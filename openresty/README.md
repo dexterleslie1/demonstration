@@ -9,3 +9,6 @@ docker run --rm --name=openresty-demo --net=host -v $(pwd)/nginx-getting-started
 ```shell script
 docker run --rm --name=openresty-demo -p 80:80 -v $(pwd)/nginx-getting-started.conf:/usr/local/openresty/nginx/conf/nginx.conf openresty/openresty
 ```
+
+##### nginx for lua api之获取请求中的参数
+http://www.shixinke.com/openresty/openresty-get-request-arguments
