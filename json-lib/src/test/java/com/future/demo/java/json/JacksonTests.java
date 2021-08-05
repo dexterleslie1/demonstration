@@ -1,6 +1,7 @@
 package com.future.demo.java.json;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -12,7 +13,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Jackson库测试
@@ -153,5 +156,38 @@ public class JacksonTests {
         ObjectNode objectNode = (ObjectNode)jsonNode;
         log.info(jsonNode.toString());
         log.info(objectNode.toString());
+    }
+
+    /**
+     * 演示json array转换为java List
+     */
+    @Test
+    public void jsonArrayToJavaList() throws IOException {
+        long userId = 12345l;
+        String loginname = "dexter";
+        boolean enable = true;
+        Date createTime = new Date();
+
+        List<BeanClass> beanClasseList = new ArrayList<BeanClass>();
+        for(int i=1; i<=5; i++) {
+            BeanClass beanClass = new BeanClass();
+            beanClass.setUserId(userId);
+            beanClass.setLoginname(loginname + "#" + i);
+            beanClass.setEnable(enable);
+            beanClass.setCreateTime(createTime);
+        }
+
+        ObjectMapper OMInstance = new ObjectMapper();
+        String json = OMInstance.writeValueAsString(beanClasseList);
+
+        List<BeanClass> beanClassListR = OMInstance.readValue(json, new TypeReference<List<BeanClass>>() {});
+
+        Assert.assertEquals(beanClasseList.size(), beanClassListR.size());
+        for(int i=0; i<beanClasseList.size(); i++) {
+            Assert.assertEquals(beanClasseList.get(i).getUserId(), beanClassListR.get(i).getUserId());
+            Assert.assertEquals(beanClasseList.get(i).getLoginname(), beanClassListR.get(i).getLoginname());
+            Assert.assertEquals(beanClasseList.get(i).isEnable(), beanClassListR.get(i).isEnable());
+            Assert.assertEquals(beanClasseList.get(i).getCreateTime(), beanClassListR.get(i).getCreateTime());
+        }
     }
 }
