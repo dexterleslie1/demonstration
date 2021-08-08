@@ -24,40 +24,45 @@ public class RedissonLockTests {
 
     private RedissonClient redisson = null;
 
+    // 标准用法
     @Test
     public void test() throws InterruptedException {
         final String key = "fdjiu34938983r399fj3j";
         ExecutorService service = Executors.newCachedThreadPool();
-        for(int i=0; i<10; i++) {
+        for(int i=0; i<100; i++) {
             final int seq = i;
             service.submit(new Runnable() {
                 public void run() {
-                    int milliseconds = Random.nextInt(500);
-                    if(milliseconds<=0) {
-                        milliseconds = 5;
-                    }
+                    int milliseconds = Random.nextInt(50);
                     try {
-                        Thread.sleep(milliseconds);
+                        if(milliseconds>0) {
+                            Thread.sleep(milliseconds);
+                        }
                     } catch (InterruptedException e) {
                         throw new RuntimeException(e);
                     }
 
-                    RLock lock = redisson.getLock(key);
-                    boolean isLocked = false;
+                    RLock lock = null;
+                    boolean acquired = false;
                     try {
-                        isLocked = lock.tryLock(10, 30000, TimeUnit.MILLISECONDS);
+                        lock = redisson.getLock(key);
+
+                        acquired = lock.tryLock(10, 30000, TimeUnit.MILLISECONDS);
+                        if(!acquired) {
+                            String message = String.format("线程%d 锁获取%s", seq, "失败");
+                            logger.info(message);
+                            return;
+                        }
+
                         // 锁定2秒
                         Thread.sleep(2000);
-                        String message = String.format("线程%d 锁获取%s", seq, isLocked?"成功":"失败");
+                        String message = String.format("线程%d 锁获取%s", seq,"成功");
                         logger.info(message);
                     } catch (Exception ex) {
                         throw new RuntimeException(ex);
                     } finally {
-                        if (isLocked) {
-                            lock = redisson.getLock(key);
-                            if (lock != null) {
-                                lock.unlock();
-                            }
+                        if (acquired && lock!=null) {
+                            lock.unlock();
                         }
                     }
                 }
