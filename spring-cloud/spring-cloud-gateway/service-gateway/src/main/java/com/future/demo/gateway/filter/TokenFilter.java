@@ -29,6 +29,12 @@ public class TokenFilter implements GlobalFilter, Ordered {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+        // 指定url不需要token验证
+        String path = exchange.getRequest().getURI().getPath();
+        if (!path.equalsIgnoreCase("/oauth/token")) {
+            return chain.filter(exchange);
+        }
+
         // 获取header中token参数
         List<String> tokenHeaderField = exchange.getRequest().getHeaders().get("token");
         String token = tokenHeaderField==null||tokenHeaderField.size()<=0?null:tokenHeaderField.get(0);
