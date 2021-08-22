@@ -1,18 +1,18 @@
-package com.future.demo.java.spring.handler.argument.request.body;
+package com.future.demo.argument;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-/**
- * @author dexterleslie@gmail.com
- */
 @RestController
 @RequestMapping(path = "/api/v1/handler/argument/request")
-public class TestController {
+public class RequestBodyDemoController {
     /**
      * 测试方法使用postman
      * body数据：body标签页选择 raw 并填写body内容为 {"age":10,"name":"Dexter1","salary":20.1}，contentType选择application/json

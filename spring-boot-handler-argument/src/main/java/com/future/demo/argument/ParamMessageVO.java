@@ -1,8 +1,5 @@
-package com.future.demo.java.spring.handler.argument.request.body;
+package com.future.demo.argument;
 
-/**
- * @author dexterleslie@gmail.com
- */
 public class ParamMessageVO {
     private long userIdTo;
     private String receiptId;
