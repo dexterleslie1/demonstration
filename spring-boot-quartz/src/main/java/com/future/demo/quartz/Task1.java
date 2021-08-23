@@ -1,4 +1,4 @@
-package com.future.demo.java.spring.boot.quartz;
+package com.future.demo.quartz;
 
 import java.util.Date;
 
