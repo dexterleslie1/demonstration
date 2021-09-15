@@ -1,4 +1,4 @@
-package com.future.study.spring.security.passwordencoder;
+package com.future.demo.spring.security;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -16,24 +16,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * @author dexterleslie@gmail.com
- */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes={WebSecurityConfig.class})
+@SpringBootTest(classes={ConfigWebSecurity.class})
 public class BCryptPasswordEncoderTests {
     private final static Logger logger = LoggerFactory.getLogger(BCryptPasswordEncoderTests.class);
 
-    /**
-     *
-     */
     @Autowired
     @Qualifier(value = "bCryptPasswordEncoder")
     private PasswordEncoder passwordEncoder = null;
 
-    /**
-     *
-     */
     @Test
     public void test() {
         String rawValue = "123456";
@@ -46,9 +37,6 @@ public class BCryptPasswordEncoderTests {
         Assert.assertTrue(match);
     }
 
-    /**
-     *
-     */
     @Test
     public void test1() {
         for(int i=0; i<100; i++) {
@@ -67,9 +55,6 @@ public class BCryptPasswordEncoderTests {
         Assert.assertTrue(match);
     }
 
-    /**
-     *
-     */
     @Test
     public void testPerformance() {
         int count = 100;

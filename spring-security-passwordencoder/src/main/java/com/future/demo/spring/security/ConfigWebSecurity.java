@@ -1,4 +1,4 @@
-package com.future.study.spring.security.passwordencoder;
+package com.future.demo.spring.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -7,17 +7,9 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-/**
- * @author dexterleslie@gmail.com
- */
 @Configuration
 @EnableWebSecurity
-public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
-
-    /**
-     *
-     * @return
-     */
+public class ConfigWebSecurity extends WebSecurityConfigurerAdapter {
     @Bean(name = "bCryptPasswordEncoder")
     public PasswordEncoder bCryptPasswordEncoder() {
         return new BCryptPasswordEncoder();
