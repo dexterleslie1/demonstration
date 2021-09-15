@@ -54,29 +54,32 @@ public class Config extends WebSecurityConfigurerAdapter {
                 .failureForwardUrl("/loginFailed");
 
         // 禁止访问自定义403返回
-        http.exceptionHandling().accessDeniedHandler(new AccessDeniedHandler() {
-            @Override
-            public void handle(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, AccessDeniedException e) throws IOException, ServletException {
-                httpServletResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                httpServletResponse.setHeader("Content-Type", "application/json;charset=utf-8");
+        http.exceptionHandling()
+                .accessDeniedHandler(new AccessDeniedHandler() {
+                        @Override
+                        public void handle(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, AccessDeniedException e) throws IOException, ServletException {
+                            httpServletResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                            httpServletResponse.setHeader("Content-Type", "application/json;charset=utf-8");
 
-                PrintWriter writer = null;
-                try {
-                    writer = httpServletResponse.getWriter();
-                    ObjectNode objectNode = JsonNodeFactory.instance.objectNode();
-                    objectNode.put("errorCode", "500001");
-                    objectNode.put("errorMessage", "权限不足，联系客服");
-                    writer.write(objectNode.toString());
-                } catch (Exception ex) {
-                    throw ex;
-                } finally {
-                    if(writer!=null) {
-                        writer.flush();
-                        writer.close();
-                    }
-                }
-            }
-        });
+                            PrintWriter writer = null;
+                            try {
+                                writer = httpServletResponse.getWriter();
+                                ObjectNode objectNode = JsonNodeFactory.instance.objectNode();
+                                objectNode.put("errorCode", "500001");
+                                objectNode.put("errorMessage", "权限不足，联系客服");
+                                writer.write(objectNode.toString());
+                            } catch (Exception ex) {
+                                throw ex;
+                            } finally {
+                                if(writer!=null) {
+                                    writer.flush();
+                                    writer.close();
+                                }
+                            }
+                        }
+                    })
+                // 权限不足自定义403拒绝访问页面
+                .accessDeniedPage("/denied.html");
 
         // 退出登录设置
         http.logout().logoutSuccessUrl("/login.html");
