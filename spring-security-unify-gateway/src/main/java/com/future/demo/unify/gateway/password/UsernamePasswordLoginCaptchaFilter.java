@@ -1,10 +1,12 @@
 package com.future.demo.unify.gateway.password;
 
-import com.pig4cloud.captcha.ArithmeticCaptcha;
+import com.yyd.common.http.HttpUtil;
 import lombok.extern.slf4j.Slf4j;
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Element;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.util.FastByteArrayOutputStream;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.servlet.FilterChain;
@@ -15,30 +17,56 @@ import java.io.IOException;
 
 @Slf4j
 public class UsernamePasswordLoginCaptchaFilter extends OncePerRequestFilter {
-    final static Integer DEFAULT_IMAGE_WIDTH = 100;
-    final static Integer DEFAULT_IMAGE_HEIGHT = 40;
+    CacheManager cacheManager;
+    Cache cachePasswordLoginCaptcha;
+    Cache cacheLoginFailureCount;
+
+    public void setCacheManager(CacheManager cacheManager) {
+        this.cacheManager = cacheManager;
+        this.cachePasswordLoginCaptcha = this.cacheManager.getCache("cachePasswordLoginCaptcha");
+        this.cacheLoginFailureCount = this.cacheManager.getCache("cacheLoginFailureCount");
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        ArithmeticCaptcha captcha = new ArithmeticCaptcha(DEFAULT_IMAGE_WIDTH, DEFAULT_IMAGE_HEIGHT);
-        String result = "11111";
+        String ip = HttpUtil.getIpAddress(request);
+        Element element = this.cacheLoginFailureCount.get(ip);
+        int failureCount = 0;
+        if(element!=null) {
+            failureCount = (Integer)element.getObjectValue();
+        }
+        // 单个ip登录失败次数大于等于5
+        if(failureCount>=5) {
+            String clientId = request.getParameter("clientId");
+            if(StringUtils.isBlank(clientId)) {
+                HttpUtil.responseWithError(response, HttpStatus.BAD_REQUEST, 50001, "没有提供clientId参数");
+                return;
+            }
 
-        log.info("验证码：" + result);
+            String captcha = request.getParameter("captcha");
+            if(StringUtils.isBlank(captcha)) {
+                HttpUtil.responseWithError(response, HttpStatus.BAD_REQUEST, 50001, "没有提供登录验证码参数");
+                return;
+            }
 
-        // 转换流信息写出
-        FastByteArrayOutputStream os = new FastByteArrayOutputStream();
-        captcha.out(os);
+            element = this.cachePasswordLoginCaptcha.get(clientId);
+            if(element==null) {
+                HttpUtil.responseWithError(response, HttpStatus.BAD_REQUEST, 50001, "登录验证码错误");
+                return;
+            }
 
-        response.setStatus(HttpStatus.OK.value());
-        response.setContentType(MediaType.IMAGE_JPEG_VALUE);
-        byte [] bytes = os.toByteArray();
-        response.setContentLength(bytes.length);
-        response.getOutputStream().write(bytes);
+            String captchaStore = (String)element.getObjectValue();
+            if(!captcha.equals(captchaStore)) {
+                HttpUtil.responseWithError(response, HttpStatus.BAD_REQUEST, 50001, "登录验证码错误");
+                return;
+            }
+        }
+        filterChain.doFilter(request, response);
     }
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String path = request.getServletPath();
-        return !path.startsWith("/api/v1/captcha/get");
+        return !path.equals("/api/v1/password/login");
     }
 }

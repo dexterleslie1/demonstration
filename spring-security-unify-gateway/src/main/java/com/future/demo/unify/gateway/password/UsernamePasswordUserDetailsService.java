@@ -1,9 +1,11 @@
 package com.future.demo.unify.gateway.password;
 
+import com.future.demo.unify.gateway.common.MyUser;
 import com.yyd.common.regex.RegexUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.User;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -20,6 +22,10 @@ public class UsernamePasswordUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        if(StringUtils.isBlank(username)) {
+            throw new BadCredentialsException("没有指定用户名、手机号码、邮箱至少一项参数");
+        }
+
         int loginType = -1;
         // 判断是否手机号码登录
         String phone;
@@ -55,6 +61,8 @@ public class UsernamePasswordUserDetailsService implements UserDetailsService {
             log.debug("email+密码登录");
         }
 
-        return new User(username, passwordEncoder.encode("123456"), new ArrayList<>());
+        MyUser user = new MyUser(username, passwordEncoder.encode("123456"), new ArrayList<>());
+        user.setLoginType(loginType);
+        return user;
     }
 }

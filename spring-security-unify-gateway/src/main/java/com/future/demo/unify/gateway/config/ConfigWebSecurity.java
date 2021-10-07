@@ -1,9 +1,11 @@
-package com.future.demo.unify.gateway;
+package com.future.demo.unify.gateway.config;
 
-import com.future.demo.unify.gateway.password.UsernamePasswordLoginCaptchaFilter;
-import com.future.demo.unify.gateway.sms.SmsCaptchaSendFilter;
-import com.future.demo.unify.gateway.password.UsernamePasswordUserDetailsService;
+import com.future.demo.unify.gateway.common.MyAccessDeniedHandler;
+import com.future.demo.unify.gateway.common.MyAuthenticationEntryPoint;
+import com.future.demo.unify.gateway.common.MyLogoutSuccessHandler;
+import com.future.demo.unify.gateway.password.*;
 import com.future.demo.unify.gateway.sms.*;
+import net.sf.ehcache.CacheManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,8 +29,23 @@ public class ConfigWebSecurity extends WebSecurityConfigurerAdapter {
     SmsCaptchaAuthenticationSuccessHandler smsCaptchaAuthenticationSuccessHandler;
     @Autowired
     SmsCaptchaAuthenticationFailureHandler smsCaptchaAuthenticationFailureHandler;
+
     @Autowired
     UsernamePasswordUserDetailsService usernamePasswordUserDetailsService;
+    @Autowired
+    UsernamePasswordAuthenticationFailureHandler usernamePasswordAuthenticationFailureHandler;
+    @Autowired
+    UsernamePasswordAuthenticationSuccessHandler usernamePasswordAuthenticationSuccessHandler;
+
+    @Autowired
+    MyLogoutSuccessHandler myLogoutSuccessHandler;
+    @Autowired
+    MyAuthenticationEntryPoint myAuthenticationEntryPoint;
+    @Autowired
+    MyAccessDeniedHandler myAccessDeniedHandler;
+
+    @Autowired
+    CacheManager cacheManager;
 
     // 这个接口专门用于配置系统默认的UsernamePasswordAuthentication
     @Override
@@ -45,27 +62,46 @@ public class ConfigWebSecurity extends WebSecurityConfigurerAdapter {
         smsCaptchaAuthenticationFilter.setAuthenticationFailureHandler(smsCaptchaAuthenticationFailureHandler);
 
         SmsCaptchaAuthenticationProvider smsCaptchaAuthenticationProvider = new SmsCaptchaAuthenticationProvider();
+        smsCaptchaAuthenticationProvider.setCacheManager(cacheManager);
         smsCaptchaAuthenticationProvider.setUserDetailsService(smsCaptchaUserDetailsService);
+
+        UsernamePasswordLoginCaptchaFilter usernamePasswordLoginCaptchaFilter = new UsernamePasswordLoginCaptchaFilter();
+        usernamePasswordLoginCaptchaFilter.setCacheManager(cacheManager);
 
         http
                 .csrf().disable()
 
+                // 未登录异常处理
+                .exceptionHandling()
+                .accessDeniedHandler(myAccessDeniedHandler)
+                .authenticationEntryPoint(myAuthenticationEntryPoint)
+
+                // 登出配置
+                .and().logout()
+                .logoutUrl("/api/v1/logout")
+                .invalidateHttpSession(true)
+                .deleteCookies("JSESSIONID")
+                .logoutSuccessHandler(myLogoutSuccessHandler)
+
+                // 允许用户名、手机号码、邮箱+密码登录url
+                .and().authorizeRequests().antMatchers("/api/v1/password/login").permitAll()
+
+                // 模拟用户名、手机号码、邮箱+密码尝试多次登录失败后需要提供登录验证码才能够继续登录系统
+                .and().addFilterBefore(usernamePasswordLoginCaptchaFilter, UsernamePasswordAuthenticationFilter.class)
+
                 // form login配置
                 .formLogin()
+                .loginProcessingUrl("/api/v1/password/login")
+                .failureHandler(usernamePasswordAuthenticationFailureHandler)
+                .successHandler(usernamePasswordAuthenticationSuccessHandler)
 
-                // /api/v1/captcha/get使用CaptchaFilter处理并且不需要登录
-                // TODO 怎么限制CaptchaFilter只能使用GET方法请求
-                .and().authorizeRequests().antMatchers("/api/v1/captcha/get").permitAll()
-
-                .and().addFilterBefore(new UsernamePasswordLoginCaptchaFilter(), UsernamePasswordAuthenticationFilter.class)
+                .and().authorizeRequests().antMatchers("/api/v1/password/captcha/get").permitAll()
 
                 // 手机号码+短信验证码登录时发送短信验证码
-                // TODO 怎么现在SmsCaptchaSendFilter只能使用POST方法请求
-                .authorizeRequests().antMatchers("/api/v1/captcha/sms/send").permitAll()
-                .and().addFilterBefore(new SmsCaptchaSendFilter(), UsernamePasswordAuthenticationFilter.class)
+                .and().authorizeRequests().antMatchers("/api/v1/sms/captcha/send").permitAll()
 
                 // 配置手机号码+短信验证码登录
-                .authorizeRequests().antMatchers("/api/v1/sms/login").permitAll()
+                .and().authorizeRequests().antMatchers("/api/v1/sms/login").permitAll()
                 .and().authenticationProvider(smsCaptchaAuthenticationProvider)
                 .addFilterBefore(smsCaptchaAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
 

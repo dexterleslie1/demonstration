@@ -5,6 +5,7 @@ import com.yyd.common.json.JSONUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
@@ -19,7 +20,7 @@ public class SmsCaptchaAuthenticationSuccessHandler implements AuthenticationSuc
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
-        logger.info("登录成功");
-        HttpUtil.response(response, JSONUtil.ObjectMapperInstance.writeValueAsString(authentication));
+        User user = (User)authentication.getPrincipal();
+        HttpUtil.response(response, user.getUsername());
     }
 }

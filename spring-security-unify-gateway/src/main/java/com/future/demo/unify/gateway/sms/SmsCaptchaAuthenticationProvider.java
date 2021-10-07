@@ -1,19 +1,26 @@
 package com.future.demo.unify.gateway.sms;
 
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Element;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.util.Assert;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Map;
 
 public class SmsCaptchaAuthenticationProvider implements AuthenticationProvider {
     private UserDetailsService userDetailsService;
+
+    CacheManager cacheManager;
+    Cache cacheSmsCaptcha;
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
@@ -33,18 +40,22 @@ public class SmsCaptchaAuthenticationProvider implements AuthenticationProvider 
         return authenticationResult;
     }
 
-    private void checkSmsCode(String mobile) {
+    private void checkSmsCode(String phone) {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
-        String inputCode = request.getParameter("smsCaptcha");
+        String smsCaptcha = request.getParameter("smsCaptcha");
 
-        String applyMobile = "13511111111";
-        String applySmsCaptcha = "123456";
-
-        if(!applyMobile.equals(mobile)) {
-            throw new BadCredentialsException("申请的手机号码与登录手机号码不一致");
+        if(StringUtils.isBlank(smsCaptcha)) {
+            throw new BadCredentialsException("没有提供短信验证码");
         }
-        if(!applySmsCaptcha.equals(inputCode)) {
-            throw new BadCredentialsException("验证码错误");
+
+        Element element = this.cacheSmsCaptcha.get(phone);
+        if(element==null) {
+            throw new BadCredentialsException("短信验证码已过期，请重新获取");
+        }
+
+        String cacheSmsCaptcha = (String)element.getObjectValue();
+        if(!cacheSmsCaptcha.equals(smsCaptcha)) {
+            throw new BadCredentialsException("提供的短信验证码错误");
         }
     }
 
@@ -60,5 +71,10 @@ public class SmsCaptchaAuthenticationProvider implements AuthenticationProvider 
 
     public void setUserDetailsService(UserDetailsService userDetailsService) {
         this.userDetailsService = userDetailsService;
+    }
+
+    public void setCacheManager(CacheManager cacheManager) {
+        this.cacheManager = cacheManager;
+        this.cacheSmsCaptcha = this.cacheManager.getCache("cacheSmsCaptcha");
     }
 }
