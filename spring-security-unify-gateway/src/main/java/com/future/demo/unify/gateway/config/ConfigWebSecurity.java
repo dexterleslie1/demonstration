@@ -1,8 +1,8 @@
 package com.future.demo.unify.gateway.config;
 
 import com.future.demo.unify.gateway.common.MyAccessDeniedHandler;
-import com.future.demo.unify.gateway.common.MyAuthenticationEntryPoint;
 import com.future.demo.unify.gateway.common.MyLogoutSuccessHandler;
+import com.future.demo.unify.gateway.common.TokenAuthenticationFilter;
 import com.future.demo.unify.gateway.password.*;
 import com.future.demo.unify.gateway.sms.*;
 import net.sf.ehcache.CacheManager;
@@ -14,6 +14,7 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -40,9 +41,9 @@ public class ConfigWebSecurity extends WebSecurityConfigurerAdapter {
     @Autowired
     MyLogoutSuccessHandler myLogoutSuccessHandler;
     @Autowired
-    MyAuthenticationEntryPoint myAuthenticationEntryPoint;
-    @Autowired
     MyAccessDeniedHandler myAccessDeniedHandler;
+    @Autowired
+    TokenAuthenticationFilter tokenAuthenticationFilter;
 
     @Autowired
     CacheManager cacheManager;
@@ -71,10 +72,15 @@ public class ConfigWebSecurity extends WebSecurityConfigurerAdapter {
         http
                 .csrf().disable()
 
+                // 禁用session
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+
+                // token验证filter
+                .and().addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+
                 // 未登录异常处理
                 .exceptionHandling()
                 .accessDeniedHandler(myAccessDeniedHandler)
-                .authenticationEntryPoint(myAuthenticationEntryPoint)
 
                 // 登出配置
                 .and().logout()

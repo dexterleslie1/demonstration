@@ -166,19 +166,24 @@ public class IntegrationTests {
         params.add("phone", phone);
         params.add("smsCaptcha", smsCaptcha);
         httpEntity = new HttpEntity<>(params, null);
-        responseEntity =
+        ResponseEntity<ObjectResponse<JsonNode>> responseEntityJsonNode =
                 restTemplate.exchange(url,
                         HttpMethod.POST,
                         httpEntity,
-                        new ParameterizedTypeReference<ObjectResponse<String>>() {});
+                        new ParameterizedTypeReference<ObjectResponse<JsonNode>>() {});
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        Assert.assertEquals(phone, responseEntity.getBody().getData());
+        Assert.assertEquals(phone, responseEntityJsonNode.getBody().getData().get("username").asText());
+        Assert.assertEquals(4, responseEntityJsonNode.getBody().getData().get("loginType").asInt());
+        String token = responseEntityJsonNode.getBody().getData().get("token").asText();
 
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add(HttpHeaders.AUTHORIZATION, "Bearer " + token);
+        httpEntity = new HttpEntity<>(null, httpHeaders);
         url = "http://localhost:" + localServerPort + "/api/v1/user/info";
         responseEntity =
                 restTemplate.exchange(url,
                         HttpMethod.GET,
-                        null,
+                        httpEntity,
                         new ParameterizedTypeReference<ObjectResponse<String>>() {});
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertEquals(phone, responseEntity.getBody().getData());
@@ -187,18 +192,20 @@ public class IntegrationTests {
         测试未登录情况
          */
         url = "http://localhost:" + localServerPort + "/api/v1/logout";
-        responseEntity = restTemplate.exchange(url, HttpMethod.POST, null, new ParameterizedTypeReference<ObjectResponse<String>>() {
+        httpHeaders = new HttpHeaders();
+        httpHeaders.add(HttpHeaders.AUTHORIZATION, "Bearer " + token);
+        httpEntity = new HttpEntity<>(null, httpHeaders);
+        responseEntity = restTemplate.exchange(url, HttpMethod.POST, httpEntity, new ParameterizedTypeReference<ObjectResponse<String>>() {
         });
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertEquals("成功退出", responseEntity.getBody().getData());
         try {
             url = "http://localhost:" + localServerPort + "/api/v1/user/info";
-            responseEntity =
-                    restTemplate.exchange(url,
-                            HttpMethod.GET,
-                            null,
-                            new ParameterizedTypeReference<ObjectResponse<String>>() {
-                            });
+            restTemplate.exchange(url,
+                    HttpMethod.GET,
+                    httpEntity,
+                    new ParameterizedTypeReference<ObjectResponse<String>>() {
+                    });
             Assert.fail("预期异常没有抛出");
         } catch (ResourceAccessException ex) {
             BusinessException businessException = (BusinessException)ex.getCause();
@@ -216,16 +223,21 @@ public class IntegrationTests {
         multiValueMap.add("username", username);
         multiValueMap.add("password", "123456");
         httpEntity = new HttpEntity<>(multiValueMap, null);
-        ResponseEntity<ObjectResponse<JsonNode>> responseEntityJsonNode =
+        responseEntityJsonNode =
                 restTemplate.exchange(url, HttpMethod.POST, httpEntity, new ParameterizedTypeReference<ObjectResponse<JsonNode>>() {});
         Assert.assertEquals(HttpStatus.OK, responseEntityJsonNode.getStatusCode());
         Assert.assertEquals(username, responseEntityJsonNode.getBody().getData().get("username").asText());
         Assert.assertEquals(1, responseEntityJsonNode.getBody().getData().get("loginType").asInt());
+        token = responseEntityJsonNode.getBody().getData().get("token").asText();
+
+        httpHeaders = new HttpHeaders();
+        httpHeaders.add(HttpHeaders.AUTHORIZATION, "Bearer " + token);
+        httpEntity = new HttpEntity<>(null, httpHeaders);
         url = "http://localhost:" + localServerPort + "/api/v1/user/info";
         responseEntity =
                 restTemplate.exchange(url,
                         HttpMethod.GET,
-                        null,
+                        httpEntity,
                         new ParameterizedTypeReference<ObjectResponse<String>>() {});
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertEquals(username, responseEntity.getBody().getData());
@@ -241,11 +253,16 @@ public class IntegrationTests {
         Assert.assertEquals(HttpStatus.OK, responseEntityJsonNode.getStatusCode());
         Assert.assertEquals(username, responseEntityJsonNode.getBody().getData().get("username").asText());
         Assert.assertEquals(2, responseEntityJsonNode.getBody().getData().get("loginType").asInt());
+        token = responseEntityJsonNode.getBody().getData().get("token").asText();
+
+        httpHeaders = new HttpHeaders();
+        httpHeaders.add(HttpHeaders.AUTHORIZATION, "Bearer " + token);
+        httpEntity = new HttpEntity<>(null, httpHeaders);
         url = "http://localhost:" + localServerPort + "/api/v1/user/info";
         responseEntity =
                 restTemplate.exchange(url,
                         HttpMethod.GET,
-                        null,
+                        httpEntity,
                         new ParameterizedTypeReference<ObjectResponse<String>>() {});
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertEquals(username, responseEntity.getBody().getData());
@@ -261,11 +278,16 @@ public class IntegrationTests {
         Assert.assertEquals(HttpStatus.OK, responseEntityJsonNode.getStatusCode());
         Assert.assertEquals(username, responseEntityJsonNode.getBody().getData().get("username").asText());
         Assert.assertEquals(2, responseEntityJsonNode.getBody().getData().get("loginType").asInt());
+        token = responseEntityJsonNode.getBody().getData().get("token").asText();
+
+        httpHeaders = new HttpHeaders();
+        httpHeaders.add(HttpHeaders.AUTHORIZATION, "Bearer " + token);
+        httpEntity = new HttpEntity<>(null, httpHeaders);
         url = "http://localhost:" + localServerPort + "/api/v1/user/info";
         responseEntity =
                 restTemplate.exchange(url,
                         HttpMethod.GET,
-                        null,
+                        httpEntity,
                         new ParameterizedTypeReference<ObjectResponse<String>>() {});
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertEquals(username, responseEntity.getBody().getData());
@@ -281,18 +303,26 @@ public class IntegrationTests {
         Assert.assertEquals(HttpStatus.OK, responseEntityJsonNode.getStatusCode());
         Assert.assertEquals(username, responseEntityJsonNode.getBody().getData().get("username").asText());
         Assert.assertEquals(3, responseEntityJsonNode.getBody().getData().get("loginType").asInt());
+        token = responseEntityJsonNode.getBody().getData().get("token").asText();
+
+        httpHeaders = new HttpHeaders();
+        httpHeaders.add(HttpHeaders.AUTHORIZATION, "Bearer " + token);
+        httpEntity = new HttpEntity<>(null, httpHeaders);
         url = "http://localhost:" + localServerPort + "/api/v1/user/info";
         responseEntity =
                 restTemplate.exchange(url,
                         HttpMethod.GET,
-                        null,
+                        httpEntity,
                         new ParameterizedTypeReference<ObjectResponse<String>>() {});
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertEquals(username, responseEntity.getBody().getData());
 
+        httpHeaders = new HttpHeaders();
+        httpHeaders.add(HttpHeaders.AUTHORIZATION, "Bearer " + token);
+        httpEntity = new HttpEntity<>(null, httpHeaders);
         // 用户登出
         url = "http://localhost:" + localServerPort + "/api/v1/logout";
-        responseEntity = restTemplate.exchange(url, HttpMethod.POST, null, new ParameterizedTypeReference<ObjectResponse<String>>() {
+        responseEntity = restTemplate.exchange(url, HttpMethod.POST, httpEntity, new ParameterizedTypeReference<ObjectResponse<String>>() {
         });
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertEquals("成功退出", responseEntity.getBody().getData());
@@ -356,11 +386,16 @@ public class IntegrationTests {
         Assert.assertEquals(HttpStatus.OK, responseEntityJsonNode.getStatusCode());
         Assert.assertEquals(username, responseEntityJsonNode.getBody().getData().get("username").asText());
         Assert.assertEquals(1, responseEntityJsonNode.getBody().getData().get("loginType").asInt());
+        token = responseEntityJsonNode.getBody().getData().get("token").asText();
+
+        httpHeaders = new HttpHeaders();
+        httpHeaders.add(HttpHeaders.AUTHORIZATION, "Bearer " + token);
+        httpEntity = new HttpEntity<>(null, httpHeaders);
         url = "http://localhost:" + localServerPort + "/api/v1/user/info";
         responseEntity =
                 restTemplate.exchange(url,
                         HttpMethod.GET,
-                        null,
+                        httpEntity,
                         new ParameterizedTypeReference<ObjectResponse<String>>() {});
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertEquals(username, responseEntity.getBody().getData());

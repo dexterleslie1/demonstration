@@ -6,4 +6,5 @@
     <cache name="cacheSmsCaptcha" maxElementsInMemory="10000"/>
 	<cache name="cacheLoginFailureCount" maxElementsInMemory="10000"/>
 	<cache name="cachePasswordLoginCaptcha" maxElementsInMemory="10000"/>
+	<cache name="cacheTokenToUser" maxElementsInMemory="10000"/>
 </ehcache>

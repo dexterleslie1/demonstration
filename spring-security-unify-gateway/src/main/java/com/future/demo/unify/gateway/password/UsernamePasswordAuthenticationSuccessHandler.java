@@ -2,6 +2,7 @@ package com.future.demo.unify.gateway.password;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.future.demo.unify.gateway.common.MyUser;
+import com.future.demo.unify.gateway.common.TokenStore;
 import com.yyd.common.http.HttpUtil;
 import com.yyd.common.json.JSONUtil;
 import net.sf.ehcache.Cache;
@@ -16,6 +17,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.UUID;
 
 @Component
 public class UsernamePasswordAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
@@ -28,6 +30,9 @@ public class UsernamePasswordAuthenticationSuccessHandler implements Authenticat
         this.cacheLoginFailureCount = this.cacheManager.getCache("cacheLoginFailureCount");
     }
 
+    @Autowired
+    TokenStore tokenStore;
+
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
                                         HttpServletResponse response,
@@ -36,9 +41,15 @@ public class UsernamePasswordAuthenticationSuccessHandler implements Authenticat
         this.cacheLoginFailureCount.remove(ip);
 
         MyUser user = (MyUser)authentication.getPrincipal();
+
+        String token = UUID.randomUUID().toString();
+        this.tokenStore.store(token, user);
+        user.setToken(token);
+
         ObjectNode userObjectNode = JSONUtil.ObjectMapperInstance.createObjectNode();
         userObjectNode.put("username", authentication.getName());
         userObjectNode.put("loginType", user.getLoginType());
+        userObjectNode.put("token", token);
         HttpUtil.response(response, userObjectNode);
     }
 }

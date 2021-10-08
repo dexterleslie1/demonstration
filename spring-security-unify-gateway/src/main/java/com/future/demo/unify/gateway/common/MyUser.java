@@ -8,6 +8,7 @@ import java.util.Collection;
 
 @Data
 public class MyUser extends User {
+    private String token;
     private int loginType;
 
     public MyUser(String username, String password, Collection<? extends GrantedAuthority> authorities) {
