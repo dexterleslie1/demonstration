@@ -1,0 +1,1 @@
+##### plugin用于演示spring-boot autoconfiguration功能
