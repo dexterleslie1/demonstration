@@ -1,9 +1,8 @@
-package com.future.study.java.annotation;
+package com.future.demo.annotation;
 
-/**
- * @author Dexterleslie.Chan
- */
 @Annotation1(value=11)
+@AnnotationRetentionSource
+@AnnotationRetentionClass
 public class TestClass {
     @Annotation2(value=12)
     private int field1;
