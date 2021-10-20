@@ -1,0 +1,20 @@
+{
+  "name": "webpack-vue3",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "dev": "webpack-dev-server"
+  },
+  "devDependencies": {
+    "html-webpack-plugin": "^5.4.0",
+    "vue-loader": "^16.7.0",
+    "vue-template-compiler": "^2.6.14",
+    "webpack": "^5.59.0",
+    "webpack-cli": "^4.9.1",
+    "webpack-dev-server": "^4.3.1"
+  },
+  "dependencies": {
+    "vue": "3.2.20"
+  }
+}
