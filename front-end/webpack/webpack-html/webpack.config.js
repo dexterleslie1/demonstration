@@ -1,4 +1,4 @@
-const {resolve} = require("path");
+const { resolve } = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 module.exports = {
@@ -15,6 +15,15 @@ module.exports = {
     },
 
     // loader处理非javascript、json资源，例如：翻译sass为css、img
+    // 配置loader
+    module: {
+        rules: [
+            {
+                test: /\.css$/,
+                use: ['style-loader', 'css-loader']
+            }
+        ]
+    },
 
     plugins: [
         // 使用html-webpack-plugin插件自动引入js、css资源文件index.html
@@ -30,5 +39,11 @@ module.exports = {
     ],
 
     // development、开发模式 production、生产模式
-    mode: "development"
+    mode: "development",
+    devServer: {
+        open: true,
+        port: 9080,
+        // 必须为./，否则HMR不正常工作
+        static: './'
+    }
 }

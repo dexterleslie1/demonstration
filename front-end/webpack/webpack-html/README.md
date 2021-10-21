@@ -1,4 +1,4 @@
-webpack基本用法演示
+webpack+html+js+css演示
 
 初始化webpack项目
 npm init
