@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script type="text/javascript">
+        // * 任何函数都有prototype属性，并且prototype是Object类型的一个实例
+        // * prototype对象属性constructor执行函数对象
+        // * 给prototype对象添加属性/方法，函数所有实例对象自动拥有prototype中的属性/方法
+        console.log(`typeof Date: ${typeof Date}`)
+        console.log(`typeof Date.prototype: ${typeof Date.prototype}`)
+
+        function MyFunction() {
+
+        }
+        console.log(`typeof MyFunction: ${typeof MyFunction}`)
+        console.log(`typeof MyFunction.prototype: ${typeof MyFunction.prototype}`)
+
+        // constructor
+        console.log(`Date.prototype.constructor===Date: ${Date.prototype.constructor===Date}`)
+        console.log(`MyFunction.prototype.constructor===MyFunction: ${MyFunction.prototype.constructor===MyFunction}`)
+    
+        // prototype添加方法
+        MyFunction.prototype.sayHello = function() {
+            console.log('Hello Dexterleslie')
+        }
+        let myFunction = new MyFunction()
+        myFunction.sayHello()
+    </script>
+</head>
+<body>
+    
+</body>
+</html>
