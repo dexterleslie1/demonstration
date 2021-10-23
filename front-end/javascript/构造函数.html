@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script type="text/javascript">
+        // 构造函数就是一个普通函数，声明方法和普通函数基本没有区别
+        // 我们习惯声明构造函数首字母大写，普通函数一般首字母小写
+
+        // 构造函数和普通函数调用方式不同：普通函数直接调用，而构造函数需要使用new关键字调用
+        function Person(name, age) {
+            this.name = name
+            this.age = age
+
+            this.display = function() {
+                console.log(`name=${this.name},age=${this.age}`)
+            }
+        }
+
+        let person = new Person('Dexter', 34)
+        person.display()
+
+        // 以下输出可以证明Person实质就是一个普通函数
+        console.log(`typeof Person: ${typeof Person}`)
+        // 以下输出可以证明javascript里所有实例都是Object子类型的对象
+        console.log(`typeof person: ${typeof person}`)
+        console.log(`person instanceof Object: ${person instanceof Object}`)
+        console.log(`person instanceof Person: ${person instanceof Person}`)
+    </script>
+</head>
+<body>
+    
+</body>
+</html>
