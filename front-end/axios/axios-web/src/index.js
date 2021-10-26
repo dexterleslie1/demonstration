@@ -1,10 +1,83 @@
 import axios from "axios";
 
 // 全局配置
-axios.defaults.baseURL = "http://c.com:8080";
+axios.defaults.baseURL = "/";
 axios.defaults.timeout = 5000;
+// request、response 拦截器
+axios.interceptors.request.use((config)=>{
+    let json = JSON.stringify(config);
+    let message = `请求前拦截config=${json}`;
+    console.log(message);
+
+    // 判断是否需要自动添加header1
+    if(config && config.needHeader) {
+        if(!config.headers) {
+            config.headers = {}
+        }
+        config.headers.header1 = 'header1 value'
+    }
+
+    return config;
+}, (error)=>{
+    // 暂时不清楚什么情况下request会回调此函数
+    console.log(error);
+});
+axios.interceptors.response.use((config)=>{
+    let json = JSON.stringify(config);
+    let message = `请求响应拦截config=${json}`;
+    console.log(message);
+
+    // 如果http响应状态码不为200
+    let httpStatus = config.status
+    if(httpStatus!==200) {
+        let errorCode = config.data.errorCode
+        let errorMessage = config.data.errorMessage
+
+        if(!errorCode || !errorMessage) {
+            errorCode = 5000
+            errorMessage = '服务器没有返回具体错误信息'
+        }
+
+        return Promise.reject({errorCode, errorMessage, httpStatus})
+    }
+
+    if(httpStatus===200 && config.data.errorCode>0) {
+        let errorCode = config.data.errorCode
+        let errorMessage = config.data.errorMessage
+
+        if(!errorCode || !errorMessage) {
+            errorCode = 5000
+            errorMessage = '服务器没有返回具体错误信息'
+        }
+
+        return Promise.reject({errorCode, errorMessage, httpStatus})
+    }
+
+    // 忽略服务器返回config.data.errorCode、config.data.errorMessage直接返回data数据
+    if(config.headers['content-type'] && config.headers['content-type'].startsWith('application/json')) {
+        return config.data.data
+    } else {
+        return config.data
+    }
+}, (error)=>{
+    if(error && !error.response) {
+        // 网络错误
+        return Promise.reject({errorCode:5000, errorMessage:error.message, httpStatus:-1})
+    } else {
+        let response = error.response
+        let httpStatus = response.status
+        let errorCode = response.data.errorCode
+        let errorMessage = response.data.errorMessage
+        if(!errorCode || !errorMessage) {
+            errorCode = 5000
+            errorMessage = '服务器没有返回具体错误信息'
+        }
+        return Promise.reject({errorCode, errorMessage, httpStatus})
+    }
+});
+
 let api1 = axios.create({
-    baseURL: "http://a.com:8080",
+    baseURL: "/",
     timeout: 5000
 });
 // request、response 拦截器
@@ -12,49 +85,176 @@ api1.interceptors.request.use((config)=>{
     let json = JSON.stringify(config);
     let message = `请求前拦截config=${json}`;
     console.log(message);
+
+    // 判断是否需要自动添加header1
+    if(config && config.needHeader) {
+        if(!config.headers) {
+            config.headers = {}
+        }
+        config.headers.header1 = 'header1 value'
+    }
+
     return config;
 }, (error)=>{
+    // 暂时不清楚什么情况下request会回调此函数
     console.log(error);
 });
 api1.interceptors.response.use((config)=>{
     let json = JSON.stringify(config);
     let message = `请求响应拦截config=${json}`;
     console.log(message);
-    return config;
+
+    // 如果http响应状态码不为200
+    let httpStatus = config.status
+    if(httpStatus!==200) {
+        let errorCode = config.data.errorCode
+        let errorMessage = config.data.errorMessage
+
+        if(!errorCode || !errorMessage) {
+            errorCode = 5000
+            errorMessage = '服务器没有返回具体错误信息'
+        }
+
+        return Promise.reject({errorCode, errorMessage, httpStatus})
+    }
+
+    if(httpStatus===200 && config.data.errorCode>0) {
+        let errorCode = config.data.errorCode
+        let errorMessage = config.data.errorMessage
+
+        if(!errorCode || !errorMessage) {
+            errorCode = 5000
+            errorMessage = '服务器没有返回具体错误信息'
+        }
+
+        return Promise.reject({errorCode, errorMessage, httpStatus})
+    }
+
+    // 忽略服务器返回config.data.errorCode、config.data.errorMessage直接返回data数据
+    if(config.headers['content-type'] && config.headers['content-type'].startsWith('application/json')) {
+        return config.data.data
+    } else {
+        return config.data
+    }
 }, (error)=>{
-    console.log(error);
-});
-let api2 = axios.create({
-    baseURL: "http://b.com:8080",
-    timeout: 5000
-});
-
-// 测试全局配置
-axios.get("api/v1/get", {params: {name: "Dexterleslie0"}}).then((result)=>{
-    console.log(result);
-});
-
-// 测试api1、api2 axios实例
-api1.get("api/v1/get", {params: {name: "Dexterleslie"}}).then((result)=>{
-    console.log(result);
-});
-api2.get("api/v1/get", {params: {name: "Dexterlesllie2"}}).then((result)=>{
-    console.log(result);
+    if(error && !error.response) {
+        // 网络错误
+        return Promise.reject({errorCode:5000, errorMessage:error.message, httpStatus:-1})
+    } else {
+        let response = error.response
+        let httpStatus = response.status
+        let errorCode = response.data.errorCode
+        let errorMessage = response.data.errorMessage
+        if(!errorCode || !errorMessage) {
+            errorCode = 5000
+            errorMessage = '服务器没有返回具体错误信息'
+        }
+        return Promise.reject({errorCode, errorMessage, httpStatus})
+    }
 });
 
-// 测试request、response拦截
-api1.get("api/v1/get", {params: {name: "Dexterleslie"}}).then((result)=>{
-    console.log(result);
-});
+const $ = require('jquery')
 
-// 测试并发请求
-axios.all([
-    api1.get("api/v1/get", {params: {name: "Dexterleslie0"}}),
-    api2.get("api/v1/get", {params: {name: "Dexterleslie1"}})
-]).then((result)=>{
-    console.log(result);
-}).catch((error)=>{
-    console.log(error);
-}).finally(()=>{
-    console.log("finally回调")
-});
+$(document).ready(function() {
+    $('#btnPutWithBody').click(function() {
+        // 测试put方法提交body参数
+        let url = '/api/v1/putWithBody'
+        api1.put(url, {
+            username: 'dexterleslie',
+            password: '123456',
+            verificationCode: '111111'
+        }, {
+            // 表示这个请求是否需要在request拦截器中自动添加header1参数
+            needHeader: true,
+            // 使用params传递参数
+            params: {param1: '+'}
+        }).then(function(response) {
+            alert(`调用接口${url}成功，服务器返回：${response}`)
+        }).catch(function(error) {
+            let errorCode = error.errorCode
+            let errorMessage = error.errorMessage
+            let httpStatus = error.httpStatus
+            alert(`调用接口${url}失败，错误代码：${errorCode}，错误原因：${errorMessage}，http状态：${httpStatus}`)
+        }).finally(function(){
+
+        })
+    })
+
+    $('#btnPostWithBody').click(function() {
+        // 测试post方法提交body参数
+        let url = '/api/v1/postWithBody'
+        api1.put(url, {
+            username: 'dexterleslie',
+            password: '123456',
+            verificationCode: '111111'
+        }, {
+            // 表示这个请求是否需要在request拦截器中自动添加header1参数
+            needHeader: true,
+            // 使用params传递参数
+            params: {param1: '+'}
+        }).then(function(response) {
+            alert(`调用接口${url}成功，服务器返回：${response}`)
+        }).catch(function(error) {
+            let errorCode = error.errorCode
+            let errorMessage = error.errorMessage
+            let httpStatus = error.httpStatus
+            alert(`调用接口${url}失败，错误代码：${errorCode}，错误原因：${errorMessage}，http状态：${httpStatus}`)
+        }).finally(function(){
+
+        })
+    })
+
+    $('#btnDelete').click(function() {
+        // 测试全局配置
+        api1.delete("api/v1/delete", {
+            needHeader:true, 
+            params: {param1: "deleteObjectId#1111"}
+        }).then((data)=>{
+            alert(data)
+        }).catch(function(error) {
+            alert(error.errorMessage)
+        })
+    })
+
+    $('#btnGlobalAxios').click(function() {
+        // 测试全局配置
+        axios.get("api/v1/get", {
+            needHeader:true, 
+            params: {param1: "Dexterleslie0"}
+        }).then((data)=>{
+            alert(data)
+        }).catch(function(error) {
+            alert(error.errorMessage)
+        })
+    })
+
+    $('#btnConcurrent').click(function() {
+        // 测试并发请求
+        axios.all([
+            axios.get("api/v1/get", {
+                needHeader:true, 
+                params: {param1: "Dexterleslie0"}
+            }),
+            axios.get("api/v1/get", {
+                needHeader:true, 
+                params: {param1: "Dexterleslie1"}
+            })
+        ]).then((data)=>{
+            alert(JSON.stringify(data))
+        }).catch((error)=>{
+            alert(JSON.stringify(error))
+        }).finally(()=>{
+            console.log("finally回调")
+        });
+    })
+
+    $('#btnGetTextPlain').click(function() {
+        // // 测试get text/plain返回
+        api1.get('/api/v1/1.txt', {
+            params:{param1:'Dexterleslie123'},
+            needHeader: true
+        }).then(function(data){
+            alert('Axios获取text/plain返回：' + data)
+        });
+    })
+})

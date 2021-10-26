@@ -25,6 +25,24 @@ module.exports = {
         // 编译时使用gzip压缩
         compress: true,
         // 编译后自动打开浏览器
-        open: true
+        open: true,
+        proxy: {
+            // '/api/v1/1.txt': {
+            //     target: 'https://bucketxy.oss-cn-hangzhou.aliyuncs.com',
+            //     ws: true,
+            //     secure: false,
+            //     changeOrigin: true,
+            //     pathRewrite: {
+            //         '^/api/v1/1.txt': '/temp/1.txt'
+            //     }
+            // },
+            '/api': {
+                target: 'http://localhost:8080',
+                ws: true,
+                pathRewrite: {
+                    '^/': '/'
+                }
+            }
+        }
     }
 }
