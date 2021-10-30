@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style type="text/css">
+        body > div {
+            border-bottom-style: solid;
+            border-bottom-width: 1px;
+        }
+        /*
+        CSS object-fit 属性
+        https://www.runoob.com/cssref/pr-object-fit.html
+        */
+        .img-without-object-fit {
+            width: 100px;
+            height: 100px; 
+        }
+        .img-none {
+            width: 100px;
+            height: 100px;
+            object-fit: none;
+        }
+        .img-fill {
+            width: 100px;
+            height: 100px;
+            object-fit: fill;
+        }
+        .img-contain {
+            width: 100px;
+            height: 100px;
+            object-fit: contain;
+        }
+        .img-cover {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+        }
+        .img-scale-down {
+            width: 100px;
+            height: 100px;
+            object-fit: scale-down;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <div>没有使用object-fit属性</div>
+        <img src="./logo.png" class="img-fill"><img>
+    </div>
+    <div>
+        <div>object-fit=none，保留原有元素内容的长度和宽度，也就是说内容不会被重置。但是img宽高小于原图大小图片超出部分不能显示</div>
+        <img src="./logo.png" class="img-none"><img>
+    </div>
+    <div>
+        <div>object-fit=fill，默认，不保证保持原有的比例，内容拉伸填充整个内容容器。</div>
+        <img src="./logo.png" class="img-fill"><img>
+    </div>
+    <div>
+        <div>object-fit=contain，保持原有尺寸比例。内容被缩放。</div>
+        <img src="./logo.png" class="img-contain"><img>
+    </div>
+    <div>
+        <div>object-fit=cover，保持原有尺寸比例。但部分内容可能被剪切。</div>
+        <img src="./logo.png" class="img-cover"><img>
+    </div>
+    <div>
+        <div>object-fit=scale-down，保持原有尺寸比例。内容的尺寸与 none 或 contain 中的一个相同，取决于它们两个之间谁得到的对象尺寸会更小一些。</div>
+        <img src="./logo.png" class="img-scale-down"><img>
+    </div>
+</body>
+</html>
