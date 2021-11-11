@@ -3,14 +3,16 @@
         <div class="dx-group-avatar-container">
                 <div
                     v-for="(entry, i) in getLayerContainerCount" :key="i" 
-                    class="dx-avatar-box">
-                    <el-avatar
+                    class="dx-avatar-layer-container">
+                    <div
                         v-for="(imageEntry, j) in getImageListSlice(i)" :key="j"
-                        :src="imageEntry" 
-                        shape="square"
-                        :size="getAvatarSize"
-                        style="margin:1px;">
-                    </el-avatar>
+                        class="dx-avatar-box">
+                        <el-avatar
+                            :src="imageEntry" 
+                            shape="square"
+                            :size="getAvatarSize">
+                        </el-avatar>
+                    </div>
                 </div>
         </div>
     </div>
@@ -48,7 +50,7 @@ export default {
         }
     },
     created() {
-        for(let i=0; i<6; i++) {
+        for(let i=0; i<9; i++) {
             this.imageList.push(require('@/assets/logo.png'))
         }
     },
@@ -123,9 +125,15 @@ export default {
     flex-direction:column;
     justify-content:center;
 }
-.dx-avatar-box {
+.dx-avatar-layer-container {
     display:flex;
     align-items:center;
     justify-content:center;
+}
+.dx-avatar-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 1px;
 }
 </style>
