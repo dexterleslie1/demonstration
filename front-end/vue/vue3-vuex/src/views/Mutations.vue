@@ -23,6 +23,9 @@
 <script>
 export default {
   name: "Mutations",
+  data() {
+    varMutationReturn: ''
+  },
   methods: {
     add() {
       this.$store.commit("addCountMutation")
