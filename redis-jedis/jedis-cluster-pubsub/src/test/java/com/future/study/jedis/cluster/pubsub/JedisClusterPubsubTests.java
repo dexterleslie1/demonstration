@@ -17,13 +17,13 @@ import java.util.concurrent.*;
 public class JedisClusterPubsubTests {
     @Test
     public void test1() throws InterruptedException, TimeoutException {
-        String message1 = "testMessage";
+        final String message1 = "testMessage";
         int count = 300;
         ExecutorService executorService = Executors.newCachedThreadPool();
-        List<JedisPubSub> subscribers = new ArrayList<JedisPubSub>();
-        CountDownLatch countDownLatch = new CountDownLatch(count);
-        String channel = "jedisClusterSubscribeChannel";
-        JedisCluster jedisCluster = JedisUtil.getInstance().getJedis();
+        final List<JedisPubSub> subscribers = new ArrayList<JedisPubSub>();
+        final CountDownLatch countDownLatch = new CountDownLatch(count);
+        final String channel = "jedisClusterSubscribeChannel";
+        final JedisCluster jedisCluster = JedisUtil.getInstance().getJedis();
         for(int i=0; i<count; i++) {
             executorService.submit(new Runnable() {
                 @Override
