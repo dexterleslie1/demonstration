@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @RunWith(SpringRunner.class)
@@ -40,6 +41,10 @@ public class ApiTests {
 
         final String token = UUID.randomUUID().toString();
         Api api = Feign.builder()
+                // https://stackoverflow.com/questions/56987701/feign-client-retry-on-exception
+                .retryer(Retryer.NEVER_RETRY)
+                // https://qsli.github.io/2020/04/28/feign-method-timeout/
+                .options(new Request.Options(15, TimeUnit.SECONDS, 15, TimeUnit.SECONDS, false))
                 .encoder(new FormEncoder(new JacksonEncoder()))
                 .decoder(new JacksonDecoder())
                 // feign logger
@@ -85,6 +90,15 @@ public class ApiTests {
             myPostVOList.add(myPostVO);
         }
         ObjectResponse<String> response1 = api.testPost(myPostVOList);
+        Assert.assertFalse(response1.getErrorCode()>0);
+        Assert.assertEquals("调用成功", response1.getData());
+
+        for(int i=0; i<2; i++) {
+            MyPostVO myPostVO = new MyPostVO();
+            myPostVO.setParameter1("parameter#" + (i+1));
+            myPostVOList.add(myPostVO);
+        }
+        response1 = api.testPut("/api/v1/testPut", myPostVOList);
         Assert.assertFalse(response1.getErrorCode()>0);
         Assert.assertEquals("调用成功", response1.getData());
 

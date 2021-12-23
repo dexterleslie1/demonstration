@@ -57,6 +57,18 @@ public class ApiController {
         return response;
     }
 
+    @PutMapping("testPut")
+    public ObjectResponse<String> testPut(@RequestBody(required = false) List<MyPostVO> myPostVOList) {
+        if(myPostVOList==null || myPostVOList.size()<=0) {
+            throw new IllegalArgumentException("没有指定myPostVOList");
+        }
+
+        log.debug("接收到客户端提交" + myPostVOList.size() + "个MyPostVO，如下: " + myPostVOList);
+        ObjectResponse<String> response = new ObjectResponse<>();
+        response.setData("调用成功");
+        return response;
+    }
+
     @GetMapping("testHeaderWithToken")
     public ObjectResponse<String> testHeaderWithToken(@RequestHeader("token") String token) {
         ObjectResponse<String> response = new ObjectResponse<>();
