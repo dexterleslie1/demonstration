@@ -183,7 +183,7 @@ $(document).ready(function() {
     $('#btnPostWithBody').click(function() {
         // 测试post方法提交body参数
         let url = '/api/v1/postWithBody'
-        api1.put(url, {
+        api1.post(url, {
             username: 'dexterleslie',
             password: '123456',
             verificationCode: '111111'

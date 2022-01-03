@@ -35,12 +35,14 @@ public class ApiController {
                 header1,
                 param1);
         ObjectResponse<String> response = new ObjectResponse<>();
-        response.setData("调用成功");
+        response.setData("username=" + loginForm.getUsername() + ",password=" + loginForm.getPassword()
+                + ",verificationCode=" + loginForm.getVerificationCode() + ",header1=" + header1
+                + ",param1=" + param1);
         return response;
     }
 
     // 演示axios post调用
-    @PutMapping("postWithBody")
+    @PostMapping("postWithBody")
     ObjectResponse<String> postWithBody(
             @RequestBody(required = false) LoginForm loginForm,
             @RequestHeader(value = "header1", defaultValue = "") String header1,
@@ -58,7 +60,9 @@ public class ApiController {
                 header1,
                 param1);
         ObjectResponse<String> response = new ObjectResponse<>();
-        response.setData("调用成功");
+        response.setData("username=" + loginForm.getUsername() + ",password=" + loginForm.getPassword()
+                + ",verificationCode=" + loginForm.getVerificationCode() + ",header1=" + header1
+                + ",param1=" + param1);
         return response;
     }
 
