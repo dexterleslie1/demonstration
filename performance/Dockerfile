@@ -1,3 +1,8 @@
-FROM registry.cn-hangzhou.aliyuncs.com/future-common/tomcat
+FROM openjdk:8-jre
 
-COPY target/performance.jar .
+ARG jarFile
+ADD target/${jarFile} /usr/share/${jarFile}
+
+ENV JAVA_OPTS=""
+
+ENTRYPOINT java ${JAVA_OPTS} -jar /usr/share/${jarFile}
