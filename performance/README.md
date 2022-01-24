@@ -20,3 +20,13 @@ mvn dockerfile:build
 ```shell script
 mvn dockerfile:push
 ```
+
+##### 使用docker-compose启动容器
+```shell script
+docker-compose up -d
+```
+
+##### 使用docker-compose关闭容器
+```shell script
+docker-compose down
+```
