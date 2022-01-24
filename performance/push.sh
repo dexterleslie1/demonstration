@@ -1,3 +1,4 @@
+
 #!/bin/bash
 
-docker push registry.cn-hangzhou.aliyuncs.com/future-common/java-performance
+docker push docker.118899.net:10001/yyd-public/java-performance

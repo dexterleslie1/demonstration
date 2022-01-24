@@ -1,19 +1,15 @@
 package com.future.demo.performance;
 
+import com.yyd.common.exception.ExceptionController;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.context.annotation.Import;
 
-/**
- * @author dexterleslie@gmail.com
- */
 @SpringBootApplication
 @EnableCaching
+@Import(ExceptionController.class)
 public class Application {
-    /**
-     *
-     * @param args
-     */
     public static void main(String []args){
         SpringApplication.run(Application.class, args);
     }
