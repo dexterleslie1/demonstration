@@ -107,3 +107,13 @@ print(varList)
 varList = [45, 67, 11, 23, 101, 23]
 varList.sort(reverse = True)
 print(varList)
+
+# 内置sorted函数升序排序，会返回一个新的列表
+varList = [45, 67, 11, 23, 101, 23]
+varList = sorted(varList)
+print(varList)
+
+# 内置sorted函数降序排序，会返回一个新的列表
+varList = [45, 67, 11, 23, 101, 23]
+varList = sorted(varList, reverse = True)
+print(varList)
