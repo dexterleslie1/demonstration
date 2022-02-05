@@ -16,3 +16,5 @@ Servers
 package-lock.json
 
 *.pyc
+.tmp
+*.tmp
