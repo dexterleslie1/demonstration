@@ -109,3 +109,9 @@ print(varStr[:5] + "!" + varStr[6:])
 print("我叫%s，年龄%d" % ("Dexter", 30))
 
 print("我叫{0}，年龄{1}，重复我叫{0}".format("Dexter", 30))
+
+# 判断字符串是否为空
+# https://blog.csdn.net/fu6543210/article/details/89607717
+varStr = " "
+assert varStr.strip()==""
+assert len(varStr.strip())==0
