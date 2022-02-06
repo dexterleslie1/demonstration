@@ -9,7 +9,7 @@
 	</parent>
 
 	<groupId>com.future.demo</groupId>
-	<artifactId>elk</artifactId>
+	<artifactId>elk-logstash-logback-encoder</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	
 	<dependencies>
