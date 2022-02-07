@@ -40,3 +40,60 @@ where not exists(select id from t_testing2 where id=4);
 insert into t_testing2(id,content) select 5,'内容5' from dual
 where not exists(select id from t_testing2 where id=5);
 ```
+
+## 在宿主机运行demo
+
+1. 使用上面的脚本初始化MySQL测试数据库
+
+2. 创建~/data-logstash目录，用于保存.logstash_jdbc_last_run_xxx文件
+
+```shell
+mkdir ~/data-logstash
+
+chmod -R o+w ~/data-logstash
+```
+
+3. 修改logstash.conf相关MySQL配置
+
+4. 复制mysql-connector-java-8.0.23.jar到 $HOME/mysql-connector-java-8.0.23.jar中
+
+```shell
+sudo cp mysql-connector-java-8.0.23.jar ~/mysql-connector-java-8.0.23.jar
+```
+
+5. 启动logstash
+
+```shell
+./logstash -f /path/to/config/logstash.conf
+```
+
+## 使用docker-compose运行demo
+
+1. 使用上面的脚本初始化MySQL测试数据库
+
+2. 创建~/data-logstash目录，用于保存.logstash_jdbc_last_run_xxx文件
+
+```shell
+mkdir ~/data-logstash
+
+chmod -R o+w ~/data-logstash
+```
+
+3. 修改logstash.conf相关MySQL配置
+
+4. 编译docker本地镜像
+```shell
+sh build.sh
+```
+
+5. 使用docker-compose启动容器
+ 
+```shell
+docker-compose up
+```
+
+6. 使用docker-compose删除容器
+
+```shell
+docker-compose down
+```
