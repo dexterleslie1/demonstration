@@ -110,3 +110,17 @@ output {
   stdout { }
 }
 ```
+
+## plugins-filters-mutate插件，add_field、remove_field、add_tag、replace、copy等
+
+[mutate插件](https://www.elastic.co/guide/en/logstash/current/plugins-filters-mutate.html)
+
+## logstash配置文件访问环境变量
+
+[访问环境变量](https://www.elastic.co/guide/en/logstash/current/environment-variables.html)
+
+## 补充资料
+
+[忽略事件](https://discuss.elastic.co/t/drop-logs-when-there-is-a-jsonparsefailure/28655)
+
+[配置脚本中访问事件的数据和字段，包括@metadata](https://www.elastic.co/guide/en/logstash/current/event-dependent-configuration.html#conditionals)
