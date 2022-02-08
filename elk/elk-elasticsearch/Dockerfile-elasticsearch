@@ -1,0 +1,5 @@
+FROM docker.elastic.co/elasticsearch/elasticsearch:7.7.0
+
+# 在线安装ik分词器
+# https://www.cnblogs.com/szwdun/p/10664348.html
+RUN echo y | /usr/share/elasticsearch/bin/elasticsearch-plugin install https://bucketxy.oss-cn-hangzhou.aliyuncs.com/elasticsearch/elasticsearch-analysis-ik-7.7.0.zip

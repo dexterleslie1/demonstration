@@ -8,10 +8,11 @@ networks:
 services:
   demo-elk-elasticsearch:
     container_name: demo-elk-elasticsearch
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.5.2
+    image: docker.118899.net:10001/demo-elk-elasticsearch
     environment:
       - "ES_JAVA_OPTS=-Xms512m -Xmx1024m"
       - discovery.type=single-node
+      # http.cors表示允许elasticsearch-head连接并管理
       - http.cors.enabled=true
       - http.cors.allow-origin=*
       - TZ=Asia/Shanghai
@@ -24,7 +25,7 @@ services:
 
   demo-elk-elasticsearch-head:
     container_name: demo-elk-elasticsearch-head
-    image: mobz/elasticsearch-head:5
+    image: docker.118899.net:10001/demo-elk-elasticsearch-head
     environment:
       - TZ=Asia/Shanghai
     ports:
