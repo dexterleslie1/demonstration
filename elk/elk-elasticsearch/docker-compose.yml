@@ -1,0 +1,33 @@
+version: "3.0"
+
+# 创建网络
+networks:
+  net:
+    name: demo-elk-elasticsearch
+
+services:
+  demo-elk-elasticsearch:
+    container_name: demo-elk-elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.5.2
+    environment:
+      - "ES_JAVA_OPTS=-Xms512m -Xmx1024m"
+      - discovery.type=single-node
+      - http.cors.enabled=true
+      - http.cors.allow-origin=*
+      - TZ=Asia/Shanghai
+    ports:
+      - 9200:9200
+    volumes:
+      - ~/data-demo-elk-elasticsearch:/usr/share/elasticsearch/data
+    networks:
+      - net
+
+  demo-elk-elasticsearch-head:
+    container_name: demo-elk-elasticsearch-head
+    image: mobz/elasticsearch-head:5
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - 9100:9100
+    networks:
+      - net
