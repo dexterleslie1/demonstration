@@ -1,5 +1,20 @@
 # elasticsearch用法
 
+## todo列表
+
+- 学会所有查询方法
+- SpringData elasticsearch学习
+- elasticsearch性能测试（高并发、大数据、集群、单机内存溢出）
+- 实现京东商品查询逻辑
+
+## elasticsearch java客户端分类
+
+> [Java Transport Client](https://www.elastic.co/guide/en/elasticsearch/client/java-api/6.8/index.html) <br>
+[Java High Level REST Client](https://www.elastic.co/guide/en/elasticsearch/client/java-rest/current/java-rest-high.html) <br>
+[Java Low Level REST Client](https://www.elastic.co/guide/en/elasticsearch/client/java-rest/current/java-rest-low.html) <br><br>
+*较新版本elasticsearch推荐使用这个客户端操作elasticsearch*<br>
+[Elasticsearch Java API Client](https://www.elastic.co/guide/en/elasticsearch/client/java-api-client/current/index.html)
+
 ## 使用docker-compose运行elasticsearch
 
 ```shell script
@@ -22,22 +37,24 @@ docker-compose down
 PUT /blog
 {
     "mappings": {
-        "properties": {
-            "id": {
-                "type": "long",
-                "store": true
-            },
-            "title": {
-                "type": "text",
-                "store": true,
-                "index": true,
-                "analyzer": "standard"
-            },
-            "content": {
-                "type": "text",
-                "store": true,
-                "index": true,
-                "analyzer": "standard"
+        "_doc": {
+            "properties": {
+                "id": {
+                    "type": "long",
+                    "store": true
+                },
+                "title": {
+                    "type": "text",
+                    "store": true,
+                    "index": true,
+                    "analyzer": "standard"
+                },
+                "content": {
+                    "type": "text",
+                    "store": true,
+                    "index": true,
+                    "analyzer": "standard"
+                }
             }
         }
     }
@@ -53,7 +70,7 @@ PUT /blog
 ### 设置索引_mappings
 
 ```text
-PUT /blog/_mappings
+PUT /blog/_doc/_mappings
 {
     "properties": {
         "id": {
@@ -406,3 +423,8 @@ GET /_analyze
     ]
 }
 ```
+
+## 使用Java Transport Client操作elasticsearch
+
+> 具体用法参考代码<br>
+[Java Transport Client](https://www.elastic.co/guide/en/elasticsearch/client/java-api/6.8/index.html)
