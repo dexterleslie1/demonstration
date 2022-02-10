@@ -1,0 +1,162 @@
+package com.future.demo.jdk8.stream;
+
+import org.junit.Assert;
+import org.junit.Test;
+
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+
+public class StreamTests {
+    @Test
+    public void test() {
+        // distinct根据hashCode和equals方法去重
+        List<UserEntityDistinct> userEntityDistinctList = new ArrayList<>();
+        userEntityDistinctList.add(new UserEntityDistinct("zhangsan", 20));
+        userEntityDistinctList.add(new UserEntityDistinct("lisi", 13));
+        userEntityDistinctList.add(new UserEntityDistinct("wangwu", 45));
+        userEntityDistinctList.add(new UserEntityDistinct("guyt", 34));
+        userEntityDistinctList.add(new UserEntityDistinct("guyt", 34));
+        Assert.assertEquals(userEntityDistinctList.size() - 1, userEntityDistinctList.stream().distinct().collect(Collectors.toList()).size());
+
+        // List<UserEntity>转换为List<String>
+        List<UserEntity> userEntityList = new ArrayList<>();
+        userEntityList.add(new UserEntity("zhangsan", 20));
+        userEntityList.add(new UserEntity("lisi", 13));
+        userEntityList.add(new UserEntity("wangwu", 45));
+        userEntityList.add(new UserEntity("guyt", 34));
+        userEntityList.add(new UserEntity("guyt", 34));
+        List<String> nameList = userEntityList.stream().map(userEntity -> userEntity.getName()).collect(Collectors.toList());
+        AtomicInteger counter = new AtomicInteger(0);
+        userEntityList.forEach(userEntity -> Assert.assertEquals(userEntity.getName(), nameList.get(counter.getAndIncrement())));
+
+        // List转换为Set
+        Set<UserEntity> userEntitySet =
+                userEntityList.stream().collect(Collectors.toSet());
+        Assert.assertEquals(userEntityList.size(), userEntitySet.size());
+        userEntitySet.stream().forEach(userEntity -> Assert.assertTrue(nameList.contains(userEntity.getName())));
+
+        // List转换为map
+        userEntityList = new ArrayList<>();
+        userEntityList.add(new UserEntity("zhangsan", 20));
+        userEntityList.add(new UserEntity("lisi", 13));
+        userEntityList.add(new UserEntity("wangwu", 45));
+        userEntityList.add(new UserEntity("guyt", 34));
+        List<String> nameList1 = userEntityList.stream().map(userEntity -> userEntity.getName()).collect(Collectors.toList());
+
+        Map<String, UserEntity> nameToUserEntityMapper =
+                userEntityList.stream().collect(Collectors.toMap( userEntity -> userEntity.getName(), userEntity -> userEntity));
+        Assert.assertEquals(userEntityList.size(), nameToUserEntityMapper.size());
+        nameToUserEntityMapper.forEach((name, userEntity) -> Assert.assertTrue(nameList1.contains(name)));
+
+        // 使用reduce实现年龄相加
+        userEntityList = new ArrayList<>();
+        userEntityList.add(new UserEntity("zhangsan", 20));
+        userEntityList.add(new UserEntity("lisi", 13));
+        userEntityList.add(new UserEntity("wangwu", 45));
+        userEntityList.add(new UserEntity("guyt", 34));
+        AtomicInteger totalAgeSum = new AtomicInteger(0);
+        userEntityList.forEach(userEntity -> totalAgeSum.addAndGet(userEntity.getAge()));
+        int totalAge = userEntityList.stream()
+                // 先变换List<UserEntity>为List<Integer>
+                .map(userEntity -> userEntity.getAge())
+                // 实现年龄相加
+                .reduce((a, b) -> a + b)
+                // List<UserEntity>为空时获取orElse值
+                .orElse(0);
+        Assert.assertEquals(totalAgeSum.get(), totalAge);
+
+        // 最大最小值
+        userEntityDistinctList = new ArrayList<>();
+        userEntityDistinctList.add(new UserEntityDistinct("zhangsan", 20));
+        userEntityDistinctList.add(new UserEntityDistinct("lisi", 13));
+        userEntityDistinctList.add(new UserEntityDistinct("wangwu", 45));
+        userEntityDistinctList.add(new UserEntityDistinct("guyt", 34));
+        UserEntityDistinct userEntityDistinctMax = userEntityDistinctList.stream()
+                .max((o1, o2) -> o1.getAge() - o2.getAge())
+                .orElse(null);
+        Assert.assertEquals(userEntityDistinctList.get(2), userEntityDistinctMax);
+
+        UserEntityDistinct userEntityDistinctMin = userEntityDistinctList.stream()
+                .min((o1, o2) -> o1.getAge() - o2.getAge())
+                .orElse(null);
+        Assert.assertEquals(userEntityDistinctList.get(1), userEntityDistinctMin);
+
+        // 匹配anyMatch
+        userEntityList = new ArrayList<>();
+        userEntityList.add(new UserEntity("zhangsan", 20));
+        userEntityList.add(new UserEntity("lisi", 13));
+        userEntityList.add(new UserEntity("wangwu", 45));
+        userEntityList.add(new UserEntity("guyt", 34));
+        boolean matchResult = userEntityList.stream()
+                .anyMatch(userEntity -> userEntity.getName().equals("wangwu"));
+        Assert.assertTrue(matchResult);
+
+        matchResult = userEntityList.stream()
+                .anyMatch(userEntity -> userEntity.getName().equals("wangwu5"));
+        Assert.assertFalse(matchResult);
+
+        // 匹配noneMatch
+        userEntityList = new ArrayList<>();
+        userEntityList.add(new UserEntity("zhangsan", 20));
+        userEntityList.add(new UserEntity("lisi", 13));
+        userEntityList.add(new UserEntity("wangwu", 45));
+        userEntityList.add(new UserEntity("guyt", 34));
+        matchResult = userEntityList.stream()
+                .noneMatch(userEntity -> userEntity.getName().equals("wangwu"));
+        Assert.assertFalse(matchResult);
+
+        matchResult = userEntityList.stream()
+                .noneMatch(userEntity -> userEntity.getName().equals("wangwu5"));
+        Assert.assertTrue(matchResult);
+
+        // 匹配allMatch
+        userEntityList = new ArrayList<>();
+        userEntityList.add(new UserEntity("zhangsan", 20));
+        userEntityList.add(new UserEntity("lisi", 13));
+        matchResult = userEntityList.stream()
+                .allMatch(userEntity -> userEntity.getAge() == 20 || userEntity.getAge() == 13);
+        Assert.assertTrue(matchResult);
+
+        matchResult = userEntityList.stream()
+                .allMatch(userEntity -> userEntity.getAge() == 20 && userEntity.getAge() == 13);
+        Assert.assertFalse(matchResult);
+
+        // 过滤
+        userEntityList = new ArrayList<>();
+        userEntityList.add(new UserEntity("zhangsan", 20));
+        userEntityList.add(new UserEntity("lisi", 13));
+        userEntityList.add(new UserEntity("wangwu", 45));
+        userEntityList.add(new UserEntity("guyt", 34));
+        List<UserEntity> userEntityListFiltered = userEntityList.stream()
+                .filter(userEntity -> userEntity.getAge() > 25).collect(Collectors.toList());
+        Assert.assertEquals(2, userEntityListFiltered.size());
+        Assert.assertEquals(userEntityList.get(2), userEntityListFiltered.get(0));
+        Assert.assertEquals(userEntityList.get(3), userEntityListFiltered.get(1));
+
+        // 模拟获取第二页skip和limit
+        userEntityList = new ArrayList<>();
+        userEntityList.add(new UserEntity("zhangsan", 20));
+        userEntityList.add(new UserEntity("lisi", 13));
+        userEntityList.add(new UserEntity("wangwu", 45));
+        userEntityList.add(new UserEntity("guyt", 34));
+        List<UserEntity> userEntityList2Page = userEntityList.stream().skip(2).limit(2).collect(Collectors.toList());
+        Assert.assertEquals(2, userEntityList2Page.size());
+        Assert.assertEquals(userEntityList.get(2), userEntityList2Page.get(0));
+        Assert.assertEquals(userEntityList.get(3), userEntityList2Page.get(1));
+
+        // 排序
+        userEntityList = new ArrayList<>();
+        userEntityList.add(new UserEntity("zhangsan", 20));
+        userEntityList.add(new UserEntity("lisi", 13));
+        userEntityList.add(new UserEntity("wangwu", 45));
+        userEntityList.add(new UserEntity("guyt", 34));
+        List<UserEntity> userEntityListSorted = userEntityList.stream()
+                .sorted((o1, o2) -> o1.getAge() - o2.getAge()).collect(Collectors.toList());
+        Assert.assertEquals(13, userEntityListSorted.get(0).getAge());
+        Assert.assertEquals(20, userEntityListSorted.get(1).getAge());
+        Assert.assertEquals(34, userEntityListSorted.get(2).getAge());
+        Assert.assertEquals(45, userEntityListSorted.get(3).getAge());
+
+    }
+}
