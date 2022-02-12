@@ -6,6 +6,7 @@
 - SpringData elasticsearch学习
 - elasticsearch性能测试（高并发、大数据、集群、单机内存溢出）
 - 实现京东商品查询逻辑
+- elastcisearch多租户可行性分析
 
 ## elasticsearch java客户端分类
 

@@ -8,7 +8,7 @@ networks:
 services:
   demo-elk-elasticsearch:
     container_name: demo-elk-elasticsearch
-    image: docker.118899.net:10001/demo-elk-elasticsearch
+    image: docker.118899.net:10001/yyd-public/demo-elk-elasticsearch
     environment:
       - "ES_JAVA_OPTS=-Xms512m -Xmx1024m"
       - discovery.type=single-node
@@ -27,7 +27,7 @@ services:
 
   demo-elk-elasticsearch-head:
     container_name: demo-elk-elasticsearch-head
-    image: docker.118899.net:10001/demo-elk-elasticsearch-head
+    image: docker.118899.net:10001/yyd-public/demo-elk-elasticsearch-head
     environment:
       - TZ=Asia/Shanghai
     ports:
