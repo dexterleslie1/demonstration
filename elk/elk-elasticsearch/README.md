@@ -429,3 +429,6 @@ GET /_analyze
 
 > 具体用法参考代码<br>
 [Java Transport Client](https://www.elastic.co/guide/en/elasticsearch/client/java-api/6.8/index.html)
+
+## Elasticsearch中什么是 tokenizer、analyzer、filter ?
+[Elasticsearch中什么是 tokenizer、analyzer、filter ?](https://cloud.tencent.com/developer/article/1706529)

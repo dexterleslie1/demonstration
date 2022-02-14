@@ -16,18 +16,28 @@ import org.elasticsearch.index.query.Operator;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.rest.RestStatus;
+import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
+import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 import org.elasticsearch.search.aggregations.metrics.cardinality.Cardinality;
 import org.elasticsearch.search.aggregations.metrics.cardinality.CardinalityAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.max.InternalMax;
 import org.elasticsearch.search.aggregations.metrics.stats.extended.ExtendedStats;
 import org.elasticsearch.search.aggregations.metrics.stats.extended.ExtendedStatsAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.sum.InternalSum;
+import org.elasticsearch.search.aggregations.metrics.sum.SumAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.valuecount.ValueCountAggregationBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
+import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.junit.*;
 
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class TransportClientTests {
     TransportClient client;
@@ -224,10 +234,14 @@ public class TransportClientTests {
 
     @Test
     public void test_prefix_query() {
+        // NOTE: 关键字不会被分词 https://www.elastic.co/guide/en/elasticsearch/reference/6.8/query-dsl-prefix-query.html
+
+        // 不分词字段prefix查询
         SearchResponse searchResponse = client.prepareSearch("demo_index").setQuery(QueryBuilders.prefixQuery("province", "广")).get();
         Assert.assertEquals(3, searchResponse.getHits().getTotalHits());
         searchResponse.getHits().forEach(searchHit -> Assert.assertEquals("广东", searchHit.getSourceAsMap().get("province")));
 
+        // 分词字段prefix查询
         searchResponse = client.prepareSearch("demo_index").setQuery(QueryBuilders.prefixQuery("content", "推")).get();
         Assert.assertEquals(1, searchResponse.getHits().getTotalHits());
         Assert.assertEquals("4", searchResponse.getHits().getHits()[0].getId());
@@ -309,7 +323,7 @@ public class TransportClientTests {
         QueryBuilder queryBuilder = QueryBuilders.matchQuery("content", "中国");
 
         HighlightBuilder highlightBuilder = new HighlightBuilder();
-        highlightBuilder.field("content", 5).preTags("<font color='red'").postTags("</font>");
+        highlightBuilder.field("content", 5).preTags("<font color='red'>").postTags("</font>");
 
         SearchResponse searchResponse = client.prepareSearch("demo_index")
                 .setQuery(queryBuilder).highlighter(highlightBuilder).get();
@@ -323,6 +337,34 @@ public class TransportClientTests {
         Assert.assertEquals(3, searchResponse.getHits().getHits()[0].getHighlightFields().get("content").getFragments().length);
         Assert.assertEquals(1, searchResponse.getHits().getHits()[1].getHighlightFields().get("content").getFragments().length);
         Assert.assertEquals(1, searchResponse.getHits().getHits()[2].getHighlightFields().get("content").getFragments().length);
+        Assert.assertEquals("7日，当<font color='red'>中国</font>高山滑雪选手徐铭甫在北京冬奥会男子滑降比赛中冲过终点时", searchResponse.getHits().getHits()[0].getHighlightFields().get("content").getFragments()[0].toString());
+        Assert.assertEquals("，<font color='red'>中国</font>高山滑雪运动也在这一刻取得了历史性的突破", searchResponse.getHits().getHits()[0].getHighlightFields().get("content").getFragments()[1].toString());
+        Assert.assertEquals("这是历史上<font color='red'>中国</font>选手首次参加并完成奥运会高山滑雪男子滑降的比赛", searchResponse.getHits().getHits()[0].getHighlightFields().get("content").getFragments()[2].toString());
+        Assert.assertEquals("春节期间，全国<font color='red'>中国</font>邮政快递业运行情况总体安全稳定", searchResponse.getHits().getHits()[1].getHighlightFields().get("content").getFragments()[0].toString());
+        Assert.assertEquals("他们不畏<font color='red'>中国</font>强手敢打敢拼", searchResponse.getHits().getHits()[2].getHighlightFields().get("content").getFragments()[0].toString());
+    }
+
+    @Test
+    public void test_sort_query() {
+        QueryBuilder queryBuilder = QueryBuilders.matchAllQuery();
+        SearchResponse searchResponse = client.prepareSearch("demo_index")
+                .setQuery(queryBuilder)
+                .addSort(SortBuilders.fieldSort("id").order(SortOrder.DESC))
+                .get();
+
+        List<String> idList = Arrays.asList("5", "4", "3", "2", "1");
+        List<String> idList1 = Arrays.asList(searchResponse.getHits().getHits()).stream().map(hit -> hit.getId()).collect(Collectors.toList());
+        Assert.assertArrayEquals(idList.toArray(), idList1.toArray());
+
+        queryBuilder = QueryBuilders.matchAllQuery();
+        searchResponse = client.prepareSearch("demo_index")
+                .setQuery(queryBuilder)
+                .addSort(SortBuilders.fieldSort("views").order(SortOrder.ASC))
+                .get();
+
+        idList = Arrays.asList("2", "1", "3", "5", "4");
+        idList1 = Arrays.asList(searchResponse.getHits().getHits()).stream().map(hit -> hit.getId()).collect(Collectors.toList());
+        Assert.assertArrayEquals(idList.toArray(), idList1.toArray());
     }
 
     @Test
@@ -345,5 +387,39 @@ public class TransportClientTests {
         Assert.assertEquals(5, extendedStats.getCount());
         Assert.assertEquals(5.0, extendedStats.getMin(), 0);
         Assert.assertEquals(100.0, extendedStats.getMax(), 0);
+
+        // 根据province分组统计views
+        TermsAggregationBuilder termsAggregationBuilder = AggregationBuilders.terms("groupProvince").field("province");
+        termsAggregationBuilder.subAggregation(AggregationBuilders.sum("groupViewsSum").field("views"));
+        termsAggregationBuilder.subAggregation(AggregationBuilders.max("groupViewsMax").field("views"));
+        QueryBuilder queryBuilder = QueryBuilders.boolQuery().mustNot(QueryBuilders.termQuery("title", "elasticsearch"));
+        searchResponse = client.prepareSearch("demo_index")
+                .setQuery(queryBuilder)
+                .addAggregation(termsAggregationBuilder).get();
+
+//        searchResponse.getAggregations().forEach(System.out::println);
+
+        // 判断是否有三个省份
+        Assert.assertEquals(3, ((StringTerms)searchResponse.getAggregations().get("groupProvince")).getBuckets().size());
+        Set<String> provinceSet = idToTitleAndContentMapper.values().stream().map(objects -> (String)objects[2]).collect(Collectors.toSet());
+        ((StringTerms)searchResponse.getAggregations().get("groupProvince")).getBuckets().forEach(bucket -> Assert.assertTrue(provinceSet.contains(bucket.getKeyAsString())));
+
+        // 广东doc=2
+        Assert.assertEquals(2, ((StringTerms) searchResponse.getAggregations().get("groupProvince")).getBucketByKey("广东").getDocCount());
+        // 上海doc=1
+        Assert.assertEquals(1, ((StringTerms) searchResponse.getAggregations().get("groupProvince")).getBucketByKey("上海").getDocCount());
+        // 北京doc=1
+        Assert.assertEquals(1, ((StringTerms) searchResponse.getAggregations().get("groupProvince")).getBucketByKey("北京").getDocCount());
+
+        // 广东=25
+        Assert.assertEquals(25.0, ((InternalSum)((StringTerms)searchResponse.getAggregations().get("groupProvince")).getBucketByKey("广东").getAggregations().get("groupViewsSum")).getValue(), 0);
+        // 上海=50
+        Assert.assertEquals(50.0, ((InternalSum)((StringTerms)searchResponse.getAggregations().get("groupProvince")).getBucketByKey("上海").getAggregations().get("groupViewsSum")).getValue(), 0);
+        // 北京=100
+        Assert.assertEquals(100.0, ((InternalSum)((StringTerms)searchResponse.getAggregations().get("groupProvince")).getBucketByKey("北京").getAggregations().get("groupViewsSum")).getValue(), 0);
+
+        Assert.assertEquals(20.0, ((InternalMax)((StringTerms) searchResponse.getAggregations().get("groupProvince")).getBucketByKey("广东").getAggregations().get("groupViewsMax")).getValue(), 0);
+        Assert.assertEquals(50.0, ((InternalMax)((StringTerms) searchResponse.getAggregations().get("groupProvince")).getBucketByKey("上海").getAggregations().get("groupViewsMax")).getValue(), 0);
+        Assert.assertEquals(100.0, ((InternalMax)((StringTerms) searchResponse.getAggregations().get("groupProvince")).getBucketByKey("北京").getAggregations().get("groupViewsMax")).getValue(), 0);
     }
 }

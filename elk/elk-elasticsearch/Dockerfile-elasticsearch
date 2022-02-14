@@ -3,3 +3,7 @@ FROM elasticsearch:6.8.5
 # 在线安装ik分词器
 # https://www.cnblogs.com/szwdun/p/10664348.html
 RUN echo y | /usr/share/elasticsearch/bin/elasticsearch-plugin install https://bucketxy.oss-cn-hangzhou.aliyuncs.com/elasticsearch/elasticsearch-analysis-ik-6.8.5.zip
+
+# 安装拼音插件
+# https://github.com/medcl/elasticsearch-analysis-pinyin
+RUN /usr/share/elasticsearch/bin/elasticsearch-plugin install https://bucketxy.oss-cn-hangzhou.aliyuncs.com/elasticsearch/elasticsearch-analysis-pinyin-6.8.5.zip
