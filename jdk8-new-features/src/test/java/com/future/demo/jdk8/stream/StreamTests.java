@@ -49,6 +49,33 @@ public class StreamTests {
         Assert.assertEquals(userEntityList.size(), nameToUserEntityMapper.size());
         nameToUserEntityMapper.forEach((name, userEntity) -> Assert.assertTrue(nameList1.contains(name)));
 
+        // Collectors.toMap java.lang.IllegalStateException: Duplicate key
+        // https://blog.csdn.net/zl18603543572/article/details/105722076
+        userEntityList = new ArrayList<>();
+        userEntityList.add(new UserEntity("zhangsan", 20));
+        userEntityList.add(new UserEntity("zhangsan", 20));
+        userEntityList.add(new UserEntity("lisi", 13));
+        try {
+            userEntityList.stream().collect(Collectors.toMap(userEntity -> userEntity.getName(), userEntity -> userEntity));
+            Assert.fail("预期异常没有抛出");
+        } catch (IllegalStateException ex) {
+            Assert.assertTrue(ex.getMessage().contains("Duplicate key"));
+        }
+        // 针对以上问题使用 list to set + lombok @Data声明entity 或者 Collectors.toMap重载方法 解决
+        userEntityDistinctList = new ArrayList<>();
+        userEntityDistinctList.add(new UserEntityDistinct("zhangsan", 20));
+        userEntityDistinctList.add(new UserEntityDistinct("zhangsan", 20));
+        userEntityDistinctList.add(new UserEntityDistinct("lisi", 13));
+        Map<String, UserEntityDistinct> userEntityDistinctMap = userEntityDistinctList.stream().collect(Collectors.toSet()).stream().collect(Collectors.toMap(userEntity -> userEntity.getName(), userEntity -> userEntity));
+        Assert.assertEquals(2, userEntityDistinctMap.size());
+        Assert.assertTrue(userEntityDistinctMap.containsKey("zhangsan"));
+        Assert.assertTrue(userEntityDistinctMap.containsKey("lisi"));
+
+        userEntityDistinctMap = userEntityDistinctList.stream().collect(Collectors.toMap(userEntity -> userEntity.getName(), userEntity -> userEntity, (userEntity1, userEntity2) -> userEntity2));
+        Assert.assertEquals(2, userEntityDistinctMap.size());
+        Assert.assertTrue(userEntityDistinctMap.containsKey("zhangsan"));
+        Assert.assertTrue(userEntityDistinctMap.containsKey("lisi"));
+
         // 使用reduce实现年龄相加
         userEntityList = new ArrayList<>();
         userEntityList.add(new UserEntity("zhangsan", 20));
