@@ -1,9 +1,7 @@
-package com.future.study.rabbitmq.examples.helloworld;
+package com.future.demo.rabbitmq.helloworld;
 
 import com.rabbitmq.client.*;
 import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -16,34 +14,22 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-/**
- * This test case is demonstrating for rabbitmq java client connect to rabbitmq server
- * @author Dexterleslie.Chan
- */
 public class HelloWorldExampleTest {
-    String host;
-    String username;
-    String password;
-
-    @Before
-    public void setup() {
-        String host = System.getenv("host");
-        String username = System.getenv("username");
-        String password = System.getenv("password");
-
-        this.host = host;
-        this.username = username;
-        this.password = password;
-    }
-
+    /**
+     * 演示使用amqp-client连接rabbitmq服务器
+     *
+     * @throws IOException
+     * @throws TimeoutException
+     * @throws InterruptedException
+     */
     @Test
     public void test_tutorial_helloworld() throws IOException, TimeoutException, InterruptedException {
         String queueName = "rabbitmq-examples-tutorial-helloworld";
 
         ConnectionFactory connectionFactory = new ConnectionFactory();
-        connectionFactory.setHost(host);
-        connectionFactory.setUsername(username);
-        connectionFactory.setPassword(password);
+        connectionFactory.setHost(Config.Host);
+        connectionFactory.setUsername(Config.Username);
+        connectionFactory.setPassword(Config.Password);
 
         Connection connection = connectionFactory.newConnection();
         Connection connectionConsumer = connectionFactory.newConnection();
@@ -55,13 +41,10 @@ public class HelloWorldExampleTest {
         int totalMessageProduce = 1000;
         List<String> listMessageConsume = new ArrayList<String>();
         CountDownLatch countDownLatch = new CountDownLatch(totalMessageProduce);
-        DeliverCallback deliverCallback = new DeliverCallback() {
-            @Override
-            public void handle(String consumerTag, Delivery delivery) throws IOException {
-                String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
-                listMessageConsume.add(message);
-                countDownLatch.countDown();
-            }
+        DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+            String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
+            listMessageConsume.add(message);
+            countDownLatch.countDown();
         };
         // Ready to consume rabbitmq message
         Channel channelConsumer = connectionConsumer.createChannel();
