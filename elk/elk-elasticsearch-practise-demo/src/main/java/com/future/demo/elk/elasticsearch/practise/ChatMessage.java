@@ -7,8 +7,11 @@ import lombok.Data;
 @AllArgsConstructor
 public class ChatMessage {
     private long id;
-    private long userIdFrom;
-    private long userIdTo;
+    private long userId;
+//    private long userIdFrom;
+//    private long userIdTo;
+    private long friendId;
     private long groupId;
     private String content;
+    private boolean deleted;
 }
