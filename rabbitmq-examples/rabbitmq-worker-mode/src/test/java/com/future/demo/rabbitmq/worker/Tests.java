@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Tests {
     @Test
     public void test() throws IOException, TimeoutException, InterruptedException {
-        String queueName = "demo-rabbitmq-worker-mode1";
+        String queueName = "demo-rabbitmq-worker-mode";
 
         ConnectionFactory connectionFactory = new ConnectionFactory();
         connectionFactory.setHost(Config.Host);
@@ -29,12 +29,17 @@ public class Tests {
 
         channel.queueDeclare(queueName, false, false, false, null);
 
-        // 创建两个消费worker
+        // 创建两个消费worker，论询方式消费消息，消息被公平分发到每个worker中
         AtomicInteger atomicInteger = new AtomicInteger();
         AtomicInteger atomicInteger1 = new AtomicInteger();
 
         Channel channelConsumer = connectionConsumer.createChannel();
         channelConsumer.basicConsume(queueName, true, ((consumerTag, message) -> {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                //
+            }
             atomicInteger.incrementAndGet();
         }), consumerTag -> {});
         channelConsumer.basicConsume(queueName, true, ((consumerTag, message) -> {
@@ -47,8 +52,8 @@ public class Tests {
             channel.basicPublish("", queueName, null, message.getBytes(StandardCharsets.UTF_8));
         }
 
-        Awaitility.await().atMost(Duration.ofSeconds(5)).pollInterval(Duration.ofSeconds(1)).until(() -> atomicInteger.get() == totalMessage/2);
-        Awaitility.await().atMost(Duration.ofSeconds(5)).pollInterval(Duration.ofSeconds(1)).until(() -> atomicInteger1.get() == totalMessage/2);
+        Awaitility.await().atMost(Duration.ofSeconds(6)).pollInterval(Duration.ofSeconds(1)).until(() -> atomicInteger.get() == totalMessage/2);
+        Awaitility.await().atMost(Duration.ofSeconds(6)).pollInterval(Duration.ofSeconds(1)).until(() -> atomicInteger1.get() == totalMessage/2);
 
         Thread.sleep(1000);
 
