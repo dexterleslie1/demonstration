@@ -1,38 +1,20 @@
-package com.future.study.rabbitmq.message.qos;
+package com.future.demo.rabbitmq.qos;
 
 import com.rabbitmq.client.*;
+import org.awaitility.Awaitility;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
-import org.junit.rules.Timeout;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/**
- *
- */
-public class MessageQosTests {
-    String host;
-    String username;
-    String password;
-
-    @Before
-    public void setup() {
-        String host = System.getenv("host");
-        String username = System.getenv("username");
-        String password = System.getenv("password");
-
-        this.host = host;
-        this.username = username;
-        this.password = password;
-    }
-
+public class Tests {
     /**
      * 程序在没有消费者订阅队列前一次发送100个消息到消息队列，
      * 发送完毕后注册两个消费者qos分别为30%和70%比例分配100个消息到两个消费中
@@ -41,13 +23,13 @@ public class MessageQosTests {
      * @throws InterruptedException
      */
     @Test
-    public void test1() throws IOException, TimeoutException, InterruptedException {
-        String queueName = UUID.randomUUID().toString();
+    public void test() throws IOException, TimeoutException, InterruptedException {
+        String queueName = "demo-rabbitmq-qos-testing";
 
         ConnectionFactory connectionFactory = new ConnectionFactory();
-        connectionFactory.setHost(host);
-        connectionFactory.setUsername(username);
-        connectionFactory.setPassword(password);
+        connectionFactory.setHost(Config.Host);
+        connectionFactory.setUsername(Config.Username);
+        connectionFactory.setPassword(Config.Password);
 
         Connection connection = connectionFactory.newConnection();
         Connection connectionWorker1 = connectionFactory.newConnection();
@@ -63,7 +45,7 @@ public class MessageQosTests {
         List<Delivery> deliveryList2 = new ArrayList<>();
 
         Channel channel = connection.createChannel();
-        channel.queueDeclare(queueName, false, false, false, null);
+        channel.queueDeclare(queueName, false, false, true, null);
         for(int i=0; i<total; i++) {
             String message = UUID.randomUUID().toString();
             channel.basicPublish("", queueName, null, message.getBytes(StandardCharsets.UTF_8));
@@ -71,32 +53,33 @@ public class MessageQosTests {
 
         Channel channelWorker1 = connectionWorker1.createChannel();
         channelWorker1.basicQos(countDownWorker1, false);
-        channelWorker1.basicConsume(queueName, false, new DeliverCallback() {
-            @Override
-            public void handle(String consumerTag, Delivery delivery) throws IOException {
-                atomicIntegerWorker1.incrementAndGet();
-                deliveryList1.add(delivery);
-            }
+        channelWorker1.basicConsume(queueName, false, (consumerTag, message) -> {
+            atomicIntegerWorker1.incrementAndGet();
+            deliveryList1.add(message);
         }, consumerTag -> {});
         Channel channelWorker2 = connectionWorker2.createChannel();
         channelWorker2.basicQos(countDownWorker2, false);
-        channelWorker2.basicConsume(queueName, false, new DeliverCallback() {
-            @Override
-            public void handle(String consumerTag, Delivery delivery) throws IOException {
-                atomicIntegerWorker2.incrementAndGet();
-                deliveryList2.add(delivery);
-            }
+        channelWorker2.basicConsume(queueName, false, (consumerTag, message) -> {
+            atomicIntegerWorker2.incrementAndGet();
+            deliveryList2.add(message);
         }, consumerTag -> {});
 
-        for(Delivery delivery : deliveryList1) {
-            channelWorker1.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
-        }
-        for(Delivery delivery : deliveryList2) {
-            channelWorker2.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
-        }
+        Awaitility.await().atMost(Duration.ofSeconds(5)).pollInterval(Duration.ofSeconds(1)).until(() -> deliveryList1.size() + deliveryList2.size() == total);
 
-        int awaitTimeoutInSeconds = 1;
-        Thread.sleep(awaitTimeoutInSeconds*1000);
+        deliveryList1.forEach(delivery -> {
+            try {
+                channelWorker1.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+        deliveryList2.forEach(delivery -> {
+            try {
+                channelWorker2.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
 
         connection.close();
         connectionWorker1.close();
