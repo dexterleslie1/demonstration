@@ -14,7 +14,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public class HelloWorldExampleTest {
+public class Tests {
     /**
      * 演示使用amqp-client连接rabbitmq服务器
      *
