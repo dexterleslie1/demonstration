@@ -55,6 +55,7 @@ public class Tests {
         Awaitility.await().atMost(Duration.ofSeconds(6)).pollInterval(Duration.ofSeconds(1)).until(() -> atomicInteger.get() == totalMessage/2);
         Awaitility.await().atMost(Duration.ofSeconds(6)).pollInterval(Duration.ofSeconds(1)).until(() -> atomicInteger1.get() == totalMessage/2);
 
+        // 再等待1秒，检查是否有可能其中的worker线程处理数会超过totalMessage/2条消息
         Thread.sleep(1000);
 
         connection.close();

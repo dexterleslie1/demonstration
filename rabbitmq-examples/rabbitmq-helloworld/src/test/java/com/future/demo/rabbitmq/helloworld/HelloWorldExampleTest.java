@@ -46,7 +46,7 @@ public class HelloWorldExampleTest {
             listMessageConsume.add(message);
             countDownLatch.countDown();
         };
-        // Ready to consume rabbitmq message
+
         Channel channelConsumer = connectionConsumer.createChannel();
         channelConsumer.basicConsume(queueName, true, deliverCallback, consumerTag -> {});
 
@@ -57,6 +57,7 @@ public class HelloWorldExampleTest {
         }
         for(int i=0; i<totalMessageProduce; i++){
             String message = listMessageProduce.get(i);
+            // 发送消息到默认交换机
             channel.basicPublish("", queueName, null, message.getBytes(StandardCharsets.UTF_8));
         }
 
