@@ -39,7 +39,7 @@ services:
 
   demo-elk-kibana:
     container_name: demo-elk-kibana
-    image: kibana:6.8.5
+    image: kibana:7.8.0
     environment:
       ELASTICSEARCH_HOSTS: http://demo-elk-elasticsearch:9200
     ports:

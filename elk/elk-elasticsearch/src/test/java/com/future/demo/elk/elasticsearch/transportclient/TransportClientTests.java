@@ -6,6 +6,7 @@ import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
+import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteAction;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteRequestBuilder;
@@ -29,17 +30,11 @@ import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryAction;
 import org.elasticsearch.index.reindex.DeleteByQueryRequestBuilder;
 import org.elasticsearch.rest.RestStatus;
-import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.terms.LongTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.cardinality.Cardinality;
-import org.elasticsearch.search.aggregations.metrics.cardinality.CardinalityAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.max.InternalMax;
-import org.elasticsearch.search.aggregations.metrics.stats.extended.ExtendedStats;
-import org.elasticsearch.search.aggregations.metrics.stats.extended.ExtendedStatsAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.sum.InternalSum;
+import org.elasticsearch.search.aggregations.metrics.*;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
@@ -121,6 +116,7 @@ public class TransportClientTests {
 
         // 创建文档
         // https://www.elastic.co/guide/en/elasticsearch/client/java-api/6.8/java-docs-index.html
+        // NOTE: 在版本6.8.0 content内容为“我是黎明前的黑暗”时，批量创建索引api会报错，解决办法升级到7.8.0
         idToTitleAndContentMapper.put(1L, new Object[] {"Elasticsearch -发- 版本：6.8.8", "文章参考如下链接，但有些内容可能过时，以实践结果为主：", "广东", 10});
         idToTitleAndContentMapper.put(2L, new Object[] {"35个项目首次参赛的背后——版本北京冬奥会推动中国冬季运动跨越式发展", "7日，当中国高山滑雪选手徐铭甫在北京冬奥会男子滑降比赛中冲过终点时，中国高山滑雪运动也在这一刻取得了历史性的突破——这是历史上中国选手首次参加并完成奥运会高山滑雪男子滑降的比赛。", "广东", 5});
         idToTitleAndContentMapper.put(3L, new Object[] {"北京冬奥会 | 燃！这个冬天，看中国的00后在干什么", "他们不畏中国强手敢打敢拼", "广东", 20});
@@ -185,7 +181,7 @@ public class TransportClientTests {
 
         QueryBuilder queryBuilder = QueryBuilders.idsQuery().addIds(String.valueOf(id));
         SearchResponse searchResponse = client.prepareSearch(IndexDemo).setQuery(queryBuilder).get();
-        Assert.assertEquals(1, searchResponse.getHits().getTotalHits());
+        Assert.assertEquals(1, searchResponse.getHits().getTotalHits().value);
     }
 
     @Test
@@ -194,12 +190,12 @@ public class TransportClientTests {
         // https://www.elastic.co/guide/en/elasticsearch/client/java-api/6.8/java-search.html
         SearchResponse searchResponse = client.prepareSearch(IndexDemo).setQuery(QueryBuilders.termQuery("title", "什么")).get();
         Assert.assertEquals(RestStatus.OK, searchResponse.status());
-        Assert.assertEquals(1, searchResponse.getHits().getTotalHits());
+        Assert.assertEquals(1, searchResponse.getHits().getTotalHits().value);
 
         // 相当于MySQL in查询
         searchResponse = client.prepareSearch(IndexDemo)
                 .setQuery(QueryBuilders.termsQuery("title", "版本", "发展")).get();
-        Assert.assertEquals(2, searchResponse.getHits().getTotalHits());
+        Assert.assertEquals(2, searchResponse.getHits().getTotalHits().value);
         List<String> idList = Arrays.asList("1", "2");
         searchResponse.getHits().forEach(searchHit -> Assert.assertTrue(idList.contains(searchHit.getId())));
     }
@@ -209,7 +205,7 @@ public class TransportClientTests {
         // 根据queryString查询文档
         SearchResponse searchResponse = client.prepareSearch(IndexDemo).setQuery(QueryBuilders.queryStringQuery("什么运动").defaultField("title")).get();
         Assert.assertEquals(RestStatus.OK, searchResponse.status());
-        Assert.assertEquals(3, searchResponse.getHits().getTotalHits());
+        Assert.assertEquals(3, searchResponse.getHits().getTotalHits().value);
     }
 
     @Test
@@ -222,32 +218,32 @@ public class TransportClientTests {
 
         // 自动分词为： 版本，发展
         SearchResponse searchResponse = client.prepareSearch(IndexDemo).setQuery(QueryBuilders.matchQuery("title", "版本发展")).get();
-        Assert.assertEquals(2, searchResponse.getHits().getTotalHits());
+        Assert.assertEquals(2, searchResponse.getHits().getTotalHits().value);
         List<String> idList = Arrays.asList("1", "2");
         searchResponse.getHits().forEach(searchHit -> Assert.assertTrue(idList.contains(searchHit.getId())));
 
         // province 是keyword类型，不自动分词，所以查不出结果
         searchResponse = client.prepareSearch(IndexDemo).setQuery(QueryBuilders.matchQuery("province", "广东北京")).get();
-        Assert.assertEquals(0, searchResponse.getHits().getTotalHits());
+        Assert.assertEquals(0, searchResponse.getHits().getTotalHits().value);
 
         // 布尔match查询
         searchResponse = client.prepareSearch(IndexDemo).setQuery(QueryBuilders.matchQuery("title", "版本发展").operator(Operator.AND)).get();
-        Assert.assertEquals(1, searchResponse.getHits().getTotalHits());
+        Assert.assertEquals(1, searchResponse.getHits().getTotalHits().value);
 
         searchResponse = client.prepareSearch(IndexDemo).setQuery(QueryBuilders.matchQuery("title", "版本发展").operator(Operator.OR)).get();
-        Assert.assertEquals(2, searchResponse.getHits().getTotalHits());
+        Assert.assertEquals(2, searchResponse.getHits().getTotalHits().value);
         searchResponse.getHits().forEach(searchHit -> Assert.assertTrue(idList.contains(searchHit.getId())));
 
         // multi_match一个查询关键字对应多个field
         searchResponse = client.prepareSearch(IndexDemo).setQuery(QueryBuilders.multiMatchQuery("广东", "province", "title")).get();
-        Assert.assertEquals(4, searchResponse.getHits().getTotalHits());
+        Assert.assertEquals(4, searchResponse.getHits().getTotalHits().value);
         searchResponse.getHits().forEach(searchHit -> Assert.assertTrue(searchHit.getSourceAsString().contains("广东")));
     }
 
     @Test
     public void test_match_all() {
         SearchResponse searchResponse = client.prepareSearch(IndexDemo).setTypes("_doc").setQuery(QueryBuilders.matchAllQuery()).get();
-        Assert.assertEquals(idToTitleAndContentMapper.size(), searchResponse.getHits().getTotalHits());
+        Assert.assertEquals(idToTitleAndContentMapper.size(), searchResponse.getHits().getTotalHits().value);
     }
 
     @Test
@@ -256,22 +252,22 @@ public class TransportClientTests {
 
         // 不分词字段prefix查询
         SearchResponse searchResponse = client.prepareSearch(IndexDemo).setQuery(QueryBuilders.prefixQuery("province", "广")).get();
-        Assert.assertEquals(3, searchResponse.getHits().getTotalHits());
+        Assert.assertEquals(3, searchResponse.getHits().getTotalHits().value);
         searchResponse.getHits().forEach(searchHit -> Assert.assertEquals("广东", searchHit.getSourceAsMap().get("province")));
 
         // 分词字段prefix查询
         searchResponse = client.prepareSearch(IndexDemo).setQuery(QueryBuilders.prefixQuery("content", "推")).get();
-        Assert.assertEquals(1, searchResponse.getHits().getTotalHits());
+        Assert.assertEquals(1, searchResponse.getHits().getTotalHits().value);
         Assert.assertEquals("4", searchResponse.getHits().getHits()[0].getId());
     }
 
     @Test
     public void test_wildcard_query() {
         SearchResponse searchResponse = client.prepareSearch(IndexDemo).setQuery(QueryBuilders.wildcardQuery("title","发?")).get();
-        Assert.assertEquals(2, searchResponse.getHits().getTotalHits());
+        Assert.assertEquals(2, searchResponse.getHits().getTotalHits().value);
 
         searchResponse = client.prepareSearch(IndexDemo).setQuery(QueryBuilders.wildcardQuery("title","发*")).get();
-        Assert.assertEquals(3, searchResponse.getHits().getTotalHits());
+        Assert.assertEquals(3, searchResponse.getHits().getTotalHits().value);
     }
 
     @Test
@@ -322,7 +318,7 @@ public class TransportClientTests {
         }
 
         SearchResponse searchResponse = client.prepareSearch(indexname).setQuery(QueryBuilders.matchAllQuery()).get();
-        Assert.assertEquals(total, searchResponse.getHits().getTotalHits());
+        Assert.assertEquals(total, searchResponse.getHits().getTotalHits().value);
 
         // 默认包含lower和upper
         // 排序
@@ -330,7 +326,7 @@ public class TransportClientTests {
                 .setQuery(QueryBuilders.rangeQuery("id").from(3))
                 .addSort(SortBuilders.fieldSort("id").order(SortOrder.DESC))
                 .get();
-        Assert.assertEquals(8, searchResponse.getHits().getTotalHits());
+        Assert.assertEquals(8, searchResponse.getHits().getTotalHits().value);
         List<Integer> expectedList = Arrays.asList(10, 9, 8, 7, 6, 5, 4, 3);
         List<Integer> actualList = new ArrayList<>();
         searchResponse.getHits().forEach(hit -> {
@@ -342,7 +338,7 @@ public class TransportClientTests {
                 .setQuery(QueryBuilders.rangeQuery("id").from(3))
                 .addSort(SortBuilders.fieldSort("id").order(SortOrder.ASC))
                 .get();
-        Assert.assertEquals(8, searchResponse.getHits().getTotalHits());
+        Assert.assertEquals(8, searchResponse.getHits().getTotalHits().value);
         List<Integer> expectedList1 = Arrays.asList(3, 4, 5, 6, 7, 8, 9, 10);
         List<Integer> actualList1 = new ArrayList<>();
         searchResponse.getHits().forEach(hit -> {
@@ -355,7 +351,7 @@ public class TransportClientTests {
                 .setQuery(QueryBuilders.rangeQuery("id").includeLower(false).from(3))
                 .addSort(SortBuilders.fieldSort("id").order(SortOrder.ASC))
                 .get();
-        Assert.assertEquals(7, searchResponse.getHits().getTotalHits());
+        Assert.assertEquals(7, searchResponse.getHits().getTotalHits().value);
         List<Integer> expectedList2 = Arrays.asList(4, 5, 6, 7, 8, 9, 10);
         List<Integer> actualList2 = new ArrayList<>();
         searchResponse.getHits().forEach(hit -> {
@@ -433,7 +429,8 @@ public class TransportClientTests {
                             .must(QueryBuilders.termQuery("province", "广东"))
                             .must(QueryBuilders.termQuery("title", "干什么")))
                 .should(QueryBuilders.termQuery("province", "北京"));
-        searchResponse = client.prepareSearch(IndexDemo).setQuery(queryBuilder).get();
+        searchResponse = client.prepareSearch(IndexDemo).setQuery(queryBuilder)
+                .addSort(SortBuilders.fieldSort("id").order(SortOrder.DESC)).get();
         Assert.assertEquals("4", searchResponse.getHits().getHits()[0].getId());
         Assert.assertEquals("3", searchResponse.getHits().getHits()[1].getId());
 
@@ -471,22 +468,24 @@ public class TransportClientTests {
         highlightBuilder.field("content", 5).preTags("<font color='red'>").postTags("</font>");
 
         SearchResponse searchResponse = client.prepareSearch(IndexDemo)
-                .setQuery(queryBuilder).highlighter(highlightBuilder).get();
+                .setQuery(queryBuilder)
+                .addSort(SortBuilders.fieldSort("id").order(SortOrder.DESC))
+                .highlighter(highlightBuilder).get();
 //        searchResponse.getHits().forEach(hit -> System.out.println(hit.getSourceAsString()));
 //        searchResponse.getHits().forEach(hit -> {
 //            Arrays.asList(hit.getHighlightFields().get("content").getFragments()).forEach(fragment -> System.out.println(hit.getId() + " - " + fragment.toString()));
 //        });
-        Assert.assertEquals("2", searchResponse.getHits().getHits()[0].getId());
-        Assert.assertEquals("5", searchResponse.getHits().getHits()[1].getId());
-        Assert.assertEquals("3", searchResponse.getHits().getHits()[2].getId());
-        Assert.assertEquals(3, searchResponse.getHits().getHits()[0].getHighlightFields().get("content").getFragments().length);
+        Assert.assertEquals("5", searchResponse.getHits().getHits()[0].getId());
+        Assert.assertEquals("3", searchResponse.getHits().getHits()[1].getId());
+        Assert.assertEquals("2", searchResponse.getHits().getHits()[2].getId());
+        Assert.assertEquals(1, searchResponse.getHits().getHits()[0].getHighlightFields().get("content").getFragments().length);
         Assert.assertEquals(1, searchResponse.getHits().getHits()[1].getHighlightFields().get("content").getFragments().length);
-        Assert.assertEquals(1, searchResponse.getHits().getHits()[2].getHighlightFields().get("content").getFragments().length);
-        Assert.assertEquals("7日，当<font color='red'>中国</font>高山滑雪选手徐铭甫在北京冬奥会男子滑降比赛中冲过终点时", searchResponse.getHits().getHits()[0].getHighlightFields().get("content").getFragments()[0].toString());
-        Assert.assertEquals("，<font color='red'>中国</font>高山滑雪运动也在这一刻取得了历史性的突破", searchResponse.getHits().getHits()[0].getHighlightFields().get("content").getFragments()[1].toString());
-        Assert.assertEquals("这是历史上<font color='red'>中国</font>选手首次参加并完成奥运会高山滑雪男子滑降的比赛", searchResponse.getHits().getHits()[0].getHighlightFields().get("content").getFragments()[2].toString());
-        Assert.assertEquals("春节期间，全国<font color='red'>中国</font>邮政快递业运行情况总体安全稳定", searchResponse.getHits().getHits()[1].getHighlightFields().get("content").getFragments()[0].toString());
-        Assert.assertEquals("他们不畏<font color='red'>中国</font>强手敢打敢拼", searchResponse.getHits().getHits()[2].getHighlightFields().get("content").getFragments()[0].toString());
+        Assert.assertEquals(3, searchResponse.getHits().getHits()[2].getHighlightFields().get("content").getFragments().length);
+        Assert.assertEquals("春节期间，全国<font color='red'>中国</font>邮政快递业运行情况总体安全稳定", searchResponse.getHits().getHits()[0].getHighlightFields().get("content").getFragments()[0].toString());
+        Assert.assertEquals("他们不畏<font color='red'>中国</font>强手敢打敢拼", searchResponse.getHits().getHits()[1].getHighlightFields().get("content").getFragments()[0].toString());
+        Assert.assertEquals("7日，当<font color='red'>中国</font>高山滑雪选手徐铭甫在北京冬奥会男子滑降比赛中冲过终点时", searchResponse.getHits().getHits()[2].getHighlightFields().get("content").getFragments()[0].toString());
+        Assert.assertEquals("，<font color='red'>中国</font>高山滑雪运动也在这一刻取得了历史性的突破", searchResponse.getHits().getHits()[2].getHighlightFields().get("content").getFragments()[1].toString());
+        Assert.assertEquals("这是历史上<font color='red'>中国</font>选手首次参加并完成奥运会高山滑雪男子滑降的比赛", searchResponse.getHits().getHits()[2].getHighlightFields().get("content").getFragments()[2].toString());
     }
 
     @Test
@@ -639,7 +638,7 @@ public class TransportClientTests {
         Assert.assertEquals(DocWriteResponse.Result.DELETED, deleteResponse.getResult());
 
         SearchResponse searchResponse = client.prepareSearch(IndexDemo).setQuery(QueryBuilders.matchAllQuery()).get();
-        Assert.assertEquals(idToTitleAndContentMapper.size()-1, searchResponse.getHits().getTotalHits());
+        Assert.assertEquals(idToTitleAndContentMapper.size()-1, searchResponse.getHits().getTotalHits().value);
         searchResponse.getHits().forEach(hit -> Assert.assertNotEquals("1", hit.getId()));
 
         // 根据查询删除
@@ -653,7 +652,7 @@ public class TransportClientTests {
         Assert.assertEquals(1, bulkByScrollResponse.getDeleted());
 
         searchResponse = client.prepareSearch(IndexDemo).setQuery(QueryBuilders.matchAllQuery()).get();
-        Assert.assertEquals(idToTitleAndContentMapper.size()-2, searchResponse.getHits().getTotalHits());
+        Assert.assertEquals(idToTitleAndContentMapper.size()-2, searchResponse.getHits().getTotalHits().value);
         searchResponse.getHits().forEach(hit -> {
             Assert.assertNotEquals("1", hit.getId());
             Assert.assertNotEquals("2", hit.getId());
@@ -671,7 +670,7 @@ public class TransportClientTests {
         Assert.assertEquals(idToTitleAndContentMapper.size(), bulkByScrollResponse.getDeleted());
 
         SearchResponse searchResponse = client.prepareSearch(IndexDemo).setQuery(QueryBuilders.matchAllQuery()).get();
-        Assert.assertEquals(0, searchResponse.getHits().getTotalHits());
+        Assert.assertEquals(0, searchResponse.getHits().getTotalHits().value);
 
         // 批量新增文档
         // https://www.elastic.co/guide/en/elasticsearch/client/java-api/current/java-docs-bulk.html
@@ -694,7 +693,7 @@ public class TransportClientTests {
         Assert.assertFalse(bulkRequestBuilder.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE).get().hasFailures());
 
         searchResponse = client.prepareSearch(IndexDemo).setQuery(QueryBuilders.matchAllQuery()).get();
-        Assert.assertEquals(idToTitleAndContentMapper.size(), searchResponse.getHits().getTotalHits());
+        Assert.assertEquals(idToTitleAndContentMapper.size(), searchResponse.getHits().getTotalHits().value);
     }
 
     @Test
@@ -789,7 +788,7 @@ public class TransportClientTests {
                                                     .must(QueryBuilders.termQuery("comments.name", "john"))
                                                     .must(QueryBuilders.termQuery("comments.age", 34)), ScoreMode.None);
         SearchResponse searchResponse = client.prepareSearch(index).setQuery(queryBuilder).get();
-        Assert.assertEquals(0, searchResponse.getHits().getTotalHits());
+        Assert.assertEquals(0, searchResponse.getHits().getTotalHits().value);
 
         queryBuilder = QueryBuilders.nestedQuery("comments", QueryBuilders.boolQuery()
                 .must(QueryBuilders.termQuery("comments.name", "john"))
@@ -799,7 +798,7 @@ public class TransportClientTests {
         highlightBuilder.field("comments.name", 15).preTags("<font color='red'>").postTags("</font>");
 
         searchResponse = client.prepareSearch(index).setQuery(queryBuilder).highlighter(highlightBuilder).get();
-        Assert.assertEquals(1, searchResponse.getHits().getTotalHits());
+        Assert.assertEquals(1, searchResponse.getHits().getTotalHits().value);
         Assert.assertEquals("<font color='red'>John</font>", searchResponse.getHits().getHits()[0].getHighlightFields().get("comments.name").getFragments()[0].string());
     }
 }
