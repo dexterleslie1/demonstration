@@ -19,4 +19,13 @@ public class DemoController {
         model.addAttribute("value1","value11");
         return "folder1/hello";
     }
+
+    /**
+     * 演示redirect到另外一个thymeleaf url
+     * @return
+     */
+    @GetMapping(value = "/redirect")
+    public String redirect() {
+        return "redirect:/hello";
+    }
 }
