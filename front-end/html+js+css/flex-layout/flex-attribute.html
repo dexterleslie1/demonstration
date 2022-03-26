@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        #box {
+            width: 60%;
+            height: 100px;
+            margin-left: auto;
+            margin-right: auto;
+            display: flex;
+        }
+
+        #box div:first-child {
+            width: 150px;
+            background-color:blue;
+        }
+
+        #box div:nth-child(2) {
+            flex: 1;
+            background-color: blueviolet;
+        }
+
+        #box div:last-child {
+            width: 150px;
+            background-color: blue;
+        }
+
+        #box2 {
+            width: 60%;
+            height: 100px;
+            margin-left: auto;
+            margin-right: auto;
+            display: flex;
+        }
+
+        #box2 div:first-child {
+            flex: 1;
+            background-color: blue;
+        }
+
+        #box2 div:last-child {
+            flex: 1;
+            background-color: blueviolet;
+        }
+
+        #box2 div:nth-child(2) {
+            flex: 2;
+            background-color: brown;
+        }
+    </style>
+</head>
+<body>
+    <div id="box">
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+    <hr/>
+
+    <div id="box2">
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+</body>
+</html>
