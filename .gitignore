@@ -18,3 +18,8 @@ package-lock.json
 *.pyc
 .tmp
 *.tmp
+Debug
+Release
+ipch
+*.suo
+*.sdf
