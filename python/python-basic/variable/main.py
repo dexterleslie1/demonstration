@@ -62,3 +62,12 @@ print(type(int('9900')))
 
 # float类型转换
 print(type(float('1.977777')))
+
+# 判断变量是否已初始化
+var_initialized = None
+if var_initialized is None:
+    print("变量未初始化")
+
+var_initialized = "None"
+if var_initialized is not None:
+    print("变量已经初始化")
