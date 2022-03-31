@@ -11,6 +11,7 @@ import javax.annotation.PostConstruct;
 
 import com.yyd.common.http.response.ObjectResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,9 +22,6 @@ import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
 
-/**
- * @author dexterleslie@gmail.com
- */
 @RestController
 @RequestMapping(value="/api/v1")
 public class ApiController {
@@ -36,19 +34,22 @@ public class ApiController {
 
     ExecutorService executorService = Executors.newCachedThreadPool();
 
-	@PostMapping("timeout")
-	ResponseEntity<String> timeout(@RequestParam(value = "timeout", defaultValue = "0") Integer timeout) {
-//		if(timeout>0) {
-//			try {
-//				TimeUnit.MILLISECONDS.sleep(timeout);
-//			} catch (InterruptedException e) {
-//				//
-//			}
-//		}
-		String uuid = UUID.randomUUID().toString();
-//		String passwordEncoded = this.passwordEncoder.encode(uuid);
-//		return ResponseEntity.ok("成功调用timeout接口，passwordEncoded=" + passwordEncoded);
-		return ResponseEntity.ok("成功调用timeout接口，uuid=" + uuid);
+	/**
+	 * 这个接口支持post和get HTTP请求
+	 *
+	 * @param timeout
+	 * @return
+	 */
+	@RequestMapping("sleep")
+	ResponseEntity<String> timeout(@RequestParam(value = "timeout", defaultValue = "0") Long timeout) {
+		if(timeout>0) {
+			try {
+				TimeUnit.MILLISECONDS.sleep(timeout);
+			} catch (InterruptedException e) {
+				//
+			}
+		}
+		return ResponseEntity.ok("接口成功休眠" + timeout + "毫秒");
 	}
 
 	@PostMapping("timeoutWithThreadPool")
