@@ -14,3 +14,9 @@ print(type(varInput))
 # input默认值
 varInput = input("输入一个数值，不输入则使用默认值：") or "默认值"
 print(varInput)
+
+# 提示输入密码
+# https://stackoverflow.com/questions/9202224/getting-a-hidden-password-input
+import getpass
+varInput = getpass.getpass("输入SSH密码：")
+print("输入的SSH密码是：" + varInput)
