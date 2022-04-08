@@ -28,3 +28,14 @@ assert not os.path.exists("tmp111")
 assert os.path.exists("tmp1/file_temporary.tmp")
 assert not os.path.exists("tmp1/file_temporary.tmp1")
 
+# 获取当前执行的python文件绝对路径
+varFile = __file__
+varIndex = varFile.rindex("/")
+varDirectory = varFile[:varIndex]
+varFullPath = os.path.dirname(os.path.realpath(__file__))
+assert varDirectory == varFullPath, varDirectory + " 不等于 " + varFullPath
+
+# 获取当前执行python文件的工作目录
+# https://stackoverflow.com/questions/5137497/find-the-current-directory-and-files-directory
+varCurrentWorkingDirectory = os.getcwd()
+assert varCurrentWorkingDirectory == varFullPath, varCurrentWorkingDirectory + " 不等于 " + varFullPath
