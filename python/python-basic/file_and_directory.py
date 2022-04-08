@@ -41,6 +41,7 @@ varCurrentWorkingDirectory = os.getcwd()
 assert varCurrentWorkingDirectory == varFullPath, varCurrentWorkingDirectory + " 不等于 " + varFullPath
 
 # 复制文件
+# https://stackoverflow.com/questions/123198/how-to-copy-files
 import shutil
 
 shutil.copyfile("tmp1/file_temporary.tmp", "tmp1/file_temporary2.tmp")
