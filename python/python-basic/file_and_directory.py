@@ -39,3 +39,9 @@ assert varDirectory == varFullPath, varDirectory + " 不等于 " + varFullPath
 # https://stackoverflow.com/questions/5137497/find-the-current-directory-and-files-directory
 varCurrentWorkingDirectory = os.getcwd()
 assert varCurrentWorkingDirectory == varFullPath, varCurrentWorkingDirectory + " 不等于 " + varFullPath
+
+# 复制文件
+import shutil
+
+shutil.copyfile("tmp1/file_temporary.tmp", "tmp1/file_temporary2.tmp")
+assert os.path.exists("tmp1/file_temporary2.tmp")
