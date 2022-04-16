@@ -2,7 +2,7 @@
 
 ## 搭建测试环境
 
-> 测试结果openresty没有被Jmeter压力测试瘫痪，TODO需要研究怎么使用Jmeter瘫痪openresty
+> 测试结论：nginx并发处理能力很强，能够开启数以万计的进程并发处理客户端请求，Jmeter不能够瘫痪nginx
 
 - 使用dcli在centOS8上安装openresty
 - 复制nginx.conf文件到/usr/local/openresty/nginx/conf/目录
