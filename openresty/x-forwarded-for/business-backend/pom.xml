@@ -13,7 +13,7 @@
 	<version>1.0.0</version>
 
 	<properties>
-		<dockerRegisterPrefix>registry.cn-hangzhou.aliyuncs.com/yyda</dockerRegisterPrefix>
+		<dockerRegisterPrefix>docker.118899.net:10001/yyd-public</dockerRegisterPrefix>
 	</properties>
 
 	<dependencies>
@@ -47,7 +47,7 @@
 					</execution>
 				</executions>
 				<configuration>
-					<repository>${dockerRegisterPrefix}/com-future-demo-business-backend</repository>
+					<repository>${dockerRegisterPrefix}/demo-x-forwarded-for-backend</repository>
 					<tag>${project.version}</tag>
 					<buildArgs>
 						<jarFile>${project.build.finalName}.jar</jarFile>

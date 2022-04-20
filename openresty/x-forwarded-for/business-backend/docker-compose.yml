@@ -3,7 +3,7 @@ version: "3.0"
 services:
   com-future-demo-business-backend:
     container_name: com-future-demo-business-backend
-    image: registry.cn-hangzhou.aliyuncs.com/yyda/com-future-demo-business-backend:1.0.0
+    image: docker.118899.net:10001/yyd-public/demo-x-forwarded-for-backend:1.0.0
     environment:
       - TZ=Asia/Shanghai
     ports:
