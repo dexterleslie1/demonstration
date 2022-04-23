@@ -1,0 +1,9 @@
+version: "3.0"
+
+services:
+  demo-openresty-limit-conn:
+    container_name: demo-openresty-limit-conn
+    image: docker.118899.net:10001/yyd-public/demo-openresty-limit-conn:1.0.0
+    environment:
+      - TZ=Asia/Shanghai
+    network_mode: "host"
