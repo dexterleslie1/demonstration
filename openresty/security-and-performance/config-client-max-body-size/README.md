@@ -1,13 +1,13 @@
-# 研究limit-conn
+# 研究client_max_body_size
 
-## 注意
+## 参考资料
 
-> docker network 使用 host 模式才能够使用lsof查看openresty网络连接情况
+> [nginx 关于client_max_body_size client_body_buffer_size配置](https://www.cnblogs.com/feixiangmanon/p/10129018.html)
 
-## 查看网络connection情况
+## 查看大body数据网络传输
 
 ```
-lsof -a -i:80
+iftop
 ```
 
 ## 编译和运行demo
