@@ -113,6 +113,10 @@ public class ApiController {
             }
             String originalFilename = fileTemporary.getOriginalFilename();
             File file = new File(temporaryDirectory, Const.DemoDirectoryName + File.separator + Const.DirectoryUploaded + File.separator + originalFilename);
+
+            // 创建所有父级目录
+            file.mkdirs();
+
             fileTemporary.transferTo(file);
 
             String name = fileTemporary.getName();
