@@ -1,4 +1,4 @@
-# 研究client_max_body_size
+# 研究client_max_body_size、client_body_buffer_size等配置
 
 ## 参考资料
 
