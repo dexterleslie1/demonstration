@@ -5,8 +5,13 @@
     <title>Title</title>
 </head>
 <body>
-    <input type="button" value="GET请求" id="btnTestGet"/>
-    <input type="button" value="POST请求" id="btnTestPost"/>
+    <input type="button" value="$.ajax的GET请求" id="btnTestGet"/>
+    <br/>
+    <input type="button" value="$.ajax的POST请求" id="btnTestPost"/>
+    <br/>
+    <input type="button" value="$.get请求" id="btn1"/>
+    <br/>
+    <input type="button" value="$.post请求" id="btn2"/>
 </body>
 <script type="text/javascript" src="https://lib.baomitu.com/jquery/1.12.4/jquery.min.js"></script>
 <script type="text/javascript">
@@ -34,6 +39,18 @@
               error(xhr,status,error) {
                   console.log(xhr)
               }
+          })
+      })
+
+      $("#btn1").click(function() {
+          $.get("/api/v1/get",function(data, status) {
+              console.log(data)
+          })
+      })
+
+      $("#btn2").click(function() {
+          $.post("/api/v1/post",function(data, status) {
+              console.log(data)
           })
       })
   })
