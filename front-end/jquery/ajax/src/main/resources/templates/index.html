@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <input type="button" value="GET请求" id="btnTestGet"/>
+    <input type="button" value="POST请求" id="btnTestPost"/>
+</body>
+<script type="text/javascript" src="https://lib.baomitu.com/jquery/1.12.4/jquery.min.js"></script>
+<script type="text/javascript">
+  $(document).ready(function() {
+      $("#btnTestGet").click(function() {
+          $.ajax({
+              type: "GET",
+              url: "/api/v1/get",
+              success: function(data) {
+                  console.log(data)
+              },
+              error(xhr,status,error) {
+                  console.log(xhr)
+              }
+          })
+      })
+
+      $("#btnTestPost").click(function() {
+          $.ajax({
+              type: "POST",
+              url: "/api/v1/post",
+              success: function(data) {
+                  console.log(data)
+              },
+              error(xhr,status,error) {
+                  console.log(xhr)
+              }
+          })
+      })
+  })
+</script>
+</html>
