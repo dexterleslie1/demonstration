@@ -1,4 +1,4 @@
-package com.future.demo.elk.elasticsearch.practise;
+package com.future.demo.elasticsearch.practise;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -1,4 +1,4 @@
-package com.future.demo.elk.elasticsearch.practise;
+package com.future.demo.elasticsearch.practise;
 
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.index.IndexResponse;
@@ -35,10 +35,10 @@ import java.util.stream.Collectors;
 
 // TODO 数据压力测试
 public class DemoTests {
-    final static String IndexChatFriendRelation = "elk_practise_demo_chat_friend_relation";
-    final static String IndexChatGroupNGroupAssist = "elk_practise_demo_chat_group_n_groupassist";
-    final static String IndexChatGroupNGroupAssistMember = "elk_practise_demo_chat_group_n_groupassist_member";
-    final static String IndexChatMessage = "elk_practise_demo_chat_message";
+    final static String IndexChatFriendRelation = "practise_demo_chat_friend_relation";
+    final static String IndexChatGroupNGroupAssist = "practise_demo_chat_group_n_groupassist";
+    final static String IndexChatGroupNGroupAssistMember = "practise_demo_chat_group_n_groupassist_member";
+    final static String IndexChatMessage = "practise_demo_chat_message";
 
     TransportClient client;
 

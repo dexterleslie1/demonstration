@@ -1,0 +1,50 @@
+version: "3.0"
+
+# 创建网络
+networks:
+  net:
+    name: demo-elasticsearch
+
+services:
+  demo-elasticsearch:
+    container_name: demo-elasticsearch
+    image: docker.118899.net:10001/yyd-public/demo-elasticsearch
+    environment:
+      - "ES_JAVA_OPTS=-Xms512m -Xmx1024m"
+      - discovery.type=single-node
+      # http.cors表示允许elasticsearch-head连接并管理
+      - http.cors.enabled=true
+      - http.cors.allow-origin=*
+      - TZ=Asia/Shanghai
+    ports:
+      - 9200:9200
+      # Java transport client需要连接这个端口去操作elasticsearch
+      - 9300:9300
+    volumes:
+      - ~/data-demo-elasticsearch:/usr/share/elasticsearch/data
+    networks:
+      - net
+
+#  demo-elasticsearch-head:
+#    container_name: demo-elasticsearch-head
+#    image: docker.118899.net:10001/yyd-public/demo-elasticsearch-head
+#    environment:
+#      - TZ=Asia/Shanghai
+#    ports:
+#      - 9100:9100
+#    networks:
+#      - net
+#    depends_on:
+#      - demo-elasticsearch
+
+  demo-kibana:
+    container_name: demo-kibana
+    image: kibana:7.8.0
+    environment:
+      ELASTICSEARCH_HOSTS: http://demo-elasticsearch:9200
+    ports:
+      - 5601:5601
+    networks:
+      - net
+    depends_on:
+      - demo-elasticsearch

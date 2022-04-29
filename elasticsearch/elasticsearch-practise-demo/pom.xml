@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	
 	<groupId>com.future.demo</groupId>
-	<artifactId>elk-elasticsearch-practise-demo</artifactId>
+	<artifactId>elasticsearch-practise-demo</artifactId>
 	<version>1.0.0</version>
 
 	<properties>
