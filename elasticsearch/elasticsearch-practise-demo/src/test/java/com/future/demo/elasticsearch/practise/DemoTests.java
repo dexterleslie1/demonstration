@@ -17,8 +17,8 @@ import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.terms.LongTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.max.InternalMax;
-import org.elasticsearch.search.aggregations.metrics.valuecount.InternalValueCount;
+import org.elasticsearch.search.aggregations.metrics.InternalMax;
+import org.elasticsearch.search.aggregations.metrics.InternalValueCount;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
@@ -571,7 +571,7 @@ public class DemoTests {
         SearchResponse searchResponse = client.prepareSearch(IndexChatFriendRelation)
                 .setTypes("_doc").setQuery(queryBuilder).highlighter(highlightBuilder).get();
 
-        Assert.assertEquals(2, searchResponse.getHits().getTotalHits());
+        Assert.assertEquals(2, searchResponse.getHits().getTotalHits().value);
         Assert.assertEquals("1", searchResponse.getHits().getAt(0).getId());
         Assert.assertEquals("<font color='red'>YydTesting001</font>", searchResponse.getHits().getHits()[0].getHighlightFields().get("uniqueIdentifier").getFragments()[0].string());
         Assert.assertEquals("3", searchResponse.getHits().getAt(1).getId());
@@ -592,7 +592,7 @@ public class DemoTests {
         searchResponse = client.prepareSearch(IndexChatFriendRelation)
                 .setTypes("_doc").setQuery(queryBuilder).highlighter(highlightBuilder).get();
 
-        Assert.assertEquals(2, searchResponse.getHits().getTotalHits());
+        Assert.assertEquals(2, searchResponse.getHits().getTotalHits().value);
         Assert.assertEquals("1", searchResponse.getHits().getAt(0).getId());
         Assert.assertEquals("<font color='red'>YydTesting001</font>", searchResponse.getHits().getHits()[0].getHighlightFields().get("uniqueIdentifier").getFragments()[0].string());
         Assert.assertEquals("3", searchResponse.getHits().getAt(1).getId());
@@ -613,7 +613,7 @@ public class DemoTests {
         searchResponse = client.prepareSearch(IndexChatFriendRelation)
                 .setTypes("_doc").setQuery(queryBuilder).highlighter(highlightBuilder).get();
 
-        Assert.assertEquals(1, searchResponse.getHits().getTotalHits());
+        Assert.assertEquals(1, searchResponse.getHits().getTotalHits().value);
         Assert.assertEquals("3", searchResponse.getHits().getAt(0).getId());
         Assert.assertEquals("同事啊强在Yyd<font color='red'>公司</font>", searchResponse.getHits().getHits()[0].getHighlightFields().get("remark").getFragments()[0].string());
 
@@ -632,7 +632,7 @@ public class DemoTests {
         searchResponse = client.prepareSearch(IndexChatFriendRelation)
                 .setTypes("_doc").setQuery(queryBuilder).highlighter(highlightBuilder).get();
 
-        Assert.assertEquals(1, searchResponse.getHits().getTotalHits());
+        Assert.assertEquals(1, searchResponse.getHits().getTotalHits().value);
         Assert.assertEquals("3", searchResponse.getHits().getAt(0).getId());
         Assert.assertEquals("同事啊强在Yyd<font color='red'>公司</font>", searchResponse.getHits().getHits()[0].getHighlightFields().get("remark").getFragments()[0].string());
 
@@ -865,7 +865,7 @@ public class DemoTests {
 //            });
 //        });
 
-        Assert.assertEquals(2, searchResponse.getHits().getTotalHits());
+        Assert.assertEquals(2, searchResponse.getHits().getTotalHits().value);
         Assert.assertEquals(2L, Long.parseLong(searchResponse.getHits().getHits()[0].getSourceAsMap().get("groupId").toString()));
         Assert.assertEquals("实现<font color='red'>发展</font>动能转换", searchResponse.getHits().getHits()[0].getHighlightFields().get("remark").getFragments()[0].string());
         Assert.assertEquals(1L, Long.parseLong(searchResponse.getHits().getHits()[1].getSourceAsMap().get("groupId").toString()));
@@ -929,7 +929,7 @@ public class DemoTests {
 //            });
 //        });
 
-        Assert.assertEquals(2, searchResponse.getHits().getTotalHits());
+        Assert.assertEquals(2, searchResponse.getHits().getTotalHits().value);
         Assert.assertEquals(2L, Long.parseLong(searchResponse.getHits().getHits()[0].getSourceAsMap().get("groupId").toString()));
         Assert.assertEquals("实现<font color='red'>发展</font>动能转换", searchResponse.getHits().getHits()[0].getHighlightFields().get("remark").getFragments()[0].string());
         Assert.assertEquals(1L, Long.parseLong(searchResponse.getHits().getHits()[1].getSourceAsMap().get("groupId").toString()));
@@ -1107,7 +1107,7 @@ public class DemoTests {
 //                    });
 //                });
 
-                Assert.assertEquals(totalCount, searchResponseTemporary.getHits().getTotalHits());
+                Assert.assertEquals(totalCount, searchResponseTemporary.getHits().getTotalHits().value);
 
                 totalCounter += searchResponseTemporary.getHits().getHits().length;
 
