@@ -1,4 +1,4 @@
-package com.future.demo.elasticsearch.practise;
+package com.future.demo.elasticsearch;
 
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.index.IndexResponse;
