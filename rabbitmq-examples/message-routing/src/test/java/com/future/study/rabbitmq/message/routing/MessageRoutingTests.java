@@ -20,9 +20,9 @@ public class MessageRoutingTests {
 
     @Before
     public void setup() {
-        String host = System.getenv("host");
-        String username = System.getenv("username");
-        String password = System.getenv("password");
+        String host = Config.Host;
+        String username = Config.Username;
+        String password = Config.Password;
 
         this.host = host;
         this.username = username;

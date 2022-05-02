@@ -20,9 +20,9 @@ public class MessagePubsubTests {
 
     @Before
     public void setup() {
-        String host = System.getenv("host");
-        String username = System.getenv("username");
-        String password = System.getenv("password");
+        String host = Config.Host;
+        String username = Config.Username;
+        String password = Config.Password;
 
         this.host = host;
         this.username = username;
@@ -55,7 +55,7 @@ public class MessagePubsubTests {
 
         Channel channel = connectionQueue1.createChannel();
         String queueName1 = channel.queueDeclare().getQueue();
-        channel.queueBind(queueName1, exchangeName, "");
+        channel.queueBind(queueName1, exchangeName, "1");
         channel.basicConsume(queueName1, true, new DeliverCallback() {
             @Override
             public void handle(String consumerTag, Delivery delivery) throws IOException {
@@ -65,7 +65,7 @@ public class MessagePubsubTests {
 
         channel = connectionQueue2.createChannel();
         String queueName2 = channel.queueDeclare().getQueue();
-        channel.queueBind(queueName2, exchangeName, "");
+        channel.queueBind(queueName2, exchangeName, "2");
         channel.basicConsume(queueName2, true, new DeliverCallback() {
             @Override
             public void handle(String consumerTag, Delivery delivery) throws IOException {
@@ -75,7 +75,7 @@ public class MessagePubsubTests {
 
         for(int i=0; i<totalMessages; i++){
             String message = UUID.randomUUID().toString();
-            channelExchange.basicPublish(exchangeName, "", null, message.getBytes());
+            channelExchange.basicPublish(exchangeName, "3", null, message.getBytes());
         }
 
         Thread.sleep(2000);
