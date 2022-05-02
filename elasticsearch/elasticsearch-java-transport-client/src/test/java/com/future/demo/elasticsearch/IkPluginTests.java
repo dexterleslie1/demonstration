@@ -117,7 +117,7 @@ public class IkPluginTests {
         // 创建文档
         // https://www.elastic.co/guide/en/elasticsearch/client/java-api/6.8/java-docs-index.html
         // NOTE: 在版本6.8.0 content内容为“我是黎明前的黑暗”时，批量创建索引api会报错，解决办法升级到7.8.0
-        idToObjectArratMapper.put(1L, new Object[] {"Elasticsearch -发- 版本：6.8.8"});
+        idToObjectArratMapper.put(1L, new Object[] {"Elasticsearch 奥克兰-发- 版本：6.8.8"});
         idToObjectArratMapper.put(2L, new Object[] {"35个项目首次参赛的背后——版本北京冬奥会推动中国冬季运动跨越式发展"});
         idToObjectArratMapper.put(3L, new Object[] {"北京冬奥会 | 燃！这个冬天，看中国的00后在干什么"});
         idToObjectArratMapper.put(4L, new Object[] {"日本运动员发文点赞冬奥志愿者 广东网友热议“好暖”"});

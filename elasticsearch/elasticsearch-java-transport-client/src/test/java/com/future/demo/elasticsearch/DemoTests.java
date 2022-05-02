@@ -10,19 +10,12 @@ import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
-import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
-import org.elasticsearch.search.aggregations.bucket.terms.LongTerms;
-import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.InternalMax;
 import org.elasticsearch.search.aggregations.metrics.InternalValueCount;
 import org.elasticsearch.search.aggregations.metrics.ValueCountAggregationBuilder;
-import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
-import org.elasticsearch.search.sort.SortBuilders;
-import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.junit.After;
 import org.junit.Assert;
@@ -32,10 +25,10 @@ import org.junit.Test;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class DemoTests {
     final static String IndexDemo = "elasticsearch_java_transport_client_demo";
+    final static String IndexDemo1 = "elasticsearch_java_transport_client_demo1";
 
     TransportClient client;
 
@@ -54,6 +47,11 @@ public class DemoTests {
         } catch (Exception ex) {
             // 忽略索引不存在情况
         }
+        try {
+            AcknowledgedResponse acknowledgedResponse = client.admin().indices().prepareDelete(IndexDemo1).get();
+            Assert.assertTrue(acknowledgedResponse.isAcknowledged());
+        } catch (Exception ex) {
+        }
 
         // 准备测试好友测试数据
         List<Object[]> datumList = Arrays.asList(
@@ -68,6 +66,12 @@ public class DemoTests {
                 new Object[] {9, "关键字9"},
                 new Object[] {10, "可就如诶人"},
                 new Object[] {11, "938可佛渡日哦"}
+        );
+        List<Object[]> datumList1 = Arrays.asList(
+                new Object[] {1, "a"},
+                new Object[] {2, "a"},
+                new Object[] {3, "a1"},
+                new Object[] {4, "a2"}
         );
 
         // keyword字段索引转换为小写
@@ -118,7 +122,7 @@ public class DemoTests {
                         .startObject("name")
                             .field("type", "text")
                             .field("store", true)
-                            .field("analyzer", "ik_smart_pinyin")
+                            .field("analyzer", "ik_max_word")
                         .endObject()
                     .endObject()
                 .endObject();
@@ -147,6 +151,46 @@ public class DemoTests {
                 Assert.fail(e.getMessage());
             }
         });
+
+        xContentBuilder = XContentFactory.jsonBuilder()
+                .startObject()
+                    .startObject("properties")
+                        .startObject("id")
+                            .field("type", "long")
+                            .field("store", false)
+                        .endObject()
+                        .startObject("content")
+                            .field("type", "text")
+                            .field("store", false)
+                            .field("analyzer", "ik_smart")
+                        .endObject()
+                    .endObject()
+                .endObject();
+        createIndexResponse = client.admin().indices()
+                .prepareCreate(IndexDemo1)
+                .addMapping("_doc", xContentBuilder)
+                .setSettings(xContentBuilderSettings)
+                .get();
+        Assert.assertTrue(createIndexResponse.isAcknowledged());
+        Assert.assertTrue(createIndexResponse.isShardsAcknowledged());
+
+        datumList1.forEach(datum -> {
+            try {
+                XContentBuilder xContentBuilderTemporary = XContentFactory.jsonBuilder()
+                        .startObject()
+                        .field("id", datum[0])
+                        .field("content", datum[1])
+                        .endObject();
+                IndexResponse indexResponse = client.prepareIndex(IndexDemo1, "_doc", String.valueOf(datum[0]))
+                        .setSource(xContentBuilderTemporary)
+                        .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
+                        .get();
+                Assert.assertEquals(RestStatus.CREATED, indexResponse.status());
+            } catch (IOException e) {
+                e.printStackTrace();
+                Assert.fail(e.getMessage());
+            }
+        });
     }
 
     @After
@@ -166,5 +210,11 @@ public class DemoTests {
                 .setQuery(queryBuilder).addAggregation(valueCountAggregationBuilder).setSize(0).get();
         Assert.assertEquals(9, ((InternalValueCount) searchResponse.getAggregations().get("countById")).getValue());
         Assert.assertEquals(0, searchResponse.getHits().getHits().length);
+
+        // 演示字母a搜索
+        keyword = "a";
+        queryBuilder = QueryBuilders.boolQuery().must(QueryBuilders.prefixQuery("content", keyword));
+        searchResponse = client.prepareSearch(IndexDemo1).setTypes("_doc").setQuery(queryBuilder).get();
+        Assert.assertEquals(4, searchResponse.getHits().getHits().length);
     }
 }
