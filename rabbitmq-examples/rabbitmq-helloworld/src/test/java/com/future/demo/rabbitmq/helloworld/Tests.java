@@ -39,7 +39,7 @@ public class Tests {
         channel.queueDeclare(queueName, false, false, false, null);
 
         int totalMessageProduce = 1000;
-        List<String> listMessageConsume = new ArrayList<String>();
+        List<String> listMessageConsume = new ArrayList<>();
         CountDownLatch countDownLatch = new CountDownLatch(totalMessageProduce);
         DeliverCallback deliverCallback = (consumerTag, delivery) -> {
             String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
