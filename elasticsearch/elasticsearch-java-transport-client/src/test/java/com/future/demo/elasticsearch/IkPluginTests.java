@@ -75,6 +75,7 @@ public class IkPluginTests {
                             .endObject()
                         .endObject()
                         .startObject("filter")
+                            // 拼音和拼音首字母搜索
                             .startObject("my_pinyin")
                                 .field("type", "pinyin")
                                 .field("keep_separate_first_letter", true)
