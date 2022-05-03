@@ -19,10 +19,6 @@
 ## 使用docker-compose运行elasticsearch
 
 ```shell script
-# 创建读写权限的 ~/data-demo-elasticsearch 目录
-sudo mkdir ~/data-demo-elasticsearch
-sudo chmod -R a+w ~/data-demo-elasticsearch
-
 # 启动elasticsearch
 docker-compose up -d
 

@@ -20,8 +20,8 @@ services:
       - 9200:9200
       # Java transport client需要连接这个端口去操作elasticsearch
       - 9300:9300
-    volumes:
-      - ~/data-demo-elasticsearch:/usr/share/elasticsearch/data
+    #volumes:
+    #  - ~/data-demo-elasticsearch:/usr/share/elasticsearch/data
     networks:
       - net
 
