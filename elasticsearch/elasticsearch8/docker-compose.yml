@@ -1,0 +1,39 @@
+version: "3.0"
+
+# 创建网络
+networks:
+  net:
+    name: demo-elasticsearch8
+
+services:
+  demo-elasticsearch8:
+    container_name: demo-elasticsearch8
+    image: docker.118899.net:10001/yyd-public/demo-elasticsearch8
+    environment:
+      - "ES_JAVA_OPTS=-Xms512m -Xmx1024m"
+      - discovery.type=single-node
+      # http.cors表示允许elasticsearch-head连接并管理
+      - http.cors.enabled=true
+      - http.cors.allow-origin=*
+      - TZ=Asia/Shanghai
+      # 禁用ssl通讯，否则需要配置证书才能够连接9200端口
+      # https://www.elastic.co/guide/en/elastic-stack-get-started/current/get-started-stack-docker.html#run-docker-secure
+      - xpack.security.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      - xpack.security.transport.ssl.enabled=false
+    ports:
+      - 9200:9200
+    networks:
+      - net
+
+  demo-kibana8:
+    container_name: demo-kibana8
+    image: kibana:8.1.2
+    environment:
+      ELASTICSEARCH_HOSTS: http://demo-elasticsearch8:9200
+    ports:
+      - 5601:5601
+    networks:
+      - net
+    depends_on:
+      - demo-elasticsearch8
