@@ -1,12 +1,12 @@
 package com.future.demo.elasticsearch.rest.high.level.client;
-import org.elasticsearch.action.admin.indices.close.CloseIndexRequest;
+
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.open.OpenIndexRequest;
 import org.elasticsearch.action.admin.indices.open.OpenIndexResponse;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.indices.*;
-import org.elasticsearch.cluster.metadata.MappingMetaData;
+import org.elasticsearch.cluster.metadata.MappingMetadata;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.junit.Assert;
@@ -152,8 +152,8 @@ public class IndexApiTests extends AbstractTestSupport {
         getMappingsRequest.indices(index);
         GetMappingsResponse getMappingsResponse =
                 client.indices().getMapping(getMappingsRequest, RequestOptions.DEFAULT);
-        Map<String, MappingMetaData> mappingMetaDataMap = getMappingsResponse.mappings();
-        MappingMetaData mappingMetaData = mappingMetaDataMap.get(index);
+        Map<String, MappingMetadata> mappingMetaDataMap = getMappingsResponse.mappings();
+        MappingMetadata mappingMetaData = mappingMetaDataMap.get(index);
         Assert.assertNotNull(mappingMetaData);
     }
 }
