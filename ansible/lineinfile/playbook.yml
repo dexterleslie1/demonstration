@@ -1,0 +1,7 @@
+- hosts: localhost
+  tasks:
+   - name: "删除/etc/fstab swap行"
+     lineinfile:
+      path: /etc/fstab
+      regexp: '.+swap.+'
+      state: absent
