@@ -28,5 +28,11 @@ public class PatternTests {
         Assert.assertTrue(match);
         match = Pattern.matches("\\d[abc]", "uu3a");
         Assert.assertFalse(match);
+
+        // 匹配 /etc/fstab中不以#开头的swap行
+        match = Pattern.matches("^(?!#).*swap.*", "/dev/mapper/centos-swap swap                    swap    defaults        0 0");
+        Assert.assertTrue(match);
+        match = Pattern.matches("^(?!#).*swap.*", "#/dev/mapper/centos-swap swap                    swap    defaults        0 0");
+        Assert.assertFalse(match);
     }
 }
