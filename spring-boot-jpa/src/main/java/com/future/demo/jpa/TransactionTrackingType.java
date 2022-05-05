@@ -1,4 +1,4 @@
-package com.future.demo.java.spring.boot.jpa;
+package com.future.demo.jpa;
 
 /**
  * @author dexterleslie@gmail.com

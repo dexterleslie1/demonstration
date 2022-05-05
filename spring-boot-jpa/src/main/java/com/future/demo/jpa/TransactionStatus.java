@@ -1,4 +1,4 @@
-package com.future.demo.java.spring.boot.jpa;
+package com.future.demo.jpa;
 
 /**
  * 交易状态
