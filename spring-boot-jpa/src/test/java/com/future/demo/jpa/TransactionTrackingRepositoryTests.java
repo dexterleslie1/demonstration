@@ -26,7 +26,7 @@ public class TransactionTrackingRepositoryTests {
 	private TransactionTrackingRepository transactionTrackingRepository;
 
 	@Test
-	public void test1() {
+	public void testNonUniqueResultException() {
 		this.transactionTrackingRepository.deleteAll();
 
 		for(int i=1; i<=3; i++) {
