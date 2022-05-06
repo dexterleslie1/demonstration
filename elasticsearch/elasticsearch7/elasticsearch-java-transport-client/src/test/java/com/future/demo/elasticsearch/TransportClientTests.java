@@ -356,6 +356,30 @@ public class TransportClientTests {
         });
         Assert.assertArrayEquals(expectedList2.toArray(), actualList2.toArray());
 
+        searchResponse = client.prepareSearch(indexname)
+                .setQuery(QueryBuilders.rangeQuery("id").includeUpper(false).to(5))
+                .addSort(SortBuilders.fieldSort("id").order(SortOrder.ASC))
+                .get();
+        Assert.assertEquals(4, searchResponse.getHits().getTotalHits().value);
+        expectedList = Arrays.asList(1, 2, 3, 4);
+        List<Integer> actualList3 = new ArrayList<>();
+        searchResponse.getHits().forEach(hit -> {
+            actualList3.add(Integer.parseInt(hit.getSourceAsMap().get("id").toString()));
+        });
+        Assert.assertArrayEquals(expectedList.toArray(), actualList3.toArray());
+
+        searchResponse = client.prepareSearch(indexname)
+                .setQuery(QueryBuilders.rangeQuery("id").includeUpper(true).to(5))
+                .addSort(SortBuilders.fieldSort("id").order(SortOrder.ASC))
+                .get();
+        Assert.assertEquals(5, searchResponse.getHits().getTotalHits().value);
+        expectedList = Arrays.asList(1, 2, 3, 4, 5);
+        List<Integer> actualList4 = new ArrayList<>();
+        searchResponse.getHits().forEach(hit -> {
+            actualList4.add(Integer.parseInt(hit.getSourceAsMap().get("id").toString()));
+        });
+        Assert.assertArrayEquals(expectedList.toArray(), actualList4.toArray());
+
         // 模拟指定聊天记录id上下文的当前上下文、上一页、下一页
 
         // 当前上下文
