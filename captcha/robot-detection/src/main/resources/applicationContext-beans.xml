@@ -15,8 +15,23 @@ http://www.springframework.org/schema/aop/spring-aop-3.2.xsd">
     <context:annotation-config/>
     <context:component-scan base-package="com.future.demo"/>
     <bean class="org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping" />
+    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="locations">
+            <array>
+                <value>classpath:application.properties</value>
+            </array>
+        </property>
+    </bean>
 
-    <bean id="cacheManager" class="com.future.demo.robot.detection.CacheManagera" scope="singleton" destroy-method="close">
-        <constructor-arg index="0" value="cacheManagerA"/>
+    <bean id="jedisPoolConfig" class="redis.clients.jedis.JedisPoolConfig">
+        <property name="maxTotal" value="1024"/>
+        <property name="testOnBorrow" value="true"/>
+    </bean>
+    <bean id="jedisPool" class="redis.clients.jedis.JedisPool">
+        <constructor-arg index="0" ref="jedisPoolConfig"/>
+        <constructor-arg index="1"><value>${redis.host}</value></constructor-arg>
+        <constructor-arg index="2"><value>${redis.port}</value></constructor-arg>
+        <constructor-arg index="3"><value>86400</value></constructor-arg>
+        <constructor-arg index="4"><value>${redis.password}</value></constructor-arg>
     </bean>
 </beans>

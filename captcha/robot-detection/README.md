@@ -4,6 +4,7 @@
 
 ```shell script
 # 运行demo
+docker-compose up
 mvn tomcat7:run
 
 # 访问首页
