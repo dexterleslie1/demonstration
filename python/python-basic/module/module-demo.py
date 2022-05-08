@@ -17,7 +17,9 @@ print("mathlib.pow(2, 3)={0}".format(mathlib.pow(2, 3)))
 print()
 print("导入函数、变量、类".center(50, "-"))
 
+# 从math库导入pi常量
 from math import pi
+# 从math库导入pow函数
 from math import pow
 
 print("pi={0}".format(pi))
