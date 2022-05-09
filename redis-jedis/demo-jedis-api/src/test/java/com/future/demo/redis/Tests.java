@@ -20,8 +20,14 @@ public class Tests {
             String key = UUID.randomUUID().toString();
             jedis.setex(key, 2, key);
 
+            Thread.sleep(1000);
+
             String value = jedis.get(key);
             Assert.assertEquals(key, value);
+
+            // ttl函数获取key剩余的ttl秒数
+            long seconds = jedis.ttl(key);
+            Assert.assertEquals(1, seconds);
 
             Thread.sleep(2100);
 
