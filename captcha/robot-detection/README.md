@@ -2,6 +2,8 @@
 
 # 运行demo
 
+**修改.env后端ip地址**
+
 ```shell script
 # 运行demo
 docker-compose up
