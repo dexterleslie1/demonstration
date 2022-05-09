@@ -23,6 +23,10 @@ http://www.springframework.org/schema/aop/spring-aop-3.2.xsd">
         </property>
     </bean>
 
+    <bean id="cacheManager" class="com.future.demo.robot.detection.CacheManagera" scope="singleton" destroy-method="close">
+        <constructor-arg index="0" value="cacheManagerA"/>
+    </bean>
+
     <bean id="jedisPoolConfig" class="redis.clients.jedis.JedisPoolConfig">
         <property name="maxTotal" value="1024"/>
         <property name="testOnBorrow" value="true"/>
