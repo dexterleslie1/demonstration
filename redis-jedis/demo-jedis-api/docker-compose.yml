@@ -1,0 +1,20 @@
+version: "3.0"
+
+# 创建网络
+networks:
+  net:
+    name: demo-jedis-api
+
+services:
+  # 启动redis
+  demo-jedis-api:
+    container_name: demo-jedis-api
+    image: redis:3.0.4
+    # 设置redis密码
+    command: redis-server --requirepass 123456
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - 6379:6379
+    networks:
+      - net
