@@ -41,17 +41,17 @@ public class CaptchaController {
         captcha.setHeight(this.height);
         captcha.setLength(this.length);
         captcha.setFont(this.font);
-
         String captchaCode = captcha.getCaptchaCode();
+        String imageBase64 = captcha.toBase64();
+
         Jedis jedis = null;
         try {
             jedis = this.jedisPool.getResource();
 
             jedis.setex(clientId, TimeoutInSeconds, captchaCode);
 
-            String base64Str = captcha.toBase64();
             Map<String, String> mapReturn = new HashMap<>();
-            mapReturn.put("imageBase64", base64Str);
+            mapReturn.put("imageBase64", imageBase64);
             mapReturn.put("clientId", clientId);
             AjaxResponse response = new AjaxResponse();
             response.setDataObject(mapReturn);
