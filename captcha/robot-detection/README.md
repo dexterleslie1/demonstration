@@ -2,14 +2,16 @@
 
 # 运行demo
 
+**修改.env后端ip地址**
+
 ```shell script
 # 运行demo
 docker-compose up
 mvn tomcat7:run
 
 # 访问首页
-http://localhost:8080/
+http://localhost
 
 # 启用检测机制，使用浏览器访问下面url
-http://localhost:8080/api/v1/biz/setEnable.do?enabled=true
+http://localhost/api/v1/biz/setEnable.do?enabled=true
 ```

@@ -21,7 +21,6 @@ import java.util.UUID;
 public class CaptchaController {
 
     private final static int TimeoutInSeconds = 3600;
-    public final static String PrefixWhitelist = "whiteprefex#";
 
     @Autowired
     JedisPool jedisPool = null;
@@ -42,18 +41,17 @@ public class CaptchaController {
         captcha.setHeight(this.height);
         captcha.setLength(this.length);
         captcha.setFont(this.font);
-
         String captchaCode = captcha.getCaptchaCode();
+        String imageBase64 = captcha.toBase64();
+
         Jedis jedis = null;
         try {
             jedis = this.jedisPool.getResource();
 
-            jedis.set(clientId, captchaCode);
-            jedis.expire(clientId, TimeoutInSeconds);
+            jedis.setex(clientId, TimeoutInSeconds, captchaCode);
 
-            String base64Str = captcha.toBase64();
             Map<String, String> mapReturn = new HashMap<>();
-            mapReturn.put("imageBase64", base64Str);
+            mapReturn.put("imageBase64", imageBase64);
             mapReturn.put("clientId", clientId);
             AjaxResponse response = new AjaxResponse();
             response.setDataObject(mapReturn);
@@ -85,9 +83,8 @@ public class CaptchaController {
                 response.setErrorMessage("验证码错误");
             } else {
                 String clientIp = RequestUtils.getRemoteAddress(request);
-                String key = PrefixWhitelist + clientIp;
-                jedis.set(key, StringUtils.EMPTY);
-                jedis.expire(key, TimeoutInSeconds);
+                String key = Const.CacheKeyPrefixWhitelist + clientIp;
+                jedis.setex(key, TimeoutInSeconds, StringUtils.EMPTY);
 
                 Map<String, String> mapReturn = new HashMap<>();
                 mapReturn.put("location", "/index.jsp");
