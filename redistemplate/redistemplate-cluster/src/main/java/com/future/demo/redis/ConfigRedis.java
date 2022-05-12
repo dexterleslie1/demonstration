@@ -23,7 +23,7 @@ public class ConfigRedis {
     public RedisConnectionFactory redisConnectionFactory(){
         RedisClusterConfiguration config = new RedisClusterConfiguration();
 //        config.addClusterNode(new RedisNode("192.168.43.215", 6381));
-        config.addClusterNode(new RedisNode("192.168.3.100", 6380));
+        config.addClusterNode(new RedisNode("192.168.3.215", 6380));
 //        config.addClusterNode(new RedisNode("192.168.3.10", 6379));
         JedisConnectionFactory connectionFactory = new JedisConnectionFactory(config);
         return connectionFactory;

@@ -36,7 +36,7 @@ public class Tests {
                             redisTemplate.opsForValue().set(string1, string1);
                         }
                     }catch(Exception ex){
-                        ex.printStackTrace();
+                        throw new RuntimeException(ex);
                     }finally{
                     }
                 }
