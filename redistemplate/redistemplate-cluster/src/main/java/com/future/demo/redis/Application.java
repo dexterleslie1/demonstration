@@ -1,11 +1,11 @@
-package com.xy.demo.redis.template;
+package com.future.demo.redis;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class ApplicationRedisTemplateCluster {
+public class Application {
     public static void main(String[] args){
-        SpringApplication.run(ApplicationRedisTemplateCluster.class,args);
+        SpringApplication.run(Application.class,args);
     }
 }
