@@ -1,5 +1,7 @@
 package com.xy.future.demo.captcha;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ramostear.captcha.common.Fonts;
 import com.ramostear.captcha.core.Captcha;
 import com.ramostear.captcha.support.CaptchaType;
@@ -15,6 +17,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.awt.*;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -23,6 +26,8 @@ import java.util.concurrent.TimeUnit;
 @SpringBootTest(classes = {Application.class})
 public class Tests {
     private final static Logger logger = LoggerFactory.getLogger(Tests.class);
+    private final static String CacheKeyCaptcha = "cacheKeyCaptcha";
+    private final static ObjectMapper OMInstance = new ObjectMapper();
 
     private CaptchaType type = CaptchaType.DEFAULT;
     private Font font = Fonts.getInstance().defaultFont();
@@ -44,7 +49,7 @@ public class Tests {
         for(int i=1; i<=threads; i++) {
             int finalI = i;
             executorService.submit(() -> {
-                Map<String, String> datumMapper = new HashMap<>();
+                List<String> captchaList = new ArrayList<>();
                 int batchCount = 0;
                 for(int j=1; j<=threadLoop; j++) {
                     Captcha captcha = new Captcha();
@@ -55,12 +60,23 @@ public class Tests {
                     captcha.setFont(this.font);
                     String captchaCode = captcha.getCaptchaCode();
                     String imageBase64 = captcha.toBase64();
-                    datumMapper.put(captchaCode, imageBase64);
+
+                    Map<String, String> datumMapper = new HashMap<>();
+                    datumMapper.put("captchaCode", captchaCode);
+                    datumMapper.put("imageBase64", imageBase64);
+                    String JSON;
+                    try {
+                        JSON = OMInstance.writeValueAsString(datumMapper);
+                        captchaList.add(JSON);
+                    } catch (JsonProcessingException e) {
+                        throw new RuntimeException(e);
+                    }
+
                     if(j%batchSize == 0) {
-                        this.redisTemplate.opsForValue().multiSet(datumMapper);
+                        this.redisTemplate.opsForSet().add(CacheKeyCaptcha, captchaList.toArray());
                         batchCount++;
                         logger.info("线程{}第{}批验证码进入redis", finalI, batchCount);
-                        datumMapper = new HashMap<>();
+                        captchaList = new ArrayList<>();
                     }
                 }
             });
