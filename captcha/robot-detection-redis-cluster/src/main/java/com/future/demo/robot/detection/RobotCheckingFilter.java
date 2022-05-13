@@ -7,6 +7,7 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.JedisPool;
 
 import javax.servlet.*;
@@ -16,7 +17,10 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class InterceptorFilter implements Filter {
+/**
+ * 验证客户端是否机器人
+ */
+public class RobotCheckingFilter implements Filter {
     private final static int TimeoutSeconds = 15*60;
     private final static ObjectMapper OMInstance = new ObjectMapper();
 
@@ -24,16 +28,18 @@ public class InterceptorFilter implements Filter {
     private Cache cacheWhitelist = null;
     private Cache cacheRequestCounter = null;
 
-    private JedisPool jedisPool = null;
+//    private JedisPool jedisPool = null;
+    private JedisCluster jedisCluster = null;
 
     @Override
     public void init(FilterConfig filterConfig) {
         ApplicationContext ctx = WebApplicationContextUtils.getRequiredWebApplicationContext(filterConfig.getServletContext());
         CacheManagera cacheManager = ctx.getBean(CacheManagera.class);
-        this.cacheEnable = cacheManager.getCache(Const.CahceNameEnable);
-        this.cacheWhitelist = cacheManager.getCache(Const.CacheNameWhitelist);
-        this.cacheRequestCounter = cacheManager.getCache(Const.CacheNameRequestCounter);
-        jedisPool = ctx.getBean(JedisPool.class);
+        this.cacheEnable = cacheManager.getCache(Const.CahceNameEhcacheEnable);
+        this.cacheWhitelist = cacheManager.getCache(Const.CacheNameEhcacheWhitelist);
+        this.cacheRequestCounter = cacheManager.getCache(Const.CacheNameEhcacheRequestCounter);
+//        jedisPool = ctx.getBean(JedisPool.class);
+        jedisCluster = ctx.getBean(JedisCluster.class);
     }
 
     @Override
@@ -49,11 +55,12 @@ public class InterceptorFilter implements Filter {
         // 为了提升性能先判断ehcache是否存在ip白名单
         Element element = this.cacheWhitelist.get(key);
         if(element == null) {
-            Jedis jedis = null;
+//            Jedis jedis = null;
             try {
-                jedis = this.jedisPool.getResource();
+//                jedis = this.jedisPool.getResource();
 
-                if (!jedis.exists(key)) {
+//                if (!jedis.exists(key)) {
+                if (!jedisCluster.exists(key)) {
                     boolean enabled = false;
                     element = this.cacheEnable.get(Const.CacheKeyEnable);
                     if (element != null) {
@@ -92,7 +99,8 @@ public class InterceptorFilter implements Filter {
                     }
                 } else {
                     // redis存在此ip白名单时，加载redis中的ip白名单到ehcache以提升性能
-                    long seconds = jedis.ttl(key);
+//                    long seconds = jedis.ttl(key);
+                    long seconds = jedisCluster.ttl(key);
                     if (seconds > 0) {
                         element = new Element(key, StringUtils.EMPTY);
                         element.setTimeToLive((int) seconds);
@@ -100,10 +108,10 @@ public class InterceptorFilter implements Filter {
                     }
                 }
             } finally {
-                if (jedis != null) {
-                    jedis.close();
-                    jedis = null;
-                }
+//                if (jedis != null) {
+//                    jedis.close();
+//                    jedis = null;
+//                }
             }
         }
 

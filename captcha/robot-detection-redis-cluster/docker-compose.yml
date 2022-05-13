@@ -1,0 +1,34 @@
+#version: "3.0"
+#
+## 创建网络
+#networks:
+#  net:
+#    name: demo-robot-detection
+#
+#services:
+#  # 启动redis
+#  demo-robot-detection-redis:
+#    container_name: demo-robot-detection-redis
+#    image: redis:3.0.4
+#    # 设置redis密码
+#    command: redis-server --requirepass 123456
+#    environment:
+#      - TZ=Asia/Shanghai
+#    ports:
+#      - 6379:6379
+#    networks:
+#      - net
+#
+#  demo-robot-detection-openresty:
+#    container_name: demo-robot-detection-openresty
+#    image: docker.118899.net:10001/yyd-public/yyd-openresty:1.0.0
+#    environment:
+#      - TZ=Asia/Shanghai
+#      - backendIp=${backendIp}
+#    ports:
+#      - 80:80
+#    volumes:
+#      - ./nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf
+#    networks:
+#      - net
+#

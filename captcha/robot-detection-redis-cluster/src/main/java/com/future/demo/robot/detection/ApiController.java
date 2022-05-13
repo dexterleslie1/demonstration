@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.JedisPool;
 
 import javax.annotation.PostConstruct;
@@ -22,11 +23,14 @@ public class ApiController {
 
     @PostConstruct
     public void init() {
-        this.cacheEnable = this.cacheManager.getCache(Const.CahceNameEnable);
+        this.cacheEnable = this.cacheManager.getCache(Const.CahceNameEhcacheEnable);
     }
 
+//    @Autowired
+//    JedisPool jedisPool = null;
+
     @Autowired
-    JedisPool jedisPool = null;
+    JedisCluster jedisCluster;
 
     @RequestMapping("test.do")
     public @ResponseBody AjaxResponse test() {
@@ -38,11 +42,12 @@ public class ApiController {
     @RequestMapping("setEnable.do")
     public @ResponseBody AjaxResponse setEnable(
             @RequestParam(name = "enabled", required = false, defaultValue = "false") boolean enabled) {
-        Jedis jedis = null;
+//        Jedis jedis = null;
         try {
-            jedis = this.jedisPool.getResource();
+//            jedis = this.jedisPool.getResource();
 
-            jedis.set(Const.CacheKeyEnable, String.valueOf(enabled));
+//            jedis.set(Const.CacheKeyEnable, String.valueOf(enabled));
+            jedisCluster.set(Const.CacheKeyEnable, String.valueOf(enabled));
 
             Element element = new Element(Const.CacheKeyEnable, enabled);
             this.cacheEnable.put(element);
@@ -51,10 +56,10 @@ public class ApiController {
             response.setDataObject("设置成功");
             return response;
         } finally {
-           if(jedis != null) {
-               jedis.close();
-               jedis = null;
-           }
+//           if(jedis != null) {
+//               jedis.close();
+//               jedis = null;
+//           }
         }
     }
 }
