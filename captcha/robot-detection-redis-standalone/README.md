@@ -1,4 +1,4 @@
-# 演示使用验证码技术识别客户端是否人类redis集群版
+# 演示使用验证码技术识别客户端是否人类redis单机版
 
 ## TODO
 
@@ -10,7 +10,7 @@
 
 ```shell script
 # 运行demo
-# 启动redis集群并修改application.properties
+# 启动redis单机版并修改application.properties
 mvn tomcat7:run
 
 # 访问首页
