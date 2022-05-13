@@ -52,7 +52,7 @@ services:
 
   redis-cluster-creator:
     image: redis:5.0.14
-    entrypoint: [/bin/sh,-c,'echo "yes" | redis-cli --cluster create ${varHostIp}:6380 ${varHostIp}:6381 ${varHostIp}:6382']
+    entrypoint: [/bin/sh, -c, 'echo "yes" | redis-cli --cluster create ${varHostIp}:6380 ${varHostIp}:6381 ${varHostIp}:6382']
     networks:
       - net
     depends_on:
