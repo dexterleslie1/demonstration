@@ -338,11 +338,54 @@ public class RedissonLockTests {
         Assert.assertTrue(isLocked);
     }
 
+    @Test
+    public void testLeaseAutomatically() throws Exception {
+        String lockKey = UUID.randomUUID().toString();
+
+        // 下面演示不够严谨用法，没有考虑到会自动lease
+        RLock rLock = null;
+        boolean acquired = false;
+        try {
+            rLock = redisson.getLock(lockKey);
+            acquired = rLock.tryLock(1000, 3000, TimeUnit.MILLISECONDS);
+            Assert.assertTrue(acquired);
+
+            Thread.sleep(4000);
+        } catch (Exception ex) {
+            throw ex;
+        } finally {
+            if(acquired && rLock!=null) {
+                try {
+                    rLock.unlock();
+                    Assert.fail("预期异常没有抛出");
+                } catch (IllegalMonitorStateException ex) {
+                }
+            }
+        }
+
+        // 下面演示严谨用法
+        rLock = null;
+        acquired = false;
+        try {
+            rLock = redisson.getLock(lockKey);
+            acquired = rLock.tryLock(1000, 3000, TimeUnit.MILLISECONDS);
+            Assert.assertTrue(acquired);
+
+            Thread.sleep(4000);
+        } catch (Exception ex) {
+            throw ex;
+        } finally {
+            if(acquired && rLock!=null && rLock.isHeldByCurrentThread()) {
+                rLock.unlock();
+            }
+        }
+    }
+
     @Before
     public void setup(){
-        String host = System.getenv("host");
-        int port = Integer.parseInt(System.getenv("port"));
-        String password = System.getenv("password");
+        String host = "localhost";
+        int port = 6379;
+        String password = "123456";
 
         Config config = new Config();
         config.useSingleServer().setAddress("redis://" + host + ":" + port).setPassword(password);
