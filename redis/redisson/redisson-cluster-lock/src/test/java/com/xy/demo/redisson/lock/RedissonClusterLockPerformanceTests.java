@@ -27,26 +27,24 @@ public class RedissonClusterLockPerformanceTests {
         Date timeStart = new Date();
         ExecutorService executorService = Executors.newCachedThreadPool();
         for(int j=0; j<200; j++) {
-            executorService.submit(new Runnable() {
-                public void run() {
-                    for (int i = 0; i < 1000; i++) {
-                        String key = UUID.randomUUID().toString();
-                        RLock mylock = redisson.getLock(key);
-                        boolean isLocked = false;
-                        try {
-                            isLocked = mylock.tryLock(10, 10000, TimeUnit.MILLISECONDS);
+            executorService.submit(() -> {
+                for (int i = 0; i < 1000; i++) {
+                    String key = UUID.randomUUID().toString();
+                    RLock mylock = redisson.getLock(key);
+                    boolean isLocked = false;
+                    try {
+                        isLocked = mylock.tryLock(10, 10000, TimeUnit.MILLISECONDS);
 
-                            int milliseconds = random.nextInt(50);
-                            if(milliseconds ==0){
-                                milliseconds = 2;
-                            }
-                            Thread.sleep(milliseconds);
-                        } catch (InterruptedException e) {
-                            if(isLocked){
-                                mylock = redisson.getLock(key);
-                                if(mylock != null) {
-                                    mylock.unlock();
-                                }
+                        int milliseconds = random.nextInt(50);
+                        if(milliseconds ==0){
+                            milliseconds = 2;
+                        }
+                        Thread.sleep(milliseconds);
+                    } catch (InterruptedException e) {
+                        if(isLocked){
+                            mylock = redisson.getLock(key);
+                            if(mylock != null) {
+                                mylock.unlock();
                             }
                         }
                     }
@@ -65,9 +63,9 @@ public class RedissonClusterLockPerformanceTests {
     public void setup(){
         Config config = new Config();
         config.useClusterServers().addNodeAddress(
-                "redis://192.168.1.111:6381",
-                "redis://192.168.1.111:6380",
-                "redis://192.168.1.111:6379"
+                "redis://127.0.0.1:6380",
+                "redis://127.0.0.1:6381",
+                "redis://127.0.0.1:6382"
         );
         redisson = Redisson.create(config);
     }
