@@ -9,4 +9,7 @@
     <cache name="cacheEnable" maxElementsInMemory="1"/>
     <cache name="cacheWhitelist" maxElementsInMemory="1000000"/>
     <cache name="cacheRequestCounter" maxElementsInMemory="1000000"/>
+    <cache name="cacheTimeout" maxElementsInMemory="1000"/>
+    <cache name="cacheCaptchaIndex" maxElementsInMemory="1"/>
+    <cache name="cacheCaptcha" maxElementsInMemory="200000"/>
 </ehcache>

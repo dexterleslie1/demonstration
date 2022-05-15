@@ -28,7 +28,6 @@ public class RobotCheckingFilter implements Filter {
     private Cache cacheWhitelist = null;
     private Cache cacheRequestCounter = null;
 
-//    private JedisPool jedisPool = null;
     private JedisCluster jedisCluster = null;
 
     @Override
@@ -38,7 +37,6 @@ public class RobotCheckingFilter implements Filter {
         this.cacheEnable = cacheManager.getCache(Const.CahceNameEhcacheEnable);
         this.cacheWhitelist = cacheManager.getCache(Const.CacheNameEhcacheWhitelist);
         this.cacheRequestCounter = cacheManager.getCache(Const.CacheNameEhcacheRequestCounter);
-//        jedisPool = ctx.getBean(JedisPool.class);
         jedisCluster = ctx.getBean(JedisCluster.class);
     }
 
@@ -55,63 +53,51 @@ public class RobotCheckingFilter implements Filter {
         // 为了提升性能先判断ehcache是否存在ip白名单
         Element element = this.cacheWhitelist.get(key);
         if(element == null) {
-//            Jedis jedis = null;
-            try {
-//                jedis = this.jedisPool.getResource();
+            if (!jedisCluster.exists(key)) {
+                boolean enabled = false;
+                element = this.cacheEnable.get(Const.CacheKeyEnable);
+                if (element != null) {
+                    enabled = (Boolean) element.getObjectValue();
+                }
 
-//                if (!jedis.exists(key)) {
-                if (!jedisCluster.exists(key)) {
-                    boolean enabled = false;
-                    element = this.cacheEnable.get(Const.CacheKeyEnable);
-                    if (element != null) {
-                        enabled = (Boolean) element.getObjectValue();
+                if (enabled) {
+
+                    // 机制启动后，记录ip请求次数
+                    Element elementRequestCounter = this.cacheRequestCounter.get(clientIp);
+                    if(elementRequestCounter == null) {
+                        elementRequestCounter = new Element(clientIp, 0);
                     }
+                    int count = (Integer)elementRequestCounter.getObjectValue()+1;
+                    elementRequestCounter = new Element(clientIp, count);
+                    elementRequestCounter.setTimeToLive(TimeoutSeconds);
+                    this.cacheRequestCounter.put(elementRequestCounter);
 
-                    if (enabled) {
-
-                        // 机制启动后，记录ip请求次数
-                        Element elementRequestCounter = this.cacheRequestCounter.get(clientIp);
-                        if(elementRequestCounter == null) {
-                            elementRequestCounter = new Element(clientIp, 0);
-                        }
-                        int count = (Integer)elementRequestCounter.getObjectValue()+1;
-                        elementRequestCounter = new Element(clientIp, count);
-                        elementRequestCounter.setTimeToLive(TimeoutSeconds);
-                        this.cacheRequestCounter.put(elementRequestCounter);
-
-                        String uri = request.getRequestURI();
-                        if (uri.endsWith("jsp") || uri.equalsIgnoreCase("/")) {
-                            response.sendRedirect("/verify.html");
+                    String uri = request.getRequestURI();
+                    if (uri.endsWith("jsp") || uri.equalsIgnoreCase("/")) {
+                        response.sendRedirect("/verify.html");
+                        return;
+                    } else {
+                        if (!uri.startsWith("/api/v1/captcha") &&
+                                !uri.equalsIgnoreCase("/api/v1/biz/setEnable.do")) {
+                            Map<String, String> mapReturn = new HashMap<>();
+                            mapReturn.put("location", "/verify.html");
+                            AjaxResponse response1 = new AjaxResponse();
+                            response1.setDataObject(mapReturn);
+                            response1.setErrorCode(50000);
+                            String JSON = OMInstance.writeValueAsString(response1);
+                            ResponseUtils.write(response, JSON);
                             return;
-                        } else {
-                            if (!uri.startsWith("/api/v1/captcha") &&
-                                    !uri.equalsIgnoreCase("/api/v1/biz/setEnable.do")) {
-                                Map<String, String> mapReturn = new HashMap<>();
-                                mapReturn.put("location", "/verify.html");
-                                AjaxResponse response1 = new AjaxResponse();
-                                response1.setDataObject(mapReturn);
-                                response1.setErrorCode(50000);
-                                String JSON = OMInstance.writeValueAsString(response1);
-                                ResponseUtils.write(response, JSON);
-                                return;
-                            }
                         }
-                    }
-                } else {
-                    // redis存在此ip白名单时，加载redis中的ip白名单到ehcache以提升性能
-//                    long seconds = jedis.ttl(key);
-                    long seconds = jedisCluster.ttl(key);
-                    if (seconds > 0) {
-                        element = new Element(key, StringUtils.EMPTY);
-                        element.setTimeToLive((int) seconds);
-                        this.cacheWhitelist.put(element);
                     }
                 }
-            } finally {
-//                if (jedis != null) {
-//                    jedis.close();
-//                    jedis = null;
-//                }
+            } else {
+                // redis存在此ip白名单时，加载redis中的ip白名单到ehcache以提升性能
+                long seconds = jedisCluster.ttl(key);
+                if (seconds > 0) {
+                    element = new Element(key, StringUtils.EMPTY);
+                    element.setTimeToLive((int) seconds);
+                    this.cacheWhitelist.put(element);
+                }
             }
         }
 
