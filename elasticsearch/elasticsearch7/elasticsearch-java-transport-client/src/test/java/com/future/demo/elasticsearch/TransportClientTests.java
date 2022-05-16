@@ -865,7 +865,7 @@ public class TransportClientTests {
         int count = 0;
         int totalCount = 0;
         SearchResponse scrollResp = client.prepareSearch(index)
-                .addSort(SortBuilders.fieldSort("id").order(SortOrder.ASC))
+//                .addSort(SortBuilders.fieldSort("id").order(SortOrder.ASC))
                 .setScroll(new TimeValue(60000))
                 .setQuery(QueryBuilders.matchAllQuery())
                 .setSize(size).get();
@@ -888,6 +888,7 @@ public class TransportClientTests {
         }
         Assert.assertEquals(page, count);
         Assert.assertEquals(total, totalCount);
-        Assert.assertEquals(expectedList, actualList);
+        Assert.assertEquals(expectedList.size(), actualList.size());
+        expectedList.forEach(id -> Assert.assertTrue(actualList.contains(id)));
     }
 }
