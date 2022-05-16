@@ -14,6 +14,7 @@ import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.TransportAddress;
+import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.index.IndexNotFoundException;
@@ -24,6 +25,7 @@ import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryAction;
 import org.elasticsearch.index.reindex.DeleteByQueryRequestBuilder;
 import org.elasticsearch.rest.RestStatus;
+import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.terms.LongTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
@@ -821,5 +823,71 @@ public class TransportClientTests {
         searchResponse = client.prepareSearch(index).setQuery(queryBuilder).highlighter(highlightBuilder).get();
         Assert.assertEquals(1, searchResponse.getHits().getTotalHits().value);
         Assert.assertEquals("<font color='red'>John</font>", searchResponse.getHits().getHits()[0].getHighlightFields().get("comments.name").getFragments()[0].string());
+    }
+
+    @Test
+    public void testScroll() throws IOException {
+        String index = "demo_index_scroll";
+
+        if(client.admin().indices().prepareExists(index).get().isExists()) {
+            AcknowledgedResponse acknowledgedResponse = client.admin().indices().prepareDelete(index).get();
+            Assert.assertTrue(acknowledgedResponse.isAcknowledged());
+        }
+
+        XContentBuilder xContentBuilder = XContentFactory.jsonBuilder()
+                .startObject()
+                    .startObject("properties")
+                        .startObject("id")
+                            .field("type", "long")
+                        .endObject()
+                    .endObject()
+                .endObject();
+        CreateIndexResponse createIndexResponse = client.admin().indices().prepareCreate(index).addMapping("_doc", xContentBuilder).get();
+        Assert.assertTrue(createIndexResponse.isAcknowledged());
+        Assert.assertTrue(createIndexResponse.isShardsAcknowledged());
+
+        int total = 101;
+        int size =3;
+        List<Long> expectedList = new ArrayList<>();
+        for(long i=1; i<=total; i++) {
+            xContentBuilder = XContentFactory.jsonBuilder()
+                    .startObject()
+                    .field("id", i)
+                    .endObject();
+            IndexResponse indexResponse = client.prepareIndex(index, "_doc", String.valueOf(i))
+                    .setSource(xContentBuilder).setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE).get();
+            Assert.assertEquals(DocWriteResponse.Result.CREATED, indexResponse.getResult());
+            Assert.assertEquals(RestStatus.CREATED, indexResponse.status());
+            expectedList.add(i);
+        }
+
+        List<Long> actualList = new ArrayList<>();
+        int count = 0;
+        int totalCount = 0;
+        SearchResponse scrollResp = client.prepareSearch(index)
+                .addSort(SortBuilders.fieldSort("id").order(SortOrder.ASC))
+                .setScroll(new TimeValue(60000))
+                .setQuery(QueryBuilders.matchAllQuery())
+                .setSize(size).get();
+        do {
+            count++;
+            totalCount = totalCount + scrollResp.getHits().getHits().length;
+            if(scrollResp.getHits() != null) {
+                scrollResp.getHits().forEach(hit -> actualList.add(Long.parseLong(hit.getSourceAsMap().get("id").toString())));
+            }
+
+            scrollResp = client.prepareSearchScroll(scrollResp.getScrollId())
+                    .setScroll(new TimeValue(60000)).execute().actionGet();
+        } while(scrollResp.getHits().getHits().length != 0);
+
+        int page;
+        if(total%size == 0) {
+            page = total/size;
+        } else {
+            page = (total+size)/size;
+        }
+        Assert.assertEquals(page, count);
+        Assert.assertEquals(total, totalCount);
+        Assert.assertEquals(expectedList, actualList);
     }
 }
