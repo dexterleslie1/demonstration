@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 @Slf4j
 public class CustomApplicationLifecycle extends ApplicationLifecycle {
     @Autowired
-    CaptchaCacheService captchaCacheService;
+    AbstractCaptchaCacheService captchaCacheService;
 
     @Override
     protected void doStartup() throws Exception {

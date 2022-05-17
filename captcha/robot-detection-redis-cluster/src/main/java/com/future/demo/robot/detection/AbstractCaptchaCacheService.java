@@ -1,6 +1,7 @@
 package com.future.demo.robot.detection;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ramostear.captcha.common.Fonts;
 import com.ramostear.captcha.core.Captcha;
 import com.ramostear.captcha.support.CaptchaType;
@@ -8,16 +9,21 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.Element;
+
 import org.apache.commons.lang.StringUtils;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
+
 import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.JedisPubSub;
 
-import javax.annotation.PostConstruct;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.awt.*;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -28,9 +34,17 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-@Service
 @Slf4j
-public class CaptchaCacheService {
+public abstract class AbstractCaptchaCacheService {
+    private final static ObjectMapper OMInstance = new ObjectMapper();
+
+    public final static String CahceNameEhcacheEnable = "cacheEnable";
+    public final static String CacheNameEhcacheWhitelist = "cacheWhitelist";
+    public final static String CacheNameEhcacheRequestCounter = "cacheRequestCounter";
+
+    public final static String CacheKeyEnable = "enable";
+    public final static String CacheKeyPrefixWhitelist = "whitelistprefex#";
+
     /**
      * 客户端id和captcha结果对照
      */
@@ -49,40 +63,272 @@ public class CaptchaCacheService {
     public final static Integer CacheCaptchaIndexCount = 100;
     public final static Integer CaptchaTimeoutInSeconds = 7*24*3600;
 
-    private final static Integer CaptchaMaximumEntries = 100;
+    private final static Integer CaptchaMaximumEntries = 20000;
     private final static String ChannelCaptchaEvent = "channelCaptchaEvent";
+    private final static String ChannelCaptchaEnable = "channelCaptchaEnable";
+
+    private final static int TimeoutSecondsRequestCounter = 15*60;
 
     // 本地ehcache captcha索引key
     private final static String CacheKeyEhcacheCaptchaIndex = "captchaIndex";
 
     private final Random random = new Random();
 
-    @Autowired
-    JedisCluster jedisCluster;
-    @Autowired
-    CacheManagera cacheManager;
-    @Autowired
-    RedissonClient redissonClient;
-
-    private Cache cacheCaptcha;
-    private Cache cacheCaptchaIndex;
-
-    @PostConstruct
-    public void init() {
-        this.cacheCaptcha = this.cacheManager.getCache("cacheCaptcha");
-        this.cacheCaptchaIndex = this.cacheManager.getCache("cacheCaptchaIndex");
-    }
-
     private final ExecutorService executorService = Executors.newCachedThreadPool();
     private final List<JedisPubSub> jedisPubSubList = new ArrayList<>();
 
     private final ExecutorService executorServiceCaptcha = Executors.newCachedThreadPool();
 
+    private final static String UriCaptchaGet = "/api/v1/anti/captcha/get.do";
+    private final static String UriCaptchaVerify = "/api/v1/anti/captcha/verify.do";
+    private final static String UriVerifyHtml = "/anti/verify.html";
+
+    private JedisCluster jedisCluster;
+    private CacheManagera cacheManager;
+    private RedissonClient redissonClient;
+
+    private Cache cacheCaptcha;
+    private Cache cacheCaptchaIndex;
+    private Cache cacheWhitelist;
+    private Cache cacheEnable;
+    private Cache cacheRequestCounter;
+
+    public AbstractCaptchaCacheService(JedisCluster jedisCluster,
+                                       CacheManagera cacheManager,
+                                       RedissonClient redissonClient) {
+        this.jedisCluster = jedisCluster;
+        this.cacheManager = cacheManager;
+        this.redissonClient = redissonClient;
+
+        // 动态创建ehcache缓存
+        // https://www.ehcache.org/documentation/2.8/code-samples.html
+        String name = "cacheCaptcha";
+        Cache cacheTemporary = new Cache(name, 20480, false, false, 0, 0);
+        this.cacheManager.getCacheManager().addCache(cacheTemporary);
+        this.cacheCaptcha = this.cacheManager.getCache(name);
+
+        name = "cacheCaptchaIndex";
+        cacheTemporary = new Cache(name, 1, false, false, 0, 0);
+        this.cacheManager.getCacheManager().addCache(cacheTemporary);
+        this.cacheCaptchaIndex = this.cacheManager.getCache(name);
+
+        name = CacheNameEhcacheWhitelist;
+        cacheTemporary = new Cache(name, 40960, false, false, 0, 0);
+        this.cacheManager.getCacheManager().addCache(cacheTemporary);
+        this.cacheWhitelist = this.cacheManager.getCache(name);
+
+        name = CahceNameEhcacheEnable;
+        cacheTemporary = new Cache(name, 1, false, false, 0, 0);
+        this.cacheManager.getCacheManager().addCache(cacheTemporary);
+        this.cacheEnable = this.cacheManager.getCache(name);
+
+        name = CacheNameEhcacheRequestCounter;
+        cacheTemporary = new Cache(name, 100000, false, false, 0, 0);
+        this.cacheManager.getCacheManager().addCache(cacheTemporary);
+        this.cacheRequestCounter = this.cacheManager.getCache(name);
+
+        name = "cacheTimeout";
+        cacheTemporary = new Cache(name, 1000, false, false, 0, 0);
+        this.cacheManager.getCacheManager().addCache(cacheTemporary);
+    }
+
+    /**
+     * 机制开关
+     *
+     * @param enable
+     */
+    public void setEnable(boolean enable) {
+        jedisCluster.set(CacheKeyEnable, String.valueOf(enable));
+        Cache cacheEnable = cacheManager.getCache(CahceNameEhcacheEnable);
+        Element element = new Element(CacheKeyEnable, enable);
+        cacheEnable.put(element);
+        this.jedisCluster.publish(ChannelCaptchaEnable, StringUtils.EMPTY);
+    }
+
+    /**
+     * 机制启动后需要重定向的uri列表，例如：/、/index.jsp、/login.jsp等
+     *
+     * @return
+     */
+    abstract List<String> getRedirectUriList();
+
+    /**
+     * 验证成功后返回前端重定向uri，例如：/index.jsp
+     *
+     * @return
+     */
+    abstract String getRedirectLocationSuccessfullyVerify();
+
+    /**
+     * 获取机制开关uri，用于不管机制是否关闭都应该放行此uri
+     * @return
+     */
+    abstract String getEnableUri();
+
+    /**
+     * http请求处理逻辑
+     *
+     * @param servletRequest
+     * @param servletResponse
+     * @param filterChain
+     */
+    public void requestFilter(ServletRequest servletRequest,
+                              ServletResponse servletResponse,
+                              FilterChain filterChain) throws IOException, ServletException {
+        HttpServletRequest request = (HttpServletRequest) servletRequest;
+        HttpServletResponse response = (HttpServletResponse) servletResponse;
+        String uri = request.getRequestURI();
+
+        if(uri.equals(this.getEnableUri())) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        try {
+            boolean enabled = false;
+            Element elementEnable = this.cacheEnable.get(CacheKeyEnable);
+            if (elementEnable != null) {
+                enabled = (Boolean) elementEnable.getObjectValue();
+            }
+
+            if(!enabled) {
+                // 机制没有启动时不能请求captcha相关接口
+                if(uri.equals(UriCaptchaGet) ||
+                        uri.equals(UriCaptchaVerify) ||
+                        uri.equals(UriVerifyHtml)) {
+                    response.setStatus(404);
+                    ResponseUtils.write(response, StringUtils.EMPTY);
+                    return;
+                }
+            }
+
+            if (enabled) {
+                // 机制已经启动
+
+                String clientIp = RequestUtils.getRemoteAddress(request);
+                String key = CacheKeyPrefixWhitelist + clientIp;
+
+                // 为了提升性能先判断ehcache是否存在ip白名单
+                boolean inWhitelist = false;
+                Element element = this.cacheWhitelist.get(key);
+                if (element == null) {
+                    if (!jedisCluster.exists(key)) {
+
+                        // 机制启动后，记录ip请求次数
+                        Element elementRequestCounter = this.cacheRequestCounter.get(clientIp);
+                        if (elementRequestCounter == null) {
+                            elementRequestCounter = new Element(clientIp, 0);
+                        }
+                        int count = (Integer) elementRequestCounter.getObjectValue() + 1;
+                        elementRequestCounter = new Element(clientIp, count);
+                        elementRequestCounter.setTimeToLive(TimeoutSecondsRequestCounter);
+                        this.cacheRequestCounter.put(elementRequestCounter);
+                    } else {
+                        // redis存在此ip白名单时，加载redis中的ip白名单到ehcache以提升性能
+                        long seconds = jedisCluster.ttl(key);
+                        if (seconds > 0) {
+                            element = new Element(key, StringUtils.EMPTY);
+                            element.setTimeToLive((int) seconds);
+                            this.cacheWhitelist.put(element);
+                            inWhitelist = true;
+                        }
+                    }
+                } else {
+                    inWhitelist = true;
+                }
+
+                if (UriCaptchaGet.equals(uri)) {
+                    // 随机给客户端分配captcha
+
+                    AbstractCaptchaCacheService.ClientCaptchaEntry clientCaptchaEntry = assignClient();
+                    String clientId = clientCaptchaEntry.getClientId();
+                    String imageBase64 = StringUtils.EMPTY;
+                    if (clientCaptchaEntry.getEntry() != null) {
+                        imageBase64 = clientCaptchaEntry.getEntry().getImageBase64();
+                    }
+
+                    Map<String, String> mapReturn = new HashMap<>();
+                    mapReturn.put("imageBase64", imageBase64);
+                    mapReturn.put("clientId", clientId);
+                    AjaxResponse ajaxResponse = new AjaxResponse();
+                    ajaxResponse.setDataObject(mapReturn);
+                    String JSON = OMInstance.writeValueAsString(ajaxResponse);
+                    ResponseUtils.write(response, JSON);
+                    return;
+
+                } else if (UriCaptchaVerify.equals(uri)) {
+                    // 验证客户端提供的captcha
+
+                    String clientId = request.getParameter("clientId");
+                    String code = request.getParameter("code");
+
+                    AjaxResponse ajaxResponse = new AjaxResponse();
+
+                    verifyClient(clientId, clientIp, code);
+
+                    Map<String, String> mapReturn = new HashMap<>();
+                    String location = this.getRedirectLocationSuccessfullyVerify();
+                    mapReturn.put("location", location);
+                    ajaxResponse.setDataObject(mapReturn);
+                    String JSON = OMInstance.writeValueAsString(ajaxResponse);
+                    ResponseUtils.write(response, JSON);
+                    return;
+
+                } else {
+                    // ip地址没有在白名单
+                    if(!inWhitelist) {
+                        if (!UriVerifyHtml.equals(uri)) {
+                            List<String> redirectUriList = this.getRedirectUriList();
+                            if (redirectUriList.contains(uri)) {
+                                response.sendRedirect(UriVerifyHtml);
+                                return;
+                            } else {
+                                Map<String, String> mapReturn = new HashMap<>();
+                                mapReturn.put("location", UriVerifyHtml);
+                                AjaxResponse ajaxResponse = new AjaxResponse();
+                                ajaxResponse.setDataObject(mapReturn);
+                                ajaxResponse.setErrorCode(50000);
+                                String JSON = OMInstance.writeValueAsString(ajaxResponse);
+                                ResponseUtils.write(response, JSON);
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+
+            filterChain.doFilter(servletRequest, servletResponse);
+        } catch (Exception ex) {
+            if(!(ex instanceof IllegalArgumentException)) {
+                log.error(ex.getMessage(), ex);
+            }
+
+            int errorCode = 50000;
+            String errorMessage;
+
+            if(ex instanceof IllegalArgumentException) {
+                errorMessage = ex.getMessage();
+            } else {
+                errorMessage = "网络繁忙，稍后重试";
+            }
+
+            try {
+                AjaxResponse ajaxResponse = new AjaxResponse();
+                ajaxResponse.setErrorCode(errorCode);
+                ajaxResponse.setErrorMessage(errorMessage);
+                String JSON = OMInstance.writeValueAsString(ajaxResponse);
+                ResponseUtils.write(response, JSON);
+            } catch (JsonProcessingException e) {
+                //
+            }
+        }
+    }
+
     /**
      * 为客户端分配captcha项
      * @return
      */
-    public ClientCaptchaEntry assignClient() {
+    private ClientCaptchaEntry assignClient() {
         CaptchaEntry entry = this.getRandomCaptcha();
         String clientId = UUID.randomUUID().toString();
         ClientCaptchaEntry clientCaptchaEntry = new ClientCaptchaEntry();
@@ -105,7 +351,7 @@ public class CaptchaCacheService {
      * @param clientIp
      * @param result
      */
-    public void verifyClient(String clientId,
+    private void verifyClient(String clientId,
                              String clientIp,
                              String result) {
         Assert.isTrue(!StringUtils.isBlank(clientId), "没有提供客户端id参数");
@@ -121,7 +367,7 @@ public class CaptchaCacheService {
 
         Assert.isTrue(resultStore.equalsIgnoreCase(result), "验证码错误");
 
-        String key = Const.CacheKeyPrefixWhitelist + clientIp;
+        String key = CacheKeyPrefixWhitelist + clientIp;
         jedisCluster.del(captchaClientIdToResultKey);
         jedisCluster.setex(key, TimeoutInSecondsWhitelist, StringUtils.EMPTY);
     }
@@ -151,7 +397,7 @@ public class CaptchaCacheService {
             String JSON = jedisCluster.get(captchaId);
             if (!StringUtils.isEmpty(JSON)) {
                 try {
-                    CaptchaEntry entry = Const.OMInstance.readValue(JSON, CaptchaEntry.class);
+                    CaptchaEntry entry = OMInstance.readValue(JSON, CaptchaEntry.class);
                     element = new Element(captchaId, entry);
                     this.cacheCaptcha.put(element);
                 } catch (IOException e) {
@@ -210,18 +456,9 @@ public class CaptchaCacheService {
         log.debug("开始加载redis缓存相关数据到本地ehcache缓存中");
 
         // 加载redis enable到本地ehcache缓存中
-        Cache cacheEnable = cacheManager.getCache(Const.CahceNameEhcacheEnable);
-        String value = jedisCluster.get(Const.CacheKeyEnable);
-        boolean enabled = true;
-        if(!StringUtils.isEmpty(value)) {
-            try {
-                enabled = Boolean.parseBoolean(value);
-            } catch (Exception ignored) {
-
-            }
-        }
-        Element element = new Element(Const.CacheKeyEnable, enabled);
-        cacheEnable.put(element);
+        loadEnable();
+        // 通知其他节点加载enable
+        this.jedisCluster.publish(ChannelCaptchaEnable, StringUtils.EMPTY);
 
         // 加载redis验证码到本地ehcache缓存中
         String captchaIndexKey = this.getRandomIndexKey();
@@ -230,11 +467,26 @@ public class CaptchaCacheService {
             captchaIdSet = new HashSet<>();
         }
         List<String> captchaIdList = new ArrayList<>(captchaIdSet);
-        element = new Element(CacheKeyEhcacheCaptchaIndex, captchaIdList);
+        Element element = new Element(CacheKeyEhcacheCaptchaIndex, captchaIdList);
         this.cacheCaptchaIndex.put(element);
         log.debug("成功加载redis中{}个captcha索引到本地ehcache中", captchaIdList.size());
 
         log.debug("完成加载redis缓存相关数据到本地ehcache缓存中");
+    }
+
+    private void loadEnable() {
+        Cache cacheEnable = cacheManager.getCache(CahceNameEhcacheEnable);
+        String value = jedisCluster.get(CacheKeyEnable);
+        boolean enabled = true;
+        if(!StringUtils.isEmpty(value)) {
+            try {
+                enabled = Boolean.parseBoolean(value);
+            } catch (Exception ignored) {
+
+            }
+        }
+        Element element = new Element(CacheKeyEnable, enabled);
+        cacheEnable.put(element);
     }
 
     /**
@@ -271,6 +523,19 @@ public class CaptchaCacheService {
             };
             this.jedisPubSubList.add(jedisPubSub);
             this.jedisCluster.subscribe(jedisPubSub, ChannelCaptchaEvent);
+        });
+
+        // 订阅机制开关事件
+        this.executorService.submit(() -> {
+            JedisPubSub jedisPubSub = new JedisPubSub() {
+                @Override
+                public void onMessage(String channel, String message) {
+                    log.debug("订阅到captcha开关事件");
+                    loadEnable();
+                }
+            };
+            this.jedisPubSubList.add(jedisPubSub);
+            this.jedisCluster.subscribe(jedisPubSub, ChannelCaptchaEnable);
         });
 
         log.debug("完成初始化订阅redis验证码生成、更新事件");
@@ -321,7 +586,7 @@ public class CaptchaCacheService {
 
                             keyIndexList.forEach(key -> jedisCluster.sadd(key, captchaId));
                             try {
-                                String JSON = Const.OMInstance.writeValueAsString(entry);
+                                String JSON = OMInstance.writeValueAsString(entry);
                                 jedisCluster.setex(captchaId, CaptchaTimeoutInSeconds, JSON);
                                 jedisCluster.publish(ChannelCaptchaEvent, captchaId);
                             } catch (JsonProcessingException e) {
@@ -417,7 +682,7 @@ public class CaptchaCacheService {
                                 this.jedisCluster.publish(ChannelCaptchaEvent, key);
                             } else {
                                 try {
-                                    CaptchaEntry entry = Const.OMInstance.readValue(JSON, CaptchaEntry.class);
+                                    CaptchaEntry entry = OMInstance.readValue(JSON, CaptchaEntry.class);
                                     String captchaId = entry.getId();
 
                                     Captcha captcha = getCaptcha();
@@ -430,7 +695,7 @@ public class CaptchaCacheService {
                                     entry.setImageBase64(imageBase64);
                                     entry.setCreateTime(new Date());
 
-                                    JSON = Const.OMInstance.writeValueAsString(entry);
+                                    JSON = OMInstance.writeValueAsString(entry);
                                     jedisCluster.setex(captchaId, CaptchaTimeoutInSeconds, JSON);
                                     jedisCluster.publish(ChannelCaptchaEvent, captchaId);
 

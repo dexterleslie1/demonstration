@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>验证</title>
+    <script type="text/javascript" src="../js/jquery.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            function refresh() {
+                $("#statusAlert").show()
+                $("#statusAlert").html("验证码加载中，稍候。。。")
+                $("#btnVerify").prop("disabled", true)
+                $("#imgVerificationCode").hide();
+
+                $.post("/api/v1/anti/captcha/get.do",function(data) {
+                    data = JSON.parse(data)
+                    if(data.errorCode > 0) {
+                        $("#statusAlert").html("验证码加载失败，原因：" + data.errorMessage + "刷新页面重试")
+                    } else {
+                        $("#clientId").val(data.dataObject.clientId)
+                        $("#imgVerificationCode").attr("src", data.dataObject.imageBase64)
+
+                        $("#statusAlert").hide()
+                        $("#btnVerify").prop("disabled", false)
+                        $("#imgVerificationCode").show()
+                    }
+                }).fail(function() {
+                    $("#statusAlert").hide()
+                    $("#btnVerify").prop("disabled", false)
+                    $("#imgVerificationCode").show()
+                })
+            }
+
+            $("#imgVerificationCode").click(function() {
+                refresh()
+            })
+
+            $("#btnVerify").click(function() {
+                var clientId = $("#clientId").val()
+                var verificationCode = $("#verificationCode").val()
+
+                $("#btnVerify").prop("disabled", true)
+                $("#btnVerify").val("验证中，稍后。。。")
+                $.post("/api/v1/anti/captcha/verify.do", {clientId: clientId, code: verificationCode}, function(data) {
+                    data = JSON.parse(data)
+                    if(data.errorCode > 0) {
+                        refresh()
+                        $("#verificationCode").val("")
+                        alert(data.errorMessage)
+                    } else {
+                        window.location.href = data.dataObject.location
+                    }
+                }).always(function() {
+                    $("#btnVerify").prop("disabled", true)
+                    $("#btnVerify").val("验证")
+                })
+            })
+
+            refresh()
+        })
+    </script>
+</head>
+<body>
+    <div style="margin-left: auto; margin-right: auto;width: 70%;text-align: center;">
+        <input type="hidden" id="clientId"/>
+        <span id="statusAlert" style="color:red;"></span>
+        <img id="imgVerificationCode" src=""/>
+        <br/>
+        验证码：<input type="text" id="verificationCode">
+        <input type="button" id="btnVerify" value="验证">
+    </div>
+</body>
+</html>

@@ -42,4 +42,10 @@ http://www.springframework.org/schema/aop/spring-aop-3.2.xsd">
     </bean>
 
     <bean id="facadeLifecycle" class="com.future.demo.robot.detection.CustomApplicationLifecycle" />
+
+    <bean id="captchaCacheService" class="com.future.demo.robot.detection.CaptchaCacheServiceImpl">
+        <constructor-arg index="0" ref="jedisCluster"/>
+        <constructor-arg index="1" ref="cacheManager"/>
+        <constructor-arg index="2" ref="redissonClient"/>
+    </bean>
 </beans>
