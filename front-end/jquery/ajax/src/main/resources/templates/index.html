@@ -48,10 +48,16 @@
           })
       })
 
+      // https://stackoverflow.com/questions/2697719/error-handling-with-post
+      // https://api.jquery.com/jquery.post/
       $("#btn2").click(function() {
-          $.post("/api/v1/post",function(data, status) {
-              console.log(data)
-          })
+          $.post("/api/v1/post",function(data) {
+              console.log(`调用成功，数据：${JSON.stringify(data)}`)
+          }).fail(function(error) {
+              console.log(`调用失败，错误：${JSON.stringify(error)}`)
+          }).always(function() {
+              console.log("完成");
+          });
       })
   })
 </script>
