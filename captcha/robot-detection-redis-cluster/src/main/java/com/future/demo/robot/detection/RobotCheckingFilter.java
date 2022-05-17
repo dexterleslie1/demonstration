@@ -40,6 +40,7 @@ public class RobotCheckingFilter implements Filter {
         jedisCluster = ctx.getBean(JedisCluster.class);
     }
 
+    // TODO 封装到Service中
     @Override
     public void doFilter(ServletRequest servletRequest,
                          ServletResponse servletResponse,

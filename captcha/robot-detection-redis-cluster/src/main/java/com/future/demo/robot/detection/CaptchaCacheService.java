@@ -9,6 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.Element;
 import org.apache.commons.lang.StringUtils;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -18,6 +20,7 @@ import redis.clients.jedis.JedisPubSub;
 import javax.annotation.PostConstruct;
 import java.awt.*;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -44,7 +47,7 @@ public class CaptchaCacheService {
     public final static String CacheKeyCaptchaIndexPrefix = "captchaIndex#";
     public final static String CacheKeyCaptchaPrefix = "captcha#";
     public final static Integer CacheCaptchaIndexCount = 100;
-    public final static Integer CaptchaTimeoutInSeconds = 3600;
+    public final static Integer CaptchaTimeoutInSeconds = 7*24*3600;
 
     private final static Integer CaptchaMaximumEntries = 100;
     private final static String ChannelCaptchaEvent = "channelCaptchaEvent";
@@ -58,6 +61,8 @@ public class CaptchaCacheService {
     JedisCluster jedisCluster;
     @Autowired
     CacheManagera cacheManager;
+    @Autowired
+    RedissonClient redissonClient;
 
     private Cache cacheCaptcha;
     private Cache cacheCaptchaIndex;
@@ -271,10 +276,9 @@ public class CaptchaCacheService {
         log.debug("完成初始化订阅redis验证码生成、更新事件");
     }
 
+    private final static String LockCreateCaptcha = "lockCreateCaptcha";
     /**
      * 创建验证码redis缓存
-     * TODO 分散captcha过期时间，以使captcha不在同一个时间刷新
-     * TODO 并发控制
      * TODO 模糊captcha
      */
     private void createCaptcha() {
@@ -284,63 +288,80 @@ public class CaptchaCacheService {
             int cronbIntervalInSeconds = 3600;
 
             while(true) {
-                log.debug("开始执行创建验证码任务");
-
                 Element element = new Element(keyTimeout, StringUtils.EMPTY);
                 element.setTimeToLive(cronbIntervalInSeconds);
                 cacheTimeout.put(element);
 
-                String randomKeyIndex = getRandomIndexKey();
-                List<String> keyIndexList = listIndexKeys();
+                RLock rLock = null;
+                try {
+                    rLock = this.redissonClient.getLock(LockCreateCaptcha);
+                    if(!rLock.tryLock(1, TimeUnit.SECONDS)) {
+                        continue;
+                    }
 
-                // 缓存中验证码个数不足需要补充
-                long length = jedisCluster.scard(randomKeyIndex);
-                int count = CaptchaMaximumEntries - (int) length;
-                if (count > 0) {
-                    for (int i = 0; i < count; i++) {
-                        Captcha captcha = getCaptcha();
-                        String code = captcha.getCaptchaCode();
-                        String imageBase64 = captcha.toBase64();
+                    log.debug("开始执行创建验证码任务");
+                    String randomKeyIndex = getRandomIndexKey();
+                    List<String> keyIndexList = listIndexKeys();
 
-                        String captchaId = CacheKeyCaptchaPrefix + UUID.randomUUID().toString();
-                        CaptchaEntry entry = new CaptchaEntry();
-                        entry.setId(captchaId);
-                        entry.setCode(code);
-                        entry.setImageBase64(imageBase64);
-                        entry.setCreateTime(new Date());
+                    // 缓存中验证码个数不足需要补充
+                    long length = jedisCluster.scard(randomKeyIndex);
+                    int count = CaptchaMaximumEntries - (int) length;
+                    if (count > 0) {
+                        for (int i = 0; i < count; i++) {
+                            Captcha captcha = getCaptcha();
+                            String code = captcha.getCaptchaCode();
+                            String imageBase64 = captcha.toBase64();
 
-                        keyIndexList.forEach(key -> jedisCluster.sadd(key, captchaId));
-                        try {
-                            String JSON = Const.OMInstance.writeValueAsString(entry);
-                            jedisCluster.setex(captchaId, CaptchaTimeoutInSeconds, JSON);
-                            jedisCluster.publish(ChannelCaptchaEvent, captchaId);
-                        } catch (JsonProcessingException e) {
-                            log.error(e.getMessage(), e);
+                            String captchaId = CacheKeyCaptchaPrefix + UUID.randomUUID().toString();
+                            CaptchaEntry entry = new CaptchaEntry();
+                            entry.setId(captchaId);
+                            entry.setCode(code);
+                            entry.setImageBase64(imageBase64);
+                            entry.setCreateTime(new Date());
+
+                            keyIndexList.forEach(key -> jedisCluster.sadd(key, captchaId));
+                            try {
+                                String JSON = Const.OMInstance.writeValueAsString(entry);
+                                jedisCluster.setex(captchaId, CaptchaTimeoutInSeconds, JSON);
+                                jedisCluster.publish(ChannelCaptchaEvent, captchaId);
+                            } catch (JsonProcessingException e) {
+                                log.error(e.getMessage(), e);
+                            }
                         }
                     }
-                }
 
-                if(count > 0) {
-                    log.debug("成功往redis生成{}个验证码", count);
-                }
+                    if (count > 0) {
+                        log.debug("成功往redis生成{}个验证码", count);
+                    }
 
-                log.debug("完成执行创建验证码任务");
+                    log.debug("完成执行创建验证码任务");
+                } catch (InterruptedException e) {
+                    //
+                } finally {
+                   if(rLock != null && rLock.isHeldByCurrentThread()) {
+                       rLock.unlock();
+                   }
+                }
 
                 element = cacheTimeout.get(keyTimeout);
                 if(element != null) {
                     Date timeNow = new Date();
                     long milliseconds = element.getExpirationTime() - timeNow.getTime();
                     if(milliseconds > 0) {
-                        Thread.sleep(milliseconds);
+                        try {
+                            Thread.sleep(milliseconds);
+                        } catch (InterruptedException e) {
+                            //
+                        }
                     }
                 }
             }
         });
     }
 
+    private final static String LockRefreshExpiredCaptcha = "lockRefreshExpiredCaptcha";
     /**
-     * 刷新过期验证码redis缓存
-     * TODO 并发控制
+     * 刷新redis缓存captcha
      */
     private void refreshExpiredCaptcha() {
         this.executorServiceCaptcha.submit(() -> {
@@ -349,32 +370,56 @@ public class CaptchaCacheService {
             int cronbIntervalInSeconds = 30;
 
             while(true) {
-                log.debug("开始执行刷新过期验证码任务");
+                try {
+                    Thread.sleep(cronbIntervalInSeconds*1000);
+                } catch (InterruptedException e) {
+                    //
+                }
 
-                Element element = new Element(keyTimeout, StringUtils.EMPTY);
-                element.setTimeToLive(cronbIntervalInSeconds);
+                // 非凌晨2点不刷新captcha
+                Date timeNow1 = new Date();
+                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH");
+                String hourStr = simpleDateFormat.format(timeNow1);
+                int hour = Integer.parseInt(hourStr);
+                if(hour != 2) {
+                    continue;
+                }
+                // 当天已经更新过captcha
+                Element element = cacheTimeout.get(keyTimeout);
+                if(element != null) {
+                    continue;
+                }
+                element = new Element(keyTimeout, StringUtils.EMPTY);
+                element.setTimeToLive(6*3600);
                 cacheTimeout.put(element);
 
-                String randomKeyIndex = getRandomIndexKey();
-                List<String> keyIndexList = listIndexKeys();
+                RLock rLock = null;
+                try {
+                    rLock = this.redissonClient.getLock(LockRefreshExpiredCaptcha);
+                    if (!rLock.tryLock(1, TimeUnit.SECONDS)) {
+                        continue;
+                    }
 
-                // 找出过期的验证码并更新
-                Set<String> captchaEntryKeyList = this.jedisCluster.smembers(randomKeyIndex);
-                if (captchaEntryKeyList != null && captchaEntryKeyList.size() > 0) {
-                    AtomicInteger count = new AtomicInteger();
+                    log.debug("开始执行刷新过期验证码任务");
 
-                    captchaEntryKeyList.forEach(key -> {
-                        String JSON = jedisCluster.get(key);
-                        if (StringUtils.isEmpty(JSON)) {
-                            keyIndexList.forEach(keyTemporary -> jedisCluster.srem(keyTemporary, key));
-                            this.jedisCluster.publish(ChannelCaptchaEvent, key);
-                        } else {
-                            try {
-                                CaptchaEntry entry = Const.OMInstance.readValue(JSON, CaptchaEntry.class);
-                                String captchaId = entry.getId();
-                                Date createTime = entry.getCreateTime();
-                                Date timeNow = new Date();
-                                if (timeNow.getTime() - createTime.getTime() > 30 * 60 * 1000) {
+                    String randomKeyIndex = getRandomIndexKey();
+                    List<String> keyIndexList = listIndexKeys();
+
+                    // 找出过期的验证码并更新
+                    Set<String> captchaEntryKeyList = this.jedisCluster.smembers(randomKeyIndex);
+                    if (captchaEntryKeyList != null && captchaEntryKeyList.size() > 0) {
+                        AtomicInteger count = new AtomicInteger();
+
+                        captchaEntryKeyList.forEach(key -> {
+                            String JSON = jedisCluster.get(key);
+                            if (StringUtils.isEmpty(JSON)) {
+                                keyIndexList.forEach(keyTemporary -> jedisCluster.srem(keyTemporary, key));
+                                this.jedisCluster.publish(ChannelCaptchaEvent, key);
+                            } else {
+                                try {
+                                    CaptchaEntry entry = Const.OMInstance.readValue(JSON, CaptchaEntry.class);
+                                    String captchaId = entry.getId();
+
                                     Captcha captcha = getCaptcha();
                                     String code = captcha.getCaptchaCode();
                                     String imageBase64 = captcha.toBase64();
@@ -390,26 +435,23 @@ public class CaptchaCacheService {
                                     jedisCluster.publish(ChannelCaptchaEvent, captchaId);
 
                                     count.incrementAndGet();
+                                } catch (IOException e) {
+                                    //
                                 }
-                            } catch (IOException e) {
-                                //
                             }
+                        });
+
+                        if (count.get() > 0) {
+                            log.debug("成功更新redis中{}个验证码", count.get());
                         }
-                    });
-
-                    if (count.get() > 0) {
-                        log.debug("成功更新redis中{}个验证码", count.get());
                     }
-                }
 
-                log.debug("完成执行刷新过期验证码任务");
-
-                element = cacheTimeout.get(keyTimeout);
-                if(element != null) {
-                    Date timeNow = new Date();
-                    long milliseconds = element.getExpirationTime() - timeNow.getTime();
-                    if(milliseconds > 0) {
-                        Thread.sleep(milliseconds);
+                    log.debug("完成执行刷新过期验证码任务");
+                } catch (InterruptedException ex) {
+                    //
+                } finally {
+                    if(rLock != null && rLock.isHeldByCurrentThread()) {
+                        rLock.unlock();
                     }
                 }
             }
