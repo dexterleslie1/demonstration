@@ -38,17 +38,20 @@ import java.util.concurrent.atomic.AtomicInteger;
 public abstract class AbstractCaptchaCacheService {
     private final static ObjectMapper OMInstance = new ObjectMapper();
 
-    public final static String CahceNameEhcacheEnable = "cacheEnable";
-    public final static String CacheNameEhcacheWhitelist = "cacheWhitelist";
-    public final static String CacheNameEhcacheRequestCounter = "cacheRequestCounter";
+    public final static String CacheNameEhcacheCaptcha = "antiRobotCacheCaptcha";
+    public final static String CacheNameEhcacheCaptchaIndex = "antiRobotCacheCaptchaIndex";
+    public final static String CahceNameEhcacheEnable = "antiRobotCacheEnable";
+    public final static String CacheNameEhcacheWhitelist = "antiRobotCacheWhitelist";
+    public final static String CacheNameEhcacheRequestCounter = "antiRobotCacheRequestCounter";
+    public final static String CacheNameEhcacheCacheTimeout = "antiRobotCacheTimeout";
 
-    public final static String CacheKeyEnable = "enable";
-    public final static String CacheKeyPrefixWhitelist = "whitelistprefex#";
+    public final static String CacheKeyEnable = "antiRobotEnable";
+    public final static String CacheKeyPrefixWhitelist = "antiRobotWhitelistprefex#";
 
     /**
      * 客户端id和captcha结果对照
      */
-    public final static String CacheKeyCaptchaClientIdToResultPrefix = "captchaClientIdToResult#";
+    public final static String CacheKeyCaptchaClientIdToResultPrefix = "antiRobotCaptchaClientIdToResult#";
     /**
      * 客户端id和captcha结果对照超时
      */
@@ -58,19 +61,19 @@ public abstract class AbstractCaptchaCacheService {
      */
     public final static Integer TimeoutInSecondsWhitelist = 3600;
 
-    public final static String CacheKeyCaptchaIndexPrefix = "captchaIndex#";
-    public final static String CacheKeyCaptchaPrefix = "captcha#";
+    public final static String CacheKeyCaptchaIndexPrefix = "antiRobotCaptchaIndex#";
+    public final static String CacheKeyCaptchaPrefix = "antiRobotCaptcha#";
     public final static Integer CacheCaptchaIndexCount = 100;
     public final static Integer CaptchaTimeoutInSeconds = 7*24*3600;
 
     private final static Integer CaptchaMaximumEntries = 20000;
-    private final static String ChannelCaptchaEvent = "channelCaptchaEvent";
-    private final static String ChannelCaptchaEnable = "channelCaptchaEnable";
+    private final static String ChannelCaptchaEvent = "antiRobotChannelCaptchaEvent";
+    private final static String ChannelCaptchaEnable = "antiRobotChannelCaptchaEnable";
 
     private final static int TimeoutSecondsRequestCounter = 15*60;
 
     // 本地ehcache captcha索引key
-    private final static String CacheKeyEhcacheCaptchaIndex = "captchaIndex";
+    private final static String CacheKeyEhcacheCaptchaIndex = "antiRobotCaptchaIndex";
 
     private final Random random = new Random();
 
@@ -102,12 +105,12 @@ public abstract class AbstractCaptchaCacheService {
 
         // 动态创建ehcache缓存
         // https://www.ehcache.org/documentation/2.8/code-samples.html
-        String name = "cacheCaptcha";
+        String name = CacheNameEhcacheCaptcha;
         Cache cacheTemporary = new Cache(name, 20480, false, false, 0, 0);
         this.cacheManager.getCacheManager().addCache(cacheTemporary);
         this.cacheCaptcha = this.cacheManager.getCache(name);
 
-        name = "cacheCaptchaIndex";
+        name = CacheNameEhcacheCaptchaIndex;
         cacheTemporary = new Cache(name, 1, false, false, 0, 0);
         this.cacheManager.getCacheManager().addCache(cacheTemporary);
         this.cacheCaptchaIndex = this.cacheManager.getCache(name);
@@ -127,7 +130,7 @@ public abstract class AbstractCaptchaCacheService {
         this.cacheManager.getCacheManager().addCache(cacheTemporary);
         this.cacheRequestCounter = this.cacheManager.getCache(name);
 
-        name = "cacheTimeout";
+        name = CacheNameEhcacheCacheTimeout;
         cacheTemporary = new Cache(name, 1000, false, false, 0, 0);
         this.cacheManager.getCacheManager().addCache(cacheTemporary);
     }
@@ -498,7 +501,7 @@ public abstract class AbstractCaptchaCacheService {
         log.debug("开始初始化订阅redis验证码生成、更新事件");
 
         // 订阅redis验证码相关事件
-        Cache cacheCaptcha = this.cacheManager.getCache("cacheCaptcha");
+        Cache cacheCaptcha = this.cacheManager.getCache(AbstractCaptchaCacheService.CacheNameEhcacheCaptcha);
         this.executorService.submit(() -> {
             JedisPubSub jedisPubSub = new JedisPubSub() {
                 @Override
@@ -549,7 +552,7 @@ public abstract class AbstractCaptchaCacheService {
      */
     private void createCaptcha() {
         this.executorServiceCaptcha.submit(() -> {
-            Cache cacheTimeout = this.cacheManager.getCache("cacheTimeout");
+            Cache cacheTimeout = this.cacheManager.getCache(AbstractCaptchaCacheService.CacheNameEhcacheCacheTimeout);
             String keyTimeout = "captchaCreation";
             int cronbIntervalInSeconds = 3600;
 
@@ -631,7 +634,7 @@ public abstract class AbstractCaptchaCacheService {
      */
     private void refreshExpiredCaptcha() {
         this.executorServiceCaptcha.submit(() -> {
-            Cache cacheTimeout = this.cacheManager.getCache("cacheTimeout");
+            Cache cacheTimeout = this.cacheManager.getCache(AbstractCaptchaCacheService.CacheNameEhcacheCacheTimeout);
             String keyTimeout = "captchaRefresh";
             int cronbIntervalInSeconds = 30;
 
