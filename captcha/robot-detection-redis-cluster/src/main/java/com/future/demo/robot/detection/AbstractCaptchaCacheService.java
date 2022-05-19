@@ -161,6 +161,7 @@ public abstract class AbstractCaptchaCacheService {
 
     /**
      * 获取机制开关uri，用于不管机制是否关闭都应该放行此uri
+     *
      * @return
      */
     abstract String getEnableUri();
@@ -223,6 +224,8 @@ public abstract class AbstractCaptchaCacheService {
                         elementRequestCounter = new Element(clientIp, count);
                         elementRequestCounter.setTimeToLive(TimeoutSecondsRequestCounter);
                         this.cacheRequestCounter.put(elementRequestCounter);
+
+                        // TODO forbidden日志
                     } else {
                         // redis存在此ip白名单时，加载redis中的ip白名单到ehcache以提升性能
                         long seconds = jedisCluster.ttl(key);
@@ -391,7 +394,6 @@ public abstract class AbstractCaptchaCacheService {
         }
 
         // 根据randomKey读取验证码
-        // TODO 测试ehcache内存压力
         element = this.cacheCaptcha.get(captchaId);
         if(element == null) {
             String JSON = jedisCluster.get(captchaId);
@@ -477,7 +479,7 @@ public abstract class AbstractCaptchaCacheService {
     private void loadEnable() {
         Cache cacheEnable = cacheManager.getCache(CahceNameEhcacheEnable);
         String value = jedisCluster.get(CacheKeyEnable);
-        boolean enabled = true;
+        boolean enabled = false;
         if(!StringUtils.isEmpty(value)) {
             try {
                 enabled = Boolean.parseBoolean(value);
@@ -544,7 +546,6 @@ public abstract class AbstractCaptchaCacheService {
     private final static String LockCreateCaptcha = "lockCreateCaptcha";
     /**
      * 创建验证码redis缓存
-     * TODO 模糊captcha
      */
     private void createCaptcha() {
         this.executorServiceCaptcha.submit(() -> {
