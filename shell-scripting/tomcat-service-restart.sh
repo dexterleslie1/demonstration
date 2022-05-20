@@ -12,14 +12,11 @@ service nginx stop
 
 # 关闭tomcat
 echo "`date` 关闭tomcat。。。"
-sudo -u $varTomcatUser sh $varTomcatDir/bin/shutdown.sh 1>/dev/null
-
-# 检查tomcat是否已经关闭
-while curl --output /dev/null --silent http://localhost:8080/;
-do
- echo "`date` 等待tomcat关闭中。。。"
- sleep 1
-done
+#sudo -u $varTomcatUser sh $varTomcatDir/bin/shutdown.sh 1>/dev/null
+varTomcatPid=`ps aux | grep $varTomcatDir | grep -v grep | awk '{print $2}'`
+if ! [[ "$varTomcatPid" == "" ]]; then
+ kill -9 $varTomcatPid
+fi
 
 # 启动tomcat
 echo "`date` 启动tomcat。。。"
@@ -34,5 +31,4 @@ done
 
 echo "`date` 启动nginx。。。"
 service nginx start
-
 
