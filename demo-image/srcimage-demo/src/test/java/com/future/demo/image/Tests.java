@@ -16,7 +16,7 @@ public class Tests {
 
         JpegWriter jpegWriter = new JpegWriter();
         InputStream inputStream = Tests.class.getClassLoader().getResourceAsStream(filename);
-        ImmutableImage.loader().fromStream(inputStream).scaleToWidth(100).output(jpegWriter, new File(directory + "/" + filenameSmall));
+        ImmutableImage.loader().fromStream(inputStream).scaleToWidth(100).scaleToHeight(200).output(jpegWriter, new File(directory + "/" + filenameSmall));
         IOUtils.close(inputStream);
     }
 }
