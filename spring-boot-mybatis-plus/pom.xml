@@ -12,9 +12,7 @@
 
     <groupId>com.future.demo</groupId>
     <artifactId>spring-boot-mybatis-plus</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-    <name>spring-boot-mybatis-plus</name>
-    <description>Demo project for Spring Boot</description>
+    <version>1.0.0</version>
 
     <properties>
         <java.version>1.8</java.version>
@@ -22,12 +20,13 @@
         <lombok.version>1.18.20</lombok.version>
         <junit.version>4.13.2</junit.version>
         <mysql.connector.version>8.0.23</mysql.connector.version>
+        <yyd-common.version>3.5.5</yyd-common.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter</artifactId>
+            <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -55,6 +54,15 @@
             <artifactId>mysql-connector-java</artifactId>
             <version>${mysql.connector.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.yyd.sdk</groupId>
+            <artifactId>yyd-common</artifactId>
+            <version>${yyd-common.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
@@ -66,4 +74,17 @@
         </plugins>
     </build>
 
+    <!-- 引用yyd nexus仓库 -->
+    <repositories>
+        <repository>
+            <id>yyd-nexus</id>
+            <url>http://maven.118899.net:10000/repository/maven-releases/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
 </project>
