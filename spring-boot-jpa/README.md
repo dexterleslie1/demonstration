@@ -3,14 +3,14 @@
 ## 运行demo
 
 ```shell script
+# 编译相关容器
+sh build.sh
+
 # 启动mariadb容器
+docker-compose up -d
 
+# 运行单元测试
 
-# 创建数据库
-create database demojpa;
-
-# 执行db.sql初始化数据库
-source db.sql
 ```
 
 ## jpa less than写法
