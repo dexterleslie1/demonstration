@@ -1,0 +1,26 @@
+version: "3.0"
+
+networks:
+  net:
+    name: network-internal
+
+services:
+  demo-dockerize:
+    container_name: demo-dockerize
+    image: mariadb:10.4.19
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - TZ=Asia/Shanghai
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci --skip-character-set-client-handshake
+    ports:
+      - 3306:3306
+    networks:
+      - net
+
+  demo-dockerize-wait:
+    container_name: demo-dockerize-wait
+    image: docker.118899.net:10001/yyd-public/demo-dockerize-wait
+    command: sh -c 'dockerize -wait tcp://demo-dockerize:3306 -timeout 60s -wait-retry-interval 5s mysql -uroot -p123456 -P3306 -hdemo-dockerize -e "create database testdb" && echo "成功创建testdb数据库"'
+    networks:
+      - net
+
