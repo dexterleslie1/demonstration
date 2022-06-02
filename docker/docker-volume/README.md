@@ -27,3 +27,16 @@ cat /data/1.txt
 
 ## 匿名volume，暂时没有需求用到不研究
 
+## 演示使用--volumes-from复制数据
+
+```
+# 创建数据容器
+docker run --name demo-docker-datum -it -v vol-demo-docker-datum:/data centos /bin/sh -c "echo '`date`' > /data/1.txt"
+
+# 从数据容器创建新的容器并且复制数据
+docker run --rm --name demo-docker-datum-cloner -it --volumes-from demo-docker-datum -v vol-demo-docker-datum-clone:/data1 centos /bin/sh -c "cp -rp /data/* /data1/"
+
+# 使用复制数据启动新的容器，切换到/data目录查看数据
+docker run --rm -it -v vol-demo-docker-datum-clone:/data centos /bin/bash
+```
+
