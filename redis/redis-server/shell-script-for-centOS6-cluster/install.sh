@@ -26,6 +26,13 @@ if [ "$varRedisNodeCount" == "" ]; then
         varRedisNodeCount=3
 fi
 
+# 提示用户输入redis起始端口
+read -p "输入redis起始端口，后续节点端口基于起始端口递增（默认值6390）：" varRedisNodeStartPort
+if [ "$varRedisNodeStartPort" == "" ]; then
+	varRedisNodeStartPort=6390
+fi
+
+
 # 编译并安装redis
 yum install -y gcc make
 
@@ -47,16 +54,16 @@ grep -q '^net.core.somaxconn' /etc/sysctl.conf && sed -i 's/^net.core.somaxconn.
 grep -q '^echo never > /sys/kernel/mm/transparent_hugepage/enabled' /etc/rc.local || echo 'echo never > /sys/kernel/mm/transparent_hugepage/enabled' >> /etc/rc.local
 
 # 配置redis各个节点redis.conf
-for ((i=1; i<=$varRedisNodeCount; i++))
+for ((i=0; i<$varRedisNodeCount; i++))
 do
         mkdir -p /data/redis-cluster/node$i
         cp -f redis.conf.template /data/redis-cluster/node$i/redis.conf
-        varRedisPortTemporary=$((6379+$i))
+        varRedisPortTemporary=$(($varRedisNodeStartPort+$i))
         sed -i "s/^port 6380/port ${varRedisPortTemporary}/" /data/redis-cluster/node$i/redis.conf
 done
 
 # 启动redis各个节点
-for ((i=1; i<=$varRedisNodeCount; i++))
+for ((i=0; i<$varRedisNodeCount; i++))
 do
 	# TODO 如果失败退出shell
         (cd /data/redis-cluster/node$i && redis-server redis.conf)
@@ -66,9 +73,9 @@ sleep 5
 
 # 创建redis集群
 varClusterCreationStr=""
-for ((i=1; i<=$varRedisNodeCount; i++))
+for ((i=0; i<$varRedisNodeCount; i++))
 do
-        varRedisPortTemporary=$((6379+$i))
+        varRedisPortTemporary=$(($varRedisNodeStartPort+$i))
         varClusterCreationStr="$varClusterCreationStr $varRedisHostIp:$varRedisPortTemporary"
         if [[ $i -lt $varRedisNodeCount ]]; then
                 varClusterCreationStr="$varClusterCreationStr "
@@ -78,7 +85,7 @@ done
 echo "yes" | redis-cli --cluster create $varClusterCreationStr
 
 # 配置开机自动启动redis集群
-for ((i=1; i<=$varRedisNodeCount; i++))
+for ((i=0; i<$varRedisNodeCount; i++))
 do
         grep -q "^sudo -i sh -c \"cd /data/redis-cluster/node${i} && /usr/local/bin/redis-server redis.conf\"" /etc/rc.local || echo "sudo -i sh -c \"cd /data/redis-cluster/node${i} && /usr/local/bin/redis-server redis.conf\"" >> /etc/rc.local
 done
