@@ -19,11 +19,23 @@
                     }
                 })
             })
+
+            $("#btn2").click(function() {
+                $.post("/api/v1/biz/removeWhitelist.do",function(data, status) {
+                    data = JSON.parse(data)
+                    if(data.errorCode > 0) {
+                        window.location.href = data.dataObject.location
+                    } else {
+                        alert(data.dataObject)
+                    }
+                })
+            })
         })
     </script>
 <body>
     <div>
         <input id="btn1" type="button" value="模拟调用接口被引导到验证界面"/>
+        <input id="btn2" type="button" value="重新进行机器人验证"/>
     </div>
 </body>
 </html>

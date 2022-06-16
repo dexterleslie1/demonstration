@@ -217,9 +217,9 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.ramostear</groupId>
-			<artifactId>Happy-Captcha</artifactId>
-			<version>1.0.1</version>
+			<groupId>com.yyd.sdk</groupId>
+			<artifactId>yyd-common</artifactId>
+			<version>3.8.39</version>
 		</dependency>
 
 		<dependency>
@@ -298,9 +298,9 @@
 		<finalName>demo-robot-detection</finalName>
 		<plugins>
 			<plugin>
-				<groupId>org.apache.tomcat.maven</groupId>
-				<artifactId>tomcat7-maven-plugin</artifactId>
-				<version>2.2</version>
+				<groupId>org.opoo.maven</groupId>
+				<artifactId>tomcat9-maven-plugin</artifactId>
+				<version>3.0.1</version>
 				<configuration>
 					<path>/</path>
 					<port>8080</port>

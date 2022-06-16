@@ -47,5 +47,7 @@ http://www.springframework.org/schema/aop/spring-aop-3.2.xsd">
         <constructor-arg index="0" ref="jedisCluster"/>
         <constructor-arg index="1" ref="cacheManager"/>
         <constructor-arg index="2" ref="redissonClient"/>
+        <constructor-arg index="3" value=""/>
+        <constructor-arg index="4" value="true"/>
     </bean>
 </beans>

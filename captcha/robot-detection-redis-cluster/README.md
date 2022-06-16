@@ -3,6 +3,7 @@
 ## TODO
 
 * 浏览器兼容性测试
+* 使用繁体字
 
 ## 运行demo
 
@@ -11,7 +12,7 @@
 ```shell script
 # 运行demo
 # 启动redis集群并修改application.properties
-mvn tomcat7:run
+mvn tomcat9:run
 
 # 访问首页
 http://localhost:8080
