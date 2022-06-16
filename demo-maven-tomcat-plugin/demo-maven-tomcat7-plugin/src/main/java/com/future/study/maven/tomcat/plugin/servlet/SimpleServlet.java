@@ -20,7 +20,7 @@ public class SimpleServlet extends HttpServlet {
     	String p1 = req.getParameter("p1");
     	if(p1==null || p1.trim().length()<=0) {
     		try {
-				Thread.sleep(15000);
+				Thread.sleep(5000);
 			} catch (InterruptedException e) {
 				//
 			}
