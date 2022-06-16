@@ -1,8 +1,10 @@
 # golang语言基础
 
-## macOS安装go
+## go环境配置和安装
 
-**下载go pkg并安装**
+### macOS安装go
+
+**下载go pkg并安装，下载地址：https://go.dev/dl/**
 
 ```
 # 编辑~/.bash_profile添加如下内容：
@@ -11,6 +13,26 @@ export GO111MODULE=on
 PATH=$PATH:~/go/bin
 export PATH
 
+# 检查
+go version
+
+```
+
+### centOS8安装go
+
+**参考资料：https://blog.csdn.net/shuaihj/article/details/123018041**
+
+**下载go安装包，下载地址：https://go.dev/dl/**
+
+```
+# 编辑~/.bash_profile添加如下内容：
+export GOPROXY=https://goproxy.io
+export GO111MODULE=on
+PATH=$PATH:~/go/bin
+export PATH
+
+# 检查
+go version
 ```
 
 ## 编译发布golang程序
