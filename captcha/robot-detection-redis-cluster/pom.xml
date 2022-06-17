@@ -219,7 +219,7 @@
 		<dependency>
 			<groupId>com.yyd.sdk</groupId>
 			<artifactId>yyd-common</artifactId>
-			<version>3.8.39</version>
+			<version>3.8.52</version>
 		</dependency>
 
 		<dependency>
