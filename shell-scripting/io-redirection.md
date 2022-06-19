@@ -57,6 +57,12 @@ date > /dev/null 2>&1
 date1 > /dev/null 2>&1
 ```
 
+### stdout输出到stderr
+
+```
+echo "*** This is a warning" >&2
+```
+
 ### Permission denided错误（stderr）不输出，stdout正常输出到控制台
 ```
 find / -iname "*takeRight*" 2>/dev/null
