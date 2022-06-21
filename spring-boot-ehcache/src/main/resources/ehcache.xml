@@ -4,4 +4,5 @@
 	xsi:noNamespaceSchemaLocation="http://ehcache.org/ehcache.xsd"
     updateCheck="false">
     <cache name="cacheTest" maxElementsInMemory="100000"/>
+	<cache name="cacheMemoryFootprint" maxElementsInMemory="100000"/>
 </ehcache>
