@@ -19,7 +19,9 @@ import javax.servlet.http.HttpServletResponse;
 @RestController
 @RequestMapping(value="/api/v1")
 public class ApiController {
-    private final static Logger logger = LoggerFactory.getLogger(ApiController.class);
+    final static Logger logger = LoggerFactory.getLogger(ApiController.class);
+    final static Logger namedLogger = LoggerFactory.getLogger("namedLogger");
+
     /**
      *
      * @param request
@@ -31,6 +33,9 @@ public class ApiController {
             HttpServletRequest request,
             HttpServletResponse response){
         logger.debug("test method is called");
+
+        namedLogger.debug("named logger输出日志");
+
         return ResponseEntity.ok("");
     }
 

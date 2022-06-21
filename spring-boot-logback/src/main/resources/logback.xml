@@ -13,6 +13,14 @@
     <springProperty name="disableConsole" source="spring.application.console.disable"/>
     <property name="k3" value="测试值3"/>
 
+    <appender name="namedConsoleAppender" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>
+                named - [%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} %logger{15}.%method\(%file:%line\) : %message [k1=${k1},k2=${varTemp2},k3=${k3}] %n
+            </pattern>
+        </encoder>
+    </appender>
+
     <appender name="consoleAppender" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>
@@ -69,6 +77,16 @@
         </encoder>
     </appender>
 
+    <appender name="normalFileAppender" class="ch.qos.logback.core.FileAppender">
+        <file>${user.home}/logback-normal-file.log</file>
+        <encoder>
+            <charset>UTF-8</charset>
+            <Pattern>
+                %d{yyyy-MM-dd HH:mm:ss} %message%n
+            </Pattern>
+        </encoder>
+    </appender>
+
     <root level="debug">
         <if condition='!property("needConsole").equals("false") &amp;&amp; !property("disableConsole").equals("true")'>
             <then>
@@ -86,5 +104,10 @@
     </logger>
     <logger name="com.future.study.spring.boot.package1.TestAdditivity" level="debug" additivity="false">
         <appender-ref ref="package1Appender"/>
+        <appender-ref ref="normalFileAppender"/>
+    </logger>
+
+    <logger name="namedLogger" level="debug" additivity="false">
+        <appender-ref ref="namedConsoleAppender"/>
     </logger>
 </configuration>
