@@ -5,5 +5,5 @@
     updateCheck="false">
     <cache name="cache1" maxElementsInMemory="100000"/>
 <!--    <cache name="cacheMemoryHolder" maxElementsInMemory="4"/>-->
-    <cache name="cacheMemoryHolder" maxElementsInMemory="100000"/>
+    <cache name="cacheMemoryHolder" maxElementsInMemory="30000000"/>
 </ehcache>

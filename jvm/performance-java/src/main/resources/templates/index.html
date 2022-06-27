@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>JVM性能相关测试</title>
+    <script type="text/javascript" src="https://lib.baomitu.com/jquery/1.12.4/jquery.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+
+            $("#btnMemoryLeakStart").click(function() {
+                $.ajax({
+                    type: "GET",
+                    url: "/api/v1/gc/memoryLeak/start",
+                    success: function(data) {
+                        alert(data.data)
+                    },
+                    error(xhr,status,error) {
+                        alert(xhr);
+                    }
+                })
+            })
+
+            $("#btnMemoryLeakStop").click(function() {
+                $.ajax({
+                    type: "GET",
+                    url: "/api/v1/gc/memoryLeak/stop",
+                    success: function(data) {
+                        alert(data.data)
+                    },
+                    error(xhr,status,error) {
+                        alert(xhr);
+                    }
+                })
+            })
+
+            $("#btnMemoryLeakRelease").click(function() {
+                $.ajax({
+                    type: "GET",
+                    url: "/api/v1/gc/memoryLeak/release",
+                    success: function(data) {
+                        alert(data.data)
+                    },
+                    error(xhr,status,error) {
+                        alert(xhr);
+                    }
+                })
+            })
+
+            $("#btnMemoryLeakPerformGC").click(function() {
+                $.ajax({
+                    type: "GET",
+                    url: "/api/v1/gc/memoryLeak/performgc",
+                    success: function(data) {
+                        alert(data.data)
+                    },
+                    error(xhr,status,error) {
+                        alert(xhr);
+                    }
+                })
+            })
+
+            $("#btnCpuLoadedStart").click(function() {
+                var durationInSeconds = $("#cpuLoadedDurationInSecond").val()
+                $.ajax({
+                    type: "GET",
+                    url: "/api/v1/cpu/loaded",
+                    data: {
+                        durationInSecond: durationInSeconds
+                    },
+                    success: function(data) {
+                        alert(data.data)
+                    },
+                    error(xhr,status,error) {
+                        alert(xhr);
+                    }
+                })
+            })
+        })
+    </script>
+</head>
+<body>
+    <h1>Memory leak测试</h1>
+    <input type="button" value="开始" id="btnMemoryLeakStart"/>
+    <input type="button" value="停止" id="btnMemoryLeakStop"/>
+    <input type="button" value="释放" id="btnMemoryLeakRelease"/>
+    <input type="button" value="System.gc()" id="btnMemoryLeakPerformGC"/>
+    <hr>
+
+    <h1>CPU负载测试</h1>
+    测试持续时间：<input type="text" id="cpuLoadedDurationInSecond"> 秒（默认60秒）
+    <input type="button" value="开始" id="btnCpuLoadedStart"/>
+    <hr>
+</body>
+</html>
