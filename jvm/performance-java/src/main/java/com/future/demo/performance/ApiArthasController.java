@@ -1,0 +1,74 @@
+package com.future.demo.performance;
+
+import com.yyd.common.http.response.ObjectResponse;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Random;
+import java.util.UUID;
+
+@RestController
+@RequestMapping(value="/api/v1/arthas")
+@Slf4j
+public class ApiArthasController {
+	@Autowired
+	ArthasService arthasService = null;
+
+	private boolean monitorStop = true;
+
+	@GetMapping("monitor/start")
+	public ObjectResponse<String> monitorStart(
+			@RequestParam(value = "loopCount", defaultValue = "-1") int loopCount,
+			@RequestParam(value = "sleepInterval", defaultValue = "0") int sleepInterval) throws InterruptedException {
+		monitorStop = false;
+		int count = 0;
+		while(!monitorStop) {
+			this.monitorMethod(sleepInterval);
+
+			count++;
+			if(loopCount > 0 && count >= loopCount) {
+				break;
+			}
+		}
+
+		ObjectResponse<String> response = new ObjectResponse<>();
+		response.setData("调用成功");
+		return response;
+	}
+
+	private void monitorMethod(int sleepInterval) throws InterruptedException {
+		if(sleepInterval > 0) {
+			Thread.sleep(sleepInterval);
+		}
+	}
+
+	@GetMapping("monitor/stop")
+	public ObjectResponse<String> monitorStop() {
+		this.monitorStop = true;
+
+		ObjectResponse<String> response = new ObjectResponse<>();
+		response.setData("调用成功");
+		return response;
+	}
+
+	@GetMapping("watch")
+	public ObjectResponse<String> watch() {
+		String uuid = UUID.randomUUID().toString();
+		int intP = new Random().nextInt(3);
+		this.arthasService.watchMethod(uuid, intP);
+
+		ObjectResponse<String> response = new ObjectResponse<>();
+		response.setData("调用成功");
+		return response;
+	}
+
+	@GetMapping("trace")
+	public ObjectResponse<String> trace() throws InterruptedException {
+		this.arthasService.traceMethodLv1();
+
+		ObjectResponse<String> response = new ObjectResponse<>();
+		response.setData("调用成功");
+		return response;
+	}
+}
