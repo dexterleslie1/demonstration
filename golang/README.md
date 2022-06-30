@@ -55,3 +55,25 @@ GOOS=darwin GOARCH=386 go build -o bin/test-darwin-i386 test.go
 # 发布linux 64位
 GOOS=linux GOARCH=amd64 go build -o test-linux-x86_64 test.go
 ```
+
+
+## 使用go run从源代码运行golang程序
+
+```
+go run xxx.go
+```
+
+## 使用go mod管理项目
+
+**使用go mod 管理项目，就不需要非得把项目放到GOPATH指定目录下，你可以在你磁盘的任何位置新建一个项目**
+
+**[go.mod go.sum](https://blog.csdn.net/Fly_as_tadpole/article/details/109441310)**
+
+```
+# 初始化一个模块名为demo-cobra，以后引用这个模块的cmd子目录方式为import "demo-cobra/cmd"，会在当前目录下生成go.mod文件
+go mod init demo-cobra
+
+# 生成go.sum文件
+go mod tidy
+```
+***
