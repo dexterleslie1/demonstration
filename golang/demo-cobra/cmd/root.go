@@ -8,13 +8,15 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"demo-cobra/cmd/mariadb"
+	"demo-cobra/cmd/mysql"
 )
 
 
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "cobra",
+	Use:   "dcli",
 	Short: "A brief description of your application",
 	Long: `A longer description that spans multiple lines and likely contains
 examples and usage of using your application. For example:
@@ -37,6 +39,8 @@ func Execute() {
 }
 
 func init() {
+	rootCmd.AddCommand(mariadb.MariadbCmd)
+	rootCmd.AddCommand(mysql.MysqlCmd)
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
