@@ -1,8 +1,17 @@
 # 演示使用autotools编译项目
 
+## 参考
+
+**[Autotools使用详细解读](https://blog.csdn.net/zhengqijun_/article/details/70105077)**
+**[autoscan、automake、autoconf详解](https://blog.csdn.net/chupaokan7404/article/details/100905223)**
+
 ## 步骤
 
 ```
+# 执行脚本buildconf能够自动化配置和编译
+./buildconf
+
+#*********************** 按照步骤执行以下命令手动配置和编译 *************************************
 # 创建configure.ac
 autoscan
 mv configure.scan configure.ac
