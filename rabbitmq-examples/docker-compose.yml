@@ -9,7 +9,8 @@ services:
   # 启动rabbitmq
   demo-rabbitmq:
     container_name: demo-rabbitmq
-    image: library/rabbitmq:3.7.16-rc.3-management
+    #image: library/rabbitmq:3.7.16-rc.3-management
+    image: docker.118899.net:10001/yyd-public/yyd-rabbitmq
     environment:
       - RABBITMQ_DEFAULT_USER=root
       - RABBITMQ_DEFAULT_PASS=123456

@@ -5,24 +5,14 @@
 	<parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.6.7</version>
+        <version>2.0.3.RELEASE</version>
     </parent>
 	
     <groupId>com.future.demo</groupId>
-    <artifactId>spring-amqp-rabbitmq-delayed-message-exchange</artifactId>
+    <artifactId>spring-amqp-demo-dead-letter</artifactId>
     <version>1.0.0</version>
 
-    <properties>
-        <java.version>1.8</java.version>
-    </properties>
-
 	<dependencies>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.13.2</version>
-            <scope>test</scope>
-        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -35,6 +25,11 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-amqp</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-collections4</artifactId>
+            <version>4.4</version>
         </dependency>
     </dependencies>
 </project>

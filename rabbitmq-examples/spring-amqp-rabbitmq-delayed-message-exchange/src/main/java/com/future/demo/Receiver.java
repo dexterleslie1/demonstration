@@ -1,10 +1,11 @@
-package com.future.study.rabbitmq.spring.delayed.message;
+package com.future.demo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author Dexterleslie.Chan
@@ -13,19 +14,15 @@ import java.util.concurrent.CountDownLatch;
 public class Receiver {
     private static final Logger logger = LoggerFactory.getLogger(Receiver.class);
 
-    private CountDownLatch latch = new CountDownLatch(1);
+    private final AtomicInteger counter = new AtomicInteger();
 
+    @RabbitListener(queues = Config.QueueName)
     public void receiveMessage(String message) {
         logger.info("Received <" + message + ">");
-        latch.countDown();
+        counter.incrementAndGet();
     }
 
-    public void setCountDown(int count) {
-        this.latch = new CountDownLatch(count);
+    public int getCount() {
+        return this.counter.get();
     }
-
-    public CountDownLatch getLatch() {
-        return latch;
-    }
-
 }
