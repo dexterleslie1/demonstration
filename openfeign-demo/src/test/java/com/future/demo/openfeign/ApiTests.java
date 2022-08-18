@@ -154,5 +154,17 @@ public class ApiTests {
         }
         response1 = api.delete("1111");
         Assert.assertEquals("删除成功", response1.getData());
+
+        // 测试x-www-form-urlencoded
+        String parameter1 = "测试";
+        ObjectResponse<String> response6 = api.postWwwFormUrlencoded(parameter1);
+        Assert.assertEquals("提交参数parameter1=" + parameter1, response6.getData());
+
+        try {
+            api.postWwwFormUrlencoded(null);
+            Assert.fail("预期异常没有抛出");
+        } catch (BusinessException ex) {
+            Assert.assertEquals("没有指定param1参数", ex.getErrorMessage());
+        }
     }
 }

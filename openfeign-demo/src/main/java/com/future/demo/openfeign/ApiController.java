@@ -26,6 +26,16 @@ import java.util.List;
 @RequestMapping("/api/v1")
 @Slf4j
 public class ApiController {
+    // https://stackoverflow.com/questions/33796218/content-type-application-x-www-form-urlencodedcharset-utf-8-not-supported-for
+    @PostMapping("postWwwFormUrlencoded")
+    public ObjectResponse<String> postWwwFormUrlencoded(MyPostVO myPostVO) {
+        String param1 = myPostVO.getParameter1();
+        Assert.isTrue(!StringUtils.isBlank(param1), "没有指定param1参数");
+        ObjectResponse<String> response = new ObjectResponse<>();
+        response.setData("提交参数parameter1=" + param1);
+        return response;
+    }
+
     @DeleteMapping("delete")
     public ObjectResponse<String> delete(@RequestParam(value = "param1", defaultValue = "") String param1) {
         Assert.isTrue(!StringUtils.isBlank(param1), "没有指定param1参数");

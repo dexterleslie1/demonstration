@@ -19,6 +19,10 @@ public interface Api {
     @Headers(value = {"Content-Type: application/json"})
     ObjectResponse<String> testPost(List<MyPostVO> myPostVOList) throws BusinessException;
 
+    @RequestLine("POST /api/v1/postWwwFormUrlencoded")
+    @Headers(value = {"Content-Type: application/x-www-form-urlencoded"})
+    ObjectResponse<String> postWwwFormUrlencoded(@Param("parameter1") String parameter1) throws BusinessException;
+
     @RequestLine("PUT {uri}")
     // 因为body提交json参数，所以需要指定请求头Content-Type: application/json
     @Headers(value = {"Content-Type: application/json"})
