@@ -1,6 +1,7 @@
 package com.future.demo.mybatis.plus.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.future.demo.mybatis.plus.entity.DBPartition;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -10,7 +11,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-public interface DBPartitionMapper extends BaseMapper {
+public interface DBPartitionMapper extends BaseMapper<DBPartition> {
     @Update("alter table dan add partition (partition ${partitionName} values less than (to_days(#{date})))")
     void add(@Param("partitionName") String partitionName,
              @Param("date") Date date);

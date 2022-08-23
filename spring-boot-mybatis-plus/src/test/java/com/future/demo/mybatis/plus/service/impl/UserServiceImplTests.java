@@ -88,15 +88,7 @@ public class UserServiceImplTests {
         Page<User> page = new Page<>(currentPage, size);
         page.orders().add(new OrderItem("id", false));
         this.userService.page(page);
-        // 或者可以使用mapper分页查询
-//        this.userMapper.selectPage(page, null);
         List<User> userList = page.getRecords();
-
-        for(int i=0; i<randomTotalCount; i++) {
-            long id = startId + i;
-            userService.removeById(id);
-        }
-
         // 当前页码
         Assert.assertEquals(1, page.getCurrent());
         // 每页显示数量
@@ -112,6 +104,32 @@ public class UserServiceImplTests {
         // 总记录数
         Assert.assertEquals(currentTotalCount, page.getTotal());
         Assert.assertEquals(size, userList.size());
+
+        // 使用mapper分页
+        page = new Page<>(currentPage, size);
+        page.orders().add(new OrderItem("id", false));
+        page = this.userMapper.selectPage(page, null);
+        currentTotalCount = (int)page.getTotal();
+        userList = page.getRecords();
+        // 当前页码
+        Assert.assertEquals(1, page.getCurrent());
+        // 每页显示数量
+        Assert.assertEquals(size, page.getSize());
+        // 总页数
+        if(currentTotalCount%size != 0) {
+            expectedPages = (currentTotalCount+size)/size;
+        } else {
+            expectedPages = currentTotalCount/size;
+        }
+        Assert.assertEquals(expectedPages, page.getPages());
+        // 总记录数
+        Assert.assertEquals(currentTotalCount, page.getTotal());
+        Assert.assertEquals(size, userList.size());
+
+        for(int i=0; i<randomTotalCount; i++) {
+            long id = startId + i;
+            userService.removeById(id);
+        }
     }
 
     /**

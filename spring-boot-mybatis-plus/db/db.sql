@@ -23,3 +23,26 @@ create table if not exists dan(
 partition by range(to_days(createDate))(
     partition pdefault values less than (to_days('2015-12-13 00:00:00'))
 );
+
+/* 用于演示mybatis-plus join查询 */
+create table if not exists t_developer(
+    id bigint primary key auto_increment,
+    `name` varchar(512) not null,
+    createTime datetime not null
+) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 collate=utf8mb4_general_ci;
+
+create table if not exists t_ipset(
+    id bigint primary key auto_increment,
+    `name` varchar(512) not null,
+    createTime datetime not null
+) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 collate=utf8mb4_general_ci;
+
+create table if not exists t_developer_and_ipset_relation(
+    id bigint primary key auto_increment,
+    developerId BIGINT(20) not null,
+    ipsetId BIGINT(20) not null,
+    createTime datetime not null,
+    constraint `fk_tDeveloperToIpsetRelation_developerId` foreign key (developerId) references t_developer(id),
+    constraint `fk_tDeveloperToIpsetRelation_ipsetId` foreign key (ipsetId) references t_ipset(id)
+) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 collate=utf8mb4_general_ci;
+
