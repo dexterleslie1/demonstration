@@ -4,11 +4,11 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Random;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  *
@@ -82,6 +82,73 @@ public class ExecutorServiceTests {
 
         System.out.println();
 
+        executorService.shutdown();
+        while(!executorService.awaitTermination(100, TimeUnit.MILLISECONDS));
+    }
+
+    @Test
+    public void testExceptionHandling() throws ExecutionException, InterruptedException {
+        ExecutorService executorService = Executors.newCachedThreadPool();
+        List<Future> futureList = new ArrayList<>();
+        for(int i=0; i<5; i++) {
+            int finalI = i;
+            futureList.add(executorService.submit(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Thread.sleep(2000);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+
+                    if(finalI == 3) {
+                        throw new RuntimeException("8888888888");
+                    }
+
+                    Thread currentThread = Thread.currentThread();
+                    logger.debug("Current Thread {} execute Worker-{}", currentThread, finalI);
+                }
+            }));
+        }
+
+        try {
+            for(Future future : futureList) {
+                future.get();
+                logger.debug("+++++++++++++++++++辅助日志，查看当前时间");
+            }
+        } finally {
+            executorService.shutdownNow();
+        }
+    }
+
+    @Test
+    public void testExecuteMethod() throws InterruptedException {
+        ExecutorService executorService = Executors.newCachedThreadPool();
+        for(int i=0; i<5; i++) {
+            int finalI = i;
+            executorService.execute(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Thread.sleep(2000);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                    Thread currentThread = Thread.currentThread();
+                    logger.debug("Current Thread {} execute Worker-{}", currentThread, finalI);
+                }
+            });
+        }
+        executorService.shutdown();
+        while(!executorService.awaitTermination(100, TimeUnit.MILLISECONDS));
+
+        executorService = Executors.newCachedThreadPool();
+        executorService.execute(new Runnable() {
+            @Override
+            public void run() {
+                throw new RuntimeException("888888");
+            }
+        });
         executorService.shutdown();
         while(!executorService.awaitTermination(100, TimeUnit.MILLISECONDS));
     }
