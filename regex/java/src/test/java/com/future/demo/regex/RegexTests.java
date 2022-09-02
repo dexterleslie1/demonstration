@@ -3,6 +3,8 @@ package com.future.demo.regex;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.regex.Pattern;
+
 
 public class RegexTests {
     @Test
@@ -139,5 +141,16 @@ public class RegexTests {
         // 匹配开头连续三个a或者连续三个a结尾
         str = str.replaceAll("^aaa|aaa$", "*");
         Assert.assertEquals("*yyyaaayyy*", str);
+
+        // 匹配字母和数字组合
+        Pattern pattern = Pattern.compile("[a-z0-9]+");
+        Assert.assertFalse(pattern.matcher("").matches());
+        Assert.assertTrue(pattern.matcher("123").matches());
+        Assert.assertTrue(pattern.matcher("123abc").matches());
+        Assert.assertTrue(pattern.matcher("1a2b3c").matches());
+        Assert.assertTrue(pattern.matcher("a1b2c3").matches());
+        Assert.assertFalse(pattern.matcher("a1b2c3,.").matches());
+        Assert.assertFalse(pattern.matcher("a1b,2c3").matches());
+        Assert.assertFalse(pattern.matcher(".a1b2c3").matches());
     }
 }
