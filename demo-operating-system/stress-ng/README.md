@@ -1,5 +1,9 @@
 # stress-ng使用
 
+## 参考资料
+
+[stress-ng使用](https://www.tecmint.com/linux-cpu-load-stress-test-with-stress-ng-tool/)
+
 ## 总结
 
 stress-ng用于模拟产生系统负载，以便分析系统相关指标，不能用于硬件的性能测试。硬件的性能测试应该使用支持能够对比不同硬件得分的软件
