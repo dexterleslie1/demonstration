@@ -87,7 +87,7 @@ echo "yes" | redis-cli --cluster create $varClusterCreationStr
 # 配置开机自动启动redis集群
 for ((i=0; i<$varRedisNodeCount; i++))
 do
-        grep -q "^sudo -i sh -c \"cd /data/redis-cluster/node${i} && /usr/local/bin/redis-server redis.conf\"" /etc/rc.local || echo "sudo -i sh -c \"cd /data/redis-cluster/node${i} && /usr/local/bin/redis-server redis.conf\"" >> /etc/rc.local
+        grep -q "^sudo -i sh -c \"cd /data/redis-cluster/node${i} && /usr/bin/redis-server redis.conf\"" /etc/rc.local || echo "sudo -i sh -c \"cd /data/redis-cluster/node${i} && /usr/bin/redis-server redis.conf\"" >> /etc/rc.local
 done
 
 grep -q "sleep 20" /etc/rc.local || echo "sleep 20" >> /etc/rc.local
