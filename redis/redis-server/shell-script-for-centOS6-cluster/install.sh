@@ -39,9 +39,9 @@ yum install -y gcc make
 cp ./redis-5.0.0.tar.gz /tmp/redis-5.0.0.tar.gz
 (cd /tmp && rm -rf redis-5.0.0)
 (cd /tmp && tar -xvzf redis-5.0.0.tar.gz)
-(cd /tmp/redis-5.0.0/deps && make hiredis jemalloc linenoise lua)
-(cd /tmp/redis-5.0.0 && make distclean)
-(cd /tmp/redis-5.0.0 && make install)
+(cd /tmp/redis-5.0.0/deps && PREFIX=/usr/ make hiredis jemalloc linenoise lua)
+(cd /tmp/redis-5.0.0 && PREFIX=/usr/ make distclean)
+(cd /tmp/redis-5.0.0 && PREFIX=/usr/ make install)
 
 # 测试redis-cli --version和redis-server命令是否正常
 redis-cli --version
