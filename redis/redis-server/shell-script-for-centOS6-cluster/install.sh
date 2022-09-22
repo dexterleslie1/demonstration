@@ -32,6 +32,8 @@ if [ "$varRedisNodeStartPort" == "" ]; then
 	varRedisNodeStartPort=6390
 fi
 
+# 确保系统没有安装redis
+yum remove redis -y || true
 
 # 编译并安装redis
 yum install -y gcc make
