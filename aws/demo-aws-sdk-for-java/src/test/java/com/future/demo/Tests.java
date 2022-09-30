@@ -68,6 +68,7 @@ public class Tests {
             String webAclName = Prefix + "web-acl";
             String webAclDescription = UUID.randomUUID().toString();
             String webAclId;
+            String webAclLockToken;
             List<WebACLSummary> webACLSummaryList = webAclListResponse.webACLs().stream().filter(o -> o.name().equals(webAclName)).collect(Collectors.toList());
             if(webACLSummaryList.size() <= 0) {
                 List<Rule> ruleList = new ArrayList<>();
@@ -147,8 +148,10 @@ public class Tests {
                 Assert.assertEquals(webAclName, createWebAclResponse.summary().name());
                 Assert.assertEquals(webAclDescription, createWebAclResponse.summary().description());
                 webAclId = createWebAclResponse.summary().id();
+                webAclLockToken = createWebAclResponse.summary().lockToken();
             } else {
                 webAclId = webACLSummaryList.get(0).id();
+                webAclLockToken = webACLSummaryList.get(0).lockToken();
             }
 
             Assert.assertFalse(StringUtils.isBlank(webAclId));
@@ -166,6 +169,78 @@ public class Tests {
                         .scope(Scope.REGIONAL)
                         .lockToken(lockToken)
                         .build());
+
+            List<Rule> ruleList = new ArrayList<>();
+            for(int i=1; i<=ruleTotalCount; i++) {
+                String ruleName = Prefix + "rule" + i;
+                ruleList.add(
+                        Rule.builder()
+                                .name(ruleName)
+                                .priority(i)
+                                .visibilityConfig(VisibilityConfig.builder()
+                                        .cloudWatchMetricsEnabled(true)
+                                        .sampledRequestsEnabled(false)
+                                        .metricName(ruleName)
+                                        .build())
+                                .statement(
+                                        Statement.builder()
+                                                .ipSetReferenceStatement(
+                                                        IPSetReferenceStatement.builder()
+                                                                .arn(ipsetNameToArnMapper.get(Prefix + "ipset" + i))
+                                                                .build()
+                                                )
+                                                .build()
+                                )
+                                .action(
+                                        RuleAction.builder()
+                                                .block(BlockAction.builder()
+                                                        .build())
+                                                .build()
+                                )
+                                .build()
+                );
+            }
+
+            String ruleName = Prefix + "rule-ratelimit";
+            ruleList.add(Rule.builder()
+                    .name(ruleName)
+                    .priority(ruleTotalCount+1)
+                    .visibilityConfig(VisibilityConfig.builder()
+                            .cloudWatchMetricsEnabled(true)
+                            .sampledRequestsEnabled(false)
+                            .metricName(ruleName)
+                            .build())
+                    .statement(Statement.builder().rateBasedStatement(
+                            RateBasedStatement.builder()
+                                    // 注意：RateBasedStatementAggregateKeyType.IP表示使用sourceIp
+                                    .aggregateKeyType(RateBasedStatementAggregateKeyType.IP)
+                                    .limit(2000L)
+                                    .build()).build())
+                    .action(
+                            RuleAction.builder()
+                                    .block(BlockAction.builder()
+                                            .build())
+                                    .build())
+                    .build());
+
+            wafv2Client.updateWebACL(
+                    UpdateWebAclRequest.builder()
+                            .id(webAclId)
+                            .name(webAclName)
+                            .description(webAclDescription)
+                            .scope(Scope.REGIONAL)
+                            .visibilityConfig(VisibilityConfig.builder()
+                                    .metricName(webAclName)
+                                    .cloudWatchMetricsEnabled(true)
+                                    .sampledRequestsEnabled(false)
+                                    .build())
+                            .rules(ruleList)
+                            .defaultAction(DefaultAction.builder()
+                                    .allow(AllowAction.builder().build())
+                                    .build())
+                            .lockToken(webAclLockToken)
+                            .build()
+            );
         } finally {
             if(wafv2Client != null) {
                 wafv2Client.close();
