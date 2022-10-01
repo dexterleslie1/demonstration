@@ -22,12 +22,10 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 public class ApiTests {
@@ -62,20 +60,19 @@ public class ApiTests {
                 })
                 .target(Api.class, "http://" + host + ":" + port);
 
-        Random r = new Random();
         ExecutorService executorService = Executors.newCachedThreadPool();
         for(int i=0; i<500; i++) {
-            executorService.submit(new Runnable() {
-                @Override
-                public void run() {
-                    for(int j=0; j<10000; j++) {
-                        String xForwardedFor = r.nextInt(256) + "." + r.nextInt(256) + "." + r.nextInt(256) + "." + r.nextInt(256);
-                        for (int i = 0; i < 120; i++) {
-                            try {
-                                api.index(xForwardedFor);
-                            } catch (BusinessException e) {
-                                throw new RuntimeException(e);
-                            }
+            executorService.submit(() -> {
+                for(int j=0; j<2000; j++) {
+                    String xForwardedFor = ThreadLocalRandom.current().nextInt(256) + "." +
+                            ThreadLocalRandom.current().nextInt(256) + "." +
+                            ThreadLocalRandom.current().nextInt(256) + "." +
+                            ThreadLocalRandom.current().nextInt(256);
+                    for (int i1 = 0; i1 < 120; i1++) {
+                        try {
+                            api.index(xForwardedFor);
+                        } catch (Exception e) {
+                            e.printStackTrace();
                         }
                     }
                 }
@@ -83,5 +80,15 @@ public class ApiTests {
         }
         executorService.shutdown();
         while(!executorService.awaitTermination(1, TimeUnit.SECONDS));
+
+//        String xForwardedFor = "CDCD:910A:2222:5498:8475:1111:3900:2020";
+//        String xForwardedFor = "192.168.1.53";
+//        for (int i1 = 0; i1 < 120; i1++) {
+//            try {
+//                api.index(xForwardedFor);
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//        }
     }
 }
