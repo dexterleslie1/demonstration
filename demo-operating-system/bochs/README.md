@@ -23,3 +23,4 @@ sh build.sh
 bochs
 ```
 
+注意：在学习过程中慢慢学习bochs相关调试命令
