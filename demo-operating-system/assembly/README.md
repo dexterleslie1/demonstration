@@ -20,6 +20,22 @@
   mount c: ~/assembly
   ```
 
+#### ubuntu安装DOSBox
+
+- apt安装dosbox
+
+  ```shell
+  sudo apt install dosbox
+  ```
+
+- 解压DOSBox/tools.zip后复制DOSBox/masm5目录下所有文件到自定义目录~/assembly，里面的工具用于编译汇编源代码
+
+- 在DOSBox中挂载~/assembly到c:盘
+
+  ```shell
+  mount c: ~/assembly
+  ```
+
 ### 编译、链接、运行
 
 ```shell
