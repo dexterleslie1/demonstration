@@ -20,5 +20,39 @@
   mount c: ~/assembly
   ```
 
-  
+### 编译、链接、运行
 
+```shell
+# 编译源代码生成obj文件，注意：分号;表示不需要交互式编译
+masm test.asm;
+
+# 链接obj文件生成exe文件
+link test;
+
+# 运行程序
+test
+```
+
+### DOSBox debug程序调试
+
+参考：https://montcs.bloomu.edu/Information/LowLevel/DOS-Debug.html
+
+#### -r
+
+打印寄存器内容
+
+#### -g 076a:000b
+
+在地址076a:000b处打断点并让程序继续执行到断点处
+
+#### -d 076a:000b
+
+以16进制显示地址076a:000b处的内存内容
+
+#### -u
+
+反汇编cs:ip开始处指令
+
+#### -t
+
+step over
