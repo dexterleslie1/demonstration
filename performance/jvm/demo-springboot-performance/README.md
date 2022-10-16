@@ -1,5 +1,7 @@
 # tomcat性能优化
 
+## 经过测试验证，一个nginx代理多个tomcat能够明显提升吞吐量量去有效防御CC攻击
+
 ## tomcat调优步骤
 
 - tomcat线程和keepalive调优
@@ -74,3 +76,10 @@ docker-compose up -d
 ```shell script
 docker-compose down
 ```
+
+## 使用此demo模拟cpu、内存、io负载
+
+### 模拟cpu负载
+
+*使用jmeter运行
+

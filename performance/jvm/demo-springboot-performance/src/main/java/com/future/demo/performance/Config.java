@@ -26,4 +26,9 @@ public class Config extends WebSecurityConfigurerAdapter {
     PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
+    @Bean(value = "tt1")
+    MemoryLeakService memoryLeakService() {
+        return new MemoryLeakService();
+    }
 }

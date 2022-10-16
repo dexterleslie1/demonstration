@@ -59,23 +59,6 @@
                 })
             })
 
-            $("#btnCpuLoadedStart").click(function() {
-                var durationInSeconds = $("#cpuLoadedDurationInSecond").val()
-                $.ajax({
-                    type: "GET",
-                    url: "/api/v1/cpu/loaded",
-                    data: {
-                        durationInSecond: durationInSeconds
-                    },
-                    success: function(data) {
-                        alert(data.data)
-                    },
-                    error(xhr,status,error) {
-                        alert(xhr);
-                    }
-                })
-            })
-
             $("#btnMonitorStart").click(function() {
                 var monitorInvocationCount = $("#monitorInvocationCount").val()
                 var monitorInvocationInterval = $("#monitorInvocationInterval").val()
@@ -141,11 +124,6 @@
     <input type="button" value="停止" id="btnMemoryLeakStop"/>
     <input type="button" value="释放" id="btnMemoryLeakRelease"/>
     <input type="button" value="System.gc()" id="btnMemoryLeakPerformGC"/>
-    <hr>
-
-    <h3>CPU负载测试</h3>
-    测试持续时间：<input type="text" id="cpuLoadedDurationInSecond"> 秒（默认60秒）
-    <input type="button" value="开始" id="btnCpuLoadedStart"/>
     <hr>
 
     <h3>arthas monitor测试，monitor com.future.demo.performance.ApiArthasController#monitorMethod</h3>
