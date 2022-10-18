@@ -13,3 +13,10 @@ print("last element:" .. fields[#fields])
 
 str = str:gsub("%s+", "")
 print("被替换空格后的字符串:" .. str)
+
+-- 演示字符串替换函数
+-- http://lua-users.org/wiki/StringLibraryTutorial
+local strForTesting = "count#888888"
+local strForTestingReplaceBefore = strForTesting
+strForTesting = strForTesting:gsub("count#", "")
+print("替换前：" .. strForTestingReplaceBefore .. "，替换后：" .. strForTesting)
