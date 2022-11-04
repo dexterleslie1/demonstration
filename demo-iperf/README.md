@@ -1,5 +1,9 @@
 # 开源项目iperf研究
 
+## clion和autotools集成原理
+
+通过下面使用clion调试iperf2代码经验，大概了解到clion通过调用autotools相关命令生成configure文件，再调用configure生成makefile，在以后的运行或者调试中通过调用make --makefile=Makefile all先编译代码再使用gdb调试生成的二进制文件。
+
 ## 在ubuntu20使用autotools编译iperf2
 
 ```shell
