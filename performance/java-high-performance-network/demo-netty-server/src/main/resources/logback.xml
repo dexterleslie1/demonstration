@@ -29,10 +29,10 @@
     <!-- 特殊的<logger>元素，是根logger。只有一个level属性，应为已经被命名为"root".
         level:设置打印级别，大小写无关：TRACE, DEBUG, INFO, WARN, ERROR, ALL 和 OFF，不能设置为INHERITED或者同义词NULL。默认是DEBUG。
         <root>可以包含零个或多个<appender-ref>元素，标识这个appender将会添加到这个loger。 -->
-    <root level="DEBUG">
+    <root>
         <appender-ref ref="out" />
     </root>
-    <logger level="ERROR" name="io.netty" additivity="false">
+    <logger name="io.netty" additivity="false" level="error">
         <appender-ref ref="out" />
     </logger>
 </configuration>

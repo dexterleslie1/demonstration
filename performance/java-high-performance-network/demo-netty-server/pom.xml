@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.future.demo</groupId>
-	<artifactId>demo-socket-client</artifactId>
+	<artifactId>demo-netty-server</artifactId>
 	<version>1.0.0</version>
 	<packaging>jar</packaging>
 
@@ -49,7 +49,7 @@
 	</dependencies>
 
 	<build>
-		<finalName>demo-socket-client</finalName>
+		<finalName>demo-netty-server</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -64,7 +64,7 @@
 							<finalName>${project.build.finalName}</finalName>
 							<transformers>
 								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-									<mainClass>com.future.demo.performance.NettyClient</mainClass>
+									<mainClass>com.future.demo.performance.NettyServer</mainClass>
 								</transformer>
 								<transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
 							</transformers>
