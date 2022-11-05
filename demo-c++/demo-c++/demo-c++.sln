@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "demo-array", "demo-array\demo-array.vcxproj", "{4DF1E926-6B96-4E95-AAA7-AD3433EBB56B}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "demo-multiple-file", "demo-multiple-file\demo-multiple-file.vcxproj", "{80474D45-773D-4164-8E1C-39B3F23B396A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -13,6 +15,10 @@ Global
 		{4DF1E926-6B96-4E95-AAA7-AD3433EBB56B}.Debug|Win32.Build.0 = Debug|Win32
 		{4DF1E926-6B96-4E95-AAA7-AD3433EBB56B}.Release|Win32.ActiveCfg = Release|Win32
 		{4DF1E926-6B96-4E95-AAA7-AD3433EBB56B}.Release|Win32.Build.0 = Release|Win32
+		{80474D45-773D-4164-8E1C-39B3F23B396A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{80474D45-773D-4164-8E1C-39B3F23B396A}.Debug|Win32.Build.0 = Debug|Win32
+		{80474D45-773D-4164-8E1C-39B3F23B396A}.Release|Win32.ActiveCfg = Release|Win32
+		{80474D45-773D-4164-8E1C-39B3F23B396A}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
