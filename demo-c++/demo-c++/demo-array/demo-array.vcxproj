@@ -11,8 +11,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{3738364B-FE81-4169-B7A9-A379340914F4}</ProjectGuid>
-    <RootNamespace>democ</RootNamespace>
+    <ProjectGuid>{4DF1E926-6B96-4E95-AAA7-AD3433EBB56B}</ProjectGuid>
+    <RootNamespace>demoarray</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -60,7 +60,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\..\Users\Administrator\Desktop\demo_comment.c" />
+    <ClCompile Include="demo-array.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

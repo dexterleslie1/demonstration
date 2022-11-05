@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\..\Users\Administrator\Desktop\demo_comment.c">
+    <ClCompile Include="demo-array.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
