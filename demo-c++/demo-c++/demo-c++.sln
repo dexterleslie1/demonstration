@@ -13,6 +13,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "demo-program-memory", "demo
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "demo-reference", "demo-reference\demo-reference.vcxproj", "{4A14FEA0-1DA5-486F-AE2C-B1AA97ADD301}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "demo-function", "demo-function\demo-function.vcxproj", "{7E98D1B6-07C6-42D4-9674-9E2A8BD79F2A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -43,6 +45,10 @@ Global
 		{4A14FEA0-1DA5-486F-AE2C-B1AA97ADD301}.Debug|Win32.Build.0 = Debug|Win32
 		{4A14FEA0-1DA5-486F-AE2C-B1AA97ADD301}.Release|Win32.ActiveCfg = Release|Win32
 		{4A14FEA0-1DA5-486F-AE2C-B1AA97ADD301}.Release|Win32.Build.0 = Release|Win32
+		{7E98D1B6-07C6-42D4-9674-9E2A8BD79F2A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{7E98D1B6-07C6-42D4-9674-9E2A8BD79F2A}.Debug|Win32.Build.0 = Debug|Win32
+		{7E98D1B6-07C6-42D4-9674-9E2A8BD79F2A}.Release|Win32.ActiveCfg = Release|Win32
+		{7E98D1B6-07C6-42D4-9674-9E2A8BD79F2A}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
