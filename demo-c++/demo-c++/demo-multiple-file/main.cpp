@@ -1,4 +1,4 @@
-#include "hello_func.h"
+﻿#include "hello_func.h"
 
 int main() {
 	say_hello();
