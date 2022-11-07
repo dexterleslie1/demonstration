@@ -21,6 +21,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "demo-assert", "demo-assert\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "demo-union", "demo-union\demo-union.vcxproj", "{49765A78-9E51-4855-AC73-A836D2FF48B4}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "demo-macro", "demo-macro\demo-macro.vcxproj", "{A8A1BF9C-01CC-4E46-9509-0A181698F478}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -67,6 +69,10 @@ Global
 		{49765A78-9E51-4855-AC73-A836D2FF48B4}.Debug|Win32.Build.0 = Debug|Win32
 		{49765A78-9E51-4855-AC73-A836D2FF48B4}.Release|Win32.ActiveCfg = Release|Win32
 		{49765A78-9E51-4855-AC73-A836D2FF48B4}.Release|Win32.Build.0 = Release|Win32
+		{A8A1BF9C-01CC-4E46-9509-0A181698F478}.Debug|Win32.ActiveCfg = Debug|Win32
+		{A8A1BF9C-01CC-4E46-9509-0A181698F478}.Debug|Win32.Build.0 = Debug|Win32
+		{A8A1BF9C-01CC-4E46-9509-0A181698F478}.Release|Win32.ActiveCfg = Release|Win32
+		{A8A1BF9C-01CC-4E46-9509-0A181698F478}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
