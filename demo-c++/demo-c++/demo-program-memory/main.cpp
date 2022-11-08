@@ -109,6 +109,32 @@ int main() {
 		cout << "*(p1 + " << i << ")=" << *(p1 + i) << endl; 
 	}
 
+	/* 演示memcpy和memset */
+	// https://blog.csdn.net/weixin_49713302/article/details/122542873
+
+	// 演示memcpy
+	// 用来将src地址处的内容拷贝n个字节的数据至目标地址dest指向的内存中去。
+	// 返回值：函数返回指向dest的指针。
+	cout << endl << "----------------演示memcpy用法" << endl;
+	byteCount = 2;
+	int *pSrc = (int *)calloc(byteCount, sizeof(int));
+	for(int i = 0; i < byteCount; i++) {
+		*(pSrc + i) = i;
+	}
+	int *pDest = (int *)calloc(byteCount, sizeof(int));
+	pDest = (int *)memcpy(pDest, pSrc, byteCount * sizeof(int));
+	for(int i = 0; i < byteCount; i++) {
+		cout << "*(pDest + " << i << ")=" << *(pDest + i) << endl; 
+	}
+
+	// 演示memset
+	// 作用：将已开辟内存空间 s 的首 n 个字节的值设为值 c（给空间初始化）。这个函数通常为新申请的内存做初始化工作。
+	cout << endl << "----------------演示memset用法" << endl;
+	p1 = (int *)calloc(byteCount, sizeof(int));
+	memset(p1, 0, byteCount * sizeof(int));
+	for(int i = 0; i < byteCount; i++) {
+		cout << "*(p1 + " << i << ")=" << *(p1 + i) << endl; 
+	}
 
 	system("pause");
 
