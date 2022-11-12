@@ -23,6 +23,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "demo-union", "demo-union\de
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "demo-macro", "demo-macro\demo-macro.vcxproj", "{A8A1BF9C-01CC-4E46-9509-0A181698F478}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "demo-program-arguments", "demo-program-arguments\demo-program-arguments.vcxproj", "{1B35F6DD-9C25-4CE2-ABFE-BCF4EEA8E6E9}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "demo-time", "demo-time\demo-time.vcxproj", "{379F9A3B-19FA-465A-98DF-692127FBA141}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -73,6 +77,14 @@ Global
 		{A8A1BF9C-01CC-4E46-9509-0A181698F478}.Debug|Win32.Build.0 = Debug|Win32
 		{A8A1BF9C-01CC-4E46-9509-0A181698F478}.Release|Win32.ActiveCfg = Release|Win32
 		{A8A1BF9C-01CC-4E46-9509-0A181698F478}.Release|Win32.Build.0 = Release|Win32
+		{1B35F6DD-9C25-4CE2-ABFE-BCF4EEA8E6E9}.Debug|Win32.ActiveCfg = Debug|Win32
+		{1B35F6DD-9C25-4CE2-ABFE-BCF4EEA8E6E9}.Debug|Win32.Build.0 = Debug|Win32
+		{1B35F6DD-9C25-4CE2-ABFE-BCF4EEA8E6E9}.Release|Win32.ActiveCfg = Release|Win32
+		{1B35F6DD-9C25-4CE2-ABFE-BCF4EEA8E6E9}.Release|Win32.Build.0 = Release|Win32
+		{379F9A3B-19FA-465A-98DF-692127FBA141}.Debug|Win32.ActiveCfg = Debug|Win32
+		{379F9A3B-19FA-465A-98DF-692127FBA141}.Debug|Win32.Build.0 = Debug|Win32
+		{379F9A3B-19FA-465A-98DF-692127FBA141}.Release|Win32.ActiveCfg = Release|Win32
+		{379F9A3B-19FA-465A-98DF-692127FBA141}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
