@@ -29,3 +29,6 @@ go.sum
 
 assembly-language-master
 dependency-reduced-pom.xml
+
+cmake-build-debug
+build
