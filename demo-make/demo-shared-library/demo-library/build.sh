@@ -13,5 +13,5 @@ rm -f *.so
 gcc -c myadd.c -o myadd.o -fPIC
 gcc -c mysub.c -o mysub.o -fPIC
 
-gcc -shared -o libmylib.so myadd.o mysub.o
+gcc -shared -fPIC -o libmylib.so myadd.o mysub.o
 rm -f *.o
