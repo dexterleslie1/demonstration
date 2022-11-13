@@ -13,10 +13,16 @@
 
 int add(int a, int b) {
 	int c = a + b;
+	int temp = a;
+	a = b;
+	b = temp;
 	return c;
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+	if(argc >= 2) {
+		printf("运行程序提供的参数: %s\n", argv[1]);
+	}
 	int a = 11;
 	int b = 10;
 	int c = add(a, b);
