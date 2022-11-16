@@ -6,6 +6,7 @@
 using namespace std;
 
 int main() {
+	// https://blog.csdn.net/u012194446/article/details/103158664
 	struct timeb t1;
     ftime(&t1);
     //t1.time是从UTC时间1970年1月1日午夜(00:00:00)起累计的秒数；t1.millitm是一秒内的毫秒数
