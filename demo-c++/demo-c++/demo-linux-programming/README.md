@@ -17,3 +17,9 @@
 参考 demo-fcntl.c
 
 演示使用fcntl函数设置STDIN_FILENO读取为O_NONBLOCK模式
+
+
+
+## lseek使用
+
+参考 demo-lseek.c
