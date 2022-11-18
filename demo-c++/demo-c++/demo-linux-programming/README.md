@@ -9,3 +9,11 @@
 ## 文件read和write
 
 参考 demo-file-read-write.c
+
+
+
+## fcntl使用
+
+参考 demo-fcntl.c
+
+演示使用fcntl函数设置STDIN_FILENO读取为O_NONBLOCK模式
