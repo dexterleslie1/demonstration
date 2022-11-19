@@ -45,3 +45,7 @@
 ### opendir、readdir、closedir实现类似ls命令
 
 参考 demo-file-dir-ls.c
+
+### 使用dup和dup2实现重定向
+
+参考 demo-duplicate.c
