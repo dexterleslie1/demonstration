@@ -41,3 +41,7 @@
 ### 硬链接link和unlink使用
 
 参考demo-link-unlink.c
+
+### opendir、readdir、closedir实现类似ls命令
+
+参考 demo-file-dir-ls.c
