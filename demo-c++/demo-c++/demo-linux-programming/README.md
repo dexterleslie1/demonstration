@@ -23,3 +23,9 @@
 ## lseek使用
 
 参考 demo-lseek.c
+
+
+
+## stat使用
+
+参考 demo-stat.c
