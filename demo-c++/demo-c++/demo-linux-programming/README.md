@@ -49,3 +49,12 @@
 ### 使用dup和dup2实现重定向
 
 参考 demo-duplicate.c
+
+
+
+## 进程和PCB
+
+### fork、getpid、getppid使用
+
+参考 demo-process-fork.c
+
