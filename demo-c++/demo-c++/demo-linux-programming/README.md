@@ -58,3 +58,6 @@
 
 参考 demo-process-fork.c
 
+### execl、execlp使用
+
+参考 demo-process-exec.c
