@@ -80,6 +80,8 @@ https://blog.csdn.net/a745233700/article/details/120715371
 
 参考 demo-process-wait.c
 
+函数作用：把僵尸进程PCB信息等相关资源及时回收
+
 一次wait或者waitpid调用只回收一个子进程
 
 ```c
@@ -94,3 +96,17 @@ while((pid = waitpid(-1, NULL, WNOHANG)) != -1) {
 }
 ```
 
+### 进程间通讯IPC(InterProcess Communication)
+
+- 匿名（pipe）和命名（fifo）管道（使用最简单）
+- 信号（开销最小）
+- 共享映射区（无血缘关系）
+- 本地套接字（最稳定）
+
+#### 匿名（pipe）和命名（fifo）管道
+
+参考 demo-process-ipc-pipe.c、demo-process-ipc-fifo-write-end.c、demo-process-ip-fifo-read-end.c
+
+匿名管道解决有血缘关系的进程间通讯
+
+命名管道解决没有血缘关系的进程间通讯
