@@ -11,6 +11,13 @@
 ```bash
 set mouse=a
 set clipboard=unnamed
+
+" 修改默认的dd命令，dd删除行之后不把内容放置到默认寄存器
+nnoremap x "_x
+nnoremap d "_d
+nnoremap D "_D
+vnoremap d "_d
+
 set ts=4 " 设置tab长度
 set ls=2
 set paste
@@ -41,8 +48,8 @@ func SetTitle()
     endif  
 
 	call append(line("."), "#	> File Name:".expand("%"))  
-    call append(line(".")+1, "#	> Author: jarven")   " 这里修改成自己的名字
-    call append(line(".")+2, "#	> Mail: whuaw@aliyun.com")   "修改为自己的邮箱
+    call append(line(".")+1, "#	> Author: dexterleslie")   " 这里修改成自己的名字
+    call append(line(".")+2, "#	> Mail: dexterleslie@gmail.com")   "修改为自己的邮箱
     call append(line(".")+3, "#	> Created Time: ".strftime("%c"))  
 
     if &filetype == 'sh' || &filetype == 'python'
