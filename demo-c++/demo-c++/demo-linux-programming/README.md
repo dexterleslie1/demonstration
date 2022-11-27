@@ -76,6 +76,10 @@ https://blog.csdn.net/a745233700/article/details/120715371
 
 孤儿进程的危害：孤儿进程是没有父进程的进程，孤儿进程这个重任就落到了 init 进程身上，init 进程就好像是一个民政局，专门负责处理孤儿进程的善后工作。每当出现一个孤儿进程的时候，内核就把孤儿进程的父进程设置为 init，而 init 进程会循环地 wait() 它的已经退出的子进程。这样，当一个孤儿进程凄凉地结束了其生命周期的时候，init 进程就会出面处理它的一切善后工作。因此孤儿进程并不会有什么危害。
 
+### 守护进程
+
+参考 demo-process-daemon.c
+
 ### 使用wait和waitpid回收fork子进程PCB等相关资源
 
 参考 demo-process-wait.c
@@ -114,3 +118,7 @@ while((pid = waitpid(-1, NULL, WNOHANG)) != -1) {
 #### 共享内存映射区
 
 参考 demo-process-ipc-mmap*.c
+
+#### 信号
+
+参考 demo-signal-*.c
