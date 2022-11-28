@@ -122,3 +122,17 @@ while((pid = waitpid(-1, NULL, WNOHANG)) != -1) {
 #### 信号
 
 参考 demo-signal-*.c
+
+## 线程
+
+### 线程基本使用
+
+参考  demo-pthread.c
+
+### 线程互斥
+
+参考 demo-pthread-mutex.c
+
+### 线程条件变量
+
+参考 demo-pthread-mutex-condition.c
