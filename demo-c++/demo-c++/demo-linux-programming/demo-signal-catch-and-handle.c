@@ -24,8 +24,20 @@ void test_catch_with_signal() {
 	}
 }
 
+// 测试SIG_IGN
+// 使用ctrl+c无法终止程序，因为被忽略
+void test_ignore_signal() {
+    // SIG_IGN用于忽略信号
+    signal(SIGINT, SIG_IGN);
+
+    while(1) {
+        sleep(1);
+    }
+}
+
 int main() {
-	test_catch_with_signal();
+	// test_catch_with_signal();
+    test_ignore_signal();
 
 	return 0;
 }

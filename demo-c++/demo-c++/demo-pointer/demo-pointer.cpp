@@ -2,17 +2,6 @@
 
 using namespace std;
 
-// 使用typedef定义函数类型，用于生命函数类型变量和函数类型指针
-typedef void my_fun_t(int a);
-typedef my_fun_t *my_fun_p_t;
-
-void fun1(int a) {
-	cout << "fun1输出：" << a << endl;
-}
-void fun2(int b) {
-	cout << "fun2输出：" << b << endl;
-}
-
 int main() {
 	/* 指针定义和使用 */
 	int a = 10;
@@ -62,20 +51,6 @@ int main() {
 		p7++;
 	}
 	cout << endl;
-
-	/* 
-		函数类型和函数指针
-		https://blog.csdn.net/xiaorenwuzyh/article/details/48997767
-	*/
-	my_fun_t *myFunP1 = fun1;
-	myFunP1(10);
-	my_fun_t *myFunP2 = fun2;
-	myFunP2(11);
-	// 使用函数指针数据类型声明函数指针变量
-	my_fun_p_t myFunP11 = fun1;
-	myFunP11(12);
-	my_fun_p_t myFunP21 = fun2;
-	myFunP21(13);
 
 	system("pause");
 
