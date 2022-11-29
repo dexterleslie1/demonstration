@@ -39,19 +39,6 @@ int main() {
 	//p6 = &b;
 	cout << "*p6=" << *p6 << endl;
 
-	/* 指针和数组 */
-	int arr1[] = {1, 2, 3, 5};
-	int *p7 = arr1;
-	cout << "arr1=" << arr1 << ",p7=" << p7 << endl;
-	cout << "*p7=" << *p7 << endl;
-
-	cout << "使用指针遍历数组: ";
-	for(int i=0; i<sizeof(arr1) / sizeof(int); i++) {
-		cout << "arr1[" << i << "]=" << *p7 << ",";
-		p7++;
-	}
-	cout << endl;
-
 	system("pause");
 
 	return 0;
