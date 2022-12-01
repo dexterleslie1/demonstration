@@ -20,6 +20,19 @@ void test(int p_a) {
     cout << "函数参数p_a地址：" << &p_a << endl;
 }
 
+class ClassTest {
+private:
+    int mInt;
+public:
+    ClassTest(int mInt) {
+        this->mInt = mInt;
+    }
+
+    void print() {
+        cout << "ClassTest类实例mInt=" << this->mInt << endl;
+    }
+};
+
 int main() {
     /* 程序内存分为：代码区、全局区、栈区、堆区 */
     // 代码区，程序编译链接后生成exe可执行程序包含全部代码区，存放cpu执行的机器指令
@@ -173,6 +186,27 @@ int main() {
     const char *strPtr6 = "hello world!";
     result = memcmp(strArr2, strPtr6, sizeof(strArr2));
     assert(result == 0);
+
+    /* new和delete */
+    // 使用new创建int等于10
+    int *ptrInt = new int(10);
+    cout << "使用new创建int等于10，*ptrInt=" << *ptrInt << endl;
+    delete ptrInt;
+
+    // 使用new创建int[2]数组
+    ptrInt = new int[2];
+    *ptrInt = 1;
+    *(ptrInt+1) = 2;
+    cout << "使用new创建int[2]，*ptrInt=" << *ptrInt << endl;
+    cout << "使用new创建int[2]，*(ptrInt+1)=" << *(ptrInt+1) << endl;
+    delete []ptrInt;
+
+    // 使用new创建class
+    // https://blog.csdn.net/qq_42138448/article/details/115304990
+    ClassTest *classTest = new ClassTest(10);
+    classTest->print();
+    // 相当于显示的调用了该对象的析构函数
+    delete classTest;
 
     return 0;
 }
