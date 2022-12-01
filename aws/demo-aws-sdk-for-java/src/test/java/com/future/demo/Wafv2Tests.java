@@ -15,7 +15,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class Tests {
+public class Wafv2Tests {
     final static String Prefix = "demo-test-";
 
     @Test
