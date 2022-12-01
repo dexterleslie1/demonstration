@@ -1,5 +1,5 @@
-﻿#include <iostream>
-#include <string>
+﻿#include <string>
+#include "my_function.h"
 
 using namespace std;
 
@@ -47,6 +47,10 @@ int main() {
 	// 参数顺序不一样
 	test2(a, d);
 	test2(d, a);
+
+	// 测试函数声明和定义分开文件，声明使用头文件h，定义使用cpp文件
+	cout << "-------测试函数声明和定义分开文件" << endl;
+	my_function(a);
 
 	system("pause");
 
