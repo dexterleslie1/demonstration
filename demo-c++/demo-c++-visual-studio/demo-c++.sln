@@ -23,6 +23,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "demo-program-arguments", "d
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "demo-time", "demo-time\demo-time.vcxproj", "{379F9A3B-19FA-465A-98DF-692127FBA141}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "demo-switch", "demo-switch\demo-switch.vcxproj", "{059C5D4D-774B-4595-981D-9CC3B864C49F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -73,6 +75,10 @@ Global
 		{379F9A3B-19FA-465A-98DF-692127FBA141}.Debug|Win32.Build.0 = Debug|Win32
 		{379F9A3B-19FA-465A-98DF-692127FBA141}.Release|Win32.ActiveCfg = Release|Win32
 		{379F9A3B-19FA-465A-98DF-692127FBA141}.Release|Win32.Build.0 = Release|Win32
+		{059C5D4D-774B-4595-981D-9CC3B864C49F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{059C5D4D-774B-4595-981D-9CC3B864C49F}.Debug|Win32.Build.0 = Debug|Win32
+		{059C5D4D-774B-4595-981D-9CC3B864C49F}.Release|Win32.ActiveCfg = Release|Win32
+		{059C5D4D-774B-4595-981D-9CC3B864C49F}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
