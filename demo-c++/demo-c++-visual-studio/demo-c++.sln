@@ -29,6 +29,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "demo-while", "demo-while\de
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "demo-goto", "demo-goto\demo-goto.vcxproj", "{E955B3B7-B449-4E10-BFB0-5924A8CD5471}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "demo-address-book-management-system", "demo-address-book-management-system\demo-address-book-management-system.vcxproj", "{79B0AFAF-E478-48F0-9A80-43B619F664E7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -91,6 +93,10 @@ Global
 		{E955B3B7-B449-4E10-BFB0-5924A8CD5471}.Debug|Win32.Build.0 = Debug|Win32
 		{E955B3B7-B449-4E10-BFB0-5924A8CD5471}.Release|Win32.ActiveCfg = Release|Win32
 		{E955B3B7-B449-4E10-BFB0-5924A8CD5471}.Release|Win32.Build.0 = Release|Win32
+		{79B0AFAF-E478-48F0-9A80-43B619F664E7}.Debug|Win32.ActiveCfg = Debug|Win32
+		{79B0AFAF-E478-48F0-9A80-43B619F664E7}.Debug|Win32.Build.0 = Debug|Win32
+		{79B0AFAF-E478-48F0-9A80-43B619F664E7}.Release|Win32.ActiveCfg = Release|Win32
+		{79B0AFAF-E478-48F0-9A80-43B619F664E7}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
