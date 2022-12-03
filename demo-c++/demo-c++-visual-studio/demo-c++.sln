@@ -39,6 +39,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "类-常函数和常对象",
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "类-友元", "类-友元\类-友元.vcxproj", "{7A642D8C-DA3C-4BB7-A15D-D4D0FBE7A6B4}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "类-声明和定义分文件", "类-声明和定义分文件\类-声明和定义分文件.vcxproj", "{CF71EDEE-4455-4442-9B47-5EC03451DB91}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -121,6 +123,10 @@ Global
 		{7A642D8C-DA3C-4BB7-A15D-D4D0FBE7A6B4}.Debug|Win32.Build.0 = Debug|Win32
 		{7A642D8C-DA3C-4BB7-A15D-D4D0FBE7A6B4}.Release|Win32.ActiveCfg = Release|Win32
 		{7A642D8C-DA3C-4BB7-A15D-D4D0FBE7A6B4}.Release|Win32.Build.0 = Release|Win32
+		{CF71EDEE-4455-4442-9B47-5EC03451DB91}.Debug|Win32.ActiveCfg = Debug|Win32
+		{CF71EDEE-4455-4442-9B47-5EC03451DB91}.Debug|Win32.Build.0 = Debug|Win32
+		{CF71EDEE-4455-4442-9B47-5EC03451DB91}.Release|Win32.ActiveCfg = Release|Win32
+		{CF71EDEE-4455-4442-9B47-5EC03451DB91}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
