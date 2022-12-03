@@ -11,8 +11,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "demo-reference", "demo-refe
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "demo-function", "demo-function\demo-function.vcxproj", "{7E98D1B6-07C6-42D4-9674-9E2A8BD79F2A}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "demo-class", "demo-class\demo-class.vcxproj", "{5B8D6AA2-C7D4-4F10-8C9B-4CDECABF7B7F}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "demo-assert", "demo-assert\demo-assert.vcxproj", "{FC960983-E207-4C3B-8AE6-715A99A3920E}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "demo-union", "demo-union\demo-union.vcxproj", "{49765A78-9E51-4855-AC73-A836D2FF48B4}"
@@ -34,6 +32,10 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "demo-class-constructor-and-destructor", "demo-class-constructor-and-destructor\demo-class-constructor-and-destructor.vcxproj", "{BC40B0F4-6464-4FB1-BBF9-8EE13AA1D550}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "类-静态成员变量和函数", "类-静态成员变量和函数\类-静态成员变量和函数.vcxproj", "{DAB35D64-20D7-4BD2-B9B5-F12A3D1A90CF}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "类-this指针", "类-this指针\类-this指针.vcxproj", "{A5190C3B-71D5-4AB1-931C-274A4A8DBBB3}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "类-常函数和常对象", "类-常函数和常对象\类-常函数和常对象.vcxproj", "{7A761FC7-8721-44E5-B591-6B745B838EE9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -61,10 +63,6 @@ Global
 		{7E98D1B6-07C6-42D4-9674-9E2A8BD79F2A}.Debug|Win32.Build.0 = Debug|Win32
 		{7E98D1B6-07C6-42D4-9674-9E2A8BD79F2A}.Release|Win32.ActiveCfg = Release|Win32
 		{7E98D1B6-07C6-42D4-9674-9E2A8BD79F2A}.Release|Win32.Build.0 = Release|Win32
-		{5B8D6AA2-C7D4-4F10-8C9B-4CDECABF7B7F}.Debug|Win32.ActiveCfg = Debug|Win32
-		{5B8D6AA2-C7D4-4F10-8C9B-4CDECABF7B7F}.Debug|Win32.Build.0 = Debug|Win32
-		{5B8D6AA2-C7D4-4F10-8C9B-4CDECABF7B7F}.Release|Win32.ActiveCfg = Release|Win32
-		{5B8D6AA2-C7D4-4F10-8C9B-4CDECABF7B7F}.Release|Win32.Build.0 = Release|Win32
 		{FC960983-E207-4C3B-8AE6-715A99A3920E}.Debug|Win32.ActiveCfg = Debug|Win32
 		{FC960983-E207-4C3B-8AE6-715A99A3920E}.Debug|Win32.Build.0 = Debug|Win32
 		{FC960983-E207-4C3B-8AE6-715A99A3920E}.Release|Win32.ActiveCfg = Release|Win32
@@ -109,6 +107,14 @@ Global
 		{DAB35D64-20D7-4BD2-B9B5-F12A3D1A90CF}.Debug|Win32.Build.0 = Debug|Win32
 		{DAB35D64-20D7-4BD2-B9B5-F12A3D1A90CF}.Release|Win32.ActiveCfg = Release|Win32
 		{DAB35D64-20D7-4BD2-B9B5-F12A3D1A90CF}.Release|Win32.Build.0 = Release|Win32
+		{A5190C3B-71D5-4AB1-931C-274A4A8DBBB3}.Debug|Win32.ActiveCfg = Debug|Win32
+		{A5190C3B-71D5-4AB1-931C-274A4A8DBBB3}.Debug|Win32.Build.0 = Debug|Win32
+		{A5190C3B-71D5-4AB1-931C-274A4A8DBBB3}.Release|Win32.ActiveCfg = Release|Win32
+		{A5190C3B-71D5-4AB1-931C-274A4A8DBBB3}.Release|Win32.Build.0 = Release|Win32
+		{7A761FC7-8721-44E5-B591-6B745B838EE9}.Debug|Win32.ActiveCfg = Debug|Win32
+		{7A761FC7-8721-44E5-B591-6B745B838EE9}.Debug|Win32.Build.0 = Debug|Win32
+		{7A761FC7-8721-44E5-B591-6B745B838EE9}.Release|Win32.ActiveCfg = Release|Win32
+		{7A761FC7-8721-44E5-B591-6B745B838EE9}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
