@@ -19,7 +19,10 @@ int main() {
 	int *p2 = (int *)0x89977;
 	// cout << "不能使用野指针操作内存" << *p2 << endl;
 
-	/* const修饰指针 */
+	/* 
+		const修饰指针 
+		https://blog.csdn.net/weixin_52244492/article/details/124081709
+	*/
 	// 常量指针，指针可以修改，指针指向值不可以修改
 	int b = 20;
 	const int *p3 = &b;
@@ -33,7 +36,7 @@ int main() {
 	//p5 = &a;
 	cout << "*p5=" << *p5 << endl;
 
-	// 即修饰指针有修饰常量，指针和指针指向值都不可以修改
+	// 即修饰指针又修饰常量，指针和指针指向值都不可以修改
 	const int * const p6 = &a;
 	//*p6 = 20;
 	//p6 = &b;

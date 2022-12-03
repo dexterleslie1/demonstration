@@ -37,7 +37,7 @@ int main() {
 	// 函数占位参数
 	test1(a);
 
-	// 函数重载
+	// 函数重载 overload
 	// 参数类型不同
 	test2(a);
 	double d = 3.14;
