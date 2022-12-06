@@ -46,3 +46,22 @@ create table if not exists t_developer_and_ipset_relation(
     constraint `fk_tDeveloperToIpsetRelation_ipsetId` foreign key (ipsetId) references t_ipset(id)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 collate=utf8mb4_general_ci;
 
+create table if not exists t_football_match(
+    id bigint primary key auto_increment,
+    teamIdA bigint not null,
+    teamIdB bigint not null,
+    createTime datetime not null
+) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 collate=utf8mb4_general_ci;
+
+insert into t_football_match(teamIdA,teamIdB,createTime)
+select 1,2,now() from dual where not exists(
+    select * from t_football_match where teamIdA=1 and teamIdB=2
+);
+insert into t_football_match(teamIdA,teamIdB,createTime)
+select 1,3,now() from dual where not exists(
+    select * from t_football_match where teamIdA=1 and teamIdB=3
+);
+insert into t_football_match(teamIdA,teamIdB,createTime)
+select 2,3,now() from dual where not exists(
+    select * from t_football_match where teamIdA=2 and teamIdB=3
+);

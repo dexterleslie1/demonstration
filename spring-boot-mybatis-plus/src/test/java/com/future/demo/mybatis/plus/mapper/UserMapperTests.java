@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.future.demo.mybatis.plus.Application;
+import com.future.demo.mybatis.plus.entity.FootballMatch;
 import com.future.demo.mybatis.plus.entity.User;
 import org.junit.Assert;
 import org.junit.Before;
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import javax.annotation.Resource;
 import java.util.Arrays;
 import java.util.List;
 
@@ -20,8 +22,10 @@ import java.util.List;
 @SpringBootTest(classes = {Application.class})
 public class UserMapperTests {
 
-    @Autowired
+    @Resource
     private UserMapper userMapper;
+    @Resource
+    private FootballMatchMapper footballMatchMapper;
 
     @Before
     public void setup() {
@@ -134,5 +138,20 @@ public class UserMapperTests {
         List<User> users = userMapper.selectList(Wrappers.<User>lambdaQuery().and(wrapper -> wrapper.eq(User::getName, name)));
         Assert.assertEquals(1, users.size());
         Assert.assertEquals(name, users.get(0).getName());
+    }
+
+    /**
+     * 测试 where (teamIdA=1 and teamIdB=2) or (teamIdA=2 and teamIdB=1)
+     */
+    @Test
+    public void testOrCombinationCondition() {
+        Long teamIdA = 2L;
+        Long teamIdB = 3L;
+        FootballMatch match = this.footballMatchMapper.selectOne(Wrappers.<FootballMatch>lambdaQuery()
+                .and(wrapper->wrapper.eq(FootballMatch::getTeamIdA, teamIdA).eq(FootballMatch::getTeamIdB, teamIdB))
+                .or(wrapper->wrapper.eq(FootballMatch::getTeamIdB, teamIdA).eq(FootballMatch::getTeamIdA, teamIdB)));
+        Assert.assertNotNull(match);
+        Assert.assertEquals(match.getTeamIdA(), teamIdA);
+        Assert.assertEquals(match.getTeamIdB(), teamIdB);
     }
 }
