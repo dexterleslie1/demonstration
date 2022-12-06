@@ -83,7 +83,7 @@
     <repositories>
         <repository>
             <id>yyd-nexus</id>
-            <url>http://maven.118899.net:10000/repository/maven-releases/</url>
+            <url>http://maven.118899.net/repository/maven-releases/</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
