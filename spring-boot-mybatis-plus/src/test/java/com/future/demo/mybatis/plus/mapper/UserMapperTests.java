@@ -1,5 +1,6 @@
 package com.future.demo.mybatis.plus.mapper;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.future.demo.mybatis.plus.Application;
@@ -12,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -116,6 +116,22 @@ public class UserMapperTests {
         queryWrapper.in("name", Arrays.asList(name));
 
         List<User> users = userMapper.selectList(queryWrapper);
+        Assert.assertEquals(1, users.size());
+        Assert.assertEquals(name, users.get(0).getName());
+    }
+
+    @Test
+    public void testLambdaQuery() {
+        String name = "Jone";
+
+        User user = new User();
+        user.setId(1L);
+        user.setAge(18);
+        user.setName(name);
+        user.setEmail("test1@baomidou.com");
+        userMapper.insert(user);
+
+        List<User> users = userMapper.selectList(Wrappers.<User>lambdaQuery().and(wrapper -> wrapper.eq(User::getName, name)));
         Assert.assertEquals(1, users.size());
         Assert.assertEquals(name, users.get(0).getName());
     }
