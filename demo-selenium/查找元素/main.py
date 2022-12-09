@@ -87,10 +87,24 @@ def test_find_element_by_css_selector_in_webelement_scope():
     pass
 
 
+# 测试多个class
+def test_find_element_by_css_selector_with_multiple_classname():
+    driver = webdriver.Firefox()
+    driver.get("https://www.baidu.com")
+    elements = driver.find_elements(By.CSS_SELECTOR, "[class=\"mnav c-font-normal c-color-t\"]")
+    elements[0].click()
+
+    time.sleep(2)
+    driver.quit()
+
+    pass
+
+
 if __name__ == "__main__":
     # test_find_element_by_id()
     # test_find_element_by_class()
     # test_find_element_by_class1()
     # test_find_elements_by_tag_name()
     # test_find_elements_by_css_selector()
-    test_find_element_by_css_selector_in_webelement_scope()
+    # test_find_element_by_css_selector_in_webelement_scope()
+    test_find_element_by_css_selector_with_multiple_classname()
