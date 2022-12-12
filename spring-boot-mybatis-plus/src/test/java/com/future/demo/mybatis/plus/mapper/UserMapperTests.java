@@ -2,6 +2,7 @@ package com.future.demo.mybatis.plus.mapper;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.future.demo.mybatis.plus.Application;
 import com.future.demo.mybatis.plus.entity.FootballMatch;
@@ -153,5 +154,36 @@ public class UserMapperTests {
         Assert.assertNotNull(match);
         Assert.assertEquals(match.getTeamIdA(), teamIdA);
         Assert.assertEquals(match.getTeamIdB(), teamIdB);
+    }
+
+    @Test
+    public void testLambdaUpdate() {
+        String name = "Jone";
+
+        User user = new User();
+        user.setId(1L);
+        user.setAge(18);
+        user.setName(name);
+        user.setEmail("test1@baomidou.com");
+        userMapper.insert(user);
+        user = new User();
+        user.setId(2L);
+        user.setAge(18);
+        user.setName(name);
+        user.setEmail("test1@baomidou.com");
+        userMapper.insert(user);
+
+        // 只更新第一条数据
+        // https://blog.csdn.net/sj1231984/article/details/118159040
+        LambdaUpdateWrapper<User> updateWrapper = Wrappers.<User>lambdaUpdate()
+                .set(User::getAge, 19)
+                .orderByAsc(User::getId)
+                .last("limit 1");
+        userMapper.update(null, updateWrapper);
+
+        List<User> users = userMapper.selectList(Wrappers.<User>lambdaQuery().orderByAsc(User::getId));
+        Assert.assertEquals(2, users.size());
+        Assert.assertEquals(new Integer(19), users.get(0).getAge());
+        Assert.assertEquals(new Integer(18), users.get(1).getAge());
     }
 }
