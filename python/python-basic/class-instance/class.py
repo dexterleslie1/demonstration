@@ -1,3 +1,6 @@
+import json
+
+
 class Student:
     # 类属性: 所有类或者类对象共享一个类属性
     classProperty = "类属性classProperty"
@@ -48,6 +51,12 @@ class Person(object):
 
     def info(self):
         print("我是{0}，今年{1}岁".format(self.name, self.age))
+
+    def __str__(self):
+        # return f"名称：{self.name}，年龄：{self.age}"
+        # json_dumps(dict)时，如果dict包含有汉字，一定加上ensure_ascii=False。否则按参数默认值True，意思是保证dumps之后的结果里所有的字符都能够被ascii表示，汉字在ascii的字符集里面，因此经过dumps以后的str里，汉字会变成对应的unicode。
+        # https://zhuanlan.zhihu.com/p/37504880
+        return json.dumps(self.__dict__, indent=4, ensure_ascii=False)
 
 
 class StudentSub(Person):
@@ -211,5 +220,12 @@ if __name__ == "__main__":
     children = Children()
     children.method1()
     children.method2()
+
+    # https://bobbyhadz.com/blog/python-print-object-as-string#:~:text=Use%20the%20__str__()%20method,string%20representation%20of%20the%20object.
+    # https://bobbyhadz.com/blog/python-print-object-as-json
+    print()
+    print("以字符串或者JSON形式打印对象".center(50, "-"))
+    student = StudentSub("中国", 32, 89)
+    print(student)
 
     pass
