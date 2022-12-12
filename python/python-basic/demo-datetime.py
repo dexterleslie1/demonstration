@@ -36,4 +36,9 @@ if __name__ == "__main__":
     if timeNow < datetimeObject:
         print("时间 ", timeNow, " 早于时间 ", datetimeObject)
 
+    # 时间戳转换为datetime对象
+    timestampObject = 1671217200000
+    datetimeObject = datetime.datetime.fromtimestamp(timestampObject/1000)
+    print("时间戳:", timestampObject, "转换为datetime对象:", datetimeObject)
+
     pass
