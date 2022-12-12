@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.future.demo.mybatis.plus.Application;
 import com.future.demo.mybatis.plus.entity.FootballMatch;
+import com.future.demo.mybatis.plus.entity.Ipset;
 import com.future.demo.mybatis.plus.entity.User;
 import org.junit.Assert;
 import org.junit.Before;
@@ -18,6 +19,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import javax.annotation.Resource;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = {Application.class})
@@ -125,6 +127,38 @@ public class UserMapperTests {
         Assert.assertEquals(name, users.get(0).getName());
     }
 
+    /**
+     * 测试自定义sql，只查询指定列name并且去重
+     * https://blog.csdn.net/qq_44695727/article/details/123434199
+     * https://blog.csdn.net/tcctcszhanghao/article/details/106576886
+     */
+    @Test
+    public void testCustomizeQuery() {
+        String name = "Jone";
+
+        User user = new User();
+        user.setId(1L);
+        user.setAge(18);
+        user.setName(name);
+        user.setEmail("test1@baomidou.com");
+        userMapper.insert(user);
+
+        user = new User();
+        user.setId(2L);
+        user.setAge(18);
+        user.setName(name);
+        user.setEmail("test2@baomidou.com");
+        userMapper.insert(user);
+
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.select("distinct name,age");
+        queryWrapper.eq("age", 18);
+        List<Map<String, Object>> nameMapList = userMapper.selectMaps(queryWrapper);
+        Assert.assertEquals(1, nameMapList.size());
+        Assert.assertEquals(2, nameMapList.get(0).size());
+        Assert.assertEquals(name, nameMapList.get(0).get("name"));
+    }
+
     @Test
     public void testLambdaQuery() {
         String name = "Jone";
@@ -156,6 +190,9 @@ public class UserMapperTests {
         Assert.assertEquals(match.getTeamIdB(), teamIdB);
     }
 
+    /**
+     * 使用last指定limit语句
+     */
     @Test
     public void testLambdaUpdate() {
         String name = "Jone";
