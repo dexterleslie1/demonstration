@@ -919,6 +919,173 @@ job.batch "job1" deleted
 
 todo
 
+### StatefulSet
+
+> RC、Deployment、DaemonSet都是面向无状态的服务，它们所管理的Pod的IP、名字，启停顺序等都是随机的，而StatefulSet是什么？顾名思义，有状态的集合，管理所有有状态的服务，比如MySQL、MongoDB集群等。
+> StatefulSet本质上是Deployment的一种变体，在v1.9版本中已成为GA版本，它为了解决有状态服务的问题，它所管理的Pod拥有固定的Pod名称，启停顺序，在StatefulSet中，Pod名字称为网络标识(hostname)，还必须要用到共享存储。
+>
+> 在Deployment中，与之对应的服务是service，而在StatefulSet中与之对应的headless service，headless service，即无头服务，与service的区别就是它没有Cluster IP，解析它的名称时将返回该Headless Service对应的全部Pod的Endpoint列表。
+>
+> [链接1](https://www.jianshu.com/p/03cd2f2dc427)
+
+**参考storageclass章节创建storageclass**
+
+**创建statefulset.yaml**
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+  labels:
+    app: nginx
+spec:
+  ports:
+  - port: 80
+    name: web
+  clusterIP: None
+  selector:
+    app: nginx
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: web
+spec:
+  selector:
+    matchLabels:
+      app: nginx # has to match .spec.template.metadata.labels
+  serviceName: "nginx"  #声明它属于哪个Headless Service.
+  replicas: 3 # by default is 1
+  template:
+    metadata:
+      labels:
+        app: nginx # has to match .spec.selector.matchLabels
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: nginx
+        image: nginx:1.20.1
+        ports:
+        - containerPort: 80
+          name: web
+        volumeMounts:
+        - name: www
+          mountPath: /usr/share/nginx/html
+  volumeClaimTemplates:   #可看作pvc的模板
+  - metadata:
+      name: www
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "gluster-heketi"  #存储类名，改为集群中已存在的
+      resources:
+        requests:
+          storage: 1Gi
+```
+
+```shell
+# kubectl create -f statefulset.yaml启动statefulset后
+# 在各个nginx目录下创建index.html，如下所示
+[root@k8s-master datass]# tree
+.
+├── default-test-claim-pvc-34bc5c37-2507-4c66-b470-76f199fc07f9
+├── default-www-web-0-pvc-532ce5e0-c614-4c4c-abd1-dd664d88298f
+│   └── index.html
+├── default-www-web-1-pvc-210e4f4a-d006-422f-bf39-3b36e4af89ef
+│   └── index.html
+└── default-www-web-2-pvc-5b905a3a-aed4-44d3-b874-b11f34ae3434
+    └── index.html
+# 每个index.html <h1>Welcome to nginx1!</h1>不一样
+[root@k8s-master default-www-web-1-pvc-210e4f4a-d006-422f-bf39-3b36e4af89ef]# cat index.html 
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+    body {
+        width: 35em;
+        margin: 0 auto;
+        font-family: Tahoma, Verdana, Arial, sans-serif;
+    }
+</style>
+</head>
+<body>
+<h1>Welcome to nginx1!</h1>
+<p>If you see this page, the nginx web server is successfully installed and
+working. Further configuration is required.</p>
+
+<p>For online documentation and support please refer to
+<a href="http://nginx.org/">nginx.org</a>.<br/>
+Commercial support is available at
+<a href="http://nginx.com/">nginx.com</a>.</p>
+
+<p><em>Thank you for using nginx.</em></p>
+</body>
+</html>
+# 分别请求3个nginx，返回的内容不一样
+[root@k8s-master ~]# kubectl get pod -o wide
+NAME                                      READY   STATUS    RESTARTS   AGE   IP            NODE        NOMINATED NODE   READINESS GATES
+nfs-client-provisioner-859477c96c-stc5k   1/1     Running   0          10m   10.244.1.40   k8s-node1   <none>           <none>
+web-0                                     1/1     Running   0          10s   10.244.2.80   k8s-node2   <none>           <none>
+web-1                                     1/1     Running   0          8s    10.244.1.41   k8s-node1   <none>           <none>
+web-2                                     1/1     Running   0          7s    10.244.2.81   k8s-node2   <none>           <none>
+[root@k8s-master ~]# curl 10.244.2.80
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+    body {
+        width: 35em;
+        margin: 0 auto;
+        font-family: Tahoma, Verdana, Arial, sans-serif;
+    }
+</style>
+</head>
+<body>
+<h1>Welcome to nginx0!</h1>
+<p>If you see this page, the nginx web server is successfully installed and
+working. Further configuration is required.</p>
+
+<p>For online documentation and support please refer to
+<a href="http://nginx.org/">nginx.org</a>.<br/>
+Commercial support is available at
+<a href="http://nginx.com/">nginx.com</a>.</p>
+
+<p><em>Thank you for using nginx.</em></p>
+</body>
+</html>
+
+[root@k8s-master ~]# curl 10.244.1.41
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+    body {
+        width: 35em;
+        margin: 0 auto;
+        font-family: Tahoma, Verdana, Arial, sans-serif;
+    }
+</style>
+</head>
+<body>
+<h1>Welcome to nginx1!</h1>
+<p>If you see this page, the nginx web server is successfully installed and
+working. Further configuration is required.</p>
+
+<p>For online documentation and support please refer to
+<a href="http://nginx.org/">nginx.org</a>.<br/>
+Commercial support is available at
+<a href="http://nginx.com/">nginx.com</a>.</p>
+
+<p><em>Thank you for using nginx.</em></p>
+</body>
+</html>
+```
+
+
+
 ## k8s service
 
 > 是一组同类pod对外访问接口，借助service，应用可以方便地实现服务发现和负载均衡
@@ -1352,7 +1519,296 @@ Commercial support is available at
 >
 > pvc(Persistent Volume Claim)是持久卷声明的意思，是用户对于存储需求的一种声明。换句话说，pvc其实是用户向k8s系统发出一种资源需求申请。
 
-todo
+**创建nfs**
+
+```shell
+# 分别在三个节点上安装nfs-utils
+[root@k8s-master ~]# yum install nfs-utils -y
+# 在master节点上启动nfs-server
+[root@k8s-master ~]# systemctl start nfs-server
+[root@k8s-master ~]# systemctl enable nfs-server
+# 在master节点创建三个pv目录
+[root@k8s-master ~]# mkdir /data/{pv1,pv2,pv3} -pv
+mkdir: created directory ‘/data/pv1’
+mkdir: created directory ‘/data/pv2’
+mkdir: created directory ‘/data/pv3’
+# 编辑/etc/exports加入如下内容
+[root@k8s-master ~]# cat /etc/exports
+/data/pv1 *(rw,sync,no_root_squash,no_subtree_check)
+/data/pv2 *(rw,sync,no_root_squash,no_subtree_check)
+/data/pv3 *(rw,sync,no_root_squash,no_subtree_check)
+# 重启nfs-server服务
+[root@k8s-master ~]# systemctl restart nfs-server
+# 显示被nfs export的目录
+[root@k8s-master ~]# showmount -e
+Export list for k8s-master:
+/datass   *
+/data/pv3 *
+/data/pv2 *
+/data/pv1 *
+```
+
+**创建pv**
+
+```yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+ name: pv1
+spec:
+ capacity: 
+  storage: 2Gi
+ accessModes:
+ - ReadWriteMany
+ persistentVolumeReclaimPolicy: Retain
+ nfs:
+  path: /data/pv1
+  server: 192.168.1.170
+```
+
+```shell
+[root@k8s-master ~]# kubectl create -f 1.yaml 
+persistentvolume/pv1 created
+[root@k8s-master ~]# kubectl get persistentvolume
+NAME   CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS      CLAIM   STORAGECLASS   REASON   AGE
+pv1    2Gi        RWX            Retain           Available                                   19s
+```
+
+**创建pvc**
+
+```yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+ name: pvc1
+ namespace: dev
+spec:
+ accessModes:
+ - ReadWriteMany
+ resources:
+  requests:
+   storage: 1Gi
+```
+
+```shell
+[root@k8s-master ~]# kubectl create -f 2.yaml 
+persistentvolumeclaim/pvc1 created
+[root@k8s-master ~]# kubectl get persistentvolumeclaim -n dev
+NAME   STATUS   VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+pvc1   Bound    pv1      2Gi        RWX                           9m39s
+```
+
+**pod使用pvc**
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+ name: pod1
+ namespace: dev
+spec:
+ containers:
+ - name: busybox
+   image: busybox
+   command: ["/bin/sh", "-c", "while true;do echo pod1 >> /root/out.txt; sleep 10; done;"]
+   volumeMounts:
+   - name: volume
+     mountPath: /root/
+ volumes:
+ - name: volume
+   persistentVolumeClaim:
+    claimName: pvc1
+    readOnly: false
+```
+
+```shell
+# 使用pvc
+[root@k8s-master ~]# kubectl create -f pod.yaml 
+pod/pod1 created
+[root@k8s-master pv1]# tail -f out.txt 
+pod1
+pod1
+pod1
+```
+
+#### storageclass
+
+> 根据pvc自动创建pv
+>
+> [链接1](https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner/blob/master/deploy/test-claim.yaml) [链接2](https://zahui.fan/posts/179eb842/)
+
+**参考pv和pvc章节配置nfs服务器**
+
+**创建rbac.yarml**
+
+```yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: nfs-client-provisioner
+  namespace: default
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: nfs-client-provisioner-runner
+rules:
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["persistentvolumes"]
+    verbs: ["get", "list", "watch", "create", "delete"]
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["get", "list", "watch", "update"]
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["storageclasses"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "update", "patch"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: run-nfs-client-provisioner
+subjects:
+  - kind: ServiceAccount
+    name: nfs-client-provisioner
+    namespace: default
+roleRef:
+  kind: ClusterRole
+  name: nfs-client-provisioner-runner
+  apiGroup: rbac.authorization.k8s.io
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: leader-locking-nfs-client-provisioner
+  namespace: default
+rules:
+  - apiGroups: [""]
+    resources: ["endpoints"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: leader-locking-nfs-client-provisioner
+  namespace: default
+subjects:
+  - kind: ServiceAccount
+    name: nfs-client-provisioner
+    namespace: default
+roleRef:
+  kind: Role
+  name: leader-locking-nfs-client-provisioner
+  apiGroup: rbac.authorization.k8s.io
+```
+
+```shell
+[root@k8s-master ~]# kubectl create -f rbac.yaml 
+serviceaccount/nfs-client-provisioner created
+clusterrole.rbac.authorization.k8s.io/nfs-client-provisioner-runner created
+clusterrolebinding.rbac.authorization.k8s.io/run-nfs-client-provisioner created
+role.rbac.authorization.k8s.io/leader-locking-nfs-client-provisioner created
+rolebinding.rbac.authorization.k8s.io/leader-locking-nfs-client-provisioner created
+```
+
+**创建deployment.yaml**
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nfs-client-provisioner
+  labels:
+    app: nfs-client-provisioner
+  namespace: default
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: nfs-client-provisioner
+  template:
+    metadata:
+      labels:
+        app: nfs-client-provisioner
+    spec:
+      serviceAccountName: nfs-client-provisioner
+      containers:
+        - name: nfs-client-provisioner
+          image: registry.cn-hangzhou.aliyuncs.com/iuxt/nfs-subdir-external-provisioner:v4.0.2
+          volumeMounts:
+            - name: nfs-client-root
+              mountPath: /persistentvolumes
+          env:
+			# 必须与storageclass.yaml中的provisioner的名称一致
+            - name: PROVISIONER_NAME
+              value: k8s-sigs.io/nfs-subdir-external-provisioner
+            - name: NFS_SERVER
+              value: 192.168.1.170
+            - name: NFS_PATH
+              value: /datass
+      volumes:
+        - name: nfs-client-root
+          nfs:
+            server: 192.168.1.170
+            path: /datass
+```
+
+```shell
+[root@k8s-master ~]# kubectl create -f deployment.yaml 
+deployment.apps/nfs-client-provisioner created
+```
+
+**创建storageclass.yaml**
+
+```yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: nfs-client
+# 必须与deployment.yaml中的PROVISIONER_NAME一致
+provisioner: k8s-sigs.io/nfs-subdir-external-provisioner # or choose another name, must match deployment's env PROVISIONER_NAME'
+parameters:
+  # https://help.aliyun.com/document_detail/144398.html
+  archiveOnDelete: "false"
+```
+
+```shell
+[root@k8s-master ~]# kubectl create -f storageclass.yaml 
+storageclass.storage.k8s.io/nfs-client created
+```
+
+**使用创建test-claim.yaml测试**
+
+```yaml
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: test-claim
+spec:
+  storageClassName: nfs-client
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Mi
+```
+
+```shell
+[root@k8s-master ~]# kubectl create -f test-claim.yaml 
+persistentvolumeclaim/test-claim created
+[root@k8s-master ~]# kubectl get pvc
+NAME         STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+test-claim   Bound    pvc-34bc5c37-2507-4c66-b470-76f199fc07f9   1Mi        RWX            nfs-client     8s
+```
+
+
 
 ### 配置存储
 
