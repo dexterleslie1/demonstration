@@ -1194,14 +1194,13 @@ service "service1" deleted
 
 **headless(无头服务)**
 
-> headless服务是通过service的dns解析访问相应的pod
+> headless服务是通过service的dns解析访问相应的pod，例如下面例子：在busybox pod中通过headless-service无头服务名称就能够访问两个nginx pod endpoints。
 
 ```yaml
 apiVersion: v1
 kind: Service
 metadata:
- name: service1
- namespace: dev
+ name: headless-service
 spec:
  # 客户端地址会话保持莫斯
  # 如果不指定使用默认，随机、轮询
@@ -1213,41 +1212,125 @@ spec:
  ports:
  - port: 81 # service端口
    targetPort: 80 # pod端口
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: headless-deployment1
+spec:
+ selector:
+  matchLabels:
+   app: nginx-pod
+ template:
+  metadata:
+   labels:
+    app: nginx-pod
+  spec:
+   containers:
+   - name: nginx
+     image: nginx:1.17.1
+     ports:
+     - containerPort: 80
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: headless-deployment2
+spec:
+ selector:
+  matchLabels:
+   app: nginx-pod
+ template:
+  metadata:
+   labels:
+    app: nginx-pod
+  spec:
+   containers:
+   - name: nginx
+     image: nginx:1.17.1
+     ports:
+     - containerPort: 80
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: headless-deployment-busybox
+spec:
+ selector:
+  matchLabels:
+   app: busybox-1
+ template:
+  metadata:
+   labels:
+    app: busybox-1
+  spec:
+   containers:
+   - name: busybox
+     image: busybox:1.28
+     command: ["/bin/sh", "-c", "sleep 3600"]
 ```
 
 ```shell
-[root@k8s-master ~]# kubectl exec -it deployment1-5ffc5bf56c-hk9mc -n dev /bin/sh
+[root@k8s-master ~]# kubectl get pod
+NAME                                         READY   STATUS    RESTARTS   AGE
+headless-deployment-busybox-b9db9bbb-vsrvm   1/1     Running   0          4m36s
+headless-deployment1-5ffc5bf56c-njvcl        1/1     Running   0          4m36s
+headless-deployment2-5ffc5bf56c-786mm        1/1     Running   0          4m36s
+nfs-client-provisioner-859477c96c-stc5k      1/1     Running   0          117m
+web-0                                        1/1     Running   0          106m
+web-1                                        1/1     Running   0          106m
+web-2                                        1/1     Running   0          106m
+# 进入busybox容器测试headless service
+[root@k8s-master ~]# kubectl exec -it headless-deployment-busybox-b9db9bbb-vsrvm /bin/sh
 kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl exec [POD] -- [COMMAND] instead.
-# cat /etc/resolv.conf
-nameserver 10.1.0.10
-search dev.svc.cluster.local svc.cluster.local cluster.local
-options ndots:5
-#
-# 使用dig命令解析headless service dns到对应的pod ip地址
-[root@k8s-master ~]# dig @10.1.0.10 service1.dev.svc.cluster.local
+/ # ping headless-service
+PING headless-service (10.244.2.90): 56 data bytes
+64 bytes from 10.244.2.90: seq=0 ttl=62 time=0.526 ms
+64 bytes from 10.244.2.90: seq=1 ttl=62 time=0.624 ms
+64 bytes from 10.244.2.90: seq=2 ttl=62 time=0.593 ms
+^C
+--- headless-service ping statistics ---
+3 packets transmitted, 3 packets received, 0% packet loss
+round-trip min/avg/max = 0.526/0.581/0.624 ms
+/ # ping headless-service
+PING headless-service (10.244.2.91): 56 data bytes
+64 bytes from 10.244.2.91: seq=0 ttl=62 time=0.628 ms
+64 bytes from 10.244.2.91: seq=1 ttl=62 time=0.578 ms
+64 bytes from 10.244.2.91: seq=2 ttl=62 time=0.587 ms
+64 bytes from 10.244.2.91: seq=3 ttl=62 time=0.543 ms
+^C
+--- headless-service ping statistics ---
+4 packets transmitted, 4 packets received, 0% packet loss
+round-trip min/avg/max = 0.543/0.584/0.628 ms
+/ # exit
 
-; <<>> DiG 9.9.4-RedHat-9.9.4-61.el7 <<>> @10.1.0.10 service1.dev.svc.cluster.local
+# 使用dig命令解析headless service dns到对应的pod ip地址
+[root@k8s-master ~]# dig @10.1.0.10 headless-service.default.svc.cluster.local
+
+; <<>> DiG 9.9.4-RedHat-9.9.4-61.el7 <<>> @10.1.0.10 headless-service.default.svc.cluster.local
 ; (1 server found)
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 34426
-;; flags: qr aa rd; QUERY: 1, ANSWER: 3, AUTHORITY: 0, ADDITIONAL: 1
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 35058
+;; flags: qr aa rd; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 1
 ;; WARNING: recursion requested but not available
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags:; udp: 4096
 ;; QUESTION SECTION:
-;service1.dev.svc.cluster.local.	IN	A
+;headless-service.default.svc.cluster.local. IN A
 
 ;; ANSWER SECTION:
-service1.dev.svc.cluster.local.	30 IN	A	10.244.1.28
-service1.dev.svc.cluster.local.	30 IN	A	10.244.2.52
-service1.dev.svc.cluster.local.	30 IN	A	10.244.2.53
+headless-service.default.svc.cluster.local. 30 IN A 10.244.2.91
+headless-service.default.svc.cluster.local. 30 IN A 10.244.2.90
 
-;; Query time: 0 msec
+;; Query time: 1 msec
 ;; SERVER: 10.1.0.10#53(10.1.0.10)
-;; WHEN: Fri Dec 09 11:19:53 CST 2022
-;; MSG SIZE  rcvd: 197
+;; WHEN: Thu Dec 15 13:18:58 CST 2022
+;; MSG SIZE  rcvd: 187
 ```
 
 **NodePort**
