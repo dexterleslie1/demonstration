@@ -117,6 +117,48 @@ kubectl create -f 1.yaml
 kubectl delete -f 1.yaml
 ```
 
+### 私有镜像拉取时提供帐号和密码
+
+> [链接1](https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/)
+
+```shell
+# 创建帐号和密码secret
+[root@k8s-master ~]# kubectl create secret docker-registry regcred --docker-server=my.docker.hub --docker-username=xxx --docker-password=xxxx
+# 查看secret
+[root@k8s-master ~]# kubectl get secret regcred --output=yaml
+```
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: deployment-yyd-ops-db
+spec:
+ selector:
+  matchLabels:
+   app: yyd-ops-db
+ template:
+  metadata:
+   labels:
+    app: yyd-ops-db
+  spec:
+   # 提供私有镜像拉取帐号和密码
+   imagePullSecrets:
+   - name: regcred
+   containers:
+   - name: yyd-ops-db
+     image: my.docker.hub/yyd-private/yyd-ops-db:1.0.0
+     ports:
+     - containerPort: 3306
+     env:
+     - name: MYSQL_ROOT_PASSWORD
+       value: "123456"
+     - name: TZ
+       value: "Asia/Shanghai"
+```
+
+
+
 ### 镜像拉取策略
 
 - Always: 总是从远程仓库拉取镜像
@@ -977,7 +1019,7 @@ spec:
       name: www
     spec:
       accessModes: [ "ReadWriteOnce" ]
-      storageClassName: "gluster-heketi"  #存储类名，改为集群中已存在的
+      storageClassName: "nfs-client"  #存储类名，改为集群中已存在的
       resources:
         requests:
           storage: 1Gi
@@ -1895,4 +1937,220 @@ test-claim   Bound    pvc-34bc5c37-2507-4c66-b470-76f199fc07f9   1Mi        RWX 
 
 ### 配置存储
 
-todo
+#### configmap
+
+**键值对存储**
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: configmap1
+data:
+ 1.properties: |
+  username: admin
+  password: 123456
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+ name: pod1
+spec:
+ containers:
+ - name: busybox
+   image: busybox
+   command: ["/bin/sh", "-c", "sleep 3600;"]
+   volumeMounts:
+   - name: volume1
+     mountPath: /root/
+ volumes:
+ - name: volume1
+   configMap:
+    name: configmap1
+```
+
+```shell
+[root@k8s-master ~]# kubectl get configmap
+NAME               DATA   AGE
+configmap1         1      2m15s
+kube-root-ca.crt   1      10d
+# 显示configmap详细信息
+[root@k8s-master ~]# kubectl describe configmap configmap1
+Name:         configmap1
+Namespace:    default
+Labels:       <none>
+Annotations:  <none>
+
+Data
+====
+1.properties:
+----
+username: admin
+password: 123456
+
+Events:  <none>
+# 进入pod查看1.properties
+[root@k8s-master ~]# kubectl exec -it pod1 /bin/sh
+kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl exec [POD] -- [COMMAND] instead.
+/ # cat /root/1.properties 
+username: admin
+password: 123456
+/ # 
+```
+
+**nginx.conf配置存储**
+
+> [链接1](https://stackoverflow.com/questions/51268488/kubernetes-configmap-set-from-file-in-yaml-configuration)
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: configmap1
+data:
+ nginx.conf: |
+  #user  nobody;
+    #worker_processes  1;
+    worker_rlimit_nofile 65535;
+
+    #error_log  logs/error.log;
+    #error_log  logs/error.log  notice;
+    #error_log  logs/error.log  info;
+
+    #pid        logs/nginx.pid;
+    error_log  logs/error.log  notice;
+
+    events {
+        worker_connections  65535;
+    }
+
+
+    http {
+        #log_format access '[$time_local] "$request" $status $request_body "$http_refferer" "$http_user_agent" $http_x_forwarded_for';
+        include       mime.types;
+        #include       /usr/local/openresty/nginx/conf/naxsi_core.rules;
+        default_type  application/octet-stream;
+
+        #log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+        #                  '$status $body_bytes_sent "$http_referer" '
+        #                  '"$http_user_agent" "$http_x_forwarded_for"';
+
+        #access_log  logs/access.log  main;
+
+        sendfile        on;
+        #tcp_nopush     on;
+
+        #keepalive_timeout  0;
+        keepalive_timeout  65;
+
+        #gzip  on;
+        gzip on;
+        gzip_min_length 1k;
+        gzip_buffers 16 64k;
+        gzip_http_version 1.1;
+        gzip_comp_level 6;
+        gzip_types application/json text/plain application/javascript text/css application/xml;
+        gzip_vary on;
+        server_tokens off;
+        autoindex off;
+        access_log off;
+        client_body_buffer_size  10k;
+        client_header_buffer_size 1k;
+        client_max_body_size 2m;
+        large_client_header_buffers 2 8k;
+        gzip_proxied any;
+
+        # 反向代理配置
+        proxy_buffering on;
+        proxy_buffer_size 8k;
+        proxy_buffers 32 8k;
+        proxy_busy_buffers_size 16k;
+
+        proxy_cache_path /tmp/proxy_cache levels=1:2 keys_zone=cache_one:200m inactive=1d max_size=2g use_temp_path=off;
+
+        upstream backend {
+            keepalive 1024;
+            server yyd-ops-api-dev:8080;
+        }
+
+        server {
+            listen       80;
+            server_name  localhost;
+
+            #charset koi8-r;
+
+            #access_log  logs/host.access.log  main;
+
+            set $naxsi_extensive_log 1;
+
+            location / {
+                #include /usr/local/openresty/nginx/conf/naxsi.rules;
+                proxy_set_header Host $host:$server_port;
+                #proxy_set_header x-forwarded-for $remote_addr;
+                proxy_http_version 1.1;
+                proxy_set_header Connection '';
+                proxy_pass http://backend;
+            }
+
+            location /request_denied {
+                default_type application/json;
+                return 403 '{"errorCode":600,"errorMessage":"您提交数据存在安全问题，被服务器拒绝，修改数据后重试"}';
+            }
+        }
+    }
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+ name: pod1
+spec:
+ containers:
+ - name: busybox
+   image: busybox
+   command: ["/bin/sh", "-c", "sleep 3600;"]
+   volumeMounts:
+   - name: volume1
+     mountPath: /root/nginx.conf
+     subPath: nginx.conf
+ volumes:
+ - name: volume1
+   configMap:
+    name: configmap1
+    items:
+    - key: nginx.conf
+      path: nginx.conf
+```
+
+```shell
+# 查看configmap
+[root@k8s-master ~]# kubectl get configmap
+NAME               DATA   AGE
+configmap1         1      10s
+kube-root-ca.crt   1      10d
+[root@k8s-master ~]# kubectl describe configmap configmap1
+Name:         configmap1
+Namespace:    default
+Labels:       <none>
+Annotations:  <none>
+
+Data
+====
+nginx.conf:
+----
+#user  nobody;
+  #worker_processes  1;
+  worker_rlimit_nofile 65535;
+......
+
+# 进入容器查看nginx.conf
+[root@k8s-master ~]# kubectl exec -it pod1 /bin/sh
+kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl exec [POD] -- [COMMAND] instead.
+/ # cat /root/nginx.conf 
+#user  nobody;
+  #worker_processes  1;
+  worker_rlimit_nofile 65535;
+......
+```
+
