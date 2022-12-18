@@ -3,6 +3,8 @@ import time
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions
+from selenium.webdriver.support.wait import WebDriverWait
 
 
 def test_implicitly_wait_element():
@@ -24,5 +26,19 @@ def test_implicitly_wait_element():
     pass
 
 
+def test_explicitly_wait_element():
+    driver = webdriver.Firefox()
+    driver.get("https://www.baidu.com")
+    wait = WebDriverWait(driver=driver, timeout=5)
+    # https://blog.csdn.net/dingding_ting/article/details/116768566
+    wait.until(expected_conditions.title_is("百度一下，你就知道"))
+
+    # https://www.jb51.net/article/219686.htm
+    wait.until(expected_conditions.presence_of_element_located((By.XPATH, "//input[@id='su']")))
+
+    driver.quit()
+
+
 if __name__ == "__main__":
-    test_implicitly_wait_element()
+    # test_implicitly_wait_element()
+    test_explicitly_wait_element()
