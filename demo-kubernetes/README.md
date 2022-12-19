@@ -2513,4 +2513,639 @@ drwxr-xr-x. 3 root root    77 Dec 16 20:01 tomcat
 -rw-r--r--. 1 root root  4241 Dec 16 20:00 tomcat-0.4.3.tgz
 ```
 
-#### 内置函数
+### 内置函数
+
+#### quote和squote函数
+
+> quote: 变量值添加双引号
+>
+> squote: 变量值添加单引号
+
+```shell
+[root@k8s-master mychart]# cat templates/configmap.yaml 
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: {{ .Release.Name }}-configmap1
+ namespace: {{ .Release.Namespace }}
+data:
+ myvalue: {{ .Values.name | quote }}
+ myvalue1: {{ .Values.name | squote }}
+
+[root@k8s-master mychart]# cat values.yaml 
+name: "hello world!!"
+
+[root@k8s-master mychart]# helm install myconfigmap1 . --debug --dry-run
+install.go:192: [debug] Original chart version: ""
+install.go:209: [debug] CHART PATH: /root/mychart
+
+NAME: myconfigmap1
+LAST DEPLOYED: Mon Dec 19 10:09:07 2022
+NAMESPACE: default
+STATUS: pending-install
+REVISION: 1
+TEST SUITE: None
+USER-SUPPLIED VALUES:
+{}
+
+COMPUTED VALUES:
+name: hello world!!
+
+HOOKS:
+MANIFEST:
+---
+# Source: mychart/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: myconfigmap1-configmap1
+ namespace: default
+data:
+ myvalue: "hello world!!"
+ myvalue1: 'hello world!!'
+```
+
+#### 使用多个函数多次处理同一个变量
+
+```shell
+[root@k8s-master mychart]# cat templates/configmap.yaml 
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: {{ .Release.Name }}-configmap1
+ namespace: {{ .Release.Namespace }}
+data:
+ myvalue: {{ .Values.name | lower | quote }}
+ myvalue1: {{ .Values.name | upper | squote }}
+ 
+[root@k8s-master mychart]# cat values.yaml 
+name: "hello world!!"
+
+[root@k8s-master mychart]# helm install myconfigmap1 . --debug --dry-run
+install.go:192: [debug] Original chart version: ""
+install.go:209: [debug] CHART PATH: /root/mychart
+
+NAME: myconfigmap1
+LAST DEPLOYED: Mon Dec 19 10:16:48 2022
+NAMESPACE: default
+STATUS: pending-install
+REVISION: 1
+TEST SUITE: None
+USER-SUPPLIED VALUES:
+{}
+
+COMPUTED VALUES:
+name: hello world!!
+
+HOOKS:
+MANIFEST:
+---
+# Source: mychart/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: myconfigmap1-configmap1
+ namespace: default
+data:
+ myvalue: "hello world!!"
+ myvalue1: 'HELLO WORLD!!'
+```
+
+#### lower和upper函数
+
+> Note：参考上面例子
+
+#### repeat函数
+
+```shell
+[root@k8s-master mychart]# cat templates/configmap.yaml 
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: {{ .Release.Name }}-configmap1
+ namespace: {{ .Release.Namespace }}
+data:
+ myvalue: {{ .Values.name | repeat 3 | quote }}
+ 
+[root@k8s-master mychart]# cat values.yaml 
+name: "hello world!!"
+
+[root@k8s-master mychart]# helm install myconfigmap1 . --debug --dry-run
+install.go:192: [debug] Original chart version: ""
+install.go:209: [debug] CHART PATH: /root/mychart
+
+NAME: myconfigmap1
+LAST DEPLOYED: Mon Dec 19 10:23:02 2022
+NAMESPACE: default
+STATUS: pending-install
+REVISION: 1
+TEST SUITE: None
+USER-SUPPLIED VALUES:
+{}
+
+COMPUTED VALUES:
+name: hello world!!
+
+HOOKS:
+MANIFEST:
+---
+# Source: mychart/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: myconfigmap1-configmap1
+ namespace: default
+data:
+ myvalue: "hello world!!hello world!!hello world!!"
+```
+
+#### default函数
+
+```shell
+[root@k8s-master mychart]# helm install myconfigmap1 . --debug --dry-run
+install.go:192: [debug] Original chart version: ""
+install.go:209: [debug] CHART PATH: /root/mychart
+
+NAME: myconfigmap1
+LAST DEPLOYED: Mon Dec 19 10:25:37 2022
+NAMESPACE: default
+STATUS: pending-install
+REVISION: 1
+TEST SUITE: None
+USER-SUPPLIED VALUES:
+{}
+
+COMPUTED VALUES:
+name: hello world!!
+
+HOOKS:
+MANIFEST:
+---
+# Source: mychart/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: myconfigmap1-configmap1
+ namespace: default
+data:
+ myvalue: "China"
+
+[root@k8s-master mychart]# cat templates/configmap.yaml 
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: {{ .Release.Name }}-configmap1
+ namespace: {{ .Release.Namespace }}
+data:
+ myvalue: {{ .Values.name1 | default "China" | quote }}
+```
+
+#### lookup函数
+
+> 用于获取k8s集群信息
+>
+> NOTE： lookup函数不能使用dry-run参数install，否则无法获取k8s集群信息
+>
+> 调用语法：lookup "apiVersion" "kind" "namespace" "name"(namespace和name参数是可选的，可以提供空字符串""，namespace提供空字符串表示所有命名空间)
+
+```shell
+[root@k8s-master mychart]# cat templates/configmap.yaml 
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: {{ .Release.Name }}-configmap1
+ namespace: {{ .Release.Namespace }}
+data:
+ myvalue: {{ lookup "v1" "Namespace" "" "" | quote }}
+
+[root@k8s-master mychart]# helm install myconfigmap1 .
+NAME: myconfigmap1
+LAST DEPLOYED: Mon Dec 19 11:02:50 2022
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+[root@k8s-master mychart]# helm get manifest myconfigmap1
+---
+# Source: mychart/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: myconfigmap1-configmap1
+ namespace: default
+data:
+ myvalue: "map[apiVersion:v1 items:[map[apiVersion:v1 kind:Namespace metadata:map[creationTimestamp:2022-12-05T06:24:25Z managedFields:[map[apiVersion:v1 fieldsType:FieldsV1 fieldsV1:map[f:status:map[f:phase:map[]]] manager:kube-apiserver operation:Update time:2022-12-05T06:24:25Z]] name:default resourceVersion:197 uid:cba1aa4d-eda8-413a-8627-ce6fa453ad7a] spec:map[finalizers:[kubernetes]] status:map[phase:Active]] map[apiVersion:v1 kind:Namespace metadata:map[creationTimestamp:2022-12-05T09:51:37Z managedFields:[map[apiVersion:v1 fieldsType:FieldsV1 fieldsV1:map[f:status:map[f:phase:map[]]] manager:kubectl-create operation:Update time:2022-12-05T09:51:37Z]] name:dev resourceVersion:16752 uid:ae4abfaa-d40e-4220-ac98-0081cbfae910] spec:map[finalizers:[kubernetes]] status:map[phase:Active]] map[apiVersion:v1 kind:Namespace metadata:map[annotations:map[kubectl.kubernetes.io/last-applied-configuration:{\"apiVersion\":\"v1\",\"kind\":\"Namespace\",\"metadata\":{\"annotations\":{},\"labels\":{\"pod-security.kubernetes.io/enforce\":\"privileged\"},\"name\":\"kube-flannel\"}}\n] creationTimestamp:2022-12-05T06:25:05Z labels:map[pod-security.kubernetes.io/enforce:privileged] managedFields:[map[apiVersion:v1 fieldsType:FieldsV1 fieldsV1:map[f:metadata:map[f:annotations:map[.:map[] f:kubectl.kubernetes.io/last-applied-configuration:map[]] f:labels:map[.:map[] f:pod-security.kubernetes.io/enforce:map[]]] f:status:map[f:phase:map[]]] manager:kubectl-client-side-apply operation:Update time:2022-12-05T06:25:05Z]] name:kube-flannel resourceVersion:471 uid:6651feb6-1c3f-4902-aa81-5d4318b545bf] spec:map[finalizers:[kubernetes]] status:map[phase:Active]] map[apiVersion:v1 kind:Namespace metadata:map[creationTimestamp:2022-12-05T06:24:24Z managedFields:[map[apiVersion:v1 fieldsType:FieldsV1 fieldsV1:map[f:status:map[f:phase:map[]]] manager:kube-apiserver operation:Update time:2022-12-05T06:24:24Z]] name:kube-node-lease resourceVersion:64 uid:994537f8-d842-44ea-bc2e-c660e38e1f55] spec:map[finalizers:[kubernetes]] status:map[phase:Active]] map[apiVersion:v1 kind:Namespace metadata:map[creationTimestamp:2022-12-05T06:24:24Z managedFields:[map[apiVersion:v1 fieldsType:FieldsV1 fieldsV1:map[f:status:map[f:phase:map[]]] manager:kube-apiserver operation:Update time:2022-12-05T06:24:24Z]] name:kube-public resourceVersion:43 uid:b568d7ad-ed30-4e5d-ab54-5a16219a9414] spec:map[finalizers:[kubernetes]] status:map[phase:Active]] map[apiVersion:v1 kind:Namespace metadata:map[creationTimestamp:2022-12-05T06:24:24Z managedFields:[map[apiVersion:v1 fieldsType:FieldsV1 fieldsV1:map[f:status:map[f:phase:map[]]] manager:kube-apiserver operation:Update time:2022-12-05T06:24:24Z]] name:kube-system resourceVersion:16 uid:c0bcf78f-273d-4833-94d5-57cb1d758e11] spec:map[finalizers:[kubernetes]] status:map[phase:Active]]] kind:NamespaceList metadata:map[resourceVersion:1877656]]"
+
+[root@k8s-master mychart]# helm uninstall myconfigmap1
+release "myconfigmap1" uninstalled
+```
+
+#### 逻辑和流程控制函数
+
+todo
+
+#### 字符串函数
+
+todo
+
+#### 类型转换函数
+
+todo
+
+#### 正则表达式函数
+
+todo
+
+#### 字典函数
+
+##### get、set、unset函数
+
+```shell
+[root@k8s-master mychart]# cat templates/configmap.yaml 
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: {{ .Release.Name }}-configmap1
+ namespace: {{ .Release.Namespace }}
+data:
+ {{- $myDict := dict "key1" "value1" "key2" "value2" }}
+ data1: {{ $myDict }}
+ data2: {{ get $myDict "key2" }}
+ data3: {{ set $myDict "key3" "value3" }}
+ data4: {{ unset $myDict "key2" }}
+
+[root@k8s-master mychart]# helm install myconfigmap1 . --debug --dry-run
+install.go:192: [debug] Original chart version: ""
+install.go:209: [debug] CHART PATH: /root/mychart
+
+NAME: myconfigmap1
+LAST DEPLOYED: Mon Dec 19 13:24:51 2022
+NAMESPACE: default
+STATUS: pending-install
+REVISION: 1
+TEST SUITE: None
+USER-SUPPLIED VALUES:
+{}
+
+COMPUTED VALUES:
+address:
+- beijing
+- shanghai
+- guangzhou
+
+HOOKS:
+MANIFEST:
+---
+# Source: mychart/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: myconfigmap1-configmap1
+ namespace: default
+data:
+ data1: map[key1:value1 key2:value2]
+ data2: value2
+ data3: map[key1:value1 key2:value2 key3:value3]
+ data4: map[key1:value1 key3:value3]
+```
+
+##### keys函数
+
+```shell
+[root@k8s-master mychart]# cat templates/configmap.yaml 
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: {{ .Release.Name }}-configmap1
+ namespace: {{ .Release.Namespace }}
+data:
+ {{- $myDict := dict "key1" "value1" "key2" "value2" }}
+ {{- $myDict1 := dict "key1" "value1" "key3" "value3" }}
+ {{- $myDict2 := dict "key1" "value1" "key4" "value4" }}
+ data1: {{ keys $myDict $myDict1 $myDict2 | sortAlpha | uniq | quote }}
+
+[root@k8s-master mychart]# helm install myconfigmap1 . --debug --dry-run
+install.go:192: [debug] Original chart version: ""
+install.go:209: [debug] CHART PATH: /root/mychart
+
+NAME: myconfigmap1
+LAST DEPLOYED: Mon Dec 19 13:29:14 2022
+NAMESPACE: default
+STATUS: pending-install
+REVISION: 1
+TEST SUITE: None
+USER-SUPPLIED VALUES:
+{}
+
+COMPUTED VALUES:
+address:
+- beijing
+- shanghai
+- guangzhou
+
+HOOKS:
+MANIFEST:
+---
+# Source: mychart/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: myconfigmap1-configmap1
+ namespace: default
+data:
+ data1: "[key1 key2 key3 key4]"
+```
+
+#### 列表函数
+
+todo
+
+### 程序流程控制语句
+
+#### ifelse语句
+
+```shell
+[root@k8s-master mychart]# cat templates/configmap.yaml 
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: {{ .Release.Name }}-configmap1
+ namespace: {{ .Release.Namespace }}
+data:
+ {{- if .Values.ingress.enabled }}
+ ingress: "配置ingress"
+ {{- else }}
+ ingress: "不配置ingress"
+ {{- end }}
+
+ {{- if eq .Values.Person.name "dexter" }}
+ welcome: "你好Dexter!"
+ {{- else }}
+ welcome: "你好谁谁!!"
+ {{- end }}
+ 
+[root@k8s-master mychart]# cat values.yaml 
+Person:
+ name: "dexter1"
+ingress:
+ enabled: true
+ 
+[root@k8s-master mychart]# helm install myconfigmap1 . --debug --dry-run
+install.go:192: [debug] Original chart version: ""
+install.go:209: [debug] CHART PATH: /root/mychart
+
+NAME: myconfigmap1
+LAST DEPLOYED: Mon Dec 19 12:21:36 2022
+NAMESPACE: default
+STATUS: pending-install
+REVISION: 1
+TEST SUITE: None
+USER-SUPPLIED VALUES:
+{}
+
+COMPUTED VALUES:
+Person:
+  name: dexter1
+ingress:
+  enabled: true
+
+HOOKS:
+MANIFEST:
+---
+# Source: mychart/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: myconfigmap1-configmap1
+ namespace: default
+data:
+ ingress: "配置ingress"
+ welcome: "你好谁谁!!"
+```
+
+#### with语句
+
+```shell
+[root@k8s-master mychart]# cat templates/configmap.yaml 
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: {{ .Release.Name }}-configmap1
+ namespace: {{ .Release.Namespace }}
+data:
+ {{- with .Values.people }}
+ name: {{ .info.name | quote }}
+ age: {{ .info.age }}
+ {{- end }}
+
+[root@k8s-master mychart]# cat values.yaml 
+people:
+ info:
+  name: "dexter1"
+  age: 11
+  
+[root@k8s-master mychart]# helm install myconfigmap1 . --debug --dry-run
+install.go:192: [debug] Original chart version: ""
+install.go:209: [debug] CHART PATH: /root/mychart
+
+NAME: myconfigmap1
+LAST DEPLOYED: Mon Dec 19 12:27:03 2022
+NAMESPACE: default
+STATUS: pending-install
+REVISION: 1
+TEST SUITE: None
+USER-SUPPLIED VALUES:
+{}
+
+COMPUTED VALUES:
+people:
+  info:
+    age: 11
+    name: dexter1
+
+HOOKS:
+MANIFEST:
+---
+# Source: mychart/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: myconfigmap1-configmap1
+ namespace: default
+data:
+ name: "dexter1"
+ age: 11
+```
+
+#### range语句
+
+```shell
+[root@k8s-master mychart]# cat templates/configmap.yaml 
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: {{ .Release.Name }}-configmap1
+ namespace: {{ .Release.Namespace }}
+data:
+ address: |-
+  {{- range .Values.address }}
+  - {{ . | title }}
+  {{- end }}
+[root@k8s-master mychart]# cat values.yaml 
+address:
+ - beijing
+ - shanghai
+ - guangzhou
+
+[root@k8s-master mychart]# helm install myconfigmap1 . --debug --dry-run
+install.go:192: [debug] Original chart version: ""
+install.go:209: [debug] CHART PATH: /root/mychart
+
+NAME: myconfigmap1
+LAST DEPLOYED: Mon Dec 19 12:37:49 2022
+NAMESPACE: default
+STATUS: pending-install
+REVISION: 1
+TEST SUITE: None
+USER-SUPPLIED VALUES:
+{}
+
+COMPUTED VALUES:
+address:
+- beijing
+- shanghai
+- guangzhou
+
+HOOKS:
+MANIFEST:
+---
+# Source: mychart/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: myconfigmap1-configmap1
+ namespace: default
+data:
+ address: |-
+  - Beijing
+  - Shanghai
+  - Guangzhou
+```
+
+### 子模板和template、include使用
+
+#### 在主模板中定义子模板
+
+> NOTE: 这种方法在实际项目中不使用，所以不demo
+
+#### 在_helpers.tpl定义子模板
+
+> 在实际项目中使用这种方法
+
+```shell
+[root@k8s-master mychart]# cat templates/_helpers.tpl 
+{{/* 注释 */}}
+{{- define "mychart.labels" }}
+ labels:
+  author: test
+  date: {{ now | htmlDate }}
+{{- end }}
+[root@k8s-master mychart]# cat templates/configmap.yaml 
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: {{ .Release.Name }}-configmap1
+ {{- include "mychart.labels" . }}
+data:
+ data1: "hello"
+ 
+[root@k8s-master mychart]# helm install myconfigmap1 . --dry-run --debug
+install.go:192: [debug] Original chart version: ""
+install.go:209: [debug] CHART PATH: /root/mychart
+
+NAME: myconfigmap1
+LAST DEPLOYED: Mon Dec 19 20:56:29 2022
+NAMESPACE: default
+STATUS: pending-install
+REVISION: 1
+TEST SUITE: None
+USER-SUPPLIED VALUES:
+{}
+
+COMPUTED VALUES:
+address:
+- beijing
+- shanghai
+- guangzhou
+
+HOOKS:
+MANIFEST:
+---
+# Source: mychart/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: myconfigmap1-configmap1
+ labels:
+  author: test
+  date: 2022-12-19
+data:
+ data1: "hello"
+```
+
+#### 带变量的子模板
+
+```shell
+[root@k8s-master mychart]# cat templates/configmap.yaml 
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: {{ .Release.Name }}-configmap1
+ labels:
+ #template和include区别是：include输出能够被函数处理，如下面演示
+{{- include "mychart.labels" . | toString | indent 2 }}
+data:
+ data1: "hello"
+ 
+[root@k8s-master mychart]# cat templates/_helpers.tpl 
+{{/* 注释 */}}
+{{- define "mychart.labels" }}
+name: {{ .Values.person.info.name }}
+age: {{ .Values.person.info.age | quote }}
+{{- end }}
+
+[root@k8s-master mychart]# helm install myconfigmap1 . --dry-run --debug
+install.go:192: [debug] Original chart version: ""
+install.go:209: [debug] CHART PATH: /root/mychart
+
+NAME: myconfigmap1
+LAST DEPLOYED: Mon Dec 19 21:26:05 2022
+NAMESPACE: default
+STATUS: pending-install
+REVISION: 1
+TEST SUITE: None
+USER-SUPPLIED VALUES:
+{}
+
+COMPUTED VALUES:
+person:
+  info:
+    age: 22
+    name: Dexter
+
+HOOKS:
+MANIFEST:
+---
+# Source: mychart/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: myconfigmap1-configmap1
+ labels:
+ #template和include区别是：include输出能够被函数处理，如下面演示  
+  name: Dexter
+  age: "22"
+data:
+ data1: "hello"
+```
+
