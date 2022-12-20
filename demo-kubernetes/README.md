@@ -63,6 +63,66 @@ kubectl create namespace dev
 kubectl delete namespace dev
 ```
 
+## downward api
+
+> 能够通过downward api获取k8s相关信息并通过环境变量传递到容器中。
+>
+> [链接1](https://kubernetes.io/docs/concepts/workloads/pods/downward-api/#available-fields)
+>
+> [通过环境变量传递pod信息](https://kubernetes.io/docs/tasks/inject-data-application/environment-variable-expose-pod-information/)
+
+```shell
+[root@k8s-master ~]# cat 1.yaml 
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dapi-envars-fieldref
+spec:
+  containers:
+    - name: test-container
+      image: busybox
+      command: [ "sh", "-c"]
+      args:
+      - while true; do
+          echo -en '\n';
+          printenv MY_NODE_NAME MY_POD_NAME MY_POD_NAMESPACE;
+          printenv MY_POD_IP MY_POD_SERVICE_ACCOUNT;
+          sleep 10;
+        done;
+      env:
+        - name: MY_NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: MY_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: MY_POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: MY_POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: MY_POD_SERVICE_ACCOUNT
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.serviceAccountName
+  restartPolicy: Never
+  
+[root@k8s-master ~]# kubectl create -f 1.yaml 
+pod/dapi-envars-fieldref created
+[root@k8s-master ~]# kubectl logs dapi-envars-fieldref
+
+k8s-node1
+dapi-envars-fieldref
+default
+10.244.1.253
+default
+```
+
 ## k8s pod
 
 ### 基础
@@ -1941,7 +2001,8 @@ test-claim   Bound    pvc-34bc5c37-2507-4c66-b470-76f199fc07f9   1Mi        RWX 
 
 **键值对存储**
 
-```yaml
+```shell
+[root@k8s-master ~]# cat 1.yaml 
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -1950,6 +2011,9 @@ data:
  1.properties: |
   username: admin
   password: 123456
+ 2.properties: |
+  key1: value1
+  key2: value2
 
 ---
 apiVersion: v1
@@ -1963,14 +2027,24 @@ spec:
    command: ["/bin/sh", "-c", "sleep 3600;"]
    volumeMounts:
    - name: volume1
-     mountPath: /root/
+     # 指定volume中的路径2repath.properties挂载到/2repath.properties
+     # https://kubernetes.io/docs/concepts/storage/volumes/#using-subpath
+     mountPath: /2repath.properties
+     subPath: 2repath.properties
+     # 挂载volume1到/root目录中
+   - name: volume1
+     mountPath: /root
  volumes:
  - name: volume1
    configMap:
     name: configmap1
-```
-
-```shell
+    items:
+     # 使用path指定configmap的2.properties这个key映射到volume的映射路径为2repath.properties
+     # 并且volume被挂载后1.properties不会被挂载，因为只指定了2.properties
+     # https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#add-configmap-data-to-a-specific-path-in-the-volume
+     - key: 2.properties
+       path: 2repath.properties
+       
 [root@k8s-master ~]# kubectl get configmap
 NAME               DATA   AGE
 configmap1         1      2m15s
@@ -1993,9 +2067,17 @@ Events:  <none>
 # 进入pod查看1.properties
 [root@k8s-master ~]# kubectl exec -it pod1 /bin/sh
 kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl exec [POD] -- [COMMAND] instead.
-/ # cat /root/1.properties 
-username: admin
-password: 123456
+/ # ls
+2repath.properties  dev                 home                root                tmp                 var
+bin                 etc                 proc                sys                 usr
+/ # cat 2repath.properties 
+key1: value1
+key2: value2
+/ # ls /root/
+2repath.properties
+/ # cat /root/2repath.properties 
+key1: value1
+key2: value2
 / # 
 ```
 
