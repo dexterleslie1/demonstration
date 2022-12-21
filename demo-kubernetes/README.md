@@ -2384,7 +2384,7 @@ data:
  myvalue: hello world!!
 ```
 
-### 内置变量
+### 变量
 
 #### 调试内置变量
 
@@ -2437,6 +2437,12 @@ data:
  service: Helm
  myvalue: hello world!!
 ```
+
+#### $(dollar)变量
+
+> 这个变量在用在range内，因为在range内点号指代的是当前item，为了避免冲突使用$代替。
+>
+> [链接1](https://helm.sh/docs/chart_template_guide/variables/)
 
 ### 常用命令
 
@@ -2942,6 +2948,139 @@ data:
 
 todo
 
+#### tpl函数
+
+> 允许开发人员在模板中传递模板字符串，例如：开发人员可以在外部的配置文件中使用helm模板语法编写配置后，使用tpl函数引用这个配置文件内容，里面的helm模板语法被动态解析。
+>
+> [链接1](https://helm.sh/docs/howto/charts_tips_and_tricks/#using-the-tpl-function)
+
+**例子1**
+
+```shell
+[root@k8s-master mychart]# cat templates/configmap.yaml 
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: {{ .Release.Name }}-configmap1
+data:
+ 1.conf: |
+  data: {{ tpl .Values.template . | quote }}
+[root@k8s-master mychart]# cat values.yaml 
+template: "{{ .Values.name }}"
+name: "Tom"
+[root@k8s-master mychart]# helm install myconfigmap1 . --dry-run --debug
+install.go:192: [debug] Original chart version: ""
+install.go:209: [debug] CHART PATH: /root/mychart
+
+NAME: myconfigmap1
+LAST DEPLOYED: Wed Dec 21 10:25:42 2022
+NAMESPACE: default
+STATUS: pending-install
+REVISION: 1
+TEST SUITE: None
+USER-SUPPLIED VALUES:
+{}
+
+COMPUTED VALUES:
+name: Tom
+template: '{{ .Values.name }}'
+
+HOOKS:
+MANIFEST:
+---
+# Source: mychart/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: myconfigmap1-configmap1
+data:
+ 1.conf: |
+  data: "Tom"
+```
+
+**渲染外部配置文件**
+
+```shell
+[root@k8s-master mychart]# cat app.conf 
+firstName={{ .Values.firstName }}
+lastName={{ .Values.lastName }}
+
+[root@k8s-master mychart]# cat templates/configmap.yaml 
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: {{ .Release.Name }}-configmap1
+data:
+ 1.conf: |
+{{ tpl (.Files.Get "app.conf") . | indent 2 }}
+
+[root@k8s-master mychart]# cat values.yaml 
+firstName: Peter
+lastName: Parker
+```
+
+#### toYaml函数
+
+> 把对象转换为yaml格式
+
+```shell
+[root@k8s-master mychart]# cat templates/configmap.yaml 
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: {{ .Release.Name }}-configmap1
+data:
+ 1.conf: | {{ .Values.redis | toYaml | nindent 2 }}
+ 
+[root@k8s-master mychart]# cat values.yaml 
+redis:
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      partition: 0
+      
+[root@k8s-master mychart]# helm install myconfigmap1 . --dry-run --debug
+install.go:192: [debug] Original chart version: ""
+install.go:209: [debug] CHART PATH: /root/mychart
+
+NAME: myconfigmap1
+LAST DEPLOYED: Wed Dec 21 13:46:41 2022
+NAMESPACE: default
+STATUS: pending-install
+REVISION: 1
+TEST SUITE: None
+USER-SUPPLIED VALUES:
+{}
+
+COMPUTED VALUES:
+redis:
+  updateStrategy:
+    rollingUpdate:
+      partition: 0
+    type: RollingUpdate
+
+HOOKS:
+MANIFEST:
+---
+# Source: mychart/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: myconfigmap1-configmap1
+data:
+ 1.conf: | 
+  updateStrategy:
+    rollingUpdate:
+      partition: 0
+    type: RollingUpdate
+```
+
+#### indent和nindent函数
+
+> indent和nindent函数区别是：nindent函数是在indent之前添加一个新换行。
+
+
+
 ### 程序流程控制语句
 
 #### ifelse语句
@@ -3229,5 +3368,115 @@ metadata:
   age: "22"
 data:
  data1: "hello"
+```
+
+#### include用法
+
+##### if判断include返回true或者false
+
+```shell
+[root@k8s-master mychart]# cat templates/configmap.yaml 
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: {{ .Release.Name }}-configmap1
+data:
+ {{- if (include "mychart.testing.bool" .) }}
+ data1: "true"
+ {{- else }}
+ data1: "false"
+ {{- end }}
+ 
+[root@k8s-master mychart]# cat templates/_helpers.tpl 
+{{/* 注释 */}}
+{{- define "mychart.testing.bool" -}}
+ {{- if .Values.enabled -}}
+  {{- true -}}
+ {{- end -}}
+{{- end -}}
+
+[root@k8s-master mychart]# cat values.yaml 
+enabled: false
+
+[root@k8s-master mychart]# helm install myconfigmap1 . --dry-run --debug
+install.go:192: [debug] Original chart version: ""
+install.go:209: [debug] CHART PATH: /root/mychart
+
+NAME: myconfigmap1
+LAST DEPLOYED: Wed Dec 21 00:02:40 2022
+NAMESPACE: default
+STATUS: pending-install
+REVISION: 1
+TEST SUITE: None
+USER-SUPPLIED VALUES:
+{}
+
+COMPUTED VALUES:
+enabled: false
+
+HOOKS:
+MANIFEST:
+---
+# Source: mychart/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: myconfigmap1-configmap1
+data:
+ data1: "false"
+```
+
+##### include返回字符串
+
+```shell
+[root@k8s-master mychart]# cat templates/_helpers.tpl 
+{{/* 注释 */}}
+{{- define "mychart.testing.getversion" -}}
+ {{- if .Values.beta -}}
+  {{- print "app/v1beta" -}}
+ {{- else -}}
+  {{- print "app/v1" -}}
+ {{- end -}}
+{{- end -}}
+
+[root@k8s-master mychart]# cat templates/configmap.yaml 
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: {{ .Release.Name }}-configmap1
+data:
+ 1.conf:
+  data: {{- include "mychart.testing.getversion" . }}
+  
+[root@k8s-master mychart]# cat values.yaml 
+beta: true
+
+[root@k8s-master mychart]# helm install myconfigmap1 . --dry-run --debug
+install.go:192: [debug] Original chart version: ""
+install.go:209: [debug] CHART PATH: /root/mychart
+
+NAME: myconfigmap1
+LAST DEPLOYED: Wed Dec 21 00:16:41 2022
+NAMESPACE: default
+STATUS: pending-install
+REVISION: 1
+TEST SUITE: None
+USER-SUPPLIED VALUES:
+{}
+
+COMPUTED VALUES:
+beta: true
+
+HOOKS:
+MANIFEST:
+---
+# Source: mychart/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: myconfigmap1-configmap1
+data:
+ 1.conf:
+  data:app/v1beta
 ```
 
