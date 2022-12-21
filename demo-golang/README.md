@@ -8,7 +8,7 @@
 
 ### macOS安装go
 
-**下载go pkg并安装，下载地址：https://go.dev/dl/**
+**下载go pkg并安装，下载地址：https://studygolang.com/dl**
 
 ```shell
 # 编辑~/.bash_profile添加如下内容：
@@ -25,7 +25,7 @@ go version
 
 **参考资料：https://blog.csdn.net/shuaihj/article/details/123018041**
 
-**下载go安装包，下载地址：https://go.dev/dl/**
+**下载go安装包，下载地址：https://studygolang.com/dl**
 
 ```shell
 # 编辑~/.bash_profile添加如下内容：

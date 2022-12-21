@@ -109,3 +109,17 @@ https://www.php.cn/linux-491726.html
 目录w：目录能删除、移动、创建文件，能创建目录，但可以修改有写权限的文件内容，mv、touch、mkdir，本质可以修改目录项
 
 目录x：可以打开和进入目录，cd
+
+## 配置环境变量
+
+### ubuntu和centOS8配置环境变量
+
+> 在/etc/profile.d/目录设置 xxxx.sh
+
+```shell
+[root@localhost ~]# cd /etc/profile.d/
+[root@localhost profile.d]# cat go.sh
+#!/bin/bash
+export PATH=$PATH:/usr/local/go/bin
+```
+
