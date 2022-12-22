@@ -1,3 +1,7 @@
+import MyAddFunction from 'my-package'
+
+console.log(`1+5=${MyAddFunction(1, 5)}`)
+
 // 命令导入
 
 // ES6导入模块错误Cannot use import statement outside a module
@@ -15,10 +19,10 @@ import {
     add,
     Person,
     ObjectVariable
-} from "./named-export.mjs";
+} from "my-package";
 
 // 所有export一次import加载写法
-import * as allExport from './named-export.mjs'
+import * as allExport from 'my-package'
 
 console.log(`ConstVariable1=${ConstVariable1}`)
 console.log(`variable2=${variable2}`)
