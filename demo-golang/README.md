@@ -112,3 +112,11 @@ go mod tidy
 > init函数(如果存在的话)，最后执行main函数
 
 ### import用法
+
+## 变量
+
+### 变量赋值=和:=区别
+
+> =是变量的单纯赋值，:=是变量的定义和赋值
+>
+> [链接1](https://baijiahao.baidu.com/s?id=1709571399429039540&wfr=spider&for=pc)
