@@ -41,4 +41,10 @@ if __name__ == "__main__":
     datetimeObject = datetime.datetime.fromtimestamp(timestampObject/1000)
     print("时间戳:", timestampObject, "转换为datetime对象:", datetimeObject)
 
+    # 计算日期之间的天数
+    # https://blog.csdn.net/weixin_41967600/article/details/126433017
+    datetimeObject = timeNow + datetime.timedelta(days=-1)
+    days = (timeNow - datetimeObject).days
+    print("时间", timeNow, "和时间", datetimeObject, "相隔", days, "天")
+
     pass
