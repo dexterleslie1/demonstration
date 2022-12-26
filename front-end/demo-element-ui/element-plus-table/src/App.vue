@@ -1,5 +1,6 @@
 <template>
   <div>
+    <el-divider content-position="left">演示el-table用法</el-divider>
     <div style="width:50%;display:inline-block;">
       <el-table :data="dataSelected">
         <el-table-column prop="name" label="赛事" width="180" />
@@ -24,6 +25,16 @@
         </el-table-column>
       </el-table>
     </div>
+
+    <el-divider content-position="left">多个属性值显示为一列</el-divider>
+    <!-- https://stackoverflow.com/questions/67565022/el-table-column-prop-with-several-values-in-an-array -->
+    <el-table :data="dataTestList">
+        <el-table-column label="名称" >
+          <template #default="scope">
+            {{ scope.row.firstname }}.{{ scope.row.lastname }}
+          </template>
+        </el-table-column>
+      </el-table>
   </div>
 </template>
 
@@ -36,6 +47,10 @@ export default {
     return {
       dataToSelectOriginalReadOnly: [],
       dataSelected: [],
+      dataTestList: [{
+        firstname: "Dexter",
+        lastname: "Chan"
+      }]
     }
   },
   created() {
