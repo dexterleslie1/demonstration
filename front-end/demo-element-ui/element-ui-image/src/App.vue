@@ -2,7 +2,7 @@
   <div id="app">
     <div id="nav">
       <router-link to="/">el-image lazy演示</router-link> |
-      <router-link to="/about">About</router-link>
+      <router-link to="/el-image-usage">el-image 用法演示</router-link>
     </div>
     <div id="main-container">
       <router-view/>

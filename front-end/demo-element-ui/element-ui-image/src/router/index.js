@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import ElImageLazy from '@/components/el-image-lazy'
+import ElImageUsage from '@/components/el-image-usage'
 
 Vue.use(VueRouter)
 
@@ -9,6 +10,11 @@ const routes = [
     path: '/',
     name: 'el-image-lazy',
     component: ElImageLazy
+  },
+  {
+    path: '/el-image-usage',
+    name: 'el-image-usage',
+    component: ElImageUsage
   },
   {
     path: '/about',

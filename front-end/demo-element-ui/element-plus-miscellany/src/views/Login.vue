@@ -1,13 +1,18 @@
 <template>
   <div class="login-main">
-    <el-form label-width="80px" class="login-form" v-bind:model="loginModel">
-      <el-form-item label="账号">
+    <el-form
+        label-width="80px"
+        class="login-form"
+        v-bind:model="loginModel"
+        v-bind:rules="loginRules"
+        ref="loginForm">
+      <el-form-item label="账号" prop="loginname">
         <el-input placeholder="输入账号" v-model="loginModel.loginname"></el-input>
       </el-form-item>
-      <el-form-item label="密码">
+      <el-form-item label="密码" prop="password">
         <el-input placeholder="输入密码" show-password v-model="loginModel.password"></el-input>
       </el-form-item>
-      <el-form-item label="验证码">
+      <el-form-item label="验证码" prop="verificationCode">
         <el-row :span="24">
           <el-col :span="16">
             <el-input
@@ -36,12 +41,30 @@ export default {
         loginname: "",
         password: "",
         verificationCode: ""
+      },
+      loginRules: {
+        loginname: [
+          {required: true, message: "请输入用户名", trigger: "blur"}
+        ],
+        password: [
+          {required: true, message: "请输入密码", trigger: "blur"},
+          {min: 6, message: "密码长度最少为6位", trigger: "blur"}
+        ],
+        verificationCode: [
+          {required: true, message: "请输入验证码", trigger: "blur"}
+        ]
       }
     }
   },
   methods: {
     submitLogin() {
-      console.log(this.loginModel);
+      this.$refs.loginForm.validate((valid)=>{
+        if(valid) {
+          alert("准备调用登录接口登录")
+        } else {
+          alert("登录数据有误不能登录")
+        }
+      })
     }
   }
 }
