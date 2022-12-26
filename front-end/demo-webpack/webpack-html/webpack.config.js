@@ -89,6 +89,8 @@ module.exports = {
 
     // development、开发模式 production、生产模式
     mode: "production",
+    // webpack5 自动刷新浏览器
+    target: "web",
     devServer: {
         open: true,
         port: 9080,
