@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"mypackage"
+)
 
 type Person struct {
 	Name string
@@ -35,4 +38,8 @@ func main() {
 	person3.Name = "dexterleslie3"
 	person3.Age = 22
 	fmt.Println("方法4创建Person:", person3)
+
+	// 使用工厂模式创建student实例
+	var student = mypackage.NewStudent("dexterleslie5", 22)
+	fmt.Println("使用工厂模式创建的student实例:", *student)
 }
