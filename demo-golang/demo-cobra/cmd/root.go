@@ -7,12 +7,11 @@ package cmd
 import (
 	"os"
 
-	"github.com/spf13/cobra"
 	"demo-cobra/cmd/mariadb"
 	"demo-cobra/cmd/mysql"
+
+	"github.com/spf13/cobra"
 )
-
-
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -39,6 +38,10 @@ func Execute() {
 }
 
 func init() {
+	// 子命令关系是和AddCommand时命令的树状关系对应的
+	// 目前这个子命令目录组织不是参考官方得来的，是自己自创的
+	// 官方推荐添加子命令方法 cobra-cli add create -p 'configCmd'
+	// https://github.com/spf13/cobra-cli/blob/main/README.md
 	rootCmd.AddCommand(mariadb.MariadbCmd)
 	rootCmd.AddCommand(mysql.MysqlCmd)
 	// Here you will define your flags and configuration settings.
@@ -51,5 +54,3 @@ func init() {
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
-
-
