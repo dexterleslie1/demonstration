@@ -58,4 +58,64 @@ func main() {
 	} else {
 		fmt.Println("成功移动./.test.txt到./.newtest.txt")
 	}
+
+	// 判断文件权限
+	err = os.WriteFile(homeDirectory+"/.1.txt", []byte(""), 0755)
+	if err != nil {
+		fmt.Printf("Unable to write file: %v", err)
+	}
+	info, err := os.Stat(homeDirectory + "/.1.txt")
+	if err != nil {
+		panic(err)
+	}
+	rwxString := ""
+	// 判断owner权限
+	if info.Mode()&(1<<uint(8)) != 0 {
+		rwxString = rwxString + "r"
+	} else {
+		rwxString = rwxString + "-"
+	}
+	if info.Mode()&(1<<uint(7)) != 0 {
+		rwxString = rwxString + "w"
+	} else {
+		rwxString = rwxString + "-"
+	}
+	if info.Mode()&(1<<uint(6)) != 0 {
+		rwxString = rwxString + "x"
+	} else {
+		rwxString = rwxString + "-"
+	}
+	// 判断group权限
+	if info.Mode()&(1<<uint(5)) != 0 {
+		rwxString = rwxString + "r"
+	} else {
+		rwxString = rwxString + "-"
+	}
+	if info.Mode()&(1<<uint(4)) != 0 {
+		rwxString = rwxString + "w"
+	} else {
+		rwxString = rwxString + "-"
+	}
+	if info.Mode()&(1<<uint(3)) != 0 {
+		rwxString = rwxString + "x"
+	} else {
+		rwxString = rwxString + "-"
+	}
+	// 判断other权限
+	if info.Mode()&(1<<uint(2)) != 0 {
+		rwxString = rwxString + "r"
+	} else {
+		rwxString = rwxString + "-"
+	}
+	if info.Mode()&(1<<uint(1)) != 0 {
+		rwxString = rwxString + "w"
+	} else {
+		rwxString = rwxString + "-"
+	}
+	if info.Mode()&(1<<uint(0)) != 0 {
+		rwxString = rwxString + "x"
+	} else {
+		rwxString = rwxString + "-"
+	}
+	fmt.Println("文件"+homeDirectory+"/.1.txt"+"权限", rwxString)
 }
