@@ -24,7 +24,6 @@ ipch
 *.suo
 *.sdf
 
-go.mod
 go.sum
 
 assembly-language-master
