@@ -3,6 +3,7 @@ package main
 import "fmt"
 
 // 演示定义常量
+// https://blog.csdn.net/zhizhengguan/article/details/119857136
 
 // 让编译器自动推断数据类型
 const Pi = 3.14159
