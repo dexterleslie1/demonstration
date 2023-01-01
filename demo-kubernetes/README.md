@@ -1,5 +1,43 @@
 # k8s
 
+## minikube
+
+> 原理: minikube使用docker容器环境启动一个名为minikube的容器，这个容器内会运行k8s所有组件。
+>
+> 支持ubuntu、centOS8部署
+>
+> https://minikube.sigs.k8s.io/docs/start/
+>
+> https://github.com/kubernetes/minikube/issues/14477
+
+```shell
+# 使用dcli安装docker环境
+
+# 设置mimikube cli
+curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+sudo install minikube-linux-amd64 /usr/local/bin/minikube
+
+# 使用minikube启动k8s环境，在root用户下启动k8s需要使用--force，指定启动v1.23.8版本k8s，否则不能成功启动
+minikube start --kubernetes-version=v1.23.8 --force
+
+# 验证集群是否正常通过查询所有pods
+minikube kubectl -- get po -A
+
+# 配置kubectl命令
+alias kubectl="minikube kubectl --"
+
+# 测试部署pod
+kubectl create deployment hello-minikube --image=kicbase/echo-server:1.0
+kubectl expose deployment hello-minikube --type=NodePort --port=8080
+kubectl get services hello-minikube
+kubectl port-forward service/hello-minikube 7080:8080
+
+# 访问服务
+curl http://localhost:7080/
+```
+
+
+
 ## k8s安装
 
 > NOTE 使用dcli安装
