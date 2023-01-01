@@ -10,6 +10,8 @@
 >
 > https://github.com/kubernetes/minikube/issues/14477
 
+**使用minikube创建k8s集群**
+
 ```shell
 # 使用dcli安装docker环境
 
@@ -34,6 +36,21 @@ kubectl port-forward service/hello-minikube 7080:8080
 
 # 访问服务
 curl http://localhost:7080/
+```
+
+**使用minikube配置k8s dashboard**
+
+> https://stackoverflow.com/questions/47173463/how-to-access-local-kubernetes-minikube-dashboard-remotely
+
+```shell
+# 获取本地dashboard url
+minikube dashboard --url
+
+# 使用kubectl代理本地dashboard以便外部访问dashboard
+kubectl proxy --address='0.0.0.0' --disable-filter=true
+
+# 打开浏览器访问dashboard
+http://external-ip:37337/api/v1/namespaces/kubernetes-dashboard/services/http:kubernetes-dashboard:/proxy/
 ```
 
 
