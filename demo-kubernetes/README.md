@@ -180,6 +180,8 @@ default
 
 ## pod
 
+> pod代表了kubernetes中的基本部署单元。
+
 ### 检查现有pod的yaml描述文件
 
 ```shell
@@ -1304,6 +1306,192 @@ namespace "custom-namespace" deleted
 service "kubernetes" deleted
 ```
 
+### 创建基于http的存活探针
+
+```shell
+# 使用nodejs制作测试用的http应用
+# 创建nodejs应用，请求大于5次后http返回500错误来模拟http服务器不能正常提供服务
+[root@k8s-master temp]# cat app.js 
+const http = require("http")
+const os = require("os")
+
+console.log("Kubia server starting...")
+
+var counter = 0
+var handler = function(request, response) {
+	console.log("Received request from " + request.connection.remoteAddress)
+    if(counter < 5)
+    	response.writeHead(200)
+	else
+		response.writeHead(500)
+    counter++
+    response.end("You've hit " + os.hostname() + " " + counter + " times\n")
+}
+
+var www = http.createServer(handler)
+www.listen(8080)
+
+# 创建Dockerfile用于编译docker镜像
+[root@k8s-master temp]# cat Dockerfile 
+FROM node:7
+
+ADD app.js /app.js
+ENTRYPOINT ["node", "app.js"]
+
+# 编译docker镜像
+[root@k8s-master temp]# docker build -t docker.118899.net:10001/yyd-public/demo-k8s-nodejs .
+Sending build context to Docker daemon  3.072kB
+Step 1/3 : FROM node:7
+7: Pulling from library/node
+ad74af05f5a2: Pull complete 
+2b032b8bbe8b: Pull complete 
+a9a5b35f6ead: Pull complete 
+3245b5a1c52c: Pull complete 
+afa075743392: Pull complete 
+9fb9f21641cd: Pull complete 
+3f40ad2666bc: Pull complete 
+49c0ed396b49: Pull complete 
+Digest: sha256:af5c2c6ac8bc3fa372ac031ef60c45a285eeba7bce9ee9ed66dad3a01e29ab8d
+Status: Downloaded newer image for node:7
+ ---> d9aed20b68a4
+Step 2/3 : ADD app.js /app.js
+ ---> 351088c10a13
+Step 3/3 : ENTRYPOINT ["node", "app.js"]
+ ---> Running in e8b89893bf0e
+Removing intermediate container e8b89893bf0e
+ ---> 0a4436ee413d
+Successfully built 0a4436ee413d
+Successfully tagged docker.118899.net:10001/yyd-public/demo-k8s-nodejs:latest
+
+# 使用curl测试http服务是否按照预期工作
+[root@k8s-master temp]# docker run --rm --name kubia-container -p 8080:8080 docker.118899.net:10001/yyd-public/demo-k8s-nodejsKubia server starting...
+Received request from ::ffff:172.17.0.1
+Received request from ::ffff:172.17.0.1
+Received request from ::ffff:172.17.0.1
+Received request from ::ffff:172.17.0.1
+[root@k8s-master mychart]# curl localhost:8080
+You've hit 111000fd7b18 5 times
+
+# 停止nodejs http服务
+[root@k8s-master mychart]# docker stop kubia-container
+kubia-container
+
+# 推送镜像到远程仓库
+[root@k8s-master temp]# docker push docker.118899.net:10001/yyd-public/demo-k8s-nodejs
+Using default tag: latest
+The push refers to repository [docker.118899.net:10001/yyd-public/demo-k8s-nodejs]
+0d2b8bfbe843: Pushed 
+ab90d83fa34a: Pushed 
+8ee318e54723: Pushed 
+e6695624484e: Pushed 
+da59b99bbd3b: Pushed 
+5616a6292c16: Pushed 
+f3ed6cb59ab0: Pushed 
+654f45ecb7e3: Pushed 
+2c40c66f7667: Pushed 
+latest: digest: sha256:6bbad638c0e676b5d3c306721b00d7a875cfdf0dbb2a6304b906c8ab5717f5dc size: 2213
+
+[root@k8s-master ~]# cat 1.yaml 
+apiVersion: v1
+kind: Pod
+metadata:
+ name: kubia-liveness
+spec:
+ containers:
+ - name: kubia
+   image: docker.118899.net:10001/yyd-public/demo-k8s-nodejs
+   livenessProbe:
+    httpGet:
+     path: /
+     port: 8080
+[root@k8s-master ~]# kubectl apply -f 1.yaml 
+pod/kubia-liveness created
+# 大概过了2分钟左右pod被探针机制重启
+[root@k8s-master ~]# kubectl get pod -w
+NAME             READY   STATUS              RESTARTS   AGE
+kubia-liveness   0/1     ContainerCreating   0          7s
+kubia-liveness   1/1     Running             0          31s
+kubia-liveness   1/1     Running             1          2m13s
+
+# 分析pod被重启的原因和探针的附加属性
+[root@k8s-master ~]# kubectl describe pod kubia-liveness
+Name:         kubia-liveness
+Namespace:    default
+Priority:     0
+Node:         k8s-node2/192.168.1.178
+Start Time:   Mon, 02 Jan 2023 10:09:31 +0800
+Labels:       <none>
+Annotations:  <none>
+Status:       Running
+IP:           10.244.2.14
+IPs:
+  IP:  10.244.2.14
+Containers:
+  kubia:
+    Container ID:   docker://57d05687a3cac48797661c544a476df4b310319bbf228618c5fae4453a3b4e2b
+    Image:          docker.118899.net:10001/yyd-public/demo-k8s-nodejs
+    Image ID:       docker-pullable://docker.118899.net:10001/yyd-public/demo-k8s-nodejs@sha256:6bbad638c0e676b5d3c306721b00d7a875cfdf0dbb2a6304b906c8ab5717f5dc
+    Port:           <none>
+    Host Port:      <none>
+    State:          Running
+      Started:      Mon, 02 Jan 2023 10:13:33 +0800
+    Last State:     Terminated
+      Reason:       Error
+      Exit Code:    137
+      Started:      Mon, 02 Jan 2023 10:11:43 +0800
+      Finished:     Mon, 02 Jan 2023 10:13:32 +0800
+    Ready:          True
+    Restart Count:  2
+    Liveness:       http-get http://:8080/ delay=0s timeout=1s period=10s #success=1 #failure=3
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from default-token-q8hxp (ro)
+Conditions:
+  Type              Status
+  Initialized       True 
+  Ready             True 
+  ContainersReady   True 
+  PodScheduled      True 
+Volumes:
+  default-token-q8hxp:
+    Type:        Secret (a volume populated by a Secret)
+    SecretName:  default-token-q8hxp
+    Optional:    false
+QoS Class:       BestEffort
+Node-Selectors:  <none>
+Tolerations:     node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                 node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type     Reason     Age                  From               Message
+  ----     ------     ----                 ----               -------
+  Normal   Scheduled  5m33s                default-scheduler  Successfully assigned default/kubia-liveness to k8s-node2
+  Normal   Pulled     5m3s                 kubelet            Successfully pulled image "docker.118899.net:10001/yyd-public/demo-k8s-nodejs" in 29.553041304s
+  Normal   Pulled     3m21s                kubelet            Successfully pulled image "docker.118899.net:10001/yyd-public/demo-k8s-nodejs" in 636.757661ms
+  Normal   Pulling    92s (x3 over 5m32s)  kubelet            Pulling image "docker.118899.net:10001/yyd-public/demo-k8s-nodejs"
+  Normal   Created    91s (x3 over 5m3s)   kubelet            Created container kubia
+  Normal   Started    91s (x3 over 5m3s)   kubelet            Started container kubia
+  Normal   Pulled     91s                  kubelet            Successfully pulled image "docker.118899.net:10001/yyd-public/demo-k8s-nodejs" in 568.498558ms
+  Warning  Unhealthy  12s (x9 over 4m12s)  kubelet            Liveness probe failed: HTTP probe failed with statuscode: 500
+  Normal   Killing    12s (x3 over 3m52s)  kubelet            Container kubia failed liveness probe, will be restarted
+
+# 配置存活探针的附加属性
+[root@k8s-master ~]# cat 1.yaml 
+apiVersion: v1
+kind: Pod
+metadata:
+ name: kubia-liveness
+spec:
+ containers:
+ - name: kubia
+   image: docker.118899.net:10001/yyd-public/demo-k8s-nodejs
+   livenessProbe:
+    httpGet:
+     path: /
+     port: 8080
+    # 等pod启动30秒后才运行探针机制
+    initialDelaySeconds: 30
+```
+
 
 
 ### 私有镜像拉取时提供帐号和密码
@@ -1682,6 +1870,133 @@ kubectl describe deployment -n dev
 kubectl delete deployment nginx -n dev
 ```
 
+### ReplicationController控制器
+
+> ReplicationController已经被ReplicaSet取代。
+
+```shell
+# 创建ReplicationController
+[root@k8s-master ~]# cat 1.yaml 
+apiVersion: v1
+kind: ReplicationController
+metadata:
+ name: kubia
+spec:
+ replicas: 3
+ selector:
+  app: kubia
+ template:
+  metadata:
+   labels:
+    app: kubia
+  spec:
+   containers:
+    - name: kubia
+      image: docker.118899.net:10001/yyd-public/demo-k8s-nodejs
+      ports:
+       - containerPort: 8080
+       
+[root@k8s-master ~]# kubectl apply -f 1.yaml 
+replicationcontroller/kubia created
+[root@k8s-master ~]# kubectl get pod
+NAME          READY   STATUS    RESTARTS   AGE
+kubia-7k79g   1/1     Running   0          7s
+kubia-qx5nt   1/1     Running   0          7s
+kubia-v2lvb   1/1     Running   0          7s
+
+# ReplicationController使用声明的labels创建pod
+[root@k8s-master ~]# kubectl get pod --show-labels
+NAME          READY   STATUS    RESTARTS   AGE     LABELS
+kubia-7k79g   1/1     Running   0          2m39s   app=kubia
+kubia-qx5nt   1/1     Running   0          2m39s   app=kubia
+kubia-v2lvb   1/1     Running   0          2m39s   app=kubia
+
+# 测试ReplicationController对已删除的pod的响应
+[root@k8s-master ~]# kubectl delete pod kubia-7k79g
+pod "kubia-7k79g" deleted
+# 当删除其中一个pod时，ReplicationController会自动启动一个新的pod代替它
+[root@k8s-master mychart]# kubectl get pod
+NAME          READY   STATUS        RESTARTS   AGE
+kubia-7k79g   1/1     Terminating   0          4m50s
+kubia-cphj2   1/1     Running       0          14s
+kubia-qx5nt   1/1     Running       0          4m50s
+kubia-v2lvb   1/1     Running       0          4m50s
+
+# 获取关于ReplicationControler的信息
+[root@k8s-master ~]# kubectl get replicationcontroller
+NAME    DESIRED   CURRENT   READY   AGE
+kubia   3         3         3       7m56s
+
+# 查看ReplicationController的附加信息
+[root@k8s-master ~]# kubectl describe replicationcontroller kubia
+Name:         kubia
+Namespace:    default
+Selector:     app=kubia
+Labels:       app=kubia
+Annotations:  <none>
+Replicas:     3 current / 3 desired
+Pods Status:  3 Running / 0 Waiting / 0 Succeeded / 0 Failed
+Pod Template:
+  Labels:  app=kubia
+  Containers:
+   kubia:
+    Image:        docker.118899.net:10001/yyd-public/demo-k8s-nodejs
+    Port:         8080/TCP
+    Host Port:    0/TCP
+    Environment:  <none>
+    Mounts:       <none>
+  Volumes:        <none>
+Events:
+  Type    Reason            Age    From                    Message
+  ----    ------            ----   ----                    -------
+  Normal  SuccessfulCreate  9m     replication-controller  Created pod: kubia-qx5nt
+  Normal  SuccessfulCreate  9m     replication-controller  Created pod: kubia-7k79g
+  Normal  SuccessfulCreate  9m     replication-controller  Created pod: kubia-v2lvb
+  Normal  SuccessfulCreate  4m24s  replication-controller  Created pod: kubia-cphj2
+  
+# 因为ReplicationController通过标签找到属于它的pod列表，使用kubectl label命令修改其中一个pod之后，这个pod就不再属于原来的ReplicationController了，此时ReplicationController发现少了一个pod并马上启动新的pod以弥补被修改标签减少的一个pod
+[root@k8s-master ~]# kubectl label pod kubia-9lc82 app=foo --overwrite
+pod/kubia-9lc82 labeled
+[root@k8s-master ~]# kubectl get pod --show-labels
+NAME          READY   STATUS    RESTARTS   AGE   LABELS
+kubia-9lc82   1/1     Running   0          75s   app=foo
+kubia-ktdfv   1/1     Running   0          75s   app=kubia
+kubia-vt6bw   1/1     Running   0          5s    app=kubia
+kubia-z5r52   1/1     Running   0          75s   app=kubia
+
+# ReplicationController扩容
+[root@k8s-master ~]# kubectl scale replicationcontroller kubia --replicas=7
+replicationcontroller/kubia scaled
+[root@k8s-master ~]# kubectl get pod
+NAME          READY   STATUS              RESTARTS   AGE
+kubia-5rjd6   0/1     ContainerCreating   0          2s
+kubia-hcmc7   0/1     ContainerCreating   0          2s
+kubia-m6b2b   0/1     ContainerCreating   0          2s
+kubia-t2t59   1/1     Running             0          39s
+kubia-t4qqh   1/1     Running             0          39s
+kubia-xjrjm   1/1     Running             0          39s
+kubia-zlwth   0/1     ContainerCreating   0          2s
+
+# ReplicationController缩容
+[root@k8s-master ~]# kubectl scale replicationcontroller kubia --replicas=3
+replicationcontroller/kubia scaled
+[root@k8s-master ~]# kubectl get pod
+NAME          READY   STATUS        RESTARTS   AGE
+kubia-5rjd6   1/1     Terminating   0          67s
+kubia-hcmc7   1/1     Terminating   0          67s
+kubia-m6b2b   1/1     Terminating   0          67s
+kubia-t2t59   1/1     Running       0          104s
+kubia-t4qqh   1/1     Running       0          104s
+kubia-xjrjm   1/1     Running       0          104s
+kubia-zlwth   1/1     Terminating   0          67s
+
+# 删除ReplicationController
+[root@k8s-master ~]# kubectl delete -f 1.yaml 
+replicationcontroller "kubia" deleted
+```
+
+
+
 ### ReplicaSet(RS)
 
 > 保证一定数量的pod能够正常运行，一旦pod发生故障就会自动重启或者重建pod，pod数量扩容，镜像版本的升级和回退
@@ -1693,7 +2008,6 @@ apiVersion: apps/v1
 kind: ReplicaSet
 metadata:
  name: replicaset1
- namespace: dev
 spec:
  replicas: 3
  selector:
@@ -2009,7 +2323,6 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
  name: daemonset1
- namespace: dev
 spec:
  selector:
   matchLabels:
@@ -2048,11 +2361,10 @@ apiVersion: batch/v1
 kind: Job
 metadata:
  name: job1
- namespace: dev
 spec:
  manualSelector: true
  completions: 6 # 总共需要执行多少个pod
- parallelism: 3 # 并行运行pod的数量
+ parallelism: 3 # 并行运行pod的数量，如果不指定表示一个一个执行
  selector:
   matchLabels:
    app: counter-pod
@@ -2124,7 +2436,42 @@ job.batch "job1" deleted
 
 > 指定特定的时间点重复执行job任务
 
-todo
+```shell
+# 每分钟执行一次
+[root@k8s-master ~]# cat 1.yaml 
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+ name: cronjob1
+spec:
+ schedule: "*/1 * * * *"
+ jobTemplate:
+  spec:
+   template:
+    spec:
+     restartPolicy: OnFailure
+     containers:
+      - name: kubia
+        image: busybox
+        command: ["/bin/sh", "-c", "echo `date`"]
+        
+[root@k8s-master ~]# kubectl get pod -w
+NAME                        READY   STATUS              RESTARTS   AGE
+cronjob1-1672666680-hk8hc   0/1     ContainerCreating   0          9s
+cronjob1-1672666680-hk8hc   0/1     Completed           0          18s
+cronjob1-1672666740-rnqqg   0/1     Pending             0          0s
+cronjob1-1672666740-rnqqg   0/1     Pending             0          0s
+cronjob1-1672666740-rnqqg   0/1     ContainerCreating   0          0s
+cronjob1-1672666740-rnqqg   0/1     Completed           0          17s
+
+# 查看cronjob日志
+[root@k8s-master ~]# kubectl logs -f cronjob1-1672666680-hk8hc
+Mon Jan 2 13:38:17 UTC 2023
+[root@k8s-master ~]# kubectl logs -f cronjob1-1672666740-rnqqg
+Mon Jan 2 13:39:17 UTC 2023
+```
+
+
 
 ### StatefulSet
 
@@ -2293,115 +2640,422 @@ Commercial support is available at
 
 
 
-## k8s service
+## Service服务
 
 > 是一组同类pod对外访问接口，借助service，应用可以方便地实现服务发现和负载均衡
 >
 > 主要的流量负载组建分别为service（4层路由）和ingress（7层路由）
 
+### 使用kubectl expose创建服务
+
 ```shell
-# 创建service
-kubectl expose deployment nginx --name=service-nginx --port=80 --target-port=80 --type=ClusterIP -n dev
+# 创建pod
+[root@k8s-master ~]# kubectl run nginx --image=docker.118899.net:10001/yyd-public/demo-k8s-nodejs --port=8080
+pod/nginx created
 
-# 查看service
-kubectl get service -n dev
+# 创建ClusterIP类型的服务，expose名为nginx的pod，服务名称为nginx，服务端口80
+[root@k8s-master ~]# kubectl expose pod nginx --name=nginx --port=80 --target-port=8080 --type=ClusterIP
+service/nginx exposed
 
-# 删除service
-kubectl delete service service-nginx -n dev
+[root@k8s-master ~]# kubectl get service
+NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+kubernetes   ClusterIP   10.1.0.1     <none>        443/TCP   41h
+nginx        ClusterIP   10.1.57.17   <none>        80/TCP    77s
+
+# 访问服务ip即访问pod nginx
+[root@k8s-master ~]# curl 10.1.57.17
+You've hit nginx 1 times
+
+# 删除nginx服务
+[root@k8s-master ~]# kubectl delete service nginx
+service "nginx" deleted
 ```
 
-### service
+### 使用yaml创建和删除ClusterIP服务
 
-service类型
+```shell
+[root@k8s-master ~]# kubectl run nginx --image=docker.118899.net:10001/yyd-public/demo-k8s-nodejs
+pod/nginx created
 
-- ClusterIP: 设置service的ip地址
-- NodePort: 使用宿主机暴露服务给外部调用
-- LoadBalancer: 结合外部LB使用
-- ExernalName: 在集群内部引入外部服务
+[root@k8s-master ~]# cat 1.yaml 
+apiVersion: v1
+kind: Service
+metadata:
+ name: nginx
+spec:
+ type: ClusterIP
+ selector:
+  run: nginx
+ ports:
+  - port: 80
+    targetPort: 8080
+[root@k8s-master ~]# kubectl apply -f 1.yaml 
+service/nginx created
 
-**环境准备**
+# 显示服务的selector
+[root@k8s-master ~]# kubectl get service -o wide
+NAME         TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE   SELECTOR
+kubernetes   ClusterIP   10.1.0.1       <none>        443/TCP   42h   <none>
+nginx        ClusterIP   10.1.247.146   <none>        80/TCP    90s   run=nginx
+# 访问服务ip地址
+[root@k8s-master ~]# curl 10.1.247.146
+You've hit nginx 1 times
 
-```yaml
+# 删除服务
+[root@k8s-master ~]# kubectl delete -f 1.yaml 
+service "nginx" deleted
+```
+
+### 配置服务上的会话亲和性sessionAffinity
+
+```shell
+[root@k8s-master ~]# cat 1.yaml 
 apiVersion: apps/v1
 kind: Deployment
 metadata:
  name: deployment1
- namespace: dev
 spec:
  replicas: 3
  selector:
   matchLabels:
-   app: nginx-pod
+   app: kubia
  template:
   metadata:
    labels:
-    app: nginx-pod
+    app: kubia
   spec:
    containers:
-   - name: nginx
-     image: nginx:1.17.1
-     ports:
-     - containerPort: 80
-```
-
-```shell
-[root@k8s-master ~]# kubectl create -f 2.yaml
-deployment.apps/deployment1 created
-# 分别进入各个pod并修改index.html
-[root@k8s-master ~]# kubectl exec -it deployment1-5ffc5bf56c-hk9mc -n dev /bin/sh
-kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl exec [POD] -- [COMMAND] instead.
-# echo "1" > /usr/share/nginx/html/index.html
-
-# 确认index.html是否修改成功
-[root@k8s-master ~]# kubectl get pod -n dev -o wide
-NAME                           READY   STATUS    RESTARTS   AGE     IP            NODE        NOMINATED NODE   READINESS GATES
-deployment1-5ffc5bf56c-hk9mc   1/1     Running   0          5m14s   10.244.2.53   k8s-node2   <none>           <none>
-deployment1-5ffc5bf56c-qbsrt   1/1     Running   0          5m14s   10.244.1.28   k8s-node1   <none>           <none>
-deployment1-5ffc5bf56c-s5lfb   1/1     Running   0          5m14s   10.244.2.52   k8s-node2   <none>           <none>
-[root@k8s-master ~]# curl 10.244.2.53
-1
-```
-
-**ClusterIP**
-
-```yaml
+    - name: kubia
+      image: docker.118899.net:10001/yyd-public/demo-k8s-nodejs
+  
+# 测试sessionAffinity=None，请求被随机分配到3个pod中
+[root@k8s-master ~]# cat 2.yaml 
 apiVersion: v1
 kind: Service
 metadata:
- name: service1
- namespace: dev
+ name: kubia
 spec:
- # 客户端地址会话保持莫斯
- # 如果不指定使用默认，随机、轮询
- #sessionAffinity: ClientIP
+ sessionAffinity: None
  selector:
-  app: nginx-pod # 使用标签绑定service到指定的pod
- clusterIP: 10.1.97.97 # 不指定时，service会随机分配一个ip地址
- type: ClusterIP
+  app: kubia
  ports:
- - port: 81 # service端口
-   targetPort: 80 # pod端口
+  - port: 80
+    targetPort: 8080
+[root@k8s-master ~]# kubectl get service
+NAME         TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE
+kubernetes   ClusterIP   10.1.0.1       <none>        443/TCP   42h
+kubia        ClusterIP   10.1.103.203   <none>        80/TCP    10s
+[root@k8s-master ~]# curl 10.1.103.203
+You've hit deployment1-9677d889-kgd26 1 times
+[root@k8s-master ~]# curl 10.1.103.203
+You've hit deployment1-9677d889-47vkh 1 times
+[root@k8s-master ~]# curl 10.1.103.203
+You've hit deployment1-9677d889-kgd26 2 times
+[root@k8s-master ~]# curl 10.1.103.203
+You've hit deployment1-9677d889-vqxvj 1 times
+[root@k8s-master ~]# curl 10.1.103.203
+You've hit deployment1-9677d889-kgd26 3 times
+[root@k8s-master ~]# curl 10.1.103.203
+You've hit deployment1-9677d889-kgd26 4 times
+[root@k8s-master ~]# curl 10.1.103.203
+You've hit deployment1-9677d889-vqxvj 2 times
+
+# 测试sessionAffinity=ClientIP请求被指定分配到某个pod中
+[root@k8s-master ~]# cat 2.yaml 
+apiVersion: v1
+kind: Service
+metadata:
+ name: kubia
+spec:
+ sessionAffinity: ClientIP
+ selector:
+  app: kubia
+ ports:
+  - port: 80
+    targetPort: 8080
+[root@k8s-master ~]# kubectl get service
+NAME         TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)   AGE
+kubernetes   ClusterIP   10.1.0.1      <none>        443/TCP   42h
+kubia        ClusterIP   10.1.79.183   <none>        80/TCP    14s
+[root@k8s-master ~]# curl 10.1.79.183
+You've hit deployment1-9677d889-47vkh 2 times
+[root@k8s-master ~]# curl 10.1.79.183
+You've hit deployment1-9677d889-47vkh 3 times
+[root@k8s-master ~]# curl 10.1.79.183
+You've hit deployment1-9677d889-47vkh 4 times
+[root@k8s-master ~]# curl 10.1.79.183
+You've hit deployment1-9677d889-47vkh 5 times
+[root@k8s-master ~]# curl 10.1.79.183
+You've hit deployment1-9677d889-47vkh 6 times
 ```
+
+### 通过dns发现服务
 
 ```shell
-[root@k8s-master ~]# kubectl create -f 1.yaml
-service/service1 created
-[root@k8s-master ~]# kubectl get service -n dev -o wide
-NAME       TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE   SELECTOR
-service1   ClusterIP   10.1.97.97   <none>        81/TCP    41s   app=nginx-pod
-# 测试ClusterIP会随机分配pod服务请求
-[root@k8s-master ~]# while true;do curl 10.1.97.97:81;sleep 5;done;
-2
-1
-1
-3
-[root@k8s-master ~]# kubectl delete -f 1.yaml 
-service "service1" deleted
+# 创建kubia-client用于curl测试服务
+[root@k8s-master ~]# cat 1.yaml 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: deployment1
+spec:
+ replicas: 3
+ selector:
+  matchLabels:
+   app: kubia
+ template:
+  metadata:
+   labels:
+    app: kubia
+  spec:
+   containers:
+    - name: kubia
+      image: docker.118899.net:10001/yyd-public/demo-k8s-nodejs
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: deployment2
+spec:
+ selector:
+  matchLabels:
+   app: kubia-client
+ template:
+  metadata:
+   labels:
+    app: kubia-client
+  spec:
+   containers:
+    - name: kubia-client
+      image: alpine/curl
+      command: ["/bin/sh", "-c", "sleep 7200"]
+
+# 创建服务myservice1暴露deployment1服务
+[root@k8s-master ~]# kubectl expose deployment deployment1 --name=myservice1 --port=80 --target-port=8080 --type=ClusterIP
+service/myservice1 exposed
+
+[root@k8s-master ~]# kubectl get pod
+NAME                           READY   STATUS    RESTARTS   AGE
+deployment1-9677d889-65g9q     1/1     Running   0          5m5s
+deployment1-9677d889-fp66h     1/1     Running   0          5m5s
+deployment1-9677d889-mqzpn     1/1     Running   0          5m5s
+deployment2-6848fcdd67-2rt9g   1/1     Running   0          5m5s
+# 进入kubia-client测试pod，使用curl myservice1和curl myservice1.default.svc.cluster.local测试服务是否正常
+[root@k8s-master ~]# kubectl exec -it deployment2-6848fcdd67-2rt9g /bin/sh
+kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl exec [POD] -- [COMMAND] instead.
+/ # curl myservice1
+You've hit deployment1-9677d889-65g9q 4 times
+/ # curl myservice1.default.svc.cluster.local
+You've hit deployment1-9677d889-mqzpn 4 times
+/ # curl myservice1.default.svc.cluster.local
+You've hit deployment1-9677d889-fp66h 4 times
+/ # curl myservice1.default.svc.cluster.local
+You've hit deployment1-9677d889-mqzpn 5 times
+# 使用nslookup命令查询myservice1.default.svc.cluster.local只会返回服务对应的ip地址
+/ # nslookup myservice1.default.svc.cluster.local
+Server:		10.1.0.10
+Address:	10.1.0.10:53
+
+
+Name:	myservice1.default.svc.cluster.local
+Address: 10.1.124.78
+
+[root@k8s-master ~]# kubectl get service
+NAME         TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)   AGE
+kubernetes   ClusterIP   10.1.0.1      <none>        443/TCP   2d8h
+myservice1   ClusterIP   10.1.124.78   <none>        80/TCP    56s
 ```
 
-**headless(无头服务)**
+### 为外部服务ExternalName创建别名
 
-> headless服务是通过service的dns解析访问相应的pod，例如下面例子：在busybox pod中通过headless-service无头服务名称就能够访问两个nginx pod endpoints。
+> todo 没有实验成功，不能代理www.baidu.com
+
+### 使用NodePort类型的服务
+
+```shell
+[root@k8s-master ~]# cat 1.yaml 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: deployment1
+spec:
+ replicas: 3
+ selector:
+  matchLabels:
+   app: kubia
+ template:
+  metadata:
+   labels:
+    app: kubia
+  spec:
+   containers:
+    - name: kubia
+      image: docker.118899.net:10001/yyd-public/demo-k8s-nodejs
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+ name: myservice1
+spec:
+ type: NodePort
+ ports:
+  - port: 80 # 服务端口80
+    targetPort: 8080 # pod端口8080 
+    nodePort: 30000 # NodePort端口30000
+ selector:
+  app: kubia
+  
+# 仍然能够使用ClusterIP访问服务 
+[root@k8s-master ~]# kubectl get service
+NAME         TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)        AGE
+kubernetes   ClusterIP   10.1.0.1      <none>        443/TCP        2d9h
+myservice1   NodePort    10.1.124.78   <none>        80:30000/TCP   65m
+[root@k8s-master ~]# curl 10.1.124.78
+You've hit deployment1-9677d889-4jc6c 1 times
+[root@k8s-master ~]# curl 10.1.124.78
+You've hit deployment1-9677d889-s6jqj 3 times
+[root@k8s-master ~]# curl 10.1.124.78
+You've hit deployment1-9677d889-4jc6c 2 times
+
+# 使用节点ip+nodePort访问服务
+[root@k8s-master ~]# curl 192.168.1.171:30000
+You've hit deployment1-9677d889-p66gb 3 times
+[root@k8s-master ~]# curl 192.168.1.171:30000
+You've hit deployment1-9677d889-4jc6c 3 times
+[root@k8s-master ~]# curl 192.168.1.171:30000
+You've hit deployment1-9677d889-p66gb 4 times
+```
+
+### 通过Google Kubernetes Engine的LoadBalancer将服务暴露出来
+
+> todo 在GKE上实现
+
+### 通过Ingress暴露服务
+
+> todo 没有在本地k8s集群中成功启动ingress-controller
+
+### 服务就绪探针
+
+```shell
+[root@k8s-master temp]# cat app.js 
+const http = require("http")
+const os = require("os")
+
+console.log("Kubia server starting...")
+
+startTime = Date.now()
+millisecondsToReady = 60000
+var handler = function(request, response) {
+    console.log("Received request from " + request.connection.remoteAddress)
+    endTime = Date.now()
+    response.setHeader("Content-Type", "text/plain; charset=utf-8")
+    if(endTime - startTime >= millisecondsToReady) {
+    	response.writeHead(200)
+	response.end(os.hostname() + "服务已准备好，可以访问\n")
+    } else {
+        response.writeHead(500)
+	response.end(os.hostname() + "服务未准备好，" + (millisecondsToReady - (endTime - startTime)) + "毫秒后访问\n")
+    }
+}
+
+var www = http.createServer(handler)
+www.listen(8080)
+
+[root@k8s-master temp]# cat Dockerfile 
+FROM node:7
+
+ADD app.js /app.js
+ENTRYPOINT ["node", "app.js"]
+
+[root@k8s-master temp]# docker build --tag docker.118899.net:10001/yyd-public/demo-k8s-readinessprobe .
+Sending build context to Docker daemon  3.584kB
+Step 1/3 : FROM node:7
+ ---> d9aed20b68a4
+Step 2/3 : ADD app.js /app.js
+ ---> Using cache
+ ---> 2af299d5e44b
+Step 3/3 : ENTRYPOINT ["node", "app.js"]
+ ---> Using cache
+ ---> 76a1bde7a026
+Successfully built 76a1bde7a026
+Successfully tagged docker.118899.net:10001/yyd-public/demo-k8s-readinessprobe:latest
+
+[root@k8s-master temp]# docker push docker.118899.net:10001/yyd-public/demo-k8s-readinessprobe
+Using default tag: latest
+The push refers to repository [docker.118899.net:10001/yyd-public/demo-k8s-readinessprobe]
+68e2eae8d1ca: Pushed 
+ab90d83fa34a: Layer already exists 
+8ee318e54723: Layer already exists 
+e6695624484e: Layer already exists 
+da59b99bbd3b: Layer already exists 
+5616a6292c16: Layer already exists 
+f3ed6cb59ab0: Layer already exists 
+654f45ecb7e3: Layer already exists 
+2c40c66f7667: Layer already exists 
+latest: digest: sha256:a046cd2569ca1a6899982712efa1d45f00733682317e57f586c03231063e9d17 size: 2213
+
+[root@k8s-master ~]# cat 1.yaml 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: deployment1
+spec:
+ replicas: 2
+ selector:
+  matchLabels:
+   app: kubia
+ template:
+  metadata:
+   labels:
+    app: kubia
+  spec:
+   containers:
+    - name: kubia
+      image: docker.118899.net:10001/yyd-public/demo-k8s-readinessprobe
+      readinessProbe:
+       httpGet:
+        path: /
+        port: 8080
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+ name: myservice1
+spec:
+ type: ClusterIP
+ selector:
+  app: kubia
+ ports:
+  - port: 80
+    targetPort: 8080
+    
+# 1分钟后才能正常访问服务，因为readinessProbe作用，pod 1分钟后才ready状态
+[root@k8s-master ~]# kubectl get service
+NAME         TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)   AGE
+kubernetes   ClusterIP   10.1.0.1      <none>        443/TCP   2d14h
+myservice1   ClusterIP   10.1.39.125   <none>        80/TCP    6s
+[root@k8s-master ~]# curl 10.1.39.125
+curl: (7) Failed connect to 10.1.39.125:80; Connection refused
+[root@k8s-master ~]# curl 10.1.39.125
+curl: (7) Failed connect to 10.1.39.125:80; Connection refused
+[root@k8s-master ~]# curl 10.1.39.125
+curl: (7) Failed connect to 10.1.39.125:80; Connection refused
+[root@k8s-master ~]# curl 10.1.39.125
+curl: (7) Failed connect to 10.1.39.125:80; Connection refused
+[root@k8s-master ~]# curl 10.1.39.125
+deployment1-78fdbb9b4-twm5m服务已准备好，可以访问
+[root@k8s-master ~]# curl 10.1.39.125
+deployment1-78fdbb9b4-sfrcz服务已准备好，可以访问
+```
+
+
+
+### **headless(无头服务)**
+
+> headless服务是通过service的dns解析访问相应的pod ip地址，例如下面例子：在busybox pod中通过headless-service无头服务名称就能够访问两个nginx pod endpoints。
 
 ```yaml
 apiVersion: v1
@@ -2531,6 +3185,7 @@ round-trip min/avg/max = 0.543/0.584/0.628 ms
 ;headless-service.default.svc.cluster.local. IN A
 
 ;; ANSWER SECTION:
+# 返回两个pod A地址记录
 headless-service.default.svc.cluster.local. 30 IN A 10.244.2.91
 headless-service.default.svc.cluster.local. 30 IN A 10.244.2.90
 
@@ -2540,64 +3195,21 @@ headless-service.default.svc.cluster.local. 30 IN A 10.244.2.90
 ;; MSG SIZE  rcvd: 187
 ```
 
-**NodePort**
-
-> 暴露服务到外部访问
-
-```yaml
-apiVersion: v1
-kind: Service
-metadata:
- name: service1
- namespace: dev
-spec:
- selector:
-  app: nginx-pod # 使用标签绑定service到指定的pod
- type: NodePort
- ports:
- - port: 81 # service端口
-   targetPort: 80 # pod端口 
-   nodePort: 30002 # 宿主机端口，如果不指定service会随机分配一个端口
-```
-
-```shell
-[root@k8s-master ~]# kubectl create -f 1.yaml 
-service/service1 created
-
-# 使用外部浏览器访问 http://192.168.1.xxx:30002
-
-[root@k8s-master ~]# kubectl delete -f 1.yaml 
-service "service1" deleted
-```
-
-**LoadBalancer**
-
-todo
-
-**ExternalName**
-
-todo
-
-> 在集群内存引入外部服务
-
-### ingress
-
-todo
-
 ## 数据存储(Volume)
 
 ### 简单存储
 
 #### EmptyDir
 
-> pod创建时会自动创建一个空的目录，无需指定宿主机目录，因为k8s系统会自动分配一个目录，在pod销毁时，emptydir中的数据也会被永久删除。
+> pod创建时会自动创建一个空的目录，无需指定宿主机目录，因为k8s系统会自动分配一个目录，**在pod销毁时，emptydir中的数据也会被永久删除。**
+>
+> 使用emptydir实现pod内的容器共享数据
 
 ```yaml
 apiVersion: v1
 kind: Pod 
 metadata:
  name: pod1
- namespace: dev 
 spec:
  containers:
  - name: nginx
@@ -2619,7 +3231,7 @@ spec:
 ```
 
 ```shell
-[root@k8s-master ~]# kubectl get pod -n dev -o wide
+[root@k8s-master ~]# kubectl get pod -o wide
 NAME   READY   STATUS    RESTARTS   AGE   IP            NODE        NOMINATED NODE   READINESS GATES
 pod1   2/2     Running   0          96s   10.244.2.55   k8s-node2   <none>           <none>
 [root@k8s-master ~]# curl 10.244.2.55
@@ -2650,18 +3262,19 @@ Commercial support is available at
 </html>
 
 # 查看busybox日志输出
-[root@k8s-master ~]# kubectl logs -f pod1 -c busybox -n dev
+[root@k8s-master ~]# kubectl logs -f pod1 -c busybox
 10.244.0.0 - - [09/Dec/2022:06:02:47 +0000] "GET / HTTP/1.1" 200 612 "-" "curl/7.29.0" "-"
 ```
 
 #### HostPath
+
+> HostPath存储不会随着pod销毁而被删除。
 
 ```yaml
 apiVersion: v1
 kind: Pod
 metadata:
  name: pod1
- namespace: dev
 spec:
  containers:
  - name: nginx
@@ -2688,10 +3301,10 @@ spec:
 [root@k8s-master ~]# kubectl create -f 1.yaml 
 pod/pod1 created
 
-[root@k8s-master ~]# kubectl logs -f pod1 -c busybox -n dev
+[root@k8s-master ~]# kubectl logs -f pod1 -c busybox
 10.244.0.0 - - [09/Dec/2022:07:13:50 +0000] "GET / HTTP/1.1" 200 612 "-" "curl/7.29.0" "-"
 
-[root@k8s-master ~]# kubectl get pod -n dev -o wide
+[root@k8s-master ~]# kubectl get pod -o wide
 NAME   READY   STATUS    RESTARTS   AGE     IP            NODE        NOMINATED NODE   READINESS GATES
 pod1   2/2     Running   0          2m22s   10.244.2.56   k8s-node2   <none>           <none>
 [root@k8s-master ~]# curl 10.244.2.56
@@ -2741,7 +3354,6 @@ apiVersion: v1
 kind: Pod
 metadata:
  name: pod1
- namespace: dev
 spec:
  containers:
  - name: nginx
@@ -2767,7 +3379,7 @@ spec:
 ```shell
 [root@k8s-master ~]# kubectl create -f 1.yaml 
 pod/pod1 created
-[root@k8s-master ~]# kubectl get pod -n dev -o wide
+[root@k8s-master ~]# kubectl get pod -o wide
 NAME   READY   STATUS    RESTARTS   AGE   IP            NODE        NOMINATED NODE   READINESS GATES
 pod1   2/2     Running   0          23s   10.244.2.58   k8s-node2   <none>           <none>
 [root@k8s-master ~]# curl 10.244.2.58
@@ -2797,7 +3409,7 @@ Commercial support is available at
 </body>
 </html>
 
-[root@k8s-master ~]# kubectl logs -f pod1 -c busybox -n dev
+[root@k8s-master ~]# kubectl logs -f pod1 -c busybox
 10.244.0.0 - - [09/Dec/2022:12:32:20 +0000] "GET / HTTP/1.1" 200 612 "-" "curl/7.29.0" "-"
 ```
 
@@ -2840,6 +3452,28 @@ Export list for k8s-master:
 
 **创建pv**
 
+> https://www.jianshu.com/p/0fab432831b3
+>
+> https://kubernetes.io/zh-cn/docs/concepts/storage/persistent-volumes/
+>
+> pv的回收策略（persistentVolumeReclaimPolicy）:
+>
+> - Retain: 回收策略 Retain 使得用户可以手动回收资源。当 PersistentVolumeClaim 对象被删除时，PersistentVolume 卷仍然存在，对应的数据卷被视为"已释放（released）"。 由于卷上仍然存在这前一申领人的数据，该卷还不能用于其他申领。 管理员可以通过下面的步骤来手动回收该卷：
+>
+>   1. 删除 PersistentVolume 对象。与之相关的、位于外部基础设施中的存储资产 （例如 AWS EBS、GCE PD、Azure Disk 或Cinder 卷）在 PV 删除之后仍然存在。
+>
+>   2. 根据情况，手动清除所关联的存储资产上的数据。
+>
+>   3. 手动删除所关联的存储资产。
+>
+>      如果你希望重用该存储资产，可以基于存储资产的定义创建新的 PersistentVolume 卷对象。
+>
+> - Recycle：不保留数据。经测试pvc删除后，在nfs服务端的数据也会被删除（相当于执行rm -rf *）。只有hostPath和NFS支持这种方式。之后该pv会给新的pvc创建申请。
+>
+> - Delete： 这表示当用户删除对应的 PersistentVolumeClaim 时，动态配置（对于手动置备的pvc效果和Retain一样，pv不会被自动删除）的 volume 将被自动删除。AWS EBS, GCE PD, Azure Disk, and Cinder volumes支持这种方式。
+>
+> **todo accessModes初步测试ReadWriteOnce似乎没有作用**
+
 ```yaml
 apiVersion: v1
 kind: PersistentVolume
@@ -2871,7 +3505,6 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
  name: pvc1
- namespace: dev
 spec:
  accessModes:
  - ReadWriteMany
@@ -2883,7 +3516,7 @@ spec:
 ```shell
 [root@k8s-master ~]# kubectl create -f 2.yaml 
 persistentvolumeclaim/pvc1 created
-[root@k8s-master ~]# kubectl get persistentvolumeclaim -n dev
+[root@k8s-master ~]# kubectl get persistentvolumeclaim
 NAME   STATUS   VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   AGE
 pvc1   Bound    pv1      2Gi        RWX                           9m39s
 ```
@@ -2895,12 +3528,11 @@ apiVersion: v1
 kind: Pod
 metadata:
  name: pod1
- namespace: dev
 spec:
  containers:
  - name: busybox
    image: busybox
-   command: ["/bin/sh", "-c", "while true;do echo pod1 >> /root/out.txt; sleep 10; done;"]
+   command: ["/bin/sh", "-c", "while true;do echo `date` >> /root/out.txt; sleep 10; done;"]
    volumeMounts:
    - name: volume
      mountPath: /root/
@@ -2916,9 +3548,10 @@ spec:
 [root@k8s-master ~]# kubectl create -f pod.yaml 
 pod/pod1 created
 [root@k8s-master pv1]# tail -f out.txt 
-pod1
-pod1
-pod1
+Wed Jan 4 13:02:07 UTC 2023
+Wed Jan 4 13:02:17 UTC 2023
+Wed Jan 4 13:02:27 UTC 2023
+Wed Jan 4 13:02:37 UTC 2023
 ```
 
 #### storageclass
@@ -3091,11 +3724,23 @@ spec:
 ```
 
 ```shell
+# 创建pvc会自动创建pv
 [root@k8s-master ~]# kubectl create -f test-claim.yaml 
 persistentvolumeclaim/test-claim created
+[root@k8s-master ~]# kubectl get pv
+NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                STORAGECLASS   REASON   AGE
+pvc-f501addf-ff00-4641-9d92-d2c29d6c595f   1Mi        RWX            Delete           Bound    default/test-claim   nfs-client              6s
 [root@k8s-master ~]# kubectl get pvc
 NAME         STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
-test-claim   Bound    pvc-34bc5c37-2507-4c66-b470-76f199fc07f9   1Mi        RWX            nfs-client     8s
+test-claim   Bound    pvc-f501addf-ff00-4641-9d92-d2c29d6c595f   1Mi        RWX            nfs-client     8s
+# 删除pvc会自动删除关联的pv
+[root@k8s-master ~]# kubectl delete -f test-claim.yaml 
+persistentvolumeclaim "test-claim" deleted
+[root@k8s-master ~]# kubectl get pvc
+No resources found in default namespace.
+[root@k8s-master ~]# kubectl get pv
+No resources found
+
 ```
 
 
