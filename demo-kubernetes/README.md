@@ -118,65 +118,7 @@ kubectl create namespace dev
 kubectl delete namespace dev
 ```
 
-## downward api
 
-> 能够通过downward api获取k8s相关信息并通过环境变量传递到容器中。
->
-> [链接1](https://kubernetes.io/docs/concepts/workloads/pods/downward-api/#available-fields)
->
-> [通过环境变量传递pod信息](https://kubernetes.io/docs/tasks/inject-data-application/environment-variable-expose-pod-information/)
-
-```shell
-[root@k8s-master ~]# cat 1.yaml 
-apiVersion: v1
-kind: Pod
-metadata:
-  name: dapi-envars-fieldref
-spec:
-  containers:
-    - name: test-container
-      image: busybox
-      command: [ "sh", "-c"]
-      args:
-      - while true; do
-          echo -en '\n';
-          printenv MY_NODE_NAME MY_POD_NAME MY_POD_NAMESPACE;
-          printenv MY_POD_IP MY_POD_SERVICE_ACCOUNT;
-          sleep 10;
-        done;
-      env:
-        - name: MY_NODE_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: spec.nodeName
-        - name: MY_POD_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.name
-        - name: MY_POD_NAMESPACE
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.namespace
-        - name: MY_POD_IP
-          valueFrom:
-            fieldRef:
-              fieldPath: status.podIP
-        - name: MY_POD_SERVICE_ACCOUNT
-          valueFrom:
-            fieldRef:
-              fieldPath: spec.serviceAccountName
-  restartPolicy: Never
-  
-[root@k8s-master ~]# kubectl create -f 1.yaml 
-pod/dapi-envars-fieldref created
-[root@k8s-master ~]# kubectl logs dapi-envars-fieldref
-
-k8s-node1
-dapi-envars-fieldref
-default
-10.244.1.253
-default
-```
 
 ## pod
 
@@ -2093,180 +2035,7 @@ deployment1-5d9c9b97bb-xlktk   1/1     Running   0          14s     10.244.1.17 
 deployment.apps/deployment1 edited
 ```
 
-**升级策略**
 
-- 重建更新: 删除所有旧版本pod，重新创建新版本pod
-
-- 滚动更新: 删除一部分旧版本pod，创建一部分新版本pod，如此重复最终所有更新替换所有旧版本pod
-
-重建更新
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
- name: deployment1
- namespace: dev
-spec:
- replicas: 3
- strategy:
-  type: Recreate # 重建更新
- selector:
-  matchLabels:
-   app: nginx-pod
- template:
-  metadata:
-   labels:
-    app: nginx-pod
-  spec:
-   containers:
-   - name: nginx
-     image: nginx:1.17.1
-```
-
-```shell
-# 模拟升级镜像版本
-[root@k8s-master ~]# kubectl set image deployment deployment1 -n dev nginx=nginx:1.17.2
-deployment.apps/deployment1 image updated
-
-# 观察pod重建过程
-[root@k8s-master ~]# kubectl get pod -n dev -o wide -w
-NAME                           READY   STATUS    RESTARTS   AGE   IP            NODE        NOMINATED NODE   READINESS GATES
-deployment1-5d9c9b97bb-7tz7p   1/1     Running   0          54m   10.244.2.30   k8s-node2   <none>           <none>
-deployment1-5d9c9b97bb-8vk5f   1/1     Running   0          54m   10.244.1.16   k8s-node1   <none>           <none>
-deployment1-5d9c9b97bb-xlktk   1/1     Running   0          44m   10.244.1.17   k8s-node1   <none>           <none>
-deployment1-5d9c9b97bb-7tz7p   1/1     Terminating   0          54m   10.244.2.30   k8s-node2   <none>           <none>
-deployment1-5d9c9b97bb-8vk5f   1/1     Terminating   0          54m   10.244.1.16   k8s-node1   <none>           <none>
-deployment1-5d9c9b97bb-xlktk   1/1     Terminating   0          45m   10.244.1.17   k8s-node1   <none>           <none>
-deployment1-5d9c9b97bb-7tz7p   0/1     Terminating   0          54m   <none>        k8s-node2   <none>           <none>
-deployment1-5d9c9b97bb-8vk5f   0/1     Terminating   0          54m   10.244.1.16   k8s-node1   <none>           <none>
-deployment1-5d9c9b97bb-xlktk   0/1     Terminating   0          45m   10.244.1.17   k8s-node1   <none>           <none>
-deployment1-5d9c9b97bb-7tz7p   0/1     Terminating   0          55m   <none>        k8s-node2   <none>           <none>
-deployment1-5d9c9b97bb-7tz7p   0/1     Terminating   0          55m   <none>        k8s-node2   <none>           <none>
-deployment1-5d9c9b97bb-8vk5f   0/1     Terminating   0          55m   10.244.1.16   k8s-node1   <none>           <none>
-deployment1-5d9c9b97bb-8vk5f   0/1     Terminating   0          55m   10.244.1.16   k8s-node1   <none>           <none>
-deployment1-5d9c9b97bb-xlktk   0/1     Terminating   0          46m   10.244.1.17   k8s-node1   <none>           <none>
-deployment1-5d9c9b97bb-xlktk   0/1     Terminating   0          46m   10.244.1.17   k8s-node1   <none>           <none>
-deployment1-7c7477c7ff-vnhtq   0/1     Pending       0          0s    <none>        <none>      <none>           <none>
-deployment1-7c7477c7ff-xcdqf   0/1     Pending       0          0s    <none>        <none>      <none>           <none>
-deployment1-7c7477c7ff-wvnrk   0/1     Pending       0          0s    <none>        <none>      <none>           <none>
-deployment1-7c7477c7ff-vnhtq   0/1     Pending       0          0s    <none>        k8s-node2   <none>           <none>
-deployment1-7c7477c7ff-xcdqf   0/1     Pending       0          0s    <none>        k8s-node1   <none>           <none>
-deployment1-7c7477c7ff-wvnrk   0/1     Pending       0          0s    <none>        k8s-node2   <none>           <none>
-deployment1-7c7477c7ff-vnhtq   0/1     ContainerCreating   0          0s    <none>        k8s-node2   <none>           <none>
-deployment1-7c7477c7ff-xcdqf   0/1     ContainerCreating   0          0s    <none>        k8s-node1   <none>           <none>
-deployment1-7c7477c7ff-wvnrk   0/1     ContainerCreating   0          0s    <none>        k8s-node2   <none>           <none>
-deployment1-7c7477c7ff-wvnrk   1/1     Running             0          22s   10.244.2.34   k8s-node2   <none>           <none>
-deployment1-7c7477c7ff-vnhtq   1/1     Running             0          22s   10.244.2.33   k8s-node2   <none>           <none>
-deployment1-7c7477c7ff-xcdqf   1/1     Running             0          23s   10.244.1.18   k8s-node1   <none>           <none>
-```
-
-滚动更新
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
- name: deployment1
- namespace: dev
-spec:
- replicas: 3
- strategy:
-  type: RollingUpdate # 滚动更新策略
-  rollingUpdate:
-   maxUnavailable: 25%
-   maxSurge: 25%
- selector:
-  matchLabels:
-   app: nginx-pod
- template:
-  metadata:
-   labels:
-    app: nginx-pod
-  spec:
-   containers:
-   - name: nginx
-     image: nginx:1.17.1
-```
-
-```shell
-# 模拟升级镜像版本
-[root@k8s-master ~]# kubectl set image deployment deployment1 -n dev nginx=nginx:1.17.2
-deployment.apps/deployment1 image updated
-
-# 观察滚动更新过程
-[root@k8s-master ~]# kubectl get pod -n dev -w
-NAME                           READY   STATUS    RESTARTS   AGE
-deployment1-5d9c9b97bb-qjd58   1/1     Running   0          20s
-deployment1-5d9c9b97bb-s8mst   1/1     Running   0          23s
-deployment1-5d9c9b97bb-vjgwx   1/1     Running   0          22s
-deployment1-76fd8c7f84-w2n8g   0/1     Pending   0          0s
-deployment1-76fd8c7f84-w2n8g   0/1     Pending   0          0s
-deployment1-76fd8c7f84-w2n8g   0/1     ContainerCreating   0          0s
-deployment1-76fd8c7f84-w2n8g   1/1     Running             0          22s
-deployment1-5d9c9b97bb-qjd58   1/1     Terminating         0          54s
-deployment1-76fd8c7f84-xln89   0/1     Pending             0          0s
-deployment1-76fd8c7f84-xln89   0/1     Pending             0          0s
-deployment1-76fd8c7f84-xln89   0/1     ContainerCreating   0          0s
-deployment1-5d9c9b97bb-qjd58   0/1     Terminating         0          55s
-deployment1-5d9c9b97bb-qjd58   0/1     Terminating         0          58s
-deployment1-5d9c9b97bb-qjd58   0/1     Terminating         0          58s
-deployment1-76fd8c7f84-xln89   1/1     Running             0          22s
-deployment1-5d9c9b97bb-vjgwx   1/1     Terminating         0          78s
-deployment1-76fd8c7f84-tqn8c   0/1     Pending             0          0s
-deployment1-76fd8c7f84-tqn8c   0/1     Pending             0          0s
-deployment1-76fd8c7f84-tqn8c   0/1     ContainerCreating   0          0s
-deployment1-76fd8c7f84-tqn8c   1/1     Running             0          1s
-deployment1-5d9c9b97bb-vjgwx   0/1     Terminating         0          79s
-deployment1-5d9c9b97bb-s8mst   1/1     Terminating         0          80s
-deployment1-5d9c9b97bb-s8mst   0/1     Terminating         0          81s
-deployment1-5d9c9b97bb-s8mst   0/1     Terminating         0          87s
-deployment1-5d9c9b97bb-s8mst   0/1     Terminating         0          87s
-deployment1-5d9c9b97bb-vjgwx   0/1     Terminating         0          90s
-deployment1-5d9c9b97bb-vjgwx   0/1     Terminating         0          90s
-```
-
-**版本回退**
-
-> 版本回退原理是通过多个replicaset实现的
-
-```shell
-# 查看版本更新历史
-[root@k8s-master ~]# kubectl rollout history deployment deployment1 -n dev
-deployment.apps/deployment1 
-REVISION  CHANGE-CAUSE
-2         <none>
-3         <none>
-4         <none>
-[root@k8s-master ~]# kubectl get replicaset -n dev
-NAME                     DESIRED   CURRENT   READY   AGE
-deployment1-5d9c9b97bb   0         0         0       77m
-deployment1-76fd8c7f84   3         3         3       16m
-deployment1-7c7477c7ff   0         0         0       21m
-
-# 回退到指定版本
-[root@k8s-master ~]# kubectl rollout undo deployment deployment1 --to-revision=2 -n dev
-deployment.apps/deployment1 rolled back
-# 查看回退状态
-[root@k8s-master ~]# kubectl rollout status deployment deployment1 -n dev
-Waiting for deployment "deployment1" rollout to finish: 2 out of 3 new replicas have been updated...
-Waiting for deployment "deployment1" rollout to finish: 2 out of 3 new replicas have been updated...
-Waiting for deployment "deployment1" rollout to finish: 2 out of 3 new replicas have been updated...
-Waiting for deployment "deployment1" rollout to finish: 1 old replicas are pending termination...
-Waiting for deployment "deployment1" rollout to finish: 1 old replicas are pending termination...
-deployment "deployment1" successfully rolled out
-# 回退后的replicaset状态
-[root@k8s-master ~]# kubectl get replicaset -n dev
-NAME                     DESIRED   CURRENT   READY   AGE
-deployment1-5d9c9b97bb   0         0         0       79m
-deployment1-76fd8c7f84   0         0         0       19m
-deployment1-7c7477c7ff   3         3         3       23m
-
-```
-
-**金丝雀发布**
-
-todo
 
 ### Horizontal Pod Autoscaler(HPA)
 
@@ -4391,6 +4160,8 @@ spec:
 
 ### 通过环境变量暴露元数据
 
+**例子1**
+
 ```shell
 # 通过env和envFrom使用环境变量暴露元数据
 [root@k8s-master ~]# cat 1.yaml 
@@ -4462,6 +4233,66 @@ KUBERNETES_PORT_443_TCP=tcp://10.1.0.1:443
 POD_NAMESPACE=default
 KUBERNETES_SERVICE_HOST=10.1.0.1
 PWD=/
+```
+
+**例子2**
+
+> 能够通过downward api获取k8s相关信息并通过环境变量传递到容器中。
+>
+> [链接1](https://kubernetes.io/docs/concepts/workloads/pods/downward-api/#available-fields)
+>
+> [通过环境变量传递pod信息](https://kubernetes.io/docs/tasks/inject-data-application/environment-variable-expose-pod-information/)
+
+```shell
+[root@k8s-master ~]# cat 1.yaml 
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dapi-envars-fieldref
+spec:
+  containers:
+    - name: test-container
+      image: busybox
+      command: [ "sh", "-c"]
+      args:
+      - while true; do
+          echo -en '\n';
+          printenv MY_NODE_NAME MY_POD_NAME MY_POD_NAMESPACE;
+          printenv MY_POD_IP MY_POD_SERVICE_ACCOUNT;
+          sleep 10;
+        done;
+      env:
+        - name: MY_NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: MY_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: MY_POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: MY_POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: MY_POD_SERVICE_ACCOUNT
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.serviceAccountName
+  restartPolicy: Never
+  
+[root@k8s-master ~]# kubectl create -f 1.yaml 
+pod/dapi-envars-fieldref created
+[root@k8s-master ~]# kubectl logs dapi-envars-fieldref
+
+k8s-node1
+dapi-envars-fieldref
+default
+10.244.1.253
+default
 ```
 
 ### 通过downwardAPI卷来传递元数据
@@ -5777,6 +5608,746 @@ default
 ### 使用客户端库与API服务器通讯
 
 > 参考 demo-kubernetes/client-fabric8
+
+## deployment声明式地升级应用
+
+### 删除旧版本pod，使用新版本pod替换
+
+```shell
+# v1版本nodejs
+[root@k8s-master temp]# cat app.js 
+const http = require("http")
+const os = require("os")
+
+console.log("Kubia server starting...")
+
+var handler = function(request, response) {
+    response.writeHead(200)
+    response.end("This is v1 app, hostname " + os.hostname() + "\n")
+}
+
+var www = http.createServer(handler)
+www.listen(8080)
+
+# v2版本nodejs
+[root@k8s-master temp]# cat app.js 
+const http = require("http")
+const os = require("os")
+
+console.log("Kubia server starting...")
+
+var handler = function(request, response) {
+    response.writeHead(200)
+    response.end("This is v2 app, hostname " + os.hostname() + "\n")
+}
+
+var www = http.createServer(handler)
+www.listen(8080)
+
+[root@k8s-master temp]# cat Dockerfile 
+FROM node:7
+
+ADD app.js /app.js
+ENTRYPOINT ["node", "app.js"]
+
+[root@k8s-master temp]# docker build --tag docker.118899.net:10001/yyd-public/demo-k8s-upgrade:v1 .
+Sending build context to Docker daemon  4.096kB
+Step 1/3 : FROM node:7
+ ---> d9aed20b68a4
+Step 2/3 : ADD app.js /app.js
+ ---> Using cache
+ ---> a1ac53e4cbe1
+Step 3/3 : ENTRYPOINT ["node", "app.js"]
+ ---> Using cache
+ ---> 5aa3070b0e62
+Successfully built 5aa3070b0e62
+Successfully tagged docker.118899.net:10001/yyd-public/demo-k8s-upgrade:v1
+
+[root@k8s-master temp]# docker push docker.118899.net:10001/yyd-public/demo-k8s-upgrade:v1
+The push refers to repository [docker.118899.net:10001/yyd-public/demo-k8s-upgrade]
+96abf5dfa62d: Pushed 
+ab90d83fa34a: Mounted from yyd-public/demo-k8s-readinessprobe 
+8ee318e54723: Mounted from yyd-public/demo-k8s-readinessprobe 
+e6695624484e: Mounted from yyd-public/demo-k8s-readinessprobe 
+da59b99bbd3b: Mounted from yyd-public/demo-k8s-readinessprobe 
+5616a6292c16: Mounted from yyd-public/demo-k8s-readinessprobe 
+f3ed6cb59ab0: Mounted from yyd-public/demo-k8s-readinessprobe 
+654f45ecb7e3: Mounted from yyd-public/demo-k8s-readinessprobe 
+2c40c66f7667: Mounted from yyd-public/demo-k8s-readinessprobe 
+v1: digest: sha256:51e36217df69535ce24819d564d8b13bee7959dcb225c6d2b0ee38e0582139a9 size: 2213
+
+[root@k8s-master temp]# docker build --tag docker.118899.net:10001/yyd-public/demo-k8s-upgrade:v2 .
+Sending build context to Docker daemon  4.096kB
+Step 1/3 : FROM node:7
+ ---> d9aed20b68a4
+Step 2/3 : ADD app.js /app.js
+ ---> ecbe73412f18
+Step 3/3 : ENTRYPOINT ["node", "app.js"]
+ ---> Running in b51e6af27f60
+Removing intermediate container b51e6af27f60
+ ---> 7674837bd57a
+Successfully built 7674837bd57a
+Successfully tagged docker.118899.net:10001/yyd-public/demo-k8s-upgrade:v2
+
+[root@k8s-master temp]# docker push docker.118899.net:10001/yyd-public/demo-k8s-upgrade:v2
+The push refers to repository [docker.118899.net:10001/yyd-public/demo-k8s-upgrade]
+9bf29a6b3072: Layer already exists 
+ab90d83fa34a: Layer already exists 
+8ee318e54723: Layer already exists 
+e6695624484e: Layer already exists 
+da59b99bbd3b: Layer already exists 
+5616a6292c16: Layer already exists 
+f3ed6cb59ab0: Layer already exists 
+654f45ecb7e3: Layer already exists 
+2c40c66f7667: Layer already exists 
+v2: digest: sha256:3270ff24e707043f94950b896c96851baeeadf708ca4705719d8d2015bea7924 size: 2213
+
+[root@k8s-master temp]# docker run --rm --name=demo -p 8080:8080 docker.118899.net:10001/yyd-public/demo-k8s-upgrade:v1
+Kubia server starting...
+
+# 打开浏览器测试docker容器
+
+# 创建版本v1 replicaset
+[root@k8s-master ~]# cat 1.yaml 
+apiVersion: v1
+kind: Service
+metadata:
+ name: myservice1
+spec:
+ sessionAffinity: None
+ type: ClusterIP
+ selector:
+  app: kubia
+ ports:
+  - port: 8080
+    targetPort: 8080
+
+---
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+ name: replicaset1
+spec:
+ replicas: 3
+ selector:
+  matchLabels:
+   app: kubia
+ template:
+  metadata:
+   labels:
+    app: kubia
+  spec:
+   containers:
+    - name: kubia
+      image: docker.118899.net:10001/yyd-public/demo-k8s-upgrade:v1
+[root@k8s-master ~]# kubectl get service
+NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)    AGE
+kubernetes   ClusterIP   10.1.0.1     <none>        443/TCP    4d13h
+myservice1   ClusterIP   10.1.26.31   <none>        8080/TCP   65s
+# 访问v1版本的app
+[root@k8s-master ~]# while true; do curl 10.1.26.31:8080; sleep 5; done;
+This is v1 app, hostname replicaset1-hq96v
+This is v1 app, hostname replicaset1-hq96v
+This is v1 app, hostname replicaset1-lq6cn
+This is v1 app, hostname replicaset1-hq96v
+This is v1 app, hostname replicaset1-hq96v
+This is v1 app, hostname replicaset1-w67km
+This is v1 app, hostname replicaset1-lq6cn
+
+# 把yaml文件版本修改为v2后应用最新的yaml
+[root@k8s-master ~]# kubectl apply -f 1.yaml 
+service/myservice1 unchanged
+replicaset.apps/replicaset1 configured
+
+# 手动删除v1版本的pod
+[root@k8s-master datass]# kubectl get pod
+NAME                                      READY   STATUS    RESTARTS   AGE
+nfs-client-provisioner-859477c96c-kt9vk   1/1     Running   0          42h
+replicaset1-hq96v                         1/1     Running   0          26m
+replicaset1-lq6cn                         1/1     Running   0          26m
+replicaset1-w67km                         1/1     Running   0          26m
+[root@k8s-master datass]# kubectl delete pod replicaset1-hq96v replicaset1-lq6cn replicaset1-w67km
+pod "replicaset1-hq96v" deleted
+pod "replicaset1-lq6cn" deleted
+pod "replicaset1-w67km" deleted
+
+# v1版本的pod被删除会，replicaset会根据最新的yaml创建v2版本的pod
+[root@k8s-master ~]# while true; do curl 10.1.26.31:8080; sleep 5; done;
+This is v1 app, hostname replicaset1-hq96v
+This is v1 app, hostname replicaset1-lq6cn
+This is v1 app, hostname replicaset1-hq96v
+This is v1 app, hostname replicaset1-hq96v
+This is v1 app, hostname replicaset1-hq96v
+This is v1 app, hostname replicaset1-hq96v
+This is v2 app, hostname replicaset1-sf6nw
+This is v2 app, hostname replicaset1-4nx92
+This is v2 app, hostname replicaset1-4nx92
+This is v2 app, hostname replicaset1-sf6nw
+This is v2 app, hostname replicaset1-sf6nw
+This is v2 app, hostname replicaset1-gl7nz
+This is v2 app, hostname replicaset1-4nx92
+This is v2 app, hostname replicaset1-gl7nz
+This is v2 app, hostname replicaset1-sf6nw
+This is v2 app, hostname replicaset1-gl7nz
+This is v2 app, hostname replicaset1-sf6nw
+This is v2 app, hostname replicaset1-4nx92
+This is v2 app, hostname replicaset1-sf6nw
+This is v2 app, hostname replicaset1-gl7nz
+This is v2 app, hostname replicaset1-gl7nz
+```
+
+### 使用ReplicationController或者ReplicaSet实现自动的滚动升级(kubectl rolling-update)
+
+> kubectl rolling-update已经过时不采用。
+
+### 使用Deployment声明式地升级应用
+
+##### 升级策略
+
+- 重建更新(Recreate): 删除所有旧版本pod，重新创建新版本pod
+
+- 滚动更新(RollingUpdate): 删除一部分旧版本pod，创建一部分新版本pod，如此重复最终所有更新替换所有旧版本pod
+
+**重建更新**
+
+```shell
+[root@k8s-master ~]# cat 1.yaml 
+apiVersion: v1
+kind: Service
+metadata:
+ name: myservice1
+spec:
+ sessionAffinity: None
+ type: ClusterIP
+ selector:
+  app: kubia
+ ports:
+  - port: 8080
+    targetPort: 8080
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: deployment1
+spec:
+ strategy:
+  type: Recreate
+ replicas: 3
+ selector:
+  matchLabels:
+   app: kubia
+ template:
+  metadata:
+   labels:
+    app: kubia
+  spec:
+   containers:
+    - name: kubia
+      image: docker.118899.net:10001/yyd-public/demo-k8s-upgrade:v1
+      
+# 手动修改yaml版本为v2后使用kubectl apply -f 1.yaml更新 deployment，deployment会自动删除旧的pod后创建新的pod
+[root@k8s-master ~]# kubectl apply -f 1.yaml 
+service/myservice1 unchanged
+deployment.apps/deployment1 configured
+
+# 观察更新过程
+[root@k8s-master ~]# kubectl get service
+NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)    AGE
+kubernetes   ClusterIP   10.1.0.1     <none>        443/TCP    5d8h
+myservice1   ClusterIP   10.1.51.24   <none>        8080/TCP   14s
+[root@k8s-master ~]# while true; do curl 10.1.51.24:8080; sleep 5; done;
+This is v1 app, hostname deployment1-b7cbf567f-pwqgs
+This is v1 app, hostname deployment1-b7cbf567f-hdbfw
+This is v1 app, hostname deployment1-b7cbf567f-hdbfw
+This is v1 app, hostname deployment1-b7cbf567f-qb4jr
+This is v1 app, hostname deployment1-b7cbf567f-qb4jr
+This is v1 app, hostname deployment1-b7cbf567f-hdbfw
+This is v1 app, hostname deployment1-b7cbf567f-pwqgs
+This is v1 app, hostname deployment1-b7cbf567f-qb4jr
+This is v1 app, hostname deployment1-b7cbf567f-hdbfw
+This is v1 app, hostname deployment1-b7cbf567f-pwqgs
+This is v1 app, hostname deployment1-b7cbf567f-qb4jr
+curl: (7) Failed connect to 10.1.51.24:8080; Connection refused
+curl: (7) Failed connect to 10.1.51.24:8080; Connection refused
+curl: (7) Failed connect to 10.1.51.24:8080; Connection refused
+curl: (7) Failed connect to 10.1.51.24:8080; Connection refused
+curl: (7) Failed connect to 10.1.51.24:8080; Connection refused
+curl: (7) Failed connect to 10.1.51.24:8080; Connection refused
+curl: (7) Failed connect to 10.1.51.24:8080; Connection refused
+This is v2 app, hostname deployment1-6bdbb4c458-6tknb
+This is v2 app, hostname deployment1-6bdbb4c458-6tknb
+This is v2 app, hostname deployment1-6bdbb4c458-hxnqz
+This is v2 app, hostname deployment1-6bdbb4c458-dgvlr
+This is v2 app, hostname deployment1-6bdbb4c458-6tknb
+This is v2 app, hostname deployment1-6bdbb4c458-dgvlr
+This is v2 app, hostname deployment1-6bdbb4c458-dgvlr
+This is v2 app, hostname deployment1-6bdbb4c458-dgvlr
+```
+
+**滚动更新**
+
+```shell
+[root@k8s-master ~]# cat 1.yaml 
+apiVersion: v1
+kind: Service
+metadata:
+ name: myservice1
+spec:
+ sessionAffinity: None
+ type: ClusterIP
+ selector:
+  app: kubia
+ ports:
+  - port: 8080
+    targetPort: 8080
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: deployment1
+spec:
+ replicas: 3
+ strategy:
+  type: RollingUpdate # 滚动更新策略
+  rollingUpdate:
+   maxUnavailable: 25%
+   maxSurge: 25%
+ selector:
+  matchLabels:
+   app: kubia
+ template:
+  metadata:
+   labels:
+    app: kubia
+  spec:
+   containers:
+   - name: kubia
+     image: docker.118899.net:10001/yyd-public/demo-k8s-upgrade:v1
+
+# 手动修改yaml版本为v2后使用kubectl apply -f 1.yaml更新 deployment，deployment会自动删除旧的pod后创建新的pod
+[root@k8s-master ~]# kubectl apply -f 1.yaml 
+service/myservice1 unchanged
+deployment.apps/deployment1 configured
+
+# 观察更新过程
+[root@k8s-master ~]# kubectl get service
+NAME         TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)    AGE
+kubernetes   ClusterIP   10.1.0.1       <none>        443/TCP    5d8h
+myservice1   ClusterIP   10.1.236.130   <none>        8080/TCP   14s
+[root@k8s-master ~]# while true; do curl 10.1.236.130:8080; sleep 5; done;
+This is v1 app, hostname deployment1-b7cbf567f-jkwnf
+This is v1 app, hostname deployment1-b7cbf567f-jkwnf
+This is v1 app, hostname deployment1-b7cbf567f-t485t
+This is v1 app, hostname deployment1-b7cbf567f-4r46l
+This is v1 app, hostname deployment1-b7cbf567f-t485t
+This is v2 app, hostname deployment1-6bdbb4c458-dwc2n
+This is v2 app, hostname deployment1-6bdbb4c458-6hfgs
+This is v2 app, hostname deployment1-6bdbb4c458-fbt52
+This is v2 app, hostname deployment1-6bdbb4c458-dwc2n
+This is v2 app, hostname deployment1-6bdbb4c458-6hfgs
+This is v2 app, hostname deployment1-6bdbb4c458-dwc2n
+This is v2 app, hostname deployment1-6bdbb4c458-fbt52
+This is v2 app, hostname deployment1-6bdbb4c458-6hfgs
+This is v2 app, hostname deployment1-6bdbb4c458-fbt52
+```
+
+##### 回滚到一个特定的版本
+
+> 版本回退原理是通过多个replicaset实现的
+
+```shell
+# 注意：annotations.kubernetes.io/change-cause对应rollout history change-cause
+[root@k8s-master ~]# cat 1.yaml 
+apiVersion: v1
+kind: Service
+metadata:
+ name: myservice1
+spec:
+ sessionAffinity: None
+ type: ClusterIP
+ selector:
+  app: kubia
+ ports:
+  - port: 8080
+    targetPort: 8080
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: deployment1
+ annotations:
+  # 对应rollout history change-cause
+  kubernetes.io/change-cause: "测试v1"
+spec:
+ replicas: 3
+ strategy:
+  type: RollingUpdate # 滚动更新策略
+  rollingUpdate:
+   maxUnavailable: 25%
+   maxSurge: 25%
+ selector:
+  matchLabels:
+   app: kubia
+ template:
+  metadata:
+   labels:
+    app: kubia
+  spec:
+   containers:
+   - name: kubia
+     image: docker.118899.net:10001/yyd-public/demo-k8s-upgrade:v1
+  
+[root@k8s-master ~]# kubectl apply -f 1.yaml 
+service/myservice1 created
+deployment.apps/deployment1 created
+# 手动修改yaml image到v2，修改annotations.kubernetes.io/change-cause到"测试v2"
+[root@k8s-master ~]# kubectl apply -f 1.yaml 
+service/myservice1 unchanged
+deployment.apps/deployment1 configured
+
+# 观察v1升级v2过程
+[root@k8s-master ~]# while true; do curl 10.1.12.32:8080; sleep 5; done;
+This is v1 app, hostname deployment1-b7cbf567f-96c99
+This is v1 app, hostname deployment1-b7cbf567f-q297b
+This is v1 app, hostname deployment1-b7cbf567f-96c99
+This is v1 app, hostname deployment1-b7cbf567f-j7n5p
+This is v1 app, hostname deployment1-b7cbf567f-96c99
+This is v1 app, hostname deployment1-b7cbf567f-96c99
+This is v2 app, hostname deployment1-6bdbb4c458-8kljx
+This is v2 app, hostname deployment1-6bdbb4c458-8kljx
+This is v2 app, hostname deployment1-6bdbb4c458-6s7jn
+This is v2 app, hostname deployment1-6bdbb4c458-8kljx
+This is v2 app, hostname deployment1-6bdbb4c458-6s7jn
+
+# 查看版本更新历史
+[root@k8s-master ~]# kubectl rollout history deployment deployment1
+deployment.apps/deployment1 
+REVISION  CHANGE-CAUSE
+1         测试v1
+2         测试v2
+# 依旧保留旧的replicaset为了回滚历史使用
+[root@k8s-master ~]# kubectl get replicaset
+NAME                                DESIRED   CURRENT   READY   AGE
+deployment1-6bdbb4c458              3         3         3       116s
+deployment1-b7cbf567f               0         0         0       2m58s
+
+# 回退到指定版本
+[root@k8s-master ~]# kubectl rollout undo deployment deployment1 --to-revision=1
+deployment.apps/deployment1 rolled back
+[root@k8s-master ~]# while true; do curl 10.1.12.32:8080; sleep 5; done;
+This is v2 app, hostname deployment1-6bdbb4c458-6s7jn
+This is v2 app, hostname deployment1-6bdbb4c458-6s7jn
+This is v2 app, hostname deployment1-6bdbb4c458-6s7jn
+This is v1 app, hostname deployment1-b7cbf567f-5mdmp
+This is v1 app, hostname deployment1-b7cbf567f-4zvdm
+This is v1 app, hostname deployment1-b7cbf567f-4zvdm
+# 查看回退状态
+[root@k8s-master ~]# kubectl rollout status deployment deployment1
+Waiting for deployment "deployment1" rollout to finish: 2 out of 3 new replicas have been updated...
+Waiting for deployment "deployment1" rollout to finish: 2 out of 3 new replicas have been updated...
+Waiting for deployment "deployment1" rollout to finish: 2 out of 3 new replicas have been updated...
+Waiting for deployment "deployment1" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "deployment1" rollout to finish: 1 old replicas are pending termination...
+deployment "deployment1" successfully rolled out
+# 回退后的replicaset状态
+[root@k8s-master ~]# kubectl get replicaset
+NAME                                DESIRED   CURRENT   READY   AGE
+deployment1-6bdbb4c458              0         0         0       4m12s
+deployment1-b7cbf567f               3         3         3       5m14s
+```
+
+##### 回滚到上一个版本
+
+```shell
+[root@k8s-master ~]# cat 1.yaml 
+apiVersion: v1
+kind: Service
+metadata:
+ name: myservice1
+spec:
+ sessionAffinity: None
+ type: ClusterIP
+ selector:
+  app: kubia
+ ports:
+  - port: 8080
+    targetPort: 8080
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: deployment1
+ annotations:
+  # 对应rollout history change-cause
+  kubernetes.io/change-cause: "测试v1"
+spec:
+ replicas: 3
+ strategy:
+  type: RollingUpdate # 滚动更新策略
+  rollingUpdate:
+   maxUnavailable: 25%
+   maxSurge: 25%
+ selector:
+  matchLabels:
+   app: kubia
+ template:
+  metadata:
+   labels:
+    app: kubia
+  spec:
+   containers:
+   - name: kubia
+     image: docker.118899.net:10001/yyd-public/demo-k8s-upgrade:v1
+# 手动修改版本为v2后应用yaml
+[root@k8s-master ~]# kubectl apply -f 1.yaml 
+service/myservice1 unchanged
+deployment.apps/deployment1 configured
+# 回滚到上一个版本
+[root@k8s-master ~]# kubectl rollout undo deployment deployment1
+deployment.apps/deployment1 rolled back
+[root@k8s-master ~]# kubectl rollout history deployment deployment1
+deployment.apps/deployment1 
+REVISION  CHANGE-CAUSE
+2         测试v2
+3         测试v1
+
+# 观察版本变化
+[root@k8s-master ~]# kubectl get service
+NAME         TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)    AGE
+kubernetes   ClusterIP   10.1.0.1       <none>        443/TCP    5d14h
+myservice1   ClusterIP   10.1.239.198   <none>        8080/TCP   35s
+[root@k8s-master ~]# while true; do curl 10.1.239.198:8080; sleep 5; done;
+This is v1 app, hostname deployment1-b7cbf567f-qvsbb
+This is v1 app, hostname deployment1-b7cbf567f-qvsbb
+This is v1 app, hostname deployment1-b7cbf567f-fc7hj
+This is v1 app, hostname deployment1-b7cbf567f-fc7hj
+This is v1 app, hostname deployment1-b7cbf567f-4fhhg
+This is v2 app, hostname deployment1-6bdbb4c458-24m25
+This is v2 app, hostname deployment1-6bdbb4c458-jk5gn
+This is v2 app, hostname deployment1-6bdbb4c458-jk5gn
+This is v2 app, hostname deployment1-6bdbb4c458-tqnl9
+This is v2 app, hostname deployment1-6bdbb4c458-24m25
+This is v2 app, hostname deployment1-6bdbb4c458-jk5gn
+This is v2 app, hostname deployment1-6bdbb4c458-24m25
+This is v1 app, hostname deployment1-b7cbf567f-hqwtc
+This is v1 app, hostname deployment1-b7cbf567f-kdkgw
+This is v1 app, hostname deployment1-b7cbf567f-kdkgw
+This is v1 app, hostname deployment1-b7cbf567f-hqwtc
+This is v1 app, hostname deployment1-b7cbf567f-kdkgw
+```
+
+##### 使用spec.minReadySeconds减慢滚动升级速度
+
+```shell
+# 使用spec.minReadySeconds指定pod之间rollingupdate速度为60秒
+[root@k8s-master ~]# cat 1.yaml 
+apiVersion: v1
+kind: Service
+metadata:
+ name: myservice1
+spec:
+ sessionAffinity: None
+ type: ClusterIP
+ selector:
+  app: kubia
+ ports:
+  - port: 8080
+    targetPort: 8080
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: deployment1
+spec:
+ # rollingupdate新建的pod指定多少秒后才认为ready状态并进行下一轮rollingupdate
+ minReadySeconds: 60
+ replicas: 3
+ strategy:
+  type: RollingUpdate # 滚动更新策略
+  rollingUpdate:
+   maxUnavailable: 25%
+   maxSurge: 25%
+ selector:
+  matchLabels:
+   app: kubia
+ template:
+  metadata:
+   labels:
+    app: kubia
+  spec:
+   containers:
+   - name: kubia
+     image: docker.118899.net:10001/yyd-public/demo-k8s-upgrade:v1
+[root@k8s-master ~]# kubectl apply -f 1.yaml 
+service/myservice1 created
+deployment.apps/deployment1 created
+
+# 手动修改版本为v2在应用yaml
+[root@k8s-master ~]# kubectl apply -f 1.yaml 
+service/myservice1 unchanged
+deployment.apps/deployment1 configured
+
+# 使用kubectl rollout status观察滚动升级速度
+[root@k8s-master ~]# kubectl rollout status deployment deployment1
+Waiting for deployment "deployment1" rollout to finish: 1 out of 3 new replicas have been updated...
+Waiting for deployment "deployment1" rollout to finish: 1 out of 3 new replicas have been updated...
+Waiting for deployment "deployment1" rollout to finish: 1 out of 3 new replicas have been updated...
+Waiting for deployment "deployment1" rollout to finish: 2 out of 3 new replicas have been updated...
+Waiting for deployment "deployment1" rollout to finish: 2 out of 3 new replicas have been updated...
+Waiting for deployment "deployment1" rollout to finish: 2 out of 3 new replicas have been updated...
+Waiting for deployment "deployment1" rollout to finish: 2 out of 3 new replicas have been updated...
+Waiting for deployment "deployment1" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "deployment1" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "deployment1" rollout to finish: 1 old replicas are pending termination...
+deployment "deployment1" successfully rolled out
+```
+
+##### 使用maxSurge和maxUnavailable控制滚动升级速率
+
+> maxSurge: 超过预期副本数(spec.replicas)的百分比或者指定个数，例如replicas=5，maxSurge=0，那么在rollingupdate期间最多有5个ready的pod在运行，其中1个新pod + 4个旧pod。
+>
+> maxUnavailable: 在rollingupdate期间有想对于预期副本数(spec.replicas)百分比或者指定个数pod处于不可用状态(Terminating状态)。
+
+```shell
+[root@k8s-master ~]# cat 1.yaml 
+apiVersion: v1
+kind: Service
+metadata:
+ name: myservice1
+spec:
+ sessionAffinity: None
+ type: ClusterIP
+ selector:
+  app: kubia
+ ports:
+  - port: 8080
+    targetPort: 8080
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: deployment1
+spec:
+ # rollingupdate新建的pod指定多少秒后才认为ready状态并进行下一轮rollingupdate
+ minReadySeconds: 30
+ replicas: 5
+ strategy:
+  type: RollingUpdate # 滚动更新策略
+  rollingUpdate:
+   maxUnavailable: 1
+   maxSurge: 0
+ selector:
+  matchLabels:
+   app: kubia
+ template:
+  metadata:
+   labels:
+    app: kubia
+  spec:
+   containers:
+   - name: kubia
+     image: docker.118899.net:10001/yyd-public/demo-k8s-upgrade:v1
+# 当前版本的replicaset和预期想符合有5个pod正在运行
+[root@k8s-master ~]# kubectl get replicaset
+NAME                                DESIRED   CURRENT   READY   AGE
+deployment1-b7cbf567f               5         5         5       3s
+
+# 修改yaml image为v2并应用后，v2版本对应的replicatset有一个pod，v1版本的replicaset有4个pod，使用命令kubectl get pod有一个v1版本的pod处于Terminating状态
+[root@k8s-master ~]# kubectl get replicaset
+NAME                                DESIRED   CURRENT   READY   AGE
+deployment1-6bdbb4c458              1         1         1       2s
+deployment1-b7cbf567f               4         4         4       118s
+
+# rollingupdate期间ready状态的pod为5,Terminating状态的pod为1，符合预期的maxSurge和maxUnavailable设置值
+[root@k8s-master ~]# kubectl get pod 
+NAME                                      READY   STATUS        RESTARTS   AGE
+deployment1-6bdbb4c458-ml78x              1/1     Running       0          2s
+deployment1-b7cbf567f-8k9c2               1/1     Terminating   0          42s
+deployment1-b7cbf567f-hhz8t               1/1     Running       0          42s
+deployment1-b7cbf567f-n76g2               1/1     Running       0          42s
+deployment1-b7cbf567f-nk4vw               1/1     Running       0          42s
+deployment1-b7cbf567f-qrj9g               1/1     Running       0          42s
+```
+
+##### 使用暂停和恢复滚动更新实现金丝雀发布
+
+```shell
+[root@k8s-master ~]# cat 1.yaml 
+apiVersion: v1
+kind: Service
+metadata:
+ name: myservice1
+spec:
+ sessionAffinity: None
+ type: ClusterIP
+ selector:
+  app: kubia
+ ports:
+  - port: 8080
+    targetPort: 8080
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: deployment1
+spec:
+ # rollingupdate新建的pod指定多少秒后才认为ready状态并进行下一轮rollingupdate
+ minReadySeconds: 30
+ replicas: 5
+ strategy:
+  type: RollingUpdate # 滚动更新策略
+  rollingUpdate:
+   maxUnavailable: 1
+   maxSurge: 0
+ selector:
+  matchLabels:
+   app: kubia
+ template:
+  metadata:
+   labels:
+    app: kubia
+  spec:
+   containers:
+   - name: kubia
+     image: docker.118899.net:10001/yyd-public/demo-k8s-upgrade:v2
+
+# 手动修改yaml image为v2后并应用yaml和暂停rollingupdate
+[root@k8s-master ~]# kubectl apply -f 1.yaml && kubectl rollout pause deployment deployment1
+service/myservice1 unchanged
+deployment.apps/deployment1 configured
+deployment.apps/deployment1 paused
+
+# 有1个v2版本对应的replicaset创建1个新的v2版本pod，有4个旧版v1版本的pod正在运行
+# 实质是有部分流量流向v2版本pod进行测试观察
+[root@k8s-master ~]# kubectl get replicaset
+NAME                                DESIRED   CURRENT   READY   AGE
+deployment1-6bdbb4c458              1         1         1       4s
+deployment1-b7cbf567f               4         4         4       81s
+[root@k8s-master ~]# kubectl get pod 
+NAME                                      READY   STATUS        RESTARTS   AGE
+deployment1-6bdbb4c458-6kg5l              1/1     Running       0          6s
+deployment1-b7cbf567f-5mhgt               1/1     Running       0          83s
+deployment1-b7cbf567f-hrxdj               1/1     Running       0          83s
+deployment1-b7cbf567f-rbfz5               1/1     Running       0          83s
+deployment1-b7cbf567f-t4vvk               1/1     Terminating   0          83s
+deployment1-b7cbf567f-xfxmx               1/1     Running       0          83s
+
+# 如果v2版本pod没有问题，恢复rollingupdate继续更新其他pod
+[root@k8s-master ~]# kubectl rollout resume deployment deployment1
+deployment.apps/deployment1 resumed
+
+# 如果v2版本pod有问题，回滚到上一版本
+[root@k8s-master ~]# kubectl rollout resume deployment deployment1 && kubectl rollout undo deployment deployment1
+deployment.apps/deployment1 resumed
+deployment.apps/deployment1 rolled back
+```
 
 
 
