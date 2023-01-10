@@ -107,6 +107,12 @@ public class IkPluginTests {
                             .field("index", true)
                             .field("analyzer", "ik_smart_pinyin")
                         .endObject()
+                        .startObject("contentWithoutPinyin")
+                            .field("type", "text")
+                            .field("store", false)
+                            .field("index", true)
+                            .field("analyzer", "ik_smart")
+                        .endObject()
                     .endObject()
                 .endObject();
         AcknowledgedResponse acknowledgedResponse = client.admin().indices().preparePutMapping(IndexDemo)
@@ -129,6 +135,7 @@ public class IkPluginTests {
                         .startObject()
                         .field("id", idTemporary)
                         .field("content", idToObjectArratMapper.get(idTemporary)[0])
+                        .field("contentWithoutPinyin", idToObjectArratMapper.get(idTemporary)[0])
                         .endObject();
                 IndexResponse indexResponse = client.prepareIndex(IndexDemo, "_doc", String.valueOf(idTemporary))
                         .setSource(builderTemporary)
@@ -174,5 +181,20 @@ public class IkPluginTests {
         Assert.assertEquals(2, searchResponse.getHits().getTotalHits().value);
         Assert.assertEquals(2, Integer.parseInt(searchResponse.getHits().getHits()[0].getId()));
         Assert.assertEquals(3, Integer.parseInt(searchResponse.getHits().getHits()[1].getId()));
+
+        // 测试不根据拼音查询
+        keyword = "中";
+        searchResponse = client.prepareSearch(IndexDemo).setQuery(QueryBuilders.prefixQuery("contentWithoutPinyin", keyword)).get();
+        Assert.assertEquals(2, searchResponse.getHits().getTotalHits().value);
+        Assert.assertEquals(2, Integer.parseInt(searchResponse.getHits().getHits()[0].getId()));
+        Assert.assertEquals(3, Integer.parseInt(searchResponse.getHits().getHits()[1].getId()));
+        keyword = "中国";
+        searchResponse = client.prepareSearch(IndexDemo).setQuery(QueryBuilders.prefixQuery("contentWithoutPinyin", keyword)).get();
+        Assert.assertEquals(2, searchResponse.getHits().getTotalHits().value);
+        Assert.assertEquals(2, Integer.parseInt(searchResponse.getHits().getHits()[0].getId()));
+        Assert.assertEquals(3, Integer.parseInt(searchResponse.getHits().getHits()[1].getId()));
+        keyword = "zg";
+        searchResponse = client.prepareSearch(IndexDemo).setQuery(QueryBuilders.prefixQuery("contentWithoutPinyin", keyword)).get();
+        Assert.assertEquals(0, searchResponse.getHits().getTotalHits().value);
     }
 }

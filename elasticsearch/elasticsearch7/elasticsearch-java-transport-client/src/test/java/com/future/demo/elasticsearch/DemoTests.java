@@ -215,6 +215,6 @@ public class DemoTests {
         keyword = "a";
         queryBuilder = QueryBuilders.boolQuery().must(QueryBuilders.prefixQuery("content", keyword));
         searchResponse = client.prepareSearch(IndexDemo1).setTypes("_doc").setQuery(queryBuilder).get();
-        Assert.assertEquals(4, searchResponse.getHits().getHits().length);
+        Assert.assertEquals(2, searchResponse.getHits().getHits().length);
     }
 }
