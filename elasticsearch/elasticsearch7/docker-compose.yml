@@ -20,10 +20,8 @@ services:
       - 9200:9200
       # Java transport client需要连接这个端口去操作elasticsearch
       - 9300:9300
-    # https://stackoverflow.com/questions/65668188/elastic-search-accessdeniedexception-usr-share-elasticsearch-data-nodes-0-a
-    # 不能把目录挂载到 /usr/share/elasticsearch/data，否则有权限问题
-    # volumes:
-    #  - ~/data-demo-elasticsearch:/var/lib/elasticsearch/data
+    #volumes:
+    # - ~/data-demo-elasticsearch:/usr/share/elasticsearch/data
     networks:
       - net
 
