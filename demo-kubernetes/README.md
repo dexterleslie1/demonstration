@@ -53,7 +53,9 @@ kubectl proxy --address='0.0.0.0' --disable-filter=true
 http://external-ip:37337/api/v1/namespaces/kubernetes-dashboard/services/http:kubernetes-dashboard:/proxy/
 ```
 
+## Kubernetes Google Container Registry国内镜像替换
 
+> https://kubernetes.feisky.xyz/appendix/mirrors
 
 ## k8s安装
 
@@ -1691,63 +1693,7 @@ spec:
 kubectl get pod -n dev -o wide -w
 ```
 
-### 定向调度
 
-> 通过nodename或者nodeselector指定pod运行的节点
-
-**使用nodename指定节点**
-
-```yaml
-apiVersion: v1
-kind: Pod
-metadata:
- name: base-pod
- namespace: dev
- labels:
-  test1: test1v
-spec:
- nodeName: k8s-node1 # 使用节点名称指定pod运行节点
- containers:
- - name: nginx
-   image: nginx
-   imagePullPolicy: Always
-```
-
-**使用nodeselector指定节点标签**
-
-```shell
-# 节点打标签
-kubectl label node k8s-node1 node-label=node1
-```
-
-```yaml
-apiVersion: v1
-kind: Pod
-metadata:
- name: base-pod
- namespace: dev
- labels:
-  test1: test1v
-spec:
- nodeSelector:
-  node-label: node1 # 指定节点标签
- containers:
- - name: nginx
-   image: nginx
-   imagePullPolicy: Always
-```
-
-### 亲和性调度
-
-todo
-
-### 污点调度
-
-todo
-
-### 容忍调度
-
-todo
 
 ## pod控制器
 
@@ -6347,6 +6293,1176 @@ deployment.apps/deployment1 resumed
 [root@k8s-master ~]# kubectl rollout resume deployment deployment1 && kubectl rollout undo deployment deployment1
 deployment.apps/deployment1 resumed
 deployment.apps/deployment1 rolled back
+```
+
+## API服务器的安全防护
+
+### 创建ServiceAccount并在pod中使用新创建的ServiceAccount
+
+```shell
+[root@k8s-master ~]# cat 1.yaml 
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+ name: foo
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+ name: curl-custom-serviceaccount
+spec:
+ serviceAccountName: foo
+ containers:
+  - name: main
+    image: alpine/curl
+    command: ["sh", "-c", "sleep 7200;"]
+  - name: ambassador
+    image: luksa/kubectl-proxy
+    
+[root@k8s-master ~]# kubectl apply -f 1.yaml 
+serviceaccount/foo created
+pod/curl-custom-serviceaccount created
+# 删除之前创建的clusterrolebinding(所有ServiceAccount能够操作任何资源)
+[root@k8s-master ~]# kubectl delete clusterrolebinding permissive-binding
+clusterrolebinding.rbac.authorization.k8s.io "permissive-binding" deleted
+[root@k8s-master ~]# kubectl get serviceaccount
+NAME                     SECRETS   AGE
+default                  1         34d
+foo                      1         41s
+# 显示ServiceAccount详细信息
+[root@k8s-master ~]# kubectl describe serviceaccount foo
+Name:                foo
+Namespace:           default
+Labels:              <none>
+Annotations:         <none>
+Image pull secrets:  <none>
+Mountable secrets:   foo-token-8vlsq
+Tokens:              foo-token-8vlsq
+Events:              <none>
+# 显示ServiceAccount对应的Secret详细信息
+[root@k8s-master ~]# kubectl describe secret foo-token-8vlsq
+Name:         foo-token-8vlsq
+Namespace:    default
+Labels:       <none>
+Annotations:  kubernetes.io/service-account.name: foo
+              kubernetes.io/service-account.uid: 9d858e34-3f20-4e7b-a827-ae5bf826bd9b
+
+Type:  kubernetes.io/service-account-token
+
+Data
+====
+namespace:  7 bytes
+token:      eyJhbGciOiJSUzI1NiIsImtpZCI6InQ3aFlRU3VMbWtiUG5IcVRiZzljc1RqRmdzQnZ0dzFxNU1vTEU0VWJ5azQifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJkZWZhdWx0Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZWNyZXQubmFtZSI6ImZvby10b2tlbi04dmxzcSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50Lm5hbWUiOiJmb28iLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiI5ZDg1OGUzNC0zZjIwLTRlN2ItYTgyNy1hZTViZjgyNmJkOWIiLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6ZGVmYXVsdDpmb28ifQ.IJL9-FyRYwd5V8ky6f5cBiSQcWJa9oYpSDi7C9170QRa47JQQZF0xttCzFHj2ez3PaVzkvz3z55PD7sDpQRycdt59fk2Uern20wJ2G7faMxFyssIMNkFByYjrip8XDnCrTW8BppbgMVm4gM7noFtbUgflZ9jjP45tHrvuOHcRrEsK9n2giEgs7__hBRjfPF3cyLPyYagATtc8tzLBCWFecAveEqvqEYUeMDhxFG7fIb2bopkbXK-Q96elxxDKQkeQAyTPrDIXHG_-XQZ_pyCaZBIyy4_yFpzGpIxUcmPLDXc6uEqvIicifl6KXIwLZ_kh7-1RugRrQLTmt6VHYiiSw
+ca.crt:     1066 bytes
+
+[root@k8s-master ~]# kubectl exec -it curl-custom-serviceaccount -c main /bin/sh
+kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl exec [POD] -- [COMMAND] instead.
+# 进入容器内查看当前使用的ServiceAccount token和Secret的token对应
+/ # cat /var/run/secrets/kubernetes.io/serviceaccount/token 
+eyJhbGciOiJSUzI1NiIsImtpZCI6InQ3aFlRU3VMbWtiUG5IcVRiZzljc1RqRmdzQnZ0dzFxNU1vTEU0VWJ5azQifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJkZWZhdWx0Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZWNyZXQubmFtZSI6ImZvby10b2tlbi04dmxzcSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50Lm5hbWUiOiJmb28iLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiI5ZDg1OGUzNC0zZjIwLTRlN2ItYTgyNy1hZTViZjgyNmJkOWIiLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6ZGVmYXVsdDpmb28ifQ.IJL9-FyRYwd5V8ky6f5cBiSQcWJa9oYpSDi7C9170QRa47JQQZF0xttCzFHj2ez3PaVzkvz3z55PD7sDpQRycdt59fk2Uern20wJ2G7faMxFyssIMNkFByYjrip8XDnCrTW8BppbgMVm4gM7noFtbUgflZ9jjP45tHrvuOHcRrEsK9n2giEgs7__hBRjfPF3cyLPyYagATtc8tzLBCWFecAveEqvqEYUeMDhxFG7fIb2bopkbXK-Q96elxxDKQkeQAyTPrDIXHG_-XQZ_pyCaZBIyy4_yFpzGpIxUcmPLDXc6uEqvIicifl6KXIwLZ_kh7-1RugRrQLTmt6VHYiiSw/ # 
+# 查看命名空间default下的ServiceAccount，只是foo ServiceAccount权限不足
+/ # curl localhost:8001/api/v1/namespaces/default/serviceaccounts
+{
+  "kind": "Status",
+  "apiVersion": "v1",
+  "metadata": {
+    
+  },
+  "status": "Failure",
+  "message": "serviceaccounts is forbidden: User \"system:serviceaccount:default:foo\" cannot list resource \"serviceaccounts\" in API group \"\" in the namespace \"default\"",
+  "reason": "Forbidden",
+  "details": {
+    "kind": "serviceaccounts"
+  },
+  "code": 403
+}/ #
+```
+
+### 使用Role和RoleBinding
+
+> Role和RoleBinding都是命名空间的资源，这意味着它们属于和应用在同一个命名空间资源上。
+>
+> 一个Role只允许访问和Role在同一命名空间的资源。如果你希望允许跨不同命名空间访问资源，就必须在每个命名空间中创建Role和RoleBinding。
+
+```shell
+# 授权ServiceAccount foo拥有对ServiceAccounts资源的get、list权限
+[root@k8s-master ~]# cat 1.yaml 
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+ name: foo
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+ name: service-reader
+rules:
+ # ServiceAccount拥有对ServiceAccounts资源的get、list权限
+ - apiGroups: [""]
+   verbs: ["get", "list"]
+   resources: ["serviceaccounts"]
+
+---
+# 创建RoleBinding绑定Role:service-reader到ServiceAccount:default/foo
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+ name: test
+roleRef:
+ apiGroup: rbac.authorization.k8s.io
+ kind: Role
+ name: service-reader
+subjects:
+ - kind: ServiceAccount
+   # ServiceAccount名称
+   name: foo
+   # 命名空间名称
+   namespace: default
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+ name: curl-custom-serviceaccount
+spec:
+ serviceAccountName: foo
+ containers:
+  - name: main
+    image: alpine/curl
+    command: ["sh", "-c", "sleep 7200;"]
+  - name: ambassador
+    image: luksa/kubectl-proxy
+
+[root@k8s-master ~]# kubectl exec -it curl-custom-serviceaccount -c main /bin/sh
+kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl exec [POD] -- [COMMAND] instead.
+/ # curl localhost:8001/api/v1/namespaces/default/serviceaccounts
+{
+  "kind": "ServiceAccountList",
+  "apiVersion": "v1",
+  "metadata": {
+    "resourceVersion": "4626087"
+  },
+  "items": [
+    {
+      "metadata": {
+        "name": "default",
+        "namespace": "default",
+        "uid": "48203853-e303-42f8-bfce-9c829e03bcbd",
+        "resourceVersion": "394",
+        "creationTimestamp": "2022-12-05T06:24:40Z"
+      },
+      "secrets": [
+        {
+          "name": "default-token-q8hxp"
+        }
+      ]
+    },
+    {
+      "metadata": {
+        "name": "foo",
+        "namespace": "default",
+        "uid": "dc89fb4f-0284-480c-90e3-4eca78b473f1",
+        "resourceVersion": "4625998",
+        "creationTimestamp": "2023-01-08T15:25:53Z",
+        "annotations": {
+          "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"v1\",\"kind\":\"ServiceAccount\",\"metadata\":{\"annotations\":{},\"name\":\"foo\",\"namespace\":\"default\"}}\n"
+        },
+        "managedFields": [
+          {
+            "manager": "kube-controller-manager",
+            "operation": "Update",
+            "apiVersion": "v1",
+            "time": "2023-01-08T15:25:53Z",
+            "fieldsType": "FieldsV1",
+            "fieldsV1": {"f:secrets":{".":{},"k:{\"name\":\"foo-token-txb6r\"}":{".":{},"f:name":{}}}}
+          },
+          {
+            "manager": "kubectl-client-side-apply",
+            "operation": "Update",
+            "apiVersion": "v1",
+            "time": "2023-01-08T15:25:53Z",
+            "fieldsType": "FieldsV1",
+            "fieldsV1": {"f:metadata":{"f:annotations":{".":{},"f:kubectl.kubernetes.io/last-applied-configuration":{}}}}
+          }
+        ]
+      },
+      "secrets": [
+        {
+          "name": "foo-token-txb6r"
+        }
+      ]
+    },
+    {
+      "metadata": {
+        "name": "nfs-client-provisioner",
+        "namespace": "default",
+        "uid": "051d8d13-15d9-48a8-9c67-b315e638f506",
+        "resourceVersion": "3951847",
+        "creationTimestamp": "2023-01-04T13:55:37Z",
+        "annotations": {
+          "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"v1\",\"kind\":\"ServiceAccount\",\"metadata\":{\"annotations\":{},\"name\":\"nfs-client-provisioner\",\"namespace\":\"default\"}}\n"
+        },
+        "managedFields": [
+          {
+            "manager": "kube-controller-manager",
+            "operation": "Update",
+            "apiVersion": "v1",
+            "time": "2023-01-04T13:55:37Z",
+            "fieldsType": "FieldsV1",
+            "fieldsV1": {"f:secrets":{".":{},"k:{\"name\":\"nfs-client-provisioner-token-vfg8h\"}":{".":{},"f:name":{}}}}
+          },
+          {
+            "manager": "kubectl-client-side-apply",
+            "operation": "Update",
+            "apiVersion": "v1",
+            "time": "2023-01-04T13:55:37Z",
+            "fieldsType": "FieldsV1",
+            "fieldsV1": {"f:metadata":{"f:annotations":{".":{},"f:kubectl.kubernetes.io/last-applied-configuration":{}}}}
+          }
+        ]
+      },
+      "secrets": [
+        {
+          "name": "nfs-client-provisioner-token-vfg8h"
+        }
+      ]
+    }
+  ]
+}/ # 
+```
+
+### 使用ClusterRole和ClusterRoleBinding
+
+> 为什么需要ClusterRole和ClusterRoleBinding？一个常规的角色只允许访问和角色在同一命名空间中的资源。如果你希望允许跨不同命名空间访问资源，就必须在每个命名空间中创建一个Role和RoleBinding。如果你想将这种行为扩展到所有命名空间（集群管理员可能需要），需要在每个命名空间创建相同的Role和RoleBinding。当创建一个新的命名空间时，必须记住也要在新的命名空间中创建这两个资源。
+>
+> ClusterRole是一种集群级别资源，它允许访问没有命名空间的资源和非资源型的URL，或者作为单个命名空间内部绑定的公共角色，从而避免必须在每个命名空间中重新定义相同的角色。
+
+```shell
+# 演示使用ClusterRole授权访问集群级别的资源
+[root@k8s-master ~]# cat 1.yaml 
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+ name: foo
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+ name: service-reader
+rules:
+ - apiGroups:
+    - ""
+   verbs:
+    - get
+    - list
+   resources:
+    - persistentvolumes
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+ name: test
+roleRef:
+ apiGroup: rbac.authorization.k8s.io
+ kind: ClusterRole
+ name: service-reader
+subjects:
+ - kind: ServiceAccount
+   name: foo
+   namespace: default
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+ name: curl-custom-serviceaccount
+spec:
+ serviceAccountName: foo
+ containers:
+  - name: main
+    image: alpine/curl
+    command: ["sh", "-c", "sleep 7200;"]
+  - name: ambassador
+    image: luksa/kubectl-proxy
+
+[root@k8s-master ~]# kubectl exec -it curl-custom-serviceaccount -c main /bin/sh
+kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl exec [POD] -- [COMMAND] instead.
+# 没有授权访问ServiceAccount资源
+/ # curl localhost:8001/api/v1/namespaces/default/serviceaccounts
+{
+  "kind": "Status",
+  "apiVersion": "v1",
+  "metadata": {
+    
+  },
+  "status": "Failure",
+  "message": "serviceaccounts is forbidden: User \"system:serviceaccount:default:foo\" cannot list resource \"serviceaccounts\" in API group \"\" in the namespace \"default\"",
+  "reason": "Forbidden",
+  "details": {
+    "kind": "serviceaccounts"
+  },
+  "code": 403
+}
+# 已经授权访问集群级别资源PersistentVolumes
+/ # curl localhost:8001/api/v1/persistentvolumes
+{
+  "kind": "PersistentVolumeList",
+  "apiVersion": "v1",
+  "metadata": {
+    "resourceVersion": "4728159"
+  },
+  "items": []
+}/ #
+```
+
+## pod与集群节点自动伸缩
+
+###  配置metrics-server
+
+> https://github.com/kubernetes-sigs/metrics-server
+>
+> kubernetes +1.19 安装 metrics-server-v0.6.x
+
+```shell
+# 安装metrics-server-v0.6.2
+# 下载 https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.6.2/components.yaml
+
+# metrics-server args添加 - --kubelet-insecure-tls 表示抓取指标数据时不使用https通讯
+# metrics-server image修改为 registry.cn-hangzhou.aliyuncs.com/google_containers/metrics-server:v0.6.2
+[root@k8s-master ~]# cat components.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    k8s-app: metrics-server
+  name: metrics-server
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    k8s-app: metrics-server
+    rbac.authorization.k8s.io/aggregate-to-admin: "true"
+    rbac.authorization.k8s.io/aggregate-to-edit: "true"
+    rbac.authorization.k8s.io/aggregate-to-view: "true"
+  name: system:aggregated-metrics-reader
+rules:
+- apiGroups:
+  - metrics.k8s.io
+  resources:
+  - pods
+  - nodes
+  verbs:
+  - get
+  - list
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    k8s-app: metrics-server
+  name: system:metrics-server
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - nodes/metrics
+  verbs:
+  - get
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - nodes
+  verbs:
+  - get
+  - list
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    k8s-app: metrics-server
+  name: metrics-server-auth-reader
+  namespace: kube-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: extension-apiserver-authentication-reader
+subjects:
+- kind: ServiceAccount
+  name: metrics-server
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    k8s-app: metrics-server
+  name: metrics-server:system:auth-delegator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:auth-delegator
+subjects:
+- kind: ServiceAccount
+  name: metrics-server
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    k8s-app: metrics-server
+  name: system:metrics-server
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:metrics-server
+subjects:
+- kind: ServiceAccount
+  name: metrics-server
+  namespace: kube-system
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    k8s-app: metrics-server
+  name: metrics-server
+  namespace: kube-system
+spec:
+  ports:
+  - name: https
+    port: 443
+    protocol: TCP
+    targetPort: https
+  selector:
+    k8s-app: metrics-server
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    k8s-app: metrics-server
+  name: metrics-server
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      k8s-app: metrics-server
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        k8s-app: metrics-server
+    spec:
+      containers:
+      - args:
+        - --cert-dir=/tmp
+        - --secure-port=4443
+        - --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname
+        - --kubelet-use-node-status-port
+        - --metric-resolution=15s
+        - --kubelet-insecure-tls
+        image: registry.cn-hangzhou.aliyuncs.com/google_containers/metrics-server:v0.6.2
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /livez
+            port: https
+            scheme: HTTPS
+          periodSeconds: 10
+        name: metrics-server
+        ports:
+        - containerPort: 4443
+          name: https
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /readyz
+            port: https
+            scheme: HTTPS
+          initialDelaySeconds: 20
+          periodSeconds: 10
+        resources:
+          requests:
+            cpu: 100m
+            memory: 200Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+        volumeMounts:
+        - mountPath: /tmp
+          name: tmp-dir
+      nodeSelector:
+        kubernetes.io/os: linux
+      priorityClassName: system-cluster-critical
+      serviceAccountName: metrics-server
+      volumes:
+      - emptyDir: {}
+        name: tmp-dir
+---
+apiVersion: apiregistration.k8s.io/v1
+kind: APIService
+metadata:
+  labels:
+    k8s-app: metrics-server
+  name: v1beta1.metrics.k8s.io
+spec:
+  group: metrics.k8s.io
+  groupPriorityMinimum: 100
+  insecureSkipTLSVerify: true
+  service:
+    name: metrics-server
+    namespace: kube-system
+  version: v1beta1
+  versionPriority: 100
+  
+[root@k8s-master ~]# kubectl apply -f components.yaml 
+serviceaccount/metrics-server created
+clusterrole.rbac.authorization.k8s.io/system:aggregated-metrics-reader created
+clusterrole.rbac.authorization.k8s.io/system:metrics-server created
+rolebinding.rbac.authorization.k8s.io/metrics-server-auth-reader created
+clusterrolebinding.rbac.authorization.k8s.io/metrics-server:system:auth-delegator created
+clusterrolebinding.rbac.authorization.k8s.io/system:metrics-server created
+service/metrics-server created
+deployment.apps/metrics-server created
+apiservice.apiregistration.k8s.io/v1beta1.metrics.k8s.io created
+
+# 查看kube-system metrics-server是Running状态
+[root@k8s-master ~]# kubectl get pod --namespace kube-system -w
+NAME                                 READY   STATUS    RESTARTS   AGE
+coredns-7f89b7bc75-9jvzv             1/1     Running   1          35d
+coredns-7f89b7bc75-nwpk2             1/1     Running   1          35d
+etcd-k8s-master                      1/1     Running   1          35d
+kube-apiserver-k8s-master            1/1     Running   1          35d
+kube-controller-manager-k8s-master   1/1     Running   1          35d
+kube-proxy-2t2ck                     1/1     Running   2          35d
+kube-proxy-6vmvt                     1/1     Running   1          35d
+kube-proxy-qb8kg                     1/1     Running   2          35d
+kube-scheduler-k8s-master            1/1     Running   1          35d
+metrics-server-6cc4fb8489-nk5p2      1/1     Running   0          32s
+```
+
+
+
+### 基于CPU使用率的HPA自动伸缩
+
+```shell
+[root@k8s-master ~]# cat 1.yaml 
+apiVersion: v1
+kind: Service
+metadata:
+ name: myservice1
+spec:
+ selector:
+  app: kubia
+ type: ClusterIP
+ ports:
+  - port: 80
+    targetPort: 8080
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: deployment1
+spec:
+ replicas: 3
+ selector:
+  matchLabels:
+   app: kubia
+ template:
+  metadata:
+   name: kubia
+   labels:
+    app: kubia
+  spec:
+   containers:
+    - name: nodejs
+      image: docker.118899.net:10001/yyd-public/demo-k8s-nodejs
+      resources:
+       requests:
+        cpu: 100m
+
+---
+# 创建HPA
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+ name: kubia
+spec:
+ maxReplicas: 5
+ targetCPUUtilizationPercentage: 30
+ minReplicas: 1
+ scaleTargetRef:
+  apiVersion: apps/v1
+  kind: Deployment
+  name: deployment1
+
+[root@k8s-master ~]# kubectl apply -f 1.yaml 
+deployment.apps/deployment1 created
+horizontalpodautoscaler.autoscaling/kubia created
+# 刚刚创建HPA时，有3个pod在运行
+[root@k8s-master ~]# kubectl get pod
+NAME                                      READY   STATUS    RESTARTS   AGE
+deployment1-65c8fdb647-4xl7b              1/1     Running   0          21s
+deployment1-65c8fdb647-9npw6              1/1     Running   0          21s
+deployment1-65c8fdb647-klsft              1/1     Running   0          21s
+# 查看HPA状态
+[root@k8s-master ~]# kubectl get hpa
+NAME    REFERENCE                TARGETS   MINPODS   MAXPODS   REPLICAS   AGE
+kubia   Deployment/deployment1   0%/30%    1         5         3          118s
+
+# 5分钟后查看HPA，自动把deployment1 replicas修改为1
+[root@k8s-master ~]# kubectl describe hpa kubia
+Name:                                                  kubia
+Namespace:                                             default
+Labels:                                                <none>
+Annotations:                                           <none>
+CreationTimestamp:                                     Tue, 10 Jan 2023 12:59:52 +0800
+Reference:                                             Deployment/deployment1
+Metrics:                                               ( current / target )
+  resource cpu on pods  (as a percentage of request):  0% (0) / 30%
+Min replicas:                                          1
+Max replicas:                                          5
+Deployment pods:                                       3 current / 1 desired
+Conditions:
+  Type            Status  Reason              Message
+  ----            ------  ------              -------
+  AbleToScale     True    SucceededRescale    the HPA controller was able to update the target scale to 1
+  ScalingActive   True    ValidMetricFound    the HPA was able to successfully calculate a replica count from cpu resource utilization (percentage of request)
+  ScalingLimited  False   DesiredWithinRange  the desired count is within the acceptable range
+Events:
+  Type     Reason                        Age    From                       Message
+  ----     ------                        ----   ----                       -------
+  Warning  FailedGetResourceMetric       5m30s  horizontal-pod-autoscaler  failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
+  Warning  FailedComputeMetricsReplicas  5m30s  horizontal-pod-autoscaler  invalid metrics (1 invalid out of 1), first error is: failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
+  Normal   SuccessfulRescale             9s     horizontal-pod-autoscaler  New size: 1; reason: All metrics below target
+# 最后剩余1个pod在运行
+[root@k8s-master ~]# kubectl get pod
+NAME                                      READY   STATUS    RESTARTS   AGE
+deployment1-65c8fdb647-9npw6              1/1     Running   0          7m8s
+
+# 模拟产生压力，pod自动扩容
+[root@k8s-master ~]# kubectl run -it --rm --restart=Never loadgenerator --image=alpine/curl -- sh -c "while true; do curl -s myservice1 > /dev/null; done;"
+If you don't see a command prompt, try pressing enter.
+^Cpod "loadgenerator" deleted
+pod default/loadgenerator terminated (Error)
+# 稍过几分钟查看发现自动创建多3个pod响应压力
+[root@k8s-master ~]# kubectl get hpa
+NAME    REFERENCE                TARGETS   MINPODS   MAXPODS   REPLICAS   AGE
+kubia   Deployment/deployment1   92%/30%   1         5         4          28m
+[root@k8s-master ~]# kubectl get pod
+NAME                                      READY   STATUS    RESTARTS   AGE
+deployment1-65c8fdb647-4xwn2              1/1     Running   0          16s
+deployment1-65c8fdb647-lz7pz              1/1     Running   0          27m
+deployment1-65c8fdb647-q6jvq              1/1     Running   0          16s
+deployment1-65c8fdb647-xfv6w              1/1     Running   0          16s
+loadgenerator                             1/1     Running   0          75s
+```
+
+### 基于QPS的HPA自动伸缩
+
+> todo 没有做实验
+
+### 手动标记节点为不可调度、排空节点
+
+```shell
+[root@k8s-master ~]# cat 1.yaml 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: deployment1
+spec:
+ replicas: 5
+ selector:
+  matchLabels:
+   app: kubia
+ template:
+  metadata:
+   labels:
+    app: kubia
+  spec:
+   containers:
+    - name: kubia
+      image: busybox
+      command: ["sh", "-c", "sleep 7200;"]
+[root@k8s-master ~]# cat 2.yaml 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: deployment2
+spec:
+ replicas: 5
+ selector:
+  matchLabels:
+   app: kubia
+ template:
+  metadata:
+   labels:
+    app: kubia
+  spec:
+   containers:
+    - name: kubia
+      image: busybox
+      command: ["sh", "-c", "sleep 7200;"]
+      
+[root@k8s-master ~]# kubectl apply -f 1.yaml 
+deployment.apps/deployment1 created
+# 有些pod被调度到k8s-node2
+[root@k8s-master ~]# kubectl get pod -o wide
+NAME                                      READY   STATUS    RESTARTS   AGE   IP            NODE        NOMINATED NODE   READINESS GATES
+deployment1-66b6f8c9b7-75rmm              1/1     Running   0          48s   10.244.2.61   k8s-node2   <none>           <none>
+deployment1-66b6f8c9b7-8gdgg              1/1     Running   0          48s   10.244.1.8    k8s-node1   <none>           <none>
+deployment1-66b6f8c9b7-bgbkp              1/1     Running   0          48s   10.244.2.62   k8s-node2   <none>           <none>
+deployment1-66b6f8c9b7-pvz64              1/1     Running   0          48s   10.244.2.59   k8s-node2   <none>           <none>
+deployment1-66b6f8c9b7-ww55m              1/1     Running   0          48s   10.244.2.60   k8s-node2   <none>           <none>
+# 标记节点为不可调度（但对其上的pod不做任何事情）
+[root@k8s-master ~]# kubectl cordon k8s-node2
+node/k8s-node2 cordoned
+# 创建deployment2
+[root@k8s-master ~]# kubectl apply -f 2.yaml 
+deployment.apps/deployment2 created
+# 可以看到后来创建的deployment2的pod不会被调度到k8s-node2中
+[root@k8s-master ~]# kubectl get pod -o wide
+NAME                                      READY   STATUS    RESTARTS   AGE   IP            NODE        NOMINATED NODE   READINESS GATES
+deployment1-66b6f8c9b7-75rmm              1/1     Running   0          22m   10.244.2.61   k8s-node2   <none>           <none>
+deployment1-66b6f8c9b7-8gdgg              1/1     Running   0          22m   10.244.1.8    k8s-node1   <none>           <none>
+deployment1-66b6f8c9b7-bgbkp              1/1     Running   0          22m   10.244.2.62   k8s-node2   <none>           <none>
+deployment1-66b6f8c9b7-pvz64              1/1     Running   0          22m   10.244.2.59   k8s-node2   <none>           <none>
+deployment1-66b6f8c9b7-ww55m              1/1     Running   0          22m   10.244.2.60   k8s-node2   <none>           <none>
+deployment2-66b6f8c9b7-bvspv              1/1     Running   0          19m   10.244.1.11   k8s-node1   <none>           <none>
+deployment2-66b6f8c9b7-jnfwv              1/1     Running   0          19m   10.244.1.12   k8s-node1   <none>           <none>
+deployment2-66b6f8c9b7-lsnqk              1/1     Running   0          19m   10.244.1.13   k8s-node1   <none>           <none>
+deployment2-66b6f8c9b7-p7lpr              1/1     Running   0          19m   10.244.1.10   k8s-node1   <none>           <none>
+deployment2-66b6f8c9b7-wdrx8              1/1     Running   0          19m   10.244.1.9    k8s-node1   <none>           <none>
+# 标记节点为不可以调度，随后疏散其上所有pod
+[root@k8s-master ~]# kubectl drain k8s-node2 --ignore-daemonsets
+node/k8s-node2 already cordoned
+WARNING: ignoring DaemonSet-managed Pods: kube-flannel/kube-flannel-ds-gjpqd, kube-system/kube-proxy-2t2ck
+evicting pod default/deployment1-66b6f8c9b7-ww55m
+evicting pod default/deployment1-66b6f8c9b7-75rmm
+evicting pod default/deployment1-66b6f8c9b7-bgbkp
+evicting pod default/deployment1-66b6f8c9b7-pvz64
+pod/deployment1-66b6f8c9b7-ww55m evicted
+pod/deployment1-66b6f8c9b7-pvz64 evicted
+pod/deployment1-66b6f8c9b7-bgbkp evicted
+pod/deployment1-66b6f8c9b7-75rmm evicted
+node/k8s-node2 evicted
+# 可以看到没有pod运行在k8s-node2上了
+[root@k8s-master ~]# kubectl get pod -o wide
+NAME                                      READY   STATUS    RESTARTS   AGE    IP            NODE        NOMINATED NODE   READINESS GATES
+deployment1-66b6f8c9b7-6flcg              1/1     Running   0          104s   10.244.1.16   k8s-node1   <none>           <none>
+deployment1-66b6f8c9b7-8gdgg              1/1     Running   0          26m    10.244.1.8    k8s-node1   <none>           <none>
+deployment1-66b6f8c9b7-ct6km              1/1     Running   0          104s   10.244.1.17   k8s-node1   <none>           <none>
+deployment1-66b6f8c9b7-pcjlk              1/1     Running   0          104s   10.244.1.14   k8s-node1   <none>           <none>
+deployment1-66b6f8c9b7-tqxt6              1/1     Running   0          104s   10.244.1.15   k8s-node1   <none>           <none>
+deployment2-66b6f8c9b7-bvspv              1/1     Running   0          23m    10.244.1.11   k8s-node1   <none>           <none>
+deployment2-66b6f8c9b7-jnfwv              1/1     Running   0          23m    10.244.1.12   k8s-node1   <none>           <none>
+deployment2-66b6f8c9b7-lsnqk              1/1     Running   0          23m    10.244.1.13   k8s-node1   <none>           <none>
+deployment2-66b6f8c9b7-p7lpr              1/1     Running   0          23m    10.244.1.10   k8s-node1   <none>           <none>
+deployment2-66b6f8c9b7-wdrx8              1/1     Running   0          23m    10.244.1.9    k8s-node1   <none>           <none>
+
+# 取消标记
+[root@k8s-master ~]# kubectl uncordon k8s-node2
+node/k8s-node2 uncordoned
+```
+
+## 高级调度
+
+### 使用污点和容忍度阻止节点调度到特定节点
+
+> 节点选择器和节点亲缘性规则，是通过明确的在pod中添加的信息，来决定一个pod可以或者不可以被调度到那些节点上。而污点则是在不修改已有的pod信息的前提下，通过在节点上添加污点信息，来拒绝pod在某系节点上的部署
+>
+> 污点效果
+>
+> - NoSchedule 表示如果pod没有容忍这些污点，pod则不能被调度到包含这些污点的污点上。
+> - PreferNoSchedule 是NoSchedule的一个宽松的版本，表示尽量阻止pod被调度到这个节点上，但是如果没有其他节点可以调度，pod依然会被调度到这个节点上。
+> - NoExecute 不同于NoSchedule以及PreferNoSchedule，后两者只在调度期间起作用，而NoExecute也会影响正在节点上运行着的pod。如果在一个节点上添加了NoExecute污点，那些在该节点上运行着的pod，如果没有容忍这个NoExecute污点，将会从这个节点去除。
+
+#### NoSchedule污点效果
+
+```shell
+# 显示节点的污点信息
+[root@k8s-master ~]# kubectl describe node k8s-master
+Name:               k8s-master
+Roles:              control-plane,master
+Labels:             beta.kubernetes.io/arch=amd64
+                    beta.kubernetes.io/os=linux
+                    kubernetes.io/arch=amd64
+                    kubernetes.io/hostname=k8s-master
+                    kubernetes.io/os=linux
+                    node-role.kubernetes.io/control-plane=
+                    node-role.kubernetes.io/master=
+Annotations:        flannel.alpha.coreos.com/backend-data: {"VNI":1,"VtepMAC":"d6:3d:8f:99:66:e4"}
+                    flannel.alpha.coreos.com/backend-type: vxlan
+                    flannel.alpha.coreos.com/kube-subnet-manager: true
+                    flannel.alpha.coreos.com/public-ip: 192.168.1.170
+                    kubeadm.alpha.kubernetes.io/cri-socket: /var/run/dockershim.sock
+                    node.alpha.kubernetes.io/ttl: 0
+                    volumes.kubernetes.io/controller-managed-attach-detach: true
+CreationTimestamp:  Mon, 05 Dec 2022 14:24:24 +0800
+Taints:             node-role.kubernetes.io/master:NoSchedule
+...
+
+# 给节点k8s-node1添加污点node-type=production:NoSchedule
+[root@k8s-master ~]# kubectl taint node k8s-node1 node-type=production:NoSchedule
+node/k8s-node1 tainted
+# 查看k8s-node1污点信息
+[root@k8s-master ~]# kubectl describe node k8s-node1
+Name:               k8s-node1
+Roles:              <none>
+Labels:             beta.kubernetes.io/arch=amd64
+                    beta.kubernetes.io/os=linux
+                    kubernetes.io/arch=amd64
+                    kubernetes.io/hostname=k8s-node1
+                    kubernetes.io/os=linux
+                    node-label=node1
+Annotations:        flannel.alpha.coreos.com/backend-data: {"VNI":1,"VtepMAC":"0e:04:60:3f:07:e6"}
+                    flannel.alpha.coreos.com/backend-type: vxlan
+                    flannel.alpha.coreos.com/kube-subnet-manager: true
+                    flannel.alpha.coreos.com/public-ip: 192.168.1.171
+                    kubeadm.alpha.kubernetes.io/cri-socket: /var/run/dockershim.sock
+                    node.alpha.kubernetes.io/ttl: 0
+                    volumes.kubernetes.io/controller-managed-attach-detach: true
+CreationTimestamp:  Mon, 05 Dec 2022 14:31:03 +0800
+Taints:             node-type=production:NoSchedule
+...
+# 删除节点k8s-node1污点node-type=production:NoSchedule
+[root@k8s-master ~]# kubectl taint node k8s-node1 node-type=production:NoSchedule-
+node/k8s-node1 untainted
+```
+
+#### NoExecute污点效果
+
+```shell
+[root@k8s-master ~]# cat 1.yaml 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: deployment1
+spec:
+ replicas: 5
+ selector:
+  matchLabels:
+   app: kubia
+ template:
+  metadata:
+   labels:
+    app: kubia
+  spec:
+   containers:
+    - name: kubia
+      image: busybox
+      command: ["sh", "-c", "sleep 7200;"]
+[root@k8s-master ~]# kubectl apply -f 1.yaml 
+deployment.apps/deployment1 created
+[root@k8s-master ~]# kubectl get pod -o wide
+NAME                                      READY   STATUS    RESTARTS   AGE     IP            NODE        NOMINATED NODE   READINESS GATES
+deployment1-66b6f8c9b7-8d9t8              1/1     Running   0          3m21s   10.244.2.77   k8s-node2   <none>           <none>
+deployment1-66b6f8c9b7-f987c              1/1     Running   0          3m21s   10.244.2.76   k8s-node2   <none>           <none>
+deployment1-66b6f8c9b7-n94t9              1/1     Running   0          3m21s   10.244.1.27   k8s-node1   <none>           <none>
+deployment1-66b6f8c9b7-vk2bp              1/1     Running   0          3m21s   10.244.2.75   k8s-node2   <none>           <none>
+deployment1-66b6f8c9b7-z9kfd              1/1     Running   0          3m21s   10.244.2.74   k8s-node2   <none>           <none>
+
+# 标记k8s-node2 NoExecute污点
+[root@k8s-master ~]# kubectl taint node k8s-node2 node-type=production:NoExecute
+node/k8s-node2 tainted
+# 最后所有pod被重新调度到k8s-node1
+[root@k8s-master ~]# kubectl get pod -o wide
+NAME                                      READY   STATUS    RESTARTS   AGE   IP            NODE        NOMINATED NODE   READINESS GATES
+deployment1-66b6f8c9b7-49n8q              1/1     Running   0          67s   10.244.1.28   k8s-node1   <none>           <none>
+deployment1-66b6f8c9b7-9k9sz              1/1     Running   0          67s   10.244.1.30   k8s-node1   <none>           <none>
+deployment1-66b6f8c9b7-h49dc              1/1     Running   0          67s   10.244.1.29   k8s-node1   <none>           <none>
+deployment1-66b6f8c9b7-n94t9              1/1     Running   0          11m   10.244.1.27   k8s-node1   <none>           <none>
+deployment1-66b6f8c9b7-r45qn              1/1     Running   0          67s   10.244.1.31   k8s-node1   <none>           <none>
+
+# 删除污点
+[root@k8s-master ~]# kubectl taint node k8s-node2 node-type=production:NoExecute-
+node/k8s-node2 untainted
+```
+
+### 定向调度
+
+> 通过nodename或者nodeselector指定pod运行的节点
+
+#### 使用nodename指定节点
+
+```shell
+[root@k8s-master ~]# cat 1.yaml 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: deployment
+spec:
+ replicas: 5
+ selector:
+  matchLabels:
+   app: kubia
+ template:
+  metadata:
+   labels:
+    app: kubia
+  spec:
+   containers:
+    - name: nginx
+      image: nginx
+   nodeName: k8s-node1 # 使用节点名称指定pod运行节点
+  
+# 所有节点被调度到k8s-node1上
+[root@k8s-master ~]# kubectl get pod -o wide
+NAME                                      READY   STATUS    RESTARTS   AGE   IP            NODE        NOMINATED NODE   READINESS GATES
+deployment-665d7b748d-5t5cf               1/1     Running   0          59s   10.244.1.46   k8s-node1   <none>           <none>
+deployment-665d7b748d-75lww               1/1     Running   0          59s   10.244.1.47   k8s-node1   <none>           <none>
+deployment-665d7b748d-k84vr               1/1     Running   0          59s   10.244.1.48   k8s-node1   <none>           <none>
+deployment-665d7b748d-x59dm               1/1     Running   0          59s   10.244.1.44   k8s-node1   <none>           <none>
+deployment-665d7b748d-xn2n6               1/1     Running   0          59s   10.244.1.45   k8s-node1   <none>           <none>
+```
+
+#### 使用nodeselector指定节点标签
+
+```shell
+# 节点打标签
+[root@k8s-master ~]# kubectl label node k8s-node1 node-label=node1
+node/k8s-node1 labeled
+
+[root@k8s-master ~]# cat 1.yaml 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: deployment
+spec:
+ replicas: 5
+ selector:
+  matchLabels:
+   app: kubia
+ template:
+  metadata:
+   labels:
+    app: kubia
+  spec:
+   containers:
+    - name: nginx
+      image: nginx
+   nodeSelector:
+    node-label: node1 # 指定节点标签
+
+# 所有pod被schedule到k8s-node1
+[root@k8s-master ~]# kubectl get pod -o wide
+NAME                                      READY   STATUS    RESTARTS   AGE   IP            NODE        NOMINATED NODE   READINESS GATES
+deployment-9d596955c-7gd4s                1/1     Running   0          51s   10.244.1.51   k8s-node1   <none>           <none>
+deployment-9d596955c-bdnsq                1/1     Running   0          51s   10.244.1.50   k8s-node1   <none>           <none>
+deployment-9d596955c-qbchg                1/1     Running   0          51s   10.244.1.53   k8s-node1   <none>           <none>
+deployment-9d596955c-wxj79                1/1     Running   0          51s   10.244.1.52   k8s-node1   <none>           <none>
+deployment-9d596955c-xdh7p                1/1     Running   0          51s   10.244.1.49   k8s-node1   <none>           <none>
+
+# 删除节点标签
+[root@k8s-master ~]# kubectl label node k8s-node1 node-label-
+node/k8s-node1 labeled
+```
+
+
+
+### 使用节点亲缘性将pod调度到特定节点上
+
+#### 节点亲缘性(node affinity)
+
+> 硬限制 requiredDuringSchedulingIgnoredDuringExecution，不匹配不调度，pod一直处于pending状态。
+>
+> 软限制 preferredDuringSchedulingIgnoredDuringExecution，不匹配也调度。
+
+情景1（无法匹配节点，pod无法调度，一直处于pending状态）
+
+```shell
+# 因为没有节点labels包含nodeenv in xxx,yyy，所以deployment无法调度一直pending状态
+[root@k8s-master ~]# cat 1.yaml 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: deployment
+spec:
+ replicas: 5
+ selector:
+  matchLabels:
+   app: kubia
+ template:
+  metadata:
+   labels:
+    app: kubia
+  spec:
+   containers:
+    - name: nginx
+      image: nginx
+   affinity:
+    nodeAffinity:
+     # 硬限制
+     requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+       # 匹配节点labels in xxx,yyy
+       - matchExpressions:
+          - key: nodeenv
+            operator: In
+            values:
+             - xxx
+             - yyy
+# 不匹配不调度，一直处于pending状态
+[root@k8s-master ~]# kubectl get pod
+NAME                                      READY   STATUS    RESTARTS   AGE
+deployment-6f8cc7cffc-5jbfk               0/1     Pending   0          3m46s
+deployment-6f8cc7cffc-8znwf               0/1     Pending   0          3m46s
+deployment-6f8cc7cffc-mpv6b               0/1     Pending   0          3m46s
+deployment-6f8cc7cffc-njv72               0/1     Pending   0          3m46s
+deployment-6f8cc7cffc-qhctx               0/1     Pending   0          3m46s
+```
+
+情景2（给k8s-node2节点打上标签，成功匹配，所有pod被调度到此节点）
+
+```shell
+# 给节点k8s-node2打上标签成功使用nodeAffinity调度pod
+[root@k8s-master ~]# kubectl label node k8s-node2 nodeenv=prod
+node/k8s-node2 labeled
+
+[root@k8s-master ~]# cat 1.yaml 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: deployment
+spec:
+ replicas: 5
+ selector:
+  matchLabels:
+   app: kubia
+ template:
+  metadata:
+   labels:
+    app: kubia
+  spec:
+   containers:
+    - name: nginx
+      image: nginx
+   affinity:
+    nodeAffinity:
+     requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+       - matchExpressions:
+          - key: nodeenv
+            operator: In
+            values:
+             - prod
+             - yyy
+# 所有pod被成功调度到k8s-node2
+[root@k8s-master ~]# kubectl get pod -o wide
+NAME                                      READY   STATUS    RESTARTS   AGE     IP            NODE        NOMINATED NODE   READINESS GATES
+deployment-86f7955fdb-fkg7n               1/1     Running   0          2m19s   10.244.2.93   k8s-node2   <none>           <none>
+deployment-86f7955fdb-ht9jb               1/1     Running   0          2m19s   10.244.2.94   k8s-node2   <none>           <none>
+deployment-86f7955fdb-k9jb9               1/1     Running   0          2m19s   10.244.2.95   k8s-node2   <none>           <none>
+deployment-86f7955fdb-snpqn               1/1     Running   0          2m19s   10.244.2.91   k8s-node2   <none>           <none>
+deployment-86f7955fdb-x8k8f               1/1     Running   0          2m19s   10.244.2.92   k8s-node2   <none>           <none>
+```
+
+情景3（软限制，即使不匹配节点，最终所有pod被随机调度到各个节点）
+
+```shell
+[root@k8s-master ~]# cat 1.yaml 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: deployment
+spec:
+ replicas: 5
+ selector:
+  matchLabels:
+   app: kubia
+ template:
+  metadata:
+   labels:
+    app: kubia
+  spec:
+   containers:
+    - name: nginx
+      image: nginx
+   affinity:
+    nodeAffinity:
+     preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 1
+        preference: 
+         matchExpressions:
+          - key: nodeenv
+            operator: In
+            values:
+             - xxx
+             - yyy
+[root@k8s-master ~]# kubectl apply -f 1.yaml 
+deployment.apps/deployment created
+# 即使不匹配，pod也会被调度到各个节点
+[root@k8s-master ~]# kubectl get pod -o wide
+NAME                                      READY   STATUS    RESTARTS   AGE     IP            NODE        NOMINATED NODE   READINESS GATES
+deployment-68d7784854-2wflh               1/1     Running   0          2m55s   10.244.2.96   k8s-node2   <none>           <none>
+deployment-68d7784854-44gfz               1/1     Running   0          2m55s   10.244.1.54   k8s-node1   <none>           <none>
+deployment-68d7784854-62cz7               1/1     Running   0          2m55s   10.244.2.97   k8s-node2   <none>           <none>
+deployment-68d7784854-qgbbf               1/1     Running   0          2m55s   10.244.2.98   k8s-node2   <none>           <none>
+deployment-68d7784854-xlb5l               1/1     Running   0          2m55s   10.244.1.55   k8s-node1   <none>           <none>
+```
+
+情景4（软限制，有匹配的节点标签，所有pod被调度到此节点）
+
+```shell
+[root@k8s-master ~]# kubectl label node k8s-node2 nodeenv=prod
+node/k8s-node2 labeled
+[root@k8s-master ~]# kubectl apply -f 1.yaml 
+deployment.apps/deployment created
+[root@k8s-master ~]# cat 1.yaml 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: deployment
+spec:
+ replicas: 5
+ selector:
+  matchLabels:
+   app: kubia
+ template:
+  metadata:
+   labels:
+    app: kubia
+  spec:
+   containers:
+    - name: nginx
+      image: nginx
+   affinity:
+    nodeAffinity:
+     preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 1
+        preference: 
+         matchExpressions:
+          - key: nodeenv
+            operator: In
+            values:
+             - prod
+             - yyy
+# 节点有标签对应，所有pod被调度到相应的节点
+[root@k8s-master ~]# kubectl get pod -o wide
+NAME                                      READY   STATUS    RESTARTS   AGE    IP             NODE        NOMINATED NODE   READINESS GATES
+deployment-5ff5dc5845-82hgx               1/1     Running   0          118s   10.244.2.103   k8s-node2   <none>           <none>
+deployment-5ff5dc5845-g5vp2               1/1     Running   0          118s   10.244.2.99    k8s-node2   <none>           <none>
+deployment-5ff5dc5845-p9zp4               1/1     Running   0          118s   10.244.2.100   k8s-node2   <none>           <none>
+deployment-5ff5dc5845-vn2vr               1/1     Running   0          118s   10.244.2.101   k8s-node2   <none>           <none>
+deployment-5ff5dc5845-wjg9b               1/1     Running   0          118s   10.244.2.102   k8s-node2   <none>           <none>
 ```
 
 
