@@ -1579,23 +1579,22 @@ spec:
      memory: "1M"
 ```
 
-### 初始化容器使用
+### init(初始化)容器使用
 
 > 使用init容器模拟等待mysql和redis启动后才启动nginx的过程
 
-```yaml
+```shell
+[root@k8s-master ~]# cat 1.yaml 
 apiVersion: v1
 kind: Pod
 metadata:
  name: base-pod
- namespace: dev
  labels:
   test1: test1v
 spec:
  containers:
  - name: nginx
    image: nginx
-   imagePullPolicy: Always
  initContainers:
  - name: test-mysql
    image: busybox
@@ -1603,41 +1602,50 @@ spec:
  - name: test-redis
    image: busybox
    command: ["sh", "-c", "i=1;until [ $i -ge 15 ]; do echo 'simulating waiting for mysql...'; sleep 1; i=$((i+1)); done;"]
-```
-
-```shell
-# 使用命令观察init容器和main容器过程，-w参数
-kubectl get pod -n dev -o wide -w
+# 使用命令观察init容器和main容器过程
+[root@k8s-master ~]# kubectl get pod
+NAME                                      READY   STATUS     RESTARTS   AGE
+base-pod                                  0/1     Init:0/2   0          8s
 ```
 
 ### 钩子函数
 
-> 在main容器启动后postStart和关闭前preStop执行指定的动作
-
-```yaml
-apiVersion: v1
-kind: Pod
-metadata:
- name: base-pod
- namespace: dev
- labels:
-  test1: test1v
-spec:
- containers:
- - name: nginx
-   image: nginx
-   imagePullPolicy: Always
-   lifecycle:
-    postStart:
-     exec:
-      command: ["sh", "-c", "echo postStart... > /usr/share/nginx/html/index.html"]
-```
+> 在main容器启动后postStart和关闭前preStop执行指定的动作，每个容器启动后和停止前执行的。
 
 ```shell
-# 获取pod ip地址
-kubectl get pod -n dev -o wide
-# 测试是否执行postStart
-curl podIp:80
+[root@k8s-master ~]# cat 1.yaml 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: deployment1
+spec:
+ replicas: 2
+ selector:
+  matchLabels:
+   app: kubia
+ template:
+  metadata:
+   labels:
+    app: kubia
+  spec:
+   containers:
+    - name: nginx
+      image: nginx
+      lifecycle:
+       postStart:
+        exec:
+         command: ["sh", "-c", "echo hello > /1.txt"]
+[root@k8s-master ~]# kubectl apply -f 1.yaml 
+deployment.apps/deployment1 created
+[root@k8s-master ~]# kubectl get pod
+NAME                                      READY   STATUS    RESTARTS   AGE
+deployment1-678b9fdbf6-4jh5v              1/1     Running   0          2m3s
+deployment1-678b9fdbf6-72mgg              1/1     Running   0          2m3s
+# 每个pod都执行一次钩子函数
+[root@k8s-master ~]# kubectl exec deployment1-678b9fdbf6-4jh5v -- cat /1.txt
+hello
+[root@k8s-master ~]# kubectl exec deployment1-678b9fdbf6-72mgg -- cat /1.txt
+hello
 ```
 
 ### 容器探测
@@ -7463,6 +7471,201 @@ deployment-5ff5dc5845-g5vp2               1/1     Running   0          118s   10
 deployment-5ff5dc5845-p9zp4               1/1     Running   0          118s   10.244.2.100   k8s-node2   <none>           <none>
 deployment-5ff5dc5845-vn2vr               1/1     Running   0          118s   10.244.2.101   k8s-node2   <none>           <none>
 deployment-5ff5dc5845-wjg9b               1/1     Running   0          118s   10.244.2.102   k8s-node2   <none>           <none>
+```
+
+#### pod亲缘性(pod affinity)
+
+**硬限制不能匹配pod一直pending状态情景**
+
+```shell
+# 创建参考点pod，指定参考点pod被调度到k8s-node2上
+[root@k8s-master ~]# cat 1.yaml 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: deployment1
+spec:
+ replicas: 2
+ selector:
+  matchLabels:
+   podenv: dev
+ template:
+  metadata:
+   labels:
+    podenv: dev
+  spec:
+   containers:
+    - name: nginx
+      image: nginx
+   nodeName: k8s-node2
+[root@k8s-master ~]# cat 2.yaml 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: deployment2
+spec:
+ replicas: 5
+ selector:
+  matchLabels:
+   app: kubia
+ template:
+  metadata:
+   labels:
+    app: kubia
+  spec:
+   containers:
+    - name: busybox
+      image: busybox
+   affinity:
+    podAffinity:
+     requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+         matchExpressions:
+          - key: podenv
+            operator: In
+            values:
+             - prod
+             - yyy
+        topologyKey: kubernetes.io/hostname
+
+# 创建不存在的pod label导致无法匹配pod一直处于pending状态
+[root@k8s-master ~]# kubectl get pod
+NAME                                      READY   STATUS    RESTARTS   AGE
+deployment1-5df7f77687-dfvvh              1/1     Running   0          7h48m
+deployment1-5df7f77687-k5hrq              1/1     Running   0          7h48m
+deployment2-54cb7fd867-7vxm2              0/1     Pending   0          7h46m
+deployment2-54cb7fd867-8jnsl              0/1     Pending   0          7h46m
+deployment2-54cb7fd867-9h5bv              0/1     Pending   0          7h46m
+deployment2-54cb7fd867-n6zl4              0/1     Pending   0          7h46m
+deployment2-54cb7fd867-qfpxm              0/1     Pending   0          7h46m
+```
+
+**硬限制能够匹配pod并且成功调度**
+
+```shell
+# 创建参考pod
+[root@k8s-master ~]# cat 1.yaml 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: deployment1
+spec:
+ replicas: 2
+ selector:
+  matchLabels:
+   podenv: dev
+ template:
+  metadata:
+   labels:
+    podenv: dev
+  spec:
+   containers:
+    - name: nginx
+      image: nginx
+   nodeName: k8s-node2
+[root@k8s-master ~]# cat 2.yaml 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: deployment2
+spec:
+ replicas: 5
+ selector:
+  matchLabels:
+   app: kubia
+ template:
+  metadata:
+   labels:
+    app: kubia
+  spec:
+   containers:
+    - name: busybox
+      image: busybox
+      command: ["sh", "-c", "sleep 7200;"]
+   affinity:
+    podAffinity:
+     requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+         matchExpressions:
+          - key: podenv
+            operator: In
+            values:
+             - dev
+             - yyy
+        topologyKey: kubernetes.io/hostname
+[root@k8s-master ~]# kubectl get pod -o wide
+NAME                                      READY   STATUS    RESTARTS   AGE     IP             NODE        NOMINATED NODE   READINESS GATES
+deployment1-5df7f77687-dfvvh              1/1     Running   0          7h59m   10.244.2.121   k8s-node2   <none>           <none>
+deployment1-5df7f77687-k5hrq              1/1     Running   0          7h59m   10.244.2.120   k8s-node2   <none>           <none>
+deployment2-69d58d6b5b-9wtfl              1/1     Running   0          6m48s   10.244.2.129   k8s-node2   <none>           <none>
+deployment2-69d58d6b5b-ld6dp              1/1     Running   0          6m48s   10.244.2.132   k8s-node2   <none>           <none>
+deployment2-69d58d6b5b-r2tdt              1/1     Running   0          6m48s   10.244.2.131   k8s-node2   <none>           <none>
+deployment2-69d58d6b5b-txwv8              1/1     Running   0          6m48s   10.244.2.130   k8s-node2   <none>           <none>
+deployment2-69d58d6b5b-zbswt              1/1     Running   0          6m48s   10.244.2.128   k8s-node2   <none>           <none>
+```
+
+**pod非亲缘性(pod anti affinity)**
+
+```shell
+[root@k8s-master ~]# cat 1.yaml 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: deployment1
+spec:
+ replicas: 2
+ selector:
+  matchLabels:
+   podenv: dev
+ template:
+  metadata:
+   labels:
+    podenv: dev
+  spec:
+   containers:
+    - name: nginx
+      image: nginx
+   nodeName: k8s-node2
+[root@k8s-master ~]# cat 2.yaml 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: deployment2
+spec:
+ replicas: 5
+ selector:
+  matchLabels:
+   app: kubia
+ template:
+  metadata:
+   labels:
+    app: kubia
+  spec:
+   containers:
+    - name: busybox
+      image: busybox
+      command: ["sh", "-c", "sleep 7200;"]
+   affinity:
+    podAntiAffinity:
+     requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+         matchExpressions:
+          - key: podenv
+            operator: In
+            values:
+             - dev
+             - yyy
+        topologyKey: kubernetes.io/hostname
+# pod被调度到k8s-node1上
+[root@k8s-master ~]# kubectl get pod -o wide
+NAME                                      READY   STATUS    RESTARTS   AGE     IP             NODE        NOMINATED NODE   READINESS GATES
+deployment1-5df7f77687-5xz8s              1/1     Running   0          2m9s    10.244.2.134   k8s-node2   <none>           <none>
+deployment1-5df7f77687-66zd9              1/1     Running   0          2m9s    10.244.2.133   k8s-node2   <none>           <none>
+deployment2-6f7bccdffb-fpfdh              1/1     Running   0          91s     10.244.1.62    k8s-node1   <none>           <none>
+deployment2-6f7bccdffb-mlwgz              1/1     Running   0          91s     10.244.1.60    k8s-node1   <none>           <none>
+deployment2-6f7bccdffb-rk5kk              1/1     Running   0          91s     10.244.1.61    k8s-node1   <none>           <none>
+deployment2-6f7bccdffb-w6v4n              1/1     Running   0          91s     10.244.1.59    k8s-node1   <none>           <none>
+deployment2-6f7bccdffb-whwr5              1/1     Running   0          91s     10.244.1.58    k8s-node1   <none>           <none>
 ```
 
 
