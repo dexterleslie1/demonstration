@@ -1557,26 +1557,34 @@ curl podip:80
 - limits: 用于限制容器运行时占用资源的最大值，容器占用资源超过limits限制时，容器被终止并且重启
 - requests: 用于设置容器启动时的最小资源，如果资源不足，容器将不能启动
 
-```yaml
+```shell
+# 演示内存限制
+# https://blog.csdn.net/weixin_48819467/article/details/124801452
+[root@k8s-master ~]# cat 1.yaml 
 apiVersion: v1
 kind: Pod
 metadata:
- name: base-pod
- namespace: dev
- labels:
-  test1: test1v
+ name: pod1
 spec:
  containers:
- - name: nginx
-   image: nginx
-   imagePullPolicy: Always
-   resources:
-    limits:
-     cpu: "1"
-     memory: "1G" # 单位G或者M
-    requests:
-     cpu: "1"
-     memory: "1M"
+  - name: demo
+    image: polinux/stress
+    command: ["stress"]
+    args:
+     - --vm
+     - "1"
+     - --vm-bytes
+     - 200M
+    resources:
+     requests:
+      memory: 50Mi
+     limits:
+      memory: 100Mi
+# 内存溢出OOMKilled
+[root@k8s-master ~]# kubectl get pod -w
+NAME                                      READY   STATUS              RESTARTS   AGE
+pod1                                      0/1     ContainerCreating   0          17s
+pod1                                      0/1     OOMKilled           0          21s
 ```
 
 ### init(初始化)容器使用
@@ -1646,31 +1654,6 @@ deployment1-678b9fdbf6-72mgg              1/1     Running   0          2m3s
 hello
 [root@k8s-master ~]# kubectl exec deployment1-678b9fdbf6-72mgg -- cat /1.txt
 hello
-```
-
-### 容器探测
-
-- liveness probes: 决定是否重启容器
-- readiness probes: 决定是否将请求转发给容器
-
-**liveness探测**
-
-```yaml
-apiVersion: v1
-kind: Pod
-metadata:
- name: base-pod
- namespace: dev
- labels:
-  test1: test1v
-spec:
- containers:
- - name: nginx
-   image: nginx
-   imagePullPolicy: Always
-   livenessProbe:
-    exec:
-     command: ["/bin/cat", "/tmp/hello.txt"] # 因为文件/tmp/hello.txt不存在，命令执行失败，导致容器不断重新启动
 ```
 
 ### 重启策略
