@@ -21,7 +21,7 @@ public class Receiver {
     }
 
     public void await() throws InterruptedException {
-        this.wait(5);
+        this.await(5);
     }
 
     public void await(int seconds) throws InterruptedException {

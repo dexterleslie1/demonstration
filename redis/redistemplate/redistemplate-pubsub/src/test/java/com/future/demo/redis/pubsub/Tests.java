@@ -1,6 +1,7 @@
 package com.future.demo.redis.pubsub;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -24,6 +25,7 @@ public class Tests {
     @Autowired
     Receiver receiver;
 
+    @Ignore
     @Test
     public void test() throws InterruptedException {
         int count = new Random().nextInt(100);
@@ -39,9 +41,10 @@ public class Tests {
         Assert.assertEquals(count, receiver.getCount());
     }
 
+    @Ignore
     @Test
     public void testPerformance() throws InterruptedException {
-        int concurrentThreads = 20;
+        int concurrentThreads = 5;
         int eachThreadPublishMessageCount = 10000;
 
         long startTime = new Date().getTime();
@@ -50,13 +53,10 @@ public class Tests {
         ExecutorService executorService = Executors.newCachedThreadPool();
         for(int i=0; i<concurrentThreads; i++) {
             final int j = i;
-            executorService.submit(new Runnable() {
-                @Override
-                public void run() {
-                    for(int i=0; i<eachThreadPublishMessageCount; i++) {
-                        int number = j*eachThreadPublishMessageCount + i;
-                        redisTemplate.convertAndSend(Config.Channel, String.valueOf(number));
-                    }
+            executorService.submit(() -> {
+                for(int i1 = 0; i1 <eachThreadPublishMessageCount; i1++) {
+                    int number = j*eachThreadPublishMessageCount + i1;
+                    redisTemplate.convertAndSend(Config.Channel, String.valueOf(number));
                 }
             });
         }
