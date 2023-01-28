@@ -25,19 +25,16 @@ public class JedisClusterPubsubTests {
         final String channel = "jedisClusterSubscribeChannel";
         final JedisCluster jedisCluster = JedisUtil.getInstance().getJedis();
         for(int i=0; i<count; i++) {
-            executorService.submit(new Runnable() {
-                @Override
-                public void run() {
-                    JedisPubSub subscriber = new JedisPubSub() {
-                        @Override
-                        public void onMessage(String channel, String message) {
-                            Assert.assertEquals(message1, message);
-                            countDownLatch.countDown();
-                        }
-                    };
-                    subscribers.add(subscriber);
-                    jedisCluster.subscribe(subscriber, channel);
-                }
+            executorService.submit(() -> {
+                JedisPubSub subscriber = new JedisPubSub() {
+                    @Override
+                    public void onMessage(String channel1, String message) {
+                        Assert.assertEquals(message1, message);
+                        countDownLatch.countDown();
+                    }
+                };
+                subscribers.add(subscriber);
+                jedisCluster.subscribe(subscriber, channel);
             });
         }
 
