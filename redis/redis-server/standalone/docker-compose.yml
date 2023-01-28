@@ -3,7 +3,7 @@ version: "3.0"
 # 创建网络
 networks:
   net:
-    name: demo-redis-server
+    name: demo-redis-server-net
 
 services:
   # 启动redis

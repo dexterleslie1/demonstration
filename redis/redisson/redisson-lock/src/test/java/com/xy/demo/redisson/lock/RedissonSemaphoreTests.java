@@ -19,9 +19,9 @@ public class RedissonSemaphoreTests {
 
     @Before
     public void setup(){
-        String host = "localhost";
-        int port = 6379;
-        String password = "123456";
+        String host = MyConfig.Host;
+        int port = MyConfig.Port;
+        String password = MyConfig.Password;
 
         Config config = new Config();
         config.useSingleServer().setAddress("redis://" + host + ":" + port).setPassword(password);

@@ -1,15 +1,20 @@
 package com.xy.demo.redisson.lock;
 
-import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.redisson.Redisson;
 import org.redisson.api.RLock;
+import org.redisson.api.RReadWriteLock;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
+import org.redisson.misc.Hash;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.*;
@@ -19,7 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  */
 public class RedissonLockTests {
-    private final static Logger logger = Logger.getLogger(RedissonLockTests.class);
+    private final static Logger logger = LoggerFactory.getLogger(RedissonLockTests.class);
     private final static java.util.Random Random = new Random();
 
     private RedissonClient redisson = null;
@@ -61,7 +66,7 @@ public class RedissonLockTests {
                     } catch (Exception ex) {
                         throw new RuntimeException(ex);
                     } finally {
-                        if (acquired && lock!=null) {
+                        if (lock != null && lock.isHeldByCurrentThread()) {
                             lock.unlock();
                         }
                     }
@@ -93,22 +98,22 @@ public class RedissonLockTests {
             final int seq = i;
             service.submit(new Runnable() {
                 public void run() {
-                    // 非第一条线程延迟500毫秒，调试isLocked函数
-                    if(seq!=0) {
-                        try {
-                            Thread.sleep(500);
-                        } catch (InterruptedException e) {
-                            //
-                        }
-                    }
+//                    // 非第一条线程延迟5000毫秒，调试isLocked函数
+//                    if(seq!=0) {
+//                        try {
+//                            Thread.sleep(5000);
+//                        } catch (InterruptedException e) {
+//                            //
+//                        }
+//                    }
 
                     RLock lock = redisson.getLock(key);
-                    boolean isLocked = lock.isLocked();
-                    if(isLocked) {
-                        atomicIntegerLocked.incrementAndGet();
-                    } else {
-                        atomicIntegerNotLocked.incrementAndGet();
-                    }
+//                    boolean isLocked = lock.isLocked();
+//                    if(isLocked) {
+//                        atomicIntegerLocked.incrementAndGet();
+//                    } else {
+//                        atomicIntegerNotLocked.incrementAndGet();
+//                    }
                     boolean isAquireLock = false;
                     try {
                         isAquireLock = lock.tryLock(10, 30000, TimeUnit.MILLISECONDS);
@@ -122,9 +127,15 @@ public class RedissonLockTests {
                     } catch (Exception ex) {
                         throw new RuntimeException(ex);
                     } finally {
-                        if (lock!=null && isAquireLock) {
+                        if (lock!=null && lock.isHeldByCurrentThread()) {
                             lock.unlock();
                         }
+                    }
+
+                    if(!isAquireLock) {
+                        atomicIntegerLocked.incrementAndGet();
+                    } else {
+                        atomicIntegerNotLocked.incrementAndGet();
                     }
                 }
             });
@@ -145,32 +156,28 @@ public class RedissonLockTests {
     @Test
     public void testTryLockLeaseTime() throws InterruptedException {
         final AtomicInteger atomicInteger = new AtomicInteger();
-        final String key = "keyLease1";
+        final String key = UUID.randomUUID().toString();
         ExecutorService executorService = Executors.newCachedThreadPool();
         executorService.submit(new Runnable() {
             public void run() {
                 try {
                     RLock rLock = redisson.getLock(key);
                     rLock.tryLock(10, 5000, TimeUnit.MILLISECONDS);
-                    Thread.sleep(1000);
-                } catch(Exception ex) {
-
-                } finally {
+                } catch(Exception ignored) {
 
                 }
             }
         });
 
-        Thread.sleep(1000);
-
         executorService.submit(new Runnable() {
             public void run() {
                 try {
                     RLock rLock = redisson.getLock(key);
-                    while(!rLock.tryLock(10, 20, TimeUnit.MILLISECONDS)) {
+                    while(!rLock.tryLock(100, 20, TimeUnit.MILLISECONDS)) {
                         atomicInteger.incrementAndGet();
                     }
                 } catch(Exception ex) {
+                    ex.printStackTrace();
                 } finally {
                     RLock rLock = redisson.getLock(key);
                     rLock.unlock();
@@ -381,11 +388,109 @@ public class RedissonLockTests {
         }
     }
 
+    /**
+     * 测试读写锁
+     * 演示使用读写锁控制不可能出现同时出现读写情况
+     * https://blog.csdn.net/qq_43750656/article/details/108634781
+     */
+    @Test
+    public void testReadWriteLock() throws InterruptedException {
+        final String lockname = "test-readwrite-lock";
+
+        final Map<String, Boolean> readingMapper  = new ConcurrentHashMap<>();
+        final Map<String, Boolean> writingMapper = new ConcurrentHashMap<>();
+        ExecutorService executorService = Executors.newCachedThreadPool();
+        for(int i=0; i<50; i++) {
+            executorService.submit(new Runnable() {
+                public void run() {
+                    RReadWriteLock readWriteLock = redisson.getReadWriteLock(lockname);
+                    RLock rLock = null;
+                    String uuid = UUID.randomUUID().toString();
+                    try {
+                        rLock = readWriteLock.readLock();
+                        rLock.lock();
+
+                        int randomInt = Random.nextInt(100);
+                        if (randomInt <= 0) {
+                            randomInt = 1;
+                        }
+
+                        readingMapper.put(uuid, true);
+
+                        displayInfo(readingMapper, writingMapper);
+
+                        try {
+                            Thread.sleep(randomInt);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+
+                        displayInfo(readingMapper, writingMapper);
+                    } catch (Exception ex) {
+                        logger.error(ex.getMessage(), ex);
+                    } finally {
+                        readingMapper.remove(uuid);
+                        if (rLock != null && rLock.isHeldByCurrentThread()) {
+                            rLock.unlock();
+                        }
+                    }
+                }
+            });
+        }
+
+        for(int i=0; i<50; i++) {
+            executorService.submit(new Runnable() {
+                public void run() {
+                    RReadWriteLock readWriteLock = redisson.getReadWriteLock(lockname);
+                    RLock rLock = null;
+                    String uuid = UUID.randomUUID().toString();
+                    try {
+                        rLock = readWriteLock.writeLock();
+                        rLock.lock();
+
+                        int randomInt = Random.nextInt(100);
+                        if (randomInt <= 0) {
+                            randomInt = 1;
+                        }
+
+                        writingMapper.put(uuid, true);
+
+                        displayInfo(readingMapper, writingMapper);
+
+                        try {
+                            Thread.sleep(randomInt);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+
+                        displayInfo(readingMapper, writingMapper);
+                    } catch (Exception ex) {
+                        logger.error(ex.getMessage(), ex);
+                    } finally {
+                        writingMapper.remove(uuid);
+                        if (rLock != null && rLock.isHeldByCurrentThread()) {
+                            rLock.unlock();
+                        }
+                    }
+                }
+            });
+        }
+
+        executorService.shutdown();
+        while(!executorService.awaitTermination(1, TimeUnit.SECONDS));
+    }
+
+    private void displayInfo(Map<String, Boolean> readingMapper, Map<String, Boolean> writingMapper) {
+        if(readingMapper.size() > 0 && writingMapper.size() > 0) {
+            logger.info("有读写并发reading={},writing={}", readingMapper.size(), writingMapper.size());
+        }
+    }
+
     @Before
     public void setup(){
-        String host = "localhost";
-        int port = 6379;
-        String password = "123456";
+        String host = MyConfig.Host;
+        int port = MyConfig.Port;
+        String password = MyConfig.Password;
 
         Config config = new Config();
         config.useSingleServer().setAddress("redis://" + host + ":" + port).setPassword(password);

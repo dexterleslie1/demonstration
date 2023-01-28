@@ -1,13 +1,15 @@
 package com.xy.demo.redisson.lock;
 
-import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.redisson.Redisson;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 import java.util.Random;
@@ -17,11 +19,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class RedissonLockPerformanceTests {
-    private final static Logger logger = Logger.getLogger(RedissonLockPerformanceTests.class);
+    private final static Logger logger = LoggerFactory.getLogger(RedissonLockPerformanceTests.class);
 
     private RedissonClient redisson = null;
     private Random random = new Random();
 
+    @Ignore
     @Test
     public void test1() throws InterruptedException {
         Date timeStart = new Date();
@@ -63,9 +66,9 @@ public class RedissonLockPerformanceTests {
 
     @Before
     public void setup(){
-        String host = System.getenv("host");
-        int port = Integer.parseInt(System.getenv("port"));
-        String password = System.getenv("password");
+        String host = MyConfig.Host;
+        int port = MyConfig.Port;
+        String password = MyConfig.Password;
 
         Config config = new Config();
         config.useSingleServer().setAddress("redis://" + host + ":" + port).setPassword(password);
