@@ -1,5 +1,6 @@
 package com.future.demo.redis;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,6 +8,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -15,58 +18,67 @@ import java.util.concurrent.TimeUnit;
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = {Application.class})
 public class Tests {
-    private final static Random random = new Random();
 
     @Autowired
     private RedisTemplate redisTemplate = null;
 
+    private final static Random RANDOM = new Random();
+    private final static List<String> Keys = new ArrayList<>();
+
+    @Before
+    public void setup() {
+        for(int i=0; i<500000; i++) {
+            String key = "k" + i;
+            Keys.add(key);
+        }
+    }
+
     @Test
     public void test() throws InterruptedException {
         int looperOutter = 10;
-        int looperInner = 100;
-        ExecutorService executorService= Executors.newCachedThreadPool();
+        int looperInner = 1000;
+
+        ExecutorService executorService = Executors.newCachedThreadPool();
         for(int i=0;i<looperOutter;i++) {
             final int j = i;
-            executorService.submit(new Runnable() {
-                @Override
-                public void run() {
-                    try{
-                        for(int i=0;i<looperInner;i++) {
-                            String string1 = String.valueOf(j*looperInner+i);
-                            redisTemplate.opsForValue().set(string1, string1);
-                        }
-                    }catch(Exception ex){
-                        throw new RuntimeException(ex);
-                    }finally{
+            executorService.submit(() -> {
+                try{
+                    for(int i1 = 0; i1 <looperInner; i1++) {
+                        int randomInt = RANDOM.nextInt(Keys.size());
+                        String string1 = String.valueOf(j*looperInner+ i1);
+                        String key = Keys.get(randomInt);
+                        redisTemplate.opsForValue().set(key, string1);
                     }
+                }catch(Exception ex){
+                    ex.printStackTrace();
                 }
             });
         }
         executorService.shutdown();
         while(!executorService.awaitTermination(1, TimeUnit.SECONDS));
         System.out.println("redis缓存数据已准备好，准备进行读效率测试");
+    }
 
-//        final int max = looperOutter*looperInner;
-//        executorService= Executors.newCachedThreadPool();
-//        for(int i=0;i<2;i++) {
-//            final int j = i;
-//            executorService.submit(new Runnable() {
-//                @Override
-//                public void run() {
-//                    RedisProperties.Jedis jedis=null;
-//                    try{
-//                        for(int i=0;i<10000;i++) {
-//                            int intTemp = random.nextInt(max);
-//                            redisTemplate.opsForValue().get(String.valueOf(intTemp));
-//                        }
-//                    }catch(Exception ex){
-//                        ex.printStackTrace();
-//                    }finally{
-//                    }
-//                }
-//            });
-//        }
-//        executorService.shutdown();
-//        while(!executorService.awaitTermination(1, TimeUnit.SECONDS));
+    @Test
+    public void testRead() throws InterruptedException {
+        int looperOutter = 10;
+        int looperInner = 10000;
+
+        ExecutorService executorService = Executors.newCachedThreadPool();
+        for(int i=0;i<looperOutter;i++) {
+            executorService.submit(() -> {
+                try{
+                    for(int i1 = 0; i1 <looperInner; i1++) {
+                        int randomInt = RANDOM.nextInt(Keys.size());
+                        String key = Keys.get(randomInt);
+                        redisTemplate.opsForValue().get(key);
+                    }
+                }catch(Exception ex){
+                    ex.printStackTrace();
+                }
+            });
+        }
+        executorService.shutdown();
+        while(!executorService.awaitTermination(1, TimeUnit.SECONDS));
     }
 }

@@ -50,13 +50,57 @@ services:
     networks:
       - net
 
+  demo-redis-cluster-node4:
+    container_name: demo-redis-cluster-node4
+    image: redis:5.0.14
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6383 --cluster-announce-ip ${varHostIp}
+    volumes:
+      - ./redis.cluster.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - 6383:6383
+      - 16383:16383
+    networks:
+      - net
+
+  demo-redis-cluster-node5:
+    container_name: demo-redis-cluster-node5
+    image: redis:5.0.14
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6384 --cluster-announce-ip ${varHostIp}
+    volumes:
+      - ./redis.cluster.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - 6384:6384
+      - 16384:16384
+    networks:
+      - net
+
+  demo-redis-cluster-node6:
+    container_name: demo-redis-cluster-node6
+    image: redis:5.0.14
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6385 --cluster-announce-ip ${varHostIp}
+    volumes:
+      - ./redis.cluster.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - 6385:6385
+      - 16385:16385
+    networks:
+      - net
+
   redis-cluster-creator:
     image: redis:5.0.14
-    entrypoint: [/bin/sh, -c, 'echo "yes" | redis-cli --cluster create ${varHostIp}:6380 ${varHostIp}:6381 ${varHostIp}:6382']
+    entrypoint: [/bin/sh, -c, 'echo "yes" | redis-cli --cluster create --cluster-replicas 1 ${varHostIp}:6380 ${varHostIp}:6381 ${varHostIp}:6382 ${varHostIp}:6383 ${varHostIp}:6384 ${varHostIp}:6385']
     networks:
       - net
     depends_on:
       - demo-redis-cluster-node1
       - demo-redis-cluster-node2
       - demo-redis-cluster-node3
-
+      - demo-redis-cluster-node4
+      - demo-redis-cluster-node5
+      - demo-redis-cluster-node6
