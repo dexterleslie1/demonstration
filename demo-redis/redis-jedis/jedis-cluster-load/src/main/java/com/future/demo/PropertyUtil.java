@@ -1,6 +1,5 @@
-package com.future.study.jedis.cluster;
+package com.future.demo;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 

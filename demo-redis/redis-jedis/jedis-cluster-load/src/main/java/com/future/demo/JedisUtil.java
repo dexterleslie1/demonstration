@@ -1,4 +1,4 @@
-package com.future.study.jedis.cluster;
+package com.future.demo;
 
 import java.util.HashSet;
 import java.util.Properties;
@@ -34,12 +34,12 @@ public class JedisUtil {
         //表示当borrow(引入)一个jedis实例时，最大的等待时间，如果超过等待时间，则直接抛出JedisConnectionException；
         config.setMaxWaitMillis(Long.parseLong(maxWaitMillis));
         //在borrow一个jedis实例时，是否提前进行validate操作；如果为true，则得到的jedis实例均是可用的；
-        config.setTestOnBorrow(Boolean.valueOf(testOnBorrow));
+        config.setTestOnBorrow(Boolean.parseBoolean(testOnBorrow));
 
         Set<HostAndPort> jedisClusterNodes = new HashSet<>();
-        jedisClusterNodes.add(new HostAndPort("192.168.1.111", 6381));
-        jedisClusterNodes.add(new HostAndPort("192.168.1.111", 6380));
-        jedisClusterNodes.add(new HostAndPort("192.168.1.111", 6379));
+        jedisClusterNodes.add(new HostAndPort(Config.RedisHost, 6383));
+//        jedisClusterNodes.add(new HostAndPort("192.168.1.111", 6380));
+//        jedisClusterNodes.add(new HostAndPort("192.168.1.111", 6379));
         try {
             jedisPool = new JedisCluster(jedisClusterNodes, config);
         }catch(Exception ex){
