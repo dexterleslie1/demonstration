@@ -66,7 +66,7 @@ public class JedisClusterCpuLoadTests {
                 JedisCluster jedis = null;
                 try {
                     jedis = JedisUtil.getInstance().getJedis();
-                    for (int i1 = 0; i1 < looperInner * 100; i1++) {
+                    for (int i1 = 0; i1 < looperInner; i1++) {
                         int randomInt = RANDOM.nextInt(Keys.size());
                         String key = Keys.get(randomInt);
                         jedis.get(key);
