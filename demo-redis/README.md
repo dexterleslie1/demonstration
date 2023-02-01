@@ -516,3 +516,23 @@ bgwriteaof
 ## 主从复制
 
 > 使用redis集群代替主从复制。所以不研究
+
+## 集群
+
+> 使用docker运行redis集群参考 demo-redis/redis-server/cluster
+>
+> redis集群原理详解 https://blog.csdn.net/a745233700/article/details/112691126
+>
+> 默认情况下，redis集群的读和写都是到master上去执行的，不支持slave节点读和写，跟Redis主从复制下读写分离不一样，因为redis集群的核心的理念，主要是使用slave做数据的热备，以及master故障时的主备切换，实现高可用的。Redis的读写分离，是为了横向任意扩展slave节点去支撑更大的读吞吐量。而redis集群架构下，本身master就是可以任意扩展的，如果想要支撑更大的读或写的吞吐量，都可以直接对master进行横向扩展。
+>
+> jedis操作集群参考 demo-redis/redis-jedis/jedis-cluster-load
+>
+> redistemplate操作集群参考 demo-redis/redistemplate/redistemplate-cluster
+
+## 秒杀场景实现
+
+### 单机版秒杀
+
+> 参考 demo-redis/demo-flash-sale-standalone
+
+### 集群版秒杀

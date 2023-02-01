@@ -23,8 +23,8 @@ public class FlashSaleTests {
             jedis.set(keyProductCount, String.valueOf(10));
         }
 
-        int concurrent = 300;
-        int eachRequests = 10;
+        int concurrent = 500;
+        int eachRequests = 100;
         ExecutorService executorService = Executors.newCachedThreadPool();
         for(int i=0; i<concurrent; i++) {
             executorService.submit(() -> {
