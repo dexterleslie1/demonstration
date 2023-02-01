@@ -16,10 +16,10 @@ public class ControllerLayerTests {
 
     @Test
     public void test() {
-//        Assert.assertNotNull(apiController);
-//        int a = 3;
-//        int b = 5;
-//        ObjectResponse<Integer> response = this.apiController.add(3, 5);
-//        Assert.assertEquals(a+b, response.getData().intValue());
+        Assert.assertNotNull(apiController);
+        int a = 3;
+        int b = 5;
+        ObjectResponse<Integer> response = this.apiController.add(3, 5);
+        Assert.assertEquals(a+b, response.getData().intValue());
     }
 }
