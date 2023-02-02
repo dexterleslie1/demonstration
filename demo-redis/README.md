@@ -552,3 +552,39 @@ bgwriteaof
 > 读写锁适合于对数据结构的读次数比写次数多得多的情况. 因为, 读模式锁定时可以共享, 以写模式锁住时意味着独占, 所以读写锁又叫共享-独占锁.
 >
 > 参考 demo-redis/redisson/redisson-lock demo
+
+### 可重入锁Reentrant lock
+
+> https://blog.csdn.net/m0_62946761/article/details/126688793
+>
+> 同一个线程能够多次上锁，redisson.getLock返回的RLock对象是ReentraintLock
+>
+> 利用redis的hash结构存储锁，key值随意，field属性为线程标识，value为锁次数。当线程获取一次锁后，如果此时redis中没有这个锁，则创建并将锁次数置为1；接下来如果线程再次获取锁会进行一次判断。即对比线程标识是否是同一个线程的多次获取，如果是的话锁次数+1。同样的，如果是释放锁的话也需要对线程标识进行判断，然后让对应的锁次数-1，当锁的次数为0时，表示此时可以删除锁了。
+>
+> 参考 demo-redis/redisson/redisson-lock demo
+
+### 公平锁FairLock
+
+> 按照加锁的请求顺序公平地（先到先得）分配上锁机会
+>
+> 参考 demo-redis/redisson/redisson-lock demo
+
+### 多锁MultiLock
+
+> https://blog.csdn.net/qq_32979219/article/details/126784890
+>
+> TODO demo为何不是预期的false
+>
+> 参考 demo-redis/redisson/redisson-lock demo
+
+### 信号量Semaphore
+
+> https://blog.csdn.net/m0_70651612/article/details/124901452
+>
+> 参考 demo-redis/redisson/redisson-lock demo
+
+### 闭锁CountDownLatch
+
+> https://blog.csdn.net/m0_70651612/article/details/124901452
+>
+> 参考 demo-redis/redisson/redisson-lock demo

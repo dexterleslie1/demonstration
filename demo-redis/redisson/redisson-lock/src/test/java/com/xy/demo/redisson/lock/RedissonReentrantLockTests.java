@@ -5,40 +5,40 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.redisson.Redisson;
-import org.redisson.api.RCountDownLatch;
 import org.redisson.api.RLock;
-import org.redisson.api.RReadWriteLock;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.Map;
-import java.util.Random;
+import java.awt.image.PackedColorModel;
 import java.util.UUID;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.TimeUnit;
 
-public class RedissonCountDownLatchTests {
-    private final static java.util.Random Random = new Random();
+// https://blog.csdn.net/m0_62946761/article/details/126688793
+public class RedissonReentrantLockTests {
 
     private RedissonClient redisson = null;
 
+    // 同一个线程能够多次上锁
     @Test
     public void test() throws InterruptedException {
         String key = UUID.randomUUID().toString();
-        RCountDownLatch countDownLatch = this.redisson.getCountDownLatch(key);
-        countDownLatch.trySetCount(5);
 
-        ExecutorService service = Executors.newCachedThreadPool();
-        for(int i=0; i<6; i++) {
-            service.submit(countDownLatch::countDown);
+        RLock rLock = this.redisson.getLock(key);
+        try {
+            boolean acquired = rLock.tryLock(10, 10000, TimeUnit.MILLISECONDS);
+            Assert.assertTrue(acquired);
+            acquired = rLock.tryLock(10, 10000, TimeUnit.MILLISECONDS);
+            Assert.assertTrue(acquired);
+        } finally {
+            // 锁计数器等于2
+            Assert.assertEquals(2, rLock.getHoldCount());
+            rLock.unlock();
+            // 锁计数器等于1
+            Assert.assertEquals(1, rLock.getHoldCount());
+            rLock.unlock();
+            // 锁计数器等于0
+            Assert.assertEquals(0, rLock.getHoldCount());
         }
-        service.shutdown();
-
-        // 等待countdown到0
-        boolean b = countDownLatch.await(1, TimeUnit.SECONDS);
-        Assert.assertTrue(b);
     }
 
     @Before
