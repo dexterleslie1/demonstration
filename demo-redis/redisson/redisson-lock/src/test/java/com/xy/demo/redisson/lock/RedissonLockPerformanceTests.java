@@ -4,6 +4,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.openjdk.jmh.annotations.*;
+import org.openjdk.jmh.runner.Runner;
+import org.openjdk.jmh.runner.RunnerException;
+import org.openjdk.jmh.runner.options.Options;
+import org.openjdk.jmh.runner.options.OptionsBuilder;
 import org.redisson.Redisson;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
@@ -18,53 +23,32 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+@BenchmarkMode(Mode.Throughput)
+@State(Scope.Benchmark) //使用的SpringBoot容器，都是无状态单例Bean，无安全问题，可以直接使用基准作用域BenchMark
+@OutputTimeUnit(TimeUnit.SECONDS)
+@Fork(1)  //整体平均执行1次
+@Warmup(iterations = 3,time = 5,timeUnit = TimeUnit.SECONDS)
+@Measurement(iterations = 3,time = 5,timeUnit = TimeUnit.SECONDS) //测试也是1s、五遍
+@Threads(16)
 public class RedissonLockPerformanceTests {
-    private final static Logger logger = LoggerFactory.getLogger(RedissonLockPerformanceTests.class);
-
     private RedissonClient redisson = null;
     private Random random = new Random();
 
-    @Ignore
-    @Test
+    @Benchmark
     public void test1() throws InterruptedException {
-        Date timeStart = new Date();
-        ExecutorService executorService = Executors.newCachedThreadPool();
-        for(int j=0; j<200; j++) {
-            executorService.submit(new Runnable() {
-                public void run() {
-                    for (int i = 0; i < 1000; i++) {
-                        String key = UUID.randomUUID().toString();
-                        RLock mylock = redisson.getLock(key);
-                        boolean isLocked = false;
-                        try {
-                            isLocked = mylock.tryLock(10, 10000, TimeUnit.MILLISECONDS);
-
-                            int milliseconds = random.nextInt(50);
-                            if(milliseconds ==0){
-                                milliseconds = 2;
-                            }
-                            Thread.sleep(milliseconds);
-                        } catch (InterruptedException e) {
-                            if(isLocked){
-                                mylock = redisson.getLock(key);
-                                if(mylock != null) {
-                                    mylock.unlock();
-                                }
-                            }
-                        }
-                    }
-                }
-            });
+        String key = UUID.randomUUID().toString();
+        RLock mylock = redisson.getLock(key);
+        boolean isLocked = false;
+        try {
+            isLocked = mylock.tryLock(1, 10000, TimeUnit.MILLISECONDS);
+        } finally {
+            if(isLocked){
+                mylock.unlock();
+            }
         }
-
-        executorService.shutdown();
-        while(!executorService.awaitTermination(100, TimeUnit.MILLISECONDS));
-        Date timeEnd = new Date();
-        long milliseconds = timeEnd.getTime() - timeStart.getTime();
-        logger.info("耗时" + milliseconds + "毫秒");
     }
 
-    @Before
+    @Setup(Level.Iteration)
     public void setup(){
         String host = MyConfig.Host;
         int port = MyConfig.Port;
@@ -75,10 +59,19 @@ public class RedissonLockPerformanceTests {
         redisson = Redisson.create(config);
     }
 
-    @After
+    @TearDown(Level.Iteration)
     public void teardown(){
         if(redisson != null){
             redisson.shutdown();
         }
+    }
+
+    public static void main(String[] args) throws RunnerException {
+        Options opt = new OptionsBuilder()
+                .include(RedissonLockPerformanceTests.class.getSimpleName())
+                .forks(1)
+                .build();
+
+        new Runner(opt).run();
     }
 }

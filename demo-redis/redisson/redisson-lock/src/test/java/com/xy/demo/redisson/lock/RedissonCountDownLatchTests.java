@@ -29,32 +29,24 @@ public class RedissonCountDownLatchTests {
     public void test() throws InterruptedException {
         ExecutorService service = Executors.newCachedThreadPool();
         for(int i=0; i<100; i++) {
-            final int seq = i;
-            service.submit(new Runnable() {
-                public void run() {
-                    int milliseconds = Random.nextInt(50);
-                    try {
-                        if(milliseconds>0) {
-                            Thread.sleep(milliseconds);
-                        }
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
+            service.submit(() -> {
+                int milliseconds = Random.nextInt(50);
+                try {
+                    if(milliseconds>0) {
+                        Thread.sleep(milliseconds);
                     }
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
 
-                    RLock lock = null;
-                    boolean acquired = false;
-                    try {
-                        RCountDownLatch  countDownLatch = redisson.getCountDownLatch("");
+                boolean acquired = false;
+                try {
+                    RCountDownLatch  countDownLatch = redisson.getCountDownLatch("");
 
-                        countDownLatch.countDown();
+                    countDownLatch.countDown();
 
-                    } catch (Exception ex) {
-                        throw new RuntimeException(ex);
-                    } finally {
-                        if (acquired && lock!=null) {
-                            lock.unlock();
-                        }
-                    }
+                } catch (Exception ex) {
+                    throw new RuntimeException(ex);
                 }
             });
         }

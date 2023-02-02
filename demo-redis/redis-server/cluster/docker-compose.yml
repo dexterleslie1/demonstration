@@ -3,7 +3,7 @@ version: "3.0"
 # 创建网络
 networks:
   net:
-    name: demo-redis-server
+    name: demo-redis-server-cluster-net
 
 services:
   demo-redis-cluster-node1:
