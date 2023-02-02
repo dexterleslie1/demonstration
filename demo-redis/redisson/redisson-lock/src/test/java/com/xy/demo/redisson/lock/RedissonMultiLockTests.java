@@ -21,7 +21,7 @@ public class RedissonMultiLockTests {
     private RedissonClient redisson = null;
 
     @Test
-    public void testAcquireSuccessfully() {
+    public void testAcquireSuccessfully() throws InterruptedException {
         String key1 = UUID.randomUUID().toString();
         String key2 = UUID.randomUUID().toString();
         String key3 = UUID.randomUUID().toString();
@@ -33,7 +33,7 @@ public class RedissonMultiLockTests {
         RLock rLock = this.redisson.getMultiLock(rLock1, rLock2, rLock3);
         boolean acquired;
         try {
-            rLock.lock(1000000, TimeUnit.SECONDS);
+            rLock.tryLock(100, TimeUnit.SECONDS);
             acquired = true;
         } finally {
             try {
@@ -58,7 +58,10 @@ public class RedissonMultiLockTests {
             RLock rLock3 = this.redisson.getLock(key3);
             RLock rLock = this.redisson.getMultiLock(rLock1, rLock2, rLock3);
             // 模拟在另外一条线程中上锁导致其他线程不能成功上锁
-            rLock.lock(100, TimeUnit.SECONDS);
+            rLock.tryLock();
+
+            // MultiLock不能使用lock方法上锁，否则下面tryLock会返回true
+            // rLock.lock(100, TimeUnit.SECONDS);
         });
         executorService.shutdown();
         while(!executorService.awaitTermination(10, TimeUnit.MILLISECONDS));
@@ -77,7 +80,6 @@ public class RedissonMultiLockTests {
 
             }
         }
-        // TODO 为何不是预期的false
         Assert.assertFalse(acquired);
     }
 

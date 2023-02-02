@@ -45,8 +45,9 @@ public class RedissonSemaphoreTests {
      */
     @Test
     public void test() throws InterruptedException {
-        String key = UUID.randomUUID().toString();
+        String key = "demo-redis-lock-semaphore";
         final RSemaphore semaphore = redisson.getSemaphore(key);
+        semaphore.delete();
         boolean b = semaphore.trySetPermits(5);
         Assert.assertTrue(b);
 
@@ -55,8 +56,9 @@ public class RedissonSemaphoreTests {
         ExecutorService executorService = Executors.newCachedThreadPool();
         for(int i=0; i<10; i++) {
             executorService.submit(() -> {
+                boolean acquired = false;
                 try {
-                    boolean acquired = semaphore.tryAcquire(10, TimeUnit.MILLISECONDS);
+                    acquired = semaphore.tryAcquire(10, TimeUnit.MILLISECONDS);
                     if(acquired) {
                         successAcquire.incrementAndGet();
                     } else {
@@ -67,7 +69,9 @@ public class RedissonSemaphoreTests {
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 } finally {
-                    semaphore.release();
+                    if(acquired) {
+                        semaphore.release();
+                    }
                 }
             });
         }

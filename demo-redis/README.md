@@ -573,8 +573,6 @@ bgwriteaof
 
 > https://blog.csdn.net/qq_32979219/article/details/126784890
 >
-> TODO demo为何不是预期的false
->
 > 参考 demo-redis/redisson/redisson-lock demo
 
 ### 信号量Semaphore
