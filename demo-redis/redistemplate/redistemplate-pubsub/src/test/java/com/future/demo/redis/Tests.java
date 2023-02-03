@@ -1,4 +1,4 @@
-package com.future.demo.redis.pubsub;
+package com.future.demo.redis;
 
 import org.junit.Assert;
 import org.junit.Ignore;

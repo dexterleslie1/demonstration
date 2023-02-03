@@ -6,6 +6,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.ArrayList;
@@ -20,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 public class Tests {
 
     @Autowired
-    private RedisTemplate redisTemplate = null;
+    StringRedisTemplate redisTemplate = null;
 
     private final static Random RANDOM = new Random();
     private final static List<String> Keys = new ArrayList<>();
@@ -36,7 +37,7 @@ public class Tests {
     @Test
     public void test() throws InterruptedException {
         int looperOutter = 10;
-        int looperInner = 1000;
+        int looperInner = 10000;
 
         ExecutorService executorService = Executors.newCachedThreadPool();
         for(int i=0;i<looperOutter;i++) {

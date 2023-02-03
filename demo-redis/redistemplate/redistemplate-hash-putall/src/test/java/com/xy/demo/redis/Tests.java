@@ -1,22 +1,18 @@
-package com.xy.demo.redis.template.hash;
+package com.xy.demo.redis;
 
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = {ApplicationRedisTemplateHash.class})
-public class RedisTemplateHashTests {
+@SpringBootTest(classes = {Application.class})
+public class Tests {
     private final static Random random = new Random();
 
     @Autowired

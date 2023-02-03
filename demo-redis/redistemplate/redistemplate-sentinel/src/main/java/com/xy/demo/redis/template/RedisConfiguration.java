@@ -29,14 +29,14 @@ public class RedisConfiguration {
         return connectionFactory;
     }
 
-    /**
-     *
-     * @return
-     */
-    @Bean
-    public RedisTemplate redisTemplate(){
-        RedisTemplate redisTemplate = new RedisTemplate();
-        redisTemplate.setConnectionFactory(redisConnectionFactory());
-        return redisTemplate;
-    }
+//    /**
+//     *
+//     * @return
+//     */
+//    @Bean
+//    public RedisTemplate redisTemplate(){
+//        RedisTemplate redisTemplate = new RedisTemplate();
+//        redisTemplate.setConnectionFactory(redisConnectionFactory());
+//        return redisTemplate;
+//    }
 }

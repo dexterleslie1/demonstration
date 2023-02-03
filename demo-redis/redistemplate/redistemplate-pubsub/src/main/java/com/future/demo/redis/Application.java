@@ -1,11 +1,18 @@
-package com.xy.demo.redis.template.hash;
+package com.future.demo.redis;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+/**
+ *
+ */
 @SpringBootApplication
-public class ApplicationRedisTemplateHash {
+public class Application {
+    /**
+     *
+     * @param args
+     */
     public static void main(String[] args){
-        SpringApplication.run(ApplicationRedisTemplateHash.class,args);
+        SpringApplication.run(Application.class,args);
     }
 }
