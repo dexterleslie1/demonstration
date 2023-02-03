@@ -25,16 +25,15 @@ public class RedissonFairLockTests {
     public void test() throws InterruptedException {
         String key = UUID.randomUUID().toString();
 
-        ExecutorService executorService = Executors.newCachedThreadPool();
         // 按照加锁的请求顺序公平地（先到先得）分配上锁机会
         RLock rLock = this.redisson.getFairLock(key);
         List<String> seqList = new ArrayList<>();
         for(int i=0; i<5; i++) {
-            executorService.submit(()->{
+            Thread thread = new Thread(()->{
+                seqList.add(Thread.currentThread().getName());
                 boolean acquired = false;
                 try {
                     acquired = rLock.tryLock(100000, 10000, TimeUnit.MILLISECONDS);
-                    seqList.add(Thread.currentThread().getName());
                     TimeUnit.MILLISECONDS.sleep(100);
                 } catch (Exception ex) {
                     ex.printStackTrace();
@@ -46,15 +45,22 @@ public class RedissonFairLockTests {
                             //
                         }
                     }
-                }});
+                }
+            });
+            thread.setName("thread-" + (i+1));
+            thread.start();
 
             TimeUnit.MILLISECONDS.sleep(10);
         }
 
-        executorService.shutdown();
-        while(!executorService.awaitTermination(1, TimeUnit.SECONDS));
+        TimeUnit.SECONDS.sleep(2);
 
-        Assert.assertArrayEquals(new String[] {"pool-2-thread-1", "pool-2-thread-2", "pool-2-thread-3", "pool-2-thread-4", "pool-2-thread-5"}, seqList.toArray());
+        Assert.assertEquals(5, seqList.size());
+        Assert.assertEquals(seqList.get(0), "thread-1");
+        Assert.assertEquals(seqList.get(1), "thread-2");
+        Assert.assertEquals(seqList.get(2), "thread-3");
+        Assert.assertEquals(seqList.get(3), "thread-4");
+        Assert.assertEquals(seqList.get(4), "thread-5");
     }
 
     @Before
