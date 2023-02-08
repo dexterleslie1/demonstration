@@ -537,7 +537,7 @@ bgwriteaof
 
 ### 集群版秒杀
 
-> 参考 demo-redis/demo-flash-sale-cluster（未完成）
+> 参考 demo-redis/demo-flash-sale-cluster（todo 未完成）
 
 ## 锁
 
@@ -586,3 +586,21 @@ bgwriteaof
 > https://blog.csdn.net/m0_70651612/article/details/124901452
 >
 > 参考 demo-redis/redisson/redisson-lock demo
+
+## mysql redis缓存双写不一致
+
+> 对于热点数据（经常被查询，但不经常被修改的数据），我们可以将其放入redis缓存中，以增加查询效率，但需要保证从redis中读取的数据与数据库中存储的数据最终是一致的。针对一致性的问题进行了汇总总结。
+>
+> TODO 深入研究
+
+## 缓存穿透、击穿、雪崩
+
+### 缓存穿透
+
+> https://baijiahao.baidu.com/s?id=1730541502423010481&wfr=spider&for=pc
+>
+> 缓存穿透是指查询一个缓存中和数据库中都不存在的数据，导致每次查询这条数据都会透过缓存，直接查库，最后返回空。当用户使用这条不存在的数据疯狂发起查询请求的时候，对数据库造成的压力就非常大，甚至可能直接挂掉。
+>
+> 解决缓存穿透的方法一般有两种，第一种是缓存空对象，第二种是使用布隆过滤器。
+>
+> 参考 demo-redis/demo-redis-cache-penetration
