@@ -21,21 +21,18 @@ public class CpuLoadTests {
         ExecutorService executorService= Executors.newCachedThreadPool();
         for(int i=0;i<looperOutter;i++) {
             final int j = i;
-            executorService.submit(new Runnable() {
-                @Override
-                public void run() {
-                    Jedis jedis=null;
-                    try{
-                        jedis=JedisUtil.getInstance().getJedis();
-                        for(int i=0;i<looperInner;i++) {
-                            String string1 = String.valueOf(j*looperInner+i);
-                            jedis.set(string1, string1);
-                        }
-                    }catch(Exception ex){
-                        ex.printStackTrace();
-                    }finally{
-                        JedisUtil.getInstance().returnJedis(jedis);
+            executorService.submit(() -> {
+                Jedis jedis=null;
+                try{
+                    jedis=JedisUtil.getInstance().getJedis();
+                    for(int i1 = 0; i1 <looperInner; i1++) {
+                        String string1 = String.valueOf(j*looperInner+ i1);
+                        jedis.set(string1, string1);
                     }
+                }catch(Exception ex){
+                    ex.printStackTrace();
+                }finally{
+                    JedisUtil.getInstance().returnJedis(jedis);
                 }
             });
         }

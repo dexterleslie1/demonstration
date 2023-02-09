@@ -16,26 +16,18 @@ public class MemoryLoadTests {
     @Test
     public void test1() throws InterruptedException {
         for(int i=0;i<100;i++) {
-            executorService.submit(new Runnable() {
-                @Override
-                public void run() {
-                    Jedis jedis=null;
-                    try{
-                        jedis=JedisUtil.getInstance().getJedis();
-                        for(int i=0;i<1000000;i++) {
-                            String uuid= UUID.randomUUID().toString();
-                            jedis.set(uuid, uuid);
-                            try {
-                                Thread.sleep(1);
-                            } catch (InterruptedException e) {
-                                //
-                            }
-                        }
-                    }catch(Exception ex){
-                        ex.printStackTrace();
-                    }finally{
-                        JedisUtil.getInstance().returnJedis(jedis);
+            executorService.submit(() -> {
+                Jedis jedis=null;
+                try{
+                    jedis=JedisUtil.getInstance().getJedis();
+                    for(int i1 = 0; i1 <10000; i1++) {
+                        String uuid= UUID.randomUUID().toString();
+                        jedis.setex(uuid, 60, uuid);
                     }
+                }catch(Exception ex){
+                    ex.printStackTrace();
+                }finally{
+                    JedisUtil.getInstance().returnJedis(jedis);
                 }
             });
         }
