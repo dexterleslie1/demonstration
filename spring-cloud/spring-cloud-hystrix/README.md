@@ -34,5 +34,8 @@ https://blog.csdn.net/qq_24504315/article/details/79120904
 设置 feignclient 各个方法hystrix超时
 http://www.saily.top/2020/04/19/springcloud/hystrix05/
 
+The Hystrix timeout of ***ms for the command *** is set lower than the combination of the Ribbon
+https://blog.csdn.net/it_beecoder/article/details/106028256
+
 TODO: 写demo演示关闭ribbon、feign、resttemplate retry机制
 

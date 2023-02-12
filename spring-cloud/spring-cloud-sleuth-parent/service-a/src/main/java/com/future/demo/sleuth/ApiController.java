@@ -21,7 +21,7 @@ public class ApiController {
      * @return
      */
     @RequestMapping(value = "/api/v1/a/test1",method = RequestMethod.GET)
-    public String test1(@RequestParam(value = "name", defaultValue = "") String name){
+    public String test1(@RequestParam(value = "name", defaultValue = "") String name) throws Exception {
         log.info("Message from service-a called with parameter name=" + name);
         String result = feignServiceB.test1(name);
         return result;

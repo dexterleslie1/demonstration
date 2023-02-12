@@ -16,5 +16,7 @@ spring:
           search-paths: /src/main/resources
           # 跳过ssl证书验签
           skip-ssl-validation: true
+          username: xxx
+          password: xxx
   application:
     name: config-center-server

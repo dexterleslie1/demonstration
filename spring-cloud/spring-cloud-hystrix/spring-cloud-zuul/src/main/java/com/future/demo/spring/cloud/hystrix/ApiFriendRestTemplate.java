@@ -23,7 +23,12 @@ public class ApiFriendRestTemplate {
             commandProperties = {
                     @HystrixProperty(name = "execution.isolation.strategy", value = "THREAD"),
                     @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "2000"),
-                    @HystrixProperty(name = "circuitBreaker.enabled", value = "true")})
+                    @HystrixProperty(name = "circuitBreaker.enabled", value = "true")},
+            threadPoolProperties = {
+                    @HystrixProperty(name = "coreSize", value = "21"),
+                    @HystrixProperty(name = "maxQueueSize", value = "101"),
+                    @HystrixProperty(name = "queueSizeRejectionThreshold", value = "101")
+            })
     ResponseEntity<ObjectResponse<String>> timeout(Integer milliseconds) {
         MultiValueMap<String, Object> multiValueParams= new LinkedMultiValueMap<>();
         multiValueParams.add("milliseconds", milliseconds);
@@ -39,7 +44,12 @@ public class ApiFriendRestTemplate {
             commandProperties = {
                     @HystrixProperty(name = "execution.isolation.strategy", value = "THREAD"),
                     @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "2000"),
-                    @HystrixProperty(name = "circuitBreaker.enabled", value = "true")})
+                    @HystrixProperty(name = "circuitBreaker.enabled", value = "true")},
+            threadPoolProperties = {
+                    @HystrixProperty(name = "coreSize", value = "21"),
+                    @HystrixProperty(name = "maxQueueSize", value = "101"),
+                    @HystrixProperty(name = "queueSizeRejectionThreshold", value = "101")
+            })
     ResponseEntity<ObjectResponse<String>> timeout2(Integer milliseconds) {
         MultiValueMap<String, Object> multiValueParams= new LinkedMultiValueMap<>();
         multiValueParams.add("milliseconds", milliseconds);

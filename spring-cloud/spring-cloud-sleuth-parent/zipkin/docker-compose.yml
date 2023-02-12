@@ -1,0 +1,17 @@
+version: "3.0"
+
+# 创建网络
+networks:
+  net:
+    name: demo-sleuth-net
+
+services:
+  demo-sleuth-zipkin-server:
+    container_name: demo-sleuth-zipkin-server
+    image: openzipkin/zipkin
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - 9411:9411
+    networks:
+      - net
