@@ -10,7 +10,7 @@ public class ApiController {
     @Value("${spring.application.name}")
     String applicationName;
 
-    @PostMapping("test")
+    @GetMapping("test")
     ResponseEntity<String> test(@RequestParam(value = "name", defaultValue = "") String name) {
         return ResponseEntity.ok("服务器" + applicationName + "向你打招呼：\"你好，" + name + "\"");
     }
