@@ -1,9 +1,12 @@
-package com.future.demo.spring.cloud.ribbon;
+package com.future.demo.ribbon;
 
+import com.future.demo.myrule.MyRuleRandom;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
+import org.springframework.cloud.netflix.ribbon.RibbonClient;
+import org.springframework.cloud.netflix.ribbon.RibbonClients;
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.client.RestTemplate;
 
@@ -12,6 +15,7 @@ import org.springframework.web.client.RestTemplate;
  */
 @SpringBootApplication
 @EnableEurekaClient
+@RibbonClient(name = "spring-cloud-helloworld", configuration = MyRuleRandom.class)
 public class ApplicationRibbon {
     /**
      *
@@ -22,7 +26,7 @@ public class ApplicationRibbon {
     }
 
     /**
-     *
+     * 无论是否何种Ribbon负载均衡算法都需要配置下面的RestTemplate
      * @return
      */
     @Bean

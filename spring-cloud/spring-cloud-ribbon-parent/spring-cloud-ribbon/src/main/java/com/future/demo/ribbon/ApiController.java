@@ -1,4 +1,4 @@
-package com.future.demo.spring.cloud.ribbon;
+package com.future.demo.ribbon;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;

@@ -77,3 +77,43 @@ http://localhost:8500/
 http://localhost:8081/api/v1/a/sayHello?name=dexter
 ```
 
+## 服务调用
+
+> 服务调用实现如下：
+>
+> Ribbon（停止更新，许多遗留项目还在使用，所以需要学习）
+>
+> LoadBalancer
+>
+> Feign（停止更新）
+>
+> OpenFeign
+
+### Ribbon
+
+> 进程内负载均衡（负载均衡+RestTemplate）。
+>
+> 参考 spring-cloud/spring-cloud-ribbon-parent demo
+
+#### 使用IRule替换负载均衡算法
+
+> 默认负载均衡算法是RoundRobinRule
+
+```java
+// 定义IRule配置类
+@Configuration
+public class MyRuleRandom {
+    @Bean
+    public IRule rule() {
+        // 随机选择服务负载均衡算法
+        return new RandomRule();
+    }
+}
+
+// 配置Application启动类加载MyRuleRandom配置@RibbonClient
+@SpringBootApplication
+@EnableEurekaClient
+@RibbonClient(name = "spring-cloud-helloworld", configuration = MyRuleRandom.class)
+public class ApplicationRibbon {
+```
+

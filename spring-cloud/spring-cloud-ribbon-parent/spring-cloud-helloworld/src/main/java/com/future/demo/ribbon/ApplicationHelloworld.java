@@ -1,4 +1,4 @@
-package com.future.demo.spring.cloud.ribbon;
+package com.future.demo.ribbon;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
