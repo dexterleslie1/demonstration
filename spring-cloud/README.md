@@ -85,7 +85,7 @@ http://localhost:8081/api/v1/a/sayHello?name=dexter
 >
 > LoadBalancer
 >
-> Feign（停止更新）
+> Feign（停止更新，不需要学习）
 >
 > OpenFeign
 
@@ -117,3 +117,4 @@ public class MyRuleRandom {
 public class ApplicationRibbon {
 ```
 
+### OpenFeign
