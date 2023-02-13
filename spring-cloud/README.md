@@ -15,3 +15,12 @@
 | Camden        | 1.4.x        |
 | Brixton       | 1.3.x, 1.4.x |
 | Angel         | 1.2.x        |
+## 服务注册与发现
+
+### eureka
+
+> eureka服务器配置
+>
+> eureka客户端服务注册配置
+>
+> 参考 spring-cloud/spring-cloud-eureka
