@@ -19,7 +19,7 @@
         <mybatis-plus.version>3.4.2</mybatis-plus.version>
         <lombok.version>1.18.20</lombok.version>
         <junit.version>4.13.2</junit.version>
-        <mysql.connector.version>8.0.23</mysql.connector.version>
+        <mysql.connector.version>8.0.28</mysql.connector.version>
         <yyd-common.version>3.5.5</yyd-common.version>
     </properties>
 
