@@ -1,4 +1,4 @@
-package com.future.demo.spring.cloud.consul;
+package com.future.demo.consul;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

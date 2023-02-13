@@ -10,7 +10,6 @@
         <groupId>com.future.demo</groupId>
         <artifactId>spring-cloud-consul-parent</artifactId>
         <version>1.0</version>
-        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <dependencies>

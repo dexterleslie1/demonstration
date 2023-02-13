@@ -1,4 +1,4 @@
-package com.future.demo.spring.cloud.consul;
+package com.future.demo.consul;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,14 +12,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class ApiController {
     @Autowired
-    BService service;
+    CService service;
 
     /**
      *
      * @param name
      * @return
      */
-    @RequestMapping(value = "/api/v1/a/sayHello", method = RequestMethod.GET)
+    @RequestMapping(value = "/api/v1/b/sayHello", method = RequestMethod.POST)
     public String sayHello(@RequestParam(value = "name", defaultValue = "") String name) {
         return service.sayHello(name);
     }

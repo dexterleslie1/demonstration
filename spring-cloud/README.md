@@ -17,6 +17,16 @@
 | Angel         | 1.2.x        |
 ## 服务注册与发现
 
+> 服务注册中心实现包括：
+>
+> eureka（停止更新，将会抛弃）
+>
+> zookeeper（用得少）
+>
+> consul
+>
+> nacos（阿里巴巴主流注册中心）
+
 ### eureka
 
 > eureka服务器配置
@@ -45,3 +55,25 @@ eureka.instance.lease-renewal-interval-in-seconds=1
 # eureka注册中心（服务端）在收到客户端心跳之后，等待下一次心跳的超时时间，如果在这个时间内没有收到下次心跳，则移除该客户端。（默认90秒）
 eureka.instance.lease-expiration-duration-in-seconds=2
 ```
+
+### consul
+
+> consul服务器启动（参考spring-cloud-consul-parent/docker-compose.yaml使用docker运行consul服务器）
+>
+> 参考 spring-cloud/spring-cloud-consul-parent demo
+
+**运行 spring-cloud/spring-cloud-consul-parent demo**
+
+```shell
+# 启动consul服务器
+docker-compose up
+
+# 检查consul服务器是否正常
+http://localhost:8500/
+
+# 启动所有springcloud应用
+
+# 测试springcloud服务是否正常
+http://localhost:8081/api/v1/a/sayHello?name=dexter
+```
+

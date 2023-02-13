@@ -1,4 +1,4 @@
-package com.future.demo.spring.cloud.consul;
+package com.future.demo.consul;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
