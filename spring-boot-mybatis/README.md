@@ -62,3 +62,10 @@ mybatis.mapper-locations=classpath:mapper/*.xml,classpath:mapper/**/*.xml
 > 参考 spring-boot-mybatis#RelationshipMapperTests demo
 >
 > 一对一、多对一、一对多、多对多，延迟加载。
+
+## 动态SQL
+
+> 参考 spring-boot-mybatis#DynamicSqlMapperTests demo
+>
+> where和if、choose和when和otherwise、foreach、sql标签
+
