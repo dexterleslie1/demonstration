@@ -28,3 +28,37 @@ public class Application {
 mybatis.mapper-locations=classpath:mapper/*.xml,classpath:mapper/**/*.xml
 ```
 
+## 获取参数值
+
+> 参考 spring-boot-mybatis#ParametersMapper demo
+
+### ${}和#{}区别
+
+> https://blog.csdn.net/li_w_ch/article/details/109754949
+>
+> 1. 当传入的是字符串参数时，#{}会在值两边加上单引号，而${}不会在值两边加上单引号。
+> 2. #{}会进行预编译处理，${}直接替换字符串。
+> 3. 尽量使用 #{}，在很大程度上能够防止sql注入。
+> 4. ${}方式一般用于传入数据库对象，例如列表和表名
+
+## 查询
+
+> 参考 spring-boot-mybatis#SelectMapper demo
+
+## 模糊查询
+
+> 参考 spring-boot-mybatis#SelectLikeMapper demo
+
+## 获取自增主键id
+
+> 参考 spring-boot-mybatis#GetAutoIncrementPrimaryKeyMapperTests demo
+
+## 字段名和属性名不一致使用ResultMap解决
+
+> 参考 spring-boot-mybatis#ResultMapMapperTests demo
+
+## 关联关系
+
+> 参考 spring-boot-mybatis#RelationshipMapperTests demo
+>
+> 一对一、多对一、一对多、多对多，延迟加载。

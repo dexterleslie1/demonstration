@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace= "com.future.demo.mybatis.mapper.RelationshipMapper" >
+    <resultMap id="empAndDeptMap1" type="com.future.demo.mybatis.entity.EmpModel">
+        <id property="id" column="eid"/>
+        <result property="name" column="ename"/>
+        <result property="age" column="eage"/>
+        <result property="dept.id" column="did"/>
+        <result property="dept.name" column="dname"/>
+    </resultMap>
+    <select id="getEmpAndDeptByEmpName1" resultMap="empAndDeptMap1">
+        select * from t_emp emp join t_dept dept on emp.did=dept.did where emp.ename=#{name}
+    </select>
+
+    <resultMap id="empAndDeptMap2" type="com.future.demo.mybatis.entity.EmpModel">
+        <id property="id" column="eid"/>
+        <result property="name" column="ename"/>
+        <result property="age" column="eage"/>
+        <!-- 一对一关系 -->
+        <association property="address" javaType="com.future.demo.mybatis.entity.AddressModel">
+            <id property="id" column="addressId"/>
+            <result property="address" column="address"/>
+        </association>
+        <!-- 多对一关系 -->
+        <association property="dept" javaType="com.future.demo.mybatis.entity.DeptModel">
+            <id property="id" column="did"/>
+            <result property="name" column="dname"/>
+        </association>
+    </resultMap>
+    <select id="getEmpAndDeptByEmpName2" resultMap="empAndDeptMap2">
+        select * from t_emp emp
+        join t_dept dept on emp.did=dept.did
+        join t_address address on emp.addressId=address.id
+        where emp.ename=#{name}
+    </select>
+
+    <resultMap id="empAndDeptMap3" type="com.future.demo.mybatis.entity.EmpModel">
+        <id property="id" column="eid"/>
+        <result property="name" column="ename"/>
+        <result property="age" column="eage"/>
+        <!--
+        分部查询获取部门信息
+        fetchType="lazy"启用延迟加载部门信息
+        -->
+        <association property="dept"
+                     select="com.future.demo.mybatis.mapper.RelationshipMapper.getDeptById"
+                     column="did"
+                     fetchType="lazy"/>
+    </resultMap>
+    <select id="getEmpAndDeptByEmpName3" resultMap="empAndDeptMap3">
+        select * from t_emp emp where emp.ename=#{name}
+    </select>
+    <resultMap id="deptMap" type="com.future.demo.mybatis.entity.DeptModel">
+        <id property="id" column="did"/>
+        <result property="name" column="dname"/>
+    </resultMap>
+    <select id="getDeptById" resultMap="deptMap">
+        select * from t_dept dept where dept.did=#{id}
+    </select>
+
+    <resultMap id="deptAndEmpMap1" type="com.future.demo.mybatis.entity.DeptModel">
+        <id property="id" column="did"/>
+        <result property="name" column="dname"/>
+
+        <collection property="empList"
+                    ofType="com.future.demo.mybatis.entity.EmpModel"
+                    javaType="java.util.ArrayList">
+            <id property="id" column="eid"/>
+            <result property="name" column="ename"/>
+            <result property="age" column="eage"/>
+        </collection>
+    </resultMap>
+    <select id="getDeptAndEmpByDeptName1" resultMap="deptAndEmpMap1">
+        select * from t_dept dept join t_emp emp on dept.did=emp.did where dept.dname=#{name}
+    </select>
+
+    <resultMap id="deptAndEmpMap2" type="com.future.demo.mybatis.entity.DeptModel">
+        <id property="id" column="did"/>
+        <result property="name" column="dname"/>
+
+        <collection property="empList"
+                    select="com.future.demo.mybatis.mapper.RelationshipMapper.findEmpByDeptId"
+                    column="did"
+                    fetchType="lazy">
+        </collection>
+    </resultMap>
+    <select id="getDeptAndEmpByDeptName2" resultMap="deptAndEmpMap2">
+        select * from t_dept dept where dept.dname=#{name}
+    </select>
+    <resultMap id="empMap" type="com.future.demo.mybatis.entity.EmpModel">
+        <id property="id" column="eid"/>
+        <result property="name" column="ename"/>
+        <result property="age" column="eage"/>
+    </resultMap>
+    <select id="findEmpByDeptId" resultMap="empMap">
+        select * from t_emp emp where emp.did=#{id}
+    </select>
+</mapper>
