@@ -47,3 +47,15 @@ create table t_emp(
 insert into t_dept values (1,'产品部'),(2,'研发部');
 insert into t_address values (1,'上海'),(2,'北京'),(3,'广州');
 insert into t_emp values (1,'张三',21,2,1),(2,'李四',22,2,2),(3,'小红',33,1,3);
+
+create table tb_batch_insert(
+    id bigint not null primary key auto_increment,
+    field1 varchar(64) not null,
+    field2 varchar(64) not null
+) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 collate=utf8mb4_general_ci;
+
+create table tb_batch_update(
+    id bigint not null primary key auto_increment,
+    field1 varchar(64) not null,
+    field2 varchar(64) not null
+) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 collate=utf8mb4_general_ci;

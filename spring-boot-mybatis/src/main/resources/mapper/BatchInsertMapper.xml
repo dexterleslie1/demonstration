@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace= "com.future.demo.mybatis.mapper.BatchInsertMapper" >
+    <update id="truncate">
+        truncate table tb_batch_insert
+    </update>
+
+    <select id="count" resultType="int">
+        select count(id) from tb_batch_insert
+    </select>
+
+    <insert id="insert1">
+        insert into tb_batch_insert values(NULL,#{model.field1},#{model.field2})
+    </insert>
+
+    <insert id="insert2" parameterType="java.util.List">
+        insert into tb_batch_insert values
+        <foreach collection="modelList" item="t" index="index" separator=",">
+            (NULL,#{t.field1}, #{t.field2})
+        </foreach>
+    </insert>
+</mapper>

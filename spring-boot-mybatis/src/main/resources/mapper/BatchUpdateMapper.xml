@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace= "com.future.demo.mybatis.mapper.BatchUpdateMapper" >
+    <update id="truncate">
+        truncate table tb_batch_update
+    </update>
+
+    <select id="count" resultType="int">
+        select count(id) from tb_batch_update
+    </select>
+
+    <select id="findAllId" resultType="long">
+        select id from tb_batch_update
+    </select>
+
+    <insert id="insert" parameterType="java.util.List">
+        insert into tb_batch_update values
+        <foreach collection="modelList" item="t" index="index" separator=",">
+            (NULL,#{t.field1}, #{t.field2})
+        </foreach>
+    </insert>
+
+    <update id="update1">
+        update tb_batch_update
+        <set>
+            <if test="model.field1!=null and model.field1!=''">
+                field1 = #{model.field1},
+            </if>
+            <if test="model.field2!=null and model.field2!=''">
+                field2 = #{model.field2},
+            </if>
+        </set>
+        where id = #{model.id}
+    </update>
+
+    <update id="update2" parameterType="java.util.List">
+        update tb_batch_update
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="field1=case" suffix="end,">
+                <foreach collection="modelList" item="i" index="index">
+                    <if test="i.field1!=null and i.field1!=''">
+                        when id=#{i.id} then #{i.field1}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="field2=case" suffix="end,">
+                <foreach collection="modelList" item="i" index="index">
+                    <if test="i.field2!=null and i.field2!=''">
+                        when id=#{i.id} then #{i.field2}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        where id in
+        <foreach collection="modelList" open="(" close=")" separator="," item="i" index="index">
+            #{i.id}
+        </foreach>
+    </update>
+</mapper>

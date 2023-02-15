@@ -69,3 +69,12 @@ mybatis.mapper-locations=classpath:mapper/*.xml,classpath:mapper/**/*.xml
 >
 > where和if、choose和when和otherwise、foreach、sql标签
 
+## mybatis缓存
+
+> 一级缓存和二级缓存
+
+## mybatis分页插件
+
+> https://blog.csdn.net/qq2844509367/article/details/126427670
+>
+> todo
