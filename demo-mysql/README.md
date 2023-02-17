@@ -4,6 +4,12 @@
 
 ## SQL
 
+### SQL预编译
+
+> https://blog.csdn.net/make_1998/article/details/118930914
+>
+> 一次编译、多次运行，省去了解析优化等过程；此外预编译语句能防止sql注入。
+
 ### DDL数据库操作
 
 ```shell
@@ -690,7 +696,98 @@ No query specified
 
 ### 流程函数
 
-> 暂时未用到
+#### if函数
+
+> if(value,t,f): 如果value为true则返回t，否则返回f。
+
+```shell
+mysql> select if(true,'yes','no');
++---------------------+
+| if(true,'yes','no') |
++---------------------+
+| yes                 |
++---------------------+
+1 row in set (0.00 sec)
+
+mysql> select if(false,'yes','no');
++----------------------+
+| if(false,'yes','no') |
++----------------------+
+| no                   |
++----------------------+
+1 row in set (0.00 sec)
+```
+
+#### ifnull函数
+
+> ifnull(value1,value2): 如果value1不为空，则返回value1,否则返回value2
+
+```shell
+mysql> select ifnull('v1','v2');
++-------------------+
+| ifnull('v1','v2') |
++-------------------+
+| v1                |
++-------------------+
+1 row in set (0.00 sec)
+
+mysql> select ifnull(NULL,'v2');
++-------------------+
+| ifnull(NULL,'v2') |
++-------------------+
+| v2                |
++-------------------+
+1 row in set (0.00 sec)
+```
+
+#### case when then else end函数
+
+> https://www.cnblogs.com/dirgo/p/9913708.html
+
+```shell
+mysql> CREATE DATABASE IF NOT EXISTS testdb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+Query OK, 1 row affected (0.01 sec)
+
+mysql> use testdb;
+Database changed
+
+create table if not exists t_test_case(
+  id bigint primary key auto_increment,
+  flag varchar(64) not null
+) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 collate=utf8mb4_general_ci;
+
+insert into t_test_case values (1,'1'),(2,'2'),(3,'3'),(4,'4');
+
+mysql> update t_test_case set flag=(case id when 1 then 'v1' when 2 then 'v2' else 'v3' end) where id in(1,2,3);
+Query OK, 3 rows affected (0.00 sec)
+Rows matched: 3  Changed: 3  Warnings: 0
+
+mysql> select * from t_test_case;
++----+------+
+| id | flag |
++----+------+
+|  1 | v1   |
+|  2 | v2   |
+|  3 | v3   |
+|  4 | 4    |
++----+------+
+4 rows in set (0.00 sec)
+
+mysql> update t_test_case set flag=(case when id=1 then 'v1' when id=2 then 'v2' else 'v3' end) where id in(1,2,3);
+Query OK, 3 rows affected (0.01 sec)
+Rows matched: 3  Changed: 3  Warnings: 0
+
+mysql> select * from t_test_case;
++----+------+
+| id | flag |
++----+------+
+|  1 | v1   |
+|  2 | v2   |
+|  3 | v3   |
+|  4 | 4    |
++----+------+
+4 rows in set (0.00 sec)
+```
 
 ## 约束
 
@@ -2714,3 +2811,301 @@ mysql> explain select * from tb_user where profession='软件工程' and age=31 
 1 row in set, 1 warning (0.00 sec)
 ```
 
+## SQL优化
+
+### 主键优化
+
+> 满足业务需求的情况下，尽量降低主键的长度。
+>
+> 插入数据是尽量选择顺序插入，选择使用auto_increment自增主键。
+>
+> 尽量不要使用UUID做主键或者其他自然逐渐，如身份证号。
+>
+> 业务操作时，避免对主键的修改。
+
+### order by优化
+
+> using filesort: 通过表的索引或者全表扫描，读取满足条件的数据行，然后在排序缓冲区sort buffer中完成排序操作，所有不是通过索引直接返回排序结果的排序都叫filesort排序。
+>
+> using index: 通过有序索引顺序扫描直接返回有序数据，这种情况即为using index，不需要而外排序，操作效率高。
+>
+> 
+>
+> 优化原则：
+>
+> 根据排序字段建立合适的索引，多字段排序时，也遵循最左前缀法则。
+>
+> 尽量使用覆盖索引。
+>
+> 多个字段排序时，一个升序一个降序，此时需要注意联合索引在创建时的规则(asc/desc)。
+>
+> 如果不可以避免出现filesort大数据量排序时，可适当增大排序缓冲区大小sort_buffer_size(默认256K)。
+
+```shell
+mysql> CREATE DATABASE IF NOT EXISTS testdb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+Query OK, 1 row affected (0.01 sec)
+
+mysql> use testdb;
+Database changed
+
+create table if not exists tb_user(
+  id bigint primary key auto_increment,
+  name varchar(64) not null,
+  phone varchar(32) not null,
+  email varchar(32) not null,
+  profession varchar(32) not null,
+  age int not null,
+  gender int default 1 not null,
+  status char(1) default 0 not null,
+  createTime datetime not null
+) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 collate=utf8mb4_general_ci;
+
+insert into tb_user values
+(1,'吕布','17799990000','lvbu666@163.com','软件工程',23,1,'6','2001-02-02 00:00:00'),
+(2,'曹操','17799990001','caocao666@qq.com','通讯工程',33,1,'0','2001-03-05 00:00:00'),
+(3,'赵云','17799990002','17799990@139.com','英语',34,1,'2','2002-03-02 00:00:00'),
+(4,'孙悟空','17799990003','17799990@sina.com','工程造价',54,1,'0','2001-07-02 00:00:00'),
+(5,'花木兰','17799990004','19980729@sina.com','软件工程',23,2,'1','2001-04-22 00:00:00'),
+(6,'大乔','17799990005','daqiao6666@sina.com','舞蹈',22,2,'0','2001-02-07 00:00:00'),
+(7,'露娜','17799990006','luna_love@sina.com','应用数学',24,2,'0','2001-02-08 00:00:00'),
+(8,'程咬金','17799990007','chengyaojin@163.com','化工',38,1,'5','2001-05-23 00:00:00'),
+(9,'项羽','17799990008','xiangyu666@qq.com','金属材料',43,1,'0','2001-09-18 00:00:00'),
+(10,'白起','17799990009','baiqi666@sina.com','机械工程及其自动化',27,1,'2','2001-08-16 00:00:00'),
+(11,'韩信','17799990010','hanxin520@163.com','无机非金属材料工程',27,1,'0','2001-06-12 00:00:00'),
+(12,'荆柯','17799990011','jingke123@163.com','会计',29,1,'0','2001-05-11 00:00:00'),
+(13,'兰陵王','17799990012','lanlinwang666@126.com','工程造价',44,1,'1','2001-04-09 00:00:00'),
+(14,'狂铁','17799990013','kuangtie@sina.com','应用数学',43,2,'2','2001-04-11 00:00:00'),
+(15,'貂蝉','17799990014','84958948374@qq.com','软件工程',40,2,'3','2001-02-12 00:00:00'),
+(16,'坦己','17799990015','2783238293@qq.com','软件工程',31,2,'0','2001-01-30 00:00:00'),
+(17,'月丹','17799990016','xiaomin2001@sina.com','工业经济',35,1,'0','2000-05-03 00:00:00'),
+(18,'赢政','17799990017','8839434342@qq.com','化工',38,1,'1','2001-08-08 00:00:00'),
+(19,'狄仁杰','17799990018','jujiamlm8166@163.com','国际贸易',30,2,'0','2007-03-12 00:00:00'),
+(20,'安琪拉','17799990019','jdodm1h@126.com','城市规划',51,2,'0','2001-08-15 00:00:00'),
+(21,'典韦','17799990020','ycaunanjian@163.com','城市规划',52,1,'2','2000-04-12 00:00:00'),
+(22,'廉颇','17799990021','lianpo321@126.com','土木工程',19,1,'3','2002-07-18 00:00:00'),
+(23,'后羿','17799990022','altycj2000@139.com','城市园林',20,1,'0','2002-03-10 00:00:00'),
+(24,'姜子牙','17799990023','37483844@qq.com','工程造价',29,1,'4','2003-05-26 00:00:00');
+
+# 表中只有一个主键索引
+mysql> show index from tb_user;
++---------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| Table   | Non_unique | Key_name | Seq_in_index | Column_name | Collation | Cardinality | Sub_part | Packed | Null | Index_type | Comment | Index_comment | Visible | Expression |
++---------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| tb_user |          0 | PRIMARY  |            1 | id          | A         |          24 |     NULL |   NULL |      | BTREE      |         |               | YES     | NULL       |
++---------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+1 row in set (0.00 sec)
+
+# age没有对应的索引，所以order by age进行了低效的using filesort排序
+mysql> explain select id,age,phone from tb_user order by age;
++----+-------------+---------+------------+------+---------------+------+---------+------+------+----------+----------------+
+| id | select_type | table   | partitions | type | possible_keys | key  | key_len | ref  | rows | filtered | Extra          |
++----+-------------+---------+------------+------+---------------+------+---------+------+------+----------+----------------+
+|  1 | SIMPLE      | tb_user | NULL       | ALL  | NULL          | NULL | NULL    | NULL |   24 |   100.00 | Using filesort |
++----+-------------+---------+------------+------+---------------+------+---------+------+------+----------+----------------+
+1 row in set, 1 warning (0.00 sec)
+
+# 创建age asc、phone asc索引
+mysql> create index idx_tb_user_age_a_phone_a on tb_user(age,phone);
+Query OK, 0 rows affected (0.02 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+# order by使用了idx_tb_user_age_a_phone_a索引排序
+mysql> explain select id,age,phone from tb_user order by age;
++----+-------------+---------+------------+-------+---------------+---------------------------+---------+------+------+----------+-------------+
+| id | select_type | table   | partitions | type  | possible_keys | key                       | key_len | ref  | rows | filtered | Extra       |
++----+-------------+---------+------------+-------+---------------+---------------------------+---------+------+------+----------+-------------+
+|  1 | SIMPLE      | tb_user | NULL       | index | NULL          | idx_tb_user_age_a_phone_a | 134     | NULL |   24 |   100.00 | Using index |
++----+-------------+---------+------------+-------+---------------+---------------------------+---------+------+------+----------+-------------+
+1 row in set, 1 warning (0.00 sec)
+mysql> explain select id,age,phone from tb_user order by age,phone;
++----+-------------+---------+------------+-------+---------------+---------------------------+---------+------+------+----------+-------------+
+| id | select_type | table   | partitions | type  | possible_keys | key                       | key_len | ref  | rows | filtered | Extra       |
++----+-------------+---------+------------+-------+---------------+---------------------------+---------+------+------+----------+-------------+
+|  1 | SIMPLE      | tb_user | NULL       | index | NULL          | idx_tb_user_age_a_phone_a | 134     | NULL |   24 |   100.00 | Using index |
++----+-------------+---------+------------+-------+---------------+---------------------------+---------+------+------+----------+-------------+
+1 row in set, 1 warning (0.00 sec)
+
+# order by使用了idx_tb_user_age_a_phone_a索引反向排序(backward index scan)，效率高
+mysql> explain select id,age,phone from tb_user order by age desc,phone desc;
++----+-------------+---------+------------+-------+---------------+---------------------------+---------+------+------+----------+----------------------------------+
+| id | select_type | table   | partitions | type  | possible_keys | key                       | key_len | ref  | rows | filtered | Extra                            |
++----+-------------+---------+------------+-------+---------------+---------------------------+---------+------+------+----------+----------------------------------+
+|  1 | SIMPLE      | tb_user | NULL       | index | NULL          | idx_tb_user_age_a_phone_a | 134     | NULL |   24 |   100.00 | Backward index scan; Using index |
++----+-------------+---------+------------+-------+---------------+---------------------------+---------+------+------+----------+----------------------------------+
+1 row in set, 1 warning (0.00 sec)
+
+# 因为orer by phone,age没有索引匹配，所以需要创建idx_tb_user_phone_a_age_a索引
+mysql> explain select id,age,phone from tb_user order by phone,age;
++----+-------------+---------+------------+-------+---------------+---------------------------+---------+------+------+----------+-----------------------------+
+| id | select_type | table   | partitions | type  | possible_keys | key                       | key_len | ref  | rows | filtered | Extra                       |
++----+-------------+---------+------------+-------+---------------+---------------------------+---------+------+------+----------+-----------------------------+
+|  1 | SIMPLE      | tb_user | NULL       | index | NULL          | idx_tb_user_age_a_phone_a | 134     | NULL |   24 |   100.00 | Using index; Using filesort |
++----+-------------+---------+------------+-------+---------------+---------------------------+---------+------+------+----------+-----------------------------+
+1 row in set, 1 warning (0.00 sec)
+mysql> create index idx_tb_user_phone_a_age_a on tb_user(phone,age);
+Query OK, 0 rows affected (0.03 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+mysql> explain select id,age,phone from tb_user order by phone,age;
++----+-------------+---------+------------+-------+---------------+---------------------------+---------+------+------+----------+-------------+
+| id | select_type | table   | partitions | type  | possible_keys | key                       | key_len | ref  | rows | filtered | Extra       |
++----+-------------+---------+------------+-------+---------------+---------------------------+---------+------+------+----------+-------------+
+|  1 | SIMPLE      | tb_user | NULL       | index | NULL          | idx_tb_user_phone_a_age_a | 134     | NULL |   24 |   100.00 | Using index |
++----+-------------+---------+------------+-------+---------------+---------------------------+---------+------+------+----------+-------------+
+1 row in set, 1 warning (0.00 sec)
+
+# 因为orer by age asc,phone desc没有索引匹配，所以需要创建idx_tb_user_age_a_phone_d索引
+mysql> explain select id,age,phone from tb_user order by age asc,phone desc;
++----+-------------+---------+------------+-------+---------------+---------------------------+---------+------+------+----------+-----------------------------+
+| id | select_type | table   | partitions | type  | possible_keys | key                       | key_len | ref  | rows | filtered | Extra                       |
++----+-------------+---------+------------+-------+---------------+---------------------------+---------+------+------+----------+-----------------------------+
+|  1 | SIMPLE      | tb_user | NULL       | index | NULL          | idx_tb_user_age_a_phone_a | 134     | NULL |   24 |   100.00 | Using index; Using filesort |
++----+-------------+---------+------------+-------+---------------+---------------------------+---------+------+------+----------+-----------------------------+
+1 row in set, 1 warning (0.00 sec)
+mysql> create index idx_tb_user_age_a_phone_d on tb_user(age asc,phone desc);
+Query OK, 0 rows affected (0.03 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+mysql> explain select id,age,phone from tb_user order by age asc,phone desc;
++----+-------------+---------+------------+-------+---------------+---------------------------+---------+------+------+----------+-------------+
+| id | select_type | table   | partitions | type  | possible_keys | key                       | key_len | ref  | rows | filtered | Extra       |
++----+-------------+---------+------------+-------+---------------+---------------------------+---------+------+------+----------+-------------+
+|  1 | SIMPLE      | tb_user | NULL       | index | NULL          | idx_tb_user_age_a_phone_d | 134     | NULL |   24 |   100.00 | Using index |
++----+-------------+---------+------------+-------+---------------+---------------------------+---------+------+------+----------+-------------+
+1 row in set, 1 warning (0.00 sec)
+
+# 因为查询中返回中有name字段导致不能覆盖索引所以order by不使用索引排序
+mysql> explain select id,age,phone,name from tb_user order by age asc,phone desc;
++----+-------------+---------+------------+------+---------------+------+---------+------+------+----------+----------------+
+| id | select_type | table   | partitions | type | possible_keys | key  | key_len | ref  | rows | filtered | Extra          |
++----+-------------+---------+------------+------+---------------+------+---------+------+------+----------+----------------+
+|  1 | SIMPLE      | tb_user | NULL       | ALL  | NULL          | NULL | NULL    | NULL |   24 |   100.00 | Using filesort |
++----+-------------+---------+------------+------+---------------+------+---------+------+------+----------+----------------+
+1 row in set, 1 warning (0.00 sec)
+```
+
+### group by优化
+
+> 分组操作时，索引的使用也需要满足最左前缀法则。
+
+```shell
+mysql> CREATE DATABASE IF NOT EXISTS testdb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+Query OK, 1 row affected (0.01 sec)
+
+mysql> use testdb;
+Database changed
+
+create table if not exists tb_user(
+  id bigint primary key auto_increment,
+  name varchar(64) not null,
+  phone varchar(32) not null,
+  email varchar(32) not null,
+  profession varchar(32) not null,
+  age int not null,
+  gender int default 1 not null,
+  status char(1) default 0 not null,
+  createTime datetime not null
+) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 collate=utf8mb4_general_ci;
+
+insert into tb_user values
+(1,'吕布','17799990000','lvbu666@163.com','软件工程',23,1,'6','2001-02-02 00:00:00'),
+(2,'曹操','17799990001','caocao666@qq.com','通讯工程',33,1,'0','2001-03-05 00:00:00'),
+(3,'赵云','17799990002','17799990@139.com','英语',34,1,'2','2002-03-02 00:00:00'),
+(4,'孙悟空','17799990003','17799990@sina.com','工程造价',54,1,'0','2001-07-02 00:00:00'),
+(5,'花木兰','17799990004','19980729@sina.com','软件工程',23,2,'1','2001-04-22 00:00:00'),
+(6,'大乔','17799990005','daqiao6666@sina.com','舞蹈',22,2,'0','2001-02-07 00:00:00'),
+(7,'露娜','17799990006','luna_love@sina.com','应用数学',24,2,'0','2001-02-08 00:00:00'),
+(8,'程咬金','17799990007','chengyaojin@163.com','化工',38,1,'5','2001-05-23 00:00:00'),
+(9,'项羽','17799990008','xiangyu666@qq.com','金属材料',43,1,'0','2001-09-18 00:00:00'),
+(10,'白起','17799990009','baiqi666@sina.com','机械工程及其自动化',27,1,'2','2001-08-16 00:00:00'),
+(11,'韩信','17799990010','hanxin520@163.com','无机非金属材料工程',27,1,'0','2001-06-12 00:00:00'),
+(12,'荆柯','17799990011','jingke123@163.com','会计',29,1,'0','2001-05-11 00:00:00'),
+(13,'兰陵王','17799990012','lanlinwang666@126.com','工程造价',44,1,'1','2001-04-09 00:00:00'),
+(14,'狂铁','17799990013','kuangtie@sina.com','应用数学',43,2,'2','2001-04-11 00:00:00'),
+(15,'貂蝉','17799990014','84958948374@qq.com','软件工程',40,2,'3','2001-02-12 00:00:00'),
+(16,'坦己','17799990015','2783238293@qq.com','软件工程',31,2,'0','2001-01-30 00:00:00'),
+(17,'月丹','17799990016','xiaomin2001@sina.com','工业经济',35,1,'0','2000-05-03 00:00:00'),
+(18,'赢政','17799990017','8839434342@qq.com','化工',38,1,'1','2001-08-08 00:00:00'),
+(19,'狄仁杰','17799990018','jujiamlm8166@163.com','国际贸易',30,2,'0','2007-03-12 00:00:00'),
+(20,'安琪拉','17799990019','jdodm1h@126.com','城市规划',51,2,'0','2001-08-15 00:00:00'),
+(21,'典韦','17799990020','ycaunanjian@163.com','城市规划',52,1,'2','2000-04-12 00:00:00'),
+(22,'廉颇','17799990021','lianpo321@126.com','土木工程',19,1,'3','2002-07-18 00:00:00'),
+(23,'后羿','17799990022','altycj2000@139.com','城市园林',20,1,'0','2002-03-10 00:00:00'),
+(24,'姜子牙','17799990023','37483844@qq.com','工程造价',29,1,'4','2003-05-26 00:00:00');
+
+# 没有索引group by profession使用using temporary临时表效率低
+mysql> explain select profession,count(*) from tb_user group by profession;
++----+-------------+---------+------------+------+---------------+------+---------+------+------+----------+-----------------+
+| id | select_type | table   | partitions | type | possible_keys | key  | key_len | ref  | rows | filtered | Extra           |
++----+-------------+---------+------------+------+---------------+------+---------+------+------+----------+-----------------+
+|  1 | SIMPLE      | tb_user | NULL       | ALL  | NULL          | NULL | NULL    | NULL |   24 |   100.00 | Using temporary |
++----+-------------+---------+------------+------+---------------+------+---------+------+------+----------+-----------------+
+1 row in set, 1 warning (0.00 sec)
+
+mysql> create index idx_tb_user_profession_age_status on tb_user(profession,age,status);
+Query OK, 0 rows affected (0.03 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+# 使用索引idx_tb_user_profession_age_status group by
+mysql> explain select profession,count(*) from tb_user group by profession;
++----+-------------+---------+------------+-------+-----------------------------------+-----------------------------------+---------+------+------+----------+-------------+
+| id | select_type | table   | partitions | type  | possible_keys                     | key                               | key_len | ref  | rows | filtered | Extra       |
++----+-------------+---------+------------+-------+-----------------------------------+-----------------------------------+---------+------+------+----------+-------------+
+|  1 | SIMPLE      | tb_user | NULL       | index | idx_tb_user_profession_age_status | idx_tb_user_profession_age_status | 138     | NULL |   24 |   100.00 | Using index |
++----+-------------+---------+------------+-------+-----------------------------------+-----------------------------------+---------+------+------+----------+-------------+
+1 row in set, 1 warning (0.00 sec)
+mysql> explain select profession,age,count(*) from tb_user group by profession,age;
++----+-------------+---------+------------+-------+-----------------------------------+-----------------------------------+---------+------+------+----------+-------------+
+| id | select_type | table   | partitions | type  | possible_keys                     | key                               | key_len | ref  | rows | filtered | Extra       |
++----+-------------+---------+------------+-------+-----------------------------------+-----------------------------------+---------+------+------+----------+-------------+
+|  1 | SIMPLE      | tb_user | NULL       | index | idx_tb_user_profession_age_status | idx_tb_user_profession_age_status | 138     | NULL |   24 |   100.00 | Using index |
++----+-------------+---------+------------+-------+-----------------------------------+-----------------------------------+---------+------+------+----------+-------------+
+1 row in set, 1 warning (0.00 sec)
+mysql> explain select profession,age,count(*) from tb_user where profession='软件工程' group by age;
++----+-------------+---------+------------+------+-----------------------------------+-----------------------------------+---------+-------+------+----------+-------------+
+| id | select_type | table   | partitions | type | possible_keys                     | key                               | key_len | ref   | rows | filtered | Extra       |
++----+-------------+---------+------------+------+-----------------------------------+-----------------------------------+---------+-------+------+----------+-------------+
+|  1 | SIMPLE      | tb_user | NULL       | ref  | idx_tb_user_profession_age_status | idx_tb_user_profession_age_status | 130     | const |    4 |   100.00 | Using index |
++----+-------------+---------+------------+------+-----------------------------------+-----------------------------------+---------+-------+------+----------+-------------+
+1 row in set, 1 warning (0.00 sec)
+```
+
+### update优化（避免行锁升级为表锁）
+
+> InnoDB行锁是针对索引加锁（update时没有使用索引就升级为表锁）的，不是针对记录加锁的，并且该索引不能失效，否则会从行锁升级为表锁。
+
+```shell
+mysql> CREATE DATABASE IF NOT EXISTS testdb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+Query OK, 1 row affected (0.01 sec)
+
+mysql> use testdb;
+Database changed
+
+create table if not exists course(
+ id bigint primary key not null auto_increment,
+ name varchar(128) not null
+) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 collate=utf8mb4_general_ci;
+
+insert into course(id,name) values (1,'java'),(2,'php'),(3,'c'),(4,'python');
+
+# 根据课程名修改课程名，因为课程名没有索引（无法锁定行），导致升级为表级锁，导致另外一个事务根据id修改课程名一直阻塞
+# 解决方案创建课程名索引 create index idx_course_name on course(name);
+mysql> start transaction;
+
+mysql> update course set name='java2' where name='java';
+Query OK, 1 row affected (0.00 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+# session2
+mysql> start transaction;
+Query OK, 0 rows affected (0.00 sec)
+# session2
+mysql> update course set name='c1' where id=3;
+Query OK, 1 row affected (4.56 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mysql> commit;
+Query OK, 0 rows affected (0.00 sec)
+
+# session2
+mysql> commit;
+Query OK, 0 rows affected (0.00 sec)
+```
