@@ -30,7 +30,9 @@ public class ApplicationTests {
         int totalCount = 5;
 
         for(int i=0; i<totalCount; i++){
-            this.rabbitTemplate.convertAndSend(Config.BusinessExchangeName, "routingKey1", "888");
+            MessageDTO messageDTO = new MessageDTO();
+            messageDTO.setType("测试类型");
+            this.rabbitTemplate.convertAndSend(Config.BusinessExchangeName, "routingKey1", messageDTO);
         }
 
         Thread.sleep(500);
@@ -43,6 +45,6 @@ public class ApplicationTests {
 
         Thread.sleep(1500);
         Assert.assertEquals(totalCount*2, this.businessReceiver.getCount());
-        Assert.assertEquals(totalCount*2, this.deadReceiver.getCount());
+        Assert.assertEquals(totalCount, this.deadReceiver.getCount());
     }
 }

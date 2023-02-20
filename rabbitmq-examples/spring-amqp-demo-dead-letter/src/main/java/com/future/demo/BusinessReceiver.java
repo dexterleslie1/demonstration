@@ -20,15 +20,14 @@ public class BusinessReceiver {
     private AtomicInteger counter = new AtomicInteger();
 
     @RabbitListener(queues = Config.BusinessQueueName)
-    public void receiveMessage(Message message, Channel channel) throws Exception {
-        String msg = new String(message.getBody());
-        logger.info("Business Received <" + msg + ">");
+    public void receiveMessage(MessageDTO messageDTO, Message message, Channel channel) throws Exception {
+        logger.info("Business Received " + messageDTO.toString());
         counter.incrementAndGet();
         try {
-            boolean b = true;
-            if(b) {
+            if(messageDTO.getRetries() < 1) {
                 throw new Exception("模拟发生业务异常进入死信");
             }
+
             channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
         } catch (Exception ex) {
             channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, false);

@@ -25,13 +25,12 @@ public class DeadReceiver {
     private AtomicInteger counter = new AtomicInteger();
 
     @RabbitListener(queues = Config.DEAD_QUEUE_NAME)
-    public void receiveMessage(Message message, Channel channel) throws Exception {
-        String msg = new String(message.getBody());
-        logger.info("Dead Received <" + msg + ">");
+    public void receiveMessage(MessageDTO messageDTO, Message message, Channel channel) throws Exception {
+        logger.info("Dead Received " + messageDTO.toString());
         counter.incrementAndGet();
-//        channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
-
-        this.rabbitTemplate.convertAndSend(Config.BusinessExchangeName, "routingKey1", "999", MessagePostProcessortVariable);
+        messageDTO.setRetries(messageDTO.getRetries() + 1);
+        this.rabbitTemplate.convertAndSend(Config.BusinessExchangeName, "routingKey1", messageDTO, MessagePostProcessortVariable);
+        channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
     }
 
     public int getCount() {
