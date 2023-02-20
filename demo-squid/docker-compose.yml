@@ -22,9 +22,12 @@ services:
     image: openresty/openresty
     volumes:
      - ./nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf
+     - ./cert.crt:/usr/local/openresty/nginx/conf/cert.crt
+     - ./key.pem:/usr/local/openresty/nginx/conf/key.pem
     environment:
       - TZ=Asia/Shanghai
     ports:
       - 80:80
+      - 443:443
     networks:
       - net

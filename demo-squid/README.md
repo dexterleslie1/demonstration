@@ -5,6 +5,11 @@
 > https://blog.csdn.net/never_late/article/details/127252668
 
 ```shell
+# 生成https证书
+docker run --rm -it -v $(pwd):/opt/temp nginx sh -c 'cd /opt/temp && openssl req -out cert.csr -new -nodes -newkey rsa:2048 -keyout key.pem'
+
+docker run --rm -it -v $(pwd):/opt/temp nginx sh -c 'cd /opt/temp && openssl x509 -req -days 3650 -in cert.csr -signkey key.pem -out cert.crt && rm cert.csr'
+
 # 启动demo
 docker-compose up
 
