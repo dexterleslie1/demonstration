@@ -30,3 +30,42 @@
 sudo apt install ./code_xxxxx.deb
 ```
 
+## ubuntu/debian配置修改源 /etc/apt/sources.list
+
+```
+参考
+https://www.cnblogs.com/Jimc/p/10214081.html
+
+备份原始源文件，当然需要系统管理员权限操作
+sudo cp /etc/apt/sources.list /etc/apt/sources.list.backup
+
+获取ubuntu codename，把codename替换下面的bionic
+https://www.ngui.cc/el/1326641.html?action=onClick
+lsb_release -a
+
+docker容器修改源sources.list内容如下:
+deb http://mirrors.aliyun.com/debian/ buster main non-free contrib
+deb-src http://mirrors.aliyun.com/debian/ buster main non-free contrib
+deb http://mirrors.aliyun.com/debian-security buster/updates main
+deb-src http://mirrors.aliyun.com/debian-security buster/updates main
+deb http://mirrors.aliyun.com/debian/ buster-updates main non-free contrib
+deb-src http://mirrors.aliyun.com/debian/ buster-updates main non-free contrib
+deb http://mirrors.aliyun.com/debian/ buster-backports main non-free contrib
+deb-src http://mirrors.aliyun.com/debian/ buster-backports main non-free contrib
+
+修改/etc/apt/sources.list文件并添加国内阿里源，内容如下：
+deb http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse
+deb http://mirrors.aliyun.com/ubuntu/ bionic-security main restricted universe multiverse
+deb http://mirrors.aliyun.com/ubuntu/ bionic-updates main restricted universe multiverse
+deb http://mirrors.aliyun.com/ubuntu/ bionic-proposed main restricted universe multiverse
+deb http://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ bionic-security main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ bionic-updates main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ bionic-proposed main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted universe multiverse
+
+更新源
+sudo apt-get update
+```
+
