@@ -997,7 +997,7 @@ Query OK, 0 rows affected (0.02 sec)
 
 #### 脏读
 
-**read uncommitted**
+**read uncommitted存在**
 
 ```shell
 mysql> truncate table t_balance;
@@ -1072,7 +1072,7 @@ mysql> commit;
 Query OK, 0 rows affected (0.00 sec)
 ```
 
-**read commited**
+**read commited不存在**
 
 ```shell
 mysql> truncate table t_balance;
@@ -1123,7 +1123,7 @@ Query OK, 0 rows affected (0.00 sec)
 
 #### 不可重复读
 
-**read commited**
+**read commited存在**
 
 ```shell
 mysql> truncate table t_balance;
@@ -1179,7 +1179,7 @@ mysql> commit;
 Query OK, 0 rows affected (0.00 sec)
 ```
 
-**repeatable read**
+**repeatable read不存在**
 
 ```shell
 mysql> truncate table t_balance;
@@ -1245,7 +1245,7 @@ mysql> select * from t_balance;
 
 #### 幻读
 
-**repeatable read**
+**repeatable read存在**
 
 ```shell
 mysql> truncate table t_balance;
@@ -1296,7 +1296,7 @@ mysql> select * from t_balance;
 1 row in set (0.00 sec)
 ```
 
-**serializable**
+**serializable不存在**
 
 ```shell
 mysql> truncate table t_balance;
@@ -3109,3 +3109,1653 @@ Query OK, 0 rows affected (0.00 sec)
 mysql> commit;
 Query OK, 0 rows affected (0.00 sec)
 ```
+
+## 锁
+
+> 按照锁粒度分为以下三类：
+>
+> 全局锁：锁定数据库中的所有表
+>
+> 表级锁：锁定数据表
+>
+> 行级锁：锁定对应的行数据
+
+### 各类SQL执行触发加锁时相关锁信息表数据
+
+#### 测试环境准备
+
+```
+mysql> CREATE DATABASE IF NOT EXISTS testdb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+Query OK, 1 row affected (0.01 sec)
+
+mysql> use testdb;
+Database changed
+
+create table if not exists course(
+ id bigint primary key not null auto_increment,
+ name varchar(128) not null
+) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 collate=utf8mb4_general_ci;
+
+insert into course(id,name) values (1,'java'),(2,'php'),(3,'c'),(4,'python');
+```
+
+
+
+#### **flush tables with read lock**
+
+> 加全局锁
+
+```
+mysql> flush tables with read lock;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> select * from performance_schema.metadata_locks where owner_thread_id!=sys.ps_thread_id(connection_id())\G;
+*************************** 1. row ***************************
+          OBJECT_TYPE: GLOBAL
+        OBJECT_SCHEMA: NULL
+          OBJECT_NAME: NULL
+          COLUMN_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 139734949679568
+            LOCK_TYPE: SHARED
+        LOCK_DURATION: EXPLICIT # 显式上锁
+          LOCK_STATUS: GRANTED
+               SOURCE: lock.cc:1051
+      OWNER_THREAD_ID: 82
+       OWNER_EVENT_ID: 37
+*************************** 2. row ***************************
+          OBJECT_TYPE: COMMIT
+        OBJECT_SCHEMA: NULL
+          OBJECT_NAME: NULL
+          COLUMN_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 139734950256192
+            LOCK_TYPE: SHARED
+        LOCK_DURATION: EXPLICIT # 显式上锁
+          LOCK_STATUS: GRANTED
+               SOURCE: lock.cc:1126
+      OWNER_THREAD_ID: 82
+       OWNER_EVENT_ID: 37
+2 rows in set (0.01 sec)
+
+ERROR: 
+No query specified
+
+mysql> unlock tables;
+Query OK, 0 rows affected (0.01 sec)
+```
+
+#### lock tables course read
+
+> 加表级共享读MDL锁（表级S锁）
+
+```
+mysql> lock tables course read;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> select * from performance_schema.metadata_locks where owner_thread_id!=sys.ps_thread_id(connection_id())\G;
+*************************** 1. row ***************************
+          OBJECT_TYPE: TABLE
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+          COLUMN_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 139734949219536
+            LOCK_TYPE: SHARED_READ_ONLY
+        LOCK_DURATION: TRANSACTION
+          LOCK_STATUS: GRANTED
+               SOURCE: sql_parse.cc:5903
+      OWNER_THREAD_ID: 82
+       OWNER_EVENT_ID: 51
+1 row in set (0.00 sec)
+
+ERROR: 
+No query specified
+
+mysql> unlock tables;
+Query OK, 0 rows affected (0.00 sec)
+```
+
+#### lock tables course write
+
+> 加表级排他写MDL锁（表级X锁）
+
+```
+mysql> lock tables course write;
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> select * from performance_schema.metadata_locks where owner_thread_id!=sys.ps_thread_id(connection_id())\G;
+*************************** 1. row ***************************
+          OBJECT_TYPE: GLOBAL
+        OBJECT_SCHEMA: NULL
+          OBJECT_NAME: NULL
+          COLUMN_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 139734949219536
+            LOCK_TYPE: INTENTION_EXCLUSIVE
+        LOCK_DURATION: STATEMENT
+          LOCK_STATUS: GRANTED
+               SOURCE: sql_base.cc:5459
+      OWNER_THREAD_ID: 82
+       OWNER_EVENT_ID: 54
+*************************** 2. row ***************************
+          OBJECT_TYPE: SCHEMA
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: NULL
+          COLUMN_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 139734949416064
+            LOCK_TYPE: INTENTION_EXCLUSIVE
+        LOCK_DURATION: TRANSACTION
+          LOCK_STATUS: GRANTED
+               SOURCE: sql_base.cc:5446
+      OWNER_THREAD_ID: 82
+       OWNER_EVENT_ID: 54
+*************************** 3. row ***************************
+          OBJECT_TYPE: TABLE
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+          COLUMN_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 139734949266832
+            LOCK_TYPE: SHARED_NO_READ_WRITE
+        LOCK_DURATION: TRANSACTION
+          LOCK_STATUS: GRANTED
+               SOURCE: sql_parse.cc:5903
+      OWNER_THREAD_ID: 82
+       OWNER_EVENT_ID: 54
+*************************** 4. row ***************************
+          OBJECT_TYPE: TABLESPACE
+        OBJECT_SCHEMA: NULL
+          OBJECT_NAME: testdb/course
+          COLUMN_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 139734950331488
+            LOCK_TYPE: INTENTION_EXCLUSIVE
+        LOCK_DURATION: TRANSACTION
+          LOCK_STATUS: GRANTED
+               SOURCE: lock.cc:804
+      OWNER_THREAD_ID: 82
+       OWNER_EVENT_ID: 54
+4 rows in set (0.00 sec)
+
+ERROR: 
+No query specified
+
+mysql> unlock tables;
+Query OK, 0 rows affected (0.00 sec)
+```
+
+#### select
+
+> 加表级共享读MDL锁（表级S锁）
+
+```
+mysql> begin;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> select * from course;
++----+-------------+------+
+| id | name        | test |
++----+-------------+------+
+|  1 | java100     |    0 |
+|  2 | php         |    0 |
+|  3 | hello       |    0 |
+|  4 | python      |    0 |
+|  6 | hello world |    0 |
++----+-------------+------+
+5 rows in set (0.00 sec)
+
+mysql> commit;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> select * from performance_schema.metadata_locks where owner_thread_id!=sys.ps_thread_id(connection_id())\G;
+*************************** 1. row ***************************
+          OBJECT_TYPE: TABLE
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+          COLUMN_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 139734949203600
+            LOCK_TYPE: SHARED_READ
+        LOCK_DURATION: TRANSACTION
+          LOCK_STATUS: GRANTED
+               SOURCE: sql_parse.cc:5903
+      OWNER_THREAD_ID: 82
+       OWNER_EVENT_ID: 63
+1 row in set (0.00 sec)
+
+ERROR: 
+No query specified
+```
+
+#### select ... lock in share mode
+
+> 加表级IS锁、表级shared_read MDL锁、行级S锁。
+
+```
+mysql> begin;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> select * from course where id=1 lock in share mode;
++----+---------+
+| id | name    |
++----+---------+
+|  1 | java100 |
++----+---------+
+1 row in set (0.00 sec)
+
+mysql> select * from performance_schema.data_locks\G;
+*************************** 1. row ***************************
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 139737209634816:1070:139737096601984
+ENGINE_TRANSACTION_ID: 421212186345472
+            THREAD_ID: 88
+             EVENT_ID: 34
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 139737096601984
+            LOCK_TYPE: TABLE
+            LOCK_MODE: IS
+          LOCK_STATUS: GRANTED
+            LOCK_DATA: NULL
+*************************** 2. row ***************************
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 139737209634816:5:4:2:139737096599072
+ENGINE_TRANSACTION_ID: 421212186345472
+            THREAD_ID: 88
+             EVENT_ID: 34
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: PRIMARY
+OBJECT_INSTANCE_BEGIN: 139737096599072
+            LOCK_TYPE: RECORD
+            LOCK_MODE: S,REC_NOT_GAP
+          LOCK_STATUS: GRANTED
+            LOCK_DATA: 1
+2 rows in set (0.00 sec)
+
+ERROR: 
+No query specified
+
+mysql> select * from performance_schema.metadata_locks where owner_thread_id!=sys.ps_thread_id(connection_id())\G;
+*************************** 1. row ***************************
+          OBJECT_TYPE: TABLE
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+          COLUMN_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 139734882067616
+            LOCK_TYPE: SHARED_READ
+        LOCK_DURATION: TRANSACTION
+          LOCK_STATUS: GRANTED
+               SOURCE: sql_parse.cc:5903
+      OWNER_THREAD_ID: 88
+       OWNER_EVENT_ID: 34
+1 row in set (0.00 sec)
+
+ERROR: 
+No query specified
+
+mysql> commit;
+Query OK, 0 rows affected (0.00 sec)
+```
+
+#### select ... for update
+
+> 加表级IX锁、表级shared_write MDL锁、行级X锁。
+
+```
+mysql> begin;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> select * from course where id=1 for update;
++----+---------+
+| id | name    |
++----+---------+
+|  1 | java100 |
++----+---------+
+1 row in set (0.00 sec)
+
+mysql> select * from performance_schema.metadata_locks where owner_thread_id!=sys.ps_thread_id(connection_id())\G;
+*************************** 1. row ***************************
+          OBJECT_TYPE: TABLE
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+          COLUMN_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 139734882082912
+            LOCK_TYPE: SHARED_WRITE
+        LOCK_DURATION: TRANSACTION
+          LOCK_STATUS: GRANTED
+               SOURCE: sql_parse.cc:5903
+      OWNER_THREAD_ID: 88
+       OWNER_EVENT_ID: 54
+1 row in set (0.01 sec)
+
+ERROR: 
+No query specified
+
+mysql> select * from performance_schema.data_locks\G;
+*************************** 1. row ***************************
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 139737209634816:1070:139737096601984
+ENGINE_TRANSACTION_ID: 1985
+            THREAD_ID: 88
+             EVENT_ID: 54
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 139737096601984
+            LOCK_TYPE: TABLE
+            LOCK_MODE: IX
+          LOCK_STATUS: GRANTED
+            LOCK_DATA: NULL
+*************************** 2. row ***************************
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 139737209634816:5:4:10:139737096599072
+ENGINE_TRANSACTION_ID: 1985
+            THREAD_ID: 88
+             EVENT_ID: 54
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: PRIMARY
+OBJECT_INSTANCE_BEGIN: 139737096599072
+            LOCK_TYPE: RECORD
+            LOCK_MODE: X,REC_NOT_GAP
+          LOCK_STATUS: GRANTED
+            LOCK_DATA: 1
+2 rows in set (0.00 sec)
+
+ERROR: 
+No query specified
+
+mysql> rollback;
+Query OK, 0 rows affected (0.00 sec)
+```
+
+#### update where主键
+
+> 加表级IX锁、表级shared_write MDL锁、行级X锁。
+
+```
+mysql> begin;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> update course set name='1111' where id=1;
+Query OK, 1 row affected (0.00 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mysql> select * from performance_schema.data_locks\G;
+*************************** 1. row ***************************
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 139737209634816:1070:139737096601984
+ENGINE_TRANSACTION_ID: 1987
+            THREAD_ID: 88
+             EVENT_ID: 62
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 139737096601984
+            LOCK_TYPE: TABLE
+            LOCK_MODE: IX
+          LOCK_STATUS: GRANTED
+            LOCK_DATA: NULL
+*************************** 2. row ***************************
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 139737209634816:5:4:10:139737096599072
+ENGINE_TRANSACTION_ID: 1987
+            THREAD_ID: 88
+             EVENT_ID: 62
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: PRIMARY
+OBJECT_INSTANCE_BEGIN: 139737096599072
+            LOCK_TYPE: RECORD
+            LOCK_MODE: X,REC_NOT_GAP
+          LOCK_STATUS: GRANTED
+            LOCK_DATA: 1
+2 rows in set (0.00 sec)
+
+ERROR: 
+No query specified
+
+mysql> select * from performance_schema.metadata_locks where owner_thread_id!=sys.ps_thread_id(connection_id())\G;
+*************************** 1. row ***************************
+          OBJECT_TYPE: TABLE
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+          COLUMN_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 139734882082912
+            LOCK_TYPE: SHARED_WRITE
+        LOCK_DURATION: TRANSACTION
+          LOCK_STATUS: GRANTED
+               SOURCE: sql_parse.cc:5903
+      OWNER_THREAD_ID: 88
+       OWNER_EVENT_ID: 62
+1 row in set (0.00 sec)
+
+ERROR: 
+No query specified
+
+mysql> rollback;
+Query OK, 0 rows affected (0.00 sec)
+```
+
+#### update where没有使用索引
+
+> 由于没有使用索引，行级X锁会退化为锁定所有行X锁。
+>
+> 加表级IX锁、表级shared_write MDL锁、所有行级X锁。
+
+```
+mysql> select * from course;
++----+-------------+
+| id | name        |
++----+-------------+
+|  1 | java100     |
+|  2 | php         |
+|  3 | hello       |
+|  4 | python      |
+|  6 | hello world |
+|  7 | java1       |
+|  8 | java2       |
++----+-------------+
+7 rows in set (0.00 sec)
+
+mysql> begin;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> update course set name='111' where name='java100';
+Query OK, 1 row affected (0.00 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mysql> select * from performance_schema.metadata_locks where owner_thread_id!=sys.ps_thread_id(connection_id())\G;
+*************************** 1. row ***************************
+          OBJECT_TYPE: TABLE
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+          COLUMN_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 139734882067616
+            LOCK_TYPE: SHARED_WRITE
+        LOCK_DURATION: TRANSACTION
+          LOCK_STATUS: GRANTED
+               SOURCE: sql_parse.cc:5903
+      OWNER_THREAD_ID: 88
+       OWNER_EVENT_ID: 80
+1 row in set (0.01 sec)
+
+ERROR: 
+No query specified
+
+mysql> select * from performance_schema.data_locks\G;
+*************************** 1. row ***************************
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 139737209634816:1070:139737096601984
+ENGINE_TRANSACTION_ID: 1996
+            THREAD_ID: 88
+             EVENT_ID: 80
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 139737096601984
+            LOCK_TYPE: TABLE
+            LOCK_MODE: IX
+          LOCK_STATUS: GRANTED
+            LOCK_DATA: NULL
+*************************** 2. row ***************************
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 139737209634816:5:4:1:139737096599072
+ENGINE_TRANSACTION_ID: 1996
+            THREAD_ID: 88
+             EVENT_ID: 80
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: PRIMARY
+OBJECT_INSTANCE_BEGIN: 139737096599072
+            LOCK_TYPE: RECORD
+            LOCK_MODE: X
+          LOCK_STATUS: GRANTED
+            LOCK_DATA: supremum pseudo-record
+*************************** 3. row ***************************
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 139737209634816:5:4:3:139737096599072
+ENGINE_TRANSACTION_ID: 1996
+            THREAD_ID: 88
+             EVENT_ID: 80
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: PRIMARY
+OBJECT_INSTANCE_BEGIN: 139737096599072
+            LOCK_TYPE: RECORD
+            LOCK_MODE: X
+          LOCK_STATUS: GRANTED
+            LOCK_DATA: 2
+*************************** 4. row ***************************
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 139737209634816:5:4:4:139737096599072
+ENGINE_TRANSACTION_ID: 1996
+            THREAD_ID: 88
+             EVENT_ID: 80
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: PRIMARY
+OBJECT_INSTANCE_BEGIN: 139737096599072
+            LOCK_TYPE: RECORD
+            LOCK_MODE: X
+          LOCK_STATUS: GRANTED
+            LOCK_DATA: 3
+*************************** 5. row ***************************
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 139737209634816:5:4:5:139737096599072
+ENGINE_TRANSACTION_ID: 1996
+            THREAD_ID: 88
+             EVENT_ID: 80
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: PRIMARY
+OBJECT_INSTANCE_BEGIN: 139737096599072
+            LOCK_TYPE: RECORD
+            LOCK_MODE: X
+          LOCK_STATUS: GRANTED
+            LOCK_DATA: 4
+*************************** 6. row ***************************
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 139737209634816:5:4:6:139737096599072
+ENGINE_TRANSACTION_ID: 1996
+            THREAD_ID: 88
+             EVENT_ID: 80
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: PRIMARY
+OBJECT_INSTANCE_BEGIN: 139737096599072
+            LOCK_TYPE: RECORD
+            LOCK_MODE: X
+          LOCK_STATUS: GRANTED
+            LOCK_DATA: 6
+*************************** 7. row ***************************
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 139737209634816:5:4:7:139737096599072
+ENGINE_TRANSACTION_ID: 1996
+            THREAD_ID: 88
+             EVENT_ID: 80
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: PRIMARY
+OBJECT_INSTANCE_BEGIN: 139737096599072
+            LOCK_TYPE: RECORD
+            LOCK_MODE: X
+          LOCK_STATUS: GRANTED
+            LOCK_DATA: 7
+*************************** 8. row ***************************
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 139737209634816:5:4:8:139737096599072
+ENGINE_TRANSACTION_ID: 1996
+            THREAD_ID: 88
+             EVENT_ID: 80
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: PRIMARY
+OBJECT_INSTANCE_BEGIN: 139737096599072
+            LOCK_TYPE: RECORD
+            LOCK_MODE: X
+          LOCK_STATUS: GRANTED
+            LOCK_DATA: 8
+*************************** 9. row ***************************
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 139737209634816:5:4:11:139737096599072
+ENGINE_TRANSACTION_ID: 1996
+            THREAD_ID: 88
+             EVENT_ID: 80
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: PRIMARY
+OBJECT_INSTANCE_BEGIN: 139737096599072
+            LOCK_TYPE: RECORD
+            LOCK_MODE: X
+          LOCK_STATUS: GRANTED
+            LOCK_DATA: 1
+9 rows in set (0.00 sec)
+
+ERROR: 
+No query specified
+
+mysql> rollback;
+Query OK, 0 rows affected (0.00 sec)
+```
+
+#### update where使用非主键和唯一索引
+
+> 加表级IX锁、表级shared_write MDL锁、行级X锁。
+
+```
+mysql> select * from course;
++----+-------------+
+| id | name        |
++----+-------------+
+|  1 | java100     |
+|  2 | php         |
+|  3 | hello       |
+|  4 | python      |
+|  6 | hello world |
+|  7 | java1       |
+|  8 | java2       |
++----+-------------+
+7 rows in set (0.00 sec)
+
+mysql> create index idx_course_name on course(name);
+Query OK, 0 rows affected (0.03 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+mysql> begin;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> update course set name='111' where name='java100';
+Query OK, 1 row affected (0.00 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mysql> select * from performance_schema.metadata_locks where owner_thread_id!=sys.ps_thread_id(connection_id())\G;
+*************************** 1. row ***************************
+          OBJECT_TYPE: TABLE
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+          COLUMN_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 139734882072192
+            LOCK_TYPE: SHARED_WRITE
+        LOCK_DURATION: TRANSACTION
+          LOCK_STATUS: GRANTED
+               SOURCE: sql_parse.cc:5903
+      OWNER_THREAD_ID: 88
+       OWNER_EVENT_ID: 86
+1 row in set (0.01 sec)
+
+ERROR: 
+No query specified
+
+mysql> select * from performance_schema.data_locks\G;
+*************************** 1. row ***************************
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 139737209634816:1070:139737096601984
+ENGINE_TRANSACTION_ID: 2006
+            THREAD_ID: 88
+             EVENT_ID: 86
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 139737096601984
+            LOCK_TYPE: TABLE
+            LOCK_MODE: IX
+          LOCK_STATUS: GRANTED
+            LOCK_DATA: NULL
+*************************** 2. row ***************************
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 139737209634816:5:5:5:139737096599072
+ENGINE_TRANSACTION_ID: 2006
+            THREAD_ID: 88
+             EVENT_ID: 86
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: idx_course_name
+OBJECT_INSTANCE_BEGIN: 139737096599072
+            LOCK_TYPE: RECORD
+            LOCK_MODE: X
+          LOCK_STATUS: GRANTED
+            LOCK_DATA: 'java100', 1
+*************************** 3. row ***************************
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 139737209634816:5:4:12:139737096599416
+ENGINE_TRANSACTION_ID: 2006
+            THREAD_ID: 88
+             EVENT_ID: 86
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: PRIMARY
+OBJECT_INSTANCE_BEGIN: 139737096599416
+            LOCK_TYPE: RECORD
+            LOCK_MODE: X,REC_NOT_GAP
+          LOCK_STATUS: GRANTED
+            LOCK_DATA: 1
+*************************** 4. row ***************************
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 139737209634816:5:5:6:139737096599760
+ENGINE_TRANSACTION_ID: 2006
+            THREAD_ID: 88
+             EVENT_ID: 86
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: idx_course_name
+OBJECT_INSTANCE_BEGIN: 139737096599760
+            LOCK_TYPE: RECORD
+            LOCK_MODE: X,GAP
+          LOCK_STATUS: GRANTED
+            LOCK_DATA: 'java2', 8
+4 rows in set (0.00 sec)
+
+ERROR: 
+No query specified
+
+mysql> rollback;
+Query OK, 0 rows affected (0.00 sec)
+```
+
+#### update where使用唯一索引
+
+
+
+#### delete
+
+> 加表级IX锁、表级shared_write MDL锁、行级X锁。
+
+```
+mysql> begin;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> delete from course where id=1;
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select * from performance_schema.metadata_locks where owner_thread_id!=sys.ps_thread_id(connection_id())\G;
+*************************** 1. row ***************************
+          OBJECT_TYPE: TABLE
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+          COLUMN_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 139734882067616
+            LOCK_TYPE: SHARED_WRITE
+        LOCK_DURATION: TRANSACTION
+          LOCK_STATUS: GRANTED
+               SOURCE: sql_parse.cc:5903
+      OWNER_THREAD_ID: 88
+       OWNER_EVENT_ID: 66
+1 row in set (0.00 sec)
+
+ERROR: 
+No query specified
+
+mysql> select * from performance_schema.data_locks\G;
+*************************** 1. row ***************************
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 139737209634816:1070:139737096601984
+ENGINE_TRANSACTION_ID: 1989
+            THREAD_ID: 88
+             EVENT_ID: 66
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 139737096601984
+            LOCK_TYPE: TABLE
+            LOCK_MODE: IX
+          LOCK_STATUS: GRANTED
+            LOCK_DATA: NULL
+*************************** 2. row ***************************
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 139737209634816:5:4:11:139737096599072
+ENGINE_TRANSACTION_ID: 1989
+            THREAD_ID: 88
+             EVENT_ID: 66
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: PRIMARY
+OBJECT_INSTANCE_BEGIN: 139737096599072
+            LOCK_TYPE: RECORD
+            LOCK_MODE: X,REC_NOT_GAP
+          LOCK_STATUS: GRANTED
+            LOCK_DATA: 1
+2 rows in set (0.00 sec)
+
+ERROR: 
+No query specified
+
+mysql> rollback;
+Query OK, 0 rows affected (0.00 sec)
+```
+
+#### insert
+
+> 加表级IX锁、表级shared_write MDL锁。
+
+```
+mysql> begin;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> insert into course values(null,'1111');
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select * from performance_schema.metadata_locks where owner_thread_id!=sys.ps_thread_id(connection_id())\G;
+*************************** 1. row ***************************
+          OBJECT_TYPE: TABLE
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+          COLUMN_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 139734882082912
+            LOCK_TYPE: SHARED_WRITE
+        LOCK_DURATION: TRANSACTION
+          LOCK_STATUS: GRANTED
+               SOURCE: sql_parse.cc:5903
+      OWNER_THREAD_ID: 88
+       OWNER_EVENT_ID: 70
+1 row in set (0.00 sec)
+
+ERROR: 
+No query specified
+
+mysql> select * from performance_schema.data_locks\G;
+*************************** 1. row ***************************
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 139737209634816:1070:139737096601984
+ENGINE_TRANSACTION_ID: 1991
+            THREAD_ID: 88
+             EVENT_ID: 70
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 139737096601984
+            LOCK_TYPE: TABLE
+            LOCK_MODE: IX
+          LOCK_STATUS: GRANTED
+            LOCK_DATA: NULL
+1 row in set (0.00 sec)
+
+ERROR: 
+No query specified
+
+mysql> rollback;
+Query OK, 0 rows affected (0.00 sec)
+```
+
+
+
+### 全局锁
+
+> 全局锁就是对整个数据库实例加锁，加锁后整个实例就处于只读状态，后续的dml、ddl语句都将被阻塞。
+>
+> 其典型的使用场景是做全库的逻辑备份，对所有的表进行锁定，从而获取一致性视图，保证数据的完整性。
+
+### 表级锁
+
+#### 表锁
+
+> 表锁分为两类：表共享读锁（所有session都能够读取数据但是不能修改数据，也称为表级S锁）、表排他写锁write lock（本session能够读写数据，其他session读写数据会被阻塞，也称为表级X锁）
+
+**demo测试表级共享读锁和表级排他写锁使用**
+
+```shell
+mysql> CREATE DATABASE IF NOT EXISTS testdb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+Query OK, 1 row affected (0.01 sec)
+
+mysql> use testdb;
+Database changed
+
+create table if not exists course(
+ id bigint primary key not null auto_increment,
+ name varchar(128) not null
+) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 collate=utf8mb4_general_ci;
+
+insert into course(id,name) values (1,'java'),(2,'php'),(3,'c'),(4,'python');
+
+# 表共享读锁演示
+mysql> lock tables course read;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> update course set name='java3' where id=1;
+ERROR 1099 (HY000): Table 'course' was locked with a READ lock and can't be updated
+
+# session2更新数据被阻塞直到session1 unlock tables;
+mysql> update course set name='java3' where id=1;
+Query OK, 1 row affected (8.04 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mysql> unlock tables;
+Query OK, 0 rows affected (0.00 sec)
+
+# 表独占写锁
+mysql> lock tables course write;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> select * from course;
++----+--------+
+| id | name   |
++----+--------+
+|  1 | java3  |
+|  2 | php    |
+|  3 | c1     |
+|  4 | python |
++----+--------+
+4 rows in set (0.00 sec)
+
+mysql> update course set name='java5' where id=1;
+Query OK, 1 row affected (0.00 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+# session2读取course一直被阻塞直到session1 unlock tables;
+mysql> select * from course;
++----+--------+
+| id | name   |
++----+--------+
+|  1 | java5  |
+|  2 | php    |
+|  3 | c1     |
+|  4 | python |
++----+--------+
+4 rows in set (4.97 sec)
+
+mysql> unlock tables;
+Query OK, 0 rows affected (0.00 sec)
+```
+
+#### 元数据锁（meta data lock，MDL）
+
+> MDL加锁过程是系统自动控制，无需显示使用，在访问一张表的时候会自动加上。MDL锁主要作用是维护表元数据的数据一致性，在表上有活动事务的时候，不可以对表元数据进行写入操作。为了避免DML和DDL冲突，保证读写的正确性。
+>
+> 在MySQL5.5中引入了MDL，当对一张表进行增删改查的时候，自动加MDL读锁（共享）。当对表结构进行变更操作时候，自动加MDL写锁（排他）。
+>
+> select、select ... lock in share mode自动加入 shared_read MDL锁。
+>
+> update、delete、insert、select ... for update自动加入shared_write MDL锁。
+>
+> alter table 自动加入exclusive排他MDL锁。
+>
+> shared_read MDL和shared_write MDL锁不冲突
+>
+> shared_read、shared_write和exclusive MDL锁冲突
+
+
+
+```shell
+# 查看当前MDL锁
+mysql> select * from performance_schema.metadata_locks\G;
+*************************** 1. row ***************************
+          OBJECT_TYPE: TABLE
+        OBJECT_SCHEMA: performance_schema
+          OBJECT_NAME: metadata_locks
+          COLUMN_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 139734949992928
+            LOCK_TYPE: SHARED_READ
+        LOCK_DURATION: TRANSACTION
+          LOCK_STATUS: GRANTED
+               SOURCE: sql_parse.cc:5903
+      OWNER_THREAD_ID: 70
+       OWNER_EVENT_ID: 16
+1 row in set (0.00 sec)
+
+ERROR: 
+No query specified
+
+# 演示select语句自动加入shared_read MDL锁
+mysql> start transaction;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> select * from course;
++----+--------+
+| id | name   |
++----+--------+
+|  1 | java5  |
+|  2 | php    |
+|  3 | c1     |
+|  4 | python |
++----+--------+
+4 rows in set (0.00 sec)
+mysql> select * from course lock in share mode;
++----+--------+
+| id | name   |
++----+--------+
+|  1 | java5  |
+|  2 | php    |
+|  3 | c1     |
+|  4 | python |
++----+--------+
+4 rows in set (0.00 sec)
+
+mysql> select * from performance_schema.metadata_locks\G;
+*************************** 1. row ***************************
+          OBJECT_TYPE: TABLE
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+          COLUMN_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 139735419844000
+            LOCK_TYPE: SHARED_READ
+        LOCK_DURATION: TRANSACTION
+          LOCK_STATUS: GRANTED
+               SOURCE: sql_parse.cc:5903
+      OWNER_THREAD_ID: 71
+       OWNER_EVENT_ID: 12
+
+mysql> commit;
+Query OK, 0 rows affected (0.00 sec)
+
+# 演示delete、update、insert、select ... for update语句自动加入shared_write MDL锁
+mysql> start transaction;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> update course set name='java' where id=1;
+Query OK, 1 row affected (0.00 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mysql> select * from performance_schema.metadata_locks\G;
+*************************** 1. row ***************************
+          OBJECT_TYPE: TABLE
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+          COLUMN_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 139735418820368
+            LOCK_TYPE: SHARED_WRITE
+        LOCK_DURATION: TRANSACTION
+          LOCK_STATUS: GRANTED
+               SOURCE: sql_parse.cc:5903
+      OWNER_THREAD_ID: 71
+       OWNER_EVENT_ID: 24
+
+mysql> commit;
+Query OK, 0 rows affected (0.00 sec)
+
+# 演示alter table exclusive MDL排他锁和select语句的shared_read共享读MDL锁冲突情景
+# 演示shared_read、shared_write和exclusive MDL锁冲突
+mysql> start transaction;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> select * from course;
++----+-------------+
+| id | name        |
++----+-------------+
+|  1 | java        |
+|  2 | php         |
+|  3 | hello       |
+|  4 | python      |
+|  6 | hello world |
++----+-------------+
+5 rows in set (0.00 sec)
+
+# session2 执行alter table DDL一直阻塞(如下面显示的pending状态)，因为exclusive MDL排他锁和session1 select语句自动加的shared_read MDL锁冲突
+mysql> alter table course add column test int not null;
+
+mysql> select * from performance_schema.metadata_locks\G;
+*************************** 1. row ***************************
+          OBJECT_TYPE: TABLE
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+          COLUMN_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 139734949992928
+            LOCK_TYPE: SHARED_READ
+        LOCK_DURATION: TRANSACTION
+          LOCK_STATUS: GRANTED
+               SOURCE: sql_parse.cc:5903
+      OWNER_THREAD_ID: 70
+       OWNER_EVENT_ID: 39
+...
+*************************** 9. row ***************************
+          OBJECT_TYPE: TABLE
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+          COLUMN_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 139735431619088
+            LOCK_TYPE: EXCLUSIVE
+        LOCK_DURATION: TRANSACTION
+          LOCK_STATUS: PENDING
+               SOURCE: mdl.cc:3753
+      OWNER_THREAD_ID: 71
+       OWNER_EVENT_ID: 52
+9 rows in set (0.00 sec)
+
+ERROR: 
+No query specified
+
+mysql> commit;
+Query OK, 0 rows affected (0.01 sec)
+
+# 演示shared_read MDL和shared_write MDL锁不冲突
+mysql> begin;
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> select * from course;
++----+-------------+------+
+| id | name        | test |
++----+-------------+------+
+|  1 | java        |    0 |
+|  2 | php         |    0 |
+|  3 | hello       |    0 |
+|  4 | python      |    0 |
+|  6 | hello world |    0 |
++----+-------------+------+
+5 rows in set (0.00 sec)
+
+# session2
+mysql> begin;
+Query OK, 0 rows affected (0.00 sec)
+# session2
+mysql> update course set name='java100' where id=1;
+Query OK, 1 row affected (0.01 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mysql> select * from performance_schema.metadata_locks\G;
+*************************** 1. row ***************************
+          OBJECT_TYPE: TABLE
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+          COLUMN_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 139734949936816
+            LOCK_TYPE: SHARED_READ
+        LOCK_DURATION: TRANSACTION
+          LOCK_STATUS: GRANTED
+               SOURCE: sql_parse.cc:5903
+      OWNER_THREAD_ID: 70
+       OWNER_EVENT_ID: 46
+*************************** 3. row ***************************
+          OBJECT_TYPE: TABLE
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+          COLUMN_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 139735431605824
+            LOCK_TYPE: SHARED_WRITE
+        LOCK_DURATION: TRANSACTION
+          LOCK_STATUS: GRANTED
+               SOURCE: sql_parse.cc:5903
+      OWNER_THREAD_ID: 71
+       OWNER_EVENT_ID: 56
+3 rows in set (0.00 sec)
+
+ERROR: 
+No query specified
+
+mysql> commit;
+Query OK, 0 rows affected (0.00 sec)
+
+# session2
+mysql> commit;
+Query OK, 0 rows affected (0.00 sec)
+```
+
+#### 意向锁
+
+> 意向锁分为：意向共享锁（IS）、意向排他锁（IX）。
+>
+> 意向锁作用：意向锁是在当事务加表锁时发挥作用。比如一个事务想要对表加排他锁，如果没有意向锁的话，那么该事务在加锁前需要判断当前表的每一行是否已经加了锁，如果表很大，遍历每行进行判断需要耗费大量的时间。如果使用意向锁的话，那么加表锁前，只需要判断当前表是否有意向锁即可，这样加快了对表锁的处理速度。
+>
+> 意向锁和表锁之间的兼容性：
+>
+> - IS锁：与表级S锁兼容，与表级X锁互斥
+> - IX锁：与表级S锁和表级X锁都互斥
+>
+> 意向锁和意向锁之间是兼容的。
+
+##### 演示IS锁和表级S锁兼容
+
+```
+mysql1> begin;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql1> select * from course where id=1 lock in share mode;
++----+---------+
+| id | name    |
++----+---------+
+|  1 | java100 |
++----+---------+
+1 row in set (0.00 sec)
+
+# lock table course read;不会阻塞因为IS锁和表级S锁兼容
+mysql2> lock table course read;
+Query OK, 0 rows affected (0.00 sec)
+mysql2> unlock table;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql1> commit;
+Query OK, 0 rows affected (0.00 sec)
+```
+
+##### 演示IS锁和表级X锁互斥
+
+```
+mysql1> begin;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql1> select * from course where id=1 lock in share mode;
++----+---------+
+| id | name    |
++----+---------+
+|  1 | java100 |
++----+---------+
+1 row in set (0.00 sec)
+
+# lock table course write;一直被阻塞，因为IS锁和表级X锁互斥
+mysql2> lock table course write;
+Query OK, 0 rows affected (4.37 sec)
+
+mysql1> commit;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql2> unlock table;
+Query OK, 0 rows affected (0.00 sec)
+```
+
+##### 演示IX锁和表级S、X锁互斥
+
+```
+mysql1> begin;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql1> select * from course where id=1 for update;
++----+---------+
+| id | name    |
++----+---------+
+|  1 | java100 |
++----+---------+
+1 row in set (0.00 sec)
+
+# 下面SQL被阻塞，因为IX锁和表级S锁互斥
+mysql2> lock table course read;
+
+mysql1> commit;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql2> unlock table;
+Query OK, 0 rows affected (0.00 sec)
+```
+
+### 行级锁
+
+> 每次操作锁住对应的行数据。锁定粒度最小，发生锁冲突的概率最低，并发度最高。应用在InnoDB存储引擎中,MyISAM不支持行级锁
+>
+> InnoDB的数据是基于索引组织的，行锁是通过对索引上的索引项加锁来实现的，而不是对记录加的锁。
+
+#### 行锁（Record Lock）
+
+> 锁定单个行记录的锁，防止其他事务对此行进行update和delete。在RC、RR隔离级别下都支持。（ RR:read committed、RC:repeatable read）
+>
+> InnoDB实现了以下两种类型的行锁：
+> 共享锁（S）：允许一个事务去读一行，阻止其他事务获得相同数据集的排它锁。
+> 排他锁（X）：允许获取排他锁的事务更新数据，阻止其他事务获得相同数据集的共享锁和排他锁。
+> 注：行锁中的共享锁在lock_mode字段中叫"S,REC_NOT_GAP",
+> 行锁中的排他锁在lock_mode字段中分别叫"X,REC_NOT_GAP"
+>
+> 
+>
+> 共享锁和共享锁之间是兼容的
+>
+> 共享锁和排他锁之间是互斥的
+>
+> 排他锁和排他锁之间是互斥的
+
+##### 演示共享锁和共享锁之间是兼容
+
+```
+mysql1> begin;
+Query OK, 0 rows affected (0.01 sec)
+mysql1> select * from course where id=1 lock in share mode;
++----+---------+
+| id | name    |
++----+---------+
+|  1 | java100 |
++----+---------+
+1 row in set (0.00 sec)
+mysql1> rollback;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql2> begin;
+Query OK, 0 rows affected (0.01 sec)
+mysql2> select * from course where id=1 lock in share mode;
++----+---------+
+| id | name    |
++----+---------+
+|  1 | java100 |
++----+---------+
+1 row in set (0.00 sec)
+mysql2> rollback;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> select * from performance_schema.data_locks\G;
+*************************** 1. row ***************************
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 139737209634816:1070:139737096601984
+ENGINE_TRANSACTION_ID: 421212186345472
+            THREAD_ID: 88
+             EVENT_ID: 98
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 139737096601984
+            LOCK_TYPE: TABLE
+            LOCK_MODE: IS
+          LOCK_STATUS: GRANTED
+            LOCK_DATA: NULL
+*************************** 2. row ***************************
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 139737209634816:5:4:14:139737096599072
+ENGINE_TRANSACTION_ID: 421212186345472
+            THREAD_ID: 88
+             EVENT_ID: 98
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: PRIMARY
+OBJECT_INSTANCE_BEGIN: 139737096599072
+            LOCK_TYPE: RECORD
+            LOCK_MODE: S,REC_NOT_GAP
+          LOCK_STATUS: GRANTED
+            LOCK_DATA: 1
+*************************** 3. row ***************************
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 139737209635624:1070:139737096607968
+ENGINE_TRANSACTION_ID: 421212186346280
+            THREAD_ID: 89
+             EVENT_ID: 30
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 139737096607968
+            LOCK_TYPE: TABLE
+            LOCK_MODE: IS
+          LOCK_STATUS: GRANTED
+            LOCK_DATA: NULL
+*************************** 4. row ***************************
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 139737209635624:5:4:14:139737096605056
+ENGINE_TRANSACTION_ID: 421212186346280
+            THREAD_ID: 89
+             EVENT_ID: 30
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: PRIMARY
+OBJECT_INSTANCE_BEGIN: 139737096605056
+            LOCK_TYPE: RECORD
+            LOCK_MODE: S,REC_NOT_GAP
+          LOCK_STATUS: GRANTED
+            LOCK_DATA: 1
+4 rows in set (0.00 sec)
+
+ERROR: 
+No query specified
+```
+
+##### 演示共享锁和排他锁之间是互斥
+
+```
+mysql1> begin;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql2> begin;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql1> select * from course where id=1 lock in share mode;
++----+---------+
+| id | name    |
++----+---------+
+|  1 | java100 |
++----+---------+
+1 row in set (0.00 sec)
+
+# SQL被阻塞，原因行级S锁和行级X锁互斥
+mysql2> select * from course where id=1 for update;
++----+---------+
+| id | name    |
++----+---------+
+|  1 | java100 |
++----+---------+
+1 row in set (4.20 sec)
+
+mysql1> rollback;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql2> rollback;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> select * from performance_schema.data_locks\G;
+*************************** 1. row ***************************
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 139737209635624:1070:139737096607968
+ENGINE_TRANSACTION_ID: 2028
+            THREAD_ID: 89
+             EVENT_ID: 42
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 139737096607968
+            LOCK_TYPE: TABLE
+            LOCK_MODE: IX
+          LOCK_STATUS: GRANTED
+            LOCK_DATA: NULL
+*************************** 2. row ***************************
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 139737209635624:5:4:14:139737096605056
+ENGINE_TRANSACTION_ID: 2028
+            THREAD_ID: 89
+             EVENT_ID: 42
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: PRIMARY
+OBJECT_INSTANCE_BEGIN: 139737096605056
+            LOCK_TYPE: RECORD
+            LOCK_MODE: X,REC_NOT_GAP
+          LOCK_STATUS: WAITING
+            LOCK_DATA: 1
+*************************** 3. row ***************************
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 139737209634816:1070:139737096601984
+ENGINE_TRANSACTION_ID: 421212186345472
+            THREAD_ID: 88
+             EVENT_ID: 110
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 139737096601984
+            LOCK_TYPE: TABLE
+            LOCK_MODE: IS
+          LOCK_STATUS: GRANTED
+            LOCK_DATA: NULL
+*************************** 4. row ***************************
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 139737209634816:5:4:14:139737096599072
+ENGINE_TRANSACTION_ID: 421212186345472
+            THREAD_ID: 88
+             EVENT_ID: 110
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: PRIMARY
+OBJECT_INSTANCE_BEGIN: 139737096599072
+            LOCK_TYPE: RECORD
+            LOCK_MODE: S,REC_NOT_GAP
+          LOCK_STATUS: GRANTED
+            LOCK_DATA: 1
+4 rows in set (0.00 sec)
+
+ERROR: 
+No query specified
+```
+
+##### 演示共享锁和共享锁之间是互斥
+
+```
+mysql1> begin;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql2> begin;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql1> select * from course where id=1 for update;
++----+---------+
+| id | name    |
++----+---------+
+|  1 | java100 |
++----+---------+
+1 row in set (0.00 sec)
+
+# SQL被阻塞，原因行级X锁和行级X锁互斥
+mysql2> select * from course where id=1 for update;
++----+---------+
+| id | name    |
++----+---------+
+|  1 | java100 |
++----+---------+
+1 row in set (18.64 sec)
+
+mysql1> rollback;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql2> rollback;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> select * from performance_schema.data_locks\G;
+*************************** 1. row ***************************
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 139737209635624:1070:139737096607968
+ENGINE_TRANSACTION_ID: 2031
+            THREAD_ID: 89
+             EVENT_ID: 50
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 139737096607968
+            LOCK_TYPE: TABLE
+            LOCK_MODE: IX
+          LOCK_STATUS: GRANTED
+            LOCK_DATA: NULL
+*************************** 2. row ***************************
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 139737209635624:5:4:14:139737096605056
+ENGINE_TRANSACTION_ID: 2031
+            THREAD_ID: 89
+             EVENT_ID: 50
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: PRIMARY
+OBJECT_INSTANCE_BEGIN: 139737096605056
+            LOCK_TYPE: RECORD
+            LOCK_MODE: X,REC_NOT_GAP
+          LOCK_STATUS: WAITING
+            LOCK_DATA: 1
+*************************** 3. row ***************************
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 139737209634816:1070:139737096601984
+ENGINE_TRANSACTION_ID: 2030
+            THREAD_ID: 88
+             EVENT_ID: 118
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 139737096601984
+            LOCK_TYPE: TABLE
+            LOCK_MODE: IX
+          LOCK_STATUS: GRANTED
+            LOCK_DATA: NULL
+*************************** 4. row ***************************
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 139737209634816:5:4:14:139737096599072
+ENGINE_TRANSACTION_ID: 2030
+            THREAD_ID: 88
+             EVENT_ID: 118
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: PRIMARY
+OBJECT_INSTANCE_BEGIN: 139737096599072
+            LOCK_TYPE: RECORD
+            LOCK_MODE: X,REC_NOT_GAP
+          LOCK_STATUS: GRANTED
+            LOCK_DATA: 1
+4 rows in set (0.00 sec)
+
+ERROR: 
+No query specified
+```
+
+
+
+#### 间隙锁（Gap Lock）
+
+#### 临键锁（Next-Key Lock）
+
+## performance_schema.threads中的thread_id、processlist_id、thread_os_id
+
+```
+https://www.linuxe.cn/post-718.html
+
+thread_os_id: 对应操作系统mysql进程下的线程ID,与ps -ef出来的mysql线程号相同
+使用top -H -p mysqld_pid列出mysql进程下的所有线程并找到thread_os_id对应的pid
+
+processlist_id: 对应连接id，通过select connection_id()获取当前session对应的processlist_id，对应show processlist显示的id
+
+thread_id: mysql内部自增的线程id，select sys.ps_thread_id(connection_id())返回发当前session的内部thread_id，select sys.ps_thread_id(processlist_id)返回指定processlist_id的内部thread_id
+
+proccesslist_id和thread_id的关系:
+processlist_id通过函数sys.ps_thread_id(processlist_id)转换为thread_id
+thread_id通过查询performance_schema.threads表找到对应的processlist_id，如下面SQL所示：
+mysql> select * from performance_schema.threads where thread_id=82\G;
+*************************** 1. row ***************************
+          THREAD_ID: 82
+               NAME: thread/sql/one_connection
+               TYPE: FOREGROUND
+     PROCESSLIST_ID: 19
+   PROCESSLIST_USER: root
+   PROCESSLIST_HOST: localhost
+     PROCESSLIST_DB: NULL
+PROCESSLIST_COMMAND: Query
+   PROCESSLIST_TIME: 0
+  PROCESSLIST_STATE: statistics
+   PROCESSLIST_INFO: select * from performance_schema.threads where thread_id=82
+   PARENT_THREAD_ID: NULL
+               ROLE: NULL
+       INSTRUMENTED: YES
+            HISTORY: YES
+    CONNECTION_TYPE: Socket
+       THREAD_OS_ID: 237
+     RESOURCE_GROUP: USR_default
+1 row in set (0.00 sec)
+
+ERROR: 
+No query specified
+```
+
