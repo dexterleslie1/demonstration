@@ -23,7 +23,7 @@ public class Tests {
      * @throws InterruptedException
      */
     @Test
-    public void test_tutorial_helloworld() throws IOException, TimeoutException, InterruptedException {
+    public void test() throws IOException, TimeoutException, InterruptedException {
         String queueName = "rabbitmq-examples-tutorial-helloworld";
 
         ConnectionFactory connectionFactory = new ConnectionFactory();
@@ -39,7 +39,7 @@ public class Tests {
         channel.queueDeclare(queueName, false, false, false, null);
 
         int totalMessageProduce = 1000;
-        List<String> listMessageConsume = new ArrayList<>();
+        List<String> listMessageConsume = Collections.synchronizedList(new ArrayList<>());
         CountDownLatch countDownLatch = new CountDownLatch(totalMessageProduce);
         DeliverCallback deliverCallback = (consumerTag, delivery) -> {
             String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
@@ -50,7 +50,7 @@ public class Tests {
         Channel channelConsumer = connectionConsumer.createChannel();
         channelConsumer.basicConsume(queueName, true, deliverCallback, consumerTag -> {});
 
-        List<String> listMessageProduce = new ArrayList<String>();
+        List<String> listMessageProduce = new ArrayList<>();
         for(int i=0 ; i<totalMessageProduce; i++){
             String message = UUID.randomUUID().toString();
             listMessageProduce.add(message);
