@@ -39,4 +39,9 @@ public class ApiController {
         log.info("result2=" + result2);
         return result;
     }
+
+    @GetMapping("timeout")
+    public String timeout() {
+        return this.productFeign.timeout();
+    }
 }

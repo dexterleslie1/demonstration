@@ -16,4 +16,7 @@ public interface ProductFeign {
     @PostMapping("add")
     String add(@RequestHeader(value = "customHeader") String customHeader,
                @RequestBody(required = false) Product product);
+
+    @GetMapping("timeout")
+    String timeout();
 }

@@ -1,4 +1,4 @@
-package com.future.demo.spring.cloud.hystrix;
+package com.future.demo.spring.cloud.hystrix.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;

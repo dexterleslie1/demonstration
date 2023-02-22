@@ -1,4 +1,4 @@
-package com.future.demo.spring.cloud.hystrix;
+package com.future.demo.spring.cloud.hystrix.client;
 
 import com.future.demo.spring.cloud.common.ObjectResponse;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
@@ -29,7 +29,7 @@ public class ApiFriendRestTemplate {
                     @HystrixProperty(name = "maxQueueSize", value = "101"),
                     @HystrixProperty(name = "queueSizeRejectionThreshold", value = "101")
             })
-    ResponseEntity<ObjectResponse<String>> timeout(Integer milliseconds) {
+    public ResponseEntity<ObjectResponse<String>> timeout(Integer milliseconds) {
         MultiValueMap<String, Object> multiValueParams= new LinkedMultiValueMap<>();
         multiValueParams.add("milliseconds", milliseconds);
         HttpEntity<MultiValueMap<String, String>> httpEntity = new HttpEntity(multiValueParams, null);
@@ -50,7 +50,7 @@ public class ApiFriendRestTemplate {
                     @HystrixProperty(name = "maxQueueSize", value = "101"),
                     @HystrixProperty(name = "queueSizeRejectionThreshold", value = "101")
             })
-    ResponseEntity<ObjectResponse<String>> timeout2(Integer milliseconds) {
+    public ResponseEntity<ObjectResponse<String>> timeout2(Integer milliseconds) {
         MultiValueMap<String, Object> multiValueParams= new LinkedMultiValueMap<>();
         multiValueParams.add("milliseconds", milliseconds);
         HttpEntity<MultiValueMap<String, String>> httpEntity = new HttpEntity(multiValueParams, null);

@@ -4,6 +4,8 @@ import com.future.demo.spring.cloud.feign.common.entity.Product;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.concurrent.TimeUnit;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/product")
@@ -43,5 +45,11 @@ public class ApiController {
         } else {
             return "新增失败";
         }
+    }
+
+    @GetMapping("timeout")
+    public String timeout() throws InterruptedException {
+        TimeUnit.SECONDS.sleep(2);
+        return "成功调用";
     }
 }

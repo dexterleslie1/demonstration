@@ -1,6 +1,8 @@
-package com.future.demo.spring.cloud.hystrix;
+package com.future.demo.spring.cloud.hystrix.controller;
 
 import com.future.demo.spring.cloud.common.ObjectResponse;
+import com.future.demo.spring.cloud.hystrix.feign.ApiFriend;
+import com.future.demo.spring.cloud.hystrix.client.ApiFriendRestTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;

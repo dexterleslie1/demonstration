@@ -1,4 +1,4 @@
-package com.future.demo.spring.cloud.hystrix;
+package com.future.demo.spring.cloud.hystrix.config;
 
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;

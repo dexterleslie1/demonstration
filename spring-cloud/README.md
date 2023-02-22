@@ -85,7 +85,7 @@ http://localhost:8081/api/v1/a/sayHello?name=dexter
 >
 > LoadBalancer
 >
-> Feign（停止更新，不需要学习）
+> Feign（停止更新，不需要学习，已经被openfeign取代）
 >
 > OpenFeign
 
@@ -118,3 +118,57 @@ public class ApplicationRibbon {
 ```
 
 ### OpenFeign
+
+> https://www.jianshu.com/p/c0cb63e7640c
+>
+> OpenFeign是一个声明式web服务客户端，让编写Web服务客户端变得更加容易，只需要创建一个接口并在接口上添加注解即可。Feign也可以支持拔插式的编码器和解码器。SpringCloud对Feign进行了封装，使其支持了Spring MVC标准注解和HttpMessageConverters。Feign可以与Eureka和Ribbon组合使用以支持负载均衡。
+>
+> 前面在使用Ribbon时候，利用RestTemplete对http请求封装处理形成一套模板化的调用方法。但是在实际开发过程中，由于对服务依赖的调用可能不止一处，往往一个接口会被多处调用，所以通常都会针对每个微服务自行封装一些客户端类来包装这些依赖服务的调用，所以Feign在此基础上做了进一步的封装，我们只需要在一个微服务接口上标注一个Feign注解即可完成对服务提供方的接口绑定，简化了Spring Cloud Ribbon时，自动封装服务调用客户端的开发量。
+>
+> 和Ribbon对比，Feign只需要在服务调用接口上加一个注解就可以了，优雅而简单的实现了服务调用。
+> 
+>
+>
+> 知识点：
+>
+> - openfeign超时配置
+>
+> - openfeign日志配置
+> - feign添加请求头信息，使用@RequestHeader注解 https://www.cnblogs.com/laeni/p/12733920.html
+>
+> 
+>
+> 参考spring-cloud/spring-cloud-feign-demo
+
+## 服务降级
+
+> 服务降级(fallback)、服务熔断(circuitbreaker)、服务限流。
+>
+> 参考spring-cloud/spring-cloud-hystrix
+
+## 服务网关
+
+> netflix zuul（进入维护状态，被springcloud抛弃）、netflix zuul2（推迟上线计划，被springcloud抛弃）、gateway（springcloud自研新一代网关）
+>
+> 参考spring-cloud/spring-cloud-gateway
+
+## 服务配置
+
+> nacos逐渐替代config
+
+### config和bus
+
+> todo 写demo
+
+## 消息驱动stream
+
+## 分布式请求链路跟踪sleuth+zipkin
+
+## springcloud alibaba nacos
+
+## springcloud alibaba sentinel
+
+## 分布式事务
+
+### seata
+
