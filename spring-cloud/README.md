@@ -178,6 +178,12 @@ public class ApplicationRibbon {
 
 ## springcloud alibaba nacos
 
+> 知识点：
+>
+> - springcloudalibaba和nacos集成配置
+>
+> 参考spring-cloud/spring-cloud-nacos
+
 ## springcloud alibaba sentinel
 
 ## 分布式事务

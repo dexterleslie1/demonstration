@@ -12,13 +12,8 @@ public class ApiController {
     @Autowired
     HelloworldClient helloworldClient;
 
-    @GetMapping(value = "test1", produces = MediaType.TEXT_PLAIN_VALUE)
-    public ResponseEntity<String> test1() {
-        return ResponseEntity.ok("成功调用zuul test1接口");
-    }
-
-    @PostMapping(value = "test2", produces = MediaType.TEXT_PLAIN_VALUE)
-    public ResponseEntity<String> test2(@RequestParam(value = "param1", defaultValue = "") String param1) {
-        return helloworldClient.test2(param1);
+    @GetMapping(value = "test1")
+    public ResponseEntity<String> test1(@RequestParam(value = "param1", defaultValue = "") String param1) {
+        return helloworldClient.test1(param1);
     }
 }

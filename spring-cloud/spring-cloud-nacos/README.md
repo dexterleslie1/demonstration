@@ -1,11 +1,18 @@
-# 演示单机版eureka的使用
+# 演示nacos使用
 
-## 启动和测试
+## springcloudalibaba配置nacos官方文档
 
-```shell
-# 启动eureka
+> https://spring-cloud-alibaba-group.github.io/github-pages/hoxton/zh-cn/index.html
 
-# 访问eureka面板
-http://localhost:9999/
+## 测试demo
+
+```
+# 启动nacos服务
+docker-compose up
+
+# 访问nacos dashboard，帐号：nacos 密码:nacos
+http://localhost:8848/nacos
+
+# 访问http://localhost:8080/api/v1/zuul/test1?param1=dexter
 ```
 

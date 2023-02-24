@@ -15,7 +15,6 @@
 
 	<modules>
 		<module>demo-springcloud-common</module>
-		<module>demo-springcloud-eureka-server</module>
 		<module>demo-springcloud-helloworld</module>
 		<module>demo-springcloud-zuul</module>
 	</modules>
@@ -34,6 +33,14 @@
 				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-dependencies</artifactId>
 				<version>Hoxton.SR10</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<!-- nacos依赖 -->
+			<dependency>
+				<groupId>com.alibaba.cloud</groupId>
+				<artifactId>spring-cloud-alibaba-dependencies</artifactId>
+				<version>2.2.9.RELEASE</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
