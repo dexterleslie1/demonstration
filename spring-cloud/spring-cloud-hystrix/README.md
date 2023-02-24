@@ -1,4 +1,40 @@
-此demo演示zuul route hystrix、feign hystrix、resttemplate hystrix用法
+# 演示zuul route hystrix、feign hystrix、resttemplate hystrix用法
+
+## 服务降级测试
+
+### 服务提供者端服务降级测试
+
+```
+# 打开浏览器访问http://localhost:8081/api/v1/user/test1正常
+
+# 打开浏览器访问http://localhost:8081/api/v1/user/test1?milliseconds=3000结果返回{"errorCode":5000,"errorMessage":null,"data":"调用ProviderSideFallbackController1#test接口失败"}表示触发服务降级
+# 因为sleep时间持续3000毫秒大于execution.isolation.thread.timeoutInMilliseconds配置的2000毫秒导致触发服务降级
+# NOTE: 虽然因为超时服务降级，但是陆续进来的请求依旧被服务器处理，并且将会导致更多的服务调用失败。
+```
+
+### 服务提供者端服务降级测试之统一fallback
+
+```
+# 打开浏览器访问http://localhost:8081/api/v1/user/test2正常
+
+# 打开浏览器访问http://localhost:8081/api/v1/user/test2?milliseconds=3000结果返回{"errorCode":5000,"errorMessage":null,"data":"调用ProviderSideFallbackController2#test接口失败"}表示成功触发统一fallback
+```
+
+### 服务调用者feign服务降级测试
+
+```
+# 打开浏览器访问http://localhost:8080/api/v1/user/timeoutWithFeignFallback正常
+
+# 打开浏览器访问http://localhost:8080/api/v1/user/timeoutWithFeignFallback?milliseconds=10100会触发feign fallback，因为在application.properties里面配置feign ApiUser.timeout超时时间为10000
+```
+
+## 服务熔断测试
+
+```
+# 访问http://localhost:8081/api/v1/user/testCircuitBreaker1刷新5次后触发熔断
+
+# 马上访问http://localhost:8081/api/v1/user/testCircuitBreaker1?id=22发现接口错误返回说明熔断已经被打开，大概经过30秒后服务恢复正常
+```
 
 turbine hystrix集群监控
 https://www.jianshu.com/p/590bad4c8947

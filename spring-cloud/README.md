@@ -146,6 +146,18 @@ public class ApplicationRibbon {
 >
 > 参考spring-cloud/spring-cloud-hystrix
 
+### 服务降级
+
+> NOTE: feign客户端调用服务时达到ribbon.ReadTimeout超时，即使execution.isolation.thread.timeoutInMilliseconds未达到超时时间也会fallback
+>
+> 配置方式分为2种：服务提供者配置服务降级、服务调用者feign配置服务降级
+
+### 服务熔断
+
+> 参考spring-cloud/spring-cloud-hystrix/README.md
+
+### 服务限流
+
 ## 服务网关
 
 > netflix zuul（进入维护状态，被springcloud抛弃）、netflix zuul2（推迟上线计划，被springcloud抛弃）、gateway（springcloud自研新一代网关）

@@ -28,7 +28,6 @@
         <module>spring-cloud-eureka</module>
         <module>spring-cloud-zuul</module>
         <module>spring-cloud-user</module>
-        <module>spring-cloud-friend</module>
     </modules>
 
     <dependencyManagement>
