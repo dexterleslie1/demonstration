@@ -18,11 +18,17 @@
     </properties>
 
     <dependencies>
-        <!-- nacos依赖 -->
+        <!-- nacos注册中心依赖配置 -->
         <dependency>
             <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
         </dependency>
+        <!-- nacos服务配置依赖配置 -->
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>com.future.demo</groupId>
             <artifactId>demo-springcloud-common</artifactId>
