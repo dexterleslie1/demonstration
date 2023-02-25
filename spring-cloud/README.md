@@ -176,15 +176,21 @@ public class ApplicationRibbon {
 
 ## 分布式请求链路跟踪sleuth+zipkin
 
-## springcloud alibaba nacos
+## springcloudalibaba nacos
 
 > 知识点：
 >
 > - springcloudalibaba和nacos集成配置
+> - nacos服务注册基本配置
+> - nacos服务注册Group、Namespace配置
 >
 > 参考spring-cloud/spring-cloud-nacos
 
-## springcloud alibaba sentinel
+## springcloudalibaba sentinel
+
+> 知识点：
+>
+> - springcloudalibaba和sentinel集成配置
 
 ## 分布式事务
 
