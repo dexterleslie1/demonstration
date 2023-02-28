@@ -1,12 +1,28 @@
-# elasticsearch用法
+# elasticsearch
 
 ## todo列表
 
-- 学会所有查询方法
-- SpringData elasticsearch学习
-- elasticsearch性能测试（高并发、大数据、集群、单机内存溢出）
-- 实现京东商品查询逻辑
-- elastcisearch多租户可行性分析
+> - 学会所有查询方法
+> - SpringData elasticsearch学习
+> - elasticsearch性能测试（高并发、大数据、集群、单机内存溢出）
+> - 实现京东商品查询逻辑
+> - elastcisearch多租户可行性分析
+
+## es介绍
+
+## es、lucene、solr区别
+
+> es：基于lucene搜索引擎
+>
+> solr：基于lucene搜索引擎
+>
+> lucene：Lucene是非常优秀的成熟的 开源的 免费的纯 纯java 语言的全文索引检索工具包jar。 是搜索引擎的底层。
+>
+> todo
+
+## es数据结构
+
+> todo: 索引数据结构，集群索引如何分片和提供服务的。
 
 ## elasticsearch java客户端分类
 
@@ -16,7 +32,7 @@
 *较新版本elasticsearch推荐使用这个客户端操作elasticsearch*<br>
 [Elasticsearch Java API Client](https://www.elastic.co/guide/en/elasticsearch/client/java-api-client/current/index.html)
 
-## 使用docker-compose运行elasticsearch
+## 使用docker运行elasticsearch、kibana
 
 ```shell script
 # 启动elasticsearch
@@ -24,13 +40,131 @@ docker-compose up -d
 
 # 删除elasticsearch
 docker-compose down
+
+# 访问kibana
+http://localhost:5601
 ```
 
-## 使用postman操作elasticsearch
+## RESTful操作elasticsearch
 
-### 创建索引
+### 使用 _analyze 查看分词情况
+
+```
+GET /_analyze
+{
+    "analyzer": "ik_smart",
+    "text": "我是程序员"
+}
+结果：
+{
+  "tokens" : [
+    {
+      "token" : "我",
+      "start_offset" : 0,
+      "end_offset" : 1,
+      "type" : "CN_CHAR",
+      "position" : 0
+    },
+    {
+      "token" : "是",
+      "start_offset" : 1,
+      "end_offset" : 2,
+      "type" : "CN_CHAR",
+      "position" : 1
+    },
+    {
+      "token" : "程序员",
+      "start_offset" : 2,
+      "end_offset" : 5,
+      "type" : "CN_WORD",
+      "position" : 2
+    }
+  ]
+}
+
+POST _analyze 
+{
+  "analyzer": "ik_max_word",
+  "text": "千锋教育"
+}
+结果:
+{
+  "tokens" : [
+    {
+      "token" : "千",
+      "start_offset" : 0,
+      "end_offset" : 1,
+      "type" : "TYPE_CNUM",
+      "position" : 0
+    },
+    {
+      "token" : "锋",
+      "start_offset" : 1,
+      "end_offset" : 2,
+      "type" : "CN_CHAR",
+      "position" : 1
+    },
+    {
+      "token" : "教育",
+      "start_offset" : 2,
+      "end_offset" : 4,
+      "type" : "CN_WORD",
+      "position" : 2
+    }
+  ]
+}
+```
+
+### es数据类型
+
+> 字符串类型：
+>
+> - text：一般用于全文检索，将当前field分词。
+> - keyword：当前field不会被分词。
+>
+> 数值类型：
+>
+> - long
+> - integer
+> - short
+> - byte
+> - double
+> - float
+>
+> 日期类型：
+>
+> - date：能够支持指定日期格式yyyy-MM-dd HH:mm:ss、yyyy-MM-dd、epoch_millis
+>
+> 布尔类型：
+>
+> - boolean：值只能够为true、false
+>
+> 二进制类型：
+>
+> - binary：支持存储基于Base64 encode后的字符串
+
+### 索引操作
+
+#### 创建索引
 
 ```text
+# number_of_shards表示索引分片数为6
+# number_of_replicas表示索引副本数为1
+PUT /person 
+{
+  "settings": {
+    "number_of_shards": 6,
+    "number_of_replicas": 1
+  }
+}
+
+结果:
+{
+  "acknowledged" : true,
+  "shards_acknowledged" : true,
+  "index" : "person"
+}
+
 PUT /blog
 {
     "mappings": {
@@ -57,6 +191,7 @@ PUT /blog
     }
 }
 
+结果:
 {
     "acknowledged": true,
     "shards_acknowledged": true,
@@ -64,181 +199,850 @@ PUT /blog
 }
 ```
 
-### 设置索引_mappings
+#### 查看索引信息
 
-```text
-PUT /blog/_doc/_mappings
+```
+GET /person
+
+结果:
 {
+  "person" : {
+    "aliases" : { },
+    "mappings" : { },
+    "settings" : {
+      "index" : {
+        "creation_date" : "1677335532848",
+        "number_of_shards" : "6",
+        "number_of_replicas" : "1",
+        "uuid" : "nvUtgXiXR7aL1SJY_1wnRg",
+        "version" : {
+          "created" : "7080099"
+        },
+        "provided_name" : "person"
+      }
+    }
+  }
+}
+```
+
+#### 删除索引
+
+```
+DELETE /person
+
+结果:
+{
+  "acknowledged" : true
+}
+```
+
+### 创建索引并指定settings和mappings
+
+```json
+PUT /book
+{
+  "settings": {
+    "number_of_shards": 8,
+    "number_of_replicas": 1
+  },
+  "mappings": {
     "properties": {
-        "id": {
-            "type": "long",
-            "store": true
-        },
-        "title": {
-            "type": "text",
-            "store": true,
-            "index": true,
-            "analyzer": "standard"
-        },
-        "content": {
-            "type": "text",
-            "store": true,
-            "index": true,
-            "analyzer": "standard"
+      "name": {
+        # 类型是text，支持分词
+        "type": "text",
+        # 使用ik分词器的ik_max_word分词
+        "analyzer": "ik_max_word"
+      },
+      "author": {
+        # 作者字段不支持分词
+        "type": "keyword"
+      },
+      "count": {
+        "type": "long"
+      },
+      "on-sale": {
+        "type": "date",
+        # 日期类型支持以下3种之一
+        "format": "yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis"
+      },
+      "descr": {
+        "type": "text",
+        "analyzer": "ik_max_word"
+      }
+    }
+  }
+}
+
+结果：
+{
+  "acknowledged" : true,
+  "shards_acknowledged" : true,
+  "index" : "book"
+}
+```
+
+### 文档操作
+
+#### 创建文档
+
+> https://www.jianshu.com/p/3b4f1fe275d4
+
+**自动生成id**
+
+```text
+POST /book/_doc
+{
+  "name": "盘龙",
+  "author": "我吃西红柿",
+  "count": 100000,
+  "on-sale": "2000-01-01",
+  "descr": "解放军诶uru日额反而就ierue积分"
+}
+
+结果：
+{
+  "_index" : "book",
+  "_type" : "_doc",
+  "_id" : "lvfajIYBGRCAoSjZfGcc",
+  "_version" : 1,
+  "result" : "created",
+  "_shards" : {
+    "total" : 2,
+    "successful" : 1,
+    "failed" : 0
+  },
+  "_seq_no" : 0,
+  "_primary_term" : 1
+}
+```
+
+**指定文档id**
+
+```
+POST /book/_doc/1
+{
+  "name": "红楼梦",
+  "author": "曹雪芹",
+  "count": 10000000,
+  "on-sale": "1985-01-01",
+  "descr": "据日u诶入耳哦u你科尔健康viueiruui额u解决ve佛恩道具ixww就iroe"
+}
+
+结果：
+{
+  "_index" : "book",
+  "_type" : "_doc",
+  "_id" : "1",
+  "_version" : 1,
+  "result" : "created",
+  "_shards" : {
+    "total" : 2,
+    "successful" : 1,
+    "failed" : 0
+  },
+  "_seq_no" : 1,
+  "_primary_term" : 1
+}
+```
+
+#### 修改文档
+
+**覆盖式修改**
+
+```text
+PUT /book/_doc/1
+{
+  "name": "红楼梦1",
+  "author": "曹雪芹1",
+  "count": 11000000,
+  "on-sale": "1986-01-01",
+  "descr": "据日u诶入耳哦u你科尔健康viueiruui额u解决ve佛恩道具ixww就iroe"
+}
+
+结果：
+{
+  "_index" : "book",
+  "_type" : "_doc",
+  "_id" : "1",
+  "_version" : 2,
+  "result" : "updated",
+  "_shards" : {
+    "total" : 2,
+    "successful" : 1,
+    "failed" : 0
+  },
+  "_seq_no" : 2,
+  "_primary_term" : 1
+}
+```
+
+**指定field修改**
+
+```
+POST /book/_update/1
+{
+  "doc": {
+    "count": 123456
+  }
+}
+
+结果：
+{
+  "_index" : "book",
+  "_type" : "_doc",
+  "_id" : "1",
+  "_version" : 3,
+  "result" : "noop",
+  "_shards" : {
+    "total" : 0,
+    "successful" : 0,
+    "failed" : 0
+  },
+  "_seq_no" : 3,
+  "_primary_term" : 1
+}
+```
+
+#### 删除文档
+
+```text
+DELETE /book/_doc/1
+
+结果：
+{
+  "_index" : "book",
+  "_type" : "_doc",
+  "_id" : "1",
+  "_version" : 8,
+  "result" : "deleted",
+  "_shards" : {
+    "total" : 2,
+    "successful" : 1,
+    "failed" : 0
+  },
+  "_seq_no" : 8,
+  "_primary_term" : 1
+}
+
+# 根据id in(100,101)删除文档
+POST /sms-logs/_delete_by_query
+{
+  "query": {
+    "ids": {
+      "values": [100,101]
+    }
+  }
+}
+```
+
+#### 根据id查询文档
+
+```text
+GET /book/_doc/1
+
+结果：
+{
+  "_index" : "book",
+  "_type" : "_doc",
+  "_id" : "1",
+  "_version" : 1,
+  "_seq_no" : 9,
+  "_primary_term" : 1,
+  "found" : true,
+  "_source" : {
+    "name" : "红楼梦",
+    "author" : "曹雪芹",
+    "count" : 10000000,
+    "on-sale" : "1985-01-01",
+    "descr" : "据日u诶入耳哦u你科尔健康viueiruui额u解决ve佛恩道具ixww就iroe"
+  }
+}
+```
+
+### es的查询
+
+#### 准备测试数据
+
+```json
+DELETE /sms-logs
+
+PUT /sms-logs
+{
+  "settings": {
+    "number_of_shards": 5,
+    "number_of_replicas": 1
+  },
+  "mappings": {
+    "properties": {
+      "province": {
+        "type": "keyword"
+      },
+      "smsContent": {
+        "type": "text"
+        , "analyzer": "ik_max_word"
+      },
+      "corpName": {
+        "type": "keyword"
+      },
+      "fee": {
+        "type": "double"
+      },
+      "operatorId": {
+        "type": "integer"
+      }
+    }
+  }
+}
+
+POST /sms-logs/_doc/1
+{
+  "province": "广东",
+  "smsContent": "我们一定都不陌生，无论中国城市还是乡间",
+  "corpName": "中国移动",
+  "fee": 11.2,
+  "operatorId": 1
+}
+POST /sms-logs/_doc/2
+{
+  "province": "广东",
+  "smsContent": "照亮了她们收货的脚下，也点亮了一安装个小小的家。",
+  "corpName": "中国移动",
+  "fee": 3.2,
+  "operatorId": 2
+}
+POST /sms-logs/_doc/3
+{
+  "province": "湖南",
+  "smsContent": "车前的灯照亮了北京这对母女送外卖的路，在次第亮起的感应灯护送下，她们穿梭在万家灯火之间。",
+  "corpName": "盒马鲜生",
+  "fee": 5.5,
+  "operatorId": 2
+}
+POST /sms-logs/_doc/4
+{
+  "province": "北京",
+  "smsContent": "这是三岁半的朦朦跟21岁的妈妈收货陈佳欣送外卖健康的第三年。",
+  "corpName": "途虎养车",
+  "fee": 6.8,
+  "operatorId": 3
+}
+POST /sms-logs/_doc/5
+{
+  "province": "北京",
+  "smsContent": "渐渐地，朦朦有了漂亮中国衣服、零食和货品玩具，她慢慢健康长大了，妈妈也可以在忙碌时暂时把她放下了。",
+  "corpName": "途虎养车",
+  "fee": 5,
+  "operatorId": 3
+}
+POST /sms-logs/_doc/6
+{
+  "province": "湖南",
+  "smsContent": "带着朦朦怕危险，放下心又悬着，妈妈也很矛盾。",
+  "corpName": "中国平安股份有限公司",
+  "fee": 20.23,
+  "operatorId": 1
+}
+```
+
+#### term和terms查询
+
+> term查询是精确匹配，不会对搜索的关键字进行分词，直接使用关键字到分词库中检索是否有匹配的分词精确匹配关键字。
+>
+> terms是用于一个字段匹配多个值情景使用，例如: province=="北京" or province=="广东"。
+>
+> term和terms查询能够用于keyword、text类型字段，只是term和terms查询都不会对关键字分词。
+
+**term查询**
+
+```
+# 查询province为北京的数据
+POST /sms-logs/_search
+{
+  "from": 0,
+  "size": 5,
+  "query": {
+    "term": {
+      "province": {
+        "value": "北京"
+      }
+    }
+  }
+}
+
+结果：
+{
+  "took" : 2,
+  "timed_out" : false,
+  "_shards" : {
+    "total" : 5,
+    "successful" : 5,
+    "skipped" : 0,
+    "failed" : 0
+  },
+  "hits" : {
+    "total" : {
+      "value" : 2,
+      "relation" : "eq"
+    },
+    "max_score" : 0.6931471,
+    "hits" : [
+      {
+        "_index" : "sms-logs",
+        "_type" : "_doc",
+        "_id" : "5",
+        "_score" : 0.6931471,
+        "_source" : {
+          "province" : "北京"
         }
-    }
-}
-
-{
-    "acknowledged": true
-}
-```
-
-### 删除索引
-
-```text
-DELETE /blog
-
-{
-    "acknowledged": true
-}
-```
-
-### 创建文档
-
-```text
-POST /blog/_doc/1
-{
-    "id": 10001,
-    "title": "中文标题",
-    "content": "中文内容"
-}
-
-{
-    "_index": "blog",
-    "_type": "_doc",
-    "_id": "1",
-    "_version": 1,
-    "result": "created",
-    "_shards": {
-        "total": 2,
-        "successful": 1,
-        "failed": 0
-    },
-    "_seq_no": 0,
-    "_primary_term": 1
-}
-```
-
-### 删除文档
-
-```text
-DELETE /blog/_doc/1
-
-{
-    "_index": "blog",
-    "_type": "_doc",
-    "_id": "1",
-    "_version": 2,
-    "result": "deleted",
-    "_shards": {
-        "total": 2,
-        "successful": 1,
-        "failed": 0
-    },
-    "_seq_no": 2,
-    "_primary_term": 1
-}
-```
-
-### 修改文档
-
-```text
-POST /blog/_doc/1
-{
-    "id": 10001,
-    "title": "[修改]中文标题",
-    "content": "[修改]中文内容"
-}
-
-{
-    "_index": "blog",
-    "_type": "_doc",
-    "_id": "1",
-    "_version": 1,
-    "result": "created",
-    "_shards": {
-        "total": 2,
-        "successful": 1,
-        "failed": 0
-    },
-    "_seq_no": 4,
-    "_primary_term": 1
-}
-```
-
-### 根据id查询文档
-
-```text
-GET /blog/_doc/1
-
-{
-    "_index": "blog",
-    "_type": "_doc",
-    "_id": "1",
-    "_version": 1,
-    "_seq_no": 4,
-    "_primary_term": 1,
-    "found": true,
-    "_source": {
-        "id": 10001,
-        "title": "[修改]中文标题",
-        "content": "[修改]中文内容"
-    }
-}
-```
-
-### 关键词查询文档
-
-```text
-GET /blog/_doc/_search
-{
-    "query": {
-        "term": {
-            "title": "文"
+      },
+      {
+        "_index" : "sms-logs",
+        "_type" : "_doc",
+        "_id" : "4",
+        "_score" : 0.2876821,
+        "_source" : {
+          "province" : "北京"
         }
+      }
+    ]
+  }
+}
+```
+
+**terms查询**
+
+```
+# 查询province为北京或者广东的数据
+POST /sms-logs/_search
+{
+  "query": {
+    "terms": {
+      "province": [
+        "北京",
+        "广东"
+      ]
     }
+  }
 }
 
+结果：
 {
-    "took": 28,
-    "timed_out": false,
-    "_shards": {
-        "total": 1,
-        "successful": 1,
-        "skipped": 0,
-        "failed": 0
+  "took" : 4,
+  "timed_out" : false,
+  "_shards" : {
+    "total" : 5,
+    "successful" : 5,
+    "skipped" : 0,
+    "failed" : 0
+  },
+  "hits" : {
+    "total" : {
+      "value" : 4,
+      "relation" : "eq"
     },
-    "hits": {
-        "total": {
-            "value": 1,
-            "relation": "eq"
-        },
-        "max_score": 0.2876821,
-        "hits": [
-            {
-                "_index": "blog",
-                "_type": "_doc",
-                "_id": "1",
-                "_score": 0.2876821,
-                "_source": {
-                    "id": 10001,
-                    "title": "[修改]中文标题",
-                    "content": "[修改]中文内容"
-                }
+    "max_score" : 1.0,
+    "hits" : [
+      {
+        "_index" : "sms-logs",
+        "_type" : "_doc",
+        "_id" : "5",
+        "_score" : 1.0,
+        "_source" : {
+          "province" : "北京"
+        }
+      },
+      {
+        "_index" : "sms-logs",
+        "_type" : "_doc",
+        "_id" : "4",
+        "_score" : 1.0,
+        "_source" : {
+          "province" : "北京"
+        }
+      },
+      {
+        "_index" : "sms-logs",
+        "_type" : "_doc",
+        "_id" : "2",
+        "_score" : 1.0,
+        "_source" : {
+          "province" : "广东"
+        }
+      },
+      {
+        "_index" : "sms-logs",
+        "_type" : "_doc",
+        "_id" : "1",
+        "_score" : 1.0,
+        "_source" : {
+          "province" : "广东"
+        }
+      }
+    ]
+  }
+}
+```
+
+#### match查询
+
+##### match_all查询
+
+```
+# 查询所有数据
+POST /sms-logs/_search
+{
+  "query": {
+    "match_all": {}
+  }
+}
+```
+
+##### match查询
+
+```
+# 查询smsContent字段包含"收货"、"安装"分词的记录
+POST /sms-logs/_search
+{
+  "query": {
+    "match": {
+      "smsContent": "收货安装"
+    }
+  }
+}
+```
+
+##### 布尔match查询
+
+```
+# 查询smsContent同时包含 "中国"和"健康" 分词的记录
+POST /sms-logs/_search
+{
+  "query": {
+    "match": {
+      "smsContent": {
+        "query": "中国 健康",
+        "operator": "and"
+      }
+    }
+  }
+}
+
+# 查询smsContent包含 "中国" 或者 "健康" 分词的记录
+POST /sms-logs/_search
+{
+  "query": {
+    "match": {
+      "smsContent": {
+        "query": "中国 健康",
+        "operator": "or"
+      }
+    }
+  }
+}
+```
+
+##### multi_match查询
+
+> match是针对一个field做检索，multi_match是针对多个field进行检索，多个field对应一个text。
+
+```
+# 查询province、smsContent有北京分词的
+POST /sms-logs/_search
+{
+  "query": {
+    "multi_match": {
+      "query": "北京",
+      "fields": ["province", "smsContent"]
+    }
+  }
+}
+```
+
+#### id和ids查询
+
+```
+# 查询id=1的sms-logs
+GET /sms-logs/_doc/1
+
+# 查询id in(1,2,3)，类似MySQL where id in查询
+POST /sms-logs/_search
+{
+  "query": {
+    "ids": {
+      "values": [1, 2, 3]
+    }
+  }
+}
+```
+
+#### prefix查询
+
+> prefix前缀查询, 比如某个field是"途虎科技", 搜索词是"途虎";则可以查询出来; 和match的区别, 如果"途虎科技"是"keyword"类型, 是查询不到的。
+
+```json
+POST /sms-logs/_search
+{
+  "query": {
+    "prefix": {
+      "corpName": {
+        "value": "途虎"
+      }
+    }
+  }
+}
+```
+
+#### fuzzy查询
+
+> 支持有错别字查询
+
+```
+# 不能查询到任何结果，因为prefix_length=3表示前缀连续3个字符必须要匹配
+POST /sms-logs/_search
+{
+  "query": {
+    "fuzzy": {
+      "corpName": {
+        "value": "盒马先生",
+        "prefix_length": 3
+      }
+    }
+  }
+}
+
+# 能够查询到结果，因为prefix_length=2表示前缀只需要连续2个字符匹配即可
+POST /sms-logs/_search
+{
+  "query": {
+    "fuzzy": {
+      "corpName": {
+        "value": "盒马先生",
+        "prefix_length": 2
+      }
+    }
+  }
+}
+```
+
+#### wildcard查询
+
+> 通配符查询，和MySQL like是一致的，通过占位符 * 和 ? 表示通配符。
+
+```
+# 查询到以中国开头的记录
+POST /sms-logs/_search
+{
+  "query": {
+    "wildcard": {
+      "corpName": {
+        "value": "中国*"
+      }
+    }
+  }
+}
+
+# 查询到以中国开头，后面有两个字的记录
+POST /sms-logs/_search
+{
+  "query": {
+    "wildcard": {
+      "corpName": {
+        "value": "中国??"
+      }
+    }
+  }
+}
+```
+
+#### range查询
+
+```
+# 查询fee在(5,10]之间的记录
+POST /sms-logs/_search
+{
+  "query": {
+    "range": {
+      "fee": {
+        "gt": 5,
+        "lte": 10
+      }
+    }
+  }
+}
+```
+
+#### regexp查询
+
+> 正则查询，通过自定义正则表达式查询。
+>
+> todo
+
+#### 复合查询
+
+##### bool查询
+
+> 复合过滤器，将多个查询条件，以一定的逻辑组合在一起。
+>
+> - must： 所有的条件，用must组合在一起表示and的意思。
+> - must_not：将must_not中的条件全部都不能匹配，表示not的意思。
+> - should：所有条件，用should组合在一起表示or的意思。
+
+```
+# province是北京或者广东
+# operatorId不能等于1
+# smsContent必须包含中国、健康
+POST /sms-logs/_search
+{
+  "query": {
+    "bool": {
+      "should": [
+        {
+          "term": {
+            "province": {
+              "value": "北京"
             }
-        ]
+          }
+        },
+        {
+          "term": {
+            "province": {
+              "value": "广东"
+            }
+          }
+        }
+      ],
+      "must_not": [
+        {
+          "term": {
+            "operatorId": {
+              "value": "1"
+            }
+          }
+        }
+      ],
+      "must": [
+        {
+          "term": {
+            "smsContent": {
+              "value": "中国"
+            }
+          }
+        },
+        {
+          "term": {
+            "smsContent": {
+              "value": "健康"
+            }
+          }
+        }
+      ]
     }
+  }
+}
+```
+
+##### boosting查询
+
+> https://blog.csdn.net/co_zjw/article/details/109811491
+>
+> 返回匹配positive查询的文档，同时降低也匹配negative查询的文档的相关性得分。您可以使用boosting查询来降低某些文档的匹配度，而不必将它们从搜索结果中排除。
+>
+> - positive: 要运行的查询。返回的所有文档都必须与此查询匹配
+> - negative: 查询用于降低匹配文档的相关性得分
+> - negative_boost: 介于0～1.0之间的浮点数，用于降低与negative查询匹配的文档的相关性得分。
+
+```
+# 查询smsContent匹配"收货安装"分词，并且如果smsContent批评"小小"分词时分数打折扣为0.1
+POST /sms-logs/_search
+{
+  "query": {
+    "boosting": {
+      "positive": {
+        "match": {
+          "smsContent": "收货安装"
+        }
+      },
+      "negative": {
+        "match": {
+          "smsContent": "小小"
+        }
+      },
+      "negative_boost": 0.1
+    }
+  }
+}
+```
+
+#### filter查询
+
+> https://www.cnblogs.com/qdhxhz/p/11493677.html
+>
+> query查询：这种语句在执行时既要计算文档是否匹配，还要计算文档相对于其他文档的匹配度有多高，匹配度越高，`_score` 分数就越高
+>
+> filter查询：过滤上下文中的语句在执行时**只关心文档是否和查询匹配，不会计算匹配度，也就是得分**。
+
+```
+# 查询结果没有计算相关性得分
+POST /sms-logs/_search
+{
+  "query": {
+    "bool": {
+      "filter": [
+        {
+          "term": {
+            "corpName": "中国移动"
+          }
+        },
+        {
+          "range": {
+            "fee": {
+              "gte": 10,
+              "lte": 20
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+```
+
+#### 高亮查询
+
+```
+# 查询smsContent包含中国，并且高亮中国。
+POST /sms-logs/_search
+{
+  "query": {
+    "match": {
+      "smsContent": "中国"
+    }
+  },
+  "highlight": {
+    "fields": {
+      "smsContent": {}
+    },
+    "pre_tags": "<font color='red'>",
+    "post_tags": "</font>"
+  }
+}
+```
+
+#### 聚合查询
+
+##### 去除重复计数cardinality
+
+```
+# 去除重复的province统计总共有多少个province
+POST /sms-logs/_search
+{
+  "aggs": {
+    "provinceCount": {
+      "cardinality": {
+        "field": "province"
+      }
+    }
+  }
 }
 ```
 
@@ -286,138 +1090,6 @@ GET /blog/_doc/_search
             }
         ]
     }
-}
-```
-
-### 查看分词器的分词效果
-
-```text
-GET /_analyze
-{
-    "analyzer": "standard",
-    "text": "中文内容1"
-}
-
-{
-    "tokens": [
-        {
-            "token": "中",
-            "start_offset": 0,
-            "end_offset": 1,
-            "type": "<IDEOGRAPHIC>",
-            "position": 0
-        },
-        {
-            "token": "文",
-            "start_offset": 1,
-            "end_offset": 2,
-            "type": "<IDEOGRAPHIC>",
-            "position": 1
-        },
-        {
-            "token": "内",
-            "start_offset": 2,
-            "end_offset": 3,
-            "type": "<IDEOGRAPHIC>",
-            "position": 2
-        },
-        {
-            "token": "容",
-            "start_offset": 3,
-            "end_offset": 4,
-            "type": "<IDEOGRAPHIC>",
-            "position": 3
-        },
-        {
-            "token": "1",
-            "start_offset": 4,
-            "end_offset": 5,
-            "type": "<NUM>",
-            "position": 4
-        }
-    ]
-}
-```
-
-### 查看中文分词器ik的分词效果
-
-```text
-GET /_analyze
-{
-    "analyzer": "ik_smart",
-    "text": "我是程序员"
-}
-
-{
-    "tokens": [
-        {
-            "token": "我",
-            "start_offset": 0,
-            "end_offset": 1,
-            "type": "CN_CHAR",
-            "position": 0
-        },
-        {
-            "token": "是",
-            "start_offset": 1,
-            "end_offset": 2,
-            "type": "CN_CHAR",
-            "position": 1
-        },
-        {
-            "token": "程序员",
-            "start_offset": 2,
-            "end_offset": 5,
-            "type": "CN_WORD",
-            "position": 2
-        }
-    ]
-}
-
-GET /_analyze
-{
-    "analyzer": "ik_max_word",
-    "text": "我是程序员"
-}
-
-{
-    "tokens": [
-        {
-            "token": "我",
-            "start_offset": 0,
-            "end_offset": 1,
-            "type": "CN_CHAR",
-            "position": 0
-        },
-        {
-            "token": "是",
-            "start_offset": 1,
-            "end_offset": 2,
-            "type": "CN_CHAR",
-            "position": 1
-        },
-        {
-            "token": "程序员",
-            "start_offset": 2,
-            "end_offset": 5,
-            "type": "CN_WORD",
-            "position": 2
-        },
-        {
-            "token": "程序",
-            "start_offset": 2,
-            "end_offset": 4,
-            "type": "CN_WORD",
-            "position": 3
-        },
-        {
-            "token": "员",
-            "start_offset": 4,
-            "end_offset": 5,
-            "type": "CN_CHAR",
-            "position": 4
-        }
-    ]
 }
 ```
 
