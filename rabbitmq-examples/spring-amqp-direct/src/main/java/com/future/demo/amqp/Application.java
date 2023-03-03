@@ -1,4 +1,4 @@
-package com.future.study.spring.amqp.direct;
+package com.future.demo.amqp;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

@@ -1,4 +1,4 @@
-package com.future.study.spring.amqp.direct;
+package com.future.demo.amqp;
 
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
