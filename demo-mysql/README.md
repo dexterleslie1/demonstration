@@ -4759,3 +4759,93 @@ ERROR:
 No query specified
 ```
 
+## MySQL和elasticsearch数据同步
+
+> http://www.ppmy.cn/news/12297.html
+>
+> 数据同步解决方案：
+>
+> - 同步双写：优点是实现简单。缺点是业务耦合，商品的管理中耦合大量数据同步代码；影响性能，写入两个存储，响应时间变长
+>   不便扩展；搜索可能有一些个性化需求，需要对数据进行聚合，这种方式不便实现。
+> - 异步双写：上架商品的时候, 先把商品数据丢入MQ, 为了解耦, 拆分一个搜索微服务, 搜搜微服务去订阅商品变动的信息, 完成同步。优点是解耦合，商品服务无需关注数据同步；实时性较好，使用MQ，正常情况下，同步完成在秒级。缺点是引入了新的组件和服务，增加了复杂度。
+> - 定时任务：定时任务, 频率不好选择, 频率高的话, 会引起业务的波峰, 使得Cpu, 内存的上升, 频率低的话, 时效性比较差。优点是实现比较简单。缺点是实时性难以保证，对存储压力较大。
+> - 数据订阅：MySQL通过binlog订阅实现主从同步，各路数据订阅框架比如canal就依据这个原理，将client组件伪装成从库，来实现数据订阅。优点是相比于异步双写, 可以降低商品的耦合性, 时效性更好；业务入侵较少，实时性较好。
+>
+> 完整的MySQL到elasticsearch数据同步demo没有编写，只编写了demo-canal demo可以作为具体实现方案的参考
+
+## MySQL8 possible_keys为null，key却不为null解答
+
+> https://blog.csdn.net/eden_Liang/article/details/108026148
+>
+> **这种情况一般发生在覆盖索引条件下，`possible_keys`为`null`说明用不上索引的树形查找，但如果二**
+>
+> **级索引包含了所有要查找的数据，二级索引往往比聚集索引小，所以\*mysql\*可能会选择顺序遍历这个二**
+>
+> **级索引直接返回，但没有发挥树形查找优势，所以就出现了这个情况。**
+
+```
+CREATE DATABASE IF NOT EXISTS testdb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+use testdb;
+
+drop table test_user;
+
+create table test_user(
+ id bigint primary key not null auto_increment,
+ name varchar(512) not null,
+ createTime datetime not null
+) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 collate=utf8mb4_general_ci;
+
+create index idx_test_user_name on test_user(name);
+
+insert into test_user(id,name,createTime) values(NULL,'张三',now()),(NULL,'李四',now()),(NULL,'王五',now()),(NULL,'老黄',now()),(NULL,'积分',now()),(NULL,'i额ur',now()),(NULL,'就佛额ur',now()),(NULL,'发咯入耳',now()),(NULL,'经济而',now()),(NULL,'第一热',now()),(NULL,'ui偶尔哦',now()),(NULL,'解决开发就',now()),(NULL,'就偶尔',now()),(NULL,'空间考虑日额',now()),(NULL,'副偶尔urgn',now()),(NULL,'u热ure',now()),(NULL,'就反而哦入耳',now()),(NULL,'i若ieu',now()),(NULL,'ui哦入耳给你',now()),(NULL,'看iore',now()),(NULL,'iu人偶尔',now()),(NULL,'你楼而',now()),(NULL,'哦iue',now()),(NULL,'就刻录机了解偶尔',now()),(NULL,'偶哦入耳',now()),(NULL,'积分金额ur',now()),(NULL,'楼热',now()),(NULL,'你率ueor',now()),(NULL,'率偶尔',now()),(NULL,'偶哦人',now()),(NULL,'女看看看入耳',now()),(NULL,'i入耳给你',now()),(NULL,'看破ioire',now()),(NULL,'那就vuer',now()),(NULL,'角落irue',now()),(NULL,'v你看哦ieur',now()),(NULL,'是热热u',now()),(NULL,'看配额uoirue',now()),(NULL,'你的人',now()),(NULL,'v弄丢热',now()),(NULL,'的热偶尔ug',now()),(NULL,'v你的哦ieur',now()),(NULL,'u哦入耳',now()),(NULL,'v地方耨而',now()),(NULL,'色热偶偶尔',now());
+
+# 因为返回列为 * ，所以没有使用idx_test_user_name索引返回数据，因为索引中不包含createTime数据
+mysql> explain select * from test_user where name like '%黄';
++----+-------------+-----------+------------+------+---------------+------+---------+------+------+----------+-------------+
+| id | select_type | table     | partitions | type | possible_keys | key  | key_len | ref  | rows | filtered | Extra       |
++----+-------------+-----------+------------+------+---------------+------+---------+------+------+----------+-------------+
+|  1 | SIMPLE      | test_user | NULL       | ALL  | NULL          | NULL | NULL    | NULL |   45 |    11.11 | Using where |
++----+-------------+-----------+------------+------+---------------+------+---------+------+------+----------+-------------+
+1 row in set, 1 warning (0.00 sec)
+
+# 没有使用idx_test_user_name检索数据，但是使用了idx_test_user_name索引返回了id数据，所以possible_keys为NULL，而key却不为NULL
+mysql> explain select id from test_user where name like '%黄';
++----+-------------+-----------+------------+-------+---------------+--------------------+---------+------+------+----------+--------------------------+
+| id | select_type | table     | partitions | type  | possible_keys | key                | key_len | ref  | rows | filtered | Extra                    |
++----+-------------+-----------+------------+-------+---------------+--------------------+---------+------+------+----------+--------------------------+
+|  1 | SIMPLE      | test_user | NULL       | index | NULL          | idx_test_user_name | 2050    | NULL |   45 |    11.11 | Using where; Using index |
++----+-------------+-----------+------------+-------+---------------+--------------------+---------+------+------+----------+--------------------------+
+1 row in set, 1 warning (0.00 sec)
+```
+
+## binlog日志
+
+> binlog 有三种格式：
+>
+> - Statement（Statement-Based Replication,SBR）：Statement 模式只记录执行的 SQL，不需要记录每一行数据的变化，因此极大的减少了 binlog 的日志量，避免了大量的 IO 操作，提升了系统的性能。
+>
+>   但是，正是由于 Statement 模式只记录 SQL，而如果一些 SQL 中 包含了函数，那么可能会出现执行结果不一致的情况。比如说 uuid() 函数，每次执行的时候都会生成一个随机字符串，在 master 中记录了 uuid，当同步到 slave 之后，再次执行，就得到另外一个结果了。
+>
+>   所以使用 Statement 格式会出现一些数据一致性问题。
+>
+> - Row（Row-Based Replication,RBR）：从 MySQL5.1.5 版本开始，binlog 引入了 Row 格式，Row 格式不记录 SQL 语句上下文相关信息，仅仅只需要记录某一条记录被修改成什么样子了。
+>
+>   Row 格式的日志内容会非常清楚地记录下每一行数据修改的细节，这样就不会出现 Statement 中存在的那种数据无法被正常复制的情况。
+>
+>   不过 Row 格式也有一个很大的问题，那就是日志量太大了，特别是批量 update、整表 delete、alter 表等操作，由于要记录每一行数据的变化，此时会产生大量的日志，大量的日志也会带来 IO 性能问题。
+>
+> - Mixed（Mixed-Based Replication,MBR）：从 MySQL5.1.8 版开始，MySQL 又推出了 Mixed 格式，这种格式实际上就是 Statement 与 Row 的结合。
+>
+>   在 Mixed 模式下，系统会自动判断 该 用 Statement 还是 Row：一般的语句修改使用 Statement 格式保存 binlog；对于一些 Statement 无法准确完成主从复制的操作，则采用 Row 格式保存 binlog。
+>
+>   Mixed 模式中，MySQL 会根据执行的每一条具体的 SQL 语句来区别对待记录的日志格式，也就是在 Statement 和 Row 之间选择一种。
+
+### 问题解决：Warning Unsafe statement written to the binary log using statement format since BINLOG_FORMAT = STATEMENT
+
+> https://stackoverflow.com/questions/17057593/warning-unsafe-statement-written-to-the-binary-log-using-statement-format-since
+>
+> 
+>
+> 把日志类型修改为mixed
+> binlog_format=mixed
