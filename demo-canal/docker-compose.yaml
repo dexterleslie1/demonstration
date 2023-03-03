@@ -1,0 +1,82 @@
+version: "3.0"
+
+# 创建网络
+networks:
+  net:
+    name: demo-canal-net
+
+# todo 未成功配置canal-admin
+# https://blog.csdn.net/weixin_40715787/article/details/126084643
+# https://github.com/alibaba/canal/wiki/Canal-Admin-Docker
+# https://github.com/alibaba/canal/wiki/Docker-QuickStart
+services:
+  demo-canal-mysql-server:
+    container_name: demo-canal-mysql-server
+    image: mysql:5.7
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+    volumes:
+      - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf
+    environment:
+      - LANG=C.UTF-8
+      - TZ=Asia/Shanghai
+      - MYSQL_ROOT_PASSWORD=123456
+    ports:
+      - 3306:3306
+    networks:
+      - net
+
+  demo-canal-mysql-server-update:
+    container_name: demo-canal-mysql-server-update
+    image: docker.118899.net:10001/yyd-public/demo-canal-mysql-server-update
+    command: sh -c "dockerize -wait tcp://demo-canal-mysql-server:3306 -timeout 120s -wait-retry-interval 5s
+              && mysql -uroot -p123456 -P3306 -hdemo-canal-mysql-server mysql < /grant.sql
+              && echo \"成功执行数据库脚本\""
+    volumes:
+      - ./grant.sql:/grant.sql
+    networks:
+      - net
+    depends_on:
+      - demo-canal-mysql-server
+
+  demo-canal-server:
+    container_name: demo-canal-server
+    image: canal/canal-server
+    ports:
+      - 11111:11111
+    environment:
+      - TZ=Asia/Shanghai
+#      - canal.admin.manager=demo-canal-admin:8089
+#      - canal.admin.port=11110
+#      - canal.admin.user=admin
+#      - canal.admin.passwd=4ACFE3202A5FF5CF467898FC58AAB1D615029441
+      - canal.auto.scan=false
+      - canal.destinations=mytest
+      - canal.instance.mysql.slaveId=1212
+      - canal.instance.master.address=demo-canal-mysql-server:3306  #要监听的mysql地址
+      - canal.instance.dbUsername=canal
+      - canal.instance.dbPassword=canal
+      - canal.instance.connectionCharset=UTF-8
+      - canal.instance.tsdb.enable=true
+      - canal.instance.gtidon=false
+      - canal.instance.filter.regex=.*\\..*  #监听规则
+#    volumes:
+#      - ./canal-server/conf/:/admin/canal-server/conf/ #挂载文件至宿主机
+#      - ./canal-server/logs/:/admin/canal-server/logs/
+    networks:
+      - net
+    depends_on:
+#      - demo-canal-admin
+      - demo-canal-mysql-server
+
+#  demo-canal-admin:
+#    container_name: demo-canal-admin
+#    image: canal/canal-admin
+#    ports:
+#      - 8089:8089
+#    environment:
+#      - server.port=8089
+#      - canal.adminUser=admin
+#      - canal.adminPasswd=123456
