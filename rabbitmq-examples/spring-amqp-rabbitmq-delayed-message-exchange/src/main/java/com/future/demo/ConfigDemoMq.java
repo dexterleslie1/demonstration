@@ -27,7 +27,7 @@ public class ConfigDemoMq {
     @Autowired
     private AmqpTemplate rabbitTemplate;
 
-    @RabbitListener(queues = ConfigDemoMq.QueueName)
+    @RabbitListener(queues = QueueName)
     public void receiveMessage(String message, Message messageO) {
         try {
             log.info("Received <" + message + ">");
@@ -52,7 +52,7 @@ public class ConfigDemoMq {
 
             // 最多重试1次
             if(xMaxRetries < 1) {
-                this.rabbitTemplate.convertAndSend(ConfigDemoMq.ExchangeName, ConfigDemoMq.RoutingKey, messageO, MessagePostProcessortVariable);
+                this.rabbitTemplate.convertAndSend(ExchangeName, RoutingKey, messageO, MessagePostProcessortVariable);
             }
         }
     }
@@ -69,7 +69,7 @@ public class ConfigDemoMq {
 
     @Bean
     public Queue queue() {
-        return QueueBuilder.nonDurable(ConfigDemoMq.QueueName).build();
+        return QueueBuilder.nonDurable(QueueName).build();
     }
 
     // 配置默认的交互机
