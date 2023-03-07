@@ -75,7 +75,6 @@ public class ConfigDemoMq {
         Integer xMaxRetries = message.getMessageProperties().getHeader(HeaderXMaxRetries);
         if(xMaxRetries == null) {
             xMaxRetries = 0;
-            message.getMessageProperties().setHeader(HeaderXMaxRetries, xMaxRetries);
         }
 
         counterDeadLetter.incrementAndGet();
