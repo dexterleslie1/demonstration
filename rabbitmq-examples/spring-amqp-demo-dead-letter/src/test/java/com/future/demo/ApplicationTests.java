@@ -36,10 +36,10 @@ public class ApplicationTests {
 
         Thread.sleep(1500);
         Assert.assertEquals(totalCount*2, this.configDemoMq.getCount());
-        Assert.assertEquals(totalCount*2, this.configDemoMq.getCountDeadLetter());
+        Assert.assertEquals(totalCount, this.configDemoMq.getCountDeadLetter());
 
         Thread.sleep(3000);
         Assert.assertEquals(totalCount*2, this.configDemoMq.getCount());
-        Assert.assertEquals(totalCount*2, this.configDemoMq.getCountDeadLetter());
+        Assert.assertEquals(totalCount, this.configDemoMq.getCountDeadLetter());
     }
 }

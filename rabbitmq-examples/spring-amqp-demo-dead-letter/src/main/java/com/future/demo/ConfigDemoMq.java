@@ -48,16 +48,21 @@ public class ConfigDemoMq {
         log.info("Business Received " + messageDTO.toString());
 
         try {
-            Integer xMaxRetries = message.getMessageProperties().getHeader(HeaderXMaxRetries);
-            log.info("x-max-retries={}", xMaxRetries);
-            if(xMaxRetries == null || xMaxRetries < 1) {
-                counter.incrementAndGet();
+            counter.incrementAndGet();
+            boolean b = true;
+            if(b) {
                 throw new Exception("模拟发生业务异常进入死信");
             }
 
             channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
         } catch (Exception ex) {
-            channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, false);
+            Integer xMaxRetries = message.getMessageProperties().getHeader(HeaderXMaxRetries);
+            log.info("x-max-retries={}", xMaxRetries);
+            if(xMaxRetries == null || xMaxRetries < 1) {
+                channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, false);
+            } else {
+                channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+            }
         }
     }
 
@@ -69,7 +74,7 @@ public class ConfigDemoMq {
     public void receiveMessageDeadLetter(Message message, Channel channel) throws Exception {
         Integer xMaxRetries = message.getMessageProperties().getHeader(HeaderXMaxRetries);
         if(xMaxRetries == null) {
-            xMaxRetries = -1;
+            xMaxRetries = 0;
             message.getMessageProperties().setHeader(HeaderXMaxRetries, xMaxRetries);
         }
 
