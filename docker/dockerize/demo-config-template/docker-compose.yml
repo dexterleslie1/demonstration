@@ -1,0 +1,21 @@
+version: "3.0"
+
+# 创建网络
+networks:
+  net:
+    name: demo-dockerize-config-template-net
+
+services:
+  demo-dockerize-template:
+    container_name: demo-dockerize-template
+    image: docker.118899.net:10001/yyd-public/demo-dockerize-template
+    volumes:
+      - ./nginx.tmpl:/usr/local/openresty/nginx/conf/nginx.tmpl
+    environment:
+      - rabbitmqServerHost=${rabbitmqServerHost}
+      - rabbitmqServerPort=${rabbitmqServerPort}
+      - TZ=Asia/Shanghai
+    ports:
+      - ${listenPort}:80
+    networks:
+      - net
