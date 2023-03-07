@@ -19,13 +19,11 @@ public class ApplicationTests {
 
     @Test
     public void test1() throws InterruptedException {
-        int totalCount = 1;
+        int totalCount = 5;
 
         for(int i=0; i<totalCount; i++){
-            this.rabbitTemplate.convertAndSend(ConfigDemoMq.ExchangeName, ConfigDemoMq.RoutingKey, "888", ConfigDemoMq.MessagePostProcessortVariable);
+            this.rabbitTemplate.convertAndSend(ConfigDemoMq.ExchangeName, ConfigDemoMq.RoutingKey, "888");
         }
-
-        Thread.sleep(1000);
 
         // 未收到delay消息
         Assert.assertEquals(0, configDemoMq.getCount());
@@ -36,6 +34,6 @@ public class ApplicationTests {
 
         // 最多重试一次
         Thread.sleep(5000);
-        Assert.assertEquals(totalCount + 1, configDemoMq.getCount());
+        Assert.assertEquals(totalCount*2, configDemoMq.getCount());
     }
 }

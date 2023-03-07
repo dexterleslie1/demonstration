@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Configuration;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Configuration
@@ -27,9 +28,12 @@ public class ConfigDemoMq {
     private AmqpTemplate rabbitTemplate;
 
     @RabbitListener(queues = ConfigDemoMq.QueueName)
-    public void receiveMessage(String message, Message messageO, Channel channel) throws Exception {
+    public void receiveMessage(String message, Message messageO) {
         try {
             log.info("Received <" + message + ">");
+
+            TimeUnit.MILLISECONDS.sleep(10);
+
             counter.incrementAndGet();
 
             boolean b = true;
@@ -50,8 +54,6 @@ public class ConfigDemoMq {
             if(xMaxRetries < 1) {
                 this.rabbitTemplate.convertAndSend(ConfigDemoMq.ExchangeName, ConfigDemoMq.RoutingKey, messageO, MessagePostProcessortVariable);
             }
-        } finally {
-            channel.basicAck(messageO.getMessageProperties().getDeliveryTag(), false);
         }
     }
 
