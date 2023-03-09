@@ -49,6 +49,8 @@ http://localhost:5601
 
 ### 使用 _analyze 查看分词情况
 
+**指定analyzer查看分词**
+
 ```
 GET /_analyze
 {
@@ -114,6 +116,44 @@ POST _analyze
   ]
 }
 ```
+
+**使用指定索引的field查看分词**
+
+```json
+DELETE /test_analyze
+
+PUT /test_analyze
+{
+  "mappings": {
+    "properties": {
+      "field1": {
+        "type": "text",
+        "analyzer": "ik_max_word"
+      },
+      "field2": {
+        "type": "keyword"
+      }
+    }
+  }
+}
+
+# 指定使用test_analyze索引的field1字段对"中华人民共和国"分词
+POST /test_analyze/_analyze
+{
+  "field": "field1",
+  "text": "中华人民共和国"
+}
+
+# 因为field2为keyword类型，所以下面不会分词
+POST /test_analyze/_analyze
+{
+  "field": "field2",
+  "text": "中华人民共和国"
+}
+
+```
+
+
 
 ### es数据类型
 
@@ -199,44 +239,7 @@ PUT /blog
 }
 ```
 
-#### 查看索引信息
-
-```
-GET /person
-
-结果:
-{
-  "person" : {
-    "aliases" : { },
-    "mappings" : { },
-    "settings" : {
-      "index" : {
-        "creation_date" : "1677335532848",
-        "number_of_shards" : "6",
-        "number_of_replicas" : "1",
-        "uuid" : "nvUtgXiXR7aL1SJY_1wnRg",
-        "version" : {
-          "created" : "7080099"
-        },
-        "provided_name" : "person"
-      }
-    }
-  }
-}
-```
-
-#### 删除索引
-
-```
-DELETE /person
-
-结果:
-{
-  "acknowledged" : true
-}
-```
-
-### 创建索引并指定settings和mappings
+#### 创建索引并指定settings和mappings
 
 ```json
 PUT /book
@@ -278,6 +281,90 @@ PUT /book
   "acknowledged" : true,
   "shards_acknowledged" : true,
   "index" : "book"
+}
+```
+
+#### 查看索引信息
+
+```
+GET /person
+
+结果:
+{
+  "person" : {
+    "aliases" : { },
+    "mappings" : { },
+    "settings" : {
+      "index" : {
+        "creation_date" : "1677335532848",
+        "number_of_shards" : "6",
+        "number_of_replicas" : "1",
+        "uuid" : "nvUtgXiXR7aL1SJY_1wnRg",
+        "version" : {
+          "created" : "7080099"
+        },
+        "provided_name" : "person"
+      }
+    }
+  }
+}
+```
+
+#### 查看索引mappings
+
+```
+GET /book/_mapping
+```
+
+#### 为已存在的索引添加字段
+
+> https://blog.csdn.net/m0_67393413/article/details/124242945
+
+```
+DELETE /test_mapping_update
+
+PUT /test_mapping_update
+{
+  "mappings": {
+    "properties": {
+      "field1": {
+        "type": "text"
+      },
+      "field2": {
+        "type": "text"
+      }
+    }
+  }
+}
+
+GET /test_mapping_update/_mapping
+
+# 新增field3和field4字段
+PUT /test_mapping_update/_mapping
+{
+  "properties": {
+    "field3": {
+      "type": "long"
+    },
+    "field4": {
+      "type": "integer"
+    }
+  }
+}
+
+GET /test_mapping_update/_mapping
+```
+
+
+
+#### 删除索引
+
+```
+DELETE /person
+
+结果:
+{
+  "acknowledged" : true
 }
 ```
 
@@ -1005,6 +1092,34 @@ POST /sms-logs/_search
     }
   }
 }
+
+# 进一步优化查询，因为是精准查询，不需要查询进行评分计算，只希望对文档进行包括或排除的计算，所以我们会使用 constant_score 查询以非评分模式来执行 term 查询并以一作为统一评分
+POST /sms-logs/_search
+{
+  "query": {
+    "constant_score": {
+      "filter": {
+        "bool": {
+          "must": [
+            {
+              "term": {
+                "corpName": "中国移动"
+              }
+            },
+            {
+              "range": {
+                "fee": {
+                  "gte": 10,
+                  "lte": 20
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}
 ```
 
 #### 高亮查询
@@ -1042,6 +1157,37 @@ POST /sms-logs/_search
         "field": "province"
       }
     }
+  }
+}
+```
+
+### _bulk批量插入文档
+
+```json
+DELETE /test_bulk
+
+PUT /test_bulk
+{
+  "mappings": {
+    "properties": {
+      "field1": {
+        "type": "text",
+        "analyzer": "ik_max_word"
+      }
+    }
+  }
+}
+
+POST /test_bulk/_bulk
+{"index": {"_id": "1"}}
+{"field1": "架飞机偶然偶尔"}
+{"index": {"_id": "2"}}
+{"field1": "就iu热额"}
+
+POST /test_bulk/_search
+{
+  "query": {
+    "match_all": {}
   }
 }
 ```
@@ -1093,6 +1239,265 @@ GET /blog/_doc/_search
 }
 ```
 
+## mapping字段里的参数fileds(innerfield)
+
+> https://www.jb51.net/article/217207.htm
+
+```
+DELETE /test_innerfield
+
+PUT /test_innerfield
+{
+  "mappings": {
+    "properties": {
+      "city": {
+        "type": "text",
+        "analyzer": "ik_max_word", 
+        "fields": {
+          "innerfield1": {
+            "type": "keyword"
+          },
+          "innerfield2": {
+            "type": "text",
+            "analyzer": "english"
+          }
+        }
+      }
+    }
+  }
+}
+
+POST /test_innerfield/_bulk
+{"index": {}}
+{"city": "广州市"}
+{"index": {}}
+{"city": "北京市"}
+{"index": {}}
+{"city": "上海市"}
+
+# 因为city分词类型是text，没有分词匹配关键词“广”
+POST /test_innerfield/_search
+{
+  "query": {
+    "term": {
+      "city": {
+        "value": "广"
+      }
+    }
+  }
+}
+
+# 因为city.innerfield2使用english分词器分词，即把各个中文一个汉字为一个分词，所以能够匹配关键词“广”
+POST /test_innerfield/_search
+{
+  "query": {
+    "term": {
+      "city.innerfield2": {
+        "value": "广"
+      }
+    }
+  }
+}
+
+# 因为city.innerfield1是keyword类型不分词，所以能够匹配整个关键词“广州市”
+POST /test_innerfield/_search
+{
+  "query": {
+    "term": {
+      "city.innerfield1": {
+        "value": "广州市"
+      }
+    }
+  }
+}
+```
+
+## 多值字段
+
+> https://www.manongdao.com/article-2053441.html
+
+```
+DELETE /test_beehive_han_v1
+
+##新增一个索引的mapping
+PUT test_beehive_han_v1 
+{
+  "settings": {
+
+        "number_of_shards": "5",
+        "number_of_replicas": "1"
+
+  },
+	"mappings": {
+        "properties": {
+          "contentTag": {
+            "type": "text",
+            "fields": {
+              "raw": {
+                "type": "keyword"
+              }
+            },
+            "analyzer": "ik_smart"
+          },
+          "userTag": {
+            "type": "text",
+            "fields": {
+              "raw": {
+                "type": "keyword"
+              }
+            },
+            "analyzer": "ik_smart"
+          },
+          "contentTagNotList": {
+            "type": "text",
+            "fields": {
+              "keyword1": {
+                "type": "keyword"
+              }
+            },
+            "analyzer": "ik_smart"
+          },
+          "userTagNotList": {
+            "type": "text",
+            "fields": {
+              "raw": {
+                "type": "keyword"
+              }
+            },
+            "analyzer": "ik_smart"
+          }
+        }
+	}
+}
+
+##查看mapping
+GET test_beehive_han_v1/_mapping
+
+##插入数据：
+POST test_beehive_han_v1/_doc/1
+{
+	"contentTagNotList":"广场舞2014,广场舞,广场舞大全,最新广场舞,广场舞教学",
+	"userTagNotList":"外星人,罗纳尔多,梅西,C罗,皇马,巴萨,大罗,小罗,内马尔,卡卡",
+	"contentTag": ["广场舞2014","广场舞","广场舞大全","最新广场舞","广场舞教学"],
+	"userTag":["外星人","罗纳尔多","梅西","C罗","皇马","巴萨","大罗","小罗","内马尔","卡卡"]
+}
+
+POST test_beehive_han_v1/_doc/2
+{
+	"contentTagNotList":"广场舞2014,广场舞",
+	"userTagNotList":"外星人,罗纳尔多,梅西",
+	"contentTag": ["广场舞2014","广场舞"],
+	"userTag":["外星人","罗纳尔多","只要包含"]
+}
+
+##查看数据
+GET test_beehive_han_v1/_search
+
+##查询-List的精确查询，比如：需要同时包含这几个值的都要被查询出来
+GET test_beehive_han_v1/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "term": {
+            "userTag.raw": {
+              "value": "外星人"
+            }
+          }
+        },{
+          "term": {
+            "userTag.raw": {
+              "value": "罗纳尔多"
+            }
+          }
+        },{
+          "term": {
+            "userTag.raw": {
+              "value": "梅西"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+
+##非List的精确查询
+GET test_beehive_han_v1/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "term": {
+            "userTagNotList.raw": {
+              "value": "外星人,罗纳尔多,梅西"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+
+
+##List的全文检索 //"query": "西"，梅西，罗纳尔多
+GET test_beehive_han_v1/_search
+{
+  "profile": "true",
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "multi_match": {
+            "query": "只要", 
+            "fields": [
+              "userTag"
+            ]
+          }
+        }
+      ]
+    }
+  }
+}
+
+## 非List的全文检索 "query": "罗纳尔多"
+GET test_beehive_han_v1/_search
+{
+  "profile": "true",
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "multi_match": {
+            "query": "皇马",
+            "fields": [
+              "userTagNotList"
+            ]
+          }
+        }
+      ]
+    }
+  }
+}
+
+##查看分词的情况
+POST test_beehive_han_v1/_analyze
+{
+  "field": "userTag",
+  "text" : "外星人,罗纳尔多,梅西"
+}
+
+POST /test_beehive_han_v1/_analyze
+{
+  "field": "userTag.raw",
+  "text": "外星人,罗纳尔多,梅西"
+}
+```
+
+
+
 ## 使用Java Transport Client操作elasticsearch
 
 > 具体用法参考代码<br>
@@ -1100,3 +1505,273 @@ GET /blog/_doc/_search
 
 ## Elasticsearch中什么是 tokenizer、analyzer、filter ?
 [Elasticsearch中什么是 tokenizer、analyzer、filter ?](https://cloud.tencent.com/developer/article/1706529)
+
+## 进阶编
+
+### 使用term、filter搜索帖子数据
+
+```
+DELETE /article
+
+PUT /article
+{
+  "mappings": {
+    "properties": {
+      "articleId": {
+        "type": "keyword"
+      },
+      "userId": {
+        "type": "long"
+      },
+      "hidden": {
+        "type": "boolean"
+      },
+      "postDate": {
+        "type": "date",
+        "format": "yyyy-MM-dd||yyyy-MM-dd HH:mm:ss"
+      }
+    }
+  }
+}
+
+POST /article/_bulk
+{"index": {"_id": "1"}}
+{"articleId": "001", "userId": 1, "hidden": false, "postDate": "2017-01-01"}
+{"index": {"_id": "2"}}
+{"articleId": "002", "userId": 1, "hidden": false, "postDate": "2017-01-02"}
+{"index": {"_id": "3"}}
+{"articleId": "003", "userId": 2, "hidden": false, "postDate": "2017-01-01"}
+{"index": {"_id": "4"}}
+{"articleId": "004", "userId": 2, "hidden": true, "postDate": "2017-01-02"}
+
+# 根据用户id搜索帖子
+POST /article/_search
+{
+  "query": {
+    "constant_score": {
+      "filter": {
+        "term": {
+          "userId": 1
+        }
+      }
+    }
+  }
+}
+
+# 搜索没有隐藏的帖子
+POST /article/_search
+{
+  "query": {
+    "constant_score": {
+      "filter": {
+        "term": {
+          "hidden": false
+        }
+      }
+    }
+  }
+}
+
+# 搜索2017-01-02发出的贴子
+POST /article/_search
+{
+  "query": {
+    "constant_score": {
+      "filter": {
+        "term": {
+          "postDate": "2017-01-02"
+        }
+      }
+    }
+  }
+}
+```
+
+### 基于bool组合多个filter条件搜素数据
+
+```
+# 搜索发帖日期为2017-01-01或者帖子id为003同时发帖日志不能为2017-01-02
+POST /article/_search
+{
+  "query": {
+    "bool": {
+      "filter": [
+        {
+          "bool": {
+            "should": [
+            {
+              "term": {
+                "postDate": {
+                  "value": "2017-01-01"
+                }
+              }
+            },
+            {
+              "term": {
+                "articleId": {
+                  "value": "003"
+                }
+              }
+            }
+          ],
+          "must_not": [
+            {"term": {
+              "postDate": {
+                "value": "2017-01-02"
+              }
+            }}
+          ]
+          }
+        }
+      ]
+    }
+  }
+}
+
+# 搜索帖子id为003或者id为004并且发帖日期为2017-01-02
+POST /article/_search
+{
+  "query": {
+    "constant_score": {
+      "filter": {
+        "bool": {
+          "should": [
+            {
+              "term": {
+                "articleId": {
+                  "value": "003"
+                }
+              }
+            },
+            {
+              "bool": {
+                "must": [
+                  {
+                    "term": {
+                      "articleId": {
+                        "value": "004"
+                      }
+                    }
+                  },
+                  {
+                    "term": {
+                      "postDate": {
+                        "value": "2017-01-02"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+### terms搜索多个值以及多值搜索
+
+```
+# 新增tags字段
+PUT /article/_mapping
+{
+  "properties": {
+    "tags": {
+      "type": "text"
+    }
+  }
+}
+
+GET /article/_mapping
+
+# 批量修改记录tags字段
+POST /article/_bulk
+{"update": {"_id": "1"}}
+{"doc": {"tags": ["java", "hadoop"]}}
+{"update": {"_id": "2"}}
+{"doc": {"tags": ["java"]}}
+{"update": {"_id": "3"}}
+{"doc": {"tags": ["hadoop"]}}
+{"update": {"_id": "4"}}
+{"doc": {"tags": ["java", "elasticsearch"]}}
+
+GET /article/_search
+
+# 搜索tags包含 ”java“ 关键词的帖子
+POST /article/_search
+{
+  "query": {
+    "constant_score": {
+      "filter": {
+        "terms": {
+          "tags": [
+            "java"
+          ]
+        }
+      }
+    }
+  }
+}
+
+# 使用terms查询articleId为002或者004
+POST /article/_search
+{
+  "query": {
+    "constant_score": {
+      "filter": {
+        "terms": {
+          "articleId": [
+            "002",
+            "004"
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+### range filter范围过滤
+
+```
+PUT /article/_mapping
+{
+  "properties": {
+    "view_cnt": {
+      "type": "long"
+    }
+  }
+}
+
+GET /article/_mapping
+
+POST /article/_bulk
+{"update": {"_id": "1"}}
+{"doc": {"view_cnt":30}}
+{"update": {"_id": "2"}}
+{"doc": {"view_cnt": 50}}
+{"update": {"_id": "3"}}
+{"doc": {"view_cnt": 100}}
+{"update": {"_id": "4"}}
+{"doc": {"view_cnt": 80}}
+
+# 搜索浏览量在30到60之间的贴子
+POST /article/_search
+{
+  "query": {
+    "constant_score": {
+      "filter": {
+        "range": {
+          "view_cnt": {
+            "gt": 30,
+            "lt": 60
+          }
+        }
+      }
+    }
+  }
+}
+```
+
