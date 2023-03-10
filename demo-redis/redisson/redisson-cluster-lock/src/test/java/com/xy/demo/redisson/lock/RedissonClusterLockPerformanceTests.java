@@ -25,8 +25,8 @@ import java.util.concurrent.TimeUnit;
 @State(Scope.Benchmark) //使用的SpringBoot容器，都是无状态单例Bean，无安全问题，可以直接使用基准作用域BenchMark
 @OutputTimeUnit(TimeUnit.SECONDS)
 @Fork(1)  //整体平均执行1次
-@Warmup(iterations = 3,time = 5,timeUnit = TimeUnit.SECONDS)
-@Measurement(iterations = 3,time = 5,timeUnit = TimeUnit.SECONDS) //测试也是1s、五遍
+@Warmup(iterations = 3,time = 5, timeUnit = TimeUnit.SECONDS)
+@Measurement(iterations = 3,time = 5, timeUnit = TimeUnit.SECONDS) //测试也是1s、五遍
 @Threads(64)
 public class RedissonClusterLockPerformanceTests {
     private final static String Key = UUID.randomUUID().toString();
