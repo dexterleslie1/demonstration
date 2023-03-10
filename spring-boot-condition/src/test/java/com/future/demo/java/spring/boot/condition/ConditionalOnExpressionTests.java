@@ -10,6 +10,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import javax.annotation.Resource;
+
 /**
  * @author dexterleslie@gmail.com
  */
@@ -21,7 +23,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 public class ConditionalOnExpressionTests {
     private final static Logger log = LoggerFactory.getLogger(ConditionalOnExpressionTests.class);
 
-    @Autowired
+    @Resource
     TestService1 testService1 = null;
 
     /**
@@ -29,6 +31,7 @@ public class ConditionalOnExpressionTests {
      * @return
      */
     @Bean
+    // 当括号中的内容为true时，使用该注解的类被实例化。
     @ConditionalOnExpression("${spring.boot.condition.on.expression.test-service1-one:false}")
     TestService1 testService1One() {
         TestService1 service = new TestService1() {
@@ -51,6 +54,18 @@ public class ConditionalOnExpressionTests {
             @Override
             public void sayHello() {
                 log.info("testService1Two sayHello.");
+            }
+        };
+        return service;
+    }
+
+    @Bean
+    @ConditionalOnExpression("!T(org.springframework.util.StringUtils).isEmpty('${spring.boot.condition.on.expression.test-service1-three:}')")
+    TestService1 testService1Three() {
+        TestService1 service = new TestService1() {
+            @Override
+            public void sayHello() {
+                log.info("testService1Three sayHello.");
             }
         };
         return service;
