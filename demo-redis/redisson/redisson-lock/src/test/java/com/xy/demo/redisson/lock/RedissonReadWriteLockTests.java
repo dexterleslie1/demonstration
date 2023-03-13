@@ -202,6 +202,56 @@ public class RedissonReadWriteLockTests {
         Assert.assertEquals(0, statusList.size());
     }
 
+    // 测试读写锁try lock
+    @Test
+    public void testReadWriteTryLock() throws InterruptedException {
+        ExecutorService executorService = Executors.newCachedThreadPool();
+
+        String key = UUID.randomUUID().toString();
+
+        executorService.submit(() -> {
+            RReadWriteLock readWriteLock = redisson.getReadWriteLock(key);
+            RLock rLock = null;
+            try {
+                rLock = readWriteLock.writeLock();
+                rLock.tryLock(3, 60, TimeUnit.SECONDS);
+
+                TimeUnit.SECONDS.sleep(5);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } finally {
+                if(rLock != null && rLock.isHeldByCurrentThread()) {
+                    try {
+                        rLock.unlock();
+                    } catch (Exception ignored) {
+
+                    }
+                }
+            }
+        });
+
+        Date startTime = new Date();
+        RReadWriteLock readWriteLock = redisson.getReadWriteLock(key);
+        RLock rLock = null;
+        try {
+            rLock = readWriteLock.readLock();
+            boolean acquired = rLock.tryLock(60, 60, TimeUnit.SECONDS);
+            Assert.assertTrue(acquired);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            if(rLock != null && rLock.isHeldByCurrentThread()) {
+                try {
+                    rLock.unlock();
+                } catch (Exception ignored) {
+
+                }
+            }
+        }
+        Date endTime = new Date();
+        Assert.assertTrue(endTime.getTime() - startTime.getTime() >= 4800);
+    }
+
     private void displayInfo(Map<String, Boolean> readingMapper, Map<String, Boolean> writingMapper, List<Boolean> statusList) {
         if(readingMapper.size() > 0 && writingMapper.size() > 0) {
 //            logger.info("有读写并发reading={},writing={}", readingMapper.size(), writingMapper.size());
