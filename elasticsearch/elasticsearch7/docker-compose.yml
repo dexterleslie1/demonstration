@@ -36,3 +36,15 @@ services:
       - net
     depends_on:
       - demo-elasticsearch
+
+  demo-elasticsearch-ik-ext:
+    container_name: demo-elasticsearch-ik-ext
+    image: openresty/openresty
+    volumes:
+     - ./ik_dict.txt:/usr/local/openresty/nginx/html/ik_dict.txt
+     - ./nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf
+    #ports:
+    # - 80:80
+    networks:
+     - net
+
