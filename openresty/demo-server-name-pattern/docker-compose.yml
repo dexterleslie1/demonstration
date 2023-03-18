@@ -1,12 +1,13 @@
 version: "3.0"
 
 services:
-  demo-openresty-https:
-    container_name: demo-openresty-https
+  demo-openresty-server-name-pattern:
+    container_name: demo-openresty-server-name-pattern
     image: openresty/openresty
     volumes:
      - ./nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf
+     - ./default.conf:/usr/local/openresty/nginx/conf/default.conf
     environment:
       - TZ=Asia/Shanghai
     ports:
-      - 80:80
+      - 261:261
