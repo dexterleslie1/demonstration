@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class DeleteTests {
+    // NOTE: 先授权用户AliyunOSSFullAccess权限，否则报错bucket不属于当前用户错误
     @Test
     public void testDeleteAllFile() {
         // Endpoint以杭州为例，其它Region请按实际情况填写。
