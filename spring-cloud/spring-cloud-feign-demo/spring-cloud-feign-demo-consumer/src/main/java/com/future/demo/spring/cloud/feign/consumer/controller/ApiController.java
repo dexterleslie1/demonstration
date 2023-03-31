@@ -2,10 +2,15 @@ package com.future.demo.spring.cloud.feign.consumer.controller;
 
 import com.future.demo.spring.cloud.feign.common.entity.Product;
 import com.future.demo.spring.cloud.feign.common.feign.ProductFeign;
+import com.future.demo.spring.cloud.feign.common.feign.ProductFeignWithConfig;
 import com.future.demo.spring.cloud.feign.common.feign.ProductFeignWithSpecifyUrl;
+import com.yyd.common.exception.BusinessException;
+import com.yyd.common.http.response.ObjectResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import javax.annotation.Resource;
 
 @Slf4j
 @RestController
@@ -15,13 +20,17 @@ public class ApiController {
     ProductFeign productFeign;
     @Autowired
     ProductFeignWithSpecifyUrl productFeignWithSpecifyUrl;
+    @Resource
+    ProductFeignWithConfig productFeignWithConfig;
 
     @GetMapping("{productId}")
-    public Product info(@PathVariable("productId") Integer productId) {
-        Product product = this.productFeign.info(productId);
-        Product product2 = this.productFeignWithSpecifyUrl.info(productId);
-        log.info("product2=" + product2);
-        return product;
+    public ObjectResponse<Product> info(@PathVariable("productId") Integer productId) throws BusinessException {
+        ObjectResponse<Product> response = this.productFeign.info(productId);
+        ObjectResponse<Product> response2 = this.productFeignWithSpecifyUrl.info(productId);
+        log.info("product2={}", response2);
+        ObjectResponse<Product> response3 = this.productFeignWithConfig.info(productId);
+        log.info("product3={}", response3);
+        return response;
     }
 
     @GetMapping("get")

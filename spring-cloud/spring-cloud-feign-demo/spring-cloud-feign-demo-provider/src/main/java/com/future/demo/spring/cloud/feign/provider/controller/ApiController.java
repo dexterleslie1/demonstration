@@ -1,6 +1,7 @@
 package com.future.demo.spring.cloud.feign.provider.controller;
 
 import com.future.demo.spring.cloud.feign.common.entity.Product;
+import com.yyd.common.http.response.ObjectResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,12 +13,14 @@ import java.util.concurrent.TimeUnit;
 public class ApiController {
     // 测试@PathVariable
     @GetMapping("{productId}")
-    public Product info(@PathVariable("productId") Integer productId) {
+    public ObjectResponse<Product> info(@PathVariable("productId") Integer productId) {
         Product product = new Product();
         product.setId(productId);
         product.setName("测试产品");
         product.setPrice(12.33);
-        return product;
+        ObjectResponse<Product> response = new ObjectResponse<>();
+        response.setData(product);
+        return response;
     }
 
     // 测试@RequestParam

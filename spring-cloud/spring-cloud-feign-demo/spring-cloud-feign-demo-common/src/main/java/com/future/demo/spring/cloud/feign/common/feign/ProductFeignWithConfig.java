@@ -6,10 +6,9 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
 @FeignClient(
-        value = "productFeignWithSpecifyUrl",
-        url = "http://localhost:8090",
+        value = "spring-cloud-feign-demo-provider-config",
         path = "/api/v1/product")
-public interface ProductFeignWithSpecifyUrl {
+public interface ProductFeignWithConfig {
     @GetMapping("{productId}")
     ObjectResponse<Product> info(@PathVariable("productId") Integer productId);
 
@@ -19,4 +18,7 @@ public interface ProductFeignWithSpecifyUrl {
     @PostMapping("add")
     String add(@RequestHeader(value = "customHeader") String customHeader,
                @RequestBody(required = false) Product product);
+
+    @GetMapping("timeout")
+    String timeout();
 }
