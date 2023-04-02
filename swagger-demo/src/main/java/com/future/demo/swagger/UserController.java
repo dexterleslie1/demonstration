@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.*;
 /**
  *
  */
-@Api(value = "用户api", description = "用户新增相关接口")
+@Api(value = "用户api", description = "用户新增相关接口", tags = "UserController" /*指定显示UserController而不显示user-controller*/)
 @RestController
 @RequestMapping(value = "/user")
 public class UserController {
@@ -19,7 +19,7 @@ public class UserController {
      */
     @ApiOperation(value = "新增用户", notes = "新增用户对象")
     @ApiImplicitParams(
-            {@ApiImplicitParam(name = "loginname", value = "用户登录s名", required = true, dataType = "String", paramType = "query"),
+            {@ApiImplicitParam(name = "loginname", value = "用户登录名", required = true, dataType = "String", paramType = "query"),
             @ApiImplicitParam(name = "password", value = "用户密码", required = true, dataType = "String", paramType = "query")})
     @RequestMapping(value = "/add", method = RequestMethod.POST)
     public String add(

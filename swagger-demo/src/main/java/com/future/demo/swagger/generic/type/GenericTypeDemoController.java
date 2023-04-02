@@ -22,7 +22,7 @@ public class GenericTypeDemoController {
      * @param password
      * @return
      */
-    @ApiOperation(value = "演示BaseResponse<UserModel>", notes = "演示BaseResponse<UserModel>")
+    @ApiOperation(value = "演示BaseResponse<UserModel>", notes = "详细说明接口的功能作用")
     @ApiImplicitParams(
             {@ApiImplicitParam(name = "loginname", value = "用户登录名", required = true, dataType = "String", paramType = "query"),
             @ApiImplicitParam(name = "password", value = "用户密码", required = true, dataType = "String", paramType = "query")})
@@ -31,7 +31,7 @@ public class GenericTypeDemoController {
             @ApiResponse(code = 50001, message = "手机号码已注册", response = UserModel.class),
             @ApiResponse(code = 50002, message = "手机号码格式错误", response = SwaggerModel.class),
             @ApiResponse(code = 50003, message = "请填写手机号码")})
-    @RequestMapping(value = "/base/response/user", method = RequestMethod.POST)
+    @PostMapping(value = "/base/response/user")
     public ResponseEntity<UserModel> demoUserModel(
             @RequestParam(defaultValue = "") String loginname,
             @RequestParam(defaultValue = "") String password) {
