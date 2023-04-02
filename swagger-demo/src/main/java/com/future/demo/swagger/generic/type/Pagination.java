@@ -1,4 +1,4 @@
-package com.xy.demo.swagger.generic.type;
+package com.future.demo.swagger.generic.type;
 
 import io.swagger.annotations.ApiModelProperty;
 

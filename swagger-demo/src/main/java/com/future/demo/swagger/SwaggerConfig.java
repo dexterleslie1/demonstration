@@ -1,4 +1,4 @@
-package com.xy.demo.swagger;
+package com.future.demo.swagger;
 
 import com.fasterxml.classmate.TypeResolver;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,8 +47,8 @@ public class SwaggerConfig {
      */
     private ApiInfo createApiInfo() {
         return new ApiInfoBuilder()
-                .title("Swagger开发规范")//标题
-                .description("Swagger开发描述")
+                .title("demo系统标题")//标题
+                .description("demo系统描述")
                 .version("1.0.0")//版本号
                 .build();
     }

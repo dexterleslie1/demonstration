@@ -1,4 +1,4 @@
-package com.xy.demo.swagger;
+package com.future.demo.swagger;
 
 
 import io.swagger.annotations.ApiModel;

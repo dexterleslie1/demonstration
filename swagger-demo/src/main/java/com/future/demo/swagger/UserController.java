@@ -1,4 +1,4 @@
-package com.xy.demo.swagger;
+package com.future.demo.swagger;
 
 import io.swagger.annotations.*;
 import org.springframework.web.bind.annotation.*;
@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.*;
 /**
  *
  */
-@Api(value = "用户api", description = "用户增删改查api")
+@Api(value = "用户api", description = "用户新增相关接口")
 @RestController
 @RequestMapping(value = "/user")
 public class UserController {

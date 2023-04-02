@@ -1,7 +1,7 @@
-package com.xy.demo.swagger.generic.type;
+package com.future.demo.swagger.generic.type;
 
-import com.xy.demo.swagger.SwaggerModel;
-import com.xy.demo.swagger.UserModel;
+import com.future.demo.swagger.SwaggerModel;
+import com.future.demo.swagger.UserModel;
 import io.swagger.annotations.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
