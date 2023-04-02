@@ -13,7 +13,10 @@ import java.util.concurrent.TimeUnit;
 public class ApiController {
     // 测试@PathVariable
     @GetMapping("{productId}")
-    public ObjectResponse<Product> info(@PathVariable("productId") Integer productId) {
+    public ObjectResponse<Product> info(
+            @PathVariable("productId") Integer productId,
+            @RequestHeader(value = "my-header", defaultValue = "") String myHeader) {
+        log.info("my-headder={}", myHeader);
         Product product = new Product();
         product.setId(productId);
         product.setName("测试产品");
