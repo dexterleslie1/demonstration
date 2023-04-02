@@ -2,12 +2,12 @@ package com.future.demo.spring.cloud.feign.consumer.controller;
 
 import com.future.demo.spring.cloud.feign.common.entity.Product;
 import com.future.demo.spring.cloud.feign.common.feign.ProductFeign;
+import com.future.demo.spring.cloud.feign.common.feign.ProductFeignTestSameName;
 import com.future.demo.spring.cloud.feign.common.feign.ProductFeignWithConfig;
 import com.future.demo.spring.cloud.feign.common.feign.ProductFeignWithSpecifyUrl;
 import com.yyd.common.exception.BusinessException;
 import com.yyd.common.http.response.ObjectResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -16,9 +16,11 @@ import javax.annotation.Resource;
 @RestController
 @RequestMapping("/api/v1/external/product")
 public class ApiController {
-    @Autowired
+    @Resource
     ProductFeign productFeign;
-    @Autowired
+    @Resource
+    ProductFeignTestSameName productFeignTestSameName;
+    @Resource
     ProductFeignWithSpecifyUrl productFeignWithSpecifyUrl;
     @Resource
     ProductFeignWithConfig productFeignWithConfig;
@@ -30,6 +32,8 @@ public class ApiController {
         log.info("product2={}", response2);
         ObjectResponse<Product> response3 = this.productFeignWithConfig.info(productId);
         log.info("product3={}", response3);
+        ObjectResponse<Product> response5 = this.productFeignTestSameName.info(productId);
+        log.info("product5={}", response5);
         return response;
     }
 

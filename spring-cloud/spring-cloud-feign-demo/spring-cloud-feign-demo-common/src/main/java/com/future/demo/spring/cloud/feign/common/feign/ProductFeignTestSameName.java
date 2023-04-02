@@ -6,11 +6,15 @@ import com.yyd.common.http.response.ObjectResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * 演示通过contextId解决重复feign问题
+ * https://stackoverflow.com/questions/69950791/how-to-make-multiple-feignclient-s-to-use-same-serviceid-name
+ */
 @FeignClient(
-        contextId = "productFeign1",
+        contextId = "productFeign2",
         value = "spring-cloud-feign-demo-provider",
         path = "/api/v1/product")
-public interface ProductFeign {
+public interface ProductFeignTestSameName {
     @GetMapping("{productId}")
     ObjectResponse<Product> info(@PathVariable("productId") Integer productId) throws BusinessException;
 

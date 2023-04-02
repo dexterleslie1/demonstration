@@ -1,6 +1,7 @@
 package com.future.demo.spring.cloud.feign.consumer;
 
 import com.future.demo.spring.cloud.feign.common.feign.ProductFeign;
+import com.future.demo.spring.cloud.feign.common.feign.ProductFeignTestSameName;
 import com.future.demo.spring.cloud.feign.common.feign.ProductFeignWithConfig;
 import com.future.demo.spring.cloud.feign.common.feign.ProductFeignWithSpecifyUrl;
 import com.yyd.common.exception.ExceptionController;
@@ -13,6 +14,7 @@ import org.springframework.context.annotation.Import;
 @EnableFeignClients(
         clients = {
                 ProductFeign.class,
+                ProductFeignTestSameName.class,
                 ProductFeignWithSpecifyUrl.class,
                 ProductFeignWithConfig.class
         }
