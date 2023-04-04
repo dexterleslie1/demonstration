@@ -1,4 +1,4 @@
-package com.future.demo.security.customize.controller;
+package com.future.demo.security.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;

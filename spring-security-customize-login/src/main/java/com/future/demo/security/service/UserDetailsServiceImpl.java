@@ -1,4 +1,4 @@
-package com.future.demo.security.customize.service;
+package com.future.demo.security.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.User;

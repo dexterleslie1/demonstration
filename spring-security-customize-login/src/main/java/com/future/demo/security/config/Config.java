@@ -1,4 +1,4 @@
-package com.future.demo.security.customize.config;
+package com.future.demo.security.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
