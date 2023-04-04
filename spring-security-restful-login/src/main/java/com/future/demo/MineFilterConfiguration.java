@@ -1,4 +1,4 @@
-package com.future.study.spring.security.web;
+package com.future.demo;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,7 +11,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class MineFilterConfiguration {
     @Bean
     public OncePerRequestFilter mineFilter(){
-        OncePerRequestFilter filter=new MineFilter();
-        return filter;
+        return new MineFilter();
     }
 }

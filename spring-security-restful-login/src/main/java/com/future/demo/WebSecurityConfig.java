@@ -1,4 +1,4 @@
-package com.future.study.spring.security.web;
+package com.future.demo;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;

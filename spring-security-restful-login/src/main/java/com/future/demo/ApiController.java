@@ -1,4 +1,4 @@
-package com.future.study.spring.security.web;
+package com.future.demo;
 
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
