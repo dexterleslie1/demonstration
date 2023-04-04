@@ -1,4 +1,4 @@
-package com.future.study.spring.form.login;
+package com.future.demo;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,8 +34,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Bean
     public UserDetailsService userDetailsService(){
-        UserDetailsService userDetailsService = new UserDetailService();
-        return userDetailsService;
+        return new UserDetailService();
     }
 
     @Override

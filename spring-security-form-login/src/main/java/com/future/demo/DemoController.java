@@ -1,4 +1,4 @@
-package com.future.study.spring.form.login;
+package com.future.demo;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;

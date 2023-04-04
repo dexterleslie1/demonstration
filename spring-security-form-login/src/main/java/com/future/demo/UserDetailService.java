@@ -1,4 +1,4 @@
-package com.future.study.spring.form.login;
+package com.future.demo;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.User;
