@@ -57,7 +57,7 @@ public class JWTTests {
     }
 
     @Test
-    public void signWithRSAAndVerify() throws NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, BadPaddingException, IllegalBlockSizeException, InvalidKeyException, SignatureException {
+    public void signWithRSAAndVerify() throws NoSuchAlgorithmException, InvalidKeySpecException {
         String publicKeyString = System.getenv("publicKey");
         String privateKeyString = System.getenv("privateKey");
         byte []privateKeyBytes = com.sun.org.apache.xerces.internal.impl.dv.util.Base64.decode(privateKeyString);
