@@ -23,7 +23,7 @@
     </modules>
 
 	<properties>
-		<yyd-common.version>3.8.70</yyd-common.version>
+		<yyd-common.version>3.8.72</yyd-common.version>
 	</properties>
 
 	<dependencies>

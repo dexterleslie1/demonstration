@@ -2,14 +2,15 @@ package com.future.demo.gateway.config;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.User;
 
 import java.util.Collection;
 
 public class MyAuthentication implements Authentication {
     private boolean authenticated = false;
-    private final SecurityUserDetails user;
+    private final User user;
 
-    MyAuthentication(SecurityUserDetails user) {
+    MyAuthentication(User user) {
         this.user = user;
     }
 

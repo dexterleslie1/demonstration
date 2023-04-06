@@ -33,17 +33,18 @@ public class ConfigSecurity {
             "/user/__MACOSX/**",
             "/user/css/**",
             "/user/fonts/**",
-            "/user/images/**"};
-    @Resource
-    SecurityUserDetailsService securityUserDetailsService;
+            "/user/images/**",
+            "/api/v1/auth/loginWithPassword"};
+//    @Resource
+//    SecurityUserDetailsService securityUserDetailsService;
     @Resource
     AuthorizationManager authorizationManager;
     @Resource
     AccessDeniedHandler accessDeniedHandler;
-    @Resource
-    AuthenticationSuccessHandler authenticationSuccessHandler;
-    @Resource
-    AuthenticationFailureHandler authenticationFailureHandler;
+//    @Resource
+//    AuthenticationSuccessHandler authenticationSuccessHandler;
+//    @Resource
+//    AuthenticationFailureHandler authenticationFailureHandler;
 //    @Autowired
 //    CookieToHeadersFilter cookieToHeadersFilter;
 //    @Autowired
@@ -67,10 +68,10 @@ public class ConfigSecurity {
                 //也可以这样写 将匹配路径和角色权限写在一起
         )
                 .httpBasic()
-                .and()
-                .formLogin().loginPage("/api/v1/auth/loginWithPassword")//登录接口
-                .authenticationSuccessHandler(authenticationSuccessHandler) //认证成功
-                .authenticationFailureHandler(authenticationFailureHandler) //登陆验证失败
+//                .and()
+//                .formLogin().loginPage("/api/v1/auth/loginWithPassword")//登录接口
+//                .authenticationSuccessHandler(authenticationSuccessHandler) //认证成功
+//                .authenticationFailureHandler(authenticationFailureHandler) //登陆验证失败
                 .and().exceptionHandling().authenticationEntryPoint(authenticationEntryPoint)
                 .accessDeniedHandler(accessDeniedHandler)//基于http的接口请求鉴权失败
                 .and().csrf().disable();//必须支持跨域
@@ -83,16 +84,16 @@ public class ConfigSecurity {
         return http.build();
     }
 
-    @Bean
-    public ReactiveAuthenticationManager reactiveAuthenticationManager() {
-        LinkedList<ReactiveAuthenticationManager> managers = new LinkedList<>();
-        managers.add(authentication -> {
-            // 其他登陆方式
-            return Mono.empty();
-        });
-        managers.add(new UserDetailsRepositoryReactiveAuthenticationManager(securityUserDetailsService));
-        return new DelegatingReactiveAuthenticationManager(managers);
-    }
+//    @Bean
+//    public ReactiveAuthenticationManager reactiveAuthenticationManager() {
+//        LinkedList<ReactiveAuthenticationManager> managers = new LinkedList<>();
+//        managers.add(authentication -> {
+//            // 其他登陆方式
+//            return Mono.empty();
+//        });
+//        managers.add(new UserDetailsRepositoryReactiveAuthenticationManager(securityUserDetailsService));
+//        return new DelegatingReactiveAuthenticationManager(managers);
+//    }
 
     // https://www.cnblogs.com/w84422/p/15519310.html
     @Bean
