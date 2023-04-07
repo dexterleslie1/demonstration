@@ -35,12 +35,12 @@ public class UserApiController {
     @Resource
     PermissionService permissionService;
 
-    @GetMapping(value = "getByUsername")
-    public ObjectResponse<UserVo> getByUsername(@RequestParam(value = "username", defaultValue = "") String username) {
-        UserModel userModel = this.userService.findByUsername(username);
-        UserVo userVo = ModelMapperUtil.ModelMapperInstance.map(userModel, UserVo.class);
-        return ResponseUtils.successObject(userVo);
-    }
+//    @GetMapping(value = "getByUsername")
+//    public ObjectResponse<UserVo> getByUsername(@RequestParam(value = "username", defaultValue = "") String username) {
+//        UserModel userModel = this.userService.findByUsername(username);
+//        UserVo userVo = ModelMapperUtil.ModelMapperInstance.map(userModel, UserVo.class);
+//        return ResponseUtils.successObject(userVo);
+//    }
 
     @GetMapping(value = "listPermission")
     public ListResponse<PermissionVo> listPermission() {

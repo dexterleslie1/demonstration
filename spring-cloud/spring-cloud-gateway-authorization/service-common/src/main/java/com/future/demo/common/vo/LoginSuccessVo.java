@@ -8,7 +8,8 @@ import java.util.List;
 public class LoginSuccessVo {
     private Long userId;
     private String loginName;
-    private String token;
+    private String refreshToken;
+    private String accessToken;
     private List<String> menuList;
     private List<String> permissionList;
 }

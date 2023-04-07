@@ -2,12 +2,14 @@ package com.future.demo.auth.service;
 
 import com.future.demo.auth.model.UserModel;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 
 import javax.annotation.PostConstruct;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -36,4 +38,10 @@ public class UserService {
     public UserModel findByUsername(String username) {
         return this.usernameToUserModelMapper.get(username);
     }
+
+    public UserModel findByUserId(Long userId) {
+        Assert.isTrue(userId != null && userId > 0, "没有提供用户id参数");
+        return this.usernameToUserModelMapper.values().stream().filter(o-> o.getId().equals(userId)).findFirst().orElse(null);
+    }
+
 }

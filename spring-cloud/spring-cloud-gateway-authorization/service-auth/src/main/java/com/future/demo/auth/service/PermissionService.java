@@ -38,6 +38,11 @@ public class PermissionService {
         permissionModel.setUrl("/api/v1/nuser/test2");
         permissionModel.setRoleListAccessing(Collections.singletonList("ROLE_user"));
         this.permissionModelList.add(permissionModel);
+
+        permissionModel = new PermissionModel();
+        permissionModel.setName("accessToken刷新接口");
+        permissionModel.setUrl("/api/v1/auth/refreshToken");
+        this.permissionModelList.add(permissionModel);
     }
 
     public List<PermissionModel> findAll() {
