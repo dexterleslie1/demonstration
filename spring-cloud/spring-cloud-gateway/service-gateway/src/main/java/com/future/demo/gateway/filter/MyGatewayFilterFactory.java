@@ -15,13 +15,18 @@ import reactor.core.publisher.Mono;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
-@Component
+/**
+ * 局部filter
+ */
 @Slf4j
-public class ForwardedFilter extends AbstractGatewayFilterFactory {
-    private final static ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+@Component
+public class MyGatewayFilterFactory extends AbstractGatewayFilterFactory<Object> {
+
+    final static ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @Override
     public GatewayFilter apply(Object config) {
@@ -29,7 +34,7 @@ public class ForwardedFilter extends AbstractGatewayFilterFactory {
             ServerHttpRequest request = exchange.getRequest();
             String originalUri = request.getURI().getPath();
             String uri = originalUri.substring(1);
-            String uriParts[] = uri.split("/", 2);
+            String[] uriParts = uri.split("/", 2);
             if(uriParts.length<2) {
                 ServerHttpResponse response = exchange.getResponse();
                 response.setStatusCode(HttpStatus.BAD_REQUEST);
@@ -42,7 +47,7 @@ public class ForwardedFilter extends AbstractGatewayFilterFactory {
                         errorResponseMap.put("errorCode", 600);
                         errorResponseMap.put("errorMessage", errMsg);
                         String responseJSON = OBJECT_MAPPER.writeValueAsString(errorResponseMap);
-                        DataBuffer dataBuffer = response.bufferFactory().wrap(responseJSON.getBytes("utf-8"));
+                        DataBuffer dataBuffer = response.bufferFactory().wrap(responseJSON.getBytes(StandardCharsets.UTF_8));
                         monoSink.success(dataBuffer);
                     }
                     catch (Exception ex) {
@@ -57,7 +62,7 @@ public class ForwardedFilter extends AbstractGatewayFilterFactory {
             String obsPrefix = "obs-";
             bucketName = bucketName.substring(obsPrefix.length());
             try {
-                objectName = URLEncoder.encode(objectName, "utf-8");
+                objectName = URLEncoder.encode(objectName, StandardCharsets.UTF_8.name());
             } catch (UnsupportedEncodingException e) {
                 log.error(e.getMessage(), e);
             }

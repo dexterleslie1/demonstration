@@ -18,6 +18,7 @@
 		<module>service-eureka</module>
 		<module>service-helloworld</module>
 		<module>service-gateway</module>
+		<module>service-test</module>
     </modules>
 
 	<dependencies>

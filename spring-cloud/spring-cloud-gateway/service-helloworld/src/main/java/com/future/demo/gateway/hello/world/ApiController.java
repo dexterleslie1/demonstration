@@ -16,19 +16,31 @@ import java.util.Map;
 @Slf4j
 public class ApiController {
 
-    @GetMapping(value = "/api/v1/sayHello", produces = MediaType.TEXT_PLAIN_VALUE)
-    public String sayHello(@RequestParam(value = "name", defaultValue = "") String name) {
-        return "Hello " + name + "!!(Zuul)";
+    @GetMapping(value = "/api/v1/test1")
+    public ResponseEntity<String> test1(@RequestParam(value = "param1", defaultValue = "") String param1) {
+        return ResponseEntity.ok("成功调用/api/v1/test1接口，[param1=" + param1 + "]");
     }
 
-    @GetMapping(value = "/api/v1/test1", produces = MediaType.TEXT_PLAIN_VALUE)
-    public ResponseEntity<String> test1() {
-        return ResponseEntity.ok("成功调用helloworld test1接口");
-    }
-
-    @PostMapping(value = "/api/v1/test2", produces = MediaType.TEXT_PLAIN_VALUE)
+    @PostMapping(value = "/api/v1/test2")
     public ResponseEntity<String> test2(@RequestParam(value = "param1", defaultValue = "") String param1) {
         return ResponseEntity.ok("你的请求参数param1=" + param1);
+    }
+
+    @PostMapping(value = "/api/v1/test3")
+    public ResponseEntity<String> test3(@RequestParam(value = "param1", defaultValue = "") String param1) {
+        return ResponseEntity.ok("成功调用/api/v1/test3接口，param1=" + param1);
+    }
+
+    @PostMapping(value = "/api/v1/test5")
+    public ResponseEntity<String> test5(@RequestHeader(value = "header1", defaultValue = "") String header1,
+                                        @RequestHeader(value = "header2", defaultValue = "") String header2) {
+        return ResponseEntity.ok("成功调用/api/v1/test5接口，header1=" + header1 + ",header2=" + header2);
+    }
+
+    @PostMapping(value = "/api/v1/test6")
+    public ResponseEntity<String> test6(@RequestHeader(value = "header1", defaultValue = "") String header1,
+                                        @RequestParam(value = "userId", defaultValue = "0") Long userId) {
+        return ResponseEntity.ok("成功调用/api/v1/test6接口，header1=" + header1 + ",userId=" + userId);
     }
 
     @GetMapping("/api/v1/oss/getObject")
