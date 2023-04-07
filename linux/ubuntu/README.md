@@ -69,3 +69,17 @@ deb-src http://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted unive
 sudo apt-get update
 ```
 
+## ubuntu20配置windows风格界面
+
+```
+# 安装tweak和gnome扩展程序
+sudo apt install gnome-tweak-tool gnome-shell-extensions
+
+# 安装dash-to-panel windows桌面风格扩展程序
+sudo apt install gnome-shell-extension-dash-to-panel
+
+# 重新启动操作系统
+# ubuntu程序中搜索并发开Tweaks
+# Tweaks设置程序打开 Extensions -> Application menu、Dash to panel、Desktop icons选项
+```
+
