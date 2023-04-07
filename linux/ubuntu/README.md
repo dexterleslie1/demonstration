@@ -80,6 +80,6 @@ sudo apt install gnome-shell-extension-dash-to-panel
 
 # 重新启动操作系统
 # ubuntu程序中搜索并发开Tweaks
-# Tweaks设置程序1、关闭general > Animations。2、打开 Extensions > Application menu、Dash to panel、Desktop icons选项
+# Tweaks设置程序1、关闭general > Animations。2、打开 Extensions > Application menu、Dash to panel、Desktop icons选项。3、打开Window Titlebars > Maximize、Minimize、Placement Right
 ```
 
