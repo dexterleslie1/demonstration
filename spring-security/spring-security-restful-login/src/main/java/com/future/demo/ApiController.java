@@ -1,13 +1,10 @@
 package com.future.demo;
 
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import java.util.*;
+import com.yyd.common.http.ResponseUtils;
+import com.yyd.common.http.response.ObjectResponse;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * @author Dexterleslie.Chan
@@ -18,37 +15,19 @@ public class ApiController {
 
     /**
      *
-     * @param request
-     * @param response
      * @return
      */
-    @RequestMapping(value="a1")
-    public ResponseEntity<Map<String,Object>> a1(
-            HttpServletRequest request,
-            HttpServletResponse response){
-        Map<String,Object> mapReturn=new HashMap<>();
-        mapReturn.put("dataObject",""+new Date());
-        ResponseEntity responseEntity=ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(mapReturn);
-        return responseEntity;
+    @GetMapping(value="a1")
+    public ObjectResponse<String> a1(){
+        return ResponseUtils.successObject("成功调用接口/api/auth/a1");
     }
 
     /**
      *
-     * @param request
-     * @param response
      * @return
      */
-    @RequestMapping(value="a2")
-    public ResponseEntity<Map<String,Object>> a2(
-            HttpServletRequest request,
-            HttpServletResponse response){
-        Map<String,Object> mapReturn=new HashMap<>();
-        mapReturn.put("dataObject",""+new Date());
-        ResponseEntity responseEntity=ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(mapReturn);
-        return responseEntity;
+    @GetMapping(value="a2")
+    public ObjectResponse<String> a2(){
+        return ResponseUtils.successObject("成功调用接口/api/auth/a2");
     }
 }

@@ -1,20 +1,19 @@
 package com.future.demo;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.yyd.common.http.ResponseUtils;
+import com.yyd.common.http.response.ObjectResponse;
+import com.yyd.common.json.JSONUtil;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.config.annotation.authentication.configurers.provisioning.UserDetailsManagerConfigurer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -26,13 +25,17 @@ import org.springframework.security.web.authentication.AuthenticationFailureHand
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
+import javax.annotation.Resource;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.*;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * @author Dexterleslie.Chan
@@ -40,109 +43,117 @@ import java.util.*;
 @Configuration
 @EnableWebSecurity
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
+
+    @Resource
+    TokenAuthenticationFilter tokenAuthenticationFilter;
+    @Resource
+    TokenStore tokenStore;
+    @Resource
+    PasswordEncoder passwordEncoder;
+
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
                 .csrf().disable()
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+
+                .and().addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+
                 .logout()
-                    .logoutUrl("/api/auth/logout")
-                    .invalidateHttpSession(true)
-                    .deleteCookies("JSESSIONID")
-                    .logoutSuccessHandler(logoutSuccessHandler())
+                .logoutUrl("/api/auth/logout")
+                .invalidateHttpSession(true)
+                .deleteCookies("JSESSIONID")
+                .logoutSuccessHandler(logoutSuccessHandler())
+
                 .and()
-                    .exceptionHandling()
-                    .accessDeniedHandler(accessDeniedHandler())
-                    .authenticationEntryPoint(authenticationEntryPoint())
+                .exceptionHandling()
+                .accessDeniedHandler(accessDeniedHandler())
+                .authenticationEntryPoint(authenticationEntryPoint())
+
                 .and()
-                    .authorizeRequests().antMatchers("/api/auth/login").permitAll()
-                    .antMatchers("/api/auth/a2").hasRole("USER")
-                    .anyRequest().authenticated()
+                .authorizeRequests()
+                .antMatchers("/api/auth/login").permitAll()
+                .antMatchers("/api/auth/a1").hasRole("USER")
+                .antMatchers("/api/auth/a2").hasRole("USER1")
+                .anyRequest().authenticated()
+
                 .and()
-                    .formLogin()
-                    .loginProcessingUrl("/api/auth/login")
-                    .successHandler(authenticationSuccessHandler())
-                    .failureHandler(authenticationFailureHandler());
+                .formLogin()
+                .loginProcessingUrl("/api/auth/login")
+                .successHandler(authenticationSuccessHandler())
+                .failureHandler(authenticationFailureHandler());
     }
 
-    AuthenticationSuccessHandler authenticationSuccessHandler(){
+    AuthenticationSuccessHandler authenticationSuccessHandler() {
         return new AuthenticationSuccessHandler() {
             @Override
             public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
-                Map<String,Object> mapReturn=new HashMap<>();
-                mapReturn.put("userId",4738438);
-                mapReturn.put("loginname",authentication.getName());
-                mapReturn.put("ticket", UUID.randomUUID().toString());
-                response.setCharacterEncoding("UTF-8");
-                response.getWriter().write(new ObjectMapper().writeValueAsString(mapReturn));
+                String token = UUID.randomUUID().toString();
+                Map<String, Object> mapReturn = new HashMap<>();
+                mapReturn.put("userId", 4738438);
+                mapReturn.put("loginname", authentication.getName());
+                mapReturn.put("token", token);
+                ObjectResponse<Map<String, Object>> responseO = ResponseUtils.successObject(mapReturn);
+                WebSecurityConfig.this.tokenStore.store(token, (MyUser)authentication.getPrincipal());
+                response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+                response.getWriter().write(JSONUtil.ObjectMapperInstance.writeValueAsString(responseO));
             }
         };
     }
 
-    AuthenticationFailureHandler authenticationFailureHandler(){
+    AuthenticationFailureHandler authenticationFailureHandler() {
         return new AuthenticationFailureHandler() {
             @Override
             public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException, ServletException {
-                Map<String,Object> mapReturn=new HashMap<>();
-                mapReturn.put("errorCode",50000);
-                mapReturn.put("errorMessage",exception.getMessage());
-                ObjectMapper mapper = new ObjectMapper();
-                response.setCharacterEncoding("UTF-8");
-                response.getWriter().write(mapper.writeValueAsString(mapReturn));
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                ObjectResponse<String> responseO = ResponseUtils.failObject(50000, exception.getMessage());
+                response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+                response.getWriter().write(JSONUtil.ObjectMapperInstance.writeValueAsString(responseO));
             }
         };
     }
 
-    LogoutSuccessHandler logoutSuccessHandler(){
+    LogoutSuccessHandler logoutSuccessHandler() {
         return new LogoutSuccessHandler() {
             @Override
             public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
-                Map<String,Object> mapReturn=new HashMap<>();
-                mapReturn.put("dataObject","成功退出");
-                response.setCharacterEncoding("UTF-8");
-                response.getWriter().write(new ObjectMapper().writeValueAsString(mapReturn));
+                ObjectResponse<String> responseO = ResponseUtils.successObject("成功退出");
+                response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+                response.getWriter().write(JSONUtil.ObjectMapperInstance.writeValueAsString(responseO));
             }
         };
     }
 
-    AccessDeniedHandler accessDeniedHandler(){
+    AccessDeniedHandler accessDeniedHandler() {
         return new AccessDeniedHandler() {
             @Override
             public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException, ServletException {
-                Map<String,Object> mapReturn=new HashMap<>();
-                mapReturn.put("errorCode",50002);
-                mapReturn.put("errorMessage","权限不足");
-                response.setCharacterEncoding("UTF-8");
-                response.getWriter().write(new ObjectMapper().writeValueAsString(mapReturn));
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                ObjectResponse<String> responseO = ResponseUtils.failObject(50002, "权限不足");
+                response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+                response.getWriter().write(JSONUtil.ObjectMapperInstance.writeValueAsString(responseO));
             }
         };
     }
 
-    AuthenticationEntryPoint authenticationEntryPoint(){
+    AuthenticationEntryPoint authenticationEntryPoint() {
         return new AuthenticationEntryPoint() {
             @Override
             public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
-                Map<String,Object> mapReturn=new HashMap<>();
-                mapReturn.put("errorCode",50001);
-                mapReturn.put("errorMessage","您未登陆");
-                response.setCharacterEncoding("UTF-8");
-                response.getWriter().write(new ObjectMapper().writeValueAsString(mapReturn));
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                ObjectResponse<String> responseO = ResponseUtils.failObject(50001, "您未登陆");
+                response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+                response.getWriter().write(JSONUtil.ObjectMapperInstance.writeValueAsString(responseO));
             }
         };
     }
-
-    @Autowired
-    PasswordEncoder passwordEncoder;
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.userDetailsService(new UserDetailsService() {
             @Override
             public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-                User.UserBuilder builder = User.builder();
-                builder.username(username).password("123456").passwordEncoder((String password)->{
-                    return passwordEncoder.encode(password);
-                }).roles("USER");
-                return builder.build();
+                return new MyUser(username, passwordEncoder.encode("123456"), Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")));
             }
         });
     }
