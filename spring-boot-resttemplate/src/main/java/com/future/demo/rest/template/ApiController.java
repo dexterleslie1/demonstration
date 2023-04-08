@@ -2,10 +2,13 @@ package com.future.demo.rest.template;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.yyd.common.http.ResponseUtils;
+import com.yyd.common.http.response.ObjectResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -55,5 +58,12 @@ public class ApiController {
         }
         String message = "你提交的参数 name=" + name + ",token=" + token;
         return ResponseEntity.ok(message);
+    }
+
+    @PostMapping("test1")
+    ObjectResponse<Map<String, Object>> test1() {
+        Map<String, Object> mapTemp = new HashMap<>();
+        mapTemp.put("k1", "v1");
+        return ResponseUtils.successObject(mapTemp);
     }
 }

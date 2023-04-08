@@ -2,16 +2,21 @@ package com.future.demo.rest.template;
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.yyd.common.http.response.ObjectResponse;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.Map;
 
 /**
  *
@@ -73,5 +78,23 @@ public class RestTemplateTests {
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         String response = responseEntity.getBody();
         Assert.assertEquals("没有任何参数提交", response);
+    }
+
+    @Test
+    public void test1() {
+        try {
+            // 返回数据类型为ObjectResponse<Map<String, Object>>和接收数据类型ObjectResponse<String>不匹配
+            // 预期抛出RestClientException
+            this.restTemplate.exchange("http://localhost:8080/api/v1/test1", HttpMethod.POST, null, new ParameterizedTypeReference<ObjectResponse<String>>() {
+            });
+            Assert.fail("预期异常没有抛出");
+        } catch (RestClientException ex) {
+            Assert.assertTrue(ex.getMessage().contains("Error while extracting response for type"));
+        }
+
+        ObjectResponse<Object> response = this.restTemplate.exchange("http://localhost:8080/api/v1/test1", HttpMethod.POST, null, new ParameterizedTypeReference<ObjectResponse<Object>>() {
+        }).getBody();
+        Assert.assertNotNull(response.getData());
+        Assert.assertTrue(((Map<String, Object>)response.getData()).containsKey("k1"));
     }
 }
