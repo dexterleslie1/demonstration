@@ -1,5 +1,6 @@
 package com.future.demo.unify.gateway.common;
 
+import com.yyd.common.http.ResponseUtils;
 import com.yyd.common.http.response.ObjectResponse;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.User;
@@ -9,7 +10,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/user")
-public class UserInfoController {
+public class ApiController {
+
     @GetMapping("info")
     ObjectResponse<String> info(Authentication authentication) {
         ObjectResponse<String> response = new ObjectResponse<>();
@@ -17,4 +19,20 @@ public class UserInfoController {
         response.setData(user.getUsername());
         return response;
     }
+
+    @GetMapping("test1")
+    ObjectResponse<String> test1() {
+        return ResponseUtils.successObject("成功调用接口 /api/v1/user/test1");
+    }
+
+    @GetMapping("test2")
+    ObjectResponse<String> test2() {
+        return ResponseUtils.successObject("成功调用接口 /api/v1/user/test2");
+    }
+
+    @GetMapping("test3")
+    ObjectResponse<String> test3() {
+        return ResponseUtils.successObject("成功调用接口 /api/v1/user/test3");
+    }
+
 }

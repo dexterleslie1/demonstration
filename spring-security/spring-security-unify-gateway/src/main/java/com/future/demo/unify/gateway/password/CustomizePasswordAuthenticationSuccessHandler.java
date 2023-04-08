@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.util.UUID;
 
 @Component
-public class UsernamePasswordAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
+public class CustomizePasswordAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
     @Autowired
     CacheManager cacheManager;
     Cache cacheLoginFailureCount;

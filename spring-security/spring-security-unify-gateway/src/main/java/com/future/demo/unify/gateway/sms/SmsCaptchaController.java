@@ -36,8 +36,6 @@ public class SmsCaptchaController {
     public ObjectResponse<String> send(@RequestParam(value = "phone", defaultValue = "") String phone) throws UnsupportedEncodingException {
         Assert.isTrue(!StringUtils.isBlank(phone), "没有指定手机号码参数");
 
-        phone = URLDecoder.decode(phone, StandardCharsets.UTF_8.name());
-
         PhoneUtil.isMobile(phone);
 
         String captcha = "111111";

@@ -1,34 +1,38 @@
 package com.future.demo.unify.gateway;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.yyd.common.exception.BusinessException;
 import com.yyd.common.http.response.ObjectResponse;
+import com.yyd.common.json.JSONUtil;
+import feign.*;
+import feign.codec.ErrorDecoder;
+import feign.form.FormEncoder;
+import feign.jackson.JacksonDecoder;
+import feign.jackson.JacksonEncoder;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
-import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.net.URLEncoder;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes={Application.class}, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = {Application.class}, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 public class IntegrationTests {
     @LocalServerPort
     int localServerPort;
@@ -46,40 +50,48 @@ public class IntegrationTests {
     }
 
     @Test
-    public void test() throws UnsupportedEncodingException {
+    public void test() throws BusinessException {
+        String host = "localhost";
+        int port = localServerPort;
+
+        Api api = Feign.builder()
+                .retryer(Retryer.NEVER_RETRY)
+                .options(new Request.Options(15, TimeUnit.SECONDS, 15, TimeUnit.SECONDS, false))
+                .encoder(new FormEncoder(new JacksonEncoder()))
+                .decoder(new JacksonDecoder())
+                .logger(new Logger.ErrorLogger()).logLevel(Logger.Level.NONE)
+                .errorDecoder(new ErrorDecoder() {
+                    @Override
+                    public Exception decode(String methodKey, Response response) {
+                        try {
+                            String json = IOUtils.toString(response.body().asInputStream(), StandardCharsets.UTF_8);
+                            ObjectResponse<String> responseError = JSONUtil.ObjectMapperInstance.readValue(json, new TypeReference<ObjectResponse<String>>() {
+                            });
+                            return new BusinessException(responseError.getErrorCode(), responseError.getErrorMessage());
+                        } catch (IOException e) {
+                            return e;
+                        }
+                    }
+                })
+                .target(Api.class, "http://" + host + ":" + port);
+
         /*
         测试发送短信验证码
          */
         // 测试手机号码格式错误
         String phone = "13511111111";
-        String url = "http://localhost:" + localServerPort + "/api/v1/sms/captcha/send?phone={phone}";
-        ResponseEntity<ObjectResponse<String>> responseEntity = null;
         try {
-            restTemplate.exchange(url,
-                    HttpMethod.GET,
-                    null,
-                    new ParameterizedTypeReference<ObjectResponse<String>>() {
-                    },
-                    URLEncoder.encode(phone, StandardCharsets.UTF_8.name()));
+            api.sendSms(phone);
             Assert.fail("预期异常没有抛出");
-        } catch (ResourceAccessException ex) {
-            BusinessException businessException = (BusinessException)ex.getCause();
-            Assert.assertEquals(600, businessException.getErrorCode());
-            Assert.assertEquals("号码=" + phone + "格式错误，必需为E.164格式：+[国家代号][手机号码]，例如：+8613512345678", businessException.getErrorMessage());
+        } catch (BusinessException ex) {
+            Assert.assertEquals(600, ex.getErrorCode());
+            Assert.assertEquals("号码=" + phone + "格式错误，必需为E.164格式：+[国家代号][手机号码]，例如：+8613512345678", ex.getErrorMessage());
         }
 
         // 测试手机号码正确
         phone = "+8613511111111";
-        responseEntity =
-                restTemplate.exchange(url,
-                        HttpMethod.GET,
-                        null,
-                        new ParameterizedTypeReference<ObjectResponse<String>>() {},
-                        URLEncoder.encode(phone, StandardCharsets.UTF_8.name()));
-        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        Assert.assertEquals(0, responseEntity.getBody().getErrorCode());
-        Assert.assertEquals("短信验证码已发送", responseEntity.getBody().getData());
-
+        ObjectResponse<String> responseStr = api.sendSms(phone);
+        Assert.assertEquals("短信验证码已发送", responseStr.getData());
         Element element = this.cacheSmsCaptcha.get(phone);
         Assert.assertEquals("111111", element.getObjectValue());
         this.cacheSmsCaptcha.remove(phone);
@@ -89,315 +101,174 @@ public class IntegrationTests {
          */
         // 未提供短信验证码
         phone = "+8613511111111";
-        url = "http://localhost:" + localServerPort + "/api/v1/sms/login";
-        MultiValueMap<String, Object> params = new LinkedMultiValueMap<>();
-        params.add("phone", phone);
-        HttpEntity<MultiValueMap<String, Object>> httpEntity = new HttpEntity<>(params, null);
         try {
-            restTemplate.exchange(url,
-                    HttpMethod.POST,
-                    httpEntity,
-                    new ParameterizedTypeReference<ObjectResponse<String>>() {
-                    });
+            api.loginSms(phone, StringUtils.EMPTY);
             Assert.fail("预期异常没有抛出");
-        } catch (ResourceAccessException ex) {
-            BusinessException businessException = (BusinessException)ex.getCause();
-            Assert.assertEquals(600, businessException.getErrorCode());
-            Assert.assertEquals("没有提供短信验证码", businessException.getErrorMessage());
+        } catch (BusinessException ex) {
+            Assert.assertEquals(600, ex.getErrorCode());
+            Assert.assertEquals("没有提供短信验证码", ex.getErrorMessage());
         }
 
         // 短信验证码已过期，请重新获取
         phone = "+8613511111111";
         String smsCaptcha = "1234567890";
-        url = "http://localhost:" + localServerPort + "/api/v1/sms/login";
-        params = new LinkedMultiValueMap<>();
-        params.add("phone", phone);
-        params.add("smsCaptcha", smsCaptcha);
-        httpEntity = new HttpEntity<>(params, null);
         try {
-            restTemplate.exchange(url,
-                    HttpMethod.POST,
-                    httpEntity,
-                    new ParameterizedTypeReference<ObjectResponse<String>>() {
-                    });
+            api.loginSms(phone, smsCaptcha);
             Assert.fail("预期异常没有抛出");
-        } catch (ResourceAccessException ex) {
-            BusinessException businessException = (BusinessException)ex.getCause();
-            Assert.assertEquals(600, businessException.getErrorCode());
-            Assert.assertEquals("短信验证码已过期，请重新获取", businessException.getErrorMessage());
+        } catch (BusinessException ex) {
+            Assert.assertEquals(600, ex.getErrorCode());
+            Assert.assertEquals("短信验证码已过期，请重新获取", ex.getErrorMessage());
         }
 
         // 提供的短信验证码错误
         phone = "+8613511111111";
-        url = "http://localhost:" + localServerPort + "/api/v1/sms/captcha/send?phone={phone}";
-        responseEntity =
-                restTemplate.exchange(url,
-                        HttpMethod.GET,
-                        null,
-                        new ParameterizedTypeReference<ObjectResponse<String>>() {},
-                        URLEncoder.encode(phone, StandardCharsets.UTF_8.name()));
-        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        Assert.assertEquals(0, responseEntity.getBody().getErrorCode());
-        Assert.assertEquals("短信验证码已发送", responseEntity.getBody().getData());
+        responseStr = api.sendSms(phone);
+        Assert.assertEquals("短信验证码已发送", responseStr.getData());
 
         smsCaptcha = "1234567890";
-        url = "http://localhost:" + localServerPort + "/api/v1/sms/login";
-        params = new LinkedMultiValueMap<>();
-        params.add("phone", phone);
-        params.add("smsCaptcha", smsCaptcha);
-        httpEntity = new HttpEntity<>(params, null);
         try {
-            restTemplate.exchange(url,
-                    HttpMethod.POST,
-                    httpEntity,
-                    new ParameterizedTypeReference<ObjectResponse<String>>() {
-                    });
+            api.loginSms(phone, smsCaptcha);
             Assert.fail("预期异常没有抛出");
-        } catch (ResourceAccessException ex) {
-            BusinessException businessException = (BusinessException)ex.getCause();
-            Assert.assertEquals(600, businessException.getErrorCode());
-            Assert.assertEquals("提供的短信验证码错误", businessException.getErrorMessage());
+        } catch (BusinessException ex) {
+            Assert.assertEquals(600, ex.getErrorCode());
+            Assert.assertEquals("提供的短信验证码错误", ex.getErrorMessage());
         }
 
         // 正常情况
         smsCaptcha = "111111";
-        url = "http://localhost:" + localServerPort + "/api/v1/sms/login";
-        params = new LinkedMultiValueMap<>();
-        params.add("phone", phone);
-        params.add("smsCaptcha", smsCaptcha);
-        httpEntity = new HttpEntity<>(params, null);
-        ResponseEntity<ObjectResponse<JsonNode>> responseEntityJsonNode =
-                restTemplate.exchange(url,
-                        HttpMethod.POST,
-                        httpEntity,
-                        new ParameterizedTypeReference<ObjectResponse<JsonNode>>() {});
-        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        Assert.assertEquals(phone, responseEntityJsonNode.getBody().getData().get("username").asText());
-        Assert.assertEquals(4, responseEntityJsonNode.getBody().getData().get("loginType").asInt());
-        String token = responseEntityJsonNode.getBody().getData().get("token").asText();
+        ObjectResponse<JsonNode> responseJsonNode = api.loginSms(phone, smsCaptcha);
+        Assert.assertEquals(phone, responseJsonNode.getData().get("username").asText());
+        Assert.assertEquals(4, responseJsonNode.getData().get("loginType").asInt());
+        String token = responseJsonNode.getData().get("token").asText();
 
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add(HttpHeaders.AUTHORIZATION, "Bearer " + token);
-        httpEntity = new HttpEntity<>(null, httpHeaders);
-        url = "http://localhost:" + localServerPort + "/api/v1/user/info";
-        responseEntity =
-                restTemplate.exchange(url,
-                        HttpMethod.GET,
-                        httpEntity,
-                        new ParameterizedTypeReference<ObjectResponse<String>>() {});
-        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        Assert.assertEquals(phone, responseEntity.getBody().getData());
+        responseStr = api.getUserInfo(token);
+        Assert.assertEquals(phone, responseStr.getData());
 
         /*
         测试未登录情况
          */
-        url = "http://localhost:" + localServerPort + "/api/v1/logout";
-        httpHeaders = new HttpHeaders();
-        httpHeaders.add(HttpHeaders.AUTHORIZATION, "Bearer " + token);
-        httpEntity = new HttpEntity<>(null, httpHeaders);
-        responseEntity = restTemplate.exchange(url, HttpMethod.POST, httpEntity, new ParameterizedTypeReference<ObjectResponse<String>>() {
-        });
-        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        Assert.assertEquals("成功退出", responseEntity.getBody().getData());
+        responseStr = api.logout(token);
+        Assert.assertEquals("成功退出", responseStr.getData());
         try {
-            url = "http://localhost:" + localServerPort + "/api/v1/user/info";
-            restTemplate.exchange(url,
-                    HttpMethod.GET,
-                    httpEntity,
-                    new ParameterizedTypeReference<ObjectResponse<String>>() {
-                    });
+            api.getUserInfo(token);
             Assert.fail("预期异常没有抛出");
-        } catch (ResourceAccessException ex) {
-            BusinessException businessException = (BusinessException)ex.getCause();
-            Assert.assertEquals(50003, businessException.getErrorCode());
-            Assert.assertEquals("您未登录", businessException.getErrorMessage());
+        } catch (BusinessException ex) {
+            Assert.assertEquals(50003, ex.getErrorCode());
+            Assert.assertEquals("未登录", ex.getErrorMessage());
         }
 
         /*
         测试用户名、手机号码、邮箱+密码登录
          */
-        // 测试登录成功loginType
-        url = "http://localhost:" + localServerPort + "/api/v1/password/login";
+        // 测试帐号密码错误
         String username = "user1";
-        MultiValueMap<String, Object> multiValueMap = new LinkedMultiValueMap<>();
-        multiValueMap.add("username", username);
-        multiValueMap.add("password", "123456");
-        httpEntity = new HttpEntity<>(multiValueMap, null);
-        responseEntityJsonNode =
-                restTemplate.exchange(url, HttpMethod.POST, httpEntity, new ParameterizedTypeReference<ObjectResponse<JsonNode>>() {});
-        Assert.assertEquals(HttpStatus.OK, responseEntityJsonNode.getStatusCode());
-        Assert.assertEquals(username, responseEntityJsonNode.getBody().getData().get("username").asText());
-        Assert.assertEquals(1, responseEntityJsonNode.getBody().getData().get("loginType").asInt());
-        token = responseEntityJsonNode.getBody().getData().get("token").asText();
+        try {
+            api.loginPassword(username, "xxxxxx", StringUtils.EMPTY, StringUtils.EMPTY);
+            Assert.fail("预期异常没有抛出");
+        } catch (BusinessException ex) {
+            Assert.assertEquals(50000, ex.getErrorCode());
+            Assert.assertEquals("用户名或者密码错误", ex.getErrorMessage());
+        }
 
-        httpHeaders = new HttpHeaders();
-        httpHeaders.add(HttpHeaders.AUTHORIZATION, "Bearer " + token);
-        httpEntity = new HttpEntity<>(null, httpHeaders);
-        url = "http://localhost:" + localServerPort + "/api/v1/user/info";
-        responseEntity =
-                restTemplate.exchange(url,
-                        HttpMethod.GET,
-                        httpEntity,
-                        new ParameterizedTypeReference<ObjectResponse<String>>() {});
-        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        Assert.assertEquals(username, responseEntity.getBody().getData());
+        // 测试登录成功loginType
+        responseJsonNode = api.loginPassword(username, "123456", StringUtils.EMPTY, StringUtils.EMPTY);
+        Assert.assertEquals(username, responseJsonNode.getData().get("username").asText());
+        Assert.assertEquals(1, responseJsonNode.getData().get("loginType").asInt());
+        token = responseJsonNode.getData().get("token").asText();
+        responseStr = api.getUserInfo(token);
+        Assert.assertEquals(username, responseStr.getData());
 
-        url = "http://localhost:" + localServerPort + "/api/v1/password/login";
         username = "13511111111";
-        multiValueMap = new LinkedMultiValueMap<>();
-        multiValueMap.add("username", username);
-        multiValueMap.add("password", "123456");
-        httpEntity = new HttpEntity<>(multiValueMap, null);
-        responseEntityJsonNode =
-                restTemplate.exchange(url, HttpMethod.POST, httpEntity, new ParameterizedTypeReference<ObjectResponse<JsonNode>>() {});
-        Assert.assertEquals(HttpStatus.OK, responseEntityJsonNode.getStatusCode());
-        Assert.assertEquals(username, responseEntityJsonNode.getBody().getData().get("username").asText());
-        Assert.assertEquals(2, responseEntityJsonNode.getBody().getData().get("loginType").asInt());
-        token = responseEntityJsonNode.getBody().getData().get("token").asText();
+        responseJsonNode = api.loginPassword(username, "123456", StringUtils.EMPTY, StringUtils.EMPTY);
+        Assert.assertEquals(username, responseJsonNode.getData().get("username").asText());
+        Assert.assertEquals(2, responseJsonNode.getData().get("loginType").asInt());
+        token = responseJsonNode.getData().get("token").asText();
+        responseStr = api.getUserInfo(token);
+        Assert.assertEquals(username, responseStr.getData());
 
-        httpHeaders = new HttpHeaders();
-        httpHeaders.add(HttpHeaders.AUTHORIZATION, "Bearer " + token);
-        httpEntity = new HttpEntity<>(null, httpHeaders);
-        url = "http://localhost:" + localServerPort + "/api/v1/user/info";
-        responseEntity =
-                restTemplate.exchange(url,
-                        HttpMethod.GET,
-                        httpEntity,
-                        new ParameterizedTypeReference<ObjectResponse<String>>() {});
-        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        Assert.assertEquals(username, responseEntity.getBody().getData());
-
-        url = "http://localhost:" + localServerPort + "/api/v1/password/login";
         username = "+8613511111111";
-        multiValueMap = new LinkedMultiValueMap<>();
-        multiValueMap.add("username", username);
-        multiValueMap.add("password", "123456");
-        httpEntity = new HttpEntity<>(multiValueMap, null);
-        responseEntityJsonNode =
-                restTemplate.exchange(url, HttpMethod.POST, httpEntity, new ParameterizedTypeReference<ObjectResponse<JsonNode>>() {});
-        Assert.assertEquals(HttpStatus.OK, responseEntityJsonNode.getStatusCode());
-        Assert.assertEquals(username, responseEntityJsonNode.getBody().getData().get("username").asText());
-        Assert.assertEquals(2, responseEntityJsonNode.getBody().getData().get("loginType").asInt());
-        token = responseEntityJsonNode.getBody().getData().get("token").asText();
+        responseJsonNode = api.loginPassword(username, "123456", StringUtils.EMPTY, StringUtils.EMPTY);
+        Assert.assertEquals(username, responseJsonNode.getData().get("username").asText());
+        Assert.assertEquals(2, responseJsonNode.getData().get("loginType").asInt());
+        token = responseJsonNode.getData().get("token").asText();
+        responseStr = api.getUserInfo(token);
+        Assert.assertEquals(username, responseStr.getData());
 
-        httpHeaders = new HttpHeaders();
-        httpHeaders.add(HttpHeaders.AUTHORIZATION, "Bearer " + token);
-        httpEntity = new HttpEntity<>(null, httpHeaders);
-        url = "http://localhost:" + localServerPort + "/api/v1/user/info";
-        responseEntity =
-                restTemplate.exchange(url,
-                        HttpMethod.GET,
-                        httpEntity,
-                        new ParameterizedTypeReference<ObjectResponse<String>>() {});
-        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        Assert.assertEquals(username, responseEntity.getBody().getData());
-
-        url = "http://localhost:" + localServerPort + "/api/v1/password/login";
         username = "dexterleslie@gmail.com";
-        multiValueMap = new LinkedMultiValueMap<>();
-        multiValueMap.add("username", username);
-        multiValueMap.add("password", "123456");
-        httpEntity = new HttpEntity<>(multiValueMap, null);
-        responseEntityJsonNode =
-                restTemplate.exchange(url, HttpMethod.POST, httpEntity, new ParameterizedTypeReference<ObjectResponse<JsonNode>>() {});
-        Assert.assertEquals(HttpStatus.OK, responseEntityJsonNode.getStatusCode());
-        Assert.assertEquals(username, responseEntityJsonNode.getBody().getData().get("username").asText());
-        Assert.assertEquals(3, responseEntityJsonNode.getBody().getData().get("loginType").asInt());
-        token = responseEntityJsonNode.getBody().getData().get("token").asText();
+        responseJsonNode = api.loginPassword(username, "123456", StringUtils.EMPTY, StringUtils.EMPTY);
+        Assert.assertEquals(username, responseJsonNode.getData().get("username").asText());
+        Assert.assertEquals(3, responseJsonNode.getData().get("loginType").asInt());
+        token = responseJsonNode.getData().get("token").asText();
+        responseStr = api.getUserInfo(token);
+        Assert.assertEquals(username, responseStr.getData());
 
-        httpHeaders = new HttpHeaders();
-        httpHeaders.add(HttpHeaders.AUTHORIZATION, "Bearer " + token);
-        httpEntity = new HttpEntity<>(null, httpHeaders);
-        url = "http://localhost:" + localServerPort + "/api/v1/user/info";
-        responseEntity =
-                restTemplate.exchange(url,
-                        HttpMethod.GET,
-                        httpEntity,
-                        new ParameterizedTypeReference<ObjectResponse<String>>() {});
-        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        Assert.assertEquals(username, responseEntity.getBody().getData());
-
-        httpHeaders = new HttpHeaders();
-        httpHeaders.add(HttpHeaders.AUTHORIZATION, "Bearer " + token);
-        httpEntity = new HttpEntity<>(null, httpHeaders);
-        // 用户登出
-        url = "http://localhost:" + localServerPort + "/api/v1/logout";
-        responseEntity = restTemplate.exchange(url, HttpMethod.POST, httpEntity, new ParameterizedTypeReference<ObjectResponse<String>>() {
-        });
-        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        Assert.assertEquals("成功退出", responseEntity.getBody().getData());
+        responseStr = api.logout(token);
+        Assert.assertEquals("成功退出", responseStr.getData());
 
         // 测试连续5次不提供账号和密码后BusinessException#errorCode=50001
-        url = "http://localhost:" + localServerPort + "/api/v1/password/login";
-        for(int i=0; i<4; i++) {
+        for (int i = 0; i < 4; i++) {
             try {
-                restTemplate.exchange(url, HttpMethod.POST, null, new ParameterizedTypeReference<ObjectResponse<String>>() {
-                });
+                api.loginPassword(StringUtils.EMPTY, StringUtils.EMPTY, StringUtils.EMPTY, StringUtils.EMPTY);
                 Assert.fail("预期异常没有抛出");
-            } catch (ResourceAccessException ex) {
-                BusinessException businessException = (BusinessException) ex.getCause();
-                Assert.assertEquals(50000, businessException.getErrorCode());
-                Assert.assertEquals("没有指定用户名、手机号码、邮箱至少一项参数", businessException.getErrorMessage());
+            } catch (BusinessException ex) {
+                Assert.assertEquals(50000, ex.getErrorCode());
+                Assert.assertEquals("没有指定用户名、手机号码、邮箱至少一项参数", ex.getErrorMessage());
             }
         }
         try {
-            restTemplate.exchange(url, HttpMethod.POST, null, new ParameterizedTypeReference<ObjectResponse<String>>() {
-            });
+            api.loginPassword(StringUtils.EMPTY, StringUtils.EMPTY, StringUtils.EMPTY, StringUtils.EMPTY);
             Assert.fail("预期异常没有抛出");
-        } catch (ResourceAccessException ex) {
-            BusinessException businessException = (BusinessException) ex.getCause();
-            Assert.assertEquals(50001, businessException.getErrorCode());
-            Assert.assertEquals("没有指定用户名、手机号码、邮箱至少一项参数", businessException.getErrorMessage());
+        } catch (BusinessException ex) {
+            Assert.assertEquals(50001, ex.getErrorCode());
+            Assert.assertEquals("没有指定用户名、手机号码、邮箱至少一项参数", ex.getErrorMessage());
         }
 
         // 尝试多次登录失败后需要提供登录验证码
         try {
-            multiValueMap = new LinkedMultiValueMap<>();
-            multiValueMap.add("clientId", UUID.randomUUID().toString());
-            multiValueMap.add("captcha", "111111");
-            multiValueMap.add("username", "usertest1");
-            multiValueMap.add("password", "123456");
-            httpEntity = new HttpEntity<>(multiValueMap, null);
-            restTemplate.exchange(url, HttpMethod.POST, httpEntity, new ParameterizedTypeReference<ObjectResponse<String>>() {
-            });
+            api.loginPassword("usertest1", "123456", UUID.randomUUID().toString(), "111111");
             Assert.fail("预期异常没有抛出");
-        } catch (ResourceAccessException ex) {
-            BusinessException businessException = (BusinessException) ex.getCause();
-            Assert.assertEquals(50001, businessException.getErrorCode());
-            Assert.assertEquals("登录验证码错误", businessException.getErrorMessage());
+        } catch (BusinessException ex) {
+            Assert.assertEquals(50001, ex.getErrorCode());
+            Assert.assertEquals("登录验证码错误", ex.getErrorMessage());
         }
 
         // 测试验证码登录
         String clientId = UUID.randomUUID().toString();
-        url = "http://localhost:" + localServerPort + "/api/v1/password/captcha/get?clientId={clientId}";
-        ResponseEntity<byte[]> responseEntityByteArr = restTemplate.exchange(url, HttpMethod.GET, null, new ParameterizedTypeReference<byte[]>() {}, clientId);
-        Assert.assertEquals(HttpStatus.OK, responseEntityByteArr.getStatusCode());
+        Response response = api.getCaptcha(clientId);
+        Assert.assertEquals(HttpStatus.OK.value(), response.status());
+        Assert.assertTrue(response.body().length() > 0);
 
         username = "user1";
-        multiValueMap = new LinkedMultiValueMap<>();
-        multiValueMap.add("clientId", clientId);
-        multiValueMap.add("captcha", "111111");
-        multiValueMap.add("username", username);
-        multiValueMap.add("password", "123456");
-        httpEntity = new HttpEntity<>(multiValueMap, null);
-        url = "http://localhost:" + localServerPort + "/api/v1/password/login";
-        responseEntityJsonNode =
-                restTemplate.exchange(url, HttpMethod.POST, httpEntity, new ParameterizedTypeReference<ObjectResponse<JsonNode>>() {});
-        Assert.assertEquals(HttpStatus.OK, responseEntityJsonNode.getStatusCode());
-        Assert.assertEquals(username, responseEntityJsonNode.getBody().getData().get("username").asText());
-        Assert.assertEquals(1, responseEntityJsonNode.getBody().getData().get("loginType").asInt());
-        token = responseEntityJsonNode.getBody().getData().get("token").asText();
+        responseJsonNode = api.loginPassword(username, "123456", clientId, "111111");
+        Assert.assertEquals(username, responseJsonNode.getData().get("username").asText());
+        Assert.assertEquals(1, responseJsonNode.getData().get("loginType").asInt());
+        token = responseJsonNode.getData().get("token").asText();
 
-        httpHeaders = new HttpHeaders();
-        httpHeaders.add(HttpHeaders.AUTHORIZATION, "Bearer " + token);
-        httpEntity = new HttpEntity<>(null, httpHeaders);
-        url = "http://localhost:" + localServerPort + "/api/v1/user/info";
-        responseEntity =
-                restTemplate.exchange(url,
-                        HttpMethod.GET,
-                        httpEntity,
-                        new ParameterizedTypeReference<ObjectResponse<String>>() {});
-        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        Assert.assertEquals(username, responseEntity.getBody().getData());
+        responseStr = api.getUserInfo(token);
+        Assert.assertEquals(username, responseStr.getData());
+
+        // 测试未登录
+        try {
+            api.test1(UUID.randomUUID().toString());
+            Assert.fail("预期异常没有抛出");
+        } catch (BusinessException ex) {
+            Assert.assertEquals(50003, ex.getErrorCode());
+            Assert.assertEquals("未登录", ex.getErrorMessage());
+        }
+
+        // 测试权限
+        responseStr = api.test1(token);
+        Assert.assertEquals("成功调用接口 /api/v1/user/test1", responseStr.getData());
+
+        responseStr = api.test2(token);
+        Assert.assertEquals("成功调用接口 /api/v1/user/test2", responseStr.getData());
+
+        try {
+            api.test3(token);
+            Assert.fail("预期异常没有抛出");
+        } catch (BusinessException ex) {
+            Assert.assertEquals(50002, ex.getErrorCode());
+            Assert.assertEquals("权限不足", ex.getErrorMessage());
+        }
     }
 }

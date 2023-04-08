@@ -1,10 +1,8 @@
 package com.future.demo.unify.gateway.common;
 
-import com.yyd.common.http.HttpUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -21,7 +19,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     TokenStore tokenStore;
 
     @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+    protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
         return "/api/v1/sms/captcha/send".equalsIgnoreCase(path) || "/api/v1/sms/login".equalsIgnoreCase(path)
                 || "/api/v1/password/login".equalsIgnoreCase(path) || "/api/v1/password/captcha/get".equalsIgnoreCase(path);
@@ -32,20 +30,14 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
         String token = obtainBearerToken(request);
-        if(StringUtils.isBlank(token)) {
-            HttpUtil.responseWithError(response, HttpStatus.UNAUTHORIZED, "没有提供Bearer Token");
-            return;
+        if(!StringUtils.isBlank(token)) {
+            MyUser user = tokenStore.get(token);
+            if (user != null) {
+                MyAuthentication authentication = new MyAuthentication(user);
+                authentication.setAuthenticated(true);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
         }
-
-        MyUser user = tokenStore.get(token);
-        if(user==null) {
-            HttpUtil.responseWithError(response, HttpStatus.UNAUTHORIZED, 50003, "您未登录");
-            return;
-        }
-
-        MyAuthentication authentication = new MyAuthentication(user);
-        authentication.setAuthenticated(true);
-        SecurityContextHolder.getContext().setAuthentication(authentication);
         filterChain.doFilter(request, response);
     }
 

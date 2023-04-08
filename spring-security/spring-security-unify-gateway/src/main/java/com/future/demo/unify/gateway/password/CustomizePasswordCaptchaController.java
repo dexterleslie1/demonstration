@@ -23,7 +23,7 @@ import java.io.IOException;
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/password/captcha")
-public class UsernamePasswordCaptchaController {
+public class CustomizePasswordCaptchaController {
     final static Integer DEFAULT_IMAGE_WIDTH = 100;
     final static Integer DEFAULT_IMAGE_HEIGHT = 40;
 

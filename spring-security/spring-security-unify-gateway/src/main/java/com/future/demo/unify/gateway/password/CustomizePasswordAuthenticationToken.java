@@ -1,4 +1,4 @@
-package com.future.demo.unify.gateway.sms;
+package com.future.demo.unify.gateway.password;
 
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
@@ -6,36 +6,38 @@ import org.springframework.security.core.SpringSecurityCoreVersion;
 
 import java.util.Collection;
 
-public class SmsCaptchaAuthenticationToken extends AbstractAuthenticationToken {
+public class CustomizePasswordAuthenticationToken extends AbstractAuthenticationToken {
 
     /**
-     * 在 UsernamePasswordAuthenticationToken 中该字段代表登录的用户名，
-     * 在这里就代表登录的手机号码
+     * 登录的用户名
      */
     private final Object principal;
+    private final Object credentials;
 
     /**
-     * 构建一个没有鉴权的 SmsCodeAuthenticationToken
+     * 构建一个没有鉴权的 CustomizePasswordAuthenticationToken
      */
-    public SmsCaptchaAuthenticationToken(Object principal) {
+    public CustomizePasswordAuthenticationToken(Object principal, Object credentials) {
         super(null);
         this.principal = principal;
+        this.credentials = credentials;
         setAuthenticated(false);
     }
 
     /**
-     * 构建拥有鉴权的 SmsCodeAuthenticationToken
+     * 构建拥有鉴权的 CustomizePasswordAuthenticationToken
      */
-    public SmsCaptchaAuthenticationToken(Object principal, Collection<? extends GrantedAuthority> authorities) {
+    public CustomizePasswordAuthenticationToken(Object principal, Object credentials, Collection<? extends GrantedAuthority> authorities) {
         super(authorities);
         this.principal = principal;
+        this.credentials = credentials;
         // must use super, as we override
         super.setAuthenticated(true);
     }
 
     @Override
     public Object getCredentials() {
-        return null;
+        return this.credentials;
     }
 
     @Override

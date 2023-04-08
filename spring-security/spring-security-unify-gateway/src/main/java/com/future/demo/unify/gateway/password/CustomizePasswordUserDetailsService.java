@@ -6,17 +6,18 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
+import java.util.Collections;
 
 @Component
 @Slf4j
-public class UsernamePasswordUserDetailsService implements UserDetailsService {
+public class CustomizePasswordUserDetailsService implements UserDetailsService {
     @Autowired
     PasswordEncoder passwordEncoder;
 
@@ -61,7 +62,7 @@ public class UsernamePasswordUserDetailsService implements UserDetailsService {
             log.debug("email+密码登录");
         }
 
-        MyUser user = new MyUser(username, passwordEncoder.encode("123456"), new ArrayList<>());
+        MyUser user = new MyUser(username, passwordEncoder.encode("123456"), Collections.singletonList(new SimpleGrantedAuthority("ROLE_admin")));
         user.setLoginType(loginType);
         return user;
     }

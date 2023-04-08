@@ -4,23 +4,33 @@ import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.util.Assert;
+import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 
+@Component
 public class SmsCaptchaAuthenticationProvider implements AuthenticationProvider {
-    private UserDetailsService userDetailsService;
 
+    @Autowired
+    private SmsCaptchaUserDetailsService userDetailsService;
+
+    @Autowired
     CacheManager cacheManager;
     Cache cacheSmsCaptcha;
+
+    @PostConstruct
+    void init() {
+        this.cacheSmsCaptcha = this.cacheManager.getCache("cacheSmsCaptcha");
+    }
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
@@ -65,16 +75,16 @@ public class SmsCaptchaAuthenticationProvider implements AuthenticationProvider 
         return SmsCaptchaAuthenticationToken.class.isAssignableFrom(authentication);
     }
 
-    public UserDetailsService getUserDetailsService() {
-        return userDetailsService;
-    }
+//    public UserDetailsService getUserDetailsService() {
+//        return userDetailsService;
+//    }
 
-    public void setUserDetailsService(UserDetailsService userDetailsService) {
-        this.userDetailsService = userDetailsService;
-    }
-
-    public void setCacheManager(CacheManager cacheManager) {
-        this.cacheManager = cacheManager;
-        this.cacheSmsCaptcha = this.cacheManager.getCache("cacheSmsCaptcha");
-    }
+//    public void setUserDetailsService(UserDetailsService userDetailsService) {
+//        this.userDetailsService = userDetailsService;
+//    }
+//
+//    public void setCacheManager(CacheManager cacheManager) {
+//        this.cacheManager = cacheManager;
+//        this.cacheSmsCaptcha = this.cacheManager.getCache("cacheSmsCaptcha");
+//    }
 }

@@ -1,6 +1,7 @@
 package com.future.demo.unify.gateway.config;
 
 import com.future.demo.unify.gateway.common.MyAccessDeniedHandler;
+import com.future.demo.unify.gateway.common.MyAuthenticationEntryPoint;
 import com.future.demo.unify.gateway.common.MyLogoutSuccessHandler;
 import com.future.demo.unify.gateway.common.TokenAuthenticationFilter;
 import com.future.demo.unify.gateway.password.*;
@@ -10,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -19,39 +21,48 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import javax.annotation.Resource;
+import java.util.Arrays;
+
 @Configuration
 @EnableWebSecurity
 public class ConfigWebSecurity extends WebSecurityConfigurerAdapter {
     @Autowired
     AuthenticationManager authenticationManager;
+
     @Autowired
     SmsCaptchaUserDetailsService smsCaptchaUserDetailsService;
     @Autowired
     SmsCaptchaAuthenticationSuccessHandler smsCaptchaAuthenticationSuccessHandler;
     @Autowired
     SmsCaptchaAuthenticationFailureHandler smsCaptchaAuthenticationFailureHandler;
+    @Autowired
+    SmsCaptchaAuthenticationProvider smsCaptchaAuthenticationProvider;
 
     @Autowired
-    UsernamePasswordUserDetailsService usernamePasswordUserDetailsService;
+    CustomizePasswordUserDetailsService customizePasswordUserDetailsService;
     @Autowired
-    UsernamePasswordAuthenticationFailureHandler usernamePasswordAuthenticationFailureHandler;
+    CustomizePasswordAuthenticationSuccessHandler customizePasswordAuthenticationSuccessHandler;
     @Autowired
-    UsernamePasswordAuthenticationSuccessHandler usernamePasswordAuthenticationSuccessHandler;
+    CustomizePasswordAuthenticationFailureHandler customizePasswordAuthenticationFailureHandler;
+    @Autowired
+    CustomizePasswordAuthenticationProvider customizePasswordAuthenticationProvider;
 
     @Autowired
     MyLogoutSuccessHandler myLogoutSuccessHandler;
     @Autowired
     MyAccessDeniedHandler myAccessDeniedHandler;
+    @Resource
+    MyAuthenticationEntryPoint myAuthenticationEntryPoint;
+
     @Autowired
     TokenAuthenticationFilter tokenAuthenticationFilter;
 
-    @Autowired
-    CacheManager cacheManager;
-
+    // todo 为何下面不能够注释
     // 这个接口专门用于配置系统默认的UsernamePasswordAuthentication
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(usernamePasswordUserDetailsService);
+        auth.userDetailsService(customizePasswordUserDetailsService);
     }
 
     @Override
@@ -62,12 +73,10 @@ public class ConfigWebSecurity extends WebSecurityConfigurerAdapter {
         smsCaptchaAuthenticationFilter.setAuthenticationSuccessHandler(smsCaptchaAuthenticationSuccessHandler);
         smsCaptchaAuthenticationFilter.setAuthenticationFailureHandler(smsCaptchaAuthenticationFailureHandler);
 
-        SmsCaptchaAuthenticationProvider smsCaptchaAuthenticationProvider = new SmsCaptchaAuthenticationProvider();
-        smsCaptchaAuthenticationProvider.setCacheManager(cacheManager);
-        smsCaptchaAuthenticationProvider.setUserDetailsService(smsCaptchaUserDetailsService);
-
-        UsernamePasswordLoginCaptchaFilter usernamePasswordLoginCaptchaFilter = new UsernamePasswordLoginCaptchaFilter();
-        usernamePasswordLoginCaptchaFilter.setCacheManager(cacheManager);
+        CustomizePasswordAuthenticationFilter customizePasswordAuthenticationFilter = new CustomizePasswordAuthenticationFilter();
+        customizePasswordAuthenticationFilter.setAuthenticationManager(authenticationManager);
+        customizePasswordAuthenticationFilter.setAuthenticationSuccessHandler(customizePasswordAuthenticationSuccessHandler);
+        customizePasswordAuthenticationFilter.setAuthenticationFailureHandler(customizePasswordAuthenticationFailureHandler);
 
         http
                 .csrf().disable()
@@ -81,6 +90,7 @@ public class ConfigWebSecurity extends WebSecurityConfigurerAdapter {
                 // 未登录异常处理
                 .exceptionHandling()
                 .accessDeniedHandler(myAccessDeniedHandler)
+                .authenticationEntryPoint(myAuthenticationEntryPoint)
 
                 // 登出配置
                 .and().logout()
@@ -89,19 +99,26 @@ public class ConfigWebSecurity extends WebSecurityConfigurerAdapter {
                 .deleteCookies("JSESSIONID")
                 .logoutSuccessHandler(myLogoutSuccessHandler)
 
+                // 接口权限
+                .and()
+                .authorizeRequests().antMatchers("/api/v1/user/test2").hasRole("admin")
+                .antMatchers("/api/v1/user/test3").hasAuthority("user:creation")
+
                 // 允许用户名、手机号码、邮箱+密码登录url
                 .and().authorizeRequests().antMatchers("/api/v1/password/login").permitAll()
 
                 // 模拟用户名、手机号码、邮箱+密码尝试多次登录失败后需要提供登录验证码才能够继续登录系统
-                .and().addFilterBefore(usernamePasswordLoginCaptchaFilter, UsernamePasswordAuthenticationFilter.class)
+                .and().authenticationProvider(customizePasswordAuthenticationProvider)
+                .addFilterBefore(customizePasswordAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
 
                 // form login配置
-                .formLogin()
-                .loginProcessingUrl("/api/v1/password/login")
-                .failureHandler(usernamePasswordAuthenticationFailureHandler)
-                .successHandler(usernamePasswordAuthenticationSuccessHandler)
+                .formLogin().disable()
+//                .loginProcessingUrl("/api/v1/password/login")
+//                .failureHandler(usernamePasswordAuthenticationFailureHandler)
+//                .successHandler(usernamePasswordAuthenticationSuccessHandler)
 
-                .and().authorizeRequests().antMatchers("/api/v1/password/captcha/get").permitAll()
+//                .and()
+                .authorizeRequests().antMatchers("/api/v1/password/captcha/get").permitAll()
 
                 // 手机号码+短信验证码登录时发送短信验证码
                 .and().authorizeRequests().antMatchers("/api/v1/sms/captcha/send").permitAll()

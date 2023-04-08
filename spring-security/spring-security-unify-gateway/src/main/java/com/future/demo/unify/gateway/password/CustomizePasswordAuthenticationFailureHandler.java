@@ -19,7 +19,7 @@ import java.io.IOException;
 
 @Component
 @Slf4j
-public class UsernamePasswordAuthenticationFailureHandler implements AuthenticationFailureHandler {
+public class CustomizePasswordAuthenticationFailureHandler implements AuthenticationFailureHandler {
     @Autowired
     CacheManager cacheManager;
     Cache cacheLoginFailureCount;
