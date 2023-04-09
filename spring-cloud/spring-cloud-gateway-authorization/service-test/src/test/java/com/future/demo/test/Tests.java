@@ -29,7 +29,7 @@ public class Tests {
                 .options(new Request.Options(15, TimeUnit.SECONDS, 15, TimeUnit.SECONDS, false))
                 .encoder(new FormEncoder(new JacksonEncoder()))
                 .decoder(new JacksonDecoder())
-                .logger(new Logger.ErrorLogger()).logLevel(Logger.Level.NONE)
+                .logger(new Logger.ErrorLogger()).logLevel(Logger.Level.FULL)
                 .errorDecoder(new ErrorDecoder() {
                     @Override
                     public Exception decode(String methodKey, Response response) {
