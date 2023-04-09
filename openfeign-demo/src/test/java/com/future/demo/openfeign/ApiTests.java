@@ -76,9 +76,10 @@ public class ApiTests {
         Assert.assertEquals("你好，" + name, response.getData().getField1());
         Assert.assertTrue(response.getData().isField2());
 
-        List<MyPostVO> myPostVOList = new ArrayList<MyPostVO>();
+        List<MyPostVO> myPostVOList = new ArrayList<>();
         try {
             api.testPost(myPostVOList);
+            Assert.fail("预期异常没有抛出");
         } catch (BusinessException ex) {
             Assert.assertTrue(ex.getErrorCode()>0);
             Assert.assertEquals("没有指定myPostVOList", ex.getErrorMessage());
