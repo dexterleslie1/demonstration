@@ -1,5 +1,9 @@
-##### 演示spring security权限控制
+# 演示基于spring-security的权限验证
 
-##### TODO
-- hasAuthority、hasAnyAuthority、hasRole、hasAnyRole用法
-- @Secured、@PreAuthorize、@PostAuthorize、@PreFilter、@PostFilter用法
+## @secured注解
+
+> 参考demo
+
+## @PreAuthorize注解
+
+> 参考demo
