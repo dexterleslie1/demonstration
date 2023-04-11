@@ -36,7 +36,7 @@
 <div style="width: 600px; margin: auto;">
     <fieldset>
         <legend>
-            <spring:message code="welcome" />
+            <spring:message code="welcome" arguments="中国"/>
         </legend>
         <p>
             <label><%--<spring:message code="chooseLang" />--%></label>   <select
