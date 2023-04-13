@@ -1,5 +1,6 @@
 package com.future.demo.jdk8.stream;
 
+import com.yyd.common.jdk8.feature.StreamUtil;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -8,6 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 public class StreamTests {
+
     @Test
     public void test() {
         // distinct根据hashCode和equals方法去重
@@ -18,6 +20,24 @@ public class StreamTests {
         userEntityDistinctList.add(new UserEntityDistinct("guyt", 34));
         userEntityDistinctList.add(new UserEntityDistinct("guyt", 34));
         Assert.assertEquals(userEntityDistinctList.size() - 1, userEntityDistinctList.stream().distinct().collect(Collectors.toList()).size());
+
+        // List<Map<String, Object>>去重
+        // distinctByKey方法使用
+        // https://www.cnblogs.com/zwh0910/p/15877284.html
+        List<Map<String, Object>> mapList = new ArrayList<>();
+        Map<String, Object> oMap = new HashMap<>();
+        oMap.put("id",  1L);
+        oMap.put("code", "1-1");
+        mapList.add(oMap);
+        oMap = new HashMap<>();
+        oMap.put("id",  2L);
+        oMap.put("code", "1-2");
+        mapList.add(oMap);
+        oMap = new HashMap<>();
+        oMap.put("id",  1L);
+        oMap.put("code", "1-3");
+        mapList.add(oMap);
+        Assert.assertEquals(mapList.size() - 1, mapList.stream().filter(StreamUtil.distinctByKey(o->o.get("id"))).collect(Collectors.toList()).size());
 
         // List<UserEntity>转换为List<String>
         List<UserEntity> userEntityList = new ArrayList<>();
