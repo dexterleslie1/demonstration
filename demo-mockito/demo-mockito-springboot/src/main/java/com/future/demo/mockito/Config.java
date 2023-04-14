@@ -15,4 +15,10 @@ public class Config {
         RestTemplate restTemplate = new RestTemplate();
         return restTemplate;
     }
+
+    @Bean
+    MyServiceInner myServiceInner() {
+        return new MyServiceInner();
+    }
+
 }

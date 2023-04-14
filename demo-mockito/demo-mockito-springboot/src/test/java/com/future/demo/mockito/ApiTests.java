@@ -4,12 +4,15 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestTemplate;
@@ -20,9 +23,12 @@ import java.lang.reflect.Modifier;
 @RunWith(SpringRunner.class)
 @SpringBootTest(
         classes={Application.class},
-        webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
 )
 public class ApiTests {
+    @LocalServerPort
+    int port;
+
     @Mock
     Logger log;
 
@@ -53,10 +59,11 @@ public class ApiTests {
         Mockito.doNothing().when(log).info("Api for testing is called.");
 
         ResponseEntity<String> response = this.restTemplate.getForEntity(
-                "http://localhost:8080/api/test1",
+                "http://localhost:"+ port + "/api/test1",
                 String.class);
         Assert.assertEquals("Hello ....", response.getBody());
 
         Mockito.verify(log).info("Api for testing is called.");
     }
+
 }
