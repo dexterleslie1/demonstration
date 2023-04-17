@@ -204,6 +204,20 @@ public class StreamTests {
         Assert.assertEquals(20, userEntityListSorted.get(1).getAge());
         Assert.assertEquals(34, userEntityListSorted.get(2).getAge());
         Assert.assertEquals(45, userEntityListSorted.get(3).getAge());
-
     }
+
+    /**
+     * Map转换为List
+     */
+    @Test
+    public void testMapToList() {
+        Map<String, UserEntity> testMap = new HashMap<>();
+        testMap.put("1", new UserEntity("zhangsan", 20));
+        testMap.put("2", new UserEntity("lisi", 13));
+        List<UserEntity> testList = new ArrayList<>(testMap.values());
+        Assert.assertEquals(2, testList.size());
+        Assert.assertEquals(new UserEntity("zhangsan", 20), testList.get(0));
+        Assert.assertEquals(new UserEntity("lisi", 13), testList.get(1));
+    }
+
 }
