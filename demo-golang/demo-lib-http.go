@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func main() {
+func TestDownfile() {
 	// https://golangdocs.com/golang-download-files
 
 	// 使用net/http库下载文件
@@ -48,4 +48,31 @@ func main() {
 	defer file.Close()
 
 	fmt.Printf("Downloaded a file %s with size %d", fileName, size)
+}
+
+func TestGetResponseHeaderValue() (string, error) {
+	url := "https://bucketxyh.oss-cn-hongkong.aliyuncs.com/kubernetes/kubectl-v1.26.0-linux"
+	client := http.Client{
+		CheckRedirect: func(r *http.Request, via []*http.Request) error {
+			r.URL.Opaque = r.URL.Path
+			return nil
+		},
+	}
+
+	resp, err := client.Head(url)
+	if err != nil {
+		// log.Fatal(err)
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	return resp.Header.Get("ETag"), nil
+}
+
+func main() {
+	headerValue, err := TestGetResponseHeaderValue()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("eTag=", headerValue)
 }
