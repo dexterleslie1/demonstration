@@ -1,0 +1,14 @@
+version: "3.0"
+
+services:
+  demo-maven-compiler:
+    container_name: demo-maven-compiler
+    image: maven:3.3-jdk-8
+    command: sh -c "rm -rf /usr/src/mytarget/* && rm -rf /usr/src/mymaven/* && unzip -d srct ../src.zip && mv srct/*/* . && mvn clean package && cp target/*.jar ../mytarget/"
+    working_dir: /usr/src/mymaven
+    volumes:
+      - ./.m2:/root/.m2
+      - ./src.zip:/usr/src/src.zip
+      - ./mytarget:/usr/src/mytarget
+    environment:
+      - TZ=Asia/Shanghai
