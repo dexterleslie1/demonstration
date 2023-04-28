@@ -6,6 +6,9 @@
 
 ## go环境配置和安装
 
+> 使用dcli程序安装go环境
+> 安装命令 dcli go install
+
 ### macOS安装go
 
 **下载go pkg并安装，下载地址：https://studygolang.com/dl**
