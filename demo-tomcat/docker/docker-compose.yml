@@ -1,0 +1,19 @@
+version: "3.0"
+
+networks:
+  net:
+    name: demo-tomcat-net
+
+services:
+  demo-tomcat9:
+    container_name: demo-tomcat9
+    image: tomcat:9.0.74-jdk8
+    volumes:
+      - ./target/tomcat-java-web.war:/usr/local/tomcat/webapps/tomcat-java-web.war
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - 8080:8080
+    networks:
+      - net
+
