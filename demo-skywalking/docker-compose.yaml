@@ -1,0 +1,69 @@
+version: "3.0"
+
+# 创建网络
+networks:
+  net:
+    name: demo-skywalking
+
+services:
+  demo-skywalking-elasticsearch:
+    container_name: demo-skywalking-elasticsearch
+    image:  elasticsearch:7.14.1
+    environment:
+      - "ES_JAVA_OPTS=-Xms512m -Xmx1024m"
+      - discovery.type=single-node
+      # http.cors表示允许elasticsearch-head连接并管理
+      - http.cors.enabled=true
+      - http.cors.allow-origin=*
+      - TZ=Asia/Shanghai
+    ports:
+      - 9200:9200
+      # Java transport client需要连接这个端口去操作elasticsearch
+      - 9300:9300
+    volumes:
+      - ~/data-demo-skywalking-elasticsearch7:/usr/share/elasticsearch/data
+    networks:
+      - net
+
+#  demo-skywalking-kibana:
+#    container_name: demo-skywalking-kibana
+#    image: kibana:7.14.1
+#    environment:
+#      - ELASTICSEARCH_HOSTS=http://demo-skywalking-elasticsearch:9200
+#      - TZ=Asia/Shanghai
+#    ports:
+#      - 5601:5601
+#    networks:
+#      - net
+#    depends_on:
+#      - demo-skywalking-elasticsearch
+
+  demo-skywalking-oap-server:
+    container_name: demo-skywalking-oap-server
+    image: apache/skywalking-oap-server:8.7.0-es7
+    environment:
+      - SW_STORAGE=elasticsearch7
+      - SW_STORAGE_ES_CLUSTER_NODES=demo-skywalking-elasticsearch:9200
+      # trace日志保留1天
+      - SW_STORAGE_ES_RECORD_DATA_TTL=1
+      - TZ=Asia/Shanghai
+    ports:
+      - 12800:12800
+      - 11800:11800
+    networks:
+      - net
+    depends_on:
+      - demo-skywalking-elasticsearch
+
+  demo-skywalking-ui:
+    container_name: demo-skywalking-ui
+    image: apache/skywalking-ui:8.7.0
+    environment:
+      - SW_OAP_ADDRESS=http://demo-skywalking-oap-server:12800
+      - TZ=Asia/Shanghai
+    ports:
+      - 8088:8080
+    networks:
+      - net
+    depends_on:
+      - demo-skywalking-oap-server
