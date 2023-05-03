@@ -11,6 +11,7 @@ services:
     image: zookeeper:3.4.9
     environment:
       - TZ=Asia/Shanghai
+      - JVMFLAGS=-Xmx512m -Xms512m -server
     ports:
       - 2181:2181
     networks:
