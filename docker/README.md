@@ -12,3 +12,14 @@ docker run --privileged --pid=host -it alpine:3.8 nsenter -t 1 -m -u -n -i sh
 ## docker volume权限管理
 
 > https://www.bbsmax.com/A/kjdwbNpA5N/
+
+## docker命令
+
+### 删除镜像
+
+```
+# 删除未被使用的镜像
+# https://www.baeldung.com/ops/docker-remove-dangling-unused-images
+docker image prune -a
+```
+
