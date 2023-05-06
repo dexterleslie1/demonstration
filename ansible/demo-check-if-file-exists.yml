@@ -1,0 +1,11 @@
+- hosts: localhost
+  tasks:
+   # 判断文件是否存在
+   - stat:
+      path: README.md
+     register: varReadmeFileExists
+   
+   - debug:
+      msg: "README.md文件是否存在变量值: {{ varReadmeFileExists.stat.exists }}"
+  
+
