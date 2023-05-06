@@ -1,0 +1,5 @@
+{
+    "registry-mirrors": ["oldxx.com","oldyy.cn"],
+    "insecure-registries": ["oldww.gov"],
+    "dataDir":"/data/data-docker"
+}

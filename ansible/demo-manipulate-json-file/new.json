@@ -1,0 +1,5 @@
+{
+    "registry-mirrors": ["newxx.com","newyy.cn"],
+    "insecure-registries": ["newww.gov"],
+    "k1": "v1"
+}
