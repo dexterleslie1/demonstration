@@ -23,3 +23,16 @@ docker run --privileged --pid=host -it alpine:3.8 nsenter -t 1 -m -u -n -i sh
 docker image prune -a
 ```
 
+### 网络管理
+
+> docker出现 could not find an available, non-overlapping IPv4...错误解决方案
+> https://blog.csdn.net/epitomizelu/article/details/124989596
+
+```
+# 查询当前创建所有网络
+docker network ls
+
+# 删除没有被引用的网络
+docker network prune
+```
+
