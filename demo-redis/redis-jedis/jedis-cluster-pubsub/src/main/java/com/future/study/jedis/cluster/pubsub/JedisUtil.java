@@ -37,9 +37,9 @@ public class JedisUtil {
         config.setTestOnBorrow(Boolean.valueOf(testOnBorrow));
 
         Set<HostAndPort> jedisClusterNodes = new HashSet<>();
-        jedisClusterNodes.add(new HostAndPort("192.168.1.111", 6381));
-        jedisClusterNodes.add(new HostAndPort("192.168.1.111", 6380));
-        jedisClusterNodes.add(new HostAndPort("192.168.1.111", 6379));
+        jedisClusterNodes.add(new HostAndPort("localhost", 6381));
+        jedisClusterNodes.add(new HostAndPort("localhost", 6380));
+        jedisClusterNodes.add(new HostAndPort("localhost", 6379));
         try {
             jedisPool = new JedisCluster(jedisClusterNodes, config);
         }catch(Exception ex){
