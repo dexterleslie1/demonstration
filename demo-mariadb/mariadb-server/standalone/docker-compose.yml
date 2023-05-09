@@ -21,9 +21,13 @@ services:
      - --character-set-server=utf8mb4
      - --collation-server=utf8mb4_general_ci
      - --skip-character-set-client-handshake
+     # 设置innodb-buffer-pool-size
+     # https://stackoverflow.com/questions/64825998/how-to-change-the-default-config-for-mysql-when-using-docker-image
+     - --innodb-buffer-pool-size=1g
     #volumes:
     #  - ~/data-demo-mariadb-standalone-server:/var/lib/mysql
     environment:
+      - LANG=C.UTF-8
       - TZ=Asia/Shanghai
       - MYSQL_ROOT_PASSWORD=123456
     ports:
