@@ -1,4 +1,4 @@
-package com.future.study.jdkapi.buffer;
+package com.future.demo;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -11,7 +11,7 @@ import java.nio.*;
  * @date 2018年08月04日
  * @time 15:22
  */
-public class ByteBufferTest {
+public class ByteBufferTests {
     /**
      * 测试put、get和position关系
      */
