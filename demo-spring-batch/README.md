@@ -9,3 +9,7 @@
 > ItemWriter: Step步骤执行过程中数据输出，将Item（数据记录）写入数据源（文件系统、数据库、队列等）。
 > ItemProcessor: Item数据加工逻辑（输入），比如：数据清洗、数据转换、数据过滤、数据校验等
 > JobRepository: 保存Job或者检索Job的信息。SpringBatch需要持久化Job（可以选择数据库或者内存），JobRepository就是持久化的接口。
+
+## 知识点
+
+> 查看测试用例回忆所有知识点
