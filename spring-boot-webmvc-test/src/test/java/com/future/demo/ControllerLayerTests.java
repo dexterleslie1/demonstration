@@ -2,14 +2,14 @@ package com.future.demo;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
+import javax.annotation.Resource;
 import java.util.UUID;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -18,11 +18,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest
+// 导入测试使用的配置
+@Import(ConfigTest.class)
 public class ControllerLayerTests {
-    @Autowired
+
+    @Resource
     private MockMvc mockMvc;
 
-    @SpyBean
+    @Resource
     TestService testService;
 
     @Test
