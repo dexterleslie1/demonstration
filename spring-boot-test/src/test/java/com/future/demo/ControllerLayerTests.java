@@ -28,6 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = {Application.class})
+// 启用mockmvc测试
 @AutoConfigureMockMvc
 public class ControllerLayerTests {
 
