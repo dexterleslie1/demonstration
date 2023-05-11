@@ -1,7 +1,5 @@
-##### 按照是否单元测试决定是否创建mock bean
-https://stackoverflow.com/questions/47789068/how-to-test-spring-conditional-beans
+# 演示spring-boot项目测试方法
 
-##### Mockito测试、@ConditionalOnProperty演示
+## 参考
 
-##### springboot test
-https://spring.io/guides/gs/testing-web/
+> https://www.javaguides.net/2022/03/spring-boot-unit-testing-crud-rest-api-with-junit-and-mockito.html
