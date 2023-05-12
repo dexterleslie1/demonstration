@@ -7,7 +7,7 @@ networks:
 services:
   demo-tomcat9:
     container_name: demo-tomcat9
-    image: tomcat:9.0.74-jdk8
+    image: future-tomcat9
     volumes:
       - ./target/tomcat-java-web.war:/usr/local/tomcat/webapps/tomcat-java-web.war
     environment:

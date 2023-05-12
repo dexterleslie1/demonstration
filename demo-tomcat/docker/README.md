@@ -17,6 +17,6 @@ mvn clean package
 docker-compose up
 
 # 打开浏览器访问应用是否正常
-http://localhost:8080/tomcat-java-web
+http://localhost:8080
 ```
 
