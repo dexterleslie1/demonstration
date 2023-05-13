@@ -1,5 +1,24 @@
 # 演示@Import用法
 
-## 场景1
+## 参考
 
-> 通过 @Import 模拟AutoConfiguration特性自动创建Bean
+> https://blog.csdn.net/Java_zhujia/article/details/128062040
+
+## 三种用法
+
+### 引入普通类
+
+> 参考demo pkg1
+
+### 引入ImportSelector的实现类
+
+> 参考demo pkg2
+
+### 引入ImportBeanDefinitionRegistrar的实现类
+
+> 作用
+>
+> - 利用ImportBeanDefinitionRegistrar手动向Spring容器注入Bean
+> - 获取 @EnableXxx(name = "xxx") 注解中name值并注入到 Bean 实例中，实现Bean实例参数由注解提供
+>
+> 参考demo pkg3

@@ -1,14 +1,15 @@
-package com.future.demo.spring.boot.test;
+package com.future.demo.app;
 
+import com.future.demo.pkg1.TestServiceAllConfiguration;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Import;
 
 @SpringBootApplication
-// 导入AutoConfigTestService配置自动配置 TestService
-@Import(value = {
-        AutoConfigTestService.class
-})
+
+// 引入普通类
+@Import(TestServiceAllConfiguration.class)
+
 public class Application {
     public static void main(String []args){
         SpringApplication.run(Application.class, args);
