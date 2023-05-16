@@ -1,5 +1,9 @@
 # 演示spring-batch用法
 
+## 说明
+
+> NOTE: 未完整学习，在工作过程中实际应用再把缺失的知识点补回。
+
 ## spring-batch概念
 
 > JobLauncher: 作业调度器，作为启动主要入口

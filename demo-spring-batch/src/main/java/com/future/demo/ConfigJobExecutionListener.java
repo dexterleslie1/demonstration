@@ -38,6 +38,12 @@ public class ConfigJobExecutionListener {
             @Override
             public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) throws Exception {
                 Counter++;
+
+                // 如果测试RepeatStatus并且Counter<=1则返回RepeatStatus.CONTINUABLE让step继续重复执行
+                boolean ifTestRepeatStatus = chunkContext.getStepContext().getJobParameters().get("ifTestRepeatStatus") != null;
+                if(ifTestRepeatStatus && Counter <= 1) {
+                    return RepeatStatus.CONTINUABLE;
+                }
                 return RepeatStatus.FINISHED;
             }
         };
