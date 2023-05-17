@@ -1,5 +1,8 @@
 ## 演示安装和配置aws-cli
 
+> 参考
+> https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
+
 ### centOS8安装和配置aws-cli
 
 ```
