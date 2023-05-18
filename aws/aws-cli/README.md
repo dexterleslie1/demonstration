@@ -16,7 +16,7 @@ unzip awscliv2.zip
 ./install -i /usr/local/aws-cli -b /usr/local/sbin
 
 验证aws-cli是否安装成功
-aws --versio
+aws --version
 
 配置aws
 aws configure
