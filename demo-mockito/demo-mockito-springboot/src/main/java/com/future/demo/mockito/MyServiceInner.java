@@ -9,7 +9,7 @@ public class MyServiceInner {
         return "param1=" + param1;
     }
 
-    public String test2(String param2)  {
+    public String test2(String param2) throws Exception {
         return "param2=" + param2;
     }
 

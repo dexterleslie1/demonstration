@@ -3,6 +3,7 @@ package com.future.demo.mockito;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -39,7 +40,7 @@ public class SpyBeanTests {
      * 正如当前测试那样使用 @SpyBean 注入 MyServiceInner
      */
     @Test
-    public void test() {
+    public void test() throws Exception {
         Mockito.doReturn("param1=p2").when(this.myServiceInner).test2(Mockito.anyString());
         ResponseEntity<String> response = this.restTemplate.getForEntity(
                 "http://localhost:"+ port  + "/api/test21?param2=p1",
@@ -51,6 +52,13 @@ public class SpyBeanTests {
                 "http://localhost:"+ port  + "/api/test2?param1=pp",
                 String.class);
         Assert.assertEquals("param1=pp", response.getBody());
+
+        // 测试mock抛出异常
+        Mockito.when(this.myServiceInner.test2(Mockito.anyString())).thenThrow(new Exception("预期异常1"));
+        response = this.restTemplate.getForEntity(
+                "http://localhost:"+ port  + "/api/test21?param2=p1",
+                String.class);
+        Assert.assertTrue(response.getBody().contains("预期异常1"));
     }
 
 }

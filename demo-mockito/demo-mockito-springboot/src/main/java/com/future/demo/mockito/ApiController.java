@@ -37,7 +37,7 @@ public class ApiController {
     }
 
     @GetMapping(value="test21")
-    public ResponseEntity<String> test21(@RequestParam(value = "param2", defaultValue = "") String param2){
+    public ResponseEntity<String> test21(@RequestParam(value = "param2", defaultValue = "") String param2) throws Exception {
         String str = this.myService.test2(param2);
         return ResponseEntity.ok(str);
     }

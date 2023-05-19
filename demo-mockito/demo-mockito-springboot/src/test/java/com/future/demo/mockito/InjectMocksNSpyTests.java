@@ -35,7 +35,7 @@ public class InjectMocksNSpyTests {
     TestRestTemplate restTemplate;
 
     @Test
-    public void test() {
+    public void test() throws Exception {
         Mockito.doReturn("param2=p2").when(this.myServiceInner).test2(Mockito.anyString());
         String str = this.myService.test2("p1");
         Assert.assertEquals("param2=p2", str);

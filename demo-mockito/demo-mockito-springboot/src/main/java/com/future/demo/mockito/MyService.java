@@ -14,7 +14,7 @@ public class MyService {
        return this.myServiceInner.test1(param1);
     }
 
-    public String test2(String param2) {
+    public String test2(String param2) throws Exception {
         return this.myServiceInner.test2(param2);
     }
 
