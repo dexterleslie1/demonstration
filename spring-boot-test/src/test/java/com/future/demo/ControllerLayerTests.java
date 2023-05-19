@@ -52,7 +52,7 @@ public class ControllerLayerTests {
                 .andExpect(jsonPath("$.data", is(3)));
 
         // 场景: 测试spybean使用被mock后指定的规则
-        Mockito.when(this.testService.add(1, 2)).thenReturn(5);
+        Mockito.doReturn(5).when(this.testService).add(Mockito.anyInt(), Mockito.anyInt());
         response = mockMvc.perform(get("/api/v1/add")
                 .queryParam("a", "1")
                 .queryParam("b", "2")

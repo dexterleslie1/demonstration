@@ -3,10 +3,10 @@ package com.future.demo;
 import com.yyd.common.http.ResponseUtils;
 import com.yyd.common.http.response.ObjectResponse;
 import com.yyd.common.json.JSONUtil;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.servlet.FilterChain;
@@ -35,7 +35,7 @@ public class CustomizeAuthenticationFilter extends OncePerRequestFilter {
         CustomizeHttpServletRequestWrapper myRequest = new CustomizeHttpServletRequestWrapper(request);
         try {
             String token = obtainBearerToken(request);
-            if (!StringUtils.isBlank(token)) {
+            if (StringUtils.hasText(token)) {
                 long userId = 11L;
                 CustomizeUser user = new CustomizeUser(userId, Collections.emptyList());
                 CustomizeAuthentication authentication = new CustomizeAuthentication(user);
@@ -51,7 +51,7 @@ public class CustomizeAuthenticationFilter extends OncePerRequestFilter {
 
     String obtainBearerToken(HttpServletRequest request) {
         String bearerStr = request.getHeader(HttpHeaders.AUTHORIZATION);
-        if(StringUtils.isBlank(bearerStr)) {
+        if(!StringUtils.hasText(bearerStr)) {
             return bearerStr;
         }
 
