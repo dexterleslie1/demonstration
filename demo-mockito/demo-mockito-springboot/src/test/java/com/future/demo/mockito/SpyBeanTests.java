@@ -54,7 +54,7 @@ public class SpyBeanTests {
         Assert.assertEquals("param1=pp", response.getBody());
 
         // 测试mock抛出异常
-        Mockito.when(this.myServiceInner.test2(Mockito.anyString())).thenThrow(new Exception("预期异常1"));
+        Mockito.doThrow(new Exception("预期异常1")).when(this.myServiceInner).test2(Mockito.anyString());
         response = this.restTemplate.getForEntity(
                 "http://localhost:"+ port  + "/api/test21?param2=p1",
                 String.class);
