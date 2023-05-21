@@ -10,13 +10,13 @@ import com.future.demo.test.feign.TestSupportDemoFeignClient;
 import feign.FeignException;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.annotation.Resource;
@@ -25,13 +25,11 @@ import java.util.UUID;
 /**
  * 使用feignclient集成测试
  */
+// https://stackoverflow.com/questions/42249791/resolving-port-already-in-use-in-a-spring-boot-test-defined-port
+@DirtiesContext
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = {Application.class, TestSupportConfiguration.class}, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-// NOTE: 正式项目中使用 @TestPropertySource 方式注入demo-spring-boot-test.ribbon.listOfServers
-// 当前是因为 ControllerLayerTests、ServiceLayerTests 和 ITByUsingFeignClientTests 存在不明确的加载冲突(单独运行ITByUsingFeignClientTests正常，全部测试一起运行不正常)
-// 导致 ITByUsingFeignClientTests测试不能正确地根据@TestPropertySource加载demo-spring-boot-test.ribbon.listOfServers
-// 所以这个测试暂时使用System.setProperty方式解决这个问题
-//@TestPropertySource(locations = "classpath:application-test.properties")
+@SpringBootTest(classes = {Application.class, TestSupportConfiguration.class}, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@TestPropertySource(locations = "classpath:application-test.properties")
 public class ITByUsingFeignClientTests {
 
     @Resource
@@ -40,15 +38,6 @@ public class ITByUsingFeignClientTests {
     TestService testService;
     @Resource
     TestSupportDemoFeignClient testSupportDemoFeignClient;
-
-    // https://stackoverflow.com/questions/58539366/spring-boot-openfeign-random-port-test
-    @LocalServerPort
-    private int localServerPort;
-
-    @Before
-    public void setup() {
-        System.setProperty("demo-spring-boot-test.ribbon.listOfServers", "http://localhost:" + localServerPort);
-    }
 
     @Test
     public void test() throws Exception {
