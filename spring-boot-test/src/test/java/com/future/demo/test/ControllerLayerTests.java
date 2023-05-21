@@ -1,6 +1,9 @@
-package com.future.demo;
+package com.future.demo.test;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.future.demo.Application;
+import com.future.demo.TestService;
+import com.future.demo.UserModel;
 import com.future.demo.mapper.UserMapper;
 import org.hamcrest.CoreMatchers;
 import org.junit.Assert;
