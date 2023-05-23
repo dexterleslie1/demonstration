@@ -1,0 +1,20 @@
+version: "3.0"
+
+networks:
+  net:
+    name: demo-openresty-config-production-net
+
+services:
+  demo-openresty-config-production:
+    container_name: demo-openresty-config-production
+    image: docker.118899.net:10001/yyd-public/yyd-openresty:1.1.1
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - 80:80
+    volumes:
+      - ./nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf
+      - ./naxsi.rules:/usr/local/openresty/nginx/conf/naxsi.rules
+    networks:
+      - net
+
