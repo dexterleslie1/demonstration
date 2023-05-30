@@ -1,4 +1,4 @@
-package com.future.demo.java.google.libphonenumber;
+package com.future.demo;
 
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
