@@ -33,6 +33,7 @@
           $.ajax({
               type: "POST",
               url: "/api/v1/post",
+              data: {param1: "p1"},
               success: function(data) {
                   console.log(data)
               },
