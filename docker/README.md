@@ -36,3 +36,13 @@ docker network ls
 docker network prune
 ```
 
+
+
+## docker最佳安全实践
+
+> https://blog.aquasec.com/docker-security-best-practices
+>
+> - 使用非root模式运行docker daemon
+>
+> todo 配置过程繁琐，暂时不研究
+
