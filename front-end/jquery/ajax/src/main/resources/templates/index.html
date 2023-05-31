@@ -34,6 +34,11 @@
               type: "POST",
               url: "/api/v1/post",
               data: {param1: "p1"},
+              // 设置header
+              // https://blog.csdn.net/zzk220106/article/details/81316092
+              headers: {
+                  accessToken: "myAccessToken"
+              },
               success: function(data) {
                   console.log(data)
               },

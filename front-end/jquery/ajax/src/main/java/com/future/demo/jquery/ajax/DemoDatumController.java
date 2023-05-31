@@ -16,10 +16,12 @@ public class DemoDatumController {
     }
 
     @PostMapping("post")
-    public Map<String, String> post(@RequestParam(value = "param1", defaultValue = "") String param1) {
+    public Map<String, String> post(@RequestParam(value = "param1", defaultValue = "") String param1,
+                                    @RequestHeader(value = "accessToken", defaultValue = "") String accessToken) {
         Map<String, String> params = new HashMap<>();
         params.put("key1", "value1");
         params.put("param1", param1);
+        params.put("accessToken", accessToken);
         return params;
     }
 }
