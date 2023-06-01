@@ -20,6 +20,11 @@
           $.ajax({
               type: "GET",
               url: "/api/v1/get",
+              // 设置header
+              // https://blog.csdn.net/zzk220106/article/details/81316092
+              headers: {
+                  Authorization: "myAccessToken"
+              },
               success: function(data) {
                   console.log(data)
               },
@@ -37,7 +42,7 @@
               // 设置header
               // https://blog.csdn.net/zzk220106/article/details/81316092
               headers: {
-                  accessToken: "myAccessToken"
+                  Authorization: "myAccessToken"
               },
               success: function(data) {
                   console.log(data)
