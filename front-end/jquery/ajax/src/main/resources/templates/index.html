@@ -5,6 +5,8 @@
     <title>Title</title>
 </head>
 <body>
+    <input type="button" value="$.ajax的GET请求返回http 400错误" id="btnTestGetWithHttp400"/>
+    <br/>
     <input type="button" value="$.ajax的GET请求" id="btnTestGet"/>
     <br/>
     <input type="button" value="$.ajax的POST请求" id="btnTestPost"/>
@@ -16,6 +18,38 @@
 <script type="text/javascript" src="https://lib.baomitu.com/jquery/1.12.4/jquery.min.js"></script>
 <script type="text/javascript">
   $(document).ready(function() {
+      // jQuery ajax全局异常处理
+      // https://stackoverflow.com/questions/4341933/wrap-jquerys-ajax-method-to-define-global-error-handling
+      $(document).ajaxError(function myErrorHandler(event, xhr, ajaxOptions, thrownError) {
+          if (xhr.responseJSON) {
+              if (xhr.responseJSON.errorCode > 0) {
+                  alert(xhr.responseJSON.errorMessage)
+              } else {
+                  alert("调用服务接口出现错误，原因: " + JSON.stringify(xhr.responseJSON))
+              }
+          } else if (xhr.responseText) {
+              alert("调用服务接口出现错误，原因: " + xhr.responseText)
+          } else {
+              alert("调用服务接口出现错误")
+          }
+      })
+
+      $("#btnTestGetWithHttp400").click(function() {
+          $.ajax({
+              type: "GET",
+              url: "/api/v1/get?exception=true",
+              headers: {
+                  Authorization: "myAccessToken"
+              },
+              success: function(data) {
+                  console.log(data)
+              },
+              error(xhr,status,error) {
+                  console.log(xhr)
+              }
+          })
+      })
+
       $("#btnTestGet").click(function() {
           $.ajax({
               type: "GET",
