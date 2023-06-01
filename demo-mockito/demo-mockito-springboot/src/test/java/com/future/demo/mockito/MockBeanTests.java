@@ -14,11 +14,10 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * 演示 @MockBean 用法
- *
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest(
-        classes={Application.class},
+        classes = {Application.class},
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
 )
 public class MockBeanTests {
@@ -41,9 +40,24 @@ public class MockBeanTests {
     public void test() {
         Mockito.doReturn("param1=p2").when(this.myServiceInner).test1(Mockito.anyString());
         ResponseEntity<String> response = this.restTemplate.getForEntity(
-                "http://localhost:"+ port  + "/api/test2?param1=p1",
+                "http://localhost:" + port + "/api/test2?param1=p1",
                 String.class);
         Assert.assertEquals("param1=p2", response.getBody());
+    }
+
+    /**
+     * mock多种不同参数场景
+     */
+    @Test
+    public void test2() {
+        for (int i = 1; i <= 5; i++) {
+            Mockito.doReturn("p" + i).when(this.myServiceInner).test1(String.valueOf(i));
+        }
+
+        String str = this.myServiceInner.test1("1");
+        Assert.assertEquals("p1", str);
+        str = this.myServiceInner.test1("2");
+        Assert.assertEquals("p2", str);
     }
 
 }
