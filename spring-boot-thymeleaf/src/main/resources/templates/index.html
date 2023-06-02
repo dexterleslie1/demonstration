@@ -4,8 +4,38 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
+    <style type="text/css">
+        .backgroundColorYellowGreen {
+            background-color: yellowgreen;
+        }
+    </style>
 </head>
 <body>
-    <div th:include="folder1/hello-suffix"></div>
+
+<div>使用th:include标签引用页面</div>
+<div th:include="folder1/hello-suffix"></div>
+<hr/>
+
+<div>访问HttpServletRequest对象</div>
+<a target="_blank" href="/accessHttpServletRequest">点击我打开新页面访问HttpServletRequest对象</a>
+<hr/>
+
+<div>使用\[\[\]\]直接显示表达式值</div>
+<div>[[${#httpServletRequest.getRequestURI()}]]</div>
+<hr/>
+
+<!-- https://stackoverflow.com/questions/25071985/thymeleaf-thtext-put-a-text-without-removing-html-structures -->
+<div>th:text显示去除外部标签</div>
+<div>
+    <!-- th:remove="tag"表示删除h1标签 -->
+    <h1 th:text="${#httpServletRequest.getRequestURI()}" th:remove="tag"></h1>
+</div>
+<hr/>
+
+<!-- https://stackoverflow.com/questions/25133807/thymeleaf-how-to-use-conditionals-to-dynamically-add-remove-a-css-class -->
+<div>动态添加class</div>
+<div style="width:20px;height:20px;" class="noneExists" th:classappend="${1==1}?'backgroundColorYellowGreen':''"></div>
+<hr/>
+
 </body>
 </html>

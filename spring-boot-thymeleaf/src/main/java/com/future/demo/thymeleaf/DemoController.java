@@ -27,4 +27,13 @@ public class DemoController {
     public String redirect() {
         return "redirect:/hello-suffix";
     }
+
+    /**
+     *
+     * @return
+     */
+    @GetMapping(value = "/accessHttpServletRequest")
+    public String accessHttpServletRequest() {
+        return "accessHttpServletRequest";
+    }
 }
