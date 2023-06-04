@@ -11,6 +11,7 @@
         // https://blog.csdn.net/qq_39232387/article/details/110194560
         $(document).ready(function() {
             // mouseenter、mouseleave演示
+            // 在父元素和子元素之间进出不会再触发事件
             $("#box1-1").mouseenter(function() {
                 console.log($(this).attr("id") + " mouseenter")
             })
@@ -19,6 +20,7 @@
             })
 
             // mouseover、mouseout演示
+            // 在父元素和子元素之间进出会再次出发事件
             $("#box2-1").mouseover(function() {
                 console.log($(this).attr("id") + " mouseover")
             })
@@ -27,6 +29,7 @@
             })
 
             // hover演示
+            // hover是mouseenter和mouseleave的合并写法
             $("#box3-1").hover(function() {
                 console.log($(this).attr("id") + " hover enter")
             }, function() {
