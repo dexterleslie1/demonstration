@@ -34,6 +34,12 @@ public class MockitoTest {
 		Mockito.verify(mockListObject).add("val1");
 		Mockito.verify(mockListObject).remove(0);
 		Mockito.verify(mockListObject).clear();
+
+		// https://stackoverflow.com/questions/14889951/how-to-verify-a-method-is-called-two-times-with-mockito-verify
+        // 验证方法被调用指定次数
+        Mockito.verify(mockListObject, Mockito.times(1)).add("val1");
+        mockListObject.add("val1");
+        Mockito.verify(mockListObject, Mockito.times(2)).add("val1");
 	}
 	
 	/**
