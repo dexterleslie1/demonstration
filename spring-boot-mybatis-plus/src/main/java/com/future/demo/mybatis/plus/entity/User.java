@@ -20,4 +20,10 @@ public class User {
     // https://javamana.com/2022/146/202205260937389358.html
     @TableField(typeHandler = ListTypeHandler.class)
     private List<String> authorities;
+
+    @TableField(exist = false)
+    // https://www.eolink.com/news/post/36131.html
+    // 数据库没有对应的字段，不会被保存的字段
+    // 把注解去除会报告java.lang.IllegalStateException: No typehandler found for property fieldNonePersist错误
+    private List<String> fieldNonePersist;
 }
