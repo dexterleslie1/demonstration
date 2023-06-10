@@ -8,6 +8,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import org.springframework.stereotype.Component;
 
 import java.net.InetSocketAddress;
+import java.util.Date;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -15,8 +16,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 @Component
 public class CanalClient {
     private Queue<String> SQL_QUEUE = new ConcurrentLinkedQueue<>();
-//    @Resource
-//    private DataSource dataSource;
 
     /**
      * canal入库方法
@@ -24,7 +23,7 @@ public class CanalClient {
     public void handleMessages() {
         CanalConnector connector = CanalConnectors.newSingleConnector(new
                 InetSocketAddress("192.168.1.181",
-                11111), "mytest", "", "");
+                11111), "example", "canal", "canal");
         int batchSize = 1000;
         System.out.println("canal启动并开始监听数据 ...... ");
         try {
@@ -38,7 +37,7 @@ public class CanalClient {
                     long batchId = message.getId();
                     int size = message.getEntries().size();
                     if (batchId == -1 || size == 0) {
-                        System.out.println("未检测到任何数据变化......");
+                        System.out.println(new Date() + " 未检测到任何数据变化......");
                         Thread.sleep(2000);
                     } else {
                         dataHandle(message.getEntries());
@@ -58,6 +57,7 @@ public class CanalClient {
             connector.disconnect();
         }
     }
+
     /**
      * 模拟执行队列里面的sql语句
      */
@@ -69,8 +69,10 @@ public class CanalClient {
 //            this.execute(sql.toString());
         }
     }
+
     /**
      * 数据处理
+     *
      * @param entrys
      */
     private void dataHandle(List<Entry> entrys) throws InvalidProtocolBufferException {
@@ -88,8 +90,10 @@ public class CanalClient {
             }
         }
     }
+
     /**
      * 保存更新语句
+     *
      * @param entry
      */
     private void saveUpdateSql(Entry entry) {
@@ -120,6 +124,7 @@ public class CanalClient {
             e.printStackTrace();
         }
     }
+
     /**
      * 保存删除语句
      *
@@ -146,6 +151,7 @@ public class CanalClient {
             e.printStackTrace();
         }
     }
+
     /**
      * 保存插入语句
      *
@@ -157,7 +163,7 @@ public class CanalClient {
             List<RowData> rowDatasList = rowChange.getRowDatasList();
             for (RowData rowData : rowDatasList) {
                 List<Column> columnList = rowData.getAfterColumnsList();
-                StringBuffer sql = new StringBuffer("insert into "+ entry.getHeader().getTableName() + " (");
+                StringBuffer sql = new StringBuffer("insert into " + entry.getHeader().getTableName() + " (");
                 for (int i = 0; i < columnList.size(); i++) {
                     sql.append(columnList.get(i).getName());
                     if (i != columnList.size() - 1) {
