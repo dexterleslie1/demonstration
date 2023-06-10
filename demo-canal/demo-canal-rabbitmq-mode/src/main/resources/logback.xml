@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration debug="false">
+    <!-- 读取application.properties中配置的yydLogstashUrlInternal属性并读取为logback.xml yydLogstashUrlInternalContextVar变量 -->
+    <property resource="application.properties"/>
+    <springProperty scope="context" name="yydLogstashUrlInternalContextVar" source="yydLogstashUrlInternal"/>
+
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>
+                [%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} %logger{15}.%method\(%file:%line\) : %message %n
+            </pattern>
+        </encoder>
+    </appender>
+
+    <root level="info">
+        <appender-ref ref="console"/>
+    </root>
+    <logger name="com.future.demo" level="debug" additivity="false">
+        <appender-ref ref="console"/>
+    </logger>
+    <!-- 禁止mybatis debug日志输出 -->
+    <logger name="com.future.demo.canal.mapper" level="warn" additivity="false">
+        <appender-ref ref="console"/>
+    </logger>
+</configuration>
