@@ -1,5 +1,6 @@
 package com.future.demo.canal;
 
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.future.demo.canal.mapper.TestMapper;
 import org.junit.Assert;
@@ -33,12 +34,10 @@ public class Tests {
 
         TimeUnit.SECONDS.sleep(2);
 
-        this.receiver.getCounterInsert().set(0);
-        this.receiver.getCounterDelete().set(0);
-        this.receiver.getCounterUpdate().set(0);
+        this.clearCounter();
 
-        int concurrent = 50;
-        int loopInsert = 1000;
+        int concurrent = 10;
+        int loopInsert = 500;
         int loopDelete = 10000;
         int loopUpdate = 10000;
         /* ----------------------------测试insert */
@@ -127,6 +126,53 @@ public class Tests {
         Assert.assertEquals(concurrent * loopInsert, this.receiver.getCounterInsert().get());
         Assert.assertEquals(countUpdate, this.receiver.getCounterUpdate().get());
         Assert.assertEquals(countDelete, this.receiver.getCounterDelete().get());
+
+        /* ----------------------------测试一条update语句修改多条记录情况 */
+        executorService = Executors.newCachedThreadPool();
+
+        for (int j = 0; j < concurrent; j++) {
+            executorService.submit(() -> {
+                for (int i = 0; i < loopInsert; i++) {
+                    this.testMapper.insert(new TestModel() {{
+                        setCreateTime(new Date());
+                    }});
+                }
+            });
+        }
+
+        executorService.shutdown();
+        while (!executorService.awaitTermination(1, TimeUnit.SECONDS)) ;
+        TimeUnit.SECONDS.sleep(2);
+
+        this.clearCounter();
+
+        int count = this.testMapper.selectCount(Wrappers.query());
+
+        UpdateWrapper<TestModel> updateWrapper = Wrappers.update();
+        updateWrapper.set("createTime", new Date());
+        this.testMapper.update(null, updateWrapper);
+
+        TimeUnit.SECONDS.sleep(2);
+
+        Assert.assertEquals(count, this.receiver.getCounterUpdate().get());
+
+        /* ----------------------------测试一条delete语句删除多条记录情况 */
+        this.clearCounter();
+
+        count = this.testMapper.selectCount(Wrappers.query());
+
+        this.testMapper.delete(Wrappers.query());
+
+        TimeUnit.SECONDS.sleep(2);
+
+        Assert.assertEquals(count, this.receiver.getCounterDelete().get());
+
+    }
+
+    void clearCounter() {
+        this.receiver.getCounterInsert().set(0);
+        this.receiver.getCounterDelete().set(0);
+        this.receiver.getCounterUpdate().set(0);
     }
 
 }

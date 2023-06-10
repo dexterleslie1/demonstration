@@ -1,6 +1,7 @@
 package com.future.demo.canal;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.yyd.common.json.JSONUtil;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -38,9 +39,23 @@ public class Receiver {
         if (type.equals("INSERT")) {
             this.counterInsert.incrementAndGet();
         } else if (type.equals("DELETE")) {
-            this.counterDelete.incrementAndGet();
+            if (jsonNode.get("data").isArray()) {
+                ArrayNode arrayNode = (ArrayNode) jsonNode.get("data");
+                for (int i = 0; i < arrayNode.size(); i++) {
+                    this.counterDelete.incrementAndGet();
+                }
+            } else {
+                this.counterDelete.incrementAndGet();
+            }
         } else if (type.equals("UPDATE")) {
-            this.counterUpdate.incrementAndGet();
+            if (jsonNode.get("data").isArray()) {
+                ArrayNode arrayNode = (ArrayNode) jsonNode.get("data");
+                for (int i = 0; i < arrayNode.size(); i++) {
+                    this.counterUpdate.incrementAndGet();
+                }
+            } else {
+                this.counterUpdate.incrementAndGet();
+            }
         }
     }
 
