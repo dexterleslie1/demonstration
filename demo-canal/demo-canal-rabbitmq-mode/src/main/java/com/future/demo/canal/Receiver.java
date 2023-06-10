@@ -2,10 +2,12 @@ package com.future.demo.canal;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.rabbitmq.client.Channel;
 import com.yyd.common.json.JSONUtil;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.ExchangeTypes;
+import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.*;
 import org.springframework.stereotype.Component;
 
@@ -32,7 +34,7 @@ public class Receiver {
     AtomicInteger counterUpdate = new AtomicInteger();
 
     @RabbitHandler
-    public void receiveMessage(byte[] data) throws Exception {
+    public void receiveMessage(byte[] data, Message messageObject, Channel channel) throws Exception {
         String message = new String(data, StandardCharsets.UTF_8);
         JsonNode jsonNode = JSONUtil.ObjectMapperInstance.readTree(message);
         String type = jsonNode.get("type").asText();
@@ -57,6 +59,8 @@ public class Receiver {
                 this.counterUpdate.incrementAndGet();
             }
         }
+
+        channel.basicAck(messageObject.getMessageProperties().getDeliveryTag(), false);
     }
 
 }
