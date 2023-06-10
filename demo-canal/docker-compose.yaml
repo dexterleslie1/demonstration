@@ -10,8 +10,8 @@ networks:
 # https://github.com/alibaba/canal/wiki/Canal-Admin-Docker
 # https://github.com/alibaba/canal/wiki/Docker-QuickStart
 services:
-  demo-canal-mysql-server:
-    container_name: demo-canal-mysql-server
+  demo-canal-db:
+    container_name: demo-canal-db
     image: docker.118899.net:10001/yyd-public/demo-canal-db
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci --skip-character-set-client-handshake
     volumes:
@@ -31,7 +31,6 @@ services:
     image: canal/canal-server:v1.1.5
     ports:
       - 11111:11111
-      - 11110:11110
     environment:
       - TZ=Asia/Shanghai
     volumes:
@@ -41,7 +40,7 @@ services:
       - net
     depends_on:
       - demo-canal-rabbitmq
-      - demo-canal-mysql-server
+      - demo-canal-db
 
 #  demo-canal-admin:
 #    container_name: demo-canal-admin
