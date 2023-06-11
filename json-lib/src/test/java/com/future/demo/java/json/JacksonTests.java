@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.commons.lang3.time.DateFormatUtils;
@@ -13,12 +14,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 /**
  * Jackson库测试
+ *
  * @author dexterleslie@gmail.com
  */
 public class JacksonTests {
@@ -68,7 +70,6 @@ public class JacksonTests {
     }
 
     /**
-     *
      * @throws IOException
      */
     @Test
@@ -80,7 +81,6 @@ public class JacksonTests {
     }
 
     /**
-     *
      * @throws IOException
      */
     @Test
@@ -101,9 +101,8 @@ public class JacksonTests {
         Assert.assertEquals(true, jsonNode.get("enable").asBoolean());
         Assert.assertEquals("dexter", jsonNode.get("loginname").asText());
     }
-    
+
     /**
-     *
      * @throws IOException
      */
     @Test
@@ -128,7 +127,6 @@ public class JacksonTests {
     }
 
     /**
-     *
      * @throws JsonProcessingException
      */
     @Test
@@ -153,7 +151,7 @@ public class JacksonTests {
         String json = "{\"userId\":12345,\"loginname\":\"dexter\",\"createTime\":1577874822420,\"enable\":true}";
         ObjectMapper OMInstance = new ObjectMapper();
         JsonNode jsonNode = OMInstance.readTree(json);
-        ObjectNode objectNode = (ObjectNode)jsonNode;
+        ObjectNode objectNode = (ObjectNode) jsonNode;
         log.info(jsonNode.toString());
         log.info(objectNode.toString());
     }
@@ -169,7 +167,7 @@ public class JacksonTests {
         Date createTime = new Date();
 
         List<BeanClass> beanClasseList = new ArrayList<BeanClass>();
-        for(int i=1; i<=5; i++) {
+        for (int i = 1; i <= 5; i++) {
             BeanClass beanClass = new BeanClass();
             beanClass.setUserId(userId);
             beanClass.setLoginname(loginname + "#" + i);
@@ -180,14 +178,34 @@ public class JacksonTests {
         ObjectMapper OMInstance = new ObjectMapper();
         String json = OMInstance.writeValueAsString(beanClasseList);
 
-        List<BeanClass> beanClassListR = OMInstance.readValue(json, new TypeReference<List<BeanClass>>() {});
+        List<BeanClass> beanClassListR = OMInstance.readValue(json, new TypeReference<List<BeanClass>>() {
+        });
 
         Assert.assertEquals(beanClasseList.size(), beanClassListR.size());
-        for(int i=0; i<beanClasseList.size(); i++) {
+        for (int i = 0; i < beanClasseList.size(); i++) {
             Assert.assertEquals(beanClasseList.get(i).getUserId(), beanClassListR.get(i).getUserId());
             Assert.assertEquals(beanClasseList.get(i).getLoginname(), beanClassListR.get(i).getLoginname());
             Assert.assertEquals(beanClasseList.get(i).isEnable(), beanClassListR.get(i).isEnable());
             Assert.assertEquals(beanClasseList.get(i).getCreateTime(), beanClassListR.get(i).getCreateTime());
         }
+    }
+
+    /**
+     * 测试ArrayNode转换为Stream
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testArrayNodeToStream() throws Exception {
+        Map<String, List<String>> testMapper = new HashMap<>();
+        testMapper.put("data", Arrays.asList("1", "2", "3"));
+        ObjectMapper objectMapper = new ObjectMapper();
+        String JSON = objectMapper.writeValueAsString(testMapper);
+        JsonNode jsonNode = objectMapper.readTree(JSON);
+        ArrayNode arrayNode = (ArrayNode) jsonNode.get("data");
+
+        // https://stackoverflow.com/questions/32683785/create-java-8-stream-from-arraynode
+        List<String> list = StreamSupport.stream(arrayNode.spliterator(), false).map(JsonNode::asText).collect(Collectors.toList());
+        Assert.assertArrayEquals(new String[]{"1", "2", "3"}, list.toArray(new String[]{}));
     }
 }
