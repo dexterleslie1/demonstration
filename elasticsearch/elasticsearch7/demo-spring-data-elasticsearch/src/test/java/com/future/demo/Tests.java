@@ -19,6 +19,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+// todo CriteriaQuery
+// todo 聚合查询
+// todo 拼音和中文analyzer
 @RunWith(SpringRunner.class)
 @SpringBootTest(
         classes = {Application.class},
@@ -31,29 +34,10 @@ public class Tests {
 
     @Test
     public void test() throws InterruptedException {
-        /*------------------------------- 判断索引是否存在，是则删除 */
-        // 判断索引是否存在
-        boolean exists = this.elasticsearchTemplate.indexExists(NoteItem.class);
-        // 删除索引
-        boolean b = this.elasticsearchTemplate.deleteIndex(NoteItem.class);
-        if (exists) {
-            Assert.assertTrue(b);
-        } else {
-            Assert.assertFalse(b);
-        }
-
-        /*------------------------------- 创建索引并修改索引的mappings */
-        // 创建索引，但是没有mappings
-        b = this.elasticsearchTemplate.createIndex(NoteItem.class);
-        Assert.assertTrue(b);
-        // 更新索引mappings
-        b = this.elasticsearchTemplate.putMapping(NoteItem.class);
-        Assert.assertTrue(b);
-
         /*------------------------------- 新增文档 */
         IndexQuery indexQuery = new IndexQueryBuilder().withObject(new NoteItem() {{
             setId("1");
-            setContent("测试中文");
+            setContent("测试偶然中文");
         }}).build();
         String resultStr = this.elasticsearchTemplate.index(indexQuery);
         Assert.assertEquals("1", resultStr);
@@ -78,7 +62,7 @@ public class Tests {
         List<IndexQuery> indexQueryList = new ArrayList<>();
         indexQueryList.add(new IndexQueryBuilder().withObject(new NoteItem() {{
             setId("2");
-            setContent("哭否而");
+            setContent("哭否偶遇而");
         }}).build());
         indexQueryList.add(new IndexQueryBuilder().withObject(new NoteItem() {{
             setId("3");
@@ -89,28 +73,12 @@ public class Tests {
         TimeUnit.SECONDS.sleep(1);
 
         searchQuery = new NativeSearchQueryBuilder().withQuery(QueryBuilders.matchAllQuery()).build();
+        searchQuery.addSort(Sort.by(Sort.Direction.DESC, "_id"));
         noteItemList = this.elasticsearchTemplate.queryForList(searchQuery, NoteItem.class);
         Assert.assertEquals(3, noteItemList.size());
         Assert.assertEquals("3", noteItemList.get(0).getId());
         Assert.assertEquals("2", noteItemList.get(1).getId());
         Assert.assertEquals("1", noteItemList.get(2).getId());
-
-        /*------------------------------- 修改文档，实质是创建文档操作，只要id一样就会替换文档 */
-        String content = "建立家乐福人";
-        indexQuery = new IndexQueryBuilder().withObject(new NoteItem() {{
-            setId("1");
-            setContent(content);
-        }}).build();
-        resultStr = this.elasticsearchTemplate.index(indexQuery);
-        Assert.assertEquals("1", resultStr);
-
-        TimeUnit.SECONDS.sleep(1);
-
-        idsQueryBuilder = QueryBuilders.idsQuery().addIds("1");
-        searchQuery = new NativeSearchQueryBuilder().withQuery(idsQueryBuilder).build();
-        noteItemList = this.elasticsearchTemplate.queryForList(searchQuery, NoteItem.class);
-        Assert.assertEquals(1, noteItemList.size());
-        Assert.assertEquals(content, noteItemList.get(0).getContent());
 
         /*------------------------------- 全局模糊查询，不指定列，match_all */
         searchQuery = new NativeSearchQueryBuilder().withQuery(QueryBuilders.queryStringQuery("偶尔")).build();
@@ -135,6 +103,7 @@ public class Tests {
                 QueryBuilders.matchQuery("content", "偶尔"),
                 QueryBuilders.termQuery("id", "2")));
         searchQuery = new NativeSearchQueryBuilder().withQuery(boolQueryBuilder).build();
+        searchQuery.addSort(Sort.by(Sort.Direction.ASC, "_id"));
         noteItemList = this.elasticsearchTemplate.queryForList(searchQuery, NoteItem.class);
         Assert.assertEquals(2, noteItemList.size());
         Assert.assertEquals("2", noteItemList.get(0).getId());
@@ -158,6 +127,23 @@ public class Tests {
         /*------------------------------- 高亮查询 */
         // todo 高亮有点麻烦暂时不研究
 
+        /*------------------------------- 修改文档，实质是创建文档操作，只要id一样就会替换文档 */
+        String content = "建立家乐福人";
+        indexQuery = new IndexQueryBuilder().withObject(new NoteItem() {{
+            setId("1");
+            setContent(content);
+        }}).build();
+        resultStr = this.elasticsearchTemplate.index(indexQuery);
+        Assert.assertEquals("1", resultStr);
+
+        TimeUnit.SECONDS.sleep(1);
+
+        idsQueryBuilder = QueryBuilders.idsQuery().addIds("1");
+        searchQuery = new NativeSearchQueryBuilder().withQuery(idsQueryBuilder).build();
+        noteItemList = this.elasticsearchTemplate.queryForList(searchQuery, NoteItem.class);
+        Assert.assertEquals(1, noteItemList.size());
+        Assert.assertEquals(content, noteItemList.get(0).getContent());
+
         /*------------------------------- 根据id删除文档 */
         resultStr = this.elasticsearchTemplate.delete(NoteItem.class, "3");
         Assert.assertEquals("3", resultStr);
@@ -171,9 +157,20 @@ public class Tests {
         Assert.assertEquals("1", noteItemList.get(1).getId());
 
         /*------------------------------- 根据多个id批量删除多个文档 */
-        idsQueryBuilder = QueryBuilders.idsQuery().addIds("1", "2");
+        idsQueryBuilder = QueryBuilders.idsQuery().addIds("1");
         DeleteQuery deleteQuery = new DeleteQuery();
         deleteQuery.setQuery(idsQueryBuilder);
+        this.elasticsearchTemplate.delete(deleteQuery, NoteItem.class);
+
+        TimeUnit.SECONDS.sleep(1);
+
+        searchQuery = new NativeSearchQueryBuilder().withQuery(QueryBuilders.matchAllQuery()).build();
+        noteItemList = this.elasticsearchTemplate.queryForList(searchQuery, NoteItem.class);
+        Assert.assertEquals(1, noteItemList.size());
+        Assert.assertEquals("2", noteItemList.get(0).getId());
+
+        /*------------------------------- 根据自定义query删除数据 */
+        deleteQuery.setQuery(QueryBuilders.termQuery("id", "2"));
         this.elasticsearchTemplate.delete(deleteQuery, NoteItem.class);
 
         TimeUnit.SECONDS.sleep(1);
