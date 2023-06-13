@@ -5,6 +5,7 @@ import com.yyd.common.http.response.ObjectResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
+// 指定@FeignClient的url
 @FeignClient(
         value = "productFeignWithSpecifyUrl",
         url = "http://localhost:8090",

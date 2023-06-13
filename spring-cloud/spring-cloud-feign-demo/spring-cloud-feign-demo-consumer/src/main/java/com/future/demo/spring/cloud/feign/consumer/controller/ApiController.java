@@ -57,4 +57,10 @@ public class ApiController {
     public String timeout() {
         return this.productFeign.timeout();
     }
+
+    // 测试feign调用接口返回401 http错误是否能够正常解析返回错误信息
+    @GetMapping("test401Error")
+    public ObjectResponse<String> test401Error() throws BusinessException {
+        return this.productFeignWithConfig.test401Error();
+    }
 }

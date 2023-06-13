@@ -1,8 +1,11 @@
 package com.future.demo.spring.cloud.feign.provider.controller;
 
 import com.future.demo.spring.cloud.feign.common.entity.Product;
+import com.yyd.common.http.ResponseUtils;
 import com.yyd.common.http.response.ObjectResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.concurrent.TimeUnit;
@@ -57,5 +60,13 @@ public class ApiController {
     public String timeout() throws InterruptedException {
         TimeUnit.SECONDS.sleep(2);
         return "成功调用";
+    }
+
+    @GetMapping("test401Error")
+    public ResponseEntity<ObjectResponse<String>> test401Error() {
+        ObjectResponse<String> response = new ObjectResponse<>();
+        response.setErrorCode(90000);
+        response.setErrorMessage("调用 /api/v1/product/test401Error 失败");
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
     }
 }

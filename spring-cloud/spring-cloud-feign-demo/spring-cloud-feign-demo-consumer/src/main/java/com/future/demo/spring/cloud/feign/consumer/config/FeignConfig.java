@@ -1,5 +1,6 @@
 package com.future.demo.spring.cloud.feign.consumer.config;
 
+import com.yyd.common.feign.CustomizeErrorDecoder;
 import feign.Logger;
 import feign.RequestInterceptor;
 import feign.codec.ErrorDecoder;
