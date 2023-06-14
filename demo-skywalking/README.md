@@ -4,6 +4,10 @@
 
 > https://juejin.cn/post/7012458633455730702
 > https://www.cnblogs.com/zhian/p/16475108.html
+>
+> **java -jar启动skywalking agent**
+> java -javaagent:/usr/share/apache-skywalking-apm-bin-es7/agent/skywalking-agent.jar -Dskywalking.agent.service_name=xxx-service -Dskywalking.collector.backend_service=skywalking-oap-server:11800 ${JAVA_OPTS} -jar /usr/share/xxx.jar --spring.profiles.active=prod
+> https://blog.csdn.net/qq_43437874/article/details/108620416
 
 
 

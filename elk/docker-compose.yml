@@ -10,7 +10,7 @@ services:
     container_name: demo-elk-elasticsearch
     image: docker.118899.net:10001/yyd-public/demo-elk-elasticsearch
     environment:
-      - "ES_JAVA_OPTS=-Xms512m -Xmx1024m"
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
       - discovery.type=single-node
       # http.cors表示允许elasticsearch-head连接并管理
       - http.cors.enabled=true
@@ -20,22 +20,10 @@ services:
       - 9200:9200
       # Java transport client需要连接这个端口去操作elasticsearch
       - 9300:9300
-    volumes:
-      - ~/data-demo-elk-elasticsearch:/usr/share/elasticsearch/data
+    #volumes:
+    #  - ~/data-demo-elk-elasticsearch:/usr/share/elasticsearch/data
     networks:
       - net
-
-#  demo-elk-elasticsearch-head:
-#    container_name: demo-elk-elasticsearch-head
-#    image: docker.118899.net:10001/yyd-public/demo-elk-elasticsearch-head
-#    environment:
-#      - TZ=Asia/Shanghai
-#    ports:
-#      - 9100:9100
-#    networks:
-#      - net
-#    depends_on:
-#      - demo-elk-elasticsearch
 
   demo-elk-kibana:
     container_name: demo-elk-kibana
@@ -48,3 +36,16 @@ services:
       - net
     depends_on:
       - demo-elk-elasticsearch
+
+  demo-elk-logstash:
+    container_name: demo-elk-logstash
+    image: logstash:7.8.0
+    environment:
+      - xpack.monitoring.elasticsearch.hosts=[ "http://demo-elk-elasticsearch:9200" ]
+      - LS_JAVA_OPTS=-Xmx512m -Xms512m
+    volumes:
+      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    ports:
+      - 5044:5044
+    networks:
+      - net
