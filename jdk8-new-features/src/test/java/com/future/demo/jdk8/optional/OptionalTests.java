@@ -1,11 +1,12 @@
 package com.future.demo.jdk8.optional;
 
+import com.future.demo.jdk8.stream.UserEntity;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.*;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 public class OptionalTests {
     @Test
@@ -65,6 +66,20 @@ public class OptionalTests {
         Assert.assertEquals("default", ordername);
         ordername = Optional.ofNullable(new InternalOrder("Dexter")).map(orderT -> orderT.getName()).map(ordernameT -> ordernameT.toLowerCase()).orElse("default");
         Assert.assertEquals("dexter", ordername);
+
+        // 操作List
+        List<UserEntity> userEntityList = new ArrayList<>();
+        userEntityList.add(new UserEntity("zhangsan", 20));
+        userEntityList.add(new UserEntity("lisi", 13));
+        List<String> nameList =
+                Optional.ofNullable(userEntityList).orElseGet(Collections::emptyList).stream().map(o -> o.getName())
+                        .collect(Collectors.toList());
+        Assert.assertArrayEquals(Arrays.asList("zhangsan", "lisi").toArray(new String[]{}), nameList.toArray(new String[]{}));
+        userEntityList = null;
+        nameList =
+                Optional.ofNullable(userEntityList).orElseGet(Collections::emptyList).stream().map(o -> o.getName())
+                        .collect(Collectors.toList());
+        Assert.assertEquals(0, nameList.size());
     }
 
     static class InternalOrder {
