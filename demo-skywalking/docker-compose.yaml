@@ -10,7 +10,7 @@ services:
     container_name: demo-skywalking-elasticsearch
     image:  elasticsearch:7.14.1
     environment:
-      - "ES_JAVA_OPTS=-Xms512m -Xmx1024m"
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
       - discovery.type=single-node
       # http.cors表示允许elasticsearch-head连接并管理
       - http.cors.enabled=true
@@ -25,18 +25,17 @@ services:
     networks:
       - net
 
-#  demo-skywalking-kibana:
-#    container_name: demo-skywalking-kibana
-#    image: kibana:7.14.1
-#    environment:
-#      - ELASTICSEARCH_HOSTS=http://demo-skywalking-elasticsearch:9200
-#      - TZ=Asia/Shanghai
-#    ports:
-#      - 5601:5601
-#    networks:
-#      - net
-#    depends_on:
-#      - demo-skywalking-elasticsearch
+  demo-skywalking-kibana:
+    container_name: demo-skywalking-kibana
+    image: kibana:7.14.1
+    environment:
+      ELASTICSEARCH_HOSTS: http://demo-skywalking-elasticsearch:9200
+    ports:
+      - 5601:5601
+    networks:
+      - net
+    depends_on:
+      - demo-skywalking-elasticsearch
 
   demo-skywalking-oap-server:
     container_name: demo-skywalking-oap-server
@@ -67,3 +66,16 @@ services:
       - net
     depends_on:
       - demo-skywalking-oap-server
+
+  demo-skywalking-logstash:
+    container_name: demo-skywalking-logstash
+    image: logstash:7.14.1
+    environment:
+      - xpack.monitoring.elasticsearch.hosts=[ "http://demo-skywalking-elasticsearch:9200" ]
+      - LS_JAVA_OPTS=-Xmx512m -Xms512m
+    volumes:
+      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    ports:
+      - 5044:5044
+    networks:
+      - net
