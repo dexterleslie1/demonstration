@@ -13,39 +13,20 @@
         </encoder>
     </appender>
 
-<!--    <appender name="consoleAccess" class="ch.qos.logback.core.ConsoleAppender">-->
-<!--        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">-->
-<!--            <providers>-->
-<!--                <timestamp>-->
-<!--                    <pattern>yyyy-MM-dd HH:mm:ss.SSS</pattern>-->
-<!--                </timestamp>-->
-<!--                <logLevel/>-->
-<!--                <mdc>-->
-<!--                    <includeMdcKeyName>traceId</includeMdcKeyName>-->
-<!--                    <includeMdcKeyName>spanId</includeMdcKeyName>-->
-<!--                    <includeMdcKeyName>userId</includeMdcKeyName>-->
-<!--                </mdc>-->
-<!--                <pattern>-->
-<!--                    <pattern>-->
-<!--                        {-->
-<!--                        "module": "elk-demo",-->
-<!--                        "log_type": "access"-->
-<!--                        }-->
-<!--                    </pattern>-->
-<!--                </pattern>-->
-<!--                <arguments/>-->
-<!--                <stackTrace/>-->
-<!--            </providers>-->
-<!--        </encoder>-->
-<!--    </appender>-->
-
     <!-- application.properties配置spring.elk.logstash.tcp.url后才启用LogstashAppender -->
     <if condition='!property("logstash.url").equals("")'>
         <then>
             <appender name="logstash" class="net.logstash.logback.appender.LogstashAccessTcpSocketAppender">
                 <destination>${logstash.url}</destination>
 
-                <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+                <!--
+                    不需要使用复杂的LoggingEventCompositeJsonEncoder配置，使用LogstashEncoder并添加自定义field
+                    https://blog.csdn.net/u013845177/article/details/113658483
+                -->
+                <encoder charset="UTF-8" class="net.logstash.logback.encoder.LogstashEncoder">
+                    <customFields>{"module": "elk-demo","log_type": "business"}</customFields>
+                </encoder>
+                <!--<encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
                     <providers>
                         <timestamp>
                             <pattern>yyyy-MM-dd HH:mm:ss.SSS</pattern>
@@ -69,36 +50,8 @@
                         <message/>
                         <stackTrace/>
                     </providers>
-                </encoder>
+                </encoder>-->
             </appender>
-
-<!--            <appender name="logstashAccess" class="net.logstash.logback.appender.LogstashAccessTcpSocketAppender">-->
-<!--                <destination>${logstash.url}</destination>-->
-
-<!--                <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">-->
-<!--                    <providers>-->
-<!--                        <timestamp>-->
-<!--                            <pattern>yyyy-MM-dd HH:mm:ss.SSS</pattern>-->
-<!--                        </timestamp>-->
-<!--                        <logLevel/>-->
-<!--                        <mdc>-->
-<!--                            <includeMdcKeyName>traceId</includeMdcKeyName>-->
-<!--                            <includeMdcKeyName>spanId</includeMdcKeyName>-->
-<!--                            <includeMdcKeyName>userId</includeMdcKeyName>-->
-<!--                        </mdc>-->
-<!--                        <pattern>-->
-<!--                            <pattern>-->
-<!--                                {-->
-<!--                                "module": "elk-demo",-->
-<!--                                "log_type": "access"-->
-<!--                                }-->
-<!--                            </pattern>-->
-<!--                        </pattern>-->
-<!--                        <arguments/>-->
-<!--                        <stackTrace/>-->
-<!--                    </providers>-->
-<!--                </encoder>-->
-<!--            </appender>-->
         </then>
     </if>
 
@@ -121,13 +74,13 @@
             </then>
         </if>
     </logger>
-<!--    <logger name="com.future.demo.elk.HttpTraceLoggingFilter" level="debug" additivity="false">-->
-<!--        <if condition='!property("isProdution").equals("true")'>-->
-<!--            <then>-->
-<!--                <appender-ref ref="consoleAccess"/>-->
-<!--            </then>-->
-<!--        </if>-->
-<!--    </logger>-->
+    <!--    <logger name="com.future.demo.elk.HttpTraceLoggingFilter" level="debug" additivity="false">-->
+    <!--        <if condition='!property("isProdution").equals("true")'>-->
+    <!--            <then>-->
+    <!--                <appender-ref ref="consoleAccess"/>-->
+    <!--            </then>-->
+    <!--        </if>-->
+    <!--    </logger>-->
     <logger name="com.future.demo.elk" level="debug" additivity="false">
         <if condition='!property("logstash.url").equals("")'>
             <then>
@@ -135,11 +88,11 @@
             </then>
         </if>
     </logger>
-<!--    <logger name="com.future.demo.elk.HttpTraceLoggingFilter" level="debug" additivity="false">-->
-<!--        <if condition='!property("logstash.url").equals("")'>-->
-<!--            <then>-->
-<!--                <appender-ref ref="logstashAccess"/>-->
-<!--            </then>-->
-<!--        </if>-->
-<!--    </logger>-->
+    <!--    <logger name="com.future.demo.elk.HttpTraceLoggingFilter" level="debug" additivity="false">-->
+    <!--        <if condition='!property("logstash.url").equals("")'>-->
+    <!--            <then>-->
+    <!--                <appender-ref ref="logstashAccess"/>-->
+    <!--            </then>-->
+    <!--        </if>-->
+    <!--    </logger>-->
 </configuration>
