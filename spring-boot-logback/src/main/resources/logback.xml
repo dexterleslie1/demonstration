@@ -13,19 +13,50 @@
     <springProperty name="disableConsole" source="spring.application.console.disable"/>
     <property name="k3" value="测试值3"/>
 
-    <appender name="namedConsoleAppender" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <pattern>
-                named - [%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} %logger{15}.%method\(%file:%line\) : %message [k1=${k1},k2=${varTemp2},k3=${k3}] %n
-            </pattern>
-        </encoder>
-    </appender>
+    <!--
+        读取application.properties中的值
+        https://www.cnblogs.com/jianliang-Wu/p/8945343.html
+    -->
+    <springProperty name="application_name" source="spring.application.name"/>
+
+    <!--
+        使用springProfile判断当前环境输入不同的日志
+        https://www.cnblogs.com/jianliang-Wu/p/8945343.html
+     -->
+    <springProfile name="dev">
+        <appender name="namedConsoleAppender" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>
+                    named ${application_name}-dev - [%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} %logger{15}.%method\(%file:%line\) : %message [k1=${k1},k2=${varTemp2},k3=${k3}] %n
+                </pattern>
+            </encoder>
+        </appender>
+    </springProfile>
+    <springProfile name="prod">
+        <appender name="namedConsoleAppender" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>
+                    named ${application_name}-prod - [%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} %logger{15}.%method\(%file:%line\) : %message [k1=${k1},k2=${varTemp2},k3=${k3}] %n
+                </pattern>
+            </encoder>
+        </appender>
+    </springProfile>
 
     <appender name="consoleAppender" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>
                 [%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} %logger{15}.%method\(%file:%line\) : %message [k1=${k1},k2=${varTemp2},k3=${k3}] %n
             </pattern>
+        </encoder>
+    </appender>
+
+    <!-- https://stackoverflow.com/questions/30571319/spring-boot-logging-pattern -->
+    <!-- use Spring default values -->
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <appender name="consoleAppenderDefault" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+            <charset>utf8</charset>
         </encoder>
     </appender>
 
@@ -91,6 +122,7 @@
         <if condition='!property("needConsole").equals("false") &amp;&amp; !property("disableConsole").equals("true")'>
             <then>
                 <appender-ref ref="consoleAppender" />
+                <appender-ref ref="consoleAppenderDefault" />
             </then>
         </if>
         <appender-ref ref="fileAppender" />
