@@ -20,8 +20,6 @@ services:
       - 9200:9200
       # Java transport client需要连接这个端口去操作elasticsearch
       - 9300:9300
-    volumes:
-      - ~/data-demo-skywalking-elasticsearch7:/usr/share/elasticsearch/data
     networks:
       - net
 
@@ -44,8 +42,9 @@ services:
       - SW_STORAGE=elasticsearch7
       - SW_STORAGE_ES_CLUSTER_NODES=demo-skywalking-elasticsearch:9200
       # trace日志保留1天
-      - SW_STORAGE_ES_RECORD_DATA_TTL=1
+      - SW_STORAGE_ES_RECORD_DATA_TTL=15
       - TZ=Asia/Shanghai
+    restart: always
     ports:
       - 12800:12800
       - 11800:11800
@@ -79,3 +78,65 @@ services:
       - 5044:5044
     networks:
       - net
+
+  demo-skywalking-service-eureka:
+    container_name: demo-skywalking-service-eureka
+    image: service-eureka:1.0.0
+    environment:
+      - JAVA_OPTS=-Xms256m -Xmx256m
+      - TZ=Asia/Shanghai
+    ports:
+      - 9999:9999
+    networks:
+      - net
+    depends_on:
+      - demo-skywalking-logstash
+      - demo-skywalking-oap-server
+
+#  demo-skywalking-service-gateway:
+#    container_name: demo-skywalking-service-gateway
+#    image: service-gateway:1.0.0
+#    environment:
+#      - JAVA_OPTS=-Xms256m -Xmx256m
+#      - TZ=Asia/Shanghai
+#    ports:
+#      - 8080:8080
+#    networks:
+#      - net
+#    depends_on:
+#      - demo-skywalking-service-eureka
+
+  demo-skywalking-service-zuul:
+    container_name: demo-skywalking-service-zuul
+    image: service-zuul:1.0.0
+    environment:
+      - JAVA_OPTS=-Xms256m -Xmx256m
+      - TZ=Asia/Shanghai
+    ports:
+      - 8081:8081
+    networks:
+      - net
+    depends_on:
+      - demo-skywalking-service-eureka
+
+  demo-skywalking-service-level-first-provider:
+    container_name: demo-skywalking-service-level-first-provider
+    image: service-level-first-provider:1.0.0
+    environment:
+      - JAVA_OPTS=-Xms256m -Xmx256m
+      - TZ=Asia/Shanghai
+    networks:
+      - net
+    depends_on:
+      - demo-skywalking-service-eureka
+
+  demo-skywalking-service-level-second-provider:
+    container_name: demo-skywalking-service-level-second-provider
+    image: service-level-second-provider:1.0.0
+    environment:
+      - JAVA_OPTS=-Xms256m -Xmx256m
+      - TZ=Asia/Shanghai
+    networks:
+      - net
+    depends_on:
+      - demo-skywalking-service-eureka
