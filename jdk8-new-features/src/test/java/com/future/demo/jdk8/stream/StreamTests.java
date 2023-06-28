@@ -1,6 +1,7 @@
 package com.future.demo.jdk8.stream;
 
 import com.yyd.common.jdk8.feature.StreamUtil;
+import lombok.Data;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -26,18 +27,18 @@ public class StreamTests {
         // https://www.cnblogs.com/zwh0910/p/15877284.html
         List<Map<String, Object>> mapList = new ArrayList<>();
         Map<String, Object> oMap = new HashMap<>();
-        oMap.put("id",  1L);
+        oMap.put("id", 1L);
         oMap.put("code", "1-1");
         mapList.add(oMap);
         oMap = new HashMap<>();
-        oMap.put("id",  2L);
+        oMap.put("id", 2L);
         oMap.put("code", "1-2");
         mapList.add(oMap);
         oMap = new HashMap<>();
-        oMap.put("id",  1L);
+        oMap.put("id", 1L);
         oMap.put("code", "1-3");
         mapList.add(oMap);
-        Assert.assertEquals(mapList.size() - 1, mapList.stream().filter(StreamUtil.distinctByKey(o->o.get("id"))).collect(Collectors.toList()).size());
+        Assert.assertEquals(mapList.size() - 1, mapList.stream().filter(StreamUtil.distinctByKey(o -> o.get("id"))).collect(Collectors.toList()).size());
 
         // List<UserEntity>转换为List<String>
         List<UserEntity> userEntityList = new ArrayList<>();
@@ -65,7 +66,7 @@ public class StreamTests {
         List<String> nameList1 = userEntityList.stream().map(userEntity -> userEntity.getName()).collect(Collectors.toList());
 
         Map<String, UserEntity> nameToUserEntityMapper =
-                userEntityList.stream().collect(Collectors.toMap( userEntity -> userEntity.getName(), userEntity -> userEntity));
+                userEntityList.stream().collect(Collectors.toMap(userEntity -> userEntity.getName(), userEntity -> userEntity));
         Assert.assertEquals(userEntityList.size(), nameToUserEntityMapper.size());
         nameToUserEntityMapper.forEach((name, userEntity) -> Assert.assertTrue(nameList1.contains(name)));
 
@@ -218,6 +219,52 @@ public class StreamTests {
         Assert.assertEquals(2, testList.size());
         Assert.assertEquals(new UserEntity("zhangsan", 20), testList.get(0));
         Assert.assertEquals(new UserEntity("lisi", 13), testList.get(1));
+    }
+
+    /**
+     * 演示flatMap用法
+     */
+    @Test
+    public void testFlatMap() {
+        List<MenuVo> menuVoList = new ArrayList<>();
+        menuVoList.add(new MenuVo() {{
+            setName("menu1");
+            setFunctionVoList(Arrays.asList(
+                    new FunctionVo() {{
+                        setName("fun1-1");
+                    }},
+                    new FunctionVo() {{
+                        setName("fun1-2");
+                    }}
+            ));
+        }});
+        menuVoList.add(new MenuVo() {{
+            setName("menu2");
+            setFunctionVoList(Arrays.asList(
+                    new FunctionVo() {{
+                        setName("fun2-1");
+                    }},
+                    new FunctionVo() {{
+                        setName("fun2-2");
+                    }}
+            ));
+        }});
+
+        List<FunctionVo> functionVoList = menuVoList.stream().flatMap(o -> o.getFunctionVoList().stream()).collect(Collectors.toList());
+        Assert.assertEquals(4, functionVoList.size());
+        Assert.assertEquals("fun1-1", functionVoList.get(0).getName());
+        Assert.assertEquals("fun2-2", functionVoList.get(3).getName());
+    }
+
+    @Data
+    public static class MenuVo {
+        private String name;
+        private List<FunctionVo> functionVoList;
+    }
+
+    @Data
+    public static class FunctionVo {
+        private String name;
     }
 
 }
