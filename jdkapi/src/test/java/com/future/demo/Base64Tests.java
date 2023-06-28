@@ -1,6 +1,5 @@
 package com.future.demo;
 
-import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
