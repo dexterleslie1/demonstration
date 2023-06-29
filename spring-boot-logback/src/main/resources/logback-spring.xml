@@ -4,11 +4,22 @@
         config-common.properties配置如下
         k1=v1
     -->
-    <property file="${user.home}/chat/config-common.properties"/>
+<!--    <property file="${user.home}/chat/config-common.properties"/>-->
+
+    <property resource="application.properties"/>
+    <springProfile name="!prod">
+        <property resource="application-dev.properties"/>
+    </springProfile>
+    <springProfile name="prod">
+        <property resource="application-prod.properties"/>
+    </springProfile>
+
     <!--
         注意：springboot要使用2.2.7.RELEASE或者更新版本，否则varTemp2会显示undefined变量
+
+        也可以使用此方式读取k2变量<springProperty name="varTemp2" source="k2"/>
     -->
-    <springProperty name="varTemp2" source="k2" defaultValue="默认值1"/>
+    <property name="varTemp2" value="${k2}" defaultValue="默认值1"/>
     <springProperty name="needConsole" source="spring.application.console"/>
     <springProperty name="disableConsole" source="spring.application.console.disable"/>
     <property name="k3" value="测试值3"/>
@@ -23,7 +34,7 @@
         使用springProfile判断当前环境输入不同的日志
         https://www.cnblogs.com/jianliang-Wu/p/8945343.html
      -->
-    <springProfile name="dev">
+    <springProfile name="!prod">
         <appender name="namedConsoleAppender" class="ch.qos.logback.core.ConsoleAppender">
             <encoder>
                 <pattern>
