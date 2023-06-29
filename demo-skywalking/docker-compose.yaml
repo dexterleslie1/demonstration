@@ -8,7 +8,7 @@ networks:
 services:
   demo-skywalking-elasticsearch:
     container_name: demo-skywalking-elasticsearch
-    image:  elasticsearch:7.14.1
+    image: demo-skywalking-elasticsearch
     environment:
       - ES_JAVA_OPTS=-Xms512m -Xmx512m
       - discovery.type=single-node
@@ -16,10 +16,10 @@ services:
       - http.cors.enabled=true
       - http.cors.allow-origin=*
       - TZ=Asia/Shanghai
-    ports:
-      - 9200:9200
-      # Java transport client需要连接这个端口去操作elasticsearch
-      - 9300:9300
+#    ports:
+#      - 9200:9200
+#      # Java transport client需要连接这个端口去操作elasticsearch
+#      - 9300:9300
     networks:
       - net
 
@@ -41,10 +41,11 @@ services:
     environment:
       - SW_STORAGE=elasticsearch7
       - SW_STORAGE_ES_CLUSTER_NODES=demo-skywalking-elasticsearch:9200
-      # trace日志保留1天
+      # trace日志保留15天
       - SW_STORAGE_ES_RECORD_DATA_TTL=15
       - TZ=Asia/Shanghai
     restart: always
+    # 容器环境可以不暴露端口
     ports:
       - 12800:12800
       - 11800:11800
@@ -74,6 +75,7 @@ services:
       - LS_JAVA_OPTS=-Xmx512m -Xms512m
     volumes:
       - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    # 容器环境可以不暴露端口
     ports:
       - 5044:5044
     networks:

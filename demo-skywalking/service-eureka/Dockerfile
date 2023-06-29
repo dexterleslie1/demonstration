@@ -16,4 +16,4 @@ ADD target/service-eureka.jar /usr/share/service-eureka.jar
 
 ENV JAVA_OPTS=""
 
-ENTRYPOINT java -javaagent:/usr/share/apache-skywalking-apm-bin-es7/agent/skywalking-agent.jar ${JAVA_OPTS} -jar /usr/share/service-eureka.jar
+ENTRYPOINT java -javaagent:/usr/share/apache-skywalking-apm-bin-es7/agent/skywalking-agent.jar ${JAVA_OPTS} -jar /usr/share/service-eureka.jar --spring.profiles.active=prod

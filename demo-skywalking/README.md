@@ -1,5 +1,16 @@
 # 演示skywalking使用
 
+## 注意
+
+> 容器部署java应用集成skywalking需要挂载agent.config到agent对应目录中，并且agent-v8以上需要手动添加以下配置到agent.config中
+>
+> ```properties
+> plugin.toolkit.log.grpc.reporter.server_host=${SW_GRPC_LOG_SERVER_HOST:demo-skywalking-oap-server}
+> plugin.toolkit.log.grpc.reporter.server_port=${SW_GRPC_LOG_SERVER_PORT:11800}
+> plugin.toolkit.log.grpc.reporter.max_message_size=${SW_GRPC_LOG_MAX_MESSAGE_SIZE:10485760}
+> plugin.toolkit.log.grpc.reporter.upstream_timeout=${SW_GRPC_LOG_GRPC_UPSTREAM_TIMEOUT:30}
+> ```
+
 ## 资料
 
 > https://juejin.cn/post/7012458633455730702
@@ -46,4 +57,3 @@ http://localhost:8081/api/v1/test1?param1=p1
 ## todo
 
 > - springcloud-gateway 上报到 skywalking 的 logback日志traceId=N/A
-> - http response返回traceId
