@@ -14,6 +14,7 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.file.Path;
+import java.util.Base64;
 import java.util.Hashtable;
 
 
@@ -21,15 +22,15 @@ public class ZXingTests {
     @Test
     public void test() throws Exception {
         // 生成二维码
-        String text="www.baidu.com";
-        int width=100;
-        int height=100;
-        String format="png";
-        Hashtable hints=new Hashtable();
+        String text = "www.baidu.com";
+        int width = 100;
+        int height = 100;
+        String format = "png";
+        Hashtable hints = new Hashtable();
         hints.put(EncodeHintType.CHARACTER_SET, "utf-8");
         hints.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.M);
         hints.put(EncodeHintType.MARGIN, 2);
-        BitMatrix bitMatrix = new MultiFormatWriter().encode(text, BarcodeFormat.QR_CODE, width, height,hints);
+        BitMatrix bitMatrix = new MultiFormatWriter().encode(text, BarcodeFormat.QR_CODE, width, height, hints);
         Path file = File.createTempFile("zxing", ".tmp").toPath();
         MatrixToImageWriter.writeToPath(bitMatrix, format, file);
 
@@ -41,40 +42,48 @@ public class ZXingTests {
         } catch (Exception ex) {
             throw ex;
         } finally {
-            if(inputStream!=null) {
+            if (inputStream != null) {
                 inputStream.close();
                 inputStream = null;
             }
         }
 
         ByteArrayOutputStream outputStream = null;
+        byte[] datum = null;
         try {
             outputStream = new ByteArrayOutputStream();
             MatrixToImageWriter.writeToStream(bitMatrix, format, outputStream);
 
-            String contentFromByteArray = IOUtils.toString(outputStream.toByteArray(), "utf-8");
+            datum = outputStream.toByteArray();
+            String contentFromByteArray = IOUtils.toString(datum, "utf-8");
             Assert.assertEquals(contentFromByteArray, contentFromFile);
         } catch (Exception ex) {
             throw ex;
         } finally {
-            if(outputStream!=null) {
+            if (outputStream != null) {
                 outputStream.close();
                 outputStream = null;
             }
         }
 
+        // 转换为base64
+        // https://stackoverflow.com/questions/61031411/creating-qr-code-as-base64-string-using-spring-boot
+        String qrCodeImageBase64 = Base64.getEncoder().encodeToString(datum);
+        Assert.assertNotNull(qrCodeImageBase64);
+
         // 识别二维码图片提取url
-        MultiFormatReader formatReader=new MultiFormatReader();
-        BufferedImage image=null;
+        // https://stackoverflow.com/questions/2489048/qr-code-encoding-and-decoding-using-zxing
+        MultiFormatReader formatReader = new MultiFormatReader();
+        BufferedImage image = null;
         try {
             image = ImageIO.read(file.toFile());
         } catch (IOException e) {
             throw e;
         }
-        BinaryBitmap binaryBitmap =new BinaryBitmap(new HybridBinarizer(new BufferedImageLuminanceSource(image)));
-        hints=new Hashtable();
+        BinaryBitmap binaryBitmap = new BinaryBitmap(new HybridBinarizer(new BufferedImageLuminanceSource(image)));
+        hints = new Hashtable();
         hints.put(EncodeHintType.CHARACTER_SET, "utf-8");
-        Result result=formatReader.decode(binaryBitmap,hints);
+        Result result = formatReader.decode(binaryBitmap, hints);
         Assert.assertEquals(BarcodeFormat.QR_CODE, result.getBarcodeFormat());
         Assert.assertEquals(text, result.getText());
     }
