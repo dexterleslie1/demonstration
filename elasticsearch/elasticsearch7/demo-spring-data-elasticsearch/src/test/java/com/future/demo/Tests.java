@@ -1,15 +1,22 @@
 package com.future.demo;
 
+import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.IdsQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.SearchResultMapper;
+import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
+import org.springframework.data.elasticsearch.core.aggregation.impl.AggregatedPageImpl;
 import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -17,11 +24,9 @@ import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 // todo CriteriaQuery
 // todo 聚合查询
-// todo 拼音和中文analyzer
 @RunWith(SpringRunner.class)
 @SpringBootTest(
         classes = {Application.class},
@@ -42,7 +47,8 @@ public class Tests {
         String resultStr = this.elasticsearchTemplate.index(indexQuery);
         Assert.assertEquals("1", resultStr);
 
-        TimeUnit.SECONDS.sleep(1);
+        // 刷新索引马上写入es，以便后续search能够查询到数据
+        this.elasticsearchTemplate.refresh(NoteItem.class);
 
         // 根据id验证文档是否新增成功
         IdsQueryBuilder idsQueryBuilder = QueryBuilders.idsQuery().addIds("1");
@@ -70,7 +76,7 @@ public class Tests {
         }}).build());
         this.elasticsearchTemplate.bulkIndex(indexQueryList);
 
-        TimeUnit.SECONDS.sleep(1);
+        this.elasticsearchTemplate.refresh(NoteItem.class);
 
         searchQuery = new NativeSearchQueryBuilder().withQuery(QueryBuilders.matchAllQuery()).build();
         searchQuery.addSort(Sort.by(Sort.Direction.DESC, "_id"));
@@ -81,13 +87,13 @@ public class Tests {
         Assert.assertEquals("1", noteItemList.get(2).getId());
 
         /*------------------------------- 全局模糊查询，不指定列，match_all */
-        searchQuery = new NativeSearchQueryBuilder().withQuery(QueryBuilders.queryStringQuery("偶尔")).build();
+        searchQuery = new NativeSearchQueryBuilder().withQuery(QueryBuilders.queryStringQuery("偶尔").analyzer("ik_max_word")).build();
         noteItemList = this.elasticsearchTemplate.queryForList(searchQuery, NoteItem.class);
         Assert.assertEquals(1, noteItemList.size());
         Assert.assertEquals("3", noteItemList.get(0).getId());
 
         /*------------------------------- 指定列的match搜索 */
-        searchQuery = new NativeSearchQueryBuilder().withQuery(QueryBuilders.matchQuery("content", "偶尔间")).build();
+        searchQuery = new NativeSearchQueryBuilder().withQuery(QueryBuilders.matchQuery("content", "偶尔间").analyzer("ik_max_word")).build();
         noteItemList = this.elasticsearchTemplate.queryForList(searchQuery, NoteItem.class);
         Assert.assertEquals(1, noteItemList.size());
         Assert.assertEquals("3", noteItemList.get(0).getId());
@@ -100,7 +106,7 @@ public class Tests {
         /*------------------------------- 多条件查询should，content contain '偶尔' or id='2' */
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
         boolQueryBuilder.should().addAll(Arrays.asList(
-                QueryBuilders.matchQuery("content", "偶尔"),
+                QueryBuilders.matchQuery("content", "偶尔").analyzer("ik_max_word"),
                 QueryBuilders.termQuery("id", "2")));
         searchQuery = new NativeSearchQueryBuilder().withQuery(boolQueryBuilder).build();
         searchQuery.addSort(Sort.by(Sort.Direction.ASC, "_id"));
@@ -125,7 +131,39 @@ public class Tests {
         Assert.assertEquals("3", noteItemList.get(0).getId());
 
         /*------------------------------- 高亮查询 */
-        // todo 高亮有点麻烦暂时不研究
+        // https://stackoverflow.com/questions/37049764/how-to-provide-highlighting-with-spring-data-elasticsearch
+        searchQuery = new NativeSearchQueryBuilder()
+                .withQuery(QueryBuilders.matchQuery("content", "偶尔").analyzer("ik_max_word"))
+                .withHighlightBuilder(new HighlightBuilder().field("content").preTags("##").postTags("##"))
+                .build();
+        AggregatedPage<NoteItem> noteItemAggregatedPage = this.elasticsearchTemplate.queryForPage(searchQuery, NoteItem.class, new SearchResultMapper() {
+            @Override
+            public <T> AggregatedPage<T> mapResults(SearchResponse response, Class<T> clazz, Pageable pageable) {
+                List<NoteItem> chunk = new ArrayList<>();
+                for (SearchHit searchHit : response.getHits()) {
+                    if (response.getHits().getHits().length <= 0) {
+                        return null;
+                    }
+                    NoteItem noteItem = new NoteItem();
+                    noteItem.setId(searchHit.getId());
+                    noteItem.setPrimaryId((Long) searchHit.getSourceAsMap().get("primaryId"));
+                    noteItem.setContent(searchHit.getHighlightFields().get("content").fragments()[0].toString());
+                    chunk.add(noteItem);
+                }
+                if (chunk.size() > 0) {
+                    return new AggregatedPageImpl<>((List<T>) chunk);
+                }
+                return null;
+            }
+
+            @Override
+            public <T> T mapSearchHit(SearchHit searchHit, Class<T> type) {
+                return null;
+            }
+        });
+        Assert.assertEquals(1, noteItemAggregatedPage.getContent().size());
+        Assert.assertEquals("3", noteItemAggregatedPage.getContent().get(0).getId());
+        Assert.assertEquals("及##偶尔##uore", noteItemAggregatedPage.getContent().get(0).getContent());
 
         /*------------------------------- 修改文档，实质是创建文档操作，只要id一样就会替换文档 */
         String content = "建立家乐福人";
@@ -136,7 +174,7 @@ public class Tests {
         resultStr = this.elasticsearchTemplate.index(indexQuery);
         Assert.assertEquals("1", resultStr);
 
-        TimeUnit.SECONDS.sleep(1);
+        this.elasticsearchTemplate.refresh(NoteItem.class);
 
         idsQueryBuilder = QueryBuilders.idsQuery().addIds("1");
         searchQuery = new NativeSearchQueryBuilder().withQuery(idsQueryBuilder).build();
@@ -148,7 +186,7 @@ public class Tests {
         resultStr = this.elasticsearchTemplate.delete(NoteItem.class, "3");
         Assert.assertEquals("3", resultStr);
 
-        TimeUnit.SECONDS.sleep(1);
+        this.elasticsearchTemplate.refresh(NoteItem.class);
 
         searchQuery = new NativeSearchQueryBuilder().withQuery(QueryBuilders.matchAllQuery()).build();
         noteItemList = this.elasticsearchTemplate.queryForList(searchQuery, NoteItem.class);
@@ -162,7 +200,7 @@ public class Tests {
         deleteQuery.setQuery(idsQueryBuilder);
         this.elasticsearchTemplate.delete(deleteQuery, NoteItem.class);
 
-        TimeUnit.SECONDS.sleep(1);
+        this.elasticsearchTemplate.refresh(NoteItem.class);
 
         searchQuery = new NativeSearchQueryBuilder().withQuery(QueryBuilders.matchAllQuery()).build();
         noteItemList = this.elasticsearchTemplate.queryForList(searchQuery, NoteItem.class);
@@ -173,7 +211,7 @@ public class Tests {
         deleteQuery.setQuery(QueryBuilders.termQuery("id", "2"));
         this.elasticsearchTemplate.delete(deleteQuery, NoteItem.class);
 
-        TimeUnit.SECONDS.sleep(1);
+        this.elasticsearchTemplate.refresh(NoteItem.class);
 
         searchQuery = new NativeSearchQueryBuilder().withQuery(QueryBuilders.matchAllQuery()).build();
         noteItemList = this.elasticsearchTemplate.queryForList(searchQuery, NoteItem.class);
