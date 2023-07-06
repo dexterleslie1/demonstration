@@ -37,8 +37,10 @@
                     console.log("编辑后的节点名称为: " + node.text)
                 },
                 // 节点拖拽后触发事件
-                onDrop: function (target, source, point) {
-                    console.log(target, source, point)
+                onStopDrag: function(node) {
+                    console.log(node)
+                    // 获取当前节点的上级节点，如果是顶级节点则返回null
+                    console.log($("#tt").tree("getParent", node.target))
                 },
                 // 在节点编辑状态中，如果选择其他节点则终止节点编辑状态
                 onSelect: function (node) {
