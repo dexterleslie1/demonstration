@@ -123,3 +123,6 @@ https://www.php.cn/linux-491726.html
 export PATH=$PATH:/usr/local/go/bin
 ```
 
+## rc.local配置
+
+> 参考dcli配置启用rc.local服务，启用服务后配置 /etc/rc.local 文件配置开机自启动服务

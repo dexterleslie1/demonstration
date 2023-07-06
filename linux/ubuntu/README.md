@@ -19,6 +19,8 @@
 ## ubuntu20安装visual code
 
 > 不能使用snap安装visual code，因为snap visual code 是阉割版，不能切换中文输入法。
+>
+> 可以使用dcli安装visual code
 
 ```shell
 # 参考文档
