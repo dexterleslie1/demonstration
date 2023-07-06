@@ -1,0 +1,14 @@
+{
+  "name": "demo-lib-commander",
+  "version": "1.0.0",
+  "description": "```",
+  "main": "index.mjs",
+  "scripts": {
+    "test": "node ./index.mjs"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "commander": "^10.0.1"
+  }
+}
