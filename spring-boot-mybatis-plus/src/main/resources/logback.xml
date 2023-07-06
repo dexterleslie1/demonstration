@@ -19,7 +19,7 @@
         <appender-ref ref="console"/>
     </logger>
     <!-- 禁止mybatis debug日志输出 -->
-    <logger name="com.future.demo.mybatis.plus.mapper" level="warn" additivity="false">
+    <logger name="com.future.demo.mybatis.plus.mapper" level="debug" additivity="false">
         <appender-ref ref="console"/>
     </logger>
 </configuration>

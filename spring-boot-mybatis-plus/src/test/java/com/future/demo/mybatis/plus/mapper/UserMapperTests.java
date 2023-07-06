@@ -1,18 +1,15 @@
 package com.future.demo.mybatis.plus.mapper;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.future.demo.mybatis.plus.Application;
 import com.future.demo.mybatis.plus.entity.FootballMatch;
-import com.future.demo.mybatis.plus.entity.Ipset;
 import com.future.demo.mybatis.plus.entity.User;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -183,8 +180,19 @@ public class UserMapperTests {
         Long teamIdA = 2L;
         Long teamIdB = 3L;
         FootballMatch match = this.footballMatchMapper.selectOne(Wrappers.<FootballMatch>lambdaQuery()
-                .and(wrapper->wrapper.eq(FootballMatch::getTeamIdA, teamIdA).eq(FootballMatch::getTeamIdB, teamIdB))
-                .or(wrapper->wrapper.eq(FootballMatch::getTeamIdB, teamIdA).eq(FootballMatch::getTeamIdA, teamIdB)));
+                .and(wrapper -> wrapper.eq(FootballMatch::getTeamIdA, teamIdA).eq(FootballMatch::getTeamIdB, teamIdB))
+                .or(wrapper -> wrapper.eq(FootballMatch::getTeamIdB, teamIdA).eq(FootballMatch::getTeamIdA, teamIdB)));
+        Assert.assertNotNull(match);
+        Assert.assertEquals(match.getTeamIdA(), teamIdA);
+        Assert.assertEquals(match.getTeamIdB(), teamIdB);
+
+        QueryWrapper<FootballMatch> queryWrapper = Wrappers.query();
+        queryWrapper.eq("1", 1);
+        queryWrapper.and(o -> {
+            o.and(o1 -> o1.eq("teamIdA", teamIdA).eq("teamIdB", teamIdB));
+            o.or(o1 -> o1.eq("teamIdB", teamIdA).eq("teamIdA", teamIdB));
+        });
+        match = this.footballMatchMapper.selectOne(queryWrapper);
         Assert.assertNotNull(match);
         Assert.assertEquals(match.getTeamIdA(), teamIdA);
         Assert.assertEquals(match.getTeamIdB(), teamIdB);
