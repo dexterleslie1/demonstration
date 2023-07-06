@@ -1,0 +1,10 @@
+## 演示使用npm命令建立nodejs项目并且添加依赖
+
+```
+# 初始化空nodejs项目(生成package.json文件)
+npm init
+
+# 添加monent开发环境依赖
+npm install moment --save-dev
+```
+
