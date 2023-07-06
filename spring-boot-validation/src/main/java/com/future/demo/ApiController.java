@@ -25,8 +25,11 @@ public class ApiController {
      * @return
      */
     @GetMapping(value = "testSingleParam")
-    public ObjectResponse<String> testSingleParam(@NotNull(message = "没有提供p1参数")
-                                                  @NotBlank(message = "没有提供p1参数")
+    // springboot validation i18n
+    // https://zhuanlan.zhihu.com/p/451266561
+    // 1、
+    public ObjectResponse<String> testSingleParam(@NotNull(message = "{param.required.p1}")
+                                                  @NotBlank(message = "{param.required.p1}")
                                                   @RequestParam(value = "p1", defaultValue = "") String p1) {
         return ResponseUtils.successObject("成功调用");
     }

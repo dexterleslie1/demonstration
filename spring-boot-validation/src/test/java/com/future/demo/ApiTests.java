@@ -31,7 +31,7 @@ public class ApiTests {
         } catch (BusinessException ex) {
             Assert.assertEquals(ErrorCodeConstant.ErrorCodeConstraintViolation, ex.getErrorCode());
             Assert.assertEquals("Parameters validation failed!", ex.getErrorMessage());
-            Assert.assertEquals(((ArrayNode) ex.getData()).get(0).asText(), "没有提供p1参数");
+            Assert.assertEquals("没有提供p1参数", ((ArrayNode) ex.getData()).get(0).asText());
         }
 
         try {

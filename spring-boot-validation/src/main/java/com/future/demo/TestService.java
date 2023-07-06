@@ -10,7 +10,7 @@ import javax.validation.constraints.NotNull;
 // 启用springboot validation
 @Validated
 public class TestService {
-    public void testSingleParam(@NotNull(message = "没有提供p1参数")
-                                @NotBlank(message = "没有提供p1参数") String p1) {
+    public void testSingleParam(@NotNull(message = "{param.required.p1}")
+                                @NotBlank(message = "{param.required.p1}") String p1) {
     }
 }
