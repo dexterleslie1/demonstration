@@ -38,6 +38,14 @@ docker network prune
 
 
 
+### docker run重写entrypoint并带参数
+
+```
+docker run --rm --entrypoint /bin/sh untergeek/curator:8.0.4 -c "while true; do date; sleep 1; done;"
+```
+
+
+
 ## docker最佳安全实践
 
 > https://blog.aquasec.com/docker-security-best-practices
@@ -45,4 +53,3 @@ docker network prune
 > - 使用非root模式运行docker daemon
 >
 > todo 配置过程繁琐，暂时不研究
-
