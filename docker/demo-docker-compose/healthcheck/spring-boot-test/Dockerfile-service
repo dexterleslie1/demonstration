@@ -1,0 +1,8 @@
+# 注意： 不能修改为8-jdk-slim，否则生成验证码时报错
+FROM openjdk:8-jre
+
+ADD target/demo-spring-boot-test.jar /usr/share/demo-spring-boot-test.jar
+
+ENV JAVA_OPTS=""
+
+ENTRYPOINT java ${JAVA_OPTS} -jar /usr/share/demo-spring-boot-test.jar --spring.profiles.active=prod

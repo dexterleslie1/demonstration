@@ -1,0 +1,62 @@
+version: "3.0"
+
+# 创建网络
+networks:
+  net:
+    name: demo-spring-boot-test-net
+
+services:
+  # 启动mariadb
+  demo-spring-boot-test-db:
+    container_name: demo-spring-boot-test-db
+    image: demo-spring-boot-test-db
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - TZ=Asia/Shanghai
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci --skip-character-set-client-handshake
+    # MySQL healthcheck
+    # https://stackoverflow.com/questions/42567475/docker-compose-check-if-mysql-connection-is-ready
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+    ports:
+      - 3306:3306
+    networks:
+      - net
+
+  demo-spring-boot-test-service:
+    container_name: demo-spring-boot-test-service
+    image: demo-spring-boot-test-service
+    environment:
+      - JAVA_OPTS=-Xms512m -Xmx512m
+      - TZ=Asia/Shanghai
+    ports:
+      - 8080:8080
+    # healthcheck用法
+    # https://wshs0713.github.io/posts/b8226bad/
+    healthcheck:
+      test: ["CMD-SHELL", "curl -H 'Authorization: xxxx' -sf 127.0.0.1:8080/api/v1/addUser || exit 1"]
+      interval: 5s
+      timeout: 30s
+      retries: 3
+      start_period: 15s # 容器启动后多久开始检测  (default: 0s)
+    restart: always
+    networks:
+      - net
+    depends_on:
+      demo-spring-boot-test-db:
+        # healthy状态的数据库才启动service
+        condition: service_healthy
+
+#  # 自动重启不健康的容器
+#  # https://wshs0713.github.io/posts/b8226bad/
+#  demo-spring-boot-test-autoheal:
+#    restart: always
+#    image: willfarrell/autoheal
+#    container_name: demo-spring-boot-test-autoheal
+#    environment:
+#      - AUTOHEAL_CONTAINER_LABEL=all
+#    volumes:
+#      - /var/run/docker.sock:/var/run/docker.sock
+
