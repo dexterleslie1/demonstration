@@ -49,3 +49,16 @@ services:
       - 5044:5044
     networks:
       - net
+
+  # 定时删除过期索引
+  demo-elk-curator:
+    container_name: demo-elk-curator
+    image: untergeek/curator:5.7.6
+    volumes:
+      - ./curator.yml:/.curator/curator.yml
+      - ./action.yml:/.curator/action.yml
+    entrypoint: /bin/sh
+    command: -c "while true; do /curator/curator --config /.curator/curator.yml /.curator/action.yml; sleep 10; done;"
+    networks:
+      - net
+
