@@ -1,19 +1,5 @@
 # demo-test
 
-
-
-## 参考资料
-
-> https://www.programmingbasic.com/add-common-header-footer-nuxt
-
-
-
-## 说明
-
-> 使用layouts/default.vue+<nuxt/>定义全局模板，NOTE: Header.vue和Footer.vue需要在components中定义，并且文件首字母大写。
-
-
-
 ## Build Setup
 
 ```bash
