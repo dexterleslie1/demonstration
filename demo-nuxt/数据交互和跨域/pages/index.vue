@@ -19,7 +19,15 @@ export default {
     let data = await $axios({'url': '/data/data.json'})
 
     // SSR读取跨域数据
-    let dataCross = await $axios({'url': '/api/v1/test1'})
+    let dataCross
+    await $axios.get('/api/v1/test1')
+    .then(function(response) {
+      dataCross = response
+    }).catch(function(error) {
+        console.log(`my error=${error}`)
+    }).finally(function() {
+        console.log(`/data/data.json request finally`)
+    })
     console.log(dataCross.data)
 
     // 通过return合并数据到vue中
