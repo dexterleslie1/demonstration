@@ -38,7 +38,9 @@ https://blog.csdn.net/sinat_17775997/article/details/83416617
   border-style: solid;
   border-width: 1px;
 
-  /deep/ .image-slot {
+  // 在使用scoped时，没有::v-deep修饰不会生成样式.el-image[data-v-fae5bece] .image-slot
+  // 导致.image-slot样式不起作用
+  ::v-deep .image-slot {
     font-size: 30px;
     display: flex;
     align-items: center;
