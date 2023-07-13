@@ -4,7 +4,6 @@ import com.yyd.common.http.response.ObjectResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
@@ -82,11 +81,12 @@ public class ApiController {
     @GetMapping("get")
     ObjectResponse<String> get(
             @RequestParam(value = "param1", defaultValue = "") String param1,
-            @RequestHeader(value = "header1", defaultValue = "") String header1) {
+            @RequestHeader(value = "header1", defaultValue = "") String header1,
+            @RequestHeader(value = "header2", defaultValue = "") String header2) {
         Assert.isTrue(StringUtils.hasText(header1), "没有提供header1参数");
         Assert.isTrue(StringUtils.hasText(param1), "没有提供param1参数");
         ObjectResponse<String> response = new ObjectResponse<>();
-        response.setData("param1=" + param1 + ",header1=" + header1);
+        response.setData("param1=" + param1 + ",header1=" + header1 + ",header2=" + header2);
         return response;
     }
 
