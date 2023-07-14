@@ -10,7 +10,7 @@ services:
     container_name: demo-elasticsearch
     image: docker.118899.net:10001/yyd-public/demo-elasticsearch
     environment:
-      - "ES_JAVA_OPTS=-Xms512m -Xmx1024m"
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
       - discovery.type=single-node
       # http.cors表示允许elasticsearch-head连接并管理
       - http.cors.enabled=true
