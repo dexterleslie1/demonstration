@@ -7,10 +7,19 @@
 <script>
 export default {
   name: 'IndexPage',
-  
+
   methods: {
     handleClick() {
-      alert('Hello world!')
+      let thisObj = this
+      thisObj.$confirm('确认退出登录吗？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        alert('确定')
+      }).catch(() => {
+        alert('取消')
+      })
     }
   }
 }
