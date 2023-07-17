@@ -1,0 +1,1 @@
+## 演示encodeURIComponent函数用法
