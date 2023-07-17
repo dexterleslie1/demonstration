@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <script>
+        // https://stackoverflow.com/questions/6802956/how-to-position-a-div-in-a-specific-coordinates
+
+        function setLeft() {
+            var element = document.getElementById('div1')
+            //console.log(`移动前offsetLeft=${element.offsetLeft},left=${element.style.left}`)
+            //element.style.left = element.offsetLeft + 10 + 'px'
+            //console.log(`移动后offsetLeft=${element.offsetLeft},left=${element.style.left}`)
+
+            // NOTE: 使用style.left属性移动元素
+            console.log(`移动前offsetLeft=${element.offsetLeft},left=${element.style.left}`)
+            var leftCurrent = parseInt(element.style.left.replaceAll('px', ''))
+            element.style.left = leftCurrent + 10 + 'px'
+            console.log(`移动后offsetLeft=${element.offsetLeft},left=${element.style.left}`)
+        }
+    </script>
+
+</head>
+
+<body>
+    <hr>
+    <div>使用ele.style.left设置div的新坐标</div>
+    <div>
+        <button onclick="setLeft()">点击我</button>
+        <div id="div1" style="position:relative;left:30px;width:50px;height:50px;background-color: antiquewhite;"></div>
+    </div>
+</body>
+
+</html>
