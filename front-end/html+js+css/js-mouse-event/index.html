@@ -32,9 +32,23 @@
                 console.log('onmouseleave')
             }
 
-            document.getElementById('div41').onmousemove = () => {
-                console.log('onmousemove')
+            document.getElementById('div41').onmousemove = (event) => {
+                console.log(`onmousemove,offsetX=${event.offsetX},offsetY=${event.offsetY}`)
             }
+
+            //#region document
+
+            document.onmousedown = () => {
+                console.log(`document onmousedown`)
+            }
+            document.onmouseup = () => {
+                console.log(`document onmouseup`)
+            }
+            document.onmousemove = (event) => {
+                console.log(`offsetX=${event.offsetX},offsetY=${event.offsetY}`)
+            }
+
+            //#endregion
         })
     </script>
 
@@ -72,6 +86,12 @@
             <div id="div42" style="width:50px;height:50px;background-color:aqua;">
             </div>
         </div>
+    </div>
+
+    <hr>
+    <div>演示docuemnt的onmousedown、onmouseup、onmousemove事件处理</div>
+    <div style="height:50px;">
+
     </div>
 </body>
 
