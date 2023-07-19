@@ -55,6 +55,6 @@ python3 用于测试selenium-hub环境是否正常.py
 # 使用容器运行测试
 # 编译运行测试的容器镜像
 sh build.sh
-docker run --rm -v ./用于测试selenium-hub环境是否正常.py:/main.py demo-selen-client python3 /main.py
+docker run --rm -v ./用于测试selenium-hub环境是否正常.py:/main.py demo-selenium-python-client python3 /main.py
 ```
 
