@@ -31,3 +31,5 @@ dependency-reduced-pom.xml
 
 cmake-build-debug
 build
+geckodriver.log
+

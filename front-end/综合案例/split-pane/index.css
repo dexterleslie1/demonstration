@@ -1,0 +1,25 @@
+.my-lr-pane-container {
+    display: flex;
+    align-items: stretch;
+    height: 100%;
+}
+
+.my-lr-pane-container .left-pane {
+    width: 30%;
+    background-color: antiquewhite;
+    min-width: 200px;
+    max-width: 50%;
+}
+
+.my-lr-pane-container .right-pane {
+    flex: 1;
+    background-color: aqua;
+}
+
+.my-lr-pane-container .splitter {
+    height: 100%;
+    width: 25px;
+    background-color: gray;
+    /* 光标提示左右大小支持调整 */
+    cursor: col-resize;
+}
