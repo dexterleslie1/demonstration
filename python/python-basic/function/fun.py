@@ -55,3 +55,20 @@ def fun3(*args, **args1):
     print("参数args={0},args1={1}".format(args, args1))
 
 fun3(1, 2, a = 3, b = 4, c = 5)
+
+#region 返回多个值
+
+print()
+print("函数返回多个值".center(50, "-"))
+
+# 使用元组方式返回多个值
+def test_fun1():
+    return ('val-a', 'val-b')
+    pass
+
+(var_a, var_b) = test_fun1()
+print('var_a={0},var_b={1}'.format(var_a, var_b))
+var_a = test_fun1()[0]
+print('var_a={0}'.format(var_a))
+
+#endregion
