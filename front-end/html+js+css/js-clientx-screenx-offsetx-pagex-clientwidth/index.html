@@ -101,6 +101,17 @@
             border-color: gray;
             padding: 10px;
         }
+
+        #div8 {
+            margin: 10px;
+            background-color: aqua;
+            width: 50px;
+            height: 50px;
+            border-style: dashed;
+            border-width: 20px;
+            border-color: gray;
+            padding: 10px;
+        }
     </style>
 
     <script>
@@ -165,6 +176,17 @@
             alert(`offsetLeft=${offsetLeft},offsetTop=${offsetTop}`)
         }
 
+        function demo8() {
+            var element = document.getElementById('div8')
+
+            var boundingClientRect = element.getBoundingClientRect()
+
+            alert(`left=${boundingClientRect.left},top=${boundingClientRect.top},
+            right=${boundingClientRect.right},bottom=${boundingClientRect.bottom},
+            width=${boundingClientRect.width},height=${boundingClientRect.height},
+            x=${boundingClientRect.x},y=${boundingClientRect.y}`)
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             var element = document.getElementById('div6')
             element.onmousedown = (event) => {
@@ -176,6 +198,8 @@
                 alert(`clientX=${event.clientX},clientY=${event.clientY}`)
             }
         })
+
+
 
     </script>
 
@@ -261,6 +285,16 @@
     </div>
     <div>
         <div id="div7"></div>
+    </div>
+
+    <hr>
+    <div>
+        getBoundingClientRect<br>
+        https://developer.mozilla.org/en-US/docs/Web/API/Element/getBoundingClientRect
+    </div>
+    <div>
+        <button onclick="demo8()">点击我</button>
+        <div id="div8"></div>
     </div>
 
 </body>
