@@ -70,3 +70,13 @@ services:
       - "4444:4444"
     networks:
       - net
+
+  demo-selenium-openresty:
+    container_name: demo-selenium-openresty
+    image: openresty/openresty:1.19.9.1-14-buster-fat
+    ports:
+      - 80:80
+    volumes:
+      - ./web-auxiliary-tool-for-testing/index.html:/usr/local/openresty/nginx/html/web-auxiliary-tool-for-testing/index.html
+    networks:
+      - net

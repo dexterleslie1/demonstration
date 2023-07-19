@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <style>
+        .box1 {
+            position: absolute;
+            left: 300px;
+            top: 150px;
+            width: 50px;
+            height: 50px;
+            background-color: antiquewhite;
+        }
+
+        .box2 {
+            width: 50px;
+            height: 50px;
+            background-color: aqua;
+        }
+
+        .box3 {
+            width: 50px;
+            height: 50px;
+            background-color: azure;
+        }
+
+        .box5 {
+            width: 50px;
+            height: 50px;
+            background-color: aqua;
+        }
+    </style>
+
+    <script>
+        function handleClick1(element) {
+            var rect = element.getBoundingClientRect()
+            alert(`x=${rect.x},y=${rect.y},width=${rect.width},height=${rect.height}`)
+        }
+
+        //#region 演示鼠标拖拽
+
+        document.addEventListener('DOMContentLoaded', () => {
+            var element52 = document.getElementsByClassName('box52')[0]
+            var dragging = false
+            document.onmouseup = () => {
+                dragging = false
+            }
+            document.onmousemove = () => {
+                if (dragging) {
+                    element52.innerHTML = 'dragging...'
+                } else {
+                    element52.innerHTML = ''
+                }
+            }
+            var element = document.getElementsByClassName('box5')[0]
+            element.onmousedown = () => {
+                dragging = true
+            }
+        })
+
+        //#endregion
+    </script>
+</head>
+
+<body>
+
+    <hr>
+    <div>
+        用于辅助测试driver.location和driver.size
+    </div>
+    <div class="box1">
+
+    </div>
+    <div class="box2">
+
+    </div>
+
+    <hr>
+    <div>用于辅助测试alert弹出框</div>
+    <div class="box3" onclick="handleClick1(this)">
+
+    </div>
+
+    <hr>
+    <div>用于辅助测试鼠标拖拽</div>
+    <div class="box5"></div>
+    <div class="box52"></div>
+
+</body>
+
+</html>

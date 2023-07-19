@@ -10,7 +10,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 if __name__ == "__main__":
     try:
         driver = webdriver.Firefox()
-        driver.get("http://127.0.0.1:5500/web-auxiliary-tool-for-testing/index.html")
+        driver.get("http://192.168.1.181/web-auxiliary-tool-for-testing/index.html")
 
         element = driver.find_element(By.CLASS_NAME, 'box3')
         location = element.location
