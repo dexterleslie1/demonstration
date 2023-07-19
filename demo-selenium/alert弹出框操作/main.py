@@ -13,6 +13,8 @@ if __name__ == "__main__":
         driver.get("http://127.0.0.1:5500/web-auxiliary-tool-for-testing/index.html")
 
         element = driver.find_element(By.CLASS_NAME, 'box3')
+        location = element.location
+        size = element.size
 
         # https://www.browserstack.com/guide/action-class-selenium-python
         action = ActionChains(driver)
@@ -29,7 +31,8 @@ if __name__ == "__main__":
         # https://stackoverflow.com/questions/47074558/how-to-read-the-text-from-the-alert-box-using-python-selenium
         alert = driver.switch_to.alert
         alert_text = alert.text
-        assert alert_text == 'x=8,y=58,width=50,height=50'
+        expected_text = 'x=' + str(location['x']) + ',y=' + str(location['y']) + ',width=' + str(int(size['width'])) + ',height=' + str(int(size['height']))
+        assert expected_text == alert_text
         alert.accept()
 
     finally:
