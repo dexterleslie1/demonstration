@@ -6,6 +6,7 @@
 > NOTE: 没有找到资料描述测试dom前能够预置html，只能够支持编程动态预置html
 > NOTE: jasmine-browser-runner runSpecs命令默认启动浏览器执行jasmine测试，可以在jasmine中通过window、document操作dom
 > NOTE: jasmine不支持模拟鼠标移动操作
+> NOTE: jasmine+karma启动浏览器测试spec，也可以使用jasmine-browser-runner runSpecs命令启动浏览器测试spec
 
 
 
