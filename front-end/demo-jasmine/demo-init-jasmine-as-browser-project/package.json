@@ -1,0 +1,15 @@
+{
+  "name": "demo-init-jasmine-as-browser-project",
+  "version": "1.0.0",
+  "description": "> https://jasmine.github.io/pages/getting_started.html",
+  "main": "index.js",
+  "scripts": {
+    "test": "jasmine-browser-runner runSpecs"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "jasmine-browser-runner": "^2.1.0",
+    "jasmine-core": "^5.0.1"
+  }
+}
