@@ -8,3 +8,10 @@ npm init
 npm install moment --save-dev
 ```
 
+
+
+## npm init命令
+
+>
+> npm init <initializer>参数解析
+> https://docs.npmjs.com/cli/v6/commands/npm-init
