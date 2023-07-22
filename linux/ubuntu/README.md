@@ -85,3 +85,60 @@ sudo apt install gnome-shell-extension-dash-to-panel
 # Tweaks设置程序1、关闭general > Animations。2、打开 Extensions > Application menu、Dash to panel、Desktop icons选项。3、打开Window Titlebars > Maximize、Minimize、Placement Right
 ```
 
+
+
+## ubuntu20.4 server(非desktop版本)安装xrdp
+
+### Xfce+xrdp
+
+> https://www.digitalocean.com/community/tutorials/how-to-enable-remote-desktop-protocol-using-xrdp-on-ubuntu-22-04
+
+```
+sudo apt update
+
+# 安装xfce
+sudo apt install xfce4 xfce4-goodies -y
+# 安装xfce过程中选择gdm3
+
+# 安装xrdp
+sudo apt install xrdp -y
+
+# 查看xrdp运行状态
+sudo systemctl status xrdp
+
+# 启动xrdp服务
+sudo systemctl start xrdp
+
+# 重启xrdp服务
+sudo systemctl restart xrdp
+
+# 使用window自带的mstsc测试远程桌面
+```
+
+
+
+### Gnome+xrdp
+
+> https://linuxize.com/post/how-to-install-xrdp-on-ubuntu-20-04/
+
+```
+sudo apt update
+
+# 安装Gnome
+sudo apt install ubuntu-desktop
+
+# 安装xrdp
+sudo apt install xrdp 
+
+# 查看xrdp运行状态
+sudo systemctl status xrdp
+
+# 添加xrdp用户到ssl-cert组
+sudo adduser xrdp ssl-cert
+
+# 重启xrdp服务
+sudo systemctl restart xrdp
+
+# 使用window自带的mstsc测试远程桌面
+```
+
