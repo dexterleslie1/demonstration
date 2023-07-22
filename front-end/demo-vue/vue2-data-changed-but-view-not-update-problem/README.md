@@ -8,7 +8,7 @@
 >
 > - 动态为对象新增属性
 > - 动态删除对象属性
-> - 使用索引修改数组值
+> - 使用索引修改数组值，https://stackoverflow.com/questions/44800470/vue-js-updated-array-item-value-doesnt-update-in-page
 
 
 
