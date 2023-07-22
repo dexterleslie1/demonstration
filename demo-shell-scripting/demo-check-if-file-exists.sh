@@ -8,3 +8,10 @@ then
 else
     echo 'file not exists'
 fi
+
+if [ ! -e test.txt ]
+then
+    echo 'file not exists'
+else
+    echo 'file exists'
+fi
