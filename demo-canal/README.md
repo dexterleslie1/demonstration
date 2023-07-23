@@ -13,6 +13,10 @@
 > - canal-server:v1.1.6都不能和mariadb:10.4.19、mysql:5.7集成，rabbitmq没有消息
 > - canal-server和mariadb:10.4.19集成insert一次会有两条消息
 > - canal-server几乎停止维护更新，学习使用其他CDC方案为宜
+>
+> NOTE: 如果同步运行不正常，可以通过进入canal容器分析/home/admin/canal-server/logs/canal/canal.log定位问题。
+
+
 
 ## 运行demo
 
