@@ -1,5 +1,36 @@
 # demo-test
 
+
+
+## 集成步骤
+
+```
+# 安装element-ui依赖
+npm install element-ui --save
+
+# nuxt.config.js中配置如下:
+css: [
+	// 引入element-ui css
+	'element-ui/lib/theme-chalk/index.css'
+],
+
+plugins: [
+    // 声明element-ui自定义插件文件
+    {
+      src: '~/plugins/element-ui',
+      ssr: true
+    }
+  ],
+  
+# plugins目录中创建文件element-ui.js内容如下:
+import Vue from 'vue'
+import ElementUI from 'element-ui'
+
+Vue.use(ElementUI)
+```
+
+
+
 ## Build Setup
 
 ```bash
