@@ -1,28 +1,19 @@
 <template>
-    <div>title: {{ title }}</div>
+  <div>
+    <a href="/pageLevelCatchErrorHandling">
+      页面级别的asyncData自定义try catch错误处理
+    </a><br>
+    <a href="/pageLevelThrownByAxiosInterceptorErrorHandling">
+      页面级别的asyncData不需要编写错误处理逻辑，只是页面编写错误显示逻辑
+    </a><br>
+    <a href="/axiosCsrAndSsrErrorHandling">
+      axios csr和ssr错误处理
+    </a>
+  </div>
 </template>
 
 <script>
 export default {
-  async asyncData({$axios}) {
-    let data
-    await $axios.get('/api/v1/test1')
-    .then(function(response) {
-      console.log(`response=${JSON.stringify(response.data)}`)
-      data = response
-    })
-    .catch(function(error) {
-      console.log(`my error=${error}`)
-    })
-    .finally(function() {
-      console.log(`my finally`)
-    })
-
-    return {
-      title: data.data.data
-    }
-  },
-
   name: 'IndexPage'
 }
 </script>

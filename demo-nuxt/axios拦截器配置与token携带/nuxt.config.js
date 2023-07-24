@@ -18,6 +18,8 @@ export default {
 
   // Global CSS: https://go.nuxtjs.dev/config-css
   css: [
+    // 引入element-ui css
+    'element-ui/lib/theme-chalk/index.css'
   ],
 
   // Plugins to run before rendering page: https://go.nuxtjs.dev/config-plugins
@@ -25,6 +27,11 @@ export default {
     // 加载axios全局配置插件
     {
       src: '~/plugins/axios',
+      ssr: true
+    },
+    // 声明element-ui自定义插件文件
+    {
+      src: '~/plugins/element-ui',
       ssr: true
     }
   ],
@@ -55,5 +62,27 @@ export default {
 
   // Build Configuration: https://go.nuxtjs.dev/config-build
   build: {
+  },
+
+  router: {
+    extendRoutes(routes, resolve) {
+      routes.push({
+        name: "pageLevelCatchErrorHandling",
+        path: "/pageLevelCatchErrorHandling",
+        component: resolve(__dirname, "components/PageLevelCatchErrorHandling.vue")
+      })
+
+      routes.push({
+        name: "pageLevelThrownByAxiosInterceptorErrorHandling",
+        path: "/pageLevelThrownByAxiosInterceptorErrorHandling",
+        component: resolve(__dirname, "components/PageLevelThrownByAxiosInterceptorErrorHandling.vue")
+      })
+
+      routes.push({
+        name: "axiosCsrAndSsrErrorHandling",
+        path: "/axiosCsrAndSsrErrorHandling",
+        component: resolve(__dirname, "components/AxiosCsrAndSsrErrorHandling.vue")
+      })
+    }
   }
 }

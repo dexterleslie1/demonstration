@@ -29,7 +29,7 @@ public class ITByUsingFeignClientTests {
   @Test
   public void test() throws Exception {
     String result = this.testSupportDemoFeignClient.test1().getData();
-    Assert.assertEquals("Nuxt api返回数据", result);
+    Assert.assertEquals("Nuxt api返回数据, token=", result);
   }
 
 }
