@@ -4,6 +4,7 @@ import com.yyd.common.jdk8.feature.StreamUtil;
 import lombok.Data;
 import org.junit.Assert;
 import org.junit.Test;
+import org.springframework.util.StreamUtils;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -15,12 +16,13 @@ public class StreamTests {
     public void test() {
         // distinct根据hashCode和equals方法去重
         List<UserEntityDistinct> userEntityDistinctList = new ArrayList<>();
-        userEntityDistinctList.add(new UserEntityDistinct("zhangsan", 20));
-        userEntityDistinctList.add(new UserEntityDistinct("lisi", 13));
-        userEntityDistinctList.add(new UserEntityDistinct("wangwu", 45));
-        userEntityDistinctList.add(new UserEntityDistinct("guyt", 34));
-        userEntityDistinctList.add(new UserEntityDistinct("guyt", 34));
-        Assert.assertEquals(userEntityDistinctList.size() - 1, userEntityDistinctList.stream().distinct().collect(Collectors.toList()).size());
+        userEntityDistinctList.add(new UserEntityDistinct("zhangsan", 20, null));
+        userEntityDistinctList.add(new UserEntityDistinct("lisi", 13, null));
+        userEntityDistinctList.add(new UserEntityDistinct("wangwu", 45, null));
+        userEntityDistinctList.add(new UserEntityDistinct("guyt", 34, Arrays.asList(new UserEntityDistinct.NestedClass(1L), new UserEntityDistinct.NestedClass(2L))));
+        userEntityDistinctList.add(new UserEntityDistinct("guyt", 34, Arrays.asList(new UserEntityDistinct.NestedClass(1L))));
+//        Assert.assertEquals(userEntityDistinctList.size() - 1, userEntityDistinctList.stream().distinct().collect(Collectors.toList()).size());
+        Assert.assertEquals(userEntityDistinctList.size() - 1, userEntityDistinctList.stream().filter(StreamUtil.distinctByKey(UserEntityDistinct::getName)).collect(Collectors.toList()).size());
 
         // List<Map<String, Object>>去重
         // distinctByKey方法使用
@@ -84,9 +86,9 @@ public class StreamTests {
         }
         // 针对以上问题使用 list to set + lombok @Data声明entity 或者 Collectors.toMap重载方法 解决
         userEntityDistinctList = new ArrayList<>();
-        userEntityDistinctList.add(new UserEntityDistinct("zhangsan", 20));
-        userEntityDistinctList.add(new UserEntityDistinct("zhangsan", 20));
-        userEntityDistinctList.add(new UserEntityDistinct("lisi", 13));
+        userEntityDistinctList.add(new UserEntityDistinct("zhangsan", 20, null));
+        userEntityDistinctList.add(new UserEntityDistinct("zhangsan", 20, null));
+        userEntityDistinctList.add(new UserEntityDistinct("lisi", 13, null));
         Map<String, UserEntityDistinct> userEntityDistinctMap = userEntityDistinctList.stream().collect(Collectors.toSet()).stream().collect(Collectors.toMap(userEntity -> userEntity.getName(), userEntity -> userEntity));
         Assert.assertEquals(2, userEntityDistinctMap.size());
         Assert.assertTrue(userEntityDistinctMap.containsKey("zhangsan"));
@@ -116,10 +118,10 @@ public class StreamTests {
 
         // 最大最小值
         userEntityDistinctList = new ArrayList<>();
-        userEntityDistinctList.add(new UserEntityDistinct("zhangsan", 20));
-        userEntityDistinctList.add(new UserEntityDistinct("lisi", 13));
-        userEntityDistinctList.add(new UserEntityDistinct("wangwu", 45));
-        userEntityDistinctList.add(new UserEntityDistinct("guyt", 34));
+        userEntityDistinctList.add(new UserEntityDistinct("zhangsan", 20, null));
+        userEntityDistinctList.add(new UserEntityDistinct("lisi", 13, null));
+        userEntityDistinctList.add(new UserEntityDistinct("wangwu", 45, null));
+        userEntityDistinctList.add(new UserEntityDistinct("guyt", 34, null));
         UserEntityDistinct userEntityDistinctMax = userEntityDistinctList.stream()
                 .max((o1, o2) -> o1.getAge() - o2.getAge())
                 .orElse(null);
