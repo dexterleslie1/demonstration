@@ -58,3 +58,4 @@ http://localhost:8081/api/v1/test1?param1=p1
 ## todo
 
 > - springcloud-gateway 上报到 skywalking 的 logback日志traceId=N/A
+> - elk日志能够支持代码行定位
