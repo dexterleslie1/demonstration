@@ -16,7 +16,7 @@ import java.util.List;
 public class Ip2regionTests {
     @Test
     public void test() throws Exception {
-        UrlResource urlResource = new UrlResource("https://bucketxy.oss-cn-hangzhou.aliyuncs.com/ip/ip2region.db");
+        UrlResource urlResource = new UrlResource("https://bucketxyh.oss-cn-hongkong.aliyuncs.com/ip/ip2region.db");
         File temporaryFile = File.createTempFile("ip2region", ".tmp");
         FileOutputStream outputStream = null;
         try {
