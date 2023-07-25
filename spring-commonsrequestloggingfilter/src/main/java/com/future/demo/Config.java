@@ -1,4 +1,4 @@
-package com.future.study.spring.logging.filter;
+package com.future.demo;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -8,12 +8,14 @@ import org.springframework.web.filter.CommonsRequestLoggingFilter;
 public class Config {
     @Bean
     public CommonsRequestLoggingFilter requestLoggingFilter() {
-        CommonsRequestLoggingFilter loggingFilter = new CustomCommonsRequestLoggingFilter();
-        loggingFilter.setIncludeClientInfo(true);
+        CommonsRequestLoggingFilter loggingFilter = new CustomizeCommonsRequestLoggingFilter();
+        loggingFilter.setIncludeClientInfo(false);
         loggingFilter.setIncludeQueryString(true);
+        loggingFilter.setIncludeHeaders(true);
         loggingFilter.setIncludePayload(true);
-        loggingFilter.setAfterMessagePrefix("");
-        loggingFilter.setAfterMessageSuffix("");
+        loggingFilter.setMaxPayloadLength(1024*1024*50);
+        loggingFilter.setBeforeMessagePrefix("接口调用前: ");
+        loggingFilter.setAfterMessagePrefix("接口调用后: ");
         return loggingFilter;
     }
 }
