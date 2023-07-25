@@ -3,8 +3,12 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.future.demo</groupId>
-	<artifactId>thumbnailator-demo</artifactId>
+	<artifactId>authing.cn</artifactId>
 	<version>1.0.0</version>
+
+<!--	<properties>-->
+<!--		<okhttp3.version>4.8.0</okhttp3.version>-->
+<!--	</properties>-->
 	
 	<dependencies>
 		<dependency>
@@ -23,10 +27,12 @@
 		    <artifactId>logback-classic</artifactId>
 		    <version>1.0.13</version>
 		</dependency>
+
+		<!-- authing.cn -->
 		<dependency>
-			<groupId>net.coobird</groupId>
-			<artifactId>thumbnailator</artifactId>
-			<version>0.4.8</version>
+			<groupId>cn.authing</groupId>
+			<artifactId>java-core</artifactId>
+			<version>4.3.33</version>
 		</dependency>
 	</dependencies>
 
