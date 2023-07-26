@@ -94,6 +94,49 @@ ls -li
 
 https://www.php.cn/linux-491726.html
 
+
+
+### tr命令
+
+> 删除字符命令，可以用于输出openssl rsa key以便不需要手动删除rsa key中的换行符号。
+> https://stackoverflow.com/questions/800030/remove-carriage-return-in-unix
+
+
+
+#### 删除换行符
+
+> 删除文件1.txt中的换行符并把结果输出到当前窗口中
+
+```
+# 1.txt内容如下
+---
+line 1
+line 2
+---
+
+# 删除换行符号
+tr -d '\n' < 1.txt
+```
+
+
+
+### htop命令
+
+> 使用top -c命令无法查看程序完整的启动命令，使用htop命令能够解决此问题
+> https://apple.stackexchange.com/questions/343000/top-how-to-view-the-full-command-path
+
+```
+# 安装htop命令
+yum install htop -y
+
+# 运行htop命令
+htop
+
+# 通过键盘左右方向键滚动屏幕以查看完整的启动命令
+```
+
+
+
 ## 文件和目录
 
 ### 文件和目录权限rwx代表的意思
