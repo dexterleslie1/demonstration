@@ -15,7 +15,10 @@ export default {
         }
     },
 
-    async asyncData({ $axios, error }) {
+    async asyncData({ app, $axios, error }) {
+        // NOTE: 这是服务器端调用axios，element-ui不会弹出窗口
+        // app.router.app.$message.error('88888')
+
         let data = await $axios.get('/api/v1/test1')
         return data.data
     }
