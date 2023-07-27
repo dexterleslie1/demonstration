@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>数组操作</title>
+</head>
+
+<body>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      //#region 数组遍历
+      // https://m.php.cn/faq/489620.html
+
+      // 使用forEach遍历
+      varArray = [1, 2, 3, 4, 5]
+      console.log(`--------------- 使用forEach遍历 ---------------`)
+      varArray.forEach((item, index) => {
+        console.log(item, index)
+      });
+
+      // 使用map遍历
+      console.log(`--------------- 使用map遍历 ---------------`)
+      varArray.map((item, index) => {
+        console.log(item, index)
+      })
+
+      // 使用map遍历并返回新的数组
+      console.log(`--------------- 使用map遍历并返回新的数组 ---------------`)
+      varArray = varArray.map((item, index) => {
+        return item * item
+      })
+      console.log(`使用map遍历并返回新的数组=${varArray}`)
+
+      //#endregion
+    })
+  </script>
+</body>
+
+</html>
