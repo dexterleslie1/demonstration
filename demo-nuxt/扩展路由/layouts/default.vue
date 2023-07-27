@@ -1,8 +1,10 @@
 <template>
     <div>
-        <nuxt-link to="/">首页</nuxt-link>
-        <nuxt-link to="/myPage">我的页面</nuxt-link>
+        <NuxtLink to="/">首页</NuxtLink>
+        <NuxtLink to="/component1">组件1</NuxtLink>
+        <NuxtLink to="/component2">组件2</NuxtLink>
+        <NuxtLink to="/component3">组件3</NuxtLink>
 
-        <nuxt/>
+        <nuxt />
     </div>
 </template>

@@ -25,7 +25,10 @@ export default {
   ],
 
   // Auto import components: https://go.nuxtjs.dev/config-components
-  components: true,
+  components: [
+    '~/components',
+    { path: '~/components/sub', extensions: ['vue'] }
+  ],
 
   // Modules for dev and build (recommended): https://go.nuxtjs.dev/config-modules
   buildModules: [
@@ -42,9 +45,21 @@ export default {
   router: {
     extendRoutes(routes, resolve) {
       routes.push({
-        name: "myPage",
-        path: "/myPage",
-        component: resolve(__dirname, "pages/my-page.vue")
+        name: "component1",
+        path: "/component1",
+        component: resolve(__dirname, "components/sub/Component1.vue")
+      })
+
+      routes.push({
+        name: "component2",
+        path: "/component2",
+        component: resolve(__dirname, "components/sub/Component2.vue")
+      })
+
+      routes.push({
+        name: "component3",
+        path: "/component3",
+        component: resolve(__dirname, "components/Component3.vue")
       })
     }
   }
