@@ -10,7 +10,9 @@
       演示input聚焦后按下enter键触发事件
     </div>
     <div>
-      <input type="text" @keydown.enter="handleOnKeydownEnter"/>
+      <textarea @keydown.ctrl.enter="handleOnKeydownEnter">
+        我是一个文本框。
+      </textarea>
     </div>
     <hr>
   </div>
