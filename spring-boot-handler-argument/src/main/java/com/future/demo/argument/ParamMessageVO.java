@@ -1,33 +1,14 @@
 package com.future.demo.argument;
 
+import lombok.Data;
+
+import java.util.List;
+
+@Data
 public class ParamMessageVO {
     private long userIdTo;
     private String receiptId;
-    private String content;
-
-    public long getUserIdTo() {
-        return userIdTo;
-    }
-
-    public void setUserIdTo(long userIdTo) {
-        this.userIdTo = userIdTo;
-    }
-
-    public String getReceiptId() {
-        return receiptId;
-    }
-
-    public void setReceiptId(String receiptId) {
-        this.receiptId = receiptId;
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public void setContent(String content) {
-        this.content = content;
-    }
+    private List<String> contentList;
 
     @Override
     public String toString() {
@@ -35,7 +16,7 @@ public class ParamMessageVO {
         builder.append(ParamMessageVO.class.getSimpleName()+ "{");
         builder.append("userIdTo:" + userIdTo);
         builder.append(",receiptId:" + receiptId);
-        builder.append(",content:" + content);
+        builder.append(",contentList:" + contentList);
         builder.append("}");
         return builder.toString();
     }
