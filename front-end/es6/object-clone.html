@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>对象克隆</title>
+</head>
+
+<body>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      //#region 对象克隆
+
+      // https://stackoverflow.com/questions/39736397/is-this-a-good-way-to-clone-an-object-in-es6
+      var obj = { a: 1, b: 2 }
+      var objNew = {...obj}
+      console.log(`objOld=${JSON.stringify(obj)},objNew=${JSON.stringify(objNew)}`)
+
+      //#endregion
+    })
+  </script>
+</body>
+
+</html>
