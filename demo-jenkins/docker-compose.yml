@@ -1,0 +1,19 @@
+version: "3.0"
+
+networks:
+  net:
+    name: demo-jenkins-net
+
+services:
+  demo-jenkins-server:
+    container_name: demo-jenkins-server
+    #image: jenkins/jenkins:2.221-centos
+    image: jenkins/jenkins
+    ports:
+      - 8080:8080
+      - 50000:50000
+    environment:
+      - TZ=Asia/Shanghai
+    networks:
+      - net
+
