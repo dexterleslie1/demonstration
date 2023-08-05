@@ -75,7 +75,103 @@ terraform destroy
 
 
 
-## terraform插件本地缓存配置
+### terraform cli用法
+
+
+
+#### terraform plan
+
+> 查看terraform将要创建资源的参数但不实际执行资源创建
+
+```
+# 执行命令
+terraform plan
+```
+
+
+
+#### terraform show
+
+> 把tf文件中所有变量解析并显示实际值
+
+```
+# 执行命令
+terraform show
+```
+
+
+
+#### terraform console
+
+> https://developer.hashicorp.com/terraform/cli/commands/console
+> https://stackoverflow.com/questions/65818997/how-can-i-print-debug-all-available-fields-of-a-data-source-resource
+>
+> 使用terraform console调试 
+
+```
+# main.tf内容如下:
+variable "vsphere_user" {
+  type    = string
+  default = "xxx@vsphere.local"
+}
+variable "vsphere_password" {
+  type = string
+  default = "xxx"
+}
+variable "vsphere_server" {
+  type = string
+  default = "192.168.1.xxx"
+}
+
+provider "vsphere" {
+  user                 = var.vsphere_user
+  password             = var.vsphere_password
+  vsphere_server       = var.vsphere_server
+  allow_unverified_ssl = true
+}
+
+data "vsphere_datacenter" "datacenter" {
+  name = "Datacenter"
+}
+
+data "vsphere_datastore" "datastore" {
+  name          = "datastoreraid0"
+  datacenter_id = data.vsphere_datacenter.datacenter.id
+}
+
+data "vsphere_host" "host" {
+  name          = "192.168.1.49"
+  datacenter_id = data.vsphere_datacenter.datacenter.id
+}
+
+data "vsphere_network" "network" {
+  name          = "VM Network"
+  datacenter_id = data.vsphere_datacenter.datacenter.id
+}
+
+data "vsphere_virtual_machine" "template" {
+  name          = "my-template-centOS8"
+  datacenter_id = data.vsphere_datacenter.datacenter.id
+}
+
+# 初始化项目
+terraform init
+
+# 通过apply同步远程状态到本地
+terraform apply
+
+# 进入terraform console
+terraform console
+# 在console中显示变量值
+> var.vsphere_user
+# 在console中打印datasource template的值
+> data.vsphere_virtual_machine.template
+
+```
+
+
+
+### terraform插件本地缓存配置
 
 > 避免每次terraform init时都到官方下载插件
 > https://bbs.huaweicloud.com/blogs/352925
@@ -111,7 +207,7 @@ terraform init
 
 
 
-## terraform vsphere provider用法
+### terraform vsphere provider用法
 
 > https://registry.terraform.io/providers/hashicorp/vsphere/latest/docs
 
@@ -198,6 +294,28 @@ resource "vsphere_virtual_machine" "vm" {
     }
   }
 }
+// 在虚拟机创建成功后执行脚本
+resource "null_resource" "init_centOS8" {
+        triggers = {
+                // 因为这个属性每次运行都变化，所以每次执行apply都会运行这个null_resource
+                always_run = "${timestamp()}"
+        }
+        connection {
+                type     = "ssh"
+                user     = "root"
+                password = "xxx"
+                host     = "192.168.1.186"
+        }
+
+        provisioner "remote-exec" {
+                inline = [
+                        "date >> /tmp/1.log",
+                ]
+        }
+
+        // 等待资源 vsphere_virtual_machine.vm 准备好才执行此资源
+        depends_on = ["vsphere_virtual_machine.vm"]
+}
 
 # 下载provider
 terraform init
@@ -208,4 +326,122 @@ terraform apply
 # 删除虚拟机
 terraform destroy
 ```
+
+
+
+### Provisioner Connection用法
+
+> https://developer.hashicorp.com/terraform/language/resources/provisioners/connection
+> 用于配置SSH或者WinRM连接信息
+
+```
+# 在resource中配置connection，命令在虚拟机创建后执行一次
+resource "vsphere_virtual_machine" "vm" {
+
+  connection {
+    type     = "ssh"
+    user     = "root"
+    password = "xxx"
+    # 通过vsphere_virtual_machine.vm.default_ip_address获取当前虚拟机ip地址
+    # https://stackoverflow.com/questions/62498591/how-do-i-get-the-ip-of-a-vsphere-virtual-machine-to-run-ansible-playbook
+    host     = self.default_ip_address
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      # 命令只会在虚拟机被创建后执行一次
+      "date >> /tmp/1.log",
+    ]
+  }
+...
+}
+```
+
+
+
+### Provisioner local-exec用法
+
+> https://developer.hashicorp.com/terraform/language/resources/provisioners/local-exec
+> 在本地执行命令
+
+```
+# main.tf内容如下:
+resource "null_resource" "test" {
+        triggers = {
+                // 因为这个属性每次运行都变化，所以每次执行apply都会运行这个null_resource
+                always_run = "${timestamp()}"
+        }
+        provisioner "local-exec" {
+                command = "date"
+        }
+}
+
+# 初始化
+terraform init
+
+# 执行
+terraform apply
+
+# 会看到在本地执行命令date的输出
+```
+
+
+
+### Provisioner remote-exec用法
+
+> https://developer.hashicorp.com/terraform/language/resources/provisioners/remote-exec#scripts
+> 用于连接到远程主机执行命令
+
+```
+# 在resource中配置remote-exec，命令在虚拟机创建后执行一次
+resource "vsphere_virtual_machine" "vm" {
+
+  connection {
+    type     = "ssh"
+    user     = "root"
+    password = "xxx"
+    # 通过vsphere_virtual_machine.vm.default_ip_address获取当前虚拟机ip地址
+    host     = self.default_ip_address
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      # 命令只会在虚拟机被创建后执行一次
+      "date >> /tmp/1.log",
+    ]
+  }
+...
+}
+```
+
+
+
+### null_resource用法
+
+> https://registry.terraform.io/providers/hashicorp/null/latest/docs
+
+```
+# main.tf内容如下:
+resource "null_resource" "test" {
+        triggers = {
+                // 因为这个属性每次运行都变化，所以每次执行apply都会运行这个null_resource
+                always_run = "${timestamp()}"
+        }
+        provisioner "local-exec" {
+                command = "date"
+        }
+}
+
+# 初始化
+terraform init
+
+# 执行
+terraform apply
+
+# 会看到在本地执行命令date的输出
+```
+
+
+
+
 
