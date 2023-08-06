@@ -25,6 +25,8 @@ services:
         puma['worker_processes'] = 0
         prometheus_monitoring['enable'] = false
         sidekiq['max_concurrency'] = 3
-        
+        # 设置root密码，NOTE: 不能是12345678、Root@123这些简单的密码，否则容器初始化失败
+        # https://stackoverflow.com/questions/56631893/how-do-i-start-a-gitlab-ce-container-via-docker-compose-with-admin-credentials-a
+        gitlab_rails['initial_root_password'] = 'Aa321321!@#'
     networks:
       - net
