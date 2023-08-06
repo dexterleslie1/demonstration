@@ -16,7 +16,15 @@ services:
     #   - ./data-gitlab/logs:/var/log/gitlab
     #   - ./data-gitlab/data:/var/opt/gitlab
     environment:
-      - TZ=Asia/Shanghai
-      # - GITLAB_OMNIBUS_CONFIG="external_url 'http://0.0.0.0'"
+      TZ: Asia/Shanghai
+      GITLAB_OMNIBUS_CONFIG: |
+        # # external_url 'http://0.0.0.0'
+        # 减少内存使用配置
+        # https://docs.gitlab.com/omnibus/settings/memory_constrained_envs.html
+        postgresql['shared_buffers'] = "512MB"
+        puma['worker_processes'] = 0
+        prometheus_monitoring['enable'] = false
+        sidekiq['max_concurrency'] = 3
+        
     networks:
       - net
