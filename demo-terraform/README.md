@@ -180,6 +180,20 @@ terraform console
 
 
 
+#### terraform destroy删除指定的资源
+
+> https://www.devopsschool.com/blog/how-to-destroy-one-specific-resource-from-tf-file-in-terraform/
+
+```
+# 显示所有资源
+terraform state list
+
+# 删除指定的资源
+terraform destroy --target=vsphere_virtual_machine.vm_devops_master
+```
+
+
+
 ### terraform插件本地缓存配置
 
 > 避免每次terraform init时都到官方下载插件
