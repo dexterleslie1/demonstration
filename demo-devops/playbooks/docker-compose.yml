@@ -1,0 +1,53 @@
+version: '3.0'
+
+networks:
+  net:
+    name: demo-devops-net
+
+# todo 持久化容器数据
+
+services:
+  # demo-devops-jenkins:
+  #   container_name: demo-devops-jenkins
+  #   image: jenkins/jenkins:2.346.3
+  #   ports:
+  #     - 8080:8080
+  #     - 50000:50000
+  #   environment:
+  #     - TZ=Asia/Shanghai
+  #   networks:
+  #     - net
+
+  demo-devops-gitlab:
+    container_name: demo-devops-gitlab
+    image: gitlab/gitlab-ce:16.2.2-ce.0
+    ports:
+      - 80:80
+    environment:
+      TZ: Asia/Shanghai
+      GITLAB_OMNIBUS_CONFIG: |
+        # # external_url 'http://0.0.0.0'
+        # 减少内存使用配置
+        # https://docs.gitlab.com/omnibus/settings/memory_constrained_envs.html
+        postgresql['shared_buffers'] = "512MB"
+        puma['worker_processes'] = 0
+        prometheus_monitoring['enable'] = false
+        sidekiq['max_concurrency'] = 3
+        gitlab_rails['initial_root_password'] = 'Aa321321!@#'
+      GITLAB_POST_RECONFIGURE_SCRIPT: |
+        # 禁止signup
+        gitlab-rails runner "ApplicationSetting.last.update_attribute(:signup_enabled, false)"
+        echo "成功禁用signup_enabled"
+        # 禁止admin approval signup
+        gitlab-rails runner "ApplicationSetting.last.update_attribute(:require_admin_approval_after_user_signup, false)"
+        echo "成功禁用require_admin_approval_after_user_signup"
+        # 创建access token
+        gitlab-rails runner "token = User.find_by_username('root').personal_access_tokens.create(scopes: ['admin_mode','api'], name: 'Automation token', expires_at: 365.days.from_now); token.set_token('token-string-here123456'); token.save!"
+        echo "成功创建access token"
+        # 创建demo-devops项目
+        curl --fail --header "Authorization: Bearer token-string-here123456" --header "Content-Type: application/json" --data '{"name": "demo-devops", "description": "用于协助演示devops流程项目","namespace": "root", "initialize_with_readme": "true", "visibility": "public"}' -X POST http://localhost/api/v4/projects
+        echo "成功创建demo-devops项目"
+
+    networks:
+      - net
+  
