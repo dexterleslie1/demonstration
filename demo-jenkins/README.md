@@ -4,6 +4,9 @@
 > https://github.com/jenkinsci/docker/blob/master/README.md
 
 ```
+# 编译容器
+docker-compose build
+
 # 启动容器
 docker-compose up -d
 

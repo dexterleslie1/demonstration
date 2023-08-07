@@ -6,11 +6,10 @@ networks:
 
 services:
   demo-jenkins-server:
+    build:
+      context: ./
     container_name: demo-jenkins-server
-    # NOTE: 很多插件已经不支持此版本
-    # image: jenkins/jenkins:2.221-centos
-    # NOTE: 这是新版本UI并且agent兼容jdk8
-    image: jenkins/jenkins:2.346.3
+    image: demo-jenkins-server-image
     ports:
       - 8080:8080
       - 50000:50000
