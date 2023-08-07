@@ -29,6 +29,7 @@ services:
         # https://stackoverflow.com/questions/56631893/how-do-i-start-a-gitlab-ce-container-via-docker-compose-with-admin-credentials-a
         gitlab_rails['initial_root_password'] = 'Aa321321!@#'
 
+      # https://gitlab.com/gitlab-org/omnibus-gitlab/-/issues/2837
       GITLAB_POST_RECONFIGURE_SCRIPT: |
         # 禁止signup
         gitlab-rails runner "ApplicationSetting.last.update_attribute(:signup_enabled, false)"
