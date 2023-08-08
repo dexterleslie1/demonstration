@@ -1,3 +1,9 @@
+## 说明
+
+> gitlab可以通过gitlab-ctl、gitlab-rails console、gitlab-rails runner、gitlab REST api、gitlab-rake控制gitlab
+
+
+
 ## 使用docker-compose运行gitlab
 
 > https://docs.gitlab.com/omnibus/docker/
