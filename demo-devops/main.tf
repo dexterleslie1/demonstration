@@ -153,8 +153,7 @@ resource "vsphere_virtual_machine" "vm_devops_master" {
     ]
   }
 
-  // 等待资源 vsphere_virtual_machine.vm_ansible 准备好才执行此资源
-  depends_on = ["vsphere_virtual_machine.vm_ansible"]
+  depends_on = [vsphere_virtual_machine.vm_centos8_slave, vsphere_virtual_machine.vm_centos8_uat]
 
 }
 
@@ -210,8 +209,7 @@ resource "vsphere_virtual_machine" "vm_centos8_slave" {
     ]
   }
 
-  // 等待资源 vsphere_virtual_machine.vm_devops_master 准备好才执行此资源
-  depends_on = ["vsphere_virtual_machine.vm_devops_master"]
+  depends_on = [vsphere_virtual_machine.vm_ansible]
 }
 
 // SIT、UAT主机
@@ -266,6 +264,5 @@ resource "vsphere_virtual_machine" "vm_centos8_uat" {
     ]
   }
 
-  // 等待资源 vsphere_virtual_machine.vm_devops_master 准备好才执行此资源
-  depends_on = ["vsphere_virtual_machine.vm_devops_master"]
+  depends_on = [vsphere_virtual_machine.vm_ansible]
 }

@@ -114,7 +114,7 @@
         dest: /usr/local/my-workspace/demo-devops-temp
       register: var_result
       until: "var_result is not failed"
-      retries: 100
+      retries: 200
       delay: 6
 
     - name: "复制demo-devops目录到/usr/local/my-workspace/"
@@ -132,7 +132,7 @@
         git push
       register: var_result
       until: "var_result is not failed"
-      retries: 100
+      retries: 200
       delay: 6
 
     - name: "删除 /usr/local/my-workspace/demo-devops 目录"

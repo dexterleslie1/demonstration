@@ -337,7 +337,7 @@ resource "null_resource" "init_centOS8" {
         }
 
         // 等待资源 vsphere_virtual_machine.vm 准备好才执行此资源
-        depends_on = ["vsphere_virtual_machine.vm"]
+        depends_on = [vsphere_virtual_machine.vm]
 }
 
 # 下载provider
