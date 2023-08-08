@@ -7,16 +7,18 @@ networks:
 # todo 持久化容器数据
 
 services:
-  # demo-devops-jenkins:
-  #   container_name: demo-devops-jenkins
-  #   image: jenkins/jenkins:2.346.3
-  #   ports:
-  #     - 8080:8080
-  #     - 50000:50000
-  #   environment:
-  #     - TZ=Asia/Shanghai
-  #   networks:
-  #     - net
+  demo-devops-jenkins:
+    build:
+      context: ./
+    container_name: demo-devops-jenkins
+    image: demo-devops-jenkins
+    ports:
+      - 8080:8080
+      - 50000:50000
+    environment:
+      - TZ=Asia/Shanghai
+    networks:
+      - net
 
   demo-devops-gitlab:
     container_name: demo-devops-gitlab
@@ -45,9 +47,8 @@ services:
         gitlab-rails runner "token = User.find_by_username('root').personal_access_tokens.create(scopes: ['admin_mode','api'], name: 'Automation token', expires_at: 365.days.from_now); token.set_token('token-string-here123456'); token.save!"
         echo "成功创建access token"
         # 创建demo-devops项目
-        curl --fail --header "Authorization: Bearer token-string-here123456" --header "Content-Type: application/json" --data '{"name": "demo-devops", "description": "用于协助演示devops流程项目","namespace": "root", "initialize_with_readme": "true", "visibility": "public"}' -X POST http://localhost/api/v4/projects
+        curl --fail --header "Authorization: Bearer token-string-here123456" --header "Content-Type: application/json" --data '{"name": "demo-devops", "description": "用于协助演示devops流程项目","namespace": "root", "initialize_with_readme": "true", "visibility": "private"}' -X POST http://localhost/api/v4/projects
         echo "成功创建demo-devops项目"
-
     networks:
       - net
   

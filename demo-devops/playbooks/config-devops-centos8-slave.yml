@@ -1,5 +1,8 @@
 - hosts: all
   tasks:
+    - package_facts:
+        manager: auto
+
     - name: "保证unzip命令已经安装"
       yum:
         name: unzip
@@ -62,23 +65,39 @@
     - name: "chmod +x /usr/local/bin/docker-compose"
       shell: chmod +x /usr/local/bin/docker-compose
 
-    - name: "重启系统"
-      reboot:
+    - name: "安装git命令"
+      yum:
+        name: git
+        state: installed
 
-    #region 运行和设置jenkins、gitlab
+    #region 安装jdk用于运行jenkins agent程序
 
-    - name: "复制docker-compose.yml到/usr/local/my-workspace/"
-      copy:
-        src: docker-compose.yml
-        dest: /usr/local/my-workspace/
+    # 判断是否已安装java
+    # 参考 https://stackoverflow.com/questions/30388361/ansible-command-to-check-the-java-version-in-different-servers
+    - name: "判断是否已安装java"
+      command: java -version
+      register: var_java_version
+      ignore_errors: true
 
-    - name: "使用docker-compose运行jenkins和gitlab，在此需要到远程拉取jenkins和gitlab镜像需要耐心等待一段比较长时间"
-      shell: cd /usr/local/my-workspace && docker-compose up -d
+    # centOS安装jdk
+    - name: 下载jdk rpm
+      get_url:
+        url: https://bucketxyh.oss-cn-hongkong.aliyuncs.com/jdk/jdk-8u144-linux-x64.rpm
+        dest: /tmp/jdk-8u144-linux-x64.rpm
+      when: var_java_version is failed and "jdk1.8.0_144" not in ansible_facts.packages
 
-    # todo 自动上传代码到gitlab
+    - name: 安装jdk
+      yum:
+        name: /tmp/jdk-8u144-linux-x64.rpm
+        state: installed
+        disable_gpg_check: yes
+      when: var_java_version is failed and "jdk1.8.0_144" not in ansible_facts.packages
 
-    # todo 自动配置jenkins
-    # todo 自动配置jenkins centOS8 slave
-    # todo 自动配置jenkins windows slave
+    - file:
+        path: /tmp/jdk-8u144-linux-x64.rpm
+        state: absent
 
     #endregion
+
+    - name: "重启系统"
+      reboot:

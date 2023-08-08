@@ -1,0 +1,147 @@
+# todo 运行harbor服务
+- hosts: all
+  tasks:
+    - name: "保证unzip命令已经安装"
+      yum:
+        name: unzip
+        state: installed
+
+    - name: "yum install yum-utils -y"
+      yum:
+        name: yum-utils
+        state: installed
+
+    - name: "yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo"
+      shell: yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+
+    - name: "yum remove podman-manpages"
+      yum:
+        name: podman-manpages
+        state: removed
+
+    - name: "yum remove podman"
+      yum:
+        name: podman
+        state: removed
+
+    - name: "下载docker-23.0.5-1-rpms.zip到目录/tmp"
+      get_url:
+        url: https://bucketxyh.oss-cn-hongkong.aliyuncs.com/docker/docker-23.0.5-1-rpms.zip
+        dest: /tmp/docker-23.0.5-1-rpms.zip
+        checksum: md5:4e08a727cd89b9f7ea33a4de5464723b
+    - name: "解压/tmp/docker-23.0.5-1-rpms.zip到/tmp/docker-23.0.5-1-rpms"
+      shell: rm -rf /tmp/docker-23.0.5-1-rpms && unzip /tmp/docker-23.0.5-1-rpms.zip -d /tmp/docker-23.0.5-1-rpms
+
+    - name: "使用yum命令安装docker"
+      shell: cd /tmp/docker-23.0.5-1-rpms && yum install -y *.rpm --allowerasing
+
+    - name: "mkdir -p /etc/docker"
+      shell: mkdir -p /etc/docker
+      ignore_errors: yes
+
+    - name: "copy daemon.json to /etc/docker/daemon.json"
+      copy:
+        src: daemon.json
+        dest: /etc/docker/daemon.json
+
+    - name: "systemctl enable docker and systemctl start docker"
+      systemd:
+        name: docker
+        state: restarted
+        enabled: yes
+
+    - name: "Download docker-compose-Linux-x86_64"
+      get_url:
+       url: https://bucketxyh.oss-cn-hongkong.aliyuncs.com/docker/docker-compose-Linux-x86_64
+       dest: /tmp/docker-compose-Linux-x86_64
+       checksum: md5:8f68ae5d2334eecb0ee50b809b5cec58
+    - name: "cp /tmp/docker-compose-Linux-x86_64 /usr/local/bin/docker-compose"
+      shell: cp /tmp/docker-compose-Linux-x86_64 /usr/local/bin/docker-compose
+    - name: "ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose"
+      shell: ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+      ignore_errors: yes
+    - name: "chmod +x /usr/local/bin/docker-compose"
+      shell: chmod +x /usr/local/bin/docker-compose
+
+    - name: "重启系统"
+      reboot:
+
+    #region 运行和设置jenkins、gitlab
+
+    - name: "安装git命令"
+      yum:
+        name: git
+        state: installed
+
+    - name: "复制docker-compose.yml到/usr/local/my-workspace/"
+      copy:
+        src: docker-compose.yml
+        dest: /usr/local/my-workspace/
+    - name: "复制Dockerfile到/usr/local/my-workspace/"
+      copy:
+        src: Dockerfile
+        dest: /usr/local/my-workspace/
+    - name: "复制plugins.txt到/usr/local/my-workspace/"
+      copy:
+        src: plugins.txt
+        dest: /usr/local/my-workspace/
+    - name: "复制casc.yaml到/usr/local/my-workspace/"
+      copy:
+        src: casc.yaml
+        dest: /usr/local/my-workspace/
+
+    - name: "使用docker-compose运行jenkins和gitlab，在此需要到远程拉取jenkins和gitlab镜像需要耐心等待一段比较长时间"
+      shell: cd /usr/local/my-workspace && docker-compose up -d
+
+    # todo 自动配置jenkins windows slave
+
+    #endregion
+
+    #region 自动推送代码到远程
+
+    - name: "删除 /usr/local/my-workspace/demo-devops-temp 目录"
+      file:
+        path: /usr/local/my-workspace/demo-devops-temp
+        state: absent
+    - name: "删除 /usr/local/my-workspace/demo-devops 目录"
+      file:
+        path: /usr/local/my-workspace/demo-devops
+        state: absent
+
+    - name: "克隆demo-devops仓库"
+      git:
+        repo: http://root:token-string-here123456@localhost/root/demo-devops.git
+        dest: /usr/local/my-workspace/demo-devops-temp
+      register: var_result
+      until: "var_result is not failed"
+      retries: 100
+      delay: 6
+
+    - name: "复制demo-devops目录到/usr/local/my-workspace/"
+      copy:
+        src: demo-devops
+        dest: /usr/local/my-workspace/
+
+    - name: "推送代码到远程"
+      shell: |
+        cd /usr/local/my-workspace/demo-devops-temp/
+        rm -rf *
+        cp -r ../demo-devops/* .
+        git add .
+        git commit -m '初始化提交'
+        git push
+      register: var_result
+      until: "var_result is not failed"
+      retries: 100
+      delay: 6
+
+    - name: "删除 /usr/local/my-workspace/demo-devops 目录"
+      file:
+        path: /usr/local/my-workspace/demo-devops
+        state: absent
+    - name: "删除 /usr/local/my-workspace/demo-devops-temp 目录"
+      file:
+        path: /usr/local/my-workspace/demo-devops-temp
+        state: absent
+
+    #endregion

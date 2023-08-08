@@ -101,6 +101,7 @@ resource "vsphere_virtual_machine" "vm_ansible" {
   }
 }
 
+// devops主机，里面运行jenkins、ansible等服务
 resource "vsphere_virtual_machine" "vm_devops_master" {
   name             = "demo-terraform-devops-master"
   resource_pool_id = data.vsphere_host.host.resource_pool_id
@@ -148,8 +149,123 @@ resource "vsphere_virtual_machine" "vm_devops_master" {
     }
 
     inline = [
-      "ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook /usr/local/my-workspace/install_docker.yml --inventory 192.168.1.151, --user root -e ansible_ssh_pass='Root@123'"
+      "ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook /usr/local/my-workspace/config-devops-master.yml --inventory 192.168.1.151, --user root -e ansible_ssh_pass='Root@123'"
     ]
   }
 
+  // 等待资源 vsphere_virtual_machine.vm_ansible 准备好才执行此资源
+  depends_on = ["vsphere_virtual_machine.vm_ansible"]
+
+}
+
+// jenkins centos8-slave主机
+resource "vsphere_virtual_machine" "vm_centos8_slave" {
+  name             = "demo-terraform-devops-centos8-slave"
+  resource_pool_id = data.vsphere_host.host.resource_pool_id
+  datastore_id     = data.vsphere_datastore.datastore.id
+  num_cpus         = 4
+  memory           = 2048
+  guest_id         = data.vsphere_virtual_machine.template.guest_id
+  scsi_type        = data.vsphere_virtual_machine.template.scsi_type
+  folder           = "/${data.vsphere_datacenter.datacenter.name}/vm/private"
+  # 必须设置efi和secure_boot，否则无法引导系统
+  firmware         = "efi"
+  efi_secure_boot_enabled = true
+  network_interface {
+    network_id   = data.vsphere_network.network.id
+    adapter_type = data.vsphere_virtual_machine.template.network_interface_types[0]
+  }
+  disk {
+    label = "disk0"
+    size             = data.vsphere_virtual_machine.template.disks.0.size
+    thin_provisioned = data.vsphere_virtual_machine.template.disks.0.thin_provisioned
+  }
+  clone {
+    template_uuid = data.vsphere_virtual_machine.template.id
+    customize {
+      # linux系统必须提供此配置
+      linux_options {
+        host_name = "demo-terraform-devops-centos8-slave"
+        domain    = "demo.terraform.devops.centos8.slave.com"
+      }
+      network_interface {
+        ipv4_address = "192.168.1.152"
+        ipv4_netmask = 24
+      }
+      ipv4_gateway = "192.168.1.1"
+    }
+  }
+
+  // 连接到ansible主机并执行centos8-slave自动配置playbook
+  provisioner "remote-exec" {
+    connection {
+    	type     = "ssh"
+    	user     = "root"
+    	password = "Root@123"
+    	host     = vsphere_virtual_machine.vm_ansible.default_ip_address
+    }
+
+    inline = [
+      "ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook /usr/local/my-workspace/config-devops-centos8-slave.yml --inventory 192.168.1.152, --user root -e ansible_ssh_pass='Root@123'"
+    ]
+  }
+
+  // 等待资源 vsphere_virtual_machine.vm_devops_master 准备好才执行此资源
+  depends_on = ["vsphere_virtual_machine.vm_devops_master"]
+}
+
+// SIT、UAT主机
+resource "vsphere_virtual_machine" "vm_centos8_uat" {
+  name             = "demo-terraform-devops-centos8-uat"
+  resource_pool_id = data.vsphere_host.host.resource_pool_id
+  datastore_id     = data.vsphere_datastore.datastore.id
+  num_cpus         = 4
+  memory           = 4096
+  guest_id         = data.vsphere_virtual_machine.template.guest_id
+  scsi_type        = data.vsphere_virtual_machine.template.scsi_type
+  folder           = "/${data.vsphere_datacenter.datacenter.name}/vm/private"
+  # 必须设置efi和secure_boot，否则无法引导系统
+  firmware         = "efi"
+  efi_secure_boot_enabled = true
+  network_interface {
+    network_id   = data.vsphere_network.network.id
+    adapter_type = data.vsphere_virtual_machine.template.network_interface_types[0]
+  }
+  disk {
+    label = "disk0"
+    size             = data.vsphere_virtual_machine.template.disks.0.size
+    thin_provisioned = data.vsphere_virtual_machine.template.disks.0.thin_provisioned
+  }
+  clone {
+    template_uuid = data.vsphere_virtual_machine.template.id
+    customize {
+      # linux系统必须提供此配置
+      linux_options {
+        host_name = "demo-terraform-devops-centos8-uat"
+        domain    = "demo.terraform.devops.centos8.uat.com"
+      }
+      network_interface {
+        ipv4_address = "192.168.1.155"
+        ipv4_netmask = 24
+      }
+      ipv4_gateway = "192.168.1.1"
+    }
+  }
+
+  // 连接到ansible主机并执行centos8-uat自动配置playbook
+  provisioner "remote-exec" {
+    connection {
+    	type     = "ssh"
+    	user     = "root"
+    	password = "Root@123"
+    	host     = vsphere_virtual_machine.vm_ansible.default_ip_address
+    }
+
+    inline = [
+      "ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook /usr/local/my-workspace/config-devops-centos8-uat.yml --inventory 192.168.1.155, --user root -e ansible_ssh_pass='Root@123'"
+    ]
+  }
+
+  // 等待资源 vsphere_virtual_machine.vm_devops_master 准备好才执行此资源
+  depends_on = ["vsphere_virtual_machine.vm_devops_master"]
 }
