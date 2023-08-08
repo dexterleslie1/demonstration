@@ -131,3 +131,25 @@ git commit -m 'message'
 git push origin main
 ```
 
+
+
+## git clone、pull、push时指定用户名和密码
+
+> https://stackoverflow.com/questions/11506124/how-to-enter-command-with-password-for-git-pull
+
+```
+# 克隆仓库
+git clone http://root:token-string-here123456@localhost/root/demo-devops.git
+
+# stage所有文件
+git add .
+# 提交
+git commit -m 'init commit'
+
+# 推送提交到远程
+git push http://root:token-string-here123456@localhost/root/demo-devops.git --all
+
+# 拉取代码
+git pull http://root:token-string-here123456@localhost/root/demo-devops.git
+```
+
