@@ -43,8 +43,8 @@ jenkins:
 security:
   queueItemAuthenticator:
     authenticators:
-    - global:
-        strategy: triggeringUsersAuthorizationStrategy
+      - global:
+          strategy: triggeringUsersAuthorizationStrategy
 
 # 创建credentials
 # https://www.eficode.com/blog/start-jenkins-config-as-code
@@ -57,3 +57,46 @@ credentials:
               id:       'centos8-slave-root-ssh'
               username: 'root'
               password: 'Root@123'
+      # 配置全局credentials
+      # https://github.com/jenkinsci/configuration-as-code-plugin/blob/master/docs/features/secrets.adoc
+      - credentials:
+          - usernamePassword:
+              scope:    SYSTEM
+              id:       'git-access-token'
+              username: 'root'
+              password: 'token-string-here123456'
+              scope: GLOBAL
+
+# https://github.com/jenkinsci/job-dsl-plugin/blob/master/docs/JCasC.md
+# https://github.com/jenkinsci/job-dsl-plugin/blob/master/docs/Handling-Credentials.md
+jobs:
+  - script: |
+      pipelineJob('demo-devops-test') {
+        description('用于演示devops流程')
+        definition {
+          cpsScm {
+            lightweight(true)
+            scm {
+              git {
+                remote {
+                  url("http://demo-gitlab-server/root/test.git")
+                  credentials('git-access-token')
+                }
+                branch("*/main")
+              }
+            }
+            scriptPath("Jenkinsfile")
+          }
+        }
+      }
+
+# jobs:
+#   - script: |
+#       multibranchPipelineJob('configuration-as-code') {
+#           branchSources {
+#               git {
+#                   id = 'configuration-as-code'
+#                   remote('https://github.com/jenkinsci/configuration-as-code-plugin.git')
+#               }
+#           }
+#       }

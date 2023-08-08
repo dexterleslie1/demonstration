@@ -285,3 +285,16 @@ pipeline {
 }
 ```
 
+
+
+## 创建git仓库中拉取项目并执行其中的Jenkinsfile
+
+> 演示从git仓库中下载源代码并执行其中的Jenkinsfile
+
+```
+# 运行demo
+sh start.sh
+
+# 登录jenkins手动触发构建测试Jenkinsfile是否正确
+```
+
