@@ -20,7 +20,8 @@
 
     - name: "推送代码到远程"
       shell: |
-        echo 'Hello Dexter!' > ./demo-devops/README.md
+        cd ./demo-devops
+        echo 'Hello Dexter!' > README.md
         git add .
         git commit -m 'init commit'
         git push
@@ -28,3 +29,8 @@
       until: "var_result is not failed"
       retries: 100
       delay: 6
+
+    - name: "删除demo-devops"
+      file:
+        path: ./demo-devops
+        state: absent
