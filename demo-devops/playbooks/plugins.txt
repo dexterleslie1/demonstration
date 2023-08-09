@@ -19,3 +19,4 @@ ssh-slaves
 timestamper
 workflow-aggregator
 ws-cleanup
+job-dsl

@@ -9,7 +9,7 @@
     # checkout代码
     # https://docs.ansible.com/ansible/latest/collections/ansible/builtin/git_module.html
     - name: "checkout代码"
-      ansible.builtin.git:
+      git:
         repo: http://root:token-string-here123456@localhost/root/demo-devops.git
         dest: ./demo-devops
       register: var_result

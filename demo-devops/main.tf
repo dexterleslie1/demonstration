@@ -1,10 +1,10 @@
 variable "vsphere_user" {
   type    = string
-  default = "xxx@vsphere.local"
+  default = "administrator@vsphere.local"
 }
 variable "vsphere_password" {
   type = string
-  default = "xxx"
+  default = "Root@123#$%"
 }
 variable "vsphere_server" {
   type = string

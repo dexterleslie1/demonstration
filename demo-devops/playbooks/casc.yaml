@@ -62,8 +62,8 @@ jenkins:
 security:
   queueItemAuthenticator:
     authenticators:
-    - global:
-        strategy: triggeringUsersAuthorizationStrategy
+      - global:
+          strategy: triggeringUsersAuthorizationStrategy
 
 # 创建credentials
 # https://www.eficode.com/blog/start-jenkins-config-as-code
@@ -76,3 +76,31 @@ credentials:
               id:       'centos8-slave-root-ssh'
               username: 'root'
               password: 'Root@123'
+      - credentials:
+          - usernamePassword:
+              scope:    SYSTEM
+              id:       'git-access-token'
+              username: 'root'
+              password: 'token-string-here123456'
+              scope: GLOBAL
+
+jobs:
+  - script: |
+      pipelineJob('demo-devops') {
+        description('用于演示devops流程')
+        definition {
+          cpsScm {
+            lightweight(true)
+            scm {
+              git {
+                remote {
+                  url("http://192.168.1.151/root/demo-devops.git")
+                  credentials('git-access-token')
+                }
+                branch("*/main")
+              }
+            }
+            scriptPath("Jenkinsfile")
+          }
+        }
+      }
