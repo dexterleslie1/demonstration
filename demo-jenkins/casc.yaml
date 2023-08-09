@@ -82,7 +82,7 @@ jobs:
                   url("http://demo-gitlab-server/root/test.git")
                   credentials('git-access-token')
                 }
-                branch("*/main")
+                branch("*/master")
               }
             }
             scriptPath("Jenkinsfile")
