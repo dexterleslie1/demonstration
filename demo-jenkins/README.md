@@ -8,25 +8,14 @@
 docker-compose build
 
 # 启动容器
-docker-compose up -d
+sh start.sh
 
-# 修改jenkins插件下载地址指向国内清华镜像
-# NOTE：必需要等待jenkins启动完毕生成/var/jenkins_home/updates目录后才能执行替换命令，有时候需要等待稍长时间jenkins才会自动生成此目录
-# NOTE: 目前发现使用外国源下载插件也很快，暂时不需要下面配置
-# sed -i 's/http:\/\/updates.jenkins-ci.org\/download/https:\/\/mirrors.tuna.tsinghua.edu.cn\/jenkins/g' /var/jenkins_home/updates/default.json && sed -i 's/http:\/\/www.google.com/https:\/\/www.baidu.com/g' /var/jenkins_home/updates/default.json
+# NOTE: 等待一段比较长的时间等待gitlab启动完毕，项目会自动配置jenkins、gitlab
 
 # 登录jenkins进行配置
-http://192.168.1.181:8080
-
-# 初始登录密码位于容器内的文件/var/jenkins_home/secrets/initialAdminPassword
-cat /var/jenkins_home/secrets/initialAdminPassword
-
-# 设置 jenkins url 为 http://192.168.1.181:8080/，NOTE: 不要设置为 http://localhost:8080，否则在运行agent.jar时候报错说agent不能连接jenkins master
-# 可以初始化完毕jenkins后设置 jenkins url， Manage Jenkins > Config System > Jenkins URL =http://192.168.1.181:8080/
-
-# 选择默认推荐的插件等待安装完成
-
-# 创建admin用户并设置密码
+http://localhost:50001
+# 登录gitlab
+http://localhost:50002
 
 # 关闭容器
 docker-compose down
@@ -144,6 +133,54 @@ pipeline {
 # 保存脚本后点击 testpipeline 项目 "Build Now"
 
 # 查看项目Status就能够看到build状态
+```
+
+
+
+### pipeline语法
+
+> pipeline分为声明式和脚本式语法，NOTE: 推荐使用声明式
+> https://www.jenkins.io/doc/book/pipeline/syntax/
+> https://zhuanlan.zhihu.com/p/133703916
+>
+> 可以使用pipeline语法生成器帮助生成语法
+> http://localhost:50001/pipeline-syntax/
+
+
+
+#### 声明式语法
+
+> 以pipeline {} 开头
+
+```
+pipeline {
+    // 这个agent不能删除，否则报告缺失agent导致语法错误
+    agent any
+    
+    stages {
+        stage('执行步骤') {
+            steps {
+                sh 'pwd'
+            }
+        }
+    }
+}
+```
+
+
+
+#### 编程脚本式语法
+
+```
+node {
+    stage('编译') {
+        sh 'uname -a'
+    }
+    
+    stage('发布') {
+        sh 'date'
+    }
+}
 ```
 
 
@@ -279,6 +316,83 @@ pipeline {
         stage('步骤2') {
             steps {
                 echo '步骤2输出'
+            }
+        }
+    }
+}
+```
+
+### pipeline基本steps
+
+> https://www.jenkins.io/doc/pipeline/steps/workflow-basic-steps/#dir-change-current-directory
+
+#### pwd step
+
+> https://www.jenkins.io/doc/pipeline/steps/workflow-basic-steps/#pwd-determine-current-directory
+> 获取当前工作目录绝对路径
+
+```
+pipeline {
+    agent any
+    
+    stages {
+        stage('测试') {
+            steps {
+                // https://stackoverflow.com/questions/46733278/is-it-possible-to-concatenate-string-with-job-parameter-in-pipeline-script
+                println "当前目录: ${pwd()}"
+            }
+        }
+    }
+}
+```
+
+#### dir step
+
+> 切换工作目录
+
+```
+pipeline {
+    agent any
+    
+    stages {
+        stage('测试') {
+            steps {
+                sh 'mkdir -p test-temp'
+                dir('test-temp') {
+                    println "当前目录: ${pwd()}"
+                }
+            }
+        }
+    }
+}
+```
+
+
+
+### pipeline插件
+
+
+
+#### git插件
+
+> https://www.jenkins.io/doc/pipeline/steps/git/
+
+```
+pipeline {
+    agent any
+    
+    stages {
+        stage('测试') {
+            steps {
+                sh 'rm -rf *'
+                sh 'mkdir test-temp'
+                dir('test-temp') {
+                    // 可以借助语法生成器生成脚本
+                    git branch: 'main', changelog: false, credentialsId: 'git-access-token', url: 'http://demo-gitlab-server/root/test.git'
+                    sh 'pwd && ls'
+                }
+                
+                sh 'pwd && ls'
             }
         }
     }

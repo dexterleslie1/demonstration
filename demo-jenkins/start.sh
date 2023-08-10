@@ -5,7 +5,7 @@ docker-compose up -d
 # 自动推送文件到test项目
 rm -rf test-temp
 
-while ! git clone http://root:token-string-here123456@localhost/root/test.git test-temp;
+while ! git clone http://root:token-string-here123456@localhost:50002/root/test.git test-temp;
 do
     echo 'git clone执行失败重试'
     sleep 5
