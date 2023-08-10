@@ -28,6 +28,9 @@ pipeline {
                     }
                 }
                 // 编译源代码
+                dir('springcloud-architecture/architecture-parent') {
+                    sh 'sh build.sh'
+                }
                 // 编译镜像
                 // 推送镜像
             }

@@ -1,2 +1,4 @@
 target
 *.iml
+.m2
+mytarget
