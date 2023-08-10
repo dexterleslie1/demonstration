@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# 判断源代码压缩包是否存在
-if [ ! -f src.zip ]; then
-	echo "需要提供源代码压缩包src.zip才能执行编译"
-    exit 1
-fi
+# # 判断源代码压缩包是否存在
+# if [ ! -f src.zip ]; then
+# 	echo "需要提供源代码压缩包src.zip才能执行编译"
+#     exit 1
+# fi
 
 # # 解压源代码压缩包到 /tmp
 # rm -f /tmp/src.zip
