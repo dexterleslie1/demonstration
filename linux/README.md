@@ -137,6 +137,24 @@ htop
 
 
 
+### scp命令
+
+```
+# 复制本地文件到远程
+scp README.md root@192.168.1.187:/data/temp/
+
+# 复制本地目录到远程
+scp -r demo-bind-dns/ root@192.168.1.187:/data/demo1
+
+# 复制远程文件到本地
+scp root@192.168.1.187:/data/temp/README.md .
+
+# 复制远程目录到本地
+scp -r root@192.168.1.187:/data/demo1/ .
+```
+
+
+
 ## 文件和目录
 
 ### 文件和目录权限rwx代表的意思
