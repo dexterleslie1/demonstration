@@ -3,9 +3,45 @@ pipeline {
     agent any
     
     stages {
-        stage('执行步骤') {
+        stage('编译代码和镜像') {
+            agent {
+                label 'centos8-slave'
+            }
+        
+            steps {
+                // checkout源代码到本地
+                dir('springcloud-architecture') {
+                    dir('architecture-parent') {
+                        git branch: 'main', changelog: false, credentialsId: 'git-access-token', url: 'http://192.168.1.151/root/demo-devops-architecture-parent.git'
+                    }
+                    dir('architecture-eureka') {
+                        git branch: 'main', changelog: false, credentialsId: 'git-access-token', url: 'http://192.168.1.151/root/demo-devops-architecture-eureka.git'
+                    }
+                    dir('architecture-zuul') {
+                        git branch: 'main', changelog: false, credentialsId: 'git-access-token', url: 'http://192.168.1.151/root/demo-devops-architecture-zuul.git'
+                    }
+                    dir('architecture-common') {
+                        git branch: 'main', changelog: false, credentialsId: 'git-access-token', url: 'http://192.168.1.151/root/demo-devops-architecture-common.git'
+                    }
+                    dir('architecture-helloworld') {
+                        git branch: 'main', changelog: false, credentialsId: 'git-access-token', url: 'http://192.168.1.151/root/demo-devops-architecture-helloworld.git'
+                    }
+                }
+                // 编译源代码
+                // 编译镜像
+                // 推送镜像
+            }
+        }
+        
+        stage('发布镜像到uat或者sit环境') {
+            agent {
+                label 'centos8-uat'
+            }
+        
             steps {
                 sh 'uname -a'
+                // 拉取最新镜像
+                // 使用最新镜像重启应用
             }
         }
     }

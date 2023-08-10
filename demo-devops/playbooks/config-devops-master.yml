@@ -1,5 +1,8 @@
 # todo 运行harbor服务
 - hosts: all
+  vars:
+    project_folder: ""
+    project_repo_name: ""
   tasks:
     - name: "保证unzip命令已经安装"
       yum:
@@ -97,21 +100,25 @@
 
     #endregion
 
-    #region 自动推送代码到远程
+    #region 自动创建demo-devops仓库
 
-    - name: "删除 /usr/local/my-workspace/demo-devops-temp 目录"
+    - name: "设置变量project_folder、project_repo_name"
+      set_fact:
+        project_folder: "demo-devops"
+        project_repo_name: "demo-devops"
+    - name: "删除 /usr/local/my-workspace/{{ project_folder }}-temp 目录"
       file:
-        path: /usr/local/my-workspace/demo-devops-temp
+        path: /usr/local/my-workspace/{{ project_folder }}-temp
         state: absent
-    - name: "删除 /usr/local/my-workspace/demo-devops 目录"
+    - name: "删除 /usr/local/my-workspace/{{ project_folder }} 目录"
       file:
-        path: /usr/local/my-workspace/demo-devops
+        path: /usr/local/my-workspace/{{ project_folder }}
         state: absent
 
-    - name: "克隆demo-devops仓库"
+    - name: "克隆{{ project_folder }}仓库"
       git:
-        repo: http://root:token-string-here123456@localhost/root/demo-devops.git
-        dest: /usr/local/my-workspace/demo-devops-temp
+        repo: http://root:token-string-here123456@localhost/root/{{ project_repo_name }}.git
+        dest: /usr/local/my-workspace/{{ project_folder }}-temp
       register: var_result
       until: "var_result is not failed"
       retries: 200
@@ -120,16 +127,16 @@
     - name: "因为创建仓库时initialize_with_readme，偶尔克隆仓库后版本落后于服务器版本，所以休眠一点时间等待initialize_with_readme完毕"
       shell: sleep 5
 
-    - name: "复制demo-devops目录到/usr/local/my-workspace/"
+    - name: "复制{{ project_folder }}目录到/usr/local/my-workspace/"
       copy:
-        src: demo-devops
+        src: "{{ project_folder }}"
         dest: /usr/local/my-workspace/
 
     - name: "推送代码到远程"
       shell: |
-        cd /usr/local/my-workspace/demo-devops-temp/
+        cd /usr/local/my-workspace/{{ project_folder }}-temp/
         rm -rf *
-        cp -r ../demo-devops/* .
+        cp -r ../{{ project_folder }}/* .
         git add .
         git commit -m '初始化提交'
         git push
@@ -138,13 +145,299 @@
       retries: 200
       delay: 6
 
-    - name: "删除 /usr/local/my-workspace/demo-devops 目录"
+    - name: "删除 /usr/local/my-workspace/{{ project_folder }} 目录"
       file:
-        path: /usr/local/my-workspace/demo-devops
+        path: /usr/local/my-workspace/{{ project_folder }}
         state: absent
-    - name: "删除 /usr/local/my-workspace/demo-devops-temp 目录"
+    - name: "删除 /usr/local/my-workspace/{{ project_folder }}-temp 目录"
       file:
-        path: /usr/local/my-workspace/demo-devops-temp
+        path: /usr/local/my-workspace/{{ project_folder }}-temp
         state: absent
 
     #endregion
+
+    #region 自动创建demo-devops-architecture-parent仓库
+
+    - name: "设置变量project_folder、project_repo_name"
+      set_fact:
+        project_folder: "architecture-parent"
+        project_repo_name: "demo-devops-architecture-parent"
+    - name: "删除 /usr/local/my-workspace/{{ project_folder }}-temp 目录"
+      file:
+        path: /usr/local/my-workspace/{{ project_folder }}-temp
+        state: absent
+    - name: "删除 /usr/local/my-workspace/{{ project_folder }} 目录"
+      file:
+        path: /usr/local/my-workspace/{{ project_folder }}
+        state: absent
+
+    - name: "克隆{{ project_folder }}仓库"
+      git:
+        repo: http://root:token-string-here123456@localhost/root/{{ project_repo_name }}.git
+        dest: /usr/local/my-workspace/{{ project_folder }}-temp
+      register: var_result
+      until: "var_result is not failed"
+      retries: 200
+      delay: 6
+
+    - name: "因为创建仓库时initialize_with_readme，偶尔克隆仓库后版本落后于服务器版本，所以休眠一点时间等待initialize_with_readme完毕"
+      shell: sleep 5
+
+    - name: "复制demo-devops-architecture/{{ project_folder }}目录到/usr/local/my-workspace/"
+      copy:
+        src: "demo-devops-architecture/{{ project_folder }}"
+        dest: /usr/local/my-workspace/
+
+    - name: "推送代码到远程"
+      shell: |
+        cd /usr/local/my-workspace/{{ project_folder }}-temp/
+        rm -rf *
+        cp -r ../{{ project_folder }}/* .
+        cp -r ../{{ project_folder }}/.gitignore .
+        git add .
+        git commit -m '初始化提交'
+        git push
+      register: var_result
+      until: "var_result is not failed"
+      retries: 200
+      delay: 6
+
+    - name: "删除 /usr/local/my-workspace/{{ project_folder }} 目录"
+      file:
+        path: /usr/local/my-workspace/{{ project_folder }}
+        state: absent
+    - name: "删除 /usr/local/my-workspace/{{ project_folder }}-temp 目录"
+      file:
+        path: /usr/local/my-workspace/{{ project_folder }}-temp
+        state: absent
+
+    #endregion
+
+    #region 自动创建demo-devops-architecture-eureka仓库
+
+    - name: "设置变量project_folder、project_repo_name"
+      set_fact:
+        project_folder: "architecture-eureka"
+        project_repo_name: "demo-devops-architecture-eureka"
+    - name: "删除 /usr/local/my-workspace/{{ project_folder }}-temp 目录"
+      file:
+        path: /usr/local/my-workspace/{{ project_folder }}-temp
+        state: absent
+    - name: "删除 /usr/local/my-workspace/{{ project_folder }} 目录"
+      file:
+        path: /usr/local/my-workspace/{{ project_folder }}
+        state: absent
+
+    - name: "克隆{{ project_folder }}仓库"
+      git:
+        repo: http://root:token-string-here123456@localhost/root/{{ project_repo_name }}.git
+        dest: /usr/local/my-workspace/{{ project_folder }}-temp
+      register: var_result
+      until: "var_result is not failed"
+      retries: 200
+      delay: 6
+
+    - name: "因为创建仓库时initialize_with_readme，偶尔克隆仓库后版本落后于服务器版本，所以休眠一点时间等待initialize_with_readme完毕"
+      shell: sleep 5
+
+    - name: "复制demo-devops-architecture/{{ project_folder }}目录到/usr/local/my-workspace/"
+      copy:
+        src: "demo-devops-architecture/{{ project_folder }}"
+        dest: /usr/local/my-workspace/
+
+    - name: "推送代码到远程"
+      shell: |
+        cd /usr/local/my-workspace/{{ project_folder }}-temp/
+        rm -rf *
+        cp -r ../{{ project_folder }}/* .
+        cp -r ../{{ project_folder }}/.gitignore .
+        git add .
+        git commit -m '初始化提交'
+        git push
+      register: var_result
+      until: "var_result is not failed"
+      retries: 200
+      delay: 6
+
+    - name: "删除 /usr/local/my-workspace/{{ project_folder }} 目录"
+      file:
+        path: /usr/local/my-workspace/{{ project_folder }}
+        state: absent
+    - name: "删除 /usr/local/my-workspace/{{ project_folder }}-temp 目录"
+      file:
+        path: /usr/local/my-workspace/{{ project_folder }}-temp
+        state: absent
+
+    #endregion
+
+    #region 自动创建demo-devops-architecture-zuul仓库
+
+    - name: "设置变量project_folder、project_repo_name"
+      set_fact:
+        project_folder: "architecture-zuul"
+        project_repo_name: "demo-devops-architecture-zuul"
+    - name: "删除 /usr/local/my-workspace/{{ project_folder }}-temp 目录"
+      file:
+        path: /usr/local/my-workspace/{{ project_folder }}-temp
+        state: absent
+    - name: "删除 /usr/local/my-workspace/{{ project_folder }} 目录"
+      file:
+        path: /usr/local/my-workspace/{{ project_folder }}
+        state: absent
+
+    - name: "克隆{{ project_folder }}仓库"
+      git:
+        repo: http://root:token-string-here123456@localhost/root/{{ project_repo_name }}.git
+        dest: /usr/local/my-workspace/{{ project_folder }}-temp
+      register: var_result
+      until: "var_result is not failed"
+      retries: 200
+      delay: 6
+
+    - name: "因为创建仓库时initialize_with_readme，偶尔克隆仓库后版本落后于服务器版本，所以休眠一点时间等待initialize_with_readme完毕"
+      shell: sleep 5
+
+    - name: "复制demo-devops-architecture/{{ project_folder }}目录到/usr/local/my-workspace/"
+      copy:
+        src: "demo-devops-architecture/{{ project_folder }}"
+        dest: /usr/local/my-workspace/
+
+    - name: "推送代码到远程"
+      shell: |
+        cd /usr/local/my-workspace/{{ project_folder }}-temp/
+        rm -rf *
+        cp -r ../{{ project_folder }}/* .
+        cp -r ../{{ project_folder }}/.gitignore .
+        git add .
+        git commit -m '初始化提交'
+        git push
+      register: var_result
+      until: "var_result is not failed"
+      retries: 200
+      delay: 6
+
+    - name: "删除 /usr/local/my-workspace/{{ project_folder }} 目录"
+      file:
+        path: /usr/local/my-workspace/{{ project_folder }}
+        state: absent
+    - name: "删除 /usr/local/my-workspace/{{ project_folder }}-temp 目录"
+      file:
+        path: /usr/local/my-workspace/{{ project_folder }}-temp
+        state: absent
+
+    #endregion
+
+    #region 自动创建demo-devops-architecture-common仓库
+
+    - name: "设置变量project_folder、project_repo_name"
+      set_fact:
+        project_folder: "architecture-common"
+        project_repo_name: "demo-devops-architecture-common"
+    - name: "删除 /usr/local/my-workspace/{{ project_folder }}-temp 目录"
+      file:
+        path: /usr/local/my-workspace/{{ project_folder }}-temp
+        state: absent
+    - name: "删除 /usr/local/my-workspace/{{ project_folder }} 目录"
+      file:
+        path: /usr/local/my-workspace/{{ project_folder }}
+        state: absent
+
+    - name: "克隆{{ project_folder }}仓库"
+      git:
+        repo: http://root:token-string-here123456@localhost/root/{{ project_repo_name }}.git
+        dest: /usr/local/my-workspace/{{ project_folder }}-temp
+      register: var_result
+      until: "var_result is not failed"
+      retries: 200
+      delay: 6
+
+    - name: "因为创建仓库时initialize_with_readme，偶尔克隆仓库后版本落后于服务器版本，所以休眠一点时间等待initialize_with_readme完毕"
+      shell: sleep 5
+
+    - name: "复制demo-devops-architecture/{{ project_folder }}目录到/usr/local/my-workspace/"
+      copy:
+        src: "demo-devops-architecture/{{ project_folder }}"
+        dest: /usr/local/my-workspace/
+
+    - name: "推送代码到远程"
+      shell: |
+        cd /usr/local/my-workspace/{{ project_folder }}-temp/
+        rm -rf *
+        cp -r ../{{ project_folder }}/* .
+        cp -r ../{{ project_folder }}/.gitignore .
+        git add .
+        git commit -m '初始化提交'
+        git push
+      register: var_result
+      until: "var_result is not failed"
+      retries: 200
+      delay: 6
+
+    - name: "删除 /usr/local/my-workspace/{{ project_folder }} 目录"
+      file:
+        path: /usr/local/my-workspace/{{ project_folder }}
+        state: absent
+    - name: "删除 /usr/local/my-workspace/{{ project_folder }}-temp 目录"
+      file:
+        path: /usr/local/my-workspace/{{ project_folder }}-temp
+        state: absent
+
+    #endregion
+
+    #region 自动创建demo-devops-architecture-helloworld仓库
+
+    - name: "设置变量project_folder、project_repo_name"
+      set_fact:
+        project_folder: "architecture-helloworld"
+        project_repo_name: "demo-devops-architecture-helloworld"
+    - name: "删除 /usr/local/my-workspace/{{ project_folder }}-temp 目录"
+      file:
+        path: /usr/local/my-workspace/{{ project_folder }}-temp
+        state: absent
+    - name: "删除 /usr/local/my-workspace/{{ project_folder }} 目录"
+      file:
+        path: /usr/local/my-workspace/{{ project_folder }}
+        state: absent
+
+    - name: "克隆{{ project_folder }}仓库"
+      git:
+        repo: http://root:token-string-here123456@localhost/root/{{ project_repo_name }}.git
+        dest: /usr/local/my-workspace/{{ project_folder }}-temp
+      register: var_result
+      until: "var_result is not failed"
+      retries: 200
+      delay: 6
+
+    - name: "因为创建仓库时initialize_with_readme，偶尔克隆仓库后版本落后于服务器版本，所以休眠一点时间等待initialize_with_readme完毕"
+      shell: sleep 5
+
+    - name: "复制demo-devops-architecture/{{ project_folder }}目录到/usr/local/my-workspace/"
+      copy:
+        src: "demo-devops-architecture/{{ project_folder }}"
+        dest: /usr/local/my-workspace/
+
+    - name: "推送代码到远程"
+      shell: |
+        cd /usr/local/my-workspace/{{ project_folder }}-temp/
+        rm -rf *
+        cp -r ../{{ project_folder }}/* .
+        cp -r ../{{ project_folder }}/.gitignore .
+        git add .
+        git commit -m '初始化提交'
+        git push
+      register: var_result
+      until: "var_result is not failed"
+      retries: 200
+      delay: 6
+
+    - name: "删除 /usr/local/my-workspace/{{ project_folder }} 目录"
+      file:
+        path: /usr/local/my-workspace/{{ project_folder }}
+        state: absent
+    - name: "删除 /usr/local/my-workspace/{{ project_folder }}-temp 目录"
+      file:
+        path: /usr/local/my-workspace/{{ project_folder }}-temp
+        state: absent
+
+    #endregion
+
