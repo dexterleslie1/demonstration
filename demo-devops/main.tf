@@ -23,7 +23,7 @@ data "vsphere_datacenter" "datacenter" {
 }
 
 data "vsphere_datastore" "datastore" {
-  name          = "datastore1"
+  name          = "datastoreraid0"
   datacenter_id = data.vsphere_datacenter.datacenter.id
 }
 
@@ -107,7 +107,7 @@ resource "vsphere_virtual_machine" "vm_devops_master" {
   resource_pool_id = data.vsphere_host.host.resource_pool_id
   datastore_id     = data.vsphere_datastore.datastore.id
   num_cpus         = 4
-  memory           = 6144
+  memory           = 8192
   guest_id         = data.vsphere_virtual_machine.template.guest_id
   scsi_type        = data.vsphere_virtual_machine.template.scsi_type
   folder           = "/${data.vsphere_datacenter.datacenter.name}/vm/private"

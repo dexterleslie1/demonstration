@@ -74,7 +74,7 @@
     - name: "重启系统"
       reboot:
 
-    #region 运行和设置jenkins、gitlab
+    #region 运行和设置jenkins、gitlab、harbor
 
     - name: "复制docker-compose.yml到/usr/local/my-workspace/"
       copy:
@@ -95,6 +95,19 @@
 
     - name: "使用docker-compose运行jenkins和gitlab，在此需要到远程拉取jenkins和gitlab镜像需要耐心等待一段比较长时间"
       shell: cd /usr/local/my-workspace && docker-compose up -d
+
+    - name: "复制harbor-online-installer-v2.5.3.tgz到/usr/local/my-workspace"
+      copy:
+        src: harbor-online-installer-v2.5.3.tgz
+        dest: /usr/local/my-workspace/
+    - name: "解压harbor-online-installer-v2.5.3.tgz"
+      shell: cd /usr/local/my-workspace && tar -xvzf harbor-online-installer-v2.5.3.tgz
+    - name: "复制harbor.yml到/usr/local/my-workspace/harbor/harbor.yml"
+      copy:
+        src: harbor.yml
+        dest: /usr/local/my-workspace/harbor/harbor.yml
+    - name: "正在启动harbor服务，下载相关镜像可能需要等待一段比较长时间。。。"
+      shell: cd /usr/local/my-workspace/harbor/ && sh install.sh
 
     # todo 自动配置jenkins windows slave
 
