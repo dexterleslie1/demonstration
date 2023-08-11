@@ -6,13 +6,8 @@ services:
     image: maven:3.3-jdk-8
     command: |
       sh -c "
-            rm -rf /usr/src/mytarget/*
             cd architecture-parent
-            mvn clean package
-            # cp ../architecture-eureka/target/*.jar ./mytarget/
-            # cp ../architecture-zuul/target/*.jar ./mytarget/
-            # cp ../architecture-helloworld/target/*.jar ./mytarget/
-            # mvn clean
+            mvn clean
             "
     working_dir: /usr/src/mymaven
     volumes:
