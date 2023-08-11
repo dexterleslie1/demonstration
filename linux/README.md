@@ -171,6 +171,101 @@ scp -r root@192.168.1.187:/data/demo1/ .
 
 目录x：可以打开和进入目录，cd
 
+
+
+## 用户和群组管理（user、group、passwd、shadow）
+
+```
+# 用户、密码、群组数据存储文件
+
+存储用户数据文件/etc/passwd解析
+https://www.cyberciti.biz/faq/understanding-etcpasswd-file-format/
+存储密码数据文件/etc/shadow解析
+https://www.cyberciti.biz/faq/understanding-etcshadow-file/
+存储群组数据文件/etc/group解析
+https://www.cyberciti.biz/faq/understanding-etcgroup-file/
+
+# 查看jenkins用户所属群组列表
+groups jenkins
+
+# 查看jenkins组下所有成员
+getent group jenkins
+
+# 新增用户jenkins到docker组，-a表示追加用户，-G表示用户组列表
+usermod -aG docker jenkins
+或者gpasswd -a jenkins docker
+
+# 从testG组删除用户testU
+# https://blog.csdn.net/sqlquan/article/details/101001295
+gpasswd -d testU testG
+
+# 新增用户组
+groupadd tomcat
+
+# 新增用户
+useradd -g tomcat tomcat -s /sbin/nologin
+
+# 新增用户并且创建用户home目录
+useradd -s /sbin/nologin -m tomcat
+
+# 修改用户密码
+passwd tomcat
+
+# 修改用户加入权限组wheel
+usermod -aG wheel tomcat
+
+# 删除用户密码
+passwd --delete userxxx
+
+# 查看用户密码状态（LK锁定状态，NP没有设置密码，PS已设置密码）
+passwd -S userxxx
+
+
+
+# 创建用户指定shell、修改用户shell
+# https://www.thegeekdiary.com/centos-rhel-how-to-change-the-login-shell-of-the-user/
+
+# 查看系统支持shell
+cat /etc/shells
+
+# 创建用户指定shell
+useradd -s /sbin/nologin userxxx
+
+# 使用chsh修改用户shell
+chsh -s /sbin/nologin userxxx
+
+# 使用usermod修改用户shell
+usermod -s /sbin/nologin userxxx
+
+# NOTE：当修改用户shell为/sbin/nologin后用户不能通过shell登陆系统，su用户会提示“The account is currently not available”
+
+
+
+# 锁定和解锁用户
+# https://hoststud.com/resources/how-to-lock-and-unlock-user-account-on-centos-linux-server.132/
+
+# 使用usermod -L和usermod -U锁定和解锁用户
+usermod -L userxxx或者usermod -U userxxx
+
+# 使用passwd -l和passwd -u锁定和解锁用户
+passwd -l userxxx或者passwd -u userxxx
+
+# NOTE：锁定用户后，用户登陆时会提示登陆失败
+
+
+# 删除用户
+
+# 删除用户user1并且保留用户对应的home目录
+userdel user1
+
+# 删除用户user1并且删除用户对应的home目录
+userdel -r user1
+```
+
+
+
+
+
 ## 配置环境变量
 
 ### ubuntu和centOS8配置环境变量
