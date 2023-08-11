@@ -17,9 +17,12 @@
 https://github.com/goharbor/harbor/releases
 
 # 解压后配置harbor.yaml，内容如下:
-hostname: docker.118899.net
+hostname: docker.118899.net # NOTE: 发现下面配置不需要关注ip
+hostname: 0.0.0.0
+
 注释https配置
-external_url: http://docker.118899.net
+external_url: http://docker.118899.net # NOTE: 发现下面配置不需要关注ip
+external_url: http://0.0.0.0
 harbor_admin_password: xxxxxx
 data_volume: /data/data-harbor
 
