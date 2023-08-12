@@ -46,6 +46,22 @@ docker run --rm --entrypoint /bin/sh untergeek/curator:8.0.4 -c "while true; do 
 
 
 
+### docker  tag给镜像打标签或者删除标签
+
+> https://blog.csdn.net/K_520_W/article/details/116570680
+
+```
+# 删除标签
+docker rmi 192.168.1.xxx:50003/library/hello-world:1.0.0
+
+# 给hello-world镜像打标签
+docker tag hello-world 192.168.1.181:50003/library/hello-world:1.0.0
+```
+
+
+
+
+
 ## docker最佳安全实践
 
 > https://blog.aquasec.com/docker-security-best-practices
