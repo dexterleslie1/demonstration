@@ -21,12 +21,15 @@ hostname: docker.118899.net # NOTE: 发现下面配置不需要关注ip
 hostname: 0.0.0.0
 
 注释https配置
-external_url: http://docker.118899.net # NOTE: 发现下面配置不需要关注ip
-external_url: http://0.0.0.0
+external_url: http://docker.118899.net
+
+# external_url: http://0.0.0.0 # NOTE: 不能使用这个配置，必须要仿上面那样配置域名，否则docker login时会报告: Error response from daemon: Get "http://192.168.1.181:50003/v2/": Get "http://0.0.0.0:50003/service/token?account=admin&client_id=docker&offline_token=true&service=harbor-registry": dial tcp 0.0.0.0:50003: connect: connection refused
+
 harbor_admin_password: xxxxxx
 data_volume: /data/data-harbor
 
 # 启动harbor，等待几分钟harbor启动
+# NOTE: 使用ubuntu运行需要sudo ./install.sh
 sh install.sh
 
 # 登陆harbor
@@ -47,6 +50,7 @@ docker login docker.118899.net
 密码：xxxxxx
 
 # 关闭harbor
+# NOTE: 使用ubuntu关闭harbor需要运行sudo docker-compose down
 docker-compose down
 
 # nginx配置如下:
