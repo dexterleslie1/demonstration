@@ -20,3 +20,4 @@ timestamper
 workflow-aggregator
 ws-cleanup
 job-dsl
+docker-workflow

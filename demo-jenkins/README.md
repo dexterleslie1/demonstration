@@ -7,7 +7,7 @@
 # 编译容器
 docker-compose build
 
-# 启动容器
+# 启动容器，NOTE: 此脚本会启动jenkins、gitlab、harbor等服务用于测试
 sh start.sh
 
 # NOTE: 等待一段比较长的时间等待gitlab启动完毕，项目会自动配置jenkins、gitlab
@@ -17,8 +17,8 @@ http://localhost:50001
 # 登录gitlab
 http://localhost:50002
 
-# 关闭容器
-docker-compose down
+# 关闭容器jekins、gitlab、harbor服务
+sh stop.sh
 ```
 
 
@@ -165,11 +165,27 @@ pipeline {
         }
     }
 }
+
+# 在声明式语法中使用script块嵌入脚本式语法
+pipeline {
+    agent any
+    
+    stages {
+        stage('测试') {
+            steps {
+                script {
+                    def my_var = 'Hello world!'
+                    println(my_var)
+                }
+            }
+        }
+    }
+}
 ```
 
 
 
-#### 编程脚本式语法
+#### 脚本式语法
 
 ```
 node {
@@ -393,6 +409,47 @@ pipeline {
                 }
                 
                 sh 'pwd && ls'
+            }
+        }
+    }
+}
+```
+
+
+
+#### docker插件
+
+> 使用sh start.sh启动服务后会自动启动一个harbor服务url: http://ip:50003
+> NOTE: 因为调试docker插件需要已安装docker环境，所以需要配置centos8-slave
+> https://docs.cloudbees.com/docs/cloudbees-ci/latest/pipelines/docker-workflow
+
+```
+pipeline {
+    agent any
+    
+    stages {
+        stage('测试') {
+            agent {
+                label 'centos8-slave'
+            }
+            steps {
+                script {
+                    def my_image = docker.image('hello-world')
+                    // 拉取hello-world
+                    my_image.pull()
+                    
+                    // 运行容器
+                    // https://stackoverflow.com/questions/62533437/running-a-docker-container-from-a-jenkins-pipeline-and-capture-the-output
+                    //my_docker.run()
+                    
+                    // 给hello-world打标签
+                    sh 'docker tag hello-world 192.168.1.181:50003/library/hello-world:1.0.1'
+                    
+                    // 推送镜像到远程
+                    my_image = docker.image('192.168.1.181:50003/library/hello-world:1.0.1')
+                    my_image.push()
+                    
+                }
             }
         }
     }

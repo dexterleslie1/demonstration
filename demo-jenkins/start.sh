@@ -1,5 +1,9 @@
 #!/bin/bash
 
+echo '启动harbor服务。。。'
+(cd harbor && sudo ./install.sh)
+
+echo '启动jenkins、gitlab服务。。。'
 docker-compose up -d
 
 # 自动推送文件到test项目
