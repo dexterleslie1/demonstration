@@ -59,6 +59,8 @@ services:
         echo "成功创建demo-devops-architecture-common项目"
         curl --header "Authorization: Bearer token-string-here123456" --header "Content-Type: application/json" --data '{"name": "demo-devops-architecture-helloworld", "description": "用于协助演示devops流程的architecture-helloworld项目","namespace": "root", "initialize_with_readme": "true", "visibility": "private"}' -X POST http://localhost/api/v4/projects
         echo "成功创建demo-devops-architecture-helloworld项目"
+        curl --header "Authorization: Bearer token-string-here123456" --header "Content-Type: application/json" --data '{"name": "demo-devops-architecture-deployer", "description": "用于协助演示devops流程的architecture-deployer项目","namespace": "root", "initialize_with_readme": "true", "visibility": "private"}' -X POST http://localhost/api/v4/projects
+        echo "成功创建demo-devops-architecture-deployer项目"
 
     restart: always
     networks:

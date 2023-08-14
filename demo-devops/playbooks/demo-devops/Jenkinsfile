@@ -49,9 +49,18 @@ pipeline {
             }
         
             steps {
-                sh 'uname -a'
-                // 拉取最新镜像
+                // 拉取最新deployer代码
+                git branch: 'main', changelog: false, credentialsId: 'git-access-token', url: 'http://192.168.1.151/root/demo-devops-architecture-deployer.git'
+                
+                script {
+                    docker.withRegistry('http://192.168.1.151:81', 'harbor-token') {
+                        // 拉取最新镜像
+                        sh 'docker-compose -f docker-compose-uat.yml pull'
+                    }
+                }
+                
                 // 使用最新镜像重启应用
+                sh 'docker-compose -f docker-compose-uat.yml up -d'
             }
         }
     }

@@ -1,0 +1,28 @@
+version: "3.0"
+
+networks:
+  net:
+    name: demo-devops-net
+
+services:
+  architecture-eureka:
+    container_name: architecture-eureka
+    image: 192.168.1.151:81/demo-devops/architecture-eureka:1.0.0
+    ports:
+      - 9999:9999
+    networks:
+      - net
+
+  architecture-zuul:
+    container_name: architecture-zuul
+    image: 192.168.1.151:81/demo-devops/architecture-zuul:1.0.0
+    ports:
+      - 80:8080
+    networks:
+      - net
+
+  architecture-helloworld:
+    container_name: architecture-helloworld
+    image: 192.168.1.151:81/demo-devops/architecture-helloworld:1.0.0
+    networks:
+      - net
