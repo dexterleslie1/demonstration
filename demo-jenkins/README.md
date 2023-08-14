@@ -422,6 +422,7 @@ pipeline {
 > 使用sh start.sh启动服务后会自动启动一个harbor服务url: http://ip:50003
 > NOTE: 因为调试docker插件需要已安装docker环境，所以需要配置centos8-slave
 > https://docs.cloudbees.com/docs/cloudbees-ci/latest/pipelines/docker-workflow
+> https://www.jenkins.io/doc/book/pipeline/docker/
 
 ```
 pipeline {
@@ -443,11 +444,14 @@ pipeline {
                     //my_docker.run()
                     
                     // 给hello-world打标签
-                    sh 'docker tag hello-world 192.168.1.181:50003/library/hello-world:1.0.1'
+                    // sh 'docker tag hello-world 192.168.1.181:50003/library/hello-world:1.0.1'
                     
-                    // 推送镜像到远程
-                    my_image = docker.image('192.168.1.181:50003/library/hello-world:1.0.1')
-                    my_image.push()
+                    // https://www.jenkins.io/doc/book/pipeline/docker/#custom-registry
+                    // https://stackoverflow.com/questions/49029379/use-private-docker-registry-with-authentication-in-jenkinsfile
+                    docker.withRegistry('https://192.168.1.181:50003', 'harbor-token') {
+                        def my_image_1 = docker.image('library/hello-world')
+                        my_image_1.push('1.0.0')
+                    }
                     
                 }
             }

@@ -66,6 +66,13 @@ credentials:
               username: 'root'
               password: 'token-string-here123456'
               scope: GLOBAL
+      - credentials:
+          - usernamePassword:
+              scope:    SYSTEM
+              id:       'harbor-token'
+              username: 'admin'
+              password: 'Harbor12345'
+              scope: GLOBAL
 
 # https://github.com/jenkinsci/job-dsl-plugin/blob/master/docs/JCasC.md
 # https://github.com/jenkinsci/job-dsl-plugin/blob/master/docs/Handling-Credentials.md
