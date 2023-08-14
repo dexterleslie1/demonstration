@@ -385,6 +385,81 @@ pipeline {
 
 
 
+#### sh step
+
+> https://stackoverflow.com/questions/48630765/jenkins-pipeline-sh-adding-new-line
+
+```
+# 基本使用
+pipeline {
+    agent any
+    
+    stages {
+        stage('测试') {
+            steps {
+                sh 'ls'
+            }
+        }
+    }
+}
+
+# 长命令换行
+# https://stackoverflow.com/questions/48630765/jenkins-pipeline-sh-adding-new-line
+pipeline {
+    agent any
+    
+    stages {
+        stage('测试') {
+            steps {
+                sh """
+                	ls;
+                	pwd;
+                	date;
+                """
+            }
+        }
+    }
+}
+```
+
+
+
+#### writeFile step
+
+> https://stackoverflow.com/questions/51233919/create-a-file-with-some-content-using-groovy-in-jenkins-pipeline
+
+```
+# 基本使用
+pipeline {
+    agent any
+    
+    stages {
+        stage('测试') {
+            steps {
+                writeFile file:'1.txt', text: '123'
+                sh 'ls; cat 1.txt;'
+            }
+        }
+    }
+}
+
+# writeFile换行
+pipeline {
+    agent any
+    
+    stages {
+        stage('测试') {
+            steps {
+                writeFile file:'1.txt', text: '1\r\n2\r\n3\r\n'
+                sh 'pwd; ls; cat 1.txt;'
+            }
+        }
+    }
+}
+```
+
+
+
 ### pipeline插件
 
 
@@ -425,6 +500,7 @@ pipeline {
 > https://www.jenkins.io/doc/book/pipeline/docker/
 
 ```
+# 综合测试
 pipeline {
     agent any
     
@@ -453,6 +529,28 @@ pipeline {
                         my_image_1.push('1.0.0')
                     }
                     
+                }
+            }
+        }
+    }
+}
+
+# 测试根据Dockerfile build镜像
+pipeline {
+    agent any
+    
+    stages {
+        stage('测试') {
+            agent {
+                label 'centos8-slave'
+            }
+            steps {
+                writeFile file: 'Dockerfile', text: 'FROM busybox\r\nRUN echo \'123\' > /1.txt'
+                
+                script {
+                    // 编译镜像
+                    // 使用命令测试镜像docker run --rm my_busybox_image:1.0.0 cat /1.txt
+                    docker.build('my_busybox_image:1.0.0')
                 }
             }
         }
