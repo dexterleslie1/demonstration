@@ -1,0 +1,10 @@
+version: "3.0"
+
+services:
+  # 用于测试--abort-on-container-exit
+  my_busybox:
+    container_name: my_busybox
+    image: busybox
+    command: |
+      sh -c "date1"
+

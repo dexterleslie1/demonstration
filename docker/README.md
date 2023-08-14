@@ -13,6 +13,10 @@ docker run --privileged --pid=host -it alpine:3.8 nsenter -t 1 -m -u -n -i sh
 
 > https://www.bbsmax.com/A/kjdwbNpA5N/
 
+
+
+
+
 ## docker命令
 
 ### 删除镜像
@@ -56,6 +60,23 @@ docker rmi 192.168.1.xxx:50003/library/hello-world:1.0.0
 
 # 给hello-world镜像打标签
 docker tag hello-world 192.168.1.181:50003/library/hello-world:1.0.0
+```
+
+
+
+
+
+## docker-compose命令
+
+
+
+### 获取docker-compose up返回状态值
+
+> https://github.com/docker/compose/issues/10225
+
+```
+# 在当前目录执行以下命令，不使用--abort-on-container-exit时下面脚本不会执行echo
+docker-compose up --abort-on-container-exit || { echo '执行失败'; }
 ```
 
 
