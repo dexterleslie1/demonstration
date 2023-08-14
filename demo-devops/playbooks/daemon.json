@@ -1,6 +1,6 @@
 {
     "registry-mirrors": ["https://1qepi2p8.mirror.aliyuncs.com","https://docker.mirrors.ustc.edu.cn"],
-    "insecure-registries": ["docker.118899.net:10001"],
+    "insecure-registries": ["docker.118899.net:10001", "192.168.1.151:81"],
     "default-address-pools":[
       {"base":"172.20.0.0/16","size":24},
       {"base":"172.21.0.0/16","size":24},

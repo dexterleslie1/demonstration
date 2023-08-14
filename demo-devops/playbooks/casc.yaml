@@ -83,6 +83,13 @@ credentials:
               username: 'root'
               password: 'token-string-here123456'
               scope: GLOBAL
+      - credentials:
+          - usernamePassword:
+              scope:    SYSTEM
+              id:       'harbor-token'
+              username: 'admin'
+              password: 'Harbor12345'
+              scope: GLOBAL
 
 jobs:
   - script: |
