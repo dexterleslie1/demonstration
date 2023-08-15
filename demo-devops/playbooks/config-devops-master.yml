@@ -109,6 +109,19 @@
     - name: "正在启动harbor服务，下载相关镜像可能需要等待一段比较长时间。。。"
       shell: cd /usr/local/my-workspace/harbor/ && sh install.sh
 
+    - name: "创建harbor项目demo-devops"
+      shell: "curl --fail -u admin:Harbor12345 -X POST http://192.168.1.151:81/api/v2.0/projects -d '{\"project_name\": \"demo-devops\"}' -H \"Content-Type: application/json\""
+      register: var_result
+      until: "var_result is not failed"
+      retries: 200
+      delay: 5
+    - name: "配置harbor gc策略"
+      shell: "curl --fail -u admin:Harbor12345 -X PUT http://192.168.1.151:81/api/v2.0/system/gc/schedule -d '{\"parameters\":{\"delete_untagged\":true},\"schedule\":{\"cron\":\"0 0 0 * * *\",\"type\":\"Daily\"}}' -H \"Content-Type: application/json\""
+      register: var_result
+      until: "var_result is not failed"
+      retries: 200
+      delay: 5
+
     # todo 自动配置jenkins windows slave
 
     #endregion
