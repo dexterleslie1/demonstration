@@ -155,6 +155,82 @@ scp -r root@192.168.1.187:/data/demo1/ .
 
 
 
+### curl命令
+
+> 下载包含curl工具的zip压缩包，解压后搜索curl.exe，然后复制
+> https://curl.haxx.se/dlwiz/?type=bin&os=Win64&flav=-&ver=-&cpu=x86_64
+
+```
+# 使用参数-X指定http请求类型
+curl -X {POST|GET|PUT|DELETE}
+
+# 获取服务器支持http方法
+curl -i -X OPTIONS http://192.168.1.178:8080/
+
+# 隐藏curl progress bar信息-s或者--silent
+curl --silent http://xxxxxx
+
+# curl -i 或者 --include参数表示在输出http响应时候打印http请求头参数
+# include the HTTP-header in the output. The HTTP-header includes things like server-name, date of the document, HTTP-version and more...
+
+# 使用curl下载文件
+curl --output apache-maven-3.6.0-bin.tar.gz http://mirrors.tuna.tsinghua.edu.cn/apache/maven/maven-3/3.6.0/binaries/apache-maven-3.6.0-bin.tar.gz
+
+# 获取接口返回数据，如下例子演示status接口是否返回Ready字符串判断应用状态
+curl -s http://localhost/status
+
+# curl使用socks5访问
+# https://www.5yun.org/20639.html
+curl --proxy socks5h://host:port -H 'Authorization: token xxxxx' https://raw.githubusercontent.com/wwwwu8899/chat/master/APPchat/chat-docker-mongodb/init.js
+
+# curl使用本地dns和远程dns
+# https://blog.twofei.com/714/
+# 本地dns
+curl --proxy socks5://host:port https://www.google.com
+# 远程dns
+curl --proxy socks5h://host:port https://www.google.com
+
+# curl ouput文件时创建相应目录
+# https://stackoverflow.com/questions/40367413/how-do-i-download-a-file-to-a-newly-created-directory-with-curl-on-os-x/40425734
+curl -H "Authorization: token {{ var_git_api_token }}" -o /tmp/{{ item }} --create-dirs https://raw.githubusercontent.com/wwwwu8899/chat/master/APPchat/{{ item }}
+
+# curl post 指定参数
+curl -X POST http://xxx.xxx.xxx.xxx:port/api/v1/console/did/number/replace -d "uniqueId=ty189289&virtualNumber=%2B32460250887"
+
+# curl在返回时打印输出http header和cookie等信息
+curl -X POST http://192.168.1.58:8093/api/v1/voip/fs/directory -i
+
+# curl使用http basic认证
+curl -X POST http://localhost:8080/hello --user "user:password" -i
+
+# 请求头参数header
+# https://stackoverflow.com/questions/356705/how-to-send-a-header-using-a-http-request-through-a-curl-call
+curl -X POST -v 192.168.1.40:82/api/v1/message/getImageSize -H "token:xxxxxxxxx"
+
+# 不压缩并打印下载字节数
+# https://stackoverflow.com/questions/9190190/how-to-use-curl-to-compare-the-size-of-the-page-with-deflate-enabled-and-without
+curl -X POST --silent --output /dev/null --write-out '%{size_download}' http://192.168.3.14:80/api/v1/downloadFile
+
+# 压缩并打印下载字节数
+# https://stackoverflow.com/questions/9190190/how-to-use-curl-to-compare-the-size-of-the-page-with-deflate-enabled-and-without
+curl -X POST --compressed --silent --output /dev/null --write-out '%{size_download}' http://192.168.3.14:80/api/v1/downloadFile
+
+# 通过命令行参数-v调试发现--compressed参数实际上是在请求头中添加Accept-Encoding: deflate, gzip，相应头中添加Content-Encoding: gzip
+
+# 发送multipart/form-data、application/x-www-form-urlencoded、application/json请求
+# https://stackoverflow.com/questions/52320831/curl-send-json-as-x-www-form-urlencoded
+
+curl -X POST -d "param1=v1" -H "Content-Type: application/x-www-form-urlencoded" http://localhost:8080/api/v1/testPostSubmitParamByFormUrlencoded1
+
+curl -X POST -F "param1=v1" -H "Content-Type: multipart/form-data" http://localhost:8080/api/v1/testPostSubmitParamByMultipartFormData
+
+curl -X POST -d '{"param1":"v1"}' -H "Content-Type: application/json" http://localhost:8080/api/v1/testPostSubmitParamByJSON
+```
+
+
+
+
+
 ## 文件和目录
 
 ### 文件和目录权限rwx代表的意思
