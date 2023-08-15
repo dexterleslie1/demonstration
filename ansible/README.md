@@ -16,3 +16,10 @@ ansible-playbook playbook.yml
 ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook demo-cli-specify-hosts.yml --inventory 192.168.1.150,192.168.1.151, --user root -e ansible_ssh_pass="xxx"
 ```
 
+
+
+## Including and Importing
+
+> https://docs.ansible.com/ansible/2.9/user_guide/playbooks_reuse_includes.html
+> 参考: including-and-importing demo
+
