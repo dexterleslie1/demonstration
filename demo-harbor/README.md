@@ -74,3 +74,21 @@ server {
 }
 ```
 
+
+
+## 调用reset API
+
+> 打开api swagger步骤，登录harbor控制台 > 点击Harbor API V2.0
+
+```
+# 提供帐号和密码调用api
+# https://cloud.tencent.com/developer/article/1750999
+curl -u admin:Harbor12345 http://192.168.1.151:81/api/v2.0/users/current
+
+# 创建project
+curl -u admin:Harbor12345 -X POST http://192.168.1.151:81/api/v2.0/projects -d '{"project_name": "test1"}' -H "Content-Type: application/json"
+
+# 更新gc策略
+curl -u admin:Harbor12345 -X PUT http://192.168.1.151:81/api/v2.0/system/gc/schedule -d '{"parameters":{"delete_untagged":true},"schedule":{"cron":"0 0 0 * * *","type":"Daily"}}' -H "Content-Type: application/json"
+```
+
