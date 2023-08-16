@@ -1,6 +1,5 @@
 package com.future.demo.java;
 
-import org.junit.Assert;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
@@ -17,13 +16,24 @@ import java.util.concurrent.TimeUnit;
 @State(Scope.Benchmark) //使用的SpringBoot容器，都是无状态单例Bean，无安全问题，可以直接使用基准作用域BenchMark
 @OutputTimeUnit(TimeUnit.SECONDS)
 @Fork(1)  //整体平均执行1次
-@Warmup(iterations = 5,time = 1,timeUnit = TimeUnit.SECONDS) //预热1s
-@Measurement(iterations = 5,time = 1,timeUnit = TimeUnit.SECONDS) //测试也是1s、五遍
+@Warmup(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS) //预热1s
+@Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS) //测试也是1s、五遍
+// 指定并发执行线程数
+// https://stackoverflow.com/questions/39644383/jmh-run-benchmark-concurrently
+@Threads(2)
 public class Tests {
+    TestService testService;
     //springBoot容器
     private ApplicationContext context;
 
-    TestService testService;
+    public static void main(String[] args) throws RunnerException {
+        //使用注解之后只需要配置一下include即可，fork和warmup、measurement都是注解
+        Options opt = new OptionsBuilder()
+                .include(Tests.class.getSimpleName())
+                .jvmArgs("-Xmx2G")
+                .build();
+        new Runner(opt).run();
+    }
 
     /**
      * 初始化，获取springBoot容器，run即可，同时得到相关的测试对象
@@ -42,20 +52,23 @@ public class Tests {
     @TearDown
     public void teardown() {
         //使用子类ConfigurableApplicationContext关闭
-        ((ConfigurableApplicationContext)context).close();
+        ((ConfigurableApplicationContext) context).close();
     }
 
+    // 实现方法的执行顺序
+    // https://stackoverflow.com/questions/36261369/control-the-order-of-methods-using-jmh#:~:text=The%20order%20in%20which%20JMH,your%20methods%20in%20that%20order.
     @Benchmark
-    public void test() {
+    public void test_0_case() {
         this.testService.add(1, 2);
     }
 
-    public static void main(String[] args) throws RunnerException {
-        //使用注解之后只需要配置一下include即可，fork和warmup、measurement都是注解
-        Options opt = new OptionsBuilder()
-                .include(Tests.class.getSimpleName())
-                .jvmArgs("-Xmx2G")
-                .build();
-        new Runner(opt).run();
+    @Benchmark
+    public void test_1_case() {
+        this.testService.sub(2, 1);
+    }
+
+    @Benchmark
+    public void test_2_case() throws InterruptedException {
+        Thread.sleep(100);
     }
 }
