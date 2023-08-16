@@ -12,7 +12,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 @TestPropertySource(properties = "app.scheduling.enable=false")
 public class ApplicationTests {
     @Test
-    public void test() {
-        System.out.println("place holder");
+    public void test() throws InterruptedException {
+        Thread.sleep(3600 * 1000);
     }
 }
