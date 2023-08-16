@@ -23,4 +23,11 @@ public class ApiController {
         return ResponseEntity.ok("成功调用/api/v1/test2接口，[param1=" + param1 + "]");
     }
 
+    @GetMapping(value = "/api/v1/test3")
+    public ResponseEntity<String> test3() throws InterruptedException {
+        log.debug("准备调用业务逻辑");
+        Thread.sleep(1000);
+        return ResponseEntity.ok("成功调用/api/v1/test3接口");
+    }
+
 }

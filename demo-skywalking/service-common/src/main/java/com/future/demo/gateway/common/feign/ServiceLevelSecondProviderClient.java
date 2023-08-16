@@ -16,4 +16,7 @@ public interface ServiceLevelSecondProviderClient {
     @GetMapping(value = "/api/v1/test2")
     ResponseEntity<String> test2(@RequestParam(value = "param1") String param1);
 
+    @GetMapping(value = "/api/v1/test3")
+    ResponseEntity<String> test3();
+
 }

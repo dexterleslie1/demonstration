@@ -37,4 +37,13 @@ public class ApiController {
         return response;
     }
 
+    @GetMapping(value = "/api/v1/test3")
+    public ResponseEntity<String> test3() throws InterruptedException {
+        log.debug("准备调用feign");
+        Thread.sleep(500);
+        ResponseEntity<String> response = this.serviceLevelSecondProviderClient.test3();
+        Thread.sleep(200);
+        log.debug("结束调用feign");
+        return response;
+    }
 }

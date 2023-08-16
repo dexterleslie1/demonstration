@@ -51,7 +51,16 @@ https://archive.apache.org/dist/skywalking/
 
 # 请求接口稍等数秒后，通过请求响应头x-request-id查询对应skywalking日志
 http://localhost:8081/api/v1/test1?param1=p1
+
+# 模拟接口调用延迟数据
+http://localhost:8081/api/v1/test3
 ```
+
+
+
+## APM
+
+> skywalking apm功能默认自动配置不需要额外配置，使用skywalking Trace功能分析哪个接口慢，使用dashboard的database功能分析慢SQL，使用dashboard APM分析各个服务的总体性能。
 
 
 
