@@ -31,7 +31,7 @@ services:
       - TZ=Asia/Shanghai
       - MYSQL_ROOT_PASSWORD=123456
     ports:
-      - 3306:3306
+      - 50000:3306
     networks:
       - net
 
