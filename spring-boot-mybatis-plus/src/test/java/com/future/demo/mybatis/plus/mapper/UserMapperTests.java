@@ -45,6 +45,16 @@ public class UserMapperTests {
 
         List<User> userList = userMapper.selectList(null);
         Assert.assertEquals(1, userList.size());
+
+        // 测试select指定列
+        QueryWrapper<User> queryWrapper = Wrappers.query();
+        queryWrapper.select("id", "name", "age");
+        queryWrapper.eq("name", name);
+        queryWrapper.orderByAsc("id");
+        List<Map<String, Object>> mapList = userMapper.selectMaps(queryWrapper);
+        Assert.assertEquals(1, mapList.size());
+        Assert.assertEquals(name, mapList.get(0).get("name"));
+        Assert.assertEquals(18, mapList.get(0).get("age"));
     }
 
     @Test
@@ -63,7 +73,7 @@ public class UserMapperTests {
         // 删除上面插入数据
         userMapper.deleteById(10001l);
 
-        Assert.assertEquals(countInsertBefore+1, countInsertAfter);
+        Assert.assertEquals(countInsertBefore + 1, countInsertAfter);
     }
 
     @Test
