@@ -45,7 +45,10 @@ public class JMHSample_01_HelloWorld {
                 .include(JMHSample_01_HelloWorld.class.getSimpleName())
                 // 指定不运行的基准测试类
                 // .exclude(JMHSample_01_HelloWorld.class.getSimpleName())
+                // 断点调试时fork=0
                 .forks(1)
+                // 发生错误停止测试
+                .shouldFailOnError(true)
                 .jvmArgs("-Xmx2G")
                 .build();
 

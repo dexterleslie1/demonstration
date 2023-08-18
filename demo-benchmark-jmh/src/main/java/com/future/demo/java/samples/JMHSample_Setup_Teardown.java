@@ -43,7 +43,10 @@ public class JMHSample_Setup_Teardown {
     public static void main(String[] args) throws RunnerException {
         Options opt = new OptionsBuilder()
                 .include(JMHSample_Setup_Teardown.class.getSimpleName())
+                // 断点调试时fork=0
                 .forks(1)
+                // 发生错误停止测试
+                .shouldFailOnError(true)
                 .build();
 
         new Runner(opt).run();

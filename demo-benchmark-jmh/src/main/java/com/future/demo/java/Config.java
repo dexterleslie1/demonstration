@@ -12,4 +12,9 @@ public class Config {
         TestService service = new TestService();
         return service;
     }
+
+    @Bean
+    MyService1 myService1() {
+        return new MyService1();
+    }
 }

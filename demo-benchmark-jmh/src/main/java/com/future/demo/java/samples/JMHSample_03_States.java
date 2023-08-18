@@ -51,7 +51,10 @@ public class JMHSample_03_States {
                 .include(JMHSample_03_States.class.getSimpleName())
                 // 2条并发执行线程
                 .threads(2)
+                // 断点调试时fork=0
                 .forks(1)
+                // 发生错误停止测试
+                .shouldFailOnError(true)
                 .build();
 
         new Runner(opt).run();

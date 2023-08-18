@@ -20,9 +20,12 @@ import java.util.concurrent.TimeUnit;
 @Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS) //测试也是1s、五遍
 // 指定并发执行线程数
 // https://stackoverflow.com/questions/39644383/jmh-run-benchmark-concurrently
-@Threads(2)
+@Threads(25)
 public class Tests {
+
     TestService testService;
+    MyService1 myService1;
+
     //springBoot容器
     private ApplicationContext context;
 
@@ -30,6 +33,10 @@ public class Tests {
         //使用注解之后只需要配置一下include即可，fork和warmup、measurement都是注解
         Options opt = new OptionsBuilder()
                 .include(Tests.class.getSimpleName())
+                // 断点调试时fork=0
+                .forks(1)
+                // 发生错误停止测试
+                .shouldFailOnError(true)
                 .jvmArgs("-Xmx2G")
                 .build();
         new Runner(opt).run();
@@ -41,9 +48,10 @@ public class Tests {
     @Setup
     public void setup() {
         //容器获取
-        context = SpringApplication.run(Application.class);
+        context = SpringApplication.run(ApplicationTest.class);
         //获取对象
         testService = context.getBean(TestService.class);
+        this.myService1 = context.getBean(MyService1.class);
     }
 
     /**
@@ -60,6 +68,8 @@ public class Tests {
     @Benchmark
     public void test_0_case() {
         this.testService.add(1, 2);
+        // NOTE: 演示jmh中mock，使用mock屏蔽此方法的抛出异常
+        this.myService1.test1();
     }
 
     @Benchmark
