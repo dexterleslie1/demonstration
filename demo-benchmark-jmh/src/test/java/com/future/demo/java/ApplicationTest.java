@@ -13,6 +13,7 @@ public class ApplicationTest {
     }
 
     // jmh测试时模拟mock
+    // https://stackoverflow.com/questions/42641853/spring-boot-integration-testing-with-mocked-services-components
     @Bean
     @Primary
     MyService1 myService1() {
