@@ -12,17 +12,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import javax.annotation.Resource;
 import java.util.Date;
 import java.util.Map;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = {Application.class})
 public class JoinTests {
-    @Autowired
+    @Resource
     DeveloperAndIpsetRelationMapper developerAndIpsetRelationMapper;
-    @Autowired
+    @Resource
     DeveloperMapper developerMapper;
-    @Autowired
+    @Resource
     IpsetMapper ipsetMapper;
 
     @Test
@@ -79,13 +80,18 @@ public class JoinTests {
 
         MPJLambdaWrapper<Developer> mpjLambdaWrapper = new MPJLambdaWrapper<>();
         mpjLambdaWrapper.
+                // 查询所有Developer列
                 selectAll(Developer.class)
+                // 只查询DeveloperAndIpsetRelation ipsetId列
                 .select(DeveloperAndIpsetRelation::getIpsetId)
+                // Developer左连接DeveloperAndIpsetRelation使用DeveloperAndIpsetRelation.developerId=Developer.id
                 .leftJoin(DeveloperAndIpsetRelation.class, DeveloperAndIpsetRelation::getDeveloperId, Developer::getId)
                 .eq(DeveloperAndIpsetRelation::getIpsetId, ipsetId11);
+        // selectOne返回一个领域对象
         Developer developerObject = this.developerMapper.selectJoinOne(Developer.class, mpjLambdaWrapper);
         Assert.assertEquals(developerId1, developerObject.getId().longValue());
 
+        // selectOne返回一个Map<String, Object>包含指定select列
         Map<String, Object> mapObject = this.developerMapper.selectJoinMap(mpjLambdaWrapper);
         Assert.assertEquals(developerId1, mapObject.get("id"));
         Assert.assertEquals(ipsetId11, mapObject.get("ipsetId"));
