@@ -1,0 +1,14 @@
+[mysqld]
+max_connections=250
+slow_query_log=1
+long_query_time=1
+slow_query_log_file=slow-query.log
+# optimize: 以下参数调整为0写性能会飞跃式地提升
+innodb_flush_log_at_trx_commit=0
+max_allowed_packet=10m
+key_buffer_size=512m
+innodb_log_file_size=512m
+innodb_log_buffer_size=256m
+innodb_file_per_table=1
+max_binlog_size=512m
+general_log_file=general.log
