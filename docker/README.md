@@ -19,13 +19,96 @@ docker run --privileged --pid=host -it alpine:3.8 nsenter -t 1 -m -u -n -i sh
 
 ## docker命令
 
-### 删除镜像
+
+
+### docker rm
+
+```
+# 删除所有容器
+docker rm $(docker ps -aq)
+```
+
+
+
+### docker stats
+
+```
+# 查看容器cpu状态
+docker stats
+
+# 查看指定容器的运行状态
+docker stats mariadb-all-in-one
+```
+
+
+
+### docker search
+
+```
+# 搜索镜像
+docker search nexus
+```
+
+
+
+### docker cp
+
+> docker cp命令复制、拷贝
+> https://www.runoob.com/docker/docker-cp-command.html
+
+```
+# 从容器复制文件到宿主机
+docker cp containername:/test.sql .
+
+# 从宿主机复制文件到容器
+docker cp ./test.sql containername:/
+```
+
+
+
+### docker image
 
 ```
 # 删除未被使用的镜像
 # https://www.baeldung.com/ops/docker-remove-dangling-unused-images
 docker image prune -a
+
+# 强制删除本地所有容器和镜像
+docker rmi -f $(docker images -aq)
+
+# 显示本地所有镜像
+# https://www.runoob.com/docker/docker-images-command.html
+docker images
 ```
+
+
+
+### docker login/logout
+
+> 登陆和登出
+> https://www.runoob.com/docker/docker-login-command.html
+
+```
+# 登陆hub.docker.com，根据提示输入用户名和密码
+docker login localhost:8082
+
+# 登出hub.docker.com
+docker logout localhost:8082
+```
+
+
+
+### docker push
+
+> 推送本地镜像到远程仓库
+> https://www.runoob.com/docker/docker-push-command.html
+
+```
+# 推送镜像dexterleslie/maven-ci-cd-demo到docker.io
+docker push dexterleslie/maven-ci-cd-demo
+```
+
+
 
 ### 网络管理
 
@@ -42,10 +125,31 @@ docker network prune
 
 
 
-### docker run重写entrypoint并带参数
+### docker run
 
 ```
+# 重写entrypoint并带参数
 docker run --rm --entrypoint /bin/sh untergeek/curator:8.0.4 -c "while true; do date; sleep 1; done;"
+
+# docker run命令传递额外启动参数
+docker run --rm --name mariadb-demo mariadb:10.4.19  --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci --skip-character-set-client-handshake
+
+# 运行容器时启动一个终端使它不退出运行
+# https://blog.csdn.net/qq_19381989/article/details/102781663
+# 前台运行
+docker run -it --name=demo-jdk8 --rm openjdk:8-jre
+
+# 后台运行
+docker run -itd --name=demo-jdk8 --rm openjdk:8-jre
+```
+
+
+
+### docker inspect
+
+```
+# 使用inspect命令查看容器信息
+docker inspect mariadb-all-in-one
 ```
 
 
