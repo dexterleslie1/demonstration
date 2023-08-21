@@ -358,3 +358,134 @@ export PATH=$PATH:/usr/local/go/bin
 ## rc.local配置
 
 > 参考dcli配置启用rc.local服务，启用服务后配置 /etc/rc.local 文件配置开机自启动服务
+
+
+
+
+
+## benchmark
+
+
+
+### 概念
+
+> **load average概念**
+> https://en.wikipedia.org/wiki/Load_%28computing%29
+> 前面三个值分别对应系统当前1分钟、5分钟、15分钟内的平均load。load用于反映当前系统的负载情况，对于16核的系统，如果每个核上cpu利用率为30%，则在不存在uninterruptible进程的情况下，系统load应该维持在4.8左右。对16核系统，如果load维持在16左右，在不存在uninterrptible进程的情况下，意味着系统CPU几乎不存在空闲状态，利用率接近于100%。结合iowait、vmstat和loadavg可以分析出系统当前的整体负载，各部分负载分布情况。
+>
+> 
+>
+> 随机读写
+> https://en.wikipedia.org/wiki/Random_access
+> 顺序读写
+> https://en.wikipedia.org/wiki/Sequential_access
+
+
+
+### sysbench工具
+
+> 什么是sysbench
+> https://www.howtoforge.com/how-to-benchmark-your-system-cpu-file-io-mysql-with-sysbench
+
+
+
+#### 基本使用
+
+```
+# centOS8安装sysbench
+yum install epel-release -y
+yum install sysbench -y
+
+# ubuntu安装sysbench
+sudo apt-get update
+sudo apt install sysbench
+
+# 显示cpu子命令帮助信息
+sysbench cpu help
+
+# 显示fileio子命令帮助信息
+sysbench fileio help
+
+
+
+# 使用sysbench产生cpu负载和分析
+sysbench --test=cpu --cpu-max-prime=2000000 --threads=100 run
+# 使用mpstat分析cpu负载，下面命令表每隔2秒收集一次cpu使用情况
+mpstat -P ALL 2
+# 使用vmstat分析cpu负载，vmstat列具体含义使用man vmstat命令查看，下面命令表示每隔2秒收集一次vmstat相关数据
+vmstat 2
+
+
+
+# 使用sysbench产生io负载和分析
+# 准备文件准备随机读写io测试
+sysbench --test=fileio --file-total-size=20G prepare
+# 开始随机读写io测试
+sysbench --test=fileio --file-total-size=20G --file-test-mode=rndrw --max-time=300 --max-requests=0 --threads=10 run
+# 清除随机读写io测试文件
+sysbench --test=fileio --file-total-size=20G cleanup
+
+# 使用iotop显示io线程使用状况
+# 安装iotop
+yum install iotop -y
+# 显示所有线程io状况
+Iotop
+
+# 使用iostat显示io使用cpu iowait状态，一般使用此命令分析系统load average，可以配合mpstat -P ALL 1命令分析每个cpu iowait情况
+# 每2秒收集io状况显示为MB
+iostat -m 2
+```
+
+
+
+#### IO性能测试
+
+> 测试指标：随机读、随机写、随机读写、4KB 块大小、多线程
+
+```
+# sysbench随机读性能测试
+sysbench --test=fileio --file-num=10 --num-threads=16 --file-total-size=10G --file-test-mode=rndrd --max-time=30 --max-requests=0 prepare
+
+sysbench --test=fileio --file-num=10 --num-threads=16 --file-total-size=10G --file-test-mode=rndrd --max-time=30 --max-requests=0 run
+
+sysbench --test=fileio --file-num=10 --num-threads=16 --file-total-size=10G --file-test-mode=rndrd --max-time=30 --max-requests=0 cleanup
+
+
+
+
+# sysbench随机写性能测试
+sysbench --test=fileio --file-num=10 --num-threads=16 --file-total-size=10G --file-test-mode=rndwr --max-time=30 --max-requests=0 prepare
+
+sysbench --test=fileio --file-num=10 --num-threads=16 --file-total-size=10G --file-test-mode=rndwr --max-time=30 --max-requests=0 run
+
+sysbench --test=fileio --file-num=10 --num-threads=16 --file-total-size=10G --file-test-mode=rndwr --max-time=30 --max-requests=0 cleanup
+
+
+
+
+# sysbench随机读写性能
+sysbench --test=fileio --file-num=10 --num-threads=16 --file-total-size=10G --file-test-mode=rndrw --max-time=30 --max-requests=0 prepare
+
+sysbench --test=fileio --file-num=10 --num-threads=16 --file-total-size=10G --file-test-mode=rndrw --max-time=30 --max-requests=0 run
+
+sysbench --test=fileio --file-num=10 --num-threads=16 --file-total-size=10G --file-test-mode=rndrw --max-time=30 --max-requests=0 cleanup
+```
+
+
+
+### stress工具
+
+```
+# 使用stress产生内存负载和分析
+# stress安装
+yum install stress -y
+
+# 并发使用2个worker每个worker占用1g virtual memory持续测试3000秒
+stress --vm 3 --vm-bytes 1g --timeout 3000s
+
+# 使用mpstat -P ALL 1可以看到每个cpu %syswait都达到100%
+mpstat -P ALL 1
+# 使用free命令显示可用内存，下面命令以g为单位显示可用内存
+free -g
+```
+
