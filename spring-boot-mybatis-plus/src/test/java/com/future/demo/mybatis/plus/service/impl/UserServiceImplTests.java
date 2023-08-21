@@ -1,6 +1,8 @@
 package com.future.demo.mybatis.plus.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.OrderItem;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.future.demo.mybatis.plus.Application;
 import com.future.demo.mybatis.plus.entity.User;
@@ -108,22 +110,35 @@ public class UserServiceImplTests {
         // 使用mapper分页
         page = new Page<>(currentPage, size);
         page.orders().add(new OrderItem("id", false));
+        // 表示不需要select count(*) from ...
+        page.setSearchCount(false);
         page = this.userMapper.selectPage(page, null);
-        currentTotalCount = (int)page.getTotal();
+
+        // 使用自定义count
+        QueryWrapper<User> queryWrapper = Wrappers.query();
+        queryWrapper.select("id");
+
+        currentTotalCount = this.userMapper.selectCount(queryWrapper);
         userList = page.getRecords();
         // 当前页码
         Assert.assertEquals(1, page.getCurrent());
         // 每页显示数量
         Assert.assertEquals(size, page.getSize());
         // 总页数
-        if(currentTotalCount%size != 0) {
-            expectedPages = (currentTotalCount+size)/size;
+        if(randomTotalCount%size != 0) {
+            expectedPages = (randomTotalCount+size)/size;
         } else {
-            expectedPages = currentTotalCount/size;
+            expectedPages = randomTotalCount/size;
         }
-        Assert.assertEquals(expectedPages, page.getPages());
+        int actualPages;
+        if(currentTotalCount%size != 0) {
+            actualPages = (currentTotalCount+size)/size;
+        } else {
+            actualPages = currentTotalCount/size;
+        }
+        Assert.assertEquals(expectedPages, actualPages);
         // 总记录数
-        Assert.assertEquals(currentTotalCount, page.getTotal());
+        Assert.assertEquals(randomTotalCount, currentTotalCount);
         Assert.assertEquals(size, userList.size());
 
         for(int i=0; i<randomTotalCount; i++) {
