@@ -1,3 +1,403 @@
+## 说明
+
+> 项目demo-mariadb-performance-test用于mariadb压力测试和调优
+
+
+
+## 分区表
+
+> Partition key , unique key, primary key建立分区表遵循规则
+> https://dev.mysql.com/doc/refman/8.0/en/partitioning-limitations-partitioning-keys-unique-keys.html
+>
+> information_schema.PARTITIONS查看表分区状态
+
+```
+# 创建表
+create table if not exists gameReportFLSeq(
+	id bigint not null auto_increment,
+    ruleCode varchar(16) not null,
+    seqNumber varchar(16) not null,
+    userIdHy bigint not null,
+    `type` int not null,
+    `date` datetime not null,
+    primary key(id, date)
+);
+
+# 创建分区
+alter table gameReportFLSeq partition by range columns(date)(
+	partition p20150512 values less than ('2015-05-12 07:30:00'),
+	partition pr values less than maxvalue
+);
+
+# 重新分区
+ALTER TABLE gameReportFLSeq REORGANIZE PARTITION pr INTO ( 
+    partition p20150513 VALUES LESS THAN ('2015-05-13 07:30:00'), 
+    partition pr VALUES LESS THAN MAXVALUE 
+);
+
+# 取消所有分区
+alter table gameReportFLSeq remove partitioning;
+```
+
+
+
+## 初始化数据库脚本
+
+```
+/*创建用户表*/
+create table if not exists t_user(
+   id int primary key auto_increment,
+   loginname varchar(50) not null comment '登录名',
+   password varchar(100) not null comment '登录密码',
+   createTime datetime not null comment '创建时间'
+)engine=InnoDB default charset=utf8;
+
+delimiter |
+begin not atomic
+	if not exists(select * from information_schema.`COLUMNS` where 
+               TABLE_SCHEMA=database() and 
+               TABLE_NAME='t_user' and 
+               COLUMN_NAME='ticket') then
+      alter table t_user add column ticket varchar(50) comment '登陆成功后，系统分配uuid身份凭证';
+   end if;
+   
+   if not exists(select * from information_schema.TABLE_CONSTRAINTS where
+                           CONSTRAINT_SCHEMA=database() and
+                           CONSTRAINT_NAME='t_user_unique_1' and 
+                           CONSTRAINT_TYPE='UNIQUE') then
+      alter table t_user add constraint t_user_unique_1 unique(loginname);
+   end if;
+end|
+delimiter ;
+
+/*初始化插入用户数据*/
+insert into t_user(loginname,password,createTime)
+select 'root','10d66ccecdf01ccfff2b86cfb1fd2b76',now() from dual
+where not exists(select id from t_user where loginname='root');
+
+/*暂存crawl数据*/
+create table if not exists t_crawl_match(
+   id int primary key auto_increment,
+   className varchar(25) not null comment '体育类型名',
+   leagueName varchar(25) not null comment '联赛名',
+   competitorHomeName varchar(25) not null comment '主参赛者',
+   competitorAwayName varchar(25) not null comment '客参赛者',
+   resultName varchar(25) not null comment '赛果',
+   sourceName varchar(25) not null comment '赛果来源',
+   odds decimal(10,5) not null comment '赛果赔率',
+   `time` datetime not null comment '竞赛时间',
+   createTime datetime not null comment '创建时间'
+)engine=InnoDB default charset=utf8;
+
+delimiter |
+begin not atomic
+	if not exists(select * from information_schema.TABLE_CONSTRAINTS where
+					   CONSTRAINT_SCHEMA=database() and
+					   CONSTRAINT_NAME='t_crawl_match_unique_1' and 
+					   CONSTRAINT_TYPE='UNIQUE') then
+	  alter table t_crawl_match add constraint t_crawl_match_unique_1 
+	  unique(className,leagueName,competitorHomeName,competitorAwayName,resultName,sourceName,`time`);
+   end if;
+end|
+delimiter ;
+
+create table if not exists t_notification(
+   id int primary key auto_increment,
+   userId int not null comment '用户id',
+   `type` int not null default 0 comment '通知类型',
+   content varchar(1024) not null comment '通知内容',
+   isReceived int not null default 0 comment '通知是否已收到',
+   createTime datetime not null comment '创建时间'
+)engine=InnoDB default charset=utf8;
+
+delimiter |
+begin not atomic
+	if not exists(select * from information_schema.TABLE_CONSTRAINTS where
+                           CONSTRAINT_SCHEMA=database() and
+                           CONSTRAINT_NAME='t_notification_fk_userId' and 
+                           CONSTRAINT_TYPE='FOREIGN KEY') then
+      alter table t_notification add constraint t_notification_fk_userId
+      foreign key (userId) references t_user(id);
+   end if;
+end|
+delimiter ;
+
+/*体育类型*/
+create table if not exists t_sport_class(
+   id int primary key auto_increment,
+   name varchar(25) not null comment '体育类型名称',
+   createTime datetime not null comment '创建时间'
+)engine=InnoDB default charset=utf8;
+/*联赛*/
+create table if not exists t_sport_league(
+   id int primary key auto_increment,
+   sportClassId int not null comment '联赛所属体育类型id',
+   name varchar(25) not null comment '联赛名',
+   createTime datetime not null comment '创建时间'
+)engine=InnoDB default charset=utf8;
+/*联赛别名*/
+create table if not exists t_sport_league_alias(
+   id int primary key auto_increment,
+   leagueId int not null comment '所属联赛id',
+   alias varchar(25) not null comment '联赛别名',
+   createTime datetime not null comment '创建时间'
+)engine=InnoDB default charset=utf8;
+/*参赛者*/
+create table if not exists t_sport_competitor(
+   id int primary key auto_increment,
+   name varchar(25) not null comment '参赛者名',
+   createTime datetime not null comment '创建时间'
+)engine=InnoDB default charset=utf8;
+/*参赛者别名*/
+create table if not exists t_sport_competitor_alias(
+   id int primary key auto_increment,
+   competitorId int not null comment '所属参赛者id',
+   alias varchar(25) not null comment '别名',
+   createTime datetime not null comment '创建时间'
+)engine=InnoDB default charset=utf8;
+/*赛事*/
+create table if not exists t_sport_match(
+   id int primary key auto_increment,
+   leagueId int not null comment '所属联赛id',
+    competitorHomeId int not null comment '主参赛者id',
+    competitorAwayId int not null comment '客参赛者id',
+    `time` datetime not null comment '竞赛时间',
+   createTime datetime not null comment '创建时间'
+)engine=InnoDB default charset=utf8;
+/*赛事结果*/
+create table if not exists t_sport_match_result(
+   id int primary key auto_increment,
+    name varchar(25) not null comment '赛果名称，例如主胜、打和、客胜，波胆1-0、0-1、1-1等',
+   createTime datetime not null comment '创建时间'
+)engine=InnoDB default charset=utf8;
+/*赛果赔率来源*/
+create table if not exists t_sport_match_result_odds_source(
+   id int primary key auto_increment,
+    name varchar(100) not null comment '名称',
+   createTime datetime not null comment '创建时间'
+)engine=InnoDB default charset=utf8;
+/*赛果赔率*/
+create table if not exists t_sport_match_result_odds(
+   id int primary key auto_increment,
+    matchId int not null comment '所属赛事id',
+    matchResultId int not null comment '所属赛果id',
+    sourceId int not null comment '赔率来源',
+    leagueAliasId int not null comment '所属联赛别名id',
+    competitorAliasHomeId int not null comment '主参赛者别名id',
+    competitorAliasAwayId int not null comment '客参赛者别名id',
+    odds decimal(10,5) not null comment '赛果赔率',
+    isMax int not null default 0 comment '是否最大赔率',
+   createTime datetime not null comment '创建时间'
+)engine=InnoDB default charset=utf8;
+
+/*用户表约束*/
+delimiter |
+begin not atomic
+   if not exists(select * from information_schema.TABLE_CONSTRAINTS where
+                           CONSTRAINT_SCHEMA=database() and
+                           CONSTRAINT_NAME='t_sport_class_unique_1' and 
+                           CONSTRAINT_TYPE='UNIQUE') then
+      alter table t_sport_class add constraint t_sport_class_unique_1 unique(name);
+   end if;
+   
+   if not exists(select * from information_schema.TABLE_CONSTRAINTS where
+                           CONSTRAINT_SCHEMA=database() and
+                           CONSTRAINT_NAME='t_sport_league_unique_1' and 
+                           CONSTRAINT_TYPE='UNIQUE') then
+      alter table t_sport_league add constraint t_sport_league_unique_1 
+      unique(name);
+   end if;
+   if not exists(select * from information_schema.TABLE_CONSTRAINTS where
+                           CONSTRAINT_SCHEMA=database() and
+                           CONSTRAINT_NAME='t_sport_league_fk_sportClassId' and 
+                           CONSTRAINT_TYPE='FOREIGN KEY') then
+      alter table t_sport_league add constraint t_sport_league_fk_sportClassId foreign key (sportClassId)
+      references t_sport_class(id);
+   end if;
+   
+   if not exists(select * from information_schema.TABLE_CONSTRAINTS where
+                           CONSTRAINT_SCHEMA=database() and
+                           CONSTRAINT_NAME='t_sport_league_alias_unique_1' and 
+                           CONSTRAINT_TYPE='UNIQUE') then
+      alter table t_sport_league_alias add constraint t_sport_league_alias_unique_1
+      unique(alias);
+   end if;
+   if not exists(select * from information_schema.TABLE_CONSTRAINTS where
+                           CONSTRAINT_SCHEMA=database() and
+                           CONSTRAINT_NAME='t_sport_league_alias_fk_leagueId' and 
+                           CONSTRAINT_TYPE='FOREIGN KEY') then
+      alter table t_sport_league_alias add constraint t_sport_league_alias_fk_leagueId
+      foreign key (leagueId) references t_sport_league(id);
+   end if;
+   
+   if not exists(select * from information_schema.TABLE_CONSTRAINTS where
+                           CONSTRAINT_SCHEMA=database() and
+                           CONSTRAINT_NAME='t_sport_competitor_unique_1' and 
+                           CONSTRAINT_TYPE='UNIQUE') then
+      alter table t_sport_competitor add constraint t_sport_competitor_unique_1 
+      unique(name);
+   end if;
+   if not exists(select * from information_schema.TABLE_CONSTRAINTS where
+                           CONSTRAINT_SCHEMA=database() and
+                           CONSTRAINT_NAME='t_sport_competitor_alias_unique_1' and 
+                           CONSTRAINT_TYPE='UNIQUE') then
+      alter table t_sport_competitor_alias add constraint t_sport_competitor_alias_unique_1
+      unique(competitorId,alias);
+   end if;
+   if not exists(select * from information_schema.TABLE_CONSTRAINTS where
+                           CONSTRAINT_SCHEMA=database() and
+                           CONSTRAINT_NAME='t_sport_competitor_alias_fk_competitorId' and 
+                           CONSTRAINT_TYPE='FOREIGN KEY') then
+      alter table t_sport_competitor_alias add constraint t_sport_competitor_alias_fk_competitorId
+      foreign key (competitorId) references t_sport_competitor(id);
+   end if;
+   
+   if not exists(select * from information_schema.TABLE_CONSTRAINTS where
+                           CONSTRAINT_SCHEMA=database() and
+                           CONSTRAINT_NAME='t_sport_match_unique_1' and 
+                           CONSTRAINT_TYPE='UNIQUE') then
+      /*不可能出现同时间同一个主和客参赛者*/
+      alter table t_sport_match add constraint t_sport_match_unique_1
+      unique(competitorHomeId,competitorAwayId,`time`);
+   end if;
+   if not exists(select * from information_schema.TABLE_CONSTRAINTS where
+                           CONSTRAINT_SCHEMA=database() and
+                           CONSTRAINT_NAME='t_sport_match_fk_leagueId' and 
+                           CONSTRAINT_TYPE='FOREIGN KEY') then
+      alter table t_sport_match add constraint t_sport_match_fk_leagueId
+      foreign key (leagueId) references t_sport_league(id);
+   end if;
+   if not exists(select * from information_schema.TABLE_CONSTRAINTS where
+                           CONSTRAINT_SCHEMA=database() and
+                           CONSTRAINT_NAME='t_sport_match_fk_competitorHomeId' and 
+                           CONSTRAINT_TYPE='FOREIGN KEY') then
+      alter table t_sport_match add constraint t_sport_match_fk_competitorHomeId
+      foreign key (competitorHomeId) references t_sport_competitor(id);
+   end if;
+   if not exists(select * from information_schema.TABLE_CONSTRAINTS where
+                           CONSTRAINT_SCHEMA=database() and
+                           CONSTRAINT_NAME='t_sport_match_fk_competitorAwayId' and 
+                           CONSTRAINT_TYPE='FOREIGN KEY') then
+      alter table t_sport_match add constraint t_sport_match_fk_competitorAwayId
+      foreign key (competitorAwayId) references t_sport_competitor(id);
+   end if;
+   
+   if not exists(select * from information_schema.TABLE_CONSTRAINTS where
+                           CONSTRAINT_SCHEMA=database() and
+                           CONSTRAINT_NAME='t_sport_match_result_unique_1' and 
+                           CONSTRAINT_TYPE='UNIQUE') then
+      alter table t_sport_match_result add constraint t_sport_match_result_unique_1
+      unique(name);
+   end if;
+   
+   if not exists(select * from information_schema.TABLE_CONSTRAINTS where
+                           CONSTRAINT_SCHEMA=database() and
+                           CONSTRAINT_NAME='t_sport_match_result_odds_source_unique_1' and 
+                           CONSTRAINT_TYPE='UNIQUE') then
+      alter table t_sport_match_result_odds_source add constraint t_sport_match_result_odds_source_unique_1
+      unique(name);
+   end if;
+   
+   if not exists(select * from information_schema.TABLE_CONSTRAINTS where
+                           CONSTRAINT_SCHEMA=database() and
+                           CONSTRAINT_NAME='t_sport_match_result_odds_unique_1' and 
+                           CONSTRAINT_TYPE='UNIQUE') then
+      /*不能重复同一时间赛果赔率*/
+      alter table t_sport_match_result_odds add constraint t_sport_match_result_odds_unique_1
+      unique(matchId,matchResultId,sourceId,createTime);
+   end if;
+   if not exists(select * from information_schema.TABLE_CONSTRAINTS where
+                           CONSTRAINT_SCHEMA=database() and
+                           CONSTRAINT_NAME='t_sport_match_result_odds_fk_matchId' and 
+                           CONSTRAINT_TYPE='FOREIGN KEY') then
+      alter table t_sport_match_result_odds add constraint t_sport_match_result_odds_fk_matchId
+      foreign key (matchId) references t_sport_match(id);
+   end if;
+   if not exists(select * from information_schema.TABLE_CONSTRAINTS where
+                           CONSTRAINT_SCHEMA=database() and
+                           CONSTRAINT_NAME='t_sport_match_result_odds_fk_matchResultId' and 
+                           CONSTRAINT_TYPE='FOREIGN KEY') then
+      alter table t_sport_match_result_odds add constraint t_sport_match_result_odds_fk_matchResultId
+      foreign key (matchResultId) references t_sport_match_result(id);
+   end if;
+   if not exists(select * from information_schema.TABLE_CONSTRAINTS where
+                           CONSTRAINT_SCHEMA=database() and
+                           CONSTRAINT_NAME='t_sport_match_result_odds_fk_sourceId' and 
+                           CONSTRAINT_TYPE='FOREIGN KEY') then
+      alter table t_sport_match_result_odds add constraint t_sport_match_result_odds_fk_sourceId
+      foreign key (sourceId) references t_sport_match_result_odds_source(id);
+   end if;
+   if not exists(select * from information_schema.TABLE_CONSTRAINTS where
+                           CONSTRAINT_SCHEMA=database() and
+                           CONSTRAINT_NAME='t_sport_match_result_odds_fk_leagueAliasId' and 
+                           CONSTRAINT_TYPE='FOREIGN KEY') then
+      alter table t_sport_match_result_odds add constraint t_sport_match_result_odds_fk_leagueAliasId
+      foreign key (leagueAliasId) references t_sport_league_alias(id);
+   end if;
+   if not exists(select * from information_schema.TABLE_CONSTRAINTS where
+                           CONSTRAINT_SCHEMA=database() and
+                           CONSTRAINT_NAME='t_sport_match_result_odds_fk_competitorAliasHomeId' and 
+                           CONSTRAINT_TYPE='FOREIGN KEY') then
+      alter table t_sport_match_result_odds add constraint t_sport_match_result_odds_fk_competitorAliasHomeId
+      foreign key (competitorAliasHomeId) references t_sport_competitor_alias(id);
+   end if;
+   if not exists(select * from information_schema.TABLE_CONSTRAINTS where
+                           CONSTRAINT_SCHEMA=database() and
+                           CONSTRAINT_NAME='t_sport_match_result_odds_fk_competitorAliasAwayId' and 
+                           CONSTRAINT_TYPE='FOREIGN KEY') then
+      alter table t_sport_match_result_odds add constraint t_sport_match_result_odds_fk_competitorAliasAwayId
+      foreign key (competitorAliasAwayId) references t_sport_competitor_alias(id);
+   end if;
+end|
+delimiter ;
+
+insert into t_sport_class(name,createTime)
+select '足球',now() from dual where not exists(
+   select id from t_sport_class where name='足球'
+);
+
+insert into t_sport_league(sportClassId,name,createTime)
+select (select id from t_sport_class where name='足球'),'英超',now() from dual where not exists(
+   select id from t_sport_league where name='英超'
+);
+insert into t_sport_league_alias(leagueId,alias,createTime)
+select (select id from t_sport_league where name='英超'),'英超',now() from dual where not exists(
+   select id from t_sport_league_alias where alias='英超'
+);
+
+insert into t_sport_competitor(name,createTime)
+select '曼联',now() from dual where not exists(
+   select id from t_sport_competitor where name='曼联'
+);
+insert into t_sport_competitor_alias(competitorId,alias,createTime)
+select (select id from t_sport_competitor where name='曼联'),'曼联',now() from dual where not exists(
+   select id from t_sport_competitor_alias where alias='曼联' and competitorId=(select id from t_sport_competitor where name='曼联')
+);
+insert into t_sport_competitor(name,createTime)
+select '曼城',now() from dual where not exists(
+   select id from t_sport_competitor where name='曼城'
+);
+insert into t_sport_competitor_alias(competitorId,alias,createTime)
+select (select id from t_sport_competitor where name='曼城'),'曼城',now() from dual where not exists(
+   select id from t_sport_competitor_alias where alias='曼城' and competitorId=(select id from t_sport_competitor where name='曼城')
+);
+
+insert into t_sport_match_result(name,createTime)
+select '主胜',now() from dual where not exists(
+   select id from t_sport_match_result where name='主胜'
+);
+insert into t_sport_match_result(name,createTime)
+select '打和',now() from dual where not exists(
+   select id from t_sport_match_result where name='打和'
+);
+insert into t_sport_match_result(name,createTime)
+select '客胜',now() from dual where not exists(
+   select id from t_sport_match_result where name='客胜'
+);
+```
+
+
+
 ## 存储过程
 
 
