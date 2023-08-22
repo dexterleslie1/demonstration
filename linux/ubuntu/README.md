@@ -12,7 +12,7 @@
    sudo apt install fcitx-googlepinyin
    ```
 
-4. 重启系统后点击右上角输入法configure，如果googlepinyin输入法不存在则添加，并且设置切换输入法快捷键为ctrl+alt+shift
+4. 重启系统后点击右上角输入法configure或者在应用搜索中输入 Fcitx Configuration，如果googlepinyin输入法不存在则添加，并且设置切换输入法快捷键为ctrl+alt+shift
 
 
 
@@ -128,7 +128,7 @@ sudo apt update
 sudo apt install ubuntu-desktop
 
 # 安装xrdp
-sudo apt install xrdp 
+sudo apt install xrdp
 
 # 查看xrdp运行状态
 sudo systemctl status xrdp
