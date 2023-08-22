@@ -81,6 +81,8 @@ public class OperationLogService {
         Page<OperationLogModel> pageObject = new Page<>(page, size);
         pageObject.orders().add(new OrderItem("id", false));
         QueryWrapper<OperationLogModel> queryWrapper = Wrappers.query();
+        // optimize: 使用覆盖索引会提高查询效率，但是目前测试没有发现很显著的性能提升
+        queryWrapper.select("id", "auth_id", "operation_type");
         queryWrapper.eq("auth_id", contextUserId);
 
         if (operationTypeList != null && operationTypeList.size() > 0) {
