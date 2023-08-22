@@ -37,6 +37,18 @@ ctrl+tab tab之间切换
 
 ## 操作系统命令
 
+
+
+### find命令
+
+```
+# 结合find命令删除指定名称的目录，包括子目录内的相应目录
+# https://askubuntu.com/questions/43709/how-do-i-remove-all-files-that-match-a-pattern
+find . -type d -name node_modules -exec rm -rfv {} \;
+```
+
+
+
 ### ln命令
 
 **硬链接使用**
