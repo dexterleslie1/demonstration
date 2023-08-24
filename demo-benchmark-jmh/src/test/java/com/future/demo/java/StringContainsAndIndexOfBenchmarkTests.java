@@ -18,11 +18,11 @@ import java.util.concurrent.TimeUnit;
 @State(Scope.Benchmark) //使用的SpringBoot容器，都是无状态单例Bean，无安全问题，可以直接使用基准作用域BenchMark
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
 @Fork(1)  //整体平均执行1次
-@Warmup(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS) //预热1s
-@Measurement(iterations = 5, time = 5, timeUnit = TimeUnit.SECONDS) //测试也是1s、五遍
+@Warmup(iterations = 5, time = 5, timeUnit = TimeUnit.SECONDS) //预热1s
+@Measurement(iterations = 5, time = 10, timeUnit = TimeUnit.SECONDS) //测试也是1s、五遍
 // 指定并发执行线程数
 // https://stackoverflow.com/questions/39644383/jmh-run-benchmark-concurrently
-@Threads(25)
+@Threads(-1)
 public class StringContainsAndIndexOfBenchmarkTests {
 
     Random random = new Random();
