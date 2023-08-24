@@ -10,7 +10,10 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.jdbc.core.JdbcTemplate;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -30,6 +33,7 @@ public class Tests {
 
     Random random = new Random();
     OperationLogService operationLogService;
+    JdbcTemplate jdbcTemplate;
 
     List<Long> userIdList = new ArrayList<>();
 
@@ -58,6 +62,7 @@ public class Tests {
         context = SpringApplication.run(Application.class);
         //获取对象
         this.operationLogService = context.getBean(OperationLogService.class);
+        this.jdbcTemplate = context.getBean(JdbcTemplate.class);
 
         for (long i = 1; i <= 200000; i++) {
             userIdList.add(i);
@@ -73,7 +78,7 @@ public class Tests {
         ((ConfigurableApplicationContext) context).close();
     }
 
-//    @Benchmark
+    //    @Benchmark
     public void testAdd() {
         int randomIndex = random.nextInt(userIdList.size());
         Long userId = userIdList.get(randomIndex);
@@ -86,7 +91,7 @@ public class Tests {
         this.operationLogService.add(userId, operatorId, passiveId, operationType, content);
     }
 
-    @Benchmark
+    //    @Benchmark
     public void testList() throws BusinessException {
         int randomIndex = random.nextInt(userIdList.size());
         Long userId = userIdList.get(randomIndex);
@@ -97,6 +102,19 @@ public class Tests {
 
         List<OperationType> operationTypeList = this.getRandomOperationTypeList();
         this.operationLogService.list(userId, operationTypeList, randomPage, randomSize);
+    }
+
+    @Benchmark
+    public void testConnectAndDisconnect() throws SQLException {
+        Connection connection = null;
+        try {
+            connection = this.jdbcTemplate.getDataSource().getConnection();
+        } finally {
+            if (connection != null) {
+                connection.close();
+            }
+        }
+
     }
 
     List<OperationType> getRandomOperationTypeList() {
