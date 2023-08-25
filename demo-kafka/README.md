@@ -53,3 +53,20 @@ cd /opt/kafka/bin
 
 ```
 
+
+
+### 生产消费
+
+```
+# 启动生产端
+./kafka-console-producer.sh --topic topic1 --bootstrap-server demo-kafka-server:9092
+
+# 启动消费端，--from-beiginning表示所有消息重新接收一次
+./kafka-console-consumer.sh --topic topic1 --bootstrap-server demo-kafka-server:9092 --from-beginning
+```
+
+
+
+### springboot集成kafka
+
+> NOTE: 参考当前目录的maven项目
