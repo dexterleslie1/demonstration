@@ -173,4 +173,59 @@ sudo systemctl restart xrdp
 >
 > - command/windows + down 还原当前窗口原始大小
 >
-> 
+
+
+
+## apt包管理
+
+```
+# 搜索名为net-tools包
+apt-cache search net-tools
+
+# 安装net-tools
+apt-get install net-tools
+
+# 搜索本机已安装包
+https://linuxize.com/post/how-to-list-installed-packages-on-debian/
+apt list --installed | grep net-tools
+dpkg-query -l | grep openresty
+
+# apt卸载并重新安装openresty
+删除openresty deb包
+apt remove --purge openresty
+
+# 删除openresty 相关deb依赖
+apt autoremove
+
+# 安装openresty
+apt install openresty
+
+# 查看远程仓库指定软件可安装版本
+sudo apt-cache madison xrdp
+
+# 从本地deb包安装
+sudo apt install ./xxx.deb
+
+# snap列出所有安装程序
+snap list | grep code
+
+# snap删除已安装程序
+snap remove code
+
+# apt-get update命令解析
+# https://askubuntu.com/questions/222348/what-does-sudo-apt-get-update-do
+# 
+# It updates the available software list on your computer.
+# 
+# Your computer has a list (like a catalog) that contains all the available software that # the Ubuntu servers have available. But the available software and versions might change, # so a "update" will hit the server and see what software is available in order to update # its local lists (or catalogs).
+# 
+# Note that update is diferent from upgrade. Update, as mentioned above, will fetch 
+# available software and update the lists while upgrade will install new versions of 
+# software installed on your computer (actual software updates).
+# 
+# To actually upgrade your software (not "update" the lists), you execute the command
+# 
+# sudo apt-get upgrade
+# which is usually executed after an "update".
+```
+
