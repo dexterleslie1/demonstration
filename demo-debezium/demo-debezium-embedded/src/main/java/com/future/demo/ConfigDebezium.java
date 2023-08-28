@@ -16,6 +16,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -57,17 +58,18 @@ public class ConfigDebezium {
                     .map(fieldName -> Pair.of(fieldName, struct.get(fieldName)))
                     .collect(toMap(Pair::getKey, Pair::getValue));
 
-            log.debug("payload={},operation={}", payload, operation);
+            log.info("payload={},operation={}", payload, operation);
         }
     }
 
     public io.debezium.config.Configuration customerConnector() {
+        String randomString = UUID.randomUUID().toString();
         return io.debezium.config.Configuration.create()
                 .with("name", "customer-mysql-connector")
                 .with("connector.class", "io.debezium.connector.mysql.MySqlConnector")
                 .with("offset.storage", "org.apache.kafka.connect.storage.FileOffsetBackingStore")
-                .with("offset.storage.file.filename", "/tmp/offsets.dat")
-                .with("offset.flush.interval.ms", "60000")
+                .with("offset.storage.file.filename", "/tmp/offset-" + randomString + ".dat")
+                .with("offset.flush.interval.ms", "10000")
                 .with("database.hostname", "localhost")
                 .with("database.port", "50000")
                 .with("database.user", "root")
@@ -77,12 +79,19 @@ public class ConfigDebezium {
                 .with("include.schema.changes", "false")
                 .with("database.server.id", "10181")
                 .with("database.server.name", "customer-mysql-db-server")
+
+                // debezium2.x配置
+                .with("schema.history.internal", "io.debezium.storage.file.history.FileSchemaHistory")
+                .with("schema.history.internal.file.filename", "/tmp/dbhistory-" + randomString + ".dat")
+
+                // debezium1.x配置
                 .with("database.history", "io.debezium.relational.history.FileDatabaseHistory")
-                .with("database.history.file.filename", "/tmp/dbhistory.dat")
+                .with("database.history.file.filename", "/tmp/dbhistory-" + randomString + ".dat")
+
                 .with("errors.max.retries", "-1")
                 .with("errors.retry.delay.initial.ms", "300")
                 .with("errors.retry.delay.max.ms", "5000")
-//                .with("topic.prefix", "demo-debezium")
+                .with("topic.prefix", "demo-debezium")
 //                .with("schema.history.internal.kafka.topic", "demo-debezium")
 //                .with("schema.history.internal.kafka.bootstrap.servers", "localhost:9092")
                 .build();
