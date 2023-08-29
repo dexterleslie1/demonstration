@@ -241,6 +241,27 @@ curl -X POST -d '{"param1":"v1"}' -H "Content-Type: application/json" http://loc
 
 
 
+### yum命令
+
+```
+# 显示redis所有版本
+yum list --showduplicates redis
+
+# 安装指定版本redis，yum install redis-<version>
+yum install redis-3.2.11-1.el6
+
+# 搜索安装
+yum search openjdk
+
+# 清除yum缓存，删除/var/cache/dnf目录下yum缓存数据
+yum clean all
+
+# 创建yum缓存，下载远程yum源仓库数据到本地目录/var/cache/dnf目录
+yum makecache
+```
+
+
+
 
 
 ## 文件和目录
