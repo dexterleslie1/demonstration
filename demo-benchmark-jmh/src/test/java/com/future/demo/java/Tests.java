@@ -1,6 +1,7 @@
 package com.future.demo.java;
 
 import org.openjdk.jmh.annotations.*;
+import org.openjdk.jmh.infra.Blackhole;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
@@ -17,10 +18,10 @@ import java.util.concurrent.TimeUnit;
 @OutputTimeUnit(TimeUnit.SECONDS)
 @Fork(1)  //整体平均执行1次
 @Warmup(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS) //预热1s
-@Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS) //测试也是1s、五遍
+@Measurement(iterations = 3, time = 10, timeUnit = TimeUnit.SECONDS) //测试也是1s、五遍
 // 指定并发执行线程数
 // https://stackoverflow.com/questions/39644383/jmh-run-benchmark-concurrently
-@Threads(25)
+@Threads(-1)
 public class Tests {
 
     TestService testService;
@@ -37,7 +38,17 @@ public class Tests {
                 .forks(1)
                 // 发生错误停止测试
                 .shouldFailOnError(true)
-                .jvmArgs("-Xmx2G")
+                .jvmArgs("-Xmx4G",
+                        "-server"/*,
+                        "-XX:+UseG1GC",
+                        "-XX:InitialHeapSize=8g",
+                        "-XX:MaxHeapSize=8g",
+                        "-XX:MaxGCPauseMillis=500",
+                        "-XX:+DisableExplicitGC",
+                        "-XX:+UseStringDeduplication",
+                        "-XX:+ParallelRefProcEnabled",
+                        "-XX:MaxMetaspaceSize=512m",
+                        "-XX:MaxTenuringThreshold=1"*/)
                 .build();
         new Runner(opt).run();
     }
@@ -65,20 +76,26 @@ public class Tests {
 
     // 实现方法的执行顺序
     // https://stackoverflow.com/questions/36261369/control-the-order-of-methods-using-jmh#:~:text=The%20order%20in%20which%20JMH,your%20methods%20in%20that%20order.
-    @Benchmark
+//    @Benchmark
     public void test_0_case() {
         this.testService.add(1, 2);
         // NOTE: 演示jmh中mock，使用mock屏蔽此方法的抛出异常
         this.myService1.test1();
     }
 
-    @Benchmark
+    //    @Benchmark
     public void test_1_case() {
         this.testService.sub(2, 1);
     }
 
-    @Benchmark
+    //    @Benchmark
     public void test_2_case() throws InterruptedException {
         Thread.sleep(100);
+    }
+
+    @Benchmark
+    public void test_cpu_utilize(Blackhole blackhole) {
+        byte[] data = new byte[4096];
+        blackhole.consume(data);
     }
 }

@@ -1,4 +1,4 @@
-package com.future.demo.java.samples;
+package com.future.demo.java;
 
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.runner.Runner;
@@ -13,12 +13,13 @@ import java.util.concurrent.TimeUnit;
 @Measurement(iterations = 2, time = 1, timeUnit = TimeUnit.SECONDS)
 // 提供报告结果的默认时间单位
 @OutputTimeUnit(TimeUnit.SECONDS)
-public class JMHSample_03_States {
+public class JMHSample_03_States_Tests {
     // https://blog.csdn.net/m0_37607945/article/details/111479890
+    // https://github.com/melix/jmh-gradle-example/blob/master/src/jmh/java/org/openjdk/jmh/samples/JMHSample_03_States.java
     // 基础测试内线程间共享
     @State(Scope.Benchmark)
     // 基准测试内线程内共享
-    //@State(Scope.Thread)
+//    @State(Scope.Thread)
     // 基础测试间变量共享
     //@State(Scope.Group)
     public static class MyState {
@@ -48,7 +49,7 @@ public class JMHSample_03_States {
      */
     public static void main(String[] args) throws RunnerException {
         Options opt = new OptionsBuilder()
-                .include(JMHSample_03_States.class.getSimpleName())
+                .include(JMHSample_03_States_Tests.class.getSimpleName())
                 // 2条并发执行线程
                 .threads(2)
                 // 断点调试时fork=0
