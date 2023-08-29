@@ -153,3 +153,24 @@ git push http://root:token-string-here123456@localhost/root/demo-devops.git --al
 git pull http://root:token-string-here123456@localhost/root/demo-devops.git
 ```
 
+
+
+## git使用http、socks5代理加速
+
+> https://gist.github.com/goncha/4591538
+
+```
+# 全局方式配置http.proxy
+git config --global http.proxy 'socks5h://192.168.3.29:10080'
+git config --global https.proxy 'socks5h://192.168.3.29:10080'
+git config --global --unset http.proxy
+git config --global --unset https.proxy
+
+# 显示config配置
+https://stackoverflow.com/questions/12254076/how-do-i-show-my-global-git-configuration
+git config --list
+
+# 每次clone指定http.proxy
+# https://stackoverflow.com/questions/15227130/using-a-socks-proxy-with-git-for-the-http-transport
+git clone https://github.com/cmu-db/benchbase.git --config 'http.proxy=socks5://192.168.1.55:1080'
+```
