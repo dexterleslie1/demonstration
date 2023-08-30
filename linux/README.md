@@ -45,6 +45,11 @@ ctrl+tab tab之间切换
 # 结合find命令删除指定名称的目录，包括子目录内的相应目录
 # https://askubuntu.com/questions/43709/how-do-i-remove-all-files-that-match-a-pattern
 find . -type d -name node_modules -exec rm -rfv {} \;
+
+# 递归搜索指定文件
+# https://www.cyberciti.biz/faq/unix-linux-grep-include-file-pattern-recursive-example/
+grep -r "17" --include "pom.xml" .
+grep -r "17" --include "*.xml" .
 ```
 
 
