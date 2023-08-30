@@ -506,6 +506,32 @@ sysbench --test=fileio --file-num=10 --num-threads=16 --file-total-size=10G --fi
 
 
 
+#### MySQL测试
+
+> https://stackoverflow.com/questions/45584065/cannot-find-oltp-test-on-sysbench
+
+```
+# 准备测试数据
+sysbench --db-driver=mysql --mysql-user=root --mysql-password=123456 \
+  --mysql-host=192.168.1.193 --mysql-port=50000 --mysql-db=demo_db --range_size=100 \
+  --table_size=10000 --tables=2 --threads=1 --events=0 --time=60 \
+  --rand-type=uniform /usr/share/sysbench/oltp_read_only.lua prepare
+
+# 运行测试
+sysbench --db-driver=mysql --mysql-user=root --mysql-password=123456 \
+  --mysql-host=192.168.1.193 --mysql-port=50000 --mysql-db=demo_db --range_size=100 \
+  --table_size=10000 --tables=2 --threads=1 --events=0 --time=60 \
+  --rand-type=uniform /usr/share/sysbench/oltp_read_only.lua run
+  
+# 清理测试数据 
+sysbench --db-driver=mysql --mysql-user=root --mysql-password=123456 \
+  --mysql-host=192.168.1.193 --mysql-port=50000 --mysql-db=demo_db --range_size=100 \
+  --table_size=10000 --tables=2 --threads=1 --events=0 --time=60 \
+  --rand-type=uniform /usr/share/sysbench/oltp_read_only.lua cleanup
+```
+
+
+
 ### stress工具
 
 ```
