@@ -10,6 +10,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 // https://blog.csdn.net/a23452/article/details/126680840
@@ -38,7 +39,7 @@ public class MyTests {
                 .forks(1)
                 // 发生错误停止测试
                 .shouldFailOnError(true)
-                .jvmArgs("-Xmx4G",
+                .jvmArgs("-Xmx2G",
                         "-server"/*,
                         "-XX:+UseG1GC",
                         "-XX:InitialHeapSize=8g",
@@ -94,8 +95,14 @@ public class MyTests {
     }
 
     @Benchmark
-    public void test_cpu_utilize(Blackhole blackhole) {
+    public void test_cpu_utilize(Blackhole blackhole) throws InterruptedException {
         byte[] data = new byte[4096];
+
+        // NOTE: 经过测试，线程的sleep到恢复大概需要1ms时间，
+        // 所以休眠100微秒和修改1000微秒导致的并发数是一致的
+        // 在8核中测试大约7k多/s并发
+        TimeUnit.MICROSECONDS.sleep(100);
+
         blackhole.consume(data);
     }
 }
