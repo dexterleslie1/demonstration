@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 // 指定并发执行线程数
 // https://stackoverflow.com/questions/39644383/jmh-run-benchmark-concurrently
 @Threads(-1)
-public class Tests {
+public class MyTests {
 
     TestService testService;
     MyService1 myService1;
@@ -33,7 +33,7 @@ public class Tests {
     public static void main(String[] args) throws RunnerException {
         //使用注解之后只需要配置一下include即可，fork和warmup、measurement都是注解
         Options opt = new OptionsBuilder()
-                .include(Tests.class.getSimpleName())
+                .include(MyTests.class.getSimpleName())
                 // 断点调试时fork=0
                 .forks(1)
                 // 发生错误停止测试
