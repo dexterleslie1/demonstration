@@ -16,6 +16,9 @@ import java.util.concurrent.TimeUnit;
 // 提供报告结果的默认时间单位
 @OutputTimeUnit(TimeUnit.SECONDS)
 @State(Scope.Benchmark)
+// 断点调试时fork=0
+@Fork(value = 1, jvmArgs = {"-Xmx2G", "-server"})
+@Threads(1)
 public class JMHSample_Setup_Teardown {
     // Trial：Setup和TearDown默认的配置，该套件方法会在每一个基准测试方法的所有批次执行的前后被执行。
     // Iteration：由于我们可以设置Warmup和Measurement，因此每一个基准测试方法都会被执行若干个批次，如果想要在每一个基准测试批次执行的前后调用套件方法，则可以将Level设置为Iteration。
@@ -43,8 +46,6 @@ public class JMHSample_Setup_Teardown {
     public static void main(String[] args) throws RunnerException {
         Options opt = new OptionsBuilder()
                 .include(JMHSample_Setup_Teardown.class.getSimpleName())
-                // 断点调试时fork=0
-                .forks(1)
                 // 发生错误停止测试
                 .shouldFailOnError(true)
                 .build();

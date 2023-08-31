@@ -25,6 +25,9 @@ import java.util.concurrent.TimeUnit;
 @Measurement(iterations = 3, time = 3, timeUnit = TimeUnit.SECONDS)
 // 提供报告结果的默认时间单位
 @OutputTimeUnit(TimeUnit.SECONDS)
+// 断点调试时fork=0
+@Fork(value = 1, jvmArgs = {"-Xmx2G", "-server"})
+@Threads(1)
 public class JMHSample_01_HelloWorld {
     /**
      *
@@ -45,11 +48,8 @@ public class JMHSample_01_HelloWorld {
                 .include(JMHSample_01_HelloWorld.class.getSimpleName())
                 // 指定不运行的基准测试类
                 // .exclude(JMHSample_01_HelloWorld.class.getSimpleName())
-                // 断点调试时fork=0
-                .forks(1)
                 // 发生错误停止测试
                 .shouldFailOnError(true)
-                .jvmArgs("-Xmx2G")
                 .build();
 
         new Runner(opt).run();
