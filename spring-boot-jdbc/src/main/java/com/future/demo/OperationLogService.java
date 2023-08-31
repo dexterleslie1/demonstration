@@ -13,9 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import javax.annotation.Resource;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -55,7 +53,7 @@ public class OperationLogService {
 
         // https://stackoverflow.com/questions/5026943/how-to-execute-insert-statement-using-jdbctemplate-class-from-spring-framework
         this.jdbcTemplate.update("insert into operation_log(auth_id,operator_id,passive_id,operation_type,content,create_time) " +
-                "values(?,?,?,?,?,?)", userId, operatorId, passiveId, operationType.ordinal(), content, new Date());
+                "values(?,?,?,?,?,?)", userId, operatorId, passiveId, operationType.getValue(), content, new Date());
     }
 
     /**
@@ -73,6 +71,9 @@ public class OperationLogService {
         }
 
         Assert.isTrue(size >= 1 && size <= 1000, "参数错误1");
+
+//        String sqlSelect = "select now()";
+//        String str1 = this.jdbcTemplate.queryForObject(sqlSelect, String.class);
 
         // https://stackoverflow.com/questions/34216124/jdbctemplate-count-queryforint-and-pass-multiple-parameters
         int start = (page - 1) * size;
@@ -107,11 +108,15 @@ public class OperationLogService {
                 Long authId = (Long) o.get("auth_id");
                 Long operatorId = (Long) o.get("operator_id");
                 Long passiveId = (Long) o.get("passive_id");
-                Integer operationTypeInt = (Integer) o.get("operation_type");
-                OperationType operationType = OperationType.values()[operationTypeInt];
+                Integer operationTypeValue = (Integer) o.get("operation_type");
+                OperationType operationType = OperationType.fromValue(operationTypeValue);
                 String content = (String) o.get("content");
-                LocalDateTime createTimeLocalDateTime = (LocalDateTime) o.get("create_time");
-                Date createTime = Date.from(createTimeLocalDateTime.toInstant(ZoneOffset.ofHours(8)));
+//                LocalDateTime createTimeLocalDateTime = (LocalDateTime) o.get("create_time");
+//                Date createTime = Date.from(createTimeLocalDateTime.toInstant(ZoneOffset.ofHours(8)));
+
+                Timestamp timestamp = (Timestamp)o.get("create_time");
+                Date createTime = new Date(timestamp.getTime());
+
                 OperationLogModel model = new OperationLogModel() {{
                     setId(id);
                     setAuthId(authId);

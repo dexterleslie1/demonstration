@@ -91,7 +91,29 @@ public enum OperationType {
         this.description = description;
     }
 
+    public Integer getValue() {
+        return this.value;
+    }
+
     public String getDescription() {
         return this.description;
+    }
+
+    /**
+     * @param value
+     * @return
+     */
+    public static OperationType fromValue(Integer value) {
+        if (value == null) {
+            return null;
+        }
+
+        for (OperationType operationType : OperationType.values()) {
+            if (value.equals(operationType.value)) {
+                return operationType;
+            }
+        }
+
+        return null;
     }
 }

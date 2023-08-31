@@ -9,6 +9,7 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.util.DigestUtils;
 
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
@@ -19,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 @OutputTimeUnit(TimeUnit.SECONDS)
 @Fork(1)  //整体平均执行1次
 @Warmup(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS) //预热1s
-@Measurement(iterations = 3, time = 10, timeUnit = TimeUnit.SECONDS) //测试也是1s、五遍
+@Measurement(iterations = 3, time = 30, timeUnit = TimeUnit.SECONDS) //测试也是1s、五遍
 // 指定并发执行线程数
 // https://stackoverflow.com/questions/39644383/jmh-run-benchmark-concurrently
 @Threads(-1)
@@ -94,15 +95,36 @@ public class MyTests {
         Thread.sleep(100);
     }
 
+    /**
+     * 测试sleep是否会引起cpu context switching
+     *
+     * @param blackhole
+     * @throws InterruptedException
+     */
     @Benchmark
-    public void test_cpu_utilize(Blackhole blackhole) throws InterruptedException {
+    public void test_check_if_sleep_cause_context_switching(Blackhole blackhole) throws InterruptedException {
         byte[] data = new byte[4096];
 
         // NOTE: 经过测试，线程的sleep到恢复大概需要1ms时间，
         // 所以休眠100微秒和修改1000微秒导致的并发数是一致的
         // 在8核中测试大约7k多/s并发
+        // NOTE: sleep会引起context switching
         TimeUnit.MICROSECONDS.sleep(100);
 
         blackhole.consume(data);
+    }
+
+    private final Random randomGen = new Random();
+
+    /**
+     * 测试encrypt是否会引起cpu context switching
+     *
+     * @return
+     */
+//    @Benchmark
+    public String test_check_if_encrypt_cause_context_switching() {
+        byte[] datum = new byte[1024];
+        randomGen.nextBytes(datum);
+        return DigestUtils.md5DigestAsHex(datum);
     }
 }

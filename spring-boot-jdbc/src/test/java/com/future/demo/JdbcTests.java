@@ -24,12 +24,12 @@ import java.util.concurrent.TimeUnit;
 @State(Scope.Benchmark) //使用的SpringBoot容器，都是无状态单例Bean，无安全问题，可以直接使用基准作用域BenchMark
 @OutputTimeUnit(TimeUnit.SECONDS)
 //@Fork(1)  //整体平均执行1次
-@Warmup(iterations = 5, time = 5, timeUnit = TimeUnit.SECONDS) //预热1s
-@Measurement(iterations = 5, time = 10, timeUnit = TimeUnit.SECONDS) //测试也是1s、五遍
+@Warmup(iterations = 4, time = 5, timeUnit = TimeUnit.SECONDS) //预热1s
+@Measurement(iterations = 5, time = 30, timeUnit = TimeUnit.SECONDS) //测试也是1s、五遍
 // 指定并发执行线程数
 // https://stackoverflow.com/questions/39644383/jmh-run-benchmark-concurrently
 @Threads(-1)
-public class Tests {
+public class JdbcTests {
 
     Random random = new Random();
     OperationLogService operationLogService;
@@ -43,12 +43,12 @@ public class Tests {
     public static void main(String[] args) throws RunnerException {
         //使用注解之后只需要配置一下include即可，fork和warmup、measurement都是注解
         Options opt = new OptionsBuilder()
-                .include(Tests.class.getSimpleName())
+                .include(JdbcTests.class.getSimpleName())
                 // 断点调试时fork=0
                 .forks(1)
                 // 发生错误停止测试
                 .shouldFailOnError(true)
-                .jvmArgs("-Xmx2G")
+                .jvmArgs("-Xmx2G", "-server")
                 .build();
         new Runner(opt).run();
     }
@@ -91,7 +91,7 @@ public class Tests {
         this.operationLogService.add(userId, operatorId, passiveId, operationType, content);
     }
 
-    //    @Benchmark
+    @Benchmark
     public void testList() throws BusinessException {
         int randomIndex = random.nextInt(userIdList.size());
         Long userId = userIdList.get(randomIndex);
@@ -104,7 +104,7 @@ public class Tests {
         this.operationLogService.list(userId, operationTypeList, randomPage, randomSize);
     }
 
-    @Benchmark
+    //    @Benchmark
     public void testConnectAndDisconnect() throws SQLException {
         Connection connection = null;
         try {
