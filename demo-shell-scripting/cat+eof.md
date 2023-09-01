@@ -11,4 +11,19 @@ cat > testing.txt << EOF
 {{ work01_hostname }} {{ work01_ip }}
 {{ work01_hostname }} {{ work01_ip }}
 EOF
+
+# <<-EOF用法，shell脚本如下
+# https://unix.stackexchange.com/questions/583782/what-is-different-between-eof-and-eof-in-bash-script
+# NOTE: EOF之间的内容需要使用tab创建indent，否则<<-EOF不起作用
+# https://unix.stackexchange.com/questions/76481/cant-indent-heredoc-to-match-code-blocks-indentation
+
+#!/bin/bash
+
+if [[ "" == "" ]]; then
+	cat > testing.txt <<-EOF
+		{{ work01_hostname }} {{ work01_ip }}
+		{{ work01_hostname }} {{ work01_ip }}
+EOF
+fi
+	
 ```
