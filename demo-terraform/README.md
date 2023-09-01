@@ -88,6 +88,15 @@ sudo snap install terraform --classic
 
 
 
+#### terraform apply
+
+```
+# 执行main.tf文件
+terraform apply
+```
+
+
+
 #### terraform plan
 
 > 查看terraform将要创建资源的参数但不实际执行资源创建
