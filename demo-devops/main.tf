@@ -1,13 +1,13 @@
+variable "vsphere_password" {
+  type        = string
+  description = "vCenter密码"
+}
 variable "vsphere_user" {
   type    = string
   default = "administrator@vsphere.local"
 }
-variable "vsphere_password" {
-  type = string
-  default = "Root@123#$%"
-}
 variable "vsphere_server" {
-  type = string
+  type    = string
   default = "192.168.1.51"
 }
 
@@ -53,14 +53,14 @@ resource "vsphere_virtual_machine" "vm_ansible" {
   scsi_type        = data.vsphere_virtual_machine.template.scsi_type
   folder           = "/${data.vsphere_datacenter.datacenter.name}/vm/private"
   # 必须设置efi和secure_boot，否则无法引导系统
-  firmware         = "efi"
+  firmware                = "efi"
   efi_secure_boot_enabled = true
   network_interface {
     network_id   = data.vsphere_network.network.id
     adapter_type = data.vsphere_virtual_machine.template.network_interface_types[0]
   }
   disk {
-    label = "disk0"
+    label            = "disk0"
     size             = data.vsphere_virtual_machine.template.disks.0.size
     thin_provisioned = data.vsphere_virtual_machine.template.disks.0.thin_provisioned
   }
@@ -81,17 +81,17 @@ resource "vsphere_virtual_machine" "vm_ansible" {
   }
 
   connection {
-        type     = "ssh"
-        user     = "root"
-        password = "Root@123"
-        host     = self.default_ip_address
+    type     = "ssh"
+    user     = "root"
+    password = "Root@123"
+    host     = self.default_ip_address
   }
 
   provisioner "file" {
-	source 	    = "./playbooks"
-        destination = "/usr/local/my-workspace"
+    source      = "./playbooks"
+    destination = "/usr/local/my-workspace"
   }
- 
+
   provisioner "remote-exec" {
     inline = [
       // 安装ansible
@@ -112,14 +112,14 @@ resource "vsphere_virtual_machine" "vm_devops_master" {
   scsi_type        = data.vsphere_virtual_machine.template.scsi_type
   folder           = "/${data.vsphere_datacenter.datacenter.name}/vm/private"
   # 必须设置efi和secure_boot，否则无法引导系统
-  firmware         = "efi"
+  firmware                = "efi"
   efi_secure_boot_enabled = true
   network_interface {
     network_id   = data.vsphere_network.network.id
     adapter_type = data.vsphere_virtual_machine.template.network_interface_types[0]
   }
   disk {
-    label = "disk0"
+    label            = "disk0"
     size             = data.vsphere_virtual_machine.template.disks.0.size
     thin_provisioned = data.vsphere_virtual_machine.template.disks.0.thin_provisioned
   }
@@ -142,10 +142,10 @@ resource "vsphere_virtual_machine" "vm_devops_master" {
   // 连接到ansible主机并执行devops_master自动配置playbook
   provisioner "remote-exec" {
     connection {
-    	type     = "ssh"
-    	user     = "root"
-    	password = "Root@123"
-    	host     = vsphere_virtual_machine.vm_ansible.default_ip_address
+      type     = "ssh"
+      user     = "root"
+      password = "Root@123"
+      host     = vsphere_virtual_machine.vm_ansible.default_ip_address
     }
 
     inline = [
@@ -168,14 +168,14 @@ resource "vsphere_virtual_machine" "vm_centos8_slave" {
   scsi_type        = data.vsphere_virtual_machine.template.scsi_type
   folder           = "/${data.vsphere_datacenter.datacenter.name}/vm/private"
   # 必须设置efi和secure_boot，否则无法引导系统
-  firmware         = "efi"
+  firmware                = "efi"
   efi_secure_boot_enabled = true
   network_interface {
     network_id   = data.vsphere_network.network.id
     adapter_type = data.vsphere_virtual_machine.template.network_interface_types[0]
   }
   disk {
-    label = "disk0"
+    label            = "disk0"
     size             = data.vsphere_virtual_machine.template.disks.0.size
     thin_provisioned = data.vsphere_virtual_machine.template.disks.0.thin_provisioned
   }
@@ -198,10 +198,10 @@ resource "vsphere_virtual_machine" "vm_centos8_slave" {
   // 连接到ansible主机并执行centos8-slave自动配置playbook
   provisioner "remote-exec" {
     connection {
-    	type     = "ssh"
-    	user     = "root"
-    	password = "Root@123"
-    	host     = vsphere_virtual_machine.vm_ansible.default_ip_address
+      type     = "ssh"
+      user     = "root"
+      password = "Root@123"
+      host     = vsphere_virtual_machine.vm_ansible.default_ip_address
     }
 
     inline = [
@@ -223,14 +223,14 @@ resource "vsphere_virtual_machine" "vm_centos8_uat" {
   scsi_type        = data.vsphere_virtual_machine.template.scsi_type
   folder           = "/${data.vsphere_datacenter.datacenter.name}/vm/private"
   # 必须设置efi和secure_boot，否则无法引导系统
-  firmware         = "efi"
+  firmware                = "efi"
   efi_secure_boot_enabled = true
   network_interface {
     network_id   = data.vsphere_network.network.id
     adapter_type = data.vsphere_virtual_machine.template.network_interface_types[0]
   }
   disk {
-    label = "disk0"
+    label            = "disk0"
     size             = data.vsphere_virtual_machine.template.disks.0.size
     thin_provisioned = data.vsphere_virtual_machine.template.disks.0.thin_provisioned
   }
@@ -253,10 +253,10 @@ resource "vsphere_virtual_machine" "vm_centos8_uat" {
   // 连接到ansible主机并执行centos8-uat自动配置playbook
   provisioner "remote-exec" {
     connection {
-    	type     = "ssh"
-    	user     = "root"
-    	password = "Root@123"
-    	host     = vsphere_virtual_machine.vm_ansible.default_ip_address
+      type     = "ssh"
+      user     = "root"
+      password = "Root@123"
+      host     = vsphere_virtual_machine.vm_ansible.default_ip_address
     }
 
     inline = [
