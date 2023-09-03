@@ -1,0 +1,142 @@
+- hosts: all
+  vars:
+    project_folder: ""
+    project_repo_name: ""
+  tasks:
+    - name: "yum install firewalld -y"
+      yum:
+        name: firewalld
+        state: installed
+      when: ansible_distribution == "CentOS"
+
+    # https://stackoverflow.com/questions/30328506/check-if-service-exists-with-ansible
+    - name: "判断firewalld服务是否存在"
+      stat:
+        path: /usr/lib/systemd/system/firewalld.service
+      register: varFirewalldService
+
+    - name: "systemctl stop firewalld && systemctl disable firewalld"
+      systemd:
+        name: firewalld
+        state: stopped
+        enabled: no
+      when: ansible_distribution == "CentOS" and varFirewalldService.stat.exists
+
+
+    - name: "Disable selinux temporarily by using setenforce 0"
+      shell: setenforce 0 || true
+      when: ansible_distribution == "CentOS"
+
+    - name: "Modify /etc/selinux/config file disable selinux"
+      replace:
+        path: /etc/sysconfig/selinux
+        regexp: SELINUX=enforcing
+        replace: SELINUX=disabled
+      when: ansible_distribution == "CentOS"
+
+    # 判断是否已安装java
+    # 参考 https://stackoverflow.com/questions/30388361/ansible-command-to-check-the-java-version-in-different-servers
+    - name: "判断是否已安装java"
+      command: java -version
+      register: var_java_version
+      ignore_errors: true
+
+    # centOS安装jdk
+    - name: 下载jdk rpm
+      get_url:
+        url: https://bucketxyh.oss-cn-hongkong.aliyuncs.com/jdk/jdk-11.0.19_linux-x64_bin.rpm
+        dest: /tmp/jdk-11.0.19_linux-x64_bin.rpm
+        checksum: md5:67e985c96ab1f37b632a065416d0c4e3
+      when: var_java_version is failed and ansible_distribution == "CentOS"
+
+    - name: 安装jdk
+      yum:
+        name: /tmp/jdk-11.0.19_linux-x64_bin.rpm
+        state: installed
+        disable_gpg_check: yes
+      when: var_java_version is failed and ansible_distribution == "CentOS"
+
+    # - file:
+    #     path: /tmp/jdk-11.0.19_linux-x64_bin.rpm
+    #     state: absent
+
+
+    - name: "从https://bucketxyh.oss-cn-hongkong.aliyuncs.com/jmeter/apache-jmeter-5.6.2.tgz下载Jmeter"
+      get_url:
+        url: https://bucketxyh.oss-cn-hongkong.aliyuncs.com/jmeter/apache-jmeter-5.6.2.tgz
+        dest: /tmp/apache-jmeter-5.6.2.tgz
+        checksum: md5:eebd530ed165e4e3f2cabe68f8088ab8
+
+    - file:
+        name: /usr/local/software
+        state: directory
+
+    # - name: "判断是否已安装Jmeter"
+    #   stat: path=/usr/local/software/jmeter
+    #   register: jmeter_folder
+
+    - file:
+        path: /usr/local/software/jmeter
+        state: absent
+
+    - name: "rm -rf /tmp/apache-jmeter-5.6.2"
+      file:
+        path: /tmp/apache-jmeter-5.6.2
+        state: absent
+      # when: not jmeter_folder.stat.exists
+
+    - name: "tar -xvzf apache-jmeter-5.6.2.tgz"
+      shell: cd /tmp && tar -xvzf apache-jmeter-5.6.2.tgz
+      # when: not jmeter_folder.stat.exists
+    - name: "mv /tmp/apache-jmeter-5.6.2 /usr/local/software/jmeter"
+      shell: mv /tmp/apache-jmeter-5.6.2 /usr/local/software/jmeter
+      # when: not jmeter_folder.stat.exists
+
+    - name: "修改#server.rmi.ssl.disable=false为server.rmi.ssl.disable=true"
+      lineinfile:
+        path: /usr/local/software/jmeter/bin/jmeter.properties
+        regexp: "#server.rmi.ssl.disable="
+        line: "server.rmi.ssl.disable=true"
+        insertbefore: "# resolve links"
+
+    - name: "master模式修改jmeter.properties remote_hosts=配置"
+      lineinfile:
+        path: /usr/local/software/jmeter/bin/jmeter.properties
+        regexp: "^remote_hosts="
+        line: "remote_hosts={{ varRemoteHosts }}"
+      when: varMasterMode is defined and varMasterMode and varRemoteHosts is defined and varRemoteHosts|length > 0
+
+    - name: "修改堆内存-Xmx"
+      lineinfile:
+        path: /usr/local/software/jmeter/bin/jmeter
+        regexp: "HEAP="
+        line: "HEAP=\"-Xms1g -Xmx{{ var_heap_mx }}g\""
+        insertbefore: "# resolve links"
+
+    - name: "配置jmeter-service.service"
+      template:
+        src: jmeter-server.service
+        dest: /usr/lib/systemd/system/jmeter-server.service
+      when: var_slave_mode is defined and var_slave_mode
+
+    - name: "systemctl daemon-reload"
+      shell: systemctl daemon-reload
+
+    - name: "systemctl start jmeter-server"
+      systemd:
+        name: jmeter-server
+        state: restarted
+        enabled: yes
+      when: var_slave_mode is defined and var_slave_mode
+
+    - name: "判断是否已配置/usr/bin/jmeter"
+      stat: path=/usr/bin/jmeter
+      register: varUsrBinJmeter
+
+    - name: "配置/usr/bin/jmeter"
+      shell: ln -s /usr/local/software/jmeter/bin/jmeter /usr/bin/jmeter
+      when: not varUsrBinJmeter.stat.exists
+    
+    - name: "重启系统"
+      reboot:
+      when: var_slave_mode is defined and var_slave_mode
