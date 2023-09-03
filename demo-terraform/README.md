@@ -524,7 +524,15 @@ terraform apply
 
 #### aws provider
 
+> 
 
+
+
+#### ucloud provider
+
+> NOTE: 虚拟机一但创建就预收一个小时费用，贵！暂时不使用。
+>
+> https://registry.terraform.io/providers/ucloud/ucloud/latest/docs
 
 
 
