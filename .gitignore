@@ -35,3 +35,4 @@ geckodriver.log
 .terraform*
 terraform.tfstate*
 *.class
+jmeter.log
