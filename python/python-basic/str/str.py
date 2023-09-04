@@ -115,3 +115,7 @@ print("我叫{0}，年龄{1}，重复我叫{0}".format("Dexter", 30))
 varStr = " "
 assert varStr.strip()==""
 assert len(varStr.strip())==0
+
+# 判断字符串是否为空
+var_str = " 9 "
+assert var_str and var_str.strip()
