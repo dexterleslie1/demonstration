@@ -118,7 +118,11 @@ openssl pkcs12 -in for-iis.pfx -out for-iis.pem -nodes
 # 生成私钥
 openssl genrsa -out private.key 1024
 
-# 生成公钥
+# 生成PEM格式公钥
 openssl rsa -in private.key -out public.key -pubout -outform PEM
+
+# 如果需要OPENSSH格式公钥，使用下面命令生成
+# https://security.stackexchange.com/questions/32768/converting-keys-between-openssl-and-openssh
+ssh-keygen -f private.key -y > public.key
 ```
 
