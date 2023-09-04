@@ -269,6 +269,17 @@ yum makecache
 
 
 
+### ssh命令
+
+```
+# 指定私钥
+ssh -i private.key root@xxx
+```
+
+
+
+
+
 ## 文件和目录
 
 ### 文件和目录权限rwx代表的意思
