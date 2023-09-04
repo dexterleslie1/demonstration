@@ -12,3 +12,18 @@ https://blog.csdn.net/u014061630/article/details/89715656
 NOTE: 配置完成SwitchyOmega后点击“应用选项”保存设置才能够生效
 ```
 
+
+
+## ubuntu安装google chrome浏览器
+
+> NOTE: 使用sudo snap install chromium安装的浏览器在使用过程中有莫名奇妙的证书域名错误，所以放弃使用chromium浏览器。
+
+```
+# 到google chrome官方网站下载deb包
+https://www.google.com/chrome
+
+# 使用dpkg安装google chrome
+sudo dpkg -i ~/Downloads/google-chrome-stable_current_amd64.deb 
+
+```
+
