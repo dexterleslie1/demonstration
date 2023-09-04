@@ -108,3 +108,17 @@ openssl pkcs12 -in for-iis.pfx -out for-iis.pem -nodes
 > freessl.org申请免费key、dns.com申请域名
 > https://www.cnblogs.com/xtxtx/p/12097177.html
 
+
+
+## 生成SSH public和private key
+
+> http://lunar.lyris.com/help/lm_help//11.3/Content/generating_public_and_private_keys.html
+
+```
+# 生成私钥
+openssl genrsa -out private.key 1024
+
+# 生成公钥
+openssl rsa -in private.key -out public.key -pubout -outform PEM
+```
+
