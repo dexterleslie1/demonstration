@@ -13,7 +13,7 @@ variable "vm_jmeter_master_ip" {
 }
 variable "vm_jmeter_slave_ips" {
   type    = list(string)
-  default = ["192.168.1.187", "192.168.1.188", "192.168.1.189"/*, "192.168.1.190", "192.168.1.191", "192.168.1.192"*/]
+  default = ["192.168.1.187", "192.168.1.188"/*, "192.168.1.189" , "192.168.1.190", "192.168.1.191", "192.168.1.192"*/]
 }
 variable "vm_ansible_name" {
   type    = string
@@ -56,8 +56,8 @@ variable "vsphere_template" {
   default = "my-template-centOS8"
 }
 variable "vsphere_template_password" {
-  type      = string
-  default   = "Root@123"
+  type    = string
+  default = "Root@123"
 }
 variable "ipv4_gateway" {
   type    = string
@@ -104,8 +104,8 @@ resource "vsphere_virtual_machine" "vm_ansible" {
   name             = var.vm_ansible_name
   resource_pool_id = data.vsphere_host.host.resource_pool_id
   datastore_id     = data.vsphere_datastore.datastore.id
-  num_cpus         = 4
-  memory           = 4096
+  num_cpus         = 2
+  memory           = 2048
   guest_id         = data.vsphere_virtual_machine.template.guest_id
   scsi_type        = data.vsphere_virtual_machine.template.scsi_type
   folder           = "/${data.vsphere_datacenter.datacenter.name}/${var.vm_folder}"
@@ -137,6 +137,7 @@ resource "vsphere_virtual_machine" "vm_ansible" {
     }
   }
 
+  # 保证/usr/local/my-workspace目录存在
   provisioner "remote-exec" {
     connection {
       type     = "ssh"
@@ -146,23 +147,55 @@ resource "vsphere_virtual_machine" "vm_ansible" {
     }
 
     inline = [
-      // 安装ansible
-      "yum remove -y ansible",
-      "yum -y install https://bucketxyh.oss-cn-hongkong.aliyuncs.com/ansible/ansible-2.9.27-1.el8.noarch.rpm https://bucketxyh.oss-cn-hongkong.aliyuncs.com/ansible/sshpass-1.09-4.el8.x86_64.rpm"
+      "mkdir -p /usr/local/my-workspace"
+    ]
+  }
+
+  # 复制playbooks到anisble vm
+  provisioner "file" {
+    connection {
+      type     = "ssh"
+      user     = "root"
+      password = var.vsphere_template_password
+      host     = self.default_ip_address
+    }
+
+    source      = "./setup.sh"
+    destination = "/usr/local/my-workspace/setup.sh"
+  }
+
+  provisioner "remote-exec" {
+    connection {
+      type     = "ssh"
+      user     = "root"
+      password = var.vsphere_template_password
+      host     = self.default_ip_address
+    }
+
+    inline = [
+      "sh /usr/local/my-workspace/setup.sh"
     ]
   }
 }
 
 # 创建jmeter master vm
 resource "vsphere_virtual_machine" "vm_jmeter_master" {
-  name             = var.vm_jmeter_master_name
-  resource_pool_id = data.vsphere_host.host.resource_pool_id
-  datastore_id     = data.vsphere_datastore.datastore.id
-  num_cpus         = 8
-  memory           = 4096
-  guest_id         = data.vsphere_virtual_machine.template.guest_id
-  scsi_type        = data.vsphere_virtual_machine.template.scsi_type
-  folder           = "/${data.vsphere_datacenter.datacenter.name}/${var.vm_folder}"
+  name               = var.vm_jmeter_master_name
+  resource_pool_id   = data.vsphere_host.host.resource_pool_id
+  datastore_id       = data.vsphere_datastore.datastore.id
+  num_cpus           = 8
+  memory             = 6144
+  cpu_limit          = (8 * 2200)
+  cpu_reservation    = (8 * 2200)
+  cpu_share_level    = "custom"
+  cpu_share_count    = (8 * 2200)
+  memory_limit       = 6144
+  memory_reservation = 6144
+  memory_share_level = "custom"
+  memory_share_count = 122880
+  guest_id           = data.vsphere_virtual_machine.template.guest_id
+  scsi_type          = data.vsphere_virtual_machine.template.scsi_type
+  folder             = "/${data.vsphere_datacenter.datacenter.name}/${var.vm_folder}"
   # 必须设置efi和secure_boot，否则无法引导系统
   firmware                = "efi"
   efi_secure_boot_enabled = true
@@ -196,15 +229,23 @@ resource "vsphere_virtual_machine" "vm_jmeter_master" {
 
 # 创建jmeter slave vm
 resource "vsphere_virtual_machine" "vm_jmeter_slave" {
-  count            = length(var.vm_jmeter_slave_ips)
-  name             = "${var.vm_jmeter_slave_name_prefix}-${count.index}"
-  resource_pool_id = data.vsphere_host.host.resource_pool_id
-  datastore_id     = data.vsphere_datastore.datastore.id
-  num_cpus         = 4
-  memory           = 6144
-  guest_id         = data.vsphere_virtual_machine.template.guest_id
-  scsi_type        = data.vsphere_virtual_machine.template.scsi_type
-  folder           = "/${data.vsphere_datacenter.datacenter.name}/${var.vm_folder}"
+  count              = length(var.vm_jmeter_slave_ips)
+  name               = "${var.vm_jmeter_slave_name_prefix}-${count.index}"
+  resource_pool_id   = data.vsphere_host.host.resource_pool_id
+  datastore_id       = data.vsphere_datastore.datastore.id
+  num_cpus           = 4
+  memory             = 6144
+  cpu_limit          = (4 * 2200)
+  cpu_reservation    = (4 * 2200)
+  cpu_share_level    = "custom"
+  cpu_share_count    = (4 * 2200)
+  memory_limit       = 6144
+  memory_reservation = 6144
+  memory_share_level = "custom"
+  memory_share_count = 122880
+  guest_id           = data.vsphere_virtual_machine.template.guest_id
+  scsi_type          = data.vsphere_virtual_machine.template.scsi_type
+  folder             = "/${data.vsphere_datacenter.datacenter.name}/${var.vm_folder}"
   # 必须设置efi和secure_boot，否则无法引导系统
   firmware                = "efi"
   efi_secure_boot_enabled = true
@@ -233,7 +274,7 @@ resource "vsphere_virtual_machine" "vm_jmeter_slave" {
     }
   }
 
-  depends_on = [resource.vsphere_virtual_machine.vm_ansible]
+  depends_on = [resource.null_resource.init_jmeter_master]
 }
 
 # 在所有虚拟机创建成功后执行脚本
@@ -241,33 +282,6 @@ resource "null_resource" "init_jmeter_master" {
   triggers = {
     # 因为这个属性每次运行都变化，所以每次执行apply都会运行这个null_resource
     always_run = "${timestamp()}"
-  }
-
-  # 保证/usr/local/my-workspace目录存在
-  provisioner "remote-exec" {
-    connection {
-      type     = "ssh"
-      user     = "root"
-      password = var.vsphere_template_password
-      host     = var.vm_ansible_ip
-    }
-
-    inline = [
-      "mkdir -p /usr/local/my-workspace/playbooks"
-    ]
-  }
-
-  # 复制playbooks到anisble vm
-  provisioner "file" {
-    connection {
-      type     = "ssh"
-      user     = "root"
-      password = var.vsphere_template_password
-      host     = var.vm_ansible_ip
-    }
-
-    source      = "./playbooks/"
-    destination = "/usr/local/my-workspace/playbooks/"
   }
 
   # 配置jmeter master
@@ -280,7 +294,7 @@ resource "null_resource" "init_jmeter_master" {
     }
 
     inline = [
-      "ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook /usr/local/my-workspace/playbooks/config-jmeter.yml --inventory ${var.vm_jmeter_master_ip}, --user root -e ansible_ssh_pass='${var.vsphere_template_password}' -e varMasterMode=true -e varRemoteHosts=${join(",", var.vm_jmeter_slave_ips)} -e var_heap_mx=4"
+      "dcli jmeter install --install=y --target_host=${var.vm_jmeter_master_ip} --target_host_password=${var.vsphere_template_password} --mode=master --remote_hosts=${join(",", var.vm_jmeter_slave_ips)} -xmx=4"
     ]
   }
 
@@ -307,7 +321,7 @@ resource "null_resource" "init_jmeter_slave" {
     }
 
     inline = [
-      "ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook /usr/local/my-workspace/playbooks/config-jmeter.yml --inventory ${var.vm_jmeter_slave_ips[count.index]}, --user root -e ansible_ssh_pass='${var.vsphere_template_password}' -e var_slave_mode=true -e varRmiListenIp=${var.vm_jmeter_slave_ips[count.index]} -e var_heap_mx=4"
+      "dcli jmeter install --install=y --target_host=${var.vm_jmeter_slave_ips[count.index]} --target_host_password=${var.vsphere_template_password} --mode=slave --slave_listen_ip=${var.vm_jmeter_slave_ips[count.index]} -xmx=4"
     ]
   }
 
