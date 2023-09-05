@@ -278,6 +278,36 @@ ssh -i private.key root@xxx
 
 
 
+#### ssh免密码配置
+
+> https://www.itzgeek.com/how-tos/linux/centos-how-tos/how-to-setup-ssh-passwordless-login-on-centos-8-rhel-8.html
+>
+
+```
+# 在用户目录 /root/.ssh/中生成名为id_rsa和id_rsa.pub的公钥和私钥
+ssh-keygen -t rsa
+
+# 登录到被连接的服务器把公钥加入到authorized_keys文件（NOTE：公钥格式是ssh-rsa+空格开头，两个==结尾，中间内容不能换行，例如下面：）
+cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
+ssh-rsa AAAAB3NzaC1yc2EAAAfeJQAAAQEAjKTZJf5zQEMv0ZMNYWJpY0SWih1pNF8HDjCQFGKd6JbGcAlFTV/r3PzIf4LdeywyWVw4IdX3AvQCp724nbjyMNZlg/CAOjhOa2x6YRWPcVjLhA09PGzFQuRY4ZwWpZFyFtbB36cfOwe4dk1RjdBuUvCgE/jEqRKrZskNkK0fjuIa77XJg5mvQk3u6IzPPyikgk2heI0+nCxTISfQXIq5n9fnP8/BkE29RH/4044PCJBb/ZkceSC4c59KnYlyPJPYkwER+pi74FvGN5TE6YgueP2aHC5Bni+0cMsAAE7k8DaG/HdpTDsBZzn9fKWsuq+fi71G1ivPOYLXzFytG0Wyhw==
+
+# 修改private key权限为属主只读
+chmod 400 id_rsa
+
+# 使用private key: id_rsa测试连接192.168.1.151
+ssh - i id_rsa root@192.168.1.151
+ssh -p50111 root@192.168.1.151 
+
+# 在主机上使用ssh-agent管理私有秘钥，但是主机重启后秘钥丢失，因为ssh-agent把秘钥存放在内存
+ssh-agent bash 启动ssh-agent
+ssh-add ~/.ssh/id_rsa 添加私有秘钥
+ssh-add -d ~/.ssh/id_rsa 删除私有秘钥
+ssh-add -l 查看私有秘钥
+ssh root@192.168.1.151
+```
+
+
+
 
 
 ## 文件和目录
@@ -563,4 +593,6 @@ mpstat -P ALL 1
 # 使用free命令显示可用内存，下面命令以g为单位显示可用内存
 free -g
 ```
+
+
 
