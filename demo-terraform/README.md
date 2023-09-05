@@ -524,7 +524,47 @@ terraform apply
 
 #### aws provider
 
-> 
+
+
+##### 配置terraform认证信息
+
+> https://registry.terraform.io/providers/hashicorp/aws/latest/docs
+
+```
+# 在aws console中创建IAM帐号并记录access_key_id和secret_access_key
+
+# 创建文件 ~/.aws/config，内容如下:
+[default]
+aws_access_key_id=xxx
+aws_secret_access_key=xxx
+```
+
+
+
+##### aws_vpc资源
+
+> 参考 aws/aws-vpc
+>
+> https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc.html
+
+
+
+##### aws_ami资源
+
+> 参考 aws/aws-ami
+>
+> https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ami
+>
+> 官方发布ami列表
+> https://www.centos.org/download/aws-images/#centos-amazon-ami-images
+
+
+
+##### aws instance资源
+
+> 参考 aws/aws-instance
+>
+> https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/instance#vpc_security_group_ids
 
 
 
