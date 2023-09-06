@@ -415,7 +415,7 @@ resource "vsphere_virtual_machine" "vm" {
 ### Provisioner local-exec用法
 
 > https://developer.hashicorp.com/terraform/language/resources/provisioners/local-exec
-> 在本地执行命令
+> NOTE: 在本地(terraform主机)执行命令
 
 ```
 # main.tf内容如下:
