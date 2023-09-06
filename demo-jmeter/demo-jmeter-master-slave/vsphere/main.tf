@@ -13,7 +13,7 @@ variable "vm_jmeter_master_ip" {
 }
 variable "vm_jmeter_slave_ips" {
   type    = list(string)
-  default = ["192.168.1.187", "192.168.1.188"/*, "192.168.1.189" , "192.168.1.190", "192.168.1.191", "192.168.1.192"*/]
+  default = ["192.168.1.187", "192.168.1.188", "192.168.1.189" , "192.168.1.190"/*, "192.168.1.191", "192.168.1.192"*/]
 }
 variable "vm_ansible_name" {
   type    = string
@@ -160,7 +160,7 @@ resource "vsphere_virtual_machine" "vm_ansible" {
       host     = self.default_ip_address
     }
 
-    source      = "./setup.sh"
+    source      = "../setup.sh"
     destination = "/usr/local/my-workspace/setup.sh"
   }
 
