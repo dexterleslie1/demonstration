@@ -310,6 +310,40 @@ ssh root@192.168.1.151
 
 
 
+### netcat、nc命令
+
+>
+> https://www.cnblogs.com/nmap/p/6148306.html
+
+```
+# centOS6安装netcat，centOS8默认已经安装nc命令
+yum install nc
+
+# 监听本地80端口
+nc -l 80
+
+# 使用telnet连接80端口
+telnet 192.168.1.23 80
+
+# 使用nc探测端口是否打开
+nc -v -w 10 -z xxx.xxx.xxx.xxx 88
+
+# 重复探测端口是否打开直到成功
+while ! nc -w 5 -z 192.168.1.188 22; do echo "retry ..."; sleep 2; done
+
+# Windows平台使用telnet程序测试
+# https://www.acronis.com/en-us/articles/telnet/
+telnet 192.168.1.34 81
+
+# Linux 平台使用netcat、nc程序测试
+# https://www.tecmint.com/check-remote-port-in-linux/
+nc -zv 192.168.1.34 81
+```
+
+
+
+
+
 ## 文件和目录
 
 ### 文件和目录权限rwx代表的意思
