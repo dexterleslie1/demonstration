@@ -2,6 +2,10 @@ variable "my_aws_region" {
   type    = string
   default = "ap-northeast-1"
 }
+variable "ssh_user" {
+  type    = string
+  default = "centos"
+}
 
 provider "aws" {
   region = var.my_aws_region
@@ -21,6 +25,10 @@ data "aws_ami" "centos8" {
 # 创建vpc
 resource "aws_vpc" "demo_vpc" {
   cidr_block = "192.168.0.0/16"
+  # 是否启用DNS 解析
+  enable_dns_support = true
+  # 是否启用DNS 主机名
+  enable_dns_hostnames = true
   tags = {
     Name = "demo_vpc"
   }
@@ -46,7 +54,8 @@ resource "aws_subnet" "demo_subnet" {
   cidr_block = "192.168.1.0/24"
   # 自动分配公有 IPv4 地址
   map_public_ip_on_launch = true
-  
+  # enable_resource_name_dns_a_record_on_launch = true
+
   # 指定子网availability_zone相当于指定vm的availability_zone
   availability_zone = "${var.my_aws_region}a"
 
@@ -122,12 +131,49 @@ resource "aws_instance" "demo_vm1" {
   tags = {
     Name = "demo_vm1"
   }
-}
 
-# 绑定eip到vm
-resource "aws_eip" "demo_eip" {
-  instance = aws_instance.demo_vm1.id
-  domain   = "vpc"
+  provisioner "remote-exec" {
+    connection {
+      type        = "ssh"
+      user        = var.ssh_user
+      private_key = file("${path.module}/private.key")
+      host        = self.public_ip
+    }
+
+    inline = [
+      "sudo mkdir -p /usr/local/my-workspace",
+      "sudo chown -R ${var.ssh_user}:${var.ssh_user} /usr/local/my-workspace"
+    ]
+  }
+
+  provisioner "file" {
+    connection {
+      type        = "ssh"
+      user        = var.ssh_user
+      private_key = file("${path.module}/private.key")
+      host        = self.public_ip
+    }
+
+    source      = "./private.key"
+    destination = "/usr/local/my-workspace/private.key"
+  }
+
+  provisioner "remote-exec" {
+    connection {
+      type        = "ssh"
+      user        = var.ssh_user
+      private_key = file("${path.module}/private.key")
+      host        = self.public_ip
+    }
+
+    inline = [
+      # 配置ansible主机免密码登录到其他jmeter主机
+      "sudo mv /usr/local/my-workspace/private.key /root/.ssh/id_rsa",
+      "sudo chmod 600 /root/.ssh/id_rsa",
+      "sudo yum install nc -y"
+    ]
+  }
+
 }
 
 resource "aws_instance" "demo_vm2" {
@@ -141,7 +187,7 @@ resource "aws_instance" "demo_vm2" {
   }
 
   vpc_security_group_ids = [resource.aws_security_group.demo_security_group.id]
-  subnet_id = aws_subnet.demo_subnet.id
+  subnet_id              = aws_subnet.demo_subnet.id
 
   key_name = "demo_key"
 
@@ -152,4 +198,39 @@ resource "aws_instance" "demo_vm2" {
   tags = {
     Name = "demo_vm2"
   }
+
+  depends_on = [aws_instance.demo_vm1]
+
+}
+
+resource "null_resource" "wait_until_demo_vm2_ssh_ready" {
+  triggers = {
+    always_run = "${timestamp()}"
+  }
+
+  # 等待实例ssh ready
+  # https://www.reddit.com/r/Terraform/comments/wl5nml/solutions_to_wait_till_ec2_instance_is_ready/
+  provisioner "remote-exec" {
+    connection {
+      type        = "ssh"
+      user        = var.ssh_user
+      private_key = file("${path.module}/private.key")
+      host        = aws_instance.demo_vm1.public_ip
+    }
+
+    inline = [
+      "while ! nc -w 5 -z ${aws_instance.demo_vm2.private_ip} 22; do echo 'retry until ${aws_instance.demo_vm2.private_ip} ssh ready ...'; sleep 2; done",
+      "echo '${aws_instance.demo_vm2.private_ip} ssh is ready!'"
+    ]
+  }
+
+  depends_on = [aws_instance.demo_vm2]
+}
+
+# 绑定eip到vm
+resource "aws_eip" "demo_eip" {
+  instance = aws_instance.demo_vm1.id
+  domain   = "vpc"
+
+  depends_on = [null_resource.wait_until_demo_vm2_ssh_ready]
 }
