@@ -316,7 +316,7 @@ ssh root@192.168.1.151
 > https://www.cnblogs.com/nmap/p/6148306.html
 
 ```
-# centOS6安装netcat，centOS8默认已经安装nc命令
+# centOS6和centOS8安装netcat
 yum install nc
 
 # 监听本地80端口
@@ -325,7 +325,7 @@ nc -l 80
 # 使用telnet连接80端口
 telnet 192.168.1.23 80
 
-# 使用nc探测端口是否打开
+# 使用nc探测端口是否打开，-v表示verbose，-w等待连接超时时间，-z只是探测端口是否打开不发送数据
 nc -v -w 10 -z xxx.xxx.xxx.xxx 88
 
 # 重复探测端口是否打开直到成功
