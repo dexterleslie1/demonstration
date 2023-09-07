@@ -568,6 +568,43 @@ aws_secret_access_key=xxx
 
 
 
+#### google provider
+
+
+
+##### google region和zone列表
+
+> https://cloud.google.com/compute/docs/regions-zones
+
+
+
+##### socks5和鉴权环境配置
+
+```
+# 配置socks5代理
+# https://stackoverflow.com/questions/65939427/how-to-set-up-terraform-behind-proxy
+export HTTP_PROXY=socks5://192.168.1.55:1080
+export HTTPS_PROXY=socks5://192.168.1.55:1080
+
+# 参考配置provider鉴权
+# https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference
+# 通过google service account控制台在指定的service account下创建key file
+# https://console.cloud.google.com/apis/credentials/serviceaccountkey
+# https://cloud.google.com/docs/authentication/application-default-credentials#personal
+# 在目录中配置service account json文件
+~/.config/gcloud/application_default_credentials.json
+```
+
+
+
+##### google_compute_instance资源
+
+> 参考gcp/main.tf
+>
+> https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance#nested_access_config
+
+
+
 #### ucloud provider
 
 > NOTE: 虚拟机一但创建就预收一个小时费用，贵！暂时不使用。
