@@ -18,6 +18,29 @@ resource "google_compute_network" "demo_vpc1" {
 }
 
 # https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_firewall
+# 允许内网所有浏览
+resource "google_compute_firewall" "demo_default_allow_internal" {
+  name        = "demo-default-allow-internal"
+  description = "Allow internal traffic on the default network"
+  priority    = 65534
+  network     = google_compute_network.demo_vpc1.self_link
+
+  allow {
+    protocol = "tcp"
+    ports    = ["0-65535"]
+  }
+
+  allow {
+    protocol = "udp"
+    ports    = ["0-65535"]
+  }
+
+  allow {
+    protocol = "icmp"
+  }
+
+  source_ranges = ["192.168.0.0/16"]
+}
 resource "google_compute_firewall" "demo_firewall_allow_icmp" {
   name    = "demo-firewall-allow-icmp"
   network = google_compute_network.demo_vpc1.self_link
@@ -74,8 +97,10 @@ data "google_compute_image" "centos8" {
 
 # https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance#nested_access_config
 resource "google_compute_instance" "demo_vm1" {
-  name         = "demo-vm1"
-  machine_type = "e2-medium"
+  name                      = "demo-vm1"
+  allow_stopping_for_update = true
+  desired_status            = "RUNNING"
+  machine_type              = "custom-2-2048"
 
   boot_disk {
     auto_delete = true
@@ -148,8 +173,10 @@ resource "google_compute_instance" "demo_vm1" {
 }
 
 resource "google_compute_instance" "demo_vm2" {
-  name         = "demo-vm2"
-  machine_type = "e2-medium"
+  name                      = "demo-vm2"
+  allow_stopping_for_update = true
+  desired_status            = "RUNNING"
+  machine_type              = "e2-medium"
 
   boot_disk {
     auto_delete = true
@@ -174,7 +201,7 @@ resource "google_compute_instance" "demo_vm2" {
     ssh-keys = "${var.ssh_user}:${file("${path.module}/public.key")}"
   }
 
-  depends_on = [ google_compute_instance.demo_vm1 ]
+  depends_on = [google_compute_instance.demo_vm1]
 }
 
 resource "null_resource" "wait_until_demo_vm2_ssh_ready" {
