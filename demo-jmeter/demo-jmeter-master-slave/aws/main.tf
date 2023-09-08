@@ -1,11 +1,11 @@
 # NOTE: 不知道为何没有发挥出8个slave的性能
 variable "aws_region" {
-    type = string
-    default = "ap-northeast-1"
+  type    = string
+  default = "ap-northeast-1"
 }
 variable "ssh_user" {
-    type= string
-    default = "centos"
+  type    = string
+  default = "centos"
 }
 variable "vm_ansible_ip" {
   type    = string
@@ -17,11 +17,11 @@ variable "vm_jmeter_master_ip" {
 }
 variable "vm_jmeter_slave_ips" {
   type    = list(string)
-  default = ["192.168.1.187", "192.168.1.188", "192.168.1.189" , "192.168.1.190", "192.168.1.191", "192.168.1.192", "192.168.1.193", "192.168.1.194"/**/]
+  default = ["192.168.1.187", "192.168.1.188", "192.168.1.189", "192.168.1.190", "192.168.1.191", "192.168.1.192", "192.168.1.193", "192.168.1.194" /**/]
 }
 
 provider "aws" {
-region = var.aws_region
+  region = var.aws_region
 }
 
 data "aws_ami" "centos8" {
@@ -64,7 +64,7 @@ resource "aws_subnet" "demo_subnet" {
   cidr_block = "192.168.1.0/24"
   # 自动分配公有 IPv4 地址
   map_public_ip_on_launch = true
-  
+
   # 指定子网availability_zone相当于指定vm的availability_zone
   availability_zone = "${var.aws_region}a"
 
@@ -134,10 +134,10 @@ resource "aws_instance" "demo_ansible_vm" {
   # 保证/usr/local/my-workspace目录存在
   provisioner "remote-exec" {
     connection {
-      type     = "ssh"
-      user     = var.ssh_user
-        private_key = file("${path.module}/private.key")
-      host     = self.public_ip
+      type        = "ssh"
+      user        = var.ssh_user
+      private_key = file("${path.module}/private.key")
+      host        = self.public_ip
     }
 
     inline = [
@@ -149,10 +149,10 @@ resource "aws_instance" "demo_ansible_vm" {
   # 复制playbooks到anisble vm
   provisioner "file" {
     connection {
-      type     = "ssh"
-      user     = var.ssh_user
-        private_key = file("${path.module}/private.key")
-      host     = self.public_ip
+      type        = "ssh"
+      user        = var.ssh_user
+      private_key = file("${path.module}/private.key")
+      host        = self.public_ip
     }
 
     source      = "../setup.sh"
@@ -161,22 +161,22 @@ resource "aws_instance" "demo_ansible_vm" {
 
   provisioner "file" {
     connection {
-      type     = "ssh"
-      user     = var.ssh_user
-        private_key = file("${path.module}/private.key")
-      host     = self.public_ip
+      type        = "ssh"
+      user        = var.ssh_user
+      private_key = file("${path.module}/private.key")
+      host        = self.public_ip
     }
 
-    source = "./private.key"
+    source      = "./private.key"
     destination = "/usr/local/my-workspace/private.key"
   }
 
   provisioner "remote-exec" {
     connection {
-      type     = "ssh"
-      user     = var.ssh_user
-        private_key = file("${path.module}/private.key")
-      host     = self.public_ip
+      type        = "ssh"
+      user        = var.ssh_user
+      private_key = file("${path.module}/private.key")
+      host        = self.public_ip
     }
 
     inline = [
@@ -207,14 +207,14 @@ resource "aws_instance" "demo_jmeter_master_vm" {
 
   key_name = aws_key_pair.demo_key.key_name
 
-  # cpu=8,memory=7G
-  instance_type = "c1.xlarge"
+  # cpu=16,memory=30G
+  instance_type = "c3.4xlarge"
 
   tags = {
     Name = "demo-jmeter-master"
   }
 
-  depends_on = [ aws_instance.demo_ansible_vm ]
+  depends_on = [aws_instance.demo_ansible_vm]
 }
 
 # 在所有虚拟机创建成功后执行脚本
@@ -223,21 +223,6 @@ resource "null_resource" "init_jmeter_master" {
     # 因为这个属性每次运行都变化，所以每次执行apply都会运行这个null_resource
     always_run = "${timestamp()}"
   }
-
-  # # todo: 使用cloud-init等待ssh
-  # # 等待jmeter_master ssh连接成功
-  # provisioner "remote-exec" {
-  #   connection {
-  #     type     = "ssh"
-  #     user     = var.ssh_user
-  #     private_key = file("${path.module}/private.key")
-  #     host     = aws_instance.demo_jmeter_master_vm.public_ip
-  #   }
-
-  #   inline = [
-  #       "echo 'SSH connected!'"
-  #   ]
-  # }
 
   # 等待实例ssh ready
   provisioner "remote-exec" {
@@ -257,10 +242,10 @@ resource "null_resource" "init_jmeter_master" {
   # 配置jmeter master
   provisioner "remote-exec" {
     connection {
-      type     = "ssh"
-      user     = var.ssh_user
+      type        = "ssh"
+      user        = var.ssh_user
       private_key = file("${path.module}/private.key")
-      host     = aws_instance.demo_ansible_vm.public_ip
+      host        = aws_instance.demo_ansible_vm.public_ip
     }
 
     inline = [
@@ -273,8 +258,8 @@ resource "null_resource" "init_jmeter_master" {
 }
 
 resource "aws_instance" "demo_jmeter_slave_vm" {
-    count              = length(var.vm_jmeter_slave_ips)
-  ami = data.aws_ami.centos8.id
+  count = length(var.vm_jmeter_slave_ips)
+  ami   = data.aws_ami.centos8.id
 
   private_ip = var.vm_jmeter_slave_ips[count.index]
 
@@ -296,7 +281,7 @@ resource "aws_instance" "demo_jmeter_slave_vm" {
     Name = "demo-jmeter-slave-${count.index}"
   }
 
-  depends_on = [ null_resource.init_jmeter_master ]
+  depends_on = [null_resource.init_jmeter_master]
 }
 
 # 在所有虚拟机创建成功后执行脚本
@@ -307,21 +292,6 @@ resource "null_resource" "init_jmeter_slave" {
     # 因为这个属性每次运行都变化，所以每次执行apply都会运行这个null_resource
     always_run = "${timestamp()}"
   }
-
-  # # todo: 使用cloud-init等待ssh
-  # # 等待jmeter_slave ssh连接成功
-  # provisioner "remote-exec" {
-  #   connection {
-  #     type     = "ssh"
-  #     user     = var.ssh_user
-  #     private_key = file("${path.module}/private.key")
-  #     host     = aws_instance.demo_jmeter_slave_vm[count.index].public_ip
-  #   }
-
-  #   inline = [
-  #       "echo 'SSH connected!'"
-  #   ]
-  # }
 
   # 等待实例ssh ready
   provisioner "remote-exec" {
@@ -341,10 +311,10 @@ resource "null_resource" "init_jmeter_slave" {
   # 配置jmeter slave
   provisioner "remote-exec" {
     connection {
-      type     = "ssh"
-      user     = var.ssh_user
+      type        = "ssh"
+      user        = var.ssh_user
       private_key = file("${path.module}/private.key")
-      host     = aws_instance.demo_ansible_vm.public_ip
+      host        = aws_instance.demo_ansible_vm.public_ip
     }
 
     inline = [

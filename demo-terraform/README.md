@@ -224,6 +224,19 @@ terraform output
 
 
 
+#### terraform state
+
+> https://developer.hashicorp.com/terraform/cli/commands/state/show
+
+```
+# 显示指定资源的状态
+terraform state show "aws_instance.demo_vm1"
+```
+
+
+
+
+
 ### terraform插件本地缓存配置
 
 > 避免每次terraform init时都到官方下载插件

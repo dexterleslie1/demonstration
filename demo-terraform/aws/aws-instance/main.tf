@@ -121,6 +121,7 @@ resource "aws_instance" "demo_vm1" {
 
   # cpu=4,memory=7.5G
   # instance_type = "c4.xlarge"
+  # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/compute-optimized-instances.html
   instance_type = "t2.small"
 
   # https://www.middlewareinventory.com/blog/terraform-aws-ec2-user_data-example/
