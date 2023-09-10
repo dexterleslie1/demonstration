@@ -189,6 +189,8 @@ apt-get install net-tools
 https://linuxize.com/post/how-to-list-installed-packages-on-debian/
 apt list --installed | grep net-tools
 dpkg-query -l | grep openresty
+# 或者
+dpkg -S openresty
 
 # apt卸载并重新安装openresty
 删除openresty deb包
