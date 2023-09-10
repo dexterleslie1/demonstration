@@ -2,6 +2,7 @@
 - hosts: localhost
   vars:
     my_var1: "value1"
+    # my_bool: "False"
 
   tasks:
     - name: "打印ansible_facts变量"
@@ -36,4 +37,8 @@
     - name: "获取cpu个数"
       debug:
         msg: "{{ ansible_processor_vcpus }}"
+
+    - name: "布尔变量默认值和强制类型转换"
+      debug:
+        msg: "my_bool={{ my_bool | default(False) | bool }}"
 
