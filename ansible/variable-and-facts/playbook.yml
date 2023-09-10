@@ -32,3 +32,8 @@
       debug:
         msg: "{{ my_var1 }}"
 
+    # https://stackoverflow.com/questions/39539559/ansible-procesor-count-vs-processor-cores-vs-processor-vcpus
+    - name: "获取cpu个数"
+      debug:
+        msg: "{{ ansible_processor_vcpus }}"
+
