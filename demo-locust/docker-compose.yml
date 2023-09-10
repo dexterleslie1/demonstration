@@ -1,0 +1,21 @@
+version: '3'
+
+# https://docs.locust.io/en/1.5.2/running-locust-docker.html
+services:
+  demo-locust-master:
+    container_name: demo-locust-master
+    image: locustio/locust
+    ports:
+     - "8089:8089"
+    volumes:
+      - ./:/mnt/locust
+    command: -f /mnt/locust/demo-customize-client.py --master -H http://demo-locust-master:8089
+
+  demo-locust-worker:
+    image: locustio/locust
+    deploy:
+      # 多少个worker，和cpu数量相等为宜
+      replicas: 8
+    volumes:
+      - ./:/mnt/locust
+    command: -f /mnt/locust/demo-customize-client.py --worker --master-host demo-locust-master

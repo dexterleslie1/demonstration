@@ -45,9 +45,15 @@ pip show fire
 # 升级fire包到最新版本
 pip install --upgrade fire
 
+# 列出指定包远程所有版本
+pip install click==
+
 # 列出指定包所有版本
 https://stackoverflow.com/questions/4888027/python-and-pip-list-all-versions-of-a-package-thats-available
-pip index versions fire
+# NOTE: 以下命令在pip3时报错不能使用，使用pip show替代
+# pip index versions fire
+# https://stackoverflow.com/questions/10214827/find-which-version-of-package-is-installed-with-pip
+pip show fire
 
 # 卸载selenium
 pip uninstall selenium
