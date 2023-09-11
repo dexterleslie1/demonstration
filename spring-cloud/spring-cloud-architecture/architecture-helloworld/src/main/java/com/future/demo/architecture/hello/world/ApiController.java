@@ -16,8 +16,8 @@ public class ApiController {
     }
 
     @GetMapping(value = "/api/v1/test1", produces = MediaType.TEXT_PLAIN_VALUE)
-    public ResponseEntity<String> test1() {
-        return ResponseEntity.ok("成功调用helloworld test1接口");
+    public ResponseEntity<String> test1(@RequestParam(value = "contextUserId", required = false) Long contextUserId) {
+        return ResponseEntity.ok("成功调用helloworld test1接口，注入上下文参数contextUserId=" + contextUserId);
     }
 
     @PostMapping(value = "/api/v1/test2", produces = MediaType.TEXT_PLAIN_VALUE)

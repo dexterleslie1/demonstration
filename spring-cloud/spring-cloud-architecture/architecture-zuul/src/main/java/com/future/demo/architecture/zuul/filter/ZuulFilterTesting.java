@@ -7,6 +7,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.netflix.zuul.filters.support.FilterConstants;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Slf4j
 public class ZuulFilterTesting extends ZuulFilter {
@@ -31,6 +35,17 @@ public class ZuulFilterTesting extends ZuulFilter {
         HttpServletRequest request = ctx.getRequest();
         String url = request.getRequestURL().toString();
         log.debug("ZuulFilter拦截url=" + url);
+
+        // 传递上下文参数
+        Long contextUserId = 100L;
+        Map<String, List<String>> params = ctx.getRequestQueryParams();
+        if (params == null) {
+            params = new HashMap<>();
+        }
+        params.remove("contextUserId");
+        params.put("contextUserId", Collections.singletonList(String.valueOf(contextUserId)));
+        ctx.setRequestQueryParams(params);
+
         return null;
     }
 }
