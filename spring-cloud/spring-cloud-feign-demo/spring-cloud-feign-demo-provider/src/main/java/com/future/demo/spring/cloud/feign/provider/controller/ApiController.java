@@ -7,7 +7,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -18,8 +21,14 @@ public class ApiController {
     @GetMapping("{productId}")
     public ObjectResponse<Product> info(
             @PathVariable("productId") Integer productId,
-            @RequestHeader(value = "my-header", defaultValue = "") String myHeader) {
-        log.info("my-headder={}", myHeader);
+            @RequestHeader(value = "my-header", defaultValue = "") String myHeader,
+            @RequestParam(value = "contextUserId", required = false) Long contextUserId) {
+        HttpServletRequest request =
+                ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes())
+                        .getRequest();
+        String contextUserIdFromRequest = request.getParameter("contextUserId");
+
+        log.info("my-headder={},contextUserId={},contextUserIdFromRequest={}", myHeader, contextUserId, contextUserIdFromRequest);
         Product product = new Product();
         product.setId(productId);
         product.setName("测试产品");
