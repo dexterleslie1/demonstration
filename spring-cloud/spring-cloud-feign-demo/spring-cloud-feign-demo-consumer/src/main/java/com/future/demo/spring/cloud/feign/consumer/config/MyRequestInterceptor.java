@@ -19,13 +19,16 @@ public class MyRequestInterceptor implements RequestInterceptor {
     public void apply(RequestTemplate template) {
         template.header("my-header", "my-value");
 
-        HttpServletRequest request =
-                ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes())
-                        .getRequest();
-        String contextUserId = request.getParameter("contextUserId");
-        if (StringUtils.hasText(contextUserId)) {
-            template.query("contextUserId", contextUserId);
-            log.debug("feign客户端成功注入上下文参数，contextUserId={}", contextUserId);
+        // https://stackoverflow.com/questions/559155/how-do-i-get-a-httpservletrequest-in-my-spring-beans
+        if (RequestContextHolder.getRequestAttributes() != null) {
+            HttpServletRequest request =
+                    ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes())
+                            .getRequest();
+            String contextUserId = request.getParameter("contextUserId");
+            if (StringUtils.hasText(contextUserId)) {
+                template.query("contextUserId", contextUserId);
+                log.debug("feign客户端成功注入上下文参数，contextUserId={}", contextUserId);
+            }
         }
     }
 }
