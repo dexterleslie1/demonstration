@@ -171,7 +171,12 @@ scp -r root@192.168.1.187:/data/demo1/ .
 
 # 免host checking
 # https://serverfault.com/questions/330503/scp-without-known-hosts-check
-scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null 1.txt user@host_ip:1.txt
+scp -o StrictHostKeyChecking=no 1.txt user@host_ip:1.txt
+
+# 自动提供SSH密码
+# https://www.cyberciti.biz/faq/linux-unix-applesox-ssh-password-on-command-line/
+yum install sshpass -y
+sshpass -p 'xxx' scp -o StrictHostKeyChecking=no 1.txt user@host_ip:1.txt
 ```
 
 
@@ -283,7 +288,10 @@ ssh -i private.key root@xxx
 # https://tecadmin.net/disable-strict-host-key-checking-in-ssh/
 ssh -o StrictHostKeyChecking=no user@host_ip
 
-
+# 自动提供SSH密码
+# https://www.cyberciti.biz/faq/linux-unix-applesox-ssh-password-on-command-line/
+yum install sshpass -y
+sshpass -p 'xxx' ssh -o StrictHostKeyChecking=no root@host_ip
 ```
 
 
