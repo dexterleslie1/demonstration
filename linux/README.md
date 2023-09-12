@@ -168,6 +168,10 @@ scp root@192.168.1.187:/data/temp/README.md .
 
 # 复制远程目录到本地
 scp -r root@192.168.1.187:/data/demo1/ .
+
+# 免host checking
+# https://serverfault.com/questions/330503/scp-without-known-hosts-check
+scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null 1.txt user@host_ip:1.txt
 ```
 
 
@@ -274,6 +278,12 @@ yum makecache
 ```
 # 指定私钥
 ssh -i private.key root@xxx
+
+# 免host checking
+# https://tecadmin.net/disable-strict-host-key-checking-in-ssh/
+ssh -o StrictHostKeyChecking=no user@host_ip
+
+
 ```
 
 
