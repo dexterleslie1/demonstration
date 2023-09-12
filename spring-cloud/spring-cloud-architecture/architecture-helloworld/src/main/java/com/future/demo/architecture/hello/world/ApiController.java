@@ -2,10 +2,7 @@ package com.future.demo.architecture.hello.world;
 
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 public class ApiController {
@@ -16,7 +13,9 @@ public class ApiController {
     }
 
     @GetMapping(value = "/api/v1/test1", produces = MediaType.TEXT_PLAIN_VALUE)
-    public ResponseEntity<String> test1(@RequestParam(value = "contextUserId", required = false) Long contextUserId) {
+    public ResponseEntity<String> test1(@RequestHeader(value = "contextUserId", required = false) Long contextUserId,
+                                        // NOTE: 用于测试使用query params方式注入上下文参数报错情况
+                                        @RequestParam(value = "page", required = false) int page) {
         return ResponseEntity.ok("成功调用helloworld test1接口，注入上下文参数contextUserId=" + contextUserId);
     }
 
