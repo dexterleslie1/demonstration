@@ -93,6 +93,11 @@ sudo snap install terraform --classic
 ```
 # 执行main.tf文件
 terraform apply
+
+# terraform从v0.15.2起弃用terraform taint，使用terraform apply -replace替换
+# https://jeffbrown.tech/terraform-taint-replace/
+terraform apply -replace="google_compute_instance.demo_jmeter_master_vm"
+terraform apply -replace="google_compute_instance.demo_jmeter_slave_vm"
 ```
 
 
