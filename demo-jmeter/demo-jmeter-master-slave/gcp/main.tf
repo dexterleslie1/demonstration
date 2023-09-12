@@ -13,7 +13,7 @@ variable "vm_jmeter_master_ip" {
 }
 variable "vm_jmeter_slave_ips" {
   type    = list(string)
-  default = ["192.168.1.187", "192.168.1.188", "192.168.1.189", "192.168.1.190", "192.168.1.191", "192.168.1.192", "192.168.1.193", "192.168.1.194" /**/]
+  default = ["192.168.1.187"/*, "192.168.1.188", "192.168.1.189", "192.168.1.190", "192.168.1.191", "192.168.1.192", "192.168.1.193", "192.168.1.194" */]
 }
 
 
@@ -139,6 +139,43 @@ resource "google_compute_instance" "demo_jmeter_ansible_vm" {
     ]
   }
 
+  # 复制demo-jmeter-customize-plugin-1.0.0.jar
+  provisioner "file" {
+    connection {
+      type        = "ssh"
+      user        = var.ssh_user
+      private_key = file("${path.module}/private.key")
+      host        = self.network_interface[0].access_config[0].nat_ip
+    }
+
+    source      = "../../demo-jmeter-customize-plugin/target/demo-jmeter-customize-plugin-1.0.0.jar"
+    destination = "/usr/local/my-workspace/demo-jmeter-customize-plugin-1.0.0.jar"
+  }
+  # 复制demo-jmeter-customize-plugin-1.0.0-jar-with-dependencies.jar
+  provisioner "file" {
+    connection {
+      type        = "ssh"
+      user        = var.ssh_user
+      private_key = file("${path.module}/private.key")
+      host        = self.network_interface[0].access_config[0].nat_ip
+    }
+
+    source      = "../../demo-jmeter-customize-plugin/target/demo-jmeter-customize-plugin-1.0.0-jar-with-dependencies.jar"
+    destination = "/usr/local/my-workspace/demo-jmeter-customize-plugin-1.0.0-jar-with-dependencies.jar"
+  }
+  # 复制jmeter.jmx
+  provisioner "file" {
+    connection {
+      type        = "ssh"
+      user        = var.ssh_user
+      private_key = file("${path.module}/private.key")
+      host        = self.network_interface[0].access_config[0].nat_ip
+    }
+
+    source      = "../../demo-jmeter-customize-plugin/jmeter.jmx"
+    destination = "/usr/local/my-workspace/jmeter.jmx"
+  }
+
   # 复制playbooks到anisble vm
   provisioner "file" {
     connection {
@@ -178,7 +215,7 @@ resource "google_compute_instance" "demo_jmeter_ansible_vm" {
       # 配置ansible主机免密码登录到其他jmeter主机
       "sudo mv /usr/local/my-workspace/private.key /root/.ssh/id_rsa",
       "sudo chmod 600 /root/.ssh/id_rsa",
-      "sudo yum install nc -y"
+      "sudo yum install nc -y",
     ]
   }
 }
@@ -246,7 +283,17 @@ resource "null_resource" "init_jmeter_master" {
     }
 
     inline = [
-      "sudo dcli jmeter install --install=y --target_host=${google_compute_instance.demo_jmeter_master_vm.network_interface[0].network_ip} --target_host_user=${var.ssh_user} --mode=master --remote_hosts=${join(",", var.vm_jmeter_slave_ips)} -xmx=6"
+      "sudo dcli jmeter install --install=y --target_host=${google_compute_instance.demo_jmeter_master_vm.network_interface[0].network_ip} --target_host_user=${var.ssh_user} --mode=master --remote_hosts=${join(",", var.vm_jmeter_slave_ips)} -xmx=6",
+      # 复制demo-jmeter-customize-plugin-1.0.0.jar
+      # 复制demo-jmeter-customize-plugin-1.0.0-jar-with-dependencies.jar
+      # https://serverfault.com/questions/330503/scp-without-known-hosts-check
+      "sudo scp -o StrictHostKeyChecking=no /usr/local/my-workspace/demo-jmeter-customize-plugin-1.0.0.jar ${var.ssh_user}@${google_compute_instance.demo_jmeter_master_vm.network_interface[0].network_ip}:demo-jmeter-customize-plugin-1.0.0.jar",
+      "sudo scp -o StrictHostKeyChecking=no /usr/local/my-workspace/demo-jmeter-customize-plugin-1.0.0-jar-with-dependencies.jar ${var.ssh_user}@${google_compute_instance.demo_jmeter_master_vm.network_interface[0].network_ip}:demo-jmeter-customize-plugin-1.0.0-jar-with-dependencies.jar",
+      "sudo ssh -o StrictHostKeyChecking=no ${var.ssh_user}@${google_compute_instance.demo_jmeter_master_vm.network_interface[0].network_ip} sudo mv demo-jmeter-customize-plugin-1.0.0.jar /usr/local/software/jmeter/lib/ext/demo-jmeter-customize-plugin-1.0.0.jar",
+      "sudo ssh -o StrictHostKeyChecking=no ${var.ssh_user}@${google_compute_instance.demo_jmeter_master_vm.network_interface[0].network_ip} sudo mv demo-jmeter-customize-plugin-1.0.0-jar-with-dependencies.jar /usr/local/software/jmeter/lib/ext/demo-jmeter-customize-plugin-1.0.0-jar-with-dependencies.jar",
+      "sudo ssh -o StrictHostKeyChecking=no ${var.ssh_user}@${google_compute_instance.demo_jmeter_master_vm.network_interface[0].network_ip} sudo chown root:root /usr/local/software/jmeter/lib/ext/demo-jmeter*.jar",
+      # 复制jmeter.jmx
+      "sudo scp -o StrictHostKeyChecking=no /usr/local/my-workspace/jmeter.jmx ${var.ssh_user}@${google_compute_instance.demo_jmeter_master_vm.network_interface[0].network_ip}:jmeter.jmx",
     ]
   }
 
@@ -320,7 +367,16 @@ resource "null_resource" "init_jmeter_slave" {
     }
 
     inline = [
-      "sudo dcli jmeter install --install=y --target_host=${var.vm_jmeter_slave_ips[count.index]} --target_host_user=${var.ssh_user} --mode=slave --slave_listen_ip=${var.vm_jmeter_slave_ips[count.index]} -xmx=4"
+      "sudo dcli jmeter install --install=y --target_host=${var.vm_jmeter_slave_ips[count.index]} --target_host_user=${var.ssh_user} --mode=slave --slave_listen_ip=${var.vm_jmeter_slave_ips[count.index]} -xmx=4",
+      # 复制demo-jmeter-customize-plugin-1.0.0.jar
+      # 复制demo-jmeter-customize-plugin-1.0.0-jar-with-dependencies.jar
+      "sudo scp -o StrictHostKeyChecking=no /usr/local/my-workspace/demo-jmeter-customize-plugin-1.0.0.jar ${var.ssh_user}@${var.vm_jmeter_slave_ips[count.index]}:demo-jmeter-customize-plugin-1.0.0.jar",
+      "sudo scp -o StrictHostKeyChecking=no /usr/local/my-workspace/demo-jmeter-customize-plugin-1.0.0-jar-with-dependencies.jar ${var.ssh_user}@${var.vm_jmeter_slave_ips[count.index]}:demo-jmeter-customize-plugin-1.0.0-jar-with-dependencies.jar",
+      "sudo ssh -o StrictHostKeyChecking=no ${var.ssh_user}@${var.vm_jmeter_slave_ips[count.index]} sudo mv demo-jmeter-customize-plugin-1.0.0.jar /usr/local/software/jmeter/lib/ext/demo-jmeter-customize-plugin-1.0.0.jar",
+      "sudo ssh -o StrictHostKeyChecking=no ${var.ssh_user}@${var.vm_jmeter_slave_ips[count.index]} sudo mv demo-jmeter-customize-plugin-1.0.0-jar-with-dependencies.jar /usr/local/software/jmeter/lib/ext/demo-jmeter-customize-plugin-1.0.0-jar-with-dependencies.jar",
+      "sudo ssh -o StrictHostKeyChecking=no ${var.ssh_user}@${var.vm_jmeter_slave_ips[count.index]} sudo chown root:root /usr/local/software/jmeter/lib/ext/demo-jmeter*.jar",
+      # 重新启动jmeter slave否则因为没有加载插件报错
+      "sudo ssh -o StrictHostKeyChecking=no ${var.ssh_user}@${var.vm_jmeter_slave_ips[count.index]} sudo systemctl restart jmeter-server",
     ]
   }
 

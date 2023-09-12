@@ -3,6 +3,10 @@ variable "vsphere_password" {
   sensitive   = true
   description = "vCenter密码"
 }
+variable "ssh_user" {
+  type = string
+  default = "root"
+}
 variable "vm_ansible_ip" {
   type    = string
   default = "192.168.1.185"
@@ -13,7 +17,7 @@ variable "vm_jmeter_master_ip" {
 }
 variable "vm_jmeter_slave_ips" {
   type    = list(string)
-  default = ["192.168.1.187", "192.168.1.188", "192.168.1.189" , "192.168.1.190"/*, "192.168.1.191", "192.168.1.192"*/]
+  default = ["192.168.1.187"/*, "192.168.1.188", "192.168.1.189" , "192.168.1.190", "192.168.1.191", "192.168.1.192"*/]
 }
 variable "vm_ansible_name" {
   type    = string
@@ -141,7 +145,7 @@ resource "vsphere_virtual_machine" "vm_ansible" {
   provisioner "remote-exec" {
     connection {
       type     = "ssh"
-      user     = "root"
+      user     = var.ssh_user
       password = var.vsphere_template_password
       host     = self.default_ip_address
     }
@@ -151,11 +155,48 @@ resource "vsphere_virtual_machine" "vm_ansible" {
     ]
   }
 
+  # 复制demo-jmeter-customize-plugin-1.0.0.jar
+  provisioner "file" {
+    connection {
+      type     = "ssh"
+      user     = var.ssh_user
+      password = var.vsphere_template_password
+      host     = self.default_ip_address
+    }
+
+    source      = "../../demo-jmeter-customize-plugin/target/demo-jmeter-customize-plugin-1.0.0.jar"
+    destination = "/usr/local/my-workspace/demo-jmeter-customize-plugin-1.0.0.jar"
+  }
+  # 复制demo-jmeter-customize-plugin-1.0.0-jar-with-dependencies.jar
+  provisioner "file" {
+    connection {
+      type     = "ssh"
+      user     = var.ssh_user
+      password = var.vsphere_template_password
+      host     = self.default_ip_address
+    }
+
+    source      = "../../demo-jmeter-customize-plugin/target/demo-jmeter-customize-plugin-1.0.0-jar-with-dependencies.jar"
+    destination = "/usr/local/my-workspace/demo-jmeter-customize-plugin-1.0.0-jar-with-dependencies.jar"
+  }
+  # 复制jmeter.jmx
+  provisioner "file" {
+    connection {
+      type     = "ssh"
+      user     = var.ssh_user
+      password = var.vsphere_template_password
+      host     = self.default_ip_address
+    }
+
+    source      = "../../demo-jmeter-customize-plugin/jmeter.jmx"
+    destination = "/usr/local/my-workspace/jmeter.jmx"
+  }
+
   # 复制playbooks到anisble vm
   provisioner "file" {
     connection {
       type     = "ssh"
-      user     = "root"
+      user     = var.ssh_user
       password = var.vsphere_template_password
       host     = self.default_ip_address
     }
@@ -167,13 +208,15 @@ resource "vsphere_virtual_machine" "vm_ansible" {
   provisioner "remote-exec" {
     connection {
       type     = "ssh"
-      user     = "root"
+      user     = var.ssh_user
       password = var.vsphere_template_password
       host     = self.default_ip_address
     }
 
     inline = [
-      "sh /usr/local/my-workspace/setup.sh"
+      "sh /usr/local/my-workspace/setup.sh",
+      "sudo yum install nc -y",
+      "sudo yum install sshpass -y",
     ]
   }
 }
@@ -284,17 +327,42 @@ resource "null_resource" "init_jmeter_master" {
     always_run = "${timestamp()}"
   }
 
-  # 配置jmeter master
+  # 等待实例ssh ready
   provisioner "remote-exec" {
     connection {
       type     = "ssh"
-      user     = "root"
+      user     = var.ssh_user
       password = var.vsphere_template_password
       host     = var.vm_ansible_ip
     }
 
     inline = [
-      "dcli jmeter install --install=y --target_host=${var.vm_jmeter_master_ip} --target_host_password=${var.vsphere_template_password} --mode=master --remote_hosts=${join(",", var.vm_jmeter_slave_ips)} -xmx=4"
+      "while ! nc -w 5 -z ${var.vm_jmeter_master_ip} 22; do echo 'retry until ${var.vm_jmeter_master_ip} ssh ready ...'; sleep 5; done",
+      "echo '${var.vm_jmeter_master_ip} ssh is ready!'"
+    ]
+  }
+
+  # 配置jmeter master
+  provisioner "remote-exec" {
+    connection {
+      type     = "ssh"
+      user     = var.ssh_user
+      password = var.vsphere_template_password
+      host     = var.vm_ansible_ip
+    }
+
+    inline = [
+      "dcli jmeter install --install=y --target_host=${var.vm_jmeter_master_ip} --target_host_password=${var.vsphere_template_password} --mode=master --remote_hosts=${join(",", var.vm_jmeter_slave_ips)} -xmx=4",
+      # 复制demo-jmeter-customize-plugin-1.0.0.jar
+      # 复制demo-jmeter-customize-plugin-1.0.0-jar-with-dependencies.jar
+      # https://serverfault.com/questions/330503/scp-without-known-hosts-check
+      "sudo sshpass -p '${var.vsphere_template_password}' scp -o StrictHostKeyChecking=no /usr/local/my-workspace/demo-jmeter-customize-plugin-1.0.0.jar ${var.ssh_user}@${var.vm_jmeter_master_ip}:demo-jmeter-customize-plugin-1.0.0.jar",
+      "sudo sshpass -p '${var.vsphere_template_password}' scp -o StrictHostKeyChecking=no /usr/local/my-workspace/demo-jmeter-customize-plugin-1.0.0-jar-with-dependencies.jar ${var.ssh_user}@${var.vm_jmeter_master_ip}:demo-jmeter-customize-plugin-1.0.0-jar-with-dependencies.jar",
+      "sudo sshpass -p '${var.vsphere_template_password}' ssh -o StrictHostKeyChecking=no ${var.ssh_user}@${var.vm_jmeter_master_ip} sudo mv demo-jmeter-customize-plugin-1.0.0.jar /usr/local/software/jmeter/lib/ext/demo-jmeter-customize-plugin-1.0.0.jar",
+      "sudo sshpass -p '${var.vsphere_template_password}' ssh -o StrictHostKeyChecking=no ${var.ssh_user}@${var.vm_jmeter_master_ip} sudo mv demo-jmeter-customize-plugin-1.0.0-jar-with-dependencies.jar /usr/local/software/jmeter/lib/ext/demo-jmeter-customize-plugin-1.0.0-jar-with-dependencies.jar",
+      "sudo sshpass -p '${var.vsphere_template_password}' ssh -o StrictHostKeyChecking=no ${var.ssh_user}@${var.vm_jmeter_master_ip} sudo chown root:root /usr/local/software/jmeter/lib/ext/demo-jmeter*.jar",
+      # 复制jmeter.jmx
+      "sudo sshpass -p '${var.vsphere_template_password}' scp -o StrictHostKeyChecking=no /usr/local/my-workspace/jmeter.jmx ${var.ssh_user}@${var.vm_jmeter_master_ip}:jmeter.jmx",
     ]
   }
 
@@ -315,13 +383,22 @@ resource "null_resource" "init_jmeter_slave" {
   provisioner "remote-exec" {
     connection {
       type     = "ssh"
-      user     = "root"
+      user     = var.ssh_user
       password = var.vsphere_template_password
       host     = var.vm_ansible_ip
     }
 
     inline = [
-      "dcli jmeter install --install=y --target_host=${var.vm_jmeter_slave_ips[count.index]} --target_host_password=${var.vsphere_template_password} --mode=slave --slave_listen_ip=${var.vm_jmeter_slave_ips[count.index]} -xmx=4"
+      "dcli jmeter install --install=y --target_host=${var.vm_jmeter_slave_ips[count.index]} --target_host_password=${var.vsphere_template_password} --mode=slave --slave_listen_ip=${var.vm_jmeter_slave_ips[count.index]} -xmx=4",
+      # 复制demo-jmeter-customize-plugin-1.0.0.jar
+      # 复制demo-jmeter-customize-plugin-1.0.0-jar-with-dependencies.jar
+      "sudo sshpass -p '${var.vsphere_template_password}' scp -o StrictHostKeyChecking=no /usr/local/my-workspace/demo-jmeter-customize-plugin-1.0.0.jar ${var.ssh_user}@${var.vm_jmeter_slave_ips[count.index]}:demo-jmeter-customize-plugin-1.0.0.jar",
+      "sudo sshpass -p '${var.vsphere_template_password}' scp -o StrictHostKeyChecking=no /usr/local/my-workspace/demo-jmeter-customize-plugin-1.0.0-jar-with-dependencies.jar ${var.ssh_user}@${var.vm_jmeter_slave_ips[count.index]}:demo-jmeter-customize-plugin-1.0.0-jar-with-dependencies.jar",
+      "sudo sshpass -p '${var.vsphere_template_password}' ssh -o StrictHostKeyChecking=no ${var.ssh_user}@${var.vm_jmeter_slave_ips[count.index]} sudo mv demo-jmeter-customize-plugin-1.0.0.jar /usr/local/software/jmeter/lib/ext/demo-jmeter-customize-plugin-1.0.0.jar",
+      "sudo sshpass -p '${var.vsphere_template_password}' ssh -o StrictHostKeyChecking=no ${var.ssh_user}@${var.vm_jmeter_slave_ips[count.index]} sudo mv demo-jmeter-customize-plugin-1.0.0-jar-with-dependencies.jar /usr/local/software/jmeter/lib/ext/demo-jmeter-customize-plugin-1.0.0-jar-with-dependencies.jar",
+      "sudo sshpass -p '${var.vsphere_template_password}' ssh -o StrictHostKeyChecking=no ${var.ssh_user}@${var.vm_jmeter_slave_ips[count.index]} sudo chown root:root /usr/local/software/jmeter/lib/ext/demo-jmeter*.jar",
+      # 重新启动jmeter slave否则因为没有加载插件报错
+      "sudo sshpass -p '${var.vsphere_template_password}' ssh -o StrictHostKeyChecking=no ${var.ssh_user}@${var.vm_jmeter_slave_ips[count.index]} sudo systemctl restart jmeter-server",
     ]
   }
 
