@@ -36,3 +36,4 @@ geckodriver.log
 terraform.tfstate*
 *.class
 jmeter.log
+terraform.tfvars
