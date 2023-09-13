@@ -47,3 +47,24 @@ variable "my_env_var1" {
 output "output_environment_variable" {
   value = var.my_env_var1
 }
+
+
+# 参数验证
+variable "my_var2" {
+  description = "用于演示参数验证的参数"
+  type        = string
+  validation {
+    condition     = var.my_var2 != ""
+    error_message = "没有指定参数my_var2"
+  }
+}
+
+# 演示本地变量
+# https://developer.hashicorp.com/terraform/language/values/locals
+locals {
+  my_local_var1 = "var1"
+}
+
+output "output_demo_local_variable" {
+  value = "my_local_var1=${local.my_local_var1}"
+}

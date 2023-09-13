@@ -84,6 +84,41 @@ sudo snap install terraform --classic
 
 
 
+### terraform基础
+
+
+
+#### expression表达式
+
+
+
+##### for表达式
+
+> 参考 demo-expression-for.tf
+
+
+
+#### local变量
+
+> 参考 demo-variable.tf#演示本地变量
+
+
+
+#### 使用variable.validation验证参数
+
+> 参考 demo-variable.tf#参数验证
+
+
+
+#### 使用terraform.tfvars提供变量值
+
+```
+# 在terraform工作目录中创建名为terraform.tfvars的文件，内容如下:
+my_var1 = "Hello world!"
+```
+
+
+
 ### terraform cli用法
 
 
@@ -98,6 +133,9 @@ terraform apply
 # https://jeffbrown.tech/terraform-taint-replace/
 terraform apply -replace="google_compute_instance.demo_jmeter_master_vm"
 terraform apply -replace="google_compute_instance.demo_jmeter_slave_vm"
+
+# 自动确认
+terraform apply --auto-approve
 ```
 
 
@@ -121,6 +159,12 @@ terraform plan
 # 执行命令
 terraform show
 ```
+
+
+
+#### terraform refresh
+
+> 此命令读取远程资源状态并同步到本地状态存储中。用于处理配置漂移情况，执行refresh后再执行terraform show就能够查看远程状态已经成功同步到本地状态存储中。
 
 
 
@@ -497,6 +541,12 @@ resource "vsphere_virtual_machine" "vm" {
 
 
 
+#### random provider
+
+> 参考 demo-provider-random.tf
+
+
+
 #### null provider
 
 > 表示没有实际对应resource
@@ -671,6 +721,12 @@ terraform destroy
 > 参考demo-function-length.tf
 >
 > https://developer.hashicorp.com/terraform/language/functions/length
+
+
+
+#### templatefile函数
+
+> 参考 demo-function-templatefile.tf
 
 
 
