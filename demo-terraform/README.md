@@ -119,6 +119,12 @@ my_var1 = "Hello world!"
 
 
 
+#### module
+
+> NOTE: 没有需求用到，暂时不需要研究。
+
+
+
 ### terraform cli用法
 
 

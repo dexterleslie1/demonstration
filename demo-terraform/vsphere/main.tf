@@ -1,57 +1,3 @@
-variable "vsphere_password" {
-  type        = string
-  sensitive   = true
-  description = "vCenter密码"
-}
-variable "ssh_user" {
-  type = string
-  default = "root"
-}
-variable "demo_vm1_ip" {
-  type =string
-  default = "192.168.1.187"
-}
-variable "vsphere_user" {
-  type    = string
-  default = "administrator@vsphere.local"
-}
-variable "vsphere_server" {
-  type    = string
-  default = "192.168.1.51"
-}
-variable "vsphere_datacenter" {
-  type    = string
-  default = "Datacenter"
-}
-variable "vsphere_datastore" {
-  type    = string
-  default = "datastore1"
-}
-variable "vsphere_host" {
-  type    = string
-  default = "192.168.1.49"
-}
-variable "vsphere_network" {
-  type    = string
-  default = "VM Network"
-}
-variable "vsphere_template" {
-  type    = string
-  default = "my-template-centOS8"
-}
-variable "vsphere_template_password" {
-  type    = string
-  default = "Root@123"
-}
-variable "ipv4_gateway" {
-  type    = string
-  default = "192.168.1.1"
-}
-variable "vm_folder" {
-  type    = string
-  default = "vm/private"
-}
-
 provider "vsphere" {
   user                 = var.vsphere_user
   password             = var.vsphere_password
@@ -97,7 +43,7 @@ resource "vsphere_virtual_machine" "demo_vm1" {
   memory_limit       = 4096
   memory_reservation = 4096
   memory_share_level = "custom"
-  memory_share_count = (4096*20)
+  memory_share_count = (4096 * 20)
   guest_id           = data.vsphere_virtual_machine.template.guest_id
   scsi_type          = data.vsphere_virtual_machine.template.scsi_type
   folder             = "/${data.vsphere_datacenter.datacenter.name}/${var.vm_folder}"
