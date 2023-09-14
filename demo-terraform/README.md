@@ -596,6 +596,28 @@ terraform apply
 
 
 
+#### azure provider
+
+> https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs
+
+
+
+##### 配置认证信息
+
+```
+# 这里选择Service Principal with a client secret方式配置认证
+# https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/guides/service_principal_client_secret
+# NOTE: 根据文档步骤配置client secret，在Add role assignment时Members选择Azure Active Directory中创建的App Application，否则在执行terraform apply时会报告权限不足错误。
+```
+
+
+
+##### 演示案例
+
+> 参考 azure/main.tf 演示使用azurerm provider部署一个无服务应用
+
+
+
 #### aws provider
 
 
