@@ -16,3 +16,10 @@ provider "aws" {
 resource "aws_kms_key" "demo_aws_kms_key1" {
   description = "demo-aws-kms-key1"
 }
+
+# 创建密钥别名
+# https://registry.terraform.io/providers/hashicorp/aws/5.17.0/docs/resources/kms_alias
+resource "aws_kms_alias" "demo_aws_kms_alias1" {
+    name = "alias/demo-aws-kms-alias1"
+    target_key_id = aws_kms_key.demo_aws_kms_key1.key_id
+}
