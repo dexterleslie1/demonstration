@@ -11,3 +11,15 @@ output "output_demo_random_shuffle" {
   value = random_shuffle.my_shuffle.result
 }
 
+# 演示random_string资源用法
+# https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string
+resource "random_string" "my_random_string" {
+  length = 24
+  special = false
+  upper = false
+}
+
+output "output_demo_random_string" {
+  value = random_string.my_random_string.result
+}
+

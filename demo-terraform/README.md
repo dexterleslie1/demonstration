@@ -758,5 +758,21 @@ terraform destroy
 
 
 
+### 后端backends状态存储配置
+
+> https://developer.hashicorp.com/terraform/language/settings/backends/configuration
+
+
+
+#### local backend
+
+> NOTE: 通过破坏测试，如果本地丢失terraform相关状态文件，terraform无法知道远程服务的resource状态导致terraform plan会提示创建新的资源。
+>
+> https://developer.hashicorp.com/terraform/language/settings/backends/local
+
+
+
+
+
 
 
