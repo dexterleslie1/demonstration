@@ -125,6 +125,35 @@ my_var1 = "Hello world!"
 
 
 
+
+
+### workspace
+
+> 参考 demo-workspace
+>
+> https://developer.hashicorp.com/terraform/language/state/workspaces
+> https://developer.hashicorp.com/terraform/cli/workspaces
+
+
+
+```
+# 查询workspace列表
+terraform workspace list
+
+# 新建workspace
+terraform workspace new prod
+terrafrom workspace new dev
+
+# 切换workspace
+terraform workspace select default
+terraform workspace select prod
+
+# 删除workspace
+terraform workspace delete prod
+```
+
+
+
 ### terraform cli用法
 
 
