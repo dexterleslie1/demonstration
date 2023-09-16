@@ -805,7 +805,26 @@ terraform destroy
 
 
 
+#### s3 backend
 
+> 参考 demo-backend/s3
+>
+> NOTE: s3 backend在使用terraform init时就自动到aws s3同步状态。
+>
+> https://developer.hashicorp.com/terraform/language/settings/backends/s3
 
+```
+# 演示步骤
+# 进入create-s3目录
+terraform init
+terraform apply
+# 复制output相关信息到use-s3-as-backend/main.tf backend "s3"中
 
+# 进入use-s3-as-backend目录
+terraform init
+terraform apply
+
+# 登录aws console查看s3 bucket: demo-aws-s3-bucket1中会有一个名为 my-s3-key 的文件，这个文件存储了terraform的状态。
+
+```
 
