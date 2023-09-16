@@ -828,3 +828,36 @@ terraform apply
 
 ```
 
+
+
+#### 使用terraform cloud作为backend
+
+> terraform cloud注册
+> https://developer.hashicorp.com/terraform/tutorials/cloud-get-started/cloud-sign-up
+>
+> 配置terraform cloud
+> https://developer.hashicorp.com/terraform/cli/cloud/settings
+
+```
+# 步骤如下
+
+# 1、注册一个terraform cloud帐号
+# 2、登录cloud并创建一个org，NOTE: 不需要手动创建workspace
+# 3、复制如下内容到main.tf
+terraform {
+  cloud {
+    organization = "future-demo-my-org"
+
+    workspaces {
+      # 设置拥有指定tag的workspace，可以使用terraform workspace select命令切换workspace
+      tags = ["my-tag"]
+    }
+  }
+}
+# 4、terraform init，根据提示输入一个新的workspace名称: dev
+# 5、terraform apply -auto-approve
+# 6、创建另外一个workspace: prod
+terraform workspace new prod
+terraform apply -auto-approve
+```
+
