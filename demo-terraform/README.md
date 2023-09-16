@@ -150,6 +150,10 @@ terraform workspace select prod
 
 # 删除workspace
 terraform workspace delete prod
+
+# 切换workspace后指定tfvars文件
+terraform workspace select prod
+terraform apply -var-file=prod.tfvars
 ```
 
 
