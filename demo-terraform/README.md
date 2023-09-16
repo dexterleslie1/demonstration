@@ -842,6 +842,7 @@ terraform apply
 # 步骤如下
 
 # 1、注册一个terraform cloud帐号
+# 2、使用terraform login在本地创建一个token用于backend和cloud通讯并存储状态
 # 2、登录cloud并创建一个org，NOTE: 不需要手动创建workspace
 # 3、复制如下内容到main.tf
 terraform {
