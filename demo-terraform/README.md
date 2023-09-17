@@ -88,6 +88,16 @@ sudo snap install terraform --classic
 
 
 
+#### meta-arguments
+
+
+
+##### for_each
+
+> 参考 demo-meta-arguments-foreach.tf
+
+
+
 #### expression表达式
 
 
