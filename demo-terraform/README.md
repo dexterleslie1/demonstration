@@ -131,7 +131,7 @@ my_var1 = "Hello world!"
 
 #### module
 
-> NOTE: 没有需求用到，暂时不需要研究。
+> 参考 demo-modular
 
 
 
@@ -353,8 +353,6 @@ terraform untaint aws_iam_access_key.app1
 
 # 重建被taint的资源
 terraform apply -auto-approve
-
-
 ```
 
 
