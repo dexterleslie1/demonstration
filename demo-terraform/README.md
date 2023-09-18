@@ -335,6 +335,30 @@ terraform state show "aws_instance.demo_vm1"
 
 
 
+#### terraform taint
+
+> 参考 demo-taint
+>
+> https://developer.hashicorp.com/terraform/cli/commands/taint
+
+```
+# 获取资源地址
+terraform state list
+
+# 标记资源taint
+terraform tain aws_iam_access_key.app1
+
+# 取消标记资源taint
+terraform untaint aws_iam_access_key.app1
+
+# 重建被taint的资源
+terraform apply -auto-approve
+
+
+```
+
+
+
 ### terraform插件本地缓存配置
 
 > 避免每次terraform init时都到官方下载插件
