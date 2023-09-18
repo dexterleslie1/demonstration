@@ -135,6 +135,141 @@ my_var1 = "Hello world!"
 
 
 
+#### 迁移状态
+
+##### 使用terraform state mv移动状态文件
+
+```
+# 使用下面main.tf创建第一个资源
+variable "my_aws_region" {
+  type    = string
+  default = "ap-northeast-1"
+}
+
+provider "aws" {
+  region = var.my_aws_region
+}
+
+resource "aws_resourcegroups_group" "group1" {
+  name = "demo-group1"
+
+  resource_query {
+    query = <<JSON
+{
+  "ResourceTypeFilters": [
+    "AWS::AllSupported"
+  ],
+  "TagFilters": [
+    {
+      "Key": "Stage",
+      "Values": ["demo"]
+    }
+  ]
+}
+JSON
+  }
+}
+
+# 部署地一个资源
+terraform apply
+
+# 模拟修改main.tf结构导致资源重建，main.tf内容如下:
+variable "my_aws_region" {
+  type    = string
+  default = "ap-northeast-1"
+}
+
+provider "aws" {
+  region = var.my_aws_region
+}
+
+resource "aws_resourcegroups_group" "group2" {
+  name = "demo-group1"
+
+  resource_query {
+    query = <<JSON
+{
+  "ResourceTypeFilters": [
+    "AWS::AllSupported"
+  ],
+  "TagFilters": [
+    {
+      "Key": "Stage",
+      "Values": ["demo"]
+    }
+  ]
+}
+JSON
+  }
+}
+
+# 此时terraform plan会提示resourcegroups会先被destroy然后再create
+
+# 显示当前资源列表
+terraform state list
+
+# 迁移aws_resourcegroups_group.group1到aws_resoucegroups_group.group2
+terraform state mv aws_resourcegroups_group.group1 aws_resourcegroups_group.group2
+
+# 执行terraform plan会提示没有objects被修改
+```
+
+
+
+##### 使用terraform state rm删除旧资源，然后使用terraform import重新导入
+
+```
+# 使用下面main.tf创建第一个资源
+variable "my_aws_region" {
+  type    = string
+  default = "ap-northeast-1"
+}
+
+provider "aws" {
+  region = var.my_aws_region
+}
+
+resource "aws_resourcegroups_group" "group1" {
+  name = "demo-group1"
+
+  resource_query {
+    query = <<JSON
+{
+  "ResourceTypeFilters": [
+    "AWS::AllSupported"
+  ],
+  "TagFilters": [
+    {
+      "Key": "Stage",
+      "Values": ["demo"]
+    }
+  ]
+}
+JSON
+  }
+}
+
+# 创建资源
+terraform apply -auto-approve
+
+# 查看当前资源列表
+terraform state list
+
+# 获取资源的id稍后导入用到
+terraform state show aws_resourcegroups_group.group1
+
+# 删除指定的资源
+terraform state rm aws_resourcegroups_group.group1
+
+# 尝试再次创建同名的资源报错
+terraform apply -auto-approve
+
+# 导入已存在的资源
+terraform import aws_resourcegroups_group.group1 demo-group1
+```
+
+
+
 
 
 ### workspace
