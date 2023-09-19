@@ -38,3 +38,4 @@ terraform.tfstate*
 jmeter.log
 terraform.tfvars
 credentials
+.vscode
