@@ -272,6 +272,23 @@ terraform import aws_resourcegroups_group.group1 demo-group1
 
 
 
+##### 自动化测试IaC terraform-exec
+
+> 参考 demo-testing
+
+```
+# 编写完go代码后，在demo-testing目录初始化go module
+go mod init example.com/m/v2
+go mod tidy
+
+# 执行测试
+go test -v
+```
+
+
+
+
+
 ### workspace
 
 > 参考 demo-workspace
