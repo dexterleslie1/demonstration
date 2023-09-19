@@ -4,9 +4,10 @@ import (
 	"fmt"
 )
 
+// https://www.geeksforgeeks.org/inheritance-in-golang/
 type Student struct {
 	Name string
-	Age int
+	Age  int
 }
 
 func (s *Student) Show() {
@@ -30,6 +31,8 @@ func (s *Student2) Testing() {
 }
 
 // 演示面向对象编程-继承
+// Student1和Student2继承Student的Show方法
+// Student1和Student2分别重写Student的Testing方法
 func main() {
 	var student1 Student1
 	student1.Name = "zhangsan"

@@ -59,6 +59,12 @@ go version
 
 
 
+### 派生和继承
+
+> 参考 demo-inheritance
+
+
+
 
 
 
