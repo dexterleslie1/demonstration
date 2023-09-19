@@ -41,6 +41,28 @@ export PATH
 go version
 ```
 
+
+
+
+
+## golang语法基础
+
+
+
+
+
+### 静态方法
+
+> NOTE: 参考golang源代码/usr/local/software/go/src/os/exec/exec.go#func Command(name string, arg ...string) *Cmd方法总结golang静态方法的标准写法。
+>
+> 参考 demo-static-method
+
+
+
+
+
+
+
 ## 编译发布golang程序
 
 **https://freshman.tech/snippets/go/cross-compile-go-programs/**
