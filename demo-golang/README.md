@@ -88,6 +88,7 @@ go mod init demo-cobra
 
 # 生成go.sum文件
 # NOTE: 自动推倒依赖并更新到go.mod文件中，生产go.sum文件锁定当前第三方库依赖版本。
+# NOTE: 会自动把项目所有依赖源代码下载到~/go/pkg/mod目录中
 go mod tidy
 ```
 
