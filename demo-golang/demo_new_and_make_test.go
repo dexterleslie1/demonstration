@@ -15,6 +15,7 @@ type SyncedBuffer struct {
 }
 
 // https://blog.wu-boy.com/2021/06/what-is-different-between-new-and-make-in-golang/
+// https://www.cnblogs.com/xiaxiaosheng/p/11167326.html
 func TestNewAndMake(t *testing.T) {
 	// 可以使用new分配一个int primative类型
 	myInt := new(int)
@@ -46,5 +47,15 @@ func TestNewAndMake(t *testing.T) {
 	}
 	if "value2" != myMap["key2"] {
 		t.Fatalf("myMap['key2']没有预期值")
+	}
+
+	// make分配slice
+	mySlice := make([]int, 0)
+	mySlice = append(mySlice, 11, 22)
+	if 11 != mySlice[0] {
+		t.Fatalf("mySlice[0]没有预期值")
+	}
+	if 22 != mySlice[1] {
+		t.Fatalf("mySlice[1]没有预期值")
 	}
 }
