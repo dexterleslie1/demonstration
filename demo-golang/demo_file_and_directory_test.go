@@ -1,14 +1,17 @@
 package main
 
 import (
+	"bytes"
+	"crypto/rand"
 	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 	"path"
+	"testing"
 )
 
-func main() {
+func TestFileAndDirectory(t *testing.T) {
 	// 用户home目录获取
 	// https://stackoverflow.com/questions/7922270/obtain-users-home-directory
 	homeDirectory, err := os.UserHomeDir()
@@ -47,8 +50,8 @@ func main() {
 
 	/* 测试mv命令 */
 	// https://blog.csdn.net/whatday/article/details/109315495
-	oldLocation := "./.test.txt"
-	newLocation := "./.newtest.txt"
+	oldLocation := homeDirectory + "/.test.txt"
+	newLocation := homeDirectory + "/.newtest.txt"
 	var mvCmd *exec.Cmd = exec.Command("mv", oldLocation, newLocation)
 	// CombinedOutput表示标准输出和错误输出合成
 	// https://stackoverflow.com/questions/1877045/how-do-you-get-the-output-of-a-system-command-in-go
@@ -118,4 +121,26 @@ func main() {
 		rwxString = rwxString + "-"
 	}
 	fmt.Println("文件"+homeDirectory+"/.1.txt"+"权限", rwxString)
+
+	//#region 在临时目录创建新的文件
+
+	randomBytes := make([]byte, 1024*1024)
+	_, err = rand.Read(randomBytes)
+	if err != nil {
+		t.Fatalf("rand.Read调用失败，原因: %s", err)
+	}
+
+	tempDirectory := os.TempDir()
+	tempFile := tempDirectory + "/.1.bin"
+	err = os.WriteFile(tempFile, randomBytes, 0755)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	tempBytes, err := os.ReadFile(tempFile)
+	if !bytes.Equal(randomBytes, tempBytes) {
+		t.Fatalf("写入文件的byte array和读取文件的byte array不匹配")
+	}
+
+	//#endregion
 }
