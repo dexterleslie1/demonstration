@@ -47,4 +47,21 @@ func TestFormat(t *testing.T) {
 	if "3.140000" != myVarStr {
 		t.Fatalf("没有预期值")
 	}
+
+	//#region 演示%+v用法
+
+	myStruct := MyStruct{
+		P1: 23,
+		P2: "Hello world!",
+	}
+	if "{P1:23 P2:Hello world!}" != fmt.Sprintf("%+v", myStruct) {
+		t.Fatalf("%s不是预期值", fmt.Sprintf("%+v", myStruct))
+	}
+
+	//#endregion
+}
+
+type MyStruct struct {
+	P1 int
+	P2 string
 }
