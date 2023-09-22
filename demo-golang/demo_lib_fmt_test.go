@@ -59,6 +59,18 @@ func TestFormat(t *testing.T) {
 	}
 
 	//#endregion
+
+	//#region 格式化换行的长字符串
+
+	// https://stackoverflow.com/questions/35142532/how-to-split-long-lines-for-fmt-sprintf
+	longStr := fmt.Sprintf(`
+		resource "petstore_pet" "pet" {
+
+		}
+	`)
+	fmt.Println(longStr)
+
+	//#endregion
 }
 
 type MyStruct struct {
