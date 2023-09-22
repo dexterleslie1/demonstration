@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"strconv"
 )
 
 func main() {
@@ -32,5 +33,15 @@ func main() {
 	resultStr := string(byteArr)
 	if str != resultStr {
 		log.Fatal("非预期值")
+	}
+
+	// 演示string转换为int64
+	str = "10000000"
+	myInt64, err := strconv.ParseInt(str, 10, 64)
+	if err != nil {
+		log.Fatalf("调用strconv.ParseInt失败，原因: %s", err)
+	}
+	if myInt64 != 10000000 {
+		log.Fatalf("myInt64非预期值")
 	}
 }
