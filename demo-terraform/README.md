@@ -88,6 +88,20 @@ sudo snap install terraform --classic
 
 
 
+#### 启用terraform apply调试模式
+
+> https://developer.hashicorp.com/terraform/internals/debugging
+
+```
+# 启用调试模式
+export TF_LOG=trace
+
+# 关闭调试模式
+export TF_LOG=ERROR
+```
+
+
+
 #### meta-arguments
 
 
@@ -923,6 +937,12 @@ export HTTPS_PROXY=socks5://192.168.1.55:1080
 > NOTE: 虚拟机一但创建就预收一个小时费用，贵！暂时不使用。
 >
 > https://registry.terraform.io/providers/ucloud/ucloud/latest/docs
+
+
+
+#### 自定义petstore provider
+
+> 参考 demo-petstore-provider
 
 
 
