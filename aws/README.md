@@ -35,3 +35,19 @@
 ## iam
 
 > 参考 iam
+
+
+
+## region和zone
+
+> 参考 region-zone
+>
+> https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html
+
+
+
+## rds
+
+> 参考 rds
+>
+> https://aws.amazon.com/rds/?nc=sn&loc=3&dn=1
