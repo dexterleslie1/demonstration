@@ -9,6 +9,7 @@ provider "aws" {
   region = var.my_aws_region
 }
 
+// https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/db_instance
 resource "aws_db_instance" "demo_db_mysql" {
   allocated_storage    = 10
   db_name              = "mydb"

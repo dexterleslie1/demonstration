@@ -51,3 +51,11 @@
 > 参考 rds
 >
 > https://aws.amazon.com/rds/?nc=sn&loc=3&dn=1
+
+
+
+## lambda function
+
+> 参考 lambda
+>
+> https://aws.amazon.com/lambda/
