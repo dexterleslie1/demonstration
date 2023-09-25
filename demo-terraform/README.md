@@ -1066,3 +1066,56 @@ terraform workspace new prod
 terraform apply -auto-approve
 ```
 
+
+
+
+
+### 安全和密钥管理
+
+
+
+#### 保护terraform状态
+
+
+
+##### 从terraform状态删除不必要的密钥
+
+> 参考 demo-security-and-key-management/demo-terraform-state-protection-lambda-function-leak
+>
+> 这个例子演示意外地使用aws lambda function的环境变量特性暴露rds帐号密码。
+
+
+
+##### 使用最小的特权访问
+
+##### 静态加密
+
+
+
+
+
+#### 保护日志
+
+
+
+##### 哪些敏感信息会泄漏？
+
+##### local-exec置备程序的危险
+
+##### 外部数据源的危险
+
+##### HTTP提供程序的危险
+
+##### 限制日志访问
+
+
+
+#### 管理静态密钥
+
+
+
+#### 使用动态密钥
+
+
+
+#### sentinel和策略即代码
