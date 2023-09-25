@@ -360,6 +360,58 @@ nc -zv 192.168.1.34 81
 
 
 
+### tar命令
+
+```
+# 不解压查看tar归档文件内容
+# https://askubuntu.com/questions/392885/how-can-i-view-the-contents-of-tar-gz-file-without-extracting-from-the-command-l
+tar -tf filename.tar.gz
+
+# -z参数使用gzip压缩文件
+tar -cvzf tomcat-lh-management.tar tomcat-lh-management 压缩文件夹
+tar -xvzf tomcat-lh-management.tar 解压文件夹
+
+
+# 压缩文件夹但不打包绝对路径,-C表示先切换到/usr/local目录
+# https://stackoverflow.com/questions/18681595/tar-a-directory-but-dont-store-full-absolute-paths-in-the-archive
+tar -cvzf tomcat-lh-management.tar -C /usr/local tomcat-lh-management
+
+# 压缩文件夹不包含父目录，解压之后直接会把所有文件解压到当前目录
+# https://unix.stackexchange.com/questions/168357/creating-a-tar-archive-without-including-parent-directory
+cd /usr/temp1
+tar -cvzf 1.tar *
+
+# 保留属主和权限信息
+tar --same-owner -cvzpf tomcat-hm-denmark.tar tomcat-hm-denmark/
+
+# tar解压到指定目录，把tar.gz解压到/tmp文件夹
+tar -xzvf archive.tar.gz -C /tmp
+```
+
+
+
+
+
+### zip和unzip命令
+
+```
+# zip压缩和unzip解压缩命令详解
+https://blog.csdn.net/CareChere/article/details/50844846
+
+# 把chat目录内容压缩到chat.zip
+zip -r chat.zip chat
+
+# 把当前目录所有内容压缩到chat.zip，解压时没有子目录
+zip -r chat.zip .
+
+# unzip解压
+unzip mydata.zip -d mydatabak
+
+# 解压文件夹包含中文目录或者文件名称
+# https://www.jb51.net/article/123666.htm
+unzip -O CP936 chat.zip -d chat
+```
+
 
 
 ## 文件和目录
