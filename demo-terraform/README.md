@@ -772,6 +772,12 @@ resource "vsphere_virtual_machine" "vm" {
 
 
 
+#### external provider
+
+> 参考 demo-provider-external.tf
+
+
+
 #### local provider
 
 > 参考demo-local-provider.tf
@@ -1096,6 +1102,10 @@ terraform apply -auto-approve
 
 ##### 静态加密
 
+> 在使用s3后端时，通过指定一个KMS密钥来使客户端加密或者让s3为服务端加密使用默认加密钥匙。
+>
+> 在使用terraform cloud或者terraform enterprise则默认情况下会自动静态加密。事实上，数据会被双重加密： 使用kms加密一次，然后再使用Vault加密一次。
+
 
 
 
@@ -1106,9 +1116,92 @@ terraform apply -auto-approve
 
 ##### 哪些敏感信息会泄漏？
 
+> 场景: 通过启用TF_LOG=trace后，执行terraform apply输出日志中会泄漏敏感的api调用身份鉴权信息。
+> 解决方案: 除非在进行调试，否则始终应该关闭跟踪日志。
+
+```
+# main.tf内容如下:
+variable "my_aws_region" {
+  type    = string
+  default = "ap-northeast-1"
+}
+variable "ssh_user" {
+  type    = string
+  default = "centos"
+}
+
+provider "aws" {
+  region = var.my_aws_region
+}
+
+# 使用默认参数创建密钥
+# https://registry.terraform.io/providers/hashicorp/aws/3.26.0/docs/resources/kms_key
+resource "aws_kms_key" "demo_aws_kms_key1" {
+  description = "demo-aws-kms-key1"
+}
+
+# 创建密钥别名
+# https://registry.terraform.io/providers/hashicorp/aws/5.17.0/docs/resources/kms_alias
+resource "aws_kms_alias" "demo_aws_kms_alias1" {
+    name = "alias/demo-aws-kms-alias1"
+    target_key_id = aws_kms_key.demo_aws_kms_key1.key_id
+}
+
+# 启用TF_LOG=trace
+export TF_LOG=trace
+
+# 执行apply
+terraform apply
+```
+
+
+
 ##### local-exec置备程序的危险
 
+> 演示通过local-exec置备程序输出本地环境变量AWS_ACCESS_KEY_ID
+
+```
+# main.tf内容如下:
+resource "null_resource" "uh_oh" {
+  triggers = {
+    always = timestamp()
+  }
+  provisioner "local-exec" {
+    command = <<-EOF
+      echo "access_key=$AWS_ACCESS_KEY_ID"
+    EOF
+  }
+}
+
+# 执行apply
+terraform apply
+```
+
+
+
 ##### 外部数据源的危险
+
+> 演示通过external provider调用未知外部脚本的危害性。
+
+```
+# main.tf内容如下:
+data "external" "do_bad_stuff" {
+  program = ["node", "${path.module}/run.js"]
+}
+output "my_output_do_bad_stuff" {
+  value = data.external.do_bad_stuff.result
+}
+
+# run.js内容如下:
+console.log(JSON.stringify({
+    AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID
+}))
+
+# 执行plan就能够触发数据源external执行脚本
+terraform plan
+```
+
+
 
 ##### HTTP提供程序的危险
 
