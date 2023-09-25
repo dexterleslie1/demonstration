@@ -1088,6 +1088,12 @@ terraform apply -auto-approve
 
 ##### 使用最小的特权访问
 
+> 参考 demo-security-and-key-management/demo-terraform-state-minimum-iam-s3-backend-policy
+>
+> NOTE: 这个例子没有实际测试验证
+
+
+
 ##### 静态加密
 
 
