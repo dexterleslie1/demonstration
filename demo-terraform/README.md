@@ -772,6 +772,12 @@ resource "vsphere_virtual_machine" "vm" {
 
 
 
+#### template provider
+
+> 参考 demo-provider-template.tf
+
+
+
 #### external provider
 
 > 参考 demo-provider-external.tf
@@ -1205,16 +1211,27 @@ terraform plan
 
 ##### HTTP提供程序的危险
 
-##### 限制日志访问
+> NOTE: 没有做实验证明
+> 由http provider泄漏敏感信息。
 
 
 
-#### 管理静态密钥
+#### 使用动态密钥vault、AWS secrets Manager
 
 
 
-#### 使用动态密钥
+##### vault
+
+> NOTE: 暂时不需要不研究
+
+
+
+##### AWS secrets Manager
+
+> NOTE: 暂时不需要不研究
 
 
 
 #### sentinel和策略即代码
+
+> NOTE: 暂时不需要不研究

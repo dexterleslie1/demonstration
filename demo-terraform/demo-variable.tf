@@ -59,6 +59,15 @@ variable "my_var2" {
   }
 }
 
+variable "my_var3" {
+  description = "用于演示参数验证的参数"
+  type        = string
+  validation {
+    condition     = length(var.my_var3) > 0 && length(var.my_var3) < 6
+    error_message = "字符串长度在1-5之间"
+  }
+}
+
 # 演示本地变量
 # https://developer.hashicorp.com/terraform/language/values/locals
 locals {
