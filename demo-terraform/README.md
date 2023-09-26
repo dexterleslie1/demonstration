@@ -145,7 +145,7 @@ my_var1 = "Hello world!"
 
 #### module
 
-> 参考 demo-modular
+> 参考 demo-modular、demo-deploy-webapp-to-aws
 
 
 
