@@ -1,0 +1,45 @@
+html.dark .el-submenu__title {
+    background-color: #121212;
+    color: #fff;
+}
+
+html.dark .el-submenu__title:hover {
+    background-color: #18222b;
+}
+
+html.dark .el-menu--inline {
+    background-color: #121212;
+    color: #fff;
+}
+
+html.dark .el-menu-item.is-active {
+    color: var(--el-color-primary);
+}
+
+html.dark .el-menu-item {
+    background-color: #121212;
+    color: #fff;
+}
+
+html.dark .el-menu-item:hover {
+    background-color: #18222b;
+}
+
+html.dark .el-card {
+    background-color: #121212;
+}
+
+html.dark {
+    background-color: #121212;
+    color: #fff;
+}
+
+/* el-button黑暗 */
+html.dark .el-button {
+    background-color: transparent;
+}
+
+/* el-input黑暗 */
+html.dark .el-input__inner {
+    background-color: transparent;
+}
