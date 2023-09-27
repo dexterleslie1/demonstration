@@ -1,0 +1,1 @@
+## NOTE: 主要是使用terraform初始化并使用google相关CI/CD组件，所以不研究。
