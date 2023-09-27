@@ -2,6 +2,12 @@
 
 
 
+### pulumi
+
+> todo 学习pulumi
+
+
+
 ### 安装terraform
 
 #### centOS8安装terraform
