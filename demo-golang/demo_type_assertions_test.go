@@ -1,5 +1,6 @@
 // 演示type assertions用法
 // https://go.dev/tour/methods/15
+// https://stackoverflow.com/questions/14289256/cannot-convert-data-type-interface-to-type-string-need-type-assertion
 
 package main
 
