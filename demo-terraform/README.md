@@ -158,6 +158,8 @@ my_var1 = "Hello world!"
 ##### 使用github发布自定义模块
 
 > 参考 demo-publish-self-defined-module
+>
+> NOTE: 仓库命名规范为 terraform-<PROVIDER>-<NAME>，否则在使用terraform注册表发布模块时无法自动识别仓库。
 
 ```
 # 编写自定义模块
@@ -166,7 +168,7 @@ my_var1 = "Hello world!"
 
 # 新建main.tf引用自定义模块
 module "say_hello" {
-  source = "github.com/dexterleslie1/demo-terraform-publish-self-defined-module.git"
+  source = "github.com/dexterleslie1/terraform-demo-publish.git"
   # source = "./src"
 
   name = "Dexter"
@@ -180,6 +182,26 @@ output "output_for_debugging" {
 
 
 ##### 使用terraform注册表发布自定义模块
+
+```
+# 参考上面的"使用github发布自定义模块"把代码上传到github中
+
+# 访问 https://registry.terraform.io 点击publish并使用github帐号登录
+
+# 更加指引选择仓库dexterleslie1/terraform-demo-publish仓库点击publish
+
+# 新建main.tf调试自定义模块
+module "say_hello" {
+  source  = "dexterleslie1/publish/demo"
+  version = "1.0.0"
+
+  name = "Dexter"
+}
+
+output "output_for_debugging" {
+  value = module.say_hello.hello_string
+}
+```
 
 
 
