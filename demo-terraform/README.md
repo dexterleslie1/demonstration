@@ -149,6 +149,40 @@ my_var1 = "Hello world!"
 
 
 
+
+
+#### 发布自定义模块modular
+
+
+
+##### 使用github发布自定义模块
+
+> 参考 demo-publish-self-defined-module
+
+```
+# 编写自定义模块
+
+# 把自定义模块上传到github中
+
+# 新建main.tf引用自定义模块
+module "say_hello" {
+  source = "github.com/dexterleslie1/demo-terraform-publish-self-defined-module.git"
+  # source = "./src"
+
+  name = "Dexter"
+}
+
+output "output_for_debugging" {
+  value = module.say_hello.hello_string
+}
+```
+
+
+
+##### 使用terraform注册表发布自定义模块
+
+
+
 #### 迁移状态
 
 ##### 使用terraform state mv移动状态文件
@@ -798,42 +832,8 @@ resource "vsphere_virtual_machine" "vm" {
 
 #### null provider
 
-> 表示没有实际对应resource
+> 参考 provider/null demo
 >
-> https://registry.terraform.io/providers/hashicorp/null/latest/docs
-
-```
-# main.tf内容如下
-resource "null_resource" "x2" {
-  count = 3
-  triggers = {
-    // 因为这个属性每次运行都变化，所以每次执行apply都会运行这个null_resource
-    always_run = "${timestamp()}"
-  }
-  provisioner "local-exec" {
-    command = "echo ++++++++++++ ${count.index}"
-  }
-}
-
-# 或者另外一个演示main.tf内容如下:
-resource "null_resource" "test" {
-        triggers = {
-                // 因为这个属性每次运行都变化，所以每次执行apply都会运行这个null_resource
-                always_run = "${timestamp()}"
-        }
-        provisioner "local-exec" {
-                command = "date"
-        }
-}
-
-# 初始化
-terraform init
-
-# 执行
-terraform apply
-
-# 会看到在本地执行命令date的输出
-```
 
 
 
