@@ -1075,12 +1075,14 @@ terraform apply
 >
 > 配置terraform cloud
 > https://developer.hashicorp.com/terraform/cli/cloud/settings
+>
+> 参考 demo-backend/cloud
 
 ```
 # 步骤如下
 
 # 1、注册一个terraform cloud帐号
-# 2、使用terraform login在本地创建一个token用于backend和cloud通讯并存储状态
+# 2、使用terraform login在本地创建一个token用于backend和cloud通讯并存储状态，NOTE: token会自动保存在目录~/.terraform.d中
 # 2、登录cloud并创建一个org，NOTE: 不需要手动创建workspace
 # 3、复制如下内容到main.tf
 terraform {
@@ -1099,8 +1101,6 @@ terraform {
 terraform workspace new prod
 terraform apply -auto-approve
 ```
-
-
 
 
 
@@ -1257,3 +1257,29 @@ terraform plan
 #### sentinel和策略即代码
 
 > NOTE: 暂时不需要不研究
+
+
+
+
+
+### terraform cloud、enterprise
+
+> NOTE: 通过阅读terraform cloud文档初步判断terraform cloud是远程执行的，它会把远程执行结果回传到本地cli stdout中。
+
+
+
+#### 注册cloud帐号
+
+> https://developer.hashicorp.com/terraform/tutorials/cloud-get-started/cloud-sign-up
+
+
+
+#### terraform cli登录terraform cloud
+
+> https://developer.hashicorp.com/terraform/tutorials/cloud-get-started/cloud-login
+
+
+
+#### 创建变量
+
+> https://developer.hashicorp.com/terraform/tutorials/cloud-get-started/cloud-create-variable-set
