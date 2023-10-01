@@ -371,6 +371,9 @@ tar -tf filename.tar.gz
 tar -cvzf tomcat-lh-management.tar tomcat-lh-management 压缩文件夹
 tar -xvzf tomcat-lh-management.tar 解压文件夹
 
+# 压缩指定文件main.tf和public.key到文件demo.tar.gz
+tar -cvzf demo.tar.gz main.tf public.key
+
 
 # 压缩文件夹但不打包绝对路径,-C表示先切换到/usr/local目录
 # https://stackoverflow.com/questions/18681595/tar-a-directory-but-dont-store-full-absolute-paths-in-the-archive
