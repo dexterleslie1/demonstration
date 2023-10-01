@@ -1289,3 +1289,17 @@ terraform plan
 #### 创建变量
 
 > https://developer.hashicorp.com/terraform/tutorials/cloud-get-started/cloud-create-variable-set
+
+
+
+#### terraform cloud api
+
+>
+> 参考 demo-cloud-api
+> https://developer.hashicorp.com/terraform/cloud-docs/run/api
+
+
+
+##### 鉴权配置
+
+> https://developer.hashicorp.com/terraform/cloud-docs/api-docs
