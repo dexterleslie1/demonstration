@@ -288,6 +288,9 @@ ssh -i private.key root@xxx
 # https://tecadmin.net/disable-strict-host-key-checking-in-ssh/
 ssh -o StrictHostKeyChecking=no user@host_ip
 
+# ssh执行命令
+ssh -o StrictHostKeyChecking=no user@host_ip date > /tmp/.temp.txt
+
 # 自动提供SSH密码
 # https://www.cyberciti.biz/faq/linux-unix-applesox-ssh-password-on-command-line/
 yum install sshpass -y

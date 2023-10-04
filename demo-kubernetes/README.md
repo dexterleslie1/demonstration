@@ -1,5 +1,9 @@
 # k8s
 
+
+
+
+
 ## minikube
 
 > 原理: minikube使用docker容器环境启动一个名为minikube的容器，这个容器内会运行k8s所有组件。
@@ -53,13 +57,23 @@ kubectl proxy --address='0.0.0.0' --disable-filter=true
 http://external-ip:37337/api/v1/namespaces/kubernetes-dashboard/services/http:kubernetes-dashboard:/proxy/
 ```
 
+
+
+
+
 ## Kubernetes Google Container Registry国内镜像替换
 
 > https://kubernetes.feisky.xyz/appendix/mirrors
 
+
+
+
+
+
+
 ## k8s安装
 
-> NOTE 使用dcli安装
+> NOTE: 使用terraform安装
 
 检查k8s服务是否正常
 
@@ -125,6 +139,15 @@ kubectl delete namespace dev
 ## pod
 
 > pod代表了kubernetes中的基本部署单元。
+>
+> 通常一个pod只包含一个容器。
+> 同一个pod中的容器之间的部分隔离，他们在相同的network中UTS命名空间下运行因此能够通过IPC进行通讯。
+> 同一个pod中容器运行与相同的network命名空间中，因此他们共享相同的ip地址和端口空间。
+> 同一个pod中所有容器具有相同的loopback网络接口，因此容器可以通过localhost与同一pod中的其他容器进行通讯。
+> 当一个pod包含多个容器时，这些容器总是运行于同一个工作节点上，一个pod绝不会跨多个工作节点。
+> 如果一个pod运行一个前端和后端容器组成，那么当你扩大pod的实例数量时，比如扩大为两个，最终会得到两个前端容器和两个后端容器是不好的结果。
+>
+> 在pod中使用多个容器的情况: pod应该包含紧密的耦合的容器组(通常是一个主容器和支持主容器的其他容器)，它们需要一起运行还是可以在不同的主机上运行？它们代表的是一个整体还是相互独立的组件？他们必须一起扩容还是可以分别进行？
 
 ### 检查现有pod的yaml描述文件
 
@@ -2304,7 +2327,7 @@ Commercial support is available at
 
 
 
-## Service服务
+## service服务
 
 > 是一组同类pod对外访问接口，借助service，应用可以方便地实现服务发现和负载均衡
 >
