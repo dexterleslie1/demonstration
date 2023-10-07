@@ -21,7 +21,7 @@ variable "demo_master_ip" {
 }
 variable "demo_node_ips" {
   type = list(string)
-  default = ["192.168.1.189", "192.168.1.190"/*, "192.168.1.191"*/]
+  default = ["192.168.1.189", "192.168.1.190", "192.168.1.191"]
 }
 variable "vsphere_user" {
   type    = string
