@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.future.demo</groupId>
-	<artifactId>java-handy-util</artifactId>
+	<artifactId>demo-java-utils</artifactId>
 	<version>1.0.0</version>
 	
 	<dependencies>
