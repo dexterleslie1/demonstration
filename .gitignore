@@ -39,3 +39,6 @@ jmeter.log
 terraform.tfvars
 credentials
 .vscode
+
+*.a
+*.so
