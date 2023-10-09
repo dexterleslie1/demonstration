@@ -8,7 +8,7 @@ vsphere vCenter standard 7.0.3许可证：104HH-D4343-07879-MV08k-2D2H2
 
 使用VMware-VMvisor-Installer-7.0U3g-20328353.x86_64.iso安装esxi服务器
 
-通过windows2016使用VMware-VCSA-all-7.0.3-20395099.iso安装vCenter服务器，注意：windows2016只是作为过渡用途，不会实际运行vCenter，所以windows2016不需要配置ip地址和不需要配置很高的配置，vCenter安装程序会自动在esxi主机上启动并安装一台独立的虚拟机作为vCenter-7.0.3的guest os。
+通过windows2016使用VMware-VCSA-all-7.0.3-20395099.iso安装vCenter服务器，注意：windows2016只是作为过渡用途，不会实际运行vCenter，所以windows2016不需要配置ip地址和不需要配置很高的配置，vCenter安装程序会自动在esxi主机上启动并安装一台独立的虚拟机作为vCenter-7.0.3的guest os。需要完成Stage1和Stage2配置才退出vCenter安装程序。
 
 ## 问题列表
 
