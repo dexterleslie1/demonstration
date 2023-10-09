@@ -1822,6 +1822,61 @@ kubectl delete service nginx
 
 
 
+### service通过endpoints转发请求到pods中
+
+> 服务并不是和pod直接相连的。相反，有一种资源介于两者之间，它就是endpoint资源。
+> endpoint资源就是暴露一个服务的ip地址和端口的列表，可以通过命令kubectl get endpoints查询endpoint资源列表。
+> 尽管在spec服务中定义了pod选择器，但在重定向传入连接时不会直接使用它。相反，选择器用于构建ip和端口列表，然后存储在endpoint资源中。当客户端连接到服务时，服务代理选择这些ip和端口对中的一个，并将传入连接重定向到在该位置监听的服务器。
+
+```
+# 1.yaml内容如下:
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: deployment1
+spec:
+ replicas: 3
+ selector:
+  matchLabels:
+   app: kubia
+ template:
+  metadata:
+   labels:
+    app: kubia
+  spec:
+   containers:
+    - name: kubia
+      image: docker.118899.net:10001/yyd-public/demo-k8s-nodejs
+      
+# 2.yaml内容如下:
+apiVersion: v1
+kind: Service
+metadata:
+ name: kubia
+spec:
+ sessionAffinity: None
+ selector:
+  app: kubia
+ ports:
+  - port: 80
+    targetPort: 8080
+    
+    
+# 创建资源
+kubectl create -f 1.yaml
+kubectl create -f 2.yaml
+
+# 查看service对应的endpoints信息
+kubectl describe service kubia
+
+# 查看指定endpoints的信息，这些endpoint ip和端口对应pod的ip和端口
+kubectl get endpoints kubia
+
+# 销毁资源
+kubectl delete -f 1.yaml
+kubectl delete -f 2.yaml
+```
+
 
 
 ### 使用yaml创建和删除ClusterIP服务
@@ -2076,6 +2131,86 @@ options ndots:5
 
 # 查询服务集群地址
 kubectl get service
+```
+
+
+
+### 创建外部服务
+
+```
+# 创建辅助pod，用于模拟外部服务
+apiVersion: v1
+kind: Service
+metadata:
+ name: kubia
+spec:
+ ports:
+  - port: 80
+[root@demo-k8s-master ~]# cat 3.yaml 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: deployment1
+spec:
+ replicas: 2
+ selector:
+  matchLabels:
+   app: kubia
+ template:
+  metadata:
+   labels:
+    app: kubia
+  spec:
+   containers:
+    - name: kubia
+      image: docker.118899.net:10001/yyd-public/demo-k8s-nodejs
+      
+# 创建pod
+kubectl create -f 1.yaml
+
+# 创建没有选择器的服务，所以在创建服务后不会自动创建endpoints
+apiVersion: v1
+kind: Service
+metadata:
+ name: kubia
+spec:
+ ports:
+  - port: 80
+  
+# 创建服务
+kuebctl create -f 2.yaml
+  
+# 查看pod ip地址，用于下面endpoints转发的目标ip
+kubect get pods -o wide
+
+# 创建endpoints资源，NOTE: 其中10.244.1.3、10.244.2.3为pod的地址
+apiVersion: v1
+kind: Endpoints
+metadata:
+ # endpoint的名称必须和服务的名称相匹配
+ name: kubia
+subsets:
+ # 服务将连接重定向到endpoint的ip地址
+ - addresses:
+    - ip: 10.244.1.3
+    - ip: 10.244.2.3
+   ports:
+    # endpoint的目标端口
+    - port: 8080
+    
+# 创建endpoint资源
+kubectl create -f 3.yaml
+
+# 查看服务集群ip地址
+kubectl get services
+
+# 测试外部服务是否成功转发
+curl 10.1.83.122
+
+# 销毁资源
+kubectl delete -f 1.yaml
+kubectl delete -f 2.yaml
+kubectl delete -f 3.yaml
 ```
 
 
