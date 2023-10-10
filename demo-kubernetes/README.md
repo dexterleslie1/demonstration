@@ -2474,8 +2474,10 @@ kubectl delete -f 2.yaml
 ### **headless(无头服务)**
 
 > headless服务是通过service的dns解析访问相应的pod ip地址，例如下面例子：在busybox pod中通过headless-service无头服务名称就能够访问两个nginx pod endpoints。
+> 尽管headless服务看起来可能与常规的服务不同，但在客户的视角上他们并无不同。即使使用headlesss服务，客户也可以通过连接的服务的DNS名称来连接到pod上，就像常规服务一样。但是对于headless服务，由于DNS返回了pod的ip，客户端直接连接到该pod，而不是通过服务代理。
 
 ```yaml
+# 用于创建无头服务，1.yaml内容如下:
 apiVersion: v1
 kind: Service
 metadata:
@@ -2492,7 +2494,7 @@ spec:
  - port: 81 # service端口
    targetPort: 80 # pod端口
 
----
+# 用于创建另个deployment，2.yaml内容如下:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -2532,7 +2534,7 @@ spec:
      ports:
      - containerPort: 80
 
----
+# 用于创建，3.yaml内容如下:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -2550,20 +2552,12 @@ spec:
    - name: busybox
      image: busybox:1.28
      command: ["/bin/sh", "-c", "sleep 3600"]
-```
+     
+# 查询所有pod
+kubectl get pods -o wide
 
-```shell
-[root@k8s-master ~]# kubectl get pod
-NAME                                         READY   STATUS    RESTARTS   AGE
-headless-deployment-busybox-b9db9bbb-vsrvm   1/1     Running   0          4m36s
-headless-deployment1-5ffc5bf56c-njvcl        1/1     Running   0          4m36s
-headless-deployment2-5ffc5bf56c-786mm        1/1     Running   0          4m36s
-nfs-client-provisioner-859477c96c-stc5k      1/1     Running   0          117m
-web-0                                        1/1     Running   0          106m
-web-1                                        1/1     Running   0          106m
-web-2                                        1/1     Running   0          106m
 # 进入busybox容器测试headless service
-[root@k8s-master ~]# kubectl exec -it headless-deployment-busybox-b9db9bbb-vsrvm /bin/sh
+kubectl exec -it headless-deployment-busybox-b9db9bbb-vsrvm /bin/sh
 kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl exec [POD] -- [COMMAND] instead.
 / # ping headless-service
 PING headless-service (10.244.2.90): 56 data bytes
@@ -2612,6 +2606,10 @@ headless-service.default.svc.cluster.local. 30 IN A 10.244.2.90
 ;; WHEN: Thu Dec 15 13:18:58 CST 2022
 ;; MSG SIZE  rcvd: 187
 ```
+
+
+
+
 
 ## 数据存储(Volume)
 
