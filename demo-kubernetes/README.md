@@ -2328,10 +2328,54 @@ You've hit deployment1-9677d889-p66gb 4 times
 
 > todo 没有在本地k8s集群中成功启动ingress-controller
 
+```
+# 用于创建pod，1.yaml内容如下:
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: deployment1
+spec:
+ replicas: 3
+ selector:
+  matchLabels:
+   app: kubia
+ template:
+  metadata:
+   labels:
+    app: kubia
+  spec:
+   containers:
+    - name: kubia
+      image: docker.118899.net:10001/yyd-public/demo-k8s-nodejs
+  
+# 创建pod
+kubectl create -f 1.yaml
+
+# 用于创建service，2.yaml内容如下:
+apiVersion: v1
+kind: Service
+metadata:
+ name: myservice1
+spec:
+ type: NodePort
+ ports:
+  - port: 80 # 服务端口80
+    targetPort: 8080 # pod端口8080 
+    nodePort: 30000 # NodePort端口30000
+ selector:
+  app: kubia
+  
+# 创建service
+kubectl create -f 2.yaml
+
+```
+
+
+
 ### 服务就绪探针
 
 ```shell
-[root@k8s-master temp]# cat app.js 
+# app.js 内容如下:
 const http = require("http")
 const os = require("os")
 
@@ -2355,46 +2399,24 @@ var handler = function(request, response) {
 var www = http.createServer(handler)
 www.listen(8080)
 
-[root@k8s-master temp]# cat Dockerfile 
+# Dockerfile 内容如下:
 FROM node:7
 
 ADD app.js /app.js
 ENTRYPOINT ["node", "app.js"]
 
-[root@k8s-master temp]# docker build --tag docker.118899.net:10001/yyd-public/demo-k8s-readinessprobe .
-Sending build context to Docker daemon  3.584kB
-Step 1/3 : FROM node:7
- ---> d9aed20b68a4
-Step 2/3 : ADD app.js /app.js
- ---> Using cache
- ---> 2af299d5e44b
-Step 3/3 : ENTRYPOINT ["node", "app.js"]
- ---> Using cache
- ---> 76a1bde7a026
-Successfully built 76a1bde7a026
-Successfully tagged docker.118899.net:10001/yyd-public/demo-k8s-readinessprobe:latest
+# 编译镜像
+docker build --tag docker.118899.net:10001/yyd-public/demo-k8s-readinessprobe .
 
-[root@k8s-master temp]# docker push docker.118899.net:10001/yyd-public/demo-k8s-readinessprobe
-Using default tag: latest
-The push refers to repository [docker.118899.net:10001/yyd-public/demo-k8s-readinessprobe]
-68e2eae8d1ca: Pushed 
-ab90d83fa34a: Layer already exists 
-8ee318e54723: Layer already exists 
-e6695624484e: Layer already exists 
-da59b99bbd3b: Layer already exists 
-5616a6292c16: Layer already exists 
-f3ed6cb59ab0: Layer already exists 
-654f45ecb7e3: Layer already exists 
-2c40c66f7667: Layer already exists 
-latest: digest: sha256:a046cd2569ca1a6899982712efa1d45f00733682317e57f586c03231063e9d17 size: 2213
+# 推送镜像
+docker push docker.118899.net:10001/yyd-public/demo-k8s-readinessprobe
 
-[root@k8s-master ~]# cat 1.yaml 
+# 1.yaml内容如下:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
  name: deployment1
 spec:
- replicas: 2
  selector:
   matchLabels:
    app: kubia
@@ -2411,7 +2433,7 @@ spec:
         path: /
         port: 8080
 
----
+# 2.yaml内容如下:
 apiVersion: v1
 kind: Service
 metadata:
@@ -2422,13 +2444,12 @@ spec:
   app: kubia
  ports:
   - port: 80
-    targetPort: 8080
-    
+    targetPort: 8080 
+ 
 # 1分钟后才能正常访问服务，因为readinessProbe作用，pod 1分钟后才ready状态
-[root@k8s-master ~]# kubectl get service
-NAME         TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)   AGE
-kubernetes   ClusterIP   10.1.0.1      <none>        443/TCP   2d14h
-myservice1   ClusterIP   10.1.39.125   <none>        80/TCP    6s
+kubectl get pods
+kubectl get services
+
 [root@k8s-master ~]# curl 10.1.39.125
 curl: (7) Failed connect to 10.1.39.125:80; Connection refused
 [root@k8s-master ~]# curl 10.1.39.125
@@ -2439,8 +2460,13 @@ curl: (7) Failed connect to 10.1.39.125:80; Connection refused
 curl: (7) Failed connect to 10.1.39.125:80; Connection refused
 [root@k8s-master ~]# curl 10.1.39.125
 deployment1-78fdbb9b4-twm5m服务已准备好，可以访问
-[root@k8s-master ~]# curl 10.1.39.125
-deployment1-78fdbb9b4-sfrcz服务已准备好，可以访问
+
+# 扩容到两个pod，第二个新的pod需要等待一分钟才ready状态接受请求
+kubectl scale deployment deployment1 --replicas=2
+
+# 销毁资源
+kubectl delete -f 1.yaml
+kubectl delete -f 2.yaml
 ```
 
 
