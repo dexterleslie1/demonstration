@@ -2611,17 +2611,21 @@ headless-service.default.svc.cluster.local. 30 IN A 10.244.2.90
 
 
 
-## 数据存储(Volume)
+## volume数据存储
+
+
+
+
 
 ### 简单存储
 
 #### EmptyDir
 
 > pod创建时会自动创建一个空的目录，无需指定宿主机目录，因为k8s系统会自动分配一个目录，**在pod销毁时，emptydir中的数据也会被永久删除。**
->
-> 使用emptydir实现pod内的容器共享数据
+>使用emptydir实现pod内的容器共享数据
 
 ```yaml
+### emptydir存储在硬盘中
 apiVersion: v1
 kind: Pod 
 metadata:
@@ -2644,43 +2648,55 @@ spec:
  volumes:
  - name: logs-volume
    emptyDir: {}
-```
-
-```shell
-[root@k8s-master ~]# kubectl get pod -o wide
-NAME   READY   STATUS    RESTARTS   AGE   IP            NODE        NOMINATED NODE   READINESS GATES
-pod1   2/2     Running   0          96s   10.244.2.55   k8s-node2   <none>           <none>
-[root@k8s-master ~]# curl 10.244.2.55
-<!DOCTYPE html>
-<html>
-<head>
-<title>Welcome to nginx!</title>
-<style>
-    body {
-        width: 35em;
-        margin: 0 auto;
-        font-family: Tahoma, Verdana, Arial, sans-serif;
-    }
-</style>
-</head>
-<body>
-<h1>Welcome to nginx!</h1>
-<p>If you see this page, the nginx web server is successfully installed and
-working. Further configuration is required.</p>
-
-<p>For online documentation and support please refer to
-<a href="http://nginx.org/">nginx.org</a>.<br/>
-Commercial support is available at
-<a href="http://nginx.com/">nginx.com</a>.</p>
-
-<p><em>Thank you for using nginx.</em></p>
-</body>
-</html>
+   
+# 查看pod ip地址
+kubectl get pod -o wide
 
 # 查看busybox日志输出
-[root@k8s-master ~]# kubectl logs -f pod1 -c busybox
-10.244.0.0 - - [09/Dec/2022:06:02:47 +0000] "GET / HTTP/1.1" 200 612 "-" "curl/7.29.0" "-"
+kubectl logs -f pod1 -c busybox
+
+# 访问nginx
+curl 10.244.2.55
+
+
+
+### emptydir存储在内存中
+apiVersion: v1
+kind: Pod 
+metadata:
+ name: pod1
+spec:
+ containers:
+ - name: nginx
+   image: nginx:1.17.1
+   ports:
+   - containerPort: 80
+   volumeMounts:
+    - name: logs-volume
+      mountPath: /var/log/nginx
+ - name: busybox
+   image: busybox
+   command: ["/bin/sh", "-c", "tail -f /logs/access.log"]
+   volumeMounts:
+   - name: logs-volume
+     mountPath: /logs
+ volumes:
+ - name: logs-volume
+   emptyDir:
+    # 存储介质为内存
+    medium: Memory
+   
+# 查看pod ip地址
+kubectl get pod -o wide
+
+# 查看busybox日志输出
+kubectl logs -f pod1 -c busybox
+
+# 访问nginx
+curl 10.244.2.55
 ```
+
+
 
 #### HostPath
 
