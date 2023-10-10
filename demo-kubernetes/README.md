@@ -2262,8 +2262,10 @@ kubectl delete -f 2.yaml
 
 ### 使用NodePort类型的服务
 
+> externalTrafficPolicy: Local配置，NOTE: 请求只转发到当前节点的pod中，不会转发到其他节点的pod上。NOTE: 因为接收连接的节点和托管目标pod的节点之间没有额外的跳跃(不执行SNAT)，所有客户端ip会被保留。
+
 ```shell
-[root@k8s-master ~]# cat 1.yaml 
+# 1.yaml内容如下: 
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -2282,12 +2284,15 @@ spec:
     - name: kubia
       image: docker.118899.net:10001/yyd-public/demo-k8s-nodejs
 
----
+# 2.yaml NodePort服务内容如下:
 apiVersion: v1
 kind: Service
 metadata:
  name: myservice1
 spec:
+ # NOTE: 请求只转发到当前节点的pod中，不会转发到其他节点的pod上
+ # NOTE: 因为接收连接的节点和托管目标pod的节点之间没有额外的跳跃(不执行SNAT)，所有客户端ip会被保留
+ externalTrafficPolicy: Local
  type: NodePort
  ports:
   - port: 80 # 服务端口80
@@ -2296,24 +2301,22 @@ spec:
  selector:
   app: kubia
   
-# 仍然能够使用ClusterIP访问服务 
-[root@k8s-master ~]# kubectl get service
-NAME         TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)        AGE
-kubernetes   ClusterIP   10.1.0.1      <none>        443/TCP        2d9h
-myservice1   NodePort    10.1.124.78   <none>        80:30000/TCP   65m
-[root@k8s-master ~]# curl 10.1.124.78
+# 仍然能够使用ClusterIP访问服务
+kubectl get services
+
+curl 10.1.124.78
 You've hit deployment1-9677d889-4jc6c 1 times
-[root@k8s-master ~]# curl 10.1.124.78
+curl 10.1.124.78
 You've hit deployment1-9677d889-s6jqj 3 times
-[root@k8s-master ~]# curl 10.1.124.78
+curl 10.1.124.78
 You've hit deployment1-9677d889-4jc6c 2 times
 
 # 使用节点ip+nodePort访问服务
-[root@k8s-master ~]# curl 192.168.1.171:30000
+curl 192.168.1.171:30000
 You've hit deployment1-9677d889-p66gb 3 times
-[root@k8s-master ~]# curl 192.168.1.171:30000
+curl 192.168.1.171:30000
 You've hit deployment1-9677d889-4jc6c 3 times
-[root@k8s-master ~]# curl 192.168.1.171:30000
+curl 192.168.1.171:30000
 You've hit deployment1-9677d889-p66gb 4 times
 ```
 
