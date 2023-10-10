@@ -2135,18 +2135,10 @@ kubectl get service
 
 
 
-### 创建外部服务
+### 创建外部服务指定endpoint ip列表
 
 ```
 # 创建辅助pod，用于模拟外部服务
-apiVersion: v1
-kind: Service
-metadata:
- name: kubia
-spec:
- ports:
-  - port: 80
-[root@demo-k8s-master ~]# cat 3.yaml 
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -2201,11 +2193,10 @@ subsets:
 # 创建endpoint资源
 kubectl create -f 3.yaml
 
-# 查看服务集群ip地址
+# 进入其中一个pod shell测试服务，测试外部服务是否成功转发
 kubectl get services
-
-# 测试外部服务是否成功转发
-curl 10.1.83.122
+kubectl exec -it deployment1-9677d889-5j4sp bash
+curl kubia
 
 # 销毁资源
 kubectl delete -f 1.yaml
@@ -2215,9 +2206,59 @@ kubectl delete -f 3.yaml
 
 
 
-### 为外部服务ExternalName创建别名
+### 创建外部服务指定ExternalName
 
-> todo 没有实验成功，不能代理www.baidu.com
+> ExternalName服务仅在DNS级别实施，为服务创建了简单的CNAME DNS记录。因此，连接到服务的客户端将直接连接到外部服务，完全绕过服务代理。出于这个原因，这些类型的服务甚至不会获取集群ip。
+
+```
+# 创建执行curl命令使用的pod
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: deployment1
+spec:
+ selector:
+  matchLabels:
+   app: kubia-testing
+ template:
+  metadata:
+   labels:
+    app: kubia-testing
+  spec:
+   containers:
+    - name: kubia-testing
+      image: docker.118899.net:10001/yyd-public/demo-k8s-nodejs
+
+# 创建pod
+kubectl create -f 1.yaml
+
+# 创建externalName服务
+apiVersion: v1
+kind: Service
+metadata:
+ name: kubia
+spec:
+ type: ExternalName
+ externalName: www.sina.com
+ ports:
+  - port: 80
+
+# 创建服务
+kubectl create -f 2.yaml
+
+# 进入pod shell测试externalName服务
+kubectl get pods
+kubectl exec -it deployment1-68bd78b7-zgx7j bash
+curl kubia
+
+# 销毁资源
+kubectl delete -f 1.yaml
+kubectl delete -f 2.yaml
+```
+
+
+
+
 
 ### 使用NodePort类型的服务
 
