@@ -2698,9 +2698,15 @@ curl 10.244.2.55
 
 
 
+#### GitRepo卷
+
+> NOTE: 暂时没有需要使用这种类型的卷，所以不研究。
+
+
+
 #### HostPath
 
-> HostPath存储不会随着pod销毁而被删除。
+> HostPath存储不会随着pod销毁而被删除。但是HostPath不能用于跨节点的数据持久化。
 
 ```yaml
 apiVersion: v1
@@ -2708,6 +2714,9 @@ kind: Pod
 metadata:
  name: pod1
 spec:
+ # 指定pod在节点demo-k8s-node1上运行
+ nodeSelector:
+  kubernetes.io/hostname: demo-k8s-node1
  containers:
  - name: nginx
    image: nginx:1.17.1
@@ -2727,45 +2736,30 @@ spec:
    hostPath:
     path: /root/logs
     type: DirectoryOrCreate # 目录不存在就创建
+    
+# 创建pod
+kubectl create -f 1.yaml 
+
+# 查看nginx日志
+kubectl logs -f pod1 -c busybox
+
+# 查看pod ip地址
+kubectl get pod -o wide
+
+# 请求nginx
+curl 10.244.2.56
+
+# 删除pod
+kubectl delete -f 1.yaml
+
+# 重新创建pod并再次查看nginx日志，之前的日志依旧存在
+kubectl create -f 1.yaml
+kubectl logs -f pod1 -c busybox
 ```
 
-```shell
-[root@k8s-master ~]# kubectl create -f 1.yaml 
-pod/pod1 created
 
-[root@k8s-master ~]# kubectl logs -f pod1 -c busybox
-10.244.0.0 - - [09/Dec/2022:07:13:50 +0000] "GET / HTTP/1.1" 200 612 "-" "curl/7.29.0" "-"
 
-[root@k8s-master ~]# kubectl get pod -o wide
-NAME   READY   STATUS    RESTARTS   AGE     IP            NODE        NOMINATED NODE   READINESS GATES
-pod1   2/2     Running   0          2m22s   10.244.2.56   k8s-node2   <none>           <none>
-[root@k8s-master ~]# curl 10.244.2.56
-<!DOCTYPE html>
-<html>
-<head>
-<title>Welcome to nginx!</title>
-<style>
-    body {
-        width: 35em;
-        margin: 0 auto;
-        font-family: Tahoma, Verdana, Arial, sans-serif;
-    }
-</style>
-</head>
-<body>
-<h1>Welcome to nginx!</h1>
-<p>If you see this page, the nginx web server is successfully installed and
-working. Further configuration is required.</p>
 
-<p>For online documentation and support please refer to
-<a href="http://nginx.org/">nginx.org</a>.<br/>
-Commercial support is available at
-<a href="http://nginx.com/">nginx.com</a>.</p>
-
-<p><em>Thank you for using nginx.</em></p>
-</body>
-</html>
-```
 
 #### NFS
 
