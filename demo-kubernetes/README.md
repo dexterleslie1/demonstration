@@ -2776,6 +2776,7 @@ spec:
    - name: logs-volume
      mountPath: /var/log/nginx
      # 在nfs挂载点下创建子目录demo-nfs/sub1，绝对路径为/data/demo-nfs/sub1
+     # 但是pod内的路径还是/var/log/nginx
      subPath: demo-nfs/sub1
  - name: busybox
    image: busybox
@@ -2809,43 +2810,22 @@ kubectl logs -f pod1 -c busybox
 
 #### pv和pvc
 
-> pv(Persistent Volume)是持久化卷的意思，是对底层共享存储的一种抽象。
+> pv(Persistent Volume)是持久化卷的意思，是对底层共享存储的一种抽象。集群管理元管理底层的pv。
 >
-> pvc(Persistent Volume Claim)是持久卷声明的意思，是用户对于存储需求的一种声明。换句话说，pvc其实是用户向k8s系统发出一种资源需求申请。
-
-**创建nfs**
-
-```shell
-# 分别在三个节点上安装nfs-utils
-[root@k8s-master ~]# yum install nfs-utils -y
-# 在master节点上启动nfs-server
-[root@k8s-master ~]# systemctl start nfs-server
-[root@k8s-master ~]# systemctl enable nfs-server
-# 在master节点创建三个pv目录
-[root@k8s-master ~]# mkdir /data/{pv1,pv2,pv3} -pv
-mkdir: created directory ‘/data/pv1’
-mkdir: created directory ‘/data/pv2’
-mkdir: created directory ‘/data/pv3’
-# 编辑/etc/exports加入如下内容
-[root@k8s-master ~]# cat /etc/exports
-/data/pv1 *(rw,sync,no_root_squash,no_subtree_check)
-/data/pv2 *(rw,sync,no_root_squash,no_subtree_check)
-/data/pv3 *(rw,sync,no_root_squash,no_subtree_check)
-# 重启nfs-server服务
-[root@k8s-master ~]# systemctl restart nfs-server
-# 显示被nfs export的目录
-[root@k8s-master ~]# showmount -e
-Export list for k8s-master:
-/datass   *
-/data/pv3 *
-/data/pv2 *
-/data/pv1 *
-```
-
-**创建pv**
-
+> pvc(Persistent Volume Claim)是持久卷声明的意思，是用户对于存储需求的一种声明。换句话说，pvc其实是用户向k8s系统发出一种资源需求申请。开发人员不需要关注底层的pv对应的存储技术，只需要创建pvc并使用存储就可以了。
+>
+> 
+>
+> 访问模式(RWO、ROX、RWX涉及可以同时使用卷的工作节点的数量而并非pod的数量):
+>
+> - RWO -- ReadWriteOnce -- 仅允许单个节点挂载读写。
+> - ROX -- ReadOnlyMany -- 允许多个节点挂载只读。
+> - RWX -- ReadWriteMany -- 允许多个节点挂载读写这个卷。
+>
+> 
+>
+> pv 相关资料
 > https://www.jianshu.com/p/0fab432831b3
->
 > https://kubernetes.io/zh-cn/docs/concepts/storage/persistent-volumes/
 >
 > pv的回收策略（persistentVolumeReclaimPolicy）:
@@ -2860,13 +2840,15 @@ Export list for k8s-master:
 >
 >      如果你希望重用该存储资产，可以基于存储资产的定义创建新的 PersistentVolume 卷对象。
 >
-> - Recycle：不保留数据。经测试pvc删除后，在nfs服务端的数据也会被删除（相当于执行rm -rf *）。只有hostPath和NFS支持这种方式。之后该pv会给新的pvc创建申请。
+> - Recycle：不保留数据。经测试pvc删除后，在nfs服务端的数据也会被删除（相当于执行rm -rf *）。只有hostPath和NFS支持这种方式。之后该pv会给新的pvc创建申请。NOTE: 不会自动删除底层的存储介质(Aws EBS、GCE PD、Azure Disk)，但是存储介质上的数据被删除了。
 >
-> - Delete： 这表示当用户删除对应的 PersistentVolumeClaim 时，动态配置（对于手动置备的pvc效果和Retain一样，pv不会被自动删除）的 volume 将被自动删除。AWS EBS, GCE PD, Azure Disk, and Cinder volumes支持这种方式。
+> - Delete： 这表示当用户删除对应的 PersistentVolumeClaim 时，底层的存储介质也会被删除(Aws EBS、GCE PD、Azure Disk)。AWS EBS, GCE PD, Azure Disk, and Cinder volumes支持这种方式。
 >
 > **todo accessModes初步测试ReadWriteOnce似乎没有作用**
 
 ```yaml
+### 演示使用nfs创建pv和pvc
+# 步骤1、创建pv
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -2878,21 +2860,16 @@ spec:
  - ReadWriteMany
  persistentVolumeReclaimPolicy: Retain
  nfs:
-  path: /data/pv1
-  server: 192.168.1.170
-```
+  path: /data
+  server: 192.168.1.186
+  
+# 创建pv
+kubectl create -f 1.yaml 
 
-```shell
-[root@k8s-master ~]# kubectl create -f 1.yaml 
-persistentvolume/pv1 created
-[root@k8s-master ~]# kubectl get persistentvolume
-NAME   CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS      CLAIM   STORAGECLASS   REASON   AGE
-pv1    2Gi        RWX            Retain           Available                                   19s
-```
+# 查询pv列表，pv状态为Available因为没有pvc在引用此pv
+kubectl get pv
 
-**创建pvc**
-
-```yaml
+# 步骤2、创建pvc
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -2903,19 +2880,16 @@ spec:
  resources:
   requests:
    storage: 1Gi
-```
+  
+# 创建pvc
+kubectl create -f 2.yaml 
 
-```shell
-[root@k8s-master ~]# kubectl create -f 2.yaml 
-persistentvolumeclaim/pvc1 created
-[root@k8s-master ~]# kubectl get persistentvolumeclaim
-NAME   STATUS   VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   AGE
-pvc1   Bound    pv1      2Gi        RWX                           9m39s
-```
+# 查看pv和pvc列表，此时发现pv和pvc都为Bound状态，并且pv对应的claim为default/pvc1
+# 当创建好pvc，k8s就会找到适当的持久卷pv并将其绑定到声明，持久卷的容量必须足够大以满足声明的需求，并且卷的访问模式必须包含声明中指定的访问模式。
+kubectl get pv
+kubectl get pvc
 
-**pod使用pvc**
-
-```yaml
+# 步骤3、创建pod使用pvc
 apiVersion: v1
 kind: Pod
 metadata:
@@ -2928,35 +2902,126 @@ spec:
    volumeMounts:
    - name: volume
      mountPath: /root/
+     subPath: demo-pv-and-pvc
  volumes:
  - name: volume
    persistentVolumeClaim:
     claimName: pvc1
     readOnly: false
-```
+    
+# 创建pod
+kubectl create -f 3.yaml 
 
-```shell
-# 使用pvc
-[root@k8s-master ~]# kubectl create -f pod.yaml 
-pod/pod1 created
-[root@k8s-master pv1]# tail -f out.txt 
+# 进入nfs服务，切换到/data/demo-pv-and-pvc目录查看out.txt内容
+tail -f out.txt 
 Wed Jan 4 13:02:07 UTC 2023
 Wed Jan 4 13:02:17 UTC 2023
 Wed Jan 4 13:02:27 UTC 2023
 Wed Jan 4 13:02:37 UTC 2023
+
+
+
+
+### 测试回收策略persistentVolumeReclaimPolicy: Recycle
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+ name: pv1
+spec:
+ capacity: 
+  storage: 2Gi
+ accessModes:
+ - ReadWriteMany
+ persistentVolumeReclaimPolicy: Recycle
+ nfs:
+  path: /data
+  server: 192.168.1.186
+  
+# 创建pv
+kubectl create -f 1.yaml
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+ name: pvc1
+spec:
+ accessModes:
+ - ReadWriteMany
+ resources:
+  requests:
+   storage: 1Gi
+
+# 创建pvc
+kubectl create -f 2.yaml
+
+# 查看pv和pvc状态，此时pv会被自动分配到pvc中并处于Bound状态
+kubectl get pv
+kubectl get pvc
+
+# 删除pvc并查看pv和pvc状态，此时pv为Released状态并且能够被其他pvc重复使用。pv中的数据被删除了。
+kubectl delete -f 2.yaml
+kubectl get pv
+kubectl get pvc
+
+
+
+
+### 测试回收策略persistentVolumeReclaimPolicy: Delete
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+ name: pv1
+spec:
+ capacity: 
+  storage: 2Gi
+ accessModes:
+ - ReadWriteMany
+ persistentVolumeReclaimPolicy: Delete
+ nfs:
+  path: /data
+  server: 192.168.1.186
+  
+# 创建pv
+kubectl create -f 1.yaml
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+ name: pvc1
+spec:
+ accessModes:
+ - ReadWriteMany
+ resources:
+  requests:
+   storage: 1Gi
+   
+# 创建pvc
+kubectl create -f 2.yaml
+
+# 查看pv和pvc状态，此时pv会被自动分配到pvc中并处于Bound状态
+kubectl get pv
+kubectl get pvc
+
+# 删除pvc并查看pv和pvc状态，此时pv为Failed状态表示底层存储被删除不能够被其他pvc重复使用。pv中的数据被删除了。只能够重新创建pv和pvc才能够再次使用nfs存储。
+kubectl delete -f 2.yaml
+kubectl get pv
+kubectl get pvc
 ```
 
-#### storageclass
 
-> 根据pvc自动创建pv
+
+#### 使用storageclass(存储类别)实现持久卷的动态卷配置
+
+> 卷置备程序会根据pvc自动创建pv，不需要集群管理员预先创建pv，集群管理员只需要定义一个或者多个StorageClass对象。
 >
-> [链接1](https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner/blob/master/deploy/test-claim.yaml) [链接2](https://zahui.fan/posts/179eb842/)
-
-**参考pv和pvc章节配置nfs服务器**
+> https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner/blob/master/deploy/test-claim.yaml
+> https://zahui.fan/posts/179eb842/
 
 **创建rbac.yarml**
 
 ```yaml
+# 配置nfs卷置备程序
+# 用于创建nfs置备程序的相关rbac
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -3020,20 +3085,11 @@ roleRef:
   kind: Role
   name: leader-locking-nfs-client-provisioner
   apiGroup: rbac.authorization.k8s.io
-```
 
-```shell
-[root@k8s-master ~]# kubectl create -f rbac.yaml 
-serviceaccount/nfs-client-provisioner created
-clusterrole.rbac.authorization.k8s.io/nfs-client-provisioner-runner created
-clusterrolebinding.rbac.authorization.k8s.io/run-nfs-client-provisioner created
-role.rbac.authorization.k8s.io/leader-locking-nfs-client-provisioner created
-rolebinding.rbac.authorization.k8s.io/leader-locking-nfs-client-provisioner created
-```
+# 创建相关资源
+kubectl create -f rbac.yaml 
 
-**创建deployment.yaml**
-
-```yaml
+# 用于创建nfs置备程序的pod
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -3061,28 +3117,23 @@ spec:
             - name: nfs-client-root
               mountPath: /persistentvolumes
           env:
-			# 必须与storageclass.yaml中的provisioner的名称一致
+            # 必须与storageclass.yaml中的provisioner的名称一致
             - name: PROVISIONER_NAME
               value: k8s-sigs.io/nfs-subdir-external-provisioner
             - name: NFS_SERVER
-              value: 192.168.1.170
+              value: 192.168.1.186
             - name: NFS_PATH
-              value: /datass
+              value: /data
       volumes:
         - name: nfs-client-root
           nfs:
-            server: 192.168.1.170
-            path: /datass
-```
+            server: 192.168.1.186
+            path: /data
+            
+# 创建deployment
+kubectl create -f deployment.yaml
 
-```shell
-[root@k8s-master ~]# kubectl create -f deployment.yaml 
-deployment.apps/nfs-client-provisioner created
-```
-
-**创建storageclass.yaml**
-
-```yaml
+# 创建storageclass
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
@@ -3092,16 +3143,10 @@ provisioner: k8s-sigs.io/nfs-subdir-external-provisioner # or choose another nam
 parameters:
   # https://help.aliyun.com/document_detail/144398.html
   archiveOnDelete: "false"
-```
 
-```shell
-[root@k8s-master ~]# kubectl create -f storageclass.yaml 
-storageclass.storage.k8s.io/nfs-client created
-```
+kubectl create -f storageclass.yaml
 
-**使用创建test-claim.yaml测试**
-
-```yaml
+# 指定storageclass创建pvc
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
@@ -3112,27 +3157,21 @@ spec:
     - ReadWriteMany
   resources:
     requests:
-      storage: 1Mi
-```
+      storage: 1Gi
+     
+# 创建pvc会自动创建pv，nfs置备程序会自动在nfs服务器/data目录下创建pv对应的目录，在删除pvc时候也同时会自动删除此pv目录
+kubectl create -f test-claim.yaml 
 
-```shell
-# 创建pvc会自动创建pv
-[root@k8s-master ~]# kubectl create -f test-claim.yaml 
-persistentvolumeclaim/test-claim created
-[root@k8s-master ~]# kubectl get pv
-NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                STORAGECLASS   REASON   AGE
-pvc-f501addf-ff00-4641-9d92-d2c29d6c595f   1Mi        RWX            Delete           Bound    default/test-claim   nfs-client              6s
-[root@k8s-master ~]# kubectl get pvc
-NAME         STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
-test-claim   Bound    pvc-f501addf-ff00-4641-9d92-d2c29d6c595f   1Mi        RWX            nfs-client     8s
+# 查看pv和pvc列表
+kubectl get pv
+kubectl get pvc
+
 # 删除pvc会自动删除关联的pv
-[root@k8s-master ~]# kubectl delete -f test-claim.yaml 
-persistentvolumeclaim "test-claim" deleted
-[root@k8s-master ~]# kubectl get pvc
-No resources found in default namespace.
-[root@k8s-master ~]# kubectl get pv
-No resources found
+kubectl delete -f test-claim.yaml 
 
+# 查看pv和pvc列表
+kubectl get pvc
+kubectl get pv
 ```
 
 
