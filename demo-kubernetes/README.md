@@ -3176,64 +3176,43 @@ kubectl get pv
 
 
 
-### 配置存储
+## ConfigMap和Secret配置应用程序
 
-#### 在kubernetes中覆盖命令和参数
+
+
+### 在kubernetes中覆盖命令和参数
 
 ```shell
 # 创建支持一个传入参数的容器
-[root@k8s-master temp]# cat entrypoint.sh 
+# entrypoint.sh内容如下:
 #!/bin/sh
 
 echo `date` - app is going to sleep $1 seconds...
 sleep $1
 echo `date` - app sleep finishing.
-[root@k8s-master temp]# cat Dockerfile 
+
+# Dockerfile内容如下:
 FROM busybox
 
 COPY entrypoint.sh /
 RUN chmod a+x /entrypoint.sh
 CMD ["5"]
 ENTRYPOINT ["sh", "/entrypoint.sh"]
-[root@k8s-master temp]# docker build --tag docker.118899.net:10001/yyd-public/demo-k8s-args .
-Sending build context to Docker daemon  3.072kB
-Step 1/5 : FROM busybox
- ---> beae173ccac6
-Step 2/5 : COPY entrypoint.sh /
- ---> Using cache
- ---> 0d606e397db7
-Step 3/5 : RUN chmod a+x /entrypoint.sh
- ---> Using cache
- ---> 9408628cb5f7
-Step 4/5 : CMD ["5"]
- ---> Using cache
- ---> fc36a8e57a4e
-Step 5/5 : ENTRYPOINT ["sh", "/entrypoint.sh"]
- ---> Using cache
- ---> 9675b6ec2957
-Successfully built 9675b6ec2957
-Successfully tagged docker.118899.net:10001/yyd-public/demo-k8s-args:latest
+
+# 编译镜像
+docker build --tag docker.118899.net:10001/yyd-public/demo-k8s-args .
 
 # 以默认参数运行容器
-[root@k8s-master temp]# docker run --rm --name=demo docker.118899.net:10001/yyd-public/demo-k8s-args
-Thu Jan 5 02:47:59 UTC 2023 - app is going to sleep 5 seconds...
-Thu Jan 5 02:48:04 UTC 2023 - app sleep finishing.
+docker run --rm --name=demo docker.118899.net:10001/yyd-public/demo-k8s-args
 
 # 以自定义参数运行容器
-[root@k8s-master temp]# docker run --rm --name=demo docker.118899.net:10001/yyd-public/demo-k8s-args 1
-Thu Jan 5 02:48:52 UTC 2023 - app is going to sleep 1 seconds...
-Thu Jan 5 02:48:53 UTC 2023 - app sleep finishing.
+docker run --rm --name=demo docker.118899.net:10001/yyd-public/demo-k8s-args 1
 
-[root@k8s-master temp]# docker push docker.118899.net:10001/yyd-public/demo-k8s-args
-Using default tag: latest
-The push refers to repository [docker.118899.net:10001/yyd-public/demo-k8s-args]
-a6fcaedddb02: Pushed 
-c6dd182cc0d1: Pushed 
-01fd6df81c8e: Pushed 
-latest: digest: sha256:3862375cf998726545289103df85df28a2af3f3ca07733f1deb208c5e1449d55 size: 941
+# 推送镜像
+docker push docker.118899.net:10001/yyd-public/demo-k8s-args
 
 # 以自定义entrypoint和参数运行pod，command覆盖docker entrypoint，args覆盖docker cmd参数
-[root@k8s-master ~]# cat 1.yaml 
+# 1.yaml内容如下:
 apiVersion: v1
 kind: Pod
 metadata:
@@ -3245,7 +3224,10 @@ spec:
     command: ["sh", "/entrypoint.sh"]
     args: ["11"]
     
-[root@k8s-master ~]# cat 1.yaml 
+# 查看pod输出日志
+kubectl logs -f pod1
+    
+# 1.yaml内容如下:
 apiVersion: v1
 kind: Pod
 metadata:
@@ -3256,8 +3238,11 @@ spec:
     image: docker.118899.net:10001/yyd-public/demo-k8s-args
     args: ["6"]
 
+# 查看pod输出日志
+kubectl logs -f pod1
+
 # 另外一种传递参数方法
-[root@k8s-master ~]# cat 1.yaml 
+# 1.yaml内容如下: 
 apiVersion: v1
 kind: Pod
 metadata:
@@ -3268,53 +3253,44 @@ spec:
     image: docker.118899.net:10001/yyd-public/demo-k8s-args
     args:
      - "7"
+     
+# 查看pod输出日志
+kubectl logs -f pod1
 ```
 
-#### 使用环境变量传递参数
+
+
+
+
+### 使用环境变量传递参数
 
 ```shell
 # 制作使用环境变量的容器
-[root@k8s-master temp]# cat entrypoint.sh 
+# entrypoint.sh 内容如下:
 #!/bin/sh
 
 echo `date` - app is going to sleep $SleepSeconds seconds...
 sleep $SleepSeconds
 echo `date` - app sleep finishing.
-[root@k8s-master temp]# cat Dockerfile 
+
+# Dockerfile 内容如下:
 FROM busybox
 
 COPY entrypoint.sh /
 RUN chmod a+x /entrypoint.sh
 ENTRYPOINT ["sh", "/entrypoint.sh"]
 
-[root@k8s-master temp]# docker build --tag docker.118899.net:10001/yyd-public/demo-k8s-env .
-Sending build context to Docker daemon  3.072kB
-Step 1/4 : FROM busybox
- ---> beae173ccac6
-Step 2/4 : COPY entrypoint.sh /
- ---> Using cache
- ---> 4b36ad02d426
-Step 3/4 : RUN chmod a+x /entrypoint.sh
- ---> Using cache
- ---> 7fa588def550
-Step 4/4 : ENTRYPOINT ["sh", "/entrypoint.sh"]
- ---> Using cache
- ---> 9b677c80d1f4
-Successfully built 9b677c80d1f4
-Successfully tagged docker.118899.net:10001/yyd-public/demo-k8s-env:latest
-[root@k8s-master temp]# docker run --rm --name=demo --env SleepSeconds=3 docker.118899.net:10001/yyd-public/demo-k8s-env
-Thu Jan 5 03:09:02 UTC 2023 - app is going to sleep 3 seconds...
-Thu Jan 5 03:09:05 UTC 2023 - app sleep finishing.
-[root@k8s-master temp]# docker push docker.118899.net:10001/yyd-public/demo-k8s-env
-Using default tag: latest
-The push refers to repository [docker.118899.net:10001/yyd-public/demo-k8s-env]
-50740041ef23: Pushed 
-00f38bae2cb6: Pushed 
-01fd6df81c8e: Mounted from yyd-public/demo-k8s-args 
-latest: digest: sha256:9cbf0c3b4cbd703c6bd36d502b5833c43034506ebd6117bc171296d53963c2fb size: 941
+# 编译镜像
+docker build --tag docker.118899.net:10001/yyd-public/demo-k8s-env .
+
+# 使用参数运行容器
+docker run --rm --name=demo --env SleepSeconds=3 docker.118899.net:10001/yyd-public/demo-k8s-env
+
+# 推送镜像
+docker push docker.118899.net:10001/yyd-public/demo-k8s-env
 
 # 使用env传递环境变量
-[root@k8s-master ~]# cat 1.yaml 
+# 1.yaml内容如下:
 apiVersion: v1
 kind: Pod
 metadata:
@@ -3326,14 +3302,14 @@ spec:
     env:
      - name: SleepSeconds
        value: "8"
-[root@k8s-master ~]# kubectl logs -f pod1
-Thu Jan 5 03:12:23 UTC 2023 - app is going to sleep 8 seconds...
-Thu Jan 5 03:12:31 UTC 2023 - app sleep finishing.
+
+# 查看pod日志
+kubectl logs -f pod1
 ```
 
 
 
-#### configmap
+### configmap
 
 **键值对存储**
 
@@ -3752,7 +3728,7 @@ spec:
      name: myconfigredis
 ```
 
-#### secret
+### secret
 
 ```shell
 # 创建secret
@@ -3820,9 +3796,9 @@ https.cert
 https.key
 ```
 
-#### 私有镜像拉取时提供帐号和密码
+### 私有镜像拉取时提供帐号和密码
 
-> [链接1](https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/)
+> https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 
 ```shell
 # 创建帐号和密码secret
@@ -3859,6 +3835,10 @@ spec:
      - name: TZ
        value: "Asia/Shanghai"
 ```
+
+
+
+
 
 ## 从应用访问pod元数据以及其他资源
 
