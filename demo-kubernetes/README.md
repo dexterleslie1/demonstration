@@ -2759,21 +2759,7 @@ kubectl logs -f pod1 -c busybox
 
 
 
-
-
 #### NFS
-
-```shell
-# 配置nfs服务
-[root@k8s-master ~]# yum install nfs-utils -y
-[root@k8s-master ~]# systemctl start nfs-server
-[root@k8s-master ~]# systemctl enable nfs-server
-Created symlink from /etc/systemd/system/multi-user.target.wants/nfs-server.service to /usr/lib/systemd/system/nfs-server.service.
-[root@k8s-master ~]# mkdir /data
-# /etc/exports添加 /data *(rw,sync,no_root_squash,no_subtree_check)
-[root@k8s-master ~]# vim /etc/exports
-[root@k8s-master ~]# exportfs -a
-```
 
 ```yaml
 apiVersion: v1
@@ -2789,55 +2775,35 @@ spec:
    volumeMounts:
    - name: logs-volume
      mountPath: /var/log/nginx
+     # 在nfs挂载点下创建子目录demo-nfs/sub1，绝对路径为/data/demo-nfs/sub1
+     subPath: demo-nfs/sub1
  - name: busybox
    image: busybox
    command: ["/bin/sh", "-c", "tail -f /logs/access.log"]
    volumeMounts:
    - name: logs-volume
      mountPath: /logs
+     subPath: demo-nfs/sub1
  volumes:
  - name: logs-volume
    nfs:
-    server: 192.168.1.170
+    server: 192.168.1.186
     path: /data
+
+# 创建pod
+kubectl create -f 1.yaml 
+
+# 查询pod
+kubectl get pod -o wide
+
+# 请求nginx产生日志
+curl 10.244.2.58
+
+# 打印pod日志
+kubectl logs -f pod1 -c busybox
 ```
 
-```shell
-[root@k8s-master ~]# kubectl create -f 1.yaml 
-pod/pod1 created
-[root@k8s-master ~]# kubectl get pod -o wide
-NAME   READY   STATUS    RESTARTS   AGE   IP            NODE        NOMINATED NODE   READINESS GATES
-pod1   2/2     Running   0          23s   10.244.2.58   k8s-node2   <none>           <none>
-[root@k8s-master ~]# curl 10.244.2.58
-<!DOCTYPE html>
-<html>
-<head>
-<title>Welcome to nginx!</title>
-<style>
-    body {
-        width: 35em;
-        margin: 0 auto;
-        font-family: Tahoma, Verdana, Arial, sans-serif;
-    }
-</style>
-</head>
-<body>
-<h1>Welcome to nginx!</h1>
-<p>If you see this page, the nginx web server is successfully installed and
-working. Further configuration is required.</p>
 
-<p>For online documentation and support please refer to
-<a href="http://nginx.org/">nginx.org</a>.<br/>
-Commercial support is available at
-<a href="http://nginx.com/">nginx.com</a>.</p>
-
-<p><em>Thank you for using nginx.</em></p>
-</body>
-</html>
-
-[root@k8s-master ~]# kubectl logs -f pod1 -c busybox
-10.244.0.0 - - [09/Dec/2022:12:32:20 +0000] "GET / HTTP/1.1" 200 612 "-" "curl/7.29.0" "-"
-```
 
 ### 高级存储
 

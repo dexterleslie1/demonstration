@@ -11,6 +11,10 @@ variable "ssh_password" {
   type    = string
   default = "Root@123"
 }
+variable "demo_nfs_ip" {
+  type = string
+  default = "192.168.1.186"
+}
 variable "demo_ansible_ip" {
   type = string
   default = "192.168.1.187"

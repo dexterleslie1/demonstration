@@ -270,3 +270,65 @@ resource "null_resource" "join_k8s_node_to_master" {
 
   depends_on = [null_resource.get_k8s_cluster_join_info]
 }
+
+# 创建 demo-k8s-nfs
+resource "vsphere_virtual_machine" "demo_nfs" {
+  name             = "demo-k8s-nfs"
+  resource_pool_id = data.vsphere_host.host.resource_pool_id
+  datastore_id     = data.vsphere_datastore.datastore.id
+  num_cpus         = 4
+  memory           = 2048
+  guest_id         = data.vsphere_virtual_machine.template.guest_id
+  scsi_type        = data.vsphere_virtual_machine.template.scsi_type
+  folder           = "/${data.vsphere_datacenter.datacenter.name}/${var.vm_folder}"
+  # 必须设置efi和secure_boot，否则无法引导系统
+  firmware                = "efi"
+  efi_secure_boot_enabled = true
+  network_interface {
+    network_id   = data.vsphere_network.network.id
+    adapter_type = data.vsphere_virtual_machine.template.network_interface_types[0]
+  }
+  disk {
+    label            = "disk0"
+    size             = data.vsphere_virtual_machine.template.disks.0.size
+    thin_provisioned = data.vsphere_virtual_machine.template.disks.0.thin_provisioned
+  }
+  clone {
+    template_uuid = data.vsphere_virtual_machine.template.id
+    customize {
+      # linux系统必须提供此配置
+      linux_options {
+        host_name = "demo-k8s-nfs"
+        domain    = "demo-k8s-nfs"
+      }
+      network_interface {
+        ipv4_address = var.demo_nfs_ip
+        ipv4_netmask = 24
+      }
+      ipv4_gateway = var.ipv4_gateway
+    }
+  }
+
+  depends_on = [null_resource.join_k8s_node_to_master]
+}
+
+resource "null_resource" "init_nfs" {
+  triggers = {
+    always_run = timestamp()
+  }
+
+  provisioner "remote-exec" {
+    connection {
+      type     = "ssh"
+      user     = var.ssh_user
+      password = var.ssh_password
+      host     = var.demo_ansible_ip
+    }
+
+    inline = [
+      "sshpass -p '${var.ssh_password}' ssh -o StrictHostKeyChecking=no ${var.ssh_user}@${var.demo_nfs_ip} \"yum install nfs-utils -y; systemctl start nfs-server; systemctl enable nfs-server; mkdir -p /data; echo '/data *(rw,sync,no_root_squash,no_subtree_check)' > /etc/exports; exportfs -a;\""
+    ]
+  }
+
+  depends_on = [vsphere_virtual_machine.demo_nfs]
+}
