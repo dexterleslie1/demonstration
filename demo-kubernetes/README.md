@@ -285,6 +285,29 @@ kubectl create -f 1.yaml -n custom-namespace
 
 
 
+#### 使用kubectl create configmap创建ConfigMap
+
+```
+# 创建ConfigMap时指定键值对
+kubectl create configmap demo-config1 --from-literal=sleep-interval=25
+
+# 查询configmap对列表
+kubectl get configmap
+
+# 查看指定configmap详细信息
+kubectl get configmap demo-config1 -o yaml
+
+# 创建包含多个键值对的ConfigMap
+kubectl create configmap demo-config2 --from-literal=foo=bar --from-literal=bar=baz
+
+# 查看指定configmap详细信息
+kubectl get configmap demo-config2 -o yaml
+```
+
+
+
+
+
 ### kubectl logs查看pod或者指定容器日志
 
 ```
@@ -3309,12 +3332,480 @@ kubectl logs -f pod1
 
 
 
-### configmap
+### ConfigMap用法
 
-**键值对存储**
+
+
+#### 创建configmap
+
+
+
+##### 使用kubectl create configmap创建ConfigMap
+
+```
+### 从指定键值对创建configmap
+# 创建ConfigMap时指定键值对
+kubectl create configmap demo-config1 --from-literal=sleep-interval=25
+
+# 查询configmap对列表
+kubectl get configmap
+
+# 查看指定configmap详细信息
+kubectl get configmap demo-config1 -o yaml
+
+# 创建包含多个键值对的ConfigMap
+kubectl create configmap demo-config2 --from-literal=foo=bar --from-literal=bar=baz
+
+# 查看指定configmap详细信息
+kubectl get configmap demo-config2 -o yaml
+
+
+
+### 从文件内容创建configmap
+
+# demo.conf内容如下:
+demo {
+ hello = demo
+}
+
+# 从文件内容创建configmap
+kubectl create configmap demo-config3 --from-file=demo.conf
+
+# 查看configmap详细信息
+kubectl get configmap demo-config3 -o yaml
+
+
+
+### 从文件内容创建configmap并指定key
+
+# demo.conf内容如下:
+demo {
+ hello = demo
+}
+
+# 从文件内容创建configmap并指定key=customkey
+kubectl create configmap demo-config3 --from-file=customkey=demo.conf
+
+# 查看configmap详细信息
+kubectl get configmap demo-config3 -o yaml
+
+
+
+### 从文件夹创建configmap
+
+# configmap-dir/key1内容
+value1
+# configmap-dir/key2内容
+value2
+
+# 从文件夹创建configmap
+kubectl create configmap demo-config5 --from-file=./configmap-dir
+
+# 查看configmap详细信息
+kubectl get configmap demo-config5 -o yaml
+```
+
+
+
+##### 使用yaml文件创建configmap
+
+```
+# 1.yaml内容
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: configmap1
+data:
+ 1.properties: |
+  username: admin
+  password: 123456
+ 2.properties: |
+  key1: value1
+  key2: value2
+  
+# 创建configmap
+kubectl create -f 1.yaml
+
+# 查看configmap详细信息
+kubectl get configmap configmap1 -o yaml
+```
+
+
+
+#### 在容器中使用configmap
+
+
+
+##### 使用环境变量方式暴露configmap条目到容器中
+
+```
+# 创建configmap
+kubectl create configmap demo-config1 --from-literal=sleep-interval=25
+
+# 使用环境变量方式暴露configmap到容器中
+apiVersion: v1
+kind: Pod
+metadata:
+ name: pod1
+spec:
+ containers:
+  - name: kubia
+    image: busybox
+    command: ["/bin/sh", "-c", "sleep 3600"]
+    env:
+     - name: INTERVAL
+       valueFrom:
+        configMapKeyRef:
+         name: demo-config1
+         key: sleep-interval
+         # configmap可选，即使configmap不存在pod依然能够启动
+         # optional: true
+         
+# 创建pod
+kubectl create -f 1.yaml
+
+# 查看pod中的环境变量INTERVAL
+kubectl exec -it pod1 sh
+
+# 在pod的shell中执行命令env查看环境变量
+/ # env
+
+
+
+### 使用环境变量方式一次暴露多个configmap条目
+
+# 创建configmap
+kubectl create configmap demo-config1 --from-literal=key1=value1 --from-literal=key2=value2
+
+# 用于创建pod，暴露的环境变量命名为MY_key1、MY_key2
+apiVersion: v1
+kind: Pod
+metadata:
+ name: pod1
+spec:
+ containers:
+  - name: kubia
+    image: busybox
+    command: ["/bin/sh", "-c", "sleep 3600"]
+    envFrom:
+     # 如果不指定prefix，则使用configmap中的key，环境变量为key1、key2
+     - prefix: MY_
+       configMapRef:
+        name: demo-config1
+        
+# 创建pod
+kubectl create -f 1.yaml
+
+# 进入pod中的shell并使用命令env查看环境变量
+kubectl exec -it pod1 sh
+/ # env
+```
+
+
+
+##### 使用命令行参数方式暴露configmap条目
+
+```
+# 创建configmap
+kubectl create configmap demo-config1 --from-literal=sleep-interval=25
+
+# entrypoint.sh内容如下:
+#!/bin/sh
+
+echo `date` - app is going to sleep $1 seconds...
+sleep $1
+echo `date` - app sleep finishing.
+
+# Dockerfile内容如下:
+FROM busybox
+
+COPY entrypoint.sh /
+RUN chmod a+x /entrypoint.sh
+CMD ["5"]
+ENTRYPOINT ["sh", "/entrypoint.sh"]
+
+# 编译镜像
+docker build --tag docker.118899.net:10001/yyd-public/demo-k8s-args .
+
+# 以自定义参数运行容器
+docker run --rm --name=demo docker.118899.net:10001/yyd-public/demo-k8s-args 1
+
+# 推送镜像
+docker push docker.118899.net:10001/yyd-public/demo-k8s-args
+
+# 1.yaml内容如下:
+apiVersion: v1
+kind: Pod
+metadata:
+ name: pod1
+spec:
+ containers:
+  - name: kubia
+    image: docker.118899.net:10001/yyd-public/demo-k8s-args
+    command: ["sh", "/entrypoint.sh"]
+    env:
+     - name: INTERVAL
+       valueFrom:
+        configMapKeyRef:
+         name: demo-config1
+         key: sleep-interval
+    # 字段pod.spec.containers.args中无法直接引用configmap的条目
+    # 但可以利用configmap条目初始化某个环境变量，然后再在参数字段中引用该环境变量
+    args: ["$(INTERVAL)"]
+ 
+# 查看pod日志
+kubectl logs -f pod1
+```
+
+
+
+##### 使用configmap卷将条目暴露为文件
+
+> configmap卷会将configmap中的每个条目均暴露成一个文件。运行在容器中的进程可通过读取文件内容获取对应的条目值。
+
+```
+## 创建configmap
+
+# 创建configmap-files/my-nginx-config.conf内容如下:
+server {
+	listen	80;
+	server_name www.kubia-example.com;
+
+	gzip 	on;
+	gzip_types	text/plain application/xml;
+	
+	location / {
+		root 	/usr/share/nginx/html;
+		index	index.html	index.htm;
+	}
+}
+
+# 创建configmap-files/sleep-interval内容如下:
+25
+
+# 从目录configmap-files创建configmap
+kubectl create configmap demo-config1 --from-file=configmap-files
+
+# 查看configmap详细信息
+kubectl get configmap demo-config1 -o yaml
+
+## 创建pod引用configmap卷
+# 1.yaml内容如下:
+apiVersion: v1
+kind: Pod
+metadata:
+ name: pod1
+spec:
+ containers:
+  - image: nginx:alpine
+    name: nginx
+    volumeMounts:
+     - name: vol-config
+       # 把卷vol-config挂载到/etc/nginx/conf.d目录下
+       mountPath: /etc/nginx/conf.d
+       readOnly: true
+ volumes:
+  - name: vol-config
+    # 卷定义引用configmap demo-config1
+    configMap:
+     name: demo-config1
+     
+# 创建pod
+kubectl create -f 1.yaml
+   
+## 调试pod中的nginx是否使用configmap卷中my-nginx-config.conf gzip配置
+
+# 临时端口转发
+kubectl port-forward pod1 8080:80
+
+# 使用curl调试gzip，日志中包含Content-Encoding: gzip表示nginx gzip配置生效
+curl -H "Accept-Encoding: gzip" -I localhost:8080
+
+# 进入pod查看被挂载的configmap内容
+kubectl exec -it pod1 ls /etc/nginx/conf.d
+kubectl exec -it pod1 cat /etc/nginx/conf.d/my-nginx-config.conf
+
+
+### 上面例子存在问题，它会在/etc/nginx/conf.d目录下暴露my-nginx-config.conf和sleep-interval两个文件，其中sleep-interval是configmap的一个key，但是不会被nginx使用。可以通过使用items指定configmap卷中需要暴露的条目达到隐藏sleep-interval目的并把my-nginx-config.conf暴露为名为gzip.conf的文件。
+
+# 1.yaml内容如下:
+apiVersion: v1
+kind: Pod
+metadata:
+ name: pod1
+spec:
+ containers:
+  - image: nginx:alpine
+    name: nginx
+    volumeMounts:
+     - name: vol-config
+       # 把卷vol-config挂载到/etc/nginx/conf.d目录下
+       mountPath: /etc/nginx/conf.d
+       readOnly: true
+ volumes:
+  - name: vol-config
+    # 卷定义引用configmap demo-config1
+    configMap:
+     name: demo-config1
+     # 指定只暴露configmap中的my-nginx-config.conf到名为gzip.conf文件
+     # configmap中的sleep-interval不会被暴露
+     items:
+      - key: my-nginx-config.conf
+        path: gzip.conf
+        
+# 查看pod中/etc/nginx/conf.d目录内容
+kubectl exec -it pod1 ls /etc/nginx/conf.d
+kubectl exec -it pod1 cat /etc/nginx/conf.d/gzip.conf
+
+
+
+### configmap独立条目作为文件被挂载且不隐藏容器目录中已存在的其他文件或者目录。上面例子存在问题，因为挂在configmap卷到/etc/nginx/conf.d目录中，如果/etc/nginx/conf.d目录存在其他文件或者目录，则这些已存在的文件或者目录都会被挂载隐藏，所以需要使用subPath字段解决此问题。
+
+# 1.yaml内容如下:
+apiVersion: v1
+kind: Pod
+metadata:
+ name: pod1
+spec:
+ containers:
+  - image: nginx:alpine
+    name: nginx
+    volumeMounts:
+     - name: vol-config
+       # 把卷vol-config挂载到/etc/nginx/conf.d目录下
+       # mountPath: /etc/nginx/conf.d
+       # 指定挂载至某一个文件而不是/etc/nginx/conf.d目录
+       mountPath: /etc/nginx/conf.d/my-n-c.conf
+       # 指定需要挂载的configmap卷中的key
+       subPath: gzip.conf
+       readOnly: true
+ volumes:
+  - name: vol-config
+    # 卷定义引用configmap demo-config1
+    configMap:
+     name: demo-config1
+     # 指定只暴露configmap中的my-nginx-config.conf到名为gzip.conf文件
+     # configmap中的sleep-interval不会被暴露
+     items:
+      - key: my-nginx-config.conf
+        path: gzip.conf
+        
+# 查看pod中/etc/nginx/conf.d目录内容
+kubectl exec -it pod1 ls /etc/nginx/conf.d
+kubectl exec -it pod1 cat /etc/nginx/conf.d/my-n-c.conf
+
+
+
+### 指定挂载文件的默认权限
+
+# 1.yaml内容如下:
+apiVersion: v1
+kind: Pod
+metadata:
+ name: pod1
+spec:
+ containers:
+  - image: nginx:alpine
+    name: nginx
+    volumeMounts:
+     - name: vol-config
+       # 把卷vol-config挂载到/etc/nginx/conf.d目录下
+       # mountPath: /etc/nginx/conf.d
+       # 指定挂载至某一个文件而不是/etc/nginx/conf.d目录
+       mountPath: /etc/nginx/conf.d/my-n-c.conf
+       # 指定需要挂载的configmap卷中的key
+       subPath: gzip.conf
+       readOnly: true
+ volumes:
+  - name: vol-config
+    # 卷定义引用configmap demo-config1
+    configMap:
+     name: demo-config1
+     # 挂载文件的默认权限 rw-rw----
+     defaultMode: 0660
+     # 指定只暴露configmap中的my-nginx-config.conf到名为gzip.conf文件
+     # configmap中的sleep-interval不会被暴露
+     items:
+      - key: my-nginx-config.conf
+        path: gzip.conf
+ 
+# 查看pod中/etc/nginx/conf.d目录内容
+kubectl exec -it pod1 -- ls -alh /etc/nginx/conf.d
+```
+
+
+
+#### configmap热更新且不重启应用程序
+
+> 在次之前提过，使用环境变量或者命令行参数作为配置员的弊端在于无法在进程运行时更新配置。将configmap暴露为卷可以达到配置热更新的效果，无须重新创建pod或者重启容器。
+>
+> NOTE: 如果挂载的是容器中的单个文件而不是完整的卷，configmap更新之后对应的文件不会被更新！
+
+```
+## 创建configmap
+
+# 创建configmap-files/my-nginx-config.conf内容如下:
+server {
+	listen	80;
+	server_name www.kubia-example.com;
+
+	gzip 	on;
+	gzip_types	text/plain application/xml;
+	
+	location / {
+		root 	/usr/share/nginx/html;
+		index	index.html	index.htm;
+	}
+}
+
+# 从目录configmap-files创建configmap
+kubectl create configmap demo-config1 --from-file=configmap-files
+
+# 查看configmap详细信息
+kubectl get configmap demo-config1 -o yaml
+
+## 创建pod引用configmap卷
+# 1.yaml内容如下:
+apiVersion: v1
+kind: Pod
+metadata:
+ name: pod1
+spec:
+ containers:
+  - image: nginx:alpine
+    name: nginx
+    volumeMounts:
+     - name: vol-config
+       # 把卷vol-config挂载到/etc/nginx/conf.d目录下
+       mountPath: /etc/nginx/conf.d
+       readOnly: true
+ volumes:
+  - name: vol-config
+    # 卷定义引用configmap demo-config1
+    configMap:
+     name: demo-config1
+     
+# 创建pod
+kubectl create -f 1.yaml
+
+# 进入pod查看被挂载的configmap内容
+kubectl exec -it pod1 cat /etc/nginx/conf.d/my-nginx-config.conf
+
+# 编辑configmap demo-config1配置，修改gzip on为gzip off
+kubectl edit configmap demo-config1
+
+# 等待约1分钟后再次查看my-nginx-config.conf发现gzip热更新为off
+kubectl exec -it pod1 cat /etc/nginx/conf.d/my-nginx-config.conf
+```
+
+
+
+#### 其他参考综合应用例子
+
+##### 键值对存储
 
 ```shell
-[root@k8s-master ~]# cat 1.yaml 
+# 1.yaml内容如下:
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -3356,46 +3847,30 @@ spec:
      # https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#add-configmap-data-to-a-specific-path-in-the-volume
      - key: 2.properties
        path: 2repath.properties
-       
-[root@k8s-master ~]# kubectl get configmap
-NAME               DATA   AGE
-configmap1         1      2m15s
-kube-root-ca.crt   1      10d
+
+# 查询configmap列表
+kubectl get configmap
+
 # 显示configmap详细信息
-[root@k8s-master ~]# kubectl describe configmap configmap1
-Name:         configmap1
-Namespace:    default
-Labels:       <none>
-Annotations:  <none>
+kubectl describe configmap configmap1
 
-Data
-====
-1.properties:
-----
-username: admin
-password: 123456
-
-Events:  <none>
 # 进入pod查看1.properties
-[root@k8s-master ~]# kubectl exec -it pod1 /bin/sh
-kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl exec [POD] -- [COMMAND] instead.
+kubectl exec -it pod1 /bin/sh
 / # ls
-2repath.properties  dev                 home                root                tmp                 var
-bin                 etc                 proc                sys                 usr
 / # cat 2repath.properties 
-key1: value1
-key2: value2
 / # ls /root/
-2repath.properties
 / # cat /root/2repath.properties 
-key1: value1
-key2: value2
 / # 
 ```
 
-**nginx.conf配置存储**
+
+
+
+
+##### nginx.conf配置存储
 
 ```yaml
+# 1.yaml内容如下:
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -3513,13 +3988,11 @@ spec:
     items:
     - key: nginx.conf
       path: nginx.conf
-```
-
-```shell
+  
 # NOTE: 使用下面命令获取yaml文件内的nginx.conf内容
 # 否则直接复制粘贴nginx.conf内容到yaml会报告yaml文件格式错误
 # https://stackoverflow.com/questions/51268488/kubernetes-configmap-set-from-file-in-yaml-configuration
-[root@k8s-master ~]# kubectl create configmap --dry-run=client somename --from-file=nginx.conf --output yaml
+kubectl create configmap --dry-run=client somename --from-file=nginx.conf --output yaml
 apiVersion: v1
 data:
   nginx.conf: |
@@ -3529,28 +4002,11 @@ data:
 ......
 
 # 查看configmap
-[root@k8s-master ~]# kubectl get configmap
-NAME               DATA   AGE
-configmap1         1      10s
-kube-root-ca.crt   1      10d
-[root@k8s-master ~]# kubectl describe configmap configmap1
-Name:         configmap1
-Namespace:    default
-Labels:       <none>
-Annotations:  <none>
-
-Data
-====
-nginx.conf:
-----
-#user  nobody;
-  #worker_processes  1;
-  worker_rlimit_nofile 65535;
-......
+kubectl get configmap
+kubectl describe configmap configmap1
 
 # 进入容器查看nginx.conf
-[root@k8s-master ~]# kubectl exec -it pod1 /bin/sh
-kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl exec [POD] -- [COMMAND] instead.
+kubectl exec -it pod1 /bin/sh
 / # cat /root/nginx.conf 
 #user  nobody;
   #worker_processes  1;
@@ -3558,27 +4014,15 @@ kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future versi
 ......
 ```
 
-**综合案例**
+
+
+
+
+##### 综合应用案例
 
 ```shell
-# 通过--from-literal创建包含多个条目的ConfigMap
-kubectl create configmap myconfig1 --from-literal=k1=v1 --from-literal=k2=v2
-
-# 查看myconfig1
-kubectl get configmap myconfig1 -o yaml
-
-# 从文件内容创建ConfigMap，以文件名nginx.conf作为key
-kubectl create configmap myconfig2 --from-file=nginx.conf
-
-# 查看myconfig2
-kubectl get configmap myconfig2 -o yaml
-
-# 从文件内容创建ConfigMap，以mykey1作为key
-kubectl create configmap myconfig3 --from-file=mykey1=nginx.conf
-kubectl get configmap myconfig3 -o yaml
-
 # 给容器传递ConfigMap条目作为环境变量
-[root@k8s-master ~]# cat 2.yaml 
+# 2.yaml内容如下:
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -3604,11 +4048,12 @@ spec:
         configMapKeyRef:
          name: myconfig5
          key: k3
-[root@k8s-master ~]# kubectl logs -f pod1
-v3
+
+# 查看pod日志，控制台会输出v3
+kubectl logs -f pod1
 
 # 一次性传递ConfigMap的所有条目作为环境变量
-[root@k8s-master ~]# cat 2.yaml 
+# 2.yaml内容如下:
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -3632,11 +4077,12 @@ spec:
      - prefix: MYCONFIG_
        configMapRef:
         name: myconfig5
-[root@k8s-master ~]# kubectl logs -f pod1
-v1
+
+# 查看pod日志，输出v1
+kubectl logs -f pod1
 
 # 传递ConfigMap条目作为命令行参数
-[root@k8s-master ~]# cat 2.yaml 
+# 2.yaml内容如下:
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -3662,23 +4108,26 @@ spec:
          name: myconfig5
          key: k2
     args: ["$(MYENV1)"]
-[root@k8s-master ~]# kubectl logs -f pod1
-Thu Jan 5 06:19:53 UTC 2023 - app is going to sleep 7 seconds...
-Thu Jan 5 06:20:00 UTC 2023 - app sleep finishing.
+
+# 查看pod日志
+kubectl logs -f pod1
 
 # 使用ConfigMap卷将条目暴露为文件
-[root@k8s-master ~]# cat redis.conf 
+# redis.conf 内容如下:
 daemon: yes
 bind: 0.0.0.0
 cluster: yes
-[root@k8s-master ~]# cat redis1.conf 
+
+# redis1.conf 内容如下:
 daemon: yes
 bind: 0.0.0.1
 cluster: yes
-[root@k8s-master ~]# kubectl create configmap myconfigredis --from-file=redis.conf --from-file=redis1.conf
-configmap/myconfigredis created
+
+# 从redis.conf和redis1.conf创建configmap
+kubectl create configmap myconfigredis --from-file=redis.conf --from-file=redis1.conf
+
 # 指定暴露ConfigMap中redis1.conf条目
-[root@k8s-master ~]# cat 2.yaml 
+# 2.yaml 内容如下:
 apiVersion: v1
 kind: Pod
 metadata:
@@ -3702,13 +4151,14 @@ spec:
       - key: redis1.conf
         # 指定暴露ConfigMap条目的key重命名为新的文件名
         path: my-redis1.conf
-[root@k8s-master ~]# kubectl logs -f pod1
-my-redis1.conf
+
+# 查看pod日志，日志只输出my-redis1.conf
+kubectl logs -f pod1
 
 # mountPath以目录方式挂载会导致目录中已存在的文件被隐藏
 # 针对以上缺陷使用ConfigMap独立条目作为文件被挂载且不隐藏文件夹中其他文件
 # 指定只暴露redis1.conf
-[root@k8s-master ~]# cat 2.yaml 
+# 2.yaml 内容如下: 
 apiVersion: v1
 kind: Pod
 metadata:
@@ -3728,7 +4178,13 @@ spec:
      name: myconfigredis
 ```
 
-### secret
+
+
+
+
+
+
+### Secret用法
 
 ```shell
 # 创建secret
