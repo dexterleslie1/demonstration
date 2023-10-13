@@ -4186,49 +4186,16 @@ spec:
 
 ### Secret用法
 
-```shell
-# 创建secret
-[root@k8s-master secret]# cat foo 
-this is foo file content
-[root@k8s-master secret]# cat https.cert 
-this is https.cert file content
-[root@k8s-master secret]# cat https.key 
-this is https.key file content
+> configmap和secret对比，secret条目的内容以base64格式编码。secret条目可以用于存储二进制文件大小限制于1MB。secret卷存储于内存(secret采用内存文件系统挂载secret到容器目录)。
 
-[root@k8s-master secret]# kubectl create secret generic mysecret1 --from-file=https.key --from-file=https.cert --from-file=foo
-secret/mysecret1 created
 
-# secret条目的内容会被以Base64格式编码
-[root@k8s-master secret]# kubectl get secret mysecret1 -o yaml
-apiVersion: v1
-data:
-  foo: dGhpcyBpcyBmb28gZmlsZSBjb250ZW50Cg==
-  https.cert: dGhpcyBpcyBodHRwcy5jZXJ0IGZpbGUgY29udGVudAo=
-  https.key: dGhpcyBpcyBodHRwcy5rZXkgZmlsZSBjb250ZW50Cg==
-kind: Secret
-metadata:
-  creationTimestamp: "2023-01-05T08:14:04Z"
-  managedFields:
-  - apiVersion: v1
-    fieldsType: FieldsV1
-    fieldsV1:
-      f:data:
-        .: {}
-        f:foo: {}
-        f:https.cert: {}
-        f:https.key: {}
-      f:type: {}
-    manager: kubectl-create
-    operation: Update
-    time: "2023-01-05T08:14:04Z"
-  name: mysecret1
-  namespace: default
-  resourceVersion: "4077396"
-  uid: bd60db44-009f-4687-b299-2aed9c3e7379
-type: Opaque
 
-# 在pod中使用secret
-[root@k8s-master ~]# cat 1.yaml 
+#### 默认令牌secret介绍
+
+> 每个pod都会被自动挂载上一个secret卷。这个secret包含3个条目分别为ca.crt、namespace、token，包含了从pod内部安全访问kubernetes API服务器所需的全部信息。
+
+```
+# 用于创建pod
 apiVersion: v1
 kind: Pod
 metadata:
@@ -4237,33 +4204,187 @@ spec:
  containers:
   - name: kubia
     image: busybox
-    command: ["sh", "-c", "ls /etc/nginx/certs; sleep 7200;"]
+    command: ["sh", "-c", "ls /etc/redis; sleep 7200"
+
+# 创建pod
+kubectl create -f 1.yaml
+
+# 查看pod详细信息，可以看到pod Volumes中挂载了一个名为default-token-przdr secret卷，并且能够看到Mounts显示secret卷被挂载到/var/run/secrets/kubernetes.io/serviceaccount目录中
+kubectl describe pod pod1
+
+# 查看secret卷列表
+kubectl get secret
+
+# 查询secret卷详细信息
+kubectl describe secret default-token-przdr
+
+# 进入pod查看secret卷挂载目录
+kubectl exec -it pod1 sh
+/ # cd /var/run/secrets/kubernetes.io/serviceaccount
+/ # ls -alh
+```
+
+
+
+#### secret卷存储于内存中
+
+> 通过挂载secret卷至文件夹/etc/nginx/certs将证书和私钥成功传递给容器。secret卷采用内存文件系统tmpfs挂载到容器目录中，存储在secret中的数据不会写入磁盘，这样就无法被窃取。
+
+```
+# 创建https证书
+openssl genrsa -out https.key 2048
+openssl req -new -x509 -key https.key -out https.cert -days 3650 -subj /CN=www.kubia-example.com
+
+# 创建secret
+kubectl create secret generic demo-secret1 --from-file=https.key --from-file=https.cert
+
+# 在pod中使用secret
+apiVersion: v1
+kind: Pod
+metadata:
+ name: pod1
+spec:
+ containers:
+  - image: nginx:alpine
+    name: nginx
     volumeMounts:
      - name: certs
        mountPath: /etc/nginx/certs
        readOnly: true
+    ports:
+     - containerPort: 80
  volumes:
   - name: certs
     secret:
-     secretName: mysecret1
-[root@k8s-master ~]# kubectl logs -f pod1
-foo
-https.cert
-https.key
+     secretName: demo-secret1
+
+# 查看 /etc/nginx/certs对应的mount point，可以发现是使用tmpfs文件系统
+kubectl exec pod1 -- mount | grep certs
 ```
 
-### 私有镜像拉取时提供帐号和密码
+
+
+#### 使用secret配置nginx https
+
+```
+## 创建nginx configmap
+
+# my-nginx-config.conf内容如下:
+server {
+	listen	80;
+	listen	443 ssl;
+	server_name	www.kubia-example.com;
+	ssl_certificate	certs/https.cert;
+	ssl_certificate_key	certs/https.key;
+	ssl_protocols	TLSv1 TLSv1.1 TLSv1.2;
+	ssl_ciphers	HIGH:!aNULL:!MD5;
+	
+	location / {
+		root /usr/share/nginx/html;
+		index index.html index.htm;
+	}
+}
+
+# 创建configmap
+kubectl create configmap demo-config1 --from-file=my-nginx-config.conf
+
+# 创建https证书
+openssl genrsa -out https.key 2048
+openssl req -new -x509 -key https.key -out https.cert -days 3650 -subj /CN=www.kubia-example.com
+
+# 创建bar文件，内容为foo
+echo bar > foo
+
+# 创建secret
+kubectl create secret generic secret-https --from-file=https.key --from-file=https.cert --from-file=foo
+
+# 查看secret详细信息
+kubectl get secret secret-https -o yaml
+
+# 在pod中使用secret
+apiVersion: v1
+kind: Pod
+metadata:
+ name: pod1
+spec:
+ containers:
+  - image: nginx:alpine
+    name: nginx
+    volumeMounts:
+     - name: https-config
+       mountPath: /etc/nginx/conf.d
+       readOnly: true
+     - name: certs
+       mountPath: /etc/nginx/certs
+       readOnly: true
+    ports:
+     - containerPort: 80
+ volumes:
+  - name: https-config
+    configMap:
+     name: demo-config1
+     items:
+      - key: my-nginx-config.conf
+        path: https.conf
+  - name: certs
+    secret:
+     secretName: secret-https
+
+# 测试nginx是否正确使用secret中的证书和密钥
+kubectl port-forward pod1 443:443
+curl https://localhost -k -v
+```
+
+
+
+#### 通过环境变量暴露secret条目
+
+```
+# 从键值对创建secret
+kubectl create secret generic demo-secret1 --from-literal=key1=value1
+
+# 查看secret详细信息
+kubectl get secret demo-secret1 -o yaml
+
+# 通过环境变量暴露secret条目到pod中
+apiVersion: v1
+kind: Pod
+metadata:
+ name: pod1
+spec:
+ containers:
+  - image: busybox
+    name: busybox
+    command: ["/bin/sh", "-c", "sleep 3600;"]
+    env:
+     - name: MY_KEY1
+       valueFrom:
+        secretKeyRef:
+         name: demo-secret1
+         key: key1
+                 
+# 创建pod
+kubectl create -f 1.yaml
+
+# 进入pod查看环境变量
+kubectl exec -it pod1 sh
+/ # env
+```
+
+
+
+#### 私有镜像拉取时提供帐号和密码
 
 > https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 
 ```shell
 # 创建帐号和密码secret
-[root@k8s-master ~]# kubectl create secret docker-registry regcred --docker-server=my.docker.hub --docker-username=xxx --docker-password=xxxx
-# 查看secret
-[root@k8s-master ~]# kubectl get secret regcred --output=yaml
-```
+kubectl create secret docker-registry regcred --docker-server=my.docker.hub --docker-username=xxx --docker-password=xxxx
 
-```yaml
+# 查看secret
+kubectl get secret regcred --output=yaml
+
+# 在pod中使用secret拉取镜像
 apiVersion: apps/v1
 kind: Deployment
 metadata:
