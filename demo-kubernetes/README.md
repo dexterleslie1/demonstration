@@ -86,10 +86,13 @@ kubectl get nodes
 
 # 部署nginx服务
 kubectl create deployment nginx --image=nginx
-# 使用NodePort方式暴露nginx服务
-kubectl expose deployment nginx --port=80 --type=NodePort
+# 使用NodePort方式暴露nginx服务，其中target-port为容器中应用监听的port，port为服务通过服务集群ip地址访问的port
+kubectl expose deployment nginx --target-port=80 --port=80 --type=NodePort
 # 查看nginx NodePort端口并使用浏览器访问成功
-kubectl get pod,svc
+kubectl get pod,service
+
+# 使用curl测试nginx是否正常，其中30576端口为NodePort类型服务随机分配的端口
+curl localhost:30576
 ```
 
 
@@ -668,7 +671,7 @@ kubectl describe pod pod1
 # 创建pod
 kubectl run nginx --image=docker.118899.net:10001/yyd-public/demo-k8s-nodejs --port=8080
 
-# 创建ClusterIP类型的服务，expose名为nginx的pod，服务名称为nginx，服务端口80
+# 创建ClusterIP类型的服务，expose名为nginx的pod，服务名称为nginx，服务端口80，target-port为容器应用服务监听的端口
 kubectl expose pod nginx --name=nginx --port=80 --target-port=8080 --type=ClusterIP
 
 # 查看服务列表
@@ -714,7 +717,7 @@ kubectl delete pod nginx
 
 
 
-## k8s namespace
+## namespace命名空间
 
 > 实现资源隔离和管理
 
@@ -4419,13 +4422,23 @@ spec:
 
 ## 从应用访问pod元数据以及其他资源
 
+> downward api用于暴露那些不能预先知道的数据，比如pod的IP、主机名或者是pod自身的名称、pod的标签和注解。
+>
+> downward api可以通过环境变量或者downward api卷传递downard api相关数据给容器。
+
+
+
 ### 通过环境变量暴露元数据
 
-**例子1**
+> 能够通过downward api获取k8s相关信息并通过环境变量传递到容器中。
+>
+> https://kubernetes.io/docs/concepts/workloads/pods/downward-api/#available-fields
+> https://kubernetes.io/docs/tasks/inject-data-application/environment-variable-expose-pod-information/
 
 ```shell
+### 例子1
 # 通过env和envFrom使用环境变量暴露元数据
-[root@k8s-master ~]# cat 1.yaml 
+# 1.yaml 内容如下:
 apiVersion: v1
 kind: Pod
 metadata:
@@ -4445,6 +4458,7 @@ spec:
     env:
      - name: POD_NAME
        valueFrom:
+        # 引用pod manifest中的元数据名称字段，而不是设定一个具体值
         fieldRef:
          fieldPath: metadata.name
      - name: POD_NAMESPACE
@@ -4465,51 +4479,31 @@ spec:
          fieldPath: spec.serviceAccountName
      - name: CONTAINER_CPU_REQUEST_MILLICORES
        valueFrom:
+        # 容器请求的cpu和内存使用量是引用resourceFieldRef字段而不是fieldRef字段
         resourceFieldRef:
          resource: requests.cpu
+         # 对于资源相关的字段，我们定义一个基数单位，从而生成每一部分的值
+         # 例如: 设定cpu资源请求为15m，基数divisior为1m时，环境变量CONTAINER_CPU_REQUEST_MILLICORES的值为15
          divisor: 1m
      - name: CONTAINER_MEMORY_LIMIT_KIBIBYTES
        valueFrom:
         resourceFieldRef:
          resource: limits.memory
+         # 例如: 设定内存使用限制为4Mi，技术divisor为1Ki时，环境变量CONTAINER_MEMORY_LIMIT_KIBIBYTES值为4096
          divisor: 1Ki
-[root@k8s-master ~]# kubectl logs -f pod1
-POD_IP=10.244.1.92
-KUBERNETES_SERVICE_PORT=443
-KUBERNETES_PORT=tcp://10.1.0.1:443
-HOSTNAME=pod1
-SHLVL=1
-HOME=/root
-NODE_NAME=k8s-node1
-CONTAINER_MEMORY_LIMIT_KIBIBYTES=5842988
-POD_NAME=pod1
-KUBERNETES_PORT_443_TCP_ADDR=10.1.0.1
-SERVICE_ACCOUNT=default
-PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-KUBERNETES_PORT_443_TCP_PORT=443
-CONTAINER_CPU_REQUEST_MILLICORES=0
-KUBERNETES_PORT_443_TCP_PROTO=tcp
-KUBERNETES_SERVICE_PORT_HTTPS=443
-KUBERNETES_PORT_443_TCP=tcp://10.1.0.1:443
-POD_NAMESPACE=default
-KUBERNETES_SERVICE_HOST=10.1.0.1
-PWD=/
-```
 
-**例子2**
+# 查看pod1环境变量
+kubectl logs pod1
 
-> 能够通过downward api获取k8s相关信息并通过环境变量传递到容器中。
->
-> [链接1](https://kubernetes.io/docs/concepts/workloads/pods/downward-api/#available-fields)
->
-> [通过环境变量传递pod信息](https://kubernetes.io/docs/tasks/inject-data-application/environment-variable-expose-pod-information/)
 
-```shell
-[root@k8s-master ~]# cat 1.yaml 
+
+
+### 例子2，和上面例子1一样通过环境变量暴露pod元数据
+# 1.yaml 内容如下:
 apiVersion: v1
 kind: Pod
 metadata:
-  name: dapi-envars-fieldref
+  name: pod1
 spec:
   containers:
     - name: test-container
@@ -4545,23 +4539,22 @@ spec:
               fieldPath: spec.serviceAccountName
   restartPolicy: Never
   
-[root@k8s-master ~]# kubectl create -f 1.yaml 
-pod/dapi-envars-fieldref created
-[root@k8s-master ~]# kubectl logs dapi-envars-fieldref
+# 创建pod
+kubectl create -f 1.yaml 
 
-k8s-node1
-dapi-envars-fieldref
-default
-10.244.1.253
-default
+# 查看pod环境变量
+kubectl logs pod1
 ```
+
+
 
 ### 通过downwardAPI卷来传递元数据
 
-> 注意：pod标签和注解只能够使用downwardAPI卷来暴露。
+> NOTE: pod标签和注解只能够使用downwardAPI卷来暴露。
 
 ```shell
-[root@k8s-master ~]# cat 1.yaml 
+### 使用downwardAPI卷暴露元数据
+# 1.yaml 内容如下:
 apiVersion: v1
 kind: Pod
 metadata:
@@ -4600,6 +4593,7 @@ spec:
          fieldPath: metadata.annotations
       - path: "containerCpuRequestMilliCores"
         resourceFieldRef:
+         # 打暴露容器可使用的资源限制或者资源请求，必须指定引用资源字段对应的容器名称
          containerName: kubia
          resource: requests.cpu
          divisor: 1m
@@ -4610,30 +4604,31 @@ spec:
           divisor: 1
           
 # 通过downwardAPI卷暴露的元数据被暴露到/etc/downward目录下
-[root@k8s-master ~]# kubectl logs -f pod1
-annotations
-containerCpuRequestMilliCores
-containerMemoryLimitBytes
-labels
-podName
-podNamespace
+kubectl logs pod1
 
 # 进入pod /etc/downward目录查看元数据
-[root@k8s-master ~]# kubectl exec -it pod1 /bin/sh
-kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl exec [POD] -- [COMMAND] instead.
+kubectl exec -it pod1 /bin/sh
 / # cd /etc/downward/
 /etc/downward # ls
-annotations                    containerMemoryLimitBytes      podName
-containerCpuRequestMilliCores  labels                         podNamespace
 /etc/downward # cat annotations 
-key1="value1"
-key2="multi\nline\nvalue\n"
-kubectl.kubernetes.io/last-applied-configuration="{\"apiVersion\":\"v1\",\"kind\":\"Pod\",\"metadata\":{\"annotations\":{\"key1\":\"value1\",\"key2\":\"multi\\nline\\nvalue\\n\"},\"labels\":{\"foo\":\"bar\"},\"name\":\"pod1\",\"namespace\":\"default\"},\"spec\":{\"containers\":[{\"command\":[\"sh\",\"-c\",\"ls /etc/downward; sleep 7200;\"],\"image\":\"busybox\",\"name\":\"kubia\",\"volumeMounts\":[{\"mountPath\":\"/etc/downward\",\"name\":\"downward\"}]}],\"volumes\":[{\"downwardAPI\":{\"items\":[{\"fieldRef\":{\"fieldPath\":\"metadata.name\"},\"path\":\"podName\"},{\"fieldRef\":{\"fieldPath\":\"metadata.namespace\"},\"path\":\"podNamespace\"},{\"fieldRef\":{\"fieldPath\":\"metadata.labels\"},\"path\":\"labels\"},{\"fieldRef\":{\"fieldPath\":\"metadata.annotations\"},\"path\":\"annotations\"},{\"path\":\"containerCpuRequestMilliCores\",\"resourceFieldRef\":{\"containerName\":\"kubia\",\"divisor\":\"1m\",\"resource\":\"requests.cpu\"}},{\"path\":\"containerMemoryLimitBytes\",\"resourceFieldRef\":{\"containerName\":\"kubia\",\"divisor\":1,\"resource\":\"limits.memory\"}}]},\"name\":\"downward\"}]}}\n"
-kubernetes.io/config.seen="2023-01-05T21:07:03.839838716+08:00"
 /etc/downward # cat podName
-/etc/downward # cat labels 
-foo="bar"/etc/downward #
+/etc/downward # cat labels
+
+
+
+### 修改标签和注解。可以在pod运行时修改标签和注解。如我们所愿，当标签和注解被修改后，k8s会更新存储有相关信息的文件，从而pod可以获取最新的数据。这也解析了为何不能通过环境变量的方式暴露标签和注解，在环境变量方式下，一旦标签和注解被修改，新的值将无法暴露。
+# 修改标签
+kubectl label pod pod1 foo=bar1 --overwrite
+
+# 再次查看labels文件内容会被同步到最新状态
+kubectl exec pod1 cat /etc/downward/labels
 ```
+
+
+
+
+
+
 
 ### kubernetes RESTAPI的yaml API构成
 
