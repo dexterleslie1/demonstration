@@ -4628,9 +4628,7 @@ kubectl exec pod1 cat /etc/downward/labels
 
 
 
-
-
-### kubernetes RESTAPI的yaml API构成
+### 调用kubernetes API
 
 > https://www.jianshu.com/p/862314e0f56f
 > https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#pod-v1-core
@@ -4640,263 +4638,94 @@ kubectl exec pod1 cat /etc/downward/labels
 > - 核心组， 对应的ApiVersion: v1对应的rest path为/api/v1
 > - 其它的group的rest path为/apis/$GROUP_NAME/$VERSION(例如：apis/batch/v1、/apis/apps/v1), 对应的 apiVersion:$GROUP_NAME/$VERSION(例如：apiVersion: batch/v1、apiVersion: apps/v1)
 
-```shell
-# 通过kubectl proxy访问API服务器
-[root@k8s-master ~]# kubectl proxy
-Starting to serve on 127.0.0.1:8001
 
-# 获取所有api-version，相当 kubectl api-versions命令
-# 由api-group/version组成，例如：batch/v1、events.k8s.io/v1
-[root@k8s-master ~]# curl localhost:8001
-{
-  "paths": [
-    "/.well-known/openid-configuration",
-    "/api",
-    "/api/v1",
-    "/apis",
-    "/apis/",
-    "/apis/admissionregistration.k8s.io",
-    "/apis/admissionregistration.k8s.io/v1",
-    "/apis/admissionregistration.k8s.io/v1beta1",
-    "/apis/apiextensions.k8s.io",
-    "/apis/apiextensions.k8s.io/v1",
-    "/apis/apiextensions.k8s.io/v1beta1",
-    "/apis/apiregistration.k8s.io",
-    "/apis/apiregistration.k8s.io/v1",
-    "/apis/apiregistration.k8s.io/v1beta1",
-    "/apis/apps",
-    "/apis/apps/v1",
-    "/apis/authentication.k8s.io",
-    "/apis/authentication.k8s.io/v1",
-    "/apis/authentication.k8s.io/v1beta1",
-    "/apis/authorization.k8s.io",
-    "/apis/authorization.k8s.io/v1",
-    "/apis/authorization.k8s.io/v1beta1",
-    "/apis/autoscaling",
-    "/apis/autoscaling/v1",
-    "/apis/autoscaling/v2beta1",
-    "/apis/autoscaling/v2beta2",
-    "/apis/batch",
-    "/apis/batch/v1",
-    "/apis/batch/v1beta1",
-    "/apis/certificates.k8s.io",
-    "/apis/certificates.k8s.io/v1",
-    "/apis/certificates.k8s.io/v1beta1",
-    "/apis/coordination.k8s.io",
-    "/apis/coordination.k8s.io/v1",
-    "/apis/coordination.k8s.io/v1beta1",
-    "/apis/discovery.k8s.io",
-    "/apis/discovery.k8s.io/v1beta1",
-    "/apis/events.k8s.io",
-    "/apis/events.k8s.io/v1",
-    "/apis/events.k8s.io/v1beta1",
-    "/apis/extensions",
-    "/apis/extensions/v1beta1",
-    "/apis/flowcontrol.apiserver.k8s.io",
-    "/apis/flowcontrol.apiserver.k8s.io/v1beta1",
-    "/apis/networking.k8s.io",
-    "/apis/networking.k8s.io/v1",
-    "/apis/networking.k8s.io/v1beta1",
-    "/apis/node.k8s.io",
-    "/apis/node.k8s.io/v1",
-    "/apis/node.k8s.io/v1beta1",
-    "/apis/policy",
-    "/apis/policy/v1beta1",
-    "/apis/rbac.authorization.k8s.io",
-    "/apis/rbac.authorization.k8s.io/v1",
-    "/apis/rbac.authorization.k8s.io/v1beta1",
-    "/apis/scheduling.k8s.io",
-    "/apis/scheduling.k8s.io/v1",
-    "/apis/scheduling.k8s.io/v1beta1",
-    "/apis/storage.k8s.io",
-    "/apis/storage.k8s.io/v1",
-    "/apis/storage.k8s.io/v1beta1",
-    "/healthz",
-    "/healthz/autoregister-completion",
-    "/healthz/etcd",
-    "/healthz/log",
-    "/healthz/ping",
-    "/healthz/poststarthook/aggregator-reload-proxy-client-cert",
-    "/healthz/poststarthook/apiservice-openapi-controller",
-    "/healthz/poststarthook/apiservice-registration-controller",
-    "/healthz/poststarthook/apiservice-status-available-controller",
-    "/healthz/poststarthook/bootstrap-controller",
-    "/healthz/poststarthook/crd-informer-synced",
-    "/healthz/poststarthook/generic-apiserver-start-informers",
-    "/healthz/poststarthook/kube-apiserver-autoregistration",
-    "/healthz/poststarthook/priority-and-fairness-config-consumer",
-    "/healthz/poststarthook/priority-and-fairness-config-producer",
-    "/healthz/poststarthook/priority-and-fairness-filter",
-    "/healthz/poststarthook/rbac/bootstrap-roles",
-    "/healthz/poststarthook/scheduling/bootstrap-system-priority-classes",
-    "/healthz/poststarthook/start-apiextensions-controllers",
-    "/healthz/poststarthook/start-apiextensions-informers",
-    "/healthz/poststarthook/start-cluster-authentication-info-controller",
-    "/healthz/poststarthook/start-kube-aggregator-informers",
-    "/healthz/poststarthook/start-kube-apiserver-admission-initializer",
-    "/livez",
-    "/livez/autoregister-completion",
-    "/livez/etcd",
-    "/livez/log",
-    "/livez/ping",
-    "/livez/poststarthook/aggregator-reload-proxy-client-cert",
-    "/livez/poststarthook/apiservice-openapi-controller",
-    "/livez/poststarthook/apiservice-registration-controller",
-    "/livez/poststarthook/apiservice-status-available-controller",
-    "/livez/poststarthook/bootstrap-controller",
-    "/livez/poststarthook/crd-informer-synced",
-    "/livez/poststarthook/generic-apiserver-start-informers",
-    "/livez/poststarthook/kube-apiserver-autoregistration",
-    "/livez/poststarthook/priority-and-fairness-config-consumer",
-    "/livez/poststarthook/priority-and-fairness-config-producer",
-    "/livez/poststarthook/priority-and-fairness-filter",
-    "/livez/poststarthook/rbac/bootstrap-roles",
-    "/livez/poststarthook/scheduling/bootstrap-system-priority-classes",
-    "/livez/poststarthook/start-apiextensions-controllers",
-    "/livez/poststarthook/start-apiextensions-informers",
-    "/livez/poststarthook/start-cluster-authentication-info-controller",
-    "/livez/poststarthook/start-kube-aggregator-informers",
-    "/livez/poststarthook/start-kube-apiserver-admission-initializer",
-    "/logs",
-    "/metrics",
-    "/openapi/v2",
-    "/openid/v1/jwks",
-    "/readyz",
-    "/readyz/autoregister-completion",
-    "/readyz/etcd",
-    "/readyz/informer-sync",
-    "/readyz/log",
-    "/readyz/ping",
-    "/readyz/poststarthook/aggregator-reload-proxy-client-cert",
-    "/readyz/poststarthook/apiservice-openapi-controller",
-    "/readyz/poststarthook/apiservice-registration-controller",
-    "/readyz/poststarthook/apiservice-status-available-controller",
-    "/readyz/poststarthook/bootstrap-controller",
-    "/readyz/poststarthook/crd-informer-synced",
-    "/readyz/poststarthook/generic-apiserver-start-informers",
-    "/readyz/poststarthook/kube-apiserver-autoregistration",
-    "/readyz/poststarthook/priority-and-fairness-config-consumer",
-    "/readyz/poststarthook/priority-and-fairness-config-producer",
-    "/readyz/poststarthook/priority-and-fairness-filter",
-    "/readyz/poststarthook/rbac/bootstrap-roles",
-    "/readyz/poststarthook/scheduling/bootstrap-system-priority-classes",
-    "/readyz/poststarthook/start-apiextensions-controllers",
-    "/readyz/poststarthook/start-apiextensions-informers",
-    "/readyz/poststarthook/start-cluster-authentication-info-controller",
-    "/readyz/poststarthook/start-kube-aggregator-informers",
-    "/readyz/poststarthook/start-kube-apiserver-admission-initializer",
-    "/readyz/shutdown",
-    "/version"
-  ]
-}
 
-# 获取kind对应的apiVersion
-[root@k8s-master ~]# kubectl api-resources -o wide
-NAME                              SHORTNAMES   APIVERSION                             NAMESPACED   KIND                             VERBS
-bindings                                       v1                                     true         Binding                          [create]
-componentstatuses                 cs           v1                                     false        ComponentStatus                  [get list]
-configmaps                        cm           v1                                     true         ConfigMap                        [create delete deletecollection get list patch update watch]
-endpoints                         ep           v1                                     true         Endpoints                        [create delete deletecollection get list patch update watch]
-events                            ev           v1                                     true         Event                            [create delete deletecollection get list patch update watch]
-limitranges                       limits       v1                                     true         LimitRange                       [create delete deletecollection get list patch update watch]
-namespaces                        ns           v1                                     false        Namespace                        [create delete get list patch update watch]
-nodes                             no           v1                                     false        Node                             [create delete deletecollection get list patch update watch]
-persistentvolumeclaims            pvc          v1                                     true         PersistentVolumeClaim            [create delete deletecollection get list patch update watch]
-persistentvolumes                 pv           v1                                     false        PersistentVolume                 [create delete deletecollection get list patch update watch]
-pods                              po           v1                                     true         Pod                              [create delete deletecollection get list patch update watch]
-podtemplates                                   v1                                     true         PodTemplate                      [create delete deletecollection get list patch update watch]
-replicationcontrollers            rc           v1                                     true         ReplicationController            [create delete deletecollection get list patch update watch]
-resourcequotas                    quota        v1                                     true         ResourceQuota                    [create delete deletecollection get list patch update watch]
-secrets                                        v1                                     true         Secret                           [create delete deletecollection get list patch update watch]
-serviceaccounts                   sa           v1                                     true         ServiceAccount                   [create delete deletecollection get list patch update watch]
-services                          svc          v1                                     true         Service                          [create delete get list patch update watch]
-mutatingwebhookconfigurations                  admissionregistration.k8s.io/v1        false        MutatingWebhookConfiguration     [create delete deletecollection get list patch update watch]
-validatingwebhookconfigurations                admissionregistration.k8s.io/v1        false        ValidatingWebhookConfiguration   [create delete deletecollection get list patch update watch]
-customresourcedefinitions         crd,crds     apiextensions.k8s.io/v1                false        CustomResourceDefinition         [create delete deletecollection get list patch update watch]
-apiservices                                    apiregistration.k8s.io/v1              false        APIService                       [create delete deletecollection get list patch update watch]
-controllerrevisions                            apps/v1                                true         ControllerRevision               [create delete deletecollection get list patch update watch]
-daemonsets                        ds           apps/v1                                true         DaemonSet                        [create delete deletecollection get list patch update watch]
-deployments                       deploy       apps/v1                                true         Deployment                       [create delete deletecollection get list patch update watch]
-replicasets                       rs           apps/v1                                true         ReplicaSet                       [create delete deletecollection get list patch update watch]
-statefulsets                      sts          apps/v1                                true         StatefulSet                      [create delete deletecollection get list patch update watch]
-tokenreviews                                   authentication.k8s.io/v1               false        TokenReview                      [create]
-localsubjectaccessreviews                      authorization.k8s.io/v1                true         LocalSubjectAccessReview         [create]
-selfsubjectaccessreviews                       authorization.k8s.io/v1                false        SelfSubjectAccessReview          [create]
-selfsubjectrulesreviews                        authorization.k8s.io/v1                false        SelfSubjectRulesReview           [create]
-subjectaccessreviews                           authorization.k8s.io/v1                false        SubjectAccessReview              [create]
-horizontalpodautoscalers          hpa          autoscaling/v1                         true         HorizontalPodAutoscaler          [create delete deletecollection get list patch update watch]
-cronjobs                          cj           batch/v1beta1                          true         CronJob                          [create delete deletecollection get list patch update watch]
-jobs                                           batch/v1                               true         Job                              [create delete deletecollection get list patch update watch]
-certificatesigningrequests        csr          certificates.k8s.io/v1                 false        CertificateSigningRequest        [create delete deletecollection get list patch update watch]
-leases                                         coordination.k8s.io/v1                 true         Lease                            [create delete deletecollection get list patch update watch]
-endpointslices                                 discovery.k8s.io/v1beta1               true         EndpointSlice                    [create delete deletecollection get list patch update watch]
-events                            ev           events.k8s.io/v1                       true         Event                            [create delete deletecollection get list patch update watch]
-ingresses                         ing          extensions/v1beta1                     true         Ingress                          [create delete deletecollection get list patch update watch]
-flowschemas                                    flowcontrol.apiserver.k8s.io/v1beta1   false        FlowSchema                       [create delete deletecollection get list patch update watch]
-prioritylevelconfigurations                    flowcontrol.apiserver.k8s.io/v1beta1   false        PriorityLevelConfiguration       [create delete deletecollection get list patch update watch]
-ingressclasses                                 networking.k8s.io/v1                   false        IngressClass                     [create delete deletecollection get list patch update watch]
-ingresses                         ing          networking.k8s.io/v1                   true         Ingress                          [create delete deletecollection get list patch update watch]
-networkpolicies                   netpol       networking.k8s.io/v1                   true         NetworkPolicy                    [create delete deletecollection get list patch update watch]
-runtimeclasses                                 node.k8s.io/v1                         false        RuntimeClass                     [create delete deletecollection get list patch update watch]
-poddisruptionbudgets              pdb          policy/v1beta1                         true         PodDisruptionBudget              [create delete deletecollection get list patch update watch]
-podsecuritypolicies               psp          policy/v1beta1                         false        PodSecurityPolicy                [create delete deletecollection get list patch update watch]
-clusterrolebindings                            rbac.authorization.k8s.io/v1           false        ClusterRoleBinding               [create delete deletecollection get list patch update watch]
-clusterroles                                   rbac.authorization.k8s.io/v1           false        ClusterRole                      [create delete deletecollection get list patch update watch]
-rolebindings                                   rbac.authorization.k8s.io/v1           true         RoleBinding                      [create delete deletecollection get list patch update watch]
-roles                                          rbac.authorization.k8s.io/v1           true         Role                             [create delete deletecollection get list patch update watch]
-priorityclasses                   pc           scheduling.k8s.io/v1                   false        PriorityClass                    [create delete deletecollection get list patch update watch]
-csidrivers                                     storage.k8s.io/v1                      false        CSIDriver                        [create delete deletecollection get list patch update watch]
-csinodes                                       storage.k8s.io/v1                      false        CSINode                          [create delete deletecollection get list patch update watch]
-storageclasses                    sc           storage.k8s.io/v1                      false        StorageClass                     [create delete deletecollection get list patch update watch]
-volumeattachments                              storage.k8s.io/v1                      false        VolumeAttachment                 [create delete deletecollection get list patch update watch]
+#### 在本机获取kubernetes API URL并测试连通性
 
-# 获取deployment资源的yaml描述
-[root@k8s-master ~]# kubectl explain deployment
-KIND:     Deployment
-VERSION:  apps/v1
+```
+# 获取kubernetes API URL，control plane即kubernetes API URL
+kubectl cluster-info
 
-DESCRIPTION:
-     Deployment enables declarative updates for Pods and ReplicaSets.
-
-FIELDS:
-   apiVersion	<string>
-     APIVersion defines the versioned schema of this representation of an
-     object. Servers should convert recognized schemas to the latest internal
-     value, and may reject unrecognized values. More info:
-     https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
-
-   kind	<string>
-     Kind is a string value representing the REST resource this object
-     represents. Servers may infer this from the endpoint the client submits
-     requests to. Cannot be updated. In CamelCase. More info:
-     https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
-
-   metadata	<Object>
-     Standard object metadata.
-
-   spec	<Object>
-     Specification of the desired behavior of the Deployment.
-
-   status	<Object>
-     Most recently observed status of the Deployment.
-[root@k8s-master ~]# kubectl explain deployment.metadata.name
-KIND:     Deployment
-VERSION:  apps/v1
-
-FIELD:    name <string>
-
-DESCRIPTION:
-     Name must be unique within a namespace. Is required when creating
-     resources, although some resources may allow a client to request the
-     generation of an appropriate name automatically. Name is primarily intended
-     for creation idempotence and configuration definition. Cannot be updated.
-     More info: http://kubernetes.io/docs/user-guide/identifiers#names
+# 测试kubernetes API URL连通性，如果此时api返回403错误表示kubernetes API是连通的
+curl https://192.168.1.188:6443 -k
 ```
 
-### 在pod内使用curl与API服务器通讯
+
+
+#### 通过kubectl proxy访问kubernetes API服务器
+
+> kubectl proxy命令启动了一个代理服务来接收来自你本机的http连接并转发至API服务器，同时处理身份认证，所以不需要每次请求都上传认证凭证。
+
+```
+# 在本地8001端口启动代理，我们也无须传递其他任何参数，因为kubectl已经知晓所需的所有参数(API服务器URL、认证凭证等)
+kubectl proxy
+
+# 测试代理，返回了大部分api组和版本信息，其中可以看出 /apis/batch支持v1和v1beta1两个版本
+# 获取所有api-version，相当 kubectl api-versions命令
+# 由api-group/version组成，例如：batch/v1、events.k8s.io/v1
+curl localhost:8001
+
+## 通过 /apis/batch 研究job资源API组的 REST endpoint
+
+# 获取api可用版本和客户端推荐使用版本信息，可以看到batch api支持v1和v1beta1两个版本，并且指出客户端推荐使用v1版本
+curl localhost:8001/apis/batch
+
+# 查看指定版本下的api信息
+# kind: APIResourceLIst表示该API组资源类型为APIResourceList。
+# resources中name: jobs表示资源对应的endpoint为 /apis/batch/v1/jobs，name: jobs/status表示资源对应的endpoint为 /apis/batch/v1/jobs/status。
+# namespaced: true表示资源是属于某个命名空间的。
+# resources中kind: Job表示资源类型为Job。
+# resources中verbs: ["create", "delete", "deletecollection", ...]表示可以通过endpoint恢复、修改以及删除Job资源。
+curl localhost:8001/apis/batch/v1
+
+# 获取kind对应的apiVersion
+kubectl api-resources -o wide
+
+## 列举集群中所有的Job实例
+
+# 用于创建job
+apiVersion: batch/v1
+kind: Job
+metadata:
+ name: job1
+spec:
+ manualSelector: true
+ completions: 6 # 总共需要执行多少个pod
+ parallelism: 3 # 并行运行pod的数量，如果不指定表示一个一个执行
+ selector:
+  matchLabels:
+   app: counter-pod
+ template:
+  metadata:
+   labels:
+    app: counter-pod
+  spec:
+   restartPolicy: Never
+   containers:
+   - name: counter
+     image: busybox
+     command: ["/bin/sh", "-c", "for i in 9 8 7 6 5 4 3 2 1; do echo $i;sleep 2; done;"]
+
+# 创建job
+kubectl create -f 1.yaml
+
+# 通过kubernetes API查询job列表
+curl localhost:8001/apis/batch/v1/jobs
+
+
+
+## 查询指定job详细信息
+
+# 查询job详细信息时需要指定job所属的命名空间
+curl localhost:8001/apis/batch/v1/namespaces/default/jobs/job1
+```
+
+
+
+#### 在pod内使用curl与API服务器通讯
 
 ```shell
-[root@k8s-master ~]# cat 1.yaml 
+# 用于创建pod，1.yaml 内容如下:
 apiVersion: v1
 kind: Pod
 metadata:
@@ -4907,564 +4736,44 @@ spec:
     image: alpine/curl
     command: ["sh", "-c", "sleep 7200"]
     
-# 执行命令赋予所有服务账号（也可以说所有pod）的集群管理员权限，否则在pod中使用curl调用API时会提示权限不足错误
-[root@k8s-master datass]# kubectl create clusterrolebinding permissive-binding --clusterrole=cluster-admin --group=system:serviceaccounts
-clusterrolebinding.rbac.authorization.k8s.io/permissive-binding created
+# 执行命令赋予所有服务账号（也可以说所有pod）的集群管理员权限，否则在pod中使用curl调用API时会提示权限不足错误，这个命令赋予了所有服务账户(也可以说所有pod)的集群管理员权限，允许他们执行任何需要的操作，很明显这是一个危险的操作，永远都不应该在生产的集群中执行。
+kubectl create clusterrolebinding permissive-binding --clusterrole=cluster-admin --group=system:serviceaccounts
 
-[root@k8s-master ~]# kubectl exec -it pod1 /bin/sh
-kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl exec [POD] -- [COMMAND] instead.
+# 进入pod shell
+kubectl exec -it pod1 /bin/sh
+# 测试curl是否存在
 / # curl
-curl: try 'curl --help' or 'curl --manual' for more information
+# 查看环境变量，在容器内通过查询KUBERNETES_SERVICE_HOST和KUBERNETES_SERVICE_PORT这两个环境变量就可以获取API服务器的ip地址和端口
 / # env
-KUBERNETES_SERVICE_PORT=443
-KUBERNETES_PORT=tcp://10.1.0.1:443
-HOSTNAME=pod1
-SHLVL=1
-HOME=/root
-TERM=xterm
-KUBERNETES_PORT_443_TCP_ADDR=10.1.0.1
-PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-KUBERNETES_PORT_443_TCP_PORT=443
-KUBERNETES_PORT_443_TCP_PROTO=tcp
-KUBERNETES_SERVICE_PORT_HTTPS=443
-KUBERNETES_PORT_443_TCP=tcp://10.1.0.1:443
-KUBERNETES_SERVICE_HOST=10.1.0.1
-PWD=/
-/ # curl https://kubernetes
-curl: (60) SSL certificate problem: unable to get local issuer certificate
-More details here: https://curl.se/docs/sslcerts.html
-
-curl failed to verify the legitimacy of the server and therefore could not
-establish a secure connection to it. To learn more about this situation and
-how to fix it, please visit the web page mentioned above.
-# 使用非https与API服务器通讯
-/ # curl https://kubernetes --insecure
-{
-  "kind": "Status",
-  "apiVersion": "v1",
-  "metadata": {
-    
-  },
-  "status": "Failure",
-  "message": "forbidden: User \"system:anonymous\" cannot get path \"/\"",
-  "reason": "Forbidden",
-  "details": {
-    
-  },
-  "code": 403
-}/ # 
-# 使用服务器ca证书请求API服务器，否则会报告SSL certificate problem
+# 通过k8s默认创建的kubernetes服务请求API服务器，此时返回403错误表示pod和API服务器能够正常通讯
+/ # curl https://kubernetes -k
+# 使用服务器ca证书请求API服务器，否则会报告SSL certificate problem，此时返回403错误表示pod和API服务器能够正常通讯
 / # curl --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt https://kubernetes
-{
-  "kind": "Status",
-  "apiVersion": "v1",
-  "metadata": {
-    
-  },
-  "status": "Failure",
-  "message": "forbidden: User \"system:anonymous\" cannot get path \"/\"",
-  "reason": "Forbidden",
-  "details": {
-    
-  },
-  "code": 403
-}/ #
 # 获取API服务器认证token
+/ #
+# 把API token设置为环境变量
 / # TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+# 打印 TOKEN 环境变量
 / # echo $TOKEN
-eyJhbGciOiJSUzI1NiIsImtpZCI6InQ3aFlRU3VMbWtiUG5IcVRiZzljc1RqRmdzQnZ0dzFxNU1vTEU0VWJ5azQifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJkZWZhdWx0Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZWNyZXQubmFtZSI6ImRlZmF1bHQtdG9rZW4tcThoeHAiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC5uYW1lIjoiZGVmYXVsdCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50LnVpZCI6IjQ4MjAzODUzLWUzMDMtNDJmOC1iZmNlLTljODI5ZTAzYmNiZCIsInN1YiI6InN5c3RlbTpzZXJ2aWNlYWNjb3VudDpkZWZhdWx0OmRlZmF1bHQifQ.SPG5mC3ru7tjcs2ja4q7W7AMcsQ0zkjJqCSKP8lUx0ulWnowVxRQ8TfAFq0vTHF93Vti4lgpi1RDdPUTepN5K0ymurR8vPI8oCpT1YSJZWgLNqOLVsDxRMI-4yb_AYuflbK2XDRkQUVr-XQp8KQTtc1La4O7PokWZkiLWVJbQbYKepOOiD6g89b5vaTHnr2G0LcRj0oiwVHU-ce-IPmVfZmMYpk9OrTdVOT2gu-rJ5nfCm28rBDNtxIttnI65F9Py4Ac6AnoTXoi0K9-OIwbEq1GiVvlb4y9J4_E3bufDo0jD0oyrfA2Et5-Jv2vh7ntu352nZQjkzE8zY4SxLYmvw
 / # curl --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt -H "Authorization: Bearer $TOKEN" https://kubernetes
-{
-  "paths": [
-    "/.well-known/openid-configuration",
-    "/api",
-    "/api/v1",
-    "/apis",
-    "/apis/",
-    "/apis/admissionregistration.k8s.io",
-    "/apis/admissionregistration.k8s.io/v1",
-    "/apis/admissionregistration.k8s.io/v1beta1",
-    "/apis/apiextensions.k8s.io",
-    "/apis/apiextensions.k8s.io/v1",
-    "/apis/apiextensions.k8s.io/v1beta1",
-    "/apis/apiregistration.k8s.io",
-    "/apis/apiregistration.k8s.io/v1",
-    "/apis/apiregistration.k8s.io/v1beta1",
-    "/apis/apps",
-    "/apis/apps/v1",
-    "/apis/authentication.k8s.io",
-    "/apis/authentication.k8s.io/v1",
-    "/apis/authentication.k8s.io/v1beta1",
-    "/apis/authorization.k8s.io",
-    "/apis/authorization.k8s.io/v1",
-    "/apis/authorization.k8s.io/v1beta1",
-    "/apis/autoscaling",
-    "/apis/autoscaling/v1",
-    "/apis/autoscaling/v2beta1",
-    "/apis/autoscaling/v2beta2",
-    "/apis/batch",
-    "/apis/batch/v1",
-    "/apis/batch/v1beta1",
-    "/apis/certificates.k8s.io",
-    "/apis/certificates.k8s.io/v1",
-    "/apis/certificates.k8s.io/v1beta1",
-    "/apis/coordination.k8s.io",
-    "/apis/coordination.k8s.io/v1",
-    "/apis/coordination.k8s.io/v1beta1",
-    "/apis/discovery.k8s.io",
-    "/apis/discovery.k8s.io/v1beta1",
-    "/apis/events.k8s.io",
-    "/apis/events.k8s.io/v1",
-    "/apis/events.k8s.io/v1beta1",
-    "/apis/extensions",
-    "/apis/extensions/v1beta1",
-    "/apis/flowcontrol.apiserver.k8s.io",
-    "/apis/flowcontrol.apiserver.k8s.io/v1beta1",
-    "/apis/networking.k8s.io",
-    "/apis/networking.k8s.io/v1",
-    "/apis/networking.k8s.io/v1beta1",
-    "/apis/node.k8s.io",
-    "/apis/node.k8s.io/v1",
-    "/apis/node.k8s.io/v1beta1",
-    "/apis/policy",
-    "/apis/policy/v1beta1",
-    "/apis/rbac.authorization.k8s.io",
-    "/apis/rbac.authorization.k8s.io/v1",
-    "/apis/rbac.authorization.k8s.io/v1beta1",
-    "/apis/scheduling.k8s.io",
-    "/apis/scheduling.k8s.io/v1",
-    "/apis/scheduling.k8s.io/v1beta1",
-    "/apis/storage.k8s.io",
-    "/apis/storage.k8s.io/v1",
-    "/apis/storage.k8s.io/v1beta1",
-    "/healthz",
-    "/healthz/autoregister-completion",
-    "/healthz/etcd",
-    "/healthz/log",
-    "/healthz/ping",
-    "/healthz/poststarthook/aggregator-reload-proxy-client-cert",
-    "/healthz/poststarthook/apiservice-openapi-controller",
-    "/healthz/poststarthook/apiservice-registration-controller",
-    "/healthz/poststarthook/apiservice-status-available-controller",
-    "/healthz/poststarthook/bootstrap-controller",
-    "/healthz/poststarthook/crd-informer-synced",
-    "/healthz/poststarthook/generic-apiserver-start-informers",
-    "/healthz/poststarthook/kube-apiserver-autoregistration",
-    "/healthz/poststarthook/priority-and-fairness-config-consumer",
-    "/healthz/poststarthook/priority-and-fairness-config-producer",
-    "/healthz/poststarthook/priority-and-fairness-filter",
-    "/healthz/poststarthook/rbac/bootstrap-roles",
-    "/healthz/poststarthook/scheduling/bootstrap-system-priority-classes",
-    "/healthz/poststarthook/start-apiextensions-controllers",
-    "/healthz/poststarthook/start-apiextensions-informers",
-    "/healthz/poststarthook/start-cluster-authentication-info-controller",
-    "/healthz/poststarthook/start-kube-aggregator-informers",
-    "/healthz/poststarthook/start-kube-apiserver-admission-initializer",
-    "/livez",
-    "/livez/autoregister-completion",
-    "/livez/etcd",
-    "/livez/log",
-    "/livez/ping",
-    "/livez/poststarthook/aggregator-reload-proxy-client-cert",
-    "/livez/poststarthook/apiservice-openapi-controller",
-    "/livez/poststarthook/apiservice-registration-controller",
-    "/livez/poststarthook/apiservice-status-available-controller",
-    "/livez/poststarthook/bootstrap-controller",
-    "/livez/poststarthook/crd-informer-synced",
-    "/livez/poststarthook/generic-apiserver-start-informers",
-    "/livez/poststarthook/kube-apiserver-autoregistration",
-    "/livez/poststarthook/priority-and-fairness-config-consumer",
-    "/livez/poststarthook/priority-and-fairness-config-producer",
-    "/livez/poststarthook/priority-and-fairness-filter",
-    "/livez/poststarthook/rbac/bootstrap-roles",
-    "/livez/poststarthook/scheduling/bootstrap-system-priority-classes",
-    "/livez/poststarthook/start-apiextensions-controllers",
-    "/livez/poststarthook/start-apiextensions-informers",
-    "/livez/poststarthook/start-cluster-authentication-info-controller",
-    "/livez/poststarthook/start-kube-aggregator-informers",
-    "/livez/poststarthook/start-kube-apiserver-admission-initializer",
-    "/logs",
-    "/metrics",
-    "/openapi/v2",
-    "/openid/v1/jwks",
-    "/readyz",
-    "/readyz/autoregister-completion",
-    "/readyz/etcd",
-    "/readyz/informer-sync",
-    "/readyz/log",
-    "/readyz/ping",
-    "/readyz/poststarthook/aggregator-reload-proxy-client-cert",
-    "/readyz/poststarthook/apiservice-openapi-controller",
-    "/readyz/poststarthook/apiservice-registration-controller",
-    "/readyz/poststarthook/apiservice-status-available-controller",
-    "/readyz/poststarthook/bootstrap-controller",
-    "/readyz/poststarthook/crd-informer-synced",
-    "/readyz/poststarthook/generic-apiserver-start-informers",
-    "/readyz/poststarthook/kube-apiserver-autoregistration",
-    "/readyz/poststarthook/priority-and-fairness-config-consumer",
-    "/readyz/poststarthook/priority-and-fairness-config-producer",
-    "/readyz/poststarthook/priority-and-fairness-filter",
-    "/readyz/poststarthook/rbac/bootstrap-roles",
-    "/readyz/poststarthook/scheduling/bootstrap-system-priority-classes",
-    "/readyz/poststarthook/start-apiextensions-controllers",
-    "/readyz/poststarthook/start-apiextensions-informers",
-    "/readyz/poststarthook/start-cluster-authentication-info-controller",
-    "/readyz/poststarthook/start-kube-aggregator-informers",
-    "/readyz/poststarthook/start-kube-apiserver-admission-initializer",
-    "/readyz/shutdown",
-    "/version"
-  ]
-}/ #
+/ #
 # 使用curl调用API查询所有pod列表
 / # NS=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)
+# 打印 NS 环境变量
 / # echo $NS
-default
+# 查询指定命名空间中所有pod
 / # curl --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt -H "Authorization: Bearer $TOKEN" https://kubernetes/api/v1/namespaces/$NS/pods
-{
-  "kind": "PodList",
-  "apiVersion": "v1",
-  "metadata": {
-    "resourceVersion": "4201398"
-  },
-  "items": [
-    {
-      "metadata": {
-        "name": "nfs-client-provisioner-859477c96c-kt9vk",
-        "generateName": "nfs-client-provisioner-859477c96c-",
-        "namespace": "default",
-        "uid": "92a890b3-a937-474b-a3d5-eb0c2d52cfa6",
-        "resourceVersion": "3951872",
-        "creationTimestamp": "2023-01-04T13:55:38Z",
-        "labels": {
-          "app": "nfs-client-provisioner",
-          "pod-template-hash": "859477c96c"
-        },
-        "ownerReferences": [
-          {
-            "apiVersion": "apps/v1",
-            "kind": "ReplicaSet",
-            "name": "nfs-client-provisioner-859477c96c",
-            "uid": "73e3a21e-3a51-4f7c-9253-0a60edf7622f",
-            "controller": true,
-            "blockOwnerDeletion": true
-          }
-        ],
-        "managedFields": [
-          {
-            "manager": "kube-controller-manager",
-            "operation": "Update",
-            "apiVersion": "v1",
-            "time": "2023-01-04T13:55:38Z",
-            "fieldsType": "FieldsV1",
-            "fieldsV1": {"f:metadata":{"f:generateName":{},"f:labels":{".":{},"f:app":{},"f:pod-template-hash":{}},"f:ownerReferences":{".":{},"k:{\"uid\":\"73e3a21e-3a51-4f7c-9253-0a60edf7622f\"}":{".":{},"f:apiVersion":{},"f:blockOwnerDeletion":{},"f:controller":{},"f:kind":{},"f:name":{},"f:uid":{}}}},"f:spec":{"f:containers":{"k:{\"name\":\"nfs-client-provisioner\"}":{".":{},"f:env":{".":{},"k:{\"name\":\"NFS_PATH\"}":{".":{},"f:name":{},"f:value":{}},"k:{\"name\":\"NFS_SERVER\"}":{".":{},"f:name":{},"f:value":{}},"k:{\"name\":\"PROVISIONER_NAME\"}":{".":{},"f:name":{},"f:value":{}}},"f:image":{},"f:imagePullPolicy":{},"f:name":{},"f:resources":{},"f:terminationMessagePath":{},"f:terminationMessagePolicy":{},"f:volumeMounts":{".":{},"k:{\"mountPath\":\"/persistentvolumes\"}":{".":{},"f:mountPath":{},"f:name":{}}}}},"f:dnsPolicy":{},"f:enableServiceLinks":{},"f:restartPolicy":{},"f:schedulerName":{},"f:securityContext":{},"f:serviceAccount":{},"f:serviceAccountName":{},"f:terminationGracePeriodSeconds":{},"f:volumes":{".":{},"k:{\"name\":\"nfs-client-root\"}":{".":{},"f:name":{},"f:nfs":{".":{},"f:path":{},"f:server":{}}}}}}
-          },
-          {
-            "manager": "kubelet",
-            "operation": "Update",
-            "apiVersion": "v1",
-            "time": "2023-01-04T13:55:40Z",
-            "fieldsType": "FieldsV1",
-            "fieldsV1": {"f:status":{"f:conditions":{"k:{\"type\":\"ContainersReady\"}":{".":{},"f:lastProbeTime":{},"f:lastTransitionTime":{},"f:status":{},"f:type":{}},"k:{\"type\":\"Initialized\"}":{".":{},"f:lastProbeTime":{},"f:lastTransitionTime":{},"f:status":{},"f:type":{}},"k:{\"type\":\"Ready\"}":{".":{},"f:lastProbeTime":{},"f:lastTransitionTime":{},"f:status":{},"f:type":{}}},"f:containerStatuses":{},"f:hostIP":{},"f:phase":{},"f:podIP":{},"f:podIPs":{".":{},"k:{\"ip\":\"10.244.2.124\"}":{".":{},"f:ip":{}}},"f:startTime":{}}}
-          }
-        ]
-      },
-      "spec": {
-        "volumes": [
-          {
-            "name": "nfs-client-root",
-            "nfs": {
-              "server": "192.168.1.170",
-              "path": "/datass"
-            }
-          },
-          {
-            "name": "nfs-client-provisioner-token-vfg8h",
-            "secret": {
-              "secretName": "nfs-client-provisioner-token-vfg8h",
-              "defaultMode": 420
-            }
-          }
-        ],
-        "containers": [
-          {
-            "name": "nfs-client-provisioner",
-            "image": "registry.cn-hangzhou.aliyuncs.com/iuxt/nfs-subdir-external-provisioner:v4.0.2",
-            "env": [
-              {
-                "name": "PROVISIONER_NAME",
-                "value": "k8s-sigs.io/nfs-subdir-external-provisioner"
-              },
-              {
-                "name": "NFS_SERVER",
-                "value": "192.168.1.170"
-              },
-              {
-                "name": "NFS_PATH",
-                "value": "/datass"
-              }
-            ],
-            "resources": {
-              
-            },
-            "volumeMounts": [
-              {
-                "name": "nfs-client-root",
-                "mountPath": "/persistentvolumes"
-              },
-              {
-                "name": "nfs-client-provisioner-token-vfg8h",
-                "readOnly": true,
-                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount"
-              }
-            ],
-            "terminationMessagePath": "/dev/termination-log",
-            "terminationMessagePolicy": "File",
-            "imagePullPolicy": "IfNotPresent"
-          }
-        ],
-        "restartPolicy": "Always",
-        "terminationGracePeriodSeconds": 30,
-        "dnsPolicy": "ClusterFirst",
-        "serviceAccountName": "nfs-client-provisioner",
-        "serviceAccount": "nfs-client-provisioner",
-        "nodeName": "k8s-node2",
-        "securityContext": {
-          
-        },
-        "schedulerName": "default-scheduler",
-        "tolerations": [
-          {
-            "key": "node.kubernetes.io/not-ready",
-            "operator": "Exists",
-            "effect": "NoExecute",
-            "tolerationSeconds": 300
-          },
-          {
-            "key": "node.kubernetes.io/unreachable",
-            "operator": "Exists",
-            "effect": "NoExecute",
-            "tolerationSeconds": 300
-          }
-        ],
-        "priority": 0,
-        "enableServiceLinks": true,
-        "preemptionPolicy": "PreemptLowerPriority"
-      },
-      "status": {
-        "phase": "Running",
-        "conditions": [
-          {
-            "type": "Initialized",
-            "status": "True",
-            "lastProbeTime": null,
-            "lastTransitionTime": "2023-01-04T13:55:38Z"
-          },
-          {
-            "type": "Ready",
-            "status": "True",
-            "lastProbeTime": null,
-            "lastTransitionTime": "2023-01-04T13:55:40Z"
-          },
-          {
-            "type": "ContainersReady",
-            "status": "True",
-            "lastProbeTime": null,
-            "lastTransitionTime": "2023-01-04T13:55:40Z"
-          },
-          {
-            "type": "PodScheduled",
-            "status": "True",
-            "lastProbeTime": null,
-            "lastTransitionTime": "2023-01-04T13:55:38Z"
-          }
-        ],
-        "hostIP": "192.168.1.178",
-        "podIP": "10.244.2.124",
-        "podIPs": [
-          {
-            "ip": "10.244.2.124"
-          }
-        ],
-        "startTime": "2023-01-04T13:55:38Z",
-        "containerStatuses": [
-          {
-            "name": "nfs-client-provisioner",
-            "state": {
-              "running": {
-                "startedAt": "2023-01-04T13:55:39Z"
-              }
-            },
-            "lastState": {
-              
-            },
-            "ready": true,
-            "restartCount": 0,
-            "image": "registry.cn-hangzhou.aliyuncs.com/iuxt/nfs-subdir-external-provisioner:v4.0.2",
-            "imageID": "docker-pullable://registry.cn-hangzhou.aliyuncs.com/iuxt/nfs-subdir-external-provisioner@sha256:f741e403b3ca161e784163de3ebde9190905fdbf7dfaa463620ab8f16c0f6423",
-            "containerID": "docker://af8f1b657c293c27e07b1eb6e942acfd1305156cdc384f997c030b4829028582",
-            "started": true
-          }
-        ],
-        "qosClass": "BestEffort"
-      }
-    },
-    {
-      "metadata": {
-        "name": "pod1",
-        "namespace": "default",
-        "uid": "26e8ebf1-90a3-4f92-8700-573775e2d3c0",
-        "resourceVersion": "4199018",
-        "creationTimestamp": "2023-01-06T01:59:44Z",
-        "annotations": {
-          "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"v1\",\"kind\":\"Pod\",\"metadata\":{\"annotations\":{},\"name\":\"pod1\",\"namespace\":\"default\"},\"spec\":{\"containers\":[{\"command\":[\"sh\",\"-c\",\"sleep 7200\"],\"image\":\"alpine/curl\",\"name\":\"kubia\"}]}}\n"
-        },
-        "managedFields": [
-          {
-            "manager": "kubectl-client-side-apply",
-            "operation": "Update",
-            "apiVersion": "v1",
-            "time": "2023-01-06T01:59:44Z",
-            "fieldsType": "FieldsV1",
-            "fieldsV1": {"f:metadata":{"f:annotations":{".":{},"f:kubectl.kubernetes.io/last-applied-configuration":{}}},"f:spec":{"f:containers":{"k:{\"name\":\"kubia\"}":{".":{},"f:command":{},"f:image":{},"f:imagePullPolicy":{},"f:name":{},"f:resources":{},"f:terminationMessagePath":{},"f:terminationMessagePolicy":{}}},"f:dnsPolicy":{},"f:enableServiceLinks":{},"f:restartPolicy":{},"f:schedulerName":{},"f:securityContext":{},"f:terminationGracePeriodSeconds":{}}}
-          },
-          {
-            "manager": "kubelet",
-            "operation": "Update",
-            "apiVersion": "v1",
-            "time": "2023-01-06T02:00:24Z",
-            "fieldsType": "FieldsV1",
-            "fieldsV1": {"f:status":{"f:conditions":{"k:{\"type\":\"ContainersReady\"}":{".":{},"f:lastProbeTime":{},"f:lastTransitionTime":{},"f:status":{},"f:type":{}},"k:{\"type\":\"Initialized\"}":{".":{},"f:lastProbeTime":{},"f:lastTransitionTime":{},"f:status":{},"f:type":{}},"k:{\"type\":\"Ready\"}":{".":{},"f:lastProbeTime":{},"f:lastTransitionTime":{},"f:status":{},"f:type":{}}},"f:containerStatuses":{},"f:hostIP":{},"f:phase":{},"f:podIP":{},"f:podIPs":{".":{},"k:{\"ip\":\"10.244.1.96\"}":{".":{},"f:ip":{}}},"f:startTime":{}}}
-          }
-        ]
-      },
-      "spec": {
-        "volumes": [
-          {
-            "name": "default-token-q8hxp",
-            "secret": {
-              "secretName": "default-token-q8hxp",
-              "defaultMode": 420
-            }
-          }
-        ],
-        "containers": [
-          {
-            "name": "kubia",
-            "image": "alpine/curl",
-            "command": [
-              "sh",
-              "-c",
-              "sleep 7200"
-            ],
-            "resources": {
-              
-            },
-            "volumeMounts": [
-              {
-                "name": "default-token-q8hxp",
-                "readOnly": true,
-                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount"
-              }
-            ],
-            "terminationMessagePath": "/dev/termination-log",
-            "terminationMessagePolicy": "File",
-            "imagePullPolicy": "Always"
-          }
-        ],
-        "restartPolicy": "Always",
-        "terminationGracePeriodSeconds": 30,
-        "dnsPolicy": "ClusterFirst",
-        "serviceAccountName": "default",
-        "serviceAccount": "default",
-        "nodeName": "k8s-node1",
-        "securityContext": {
-          
-        },
-        "schedulerName": "default-scheduler",
-        "tolerations": [
-          {
-            "key": "node.kubernetes.io/not-ready",
-            "operator": "Exists",
-            "effect": "NoExecute",
-            "tolerationSeconds": 300
-          },
-          {
-            "key": "node.kubernetes.io/unreachable",
-            "operator": "Exists",
-            "effect": "NoExecute",
-            "tolerationSeconds": 300
-          }
-        ],
-        "priority": 0,
-        "enableServiceLinks": true,
-        "preemptionPolicy": "PreemptLowerPriority"
-      },
-      "status": {
-        "phase": "Running",
-        "conditions": [
-          {
-            "type": "Initialized",
-            "status": "True",
-            "lastProbeTime": null,
-            "lastTransitionTime": "2023-01-06T01:59:45Z"
-          },
-          {
-            "type": "Ready",
-            "status": "True",
-            "lastProbeTime": null,
-            "lastTransitionTime": "2023-01-06T02:00:25Z"
-          },
-          {
-            "type": "ContainersReady",
-            "status": "True",
-            "lastProbeTime": null,
-            "lastTransitionTime": "2023-01-06T02:00:25Z"
-          },
-          {
-            "type": "PodScheduled",
-            "status": "True",
-            "lastProbeTime": null,
-            "lastTransitionTime": "2023-01-06T01:59:44Z"
-          }
-        ],
-        "hostIP": "192.168.1.171",
-        "podIP": "10.244.1.96",
-        "podIPs": [
-          {
-            "ip": "10.244.1.96"
-          }
-        ],
-        "startTime": "2023-01-06T01:59:45Z",
-        "containerStatuses": [
-          {
-            "name": "kubia",
-            "state": {
-              "running": {
-                "startedAt": "2023-01-06T02:00:24Z"
-              }
-            },
-            "lastState": {
-              
-            },
-            "ready": true,
-            "restartCount": 0,
-            "image": "alpine/curl:latest",
-            "imageID": "docker-pullable://alpine/curl@sha256:81372de8c566f2d731bde924bed45230018e6d7c21d051c15e283eb8e06dfa2d",
-            "containerID": "docker://56873cd23ee11a01c75f80f477999363958e03d40a826a71843f7939d5f9e568",
-            "started": true
-          }
-        ],
-        "qosClass": "BestEffort"
-      }
-    }
-  ]
-}/ #
+/ #
 ```
 
-### 通过ambassador容器简化与API服务器的通讯
+
+
+#### 通过ambassador容器简化与API服务器的通讯
+
+> curl向在ambassador容器内运行代理发送普通http请求(不包含任何授权相关的表头)，然后代理向API服务器发送https请求，通过发送凭证来对客户端授权，同时通过验证证书来识别服务器身份。
 
 ```shell
-[root@k8s-master ~]# cat 1.yaml 
+# 用于创建pod，1.yaml 内容如下:
 apiVersion: v1
 kind: Pod
 metadata:
@@ -5476,394 +4785,28 @@ spec:
     command: ["sh", "-c", "sleep 7200"]
   - name: ambassador
     image: luksa/kubectl-proxy
-    
-[root@k8s-master ~]# kubectl exec -it pod1 /bin/sh
-kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl exec [POD] -- [COMMAND] instead.
-Defaulting container name to kubia.
-Use 'kubectl describe pod/pod1 -n default' to see all of the containers in this pod.
+
+# 进入pod shell
+kubectl exec -it pod1 /bin/sh
 / # NS=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)
+# 查看环境变量命名空间
 / # echo $NS
-default
 # 在kubia容器请求localhost:8001实质上是通过ambassador容器的kubectl proxy代理API调用
 / # curl localhost:8001/api/v1/namespaces/$NS/pods
-{
-  "kind": "PodList",
-  "apiVersion": "v1",
-  "metadata": {
-    "resourceVersion": "4202870"
-  },
-  "items": [
-    {
-      "metadata": {
-        "name": "nfs-client-provisioner-859477c96c-kt9vk",
-        "generateName": "nfs-client-provisioner-859477c96c-",
-        "namespace": "default",
-        "uid": "92a890b3-a937-474b-a3d5-eb0c2d52cfa6",
-        "resourceVersion": "3951872",
-        "creationTimestamp": "2023-01-04T13:55:38Z",
-        "labels": {
-          "app": "nfs-client-provisioner",
-          "pod-template-hash": "859477c96c"
-        },
-        "ownerReferences": [
-          {
-            "apiVersion": "apps/v1",
-            "kind": "ReplicaSet",
-            "name": "nfs-client-provisioner-859477c96c",
-            "uid": "73e3a21e-3a51-4f7c-9253-0a60edf7622f",
-            "controller": true,
-            "blockOwnerDeletion": true
-          }
-        ],
-        "managedFields": [
-          {
-            "manager": "kube-controller-manager",
-            "operation": "Update",
-            "apiVersion": "v1",
-            "time": "2023-01-04T13:55:38Z",
-            "fieldsType": "FieldsV1",
-            "fieldsV1": {"f:metadata":{"f:generateName":{},"f:labels":{".":{},"f:app":{},"f:pod-template-hash":{}},"f:ownerReferences":{".":{},"k:{\"uid\":\"73e3a21e-3a51-4f7c-9253-0a60edf7622f\"}":{".":{},"f:apiVersion":{},"f:blockOwnerDeletion":{},"f:controller":{},"f:kind":{},"f:name":{},"f:uid":{}}}},"f:spec":{"f:containers":{"k:{\"name\":\"nfs-client-provisioner\"}":{".":{},"f:env":{".":{},"k:{\"name\":\"NFS_PATH\"}":{".":{},"f:name":{},"f:value":{}},"k:{\"name\":\"NFS_SERVER\"}":{".":{},"f:name":{},"f:value":{}},"k:{\"name\":\"PROVISIONER_NAME\"}":{".":{},"f:name":{},"f:value":{}}},"f:image":{},"f:imagePullPolicy":{},"f:name":{},"f:resources":{},"f:terminationMessagePath":{},"f:terminationMessagePolicy":{},"f:volumeMounts":{".":{},"k:{\"mountPath\":\"/persistentvolumes\"}":{".":{},"f:mountPath":{},"f:name":{}}}}},"f:dnsPolicy":{},"f:enableServiceLinks":{},"f:restartPolicy":{},"f:schedulerName":{},"f:securityContext":{},"f:serviceAccount":{},"f:serviceAccountName":{},"f:terminationGracePeriodSeconds":{},"f:volumes":{".":{},"k:{\"name\":\"nfs-client-root\"}":{".":{},"f:name":{},"f:nfs":{".":{},"f:path":{},"f:server":{}}}}}}
-          },
-          {
-            "manager": "kubelet",
-            "operation": "Update",
-            "apiVersion": "v1",
-            "time": "2023-01-04T13:55:40Z",
-            "fieldsType": "FieldsV1",
-            "fieldsV1": {"f:status":{"f:conditions":{"k:{\"type\":\"ContainersReady\"}":{".":{},"f:lastProbeTime":{},"f:lastTransitionTime":{},"f:status":{},"f:type":{}},"k:{\"type\":\"Initialized\"}":{".":{},"f:lastProbeTime":{},"f:lastTransitionTime":{},"f:status":{},"f:type":{}},"k:{\"type\":\"Ready\"}":{".":{},"f:lastProbeTime":{},"f:lastTransitionTime":{},"f:status":{},"f:type":{}}},"f:containerStatuses":{},"f:hostIP":{},"f:phase":{},"f:podIP":{},"f:podIPs":{".":{},"k:{\"ip\":\"10.244.2.124\"}":{".":{},"f:ip":{}}},"f:startTime":{}}}
-          }
-        ]
-      },
-      "spec": {
-        "volumes": [
-          {
-            "name": "nfs-client-root",
-            "nfs": {
-              "server": "192.168.1.170",
-              "path": "/datass"
-            }
-          },
-          {
-            "name": "nfs-client-provisioner-token-vfg8h",
-            "secret": {
-              "secretName": "nfs-client-provisioner-token-vfg8h",
-              "defaultMode": 420
-            }
-          }
-        ],
-        "containers": [
-          {
-            "name": "nfs-client-provisioner",
-            "image": "registry.cn-hangzhou.aliyuncs.com/iuxt/nfs-subdir-external-provisioner:v4.0.2",
-            "env": [
-              {
-                "name": "PROVISIONER_NAME",
-                "value": "k8s-sigs.io/nfs-subdir-external-provisioner"
-              },
-              {
-                "name": "NFS_SERVER",
-                "value": "192.168.1.170"
-              },
-              {
-                "name": "NFS_PATH",
-                "value": "/datass"
-              }
-            ],
-            "resources": {
-              
-            },
-            "volumeMounts": [
-              {
-                "name": "nfs-client-root",
-                "mountPath": "/persistentvolumes"
-              },
-              {
-                "name": "nfs-client-provisioner-token-vfg8h",
-                "readOnly": true,
-                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount"
-              }
-            ],
-            "terminationMessagePath": "/dev/termination-log",
-            "terminationMessagePolicy": "File",
-            "imagePullPolicy": "IfNotPresent"
-          }
-        ],
-        "restartPolicy": "Always",
-        "terminationGracePeriodSeconds": 30,
-        "dnsPolicy": "ClusterFirst",
-        "serviceAccountName": "nfs-client-provisioner",
-        "serviceAccount": "nfs-client-provisioner",
-        "nodeName": "k8s-node2",
-        "securityContext": {
-          
-        },
-        "schedulerName": "default-scheduler",
-        "tolerations": [
-          {
-            "key": "node.kubernetes.io/not-ready",
-            "operator": "Exists",
-            "effect": "NoExecute",
-            "tolerationSeconds": 300
-          },
-          {
-            "key": "node.kubernetes.io/unreachable",
-            "operator": "Exists",
-            "effect": "NoExecute",
-            "tolerationSeconds": 300
-          }
-        ],
-        "priority": 0,
-        "enableServiceLinks": true,
-        "preemptionPolicy": "PreemptLowerPriority"
-      },
-      "status": {
-        "phase": "Running",
-        "conditions": [
-          {
-            "type": "Initialized",
-            "status": "True",
-            "lastProbeTime": null,
-            "lastTransitionTime": "2023-01-04T13:55:38Z"
-          },
-          {
-            "type": "Ready",
-            "status": "True",
-            "lastProbeTime": null,
-            "lastTransitionTime": "2023-01-04T13:55:40Z"
-          },
-          {
-            "type": "ContainersReady",
-            "status": "True",
-            "lastProbeTime": null,
-            "lastTransitionTime": "2023-01-04T13:55:40Z"
-          },
-          {
-            "type": "PodScheduled",
-            "status": "True",
-            "lastProbeTime": null,
-            "lastTransitionTime": "2023-01-04T13:55:38Z"
-          }
-        ],
-        "hostIP": "192.168.1.178",
-        "podIP": "10.244.2.124",
-        "podIPs": [
-          {
-            "ip": "10.244.2.124"
-          }
-        ],
-        "startTime": "2023-01-04T13:55:38Z",
-        "containerStatuses": [
-          {
-            "name": "nfs-client-provisioner",
-            "state": {
-              "running": {
-                "startedAt": "2023-01-04T13:55:39Z"
-              }
-            },
-            "lastState": {
-              
-            },
-            "ready": true,
-            "restartCount": 0,
-            "image": "registry.cn-hangzhou.aliyuncs.com/iuxt/nfs-subdir-external-provisioner:v4.0.2",
-            "imageID": "docker-pullable://registry.cn-hangzhou.aliyuncs.com/iuxt/nfs-subdir-external-provisioner@sha256:f741e403b3ca161e784163de3ebde9190905fdbf7dfaa463620ab8f16c0f6423",
-            "containerID": "docker://af8f1b657c293c27e07b1eb6e942acfd1305156cdc384f997c030b4829028582",
-            "started": true
-          }
-        ],
-        "qosClass": "BestEffort"
-      }
-    },
-    {
-      "metadata": {
-        "name": "pod1",
-        "namespace": "default",
-        "uid": "8189bac0-80c7-4a9c-9328-470f8096c04d",
-        "resourceVersion": "4202651",
-        "creationTimestamp": "2023-01-06T02:31:33Z",
-        "annotations": {
-          "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"v1\",\"kind\":\"Pod\",\"metadata\":{\"annotations\":{},\"name\":\"pod1\",\"namespace\":\"default\"},\"spec\":{\"containers\":[{\"command\":[\"sh\",\"-c\",\"sleep 7200\"],\"image\":\"alpine/curl\",\"name\":\"kubia\"},{\"image\":\"luksa/kubectl-proxy\",\"name\":\"ambassador\"}]}}\n"
-        },
-        "managedFields": [
-          {
-            "manager": "kubectl-client-side-apply",
-            "operation": "Update",
-            "apiVersion": "v1",
-            "time": "2023-01-06T02:31:33Z",
-            "fieldsType": "FieldsV1",
-            "fieldsV1": {"f:metadata":{"f:annotations":{".":{},"f:kubectl.kubernetes.io/last-applied-configuration":{}}},"f:spec":{"f:containers":{"k:{\"name\":\"ambassador\"}":{".":{},"f:image":{},"f:imagePullPolicy":{},"f:name":{},"f:resources":{},"f:terminationMessagePath":{},"f:terminationMessagePolicy":{}},"k:{\"name\":\"kubia\"}":{".":{},"f:command":{},"f:image":{},"f:imagePullPolicy":{},"f:name":{},"f:resources":{},"f:terminationMessagePath":{},"f:terminationMessagePolicy":{}}},"f:dnsPolicy":{},"f:enableServiceLinks":{},"f:restartPolicy":{},"f:schedulerName":{},"f:securityContext":{},"f:terminationGracePeriodSeconds":{}}}
-          },
-          {
-            "manager": "kubelet",
-            "operation": "Update",
-            "apiVersion": "v1",
-            "time": "2023-01-06T02:32:11Z",
-            "fieldsType": "FieldsV1",
-            "fieldsV1": {"f:status":{"f:conditions":{"k:{\"type\":\"ContainersReady\"}":{".":{},"f:lastProbeTime":{},"f:lastTransitionTime":{},"f:status":{},"f:type":{}},"k:{\"type\":\"Initialized\"}":{".":{},"f:lastProbeTime":{},"f:lastTransitionTime":{},"f:status":{},"f:type":{}},"k:{\"type\":\"Ready\"}":{".":{},"f:lastProbeTime":{},"f:lastTransitionTime":{},"f:status":{},"f:type":{}}},"f:containerStatuses":{},"f:hostIP":{},"f:phase":{},"f:podIP":{},"f:podIPs":{".":{},"k:{\"ip\":\"10.244.1.97\"}":{".":{},"f:ip":{}}},"f:startTime":{}}}
-          }
-        ]
-      },
-      "spec": {
-        "volumes": [
-          {
-            "name": "default-token-q8hxp",
-            "secret": {
-              "secretName": "default-token-q8hxp",
-              "defaultMode": 420
-            }
-          }
-        ],
-        "containers": [
-          {
-            "name": "kubia",
-            "image": "alpine/curl",
-            "command": [
-              "sh",
-              "-c",
-              "sleep 7200"
-            ],
-            "resources": {
-              
-            },
-            "volumeMounts": [
-              {
-                "name": "default-token-q8hxp",
-                "readOnly": true,
-                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount"
-              }
-            ],
-            "terminationMessagePath": "/dev/termination-log",
-            "terminationMessagePolicy": "File",
-            "imagePullPolicy": "Always"
-          },
-          {
-            "name": "ambassador",
-            "image": "luksa/kubectl-proxy",
-            "resources": {
-              
-            },
-            "volumeMounts": [
-              {
-                "name": "default-token-q8hxp",
-                "readOnly": true,
-                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount"
-              }
-            ],
-            "terminationMessagePath": "/dev/termination-log",
-            "terminationMessagePolicy": "File",
-            "imagePullPolicy": "Always"
-          }
-        ],
-        "restartPolicy": "Always",
-        "terminationGracePeriodSeconds": 30,
-        "dnsPolicy": "ClusterFirst",
-        "serviceAccountName": "default",
-        "serviceAccount": "default",
-        "nodeName": "k8s-node1",
-        "securityContext": {
-          
-        },
-        "schedulerName": "default-scheduler",
-        "tolerations": [
-          {
-            "key": "node.kubernetes.io/not-ready",
-            "operator": "Exists",
-            "effect": "NoExecute",
-            "tolerationSeconds": 300
-          },
-          {
-            "key": "node.kubernetes.io/unreachable",
-            "operator": "Exists",
-            "effect": "NoExecute",
-            "tolerationSeconds": 300
-          }
-        ],
-        "priority": 0,
-        "enableServiceLinks": true,
-        "preemptionPolicy": "PreemptLowerPriority"
-      },
-      "status": {
-        "phase": "Running",
-        "conditions": [
-          {
-            "type": "Initialized",
-            "status": "True",
-            "lastProbeTime": null,
-            "lastTransitionTime": "2023-01-06T02:31:33Z"
-          },
-          {
-            "type": "Ready",
-            "status": "True",
-            "lastProbeTime": null,
-            "lastTransitionTime": "2023-01-06T02:32:12Z"
-          },
-          {
-            "type": "ContainersReady",
-            "status": "True",
-            "lastProbeTime": null,
-            "lastTransitionTime": "2023-01-06T02:32:12Z"
-          },
-          {
-            "type": "PodScheduled",
-            "status": "True",
-            "lastProbeTime": null,
-            "lastTransitionTime": "2023-01-06T02:31:33Z"
-          }
-        ],
-        "hostIP": "192.168.1.171",
-        "podIP": "10.244.1.97",
-        "podIPs": [
-          {
-            "ip": "10.244.1.97"
-          }
-        ],
-        "startTime": "2023-01-06T02:31:33Z",
-        "containerStatuses": [
-          {
-            "name": "ambassador",
-            "state": {
-              "running": {
-                "startedAt": "2023-01-06T02:32:10Z"
-              }
-            },
-            "lastState": {
-              
-            },
-            "ready": true,
-            "restartCount": 0,
-            "image": "luksa/kubectl-proxy:latest",
-            "imageID": "docker-pullable://luksa/kubectl-proxy@sha256:d564ada95b50b28ba00a25b204fdd1f177246d9f7a9edc7e7e9b119f236fb496",
-            "containerID": "docker://10bbaec365530ec4e9ae6fd56a61b097f46dd4220621f719831117df31db4a4c",
-            "started": true
-          },
-          {
-            "name": "kubia",
-            "state": {
-              "running": {
-                "startedAt": "2023-01-06T02:31:52Z"
-              }
-            },
-            "lastState": {
-              
-            },
-            "ready": true,
-            "restartCount": 0,
-            "image": "alpine/curl:latest",
-            "imageID": "docker-pullable://alpine/curl@sha256:81372de8c566f2d731bde924bed45230018e6d7c21d051c15e283eb8e06dfa2d",
-            "containerID": "docker://5e6245fea7be444417300c307da06c7752028345062c2cafc76f4cfa59d8b433",
-            "started": true
-          }
-        ],
-        "qosClass": "BestEffort"
-      }
-    }
-  ]
-}/ #
+/ #
 ```
 
-### 使用客户端库与API服务器通讯
+
+
+
+
+#### 使用客户端库与API服务器通讯
 
 > 参考 demo-kubernetes/client-fabric8
+
+
+
+
 
 ## deployment声明式地升级应用
 
