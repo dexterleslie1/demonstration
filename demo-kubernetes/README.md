@@ -423,6 +423,9 @@ curl 10.244.2.6
 
 # 删除pod
 kubectl delete pod nginx
+
+# 临时运行pod退出后自动删除
+kubectl run -it temp1 --image=tutum/dnsutils --rm --restart=Never -- dig SRV kubia.default.svc.cluster.local
 ```
 
 
@@ -1659,26 +1662,110 @@ kubectl logs -f cronjob1-1672666740-rnqqg
 >
 > 在Deployment中，与之对应的服务是service，而在StatefulSet中与之对应的headless service，headless service，即无头服务，与service的区别就是它没有Cluster IP，解析它的名称时将返回该Headless Service对应的全部Pod的Endpoint列表。
 >
-> [链接1](https://www.jianshu.com/p/03cd2f2dc427)
-
-**参考storageclass章节创建storageclass**
-
-**创建statefulset.yaml**
+> 一个statefulset创建的每个pod都有一个从零开始的顺序索引，这个会体现在pod的名称和主机名上，同样还是体现在pod对应的固定存储上。这些pod的名称则是可以预知的，因为他是由statefulset的名称加该实例的顺序索引值组成的。
+>
+> 一个statefulset通常要求你创建一个用来记录每个pod网络标记的headless service。通过这个service，每个pod将拥有独立的DNS记录，这样集群里他的伙伴或者客户端可以通过主机名方便地找到他。比如说，一个属于default命名空间，名为foo的控制服务，他的一个pod名称为A-0，那么可以通过下面的完整域名来访问他: a-0.foo.default.svc.cluster.local。而在Replicaset中这样是行不通的。另外，也可以通过DNS服务，查找域名foo.default.svc.cluster.local对应的所有srv记录，获取一个statefulset中所有pod的名称。
+>
+> statefulset中每个有状态实例都有其对应的专属存储。
+>
+> https://www.jianshu.com/p/03cd2f2dc427
+>
+> 
 
 ```yaml
+# NOTE: 参考storageclass章节创建storageclass
+
+
+### 基本使用
+# app.js内容如下:
+const http = require("http")
+const os = require("os")
+const fs = require("fs")
+const dns = require("dns")
+
+const dataFile = "/var/data/kubia.txt";
+const serviceName = "kubia.default.svc.cluster.local";
+const port = 8080;
+
+var handler = function(request, response) {
+	if (request.method == "POST") {
+		// POST请求把请求body存储到一个文件
+		var file = fs.createWriteStream(dataFile);
+		file.on("open", function(fd) {
+			request.pipe(file);
+			console.log("New data has been received and stored.");
+			response.writeHead(200);
+			response.end("Data stored on pod " + os.hostname() + "\n");
+		});
+	} else {
+		response.writeHead(200)
+		if (request.url == "/data") {
+			// GET或者其他类型请求返回主机名和数据文件内容
+                	var data = fs.existsSync(dataFile) ? fs.readFileSync(dataFile, "utf8") : "No data posted yet";
+                	response.write("You've hit " + os.hostname() + "\n");
+                	response.end("Data stored on this pod: " + data + "\n");
+		} else {
+			response.write("You've hit " + os.hostname() + "\n");
+			response.write("DNS SRV records:\n");
+			// 通过DNS查询SRV记录
+			dns.resolveSrv(serviceName, function(err, addresses) {
+				if (err) {
+					response.end("Could not look up DNS SRV records: " + err);
+					return;
+				}
+
+				var numResponses = 0;
+				if (addresses.length == 0) {
+					response.end("No peers discovered.");
+				} else {
+					// 与SRV记录对应的每个pod通讯获取其数据
+					addresses.forEach(function (item) {
+						numResponses++;
+						response.write("- " + item.name + "\n");
+						if (numResponses == addresses.length) {
+							response.end();
+						}
+					});
+				}
+			});
+		}
+	}
+}
+
+var www = http.createServer(handler);
+console.log("Server started!")
+www.listen(8080);
+
+# Dockerfile内容如下:
+FROM node:7
+
+ADD app.js /app.js
+ENTRYPOINT ["node", "app.js"]
+
+# 编译镜像
+docker build --tag docker.118899.net:10001/yyd-public/demo-k8s-statefulset:v1 .
+
+# 推送镜像
+docker push docker.118899.net:10001/yyd-public/demo-k8s-statefulset:v1
+
+# 测试镜像
+docker run --rm --name=demo -p 8080:8080 docker.118899.net:10001/yyd-public/demo-k8s-statefulset:v1
+curl http://localhost:8080/data
+
+# 1.yaml 内容如下:
 apiVersion: v1
 kind: Service
 metadata:
-  name: nginx
+  name: kubia
   labels:
-    app: nginx
+    app: kubia
 spec:
   ports:
   - port: 80
     name: web
   clusterIP: None
   selector:
-    app: nginx
+    app: kubia
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -1687,24 +1774,25 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app: nginx # has to match .spec.template.metadata.labels
-  serviceName: "nginx"  #声明它属于哪个Headless Service.
+      app: kubia # has to match .spec.template.metadata.labels
+  serviceName: "kubia"  #声明它属于哪个Headless Service.
   replicas: 3 # by default is 1
   template:
     metadata:
       labels:
-        app: nginx # has to match .spec.selector.matchLabels
+        app: kubia # has to match .spec.selector.matchLabels
     spec:
       terminationGracePeriodSeconds: 10
       containers:
-      - name: nginx
-        image: nginx:1.20.1
+      - name: kubia
+        image: docker.118899.net:10001/yyd-public/demo-k8s-statefulset:v1
+        imagePullPolicy: Always
         ports:
-        - containerPort: 80
+        - containerPort: 8080
           name: web
         volumeMounts:
         - name: www
-          mountPath: /usr/share/nginx/html
+          mountPath: /var/data
   volumeClaimTemplates:   #可看作pvc的模板
   - metadata:
       name: www
@@ -1714,107 +1802,64 @@ spec:
       resources:
         requests:
           storage: 1Gi
-```
+          
+# 创建statefulset
+kubectl apply -f 1.yaml
 
-```shell
-# kubectl create -f statefulset.yaml启动statefulset后
-# 在各个nginx目录下创建index.html，如下所示
-[root@k8s-master datass]# tree
-.
-├── default-test-claim-pvc-34bc5c37-2507-4c66-b470-76f199fc07f9
-├── default-www-web-0-pvc-532ce5e0-c614-4c4c-abd1-dd664d88298f
-│   └── index.html
-├── default-www-web-1-pvc-210e4f4a-d006-422f-bf39-3b36e4af89ef
-│   └── index.html
-└── default-www-web-2-pvc-5b905a3a-aed4-44d3-b874-b11f34ae3434
-    └── index.html
-# 每个index.html <h1>Welcome to nginx1!</h1>不一样
-[root@k8s-master default-www-web-1-pvc-210e4f4a-d006-422f-bf39-3b36e4af89ef]# cat index.html 
-<!DOCTYPE html>
-<html>
-<head>
-<title>Welcome to nginx!</title>
-<style>
-    body {
-        width: 35em;
-        margin: 0 auto;
-        font-family: Tahoma, Verdana, Arial, sans-serif;
-    }
-</style>
-</head>
-<body>
-<h1>Welcome to nginx1!</h1>
-<p>If you see this page, the nginx web server is successfully installed and
-working. Further configuration is required.</p>
+# 查看pod、pvc、pv
+kubectl get pod
+kubectl get pvc
+kubectl get pv
 
-<p>For online documentation and support please refer to
-<a href="http://nginx.org/">nginx.org</a>.<br/>
-Commercial support is available at
-<a href="http://nginx.com/">nginx.com</a>.</p>
+# 提交数据到web-2服务中，下面ip地址是web-2对应pod ip地址
+curl -X POST -d "Hello, there!" 10.244.1.88:8080
 
-<p><em>Thank you for using nginx.</em></p>
-</body>
-</html>
-# 分别请求3个nginx，返回的内容不一样
-[root@k8s-master ~]# kubectl get pod -o wide
-NAME                                      READY   STATUS    RESTARTS   AGE   IP            NODE        NOMINATED NODE   READINESS GATES
-nfs-client-provisioner-859477c96c-stc5k   1/1     Running   0          10m   10.244.1.40   k8s-node1   <none>           <none>
-web-0                                     1/1     Running   0          10s   10.244.2.80   k8s-node2   <none>           <none>
-web-1                                     1/1     Running   0          8s    10.244.1.41   k8s-node1   <none>           <none>
-web-2                                     1/1     Running   0          7s    10.244.2.81   k8s-node2   <none>           <none>
-[root@k8s-master ~]# curl 10.244.2.80
-<!DOCTYPE html>
-<html>
-<head>
-<title>Welcome to nginx!</title>
-<style>
-    body {
-        width: 35em;
-        margin: 0 auto;
-        font-family: Tahoma, Verdana, Arial, sans-serif;
-    }
-</style>
-</head>
-<body>
-<h1>Welcome to nginx0!</h1>
-<p>If you see this page, the nginx web server is successfully installed and
-working. Further configuration is required.</p>
+# 获取web-2中数据
+curl 10.244.1.88:8080/data
 
-<p>For online documentation and support please refer to
-<a href="http://nginx.org/">nginx.org</a>.<br/>
-Commercial support is available at
-<a href="http://nginx.com/">nginx.com</a>.</p>
+# 删除web-2看其被statefulset重建后是否使用之前的数据
+kubectl delete pod web-2
+# 获取web-2中数据，数据依旧是之前的数据。
+curl 10.244.1.92:8080/data
 
-<p><em>Thank you for using nginx.</em></p>
-</body>
-</html>
 
-[root@k8s-master ~]# curl 10.244.1.41
-<!DOCTYPE html>
-<html>
-<head>
-<title>Welcome to nginx!</title>
-<style>
-    body {
-        width: 35em;
-        margin: 0 auto;
-        font-family: Tahoma, Verdana, Arial, sans-serif;
-    }
-</style>
-</head>
-<body>
-<h1>Welcome to nginx1!</h1>
-<p>If you see this page, the nginx web server is successfully installed and
-working. Further configuration is required.</p>
 
-<p>For online documentation and support please refer to
-<a href="http://nginx.org/">nginx.org</a>.<br/>
-Commercial support is available at
-<a href="http://nginx.com/">nginx.com</a>.</p>
+### 借助DNS服务器发现其他pod
+# 临时执行dig命令
+kubectl run -it temp1 --image=tutum/dnsutils --rm --restart=Never -- dig SRV kubia.default.svc.cluster.local
 
-<p><em>Thank you for using nginx.</em></p>
-</body>
-</html>
+
+
+
+### 通过编程借助DNS服务器发现其他pod
+
+# 获取web-2 pod ip
+kubectl get service
+# 请求web-2 获取DNS SRV，这个请求会调用nodejs dns.resolveSrv函数
+curl 10.244.3.119:8080
+
+
+### 了解statefulset如何处理节点失效
+# 我们阐述了kubernetes必须完全保证: 一个有状态pod在创建他的代替者之前已经不再运行，当一个节点突然失效，kubernetes并不知道节点或者他上面的pod的状态。他不知道这些pod是否还在运行，或者他是否还存在，甚至是否能被客户端访问到，或者仅仅是kubelet停止向主节点上报本节点状态。
+# 因为一个statefulset要保证不会有两个拥有相同标记的和存储的pod同时运行，当一个节点似乎失效时，statefulset在明确知道一个pod不再运行之前，他不能或者不应该创建一个替换pod。
+# 只有当集群管理者告诉他这些信息时候，他才能明确知道。为了做到这一点，管理者需要删除这个pod，或者删除整个节点(这么做会删除所有调度到该节点上的pod)。
+
+# 手动断开有pod正在运行的节点网络来模拟一个节点网络断开情况，此时参考节点情况会发现被断开网络的节点处于NotReady状态，过若干分钟后在该节点上的pod被主节点标记为Terminating。
+kubectl get pod
+kubectl get node
+
+# 若该节点过段时间正常连通，并且重新汇报他上面的pod状态，那这个pod就会重新标记为Running。但如果这个pod未知状态持续几分钟(这个时间可以配置的)，这个pod就会自动从节点上驱逐。这是由主节点(kubernetes的控制组件)处理的。他通过删除pod的资源来把他从节点上驱逐。
+# 当kubelet发现这个pod被标记为删除状态后，他开始终止运行该pod。在当前的示例中，kubelet已不能与主节点通信(因为你断开了这个节点的网络)，这也就意味着这个pod会一直运行着。
+# 此时通过下面命令查看pod详细信息，web-2此时处于Terminating状态，但是没有新的pod被创建并替换此pod，因为主节点没有确切地知道web-2 pod不能再提供服务。
+kubectl describe pod web-2
+
+# 此时使用下面命令尝试删除pod web-2失败，命令一直在等待状态。这是因为在删除pod之前，这个pod已经被标记为删除(控制组件已经标记其为删除状态)。
+# 可以看出这个pod状态是Terminating。这个pod之前已经被标记为删除，只要他所在的节点上的kubelet通知api服务器说这个pod容器已经终止，那么他就会被清除掉。但是因为这个节点上的网络断开了，所以上述情况永远都不会发生。
+kubectl delete pod web-2
+
+# 由于上面描述的原因，只能够强制删除pod，以便web-2重建。
+# 现在你唯一可以做的告诉api服务器不用等待kubelet来确认这个pod已经不再运行，而是直接删除他。
+kubectl delete pod web-2 --force --grace-period=0
 ```
 
 
@@ -2606,8 +2651,8 @@ PING headless-service (10.244.2.91): 56 data bytes
 round-trip min/avg/max = 0.543/0.584/0.628 ms
 / # exit
 
-# 使用dig命令解析headless service dns到对应的pod ip地址
-[root@k8s-master ~]# dig @10.1.0.10 headless-service.default.svc.cluster.local
+# 在本地节点中使用dig命令解析headless service dns到对应的pod ip地址
+dig @10.1.0.10 headless-service.default.svc.cluster.local
 
 ; <<>> DiG 9.9.4-RedHat-9.9.4-61.el7 <<>> @10.1.0.10 headless-service.default.svc.cluster.local
 ; (1 server found)
