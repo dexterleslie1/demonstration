@@ -5860,10 +5860,71 @@ docker ps
 
 ## API服务器的安全防护
 
+
+
+### 基础概念
+
+> 正常用户和ServiceAccount都可以属于一个或者多个组。我们已经讲过认证插件会连同用户名和用户ID返回组。组可以一次给多个用户赋予权限，而不是必须单独给用户赋予权限。
+> 有插件返回的组仅仅是表示组名称的字符串，但是系统内置的组会有一些特许的含义。
+> system:unauthenticated 组用于所有认证插件都不会认证客户端身份的请求。
+> system:authenticated 组会自动分配给一个成功通过认证的用户。
+> system:serviceaccounts 组包含所有在系统中的ServiceAccount。
+> system:serviceaccounts:<namespace> 组包含了所有在特定命名空间中的ServiceAccount。
+>
+> ServiceAccount特性:
+> 每个pod都与一个ServiceAccount相关联，他代表了运行在pod中应用程序的身份证明。ServiceAccount用户名的格式: system:serviceaccount:<namespace>:<service account name>
+> ServiceAccount就像Pod、Secret、ConfigMap等一样都是资源，他们作用在单独的命名空间，为每个命名空间自动创建一个默认的ServiceAccount（如果在创建pod时不指定ServiceAccount则使用此默认ServiceAccount）。在pod的manifest文件中，可以用指定账户名称的方式将一个ServiceAccount赋值给一个pod。如果不显式地指定ServiceAccount的账户名称，pod会使用在这个命名空间中的默认ServiceAccount。
+>
+> RBAC授权规则是通过四种资源来进行配置的，他们可以分为两个组:
+> Role（角色）和ClusterRole（集群角色），他们指定了在资源上可以执行那些动词。
+> RoleBinding（角色绑定）和ClusterRoleBinding（集群角色绑定），他们将上述角色绑定到特定的用户、组或ServiceAccount上。
+> 角色和集群角色，或者角色绑定和集群角色绑定之间的区别在于角色和角色绑定是命名空间的资源，而集群角色和集群角色绑定是集群级别的资源（不是命名空间的）。
+> 一个Role只允许访问和Role在同一命名空间的资源。如果你希望允许跨不同命名空间访问资源，就必须在每个命名空间中创建Role和RoleBinding。
+>
+> ClusterRole和ClusterRoleBinding特性: 支持授权非资源型URL，支持授权非命名空间资源。
+>
+> **何时使用具体的role和binding的组合**
+> 集群级别的资源（Nodes、PersistentVolumes、.....）: ClusterRole + ClusterRoleBinding。
+> 非资源型URL（/api、/healthz、.....）: ClusterRole + ClusterRoleBinding。
+> 在任何命名空间中的资源（和跨所有命名空间的资源）: ClusterRole + ClusterRoleBinding。
+> 在具体命名空间的资源（在多个命名空间中重用这个相同的ClusterRole）: ClusterRole + RoleBinding。
+> 在具体命名空间中的资源（Role必须在每个命名空间中定义）: Role + RoleBinding。
+
+
+
+### 创建ServiceAccount
+
+```shell
+### 通过命令创建ServiceAccount
+# 创建ServiceAccount
+kubectl create serviceaccount foo
+
+# 查看ServiceAccount详细信息
+kubectl describe serviceaccount foo
+
+# 查看ServiceAccount被自动创建并绑定的密钥，密钥中包含了ca.crt、namespace、token条目
+kubectl get secret
+kubectl describe secret foo-token-xt757
+
+
+
+
+### 通过yaml文件创建ServiceAccount
+# 1.yaml内容如下:
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+ name: foo
+ 
+# 创建ServiceAccount
+```
+
+
+
 ### 创建ServiceAccount并在pod中使用新创建的ServiceAccount
 
 ```shell
-[root@k8s-master ~]# cat 1.yaml 
+# 1.yaml 内容如下:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -5875,6 +5936,7 @@ kind: Pod
 metadata:
  name: curl-custom-serviceaccount
 spec:
+ # 指定pod使用自定义的ServiceAccount
  serviceAccountName: foo
  containers:
   - name: main
@@ -5883,96 +5945,138 @@ spec:
   - name: ambassador
     image: luksa/kubectl-proxy
     
-[root@k8s-master ~]# kubectl apply -f 1.yaml 
-serviceaccount/foo created
-pod/curl-custom-serviceaccount created
+# 创建ServiceAccount和相关pod
+kubectl apply -f 1.yaml 
+
 # 删除之前创建的clusterrolebinding(所有ServiceAccount能够操作任何资源)
-[root@k8s-master ~]# kubectl delete clusterrolebinding permissive-binding
-clusterrolebinding.rbac.authorization.k8s.io "permissive-binding" deleted
-[root@k8s-master ~]# kubectl get serviceaccount
-NAME                     SECRETS   AGE
-default                  1         34d
-foo                      1         41s
+kubectl delete clusterrolebinding permissive-binding
+
+# 查看ServiceAccount列表
+kubectl get serviceaccount
+
 # 显示ServiceAccount详细信息
-[root@k8s-master ~]# kubectl describe serviceaccount foo
-Name:                foo
-Namespace:           default
-Labels:              <none>
-Annotations:         <none>
-Image pull secrets:  <none>
-Mountable secrets:   foo-token-8vlsq
-Tokens:              foo-token-8vlsq
-Events:              <none>
+kubectl describe serviceaccount foo
+
 # 显示ServiceAccount对应的Secret详细信息
-[root@k8s-master ~]# kubectl describe secret foo-token-8vlsq
-Name:         foo-token-8vlsq
-Namespace:    default
-Labels:       <none>
-Annotations:  kubernetes.io/service-account.name: foo
-              kubernetes.io/service-account.uid: 9d858e34-3f20-4e7b-a827-ae5bf826bd9b
+kubectl describe secret foo-token-8vlsq
 
-Type:  kubernetes.io/service-account-token
-
-Data
-====
-namespace:  7 bytes
-token:      eyJhbGciOiJSUzI1NiIsImtpZCI6InQ3aFlRU3VMbWtiUG5IcVRiZzljc1RqRmdzQnZ0dzFxNU1vTEU0VWJ5azQifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJkZWZhdWx0Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZWNyZXQubmFtZSI6ImZvby10b2tlbi04dmxzcSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50Lm5hbWUiOiJmb28iLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiI5ZDg1OGUzNC0zZjIwLTRlN2ItYTgyNy1hZTViZjgyNmJkOWIiLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6ZGVmYXVsdDpmb28ifQ.IJL9-FyRYwd5V8ky6f5cBiSQcWJa9oYpSDi7C9170QRa47JQQZF0xttCzFHj2ez3PaVzkvz3z55PD7sDpQRycdt59fk2Uern20wJ2G7faMxFyssIMNkFByYjrip8XDnCrTW8BppbgMVm4gM7noFtbUgflZ9jjP45tHrvuOHcRrEsK9n2giEgs7__hBRjfPF3cyLPyYagATtc8tzLBCWFecAveEqvqEYUeMDhxFG7fIb2bopkbXK-Q96elxxDKQkeQAyTPrDIXHG_-XQZ_pyCaZBIyy4_yFpzGpIxUcmPLDXc6uEqvIicifl6KXIwLZ_kh7-1RugRrQLTmt6VHYiiSw
-ca.crt:     1066 bytes
-
-[root@k8s-master ~]# kubectl exec -it curl-custom-serviceaccount -c main /bin/sh
-kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl exec [POD] -- [COMMAND] instead.
+# 进入curl容器shell
+kubectl exec -it curl-custom-serviceaccount -c main /bin/sh
 # 进入容器内查看当前使用的ServiceAccount token和Secret的token对应
 / # cat /var/run/secrets/kubernetes.io/serviceaccount/token 
-eyJhbGciOiJSUzI1NiIsImtpZCI6InQ3aFlRU3VMbWtiUG5IcVRiZzljc1RqRmdzQnZ0dzFxNU1vTEU0VWJ5azQifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJkZWZhdWx0Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZWNyZXQubmFtZSI6ImZvby10b2tlbi04dmxzcSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50Lm5hbWUiOiJmb28iLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiI5ZDg1OGUzNC0zZjIwLTRlN2ItYTgyNy1hZTViZjgyNmJkOWIiLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6ZGVmYXVsdDpmb28ifQ.IJL9-FyRYwd5V8ky6f5cBiSQcWJa9oYpSDi7C9170QRa47JQQZF0xttCzFHj2ez3PaVzkvz3z55PD7sDpQRycdt59fk2Uern20wJ2G7faMxFyssIMNkFByYjrip8XDnCrTW8BppbgMVm4gM7noFtbUgflZ9jjP45tHrvuOHcRrEsK9n2giEgs7__hBRjfPF3cyLPyYagATtc8tzLBCWFecAveEqvqEYUeMDhxFG7fIb2bopkbXK-Q96elxxDKQkeQAyTPrDIXHG_-XQZ_pyCaZBIyy4_yFpzGpIxUcmPLDXc6uEqvIicifl6KXIwLZ_kh7-1RugRrQLTmt6VHYiiSw/ # 
 # 查看命名空间default下的ServiceAccount，只是foo ServiceAccount权限不足
 / # curl localhost:8001/api/v1/namespaces/default/serviceaccounts
-{
-  "kind": "Status",
-  "apiVersion": "v1",
-  "metadata": {
-    
-  },
-  "status": "Failure",
-  "message": "serviceaccounts is forbidden: User \"system:serviceaccount:default:foo\" cannot list resource \"serviceaccounts\" in API group \"\" in the namespace \"default\"",
-  "reason": "Forbidden",
-  "details": {
-    "kind": "serviceaccounts"
-  },
-  "code": 403
-}/ #
 ```
+
+
 
 ### 使用Role和RoleBinding
 
-> Role和RoleBinding都是命名空间的资源，这意味着它们属于和应用在同一个命名空间资源上。
->
-> 一个Role只允许访问和Role在同一命名空间的资源。如果你希望允许跨不同命名空间访问资源，就必须在每个命名空间中创建Role和RoleBinding。
-
 ```shell
-# 授权ServiceAccount foo拥有对ServiceAccounts资源的get、list权限
-[root@k8s-master ~]# cat 1.yaml 
+# 创建命名空间foo和pod
+kubectl create ns foo
+kubectl run test --image=luksa/kubectl-proxy -n foo
+
+# 创建命名空间bar和pod
+kubectl create ns bar
+kubectl run test --image=luksa/kubectl-proxy -n bar
+
+# 进入命名空间foo中pod的shell
+kubectl exec -it test -n foo sh
+# 调用services列表api，结果返回403是预期情况，因为默认ServiceAccount没有权限调用此接口
+/ # curl localhost:8001/api/v1/namespaces/foo/services
+
+# 创建Role稍后授权给默认ServiceAccount
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+ namespace: foo
+ name: service-reader
+rules:
+ # services是核心apiGroup的资源，所以没有apiGroup名就是""
+ - apiGroups: [""]
+   verbs: ["get", "list"]
+   # 指定资源为services，NOTE: 必须使用复数的名字
+   resources: ["services"]
+
+kubectl create -f 1.yaml
+
+# 使用下面命令在bar命名空间中创建Role，下面命令和上面yaml创建Role是等价的语法
+kubectl create role service-reader --verb=get --verb=list --resource=services -n bar
+
+# 通过RoleBinding绑定角色到ServiceAccount
+kubectl create rolebinding test --role=service-reader --serviceaccount=foo:default -n foo
+
+# 再次进入命名空间foo中pod的shell
+kubectl exec -it test -n foo sh
+# 调用services列表api，此时结果不再返回403错误而是返回200，说明授权生效了
+/ # curl localhost:8001/api/v1/namespaces/foo/services
+
+
+# 进入命名空间bar中pod的shell
+kubectl exec -it test -n bar sh
+# 调用services列表api，此时返回403错误，因为命名空间bar中的pod没有权限调用命名空间foo中的services列表api
+/ # curl localhost:8001/api/v1/namespaces/foo/services
+
+# 授权命名空间bar中的默认ServiceAccount调用命名空间foo中的services列表api
+kubectl create rolebinding test1 --role=service-reader --serviceaccount=bar:default -n foo
+
+# 再次进入命名空间bar中pod的shell
+kubectl exec -it test -n bar sh
+# 调用services列表api，此时返回200
+/ # curl localhost:8001/api/v1/namespaces/foo/services
+
+# 删除所有数据
+kubectl delete namespace foo
+kubectl delete namespace bar
+
+
+
+
+### 上面例子的yaml等价实现
+# 1.yaml 内容如下:
+---
 apiVersion: v1
-kind: ServiceAccount
+kind: Namespace
 metadata:
  name: foo
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+ name: bar
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
  name: service-reader
+ namespace: foo
 rules:
  # ServiceAccount拥有对ServiceAccounts资源的get、list权限
  - apiGroups: [""]
    verbs: ["get", "list"]
-   resources: ["serviceaccounts"]
+   resources: ["services"]
+   
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+ name: service-reader
+ namespace: bar
+rules:
+ - apiGroups: [""]
+   verbs: ["get", "list"]
+   resources: ["services"]
 
 ---
-# 创建RoleBinding绑定Role:service-reader到ServiceAccount:default/foo
+# 创建RoleBinding绑定Role:service-reader到ServiceAccount:foo:default
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
  name: test
+ namespace: foo
 roleRef:
  apiGroup: rbac.authorization.k8s.io
  kind: Role
@@ -5980,133 +6084,97 @@ roleRef:
 subjects:
  - kind: ServiceAccount
    # ServiceAccount名称
-   name: foo
+   name: default
    # 命名空间名称
-   namespace: default
+   namespace: foo
+ 
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+ name: test1
+ namespace: foo
+roleRef:
+ apiGroup: rbac.authorization.k8s.io
+ kind: Role
+ name: service-reader
+subjects:
+ - kind: ServiceAccount
+   name: default
+   namespace: bar
 
 ---
 apiVersion: v1
 kind: Pod
 metadata:
- name: curl-custom-serviceaccount
+ name: test
+ namespace: foo
 spec:
- serviceAccountName: foo
  containers:
-  - name: main
-    image: alpine/curl
-    command: ["sh", "-c", "sleep 7200;"]
   - name: ambassador
     image: luksa/kubectl-proxy
 
-[root@k8s-master ~]# kubectl exec -it curl-custom-serviceaccount -c main /bin/sh
-kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl exec [POD] -- [COMMAND] instead.
-/ # curl localhost:8001/api/v1/namespaces/default/serviceaccounts
-{
-  "kind": "ServiceAccountList",
-  "apiVersion": "v1",
-  "metadata": {
-    "resourceVersion": "4626087"
-  },
-  "items": [
-    {
-      "metadata": {
-        "name": "default",
-        "namespace": "default",
-        "uid": "48203853-e303-42f8-bfce-9c829e03bcbd",
-        "resourceVersion": "394",
-        "creationTimestamp": "2022-12-05T06:24:40Z"
-      },
-      "secrets": [
-        {
-          "name": "default-token-q8hxp"
-        }
-      ]
-    },
-    {
-      "metadata": {
-        "name": "foo",
-        "namespace": "default",
-        "uid": "dc89fb4f-0284-480c-90e3-4eca78b473f1",
-        "resourceVersion": "4625998",
-        "creationTimestamp": "2023-01-08T15:25:53Z",
-        "annotations": {
-          "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"v1\",\"kind\":\"ServiceAccount\",\"metadata\":{\"annotations\":{},\"name\":\"foo\",\"namespace\":\"default\"}}\n"
-        },
-        "managedFields": [
-          {
-            "manager": "kube-controller-manager",
-            "operation": "Update",
-            "apiVersion": "v1",
-            "time": "2023-01-08T15:25:53Z",
-            "fieldsType": "FieldsV1",
-            "fieldsV1": {"f:secrets":{".":{},"k:{\"name\":\"foo-token-txb6r\"}":{".":{},"f:name":{}}}}
-          },
-          {
-            "manager": "kubectl-client-side-apply",
-            "operation": "Update",
-            "apiVersion": "v1",
-            "time": "2023-01-08T15:25:53Z",
-            "fieldsType": "FieldsV1",
-            "fieldsV1": {"f:metadata":{"f:annotations":{".":{},"f:kubectl.kubernetes.io/last-applied-configuration":{}}}}
-          }
-        ]
-      },
-      "secrets": [
-        {
-          "name": "foo-token-txb6r"
-        }
-      ]
-    },
-    {
-      "metadata": {
-        "name": "nfs-client-provisioner",
-        "namespace": "default",
-        "uid": "051d8d13-15d9-48a8-9c67-b315e638f506",
-        "resourceVersion": "3951847",
-        "creationTimestamp": "2023-01-04T13:55:37Z",
-        "annotations": {
-          "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"v1\",\"kind\":\"ServiceAccount\",\"metadata\":{\"annotations\":{},\"name\":\"nfs-client-provisioner\",\"namespace\":\"default\"}}\n"
-        },
-        "managedFields": [
-          {
-            "manager": "kube-controller-manager",
-            "operation": "Update",
-            "apiVersion": "v1",
-            "time": "2023-01-04T13:55:37Z",
-            "fieldsType": "FieldsV1",
-            "fieldsV1": {"f:secrets":{".":{},"k:{\"name\":\"nfs-client-provisioner-token-vfg8h\"}":{".":{},"f:name":{}}}}
-          },
-          {
-            "manager": "kubectl-client-side-apply",
-            "operation": "Update",
-            "apiVersion": "v1",
-            "time": "2023-01-04T13:55:37Z",
-            "fieldsType": "FieldsV1",
-            "fieldsV1": {"f:metadata":{"f:annotations":{".":{},"f:kubectl.kubernetes.io/last-applied-configuration":{}}}}
-          }
-        ]
-      },
-      "secrets": [
-        {
-          "name": "nfs-client-provisioner-token-vfg8h"
-        }
-      ]
-    }
-  ]
-}/ # 
+---
+apiVersion: v1
+kind: Pod
+metadata:
+ name: test
+ namespace: bar
+spec:
+ containers:
+  - name: ambassador
+    image: luksa/kubectl-proxy
+
+# 进入命名空间foo中pod的shell
+kubectl exec -it test -c ambassador -n foo sh
+# 调用services列表api，此时返回200
+/ # curl localhost:8001/api/v1/namespaces/foo/services
+
+# 进入命名空间bar中pod的shell
+kubectl exec -it test -c ambassador -n bar sh
+# 调用services列表api，此时返回200
+/ # curl localhost:8001/api/v1/namespaces/foo/services
 ```
+
+
 
 ### 使用ClusterRole和ClusterRoleBinding
 
-> 为什么需要ClusterRole和ClusterRoleBinding？一个常规的角色只允许访问和角色在同一命名空间中的资源。如果你希望允许跨不同命名空间访问资源，就必须在每个命名空间中创建一个Role和RoleBinding。如果你想将这种行为扩展到所有命名空间（集群管理员可能需要），需要在每个命名空间创建相同的Role和RoleBinding。当创建一个新的命名空间时，必须记住也要在新的命名空间中创建这两个资源。
->
-> ClusterRole是一种集群级别资源，它允许访问没有命名空间的资源和非资源型的URL，或者作为单个命名空间内部绑定的公共角色，从而避免必须在每个命名空间中重新定义相同的角色。
+> Role和RoleBinding都是命名空间的资源，这意味着他们属于和应用在一个单一的命名空间资源上。但是，如我们所见，RoleBinding可以引用来自其他命名空间中的ServiceAccount。
+> 除了这些命名空间里的资源，还存在两个集群级别的RBAC资源: ClusterRole和ClusterRoleBinding，他们不再命名空间里。让我们看看为什么需要他们。
+> 一个常规的角色只允许访问和角色在同一命名空间中的资源。如果你希望跨不同命名空间访问资源，就必须要在每个命名空间中创建一个Role和RoleBinding。如果你想将这种行为扩展到所有的命名空间（集群管理员可能需要），需要在每个命名空间中创建相同的Role和RoleBinding。当创建一个新的命名空间时，必须记住也要在新的命名空间中创建这两个资源。
+> 正如你在整本书中了解到的，一些特定的资源完全不在命名空间中（包括Node、PersistentVolume、Namespace等等）。我们也提到过API服务器对外暴露了一些不表示资源的URL路径（例如 /healthz）。常规角色不能对这些资源或非资源型的URL进行授权，但是ClusterRole可以。
+> ClusterRole是一种集群级资源，他允许访问没有命名空间的资源和非资源型的URL，或者作为单个命名空间内部绑定的公共角色，从而避免必须在每个命名空间中重新定义相同的角色。
+
+
+
+#### 允许访问集群级别的资源
 
 ```shell
-# 演示使用ClusterRole授权访问集群级别的资源
-[root@k8s-master ~]# cat 1.yaml 
+# 创建集群角色允许pod列出集群中PersistentVolume
+kubectl create clusterrole pv-reader --verb=get,list --resource=persistentvolumes
+
+# 创建pod
+kubectl create namespace foo
+kubectl run test --image=luksa/kubectl-proxy -n foo
+
+# 在绑定ClusterRole到pod的ServiceAccount之前，验证pod是否可以列出PersistentVolume
+kubectl exec -it test -n foo sh
+# 结果返回403表示没有权限列出PersistentVolume
+/ # curl localhost:8001/api/v1/persistentvolumes
+
+# 授权集群角色到命名空间foo的默认ServiceAccount
+kubectl create clusterrolebinding pv-test --clusterrole=pv-reader --serviceaccount=foo:default
+
+# 再次在pod的shell中列出persistentvolume，此时返回200表示授权成功
+/ # curl localhost:8001/api/v1/persistentvolumes
+
+
+### 使用yaml实现上面场景
+# 1.yaml 内容如下:
+---
 apiVersion: v1
-kind: ServiceAccount
+kind: Namespace
 metadata:
  name: foo
 
@@ -6114,7 +6182,7 @@ metadata:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
- name: service-reader
+ name: pv-reader
 rules:
  - apiGroups:
     - ""
@@ -6128,59 +6196,189 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
- name: test
+ name: pv-test
 roleRef:
  apiGroup: rbac.authorization.k8s.io
  kind: ClusterRole
- name: service-reader
+ name: pv-reader
 subjects:
  - kind: ServiceAccount
-   name: foo
-   namespace: default
+   name: default
+   namespace: foo
 
 ---
 apiVersion: v1
 kind: Pod
 metadata:
- name: curl-custom-serviceaccount
+ name: test
+ namespace: foo
 spec:
- serviceAccountName: foo
  containers:
-  - name: main
-    image: alpine/curl
-    command: ["sh", "-c", "sleep 7200;"]
+  - name: ambassador
+    image: luksa/kubectl-proxy
+    
+# 创建资源
+kubectl create -f 1.yaml
+
+# 进入pod的shell
+kubectl exec -it test -c ambassador -n foo /bin/sh
+# 没有授权访问ServiceAccount资源，此时返回403错误
+/ # curl localhost:8001/api/v1/namespaces/default/serviceaccounts
+# 已经授权访问集群级别资源PersistentVolumes，此时返回200
+/ # curl localhost:8001/api/v1/persistentvolumes
+
+# 删除资源
+kubectl delete -f 1.yaml
+```
+
+
+
+#### 允许访问非资源型URL
+
+##### 了解系统预置的一个ClusterRole和ClusterRoleBinding实例
+
+```shell
+# 查看系统预置的ClusterRole system:discovery
+# 可以发现，system:discovery引用的是URL路径而不是资源（使用的是非资源URL字段而不是资源字段）。verbs字段只允许在这些URL上使用GET HTTP方法。注意: 对于非资源型URL，使用普通的HTTP动词，如post、put和patch，而不是create或者update。动词需要使用小写的形式指定。
+kubectl get clusterrole system:discovery -o yaml
+
+# 查看与ClusterRole绑定的ClusterRoleBinding system:discovery
+# yaml内容显示ClusterRoleBinding正如预期的那样指向system:discovery ClusterRole。他绑定到了两个组，分别是system:authenticated和system:unauthenticated，这使得他和所有用户绑定在一起。这意味着每个人都绝对可以访问列在ClusterRole中的URL。
+kubectl get clusterrolebinding system:discovery -o yaml
+
+# 根据上面分析结果，测试在默认授权的pod中请求 /api 非资源型URL是允许的
+kubectl run test --image=luksa/kubectl-proxy
+kubectl exec -it test sh
+/ # curl localhost:8001/api
+```
+
+
+
+##### 使用ClusterRole来授权访问指定命名空间中的资源
+
+> ClusterRole不是必须一直和集群级别的ClusterRoleBinding捆绑使用。他们也可以和常规的有命名空间的RoleBinding进行捆绑。
+
+```shell
+# 下面演示这两种情况: ClusterRole和ClusterRoleBinding绑定的主体可以列出所有命名空间中ClsuterRole授权的资源。相反，如果你把ClusterRole绑定到RoleBinding，那么在绑定中列出的主体只能够查看RoleBinding命名空间中的资源。
+
+
+###  ClusterRole和ClusterRoleBinding绑定的主体可以列出所有命名空间中ClsuterRole授权的资源。
+# 创建ClusterRole view-test
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+ name: foo
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+ name: bar
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+ name: view-test
+rules:
+ - apiGroups:
+    - ""
+   # 这些都是有命名空间的资源
+   resources:
+    - configmaps
+    - endpoints
+    - persistentvolumeclaims
+    - pods
+    - replicationcontrollers
+    - replicationcontrollers/scale
+    - serviceaccounts
+    - services
+   # 只允许读操作，不能对列出的资源进行写操作
+   verbs:
+    - get
+    - list
+    - watch
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+ name: test
+ namespace: foo
+spec:
+ containers:
   - name: ambassador
     image: luksa/kubectl-proxy
 
-[root@k8s-master ~]# kubectl exec -it curl-custom-serviceaccount -c main /bin/sh
-kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl exec [POD] -- [COMMAND] instead.
-# 没有授权访问ServiceAccount资源
-/ # curl localhost:8001/api/v1/namespaces/default/serviceaccounts
-{
-  "kind": "Status",
-  "apiVersion": "v1",
-  "metadata": {
-    
-  },
-  "status": "Failure",
-  "message": "serviceaccounts is forbidden: User \"system:serviceaccount:default:foo\" cannot list resource \"serviceaccounts\" in API group \"\" in the namespace \"default\"",
-  "reason": "Forbidden",
-  "details": {
-    "kind": "serviceaccounts"
-  },
-  "code": 403
-}
-# 已经授权访问集群级别资源PersistentVolumes
-/ # curl localhost:8001/api/v1/persistentvolumes
-{
-  "kind": "PersistentVolumeList",
-  "apiVersion": "v1",
-  "metadata": {
-    "resourceVersion": "4728159"
-  },
-  "items": []
-}/ #
+# 创建ClusterRole
+kubectl create -f 1.yaml
+
+# 授予foo命名空间中的默认ServiceAccount ClusterRole view-test角色
+kubectl create clusterrolebinding view-test --clusterrole=view-test --serviceaccount=foo:default
+
+# 进入foo命名空间pod的shell
+kubectl exec -it test -n foo sh
+# 查询foo命名空间中的pod，返回200
+/ # curl localhost:8001/api/v1/namespaces/foo/pods
+# 查询bar命名空间中的pod，返回200
+/ # curl localhost:8001/api/v1/namespaces/bar/pods
+# 查询所有命名空间中的pod，返回200
+/ # curl localhost:8001/api/v1/pods
+
+
+### 相反，如果你把ClusterRole绑定到RoleBinding，那么在绑定中列出的主体只能够查看RoleBinding命名空间中的资源。
+# 删除上面的clusterrolebinding
+kubectl delete clusterrolebinding view-test
+
+# 绑定foo:default到命名空间foo中RoleBinding，这样foo:default只能查看foo命名空间中的pod
+kubectl create rolebinding view-test --clusterrole=view-test --serviceaccount=foo:default -n foo
+
+# 再次进入foo命名空间pod的shell
+kubectl exec -it test -n foo sh
+# 查询foo命名空间中的pod，返回200
+/ # curl localhost:8001/api/v1/namespaces/foo/pods
+# 查询bar命名空间中的pod，返回403
+/ # curl localhost:8001/api/v1/namespaces/bar/pods
+# 查询所有命名空间中的pod，返回403
+/ # curl localhost:8001/api/v1/pods
 ```
+
+
+
+
+
+### 了解默认的ClusterRole和ClusterRoleBinding
+
+> kubernetes提供了一组默认的ClusterRole和ClusterRoleBinding，每次API服务器启动时都会更新他们。这保证了在你错误地删除角色和绑定，或者kubernetes的新版本使用了不同的集群角色和绑定配置时，所有的默认角色和绑定都会被重新创建。
+>
+> **用view ClusterRole允许对资源的只读访问**
+> 他允许读取一个命名空间的大多数资源，除了Role、RoleBinding和Secret。
+> **用admin ClusterRole赋予一个命名空间全部的控制权限**
+> 一个命名空间中的资源的完全控制权是由admin ClusterRole赋予的。有这个ClusterRole的主体可以读取和修改命名空间中的任何资源，除了ResourceQuota和命名空间资源本身。edit和admin ClusterRole之间的主要区别是能否在命名空间中查看和修改Role和RoleBinding。
+> **用cluster-admin ClusterRole得到完全的控制**
+> 通过将cluster-admin ClusterRole赋给主体，主体可以获得kubernetes集群完全控制的权限。正如你前面了解的那样，admin ClusterRole不允许用户修改命名空间的ResourceQuota对象或者命名空间资源本身。如果你想允许用户这样做，需要创建一个指向cluster-admin ClusterRole的RoleBinding。这使得RoleBinding中包含的用户能够完全控制创建RoleBinding所在命名空间上的所有方面。
+> 如果你留心观察，可能已经知道如何授予用户一个集群中所有命名空间的完全控制权限。就是通过ClusterRoleBinding而不是RoleBinding中引用cluster-admin ClusterRole。
+> **了解其他默认的ClusterRole**
+> 默认的ClusterRole列表包含了大量的其他的ClusterRole，他们以system:为前缀。这些角色用于各种kubernetes组件中。在他们之中，可以找到如system:kube-scheduler之类的角色，他明显是给调度器使用的，system:node是给kubelet组件使用的。
+> 虽然Controller Manager作为一个独立的pod来运行，但是在其中运行的每个控制器都可以使用单独的ClusterRole和ClusterRoleBinding（他们以system:Controller:为前缀）。
+> 这些系统的每个ClusterRole都有一个ie匹配的ClusterRoleBinding，他会绑定到系统组件用来身份认证的用户上。例如，system:kube-scheduler ClusterRoleBinding将名称相同的ClusterRole分配给system:kube-scheduler用户，他是调度器作为身份认证的用户名。
+
+```shell
+# 查询clusterrolebinding列表，包括系统预置的clusterrolebinding
+kubectl get clusterrolebinding
+
+# 查询clusterrole列表，包括系统预置的clusterrole
+kubectl get clusterrole
+```
+
+
+
+
+
+
+
+
 
 ## pod与集群节点自动伸缩
 
