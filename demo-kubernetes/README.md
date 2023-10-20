@@ -6380,6 +6380,471 @@ kubectl get clusterrole
 
 
 
+## 保障集群内节点和网络安全
+
+
+
+### 在pod中使用宿主节点的linux命名空间
+
+> pod中的容器通常在分开的linux命名空间中运行。这些命名空间将容器中的进程和其他容器中，或者宿主默认命名空间中的进程隔离开来。
+> 例如，每一个pod有自己的ip和端口空间，这是因为他拥有自己的网络命名空间。类似地，每一个pod拥有自己的进程树，因为他有自己的PID命名空间。同样地，pod拥有自己的IPC命名空间，仅允许同一pod内的进程通过进程间通信（Inter Process Communication，简称IPC）机制进行交流。
+
+#### 在pod中使用宿主节点网络命名空间
+
+> 部分pod（特别是系统pod）需要在宿主节点的默认命名空间中运行，以允许他们看到和操作节点级别的资源和设备。例如，某个pod可能需要使用宿主节点上的网络适配器，而不是自己的虚拟网络设备。这可以通过将pod spec中的hostNetwork设置为true实现。
+> 在这种情况下，这个pod可以使用宿主节点的网络接口，而不是拥有自己独立的网络。这意味这这个pod没有自己的ip地址；如果这个pod中的某一进程绑定了某个端口，那么该进程将绑定到宿主节点的端口上。
+> kubernetes控制平面组件通过pod部署时，这些pod都会使用hostNetwork选项，让他们的行为与不在pod中运行时相同。
+
+```shell
+# 一个使用宿主节点默认的网络命名空间的pod
+apiVersion: v1
+kind: Pod
+metadata:
+ name: test
+spec:
+ # 使用宿主节点的网络命名空间
+ hostNetwork: true
+ containers:
+  - name: main
+    image: alpine
+    command: ["/bin/sleep", "3600"]
+
+# 创建pod
+kubectl create -f 1.yaml
+
+# 在pod中执行ifconfig命令，可以看到pod确实使用了宿主节点的网络命名空间
+kubectl exec test ifconfig
+```
+
+
+
+#### 绑定宿主节点上的端口而不使用宿主节点的网络命名空间
+
+> 一个与此有关的功能可以让pod在拥有自己的网络命名空间的同时，将端口绑定到宿主节点的端口上。这可以通过配置pod的spec.containers.ports字段中某个容器某一端口的hostPort属性来实现。
+> 不要混淆使用hostPort的pod和通过NodePort服务暴露的pod，他们是不同的。对于一个使用hostPort的pod，到达宿主节点的端口的连接会被直接转发到pod的对应端口上；然而在NodePort服务中，到达宿主节点的端口连接将被转发到随机选取的pod上（这个pod可能在其他节点上）。另外一个区别是，对于使用hostPort的pod，仅有运行了这类pod的节点会绑定对应的端口；而NodePort类型的服务会在所有节点上绑定端口，即使这个节点上没有运行对应的pod。
+> 很重要的一点是，如果一个pod绑定了宿主节点上的一个特定端口，每个宿主节点只能调度一个这样的pod实例，因为两个进程不能绑定宿主机上的同一个端口。调度器在调度pod时会考虑这一点，所以他不会把两个这样的pod调度到同一个节点上，如果要在3个节点上部署4个这样的pod副本，只有3个副本能够成功部署（剩余一个pod保持pending状态）。
+
+```shell
+# 将pod中的一个端口绑定到宿主节点默认网络命名空间的端口
+# 用于创建pod的yaml
+apiVersion: v1
+kind: Pod
+metadata:
+ name: kubia-hostport
+spec:
+ containers:
+  - image: luksa/kubia
+    name: kubia
+    ports:
+     - containerPort: 8080
+       # 可以通过pod所在节点的9000端口访问
+       hostPort: 9000
+       protocol: TCP
+       
+# 创建pod
+kubectl create -f 1.yaml
+
+# 查看pod所在的节点
+kubectl get pod -o wide
+
+# SSH连接到pod所在的节点通过9000端口访问pod的服务
+curl localhost:9000
+```
+
+
+
+#### 使用宿主节点的PID和IPC命名空间
+
+> pod spec中的hostPID和hostIPC选项与hostNetwork相似。当他们被设置为true时，pod中的容器会使用宿主节点的PID和IPC命名空间，分别允许他们看到宿主机上的全部进程，或者通过IPC机制与他们通信。
+
+```shell
+# 使用宿主节点的PID和IPC命名空间
+# 用于创建pod的yaml定义
+apiVersion: v1
+kind: Pod
+metadata:
+ name: test
+spec:
+ # 这个pod使用宿主节点的PID命名空间
+ hostPID: true
+ # 同样地，pod使用宿主节点的IPC命名空间
+ # 将hostIPC设置为true，pod中的进程就可以通过进程间通信机制与宿主机上的其他所有进程进行通信
+ hostIPC: true
+ containers:
+  - name: main
+    image: alpine
+    command: ["/bin/sleep", "3600"]
+    
+# 创建pod
+kuebctl create -f 1.yaml
+
+# pod中通常之能够看到自己内部的进程，但在这个pod的容器中列出进程，可以看到宿主机上的所有进程，而不仅仅是容器内的进程。
+kubectl exec test ps aux
+```
+
+
+
+
+
+### 配置节点的安全上下文
+
+#### 运行pod而不配置安全上文
+
+```shell
+# 运行一个没有任何安全上下问配置的pod
+kubectl run test --image alpine --restart Never -- /bin/sleep 3600
+
+# 查看容器中的用户ID和组ID，这个容器在用户ID（uid）为0的用户，即root，用户组ID（gid）为0（同样是root）的用户组下运行。
+kubectl exec test id
+
+# 删除pod
+kubectl delete pod test
+```
+
+
+
+#### 使用指定用户运行容器
+
+```shell
+# 用于创建pod
+apiVersion: v1
+kind: Pod
+metadata:
+ name: test
+spec:
+ containers:
+  - name: main
+    image: alpine
+    command: ["sleep", "3600"]
+    securityContext:
+     # 你需要指明一个用户id，而不是用户名（id 405对应guest用户）
+     runAsUser: 405
+
+# 创建pod
+kubectl create -f 1.yaml
+
+# 可以看出该容器在guest用户下运行
+kubectl exec test id
+```
+
+
+
+#### 阻止容器以root用户运行
+
+```shell
+# 指定pod以非root运行
+apiVersion: v1
+kind: Pod
+metadata:
+ name: test
+spec:
+ containers:
+  - name: main
+    image: alpine
+    command: ["sleep", "3600"]
+    securityContext:
+     # 这个容器只允许以非root用户运行
+     runAsNonRoot: true
+     
+# 结果pod不能运行，这是预期结果并且报错: Error: container has runAsNonRoot and image will run as root (pod: "test_default(ff069190-cd04-480b-a5ba-b3376f0990d8)", container: main)
+kubectl describe pod test
+```
+
+
+
+#### 使用特权模式运行pod
+
+> 有时候pod需要做他们的宿主节点上能够做的任何事，例如操作被保护的系统设备，或者使用其他在通常容器中不能使用的内核功能。
+> 这种pod的一个样例就是kube-proxy pod，该pod修改宿主机的iptables规则来让kubernetes中的服务规则生效。使用kubeadm部署集群时，你会看到每个节点上都运行了kube-proxy pod，并且可以查看yaml描述文件中所有使用到的特殊特性。
+> 为获取宿主机内核的完整权限，该pod需要在特权模式下运行。这可以通过将容器的securityContext的privileged设置为true。
+
+```shell
+# 用于创建非特权pod和特权pod
+---
+apiVersion: v1
+kind: Pod
+metadata:
+ name: test
+spec:
+ containers:
+  - name: main
+    image: alpine
+    command: ["sleep", "3600"]
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+ name: test1
+spec:
+ containers:
+  - name: main
+    image: alpine
+    command: ["sleep", "3600"]
+    securityContext:
+     # 这个容器将在特权模式下运行
+     privileged: true
+
+# 列出/dev目录下文件的方式查看先前部署的非特权模式容器中的设备，这个相当短的列表已经列出了全部的设备
+kubectl exec test ls /dev
+
+# 完整的设备列表很长，这里已经足以证明这个设备列表远远长于之前的列表。事实上，特权模式的pod可以看到宿主节点上的所有设备。这意味着他可以自由使用任何设备。
+kubectl exec test1 ls /dev
+```
+
+
+
+#### 为容器单独添加内核功能
+
+> 传统的unix实现只区分特权和非特权进程，但是经过多年的发展，linux已经可以通过内核功能支持更细粒度的权限系统。
+> 相比于让容器运行在特权模式下以给予其无限的权限，一个更加安全的做法是只给予他使用真正需要的内核功能的权限。kubernetes允许为特定的容器添加内核功能，或者禁用部分内核功能，以允许对容器进行更加精细的权限控制，限制攻击者的侵入的影响。
+
+```shell
+### 一个容器通常不允许修改系统时间（硬件时钟的时间），报错: Operation not permitted
+apiVersion: v1
+kind: Pod
+metadata:
+ name: test
+spec:
+ containers:
+  - name: main
+    image: alpine
+    command: ["sleep", "3600"]
+    
+# 设置硬件时钟的时间
+kubectl exec -it test -- date +%T -s "12:00:00"
+
+
+
+### 使用securityContext 允许容器修改系统时间
+apiVersion: v1
+kind: Pod
+metadata:
+ name: test
+spec:
+ containers:
+  - name: main
+    image: alpine
+    command: ["sleep", "3600"]
+    # 在securityContext中添加或者禁用内核功能
+    securityContext:
+     capabilities:
+      add:
+       # 允许容器修改系统时间
+       # linux内核功能的名称通常以CAP_开头。但在pod spec中指定内核功能时，必须省略CAP_前缀。
+       - SYS_TIME
+
+# 成功修改系统时间不再报错
+kubectl exec -it test -- date +%T -s "12:00:00"
+kubectl exec -it test -- date
+```
+
+
+
+#### 在容器禁用内核功能
+
+```shell
+### 普通容器默认是支持chown命令的
+
+apiVersion: v1
+kind: Pod
+metadata:
+ name: test
+spec:
+ containers:
+  - name: main
+    image: alpine
+    command: ["sleep", "3600"]
+    
+# 在普通容器中运行chown命令是正常的，最后/tmp目录属主修改为guest
+kubectl exec -it test -- chown guest /tmp
+kubectl exec -it test -- ls -la / | grep tmp
+
+### 使用securityContext禁用chown内核功能
+
+apiVersion: v1
+kind: Pod
+metadata:
+ name: test
+spec:
+ containers:
+  - name: main
+    image: alpine
+    command: ["sleep", "3600"]
+    securityContext:
+     capabilities:
+      drop:
+       # 禁止容器修改文件的所有者
+       - CHOWN
+       
+# 禁用CHOWN内核功能后，不允许在这个pod中修改文件的所有者，报错: Operation not permitted
+kubectl exec -it test -- chown guest /tmp
+```
+
+
+
+#### 阻止对容器根文件系统的写入
+
+> 因为安全原因，你可能需要阻止容器中的进程对容器的根文件系统进行写入，仅允许他们写入挂在的存储卷。
+> 假如你在运行一个有隐藏漏洞，可以允许攻击者写入文件系统的PHP应用。这些PHP文件在构建时放入容器的镜像中，并且在容器的根文件系统中提供服务。由于漏洞的存在，攻击者可以修改这些文件，在其中注入恶意代码。
+> 这一类攻击可以通过阻止容器写入自己的根文件系统（应用的可执行代码的通常存储位置）来防止。通过securityContext将容器readOnlyRootFileSystem设置为true实现。
+
+```shell
+# 用于创建测试的pod
+apiVersion: v1
+kind: Pod
+metadata:
+ name: test
+spec:
+ containers:
+ - name: main
+   image: alpine
+   command: ["sleep", "3600"]
+   securityContext:
+    # 这个容器的跟文件系统不允许写入
+    readOnlyRootFilesystem: true
+   volumeMounts:
+   # 但是向/volume写入是允许的，因为这个目录挂载了一个存储卷
+   - name: my-volume
+     mountPath: /volume
+     readOnly: false
+ volumes:
+ - name: my-volume
+   emptyDir:
+   
+# 这个pod中容器虽然以root用户运行，拥有 / 目录的写权限，但在该目录下写入一个文件会失败，错误: touch: /new-file: Read-only file system
+kubectl exec -it test touch /new-file
+
+# 对挂载卷的写入是允许的
+kubectl exec -it test touch /volume/new-file
+kubectl exec -it test -- ls -la /volume
+```
+
+
+
+#### 设置pod级别的安全上下文
+
+> 以上的例子都是对单独的容器设置安全上下文。这些选项中的一部分也可以从pod级别设定（通过pod.spec.securityContext属性）。他们会作为pod中每一个容器的默认安全上下文，但是会被容器级别的安全上下文覆盖。
+
+
+
+
+
+### 限制pod使用安全相关的特性
+
+> 之前例子已经介绍了如何在部署pod时在任一宿主节点上做任何想做的事。比如，部署一个特权模式的pod。很明显，需要有一种机制阻止用户使用其中部分功能。集群管理人员可以通过创建PodSecurityPolicy资源来限制对以上提到的安全相关的特性的使用。
+> 当有人向API服务器发送pod资源时，PodSecurityPolicy准入控制插件会将这个pod与已经配置的PodSecurityPolicy进行校验。如果这个pod符合集群中已有安全策略，他会被接收并存入etcd；否则他会立即被拒绝。
+
+
+
+#### 第一个PodSecurityPolicy例子
+
+```shell
+# 用于创建PodSecurityPolicy
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+ name: my-psp1
+spec:
+ # 容器不允许使用宿主节点的IPC、PID和网络命名空间
+ hostIPC: false
+ hostPID: false
+ hostNetwork: false
+ # 容器只能绑定宿主节点的10000-11000端口（含端点）或者13000-15000端口
+ hostPorts:
+ - min: 10000
+   max: 11000
+ - min: 13000
+   max: 15000
+ # 容器不能在特权模式下运行
+ privileged: false
+ # 容器强制使用只读的根文件系统
+ readOnlyRootFilesystem: true
+ # 容器可以以任意用户和用户组运行
+ runAsUser:
+  rule: RunAsAny
+ fsGroup:
+  rule: RunAsAny
+ supplementalGroups:
+  rule: RunAsAny
+ # 他们也可以使用任何SELinux选项
+ seLinux:
+  rule: RunAsAny
+ # pod可以使用所有类型的存储卷
+ volumes:
+ - '*'
+
+# 
+```
+
+
+
+### 隔离pod的网络
+
+#### 在一个命名空间中启用网络隔离
+
+> 在默认情况下，某一命名空间中的pod可以被任意来源访问。首先，需要改变这个设定。需要创建一个default-deny NetworkPolicy，他会阻止任何客户端访问中的pod。
+
+```shell
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+ name: foo
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+ name: bar
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+ name: test-nginx
+ namespace: foo
+spec:
+ containers:
+ - name: main
+   image: nginx
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+ name: test-curl
+ namespace: bar
+spec:
+ containers:
+ - name: main
+   image: alpine/curl
+   command: ["sleep", "3600"]
+
+#
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+ name: default-deny
+spec:
+ # 空的标签选择器匹配命名空间中所有pod
+ podSelector: {}
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## pod与集群节点自动伸缩
 
 ###  配置metrics-server
