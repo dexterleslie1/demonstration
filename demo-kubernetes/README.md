@@ -3416,7 +3416,7 @@ kubectl logs -f pod1
 
 ##### 使用kubectl create configmap创建ConfigMap
 
-```
+```shell
 ### 从指定键值对创建configmap
 # 创建ConfigMap时指定键值对
 kubectl create configmap demo-config1 --from-literal=sleep-interval=25
@@ -3477,6 +3477,26 @@ kubectl create configmap demo-config5 --from-file=./configmap-dir
 
 # 查看configmap详细信息
 kubectl get configmap demo-config5 -o yaml
+
+
+### 预读取文件内容，再使用yaml创建ConfigMap
+# https://stackoverflow.com/questions/51268488/kubernetes-configmap-set-from-file-in-yaml-configuration
+
+# 模拟创建nginx.conf文件内容如下:
+server {
+	listen 80;
+}
+
+# 输出创建configmap的yaml文件格式
+kubectl create configmap --dry-run=client somename --from-file=nginx.conf --output yaml
+
+# 修改configmap yaml输出如下:
+apiVersion: v1
+data:
+  nginx.conf: "server {\n\tlisten 80;\n}\n"
+kind: ConfigMap
+metadata:
+  name: somename
 ```
 
 

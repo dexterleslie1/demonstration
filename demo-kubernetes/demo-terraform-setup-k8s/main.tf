@@ -170,7 +170,7 @@ resource "vsphere_virtual_machine" "demo_nodes" {
   resource_pool_id = data.vsphere_host.host.resource_pool_id
   datastore_id     = data.vsphere_datastore.datastore.id
   num_cpus         = 4
-  memory           = 2048
+  memory           = 8192
   guest_id         = data.vsphere_virtual_machine.template.guest_id
   scsi_type        = data.vsphere_virtual_machine.template.scsi_type
   folder           = "/${data.vsphere_datacenter.datacenter.name}/${var.vm_folder}"
@@ -277,7 +277,7 @@ resource "vsphere_virtual_machine" "demo_nfs" {
   resource_pool_id = data.vsphere_host.host.resource_pool_id
   datastore_id     = data.vsphere_datastore.datastore.id
   num_cpus         = 4
-  memory           = 2048
+  memory           = 4096
   guest_id         = data.vsphere_virtual_machine.template.guest_id
   scsi_type        = data.vsphere_virtual_machine.template.scsi_type
   folder           = "/${data.vsphere_datacenter.datacenter.name}/${var.vm_folder}"
