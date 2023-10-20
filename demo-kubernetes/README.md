@@ -99,7 +99,33 @@ curl localhost:30576
 
 
 
-## kubectl命令用法
+## kubectl命令
+
+
+
+### ubuntu安装kubectl命令
+
+> https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/
+
+```shell
+# 下载指定版本kubectl二进制程序
+curl -LO https://dl.k8s.io/release/v1.20.0/bin/linux/amd64/kubect
+
+# 把当前目录中kubectl二进制程序移动到/usr/bin
+sudo mv kubectl /usr/bin/
+
+# /usr/bin/kubectl添加执行权限
+sudo chmod +x /usr/bin/kubectl
+
+## 配置kubectl认证信息
+# 复制kubernetes master ~/.kube/config文件到ubuntu的 ~/.kube/config 中
+
+# 查看kubectl版本
+kubectl version
+
+# 验证认证信息是否正确
+kubectl cluster-info
+```
 
 
 
