@@ -61,6 +61,17 @@ pip uninstall selenium
 
 
 
+### pip安装时指定国内源
+
+```shell
+# 参考 https://developer.aliyun.com/article/652884
+
+# pip3 install指定阿里源
+pip3 install fire -i https://mirrors.aliyun.com/pypi/simple/
+```
+
+
+
 ### pip使用socks5
 
 > https://stackoverflow.com/questions/22915705/how-to-use-pip-with-socks-proxy
