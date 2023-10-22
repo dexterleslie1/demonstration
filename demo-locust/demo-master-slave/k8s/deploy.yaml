@@ -110,6 +110,7 @@ spec:
    - name: locust-master
      image: locustio/locust
      args: ["-f", "/mnt/locust/locustfile.py", "--master", "-H", "http://0.0.0.0:8089"]
+     imagePullPolicy: IfNotPresent
      volumeMounts:
      - name: vol-config
        mountPath: /mnt/locust
@@ -144,7 +145,7 @@ kind: Deployment
 metadata:
  name: demo-locust-slave
 spec:
- replicas: 12
+ replicas: 16
  selector:
   matchLabels:
    app: locust-slave
