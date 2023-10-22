@@ -21,6 +21,18 @@ docker run --privileged --pid=host -it alpine:3.8 nsenter -t 1 -m -u -n -i sh
 
 
 
+### docker build
+
+```shell
+# 编译最新版本镜像并指定使用Dockerfile-base
+docker build --tag docker.118899.net:10001/yyd-public/my-image:latest -f Dockerfile-base .
+
+# 编译指定版本镜像并指定使用Dockerfile-base
+docker build --tag docker.118899.net:10001/yyd-public/my-image:1.0.0 -f Dockerfile-base .
+```
+
+
+
 ### docker rm
 
 ```
