@@ -153,6 +153,13 @@ spec:
    labels:
     app: locust-slave
   spec:
+   topologySpreadConstraints:
+   - maxSkew: 1
+     topologyKey: kubernetes.io/hostname
+     whenUnsatisfiable: ScheduleAnyway
+     labelSelector:
+      matchLabels:
+       app: locust-slave
    initContainers:
    - name: init1
      image: alpine/curl
