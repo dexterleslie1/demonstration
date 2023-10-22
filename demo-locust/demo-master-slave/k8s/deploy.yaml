@@ -129,9 +129,9 @@ spec:
  type: NodePort
  ports:
   - name: port-8089
-    port: 8089 # 服务端口5557
-    targetPort: 8089 # pod端口8089
-    nodePort: 30000 # NodePort端口30000
+    port: 8089
+    targetPort: 8089
+    nodePort: 30000
   - name: port-5557
     port: 5557
     targetPort: 5557
@@ -153,6 +153,19 @@ spec:
    labels:
     app: locust-slave
   spec:
+   initContainers:
+   - name: init1
+     image: alpine/curl
+     # 等待locust master启动后才启动locust slave
+     command: ["sh", "-c"]
+     args:
+     - target_domain=demo-locust;
+       while ! curl -s -f -o /dev/null --connect-timeout 5 $target_domain:8089;
+       do
+          echo "`date` - 命令curl -s -f -o /dev/null --connect-timeout 5 $target_domain:8089 执行失败重试";
+          sleep 1;
+       done
+     imagePullPolicy: IfNotPresent
    containers:
    - name: locust-slave
      image: locustio/locust

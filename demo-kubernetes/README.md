@@ -783,7 +783,7 @@ kubectl delete namespace dev
 
 ### 创建基于http的存活探针
 
-```
+```shell
 # 使用nodejs制作测试用的http应用
 # 创建nodejs应用，请求大于5次后http返回500错误来模拟http服务器不能正常提供服务
 # app.js内容如下:
@@ -8062,6 +8062,86 @@ deployment2-6f7bccdffb-mlwgz              1/1     Running   0          91s     1
 deployment2-6f7bccdffb-rk5kk              1/1     Running   0          91s     10.244.1.61    k8s-node1   <none>           <none>
 deployment2-6f7bccdffb-w6v4n              1/1     Running   0          91s     10.244.1.59    k8s-node1   <none>           <none>
 deployment2-6f7bccdffb-whwr5              1/1     Running   0          91s     10.244.1.58    k8s-node1   <none>           <none>
+```
+
+
+
+
+
+## 开发应用的最佳实践
+
+
+
+### 了解pod的生命周期
+
+#### 借助init容器以固定顺序启动pod
+
+> 下面演示test pod等待nginx pod启动完毕后才启动
+
+```shell
+---
+apiVersion: v1
+kind: Pod
+metadata:
+ name: nginx
+ labels:
+    app: nginx
+spec:
+ initContainers:
+ - name: init1
+   image: busybox
+   # 使用多行命令写法
+   command: ["sh", "-c"]
+   args:
+   - date;
+     sleep 10;
+     date;
+   imagePullPolicy: IfNotPresent
+ - name: init2
+   image: busybox
+   command: ["sleep", "10"]
+ containers:
+ - name: test
+   image: nginx
+   imagePullPolicy: IfNotPresent
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+ name: nginx
+spec:
+ sessionAffinity: None
+ selector:
+  app: nginx
+ ports:
+  - port: 80
+    targetPort: 80
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+ name: test
+spec:
+ initContainers:
+ - name: init1
+   image: alpine/curl
+   # 等待nginx pod启动后才启动本pod
+   command: ["sh", "-c"]
+   args:
+   - target_domain=nginx;
+     while ! curl -s -f -o /dev/null --connect-timeout 5 $target_domain;
+     do
+        echo "`date` - 命令curl -s -f -o /dev/null --connect-timeout 5 $target_domain 执行失败重试";
+        sleep 1;
+     done
+   imagePullPolicy: IfNotPresent
+ containers:
+ - name: test
+   image: busybox
+   command: ["sleep", "3600"]
+   imagePullPolicy: IfNotPresent
 ```
 
 

@@ -186,7 +186,7 @@ sshpass -p 'xxx' scp -o StrictHostKeyChecking=no 1.txt user@host_ip:1.txt
 > 下载包含curl工具的zip压缩包，解压后搜索curl.exe，然后复制
 > https://curl.haxx.se/dlwiz/?type=bin&os=Win64&flav=-&ver=-&cpu=x86_64
 
-```
+```shell
 # 使用参数-X指定http请求类型
 curl -X {POST|GET|PUT|DELETE}
 
