@@ -8072,11 +8072,11 @@ deployment2-6f7bccdffb-whwr5              1/1     Running   0          91s     1
 
 
 
-### 了解pod的生命周期
+### init容器实现pod之间的依赖关系
 
-#### 借助init容器以固定顺序启动pod
-
-> 下面演示test pod等待nginx pod启动完毕后才启动
+> 下面演示test pod等待nginx pod启动完毕后才启动。
+>
+> NOTE: init容器是应用到整个pod。
 
 ```shell
 ---
@@ -8142,6 +8142,131 @@ spec:
    image: busybox
    command: ["sleep", "3600"]
    imagePullPolicy: IfNotPresent
+```
+
+
+
+### pod的生命周期钩子
+
+> pod的生命周期钩子是基于每个容器来指定的。
+
+#### 启动后（postStart）容器生命周期钩子
+
+> 启动后钩子是在容器的主进程启动之后立即执行，这个钩子和主进程是并行执行的。
+> 如果钩子执行失败或者返回了非零状态码，主容器会被杀死。
+> 在启动后钩子未执行完毕时，pod一直处于ContainerCreating状态（下面postStart例子sleep 30用于观察次状态）。
+
+```shell
+apiVersion: v1
+kind: Pod
+metadata:
+ name: test
+spec:
+ containers:
+ - name: test
+   image: busybox
+   imagePullPolicy: IfNotPresent
+   command: ["sleep", "3600"]
+   lifecycle:
+    postStart:
+     exec:
+      command:
+      - sh
+      - -c
+      - |
+       date;
+       sleep 30;
+       date;
+
+# 如果pod因为postStart启动失败，通过describe命令查看原因
+kubectl describe pod test
+```
+
+
+
+#### 停止前（preStop）容器生命周期钩子
+
+> 停止前钩子是在容器被终止之前立即执行的。当一个容器需要终止运行的时候，kubelet在配置了停止前钩子的时候就会执行这个停止前钩子，并且仅在执行完钩子程序后才会向容器进程发送SIGTERM信号。
+> 虽然停止pod时被标记为Terminating，但是因为停止前钩子的作用（如下面例子sleep 90，延迟容器接收SIGTERM信号）依旧能在90秒内正常提供服务。
+
+```shell
+apiVersion: v1
+kind: Pod
+metadata:
+ name: test
+spec:
+ # 把默认的30秒终止宽限期修改为300秒
+ # 这样容器就不会接收到SIGKILL信号导致被强制终止
+ terminationGracePeriodSeconds: 300
+ containers:
+ - name: test
+   image: nginx
+   imagePullPolicy: IfNotPresent
+   lifecycle:
+    preStop:
+     exec:
+      command:
+      - sh
+      - -c
+      - |
+       date > /tmp/1.log;
+       sleep 90;
+       date >> /tmp/1.log;
+```
+
+
+
+### 确保所有客户端请求都得到了妥善处理
+
+#### 在pod启动时避免客户端连接断开
+
+> 通过添加就绪探针就能够很好第解决此问题
+
+#### 在pod关闭时避免客户端连接断开
+
+> 通过添加关闭前钩子解决此问题
+
+```shell
+apiVersion: v1
+kind: Pod
+metadata:
+ name: test
+spec:
+ containers:
+ - name: test
+   image: nginx
+   imagePullPolicy: IfNotPresent
+   lifecycle:
+    preStop:
+     exec:
+      command:
+      - sh
+      - -c
+      - |
+       sleep 20;
+```
+
+
+
+### 给进程终止提供更多的信息
+
+```shell
+apiVersion: v1
+kind: Pod
+metadata:
+ name: test
+spec:
+ containers:
+ - name: test
+   image: busybox
+   terminationMessagePath: /var/termination-reason
+   command:
+   - sh    
+   - -c
+   - 'echo "I''ve has enough" > /var/termination-reason; exit 1'
+
+# 通过describe命令查看pod终止原因（在Last State列中写明了原因）
+kubectl describe pod test
 ```
 
 
