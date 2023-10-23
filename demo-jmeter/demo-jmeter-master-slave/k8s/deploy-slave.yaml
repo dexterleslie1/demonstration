@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: jmeter-slaves
+  labels:
+    jmeter_mode: slave
+spec:
+  # replicas: 3
+  selector:
+    matchLabels:
+      jmeter_mode: slave
+  template:
+    metadata:
+      labels:
+        jmeter_mode: slave
+    spec:
+      # slave节点和master节点分开
+      affinity:
+      #  nodeAffinity:
+      #   requiredDuringSchedulingIgnoredDuringExecution:
+      #     nodeSelectorTerms:
+      #     - matchFields:
+      #       - key: metadata.name
+      #         operator: In
+      #         values: 
+      #         - demo-k8s-node1
+      #     - matchFields:
+      #       - key: metadata.name
+      #         operator: In
+      #         values: 
+      #         - demo-k8s-node2
+       podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - topologyKey: kubernetes.io/hostname
+          labelSelector:
+           matchLabels:
+            jmeter_mode: master
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+           jmeter_mode: slave
+      containers:
+      - name: jmslave
+        image: docker.118899.net:10001/yyd-public/demo-jmeter-slave:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 1099
+        - containerPort: 50000

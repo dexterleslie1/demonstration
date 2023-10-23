@@ -169,8 +169,9 @@ resource "vsphere_virtual_machine" "demo_nodes" {
   name             = "demo-k8s-node${count.index}"
   resource_pool_id = data.vsphere_host.host.resource_pool_id
   datastore_id     = data.vsphere_datastore.datastore.id
-  num_cpus         = 4
-  memory           = 8192
+  # 第一个节点用于运行jmeter-master，所以cpu需要多点
+  num_cpus         = "${count.index == 0 ? 8 : 4}"
+  memory           = 4096
   guest_id         = data.vsphere_virtual_machine.template.guest_id
   scsi_type        = data.vsphere_virtual_machine.template.scsi_type
   folder           = "/${data.vsphere_datacenter.datacenter.name}/${var.vm_folder}"

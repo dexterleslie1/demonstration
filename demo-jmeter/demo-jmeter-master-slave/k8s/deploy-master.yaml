@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jmeter-master
+  labels:
+    jmeter_mode: master
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      jmeter_mode: master
+  template:
+    metadata:
+      labels:
+        jmeter_mode: master
+    spec:
+      # 指定master调度到demo-k8s-node0节点上
+      nodeName: demo-k8s-node0
+      containers:
+      - name: jmmaster
+        image: docker.118899.net:10001/yyd-public/demo-jmeter-master:latest
+        imagePullPolicy: IfNotPresent
+        command: [ "/bin/bash", "-c", "--" ]
+        args: [ "while true; do sleep 30; done;" ]
+        volumeMounts:
+          - name: loadtest
+            mountPath: /load_test
+            subPath: "load_test"
+        ports:
+        - containerPort: 60000
+      volumes:
+      - name: loadtest 
+        configMap:
+         name: jmeter-load-test
