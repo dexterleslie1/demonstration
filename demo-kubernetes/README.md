@@ -7487,81 +7487,88 @@ deployment2-66b6f8c9b7-wdrx8              1/1     Running   0          23m    10
 node/k8s-node2 uncordoned
 ```
 
+
+
+
+
+
+
 ## 高级调度
 
 ### 使用污点和容忍度阻止节点调度到特定节点
 
 > 节点选择器和节点亲缘性规则，是通过明确的在pod中添加的信息，来决定一个pod可以或者不可以被调度到那些节点上。而污点则是在不修改已有的pod信息的前提下，通过在节点上添加污点信息，来拒绝pod在某系节点上的部署
 >
-> 污点效果
+> **污点效果**
 >
 > - NoSchedule 表示如果pod没有容忍这些污点，pod则不能被调度到包含这些污点的污点上。
 > - PreferNoSchedule 是NoSchedule的一个宽松的版本，表示尽量阻止pod被调度到这个节点上，但是如果没有其他节点可以调度，pod依然会被调度到这个节点上。
 > - NoExecute 不同于NoSchedule以及PreferNoSchedule，后两者只在调度期间起作用，而NoExecute也会影响正在节点上运行着的pod。如果在一个节点上添加了NoExecute污点，那些在该节点上运行着的pod，如果没有容忍这个NoExecute污点，将会从这个节点去除。
 
+
+
+#### 主节点的污点和系统级别pod的污点容忍度
+
+```shell
+# 默认情况下，集群中的主节点需要设置污点，这样才能保证只有控制面板pod才能够部署在主节点上
+# 可以看到主节点被添加污点 node-role.kubernetes.io/master:NoSchedule
+kubectl describe node demo-k8s-master
+
+# 因为kube-proxy pod添加了污点容忍度node-role.kubernetes.io/master:NoSchedule
+# 所以kube-proxy能够被调度到master节点上
+kubectl get pod -n kube-system -o wide | grep kube-proxy
+kubectl describe pod kube-proxy-825tq -n kube-system
+```
+
+
+
 #### NoSchedule污点效果
 
 ```shell
-# 显示节点的污点信息
-[root@k8s-master ~]# kubectl describe node k8s-master
-Name:               k8s-master
-Roles:              control-plane,master
-Labels:             beta.kubernetes.io/arch=amd64
-                    beta.kubernetes.io/os=linux
-                    kubernetes.io/arch=amd64
-                    kubernetes.io/hostname=k8s-master
-                    kubernetes.io/os=linux
-                    node-role.kubernetes.io/control-plane=
-                    node-role.kubernetes.io/master=
-Annotations:        flannel.alpha.coreos.com/backend-data: {"VNI":1,"VtepMAC":"d6:3d:8f:99:66:e4"}
-                    flannel.alpha.coreos.com/backend-type: vxlan
-                    flannel.alpha.coreos.com/kube-subnet-manager: true
-                    flannel.alpha.coreos.com/public-ip: 192.168.1.170
-                    kubeadm.alpha.kubernetes.io/cri-socket: /var/run/dockershim.sock
-                    node.alpha.kubernetes.io/ttl: 0
-                    volumes.kubernetes.io/controller-managed-attach-detach: true
-CreationTimestamp:  Mon, 05 Dec 2022 14:24:24 +0800
-Taints:             node-role.kubernetes.io/master:NoSchedule
-...
+# 给节点demo-k8s-node1添加污点node-type=production:NoSchedule
+kubectl taint node demo-k8s-node1 node-type=production:NoSchedule
 
-# 给节点k8s-node1添加污点node-type=production:NoSchedule
-[root@k8s-master ~]# kubectl taint node k8s-node1 node-type=production:NoSchedule
-node/k8s-node1 tainted
-# 查看k8s-node1污点信息
-[root@k8s-master ~]# kubectl describe node k8s-node1
-Name:               k8s-node1
-Roles:              <none>
-Labels:             beta.kubernetes.io/arch=amd64
-                    beta.kubernetes.io/os=linux
-                    kubernetes.io/arch=amd64
-                    kubernetes.io/hostname=k8s-node1
-                    kubernetes.io/os=linux
-                    node-label=node1
-Annotations:        flannel.alpha.coreos.com/backend-data: {"VNI":1,"VtepMAC":"0e:04:60:3f:07:e6"}
-                    flannel.alpha.coreos.com/backend-type: vxlan
-                    flannel.alpha.coreos.com/kube-subnet-manager: true
-                    flannel.alpha.coreos.com/public-ip: 192.168.1.171
-                    kubeadm.alpha.kubernetes.io/cri-socket: /var/run/dockershim.sock
-                    node.alpha.kubernetes.io/ttl: 0
-                    volumes.kubernetes.io/controller-managed-attach-detach: true
-CreationTimestamp:  Mon, 05 Dec 2022 14:31:03 +0800
-Taints:             node-type=production:NoSchedule
-...
-# 删除节点k8s-node1污点node-type=production:NoSchedule
-[root@k8s-master ~]# kubectl taint node k8s-node1 node-type=production:NoSchedule-
-node/k8s-node1 untainted
+# 查看节点污点信息
+kubectl describe node demo-k8s-node1
+
+# 部署没有容忍度的pod
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: test
+spec:
+ replicas: 9
+ selector:
+  matchLabels:
+   app: test
+ template:
+  metadata:
+   labels:
+    app: test
+  spec:
+   containers:
+   - name: nginx
+     image: nginx
+     imagePullPolicy: IfNotPresent
+    
+    
+# 查看pod没有被调度到节点demo-k8s-node1上
+kubectl get pod -o wide
+
+# 删除节点污点node-type=production:NoSchedule
+kubectl taint node demo-k8s-node1 node-type=production:NoSchedule-
 ```
 
 #### NoExecute污点效果
 
 ```shell
-[root@k8s-master ~]# cat 1.yaml 
+# 用于创建pod 
 apiVersion: apps/v1
 kind: Deployment
 metadata:
  name: deployment1
 spec:
- replicas: 5
+ replicas: 9
  selector:
   matchLabels:
    app: kubia
@@ -7573,33 +7580,67 @@ spec:
    containers:
     - name: kubia
       image: busybox
+      imagePullPolicy: IfNotPresent
       command: ["sh", "-c", "sleep 7200;"]
-[root@k8s-master ~]# kubectl apply -f 1.yaml 
-deployment.apps/deployment1 created
-[root@k8s-master ~]# kubectl get pod -o wide
-NAME                                      READY   STATUS    RESTARTS   AGE     IP            NODE        NOMINATED NODE   READINESS GATES
-deployment1-66b6f8c9b7-8d9t8              1/1     Running   0          3m21s   10.244.2.77   k8s-node2   <none>           <none>
-deployment1-66b6f8c9b7-f987c              1/1     Running   0          3m21s   10.244.2.76   k8s-node2   <none>           <none>
-deployment1-66b6f8c9b7-n94t9              1/1     Running   0          3m21s   10.244.1.27   k8s-node1   <none>           <none>
-deployment1-66b6f8c9b7-vk2bp              1/1     Running   0          3m21s   10.244.2.75   k8s-node2   <none>           <none>
-deployment1-66b6f8c9b7-z9kfd              1/1     Running   0          3m21s   10.244.2.74   k8s-node2   <none>           <none>
 
-# 标记k8s-node2 NoExecute污点
-[root@k8s-master ~]# kubectl taint node k8s-node2 node-type=production:NoExecute
-node/k8s-node2 tainted
-# 最后所有pod被重新调度到k8s-node1
-[root@k8s-master ~]# kubectl get pod -o wide
-NAME                                      READY   STATUS    RESTARTS   AGE   IP            NODE        NOMINATED NODE   READINESS GATES
-deployment1-66b6f8c9b7-49n8q              1/1     Running   0          67s   10.244.1.28   k8s-node1   <none>           <none>
-deployment1-66b6f8c9b7-9k9sz              1/1     Running   0          67s   10.244.1.30   k8s-node1   <none>           <none>
-deployment1-66b6f8c9b7-h49dc              1/1     Running   0          67s   10.244.1.29   k8s-node1   <none>           <none>
-deployment1-66b6f8c9b7-n94t9              1/1     Running   0          11m   10.244.1.27   k8s-node1   <none>           <none>
-deployment1-66b6f8c9b7-r45qn              1/1     Running   0          67s   10.244.1.31   k8s-node1   <none>           <none>
+# 创建pod
+kubectl apply -f 1.yaml 
+
+# 查看所有pod
+kubectl get pod -o wide
+
+# 标记demo-k8s-node1 NoExecute污点
+kubectl taint node demo-k8s-node1 node-type=production:NoExecute
+
+# 在节点demo-k8s-node1上的pod被重新调度到别的节点
+kubectl get pod -o wide
 
 # 删除污点
-[root@k8s-master ~]# kubectl taint node k8s-node2 node-type=production:NoExecute-
-node/k8s-node2 untainted
+kubectl taint node demo-k8s-node1 node-type=production:NoExecute-
 ```
+
+
+
+#### 创建pod时添加污点容忍度
+
+```shell
+# 标记demo-k8s-node1 NoSchedule污点
+kubectl taint node demo-k8s-node1 node-type=production:NoSchedule
+
+# 创建带容忍度的pod
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: deployment1
+spec:
+ replicas: 9
+ selector:
+  matchLabels:
+   app: kubia
+ template:
+  metadata:
+   labels:
+    app: kubia
+  spec:
+   tolerations:
+   - key: node-type
+     operator: Equal
+     value: production
+     effect: NoSchedule
+   containers:
+    - name: kubia
+      image: busybox
+      imagePullPolicy: IfNotPresent
+      command: ["sh", "-c", "sleep 7200;"]
+
+# 查看pod也会被调度到节点demo-k8s-node1
+kubectl get pod -o wide
+
+# 删除污点
+kubectl taint node demo-k8s-node1 node-type=production:NoSchedule-
+```
+
+
 
 ### 定向调度
 
@@ -7608,7 +7649,7 @@ node/k8s-node2 untainted
 #### 使用nodename指定节点
 
 ```shell
-[root@k8s-master ~]# cat 1.yaml 
+# 用于创建pod
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -7626,26 +7667,21 @@ spec:
    containers:
     - name: nginx
       image: nginx
-   nodeName: k8s-node1 # 使用节点名称指定pod运行节点
+   nodeName: demo-k8s-node1 # 使用节点名称指定pod运行节点
   
-# 所有节点被调度到k8s-node1上
-[root@k8s-master ~]# kubectl get pod -o wide
-NAME                                      READY   STATUS    RESTARTS   AGE   IP            NODE        NOMINATED NODE   READINESS GATES
-deployment-665d7b748d-5t5cf               1/1     Running   0          59s   10.244.1.46   k8s-node1   <none>           <none>
-deployment-665d7b748d-75lww               1/1     Running   0          59s   10.244.1.47   k8s-node1   <none>           <none>
-deployment-665d7b748d-k84vr               1/1     Running   0          59s   10.244.1.48   k8s-node1   <none>           <none>
-deployment-665d7b748d-x59dm               1/1     Running   0          59s   10.244.1.44   k8s-node1   <none>           <none>
-deployment-665d7b748d-xn2n6               1/1     Running   0          59s   10.244.1.45   k8s-node1   <none>           <none>
+# 所有节点被调度到demo-k8s-node1上
+kubectl get pod -o wide
 ```
+
+
 
 #### 使用nodeselector指定节点标签
 
 ```shell
 # 节点打标签
-[root@k8s-master ~]# kubectl label node k8s-node1 node-label=node1
-node/k8s-node1 labeled
+kubectl label node demo-k8s-node1 node-label=node1
 
-[root@k8s-master ~]# cat 1.yaml 
+# 用于创建pod 
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -7666,18 +7702,11 @@ spec:
    nodeSelector:
     node-label: node1 # 指定节点标签
 
-# 所有pod被schedule到k8s-node1
-[root@k8s-master ~]# kubectl get pod -o wide
-NAME                                      READY   STATUS    RESTARTS   AGE   IP            NODE        NOMINATED NODE   READINESS GATES
-deployment-9d596955c-7gd4s                1/1     Running   0          51s   10.244.1.51   k8s-node1   <none>           <none>
-deployment-9d596955c-bdnsq                1/1     Running   0          51s   10.244.1.50   k8s-node1   <none>           <none>
-deployment-9d596955c-qbchg                1/1     Running   0          51s   10.244.1.53   k8s-node1   <none>           <none>
-deployment-9d596955c-wxj79                1/1     Running   0          51s   10.244.1.52   k8s-node1   <none>           <none>
-deployment-9d596955c-xdh7p                1/1     Running   0          51s   10.244.1.49   k8s-node1   <none>           <none>
+# 所有pod被schedule到demo-k8s-node1
+kubectl get pod -o wide
 
 # 删除节点标签
-[root@k8s-master ~]# kubectl label node k8s-node1 node-label-
-node/k8s-node1 labeled
+kubectl label node demo-k8s-node1 node-label-
 ```
 
 
@@ -7693,8 +7722,7 @@ node/k8s-node1 labeled
 情景1（无法匹配节点，pod无法调度，一直处于pending状态）
 
 ```shell
-# 因为没有节点labels包含nodeenv in xxx,yyy，所以deployment无法调度一直pending状态
-[root@k8s-master ~]# cat 1.yaml 
+# 因为没有节点labels包含nodeenv in xxx,yyy，所以deployment无法调度一直pending状态 
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -7712,6 +7740,7 @@ spec:
    containers:
     - name: nginx
       image: nginx
+      imagePullPolicy: IfNotPresent
    affinity:
     nodeAffinity:
      # 硬限制
@@ -7724,24 +7753,18 @@ spec:
             values:
              - xxx
              - yyy
+             
 # 不匹配不调度，一直处于pending状态
-[root@k8s-master ~]# kubectl get pod
-NAME                                      READY   STATUS    RESTARTS   AGE
-deployment-6f8cc7cffc-5jbfk               0/1     Pending   0          3m46s
-deployment-6f8cc7cffc-8znwf               0/1     Pending   0          3m46s
-deployment-6f8cc7cffc-mpv6b               0/1     Pending   0          3m46s
-deployment-6f8cc7cffc-njv72               0/1     Pending   0          3m46s
-deployment-6f8cc7cffc-qhctx               0/1     Pending   0          3m46s
+kubectl get pod -o wide
 ```
 
-情景2（给k8s-node2节点打上标签，成功匹配，所有pod被调度到此节点）
+情景2（给demo-k8s-node2节点打上标签，成功匹配，所有pod被调度到此节点）
 
 ```shell
-# 给节点k8s-node2打上标签成功使用nodeAffinity调度pod
-[root@k8s-master ~]# kubectl label node k8s-node2 nodeenv=prod
-node/k8s-node2 labeled
+# 给节点demo-k8s-node2打上标签成功使用nodeAffinity调度pod
+kubectl label node demo-k8s-node2 nodeenv=prod
 
-[root@k8s-master ~]# cat 1.yaml 
+# 用于创建pod
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -7759,6 +7782,7 @@ spec:
    containers:
     - name: nginx
       image: nginx
+      imagePullPolicy: IfNotPresent
    affinity:
     nodeAffinity:
      requiredDuringSchedulingIgnoredDuringExecution:
@@ -7769,20 +7793,18 @@ spec:
             values:
              - prod
              - yyy
-# 所有pod被成功调度到k8s-node2
-[root@k8s-master ~]# kubectl get pod -o wide
-NAME                                      READY   STATUS    RESTARTS   AGE     IP            NODE        NOMINATED NODE   READINESS GATES
-deployment-86f7955fdb-fkg7n               1/1     Running   0          2m19s   10.244.2.93   k8s-node2   <none>           <none>
-deployment-86f7955fdb-ht9jb               1/1     Running   0          2m19s   10.244.2.94   k8s-node2   <none>           <none>
-deployment-86f7955fdb-k9jb9               1/1     Running   0          2m19s   10.244.2.95   k8s-node2   <none>           <none>
-deployment-86f7955fdb-snpqn               1/1     Running   0          2m19s   10.244.2.91   k8s-node2   <none>           <none>
-deployment-86f7955fdb-x8k8f               1/1     Running   0          2m19s   10.244.2.92   k8s-node2   <none>           <none>
+             
+# 所有pod被成功调度到demo-k8s-node2
+kubectl get pod -o wide
+
+# 删除节点标签
+kubectl label node demo-k8s-node2 nodeenv-
 ```
 
 情景3（软限制，即使不匹配节点，最终所有pod被随机调度到各个节点）
 
 ```shell
-[root@k8s-master ~]# cat 1.yaml 
+# 用于创建pod
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -7800,6 +7822,7 @@ spec:
    containers:
     - name: nginx
       image: nginx
+      imagePullPolicy: IfNotPresent
    affinity:
     nodeAffinity:
      preferredDuringSchedulingIgnoredDuringExecution:
@@ -7811,26 +7834,20 @@ spec:
             values:
              - xxx
              - yyy
-[root@k8s-master ~]# kubectl apply -f 1.yaml 
-deployment.apps/deployment created
+# 创建pod
+kubectl apply -f 1.yaml
+
 # 即使不匹配，pod也会被调度到各个节点
-[root@k8s-master ~]# kubectl get pod -o wide
-NAME                                      READY   STATUS    RESTARTS   AGE     IP            NODE        NOMINATED NODE   READINESS GATES
-deployment-68d7784854-2wflh               1/1     Running   0          2m55s   10.244.2.96   k8s-node2   <none>           <none>
-deployment-68d7784854-44gfz               1/1     Running   0          2m55s   10.244.1.54   k8s-node1   <none>           <none>
-deployment-68d7784854-62cz7               1/1     Running   0          2m55s   10.244.2.97   k8s-node2   <none>           <none>
-deployment-68d7784854-qgbbf               1/1     Running   0          2m55s   10.244.2.98   k8s-node2   <none>           <none>
-deployment-68d7784854-xlb5l               1/1     Running   0          2m55s   10.244.1.55   k8s-node1   <none>           <none>
+kubectl get pod -o wide
 ```
 
 情景4（软限制，有匹配的节点标签，所有pod被调度到此节点）
 
 ```shell
-[root@k8s-master ~]# kubectl label node k8s-node2 nodeenv=prod
-node/k8s-node2 labeled
-[root@k8s-master ~]# kubectl apply -f 1.yaml 
-deployment.apps/deployment created
-[root@k8s-master ~]# cat 1.yaml 
+# 节点打标签
+kubectl label node demo-k8s-node2 nodeenv=prod
+
+# 用于创建pod
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -7848,6 +7865,7 @@ spec:
    containers:
     - name: nginx
       image: nginx
+      imagePullPolicy: IfNotPresent
    affinity:
     nodeAffinity:
      preferredDuringSchedulingIgnoredDuringExecution:
@@ -7859,23 +7877,23 @@ spec:
             values:
              - prod
              - yyy
+             
 # 节点有标签对应，所有pod被调度到相应的节点
-[root@k8s-master ~]# kubectl get pod -o wide
-NAME                                      READY   STATUS    RESTARTS   AGE    IP             NODE        NOMINATED NODE   READINESS GATES
-deployment-5ff5dc5845-82hgx               1/1     Running   0          118s   10.244.2.103   k8s-node2   <none>           <none>
-deployment-5ff5dc5845-g5vp2               1/1     Running   0          118s   10.244.2.99    k8s-node2   <none>           <none>
-deployment-5ff5dc5845-p9zp4               1/1     Running   0          118s   10.244.2.100   k8s-node2   <none>           <none>
-deployment-5ff5dc5845-vn2vr               1/1     Running   0          118s   10.244.2.101   k8s-node2   <none>           <none>
-deployment-5ff5dc5845-wjg9b               1/1     Running   0          118s   10.244.2.102   k8s-node2   <none>           <none>
+kubectl get pod -o wide
+
+# 删除标签
+kubectl label node demo-k8s-node2 nodeenv-
 ```
+
+
 
 #### pod亲缘性(pod affinity)
 
 **硬限制不能匹配pod一直pending状态情景**
 
 ```shell
-# 创建参考点pod，指定参考点pod被调度到k8s-node2上
-[root@k8s-master ~]# cat 1.yaml 
+# 创建参考点pod，指定参考点pod被调度到demo-k8s-node2上
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -7893,8 +7911,10 @@ spec:
    containers:
     - name: nginx
       image: nginx
-   nodeName: k8s-node2
-[root@k8s-master ~]# cat 2.yaml 
+      imagePullPolicy: IfNotPresent
+   nodeName: demo-k8s-node2
+
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -7912,6 +7932,7 @@ spec:
    containers:
     - name: busybox
       image: busybox
+      imagePullPolicy: IfNotPresent
    affinity:
     podAffinity:
      requiredDuringSchedulingIgnoredDuringExecution:
@@ -7925,22 +7946,14 @@ spec:
         topologyKey: kubernetes.io/hostname
 
 # 创建不存在的pod label导致无法匹配pod一直处于pending状态
-[root@k8s-master ~]# kubectl get pod
-NAME                                      READY   STATUS    RESTARTS   AGE
-deployment1-5df7f77687-dfvvh              1/1     Running   0          7h48m
-deployment1-5df7f77687-k5hrq              1/1     Running   0          7h48m
-deployment2-54cb7fd867-7vxm2              0/1     Pending   0          7h46m
-deployment2-54cb7fd867-8jnsl              0/1     Pending   0          7h46m
-deployment2-54cb7fd867-9h5bv              0/1     Pending   0          7h46m
-deployment2-54cb7fd867-n6zl4              0/1     Pending   0          7h46m
-deployment2-54cb7fd867-qfpxm              0/1     Pending   0          7h46m
+kubectl get pod -o wide
 ```
 
 **硬限制能够匹配pod并且成功调度**
 
 ```shell
 # 创建参考pod
-[root@k8s-master ~]# cat 1.yaml 
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -7958,8 +7971,10 @@ spec:
    containers:
     - name: nginx
       image: nginx
-   nodeName: k8s-node2
-[root@k8s-master ~]# cat 2.yaml 
+      imagePullPolicy: IfNotPresent
+   nodeName: demo-k8s-node2
+
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -7977,6 +7992,7 @@ spec:
    containers:
     - name: busybox
       image: busybox
+      imagePullPolicy: IfNotPresent
       command: ["sh", "-c", "sleep 7200;"]
    affinity:
     podAffinity:
@@ -7989,21 +8005,15 @@ spec:
              - dev
              - yyy
         topologyKey: kubernetes.io/hostname
-[root@k8s-master ~]# kubectl get pod -o wide
-NAME                                      READY   STATUS    RESTARTS   AGE     IP             NODE        NOMINATED NODE   READINESS GATES
-deployment1-5df7f77687-dfvvh              1/1     Running   0          7h59m   10.244.2.121   k8s-node2   <none>           <none>
-deployment1-5df7f77687-k5hrq              1/1     Running   0          7h59m   10.244.2.120   k8s-node2   <none>           <none>
-deployment2-69d58d6b5b-9wtfl              1/1     Running   0          6m48s   10.244.2.129   k8s-node2   <none>           <none>
-deployment2-69d58d6b5b-ld6dp              1/1     Running   0          6m48s   10.244.2.132   k8s-node2   <none>           <none>
-deployment2-69d58d6b5b-r2tdt              1/1     Running   0          6m48s   10.244.2.131   k8s-node2   <none>           <none>
-deployment2-69d58d6b5b-txwv8              1/1     Running   0          6m48s   10.244.2.130   k8s-node2   <none>           <none>
-deployment2-69d58d6b5b-zbswt              1/1     Running   0          6m48s   10.244.2.128   k8s-node2   <none>           <none>
+        
+# pod被成功调度到demo-k8s-node2上
+kubectl get pod -o wide
 ```
 
 **pod非亲缘性(pod anti affinity)**
 
 ```shell
-[root@k8s-master ~]# cat 1.yaml 
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -8021,8 +8031,10 @@ spec:
    containers:
     - name: nginx
       image: nginx
-   nodeName: k8s-node2
-[root@k8s-master ~]# cat 2.yaml 
+      imagePullPolicy: IfNotPresent
+   nodeName: demo-k8s-node2
+
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -8040,6 +8052,7 @@ spec:
    containers:
     - name: busybox
       image: busybox
+      imagePullPolicy: IfNotPresent
       command: ["sh", "-c", "sleep 7200;"]
    affinity:
     podAntiAffinity:
@@ -8052,16 +8065,46 @@ spec:
              - dev
              - yyy
         topologyKey: kubernetes.io/hostname
-# pod被调度到k8s-node1上
-[root@k8s-master ~]# kubectl get pod -o wide
-NAME                                      READY   STATUS    RESTARTS   AGE     IP             NODE        NOMINATED NODE   READINESS GATES
-deployment1-5df7f77687-5xz8s              1/1     Running   0          2m9s    10.244.2.134   k8s-node2   <none>           <none>
-deployment1-5df7f77687-66zd9              1/1     Running   0          2m9s    10.244.2.133   k8s-node2   <none>           <none>
-deployment2-6f7bccdffb-fpfdh              1/1     Running   0          91s     10.244.1.62    k8s-node1   <none>           <none>
-deployment2-6f7bccdffb-mlwgz              1/1     Running   0          91s     10.244.1.60    k8s-node1   <none>           <none>
-deployment2-6f7bccdffb-rk5kk              1/1     Running   0          91s     10.244.1.61    k8s-node1   <none>           <none>
-deployment2-6f7bccdffb-w6v4n              1/1     Running   0          91s     10.244.1.59    k8s-node1   <none>           <none>
-deployment2-6f7bccdffb-whwr5              1/1     Running   0          91s     10.244.1.58    k8s-node1   <none>           <none>
+
+# deployment2没有pod被调度到demo-k8s-node2节点上
+kubectl get pod -o wide
+```
+
+
+
+### 平均地调度pod到所有节点中
+
+> https://cloudhero.io/kubernetes-evenly-distribution-of-pods-across-cluster-nodes/
+
+```shell
+# 8个pod会被平均地分配到4个节点中
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: test
+spec:
+ replicas: 8
+ selector:
+  matchLabels:
+   app: test
+ template:
+  metadata:
+   labels:
+    app: test
+  spec:
+   # 平均地调度pod到所有节点中
+   topologySpreadConstraints:
+   - maxSkew: 1
+     topologyKey: kubernetes.io/hostname
+     whenUnsatisfiable: ScheduleAnyway
+     labelSelector:
+      matchLabels:
+       app: test
+   containers:
+   - name: test
+     image: busybox
+     command: ["sleep", "3600"]
+     imagePullPolicy: IfNotPresent
 ```
 
 
