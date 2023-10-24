@@ -1,6 +1,6 @@
-## markdown插件安装
+## typora/markdown插件安装
 
-> 安装markdown editor(A full-featured WYSIWYG editor for markdown.)
+> 在插件管理器搜索typora，选择安装下载量排第一的插件，这样就能够在vscode像typora那样编辑md文件
 
 
 
