@@ -26,3 +26,24 @@
 ## vscode设置
 
 > 1、设置zoom为1，Code > Preferences > Settings > Zoom
+
+
+
+## vscode远程开发
+
+### 使用remote-ssh插件远程开发
+
+> NOTE: 因为ssh命令不支持连接时提供密码，所以remote-ssh插件不支持保存SSH密码
+>
+> 远程开发的terminal也是远程的，远程打开git仓库就可以通过vscode git管理仓库了。
+
+```shell
+# 通过插件面板安装remote-ssh插件
+
+# 在remote-ssh导航标签中添加主机
+# 在弹出提示中输入主机信息: ssh root@192.168.1.200
+
+# 在remote-ssh功能中选择刚刚添加的主机并选择在新窗口打开，输入密码后就会打开一个新的vscode编辑窗口
+# 新窗口中提示输入SSH密码并输入密码后，选择克隆或者打开远程主机的目录就可以进行远程开发了。
+```
+
