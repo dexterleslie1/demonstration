@@ -41,15 +41,7 @@ export PATH
 go version
 ```
 
-
-
-
-
 ## golang语法基础
-
-
-
-
 
 ### 静态方法
 
@@ -57,17 +49,9 @@ go version
 >
 > 参考 demo-static-method
 
-
-
 ### 派生和继承
 
 > 参考 demo-inheritance
-
-
-
-
-
-
 
 ## 编译发布golang程序
 
@@ -90,16 +74,11 @@ GOOS=darwin GOARCH=386 go build -o bin/test-darwin-i386 test.go
 GOOS=linux GOARCH=amd64 go build -o test-linux-x86_64 test.go
 ```
 
-
 ## 使用go run从源代码运行golang程序
 
 ```shell
 go run xxx.go
 ```
-
-
-
-
 
 ## 使用go mod管理项目
 
@@ -120,10 +99,6 @@ go mod init demo-cobra
 go mod tidy
 ```
 
-
-
-
-
 ## 包(package)
 
 ### 包作用
@@ -131,8 +106,6 @@ go mod tidy
 > go语言如何调用不同文件，package的作用是什么？[链接](https://www.qycn.com/xzx/article/8412.html)
 >
 > go语言package是golang基本的管理单元，在同一个package中可以有多个不同文件，只要每个文件的头部都有“package xxx”的相同name，就可以在主方法中使用“xxx.Method()”调用不同文件中的方法。
->
-> 
 >
 > go 依赖管理的演进经历了以下 3 个阶段：GOPATH(存在缺陷被抛弃)、go vendor(存在缺陷被抛弃)、go module(现在使用这个方法模块化) [链接](https://blog.csdn.net/Sihang_Xie/article/details/124851399)
 
@@ -163,4 +136,15 @@ go mod tidy
 
 > =是变量的单纯赋值，:=是变量的定义和赋值
 >
-> [链接1](https://baijiahao.baidu.com/s?id=1709571399429039540&wfr=spider&for=pc)
+> https://baijiahao.baidu.com/s?id=1709571399429039540&wfr=spider&for=pc
+
+
+
+
+## 第三方库使用
+
+### progressbar使用
+
+> 参考 demo-lib-progressbar
+>
+> https://github.com/schollz/progressbar
