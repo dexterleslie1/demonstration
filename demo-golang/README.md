@@ -138,9 +138,6 @@ go mod tidy
 >
 > https://baijiahao.baidu.com/s?id=1709571399429039540&wfr=spider&for=pc
 
-
-
-
 ## 第三方库使用
 
 ### progressbar使用
@@ -148,3 +145,11 @@ go mod tidy
 > 参考 demo-lib-progressbar
 >
 > https://github.com/schollz/progressbar
+
+
+
+### termenv使用
+
+> 参考 demo-lib-termenv
+>
+> https://github.com/muesli/termenv
