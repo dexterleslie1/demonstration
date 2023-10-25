@@ -35,14 +35,14 @@ func TestColor(t *testing.T) {
 
 	// Supports hex values
 	// Will automatically degrade colors on terminals not supporting RGB
-	s.Foreground(output.Color("#abcdef"))
+	s = s.Foreground(output.Color("#abcdef"))
 	// but also supports ANSI colors (0-255)
-	s.Background(output.Color("69"))
+	s = s.Background(output.Color("69"))
 	// ...or the color.Color interface
-	s.Foreground(output.FromColor(color.RGBA{255, 128, 0, 255}))
+	s = s.Foreground(output.FromColor(color.RGBA{255, 128, 0, 255}))
 
 	// Combine fore- & background colors
-	s.Foreground(output.Color("#ffffff")).Background(output.Color("#0000ff"))
+	s = s.Foreground(output.Color("#ffffff")).Background(output.Color("#0000ff"))
 
 	// Supports the fmt.Stringer interface
 	fmt.Println(s)
@@ -54,20 +54,20 @@ func TestStyles(t *testing.T) {
 	s := output.String("foobar")
 
 	// Text styles
-	s.Bold()
-	s.Faint()
-	s.Italic()
-	s.CrossOut()
-	s.Underline()
-	s.Overline()
+	s = s.Bold()
+	s = s.Faint()
+	s = s.Italic()
+	s = s.CrossOut()
+	s = s.Underline()
+	s = s.Overline()
 
 	// Reverse swaps current fore- & background colors
-	s.Reverse()
+	s = s.Reverse()
 
 	// Blinking text
-	s.Blink()
+	s = s.Blink()
 
 	// Combine multiple options
-	s.Bold().Underline()
+	s = s.Bold().Underline()
 	fmt.Println(s)
 }
