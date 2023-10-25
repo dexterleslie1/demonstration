@@ -2572,9 +2572,12 @@ kubectl delete -f 2.yaml
 
 > headless服务是通过service的dns解析访问相应的pod ip地址，例如下面例子：在busybox pod中通过headless-service无头服务名称就能够访问两个nginx pod endpoints。
 > 尽管headless服务看起来可能与常规的服务不同，但在客户的视角上他们并无不同。即使使用headlesss服务，客户也可以通过连接的服务的DNS名称来连接到pod上，就像常规服务一样。但是对于headless服务，由于DNS返回了pod的ip，客户端直接连接到该pod，而不是通过服务代理。
+>
+> jmeter cluster场景master启动测试时，能够借助headless服务获取所有slave ip地址。
 
 ```yaml
 # 用于创建无头服务，1.yaml内容如下:
+---
 apiVersion: v1
 kind: Service
 metadata:
@@ -2591,7 +2594,8 @@ spec:
  - port: 81 # service端口
    targetPort: 80 # pod端口
 
-# 用于创建另个deployment，2.yaml内容如下:
+---
+# 两个deploymnet用于演示无头服务
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -2610,7 +2614,6 @@ spec:
      image: nginx:1.17.1
      ports:
      - containerPort: 80
-
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -2631,7 +2634,8 @@ spec:
      ports:
      - containerPort: 80
 
-# 用于创建，3.yaml内容如下:
+---
+# 用于进入shell调试无头服务
 apiVersion: apps/v1
 kind: Deployment
 metadata:
