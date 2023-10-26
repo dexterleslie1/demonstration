@@ -27,3 +27,18 @@
 # 停止分布式测试
 ./stoptest.sh
 ```
+
+
+
+
+
+
+
+
+
+## 使用docker运行jmeter+influxdb+grafana
+
+> 参考 demo-docker-with-influxdb-grafana
+>
+> https://zhuanlan.zhihu.com/p/621684630?utm_id=0
+
