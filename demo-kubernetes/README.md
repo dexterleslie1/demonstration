@@ -7034,6 +7034,12 @@ kubectl exec -it test sh
 > https://github.com/kubernetes-sigs/metrics-server
 >
 > kubernetes +1.19 安装 metrics-server-v0.6.x
+>
+> 
+>
+> metrics-server 是用来取代heapster，负责从kubelet中采集数据， 并通过Metrics API在Kubernetes Apiserver中暴露它们。
+> metrics-server 采集node 和pod 的cpu/mem，数据存在容器本地，不做持久化。这些数据的使用场景有 kubectl top 和scheduler 调度、hpa 弹性伸缩，以及原生的dashboard 监控数据展示。
+> https://misa.gitbook.io/k8s-ocp-yaml/kubernetes-docs/2020-04-14-metrics-server
 
 ```shell
 # 安装metrics-server-v0.6.2
@@ -7041,7 +7047,7 @@ kubectl exec -it test sh
 
 # metrics-server args添加 - --kubelet-insecure-tls 表示抓取指标数据时不使用https通讯
 # metrics-server image修改为 registry.cn-hangzhou.aliyuncs.com/google_containers/metrics-server:v0.6.2
-[root@k8s-master ~]# cat components.yaml
+# components.yaml内容如下:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -7240,30 +7246,11 @@ spec:
   version: v1beta1
   versionPriority: 100
   
-[root@k8s-master ~]# kubectl apply -f components.yaml 
-serviceaccount/metrics-server created
-clusterrole.rbac.authorization.k8s.io/system:aggregated-metrics-reader created
-clusterrole.rbac.authorization.k8s.io/system:metrics-server created
-rolebinding.rbac.authorization.k8s.io/metrics-server-auth-reader created
-clusterrolebinding.rbac.authorization.k8s.io/metrics-server:system:auth-delegator created
-clusterrolebinding.rbac.authorization.k8s.io/system:metrics-server created
-service/metrics-server created
-deployment.apps/metrics-server created
-apiservice.apiregistration.k8s.io/v1beta1.metrics.k8s.io created
+# 创建metrics-server
+kubectl apply -f components.yaml
 
 # 查看kube-system metrics-server是Running状态
-[root@k8s-master ~]# kubectl get pod --namespace kube-system -w
-NAME                                 READY   STATUS    RESTARTS   AGE
-coredns-7f89b7bc75-9jvzv             1/1     Running   1          35d
-coredns-7f89b7bc75-nwpk2             1/1     Running   1          35d
-etcd-k8s-master                      1/1     Running   1          35d
-kube-apiserver-k8s-master            1/1     Running   1          35d
-kube-controller-manager-k8s-master   1/1     Running   1          35d
-kube-proxy-2t2ck                     1/1     Running   2          35d
-kube-proxy-6vmvt                     1/1     Running   1          35d
-kube-proxy-qb8kg                     1/1     Running   2          35d
-kube-scheduler-k8s-master            1/1     Running   1          35d
-metrics-server-6cc4fb8489-nk5p2      1/1     Running   0          32s
+kubectl get pod --namespace kube-system -o wide
 ```
 
 
@@ -7271,7 +7258,7 @@ metrics-server-6cc4fb8489-nk5p2      1/1     Running   0          32s
 ### 基于CPU使用率的HPA自动伸缩
 
 ```shell
-[root@k8s-master ~]# cat 1.yaml 
+# 1.yaml内容如下:
 apiVersion: v1
 kind: Service
 metadata:
@@ -7322,174 +7309,36 @@ spec:
   kind: Deployment
   name: deployment1
 
-[root@k8s-master ~]# kubectl apply -f 1.yaml 
-deployment.apps/deployment1 created
-horizontalpodautoscaler.autoscaling/kubia created
+# 创建pod
+kubectl apply -f 1.yaml 
+
 # 刚刚创建HPA时，有3个pod在运行
-[root@k8s-master ~]# kubectl get pod
-NAME                                      READY   STATUS    RESTARTS   AGE
-deployment1-65c8fdb647-4xl7b              1/1     Running   0          21s
-deployment1-65c8fdb647-9npw6              1/1     Running   0          21s
-deployment1-65c8fdb647-klsft              1/1     Running   0          21s
+kubectl get pod -o wide
+
 # 查看HPA状态
-[root@k8s-master ~]# kubectl get hpa
-NAME    REFERENCE                TARGETS   MINPODS   MAXPODS   REPLICAS   AGE
-kubia   Deployment/deployment1   0%/30%    1         5         3          118s
+kubectl get hpa
 
 # 5分钟后查看HPA，自动把deployment1 replicas修改为1
-[root@k8s-master ~]# kubectl describe hpa kubia
-Name:                                                  kubia
-Namespace:                                             default
-Labels:                                                <none>
-Annotations:                                           <none>
-CreationTimestamp:                                     Tue, 10 Jan 2023 12:59:52 +0800
-Reference:                                             Deployment/deployment1
-Metrics:                                               ( current / target )
-  resource cpu on pods  (as a percentage of request):  0% (0) / 30%
-Min replicas:                                          1
-Max replicas:                                          5
-Deployment pods:                                       3 current / 1 desired
-Conditions:
-  Type            Status  Reason              Message
-  ----            ------  ------              -------
-  AbleToScale     True    SucceededRescale    the HPA controller was able to update the target scale to 1
-  ScalingActive   True    ValidMetricFound    the HPA was able to successfully calculate a replica count from cpu resource utilization (percentage of request)
-  ScalingLimited  False   DesiredWithinRange  the desired count is within the acceptable range
-Events:
-  Type     Reason                        Age    From                       Message
-  ----     ------                        ----   ----                       -------
-  Warning  FailedGetResourceMetric       5m30s  horizontal-pod-autoscaler  failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
-  Warning  FailedComputeMetricsReplicas  5m30s  horizontal-pod-autoscaler  invalid metrics (1 invalid out of 1), first error is: failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
-  Normal   SuccessfulRescale             9s     horizontal-pod-autoscaler  New size: 1; reason: All metrics below target
+kubectl describe hpa kubia
+
 # 最后剩余1个pod在运行
-[root@k8s-master ~]# kubectl get pod
-NAME                                      READY   STATUS    RESTARTS   AGE
-deployment1-65c8fdb647-9npw6              1/1     Running   0          7m8s
+kubectl get pod -o wide
 
 # 模拟产生压力，pod自动扩容
-[root@k8s-master ~]# kubectl run -it --rm --restart=Never loadgenerator --image=alpine/curl -- sh -c "while true; do curl -s myservice1 > /dev/null; done;"
-If you don't see a command prompt, try pressing enter.
-^Cpod "loadgenerator" deleted
-pod default/loadgenerator terminated (Error)
+kubectl run -it --rm --restart=Never loadgenerator --image=alpine/curl -- sh -c "while true; do curl -s myservice1 > /dev/null; done;"
+
 # 稍过几分钟查看发现自动创建多3个pod响应压力
-[root@k8s-master ~]# kubectl get hpa
-NAME    REFERENCE                TARGETS   MINPODS   MAXPODS   REPLICAS   AGE
-kubia   Deployment/deployment1   92%/30%   1         5         4          28m
-[root@k8s-master ~]# kubectl get pod
-NAME                                      READY   STATUS    RESTARTS   AGE
-deployment1-65c8fdb647-4xwn2              1/1     Running   0          16s
-deployment1-65c8fdb647-lz7pz              1/1     Running   0          27m
-deployment1-65c8fdb647-q6jvq              1/1     Running   0          16s
-deployment1-65c8fdb647-xfv6w              1/1     Running   0          16s
-loadgenerator                             1/1     Running   0          75s
+kubectl get hpa
+kubectl get pod -o wide
 ```
+
+
+
+
 
 ### 基于QPS的HPA自动伸缩
 
 > todo 没有做实验
-
-### 手动标记节点为不可调度、排空节点
-
-```shell
-[root@k8s-master ~]# cat 1.yaml 
-apiVersion: apps/v1
-kind: Deployment
-metadata:
- name: deployment1
-spec:
- replicas: 5
- selector:
-  matchLabels:
-   app: kubia
- template:
-  metadata:
-   labels:
-    app: kubia
-  spec:
-   containers:
-    - name: kubia
-      image: busybox
-      command: ["sh", "-c", "sleep 7200;"]
-[root@k8s-master ~]# cat 2.yaml 
-apiVersion: apps/v1
-kind: Deployment
-metadata:
- name: deployment2
-spec:
- replicas: 5
- selector:
-  matchLabels:
-   app: kubia
- template:
-  metadata:
-   labels:
-    app: kubia
-  spec:
-   containers:
-    - name: kubia
-      image: busybox
-      command: ["sh", "-c", "sleep 7200;"]
-      
-[root@k8s-master ~]# kubectl apply -f 1.yaml 
-deployment.apps/deployment1 created
-# 有些pod被调度到k8s-node2
-[root@k8s-master ~]# kubectl get pod -o wide
-NAME                                      READY   STATUS    RESTARTS   AGE   IP            NODE        NOMINATED NODE   READINESS GATES
-deployment1-66b6f8c9b7-75rmm              1/1     Running   0          48s   10.244.2.61   k8s-node2   <none>           <none>
-deployment1-66b6f8c9b7-8gdgg              1/1     Running   0          48s   10.244.1.8    k8s-node1   <none>           <none>
-deployment1-66b6f8c9b7-bgbkp              1/1     Running   0          48s   10.244.2.62   k8s-node2   <none>           <none>
-deployment1-66b6f8c9b7-pvz64              1/1     Running   0          48s   10.244.2.59   k8s-node2   <none>           <none>
-deployment1-66b6f8c9b7-ww55m              1/1     Running   0          48s   10.244.2.60   k8s-node2   <none>           <none>
-# 标记节点为不可调度（但对其上的pod不做任何事情）
-[root@k8s-master ~]# kubectl cordon k8s-node2
-node/k8s-node2 cordoned
-# 创建deployment2
-[root@k8s-master ~]# kubectl apply -f 2.yaml 
-deployment.apps/deployment2 created
-# 可以看到后来创建的deployment2的pod不会被调度到k8s-node2中
-[root@k8s-master ~]# kubectl get pod -o wide
-NAME                                      READY   STATUS    RESTARTS   AGE   IP            NODE        NOMINATED NODE   READINESS GATES
-deployment1-66b6f8c9b7-75rmm              1/1     Running   0          22m   10.244.2.61   k8s-node2   <none>           <none>
-deployment1-66b6f8c9b7-8gdgg              1/1     Running   0          22m   10.244.1.8    k8s-node1   <none>           <none>
-deployment1-66b6f8c9b7-bgbkp              1/1     Running   0          22m   10.244.2.62   k8s-node2   <none>           <none>
-deployment1-66b6f8c9b7-pvz64              1/1     Running   0          22m   10.244.2.59   k8s-node2   <none>           <none>
-deployment1-66b6f8c9b7-ww55m              1/1     Running   0          22m   10.244.2.60   k8s-node2   <none>           <none>
-deployment2-66b6f8c9b7-bvspv              1/1     Running   0          19m   10.244.1.11   k8s-node1   <none>           <none>
-deployment2-66b6f8c9b7-jnfwv              1/1     Running   0          19m   10.244.1.12   k8s-node1   <none>           <none>
-deployment2-66b6f8c9b7-lsnqk              1/1     Running   0          19m   10.244.1.13   k8s-node1   <none>           <none>
-deployment2-66b6f8c9b7-p7lpr              1/1     Running   0          19m   10.244.1.10   k8s-node1   <none>           <none>
-deployment2-66b6f8c9b7-wdrx8              1/1     Running   0          19m   10.244.1.9    k8s-node1   <none>           <none>
-# 标记节点为不可以调度，随后疏散其上所有pod
-[root@k8s-master ~]# kubectl drain k8s-node2 --ignore-daemonsets
-node/k8s-node2 already cordoned
-WARNING: ignoring DaemonSet-managed Pods: kube-flannel/kube-flannel-ds-gjpqd, kube-system/kube-proxy-2t2ck
-evicting pod default/deployment1-66b6f8c9b7-ww55m
-evicting pod default/deployment1-66b6f8c9b7-75rmm
-evicting pod default/deployment1-66b6f8c9b7-bgbkp
-evicting pod default/deployment1-66b6f8c9b7-pvz64
-pod/deployment1-66b6f8c9b7-ww55m evicted
-pod/deployment1-66b6f8c9b7-pvz64 evicted
-pod/deployment1-66b6f8c9b7-bgbkp evicted
-pod/deployment1-66b6f8c9b7-75rmm evicted
-node/k8s-node2 evicted
-# 可以看到没有pod运行在k8s-node2上了
-[root@k8s-master ~]# kubectl get pod -o wide
-NAME                                      READY   STATUS    RESTARTS   AGE    IP            NODE        NOMINATED NODE   READINESS GATES
-deployment1-66b6f8c9b7-6flcg              1/1     Running   0          104s   10.244.1.16   k8s-node1   <none>           <none>
-deployment1-66b6f8c9b7-8gdgg              1/1     Running   0          26m    10.244.1.8    k8s-node1   <none>           <none>
-deployment1-66b6f8c9b7-ct6km              1/1     Running   0          104s   10.244.1.17   k8s-node1   <none>           <none>
-deployment1-66b6f8c9b7-pcjlk              1/1     Running   0          104s   10.244.1.14   k8s-node1   <none>           <none>
-deployment1-66b6f8c9b7-tqxt6              1/1     Running   0          104s   10.244.1.15   k8s-node1   <none>           <none>
-deployment2-66b6f8c9b7-bvspv              1/1     Running   0          23m    10.244.1.11   k8s-node1   <none>           <none>
-deployment2-66b6f8c9b7-jnfwv              1/1     Running   0          23m    10.244.1.12   k8s-node1   <none>           <none>
-deployment2-66b6f8c9b7-lsnqk              1/1     Running   0          23m    10.244.1.13   k8s-node1   <none>           <none>
-deployment2-66b6f8c9b7-p7lpr              1/1     Running   0          23m    10.244.1.10   k8s-node1   <none>           <none>
-deployment2-66b6f8c9b7-wdrx8              1/1     Running   0          23m    10.244.1.9    k8s-node1   <none>           <none>
-
-# 取消标记
-[root@k8s-master ~]# kubectl uncordon k8s-node2
-node/k8s-node2 uncordoned
-```
 
 
 
@@ -8315,6 +8164,83 @@ spec:
 # 通过describe命令查看pod终止原因（在Last State列中写明了原因）
 kubectl describe pod test
 ```
+
+
+
+
+
+## kubernetes节点运维
+
+### 手动标记节点为不可调度、排空节点
+
+```shell
+# 1.yaml内容如下:
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: deployment1
+spec:
+ replicas: 5
+ selector:
+  matchLabels:
+   app: kubia
+ template:
+  metadata:
+   labels:
+    app: kubia
+  spec:
+   containers:
+    - name: kubia
+      image: busybox
+      command: ["sh", "-c", "sleep 7200;"]
+      imagePullPolicy: IfNotPresent
+
+# 创建pod
+kubectl apply -f 1.yaml 
+
+# 有些pod被调度到k8s-node2
+kubectl get pod -o wide
+
+# 标记节点为不可调度（但对其上的pod不做任何事情）
+kubectl cordon demo-k8s-node2
+
+# 2.yaml内容如下:
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: deployment2
+spec:
+ replicas: 5
+ selector:
+  matchLabels:
+   app: kubia
+ template:
+  metadata:
+   labels:
+    app: kubia
+  spec:
+   containers:
+    - name: kubia
+      image: busybox
+      command: ["sh", "-c", "sleep 7200;"]
+      imagePullPolicy: IfNotPresent
+# 创建deployment2
+kubectl apply -f 2.yaml 
+
+# 可以看到后来创建的deployment2的pod不会被调度到k8s-node2中
+kubectl get pod -o wide
+
+# 标记节点为不可以调度，随后疏散其上所有pod
+kubectl drain demo-k8s-node2 --ignore-daemonsets
+
+# 可以看到没有pod运行在k8s-node2上了
+kubectl get pod -o wide
+
+# 取消标记
+kubectl uncordon demo-k8s-node2
+```
+
+
 
 
 
