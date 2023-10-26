@@ -709,3 +709,12 @@ free -g
 
 
 
+
+
+## ntp服务
+
+> 开源NTP服务器：cn.pool.ntp.org（当前vsphere使用此服务）
+>
+> 国内NTP服务器
+> https://www.cnblogs.com/jarsing/articles/17503565.html
+
