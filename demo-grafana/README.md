@@ -15,3 +15,11 @@ grafana/grafana:6.6.2
 http://localhost:3000
 ```
 
+
+
+
+
+### grafana自动创建datasource和dashboard
+
+> 参考 demo-grafana-provision-automatically
+> NOTE: demo会自动创建influxdb datasource和jmeter dashboard
