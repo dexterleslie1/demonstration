@@ -7029,6 +7029,8 @@ kubectl exec -it test sh
 
 ## pod与集群节点自动伸缩
 
+> todo 根据自定义指标实现自定义HPA
+
 ###  配置metrics-server
 
 > https://github.com/kubernetes-sigs/metrics-server
