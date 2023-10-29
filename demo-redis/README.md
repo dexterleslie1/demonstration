@@ -513,7 +513,9 @@ aof-user-rdb-preamble yes
 bgwriteaof
 ```
 
-## 
+
+
+
 
 
 
@@ -522,6 +524,9 @@ bgwriteaof
 ## 集群
 
 > https://baijiahao.baidu.com/s?id=1768636453217086050&wfr=spider&for=pc
+>
+> --replica-announce-ip 指定redis节点间所有通信使用此ip地址
+> --replica-announce-port 指定redis节点间所有通信使用此端口
 
 
 
@@ -542,6 +547,8 @@ bgwriteaof
 #### 主从切换
 
 > NOTE: 此模式下只支持人工主从切换
+>
+> 人工主从切换后需要修改spring-data-redis配置指向到新master节点后重启应用。
 >
 > redis 主从切换命令
 > https://blog.csdn.net/qq_36949713/article/details/106812171?app_version=6.1.9&csdn_share_tail=%7B%22type%22%3A%22blog%22%2C%22rType%22%3A%22article%22%2C%22rId%22%3A%22106812171%22%2C%22source%22%3A%22dexterchan%22%7D&utm_source=app
@@ -578,6 +585,8 @@ docker exec -it demo-redis-replication-node3 redis-cli info replication
 
 
 #### 新增slave节点
+
+> 新增节点后redis会自动通知spring-data-redis更新slave读取节点，新节点会参与到读负载均衡中。
 
 ```shell
 # 启动redis replication模式
@@ -622,10 +631,62 @@ docker stop demo-redis-replication-node4
 >
 > - 哨兵节点：哨兵系统由一个或多个哨兵节点组成，哨兵节点是特殊的redis节点，不存储数据。
 > - 数据节点：主节点和从节点都是数据节点。
+>
+> 参考 redis-server/mode-sentinel
+
+
+
+#### 模拟master节点down（删除节点）
+
+> master节点down后大约过了30s，sentinel重新选举一个新的master节点。spring-data-redis会被通知新的master节点和slave读节点不需要重启应用。
+
+```shell
+# 关闭master节点，大约等待30秒左右，sentinel会从slave节点中选举一个节点作为新的master
+docker stop demo-redis-sentinel-repl-node1
+
+# redistemplate/redistemplate-sentinel会被通知新的master节点，不需要重启应用
+
+# 关闭master节点后，查看各个节点的replication信息被sentinel更新了
+docker exec -it demo-redis-sentinel-repl-node2 redis-cli info replication
+docker exec -it demo-redis-sentinel-repl-node3 redis-cli info replication
+docker exec -it demo-redis-sentinel-repl-node4 redis-cli info replication
+# 查看sentinel master节点sentinel信息
+docker exec -it demo-redis-sentinel-node1 redis-cli -p 26379 info sentinel
+```
+
+
+
+
+
+#### 模拟slave节点down（删除节点）
+
+> slave节点down后，spring-data-redis会被通知删除slave读节点不需要重启应用。
+
+```shell
+# 关闭 demo-redis-sentinel-repl-node3 slave节点
+docker stop demo-redis-sentinel-repl-node3
+```
+
+
+
+
+
+#### 新增slave节点
+
+> slave节点新增后，spring-data-redis会被通知新增slave读节点不需要重启应用。
+
+```shell
+# 新增slave节点
+docker-compose -f docker-compose-add-slave-node.yml up -d
+```
+
+
+
+
 
 ### cluster模式
 
-> 使用docker运行redis集群参考 demo-redis/redis-server/mode-cluster
+> 参考 redis-server/mode-cluster
 >
 > redis集群原理详解 https://blog.csdn.net/a745233700/article/details/112691126
 >
