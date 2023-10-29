@@ -9,6 +9,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -20,8 +21,8 @@ import java.util.concurrent.TimeUnit;
 @SpringBootTest(classes = {Application.class})
 public class Tests {
 
-    @Autowired
-    StringRedisTemplate redisTemplate = null;
+    @Resource
+    RedisTemplate<String, String> redisTemplate = null;
 
     private final static Random RANDOM = new Random();
     private final static List<String> Keys = new ArrayList<>();

@@ -513,13 +513,119 @@ aof-user-rdb-preamble yes
 bgwriteaof
 ```
 
-## 主从复制
+## 
 
-> 使用redis集群代替主从复制。所以不研究
+
+
+
 
 ## 集群
 
-> 使用docker运行redis集群参考 demo-redis/redis-server/cluster
+> https://baijiahao.baidu.com/s?id=1768636453217086050&wfr=spider&for=pc
+
+
+
+
+
+### 主从复制模式
+
+> 使用场景：读多写少的情况
+>
+> 主从复制，是指将一台 Redis 服务器的数据，复制到其他的 Redis 服务器。前者称为主节点(Master)，后者称为从节点(Slave)；数据的复制是单向的，只能由主节点到从节点。
+> 默认情况下，每台 Redis 服务器都是主节点；且一个主节点可以有多个从节点 (或没有从节点)，但一个从节点只能有一个主节点。
+> 数据冗余：主从复制实现了数据的热备份，是持久化之外的一种数据冗余方式。
+> 故障恢复：当主节点出现问题时，可以由从节点提供服务，实现快速的故障恢复；实际上是一种服务的冗余。
+> 负载均衡：在主从复制的基础上，配合读写分离，可以由主节点提供写服务，由从节点提供读服务 (即写 Redis 数据时应用连接主节点，读 Redis 数据时应用连接从节点)，分担服务器负载；尤其是在写少读多的场景下，通过多个从节点分担读负载，可以大大提高Redis服务器的并发量。
+>
+> 参考 redis-server/mode-replication，NOTE: 使用redistemplate/redistemplate-replication调试mode-replication
+
+#### 主从切换
+
+> NOTE: 此模式下只支持人工主从切换
+>
+> redis 主从切换命令
+> https://blog.csdn.net/qq_36949713/article/details/106812171?app_version=6.1.9&csdn_share_tail=%7B%22type%22%3A%22blog%22%2C%22rType%22%3A%22article%22%2C%22rId%22%3A%22106812171%22%2C%22source%22%3A%22dexterchan%22%7D&utm_source=app
+
+```shell
+# 使用docker-compose启动上面的mode-replication主从模式
+
+# 模拟master节点down机，NOTE: 此时集群支持读但不支持写
+docker stop demo-redis-replication-node1
+
+# 可以查看其中一个slave显示master是down状态
+docker exec -it demo-redis-replication-node3 redis-cli info replication
+
+# 切换 demo-redis-replication-node3 为master
+docker exec -it demo-redis-replication-node3 redis-cli slaveof no one
+# 持久化配置到redis.conf
+docker exec -it demo-redis-replication-node3 redis-cli config rewrite
+# 可以看到当前 demo-redis-replication-node3 已经切换为master，但还没有slave节点
+docker exec -it demo-redis-replication-node3 redis-cli info replication
+
+# 设置 demo-redis-replication-node2 指向新的master
+docker exec -it demo-redis-replication-node2 redis-cli slaveof demo-redis-replication-node3 6379
+docker exec -it demo-redis-replication-node2 redis-cli config rewrite
+# 设置 demo-redis-replication-node4 指向新的master
+docker exec -it demo-redis-replication-node4 redis-cli slaveof demo-redis-replication-node3 6379
+docker exec -it demo-redis-replication-node4 redis-cli config rewrite
+
+# 可以看到新的master下有3个slave节点了
+docker exec -it demo-redis-replication-node3 redis-cli info replication
+
+# 最后把应用配置 redistemplate/redistemplate-replication 修改新的master节点即可
+```
+
+
+
+#### 新增slave节点
+
+```shell
+# 启动redis replication模式
+docker-compose up -d
+
+# 启动完毕后新增节点
+docker-compose -f docker-compose-add-slave-node.yaml up -d
+
+# 此时可以使用 redistemplate/redistemplate-replication 调试
+```
+
+
+
+#### 删除slave节点
+
+> 通过docker stop停止slave容器后，slave节点就能够自动从master slave节点列表中删除。
+> 自动删除的slave节点不再参与spring-data-redis的读负载均衡。
+> 自动删除的slave节点如果再次重新上线则又会重新参与到spring-data-redis的读负载均衡中。
+> slave节点的删除和新增都不需要重启spring-data-redis应用就能够感知到slave的删除和新增。
+
+```shell
+# 停止容器表示删除节点
+docker stop demo-redis-replication-node4
+
+# 此时可以使用 redistemplate/redistemplate-replication 调试
+```
+
+
+
+### 哨兵模式
+
+> 主从切换技术的方法是：当服务器宕机后，需要手动一台从机切换为主机，这需要人工干预，不仅费时费力，而且还会造成一段时间内服务不可用。为了解决主从复制的缺点，就有了哨兵模式。
+> 哨兵(sentinel)：是一个分布式系统，用于对主从结构中的每台服务器进行监控，当出现故障时通过投票机制选择新的 Master 并将所有 Slave 连接到新的 Master。所以整个运行哨兵的集群的数量不得少于3个节点。
+>
+> 哨兵模式的作用
+>
+> - 监控：哨兵会不断地检查主节点和从节点是否运作正常。
+> - 自动故障转移：当主节点不能正常工作时，哨兵会开始自动故障转移操作，它会将失效主节点的其中一个从节点升级为新的主节点，并让其他从节点改为复制新的主节点。
+> - 通知（提醒）：哨兵可以将故障转移的结果发送给客户端。
+>
+> 哨兵模式的结构由两部分组成，哨兵节点和数据节点：
+>
+> - 哨兵节点：哨兵系统由一个或多个哨兵节点组成，哨兵节点是特殊的redis节点，不存储数据。
+> - 数据节点：主节点和从节点都是数据节点。
+
+### cluster模式
+
+> 使用docker运行redis集群参考 demo-redis/redis-server/mode-cluster
 >
 > redis集群原理详解 https://blog.csdn.net/a745233700/article/details/112691126
 >
@@ -528,6 +634,10 @@ bgwriteaof
 > jedis操作集群参考 demo-redis/redis-jedis/jedis-cluster-load
 >
 > redistemplate操作集群参考 demo-redis/redistemplate/redistemplate-cluster
+
+
+
+
 
 ## 秒杀场景实现
 
