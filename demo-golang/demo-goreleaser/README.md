@@ -12,6 +12,22 @@ brew install goreleaser
 goreleaser --version
 ```
 
+## centOS8安装goreleaser
+
+```shell
+# 参考 https://goreleaser.com/install/#yum
+
+# 设置yum repo
+echo '[goreleaser]
+name=GoReleaser
+baseurl=https://repo.goreleaser.com/yum/
+enabled=1
+gpgcheck=0' | sudo tee /etc/yum.repos.d/goreleaser.repo
+
+# 安装goreleaser
+sudo yum install goreleaser -y
+```
+
 ## 使用goreleaser
 
 ```

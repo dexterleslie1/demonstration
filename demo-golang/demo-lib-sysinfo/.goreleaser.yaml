@@ -1,6 +1,6 @@
 # This is an example .goreleaser.yml file with some sane defaults.
 # Make sure to check the documentation at http://goreleaser.com
-project_name: "demo-goreleaser"
+project_name: "demo-lib-sysinfo"
 before:
   hooks:
     - go mod tidy -go=1.19
@@ -11,9 +11,9 @@ builds:
       - CGO_ENABLED=0
     goos:
       - linux
-      - windows
+      # - windows
       - darwin
-    dir: ./program1
+    dir: ./
     main: ./
     ignore:
       - goos: darwin
@@ -24,28 +24,7 @@ builds:
         goarch: arm64
       - goos: windows
         goarch: 386
-    binary: program1
-  - id: "program2"
-    env:
-      - CGO_ENABLED=0
-    goos:
-      - linux
-      - windows
-      - darwin
-    dir: ./program2
-    main: ./
-    ignore:
-      - goos: darwin
-        goarch: 386
-      - goos: linux
-        goarch: 386
-      - goos: linux
-        goarch: arm64
-      - goos: windows
-        goarch: 386
-    binary: program2
-    hooks:
-      post: echo "编译完成后调用脚本..."
+    binary: dtest
 archives:
   - id: "program1"
     # replacements:
@@ -59,19 +38,6 @@ archives:
     name_template: "{{ .ProjectName }}-program1-{{ .Os }}_{{ .Arch }}"
     builds:
       - "program1"
-
-  - id: "program2"
-    # replacements:
-    #   386: i386
-    #   amd64: x86_64
-    format: tar.gz
-    wrap_in_directory: true
-    format_overrides:
-    - goos: windows
-      format: zip
-    name_template: "{{ .ProjectName }}-program2-{{ .Os }}_{{ .Arch }}"
-    builds:
-      - "program2"
 
 checksum:
   name_template: 'checksums.txt'
