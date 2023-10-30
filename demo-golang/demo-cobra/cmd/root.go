@@ -1,6 +1,5 @@
 /*
 Copyright © 2022 NAME HERE <EMAIL ADDRESS>
-
 */
 package cmd
 
@@ -9,6 +8,7 @@ import (
 
 	"demo-cobra/cmd/mariadb"
 	"demo-cobra/cmd/mysql"
+	osd "demo-cobra/cmd/os"
 
 	"github.com/spf13/cobra"
 )
@@ -44,6 +44,7 @@ func init() {
 	// https://github.com/spf13/cobra-cli/blob/main/README.md
 	rootCmd.AddCommand(mariadb.MariadbCmd)
 	rootCmd.AddCommand(mysql.MysqlCmd)
+	rootCmd.AddCommand(osd.OsCommand)
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
