@@ -15,7 +15,7 @@ services:
       context: .
       dockerfile: ./Dockerfile
     container_name: demo-redis-replication-node-extra
-    image: my-redis:5.0.14
+    image: my-redis-repl:5.0.14
     command: redis-server /usr/local/etc/redis/redis.conf --port 6379
     environment:
       - TZ=Asia/Shanghai
@@ -28,7 +28,7 @@ services:
       context: .
       dockerfile: ./Dockerfile
     container_name: demo-redis-replication-node-extra-slave-join
-    image: my-redis:5.0.14
+    image: my-redis-repl:5.0.14
     command: sh -c "dockerize -wait tcp://demo-redis-replication-node1:6379 -timeout 120s -wait-retry-interval 5s
                     && dockerize -wait tcp://demo-redis-replication-node-extra:6379 -timeout 120s -wait-retry-interval 5s
                     && redis-cli -h demo-redis-replication-node-extra slaveof demo-redis-replication-node1 6379

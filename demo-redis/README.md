@@ -689,12 +689,131 @@ docker-compose -f docker-compose-add-slave-node.yml up -d
 > 参考 redis-server/mode-cluster
 >
 > redis集群原理详解 https://blog.csdn.net/a745233700/article/details/112691126
+> redis插槽 https://baijiahao.baidu.com/s?id=1767053233302021116&wfr=spider&for=pc
 >
 > 默认情况下，redis集群的读和写都是到master上去执行的，不支持slave节点读和写，跟Redis主从复制下读写分离不一样，因为redis集群的核心的理念，主要是使用slave做数据的热备，以及master故障时的主备切换，实现高可用的。Redis的读写分离，是为了横向任意扩展slave节点去支撑更大的读吞吐量。而redis集群架构下，本身master就是可以任意扩展的，如果想要支撑更大的读或写的吞吐量，都可以直接对master进行横向扩展。
+>
+> redis-cli --cluster create --cluster-replicas 1 xxx:6380 xxx:6381 xxx:6382 xxx:6383 xxx6384 xxx:6385 创建集群后依次为6380和6383互为主从、6381和6384互为主从、6382和6385互为主从。
 >
 > jedis操作集群参考 demo-redis/redis-jedis/jedis-cluster-load
 >
 > redistemplate操作集群参考 demo-redis/redistemplate/redistemplate-cluster
+
+
+
+#### failover测试
+
+> 测试场景： 停止1、3、5节点集群依旧能够正常提供服务。
+>
+> TODO: 同时停止1、3、5节点会导致集群无法恢复，必须要停止一个节点failover后再停止另外一个。
+
+```shell
+# 连接节点2查询集群状态
+docker exec -it demo-redis-cluster-node2 sh
+redis-cli -p 6381
+# 显示集群状态为ok
+cluster info
+# 显示集群节点状态
+cluster nodes
+
+# NOTE: 依次停止节点等待failover成功后再停止下一个节点
+docker stop demo-redis-cluster-node1
+docker stop demo-redis-cluster-node3
+docker stop demo-redis-cluster-node5
+
+# 最后集群依旧能够正常提供服务
+```
+
+
+
+#### 在线扩容
+
+> 新增节点 https://zhuanlan.zhihu.com/p/540573229?utm_id=0
+>
+> todo: 使用redistemplate/redistemplate-cluster创造数据后添加节点会报告错误 CROSSSLOT Keys in request don't hash to the same slot
+
+```shell
+### 添加新的master节点到集群中
+
+# 启动新节点容器
+docker-compose -f docker-compose-add-node.yaml up -d
+
+# 登录新的redis节点，把新节点添加到redis cluster中
+docker exec -it demo-redis-cluster-node-extra sh
+# demo-redis-cluster-node-extra:6390 为新节点
+# 192.168.1.181:6380 为已存在的任意一个集群节点
+# NOTE: 下面已存在节点不能使用docker容器网络名称只能够使用192.168.1.181 ip地址，否则报错
+redis-cli --cluster add-node demo-redis-cluster-node-extra:6390 192.168.1.181:6380
+
+# 此时新节点无法接收和处理请求，因为新节点还没有分配插槽
+# 为新节点分配插槽
+docker exec -it demo-redis-cluster-node-extra sh
+# 分配插槽
+# 输入需要移动的插槽数1000，然后输入接收插槽数据的新节点id，输入all表示从所有现有的节点中抽取共1000个插槽并移动到新节点中
+redis-cli --cluster reshard demo-redis-cluster-node1:6380
+
+# 查看集群状态，此时新的节点能够提供服务了
+docker exec -it demo-redis-cluster-node1 sh
+redis-cli -p 6380 cluster nodes
+
+
+
+
+### 为新的节点添加从节点
+# 登录从节点
+docker exec -it demo-redis-cluster-node-extra-slave sh
+# 添加节点到集群中
+redis-cli --cluster add-node demo-redis-cluster-node-extra-slave:6391 192.168.1.181:6380
+# 指定当前从节点的主节点
+redis-cli -p 6391
+cluster replicate 2728a594a0498e98e4b83a537e19f9a0a3790f38
+
+# 查看集群状态
+docker exec -it demo-redis-cluster-node1 sh
+redis-cli -p 6380 cluster nodes
+```
+
+
+
+#### 在线缩容
+
+> 新增节点 https://zhuanlan.zhihu.com/p/540573229?utm_id=0
+
+```shell
+### 删除从节点
+
+# 登录从节点
+docker exec -it demo-redis-cluster-node-extra-slave sh
+
+# 删除从节点
+# 192.168.1.181:6391 是通过cluster nodes获取的从节点ip:port
+# 6b92155a7e8851b9842c4a3ec38ff9d2b230b33e 是通过cluster nodes获取的从节点id
+redis-cli --cluster del-node 192.168.1.181:6391 6b92155a7e8851b9842c4a3ec38ff9d2b230b33e
+
+# 查看集群状态
+docker exec -it demo-redis-cluster-node1 sh
+redis-cli -p 6380 cluster nodes
+
+
+
+
+### 删除主节点
+
+# 登录主节点
+docker exec -it demo-redis-cluster-node-extra sh
+
+# 迁移将要删除的主节点slot到其他节点中，根据提示将节点中所有slot迁移，NOTE: sources ID输入被删除的主节点id，不能输入all
+redis-cli --cluster reshard demo-redis-cluster-node-extra:6390
+
+# slot迁移成功后，删除主节点
+redis-cli --cluster del-node demo-redis-cluster-node-extra:6390 65999fa8f6dc13726008c35dfd0e60cec7e2c7da
+```
+
+
+
+
+
+
 
 
 

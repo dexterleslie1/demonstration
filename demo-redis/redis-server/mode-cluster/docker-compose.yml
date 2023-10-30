@@ -7,8 +7,11 @@ networks:
 
 services:
   demo-redis-cluster-node1:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
     container_name: demo-redis-cluster-node1
-    image: redis:5.0.14
+    image: my-redis-cluster:5.0.14
     # 必须设置cluster-announce-ip才能够在创建集群时节点join到master，否则会一直waiting...
     command: redis-server /usr/local/etc/redis/redis.conf --port 6380 --cluster-announce-ip ${varHostIp}
     volumes:
@@ -23,8 +26,11 @@ services:
       - net
 
   demo-redis-cluster-node2:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
     container_name: demo-redis-cluster-node2
-    image: redis:5.0.14
+    image: my-redis-cluster:5.0.14
     command: redis-server /usr/local/etc/redis/redis.conf --port 6381 --cluster-announce-ip ${varHostIp}
     volumes:
       - ./redis.cluster.conf:/usr/local/etc/redis/redis.conf
@@ -37,8 +43,11 @@ services:
       - net
 
   demo-redis-cluster-node3:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
     container_name: demo-redis-cluster-node3
-    image: redis:5.0.14
+    image: my-redis-cluster:5.0.14
     command: redis-server /usr/local/etc/redis/redis.conf --port 6382 --cluster-announce-ip ${varHostIp}
     volumes:
       - ./redis.cluster.conf:/usr/local/etc/redis/redis.conf
@@ -51,8 +60,11 @@ services:
       - net
 
   demo-redis-cluster-node4:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
     container_name: demo-redis-cluster-node4
-    image: redis:5.0.14
+    image: my-redis-cluster:5.0.14
     command: redis-server /usr/local/etc/redis/redis.conf --port 6383 --cluster-announce-ip ${varHostIp}
     volumes:
       - ./redis.cluster.conf:/usr/local/etc/redis/redis.conf
@@ -65,8 +77,11 @@ services:
       - net
 
   demo-redis-cluster-node5:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
     container_name: demo-redis-cluster-node5
-    image: redis:5.0.14
+    image: my-redis-cluster:5.0.14
     command: redis-server /usr/local/etc/redis/redis.conf --port 6384 --cluster-announce-ip ${varHostIp}
     volumes:
       - ./redis.cluster.conf:/usr/local/etc/redis/redis.conf
@@ -79,8 +94,11 @@ services:
       - net
 
   demo-redis-cluster-node6:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
     container_name: demo-redis-cluster-node6
-    image: redis:5.0.14
+    image: my-redis-cluster:5.0.14
     command: redis-server /usr/local/etc/redis/redis.conf --port 6385 --cluster-announce-ip ${varHostIp}
     volumes:
       - ./redis.cluster.conf:/usr/local/etc/redis/redis.conf
@@ -93,7 +111,10 @@ services:
       - net
 
   redis-cluster-creator:
-    image: redis:5.0.14
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    image: my-redis-cluster:5.0.14
     entrypoint: [/bin/sh, -c, 'echo "yes" | redis-cli --cluster create --cluster-replicas 1 ${varHostIp}:6380 ${varHostIp}:6381 ${varHostIp}:6382 ${varHostIp}:6383 ${varHostIp}:6384 ${varHostIp}:6385']
     networks:
       - net
