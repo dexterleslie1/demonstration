@@ -171,3 +171,11 @@ go mod tidy
 > 参考 demo-lib-bubbletea
 >
 > https://github.com/charmbracelet/bubbletea
+
+
+
+### lipgloss使用
+
+> 参考 demo-lib-lipgloss
+>
+> https://github.com/charmbracelet/lipgloss
