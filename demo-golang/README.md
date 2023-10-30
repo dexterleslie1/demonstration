@@ -152,18 +152,22 @@ go mod tidy
 >
 > https://github.com/muesli/termenv
 
-
-
 ### reflow使用
 
 > 参考 demo-lib-reflow
 >
 > https://github.com/muesli/reflow
 
-
-
 ### glamour使用
 
 > 参考 demo-lib-glamour
 >
 > https://github.com/charmbracelet/glamour
+
+
+
+### bubbletea使用
+
+> 参考 demo-lib-bubbletea
+>
+> https://github.com/charmbracelet/bubbletea
