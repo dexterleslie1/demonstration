@@ -334,6 +334,50 @@ ssh root@192.168.1.151
 
 
 
+#### ssh端口转发（port forwarding）
+
+> https://www.jianshu.com/p/50c4160e62ac
+>
+> 端口转发windows服务器端使用bitvise服务器
+>
+> 使用-f可以使ssh进程后台运行
+
+
+
+##### 本地端口转发
+
+> 本地端口转发：创建监听本地端口（执行ssh命令的计算机）的ssh进程
+>
+> - 例子：vm1监听本地端口44567接收用户请求后转发给跳板机vm2端口22，vm2再转发给vm3 端口80，ssh进程监听44567端口在vm1运行
+>   [root@vm1 ~] ssh -o ServerAliveInterval=60 -gNT -L 44567:vm3:80 root@vm2
+> - 例子：vm1监听本地端口44567接收用户请求后转发给跳板机vm1端口22，vm1再转发给vm3端口80，ssh进程监听44567端口在vm1运行
+>   [root@vm1 ~] ssh -o ServerAliveInterval=60 -gNT -L 44567:vm3:80 root@vm1
+> - 例子：vm1监听本地端口44567接收用户请求后转发给跳板机vm3端口22，vm3再转发给vm3端口80，ssh进程监听44567端口在vm1运行
+>   [root@vm1 ~] ssh -o ServerAliveInterval=60 -gNT -L 44567:localhost:80 root@vm3
+> - 例子：本地端口转发，命令在本机上执行并监听端口8888，本机端口8888接收到数据通过ssh隧道转发到192.168.1.54，192.168.1.54转发数据到192.168.1.58:8080
+>   ssh -L 8888:192.168.1.58:8080 192.168.1.54
+> - 例子：本地端口转发，命令在本机上执行并监听端口8888，本机端口8888接收到数据通过ssh隧道转发到本机，本机转发数据到192.168.1.58:8080
+>   ssh -L 8888:192.168.1.58:8080 127.0.0.1
+
+
+
+
+
+##### 远程端口转发
+
+> 远程端口转发：创建监听远程端口（被ssh的远程计算机）的ssh进程，NOTE: 远程端口转发类型监听客户端链接端口ssh配置需要修改/etc/ssh/sshd_config文件GatewayPorts yes并且使用0.0.0.0:44567:localhost:80方式绑定到所有网卡
+>
+> - 例子：vm1监听本地端口44567接收用户请求后转发给vm2端口22，vm2再转发		给vm3端口80，ssh进程监听44567端口在vm1运行
+>   [root@vm2 ~] ssh -o "ServerAliveInterval 60" -NT -R 44567:vm3:80 root@vm1
+> - 例子：使用/usr/keys/k1远程端口连接root@23.43.56.124:44770并在23.43.56.124监听44890数据转发到192.168.1.65:8090
+>   ssh -o TCPKeepAlive=yes -o ServerAliveInterval=60 -o ServerAliveCountMax=30 -o ExitOnForwardFailure=no -p44770 -i /usr/keys/k1 -NTf -R 0.0.0.0:44890:192.168.1.65:8090 root@23.43.56.124
+> - 例子：服务器23.91.97.126监听端口44791转发到服务器192.168.1.53:5900
+>   ssh -o TCPKeepAlive=yes -o ServerAliveInterval=60 -o ServerAliveCountMax=30 -o ExitOnForwardFailure=no -p44790 -i /path/to/ssh/private/key -NTf -R 0.0.0.0:44791:192.168.1.53:5900 user@23.91.97.126
+
+
+
+
+
 ### netcat、nc命令
 
 >
