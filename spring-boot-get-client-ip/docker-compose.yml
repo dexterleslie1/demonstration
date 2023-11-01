@@ -1,0 +1,17 @@
+version: "3.0"
+
+# 创建网络
+networks:
+  net:
+    name: demo-spring-boot-get-client-ip-net
+
+services:
+  demo-spring-boot-get-client-ip:
+    container_name: demo-spring-boot-get-client-ip
+    image: docker.118899.net:10001/yyd-public/demo-spring-boot-get-client-ip
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - 8080:8080
+    networks:
+      - net
