@@ -33,11 +33,7 @@ command+w 关闭当前tab
 
 ctrl+tab tab之间切换
 
-
-
 ## 操作系统命令
-
-
 
 ### find命令
 
@@ -51,8 +47,6 @@ find . -type d -name node_modules -exec rm -rfv {} \;
 grep -r "17" --include "pom.xml" .
 grep -r "17" --include "*.xml" .
 ```
-
-
 
 ### ln命令
 
@@ -111,14 +105,10 @@ ls -li
 
 https://www.php.cn/linux-491726.html
 
-
-
 ### tr命令
 
 > 删除字符命令，可以用于输出openssl rsa key以便不需要手动删除rsa key中的换行符号。
 > https://stackoverflow.com/questions/800030/remove-carriage-return-in-unix
-
-
 
 #### 删除换行符
 
@@ -135,8 +125,6 @@ line 2
 tr -d '\n' < 1.txt
 ```
 
-
-
 ### htop命令
 
 > 使用top -c命令无法查看程序完整的启动命令，使用htop命令能够解决此问题
@@ -151,8 +139,6 @@ htop
 
 # 通过键盘左右方向键滚动屏幕以查看完整的启动命令
 ```
-
-
 
 ### scp命令
 
@@ -178,8 +164,6 @@ scp -o StrictHostKeyChecking=no 1.txt user@host_ip:1.txt
 yum install sshpass -y
 sshpass -p 'xxx' scp -o StrictHostKeyChecking=no 1.txt user@host_ip:1.txt
 ```
-
-
 
 ### curl命令
 
@@ -253,8 +237,6 @@ curl -X POST -F "param1=v1" -H "Content-Type: multipart/form-data" http://localh
 curl -X POST -d '{"param1":"v1"}' -H "Content-Type: application/json" http://localhost:8080/api/v1/testPostSubmitParamByJSON
 ```
 
-
-
 ### yum命令
 
 ```
@@ -273,10 +255,6 @@ yum clean all
 # 创建yum缓存，下载远程yum源仓库数据到本地目录/var/cache/dnf目录
 yum makecache
 ```
-
-
-
-
 
 ### ssh命令
 
@@ -300,12 +278,9 @@ yum install sshpass -y
 sshpass -p 'xxx' ssh -o StrictHostKeyChecking=no root@host_ip
 ```
 
-
-
 #### ssh免密码配置
 
 > https://www.itzgeek.com/how-tos/linux/centos-how-tos/how-to-setup-ssh-passwordless-login-on-centos-8-rhel-8.html
->
 
 ```
 # 在用户目录 /root/.ssh/中生成名为id_rsa和id_rsa.pub的公钥和私钥
@@ -330,10 +305,6 @@ ssh-add -l 查看私有秘钥
 ssh root@192.168.1.151
 ```
 
-
-
-
-
 #### ssh端口转发（port forwarding）
 
 > https://www.jianshu.com/p/50c4160e62ac
@@ -341,8 +312,6 @@ ssh root@192.168.1.151
 > 端口转发windows服务器端使用bitvise服务器
 >
 > 使用-f可以使ssh进程后台运行
-
-
 
 ##### 本地端口转发
 
@@ -359,10 +328,6 @@ ssh root@192.168.1.151
 > - 例子：本地端口转发，命令在本机上执行并监听端口8888，本机端口8888接收到数据通过ssh隧道转发到本机，本机转发数据到192.168.1.58:8080
 >   ssh -L 8888:192.168.1.58:8080 127.0.0.1
 
-
-
-
-
 ##### 远程端口转发
 
 > 远程端口转发：创建监听远程端口（被ssh的远程计算机）的ssh进程，NOTE: 远程端口转发类型监听客户端链接端口ssh配置需要修改/etc/ssh/sshd_config文件GatewayPorts yes并且使用0.0.0.0:44567:localhost:80方式绑定到所有网卡
@@ -374,13 +339,8 @@ ssh root@192.168.1.151
 > - 例子：服务器23.91.97.126监听端口44791转发到服务器192.168.1.53:5900
 >   ssh -o TCPKeepAlive=yes -o ServerAliveInterval=60 -o ServerAliveCountMax=30 -o ExitOnForwardFailure=no -p44790 -i /path/to/ssh/private/key -NTf -R 0.0.0.0:44791:192.168.1.53:5900 user@23.91.97.126
 
-
-
-
-
 ### netcat、nc命令
 
->
 > https://www.cnblogs.com/nmap/p/6148306.html
 
 ```
@@ -407,8 +367,6 @@ telnet 192.168.1.34 81
 # https://www.tecmint.com/check-remote-port-in-linux/
 nc -zv 192.168.1.34 81
 ```
-
-
 
 ### tar命令
 
@@ -441,13 +399,10 @@ tar --same-owner -cvzpf tomcat-hm-denmark.tar tomcat-hm-denmark/
 tar -xzvf archive.tar.gz -C /tmp
 ```
 
-
-
-
-
 ### zip和unzip命令
 
 ```
+
 # zip压缩和unzip解压缩命令详解
 https://blog.csdn.net/CareChere/article/details/50844846
 
@@ -467,6 +422,29 @@ unzip -O CP936 chat.zip -d chat
 
 
 
+
+
+
+
+
+
+### jq命令
+
+> jq 是一个强大的命令行工具，用于处理 JSON 格式的数据。它可以帮助你查询、过滤、修改和处理 JSON 数据，使得在命令行环境下处理 JSON 变得非常方便。
+>
+> https://baijiahao.baidu.com/s?id=1773731505742878774&wfr=spider&for=pc
+
+```
+# 安装jq命令
+yum install -y epel-release
+yum install -y jq
+
+```
+
+
+
+
+
 ## 文件和目录
 
 ### 文件和目录权限rwx代表的意思
@@ -482,8 +460,6 @@ unzip -O CP936 chat.zip -d chat
 目录w：目录能删除、移动、创建文件，能创建目录，但可以修改有写权限的文件内容，mv、touch、mkdir，本质可以修改目录项
 
 目录x：可以打开和进入目录，cd
-
-
 
 ## 用户和群组管理（user、group、passwd、shadow）
 
@@ -574,10 +550,6 @@ userdel user1
 userdel -r user1
 ```
 
-
-
-
-
 ## 配置环境变量
 
 ### ubuntu和centOS8配置环境变量
@@ -595,13 +567,7 @@ export PATH=$PATH:/usr/local/go/bin
 
 > 参考dcli配置启用rc.local服务，启用服务后配置 /etc/rc.local 文件配置开机自启动服务
 
-
-
-
-
 ## benchmark
-
-
 
 ### 概念
 
@@ -609,21 +575,15 @@ export PATH=$PATH:/usr/local/go/bin
 > https://en.wikipedia.org/wiki/Load_%28computing%29
 > 前面三个值分别对应系统当前1分钟、5分钟、15分钟内的平均load。load用于反映当前系统的负载情况，对于16核的系统，如果每个核上cpu利用率为30%，则在不存在uninterruptible进程的情况下，系统load应该维持在4.8左右。对16核系统，如果load维持在16左右，在不存在uninterrptible进程的情况下，意味着系统CPU几乎不存在空闲状态，利用率接近于100%。结合iowait、vmstat和loadavg可以分析出系统当前的整体负载，各部分负载分布情况。
 >
-> 
->
 > 随机读写
 > https://en.wikipedia.org/wiki/Random_access
 > 顺序读写
 > https://en.wikipedia.org/wiki/Sequential_access
 
-
-
 ### sysbench工具
 
 > 什么是sysbench
 > https://www.howtoforge.com/how-to-benchmark-your-system-cpu-file-io-mysql-with-sysbench
-
-
 
 #### 基本使用
 
@@ -672,8 +632,6 @@ Iotop
 iostat -m 2
 ```
 
-
-
 #### IO性能测试
 
 > 测试指标：随机读、随机写、随机读写、4KB 块大小、多线程
@@ -707,8 +665,6 @@ sysbench --test=fileio --file-num=10 --num-threads=16 --file-total-size=10G --fi
 sysbench --test=fileio --file-num=10 --num-threads=16 --file-total-size=10G --file-test-mode=rndrw --max-time=30 --max-requests=0 cleanup
 ```
 
-
-
 #### MySQL测试
 
 > https://stackoverflow.com/questions/45584065/cannot-find-oltp-test-on-sysbench
@@ -733,8 +689,6 @@ sysbench --db-driver=mysql --mysql-user=root --mysql-password=123456 \
   --rand-type=uniform /usr/share/sysbench/oltp_read_only.lua cleanup
 ```
 
-
-
 ### stress工具
 
 ```
@@ -751,14 +705,9 @@ mpstat -P ALL 1
 free -g
 ```
 
-
-
-
-
 ## ntp服务
 
 > 开源NTP服务器：cn.pool.ntp.org（当前vsphere使用此服务）
 >
 > 国内NTP服务器
 > https://www.cnblogs.com/jarsing/articles/17503565.html
-
