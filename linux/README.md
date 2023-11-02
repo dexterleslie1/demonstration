@@ -463,7 +463,7 @@ yum install -y jq
 
 ## 用户和群组管理（user、group、passwd、shadow）
 
-```
+```shell
 # 用户、密码、群组数据存储文件
 
 存储用户数据文件/etc/passwd解析
@@ -495,6 +495,9 @@ useradd -g tomcat tomcat -s /sbin/nologin
 
 # 新增用户并且创建用户home目录
 useradd -s /sbin/nologin -m tomcat
+
+# 新增用户使用/bin/bash并创建用户目录
+useradd -s /bin/bash -m tomcat
 
 # 修改用户密码
 passwd tomcat
@@ -565,7 +568,106 @@ export PATH=$PATH:/usr/local/go/bin
 
 ## rc.local配置
 
-> 参考dcli配置启用rc.local服务，启用服务后配置 /etc/rc.local 文件配置开机自启动服务
+
+
+### centOS6 rc.local配置
+
+> centOS6安装完系统后 rc.local 服务默认已经启动不需要手动配置，centOS6开机自启动配置文件 /etc/rc.local
+
+
+
+### centOS7、8 rc.local配置
+
+> centOS7、centOS8 开机自启动配置文件/etc/rc.d/rc.local，centOS7、centOS8 /etc/rc.local符号链接到/etc/rc.d/rc.local文件，所以centOS7、centOS8只需要编辑文件/etc/rc.d/rc.local即可
+> 参考dcli配置启用rc.local服务，启用服务后配置 /etc/rc.d/rc.local 文件配置开机自启动服务
+
+```shell
+# centos7 rc.local服务配置和查看
+# https://www.cnblogs.com/architectforest/p/12467474.html
+
+# 设置/etc/rc.d/rc.local文件拥有可执行权限，这样rc.local服务才能正常启用
+chmod +x /etc/rc.d/rc.local
+
+# 编辑/usr/lib/systemd/system/rc-local.service添加如下
+[Install]
+WantedBy=multi-user.target
+
+# centOS7、centOS8 开机自启动会出现Network Unreachable错误
+# https://askubuntu.com/questions/882123/rc-local-only-executing-after-connecting-to-ethernet
+
+# 修改/usr/systemd/system/rc-local.service
+After=network.target修改为After=network-online.target
+
+systemctl daemon-reload
+systemctl restart rc-local.service
+
+# 查看所有的开启启动项目里面有没有这个rc-local这个服务被加载和现在状态
+systemctl list-units --type=service
+# 查看rc-local.service服务状态
+systemctl status rc-local.service
+# 启用rc-local.service服务
+systemctl enable rc-local.service
+
+# 开机自启动调试日志，将以下配置添加到/etc/rc.local，centOS7、centOS8将配置添加到/etc/rc.d/rc.local
+exec 2> /tmp/rc.local.log  # send stderr from rc.local to a log file
+exec 1>&2                      # send stdout to the same log file
+set -x                         # tell sh to display commands before execution
+
+# 实例：开机自动启动redis集群服务
+sudo -i sh -c "cd /usr/redis1 && /usr/local/bin/redis-server redis.conf"
+sudo -i sh -c "cd /usr/redis2 && /usr/local/bin/redis-server redis.conf"
+sudo -i sh -c "cd /usr/redis3 && /usr/local/bin/redis-server redis.conf"
+
+# 此命令只能用于tomcat用户shell为/bin/bash
+sudo -i su tomcat -c '/data/tomcat-hm-cronb/bin/startup.sh'
+
+# 当tomcat用户shell为/sbin/nologin时使用此命令
+sudo -u tomcat sh /usr/tomcat-hm/bin/startup.sh
+```
+
+
+
+### ubuntu rc.local配置
+
+```shell
+# https://helloworld.pixnet.net/blog/post/47874794-%E5%95%9F%E7%94%A8-ubuntu-20.04--etc-rc.local
+
+# 1. 在檔案的最末端加入以下三行，存檔離開
+sudo vi /lib/systemd/system/rc-local.service
+[Install] 
+WantedBy=multi-user.target
+Alias=rc-local.service
+
+# 2. 建立 rc.local
+sudo vi /etc/rc.local
+#!/bin/sh -e
+
+echo `date` >> /tmp/reboot.log
+
+exit 0
+
+# 3. 加入可執行權限
+sudo chmod u+x /etc/rc.local
+
+# 4. 設定開機啟動，並手動啟用測試
+sudo systemctl enable rc-local
+sudo systemctl start rc-local
+
+# 5. 檢視是否已啟用
+sudo systemctl status rc-local
+
+# 6. 重開機
+sudo reboot
+
+# /lib/systemd/system/与/etc/systemd/system/的区别
+https://www.jianshu.com/p/32c7100b1b0c
+
+systemd的使用大幅提高了系统服务的运行效率, 而unit的文件位置一般主要有三个目录：/etc/systemd/system、/run/systemd/system、/lib/systemd/system，这三个目录的配置文件优先级依次从高到低，如果同一选项三个地方都配置了，优先级高的会覆盖优先级低的。
+```
+
+
+
+
 
 ## benchmark
 
