@@ -434,11 +434,67 @@ unzip -O CP936 chat.zip -d chat
 >
 > https://baijiahao.baidu.com/s?id=1773731505742878774&wfr=spider&for=pc
 
-```
+```shell
 # 安装jq命令
 yum install -y epel-release
 yum install -y jq
 
+### 查询和过滤数据
+# 演示使用的JSON
+[
+   {
+      "name":"Alice",
+      "age":25,
+      "city":"New York"
+   },
+   {
+      "name":"Bob",
+      "age":30,
+      "city":"Los Angeles"
+   },
+   {
+      "name":"Charlie",
+      "age":22,
+      "city":"Chicago"
+   }
+]
+
+# 不选择字段，输出所有数组对象
+cat 1.json | jq ".[]"
+
+# 选择字段，查询并选择所有人的姓名
+cat 1.json | jq ".[].name"
+
+# 过滤，选择年龄大于 25 岁的人的姓名和城市
+cat 1.json | jq ".[] | select(.age > 25) | .name, .city"
+
+# 遍历数组，遍历并输出所有人的年龄
+cat 1.json | jq ".[] | .age"
+
+# 组合操作，选择年龄在 25 到 30 岁之间的人的姓名和城市，并按照姓名排序
+cat 1.json | jq ".[] | select(.age >= 25 and .age <= 30) | .name, .city" | sort
+
+
+
+
+
+### 修改数据
+
+# 演示使用的JSON
+{
+   "name":"Alice",
+   "age":25,
+   "city":"New York"
+}
+
+# 修改字段值，修改年龄字段的值为 26
+cat 2.json | jq ".age=26"
+
+# 创建新字段，添加一个新的字段 country 并设置其值为 "USA"
+cat 2.json | jq ".country=\"USA\""
+
+# 组合操作，修改年龄字段的值为 26，并添加一个新的字段 country
+cat 2.json | jq ".age=26 | .country=\"USA\""
 ```
 
 
