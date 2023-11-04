@@ -48,14 +48,34 @@ func TestFormat(t *testing.T) {
 		t.Fatalf("没有预期值")
 	}
 
-	//#region 演示%+v用法
+	//#region 演示%v用法
+	// https://blog.csdn.net/yzf279533105/article/details/105433262
 
+	// %v只输出结构体值
 	myStruct := MyStruct{
+		P1: 23,
+		P2: "Hello world!",
+	}
+	if "{23 Hello world!}" != fmt.Sprintf("%v", myStruct) {
+		t.Fatalf("%s不是预期值", fmt.Sprintf("%v", myStruct))
+	}
+
+	// %+v输出结构体键和值
+	myStruct = MyStruct{
 		P1: 23,
 		P2: "Hello world!",
 	}
 	if "{P1:23 P2:Hello world!}" != fmt.Sprintf("%+v", myStruct) {
 		t.Fatalf("%s不是预期值", fmt.Sprintf("%+v", myStruct))
+	}
+
+	// %#v 先输出结构体名称，再输出结构体键值
+	myStruct = MyStruct{
+		P1: 23,
+		P2: "Hello world!",
+	}
+	if "main.MyStruct{P1:23, P2:\"Hello world!\"}" != fmt.Sprintf("%#v", myStruct) {
+		t.Fatalf("%s不是预期值", fmt.Sprintf("%#v", myStruct))
 	}
 
 	//#endregion

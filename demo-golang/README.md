@@ -4,13 +4,9 @@
 
 > 使用vscode作为go开发ide，安装vscode之后直接创建go文件编写go代码即可从源代码执行程序，根据vscode弹出提示安装golang相关插件以便debug使用。
 
-
-
 ## 使用goreleaser发布go程序
 
 > 参考 demo-goreleaser
-
-
 
 ## go环境配置和安装
 
@@ -184,10 +180,17 @@ go mod tidy
 >
 > https://github.com/charmbracelet/lipgloss
 
-
-
 ### sysinfo使用
 
 > 参考 demo-lib-sysinfo
 >
 > https://github.com/zcalusic/sysinfo
+
+
+
+
+### emoji使用
+
+> 参考 demo-lib-emoji
+>
+> https://github.com/enescakir/emoji/tree/master
