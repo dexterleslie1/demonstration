@@ -186,11 +186,16 @@ go mod tidy
 >
 > https://github.com/zcalusic/sysinfo
 
-
-
-
 ### emoji使用
 
 > 参考 demo-lib-emoji
 >
 > https://github.com/enescakir/emoji/tree/master
+
+
+
+### xterm使用
+
+> 参考 demo-lib-xterm
+>
+> golang.org/x/term
