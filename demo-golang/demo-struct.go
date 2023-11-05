@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"mypackage"
+	"unsafe"
 )
 
 type Person struct {
@@ -34,7 +35,7 @@ func main() {
 
 	var person12 Person = Person{
 		Name: "dexterleslie12",
-		Age: 23,
+		Age:  23,
 	}
 	fmt.Println("方法2-2创建Person:", person12)
 
@@ -60,4 +61,57 @@ func main() {
 	person5.Name = "dexterleslie6"
 	person5.Age = 23
 	person5.showDetails()
+
+	//#region 空结构体用法
+
+	// https://geektutu.com/post/hpg-empty-struct.html
+
+	// 空结构体 struct{} 实例不占据任何的内存空间
+	myStruct := struct{}{}
+	length := unsafe.Sizeof(myStruct)
+	fmt.Printf("空结构体struct{}长度为: %d\n", length)
+
+	// 使用空结构体实现集合(Set)
+	// Go 语言标准库没有提供 Set 的实现，通常使用 map 来代替。事实上，对于集合来说，只需要 map 的键，而不需要值。即使是将值设置为 bool 类型，也会多占据 1 个字节，那假设 map 中有一百万条数据，就会浪费 1MB 的空间。
+	// 因此呢，将 map 作为集合(Set)使用时，可以将值类型定义为空结构体，仅作为占位符使用即可。
+	fmt.Println("\n---------- 使用空结构体实现集合(Set) ----------------")
+	s := make(Set)
+	s.Add("Tom")
+	s.Add("Sam")
+	fmt.Println(s.Has("Tom"))
+	fmt.Println(s.Has("Jack"))
+
+	// 在部分场景下，结构体只包含方法，不包含任何的字段。例如上面例子中的 Door，在这种情况下，Door 事实上可以用任何的数据结构替代。例如：
+	// type Door int、type Door bool 无论是 int 还是 bool 都会浪费额外的内存，因此呢，这种情况下，声明为空结构体是最合适的
+	fmt.Println("\n---------- 仅包含方法的结构体 ----------------")
+	door := Door{}
+	door.Open()
+	door.Close()
+
+	//#endregion
+}
+
+type Set map[string]struct{}
+
+func (s Set) Has(key string) bool {
+	_, ok := s[key]
+	return ok
+}
+
+func (s Set) Add(key string) {
+	s[key] = struct{}{}
+}
+
+func (s Set) Delete(key string) {
+	delete(s, key)
+}
+
+type Door struct{}
+
+func (d Door) Open() {
+	fmt.Println("Open the door")
+}
+
+func (d Door) Close() {
+	fmt.Println("Close the door")
 }
