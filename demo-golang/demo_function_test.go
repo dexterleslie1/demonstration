@@ -1,7 +1,11 @@
 // 演示golang函数
 package main
 
-import "testing"
+import (
+	"fmt"
+	"strings"
+	"testing"
+)
 
 // 测试函数参数为指针
 // https://www.geeksforgeeks.org/function-arguments-in-golang/
@@ -37,4 +41,19 @@ func TestFuncReturnMultipleValues(t *testing.T) {
 	if b != 3 {
 		t.Errorf("b must be 3")
 	}
+}
+
+// 测试variadic function 可变参数函数
+// https://www.geeksforgeeks.org/golang-program-that-uses-func-with-variable-argument-list/
+func TestVariadicFunction(t *testing.T) {
+	return_arr := myVariadicFun1("Dexter", "!")
+	fmt.Println(strings.Join(return_arr, " "))
+}
+
+func myVariadicFun1(args ...string) []string {
+	return myVariadicFun2(args...)
+}
+
+func myVariadicFun2(args ...string) []string {
+	return append([]string{"Hello"}, args...)
 }

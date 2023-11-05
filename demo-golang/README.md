@@ -88,7 +88,7 @@ go run xxx.go
 
 **使用go mod 管理项目，就不需要非得把项目放到GOPATH指定目录下，你可以在你磁盘的任何位置新建一个项目**
 
-go.mod: 记录当前模块的最低go版本、模块名称、第三依赖库。
+go.mod: 记录当前模块的最低go版本、模块名称、第三依赖库。require中可以指定第三方依赖库版本
 go.sum: 记录第三方库被锁定的版本。
 **[go.mod go.sum](https://blog.csdn.net/Fly_as_tadpole/article/details/109441310)**
 

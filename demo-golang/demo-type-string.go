@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 )
 
 func main() {
@@ -43,5 +44,23 @@ func main() {
 	}
 	if myInt64 != 10000000 {
 		log.Fatalf("myInt64非预期值")
+	}
+
+	// 演示strings.Contains
+	// https://www.geeksforgeeks.org/string-contains-function-in-golang-with-examples/
+	strTest := "5.15.0-46-generic"
+	if strings.Contains(strTest, "el8") {
+		log.Fatalf("%s不应该包含el8", strTest)
+	}
+
+	strTest = "4.18.0-373.el8.x86_64"
+	if !strings.Contains(strTest, "el8") {
+		log.Fatalf("%s应该包含el8", strTest)
+	}
+
+	// 演示strings.Join
+	my_str_arr := []string{"Hello", "Dexter", "!"}
+	if "Hello Dexter !" != strings.Join(my_str_arr, " ") {
+		log.Fatalf("字符串应该为： %s", "Hello Dexter !")
 	}
 }
