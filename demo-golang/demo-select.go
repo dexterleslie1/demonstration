@@ -22,12 +22,16 @@ func main() {
 	o := make(chan bool)
 	go func() {
 		for {
+			// 下面两个case中任何一个case能够从channel中获取到数据，则select就选择获取到数据的case分支继续执行
+			// 否则阻塞
 			select {
 			case v := <-c:
 				fmt.Println(v)
 			//5秒钟自动关闭,避免长时间超时
 			case <-time.After(1 * time.Second):
 				fmt.Println("timeout")
+
+				// channel中放入元素true让主线程 <-o 继续执行并退出
 				o <- true
 				break
 			}

@@ -5,14 +5,16 @@ import "fmt"
 func Test1() {
 	// 定义channel
 	intChannel := make(chan int, 3)
+	// 把元素放入到channel中
 	intChannel <- 1
 	intChannel <- 2
 	intChannel <- 3
 	// 不能超过channel的容量3，否则会报告 fatal error: all goroutines are asleep - deadlock!
 	// intChannel <- 5
 
-	// 丢弃一个元素
-	<-intChannel
+	// 从channel中获取一个元素
+	element := <-intChannel
+	fmt.Printf("element=%d\n", element)
 	intChannel <- 5
 
 	<-intChannel
