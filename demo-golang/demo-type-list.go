@@ -31,4 +31,12 @@ func main() {
 	my_str_arr = []string{" Dexter", "!"}
 	my_str_arr = append([]string{"Hello"}, my_str_arr...)
 	fmt.Println("preappend字符串：", strings.Join(my_str_arr, ""))
+
+	// 删除最后一个元素
+	// https://stackoverflow.com/questions/26172196/how-to-remove-the-last-element-from-a-slice
+	my_str_arr = []string{"Hello", " Dexter", "!"}
+	if len(my_str_arr) > 0 {
+		my_str_arr = my_str_arr[:len(my_str_arr)-1]
+	}
+	fmt.Println("删除最后一个元素：", strings.Join(my_str_arr, ""))
 }
