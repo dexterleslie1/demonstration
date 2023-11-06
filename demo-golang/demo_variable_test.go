@@ -1,6 +1,9 @@
 package main
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 const (
 	myString string = "Hello world!"
@@ -62,4 +65,15 @@ func TestConstVariable(t *testing.T) {
 	if B2 != 3 {
 		t.Fatalf("B2 must be %d", B2)
 	}
+
+	//#region 打印变量内存地址
+
+	// https://freshman.tech/snippets/go/memory-address/
+	a := 2
+	fmt.Print("variable a address: ")
+	fmt.Println(&a)
+
+	fmt.Printf("variable a address: %p\n", &a)
+
+	//#endregion
 }
