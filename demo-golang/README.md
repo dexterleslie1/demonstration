@@ -192,10 +192,20 @@ go mod tidy
 >
 > https://github.com/enescakir/emoji/tree/master
 
-
-
 ### xterm使用
 
 > 参考 demo-lib-xterm
 >
 > golang.org/x/term
+
+### promptui使用
+
+> 参考 demo-lib-promptui
+>
+> https://github.com/manifoldco/promptui
+
+### properties使用
+
+> 参考 demo-lib-properties
+>
+> https://github.com/magiconair/properties
