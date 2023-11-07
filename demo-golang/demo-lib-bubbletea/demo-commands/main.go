@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"time"
@@ -25,6 +26,8 @@ type model struct {
 	err    error
 }
 
+var counter int = 0
+
 func checkServer() tea.Msg {
 
 	// Create an HTTP client and make a GET request.
@@ -40,8 +43,15 @@ func checkServer() tea.Msg {
 	}
 	// We received a response from the server. Return the HTTP status code
 	// as a message.
-	return statusMsg(res.StatusCode)
+	counter++
+	if counter < 5 {
+		return statusMsg(res.StatusCode)
+	} else {
+		return statusMsg(-1)
+	}
 }
+
+type startupMsg struct{}
 
 type statusMsg int
 
@@ -52,11 +62,23 @@ type errMsg struct{ err error }
 func (e errMsg) Error() string { return e.err.Error() }
 
 func (m model) Init() tea.Cmd {
-	return checkServer
+	// return checkServer
+	return func() tea.Msg {
+		// 5秒后开始发出启动消息
+		timer := time.NewTimer(time.Duration(5) * time.Second)
+		log.Println("5秒后发出启动应用消息")
+		<-timer.C
+		log.Println("正式发出启动应用消息")
+		return startupMsg{}
+	}
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+
+	case startupMsg:
+		log.Println("接收到启动应用消息")
+		return m, checkServer
 
 	case statusMsg:
 		// The server returned a status message. Save it to our model. Also
@@ -64,7 +86,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// else to do. We'll still be able to render a final view with our
 		// status message.
 		m.status = int(msg)
-		return m, tea.Quit
+		if m.status == 200 {
+			log.Println("接收到checkServer返回 status=200，应用继续执行")
+			return m, checkServer
+		} else {
+			log.Println("接收到checkServer返回 status=-1，退出应用")
+			return m, tea.Quit
+		}
 
 	case errMsg:
 		// There was an error. Note it in the model. And tell the runtime
