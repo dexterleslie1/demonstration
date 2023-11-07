@@ -122,3 +122,14 @@ func TestExecYumProgress(t *testing.T) {
 
 	//#endregion
 }
+
+// 执行带有管道的命令
+// https://stackoverflow.com/questions/10781516/how-to-pipe-several-commands-in-go
+func TestExecPipe(t *testing.T) {
+	out, err := exec.Command("bash", "-c", "cat /etc/passwd|grep root").CombinedOutput()
+	if err != nil {
+		log.Fatal(err, " ", string(out))
+	} else {
+		fmt.Println("命令执行结果:", string(out))
+	}
+}
