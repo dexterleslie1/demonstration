@@ -63,4 +63,11 @@ func main() {
 	if "Hello Dexter !" != strings.Join(my_str_arr, " ") {
 		log.Fatalf("字符串应该为： %s", "Hello Dexter !")
 	}
+
+	// 演示string HasPrefix(startWith)
+	// https://stackoverflow.com/questions/12667327/go-startswithstr-string
+	strTest = "hello dexter"
+	if !strings.HasPrefix(strTest, "hello") {
+		log.Fatalf("字符串“%s”应该以hello开头", strTest)
+	}
 }

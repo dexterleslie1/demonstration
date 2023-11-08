@@ -39,4 +39,68 @@ func main() {
 		my_str_arr = my_str_arr[:len(my_str_arr)-1]
 	}
 	fmt.Println("删除最后一个元素：", strings.Join(my_str_arr, ""))
+
+	//#region 演示slice用法
+
+	// 演示slice使用
+	// https://blog.csdn.net/qq_36977923/article/details/124812086
+
+	// 使用make函数创建slice
+	mySlice := make([]int, 0)
+	fmt.Println("mySlice=", mySlice)
+
+	// append元素到slice
+	mySlice = append(mySlice, 11)
+	fmt.Println("append(mySlice, 11)后的mySlice=", mySlice)
+
+	mySlice = append(mySlice, 12, 13)
+	fmt.Println("append(mySlice, 12, 13)后的mySlice=", mySlice)
+
+	// https://stackoverflow.com/questions/16248241/concatenate-two-slices-in-go
+	var mySlice1 []int
+	mySlice1 = append(mySlice1, 22, 23)
+	mySlice = append(mySlice, mySlice1...)
+	fmt.Println("append(mySlice, mySlice1...)后的mySlice=", mySlice)
+
+	// 演示 slice[start:end] 语法
+	mySlice = []int{0, 1, 2, 3, 4, 5}
+	fmt.Println("mySlice[0:]=", mySlice[0:])
+	fmt.Println("mySlice[:]", mySlice[:])
+	fmt.Println("mySlice[1:]", mySlice[1:])
+	fmt.Println("mySlice[:3+1]", mySlice[:3+1])
+	fmt.Println("mySlice[3:]", mySlice[3:])
+
+	mySlice = []int{0, 1, 2, 3, 4, 5}
+	mySlice = insertBefore(mySlice, 0, 8)
+	fmt.Println("mySlice在index=0位置前插入8", mySlice)
+	mySlice = []int{0, 1, 2, 3, 4, 5}
+	mySlice = insertBefore(mySlice, 3, 8)
+	fmt.Println("mySlice在index=3位置前插入8", mySlice)
+	mySlice = []int{0, 1, 2, 3, 4, 5}
+	mySlice = insertBefore(mySlice, 5, 8)
+	fmt.Println("mySlice在index=5位置前插入8", mySlice)
+
+	mySlice = []int{0, 1, 2, 3, 4, 5}
+	mySlice = insertAfter(mySlice, 0, 8)
+	fmt.Println("mySlice在index=0位置后插入8", mySlice)
+	mySlice = []int{0, 1, 2, 3, 4, 5}
+	mySlice = insertAfter(mySlice, 3, 8)
+	fmt.Println("mySlice在index=3位置后插入8", mySlice)
+	mySlice = []int{0, 1, 2, 3, 4, 5}
+	mySlice = insertAfter(mySlice, 5, 8)
+	fmt.Println("mySlice在index=5位置后插入8", mySlice)
+
+	//#endregion
+}
+
+func insertBefore(slice []int, index int, value int) []int {
+	slice = append(slice[:index+1], slice[index:]...)
+	slice[index] = value
+	return slice
+}
+
+func insertAfter(slice []int, index int, value int) []int {
+	slice = append(slice[:index+1], slice[index:]...)
+	slice[index+1] = value
+	return slice
 }

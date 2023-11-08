@@ -9,6 +9,7 @@ builds:
   - id: "program1"
     env:
       - CGO_ENABLED=0
+    # 编译linux、windows、macOS平台对应的程序
     goos:
       - linux
       - windows
@@ -16,12 +17,16 @@ builds:
     dir: ./program1
     main: ./
     ignore:
+      # 忽略 macOS 386 cpu架构编译
       - goos: darwin
         goarch: 386
+      # 忽略 linux 386 cpu架构编译
       - goos: linux
         goarch: 386
+      # 忽略 linux arm64 cpu架构编译
       - goos: linux
         goarch: arm64
+      # 忽略 windows 386 cpu架构编译
       - goos: windows
         goarch: 386
     binary: program1

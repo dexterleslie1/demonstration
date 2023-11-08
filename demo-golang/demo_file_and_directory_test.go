@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path"
@@ -141,6 +142,27 @@ func TestFileAndDirectory(t *testing.T) {
 	if !bytes.Equal(randomBytes, tempBytes) {
 		t.Fatalf("写入文件的byte array和读取文件的byte array不匹配")
 	}
+
+	//#endregion
+
+	//#region 复制(copy)文件
+
+	srcFile, err := os.OpenFile("./demo_file_and_directory_test.go", os.O_RDONLY, 0600)
+	if err != nil {
+		t.Fatalf("%s\n", err)
+	}
+	defer srcFile.Close()
+	dstFile, err := os.OpenFile("/tmp/test.go", os.O_CREATE|os.O_WRONLY, 0600)
+	if err != nil {
+		t.Fatalf("%s\n", err)
+	}
+	defer dstFile.Close()
+
+	_, err = io.Copy(dstFile, srcFile)
+	if err != nil {
+		t.Fatalf("%s\n", err)
+	}
+	fmt.Println("文件./demo_file_and_directory_test.go成功复制到/tmp/test.go")
 
 	//#endregion
 }
