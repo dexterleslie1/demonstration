@@ -91,6 +91,14 @@ func TestFormat(t *testing.T) {
 	fmt.Println(longStr)
 
 	//#endregion
+
+	//#region 打印bool布尔值
+
+	// https://stackoverflow.com/questions/7059735/how-to-print-boolean-value-in-go
+	myBool := true
+	fmt.Printf("myBool=%t\n", myBool)
+
+	//#endregion
 }
 
 type MyStruct struct {

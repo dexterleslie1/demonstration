@@ -5,7 +5,6 @@ import (
 	_ "embed"
 	"fmt"
 	"log"
-	"os"
 )
 
 // Embed the file content as string.
@@ -37,7 +36,7 @@ func main() {
 	fmt.Println("")
 
 	// embed的文件可以使用相对路径读取
-	fileData, err := os.ReadFile("templates/index.html.tmpl")
+	fileData, err := templatesFolder.ReadFile("templates/index.html.tmpl")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -46,7 +45,7 @@ func main() {
 	fmt.Println("--------------------------------------------------------")
 	fmt.Println("")
 
-	fileData, err = os.ReadFile("static/2.txt")
+	fileData, err = staticFolder.ReadFile("static/2.txt")
 	if err != nil {
 		log.Fatal(err)
 	}

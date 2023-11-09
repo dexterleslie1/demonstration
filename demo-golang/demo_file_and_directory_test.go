@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"os/exec"
 	"path"
@@ -163,6 +164,24 @@ func TestFileAndDirectory(t *testing.T) {
 		t.Fatalf("%s\n", err)
 	}
 	fmt.Println("文件./demo_file_and_directory_test.go成功复制到/tmp/test.go")
+
+	//#endregion
+
+	//#region 获取home目录下的子目录
+
+	// https://stackoverflow.com/questions/14668850/list-directory-in-go
+	fmt.Println()
+	fmt.Println("---------- home 目录下的子目录 ----------")
+	entries, err := os.ReadDir("/home")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, e := range entries {
+		if e.IsDir() {
+			fmt.Println(e.Name())
+		}
+	}
 
 	//#endregion
 }

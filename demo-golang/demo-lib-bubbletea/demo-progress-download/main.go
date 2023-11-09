@@ -51,6 +51,9 @@ func getResponse(url string) (*http.Response, error) {
 }
 
 // https://github.com/charmbracelet/bubbletea/tree/master/examples/progress-download
+
+// 辅助测试下载地址
+// https://bucketxyh.oss-cn-hongkong.aliyuncs.com/docker/docker-compose-Linux-x86_64
 func main() {
 	url := flag.String("url", "", "url for the file to download")
 	flag.Parse()
