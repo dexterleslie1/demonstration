@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"testing"
 )
 
 type Usb interface {
@@ -47,15 +48,15 @@ func main() {
 	computer.Plugin(phone)
 	computer.Plugin(camera)
 
-	result := TestEmptyInterface("Hello world!")
+	result := testEmptyInterface("Hello world!")
 	fmt.Printf("%s\n", result)
-	TestEmptyInterface(19)
+	testEmptyInterface(19)
 }
 
 // 演示empty interface用法
 // NOTE: empty interface实质表示任意数据类型
 // https://www.programiz.com/golang/empty-interface
-func TestEmptyInterface(param1 interface{}) interface{} {
+func testEmptyInterface(param1 interface{}) interface{} {
 	var a interface{} = 18
 	if a == 18 {
 		fmt.Println("var a interface{} == 18")
@@ -64,4 +65,44 @@ func TestEmptyInterface(param1 interface{}) interface{} {
 	fmt.Printf("%s\n", param1)
 
 	return "Return hello world!!!"
+}
+
+type Shape interface {
+	Area() float64
+}
+type Color interface {
+	Fill() string
+}
+type ColoredShape interface {
+	Shape
+	Color
+}
+
+type Square struct {
+	Length float64
+}
+
+func (s Square) Area() float64 {
+	return s.Length * s.Length
+}
+
+type Red struct {
+}
+
+func (r Red) Fill() string {
+	return "red"
+}
+
+type RedSquare struct {
+	Red
+	Square
+}
+
+// 演示接口继承
+// https://stackoverflow.com/questions/32323363/interface-inherit-from-other-interface-in-golang
+// https://www.tutorialspoint.com/embedding-interfaces-in-golang
+func TestInterfaceEmbedding(t *testing.T) {
+	rs := RedSquare{Red{}, Square{Length: 5}}
+	fmt.Println("Area of square: ", rs.Area())
+	fmt.Println("Color of square: ", rs.Fill())
 }
