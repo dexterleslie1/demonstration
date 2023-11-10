@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
+	"testing"
 
 	"github.com/manifoldco/promptui"
 )
 
-func main() {
+func TestSelect(t *testing.T) {
 	prompt := promptui.Select{
 		Label: "Select Day",
 		Items: []string{"Monday", "Tuesday", "Wednesday", "Thursday", "Friday",

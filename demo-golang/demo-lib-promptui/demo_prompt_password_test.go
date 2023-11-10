@@ -3,11 +3,12 @@ package main
 import (
 	"errors"
 	"fmt"
+	"testing"
 
 	"github.com/manifoldco/promptui"
 )
 
-func main() {
+func TestPromptPassword(t *testing.T) {
 	validate := func(input string) error {
 		if len(input) < 6 {
 			return errors.New("Password must have more than 6 characters")
