@@ -111,3 +111,16 @@ if __name__ == "__main__":
             print("[" + "#" * width + " " * (25 - width) + "]")
     print("------------------------------------------")
     print()
+
+    # 显示和隐藏光标
+    print("---------------- 显示和隐藏光标 ----------------")
+    print("隐藏光标3秒")
+    sys.stdout.write("\u001b[?25l")
+    sys.stdout.flush()
+    time.sleep(3)
+    print("显示光标3秒")
+    sys.stdout.write("\u001b[?25h")
+    sys.stdout.flush()
+    time.sleep(3)
+    print("------------------------------------------")
+    print()
