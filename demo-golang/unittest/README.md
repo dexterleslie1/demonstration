@@ -7,6 +7,11 @@ go test -v
 # 运行指定测试用例文件
 go test -v add_test.go cal.go
 
-# 运行指定测试用例
+# 运行指定测试用例，NOTE: TestAdd被解析为正则表达式表示会执行TestAdd开头的测试
 go test -v -test.run TestAdd
+
+# 精确地指定运行测试用例
+# https://stackoverflow.com/questions/26092155/just-run-single-test-instead-of-the-whole-suite
+go test -v -test.run ^TestAdd$
+
 ```
