@@ -5,9 +5,6 @@
 # ANSI escape code基本语法
 # https://codehs.com/tutorial/andy/ansi-colors
 
-# github gist ANSI code介绍
-# https://gist.github.com/fnky/458719343aabd01cfb17a3a4f7296797
-
 # ASCII 码表
 # https://www.asciitable.com/
 
@@ -59,4 +56,22 @@ echo -e "$ESC[35;3mHello $ESC[33;1mDexterleslie$ESC[0m!!!!!"
 
 
 #endregin
+
+
+
+
+#region 模拟docker-compose命令
+
+echo -e
+echo "Pulling zulu-jdk-15 ... downloading" && \
+echo "Pulling zulu-jdk-11 ... downloading" && \
+echo "Pulling zulu-jdk-8  ... downloading" && \
+sleep 2 && \
+echo -e "\e[2A\e[24C\e[32mdone\e[0m\e[K" && \
+sleep 1 && \
+echo -e "\e[24C\e[32mdone\e[0m\e[K" && \
+sleep 1 && \
+echo -e "\e[3A\e[24C\e[32mdone\e[0m\e[K\n\n"
+
+#ednregion
 

@@ -72,3 +72,18 @@ var_a = test_fun1()[0]
 print('var_a={0}'.format(var_a))
 
 #endregion
+
+#region 参数有默认值的函数
+
+def sum(a, b=100) :
+ total = a+b
+ return total
+
+total = sum(10)
+print("10+100=" + str(total))
+
+total = sum(10,1000)
+print("10+1000=" + str(total))
+
+#endregion
+

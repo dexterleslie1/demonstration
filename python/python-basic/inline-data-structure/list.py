@@ -120,3 +120,41 @@ if __name__ == "__main__":
     varList = [45, 67, 11, 23, 101, 23]
     varList = sorted(varList, reverse = True)
     print(varList)
+
+    # 获取list长度
+    varList = [0]*5
+    print("[0]*5的长度为：", len(varList))
+
+    # list comprehensions
+    # https://docs.python.org/2/tutorial/datastructures.html#list-comprehensions
+
+    print("---------------- 不使用list comprehensions过滤list例子 ----------------")
+    source_list = ["a", "b", "c"]
+    target_list = []
+    for x in source_list:
+        if x == "a" or x == "c":
+            target_list.append(x.upper())
+    print(target_list)
+    print("------------------------------------------")
+    print()
+
+    # 例子1
+    print("---------------- list comprehensions 例子1 ----------------")
+    target_list = [x.upper() for x in source_list if x == "a" or x == "c"]
+    print(target_list)
+    print("------------------------------------------")
+    print()
+
+    # 例子2
+    print("---------------- list comprehensions 例子2 ----------------")
+    target_list = [(x, y) for x in [1,2,3] for y in [3,1,4] if x != y]
+    print(target_list)
+    print("------------------------------------------")
+    print()
+
+    # 例子3
+    print("---------------- list comprehensions 例子3 ----------------")
+    target_list = [(i, v) for i, v in enumerate(source_list) if v == "a" or v == "c"]
+    print(target_list)
+    print("------------------------------------------")
+    print()
