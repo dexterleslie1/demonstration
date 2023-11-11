@@ -209,3 +209,9 @@ go mod tidy
 > 参考 demo-lib-properties
 >
 > https://github.com/magiconair/properties
+
+
+
+## 数据类型
+
+> 参考 demo-data-type
