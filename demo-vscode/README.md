@@ -2,18 +2,13 @@
 
 > 在插件管理器搜索typora，选择安装下载量排第一的插件，这样就能够在vscode像typora那样编辑md文件
 
-
-
 ## 配置git
 
 > - 使用vscode自带的git管理工具
->
 > - 安装git graph插件用于查看提交日志
->
 > - 设置vscode自带git管理工具tree模式查看变动的文件
 >   https://stackoverflow.com/questions/51476096/visual-studio-code-group-pending-changes-by-folder
 >   Source Control -- pending changes > Source Control > View & Sort > View as Tree
->
 > - 设置git自动保存密码，避免每次提交时都要输入密码
 >
 >   https://stackoverflow.com/questions/34400272/visual-studio-code-is-always-asking-for-git-credentials
@@ -21,13 +16,9 @@
 >   设置git自动保存密码 git config --global credential.helper store
 >   查看git自动保存密码是否设置成功 git config --global credential.helper
 
-
-
 ## vscode设置
 
 > 1、设置zoom为1，Code > Preferences > Settings > Zoom
-
-
 
 ## vscode远程开发
 
@@ -47,23 +38,15 @@
 # 新窗口中提示输入SSH密码并输入密码后，选择克隆或者打开远程主机的目录就可以进行远程开发了。
 ```
 
-
-
-
-
 ## 设置打开文件很多时tabs多行显示
 
 > https://stackoverflow.com/questions/42462777/multirow-tabs-for-vscode
 >
 > 打开 File > Preferences > Settings > Workbench > Editor Management 后搜索 wrap tabs 打上钩则可。
 
-
-
-
-
 ## 使用launch.json设置 run/debug 加载的golang入口文件
 
-```shell
+```json
 # unittest时配置如下
 {
     "version": "0.2.0",
@@ -86,3 +69,10 @@
 }
 ```
 
+## 快捷键
+
+```shell
+# 快速搜索并打开文件 ctrl+p
+
+# 快速隐藏或者打开 Terminal 所在的Panel ctrl+`
+```
