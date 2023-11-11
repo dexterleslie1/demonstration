@@ -47,3 +47,42 @@
 # 新窗口中提示输入SSH密码并输入密码后，选择克隆或者打开远程主机的目录就可以进行远程开发了。
 ```
 
+
+
+
+
+## 设置打开文件很多时tabs多行显示
+
+> https://stackoverflow.com/questions/42462777/multirow-tabs-for-vscode
+>
+> 打开 File > Preferences > Settings > Workbench > Editor Management 后搜索 wrap tabs 打上钩则可。
+
+
+
+
+
+## 使用launch.json设置 run/debug 加载的golang入口文件
+
+```shell
+# unittest时配置如下
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch Package",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            // 指定加载demo_prompt_test.go为测试入口文件
+            "program": "${workspaceFolder}/demo_prompt_test.go",
+            "args": [
+            	// 指定只运行 unittest 中的名为 TestPrompt 的用例
+                "-test.run=^TestPrompt$"
+            ],
+            // 必须设置为 integratedTerminal，否则测试 promptui stdin 无法输入
+            "console": "integratedTerminal"
+        }
+    ]
+}
+```
+
