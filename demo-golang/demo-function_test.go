@@ -57,3 +57,14 @@ func myVariadicFun1(args ...string) []string {
 func myVariadicFun2(args ...string) []string {
 	return append([]string{"Hello"}, args...)
 }
+
+// Named return values
+// https://go.dev/tour/basics/7
+func TestNamedReturnValues(t *testing.T) {
+	x, y := namedRetrunValues()
+	fmt.Println("x=", x, ",y=", y)
+}
+
+func namedRetrunValues() (x string, y int) {
+	return "hello", 36
+}

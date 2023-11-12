@@ -38,4 +38,11 @@ func TestDataTypeRune(t *testing.T) {
 	if "Go语言" != string([]rune(str)[:4]) {
 		t.Errorf("expected Go语言, got %s", string([]rune(str)[:4]))
 	}
+
+	// 获取单个rune
+	// https://stackoverflow.com/questions/30263607/how-to-get-a-single-unicode-character-from-string
+	r, _ := utf8.DecodeRuneInString("我")
+	if 25105 != r {
+		t.Errorf("exptected 25105, got %d", r)
+	}
 }
