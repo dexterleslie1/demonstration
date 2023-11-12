@@ -239,6 +239,7 @@ func LineCount(screenWidth, w int) int {
 	return r
 }
 
+// 非a-z，A-Z，0-9的rune被认为WordBreak
 func IsWordBreak(i rune) bool {
 	switch {
 	case i >= 'a' && i <= 'z':

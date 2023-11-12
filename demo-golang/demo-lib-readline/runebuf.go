@@ -15,7 +15,8 @@ type runeBufferBck struct {
 }
 
 type RuneBuffer struct {
-	buf    []rune
+	buf []rune
+	// 光标位置
 	idx    int
 	prompt []rune
 	w      io.Writer
@@ -145,6 +146,7 @@ func (r *RuneBuffer) MoveToLineStart() {
 	})
 }
 
+// 光标向左移动一步
 func (r *RuneBuffer) MoveBackward() {
 	r.Refresh(func() {
 		if r.idx == 0 {
@@ -164,17 +166,21 @@ func (r *RuneBuffer) WriteRune(s rune) {
 
 func (r *RuneBuffer) WriteRunes(s []rune) {
 	r.Refresh(func() {
+		// 在当前光标前插入内容
 		tail := append(s, r.buf[r.idx:]...)
 		r.buf = append(r.buf[:r.idx], tail...)
+		// 当前光标位置向右移动到新插入内容尾部
 		r.idx += len(s)
 	})
 }
 
 func (r *RuneBuffer) MoveForward() {
 	r.Refresh(func() {
+		// 在行尾不能再向右移动
 		if r.idx == len(r.buf) {
 			return
 		}
+		// 向右移动一步
 		r.idx++
 	})
 }
@@ -182,15 +188,18 @@ func (r *RuneBuffer) MoveForward() {
 func (r *RuneBuffer) IsCursorInEnd() bool {
 	r.Lock()
 	defer r.Unlock()
+	// 判断光标是否在行尾
 	return r.idx == len(r.buf)
 }
 
 func (r *RuneBuffer) Replace(ch rune) {
 	r.Refresh(func() {
+		// 替换光标处内容
 		r.buf[r.idx] = ch
 	})
 }
 
+// 删除所有文本并记录上次删除内容到缓存中
 func (r *RuneBuffer) Erase() {
 	r.Refresh(func() {
 		r.idx = 0
@@ -250,6 +259,7 @@ func (r *RuneBuffer) MoveToPrevWord() (success bool) {
 	return
 }
 
+// 删除光标前的内容
 func (r *RuneBuffer) KillFront() {
 	r.Refresh(func() {
 		if r.idx == 0 {
@@ -264,6 +274,7 @@ func (r *RuneBuffer) KillFront() {
 	})
 }
 
+// 删除光标之后的内容
 func (r *RuneBuffer) Kill() {
 	r.Refresh(func() {
 		r.pushKill(r.buf[r.idx:])
@@ -359,6 +370,7 @@ func (r *RuneBuffer) Yank() {
 	})
 }
 
+// 删除光标前的一个字符
 func (r *RuneBuffer) Backspace() {
 	r.Refresh(func() {
 		if r.idx == 0 {
@@ -588,6 +600,7 @@ func (r *RuneBuffer) SetPrompt(prompt string) {
 	r.Unlock()
 }
 
+// 清除之前输出到屏幕的内容
 func (r *RuneBuffer) cleanOutput(w io.Writer, idxLine int) {
 	buf := bufio.NewWriter(w)
 
