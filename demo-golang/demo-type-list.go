@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"reflect"
 	"strconv"
 	"strings"
 )
@@ -89,6 +91,18 @@ func main() {
 	mySlice = []int{0, 1, 2, 3, 4, 5}
 	mySlice = insertAfter(mySlice, 5, 8)
 	fmt.Println("mySlice在index=5位置后插入8", mySlice)
+
+	//#endregion
+
+	//#region 使用reflect.DeepEqual比较两个[]int是否相等
+
+	intSlice1 := []int{1, 2, 3}
+	intSlice2 := []int{1, 2, 3}
+	if !reflect.DeepEqual(intSlice1, intSlice2) {
+		log.Println(intSlice1, " and ", intSlice2, " is not equal")
+	} else {
+		log.Println(intSlice1, " and ", intSlice2, " is equal")
+	}
 
 	//#endregion
 }
