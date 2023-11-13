@@ -46,4 +46,22 @@ func main() {
 	whatAmI(true)
 	whatAmI(1)
 	whatAmI("hey")
+
+	// fallthrough用法
+	// https://www.cnblogs.com/zsy/p/6741902.html
+
+	// fallthrough：Go里面switch默认相当于每个case最后带有break，匹配成功后不会自动向下执行其他case，而是跳出整个switch, 但是可以使用fallthrough强制执行后面的case代码。
+	s := "abcd"
+	switch s[1] {
+	case 'a':
+		fmt.Println("The integer was <= 4")
+		fallthrough
+	case 'b':
+		fmt.Println("The integer was <= 5")
+		fallthrough
+	case 'c':
+		fmt.Println("The integer was <= 6")
+	default:
+		fmt.Println("default case")
+	}
 }
