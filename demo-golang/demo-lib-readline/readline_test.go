@@ -25,9 +25,11 @@ func TestReadline(t *testing.T) {
 	rl.SetPrompt(">> ")
 	strExpected := "中a国bc"
 	// _, err = rl.Write([]byte(strExpected))
-	rl.Operation.buf.WriteString(strExpected)
-	if err != nil {
-		t.Fatalf("expected no err, got %s", err)
+	// rl.Operation.buf.WriteString(strExpected)
+	// 模拟键盘输入 “中a国bc”
+	runes := []rune(strExpected)
+	for _, r := range runes {
+		rl.Terminal.outchan <- r
 	}
 
 	// 模拟按下Enter键

@@ -24,9 +24,12 @@ func main() {
 		for {
 			// 下面两个case中任何一个case能够从channel中获取到数据，则select就选择获取到数据的case分支继续执行
 			// 否则阻塞
+
+			// 这种机制可以用法主线程等待协程完成某种操作后再继续执行场景，例如：在编写cli程序时候，主线程一直等待直到按下Enter按后程序才退出执行
 			select {
 			case v := <-c:
 				fmt.Println(v)
+				o <- true
 			//5秒钟自动关闭,避免长时间超时
 			case <-time.After(1 * time.Second):
 				fmt.Println("timeout")
