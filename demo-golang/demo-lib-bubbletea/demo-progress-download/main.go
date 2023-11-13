@@ -95,8 +95,9 @@ func main() {
 	}
 
 	m := model{
-		pw:       pw,
-		progress: progress.New(progress.WithDefaultGradient()),
+		pw: pw,
+		// progress: progress.New(progress.WithDefaultGradient()),
+		progress: progress.New(progress.WithSolidFill("")),
 	}
 	// Start Bubble Tea
 	p = tea.NewProgram(m)
