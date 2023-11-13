@@ -13,12 +13,12 @@ func TestGoroutine(t *testing.T) {
 	waitGroup.Add(2)
 
 	go func() {
+		defer waitGroup.Done()
 		log.Println("Goroutine 1")
-		waitGroup.Done()
 	}()
 	go func() {
+		defer waitGroup.Done()
 		log.Println("Groutine 2")
-		waitGroup.Done()
 	}()
 
 	// 等待两个协程结束
@@ -30,9 +30,17 @@ func TestGoroutine(t *testing.T) {
 
 	go f1()
 	time.Sleep(2 * time.Second)
-	log.Println("main finished")
+	log.Println("main after f2 finished")
 
 	//#endregion
+
+	//region 演示recover机制
+
+	go f3()
+	time.Sleep(time.Second)
+	log.Println("main after f3 finished")
+
+	//endregion
 }
 
 func f1() {
@@ -45,4 +53,18 @@ func f1() {
 func f2() {
 	time.Sleep(time.Second)
 	log.Println("f2 finished")
+}
+
+func f3() {
+	// 通过此recover机制就不会导致整个程序崩溃
+	defer func() {
+		err := recover()
+		if err != nil {
+			log.Printf("f3发生错误 %s\n", err)
+		}
+	}()
+	a, b := 1, 0
+	// 此处会发生panic错误导致整个程序崩溃
+	_ = a / b
+	log.Println("f3 finished")
 }

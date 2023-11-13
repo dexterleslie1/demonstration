@@ -11,12 +11,12 @@ func TestGoroutine(t *testing.T) {
 	waitGroup.Add(2)
 
 	go func() {
+		defer waitGroup.Done()
 		log.Println("Goroutine 1")
-		waitGroup.Done()
 	}()
 	go func() {
+		defer waitGroup.Done()
 		log.Println("Groutine 2")
-		waitGroup.Done()
 	}()
 
 	// 等待两个协程结束
