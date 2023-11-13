@@ -9,7 +9,7 @@ import (
 
 var atomicCount int32
 
-func atomic_f1() {
+func atomicF1() {
 	// 没有使用并发控制时，count最终不是预期2000000
 	//for i := 0; i < 1000000; i++ {
 	//	count++
@@ -26,13 +26,13 @@ func TestAtomic(t *testing.T) {
 
 	go func() {
 		defer waitGroup.Done()
-		atomic_f1()
+		atomicF1()
 		log.Printf("f1 count=%d\n", atomicCount)
 	}()
 
 	go func() {
 		defer waitGroup.Done()
-		atomic_f1()
+		atomicF1()
 		log.Printf("f1 count=%d\n", atomicCount)
 	}()
 
