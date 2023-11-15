@@ -89,6 +89,44 @@ func main() {
 	door.Close()
 
 	//#endregion
+
+	//region 演示for range修改struct陷阱
+
+	fmt.Println("\n---------- 演示for range修改struct陷阱 ----------------")
+	persons := []Person{
+		{
+			Name: "p1",
+			Age:  11,
+		},
+		{
+			Name: "p2",
+			Age:  12,
+		},
+	}
+	fmt.Println("修改前persons=", persons)
+
+	for i := range persons {
+		// NOTE: 下面写法是不能修改persons数组中的值，因为p变量是persons中元素的复制
+		//p.Name = p.Name + "1"
+		//p.Age = p.Age + 1
+
+		// NOTE: 下面写法是不能修改persons数组中的值
+		//p := persons[i]
+		//p.Name = p.Name + "1"
+		//p.Age = p.Age + 1
+
+		// 正确写法
+		//persons[i].Name = p.Name + "1"
+		//persons[i].Age = p.Age + 1
+
+		// 正确写法
+		p := &persons[i]
+		p.Name = p.Name + "1"
+		p.Age = p.Age + 1
+	}
+	fmt.Println("修改后persons=", persons)
+
+	//endregion
 }
 
 type Set map[string]struct{}

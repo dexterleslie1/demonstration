@@ -44,4 +44,22 @@ func main() {
 	student2.Testing()
 	student1.Show()
 	student2.Show()
+
+	// 构造时初始化父级field
+	student1 = Student1{
+		Student{
+			Name: "zhangsan1",
+			Age:  23,
+		},
+	}
+	student2 = Student2{
+		Student{
+			Name: "lisi1",
+			Age:  24,
+		},
+	}
+	student1.Testing()
+	student2.Testing()
+	student1.Show()
+	student2.Show()
 }
