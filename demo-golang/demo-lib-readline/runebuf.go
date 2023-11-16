@@ -521,6 +521,7 @@ func (r *RuneBuffer) output() []byte {
 	return buf.Bytes()
 }
 
+// 定位光标的 ANSI esc code 序列
 func (r *RuneBuffer) getBackspaceSequence() []byte {
 	var sep = map[int]bool{}
 
