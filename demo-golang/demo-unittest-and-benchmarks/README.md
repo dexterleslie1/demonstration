@@ -16,8 +16,6 @@ go test -v -run ^TestAdd$
 
 ```
 
-
-
 ## benchmark测试
 
 > https://stackoverflow.com/questions/16161142/how-to-test-only-one-benchmark-function
@@ -27,3 +25,11 @@ go test -v -run ^TestAdd$
 # -bench 指定运行以Benchmark开头的方法
 go test -bench Benchmark -run ^$
 ```
+
+
+
+## 单元测试stdin mock
+
+> 单元测试时，读取stdin即时返回EOF，所以单元测试时候无法实现手动输入功能。此情况只能使用mock stdin方式实现模拟手动输入。
+>
+> 参考 demo-read-stdin_test.go
