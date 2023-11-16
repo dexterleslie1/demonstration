@@ -7,7 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Tests {
+public class CharacterEncodingTests {
 
     @Test
     public void testUnicode() {
@@ -63,6 +63,5 @@ public class Tests {
 
     String toHexString(byte datum) {
         return String.format("0x%2s", Integer.toHexString(datum & 0XFF)).replaceAll(" ", "0");
-
     }
 }
