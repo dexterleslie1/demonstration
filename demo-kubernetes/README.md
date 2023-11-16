@@ -129,6 +129,38 @@ kubectl cluster-info
 
 
 
+### kubectl输出http调试日志
+
+> https://www.shellhacks.com/kubectl-debug-increase-verbosity/
+>
+> kubectl调试日志等级从0到9共10个等级，数值越大调试日志越详细。
+
+```shell
+# 用于协助调试kubectl调用了哪些RESTApi
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: deployment1
+spec:
+ replicas: 3
+ selector:
+  matchLabels:
+   app: nginx-pod
+ template:
+  metadata:
+   labels:
+    app: nginx-pod
+  spec:
+   containers:
+   - name: nginx
+     image: nginx:1.17.1
+
+# 使用最详细的日志模式调试kubectl
+kubectl apply -f 3.yaml --v=9
+```
+
+
+
 ### kubectl get用法
 
 
@@ -334,6 +366,170 @@ kubectl get configmap demo-config2 -o yaml
 ```
 
 
+
+
+
+### kubectl apply用法
+
+#### 使用--dry-run转换yaml格式为JSON格式
+
+```shell
+# yaml文件内容如下:
+apiVersion: v1
+kind: Pod
+metadata:
+ name: pod1
+spec:
+ containers:
+ - name: busybox
+   image: busybox
+   command: ["/bin/sh", "-c", "while true;do echo `date` >> /root/out.txt; sleep 10; done;"]
+   volumeMounts:
+   - name: volume
+     mountPath: /root/
+     subPath: demo-pv-and-pvc
+ volumes:
+ - name: volume
+   persistentVolumeClaim:
+    claimName: pvc1
+    readOnly: false
+
+# 转换yaml格式为JSON
+kubectl apply -f 3.yaml --dry-run=client -o json
+```
+
+
+
+
+
+#### 使用JSON格式文件创建pod
+
+```shell
+# yaml文件内容如下:
+apiVersion: v1
+kind: Pod
+metadata:
+ name: pod1
+spec:
+ containers:
+ - name: busybox
+   image: busybox
+   command: ["/bin/sh", "-c", "while true;do echo `date` >> /root/out.txt; sleep 10; done;"]
+   imagePullPolicy: IfNotPresent
+   volumeMounts:
+   - name: volume
+     mountPath: /root/
+     subPath: demo-pv-and-pvc
+ volumes:
+ - name: volume
+   persistentVolumeClaim:
+    claimName: test-pvc1
+    readOnly: false
+
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: test-pvc1
+spec:
+  storageClassName: nfs-client
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+
+# 先将yaml文件转换为JSON格式文件
+kubectl apply -f 3.yaml --dry-run=client -o json
+
+# 使用JSON格式文件创建pod
+cat test.json | kubectl apply -f -
+
+# 使用JSON格式文件删除pod
+cat test.json | kubectl delete -f -
+```
+
+
+
+### kubectl apply用法
+
+#### 使用--dry-run转换yaml格式为JSON格式
+
+```shell
+# yaml文件内容如下:
+apiVersion: v1
+kind: Pod
+metadata:
+ name: pod1
+spec:
+ containers:
+ - name: busybox
+   image: busybox
+   command: ["/bin/sh", "-c", "while true;do echo `date` >> /root/out.txt; sleep 10; done;"]
+   volumeMounts:
+   - name: volume
+     mountPath: /root/
+     subPath: demo-pv-and-pvc
+ volumes:
+ - name: volume
+   persistentVolumeClaim:
+    claimName: pvc1
+    readOnly: false
+
+# 转换yaml格式为JSON
+kubectl apply -f 3.yaml --dry-run=client -o json
+```
+
+
+
+
+
+#### 使用JSON格式文件创建pod
+
+```shell
+# yaml文件内容如下:
+apiVersion: v1
+kind: Pod
+metadata:
+ name: pod1
+spec:
+ containers:
+ - name: busybox
+   image: busybox
+   command: ["/bin/sh", "-c", "while true;do echo `date` >> /root/out.txt; sleep 10; done;"]
+   imagePullPolicy: IfNotPresent
+   volumeMounts:
+   - name: volume
+     mountPath: /root/
+     subPath: demo-pv-and-pvc
+ volumes:
+ - name: volume
+   persistentVolumeClaim:
+    claimName: test-pvc1
+    readOnly: false
+
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: test-pvc1
+spec:
+  storageClassName: nfs-client
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+
+# 先将yaml文件转换为JSON格式文件
+kubectl apply -f 3.yaml --dry-run=client -o json
+
+# 使用JSON格式文件创建pod
+cat test.json | kubectl apply -f -
+
+# 使用JSON格式文件删除pod
+cat test.json | kubectl delete -f -
+```
 
 
 
@@ -1424,6 +1620,7 @@ spec:
    containers:
    - name: nginx
      image: nginx:1.17.1
+     imagePullPolicy: IfNotPresent
 
 # 创建资源
 kubectl create -f 1.yaml
@@ -1475,6 +1672,7 @@ spec:
    containers:
    - name: nginx
      image: nginx:1.17.1
+     imagePullPolicy: IfNotPresent
 
 # 创建资源
 kubectl create -f 1.yaml
@@ -8240,6 +8438,204 @@ kubectl get pod -o wide
 
 # 取消标记
 kubectl uncordon demo-k8s-node2
+```
+
+
+
+
+
+## kubernetes应用扩展
+
+
+
+### CustomResourceDefinitions CRD介绍
+
+> https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/
+
+```shell
+### 用于创建CRD对象
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+ name: websites.extensions.example.com
+spec:
+ # Website资源是属于某个命名空间的
+ scope: Namespaced
+ # api组
+ group: extensions.example.com
+ # api版本
+ # 在定义Website资源时 apiVersion 应该填写 extensions.example.com/v1
+ versions: 
+ - name: v1
+   storage: true
+   served: true
+   schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            # Website资源的spec支持字段
+            spec:
+              type: object
+              properties:
+                gitRepo:
+                  type: string
+ names:
+  kind: Website
+  # 单数
+  singular: website
+  # 复数
+  plural: websites
+  shortNames:
+  - ws
+
+# 创建CRD
+kubectl apply -f 1.yaml
+
+
+
+### 创建和删除CRD对象实例
+apiVersion: extensions.example.com/v1
+kind: Website
+metadata:
+ name: test
+spec:
+ gitRepo: https://github.com/luksa/kubia-website-example.git
+
+# 查看Website对象实例列表
+kubectl get website
+
+# 查看website对象实例详细信息
+kubectl get website test -o yaml
+
+# 删除CRD对象实例
+kubectl delete website test
+```
+
+
+
+### 自定义控制器（网站控制器）
+
+> 参考 website-controller
+
+```shell
+# 启动kubernetes API proxy
+kubectl proxy
+
+# 在website-controller项目的根目录中执行如下命令启动website-controller
+go run pkg/website-controller.go
+
+# 用于创建website对象实例
+apiVersion: extensions.example.com/v1
+kind: Website
+metadata:
+ name: test
+spec:
+ gitRepo: https://github.com/luksa/kubia-website-example.git
+
+# 创建website
+kubectl apply -f 1.yaml
+
+# 打开浏览器访问kubernetes任意一个节点测试website是否部署成功
+http://192.168.1.1.188:30000
+```
+
+
+
+
+
+## kubernetes应用扩展
+
+
+
+### CustomResourceDefinitions CRD介绍
+
+> https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/
+
+```shell
+### 用于创建CRD对象
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+ name: websites.extensions.example.com
+spec:
+ # Website资源是属于某个命名空间的
+ scope: Namespaced
+ # api组
+ group: extensions.example.com
+ # api版本
+ # 在定义Website资源时 apiVersion 应该填写 extensions.example.com/v1
+ versions: 
+ - name: v1
+   storage: true
+   served: true
+   schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            # Website资源的spec支持字段
+            spec:
+              type: object
+              properties:
+                gitRepo:
+                  type: string
+ names:
+  kind: Website
+  # 单数
+  singular: website
+  # 复数
+  plural: websites
+  shortNames:
+  - ws
+
+# 创建CRD
+kubectl apply -f 1.yaml
+
+
+
+### 创建和删除CRD对象实例
+apiVersion: extensions.example.com/v1
+kind: Website
+metadata:
+ name: test
+spec:
+ gitRepo: https://github.com/luksa/kubia-website-example.git
+
+# 查看Website对象实例列表
+kubectl get website
+
+# 查看website对象实例详细信息
+kubectl get website test -o yaml
+
+# 删除CRD对象实例
+kubectl delete website test
+```
+
+
+
+### 自定义控制器（网站控制器）
+
+> 参考 website-controller
+
+```shell
+# 启动kubernetes API proxy
+kubectl proxy
+
+# 在website-controller项目的根目录中执行如下命令启动website-controller
+go run pkg/website-controller.go
+
+# 用于创建website对象实例
+apiVersion: extensions.example.com/v1
+kind: Website
+metadata:
+ name: test
+spec:
+ gitRepo: https://github.com/luksa/kubia-website-example.git
+
+# 创建website
+kubectl apply -f 1.yaml
+
+# 打开浏览器访问kubernetes任意一个节点测试website是否部署成功
+http://192.168.1.1.188:30000
 ```
 
 

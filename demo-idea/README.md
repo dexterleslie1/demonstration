@@ -17,3 +17,22 @@
 # idea设置: 显示Git Commit tab，打开Settings>Version Control>Commit>Use non-modal commit interface
 ```
 
+
+
+## 设置multiple rows显示tabs
+
+> 打开Settings搜索“tabs row”，然后勾选 “multiple rows”。
+> 或者 Editor > General > Editor Tabs > Show tabs in > Multiple rows
+
+
+
+## 快捷键
+
+```shell
+# 快速删除一行 ctrl+y
+
+# 快速格式化代码 ctrl+alt+l
+```
+
+
+
