@@ -1,41 +1,44 @@
 package readline
 
 import (
+	"io"
+	"strings"
 	"testing"
 )
 
 func TestReadline(t *testing.T) {
-	rl, err := NewEx(&Config{})
+	strExpected := "中a国bc"
+	reader := strings.NewReader(strExpected)
+	readerCloser := io.NopCloser(reader)
+	rl, err := NewEx(&Config{Stdin: readerCloser})
 	if err != nil {
 		t.Fatal(err)
 		return
 	}
 
-	// go func() {
-	// 	for range time.Tick(time.Millisecond) {
-	// 		rl.SetPrompt("hello>> ")
-	// 	}
-	// }()
-
-	// go func() {
-	// 	time.Sleep(100000 * time.Millisecond)
-	// 	rl.Close()
-	// }()
-
 	rl.SetPrompt(">> ")
-	strExpected := "中a国bc"
-	// _, err = rl.Write([]byte(strExpected))
-	// rl.Operation.buf.WriteString(strExpected)
-	// 模拟键盘输入 “中a国bc”
-	runes := []rune(strExpected)
-	for _, r := range runes {
-		rl.Terminal.outchan <- r
-	}
-
-	// 模拟按下Enter键
-	rl.Terminal.outchan <- CharEnter
 
 	str, err := rl.Readline()
+	if strExpected != str {
+		t.Errorf("expected %s, got %s", strExpected, str)
+	}
+}
+
+func TestReadlineWithControlCharacter(t *testing.T) {
+	str := "中a国bc\u0002\u0002\u007F"
+	reader := strings.NewReader(str)
+	readerCloser := io.NopCloser(reader)
+	rl, err := NewEx(&Config{Stdin: readerCloser})
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+
+	strExpected := "中abc"
+
+	rl.SetPrompt(">> ")
+
+	str, err = rl.Readline()
 	if strExpected != str {
 		t.Errorf("expected %s, got %s", strExpected, str)
 	}
