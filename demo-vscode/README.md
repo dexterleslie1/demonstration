@@ -67,6 +67,8 @@
         }
     ]
 }
+
+# NOTE: 使用vscode开发工具时候需要切换到 Run and debug 面板使用Launch package调试，不能使用源码测试函数上面的 run test和 debug test功能，因为此功能不能加载 launch.json
 ```
 
 ## 快捷键
