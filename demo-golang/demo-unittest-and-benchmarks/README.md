@@ -66,6 +66,111 @@ go test -v
 
 ### goland远程开发场景
 
+```shell
+# 从命令行Run程序，能够正常读取stdin
+go run main.go
+
+# 从goland Run程序，不能正常读取stdin，尝试手动输入字符控制台没有反应
+
+# 从golang Debug程序，不能正常读取stdin，尝试手动输入字符控制台没有反应
+
+# 从命令行Run unittest程序，不能正常读取stdin遇到EOF错误
+go test -v
+
+# 从goland Run unittest程序，不能正常读取stdin遇到EOF错误
+
+# 从golang Debug unittest程序，不能正常读取stdin遇到EOF错误
+```
+
+
+
 ### vscode本地开发场景
 
+```shell
+# 从命令行Run程序，能够正常读取stdin
+go run main.go
+
+# 从vscode launch.json Run/Debug程序，能够正常读取stdin，launch.json内容如下:
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch Package",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/main.go",
+            "console": "integratedTerminal"
+        }
+    ]
+}
+
+# 从命令行Run unittest程序，不能正常读取stdin遇到EOF错误
+go test -v
+
+# 从vscode launch.json Run/Debug unittest程序，能够正常读取stdin，launch.json内容如下:
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch Package",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            // "program": "${workspaceFolder}/main.go",
+            "program": "${workspaceFolder}/demo_test.go",
+            "args": [
+                "-test.run=^TestReadStdin$"
+            ],
+            "console": "integratedTerminal"
+        }
+    ]
+}
+```
+
+
+
 ### vscode远程开发场景
+
+```shell
+# 从命令行Run程序，能够正常读取stdin
+go run main.go
+
+# 从vscode launch.json Run/Debug程序，能够正常读取stdin，launch.json内容如下:
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch Package",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/main.go",
+            "console": "integratedTerminal"
+        }
+    ]
+}
+
+# 从命令行Run unittest程序，不能正常读取stdin遇到EOF错误
+go test -v
+
+# 从vscode launch.json Run/Debug unittest程序，能够正常读取stdin，launch.json内容如下:
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch Package",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            // "program": "${workspaceFolder}/main.go",
+            "program": "${workspaceFolder}/demo_test.go",
+            "args": [
+                "-test.run=^TestReadStdin$"
+            ],
+            "console": "integratedTerminal"
+        }
+    ]
+}
+```
+

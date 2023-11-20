@@ -9,7 +9,7 @@ import (
 )
 
 func TestReadStdin(t *testing.T) {
-	fmt.Print("输入任意的字符：")
+	fmt.Print("unittest输入任意的字符：")
 	buf := bufio.NewReader(os.Stdin)
 	r, _, err := buf.ReadRune()
 	if err != nil {
