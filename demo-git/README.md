@@ -174,3 +174,13 @@ git config --list
 # https://stackoverflow.com/questions/15227130/using-a-socks-proxy-with-git-for-the-http-transport
 git clone https://github.com/cmu-db/benchbase.git --config 'http.proxy=socks5://192.168.1.55:1080'
 ```
+
+
+
+## git设置全局自签名ssl证书不验证合法性
+
+> https://confluence.atlassian.com/fishkb/unable-to-clone-git-repository-due-to-self-signed-certificate-376838977.html
+
+```shell
+git config --global http.sslVerify false
+```
