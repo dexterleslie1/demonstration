@@ -3,9 +3,9 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"io"
 	"log"
 	"os/exec"
+	"sync"
 	"testing"
 )
 
@@ -47,12 +47,27 @@ func TestExecProgress(t *testing.T) {
 		log.Fatal("调用cmd.Start()错误，原因: ", err)
 	}
 
-	scanner := bufio.NewScanner(io.MultiReader(stdout, stderr))
-	// scanner.Split(bufio.ScanWords)
+	waitGroup := sync.WaitGroup{}
+	waitGroup.Add(1)
+
+	go func() {
+		scanner := bufio.NewScanner(stderr)
+		for scanner.Scan() {
+			m := scanner.Text()
+			fmt.Println(m)
+		}
+
+		waitGroup.Done()
+	}()
+
+	scanner := bufio.NewScanner(stdout)
 	for scanner.Scan() {
 		m := scanner.Text()
 		fmt.Println(m)
 	}
+
+	waitGroup.Wait()
+
 	err = cmd.Wait()
 	if err != nil {
 		log.Fatal("调用cmd.Wait()错误，原因: ", err)
@@ -80,14 +95,27 @@ func TestExecYumProgress(t *testing.T) {
 			log.Fatal("调用cmd.Start()错误，原因: ", err)
 		}
 
-		scanner := bufio.NewScanner(io.MultiReader(stdout, stderr))
-		for scanner.Scan() {
-			// func main() {
+		waitGroup := sync.WaitGroup{}
+		waitGroup.Add(1)
 
-			// }
+		go func() {
+			scanner := bufio.NewScanner(stderr)
+			for scanner.Scan() {
+				m := scanner.Text()
+				fmt.Println(m)
+			}
+
+			waitGroup.Done()
+		}()
+
+		scanner := bufio.NewScanner(stdout)
+		for scanner.Scan() {
 			m := scanner.Text()
 			fmt.Println(m)
 		}
+
+		waitGroup.Wait()
+
 		err = cmd.Wait()
 		if err != nil {
 			log.Fatal("调用cmd.Wait()错误，原因: ", err)
@@ -110,11 +138,27 @@ func TestExecYumProgress(t *testing.T) {
 		log.Fatal("调用cmd.Start()错误，原因: ", err)
 	}
 
-	scanner := bufio.NewScanner(io.MultiReader(stdout, stderr))
+	waitGroup := sync.WaitGroup{}
+	waitGroup.Add(1)
+
+	go func() {
+		scanner := bufio.NewScanner(stderr)
+		for scanner.Scan() {
+			m := scanner.Text()
+			fmt.Println(m)
+		}
+
+		waitGroup.Done()
+	}()
+
+	scanner := bufio.NewScanner(stdout)
 	for scanner.Scan() {
 		m := scanner.Text()
 		fmt.Println(m)
 	}
+
+	waitGroup.Wait()
+
 	err = cmd.Wait()
 	if err != nil {
 		log.Fatal("调用cmd.Wait()错误，原因: ", err)
@@ -131,5 +175,49 @@ func TestExecPipe(t *testing.T) {
 		log.Fatal(err, " ", string(out))
 	} else {
 		fmt.Println("命令执行结果:", string(out))
+	}
+}
+
+// 在ubuntu系统中解压文件到/usr/local会提示permission denided错误，需要使用下面方法读取stdout和stderr
+func TestUbuntuPermissionDenided(t *testing.T) {
+	cmd := exec.Command("bash", "-c", "tar -xvzf /tmp/ideaIU-2023.2.5.tar.gz -C /usr/local/")
+
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		log.Fatal("获取stdout pipe错误，原因: ", err)
+	}
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		log.Fatal("获取stderr pipe错误，原因: ", err)
+	}
+	err = cmd.Start()
+	if err != nil {
+		log.Fatal("调用cmd.Start()错误，原因: ", err)
+	}
+
+	waitGroup := sync.WaitGroup{}
+	waitGroup.Add(1)
+
+	go func() {
+		scanner := bufio.NewScanner(stderr)
+		for scanner.Scan() {
+			m := scanner.Text()
+			fmt.Println(m)
+		}
+
+		waitGroup.Done()
+	}()
+
+	scanner := bufio.NewScanner(stdout)
+	for scanner.Scan() {
+		m := scanner.Text()
+		fmt.Println(m)
+	}
+
+	waitGroup.Wait()
+
+	err = cmd.Wait()
+	if err != nil {
+		log.Fatal("调用cmd.Wait()错误，原因: ", err)
 	}
 }
