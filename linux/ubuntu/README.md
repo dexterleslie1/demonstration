@@ -231,3 +231,23 @@ snap remove code
 # which is usually executed after an "update".
 ```
 
+
+
+
+
+## update-alternatives切换jdk版本
+
+> https://askubuntu.com/questions/613016/removing-oracle-jdk-and-re-configuring-update-alternatives
+
+```
+# 列出所有java版本并根据提示切换版本
+sudo update-alternatives --config java
+
+# 删除指定版本的java配置
+sudo update-alternatives --remove java /usr/local/jdk-11.0.19/bin/java
+
+# 添加指定版本的java配置
+sudo update-alternatives --install "/usr/bin/java" "java" "/usr/local/jdk-11.0.19/bin/java" 1500
+sudo update-alternatives --install "/usr/bin/javac" "javac" "/usr/local/jdk-11.0.19/bin/javac" 1500
+```
+
