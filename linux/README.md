@@ -499,6 +499,18 @@ cat 2.json | jq ".age=26 | .country=\"USA\""
 
 
 
+### reset命令
+
+> 因为程序意外终止导致终端处于不正常状态，例如没有echo、乱码等。使用reset能够重置终端到初始默认状态。
+> https://www.geeksforgeeks.org/reset-command-in-linux-with-examples/
+
+```shell
+# 重置终端
+reset
+```
+
+
+
 
 
 ## 文件和目录
