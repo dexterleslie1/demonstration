@@ -2,12 +2,11 @@ package main
 
 import (
 	"fmt"
-	"testing"
 
 	"github.com/manifoldco/promptui"
 )
 
-func TestConfirm(t *testing.T) {
+func main() {
 	prompt := promptui.Prompt{
 		Label:     "是否关闭系统防火墙",
 		IsConfirm: true,

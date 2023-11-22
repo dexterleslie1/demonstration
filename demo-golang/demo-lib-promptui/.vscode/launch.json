@@ -9,10 +9,11 @@
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "program": "${workspaceFolder}/demo_prompt_test.go",
-            "args": [
-                "-test.run=^TestPrompt$"
-            ],
+            "program": "${workspaceFolder}/demo-confirm/main.go",
+            // "program": "${workspaceFolder}/demo_prompt_test.go",
+            // "args": [
+            //     "-test.run=^TestPrompt$"
+            // ],
             "console": "integratedTerminal"
         }
     ]
