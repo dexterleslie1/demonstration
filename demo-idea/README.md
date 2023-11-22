@@ -46,7 +46,7 @@
 
 # 解压idea并start trail，NOTE: 不能使用root运行idea.sh，否则会报告 x-windows相关错误
 
-# 下载阿里存储 intelliJ-IDEA/jihuo-tool-my.zip，NOTE: jihuo-tool-origin.zip是别人编译的工具，jihuo-tool-my.zip中的ja-netfilter是自己从源代码编译的，所有ja-netfilter相关源码在自己github中可以找到
+# 下载微云中 idea/jihuo-tool-my.zip，NOTE: jihuo-tool-origin.zip是别人编译的工具，jihuo-tool-my.zip中的ja-netfilter是自己从源代码编译的，所有ja-netfilter相关源码在自己github中可以找到
 
 # 下载后解压到任意目录
 unzip jihuo-tool-my.zip
