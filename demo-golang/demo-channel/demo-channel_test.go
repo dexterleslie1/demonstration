@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"sync"
 	"testing"
@@ -206,6 +207,40 @@ func TestMainRoutineAwaitByUsingChannel(t *testing.T) {
 
 	// 等待消费者执行完毕
 	<-awaitChannelConsumer
+}
+
+//endregion
+
+//region 函数返回channel
+
+// https://stackoverflow.com/questions/28602308/returning-channels-golang
+func TestFuncReturnChannel(t *testing.T) {
+	out := gen([]int{1, 2, 3, 4, 5, 6})
+	ok := true
+	for ok {
+		n, okT := <-out
+		ok = okT
+		if ok {
+			fmt.Printf("get ok, n=%d\n", n)
+		} else {
+			fmt.Printf("get not ok, n=%d\n", n)
+		}
+	}
+}
+
+func gen(numbers []int) <-chan int {
+	out := make(chan int)
+	go func() {
+		for _, n := range numbers {
+			out <- n
+			time.Sleep(time.Second)
+		}
+
+		close(out)
+	}()
+
+	fmt.Println("return statement is called")
+	return out
 }
 
 //endregion
