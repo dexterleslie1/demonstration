@@ -102,7 +102,56 @@ type RedSquare struct {
 // https://stackoverflow.com/questions/32323363/interface-inherit-from-other-interface-in-golang
 // https://www.tutorialspoint.com/embedding-interfaces-in-golang
 func TestInterfaceEmbedding(t *testing.T) {
-	rs := RedSquare{Red{}, Square{Length: 5}}
-	fmt.Println("Area of square: ", rs.Area())
-	fmt.Println("Color of square: ", rs.Fill())
+	var coloredShape ColoredShape = RedSquare{Red{}, Square{Length: 5}}
+	fmt.Println("Area of square: ", coloredShape.Area())
+	fmt.Println("Color of square: ", coloredShape.Fill())
 }
+
+//region 演示使用interface实现方法重写(override)
+
+func TestMethodOverride(t *testing.T) {
+	var s sayHello = &sayHelloNormal{name: "Dexter"}
+	helloStr := s.Say()
+	if "Hello Dexter!" != helloStr {
+		t.Errorf("expected 'Hello Dexter!', got %s", helloStr)
+	}
+
+	s = &sayHelloWithGreeting{sayHello: &sayHelloNormal{name: "Dexter"}, greeting: "Welcome"}
+	name := s.GetName()
+	if "Dexter" != name {
+		t.Errorf("expected 'Dexter', got %s", name)
+	}
+	helloStr = s.Say()
+	if "Hello Dexter ~~Welcome!" != helloStr {
+		t.Errorf("expected 'Hello Dexter ~~Welcome!', got %s", helloStr)
+	}
+}
+
+type sayHello interface {
+	GetName() string
+	Say() string
+}
+
+type sayHelloNormal struct {
+	name string
+}
+
+func (s *sayHelloNormal) GetName() string {
+	return s.name
+}
+func (s *sayHelloNormal) Say() string {
+	return "Hello " + s.GetName() + "!"
+}
+
+type sayHelloWithGreeting struct {
+	greeting string
+	sayHello
+}
+
+// Override sayHello Say method
+func (s *sayHelloWithGreeting) Say() string {
+	name := s.sayHello.GetName()
+	return "Hello " + name + " ~~" + s.greeting + "!"
+}
+
+//endregion

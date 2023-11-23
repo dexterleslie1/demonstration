@@ -218,6 +218,7 @@ func TestFuncReturnChannel(t *testing.T) {
 	out := gen([]int{1, 2, 3, 4, 5, 6})
 	ok := true
 	for ok {
+		// channel被关闭后，okT=false
 		n, okT := <-out
 		ok = okT
 		if ok {

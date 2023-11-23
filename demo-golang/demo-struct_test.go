@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"testing"
 	"unsafe"
 )
 
@@ -19,7 +20,7 @@ func newPerson(name string, age int) *Person {
 	return &Person{name, age}
 }
 
-func main() {
+func TestStructBasic(t *testing.T) {
 	// 结构体创建的四种方法
 	// 方法1
 	var person Person
