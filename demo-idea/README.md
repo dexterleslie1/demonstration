@@ -32,6 +32,11 @@
 # 快速删除一行 ctrl+y
 
 # 快速格式化代码 ctrl+alt+l
+
+# 回到光标上一个位置
+# macOS alt(option)+shift+left
+# 回到光标下一个位置
+# macOS alt(option)+shift+right
 ```
 
 
