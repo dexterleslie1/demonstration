@@ -2,8 +2,6 @@ module main
 
 go 1.19
 
-replace mypackage => ./my-package
-
 require (
 	github.com/charmbracelet/bubbles v0.16.1
 	github.com/charmbracelet/bubbletea v0.24.2
@@ -22,7 +20,6 @@ require (
 	github.com/zcalusic/sysinfo v1.0.2
 	golang.org/x/term v0.13.0
 	k8s.io/client-go v0.28.3
-	mypackage v0.0.0
 )
 
 require (

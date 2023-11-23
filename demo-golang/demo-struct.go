@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"mypackage"
 	"unsafe"
 )
 
@@ -14,6 +13,10 @@ type Person struct {
 // 指定Person结构体拥有下面方法
 func (p Person) showDetails() {
 	fmt.Println("我的名称:", p.Name, "，年龄:", p.Age)
+}
+
+func newPerson(name string, age int) *Person {
+	return &Person{name, age}
 }
 
 func main() {
@@ -51,9 +54,9 @@ func main() {
 	person3.Age = 22
 	fmt.Println("方法4创建Person:", person3)
 
-	// 使用工厂模式创建student实例
-	var student = mypackage.NewStudent("dexterleslie5", 22)
-	fmt.Println("使用工厂模式创建的student实例:", *student)
+	// 使用工厂模式创建person实例
+	myPerson := newPerson("dexterleslie5", 22)
+	fmt.Println("使用工厂模式创建的person实例:", *myPerson)
 
 	// golang中方法是和指定的数据类型绑定的，即只能使用指定的数据类型调用方法
 	// Person结构体方法
