@@ -36,9 +36,15 @@ func main() {
 	whatAmI := func(i interface{}) {
 		switch t := i.(type) {
 		case bool:
-			fmt.Println("I'm a bool")
+			fmt.Printf("I'm a bool, value is %t\n", t)
 		case int:
-			fmt.Println("I'm an int")
+			fmt.Printf("I'm an int, value is %d\n", t)
+			// myStruct类型
+		case myStruct:
+			fmt.Printf("I'm an myStruct value is %+v\n", t)
+			// myStruct指针类型
+		case *myStruct:
+			fmt.Printf("I'm an *myStruct value is %+v\n", t)
 		default:
 			fmt.Printf("Don't know type %T\n", t)
 		}
@@ -46,6 +52,8 @@ func main() {
 	whatAmI(true)
 	whatAmI(1)
 	whatAmI("hey")
+	whatAmI(myStruct{})
+	whatAmI(&myStruct{})
 
 	// fallthrough用法
 	// https://www.cnblogs.com/zsy/p/6741902.html
@@ -64,4 +72,7 @@ func main() {
 	default:
 		fmt.Println("default case")
 	}
+}
+
+type myStruct struct {
 }
