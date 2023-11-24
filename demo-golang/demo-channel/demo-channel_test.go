@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -242,6 +243,71 @@ func gen(numbers []int) <-chan int {
 
 	fmt.Println("return statement is called")
 	return out
+}
+
+//endregion
+
+//region 重复关闭channel panic处理
+
+// https://go101.org/article/channel-closing.html
+func TestRecoverPanicFromCloseOfClosedChannel(t *testing.T) {
+	ch := make(chan int)
+	safeClose(ch)
+	safeClose(ch)
+}
+
+func safeClose(ch chan int) (justClosed bool) {
+	defer func() {
+		if err := recover(); err != nil {
+			if strings.Contains(err.(error).Error(), "close of closed channel") {
+				justClosed = false
+			} else {
+				justClosed = true
+			}
+		}
+	}()
+
+	close(ch)
+	return true
+}
+
+//endregion
+
+//region 发送数据到已经关闭channel panic处理
+
+// https://go101.org/article/channel-closing.html
+func TestRecoverPanicFromSendDataToClosedChannel(t *testing.T) {
+	ch := make(chan int)
+
+	go closeChannelAfter1500Milliseconds(ch)
+
+	for i := 0; i < 100; i++ {
+		if !safeSend(ch, i) {
+			break
+		}
+		time.Sleep(time.Second)
+	}
+	fmt.Println("TestRecoverPanicFromSendDataToClosedChannel: finished")
+}
+
+func safeSend(ch chan int, value int) (sent bool) {
+	defer func() {
+		if err := recover(); err != nil {
+			if strings.Contains(err.(error).Error(), "send on closed channel") {
+				sent = false
+			} else {
+				sent = true
+			}
+		}
+	}()
+
+	ch <- value
+	return true
+}
+
+func closeChannelAfter1500Milliseconds(ch chan int) {
+	time.Sleep(1500 * time.Millisecond)
+	close(ch)
 }
 
 //endregion
