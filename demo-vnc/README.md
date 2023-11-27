@@ -1,6 +1,8 @@
 ## ubuntu20.4 desktop版本配置tigervnc server + ultravnc viewer
 
 > https://www.tecmint.com/install-and-configure-vnc-server-on-ubuntu/
+> https://www.codeprj.com/blog/89d4ec1.html
+> https://linuxtechlab.com/secure-vnc-server-tls-encryption/
 
 ```shell
 ### 安装并配置tigervnc server
@@ -46,5 +48,23 @@ server:port 192.168.1.205:5900
 勾选 256 colors
 勾选 Use Zstd instead of zlib
 勾选 Use CopyRect encoding
+```
+
+
+
+
+
+## ubuntu20.4 server版本配置tigervnc server + ultravnc viewer
+
+> 安装步骤和上面的desktop版本一样，只是在安装tigervnc server之前需要先安装gnome desktop
+
+```shell
+# 同步apt源
+sudo apt update
+
+# 安装gnome desktop
+sudo apt install ubuntu-gnome-desktop
+
+# tigervnc server安装和配置和上面desktop版本一样
 ```
 
