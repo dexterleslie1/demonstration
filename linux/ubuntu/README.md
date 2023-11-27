@@ -1,4 +1,4 @@
-## ubuntu20安装googlepinyin输入法
+## ubuntu20安装googlepinyin输入法，NOTE: 使用系统自带的智能拼音输入法即可
 
 [ubuntu20.04中文输入法安装步骤](https://www.qetool.com/scripts/view/20653.html)
 
