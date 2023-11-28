@@ -59,7 +59,7 @@ unzip jihuo-tool-my.zip
 # 执行jihuo-tool/scripts/install.sh
 sh install.sh
 
-# 运行idea后点击Manage license后填入下面对应的activation code点击激活后，过期时间会变为2025年
+# 运行idea后点击Manage license后填入下面对应的activation code点击激活后，过期时间会变为2025年(经过测试这个过期时间是假的，破解后能够永久激活)
 https://docs.qq.com/doc/DZWFmak1WcVBhdENu
 
 # IDEA
