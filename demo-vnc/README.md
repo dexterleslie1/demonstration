@@ -1,3 +1,9 @@
+## 注意声明
+
+> ubuntu20.4 desktop版本无法成功配置tigervnc server开机自启动，所以暂时放弃ubuntu使用vnc作为远程的方案。继续使用xrdp方案。
+
+
+
 ## ubuntu20.4 desktop版本配置tigervnc server + ultravnc viewer
 
 > https://www.tecmint.com/install-and-configure-vnc-server-on-ubuntu/
@@ -7,7 +13,7 @@
 ```shell
 ### 安装并配置tigervnc server
 # 安装tigervnc server
-sudo apt install tigervnc-standalone-server tigervnc-common tigervnc-xorg-extension
+sudo apt install tigervnc-standalone-server tigervnc-common tigervnc-xorg-extension -y
 
 # 配置tigervnc server密码，根据提示输入密码，NOTE: 不需要sudo vncserver
 vncserver
