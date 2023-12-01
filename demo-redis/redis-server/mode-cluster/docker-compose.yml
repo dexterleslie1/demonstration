@@ -114,6 +114,7 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
+    container_name: redis-cluster-creator
     image: my-redis-cluster:5.0.14
     entrypoint: [/bin/sh, -c, 'echo "yes" | redis-cli --cluster create --cluster-replicas 1 ${varHostIp}:6380 ${varHostIp}:6381 ${varHostIp}:6382 ${varHostIp}:6383 ${varHostIp}:6384 ${varHostIp}:6385']
     networks:
