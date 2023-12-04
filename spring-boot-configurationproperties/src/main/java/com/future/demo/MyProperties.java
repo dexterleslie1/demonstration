@@ -25,4 +25,6 @@ public class MyProperties {
 
     @NotNull
     private List<String> p2;
+
+    private List<ClientProperty> clients;
 }
