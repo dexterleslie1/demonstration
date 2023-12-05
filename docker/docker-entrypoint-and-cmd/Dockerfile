@@ -2,5 +2,6 @@
 FROM mariadb:10.4.19
 
 COPY entrypoint.sh /usr/local/bin
-CMD ["echo","Output from default CMD when not specify any external CMD"]
+CMD ["Output from default CMD when not specify any external CMD"]
 ENTRYPOINT ["sh","/usr/local/bin/entrypoint.sh"]
+
