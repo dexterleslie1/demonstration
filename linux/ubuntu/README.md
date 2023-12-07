@@ -1,18 +1,19 @@
-## ubuntu20安装googlepinyin输入法，NOTE: 使用系统自带的智能拼音输入法即可
+## ubuntu20安装googlepinyin输入法
 
-[ubuntu20.04中文输入法安装步骤](https://www.qetool.com/scripts/view/20653.html)
+> ubuntu20.04中文输入法安装步骤
+> https://www.qetool.com/scripts/view/20653.html
 
-1. 打开language support后点击install安装所有支持语言
+```shell
+# 安装中文语言支持
+sudo apt install -y gnome-user-docs-zh-hans firefox-locale-zh-hans language-pack-zh-hans thunderbird-locale-zh-cn thunderbird-locale-zh-hans language-pack-gnome-zh-hans
 
-2. 打开language support选择输入法方式为fcitx
+# 安装google拼音输入法
+sudo apt install -y fcitx-googlepinyin
 
-3. 安装googlepinyin输入法
+# 打开language support选择输入法方式为fcitx
 
-   ```shell
-   sudo apt install fcitx-googlepinyin
-   ```
-
-4. 重启系统后点击右上角输入法configure或者在应用搜索中输入 Fcitx Configuration，如果googlepinyin输入法不存在则添加，并且设置切换输入法快捷键为ctrl+alt+shift
+# 重启系统后点击右上角输入法configure或者在应用搜索中输入 Fcitx Configuration，如果googlepinyin输入法不存在则添加，并且设置切换输入法快捷键为ctrl+alt+shift
+```
 
 
 
