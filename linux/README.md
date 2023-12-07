@@ -511,6 +511,15 @@ reset
 
 
 
+### openssl命令
+
+```shell
+# 获取指定文件的二进制base64编码，tr -d '\n'表示删除换行符号
+openssl base64 -in xxx.p12 | tr -d '\n'
+```
+
+
+
 
 
 ## 文件和目录
