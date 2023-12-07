@@ -45,6 +45,31 @@ export PATH
 go version
 ```
 
+
+
+### w2k16安装go
+
+> golang msi安装程序下载地址
+> https://go.dev/dl/
+>
+> windows平台从msi安装golang
+> https://silentinstallhq.com/go-programming-language-silent-install-how-to-guide/
+
+```shell
+# 下载msi安装程序
+
+# 打开msi安装程序根据提示一步步安装golang
+
+# 设置环境变量
+GOPROXY=https://goproxy.io
+GO111MODULE=on
+
+# 打开cmd验证golang是否成功安装
+go version
+```
+
+
+
 ## golang语法基础
 
 ### 静态方法
