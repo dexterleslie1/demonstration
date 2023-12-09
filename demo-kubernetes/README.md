@@ -8442,6 +8442,172 @@ kubectl uncordon demo-k8s-node2
 
 
 
+## kubernetes rest API
+
+### 为pod添加event
+
+```shell
+# 创建pod
+apiVersion: v1
+kind: Pod
+metadata:
+ name: pod1
+ labels:
+  creation_method: manual
+  env: prod
+spec:
+ containers:
+ - name: nginx
+   image: nginx
+   
+# 使用kubectl启动proxy
+unset HTTPS_PROXY
+unset HTTP_PROXY
+kubectl proxy
+
+# 查看pod events
+kubectl describe pod pod1
+
+# 使用curl调用api添加event到指定的pod
+curl -X POST -H "Content-Type: application/json" -d @./data.json http://127.0.0.1:8001/api/v1/namespaces/default/events
+# data.json内容如下:
+{
+	"kind": "Event",
+	"apiVersion": "v1",
+	"metadata": {
+		"name": "pod1.179f0a9f1e4f277a",
+		"namespace": "default"
+	},
+	"involvedObject": {
+		"kind": "Pod",
+		"namespace": "default",
+		"name": "pod1",
+		"uid": "9176d70a-8033-4321-a75b-677a3f727b77",
+		"apiVersion": "v1",
+		"resourceVersion": "9013112"
+	},
+	"reason": "Reason Test",
+	"message": "Message Test",
+	"source": {
+		"component": "my-source-test"
+	},
+	"firstTimestamp": "2023-12-09T03:01:02Z",
+	"lastTimestamp": "2023-12-09T03:01:02Z",
+	"count": 1,
+	"type": "Warning",
+	"reportingComponent": "my-source-test"
+}
+
+# 查看pod events
+kubectl describe pod pod1
+```
+
+
+
+### 通过rest api更新cr资源状态
+
+> 参考官方通过client-go更新cr资源状态
+> https://github.com/kubernetes/sample-controller
+
+```shell
+# 创建crd
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: websites.extensions.example.com
+spec:
+  # Website资源是属于某个命名空间的
+  scope: Namespaced
+  # api组
+  group: extensions.example.com
+  # api版本
+  # 在定义Website资源时 apiVersion 应该填写 extensions.example.com/v1
+  versions:
+    - name: v1
+      storage: true
+      served: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            # Website资源的spec支持字段
+            spec:
+              type: object
+              properties:
+                gitRepo:
+                  type: string
+            status:
+              type: object
+              properties:
+                phase:
+                  type: string
+                myMessage:
+                  type: string
+
+      # subresources for the custom resource
+      subresources:
+        # enables the status subresource
+        status: {}
+
+      # https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/
+      additionalPrinterColumns:
+        - name: Status
+          type: string
+          description: The status of website
+          jsonPath: .status.phase
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp
+  names:
+    kind: Website
+    # 单数
+    singular: website
+    # 复数
+    plural: websites
+    shortNames:
+      - ws
+    
+# 创建crd
+kubectl apply -f 1.yaml
+
+# 创建cr资源
+apiVersion: extensions.example.com/v1
+kind: Website
+metadata:
+ name: test
+spec:
+ gitRepo: https://github.com/luksa/kubia-website-example.git
+
+# 查看Website对象实例列表
+kubectl get website
+
+# 通过rest api更新cr资源状态
+curl -X PUT -H "Content-Type: application/json" -d @./data.json http://127.0.0.1:8001/apis/extensions.example.com/v1/namespaces/default/websites/test/status
+# data.json内容:
+{
+	"apiVersion": "extensions.example.com/v1",
+	"kind": "Website",
+	"status": {
+	  "phase": "phase-testing",
+	  "myMessage": "my message"
+	},
+	"metadata": {
+	   "name": "test",
+	   "resourceVersion": "9084804"
+	},
+	"spec": {
+		"gitRepo": "https://github.com/luksa/kubia-website-example.git"
+	}
+}
+
+# 查看website状态
+kubectl get website
+kubectl describe website test
+
+# 使用rest api获取website数据
+curl -X GET http://127.0.0.1:8001/apis/extensions.example.com/v1/namespaces/default/websites/test/status
+```
+
 
 
 ## kubernetes应用扩展
@@ -8457,19 +8623,19 @@ kubectl uncordon demo-k8s-node2
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
- name: websites.extensions.example.com
+  name: websites.extensions.example.com
 spec:
- # Website资源是属于某个命名空间的
- scope: Namespaced
- # api组
- group: extensions.example.com
- # api版本
- # 在定义Website资源时 apiVersion 应该填写 extensions.example.com/v1
- versions: 
- - name: v1
-   storage: true
-   served: true
-   schema:
+  # Website资源是属于某个命名空间的
+  scope: Namespaced
+  # api组
+  group: extensions.example.com
+  # api版本
+  # 在定义Website资源时 apiVersion 应该填写 extensions.example.com/v1
+  versions:
+    - name: v1
+      storage: true
+      served: true
+      schema:
         openAPIV3Schema:
           type: object
           properties:
@@ -8479,14 +8645,36 @@ spec:
               properties:
                 gitRepo:
                   type: string
- names:
-  kind: Website
-  # 单数
-  singular: website
-  # 复数
-  plural: websites
-  shortNames:
-  - ws
+            status:
+              type: object
+              properties:
+                phase:
+                  type: string
+                myMessage:
+                  type: string
+
+      # subresources for the custom resource
+      subresources:
+        # enables the status subresource
+        status: {}
+
+      # https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/
+      additionalPrinterColumns:
+        - name: Status
+          type: string
+          description: The status of website
+          jsonPath: .status.phase
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp
+  names:
+    kind: Website
+    # 单数
+    singular: website
+    # 复数
+    plural: websites
+    shortNames:
+      - ws
 
 # 创建CRD
 kubectl apply -f 1.yaml
