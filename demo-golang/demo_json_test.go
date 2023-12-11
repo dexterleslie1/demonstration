@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 )
 
@@ -28,6 +29,16 @@ type StudentWithOption struct {
 	StudentClass string `json:"class,omitempty"`
 	// json:"-"表示属性不会被序列化到JSON中
 	StudentTeacher string `json:"-"`
+}
+
+type Pod struct {
+	// NOTE: 经过测试有inline和没有inline效果是一样的
+	TypeMeta `json:",inline"`
+}
+
+type TypeMeta struct {
+	Kind       string `json:"kind,omitempty"`
+	APIVersion string `json:"apiVersion,omitempty"`
 }
 
 // 演示struct json tag用法
@@ -86,4 +97,15 @@ func TestJson(t *testing.T) {
 	if "{\"StudentId\":\"1\",\"sname\":\"xiaoming\",\"class\":\"0903\"}" != string(JSON) {
 		t.Fatalf("没有预期值")
 	}
+
+	//region 测试json inline
+
+	pod := Pod{TypeMeta{Kind: "Pod", APIVersion: "v1"}}
+	JSON, err := json.Marshal(pod)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println(string(JSON))
+
+	//endregion
 }
