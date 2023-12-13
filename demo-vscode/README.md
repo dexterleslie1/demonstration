@@ -74,6 +74,10 @@
 ## 快捷键
 
 ```shell
+# 删除一行 ctrl+shift+k
+
+# 克隆当前光标一行 ctrl+c ctrl+v
+
 # 快速搜索并打开文件 ctrl+p
 
 # 快速隐藏或者打开 Terminal 所在的Panel ctrl+`

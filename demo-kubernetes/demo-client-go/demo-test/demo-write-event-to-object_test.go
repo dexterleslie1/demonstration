@@ -37,7 +37,7 @@ func TestWriteEventToObject(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	podName := "deployment1-5d9c9b97bb-8kwrq"
+	podName := "pod1"
 	pod, err := clientset.CoreV1().Pods("default").Get(context.TODO(), podName, metav1.GetOptions{})
 	if err != nil {
 		log.Fatal(err)

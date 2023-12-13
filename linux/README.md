@@ -235,6 +235,13 @@ curl -X POST -d "param1=v1" -H "Content-Type: application/x-www-form-urlencoded"
 curl -X POST -F "param1=v1" -H "Content-Type: multipart/form-data" http://localhost:8080/api/v1/testPostSubmitParamByMultipartFormData
 
 curl -X POST -d '{"param1":"v1"}' -H "Content-Type: application/json" http://localhost:8080/api/v1/testPostSubmitParamByJSON
+
+# curl post提交从文件读取并提交JSON数据
+# https://gist.github.com/ungoldman/11282441
+# data.json内容:
+{"kind":"Event","apiVersion":"v1","metadata":{"name":"deployment1-5d9c9b97bb-4jlgb.100","namespace":"default","creationTimestamp":null},"involvedObject":{"kind":"Website","namespace":"default","name":"test","uid":"f637afc8-51de-4b09-a3ab-3254672b1a55","apiVersion":"v1","resourceVersion":"8904043"},"reason":"Reason Test","message":"Message Test","source":{"component":"my-source-test"},"firstTimestamp":"2023-12-08T02:40:54Z","lastTimestamp":"2023-12-08T02:40:54Z","count":1,"type":"Warning","eventTime":null,"reportingComponent":"my-source-test","reportingInstance":""}
+
+curl -X POST -H "Content-Type: application/json" -d @./data.json http://127.0.0.1:8001/api/v1/namespaces/default/events
 ```
 
 ### yum命令
