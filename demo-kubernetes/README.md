@@ -8610,6 +8610,24 @@ curl -X GET http://127.0.0.1:8001/apis/extensions.example.com/v1/namespaces/defa
 
 
 
+## client-go用法
+
+
+
+
+
+### 使用client-go dynamic client操作内建资源
+
+> 参考 demo-client-go/demo-dynamic-client-builtin-resource_test.go
+
+
+
+### 使用client-go dynamic client操作cr资源
+
+> 参考 demo-client-go/demo-dynamic-client-crd-resource_test.go
+
+
+
 ## kubernetes应用扩展
 
 
