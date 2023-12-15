@@ -8,9 +8,15 @@ require (
 	k8s.io/api v0.26.11
 	k8s.io/apimachinery v0.26.11
 	k8s.io/client-go v0.26.11
+	// controller-runtime-v0.14.x才能够兼容api-v0.26.x
+	sigs.k8s.io/controller-runtime v0.14.7
 )
 
-require github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
+require (
+	github.com/evanphx/json-patch/v5 v5.6.0 // indirect
+	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
+	github.com/pkg/errors v0.9.1 // indirect
+)
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -43,7 +49,7 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/klog/v2 v2.110.1
+	k8s.io/klog/v2 v2.110.1 // indirect
 	//k8s.io/kube-openapi v0.0.0-20231010175941-2dd684a91f00 // indirect
 	k8s.io/kube-openapi v0.0.0-20221012153701-172d655c2280 // indirect
 	k8s.io/utils v0.0.0-20230726121419-3b25d923346b // indirect

@@ -38,6 +38,10 @@ func TestNamespaceCreateAndDelete(t *testing.T) {
 			Name: namespaceName,
 		},
 	}
+	// 先删除命名空间
+	_ = clientset.CoreV1().Namespaces().Delete(context.TODO(), namespaceName, metav1.DeleteOptions{
+		GracePeriodSeconds: new(int64),
+	})
 	_, err = clientset.CoreV1().Namespaces().Create(context.Background(), nsName, metav1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("expected no err, got %s", err)
@@ -47,7 +51,9 @@ func TestNamespaceCreateAndDelete(t *testing.T) {
 	fmt.Println("命名空间", namespaceName, "将会在5秒后被删除")
 	time.Sleep(time.Duration(5) * time.Second)
 
-	err = clientset.CoreV1().Namespaces().Delete(context.Background(), namespaceName, metav1.DeleteOptions{})
+	err = clientset.CoreV1().Namespaces().Delete(context.Background(), namespaceName, metav1.DeleteOptions{
+		GracePeriodSeconds: new(int64),
+	})
 	if err != nil {
 		t.Fatalf("expected no err, got %s", err)
 	}
