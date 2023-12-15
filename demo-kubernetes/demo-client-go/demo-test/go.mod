@@ -12,6 +12,8 @@ require (
 	sigs.k8s.io/controller-runtime v0.14.7
 )
 
+require k8s.io/apiextensions-apiserver v0.26.10
+
 require (
 	github.com/evanphx/json-patch/v5 v5.6.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
