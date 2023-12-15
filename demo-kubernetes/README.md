@@ -8644,7 +8644,7 @@ curl -X GET http://127.0.0.1:8001/apis/extensions.example.com/v1/namespaces/defa
 
 #### 使用controller-runtime操作cr资源
 
-
+> 参考 demo-client-go/demo-controller-runtime-crd-resource_test.go
 
 
 
