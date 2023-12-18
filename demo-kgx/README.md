@@ -31,6 +31,5 @@ git clone https://github.com/wwwwu8899/kgx.git
 # 使用 idea 导入 lhcparent 目录
 # 设置 idea maven 指向本地maven
 # 添加本地 tomcat 到 idea
-# NOTE: 启动项目前修改 lhcfacadea/.env和lhcservice/.env hostIp为本机内网ip地址
 ```
 
