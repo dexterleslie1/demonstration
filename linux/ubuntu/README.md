@@ -252,3 +252,22 @@ sudo update-alternatives --install "/usr/bin/java" "java" "/usr/local/jdk-11.0.1
 sudo update-alternatives --install "/usr/bin/javac" "javac" "/usr/local/jdk-11.0.19/bin/javac" 1500
 ```
 
+
+
+
+
+## ubuntu使用gsetting实现自动配置
+
+```shell
+### 通过参考下面链接找到gsettings需要设置的key
+### https://askubuntu.com/questions/971067/how-can-i-script-the-settings-made-by-gnome-tweak-tool
+
+# 先运行以下命令watch配置变化
+dconf watch /
+
+# 手动打开设置进行设置，随后dconf watch会有输出
+
+# 经过转换后例如下面gsettings命令
+sudo -E -u dexterleslie gsettings set org.gnome.desktop.interface enable-animations false
+```
+
