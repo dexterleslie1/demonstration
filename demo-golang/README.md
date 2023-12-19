@@ -240,3 +240,21 @@ go mod tidy
 ## 数据类型
 
 > 参考 demo-data-type
+
+
+
+
+
+## go mod vendor用法
+
+> https://blog.csdn.net/test1280/article/details/120855865
+
+## go get
+
+> https://gosamples.dev/go-get/
+> The `go get` command handles package management - adding, updating, or removing dependencies in the `go.mod` file. The `go get` does not build packages.
+
+## go install
+
+> https://gosamples.dev/go-get/
+> The [`go install`](https://go.dev/ref/mod#go-install) command builds the package and installs the executable file in the directory defined by the `GOBIN` environment variable, which defaults to the `$GOPATH/bin` path. Installing the executable file allows you to call it directly  from your system terminal by simply typing the command name, e.g. `mytool` in the command line.
