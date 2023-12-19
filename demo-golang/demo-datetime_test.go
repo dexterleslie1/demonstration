@@ -39,5 +39,8 @@ func TestDatetime(t *testing.T) {
 	}
 	fmt.Printf("时间 %s 在 %s 之前？ %t\n", timeNow.Format("15:04:05"), timeStr, timeNow.Before(timeInstance1))
 
+	// 当前时间减去一天
+	fmt.Println("当前时间的前一天: " + time.Now().AddDate(0, 0, -1).Format("2006-01-02 15:04:05"))
+
 	//endregion
 }
