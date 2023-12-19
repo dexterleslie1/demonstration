@@ -13,12 +13,12 @@ import (
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/homedir"
 	"k8s.io/client-go/util/retry"
-	"log"
 	"path/filepath"
+	"testing"
 	"time"
 )
 
-func main() {
+func TestClientsetCrdResource(t *testing.T) {
 	var kubeconfig string
 	if home := homedir.HomeDir(); home != "" {
 		kubeconfig = filepath.Join(home, ".kube", "config")
@@ -28,11 +28,11 @@ func main() {
 
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
-		log.Fatalf("expected no err, got %s", err)
+		t.Fatalf("expected no err, got %s", err)
 	}
 	clientset, err := v1.NewForConfig(config)
 	if err != nil {
-		log.Fatalf("expected no err, got %s", err)
+		t.Fatalf("expected no err, got %s", err)
 	}
 
 	websiteName := "test"
@@ -43,7 +43,7 @@ func main() {
 			GracePeriodSeconds: new(int64),
 		})
 		if err != nil {
-			log.Fatalf("expected no err, got %s", err)
+			t.Fatalf("expected no err, got %s", err)
 		}
 	}
 
@@ -53,14 +53,14 @@ func main() {
 	website.Spec.GitRepo = "https://github.com/luksa/kubia-website-example.git"
 	_, err = clientset.Websites(v12.NamespaceDefault).Create(context.Background(), website, v12.CreateOptions{})
 	if err != nil {
-		log.Fatalf("expected no err, got %s", err)
+		t.Fatalf("expected no err, got %s", err)
 	}
 
 	// 修改website
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		websiteNewest, err := clientset.Websites(v12.NamespaceDefault).Get(context.Background(), websiteName, v12.GetOptions{})
 		if err != nil {
-			log.Fatalf("expected no err, got %s", err)
+			t.Fatalf("expected no err, got %s", err)
 		}
 
 		// 修改website状态
@@ -71,24 +71,24 @@ func main() {
 		return err
 	})
 	if retryErr != nil {
-		log.Fatalf("expected no err, got %s", err)
+		t.Fatalf("expected no err, got %s", err)
 	}
 
 	websiteNewest, err := clientset.Websites(v12.NamespaceDefault).Get(context.Background(), websiteName, v12.GetOptions{})
 	if err != nil {
-		log.Fatalf("expected no err, got %s", err)
+		t.Fatalf("expected no err, got %s", err)
 	}
 	if websiteNewest.Status.Phase != "ok" {
-		log.Fatalf("expected ok, got %s", websiteNewest.Status.Phase)
+		t.Fatalf("expected ok, got %s", websiteNewest.Status.Phase)
 	}
 	if websiteNewest.Status.MyMessage != "Testing message" {
-		log.Fatalf("expected Testing message, got %s", websiteNewest.Status.MyMessage)
+		t.Fatalf("expected Testing message, got %s", websiteNewest.Status.MyMessage)
 	}
 
 	// 添加event到website
 	clientsetBuiltin, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		log.Fatalf("expected no err, got %s", err)
+		t.Fatalf("expected no err, got %s", err)
 	}
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartStructuredLogging(4)
@@ -102,7 +102,7 @@ func main() {
 	// 查询website列表
 	list, err := clientset.Websites(v12.NamespaceDefault).List(context.Background(), v12.ListOptions{})
 	if err != nil {
-		log.Fatalf("expected no err, got %s", err)
+		t.Fatalf("expected no err, got %s", err)
 	}
 	found := false
 	for _, obj := range list.Items {
@@ -112,6 +112,6 @@ func main() {
 		}
 	}
 	if !found {
-		log.Fatalf("expected true, got %t", found)
+		t.Fatalf("expected true, got %t", found)
 	}
 }

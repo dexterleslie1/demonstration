@@ -24,7 +24,7 @@ type WebsiteStatus struct {
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 type WebsiteList struct {
-	metav1.TypeMeta   `json:"inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Items             []Website `json:"items"`
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata"`
+	Items           []Website `json:"items"`
 }
