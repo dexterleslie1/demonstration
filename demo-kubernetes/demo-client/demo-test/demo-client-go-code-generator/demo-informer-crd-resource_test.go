@@ -38,7 +38,7 @@ func TestInformerCrdResource(t *testing.T) {
 
 	// 初始化 informer
 	factory := externalversions.NewSharedInformerFactory(clientset, 0)
-	websiteInformer := factory.Extensions().V1().Websites()
+	websiteInformer := factory.Website().V1().Websites()
 	informer := websiteInformer.Informer()
 	defer runtime.HandleCrash()
 
@@ -67,7 +67,7 @@ func TestInformerCrdResource(t *testing.T) {
 	_, err = websiteInformer.Lister().Websites(corev1.NamespaceDefault).Get(websiteName)
 	if err == nil {
 		// 删除pod
-		err := clientset.ExtensionsV1().Websites(corev1.NamespaceDefault).Delete(context.Background(), websiteName, v1.DeleteOptions{
+		err := clientset.WebsiteV1().Websites(corev1.NamespaceDefault).Delete(context.Background(), websiteName, v1.DeleteOptions{
 			GracePeriodSeconds: new(int64),
 		})
 		if err != nil {
@@ -84,7 +84,7 @@ func TestInformerCrdResource(t *testing.T) {
 	website.SetNamespace(corev1.NamespaceDefault)
 	website.SetName(websiteName)
 	website.Spec = v12.WebsiteSpec{GitRepo: "https://github.com/luksa/kubia-website-example.git"}
-	_, err = clientset.ExtensionsV1().Websites(corev1.NamespaceDefault).Create(context.Background(), website, v1.CreateOptions{})
+	_, err = clientset.WebsiteV1().Websites(corev1.NamespaceDefault).Create(context.Background(), website, v1.CreateOptions{})
 	if err != nil {
 		t.Fatalf("expected no err, got %s", err)
 	}
@@ -95,7 +95,7 @@ func TestInformerCrdResource(t *testing.T) {
 	}
 
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		websiteNewest, err := clientset.ExtensionsV1().Websites(v1.NamespaceDefault).Get(context.Background(), websiteName, v1.GetOptions{})
+		websiteNewest, err := clientset.WebsiteV1().Websites(v1.NamespaceDefault).Get(context.Background(), websiteName, v1.GetOptions{})
 		if err != nil {
 			t.Fatalf("expected no err, got %s", err)
 		}
@@ -104,7 +104,7 @@ func TestInformerCrdResource(t *testing.T) {
 		websiteNewest.Status.Phase = "ok"
 		websiteNewest.Status.MyMessage = "Testing message"
 
-		_, err = clientset.ExtensionsV1().Websites(v1.NamespaceDefault).UpdateStatus(context.Background(), websiteNewest, v1.UpdateOptions{})
+		_, err = clientset.WebsiteV1().Websites(v1.NamespaceDefault).UpdateStatus(context.Background(), websiteNewest, v1.UpdateOptions{})
 		return err
 	})
 	if retryErr != nil {
