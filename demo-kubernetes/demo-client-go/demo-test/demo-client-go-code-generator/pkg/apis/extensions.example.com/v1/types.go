@@ -3,6 +3,7 @@ package v1
 import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 // NOTE: 下面两个注释之间不能够空行
+// TODO 搞懂+genclient和+k8s底层原理
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
