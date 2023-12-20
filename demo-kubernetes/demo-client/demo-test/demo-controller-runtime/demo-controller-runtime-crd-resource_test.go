@@ -1,15 +1,13 @@
-package main
+package demo_controller_runtime
 
 import (
 	"context"
-	websitev1 "demotest/website/v1"
+	websitev1 "demotest/demo-controller-runtime/website/v1"
 	v1 "k8s.io/api/core/v1"
 	v12 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/kubernetes/scheme"
 	typedv1core "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/record"
@@ -212,11 +210,11 @@ func TestControllerRuntimeCrdResource(t *testing.T) {
 	eventBroadcaster.StartStructuredLogging(4)
 	eventBroadcaster.StartRecordingToSink(&typedv1core.EventSinkImpl{Interface: clientset.CoreV1().Events("")})
 	// EventSource是events列表显示from字段
-	groupVersion := schema.GroupVersion{Group: "extensions.example.com", Version: "v1"}
-	schemeObj := scheme.Scheme
-	schemeObj.AddKnownTypes(groupVersion, &websitev1.Website{}, &websitev1.WebsiteList{})
-	metav1.AddToGroupVersion(schemeObj, groupVersion)
-	eventRecorder := eventBroadcaster.NewRecorder(schemeObj, v1.EventSource{Component: "demo-test"})
+	//groupVersion := schema.GroupVersion{Group: "extensions.example.com", Version: "v1"}
+	//schemeObj := scheme.Scheme
+	//schemeObj.AddKnownTypes(groupVersion, &websitev1.Website{}, &websitev1.WebsiteList{})
+	//metav1.AddToGroupVersion(schemeObj, groupVersion)
+	eventRecorder := eventBroadcaster.NewRecorder(crScheme, v1.EventSource{Component: "demo-test"})
 	eventRecorder.Event(website, v1.EventTypeWarning, "Reason Test", "Message Test")
 	eventBroadcaster.Shutdown()
 	time.Sleep(2 * time.Second)

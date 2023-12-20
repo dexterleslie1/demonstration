@@ -1,4 +1,4 @@
-package main
+package demo_controller_runtime
 
 import (
 	"context"
