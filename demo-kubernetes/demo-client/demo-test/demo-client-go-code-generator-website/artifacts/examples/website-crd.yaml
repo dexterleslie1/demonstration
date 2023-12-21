@@ -1,0 +1,55 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: websites.extensions.example.com
+spec:
+  # Website资源是属于某个命名空间的
+  scope: Namespaced
+  # api组
+  group: extensions.example.com
+  # api版本
+  # 在定义Website资源时 apiVersion 应该填写 extensions.example.com/v1
+  versions:
+    - name: v1
+      storage: true
+      served: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            # Website资源的spec支持字段
+            spec:
+              type: object
+              properties:
+                gitRepo:
+                  type: string
+            status:
+              type: object
+              properties:
+                phase:
+                  type: string
+                myMessage:
+                  type: string
+
+      # subresources for the custom resource
+      subresources:
+        # enables the status subresource
+        status: {}
+
+      # https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/
+      additionalPrinterColumns:
+        - name: Status
+          type: string
+          description: The status of website
+          jsonPath: .status.phase
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp
+  names:
+    kind: Website
+    # 单数
+    singular: website
+    # 复数
+    plural: websites
+    shortNames:
+      - ws
