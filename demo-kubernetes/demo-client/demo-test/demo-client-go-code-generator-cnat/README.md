@@ -4,6 +4,12 @@
 > https://github.com/programming-kubernetes/cnat
 
 ```shell
+# 下载 k8s.io/code-generator 到 vendor/k8s.io/code-generator
+go mod vendor
+
+# 生成代码 pkg/generated 和 pkg/apis/extensions.example.com/v1/zz_generated.deepcopy.go
+./hack/update-codegen.sh
+
 # 创建crd
 kubectl apply -f artifacts/examples/cnat-crd.yaml
 

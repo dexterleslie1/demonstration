@@ -12,7 +12,19 @@ go mod vendor
 # 生成代码 pkg/generated 和 pkg/apis/extensions.example.com/v1/zz_generated.deepcopy.go
 ./hack/update-codegen.sh
 
-# 运行 main.go
+# 创建crd
+kubectl apply -f artifacts/examples/website-crd.yaml
+
+# 运行website-controller
+unset HTTPS_PROXY
 go run main.go
+
+# 创建website
+kubectl apply -f artifacts/examples/website-example.yaml
+
+# 删除website
+kubectl delete -f artifacts/examples/website-example.yaml
+# 删除crd
+kubectl delete -f artifacts/examples/website-crd.yaml
 ```
 
