@@ -30,6 +30,9 @@ data_volume: /data/data-harbor
 
 # 启动harbor，等待几分钟harbor启动
 # NOTE: 使用ubuntu运行需要sudo ./install.sh
+
+# NOTE: 支持helm charts需要添加 --with-chartmuseum 参数，例如: sh install.sh --with-chartmuseum
+# https://github.com/goharbor/harbor/issues/14446
 sh install.sh
 
 # 登陆harbor

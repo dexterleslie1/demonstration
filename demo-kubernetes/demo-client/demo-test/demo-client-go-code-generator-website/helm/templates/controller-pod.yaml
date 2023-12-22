@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: website-controller
+  namespace: kube-system
+spec:
+  serviceAccountName: website-sa
+  containers:
+    - name: website-controller
+      image: docker.118899.net:10001/yyd-public/website-controller:latest

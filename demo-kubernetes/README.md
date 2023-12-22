@@ -8771,9 +8771,38 @@ http://192.168.1.1.188:30000
 
 ## helm
 
+
+
+### 为何helm
+
+> **传统服务部署到k8s流程**
+> 拉取代码 > 打包编译 > 构建镜像 > 准备部署相关的yaml(例如: deployment、service、ingress) >  kubectl apply 部署到k8s
+>
+> 传统方式不能根据一套yaml文件来创建多个环境，需要手动进行修改。例如：一般环境都分为dev、预生产、生产环境，部署完了dev这套环境，后面再部署预生产和生产环境，还需要复制出两套，并手动修改才行。使用一套helm应用包部署多个环境。
+
+
+
+### helm组件
+
+> chart包： 就是helm的一个整合后的chart包，包含一个应用的所有kubernetes声明模板，类似于yum的rpm包或者apt的dpkg文件。
+> helm客户端： helm的客户端组件，负责和k8s apiserver通信
+> helm仓库： 用于发布和存储chart包的仓库，类似yum仓库或者docker仓库
+> release： 用chart包部署的一个实例。通过chart在k8s中部署的应用会产生一个唯一的release，同一个chart部署多次就会生产多个release。
+
+
+
 ### 安装
 
 > 使用dcli安装helm cli
+
+
+
+### todo 搭建 helm 私有仓库
+
+> todo 使用 https://github.com/helm/chartmuseum 搭建
+> todo 使用 harbor 搭建(在helm push时候报告错误)
+
+
 
 ### 使用helm创建一个chart
 
@@ -8781,98 +8810,74 @@ http://192.168.1.1.188:30000
 
 ```shell
 # 创建mychart项目
-[root@k8s-master ~]# helm create mychart
-Creating mychart
+helm create mychart
+
 # 删除mychart/templates文件夹下所有文件
-[root@k8s-master ~]# cd mychart/templates/
-[root@k8s-master templates]# rm -rf *
-# 在mychart/templates目录下创建configmap.yaml
-[root@k8s-master templates]# cat configmap.yaml 
+rm -rf templates/*
+
+# 在mychart/templates目录下创建configmap.yaml，内容如下:
 apiVersion: v1
 kind: ConfigMap
 metadata:
  name: mychart-configmap1
 data:
  myvalue: "hello world!"
+ 
  # 创建helm release
-[root@k8s-master mychart]# helm install myconfigmap1 .
-NAME: myconfigmap1
-LAST DEPLOYED: Fri Dec 16 16:14:36 2022
-NAMESPACE: default
-STATUS: deployed
-REVISION: 1
-TEST SUITE: None
+helm install myconfigmap1 .
+
 # 查看helm release
-[root@k8s-master mychart]# helm list
-NAME        	NAMESPACE	REVISION	UPDATED                                	STATUS  	CHART        	APP VERSION
-myconfigmap1	default  	1       	2022-12-16 16:14:36.220185982 +0800 CST	deployed	mychart-0.1.0	1.16.0
+helm list
+
 # 查看configmap
-[root@k8s-master mychart]# kubectl get configmap
-NAME                            DATA   AGE
-kube-root-ca.crt                1      11d
-mychart-configmap1              1      3m30s
+kubectl get configmap
+
 # 查看helm release详细信息
-[root@k8s-master mychart]# helm get manifest myconfigmap1
----
-# Source: mychart/templates/configmap.yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
- name: mychart-configmap1
-data:
- myvalue: "hello world!"
+helm get manifest myconfigmap1
+
 # 删除helm release
-[root@k8s-master mychart]# helm uninstall myconfigmap1
-release "myconfigmap1" uninstalled
-[root@k8s-master mychart]# helm list
-NAME	NAMESPACE	REVISION	UPDATED	STATUS	CHART	APP VERSION
-[root@k8s-master mychart]# kubectl get configmap
-NAME                            DATA   AGE
-kube-root-ca.crt                1      11d
+helm uninstall myconfigmap1
+
+helm list
+kubectl get configmap
 ```
+
+
 
 **带变量的helm**
 
 ```shell
 # 把上面 没有变量的helm 修改 templates/configmap.yaml和values.yaml
-[root@k8s-master mychart]# cat templates/configmap.yaml 
+# templates/configmap.yaml内容如下:
 apiVersion: v1
 kind: ConfigMap
 metadata:
  name: {{ .Release.Name }}-configmap1
 data:
  myvalue: {{ .Values.MY_VALUE }}
-[root@k8s-master mychart]# cat values.yaml 
+ 
+# values.yaml内容如下: 
 MY_VALUE: "hello world!!"
-[root@k8s-master mychart]# helm install myconfigmap2 .
-NAME: myconfigmap2
-LAST DEPLOYED: Fri Dec 16 16:45:23 2022
-NAMESPACE: default
-STATUS: deployed
-REVISION: 1
-TEST SUITE: None
-[root@k8s-master mychart]# helm list
-NAME        	NAMESPACE	REVISION	UPDATED                                	STATUS  	CHART        	APP VERSION
-myconfigmap2	default  	1       	2022-12-16 16:45:23.180735938 +0800 CST	deployed	mychart-0.1.0	1.16.0     
-[root@k8s-master mychart]# kubectl get configmap
-NAME                            DATA   AGE
-kube-root-ca.crt                1      11d
-myconfigmap2-configmap1         1      14s
-[root@k8s-master mychart]# helm get manifest myconfigmap2
----
-# Source: mychart/templates/configmap.yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
- name: myconfigmap2-configmap1
-data:
- myvalue: hello world!!
 
-[root@k8s-master mychart]# helm uninstall myconfigmap2
-release "myconfigmap2" uninstalled
-[root@k8s-master mychart]# helm list
-NAME	NAMESPACE	REVISION	UPDATED	STATUS	CHART	APP VERSION
+# 安装
+helm install myconfigmap2 .
+
+# 查询安装列表
+helm list
+
+# 查询configmap列表
+kubectl get configmap
+
+# 查看helm安装详情
+helm get manifest myconfigmap2
+
+# 卸载
+helm uninstall myconfigmap2
+
+helm list
 ```
+
+
 
 ### debug和dry-run
 
@@ -8967,162 +8972,88 @@ data:
 >
 > [链接1](https://helm.sh/docs/chart_template_guide/variables/)
 
-### 常用命令
+### helm相关命令
 
-#### 查看helm版本
+
+
+#### helm version查看helm版本
 
 ```shell
-[root@k8s-master mychart]# helm version
-version.BuildInfo{Version:"v3.10.3", GitCommit:"835b7334cfe2e5e27870ab3ed4135f136eecc704", GitTreeState:"clean", GoVersion:"go1.18.9"}
-
+helm version
 ```
 
-#### 仓库管理
+
+
+#### helm env 查看helm命令使用的环境变量列表
+
+```shell
+helm env
+```
+
+
+
+#### helm repo 仓库管理
 
 ```shell
 # 添加微软helm仓库
-[root@k8s-master mychart]# helm repo add stable  http://mirror.azure.cn/kubernetes/charts/
-"stable" has been added to your repositories
+helm repo add stable  http://mirror.azure.cn/kubernetes/charts/
 
 # 列出helm仓库
-[root@k8s-master mychart]# helm repo list
-NAME  	URL                                      
-stable	http://mirror.azure.cn/kubernetes/charts/
+helm repo list
 
 # 把远程仓库更新到本地
-[root@k8s-master mychart]# helm repo update
-Hang tight while we grab the latest from your chart repositories...
-...Successfully got an update from the "stable" chart repository
-Update Complete. ?Happy Helming!?
+helm repo update
 
 # 删除仓库
-[root@k8s-master mychart]# helm repo list
+helm repo list
 NAME   	URL                                      
 stable 	http://mirror.azure.cn/kubernetes/charts/
 stable2	http://mirror.azure.cn/kubernetes/charts/
-[root@k8s-master mychart]# helm repo remove stable2
-"stable2" has been removed from your repositories
-[root@k8s-master mychart]# helm repo list
-NAME  	URL                                      
-stable	http://mirror.azure.cn/kubernetes/charts/
+# stable2是helm仓库名称
+helm repo remove stable2
 
 # 在远程helm仓库中搜索tomcat包
-[root@k8s-master ~]# helm search repo tomcat
-NAME         	CHART VERSION	APP VERSION	DESCRIPTION                                       
-stable/tomcat	0.4.3        	7.0        	DEPRECATED - Deploy a basic tomcat application ...
+helm search repo tomcat
 ```
 
-#### chart包管理
+
+
+#### helm chart包管理
 
 ```shell
 # 创建chart包
-[root@k8s-master ~]# helm create mychart-test
-Creating mychart-test
+helm create mychart-test
 
 # 显示stable/tomcat包信息
-[root@k8s-master ~]# helm show chart stable/tomcat
-apiVersion: v1
-appVersion: "7.0"
-deprecated: true
-description: DEPRECATED - Deploy a basic tomcat application server with sidecar as
-  web archive container
-home: https://github.com/yahavb
-icon: http://tomcat.apache.org/res/images/tomcat.png
-name: tomcat
-version: 0.4.3
+helm show chart stable/tomcat
+
 # 显示stable/tomcat values信息
-[root@k8s-master ~]# helm show values stable/tomcat
-# Default values for the chart.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
-replicaCount: 1
-
-image:
-  webarchive:
-    repository: ananwaresystems/webarchive
-    tag: "1.0"
-  tomcat:
-    repository: tomcat
-    tag: "7.0"
-  pullPolicy: IfNotPresent
-  pullSecrets: []
-
-deploy:
-  directory: /usr/local/tomcat/webapps
-
-service:
-  name: http
-  type: LoadBalancer
-  externalPort: 80
-  internalPort: 8080
-
-hostPort: 8009
-
-ingress:
-  enabled: false
-  annotations: {}
-    # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
-  path: /
-  hosts:
-    - chart-example.local
-  tls: []
-  #  - secretName: chart-example-tls
-  #    hosts:
-  #      - chart-example.local
-
-env: []
-  # - name: env
-  #   value: test
-
-extraVolumes: []
-  # - name: extra
-  #   emptyDir: {}
-
-extraVolumeMounts: []
-  # - name: extra
-  #   mountPath: /usr/local/tomcat/webapps/app
-  #   readOnly: true
-
-extraInitContainers: []
-  # - name: do-something
-  #   image: busybox
-  #   command: ['do', 'something']
-
-readinessProbe:
-  path: "/sample"
-  initialDelaySeconds: 60
-  periodSeconds: 30
-  failureThreshold: 6
-  timeoutSeconds: 5
-livenessProbe:
-  path: "/sample"
-  initialDelaySeconds: 60
-  periodSeconds: 30
-  failureThreshold: 6
-  timeoutSeconds: 5
-
-resources: {}
-#  limits:
-#    cpu: 100m
-#    memory: 256Mi
-#  requests:
-#    cpu: 100m
-#    memory: 256Mi
-
-nodeSelector: {}
-
-tolerations: []
-
-affinity: {}
+helm show values stable/tomcat
 
 # 拉取helm chart包，--untar解压
-[root@k8s-master ~]# helm pull stable/tomcat --version 0.4.3
-[root@k8s-master ~]# helm pull stable/tomcat --version 0.4.3 --untar
-[root@k8s-master ~]# ll | grep tomcat
-drwxr-xr-x. 3 root root    77 Dec 16 20:01 tomcat
--rw-r--r--. 1 root root  4241 Dec 16 20:00 tomcat-0.4.3.tgz
+# 拉取 helm tgz 包，例如： tomcat-0.4.3.tgz
+helm pull stable/tomcat --version 0.4.3
+# 拉取 helm tgz 包并在当前目录解压
+helm pull stable/tomcat --version 0.4.3 --untar
 ```
+
+
+
+#### helm package 归档chart包
+
+> https://helm.sh/docs/helm/helm_package/
+
+```shell
+# 在 mychart 目录内时打包 chart 资源，在当前目录生成 mychart-0.1.0.tgz
+helm package .
+
+# 不在 mychart 目录内时打包 chart 资源，在当前目录生产 mychart-0.1.0.tgz
+helm package mychart
+```
+
+
+
+
 
 ### 内置函数
 

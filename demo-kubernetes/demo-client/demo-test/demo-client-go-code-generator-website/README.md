@@ -4,27 +4,22 @@
 > https://tangxusc.github.io/blog/2019/05/code-generator%E4%BD%BF%E7%94%A8/
 > https://www.cnblogs.com/double12gzh/p/13734830.html
 > https://github.com/kubernetes/sample-controller
+> https://github.com/chenzongshu/Kubernetes/blob/master/%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99controller.md
 
 ```shell
-# 下载 k8s.io/code-generator 到 vendor/k8s.io/code-generator
-go mod vendor
+# 编译website-controller
+sh buildAndPush.sh
 
-# 生成代码 pkg/generated 和 pkg/apis/extensions.example.com/v1/zz_generated.deepcopy.go
-./hack/update-codegen.sh
-
-# 创建crd
-kubectl apply -f artifacts/examples/website-crd.yaml
-
-# 运行website-controller
-unset HTTPS_PROXY
-go run main.go
+# 安装crd、启动 website-controller pod
+helm install mywebsite .
 
 # 创建website
-kubectl apply -f artifacts/examples/website-example.yaml
+kubectl apply -f examples/website-example.yaml
 
 # 删除website
-kubectl delete -f artifacts/examples/website-example.yaml
-# 删除crd
-kubectl delete -f artifacts/examples/website-crd.yaml
+kubectl delete -f examples/website-example.yaml
+
+# 卸载website-controller pod
+helm uninstall mywebsite
 ```
 
