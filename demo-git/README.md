@@ -85,14 +85,14 @@ sudo git lfs pull --include="xxx.pdf"
 
 ## git clean
 
-### 作用
-
-用于删除被 .gitignore 但依旧在远程仓库存在的文件
-
 ### 参考资料
 
 How to remove files that are listed in the .gitignore but still on the repository?
 https://stackoverflow.com/questions/13541615/how-to-remove-files-that-are-listed-in-the-gitignore-but-still-on-the-repositor#:~:text=As%20the%20files%20in%20.,clean%20%2Dxdf%20to%20execute%20it.
+
+### 作用
+
+用于删除被 .gitignore 但依旧在远程仓库存在的文件
 
 ### 相关操作
 
@@ -230,3 +230,16 @@ git clone https://github.com/cmu-db/benchbase.git --config 'http.proxy=socks5://
 ```shell
 git config --global http.sslVerify false
 ```
+
+
+
+## fork仓库
+
+### 参考资料
+
+https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo
+
+### NOTE
+
+目前工作中暂时没有用到此特性，所有不深入研究。
+
