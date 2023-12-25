@@ -40,9 +40,28 @@ git push -f
 
 ## git status
 
-```
-# 设置git status命令显示中文
+设置git status命令显示中文
+
+```shell
 git config --global core.quotepath false
+```
+
+无论哪个子目录都显示整个项目的状态
+
+```shell
+git status
+```
+
+显示当前所在目录的状态
+
+```shell
+git status .
+```
+
+显示当前所在目录的状态包括untracked文件，可参考 https://michaelheap.com/git-status-untracked/
+
+```shell
+git status -u .
 ```
 
 
@@ -60,6 +79,29 @@ sudo apt install git-lfs
 ```
 # pull指定文件，参考https://sabicalija.github.io/git-lfs-intro/
 sudo git lfs pull --include="xxx.pdf"
+```
+
+
+
+## git clean 用于删除被 .gitignore 但依旧在远程仓库存在的文件
+
+### 参考资料
+
+> How to remove files that are listed in the .gitignore but still on the repository?
+> https://stackoverflow.com/questions/13541615/how-to-remove-files-that-are-listed-in-the-gitignore-but-still-on-the-repositor#:~:text=As%20the%20files%20in%20.,clean%20%2Dxdf%20to%20execute%20it.
+
+### 相关操作
+
+只显示将要删除的文件或者目录，不执行实际删除，-x 删除被忽略的文件，-d 删除被忽略的目录，-n 等价为 --dry-run 表示模拟输出不实际执行
+
+```shell
+git clean -xdn
+```
+
+执行实际删除，-f 强制执行
+
+```shell
+git clean -xdf
 ```
 
 
