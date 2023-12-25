@@ -83,12 +83,16 @@ sudo git lfs pull --include="xxx.pdf"
 
 
 
-## git clean 用于删除被 .gitignore 但依旧在远程仓库存在的文件
+## git clean
+
+### 作用
+
+用于删除被 .gitignore 但依旧在远程仓库存在的文件
 
 ### 参考资料
 
-> How to remove files that are listed in the .gitignore but still on the repository?
-> https://stackoverflow.com/questions/13541615/how-to-remove-files-that-are-listed-in-the-gitignore-but-still-on-the-repositor#:~:text=As%20the%20files%20in%20.,clean%20%2Dxdf%20to%20execute%20it.
+How to remove files that are listed in the .gitignore but still on the repository?
+https://stackoverflow.com/questions/13541615/how-to-remove-files-that-are-listed-in-the-gitignore-but-still-on-the-repositor#:~:text=As%20the%20files%20in%20.,clean%20%2Dxdf%20to%20execute%20it.
 
 ### 相关操作
 
