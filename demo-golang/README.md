@@ -109,6 +109,8 @@ GOOS=linux GOARCH=amd64 go build -o test-linux-x86_64 test.go
 go run xxx.go
 ```
 
+
+
 ## 使用go mod管理项目
 
 **使用go mod 管理项目，就不需要非得把项目放到GOPATH指定目录下，你可以在你磁盘的任何位置新建一个项目**
@@ -121,12 +123,23 @@ go.sum: 记录第三方库被锁定的版本。
 # 初始化一个模块名为demo-cobra，以后引用这个模块的cmd子目录方式为import "demo-cobra/cmd"，会在当前目录下生成go.mod文件
 # NOTE: 在当前目录生成go.mod文件，文件中包含module名称和最低的go版本
 go mod init demo-cobra
+```
 
+
+
+### go mod tidy
+
+```shell
 # 生成go.sum文件
-# NOTE: 自动推倒依赖并更新到go.mod文件中，生产go.sum文件锁定当前第三方库依赖版本。
+# NOTE: 自动推导依赖并更新到go.mod文件中，生产go.sum文件锁定当前第三方库依赖版本。
 # NOTE: 会自动把项目所有依赖源代码下载到~/go/pkg/mod目录中
+
+# NOTE: 会自动升级依赖的版本，例如: k8s.io/apiextensions-apiserver 依赖于 k8s.io/api。当前k8s.io/apiextensions-apiserver版本为v0.29.0，如果 k8s.io/api版本小于v0.29.0则会被自动升级为此版本
+
 go mod tidy
 ```
+
+
 
 ## 包(package)
 
@@ -249,6 +262,24 @@ go mod tidy
 
 > https://blog.csdn.net/test1280/article/details/120855865
 
+
+
+## go help 用法
+
+### 用途
+
+用于查看 go xxx 相关命令的帮助文档
+
+### 用法
+
+查看`go list`命令帮助文档
+
+```shell
+go help list
+```
+
+
+
 ## go get
 
 > https://gosamples.dev/go-get/
@@ -258,3 +289,73 @@ go mod tidy
 
 > https://gosamples.dev/go-get/
 > The [`go install`](https://go.dev/ref/mod#go-install) command builds the package and installs the executable file in the directory defined by the `GOBIN` environment variable, which defaults to the `$GOPATH/bin` path. Installing the executable file allows you to call it directly  from your system terminal by simply typing the command name, e.g. `mytool` in the command line.
+
+
+
+## go list 用法
+
+### 参考资料
+
+https://dave.cheney.net/2014/09/14/go-list-your-swiss-army-knife
+
+### 用法
+
+返回当前目录在使用 import 时的路径，-f '{{ .ImportPath }}' 和不添加 -f 一致是默认格式
+
+```shell
+go list
+或者
+go list -f '{{ .ImportPath }}'
+```
+
+查看指定package import 路径
+
+```shell
+go list github.com/juju/juju
+```
+
+查询测试文件列表
+
+```shell
+go list -f '{{ .TestGoFiles }}'
+```
+
+查询外部测试文件列表
+
+```shell
+go list -f '{{ .XTestGoFiles }}'
+```
+
+查询直接依赖列表
+
+```shell
+go list -f '{{ .Imports }}'
+```
+
+查询直接和间接依赖列表
+
+```shell
+go list -f '{{ .Deps }}'
+```
+
+
+
+## golang内置api
+
+
+
+### packagestest相关api用法
+
+#### 参考资料
+
+> https://pkg.go.dev/golang.org/x/tools/go/packages/packagestest
+> 参考 demo-package-packagestest demo
+
+
+
+
+
+## golang marker comment(marker注释)
+
+> https://pkg.go.dev/sigs.k8s.io/controller-tools/pkg/markers
+
