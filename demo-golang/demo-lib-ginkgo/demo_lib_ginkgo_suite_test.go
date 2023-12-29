@@ -1,6 +1,7 @@
 package demo_lib_ginkgo_test
 
 import (
+	"fmt"
 	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -13,3 +14,11 @@ func TestDemoLibGinkgo(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "DemoLibGinkgo Suite")
 }
+
+var _ = BeforeSuite(func() {
+	fmt.Println("before suite method called")
+})
+
+var _ = AfterSuite(func() {
+	fmt.Println("after suite method called")
+})
