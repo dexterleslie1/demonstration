@@ -808,9 +808,287 @@ kustomize build .
 
 
 
-## kustomize模块化
+## kustomize components 模块化
 
-参考资料如下：
+### 参考
 
 https://kubectl.docs.kubernetes.io/guides/config_management/components/
+
+### 演示
+
+#### base 目录和文件如下
+
+base/deployment.yaml 内容如下：
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: example
+spec:
+  template:
+    spec:
+      containers:
+      - name: example
+        image: example:1.0
+        volumeMounts:
+        - name: conf
+          mountPath: /etc/config
+      volumes:
+        - name: conf
+          configMap:
+            name: conf
+```
+
+base/kustomization.yaml 内容如下：
+
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+# namespace to deploy all Resources to
+namespace: default
+
+resources:
+- deployment.yaml
+
+configMapGenerator:
+- name: conf
+  literals:
+    - main.conf=|
+        color=cornflower_blue
+        log_level=info
+```
+
+#### components 目录和文件如下
+
+**external_db 组件**
+
+components/external_db/configmap.yaml 内容如下：
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: conf
+data:
+  db.conf: |
+    endpoint=127.0.0.1:1234
+    name=app
+    user=admin
+    pass=/var/run/secrets/db/dbpass.txt
+```
+
+components/external_db/dbpass.txt 文件存在但没有内容
+
+components/external_db/deployment.yaml 内容如下：
+
+```yaml
+- op: add
+  path: /spec/template/spec/volumes/0
+  value:
+    name: dbpass
+    secret:
+      secretName: dbpass
+- op: add
+  path: /spec/template/spec/containers/0/volumeMounts/0
+  value:
+    mountPath: /var/run/secrets/db/
+    name: dbpass
+```
+
+components/external_db/kustomization.yaml 内容如下：
+
+```yaml
+apiVersion: kustomize.config.k8s.io/v1alpha1  # <-- Component notation
+kind: Component
+
+secretGenerator:
+- name: dbpass
+  files:
+    - dbpass.txt
+
+patchesStrategicMerge:
+  - configmap.yaml
+
+patchesJson6902:
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: example
+  path: deployment.yaml
+```
+
+**ldap 组件**
+
+components/ldap/configmap.yaml 内容如下：
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: conf
+data:
+  ldap.conf: |
+    endpoint=ldap://ldap.example.com
+    bindDN=cn=admin,dc=example,dc=com
+    pass=/var/run/secrets/ldap/ldappass.txt
+```
+
+components/ldap/deployment.yaml 内容如下：
+
+```yaml
+- op: add
+  path: /spec/template/spec/volumes/0
+  value:
+    name: ldappass
+    secret:
+      secretName: ldappass
+- op: add
+  path: /spec/template/spec/containers/0/volumeMounts/0
+  value:
+    mountPath: /var/run/secrets/ldap/
+    name: ldappass
+```
+
+components/ldap/kustomization.yaml 内容如下：
+
+```yaml
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+secretGenerator:
+- name: ldappass
+  files:
+    - ldappass.txt
+
+patchesStrategicMerge:
+  - configmap.yaml
+
+patchesJson6902:
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: example
+  path: deployment.yaml
+```
+
+**recaptcha 组件**
+
+components/recaptcha/deployment.yaml 内容如下：
+
+```yaml
+- op: add
+  path: /spec/template/spec/volumes/0
+  value:
+    name: recaptcha
+    secret:
+      secretName: recaptcha
+- op: add
+  path: /spec/template/spec/containers/0/volumeMounts/0
+  value:
+    mountPath: /var/run/secrets/recaptcha/
+    name: recaptcha
+```
+
+components/recaptcha/kustomization.yaml 内容如下：
+
+```yaml
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+secretGenerator:
+- name: recaptcha
+  files:
+    - site_key.txt
+    - secret_key.txt
+
+# Updating the ConfigMap works with generators as well.
+configMapGenerator:
+- name: conf
+  behavior: merge
+  literals:
+    - recaptcha.conf=|
+        enabled=true
+        site_key=/var/run/secrets/recaptcha/site_key.txt
+        secret_key=/var/run/secrets/recaptcha/secret_key.txt
+
+patchesJson6902:
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: example
+  path: deployment.yaml
+```
+
+components/recaptcha/scret_key.txt 文件存在但没有内容
+
+components/recaptcha/site_key.txt 文件存在但没有内容
+
+**overlays 组件**
+
+components/overlays/community/kustomization.yaml 内容如下：
+
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+components:
+  - ../../components/external_db
+  - ../../components/recaptcha
+```
+
+components/overlays/dev/kustomization.yaml 内容如下：
+
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+components:
+  - ../../components/external_db
+  #- ../../components/ldap
+  - ../../components/recaptcha
+```
+
+components/overlays/enterprise/kustomization.yaml 内容如下：
+
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+components:
+  - ../../components/external_db
+  - ../../components/ldap
+```
+
+**测试不同的 overlays 生成不同版本的配置**
+
+生成 community 版本
+
+```shell
+kustomize build overlays/community
+```
+
+生成 dev 版本
+
+```shell
+kustomize build overlays/dev
+```
+
+生成 enterprise 版本
+
+```shell
+kustomize build overlays/enterprise
+```
 
