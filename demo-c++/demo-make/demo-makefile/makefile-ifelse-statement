@@ -1,0 +1,24 @@
+# https://stackoverflow.com/questions/11994029/makefile-ifeq-when-are-they-evaluated
+
+# 演示 if else 用法
+
+# 判断 TEST 变量是否等于 ON
+TEST = ON
+TEST1 =
+
+test:
+	@echo "TEST=$(TEST)"
+	@echo "TEST1=$(TEST1)"
+
+ifeq ($(TEST),ON)
+	@echo inspecting 1 passed
+else
+	@echo inspecting 1 failed
+endif
+
+# 判断 TEST1 变量是否为空
+ifeq (,$(TEST1))
+	@echo inspecting 2 passed
+else
+	@echo inspecting 2 failed
+endif

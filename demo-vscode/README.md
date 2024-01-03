@@ -82,3 +82,18 @@
 
 # 快速隐藏或者打开 Terminal 所在的Panel ctrl+`
 ```
+
+
+
+## vscode makefile 报告 Makefile:2: *** missing separator.  Stop.
+
+参考
+https://blog.csdn.net/zhoumingazmq/article/details/109455210
+
+在编辑器的右下角点击Space或Tab
+
+选择Indent Using Tabs
+
+然后选择4 configured Tab Size
+
+最后删掉之前的空格重新使用Tab可以看到之前的四个点变成了一个箭头（–>）如果需要将tab替换回四个空格同样使用这种方式
