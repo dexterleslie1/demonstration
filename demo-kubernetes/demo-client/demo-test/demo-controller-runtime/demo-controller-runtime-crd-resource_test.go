@@ -245,14 +245,26 @@ func TestControllerRuntimeCrdResource(t *testing.T) {
 
 	//region 演示 pod 列表属于 website
 
-	// 使用 labels 方式匹配
+	// 使用 labels 方式匹配并设置 pod 的 ownerreferences
 	for i := 0; i < 2; i++ {
+		isController := true
+		apiVersion := websitev1.SchemeGroupVersion.String()
 		pod := v1.Pod{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: v1.NamespaceDefault,
 				Name:      "pod-" + strconv.Itoa(i),
 				Labels: map[string]string{
 					"app": "my-website",
+				},
+				// 设置 OwnerReferences 后，删除 website 会自动删除其属下的 pod
+				OwnerReferences: []metav1.OwnerReference{
+					{
+						APIVersion: apiVersion,
+						Kind:       "Website",
+						Name:       website.Name,
+						UID:        website.UID,
+						Controller: &isController,
+					},
 				},
 			},
 			Spec: v1.PodSpec{
@@ -266,7 +278,7 @@ func TestControllerRuntimeCrdResource(t *testing.T) {
 			},
 		}
 
-		_ = cl.Delete(context.Background(), &pod, &client.DeleteOptions{GracePeriodSeconds: new(int64)})
+		//_ = cl.Delete(context.Background(), &pod, &client.DeleteOptions{GracePeriodSeconds: new(int64)})
 
 		err := cl.Create(context.Background(), &pod, &client.CreateOptions{})
 		if err != nil {
