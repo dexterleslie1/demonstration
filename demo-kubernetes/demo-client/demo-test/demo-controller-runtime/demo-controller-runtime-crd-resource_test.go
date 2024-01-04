@@ -16,6 +16,7 @@ import (
 	"path/filepath"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
+	"strconv"
 	"testing"
 	"time"
 )
@@ -23,6 +24,10 @@ import (
 func TestControllerRuntimeCrdResource(t *testing.T) {
 	crScheme := runtime.NewScheme()
 	err := websitev1.AddToScheme(crScheme)
+	if err != nil {
+		t.Fatalf("expected no err, got %s", err)
+	}
+	err = v1.AddToScheme(crScheme)
 	if err != nil {
 		t.Fatalf("expected no err, got %s", err)
 	}
@@ -145,6 +150,9 @@ func TestControllerRuntimeCrdResource(t *testing.T) {
 	website = &websitev1.Website{}
 	website.SetNamespace(v1.NamespaceDefault)
 	website.SetName(websiteName)
+	website.SetLabels(map[string]string{
+		"app": "my-website",
+	})
 	website.Spec = websitev1.WebsiteSpec{
 		GitRepo: "https://github.com/luksa/kubia-website-example.git",
 	}
@@ -234,4 +242,49 @@ func TestControllerRuntimeCrdResource(t *testing.T) {
 	if !found {
 		t.Fatalf("expected true, got %t", found)
 	}
+
+	//region 演示 pod 列表属于 website
+
+	// 使用 labels 方式匹配
+	for i := 0; i < 2; i++ {
+		pod := v1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: v1.NamespaceDefault,
+				Name:      "pod-" + strconv.Itoa(i),
+				Labels: map[string]string{
+					"app": "my-website",
+				},
+			},
+			Spec: v1.PodSpec{
+				Containers: []v1.Container{
+					{
+						Name:            "nginx",
+						Image:           "nginx",
+						ImagePullPolicy: v1.PullIfNotPresent,
+					},
+				},
+			},
+		}
+
+		_ = cl.Delete(context.Background(), &pod, &client.DeleteOptions{GracePeriodSeconds: new(int64)})
+
+		err := cl.Create(context.Background(), &pod, &client.CreateOptions{})
+		if err != nil {
+			t.Fatalf("expected no err, got %s", err)
+		}
+	}
+
+	podList := v1.PodList{}
+	err = cl.List(context.Background(), &podList, client.MatchingLabels{
+		"app": "my-website",
+	})
+	if err != nil {
+		t.Fatalf("expected no err, got %s", err)
+	}
+
+	if len(podList.Items) != 2 {
+		t.Fatalf("expected 2, got %d", len(podList.Items))
+	}
+
+	//endregion
 }
