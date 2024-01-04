@@ -206,3 +206,58 @@ docker-compose up --abort-on-container-exit || { echo '执行失败'; }
 > - 使用非root模式运行docker daemon
 >
 > todo 配置过程繁琐，暂时不研究
+
+
+
+## docker 多阶段构建
+
+Dockerfile 多阶段构建是一种优化 Docker 镜像构建的方法，它可以减少 Docker 镜像的大小和运行时的资源消耗。
+Dockerfile 多阶段构建的基本思路是利用多个阶段构建镜像，每个阶段都有一个基础镜像，并在这个基础镜像上进行构建。在每个阶段的最后，通过 COPY 或者 FROM 语句将需要的文件或者库复制到最终的镜像中。这种方法可以减少最终镜像的大小，同时也可以避免在运行时不必要的资源消耗。
+
+参考 https://zhuanlan.zhihu.com/p/612292168
+
+示例：
+
+main.go 内容如下：
+
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func main() {
+	fmt.Println("Hello world!")
+	time.Sleep(time.Second * 3600)
+}
+```
+
+Dockerfile 内容如下：
+
+```dockerfile
+FROM golang:1.16-alpine AS builder
+WORKDIR /app
+COPY main.go .
+RUN go build -o myapp main.go
+
+FROM alpine:latest
+RUN apk --no-cache add ca-certificates
+WORKDIR /root/
+COPY --from=builder /app/myapp .
+CMD ["./myapp"]
+```
+
+编译镜像
+
+```shell
+docker build --tag my-hello-world .
+```
+
+运行镜像，输出 "Hello world" 表示成功运行
+
+```shell
+docker run --rm my-hello-world
+```
+
