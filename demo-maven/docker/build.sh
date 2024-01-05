@@ -20,7 +20,9 @@
 # cp /tmp/src/target/*.jar .
 
 # 使用docker-compose编译jar
-docker-compose -f docker-compose-compiler.yml up
+# docker-compose -f docker-compose-compiler.yml up
 
 # 编译发布demo docker镜像
 docker build --tag docker.118899.net:10001/demo/demo-maven:1.0.0 --file Dockerfile .
+# https://stackoverflow.com/questions/64804749/why-is-docker-build-not-showing-any-output-from-commands
+# docker build --progress=plain --no-cache --tag docker.118899.net:10001/demo/demo-maven:1.0.0 --file Dockerfile .

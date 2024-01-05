@@ -80,7 +80,7 @@ docker cp ./test.sql containername:/
 
 ### docker image
 
-```
+```shell
 # 删除未被使用的镜像
 # https://www.baeldung.com/ops/docker-remove-dangling-unused-images
 docker image prune -a
@@ -91,6 +91,11 @@ docker rmi -f $(docker images -aq)
 # 显示本地所有镜像
 # https://www.runoob.com/docker/docker-images-command.html
 docker images
+
+# 删除 none tag 镜像
+docker rmi $(docker images -f "dangling=true" -q)
+# 或者
+docker image prune
 ```
 
 
