@@ -8912,6 +8912,44 @@ data:
  myvalue: hello world!!
 ```
 
+
+
+### {{ 和 {{- 、}} 和 -}} 的区别
+
+> {{ 会保留左边空格，{{- 相当于 left trim，}} 会保留右边空格，-}} 相当于 right trim。
+> https://stackoverflow.com/questions/69992198/what-is-different-between-and-syntax-in-helm3
+
+在当前目录创建 helm 项目
+
+```
+helm create .
+```
+
+删除 templates 中的文件
+
+```
+rm -rf templates/*
+```
+
+创建 templates/1.yaml 内容如下：
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: myconfigmap
+data:
+ k1: {{"a"}} {{- "b"}}{{"c" -}} {{"d"}} {{- "e" -}} {{"f"}} {{"g"}}
+```
+
+调试
+
+```sh
+helm install demo1 . --debug --dry-run
+```
+
+
+
 ### 变量
 
 #### 调试内置变量
@@ -8966,11 +9004,105 @@ data:
  myvalue: hello world!!
 ```
 
-#### $(dollar)变量
+#### $ 符号
 
-> 这个变量在用在range内，因为在range内点号指代的是当前item，为了避免冲突使用$代替。
->
-> [链接1](https://helm.sh/docs/chart_template_guide/variables/)
+> 参考
+> https://helm.sh/docs/chart_template_guide/variables/
+
+##### 定义局部变量
+
+在当前目录创建 helm 项目
+
+```
+helm create .
+```
+
+删除 templates 中的文件
+
+```
+rm -rf templates/*
+```
+
+创建 templates/1.yaml 内容如下：
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-configmap
+data:
+  myvalue: "Hello World"
+  {{- $relname := .Release.Name -}}
+  {{- with .Values.favorite }}
+  drink: {{ .drink | default "tea" | quote }}
+  food: {{ .food | upper | quote }}
+  release: {{ $relname }}
+  {{- end }}
+```
+
+values.yaml 内容如下：
+
+```yaml
+favorite:
+  drink: "coffee"
+  food: "PIZZA"
+```
+
+调试
+
+```sh
+helm install demo1 . --debug --dry-run
+```
+
+
+
+##### 在 range 中特殊用法
+
+> 在 range 作用域中想引用全局变量 .Release.Name 时，因为 .Release.Name 中的 .(点号) 此时指代的是当前 item 导致不能成功引用全局变量 .Release.Name ，为了避免冲突使用 $ 代替 .(点号) 解决此问题。
+
+在当前目录创建 helm 项目
+
+```
+helm create .
+```
+
+删除 templates 中的文件
+
+```
+rm -rf templates/*
+```
+
+创建 templates/1.yaml 内容如下：
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-configmap
+data:
+  {{- range .Values.items }}
+  {{ .myK }}: {{ .myV }}
+  releaseName: {{ $.Release.Name }}
+  {{- end }}
+```
+
+values.yaml 内容如下：
+
+```yaml
+items:
+- myK: "k1"
+  myV: "v1"
+- myK: "k2"
+  myV: "v2"
+```
+
+调试
+
+```sh
+helm install demo1 . --debug --dry-run
+```
+
+
 
 ### helm相关命令
 
@@ -9535,35 +9667,146 @@ data:
 
 
 
+#### trimSuffix 函数
+
+> 删除后缀匹配的字符串
+
+在当前目录创建 helm 项目
+
+```
+helm create .
+```
+
+删除 templates 中的文件
+
+```
+rm -rf templates/*
+```
+
+创建 templates/1.yaml 内容如下：
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: myconfigmap
+data:
+ k1: {{ "abc-cba-" | trimSuffix "-" }}
+```
+
+调试
+
+```sh
+helm install demo1 . --debug --dry-run
+```
+
+
+
+#### trunc 函数
+
+> 截断字符串
+
+在当前目录创建 helm 项目
+
+```
+helm create .
+```
+
+删除 templates 中的文件
+
+```
+rm -rf templates/*
+```
+
+创建 templates/1.yaml 内容如下：
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: myconfigmap
+data:
+ k1: {{ "abc-cba-" | trunc 3 }}
+```
+
+调试
+
+```sh
+helm install demo1 . --debug --dry-run
+```
+
+
+
 ### 程序流程控制语句
 
 #### ifelse语句
 
-```shell
-[root@k8s-master mychart]# cat templates/configmap.yaml 
+在当前目录创建 helm 项目
+
+```
+helm create .
+```
+
+删除 templates 中的文件
+
+```
+rm -rf templates/*
+```
+
+创建 templates/1.yaml 内容如下：
+
+```yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
  name: {{ .Release.Name }}-configmap1
  namespace: {{ .Release.Namespace }}
 data:
+ {{- /* 判断布尔变量是否为真 */ -}}
  {{- if .Values.ingress.enabled }}
  ingress: "配置ingress"
  {{- else }}
  ingress: "不配置ingress"
  {{- end }}
 
+ {{- /* 判断字符串是否相等 */ -}}
  {{- if eq .Values.Person.name "dexter" }}
  welcome: "你好Dexter!"
  {{- else }}
  welcome: "你好谁谁!!"
  {{- end }}
- 
-[root@k8s-master mychart]# cat values.yaml 
+
+ {{- /* 使用if判断字符串是否为空 */ -}}
+ {{- if .Values.Person.name }}
+ ifNameEmptyMessage: "name不为空"
+ {{- else }}
+ ifNameEmptyMessage: "name为空"
+ {{- end }}
+```
+
+values.yaml 内容如下：
+
+```yaml
 Person:
  name: "dexter1"
 ingress:
  enabled: true
+```
+
+调试
+
+```sh
+helm install demo1 . --debug --dry-run
+```
+
+
+
+```shell
+[root@k8s-master mychart]# cat templates/configmap.yaml 
+
+ 
+[root@k8s-master mychart]# cat values.yaml 
+
  
 [root@k8s-master mychart]# helm install myconfigmap1 . --debug --dry-run
 install.go:192: [debug] Original chart version: ""
@@ -9654,8 +9897,119 @@ data:
 
 #### range语句
 
-```shell
-[root@k8s-master mychart]# cat templates/configmap.yaml 
+##### range index 索引
+
+> https://helm.sh/docs/chart_template_guide/variables/
+
+在当前目录创建 helm 项目
+
+```
+helm create .
+```
+
+删除 templates 中的文件
+
+```
+rm -rf templates/*
+```
+
+创建 templates/1.yaml 内容如下：
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-configmap
+data:
+  toppings: |-
+    {{- range $index, $topping := .Values.pizzaToppings }}
+    {{ $index }}: {{ $topping }}
+    {{- end }}
+```
+
+values.yaml 内容如下：
+
+```yaml
+pizzaToppings:
+- mushrooms
+- cheese
+- peppers
+- onions
+```
+
+调试
+
+```sh
+helm install demo1 . --debug --dry-run
+```
+
+
+
+##### range key 键值
+
+> https://helm.sh/docs/chart_template_guide/variables/
+
+在当前目录创建 helm 项目
+
+```
+helm create .
+```
+
+删除 templates 中的文件
+
+```
+rm -rf templates/*
+```
+
+创建 templates/1.yaml 内容如下：
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-configmap
+data:
+  myvalue: "Hello World"
+  {{- range $key, $val := .Values.favorite }}
+  {{ $key }}: {{ $val | quote }}
+  {{- end }}
+```
+
+values.yaml 内容如下：
+
+```yaml
+favorite:
+  drink: "coffee"
+  food: "PIZZA"
+```
+
+调试
+
+```sh
+helm install demo1 . --debug --dry-run
+```
+
+
+
+##### range 特殊变量 .(dot) 符号
+
+> https://helm.sh/docs/chart_template_guide/variables/
+
+在当前目录创建 helm 项目
+
+```
+helm create .
+```
+
+删除 templates 中的文件
+
+```
+rm -rf templates/*
+```
+
+创建 templates/1.yaml 内容如下：
+
+```yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -9666,46 +10020,163 @@ data:
   {{- range .Values.address }}
   - {{ . | title }}
   {{- end }}
-[root@k8s-master mychart]# cat values.yaml 
-address:
- - beijing
- - shanghai
- - guangzhou
+```
 
-[root@k8s-master mychart]# helm install myconfigmap1 . --debug --dry-run
-install.go:192: [debug] Original chart version: ""
-install.go:209: [debug] CHART PATH: /root/mychart
+values.yaml 内容如下：
 
-NAME: myconfigmap1
-LAST DEPLOYED: Mon Dec 19 12:37:49 2022
-NAMESPACE: default
-STATUS: pending-install
-REVISION: 1
-TEST SUITE: None
-USER-SUPPLIED VALUES:
-{}
-
-COMPUTED VALUES:
+```yaml
 address:
 - beijing
 - shanghai
 - guangzhou
+```
 
-HOOKS:
-MANIFEST:
----
-# Source: mychart/templates/configmap.yaml
+调试
+
+```sh
+helm install demo1 . --debug --dry-run
+```
+
+
+
+### helm subchart/dependency
+
+> https://levelup.gitconnected.com/helm-dependencies-1907facbe410
+> https://helm.sh/docs/chart_template_guide/subcharts_and_globals/
+
+创建并初始化 demo-mychart 和 demo-mysubchart 目录
+
+```
+mkdir demo-mychart
+cd demo-mychart
+helm create .
+rm -rf templates/*
+mkdir demo-mysubchart
+cd demo-mysubchart
+helm create .
+rm -rf templates/*
+```
+
+demo-mysubchart/Chart.yaml 内容如下：
+
+```yaml
+apiVersion: v2
+name: mysubchart
+description: A Helm chart for Kubernetes
+
+# A chart can be either an 'application' or a 'library' chart.
+#
+# Application charts are a collection of templates that can be packaged into versioned archives
+# to be deployed.
+#
+# Library charts provide useful utilities or functions for the chart developer. They're included as
+# a dependency of application charts to inject those utilities and functions into the rendering
+# pipeline. Library charts do not define any templates and therefore cannot be deployed.
+type: application
+
+# This is the chart version. This version number should be incremented each time you make changes
+# to the chart and its templates, including the app version.
+# Versions are expected to follow Semantic Versioning (https://semver.org/)
+version: 0.1.0
+
+# This is the version number of the application being deployed. This version number should be
+# incremented each time you make changes to the application. Versions are not expected to
+# follow Semantic Versioning. They should reflect the version the application is using.
+# It is recommended to use it with quotes.
+appVersion: "1.16.0"
+```
+
+demo-mysubchart/values.yaml 内容如下：
+
+```yaml
+name: "Dexter"
+```
+
+demo-mysubchart/templates/1.yaml 内容如下：
+
+```yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
- name: myconfigmap1-configmap1
- namespace: default
+ name: {{ .Release.Name }}-configmap-mysubchart
+ namespace: {{ .Release.Namespace }}
 data:
- address: |-
-  - Beijing
-  - Shanghai
-  - Guangzhou
+  myName: {{ .Values.name }}
 ```
+
+demo-mychart/Chart.yaml 内容如下：
+
+```yaml
+apiVersion: v2
+name: .
+description: A Helm chart for Kubernetes
+
+# A chart can be either an 'application' or a 'library' chart.
+#
+# Application charts are a collection of templates that can be packaged into versioned archives
+# to be deployed.
+#
+# Library charts provide useful utilities or functions for the chart developer. They're included as
+# a dependency of application charts to inject those utilities and functions into the rendering
+# pipeline. Library charts do not define any templates and therefore cannot be deployed.
+type: application
+
+# This is the chart version. This version number should be incremented each time you make changes
+# to the chart and its templates, including the app version.
+# Versions are expected to follow Semantic Versioning (https://semver.org/)
+version: 0.1.0
+
+# This is the version number of the application being deployed. This version number should be
+# incremented each time you make changes to the application. Versions are not expected to
+# follow Semantic Versioning. They should reflect the version the application is using.
+# It is recommended to use it with quotes.
+appVersion: "1.16.0"
+
+dependencies:
+  - name: mysubchart
+    version: 0.1.0
+    repository: file://../demo-mysubchart
+```
+
+demo-mychart/values.yaml 内容如下：
+
+```yaml
+# 设置 mysubchart .Values.name变量
+mysubchart:
+  name: "Dexterleslie"
+```
+
+demo-mychart/templates/1.yaml 内容如下：
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: {{ .Release.Name }}-configmap-mychart
+ namespace: {{ .Release.Namespace }}
+data:
+```
+
+下载 mysubchart 到 demo-mychart/charts 子目录中
+
+```sh
+helm dependency update .
+```
+
+调试
+
+```sh
+helm install demo1 . --debug --dry-run
+```
+
+
+
+### helm 多个环境配置
+
+> 使用多个 values-xxx.yaml 配置设置不同环境的参数
+> https://codefresh.io/blog/helm-deployment-environments/
+>
+> NOTE: 上面的方案并不好，因为如果 values-xxx.yaml 参数一旦变动需要维护多个 values-xxx.yaml 文件。所以还是采用使用一个 values.yaml 配置不同环境的参数。
 
 ### 子模板和template、include使用
 
