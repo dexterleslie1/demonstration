@@ -8797,10 +8797,121 @@ http://192.168.1.1.188:30000
 
 
 
-### todo 搭建 helm 私有仓库
+### 搭建 helm 私有仓库
 
-> todo 使用 https://github.com/helm/chartmuseum 搭建
-> todo 使用 harbor 搭建(在helm push时候报告错误)
+> helm 仓库 https://helm.sh/docs/topics/chart_repository/
+>
+> 使用 chartmuseum 搭建私有仓库
+> https://github.com/helm/chartmuseum
+> https://www.tinfoilcipher.co.uk/2021/04/26/creating-a-private-helm-repo-with-chartmuseum-using-aws-s3/
+>
+> NOTE: 使用 harbor 搭建(在helm push时候报告错误)，暂时不使用此方案
+
+使用 docker 运行 chartmuseum
+
+```sh
+docker run \
+  -d \
+  -p 8080:8080 \
+  -e DEBUG=1 \
+  -e STORAGE=local \
+  -e STORAGE_LOCAL_ROOTDIR=/charts \
+  -e BASIC_AUTH_USER=root \
+  -e BASIC_AUTH_PASS=123456 \
+  -v ~/data-demo-helm-charts:/charts \
+  ghcr.io/helm/chartmuseum:v0.16.1
+```
+
+授权 ~/data-demo-helm-charts 目录写权限
+
+```sh
+sudo chmod -R a+w ~/data-demo-helm-charts/
+```
+
+添加 chartmuseum 仓库
+
+```sh
+helm repo add --username root --password 123456 chartmuseum http://localhost:8080
+```
+
+搜索 charts 用于测试 chartmuseum 仓库是否添加成功
+
+```sh
+helm search repo chartmuseum/
+```
+
+创建 charts 项目测试 chartmuseum
+
+```sh
+mkdir temp-chartmuseum-testing
+cd temp-chartmuseum-testing
+helm create .
+rm -rf templates/*
+```
+
+修改 Chart.yaml 中 name 为 mychart，修改后的 Chart.yaml 内容如下：
+
+```yaml
+apiVersion: v2
+name: mychart
+description: A Helm chart for Kubernetes
+
+# A chart can be either an 'application' or a 'library' chart.
+#
+# Application charts are a collection of templates that can be packaged into versioned archives
+# to be deployed.
+#
+# Library charts provide useful utilities or functions for the chart developer. They're included as
+# a dependency of application charts to inject those utilities and functions into the rendering
+# pipeline. Library charts do not define any templates and therefore cannot be deployed.
+type: application
+
+# This is the chart version. This version number should be incremented each time you make changes
+# to the chart and its templates, including the app version.
+# Versions are expected to follow Semantic Versioning (https://semver.org/)
+version: 0.1.0
+
+# This is the version number of the application being deployed. This version number should be
+# incremented each time you make changes to the application. Versions are not expected to
+# follow Semantic Versioning. They should reflect the version the application is using.
+# It is recommended to use it with quotes.
+appVersion: "1.16.0"
+```
+
+新增 templates/1.yaml 内容如下：
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: myconfigmap
+data:
+ k1: v1
+```
+
+安装推送插件
+
+```sh
+helm plugin install https://github.com/chartmuseum/helm-push
+```
+
+推送 charts 项目到 chartmuseum 仓库
+
+```sh
+helm cm-push . chartmuseum
+```
+
+从 chartmuseum 安装 charts
+
+```sh
+helm install chartmuseum/mychart --generate-name
+```
+
+卸载 mychart
+
+```sh
+helm uninstall mychart-1704695350
+```
 
 
 
@@ -9130,10 +9241,14 @@ helm env
 # 添加微软helm仓库
 helm repo add stable  http://mirror.azure.cn/kubernetes/charts/
 
+# 添加 basic auth 的私有仓库
+helm repo add chartmuseum --username root --password 123456 http://localhost:8080
+
 # 列出helm仓库
 helm repo list
 
-# 把远程仓库更新到本地
+# 把远程仓库 index.yaml 更新到本地
+# https://stackoverflow.com/questions/55973901/how-can-i-list-all-available-charts-under-a-helm-repo
 helm repo update
 
 # 删除仓库
@@ -9184,6 +9299,34 @@ helm package mychart
 ```
 
 
+
+#### helm search
+
+> https://stackoverflow.com/questions/55973901/how-can-i-list-all-available-charts-under-a-helm-repo
+
+先同步远程 helm 仓库中的 index.yaml 到本地缓存中
+
+```sh
+helm repo update
+```
+
+查看所有 helm 仓库中的所有 charts
+
+```sh
+helm search repo
+```
+
+查看名为 chartmuseum 的 helm 仓库中所有 charts，只显示最新版本
+
+```sh
+helm search repo chartmuseum/
+```
+
+查看 chartmuseum 的 helm 仓库中名为 mychart 的 chart ，并显示所有版本
+
+```sh
+helm search repo -l chartmuseum/mychart 
+```
 
 
 
