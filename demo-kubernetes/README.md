@@ -1894,7 +1894,6 @@ kubectl logs -f cronjob1-1672666740-rnqqg
 >
 > https://www.jianshu.com/p/03cd2f2dc427
 >
-> 
 
 ```yaml
 # NOTE: 参考storageclass章节创建storageclass
@@ -2098,6 +2097,8 @@ kubectl delete pod web-2 --force --grace-period=0
 
 ### 使用kubectl expose创建服务
 
+> 不使用 yaml 方式，使用 CLI 方式创建服务
+
 ```shell
 # 创建pod
 kubectl run nginx --image=docker.118899.net:10001/yyd-public/demo-k8s-nodejs --port=8080
@@ -2113,6 +2114,8 @@ curl 10.1.57.17
 
 # 删除nginx服务
 kubectl delete service nginx
+# 删除 pod
+kubectl delete pod nginx
 ```
 
 
@@ -3091,7 +3094,7 @@ spec:
     path: /data
 
 # 创建pod
-kubectl create -f 1.yaml 
+kubectl apply -f 1.yaml 
 
 # 查询pod
 kubectl get pod -o wide
@@ -3163,7 +3166,7 @@ spec:
   server: 192.168.1.186
   
 # 创建pv
-kubectl create -f 1.yaml 
+kubectl apply -f 1.yaml 
 
 # 查询pv列表，pv状态为Available因为没有pvc在引用此pv
 kubectl get pv
@@ -3181,7 +3184,7 @@ spec:
    storage: 1Gi
   
 # 创建pvc
-kubectl create -f 2.yaml 
+kubectl apply -f 2.yaml 
 
 # 查看pv和pvc列表，此时发现pv和pvc都为Bound状态，并且pv对应的claim为default/pvc1
 # 当创建好pvc，k8s就会找到适当的持久卷pv并将其绑定到声明，持久卷的容量必须足够大以满足声明的需求，并且卷的访问模式必须包含声明中指定的访问模式。
@@ -3197,10 +3200,12 @@ spec:
  containers:
  - name: busybox
    image: busybox
+   # 写入数据到 nfs 服务器 /data/demo-pv-and-pvc/out.txt 文件
    command: ["/bin/sh", "-c", "while true;do echo `date` >> /root/out.txt; sleep 10; done;"]
    volumeMounts:
    - name: volume
      mountPath: /root/
+     # 在 nfs 服务器创建 /data/demo-pv-and-pvc 目录
      subPath: demo-pv-and-pvc
  volumes:
  - name: volume
@@ -9330,6 +9335,24 @@ helm search repo -l chartmuseum/mychart
 
 
 
+#### helm template
+
+> https://helm.sh/docs/helm/helm_template/
+
+显示所有模板
+
+```sh
+helm template .
+```
+
+显示指定模板 templates/1.yaml
+
+```sh
+helm template -s templates/1.yaml .
+```
+
+
+
 ### 内置函数
 
 #### quote和squote函数
@@ -9877,6 +9900,133 @@ data:
 ```sh
 helm install demo1 . --debug --dry-run
 ```
+
+
+
+#### printf 函数
+
+> 格式化字符串函数
+
+在当前目录创建 helm 项目
+
+```
+helm create .
+```
+
+删除 templates 中的文件
+
+```
+rm -rf templates/*
+```
+
+创建 templates/1.yaml 内容如下：
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: myconfigmap
+data:
+ k1: {{ printf "%s! Are you %d years old?" "Hello dexter" 23 | quote }}
+```
+
+调试
+
+```sh
+helm install demo1 . --debug --dry-run
+```
+
+
+
+#### 字典类型和字典函数(dict、dictionary)
+
+> https://helm.sh/docs/chart_template_guide/function_list/#dictionaries-and-dict-functions
+
+在当前目录创建 helm 项目
+
+```
+helm create .
+```
+
+删除 templates 中的文件
+
+```
+rm -rf templates/*
+```
+
+创建 templates/1.yaml 内容如下：
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: myconfigmap
+data:
+ {{/*定义字典变量*/}}
+ {{- $myDict := dict "name1" "value1" "name2" "value2" "name3" "value 3" -}}
+ {{/*修改字典变量，NOTE:set 返回字典（Go 模板函数的要求），因此您可能需要像上面那样使用 $_ 赋值来捕获值。*/}}
+ {{- $_ := set $myDict "name4" "value4" -}}
+ {{/*删除key=name3的键值*/}}
+ {{- $_ := unset $myDict "name3" -}}
+ hasKey3: {{ hasKey $myDict "name3" }}
+ name4: {{ get $myDict "name4" }}
+```
+
+调试
+
+```sh
+helm install demo1 . --debug --dry-run
+```
+
+
+
+#### 逻辑和流程控制功能函数(and、or、eq、gt等)
+
+> https://stackoverflow.com/questions/49789867/can-we-use-or-operator-in-helm-yaml-files
+
+##### and 操作符
+
+在当前目录创建 helm 项目
+
+```
+helm create .
+```
+
+删除 templates 中的文件
+
+```
+rm -rf templates/*
+```
+
+创建 templates/1.yaml 内容如下：
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: myconfigmap
+data:
+ {{- if and .Values.b1 .Values.b2 }}
+ k1: v1
+ {{- end }}
+```
+
+values.yaml 内容如下：
+
+```yaml
+b1: true
+b2: true
+```
+
+调试
+
+```sh
+helm install demo1 . --debug --dry-run
+```
+
+
+
+
 
 
 
@@ -10440,6 +10590,8 @@ data:
 
 #### include用法
 
+> include 语法为 include <标签> <变量参数>，例如： include "mychart.demo1" . 表示使用全局变量 .(dot) 参数调用 mychart.demo1 标签模板，include "mychart.demo1" (dict "k1" "v1") 表示使用字典变量 dict "k1" "v1" 参数调用 mychart.demo1 标签模板。
+
 ##### if判断include返回true或者false
 
 ```shell
@@ -10547,4 +10699,71 @@ data:
  1.conf:
   data:app/v1beta
 ```
+
+
+
+##### 带 dict 参数的 include
+
+> https://stackoverflow.com/questions/60636775/pass-multiple-variables-in-helm-template
+
+在当前目录创建 helm 项目
+
+```
+helm create .
+```
+
+删除 templates 中的文件
+
+```
+rm -rf templates/*
+```
+
+创建 templates/_helpers.tpl 内容如下：
+
+```yaml
+{{- define "mychart.demo1" -}}
+{{/* 获取 dict 的 k1键 的值 */}}
+myK1: {{ .item.k1 }}
+myK2: {{ .item.k2 }}
+{{- end -}}
+```
+
+创建 templates/1.yaml 内容如下：
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: myconfigmap
+data:
+ {{- range $item := .Values.items }}
+ {{- include "mychart.demo1" (dict "item" $item) | indent 4 }}
+ {{- end }}
+```
+
+values.yaml 内容如下：
+
+```yaml
+items:
+- k1: v1
+  k2: v2
+```
+
+调试
+
+```sh
+helm install demo1 . --debug --dry-run
+```
+
+
+
+#### template 和 include 区别
+
+> https://stackoverflow.com/questions/71086697/how-does-template-and-include-differ-in-helm
+>
+> template 和 include 调用语法是一样的，template的结果无法捕获在变量中或包含在管道中。include的结果作为字符串返回并且能够包含在管道中。
+>
+> 如下例子：
+> template 结果直接输出不能使用变量捕获，{{ template "common.tplvalues.merge" (dict "values" (list .customLabels $default) "context" .context) }}
+> include 结果能够使用变量捕获或者输出到管道中，{{ include "common.names.namespace" . | quote }}
 
