@@ -9330,6 +9330,64 @@ kubectl get configmap
 
 
 
+### helm NOTES.txt 用于输出操作说明
+
+创建 mychart 项目
+
+```sh
+helm create mychart
+```
+
+删除mychart/templates文件夹下所有文件
+
+```sh
+rm -rf templates/*
+```
+
+创建 templates/configmap.yaml 内容如下：
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: mychart-configmap1
+data:
+ myvalue: "hello world!"
+```
+
+创建 templates/NOTES.txt (NOTES.txt 中可以编写模板语法)内容如下：
+
+```markdown
+CHART NAME: {{ .Chart.Name }}
+CHART VERSION: {{ .Chart.Version }}
+APP VERSION: {{ .Chart.AppVersion }}
+
+** Please be patient while the chart is being deployed **
+
+Redis&reg; can be accessed on the following DNS names from within your cluster:
+
+    myredis-master.default.svc.cluster.local for read/write operations (port 6379)
+    myredis-replicas.default.svc.cluster.local for read-only operations (port 6379)
+
+To get your password run:
+
+    export REDIS_PASSWORD=$(kubectl get secret --namespace default myredis -o jsonpath="{.data.redis-password}" | base64 -d)
+```
+
+创建helm release
+
+```sh
+helm install myconfigmap1 .
+```
+
+删除helm release
+
+```sh
+helm uninstall myconfigmap1
+```
+
+
+
 **带变量的helm**
 
 ```shell
