@@ -623,7 +623,7 @@ curl localhost:8888
 kubectl delete -f 1.yaml
 ```
 
-#### 转发到`service`端口
+#### 转发到`service`端口(不能转发给headless服务)
 
 创建`service` yaml 文件内容如下：
 
@@ -1573,7 +1573,9 @@ spec:
    image: busybox
 ```
 
-### 启动命令
+### 启动命令 command 和 args
+
+> https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/
 
 ```yaml
 apiVersion: v1
