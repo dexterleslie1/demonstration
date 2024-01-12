@@ -567,10 +567,13 @@ kubectl delete -f 1.yaml
 
 
 
-### kubectl port-forward将本地网络端口转发到pod中的端口
+### kubectl port-forward将本地网络端口转发到pod或者service的端口
 
-```
-# 1.yaml内容如下:
+#### 转发到`pod`端口
+
+创建`pod` yaml 文件内容如下：
+
+```yaml
 apiVersion: v1
 kind: Pod
 metadata:
@@ -582,20 +585,98 @@ spec:
     ports:
      - containerPort: 8080
        protocol: TCP
-   
-# 创建pod
-kubectl create -f 1.yaml
+```
 
-# 在pod列表中查看新创建的pod
+创建`pod`
+
+```sh
+kubectl apply -f 1.yaml
+```
+
+在pod列表中查看新创建的pod
+
+```sh
 kubectl get pods
+```
 
-# 将本地网络端口8888转发到pod中的端口8080，用于临时调试和测试
+将本地网络端口8888转发到pod中的端口8080，用于临时调试和测试
+
+```sh
 kubectl port-forward kubia-manual 8888:8080
+```
 
-# 使用curl命令向pod发送http请求
+或者使用下面命令等价于上面的命令
+
+```
+kubectl port-forward pod/kubia-manual 8888:8080
+```
+
+使用curl命令向pod发送http请求
+
+```sh
 curl localhost:8888
+```
 
-# 删除pod
+删除pod
+
+```sh
+kubectl delete -f 1.yaml
+```
+
+#### 转发到`service`端口
+
+创建`service` yaml 文件内容如下：
+
+```sh
+apiVersion: v1
+kind: Pod
+metadata:
+ name: kubia-manual
+ labels:
+    app: my-kubia
+spec:
+ containers:
+  - image: luksa/kubia
+    name: kubia
+    ports:
+     - containerPort: 8080
+       protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+ name: kubia-manual
+spec:
+ type: ClusterIP
+ ports:
+  - port: 8081
+    targetPort: 8080 # pod端口8080
+ selector:
+  app: my-kubia
+
+```
+
+创建`service`
+
+```sh
+kubectl apply -f 1.yaml
+```
+
+转发本地端口`8888`到服务端口`8081`
+
+```sh
+kubectl port-forward service/kubia-manual 8888:8081
+```
+
+使用curl命令向pod发送http请求
+
+```sh
+curl localhost:8888
+```
+
+删除pod
+
+```sh
 kubectl delete -f 1.yaml
 ```
 
@@ -938,6 +1019,280 @@ kubectl exec -it nginx  bash
 
 # 删除pod
 kubectl delete pod nginx
+```
+
+
+
+### kubectl cp
+
+创建测试 pod yaml 内容如下：
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+ name: pod1
+ labels:
+  creation_method: manual
+  env: prod
+spec:
+ containers:
+ - name: nginx
+   image: nginx
+```
+
+复制本地文件到 pod1 中
+
+```sh
+kubectl cp test.json pod1:/
+```
+
+进入 pod1 中查看 /test.json 文件是否存在
+
+```sh
+kubectl exec -it pod1 /bin/bash
+ls -alh |grep test.json
+```
+
+复制 pod1 中文件到本地
+
+```sh
+kubectl cp pod1:etc/apt/sources.list ./sources.list
+```
+
+
+
+### kubectl top
+
+需要先运行 metrics 服务器，否则`kubectl top`会报告 ”metrics服务不可用“ 错误，components.yaml 内容如下：
+
+> 安装metrics-server-v0.6.2
+> 下载 https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.6.2/components.yaml
+> metrics-server args添加 - --kubelet-insecure-tls 表示抓取指标数据时不使用https通讯
+> metrics-server image修改为 registry.cn-hangzhou.aliyuncs.com/google_containers/metrics-server:v0.6.2
+
+```yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    k8s-app: metrics-server
+  name: metrics-server
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    k8s-app: metrics-server
+    rbac.authorization.k8s.io/aggregate-to-admin: "true"
+    rbac.authorization.k8s.io/aggregate-to-edit: "true"
+    rbac.authorization.k8s.io/aggregate-to-view: "true"
+  name: system:aggregated-metrics-reader
+rules:
+- apiGroups:
+  - metrics.k8s.io
+  resources:
+  - pods
+  - nodes
+  verbs:
+  - get
+  - list
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    k8s-app: metrics-server
+  name: system:metrics-server
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - nodes/metrics
+  verbs:
+  - get
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - nodes
+  verbs:
+  - get
+  - list
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    k8s-app: metrics-server
+  name: metrics-server-auth-reader
+  namespace: kube-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: extension-apiserver-authentication-reader
+subjects:
+- kind: ServiceAccount
+  name: metrics-server
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    k8s-app: metrics-server
+  name: metrics-server:system:auth-delegator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:auth-delegator
+subjects:
+- kind: ServiceAccount
+  name: metrics-server
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    k8s-app: metrics-server
+  name: system:metrics-server
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:metrics-server
+subjects:
+- kind: ServiceAccount
+  name: metrics-server
+  namespace: kube-system
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    k8s-app: metrics-server
+  name: metrics-server
+  namespace: kube-system
+spec:
+  ports:
+  - name: https
+    port: 443
+    protocol: TCP
+    targetPort: https
+  selector:
+    k8s-app: metrics-server
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    k8s-app: metrics-server
+  name: metrics-server
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      k8s-app: metrics-server
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        k8s-app: metrics-server
+    spec:
+      containers:
+      - args:
+        - --cert-dir=/tmp
+        - --secure-port=4443
+        - --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname
+        - --kubelet-use-node-status-port
+        - --metric-resolution=15s
+        - --kubelet-insecure-tls
+        image: registry.cn-hangzhou.aliyuncs.com/google_containers/metrics-server:v0.6.2
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /livez
+            port: https
+            scheme: HTTPS
+          periodSeconds: 10
+        name: metrics-server
+        ports:
+        - containerPort: 4443
+          name: https
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /readyz
+            port: https
+            scheme: HTTPS
+          initialDelaySeconds: 20
+          periodSeconds: 10
+        resources:
+          requests:
+            cpu: 100m
+            memory: 200Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+        volumeMounts:
+        - mountPath: /tmp
+          name: tmp-dir
+      nodeSelector:
+        kubernetes.io/os: linux
+      priorityClassName: system-cluster-critical
+      serviceAccountName: metrics-server
+      volumes:
+      - emptyDir: {}
+        name: tmp-dir
+---
+apiVersion: apiregistration.k8s.io/v1
+kind: APIService
+metadata:
+  labels:
+    k8s-app: metrics-server
+  name: v1beta1.metrics.k8s.io
+spec:
+  group: metrics.k8s.io
+  groupPriorityMinimum: 100
+  insecureSkipTLSVerify: true
+  service:
+    name: metrics-server
+    namespace: kube-system
+  version: v1beta1
+  versionPriority: 100
+```
+
+创建metrics-server
+
+```sh
+kubectl apply -f components.yaml
+```
+
+查看kube-system metrics-server是Running状态
+
+```sh
+kubectl get pod --namespace kube-system -o wide
+```
+
+显示 node 资源利用率
+
+```sh
+kubectl top node
+```
+
+显示 pod 资源利用率
+
+```sh
+kubectl top pod
 ```
 
 
@@ -8371,6 +8726,21 @@ kubectl describe pod test
 ```
 
 
+
+### 应用开发环境和 kubernetes 连接方便调试
+
+> https://www.getambassador.io/blog/local-kubernetes-development-optimization-guide
+> https://kubernetes.io/blog/2023/09/12/local-k8s-development-tools/
+>
+> Local Kubernetes Development Tools: Telepresence, Gefyra, and mirrord，这里采用最新的工具 mirrord。
+
+#### mirrord
+
+> TODO 没有配置成功
+
+#### telepresence
+
+> NOTE: 安装过程中需要到国外下载文件很慢并且配置步骤复杂暂时不采用。
 
 
 
