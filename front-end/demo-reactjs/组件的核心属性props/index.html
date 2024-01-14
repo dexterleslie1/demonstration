@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <!-- reactjs追加dom的容器 -->
+    <div id="test"></div>
+    <div id="test1"></div>
+
+    <script type="text/javascript" src="../js/react.development.js" ></script>
+    <script type="text/javascript" src="../js/react-dom.development.js" ></script>
+    <script type="text/javascript" src="../js/babel.min.js" ></script>
+    <script type="text/javascript" src="../js/prop-types.js"></script>
+
+    <!-- 因为使用jsx语法编写虚拟dom代码，所以这里type必须为text/babel -->
+    <script type="text/babel">
+        class Person extends React.Component {
+            // https://legacy.reactjs.org/docs/typechecking-with-proptypes.html
+            static propTypes = {
+                // 姓名必须为string类型并且必须提供
+                name: PropTypes.string.isRequired,
+                // 性别必须为string类型
+                sex: PropTypes.string,
+                // 年龄必须为数值类型
+                age: PropTypes.number
+            }
+
+            static defaultProps = {
+                // 性别默认值为 男
+                sex: "男",
+                // 年龄默认值为 18
+                age: 18
+            }
+
+            render() {
+                let {name, sex, age} = this.props
+                return (
+                    <ul>
+                        <li>姓名：{name}</li>
+                        <li>性别：{sex}</li>
+                        <li>年龄：{age+1}</li>
+                    </ul>
+                )
+            }
+        }
+
+        // 渲染自定义组件到页面容器中
+        let data = {name: "张三", sex: "女", age: 19}
+        ReactDOM.render(<Person {...data}/>, document.getElementById("test"))
+        ReactDOM.render(<Person name="李四" sex="男" age={20}/>, document.getElementById("test1"))
+    </script>
+</body>
+</html>

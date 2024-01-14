@@ -42,3 +42,7 @@
 ### state属性用法
 
 > 参考 组件的核心属性state demo
+
+### props属性用法
+
+> 参考 组件的核心属性props demo
