@@ -46,3 +46,7 @@
 ### props属性用法
 
 > 参考 组件的核心属性props demo
+
+### refs属性用法
+
+> 参考 组件的核心属性refs demo

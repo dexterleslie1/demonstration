@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <!-- reactjs追加dom的容器 -->
+    <div id="test"></div>
+
+    <script type="text/javascript" src="../js/react.development.js" ></script>
+    <script type="text/javascript" src="../js/react-dom.development.js" ></script>
+    <script type="text/javascript" src="../js/babel.min.js" ></script>
+    <script type="text/javascript" src="../js/prop-types.js"></script>
+
+    <!-- 因为使用jsx语法编写虚拟dom代码，所以这里type必须为text/babel -->
+    <script type="text/babel">
+        class MyComponent extends React.Component {
+            input1 = React.createRef()
+            input2 = React.createRef()
+
+            showDataOnClick = ()=> {
+                alert(`左侧input的值为： ${this.input1.current.value}`)
+            }
+
+            showDataOnBlur = ()=>{
+                alert(`右侧input的值为： ${this.input2.current.value}`)
+            }
+
+            render() {
+                return (
+                    <div>
+                        <input ref={this.input1} type="text" placeholder="点击按钮提示数据"/>&nbsp;
+                        <button onClick={this.showDataOnClick}>点击我提示左侧的数据</button>&nbsp;
+                        <input ref={this.input2} type="text" placeholder="失去焦点提示数据" onBlur={this.showDataOnBlur}/>
+                    </div>
+                )
+            }
+        }
+
+        // 渲染自定义组件到页面容器中
+        ReactDOM.render(<MyComponent/>, document.getElementById("test"))
+    </script>
+</body>
+</html>
