@@ -527,6 +527,16 @@ openssl base64 -in xxx.p12 | tr -d '\n'
 
 
 
+### timeout 命令
+
+> https://linuxize.com/post/timeout-command-in-linux/
+
+timeout 命令超时时候会返回 124 代码，否则返回命令的退出状态值，-s 15 表示命令超时时候发出第 15 号信号(SIGTERM，可以通过 kill -l 查看相关值)，2 表示命令的超时时间为 2 秒， sleep 10 表示休眠 10 秒。
+
+```sh
+timeout -s 15 2 sleep 10
+```
+
 
 
 ## 文件和目录
