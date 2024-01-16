@@ -1955,9 +1955,11 @@ kubectl logs base-pod -c test-mysql
 kubectl logs base-pod -c test-redis
 ```
 
-### 钩子函数
+### 钩子函数 postStart、preStop
 
 > 在main容器启动后postStart和关闭前preStop执行指定的动作，每个容器启动后和停止前执行的。
+
+#### postStart 测试
 
 ```shell
 [root@k8s-master ~]# cat 1.yaml 
@@ -1994,6 +1996,38 @@ hello
 [root@k8s-master ~]# kubectl exec deployment1-678b9fdbf6-72mgg -- cat /1.txt
 hello
 ```
+
+
+
+#### 通过 pod events 列表查看 postStart 失败日志
+
+yaml 内容如下：
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+ name: pod1
+spec:
+ containers:
+  - image: nginx:alpine
+    name: nginx
+    lifecycle:
+       postStart:
+        exec:
+         command:
+         - sh
+         - -c
+         - "echo '你好世界'; exit 1; date;"
+```
+
+查看失败日志
+
+```sh
+kubectl describe pod pod1
+```
+
+
 
 ### 重启策略
 
