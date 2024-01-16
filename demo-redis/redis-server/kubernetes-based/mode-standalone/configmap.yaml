@@ -1383,3 +1383,16 @@ data:
     # to suppress
     #
     # ignore-warnings ARM64-COW-BUG
+  ping_liveness_n_readines_local.sh: |-
+      #!/bin/sh
+
+      export REDISCLI_AUTH="123456"
+
+      response=$(
+        timeout -s SIGTERM 5 \
+        redis-cli -h localhost -p 6379 ping
+      )
+      if [ "$response" != "PONG" ]; then
+        echo "$response"
+        exit 1
+      fi

@@ -61,29 +61,27 @@ spec:
           ports:
             - name: redis
               containerPort: 6379
-          # livenessProbe:
-          #   initialDelaySeconds: 20
-          #   periodSeconds: 5
-          #   # One second longer than command timeout should prevent generation of zombie processes.
-          #   timeoutSeconds: 6
-          #   successThreshold: 1
-          #   failureThreshold: 5
-          #   exec:
-          #     command:
-          #       - sh
-          #       - -c
-          #       - /health/ping_liveness_local.sh 5
-          # readinessProbe:
-          #   initialDelaySeconds: 20
-          #   periodSeconds: 5
-          #   timeoutSeconds: 2
-          #   successThreshold: 1
-          #   failureThreshold: 5
-          #   exec:
-          #     command:
-          #       - sh
-          #       - -c
-          #       - /health/ping_readiness_local.sh 1
+          livenessProbe:
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            # One second longer than command timeout should prevent generation of zombie processes.
+            timeoutSeconds: 6
+            successThreshold: 1
+            failureThreshold: 5
+            exec:
+              command:
+                - sh
+                - /health/ping_liveness_n_readines_local.sh
+          readinessProbe:
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 2
+            successThreshold: 1
+            failureThreshold: 5
+            exec:
+              command:
+                - sh
+                - /health/ping_liveness_n_readines_local.sh
           resources:
             limits: {}
             requests: {}
@@ -93,6 +91,8 @@ spec:
             - name: config
               mountPath: /usr/local/etc/redis/
               readOnly: true
+            - name: liveness-and-readiness-config
+              mountPath: /health/
       volumes:
         - name: config
           configMap:
@@ -100,6 +100,12 @@ spec:
             items:
             - key: redis.conf
               path: redis.conf
+        - name: liveness-and-readiness-config
+          configMap:
+            name: redis-configuration
+            items:
+            - key: ping_liveness_n_readines_local.sh
+              path: ping_liveness_n_readines_local.sh
   volumeClaimTemplates:
     - apiVersion: v1
       kind: PersistentVolumeClaim

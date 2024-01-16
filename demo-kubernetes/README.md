@@ -1427,6 +1427,220 @@ spec:
 
 
 
+### 服务就绪探针
+
+#### http 服务就绪探针
+
+app.js 内容如下：
+
+```js
+const http = require("http")
+const os = require("os")
+
+console.log("Kubia server starting...")
+
+startTime = Date.now()
+millisecondsToReady = 60000
+var handler = function(request, response) {
+    console.log("Received request from " + request.connection.remoteAddress)
+    endTime = Date.now()
+    response.setHeader("Content-Type", "text/plain; charset=utf-8")
+    if(endTime - startTime >= millisecondsToReady) {
+    	response.writeHead(200)
+	    response.end(os.hostname() + "服务已准备好，可以访问\n")
+    } else {
+        response.writeHead(500)
+	    response.end(os.hostname() + "服务未准备好，" + (millisecondsToReady - (endTime - startTime)) + "毫秒后访问\n")
+    }
+}
+
+var www = http.createServer(handler)
+www.listen(8080)
+
+```
+
+Dockerfile 内容如下：
+
+```dockerfile
+FROM node:7
+
+ADD app.js /app.js
+ENTRYPOINT ["node", "app.js"]
+
+```
+
+编译 docker 镜像
+
+```sh
+docker build --tag docker.118899.net:10001/yyd-public/demo-k8s-readinessprobe .
+```
+
+推送 docker 镜像
+
+```sh
+docker push docker.118899.net:10001/yyd-public/demo-k8s-readinessprobe
+```
+
+创建 deployment 和 service yaml 内容如下：
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: deployment1
+spec:
+ selector:
+  matchLabels:
+   app: kubia
+ template:
+  metadata:
+   labels:
+    app: kubia
+  spec:
+   containers:
+    - name: kubia
+      image: docker.118899.net:10001/yyd-public/demo-k8s-readinessprobe
+      readinessProbe:
+       httpGet:
+        path: /
+        port: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+ name: myservice1
+spec:
+ type: ClusterIP
+ selector:
+  app: kubia
+ ports:
+  - port: 80
+    targetPort: 8080
+```
+
+创建 deployment 和 service
+
+```sh
+kubectl apply -f 1.yaml
+```
+
+1分钟后才能正常访问服务，因为readinessProbe作用，pod 1分钟后才ready状态
+
+```sh
+kubectl get pods
+kubectl get services
+```
+
+查看 pod 的关于服务就绪探针的 events 日志
+
+```sh
+kubectl describe pod deployment1-78fdbb9b4
+```
+
+使用curl测试服务是否正常，curl ip为服务的对应的ip地址
+
+```sh
+[root@k8s-master ~]# curl 10.1.39.125
+curl: (7) Failed connect to 10.1.39.125:80; Connection refused
+[root@k8s-master ~]# curl 10.1.39.125
+curl: (7) Failed connect to 10.1.39.125:80; Connection refused
+[root@k8s-master ~]# curl 10.1.39.125
+curl: (7) Failed connect to 10.1.39.125:80; Connection refused
+[root@k8s-master ~]# curl 10.1.39.125
+curl: (7) Failed connect to 10.1.39.125:80; Connection refused
+[root@k8s-master ~]# curl 10.1.39.125
+deployment1-78fdbb9b4服务已准备好，可以访问
+```
+
+扩容到两个pod，第二个新的pod需要等待一分钟才ready状态接受请求
+
+```sh
+kubectl scale deployment deployment1 --replicas=2
+```
+
+
+
+#### 自定义脚本服务就绪探针
+
+创建探针的 yaml 内容如下：
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: configmap1
+data:
+  ping_liveness_local.sh: |-
+    #!/bin/sh
+
+    export REDISCLI_AUTH="123456"
+
+    response=$(
+      timeout -s SIGTERM 5 \
+      redis-cli -h localhost -p 6379 ping
+    )
+    if [ "$response" != "PONG" ]; then
+      echo "$response"
+      exit 1
+    fi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: deployment1
+spec:
+ selector:
+  matchLabels:
+   app: kubia
+ template:
+  metadata:
+   labels:
+    app: kubia
+  spec:
+    containers:
+    - name: kubia
+      image: redis:5.0.14
+      imagePullPolicy: IfNotPresent
+      volumeMounts:
+      - name: config
+        mountPath: /health/
+      readinessProbe:
+        initialDelaySeconds: 5
+        periodSeconds: 5
+        # One second longer than command timeout should prevent generation of zombie processes.
+        timeoutSeconds: 6
+        successThreshold: 1
+        failureThreshold: 5
+        exec:
+          command:
+            - sh
+            - /health/ping_liveness_local.sh
+    volumes:
+    - name: config
+      configMap:
+        name: configmap1
+        items:
+        - key: ping_liveness_local.sh
+          path: ping_liveness_local.sh
+
+```
+
+查看 readiness 探针状态
+
+```sh
+kubectl describe pod deployment1-9d8b8558c-sfbfb
+```
+
+5 秒后查看 deployment 和 pod 状态为就绪状态
+
+```sh
+kubectl get deployment
+kubectl get pod
+```
+
+
+
 ## pod
 
 > pod代表了kubernetes中的基本部署单元。
@@ -3029,100 +3243,7 @@ kubectl create -f 2.yaml
 
 ### 服务就绪探针
 
-```shell
-# app.js 内容如下:
-const http = require("http")
-const os = require("os")
-
-console.log("Kubia server starting...")
-
-startTime = Date.now()
-millisecondsToReady = 60000
-var handler = function(request, response) {
-    console.log("Received request from " + request.connection.remoteAddress)
-    endTime = Date.now()
-    response.setHeader("Content-Type", "text/plain; charset=utf-8")
-    if(endTime - startTime >= millisecondsToReady) {
-    	response.writeHead(200)
-	response.end(os.hostname() + "服务已准备好，可以访问\n")
-    } else {
-        response.writeHead(500)
-	response.end(os.hostname() + "服务未准备好，" + (millisecondsToReady - (endTime - startTime)) + "毫秒后访问\n")
-    }
-}
-
-var www = http.createServer(handler)
-www.listen(8080)
-
-# Dockerfile 内容如下:
-FROM node:7
-
-ADD app.js /app.js
-ENTRYPOINT ["node", "app.js"]
-
-# 编译镜像
-docker build --tag docker.118899.net:10001/yyd-public/demo-k8s-readinessprobe .
-
-# 推送镜像
-docker push docker.118899.net:10001/yyd-public/demo-k8s-readinessprobe
-
-# 1.yaml内容如下:
-apiVersion: apps/v1
-kind: Deployment
-metadata:
- name: deployment1
-spec:
- selector:
-  matchLabels:
-   app: kubia
- template:
-  metadata:
-   labels:
-    app: kubia
-  spec:
-   containers:
-    - name: kubia
-      image: docker.118899.net:10001/yyd-public/demo-k8s-readinessprobe
-      readinessProbe:
-       httpGet:
-        path: /
-        port: 8080
-
-# 2.yaml内容如下:
-apiVersion: v1
-kind: Service
-metadata:
- name: myservice1
-spec:
- type: ClusterIP
- selector:
-  app: kubia
- ports:
-  - port: 80
-    targetPort: 8080 
- 
-# 1分钟后才能正常访问服务，因为readinessProbe作用，pod 1分钟后才ready状态
-kubectl get pods
-kubectl get services
-
-[root@k8s-master ~]# curl 10.1.39.125
-curl: (7) Failed connect to 10.1.39.125:80; Connection refused
-[root@k8s-master ~]# curl 10.1.39.125
-curl: (7) Failed connect to 10.1.39.125:80; Connection refused
-[root@k8s-master ~]# curl 10.1.39.125
-curl: (7) Failed connect to 10.1.39.125:80; Connection refused
-[root@k8s-master ~]# curl 10.1.39.125
-curl: (7) Failed connect to 10.1.39.125:80; Connection refused
-[root@k8s-master ~]# curl 10.1.39.125
-deployment1-78fdbb9b4-twm5m服务已准备好，可以访问
-
-# 扩容到两个pod，第二个新的pod需要等待一分钟才ready状态接受请求
-kubectl scale deployment deployment1 --replicas=2
-
-# 销毁资源
-kubectl delete -f 1.yaml
-kubectl delete -f 2.yaml
-```
+> NOTE：参考上面的服务就绪探针演示
 
 
 
@@ -8241,6 +8362,7 @@ spec:
    affinity:
     nodeAffinity:
      preferredDuringSchedulingIgnoredDuringExecution:
+      # 1-100权重参数，pod 优先调度到权重总和最高的节点上
       - weight: 1
         preference: 
          matchExpressions:
@@ -8308,7 +8430,6 @@ kubectl label node demo-k8s-node2 nodeenv-
 
 ```shell
 # 创建参考点pod，指定参考点pod被调度到demo-k8s-node2上
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -8427,8 +8548,9 @@ kubectl get pod -o wide
 
 **pod非亲缘性(pod anti affinity)**
 
+情景1，硬限制
+
 ```shell
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -8482,6 +8604,71 @@ spec:
         topologyKey: kubernetes.io/hostname
 
 # deployment2没有pod被调度到demo-k8s-node2节点上
+kubectl get pod -o wide
+```
+
+情景2，软限制
+
+```sh
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: deployment1
+spec:
+ replicas: 1
+ selector:
+  matchLabels:
+   podenv: dev
+ template:
+  metadata:
+   labels:
+    podenv: dev
+  spec:
+   containers:
+    - name: nginx
+      image: nginx
+      imagePullPolicy: IfNotPresent
+   nodeName: demo-k8s-node2
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: deployment2
+spec:
+ replicas: 5
+ selector:
+  matchLabels:
+   app: kubia
+ template:
+  metadata:
+   labels:
+    app: kubia
+  spec:
+   containers:
+    - name: busybox
+      image: busybox
+      imagePullPolicy: IfNotPresent
+      command: ["sh", "-c", "sleep 7200;"]
+   affinity:
+    podAntiAffinity:
+     # 表示尽量不和有标签 podenv=dev 的pod在同一个节点上
+     preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 1
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: podenv
+                operator: In
+                values:
+                - dev
+                - yyy
+          topologyKey: kubernetes.io/hostname
+          
+# 创建 pod
+kubectl apply -f 1.yal
+
+# deployment2 和 deployment1 中的 pod 不会在同一个节点上
 kubectl get pod -o wide
 ```
 
