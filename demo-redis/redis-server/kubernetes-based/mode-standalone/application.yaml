@@ -8,6 +8,7 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/name: redis
+  # 对应的 redis-headless 无头服务没有用到所以不存在
   serviceName: redis-headless
   template:
     metadata:
@@ -90,7 +91,6 @@ spec:
               mountPath: /data
             - name: config
               mountPath: /usr/local/etc/redis/
-              readOnly: true
             - name: liveness-and-readiness-config
               mountPath: /health/
       volumes:

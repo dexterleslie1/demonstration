@@ -1919,8 +1919,9 @@ pod1                                      0/1     OOMKilled           0         
 
 > 使用init容器模拟等待mysql和redis启动后才启动nginx的过程
 
-```shell
-[root@k8s-master ~]# cat 1.yaml 
+yaml 内容如下：
+
+```yaml
 apiVersion: v1
 kind: Pod
 metadata:
@@ -1938,10 +1939,20 @@ spec:
  - name: test-redis
    image: busybox
    command: ["sh", "-c", "i=1;until [ $i -ge 15 ]; do echo 'simulating waiting for mysql...'; sleep 1; i=$((i+1)); done;"]
-# 使用命令观察init容器和main容器过程
-[root@k8s-master ~]# kubectl get pod
-NAME                                      READY   STATUS     RESTARTS   AGE
-base-pod                                  0/1     Init:0/2   0          8s
+```
+
+观察init容器和main容器过程
+
+```sh
+kubectl get pod
+```
+
+查看 init 容器状态和日志，https://kubernetes.io/docs/tasks/debug/debug-application/debug-init-containers/
+
+```sh
+kubectl describe pod base-pod
+kubectl logs base-pod -c test-mysql
+kubectl logs base-pod -c test-redis
 ```
 
 ### 钩子函数
