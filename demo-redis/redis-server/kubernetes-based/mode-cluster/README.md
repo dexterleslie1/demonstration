@@ -8,7 +8,7 @@
 kubectl apply -f .
 ```
 
-等待所有 redis cluster 节点 running 状态后手动创建 redis 集群
+等待所有 redis cluster 节点 running 状态后手动创建 redis 集群，参考 https://medium.com/geekculture/redis-cluster-on-kubernetes-c9839f1c14b6
 
 ```sh
 export REDIS_NODES=$(kubectl get pods  -l app.kubernetes.io/name=redis-cluster -o json | jq -r '.items | map(.status.podIP) | join(":6379 ")'):6379

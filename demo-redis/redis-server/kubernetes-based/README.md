@@ -1,3 +1,10 @@
+## 参考以下资料基于 kubernetes 创建各种模式的 redis
+
+> https://github.com/bitnami/charts/tree/main/bitnami/redis-cluster
+> https://github.com/bitnami/charts/tree/main/bitnami/redis
+> https://github.com/bitnami/containers/tree/main/bitnami/redis-cluster
+> https://github.com/bitnami/containers/tree/main/bitnami/redis
+
 ## 使用 demo-redis/redistemplate 客户端测试集群内的 redis
 
 切换到 kubernetes-based/mode-xxx redis对应的模式目录中，然后在 kubernetes 中创建 redis
