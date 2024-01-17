@@ -40,11 +40,14 @@ public class RedisConfiguration {
                 .clientOptions(ClientOptions.builder().build())
                 .build();
 
+//        RedisSentinelConfiguration sentinelConfig = new RedisSentinelConfiguration()
+//                .master("mymaster")
+//                .sentinel("localhost", 26381)
+//                .sentinel("localhost", 26380)
+//                .sentinel("localhost", 26379);
         RedisSentinelConfiguration sentinelConfig = new RedisSentinelConfiguration()
                 .master("mymaster")
-                .sentinel("localhost", 26381)
-                .sentinel("localhost", 26380)
-                .sentinel("localhost", 26379);
+                .sentinel("redis-sentinel-service", 26379);
         return new LettuceConnectionFactory(sentinelConfig, clientConfig);
     }
 }
