@@ -87,8 +87,8 @@ spec:
             limits: {}
             requests: {}
           volumeMounts:
-            - name: redis-data
-              mountPath: /data
+            # - name: redis-data
+            #   mountPath: /data
             - name: config
               mountPath: /usr/local/etc/redis/
             - name: liveness-and-readiness-config
@@ -106,20 +106,20 @@ spec:
             items:
             - key: ping_liveness_n_readines_local.sh
               path: ping_liveness_n_readines_local.sh
-  volumeClaimTemplates:
-    - apiVersion: v1
-      kind: PersistentVolumeClaim
-      metadata:
-        name: redis-data
-        labels:
-          app.kubernetes.io/name: redis-master
-      spec:
-        accessModes:
-          - "ReadWriteOnce"
-        resources:
-          requests:
-            storage: "8Gi"
-        storageClassName: nfs-client
+  # volumeClaimTemplates:
+  #   - apiVersion: v1
+  #     kind: PersistentVolumeClaim
+  #     metadata:
+  #       name: redis-data
+  #       labels:
+  #         app.kubernetes.io/name: redis-master
+  #     spec:
+  #       accessModes:
+  #         - "ReadWriteOnce"
+  #       resources:
+  #         requests:
+  #           storage: "8Gi"
+  #       storageClassName: nfs-client
 
 ---
 apiVersion: apps/v1
