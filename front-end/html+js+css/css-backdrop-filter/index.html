@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style type="text/css">
+        .box {
+            background-color: rgb(255 255 255 / 30%);
+            backdrop-filter: blur(5px);
+            height: 300px;
+        }
+
+        body {
+            background-image: url("anemones.jpg");
+            background-repeat: no-repeat;
+        }
+    </style>
+</head>
+
+<body>
+    <!--
+        NOTE: firefox版本103之前不支持此属性，使用chrome测试
+        将模糊或者颜色偏移等效果应用到当前元素后面的区域
+        https://developer.mozilla.org/en-US/docs/Web/CSS/backdrop-filter
+    -->
+
+    <div class="container">
+        <div class="box">
+            <p>backdrop-filter: blur(10px)</p>
+        </div>
+    </div>
+</body>
+
+</html>
