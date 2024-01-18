@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style type="text/css">
+        div {
+            width: 100px;
+            height: 50px;
+            margin: 1rem;
+        }
+
+        /* 空格分隔语法 */
+        div.space-separated {
+            background-color: rgb(255 0 0 / 50%);
+        }
+
+        /* 逗号分隔语法 */
+        div.comma-separated {
+            background-color: rgb(255, 0, 0, 0.5);
+        }
+
+        div {
+            width: 100px;
+            height: 50px;
+            margin: 1rem;
+        }
+        /* rgb函数语法 */
+        div.rgb {
+            background-color: rgb(255 0 0 / 50%);
+        }
+
+        /* rgba函数语法 */
+        div.rgba {
+            background-color: rgba(255 0 0 / 0.5);
+        }
+
+    </style>
+</head>
+<body>
+    <!--
+        https://developer.mozilla.org/en-US/docs/Web/CSS/color_value/rgb
+
+        rgb是新函数，是表示red、green、blue的首字母。
+        rgba是遗留函数，其中a表示alpha，取值范围为0-1表示透明度。
+    -->
+
+    <div>rgb用法</div>
+    <div class="space-separated"></div>
+    <div class="comma-separated"></div>
+    <hr/>
+
+    <div>rgba用法</div>
+    <div class="rgb"></div>
+    <div class="rgba"></div>
+</body>
+</html>
