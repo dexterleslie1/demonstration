@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .elementDiv1 {
+            margin: 0 auto;
+            background-color: orange;
+            width: 200px;
+            height: 100px;
+            animation: movement1 2s infinite linear;
+            animation-direction: alternate;
+        }
+
+        @keyframes movement1 {
+            from {
+                transform: translateX(0);
+            }
+            to {
+                transform: translateX(200px);
+            }
+        }
+
+        .elementDiv2 {
+            margin: 0 auto;
+            background-color: orange;
+            width: 200px;
+            height: 100px;
+            animation: movement2 2s infinite linear;
+            animation-direction: alternate-reverse;
+        }
+
+        @keyframes movement2 {
+            from {
+                transform: translateX(0);
+            }
+            to {
+                transform: translateX(200px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!--
+        https://developer.mozilla.org/en-US/docs/Web/CSS/animation-direction
+    -->
+
+    <div>animation-direction: alternate</div>
+    <div style="width:100%">
+        <div class="elementDiv1"></div>
+    </div>
+    <hr/>
+
+    <div>animation-direction: reverse</div>
+    <div style="width:100%">
+        <div class="elementDiv2"></div>
+    </div>
+    <hr/>
+</body>
+</html>
