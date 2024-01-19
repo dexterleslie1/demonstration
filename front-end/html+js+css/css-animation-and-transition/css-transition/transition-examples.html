@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .elementDiv1 {
+            margin: 0 auto;
+            background-color: blueviolet;
+            width: 300px;
+            height: 100px;
+            /* 应用到所有变化的属性中，和 transition: all 1s linear 等价 */
+            /* https://developer.mozilla.org/en-US/docs/Web/CSS/transition */
+            transition: 1s linear;
+            /* 下面例子指定transform属性使用transition */
+            /* transition: transform 1s linear; */
+        }
+
+        .elementDiv1:hover {
+            /* 50%透明度 */
+            opacity: 0.5;
+            /* 缩放尺寸为原来的1.1倍 */
+            transform: scale(1.1);
+        }
+
+        .elementDiv2 {
+            background-color: orange;
+            width: 300px;
+            height: 100px;
+        }
+
+        .elementDiv2.myAnimation {
+            /* animation持续时间为2秒 */
+            animation: keyframesMyAnimation 2s;
+            /* 5秒后才执行animation */
+            /* animation-delay: 5s; */
+        }
+
+        @keyframes keyframesMyAnimation {
+            0% {
+                transform: translateX(0x);
+            }
+
+            100% {
+                transform: translateX(150px);
+            }
+        }
+
+        .elementDiv3 {
+            margin: 0 auto;
+            background-color: orange;
+            width: 300px;
+            height: 100px;
+            transition: transform 3s linear;
+        }
+        .elementDiv3.myAnimation {
+            transform: translateX(150px);
+        }
+
+        .elementDiv5 {
+            margin: 0 auto;
+            background-color: orange;
+            width: 300px;
+            height: 100px;
+            transition: transform 3s linear, border-radius 3s linear, background-color 3s linear;
+        }
+        .elementDiv5.myAnimation {
+            transform: translateX(150px);
+            border-radius: 50%;
+            background-color: skyblue;
+        }
+    </style>
+</head>
+<body>
+    <!--
+        https://www.freecodecamp.org/news/css-transition-examples/
+    -->
+    <div>transition基本用法</div>
+    <div style="width:100%;">
+        <div class="elementDiv1"></div>
+    </div>
+    <hr/>
+
+    <div>通过添加class触发transition</div>
+    <div style="width:100%;">
+        <button onclick="onclick1()" style="margin:5px;">点击我触发transition</button>
+        <div class="elementDiv2"></div>
+    </div>
+    <hr/>
+
+    <div>通过tansition控制transform: translateX速度</div>
+    <div style="width:100%;">
+        <div class="elementDiv3"></div>
+    </div>
+    <hr/>
+
+    <div>通过tansition同时控制多个属性</div>
+    <div style="width:100%;">
+        <div class="elementDiv5"></div>
+    </div>
+
+    <script type="text/javascript">
+        function onclick1() {
+            let elementDiv = document.getElementsByClassName("elementDiv2")
+            // 如果 class myAnimation 存在则删除，否则添加
+            elementDiv[0].classList.toggle("myAnimation")
+        }
+
+        window.onload = function() {
+            // transition 无法自我触发，需要javascript通过添加class方式出发tansition
+            // 如果不想通过javascript方式触发tansition，可以使用keyframes方式自我触发animation
+            let elementDiv = document.getElementsByClassName("elementDiv3")
+            elementDiv[0].classList.add("myAnimation")
+
+            elementDiv = document.getElementsByClassName("elementDiv5")
+            elementDiv[0].classList.add("myAnimation")            
+        }
+    </script>
+</body>
+</html>

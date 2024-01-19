@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style type="text/css">
+        body>div {
+            position: relative;
+            height: 100px;
+        }
+
+        div>div {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background-color: blue;
+            background-image: radial-gradient(circle at 10px 10px,
+                    rgb(25 255 255 / 80%),
+                    rgb(25 255 255 / 40%));
+            border-radius: 50%;
+            top: 25px;
+            animation: 2s infinite alternate;
+        }
+
+        @keyframes move-right {
+            from {
+                left: 10%;
+            }
+
+            to {
+                left: 90%;
+            }
+        }
+
+        li {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+    </style>
+
+    <script type="text/javascript">
+        window.onload = () => {
+            const selectElem = document.querySelector("select");
+            const startBtn = document.querySelector("button");
+            const divElem = document.querySelector("div > div");
+
+            startBtn.addEventListener("click", () => {
+                if (startBtn.textContent === "Start animation") {
+                    divElem.style.animationName = "move-right";
+                    startBtn.textContent = "Stop animation";
+                    divElem.style.animationTimingFunction = selectElem.value;
+                } else {
+                    divElem.style.animationName = "unset";
+                    startBtn.textContent = "Start animation";
+                }
+            });
+
+            selectElem.addEventListener("change", () => {
+                divElem.style.animationTimingFunction = selectElem.value;
+            });
+        }
+    </script>
+</head>
+
+<body>
+    <!--
+        https://developer.mozilla.org/en-US/docs/Web/CSS/easing-function
+        https://developer.mozilla.org/en-US/docs/Web/CSS/animation-timing-function
+        easing-function: 表示描述值变化速率的数学函数
+    -->
+    <div>
+        <div></div>
+    </div>
+    <ul>
+        <li>
+            <button class="animation-button">Start animation</button>
+        </li>
+        <li>
+            <label for="easing-select">Choose an easing function:</label>
+            <select id="easing-select">
+                <!-- linear是匀速的 -->
+                <option selected>linear</option>
+                <!-- todo 其他还没有研究 -->
+                <option>linear(0, 0.5 50%, 1)</option>
+                <option>ease</option>
+                <option>ease-in</option>
+                <option>ease-in-out</option>
+                <option>ease-out</option>
+                <option>cubic-bezier(0.1, -0.6, 0.2, 0)</option>
+                <option>cubic-bezier(0, 1.1, 0.8, 4)</option>
+                <option>steps(5, end)</option>
+                <option>steps(3, start)</option>
+                <option>steps(4)</option>
+            </select>
+        </li>
+    </ul>
+
+</body>
+
+</html>
