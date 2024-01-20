@@ -38,7 +38,8 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
         - name: redis
-          image: redis:5.0.14-bullseye
+          # image: redis:5.0.14-bullseye
+          image: redis:7.2.4-bookworm
           imagePullPolicy: "IfNotPresent"
           # securityContext:
           #   allowPrivilegeEscalation: false
@@ -87,8 +88,8 @@ spec:
             limits: {}
             requests: {}
           volumeMounts:
-            # - name: redis-data
-            #   mountPath: /data
+            - name: redis-data
+              mountPath: /data
             - name: config
               mountPath: /usr/local/etc/redis/
             - name: liveness-and-readiness-config
@@ -106,6 +107,8 @@ spec:
             items:
             - key: ping_liveness_n_readines_local.sh
               path: ping_liveness_n_readines_local.sh
+        - name: redis-data
+          emptyDir: {}
   # volumeClaimTemplates:
   #   - apiVersion: v1
   #     kind: PersistentVolumeClaim
