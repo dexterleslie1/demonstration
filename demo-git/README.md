@@ -110,6 +110,43 @@ git clean -xdf
 
 
 
+## git stash
+
+> https://www.cnblogs.com/zndxall/archive/2018/09/04/9586088.html
+> https://stackoverflow.com/questions/1910082/git-stash-apply-version
+
+显示 stash 列表
+
+```sh
+git stash list
+```
+
+使用最近的提交日志内容作为暂存标识暂存修改
+
+```sh
+git stash
+```
+
+指定暂存的名称
+
+```sh
+git stash save "test1"
+```
+
+应用最近一次暂存
+
+```sh
+git stash apply
+```
+
+应用指定的暂存，0为暂存的索引
+
+```sh
+git stash apply 0
+```
+
+
+
 ## 切换、创建、删除分支
 
 ```
