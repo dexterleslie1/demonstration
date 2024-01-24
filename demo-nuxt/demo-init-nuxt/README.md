@@ -20,6 +20,22 @@ npm run build && npm run start
 
 
 
+## 在新环境运行 nuxt 项目
+
+下载相关依赖包括 nuxt CLI
+
+```sh
+npm install
+```
+
+运行项目
+
+```sh
+npm run dev
+```
+
+
+
 ## Build Setup
 
 ```bash

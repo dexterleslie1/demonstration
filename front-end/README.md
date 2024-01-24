@@ -49,6 +49,7 @@ registry=https://mirrors.cloud.tencent.com/npm/
 home=https://mirrors.cloud.tencent.com/npm/
 
 # 通过直接修改~/.yarnrc文件配置yarn源，内容如下
+# NOTE: todo 似乎淘宝源解析到美国的npm源导致下载速度很慢
 registry "https://registry.npm.taobao.org"
 chromedriver_cdnurl "https://cdn.npm.taobao.org/dist/chromedriver"
 electron_mirror "https://npm.taobao.org/mirrors/electron/"
@@ -65,13 +66,14 @@ npm config get registry
 yarn config get registry
 
 # 设置阿里源
-npm config set registry https://registry.npm.taobao.org/
+npm config set registry http://mirrors.cloud.tencent.com/npm/
 
 # yarn设置阿里源
-yarn config set registry https://registry.npm.taobao.org/
+yarn config set registry http://mirrors.cloud.tencent.com/npm/
 
 # 设置官方源
 npm config set registry https://registry.npmjs.org/
+yarn config set registry https://registry.npmjs.org/
 ```
 
 **nrm配置源方法不推荐使用，使用上面方法即可**

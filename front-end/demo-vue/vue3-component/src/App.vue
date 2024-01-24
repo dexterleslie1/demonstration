@@ -1,12 +1,13 @@
 <template>
   <!-- 布局 -->
   <div class="container">
+    <button @click="handleCallComponentMethod()">测试1</button>
     <div class="header">
       <ComponentHeader></ComponentHeader>
     </div>
     <div class="body">
       <div class="body-navigator">
-        <ComponentNavigator></ComponentNavigator>
+        <ComponentNavigator ref="myNavigator"></ComponentNavigator>
       </div>
       <div class="body-content">
         <ComponentContent></ComponentContent>
@@ -31,6 +32,11 @@ export default {
     ComponentNavigator,
     ComponentContent,
     ComponentFooter
+  },
+  methods: {
+    handleCallComponentMethod() {
+      this.$refs.myNavigator.toggleMethod()
+    }
   }
 }
 </script>

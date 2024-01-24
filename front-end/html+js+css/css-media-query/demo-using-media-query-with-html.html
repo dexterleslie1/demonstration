@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <!--
+        https://css-tricks.com/a-complete-guide-to-css-media-queries/
+        根据不同的浏览器尺寸使用不同的css文件
+    -->
+    <style>
+        .div1 {
+            width: 100px;
+            height: 100px;
+        }
+    </style>
+    <!-- <=600px -->
+    <link rel="stylesheet" href="le.css" media="only screen and (max-width: 600px)">
+    <!-- >600px and <=700px -->
+    <link rel="stylesheet" href="gt-and-le.css" media="only screen and (min-width: 600px) and (max-width: 700px)">
+    <!-- >700px -->
+    <style media="only screen and (min-width: 700px)">
+        .div1 {
+            background-color: blue;
+        }
+    </style>
+</head>
+<body>
+    <div class="div1">
+
+    </div>
+</body>
+</html>

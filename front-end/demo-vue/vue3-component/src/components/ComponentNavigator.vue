@@ -6,7 +6,18 @@
 
 <script>
 export default {
-  name: "ComponentNavigator"
+  name: "ComponentNavigator",
+  data() {
+    return {
+      internalVar: false,
+    }
+  },
+  methods: {
+    toggleMethod() {
+      this.internalVar = !this.internalVar
+      console.log(`internalVar=${this.internalVar}`)
+    }
+  }
 }
 </script>
 
