@@ -29,14 +29,14 @@
             }
             document.addEventListener("touchend",(event) => {
                 dragger.stop()
-            }, false)
+            })
 
             document.onmousemove = (event) => {
                 dragger.drag(event)
             }
             document.addEventListener("touchmove",(event) => {
                 dragger.drag(event)
-            }, false)
+            }, {passive: false/* https://stackoverflow.com/questions/49500339/cant-prevent-touchmove-from-scrolling-window-on-ios */})
 
             elementObject.onmousedown = (event) => {
                 dragger.start(event)

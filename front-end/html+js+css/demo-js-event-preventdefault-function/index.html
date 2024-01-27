@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <!--
+        演示event.preventDefault()函数用法： 阻止控件的默认行为，
+        例如：anchor点击后会打开url、document的touchmove会滚动屏幕等。
+
+        how and when to use preventDefault
+        https://stackoverflow.com/questions/17401364/how-and-when-to-use-preventdefault
+    -->
+
+    <div>使用preventDefault阻止anchor打开url</div>
+    <a id="myAnchor1" href="https://www.baidu.com">打开百度</a>
+    <hr/>
+
+    <style>
+        html, body {
+            height: 2000px;
+        }
+    </style>
+    <script>
+        var element = document.getElementById("myAnchor1")
+        element.addEventListener("click", (event)=>{
+            event.preventDefault()
+            alert("anchor点击默认行为打开url被preventDefault阻止")
+        })
+
+        // passive=true表示listener不会调用preventDefault()函数，如果listener仍然调用次函数，
+        // 客户端会忽略他的调用并在控制台抛出一个警告。
+        // passive=false表示listener会调用preventDefault()函数，所以控制台不会抛出警告。
+        document.addEventListener("touchmove",(event)=>{
+            event.preventDefault()
+            console.log(`document的touchmove默认行为拖拽屏幕被preventDefault阻止`)
+        }, {passive: false})
+    </script>
+</body>
+</html>
