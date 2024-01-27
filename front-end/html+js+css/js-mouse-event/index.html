@@ -49,7 +49,30 @@
             }
 
             //#endregion
+
+            //#region 测试touch事件
+
+            document.getElementById("div51").addEventListener("touchstart", ()=> {
+                console.log(`元素touchstart事件被触发`)
+            })
+
+            //#endregion
         })
+
+        document.addEventListener("touchstart",(e)=>{
+            // https://stackoverflow.com/questions/61017220/how-to-get-touch-position-direction-in-javascript
+            console.log(`document touchstart x=${e.touches[0].clientX},y=${e.touches[0].clientY}`)
+        })
+
+        document.addEventListener("touchend",(e)=>{
+            // https://stackoverflow.com/questions/61017220/how-to-get-touch-position-direction-in-javascript
+            console.log(`document touchend x=${e.changedTouches[0].clientX},y=${e.changedTouches[0].clientY}`)
+        })
+
+        document.addEventListener("touchmove", (e)=> {
+            // https://stackoverflow.com/questions/61017220/how-to-get-touch-position-direction-in-javascript
+            console.log(`touchmove offsetX=${e.changedTouches[0].clientX},offsetY=${e.changedTouches[0].clientY}`)
+        },false)
     </script>
 
 </head>
@@ -93,6 +116,10 @@
     <div style="height:50px;">
 
     </div>
+    <hr/>
+
+    <div>测试元素的touch事件</div>
+    <div id="div51" style="width:100px;height:100px;background-color:skyblue;"></div>
 </body>
 
 </html>

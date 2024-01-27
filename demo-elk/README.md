@@ -432,3 +432,15 @@ GET /_analyze
 
 ## Elasticsearch中什么是 tokenizer、analyzer、filter ?
 [Elasticsearch中什么是 tokenizer、analyzer、filter ?](https://cloud.tencent.com/developer/article/1706529)
+
+## 问题列表
+
+### 访问 kibana 时，提示 "Data too large, data for [<http_request>] would be ..." 错误
+
+错误信息如下：
+
+```json
+{"statusCode":500,"error":"Internal Server Error","message":"[parent] Data too large, data for [<http_request>] would be [514390462/490.5mb], which is larger than the limit of [510027366/486.3mb], real usage: [514389880/490.5mb], new bytes reserved: [582/582b], usages [request=0/0b, fielddata=0/0b, in_flight_requests=582/582b, model_inference=0/0b, eql_sequence=0/0b, accounting=10639028/10.1mb]: [circuit_breaking_exception] [parent] Data too large, data for [<http_request>] would be [514390462/490.5mb], which is larger than the limit of [510027366/486.3mb], real usage: [514389880/490.5mb], new bytes reserved: [582/582b], usages [request=0/0b, fielddata=0/0b, in_flight_requests=582/582b, model_inference=0/0b, eql_sequence=0/0b, accounting=10639028/10.1mb], with { bytes_wanted=514390462 & bytes_limit=510027366 & durability=\"PERMANENT\" }"}
+```
+
+经过分析，是 GC 回收后都无法释放 elasticsearch jvm内存导致，解决办法：调整 elasticsearch 内存为 Xmx1024m 或者更高值

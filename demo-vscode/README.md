@@ -24,7 +24,7 @@
 
 ### 使用remote-ssh插件远程开发
 
-> NOTE: 因为ssh命令不支持连接时提供密码，所以remote-ssh插件不支持保存SSH密码
+> NOTE: 因为ssh命令不支持连接时提供密码，所以remote-ssh插件不支持保存SSH密码，启动应用后会自动端口转发。
 >
 > 远程开发的terminal也是远程的，远程打开git仓库就可以通过vscode git管理仓库了。
 

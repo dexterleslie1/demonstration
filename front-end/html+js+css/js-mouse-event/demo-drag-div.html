@@ -27,13 +27,23 @@
             document.onmouseup = () => {
                 dragger.stop()
             }
+            document.addEventListener("touchend",(event) => {
+                dragger.stop()
+            }, false)
+
             document.onmousemove = (event) => {
                 dragger.drag(event)
             }
+            document.addEventListener("touchmove",(event) => {
+                dragger.drag(event)
+            }, false)
 
             elementObject.onmousedown = (event) => {
                 dragger.start(event)
             }
+            elementObject.addEventListener("touchstart", (event) => {
+                dragger.start(event)
+            }, false)
 
             this.start = function (event) {
                 this.pointerTracker.markOriginalPosition(event)
@@ -47,6 +57,7 @@
 
             this.drag = function (event) {
                 if (this.pointerTracker.tracking) {
+                    event.preventDefault()
                     this.pointerTracker.updatePosition(event)
                     var offset = this.pointerTracker.getOffset()
                     this.divMover.move(offset.x, offset.y)
@@ -77,8 +88,8 @@
                  */
                 this.markOriginalPosition = function (event) {
                     this.tracking = true
-                    this.originalX = event.clientX
-                    this.originalY = event.clientY
+                    this.originalX = event.clientX || event.touches[0].clientX
+                    this.originalY = event.clientY || event.touches[0].clientY
 
                     console.log(`PointerTracker markOriginalPosition,
                     this.originalX=${this.originalX},this.originalY=${this.originalY}`)
@@ -106,8 +117,8 @@
                         return
                     }
 
-                    this.currentX = event.clientX
-                    this.currentY = event.clientY
+                    this.currentX = event.clientX || event.changedTouches[0].clientX
+                    this.currentY = event.clientY || event.changedTouches[0].clientY
 
                     console.log(`PointerTracker update this.currentX and this.currentY,
                     this.currentX=${this.currentX},this.currentY=${this.currentY}`)

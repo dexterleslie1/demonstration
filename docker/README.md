@@ -15,6 +15,30 @@ docker run --privileged --pid=host -it alpine:3.8 nsenter -t 1 -m -u -n -i sh
 
 
 
+## 以列表方式显示 docker 容器已经启动时间 uptime
+
+通过查看 docker ps 命令输出的 STATUS 字段查看容器已经启动的时间
+
+```sh
+docker ps
+```
+
+
+
+## 使用 docker compose 仅对单个服务 service 进行操作
+
+仅更新 yyd-websocket-service
+
+```sh
+docker compose pull yyd-websocket-service
+```
+
+强制重建 yyd-websocket-service，--no-deps 表示依赖的相关容器不会被重建
+
+```
+docker compose up -d --no-deps --force-recreate yyd-websocket-service
+```
+
 
 
 ## docker命令

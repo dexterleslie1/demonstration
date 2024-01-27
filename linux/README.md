@@ -346,6 +346,27 @@ ssh root@192.168.1.151
 > - 例子：服务器23.91.97.126监听端口44791转发到服务器192.168.1.53:5900
 >   ssh -o TCPKeepAlive=yes -o ServerAliveInterval=60 -o ServerAliveCountMax=30 -o ExitOnForwardFailure=no -p44790 -i /path/to/ssh/private/key -NTf -R 0.0.0.0:44791:192.168.1.53:5900 user@23.91.97.126
 
+
+
+#### 使用 ssh 动态端口转发配置 socks5 代理服务
+
+> https://www.cnblogs.com/zangfans/p/8848279.html
+
+创建 socks5 服务
+
+```sh
+ssh -NTf -D 0.0.0.0:10080 -p22 root@localhost
+ssh -NTf -D 0.0.0.0:10080 -p22 -i /private/key/path root@localhost
+```
+
+配置浏览器使用socks5连接服务器1080端口实现代理上网，或者使用下面命令测试 socks5 服务是否正常
+
+```sh
+git clone https://github.com/cmu-db/benchbase.git --config 'http.proxy=socks5://192.168.1.55:1080'
+```
+
+
+
 ### netcat、nc命令
 
 > https://www.cnblogs.com/nmap/p/6148306.html

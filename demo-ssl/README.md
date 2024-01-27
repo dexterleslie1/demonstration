@@ -114,7 +114,7 @@ openssl pkcs12 -in for-iis.pfx -out for-iis.pem -nodes
 
 > http://lunar.lyris.com/help/lm_help//11.3/Content/generating_public_and_private_keys.html
 
-```
+```sh
 # 生成私钥
 openssl genrsa -out private.key 1024
 
