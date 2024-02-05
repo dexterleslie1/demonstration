@@ -35,7 +35,7 @@ docker compose pull yyd-websocket-service
 
 强制重建 yyd-websocket-service，--no-deps 表示依赖的相关容器不会被重建
 
-```
+```sh
 docker compose up -d --no-deps --force-recreate yyd-websocket-service
 ```
 
@@ -290,3 +290,102 @@ docker build --tag my-hello-world .
 docker run --rm my-hello-world
 ```
 
+
+
+
+
+## docker 容器占用存储空间分析
+
+### 备注
+
+下面命令会自动删除 /var/lib/docker/containers 下对应的容器日志卷，但是不会自动删除容器对应的匿名卷和命名卷
+
+```sh
+docker compose down
+```
+
+下面命令会自动删除 /var/lib/docker/containers 下对应的容器日志卷，也会自动删除容器对应的匿名卷和命名卷
+
+```sh
+docker compose down -v
+```
+
+
+
+### 分析容器的 overlay2 存储空间使用情况
+
+备注： 删除容器会自动删除 overlay2 对应的存储。
+
+
+
+创建使用 overlay2 存储空间容器
+
+```sh
+docker run --rm --name test1 centos /bin/sh -c "for i in {1..10000000}; do echo \$i >> /1.txt; done; sleep 3600;"
+```
+
+分析 overlay2 存储空间使用大小
+
+```sh
+docker inspect -f '{{ .Name }} {{ .GraphDriver }}' test1
+cd /var/lib/docker
+du -d 1 -h a9acff3198a9e707e92c8db0728e2a83ab17dafafdeffc844acdf710247c38a1/
+```
+
+删除容器
+
+```sh
+docker rm -f test1
+```
+
+
+
+### 分析容器的日志存储空间使用情况
+
+查看指定或者所有容器的日志路径
+
+```sh
+docker inspect -f '{{ .Name }} {{ .LogPath }}' $(docker ps -qa)
+```
+
+创建容器实例模拟占用大量日志存储空间
+
+```sh
+docker run --name test2 centos /bin/sh -c "for i in {1..10000000}; do echo \$i; done;"
+```
+
+显示所有容器实例日志存储存储使用情况，再通过显示的日志路径中id部分找出对应的容器实例。https://stackoverflow.com/questions/59765204/how-to-list-docker-logs-size-for-all-containers
+
+```sh
+sudo du -ch $(docker inspect --format='{{.LogPath}}' $(docker ps -qa)) | sort -h
+```
+
+
+
+### 分析容器的卷存储空间使用情况
+
+> NOTE： 绑定卷无法通过下面方法查看存储空间使用情况，但可以通过查看宿主机卷挂载点硬盘存储使用情况间接分析容器绑定卷存储空间使用情况。
+
+创建命名卷模拟占用大量存储空间
+
+```sh
+docker run --name b2 -v vol1:/data centos /bin/sh -c "for i in {1..10000000}; do echo \$i >> /data/1.txt; done;"
+```
+
+针对匿名卷需要通过下面命令(列出所有容器实例对应的卷，包括命名卷、绑定卷、匿名卷)配合查到匿名卷对应的容器，https://stackoverflow.com/questions/30133664/how-do-you-list-volumes-in-docker-containers
+
+```sh
+docker inspect -f '{{ .Name }} {{ .Mounts }}' $(docker ps -qa)
+```
+
+显示 images、containers、volumes、build cache 存储空间使用情况汇总，images 表示镜像存储的使用空间，containers 表示容器实例存储的使用空间，volumes 表示卷存储的使用空间。
+
+```sh
+docker system df
+```
+
+显示 images、containers、volumes、build cahce 存储空间使用情况明细
+
+```sh
+docker system df -v
+```

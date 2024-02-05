@@ -179,7 +179,7 @@ sudo systemctl restart xrdp
 
 ## apt包管理
 
-```
+```sh
 # 搜索名为net-tools包
 apt-cache search net-tools
 
@@ -215,7 +215,7 @@ snap list | grep code
 # snap删除已安装程序
 snap remove code
 
-# apt-get update命令解析
+# apt-get update命令解析，apt update 会同步远程仓库软件版本索引到本地
 # https://askubuntu.com/questions/222348/what-does-sudo-apt-get-update-do
 # 
 # It updates the available software list on your computer.
@@ -269,5 +269,21 @@ dconf watch /
 
 # 经过转换后例如下面gsettings命令
 sudo -E -u dexterleslie gsettings set org.gnome.desktop.interface enable-animations false
+```
+
+
+
+
+
+## ubuntu 通过命令行设置静态 ip 地址
+
+https://www.freecodecamp.org/news/setting-a-static-ip-in-ubuntu-linux-ip-address-tutorial/
+
+编辑 netplan 配置文件 /etc/netplan/00-installer-config.yaml，修改 ip 地址为 192.168.1.205/24
+
+保存和应用 netplan 配置
+
+```sh
+sudo netplan try
 ```
 
