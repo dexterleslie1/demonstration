@@ -389,3 +389,47 @@ docker system df
 ```sh
 docker system df -v
 ```
+
+
+
+
+
+## 环境变量用法
+
+### dockerfile 中声明环境变量
+
+dockerfile 内容如下：
+
+```dockerfile
+FROM busybox
+
+ENV myV=v2
+
+ENTRYPOINT [ "/bin/sh", "-c", "sleep 36000000" ]
+```
+
+编译镜像
+
+```sh
+docker build --rm -t test .
+```
+
+运行容器
+
+```sh
+docker run -d --rm --name test1 test
+```
+
+查看环境变量
+
+```sh
+docker exec -it test1 /bin/sh
+echo $myV
+```
+
+删除容器
+
+```sh
+docker rm -f test1
+```
+

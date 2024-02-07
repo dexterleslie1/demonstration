@@ -33,14 +33,12 @@ services:
       dockerfile: Dockerfile-autobackup
     container_name: demo-mariadb-auto-backup
     image: demo-mariadb-auto-backup
-    volumes:
-      - ./auto-backup.sh:/data/auto-backup/auto-backup.sh
+    # volumes:
+    #   - ./auto-backup.sh:/data/auto-backup/auto-backup.sh
     environment:
-      - LANG=C.UTF-8
-      - TZ=Asia/Shanghai
       - DBHOST=demo-mariadb-backup-server
       - DBUSER=root
-      - BDPASSWORD=123456
+      - DBPASSWORD=123456
       - DBNAME=demo_db
       - BUCKETNAME=backup-db-all
       # 桶下的子目录

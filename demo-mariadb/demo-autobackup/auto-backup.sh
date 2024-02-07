@@ -38,7 +38,7 @@ currentBackupFile=$currentBackup.sql
 # echo $currentBackupFile
 echo "Backup sql file: `pwd`/$currentBackupFile"
 
-mysqldump -u$DBUSER -p$BDPASSWORD -h$DBHOST --single-transaction --quick --lock-tables=false $DBNAME > $currentBackupFile
+mysqldump -u$DBUSER -p$DBPASSWORD -h$DBHOST --single-transaction --quick --lock-tables=false $DBNAME > $currentBackupFile
 tar -czf $basedir/$currentBaseBackupDir/$currentBackupFile.tar.gz $currentBackupFile
 rm -f $currentBackupFile
 aws s3api put-object --bucket $BUCKETNAME --key $BUCKETSUBDIR/$currentBaseBackupDir/$currentBackupFile.tar.gz --body $basedir/$currentBaseBackupDir/$currentBackupFile.tar.gz
