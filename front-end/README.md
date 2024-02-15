@@ -37,6 +37,58 @@ node -v
 
 > [npm、yarn换源与nrm](https://juejin.cn/post/6844904165466980359)
 
+
+
+##### npmmirror 镜像站
+
+> https://npmmirror.com/ 是一个完整 [npmjs.com](https://www.npmjs.com) 镜像，你可以用此代替官方版本(只读)，我们将尽量与官方服务**实时同步**。
+>
+> https://mjpclab.site/uncategorized/npm-install-electron-by-mirror
+>
+> 通过下面配置 ELECTRON_MIRROR
+> ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/
+>
+> 通过下面配置设置  REGISTRY
+> npm config set registry https://registry.npmmirror.com
+
+
+
+##### 通过项目 .npmrc 配置 npm/yarn 源
+
+创建项目目录 demo-npmrc
+
+```sh
+mkdir demo-npmrc
+```
+
+初始化项目，所有选项选择默认值直接 enter 即可
+
+```sh
+npm init
+```
+
+添加 jquery 依赖到项目中
+
+```sh
+npm install --save-dev jquery
+```
+
+添加 .npmrc 内容如下
+
+```properties
+electron_mirror=https://npmmirror.com/mirrors/electron/
+electron-builder-binaries_mirror=https://npmmirror.com/mirrors/electron-builder-binaries/
+registry=https://registry.npmmirror.com
+```
+
+npm install 时通过 --verbose 参数查看依赖下载所使用的源
+
+```sh
+npm install --verbose
+```
+
+
+
 **使用npm相关命令配置npm和yarn源**
 
 ```shell
