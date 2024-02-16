@@ -1,5 +1,3 @@
-# 前端相关技术
-
 ## nodejs
 
 ### nodejs原理
@@ -10,16 +8,33 @@
 
 ### 安装nodejs
 
-```shell
-# macOS安装
-brew install node
+#### 注意
 
-# windows安装(暂时没有需求)
+npm是和Nodejs一起并存的，只要安装了Nodejs，npm也安装好了，安装好Nodejs之后。打开终端，执行如下命令，检查是否安装成功。
 
-# npm是和Nodejs一起并存的，只要安装了Nodejs，npm也安装好了，安装好Nodejs之后。打开终端，执行如下命令，检查是否安装成功。
-# 查看node版本
+#### macOS 安装 nodejs
+
+到nodejs官网 https://nodejs.org/en/download 下载 pkg 安装包，双击 pkg 安装包根据提示安装
+
+查看node版本
+
+```sh
 node -v
 ```
+
+
+
+#### windows 安装 nodejs
+
+到nodejs官网 https://nodejs.org/en/download 下载 msi 安装包，双击 msi 安装包根据提示安装
+
+查看node版本
+
+```sh
+node -v
+```
+
+
 
 ### npm和yarn
 
@@ -253,3 +268,4 @@ npm info vue versions
 # 显示远程vue所有版本
 yarn info vue versions
 ```
+
