@@ -151,3 +151,14 @@ https://blog.csdn.net/MASILEJFOAISEGJIAE/article/details/85253919
 rm -rf /usr/local/var/homebrew/locks
 ```
 
+
+
+
+
+## macOS 远程桌面管理方案
+
+NOTE：没有找到相关资料在 macOS 中安装 rdp 服务。没有尝试内置的远程管理功能(ARD)，因为 windows 没有 ARD 客户端软件。
+
+启用内置的屏幕共享和文件共享功能，其中文件共享功能用于解决 realvnc viewer 无法复制粘贴内容时使用。
+
+下载最新版本的 realvnc viewer 连接到服务器。
