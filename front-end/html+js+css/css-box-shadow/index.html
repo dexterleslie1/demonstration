@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <style>
+        .my-div {
+            width: 50px;
+            height: 50px;
+            background-color: yellow;
+            box-shadow: 0 5px 0 rgba(255, 0, 0, 1), 0 10px 0 rgba(0, 255, 0, 1);
+        }
+    </style>
 </head>
 <body>
     <!--
@@ -18,6 +26,17 @@
     <div style="width:100%;">
         <div style="margin:0 auto;background-color: green;height:100px;width:100px;box-shadow: 5px 5px 10px -5px black;"></div>
     </div>
+    <hr/>
+
+
+    <div>box-shadow只提供三个值时指定了 offset-x、offset-y、blur-radius的值</div>
+    <div style="width:100%;">
+        <div style="background-color: green;height: 100px;width: 100px;box-shadow: 50px 5px 50px black;"></div>
+    </div>
+    <hr/>
+
+    <div>演示指定多个box-shadow</div>
+    <div class="my-div"></div>
     <hr/>
 
     <div>
