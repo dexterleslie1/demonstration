@@ -9,10 +9,6 @@
 docker run --privileged --pid=host -it alpine:3.8 nsenter -t 1 -m -u -n -i sh
 ```
 
-## docker volume权限管理
-
-> https://www.bbsmax.com/A/kjdwbNpA5N/
-
 
 
 ## 以列表方式显示 docker 容器已经启动时间 uptime
@@ -21,22 +17,6 @@ docker run --privileged --pid=host -it alpine:3.8 nsenter -t 1 -m -u -n -i sh
 
 ```sh
 docker ps
-```
-
-
-
-## 使用 docker compose 仅对单个服务 service 进行操作
-
-仅更新 yyd-websocket-service
-
-```sh
-docker compose pull yyd-websocket-service
-```
-
-强制重建 yyd-websocket-service，--no-deps 表示依赖的相关容器不会被重建
-
-```sh
-docker compose up -d --no-deps --force-recreate yyd-websocket-service
 ```
 
 
@@ -208,21 +188,6 @@ docker tag hello-world 192.168.1.181:50003/library/hello-world:1.0.0
 ```
 
 
-
-
-
-## docker-compose命令
-
-
-
-### 获取docker-compose up返回状态值
-
-> https://github.com/docker/compose/issues/10225
-
-```
-# 在当前目录执行以下命令，不使用--abort-on-container-exit时下面脚本不会执行echo
-docker-compose up --abort-on-container-exit || { echo '执行失败'; }
-```
 
 
 
@@ -398,6 +363,8 @@ docker system df -v
 
 ### dockerfile 中声明环境变量
 
+https://www.baeldung.com/ops/dockerfile-env-variable
+
 dockerfile 内容如下：
 
 ```dockerfile
@@ -431,5 +398,182 @@ echo $myV
 
 ```sh
 docker rm -f test1
+```
+
+
+
+
+
+## dockerfile USER 指令用法
+
+使用 USER 指令指定的用户名将用于运行 Dockerfile 中的所有后续 RUN、CMD 和 ENTRYPOINT 指令。
+
+参考
+
+> https://subscription.packtpub.com/book/cloud-and-networking/9781838983444/2/ch02lvl1sec14/other-dockerfile-directives
+
+dockerfile 内容如下：
+
+```dockerfile
+FROM ubuntu
+# RUN apt-get update && apt-get install apache2 -y 
+USER www-data
+CMD ["whoami"]
+```
+
+编译镜像
+
+```sh
+docker build -t user .
+```
+
+运行容器
+
+```sh
+docker run -it user
+```
+
+容器输出 www-data 表示当前运行用户为 www-data
+
+
+
+## dockerfile ENTRYPOINT 指令用法
+
+
+
+### ENTRYPOINT 指令执行多条命令
+
+参考
+
+> https://stackoverflow.com/questions/54121031/multiple-commands-on-docker-entrypoint
+
+dockerfile 内容
+
+```dockerfile
+FROM ubuntu
+
+ENTRYPOINT [ "/bin/sh", "-c", "date > /tmp/1.txt && cat /tmp/1.txt && sleep infinity" ]
+
+```
+
+docker-compose.yaml 内容
+
+```yaml
+version: "3.0"
+
+services:
+  demo-test:
+    build:
+      context: .
+    container_name: demo-test
+    image: my-demo-test
+
+```
+
+编译并启动服务
+
+```sh
+docker compose build
+docker compose up
+```
+
+
+
+## docker compose
+
+### docker compose yaml 指定 command
+
+docker-compose.yaml 内容如下：
+
+```yaml
+version: "3.0"
+
+services:
+  demo-test:
+    container_name: demo-test
+    image: centos
+    command: /bin/sh -c "date > /1.txt && cat /1.txt"
+
+```
+
+启动服务，控制台会输出当前时间
+
+```sh
+docker compose up
+```
+
+
+
+### 使用 docker compose 仅对单个服务 service 进行操作
+
+仅更新 yyd-websocket-service
+
+```sh
+docker compose pull yyd-websocket-service
+```
+
+强制重建 yyd-websocket-service，--no-deps 表示依赖的相关容器不会被重建
+
+```sh
+docker compose up -d --no-deps --force-recreate yyd-websocket-service
+```
+
+
+
+### 获取docker-compose up返回状态值
+
+> https://github.com/docker/compose/issues/10225
+
+```
+# 在当前目录执行以下命令，不使用--abort-on-container-exit时下面脚本不会执行echo
+docker-compose up --abort-on-container-exit || { echo '执行失败'; }
+```
+
+
+
+
+
+## 运行容器的用户和卷、目录、文件权限
+
+备注： 如果不使用 dockerfile USER 指令或者 docker run --user 参数指定运行容器用户，则默认使用 root 用户运行容器，对所有目录都有写权限。如果使用 USER 指令或者 --user 参数指定运行容器用户，则需要使用 chmod 或者 chown 授予当前用户或者修改目录、文件的属主以获得对目录、文件写入权限。
+
+dockerfile 内容如下：
+
+```dockerfile
+FROM ubuntu
+RUN mkdir /data
+
+# 必须授予 www-data 用户对 /data 目录有写入权限，
+# 否则会报告 /bin/sh: 1: cannot create /data/1.txt: Permission denied 错误
+RUN chmod -R o+w /data
+
+USER www-data
+ENTRYPOINT [ "/bin/sh", "-c", "date > /data/1.txt" ]
+```
+
+docker-compose.yaml 内容
+
+```yaml
+version: "3.0"
+
+services:
+  demo-test:
+    build:
+      context: .
+    container_name: demo-test
+    image: my-demo-test
+
+```
+
+编译镜像
+
+```sh
+docker compose build
+```
+
+启动服务，没有错误信息输出表示 www-data 用户成功写入输入到 /data/1.txt 文件中。
+
+```sh
+docker compose up
 ```
 

@@ -74,6 +74,10 @@ docker run -it --rm -v vol1:/data centos /bin/sh -c "echo 'Test content11' > /da
 
 #### 命名volume
 
+
+
+##### 使用容器测试命名卷
+
 ```sh
 # 自动创建vol1 volume （在宿主机目录/var/lib/docker/volumes 中）并挂载到容器/data目录下，执行echo SHELL命令输出 “Test content11” 到 /data/1.txt 文件中
 docker run -it --rm -v vol1:/data centos /bin/sh -c "echo 'Test content11' > /data/1.txt"
@@ -81,6 +85,45 @@ docker run -it --rm -v vol1:/data centos /bin/sh -c "echo 'Test content11' > /da
 # 创建vol2并输出内容到其中
 docker volume create vol2
 docker run -it --rm -v vol2:/data centos /bin/sh -c "echo 'Test content11' > /data/1.txt"
+```
+
+
+
+##### 使用 docker compose 测试命名卷
+
+备注： docker compose down -v 不会自动删除 external=true 的命名卷，但是会自动删除 external=false 的命名卷。
+
+docker-compose.yaml 内容如下：
+
+```yaml
+version: "3.0"
+
+services:
+  demo-test:
+    container_name: demo-test
+    image: centos
+    volumes:
+      - vol1:/data
+    command: /bin/sh -c "echo 'Test content11' > /data/1.txt"
+volumes:   # add this section
+  vol1:    # does not need anything underneath this
+    # external: true
+
+```
+
+启动服务
+
+```sh
+# external=true 时候需要手动创建命名卷，否则报告 vol1 卷不存在导致服务无法启动
+docker volume create vol1
+
+docker compose up -d
+```
+
+关闭服务并且删除 external=false 自动创建的命名卷
+
+```sh
+docker compose down -v
 ```
 
 
