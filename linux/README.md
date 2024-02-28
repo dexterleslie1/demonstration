@@ -33,7 +33,7 @@ command+w 关闭当前tab
 
 ctrl+tab tab之间切换
 
-## 操作系统命令
+## 命令行工具
 
 ### find命令
 
@@ -41,12 +41,28 @@ ctrl+tab tab之间切换
 # 结合find命令删除指定名称的目录，包括子目录内的相应目录
 # https://askubuntu.com/questions/43709/how-do-i-remove-all-files-that-match-a-pattern
 find . -type d -name node_modules -exec rm -rfv {} \;
+```
 
-# 递归搜索指定文件
-# https://www.cyberciti.biz/faq/unix-linux-grep-include-file-pattern-recursive-example/
+
+
+### grep 命令
+
+递归搜索指定文件，https://www.cyberciti.biz/faq/unix-linux-grep-include-file-pattern-recursive-example/
+
+```sh
 grep -r "17" --include "pom.xml" .
 grep -r "17" --include "*.xml" .
 ```
+
+
+
+不搜索指定的目录或者文件
+
+```
+grep -r "xxx" --exclude-dir mydir1 --exclude-dir mydir2 --exclude myfile1 --exclude myfile2 --exclude *.min.js
+```
+
+
 
 ### ln命令
 
@@ -579,6 +595,66 @@ du -d 2 -h .
 
 
 
+### vi/vim 命令
+
+#### vi/vim 中快速替换
+
+参考
+
+> https://linuxize.com/post/vim-find-replace/
+
+在命令行模式中输入 :%s/foo/bar/g 表示替换所有 foo 为 bar，% 表示整个文件，/g 表示替换当前行所有 foo。 
+
+
+
+### dig 命令
+
+参考 https://phoenixnap.com/kb/linux-dig-command-examples
+
+通过查看版本检查是否已经安装 dig 命令
+
+```sh
+dig -v
+```
+
+debian/ubuntu 安装 dig 命令
+
+```sh
+sudo apt-get install dnsutils
+```
+
+centOS/redhat 安装 dig 命令
+
+```sh
+sudo yum install bind-utils
+```
+
+查询指定域名的 dns 信息
+
+```sh
+dig baidu.com
+```
+
+指定 dns 服务器 114.114.114.114
+
+```sh
+dig @114.114.114.114 baidu.com
+```
+
+显示所有 dns 记录
+
+```sh
+dig baidu.com ANY
+```
+
+只显示 dns 对应的 ip 地址
+
+```sh
+dig baidu.com +short
+```
+
+
+
 ## 文件和目录
 
 ### 文件和目录权限rwx代表的意思
@@ -947,3 +1023,34 @@ free -g
 >
 > 国内NTP服务器
 > https://www.cnblogs.com/jarsing/articles/17503565.html
+
+
+
+## 查看 linux 系统版本
+
+### 查看 centOS 版本
+
+参考 https://www.casbay.com/guide/kb/linux-os-centos-version
+
+查看指定文件检查 centOS 版本
+
+```sh
+cat /etc/centos-release
+cat /etc/system-release
+cat /etc/os-release
+cat /etc/redhat-release
+```
+
+使用 lsb_release 查看 centOS 版本
+
+```sh
+yum install redhat-lsb
+lsb_release -d
+```
+
+使用 hostnamectl 命令查看  centOS 版本
+
+```sh
+hostnamectl
+```
+
