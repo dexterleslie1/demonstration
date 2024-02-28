@@ -24,7 +24,9 @@
 
 ### 使用remote-ssh插件远程开发
 
-> NOTE: 因为ssh命令不支持连接时提供密码，所以remote-ssh插件不支持保存SSH密码，启动应用后会自动端口转发。
+> NOTE：因为ssh命令不支持连接时提供密码，所以remote-ssh插件不支持保存SSH密码，启动应用后会自动端口转发。
+>
+> NOTE： 在连接远程过程中提示 "Could not establish connection to "": XHR failed" 错误，是因为 vscode commit id 对应的 remote-ssh 插件服务端程序不存在导致无法下载，所以此时应该升级 vscode 到最新版本。
 >
 > 远程开发的terminal也是远程的，远程打开git仓库就可以通过vscode git管理仓库了。
 
