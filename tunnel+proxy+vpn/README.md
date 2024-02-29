@@ -30,6 +30,22 @@ gost -L http://user:passwd@:8080
 
 
 
+使用 gost https 隧道传输 socks5 协议
+
+运行 gost 服务器端，NOTE： 经过测试只能够使用 https 协议作为隧道传输协议，SSH2和http协议都不能正常工作，可能是由于gfw拦截问题。
+
+```sh
+./gost -L https://secretuser:xxx@:30000
+```
+
+运行 gost 客户端
+
+```sh
+./gost -L :1080 -F https://secretuser:xxx@xxx.xxx.xxx.xxx:30000
+```
+
+
+
 ## 使用 ssh 作为 tunnel 封装 socks5 协议以逃避 GFW DPI
 
 NOTE：此方案按照繁琐，使用 SSH 动态端口转发方案更佳。
