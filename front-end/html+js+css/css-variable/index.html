@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        :root {
+            --my-background-color: red;
+        }
+
+        /* 当 body 添加 class on 时 css 变量值变为 yellow，否则为 red */
+        body.on {
+            --my-background-color: yellow;
+        }
+
+        .div1 {
+            width: 100px;
+            height: 100px;
+            background-color: var(--my-background-color);
+        }
+    </style>
+</head>
+<body>
+    <!--
+        https://www.freecodecamp.org/news/what-are-css-variables-and-how-to-use-them/
+    -->
+    <div>演示 css 变量的基本用法</div>
+    <div class="div1"></div>
+    <hr/>
+</body>
+</html>
