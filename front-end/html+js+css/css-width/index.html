@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .div1 .container {
+            background-color: #2a9d8f;
+            padding: 10px;
+            width: 50px;
+        }
+
+        .div1 .item {
+            background-color: #e9c46a;
+            padding: 5px;
+            margin-bottom: 5px;
+        }
+
+        .div1 .max-content {
+            width: max-content;
+        }
+
+        .div2 .container {
+            background-color: #2a9d8f;
+            padding: 10px;
+            width: 50px;
+        }
+
+        .div2 .item {
+            background-color: #e9c46a;
+            padding: 5px;
+            margin-bottom: 5px;
+        }
+
+        .div2 .min-content {
+            width: min-content;
+        }
+
+        .div22 .container {
+            background-color: #2a9d8f;
+            padding: 10px;
+            width: 50px;
+        }
+
+        .div22 .item {
+            background-color: #e9c46a;
+            padding: 5px;
+            margin-bottom: 5px;
+        }
+
+        .div22 img {
+            width: 80px;
+            display: block;
+        }
+
+        .div22 .min-content {
+            width: min-content;
+        }
+    </style>
+</head>
+
+<body>
+    <!--
+        https://shinyu0430.github.io/2021/09/21/maxwidthminwidthfitcontent/
+    -->
+    <div>演示 width: max-content 用法，表示父元素自动调整其宽度以包含其所有子元素并且不会换行</div>
+    <div class="div1">
+        <div class="container">
+            <div class="item">
+                Lorem ipsum dolor sit amet consectetur adipisicing
+            </div>
+            <div class="item max-content">
+                max-content!max-content!max-content!max-content!
+            </div>
+        </div>
+    </div>
+    <hr>
+
+    <div>演示 width: min-content 用法，表示父元素自动调整其宽度以包含其子元素中最长的宽度以防止溢出并会自动换行</div>
+    <div class="div2">
+        <div class="container">
+            <div class="item">
+                Lorem ipsum, dolor sit amet consecteturctetur adipi elit. Maiores
+            </div>
+            <div class="item min-content">
+                Lorem ipsum, dolor sit amet consecteturctetur adipi elit. Maiores
+            </div>
+        </div>
+    </div>
+
+    <div class="div22">
+
+
+        <div class="container">
+            <div class="item">
+                <img src="https://cdn.pixabay.com/photo/2020/07/21/16/24/landscape-5426755_1280.jpg" alt="">
+                <p>Lorem ipsum dolor sita met </p>
+
+            </div>
+            <div class="item min-content">
+                <img src="https://cdn.pixabay.com/photo/2020/07/21/16/24/landscape-5426755_1280.jpg" alt="">
+                <p>Lorem ipsum dolor sita met </p>
+            </div>
+        </div>
+
+
+    </div>
+    <hr>
+
+</body>
+
+</html>
