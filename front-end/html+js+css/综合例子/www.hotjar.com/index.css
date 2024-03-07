@@ -1,0 +1,117 @@
+.feedback {
+    position: fixed;
+    right: 0;
+    top: 50%;
+    background-color: rgba(255, 0, 0, 0.9);
+    border-radius: 0 5px 5px 0;
+    padding: 15px 12px;
+    color: white;
+    transform: rotate(180deg) translate(-3px, 50%);
+    font-size: 14px;
+    writing-mode: vertical-lr;
+    transition: all 0.2s;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.feedback:hover {
+    transform: rotate(180deg) translate(0, 50%);
+    box-shadow: 0 0 40px 0px rgba(0, 0, 0, 0.5);
+}
+
+.feedback .icon-emotion {
+    transform: rotate(90deg);
+    margin-bottom: 5px;
+}
+
+.feedback .icon-emotion::before {
+    content: '\1F4AC';
+}
+
+.feedback-submit-panel {
+    position: fixed;
+    top: 50%;
+    right: 20px;
+    width: 400px;
+    height: 200px;
+    background-color: white;
+    transform: translateY(-50%);
+
+    font-size: 14px;
+
+    display: none;
+}
+
+.feedback-submit-panel .close {
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 30px;
+    height: 30px;
+    transform: translateY(-50%);
+    right: 20px;
+    border-radius: 50%;
+    color: white;
+    font-weight: bold;
+    background-color: #4d5167;
+    cursor: pointer;
+}
+
+.feedback-submit-panel>div:nth-of-type(1) {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+
+.feedback-submit-panel .prompt {
+    text-align: center;
+    width: 250px;
+    opacity: 0.8;
+    font-size: 16px;
+}
+
+.feedback-submit-panel>div:nth-of-type(1) ul {
+    list-style-type: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 45px;
+    color: rgba(0,0,0,0.4);
+    cursor: pointer;
+}
+
+.feedback-submit-panel>div:nth-of-type(1) ul:hover {
+    /* https://stackoverflow.com/questions/40536101/css-opacity-wont-work-inside-li-on-hover */
+    fill: rgba(0,0,0,0.4);
+}
+
+.feedback-submit-panel>div:nth-of-type(1) ul li {
+    padding: 3px;
+}
+
+.feedback-submit-panel>div:nth-of-type(1) ul li>div {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.feedback-submit-panel>div:nth-of-type(1) ul li>div>div:nth-of-type(2) {
+    visibility: hidden;
+}
+.feedback-submit-panel>div:nth-of-type(1) ul li:hover {
+    fill: rgba(0,0,0,1);
+}
+.feedback-submit-panel>div:nth-of-type(1) ul li:hover>div>div:nth-of-type(2) {
+    visibility: visible;
+}
+
+.feedback-submit-panel>div:nth-of-type(1) svg {
+    width: 30px;
+    height: 30px;
+}
