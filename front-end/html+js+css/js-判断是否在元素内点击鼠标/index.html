@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <!--
+        https://serversideup.net/detect-if-click-is-inside-an-element-with-javascript/
+    -->
+
+    <div id="container">
+        关键词：<input type="text" id="query" />
+
+        <div id="autocomplete">
+            <div>1</div>
+            <div>2</div>
+            <div>3</div>
+        </div>
+    </div>
+
+    <script>
+        let elementContiner = document.querySelector("#container")
+        document.addEventListener("click", (event) => {
+            if (elementContiner.contains(event.target)) {
+                console.log("clicked inside")
+            } else {
+                console.log("clicked outside")
+            }
+        })
+    </script>
+</body>
+
+</html>
