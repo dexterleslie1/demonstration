@@ -35,6 +35,17 @@
         .div2 div:not(.colorRed) p{
             color:red;
         }
+
+        .div3 ul {
+            cursor: pointer;
+        }
+        .div3 ul:hover :not(li:hover) {
+            color: red;
+        }
+        .div3 ul li:hover {
+            background-color: yellow;
+            color: green;
+        }
     </style>
 </head>
 
@@ -67,6 +78,15 @@
                 <p>3、文字3</p>
             </span>
         </div>
+    </div>
+    <hr>
+
+    <div class="div3">
+        <ul>
+            <li>1</li>
+            <li>2</li>
+            <li>3</li>
+        </ul>
     </div>
     <hr>
 
