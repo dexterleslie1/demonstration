@@ -32,16 +32,18 @@
             font-family: sans-serif;
         }
 
-        .div2 div:not(.colorRed) p{
-            color:red;
+        .div2 div:not(.colorRed) p {
+            color: red;
         }
 
         .div3 ul {
             cursor: pointer;
         }
-        .div3 ul:hover :not(li:hover) {
+
+        .div3 ul:hover li:not(:hover) {
             color: red;
         }
+
         .div3 ul li:hover {
             background-color: yellow;
             color: green;
