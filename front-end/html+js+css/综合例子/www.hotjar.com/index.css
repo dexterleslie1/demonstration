@@ -1,3 +1,265 @@
+:root {
+    --var-background-color: #202641;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    /* font-family: "Ambit", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; */
+    font-size: 16px;
+    background-color: var(--var-background-color);
+}
+
+a {
+    text-decoration: none;
+}
+
+nav {
+    height: 64px;
+    box-shadow: inset 0 -1px 0 #565a6f;
+    padding-left: 80px;
+    padding-right: 80px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* logo 设置 */
+.logo {
+    cursor: pointer;
+}
+
+.logo {
+    display: flex;
+}
+
+.logo svg path {
+    fill: white;
+}
+
+.logo path:nth-last-child(1),
+.logo path:nth-last-child(2) {
+    fill: red;
+}
+
+.left-side-block {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.right-side-block {
+    display: flex;
+    align-items: center;
+}
+
+ul.nav-ul {
+    display: flex;
+    flex-direction: row;
+    list-style-type: none;
+    justify-content: space-between;
+    margin-left: 35px;
+    color: white;
+    cursor: pointer;
+
+    /* position: relative; */
+}
+
+ul.nav-ul li {
+    /* position: relative; */
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 62px;
+    /* background-color: red; */
+}
+
+ul.nav-ul li:hover {
+    /* border-top: 4px solid red; */
+    box-shadow: inset 0px 3px red;
+}
+
+ul.nav-ul li svg {
+    transform: rotate(0deg);
+}
+
+ul.nav-ul li.expand>svg {
+    transform: rotate(180deg);
+}
+
+ul.nav-ul li.expand .mask {
+    display: block;
+}
+
+ul.nav-ul li svg path {
+    stroke: white;
+}
+
+ul.nav-ul>li>div {
+    position: absolute;
+    top: 68px;
+    left: 0;
+    width: 100%;
+    /* 拉伸以铺满 viewport 的高度 */
+    bottom: 0;
+    /* background-color: red; */
+}
+
+ul.nav-ul .mask {
+    display: none;
+}
+
+.category-container {
+    display: flex;
+    /* flex-direction: column; */
+    justify-content: space-around;
+    align-items: flex-start;
+    /* padding-bottom: 50px; */
+    /* border-bottom: 1px solid rgba(255, 255, 255, 0.1); */
+    /* box-shadow: 0 10px 10px 0 rgba(255, 255, 255, 0.05); */
+}
+
+.category-container .category-item {
+    margin: 50px 25px;
+    flex: 1;
+}
+
+.category-container svg {
+    width: 35px;
+    height: 35px;
+    fill: red;
+}
+.category-container:hover .category-entry:not(:hover) svg {
+    fill: rgba(255, 0, 0, 0.5);
+}
+
+.category-container .category-title {
+    font-size: 20px;
+    padding: 15px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.category-container .category-entry {
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    margin-top: 25px;
+    /* background-color: green; */
+}
+
+.category-container:hover .category-entry:not(:hover) {
+    color: rgba(255, 255, 255, 0.5)
+}
+
+.category-container .category-entry>div:nth-of-type(2)>div {
+    padding: 8px 15px;
+}
+
+.category-container .category-entry>div:nth-of-type(2)>div:nth-of-type(2) {
+    color: rgba(255, 255, 255, 0.5);
+}
+.category-container:hover .category-entry:not(:hover)>div:nth-of-type(2)>div:nth-of-type(2) {
+    color: rgba(255, 255, 255, 0.2);
+}
+
+.right-side-block>a {
+    padding: 10px 5px;
+    color: #c3f0f7;
+    margin: auto 5px;
+}
+
+.right-side-block>a:hover {
+    opacity: 0.8;
+}
+
+.right-side-block>a:nth-child(2) {
+    padding: 8px 10px;
+    border: 1px solid #c3f0f7;
+    border-radius: 5px;
+}
+
+.right-side-block>a:nth-child(3) {
+    color: black;
+    background-color: #c3f0f7;
+    border-radius: 5px;
+    padding: 8px 10px;
+}
+
+.right-side-block .lang-switch-container>a:nth-last-of-type(1) {
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 14px;
+}
+
+.right-side-block .lang-switch-container {
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.right-side-block .lang-switch-container:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.right-side-block .lang-switch-container>a:nth-last-of-type(1) svg:nth-child(1) path {
+    /* stroke: white; */
+    fill: white;
+}
+
+.right-side-block .lang-switch-container>a:nth-last-of-type(1) svg:nth-child(2) path {
+    stroke: white;
+}
+
+.right-side-block .lang-switch-container {
+    opacity: 0.8;
+    position: relative;
+}
+
+ul.ul-lang-switch {
+    display: none;
+    position: absolute;
+    top: 45px;
+    left: -75px;
+    border: 1px solid #8b8e9c;
+    border-radius: 4px;
+    list-style-type: none;
+    width: max-content;
+    background-color: var(--var-background-color);
+}
+
+ul.ul-lang-switch a {
+    text-decoration: none;
+    color: rgba(255, 255, 255, 0.89);
+}
+
+ul.ul-lang-switch li:not(:last-child) {
+    border-bottom: 1px solid #8b8e9c;
+}
+
+ul.ul-lang-switch li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 40px 10px 16px;
+    font-size: 14px;
+    font-weight: 400;
+}
+
+ul.ul-lang-switch li:hover {
+    background-color: #4d5167;
+}
+
+ul.ul-lang-switch li svg {
+    transform: translateX(30px) scale(1.5);
+    fill: #ff3c00;
+}
+
+/* feedback 设置 */
 .feedback {
     position: fixed;
     right: 0;
@@ -81,13 +343,13 @@
     justify-content: center;
     align-items: center;
     margin-top: 45px;
-    color: rgba(0,0,0,0.4);
+    color: rgba(0, 0, 0, 0.4);
     cursor: pointer;
 }
 
 .feedback-submit-panel>div:nth-of-type(1) ul:hover {
     /* https://stackoverflow.com/questions/40536101/css-opacity-wont-work-inside-li-on-hover */
-    fill: rgba(0,0,0,0.4);
+    fill: rgba(0, 0, 0, 0.4);
 }
 
 .feedback-submit-panel>div:nth-of-type(1) ul li {
@@ -104,9 +366,11 @@
 .feedback-submit-panel>div:nth-of-type(1) ul li>div>div:nth-of-type(2) {
     visibility: hidden;
 }
+
 .feedback-submit-panel>div:nth-of-type(1) ul li:hover {
-    fill: rgba(0,0,0,1);
+    fill: rgba(0, 0, 0, 1);
 }
+
 .feedback-submit-panel>div:nth-of-type(1) ul li:hover>div>div:nth-of-type(2) {
     visibility: visible;
 }

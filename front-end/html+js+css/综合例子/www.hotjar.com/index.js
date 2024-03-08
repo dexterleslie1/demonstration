@@ -8,6 +8,18 @@ languageSwitchTrigger.addEventListener("click", () => {
     }
 })
 
+// 点击导航栏的 .nav-ul>li
+let lis = document.querySelectorAll(".nav-ul>li")
+lis.forEach((e, index) => {
+    e.addEventListener("click", (event) => {
+        lis.forEach((li) => {
+            if (li != event.target)
+                li.classList.remove("expand")
+        })
+        lis[index].classList.toggle("expand")
+    })
+})
+
 // 点击 feedback
 let feedback = document.querySelector(".feedback")
 let feedbackSubmitPanel = document.querySelector(".feedback-submit-panel")
