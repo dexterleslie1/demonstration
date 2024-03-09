@@ -1,5 +1,11 @@
 :root {
     --var-background-color: #202641;
+    /* a 元素的字体颜色 */
+    --var-el-a-color: #c3f0f7;
+    /* a 元素的边界颜色 */
+    --var-el-a-border-color: #c3f0f7;
+    /* a 元素的背景颜色 */
+    --var-el-a-background-color: #c3f0f7;
 }
 
 * {
@@ -17,7 +23,11 @@ a {
     text-decoration: none;
 }
 
-nav {
+a:hover {
+    opacity: 0.8;
+}
+
+nav .container {
     height: 64px;
     box-shadow: inset 0 -1px 0 #565a6f;
     padding-left: 80px;
@@ -111,6 +121,7 @@ ul.nav-ul>li>div {
 
 ul.nav-ul .mask {
     display: none;
+    background-color: rgba(0, 0, 0, 0.5);
 }
 
 .category-container {
@@ -121,6 +132,7 @@ ul.nav-ul .mask {
     /* padding-bottom: 50px; */
     /* border-bottom: 1px solid rgba(255, 255, 255, 0.1); */
     /* box-shadow: 0 10px 10px 0 rgba(255, 255, 255, 0.05); */
+    background-color: var(--var-background-color);
 }
 
 .category-container .category-item {
@@ -133,6 +145,7 @@ ul.nav-ul .mask {
     height: 35px;
     fill: red;
 }
+
 .category-container:hover .category-entry:not(:hover) svg {
     fill: rgba(255, 0, 0, 0.5);
 }
@@ -162,29 +175,26 @@ ul.nav-ul .mask {
 .category-container .category-entry>div:nth-of-type(2)>div:nth-of-type(2) {
     color: rgba(255, 255, 255, 0.5);
 }
+
 .category-container:hover .category-entry:not(:hover)>div:nth-of-type(2)>div:nth-of-type(2) {
     color: rgba(255, 255, 255, 0.2);
 }
 
 .right-side-block>a {
     padding: 10px 5px;
-    color: #c3f0f7;
+    color: var(--var-el-a-color);
     margin: auto 5px;
-}
-
-.right-side-block>a:hover {
-    opacity: 0.8;
 }
 
 .right-side-block>a:nth-child(2) {
     padding: 8px 10px;
-    border: 1px solid #c3f0f7;
+    border: 1px solid var(--var-el-a-border-color);
     border-radius: 5px;
 }
 
 .right-side-block>a:nth-child(3) {
     color: black;
-    background-color: #c3f0f7;
+    background-color: var(--var-el-a-background-color);
     border-radius: 5px;
     padding: 8px 10px;
 }
@@ -257,6 +267,193 @@ ul.ul-lang-switch li:hover {
 ul.ul-lang-switch li svg {
     transform: translateX(30px) scale(1.5);
     fill: #ff3c00;
+}
+
+/* main section 1 设置 */
+main .container {
+    padding-left: 80px;
+    padding-right: 80px;
+}
+
+main .container .section-1 {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    margin-top: 60px;
+}
+
+main .container .section-1 .left-side {
+    flex: 4;
+}
+
+main .container .section-1 .right-side {
+    flex: 6;
+}
+
+main .container .section-1 .right-side img {
+    /* 图片填满父布局，为了避免撑开父布局导致排版变形 */
+    width: 100%;
+}
+
+main .container .section-1 .left-side>div:nth-of-type(1) {
+    color: white;
+    font-size: 40px;
+    padding-bottom: 20px;
+}
+
+main .container .section-1 .left-side>div:nth-of-type(2) {
+    color: white;
+    font-size: 20px;
+    padding: 20px 0;
+}
+
+main .container .section-1 .left-side>div:nth-of-type(3) {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 15px;
+    padding: 20px 0;
+}
+
+main .container .section-1 .left-side>div:nth-of-type(4) {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 15px;
+    margin-top: 30px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+}
+
+main .container .section-1 .left-side>div:nth-of-type(4)>a:nth-of-type(1) {
+    border: 1px solid var(--var-el-a-border-color);
+    padding: 10px;
+    color: var(--var-el-a-color);
+    border-radius: 5px;
+}
+
+main .container .section-1 .left-side>div:nth-of-type(4)>a:nth-of-type(2) {
+    display: flex;
+    align-items: center;
+    margin-left: 10px;
+    background-color: blue;
+    border-radius: 5px;
+}
+
+main .container .section-1 .left-side>div:nth-of-type(4)>a:nth-of-type(2)>div:nth-of-type(1) {
+    background-color: white;
+    width: 40px;
+    aspect-ratio: 1/1;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+main .container .section-1 .left-side>div:nth-of-type(4)>a:nth-of-type(2)>div:nth-of-type(1)>svg {
+    width: 20px;
+    height: 20px;
+}
+
+main .container .section-1 .left-side>div:nth-of-type(4)>a:nth-of-type(2)>div:nth-of-type(2) {
+    color: white;
+    margin: 10px;
+
+}
+
+main .container .section-1 .left-side>div:nth-of-type(5) {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 15px;
+}
+
+/* main section-2 */
+main .container .section-2 {
+    margin-top: 80px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+main .container .section-2 .title {
+    color: white;
+    font-size: 30px;
+}
+
+main .container .section-2 .scroll-container {
+    width: 100%;
+    margin-top: 40px;
+    overflow: hidden;
+    position: relative;
+    height: 40px;
+}
+
+main .container .section-2 .scroll-container .scroll-element {
+    position: absolute;
+    width: inherit;
+    height: inherit;
+    color: rgba(255, 255, 255, 0.5);
+    display: flex;
+    justify-content: space-around;
+    font-size: 16px;
+    /* background-color: green; */
+    font-weight: bold;
+}
+main .container .section-2 .scroll-container .scroll-element>div {
+    cursor: pointer;
+}
+main .container .section-2 .scroll-container:hover .scroll-element {
+    animation-play-state: paused;
+}
+
+main .container .section-2 .scroll-container::before {
+    position: absolute;
+    content: "";
+    top: 0;
+    left: 0;
+    background: linear-gradient(90deg, var(--var-background-color), transparent);
+    /* background-color: red; */
+    width: 300px;
+    height: 100%;
+    z-index: 1;
+}
+
+
+main .container .section-2 .scroll-container::after {
+    position: absolute;
+    content: "";
+    top: 0;
+    right: 0;
+    background: linear-gradient(-90deg, var(--var-background-color), transparent);
+    width: 300px;
+    height: 100%;
+    z-index: 1;
+}
+
+main .container .section-2 .scroll-container .primary {
+    animation: animation-primary 15s linear 0s infinite normal none;
+}
+
+main .container .section-2 .scroll-container .secondary {
+    animation: animation-secondary 15s linear 0s infinite normal none;
+
+}
+
+@keyframes animation-primary {
+    from {
+        left: 0%;
+    }
+
+    to {
+        left: -100%;
+    }
+}
+
+@keyframes animation-secondary {
+    from {
+        left: 100%;
+    }
+
+    to {
+        left: 0%;
+    }
 }
 
 /* feedback 设置 */
