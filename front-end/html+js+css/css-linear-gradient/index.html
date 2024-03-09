@@ -6,6 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <style>
+        /*
+            0度表示 to top
+            color-stop 一个 length 值时表示颜色的开始位置
+            color-stop 两个 length 值时表示硬过渡颜色的开始和结束位置
+        */
         .div1 {
             width: 100px;
             height: 150px;
@@ -43,7 +48,7 @@
             /* Color stop: A gradient going from the bottom to top,
             starting blue, turning green at 40% of its length,
             and finishing red */
-            background: linear-gradient(0deg, blue, green 40%, red)
+            background: linear-gradient(0deg, blue, green 20%, red)
         }
 
         .div41 {
