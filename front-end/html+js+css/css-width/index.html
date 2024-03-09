@@ -58,6 +58,36 @@
         .div22 .min-content {
             width: min-content;
         }
+
+        .div31 .parent{
+            position: relative;
+            width: 200px;
+            height: 100px;
+            background-color: green;
+        }
+        .div31 .parent .child {
+            position: absolute;
+            width: inherit;
+            height: inherit;
+            background-color: yellow;
+        }
+
+        .div32 {
+            margin-top: 10px;
+        }
+        .div32 .parent{
+            position: relative;
+            width: 50%;
+            height: 100px;
+            background-color: green;
+        }
+        .div32 .parent .child {
+            position: absolute;
+            /* 继承父元素的50%值，所以此时width=50%表示为父元素的宽度的50% */
+            width: inherit;
+            height: inherit;
+            background-color: yellow;
+        }
     </style>
 </head>
 
@@ -106,6 +136,24 @@
         </div>
 
 
+    </div>
+    <hr>
+
+    <div>演示 width: inherit(继承父元素声明的宽高值) 用法，同时演示父元素relative和子元素absolute时子元素自动适应撑满父元素的宽高</div>
+    <div class="div31">
+        <div class="parent">
+            <div class="child">
+                Child div
+            </div>
+        </div>
+    </div>
+
+    <div class="div32">
+        <div class="parent">
+            <div class="child">
+                Child div
+            </div>
+        </div>
     </div>
     <hr>
 
