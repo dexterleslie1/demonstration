@@ -510,52 +510,63 @@ main .container .section-3 .group .header svg {
     height: 25px;
     fill: red;
 }
+
 main .container .section-3 .group .header>div:nth-of-type(2) {
     margin-left: 10px;
     font-size: 20px;
     color: white;
 }
+
 main .container .section-3 .group .entry {
     padding: 10px 20px;
     border: 1px solid rgba(255, 255, 255, 0.5);
     border-radius: 5px;
-    color:white;
+    color: white;
     margin-bottom: 5px;
 }
+
 main .container .section-3 .group .entry>div:nth-of-type(1) {
     display: flex;
     cursor: pointer;
     /* background-color: green; */
     align-items: center;
 }
+
 main .container .section-3 .group .entry>div:nth-of-type(1).expand .oparrow svg {
     transform: rotate(180deg);
 }
+
 main .container .section-3 .group .entry>div:nth-of-type(1).expand~.description {
     display: block;
 }
+
 main .container .section-3 .group .entry>div:nth-of-type(1).expand~.nav-link {
     display: block;
 }
+
 main .container .section-3 .group .entry .icon svg {
     width: 20px;
     height: 20px;
     fill: red;
 }
+
 main .container .section-3 .group .entry .content {
     margin-left: 10px;
     /* background-color: yellow; */
 }
+
 main .container .section-3 .group .entry .oparrow {
     flex: 1;
 }
+
 main .container .section-3 .group .entry .oparrow svg {
     fill: white;
     width: 15px;
     height: 15px;
     float: right;
-    
+
 }
+
 main .container .section-3 .group .entry .description {
     display: none;
     font-size: 15px;
@@ -567,9 +578,55 @@ main .container .section-3 .group .entry .description {
 main .container .section-3 .group .entry .nav-link {
     display: none;
 }
+
 main .container .section-3 .group .entry .nav-link a {
     text-decoration: underline;
     color: var(--var-el-a-color);
+}
+
+/* main section-4 */
+main .section-4 {
+    margin-top: 80px;
+    background-color: #0e2f6c;
+    /* position: absolute; */
+    /* width: 100%; */
+    color: white;
+    display: flex;
+    padding: 60px 80px;
+    align-items: center;
+    /* justify-content: flex-end; */
+}
+
+main .section-4 .left-side {
+    flex: 1;
+    /* background-color: yellow; */
+    /* margin-right: 80px; */
+    padding-right: 150px;
+}
+
+main .section-4 .left-side div:nth-of-type(1) {
+    font-size: 30px;
+}
+
+main .section-4 .left-side div:nth-of-type(2) {
+    margin-top: 20px;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+main .section-4 .left-side div:nth-of-type(3) {
+    margin-top: 80px;
+}
+
+main .section-4 .left-side div:nth-of-type(3) a {
+    padding: 10px 20px;
+    background-color: var(--var-el-a-background-color);
+    color: black;
+    border-radius: 5px;
+}
+
+main .section-4 .left-side div:nth-of-type(4) {
+    margin-top: 30px;
+    color: rgba(255, 255, 255, 0.5);
 }
 
 /* feedback 设置 */
