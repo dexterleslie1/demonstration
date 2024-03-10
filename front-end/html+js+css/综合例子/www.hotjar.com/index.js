@@ -33,3 +33,11 @@ feedbackSubmitPanel.querySelector(".close").addEventListener("click", () => {
     feedback.style.display = feebackDispalyOrigin
     feedbackSubmitPanel.style.display = "none"
 })
+
+// 点击 section-3 导航展开或者关闭
+let elList = document.querySelectorAll("main .container .section-3 .group .entry>div:nth-of-type(1)")
+elList.forEach((el)=> {
+    el.addEventListener("click", ()=>{
+        el.classList.toggle("expand")
+    })
+})
