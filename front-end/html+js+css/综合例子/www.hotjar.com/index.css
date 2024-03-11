@@ -742,6 +742,7 @@ main .container .section-6 .scroll-container {
     height: 150px;
     margin: 40px 0;
     overflow: hidden;
+    z-index: -1;
 }
 
 main .container .section-6 .scroll-container::before {
@@ -873,6 +874,7 @@ main .section-7 .slider-container .item {
 main .section-7 .slider-container .item .left {
     flex: 3;
 }
+
 main .section-7 .slider-container .item .right {
     flex: 7;
 }
@@ -882,14 +884,17 @@ main .section-7 .slider-container .item .right {
     color: rgba(255, 255, 255, 0.5);
     margin: 15px 0;
 }
+
 .section-7 .slider-container .item .left .title {
     font-size: 30px;
     color: white;
 }
+
 .section-7 .slider-container .item .left .a-link {
     margin-top: 40px;
     /* background-color: green; */
 }
+
 .section-7 .slider-container .item .left a {
     /* margin: 40px; */
     color: var(--var-el-a-color);
@@ -902,10 +907,12 @@ main .section-7 .slider-container .item .right {
     position: relative;
     color: black;
 }
+
 .section-7 .slider-container .item .right img {
     width: 50%;
     /* height: 100%; */
 }
+
 .section-7 .slider-container .item .right .description {
     width: 60%;
     position: absolute;
@@ -914,16 +921,74 @@ main .section-7 .slider-container .item .right {
     background-color: #ffece6;
     padding: 20px;
 }
+
 .section-7 .slider-container .item .right .description img {
     width: 100px;
 }
+
 .section-7 .slider-container .item .right .description>div:nth-of-type(2) {
     margin: 20px 0;
     color: rgba(0, 0, 0, 0.8);
 }
+
 .section-7 .slider-container .item .right .description .author {
     font-weight: bold;
     margin-bottom: 5px;
+}
+
+/* main .section-8 */
+.section-8 {
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-top: 80px;
+}
+
+.section-8 .title {
+    font-size: 30px;
+}
+
+.section-8 .sub-title {
+    margin-top: 10px;
+    font-size: 15px;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.section-8 .item-container {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    margin-top: 30px;
+    width: 100%;
+    /* background-color: green; */
+}
+
+.section-8 .item-container img {
+    width: 25px;
+}
+
+.section-8 .item-container .item {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.section-8 .item-container .item>div {
+    margin: 10px 0;
+}
+
+/* .section-8 .item-container .item .a-link {
+    margin-top: 20px;
+} */
+.section-8 .item-container .item a {
+    color: var(--var-el-a-color);
+    /* border: 1px solid var(--var-el-a-border-color); */
+    /* padding: 10px; */
+    /* border-radius: 3px; */
+    text-decoration: underline;
 }
 
 /* feedback 设置 */
