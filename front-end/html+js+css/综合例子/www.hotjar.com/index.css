@@ -27,6 +27,14 @@ a:hover {
     opacity: 0.8;
 }
 
+nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: var(--var-background-color);
+    width: 100%;
+}
+
 nav .container {
     height: 64px;
     box-shadow: inset 0 -1px 0 #565a6f;
@@ -269,6 +277,10 @@ ul.ul-lang-switch li svg {
     fill: #ff3c00;
 }
 
+main {
+    margin-top:150px;
+}
+
 /* main section 1 设置 */
 main .container {
     padding-left: 80px;
@@ -383,6 +395,8 @@ main .container .section-2 .scroll-container {
     overflow: hidden;
     position: relative;
     height: 40px;
+    /* 使 nav 覆盖当前元素 */
+    z-index: -1;
 }
 
 main .container .section-2 .scroll-container .scroll-element {
@@ -414,7 +428,6 @@ main .container .section-2 .scroll-container::before {
     /* background-color: red; */
     width: 300px;
     height: 100%;
-    z-index: 1;
 }
 
 
@@ -426,7 +439,6 @@ main .container .section-2 .scroll-container::after {
     background: linear-gradient(-90deg, var(--var-background-color), transparent);
     width: 300px;
     height: 100%;
-    z-index: 1;
 }
 
 main .container .section-2 .scroll-container .primary {
@@ -652,6 +664,8 @@ main .container .section-5 .entry {
     /* background-color: yellow; */
 
     /* width: 300px; */
+    z-index: -1;
+
 }
 
 main .container .section-5 .entry .collapse-panel {
