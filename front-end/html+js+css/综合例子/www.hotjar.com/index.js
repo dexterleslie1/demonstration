@@ -36,8 +36,41 @@ feedbackSubmitPanel.querySelector(".close").addEventListener("click", () => {
 
 // 点击 section-3 导航展开或者关闭
 let elList = document.querySelectorAll("main .container .section-3 .group .entry>div:nth-of-type(1)")
-elList.forEach((el)=> {
-    el.addEventListener("click", ()=>{
+elList.forEach((el) => {
+    el.addEventListener("click", () => {
         el.classList.toggle("expand")
     })
 })
+
+// section-7
+let activeIndex = 0
+// 点击左边的 slider arrow 按钮
+document.querySelector("main .section-7 .slider-switcher>.arrow:nth-of-type(1)")
+    .addEventListener("click", () => {
+        if (activeIndex - 1 >= -1)
+            activeIndex--
+        setActive()
+    })
+// 点击右边的 slider arrow 按钮
+document.querySelector("main .section-7 .slider-switcher>.arrow:nth-of-type(3)")
+    .addEventListener("click", () => {
+        if (activeIndex + 1 <= 2)
+            activeIndex++
+        setActive()
+    })
+setActive()
+
+function setActive() {
+    let divList = document.querySelectorAll("main .section-7 .slider-switcher .center-side-slide-switcher>div")
+    divList.forEach((divEl) => {
+        divEl.classList.remove("active")
+    })
+    divList[activeIndex + 1].classList.add("active")
+    let basis = 60
+    let calValue = -activeIndex * 120 + basis
+
+    let itemList = document.querySelectorAll("main .section-7 .slider-container>.item")
+    itemList.forEach((item) => {
+        item.style.transform = "translateX(" + calValue + "%)"
+    })
+}

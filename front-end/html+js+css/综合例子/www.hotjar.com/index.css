@@ -278,7 +278,7 @@ ul.ul-lang-switch li svg {
 }
 
 main {
-    margin-top:150px;
+    margin-top: 150px;
 }
 
 /* main section 1 设置 */
@@ -753,6 +753,7 @@ main .container .section-6 .scroll-container::before {
     background: linear-gradient(90deg, var(--var-background-color), transparent);
     z-index: 1;
 }
+
 main .container .section-6 .scroll-container::after {
     position: absolute;
     content: "";
@@ -785,6 +786,144 @@ main .container .section-6 a {
     color: var(--var-el-a-color);
     border: 1px solid var(--var-el-a-border-color);
     border-radius: 5px;
+}
+
+/* main section-7 */
+main .section-7 {
+    margin-top: 80px;
+    position: relative;
+    color: white;
+}
+
+main .section-7 .slider-switcher {
+    position: absolute;
+    top: 0;
+    right: 0;
+    /* width: 200px; */
+    height: 50px;
+    /* background-color: green; */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+main .section-7 .slider-switcher svg {
+    width: 30px;
+    height: 30px;
+    fill: white;
+    /* margin: 20px; */
+    cursor: pointer;
+}
+
+main .section-7 .slider-switcher>.arrow {
+    border-radius: 50%;
+    padding: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 20px;
+}
+
+main .section-7 .slider-switcher>.arrow:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+main .section-7 .slider-switcher>.arrow:nth-of-type(1) svg {
+    transform: rotate(180deg);
+}
+
+main .section-7 .slider-switcher .center-side-slide-switcher {
+    display: flex;
+    align-items: center;
+}
+
+main .section-7 .slider-switcher .center-side-slide-switcher>div {
+    margin: 0 5px;
+    width: 8px;
+    height: 8px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+main .section-7 .slider-switcher .center-side-slide-switcher>div.active {
+    background-color: white;
+}
+
+main .section-7 .slider-container {
+    display: flex;
+    justify-content: center;
+    overflow: hidden;
+    /* background-color: green; */
+}
+
+main .section-7 .slider-container .item {
+    flex: 0 0 100%;
+    /* height: 100px; */
+    margin: 0 10%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* transform: translateX(-60%); */
+    /* transform: translateX(-70%); */
+    transition: all 2s;
+}
+
+main .section-7 .slider-container .item .left {
+    flex: 3;
+}
+main .section-7 .slider-container .item .right {
+    flex: 7;
+}
+
+.section-7 .slider-container .item .left .sub-title {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 15px 0;
+}
+.section-7 .slider-container .item .left .title {
+    font-size: 30px;
+    color: white;
+}
+.section-7 .slider-container .item .left .a-link {
+    margin-top: 40px;
+    /* background-color: green; */
+}
+.section-7 .slider-container .item .left a {
+    /* margin: 40px; */
+    color: var(--var-el-a-color);
+    border: 1px solid var(--var-el-a-border-color);
+    padding: 10px;
+    border-radius: 3px;
+}
+
+.section-7 .slider-container .item .right {
+    position: relative;
+    color: black;
+}
+.section-7 .slider-container .item .right img {
+    width: 50%;
+    /* height: 100%; */
+}
+.section-7 .slider-container .item .right .description {
+    width: 60%;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    background-color: #ffece6;
+    padding: 20px;
+}
+.section-7 .slider-container .item .right .description img {
+    width: 100px;
+}
+.section-7 .slider-container .item .right .description>div:nth-of-type(2) {
+    margin: 20px 0;
+    color: rgba(0, 0, 0, 0.8);
+}
+.section-7 .slider-container .item .right .description .author {
+    font-weight: bold;
+    margin-bottom: 5px;
 }
 
 /* feedback 设置 */
