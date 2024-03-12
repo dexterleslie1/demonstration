@@ -33,6 +33,8 @@ nav {
     left: 0;
     background-color: var(--var-background-color);
     width: 100%;
+    /* 解决 position: relative 定位的元素遮盖此元素 */
+    z-index: 2;
 }
 
 nav .container {
@@ -395,8 +397,6 @@ main .container .section-2 .scroll-container {
     overflow: hidden;
     position: relative;
     height: 40px;
-    /* 使 nav 覆盖当前元素 */
-    z-index: -1;
 }
 
 main .container .section-2 .scroll-container .scroll-element {
@@ -428,6 +428,7 @@ main .container .section-2 .scroll-container::before {
     /* background-color: red; */
     width: 300px;
     height: 100%;
+    z-index: 1;
 }
 
 
@@ -664,8 +665,6 @@ main .container .section-5 .entry {
     /* background-color: yellow; */
 
     /* width: 300px; */
-    z-index: -1;
-
 }
 
 main .container .section-5 .entry .collapse-panel {
@@ -742,13 +741,13 @@ main .container .section-6 .scroll-container {
     height: 150px;
     margin: 40px 0;
     overflow: hidden;
-    z-index: -1;
+    /* z-index: -1; */
 }
 
 main .container .section-6 .scroll-container::before {
     position: absolute;
     content: "";
-    /* background-color: green; */
+    left: 0;
     width: 300px;
     height: 100%;
     background: linear-gradient(90deg, var(--var-background-color), transparent);
@@ -758,12 +757,10 @@ main .container .section-6 .scroll-container::before {
 main .container .section-6 .scroll-container::after {
     position: absolute;
     content: "";
-    /* background-color: green; */
     right: 0;
     width: 300px;
     height: 100%;
     background: linear-gradient(-90deg, var(--var-background-color), transparent);
-    z-index: 1;
 }
 
 main .container .section-6 .scroll-container .scroll-element {
@@ -794,7 +791,7 @@ main .section-7 {
     margin-top: 80px;
     position: relative;
     color: white;
-    z-index: -1;
+    /* z-index: -1; */
 }
 
 main .section-7 .slider-switcher {
