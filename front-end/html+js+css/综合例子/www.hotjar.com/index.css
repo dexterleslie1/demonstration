@@ -1166,6 +1166,7 @@ footer {
 
 footer .link-container {
     display: flex;
+    justify-content: space-between;
 }
 
 footer .link-container .title {
@@ -1180,8 +1181,8 @@ footer .link-container a:hover {
     color: white;
 }
 
-footer .link-container .col {
-    margin: 0 30px;
+footer .link-container .col:not(:nth-last-child()) {
+    margin-right: 30px;
     font-size: 15px;
 }
 
