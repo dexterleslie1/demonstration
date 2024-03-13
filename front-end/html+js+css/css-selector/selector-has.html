@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        /* 表示当有兄弟元素.b.active时才匹配.x元素 */
+        .div1 .x:has(~ .b.active) {
+            background-color: green;
+        }
+    </style>
+</head>
+<body>
+    <!--
+        https://www.zhangxinxu.com/wordpress/2022/08/css-has-pseudo-class/
+
+        NOTE：低版本的firefox、chrome浏览器不支持:has伪类
+    -->
+
+    <div>使用has选择前兄弟元素</div>
+    <div class="div1">
+        <ol>
+            <li class="b">b</li>
+            <li class="a">a</li>
+            <li class="x">x</li>
+            <li class="b active">b</li>
+            <li class="b">b</li>
+        </ol>
+    </div>
+    <hr>
+</body>
+</html>
