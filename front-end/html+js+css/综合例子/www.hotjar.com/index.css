@@ -15,8 +15,8 @@
 
 @media only screen and (max-width: 1000px) {
     :root {
-        --var-container-padding-left: 16px;
-        --var-container-padding-right: 16px;
+        --var-container-padding-left: 40px;
+        --var-container-padding-right: 40px;
     }
 }
 
@@ -24,6 +24,7 @@
     margin: 0;
     padding: 0;
     scrollbar-color: gray white;
+    box-sizing: border-box;
 }
 
 body {
@@ -557,7 +558,7 @@ main .section-1 .left>div:nth-of-type(3) {
     padding: 20px 0;
 }
 
-main .section-1 .left>div:nth-of-type(4) {
+main .section-1 .left .a-link {
     color: rgba(255, 255, 255, 0.5);
     font-size: 15px;
     margin-top: 30px;
@@ -605,6 +606,31 @@ main .section-1 .left>div:nth-of-type(4)>a:nth-of-type(2)>div:nth-of-type(2) {
 main .section-1 .left>div:nth-of-type(5) {
     color: rgba(255, 255, 255, 0.5);
     font-size: 15px;
+}
+
+@media only screen and (max-width: 1000px) {
+    main {
+        margin-top: 0;
+    }
+
+    main .section-1 {
+        flex-direction: column;
+    }
+
+    main .section-1 .left .a-link {
+        flex-direction: column;
+        margin-top: 0;
+    }
+
+    main .section-1 .left .a-link a {
+        width: 100%;
+        margin: 5px;
+    }
+
+    main .section-1 .left {
+        margin-top: 30px;
+        margin-bottom: 50px;
+    }
 }
 
 /* main section-2 */
@@ -827,6 +853,16 @@ main .section-3 .group .entry .nav-link a {
     color: var(--var-el-a-color);
 }
 
+@media only screen and (max-width: 1000px) {
+    main .section-3 .subtitle {
+        width: auto;
+    }
+
+    main .section-3 .section-nav .nav {
+        margin-left: 10px;
+    }
+}
+
 /* main section-4 */
 main .section-4 {
     margin-top: 80px;
@@ -870,6 +906,12 @@ main .section-4 .left-side div:nth-of-type(4) {
     color: rgba(255, 255, 255, 0.5);
 }
 
+@media only screen and (max-width: 1000px) {
+    main .section-4 {
+        flex-direction: column-reverse;
+    }
+}
+
 /* main .section-5 */
 main .section-5 {
     margin-top: 80px;
@@ -897,22 +939,12 @@ main .section-5 .entry {
 
 main .section-5 .entry .collapse-panel {
     transition: 0.5s;
-    height: 96%;
+    height: 100%;
+    /* background-color: green; */
 }
 
-main .section-5 .entry:hover .collapse-panel {
-    transform: translateY(-190px);
-}
-
-main .section-5 .entry .mask {
-    background-color: var(--var-background-color);
-    width: 100%;
-    /* height: 30%; */
-    height: 100px;
-    position: absolute;
-    left: 0;
-    bottom: 35px;
-    /* z-index: 2; */
+main .section-5 .entry:hover .collapse-panel>div:nth-of-type(3) {
+    visibility: visible;
 }
 
 main .section-5 .entry .collapse-panel>div:nth-of-type(1) img {
@@ -928,16 +960,26 @@ main .section-5 .entry .collapse-panel>div:nth-of-type(2) {
 main .section-5 .entry .collapse-panel>div:nth-of-type(3) {
     font-size: 15px;
     margin-top: 30px;
-    color: rgba(255, 255, 255, 0.5)
+    color: rgba(255, 255, 255, 0.5);
+    visibility: hidden;
 }
 
 main .section-5 .entry>div.nav-link {
-    height: 40%;
+    position: absolute;
+    /* height: 50%; */
+    /* background-color: green; */
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    align-items: flex-end;
+    /* background-color: var(--var-background-color); */
 }
 
 main .section-5 .entry>div.nav-link a {
     text-decoration: underline;
     color: var(--var-el-a-color);
+    margin: auto auto 15px 15px;
 }
 
 /* main section-6 */

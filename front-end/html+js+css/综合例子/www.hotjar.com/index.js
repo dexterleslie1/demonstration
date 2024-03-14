@@ -80,3 +80,17 @@ document.querySelector("nav .more").addEventListener("click", (event) => {
     document.querySelector("nav .right").classList.toggle("active")
     document.querySelector("nav .left").classList.toggle("active")
 })
+
+// 解决 .section-5 .collapse-panel translateY问题
+let entryList = document.querySelectorAll("main .section-5 .entry")
+entryList.forEach((entry) => {
+    entry.addEventListener("mouseenter", (event) => {
+        let elCollapsePanel = entry.querySelector(".collapse-panel")
+        let elImage = elCollapsePanel.querySelector("img:nth-of-type(1)")
+        elCollapsePanel.style.transform = "translateY(-" + (elImage.clientHeight + 15) + "px)"
+    })
+    entry.addEventListener("mouseleave", (event) => {
+        let elCollapsePanel = entry.querySelector(".collapse-panel")
+        elCollapsePanel.style.transform = "none"
+    })
+})
