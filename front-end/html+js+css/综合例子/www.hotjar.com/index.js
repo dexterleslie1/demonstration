@@ -9,11 +9,11 @@ languageSwitchTrigger.addEventListener("click", () => {
 })
 
 // 点击导航栏的 .nav-ul>li
-let lis = document.querySelectorAll(".nav-ul>li")
+let lis = document.querySelectorAll("nav .left .nav-container .nav-ul>li")
 lis.forEach((e, index) => {
     e.addEventListener("click", (event) => {
         lis.forEach((li) => {
-            if (li != event.target)
+            if (!li.contains(event.target))
                 li.classList.remove("expand")
         })
         lis[index].classList.toggle("expand")
@@ -74,3 +74,9 @@ function setActive() {
         item.style.transform = "translateX(" + calValue + "%)"
     })
 }
+
+// 点击 nav .more
+document.querySelector("nav .more").addEventListener("click", (event) => {
+    document.querySelector("nav .right").classList.toggle("active")
+    document.querySelector("nav .left").classList.toggle("active")
+})
