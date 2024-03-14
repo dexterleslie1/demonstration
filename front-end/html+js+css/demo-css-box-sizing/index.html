@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .div1 .parent {
+            width: 200px;
+            height: 100px;
+            border: 10px solid yellowgreen;
+        }
+
+        .div1 .parent .child {
+            height: 50px;
+            box-sizing: content-box;
+            width: 100%;
+            background-color: gray;
+        }
+
+        .div2 .parent {
+            width: 200px;
+            height: 100px;
+            border: 10px solid yellowgreen;
+        }
+
+        .div2 .parent .child {
+            height: 50px;
+            box-sizing: content-box;
+            width: 100%;
+            border: solid #5B6DCD 10px;
+            padding: 5px;
+        }
+
+        .div3 .parent {
+            width: 200px;
+            height: 100px;
+            border: 10px solid yellowgreen;
+        }
+
+        .div3 .parent .child {
+            height: 50px;
+            box-sizing: border-box;
+            width: 100%;
+            border: solid #5B6DCD 10px;
+            padding: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <!--
+        https://developer.mozilla.org/en-US/docs/Web/CSS/box-sizing
+        https://stackoverflow.com/questions/16907518/css-input-with-width-100-goes-outside-parents-bound
+
+        box-sizing CSS 属性设置如何计算元素的总宽度和高度。
+    -->
+    <div>演示box-sizing:content-box子元素没有padding情况</div>
+    <div class="div1">
+        <div class="parent">
+            <div class="child"></div>
+        </div>
+    </div>
+    <hr>
+
+    <div>演示box-sizing:content-box子元素有padding情况</div>
+    <div class="div2">
+        <div class="parent">
+            <div class="child"></div>
+        </div>
+    </div>
+    <hr>
+
+    <div>演示box-sizing:border-box情况</div>
+    <div class="div3">
+        <div class="parent">
+            <div class="child"></div>
+        </div>
+    </div>
+    <hr>
+</body>
+
+</html>
