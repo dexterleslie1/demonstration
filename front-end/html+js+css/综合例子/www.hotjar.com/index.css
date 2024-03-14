@@ -1038,6 +1038,11 @@ main .section-6 .scroll-container .scroll-element {
     position: absolute;
 }
 
+main .section-6 .scroll-container .scroll-element img {
+    width: 10vw;
+    height: 10vw;
+}
+
 main .section-6 .scroll-container .primary {
     animation: animation-primary 25s linear 0s infinite normal none;
 }
@@ -1158,6 +1163,7 @@ main .section-7 .slider-container .item .left .title {
 main .section-7 .slider-container .item .left .a-link {
     margin-top: 40px;
     /* background-color: green; */
+    display: flex;
 }
 
 main .section-7 .slider-container .item .left a {
@@ -1199,6 +1205,24 @@ main .section-7 .slider-container .item .right .description>div:nth-of-type(2) {
 main .section-7 .slider-container .item .right .description .author {
     font-weight: bold;
     margin-bottom: 5px;
+}
+
+@media only screen and (max-width: 1000px) {
+    main .section-7 .slider-container .item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    main .section-7 .slider-container .left {
+        margin-bottom: 20px;
+    }
+    main .section-7 .slider-switcher {
+        position: static;
+        margin-top: 30px;
+        /* background-color: green; */
+        width: 20%;
+        margin-left: auto;
+        margin-right: auto;
+    }
 }
 
 /* main .section-8 */
@@ -1254,6 +1278,23 @@ main .section-8 .item-container .item a {
     /* padding: 10px; */
     /* border-radius: 3px; */
     text-decoration: underline;
+}
+
+@media only screen and (max-width: 1000px) {
+    main .section-8 .item-container {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    main .section-8 .item-container .item {
+        width: 100%;
+        align-items: flex-start;
+        padding: 20px 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    main .section-8 .item-container .item:nth-last-of-type(1) {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    }
 }
 
 /* main section-9 */
@@ -1329,6 +1370,24 @@ main .section-9 .right>ul li {
 
 main .section-9 .right>ul li img {
     margin-right: 10px;
+}
+
+@media only screen and (max-width: 1000px) {
+    main .section-9>div:nth-of-type(1) {
+        flex-direction: column;
+        align-items: flex-start;
+        padding-left: var(--var-container-padding-left);
+        padding-right: var(--var-container-padding-right);
+        padding-top: 80px;
+        padding-bottom: 80px;
+    }
+    main .section-9 .left {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+    }
+    main .section-9 .right {
+        margin-top: 30px;
+        padding-left: 0;
+    }
 }
 
 /* main section-10 */
@@ -1421,6 +1480,17 @@ main .section-10 .right .platform-logos>div {
     margin: 0 5px;
 }
 
+@media only screen and (max-width: 1000px) {
+    main .section-10 {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    main .section-10 .right {
+        margin-top: 50px;
+        align-items: flex-start;
+    }
+}
+
 /* footer */
 footer {
     color: white;
@@ -1453,7 +1523,8 @@ footer .link-container .col:not(:nth-last-child()) {
     font-size: 15px;
 }
 
-footer .link-container .col>div {
+footer .link-container .col>.separator,
+footer .link-container .section-container>div {
     margin: 20px 0;
 }
 
@@ -1492,6 +1563,41 @@ footer .copy-right-and-cookie-container .cookie-panel>div {
 
 footer .copy-right-and-cookie-container .cookie-panel a {
     color: rgba(255, 255, 255, 0.5);
+}
+
+@media only screen and (max-width: 1000px) {
+    footer {
+        padding-left: var(--var-container-padding-left);
+        padding-right: var(--var-container-padding-right);
+    }
+    footer .link-container {
+        flex-direction: column;
+    }
+
+    footer .link-container .title {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        padding-bottom: 10px;
+    }
+    footer .link-container .title {
+        margin: 20px 0;
+    }
+    footer .link-container .section-container {
+        display: grid;
+        grid-template-columns: repeat(2,1fr);
+    }
+    footer .link-container .col>.separator {
+        margin: 20px 0;
+    }
+    footer .link-container .section-container>div {
+        margin: 5px 0;
+    }
+    footer .copy-right-and-cookie-container {
+        flex-direction: column-reverse;
+        margin-top: 50px;
+    }
+    footer .copy-right-and-cookie-container .copy-right{
+        margin-top: 20px;
+    }
 }
 
 /* feedback 设置 */
