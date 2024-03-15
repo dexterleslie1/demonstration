@@ -15,8 +15,8 @@
 
 @media only screen and (max-width: 1000px) {
     :root {
-        --var-container-padding-left: 40px;
-        --var-container-padding-right: 40px;
+        --var-container-padding-left: 16px;
+        --var-container-padding-right: 16px;
     }
 }
 
@@ -906,9 +906,17 @@ main .section-4 .left-side div:nth-of-type(4) {
     color: rgba(255, 255, 255, 0.5);
 }
 
+main .section-4 .right-side img {
+    width: 100%;
+    height: 100%;
+}
+
 @media only screen and (max-width: 1000px) {
     main .section-4 {
         flex-direction: column-reverse;
+    }
+    main .section-4 .left-side {
+        padding-right: 0;
     }
 }
 
@@ -1074,7 +1082,7 @@ main .section-7 .slider-switcher {
     height: 50px;
     /* background-color: green; */
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
 }
 
@@ -1217,9 +1225,10 @@ main .section-7 .slider-container .item .right .description .author {
     }
     main .section-7 .slider-switcher {
         position: static;
+        /* display: inline-block; */
         margin-top: 30px;
         /* background-color: green; */
-        width: 20%;
+        /* width: 50%; */
         margin-left: auto;
         margin-right: auto;
     }

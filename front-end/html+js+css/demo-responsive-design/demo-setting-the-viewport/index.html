@@ -8,11 +8,59 @@
     <!-- max-scale: 最大缩放。即允许的最大缩放程度。这也是一个浮点值，用以指出页面大小与屏幕大小相比的最大乘数。例如： 如果你将这个值设置为2.0，那么这个页面与target size相比，最多能放大2倍。 -->
     <!-- user-scalable: 用户调整缩放。即用户是否能够调整改变页面的缩放程度。如果设置为yes则是允许用户对其进行改变，反之为no。默认值是yes。如果你将其设置为no，那么mini-scale和max-scale都将被忽略，因为根本不可能缩放。 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            height: 2000px;
+            background-color: black;
+        }
+
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 64px;
+            width: 100%;
+            z-index: 2;
+        }
+
+        nav .container {
+            margin-left: 16px;
+            margin-right: 16px;
+            background-color: green;
+            height: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        nav .logo {
+            width: 25px;
+            height: 25px;
+            background-color: red;
+        }
+        nav .components {
+            width: 100px;
+            height: 50px;
+            background-color: yellow;
+        }
+    </style>
 </head>
 <body>
-
-<h2>Setting the Viewport</h2>
-<p>This example does not really do anything, other than showing you how to add the viewport meta element.</p>
-
+    <nav>
+        <div class="container">
+            <div class="left">
+                <div class="logo"></div>
+            </div>
+            <div class="right">
+                <div class="components"></div>
+            </div>
+        </div>
+    </nav>
 </body>
 </html>
