@@ -1,0 +1,21 @@
+$demo1-background-color: green;
+
+.demo1 div {
+    width: 50px;
+    height: 25px;
+    background-color: $demo1-background-color;
+}
+
+.demo2 {
+    .parent {
+        width: 50px;
+        height: 50px;
+        background-color: green;
+
+        .child {
+            width: 25px;
+            height: 25px;
+            background-color: yellow;
+        }
+    }
+}
