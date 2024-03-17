@@ -209,7 +209,7 @@
 
     <hr>
     <div>
-        演示clientWidth、clientHeight、clientLeft、clientTop属性<br>
+        演示clientWidth(不包括border的尺寸)、clientHeight、clientLeft、clientTop属性<br>
         不存在垂直滚动条clientWidth=paddingWidth+contentWidth，例子 70px=10px*2+50px<br>
         存在垂直滚动条clientWidth=paddingWidth+contentWidth-scollbarWidth，例子 55px=10px*2+50px-15px<br>
         默认情况下clientLeft和clientTop实际是border的宽度<br>
@@ -242,7 +242,7 @@
 
     <hr>
     <div>
-        演示offsetWidth、offsetHeight<br>
+        演示offsetWidth、offsetHeight(包括border的尺寸)<br>
         offsetWidth=width+borderWidth*2*padding*2，例子: 110px=50px+20px*2+10px*2<br>
         https://blog.51cto.com/u_15127622/2757550
     </div>
@@ -289,7 +289,7 @@
 
     <hr>
     <div>
-        getBoundingClientRect<br>
+        getBoundingClientRect(以viewport的left=0、top=0作为参考的定位)<br>
         https://developer.mozilla.org/en-US/docs/Web/API/Element/getBoundingClientRect
     </div>
     <div>
