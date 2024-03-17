@@ -181,5 +181,48 @@
         <div class="w-[100px] h-[50px] bg-[green] !text-[yellow]">文字</div>
     </div>
     <hr>
+
+    <!--
+        https://tailwindcss.com/docs/hover-focus-and-other-states#hover-focus-and-active
+    -->
+    <div>hover、focus、active用法</div>
+    <div>
+        <button class="bg-violet-500 hover:bg-violet-600 active:bg-violet-700 focus:text-[yellow]">测试按钮</button>
+    </div>
+    <hr>
+
+    <div>根据父级元素状态设置子元素样式</div>
+    <div class="[&>div]:w-[200px] [&>div]:h-[100px] [&>div]:bg-[green] [&>div]:m-[5px]">
+        <!-- 
+            单个父级分组
+            语法: group-hover:
+            https://tailwindcss.com/docs/hover-focus-and-other-states#styling-based-on-parent-state
+        -->
+        <div class="group">
+            <div class="bg-[red] group-hover:bg-[yellow] w-[80%] h-[60%]"></div>
+        </div>
+
+        <!-- 
+            多个不同的父级分组
+            语法: 父级分组为group/l1，则group-hover/l1:
+            https://tailwindcss.com/docs/hover-focus-and-other-states#differentiating-nested-groups
+        -->
+        <div class="group/l1">
+            <div class="bg-[red] group/l2 group-hover/l1:bg-[yellow] w-[80%] h-[60%]">
+                <div class="bg-[blue] group-hover/l2:bg-[purple] w-[80%] h-[60%]">
+                </div>
+            </div>
+        </div>
+
+        <!--
+            使用自定义class作为父级分组状态
+            语法: group-[.active]:
+            https://tailwindcss.com/docs/hover-focus-and-other-states#arbitrary-groups
+        -->
+        <div class="group"><!-- 在这里手动添加或者删除active类 -->
+            <div class="bg-[red] group-[.active]:bg-[yellow] w-[80%] h-[60%]"></div>
+        </div>
+    </div>
+    <hr>
 </body>
 </html>
