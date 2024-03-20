@@ -17,6 +17,14 @@
     --badge-color-info: #576dff;
     --badge-color-light: white;
     --badge-color-dark: black;
+    --color-primary-darker: hsl(236, 100%, 45%);
+    --color-secondary-darker: hsl(0, 0%, 35%);
+    --color-success-darker: hsl(120, 100%, 40%);
+    --color-danger-darker: hsl(0, 100%, 45%);
+    --color-warn-darker: hsl(50, 100%, 47%);
+    --color-info-darker: hsl(232, 100%, 50%);
+    --color-light-darker: hsl(0, 0%, 50%);
+    --color-dark-darker: hsl(0, 0%, 30%);
 }
 
 .alert {
@@ -241,4 +249,143 @@
 
 .breadcrumb .breadcrumb-item.active {
     color: grey;
+}
+
+.btn {
+    border-style: none;
+    background-color: var(--btn-bg-color);
+    color: white;
+    padding: 0.5em 1em;
+    border-radius: 0.3em;
+    font-weight: 400;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.btn.btn-primary {
+    --btn-bg-color: var(--badge-color-primary);
+}
+
+.btn.btn-primary:hover {
+    --btn-bg-color: var(--color-primary-darker);
+}
+
+.btn.btn-secondary {
+    --btn-bg-color: var(--badge-color-secondary);
+}
+
+.btn.btn-secondary:hover {
+    --btn-bg-color: var(--color-secondary-darker);
+}
+
+.btn.btn-success {
+    --btn-bg-color: var(--badge-color-success);
+}
+
+.btn.btn-success:hover {
+    --btn-bg-color: var(--color-success-darker);
+}
+
+.btn.btn-danger {
+    --btn-bg-color: var(--badge-color-danger);
+}
+
+.btn.btn-danger:hover {
+    --btn-bg-color: var(--color-danger-darker);
+}
+
+.btn.btn-warn {
+    --btn-bg-color: var(--badge-color-warn);
+    color: black;
+}
+
+.btn.btn-warn:hover {
+    --btn-bg-color: var(--color-warn-darker);
+}
+
+.btn.btn-info {
+    --btn-bg-color: var(--badge-color-info);
+}
+
+.btn.btn-info:hover {
+    --btn-bg-color: var(--color-info-darker);
+}
+
+.btn.btn-light {
+    --btn-bg-color: var(--badge-color-light);
+}
+
+.btn.btn-light:hover {
+    --btn-bg-color: var(--color-light-darker);
+}
+
+.btn.btn-dark {
+    --btn-bg-color: var(--badge-color-dark);
+}
+
+.btn.btn-dark:hover {
+    --btn-bg-color: var(--color-dark-darker);
+}
+
+.btn.btn-outline {
+    border: 1px solid var(--btn-outline-border-color);
+    color: var(--btn-outline-color);
+    transition: background-color .1s, color .1s;
+}
+
+.btn.btn-outline:hover {
+    color: white;
+    background-color: var(--btn-outline-hover-bg-color);
+}
+
+.btn.btn-outline.primary {
+    --btn-outline-border-color: var(--badge-color-primary);
+    --btn-outline-hover-bg-color: var(--color-primary-darker);
+    --btn-outline-color: var(--badge-color-primary);
+}
+
+.btn.btn-outline.secondary {
+    --btn-outline-border-color: var(--badge-color-secondary);
+    --btn-outline-hover-bg-color: var(--color-secondary-darker);
+    --btn-outline-color: var(--badge-color-secondary);
+}
+
+.btn.btn-outline.success {
+    --btn-outline-border-color: var(--badge-color-success);
+    --btn-outline-hover-bg-color: var(--color-success-darker);
+    --btn-outline-color: var(--badge-color-success);
+}
+
+.btn.btn-outline.danger {
+    --btn-outline-border-color: var(--badge-color-danger);
+    --btn-outline-hover-bg-color: var(--color-danger-darker);
+    --btn-outline-color: var(--badge-color-danger);
+}
+
+.btn.btn-outline.info {
+    --btn-outline-border-color: var(--badge-color-info);
+    --btn-outline-hover-bg-color: var(--color-info-darker);
+    --btn-outline-color: var(--badge-color-info);
+}
+
+.btn.btn-outline.warn {
+    --btn-outline-border-color: var(--badge-color-warn);
+    --btn-outline-hover-bg-color: var(--color-warn-darker);
+    --btn-outline-color: var(--badge-color-warn);
+}
+
+.btn.btn-outline.warn:hover {
+    color: black;
+}
+
+.btn.btn-outline.light {
+    --btn-outline-border-color: var(--badge-color-light);
+    --btn-outline-hover-bg-color: var(--color-light-darker);
+    --btn-outline-color: var(--badge-color-light);
+}
+
+.btn.btn-outline.dark {
+    --btn-outline-border-color: var(--badge-color-dark);
+    --btn-outline-hover-bg-color: var(--color-dark-darker);
+    --btn-outline-color: var(--badge-color-dark);
 }
