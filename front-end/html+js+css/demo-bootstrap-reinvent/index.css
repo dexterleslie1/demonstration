@@ -216,3 +216,29 @@
 .badge.badge-pill-tag.dark {
     --badge-rounded-tag-bg-color: var(--badge-color-dark);
 }
+
+.breadcrumb {
+    --breadcrumb-divider: "/";
+    list-style-type: none;
+    display: flex;
+    align-items: center;
+}
+
+.breadcrumb .breadcrumb-item:not(.active)::after {
+    content: var(--breadcrumb-divider);
+    margin-left: 0.5em;
+    margin-right: 0.5em;
+    color: grey;
+}
+
+.breadcrumb .breadcrumb-item>a {
+    color: #0577fa;
+}
+
+.breadcrumb .breadcrumb-item>a:hover {
+    color: #0b5bc2;
+}
+
+.breadcrumb .breadcrumb-item.active {
+    color: grey;
+}
