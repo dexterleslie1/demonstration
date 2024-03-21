@@ -25,6 +25,13 @@
     --color-info-darker: hsl(232, 100%, 50%);
     --color-light-darker: hsl(0, 0%, 50%);
     --color-dark-darker: hsl(0, 0%, 30%);
+    --color-primary-disabled: hsl(236, 100%, 80%);
+    --color-secondary-disabled: hsl(0, 0%, 72%);
+    --color-success-disabled: hsl(120, 100%, 73%);
+    --color-danger-disabled: hsl(0, 100%, 88%);
+    --color-warn-disabled: hsl(50, 100%, 87%);
+    --color-info-disabled: hsl(232, 100%, 80%);
+    --color-dark-disabled: hsl(0, 0%, 30%);
 }
 
 .alert {
@@ -258,15 +265,23 @@
     padding: 0.5em 1em;
     border-radius: 0.3em;
     font-weight: 400;
-    cursor: pointer;
     text-decoration: none;
+}
+
+.btn:not([disabled]) {
+    cursor: pointer;
 }
 
 .btn.btn-primary {
     --btn-bg-color: var(--badge-color-primary);
 }
 
-.btn.btn-primary:hover {
+.btn.btn-primary[disabled] {
+    --btn-bg-color: var(--color-primary-disabled);
+}
+
+.btn.btn-primary:not([disabled]):hover,
+.btn.btn-primary:not([disabled]).active {
     --btn-bg-color: var(--color-primary-darker);
 }
 
@@ -274,15 +289,26 @@
     --btn-bg-color: var(--badge-color-secondary);
 }
 
-.btn.btn-secondary:hover {
+.btn.btn-secondary[disabled] {
+    --btn-bg-color: var(--color-secondary-disabled);
+}
+
+.btn.btn-secondary:not([disabled]):hover,
+.btn.btn-secondary:not([disabled]).active {
     --btn-bg-color: var(--color-secondary-darker);
 }
 
 .btn.btn-success {
     --btn-bg-color: var(--badge-color-success);
+    color: black;
 }
 
-.btn.btn-success:hover {
+.btn.btn-success[disabled] {
+    --btn-bg-color: var(--color-success-disabled);
+    color: var(--color-dark-disabled);
+}
+
+.btn.btn-success:not([disabled]):hover {
     --btn-bg-color: var(--color-success-darker);
 }
 
@@ -290,7 +316,11 @@
     --btn-bg-color: var(--badge-color-danger);
 }
 
-.btn.btn-danger:hover {
+.btn.btn-danger[disabled] {
+    --btn-bg-color: var(--color-danger-disabled);
+}
+
+.btn.btn-danger:not([disabled]):hover {
     --btn-bg-color: var(--color-danger-darker);
 }
 
@@ -299,7 +329,12 @@
     color: black;
 }
 
-.btn.btn-warn:hover {
+.btn.btn-warn[disabled] {
+    --btn-bg-color: var(--color-warn-disabled);
+    color: var(--color-dark-disabled);
+}
+
+.btn.btn-warn:not([disabled]):hover {
     --btn-bg-color: var(--color-warn-darker);
 }
 
@@ -307,7 +342,11 @@
     --btn-bg-color: var(--badge-color-info);
 }
 
-.btn.btn-info:hover {
+.btn.btn-info[disabled] {
+    --btn-bg-color: var(--color-info-disabled);
+}
+
+.btn.btn-info:not([disabled]):hover {
     --btn-bg-color: var(--color-info-darker);
 }
 
@@ -323,7 +362,11 @@
     --btn-bg-color: var(--badge-color-dark);
 }
 
-.btn.btn-dark:hover {
+.btn.btn-dark[disabled] {
+    --btn-bg-color: var(--color-dark-disabled);
+}
+
+.btn.btn-dark:not([disabled]):hover {
     --btn-bg-color: var(--color-dark-darker);
 }
 
@@ -333,7 +376,7 @@
     transition: background-color .1s, color .1s;
 }
 
-.btn.btn-outline:hover {
+.btn.btn-outline:not([disabled]):hover {
     color: white;
     background-color: var(--btn-outline-hover-bg-color);
 }
@@ -344,10 +387,20 @@
     --btn-outline-color: var(--badge-color-primary);
 }
 
+.btn.btn-outline.primary[disabled] {
+    --btn-outline-border-color: var(--color-primary-disabled);
+    --btn-outline-color: var(--color-primary-disabled);
+}
+
 .btn.btn-outline.secondary {
     --btn-outline-border-color: var(--badge-color-secondary);
     --btn-outline-hover-bg-color: var(--color-secondary-darker);
     --btn-outline-color: var(--badge-color-secondary);
+}
+
+.btn.btn-outline.secondary[disabled] {
+    --btn-outline-border-color: var(--color-secondary-disabled);
+    --btn-outline-color: var(--color-secondary-disabled);
 }
 
 .btn.btn-outline.success {
