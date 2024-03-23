@@ -491,3 +491,74 @@ end|
 delimiter ;
 ```
 
+
+
+## binlog
+
+### 启用binlog
+
+在my.cnf文件中添加如下内容即可启用binlog
+
+```properties
+[mysqld]
+log_bin
+expire_logs_days=10
+binlog_format=mixed
+max_binlog_size=1024m
+server_id=10001
+```
+
+
+
+### 查看和管理binlog
+
+参考 https://mariadb.com/kb/en/purge-binary-logs/
+
+查看binlog功能是否已经开启，通过下面命令查看log_bin参数是否为ON，ON表示已经启用binlog功能。参考 https://stackoverflow.com/questions/6956106/how-to-know-if-mysql-binary-log-is-enable-through-sql-command
+
+```sh
+show variables like '%bin%';
+```
+
+显示服务器中所有binlog文件
+
+```sh
+show binary logs;
+```
+
+删除所有binlog文件
+
+```sh
+reset master;
+```
+
+切换到新的binlog文件
+
+```sh
+flush logs;
+```
+
+删除binlog到指定文件之前(不包含本文件)
+
+```sh
+purge binary logs to 'master1-bin.000003';
+```
+
+删除binlog到指定时间之前
+
+```sh
+purge binary logs before '2013-04-22 09:55:22';
+```
+
+
+
+### 关闭/禁用binlog
+
+**通过配置文件关闭binlog**
+
+把my.cnf配置中的log_bin配置删除即可关闭binlog
+
+**通过命令关闭binlog**
+
+查阅相关资料后证实不能通过命令关闭binlog，只能够通过命令管理binlog
+
