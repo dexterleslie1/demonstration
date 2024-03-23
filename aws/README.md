@@ -59,3 +59,8 @@
 > 参考 lambda
 >
 > https://aws.amazon.com/lambda/
+
+## ami
+
+官方发布ami列表
+https://www.centos.org/download/aws-images/#centos-amazon-ami-images
