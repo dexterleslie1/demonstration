@@ -9,6 +9,34 @@
         .div1 .x:has(~ .b.active) {
             background-color: green;
         }
+
+        .demo1>div {
+            width: 200px;
+            height: 100px;
+            background-color: green;
+            margin: 10px;
+        }
+        .demo1>div:has(p) {
+            background-color: yellowgreen;
+        }
+
+
+        .demo2 .parent {
+            width: 300px;
+            height: 100px;
+            background-color: green;
+        }
+        .demo2 .parent:hover:has(:not(.child:hover)) {
+            background-color: blue;
+        }
+        .demo2 .child {
+            width: 150px;
+            height: 50px;
+            background-color: yellowgreen;
+        }
+        .demo2 .child:hover {
+            background-color: aqua;
+        }
     </style>
 </head>
 <body>
@@ -27,6 +55,31 @@
             <li class="b active">b</li>
             <li class="b">b</li>
         </ol>
+    </div>
+    <hr>
+
+    <!--
+        https://www.freecodecamp.org/news/how-to-use-the-has-selector-in-css/
+    -->
+    <div>有子元素p的div background-color才变色</div>
+    <div class="demo1">
+        <div>你好</div>
+        <div>
+            <p>你好</p>
+        </div>
+    </div>
+    <hr>
+
+    <!--
+        https://stackoverflow.com/questions/17923922/hover-on-child-should-turn-off-hover-effect-on-parent
+    -->
+    <div>使用has关闭父元素hover效果当hover到子元素</div>
+    <div class="demo2">
+        <div class="parent">
+            <div class="child">
+
+            </div>
+        </div>
     </div>
     <hr>
 </body>
