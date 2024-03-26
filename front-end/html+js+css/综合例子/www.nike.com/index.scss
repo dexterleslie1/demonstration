@@ -1,0 +1,264 @@
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+html {
+    font-family: "Helvetica";
+}
+
+header {
+    $text-color: black;
+    $margin-left: 3em;
+    $margin-right: 3em;
+
+    color: $text-color;
+
+    a {
+        color: $text-color;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .bar1 {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: lighten(grey, 45%);
+
+        .left {
+            display: flex;
+            margin-left: $margin-left;
+        }
+
+        .logo1,
+        .logo2 {
+            width: 1.5em;
+            height: 1.5em;
+            // background-color: lighten(green, 60%);
+            // margin: .3em;
+            margin-right: 1em;
+            cursor: pointer;
+
+            &:hover svg {
+                fill: grey;
+            }
+        }
+
+        .right {
+            margin-right: $margin-right;
+            margin-top: .8em;
+            margin-bottom: .8em;
+            // background-color: green;
+
+            &>a {
+                font-size: .85em;
+            }
+
+            &>a:hover {
+                color: lighten($text-color, 50%);
+
+                &::after {
+                    color: $text-color;
+                }
+            }
+
+            &>a:not(:nth-last-of-type(1))::after {
+                content: "|";
+                margin-left: 1em;
+                margin-right: 1em;
+            }
+        }
+    }
+
+    .bar2 {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: .5em;
+        // background-color: yellow;
+
+        .left {
+            margin-left: $margin-left;
+            // background-color: blue;
+            // flex: 1;
+        }
+        // .center {
+        //     background-color: red;
+
+        // }
+
+        .right {
+            margin-right: $margin-right;
+            display: flex;
+            align-items: center;
+            // justify-content: flex-end;
+            // box-sizing: border-box;
+            // background-color: blue;
+            // flex: 1;
+        }
+
+        .logo1 {
+            width: 5em;
+            // background-color: lighten(green, 60%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+
+            &:hover svg {
+                fill: grey;
+
+            }
+        }
+
+        ul {
+            list-style-type: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            li {
+                margin: 0 1em;
+                padding: 1em .5em;
+                // position: relative;
+            }
+
+            .links-container {
+                display: none;
+                position: absolute;
+                margin-left: $margin-left;
+                margin-right: $margin-right;
+                // background-color: green;
+                left: 0;
+                right: 0;
+                margin-top: calc(1em + 5px);
+
+                // display: flex;
+                justify-content: space-between;
+                // align-items: center;
+
+                .category {
+                    margin: 1.5em 0;
+
+                    .title {
+                        font-size: 1em;
+                        font-weight: bold;
+                        margin: .8rem 0;
+                    }
+                    .item {
+                        margin: .3em 0;
+                        // margin-left: .8em;
+
+                        a {
+                            font-weight: 500;
+                            color: grey;
+                            font-size: .9em;
+
+                            &:hover {
+                                color: black;
+                            }
+                        }
+                    }
+                }
+            }
+
+            li:hover {
+                box-shadow: 0 2px 0 black;
+
+                .links-container {
+                    display: flex;
+                }
+            }
+        }
+
+
+        $background-color-hover: lighten(grey, 40%);
+
+        .search-bar {
+            $background-color: lighten(grey, 45%);
+
+            background-color: $background-color;
+            display: flex;
+            align-items: center;
+            border-radius: 5em;
+            height: 2.2em;
+
+            &:hover:not(:has(.svg-search:hover)) {
+                background-color: $background-color-hover;
+            }
+
+            &:hover:not(:has(.svg-search:hover)) input[type=text]::placeholder {
+                color: lighten(grey, 10%);
+            }
+
+            .svg-search {
+                height: 100%;
+                aspect-ratio: 1/1;
+                margin-right: .5em;
+                cursor: pointer;
+                border-radius: 5em;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: .5em;
+            }
+
+            .svg-search:hover {
+                background-color: $background-color-hover;
+            }
+
+            input[type=text] {
+                border-style: none;
+                background-color: transparent;
+                outline: none;
+                width: 11em;
+                font-size: 1em;
+            }
+
+            input[type=text]::placeholder {
+                color: lighten(grey, 30%);
+            }
+        }
+
+        $svg-width: 2.3em;
+        $svg-height: 2.3em;
+        $margin-left: 1em;
+
+        .svg-like {
+            width: $svg-width;
+            height: $svg-width;
+            margin-left: $margin-left;
+            stroke: black;
+            stroke-width: 15;
+            cursor: pointer;
+            padding: .3em;
+            transform: translateX(.3em);
+
+            &:hover {
+                background-color: $background-color-hover;
+                border-radius: 50%;
+
+            }
+        }
+
+        .svg-bag-item {
+            // background-color: green;
+            width: $svg-width;
+            height: $svg-width;
+            margin-left: $margin-left;
+            stroke: black;
+            stroke-width: 15;
+            cursor: pointer;
+            padding: .3em;
+            transform: translateX(.3em);
+
+            &:hover {
+                background-color: $background-color-hover;
+                border-radius: 50%;
+
+            }
+        }
+    }
+}
