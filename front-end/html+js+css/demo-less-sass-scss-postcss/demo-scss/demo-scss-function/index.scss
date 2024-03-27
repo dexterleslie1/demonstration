@@ -1,0 +1,15 @@
+// https://medium.com/ampersand-academy/functions-in-sass-scss-aa917f7c1360
+
+$font-weights: (
+    "light": 300,
+    "regular": 400,
+    "bold": 700
+);
+
+@function weight($map, $key) {
+    @return map-get($map, $key);
+}
+
+.main {
+    font-weight: weight($font-weights, light);
+}
