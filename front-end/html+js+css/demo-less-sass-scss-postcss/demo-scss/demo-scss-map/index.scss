@@ -1,0 +1,9 @@
+// https://sass-lang.com/documentation/modules/map/
+@use "sass:map";
+
+$config: (
+    a: (b: (c: d))
+);
+
+// 打印d
+@debug map.get($config, a, b, c);
