@@ -1,0 +1,32 @@
+// 通过@mixin加名称的方式就可以定义一个Mixins模块，在模块内你可以添加任何你想重复使用的样式。
+@mixin button {
+    font-size: 1em;
+    padding: 0.5em 1.0em;
+    text-decoration: none;
+    color: #fff;
+}
+
+// Mixins能够包含任何在 CSS 和 Sass 中有效的内容。
+@mixin link {
+    a {
+        color: blue;
+
+        &:visited {
+            color: purple;
+        }
+
+        &:hover {
+            color: white;
+        }
+
+        &:active {
+            color: red;
+        }
+    }
+}
+
+// 你可以通过@include来调用具有相同名称的mixin模块。
+.button-green {  
+    @include button;  
+    background-color: green;  
+}
