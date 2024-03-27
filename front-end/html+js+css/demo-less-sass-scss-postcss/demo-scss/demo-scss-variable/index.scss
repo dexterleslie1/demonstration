@@ -1,0 +1,26 @@
+// https://sass-lang.com/documentation/variables/
+
+// 局部变量甚至可以使用与全局变量相同的名称来声明。 如果发生这种情况，实际上有两个不同的变量具有相同的名称：一个本地变量和一个全局变量。 这有助于确保编写局部变量的作者不会意外更改他们甚至不知道的全局变量的值。
+$var1: global value;
+
+.demo1-1 {
+  $var1: local value;
+  value: $var1;
+}
+
+.demo1-2 {
+  value: $var1;
+}
+
+// 如果您需要在本地范围内（例如在 mixin 中）设置全局变量的值，则可以使用 !global 标志。 标记为 !global 的变量声明将始终分配给全局范围。
+$variable: first global value;
+
+.demo2-1 {
+  $variable: second global value !global;
+  value: $variable;
+}
+
+.demo2-2 {
+  value: $variable;
+}
+
