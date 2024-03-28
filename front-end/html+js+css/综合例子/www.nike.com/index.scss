@@ -1,3 +1,130 @@
+@mixin themify($themes) {
+    @each $name, $value in $themes {
+        $theme-map: $value !global;
+
+        @if $name ==light {
+
+            html[#{$name}],
+            html {
+                @content;
+            }
+        }
+
+        @else {
+            html[#{$name}] {
+                @content;
+            }
+        }
+    }
+}
+
+@function themed($key) {
+    @return map-get($theme-map, $key);
+}
+
+$themes: (
+    light: (body-background-color: white,
+        bar1-background-color: lighten(grey, 45%),
+        logo-fill-color: inherit,
+        logo-fill-color-hover: grey,
+        bar1-right-a-color: inherit,
+        bar1-right-a-color-hover: black,
+        bar2-nav-a-color: inherit,
+        bar2-nav-li-shadow-color: black,
+        bar2-svg-background-color: transparent,
+        bar2-svg-background-color-hover: lighten(grey, 40%),
+        bar2-nav-category-title-color: inherit,
+        bar2-nav-category-item-a-color: grey,
+        bar2-nav-category-item-a-color-hover: black,
+    ),
+    dark: (body-background-color: black,
+        bar1-background-color: lighten(black, 10%),
+        logo-fill-color: white,
+        logo-fill-color-hover: grey,
+        bar1-right-a-color: white,
+        bar1-right-a-color-hover: black,
+        bar2-nav-a-color: white,
+        bar2-nav-li-shadow-color: white,
+        bar2-svg-background-color: white,
+        bar2-svg-background-color-hover: lighten(grey, 40%),
+        bar2-nav-category-title-color: white,
+        bar2-nav-category-item-a-color: lighten(grey, 35%),
+        bar2-nav-category-item-a-color-hover: white,
+
+    )
+);
+
+@include themify($themes) {
+    background-color: themed(body-background-color);
+
+    header {
+        .bar1 {
+            background-color: themed(bar1-background-color);
+            
+            .right {
+                &>a {
+                    color: themed(bar1-right-a-color);
+                }
+                &>a:hover {
+                    color: lighten(themed(bar1-right-a-color-hover), 50%);
+                    
+                    &::after {
+                        color: themed(bar1-right-a-color);
+                    }
+                }
+            }
+        }
+
+        .bar2 {
+            ul {
+                li {
+                    a {
+                        color: themed(bar2-nav-a-color);
+                    }
+
+                    &:hover {
+                        box-shadow: 0 2px 0 themed(bar2-nav-li-shadow-color); 
+                    }
+                }
+
+                .links-container{
+                    .category {
+                        .title {
+                            color: themed(bar2-nav-category-title-color);
+                        }
+                        .item {
+                            a {
+                                color: themed(bar2-nav-category-item-a-color);
+                                &:hover {
+                                    color: themed(bar2-nav-category-item-a-color-hover);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            .svg-like,.svg-bag-item {
+                background-color: themed(bar2-svg-background-color);
+            
+                &:hover {
+                    background-color: themed(bar2-svg-background-color-hover);
+                }
+            }
+        }
+
+        .logo {
+            svg {
+                fill: themed(logo-fill-color);
+            }
+
+            &:hover svg {
+                fill: themed(logo-fill-color-hover);
+            }
+        }
+    }
+}
+
 * {
     padding: 0;
     margin: 0;
@@ -25,7 +152,6 @@ header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        background-color: lighten(grey, 45%);
 
         .left {
             display: flex;
@@ -36,14 +162,9 @@ header {
         .logo2 {
             width: 1.5em;
             height: 1.5em;
-            // background-color: lighten(green, 60%);
             // margin: .3em;
             margin-right: 1em;
             cursor: pointer;
-
-            &:hover svg {
-                fill: grey;
-            }
         }
 
         .right {
@@ -56,13 +177,13 @@ header {
                 font-size: .85em;
             }
 
-            &>a:hover {
-                color: lighten($text-color, 50%);
+            // &>a:hover {
+            //     // color: lighten($text-color, 50%);
 
-                &::after {
-                    color: $text-color;
-                }
-            }
+            //     &::after {
+            //         // color: $text-color;
+            //     }
+            // }
 
             &>a:not(:nth-last-of-type(1))::after {
                 content: "|";
@@ -84,6 +205,7 @@ header {
             // background-color: blue;
             // flex: 1;
         }
+
         // .center {
         //     background-color: red;
 
@@ -147,25 +269,26 @@ header {
                         font-weight: bold;
                         margin: .8rem 0;
                     }
+
                     .item {
                         margin: .3em 0;
                         // margin-left: .8em;
 
                         a {
                             font-weight: 500;
-                            color: grey;
+                            // color: grey;
                             font-size: .9em;
 
-                            &:hover {
-                                color: black;
-                            }
+                            // &:hover {
+                            //     color: black;
+                            // }
                         }
                     }
                 }
             }
 
             li:hover {
-                box-shadow: 0 2px 0 black;
+                // box-shadow: 0 2px 0 black;
 
                 .links-container {
                     display: flex;
@@ -235,12 +358,11 @@ header {
             cursor: pointer;
             padding: .3em;
             transform: translateX(.3em);
+            border-radius: 50%;
 
-            &:hover {
-                background-color: $background-color-hover;
-                border-radius: 50%;
-
-            }
+            // &:hover {
+            //     background-color: $background-color-hover;
+            // }
         }
 
         .svg-bag-item {
@@ -253,12 +375,11 @@ header {
             cursor: pointer;
             padding: .3em;
             transform: translateX(.3em);
+            border-radius: 50%;
 
-            &:hover {
-                background-color: $background-color-hover;
-                border-radius: 50%;
-
-            }
+            // &:hover {
+            //     background-color: $background-color-hover;
+            // }
         }
     }
 }
