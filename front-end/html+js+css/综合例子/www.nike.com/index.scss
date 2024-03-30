@@ -22,6 +22,14 @@
     @return map-get($theme-map, $key);
 }
 
+$margin-left: 3em;
+$margin-right: 3em;
+
+:root {
+    --margin-left: #{$margin-left};
+    --margin-right: #{$margin-right};
+}
+
 $themes: (
     light: (body-background-color: white,
         bar1-background-color: lighten(grey, 45%),
@@ -48,8 +56,8 @@ $themes: (
         bar2-svg-background-color: white,
         bar2-svg-background-color-hover: lighten(grey, 40%),
         bar2-nav-category-title-color: white,
-        bar2-nav-category-item-a-color: lighten(grey, 35%),
-        bar2-nav-category-item-a-color-hover: white,
+        bar2-nav-category-item-a-color: white,
+        bar2-nav-category-item-a-color-hover: lighten(grey, 15%),
 
     )
 );
@@ -60,14 +68,15 @@ $themes: (
     header {
         .bar1 {
             background-color: themed(bar1-background-color);
-            
+
             .right {
                 &>a {
                     color: themed(bar1-right-a-color);
                 }
+
                 &>a:hover {
                     color: lighten(themed(bar1-right-a-color-hover), 50%);
-                    
+
                     &::after {
                         color: themed(bar1-right-a-color);
                     }
@@ -83,18 +92,24 @@ $themes: (
                     }
 
                     &:hover {
-                        box-shadow: 0 2px 0 themed(bar2-nav-li-shadow-color); 
+                        box-shadow: 0 2px 0 themed(bar2-nav-li-shadow-color);
+                    }
+
+                    .nav-container>svg:nth-of-type(1) {
+                        fill: themed(bar2-nav-category-title-color)
                     }
                 }
 
-                .links-container{
+                .links-container {
                     .category {
                         .title {
                             color: themed(bar2-nav-category-title-color);
                         }
+
                         .item {
                             a {
                                 color: themed(bar2-nav-category-item-a-color);
+
                                 &:hover {
                                     color: themed(bar2-nav-category-item-a-color-hover);
                                 }
@@ -104,9 +119,11 @@ $themes: (
                 }
             }
 
-            .svg-like,.svg-bag-item {
+            .svg-like,
+            .svg-bag-item,
+            .more-or-close {
                 background-color: themed(bar2-svg-background-color);
-            
+
                 &:hover {
                     background-color: themed(bar2-svg-background-color-hover);
                 }
@@ -137,8 +154,6 @@ html {
 
 header {
     $text-color: black;
-    $margin-left: 3em;
-    $margin-right: 3em;
 
     color: $text-color;
 
@@ -155,7 +170,7 @@ header {
 
         .left {
             display: flex;
-            margin-left: $margin-left;
+            margin-left: var(--margin-left);
         }
 
         .logo1,
@@ -201,18 +216,19 @@ header {
         // background-color: yellow;
 
         .left {
-            margin-left: $margin-left;
+            margin-left: var(--margin-left);
             // background-color: blue;
             // flex: 1;
         }
 
-        // .center {
-        //     background-color: red;
-
-        // }
+        .center {
+            &>.links-container {
+                display: none;
+            }
+        }
 
         .right {
-            margin-right: $margin-right;
+            margin-right: var(--margin-right);
             display: flex;
             align-items: center;
             // justify-content: flex-end;
@@ -245,13 +261,21 @@ header {
                 margin: 0 1em;
                 padding: 1em .5em;
                 // position: relative;
+
+                .nav-container>svg:nth-of-type(1) {
+                    display: none;
+                    width: 1em;
+                    height: 1em;
+                    // stroke: black;
+                    // stroke-width: 10px;
+                }
             }
 
             .links-container {
                 display: none;
                 position: absolute;
-                margin-left: $margin-left;
-                margin-right: $margin-right;
+                margin-left: var(--margin-left);
+                margin-right: var(--margin-right);
                 // background-color: green;
                 left: 0;
                 right: 0;
@@ -287,13 +311,13 @@ header {
                 }
             }
 
-            li:hover {
-                // box-shadow: 0 2px 0 black;
+            // li:hover {
+            //     // box-shadow: 0 2px 0 black;
 
-                .links-container {
-                    display: flex;
-                }
-            }
+            //     .links-container {
+            //         display: flex;
+            //     }
+            // }
         }
 
 
@@ -347,12 +371,11 @@ header {
 
         $svg-width: 2.3em;
         $svg-height: 2.3em;
-        $margin-left: 1em;
 
         .svg-like {
             width: $svg-width;
             height: $svg-width;
-            margin-left: $margin-left;
+            margin-left: 1em;
             stroke: black;
             stroke-width: 15;
             cursor: pointer;
@@ -369,7 +392,7 @@ header {
             // background-color: green;
             width: $svg-width;
             height: $svg-width;
-            margin-left: $margin-left;
+            margin-left: 1em;
             stroke: black;
             stroke-width: 15;
             cursor: pointer;
@@ -381,5 +404,146 @@ header {
             //     background-color: $background-color-hover;
             // }
         }
+
+        .more-or-close {
+            display: none;
+            width: $svg-width;
+            height: $svg-width;
+            margin-left: 1em;
+            stroke: black;
+            stroke-width: 15;
+            cursor: pointer;
+            padding: .3em;
+            transform: translateX(.3em);
+            border-radius: 50%;
+
+            &>svg:nth-of-type(2) {
+                display: none;
+            }
+
+            &.expand>svg:nth-of-type(1) {
+                display: none;
+            }
+
+            &.expand>svg:nth-of-type(2) {
+                display: block;
+            }
+        }
     }
+}
+
+$max-width: 1024px;
+@media only screen and (min-width: $max-width) {
+    header {
+        .bar2 {
+            ul {
+                li:hover {
+                    .links-container {
+                        display: flex;
+                    }
+                }
+            }
+        }
+    }
+}
+
+@media only screen and (max-width: $max-width) {
+    :root {
+        --margin-left: .5em;
+        --margin-right: .5em;
+    }
+
+    html,html[dark] {
+        header {
+            .bar1 {
+                display: none;
+            }
+
+            .bar2 {
+                .center {
+                    display: none;
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    margin-top: 3em;
+
+                    &>.links-container {
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: center;
+                        align-items: center;
+
+                        &>a  {
+                            width: calc(100% - 1em);
+                            padding: .5em 1em;
+                            text-align: center;
+                            border-radius: 10em;
+                            margin-top: .5em;
+                            cursor: pointer;
+                        }
+
+                        &>a:nth-of-type(1) {
+                            background-color: black;
+                            color: white;
+                        }
+                        &>a:nth-of-type(2) {
+                            border: 1px solid grey;
+
+                        }
+                    }
+                }
+
+                .center.expand {
+                    display: block;
+                }
+
+                ul {
+                    flex-direction: column;
+
+                    li {
+                        width: 100%;
+
+                        .nav-container {
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+
+                        }
+
+                        .nav-container>svg:nth-of-type(1) {
+                            display: block;
+                        }
+
+                        &.expand .nav-container>svg:nth-of-type(1) {
+                            transform: rotate(180deg);
+                        }
+
+                        &.expand .links-container {
+                            display: block;
+                        }
+
+                        &:hover {
+                            box-shadow: none;
+                        }
+
+                        .links-container {
+                            position: relative;
+                        }
+                    }
+
+                }
+
+                .search-bar {
+                    display: none;
+                }
+
+                .more-or-close {
+                    display: block;
+                }
+            }
+        }
+    }
+
 }
