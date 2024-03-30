@@ -31,33 +31,35 @@ $margin-right: 3em;
 }
 
 $themes: (
-    light: (body-background-color: white,
+    light: (
+        /* body 背景颜色 */
+        body-background-color: white,
+        /* 所有文字的颜色 */
+        text-color: black,
+        /* 所有svg的fill颜色 */
+        svg-fill-color: black,
+        /* 所有svg的hover fill颜色 */
+        svg-fill-color-hover: grey,
+        /* 所有svg需要背景颜色 */
+        svg-background-color: transparent,
+        /* 所有svg需要hover背景颜色 */
+        svg-background-color-hover: lighten(grey, 40%),
+        /* .bar1 背景颜色 */
         bar1-background-color: lighten(grey, 45%),
-        logo-fill-color: inherit,
-        logo-fill-color-hover: grey,
-        bar1-right-a-color: inherit,
+        /* .bar1 .right a标签的hover颜色 */
         bar1-right-a-color-hover: black,
-        bar2-nav-a-color: inherit,
-        bar2-nav-li-shadow-color: black,
-        bar2-svg-background-color: transparent,
-        bar2-svg-background-color-hover: lighten(grey, 40%),
-        bar2-nav-category-title-color: inherit,
-        bar2-nav-category-item-a-color: grey,
-        bar2-nav-category-item-a-color-hover: black,
+        /* .bar2 nav的item a标签hover颜色 */
+        bar2-nav-item-a-color-hover: black,
     ),
     dark: (body-background-color: black,
+        text-color: white,
+        svg-fill-color: white,
+        svg-fill-color-hover: grey,
+        svg-background-color: white,
+        svg-background-color-hover: lighten(grey, 40%),
         bar1-background-color: lighten(black, 10%),
-        logo-fill-color: white,
-        logo-fill-color-hover: grey,
-        bar1-right-a-color: white,
         bar1-right-a-color-hover: black,
-        bar2-nav-a-color: white,
-        bar2-nav-li-shadow-color: white,
-        bar2-svg-background-color: white,
-        bar2-svg-background-color-hover: lighten(grey, 40%),
-        bar2-nav-category-title-color: white,
-        bar2-nav-category-item-a-color: white,
-        bar2-nav-category-item-a-color-hover: lighten(grey, 15%),
+        bar2-nav-item-a-color-hover: lighten(grey, 15%),
 
     )
 );
@@ -71,47 +73,61 @@ $themes: (
 
             .right {
                 &>a {
-                    color: themed(bar1-right-a-color);
+                    color: themed(text-color);
                 }
 
                 &>a:hover {
                     color: lighten(themed(bar1-right-a-color-hover), 50%);
 
                     &::after {
-                        color: themed(bar1-right-a-color);
+                        color: themed(text-color);
                     }
                 }
             }
         }
 
         .bar2 {
+            .center {
+                &>.links-container {
+                    &>a:nth-of-type(1) {
+                        background-color: themed(text-color);
+                        color: themed(body-background-color);
+                    }
+
+                    &>a:nth-of-type(2) {
+                        border: 1px solid grey;
+                        color: themed(text-color);
+                    }
+                }
+            }
+
             ul {
                 li {
                     a {
-                        color: themed(bar2-nav-a-color);
+                        color: themed(text-color);
                     }
 
                     &:hover {
-                        box-shadow: 0 2px 0 themed(bar2-nav-li-shadow-color);
+                        box-shadow: 0 2px 0 themed(text-color);
                     }
 
                     .nav-container>svg:nth-of-type(1) {
-                        fill: themed(bar2-nav-category-title-color)
+                        fill: themed(text-color)
                     }
                 }
 
                 .links-container {
                     .category {
                         .title {
-                            color: themed(bar2-nav-category-title-color);
+                            color: themed(text-color);
                         }
 
                         .item {
                             a {
-                                color: themed(bar2-nav-category-item-a-color);
+                                color: lighten(themed(text-color), 50%);
 
                                 &:hover {
-                                    color: themed(bar2-nav-category-item-a-color-hover);
+                                    color: themed(bar2-nav-item-a-color-hover);
                                 }
                             }
                         }
@@ -122,21 +138,21 @@ $themes: (
             .svg-like,
             .svg-bag-item,
             .more-or-close {
-                background-color: themed(bar2-svg-background-color);
+                background-color: themed(svg-background-color);
 
                 &:hover {
-                    background-color: themed(bar2-svg-background-color-hover);
+                    background-color: themed(svg-background-color-hover);
                 }
             }
         }
 
         .logo {
             svg {
-                fill: themed(logo-fill-color);
+                fill: themed(svg-fill-color);
             }
 
             &:hover svg {
-                fill: themed(logo-fill-color-hover);
+                fill: themed(svg-fill-color-hover);
             }
         }
     }
@@ -453,7 +469,8 @@ $max-width: 1024px;
         --margin-right: .5em;
     }
 
-    html,html[dark] {
+    html,
+    html[dark] {
         header {
             .bar1 {
                 display: none;
@@ -475,22 +492,13 @@ $max-width: 1024px;
                         justify-content: center;
                         align-items: center;
 
-                        &>a  {
+                        &>a {
                             width: calc(100% - 1em);
                             padding: .5em 1em;
                             text-align: center;
                             border-radius: 10em;
                             margin-top: .5em;
                             cursor: pointer;
-                        }
-
-                        &>a:nth-of-type(1) {
-                            background-color: black;
-                            color: white;
-                        }
-                        &>a:nth-of-type(2) {
-                            border: 1px solid grey;
-
                         }
                     }
                 }
