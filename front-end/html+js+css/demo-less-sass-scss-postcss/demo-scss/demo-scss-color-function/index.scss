@@ -1,0 +1,40 @@
+.demo1 {
+    >div {
+        display: inline-block;
+        width: 25px;
+        height: 25px;
+    }
+
+    $base-color: blue;
+
+    >div:nth-of-type(1) {
+        background-color: adjust-hue($base-color, -40deg);
+    }
+    >div:nth-of-type(2) {
+        background-color: adjust-hue($base-color,-30deg);
+    }
+    >div:nth-of-type(3) {
+        background-color: adjust-hue($base-color,-20deg);
+    }
+    >div:nth-of-type(4) {
+        background-color: adjust-hue($base-color,-10deg);
+    }
+    >div:nth-of-type(5) {
+        background-color: adjust-hue($base-color,0deg);
+    }
+    >div:nth-of-type(6) {
+        background-color: adjust-hue($base-color,10deg);
+    }
+    >div:nth-of-type(7) {
+        background-color: adjust-hue($base-color,20deg);
+    }
+    >div:nth-of-type(8) {
+        background-color: adjust-hue($base-color,30deg);
+    }
+    >div:nth-of-type(9) {
+        background-color: adjust-hue($base-color,40deg);
+    }
+    >div:nth-of-type(10) {
+        background-color: adjust-hue($base-color,50deg);
+    }
+}
