@@ -144,6 +144,22 @@
             border-color: black;
             border-style: solid;
         }
+
+        .demo1 .container {
+            background-color: green;
+            position: relative;
+            height: 50px;
+        }
+        .demo1 .container .widget {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background-color: yellow;
+            /* position: absolute的元素居中时需要同时指定margin: 0 auto;left: 0;right: 0; */
+            margin: 0 auto;
+            left: 0;
+            right: 0;
+        }
     </style>
 </head>
 
@@ -198,6 +214,14 @@
         <div class="box" style="top:10px;left:10px;"></div>
         <div class="box" style="right:10px;bottom:10px;"></div>
     </div>
+
+    <div>演示position: absolute居中显示</div>
+    <div class="demo1">
+        <div class="container">
+            <div class="widget"></div>
+        </div>
+    </div>
+    <hr>
 </body>
 
 </html>
