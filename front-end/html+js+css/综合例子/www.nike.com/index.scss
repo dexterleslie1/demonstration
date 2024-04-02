@@ -555,3 +555,107 @@ $max-width: 1024px;
     }
 
 }
+
+$footer-color1: darken(white, 15%);
+$footer-color2: gray;
+
+footer {
+    font-size: .9em;
+    padding-left: $margin-left;
+    padding-right: $margin-right;
+    margin-top: 16em;
+    color: $footer-color1;
+
+    a{
+        color: $footer-color1;
+        text-decoration: none;
+    }
+
+    .part1 {
+        display: flex;
+        justify-content: space-between;
+
+        .left {
+            font-weight: bold;
+
+            .item {
+                margin-bottom: 1.5em;
+            }
+        }
+
+        .center {
+            flex: 1;
+            display: flex;
+            justify-content: flex-start;
+
+            .col {
+                margin-left: 8em;
+            }
+
+            .title {
+                font-weight: bold;
+            }
+            .item {
+                margin: 1em 0;
+                
+                a {
+                    color: $footer-color2;
+                    &:hover {
+                        color: $footer-color1;
+                    }
+                }
+            }
+        }
+
+        .right {
+            display: flex;
+            justify-content: flex-end;
+
+            .logo {
+                width: 1em;
+                height: 1em;
+                background-color: green;
+                margin-left: 1em;
+            }
+        }
+    }
+
+    .part2 {
+        margin: 2em 0;
+        display: flex;
+        justify-content: flex-end;
+
+        a {
+            margin-left: 1em;
+            color: $footer-color2;
+
+            &:hover {
+                color: $footer-color1;
+            }
+        }
+    }
+
+    .part3 {
+        display: flex;
+        justify-content: space-between;
+        
+        .left {
+            display: flex;
+
+            .copyright {
+                color: $footer-color2;
+                margin-left: 1em;
+            }
+        }
+
+        .right {
+            a {
+                color: $footer-color2;
+
+                &:hover {
+                    color: $footer-color1;
+                }
+            }
+        }
+    }
+ }
