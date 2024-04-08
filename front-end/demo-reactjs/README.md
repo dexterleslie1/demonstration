@@ -41,6 +41,12 @@ JSX（JavaScript XML，正式名称为 JavaScript Syntax eXtension）是一种 J
 
 > 参考 组件的类式定义 demo
 
+### 受控和非受控组件
+
+参考 受控和非受控 demo
+
+
+
 ## 组件的核心属性用法
 
 ### state属性用法
