@@ -9,7 +9,11 @@
 
 ## jsx 语法规则
 
+### 什么是JSX
 
+https://en.wikipedia.org/wiki/JSX_(JavaScript)
+
+JSX（JavaScript XML，正式名称为 JavaScript Syntax eXtension）是一种 JavaScript 扩展，允许使用类似 XML 的语法创建文档对象模型 (DOM) 树。 [1] JSX 最初由 Facebook 创建，用于与 React 一起使用，现已被多个 Web 框架采用。[2]: 5 [3]: 11  作为一种语法糖，JSX 通常被转换为嵌套的 JavaScript 函数调用，其结构与原始 JSX 类似。
 
 ### 创建虚拟dom语法
 
