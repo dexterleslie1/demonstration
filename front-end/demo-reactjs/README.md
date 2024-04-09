@@ -74,3 +74,38 @@ JSX（JavaScript XML，正式名称为 JavaScript Syntax eXtension）是一种 J
 ## 事件处理
 
 > 参考 事件处理 demo
+
+
+
+## react脚手架
+
+### todo 自动动手还原react脚手架
+
+react脚手架架构：react+webpack+es6+eslint
+
+### 使用react脚手架创建项目
+
+安装react脚手架
+
+```sh
+sudo npm install -g create-react-app
+```
+
+使用react脚手架创建hello-react项目
+
+```sh
+create-react-app hello-react
+```
+
+进入hello-react项目
+
+```sh
+cd hello-react
+```
+
+启动hello-react项目
+
+```sh
+npm start
+```
+
