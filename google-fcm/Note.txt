@@ -1,0 +1,10 @@
+google-fcm
+2.2.7.RELEASE
+jdk8
+
+Springboot服务端集成Google FCM推送
+
+详细说明与使用方法请看测试单元 NotificationTest.java
+
+
+
