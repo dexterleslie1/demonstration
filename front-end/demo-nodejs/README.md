@@ -269,3 +269,19 @@ npm info vue versions
 yarn info vue versions
 ```
 
+
+
+##### 显示 package.json 依赖树版本
+
+显示整棵依赖树的版本，参考 https://stackoverflow.com/questions/49019022/how-to-check-a-projects-vue-js-version
+
+```sh
+npm list -a
+```
+
+显示指定组件的依赖版本，参考 https://stackoverflow.com/questions/49019022/how-to-check-a-projects-vue-js-version
+
+```sh
+npm list @vue/cli-service
+```
+
