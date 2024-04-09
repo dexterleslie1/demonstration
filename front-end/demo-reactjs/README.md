@@ -113,3 +113,6 @@ cd hello-react
 npm start
 ```
 
+## 样式模块化
+
+参考 react-modular-css
