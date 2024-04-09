@@ -33,11 +33,11 @@ JSX（JavaScript XML，正式名称为 JavaScript Syntax eXtension）是一种 J
 
 ## 组件
 
-### 函数式自定义组件
+### 基于非脚手架函数式自定义组件
 
 > 参考 组件的函数式定义 demo
 
-### 类式自定义组件
+### 基于非脚手架类式自定义组件
 
 > 参考 组件的类式定义 demo
 
@@ -54,6 +54,10 @@ JSX（JavaScript XML，正式名称为 JavaScript Syntax eXtension）是一种 J
 #### 新的生命周期
 
 参考 组件的生命周期/新的生命周期
+
+### 自定义组件(基于脚手架)
+
+参考 react-component
 
 
 
