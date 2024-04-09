@@ -19,15 +19,20 @@
     <script type="text/babel">
         class Login extends React.Component {
             state = {
-                username: "",
-                password: ""
+                username: "123",
+                password: "456"
             }
 
-            onChangeUsername = (event) => {
-                this.setState({ username: event.target.value })
-            }
-            onChangePassword = (event) => {
-                this.setState({ password: event.target.value })
+            // onChangeUsername = (event) => {
+            //     this.setState({ username: event.target.value })
+            // }
+            // onChangePassword = (event) => {
+            //     this.setState({ password: event.target.value })
+            // }
+            onChangeFormData = (field) => {
+                return (event) => {
+                    this.setState({ [field]: event.target.value })
+                }
             }
 
             onSubmit = (event) => {
@@ -39,8 +44,8 @@
             render() {
                 return (
                     <form onSubmit={this.onSubmit}>
-                        帐号：<input type="text" onChange={this.onChangeUsername} /><br />
-                        密码：<input type="password" onChange={this.onChangePassword} /><br />
+                        帐号：<input type="text" value={this.state.username} onChange={this.onChangeFormData("username")} /><br />
+                        密码：<input type="password" value={this.state.password} onChange={this.onChangeFormData("password")} /><br />
                         <input type="submit" value="登录" />
                     </form>
                 )
