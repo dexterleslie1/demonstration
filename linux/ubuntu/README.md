@@ -13,6 +13,9 @@ sudo apt install -y fcitx-googlepinyin
 # 打开language support选择输入法方式为fcitx
 
 # 重启系统后点击右上角输入法configure或者在应用搜索中输入 Fcitx Configuration，如果googlepinyin输入法不存在则添加，并且设置切换输入法快捷键为ctrl+alt+shift
+
+# 把googlepinyin输入法修改为繁体输入，参考 https://askubuntu.com/questions/1336435/how-do-i-get-traditional-chinese-input-with-pinyin-on-ubuntu-20-04
+# 使用 ctrl + shift + f 切换到繁体输入(切换之后永久改变)
 ```
 
 
