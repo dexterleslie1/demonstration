@@ -83,7 +83,7 @@ JSX（JavaScript XML，正式名称为 JavaScript Syntax eXtension）是一种 J
 
 ## 事件处理
 
-> 参考 事件处理 demo
+参考 事件处理 demo、react-handling-event
 
 
 
@@ -122,3 +122,7 @@ npm start
 ## 样式模块化
 
 参考 react-modular-css
+
+## checkbox的defaultChecked和checked
+
+参考 react-checkbox-defaultchecked-and-checked
