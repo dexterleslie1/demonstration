@@ -70,3 +70,14 @@ mvn wrapper:wrapper -Dmaven=3.5.4
 mvn clean
 ```
 
+
+
+## maven设置编译jdk版本
+
+```xml
+<properties>
+    <maven.compiler.target>1.8</maven.compiler.target>
+    <maven.compiler.source>1.8</maven.compiler.source>
+</properties>
+```
+

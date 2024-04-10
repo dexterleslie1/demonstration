@@ -9,6 +9,8 @@
 > https://blog.csdn.net/zts_zts/article/details/115220786
 
 ```
+# NOTE: git reset 时候需要指定重置到的git log hash id
+
 # git reset --mixed(默认)：回退版本后，之后提交的文件或代码在暂存区不跟踪了，转移到工作区，需要用add命令添加跟踪，然后再commit，用于未push场景
 # NOTE: 没有写命令演示
 

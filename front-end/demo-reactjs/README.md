@@ -1,3 +1,9 @@
+## vscode安装react插件
+
+1、ES7 React/Redux/GraphQL/React-Native snippets
+
+
+
 ## 创建不基于脚手架的 reactjs 项目
 
 > reactjs CDN引用
