@@ -33,6 +33,34 @@
       console.log(`使用map遍历并返回新的数组=${varArray}`)
 
       //#endregion
+
+      //#region 复制数组元素
+
+      // 使用ES6展开语法复制数组
+      // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax
+      // https://www.freecodecamp.org/news/how-to-clone-an-array-in-javascript-1d3183468f6a/
+      let myArr = [1,2,3]
+      let myArrCopy = [...myArr]
+      console.log(`使用ES6展开语法复制的数组：${myArrCopy}`)
+
+      //#endregion
+
+      //#region 往数组插入元素
+
+      // 使用unshift在数组头部插入元素
+      // https://www.freecodecamp.org/news/how-to-insert-an-element-into-an-array-in-javascript/
+      myArr = [1,2,3]
+      let myArrOrigin = [...myArr]
+      myArr.unshift(0)
+      console.log(`unshift前数组：${myArrOrigin}，后数组：${myArr}`)
+
+      // 使用push在数组尾部追加元素
+      myArr = [1,2,3]
+      myArrOrigin = [...myArr]
+      myArr.push(5)
+      console.log(`push前数组：${myArrOrigin}，后数组：${myArr}`)
+
+      //#endregion
     })
   </script>
 </body>
