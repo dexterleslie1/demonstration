@@ -183,6 +183,9 @@ sudo systemctl restart xrdp
 ## apt包管理
 
 ```sh
+# 更新本地包索引和包列表文件
+sudo apt update
+
 # 搜索名为net-tools包
 apt-cache search net-tools
 
@@ -288,5 +291,21 @@ https://www.freecodecamp.org/news/setting-a-static-ip-in-ubuntu-linux-ip-address
 
 ```sh
 sudo netplan try
+```
+
+
+
+## ubuntu升级firefox浏览器
+
+升级本地包索引和包列表
+
+```sh
+sudo apt update
+```
+
+升级firefox浏览器
+
+```sh
+sudo apt install firefox
 ```
 
