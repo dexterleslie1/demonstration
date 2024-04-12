@@ -28,6 +28,9 @@ git clone https://github.com/wwwwu8899/kgx.git
 打开language support选择输入法方式为fcitx
 打开Fcitx Configuration，如果googlepinyin输入法不存在则添加，并且设置切换输入法快捷键为ctrl+alt+shift
 
+# 把googlepinyin输入法修改为繁体输入，参考 https://askubuntu.com/questions/1336435/how-do-i-get-traditional-chinese-input-with-pinyin-on-ubuntu-20-04
+使用 ctrl + shift + f 切换到繁体输入(切换之后永久改变)
+
 # 使用 idea 导入 lhcparent 目录
 # 设置 idea maven 指向本地maven
 # 添加本地 tomcat 到 idea
