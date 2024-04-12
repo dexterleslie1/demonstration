@@ -1,0 +1,16 @@
+.todo-list-container .todo-list-ul-container li:hover {
+    background-color: #fef2f3;
+}
+
+.todo-list-container .todo-list-ul-container li input[type=button] {
+    visibility: hidden;
+    background-color: #b31d3f;
+    border: none;
+    color: white;
+    padding: .2rem .8rem;
+    border-radius: .2rem;
+    cursor: pointer;
+}
+.todo-list-container .todo-list-ul-container li:hover input[type=button] {
+    visibility: visible;
+}

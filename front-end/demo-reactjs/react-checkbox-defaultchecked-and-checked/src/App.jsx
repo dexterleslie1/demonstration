@@ -13,7 +13,7 @@ export default class App extends React.Component {
       <div className="App">
         {
           /*
-          1、checkbox的手动选择和不选中都不能够改变defaultChecked对应state中的变量。
+          1、checkbox的手动选择和不选中都不能够改变defaultChecked对应state中的变量，因为defaultChecked只在组件初始化渲染一次。
           2、修改state中的checked变量值不会改变defaultChecked对应checkbox的选中和不选中状态。
           3、checked+onChange能够自由控制state中的checked变量。
           4、defaultChecked、defaultValue只在初始渲染时由状态控制，之后更新不再跟状态有关系，而checked、value在全过程中都受状态控制。
