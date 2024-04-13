@@ -127,6 +127,12 @@ npm start
 
 参考 react-checkbox-defaultchecked-and-checked
 
-## 综合案例TodoLis
+## 综合案例TodoList
 
 参考 demo-todo-list
+
+## react配置http proxy
+
+配置setupProxy.js文件，不需要npm install http-proxy-middleware，因为react脚手架已经包含此组件。
+
+参考 react-config-http-proxy
