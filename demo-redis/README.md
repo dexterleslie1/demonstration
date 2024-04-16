@@ -429,6 +429,7 @@ redis-cli -a 123456 --eval ./1.lua redis
 ## 持久化
 
 > https://www.cnblogs.com/iceggboom/p/13749948.html
+> https://juejin.cn/post/6844903939339452430
 >
 > **RDB：**Redis 将内存数据库快照保存在名字为 `dump.rdb` 的二进制文件中。
 >
@@ -466,15 +467,17 @@ redis-cli -a 123456 --eval ./1.lua redis
 
 ### AOF
 
+结论：使用 redistemplate-standalone-load-test 测试后，AOF appendfsync always 对 redis 性能损耗很大，appendfsync everysec 对 redis 性能损耗很小。
+
 ```shell
 # 默认关闭若要开启将no改为yes
 appendonly yes
 # append文件的名字
 appendfilename "appendonly.aof"
 # AOF文件的写入方式
-# always一旦缓存区内容发生变化就写入AOF文件中
+# always一旦缓存区内容发生变化就写入AOF文件中，对性能损耗影响很大
 appendfsync always
-# everysec 每个一秒将缓存区内容写入文件 默认开启的写入方式
+# everysec 每个一秒将缓存区内容写入文件 默认开启的写入方式，对性能损耗很小
 appendfsync everysec
 # 将写入文件的操作交由操作系统决定
 appendfsync no
@@ -482,22 +485,179 @@ appendfsync no
 auto-aof-rewrite-percentage 100
 # 当AOF文件大小大于该配置项时自动开启重写
 auto-aof-rewrite-min-size 64mb
+
+#   save ""
+
+# save 900 1
+# save 300 10
+# save 60 10000
 ```
+
+
+
+测试 AOF 持久化特性过程
+
+使用 docker-based/mode-standalone 测试 AOF 持久化特性
+
+配置 redis.conf
+
+```properties
+appendonly yes
+appendfilename "appendonly.aof"
+appendfsync everysec
+auto-aof-rewrite-percentage 100
+auto-aof-rewrite-min-size 64mb
+
+#   save ""
+
+# save 900 1
+# save 300 10
+# save 60 10000
+```
+
+使用前端模式启动 redis
+
+```sh
+docker compose up
+```
+
+进入 redis cli
+
+```sh
+docker exec -it demo-redis-server /bin/bash
+redis-cli -a 123456
+```
+
+使用 set 命令创建数据
+
+```sh
+set hello 8
+```
+
+杀死 redis 进程（为了避免正常关闭 redis 时会 save 数据）
+
+```sh
+docker compose kill
+```
+
+重新启动 redis 后发现数据没有丢失
+
+```sh
+docker compose up
+keys *
+```
+
+
 
 ### RDB
 
+结论：使用 redistemplate-standalone-load-test 测试后，RDB 持久化方案对 redis 性能损耗很小。
+
+触发快照的时机
+
+- 执行`save`和`bgsave`命令
+- 配置文件设置`save <seconds> <changes>`规则，自动间隔性执行`bgsave`命令
+- 主从复制时，从库全量复制同步主库数据，主库会执行`bgsave`
+- 执行`flushall`命令清空服务器数据
+- 执行`shutdown`命令关闭Redis时，会执行`save`命令
+
+使用`save`命令会阻塞Redis服务器进程，服务器进程在RDB文件创建完成之前是不能处理任何的命令请求。
+
+而使用`bgsave`命令不同的是，`basave`命令会`fork`一个子进程，然后该子进程会负责创建RDB文件，而服务器进程会继续处理命令请求。
+
+`save <seconds> <changes>`表示在seconds秒内，至少有changes次变化，就会自动触发`gbsave`命令。
+
+- `save 900 1`  当时间到900秒时，如果至少有1个key发生变化，就会自动触发`bgsave`命令创建快照
+- `save 300 10`  当时间到300秒时，如果至少有10个key发生变化，就会自动触发`bgsave`命令创建快照
+- `save 60 10000`    当时间到60秒时，如果至少有10000个key发生变化，就会自动触发`bgsave`命令创建快照
+
+RDB 配置样例
+
 ```shell
-# 在几秒内改动了多少数据就触发持久化
+appendonly no
+
 # 想禁用的话不设置save   或者save ""
 save 900 1
 save 300 10
-# 60秒内有10个key变动则在第60秒持久化到存储中
+# 60秒内有10000个key变动则在第60秒持久化到存储中，NOTE：不是在第10000个key变动时持久化。
 save 60 10000
 # 备份进程出错主进程停止写入操作
 stop-writes-on-bgsave-error yes
 # 是否压缩rdb文件 推荐no 相对于硬盘成本cpu更值钱
 rdbcompression yes
 ```
+
+
+
+测试 RDB 持久化特性过程
+
+使用 docker-based/mode-standalone 测试 RDB 持久化特性
+
+配置 redis.conf
+
+```properties
+save 30 2
+```
+
+使用前端模式启动 redis
+
+```sh
+docker compose up
+```
+
+进入 redis cli
+
+```sh
+docker exec -it demo-redis-server /bin/bash
+redis-cli -a 123456
+```
+
+30 秒内只有一个 set 命令，时间到了 30 秒时 bgsave 进程没有启动，因为 redis.conf 配置为 30 秒内至少 2 个 set 命令
+
+```sh
+set hello 8
+```
+
+杀死 redis 进程（为了避免正常关闭 redis 时会 save 数据）
+
+```sh
+docker compose kill
+```
+
+重新启动 redis 后发现数据丢失
+
+```sh
+docker compose up
+keys *
+```
+
+删除之前的 redis 数据
+
+```sh
+docker compose down -v
+```
+
+30 秒内两个 set 命令，时间到 30 秒时 bgsave 进程启动
+
+```sh
+set hello 8
+set hello1 8
+```
+
+杀死 redis 进程（为了避免正常关闭 redis 时会 save 数据）
+
+```sh
+docker compose kill
+```
+
+重新启动 redis 后发现数据没有丢失
+
+```sh
+docker compose up
+keys *
+```
+
+
 
 ### RDB+AOF混合持久化
 

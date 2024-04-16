@@ -81,3 +81,41 @@ mvn clean
 </properties>
 ```
 
+## 配置maven的mvn deploy用户凭证
+
+在~/.m2/settings.xml中加入
+
+```xml
+<server>
+    <id>yyd-nexus</id>
+    <username>xxx</username>
+    <password>xxx</password>
+</server>
+```
+
+
+
+## maven 3.8.1之后版本blocked http
+
+参考 https://gist.github.com/vegaasen/1d545aafeda867fcb48ae3f6cd8fd7c7
+
+~/.m2/settings.xml添加如下mirror
+
+```xml
+<settings xmlns="http://maven.apache.org/SETTINGS/1.2.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.2.0 http://maven.apache.org/xsd/settings-1.2.0.xsd">
+  ...
+    <mirrors>
+        <mirror>
+            <id>maven-default-http-blocker</id>
+            <mirrorOf>external:dont-match-anything-mate:*</mirrorOf>
+            <name>Pseudo repository to mirror external repositories initially using HTTP.</name>
+            <url>http://0.0.0.0/</url>
+            <blocked>false</blocked>
+        </mirror>
+    </mirrors>
+  ...
+</settings>
+```
+
