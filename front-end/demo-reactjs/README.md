@@ -136,3 +136,7 @@ npm start
 配置setupProxy.js文件，不需要npm install http-proxy-middleware，因为react脚手架已经包含此组件。
 
 参考 react-config-http-proxy
+
+## 综合案例 demo-github-search
+
+参考 demo-github-search

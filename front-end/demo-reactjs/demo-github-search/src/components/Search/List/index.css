@@ -1,0 +1,6 @@
+.search-list-container {
+    padding: .5rem 1rem;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
