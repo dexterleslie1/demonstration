@@ -189,7 +189,19 @@ docker tag hello-world 192.168.1.181:50003/library/hello-world:1.0.0
 
 
 
+### docker compose logs 查看容器日志
 
+从容器的最后10条开始查看日志并且滚动最新日志
+
+```sh
+docker-compose logs --tail 10 -f
+```
+
+查询指定的容器最后10条开始并滚动最新日志
+
+```sh
+docker-compose logs --tail 10 -f yyd-websocket-service
+```
 
 
 
