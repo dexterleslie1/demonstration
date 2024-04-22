@@ -65,7 +65,7 @@ public class NotificationTest {
                     .setCredentials(GoogleCredentials.fromStream(inputStream, httpTransportFactory))
                     .setHttpTransport(httpTransport)
                     .build();
-            firebaseApp = FirebaseApp.initializeApp(options);
+            firebaseApp = FirebaseApp.initializeApp(options, UUID.randomUUID().toString()/* NOTE: 需要指定firebaseapp名称，否则在创建多个firebaseapp时会报告都使用default名称冲突 */);
         } catch (Exception e) {
             log.error("google FirebaseApp initializeApp fail = {}", e);
         } finally {
@@ -114,6 +114,10 @@ public class NotificationTest {
                 .setNotification(Notification.builder()
                         .setTitle(title)
                         .setBody(body)
+                        .build())
+                //使用高级别,休眠状态也能提醒!
+                .setAndroidConfig(AndroidConfig.builder()
+                        .setPriority(AndroidConfig.Priority.HIGH)
                         .build())
                 .setToken(token)
                 .build();
