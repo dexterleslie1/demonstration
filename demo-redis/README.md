@@ -1125,3 +1125,24 @@ redis-cli --cluster del-node demo-redis-cluster-node-extra:6390 65999fa8f6dc1372
 > 针对第二种redis发生故障的情况，部署redis时可以使用redis的几种高可用方案部署
 >
 > 因为这种情况基本不会遇到所有不写demo
+
+
+
+## redis-cli 在 redis 集群中切换 master
+
+使用 redis-cli 集群模式连接到 redis 集群中任意一个节点
+
+```sh
+redis-cli -c
+```
+
+通过 get 不同的 key 自动 redirect 到不同的 master 节点
+
+```sh
+get 0
+get 1
+get 2
+get 3
+...
+```
+
