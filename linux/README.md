@@ -37,10 +37,14 @@ ctrl+tab tab之间切换
 
 ### find命令
 
-```
+```sh
 # 结合find命令删除指定名称的目录，包括子目录内的相应目录
 # https://askubuntu.com/questions/43709/how-do-i-remove-all-files-that-match-a-pattern
 find . -type d -name node_modules -exec rm -rfv {} \;
+
+# find 命令排除指定目录，排除 node_modules 和 demo 开头的目录
+# https://linuxhandbook.com/find-command-exclude-directories/
+find . -maxdepth 5 -iname "*perfor*" ! -path "*/node_modules/*" ! -path "*/demo*/*"
 ```
 
 
@@ -154,6 +158,10 @@ yum install htop -y
 htop
 
 # 通过键盘左右方向键滚动屏幕以查看完整的启动命令
+
+# 通过 F6 按键调出排序字段选择窗口
+
+# 通过 Setup > Display options > Hide userland process threads 隐藏显示线程只显示进程方式
 ```
 
 ### scp命令
@@ -651,6 +659,12 @@ dig baidu.com ANY
 
 ```sh
 dig baidu.com +short
+```
+
+分析baidu.com dns解析过程
+
+```
+dig +trace baidu.com
 ```
 
 

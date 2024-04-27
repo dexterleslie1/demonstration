@@ -83,3 +83,7 @@ docker-compose down
 
 *使用jmeter运行
 
+### 模拟 OOM
+
+todo 使用压力测试工具消耗操作系统大量内存导致 JVM 无法申请系统内存的 OOM 情况。
+

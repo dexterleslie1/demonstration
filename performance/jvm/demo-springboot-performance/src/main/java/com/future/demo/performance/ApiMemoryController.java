@@ -6,21 +6,24 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 @RestController
-@RequestMapping(value="/api/v1/memory")
+@RequestMapping(value = "/api/v1/memory")
 @Slf4j
 public class ApiMemoryController {
-	private final static Integer Size = 1024*1024;
+    private final static Integer MaximumByteToAlloc = 5 * 1024;
+    private final Random RANDOM = new Random();
 
-	private List<byte []> list = new ArrayList<>();
-	private List<Integer> list1 = new ArrayList<>();
+    private List<byte[]> list1 = new ArrayList<>();
 
-	@RequestMapping("alloc")
-	void alloc() {
-		byte []datum = new byte[Size];
-		int length = datum.length;
-//		list.add(datum);
-		list1.add(length);
-	}
+    @RequestMapping("alloc")
+    public String alloc() {
+        int length = RANDOM.nextInt(MaximumByteToAlloc);
+        if (length > 0) {
+            byte[] datum = new byte[length];
+            list1.add(datum);
+        }
+        return "成功分配 " + length + "B 内存";
+    }
 }

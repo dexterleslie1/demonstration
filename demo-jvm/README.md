@@ -10,6 +10,25 @@ todo class 文件格式
 参考
 https://www.jianshu.com/p/da41cc4122ff
 
+### java 命令参数
+
+- -XX:+CrashOnOutOfMemoryError 和 -XX:+ExitOnOutOfMemoryError
+
+  NOTE：如果 crash 文件（例如：hs_err_pid7.log）已经存在，则 JVM 内存溢出崩溃时不会 overwrite 这个文件，所以要确保目录中不存在 hs_err_*.log 文件。
+
+  
+
+  内存溢出后 jvm 退出
+  https://stackoverflow.com/questions/19433753/java-heap-dump-shut-down-what-order
+
+  
+
+  -XX:+CrashOnOutOfMemoryError 在 jvm 退出时打印崩溃日志。
+
+  -XX:+ExitOnOutOfMemoryError 在 jvm 退出时不做任何动作。
+
+  
+
 ### GC 相关
 
 - MinorGC/YoungGC、MajorGC/OldGC、FullGC概念和触发时机
@@ -98,7 +117,7 @@ https://www.jianshu.com/p/da41cc4122ff
   指定 Serial
 
   ```sh
-  java -jar -XX:+UseSerialGC -XX:+PrintGC -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:./gc.log -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=128m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/data -Xmx8g -Xms8g java-performance.jar
+  java -jar -XX:+UseSerialGC -XX:+PrintGC -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:./gc.log -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=128m -XX:+HeapDumpOnOutOfMemoryError -XX:+CrashOnOutOfMemoryError -XX:HeapDumpPath=./ -Xmx2g -Xms2g java-performance.jar
   ```
 
   
@@ -106,7 +125,7 @@ https://www.jianshu.com/p/da41cc4122ff
   指定 PS + PO
 
   ```sh
-  java -jar -XX:+ UseParallelGC -XX:+PrintGC -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:./gc.log -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=128m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/data -Xmx8g -Xms8g java-performance.jar
+  java -jar -XX:+UseParallelGC -XX:+PrintGC -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:./gc.log -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=128m -XX:+HeapDumpOnOutOfMemoryError -XX:+CrashOnOutOfMemoryError -XX:HeapDumpPath=./ -Xmx2g -Xms2g java-performance.jar
   ```
 
   
@@ -114,7 +133,7 @@ https://www.jianshu.com/p/da41cc4122ff
   指定 ParNew + CMS
 
   ```sh
-  java -jar -XX:+UseConcMarkSweepGC -XX:+PrintGC -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:./gc.log -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=128m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/data -Xmx8g -Xms8g java-performance.jar
+  java -jar -XX:+UseConcMarkSweepGC -XX:+PrintGC -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:./gc.log -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=128m -XX:+HeapDumpOnOutOfMemoryError -XX:+CrashOnOutOfMemoryError -XX:HeapDumpPath=./ -Xmx2g -Xms2g java-performance.jar
   ```
 
   
@@ -122,7 +141,7 @@ https://www.jianshu.com/p/da41cc4122ff
   指定 G1
 
   ```sh
-  java -jar -XX:+UseG1GC -XX:+PrintGC -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:./gc.log -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=128m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/data -Xmx8g -Xms8g java-performance.jar
+  java -jar -XX:+UseG1GC -XX:+PrintGC -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:./gc.log -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=128m -XX:+HeapDumpOnOutOfMemoryError -XX:+CrashOnOutOfMemoryError -XX:HeapDumpPath=./ -Xmx2g -Xms2g java-performance.jar
   ```
 
   
@@ -151,10 +170,6 @@ https://www.jianshu.com/p/da41cc4122ff
 
   为什么要有两个survivor区域
   https://zhuanlan.zhihu.com/p/265220301
-
-  
-
-  
 
   
 
