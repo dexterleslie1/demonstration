@@ -4,6 +4,8 @@
 
 注意：公司环境和google环境在 centOS8.5、centOS stream 8 上搭建 swarm 后 overlay 网络都无法正常工作；公司环境 ubuntu20.4 上搭建 swarm 后 overlay 网络也是无法正常工作；只有 centOS7 搭建 swarm 后 overlay 网络能够正常工作。
 
+建议：因为 k8s 能够实现 swarm 的所有功能，所以建议使用 k8s 作为 swarm 的替代方案。
+
 ### centOS7 搭建
 
 参考
