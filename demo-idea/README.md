@@ -37,6 +37,11 @@
 # macOS alt(option)+shift+left
 # 回到光标下一个位置
 # macOS alt(option)+shift+right
+
+# 向上移动当前行
+# macOS ctrl + shift + up
+# 向下移动当前行
+# macOS ctrl + shift + down
 ```
 
 

@@ -282,3 +282,35 @@ https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/workin
 
 目前工作中暂时没有用到此特性，所有不深入研究。
 
+
+
+## git 显示和替换远程地址
+
+显示远程地址
+
+```sh
+git remote -v
+```
+
+替换远程地址
+
+```sh
+git remote set-url origin https://github.com/username/new-repo.git
+```
+
+
+
+## ubuntu 删除本地存储的 git 凭证
+
+查看当前凭证提供程序，如果输出 git-credential-store 表示使用了`git-credential-store`，凭证被永久存储在`~/.git-credentials`文件中。
+
+```sh
+git config --global credential.helper
+```
+
+使用`git-credential-store`，凭证通常存储在`~/.git-credentials`文件中。你可以通过删除该文件来删除所有存储的凭证。
+
+```sh
+rm ~/.git-credentials
+```
+
