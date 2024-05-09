@@ -1,8 +1,11 @@
 ## 学习思考
 
-todo 有句子成分拆解软件吗？
+有句子成分拆解软件吗？
+使用 chat-gpt3.5、百度ai文心一言、google gemini 能够智能地帮助分析和通过交互式探讨句子成分，但是 chat-gpt3.5 和百度ai文心一言对句子成分分析得不够细致和准确，google gemini（绑定信用卡后才可以使用） 能够细致地、准确地分析句子成分。
+
 todo 寻找练习题目专项训练每个知识点？
 todo 区分定语、状语、宾补。
+todo 语法过关后按照英语六级综合训练
 
 ## 什么是语法和语法的作用
 
@@ -14,17 +17,580 @@ todo 区分定语、状语、宾补。
 
 todo
 
-## 词性
+## 词类/词性
 
-### 名词 (n.)
+### 名词 （Noun）
 
-表示人、事、物、地点或者抽象的名称。
+名词（Noun）是表示人、事物、地点、抽象概念等实体或概念的词类。名词在句子中通常担任主语、宾语、定语或补语等角色。
 
-例如：student、teacher、book、park。
+名词的分类：
 
-### 动词 (v.)
+- 普通名词（Common Nouns）和专有名词（Proper Nouns）
 
-表示动作或者状态，在句子中通常充当谓语。动词非为实义和非谓语动词。
+  普通名词表示某一类人或事物，不指具体的个体。例如：book（书本）、cat（猫）、tree（树木）。
+  专有名词表示特定的人、地方、机构或事物。例如：Beijing（北京）、Elizabeth（伊丽莎白）、UNICEF（联合国儿童基金会）。
+
+- 可数名词（Countable Nouns）和不可数名词（Uncountable Nouns）
+
+  可数名词有单数和复数形式，可以计数的。例如：apple（苹果）、book（书本）、dog（狗）。
+  不可数名词没有单复数形式，通常表示抽象概念、物质或无法计数的物质或材料。抽象概念例如：advice（建议）、information（信息）、happiness（幸福）、love（爱）、patience（耐性）。无法计数物质例如：water（水）、gold（金子）、sand（沙子）、milk（牛奶）。
+
+- 抽象名词（Abstract Nouns）和具体名词（Concrete Nouns）
+
+  抽象名词表示概念、品质、状态等抽象事物。例如：happiness（幸福）、love（爱）、patience（耐心）。
+  具体名词表示可以通过感官直接感知的实体。例如：table（桌子）、chair（椅子）、pen（笔）。
+
+### 动词（Verbs）
+
+动词是语言中非常重要且多功能的一类词，它们用于描述动作、状态或发生的事件。
+
+1. 实义动词（Main Verbs）
+
+   及物和不及物动词解析参考
+   https://mp.weixin.qq.com/s?__biz=MjM5MTIyMDUzMA==&mid=2247508624&idx=4&sn=f9e4940dd1d21159253457c27e9027f8&chksm=a6ba34cd91cdbddb3f72d56f23fdcbba92a355b5389c32a4d22c636e1c8e6e522f18a0781d9e&scene=27
+
+   
+
+   区分及物动词和不及物动词的方法：根据性质，及物动词后面必须跟宾语才能表达完整的语义，不及物动词本身意义完整，后面不必跟宾语也能够表达具体语义；根据宾语接法，及物动词可以接名词、代词、动名词做动词的宾语，不及物动词后面不可直接加宾语，一般要先加介词后再接宾语。
+   https://localsite.baidu.com/okam/pages/article/index?categoryLv1=%E6%95%99%E8%82%B2%E5%9F%B9%E8%AE%AD&ch=54&srcid=10004&strategyId=136777699738419&source=natural
+
+   
+
+   表示动作或状态，有完整的词义，能独立作谓语。按其带不带宾语可分为及物动词和不及物动词。
+
+   例如：Give me some ink, please. 翻译：请给我一些墨水。其中 give 是及物动词谓语后面跟 me 和 some ink 双宾语。
+   例如：He works hard. 翻译：他努力工作。其中 works 是不及物动词谓语后面没有跟宾语。
+
+   
+
+   1.1. 及物动词（Transitive Verbs）
+
+   可以加宾语的动词或者说及物动词后面可以跟 “人或物”，如 celebrate、play、eat 。此类动词如果没有宾语句子意思是不完整的。
+
+   例如：She bought a book yesterday. 其中 bought 是及物动词后面跟 a book 宾语。
+   例如：I drink milk every day. drink 是及物动词，因为 drink 后面可以跟 milk 这个名词。
+   例如：I play video games everyday. play 是及物动词后面跟着宾语 video 。
+   例如：Many people earn their living by writing music. 其中 many people 是主语，earn 是及物动词，their living 是宾语（宾语是物）。
+   例如：Ask your friends about the work they do. 其中 ask 是及物动词，your friends 是宾语（宾语是人）。
+   例如：At the very beginning I choose a play and the actors. 翻译为一开始，我选剧本和演员。其中 I 是主语，choose 是及物动词，a play and the actors 是宾语（宾语是人和物）。
+
+   
+
+   及物动词分三类：单宾语及物动词、双宾语及物动词、复合宾语及物动词。
+
+   - 单宾语动词：即只可接一个宾语的动词。如：accept接受、discover发现、enjoy享受、forget忘记、borrow借入、buy买、catch抓、invent发明、found建造、like喜欢、find寻找、receive接受、see看见、say说、show展示、make做、tell告诉等。
+     例如：I'm sorry that I forgot you address. 翻译：对不起，我忘记了你的地址。其中 forgot 后面只能接一个宾语 your address。
+     例如：Finally she discovered the truth. 翻译为她终于发现了真相。其中 the truth 为单宾语，所以 discovered 为单宾语及物动词。
+
+   - 双宾语动词：即后接间接宾语（指人）和直接宾语（指物）的动词。如：give给、buy买、pay付款、hand递、read读、return返还、sell卖等。
+     例如：I am going to return him the books tomorrow afternoon. 翻译：我明天下午要把书还给他。其中 return 后面接间接宾语 him 和直接宾语 the books。
+     例如：Don't forget to buy me a box of biscuits. 翻译为别忘了给我买一盒饼干。其中 buy 是双宾语及物动词，a box of biscuits 是直接宾语，me 是间接宾语。
+
+   - 复合宾语的动词：后接宾语和宾补的动词。如：believe相信、find发现、hear听见，听说、keep保持、make使得、see看见等。
+     例如：They kept him waiting at the door for twenty minutes. 翻译：他们让他在门口等了20分钟。其中 waiting at the door 是 him 宾语的宾补，因为没有 waiting .. door 句子的意思不完整。
+     例如：She had cut her hair very short. 翻译：她把她头发剪得很短。其中 her hair 是宾语，very short 是宾语补足语。
+
+   
+
+   动词固定搭配用法
+
+   - 固定搭配动名词作宾语（动词+doing）的动词。
+
+     例如：Keep studying hard and you will succeed.（努力学习，你就会成功。）其中 keep doing 表示坚持做某事，持续进行某动作。
+
+     例如：I enjoy reading books in my free time.（我喜欢在空闲时间读书）其中 enjoy doing 表示喜欢做某事，享受做某事的乐趣。
+
+     例如：I will finish doing my homework tonight.（我今晚要完成我的作业）其中 finish doing 表示完成做某事，结束某动作。
+
+     例如：She practises playing the piano every day.（她每天练习弹钢琴）其中 practise doing 表示练习做某事，通过反复训练提高技能。
+
+     例如：Would you mind closing the window?（你介意把窗户关上吗？）其中 mind doing 表示介意做某事，对做某事持有反对或不满的态度。
+     例如：
+
+     例如：We are considering buying a new car.（我们正在考虑买一辆新车。）其中 consider doing 表示考虑做某事，权衡利弊后决定是否进行某动作。
+
+     例如：You should avoid eating too much junk food.（你应该避免吃太多垃圾食品）其中 avoid doing 表示避免做某事，不希望或不愿意进行某动作。
+
+     例如：He escaped being punished by apologizing.（他通过道歉逃脱了惩罚）其中 escape doing 表示逃脱做某事，避免或摆脱某动作的责任或后果。
+
+     例如：admit doing（承认做某事）
+
+     例如：like doing（喜欢做某事）
+
+     例如：continue doing（继续做某事）
+
+     例如：finish doing（完成做某事）
+
+     例如：end doing（结束做某事）
+
+     例如：suggest doing（建议做某事）
+
+     例如：require doing（要求做某事）
+
+     例如：miss doing（错过做某事）
+
+     例如：deny doing（否认做某事）
+
+   - 固定搭配不定式作宾语的动词。
+
+     例如：He decided to quit his job and travel the world.（他决定辞职环游世界。）其中 decide to do 表示决定做某事。
+
+     例如：We plan to have a party next weekend.（我们计划下周末举办一个派对）其中 plan to do 表示计划做某事。
+
+     例如：I want to learn a new language.（我想学一门新语言）其中 want to do 表示想要做某事。
+
+     例如：She hopes to become a famous singer.（她希望成为一名著名的歌手）其中 hope to do 希望做某事。
+
+     例如：We expect to finish the project by the end of the month.（我们期望在月底前完成这个项目）其中 expect to do 表示期待做某事。
+
+     例如：They agreed to meet at the restaurant at 7 pm.（他们同意晚上7点在餐厅见面）其中 agree to do 表示同意做某事。
+
+     例如：I promised to help him with his homework.（我承诺帮他做作业）其中 promise to do 表示承诺做某事。
+
+     例如：I will try to call you later.（我稍后会试着给你打电话。）其中 try to do 表示努力做某事。
+
+     例如：Children learn to walk and talk.（孩子们学习走路和说话。）其中 learn to do 表示学习做某事。
+
+     例如：He refused to answer any more questions.（他拒绝回答任何更多的问题。）其中 refuse to do 表示拒绝做某事。
+
+     例如：She chose to stay at home rather than go out.（她选择留在家里而不是出去。）其中 choose to do 表示选择做某事。
+
+     例如：The rain began to fall.（开始下雨了。）其中 begin to do / start to do 表示开始做某事。
+
+     例如：She fears to speak in public.（她害怕在公众场合发言）其中 fear to do 表示害怕做某事。
+
+     例如：Bill refused to take responsibility for the accident. 翻译：比尔拒绝对那次事故负责任。其中 refused 谓语后跟 to take responsibility for the accident 不定式作宾语。
+
+   
+
+   1.2. 不及物动词（Intransitive Verbs）
+
+   不及物动词是那些不需要接宾语就能完整表达意思的动词，它们在句子中通常不需要跟随宾语。如果不及物动词要后跟宾语，必须在动词和宾语之间加上某个介词，如to，of，at等。
+
+   例如：He is waiting for you at the gate. 翻译：他在门口等着你。其中 is waiting 是不及物动词作谓语，如果后面需要跟宾语则需要添加介词，例子中 is waiting for 中的介词 for，you 是宾语。
+
+   例如：Birds can fly. 其中因为 fly 后面不可以跟名词，所以是不及物动词。
+
+   例如：Jane hesitated. 其中因为 hesitated 后面不可以跟宾语，所以是不及物动词
+
+   例如：Don't refer to that matter again. 翻译为不要再提此事。其中 refer 为不及物动词，这里跟宾语 that matter 需要添加介词 to。
+
+   例如：Modern gymnastics began in the 19th century. 翻译为现代体操的形成始于19世纪。其中 began 是不及物动词，这里跟宾语 in the 19th century 需要添加介词 in。
+
+   例如：The plan depends on the weather. 翻译为这计划得靠天气决定。其中 depends 是不及物动词，这里跟宾语 on the weather 需要添加介词 on。
+
+   例如：An accident happened last night.（昨晚发生了一起事故。）其中 happen 表示发生为不及物动词。
+
+   例如：The sun appeared in the east.（太阳从东方升起。）其中 appear 表示出现为不及物动词。
+
+   例如：They finally arrived at their destination.（他们最终到达了目的地。）其中 arrive 表示到达为不及物动词。
+
+   例如：She left the room without saying a word.（她一言不发地离开了房间。）其中 leave 表示离开为不及物动词。
+
+   例如：There exist many unsovled problems in this field.（这个领域存在许多未解决的问题。）其中 exist 表示存在为不及物动词。
+
+   例如：He works hard to support his family.（他努力工作以养家糊口。）其中 works 表示工作为不及物动词。
+
+   例如：She enjoys swimming in the ocean.（她喜欢在大海里游泳。）其中 swim 表示游泳为不及物动词。
+
+   例如：The children laughed heartily when they saw the clown.（孩子们看到小丑时开心地笑了起来。）其中 laugh 表示笑为不及物动词。
+
+   例如：She cried when she heard the bad news.（她听到坏消息时哭了。）其中 cry 表示哭为不及物动词。
+
+   例如：I need to sleep early tonight because I'm tired.（我今晚需要早点睡觉，因为我累了。）其中 sleep 表示睡觉为不及物动词。
+
+   
+
+2. 连系动词（Linking Verbs）
+
+   本身具有一定词义但不够完整，需要与表语共同构成复合谓语，形成主系表结构，说明主语的状态、性质、特性或身份等。
+
+   例如：He is a teacher. 翻译：他是一位老师。其中 he 是主语，is 是连系动词，a teacher 是表语。
+   例如：They look the same. 翻译：他们看起来一样。其中 look 是连系动词，the same 是表语。
+
+   
+
+   系动词的分类：状态系动词、感官系动词、持续系动词、表象系动词、变化系动词、终止系动词。
+
+   - 状态系动词
+
+     主要用于描述主语的状态。最常用的状态系动词是“be”，其各种形式（am、is、are、was、were）可以表示主语的状态、特征或身份。
+
+     例如：He is a teacher.（他是一名教师）
+
+     例如：He is good father. 翻译：他是一位好父亲。
+
+   - 感官系动词
+
+     这类动词主要描述人的感官体验，包括“feel”（感觉）、“smell”（闻）、“sound”（听起来）、“taste”（尝起来）、“touch”（触摸）。
+
+     例如：This flower smells very nice.（这朵花闻起来很香。）
+
+   - 持续系动词
+
+     用于描述主语持续或保持的某种状态或态度。常见的持续系动词有“keep”（保持）、“remain”（保持）、“stay”（停留）、“lie”（位于）、“stand”（站立）等。
+
+     例如：He always keeps silent in class.（他在课堂上总是保持沉默。）
+
+     例如：The old man stays calm. 翻译：老人保持平静。
+
+     例如：Keep quiet while you're going around. 翻译：参观时要保持安静。
+
+   - 表象系动词
+
+     主要用来描述某物或某人看起来的样子或给人的印象。常见的表象系动词有“look”（看起来）、“seem”（似乎）、“appear”（出现）等。
+
+     例如：She looks tired.（她看起来很累。）
+
+     例如：She looks younger than before. 翻译：她看起来比以前年轻。
+
+   - 变化系动词
+
+     主要表示主语从一种状态变为另一种状态。常见的变化系动词有“become”（变成）、“grow”（成长）、“turn”（变得）、“fall”（变得）、“get”（变得）、“go”（变得）、“come”（变得）、“run”（变得）等。
+
+     例如：He became fat in winter holiday.（他在寒假期间变胖了。）
+
+     例如：Everyone will grow old. 翻译：每个人都会变老。
+
+     例如：After a few years, the things got worse and worse. 翻译：几年后，情况变得越来越糟糕。
+
+   - 终止系动词
+
+     表示主语的动作或状态已经结束或已被证实。常见的终止系动词有“prove”（证明）、“turn out”（结果是）等。
+
+     例如：The rumor proved false.（这个谣言被证实是假的。）
+
+     例如：The experiment turned out successful.（实验结果成功了。）
+
+   
+
+3. 助动词（Helping Verbs 或 Auxiliary Verbs）
+
+   本身无词义，不能独立作谓语，只能和实义动词一起构成谓语。可用来表示否定、疑问、时态、语态、语气等。常见的助动词有：be、do、have 等。
+
+   例如：I am watching TV. 其中 am 是助动词和 watching 组合表示现在进行时。
+   例如：I don't speak English. 其中 don't 是助动词 do 的否定形式和 speak 组合构成谓语。
+
+   
+
+   - 助动词 be
+
+     作为状态系动词时，“be”主要表示主语的状态或特征。它后面通常接形容词、名词或介词短语作为表语，构成主系表结构。
+
+     作为助动词时，“be”主要用于构成进行时态和被动语态。
+
+     第一人称单数 I：现在时态 am；过去时态 was；现在分词 being；过去分词 been
+
+     第一人称复数 we：现在时态 are；过去时态 were；现在分词 being；过去分词 been
+
+     第二人称单数 you：现在时态 are；过去时态 were；现在分词 being；过去分词 been
+
+     第二人称复数 you：同上。
+
+     第三人称单数 he、she、it：现在时态 is；过去时态 was；现在分词 being；过去分词 been
+
+     第三人称复数 they：现在时态 are；过去时态 were；现在分词 being；过去分词 been
+
+     例如：She is singing.（她正在唱歌。）其中 be + 现在分词构成进行时态。
+
+     例如：My friend is reading a newpaper in the sofa. 翻译：我的朋友正坐在沙发上看报纸。
+
+     例如：The window was broken by the child.（窗户被孩子打破了。）其中 be + 及物动词的过去分词构成被动语态
+
+     例如：The truth will be known everyone. 翻译：真相将会大白于天下。
+
+   - 助动词 do
+
+     用于构成疑问句、否定句以及强调肯定或祈使语气。
+
+     形式为原形：肯定式 do；否定式 do not；缩略否定式 don't
+
+     形式第三人称单数：肯定式 does；否定式 does not；缩略否定式 doesn't
+
+     形式过去式：肯定式 did；否定式 did not；缩略否定式 didn't
+
+     
+
+     用 do 构成否定句和疑问句
+
+     例如：I don't like this kind of music. 翻译：我不喜欢这种音乐。
+
+     例如：Do you like this kind of music. 翻译：你喜欢这种音乐吗？
+
+     例如：Does he like this kind of music. 翻译：他喜欢这种音乐吗？
+
+     例如：Did you finish your homework?（你完成作业了吗？）
+
+     
+
+     do + 动词原形构成强调句或祈使句
+
+     在祈使句中，“do”常常用于强调说话者的意愿、请求或建议，使得句子更具说服力和强调意味。需要注意的是，不是所有的祈使句都需要使用“do”，它的使用取决于具体的语境和想要表达的情感强度。
+
+     例如：I do need your help. 翻译：我的确需要你的帮助。
+
+     例如：Do be careful!（一定要小心！）解释：这里“do”加强了“be careful”的语气，表示说话者认为对方应该格外注意。
+
+     例如：Do remember to lock the door when you leave.（离开时，一定要记得锁门。）解释：“do”用于强调“remember”的动作，意在告诉对方这是一个非常重要的事情，不容忘记。
+
+     例如：Do try this cake. It's delicious.（一定要尝尝这块蛋糕。它很好吃。）解释：通过使用“do”，说话者强烈建议对方尝试某物，并认为对方会喜欢。
+
+     例如：Do not hesitate to ask for help if you need it.（如果你需要帮助，不要犹豫，尽管提出来。）解释：这里“do not”与“hesitate”一起使用，表示说话者强烈建议对方在需要时寻求帮助，不要犹豫。
+
+     例如：Do your best and you will succeed.（尽你最大的努力，你就会成功。）解释：“do”用于强调“your best”的努力程度，鼓励对方全力以赴。
+
+   
+
+   - 助动词 have
+
+     与过去分词一起构成完成时态，表示已经完成的动作或状态。
+
+     形式原形：肯定式 have；否定式 have not；缩略否定式 haven't
+
+     形式第三人称单数：肯定式 has；否定式 has not；缩略否定式 hasn't
+
+     形式过去式：肯定式 had；否定式 had not；缩略否定式 hadn't
+
+     例如：We haven't seen for a long time. 翻译：我们很久没有见面了。
+
+     例如：I have finished my work.（我已经完成了我的工作。）
+
+   
+
+4. 情态动词（Modal Verbs）
+
+   本身有一定的意义，表示人的语气和情态，不可单独作谓语，必须和实义动词或系动词一起构成谓语。
+
+   例如：Tom can swim. 翻译：汤姆会游泳。其中 can 作情态动词和 swim 组合构成句子的谓语。
+   例如：May I come in? 翻译：我可以进来吗？其中 may 作情态动词。
+
+   
+
+   4.1. can/could
+
+   表示能力，以为 ”能，会“。can 表示现在时态，could 表示过去时态。can + 动词原型结构。
+
+   例如：I can read this sentence in English. 翻译：我能用英语读这句话。
+   例如：Could you speak English then? 翻译：那时候你会说英语吗？
+
+   
+
+   表示许可（即请求别人允许自己做某事），两者均可用，但 could 语气更委婉。
+   例如：Can/Could I come in? 翻译：我可以进来吗？
+   例如：Can/Could I use your pen? 翻译：我能够用你的笔吗？
+
+   表示给予允许（即自己允许别人做某事），一般只用 can，而不用 could。
+   例如：Yes, of course you can. 其中这里不能表达为 Yes, of course you could。
+
+   
+
+   表示推测，意为 ”可能“，could 既可以表示过去的可能性，也可以表示现在的可能性，比 can 的程度要弱。
+   例如：The man can't be our teacher he has gone to Beijing. 翻译：那个男人不可能是我们的老师，他去北京了。
+
+   
+
+   can 的一般疑问句，肯定回答用 Yes, 主语 + can；否定回答用 No, 主语 + can't；
+   例如：Can you play the piano? 翻译：你会弹钢琴吗？ Yes, I can. 翻译：是的，我会。No, I can't. 翻译：不，我不会。
+
+   
+
+   can/could 表示能力时，可用 be able to 代替。
+   例如：I can（/am able to） afford the car. 翻译：我能买得起这辆小汽车。
+
+   
+
+   can/could 和 be able to 区别：can 只有现在时和过去时，而 be able to 可以用于各种时态。
+   例如：She has been able to come to school. 翻译：她已经能去学校了。
+   例如：I could（/was able to ）drive a car before I left school. 翻译：毕业前我就会开车。
+
+   
+
+   4.2. may/might
+
+   表示许可，意为 ”可以“。might 比 may 的语气委婉。may not 表示拒绝或禁止。
+
+   例如：May I use your phone? 翻译：我可以用你的电话吗？
+   例如：Students may not stay out after midnight. 翻译：学生不准午夜后在外逗留。
+
+   
+
+   表示推测，may 的可能性比 can 小，might 可作 may 的过去式，也可以替代 may 说明现在的情况，可能性比 may 小。
+
+   例如：He may be wrong, but I'm not sure. 翻译：也许他错了，但我也不确定。
+   例如：She might（可能性非常小） be very busy now. 翻译：她现在可能非常忙。
+
+   
+
+   may 的一般疑问句，肯定回答用 Yes, ... may./ Yes, of course./ Yes certainly. 否则回答用 No, ... can't / mustn't.
+
+   例如：Might/May I smoke in this room? 翻译：我可以在这间房子里抽烟吗？ Yes, you may. 翻译：是的，你可以。No, you can't/ mustn't. 翻译：不，不可以。
+
+   
+
+   用于表示推测时，may 和 might 一般不用于疑问句，而在疑问句中，常使用 can；在否定句中，may not/might not 意为 ”可能不“，而 can't/cloudn't 意为 ”不可能“。
+
+   例如：The young people might not like the idea. 翻译：年轻人可能不喜欢这个注意。
+   例如：It can't be our headmaster. He has gone to America. 翻译：那人不可能是我们校长。他已经去美国了。
+
+   
+
+   4.3. must
+
+   表示必须，多指现在或将来的情况，指说话人的主观语气。
+
+   例如：You must obey the school rules. 翻译：你必须遵守校规。
+
+   
+
+   mustn't 表示禁止，是说话人强力的劝告。
+
+   例如：You mustn't play with the knife or you may hurt yourself. 翻译：你禁止玩刀否则你可能会伤到自己。
+
+   
+
+   表示推测时，用于肯定句，意为 ”想必，一定“，否定句或疑问句中用 can't/couldn't 来代替。
+
+   例如：This must be your room. 翻译：这一定是你的房间。
+   例如：He must be eighty now. 翻译：他现在想必有八十岁了。
+
+   
+
+   must 的一般疑问句，肯定回答为 Yes, ... must.；否定回答为 No, ... needn't. / No, ... don't have to.
+
+   例如：Must I clean the classroom now? 翻译：我必须现在打扫教室吗？Yes, you must. 翻译：是的，你必须。No, you don't have to. / No, you needn't. 翻译：不，你不必。
+
+   
+
+   用 must 表示 ”必须“ 的意思时，通常着重于说话的主观看法，认为有必要去做某事；而 have to 着重于客观需要，含有 ”不得不“ 的意思。
+
+   例如：We must study English hard. 翻译：我们必须努力学习英语。
+   例如：You are ill today. You have to see a doctor. 翻译：你今天病了，不得不去看医生。
+   例如：You must drive fast to catch the time. 翻译：你必须开车快点来赶时间。
+
+   
+
+   用 must 表示 ”必须“，只有现在时态的形式，如果要表示过去时或将来时的 ”必须“，就要用 have to 的相应形式。
+
+   例如：They will have to leave tomorrow morning. 翻译：他们必须明天早晨起程。
+
+   
+
+   4.4. will/would
+
+   表示意志、愿望和决心，常译为 “愿意”
+
+   例如：If you will help us, we shall be very grateful. 翻译：如果你愿意帮助我们，我们将不胜感激。
+
+   
+
+   用于第二人称疑问句，表示请求或建议等
+
+   例如：Will you have dinner with me tonight? 翻译：今天晚上和我一起吃饭好吗？
+
+   
+
+   表示习惯性动作或某种倾向，多用于现在时，常译为 “总是”
+
+   例如：Kate will sit there, waiting for her daughter to come back. 翻译：凯特总是坐在那儿等女儿回来。
+
+   
+
+   would 作为 will 的过去式，可表示过去的意志、愿望或决心等，意为 ”愿意“
+
+   例如：He promised he would never smoke again. 翻译：他承诺他再也不吸烟了。
+
+   
+
+   would 表示过去反复发生的动作或某种倾向
+
+   例如：Their English teacher would tell them stories in English after class. 翻译：他们的英语老师总是在课后用英语给他们讲故事。
+
+   
+
+   would 用于第二人称疑问句中，表示现在的请求、建议，比 will 的语气委婉。
+
+   例如：Would you please pass the English-Chinese dictionary on to Mary? 翻译：请把这本英汉词典传给玛丽好吗？
+
+   
+
+   would like 意为 ”愿意，想要“
+
+   例如：Would you like a cup of tea? 翻译：你想喝杯茶吗？
+
+   
+
+   would like/love to do sth 意为 ”愿意/想要做某事“
+
+   例如：Would you like to sing a song? 翻译：你想唱首歌吗？
+
+   
+
+   would like sb to do sth 意为 ”想要某人做某事“
+
+   例如：I would like you to wake me up at 5:30 tomorrow morning. 翻译：我想让你在明天早晨 5:30 叫醒我。
+
+   
+
+   4.5. shall/should
+
+   用于第一、三人称疑问句，表示征求对方意见
+
+   例如：Shall we begin now? 翻译：我们现在就开始吗？
+   例如：Tom is waiting outside. Shall he come in, sir? 翻译：汤姆正在门外等着，可以让他进来吗，先生？
+
+   
+
+   用于第二、三人称陈述句时，表示命令、警告、允诺或威胁等
+
+   例如：You shall fail if you don't work hard. 翻译：如果你不努力工作，你就会失败。
+
+   
+
+   should 是 shall 的过去式，用于第一、三人称，多用于间接引语中，以征求对方意见。
+
+   例如：I asked the managr if I should have a few days off. 翻译：我问经理我是否可以请几天假。
+
+   
+
+   should 表示义务、职责时，意为 ”应当，应该“，往往表示说话者的观点。
+
+   例如：He should work harder. 翻译：他应该更加努力。
+
+   
+
+   should 表示惊讶、遗憾等，意为 ”竟然、居然“。
+
+   例如：It's strange that he should be late. 翻译：真奇怪，他竟会迟到。
+
+   
+
+   4.6. need
+
+   表示 ”需要、必须“，多用于疑问句和否定句
+
+   例如：Need you go so soon? 翻译：你需要那么早走吗？
+   例如：You needn't come so early. 翻译：你不必来那么早。
+
+   
+
+   need 的一般疑问句，肯定回答为 Yes, ... must；否定回答为 No, ... needn't
+
+   例如：Need he finish the article next week? 翻译：他需要下星期完成这篇文章吗？Yes, he must. 翻译：是的，他必须完成。/ No, he needn't. 翻译：不，他不需要。
+
+   
+
+   4.7. have to
+
+   表示不得不，说明客观条件只能如此；有时态形式的变化；否定式 don't have to 意为 ”不必“（=needn't）
+
+   例如：My brother was very ill, so I had to call the doctor in the midnight. 翻译：我弟弟病得厉害，我只得半夜里把医生请来。
+   例如：I haven't got any money with me, so I'll have to borrow some from my friend. 翻译：我身上没带钱，只好向朋友借点了。
+
+
+
+
+
+
 
 1、实义动词：在句子中充当谓语。
 
@@ -316,15 +882,48 @@ once：一旦。
 
 例如：oh, ah, aha
 
-
-
 ## 句子成分
 
 ### 主语
 
-主语表示动作的发出者，人或物。主语可以是句子中的名词或代词。
+主语它主要表示句子所描述的动作或状态的执行者或承受者。，一般由名词、代词、数词、不定式（to do）、动名词（动词ing）和从句等充当。通常来说位于句首。
 
+名词作主语
+例如：The river flows. 其中 the river 是名词作主语。
+例如：The classroom is very big. 其中 the classroom 是名词作主语。
+例如：Red is my favorite color. 解析：名词“Red”（红色）作为主语，表示最喜欢的颜色。
+例如：Patience is essential for learning a new language. 解析：名词“Patience”（耐心）作为主语，表示学习新语言所需的重要品质。
+例如：Paris is the capital of France. 解析：名词“Paris”（巴黎）作为主语，表示法国的首都。
+例如：”Pride and prejudice" is a book I would recommend to everyone. 解析：名词短语“'Pride and Prejudice'”（《傲慢与偏见》）作为主语，表示一本推荐给大家的书。
+例如：Sleep is important for maintaining good health. 解析：名词“Sleep”（睡眠）作为主语，表示保持健康所需的重要因素。
+例如：Science is my favorite subject at school. 解析：名词“Science”（科学）填入空白处作为主语，表示在学校最喜欢的科目。
+例如：Love is necessary for a happy life. 解析：名词“Love”（爱）填入空白处作为主语，表示幸福生活所需的重要因素。
+例如：Jupiter is the largest planet in our solar system. 解析：名词“Jupiter”（木星）填入空白处作为主语，表示太阳系中最大的行星。
+例如：Strawberries is a delicious fruit that many people enjoy. 解析：名词“Strawberries”（草莓）填入空白处作为主语，表示一种许多人喜欢的美味水果。
+例如：Communication is an important skill for any job. 解析：名词“Communication”（沟通）填入空白处作为主语，表示任何工作中所需的重要技能。
+
+代词作主语
 例如：She eats fish. 其中 she 这个人称代词是主语。
+例如：There are some bottles of milk in the box. 其中 there 是代词作主语，表示某个地方或某个时间存在某个事物。
+例如：We work in a big factory. 其中 we 是第一人称复数代词作主语。
+
+动名词作主语
+例如：Swimming is my favorite sport. 解析：swimming 动名词作主语，表示一种习惯或经常性的动作。游泳是一种运动，所以用动名词形式 “Swimming”。
+例如：Eating vegetables makes people healthy. 解析：eating vegetables 动名词作主语，表示一种普遍的事实或习惯。吃蔬菜使人健康，所以用动名词形式 “Eating vegetables”。
+例如：Watching English movies is a good way to learn English. 解析：动名词作主语，表示一种好的学习方法。看英语电影是一种学习英语的方式，所以用动名词形式“Watching English movies”。
+例如：Using the internet is important in our daily life. 解析：动名词作主语，表示一种日常活动的重要性。使用互联网是我们日常生活中的重要活动，所以用动名词形式“Using the internet”。
+例如：Playing football is my brother's favorite hobby. 解析：动名词短语作主语，表示一种爱好或习惯。
+例如：Swimming is a an interesting sport. 其中 swimming 是动名词作主语。
+
+数词作主语
+例如：Three are enough. 其中 three 是数词作主语。
+
+从句作主语
+例如：What we need is food. 其中 what we need 是从句作主语。
+
+不定式、动名词、主语从句等作主语的时候，通常在句首用形式主语 it 作主语，而把真正的主语放在句子末尾为了避免头重脚轻。
+例如：It took two workers about three months to build the house. 其中 it 是形式主语，to build the house 是不定式作主语。
+例如：It is necessary for students to do homework every day. 其中 it 作形式主语，真正的主语是后面的不定式短语“to do homework every day”。It is necessary for sb. to do sth.是一个固定句型，表示“对某人来说做某事是必要的”。
 
 ### 谓语
 
@@ -1280,6 +1879,451 @@ todo 视频未看完
 ## 强调句
 
 todo ...
+
+
+
+
+
+## 初中英语语法
+
+### 代词
+
+1、代词的三种形式
+
+在英语语法中，主格、宾格和所有格是代词的三种形式，它们分别用于不同的语法功能和语境中。
+
+主格是代词的主要形式，通常用于表示句子的主语，即动作的发起者。主格代词有：I、you、he、she、it、we、they。例如：I am a student.
+宾格是代词的另一种形式，通常用于表示动词的宾语或者介词的宾语，即动作的接受者。宾格代词有：me、you、him、her、it、us、them。例如：He gave me a book.
+所有格或称为定格，表示代词与其他名词之间的所有关系，即代词所拥有或所指代的事物的归属关系。所有格代词通常通过在代词后面加上 's 或 ' 来构成，如 my、your、his、her、its、their。例如：This is my book.
+
+2、不定代词
+
+不定代词有：something、anything、nothing、someone、anyone、somebody、anybody、nobody
+
+
+
+### 句子成分
+
+1、主语
+
+2、谓语
+
+说明主语的动作、状态和特征。谓语一般由动词充当，可以有不同的人称、数、时态和语态。通常放在主语后面。
+
+例如：He plays football. 其中 he 是第三人称单数代词作主语，plays 是动词作谓语，因为主要是第三人称单数，所以 play 谓语一般现在时需要加 s。
+例如：He is very kind. 其中 he 是第三人称单数代词作主语，is 是系动词作谓语。
+例如：She looks very smart. 其中 she 是第三人称单数代词作主语，looks 是系动词作谓语。
+例如：We have finished the job. 其中 we 是第一人称复数作主语，have finished 是动词现在完成时态作谓语。
+例如：He can speak a little a English. 其中 he 是第三人称单数作主语，can speak 是情态动词 + 动词作谓语。
+
+3、宾语
+
+宾语是动作、行为的对象，分为动词宾语（及物动词）和介词宾语（不及物动词），由名词、代词、不定式、动名词或从句来充当，通常放在谓语动词后面。
+
+例如：We like English. 其中 English 是名词作宾语。
+例如：He never forgives others for their mistakes. 其中 others 是代词作 forgives 谓语的宾语。
+例如：He often helps me. 其中 me 是第一人称单数代词宾格作 helps 谓语的宾语。
+例如：He likes to sleep in the open air. 其中 to sleep 是不定式作 likes 谓语的宾语，in the open air 是介词短语作地点状语。
+例如：The Americans enjoy living in China. 其中 living in China 是动名词作 enjoy 谓语的宾语。
+例如：I believe that that they can finish the work on time. 其中 that they can finish the work on time 是 believe 谓语的宾语从句。
+例如：He enjoys reading. 其中 reading 是动名词作宾语。
+例如：He admits that he was mistaken. 其中 that he was mistaken 是从句作宾语。
+
+直接宾语是及物动词的对象。但有些动词除了直接宾语外，还需要有一个间接宾语，简介宾语表示动作是对谁做的，所以只能用名词或代词来充当。
+
+例如：We bring him some food. 其中 him 是 bring 的间接宾语指代的是人，some food 是 bring 的直接宾语。
+
+4、表语
+
+表语说明主语 ”是什么“ 或 ”怎么样“，由名词、形容词、介词短语、副词、不定式、动名词和从句等充当，它的位置在系动词后面。
+
+例如：My sister is a nurse. 其中 is 是系动词，a nurse 是名词作表语，说明主语我的表姐是护士的身份。
+例如：It's me. 其中 is 是系动词，me 是第一人称单数宾格作表语。
+例如：You look young. 其中 look 是系动词，young 是形容词作表语。
+例如：Everyone is here. 其中 is 是系动词，here 是表示地点的副词作表语。
+例如：They are at the theater. 其中 are 是系动词，at the theater 是介词短语作表语。
+例如：My job is to teach them English. 其中 is 是系动词，to teach them English 是不定式作表语。
+例如：Her job is training the nurses. 其中 is 是系动词，training the nurses 是动名词作表语。
+例如：The thing is that you have to explain to him. 其中 is 系动词，that you have to explain to him 是从句作表语。
+例如：This is an English-Chinese dictionary. 其中 an English-Chines dictionary 是名词作表语。
+例如：The dinner smells good. 其中 smells 是系动词，good  是形容词作表语。
+例如：Everything looks different. 其中 looks 是系动词，different 是形容词作表语。
+
+5、宾语补足语
+
+在英语的句子中有些句子里只有宾语并不能表达完整的意思，还必须在宾语后面加上宾语的补足语才能表达完整的意思。我们把 “宾语 + 宾语补足语” 合起来成为复合宾语。名词、形容词、副词、介词短语、不定式、现在分词、过去分词都可以作为宾语补足语。
+
+例如：We call him Jack. 其中 Jack 是名词作 him 的宾语补足语。
+例如：Don't make your hands dirty. 其中 dirty 是形容词作 your hands 的宾语补足语。
+例如：We found Li Ming out when we arrived. 其中 out 是副词作 Li Ming 的宾语补足语。
+例如：Make yourself at home. 其中 at home 是介词短语作 yourself 的宾语补足语。
+例如：The boy ordered the dog to lie down. 其中 to lie down 是不定式作 the dog 的宾语补足语。
+例如：The boss keeps them working all day. 其中 working 是现在分词作 them 的宾语补足语。
+例如：Yesterday he got his leg broken. 其中 broken 是过去分词作 his leg 的宾语补足语。
+
+6、定语
+
+定语用来修饰名词或代词，描述人或事物的品质和特性。形容词、代词、数词、名词、介词短语、不定式或定语从句等都可以充当定语。
+
+例如：He is a new student. 其中 new 是形容词作定语修饰 student。
+例如：The black bike is mine. 其中 black 是形容词作定语修饰 bike。
+例如：What's your name? 其中 your 是形容词性的物主代词作定语修饰 name。
+例如：She sent two letters to the police. 其中 two 是数词作定语修饰 letters。
+例如：They made some paper flowers. 其中 paper 是名词作定语修饰 flowers。
+例如：The tall boy who is standing there is Peter. 其中 who is standing there 是定语从句作定语修饰 the tall boy。
+
+修饰不定代词 something、anything、nothing、someone、anyone、somebody、anybody、nobody 的定语必须后置。
+
+例如：Do you have anything important to tell me? 其中 important 是形容词作定语修饰 anything。
+
+介词短语作定语时要后置
+
+例如：The students in the room are all my friends. 其中 in the room 是介词短语作定语修饰 the students。
+例如：The boys in the room are in Class Three. 其中 in the room 是介词短语作定语修饰 the boys。
+
+动词的不定式作定语时要后置
+
+例如：What about something to drink? 其中 to drink 是不定式作定语修饰 something。
+
+near by、below、downstairs 等个别方位词作定语时要后置。
+
+例如：Can you see the village below? 其中 below 作定语修饰 village。
+
+7、状语
+
+状语用来修饰动词、形容词、副词或句子。它表示行为发生的时间、地点、目的、方式、程度、条件等，一般由副词、介词短语、不定式、从句来充当。状语一般放在句末，但有时也可以放在句首、句中。
+
+例如：He lives in New York. 其中 in New York 是 lives 的地点状语。
+例如：He did it carefully. 其中 carefully 是副词作 did 的程度状语。
+例如：They missed me very much. 其中 very much 是 missed 的程度状语。
+例如：She went to the library yesterday. 其中 yesterday 是时间状语。
+例如：Without his help, we coluldn't work it out. 其中 without his help 是介词短语作条件状语。
+例如：In order to catch up with my classmates, I must study hard. 其中 in order to catch up with my classmates 是目的状语。
+例如：When I was young, I could swim well. 其中 when I was young 是时间状语从句。
+
+8、同位语
+
+同位语一般是由名词、代词、数词、从句等来充当的，用来对句子中的某个成分进一步的解释、说明或者限定，与被它说明的先行词语法上处于同等地位。同位语常放在被说明的词后面。
+
+例如：Henry, a rich New Yorker, died in 1919. 其中 a rich New Yorker 是名词作 Henry 的同位语。
+
+9、独立成分
+
+独立成分是一种与全句没有语法关系的成分。感叹语、呼语、插入语一般充当独立成分。
+
+感叹语
+
+例如：Well, that's good news. 其中 well 是一个感叹语独立成分。
+
+呼语
+
+例如：Brother, what luck! 其中 brother 是呼语独立成分。
+
+插入语
+
+例如：Oh, by the way, I don't have many friends. 其中 by the way 是插入语独立成分。
+
+10、综合练习
+
+例如：Handsome Tom surprisingly found the chees gong today. 其中 Tom 是名词作主语，found 是谓语，the cheese 是宾语，gone 是过去分词作宾语 the cheese 的补语（gone 如果去掉句子的意思不完整，所以是宾语补足语），handsome 是形容词作 Tom 主语的定语，surprisingly 是副词作 found 的程度状语，today 是时间状语。
+例如：Well, I'm sorry, I've got bad news. 其中 well 是感叹语独立成分，I'm sorry 是主系表结构，I 是主语，have got 是现在完成时作谓语，news 是名词作宾语，bad 是形容词作定语修饰 news。
+例如：Most students do an IQ test early in their school career. 其中 students 是主语，do 是谓语，an IQ test 是宾语，most 是定语修饰 students，early 是副词作时间状语，in their school career 是介词短语作时间状语。
+
+
+
+### 简单句的五种基本句型
+
+1、主语 + 谓语（不及物动词）
+
+此句型句子的谓语动词都能表达完整的意思。这类动词叫做不及物动词。
+
+例如：Birds fly. 其中 Birds 是主语，fly 是不及物动词作谓语。
+例如：They arrived in Beijing yesterday. 其中 they 是主语，arrived 是不及物动词作谓语，in Beijing 是地点状语，yesterday 是时间状语。
+例如：The machine works smoothly. 其中 works 是不及物动词作谓语。
+例如：Lucy and Mary get up early every morning. 其中 get up 是不及物动词作谓语。
+例如：The sun was shining. 其中 was shining 是不及物动词 shine 的过去进行时态作谓语。
+
+2、主语 + 谓语（及物动词） + 宾语
+
+谓语动词都具有实义，都是主语产生的动作，但不能表达完整的意思，必须要跟一个宾语，即动作的承受者，才能使意思完整。这类动词叫做及物动词。
+
+例如：He plays football. 其中 plays 是及物动词后面跟着宾语 football。
+例如：I study English. 其中 study 是及物动词后面跟着宾语 English。
+例如：The Greens enjoy living in China. 其中 enjoy 是及物动词后面跟着动名词宾语 living。
+例如：I want to have a cup of tea. 其中 want 是及物动词后面跟着不定式作宾语 to have a cup of tea。
+例如：He admits that he was mistaken. 其中 admits 是及物动词后面跟着宾语从句作宾语 that he was mistaken。
+
+3、主语 + 谓语 + 间接宾语 + 直接宾语
+
+谓语动词必须跟有两个宾语才能表达完整的意思。这两个宾语一个是动作的直接承受者，另一个是动词的间接承受者。即指人的间接宾语和指物的直接宾语。
+
+例如：I showed him my pictures. 其中 my pictures 是直接宾语，him 是间接宾语。
+
+如果直接宾语必须放在间接宾语前，接适当介词 for 或 to。
+
+例如：My aunt bought me a computer. = My aunt bought a computer for me. 其中通过添加介词 for 把直接宾语提前到间接宾语前。
+例如：I passed him the salt = I passed the salt to him. 其中通过添加介词 to 把直接宾语提前到间接宾语前。
+例如：She ordered herself a new dress. 其中 herself 是间接宾语，a new dress 是直接宾语。
+例如：We bring him some food. 其中 him 是简介宾语，some food 是直接宾语。
+例如：Our teacher taught us English. 其中 us 是间接宾语，English 是直接宾语。
+例如：She cooked her husband a delicious meal. 其中 her husband 是间接宾语，a delicious meal 是直接宾语。
+
+4、主语 + 谓语 + 宾语 + 宾语补足语
+
+动词虽然是及物动词，但是只跟一个宾语还不能表达完整的意思，必须加上一个补充成分来补足宾语，才能使意思完整。
+
+例如：They appointed him manager. 其中 manager 是名词作 him 宾语的宾语补足语，因为如果没有 manager 句子意思是不完整的。
+例如：They painted the door green.  其中 green 是形容词作 the door 宾语的宾语补足语，因为如果没有 green 句子意思是不完整的。
+例如：We saw him out. 其中 out 是副词作 him 宾语的宾语补足语。
+例如：He asked me to come back soon. 其中 to come back soon 是不定式作 me 宾语的宾语补足语。
+例如：I saw them getting on the bus. 其中 getting on the bus 是动名词作 them 宾语的宾语补足语。
+
+5、主语 + 谓语 + 表语
+
+这类动词叫做连系动词。be 本身没有什么意义，只起到连系主语和表语的作用。其他系动词仍保持其部分词义。
+
+例如：He is a student. 其中 he 是主语，is 是系动词，a student 表语。
+例如：The dinner smells good. 其中 the dinner 是主语，smells 是系动词，good 是表语。
+例如：Everything looks different. 其中 everything 是主语，looks 是系动词，different 是表语。
+例如：The search proved difficult. 其中 the search 是主语，proved 是系动词，difficult 是表语。
+例如：He became mad after that. 其中 he 是主语，became 是系动词，mad 是表语。
+
+6、综合练习
+
+例如：He died. 其中句子是主谓结构，he 是主语，died 是不及物动词作谓语。
+例如：I found the book easily. 其中句子是主谓宾结构，I 是主语，found 是谓语，the book 是宾语，easily 是副词作程度状语修饰 found 谓语。
+例如：I found the book easy. 其中句子是主谓宾结构，I 是主语，found 是谓语，the book 是宾语，easy 是宾语补足语，因为如果去掉 easy 句子意思不完整。翻译：我发现这本书容易理解。
+例如：He got her a splendid present. 其中句子是主谓宾 + 宾补结构，he 是主语，got 是谓语，her 是间接宾语，a splendid present 是直接宾语。如果需要把直接宾语前置于间接宾语前则需要加介词 for：He got a splendid present for her。
+例如：This kind of cloth feels very soft. 其中句子是主系表结构，this kind of cloth 是主语，feels 是系动词，very soft 是表语。
+
+
+
+### 动词的分类
+
+1. 
+
+   
+
+   
+   
+
+### 动词的基本形式
+
+1. 一般现在时第三人称单数
+
+   变化规则：
+
+   - 一般情况在动词后直接加 s，如：look -> looks、work -> works。
+
+   - 以 o、s、x、sh、ch 结尾的动词后加 es，如：catch -> catches、go -> goes。
+
+   - 以辅音字母加 y 结尾的动词，变 y 为 i，再加 es，如：study -> studies、try -> tries。
+
+2. 现在分词
+
+   变化规则：
+
+   - 一般情况在动词后直接加 ing，如：read -> reading、go -> going。
+
+   - 以 ee、oe、ye 结尾的动词，直接加 ing，如：see -> seeing、toe -> toeing。
+
+   - 以不发音字母 e 结尾的动词，先去掉 e，再加 ing，如：love -> loving、write -> writing。
+
+   - 以重读闭音节结尾，词尾只有一个辅音字母的动词，先双写辅音字母，再加 ing，如：cut -> cutting、put -> putting。
+
+   - 少数以 ie 结尾的动词，先变 ie 为 y 再加 ing，如：die -> dying、lie -> lying。
+
+3. 过去式和过去分词
+
+   变化规则：
+
+   - 一般情况在动词后直接加 ed，如：ask -> asked、help -> helped。
+
+   - 以不发音字母 e 结尾的动词，只加 d，如：like -> liked、live -> lived。
+
+   - 以辅音字母加 y 结尾的动词，变 y 为 i，再加 ed，如：cry -> cried、study -> studied。
+
+   - 以重读闭音节结尾，词尾只有一个辅音字母的动词，先双写辅音字母，再加 ed，如：stop -> stopped、plan -> planned。
+
+4. 综合练习
+
+   例如：wash -> washes -> washing -> washed -> washed
+   例如：guess -> guesses -> guessing -> guessed -> guessed
+   例如：study -> studies -> studying -> studied -> studied
+   例如：finish -> finishes -> finishing -> finished -> finished
+   例如：go -> goes -> going -> went -> gone
+
+### 动词短语
+
+1. 动词 + 冠词 + 名词
+
+   give a concert 开音乐会、give a test 进行测试、have a rest 休息、have a picnic 野餐、have a try 试一试、keep a record 保持记录、leave a message 留言、make a face 做鬼脸、make a living 谋生、make a speech 进行演讲、pay a bill 付账、take a risk 冒险
+
+2. 动词 + 名词
+
+   catch fire 着火、keep watch 守望/值班、make repairs 维修、play sports 做运动、take action 采取行动、take measures 采取措施、take place 发生/举行
+
+3. 动词 + 名词 + 介词
+
+   catch hold of 抓住、catch sight of 看见、make contributions to 对 。。。做贡献、make room for 给。。。腾地方、make use of 利用、pay attention to 注意、take advantage of 利用、make contact with 和。。。接触/联系、take pride in 以。。。为豪
+
+4. 动词 + 介词 + 名词
+
+   come into use 开始使用、get into trouble 陷入麻烦、play with fire 玩火/冒险、wait in line 排队等候
+
+5. 动词 + 宾语 + 介词 + 名词
+
+   bring ... to mind 使想起、put ... into use 应用、put ... into practice 实行、实施、take ... for example 以。。。为例
+
+6. 动词 + 副词 + 介词
+
+   add up to 合计达、break away from 脱离、come up with 想出/提出、catch up with 赶上/追上、go ahead with 开始/着手、go in for 参加/追求、go along with 一起去、hold on to 坚持、keep away from 远离、look down upon 瞧不起/轻视、put up with 忍受/容忍、run out of 用完
+
+### 时态
+
+1. 一般现在时
+
+   表示主语现在的特征和状态，通常不用时间状语。
+
+   例如：These books are new. 翻译：这些书是新的。
+
+   
+
+   表示经常性、习惯性的动作。常与频度副词 always、usually、often、sometimes、hardly、ever、never、once a week、every day、on weekends 等连用。
+
+   例如：I often take a walk in the park. 翻译：我经常在公园散步。
+
+   
+
+   表示客观真理、科学事实、自然现象、格言等。
+
+   例如：The sun rises in the east and sets in the west. 翻译：太阳东升西落。
+
+   
+
+   一般现在时表示将来时。在时间、条件状语从句中表示将来的动作。（主句使用将来时，从句使用一般现在时）
+
+   例如：If it doesn't rain tomorrow, I will go bike riding in the open air. 翻译：如果明天不下雨，我将在户外骑自行车。
+
+   
+
+   表示按计划或安排将要发生的动作。但只限于 start、begin、leave、go、come、run、arrive、return、take place 等。
+
+   例如：The train arrives at 8:00. 翻译：火车八点开车。
+
+   
+
+2. 现在进行时
+
+   表示现在（指说话人说话时）正在发生的事情。
+
+   例如：We are waiting for you. 翻译：我们正在等你。
+
+   
+
+   现在进行时表将来意为：意图、打算、安排。常用词为 come、go、start、arrive、leave、stay 等。
+
+   例如：I'm leaving tomorrow. 翻译：我打算明天离开。
+
+   
+
+   当句子中有 now 时，要用现在进行时。
+
+   例如：They are playing basketball now. 翻译：他们现在正在打篮球。
+
+   
+
+3. 一般过去时
+
+4. 过去进行时
+
+5. 一般将来时
+
+6. 过去将来时
+
+7. 将来进行时
+
+8. 现在完成时
+
+9. 过去完成时
+
+10. 现在完成进行时
+
+### 语态
+
+1. 被动语态
+
+### 主谓一致
+
+### 非谓语动词
+
+### 冠词
+
+### 名词
+
+### 代词
+
+### 连词
+
+### 数词
+
+### 介词
+
+### 形容词
+
+### 副词
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
