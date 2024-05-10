@@ -2,16 +2,12 @@
 
 1、ES7 React/Redux/GraphQL/React-Native snippets
 
-
-
 ## 创建不基于脚手架的 reactjs 项目
 
 > reactjs CDN引用
 > https://stackoverflow.com/questions/68350370/get-rid-of-babelstandalone-warning-message-from-cdn-package/68350422#68350422
 >
 > 参考 不基于脚手架的reactjs项目 demo
-
-
 
 ## jsx 语法规则
 
@@ -65,8 +61,6 @@ JSX（JavaScript XML，正式名称为 JavaScript Syntax eXtension）是一种 J
 
 参考 react-component
 
-
-
 ## 组件的核心属性用法
 
 ### state属性用法
@@ -84,8 +78,6 @@ JSX（JavaScript XML，正式名称为 JavaScript Syntax eXtension）是一种 J
 ## 事件处理
 
 参考 事件处理 demo、react-handling-event
-
-
 
 ## react脚手架
 
@@ -140,3 +132,15 @@ npm start
 ## 综合案例 demo-github-search
 
 参考 demo-github-search
+
+## 路由
+
+参考 demo-react-router
+
+> 添加 react-router-dom 依赖
+>
+> ```bash
+> npm install react-router-dom
+> ```
+>
+> NavLink 和 Route 包含在 BrowserRouter 中
