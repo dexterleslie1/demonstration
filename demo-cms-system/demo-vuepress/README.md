@@ -4,11 +4,11 @@
 
 vuepress2 需要 nodejs v18.16.0+，nodejs v15.14.0 不能启动 vuepress。
 
-
-
-
-
 ## 第一个 vuepress 入门例子
+
+注意：docs 中每个 markdown 目录都必须要包含一个 README.md 文件，否则 sidebar 不能够正常生成。
+
+
 
 ### vuepress1.x
 
@@ -65,8 +65,6 @@ npm run docs:dev
 ```
 
 打开浏览器访问 http://localhost:8080/
-
-
 
 ### vuepress2.x
 
@@ -151,8 +149,6 @@ npm run docs:dev
 ```
 
 打开浏览器访问 http://localhost:8080/ 即可查看效果
-
-
 
 ## vuepress nav 和 sidebar
 

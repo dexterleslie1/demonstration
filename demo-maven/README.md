@@ -119,3 +119,24 @@ mvn clean
 </settings>
 ```
 
+
+
+## 通过 dependency tree 解决依赖冲突
+
+TODO：使用mvn help:effective-pom列出pom结构分析版本冲突问题。（未通过做实验验证此方法）
+
+参考
+https://maven.apache.org/plugins/maven-dependency-plugin/examples/resolving-conflicts-using-the-dependency-tree.html
+
+显示项目中logback版本信息
+
+```sh
+mvn dependency:tree -Dincludes=*logback*
+```
+
+根据artifactId为log4j搜索
+
+```sh
+mvn dependency:tree -Dverbose -Dincludes=*:*log4j*
+```
+

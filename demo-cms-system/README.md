@@ -6,9 +6,13 @@
 - 支持目录导航
 - 是否方便地支持 demonstration 整项目的内容选择性发布
 
-## google 搜索关键词
+## 搜索关键词
 
-open source cms system, open source kms(Knowledge Management System) system, markdown as source cms, static site generator, markdown-centered static site generator
+Google 搜索的关键词：open source cms system, open source kms(Knowledge Management System) system, markdown as source cms, static site generator, markdown-centered static site generator
+
+AI 询问的关键词：
+
+- 企业级文档管理系统有那些？
 
 ## 开源的内容管理系统
 
