@@ -45,6 +45,9 @@ find . -type d -name node_modules -exec rm -rfv {} \;
 # find 命令排除指定目录，排除 node_modules 和 demo 开头的目录
 # https://linuxhandbook.com/find-command-exclude-directories/
 find . -maxdepth 5 -iname "*perfor*" ! -path "*/node_modules/*" ! -path "*/demo*/*"
+
+# find 命令只保留文件名称（删除文件目录路径）
+find . -maxdepth 1 -iname "*\.md" -printf '%f\n'
 ```
 
 
@@ -119,6 +122,12 @@ ls -li
 # 删除和移动源文件，会导致符号链接失效，因为符号链接指向文件路径的
 # 符号链接能够链接文件和目录
 # 符号链接能够链接不同的文件系统，因为符号链接指向文件的路径
+
+# 创建目录的符号链接需要先切换到目标目录中，否则在创建时会报告错误
+# 错误的创建命令
+ln -s ../../demo-english/ docs/english-learning
+# 正确的创建命令
+(cd docs && ln -s ../../../demo-english english-learning)
 ```
 
 **符号链接与硬链接的区别**
@@ -599,6 +608,18 @@ tree -h
 tree -L 2
 
 du -d 2 -h .
+```
+
+通过 -a 选项显示隐藏的文件或目录
+
+```sh
+tree -a
+```
+
+通过 -I 参数忽略指定的模式 \*node\*和\*modules\*
+
+```sh
+tree -I "*node*|*modules*"
 ```
 
 

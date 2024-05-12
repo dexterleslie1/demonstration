@@ -8,11 +8,18 @@ module.exports = {
             { text: 'IntelliJ IDEA的使用', link: '/intellij-idea/' },
             { text: 'MySQL/MariaDB学习', link: '/MySQL或MariaDB学习/' },
             {
+                text: '前端技术',
+                items: [
+                    { text: 'React技术', link: '/React技术/' }
+                ]
+            },
+            {
                 text: '容器相关',
                 items: [
                     { text: 'Docker容器', link: '/docker容器/' }
                 ]
             },
+            { text: 'Shell脚本编程', link: '/shell脚本编程/' },
             { text: '我的Github', link: 'https://github.com/dexterleslie1', target: '_blank' },
         ],
         sidebar: {
@@ -51,6 +58,27 @@ module.exports = {
                     title: "docker容器学习",
                     children: [
                         'docker的安装.md'
+                    ]
+                }
+            ],
+            '/React技术/': [
+                {
+                    title: "React学习",
+                    children: [
+                        '使用react脚手架创建项目.md',
+                    ]
+                }
+            ],
+            '/shell脚本编程/': [
+                {
+                    title: "Shell脚本编程",
+                    children: [
+                        '在脚本头声明脚本的用法.md',
+                        '设置shell行为的命令.md',
+                        '函数的用法.md',
+                        '标准shell脚本结构.md',
+                        '数组.md',
+                        '关联数组.md',
                     ]
                 }
             ],
