@@ -1,25 +1,3 @@
-## ubuntu20安装googlepinyin输入法
-
-> ubuntu20.04中文输入法安装步骤
-> https://www.qetool.com/scripts/view/20653.html
-
-```shell
-# 安装中文语言支持
-sudo apt install -y gnome-user-docs-zh-hans firefox-locale-zh-hans language-pack-zh-hans thunderbird-locale-zh-cn thunderbird-locale-zh-hans language-pack-gnome-zh-hans
-
-# 安装google拼音输入法
-sudo apt install -y fcitx-googlepinyin
-
-# 打开language support选择输入法方式为fcitx
-
-# 重启系统后点击右上角输入法configure或者在应用搜索中输入 Fcitx Configuration，如果googlepinyin输入法不存在则添加，并且设置切换输入法快捷键为ctrl+alt+shift
-
-# 把googlepinyin输入法修改为繁体输入，参考 https://askubuntu.com/questions/1336435/how-do-i-get-traditional-chinese-input-with-pinyin-on-ubuntu-20-04
-# 使用 ctrl + shift + f 切换到繁体输入(切换之后永久改变)
-```
-
-
-
 ## ubuntu20安装visual code
 
 > 不能使用snap安装visual code，因为snap visual code 是阉割版，不能切换中文输入法。

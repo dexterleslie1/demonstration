@@ -17,6 +17,7 @@ source_dir_to_target_dir_map["../../demo-mysql"]="MySQL或MariaDB学习"
 source_dir_to_target_dir_map["../../docker"]="docker容器"
 source_dir_to_target_dir_map["../../front-end/demo-reactjs"]="React技术"
 source_dir_to_target_dir_map["../../demo-shell-scripting"]="shell脚本编程"
+source_dir_to_target_dir_map["../../linux/ubuntu"]="ubuntu使用"
 
 for key in ${!source_dir_to_target_dir_map[@]}; do
     # 删除符号链接目录

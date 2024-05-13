@@ -20,6 +20,7 @@ module.exports = {
                 ]
             },
             { text: 'Shell脚本编程', link: '/shell脚本编程/' },
+            { text: 'Ubuntu使用', link: '/ubuntu使用/' },
             { text: '我的Github', link: 'https://github.com/dexterleslie1', target: '_blank' },
         ],
         sidebar: {
@@ -80,6 +81,15 @@ module.exports = {
                         '标准shell脚本结构.md',
                         '数组.md',
                         '关联数组.md',
+                    ]
+                }
+            ],
+            '/ubuntu使用/': [
+                {
+                    title: "Ubuntu使用",
+                    children: [
+                        '配置基于ubuntu的软件开发环境.md',
+                        '安装googlepinyin输入法.md'
                     ]
                 }
             ],

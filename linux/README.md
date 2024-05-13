@@ -466,7 +466,7 @@ tar -xzvf archive.tar.gz -C /tmp
 
 ### zip和unzip命令
 
-```
+```bash
 
 # zip压缩和unzip解压缩命令详解
 https://blog.csdn.net/CareChere/article/details/50844846
@@ -483,6 +483,9 @@ unzip mydata.zip -d mydatabak
 # 解压文件夹包含中文目录或者文件名称
 # https://www.jb51.net/article/123666.htm
 unzip -O CP936 chat.zip -d chat
+
+# 使用 unzip 命令解压 war 后缀的文件，解压 test.war 到 test 目录
+unzip test.war -d test
 ```
 
 
