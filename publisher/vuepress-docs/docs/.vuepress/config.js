@@ -66,6 +66,7 @@ module.exports = {
                     title: "React学习",
                     children: [
                         '使用react脚手架创建项目.md',
+                        '路由.md',
                     ]
                 }
             ],

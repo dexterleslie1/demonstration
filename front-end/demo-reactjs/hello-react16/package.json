@@ -1,5 +1,5 @@
 {
-  "name": "demo-react-router",
+  "name": "hello-react16",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -8,7 +8,6 @@
     "@testing-library/user-event": "^13.5.0",
     "react": "^16.14.0",
     "react-dom": "^16.14.0",
-    "react-router-dom": "^5.3.4",
     "react-scripts": "5.0.1",
     "web-vitals": "^2.1.4"
   },

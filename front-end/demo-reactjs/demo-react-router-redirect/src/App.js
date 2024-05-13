@@ -1,7 +1,7 @@
 import logo from './logo.svg';
 import './App.css';
 
-import { NavLink, Route, Switch } from 'react-router-dom';
+import { NavLink, Route, Switch, Redirect } from 'react-router-dom';
 import Home from './components/Home';
 import About from './components/About';
 
@@ -37,8 +37,8 @@ function App() {
           flexDirection: 'column',
           borderRight: '1px solid black',
         }}>
-          <NavLink exact activeClassName='my-active' to="/">Home</NavLink>
-          <NavLink exact activeClassName='my-active' to="/about">About</NavLink>
+          <NavLink activeClassName='my-active' to="/home">Home</NavLink>
+          <NavLink activeClassName='my-active' to="/about">About</NavLink>
         </div>
         {/* content */}
         <div style={{
@@ -46,8 +46,9 @@ function App() {
           // backgroundColor: 'red'
         }}>
           <Switch>
-            <Route path='/' component={Home} />
+            <Route path='/home' component={Home} />
             <Route path='/about' component={About} />
+            <Redirect from="*" to="/home" />  
           </Switch>
         </div>
       </div>

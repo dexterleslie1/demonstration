@@ -61,12 +61,16 @@ grep -r "17" --include "pom.xml" .
 grep -r "17" --include "*.xml" .
 ```
 
-
-
 不搜索指定的目录或者文件
 
-```
+```bash
 grep -r "xxx" --exclude-dir mydir1 --exclude-dir mydir2 --exclude myfile1 --exclude myfile2 --exclude *.min.js
+```
+
+忽略大小写搜索
+
+```bash
+grep -r -i "xxx" .
 ```
 
 
