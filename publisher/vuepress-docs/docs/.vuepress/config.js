@@ -19,8 +19,14 @@ module.exports = {
                     { text: 'Docker容器', link: '/docker容器/' }
                 ]
             },
-            { text: 'Shell脚本编程', link: '/shell脚本编程/' },
-            { text: 'Ubuntu使用', link: '/ubuntu使用/' },
+            {
+                text: '操作系统',
+                items: [
+                    { text: 'Shell脚本编程', link: '/shell脚本编程/' },
+                    { text: 'Ubuntu使用', link: '/ubuntu使用/' },
+                    { text: 'Linux使用', link: '/linux使用/' },
+                ]
+            },
             { text: '我的Github', link: 'https://github.com/dexterleslie1', target: '_blank' },
         ],
         sidebar: {
@@ -90,6 +96,13 @@ module.exports = {
                     children: [
                         '配置基于ubuntu的软件开发环境.md',
                         '安装googlepinyin输入法.md'
+                    ]
+                }
+            ], '/linux使用/': [
+                {
+                    title: "Linux使用",
+                    children: [
+                        '命令行工具列表.md'
                     ]
                 }
             ],
