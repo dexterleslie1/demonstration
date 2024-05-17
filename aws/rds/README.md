@@ -58,3 +58,26 @@ yum install telnet
 telnet db1.cpoqcayek8wb.us-east-1.rds.amazonaws.com 3306
 ```
 
+
+
+### 测试用户是否能够停止binlog
+
+创建数据库，创建表并插入数据
+
+```sql
+create database if not exists demo1 character set utf8mb4 collate utf8mb4_unicode_ci;
+
+use demo1;
+
+create table if not exists t1(
+    
+) engine=innodb default charset=utf8mb4 collate=utf8mb4_general_ci;
+```
+
+
+
+#### 特权用户
+
+
+
+#### 非特权用户
