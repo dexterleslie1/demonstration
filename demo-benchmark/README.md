@@ -113,6 +113,8 @@ fio -version
 
 - 使用 fio 作为基准工具测试 I/O 性能
 
+  > 需要适当调节`--bs I/O` 单元的块大小才能够跑满硬盘`I/O`吞吐量。
+
   
 
   fio 使用参考文档
@@ -145,7 +147,7 @@ fio -version
   通过使用多个并行流 (16+) 执行顺序写入、使用 1 MB 的 I/O 块大小和至少 64 的 I/O 深度来测试写入吞吐量
 
   ```sh
-  sudo fio --name=write_throughput --directory=/home/temp --numjobs=16 \
+  sudo fio --name=test_iops --directory=/home/temp --numjobs=8 \
   --size=10G --time_based --runtime=60s --ramp_time=2s --ioengine=libaio \
   --direct=1 --verify=0 --bs=1M --iodepth=64 --rw=write \
   --group_reporting=1 --iodepth_batch_submit=64 \
@@ -155,7 +157,7 @@ fio -version
   通过使用多个并行流 (16+) 执行顺序读取、使用 1 MB 的 I/O 块大小和至少 64 的 I/O 深度来测试读取吞吐量
 
   ```sh
-  sudo fio --name=read_throughput --directory=/home/temp --numjobs=16 \
+  sudo fio --name=test_iops --directory=/home/temp --numjobs=8 \
   --size=10G --time_based --runtime=60s --ramp_time=2s --ioengine=libaio \
   --direct=1 --verify=0 --bs=1M --iodepth=64 --rw=read \
   --group_reporting=1 \
@@ -165,7 +167,7 @@ fio -version
   通过使用多个并行流 (16+) 执行顺序读写、使用 1 MB 的 I/O 块大小和至少 64 的 I/O 深度来测试读取吞吐量
 
   ```sh
-  sudo fio --name=rw_throughput --directory=/home/temp --numjobs=16 \
+  sudo fio --name=test_iops --directory=/home/temp --numjobs=8 \
   --size=10G --time_based --runtime=60s --ramp_time=2s --ioengine=libaio \
   --direct=1 --verify=0 --bs=1M --iodepth=64 --rw=rw \
   --group_reporting=1 \
@@ -177,7 +179,7 @@ fio -version
   通过执行随机写入来测试写入 IOPS，使用 4 KB 的 I/O 块大小和至少 256 的 I/O 深度
 
   ```sh
-  sudo fio --name=write_iops --directory=/home/temp --numjobs=16 --size=10G \
+  sudo fio --name=test_iops --directory=/home/temp --numjobs=8 --size=10G \
   --time_based --runtime=60s --ramp_time=2s --ioengine=libaio --direct=1 \
   --verify=0 --bs=4K --iodepth=256 --rw=randwrite --group_reporting=1  \
   --iodepth_batch_submit=256  --iodepth_batch_complete_max=256
@@ -186,7 +188,7 @@ fio -version
   通过执行随机读取来测试读取 IOPS，使用 4 KB 的 I/O 块大小和至少 256 的 I/O 深度
 
   ```sh
-  sudo fio --name=read_iops --directory=/home/temp --numjobs=16 --size=10G \
+  sudo fio --name=test_iops --directory=/home/temp --numjobs=8 --size=10G \
   --time_based --runtime=60s --ramp_time=2s --ioengine=libaio --direct=1 \
   --verify=0 --bs=4K --iodepth=256 --rw=randread --group_reporting=1 \
   --iodepth_batch_submit=256  --iodepth_batch_complete_max=256
@@ -195,7 +197,7 @@ fio -version
   通过执行随机读写来测试读写 IOPS，使用 4 KB 的 I/O 块大小和至少 256 的 I/O 深度
 
   ```sh
-  sudo fio --name=rw_iops --directory=/home/temp --numjobs=16 --size=10G \
+  sudo fio --name=test_iops --directory=/home/temp --numjobs=8 --size=10G \
   --time_based --runtime=60s --ramp_time=2s --ioengine=libaio --direct=1 \
   --verify=0 --bs=4K --iodepth=256 --rw=randrw --group_reporting=1 \
   --iodepth_batch_submit=256  --iodepth_batch_complete_max=256
