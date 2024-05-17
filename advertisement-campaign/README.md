@@ -44,3 +44,4 @@ gmail@Ks...23
 
 https://login.payoneer.com/
 gmail@Ks...23
+NOTE：支持创建美元账户
