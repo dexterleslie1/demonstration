@@ -74,6 +74,7 @@ module.exports = {
                     children: [
                         '使用react脚手架创建项目.md',
                         '路由.md',
+                        'redux.md',
                     ]
                 }
             ],
