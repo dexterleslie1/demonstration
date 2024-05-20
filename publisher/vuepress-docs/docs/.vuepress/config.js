@@ -25,6 +25,7 @@ module.exports = {
                     { text: 'Shell脚本编程', link: '/shell脚本编程/' },
                     { text: 'Ubuntu使用', link: '/ubuntu使用/' },
                     { text: 'Linux使用', link: '/linux使用/' },
+                    { text: '基准和性能测试', link: '/基准和性能测试/' },
                 ]
             },
             { text: '我的Github', link: 'https://github.com/dexterleslie1', target: '_blank' },
@@ -104,6 +105,14 @@ module.exports = {
                     title: "Linux使用",
                     children: [
                         '命令行工具列表.md'
+                    ]
+                }
+            ], '/基准和性能测试/': [
+                {
+                    title: "系统基准和性能测试",
+                    children: [
+                        '测试工具安装.md',
+                        'IO测试.md',
                     ]
                 }
             ],
