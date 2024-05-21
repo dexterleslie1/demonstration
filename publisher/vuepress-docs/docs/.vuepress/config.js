@@ -1,3 +1,25 @@
+const lessSassPostcssSidebar = {
+    title: "less、sass/scss、postcss学习",
+    // 点击title时候跳转到/less-sass-postcss/路由
+    path: '/less-sass-postcss/',
+    children: [
+        {
+            title: "less",
+            children: [
+                '/less/浏览器开发环境中配置less.md',
+                '/less/变量.md',
+            ]
+        }, {
+            title: "sass/scss",
+            children: [
+                '/scss/浏览器开发环境中配置scss.md',
+                '/scss/变量.md',
+                '/scss/嵌套样式.md',
+            ]
+        },
+    ]
+}
+
 module.exports = {
     title: '我的知识库',
     themeConfig: {
@@ -10,7 +32,8 @@ module.exports = {
             {
                 text: '前端技术',
                 items: [
-                    { text: 'React技术', link: '/React技术/' }
+                    { text: 'React技术', link: '/React技术/' },
+                    { text: 'less、sass/scss、postcss', link: '/less-sass-postcss/' },
                 ]
             },
             {
@@ -79,6 +102,12 @@ module.exports = {
                         '样式的管理.md',
                     ]
                 }
+            ], '/less-sass-postcss/': [
+                lessSassPostcssSidebar
+            ], '/less/': [
+                lessSassPostcssSidebar
+            ],'/scss/': [
+                lessSassPostcssSidebar
             ],
             '/shell脚本编程/': [
                 {
