@@ -193,3 +193,40 @@ sudo fio --name=test_iops --directory=/home/temp --numjobs=8 --size=10G \
 --iodepth_batch_submit=256  --iodepth_batch_complete_max=256
 ```
 
+## 基于`docker`模拟过载的`I/O`压力
+
+> 用于辅助测试监控方案是否能够收集容器进程指标。
+
+`Dockerfile`内容如下：
+
+```dockerfile
+# 使用一个包含fio的基础镜像，如ubuntu或其他Linux发行版  
+FROM ubuntu:latest  
+  
+# 安装fio  
+RUN apt-get update && apt-get install -y fio  
+  
+# 设置工作目录（可选）  
+WORKDIR /root  
+  
+# 当你运行容器时，执行的命令（可选）  
+# CMD ["fio", "--version"]  # 例如，只打印fio版本
+```
+
+编译`docker`镜像
+
+```bash
+docker build -t my-fio-image .
+```
+
+运行`docker`容器模拟`I/O`过载
+
+```bash
+mkdir -p /home/temp &&
+docker run --rm -v /home/temp:/mnt/temp my-fio-image \
+    fio --name=test_iops --directory=/mnt/temp --numjobs=8 --size=10G \
+    --time_based --runtime=1800s --ramp_time=2s --ioengine=libaio --direct=1 \
+    --verify=0 --bs=32K --iodepth=512 --rw=randread --group_reporting=1 \
+    --iodepth_batch_submit=256  --iodepth_batch_complete_max=256
+```
+
