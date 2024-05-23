@@ -23,6 +23,8 @@ source_dir_to_target_dir_map["../../demo-benchmark"]="基准和性能测试"
 source_dir_to_target_dir_map["../../front-end/html+js+css/demo-less-sass-scss-postcss"]="less-sass-postcss"
 source_dir_to_target_dir_map["../../front-end/html+js+css/demo-less-sass-scss-postcss/demo-less"]="less"
 source_dir_to_target_dir_map["../../front-end/html+js+css/demo-less-sass-scss-postcss/demo-scss"]="scss"
+source_dir_to_target_dir_map["../../demo-prometheus-grafana-alertmanager"]="prometheus-grafana-alertmanager"
+source_dir_to_target_dir_map["../../demo-prometheus-grafana-alertmanager/demo-grafana"]="grafana"
 
 for key in ${!source_dir_to_target_dir_map[@]}; do
     # 删除符号链接目录

@@ -20,6 +20,22 @@ const lessSassPostcssSidebar = {
     ]
 }
 
+const prometheusGrafanaAlertmanagerSidebar = {
+    title: "监控Prometheus+Grafana+AlertManager",
+    path: '/prometheus-grafana-alertmanager/',
+    children: [
+        '使用docker-compose运行prometheus-grafana-alertmanager.md',
+        {
+            title: "Grafana使用",
+            children: [
+                '/grafana/使用docker运行.md',
+                '/grafana/手动导入dashboard.md',
+                '/grafana/自动导入dashboards和datasources.md',
+            ]
+        },
+    ]
+}
+
 module.exports = {
     title: '我的知识库',
     themeConfig: {
@@ -49,6 +65,12 @@ module.exports = {
                     { text: 'Ubuntu使用', link: '/ubuntu使用/' },
                     { text: 'Linux使用', link: '/linux使用/' },
                     { text: '基准和性能测试', link: '/基准和性能测试/' },
+                ]
+            },
+            {
+                text: '运维',
+                items: [
+                    { text: '监控Prometheus+Grafana+AlertManager', link: '/prometheus-grafana-alertmanager/' },
                 ]
             },
             { text: '我的Github', link: 'https://github.com/dexterleslie1', target: '_blank' },
@@ -106,7 +128,7 @@ module.exports = {
                 lessSassPostcssSidebar
             ], '/less/': [
                 lessSassPostcssSidebar
-            ],'/scss/': [
+            ], '/scss/': [
                 lessSassPostcssSidebar
             ],
             '/shell脚本编程/': [
@@ -141,10 +163,15 @@ module.exports = {
                 {
                     title: "系统基准和性能测试",
                     children: [
+                        '监控方案.md',
                         '测试工具安装.md',
                         'IO测试.md',
                     ]
                 }
+            ], '/prometheus-grafana-alertmanager/': [
+                prometheusGrafanaAlertmanagerSidebar
+            ], '/grafana/': [
+                prometheusGrafanaAlertmanagerSidebar
             ],
             '/': ['/'],
         }

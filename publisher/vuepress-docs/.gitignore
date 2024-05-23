@@ -10,3 +10,5 @@ docs/基准和性能测试
 docs/less-sass-postcss
 docs/less
 docs/scss
+docs/prometheus-grafana-alertmanager
+docs/grafana
