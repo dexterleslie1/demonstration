@@ -32,7 +32,17 @@ const prometheusGrafanaAlertmanagerSidebar = {
                 '/grafana/手动导入dashboard.md',
                 '/grafana/自动导入dashboards和datasources.md',
             ]
-        },
+        }, {
+            title: "Prometheus使用",
+            children: [
+                '/prometheus/标签.md',
+                '/prometheus/指标类型.md',
+                '/prometheus/客户端库.md',
+                '/prometheus/拉取目标配置.md',
+                '/prometheus/自定义exporter.md',
+                '/prometheus/promql.md',
+            ]
+        }
     ]
 }
 
@@ -171,6 +181,8 @@ module.exports = {
             ], '/prometheus-grafana-alertmanager/': [
                 prometheusGrafanaAlertmanagerSidebar
             ], '/grafana/': [
+                prometheusGrafanaAlertmanagerSidebar
+            ], '/prometheus/': [
                 prometheusGrafanaAlertmanagerSidebar
             ],
             '/': ['/'],
