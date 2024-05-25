@@ -1,4 +1,4 @@
-# `prometheus + grafana + alertmanager`使用
+# `prometheus + grafana + pushgateway + alertmanager`使用
 
 什么是`prometheus`？
 
@@ -14,7 +14,13 @@
 
 > Prometheus数据采集的方式主要有两种：
 >
-> 1. Push方式：在这种方式中，被监控的应用程序将指标数据主动推送给Prometheus服务器。为了实现这一点，应用程序需要暴露一个HTTP端点，Prometheus服务器定期请求这个端点以获取最新的指标数据。
-> 2. Pull方式：这是Prometheus更常用的数据采集方式。在Pull方式中，Prometheus服务器主动从被监控的应用程序拉取指标数据。同样，被监控的应用程序需要将指标数据暴露为一个HTTP端点，Prometheus服务器定期请求这个端点以获取最新的指标数据。
+> 1. 推送方式：推送模式是进程主动将指标推送给prometheus服务器，但是在架构设计上并不是直接推送的，如下，是prometheus官网的架构图。推送的指标是推送给了pushgateway，然后prometheus server 从推送网关上面拉取指标信息。像短时定时任务我们可以采用推送模式，推送定时任务相关的指标。
+> 2. 拉去方式：这是Prometheus更常用的数据采集方式。在Pull方式中，Prometheus服务器主动从被监控的应用程序拉取指标数据。同样，被监控的应用程序需要将指标数据暴露为一个HTTP端点，Prometheus服务器定期请求这个端点以获取最新的指标数据。
 
-### 
+`pushgateway`是什么呢？
+
+> Pushgateway是Prometheus整体监控方案的一个功能组件，作为一个独立的工具存在。它主要用于Prometheus无法直接拿到监控指标的场景，例如监控源位于防火墙之后，Prometheus无法穿透防火墙；或者目标服务没有可抓取监控数据的端点等多种情况。在这些场景中，可以通过部署Pushgateway来解决问题。
+>
+> 当部署该组件后，监控源通过主动发送监控数据到Pushgateway，再由Prometheus定时获取信息，实现资源的状态监控。Pushgateway的工作流程大致是：监控源通过Post方式，发送数据到Pushgateway（路径为/metrics）。然后Prometheus服务端设置任务，定时获取Pushgateway上面的监控指标。
+>
+> Pushgateway支持两种数据推送方式：Prometheus Client SDK推送和API推送。它主要适用于临时性的任务，各个目标主机可以上报数据到Pushgateway，然后Prometheus server统一从Pushgateway拉取数据。同时，Pushgateway也可以作为数据中转站，支持数据生产者随时将数据推送过来，尤其是那些瞬时生成的数据需要一个中转站临时存放。此外，Pushgateway还可以统一收集并持久化推送给它的所有监控数据，起到给Prometheus减压的作用。

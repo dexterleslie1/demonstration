@@ -1,12 +1,12 @@
-# 使用`docker-compose`运行`prometheus + grafana + alertmanager`
+# 使用`docker-compose`运行`prometheus + grafana + alertmanager + pushgateway`
 
-> 功能介绍：自动运行`prometheus`、`grafana`、`alertmanager`、`node_exporter`（监控宿主机）、`cAdvisor`服务；自动导入`dashboards`、`datasources`。
+> 功能介绍：自动运行`prometheus`、`grafana`、`alertmanager`、`pushgateway`、`node_exporter`（监控宿主机）、`cAdvisor`服务；自动导入`dashboards`、`datasources`。
 >
 > 参考`gitee`别人开源的仓库编写`docker-compose`运行`prometheus + grafana + alertmanager`[链接](https://gitee.com/linge365/docker-prometheus/tree/master)
 
-使用`docker-compose`运行`prometheus + grafana + alertmanager`的配置文件参考[链接](https://github.com/dexterleslie1/demonstration/tree/master/demo-prometheus-grafana-alertmanager/demo-docker-compose-prometheus-grafana-alertmanager)
+使用`docker-compose`运行`prometheus + grafana + alertmanager + pushgateway`的配置文件参考[链接](https://github.com/dexterleslie1/demonstration/tree/master/demo-prometheus-grafana-alertmanager/demo-docker-compose-prometheus-grafana-alertmanager)
 
-运行`prometheus + grafana + alertmanager`服务
+运行`prometheus + grafana + alertmanager + pushgateway`服务
 
 ```bash
 docker compose up -d
