@@ -10,9 +10,14 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.future.study</groupId>
-    <artifactId>spring-boot-pom-basic-config</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <artifactId>demo-spring-boot-scaffold</artifactId>
+    <version>1.0.0</version>
     <packaging>jar</packaging>
+
+    <properties>
+        <!-- 指定项目目前使用的jdk版本 -->
+        <java.version>1.8</java.version>
+    </properties>
 
     <dependencies>
         <dependency>
@@ -23,6 +28,10 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
         </dependency>
     </dependencies>
 
