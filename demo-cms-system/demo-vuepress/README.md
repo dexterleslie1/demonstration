@@ -156,3 +156,49 @@ npm run docs:dev
 
 参考
 demo-vuepress1-all
+
+## 插件
+
+### `vuepress1.x`使用`vuepress-plugin-mermaidjs`插件
+
+> `vuepress-plugin-mermaidjs`插件用于解析`markdown`中的`mermaid`代码块转换为`html`中的`svg`指令。
+
+安装`vuepress-plugin-mermaidjs`插件
+
+> `vuepress1.x`只能兼容到`vuepress-plugin-mermaidjs-1.9.1`，更新版本的`vuepress-plugin-mermaidjs`兼容`vuepress2.x`。
+
+```bash
+npm install --save-dev vuepress-plugin-mermaidjs@1.9.1
+```
+
+`.vuepress/config.js`中配置`vuepress-plugin-mermaidjs`插件
+
+```js
+module.exports = {
+    ...
+    plugins: [
+        'mermaidjs'
+    ]
+}
+```
+
+`markdown`文件中使用`mermaid`语法画时序图
+
+```mermaid
+sequenceDiagram  
+    participant Client  
+    participant KongAPIGateway  
+    participant BackendServer1  
+    participant BackendServer2  
+    Client->>KongAPIGateway: 发送TCP请求  
+    KongAPIGateway->>BackendServer1: 转发TCP请求  
+    BackendServer1-->>KongAPIGateway: 返回TCP响应  
+    KongAPIGateway-->>Client: 将TCP响应返回给客户端  
+    alt 其他后端服务器  
+        KongAPIGateway->>BackendServer2: 转发TCP请求  
+        BackendServer2-->>KongAPIGateway: 返回TCP响应  
+        KongAPIGateway-->>Client: 将TCP响应返回给客户端  
+    end
+```
+
+`vuepress1.x`会自动编译`mermaid`语法时序图到`html svg`指令。

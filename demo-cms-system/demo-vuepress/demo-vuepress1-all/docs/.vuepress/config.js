@@ -30,5 +30,8 @@ module.exports = {
             // 路由为 / 时的 sidebar
             '/': ['/', '/vue/', '/react/', '/nodejs/'],
         }
-    }
+    },
+    plugins: [
+        'mermaidjs'
+    ]
 }
