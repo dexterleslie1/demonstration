@@ -36,4 +36,17 @@ scrape_configs:
     static_configs:
     - targets: ['node_exporter:9100']
       labels:
-        instance: Prometheus服务器 
+        instance: Prometheus服务器
+    - targets: ['192.168.1.205:9100']
+      labels:
+        instance: centOS8测试服务器
+
+  - job_name: 'process-exporter'
+    scrape_interval: 15s
+    static_configs:
+    - targets: ['192.168.1.205:9256']
+      labels:
+        instance: centOS8测试服务器
+    - targets: ['192.168.1.204:9256']
+      labels:
+        instance: centOS8-204

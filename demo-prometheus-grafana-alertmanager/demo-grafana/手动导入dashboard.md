@@ -24,5 +24,5 @@ docker compose up -d
 
 跳转到`http://localhost:3000/datasources/new`创建一个类型为`prometheus`的新的数据源。其中数据源`HTTP`>`URL`配置为：`http://promethues:9090`，其他使用默认值。
 
-跳转到`http://localhost:3000/dashboard/import`，在`Import via grafana.com`输入`1860`在线导入`node_exporter dashboard`
+跳转到`http://localhost:3000/dashboard/import`，在`Import via grafana.com`输入`1860（node_exporter系统监控dashboard）`在线导入`node_exporter dashboard`
 

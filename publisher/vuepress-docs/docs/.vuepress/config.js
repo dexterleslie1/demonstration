@@ -41,6 +41,7 @@ const prometheusGrafanaAlertmanagerSidebar = {
                 '/prometheus/拉取目标配置.md',
                 '/prometheus/自定义exporter.md',
                 '/prometheus/promql.md',
+                '/prometheus/exporter使用.md',
             ]
         }
     ]
