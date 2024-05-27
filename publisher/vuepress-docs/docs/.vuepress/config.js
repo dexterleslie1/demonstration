@@ -49,6 +49,9 @@ const prometheusGrafanaAlertmanagerSidebar = {
 
 module.exports = {
     title: '我的知识库',
+    plugins: [
+        'mermaidjs'
+    ],
     themeConfig: {
         sidebarDepth: 6,
         nav: [
@@ -121,7 +124,8 @@ module.exports = {
                 {
                     title: "docker容器学习",
                     children: [
-                        'docker的安装.md'
+                        'docker的安装.md',
+                        'docker-compose设置项目名称.md',
                     ]
                 }
             ],
