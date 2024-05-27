@@ -1,14 +1,8 @@
 version: "3.0"
 
-# 创建网络
-networks:
-  net:
-    name: demo-redis-server-net
-
 services:
   # 启动redis
   demo-redis-server:
-    container_name: demo-redis-server
     image: redis:5.0.14
     # 设置redis密码
     command: redis-server /usr/local/etc/redis/redis.conf --requirepass 123456
@@ -18,6 +12,4 @@ services:
       - TZ=Asia/Shanghai
     ports:
       - 6379:6379
-    networks:
-      - net
 

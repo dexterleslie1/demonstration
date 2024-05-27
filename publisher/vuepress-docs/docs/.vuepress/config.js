@@ -58,6 +58,7 @@ module.exports = {
             { text: '首页', link: '/' },
             { text: '英语学习', link: '/英语学习/' },
             { text: 'IntelliJ IDEA的使用', link: '/intellij-idea/' },
+            { text: 'Redis', link: '/redis/' },
             {
                 text: '数据库',
                 items: [
@@ -114,7 +115,7 @@ module.exports = {
                         'mysqldump使用.md'
                     ]
                 }
-            ],'/MariaDB/': [
+            ], '/MariaDB/': [
                 {
                     title: "MariaDB学习",
                     children: [
@@ -193,6 +194,13 @@ module.exports = {
                 prometheusGrafanaAlertmanagerSidebar
             ], '/prometheus/': [
                 prometheusGrafanaAlertmanagerSidebar
+            ],'/redis/': [
+                {
+                    title: "redis",
+                    children: [
+                        'docker运行redis.md',
+                    ]
+                }
             ],
             '/': ['/'],
         }
