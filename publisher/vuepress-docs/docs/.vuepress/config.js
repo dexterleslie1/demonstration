@@ -126,6 +126,7 @@ module.exports = {
                     children: [
                         'docker的安装.md',
                         'docker-compose设置项目名称.md',
+                        'docker-volume.md',
                     ]
                 }
             ],
