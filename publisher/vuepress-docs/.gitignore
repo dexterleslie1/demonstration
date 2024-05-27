@@ -1,6 +1,5 @@
 docs/docker容器
 docs/intellij-idea
-docs/MySQL或MariaDB学习
 docs/英语学习
 docs/React技术
 docs/shell脚本编程
@@ -13,3 +12,5 @@ docs/scss
 docs/prometheus-grafana-alertmanager
 docs/grafana
 docs/prometheus
+docs/MySQL
+docs/MariaDB

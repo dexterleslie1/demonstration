@@ -58,8 +58,13 @@ module.exports = {
             { text: '首页', link: '/' },
             { text: '英语学习', link: '/英语学习/' },
             { text: 'IntelliJ IDEA的使用', link: '/intellij-idea/' },
-            { text: 'MySQL/MariaDB学习', link: '/MySQL或MariaDB学习/' },
             {
+                text: '数据库',
+                items: [
+                    { text: 'MySQL', link: '/MySQL/' },
+                    { text: 'MariaDB', link: '/MariaDB/' },
+                ]
+            }, {
                 text: '前端技术',
                 items: [
                     { text: 'React技术', link: '/React技术/' },
@@ -101,22 +106,20 @@ module.exports = {
                 title: "IntelliJ IDEA的使用",
                 children: ['多重光标同时编辑.md', '快捷键.md'],
             }],
-            '/MySQL或MariaDB学习/': [
+            '/MySQL/': [
                 {
-                    title: "MySQL/MariaDB学习",
+                    title: "MySQL学习",
                     children: [
-                        {
-                            title: "MySQL",
-                            children: [
-                                '使用docker-compose运行MySQL.md',
-                                'mysqldump使用.md'
-                            ]
-                        }, {
-                            title: "MariaDB",
-                            // children: [
-                            //     ''
-                            // ]
-                        }
+                        '使用docker-compose运行MySQL.md',
+                        'mysqldump使用.md'
+                    ]
+                }
+            ],'/MariaDB/': [
+                {
+                    title: "MariaDB学习",
+                    children: [
+                        '使用容器运行.md',
+                        '自动更新数据库.md',
                     ]
                 }
             ],
