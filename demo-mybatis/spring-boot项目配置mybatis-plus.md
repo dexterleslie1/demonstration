@@ -1,4 +1,4 @@
-# `spring-boot`项目配置`MyBatis-plus`
+# `spring-boot`项目集成`MyBatis-plus`
 
 > [mybatis-plus-join插件](https://github.118899.net/yulichang/mybatis-plus-join)
 >

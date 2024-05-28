@@ -1,8 +1,23 @@
 # 快速创建`spring-boot`项目
 
-## 复制预先配置好的模板项目
+## 复制预先配置好的`spring-boot`模板项目
 
-1. 
+> 模板项目包括以下预配置：
+>
+> - 基于`docker`的`MariaDB`
+> - 基于`docker`的`redis`集群
+
+1. 克隆演示用途的仓库`demonstration`
+
+   ```bash
+   git clone --depth 0 https://github.com/dexterleslie1/demonstration.git
+   ```
+
+2. 复制仓库中的`demo-spring-boot-scaffold`项目
+
+   ```bash
+   cp -r demonstration/demo-spring-boot/demo-spring-boot-scaffold .
+   ```
 
 ## 使用`IntelliJ IDEA`快速创建基于`maven`的`spring-boot`项目
 
