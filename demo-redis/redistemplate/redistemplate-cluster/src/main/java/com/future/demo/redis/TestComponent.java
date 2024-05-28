@@ -1,9 +1,9 @@
 package com.future.demo.redis;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 @Component
 public class TestComponent {
 
-    @Resource
+    @Autowired
     RedisTemplate<String, String> redisTemplate = null;
 
     private final static Random RANDOM = new Random();
