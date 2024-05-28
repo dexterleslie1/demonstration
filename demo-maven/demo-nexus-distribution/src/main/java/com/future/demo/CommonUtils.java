@@ -1,4 +1,4 @@
-package com.future.demo.sonatype.nexus.distribution;
+package com.future.demo;
 
 /**
  *

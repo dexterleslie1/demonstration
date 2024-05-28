@@ -3,9 +3,17 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.future.demo</groupId>
-	<artifactId>sonatype-nexus-reference</artifactId>
+	<artifactId>demo-nexus-distribution</artifactId>
+	<!-- 版本SNAPSHOT会自动发布到snapshot仓库 -->
 	<version>0.0.1-SNAPSHOT</version>
+	<!-- 版本没有SNAPSHOT会自动发布到release仓库 -->
+	<!--<version>0.0.1</version>-->
 	<packaging>jar</packaging>
+
+	<properties>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
+	</properties>
 	
 	<dependencies>
 		<dependency>
@@ -14,23 +22,17 @@
 			<version>4.11</version>
 			<scope>test</scope>
 		</dependency>
-		<dependency>
-			<groupId>com.future.demo</groupId>
-			<artifactId>sonatype-nexus-distribution</artifactId>
-			<!-- 版本SNAPSHOT会自动发布到snapshot仓库 -->
-			<version>0.0.1-SNAPSHOT</version>
-			<!-- 版本没有SNAPSHOT会自动发布到release仓库 -->
-			<!-- <version>0.0.1</version> -->
-		</dependency>
 	</dependencies>
 
 	<distributionManagement>
+		<!-- release仓库的地址 -->
 		<repository>
-			<id>nexus-user-deploy</id>
+			<id>demo-nexus-deployer</id>
 			<url>http://localhost:8081/repository/maven-releases/</url>
 		</repository>
+		<!-- snapshot仓库的地址 -->
 		<snapshotRepository>
-			<id>nexus-user-deploy</id>
+			<id>demo-nexus-deployer</id>
 			<url>http://localhost:8081/repository/maven-snapshots/</url>
 		</snapshotRepository>
 	</distributionManagement>
