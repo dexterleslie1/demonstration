@@ -1,6 +1,5 @@
-package com.future.demo.sonatype.nexus.reference;
+package com.future.demo;
 
-import com.future.demo.sonatype.nexus.distribution.CommonUtils;
 import org.junit.Assert;
 import org.junit.Test;
 

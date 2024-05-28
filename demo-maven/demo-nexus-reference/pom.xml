@@ -14,24 +14,28 @@
 			<version>4.11</version>
 			<scope>test</scope>
 		</dependency>
+
 		<dependency>
 			<groupId>com.future.demo</groupId>
-			<artifactId>sonatype-nexus-distribution</artifactId>
-			<!-- 版本SNAPSHOT会自动发布到snapshot仓库 -->
+			<artifactId>demo-nexus-distribution</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
-			<!-- 版本没有SNAPSHOT会自动发布到release仓库 -->
-			<!-- <version>0.0.1</version> -->
+			<!--<version>0.0.1</version>-->
 		</dependency>
 	</dependencies>
 
-	<distributionManagement>
+	<repositories>
 		<repository>
-			<id>nexus-user-deploy</id>
-			<url>http://localhost:8081/repository/maven-releases/</url>
+			<id>xxx</id> <!-- 仓库的唯一ID，如果私有仓库不需要身份认证则随便填写xxx -->
+			<url>http://localhost:8081/repository/maven-public/</url> <!-- 仓库的URL，注意：后缀需要使用maven-public，因为同时支持snapshot和release依赖下载 -->
+			<releases>
+				<enabled>true</enabled> <!-- 是否允许从该仓库下载release版本的构件 -->
+				<updatePolicy>daily</updatePolicy> <!-- 更新策略，比如always、daily、interval:X（X分钟）等 -->
+				<checksumPolicy>fail</checksumPolicy> <!-- 校验和错误策略 -->
+			</releases>
+			<snapshots>
+				<enabled>true</enabled> <!-- 是否允许从该仓库下载snapshot版本的构件 -->
+				<updatePolicy>always</updatePolicy> <!-- snapshot版本的更新策略 -->
+			</snapshots>
 		</repository>
-		<snapshotRepository>
-			<id>nexus-user-deploy</id>
-			<url>http://localhost:8081/repository/maven-snapshots/</url>
-		</snapshotRepository>
-	</distributionManagement>
+	</repositories>
 </project>

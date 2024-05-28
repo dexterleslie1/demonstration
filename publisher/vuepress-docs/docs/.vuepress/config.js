@@ -71,6 +71,7 @@ module.exports = {
                     { text: 'MariaDB', link: '/MariaDB/' },
                     { text: 'MyBatis-plus', link: '/mybatis/' },
                     { text: 'Redis', link: '/redis/' },
+                    { text: 'Maven', link: '/maven/' },
                 ]
             },
             {
@@ -209,6 +210,13 @@ module.exports = {
                     children: [
                         '',
                         'spring-boot项目配置mybatis-plus.md',
+                    ]
+                }
+            ], '/maven/': [
+                {
+                    title: "Maven",
+                    children: [
+                        'maven仓库.md',
                     ]
                 }
             ],
