@@ -30,7 +30,9 @@
    - Codehaus项目相关的Maven仓库。
 9. 阿里云Maven公共仓库
    - 阿里云提供了Maven Central、JCenter等常用Maven制品仓库的镜像功能，使得国内用户能够更快速地下载依赖项。
-10. 私有仓库（Remote Repository）
+10. Jitpack
+    - URL: https://jitpack.io/
+11. 私有仓库（Remote Repository）
     - 是由用户自己搭建的私有仓库，用于存储和共享自己开发的项目构件。
     - 使用私有仓库可以获取到一些不在公共仓库中的构件，满足特定需求。
 
@@ -90,11 +92,11 @@ docker compose down -v
 
 
 
-## 发布自己库到私有`nexus`仓库中
+## 发布构件到私有`nexus`仓库中
 
 `maven`项目中`pom.xml`加入如下配置：
 
-> `artifact`的`version`为`x.x.x-SNAPSHOT`时会自动发布到`snapshot`仓库（支持同一个版本更新发布），`version`没有`SNAPSHOT`时会自动发布到`release`仓库（不支持同一个版本更新发布）。
+> 构件的`version`为`x.x.x-SNAPSHOT`时会自动发布到`snapshot`仓库（支持同一个版本更新发布），`version`没有`SNAPSHOT`时会自动发布到`release`仓库（不支持同一个版本更新发布）。
 
 ```xml
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -159,7 +161,7 @@ docker compose down -v
 </settings>
 ```
 
-发布`artifact`
+发布构件
 
 > 注意：搭建好`nexus`不需要手动创建仓库，使用默认的`maven-releases`、`maven-snapshots`仓库即可
 
@@ -169,7 +171,7 @@ mvn deploy
 
 
 
-## 引用私有`nexus`仓库中的库
+## 引用私有`nexus`仓库中的构件
 
 项目的`pom.xml`配置如下：
 
@@ -208,4 +210,53 @@ mvn deploy
 
 ```
 
-## 发布自己的库到阿里`Maven`公共仓库
+## 发布构件到阿里`Maven`公共仓库
+
+> 暂时使用`jitpack`发布，所以不测试阿里。
+
+## 发布构件到`jitpack`公共仓库
+
+> 访问`jitpack`官网`https://jitpack.io/`
+>
+> 免费的`jitpack`发布个人构件需要`github`的仓库为`public`类型，因为`jitpack`会自动拉取`github`指定仓库的`tag`并显示在它的界面中，开发者只需要选择相应的`tag`即可触发`jitpack`自动构建。
+
+使用`jitpack`发布构件，构件项目只需要是普通的`maven`项目，详细参考模板项目 [dexterleslie1/maven-jitpack-multiple-module-demo](https://github.com/dexterleslie1/maven-jitpack-multiple-module-demo)
+
+使用`IntelliJ IDEA`（使用你习惯的`git`工具）在项目中创建名为`1.0.11`的`tag`并推送到`github`中。
+
+访问`https://jitpack.io/`打开`jitpack`首页
+
+在`look up`框中输入`https://github.com/dexterleslie1/maven-jitpack-multiple-module-demo`后，点击`look up`按钮
+
+稍后会在界面中显示模板项目中所有`tag`，选择其中没有被构建过的`tag`触发构建（通过点击`tag`上的`log`链接查看详细的构建日志）。
+
+## 引用`jitpack`中的构件
+
+访问`https://jitpack.io/`打开`jitpack`首页
+
+在`look up`框中输入`https://github.com/dexterleslie1/maven-jitpack-multiple-module-demo`后，点击`look up`按钮
+
+稍后会在界面中显示模板项目中所有`tag`，点击相应版本的`tag`后的`Get it`按钮后会显示构件相关的`maven`配置信息，例如：
+
+```xml
+<!-- 配置jitpack仓库 -->
+<repositories>
+    <repository>
+        <id>jitpack.io</id>
+        <url>https://jitpack.io</url>
+    </repository>
+</repositories>
+
+<!-- 配置引用的依赖 -->
+<dependency>
+    <groupId>com.github.dexterleslie1.maven-jitpack-multiple-module-demo</groupId>
+    <artifactId>module1</artifactId>
+    <version>1.0.11</version>
+</dependency>
+```
+
+把上面的`maven`配置信息配置到项目的`pom.xml`文件中即可引用`jitpack`发布的构件。
+
+## 发布`android`构件到`jitpack`公共仓库
+
+> todo 抽个时间做测试！
