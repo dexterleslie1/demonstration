@@ -58,18 +58,19 @@ module.exports = {
             { text: '首页', link: '/' },
             { text: '英语学习', link: '/英语学习/' },
             { text: 'IntelliJ IDEA的使用', link: '/intellij-idea/' },
-            { text: 'Redis', link: '/redis/' },
             {
-                text: '数据库',
-                items: [
-                    { text: 'MySQL', link: '/MySQL/' },
-                    { text: 'MariaDB', link: '/MariaDB/' },
-                ]
-            }, {
-                text: '前端技术',
+                text: '前端相关技术',
                 items: [
                     { text: 'React技术', link: '/React技术/' },
                     { text: 'less、sass/scss、postcss', link: '/less-sass-postcss/' },
+                ]
+            }, {
+                text: '后端相关技术',
+                items: [
+                    { text: 'MySQL', link: '/MySQL/' },
+                    { text: 'MariaDB', link: '/MariaDB/' },
+                    { text: 'MyBatis-plus', link: '/mybatis/' },
+                    { text: 'Redis', link: '/redis/' },
                 ]
             },
             {
@@ -194,11 +195,20 @@ module.exports = {
                 prometheusGrafanaAlertmanagerSidebar
             ], '/prometheus/': [
                 prometheusGrafanaAlertmanagerSidebar
-            ],'/redis/': [
+            ], '/redis/': [
                 {
-                    title: "redis",
+                    title: "Redis",
                     children: [
                         'docker运行redis.md',
+                        'spring-boot项目集成redis.md',
+                    ]
+                }
+            ], '/mybatis/': [
+                {
+                    title: "MyBatis",
+                    children: [
+                        '',
+                        'spring-boot项目配置mybatis-plus.md',
                     ]
                 }
             ],

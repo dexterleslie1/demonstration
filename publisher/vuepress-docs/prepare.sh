@@ -28,6 +28,7 @@ source_dir_to_target_dir_map["../../demo-prometheus-grafana-alertmanager"]="prom
 source_dir_to_target_dir_map["../../demo-prometheus-grafana-alertmanager/demo-grafana"]="grafana"
 source_dir_to_target_dir_map["../../demo-prometheus-grafana-alertmanager/demo-prometheus"]="prometheus"
 source_dir_to_target_dir_map["../../demo-redis"]="redis"
+source_dir_to_target_dir_map["../../demo-mybatis"]="mybatis"
 
 for key in ${!source_dir_to_target_dir_map[@]}; do
     # 删除符号链接目录

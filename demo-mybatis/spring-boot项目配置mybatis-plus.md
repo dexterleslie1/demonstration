@@ -3,6 +3,8 @@
 > [mybatis-plus-join插件](https://github.118899.net/yulichang/mybatis-plus-join)
 >
 > [mybatis-plus官方文档](https://mp.baomidou.com/guide/quick-start.html#%E5%88%9D%E5%A7%8B%E5%8C%96%E5%B7%A5%E7%A8%8B)
+>
+> `spring-boot`项目集成`mybatis-plus`详细配置参考 [链接](https://github.com/dexterleslie1/demonstration/tree/master/demo-mybatis/demo-spring-boot-mybatis-plus)
 
 `pom.xml`配置引用`MyBatis-plus`依赖
 
