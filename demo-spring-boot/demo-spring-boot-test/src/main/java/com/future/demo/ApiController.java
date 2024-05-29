@@ -1,8 +1,6 @@
 package com.future.demo;
 
-import com.yyd.common.http.ResponseUtils;
-import com.yyd.common.http.response.ObjectResponse;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.future.common.http.ObjectResponse;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -45,6 +43,8 @@ public class ApiController {
         userModel.setEmail("dexterleslie@gmail.com");
         userService.save(userModel);
 
-        return ResponseUtils.successObject("成功创建用户");
+        ObjectResponse<String> response = new ObjectResponse<>();
+        response.setData("成功创建用户");
+        return response;
     }
 }

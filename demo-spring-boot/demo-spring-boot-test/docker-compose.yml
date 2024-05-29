@@ -1,0 +1,17 @@
+version: "3.0"
+
+services:
+  # 启动mariadb
+  db:
+    build:
+      context: ./
+    image: demo-mariadb-dev:latest
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - TZ=Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+    ports:
+      - '3306:3306'

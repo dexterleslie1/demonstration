@@ -30,7 +30,7 @@ import java.util.UUID;
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = {Application.class, TestSupportConfiguration.class}, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @TestPropertySource(locations = "classpath:application-test.properties")
-public class ITByUsingFeignClientTests {
+public class FeignClientTests {
 
     @Resource
     UserMapper userMapper;

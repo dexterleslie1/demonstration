@@ -1,8 +1,7 @@
 package com.future.demo;
 
-import com.yyd.common.http.ResponseUtils;
-import com.yyd.common.http.response.ObjectResponse;
-import com.yyd.common.json.JSONUtil;
+import com.future.common.http.ObjectResponse;
+import com.future.common.json.JSONUtil;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -63,7 +62,10 @@ public class CustomizeAuthenticationFilter extends OncePerRequestFilter {
                          int errorCode,
                          String errorMessage) throws IOException {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        ObjectResponse<String> responseO = ResponseUtils.failObject(errorCode, errorMessage);
+        ObjectResponse<String> objectResponse = new ObjectResponse<>();
+        objectResponse.setErrorCode(errorCode);
+        objectResponse.setErrorMessage(errorMessage);
+        ObjectResponse<String> responseO = objectResponse;
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
         response.getWriter().write(JSONUtil.ObjectMapperInstance.writeValueAsString(responseO));
