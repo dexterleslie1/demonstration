@@ -1,6 +1,6 @@
 package com.future.demo;
 
-import com.yyd.common.http.response.ObjectResponse;
+import com.future.common.http.ObjectResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

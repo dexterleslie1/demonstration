@@ -15,6 +15,13 @@
     <packaging>jar</packaging>
 
     <dependencies>
+        <!-- 从jitpack中引用自定义工具依赖构件 -->
+        <dependency>
+            <groupId>com.github.dexterleslie1</groupId>
+            <artifactId>future-common</artifactId>
+            <version>1.0.1</version>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -29,12 +36,6 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>1.18.24</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.yyd.sdk</groupId>
-            <artifactId>yyd-common</artifactId>
-            <version>3.8.82</version>
         </dependency>
 
         <!-- openfeign 依赖 -->
@@ -70,16 +71,11 @@
         </plugins>
     </build>
 
+    <!-- jitpack公共仓库，用于引用自定义构件 -->
     <repositories>
         <repository>
-            <id>yyd-nexus</id>
-            <url>http://maven.118899.net/repository/maven-releases/</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
         </repository>
     </repositories>
 </project>

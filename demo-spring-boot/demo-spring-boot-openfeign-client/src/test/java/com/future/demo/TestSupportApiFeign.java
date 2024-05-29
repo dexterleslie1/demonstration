@@ -1,7 +1,7 @@
 package com.future.demo;
 
-import com.yyd.common.exception.BusinessException;
-import com.yyd.common.http.response.ObjectResponse;
+import com.future.common.exception.BusinessException;
+import com.future.common.http.ObjectResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 

@@ -1,6 +1,6 @@
 package com.future.demo;
 
-import com.yyd.common.feign.CustomizeErrorDecoder;
+import com.future.common.feign.CustomizeErrorDecoder;
 import feign.codec.ErrorDecoder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
