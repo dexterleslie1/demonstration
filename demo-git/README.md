@@ -147,40 +147,6 @@ git stash apply
 git stash apply 0
 ```
 
-
-
-## 切换、创建、删除分支
-
-```
-# 显示本地所有分支
-git branch
-
-# 显示本地和远程分支
-# http://gitready.com/intermediate/2009/02/13/list-remote-branches.html
-git branch -r
-
-# 切换分支
-git checkout <branchname>
-
-# 创建分支
-git checkout -b <branchname>
-# 把本地分支推送到远程仓库
-git push --set-upstream origin kamailio-support
-
-# 删除本地分支
-git branch -D <branchname>
-
-# 重命名当前分支为main
-https://blog.csdn.net/tiantao2012/article/details/70255603
-git branch -M main
-
-# 删除远程分支
-# NOTE: 如果删除远程分支提示远程分支不存在不能删除，则先执行命令同步本地和远程参考分支数据git fetch --prune origin
-git push origin --delete <branchname>
-```
-
-
-
 ## 初始化非空目录指向远程仓库
 
 > https://stackoverflow.com/questions/3311774/how-to-convert-existing-non-empty-directory-into-a-git-working-directory-and-pus

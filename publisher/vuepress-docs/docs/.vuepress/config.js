@@ -73,6 +73,11 @@ module.exports = {
                     { text: 'Redis', link: '/redis/' },
                     { text: 'Maven', link: '/maven/' },
                 ]
+            }, {
+                text: '其他技术',
+                items: [
+                    { text: 'Git使用', link: '/git/' },
+                ]
             },
             {
                 text: '容器相关',
@@ -217,6 +222,15 @@ module.exports = {
                     title: "Maven",
                     children: [
                         'maven仓库.md',
+                    ]
+                }
+            ], '/git/': [
+                {
+                    title: "Git",
+                    children: [
+                        '分支.md',
+                        '标签.md',
+                        '基于分支和标签的版本管理.md',
                     ]
                 }
             ],
