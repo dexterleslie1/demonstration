@@ -219,6 +219,8 @@ mvn deploy
 > 访问`jitpack`官网`https://jitpack.io/`
 >
 > 免费的`jitpack`发布个人构件需要`github`的仓库为`public`类型，因为`jitpack`会自动拉取`github`指定仓库的`tag`并显示在它的界面中，开发者只需要选择相应的`tag`即可触发`jitpack`自动构建。
+>
+> `jitpack`无法覆盖同一个`tag`更新发布。
 
 使用`jitpack`发布构件，构件项目只需要是普通的`maven`项目，详细参考模板项目 [dexterleslie1/maven-jitpack-multiple-module-demo](https://github.com/dexterleslie1/maven-jitpack-multiple-module-demo)
 
