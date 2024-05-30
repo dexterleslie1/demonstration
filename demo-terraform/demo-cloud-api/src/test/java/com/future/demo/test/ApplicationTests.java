@@ -42,7 +42,8 @@ public class ApplicationTests {
     // https://developer.hashicorp.com/terraform/cloud-docs/run/api
     @Test
     public void test() throws Exception {
-        String token = "Bearer ZnedG8pHBBqSwg.atlasv1.meR0Uz6K2EJCpvzhPmD3dERJtNTK0MszIEfUTn3DSVcdvfXRd7667KwimK1hy4spj5s";
+        // 登录terraform cloud获取token
+        String token = "Bearer xxx";
         String organizationName = "future-demo-my-org";
         ObjectNode response = this.testSupportDemoFeignClient.accountDetails(token);
         Assert.assertEquals("dexterleslie", response.get("data").get("attributes").get("username").asText());
