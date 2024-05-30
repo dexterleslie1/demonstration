@@ -50,7 +50,6 @@ public class FeignClientTests {
         result = this.testSupportDemoFeignClient.add(1, 2, "Bearer " + UUID.randomUUID().toString()).getData();
         Assert.assertEquals(new Integer(5), result);
 
-
         // 场景: 测试没有被mock
         result = this.testSupportDemoFeignClient.minus(1, 2, "Bearer " + UUID.randomUUID().toString()/* 注入一个随机token就模拟已经登录 */).getData();
         Assert.assertEquals(new Integer(-1), result);
@@ -62,7 +61,6 @@ public class FeignClientTests {
         } catch (FeignException ex) {
             Assert.assertEquals(403, ex.status());
         }
-
 
         // 场景: 测试集成mybatis-plus测试，查看是否正确加载mybatis-plus
         this.userMapper.delete(Wrappers.query());

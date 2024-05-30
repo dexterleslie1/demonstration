@@ -5,6 +5,8 @@
 ### 使用`openfeign`进行`web`环境测试
 
 > 案例的详细请参考 [链接](https://github.com/dexterleslie1/demonstration/tree/master/demo-spring-boot/demo-spring-boot-openfeign-client)
+>
+> 注意：目前项目中使用这种方法+`mock`技术实现各个微服务独立的集成测试。
 
 `pom.xml`配置引用`openfeign`依赖如下：
 
@@ -159,4 +161,189 @@ public class ApiTests {
 
 
 
-## 集成测试（Integration Testing）
+## 集成测试或单元测试
+
+### `mockmvc`测试
+
+> 案例的详细请参考 [链接](https://github.com/dexterleslie1/demonstration/blob/master/demo-spring-boot/demo-spring-boot-test/src/test/java/com/future/demo/test/ControllerTests.java)
+>
+> `MockMvc` 是 Spring Framework 提供的一个用于测试 Spring MVC 控制器（Controller）的类。它允许你以编程的方式执行 HTTP 请求，并验证返回的结果。这对于在开发过程中编写单元测试或集成测试非常有用，因为它不需要启动一个完整的 HTTP 服务器。
+
+在`pom.xml`中引入测试依赖
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-test</artifactId>
+    <scope>test</scope>
+</dependency>
+```
+
+在测试类`ControllerTests`中添加`@AutoConfigureMockMvc`启用`mockmvc`测试。
+
+在测试类`ControllerTests`中添加如下代码注入`MockMvc`实例
+
+```java
+@Resource
+private MockMvc mockMvc;
+```
+
+使用`MockMvc`实例调用`/api/v1/addUser`接口
+
+```java
+ResultActions response = mockMvc.perform(get("/api/v1/add")
+        .queryParam("a", "1")
+        .queryParam("b", "2")
+        // 注入一个随机token就模拟已经登录
+        .header(HttpHeaders.AUTHORIZATION, "Bearer " + UUID.randomUUID().toString())
+        .contentType(MediaType.APPLICATION_FORM_URLENCODED));
+response.andExpect(status().isOk())
+        .andExpect(jsonPath("$.data", is(3)));
+```
+
+完整的测试用例`ControllerTests`如下：
+
+```java
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.future.demo.Application;
+import com.future.demo.TestService;
+import com.future.demo.UserModel;
+import com.future.demo.mapper.UserMapper;
+import org.hamcrest.CoreMatchers;
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mockito;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+
+import javax.annotation.Resource;
+import java.util.UUID;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+// https://stackoverflow.com/questions/42249791/resolving-port-already-in-use-in-a-spring-boot-test-defined-port
+@DirtiesContext
+@RunWith(SpringRunner.class)
+@SpringBootTest(classes = {Application.class})
+// 启用mockmvc测试
+@AutoConfigureMockMvc
+public class ControllerTests {
+
+    @Resource
+    UserMapper userMapper;
+    @SpyBean
+    TestService testService;
+    @Resource
+    private MockMvc mockMvc;
+
+    @Test
+    public void test() throws Exception {
+        // 场景: 测试spybean使用原来的逻辑
+        ResultActions response = mockMvc.perform(get("/api/v1/add")
+                .queryParam("a", "1")
+                .queryParam("b", "2")
+                // 注入一个随机token就模拟已经登录
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + UUID.randomUUID().toString())
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED));
+        response.andExpect(status().isOk())
+                .andExpect(jsonPath("$.data", is(3)));
+
+        // 场景: 测试spybean使用被mock后指定的规则
+        Mockito.doReturn(5).when(this.testService).add(Mockito.anyInt(), Mockito.anyInt());
+        response = mockMvc.perform(get("/api/v1/add")
+                .queryParam("a", "1")
+                .queryParam("b", "2")
+                // 注入一个随机token就模拟已经登录
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + UUID.randomUUID().toString())
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED));
+        response.andExpect(status().isOk())
+                .andExpect(jsonPath("$.data", is(5)));
+
+        // 场景: 测试没有被mock
+        response = mockMvc.perform(get("/api/v1/minus")
+                .queryParam("a", "1")
+                .queryParam("b", "2")
+                // 注入一个随机token就模拟已经登录
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + UUID.randomUUID().toString())
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED));
+        response.andExpect(status().isOk())
+                .andExpect(jsonPath("$.data", is(-1)));
+
+        // 场景: 测试spring-security在mockmvc测试中是否生效，不提供token预期报错
+        response = mockMvc.perform(get("/api/v1/minus")
+                .queryParam("a", "1")
+                .queryParam("b", "2")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED));
+        response.andExpect(status().isForbidden());
+
+        // 场景: 测试集成mybatis-plus测试，查看是否正确加载mybatis-plus
+        this.userMapper.delete(Wrappers.query());
+        response = mockMvc.perform(post("/api/v1/addUser")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + UUID.randomUUID().toString()));
+        response.andExpect(status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.data", CoreMatchers.is("成功创建用户")));
+        UserModel userModel = this.userMapper.selectList(Wrappers.query()).get(0);
+        Assert.assertEquals("中文测试", userModel.getName());
+        Assert.assertEquals("dexterleslie@gmail.com", userModel.getEmail());
+    }
+
+}
+
+```
+
+### `service`单元测试
+
+>案例的详细请参考 [链接](https://github.com/dexterleslie1/demonstration/blob/master/demo-spring-boot/demo-spring-boot-test/src/test/java/com/future/demo/test/ServiceTests.java)
+>
+>在Spring Boot中，对服务层（Service）进行单元测试是一个常见的做法，以确保业务逻辑的正确性。这通常涉及到模拟（Mock）依赖项，如数据访问对象（DAO）或外部服务，以隔离正在测试的服务层逻辑。
+
+`ServiceTests`测试用例内容如下：
+
+```java
+import com.future.demo.Application;
+import com.future.demo.TestService;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mockito;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.junit4.SpringRunner;
+
+// https://stackoverflow.com/questions/42249791/resolving-port-already-in-use-in-a-spring-boot-test-defined-port
+@DirtiesContext
+@Slf4j
+@RunWith(SpringRunner.class)
+@SpringBootTest(classes = {Application.class})
+public class ServiceTests {
+
+    @SpyBean
+    TestService testService;
+
+    @Test
+    public void test() {
+        int c = this.testService.add(1, 2);
+        Assert.assertEquals(3, c);
+
+        Mockito.when(this.testService.add(1, 2)).thenReturn(5);
+        c = this.testService.add(1, 2);
+        Assert.assertEquals(5, c);
+    }
+}
+```
+
