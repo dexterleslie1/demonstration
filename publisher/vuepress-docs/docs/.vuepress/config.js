@@ -72,6 +72,7 @@ module.exports = {
                     { text: 'MyBatis-plus', link: '/mybatis/' },
                     { text: 'Redis', link: '/redis/' },
                     { text: 'Maven', link: '/maven/' },
+                    { text: 'Mockito', link: '/mockito/' },
                 ]
             }, {
                 text: '其他技术',
@@ -231,6 +232,14 @@ module.exports = {
                         '分支.md',
                         '标签.md',
                         '基于分支和标签的版本管理.md',
+                    ]
+                }
+            ], '/mockito/': [
+                {
+                    title: "Mockito",
+                    children: [
+                        'maven项目配置mockito.md',
+                        'mockito的使用.md',
                     ]
                 }
             ],

@@ -1,4 +1,4 @@
-package com.future.demo.mockito;
+package com.future.demo;
 
 import org.springframework.stereotype.Service;
 

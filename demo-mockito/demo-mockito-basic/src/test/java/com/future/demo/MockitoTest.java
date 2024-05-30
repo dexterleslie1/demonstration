@@ -1,4 +1,4 @@
-package com.future.study.mockito.unit.test;
+package com.future.demo;
 
 import java.util.ArrayList;
 import java.util.LinkedList;

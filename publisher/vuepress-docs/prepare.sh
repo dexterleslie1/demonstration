@@ -31,6 +31,7 @@ source_dir_to_target_dir_map["../../demo-redis"]="redis"
 source_dir_to_target_dir_map["../../demo-mybatis"]="mybatis"
 source_dir_to_target_dir_map["../../demo-maven"]="maven"
 source_dir_to_target_dir_map["../../demo-git"]="git"
+source_dir_to_target_dir_map["../../demo-mockito"]="mockito"
 
 for key in ${!source_dir_to_target_dir_map[@]}; do
     # 删除符号链接目录

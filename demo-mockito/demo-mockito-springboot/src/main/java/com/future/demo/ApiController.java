@@ -1,4 +1,4 @@
-package com.future.demo.mockito;
+package com.future.demo;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
