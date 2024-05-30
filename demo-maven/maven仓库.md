@@ -232,6 +232,16 @@ mvn deploy
 
 稍后会在界面中显示模板项目中所有`tag`，选择其中没有被构建过的`tag`触发构建（通过点击`tag`上的`log`链接查看详细的构建日志）。
 
+## `jitpack`公共仓库`snapshot`构件调试模式
+
+> 构建`snapshot`构件不需要打标签，只需要选择指定的`github`提交日志即可以临时构建和调试构件。
+
+访问`https://jitpack.io/`打开`jitpack`首页
+
+在`look up`框中输入`https://github.com/dexterleslie1/maven-jitpack-multiple-module-demo`后，点击`look up`按钮
+
+点击`Commits`切换到`github`提交日志显示，选择对应的提交日志触发`jitpack`构建，构件构建完成后把提交对应的`version`填写到项目构件引用的`version`中
+
 ## 引用`jitpack`中的构件
 
 访问`https://jitpack.io/`打开`jitpack`首页
