@@ -252,6 +252,7 @@ module.exports = {
                     children: [
                         '快速创建spring-boot项目.md',
                         'spring-boot项目的测试.md',
+                        'spring-boot全局异常处理.md',
                     ]
                 }
             ], '/java/': [

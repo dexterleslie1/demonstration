@@ -42,6 +42,13 @@ public class FeignClientTests {
         } catch (BusinessException ex) {
             Assert.assertEquals("测试IllegalArgumentException", ex.getMessage());
         }
+
+        try {
+            this.testSupportDemoFeignClient.testNoneExist();
+            Assert.fail("预期异常没有抛出");
+        } catch (BusinessException ex) {
+            Assert.assertEquals("资源 /api/v1/testNoneExist 不存在！", ex.getMessage());
+        }
     }
 
 }

@@ -16,5 +16,8 @@ public interface TestSupportDemoFeignClient {
 
     @GetMapping("testIllegalArgumentException")
     ObjectResponse<String> testIllegalArgumentException() throws BusinessException;
+
+    @GetMapping("testNoneExist")
+    ObjectResponse<String> testNoneExist() throws BusinessException;
 }
 

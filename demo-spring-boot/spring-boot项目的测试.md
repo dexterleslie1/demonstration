@@ -13,7 +13,12 @@
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <project>
-    ...
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.2.7.RELEASE</version>
+        <relativePath/>
+    </parent>
 
     <dependencies>
         <!-- 从jitpack中引用自定义工具依赖构件 -->
@@ -23,7 +28,7 @@
             <version>1.0.1</version>
         </dependency>
         
-        <!-- openfeign 依赖 -->
+        <!-- 用于测试的openfeign依赖 -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-openfeign</artifactId>
@@ -42,6 +47,10 @@
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-dependencies</artifactId>
+                <!--
+                    spring-cloud-dependencies的版本需要和spring-boot-starter-parent的版本兼容，
+                    否则启动测试时候会报错
+                 -->
                 <version>Hoxton.SR10</version>
                 <type>pom</type>
                 <scope>import</scope>

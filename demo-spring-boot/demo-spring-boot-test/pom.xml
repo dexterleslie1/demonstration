@@ -90,6 +90,10 @@
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-dependencies</artifactId>
+                <!--
+                    spring-cloud-dependencies的版本需要和spring-boot-starter-parent的版本兼容，
+                    否则启动测试时候会报错
+                 -->
                 <version>Hoxton.SR10</version>
                 <type>pom</type>
                 <scope>import</scope>
