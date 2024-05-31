@@ -33,6 +33,7 @@ source_dir_to_target_dir_map["../../demo-maven"]="maven"
 source_dir_to_target_dir_map["../../demo-git"]="git"
 source_dir_to_target_dir_map["../../demo-mockito"]="mockito"
 source_dir_to_target_dir_map["../../demo-spring-boot"]="spring-boot"
+source_dir_to_target_dir_map["../../demo-java"]="java"
 
 for key in ${!source_dir_to_target_dir_map[@]}; do
     # 删除符号链接目录

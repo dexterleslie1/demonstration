@@ -73,6 +73,7 @@ module.exports = {
                     { text: 'Redis', link: '/redis/' },
                     { text: 'Maven', link: '/maven/' },
                     { text: 'Mockito', link: '/mockito/' },
+                    { text: 'Java相关', link: '/java/' },
                     { text: 'Spring Boot', link: '/spring-boot/' },
                 ]
             }, {
@@ -249,6 +250,13 @@ module.exports = {
                     children: [
                         '快速创建spring-boot项目.md',
                         'spring-boot项目的测试.md',
+                    ]
+                }
+            ],'/java/': [
+                {
+                    title: "Java相关",
+                    children: [
+                        'entity、vo、dto、po、do.md',
                     ]
                 }
             ],
