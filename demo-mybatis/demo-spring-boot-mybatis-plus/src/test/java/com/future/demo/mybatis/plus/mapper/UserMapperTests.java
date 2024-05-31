@@ -197,10 +197,10 @@ public class UserMapperTests {
         Assert.assertEquals(match.getTeamIdB(), teamIdB);
 
         QueryWrapper<FootballMatch> queryWrapper = Wrappers.query();
-        queryWrapper.eq("1", 1);
-        queryWrapper.and(o -> {
-            o.and(o1 -> o1.eq("teamIdA", teamIdA).eq("teamIdB", teamIdB));
-            o.or(o1 -> o1.eq("teamIdB", teamIdA).eq("teamIdA", teamIdB));
+        queryWrapper.and(wrapper -> {
+            wrapper.eq("teamIdA", teamIdA).eq("teamIdB", teamIdB);
+        }).or(wrapper -> {
+            wrapper.eq("teamIdB", teamIdA).eq("teamIdA", teamIdB);
         });
         match = this.footballMatchMapper.selectOne(queryWrapper);
         Assert.assertNotNull(match);
