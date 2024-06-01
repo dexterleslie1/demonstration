@@ -1,9 +1,5 @@
 # 演示@Import用法
 
-## 参考
-
-> https://blog.csdn.net/Java_zhujia/article/details/128062040
-
 ## 三种用法
 
 ### 引入普通类
