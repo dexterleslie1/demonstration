@@ -82,6 +82,9 @@ mybatis.mapper-locations=classpath:mapper/*.xml,classpath:mapper/**/*.xml
 # 用于指定mybatis-plus扫描java枚举所在的包，
 # 实现Java枚举类型与数据库中的数据类型（如字符串、整数等）之间的转换
 mybatis-plus.type-enums-package=com.future.demo
+
+# 启用mybatis-plus SQL调试输出
+logging.level.com.future.demo=debug
 ```
 
 `spring-boot`启动类配置`mybatis-plus XxxMapper`所在包路径`@MapperScan("com.future.demo.mybatis.plus.mapper")`以便`mybatis-plus`扫描`mapper`
