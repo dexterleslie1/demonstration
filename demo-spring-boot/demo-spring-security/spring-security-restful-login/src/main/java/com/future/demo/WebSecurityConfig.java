@@ -1,8 +1,8 @@
 package com.future.demo;
 
-import com.yyd.common.http.ResponseUtils;
-import com.yyd.common.http.response.ObjectResponse;
-import com.yyd.common.json.JSONUtil;
+import com.future.common.http.ObjectResponse;
+import com.future.common.http.ResponseUtils;
+import com.future.common.json.JSONUtil;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.access.AccessDeniedException;
@@ -54,33 +54,52 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
+                // 禁用 CSRF 保护
                 .csrf().disable()
+                // 用于指示Spring Security不应为客户端创建HTTP会话（即，不应在服务器上存储会话数据）。当您将此策略设置为无状态时，Spring Security将不会使用HTTP会话来跟踪用户身份或状态。
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-
+                // 验证用户是否登录拦截器
                 .and().addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
 
+                // 退出设置
                 .logout()
+                // 退出URL
                 .logoutUrl("/api/auth/logout")
+                // 退出时清除session
                 .invalidateHttpSession(true)
+                // 退出时清除cookie
                 .deleteCookies("JSESSIONID")
+                // 退出成功时处理
                 .logoutSuccessHandler(logoutSuccessHandler())
 
                 .and()
+                // 异常处理设置
                 .exceptionHandling()
+                // 权限不足时处理
                 .accessDeniedHandler(accessDeniedHandler())
+                // 未登录时处理
                 .authenticationEntryPoint(authenticationEntryPoint())
 
                 .and()
+                // 用于对 URL 进行访问权限控制
                 .authorizeRequests()
+                // 登录接口允许匿名访问
                 .antMatchers("/api/auth/login").permitAll()
+                // 访问资源需要USER角色
                 .antMatchers("/api/auth/a1").hasRole("USER")
+                // 访问资源需要USER1角色
                 .antMatchers("/api/auth/a2").hasRole("USER1")
+                // 用于指定对于任何未明确指定权限要求的请求（即前面未通过 .antMatchers() 等方法明确匹配的请求），都需要用户进行身份验证（即用户必须登录）。
                 .anyRequest().authenticated()
 
                 .and()
+                // form登录设置
                 .formLogin()
+                // 登录URL
                 .loginProcessingUrl("/api/auth/login")
+                // 登录成功时处理
                 .successHandler(authenticationSuccessHandler())
+                // 登录失败时处理
                 .failureHandler(authenticationFailureHandler());
     }
 
@@ -94,7 +113,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 mapReturn.put("loginname", authentication.getName());
                 mapReturn.put("token", token);
                 ObjectResponse<Map<String, Object>> responseO = ResponseUtils.successObject(mapReturn);
-                WebSecurityConfig.this.tokenStore.store(token, (MyUser)authentication.getPrincipal());
+                WebSecurityConfig.this.tokenStore.store(token, (MyUser) authentication.getPrincipal());
                 response.setCharacterEncoding(StandardCharsets.UTF_8.name());
                 response.getWriter().write(JSONUtil.ObjectMapperInstance.writeValueAsString(responseO));
             }

@@ -7,17 +7,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import java.security.Principal;
 
-/**
- * @author Dexterleslie.Chan
- */
 @Controller
 public class DemoController {
-    /**
-     * @param model
-     * @param error
-     * @param logout
-     * @return
-     */
+
     @RequestMapping(value = "/login", method = RequestMethod.GET)
     public String login(Model model, String error, String logout) {
         model.addAttribute("var1", "Controller设置的值");

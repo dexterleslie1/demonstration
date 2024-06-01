@@ -1,10 +1,8 @@
 package com.future.demo;
 
-import com.yyd.common.http.HttpUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -15,6 +13,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+// 验证用户是否登录拦截器
 @Component
 public class TokenAuthenticationFilter extends OncePerRequestFilter {
     @Autowired
@@ -23,6 +22,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String path = request.getServletPath();
+        // 不拦截登录接口
         return "/api/v1/auth/login".equalsIgnoreCase(path);
     }
 
@@ -30,6 +30,8 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
+        // 获取请求中携带的token并在本地查询是否有此token，
+        // 是，则构造Authentication对象并注入到请求上下文中
         String token = obtainBearerToken(request);
         if(!StringUtils.isBlank(token)) {
             MyUser user = tokenStore.get(token);

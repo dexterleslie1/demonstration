@@ -1,9 +1,10 @@
 package com.future.demo;
 
+
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.yyd.common.exception.BusinessException;
-import com.yyd.common.http.response.ObjectResponse;
-import com.yyd.common.json.JSONUtil;
+import com.future.common.exception.BusinessException;
+import com.future.common.http.ObjectResponse;
+import com.future.common.json.JSONUtil;
 import feign.*;
 import feign.codec.ErrorDecoder;
 import feign.form.FormEncoder;
@@ -13,9 +14,7 @@ import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -26,13 +25,10 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes={Application.class}, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = {Application.class}, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class Tests {
     @LocalServerPort
     int localServerPort;
-
-    @Autowired
-    TestRestTemplate restTemplate;
 
     @Test
     public void test() throws BusinessException {
@@ -56,7 +52,8 @@ public class Tests {
                     public Exception decode(String methodKey, Response response) {
                         try {
                             String json = IOUtils.toString(response.body().asInputStream(), StandardCharsets.UTF_8);
-                            ObjectResponse<String> responseError = JSONUtil.ObjectMapperInstance.readValue(json, new TypeReference<ObjectResponse<String>>(){});
+                            ObjectResponse<String> responseError = JSONUtil.ObjectMapperInstance.readValue(json, new TypeReference<ObjectResponse<String>>() {
+                            });
                             return new BusinessException(responseError.getErrorCode(), responseError.getErrorMessage());
                         } catch (IOException e) {
                             return e;
@@ -89,7 +86,7 @@ public class Tests {
         Assert.assertNotNull(response.getData().get("token"));
 
         // 测试调用接口
-        String token = (String)response.getData().get("token");
+        String token = (String) response.getData().get("token");
         ObjectResponse<String> response1 = api.a1(token);
         Assert.assertEquals("成功调用接口/api/auth/a1", response1.getData());
         try {
@@ -98,6 +95,15 @@ public class Tests {
             Assert.fail("预期异常没有抛出");
         } catch (BusinessException ex) {
             Assert.assertEquals("权限不足", ex.getErrorMessage());
+        }
+
+        try {
+            // 随便提供不存在token模拟未登录
+            String randomToken = UUID.randomUUID().toString();
+            api.a2(randomToken);
+            Assert.fail("预期异常没有抛出");
+        } catch (BusinessException ex) {
+            Assert.assertEquals("您未登陆", ex.getErrorMessage());
         }
     }
 }
