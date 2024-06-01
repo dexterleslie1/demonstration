@@ -1,6 +1,6 @@
-package com.future.study.spring.boot.logback;
+package com.future.demo;
 
-import com.future.study.spring.boot.package1.TestAdditivity;
+import com.future.demo.package1.TestAdditivity;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 

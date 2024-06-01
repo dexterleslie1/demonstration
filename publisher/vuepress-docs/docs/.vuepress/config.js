@@ -75,6 +75,7 @@ module.exports = {
                     { text: 'Mockito', link: '/mockito/' },
                     { text: 'Java相关', link: '/java/' },
                     { text: 'Spring Boot', link: '/spring-boot/' },
+                    { text: 'Logback', link: '/logback/' },
                 ]
             }, {
                 text: '其他技术',
@@ -260,6 +261,13 @@ module.exports = {
                     title: "Java相关",
                     children: [
                         'entity、vo、dto、po、do.md',
+                    ]
+                }
+            ],'/logback/': [
+                {
+                    title: "Logback",
+                    children: [
+                        '配置和使用.md',
                     ]
                 }
             ],

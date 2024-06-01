@@ -1,4 +1,4 @@
-package com.future.study.spring.boot.package1;
+package com.future.demo.package1;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
