@@ -18,7 +18,7 @@ public class MyBeanDefinitionRegister implements ImportBeanDefinitionRegistrar {
 
         RootBeanDefinition rootBeanDefinition = new RootBeanDefinition();
         rootBeanDefinition.setBeanClass(MyBean.class);
-        // 把 @EnableMyBean name 注解值注入到配置中，实现 @Bean 参数支持注解配置提供
+        // 把 @EnableMyBean name 注解值注入到 MyBean 实例的 name 字段中
         MutablePropertyValues propertyValues = new MutablePropertyValues();
         propertyValues.add("name", name);
         // 添加属性

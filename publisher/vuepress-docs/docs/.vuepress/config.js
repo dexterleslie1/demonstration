@@ -255,6 +255,7 @@ module.exports = {
                         'spring-boot项目的测试.md',
                         'spring-boot全局异常处理.md',
                         'spring-security.md',
+                        'spring-boot中@Import用法.md',
                     ]
                 }
             ], '/java/': [

@@ -12,7 +12,7 @@ public class CacheSelector implements ImportSelector {
         // 获取 @EnableMyCache 缓存类型注解值
         Map<String, Object> annotationAttributes = importingClassMetadata.getAnnotationAttributes(EnableMyCache.class.getName());
         CacheType type = (CacheType) annotationAttributes.get("type");
-        // 根据注解返回不同的缓存实现类名称
+        // 根据注解返回不同的缓存实现类名称，以实现动态地向Spring IoC容器中导入组件
         switch (type) {
             case Local: {
                 return new String[]{LocalCacheService.class.getName()};
