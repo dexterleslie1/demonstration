@@ -24,11 +24,8 @@ public class ConditionalOnPropertyTests {
     @Autowired(required = false)
     TestService1 testService1 = null;
 
-    /**
-     *
-     * @return
-     */
     @Bean
+    // application.properties中配置spring.boot.condition.need.test-service1=true时才创建TestService1
     @ConditionalOnProperty(
             value = "spring.boot.condition.need.test-service1",
             havingValue = "true")

@@ -257,6 +257,7 @@ module.exports = {
                         'spring-security.md',
                         'spring-boot中@Import用法.md',
                         'spring-boot自定义属性.md',
+                        'spring-boot的condition用法.md',
                     ]
                 }
             ], '/java/': [

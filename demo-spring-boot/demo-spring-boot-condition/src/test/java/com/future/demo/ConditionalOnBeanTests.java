@@ -39,6 +39,7 @@ public class ConditionalOnBeanTests {
      * @return
      */
     @Bean
+    // testService1 bean存在时才创建TestService2的实例
     @ConditionalOnBean(name = "testService1")
     TestService2 testService2() {
         TestService2 service = new TestService2();

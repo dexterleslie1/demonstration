@@ -16,7 +16,7 @@ import javax.annotation.Resource;
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest(
-        classes={Application.class, ConditionalOnExpressionTests.class},
+        classes = {Application.class, ConditionalOnExpressionTests.class},
         webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT
 )
 public class ConditionalOnExpressionTests {
@@ -26,11 +26,10 @@ public class ConditionalOnExpressionTests {
     TestService1 testService1 = null;
 
     /**
-     *
      * @return
      */
     @Bean
-    // 当括号中的内容为true时，使用该注解的类被实例化。
+    // 当括号中的内容为true时，使用该注解的类才被实例化。
     @ConditionalOnExpression("${spring.boot.condition.on.expression.test-service1-one:false}")
     TestService1 testService1One() {
         TestService1 service = new TestService1() {
@@ -43,7 +42,6 @@ public class ConditionalOnExpressionTests {
     }
 
     /**
-     *
      * @return
      */
     @Bean
@@ -59,6 +57,7 @@ public class ConditionalOnExpressionTests {
     }
 
     @Bean
+    // spring.boot.condition.on.expression.test-service1-three不为空则创建TestService1
     @ConditionalOnExpression("!T(org.springframework.util.StringUtils).isEmpty('${spring.boot.condition.on.expression.test-service1-three:}')")
     TestService1 testService1Three() {
         TestService1 service = new TestService1() {
@@ -75,6 +74,6 @@ public class ConditionalOnExpressionTests {
      */
     @Test
     public void test() {
-       testService1.sayHello();
+        testService1.sayHello();
     }
 }

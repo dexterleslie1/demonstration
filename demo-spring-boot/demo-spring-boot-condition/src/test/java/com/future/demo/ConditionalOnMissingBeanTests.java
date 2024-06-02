@@ -39,6 +39,7 @@ public class ConditionalOnMissingBeanTests {
      * @return
      */
     @Bean
+    // 只有testService1One bean不存在时才创建新增TestService1实例
     @ConditionalOnMissingBean(name = "testService1One")
     TestService1 testService1Two() {
         TestService1 service = new TestService1();
