@@ -1,1 +1,0 @@
-##### 项目用于测试com.future.demo.spring-boot-starter-demo-plugin

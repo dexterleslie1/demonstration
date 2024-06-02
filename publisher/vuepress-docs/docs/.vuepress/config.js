@@ -258,6 +258,7 @@ module.exports = {
                         'spring-boot中@Import用法.md',
                         'spring-boot自定义属性.md',
                         'spring-boot的condition用法.md',
+                        'spring-boot自定义自动配置.md',
                     ]
                 }
             ], '/java/': [

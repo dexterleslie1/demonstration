@@ -17,7 +17,7 @@ import java.util.Map;
 @SpringBootTest(classes = {Application.class})
 public class ConfigurationPropertiesTests {
     @Autowired
-    TestProperties testProperties;
+    TestPropertiesPrinter.TestProperties testProperties;
     @Autowired
     TestPropertiesPrinter testPropertiesPrinter;
 
