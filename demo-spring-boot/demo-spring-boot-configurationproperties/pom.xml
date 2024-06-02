@@ -11,15 +11,15 @@
     </parent>
 
     <groupId>com.future.demo</groupId>
-    <artifactId>spring-boot-configurationproperties</artifactId>
+    <artifactId>demo-spring-boot-configurationproperties</artifactId>
     <version>1.0.0</version>
 
     <dependencies>
-        <!-- yyd-common -->
+        <!-- 从jitpack中引用自定义工具依赖构件 -->
         <dependency>
-            <groupId>com.yyd.sdk</groupId>
-            <artifactId>yyd-common</artifactId>
-            <version>3.8.79</version>
+            <groupId>com.github.dexterleslie1</groupId>
+            <artifactId>future-common</artifactId>
+            <version>1.0.8</version>
         </dependency>
 
         <dependency>
@@ -38,17 +38,11 @@
         </dependency>
     </dependencies>
 
-    <!-- 引用yyd nexus仓库 -->
+    <!-- jitpack公共仓库，用于引用自定义构件 -->
     <repositories>
         <repository>
-            <id>yyd-nexus</id>
-            <url>http://maven.118899.net/repository/maven-releases/</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
         </repository>
     </repositories>
 </project>
