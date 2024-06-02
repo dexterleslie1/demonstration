@@ -1,4 +1,4 @@
-package com.future.demo.java.spring.boot.condition;
+package com.future.demo;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;

@@ -1,4 +1,4 @@
-package com.future.demo.java.spring.boot.condition;
+package com.future.demo;
 
 /**
  * @author dexterleslie@gmail.com
