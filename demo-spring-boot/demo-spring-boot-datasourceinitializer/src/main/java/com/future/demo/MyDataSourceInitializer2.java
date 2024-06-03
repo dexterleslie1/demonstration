@@ -9,13 +9,9 @@ import java.util.Arrays;
 import java.util.List;
 
 public class MyDataSourceInitializer2 extends DataSourceInitializer {
-    /**
-     * @param dataSource
-     */
     public MyDataSourceInitializer2(DataSource dataSource) {
         this.setDataSource(dataSource);
 
-        // 初始化数据库DatabasePopulator
         ResourceDatabasePopulator databasePopulator = new ResourceDatabasePopulator();
         List<String> sqlFileList = Arrays.asList("db2.sql");
         if (sqlFileList != null && sqlFileList.size() != 0) {
@@ -24,7 +20,6 @@ public class MyDataSourceInitializer2 extends DataSourceInitializer {
                 databasePopulator.addScript(resource);
             }
         }
-//        databasePopulator.setSeparator("$$");
         this.setDatabasePopulator(databasePopulator);
 
         // 清除数据库DatabasePopulator
@@ -36,7 +31,6 @@ public class MyDataSourceInitializer2 extends DataSourceInitializer {
                 databasePopulator.addScript(resource);
             }
         }
-//        databaseCleaner.setSeparator("$$");
         this.setDatabaseCleaner(databaseCleaner);
     }
 }
