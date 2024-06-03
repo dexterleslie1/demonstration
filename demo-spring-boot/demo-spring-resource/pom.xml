@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.future.demo</groupId>
-	<artifactId>spring-resource</artifactId>
+	<artifactId>demo-spring-resource</artifactId>
 	<version>1.0.0</version>
 
 	<properties>

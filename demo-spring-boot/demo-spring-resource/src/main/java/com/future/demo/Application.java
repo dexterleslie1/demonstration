@@ -18,7 +18,7 @@ public class Application {
         InputStream inputStream = null;
         try {
             resource = new ClassPathResource("file.properties");
-            System.out.println("ClassPahtResource path: " + resource.getURL().getPath());
+            System.out.println("ClassPathResource path: " + resource.getURL().getPath());
             inputStream = resource.getInputStream();
             StreamUtils.copyToByteArray(inputStream);
         } finally {
@@ -31,6 +31,7 @@ public class Application {
         Assert.assertTrue(resource.exists());
         try {
             // 调用ClassPathResource.getFile()方法会预期抛出FileNotFoundException
+            // 当资源是打包在 JAR、WAR、EAR 或其他归档文件内部时，getFile() 方法将无法直接访问它，因为这些资源并不是以文件系统上的独立文件形式存在的。在这种情况下，尝试调用 getFile() 将会失败，因为文件系统中没有实际的文件与之对应。
             resource.getFile();
             Assert.fail("没有抛出预期异常");
         } catch (FileNotFoundException ex) {
