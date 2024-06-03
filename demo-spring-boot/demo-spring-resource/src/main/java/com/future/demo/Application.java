@@ -79,16 +79,22 @@ public class Application {
         // 测试ResourceLoader
         ClassPathResource classPathResource = new ClassPathResource("file.properties");
         ResourceLoader resourceLoader = new DefaultResourceLoader();
+
+        // 读取classpath资源
         Resource resourceL = resourceLoader.getResource("file.properties");
         Assert.assertTrue(resourceL instanceof ClassPathResource);
 
+        // 读取classpath资源路径前缀使用classpath:
         resourceL = resourceLoader.getResource("classpath:file.properties");
         Assert.assertTrue(resourceL instanceof ClassPathResource);
 
+        // 使用绝对路径读取classpath资源
+        // absolutePath例子：file:/home/xxx/workspace-git/demonstration/demo-spring-boot/demo-spring-resource/target/demo.jar!/file.properties
         String absolutePath = classPathResource.getURL().getPath();
         resourceL = resourceLoader.getResource(absolutePath);
         Assert.assertTrue(resourceL instanceof FileUrlResource);
 
+        // 读取网络的资源
         resourceL = resourceLoader.getResource("https://docs.spring.io/spring/docs/4.0.0.M1/spring-framework-reference/pdf/spring-framework-reference.pdf");
         Assert.assertTrue(resourceL instanceof UrlResource);
     }
