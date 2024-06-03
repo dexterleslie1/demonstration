@@ -5,6 +5,7 @@ import org.springframework.core.io.*;
 import org.springframework.util.StreamUtils;
 
 import java.io.*;
+import java.util.Properties;
 import java.util.Random;
 
 public class Application {
@@ -13,16 +14,45 @@ public class Application {
         ClassPathResource resource = new ClassPathResource("file-none-exists.properties");
         Assert.assertFalse(resource.exists());
 
+        // 模拟读取第三方库的classpath资源
+        resource = new ClassPathResource("external.properties");
+        Assert.assertTrue(resource.exists());
+        // 2. 从Resource中获取InputStream
+        InputStream inputStream = null;
+        try {
+            inputStream = resource.getInputStream();
+
+            // 3. 使用Properties类加载配置文件
+            Properties properties = new Properties();
+            properties.load(inputStream);
+
+            // 4. 读取并打印配置值
+            String value = properties.getProperty("key1");
+            System.out.println("从external.properties读取的key1=" + value);
+
+        } catch (IOException e) {
+            throw e;
+        } finally {
+            // 5. 关闭InputStream
+            if (inputStream != null) {
+                try {
+                    inputStream.close();
+                } catch (IOException e) {
+                    throw e;
+                }
+            }
+        }
+
         // 测试使用InputStream读取classpath资源
         // 不抛出异常认为成功读取数据
-        InputStream inputStream = null;
+        inputStream = null;
         try {
             resource = new ClassPathResource("file.properties");
             System.out.println("ClassPathResource path: " + resource.getURL().getPath());
             inputStream = resource.getInputStream();
             StreamUtils.copyToByteArray(inputStream);
         } finally {
-            if(inputStream != null) {
+            if (inputStream != null) {
                 inputStream.close();
             }
         }
@@ -58,19 +88,19 @@ public class Application {
         } catch (Exception ex) {
             throw ex;
         } finally {
-            if(outputStream!=null) {
+            if (outputStream != null) {
                 outputStream.close();
                 outputStream = null;
             }
 
-            if(inputStream!=null) {
+            if (inputStream != null) {
                 inputStream.close();
                 inputStream = null;
             }
         }
 
         // 测试ByteArrayResource
-        byte [] randomBytes = new byte[1024*100];
+        byte[] randomBytes = new byte[1024 * 100];
         Random random = new Random();
         random.nextBytes(randomBytes);
         ByteArrayResource byteArrayResource = new ByteArrayResource(randomBytes);

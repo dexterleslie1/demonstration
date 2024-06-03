@@ -27,6 +27,13 @@
 			<artifactId>commons-io</artifactId>
 			<version>2.6</version>
 		</dependency>
+
+		<!-- 模拟引用第三方公共库，用于读取其中的classpath资源 -->
+		<dependency>
+			<groupId>com.future.demo</groupId>
+			<artifactId>demo-third-party-library</artifactId>
+			<version>1.0.0</version>
+		</dependency>
 	</dependencies>
 
 	<build>
