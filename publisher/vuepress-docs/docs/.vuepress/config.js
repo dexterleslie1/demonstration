@@ -260,6 +260,7 @@ module.exports = {
                         'spring-boot的condition用法.md',
                         'spring-boot自定义自动配置.md',
                         'spring的resource使用.md',
+                        'spring-boot的DataSourceInitializer使用.md',
                     ]
                 }
             ], '/java/': [
