@@ -15,7 +15,8 @@ public class MyUserDetailsService implements UserDetailsService {
     PasswordEncoder passwordEncoder;
 
     // 使用UserDetailsService自定义加载用户数据
-    // 
+    // 可用于从数据库自定义加载用户信息
+    //
     // 使用正则自动识别手机、邮箱、用户名实现支持三个字段登录
     // https://blog.csdn.net/qq_41589293/article/details/82953674
     @Override
