@@ -2,23 +2,32 @@
 
 > 例子的详细请参考 [链接](https://github.com/dexterleslie1/demonstration/tree/master/demo-spring-boot/demo-spring-resource)
 >
+> 例子的解析：例子中有`demo-third-party-library`和`demo-tester`两个子项目，`demo-third-party-library`用于模拟第三方库，`demo-tester`作为测试用途的项目用于测试引用`demo-third-party-library`后读取其中的`classpath  external.properties`资源，以达到测试证明`ClassPathResource`是否有能力读取`jar`中的`classpath`资源目的。
+>
 > 运行例子步骤：
 >
 > > 注意：不能从源代码运行此例子。
 >
-> 1. 编译例子
+> 1. 编译并安装`demo-third-party-library`到本地`maven`
 >
 >    ```bash
+>    cd demo-third-party-library 
+>    mvn package install
+>    ```
+>
+> 2. 编译`demo-tester`
+>
+>    ```bash
+>    cd demo-tester
 >    mvn package
 >    ```
 >
-> 2. 运行例子
+> 3. 运行测试
 >
->    ```
+>    ```bash
+>    cd demo-tester
 >    java -jar target/demo.jar
 >    ```
->
->    
 
 ## `ClassPathResource#exists`方法判断`classpath`资源是否存在
 
