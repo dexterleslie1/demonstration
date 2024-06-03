@@ -261,6 +261,7 @@ module.exports = {
                         'spring-boot自定义自动配置.md',
                         'spring的resource使用.md',
                         'spring-boot的DataSourceInitializer使用.md',
+                        'spring-boot的PasswordEncoder使用.md',
                     ]
                 }
             ], '/java/': [
