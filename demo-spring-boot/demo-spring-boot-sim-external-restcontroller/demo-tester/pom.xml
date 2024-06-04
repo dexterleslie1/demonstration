@@ -26,12 +26,6 @@
             <artifactId>demo-third-party-lib</artifactId>
             <version>1.0.0</version>
         </dependency>
-        <!-- 从jitpack中引用自定义工具依赖构件 -->
-<!--        <dependency>-->
-<!--            <groupId>com.github.dexterleslie1</groupId>-->
-<!--            <artifactId>future-common</artifactId>-->
-<!--            <version>1.0.0</version>-->
-<!--        </dependency>-->
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -77,12 +71,4 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-
-    <!-- jitpack公共仓库，用于引用自定义构件 -->
-    <repositories>
-        <repository>
-            <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
-        </repository>
-    </repositories>
 </project>
