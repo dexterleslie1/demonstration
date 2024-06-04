@@ -263,6 +263,7 @@ module.exports = {
                         'spring-boot的DataSourceInitializer使用.md',
                         'spring-boot的PasswordEncoder使用.md',
                         'spring-boot外部restcontroller.md',
+                        'spring-boot的@EnableXxx使用.md',
                     ]
                 }
             ], '/java/': [
