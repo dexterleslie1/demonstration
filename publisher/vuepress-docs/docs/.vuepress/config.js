@@ -228,6 +228,11 @@ module.exports = {
                     title: "Maven",
                     children: [
                         'maven仓库.md',
+                        'mvn命令.md',
+                        'maven的scope用法.md',
+                        '指定jdk版本.md',
+                        '多模块配置.md',
+                        'dependencymanagement用法.md',
                     ]
                 }
             ], '/git/': [
