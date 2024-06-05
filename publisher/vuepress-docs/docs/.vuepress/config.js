@@ -269,6 +269,7 @@ module.exports = {
                         'spring-boot的PasswordEncoder使用.md',
                         'spring-boot外部restcontroller.md',
                         'spring-boot的@EnableXxx使用.md',
+                        '通过parent或dependencymanagement方式管理spring-boot依赖.md',
                     ]
                 }
             ], '/java/': [

@@ -1,3 +1,12 @@
+# 通过`parent`或者`dependencyManagement`方式管理`spring-boot`依赖
+
+>例子详细用法请参考 [链接](https://github.com/dexterleslie1/demonstration/tree/master/demo-spring-boot/demo-spring-boot-dependencies)
+
+## 使用`parent`方式管理`spring-boot`依赖
+
+`pom.xml`内容如下：
+
+```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -5,29 +14,20 @@
     <modelVersion>4.0.0</modelVersion>
 
     <!-- 通过指向parent的方式管理spring-boot依赖 -->
-    <!--<parent>
+    <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>2.2.7.RELEASE</version>
         <relativePath/>
-    </parent>-->
-
-    <groupId>com.future.demo</groupId>
-    <artifactId>demo-spring-boot-dependencies</artifactId>
-    <version>1.0.0</version>
+    </parent>
+    
+    ...
 
     <properties>
         <java.version>1.8</java.version>
     </properties>
 
     <dependencies>
-        <!-- 从jitpack中引用自定义工具依赖构件 -->
-        <dependency>
-            <groupId>com.github.dexterleslie1</groupId>
-            <artifactId>future-common</artifactId>
-            <version>1.0.9</version>
-        </dependency>
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -37,35 +37,44 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+    </dependencies>
+</project>
 
-        <!-- 测试用例使用openfeign需要的依赖 -->
+```
+
+
+
+## 使用`dependencyManagement`方式管理`spring-boot`依赖
+
+`pom.xml`内容如下：
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    ...
+
+    <properties>
+        <java.version>1.8</java.version>
+    </properties>
+
+    <dependencies>
         <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-openfeign</artifactId>
-            <scope>test</scope>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-netflix-ribbon</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
 
     <dependencyManagement>
         <dependencies>
-            <!-- spring-cloud-dependencies -->
-            <dependency>
-                <groupId>org.springframework.cloud</groupId>
-                <artifactId>spring-cloud-dependencies</artifactId>
-                <!--
-                    spring-cloud-dependencies的版本需要和spring-boot-starter-parent的版本兼容，
-                    否则启动测试时候会报错
-                 -->
-                <version>Hoxton.SR10</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-
             <!-- 通过dependencyManagement方式管理spring-boot依赖 -->
             <dependency>
                 <groupId>org.springframework.boot</groupId>
@@ -76,12 +85,7 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-
-    <!-- jitpack公共仓库，用于引用自定义构件 -->
-    <repositories>
-        <repository>
-            <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
-        </repository>
-    </repositories>
 </project>
+
+```
+

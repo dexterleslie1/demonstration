@@ -15,18 +15,8 @@ import org.springframework.web.bind.annotation.RequestParam;
         path = "/api/v1")
 public interface TestSupportDemoFeignClient {
 
-    @GetMapping("add")
-    ObjectResponse<Integer> add(@RequestParam(value = "a") int a,
-                                @RequestParam(value = "b") int b,
-                                @RequestHeader(value = HttpHeaders.AUTHORIZATION) String accessToken) throws BusinessException;
-
-    @GetMapping("minus")
-    ObjectResponse<Integer> minus(@RequestParam(value = "a") int a,
-                                  @RequestParam(value = "b") int b,
-                                  @RequestHeader(value = HttpHeaders.AUTHORIZATION) String accessToken) throws BusinessException;
-
-    @PostMapping("addUser")
-    ObjectResponse<String> addUser(@RequestHeader(value = HttpHeaders.AUTHORIZATION) String accessToken) throws BusinessException;
+    @GetMapping("test1")
+    ObjectResponse<String> test1() throws BusinessException;
 
 }
 
