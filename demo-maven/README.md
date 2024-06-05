@@ -1,15 +1,5 @@
 ## mvn命令使用
 
-### 编译指定模块
-
-```
-# https://stackoverflow.com/questions/1114026/maven-modules-building-a-single-specific-module
-# -am表示-also-make自动编译依赖的子模块
-mvn -pl ../xxx-module -am package
-```
-
-
-
 ## 使用mvn命令运行unittest
 
 > https://stackoverflow.com/questions/75939658/how-to-run-tests-using-maven
@@ -71,15 +61,6 @@ mvn clean
 ```
 
 
-
-## maven设置编译jdk版本
-
-```xml
-<properties>
-    <maven.compiler.target>1.8</maven.compiler.target>
-    <maven.compiler.source>1.8</maven.compiler.source>
-</properties>
-```
 
 ## 配置maven的mvn deploy用户凭证
 

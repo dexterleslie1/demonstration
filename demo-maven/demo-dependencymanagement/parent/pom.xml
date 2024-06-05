@@ -23,6 +23,7 @@
 
     <dependencyManagement>
         <dependencies>
+            <!-- commons-lang3统一版本管理 -->
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-lang3</artifactId>
