@@ -233,6 +233,7 @@ module.exports = {
                         '指定jdk版本.md',
                         '多模块配置.md',
                         'dependencymanagement用法.md',
+                        'maven的optional用法.md',
                     ]
                 }
             ], '/git/': [
