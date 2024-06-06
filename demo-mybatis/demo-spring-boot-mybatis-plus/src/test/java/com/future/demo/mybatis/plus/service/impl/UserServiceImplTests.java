@@ -34,7 +34,7 @@ public class UserServiceImplTests {
     @Test
     public void testSave() {
         // insert前总记录数
-        int countInsertBefore = userService.count();
+        int countInsertBefore = (int)userService.count();
         User user = new User();
         user.setId(10001l);
         user.setAge(30);
@@ -42,7 +42,7 @@ public class UserServiceImplTests {
         user.setEmail("dexterleslie@gmail.com");
         userService.save(user);
 
-        int countInsertAfter = userService.count();
+        int countInsertAfter = (int)userService.count();
 
 //        // 删除上面插入数据
 //        userService.removeById(10001l);
@@ -65,7 +65,7 @@ public class UserServiceImplTests {
             this.userService.removeById(id);
         }
 
-        int prevTotalCount = this.userService.count();
+        int prevTotalCount = (int)this.userService.count();
 
         if(randomTotalCount < 50) {
             randomTotalCount = 50;
@@ -82,13 +82,15 @@ public class UserServiceImplTests {
             userService.save(user);
         }
 
-        int currentTotalCount = this.userService.count();
+        int currentTotalCount = (int)this.userService.count();
         Assert.assertEquals(prevTotalCount+randomTotalCount, currentTotalCount);
 
         int currentPage = 1;
         int size = 50;
         Page<User> page = new Page<>(currentPage, size);
-        page.orders().add(new OrderItem("id", false));
+        OrderItem orderItem = new OrderItem();
+        orderItem.setColumn("id").setAsc(false);
+        page.orders().add(orderItem);
         this.userService.page(page);
         List<User> userList = page.getRecords();
         // 当前页码
@@ -109,7 +111,9 @@ public class UserServiceImplTests {
 
         // 使用mapper分页
         page = new Page<>(currentPage, size);
-        page.orders().add(new OrderItem("id", false));
+        orderItem = new OrderItem();
+        orderItem.setColumn("id").setAsc(false);
+        page.orders().add(orderItem);
         // 表示不需要select count(*) from ...
         page.setSearchCount(false);
         page = this.userMapper.selectPage(page, null);
@@ -118,7 +122,7 @@ public class UserServiceImplTests {
         QueryWrapper<User> queryWrapper = Wrappers.query();
         queryWrapper.select("id");
 
-        currentTotalCount = this.userMapper.selectCount(queryWrapper);
+        currentTotalCount = this.userMapper.selectCount(queryWrapper).intValue();
         userList = page.getRecords();
         // 当前页码
         Assert.assertEquals(1, page.getCurrent());

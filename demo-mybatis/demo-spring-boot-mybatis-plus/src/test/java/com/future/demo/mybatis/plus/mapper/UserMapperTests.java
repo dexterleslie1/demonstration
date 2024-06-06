@@ -60,7 +60,7 @@ public class UserMapperTests {
     @Test
     public void testInsert() {
         // insert前总记录数
-        int countInsertBefore = userMapper.selectCount(null);
+        int countInsertBefore = userMapper.selectCount(null).intValue();
         User user = new User();
         user.setId(10001l);
         user.setAge(30);
@@ -68,7 +68,7 @@ public class UserMapperTests {
         user.setEmail("dexterleslie@gmail.com");
         userMapper.insert(user);
 
-        int countInsertAfter = userMapper.selectCount(null);
+        int countInsertAfter = userMapper.selectCount(null).intValue();
 
         // 删除上面插入数据
         userMapper.deleteById(10001l);

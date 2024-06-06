@@ -81,7 +81,9 @@ public class OperationLogService {
         Assert.isTrue(size >= 1 && size <= 1000, "参数错误1");
 
         Page<OperationLogModel> pageObject = new Page<>(page, size);
-        pageObject.orders().add(new OrderItem("id", false));
+        OrderItem orderItem = new OrderItem();
+        orderItem.setColumn("id").setAsc(false);
+        pageObject.orders().add(orderItem);
         QueryWrapper<OperationLogModel> queryWrapper = Wrappers.query();
         queryWrapper.eq("auth_id", contextUserId);
 
