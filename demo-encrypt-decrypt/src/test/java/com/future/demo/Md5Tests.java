@@ -1,4 +1,4 @@
-package com.future.demo.java.encryption;
+package com.future.demo;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.Assert;

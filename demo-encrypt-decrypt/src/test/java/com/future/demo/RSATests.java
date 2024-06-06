@@ -1,4 +1,4 @@
-package com.future.demo.java.encryption;
+package com.future.demo;
 
 import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
 import org.junit.Assert;

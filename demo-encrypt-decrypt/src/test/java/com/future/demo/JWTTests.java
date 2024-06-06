@@ -1,4 +1,4 @@
-package com.future.demo.java.encryption;
+package com.future.demo;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
