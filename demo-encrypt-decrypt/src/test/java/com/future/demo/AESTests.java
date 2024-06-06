@@ -10,9 +10,9 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
-public class DESTests {
+public class AESTests {
     /**
-     * 测试DES密码算法的加密和解密
+     * 测试AES密码算法的加密和解密
      *
      * @throws NoSuchAlgorithmException
      * @throws NoSuchPaddingException
@@ -21,12 +21,10 @@ public class DESTests {
      * @throws IllegalBlockSizeException
      */
     @Test
-    public void testDESEncryptDecrypt() throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
+    public void testAESEncryptDecrypt() throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
         String plainText = RandomStringUtils.random(256);
 
-        // DES密码算法
-        String algorithm = "DES";
-        // 明文的密钥
+        String algorithm = "AES";
         String plainSecretKey = RandomStringUtils.random(1024);
 
         // 生成秘钥
@@ -47,7 +45,6 @@ public class DESTests {
         cipher.init(Cipher.DECRYPT_MODE, secretKey);
         byte[] plainBytes = cipher.doFinal(encryptBytes);
 
-        // 原来的明文能够匹配被加密和解密后的明文
         String plainTextDecrypt = new String(plainBytes);
         Assert.assertEquals(plainText, plainTextDecrypt);
     }

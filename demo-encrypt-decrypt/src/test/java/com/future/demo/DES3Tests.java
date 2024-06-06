@@ -10,9 +10,9 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
-public class DESTests {
+public class DES3Tests {
     /**
-     * 测试DES密码算法的加密和解密
+     * 测试DES3密码算法的加密和解密
      *
      * @throws NoSuchAlgorithmException
      * @throws NoSuchPaddingException
@@ -21,12 +21,10 @@ public class DESTests {
      * @throws IllegalBlockSizeException
      */
     @Test
-    public void testDESEncryptDecrypt() throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
+    public void testDES3EncryptDecrypt() throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
         String plainText = RandomStringUtils.random(256);
 
-        // DES密码算法
-        String algorithm = "DES";
-        // 明文的密钥
+        String algorithm = "DESede";
         String plainSecretKey = RandomStringUtils.random(1024);
 
         // 生成秘钥
