@@ -54,10 +54,6 @@
             <scope>test</scope>
         </dependency>
         <!-- 引用mybatis-plus依赖 -->
-        <!--
-            版本3.5.6之前存在SQL注入漏洞
-            https://nvd.nist.gov/vuln/detail/CVE-2024-35548
-        -->
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-boot-starter</artifactId>
