@@ -35,6 +35,7 @@ source_dir_to_target_dir_map["../../demo-mockito"]="mockito"
 source_dir_to_target_dir_map["../../demo-spring-boot"]="spring-boot"
 source_dir_to_target_dir_map["../../demo-java"]="java"
 source_dir_to_target_dir_map["../../demo-logback"]="logback"
+source_dir_to_target_dir_map["../../demo-computer-information-security"]="计算机信息安全"
 
 for key in ${!source_dir_to_target_dir_map[@]}; do
     # 删除符号链接目录
