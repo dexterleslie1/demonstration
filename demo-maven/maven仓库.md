@@ -36,9 +36,13 @@
     - 是由用户自己搭建的私有仓库，用于存储和共享自己开发的项目构件。
     - 使用私有仓库可以获取到一些不在公共仓库中的构件，满足特定需求。
 
-## 搭建私有仓库
+## 搭建`nexus3`私有仓库
 
 > 选择使用`nexus3`作为私有仓库
+>
+> [sonatype nexus介绍](https://www.cnblogs.com/aiseek/p/9466247.html)
+
+Sonatype Nexus。它是Sonatype公司的一个产品，叫Nexus，它是Maven的私服。事实上有三种专门的Maven仓库管理软件可以帮助我们创建私服，有Apache的Archiva;JFrog的Artifactory和Sonatype的Nexus。其中Archiva是开源的，Artifactory和Nexus的核心也是开源的。这里我们重点介绍Sonatype公司的Nexus。Sonatype nexus 分为oss和professional版本。
 
 `docker-compose.yaml`配置如下：
 
@@ -221,6 +225,8 @@ mvn deploy
 > 免费的`jitpack`发布个人构件需要`github`的仓库为`public`类型，因为`jitpack`会自动拉取`github`指定仓库的`tag`并显示在它的界面中，开发者只需要选择相应的`tag`即可触发`jitpack`自动构建。
 >
 > `jitpack`无法覆盖同一个`tag`更新发布。
+>
+> 参考 [链接](https://blog.csdn.net/Jul_11th/article/details/79650734)
 
 使用`jitpack`发布构件，构件项目只需要是普通的`maven`项目，详细参考模板项目 [dexterleslie1/maven-jitpack-multiple-module-demo](https://github.com/dexterleslie1/maven-jitpack-multiple-module-demo)
 
@@ -272,3 +278,26 @@ mvn deploy
 ## 发布`android`构件到`jitpack`公共仓库
 
 > todo 抽个时间做测试！
+
+## 发布自定义构件到`maven`中央仓库
+
+> todo 抽个时间做测试！
+>
+> https://central.sonatype.com/ gmail@Kl(shift)||
+
+## `nexus3`管理
+
+### 仓库类型
+
+nexus3仓库类型主要包括以下几种：
+
+1. group（仓库组）
+   - 仓库组没有具体的内容，它会转向其包含的宿主仓库或代理仓库获得实际构件的内容。
+   - 它是多个仓库的集合，可以包含多个hosted、proxy、group类型的仓库。
+   - 在group中还存在优先级的关系，例如，当多个仓库都包含同一镜像时，会按照配置的优先级顺序进行匹配，一旦匹配成功则不再继续向下匹配。
+2. hosted（宿主）
+   - 宿主仓库主要是用来存放一些组织内部的构件，或由于版权原因不能放在公共仓库中的构件。
+   - 宿主仓库指的是用户自己项目所构建组成的仓库。
+3. proxy（代理）
+   - 代理仓库用于代理远程仓库，当客户端请求proxy类型仓库时，如果仓库中依赖存在即返回给客户端，如未存在就从proxy配置的远程仓库中拉取依赖返回给客户端，并在proxy仓库中进行缓存。
+   - 代理仓库也称为缓存仓库，主要用于代理远程的公共仓库，如Maven中央仓库等。
