@@ -14,17 +14,34 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.4.5</version>
+        <relativePath/> <!-- lookup parent from repository -->
+    </parent>
+    
     ...
 
     <properties>
         <java.version>1.8</java.version>
-        <mybatis-plus.version>3.4.2</mybatis-plus.version>
+        <mybatis-plus.version>3.5.6</mybatis-plus.version>
         <lombok.version>1.18.20</lombok.version>
         <junit.version>4.13.2</junit.version>
         <mysql.connector.version>8.0.23</mysql.connector.version>
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        
         <!-- 用于在entity中引用@Data注解 -->
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -48,7 +65,7 @@
         <dependency>
             <groupId>com.github.yulichang</groupId>
             <artifactId>mybatis-plus-join</artifactId>
-            <version>1.2.4</version>
+            <version>1.4.13</version>
         </dependency>
         <!-- mysql jdbc驱动程序 -->
         <dependency>
