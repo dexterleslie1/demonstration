@@ -118,7 +118,11 @@ module.exports = {
             }],
             '/intellij-idea/': [{
                 title: "IntelliJ IDEA的使用",
-                children: ['多重光标同时编辑.md', '快捷键.md'],
+                children: [
+                    '多重光标同时编辑.md',
+                    '快捷键.md',
+                    'intellij全家桶破解.md',
+                ],
             }],
             '/MySQL/': [
                 {
