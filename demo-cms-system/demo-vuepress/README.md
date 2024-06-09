@@ -12,6 +12,8 @@ vuepress2 需要 nodejs v18.16.0+，nodejs v15.14.0 不能启动 vuepress。
 
 ### vuepress1.x
 
+> 注意：`vuepress1.x`不处理`markdown`中引用的本地图片，所以需要使用阿里云存储发布图片。
+
 参考
 https://v1.vuepress.vuejs.org/guide/getting-started.html
 demo-vuepress1-getting-started
