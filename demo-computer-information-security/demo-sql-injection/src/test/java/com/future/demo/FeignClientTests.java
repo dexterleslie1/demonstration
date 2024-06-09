@@ -24,7 +24,7 @@ public class FeignClientTests {
     public void test() throws Exception {
         try {
             // username参数sql
-            this.testSupportDemoFeignClient.testErrorBasedSqlInjection("user'; select 1 from table_test; #");
+            this.testSupportDemoFeignClient.testErrorBasedSqlInjection("user'; select 1 from table_test; -- ");
             Assert.fail("预期异常没有抛出");
         } catch (BusinessException ex) {
             Assert.assertEquals("Table 'demo.table_test' doesn't exist", ex.getErrorMessage());
@@ -36,7 +36,7 @@ public class FeignClientTests {
         Assert.assertTrue(
                 this.testSupportDemoFeignClient.testTimeBasedBlindSqlInjection("' OR IF(1=1, SLEEP(1), 0) OR '1'='0").getData() >= 1000);
 
-        List<String> userList = this.testSupportDemoFeignClient.testUnionBasedSqlInjection("' OR '1'='1' UNION SELECT null,col1, col2,null FROM secret_data #").getData();
+        List<String> userList = this.testSupportDemoFeignClient.testUnionBasedSqlInjection("' OR '1'='1' UNION SELECT null,col1, col2,null FROM secret_data -- ").getData();
         Assert.assertEquals(3, userList.size());
         Assert.assertEquals("secret-col1", userList.get(userList.size() - 1));
 
@@ -46,7 +46,7 @@ public class FeignClientTests {
         Assert.assertEquals("user1", usernameList.get(0));
         Assert.assertEquals("user2", usernameList.get(1));
 
-        usernameList = this.testSupportDemoFeignClient.testMybatisPlusWhereInSqlInjection(Collections.singletonList("1) OR 1=1 #")).getData();
+        usernameList = this.testSupportDemoFeignClient.testMybatisPlusWhereInSqlInjection(Collections.singletonList("1) OR 1=1 -- ")).getData();
         Assert.assertEquals(2, usernameList.size());
         Assert.assertEquals("user1", usernameList.get(0));
         Assert.assertEquals("user2", usernameList.get(1));
