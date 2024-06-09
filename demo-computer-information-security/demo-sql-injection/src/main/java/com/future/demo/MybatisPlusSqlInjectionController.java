@@ -41,6 +41,14 @@ public class MybatisPlusSqlInjectionController {
         return ResponseUtils.successList(userList.stream().map(o -> o.getUsername()).collect(Collectors.toList()));
     }
 
+    /**
+     * where in sql注入
+     *
+     * @param idList
+     * @return
+     * @throws SQLException
+     * @throws BusinessException
+     */
     @GetMapping("mybatis-plus/testWhereInSqlInjection")
     ListResponse<String> testWhereInSqlInjection(
             @RequestParam(name = "idList", required = false) List<String> idList
