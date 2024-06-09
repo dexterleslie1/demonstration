@@ -77,7 +77,9 @@ module.exports = {
                     { text: 'Spring Boot', link: '/spring-boot/' },
                     { text: 'Logback', link: '/logback/' },
                 ]
-            }, {
+            },
+            { text: '计算机信息安全', link: '/计算机信息安全/' },
+            {
                 text: '其他技术',
                 items: [
                     { text: 'Git使用', link: '/git/' },
@@ -180,7 +182,8 @@ module.exports = {
                     title: "Ubuntu使用",
                     children: [
                         '配置基于ubuntu的软件开发环境.md',
-                        '安装googlepinyin输入法.md'
+                        '安装googlepinyin输入法.md',
+                        'sources.list.md',
                     ]
                 }
             ], '/linux使用/': [
@@ -285,6 +288,14 @@ module.exports = {
                     title: "Logback",
                     children: [
                         '配置和使用.md',
+                    ]
+                }
+            ], '/计算机信息安全/': [
+                {
+                    title: "计算机信息安全",
+                    children: [
+                        '',
+                        '应用安全.md',
                     ]
                 }
             ],
