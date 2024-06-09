@@ -123,6 +123,74 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 }
 ```
 
+## 用户和密码数据源配置
+
+> 例子详细用法请参考 [链接](https://github.com/dexterleslie1/demonstration/tree/master/demo-spring-boot/demo-spring-security/spring-security-user-and-password-datasource)
+
+### `UserDetailsService`方式
+
+> 可通过此方式从数据库读取用户信息，甚至可以从任何其他数据源读取用户信息。
+
+`MyUserDetailsService`
+
+```java
+@Service
+public class MyUserDetailsService implements UserDetailsService {
+    @Autowired
+    PasswordEncoder passwordEncoder;
+
+    // 使用UserDetailsService自定义加载用户数据
+    // 可用于从数据库自定义加载用户信息
+    //
+    // 使用正则自动识别手机、邮箱、用户名实现支持三个字段登录
+    // https://blog.csdn.net/qq_41589293/article/details/82953674
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        return new User("user3", this.passwordEncoder.encode("123456"), AuthorityUtils.commaSeparatedStringToAuthorityList("role3"));
+    }
+}
+```
+
+
+
+### `application.properties`文件配置方式
+
+> 此方式通常用于测试用途，注意: 不需要配置`WebSecurityConfigurerAdapter`和配置`PasswordEncoder`(否则登录时报错)
+
+`application.properties`配置如下：
+
+```properties
+# 使用配置文件配置用户密码
+# 注意: 不需要配置WebSecurityConfigurerAdapter和配置PasswordEncoder(否则登录时报错)
+spring.security.user.name=user1
+spring.security.user.password=123456
+spring.security.user.roles=role1
+```
+
+
+
+### 通过配置类临时内存存储
+
+> 此方式通常用于测试用途，用户的信息存储于内存中。
+
+配置如下：
+
+```java
+@Configuration
+public class ConfigInMemoryDatasource extends WebSecurityConfigurerAdapter {
+    @Autowired
+    PasswordEncoder passwordEncoder;
+
+    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        // 使用配置类配置用户密码
+        // 用户认证信息在内存中临时存放
+        auth.inMemoryAuthentication()
+                .withUser("user2").password(passwordEncoder.encode("123456")).roles("role2");
+    }
+}
+```
+
 
 
 ## 自定义登录界面
