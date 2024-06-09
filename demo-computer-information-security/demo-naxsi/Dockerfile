@@ -9,9 +9,13 @@ RUN cd /usr/local && tar -xvzf openresty.tar
 # 删除编译后的openresty压缩包
 RUN rm -f openresty.tar
 
-# 安装和配置logrotate
 ADD sources.list /etc/apt/sources.list
-# RUN apt update
+RUN apt update
+
+# openresty运行时依赖
+RUN apt install openssl -y
+
+# 安装和配置logrotate
 # RUN apt install vim -y
 # RUN apt install logrotate -y
 # RUN apt install systemd -y
