@@ -194,7 +194,8 @@ module.exports = {
                 {
                     title: "Linux使用",
                     children: [
-                        '命令行工具列表.md'
+                        '命令行工具列表.md',
+                        'centos8相关.md',
                     ]
                 }
             ], '/基准和性能测试/': [
