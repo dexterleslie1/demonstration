@@ -26,4 +26,10 @@ public interface Api {
     })
     ObjectResponse<String> a2(@Param("token") String token) throws BusinessException;
 
+    @RequestLine("POST /api/auth/logout")
+    @Headers(value = {
+            "Authorization: Bearer {token}"
+    })
+    ObjectResponse<String> logout(@Param("token") String token) throws BusinessException;
+
 }

@@ -16,8 +16,8 @@ public class ApiController {
      * @return
      */
     @GetMapping(value = "a1")
-    public ObjectResponse<String> a1() {
-        return ResponseUtils.successObject("成功调用接口/api/auth/a1");
+    public ObjectResponse<String> a1(CustomizeAuthentication authentication) {
+        return ResponseUtils.successObject("成功调用接口/api/auth/a1，登录用户 " + authentication.getName());
     }
 
     /**
@@ -26,7 +26,7 @@ public class ApiController {
      * @return
      */
     @GetMapping(value = "a2")
-    public ObjectResponse<String> a2() {
-        return ResponseUtils.successObject("成功调用接口/api/auth/a2");
+    public ObjectResponse<String> a2(CustomizeAuthentication authentication) {
+        return ResponseUtils.successObject("成功调用接口/api/auth/a2，登录用户 " + authentication.getName());
     }
 }

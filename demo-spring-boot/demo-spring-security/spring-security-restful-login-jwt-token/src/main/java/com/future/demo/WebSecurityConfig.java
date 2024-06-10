@@ -1,8 +1,10 @@
 package com.future.demo;
 
-import com.future.common.http.ObjectResponse;
+import com.future.common.constant.ErrorCodeConstant;
 import com.future.common.http.ResponseUtils;
-import com.future.common.json.JSONUtil;
+import com.future.common.jwt.JwtUtil;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.access.AccessDeniedException;
@@ -13,6 +15,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -31,25 +34,29 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * @author Dexterleslie.Chan
  */
 @Configuration
 @EnableWebSecurity
+@Slf4j
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Resource
-    TokenAuthenticationFilter tokenAuthenticationFilter;
-    @Resource
-    TokenStore tokenStore;
+    CustomizeAuthenticationFilter customizeAuthenticationFilter;
     @Resource
     PasswordEncoder passwordEncoder;
+
+    @Value("${customize.privateKey}")
+    private String privateKey;
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
@@ -59,11 +66,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 // 用于指示Spring Security不应为客户端创建HTTP会话（即，不应在服务器上存储会话数据）。当您将此策略设置为无状态时，Spring Security将不会使用HTTP会话来跟踪用户身份或状态。
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 // 验证用户是否登录拦截器
-                .and().addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .and().addFilterBefore(customizeAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
 
                 // 退出设置
                 .logout()
-                // 退出URL
+                // 退出URL，自定义的所有OncePerRequestFilter都不会拦截这个URL
                 .logoutUrl("/api/auth/logout")
                 // 退出时清除session
                 .invalidateHttpSession(true)
@@ -77,7 +84,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .exceptionHandling()
                 // 权限不足时处理
                 .accessDeniedHandler(accessDeniedHandler())
-                // 未登录时处理
+                // 未登录时处理，即SecurityContextHolder中不存在Authentication对象时
                 .authenticationEntryPoint(authenticationEntryPoint())
 
                 .and()
@@ -107,15 +114,31 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         return new AuthenticationSuccessHandler() {
             @Override
             public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
-                String token = UUID.randomUUID().toString();
-                Map<String, Object> mapReturn = new HashMap<>();
-                mapReturn.put("userId", 4738438);
-                mapReturn.put("loginname", authentication.getName());
-                mapReturn.put("token", token);
-                ObjectResponse<Map<String, Object>> responseO = ResponseUtils.successObject(mapReturn);
-                WebSecurityConfig.this.tokenStore.store(token, (MyUser) authentication.getPrincipal());
-                response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-                response.getWriter().write(JSONUtil.ObjectMapperInstance.writeValueAsString(responseO));
+                try {
+                    Long userId = ((CustomizeUserDetails) authentication.getPrincipal()).getUserId();
+                    String loginname = authentication.getName();
+                    String jwtToken = JwtUtil.signWithPrivateKey(privateKey, new Consumer<com.auth0.jwt.JWTCreator.Builder>() {
+                        @Override
+                        public void accept(com.auth0.jwt.JWTCreator.Builder builder) {
+                            builder.withClaim("userId", userId)
+                                    .withClaim("roleList",
+                                            authentication.getAuthorities().stream()
+                                                    .map(GrantedAuthority::getAuthority)
+                                                    .collect(Collectors.toList()));
+                        }
+                    });
+
+                    Map<String, Object> mapReturn = new HashMap<>();
+                    mapReturn.put("userId", userId);
+                    mapReturn.put("loginname", loginname);
+                    mapReturn.put("token", jwtToken);
+
+
+                    ResponseUtils.writeSuccessResponse(response, mapReturn);
+                } catch (NoSuchAlgorithmException | InvalidKeySpecException ex) {
+                    log.error(ex.getMessage(), ex);
+                    ResponseUtils.writeFailResponse(response, ErrorCodeConstant.ErrorCodeCommon, "网络繁忙，稍后重试！");
+                }
             }
         };
     }
@@ -124,10 +147,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         return new AuthenticationFailureHandler() {
             @Override
             public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException, ServletException {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                ObjectResponse<String> responseO = ResponseUtils.failObject(50000, exception.getMessage());
-                response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-                response.getWriter().write(JSONUtil.ObjectMapperInstance.writeValueAsString(responseO));
+                ResponseUtils.writeFailResponse(response, ErrorCodeConstant.ErrorCodeCommon, exception.getMessage());
             }
         };
     }
@@ -136,9 +156,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         return new LogoutSuccessHandler() {
             @Override
             public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
-                ObjectResponse<String> responseO = ResponseUtils.successObject("成功退出");
-                response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-                response.getWriter().write(JSONUtil.ObjectMapperInstance.writeValueAsString(responseO));
+                // jwt token的退出逻辑需要使用redis记录相应的jwt token已经退出
+                ResponseUtils.writeSuccessResponse(response, "成功退出");
             }
         };
     }
@@ -147,10 +166,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         return new AccessDeniedHandler() {
             @Override
             public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException, ServletException {
-                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                ObjectResponse<String> responseO = ResponseUtils.failObject(50002, "权限不足");
-                response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-                response.getWriter().write(JSONUtil.ObjectMapperInstance.writeValueAsString(responseO));
+                ResponseUtils.writeFailResponse(response, HttpServletResponse.SC_FORBIDDEN, ErrorCodeConstant.ErrorCodeCommon, "权限不足");
             }
         };
     }
@@ -159,10 +175,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         return new AuthenticationEntryPoint() {
             @Override
             public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                ObjectResponse<String> responseO = ResponseUtils.failObject(50001, "您未登陆");
-                response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-                response.getWriter().write(JSONUtil.ObjectMapperInstance.writeValueAsString(responseO));
+                ResponseUtils.writeFailResponse(response, HttpServletResponse.SC_UNAUTHORIZED, ErrorCodeConstant.ErrorCodeCommon, "您未登陆");
+
             }
         };
     }
@@ -172,7 +186,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         auth.userDetailsService(new UserDetailsService() {
             @Override
             public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-                return new MyUser(username, passwordEncoder.encode("123456"), Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")));
+                Long userId = 4738438L;
+                return new CustomizeUserDetails(userId, username,
+                        passwordEncoder.encode("123456"),
+                        Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")));
             }
         });
     }

@@ -84,11 +84,12 @@ public class Tests {
         Assert.assertEquals(4738438, response.getData().get("userId"));
         Assert.assertEquals(username, response.getData().get("loginname"));
         Assert.assertNotNull(response.getData().get("token"));
+        Long userId = ((Integer) response.getData().get("userId")).longValue();
 
         // 测试调用接口
         String token = (String) response.getData().get("token");
         ObjectResponse<String> response1 = api.a1(token);
-        Assert.assertEquals("成功调用接口/api/auth/a1", response1.getData());
+        Assert.assertEquals("成功调用接口/api/auth/a1，登录用户 " + userId, response1.getData());
         try {
             // 访问接口 /api/v1/a2 需要 USER1 角色
             api.a2(token);
@@ -101,6 +102,15 @@ public class Tests {
             // 随便提供不存在token模拟未登录
             String randomToken = UUID.randomUUID().toString();
             api.a2(randomToken);
+            Assert.fail("预期异常没有抛出");
+        } catch (BusinessException ex) {
+            Assert.assertEquals("您未登陆", ex.getErrorMessage());
+        }
+
+        // 测试退出登录
+        Assert.assertEquals("成功退出", api.logout(token).getData());
+        try {
+            api.a1(token);
             Assert.fail("预期异常没有抛出");
         } catch (BusinessException ex) {
             Assert.assertEquals("您未登陆", ex.getErrorMessage());

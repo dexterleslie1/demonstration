@@ -3,6 +3,7 @@ package com.future.demo;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -19,21 +20,22 @@ public class TokenStore {
         this.cacheTokenToUser = this.cacheManager.getCache("cacheTokenToUser");
     }
 
-    public void store(String token, MyUser user) {
+    public void store(String token, CustomizeUser user) {
         Element element = new Element(token, user);
         this.cacheTokenToUser.put(element);
     }
 
-    public MyUser get(String token) {
+    public CustomizeUser get(String token) {
         Element element = this.cacheTokenToUser.get(token);
-        if(element==null) {
+        if (element == null) {
             return null;
         }
 
-        return (MyUser)element.getObjectValue();
+        return (CustomizeUser) element.getObjectValue();
     }
 
     public void remove(String token) {
-        this.cacheTokenToUser.remove(token);
+        if (!StringUtils.isBlank(token))
+            this.cacheTokenToUser.remove(token);
     }
 }

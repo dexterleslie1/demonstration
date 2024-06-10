@@ -1,8 +1,8 @@
 package com.future.demo;
 
+import com.future.common.http.RequestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -15,7 +15,7 @@ import java.io.IOException;
 
 // 验证用户是否登录拦截器
 @Component
-public class TokenAuthenticationFilter extends OncePerRequestFilter {
+public class CustomizeAuthenticationFilter extends OncePerRequestFilter {
     @Autowired
     TokenStore tokenStore;
 
@@ -32,12 +32,12 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
         // 获取请求中携带的token并在本地查询是否有此token，
         // 是，则构造Authentication对象并注入到请求上下文中
-        String token = obtainBearerToken(request);
-        if(!StringUtils.isBlank(token)) {
-            MyUser user = tokenStore.get(token);
+        String token = RequestUtils.ObtainBearerToken(request);
+        if (!StringUtils.isBlank(token)) {
+            CustomizeUser user = tokenStore.get(token);
 
             if (user != null) {
-                MyAuthentication authentication = new MyAuthentication(user);
+                CustomizeAuthentication authentication = new CustomizeAuthentication(user);
                 authentication.setAuthenticated(true);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
@@ -45,12 +45,4 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    String obtainBearerToken(HttpServletRequest request) {
-        String bearerStr = request.getHeader(HttpHeaders.AUTHORIZATION);
-        if(StringUtils.isBlank(bearerStr)) {
-            return bearerStr;
-        }
-
-        return bearerStr.replace("Bearer ", "");
-    }
 }
