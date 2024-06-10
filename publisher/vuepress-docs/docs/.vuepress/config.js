@@ -78,7 +78,13 @@ module.exports = {
                     { text: 'Logback', link: '/logback/' },
                 ]
             },
-            { text: '计算机信息安全', link: '/计算机信息安全/' },
+            {
+                text: '计算机信息安全',
+                items: [
+                    { text: '密码算法', link: '/密码算法/' },
+                    { text: '信息安全', link: '/计算机信息安全/' },
+                ]
+            },
             {
                 text: '其他技术',
                 items: [
@@ -297,10 +303,21 @@ module.exports = {
                 }
             ], '/计算机信息安全/': [
                 {
-                    title: "计算机信息安全",
+                    title: "信息安全",
                     children: [
                         '',
                         '应用安全.md',
+                    ]
+                }
+            ], '/密码算法/': [
+                {
+                    title: "密码算法",
+                    children: [
+                        '',
+                        '摘要算法.md',
+                        '对称密码算法.md',
+                        '非对称密码算法.md',
+                        'jwt.md',
                     ]
                 }
             ],
