@@ -45,6 +45,7 @@ public class AESTests {
         cipher.init(Cipher.DECRYPT_MODE, secretKey);
         byte[] plainBytes = cipher.doFinal(encryptBytes);
 
+        // 原来的明文能够匹配被加密和解密后的明文
         String plainTextDecrypt = new String(plainBytes);
         Assert.assertEquals(plainText, plainTextDecrypt);
     }
