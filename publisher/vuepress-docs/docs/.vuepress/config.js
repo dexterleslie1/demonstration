@@ -91,6 +91,7 @@ module.exports = {
                     { text: 'Git使用', link: '/git/' },
                     { text: 'OpenLDAP', link: '/openldap/' },
                     { text: 'Jira', link: '/jira/' },
+                    { text: '软件工程', link: '/软件工程/' },
                 ]
             },
             {
@@ -337,6 +338,13 @@ module.exports = {
                     children: [
                         '',
                         '使用docker运行jira.md',
+                    ]
+                }
+            ], '/软件工程/': [
+                {
+                    title: "软件工程",
+                    children: [
+                        'drawio使用.md',
                     ]
                 }
             ],
