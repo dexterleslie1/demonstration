@@ -1,4 +1,4 @@
-<mxfile host="app.diagrams.net" modified="2024-06-11T15:01:33.796Z" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36" etag="fMaMpZFZtZ3rKT0h1Rsc" version="24.5.3" type="github">
+<mxfile host="app.diagrams.net" modified="2024-06-11T15:03:09.958Z" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36" etag="PgZ3MQkrLgj6wzZ9dXo9" version="24.5.3" type="github">
   <diagram name="Page-1" id="2YBvvXClWsGukQMizWep">
     <mxGraphModel dx="1146" dy="650" grid="1" gridSize="11" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="1700" math="0" shadow="0">
       <root>
@@ -113,12 +113,6 @@
             <mxPoint x="540" y="173" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="2gi-IcAWOZ9MMK4t8qeL-38" value="返回错误信息给客户端" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;endSize=8;curved=0;rounded=0;" edge="1" parent="2gi-IcAWOZ9MMK4t8qeL-25" target="s-xXhrgxncU4U6OP28lx-1">
-          <mxGeometry relative="1" as="geometry">
-            <mxPoint x="916" y="115.84000000000003" as="sourcePoint" />
-            <mxPoint x="36" y="109.99599999999998" as="targetPoint" />
-          </mxGeometry>
-        </mxCell>
         <mxCell id="2gi-IcAWOZ9MMK4t8qeL-42" value="调用HttpSecurity配置的" style="html=1;verticalAlign=bottom;endArrow=block;curved=0;rounded=0;exitX=0.509;exitY=0.907;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="2gi-IcAWOZ9MMK4t8qeL-25" target="2gi-IcAWOZ9MMK4t8qeL-32">
           <mxGeometry width="80" relative="1" as="geometry">
             <mxPoint x="534.9849999999999" y="186.99900000000002" as="sourcePoint" />
@@ -147,6 +141,12 @@
           <mxGeometry relative="1" as="geometry">
             <mxPoint x="1045" y="693" as="sourcePoint" />
             <mxPoint x="61.5" y="693" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="2gi-IcAWOZ9MMK4t8qeL-38" value="返回错误信息给客户端" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;endSize=8;curved=0;rounded=0;exitX=0.503;exitY=0.614;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="2gi-IcAWOZ9MMK4t8qeL-31" target="s-xXhrgxncU4U6OP28lx-1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="938" y="588.84" as="sourcePoint" />
+            <mxPoint x="58" y="582.996" as="targetPoint" />
           </mxGeometry>
         </mxCell>
       </root>
