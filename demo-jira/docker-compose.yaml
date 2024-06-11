@@ -1,0 +1,53 @@
+version: "3.0"
+
+services:
+  db:
+    build:
+      context: ./
+      dockerfile: Dockerfile-db
+    image: demo-jira-mariadb
+    command:
+     - --character-set-server=utf8mb4
+     - --collation-server=utf8mb4_general_ci
+     - --skip-character-set-client-handshake
+     - --innodb-buffer-pool-size=256m
+    environment:
+      - LANG=C.UTF-8
+      - TZ=Asia/Shanghai
+      - MYSQL_ROOT_PASSWORD=123456
+
+  jira-software:
+    build:
+      context: ./
+      dockerfile: Dockerfile-jira
+    image: demo-jira-software
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - '18080:8080'
+    depends_on:
+      - db
+      - openldap
+
+  openldap:  
+    image: osixia/openldap:latest     
+    environment:  
+      LDAP_ORGANISATION: "Example Inc."  
+      LDAP_DOMAIN: "example.org" 
+      #  设置LDAP的根域（可以根据需要修改） 
+      LDAP_ROOT: "dc=example,dc=org"
+      # 设置管理员的用户名为“admin” 
+      LDAP_ADMIN_USERNAME: admin
+      # 设置管理员的密码（请替换YourPasswordHere为您的实际密码）
+      LDAP_ADMIN_PASSWORD: "123456" 
+  
+  # 这是一个可选的phpLDAPadmin容器，用于管理LDAP  
+  phpldapadmin:  
+    image: osixia/phpldapadmin:latest   
+    ports:  
+      - "18081:80"  
+    environment:  
+      PHPLDAPADMIN_LDAP_HOSTS: "openldap"  
+      PHPLDAPADMIN_HTTPS: "false"  
+    depends_on:  
+      - openldap

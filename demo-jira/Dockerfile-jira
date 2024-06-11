@@ -1,0 +1,4 @@
+FROM cptactionhank/atlassian-jira-software:8.1.0
+
+# 复制破解文件atlassian-extras-3.2.jar到目录中即可破解
+COPY atlassian-extras-3.2.jar /opt/atlassian/jira/atlassian-jira/WEB-INF/lib/atlassian-extras-3.2.jar

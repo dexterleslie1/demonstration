@@ -90,6 +90,7 @@ module.exports = {
                 items: [
                     { text: 'Git使用', link: '/git/' },
                     { text: 'OpenLDAP', link: '/openldap/' },
+                    { text: 'Jira', link: '/jira/' },
                 ]
             },
             {
@@ -328,6 +329,14 @@ module.exports = {
                         '',
                         '使用docker运行openldap.md',
                         '管理openldap.md',
+                    ]
+                }
+            ], '/jira/': [
+                {
+                    title: "Jira使用",
+                    children: [
+                        '',
+                        '使用docker运行jira.md',
                     ]
                 }
             ],
