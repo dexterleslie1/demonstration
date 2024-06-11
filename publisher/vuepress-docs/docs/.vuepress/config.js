@@ -89,6 +89,7 @@ module.exports = {
                 text: '其他技术',
                 items: [
                     { text: 'Git使用', link: '/git/' },
+                    { text: 'OpenLDAP', link: '/openldap/' },
                 ]
             },
             {
@@ -318,6 +319,15 @@ module.exports = {
                         '对称密码算法.md',
                         '非对称密码算法.md',
                         'jwt.md',
+                    ]
+                }
+            ], '/openldap/': [
+                {
+                    title: "OpenLDAP使用",
+                    children: [
+                        '',
+                        '使用docker运行openldap.md',
+                        '管理openldap.md',
                     ]
                 }
             ],
