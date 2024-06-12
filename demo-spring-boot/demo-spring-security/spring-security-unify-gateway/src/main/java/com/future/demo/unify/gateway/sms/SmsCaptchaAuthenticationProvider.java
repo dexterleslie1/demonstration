@@ -10,11 +10,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.annotation.PostConstruct;
-import javax.servlet.http.HttpServletRequest;
 
 @Component
 public class SmsCaptchaAuthenticationProvider implements AuthenticationProvider {
@@ -36,9 +33,7 @@ public class SmsCaptchaAuthenticationProvider implements AuthenticationProvider 
         SmsCaptchaAuthenticationToken authenticationToken = (SmsCaptchaAuthenticationToken) authentication;
 
         String mobile = (String) authenticationToken.getPrincipal();
-
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
-        String smsCaptcha = request.getParameter("smsCaptcha");
+        String smsCaptcha = (String) authenticationToken.getCredentials();
 
         if (StringUtils.isBlank(smsCaptcha)) {
             throw new BadCredentialsException("没有提供短信验证码");

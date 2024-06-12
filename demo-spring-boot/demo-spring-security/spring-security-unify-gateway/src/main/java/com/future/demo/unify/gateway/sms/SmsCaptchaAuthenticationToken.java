@@ -2,7 +2,6 @@ package com.future.demo.unify.gateway.sms;
 
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.SpringSecurityCoreVersion;
 
 import java.util.Collection;
 
@@ -13,13 +12,15 @@ public class SmsCaptchaAuthenticationToken extends AbstractAuthenticationToken {
      * 在这里就代表登录的手机号码
      */
     private final Object principal;
+    private final Object credentials;
 
     /**
      * 构建一个没有鉴权的 SmsCodeAuthenticationToken
      */
-    public SmsCaptchaAuthenticationToken(Object principal) {
+    public SmsCaptchaAuthenticationToken(Object principal, Object credentials) {
         super(null);
         this.principal = principal;
+        this.credentials = credentials;
         setAuthenticated(false);
     }
 
@@ -29,13 +30,13 @@ public class SmsCaptchaAuthenticationToken extends AbstractAuthenticationToken {
     public SmsCaptchaAuthenticationToken(Object principal, Collection<? extends GrantedAuthority> authorities) {
         super(authorities);
         this.principal = principal;
-        // must use super, as we override
+        this.credentials = null;
         super.setAuthenticated(true);
     }
 
     @Override
     public Object getCredentials() {
-        return null;
+        return this.credentials;
     }
 
     @Override

@@ -1,11 +1,10 @@
-package com.future.demo.unify.gateway.password;
+package com.future.demo.unify.gateway.common;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.future.common.http.HttpUtil;
 import com.future.common.http.ResponseUtils;
 import com.future.common.json.JSONUtil;
-import com.future.demo.unify.gateway.common.CustomizeUser;
-import com.future.demo.unify.gateway.common.TokenStore;
+import com.future.demo.unify.gateway.password.CustomizePasswordAuthenticationToken;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +23,7 @@ import java.util.UUID;
  * 登录成功后处理
  */
 @Component
-public class CustomizePasswordAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
+public class CustomizeAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
     @Autowired
     CacheManager cacheManager;
     Cache cacheLoginFailureCount;
@@ -41,8 +40,11 @@ public class CustomizePasswordAuthenticationSuccessHandler implements Authentica
     public void onAuthenticationSuccess(HttpServletRequest request,
                                         HttpServletResponse response,
                                         Authentication authentication) throws IOException, ServletException {
-        String ip = HttpUtil.getIpAddress(request);
-        this.cacheLoginFailureCount.remove(ip);
+        // 密码登录
+        if(authentication instanceof CustomizePasswordAuthenticationToken) {
+            String ip = HttpUtil.getIpAddress(request);
+            this.cacheLoginFailureCount.remove(ip);
+        }
 
         CustomizeUser user = (CustomizeUser)authentication.getPrincipal();
 

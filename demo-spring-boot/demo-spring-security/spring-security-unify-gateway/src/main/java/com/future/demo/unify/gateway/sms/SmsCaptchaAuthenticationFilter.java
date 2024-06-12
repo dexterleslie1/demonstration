@@ -14,6 +14,7 @@ public class SmsCaptchaAuthenticationFilter extends AbstractAuthenticationProces
      * form表单中手机号码的字段name
      */
     public static final String SPRING_SECURITY_FORM_MOBILE_KEY = "phone";
+    public static final String SPRING_SECURITY_FORM_SMS_CAPTCHA = "smsCaptcha";
 
     public SmsCaptchaAuthenticationFilter() {
         // 短信登录的请求 post 方式的 /api/v1/sms/login
@@ -29,15 +30,20 @@ public class SmsCaptchaAuthenticationFilter extends AbstractAuthenticationProces
         }
 
         String mobile = obtainMobile(request);
+        String smsCaptcha = obtainSmsCaptcha(request);
 
         if (mobile == null) {
             mobile = "";
         }
 
+        if(smsCaptcha == null) {
+            smsCaptcha = "";
+        }
+
         mobile = mobile.trim();
 
         // 创建没有鉴权的token
-        SmsCaptchaAuthenticationToken authRequest = new SmsCaptchaAuthenticationToken(mobile);
+        SmsCaptchaAuthenticationToken authRequest = new SmsCaptchaAuthenticationToken(mobile, smsCaptcha);
 
         setDetails(request, authRequest);
 
@@ -46,6 +52,10 @@ public class SmsCaptchaAuthenticationFilter extends AbstractAuthenticationProces
 
     protected String obtainMobile(HttpServletRequest request) {
         return request.getParameter(SPRING_SECURITY_FORM_MOBILE_KEY);
+    }
+
+    protected String obtainSmsCaptcha(HttpServletRequest request) {
+        return request.getParameter(SPRING_SECURITY_FORM_SMS_CAPTCHA);
     }
 
     protected void setDetails(HttpServletRequest request, SmsCaptchaAuthenticationToken authRequest) {

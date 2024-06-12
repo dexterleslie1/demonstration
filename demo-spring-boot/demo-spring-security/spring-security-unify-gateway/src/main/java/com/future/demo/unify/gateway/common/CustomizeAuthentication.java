@@ -6,7 +6,7 @@ import org.springframework.security.core.GrantedAuthority;
 import java.util.Collection;
 
 /**
- * spring security Authentication对象
+ * spring security上下文中表示用户已登录的authentication对象
  */
 public class CustomizeAuthentication implements Authentication {
     private boolean authenticated = false;

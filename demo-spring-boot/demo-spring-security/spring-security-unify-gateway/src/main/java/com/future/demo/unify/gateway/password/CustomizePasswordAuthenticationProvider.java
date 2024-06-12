@@ -21,6 +21,7 @@ import javax.servlet.http.HttpServletRequest;
 
 /**
  * 密码登录AuthenticationProvider
+ * 模拟用户名、手机号码、邮箱+密码尝试多次登录失败后需要提供登录验证码才能够继续登录系统
  */
 @Component
 public class CustomizePasswordAuthenticationProvider implements AuthenticationProvider {

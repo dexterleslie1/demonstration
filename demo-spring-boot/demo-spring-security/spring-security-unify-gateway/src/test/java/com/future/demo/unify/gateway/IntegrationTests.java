@@ -163,7 +163,7 @@ public class IntegrationTests {
             api.loginPassword(username, "xxxxxx", StringUtils.EMPTY, StringUtils.EMPTY);
             Assert.fail("预期异常没有抛出");
         } catch (BusinessException ex) {
-            Assert.assertEquals(50000, ex.getErrorCode());
+            Assert.assertEquals(ErrorCodeConstant.ErrorCodeCommon, ex.getErrorCode());
             Assert.assertEquals("用户名或者密码错误", ex.getErrorMessage());
         }
 
@@ -208,7 +208,7 @@ public class IntegrationTests {
                 api.loginPassword(StringUtils.EMPTY, StringUtils.EMPTY, StringUtils.EMPTY, StringUtils.EMPTY);
                 Assert.fail("预期异常没有抛出");
             } catch (BusinessException ex) {
-                Assert.assertEquals(50000, ex.getErrorCode());
+                Assert.assertEquals(ErrorCodeConstant.ErrorCodeCommon, ex.getErrorCode());
                 Assert.assertEquals("没有指定用户名、手机号码、邮箱至少一项参数", ex.getErrorMessage());
             }
         }
