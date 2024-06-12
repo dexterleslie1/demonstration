@@ -1,8 +1,8 @@
 package com.future.demo.unify.gateway.common;
 
+import com.future.common.http.RequestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -13,8 +13,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+/**
+ * 用户请求token拦截处理
+ */
 @Component
-public class TokenAuthenticationFilter extends OncePerRequestFilter {
+public class CustomizeTokenAuthenticationFilter extends OncePerRequestFilter {
     @Autowired
     TokenStore tokenStore;
 
@@ -29,24 +32,15 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
-        String token = obtainBearerToken(request);
-        if(!StringUtils.isBlank(token)) {
-            MyUser user = tokenStore.get(token);
+        String token = RequestUtils.ObtainBearerToken(request);
+        if (!StringUtils.isBlank(token)) {
+            CustomizeUser user = tokenStore.get(token);
             if (user != null) {
-                MyAuthentication authentication = new MyAuthentication(user);
+                CustomizeAuthentication authentication = new CustomizeAuthentication(user);
                 authentication.setAuthenticated(true);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         }
         filterChain.doFilter(request, response);
-    }
-
-    String obtainBearerToken(HttpServletRequest request) {
-        String bearerStr = request.getHeader(HttpHeaders.AUTHORIZATION);
-        if(StringUtils.isBlank(bearerStr)) {
-            return bearerStr;
-        }
-
-        return bearerStr.replace("Bearer ", "");
     }
 }

@@ -1,11 +1,10 @@
 package com.future.demo.unify.gateway.password;
 
 import org.springframework.security.authentication.AbstractAuthenticationToken;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.SpringSecurityCoreVersion;
 
-import java.util.Collection;
-
+/**
+ * 密码登录AuthenticationToken
+ */
 public class CustomizePasswordAuthenticationToken extends AbstractAuthenticationToken {
 
     /**
@@ -22,17 +21,6 @@ public class CustomizePasswordAuthenticationToken extends AbstractAuthentication
         this.principal = principal;
         this.credentials = credentials;
         setAuthenticated(false);
-    }
-
-    /**
-     * 构建拥有鉴权的 CustomizePasswordAuthenticationToken
-     */
-    public CustomizePasswordAuthenticationToken(Object principal, Object credentials, Collection<? extends GrantedAuthority> authorities) {
-        super(authorities);
-        this.principal = principal;
-        this.credentials = credentials;
-        // must use super, as we override
-        super.setAuthenticated(true);
     }
 
     @Override

@@ -1,17 +1,13 @@
 package com.future.demo.unify.gateway;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.yyd.common.exception.BusinessException;
-import com.yyd.common.http.response.ObjectResponse;
+import com.future.common.exception.BusinessException;
+import com.future.common.http.ObjectResponse;
 import feign.Headers;
 import feign.Param;
 import feign.RequestLine;
 import feign.Response;
 import org.springframework.http.HttpHeaders;
-import org.springframework.messaging.handler.annotation.Header;
-
-import java.io.File;
-import java.util.List;
 
 public interface Api {
 

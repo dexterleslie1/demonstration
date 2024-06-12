@@ -10,12 +10,16 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+/**
+ * 自定义密码登录AuthenticationFilter
+ */
 public class CustomizePasswordAuthenticationFilter extends AbstractAuthenticationProcessingFilter {
 
     public static final String SPRING_SECURITY_FORM_USERNAME_KEY = "username";
     public static final String SPRING_SECURITY_FORM_PASSWORD_KEY = "password";
 
     public CustomizePasswordAuthenticationFilter() {
+        // 只处理密码登录url
         super(new AntPathRequestMatcher("/api/v1/password/login", "POST"));
     }
 
@@ -39,6 +43,7 @@ public class CustomizePasswordAuthenticationFilter extends AbstractAuthenticatio
 
         username = username.trim();
 
+        // 创建没有鉴权的密码登录token
         CustomizePasswordAuthenticationToken authRequest = new CustomizePasswordAuthenticationToken(
                 username, password);
 

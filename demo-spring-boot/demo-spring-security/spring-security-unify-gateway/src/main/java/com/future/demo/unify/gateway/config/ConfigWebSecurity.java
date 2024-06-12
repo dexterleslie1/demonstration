@@ -1,17 +1,16 @@
 package com.future.demo.unify.gateway.config;
 
-import com.future.demo.unify.gateway.common.MyAccessDeniedHandler;
-import com.future.demo.unify.gateway.common.MyAuthenticationEntryPoint;
-import com.future.demo.unify.gateway.common.MyLogoutSuccessHandler;
-import com.future.demo.unify.gateway.common.TokenAuthenticationFilter;
+
+import com.future.demo.unify.gateway.common.CustomizeAccessDeniedHandler;
+import com.future.demo.unify.gateway.common.CustomizeAuthenticationEntryPoint;
+import com.future.demo.unify.gateway.common.CustomizeLogoutSuccessHandler;
+import com.future.demo.unify.gateway.common.CustomizeTokenAuthenticationFilter;
 import com.future.demo.unify.gateway.password.*;
 import com.future.demo.unify.gateway.sms.*;
-import net.sf.ehcache.CacheManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -22,7 +21,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import javax.annotation.Resource;
-import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
@@ -49,17 +47,16 @@ public class ConfigWebSecurity extends WebSecurityConfigurerAdapter {
     CustomizePasswordAuthenticationProvider customizePasswordAuthenticationProvider;
 
     @Autowired
-    MyLogoutSuccessHandler myLogoutSuccessHandler;
+    CustomizeLogoutSuccessHandler customizeLogoutSuccessHandler;
     @Autowired
-    MyAccessDeniedHandler myAccessDeniedHandler;
+    CustomizeAccessDeniedHandler customizeAccessDeniedHandler;
     @Resource
-    MyAuthenticationEntryPoint myAuthenticationEntryPoint;
+    CustomizeAuthenticationEntryPoint customizeAuthenticationEntryPoint;
 
     @Autowired
-    TokenAuthenticationFilter tokenAuthenticationFilter;
+    CustomizeTokenAuthenticationFilter customizeTokenAuthenticationFilter;
 
-    // todo 为何下面不能够注释
-    // 这个接口专门用于配置系统默认的UsernamePasswordAuthentication
+    // 这个接口专门用于配置系统UsernamePasswordAuthenticationFilter中默认的UserDetailsService
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.userDetailsService(customizePasswordUserDetailsService);
@@ -85,39 +82,35 @@ public class ConfigWebSecurity extends WebSecurityConfigurerAdapter {
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 
                 // token验证filter
-                .and().addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .and().addFilterBefore(customizeTokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
 
                 // 未登录异常处理
                 .exceptionHandling()
-                .accessDeniedHandler(myAccessDeniedHandler)
-                .authenticationEntryPoint(myAuthenticationEntryPoint)
+                .accessDeniedHandler(customizeAccessDeniedHandler)
+                .authenticationEntryPoint(customizeAuthenticationEntryPoint)
 
                 // 登出配置
                 .and().logout()
                 .logoutUrl("/api/v1/logout")
                 .invalidateHttpSession(true)
                 .deleteCookies("JSESSIONID")
-                .logoutSuccessHandler(myLogoutSuccessHandler)
+                .logoutSuccessHandler(customizeLogoutSuccessHandler)
 
                 // 接口权限
                 .and()
-                .authorizeRequests().antMatchers("/api/v1/user/test2").hasRole("admin")
+                .authorizeRequests()
+                .antMatchers("/api/v1/user/test2").hasRole("admin")
                 .antMatchers("/api/v1/user/test3").hasAuthority("user:creation")
 
                 // 允许用户名、手机号码、邮箱+密码登录url
                 .and().authorizeRequests().antMatchers("/api/v1/password/login").permitAll()
-
                 // 模拟用户名、手机号码、邮箱+密码尝试多次登录失败后需要提供登录验证码才能够继续登录系统
                 .and().authenticationProvider(customizePasswordAuthenticationProvider)
                 .addFilterBefore(customizePasswordAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
 
                 // form login配置
                 .formLogin().disable()
-//                .loginProcessingUrl("/api/v1/password/login")
-//                .failureHandler(usernamePasswordAuthenticationFailureHandler)
-//                .successHandler(usernamePasswordAuthenticationSuccessHandler)
 
-//                .and()
                 .authorizeRequests().antMatchers("/api/v1/password/captcha/get").permitAll()
 
                 // 手机号码+短信验证码登录时发送短信验证码

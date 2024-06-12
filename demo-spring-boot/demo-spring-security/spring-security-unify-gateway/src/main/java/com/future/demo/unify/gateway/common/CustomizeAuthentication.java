@@ -5,11 +5,14 @@ import org.springframework.security.core.GrantedAuthority;
 
 import java.util.Collection;
 
-public class MyAuthentication implements Authentication {
+/**
+ * spring security Authentication对象
+ */
+public class CustomizeAuthentication implements Authentication {
     private boolean authenticated = false;
-    private MyUser user;
+    private CustomizeUser user;
 
-    MyAuthentication(MyUser user) {
+    CustomizeAuthentication(CustomizeUser user) {
         this.user = user;
     }
 

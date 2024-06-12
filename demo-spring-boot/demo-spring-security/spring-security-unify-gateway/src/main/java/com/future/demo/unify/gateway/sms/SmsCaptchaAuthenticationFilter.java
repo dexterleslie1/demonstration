@@ -36,6 +36,7 @@ public class SmsCaptchaAuthenticationFilter extends AbstractAuthenticationProces
 
         mobile = mobile.trim();
 
+        // 创建没有鉴权的token
         SmsCaptchaAuthenticationToken authRequest = new SmsCaptchaAuthenticationToken(mobile);
 
         setDetails(request, authRequest);

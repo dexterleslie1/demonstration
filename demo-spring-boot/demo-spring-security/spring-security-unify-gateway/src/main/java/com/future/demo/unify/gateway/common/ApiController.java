@@ -1,7 +1,7 @@
 package com.future.demo.unify.gateway.common;
 
-import com.yyd.common.http.ResponseUtils;
-import com.yyd.common.http.response.ObjectResponse;
+import com.future.common.http.ObjectResponse;
+import com.future.common.http.ResponseUtils;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.annotation.GetMapping;

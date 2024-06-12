@@ -1,6 +1,6 @@
 package com.future.demo.unify.gateway.password;
 
-import com.yyd.common.http.HttpUtil;
+import com.future.common.http.HttpUtil;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
@@ -19,6 +19,9 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 
+/**
+ * 密码登录AuthenticationProvider
+ */
 @Component
 public class CustomizePasswordAuthenticationProvider implements AuthenticationProvider {
 
@@ -44,6 +47,7 @@ public class CustomizePasswordAuthenticationProvider implements AuthenticationPr
 
         String username = (String) authenticationToken.getPrincipal();
 
+        // 校验验证码
         checkCaptcha();
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
@@ -97,22 +101,4 @@ public class CustomizePasswordAuthenticationProvider implements AuthenticationPr
         // 判断 authentication 是不是 UsernamePasswordAuthenticationToken 的子类或子接口
         return CustomizePasswordAuthenticationToken.class.isAssignableFrom(authentication);
     }
-
-//    public UserDetailsService getUserDetailsService() {
-//        return userDetailsService;
-//    }
-
-//    public void setUserDetailsService(UserDetailsService userDetailsService) {
-//        this.userDetailsService = userDetailsService;
-//    }
-//
-//    public void setCacheManager(CacheManager cacheManager) {
-//        this.cacheManager = cacheManager;
-//        this.cachePasswordLoginCaptcha = this.cacheManager.getCache("cachePasswordLoginCaptcha");
-//        this.cacheLoginFailureCount = this.cacheManager.getCache("cacheLoginFailureCount");
-//    }
-//
-//    public void setPasswordEncoder(PasswordEncoder passwordEncoder) {
-//        this.passwordEncoder = passwordEncoder;
-//    }
 }

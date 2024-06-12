@@ -19,18 +19,18 @@ public class TokenStore {
         this.cacheTokenToUser = this.cacheManager.getCache("cacheTokenToUser");
     }
 
-    public void store(String token, MyUser user) {
+    public void store(String token, CustomizeUser user) {
         Element element = new Element(token, user);
         this.cacheTokenToUser.put(element);
     }
 
-    public MyUser get(String token) {
+    public CustomizeUser get(String token) {
         Element element = this.cacheTokenToUser.get(token);
         if(element==null) {
             return null;
         }
 
-        return (MyUser)element.getObjectValue();
+        return (CustomizeUser) element.getObjectValue();
     }
 
     public void remove(String token) {
