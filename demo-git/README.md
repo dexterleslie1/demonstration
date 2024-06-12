@@ -147,41 +147,6 @@ git stash apply
 git stash apply 0
 ```
 
-## 初始化非空目录指向远程仓库
-
-> https://stackoverflow.com/questions/3311774/how-to-convert-existing-non-empty-directory-into-a-git-working-directory-and-pus
-
-```
-# NOTE: 在git remote add origin使本地仓库指向远程仓库后，需要马上git pull origin main拉去远程提交到本地。在同步到远程最新代码后，再提交本地修改一切就很顺利了。
-
-# 切换到本地非空目录
-cd <localdir>
-
-# 初始化本地非空目录为git仓库
-git init
-
-# 本地git仓库指向远程仓库
-git remote add origin <url>
-
-# 拉去远程代码到本地
-git pull origin main
-
-# 查看本地分支名称
-git branch
-
-# 重命名本地分支master为main
-git branch -m master main
-
-# stage所有本地修复
-git add .
-
-# 提交本地所有stage修改
-git commit -m 'message'
-
-# 推送本地commit到远程仓库
-git push origin main
-```
-
 
 
 ## git clone、pull、push时指定用户名和密码
