@@ -1,215 +1,183 @@
 package com.future.demo;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.OrderItem;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.future.demo.entity.User;
-import com.future.demo.mapper.UserMapper;
-import com.future.demo.service.UserService;
+import com.future.common.auth.dto.LoginSuccessDto;
+import com.future.common.auth.dto.UserDto;
+import com.future.common.auth.service.TokenService;
+import com.future.common.auth.service.VerificationCodeService;
+import com.future.common.constant.ErrorCodeConstant;
+import com.future.common.exception.BusinessException;
+import com.future.common.http.ObjectResponse;
+import com.future.common.phone.RandomPhoneGeneratorUtil;
+import com.future.demo.feign.ApplicationFeign;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.*;
-import java.util.concurrent.TimeUnit;
+import java.util.UUID;
 
 /**
- * 用于测试这个开发环境是否正常
+ * 应用集成测试用例
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = {Application.class})
+@SpringBootTest(
+        classes = {Application.class},
+        webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@TestPropertySource("classpath:application-test.properties")
 public class ApplicationTests {
     @Autowired
-    UserService userService;
-    @Autowired
-    UserMapper userMapper;
-    @Autowired
-    RedisTemplate<String, String> redisTemplate;
-
-    @Before
-    public void setup() {
-        this.userMapper.delete(null);
-    }
+    ApplicationFeign applicationFeign;
+    @SpyBean
+    VerificationCodeService verificationCodeService;
+    @SpyBean
+    TokenService tokenService;
 
     @Test
-    public void testSave() {
-        // insert前总记录数
-        int countInsertBefore = userService.count();
-        User user = new User();
-        user.setId(10001l);
-        user.setAge(30);
-        user.setName("中文测试");
-        user.setEmail("dexterleslie@gmail.com");
-        userService.save(user);
+    public void test_register_and_login() throws BusinessException, InterruptedException {
+        // mock指定的验证码
+        String verificationCode = "1111";
+        Mockito.doReturn(verificationCode).when(this.verificationCodeService).generateRandomCode();
 
-        int countInsertAfter = userService.count();
+        String phone = RandomPhoneGeneratorUtil.getRandom();
+        ObjectResponse<Integer> response =
+                this.applicationFeign.getVerificationCode(phone);
+        Assert.assertEquals(VerificationCodeService.VerificationCodeTTLInSeconds, response.getData().intValue());
 
-        Assert.assertEquals(countInsertBefore + 1, countInsertAfter);
+        // 恢复验证码mock
+        Mockito.doCallRealMethod().when(this.verificationCodeService).generateRandomCode();
+
+        String password = UUID.randomUUID().toString();
+        ObjectResponse<String> responseRegister =
+                this.applicationFeign.register(phone, phone, password, verificationCode);
+        Assert.assertEquals("注册成功", responseRegister.getData());
+
+        ObjectResponse<LoginSuccessDto> responseLogin = this.applicationFeign.login(phone, password);
+        Assert.assertEquals(phone, responseLogin.getData().getPhone());
+
+        String accessToken = responseLogin.getData().getAccessToken();
+
+        ObjectResponse<UserDto> getInfoResponse = this.applicationFeign.getInfo(accessToken);
+        Assert.assertEquals(phone, getInfoResponse.getData().getPhone());
+
+        // 测试多个spring-security配置是否会冲突
+//        Assert.assertEquals("Hello world!", this.applicationFeign.test1().getData());
+//        Assert.assertEquals(phone, this.applicationFeign.test2(accessToken).getData());
+
+        //region 测试需要登录的接口不登录就请求和不需要登录的接口却登录请求的情况
+        verificationCode = "1111";
+        Mockito.doReturn(verificationCode).when(this.verificationCodeService).generateRandomCode();
+
+        phone = RandomPhoneGeneratorUtil.getRandom();
+
+        response = this.applicationFeign.getVerificationCode(phone, accessToken);
+        Assert.assertEquals(VerificationCodeService.VerificationCodeTTLInSeconds, response.getData().intValue());
+
+        // 恢复验证码mock
+        Mockito.doCallRealMethod().when(this.verificationCodeService).generateRandomCode();
+
+        password = UUID.randomUUID().toString();
+        responseRegister =
+                this.applicationFeign.register(phone, phone, password, verificationCode, accessToken);
+        Assert.assertEquals("注册成功", responseRegister.getData());
+
+        responseLogin = this.applicationFeign.login(phone, password, accessToken);
+        Assert.assertEquals(phone, responseLogin.getData().getPhone());
+
+        accessToken = responseLogin.getData().getAccessToken();
+
+        try {
+            this.applicationFeign.getInfo();
+            Assert.fail("预期异常没有抛出");
+        } catch (BusinessException ex) {
+            Assert.assertEquals(ErrorCodeConstant.ErrorCodeLoginRequired, ex.getErrorCode());
+            Assert.assertEquals("您未登陆", ex.getMessage());
+        }
+
+//        Assert.assertEquals("Hello world!", this.applicationFeign.test1(accessToken).getData());
+//        try {
+//            this.applicationFeign.test2();
+//            Assert.fail("预期异常没有抛出");
+//        } catch (BusinessException ex) {
+//            Assert.assertEquals(ErrorCodeConstant.ErrorCodeLoginRequired, ex.getErrorCode());
+//            Assert.assertEquals("您未登陆", ex.getMessage());
+//        }
+
+        //endregion
+
+        //region 不能使用refresh token调用非refresh外的接口
+        String refreshToken = responseLogin.getData().getRefreshToken();
+        try {
+            this.applicationFeign.getInfo(refreshToken);
+            Assert.fail("预期异常没有抛出");
+        } catch (BusinessException ex) {
+            Assert.assertEquals(ErrorCodeConstant.ErrorCodeCommon, ex.getErrorCode());
+            Assert.assertEquals("不存在token", ex.getErrorMessage());
+        }
+        //endregion
+
+        //region 测试refresh access token
+        try {
+            this.applicationFeign.refreshAccessToken(refreshToken);
+            Assert.fail("预期异常没有抛出");
+        } catch (BusinessException ex) {
+            Assert.assertEquals(ErrorCodeConstant.ErrorCodeCommon, ex.getErrorCode());
+            Assert.assertEquals("不能提前刷新access token", ex.getErrorMessage());
+        }
+
+        Mockito.doReturn(1).when(this.tokenService).getTtlAccessToken();
+        Thread.sleep(2000);
+        accessToken = this.applicationFeign.refreshAccessToken(refreshToken).getData();
+        Mockito.doCallRealMethod().when(this.tokenService).getTtlAccessToken();
+        Assert.assertEquals(phone, this.applicationFeign.getInfo(accessToken).getData().getPhone());
+
+        // 测试不能使用access token请求refresh接口
+        try {
+            this.applicationFeign.refreshAccessToken(accessToken);
+            Assert.fail("预期异常没有抛出");
+        } catch (BusinessException ex) {
+            Assert.assertEquals(ErrorCodeConstant.ErrorCodeCommon, ex.getErrorCode());
+            Assert.assertEquals("不存在token", ex.getErrorMessage());
+        }
+
+        //endregion
+
+        //region 测试token过期
+        Mockito.doReturn(1).when(this.tokenService).getTtlAccessToken();
+        Mockito.doReturn(1).when(this.tokenService).getTtlRefreshTokenInSeconds();
+        Thread.sleep(2000);
+        try {
+            this.applicationFeign.getInfo(accessToken);
+            Assert.fail("预期异常没有抛出");
+        } catch (BusinessException ex) {
+            Assert.assertEquals(ErrorCodeConstant.ErrorCodeTokenExpired, ex.getErrorCode());
+            Assert.assertEquals("token已过期", ex.getMessage());
+        }
+
+//        Assert.assertEquals("Hello world!", this.applicationFeign.test1(accessToken).getData());
+//        Assert.assertEquals("Hello world!", this.applicationFeign.test1().getData());
+//
+//        try {
+//            this.applicationFeign.test2(accessToken);
+//            Assert.fail("预期异常没有抛出");
+//        } catch (BusinessException ex) {
+//            Assert.assertEquals(ErrorCodeConstant.ErrorCodeTokenExpired, ex.getErrorCode());
+//            Assert.assertEquals("token已过期", ex.getMessage());
+//        }
+
+        try {
+            this.applicationFeign.refreshAccessToken(refreshToken);
+            Assert.fail("预期异常没有抛出");
+        } catch (BusinessException ex) {
+            Assert.assertEquals(ErrorCodeConstant.ErrorCodeTokenExpired, ex.getErrorCode());
+            Assert.assertEquals("token已过期", ex.getMessage());
+        }
+
+        //endregion
     }
 
-    // 测试分页查询
-    @Test
-    public void testPage() {
-        // 新增数据
-        int startId = 500000;
-        int randomTotalCount = new Random().nextInt(1000);
-        if (randomTotalCount <= 0) {
-            randomTotalCount = 121;
-        }
-
-        for (int i = 0; i < randomTotalCount; i++) {
-            long id = startId + i;
-            this.userService.removeById(id);
-        }
-
-        int prevTotalCount = this.userService.count();
-
-        if (randomTotalCount < 50) {
-            randomTotalCount = 50;
-        }
-
-        for (int i = 0; i < randomTotalCount; i++) {
-            long id = startId + i;
-
-            User user = new User();
-            user.setId(id);
-            user.setAge(30 + i);
-            user.setName("Dexterleslie" + i);
-            user.setEmail("dexterleslie@gmail.com" + i);
-            userService.save(user);
-        }
-
-        int currentTotalCount = this.userService.count();
-        Assert.assertEquals(prevTotalCount + randomTotalCount, currentTotalCount);
-
-        int currentPage = 1;
-        int size = 50;
-        Page<User> page = new Page<>(currentPage, size);
-        page.orders().add(new OrderItem("id", false));
-        this.userService.page(page);
-        List<User> userList = page.getRecords();
-        // 当前页码
-        Assert.assertEquals(1, page.getCurrent());
-        // 每页显示数量
-        Assert.assertEquals(size, page.getSize());
-        // 总页数
-        int expectedPages;
-        if (currentTotalCount % size != 0) {
-            expectedPages = (currentTotalCount + size) / size;
-        } else {
-            expectedPages = currentTotalCount / size;
-        }
-        Assert.assertEquals(expectedPages, page.getPages());
-        // 总记录数
-        Assert.assertEquals(currentTotalCount, page.getTotal());
-        Assert.assertEquals(size, userList.size());
-
-        // 使用mapper分页
-        page = new Page<>(currentPage, size);
-        page.orders().add(new OrderItem("id", false));
-        // 表示不需要select count(*) from ...
-        page.setSearchCount(false);
-        page = this.userMapper.selectPage(page, null);
-
-        // 使用自定义count
-        QueryWrapper<User> queryWrapper = Wrappers.query();
-        queryWrapper.select("id");
-
-        currentTotalCount = this.userMapper.selectCount(queryWrapper);
-        userList = page.getRecords();
-        // 当前页码
-        Assert.assertEquals(1, page.getCurrent());
-        // 每页显示数量
-        Assert.assertEquals(size, page.getSize());
-        // 总页数
-        if (randomTotalCount % size != 0) {
-            expectedPages = (randomTotalCount + size) / size;
-        } else {
-            expectedPages = randomTotalCount / size;
-        }
-        int actualPages;
-        if (currentTotalCount % size != 0) {
-            actualPages = (currentTotalCount + size) / size;
-        } else {
-            actualPages = currentTotalCount / size;
-        }
-        Assert.assertEquals(expectedPages, actualPages);
-        // 总记录数
-        Assert.assertEquals(randomTotalCount, currentTotalCount);
-        Assert.assertEquals(size, userList.size());
-
-        for (int i = 0; i < randomTotalCount; i++) {
-            long id = startId + i;
-            userService.removeById(id);
-        }
-    }
-
-    /**
-     * https://www.cnblogs.com/rwxwsblog/p/4512061.html
-     */
-    @Test
-    public void batchUpdate() {
-        User userTemporary = new User();
-        userTemporary.setAge(156);
-        userTemporary.setName("user1");
-        userTemporary.setEmail("test1@baomidou.com");
-        userMapper.insert(userTemporary);
-        long userId1 = userTemporary.getId();
-
-        userTemporary = new User();
-        userTemporary.setAge(157);
-        userTemporary.setName("user2");
-        userTemporary.setEmail("test2@baomidou.com");
-        userMapper.insert(userTemporary);
-        long userId2 = userTemporary.getId();
-
-        Map<Long, Integer> idToAgeMapper = new HashMap<>();
-        idToAgeMapper.put(userId1, 156);
-        idToAgeMapper.put(userId2, 157);
-
-        List<Map<String, Object>> mapList = new ArrayList<>();
-        for (Long id : idToAgeMapper.keySet()) {
-            Map<String, Object> mapObject = new HashMap<>();
-            mapObject.put("id", id);
-            mapObject.put("age", idToAgeMapper.get(id));
-            mapList.add(mapObject);
-        }
-
-        List<User> userListOriginal = this.userMapper.selectBatchIds(Arrays.asList(userId1, userId2));
-
-        this.userMapper.updateAge(mapList);
-
-        List<User> userList = this.userMapper.selectBatchIds(Arrays.asList(userId1, userId2));
-        Map<Long, User> idToUserMapper = new HashMap<>();
-        for (User user : userList) {
-            idToUserMapper.put(user.getId(), user);
-        }
-        for (Long id : idToUserMapper.keySet()) {
-            Assert.assertEquals(idToAgeMapper.get(id), idToUserMapper.get(id).getAge());
-        }
-
-        mapList = new ArrayList<>();
-        for (User userOriginal : userListOriginal) {
-            Map<String, Object> mapObject = new HashMap<>();
-            mapObject.put("id", userOriginal.getId());
-            mapObject.put("age", userOriginal.getAge());
-            mapList.add(mapObject);
-        }
-        this.userMapper.updateAge(mapList);
-    }
-
-    @Test
-    public void test_redis() {
-        String randomKey = UUID.randomUUID().toString();
-        this.redisTemplate.delete(randomKey);
-        Assert.assertNull(this.redisTemplate.opsForValue().get(randomKey));
-        this.redisTemplate.opsForValue().set(randomKey, randomKey, 30, TimeUnit.SECONDS);
-        Assert.assertEquals(randomKey, this.redisTemplate.opsForValue().get(randomKey));
-    }
 }
