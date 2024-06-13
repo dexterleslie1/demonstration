@@ -1,15 +1,9 @@
 version: "3.0"
 
-# 创建网络
-networks:
-  net:
-    name: demo-mysql-standalone-net
-
 services:
   # https://hub.docker.com/_/mysql?tab=description  
-  demo-mysql-standalone-server:
-    container_name: demo-mysql-standalone-server
-    image: mysql
+  db:
+    image: mysql:5.7
     command:
      - --character-set-server=utf8mb4
      - --collation-server=utf8mb4_general_ci
@@ -22,7 +16,5 @@ services:
       - TZ=Asia/Shanghai
       - MYSQL_ROOT_PASSWORD=123456
     ports:
-      - 3306:3306
-    networks:
-      - net
+      - '3306:3306'
 

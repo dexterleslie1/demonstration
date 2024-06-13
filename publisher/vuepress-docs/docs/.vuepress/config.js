@@ -138,7 +138,7 @@ module.exports = {
                     title: "MySQL学习",
                     children: [
                         '使用docker-compose运行MySQL.md',
-                        'mysqldump使用.md'
+                        'mysql备份和还原.md'
                     ]
                 }
             ], '/MariaDB/': [
