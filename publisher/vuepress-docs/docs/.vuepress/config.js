@@ -92,6 +92,7 @@ module.exports = {
                     { text: 'OpenLDAP', link: '/openldap/' },
                     { text: 'Jira', link: '/jira/' },
                     { text: '软件工程', link: '/软件工程/' },
+                    { text: 'Jsoup', link: '/jsoup/' },
                 ]
             },
             {
@@ -346,6 +347,14 @@ module.exports = {
                     title: "软件工程",
                     children: [
                         'drawio使用.md',
+                    ]
+                }
+            ], '/jsoup/': [
+                {
+                    title: "jsoup使用",
+                    children: [
+                        '',
+                        'jsoup的用法.md',
                     ]
                 }
             ],
