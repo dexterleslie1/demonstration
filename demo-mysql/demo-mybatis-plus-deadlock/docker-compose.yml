@@ -5,7 +5,10 @@ services:
     build:
       context: ./
     image: demo-mybatis-plus-deadlock:latest
+    volumes:
+      - ./my.cnf:/etc/mysql/conf.d/my-customize.cnf
     environment:
+      - LANG=C.UTF-8
       - MYSQL_ROOT_PASSWORD=123456
       - TZ=Asia/Shanghai
     command:

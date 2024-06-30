@@ -86,6 +86,78 @@ create table if not exists course(
 insert into course(id,name,age) values (5,'java',5),(15,'php',15),(16,'c',15),(31,'python',31);
 
 create index idx_course_age on course(age);
+
+# 设置全局锁等待超时秒数
+set global innodb_lock_wait_timeout=3600;
+```
+
+## 使用`show engine innodb status`显示当前锁信息
+
+启用`innodb status`打印锁等待信息
+
+```sql
+set global innodb_status_output_locks=ON;
+```
+
+示例：
+
+```bash
+# session1开启事务
+begin;
+
+# session2开启事务
+begin;
+# session2加记录共享锁
+select * from course where id=5 lock in share mode;
+
+# session1加记录排他锁，但等待
+update course set name='xxx' where id=5;
+
+# 此时查看锁等待信息
+show engine innodb status\G;
+# 锁等待信息如下：
+TRANSACTIONS
+------------
+Trx id counter 1832
+Purge done for trx's n:o < 1831 undo n:o < 0 state: running but idle
+History list length 0
+LIST OF TRANSACTIONS FOR EACH SESSION:
+---TRANSACTION 421989908311256, not started
+0 lock struct(s), heap size 1128, 0 row lock(s)
+---TRANSACTION 421989908310448, not started
+0 lock struct(s), heap size 1128, 0 row lock(s)
+---TRANSACTION 421989908309640, not started
+0 lock struct(s), heap size 1128, 0 row lock(s)
+---TRANSACTION 1831, ACTIVE 5 sec starting index read
+mysql tables in use 1, locked 1
+LOCK WAIT 2 lock struct(s), heap size 1128, 1 row lock(s)
+MySQL thread id 9, OS thread handle 140514761336576, query id 267 172.20.32.1 root updating
+# 当前等待锁对应的sql
+/* ApplicationName=IntelliJ IDEA 2023.2.5 */ update course set name='xxx' where id=5
+------- TRX HAS BEEN WAITING 5 SEC FOR THIS LOCK TO BE GRANTED:
+# 尝试加记录排他锁，但等待
+RECORD LOCKS space id 2 page no 4 n bits 80 index PRIMARY of table `testdb`.`course` trx id 1831 lock_mode X locks rec but not gap waiting
+Record lock, heap no 8 PHYSICAL RECORD: n_fields 5; compact format; info bits 0
+ # todo ...
+ # 聚簇索引的值
+ 0: len 8; hex 8000000000000005; asc         ;;
+ # 事务id
+ 1: len 6; hex 000000000714; asc       ;;
+ # undo记录
+ 2: len 7; hex 81000001060110; asc        ;;
+ 3: len 4; hex 6a617661; asc java;;
+ 4: len 4; hex 80000005; asc     ;;
+
+------------------
+# 当前事务等待(waiting)锁信息，当前尝试加记录排他锁，但等待
+TABLE LOCK table `testdb`.`course` trx id 1831 lock mode IX
+RECORD LOCKS space id 2 page no 4 n bits 80 index PRIMARY of table `testdb`.`course` trx id 1831 lock_mode X locks rec but not gap waiting
+Record lock, heap no 8 PHYSICAL RECORD: n_fields 5; compact format; info bits 0
+ 0: len 8; hex 8000000000000005; asc         ;;
+ 1: len 6; hex 000000000714; asc       ;;
+ 2: len 7; hex 81000001060110; asc        ;;
+ 3: len 4; hex 6a617661; asc java;;
+ 4: len 4; hex 80000005; asc     ;;
 ```
 
 
@@ -94,6 +166,8 @@ create index idx_course_age on course(age);
 
 ### 锁信息系统表
 
+`mysql8.0`锁信息系统表如下：
+
 - `performance_schema.data_locks`：用于查看行锁信息的
 
   > 注意：`performance_schema.data_locks`中`LOCK_TYPE='RECORD' and LOCK_DATA='supremum pseudo-record'`的记录表示间隙锁，区间`(聚簇索引最后记录, +infinity]`。
@@ -101,6 +175,8 @@ create index idx_course_age on course(age);
 - `performance_schema.data_lock_waits`：在等待其他锁释放的锁信息
 
 - `performance_schema.metadata_locks`：用于查看元数据锁信息的
+
+`mysql5.7`锁信息系统表：`information_schema.innodb_locks`、`information_schema.innodb_lock_waits`、`information_schema.innodb_trx`
 
 ### 演示锁信息系统表使用
 
@@ -3845,6 +3921,8 @@ Query OK, 0 rows affected (0.00 sec)
 
 值得注意的是，行级锁只在事务中有效，也就是说，只有在一个事务开始后并在事务提交或回滚之前，才能对数据进行锁定。如果在非事务环境中执行`SQL`语句，那么`InnoDB`会在语句执行结束后立即释放所有的锁。
 
+加锁的对象是索引，加锁的基本单位是临键锁，在某种情况下临键锁会退化为记录锁或者间隙锁。
+
 ### 行级锁有哪些类型？
 
 和锁的分类一样，分为共享读锁和排他写锁。
@@ -4180,14 +4258,6 @@ mysql> commit;
 Query OK, 0 rows affected (0.00 sec)
 ```
 
-### `MySQL`行级锁有什么风险点呢？
-
-- 死锁：当两个或更多事务相互等待对方释放资源时，就会发生死锁。例如：事务1锁定了行A并试图锁定行B，同时事务2锁定了行B并试图锁定行A，这就形成了死锁。`MySQL`会检测到死锁并终止其中一个事务，但这仍可能导致性能问题和事务失败。
-- 锁升级：如果一个事务已经锁定了某行，其他试图访问这行的事务就必须等待，这可能导致性能下降。如果有大量的事务在等待锁，就可能导致系统出现性能瓶颈。
-- 资源消耗：行级需要更多内存来存储锁信息，而且需要更多的CPU时间来处理锁请求和释放锁，如果数据库中行数非常多，或者并发事务数量非常多，就可能会导致显著的资源消耗。
-- 难以调试和排查：由于行级锁的粒度较小，如果出现性能问题或锁冲突，可能需要复杂的调试和排查工作来找出问题的原因。
-- 事务隔离级别：不同的事务隔离级别会影响锁的行为和性能，可能需要根据具体的应用场景来调整事务隔离级别。
-
 ### 间隙锁（Gap Lock）
 
 #### 什么是间隙锁呢？
@@ -4195,6 +4265,14 @@ Query OK, 0 rows affected (0.00 sec)
 是对索引的间隙加锁，其目的只有一个，防止其他事物插入数据。在`Read Committed`隔离级别下，不会使用间隙锁。隔离级别比`Read Committed`低的情况下，也不会使用间隙锁，如隔离级别为`Read Uncommited`时，也不存在间隙锁。当隔离级别为`Repeatable Read`和`Serializable`时，就会存在间隙锁。**即锁定一个区间，左开右开（因为间隙锁不包含记录锁，所以是左开右开）。**
 
 #### 间隙锁有哪些类型呢？
+
+和锁的分类一样，分为共享锁和排他锁。
+
+#### 间隙锁的兼容性
+
+- 与其他间隙锁的兼容性：由于间隙锁是共享锁，多个事务可以同时持有同一个间隙锁，因此间隙锁之间是相互兼容的。
+- 与记录锁的兼容性：间隙锁与记录锁（行锁）是不兼容的。如果一个事务已经持有了某个记录的行锁，那么其他事务无法在该记录所在的间隙上获得间隙锁。
+- 与意向锁的兼容性：意向锁（Intention Locks）是InnoDB自动加的，用于表示事务准备获取某种类型的锁（共享锁或排他锁）。意向锁与间隙锁是兼容的，因为意向锁只是表示事务的加锁意向，并不实际锁定任何数据。
 
 #### 哪些`sql`执行会触发加间隙锁呢？
 
@@ -4209,7 +4287,7 @@ Query OK, 0 rows affected (0.00 sec)
 mysql> begin;
 Query OK, 0 rows affected (0.00 sec)
 
-# session1给不存在的id加记录排他锁时退化为间隙锁
+# session1给不存在的id加间隙锁
 mysql> select * from course where id=18 for update;
 Empty set (0.00 sec)
 
@@ -4232,18 +4310,130 @@ OBJECT_INSTANCE_BEGIN: 139953858223616
           LOCK_STATUS: GRANTED
             LOCK_DATA: 31
                        
-# session2插入间隙锁边界是允许的，因为间隙锁是左开右开的
+# session2插入间隙锁边界是允许的，因为间隙锁是左开右开的（id=16和id=31的记录不在主键索引间隙锁之间）
 mysql> insert into course values(16,'xxx',22);
 ERROR 1062 (23000): Duplicate entry '16' for key 'course.PRIMARY'
 mysql> insert into course values(31,'xxx',22);
 ERROR 1062 (23000): Duplicate entry '31' for key 'course.PRIMARY'
 
-# session2插入区间中的记录，一直在等待
+# session2插入区间中的记录，一直在等待，因为id=17在主键索引间隙锁之间
 mysql> insert into course values(17,'xxx',22);
 
 # session1释放锁
 mysql> commit;
 Query OK, 0 rows affected (0.01 sec)
+```
+
+
+
+#### 插入意向锁
+
+>[参考链接](https://www.51cto.com/article/759298.html)
+
+##### 什么是插入意向锁呢？
+
+插入意向锁是由 INSERT 操作在插入记录之前加的一种间隙锁。插入意向锁是一种排他（LOCK_X）间隙锁（LOCK_GAP）。
+
+由于多个间隙锁可以共存，插入记录需要加锁时，如果直接使用间隙锁，一个事务锁住了某个间隙，其它事务执行 INSERT 语句还可以插入记录到该间隙中，这样会存在幻读的问题。为了解决这个问题，InnoDB 引入了插入意向锁。
+
+##### 间隙锁会阻塞插入意向锁
+
+```bash
+# session1开启事务
+begin;
+# session1加锁
+select * from course where id>16 and id<31 for update;
+
+# session2插入记录被阻塞
+insert into course values(18,'xxx',12);
+
+mysql> select * from performance_schema.data_locks\G;
+*************************** 2. row ***************************
+# session2插入意向锁
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 140497656111912:2:4:5:140497574251904
+ENGINE_TRANSACTION_ID: 1844
+            THREAD_ID: 74
+             EVENT_ID: 42
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: PRIMARY
+OBJECT_INSTANCE_BEGIN: 140497574251904
+            LOCK_TYPE: RECORD
+            LOCK_MODE: X,GAP,INSERT_INTENTION
+          LOCK_STATUS: WAITING
+            LOCK_DATA: 31
+*************************** 4. row ***************************
+# session1间隙锁
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 140497656111104:2:4:5:140497574245920
+ENGINE_TRANSACTION_ID: 1843
+            THREAD_ID: 73
+             EVENT_ID: 50
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: PRIMARY
+OBJECT_INSTANCE_BEGIN: 140497574245920
+            LOCK_TYPE: RECORD
+            LOCK_MODE: X,GAP
+          LOCK_STATUS: GRANTED
+            LOCK_DATA: 31
+            
+------------
+TRANSACTIONS
+------------
+Trx id counter 1845
+Purge done for trx's n:o < 1839 undo n:o < 0 state: running but idle
+History list length 0
+LIST OF TRANSACTIONS FOR EACH SESSION:
+---TRANSACTION 421972632823376, not started
+0 lock struct(s), heap size 1128, 0 row lock(s)
+---TRANSACTION 421972632820952, not started
+0 lock struct(s), heap size 1128, 0 row lock(s)
+---TRANSACTION 421972632820144, not started
+0 lock struct(s), heap size 1128, 0 row lock(s)
+---TRANSACTION 421972632819336, not started
+0 lock struct(s), heap size 1128, 0 row lock(s)
+---TRANSACTION 1844, ACTIVE 152 sec inserting
+mysql tables in use 1, locked 1
+LOCK WAIT 2 lock struct(s), heap size 1128, 1 row lock(s)
+MySQL thread id 28, OS thread handle 140496583227136, query id 685 172.20.41.1 root update
+/* ApplicationName=IntelliJ IDEA 2023.2.5 */ insert into course values(18,'xxx',12)
+------- TRX HAS BEEN WAITING 152 SEC FOR THIS LOCK TO BE GRANTED:
+# 加插入意向锁但等待
+RECORD LOCKS space id 2 page no 4 n bits 72 index PRIMARY of table `testdb`.`course` trx id 1844 lock_mode X locks gap before rec insert intention waiting
+Record lock, heap no 5 PHYSICAL RECORD: n_fields 5; compact format; info bits 0
+ 0: len 8; hex 800000000000001f; asc         ;;
+ 1: len 6; hex 000000000714; asc       ;;
+ 2: len 7; hex 81000001060143; asc       C;;
+ 3: len 6; hex 707974686f6e; asc python;;
+ 4: len 4; hex 8000001f; asc     ;;
+
+------------------
+TABLE LOCK table `testdb`.`course` trx id 1844 lock mode IX
+RECORD LOCKS space id 2 page no 4 n bits 72 index PRIMARY of table `testdb`.`course` trx id 1844 lock_mode X locks gap before rec insert intention waiting
+Record lock, heap no 5 PHYSICAL RECORD: n_fields 5; compact format; info bits 0
+ 0: len 8; hex 800000000000001f; asc         ;;
+ 1: len 6; hex 000000000714; asc       ;;
+ 2: len 7; hex 81000001060143; asc       C;;
+ 3: len 6; hex 707974686f6e; asc python;;
+ 4: len 4; hex 8000001f; asc     ;;
+
+---TRANSACTION 1843, ACTIVE 177 sec
+2 lock struct(s), heap size 1128, 1 row lock(s)
+MySQL thread id 27, OS thread handle 140496579016448, query id 664 172.20.41.1 root
+TABLE LOCK table `testdb`.`course` trx id 1843 lock mode IX
+RECORD LOCKS space id 2 page no 4 n bits 72 index PRIMARY of table `testdb`.`course` trx id 1843 lock_mode X locks gap before rec
+Record lock, heap no 5 PHYSICAL RECORD: n_fields 5; compact format; info bits 0
+ 0: len 8; hex 800000000000001f; asc         ;;
+ 1: len 6; hex 000000000714; asc       ;;
+ 2: len 7; hex 81000001060143; asc       C;;
+ 3: len 6; hex 707974686f6e; asc python;;
+ 4: len 4; hex 8000001f; asc     ;;
 ```
 
 
@@ -4342,13 +4532,13 @@ OBJECT_INSTANCE_BEGIN: 139953858224304
           LOCK_STATUS: GRANTED
             LOCK_DATA: 'php', 15
     
-# session2允许插入下面记录，因为记录不在临键锁区间中
+# session2允许插入下面记录，因为name='b'和name='c'不在idx_course_name索引临键锁之间
 mysql> insert into course values(17,'b',22);
 Query OK, 1 row affected (0.00 sec)
 mysql> insert into course values(14,'c',22);
 Query OK, 1 row affected (0.01 sec)
 
-# session2不允许插入下面记录（语句一直在等待），因为记录在临键锁区间中
+# session2不允许插入下面记录（语句一直在等待），因为name='c1'和name='java'在idx_course_name索引临键锁之间
 mysql> insert into course values(17,'c1',22);
 mysql> insert into course values(1,'java',22);
 
@@ -4357,16 +4547,618 @@ mysql> commit;
 Query OK, 0 rows affected (0.00 sec)
 ```
 
+### 不同情况下记录锁、间隙锁、临键锁加锁情况
+
+>[参考链接](https://blog.csdn.net/yzx3105/article/details/129728659)
+
+#### `RR`事务级别时
+
+##### 无索引等值或范围查询
+
+>因为查询条件为无索引，所以会使用临键锁锁定所有间隙+记录。
+
+```bash
+# session1开启事务
+begin;
+
+# session1加锁
+select * from course where name='java' for update;
+
+# session2全表锁定不能插入任何数据
+insert into course values(17,'xxx',17);
+# session2全表锁定不能修改任何数据
+update course set name='xxx' where id=16;
+```
+
+
+
+##### 唯一索引等值查询
+
+- 记录存在时
+
+  > 查询条件为聚簇索引或唯一索引时，临键锁退化为记录锁。
+
+  ```bash
+  # session1开启事务
+  begin;
+  
+  # session1加锁
+  select * from course where id=15 for update;
+  
+  # session2允许插入记录
+  insert into course values(17,'xxx',17);
+  # session2不能修改记录，因为有记录锁存在
+  update course set name='xxx' where id=15;
+  ```
+
+  
+
+- 记录不存在时
+
+  >查询条件为聚簇索引或唯一索引时，临键锁退化为间隙锁。
+
+  ```bash
+  # session1开启事务
+  begin;
+  # session1加锁，间隙锁区间为(31,+infinity)
+  select * from course where id=12345 for update;
+  
+  # session2允许插入间隙锁区间外的记录
+  insert into course values(17,'xxx',17);
+  # session2不允许插入间隙锁区间内的记录
+  insert into course values(33,'xxx',33);
+  ```
+
+  
+
+##### 唯一索引范围查询
+
+>查询条件为聚簇索引或唯一索引时，临键锁+记录锁。
+
+```bash
+# session1开启事务
+begin;
+# session1加锁
+select * from course where id>14 and id<19 for update;
+
+# session2不允许插入临键锁区间
+insert into course values(12,'xxx',12);
+insert into course values(17,'xxx',17);
+insert into course values(16,'xxx',16);
+
+# session2不允许修改记录
+update course set name='xxx' where id=15;
+```
+
+
+
+##### 非唯一索引等值查询
+
+- 记录存在时
+
+>临键锁+间隙锁+记录锁
+
+```bash
+# session1开启事务
+begin;
+# session1加锁
+select * from course where name='java' for update;
+
+# session2不允许插入
+insert into course values(38,'c1',12);
+insert into course values(39,'c',12);
+insert into course values(40,'java',12);
+insert into course values(41,'pha',12);
+
+# session2不允许修改
+update course set name='xxx' where id=5;
+```
+
+
+
+- 记录不存在时
+
+  >间隙锁
+
+  ```bash
+  # session1开启事务
+  begin;
+  # session1加锁
+  select * from course where name='java-noneexists' for update;
+  
+  # session2不能插入记录
+  insert into course values(32,'java',12);
+  insert into course values(2,'php',12);
+  ```
+
+  
+
+##### 非唯一索引范围查询
+
+>临键锁+记录锁。
+
+```bash
+# session1开启事务
+begin;
+# session1加锁
+select * from course where name>='c' and name<='java' for update;
+
+# session2不能插入记录
+insert into course values(2,'c0',12);
+# session2不能修改记录
+update course set name='xxx' where id=5;
+```
+
 
 
 ## 数据库死锁有哪些情况呢？
 
-> todo ...
+### 什么是数据库死锁呢？
+
+数据库的死锁是指不同的事务在获取资源时相互等待，导致无法继续执行的一种情况。当发生死锁时，数据库系统会自动中断其中一个事务，以解除死锁。在数据库中，事务可以分为读事务和写事务。读事务只需要获取读锁，而写事务需要获取写锁。当多个事务同时操作同一组数据时，可能会引发死锁的出现。
+
+### 死锁有哪些情况呢？
+
+#### 对资源的锁定顺序不一致
+
+重现过程
+
+```sql
+# session1开启事务
+begin;
+# session1更新记录id=5
+update course set name='xxx' where id=5;
+
+# session2开启事务
+begin;
+# session2更新记录id=15
+update course set name='xxx1' where id=15;
+
+# session1更新记录id=15
+update course set name='xxx1' where id=15;
+
+# session2更新记录id=5，此时报告死锁异常
+update course set name='xxx' where id=5;
+```
+
+分析：
+
+```bash
+# 使用下面命令获取最近一次死锁信息
+show engine innodb status\G;
+
+# 注意：无法根据下面信息获取当前锁详细信息和当前锁是由什么sql触发加的
+------------------------
+LATEST DETECTED DEADLOCK
+------------------------
+# 死锁发生时间
+2024-06-22 12:21:29 139953469400832
+# session1
+*** (1) TRANSACTION:
+TRANSACTION 5561, ACTIVE 16 sec starting index read
+mysql tables in use 1, locked 1
+LOCK WAIT 3 lock struct(s), heap size 1128, 2 row lock(s), undo log entries 1
+MySQL thread id 24, OS thread handle 139953793070848, query id 2507 172.20.35.1 root updating
+/* ApplicationName=IntelliJ IDEA 2023.2.5 */ update course set name='xxx1' where id=15
+# 当前事务持有的锁
+*** (1) HOLDS THE LOCK(S):
+# update course set name='xxx' where id=5;触发加记录排他锁
+RECORD LOCKS space id 7 page no 4 n bits 88 index PRIMARY of table `testdb`.`course` trx id 5561 lock_mode X locks rec but not gap
+Record lock, heap no 16 PHYSICAL RECORD: n_fields 5; compact format; info bits 0
+ 0: len 8; hex 8000000000000005; asc         ;;
+ 1: len 6; hex 0000000015b9; asc       ;;
+ 2: len 7; hex 0100000140027e; asc     @ ~;;
+ 3: len 3; hex 787878; asc xxx;;
+ 4: len 4; hex 80000005; asc     ;;
+# 当前事务等待的锁
+*** (1) WAITING FOR THIS LOCK TO BE GRANTED:
+# 等待锁是由update course set name='xxx1' where id=15;触发的，等待session2记录排他锁释放
+RECORD LOCKS space id 7 page no 4 n bits 88 index PRIMARY of table `testdb`.`course` trx id 5561 lock_mode X locks rec but not gap waiting
+Record lock, heap no 18 PHYSICAL RECORD: n_fields 5; compact format; info bits 0
+ 0: len 8; hex 800000000000000f; asc         ;;
+ 1: len 6; hex 0000000015ba; asc       ;;
+ 2: len 7; hex 020000013e0286; asc     >  ;;
+ 3: len 4; hex 78787831; asc xxx1;;
+ 4: len 4; hex 8000000f; asc     ;;
+
+# session2
+*** (2) TRANSACTION:
+TRANSACTION 5562, ACTIVE 8 sec starting index read
+mysql tables in use 1, locked 1
+LOCK WAIT 3 lock struct(s), heap size 1128, 2 row lock(s), undo log entries 1
+MySQL thread id 23, OS thread handle 139953794127616, query id 2516 172.20.35.1 root updating
+/* ApplicationName=IntelliJ IDEA 2023.2.5 */ update course set name='xxx' where id=5
+# 当前事务持有的锁
+*** (2) HOLDS THE LOCK(S):
+# update course set name='xxx' where id=15;触发加记录排他锁
+RECORD LOCKS space id 7 page no 4 n bits 88 index PRIMARY of table `testdb`.`course` trx id 5562 lock_mode X locks rec but not gap
+Record lock, heap no 18 PHYSICAL RECORD: n_fields 5; compact format; info bits 0
+ 0: len 8; hex 800000000000000f; asc         ;;
+ 1: len 6; hex 0000000015ba; asc       ;;
+ 2: len 7; hex 020000013e0286; asc     >  ;;
+ 3: len 4; hex 78787831; asc xxx1;;
+ 4: len 4; hex 8000000f; asc     ;;
+# 当前事务等待的锁
+*** (2) WAITING FOR THIS LOCK TO BE GRANTED:
+# 等待锁是由update course set name='xxx1' where id=5;触发的，等待session1记录排他锁释放
+RECORD LOCKS space id 7 page no 4 n bits 88 index PRIMARY of table `testdb`.`course` trx id 5562 lock_mode X locks rec but not gap waiting
+Record lock, heap no 16 PHYSICAL RECORD: n_fields 5; compact format; info bits 0
+ 0: len 8; hex 8000000000000005; asc         ;;
+ 1: len 6; hex 0000000015b9; asc       ;;
+ 2: len 7; hex 0100000140027e; asc     @ ~;;
+ 3: len 3; hex 787878; asc xxx;;
+ 4: len 4; hex 80000005; asc     ;;
+
+*** WE ROLL BACK TRANSACTION (2)
+```
+
+解决办法：不同事务中的加锁顺序尽量保持统一，例如：上面示例按照`id`相同的顺序（一致降序或者升序）更新记录
+
+#### 记录锁和间隙锁发生死锁
+
+重现过程
+
+```bash
+# session1开启事务
+begin;
+# session1为id=15的主键加锁
+update course set name='xxx' where id=15;
+
+# session2开启事务
+begin;
+# session2为id<30的主键加间隙锁
+# 因为id=15的主键被session1锁定，所以session2间隙锁在id=15的主键处一直等待session1释放id=15主键的排他锁
+update course set name='xxx' where id<30;
+
+# session1修改id=5记录，但是报告死锁错误，因为id=5的主键被session2持有
+update course set name='xxx1' where id=5;
+```
+
+分析：
+
+```bash
+# 使用下面命令获取最近一次死锁信息
+show engine innodb status\G;
+
+# 注意：无法根据下面信息获取当前锁详细信息和当前锁是由什么sql触发加的
+------------------------
+LATEST DETECTED DEADLOCK
+------------------------
+2024-06-22 16:11:00 139953469400832
+# session2
+*** (1) TRANSACTION:
+TRANSACTION 5592, ACTIVE 42 sec fetching rows
+mysql tables in use 1, locked 1
+LOCK WAIT 3 lock struct(s), heap size 1128, 2 row lock(s), undo log entries 1
+MySQL thread id 31, OS thread handle 139953459951360, query id 2981 172.20.35.1 root updating
+/* ApplicationName=IntelliJ IDEA 2023.2.5 */ update course set name='xxx' where id<30
+
+*** (1) HOLDS THE LOCK(S):
+# 当前事务持有间隙排他锁
+RECORD LOCKS space id 7 page no 4 n bits 96 index PRIMARY of table `testdb`.`course` trx id 5592 lock_mode X
+Record lock, heap no 24 PHYSICAL RECORD: n_fields 5; compact format; info bits 0
+ 0: len 8; hex 8000000000000005; asc         ;;
+ 1: len 6; hex 0000000015d8; asc       ;;
+ 2: len 7; hex 01000001440392; asc     D  ;;
+ 3: len 3; hex 787878; asc xxx;;
+ 4: len 4; hex 80000005; asc     ;;
+
+
+*** (1) WAITING FOR THIS LOCK TO BE GRANTED:
+# 上面的sql尝试加间隙排他锁，等待session1记录排他锁释放
+RECORD LOCKS space id 7 page no 4 n bits 96 index PRIMARY of table `testdb`.`course` trx id 5592 lock_mode X waiting
+Record lock, heap no 22 PHYSICAL RECORD: n_fields 5; compact format; info bits 0
+ 0: len 8; hex 800000000000000f; asc         ;;
+ 1: len 6; hex 0000000015d3; asc       ;;
+ 2: len 7; hex 02000002140151; asc       Q;;
+ 3: len 3; hex 787878; asc xxx;;
+ 4: len 4; hex 8000000f; asc     ;;
+
+# session1
+*** (2) TRANSACTION:
+TRANSACTION 5587, ACTIVE 48 sec starting index read
+mysql tables in use 1, locked 1
+LOCK WAIT 3 lock struct(s), heap size 1128, 2 row lock(s), undo log entries 1
+MySQL thread id 24, OS thread handle 139953793070848, query id 3011 172.20.35.1 root updating
+/* ApplicationName=IntelliJ IDEA 2023.2.5 */ update course set name='xxx1' where id=5
+
+*** (2) HOLDS THE LOCK(S):
+# 当前事务持有记录排他锁
+RECORD LOCKS space id 7 page no 4 n bits 96 index PRIMARY of table `testdb`.`course` trx id 5587 lock_mode X locks rec but not gap
+Record lock, heap no 22 PHYSICAL RECORD: n_fields 5; compact format; info bits 0
+ 0: len 8; hex 800000000000000f; asc         ;;
+ 1: len 6; hex 0000000015d3; asc       ;;
+ 2: len 7; hex 02000002140151; asc       Q;;
+ 3: len 3; hex 787878; asc xxx;;
+ 4: len 4; hex 8000000f; asc     ;;
+
+
+*** (2) WAITING FOR THIS LOCK TO BE GRANTED:
+# 上面sql尝试加记录排他锁，等待session2间隙排他锁释放
+RECORD LOCKS space id 7 page no 4 n bits 96 index PRIMARY of table `testdb`.`course` trx id 5587 lock_mode X locks rec but not gap waiting
+Record lock, heap no 24 PHYSICAL RECORD: n_fields 5; compact format; info bits 0
+ 0: len 8; hex 8000000000000005; asc         ;;
+ 1: len 6; hex 0000000015d8; asc       ;;
+ 2: len 7; hex 01000001440392; asc     D  ;;
+ 3: len 3; hex 787878; asc xxx;;
+ 4: len 4; hex 80000005; asc     ;;
+
+*** WE ROLL BACK TRANSACTION (2)
+```
+
+解决办法：尽量避免间隙锁，建议将间隙所转化为记录锁。例如：将上面的`update course set name='xxx' where id<30;`改为使用主键修改数据。
+
+#### `lock in share mode`死锁
+
+重现过程
+
+```bash
+# session1开启事务
+begin;
+# session1锁记录，只允许其他事务读
+select * from course where id=5 lock in share mode;
+
+# session2开启事务
+begin;
+# session2锁记录，只允许其他事务读
+select * from course where id=5 lock in share mode;
+
+# session1修改数据
+update course set name='xxx' where id=5;
+
+# session2修改数据，但报告死锁异常，因为session1等待session2记录共享锁，session2等待session1记录排他锁
+update course set name='xxx' where id=5;
+```
+
+分析：
+
+```bash
+# 使用下面命令获取最近一次死锁信息
+show engine innodb status\G;
+
+------------------------
+LATEST DETECTED DEADLOCK
+------------------------
+2024-06-22 17:43:35 139953469400832
+*** (1) TRANSACTION:
+TRANSACTION 5599, ACTIVE 24 sec starting index read
+mysql tables in use 1, locked 1
+LOCK WAIT 4 lock struct(s), heap size 1128, 2 row lock(s)
+MySQL thread id 24, OS thread handle 139953793070848, query id 3202 172.20.35.1 root updating
+/* ApplicationName=IntelliJ IDEA 2023.2.5 */ update course set name='xxx' where id=5
+
+*** (1) HOLDS THE LOCK(S):
+# 当前持有记录共享锁
+RECORD LOCKS space id 7 page no 4 n bits 96 index PRIMARY of table `testdb`.`course` trx id 5599 lock mode S locks rec but not gap
+Record lock, heap no 26 PHYSICAL RECORD: n_fields 5; compact format; info bits 0
+ 0: len 8; hex 8000000000000005; asc         ;;
+ 1: len 6; hex 000000000f96; asc       ;;
+ 2: len 7; hex 82000000a90110; asc        ;;
+ 3: len 4; hex 6a617661; asc java;;
+ 4: len 4; hex 80000005; asc     ;;
+
+
+*** (1) WAITING FOR THIS LOCK TO BE GRANTED:
+# 请求记录排他锁，等待session2释放记录共享锁
+RECORD LOCKS space id 7 page no 4 n bits 96 index PRIMARY of table `testdb`.`course` trx id 5599 lock_mode X locks rec but not gap waiting
+Record lock, heap no 26 PHYSICAL RECORD: n_fields 5; compact format; info bits 0
+ 0: len 8; hex 8000000000000005; asc         ;;
+ 1: len 6; hex 000000000f96; asc       ;;
+ 2: len 7; hex 82000000a90110; asc        ;;
+ 3: len 4; hex 6a617661; asc java;;
+ 4: len 4; hex 80000005; asc     ;;
+
+
+*** (2) TRANSACTION:
+TRANSACTION 5600, ACTIVE 19 sec starting index read
+mysql tables in use 1, locked 1
+LOCK WAIT 4 lock struct(s), heap size 1128, 2 row lock(s)
+MySQL thread id 31, OS thread handle 139953459951360, query id 3212 172.20.35.1 root updating
+/* ApplicationName=IntelliJ IDEA 2023.2.5 */ update course set name='xxx' where id=5
+
+*** (2) HOLDS THE LOCK(S):
+# 当前持有记录共享锁
+RECORD LOCKS space id 7 page no 4 n bits 96 index PRIMARY of table `testdb`.`course` trx id 5600 lock mode S locks rec but not gap
+Record lock, heap no 26 PHYSICAL RECORD: n_fields 5; compact format; info bits 0
+ 0: len 8; hex 8000000000000005; asc         ;;
+ 1: len 6; hex 000000000f96; asc       ;;
+ 2: len 7; hex 82000000a90110; asc        ;;
+ 3: len 4; hex 6a617661; asc java;;
+ 4: len 4; hex 80000005; asc     ;;
+
+
+*** (2) WAITING FOR THIS LOCK TO BE GRANTED:
+# 请求记录排他锁，等待session1释放记录共享锁
+RECORD LOCKS space id 7 page no 4 n bits 96 index PRIMARY of table `testdb`.`course` trx id 5600 lock_mode X locks rec but not gap waiting
+Record lock, heap no 26 PHYSICAL RECORD: n_fields 5; compact format; info bits 0
+ 0: len 8; hex 8000000000000005; asc         ;;
+ 1: len 6; hex 000000000f96; asc       ;;
+ 2: len 7; hex 82000000a90110; asc        ;;
+ 3: len 4; hex 6a617661; asc java;;
+ 4: len 4; hex 80000005; asc     ;;
+
+*** WE ROLL BACK TRANSACTION (2)
+```
+
+解决办法：
+
+1. 使用悲观锁`select * from course where id=5 for update`锁定记录，这样会导致并发性能降低。
+2. 使用乐观锁，这里要注意，当同时两个会话针对同一行数据执行上述更新操作的时候，可能会导致同一行的记录被锁，所以我们在进行update的时候，可以用一个version字段去管理。但是这种设计，可能会导致一次更新失败，需要进行重试，因此并发量高的情况下，容易对MySQL造成较大的压力。
+3. 在业务层使用分布式锁控制并发。
+
+#### todo 暂时不知道称呼什么
+
+> https://blog.csdn.net/cxyxysam/article/details/136301789
+
+```bash
+# session1开启事务
+begin;
+# session1判断记录是否存在
+select * from course where id=18 for update;
+
+# session2开启事务
+begin;
+# session2判断记录是否存在
+select * from course where id=19 for update;
+
+# session1判断记录不存在则插入
+insert into course values(18,'xxx',18);
+
+# session2判断记录不存在则插入，此时报告死锁
+insert into course values(19,'xxx',19);
+
+# session1回滚事务
+rollback;
+```
+
+
+
+#### `insert`触发的死锁
+
+>https://zhuanlan.zhihu.com/p/683009416
+>
+>https://baijiahao.baidu.com/s?id=1781188447015451234&wfr=spider&for=pc
+
+
 
 ## 业务开发中应该如何避免死锁呢？
 
-> todo ...
+- 不同事务中的加锁顺序尽量保持统一
+- 尽量避免大事务，占有的资源锁越多，越容易出现死锁。建议拆成小事务
+- 尽量避免间隙锁。建议将间隙所转化为行锁
 
-## 数据库死锁问题如何排查呢？
+## 数据库死锁问题如何监控和排查呢？
+
+> [MySQL死锁系列-线上死锁问题排查思路](https://www.cnblogs.com/remcarpediem/p/13843180.html)
+
+### 监控和排查死锁步骤
+
+1. 通过`prometheus`监控并报警`mysql`死锁
+2. 查看应用报告的死锁错误日志堆栈信息（找到死锁对应的具体业务）
+3. 查看`mysql`死锁相关日志
+   - 如果启用`innodb_status_output`，则在`mysql log_error`配置的错误日志中找出和应用报告死锁时间接近的日志
+   - 如果没有启用`innodb_status_output`，则使用`show engine innodb status\G;`查看最近一次死锁信息
+4. 根据`mysql`日志中的信息找到死锁相关的事务`id`，然后再根据相关事务`id` 在`binlog`中查看执行的具体`sql`
+5. 通过分析或者建立模拟环境一步步执行上面找到的`sql`重现死锁过程
+6. 修改业务代码解决死锁问题
+
+### 演示排查死锁步骤
+
+下面是一个简单的示例，简化模拟应用开发中遇到死锁场景，并按照上面提到的步骤逐步分析死锁问题。
+
+1. 通过运行基于`mybatis-plus`的死锁示例触发死锁 [示例链接](https://github.com/dexterleslie1/demonstration/tree/master/demo-mysql/demo-mybatis-plus-deadlock)
+
+2. 查看示例中的控制台确认业务代码已经打印死锁异常日志
+
+3. 查看`mysql`死锁相关日志
+
+   ```bash
+   # 死锁发生时即时触发的死锁日志
+   TRANSACTION 2317, ACTIVE 1 sec starting index read
+   mysql tables in use 1, locked 1
+   LOCK WAIT 4 lock struct(s), heap size 1128, 2 row lock(s)
+   MySQL thread id 9, OS thread handle 140088953771776, query id 59 127.0.0.1 root updating
+   UPDATE course  SET name='javab19b1693-7d80-4b48-9195-8fa489eedd02', age=5  WHERE id=5
+   RECORD LOCKS space id 2 page no 4 n bits 72 index PRIMARY of table `demo`.`course` trx id 2317 lock mode S locks rec but not gap
+   Record lock, heap no 6 PHYSICAL RECORD: n_fields 5; compact format; info bits 0
+    0: len 8; hex 8000000000000005; asc         ;;
+    1: len 6; hex 00000000053b; asc      ;;;
+    2: len 7; hex 81000001110110; asc        ;;
+    3: len 4; hex 6a617661; asc java;;
+    4: len 4; hex 80000005; asc     ;;
+   
+   RECORD LOCKS space id 2 page no 4 n bits 72 index PRIMARY of table `demo`.`course` trx id 2317 lock_mode X locks rec but not gap waiting
+   Record lock, heap no 6 PHYSICAL RECORD: n_fields 5; compact format; info bits 0
+    0: len 8; hex 8000000000000005; asc         ;;
+    1: len 6; hex 00000000053b; asc      ;;;
+    2: len 7; hex 81000001110110; asc        ;;
+    3: len 4; hex 6a617661; asc java;;
+    4: len 4; hex 80000005; asc     ;;
+   
+   TRANSACTION 2318, ACTIVE 1 sec starting index read
+   mysql tables in use 1, locked 1
+   LOCK WAIT 4 lock struct(s), heap size 1128, 2 row lock(s)
+   MySQL thread id 8, OS thread handle 140089352570624, query id 61 127.0.0.1 root updating
+   UPDATE course  SET name='java676c73cc-2cf5-4fc8-9c7a-d9c42a604959', age=5  WHERE id=5
+   RECORD LOCKS space id 2 page no 4 n bits 72 index PRIMARY of table `demo`.`course` trx id 2318 lock mode S locks rec but not gap
+   Record lock, heap no 6 PHYSICAL RECORD: n_fields 5; compact format; info bits 0
+    0: len 8; hex 8000000000000005; asc         ;;
+    1: len 6; hex 00000000053b; asc      ;;;
+    2: len 7; hex 81000001110110; asc        ;;
+    3: len 4; hex 6a617661; asc java;;
+    4: len 4; hex 80000005; asc     ;;
+   
+   RECORD LOCKS space id 2 page no 4 n bits 72 index PRIMARY of table `demo`.`course` trx id 2318 lock_mode X locks rec but not gap waiting
+   Record lock, heap no 6 PHYSICAL RECORD: n_fields 5; compact format; info bits 0
+    0: len 8; hex 8000000000000005; asc         ;;
+    1: len 6; hex 00000000053b; asc      ;;;
+    2: len 7; hex 81000001110110; asc        ;;
+    3: len 4; hex 6a617661; asc java;;
+    4: len 4; hex 80000005; asc     ;;
+     
+   # 周期性打印的死锁日志
+   ------------------------
+   LATEST DETECTED DEADLOCK
+   ------------------------
+   2024-06-24 00:05:00 140089020913408
+   *** (1) TRANSACTION:
+   TRANSACTION 2317, ACTIVE 1 sec starting index read
+   mysql tables in use 1, locked 1
+   LOCK WAIT 4 lock struct(s), heap size 1128, 2 row lock(s)
+   MySQL thread id 9, OS thread handle 140088953771776, query id 59 127.0.0.1 root updating
+   UPDATE course  SET name='javab19b1693-7d80-4b48-9195-8fa489eedd02', age=5  WHERE id=5
+   
+   *** (1) HOLDS THE LOCK(S):
+   RECORD LOCKS space id 2 page no 4 n bits 72 index PRIMARY of table `demo`.`course` trx id 2317 lock mode S locks rec but not gap
+   Record lock, heap no 6 PHYSICAL RECORD: n_fields 5; compact format; info bits 0
+    0: len 8; hex 8000000000000005; asc         ;;
+    1: len 6; hex 00000000053b; asc      ;;;
+    2: len 7; hex 81000001110110; asc        ;;
+    3: len 4; hex 6a617661; asc java;;
+    4: len 4; hex 80000005; asc     ;;
+   
+   
+   *** (1) WAITING FOR THIS LOCK TO BE GRANTED:
+   RECORD LOCKS space id 2 page no 4 n bits 72 index PRIMARY of table `demo`.`course` trx id 2317 lock_mode X locks rec but not gap waiting
+   Record lock, heap no 6 PHYSICAL RECORD: n_fields 5; compact format; info bits 0
+    0: len 8; hex 8000000000000005; asc         ;;
+    1: len 6; hex 00000000053b; asc      ;;;
+    2: len 7; hex 81000001110110; asc        ;;
+    3: len 4; hex 6a617661; asc java;;
+    4: len 4; hex 80000005; asc     ;;
+   
+   
+   *** (2) TRANSACTION:
+   TRANSACTION 2318, ACTIVE 1 sec starting index read
+   mysql tables in use 1, locked 1
+   LOCK WAIT 4 lock struct(s), heap size 1128, 2 row lock(s)
+   MySQL thread id 8, OS thread handle 140089352570624, query id 61 127.0.0.1 root updating
+   UPDATE course  SET name='java676c73cc-2cf5-4fc8-9c7a-d9c42a604959', age=5  WHERE id=5
+   
+   *** (2) HOLDS THE LOCK(S):
+   RECORD LOCKS space id 2 page no 4 n bits 72 index PRIMARY of table `demo`.`course` trx id 2318 lock mode S locks rec but not gap
+   Record lock, heap no 6 PHYSICAL RECORD: n_fields 5; compact format; info bits 0
+    0: len 8; hex 8000000000000005; asc         ;;
+    1: len 6; hex 00000000053b; asc      ;;;
+    2: len 7; hex 81000001110110; asc        ;;
+    3: len 4; hex 6a617661; asc java;;
+    4: len 4; hex 80000005; asc     ;;
+   
+   
+   *** (2) WAITING FOR THIS LOCK TO BE GRANTED:
+   RECORD LOCKS space id 2 page no 4 n bits 72 index PRIMARY of table `demo`.`course` trx id 2318 lock_mode X locks rec but not gap waiting
+   Record lock, heap no 6 PHYSICAL RECORD: n_fields 5; compact format; info bits 0
+    0: len 8; hex 8000000000000005; asc         ;;
+    1: len 6; hex 00000000053b; asc      ;;;
+    2: len 7; hex 81000001110110; asc        ;;
+    3: len 4; hex 6a617661; asc java;;
+    4: len 4; hex 80000005; asc     ;;
+   
+   *** WE ROLL BACK TRANSACTION (2)
+   ```
+
+   
+
+## 数据库锁给并发性能带来的影响
 
 > todo ...
