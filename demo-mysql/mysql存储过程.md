@@ -86,4 +86,3 @@ call proc_temp();
 -- 删除存储过程
 drop procedure if exists proc_temp;
 ```
-
