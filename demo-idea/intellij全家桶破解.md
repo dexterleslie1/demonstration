@@ -20,6 +20,8 @@
    sh install.sh
    ```
 
+6. 重新启动`idea`
+
 6. 运行`idea`后点击`Manage license`后填入下面对应的`activation code`点击激活后，过期时间会变为2025年(经过测试这个过期时间是假的，破解后能够永久激活)
 
    > 参考 [链接](https://docs.qq.com/doc/DZWFmak1WcVBhdENu)
