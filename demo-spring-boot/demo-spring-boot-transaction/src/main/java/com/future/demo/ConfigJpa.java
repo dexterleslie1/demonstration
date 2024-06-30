@@ -1,4 +1,4 @@
-package com.future.demo.spring.boot.transaction;
+package com.future.demo;
 
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.Configuration;

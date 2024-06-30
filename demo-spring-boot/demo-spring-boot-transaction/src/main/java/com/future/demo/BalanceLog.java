@@ -1,4 +1,4 @@
-package com.future.demo.spring.boot.transaction;
+package com.future.demo;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -6,13 +6,15 @@ import lombok.Setter;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import java.util.Date;
 
 @Entity
-@Table(name = "balance")
-@Setter
+@Table(name = "balance_log")
 @Getter
-public class Balance {
+@Setter
+public class BalanceLog {
     @Id
     private long id;
     private double amount;
+    private Date createTime;
 }

@@ -1,4 +1,4 @@
-package com.future.demo.spring.boot.transaction;
+package com.future.demo;
 
 public class BusinessException extends Exception {
     /**
