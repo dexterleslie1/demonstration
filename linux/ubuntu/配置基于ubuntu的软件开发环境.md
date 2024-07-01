@@ -7,7 +7,7 @@
    > 注意：如果提示curl command not found，ubuntu系统运行 sudo apt install curl -y，centOS系统运行 yum install curl -y
 
    ```bash
-   sudo rm -f /usr/bin/dcli && sudo curl -s https://bucketxyh.oss-cn-hongkong.aliyuncs.com/dcli/dcli-linux-x86_64 --output /usr/bin/dcli && sudo chmod +x /usr/bin/dcli
+   sudo rm -f /usr/bin/dcli && sudo curl https://fut001.oss-cn-hangzhou.aliyuncs.com/dcli/dcli-linux-x86_64 --output /usr/bin/dcli && sudo chmod +x /usr/bin/dcli
    ```
 
 2. 检查`dcli`命令是否配置成功，结果输出`dcli`版本说明配置成功
