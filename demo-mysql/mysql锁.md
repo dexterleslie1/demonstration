@@ -4330,11 +4330,186 @@ Query OK, 0 rows affected (0.01 sec)
 
 >[参考链接](https://www.51cto.com/article/759298.html)
 
+##### 什么是隐式锁呢？
+
+当事物需要加锁时，如果这个锁不可能发生冲突，InnoDB会跳过加锁环节，这种机制称为隐式锁。隐式锁时InnoDB实现的延时加锁机制，只有当可能会产生冲突的时候才会加锁，减少锁的数量，提高系统的性能。在Insert过程中不加锁，遇到特殊情况，将隐式锁转为显示锁。
+
 ##### 什么是插入意向锁呢？
 
 插入意向锁是由 INSERT 操作在插入记录之前加的一种间隙锁。插入意向锁是一种排他（LOCK_X）间隙锁（LOCK_GAP）。
 
 由于多个间隙锁可以共存，插入记录需要加锁时，如果直接使用间隙锁，一个事务锁住了某个间隙，其它事务执行 INSERT 语句还可以插入记录到该间隙中，这样会存在幻读的问题。为了解决这个问题，InnoDB 引入了插入意向锁。
+
+##### 显示插入意向锁
+
+>在插入意向锁没有和其他锁冲突时，通过`performance_schema.data_locks`是无法查询到插入意向锁信息。（这种机制称为隐式锁）
+
+```bash
+# session1开启事务
+begin;
+# session1加间隙锁，为了间隙锁和插入意向锁冲突
+select * from course where id>16 and id<31 for update;
+
+# session1加的间隙锁信息如下
+mysql> select * from performance_schema.data_locks\G;
+*************************** 1. row ***************************
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 140484288074536:1067:140484219590880
+ENGINE_TRANSACTION_ID: 2340
+            THREAD_ID: 58
+             EVENT_ID: 95
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 140484219590880
+            LOCK_TYPE: TABLE
+            LOCK_MODE: IX
+          LOCK_STATUS: GRANTED
+            LOCK_DATA: NULL
+*************************** 2. row ***************************
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 140484288074536:2:4:5:140484219587968
+ENGINE_TRANSACTION_ID: 2340
+            THREAD_ID: 58
+             EVENT_ID: 95
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: PRIMARY
+OBJECT_INSTANCE_BEGIN: 140484219587968
+            LOCK_TYPE: RECORD
+            LOCK_MODE: X,GAP
+          LOCK_STATUS: GRANTED
+            LOCK_DATA: 31
+
+# session2开启事务
+begin;
+# session2加插入意向锁但阻塞，因为和间隙锁冲突
+insert into course values(18,'xxx',18);
+
+mysql> select * from performance_schema.data_locks\G;
+*************************** 1. row ***************************
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 140484288075344:1067:140484219596864
+ENGINE_TRANSACTION_ID: 2341
+            THREAD_ID: 60
+             EVENT_ID: 76
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 140484219596864
+            LOCK_TYPE: TABLE
+            LOCK_MODE: IX
+          LOCK_STATUS: GRANTED
+            LOCK_DATA: NULL
+*************************** 2. row ***************************
+# 插入意向锁被阻塞
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 140484288075344:2:4:5:140484219593952
+ENGINE_TRANSACTION_ID: 2341
+            THREAD_ID: 60
+             EVENT_ID: 76
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: PRIMARY
+OBJECT_INSTANCE_BEGIN: 140484219593952
+            LOCK_TYPE: RECORD
+            LOCK_MODE: X,GAP,INSERT_INTENTION
+          LOCK_STATUS: WAITING
+            LOCK_DATA: 31
+*************************** 3. row ***************************
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 140484288074536:1067:140484219590880
+ENGINE_TRANSACTION_ID: 2340
+            THREAD_ID: 58
+             EVENT_ID: 95
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 140484219590880
+            LOCK_TYPE: TABLE
+            LOCK_MODE: IX
+          LOCK_STATUS: GRANTED
+            LOCK_DATA: NULL
+*************************** 4. row ***************************
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 140484288074536:2:4:5:140484219587968
+ENGINE_TRANSACTION_ID: 2340
+            THREAD_ID: 58
+             EVENT_ID: 95
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: PRIMARY
+OBJECT_INSTANCE_BEGIN: 140484219587968
+            LOCK_TYPE: RECORD
+            LOCK_MODE: X,GAP
+          LOCK_STATUS: GRANTED
+            LOCK_DATA: 31
+
+------------
+TRANSACTIONS
+------------
+Trx id counter 2344
+Purge done for trx's n:o < 2336 undo n:o < 0 state: running but idle
+History list length 0
+LIST OF TRANSACTIONS FOR EACH SESSION:
+---TRANSACTION 421959264784384, not started
+0 lock struct(s), heap size 1128, 0 row lock(s)
+---TRANSACTION 421959264783576, not started
+0 lock struct(s), heap size 1128, 0 row lock(s)
+---TRANSACTION 421959264782768, not started
+0 lock struct(s), heap size 1128, 0 row lock(s)
+---TRANSACTION 421959264781960, not started
+0 lock struct(s), heap size 1128, 0 row lock(s)
+---TRANSACTION 2343, ACTIVE 6 sec inserting
+mysql tables in use 1, locked 1
+LOCK WAIT 2 lock struct(s), heap size 1128, 1 row lock(s)
+MySQL thread id 14, OS thread handle 140483752056576, query id 496 172.20.1.1 root update
+/* ApplicationName=IntelliJ IDEA 2023.2.5 */ insert into course values(18,'xxx',18)
+------- TRX HAS BEEN WAITING 6 SEC FOR THIS LOCK TO BE GRANTED:
+RECORD LOCKS space id 2 page no 4 n bits 72 index PRIMARY of table `testdb`.`course` trx id 2343 lock_mode X locks gap before rec insert intention waiting
+Record lock, heap no 5 PHYSICAL RECORD: n_fields 5; compact format; info bits 0
+ 0: len 8; hex 800000000000001f; asc         ;;
+ 1: len 6; hex 000000000914; asc       ;;
+ 2: len 7; hex 81000001060143; asc       C;;
+ 3: len 6; hex 707974686f6e; asc python;;
+ 4: len 4; hex 8000001f; asc     ;;
+
+------------------
+TABLE LOCK table `testdb`.`course` trx id 2343 lock mode IX
+RECORD LOCKS space id 2 page no 4 n bits 72 index PRIMARY of table `testdb`.`course` trx id 2343 lock_mode X locks gap before rec insert intention waiting
+Record lock, heap no 5 PHYSICAL RECORD: n_fields 5; compact format; info bits 0
+ 0: len 8; hex 800000000000001f; asc         ;;
+ 1: len 6; hex 000000000914; asc       ;;
+ 2: len 7; hex 81000001060143; asc       C;;
+ 3: len 6; hex 707974686f6e; asc python;;
+ 4: len 4; hex 8000001f; asc     ;;
+
+---TRANSACTION 2342, ACTIVE 31 sec
+2 lock struct(s), heap size 1128, 1 row lock(s)
+MySQL thread id 12, OS thread handle 140483755218688, query id 480 172.20.1.1 root
+TABLE LOCK table `testdb`.`course` trx id 2342 lock mode IX
+RECORD LOCKS space id 2 page no 4 n bits 72 index PRIMARY of table `testdb`.`course` trx id 2342 lock_mode X locks gap before rec
+Record lock, heap no 5 PHYSICAL RECORD: n_fields 5; compact format; info bits 0
+ 0: len 8; hex 800000000000001f; asc         ;;
+ 1: len 6; hex 000000000914; asc       ;;
+ 2: len 7; hex 81000001060143; asc       C;;
+ 3: len 6; hex 707974686f6e; asc python;;
+ 4: len 4; hex 8000001f; asc     ;;
+```
+
+
 
 ##### 间隙锁会阻塞插入意向锁
 
@@ -4434,6 +4609,153 @@ Record lock, heap no 5 PHYSICAL RECORD: n_fields 5; compact format; info bits 0
  2: len 7; hex 81000001060143; asc       C;;
  3: len 6; hex 707974686f6e; asc python;;
  4: len 4; hex 8000001f; asc     ;;
+```
+
+##### 插入意向锁不会阻塞间隙锁
+
+```bash
+# session1开启事务
+begin;
+# session1加间隙锁，区间(16,31)
+select * from course where id>16 and id<31 for update;
+
+# session2开启事务
+begin;
+# session2加插入意向锁但被阻塞
+insert into course values(18,'xxx',18);
+
+# session1回滚事务
+rollback;
+
+# 插入意向锁信息如下：
+mysql> select * from performance_schema.data_locks\G;
+*************************** 1. row ***************************
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 140484288075344:1067:140484219596864
+ENGINE_TRANSACTION_ID: 2345
+            THREAD_ID: 60
+             EVENT_ID: 132
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 140484219596864
+            LOCK_TYPE: TABLE
+            LOCK_MODE: IX
+          LOCK_STATUS: GRANTED
+            LOCK_DATA: NULL
+*************************** 2. row ***************************
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 140484288075344:2:4:5:140484219593952
+ENGINE_TRANSACTION_ID: 2345
+            THREAD_ID: 60
+             EVENT_ID: 132
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: PRIMARY
+OBJECT_INSTANCE_BEGIN: 140484219593952
+            LOCK_TYPE: RECORD
+            LOCK_MODE: X,GAP,INSERT_INTENTION
+          LOCK_STATUS: GRANTED
+            LOCK_DATA: 31
+            
+# session3开启事务
+begin;
+# session3加间隙锁，区间(16,31)
+select * from course where id>18 and id<31 for update;
+
+# 插入意向锁不会阻塞间隙锁
+mysql> select * from performance_schema.data_locks\G;
+*************************** 1. row ***************************
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 140484288076152:1067:140484219603136
+ENGINE_TRANSACTION_ID: 2346
+            THREAD_ID: 64
+             EVENT_ID: 50
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 140484219603136
+            LOCK_TYPE: TABLE
+            LOCK_MODE: IX
+          LOCK_STATUS: GRANTED
+            LOCK_DATA: NULL
+*************************** 2. row ***************************
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 140484288076152:2:4:5:140484219600224
+ENGINE_TRANSACTION_ID: 2346
+            THREAD_ID: 64
+             EVENT_ID: 50
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: PRIMARY
+OBJECT_INSTANCE_BEGIN: 140484219600224
+            LOCK_TYPE: RECORD
+            LOCK_MODE: X,GAP
+          LOCK_STATUS: GRANTED
+            LOCK_DATA: 31
+*************************** 3. row ***************************
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 140484288075344:1067:140484219596864
+ENGINE_TRANSACTION_ID: 2345
+            THREAD_ID: 60
+             EVENT_ID: 132
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 140484219596864
+            LOCK_TYPE: TABLE
+            LOCK_MODE: IX
+          LOCK_STATUS: GRANTED
+            LOCK_DATA: NULL
+*************************** 4. row ***************************
+               ENGINE: INNODB
+       ENGINE_LOCK_ID: 140484288075344:2:4:5:140484219593952
+ENGINE_TRANSACTION_ID: 2345
+            THREAD_ID: 60
+             EVENT_ID: 132
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+       PARTITION_NAME: NULL
+    SUBPARTITION_NAME: NULL
+           INDEX_NAME: PRIMARY
+OBJECT_INSTANCE_BEGIN: 140484219593952
+            LOCK_TYPE: RECORD
+            LOCK_MODE: X,GAP,INSERT_INTENTION
+          LOCK_STATUS: GRANTED
+            LOCK_DATA: 31
+
+```
+
+##### 插入意向锁相互之间不会阻塞
+
+```bash
+# session1开启事务
+begin;
+# session1加间隙锁
+select * from course where id>16 and id<31 for update;
+
+# session2
+begin;
+# session2加插入意向锁但被阻塞
+insert into course values(18,'xxx',18);
+
+# session3
+begin;
+# session3加插入意向锁但被阻塞
+insert into course values(19,'xxx',19);
+
+# session1释放间隙锁后，session2和session3都能够成功插入记录，说明插入意向锁之间兼容
+rollback;
 ```
 
 
