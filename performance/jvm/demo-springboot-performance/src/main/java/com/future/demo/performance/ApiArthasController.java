@@ -1,9 +1,12 @@
 package com.future.demo.performance;
 
-import com.yyd.common.http.response.ObjectResponse;
+import com.future.common.http.ObjectResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Random;
 import java.util.UUID;
@@ -19,8 +22,8 @@ public class ApiArthasController {
 
 	@GetMapping("monitor/start")
 	public ObjectResponse<String> monitorStart(
-			@RequestParam(value = "loopCount", defaultValue = "-1") int loopCount,
-			@RequestParam(value = "sleepInterval", defaultValue = "0") int sleepInterval) throws InterruptedException {
+			@RequestParam(value = "loopCount", defaultValue = "100") int loopCount,
+			@RequestParam(value = "sleepInterval", defaultValue = "100") int sleepInterval) throws InterruptedException {
 		monitorStop = false;
 		int count = 0;
 		while(!monitorStop) {

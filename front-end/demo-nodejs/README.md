@@ -99,7 +99,7 @@ npm install --save-dev jquery
 ```properties
 electron_mirror=https://npmmirror.com/mirrors/electron/
 electron-builder-binaries_mirror=https://npmmirror.com/mirrors/electron-builder-binaries/
-registry=https://registry.npmmirror.com
+registry=http://mirrors.cloud.tencent.com/npm/
 ```
 
 npm install 时通过 --verbose 参数查看依赖下载所使用的源

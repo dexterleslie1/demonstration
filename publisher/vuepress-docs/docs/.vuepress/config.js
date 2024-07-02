@@ -59,6 +59,13 @@ module.exports = {
             { text: '英语学习', link: '/英语学习/' },
             { text: 'IntelliJ IDEA的使用', link: '/intellij-idea/' },
             {
+                text: '性能相关',
+                items: [
+                    { text: '系统基准和性能测试', link: '/基准和性能测试/' },
+                    { text: 'JVM性能', link: '/jvm性能/' },
+                ]
+            },
+            {
                 text: '前端相关技术',
                 items: [
                     { text: 'React技术', link: '/React技术/' },
@@ -107,7 +114,6 @@ module.exports = {
                     { text: 'Shell脚本编程', link: '/shell脚本编程/' },
                     { text: 'Ubuntu使用', link: '/ubuntu使用/' },
                     { text: 'Linux使用', link: '/linux使用/' },
-                    { text: '基准和性能测试', link: '/基准和性能测试/' },
                 ]
             },
             {
@@ -356,6 +362,14 @@ module.exports = {
                     children: [
                         '',
                         'jsoup的用法.md',
+                    ]
+                }
+            ], '/jvm性能/': [
+                {
+                    title: "JVM性能相关",
+                    children: [
+                        'cpu性能分析.md',
+                        'arthas使用.md',
                     ]
                 }
             ],

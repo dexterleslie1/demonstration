@@ -138,11 +138,13 @@ sudo cp /etc/apt/sources.list /etc/apt/sources.list.backup
 
 获取`ubuntu codename`，把`codename`替换下面的`bionic`，[参考](https://www.ngui.cc/el/1326641.html?action=onClick)
 
+>注意：如果`lsb_release`命令不存在，则查看原来的`sources.list`文件获取`codename`
+
 ```bash
 lsb_release -a
 ```
 
-`debian`中主要使用`main`、`non-free`、`contrib`组件分类，`/etc/apt/sources.list`配置如下：
+`debian`或主流开源`docker`容器镜像中主要使用`main`、`non-free`、`contrib`组件分类，`/etc/apt/sources.list`配置如下：
 
 非生产环境配置：
 

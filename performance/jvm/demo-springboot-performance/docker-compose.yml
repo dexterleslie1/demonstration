@@ -2,12 +2,9 @@ version: "3.0"
 
 services:
   demo-springboot-performance:
-    container_name: demo-springboot-performance
-    image: docker.118899.net:10001/yyd-public/demo-springboot-performance:1.0.0
+    image: demo-springboot-performance-dev
     environment:
       - JAVA_OPTS=-Xms2048m -Xmx2048m
       - TZ=Asia/Shanghai
     restart: always
-#    network_mode: host
-    ports:
-      - "8080:8080"
+    network_mode: host

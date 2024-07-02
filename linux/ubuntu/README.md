@@ -248,3 +248,13 @@ sudo apt update
 sudo apt install firefox
 ```
 
+
+
+## 基于`debian`的`docker`容器安装`top`命令
+
+先配置国内`sources.list`，再安装`procps`包含了`top`命令
+
+```bash
+apt update && apt install procps
+```
+
