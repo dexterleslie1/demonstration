@@ -228,20 +228,3 @@ git remote -v
 ```sh
 git remote set-url origin https://github.com/username/new-repo.git
 ```
-
-
-
-## ubuntu 删除本地存储的 git 凭证
-
-查看当前凭证提供程序，如果输出 git-credential-store 表示使用了`git-credential-store`，凭证被永久存储在`~/.git-credentials`文件中。
-
-```sh
-git config --global credential.helper
-```
-
-使用`git-credential-store`，凭证通常存储在`~/.git-credentials`文件中。你可以通过删除该文件来删除所有存储的凭证。
-
-```sh
-rm ~/.git-credentials
-```
-
