@@ -2,7 +2,7 @@
 
 ## 环境配置
 
-vuepress2 需要 nodejs v18.16.0+，nodejs v15.14.0 不能启动 vuepress。
+vuepress2 需要 nodejs v18.16.0+，nodejs v15.14.0 不能启动 vuepress。`vuepress1.x`使用`nodejs v20.12.2`兼容。
 
 ## 第一个 vuepress 入门例子
 
