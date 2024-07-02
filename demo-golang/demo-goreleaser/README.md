@@ -28,6 +28,16 @@ gpgcheck=0' | sudo tee /etc/yum.repos.d/goreleaser.repo
 sudo yum install goreleaser -y
 ```
 
+
+
+## `ubuntu`安装`goreleaser`
+
+```bash
+sudo snap install goreleaser --classic
+```
+
+
+
 ## 使用goreleaser
 
 ```
