@@ -82,7 +82,8 @@ public class OperationLogService {
 
         Page<OperationLogModel> pageObject = new Page<>(page, size);
         OrderItem orderItem = new OrderItem();
-        orderItem.setColumn("id").setAsc(false);
+        orderItem.setColumn("id");
+        orderItem.setAsc(false);
         pageObject.orders().add(orderItem);
         QueryWrapper<OperationLogModel> queryWrapper = Wrappers.query();
         queryWrapper.eq("auth_id", contextUserId);

@@ -34,7 +34,7 @@ public class UserServiceImplTests {
     @Test
     public void testSave() {
         // insert前总记录数
-        int countInsertBefore = (int)userService.count();
+        int countInsertBefore = (int) userService.count();
         User user = new User();
         user.setId(10001l);
         user.setAge(30);
@@ -42,7 +42,7 @@ public class UserServiceImplTests {
         user.setEmail("dexterleslie@gmail.com");
         userService.save(user);
 
-        int countInsertAfter = (int)userService.count();
+        int countInsertAfter = (int) userService.count();
 
 //        // 删除上面插入数据
 //        userService.removeById(10001l);
@@ -56,40 +56,41 @@ public class UserServiceImplTests {
         // 新增数据
         int startId = 500000;
         int randomTotalCount = new Random().nextInt(1000);
-        if(randomTotalCount<=0) {
+        if (randomTotalCount <= 0) {
             randomTotalCount = 121;
         }
 
-        for(int i=0; i<randomTotalCount; i++) {
+        for (int i = 0; i < randomTotalCount; i++) {
             long id = startId + i;
             this.userService.removeById(id);
         }
 
-        int prevTotalCount = (int)this.userService.count();
+        int prevTotalCount = (int) this.userService.count();
 
-        if(randomTotalCount < 50) {
+        if (randomTotalCount < 50) {
             randomTotalCount = 50;
         }
 
-        for(int i=0; i<randomTotalCount; i++) {
+        for (int i = 0; i < randomTotalCount; i++) {
             long id = startId + i;
 
             User user = new User();
             user.setId(id);
-            user.setAge(30+i);
+            user.setAge(30 + i);
             user.setName("Dexterleslie" + i);
             user.setEmail("dexterleslie@gmail.com" + i);
             userService.save(user);
         }
 
-        int currentTotalCount = (int)this.userService.count();
-        Assert.assertEquals(prevTotalCount+randomTotalCount, currentTotalCount);
+        int currentTotalCount = (int) this.userService.count();
+        Assert.assertEquals(prevTotalCount + randomTotalCount, currentTotalCount);
 
         int currentPage = 1;
         int size = 50;
         Page<User> page = new Page<>(currentPage, size);
         OrderItem orderItem = new OrderItem();
-        orderItem.setColumn("id").setAsc(false);
+        orderItem.setColumn("id");
+        orderItem.setAsc(false);
         page.orders().add(orderItem);
         this.userService.page(page);
         List<User> userList = page.getRecords();
@@ -99,10 +100,10 @@ public class UserServiceImplTests {
         Assert.assertEquals(size, page.getSize());
         // 总页数
         int expectedPages;
-        if(currentTotalCount%size != 0) {
-            expectedPages = (currentTotalCount+size)/size;
+        if (currentTotalCount % size != 0) {
+            expectedPages = (currentTotalCount + size) / size;
         } else {
-            expectedPages = currentTotalCount/size;
+            expectedPages = currentTotalCount / size;
         }
         Assert.assertEquals(expectedPages, page.getPages());
         // 总记录数
@@ -112,7 +113,8 @@ public class UserServiceImplTests {
         // 使用mapper分页
         page = new Page<>(currentPage, size);
         orderItem = new OrderItem();
-        orderItem.setColumn("id").setAsc(false);
+        orderItem.setColumn("id");
+        orderItem.setAsc(false);
         page.orders().add(orderItem);
         // 表示不需要select count(*) from ...
         page.setSearchCount(false);
@@ -129,23 +131,23 @@ public class UserServiceImplTests {
         // 每页显示数量
         Assert.assertEquals(size, page.getSize());
         // 总页数
-        if(randomTotalCount%size != 0) {
-            expectedPages = (randomTotalCount+size)/size;
+        if (randomTotalCount % size != 0) {
+            expectedPages = (randomTotalCount + size) / size;
         } else {
-            expectedPages = randomTotalCount/size;
+            expectedPages = randomTotalCount / size;
         }
         int actualPages;
-        if(currentTotalCount%size != 0) {
-            actualPages = (currentTotalCount+size)/size;
+        if (currentTotalCount % size != 0) {
+            actualPages = (currentTotalCount + size) / size;
         } else {
-            actualPages = currentTotalCount/size;
+            actualPages = currentTotalCount / size;
         }
         Assert.assertEquals(expectedPages, actualPages);
         // 总记录数
         Assert.assertEquals(randomTotalCount, currentTotalCount);
         Assert.assertEquals(size, userList.size());
 
-        for(int i=0; i<randomTotalCount; i++) {
+        for (int i = 0; i < randomTotalCount; i++) {
             long id = startId + i;
             userService.removeById(id);
         }
@@ -177,7 +179,7 @@ public class UserServiceImplTests {
         idToAgeMapper.put(userId2, 157);
 
         List<Map<String, Object>> mapList = new ArrayList<>();
-        for(Long id : idToAgeMapper.keySet()) {
+        for (Long id : idToAgeMapper.keySet()) {
             Map<String, Object> mapObject = new HashMap<>();
             mapObject.put("id", id);
             mapObject.put("age", idToAgeMapper.get(id));
@@ -190,15 +192,15 @@ public class UserServiceImplTests {
 
         List<User> userList = this.userMapper.selectBatchIds(Arrays.asList(userId1, userId2));
         Map<Long, User> idToUserMapper = new HashMap<>();
-        for(User user : userList) {
+        for (User user : userList) {
             idToUserMapper.put(user.getId(), user);
         }
-        for(Long id : idToUserMapper.keySet()) {
+        for (Long id : idToUserMapper.keySet()) {
             Assert.assertEquals(idToAgeMapper.get(id), idToUserMapper.get(id).getAge());
         }
 
         mapList = new ArrayList<>();
-        for(User userOriginal : userListOriginal) {
+        for (User userOriginal : userListOriginal) {
             Map<String, Object> mapObject = new HashMap<>();
             mapObject.put("id", userOriginal.getId());
             mapObject.put("age", userOriginal.getAge());
