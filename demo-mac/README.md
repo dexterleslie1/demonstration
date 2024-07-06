@@ -198,6 +198,16 @@ cpuid.1.ecx = "1000:0010:1001:1000:0010:0010:0000:0011"
 cpuid.1.edx = "0000:0111:1000:1011:1111:1011:1111:1111"
 ```
 
+`vmware workstation17`破解序列号
+
+> [序列号参考链接](https://gist.github.com/PurpleVibe32/30a802c3c8ec902e1487024cdea26251)
+
+```
+MC60H-DWHD5-H80U9-6V85M-8280D
+```
+
+
+
 
 
 ### esxi7 update3 安装 macOS11 和 macOS12
