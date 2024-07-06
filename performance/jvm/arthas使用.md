@@ -3,6 +3,8 @@
 ## `arthas`安装和运行
 
 >[参考链接](https://arthas.aliyun.com/doc/quick-start.html)
+>
+>注意：如果`java`应用使用`systemctl`运行，请不要把`xxx.service`配置文件中的`PrivateTmp`设置为`true`，否则`arthas`会报告`Unable to open socket file`错误。
 
 1. 启动 math-game
 
