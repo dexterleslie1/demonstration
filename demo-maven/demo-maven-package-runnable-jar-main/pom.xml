@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.future.demo</groupId>
-	<artifactId>maven-package-runnable-jar-main</artifactId>
+	<artifactId>demo-maven-package-runnable-jar-main</artifactId>
 	<version>1.0.0</version>
 
 	<properties>
@@ -51,7 +51,7 @@
 							<finalName>${project.build.finalName}</finalName>
 							<transformers>
 								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-									<mainClass>com.future.demo.test.client.Application</mainClass>
+									<mainClass>com.future.demo.Application</mainClass>
 								</transformer>
 								<transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
 							</transformers>

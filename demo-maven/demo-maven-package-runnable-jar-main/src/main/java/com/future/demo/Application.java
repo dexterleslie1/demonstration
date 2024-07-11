@@ -1,4 +1,4 @@
-package com.future.demo.test.client;
+package com.future.demo;
 
 import org.apache.commons.codec.binary.Base64;
 
