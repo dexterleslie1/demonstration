@@ -22,14 +22,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Date;
-import java.util.List;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes={Application.class})
+@SpringBootTest(classes = {Application.class})
 @Slf4j
 public class ApplicationTests {
     @Autowired
@@ -40,7 +39,7 @@ public class ApplicationTests {
         // 创建bucket
         String bucketName = "test-bucket";
         boolean exists = this.minioClient.bucketExists(bucketName);
-        if(!exists) {
+        if (!exists) {
             this.minioClient.makeBucket(bucketName);
         }
         exists = this.minioClient.bucketExists(bucketName);
@@ -51,7 +50,7 @@ public class ApplicationTests {
         ClassPathResource resource = new ClassPathResource("1.txt");
         this.minioClient.putObject(bucketName, objectName, resource.getFile().getAbsolutePath(), null);
         Iterable<Result<Item>> iterable = this.minioClient.listObjects(bucketName);
-        Assert.assertTrue(StreamSupport.stream(iterable.spliterator(), false).count()>=1);
+        Assert.assertTrue(StreamSupport.stream(iterable.spliterator(), false).count() >= 1);
         // 判断对象是否存在
         ObjectStat objectStat = this.minioClient.statObject(bucketName, objectName);
         Assert.assertNotNull(objectStat);
@@ -76,25 +75,26 @@ public class ApplicationTests {
                 this.minioClient.removeObject(bucketName, itemResult.get().objectName());
             } catch (Exception e) {
                 log.error(e.getMessage(), e);
+                throw new RuntimeException(e);
             }
         });
         // 判断对象是否存在
         try {
             this.minioClient.statObject(bucketName, objectName);
             Assert.fail("预期异常没有抛出");
-        } catch (ErrorResponseException ex ) {
+        } catch (ErrorResponseException ex) {
             ErrorCode errorCodeResponse = ex.errorResponse().errorCode();
-            Assert.assertTrue(ErrorCode.NO_SUCH_KEY==errorCodeResponse || ErrorCode.NO_SUCH_OBJECT==errorCodeResponse);
+            Assert.assertTrue(ErrorCode.NO_SUCH_KEY == errorCodeResponse || ErrorCode.NO_SUCH_OBJECT == errorCodeResponse);
         }
 
         // 查询所有bucket
         String randomBucketName = UUID.randomUUID().toString();
         this.minioClient.makeBucket(randomBucketName);
         List<Bucket> buckets = this.minioClient.listBuckets();
-        Assert.assertTrue(buckets.size()>0);
+        Assert.assertTrue(buckets.size() > 0);
 
         // 测试path
-        byte [] randomBytes = new byte[1024*1024];
+        byte[] randomBytes = new byte[1024 * 1024];
         Random random = new Random();
         random.nextBytes(randomBytes);
         String path = DateFormatUtils.format(new Date(), "yyyy-MM-dd");
@@ -104,12 +104,22 @@ public class ApplicationTests {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         inputStream = this.minioClient.getObject(bucketName, objectNameWithPath);
         IOUtils.copy(inputStream, outputStream);
-        byte [] bytesRead = outputStream.toByteArray();
+        byte[] bytesRead = outputStream.toByteArray();
         inputStream.close();
         Assert.assertArrayEquals(randomBytes, bytesRead);
 
         // 测试objectStat
         objectStat = this.minioClient.statObject(bucketName, objectNameWithPath);
         Assert.assertEquals(randomBytes.length, objectStat.length());
+
+        // 测试获取对象列表
+        List<Bucket> bucketList = this.minioClient.listBuckets();
+        Assert.assertTrue(bucketList.stream().map(Bucket::name).collect(Collectors.toList()).contains(bucketName));
+        Iterable<Result<Item>> resultIterable = this.minioClient.listObjects(bucketName);
+        List<Item> resultList = new ArrayList<>();
+        for (Result<Item> result : resultIterable) {
+            resultList.add(result.get());
+        }
+        Assert.assertTrue(resultList.stream().map(Item::objectName).collect(Collectors.toList()).contains(objectNameWithPath));
     }
 }

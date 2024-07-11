@@ -20,7 +20,6 @@ public class MinioConfiguration {
 
     @Bean
     MinioClient minioClient() throws InvalidPortException, InvalidEndpointException {
-        MinioClient minioClient = new MinioClient(minioEndpoint, minioPort, minioRootUser, minioRootPassword, false);
-        return minioClient;
+        return new MinioClient(minioEndpoint, minioPort, minioRootUser, minioRootPassword, false);
     }
 }
