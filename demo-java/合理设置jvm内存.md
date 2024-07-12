@@ -65,3 +65,25 @@ JVM堆内存设置
 
 
 
+## 合理设置内存
+
+1. 编译和运行[demo-springboot-performance](https://github.com/dexterleslie1/demonstration/tree/master/performance/jvm/demo-springboot-performance)演示，协助分析垃圾回收相关信息
+
+   ```bash
+   # 编译
+   mvn package
+   
+   # 启动springboot项目
+   java -jar -Xmx2g -Xms2g -XX:+PrintGC -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:./gc.log -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=128m -XX:+HeapDumpOnOutOfMemoryError -XX:+CrashOnOutOfMemoryError -XX:HeapDumpPath=./ target/demo-springboot-performance.jar
+   ```
+
+2. 使用`jmeter`打开并运行[memory负载.jmx](https://github.com/dexterleslie1/demonstration/blob/master/performance/jvm/demo-springboot-performance/memory%E8%B4%9F%E8%BD%BD.jmx)
+
+3. 查看`jvm`内存和`GC`情况并通过`-Xmx -Xms`调整`jvm`内存
+
+   ```bash
+   tail -f gc.log.0.current 
+   ```
+
+4. 结论：`jvm`内存过低会报告`OOM`错误或者会有较多的`Full GC`发生，所以需要调整`jvm`内存直到不会发生`OOM`错误和不会发生较多的`Full GC`。暂时发现`PS+PO`、`CMS`、`G1`垃圾回收器对性能影响相同，所以使用默认的垃圾回收器即可。
+
