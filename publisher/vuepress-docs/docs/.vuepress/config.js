@@ -305,6 +305,11 @@ module.exports = {
                     title: "Java相关",
                     children: [
                         'entity、vo、dto、po、do.md',
+                        'GC.md',
+                        'java命令行参数.md',
+                        'jdk相关工具.md',
+                        'metaspace与permgen.md',
+                        '合理设置jvm内存.md',
                     ]
                 }
             ], '/logback/': [

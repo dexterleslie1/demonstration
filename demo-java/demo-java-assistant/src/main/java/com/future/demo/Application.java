@@ -12,6 +12,10 @@ public class Application {
         AssistantService service = new AssistantService();
         if (arg.equals("xss"))
             service.investigateXss();
+        else if (arg.equals("memallocpeak"))
+            service.investigateMemoryAllocationPeak();
+        else if (arg.equals("memalloc"))
+            service.investigateMemoryAllocation();
         else {
             throw new IllegalArgumentException("不支持测试场景参数 " + arg);
         }

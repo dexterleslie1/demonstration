@@ -16,11 +16,13 @@ public class AssistantService {
     public void investigateXss() throws InterruptedException {
         System.out.println("开始调用investigateXss...");
         ExecutorService executorService = Executors.newCachedThreadPool();
+        // 创建256个线程
         for (int i = 0; i < 256; i++) {
             executorService.submit(new Runnable() {
                 @Override
                 public void run() {
-                    int maxDepth = 1024; // 你可以调整这个值来测试不同的栈大小
+                    // 每个线程函数递归调用的深度为8*1024
+                    int maxDepth = 8 * 1024;
                     try {
                         investigateXssRecursion(maxDepth);
                     } catch (StackOverflowError e) {
@@ -35,15 +37,8 @@ public class AssistantService {
 
     private void investigateXssRecursion(int depth) {
         if (depth > 0) {
-            // 增加局部变量以消耗更多栈空间（可选）
-            byte[] largeArray = new byte[1024]; // 分配一个较大的数组作为局部变量
-            RANDOM.nextBytes(largeArray);
-
             // 递归调用
             investigateXssRecursion(depth - 1);
-
-            // 需要引用变量largeArray，否则变量在年轻代gc就被回收无法查看变量占用内存空间
-            System.out.println(largeArray.length);
         } else {
             // 达到递归深度后不退出函数，以便测试分析
             try {
@@ -52,5 +47,107 @@ public class AssistantService {
                 throw new RuntimeException(e);
             }
         }
+    }
+
+    /**
+     * 用于研究内存使用峰值
+     *
+     * @throws InterruptedException
+     */
+    public void investigateMemoryAllocationPeak() throws InterruptedException {
+        System.out.println("开始调用investigateMemoryAllocation...");
+        ExecutorService executorService = Executors.newCachedThreadPool();
+        // 创建256个线程
+        for (int i = 0; i < 256; i++) {
+            executorService.submit(new Runnable() {
+                @Override
+                public void run() {
+                    // 每个线程函数递归调用的深度为1024
+                    int maximumDepth = 2 * 1024;
+                    try {
+                        investigateMemoryAllocationRecursionPeak(maximumDepth, 1);
+                    } catch (StackOverflowError e) {
+                        System.out.println("Stack overflow occurred in thread " + Thread.currentThread().getName());
+                    }
+                }
+            });
+        }
+        executorService.shutdown();
+        while (!executorService.awaitTermination(10, TimeUnit.SECONDS)) ;
+    }
+
+    private void investigateMemoryAllocationRecursionPeak(int maximumDepth, int currentDepth) {
+        byte[] allocByteArray = new byte[1024];
+        RANDOM.nextBytes(allocByteArray);
+
+        if (currentDepth >= maximumDepth) {
+            try {
+                Thread.sleep(3600 * 1000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            investigateMemoryAllocationRecursionPeak(maximumDepth, currentDepth + 1);
+        }
+
+        // 这里需要引用allocByteArray，否则上面allocByteArray会被jvm优化在年轻代gc就被回收
+        int length = allocByteArray.length;
+    }
+
+    /**
+     * @throws InterruptedException
+     */
+    public void investigateMemoryAllocation() throws InterruptedException {
+        System.out.println("开始调用investigateMemoryAllocation...");
+        ExecutorService executorService = Executors.newCachedThreadPool();
+        // 创建256个线程
+        for (int i = 0; i < 512; i++) {
+            executorService.submit(new Runnable() {
+                @Override
+                public void run() {
+                    // 每个线程函数递归调用的深度为1000
+                    int maximumDepth = 1024;
+                    try {
+                        while (true)
+                            investigateMemoryAllocationRecursion(maximumDepth, 1);
+                    } catch (StackOverflowError e) {
+                        System.out.println("Stack overflow occurred in thread " + Thread.currentThread().getName());
+                    }
+                }
+            });
+        }
+        executorService.shutdown();
+        while (!executorService.awaitTermination(10, TimeUnit.SECONDS)) ;
+    }
+
+    private final static Integer INTEGER = 10;
+
+    private void investigateMemoryAllocationRecursion(int maximumDepth, int currentDepth) {
+        byte[] allocByteArray = new byte[1024];
+        RANDOM.nextBytes(allocByteArray);
+
+        int randomInt = RANDOM.nextInt(INTEGER);
+        if (randomInt > 0) {
+            try {
+                Thread.sleep(randomInt);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        if (currentDepth < maximumDepth)
+            investigateMemoryAllocationRecursion(maximumDepth, currentDepth + 1);
+
+        randomInt = RANDOM.nextInt(INTEGER);
+        if (randomInt > 0) {
+            try {
+                Thread.sleep(randomInt);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        // 这里需要引用allocByteArray，否则上面allocByteArray会被jvm优化在年轻代gc就被回收
+        int length = allocByteArray.length;
     }
 }

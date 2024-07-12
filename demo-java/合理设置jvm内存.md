@@ -2,7 +2,7 @@
 
 > [深入JVM虚拟机之高并发交易系统应如何设置JVM堆内存的大小？](https://blog.csdn.net/weixin_42194284/article/details/106912093)
 
-## 引入案例
+## 理论分析
 
 以一个每日百万级别的交易支付系统作为背景，来分析一下，在线上部署一个系统时，应该如何根据系统的业务来合理的设置JVM对内存的大小。
 
@@ -42,6 +42,26 @@ JVM堆内存设置
 2. 如果用2核4G的机器来部署，机器4G内存，JVM进程估计最多也就是2G内存。
 3. 这2G还得分给元空间、栈内存、堆内存几块区域，那么堆内存估计可能也就1个多G的内存空间。堆内存还分为新生代和老年代，那么新生代可能也就几百MB的内存
 4. 整个系统每秒需要1MB左右的内存空间，新生代只有几百MB，运行几百秒也就是大概五六分钟左右，新生代内存空间就满了，肯定会触发Minor GC。如果这么频繁的触发Minor GC，必然会影响线上系统的性能稳定性
+
+
+
+## 证明上面理论分析
+
+1. 编译[demo-java-assistant](https://github.com/dexterleslie1/demonstration/tree/master/demo-java/demo-java-assistant)演示
+
+   ```bash
+   mvn package
+   ```
+
+2. 运行演示
+
+   ```bash
+   java -jar target/demo.jar memallocpeak
+   ```
+
+3. 使用`jstat`或者`arthas memory`查看堆内存使用
+
+4. 结论：通过查看堆内存使用情况，可以看到老年代内存使用接近`512m`符合以上理论预期
 
 
 
