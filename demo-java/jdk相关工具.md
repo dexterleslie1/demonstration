@@ -215,3 +215,28 @@ jstat -gccapacity 77553
 - **MCMN**、**MCMX**、**MC**：这些列分别代表元空间（Metaspace，在Java 8及之后版本中）的最小容量、最大容量和当前容量（均以KB为单位）。元空间用于存储类的元数据。这里MCMN是0.0 KB（但实际上JVM会设置一个非零的默认值），MCMX是1056768.0 KB，MC是4864.0 KB，表示当前元空间的使用情况。
 - **CCSMN**、**CCSMX**、**CCSC**：这些列与压缩类空间（Compressed Class Space）相关，但在你提供的输出中，CCSMN是0.0 KB，这可能意味着压缩类空间没有被启用或配置。CCSMX是1048576.0 KB（即1 GB），是压缩类空间可以扩展到的最大容量。CCSC是512.0 KB，但考虑到CCSMN是0，这个值可能不表示当前实际使用的压缩类空间大小。
 - **YGC** 和 **FGC**：分别表示年轻代垃圾收集（Young GC）和完全垃圾收集（Full GC）的次数。这里YGC是3次，表示已经进行了3次年轻代垃圾收集；FGC是0次，表示还没有进行过完全垃圾收集。
+
+
+
+## `jstack`
+
+**jstack命令是Java Development Kit（JDK）自带的一个命令行工具**，它主要用于生成Java应用程序的线程快照，即打印出给定Java进程ID、core文件或远程调试服务的Java堆栈信息。这个工具在诊断Java应用程序的性能问题、死锁问题等方面非常有用。
+
+显示所有线程
+
+```bash
+./jstack <pid>
+```
+
+
+
+## `jcmd`
+
+`jcmd`是JDK 1.7及以后版本中引入的一个多功能的命令行工具，它提供了一种简单而强大的方式来管理和监控Java进程。
+
+显示所有线程
+
+```bash
+./jcmd <pid> Thread.print
+```
+
