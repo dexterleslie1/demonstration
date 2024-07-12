@@ -93,6 +93,24 @@ dashboard -n 5
 
 >[参考链接](https://arthas.aliyun.com/doc/thread.html)
 
+默认按照 CPU 增量时间降序排列，只显示第一页数据。
+
+```bash
+thread
+```
+
+显示所有匹配线程信息，有时需要获取全部 JVM 的线程数据进行分析
+
+```bash
+thread -all
+```
+
+查看指定状态的线程
+
+```bash
+thread --state RUNNABLE
+```
+
 列出`5000ms`内最忙的6个线程栈
 
 ```bash
