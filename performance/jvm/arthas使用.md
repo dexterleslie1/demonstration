@@ -71,6 +71,8 @@
 
 ## `dashboard`使用
 
+>查看`jvm`线程、内存、`GC`情况
+>
 >[参考链接](https://arthas.aliyun.com/doc/dashboard.html)
 
 指定每1秒刷新一次，单位毫秒
@@ -150,6 +152,8 @@ thread -n 6 -i 5000
 
 ## `jvm`使用
 
+> 显示`jvm`启动参数、垃圾回收器信息、`GC`统计信息、内存使用情况、线程信息。
+>
 > [参考链接](https://arthas.aliyun.com/doc/jvm.html)
 
 查看当前JVM信息
@@ -158,7 +162,29 @@ thread -n 6 -i 5000
 jvm
 ```
 
+THREAD相关
 
+- COUNT：JVM当前活跃的线程数
+- DAEMON-COUNT： JVM当前活跃的守护线程数
+- PEAK-COUNT：从JVM启动开始曾经活着的最大线程数
+- STARTED-COUNT：从JVM启动开始总共启动过的线程次数
+- DEADLOCK-COUNT：JVM当前死锁的线程数
+
+## `memory`使用
+
+>[memory命令参考](https://arthas.aliyun.com/doc/memory.html)
+
+查看`jvm`内存使用情况
+
+```bash
+memory
+```
+
+`memory`命令输出列对应的意义，[参考](https://docs.oracle.com/en/java/javase/11/docs/api/java.management/java/lang/management/MemoryUsage.html)
+
+- used：目前正在使用的内存大小
+- total：之前已经申请使用的内存，`committed`内存
+- max：可支持最大内存
 
 ## `sysprop`使用
 
@@ -198,8 +224,11 @@ sysprop user.country CN
 
 dump到指定文件
 
-```sh
+```bash
 heapdump /tmp/dump.hprof
+
+# 在应用运行的当前目录中创建dump.hprof文件
+heapdump dump.hprof
 ```
 
 只dump live对象
@@ -208,7 +237,7 @@ heapdump /tmp/dump.hprof
 heapdump --live /tmp/dump.hprof
 ```
 
-dump到临时文件
+dump到`/tmp/xxx.hprof`
 
 ```sh
 heapdump
@@ -384,3 +413,78 @@ ts=2024-07-02 09:03:33;thread_name=http-nio-8080-exec-17;id=163;is_daemon=true;p
         at java.lang.Thread.run(Thread.java:834)
 
 ```
+
+
+
+## `profiler`使用
+
+### 什么是`profiler`？
+
+Arthas的`profiler`命令是一个强大的工具，它在Java应用程序的性能分析和调优中扮演着关键角色。这个命令通过利用`async-profiler`库（或其他类似的性能分析工具，具体取决于Arthas的版本和配置）来收集应用程序运行时的各种性能数据。以下是`arthas profiler`命令的主要作用：
+
+1. **热点分析**：`profiler`可以帮助开发者识别应用程序中的热点代码区域，即执行频率高、消耗资源多的代码段。这有助于开发者优先关注那些对性能影响最大的部分，从而进行针对性的优化。
+2. **内存分配分析**：当使用`profiler alloc`等子命令时，`profiler`可以跟踪Java堆中的内存分配情况。这有助于识别内存泄漏、不必要的内存分配和内存使用效率低下的问题。通过分析内存分配热点，开发者可以优化数据结构、减少内存占用和提高内存使用效率。
+3. **锁竞争分析**：某些`profiler`子命令（如`profiler lock`）可以跟踪Java中的锁竞争情况。这有助于识别死锁、锁争用和锁饥饿等问题，这些问题可能会导致应用程序的性能下降甚至崩溃。通过分析锁竞争热点，开发者可以优化同步机制、减少锁的使用或改进锁的策略。
+4. **CPU性能分析**：使用`profiler cpu`等子命令时，`profiler`可以收集CPU使用情况的数据。这有助于识别哪些代码段占用了最多的CPU时间，从而找到性能瓶颈。通过分析CPU使用热点，开发者可以优化算法、减少不必要的计算或并行化代码以提高性能。
+5. **火焰图生成**：`profiler`收集的数据通常以火焰图的形式展示。火焰图是一种性能分析的可视化工具，它通过堆叠的条形图来表示方法的调用关系和调用时间。这种图形化的表示方式使得性能分析更加直观和易于理解。
+6. **非侵入式分析**：与传统的性能分析工具相比，`arthas profiler`通常不需要修改应用程序的代码或重新编译。这使得它成为一种非侵入式的性能分析方法，可以在不中断应用程序正常运行的情况下进行性能分析。
+7. **动态分析**：`arthas profiler`支持在应用程序运行时动态地启动和停止性能分析。这使得开发者可以在需要时快速地进行性能分析，而无需事先进行复杂的设置或配置。
+
+总之，`arthas profiler`是一个功能强大的性能分析工具，它可以帮助开发者识别和解决Java应用程序中的性能问题。通过热点分析、内存分配分析、锁竞争分析、CPU性能分析以及火焰图的生成等功能，`arthas profiler`为Java应用的性能调优提供了有力的支持。
+
+### `CPU`火焰图
+
+1. 编译并运行[demo-springboot-performance](https://github.com/dexterleslie1/demonstration/tree/master/performance/jvm/demo-springboot-performance)演示项目，注意：需要使用`java -jar demo-springboot-performance.jar -Xmx4g -Xms4g`命令运行
+
+2. 使用`jmeter`打开[cpu负载.jmx](https://github.com/dexterleslie1/demonstration/blob/master/performance/jvm/demo-springboot-performance/cpu%E8%B4%9F%E8%BD%BD.jmx)用于给应用加`cpu`负载
+
+3. 运行`arthas`并选择`demo-springboot-performance`进程
+
+4. 生成`cpu`火焰图
+
+   ```bash
+   # 默认是--event cpu，对cpu生成火焰图
+   profiler start
+   
+   # 查看profiler状态
+   profiler status
+   
+   # 查看已经采样的个数
+   profiler getSamples
+   
+   # 停止采样并输出html格式的火焰图
+   profiler stop
+   ```
+
+5. 使用浏览器打开火焰图对应的`html`，`html`在目录`arthas-output`中
+
+6. 在火焰图中能够直观地看到`com/future/demo/performance/CpuService.consume`最宽表示占用`cpu`时间最多
+
+### 内存分配火焰图
+
+1. 编译并运行[demo-springboot-performance](https://github.com/dexterleslie1/demonstration/tree/master/performance/jvm/demo-springboot-performance)演示项目，注意：需要使用`java -jar demo-springboot-performance.jar -Xmx4g -Xms4g`命令运行
+
+2. 使用`jmeter`打开[memory负载.jmx](https://github.com/dexterleslie1/demonstration/blob/master/performance/jvm/demo-springboot-performance/memory%E8%B4%9F%E8%BD%BD.jmx)用于给应用加内存分配负载
+
+3. 运行`arthas`并选择`demo-springboot-performance`进程
+
+4. 生成`cpu`火焰图
+
+   ```bash
+   # 对内存分配生成火焰图
+   profiler start --event alloc
+   
+   # 查看profiler状态
+   profiler status
+   
+   # 查看已经采样的个数
+   profiler getSamples
+   
+   # 停止采样并输出html格式的火焰图
+   profiler stop
+   ```
+
+5. 使用浏览器打开火焰图对应的`html`，`html`在目录`arthas-output`中
+
+6. 在火焰图中能够直观地看到`com/future/demo/performance/ApiMemoryController.alloc`比较宽表示内存分配比较多
+

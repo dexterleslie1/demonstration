@@ -374,8 +374,10 @@ module.exports = {
                 {
                     title: "JVM性能相关",
                     children: [
-                        'cpu性能分析.md',
                         'arthas使用.md',
+                        'jprofiler用法.md',
+                        'cpu性能分析.md',
+                        'oom分析.md',
                     ]
                 }
             ],
