@@ -1475,44 +1475,6 @@ ERROR:
 No query specified
 ```
 
-### 慢日志
-
-```shell
-# 查看是否启用慢日志
-show variables like 'slow_query%';
-
-# 启用慢日志，编辑my.cnf添加如下内容
-[mysqld]
-slow_query_log=1
-long_query_time=1
-slow_query_log_file=slow-query.log
-
-mysql> show variables like 'slow_query%';
-+---------------------+----------------+
-| Variable_name       | Value          |
-+---------------------+----------------+
-| slow_query_log      | ON             |
-| slow_query_log_file | slow-query.log |
-+---------------------+----------------+
-2 rows in set (0.01 sec)
-
-# 不重启mariadb服务启用slow_query_log功能
-# 在配置文件/etc/my.conf.d/server.conf先配置
-slow_query_log=0
-long_query_time=1
-slow_query_log_file=slow-query.log
-
-show global variables like 'slow_query_log';
-
-在mysql cli设置global slow_query_log=on
-set global slow_query_log=on;
-
-打开新的mysql连接
-select sleep(3)
-
-注意：设置global slow_query_log=on后要打开新的mysql连接，否者旧的mysql连接不会被log
-```
-
 ### 性能分析show profiles
 
 ```shell

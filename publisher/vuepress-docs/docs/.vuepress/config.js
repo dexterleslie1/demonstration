@@ -147,6 +147,7 @@ module.exports = {
                         '使用docker-compose运行MySQL.md',
                         'mysql备份和还原.md',
                         'mysql存储过程.md',
+                        '启用或关闭慢日志.md',
                     ]
                 }
             ], '/MariaDB/': [
