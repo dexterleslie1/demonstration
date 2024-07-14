@@ -10,7 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes={Application.class}, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@SpringBootTest(classes = {Application.class}, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 public class ApplicationTests {
     @Autowired
     private AmqpTemplate rabbitTemplate;
@@ -18,22 +18,27 @@ public class ApplicationTests {
     private ConfigDemoMq configDemoMq;
 
     @Test
-    public void test1() throws InterruptedException {
+    public void test() throws InterruptedException {
+        // 清除之前的消息
+        Thread.sleep(3100);
+        this.configDemoMq.clear();
+
         int totalCount = 5;
 
-        for(int i=0; i<totalCount; i++){
-            this.rabbitTemplate.convertAndSend(ConfigDemoMq.ExchangeName, ConfigDemoMq.RoutingKey, "888");
+        for (int i = 0; i < totalCount; i++) {
+            this.rabbitTemplate.convertAndSend(ConfigDemoMq.ExchangeName, ConfigDemoMq.RoutingKey, "888", ConfigDemoMq.MessagePostProcessortVariable);
         }
 
+        Thread.sleep(500);
         // 未收到delay消息
         Assert.assertEquals(0, configDemoMq.getCount());
 
-        Thread.sleep(2500);
+        Thread.sleep(2600);
         // 收到所有delay消息
         Assert.assertEquals(totalCount, configDemoMq.getCount());
 
         // 最多重试一次
         Thread.sleep(5000);
-        Assert.assertEquals(totalCount*2, configDemoMq.getCount());
+        Assert.assertEquals(totalCount * 2, configDemoMq.getCount());
     }
 }
