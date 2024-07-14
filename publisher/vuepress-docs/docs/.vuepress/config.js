@@ -57,7 +57,7 @@ module.exports = {
         nav: [
             { text: '首页', link: '/' },
             { text: '英语学习', link: '/英语学习/' },
-            { text: 'IntelliJ IDEA的使用', link: '/intellij-idea/' },
+            { text: '数据结构和算法', link: '/数据结构和算法/' },
             {
                 text: '性能相关',
                 items: [
@@ -93,13 +93,14 @@ module.exports = {
                 ]
             },
             {
-                text: '其他技术',
+                text: '其他',
                 items: [
                     { text: 'Git使用', link: '/git/' },
                     { text: 'OpenLDAP', link: '/openldap/' },
                     { text: 'Jira', link: '/jira/' },
                     { text: '软件工程', link: '/软件工程/' },
                     { text: 'Jsoup', link: '/jsoup/' },
+                    { text: 'IntelliJ IDEA的使用', link: '/intellij-idea/' },
                 ]
             },
             {
@@ -380,6 +381,13 @@ module.exports = {
                         'jprofiler用法.md',
                         'cpu性能分析.md',
                         'oom分析.md',
+                    ]
+                }
+            ], '/数据结构和算法/': [
+                {
+                    title: "数据结构和算法",
+                    children: [
+                        '布隆过滤器.md',
                     ]
                 }
             ],
