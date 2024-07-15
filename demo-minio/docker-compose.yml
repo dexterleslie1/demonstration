@@ -1,10 +1,5 @@
 version: "3.0"
 
-## 创建网络
-#networks:
-#  net:
-#    name: demo-minio-net
-
 services:
   minio-demo:
     container_name: minio-demo
@@ -13,11 +8,10 @@ services:
     environment:
       - MINIO_ROOT_USER=root
       - MINIO_ROOT_PASSWORD=root123456
-#    volumes:
-#      - ~/data-minio-demo/data:/data
-#      - ~/data-minio-demo/config:/root/.minio
-#    ports:
-#      - '9000:9000'
-#    networks:
-#      - net
+    #volumes:
+    # 存储minio业务数据
+    #  - ~/data-minio-demo/data:/data
+    #  - ~/data-minio-demo/config:/root/.minio
+    #ports:
+    #  - '9000:9000'
     network_mode: host
