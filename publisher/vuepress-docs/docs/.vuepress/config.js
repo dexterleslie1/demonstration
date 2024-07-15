@@ -217,6 +217,7 @@ module.exports = {
                     children: [
                         '命令行工具列表.md',
                         'centos8相关.md',
+                        'lvm逻辑卷管理.md',
                     ]
                 }
             ], '/基准和性能测试/': [
