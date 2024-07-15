@@ -83,6 +83,7 @@ module.exports = {
                     { text: 'Java相关', link: '/java/' },
                     { text: 'Spring Boot', link: '/spring-boot/' },
                     { text: 'Logback', link: '/logback/' },
+                    { text: 'Minio', link: '/minio/' },
                 ]
             },
             {
@@ -388,6 +389,14 @@ module.exports = {
                     title: "数据结构和算法",
                     children: [
                         '布隆过滤器.md',
+                    ]
+                }
+            ], '/minio/': [
+                {
+                    title: "Minio使用",
+                    children: [
+                        'docker运行minio.md',
+                        'java客户端.md',
                     ]
                 }
             ],
