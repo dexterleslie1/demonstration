@@ -84,6 +84,7 @@ module.exports = {
                     { text: 'Spring Boot', link: '/spring-boot/' },
                     { text: 'Logback', link: '/logback/' },
                     { text: 'Minio', link: '/minio/' },
+                    { text: 'Locust', link: '/locust/' },
                 ]
             },
             {
@@ -398,6 +399,16 @@ module.exports = {
                     children: [
                         'docker运行minio.md',
                         'java客户端.md',
+                    ]
+                }
+            ], '/locust/': [
+                {
+                    title: "Locust使用",
+                    children: [
+                        '安装并运行.md',
+                        '使用docker运行.md',
+                        'master-slave模式.md',
+                        'locust4j.md',
                     ]
                 }
             ],
