@@ -164,19 +164,17 @@ docker service create --detach=true --network=overlaynet1 --replicas 1 --name h1
 version: '3.8'  
   
 services:  
-  db:  
-    image: 106.75.188.68:10001/yyd-public/mariadb
+  nginx:  
+    image: nginx
     ports:
-      - "3306:3306"
-    environment:
-      - MARIADB_ROOT_PASSWORD="123456"
+      - "80:80"
     deploy: 
       replicas: 1 
     networks:  
-      - backend
+      - nginx-test
 
 networks:  
-  backend:
+  nginx-test:
 ```
 
 根据 docker-compose.yaml 部署 stack，其中 -c 表示 --compose-file
