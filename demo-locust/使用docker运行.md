@@ -1,103 +1,81 @@
 # 使用`docker`运行
 
+## 使用`docker compose`运行
+
 >[Running Locust with Docker](https://docs.locust.io/en/1.5.2/running-locust-docker.html)
 
-`docker-compose.yaml`内容如下：
+运行 [演示](https://github.com/dexterleslie1/demonstration/tree/master/demo-locust/docker-compose) 步骤如下：
 
-```yaml
-version: '3'
+1. 编译演示
 
-# https://docs.locust.io/en/1.5.2/running-locust-docker.html
-services:
-  master:
-    image: locustio/locust
-    ports:
-     - "8089:8089"
-    volumes:
-      - ./:/mnt/locust
-    command: -f /mnt/locust/test_json_parse_perf_client.py --master -H http://master:8089
+   ```bash
+   docker compose build
+   ```
 
-  worker:
-    image: locustio/locust
-    deploy:
-      # 多少个worker，和cpu数量相等为宜
-      replicas: 6
-    volumes:
-      - ./:/mnt/locust
-    command: -f /mnt/locust/test_json_parse_perf_client.py --worker --master-host master
+2. 运行演示
 
-```
+   ```bash
+   docker compose up -d
+   ```
 
-`test_json_parse_perf_client.py`内容如下：
+3. 访问`http://localhost:8089/`启动测试
 
-```python
-import json
+4. 关闭演示
 
-import locust
-from locust import HttpUser, task
-
-from locust import User, between, TaskSet, task, events
-import time
-import uuid
-
-# 测试json解析性能
-def test_json_parse_perf():
-    uuid4_str = str(uuid.uuid4())
-    JSON = "{\"errorCode\":0,\"errorMessage\":null,\"dataObject\":\"你好" + uuid4_str + "\"}"
-    json_object = json.loads(JSON)
-    error_code = json_object.get("errorCode")
-    if error_code > 0:
-        register_success = False
-    else:
-        register_success = True
-    # time.sleep(0.5)
-    return register_success
-
-# 测试客户端
-class TestJsonParsePerformanceClient:
-
-    def __getattr__(self, name):
-        def wrapper(*args, **kwargs):
-            start_time = time.time()
-            try:
-                res = test_json_parse_perf()
-                # 记录测试样本
-                events.request.fire(request_type="mysql",
-                                    name=name,
-                                    response_time=int((time.time() - start_time) * 1000),
-                                    response_length=1,
-                                    exception=None,
-                                    context={})
-            except Exception as e:
-                events.request.fire(request_type="mysql",
-                                    name=name,
-                                    response_time=int((time.time() - start_time) * 1000),
-                                    response_length=1,
-                                    exception=e,
-                                    context={})
-
-                print('error {}'.format(e))
-
-        return wrapper
+   ```bash
+   docker compose down -v
+   ```
 
 
-class TestJsonParsePerfUser(User):
-    register_success = False
 
-    def __init__(self, parent):
-        super().__init__(parent)
-        self.client = TestJsonParsePerformanceClient()
+## 使用`docker swarm`运行
 
-    @task
-    def test_json_parse_perf(self):
-        register_success = self.client.execute1()
+运行 [演示](https://github.com/dexterleslie1/demonstration/tree/master/demo-locust/docker-swarm) 步骤如下：
 
-```
+1. 参考 <a href="/docker容器/docker-swarm.html#centos7-搭建" target="_blank">链接</a> 搭建`docker swarm`
 
-启动`locust`集群
+   ```bash
+   # 给各个节点打标签，locust master被调度到manager节点，locust worker被调度到worker节点
+   
+   # 给swarm管理节点打manager标签
+   docker node update --label-add mylabel=manager manager
+   
+   # 给swarm worker节点打worker标签
+   docker node update --label-add mylabel=worker worker1
+   docker node update --label-add mylabel=worker worker2
+   docker node update --label-add mylabel=worker worker3
+   ```
 
-```bash
-docker compose up -d
-```
+2. 编译演示
 
-访问`http://localhost:8089/`启动测试
+   ```bash
+   docker compose build
+   ```
+
+3. 推送镜像到`docker`仓库
+
+   ```bash
+   docker compose push
+   ```
+
+4. 在`swarm`管理节点上运行`locust`集群
+
+   ```bash
+   docker stack deploy test1 -c docker-compose.yaml
+   ```
+
+5. 查看`stack`中`service`的容器实例状态
+
+   ```bash
+   docker stack ps test1
+   ```
+
+6. 访问`http://localhost:8089/`启动测试
+
+7. 删除`stack test1`
+
+   ```bash
+   docker stack rm test1
+   ```
+
+   
