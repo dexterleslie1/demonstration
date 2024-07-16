@@ -45,6 +45,7 @@ source_dir_to_target_dir_map["../../performance/jvm"]="jvm性能"
 source_dir_to_target_dir_map["../../demo-数据结构和算法"]="数据结构和算法"
 source_dir_to_target_dir_map["../../demo-minio"]="minio"
 source_dir_to_target_dir_map["../../demo-locust"]="locust"
+source_dir_to_target_dir_map["../../demo-harbor"]="harbor"
 
 for key in ${!source_dir_to_target_dir_map[@]}; do
     # 删除符号链接目录

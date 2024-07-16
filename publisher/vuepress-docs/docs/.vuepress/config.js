@@ -85,6 +85,8 @@ module.exports = {
                     { text: 'Logback', link: '/logback/' },
                     { text: 'Minio', link: '/minio/' },
                     { text: 'Locust', link: '/locust/' },
+                    { text: 'Docker容器', link: '/docker容器/' },
+                    { text: 'Harbor', link: '/harbor/' },
                 ]
             },
             {
@@ -103,12 +105,6 @@ module.exports = {
                     { text: '软件工程', link: '/软件工程/' },
                     { text: 'Jsoup', link: '/jsoup/' },
                     { text: 'IntelliJ IDEA的使用', link: '/intellij-idea/' },
-                ]
-            },
-            {
-                text: '容器相关',
-                items: [
-                    { text: 'Docker容器', link: '/docker容器/' }
                 ]
             },
             {
@@ -170,6 +166,7 @@ module.exports = {
                         'docker的安装.md',
                         'docker-compose设置项目名称.md',
                         'docker-volume.md',
+                        'docker-swarm.md',
                     ]
                 }
             ],
@@ -217,7 +214,7 @@ module.exports = {
                     title: "Linux使用",
                     children: [
                         '命令行工具列表.md',
-                        'centos8相关.md',
+                        'centos相关.md',
                         'lvm逻辑卷管理.md',
                     ]
                 }
@@ -276,6 +273,9 @@ module.exports = {
                         '标签.md',
                         '基于分支和标签的版本管理.md',
                         '初始化非空目录指向远程仓库.md',
+                        'git凭证管理.md',
+                        'gitee.md',
+                        '设置自签名ssl证书不验证.md',
                     ]
                 }
             ], '/mockito/': [
@@ -409,6 +409,13 @@ module.exports = {
                         '使用docker运行.md',
                         'master-slave模式.md',
                         'locust4j.md',
+                    ]
+                }
+            ], '/harbor/': [
+                {
+                    title: "Harbor使用",
+                    children: [
+                        '',
                     ]
                 }
             ],
