@@ -193,16 +193,6 @@ git clone https://github.com/cmu-db/benchbase.git --config 'http.proxy=socks5://
 
 
 
-## git设置全局自签名ssl证书不验证合法性
-
-> https://confluence.atlassian.com/fishkb/unable-to-clone-git-repository-due-to-self-signed-certificate-376838977.html
-
-```shell
-git config --global http.sslVerify false
-```
-
-
-
 ## fork仓库
 
 ### 参考资料
