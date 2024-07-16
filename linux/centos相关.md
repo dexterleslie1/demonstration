@@ -1,4 +1,4 @@
-# `centOS8`或`centOS8 stream`相关
+# `centOS`相关
 
 ## `yum install`时报告源错误处理
 
@@ -7,6 +7,8 @@
 > 参考 [链接](https://kb.fast-line.tw/linux/778/)
 
 解决方案1：
+
+>适用于`centOS8`、`centOS8-stream`
 
 ```bash
 # 注释 /etc/yum.repos.d/CentOS-* 中所有 mirrorlist 开头的行
@@ -17,6 +19,8 @@ sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /
 ```
 
 解决方案2：
+
+>适用于`centOS8`、`centOS8-stream`、`centOS7`
 
 ```bash
 # 注释 /etc/yum.repos.d/CentOS-* 中所有 mirrorlist 开头的行
