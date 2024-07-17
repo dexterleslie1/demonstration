@@ -87,6 +87,7 @@ module.exports = {
                     { text: 'Locust', link: '/locust/' },
                     { text: 'Docker容器', link: '/docker容器/' },
                     { text: 'Harbor', link: '/harbor/' },
+                    { text: 'Openresty', link: '/openresty/' },
                 ]
             },
             {
@@ -105,6 +106,7 @@ module.exports = {
                     { text: '软件工程', link: '/软件工程/' },
                     { text: 'Jsoup', link: '/jsoup/' },
                     { text: 'IntelliJ IDEA的使用', link: '/intellij-idea/' },
+                    { text: 'Lua的使用', link: '/lua/' },
                 ]
             },
             {
@@ -416,6 +418,15 @@ module.exports = {
                     title: "Harbor使用",
                     children: [
                         '',
+                    ]
+                }
+            ], '/lua/': [
+                {
+                    title: "Lua的使用",
+                    children: [
+                        '运行环境安装.md',
+                        '运行lua脚本.md',
+                        'lua编程基础.md',
                     ]
                 }
             ],
