@@ -430,6 +430,14 @@ module.exports = {
                         'lua编程基础.md',
                     ]
                 }
+            ], '/openresty/': [
+                {
+                    title: "Openresty的使用",
+                    children: [
+                        '编译docker基础镜像.md',
+                        'lua脚本.md',
+                    ]
+                }
             ],
             '/': ['/'],
         }
