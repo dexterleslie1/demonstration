@@ -1,0 +1,13 @@
+LearningMode;
+SecRulesEnabled;
+DeniedUrl "/request_denied";
+
+## Check & Blocking Rules
+CheckRule "$SQL >= 8" BLOCK;
+CheckRule "$RFI >= 8" BLOCK;
+CheckRule "$TRAVERSAL >= 4" BLOCK;
+CheckRule "$EVADE >= 4" BLOCK;
+CheckRule "$XSS >= 8" BLOCK;
+
+BasicRule wl:2;
+BasicRule wl:16;
