@@ -11,6 +11,8 @@
 
 ## 设置和运行
 
+>注意：系统重启后，如果`harbor`应用某些服务没有自动启动，则切换到`harbor`目录执行`docker compose up -d`手动启动所有`harbor`相关服务。
+
 使用`dcli`安装`docker`环境
 
 下载最新版本的`harbor`离线安装包，例如：`harbor-offline-installer-v2.10.3.tgz`，地址：https://github.com/goharbor/harbor/releases，注意：由于国内下载远程镜像失败，所以使用离线安装包为宜。
