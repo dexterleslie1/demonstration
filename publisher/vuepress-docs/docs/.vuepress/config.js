@@ -209,6 +209,7 @@ module.exports = {
                         '配置基于ubuntu的软件开发环境.md',
                         '安装googlepinyin输入法.md',
                         'sources.list.md',
+                        '取消unattended-upgrades.md',
                     ]
                 }
             ], '/linux使用/': [
