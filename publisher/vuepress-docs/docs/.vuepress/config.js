@@ -412,6 +412,7 @@ module.exports = {
                         '安装并运行.md',
                         '使用docker运行.md',
                         'master-slave模式.md',
+                        '编写测试.md',
                         'locust4j.md',
                     ]
                 }
