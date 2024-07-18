@@ -1,7 +1,5 @@
 #!/bin/bash
 
-dockerRegistryPrefix=192.168.235.138/library
-
 set -x
 set -e
 
@@ -17,5 +15,5 @@ docker cp openresty-compile-instance-dev:/usr/local/openresty.tar openresty.tar
 # docker build -f Dockerfile --tag $dockerRegistryPrefix/demo-openresty-base-dev .
 docker compose build
 
-echo "成功编译openresty基础镜像，镜像标签为： $dockerRegistryPrefix/demo-openresty-base-dev" && sudo rm -f openresty.tar
+echo "成功编译openresty基础镜像" && sudo rm -f openresty.tar
 
