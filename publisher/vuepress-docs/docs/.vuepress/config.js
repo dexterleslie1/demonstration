@@ -319,6 +319,7 @@ module.exports = {
                         'jdk相关工具.md',
                         'metaspace与permgen.md',
                         '合理设置jvm内存.md',
+                        'jmh.md',
                     ]
                 }
             ], '/logback/': [
