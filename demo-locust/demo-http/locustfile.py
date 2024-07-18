@@ -17,10 +17,12 @@ class HelloWorldUser(HttpUser):
     @task
     def test1(self):
         # https://docs.locust.io/en/stable/writing-a-locustfile.html
-        with self.client.get("http://127.0.0.1:8080/api/v1/test1", catch_response=True) as response:
+        with self.client.get("http://192.168.235.129:18080/api/v1/testGet", catch_response=True) as response:
             # NOTE: 需要设置catch_response=True否则response调用success和failure会报告方法不存在错误
             # https://stackoverflow.com/questions/66764483/locust-fastresponses-failure-attribute-doesnt-set-request-as-failed-in-report
             if response.status_code == 200:
+                data = response.json()
+                print(data)
                 response.success()
             else:
                 response.failure('预期错误')
