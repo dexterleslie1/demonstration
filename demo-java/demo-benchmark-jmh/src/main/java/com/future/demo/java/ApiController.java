@@ -1,6 +1,6 @@
 package com.future.demo.java;
 
-import com.yyd.common.http.response.ObjectResponse;
+//import com.yyd.common.http.response.ObjectResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,12 +13,12 @@ public class ApiController {
     @Autowired
     TestService testService;
 
-    @GetMapping("add")
-    ObjectResponse<Integer> add(@RequestParam("a") int a,
-                                @RequestParam("b") int b) {
-        int c = testService.add(a, b);
-        ObjectResponse<Integer> response = new ObjectResponse<>();
-        response.setData(c);
-        return response;
-    }
+//    @GetMapping("add")
+//    ObjectResponse<Integer> add(@RequestParam("a") int a,
+//                                @RequestParam("b") int b) {
+//        int c = testService.add(a, b);
+//        ObjectResponse<Integer> response = new ObjectResponse<>();
+//        response.setData(c);
+//        return response;
+//    }
 }

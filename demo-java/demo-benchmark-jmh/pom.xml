@@ -41,11 +41,10 @@
             <version>1.18.8</version>
         </dependency>
 
-        <!-- yyd-common -->
         <dependency>
-            <groupId>com.yyd.sdk</groupId>
-            <artifactId>yyd-common</artifactId>
-            <version>3.8.16</version>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.12.0</version>
         </dependency>
     </dependencies>
 
@@ -90,18 +89,4 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-
-    <!-- 引用yyd nexus仓库 -->
-    <repositories>
-        <repository>
-            <id>yyd-nexus</id>
-            <url>http://maven.118899.net/repository/maven-releases/</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
 </project>
