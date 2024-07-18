@@ -23,8 +23,8 @@ public class ApplicationTests {
     TestSupportDemoFeignClient testSupportDemoFeignClient;
 
     @Test
-    public void test1() throws Exception {
-        String uuid = this.testSupportDemoFeignClient.test1().getData();
+    public void testGet() throws Exception {
+        String uuid = this.testSupportDemoFeignClient.testGet().getData();
         Assert.assertNotNull(uuid);
     }
 
