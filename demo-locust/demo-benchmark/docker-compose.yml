@@ -16,5 +16,5 @@ services:
     image: 192.168.235.138/library/my-locust-dev
     deploy:
       # 多少个worker，和cpu数量相等为宜
-      replicas: 1
+      replicas: 7
     command: -f /mnt/locust/locustfile.py --worker --master-host master

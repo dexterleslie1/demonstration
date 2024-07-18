@@ -42,7 +42,7 @@ sh install.sh
 `docker`客户端配置`/etc/docker/daemon.json`添加`insecure-registries`，[参考](https://stackoverflow.com/questions/42211380/add-insecure-registry-to-docker)
 
 ```json
-"insecure-registries": ["docker.xxx.net"]
+"insecure-registries": ["http://docker.xxx.net:80"]
 ```
 
 客户端使用`harbor`默认项目仓库地址：`docker.xxx.net/library`
