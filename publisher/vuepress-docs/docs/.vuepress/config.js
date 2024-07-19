@@ -413,6 +413,7 @@ module.exports = {
                         '使用docker运行.md',
                         'master-slave模式.md',
                         '编写测试.md',
+                        '性能测试实践.md',
                         'locust4j.md',
                     ]
                 }
@@ -438,6 +439,13 @@ module.exports = {
                     children: [
                         '编译docker基础镜像.md',
                         'lua脚本.md',
+                    ]
+                }
+            ], '/性能测试/': [
+                {
+                    title: "性能测试相关",
+                    children: [
+                        '启动性能测试辅助目标.md',
                     ]
                 }
             ],

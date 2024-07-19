@@ -48,6 +48,7 @@ source_dir_to_target_dir_map["../../demo-locust"]="locust"
 source_dir_to_target_dir_map["../../demo-harbor"]="harbor"
 source_dir_to_target_dir_map["../../openresty"]="openresty"
 source_dir_to_target_dir_map["../../lua"]="lua"
+source_dir_to_target_dir_map["../../performance"]="性能测试"
 
 for key in ${!source_dir_to_target_dir_map[@]}; do
     # 删除符号链接目录
