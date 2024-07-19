@@ -17,7 +17,7 @@ class HelloWorldUser(HttpUser):
     @task
     def test1(self):
         # https://docs.locust.io/en/stable/writing-a-locustfile.html
-        with self.client.get("http://192.168.235.144", catch_response=True) as response:
+        with self.client.get("http://192.168.235.164", catch_response=True) as response:
             # NOTE: 需要设置catch_response=True否则response调用success和failure会报告方法不存在错误
             # https://stackoverflow.com/questions/66764483/locust-fastresponses-failure-attribute-doesnt-set-request-as-failed-in-report
             if response.status_code == 200:
