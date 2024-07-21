@@ -19,7 +19,11 @@ RUN rm -rf /usr/local/openresty
 RUN rm -rf /usr/local/openresty.tar
 RUN cd /tmp && rm -rf openresty-$varOpenrestyVersion && tar -xzf openresty-$varOpenrestyVersion.tar.gz
 RUN cd /tmp && rm -rf naxsi-$varNaxsiVersion && tar -xzf naxsi-$varNaxsiVersion.tar.gz
-RUN cd /tmp/openresty-$varOpenrestyVersion && ./configure --add-module=/tmp/naxsi-$varNaxsiVersion/naxsi_src
+
+# https://github.com/knyar/nginx-lua-prometheus/issues/67
+# --with-http_stub_status_module为了lua脚本支持读取ngx.var.connections_reading变量
+# 否则nginx-lua-prometheus插件不能正常运行
+RUN cd /tmp/openresty-$varOpenrestyVersion && ./configure --add-module=/tmp/naxsi-$varNaxsiVersion/naxsi_src --with-http_stub_status_module
 RUN cd /tmp/openresty-$varOpenrestyVersion && gmake && gmake install
 
 RUN cp /tmp/naxsi-$varNaxsiVersion/naxsi_config/naxsi_core.rules /usr/local/openresty/nginx/conf
