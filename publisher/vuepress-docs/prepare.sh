@@ -49,6 +49,7 @@ source_dir_to_target_dir_map["../../demo-harbor"]="harbor"
 source_dir_to_target_dir_map["../../openresty"]="openresty"
 source_dir_to_target_dir_map["../../lua"]="lua"
 source_dir_to_target_dir_map["../../performance"]="性能测试"
+source_dir_to_target_dir_map["../../demo-jmeter"]="jmeter"
 
 for key in ${!source_dir_to_target_dir_map[@]}; do
     # 删除符号链接目录

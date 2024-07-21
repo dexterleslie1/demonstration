@@ -21,7 +21,7 @@ const lessSassPostcssSidebar = {
 }
 
 const prometheusGrafanaAlertmanagerSidebar = {
-    title: "监控Prometheus+Grafana+AlertManager",
+    title: "Prometheus+Grafana+AlertManager",
     path: '/prometheus-grafana-alertmanager/',
     children: [
         '使用docker-compose运行prometheus-grafana-alertmanager.md',
@@ -88,6 +88,7 @@ module.exports = {
                     { text: 'Docker容器', link: '/docker容器/' },
                     { text: 'Harbor', link: '/harbor/' },
                     { text: 'Openresty', link: '/openresty/' },
+                    { text: 'JMeter用法', link: '/jmeter/' },
                 ]
             },
             {
@@ -446,6 +447,13 @@ module.exports = {
                     title: "性能测试相关",
                     children: [
                         '启动性能测试辅助目标.md',
+                    ]
+                }
+            ], '/jmeter/': [
+                {
+                    title: "JMeter用法",
+                    children: [
+                        '',
                     ]
                 }
             ],
