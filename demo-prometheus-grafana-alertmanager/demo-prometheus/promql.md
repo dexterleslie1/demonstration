@@ -1,11 +1,19 @@
 # promql的用法
 
-> PromQL（Prometheus Query Language）是Prometheus监控系统内置的一种查询语言，用于查询、聚合和转换时间序列数据。PromQL被广泛应用于Prometheus的日常应用中，包括数据查询、可视化以及告警处理等方面。
 
-> 启动`promql`测试实验环境：
->
-> - 启动`prometheus`服务，参考<a href='/prometheus-grafana-alertmanager/使用docker-compose运行prometheus-grafana-alertmanager/' target='_blank'>链接</a>
-> - 启动自定义`exporter`服务，参考<a href='/prometheus/自定义exporter/' target='_blank'>链接</a>
+
+## 什么是`promql`呢？
+
+PromQL（Prometheus Query Language）是Prometheus监控系统内置的一种查询语言，用于查询、聚合和转换时间序列数据。PromQL被广泛应用于Prometheus的日常应用中，包括数据查询、可视化以及告警处理等方面。
+
+
+
+## 启动`promql`测试实验环境
+
+1. 启动`prometheus`服务，参考 <a href='/prometheus-grafana-alertmanager/使用docker-compose运行prometheus-grafana-alertmanager/' target='_blank'>链接</a>
+2. 启动自定义`exporter`服务，参考 <a href='/prometheus/自定义exporter/' target='_blank'>链接</a>
+
+
 
 ## 选择器
 

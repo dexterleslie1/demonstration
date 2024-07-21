@@ -2,7 +2,7 @@
 
 > `datasource`数据源`provisioning yaml`文件配置[链接](https://grafana.com/docs/grafana/latest/administration/provisioning/#example-data-source-config-file)
 >
-> 当前例子的源码参考[链接](https://github.com/dexterleslie1/demonstration/tree/master/demo-prometheus-grafana-alertmanager/demo-grafana/demo-provisioning-automatically)
+> 示例的详细代码请参考 [链接](https://gitee.com/dexterleslie/demonstration/tree/master/demo-prometheus-grafana-alertmanager/demo-grafana/demo-provisioning-automatically)
 
 `docker-compose.yaml`内容如下：
 
@@ -11,14 +11,14 @@ version: "3.0"
 
 services:
   demo-grafana:
-    image: grafana/grafana:6.6.2
+    image: grafana/grafana:9.4.3
     environment:
       - TZ=Asia/Shanghai
       - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
     volumes:
-      - ./datasources.yaml:/etc/grafana/provisioning/datasources/default.yaml
-      - ./dashboards.yaml:/etc/grafana/provisioning/dashboards/default.yaml
-      - ./jmeter.json:/var/lib/grafana/dashboards/jmeter.json
+      - ./datasources.yaml:/etc/grafana/provisioning/datasources/default.yaml:ro
+      - ./dashboards.yaml:/etc/grafana/provisioning/dashboards/default.yaml:ro
+      - ./jmeter.json:/var/lib/grafana/dashboards/jmeter.json:ro
     ports:
       - 3000:3000
     restart: always
@@ -29,7 +29,7 @@ services:
         max-file: "5"
 ```
 
-`jmeter.json`内容如下：
+`jmeter.json`（用于创建`jmeter dashboard`）内容如下：
 
 ```json
 {
@@ -58,7 +58,7 @@ services:
   }
 ```
 
-`dashboards.yaml`内容如下：
+`dashboards.yaml`（指定创建`dashboard`的`json`文件）内容如下：
 
 ```yaml
 apiVersion: 1
@@ -70,7 +70,7 @@ providers:
     path: /var/lib/grafana/dashboards/jmeter.json
 ```
 
-`datasources.yaml`内容如下：
+`datasources.yaml`（用于创建`influxdb`数据源）内容如下：
 
 ```yaml
 ---
