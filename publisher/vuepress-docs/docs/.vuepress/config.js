@@ -441,6 +441,7 @@ module.exports = {
                         '编译docker基础镜像.md',
                         'lua脚本.md',
                         '监控.md',
+                        'x-forwarded-for用法.md',
                     ]
                 }
             ], '/性能测试/': [

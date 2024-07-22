@@ -2,7 +2,7 @@
 
 > [例子详细细节请参考](https://gitee.com/dexterleslie/demonstration/tree/master/openresty/demo-build-base-image)
 
-编译基础镜像
+编译基础镜像，编译后的基础镜像为`192.168.235.138:80/library/demo-openresty-base-dev`
 
 ```bash
 ./build.sh
