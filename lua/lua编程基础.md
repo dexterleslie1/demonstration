@@ -1,5 +1,29 @@
 # `lua`编程基础
 
+## 变量
+
+### 全局和局部变量
+
+>示例的详细代码请参考 [链接](https://gitee.com/dexterleslie/demonstration/blob/master/lua/demo-variables.lua)
+>
+>[变量](https://www.codecademy.com/resources/docs/lua/variables)
+
+```lua
+count = 2
+
+function addValue (val)
+  local count = 1
+  return count + val
+end
+
+-- 返回6
+print("局部变量count:" .. tostring(addValue(5)))
+-- 返回2
+print("全局变量count:" .. tostring(count))
+```
+
+
+
 ## 逻辑运算符（`logic operators`）
 
 >下面各个示例的详细代码请参考 [链接](https://gitee.com/dexterleslie/demonstration/blob/master/lua/demo-logic-operators.lua)
