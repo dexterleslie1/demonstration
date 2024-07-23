@@ -2,7 +2,7 @@
 
 # 资料
 
-**[lua-resty-http](https://github.118899.net/ledgetech/lua-resty-http)**
+**[lua-resty-http](https://github.com/ledgetech/lua-resty-http)**
 **[openresty安装lua-resty-http](https://stackoverflow.com/questions/48319678/install-resty-http-with-already-installed-openresty)**
 
 # 启动方式
