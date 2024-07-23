@@ -97,6 +97,18 @@ assert(#fruits == 4, "varArray长度不等于4")
 
 
 
+### `table`类型当作字典类型
+
+```bash
+-- 演示table数据类型作为字典的用法
+local dict = {k1="v1", k2="v2"}
+dict["k3"] = "v3"
+print("dict[\"k1\"]=" .. dict["k1"])
+print("dict[\"k3\"]=" .. dict["k3"])
+```
+
+
+
 ## 逻辑运算符（`logic operators`）
 
 >下面各个示例的详细代码请参考 [链接](https://gitee.com/dexterleslie/demonstration/blob/master/lua/demo-logic-operators.lua)
