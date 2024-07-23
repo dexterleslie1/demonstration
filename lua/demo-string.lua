@@ -20,3 +20,8 @@ local strForTesting = "count#888888"
 local strForTestingReplaceBefore = strForTesting
 strForTesting = strForTesting:gsub("count#", "")
 print("替换前：" .. strForTestingReplaceBefore .. "，替换后：" .. strForTesting)
+
+-- 转换布尔类型到字符串类型
+-- https://stackoverflow.com/questions/6615572/how-to-format-a-lua-string-with-a-boolean-variable
+local booleanVariable = true
+print("布尔变量值为： " .. tostring(booleanVariable))

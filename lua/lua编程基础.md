@@ -36,3 +36,18 @@ print(myUuid)
 lua test.lua
 ```
 
+
+
+## 字符串（string）相关
+
+>下面各个示例的详细代码请参考 [链接](https://gitee.com/dexterleslie/demonstration/blob/master/lua/demo-string.lua)
+
+### 布尔类型转换为字符串类型
+
+>[how-to-format-a-lua-string-with-a-boolean-variable](https://stackoverflow.com/questions/6615572/how-to-format-a-lua-string-with-a-boolean-variable)
+
+```lua
+local booleanVariable = true
+print("布尔变量值为： " .. tostring(booleanVariable))
+```
+
