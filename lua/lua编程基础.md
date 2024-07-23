@@ -1,5 +1,26 @@
 # `lua`编程基础
 
+## 逻辑运算符（`logic operators`）
+
+>下面各个示例的详细代码请参考 [链接](https://gitee.com/dexterleslie/demonstration/blob/master/lua/demo-logic-operators.lua)
+>
+>[官方逻辑运算符手册](https://www.lua.org/pil/3.3.html)
+
+### `or`
+
+```lua
+-- 变量设置初始值为nil，逻辑运算符认为是false
+-- local variable1 = nil
+-- 设置为false，逻辑运算符认为是false
+-- local variable1 = false
+-- 非nil和false以外的值，逻辑运算符认为是true
+-- local variable1 = true
+local result = variable1 or variable2 or '变量1和变量2都没有设置初始值'
+print('result: ' .. tostring(result))
+```
+
+
+
 ## 生成`uuid`
 
 安装`luarocks`，可以使用`LuaRocks`（Lua的包管理器）来安装第三方库，比如`lua-uuid`
