@@ -254,3 +254,21 @@ local booleanVariable = true
 print("布尔变量值为： " .. tostring(booleanVariable))
 ```
 
+
+
+## 标准库用法
+
+>示例详细用法请参考 [链接](https://gitee.com/dexterleslie/demonstration/blob/master/lua/demo-standard-libraries.lua)
+
+### `math.random`用法
+
+```lua
+-- 演示math.random函数用法
+math.randomseed(os.time())
+for var=1, 5 do
+    -- 返回[2, 5]之间的随机数
+    local num = math.random(2, 5)
+    print("random number: " ..  num) 
+end  
+```
+
