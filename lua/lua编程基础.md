@@ -24,6 +24,48 @@ print("全局变量count:" .. tostring(count))
 
 
 
+## 逻辑控制语句
+
+>示例的详细代码请参考 [链接](https://gitee.com/dexterleslie/demonstration/blob/master/lua/logic-controller.lua)
+
+### `if`语句
+
+```lua
+if 1==1 then
+    print("if逻辑控制语句1=1")
+end
+
+if 1==0 then
+    print("1=0")
+elseif 1==1 then
+    print("if elseif逻辑控制语句1=1")
+end
+
+if 1==0 then
+    print("1=0")
+elseif 1==2 then
+    print("1==2")
+else
+    print("if elseif else逻辑控制语句1=1")
+end
+```
+
+
+
+## 关系运算符
+
+>示例的详细代码请参考 [链接](https://gitee.com/dexterleslie/demonstration/blob/master/lua/demo-relational-operators.lua)
+
+### `~=`
+
+```lua
+if 1~=2 and 1~=3 then
+    print("1~=2 and 1~=3")
+end
+```
+
+
+
 ## 函数定义和调用
 
 >示例的详细代码请参考 [链接](https://gitee.com/dexterleslie/demonstration/blob/master/lua/%E5%AE%9A%E4%B9%89%E5%87%BD%E6%95%B0.lua)
@@ -146,6 +188,17 @@ print("dict[\"k3\"]=" .. dict["k3"])
 -- local variable1 = true
 local result = variable1 or variable2 or '变量1和变量2都没有设置初始值'
 print('result: ' .. tostring(result))
+```
+
+
+
+### `and`
+
+```lua
+-- 演示and用法
+if 1~=2 and 1~=3 then
+    print("1~=2 and 1~=3")
+end
 ```
 
 
