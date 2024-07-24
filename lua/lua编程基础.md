@@ -24,6 +24,26 @@ print("全局变量count:" .. tostring(count))
 
 
 
+## 函数定义和调用
+
+>示例的详细代码请参考 [链接](https://gitee.com/dexterleslie/demonstration/blob/master/lua/%E5%AE%9A%E4%B9%89%E5%87%BD%E6%95%B0.lua)
+
+定义函数
+
+```lua
+function sayHello()
+    print("Hello Dexterleslie!")
+end
+```
+
+调用函数
+
+```lua
+sayHello()
+```
+
+
+
 ## 数据类型
 
 >下面各个示例的详细代码请参考 [链接](https://gitee.com/dexterleslie/demonstration/blob/master/lua/demo-data-types.lua)
