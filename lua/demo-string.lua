@@ -8,6 +8,14 @@ for field in str:gmatch('([^,]+)') do
 end
 print("last element:" .. fields[#fields])
 
+-- 获取第一个元素
+local firstEle = nil
+for field in str:gmatch('([^,]+)') do
+	firstEle = field
+	break
+end
+print("first element:" .. firstEle)
+
 -- 演示替换字符串中的空格
 -- https://stackoverflow.com/questions/10460126/how-to-remove-spaces-from-a-string-in-lua
 
