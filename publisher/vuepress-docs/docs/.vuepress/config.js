@@ -443,6 +443,7 @@ module.exports = {
                         'lua脚本.md',
                         '监控.md',
                         'x-forwarded-for用法.md',
+                        '设置和获取客户端ip地址.md',
                     ]
                 }
             ], '/性能测试/': [
