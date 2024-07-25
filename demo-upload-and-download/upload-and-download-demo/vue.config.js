@@ -6,7 +6,7 @@ module.exports = {
         proxy: {
             // upload-and-download-api
             '/api': {
-                target: 'http://localhost:8080',
+                target: 'http://localhost:18080',
                 ws: true,
                 pathRewrite: {
                     '^/': '/'
