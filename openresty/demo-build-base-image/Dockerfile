@@ -6,9 +6,9 @@ RUN cd /usr/local && tar -xvzf openresty.tar
 
 RUN rm -f openresty.tar
 
-## 日志输出到stdout、stderr NOTE: docker-compose mount了日志目录到硬盘，不需要控制台输出
-#RUN ln -sf /dev/stdout /usr/local/openresty/nginx/logs/access.log
-#RUN ln -sf /dev/stderr /usr/local/openresty/nginx/logs/error.log
+# 支持日志通过docker compose logs查看
+RUN ln -sf /dev/stdout /usr/local/openresty/nginx/logs/access.log
+RUN ln -sf /dev/stderr /usr/local/openresty/nginx/logs/error.log
 
 add sources.list /etc/apt/sources.list
 run apt update
