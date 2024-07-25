@@ -82,6 +82,7 @@ module.exports = {
                     { text: 'Mockito', link: '/mockito/' },
                     { text: 'Java相关', link: '/java/' },
                     { text: 'Spring Boot', link: '/spring-boot/' },
+                    { text: 'Spring Cloud', link: '/spring-cloud/' },
                     { text: 'Logback', link: '/logback/' },
                     { text: 'Minio', link: '/minio/' },
                     { text: 'Locust', link: '/locust/' },
@@ -458,6 +459,14 @@ module.exports = {
                     title: "JMeter用法",
                     children: [
                         '',
+                    ]
+                }
+            ], '/spring-cloud/': [
+                {
+                    title: "SpringCloud用法",
+                    children: [
+                        'springcloud和springboot版本兼容性.md',
+                        '服务网关.md',
                     ]
                 }
             ],
