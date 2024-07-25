@@ -74,6 +74,7 @@ services:
       - ./grafana-provisioning/datasources.yaml:/etc/grafana/provisioning/datasources/default.yaml:ro
       - ./grafana-provisioning/dashboards.yaml:/etc/grafana/provisioning/dashboards/default.yaml:ro
       - ./grafana-provisioning/1860.json:/var/lib/grafana/dashboards/1860.json:ro
+      - ./grafana-provisioning/4202.json:/var/lib/grafana/dashboards/4202.json:ro
     env_file:
       - ./grafana-config.monitoring
     ports:
