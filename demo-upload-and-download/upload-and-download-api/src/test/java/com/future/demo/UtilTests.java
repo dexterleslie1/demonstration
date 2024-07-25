@@ -1,4 +1,4 @@
-package com.future.demo.controller;
+package com.future.demo;
 
 import com.future.demo.util.Util;
 import lombok.extern.slf4j.Slf4j;
