@@ -272,3 +272,41 @@ for var=1, 5 do
 end  
 ```
 
+
+
+## `require`用法
+
+### 多次`require`同一个文件会重复创建变量吗？
+
+当你多次使用`require`函数来加载同一个文件（模块）时，它不会重复创建模块中的变量。Lua的`require`机制设计用来确保每个模块只被加载一次，并在后续的`require`调用中返回相同的模块对象。
+
+Lua通过维护一个`package.loaded`表来跟踪哪些模块已经被加载。当你第一次`require`一个模块时，Lua会查找`package.loaded`表以确认该模块是否已经被加载。如果模块尚未加载，Lua会执行模块文件中的代码，并将模块对象（通常是模块文件返回的最后一个表达式的值）存储在`package.loaded`表中。如果模块已经被加载，Lua会直接返回`package.loaded`表中存储的模块对象，而不会重新执行模块文件中的代码。
+
+因此，模块文件中的变量（包括函数、常量等）只会在模块首次加载时创建一次。这些变量将作为模块对象的一部分被存储，并在后续的`require`调用中通过返回的模块对象进行访问。
+
+这里有一个简单的例子来说明这一点：
+
+```lua
+-- 假设我们有一个名为"mymodule.lua"的文件  
+-- mymodule.lua  
+local my_var = "Hello, World!"  -- 这是一个局部变量，但它是模块对象的一部分  
+  
+function greet()  
+    return my_var  
+end  
+  
+return {  
+    greet = greet  -- 返回包含greet函数的表，这个表就是模块对象  
+}  
+  
+-- 在另一个文件中  
+local mymodule = require("mymodule")  
+print(mymodule.greet())  -- 输出: Hello, World!  
+  
+-- 再次require同一个模块  
+local mymodule2 = require("mymodule")  
+print(mymodule2 === mymodule)  -- 输出: true，说明mymodule2和mymodule是同一个对象  
+print(mymodule2.greet())  -- 输出: Hello, World!，使用的是相同的变量
+```
+
+在这个例子中，无论`require("mymodule")`被调用多少次，`my_var`这个局部变量都只会在`mymodule.lua`文件首次被加载时创建一次。而且，由于`mymodule.lua`返回了一个包含`greet`函数的表，这个表（即模块对象）在后续的`require`调用中会被重用。因此，`mymodule`和`mymodule2`实际上是同一个对象，它们访问的是相同的`greet`函数和`my_var`变量。
