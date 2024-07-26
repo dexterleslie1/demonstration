@@ -204,6 +204,22 @@ http {
 
 
 
+### `init_by_lua`和`init_worker_by_lua`
+
+#### 分别在两个阶段创建的同名全局变量
+
+注意：如果分别在两个阶段创建同名全家变量`init_worker_by_lua`阶段的全局变量会覆盖`init_by_lua`阶段的全局变量。
+
+`init_worker_by_lua`中的全局变量
+
+- `init_worker_by_lua*`在每个Nginx worker进程启动时执行，这里定义的全局变量实际上是每个worker进程内的局部变量。
+- 不同worker进程之间的全局变量是隔离的，因此不会相互冲突。
+- 但如果worker进程内部有多个协程并发执行，并且它们访问和修改同一个全局变量，那么就需要考虑并发控制的问题，以避免数据竞争和不一致。
+
+在`init_by_lua*`和`init_worker_by_lua*`阶段定义的全局变量通常不会跨进程冲突，因为它们分别运行在Nginx的不同上下文（master进程和worker进程）中。
+
+
+
 ### `content_by_lua_block`和`access_by_lua_block`
 
 `content_by_lua_block`和`access_by_lua_block`是OpenResty（一个基于Nginx与Lua的高性能Web平台）中用于处理HTTP请求的两个重要指令，它们分别代表了Nginx处理请求的不同阶段和用途。以下是两者的主要区别：
