@@ -88,6 +88,7 @@ print("b:get_info()=", b:get_info())
 print("a:get_info()=", a:get_info())
 
 -- 演示使用业界标准方法自定义lua库
+-- 引用demo-oop-assistant库
 local mylib = require('demo-oop-assistant')
 local myobj = mylib.new("Dexter")
 myobj:say_hello()

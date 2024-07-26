@@ -310,3 +310,111 @@ print(mymodule2.greet())  -- 输出: Hello, World!，使用的是相同的变量
 ```
 
 在这个例子中，无论`require("mymodule")`被调用多少次，`my_var`这个局部变量都只会在`mymodule.lua`文件首次被加载时创建一次。而且，由于`mymodule.lua`返回了一个包含`greet`函数的表，这个表（即模块对象）在后续的`require`调用中会被重用。因此，`mymodule`和`mymodule2`实际上是同一个对象，它们访问的是相同的`greet`函数和`my_var`变量。
+
+
+
+## `metatable`用法
+
+>[`metatable`用法请参考](https://www.runoob.com/lua/lua-metatables.html)
+
+### `__index`元方法
+
+> 这是 metatable 最常用的键。当你通过键来访问 table 的时候，如果这个键没有值，那么Lua就会寻找该table的metatable（假定有metatable）中的__index 键。如果__index包含一个表格，Lua会在表格中查找相应的键。
+
+详细用法请参考示例 [链接](https://gitee.com/dexterleslie/demonstration/blob/master/lua/demo-metatable.lua)
+
+```lua
+other = { foo = 3 }
+myobj = {}
+-- myobj没有foo属性，但是会通过__index元方法查找到other对象中的foo属性
+t = setmetatable(myobj, { __index = other })
+print("t.foo=" .. t.foo)
+```
+
+
+
+## 面向对象编程
+
+### 面向对象编程继承
+
+>`lua`面向对象编程的继承主要是借助`metatable+setmetatable`实现。
+
+详细用法请参考 [链接1](https://gitee.com/dexterleslie/demonstration/blob/master/lua/demo-oop.lua)、[链接2](https://gitee.com/dexterleslie/demonstration/blob/master/lua/demo-oop-assistant.lua)
+
+参考`https://www.cnblogs.com/huageyiyangdewo/p/17488042.html`学习继承的基本示例：
+
+```lua
+local RectAngle = { length, width, area }
+
+-- 创建新的RectAngle对象
+function RectAngle:new(length, width)
+    o = {
+        -- 初始化成员变量
+        length = length or 0,
+        width = width or 0,
+        area = length * width,
+    }
+
+    -- 继承RectAngle对象的所有属性和方法
+    o = setmetatable(o, { __index = self })
+
+    return o
+end
+
+-- RectAngle对象定义get_info方法
+function RectAngle:get_info()
+    return self.length, self.width, self.area
+end
+
+a = RectAngle:new(10, 20)
+-- 输出：a:get_info()=   10      20      200
+print("a:get_info()=", a:get_info())
+
+b = RectAngle:new(10, 30)
+-- 输出：b:get_info()=   10      30      300
+print("b:get_info()=", b:get_info())
+-- 输出：a:get_info()=   10      20      200
+print("a:get_info()=", a:get_info())
+```
+
+参考 [lua-resty-limit-traffic开源库](https://github.com/openresty/lua-resty-limit-traffic/blob/master/lib/resty/limit/req.lua) 学习封装一个自定义库`demo-oop-assistant`
+
+`demo-oop-assistant.lua`代码如下：
+
+```lua
+local math = require "math"
+
+local _M = {
+    _VERSION = '1.0.0'
+}
+
+
+local mt = {
+    __index = _M
+}
+
+function _M.new(name)
+    -- 定义一个局部变量self
+    local self = {
+        name = name,
+    }
+
+    return setmetatable(self, mt)
+end
+
+function _M.say_hello(self)
+    print("Hello " .. self.name .. "!!!")
+end
+
+return _M
+```
+
+`demo-oop.lua`代码如下：
+
+```lua
+-- 引用demo-oop-assistant库
+local mylib = require('demo-oop-assistant')
+local myobj = mylib.new("Dexter")
+myobj:say_hello()
+```
+
