@@ -1,0 +1,9 @@
+version: "3.0"
+
+services:
+  openresty:
+    build:
+      context: ./
+    image: demo-openresty-lib-lua-resty-limit-traffic-dev
+    ports:
+      - '80:80'
