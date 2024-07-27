@@ -52,6 +52,18 @@ end
 
 
 
+### `for`语句
+
+> [参考链接](https://www.tutorialspoint.com/lua/lua_for_loop.htm)
+
+```lua
+for i = 1, 3 do 
+   print(i)
+end
+```
+
+
+
 ## 关系运算符
 
 >示例的详细代码请参考 [链接](https://gitee.com/dexterleslie/demonstration/blob/master/lua/demo-relational-operators.lua)

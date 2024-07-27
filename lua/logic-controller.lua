@@ -1,4 +1,4 @@
--- 演示逻辑控制语句if、if elseif、if elseif else
+-- 演示逻辑控制语句if、if elseif、if elseif else、for
 
 ---------------------------------------------------------------------------------------------------------------------
 -- 演示if、if elseif、if elseif else
@@ -25,4 +25,11 @@ end
 -- https://stackoverflow.com/questions/11658975/not-equal-to-this-or-that-in-lua
 if 1~=2 and 1~=3 then
     print("1~=2 and 1~=3")
+end
+
+---------------------------------------------------------------------------------------------------------------------
+-- 演示for语句
+-- https://www.tutorialspoint.com/lua/lua_for_loop.htm
+for i = 1, 3 do 
+   print(i) 
 end
