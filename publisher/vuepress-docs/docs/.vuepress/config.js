@@ -97,6 +97,7 @@ module.exports = {
                 items: [
                     { text: '密码算法', link: '/密码算法/' },
                     { text: '信息安全', link: '/计算机信息安全/' },
+                    { text: 'ssl、tls、https相关', link: '/ssl-tls-https/' },
                 ]
             },
             {
@@ -109,7 +110,6 @@ module.exports = {
                     { text: 'Jsoup', link: '/jsoup/' },
                     { text: 'IntelliJ IDEA的使用', link: '/intellij-idea/' },
                     { text: 'Lua的使用', link: '/lua/' },
-                    { text: 'ssl、tls、https相关', link: '/ssl-tls-https/' },
                 ]
             },
             {
