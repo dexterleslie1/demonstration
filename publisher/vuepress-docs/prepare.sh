@@ -51,6 +51,7 @@ source_dir_to_target_dir_map["../../lua"]="lua"
 source_dir_to_target_dir_map["../../performance"]="性能测试"
 source_dir_to_target_dir_map["../../demo-jmeter"]="jmeter"
 source_dir_to_target_dir_map["../../spring-cloud"]="spring-cloud"
+source_dir_to_target_dir_map["../../demo-ssl-tls-https"]="ssl-tls-https"
 
 for key in ${!source_dir_to_target_dir_map[@]}; do
     # 删除符号链接目录
