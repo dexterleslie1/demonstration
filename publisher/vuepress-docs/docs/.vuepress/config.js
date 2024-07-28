@@ -446,6 +446,7 @@ module.exports = {
                         'x-forwarded-for用法.md',
                         '设置和获取客户端ip地址.md',
                         'lua-resty-limit-traffic库使用.md',
+                        'https设置.md',
                     ]
                 }
             ], '/性能测试/': [
