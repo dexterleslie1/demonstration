@@ -69,6 +69,8 @@ services:
       - ./process-exporter.yml:/config/process-exporter.yml  # 挂载你的配置文件  
     command: ["-config.path", "/config/process-exporter.yml", '-procfs', '/host/proc']  # 指定配置文件的路径
     restart: always
+    # privileged: true需要设置，否则无法监控i/o数据
+    privileged: true
     network_mode: 'host'
       
 ```
@@ -78,8 +80,8 @@ services:
 ```yaml
 # 进程名称和对应的命令行/PID文件配置  
 process_names:
-  # 监控所有进程并使用其进程完全限定路径作为指标名称
-  - name: "{{.ExeFull}}"
+  # 监控所有进程并使用其进程完整命令行（包括进程所有参数）作为显示进程名
+  - name: "{{.Matches}}"
     cmdline: 
     - '.+'
   
