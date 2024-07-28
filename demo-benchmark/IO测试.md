@@ -5,6 +5,10 @@
 ### 什么是顺序和随机读写？
 
 > 说明什么是顺序和随机读写。[链接](https://blog.csdn.net/markzy/article/details/135869536)
+>
+> [随机读写](https://en.wikipedia.org/wiki/Random_access)
+>
+> [顺序读写](https://en.wikipedia.org/wiki/Sequential_access)
 
 顺序读写是指，要读写的[数据存储](https://so.csdn.net/so/search?q=数据存储&spm=1001.2101.3001.7020)在磁盘的一整块连续的地址上。举个例子老师发卷子的例子，老师按座位发卷子，找到坐在第一个的同学，一路走下去就能正确的把卷子发到每位同学的手里。简单来说就是只需要找一次，就可以完成读写数据。
 
@@ -148,6 +152,8 @@ sudo fio --name=test_iops --directory=/home/temp --numjobs=8 --size=10G \
 --iodepth_batch_submit=256  --iodepth_batch_complete_max=256
 ```
 
+
+
 清除测试数据
 
 ```sh
@@ -156,7 +162,7 @@ sudo rm -rf /home/temp/*
 
 
 
-## 使用`sysbench`作为基准工具测试`I/O`性能（todo 未做实验）
+## `sysbench`作为基准工具测试`I/O`性能（todo 未做实验）
 
 > 参考 [链接](https://www.howtoforge.com/how-to-benchmark-your-system-cpu-file-io-mysql-with-sysbench)
 
@@ -177,6 +183,144 @@ sysbench fileio --file-total-size=50G --file-test-mode=rndrw --time=300 --max-re
 ```sh
 sysbench fileio --file-total-size=50G --file-test-mode=rndrw --time=300 --max-requests=0 cleanup
 ```
+
+备份（todo 未做实验）
+
+```bash
+# sysbench随机读性能测试
+sysbench --test=fileio --file-num=10 --num-threads=16 --file-total-size=10G --file-test-mode=rndrd --max-time=30 --max-requests=0 prepare
+
+sysbench --test=fileio --file-num=10 --num-threads=16 --file-total-size=10G --file-test-mode=rndrd --max-time=30 --max-requests=0 run
+
+sysbench --test=fileio --file-num=10 --num-threads=16 --file-total-size=10G --file-test-mode=rndrd --max-time=30 --max-requests=0 cleanup
+
+# sysbench随机写性能测试
+sysbench --test=fileio --file-num=10 --num-threads=16 --file-total-size=10G --file-test-mode=rndwr --max-time=30 --max-requests=0 prepare
+
+sysbench --test=fileio --file-num=10 --num-threads=16 --file-total-size=10G --file-test-mode=rndwr --max-time=30 --max-requests=0 run
+
+sysbench --test=fileio --file-num=10 --num-threads=16 --file-total-size=10G --file-test-mode=rndwr --max-time=30 --max-requests=0 cleanup
+
+# sysbench随机读写性能
+sysbench --test=fileio --file-num=10 --num-threads=16 --file-total-size=10G --file-test-mode=rndrw --max-time=30 --max-requests=0 prepare
+
+sysbench --test=fileio --file-num=10 --num-threads=16 --file-total-size=10G --file-test-mode=rndrw --max-time=30 --max-requests=0 run
+
+sysbench --test=fileio --file-num=10 --num-threads=16 --file-total-size=10G --file-test-mode=rndrw --max-time=30 --max-requests=0 cleanup
+
+# 使用sysbench产生io负载和分析
+# 准备文件准备随机读写io测试
+sysbench --test=fileio --file-total-size=20G prepare
+# 开始随机读写io测试
+sysbench --test=fileio --file-total-size=20G --file-test-mode=rndrw --max-time=300 --max-requests=0 --threads=10 run
+# 清除随机读写io测试文件
+sysbench --test=fileio --file-total-size=20G cleanup
+```
+
+## `I/O`负载监控和分析
+
+### 使用`prometheus`监控`I/O`情况
+
+运行测试步骤如下：
+
+1. 参考 <a href="/prometheus-grafana-alertmanager/使用docker-compose运行prometheus-grafana-alertmanager.html" target="_blank">链接</a> 运行`prometheus+node_exporter+process_exporter`监控
+1. 通过`node_exporter`的`Storage Disk`试图中的各项指标（重点关注`Instantaneous Queue Size`和`Disk Average Wait Time`指标是否不为0，是则表示有`I/O`请求在排队和`I/O`需要等待，`I/O`设备极度繁忙）综合分析判断`I/O`是否达到瓶颈。
+
+### 使用`iotop`命令分析`I/O`情况
+
+> 结论：如果`IO>`百分比比较大说明`io`等待比较多，表明磁盘`I/O`达到瓶颈。
+
+使用`iotop`命令查看`io`信息
+
+```bash
+# 使用iotop显示io线程使用状况
+# 安装iotop
+yum install iotop -y
+
+# 显示所有线程io状况
+iotop
+```
+
+`iotop`命令输出示例解析
+
+```bash
+Total DISK READ :      45.66 M/s | Total DISK WRITE :	   44.70 M/s
+Actual DISK READ:      45.67 M/s | Actual DISK WRITE:	   44.76 M/s
+    TID  PRIO  USER     DISK READ  DISK WRITE  SWAPIN     IO>    COMMAND                                                                                                                                           
+   4433 be/4 root	 5.52 M/s    5.67 M/s  0.00 % 82.95 % fio --name=test_iops --directory=/home/temp --numjobs=8 --size=10G --time_~up_reporting=1 --iodepth_batch_submit=256 --iodepth_batch_complete_max=256
+   4434 be/4 root        5.74 M/s    5.43 M/s  0.00 % 82.75 % fio --name=test_iops --directory=/home/temp --numjobs=8 --size=10G --time_~up_reporting=1 --iodepth_batch_submit=256 --iodepth_batch_complete_max=256
+   4435 be/4 root        4.95 M/s    4.72 M/s  0.00 % 82.54 % fio --name=test_iops --directory=/home/temp --numjobs=8 --size=10G --time_~up_reporting=1 --iodepth_batch_submit=256 --iodepth_batch_complete_max=256
+   4431 be/4 root        5.06 M/s    4.83 M/s  0.00 % 82.53 % fio --name=test_iops --directory=/home/temp --numjobs=8 --size=10G --time_~up_reporting=1 --iodepth_batch_submit=256 --iodepth_batch_complete_max=256
+   4429 be/4 root        6.01 M/s    5.91 M/s  0.00 % 82.11 % fio --name=test_iops --directory=/home/temp --numjobs=8 --size=10G --time_~up_reporting=1 --iodepth_batch_submit=256 --iodepth_batch_complete_max=256
+   4428 be/4 root        5.15 M/s    5.02 M/s  0.00 % 81.96 % fio --name=test_iops --directory=/home/temp --numjobs=8 --size=10G --time_~up_reporting=1 --iodepth_batch_submit=256 --iodepth_batch_complete_max=256
+   4432 be/4 root        7.24 M/s    7.23 M/s  0.00 % 81.74 % fio --name=test_iops --directory=/home/temp --numjobs=8 --size=10G --time_~up_reporting=1 --iodepth_batch_submit=256 --iodepth_batch_complete_max=256
+   4430 be/4 root        6.00 M/s    5.89 M/s  0.00 % 81.58 % fio --name=test_iops --directory=/home/temp --numjobs=8 --size=10G --time_~up_reporting=1 --iodepth_batch_submit=256 --iodepth_batch_complete_max=256
+```
+
+- **Total DISK READ 和 Total DISK WRITE**：这是所有作业加起来的总读写速度，分别为45.66 MB/s和44.70 MB/s。
+- **Actual DISK READ 和 Actual DISK WRITE**：这里似乎是对总读写速度的一个稍微不同的测量或计算，但差异很小，分别为45.67 MB/s和44.76 MB/s。
+- 每个作业（即每个`fio`进程）都显示了自己的读写速率和IO等待时间（`IO>`列，以百分比表示）。从数据可以看出：
+  - 大多数作业的读写速率在5 MB/s到7 MB/s之间，但有一个作业（TID 4432）的读写速率较高，分别为7.24 MB/s和7.23 MB/s。
+  - 所有作业的IO等待时间都很高（约81%到83%），这表明磁盘I/O是这些进程的主要瓶颈。
+- 你的`fio`测试显示了磁盘I/O是这些进程的主要瓶颈。通过调整测试参数、优化系统配置或升级硬件，你可以尝试提高I/O性能。
+
+### 使用`iostat`命令分析`I/O`情况
+
+使用`iostat`命令查看`io`信息
+
+```bash
+# 安装iostat
+yum install sysstat -y
+
+# 每2秒显示一次io情况，-h表示使用适当的计量单位输出io信息
+iostat -h 2
+```
+
+`iostat`输出示例解析
+
+```bash
+avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+           5.8%    0.0%   18.6%   61.8%    0.0%   13.8%
+
+      tps    kB_read/s    kB_wrtn/s    kB_read    kB_wrtn Device
+ 19747.50        38.4M        38.7M      76.9M      77.4M nvme0n1
+     0.00         0.0k         0.0k       0.0k       0.0k scd0
+     0.00         0.0k         0.0k       0.0k       0.0k dm-0
+     0.00         0.0k         0.0k       0.0k       0.0k dm-1
+ 19741.00        38.4M        38.7M      76.9M      77.4M dm-2
+```
+
+从提供的`iostat`输出来看，系统的CPU使用情况和磁盘I/O性能有一些值得注意的地方。以下是对这些数据的详细解读：
+
+CPU使用情况
+
+- **%user**: 5.8% 表示CPU时间中用户进程所占的百分比。这个值相对较低，通常意味着用户进程没有过多地占用CPU资源。
+- **%nice**: 0.0% 表示通过`nice`命令降低优先级的用户进程所占用的CPU时间百分比。这个值为0表示没有使用`nice`调整优先级的进程在运行或它们没有占用显著的CPU时间。
+- **%system**: 18.6% 表示系统进程（如内核线程）所占用的CPU时间百分比。这个值适中，但相对于`%iowait`来说，它表明系统本身也在处理一些任务，但这些任务没有被I/O等待所阻塞。
+- **%iowait**: 61.8% 是非常高的，表示CPU在空闲时等待I/O操作完成的时间百分比。这通常指示磁盘I/O性能是系统的一个瓶颈。
+- **%steal**: 0.0% 表示虚拟化环境中，由于另一个虚拟CPU正在运行而使得当前虚拟CPU处于空闲状态的时间百分比。在你的系统中，这个值为0，表示你可能不是在虚拟化环境中运行，或者虚拟化环境没有造成显著的CPU资源窃取。
+- **%idle**: 13.8% 表示CPU处于空闲状态的时间百分比。由于`%iowait`非常高，这里的空闲时间实际上是由于I/O等待造成的“虚假”空闲。
+
+磁盘I/O性能
+
+- **nvme0n1**: 这个设备（很可能是一个NVMe SSD）展示了非常高的吞吐量（tps=19747.50），并且读写速度也相当快（kB_read/s 和 kB_wrtn/s 分别为38.4M和38.7M）。这表明该设备本身性能非常好，但系统的高`%iowait`可能意味着有其他因素（如系统配置、并发I/O请求数、磁盘碎片等）在影响整体性能。
+- **scd0, dm-0, dm-1**: 这些设备（可能是光盘驱动器、LVM逻辑卷等）几乎没有I/O活动，这通常是正常的。
+- **dm-2**: 这个设备（可能是一个LVM逻辑卷或其他类型的磁盘映射）的I/O性能与nvme0n1相似，但同样受到系统高`%iowait`的影响。
+
+结论与建议
+
+1. **优化I/O性能**：由于`%iowait`非常高，你应该检查是否有大量的小文件I/O请求、磁盘碎片、不合理的I/O调度器设置或其他可能导致I/O瓶颈的因素。考虑使用更合适的I/O调度器（如`noop`、`deadline`或`mq-deadline`对于SSD），或者增加磁盘缓存的大小。
+2. **分析应用程序**：查看是否有应用程序正在进行大量的磁盘I/O操作，特别是那些可能导致高`%iowait`的随机I/O请求。优化这些应用程序的I/O模式或使用更快的存储设备可能会有所帮助。
+3. **监控和日志**：使用其他工具（如`vmstat`、`pidstat`、`iotop`等）来进一步分析系统的I/O行为和性能瓶颈。检查系统日志以查找任何可能导致I/O性能下降的错误或警告。
+4. **硬件升级**：如果可能的话，考虑升级到更快的存储设备或增加更多的存储设备以分散I/O负载。对于NVMe SSD来说，这通常不是必要的，但如果是传统的HDD或SATA SSD，则可能是一个值得考虑的选择。
+
+
+
+### 怎么判断`I/O`设备性能已经达到瓶颈呢？
+
+在`I/O CPU`利用率达到100%，`I/O ops`和速率都达到硬盘的峰值时，`I/O`等待队列（`queue size`）不为0代表有`I/O`请求在排队，硬盘`I/O`平均等待时间不为0，表示`I/O`设备性能已经达到瓶颈。
+
+
 
 ## 模拟过载的`I/O`压力
 
