@@ -2,7 +2,7 @@
 
 ## `@RunWith(MockitoJUnitRunner.class)`使用
 
-> 详细使用请参考 [链接](https://github.com/dexterleslie1/demonstration/blob/master/demo-mockito/demo-mockito-basic/src/test/java/com/future/study/mockito/unit/test/AnnotationMock1Test.java)
+> 详细使用请参考 [链接](https://gitee.com/dexterleslie/demonstration/blob/master/demo-mockito/demo-mockito-basic/src/test/java/com/future/demo/AnnotationMock1Test.java)
 >
 > `@RunWith(MockitoJUnitRunner.class)` 是 Mockito 和 JUnit 结合使用的一个注解，它主要用于初始化 Mockito 的环境，以便在 JUnit 测试中更方便地使用 Mockito。
 >
@@ -41,7 +41,7 @@ public class AnnotationMock1Test {
 
 ## `@Mock + MockitoAnnotations.initMocks()`使用
 
->详细使用请参考 [链接](https://github.com/dexterleslie1/demonstration/blob/master/demo-mockito/demo-mockito-basic/src/test/java/com/future/study/mockito/unit/test/AnnotationMock2Test.java)
+>详细使用请参考 [链接](https://gitee.com/dexterleslie/demonstration/blob/master/demo-mockito/demo-mockito-basic/src/test/java/com/future/demo/AnnotationMock2Test.java)
 >
 >`MockitoAnnotations.initMocks`用于手动创建`@Mock`注解的字段对象并注入到测试实例中
 
@@ -151,7 +151,7 @@ public void test_any_parameters_value_match(){
 
 ## 静态`log`字段注入替换为`mock logger`
 
-> 详细使用请参考 [链接](https://github.com/dexterleslie1/demonstration/blob/master/demo-mockito/demo-mockito-springboot/src/test/java/com/future/demo/mockito/StaticLoggerFieldInjectionTests.java)
+> 详细使用请参考 [链接](https://gitee.com/dexterleslie/demonstration/blob/master/demo-mockito/demo-mockito-springboot/src/test/java/com/future/demo/StaticLoggerFieldInjectionTests.java)
 >
 > 外部参考链接：
 >
@@ -239,7 +239,7 @@ public class StaticLoggerFieldInjectionTests {
 
 > 自动创建 mock bean 并注入到 spring 容器中，自动替换所有同类型的 bean
 >
-> 详细使用请参考 [链接](https://github.com/dexterleslie1/demonstration/blob/master/demo-mockito/demo-mockito-springboot/src/test/java/com/future/demo/mockito/MockBeanTests.java)
+> 详细使用请参考 [链接](https://gitee.com/dexterleslie/demonstration/blob/master/demo-mockito/demo-mockito-springboot/src/test/java/com/future/demo/MockBeanTests.java)
 
 ## @InjectMocks + @Mock
 
@@ -247,7 +247,7 @@ public class StaticLoggerFieldInjectionTests {
 >
 > 如果允许情况下建议使用 @MockBean 替换这个使用组合
 >
-> 详细使用请参考 [链接](https://github.com/dexterleslie1/demonstration/blob/master/demo-mockito/demo-mockito-springboot/src/test/java/com/future/demo/mockito/InjectMocksNMockTests.java)
+> 详细使用请参考 [链接](https://gitee.com/dexterleslie/demonstration/blob/master/demo-mockito/demo-mockito-springboot/src/test/java/com/future/demo/InjectMocksNMockTests.java)
 
 ## @InjectMocks + @Spy
 
@@ -255,10 +255,10 @@ public class StaticLoggerFieldInjectionTests {
 >
 > 如果允许情况下建议使用 @SpyBean 替换这个使用组合
 >
-> 详细使用请参考 [链接](https://github.com/dexterleslie1/demonstration/blob/master/demo-mockito/demo-mockito-springboot/src/test/java/com/future/demo/mockito/InjectMocksNSpyTests.java)
+> 详细使用请参考 [链接](https://gitee.com/dexterleslie/demonstration/blob/master/demo-mockito/demo-mockito-springboot/src/test/java/com/future/demo/InjectMocksNSpyTests.java)
 
 ## @SpyBean
 
 > 自动创建 mock bean 并注入到 spring 容器中，自动替换所有同类型的 bean，没有被定义 mock 规则的方法默认执行原始逻辑。
 >
-> 详细使用请参考 [链接](https://github.com/dexterleslie1/demonstration/blob/master/demo-mockito/demo-mockito-springboot/src/test/java/com/future/demo/mockito/SpyBeanTests.java)
+> 详细使用请参考 [链接](https://gitee.com/dexterleslie/demonstration/blob/master/demo-mockito/demo-mockito-springboot/src/test/java/com/future/demo/SpyBeanTests.java)
