@@ -8,7 +8,7 @@
 
 解决方案1：
 
->适用于`centOS8`、`centOS8-stream`
+>适用于`centOS8`、`centOS8-stream`，国外推荐使用此配置。
 
 ```bash
 # 注释 /etc/yum.repos.d/CentOS-* 中所有 mirrorlist 开头的行
@@ -20,7 +20,7 @@ sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /
 
 解决方案2：
 
->适用于`centOS8`、`centOS8-stream`、`centOS7`
+>适用于`centOS8`、`centOS8-stream`、`centOS7`，国内推荐使用此配置。
 
 ```bash
 # 注释 /etc/yum.repos.d/CentOS-* 中所有 mirrorlist 开头的行
