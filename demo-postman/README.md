@@ -1,10 +1,22 @@
-## ubuntu安装postman
+# `postman`使用
 
-```
-# 使用snap安装postman
-sudo snap install postman
+## 信息
 
-# 启动postman
-postman
-```
+帐号和密码：`gmail@Kl...`
+
+## `ubuntu`安装`postman`
+
+- 使用`snap`安装`postman`
+
+  ```bash
+  sudo snap install postman
+  ```
+
+- 启动`postman`
+
+  ```bash
+  postman
+  ```
+
+  
 

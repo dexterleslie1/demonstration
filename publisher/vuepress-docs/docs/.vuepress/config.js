@@ -110,6 +110,7 @@ module.exports = {
                     { text: 'Jsoup', link: '/jsoup/' },
                     { text: 'IntelliJ IDEA的使用', link: '/intellij-idea/' },
                     { text: 'Lua的使用', link: '/lua/' },
+                    { text: 'Postman使用', link: '/postman/' },
                 ]
             },
             {
@@ -481,6 +482,15 @@ module.exports = {
                         'https中间人攻击.md',
                     ]
                 }
+            ], '/kubernetes/': [
+                {
+                    title: "kubernetes用法",
+                    children: [
+                        '',
+                    ]
+                }
+            ], '/postman/': [
+                ''
             ],
             '/': ['/'],
         }
