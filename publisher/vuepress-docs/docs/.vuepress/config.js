@@ -90,6 +90,7 @@ module.exports = {
                     { text: 'Harbor', link: '/harbor/' },
                     { text: 'Openresty', link: '/openresty/' },
                     { text: 'JMeter用法', link: '/jmeter/' },
+                    { text: 'kubernetes(k8s)', link: '/kubernetes/' },
                 ]
             },
             {
@@ -486,7 +487,7 @@ module.exports = {
                 {
                     title: "kubernetes用法",
                     children: [
-                        '',
+                        '安装k8s.md',
                     ]
                 }
             ], '/postman/': [

@@ -1,101 +1,10 @@
-# k8s
-
-
-
-
-
-## minikube
-
-> 原理: minikube使用docker容器环境启动一个名为minikube的容器，这个容器内会运行k8s所有组件。
->
-> 支持ubuntu、centOS8部署
->
-> https://minikube.sigs.k8s.io/docs/start/
->
-> https://github.com/kubernetes/minikube/issues/14477
-
-**使用minikube创建k8s集群**
-
-```shell
-# 使用dcli安装docker环境
-
-# 设置mimikube cli
-curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
-sudo install minikube-linux-amd64 /usr/local/bin/minikube
-
-# 使用minikube启动k8s环境，在root用户下启动k8s需要使用--force，指定启动v1.23.8版本k8s，否则不能成功启动
-minikube start --kubernetes-version=v1.23.8 --force
-
-# 验证集群是否正常通过查询所有pods
-minikube kubectl -- get po -A
-
-# 配置kubectl命令
-alias kubectl="minikube kubectl --"
-
-# 测试部署pod
-kubectl create deployment hello-minikube --image=kicbase/echo-server:1.0
-kubectl expose deployment hello-minikube --type=NodePort --port=8080
-kubectl get services hello-minikube
-kubectl port-forward service/hello-minikube 7080:8080
-
-# 访问服务
-curl http://localhost:7080/
-```
-
-**使用minikube配置k8s dashboard**
-
-> https://stackoverflow.com/questions/47173463/how-to-access-local-kubernetes-minikube-dashboard-remotely
-
-```shell
-# 获取本地dashboard url
-minikube dashboard --url
-
-# 使用kubectl代理本地dashboard以便外部访问dashboard
-kubectl proxy --address='0.0.0.0' --disable-filter=true
-
-# 打开浏览器访问dashboard
-http://external-ip:37337/api/v1/namespaces/kubernetes-dashboard/services/http:kubernetes-dashboard:/proxy/
-```
-
-
+# `kubernetes(k8s)`
 
 
 
 ## Kubernetes Google Container Registry国内镜像替换
 
 > https://kubernetes.feisky.xyz/appendix/mirrors
-
-
-
-
-
-
-
-## k8s安装
-
-> NOTE: 使用terraform安装
-
-检查k8s服务是否正常
-
-```shell
-# 在master节点查看基础容器运行状态
-kubectl get pods -n kube-system
-
-# 在master节点查看所有节点状态
-kubectl get nodes
-
-# 部署nginx服务
-kubectl create deployment nginx --image=nginx
-# 使用NodePort方式暴露nginx服务，其中target-port为容器中应用监听的port，port为服务通过服务集群ip地址访问的port
-kubectl expose deployment nginx --target-port=80 --port=80 --type=NodePort
-# 查看nginx NodePort端口并使用浏览器访问成功
-kubectl get pod,service
-
-# 使用curl测试nginx是否正常，其中30576端口为NodePort类型服务随机分配的端口
-curl localhost:30576
-```
-
-
 
 
 
