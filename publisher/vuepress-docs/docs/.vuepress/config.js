@@ -488,6 +488,7 @@ module.exports = {
                     title: "kubernetes用法",
                     children: [
                         '安装k8s.md',
+                        'kubectl命令.md',
                     ]
                 }
             ], '/postman/': [
