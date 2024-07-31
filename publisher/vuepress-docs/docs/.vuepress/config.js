@@ -230,6 +230,7 @@ module.exports = {
                         'centos相关.md',
                         'lvm逻辑卷管理.md',
                         'systemd、systemctl服务.md',
+                        '搭建nfs服务器.md',
                     ]
                 }
             ], '/基准和性能测试/': [
