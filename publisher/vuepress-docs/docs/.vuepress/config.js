@@ -127,6 +127,11 @@ module.exports = {
                 items: [
                     { text: '监控Prometheus+Grafana+AlertManager', link: '/prometheus-grafana-alertmanager/' },
                 ]
+            }, {
+                text: '云提供商',
+                items: [
+                    { text: '亚马逊', link: '/aws/' },
+                ]
             },
             { text: '我的Github', link: 'https://github.com/dexterleslie1', target: '_blank' },
         ],
@@ -234,6 +239,7 @@ module.exports = {
                         '监控方案.md',
                         '测试工具安装.md',
                         'IO测试.md',
+                        '网络测试.md',
                     ]
                 }
             ], '/prometheus-grafana-alertmanager/': [
@@ -493,6 +499,13 @@ module.exports = {
                 }
             ], '/postman/': [
                 ''
+            ], '/aws/': [
+                {
+                    title: "亚马逊使用",
+                    children: [
+                        'aws-sdk.md',
+                    ]
+                }
             ],
             '/': ['/'],
         }
