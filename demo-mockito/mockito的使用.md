@@ -129,9 +129,89 @@ public void test_any_parameters_value_match(){
 
 > todo ...
 
-## `Answer`使用
+## `doReturn`和`doAnswer`区别
 
-> todo ...
+Mockito中的`doReturn`和`doAnswer`都是用于在模拟对象（mock objects）上配置方法调用的返回值或行为的重要工具，但它们之间存在一些关键区别。以下是它们的主要区别：
+
+doReturn
+
+1. **用途**：`doReturn`主要用于直接指定模拟对象的方法调用时应返回的固定值或一系列值。
+
+2. **适用场景**：当你需要模拟一个方法返回简单的、固定的结果时，`doReturn`是最佳选择。
+
+3. **使用方式**：通常与`when`一起使用，但`doReturn`用于链式调用中，特别是在处理void方法或需要强调“不调用真实方法”的场景时。
+
+4. 示例：
+
+   ```java
+   Mockito.doReturn("mockedValue").when(mockObject).methodToMock();
+   ```
+
+   这里，当`mockObject`的`methodToMock`方法被调用时，将直接返回`"mockedValue"`。
+
+doAnswer
+
+1. **用途**：`doAnswer`用于在模拟对象的方法调用时执行自定义的Answer逻辑，从而允许更复杂的返回值生成逻辑，包括基于方法参数或其他外部因素的计算。
+
+2. **适用场景**：当你需要模拟的方法返回值不是一个简单的值，而是需要根据方法参数或其他因素动态计算的结果时，`doAnswer`是更合适的选择。
+
+3. **使用方式**：通过提供一个实现了`Answer`接口的匿名类或使用lambda表达式来定义自定义行为。
+
+4. 示例：
+
+   ```java
+   Mockito.doAnswer(invocation -> {  
+       // 获取方法参数  
+       Object[] args = invocation.getArguments();  
+       // 根据参数计算返回值  
+       int result = (int) args[0] + (int) args[1];  
+       // 返回计算结果  
+       return result;  
+   }).when(mockObject).add(anyInt(), anyInt());
+   ```
+
+   在这个例子中，当`mockObject`的`add`方法被调用时，会执行自定义的Answer逻辑，根据传入的参数计算并返回结果。
+
+总结
+
+|              | doReturn                                   | doAnswer                                         |
+| ------------ | ------------------------------------------ | ------------------------------------------------ |
+| **用途**     | 直接指定方法调用的返回值                   | 在方法调用时执行自定义的Answer逻辑               |
+| **适用场景** | 简单的、固定的返回值                       | 复杂的、基于参数或外部因素的计算结果             |
+| **使用方式** | 通常与`when`一起使用，但也可用于链式调用中 | 提供一个实现了`Answer`接口的匿名类或lambda表达式 |
+
+选择`doReturn`还是`doAnswer`主要取决于你的测试需求以及你希望模拟的方法行为的复杂度。对于简单的返回值模拟，`doReturn`通常更简洁、更直接。而对于需要更复杂逻辑的情况，`doAnswer`提供了更高的灵活性和控制力。
+
+`doReturn`和`doAnswer`详细用法请参考示例 [链接](https://gitee.com/dexterleslie/demonstration/blob/master/demo-mockito/demo-mockito-basic/src/test/java/com/future/demo/MockitoTest.java#L166)
+
+```java
+/**
+ * 测试doReturn和doAnswer的区别
+ */
+@Test
+public void testDifferentWithDoReturnAndDoAnswer() {
+    List<String> testList = Mockito.mock(List.class);
+
+    // 测试doReturn
+    Mockito.doReturn("hello").when(testList).get(Mockito.anyInt());
+    String str = testList.get(0);
+    Assert.assertEquals("hello", str);
+
+    // 测试doAnswer
+    Mockito.doAnswer(invocationOnMock -> {
+        // 根据输入参数返回hello-x字符串
+        return "hello-" + invocationOnMock.getArguments()[0];
+    }).when(testList).get(Mockito.anyInt());
+
+    str = testList.get(0);
+    Assert.assertEquals("hello-0", str);
+
+    str = testList.get(1);
+    Assert.assertEquals("hello-1", str);
+}
+```
+
+
 
 ## 验证调用次数
 
@@ -234,6 +314,54 @@ public class StaticLoggerFieldInjectionTests {
 }
 
 ```
+
+
+
+## `mock final`声明的类
+
+示例的详细用法请参考 [链接](https://gitee.com/dexterleslie/demonstration/blob/master/demo-mockito/demo-mockito-basic/src/test/java/com/future/demo/MockitoTest.java#L191)
+
+`maven`配置引用`mockito-inline`依赖，否则无法`mock final`声明的类
+
+```xml
+<dependency>
+    <groupId>org.mockito</groupId>
+    <artifactId>mockito-inline</artifactId>
+    <version>3.9.0</version>
+    <scope>test</scope>
+</dependency>
+```
+
+使用`final`生命类
+
+```java
+/**
+ * 用于协助演示mockito mock final声明的类
+ */
+public final class MyFinalClass {
+    public String sayHello() {
+        return "hello";
+    }
+}
+```
+
+`mock final`声明的类测试
+
+```java
+/**
+ * 演示mock final类
+ */
+@Test
+public void testMockFinalClass() {
+    MyFinalClass myFinalClass = Mockito.mock(MyFinalClass.class);
+    Mockito.doReturn("H").when(myFinalClass).sayHello();
+
+    String str = myFinalClass.sayHello();
+    Assert.assertEquals("H", str);
+}
+```
+
+
 
 ## @MockBean
 
