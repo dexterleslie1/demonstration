@@ -183,4 +183,16 @@ public class MockitoTest {
         str = testList.get(1);
         Assert.assertEquals("hello-1", str);
     }
+
+    /**
+     * 演示mock final类
+     */
+    @Test
+    public void testMockFinalClass() {
+        MyFinalClass myFinalClass = Mockito.mock(MyFinalClass.class);
+        Mockito.doReturn("H").when(myFinalClass).sayHello();
+
+        String str = myFinalClass.sayHello();
+        Assert.assertEquals("H", str);
+    }
 }

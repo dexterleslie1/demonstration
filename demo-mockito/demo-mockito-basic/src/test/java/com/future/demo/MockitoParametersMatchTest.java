@@ -52,9 +52,9 @@ public class MockitoParametersMatchTest {
         Assert.assertTrue(mockListObject.contains(2));
     }
 
-    private class IsValid extends ArgumentMatcher<Integer> {
+    private class IsValid implements ArgumentMatcher<Integer> {
         @Override
-        public boolean matches(Object o) {
+        public boolean matches(Integer o) {
             return (Integer) o == 1 || (Integer) o == 2;
         }
     }
