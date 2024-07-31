@@ -32,10 +32,10 @@ public class Wafv2Tests {
                     .region(region).build();
             final Wafv2Client finalWafv2Client = wafv2Client;
 
-            // 创建ipset
+            //region 创建ipset
             int ruleTotalCount = 2;
             List<String> ipsetNameList = new ArrayList<>();
-            for(int i=1; i<=ruleTotalCount; i++) {
+            for (int i = 1; i <= ruleTotalCount; i++) {
                 String ipsetName = Prefix + "ipset" + i;
                 ipsetNameList.add(ipsetName);
             }
@@ -45,9 +45,9 @@ public class Wafv2Tests {
                             .limit(100)
                             .scope(Scope.REGIONAL)
                             .build());
-            Map<String, IPSetSummary> nameToIpsetSummaryMapper = listIpSetsResponse.ipSets().stream().filter(o->ipsetNameList.contains(o.name())).collect(Collectors.toMap(o->o.name(), o->o));
-            ipsetNameList.forEach(o-> {
-                if(!nameToIpsetSummaryMapper.containsKey(o)) {
+            Map<String, IPSetSummary> nameToIpsetSummaryMapper = listIpSetsResponse.ipSets().stream().filter(o -> ipsetNameList.contains(o.name())).collect(Collectors.toMap(o -> o.name(), o -> o));
+            ipsetNameList.forEach(o -> {
+                if (!nameToIpsetSummaryMapper.containsKey(o)) {
                     // 创建ipset
                     CreateIpSetResponse createIpSetResponse = finalWafv2Client.createIPSet(
                             CreateIpSetRequest.builder()
@@ -63,16 +63,18 @@ public class Wafv2Tests {
                 }
             });
 
-            // 创建webacl
+            //endregion
+
+            //region 创建webacl
             ListWebAcLsResponse webAclListResponse = wafv2Client.listWebACLs(ListWebAcLsRequest.builder().limit(100).scope(Scope.REGIONAL).build());
             String webAclName = Prefix + "web-acl";
             String webAclDescription = UUID.randomUUID().toString();
             String webAclId;
             String webAclLockToken;
             List<WebACLSummary> webACLSummaryList = webAclListResponse.webACLs().stream().filter(o -> o.name().equals(webAclName)).collect(Collectors.toList());
-            if(webACLSummaryList.size() <= 0) {
+            if (webACLSummaryList.size() <= 0) {
                 List<Rule> ruleList = new ArrayList<>();
-                for(int i=1; i<=ruleTotalCount; i++) {
+                for (int i = 1; i <= ruleTotalCount; i++) {
                     String ruleName = Prefix + "rule" + i;
                     ruleList.add(Rule.builder()
                             .name(ruleName)
@@ -84,6 +86,7 @@ public class Wafv2Tests {
                                     .build())
                             .statement(Statement.builder()
                                     .ipSetReferenceStatement(IPSetReferenceStatement.builder()
+                                            // rule和ipset一一对应绑定
                                             .arn(ipsetNameToArnMapper.get(Prefix + "ipset" + i))
                                             // 注意：如果注释ipSetForwardedIPConfig表示使用sourceIp
                                             .ipSetForwardedIPConfig(IPSetForwardedIPConfig.builder()
@@ -105,7 +108,7 @@ public class Wafv2Tests {
                 String ruleName = Prefix + "rule-ratelimit";
                 ruleList.add(Rule.builder()
                         .name(ruleName)
-                        .priority(ruleTotalCount+1)
+                        .priority(ruleTotalCount + 1)
                         .visibilityConfig(VisibilityConfig.builder()
                                 .cloudWatchMetricsEnabled(true)
                                 .sampledRequestsEnabled(false)
@@ -156,22 +159,28 @@ public class Wafv2Tests {
 
             Assert.assertFalse(StringUtils.isBlank(webAclId));
 
+            //endregion
+
+            //region 添加ip地址到ipset中
             listIpSetsResponse = wafv2Client.listIPSets(ListIpSetsRequest.builder().scope(Scope.REGIONAL).limit(100).build());
             List<IPSetSummary> ipSetSummaryList = listIpSetsResponse.ipSets().stream().filter(o -> o.name().startsWith(Prefix + "ipset")).collect(Collectors.toList());
             String ipsetId = ipSetSummaryList.get(0).id();
             String ipsetName = ipSetSummaryList.get(0).name();
             String lockToken = ipSetSummaryList.get(0).lockToken();
             wafv2Client.updateIPSet(
-                UpdateIpSetRequest.builder()
-                        .name(ipsetName)
-                        .id(ipsetId)
-                        .addresses("192.168.1.2/32", "192.168.1.5/32")
-                        .scope(Scope.REGIONAL)
-                        .lockToken(lockToken)
-                        .build());
+                    UpdateIpSetRequest.builder()
+                            .name(ipsetName)
+                            .id(ipsetId)
+                            .addresses("192.168.1.2/32", "192.168.1.5/32")
+                            .scope(Scope.REGIONAL)
+                            .lockToken(lockToken)
+                            .build());
 
+            //endregion
+
+            //region 测试更新rule
             List<Rule> ruleList = new ArrayList<>();
-            for(int i=1; i<=ruleTotalCount; i++) {
+            for (int i = 1; i <= ruleTotalCount; i++) {
                 String ruleName = Prefix + "rule" + i;
                 ruleList.add(
                         Rule.builder()
@@ -204,7 +213,7 @@ public class Wafv2Tests {
             String ruleName = Prefix + "rule-ratelimit";
             ruleList.add(Rule.builder()
                     .name(ruleName)
-                    .priority(ruleTotalCount+1)
+                    .priority(ruleTotalCount + 1)
                     .visibilityConfig(VisibilityConfig.builder()
                             .cloudWatchMetricsEnabled(true)
                             .sampledRequestsEnabled(false)
@@ -241,8 +250,10 @@ public class Wafv2Tests {
                             .lockToken(webAclLockToken)
                             .build()
             );
+
+            //endregion
         } finally {
-            if(wafv2Client != null) {
+            if (wafv2Client != null) {
                 wafv2Client.close();
             }
         }
