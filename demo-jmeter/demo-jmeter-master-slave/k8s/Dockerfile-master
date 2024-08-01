@@ -1,4 +1,4 @@
-FROM 192.168.235.138:80/library/demo-jmeter-base:latest
+FROM demo-k8s-jmeter-base:latest
 
 COPY jmeter-master-tmpl /usr/local/jmeter/bin/jmeter
 RUN chmod +x /usr/local/jmeter/bin/jmeter
