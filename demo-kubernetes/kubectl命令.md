@@ -28,7 +28,7 @@ kubectl cluster-info
 
 
 
-### kubectl输出http调试日志
+## `kubectl`输出`http`调试日志
 
 > https://www.shellhacks.com/kubectl-debug-increase-verbosity/
 >
@@ -60,13 +60,13 @@ kubectl apply -f 3.yaml --v=9
 
 
 
-### kubectl get用法
+## `kubectl get`用法
 
 
 
-#### kubectl get检查现有pod对应的yaml描述文件
+### `kubectl get`检查现有`pod`对应的`yaml`描述文件
 
-```
+```bash
 # -o yaml表示以yaml格式输出pod的定义
 # apiVersion: v1 描述文件所使用的kubernetes api版本
 # kind: Pod kubernetes对象资源类型
@@ -84,9 +84,9 @@ kubectl get pod -n dev -o wide
 
 
 
-#### kubectl get显示资源的标签
+### `kubectl get`显示资源的标签
 
-```
+```bash
 # 1.yaml内容如下: 
 apiVersion: v1
 kind: Pod
@@ -112,9 +112,9 @@ kubectl get pod -L creation_method,env
 
 
 
-#### kubectl get通过标签选择其筛选资源
+### `kubectl get`通过标签选择其筛选资源
 
-```
+```bash
 # 1.yaml内容如下: 
 apiVersion: v1
 kind: Pod
@@ -149,9 +149,9 @@ kubectl get pod -l creation_method!=auto
 
 
 
-#### kubectl get pod --namespace查询指定命名空间下的pod
+### `kubectl get pod --namespace`查询指定命名空间下的`pod`
 
-```
+```bash
 # 查询命名kube-system下的pod
 kubectl get pod --namespace kube-system
 kubectl get pod -n kube-system
@@ -159,22 +159,22 @@ kubectl get pod -n kube-system
 
 
 
-#### kubectl get ns命名空间
+### `kubectl get ns`命名空间
 
-```
+```bash
 # 获取所有命名空间
 kubectl get ns
 ```
 
 
 
-### kubectl create
+## `kubectl create`
 
 
 
-#### kubectl create创建pod
+### `kubectl create`创建`pod`
 
-```
+```bash
 # 1.yaml内容如下:
 apiVersion: v1
 kind: Pod
@@ -199,9 +199,9 @@ kubectl delete -f 1.yaml
 
 
 
-#### kubectl create从yaml文件创建命名空间
+### `kubectl create`从`yaml`文件创建命名空间
 
-```
+```bash
 # 1.yaml内容如下:
 apiVersion: v1
 kind: Namespace
@@ -214,18 +214,18 @@ kubectl create -f 1.yaml
 
 
 
-#### kubectl create namespace创建命名空间
+### `kubectl create namespace`创建命名空间
 
-```
+```bash
 # 创建命名空间
 kubectl create namespace custom-namespace
 ```
 
 
 
-#### kubectl create创建资源时指定命名空间
+### `kubectl create`创建资源时指定命名空间
 
-```
+```bash
 # 创建命名空间
 kubectl create namespace custom-namespace
 
@@ -245,9 +245,9 @@ kubectl create -f 1.yaml -n custom-namespace
 
 
 
-#### 使用kubectl create configmap创建ConfigMap
+### 使用`kubectl create configmap`创建`ConfigMap`
 
-```
+```bash
 # 创建ConfigMap时指定键值对
 kubectl create configmap demo-config1 --from-literal=sleep-interval=25
 
@@ -268,11 +268,11 @@ kubectl get configmap demo-config2 -o yaml
 
 
 
-### kubectl apply用法
+## `kubectl apply`用法
 
-#### 使用--dry-run转换yaml格式为JSON格式
+### 使用`--dry-run`转换`yaml`格式为`JSON`格式
 
-```shell
+```bash
 # yaml文件内容如下:
 apiVersion: v1
 kind: Pod
@@ -301,9 +301,9 @@ kubectl apply -f 3.yaml --dry-run=client -o json
 
 
 
-#### 使用JSON格式文件创建pod
+### 使用`JSON`格式文件创建`pod`
 
-```shell
+```bash
 # yaml文件内容如下:
 apiVersion: v1
 kind: Pod
@@ -350,91 +350,9 @@ cat test.json | kubectl delete -f -
 
 
 
-### kubectl apply用法
+## `kubectl logs`查看`pod`或者指定容器日志
 
-#### 使用--dry-run转换yaml格式为JSON格式
-
-```shell
-# yaml文件内容如下:
-apiVersion: v1
-kind: Pod
-metadata:
- name: pod1
-spec:
- containers:
- - name: busybox
-   image: busybox
-   command: ["/bin/sh", "-c", "while true;do echo `date` >> /root/out.txt; sleep 10; done;"]
-   volumeMounts:
-   - name: volume
-     mountPath: /root/
-     subPath: demo-pv-and-pvc
- volumes:
- - name: volume
-   persistentVolumeClaim:
-    claimName: pvc1
-    readOnly: false
-
-# 转换yaml格式为JSON
-kubectl apply -f 3.yaml --dry-run=client -o json
-```
-
-
-
-
-
-#### 使用JSON格式文件创建pod
-
-```shell
-# yaml文件内容如下:
-apiVersion: v1
-kind: Pod
-metadata:
- name: pod1
-spec:
- containers:
- - name: busybox
-   image: busybox
-   command: ["/bin/sh", "-c", "while true;do echo `date` >> /root/out.txt; sleep 10; done;"]
-   imagePullPolicy: IfNotPresent
-   volumeMounts:
-   - name: volume
-     mountPath: /root/
-     subPath: demo-pv-and-pvc
- volumes:
- - name: volume
-   persistentVolumeClaim:
-    claimName: test-pvc1
-    readOnly: false
-
----
-kind: PersistentVolumeClaim
-apiVersion: v1
-metadata:
-  name: test-pvc1
-spec:
-  storageClassName: nfs-client
-  accessModes:
-    - ReadWriteMany
-  resources:
-    requests:
-      storage: 1Gi
-
-# 先将yaml文件转换为JSON格式文件
-kubectl apply -f 3.yaml --dry-run=client -o json
-
-# 使用JSON格式文件创建pod
-cat test.json | kubectl apply -f -
-
-# 使用JSON格式文件删除pod
-cat test.json | kubectl delete -f -
-```
-
-
-
-### kubectl logs查看pod或者指定容器日志
-
-```
+```bash
 # 1.yaml内容如下:
 apiVersion: v1
 kind: Pod
@@ -466,9 +384,9 @@ kubectl delete -f 1.yaml
 
 
 
-### kubectl port-forward将本地网络端口转发到pod或者service的端口
+## `kubectl port-forward`将本地网络端口转发到`pod`或者`service`的端口
 
-#### 转发到`pod`端口
+### 转发到`pod`端口
 
 创建`pod` yaml 文件内容如下：
 
@@ -522,7 +440,7 @@ curl localhost:8888
 kubectl delete -f 1.yaml
 ```
 
-#### 转发到`service`端口(不能转发给headless服务)
+### 转发到`service`端口，注意：不能转发给`headless`服务
 
 创建`service` yaml 文件内容如下：
 
@@ -581,9 +499,9 @@ kubectl delete -f 1.yaml
 
 
 
-### kubectl explain查看可用的api对象字段
+## `kubectl explain`查看可用的`api`对象字段
 
-```
+```bash
 # 查询Pod相关帮助
 kubectl explain Pod
 
@@ -605,9 +523,9 @@ kubectl api-versions
 
 
 
-### kubectl run运行pod
+## `kubectl run`运行`pod`
 
-```
+```bash
 # 使用kubectl run直接运行pod
 kubectl run nginx --image=nginx --port=80
 
@@ -632,11 +550,11 @@ kubectl run -it temp1 --image=tutum/dnsutils --rm --restart=Never -- dig SRV kub
 
 
 
-### kubectl delete
+## `kubectl delete`
 
-#### kubectl delete从yaml文件删除资源
+### `kubectl delete`从`yaml`文件删除资源
 
-```
+```bash
 # 1.yaml内容如下:
 apiVersion: v1
 kind: Pod
@@ -662,9 +580,9 @@ kubectl delete -f 1.yaml
 
 
 
-#### kubectl delete按名称删除pod
+### `kubectl delete`按名称删除`pod`
 
-```
+```bash
 # 1.yaml内容如下:
 apiVersion: v1
 kind: Pod
@@ -690,9 +608,9 @@ kubectl delete pod kubia-manual
 
 
 
-#### kubectl delete pod --all删除指定命名空间中所有pod
+### `kubectl delete pod --all`删除指定命名空间中所有`pod`
 
-```
+```bash
 # 创建命名空间
 kubectl create ns custom-namespace
 
@@ -716,9 +634,9 @@ kubectl delete pod --all -n custom-namespace
 
 
 
-#### kubectl delete使用标签选择器删除pod
+### `kubectl delete`使用标签选择器删除`pod`
 
-```
+```bash
 # 1.yaml内容如下:
 apiVersion: v1
 kind: Pod
@@ -743,9 +661,9 @@ kubectl delete pod -l gpu="true"
 
 
 
-#### kubectl delete ns删除命名空间
+### `kubectl delete ns`删除命名空间
 
-```
+```bash
 # 创建命名空间
 kubectl create ns custom-namespace
 
@@ -769,9 +687,9 @@ kubectl delete ns custom-namespace
 
 
 
-#### kubectl delete all --all删除命名空间中所有资源
+### `kubectl delete all --all`删除命名空间中所有资源
 
-```
+```bash
 # 删除当前默认命名空间下的所有资源
 kubectl delete all --all
 
@@ -781,9 +699,9 @@ kubectl delete all --all -n custom-namespace
 
 
 
-### kubectl label修改资源标签
+## `kubectl label`修改资源标签
 
-```
+```bash
 ### 为pod打标签
 
 # 1.yaml内容如下:
@@ -842,9 +760,9 @@ kubectl delete -f 1.yaml
 
 
 
-### kubectl annotate添加和修改注解
+## `kubectl annotate`添加和修改注解
 
-```
+```bash
 # 1.yaml内容如下:
 apiVersion: v1
 kind: Pod
@@ -870,9 +788,9 @@ kubectl describe pod pod1
 
 
 
-### kubectl expose创建服务
+## `kubectl expose`创建服务
 
-```
+```bash
 # 创建pod
 kubectl run nginx --image=docker.118899.net:10001/yyd-public/demo-k8s-nodejs --port=8080
 
@@ -894,9 +812,9 @@ kubectl delete pod nginx
 
 
 
-### kubectl exec在pod中执行命令
+## `kubectl exec`在`pod`中执行命令
 
-```
+```bash
 ### 执行一次命令
 # 创建pod
 kubectl run nginx --image=docker.118899.net:10001/yyd-public/demo-k8s-nodejs --port=8080
@@ -922,7 +840,7 @@ kubectl delete pod nginx
 
 
 
-### kubectl cp
+## `kubectl cp`
 
 创建测试 pod yaml 内容如下：
 
@@ -961,7 +879,7 @@ kubectl cp pod1:etc/apt/sources.list ./sources.list
 
 
 
-### kubectl top
+## `kubectl top`
 
 需要先运行 metrics 服务器，否则`kubectl top`会报告 ”metrics服务不可用“ 错误，components.yaml 内容如下：
 
