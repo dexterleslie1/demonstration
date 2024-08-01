@@ -8,7 +8,7 @@
 
 ```bash
 # 下载指定版本kubectl二进制程序
-curl -LO https://dl.k8s.io/release/v1.23.0/bin/linux/amd64/kubect
+curl -LO https://dl.k8s.io/release/v1.23.0/bin/linux/amd64/kubectl
 
 # 把当前目录中kubectl二进制程序移动到/usr/bin
 sudo mv kubectl /usr/bin/

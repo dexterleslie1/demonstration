@@ -149,7 +149,7 @@ dcli docker install
   systemctl enable kubelet
   ```
 
-- 执行`kubeadm init`初始化`master`节点
+- 执行`kubeadm init`初始化`master`节点，注意：如果`kubeadm init`命令执行失败，可以通过命令`kubeadm reset`重置`k8s`集群后再重新执行`kubeadm init`命令。
 
   ```bash
   kubeadm init \
