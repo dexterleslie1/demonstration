@@ -179,6 +179,7 @@ module.exports = {
                         'docker-compose设置项目名称.md',
                         'docker-volume.md',
                         'docker-swarm.md',
+                        'docker命令.md',
                     ]
                 }
             ],
