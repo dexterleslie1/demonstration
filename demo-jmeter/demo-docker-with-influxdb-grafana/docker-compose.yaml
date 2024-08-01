@@ -10,8 +10,7 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile-jmeter
-    container_name: demo-jmeter
-    image: docker.118899.net:10001/public/demo-jmeter:1.0.0
+    image: 192.168.235.138:80/demo-jmeter
     environment:
       - TZ=Asia/Shanghai
     command: sleep 999999
@@ -25,7 +24,6 @@ services:
         max-file: "5"
 
   demo-influxdb:
-    container_name: demo-influxdb
     image: influxdb:1.8.10
     environment:
       - TZ=Asia/Shanghai
@@ -42,7 +40,6 @@ services:
   # 用于初始化influxdb
   # 创建jmeter数据库
   demo-influxdb-db-creator:
-    container_name: demo-influxdb-db-creator
     image: influxdb:1.8.10
     command: influx --host demo-influxdb -execute 'create database jmeter'
     environment:
@@ -53,7 +50,6 @@ services:
       - demo-influxdb
 
   demo-grafana:
-    container_name: demo-grafana
     image: grafana/grafana:6.6.2
     environment:
       - TZ=Asia/Shanghai
