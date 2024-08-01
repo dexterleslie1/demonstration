@@ -10,7 +10,7 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile-jmeter
-    image: 192.168.235.138:80/demo-jmeter
+    image: demo-jmeter-with-influxdb-grafana
     environment:
       - TZ=Asia/Shanghai
     command: sleep 999999

@@ -201,7 +201,34 @@ jmeter -n -t /home/xxx/xxx.jmx -R 192.168.1.1,192.168.1.2
 
 ## 使用`docker`运行`jmeter+influxdb+grafana`
 
-> 参考 demo-docker-with-influxdb-grafana
+> [JMeter的基本使用（jmeter+influxDB+Grafana）](https://zhuanlan.zhihu.com/p/621684630?utm_id=0)
 >
-> https://zhuanlan.zhihu.com/p/621684630?utm_id=0
+> 提醒：`grafana dashboards JSON`文件是通过手动导入`https://grafana.com/grafana/dashboards/5496`第三方模板后再导出为`JSON`得到的。
 
+示例的详细配置请参考 [链接](https://gitee.com/dexterleslie/demonstration/tree/master/demo-jmeter/demo-docker-with-influxdb-grafana)
+
+`jmeter+influxdb+grafana`是为了图形化显示`jmeter`压测结果。
+
+运行步骤：
+
+- 编译镜像
+
+  ```bash
+  docker compose build
+  ```
+
+- 运行示例
+
+  ```bash
+  docker compose up -d
+  ```
+
+- 访问`grafana http://localhost:3000/`查看`jmeter`压测状态
+
+- 启动测试制造`influxdb+grafana`数据
+
+  ```bash
+  ./start_test.sh
+  ```
+
+  
