@@ -30,6 +30,8 @@ spec:
       labels:
         app: grafana
     spec:
+      # 指定调度到master节点上
+      nodeName: k8s-master
       containers:
       - name: jmeter-grafana
         image: grafana/grafana:6.6.2

@@ -1,3 +1,7 @@
-FROM docker.118899.net:10001/yyd-public/demo-jmeter-base:latest
+FROM 192.168.235.138:80/library/demo-jmeter-base:latest
+
+COPY jmeter-master-tmpl /usr/local/jmeter/bin/jmeter
+RUN chmod +x /usr/local/jmeter/bin/jmeter
+COPY jmeter.properties /usr/local/jmeter/bin/jmeter.properties
 		
 EXPOSE 60000

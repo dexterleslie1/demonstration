@@ -1,7 +1,12 @@
 #!/bin/bash
 
-docker push docker.118899.net:10001/yyd-public/demo-jmeter-base:latest
+set -x
+set -e
 
-docker push docker.118899.net:10001/yyd-public/demo-jmeter-master:latest
+dockerRegistry=192.168.235.138:80/library
 
-docker push docker.118899.net:10001/yyd-public/demo-jmeter-slave:latest
+docker push $dockerRegistry/demo-jmeter-base:latest
+
+docker push $dockerRegistry/demo-jmeter-master:latest
+
+docker push $dockerRegistry/demo-jmeter-slave:latest

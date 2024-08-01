@@ -64,8 +64,8 @@ spec:
            jmeter_mode: slave
       containers:
       - name: jmslave
-        image: docker.118899.net:10001/yyd-public/demo-jmeter-slave:latest
-        imagePullPolicy: IfNotPresent
+        image: 192.168.235.138:80/library/demo-jmeter-slave:latest
+        imagePullPolicy: Always
         env:
         - name: TZ
           value: "Asia/Shanghai"

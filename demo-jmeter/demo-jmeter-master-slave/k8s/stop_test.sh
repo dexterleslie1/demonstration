@@ -9,4 +9,4 @@ working_dir=`pwd`
 
 master_pod=`kubectl get pod | grep jmeter-master | awk '{print $1}'`
 
-kubectl exec -ti $master_pod bash /usr/local/software/jmeter/bin/stoptest.sh
+kubectl exec -ti $master_pod bash /usr/local/jmeter/bin/stoptest.sh
