@@ -55,6 +55,7 @@ source_dir_to_target_dir_map["../../demo-ssl-tls-https"]="ssl-tls-https"
 source_dir_to_target_dir_map["../../demo-kubernetes"]="kubernetes"
 source_dir_to_target_dir_map["../../demo-postman"]="postman"
 source_dir_to_target_dir_map["../../aws"]="aws"
+source_dir_to_target_dir_map["../../demo-aliyun"]="aliyun"
 
 for key in ${!source_dir_to_target_dir_map[@]}; do
     # 删除符号链接目录

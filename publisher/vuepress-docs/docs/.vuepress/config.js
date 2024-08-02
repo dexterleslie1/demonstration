@@ -131,6 +131,7 @@ module.exports = {
                 text: '云提供商',
                 items: [
                     { text: '亚马逊', link: '/aws/' },
+                    { text: '阿里云', link: '/aliyun/' },
                 ]
             },
             { text: '我的Github', link: 'https://github.com/dexterleslie1', target: '_blank' },
@@ -510,6 +511,13 @@ module.exports = {
                     title: "亚马逊使用",
                     children: [
                         'aws-sdk.md',
+                    ]
+                }
+            ], '/aliyun/': [
+                {
+                    title: "阿里云使用",
+                    children: [
+                        '阿里云容器镜像服务.md',
                     ]
                 }
             ],
