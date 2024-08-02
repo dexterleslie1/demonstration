@@ -502,6 +502,7 @@ module.exports = {
                         'pod控制器.md',
                         '高级调度.md',
                         'volume数据存储.md',
+                        'service服务.md',
                     ]
                 }
             ], '/postman/': [
