@@ -3,7 +3,7 @@
 set -x
 set -e
 
-cp -r ../../demo-jmeter-customize-plugin/target ./target
+# cp -r ../../demo-jmeter-customize-plugin/target ./target
 
 docker build --tag demo-k8s-jmeter-base:latest -f Dockerfile-base .
 
