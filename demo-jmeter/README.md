@@ -231,7 +231,21 @@ jmeter -n -t /home/xxx/xxx.jmx -R 192.168.1.1,192.168.1.2
 
 实验结论：非基于`kubernetes`性能高于基于`kubernetes`环境，可能是由于`jmeter`运行容器环境性能有所降低或者`kubernetes flannel`网络性能不如虚拟机之间直接通讯的网络性能高导致（`todo`：未排查得到证据证明这个猜想）。但是总体基于`kubernetes`环境的性能损耗还是在可接受范围内的。
 
-   
+
+
+## `GCP`平台测试基于`kubernetes`的`jmeter`分布式压测结果
+
+实验配置如下：
+
+- 1台`k8s master`虚拟机`centOS8-stream`，虚拟类型`e2`+4核+`8G`内存
+- 5台`k8s worker`虚拟机`centOS8-stream`，虚拟类型`e2`+4核+`8G`内存
+- 1台`openresty`辅助测试目标虚拟机`centOS8-stream`，虚拟类型`e2`+16核+`16G`内存
+
+实验结果：`QPS`稳定在`164k/s`
+
+实验结论：`GCP`平台上压测每台`k8s worker`能够产生约`32k/s`的`QPS`，`jmeter`集群产生的总`QPS`和`k8s worker`数量成正比的。
+
+
 
 ## `jmeter`调优
 
