@@ -33,7 +33,7 @@ spec:
       nodeName: k8s-master
       containers:
       - name: jmmaster
-        image: 192.168.235.138:80/library/demo-jmeter-master:latest
+        image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-jmeter-master:latest
         imagePullPolicy: Always
         env:
         - name: TZ

@@ -64,7 +64,7 @@ spec:
            jmeter_mode: slave
       containers:
       - name: jmslave
-        image: 192.168.235.138:80/library/demo-jmeter-slave:latest
+        image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-jmeter-slave:latest
         imagePullPolicy: Always
         env:
         - name: TZ

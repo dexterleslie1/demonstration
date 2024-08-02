@@ -3,7 +3,7 @@
 set -x
 set -e
 
-dockerRegistry=192.168.235.138:80/library
+dockerRegistry=registry.cn-hangzhou.aliyuncs.com/future-public
 
 docker tag demo-k8s-jmeter-base:latest $dockerRegistry/demo-jmeter-base:latest
 docker push $dockerRegistry/demo-jmeter-base:latest
