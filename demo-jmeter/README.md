@@ -170,6 +170,8 @@ jmeter -n -t /home/xxx/xxx.jmx -R 192.168.1.1,192.168.1.2
 ## 基于`kubernetes`的`jmeter`分布式测试
 
 >注意：推荐使用这个方式运行`jmeter`分布式测试，因为方便部署和管理。
+>
+>[Load Testing With Jmeter On Kubernetes and OpenShift](https://blog.kubernauts.io/load-testing-as-a-service-with-jmeter-on-kubernetes-fc5288bb0c8b)
 
 `jmeter slave`以`DaemonSet`方式在`kubernetes`集群中运行。
 
