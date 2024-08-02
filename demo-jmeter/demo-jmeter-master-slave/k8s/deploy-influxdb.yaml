@@ -50,19 +50,19 @@ spec:
                     sleep 1;
                 done;
                 influx -execute 'create database jmeter'
-        volumeMounts:
-        - name: jmeter-influxdb
-          mountPath: /var/lib/influxdb
+        # volumeMounts:
+        # - name: jmeter-influxdb
+        #   mountPath: /var/lib/influxdb
         ports:
         - containerPort: 8086
 
-  volumeClaimTemplates:   #可看作pvc的模板
-  - metadata:
-      name: jmeter-influxdb
-    spec:
-      accessModes: [ "ReadWriteOnce" ]
-      storageClassName: "nfs-client"  #存储类名，改为集群中已存在的
-      resources:
-        requests:
-          storage: 15Gi
+  # volumeClaimTemplates:   #可看作pvc的模板
+  # - metadata:
+  #     name: jmeter-influxdb
+  #   spec:
+  #     accessModes: [ "ReadWriteOnce" ]
+  #     storageClassName: "nfs-client"  #存储类名，改为集群中已存在的
+  #     resources:
+  #       requests:
+  #         storage: 15Gi
 

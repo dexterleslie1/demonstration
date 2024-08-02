@@ -175,51 +175,39 @@ jmeter -n -t /home/xxx/xxx.jmx -R 192.168.1.1,192.168.1.2
 
 运行示例步骤：
 
-1. 搭建`nfs`服务器，`kubernetes`存储配置需要用到此服务器，<a href="/linux使用/搭建nfs服务器.html#centos7、centos8搭建nfs服务器" target="_blank">参考链接</a>
+1. 搭建`openresty`目标，用于协助`jmeter`性能测试，<a href="/性能测试/启动性能测试辅助目标.html" target="_blank">参考链接</a>
 
-2. 搭建`openresty`目标，用于协助`jmeter`性能测试，<a href="/性能测试/启动性能测试辅助目标.html" target="_blank">参考链接</a>
-
-3. 搭建`harbor`服务器，用于测试的`docker`镜像`push`和`pull`，<a href="/harbor/#设置和运行" target="_blank">参考链接</a>
-
-4. 修改`push-images.sh`中的`dockerRegistry`变量指向上面搭建的`harbor`
-
-5. 修改`deploy-master.yaml`中的`image: 192.168.235.138:80/library/demo-jmeter-master:latest`指向上面搭建的`harbor`
-
-6. 修改`deploy-slave.yaml`中的`image: 192.168.235.138:80/library/demo-jmeter-slave:latest`指向上面搭建的`harbor`
-
-7. 编译`docker`镜像
+2. 编译`docker`镜像
 
    ```bash
    ./build-images.sh
    ```
 
-8. 推送`docker`镜像
+3. 推送`docker`镜像
 
    ```bash
    ./push-images.sh
    ```
 
-9. 搭建`kubernetes`集群，<a href="/kubernetes/安装k8s.html#使用二进制程序安装k8s" target="_blank">参考链接</a>，注意：`k8s`集群的`master`节点`hostname`必须为`k8s-master`，否则`jmeter master`节点、`prometheus`相关`pod`不能启动，因为这些`pod`使用`nodename`定向调度。
+4. 搭建`kubernetes`集群，<a href="/kubernetes/安装k8s.html#使用二进制程序安装k8s" target="_blank">参考链接</a>，注意：`k8s`集群的`master`节点`hostname`必须为`k8s-master`，否则`jmeter master`节点、`prometheus`相关`pod`不能启动，因为这些`pod`使用`nodename`定向调度。
 
-10. 配置`kubernetes`集群提供`nfs`存储服务，<a href="/kubernetes/volume数据存储.html#使用storageclass-存储类别-实现持久卷的动态卷配置" target="_blank">参考链接</a>
+5. 修改`jmeter.jmx`文件中的目标为上面`openresty`的`ip`地址
 
-11. 修改`jmeter.jmx`文件中的目标为上面`openresty`的`ip`地址
+6. `ubuntu`配置`kubectl`客户端以直接在`ubuntu`上运行`jmeter`分布式测试，<a href="/kubernetes/kubectl命令.html#ubuntu安装kubectl命令" target="_blank">参考链接</a>
 
-12. `ubuntu`配置`kubectl`客户端以直接在`ubuntu`上运行`jmeter`分布式测试，<a href="" target="_blank">参考链接</a>
+7. 启动测试
 
-13. 启动测试
+   ```bash
+   ./start_test.sh jmeter.jmx
+   ```
 
-    ```bash
-    ./start_test.sh jmeter.jmx
-    ```
+8. 停止测试
 
-14. 停止测试
+   ```bash
+   ./stop_test.sh
+   ```
 
-    ```bash
-    ./stop_test.sh
-    ```
-
-    
+   
 
 ## `jmeter`调优
 

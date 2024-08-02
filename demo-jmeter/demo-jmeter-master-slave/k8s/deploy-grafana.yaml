@@ -48,8 +48,8 @@ spec:
           mountPath: /etc/grafana/provisioning/dashboards/
         - name: vol-jmeter-grafana-json
           mountPath: /var/lib/grafana/dashboards/
-        - name: jmeter-grafana
-          mountPath: /var/lib/grafana
+        # - name: jmeter-grafana
+        #   mountPath: /var/lib/grafana
         ports:
         - containerPort: 3000
       volumes:
@@ -74,15 +74,15 @@ spec:
           - key: jmeter.json
             path: jmeter.json
 
-  volumeClaimTemplates:   #可看作pvc的模板
-  - metadata:
-      name: jmeter-grafana
-    spec:
-      accessModes: [ "ReadWriteOnce" ]
-      storageClassName: "nfs-client"  #存储类名，改为集群中已存在的
-      resources:
-        requests:
-          storage: 15Gi
+  # volumeClaimTemplates:   #可看作pvc的模板
+  # - metadata:
+  #     name: jmeter-grafana
+  #   spec:
+  #     accessModes: [ "ReadWriteOnce" ]
+  #     storageClassName: "nfs-client"  #存储类名，改为集群中已存在的
+  #     resources:
+  #       requests:
+  #         storage: 15Gi
 
 ---
 apiVersion: v1
