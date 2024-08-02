@@ -30,7 +30,11 @@ spec:
         app: influxdb
     spec:
       # 指定调度到master节点上
-      nodeName: k8s-master
+      nodeSelector:
+        node-role.kubernetes.io/master: ""
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
       containers:
       - name: jmeter-influxdb
         image: influxdb:1.8.10
