@@ -201,7 +201,11 @@ jmeter -n -t /home/xxx/xxx.jmx -R 192.168.1.1,192.168.1.2
    ./start_test.sh jmeter.jmx
    ```
 
-8. 停止测试
+8. 测试期间通过`http://192.168.235.155:3000/`（其中`192.168.235.155`是`openresty`目标的`ip`地址）登录`openresty`目标`grafana`查看压力测试相关数据
+
+9. 测试期间通过`http://192.168.1.10:30000/`（其中`192.168.1.10`是`k8s master`节点的`ip`地址）登录`jmeter`的`grafana`查看`jmeter`监听器上报的测试数据
+
+10. 停止测试
 
    ```bash
    ./stop_test.sh
