@@ -139,7 +139,7 @@ jmeter -n -t /home/xxx/xxx.jmx
 
 
 
-## 分布式测试
+## 非基于`kubernetes`的`jmeter`分布式测试
 
 >注意：使用`dcli`分别在`master`虚拟机上安装`jmeter master`模式，在`slave`虚拟机上安装`jmeter slave`模式。
 
@@ -168,6 +168,8 @@ jmeter -n -t /home/xxx/xxx.jmx -R 192.168.1.1,192.168.1.2
 
 
 ## 基于`kubernetes`的`jmeter`分布式测试
+
+>注意：推荐使用这个方式运行`jmeter`分布式测试，因为方便部署和管理。
 
 `jmeter slave`以`DaemonSet`方式在`kubernetes`集群中运行。
 
@@ -210,6 +212,22 @@ jmeter -n -t /home/xxx/xxx.jmx -R 192.168.1.1,192.168.1.2
    ```bash
    ./stop_test.sh
    ```
+
+
+
+## 基于`kubernetes`和非基于`kubernetes`的`jmeter`分布式测试结果对比
+
+实验配置如下：
+
+- `jmeter master`/`k8s master`虚拟机`centOS8-stream`，4核（无限制`CPU`）+`8G`内存
+- 3台`jmeter slave`/`k8s worker`虚拟机`centOS8-stream`，2核（最高`44000Hz CPU`频率）+`4G`内存
+
+实验结果：
+
+- 基于`kubernetes QPS`最高`50k/s`左右
+- 非基于`kubernetes QPS`最高`59k/s`左右
+
+实验结论：非基于`kubernetes`性能高于基于`kubernetes`环境，可能是由于`jmeter`运行容器环境性能有所降低或者`kubernetes flannel`网络性能不如虚拟机之间直接通讯的网络性能高导致（`todo`：未排查得到证据证明这个猜想）。但是总体基于`kubernetes`环境的性能损耗还是在可接受范围内的。
 
    
 
