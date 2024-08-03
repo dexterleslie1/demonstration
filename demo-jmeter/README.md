@@ -325,6 +325,8 @@ jmeter -n -t /home/xxx/xxx.jmx -R 192.168.1.1,192.168.1.2
 ## `todo jmeter`单机性能调优
 
 >`todo`：搜索一篇外国资料描述`jmeter`单机或者分布式测试的性能调优博客。调优后使得`jmeter`分布式测试在相同的硬件配置下发挥出更高的性能。
+>
+>`todo`：centos8 系统优化 centos内核优化（在gcp中测试jmeter时，测试以下配置是否有调优效果）`https://blog.51cto.com/u_16099314/10091045`
 
 	1、内存
 	2、线程数

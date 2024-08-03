@@ -2,6 +2,12 @@
 
 > [深入JVM虚拟机之高并发交易系统应如何设置JVM堆内存的大小？](https://blog.csdn.net/weixin_42194284/article/details/106912093)
 
+## `todo`
+
+- 是否有更加科学的方法通过模拟去收集和判断在生成环境应该分配多大内存给`jvm`？
+
+
+
 ## 理论分析
 
 以一个每日百万级别的交易支付系统作为背景，来分析一下，在线上部署一个系统时，应该如何根据系统的业务来合理的设置JVM对内存的大小。
@@ -47,7 +53,7 @@ JVM堆内存设置
 
 ## 证明上面理论分析
 
-1. 编译[demo-java-assistant](https://github.com/dexterleslie1/demonstration/tree/master/demo-java/demo-java-assistant)演示
+1. 编译 [demo-java-assistant](https://github.com/dexterleslie1/demonstration/tree/master/demo-java/demo-java-assistant) 演示
 
    ```bash
    mvn package
@@ -67,7 +73,7 @@ JVM堆内存设置
 
 ## 合理设置内存
 
-1. 编译和运行[demo-springboot-performance](https://github.com/dexterleslie1/demonstration/tree/master/performance/jvm/demo-springboot-performance)演示，协助分析垃圾回收相关信息
+1. 编译和运行 [demo-springboot-performance](https://github.com/dexterleslie1/demonstration/tree/master/performance/jvm/demo-springboot-performance) 演示，协助分析垃圾回收相关信息
 
    ```bash
    # 编译
@@ -78,7 +84,7 @@ JVM堆内存设置
    java -jar -Xmx1g -Xms1g -XX:NewSize=64m -XX:MaxNewSize=64m -XX:+PrintGC -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:./gc.log -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=128m -XX:+HeapDumpOnOutOfMemoryError -XX:+CrashOnOutOfMemoryError -XX:HeapDumpPath=./ target/demo-springboot-performance.jar
    ```
 
-2. 使用`jmeter`打开并运行[memory负载.jmx](https://github.com/dexterleslie1/demonstration/blob/master/performance/jvm/demo-springboot-performance/memory%E8%B4%9F%E8%BD%BD.jmx)
+2. 使用`jmeter`打开并运行 [memory负载.jmx](https://github.com/dexterleslie1/demonstration/blob/master/performance/jvm/demo-springboot-performance/memory%E8%B4%9F%E8%BD%BD.jmx)
 
 3. 查看`jvm`内存和`GC`情况并通过`-Xmx -Xms`调整`jvm`内存
 
