@@ -319,4 +319,14 @@ jmeter -n -t /home/xxx/xxx.jmx -R 192.168.1.1,192.168.1.2
   ./start_test.sh
   ```
 
-  
+
+
+
+## `todo jmeter`单机性能调优
+
+>`todo`：搜索一篇外国资料描述`jmeter`单机或者分布式测试的性能调优博客。调优后使得`jmeter`分布式测试在相同的硬件配置下发挥出更高的性能。
+
+	1、内存
+	2、线程数
+	3、调整Stastic
+	4、queue size=8192
