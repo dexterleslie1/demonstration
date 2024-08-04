@@ -10,6 +10,12 @@
 
 
 
+## `todo`
+
+- `cname`的用法示例
+
+
+
 ## `centOS8`上搭建`dns`服务器
 
 >[How to Setup DNS Server (Bind) on CentOS 8 / RHEL8](https://www.linuxtechi.com/setup-bind-server-centos-8-rhel-8/)
