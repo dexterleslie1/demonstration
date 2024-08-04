@@ -34,6 +34,14 @@
           <stringProp name="classname">com.future.demo.JsonDecodeSamplerClient</stringProp>
         </JavaSampler>
         <hashTree/>
+        <DNSCacheManager guiclass="DNSCachePanel" testclass="DNSCacheManager" testname="DNS Cache Manager" enabled="false">
+          <collectionProp name="DNSCacheManager.servers">
+            <stringProp name="1150673560">192.168.235.155</stringProp>
+          </collectionProp>
+          <boolProp name="DNSCacheManager.clearEachIteration">false</boolProp>
+          <boolProp name="DNSCacheManager.isCustomResolver">true</boolProp>
+        </DNSCacheManager>
+        <hashTree/>
         <ConfigTestElement guiclass="HttpDefaultsGui" testclass="ConfigTestElement" testname="HTTP Request Defaults" enabled="true">
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
             <collectionProp name="Arguments.arguments"/>

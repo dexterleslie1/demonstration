@@ -461,6 +461,7 @@ module.exports = {
                         '设置和获取客户端ip地址.md',
                         'lua-resty-limit-traffic库使用.md',
                         'https设置.md',
+                        '横向扩展.md',
                     ]
                 }
             ], '/性能测试/': [
