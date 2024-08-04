@@ -7,6 +7,7 @@ services:
     image: demo-perf-assistant-target-openresty-dev
     environment:
       - TZ=Asia/Shanghai
+    restart: always
     ports:
       - '80:80'
       - '9145:9145'
@@ -29,6 +30,7 @@ services:
       - '--storage.tsdb.retention.time=30d'
     environment:
       - TZ=Asia/Shanghai
+    restart: always
     ports:
       - '9090:9090'
 
@@ -42,6 +44,7 @@ services:
       - ./grafana-config.monitoring
     environment:
       - TZ=Asia/Shanghai
+    restart: always
     ports:
       - '3000:3000'
     depends_on:
