@@ -90,7 +90,7 @@ module.exports = {
                     { text: 'Harbor', link: '/harbor/' },
                     { text: 'Openresty', link: '/openresty/' },
                     { text: 'JMeter用法', link: '/jmeter/' },
-                    { text: 'kubernetes(k8s)', link: '/kubernetes/' },
+                    { text: 'Kubernetes', link: '/kubernetes/' },
                 ]
             },
             {
@@ -112,6 +112,7 @@ module.exports = {
                     { text: 'IntelliJ IDEA的使用', link: '/intellij-idea/' },
                     { text: 'Lua的使用', link: '/lua/' },
                     { text: 'Postman使用', link: '/postman/' },
+                    { text: 'VMWare', link: '/vmware/' },
                 ]
             },
             {
@@ -233,6 +234,7 @@ module.exports = {
                         'lvm逻辑卷管理.md',
                         'systemd、systemctl服务.md',
                         '搭建nfs服务器.md',
+                        'dns.md',
                     ]
                 }
             ], '/基准和性能测试/': [
@@ -520,6 +522,14 @@ module.exports = {
                     title: "阿里云使用",
                     children: [
                         '阿里云容器镜像服务.md',
+                    ]
+                }
+            ], '/vmware/': [
+                {
+                    title: "VMWare相关产品使用",
+                    children: [
+                        'vsphere安装.md',
+                        'vmware-tools.md',
                     ]
                 }
             ],
