@@ -260,6 +260,7 @@ module.exports = {
                         'docker运行redis.md',
                         'spring-boot项目集成redis.md',
                         'spring-boot集成redisson.md',
+                        'redisson用法.md',
                     ]
                 }
             ], '/mybatis/': [
