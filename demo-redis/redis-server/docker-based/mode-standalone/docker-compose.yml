@@ -11,5 +11,5 @@ services:
     environment:
       - TZ=Asia/Shanghai
     ports:
-      - 6379:6379
+      - '6379:6379'
 

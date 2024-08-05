@@ -29,47 +29,43 @@ public class RedissonLockTests {
 
     private RedissonClient redisson = null;
 
-    // 标准用法
+    /**
+     * 测试标准用法
+     *
+     * @throws InterruptedException
+     */
     @Test
     public void test() throws InterruptedException {
-        final String key = "fdjiu34938983r399fj3j";
+        final String key = UUID.randomUUID().toString();
+
+        AtomicInteger atomicIntegerAcquired = new AtomicInteger();
+        AtomicInteger atomicIntegerNotAcquired = new AtomicInteger();
         ExecutorService service = Executors.newCachedThreadPool();
-        for(int i=0; i<100; i++) {
-            final int seq = i;
+        int totalConcurrent = 100;
+        for (int i = 0; i < totalConcurrent; i++) {
             service.submit(new Runnable() {
                 public void run() {
-                    int milliseconds = Random.nextInt(50);
-                    try {
-                        if(milliseconds>0) {
-                            Thread.sleep(milliseconds);
-                        }
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-
                     RLock lock = null;
                     boolean acquired = false;
                     try {
                         lock = redisson.getLock(key);
 
                         acquired = lock.tryLock(10, 30000, TimeUnit.MILLISECONDS);
-                        if(!acquired) {
-                            String message = String.format("线程%d 锁获取%s", seq, "失败");
-                            logger.info(message);
+                        if (!acquired) {
+                            atomicIntegerNotAcquired.incrementAndGet();
                             return;
                         }
 
                         // 锁定2秒
-                        Thread.sleep(2000);
-                        String message = String.format("线程%d 锁获取%s", seq,"成功");
-                        logger.info(message);
+                        Thread.sleep(500);
+                        atomicIntegerAcquired.incrementAndGet();
                     } catch (Exception ex) {
                         throw new RuntimeException(ex);
                     } finally {
                         if (acquired) {
                             try {
                                 lock.unlock();
-                            } catch(Exception ex) {
+                            } catch (Exception ex) {
                                 //
                             }
                         }
@@ -78,11 +74,16 @@ public class RedissonLockTests {
             });
         }
         service.shutdown();
-        while(!service.awaitTermination(100, TimeUnit.MILLISECONDS));
+        while (!service.awaitTermination(100, TimeUnit.MILLISECONDS)) ;
+
+        // 只有一个并发请求能够取得锁
+        Assert.assertEquals(1, atomicIntegerAcquired.get());
+        Assert.assertEquals(totalConcurrent - 1, atomicIntegerNotAcquired.get());
     }
 
     /**
      * 演示使用isLocked函数判断key是否被锁定
+     *
      * @throws InterruptedException
      */
     @Test
@@ -96,13 +97,13 @@ public class RedissonLockTests {
         final AtomicInteger atomicIntegerLocked = new AtomicInteger();
         int totalThreads = 100;
         ExecutorService service = Executors.newCachedThreadPool();
-        for(int i=0; i<totalThreads; i++) {
+        for (int i = 0; i < totalThreads; i++) {
             service.submit(() -> {
                 RLock lock = redisson.getLock(key);
                 boolean isAquireLock = false;
                 try {
                     isAquireLock = lock.tryLock(10, 30000, TimeUnit.MILLISECONDS);
-                    if(isAquireLock) {
+                    if (isAquireLock) {
                         atomicIntegerAquiredLock.incrementAndGet();
                         // 模拟耗时操作
                         Thread.sleep(2000);
@@ -111,7 +112,7 @@ public class RedissonLockTests {
                     }
 
                     boolean isLocked = lock.isLocked();
-                    if(isLocked) {
+                    if (isLocked) {
                         atomicIntegerLocked.incrementAndGet();
                     }
                 } catch (Exception ex) {
@@ -120,7 +121,7 @@ public class RedissonLockTests {
                     if (isAquireLock) {
                         try {
                             lock.unlock();
-                        } catch(Exception ex) {
+                        } catch (Exception ex) {
                             //
                         }
                     }
@@ -128,16 +129,17 @@ public class RedissonLockTests {
             });
         }
         service.shutdown();
-        while(!service.awaitTermination(100, TimeUnit.MILLISECONDS));
+        while (!service.awaitTermination(100, TimeUnit.MILLISECONDS)) ;
 
         Assert.assertEquals(1, atomicIntegerAquiredLock.get());
-        Assert.assertEquals(totalThreads-1, atomicIntegerNotAquiredLock.get());
+        Assert.assertEquals(totalThreads - 1, atomicIntegerNotAquiredLock.get());
         Assert.assertEquals(totalThreads, atomicIntegerLocked.get());
         Assert.assertFalse(redisson.getLock(key).isLocked());
     }
 
     /**
      * 测试tryLock函数leaseTime参数
+     *
      * @throws InterruptedException
      */
     @Test
@@ -149,7 +151,7 @@ public class RedissonLockTests {
             try {
                 RLock rLock = redisson.getLock(key);
                 rLock.tryLock(10, 500, TimeUnit.MILLISECONDS);
-            } catch(Exception ignored) {
+            } catch (Exception ignored) {
 
             }
         });
@@ -157,10 +159,10 @@ public class RedissonLockTests {
         executorService.submit(() -> {
             RLock rLock = redisson.getLock(key);
             try {
-                while(!rLock.tryLock(10, 1000, TimeUnit.MILLISECONDS)) {
+                while (!rLock.tryLock(10, 1000, TimeUnit.MILLISECONDS)) {
                     atomicInteger.incrementAndGet();
                 }
-            } catch(Exception ex) {
+            } catch (Exception ex) {
                 ex.printStackTrace();
             } finally {
                 rLock.unlock();
@@ -168,14 +170,15 @@ public class RedissonLockTests {
         });
 
         executorService.shutdown();
-        while (!executorService.awaitTermination(100, TimeUnit.MILLISECONDS));
+        while (!executorService.awaitTermination(100, TimeUnit.MILLISECONDS)) ;
 
-        Assert.assertTrue(atomicInteger.get()>0);
+        Assert.assertTrue(atomicInteger.get() > 0);
         Assert.assertFalse(redisson.getLock(key).isLocked());
     }
 
     /**
      * 非本线程unlock锁会抛出IllegalMonitorStateException
+     *
      * @throws InterruptedException
      */
     @Test
@@ -220,7 +223,7 @@ public class RedissonLockTests {
                 try {
                     rLock.unlock();
                 } catch (Exception ex) {
-                    if(ex instanceof IllegalMonitorStateException) {
+                    if (ex instanceof IllegalMonitorStateException) {
                         atomicIntegerExceptionCounter.incrementAndGet();
                     }
                 }
@@ -228,12 +231,12 @@ public class RedissonLockTests {
         });
 
         executorService.shutdown();
-        while(!executorService.awaitTermination(10, TimeUnit.MILLISECONDS));
+        while (!executorService.awaitTermination(10, TimeUnit.MILLISECONDS)) ;
         future.get();
         future1.get();
 
-        Assert.assertTrue("Exception counter="+atomicIntegerExceptionCounter.get(), atomicIntegerExceptionCounter.get()>0);
-        Assert.assertTrue("Exception count="+atomicIntegerException.get(), atomicIntegerException.get()<=0);
+        Assert.assertTrue("Exception counter=" + atomicIntegerExceptionCounter.get(), atomicIntegerExceptionCounter.get() > 0);
+        Assert.assertTrue("Exception count=" + atomicIntegerException.get(), atomicIntegerException.get() <= 0);
     }
 
     /**
@@ -251,7 +254,7 @@ public class RedissonLockTests {
                 RLock rLock = redisson.getLock(keyTemp);
                 rLock.tryLock(10, 5000, TimeUnit.MILLISECONDS);
                 boolean isHeldByCurrentThread = rLock.isHeldByCurrentThread();
-                if(isHeldByCurrentThread) {
+                if (isHeldByCurrentThread) {
                     atomicIntegerOwner.incrementAndGet();
                 }
 
@@ -265,13 +268,13 @@ public class RedissonLockTests {
         TimeUnit.MILLISECONDS.sleep(100);
 
         int notOwnerCounter = 15;
-        for(int i=0; i<notOwnerCounter; i++) {
+        for (int i = 0; i < notOwnerCounter; i++) {
             executorService.submit(() -> {
                 try {
                     RLock rLock = redisson.getLock(keyTemp);
                     rLock.tryLock(1, 5000, TimeUnit.MILLISECONDS);
                     boolean isHeldByCurrentThread = rLock.isHeldByCurrentThread();
-                    if(!isHeldByCurrentThread) {
+                    if (!isHeldByCurrentThread) {
                         atomicIntegerNotOwner.incrementAndGet();
                     }
                 } catch (Exception ignored) {
@@ -281,7 +284,7 @@ public class RedissonLockTests {
         }
 
         executorService.shutdown();
-        while(!executorService.awaitTermination(100, TimeUnit.MILLISECONDS));
+        while (!executorService.awaitTermination(100, TimeUnit.MILLISECONDS)) ;
 
         Assert.assertEquals(1, atomicIntegerOwner.get());
         Assert.assertEquals(notOwnerCounter, atomicIntegerNotOwner.get());
@@ -306,7 +309,7 @@ public class RedissonLockTests {
         });
 
         executorService.shutdown();
-        while(!executorService.awaitTermination(10, TimeUnit.MILLISECONDS));
+        while (!executorService.awaitTermination(10, TimeUnit.MILLISECONDS)) ;
 
         RLock rLock = redisson.getLock(keyTemp);
         boolean isLocked = rLock.isLocked();
@@ -337,7 +340,7 @@ public class RedissonLockTests {
     }
 
     @Before
-    public void setup(){
+    public void setup() {
         String host = MyConfig.Host;
         int port = MyConfig.Port;
         String password = MyConfig.Password;
@@ -348,8 +351,8 @@ public class RedissonLockTests {
     }
 
     @After
-    public void teardown(){
-        if(redisson != null){
+    public void teardown() {
+        if (redisson != null) {
             redisson.shutdown();
         }
     }
