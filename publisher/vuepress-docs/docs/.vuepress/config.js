@@ -259,6 +259,7 @@ module.exports = {
                     children: [
                         'docker运行redis.md',
                         'spring-boot项目集成redis.md',
+                        'spring-boot集成redisson.md',
                     ]
                 }
             ], '/mybatis/': [

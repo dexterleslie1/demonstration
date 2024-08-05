@@ -11,7 +11,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@EnableCaching
 public class ConfigRedis {
     @Value("${spring.redis.host}")
     private String redisHost = null;

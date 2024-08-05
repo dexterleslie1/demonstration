@@ -1,13 +1,7 @@
 version: "3.0"
 
-# 创建网络
-networks:
-  net:
-    name: spring-boot-redisson-integration-net
-
 services:
   spring-boot-redisson-integration-redis-server:
-    container_name: spring-boot-redisson-integration-redis-server
     image: redis:5.0.14
     # 设置redis密码
     command: redis-server /usr/local/etc/redis/redis.conf --requirepass 123456
@@ -16,6 +10,4 @@ services:
     environment:
       - TZ=Asia/Shanghai
     ports:
-      - 6379:6379
-    networks:
-      - net
+      - '6379:6379'
