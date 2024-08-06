@@ -187,7 +187,7 @@ jmeter -n -t /home/xxx/xxx.jmx -R 192.168.1.1,192.168.1.2
 
 运行示例步骤：
 
-1. 搭建`openresty`目标，用于协助`jmeter`性能测试，<a href="/性能测试/启动性能测试辅助目标.html" target="_blank">参考链接</a>
+1. 搭建`openresty`目标，用于协助`jmeter`性能测试，<a href="/性能测试/启动性能测试辅助目标.html#使用kubernetes启动" target="_blank">参考链接</a>
 
 2. 编译`docker`镜像
 
@@ -201,9 +201,7 @@ jmeter -n -t /home/xxx/xxx.jmx -R 192.168.1.1,192.168.1.2
    ./push-images.sh
    ```
 
-4. 搭建`kubernetes`集群，<a href="/kubernetes/安装k8s.html#使用二进制程序安装k8s" target="_blank">参考链接</a>，注意：`k8s`集群的`master`节点`hostname`必须为`k8s-master`，否则`jmeter master`节点、`prometheus`相关`pod`不能启动，因为这些`pod`使用`nodename`定向调度。
-
-5. 修改`jmeter.jmx`文件中的目标为上面`openresty`的`ip`地址
+4. 搭建`kubernetes`集群，<a href="/kubernetes/安装k8s.html#使用二进制程序安装k8s" target="_blank">参考链接</a>
 
 6. `ubuntu`配置`kubectl`客户端以直接在`ubuntu`上运行`jmeter`分布式测试，<a href="/kubernetes/kubectl命令.html#ubuntu安装kubectl命令" target="_blank">参考链接</a>
 
@@ -213,7 +211,7 @@ jmeter -n -t /home/xxx/xxx.jmx -R 192.168.1.1,192.168.1.2
    ./start_test.sh jmeter.jmx
    ```
 
-8. 测试期间通过`http://192.168.235.155:3000/`（其中`192.168.235.155`是`openresty`目标的`ip`地址）登录`openresty`目标`grafana`查看压力测试相关数据
+8. 测试期间通过`http://192.168.1.10:30001`（其中`192.168.1.10`是`k8s`集群的任何一个节点`ip`地址）登录`openresty`目标`grafana`查看压力测试相关数据
 
 9. 测试期间通过`http://192.168.1.10:30000/`（其中`192.168.1.10`是`k8s master`节点的`ip`地址）登录`jmeter`的`grafana`查看`jmeter`监听器上报的测试数据
 
@@ -230,7 +228,7 @@ jmeter -n -t /home/xxx/xxx.jmx -R 192.168.1.1,192.168.1.2
 实验配置如下：
 
 - `jmeter master`/`k8s master`虚拟机`centOS8-stream`，4核（无限制`CPU`）+`8G`内存
-- 3台`jmeter slave`/`k8s worker`虚拟机`centOS8-stream`，2核（最高`44000Hz CPU`频率）+`4G`内存
+- 3台`jmeter slave`/`k8s worker`虚拟机`centOS8-stream`，2核（最高`4400MHz CPU`频率）+`4G`内存
 
 实验结果：
 
