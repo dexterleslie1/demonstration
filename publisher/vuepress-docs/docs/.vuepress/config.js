@@ -502,6 +502,7 @@ module.exports = {
                     title: "kubernetes用法",
                     children: [
                         '安装k8s.md',
+                        '实验用的镜像.md',
                         'kubectl命令.md',
                         '命名空间namespace.md',
                         'pod控制器.md',
