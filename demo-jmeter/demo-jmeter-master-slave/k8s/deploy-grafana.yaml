@@ -10,7 +10,7 @@ spec:
     targetPort: 3000
     nodePort: 30000
  selector:
-  app: grafana
+  app: jmeter-grafana
 
 ---
 apiVersion: apps/v1
@@ -18,17 +18,17 @@ kind: StatefulSet
 metadata:
   name: jmeter-grafana
   labels:
-    app: grafana
+    app: jmeter-grafana
 spec:
   replicas: 1
   serviceName: jmeter-grafana
   selector:
     matchLabels:
-      app: grafana
+      app: jmeter-grafana
   template:
     metadata:
       labels:
-        app: grafana
+        app: jmeter-grafana
     spec:
       # 指定调度到master节点上
       nodeSelector:
