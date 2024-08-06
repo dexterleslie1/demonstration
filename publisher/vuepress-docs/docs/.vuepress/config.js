@@ -512,6 +512,7 @@ module.exports = {
                         'service服务.md',
                         '节点运维.md',
                         'configmap和secret.md',
+                        '计算资源管理.md',
                     ]
                 }
             ], '/postman/': [

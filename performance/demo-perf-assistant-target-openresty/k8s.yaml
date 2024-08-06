@@ -70,6 +70,9 @@ spec:
    - name: demo-perf-assistant-target-openresty-dev
      image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-perf-assistant-target-openresty-dev
      imagePullPolicy: IfNotPresent
+    #  resources:
+    #   limits:
+    #    cpu: 100m
      env:
      - name: "TZ"
        value: "Asia/Shanghai"
