@@ -503,6 +503,7 @@ module.exports = {
                     children: [
                         '安装k8s.md',
                         '实验用的镜像.md',
+                        'pod的基础.md',
                         'kubectl命令.md',
                         '命名空间namespace.md',
                         'pod控制器.md',
@@ -510,6 +511,7 @@ module.exports = {
                         'volume数据存储.md',
                         'service服务.md',
                         '节点运维.md',
+                        'configmap和secret.md',
                     ]
                 }
             ], '/postman/': [

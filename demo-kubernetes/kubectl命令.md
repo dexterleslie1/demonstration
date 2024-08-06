@@ -812,7 +812,9 @@ kubectl delete pod nginx
 
 
 
-## `kubectl exec`在`pod`中执行命令
+## `kubectl exec`
+
+### 在`pod`中执行命令
 
 ```bash
 ### 执行一次命令
@@ -837,6 +839,35 @@ kubectl exec -it nginx  bash
 # 删除pod
 kubectl delete pod nginx
 ```
+
+### 连接`pod`中指定的容器
+
+```bash
+# 创建pod中有多个容器，1.yaml文件内容如下：
+apiVersion: v1
+kind: Pod
+metadata:
+ name: test-pod
+spec:
+ containers:
+ - name: nginx
+   image: nginx
+ - name: curl
+   image: curlimages/curl
+   command: ["/bin/sh", "-c", "sleep 7200"]
+   
+# 启动pod
+kubectl apply -f 1.yaml
+
+# 连接curl容器，使用curl通过localhost测试nginx服务
+kubectl exec -it test-pod -c curl /bin/sh
+curl localhost
+
+# 删除pod
+kubectl delete -f 1.yaml
+```
+
+
 
 
 
