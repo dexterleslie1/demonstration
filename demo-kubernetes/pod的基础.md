@@ -155,7 +155,9 @@ spec:
 
 > [Define a Command and Arguments for a Container](https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/)
 
-```yaml
+### 使用`command`指定`args`
+
+```bash
 apiVersion: v1
 kind: Pod
 metadata:
@@ -171,9 +173,7 @@ spec:
  - name: busybox
    image: busybox
    command: ["/bin/sh", "-c", "touch /tmp/hello.txt;while true;do /bin/echo $(date +%T) >> /tmp/hello.txt;sleep 3;done;"]
-```
-
-```shell
+   
 # 进入容器查看/tmp/hello.txt输出，base-pod是pod的名称，busybox是容器名称
 kubectl exec base-pod -n dev -it -c busybox /bin/sh
 
@@ -181,9 +181,91 @@ kubectl exec base-pod -n dev -it -c busybox /bin/sh
 tail -f /tmp/hello.txt
 ```
 
+### 在`kubernetes`中覆盖命令和参数
+
+```bash
+# 创建支持一个传入参数的容器
+# entrypoint.sh内容如下:
+#!/bin/sh
+
+echo `date` - app is going to sleep $1 seconds...
+sleep $1
+echo `date` - app sleep finishing.
+
+# Dockerfile内容如下:
+FROM busybox
+
+COPY entrypoint.sh /
+RUN chmod a+x /entrypoint.sh
+CMD ["5"]
+ENTRYPOINT ["sh", "/entrypoint.sh"]
+
+# 编译镜像
+docker build --tag registry.cn-hangzhou.aliyuncs.com/future-public/demo-k8s-args .
+
+# 以默认参数运行容器
+docker run --rm --name=demo registry.cn-hangzhou.aliyuncs.com/future-public/demo-k8s-args
+
+# 以自定义参数运行容器
+docker run --rm --name=demo registry.cn-hangzhou.aliyuncs.com/future-public/demo-k8s-args 1
+
+# 推送镜像
+docker push registry.cn-hangzhou.aliyuncs.com/future-public/demo-k8s-args
+
+# 以自定义entrypoint和参数运行pod，command覆盖docker entrypoint，args覆盖docker cmd参数
+# 1.yaml内容如下:
+apiVersion: v1
+kind: Pod
+metadata:
+ name: pod1
+spec:
+ containers:
+  - name: kubia
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-k8s-args
+    command: ["sh", "/entrypoint.sh"]
+    args: ["11"]
+    
+# 查看pod输出日志
+kubectl logs -f pod1
+    
+# 1.yaml内容如下:
+apiVersion: v1
+kind: Pod
+metadata:
+ name: pod1
+spec:
+ containers:
+  - name: kubia
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-k8s-args
+    args: ["6"]
+
+# 查看pod输出日志
+kubectl logs -f pod1
+
+# 另外一种传递参数方法
+# 1.yaml内容如下: 
+apiVersion: v1
+kind: Pod
+metadata:
+ name: pod1
+spec:
+ containers:
+  - name: kubia
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-k8s-args
+    args:
+     - "7"
+     
+# 查看pod输出日志
+kubectl logs -f pod1
+```
+
+
+
 ## 环境变量
 
-```yaml
+### `pod`中使用`env`配置环境变量
+
+```bash
 apiVersion: v1
 kind: Pod
 metadata:
@@ -204,9 +286,7 @@ spec:
      value: "admin"
    - name: "password"
      value: "123456"
-```
-
-```shell
+     
 # 进入容器
 kubectl exec base-pod -n dev -it -c busybox /bin/sh
 
@@ -214,6 +294,53 @@ kubectl exec base-pod -n dev -it -c busybox /bin/sh
 echo $username
 echo $password
 ```
+
+### 使用环境变量传递参数
+
+```shell
+# 制作使用环境变量的容器
+# entrypoint.sh 内容如下:
+#!/bin/sh
+
+echo `date` - app is going to sleep $SleepSeconds seconds...
+sleep $SleepSeconds
+echo `date` - app sleep finishing.
+
+# Dockerfile 内容如下:
+FROM busybox
+
+COPY entrypoint.sh /
+RUN chmod a+x /entrypoint.sh
+ENTRYPOINT ["sh", "/entrypoint.sh"]
+
+# 编译镜像
+docker build --tag registry.cn-hangzhou.aliyuncs.com/future-public/demo-k8s-env .
+
+# 使用参数运行容器
+docker run --rm --name=demo --env SleepSeconds=3 registry.cn-hangzhou.aliyuncs.com/future-public/demo-k8s-env
+
+# 推送镜像
+docker push registry.cn-hangzhou.aliyuncs.com/future-public/demo-k8s-env
+
+# 使用env传递环境变量
+# 1.yaml内容如下:
+apiVersion: v1
+kind: Pod
+metadata:
+ name: pod1
+spec:
+ containers:
+  - name: kubia
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-k8s-env
+    env:
+     - name: SleepSeconds
+       value: "8"
+
+# 查看pod日志
+kubectl logs -f pod1
+```
+
+
 
 ## 端口设置
 
