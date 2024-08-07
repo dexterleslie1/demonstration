@@ -1,0 +1,61 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: target-springboot
+spec:
+#  clusterIP: None # headless无头服务
+  type: ClusterIP
+  selector:
+    app: demo-perf-assistant-target-springboot
+  ports:
+    - port: 80 # service端口
+      targetPort: 18080 # pod端口
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-perf-assistant-target-springboot-np-svc
+spec:
+  type: NodePort
+  ports:
+    - port: 18080 # 服务端口80
+      targetPort: 18080 # pod端口8080
+      nodePort: 31000 # NodePort端口31000
+  selector:
+    app: demo-perf-assistant-target-springboot
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-perf-assistant-target-springboot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demo-perf-assistant-target-springboot
+  template:
+    metadata:
+      labels:
+        app: demo-perf-assistant-target-springboot
+    spec:
+      # 定向调度到springboot专用k8s节点中
+      # 通过kubectl taint node k8s-node-openresty support-only-perf-target:NoSchedule添加污点，为了不让jmeter slave daemonset调度到此节点
+      # 通过kubectl label node k8s-node-openresty support-only-perf-target=添加标签，为了让springboot通过标签选择器指定调度到此节点
+      tolerations:
+        - effect: NoSchedule
+          key: support-only-perf-target
+      nodeSelector:
+        support-only-perf-target: ""
+      containers:
+        - name: demo-perf-assistant-target-springboot
+          image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-perf-assistant-target-springboot
+          env:
+          - name: "JAVA_OPTS"
+            value: "-Xmx1536m -Xms1536m"
+          resources:
+            limits:
+              cpu: 500m
+          imagePullPolicy: Always
