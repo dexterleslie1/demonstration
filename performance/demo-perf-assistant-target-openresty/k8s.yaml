@@ -30,7 +30,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
- name: openresty
+ name: target-openresty
 spec:
  type: ClusterIP
  selector:
@@ -59,13 +59,13 @@ spec:
     app: openresty
   spec:
    # 定向调度到openresty专用k8s节点中
-   # 通过kubectl taint node k8s-node-openresty support-only-openresty:NoSchedule添加污点，为了不让jmeter slave daemonset调度到此节点
-   # 通过kubectl label node k8s-node-openresty support-only-openresty=添加标签，为了让openresty通过标签选择器指定调度到此节点
+   # 通过kubectl taint node k8s-node-openresty support-only-perf-target:NoSchedule添加污点，为了不让jmeter slave daemonset调度到此节点
+   # 通过kubectl label node k8s-node-openresty support-only-perf-target=添加标签，为了让openresty通过标签选择器指定调度到此节点
    tolerations:
    - effect: NoSchedule
-     key: support-only-openresty
+     key: support-only-perf-target
    nodeSelector:
-    support-only-openresty: ""
+    support-only-perf-target: ""
    containers:
    - name: demo-perf-assistant-target-openresty-dev
      image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-perf-assistant-target-openresty-dev
@@ -213,7 +213,7 @@ data:
     报警(触发器)配置\nrule_files:\n  - \"alert-rule.yml\"\n\n# 搜刮配置\nscrape_configs:\n  -
     job_name: \"prometheus\"\n    static_configs:\n      - targets: [\"prometheus:9090\"]\n
     \ # openresty metrics端点配置\n  - job_name: 'openresty'\n    static_configs:\n      -
-    targets: ['openresty:9145']\n  # - job_name: 'alertmanager'\n  #   scrape_interval:
+    targets: ['target-openresty:9145']\n  # - job_name: 'alertmanager'\n  #   scrape_interval:
     15s\n  #   static_configs:\n  #   - targets: ['alertmanager:9093']\n  # - job_name:
     'cadvisor'\n  #   scrape_interval: 15s\n  #   static_configs:\n  #   - targets:
     ['cadvisor:8080']\n  #     labels:\n  #       instance: Prometheus服务器 \n\n  #
@@ -822,8 +822,8 @@ data:
             {
               "current": {
                 "selected": false,
-                "text": "openresty:9145",
-                "value": "openresty:9145"
+                "text": "target-openresty:9145",
+                "value": "target-openresty:9145"
               },
               "datasource": {
                 "type": "prometheus",

@@ -46,7 +46,7 @@
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
             <collectionProp name="Arguments.arguments"/>
           </elementProp>
-          <stringProp name="HTTPSampler.domain">openresty</stringProp>
+          <stringProp name="HTTPSampler.domain">target-openresty</stringProp>
           <stringProp name="HTTPSampler.port">80</stringProp>
         </ConfigTestElement>
         <hashTree/>
