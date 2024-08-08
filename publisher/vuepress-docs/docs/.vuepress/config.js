@@ -224,6 +224,7 @@ module.exports = {
                         '安装googlepinyin输入法.md',
                         'sources.list.md',
                         '取消unattended-upgrades.md',
+                        'ubuntu或者debian安装工具.md',
                     ]
                 }
             ], '/linux使用/': [
