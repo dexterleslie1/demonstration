@@ -81,6 +81,7 @@ module.exports = {
                     { text: 'Maven', link: '/maven/' },
                     { text: 'Mockito', link: '/mockito/' },
                     { text: 'Java相关', link: '/java/' },
+                    { text: 'Java相关库', link: '/java-library/' },
                     { text: 'Spring Boot', link: '/spring-boot/' },
                     { text: 'Spring Cloud', link: '/spring-cloud/' },
                     { text: 'Logback', link: '/logback/' },
@@ -538,6 +539,13 @@ module.exports = {
                     children: [
                         'vsphere安装.md',
                         'vmware-tools.md',
+                    ]
+                }
+            ], '/java-library/': [
+                {
+                    title: "Java相关库使用",
+                    children: [
+                        'awaitility使用.md',
                     ]
                 }
             ],
