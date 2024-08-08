@@ -15,6 +15,15 @@
 
 下载`redis cluster`配置到本地，[链接](https://gitee.com/dexterleslie/demonstration/tree/master/demo-redis/redis-server/kubernetes-based/mode-cluster)
 
+给`redis`集群性能测试专用节点加污点和标签
+
+> 注意：在性能测试时，避免`jmeter slave`和`redis`集群在同一个`k8s`节点上运行导致相互干扰，所以需要给`redis`集群专用节点添加污点，标签是用于`redis`集群定向调度到指定`k8s`节点中。
+
+```bash
+kubectl taint node k8s-node-openresty support-only-perf-target:NoSchedule
+kubectl label node k8s-node-openresty support-only-perf-target=
+```
+
 创建并启动所有`redis cluster`节点
 
 ```bash
