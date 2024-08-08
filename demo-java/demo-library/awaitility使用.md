@@ -1,5 +1,9 @@
 # `awaitility`使用
 
+>[Github Getting Started](https://github.com/awaitility/awaitility/wiki/Getting_started)
+>
+>[Github Usage](https://github.com/awaitility/awaitility/wiki/Usage)
+
 `Awaitility` 是一个 Java 库，用于在编写异步代码时简化等待条件成立的过程。它提供了一种流畅的 API 来等待直到某个条件为真，而无需编写复杂的轮询逻辑或处理线程中断。这对于测试异步代码或等待外部系统响应时特别有用。
 
 `awaitility`的详细用法请参考 [链接](https://gitee.com/dexterleslie/demonstration/tree/master/demo-java/demo-library/demo-awaitility)
