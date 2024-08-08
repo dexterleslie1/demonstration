@@ -7,7 +7,8 @@ metadata:
 spec:
   containers:
     - name: demo-redistemplate-cluster
-      image: docker.118899.net:10001/yyd-public/demo-redistemplate-cluster
+      image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-redistemplate-cluster
+      imagePullPolicy: Always
 
 ---
 apiVersion: v1

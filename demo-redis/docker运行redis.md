@@ -4,7 +4,7 @@
 
 ## `standalone`模式（单机模式）
 
-复制 [redis standalone](https://github.com/dexterleslie1/demonstration/tree/master/demo-redis/redis-server/docker-based/mode-standalone) 相关配置到本地
+复制 [redis standalone](https://gitee.com/dexterleslie/demonstration/tree/master/demo-redis/redis-server/docker-based/mode-standalone) 相关配置到本地
 
 切换到`mode-standalone`目录内
 
@@ -30,7 +30,7 @@ docker compose down -v
 >
 > `docker-compose-add-slave-node.yml`用于添加`slave`节点到现有的`replication`集群中。
 
-复制 [redis replication](https://github.com/dexterleslie1/demonstration/tree/master/demo-redis/redis-server/docker-based/mode-replication) 相关配置到本地
+复制 [redis replication](https://gitee.com/dexterleslie/demonstration/tree/master/demo-redis/redis-server/docker-based/mode-replication) 相关配置到本地
 
 切换到`mode-replication`目录内
 
@@ -74,7 +74,7 @@ docker compose -f docker-compose-add-slave-node.yml down -v
 
 > `docker-compose-add-slave-node.yml`用于添加`slave`节点到现有的集群中。
 
-复制 [redis sentinel](https://github.com/dexterleslie1/demonstration/tree/master/demo-redis/redis-server/docker-based/mode-sentinel) 相关配置到本地
+复制 [redis sentinel](https://gitee.com/dexterleslie/demonstration/tree/master/demo-redis/redis-server/docker-based/mode-sentinel) 相关配置到本地
 
 切换到`mode-sentinel`目录内
 
@@ -113,7 +113,7 @@ docker compose down -v
 
 > [使用`docker compose`建立`redis cluster`](https://blog.yowko.com/docker-compose-redis-cluster/)
 
-复制 [redis cluster](https://github.com/dexterleslie1/demonstration/tree/master/demo-redis/redis-server/docker-based/mode-cluster) 相关配置到本地
+复制 [redis cluster](https://gitee.com/dexterleslie/demonstration/tree/master/demo-redis/redis-server/docker-based/mode-cluster) 相关配置到本地
 
 切换到`mode-cluster`目录内
 
