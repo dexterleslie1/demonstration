@@ -53,7 +53,7 @@
         <dependency>
             <groupId>org.redisson</groupId>
             <artifactId>redisson</artifactId>
-            <version>3.19.1</version>
+            <version>3.22.0</version>
         </dependency>
     </dependencies>
 </project>
