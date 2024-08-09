@@ -189,19 +189,26 @@ jmeter -n -t /home/xxx/xxx.jmx -R 192.168.1.1,192.168.1.2
 
 1. 搭建`openresty`目标，用于协助`jmeter`性能测试，<a href="/性能测试/启动性能测试辅助目标.html#使用kubernetes启动" target="_blank">参考链接</a>
 
-2. 编译`docker`镜像
+2. 因为此`jmeter`支持自定义`RedisBenchmarkSampler`插件用于性能测试`redis`，所以需要先编译此插件 [链接](https://gitee.com/dexterleslie/demonstration/tree/master/demo-jmeter/demo-jmeter-customize-plugin)
+
+   ```bash
+   # 编译插件命令
+   mvn package
+   ```
+
+3. 编译`docker`镜像
 
    ```bash
    ./build-images.sh
    ```
 
-3. 推送`docker`镜像
+4. 推送`docker`镜像
 
    ```bash
    ./push-images.sh
    ```
 
-4. 搭建`kubernetes`集群，<a href="/kubernetes/安装k8s.html#使用二进制程序安装k8s" target="_blank">参考链接</a>
+5. 搭建`kubernetes`集群，<a href="/kubernetes/安装k8s.html#使用二进制程序安装k8s" target="_blank">参考链接</a>
 
 6. `ubuntu`配置`kubectl`客户端以直接在`ubuntu`上运行`jmeter`分布式测试，<a href="/kubernetes/kubectl命令.html#ubuntu安装kubectl命令" target="_blank">参考链接</a>
 

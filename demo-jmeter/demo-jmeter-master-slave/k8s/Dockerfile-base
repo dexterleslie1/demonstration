@@ -10,9 +10,15 @@ RUN curl https://fut001.oss-cn-hangzhou.aliyuncs.com/jmeter/apache-jmeter-5.6.2.
     cd /tmp && tar -xvzf apache-jmeter-5.6.2.tgz && mv /tmp/apache-jmeter-5.6.2 /usr/local/jmeter && \
     rm -f /tmp/apache-jmeter-5.6.2.tgz
 
-# COPY ./target/demo-jmeter-customize-plugin-1.0.0.jar /usr/local/jmeter/lib/ext/demo-jmeter-customize-plugin-1.0.0.jar
-# COPY ./target/demo-jmeter-customize-plugin-1.0.0-jar-with-dependencies.jar /usr/local/jmeter/lib/ext/demo-jmeter-customize-plugin-1.0.0-jar-with-dependencies.jar
-# RUN chown root:root /usr/local/jmeter/lib/ext/demo-jmeter*.jar
+# 复制插件到jmeter lib/ext目录
+COPY ./target/demo-jmeter-customize-plugin-1.0.0.jar /usr/local/jmeter/lib/ext/demo-jmeter-customize-plugin-1.0.0.jar
+# 复制插件依赖的库到jmeter lib/ext目录，否则会报告ClassNotFound错误
+# 注意：下面jar-with-dependencies.jar打包包括jmeter的依赖，导致测试时候有莫名其妙的报错和log.info不能输出日志等问题，
+# 所以不采取jar-with-dependencies.jar方式打包依赖
+#sudo cp ./target/demo-jmeter-customize-plugin-1.0.0-jar-with-dependencies.jar /usr/local/jmeter/lib/ext/demo-jmeter-customize-plugin-1.0.0-jar-with-dependencies.jar
+# 采用复制指定的依赖库方式避免ClassNotFound错误
+COPY ./target/lib/hutool*.jar /usr/local/jmeter/lib/ext/
+COPY ./target/lib/jedis*.jar /usr/local/jmeter/lib/ext/
 
 ENV JMETER_HOME /usr/local/jmeter
 		
