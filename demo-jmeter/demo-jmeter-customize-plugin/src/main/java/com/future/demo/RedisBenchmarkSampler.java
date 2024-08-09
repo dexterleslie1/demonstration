@@ -8,7 +8,9 @@ import org.apache.jmeter.threads.JMeterVariables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.DefaultJedisClientConfig;
+import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisCluster;
 
 import java.util.Random;
 import java.util.UUID;
@@ -26,35 +28,80 @@ public class RedisBenchmarkSampler extends AbstractJavaSamplerClient {
     private static final int KeySuffixMaximum = 10000000;
     private static final Random R = new Random(System.currentTimeMillis());
 
+    /**
+     * 是否连接redis集群
+     */
+    private boolean cluster;
+    /**
+     * 非redis集群客户端
+     */
     Jedis jedis;
+    /**
+     * redis集群客户端
+     */
+    JedisCluster jedisCluster;
 
     @Override
     public void setupTest(JavaSamplerContext context) {
-        if (jedis == null) {
-            String host = context.getParameter("host", "127.0.0.1");
-            int port = context.getIntParameter("port", 6379);
-            String password = context.getParameter("password", "123456");
-            // 注意：暂时没有找到方法当jedis实例创建失败时停止测试
-            jedis = new Jedis(host, port, DefaultJedisClientConfig.builder().password(password).build());
 
-            if (log.isDebugEnabled()) {
-                log.debug("成功创建jedis实例 host {} port {} password *** 线程 {}", host, port, Thread.currentThread().getName());
+        String host = context.getParameter("host", "127.0.0.1");
+        int port = context.getIntParameter("port", 6379);
+        String password = context.getParameter("password", "");
+        boolean cluster = Boolean.parseBoolean(context.getParameter("cluster", "false"));
+        this.cluster = cluster;
+        // 非redis集群
+        if (!this.cluster) {
+            if (jedis == null) {
+                if (password != null && !password.isEmpty()) {
+                    // 注意：暂时没有找到方法当jedis实例创建失败时停止测试
+                    jedis = new Jedis(host, port, DefaultJedisClientConfig.builder().password(password).build());
+
+                    if (log.isDebugEnabled()) {
+                        log.debug("成功创建jedis实例 host {} port {} password *** 线程 {}", host, port, Thread.currentThread().getName());
+                    }
+                } else {
+                    jedis = new Jedis(host, port);
+
+                    if (log.isDebugEnabled()) {
+                        log.debug("成功创建jedis实例 host {} port {} password 无密码模式 线程 {}", host, port, Thread.currentThread().getName());
+                    }
+                }
+            } else {
+                if (log.isDebugEnabled()) {
+                    log.debug("意料之外，jedis实例已经初始化");
+                }
             }
         } else {
-            if (log.isDebugEnabled()) {
-                log.debug("意料之外，jedis实例已经初始化");
+            // redis集群
+            if (this.jedisCluster == null) {
+                this.jedisCluster = new JedisCluster(new HostAndPort(host, port));
+            } else {
+                if (log.isDebugEnabled()) {
+                    log.debug("意料之外，jedisCluster实例已经初始化");
+                }
             }
         }
     }
 
     @Override
     public void teardownTest(JavaSamplerContext context) {
-        if (jedis != null) {
-            jedis.close();
-            jedis = null;
+        if (!this.cluster) {
+            if (jedis != null) {
+                jedis.close();
+                jedis = null;
 
-            if (log.isDebugEnabled()) {
-                log.debug("成功关闭jedis实例");
+                if (log.isDebugEnabled()) {
+                    log.debug("成功关闭jedis实例");
+                }
+            }
+        } else {
+            if (this.jedisCluster != null) {
+                this.jedisCluster.close();
+                this.jedisCluster = null;
+
+                if (log.isDebugEnabled()) {
+                    log.debug("成功关闭jedisCluster实例");
+                }
             }
         }
     }
@@ -67,7 +114,9 @@ public class RedisBenchmarkSampler extends AbstractJavaSamplerClient {
             // redis端口
             addArgument("port", "6379");
             // redis密码
-            addArgument("password", "123456");
+            addArgument("password", "");
+            // 是否集群
+            addArgument("cluster", "false");
         }};
     }
 
@@ -90,7 +139,12 @@ public class RedisBenchmarkSampler extends AbstractJavaSamplerClient {
                 // 写性能
                 String key = KeyPrefix + R.nextInt(KeySuffixMaximum);
                 String value = UUID.randomUUID().toString();
-                this.jedis.set(key, value);
+
+                if (!this.cluster) {
+                    this.jedis.set(key, value);
+                } else {
+                    this.jedisCluster.set(key, value);
+                }
 
                 if (log.isDebugEnabled()) {
                     log.debug("写性能测试随机 key {} value {} 并使用此key和value set", key, value);
@@ -100,7 +154,12 @@ public class RedisBenchmarkSampler extends AbstractJavaSamplerClient {
 
                 // 读性能
                 String key = KeyPrefix + R.nextInt(KeySuffixMaximum);
-                String value = this.jedis.get(key);
+                String value;
+                if (!this.cluster) {
+                    value = this.jedis.get(key);
+                } else {
+                    value = this.jedisCluster.get(key);
+                }
 
                 if (value != null) {
                     context.getJMeterContext().setVariables(new JMeterVariables() {{
