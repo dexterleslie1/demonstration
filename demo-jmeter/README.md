@@ -330,3 +330,11 @@ jmeter -n -t /home/xxx/xxx.jmx -R 192.168.1.1,192.168.1.2
 	2、线程数
 	3、调整Stastic
 	4、queue size=8192
+
+
+
+## 调整`jmeter`日志级别
+
+在开发插件过程中，需要调整`jmeter`日志级别为`DEBUG`以打印插件调试信息，[参考链接](https://www.blazemeter.com/blog/jmeter-logging)
+
+通过`jmeter`菜单修改日志级别，`Options`>`Log Level`>`DEBUG`

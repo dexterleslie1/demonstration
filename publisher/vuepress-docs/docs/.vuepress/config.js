@@ -482,6 +482,7 @@ module.exports = {
                     title: "JMeter用法",
                     children: [
                         '',
+                        '自定义插件.md',
                     ]
                 }
             ], '/spring-cloud/': [
