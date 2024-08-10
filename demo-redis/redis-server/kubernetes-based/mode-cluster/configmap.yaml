@@ -775,7 +775,8 @@ data:
     # rewrite feature.
 
     auto-aof-rewrite-percentage 100
-    auto-aof-rewrite-min-size 64mb
+    # 注意：性能测试环境设置较大的值以避免aof rewrite争夺cpu资源导致qps不稳定
+    auto-aof-rewrite-min-size 50gb
 
     # An AOF file may be found to be truncated at the end during the Redis
     # startup process, when the AOF data gets loaded back into memory.

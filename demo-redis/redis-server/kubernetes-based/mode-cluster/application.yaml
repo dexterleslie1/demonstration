@@ -46,8 +46,9 @@ spec:
         support-only-perf-target: ""
       containers:
         - name: redis
-          # image: redis:5.0.14-bullseye
-          image: redis:7.2.4-bookworm
+          image: redis:5.0.14-bullseye
+          # 注意：使用这个新的镜像似乎redis.conf的持久化配置不生效依旧使用rdb方式
+          # image: redis:7.2.4-bookworm
           imagePullPolicy: IfNotPresent
           # securityContext:
           #   allowPrivilegeEscalation: false
@@ -71,27 +72,27 @@ spec:
           ports:
             - name: redis
               containerPort: 6379
-          livenessProbe:
-            initialDelaySeconds: 0
-            periodSeconds: 1
-            # One second longer than command timeout should prevent generation of zombie processes.
-            timeoutSeconds: 5
-            successThreshold: 1
-            failureThreshold: 5
-            exec:
-              command:
-                - sh
-                - /health/ping_liveness_n_readines_local.sh
-          readinessProbe:
-            initialDelaySeconds: 0
-            periodSeconds: 1
-            timeoutSeconds: 5
-            successThreshold: 1
-            failureThreshold: 5
-            exec:
-              command:
-                - sh
-                - /health/ping_liveness_n_readines_local.sh
+          # livenessProbe:
+          #   initialDelaySeconds: 0
+          #   periodSeconds: 1
+          #   # One second longer than command timeout should prevent generation of zombie processes.
+          #   timeoutSeconds: 5
+          #   successThreshold: 1
+          #   failureThreshold: 5
+          #   exec:
+          #     command:
+          #       - sh
+          #       - /health/ping_liveness_n_readines_local.sh
+          # readinessProbe:
+          #   initialDelaySeconds: 0
+          #   periodSeconds: 1
+          #   timeoutSeconds: 5
+          #   successThreshold: 1
+          #   failureThreshold: 5
+          #   exec:
+          #     command:
+          #       - sh
+          #       - /health/ping_liveness_n_readines_local.sh
           resources:
             limits:
               cpu: 200m
