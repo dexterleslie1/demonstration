@@ -542,6 +542,7 @@ module.exports = {
                     children: [
                         'vsphere安装.md',
                         'vmware-tools.md',
+                        'vmware序列号.md',
                     ]
                 }
             ], '/java-library/': [
