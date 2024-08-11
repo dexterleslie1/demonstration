@@ -109,21 +109,74 @@ public void test_any_parameters_value_match(){
 }
 ```
 
+## 清除之前`mock`调用信息
+
+```java
+// 使用Mockito.clearInvocations清除之前的mock调用信息
+// https://stackoverflow.com/questions/30081161/mockito-does-verify-method-reboot-number-of-times
+@Test
+public void testClearInvocations() {
+    List mockList = Mockito.mock(List.class);
+    mockList.add("1");
+    Mockito.verify(mockList).add("1");
+
+    mockList.add("2");
+    Mockito.verify(mockList).add("2");
+    Mockito.verify(mockList).add("1");
+
+    // 使用clearInvocations清除之前的调用信息
+    Mockito.clearInvocations(mockList);
+    mockList.add("2");
+    Mockito.verify(mockList).add("2");
+    try {
+        // 被clearInvocations，所以之前add("1")的调用信息不存在
+        Mockito.verify(mockList).add("1");
+        Assert.fail("预期异常没有抛出");
+    } catch (Throwable throwable) {
+        Assert.assertTrue(throwable instanceof WantedButNotInvoked);
+    }
+}
+```
+
+
+
 ## 使用`ArgumentMatcher`匹配指定参数
-
-> todo ...
-
-## 调用`verify`验证时匹配调用参数
 
 > todo ...
 
 ## `ArgumentCaptor`使用
 
-> todo ...
+```java
+/**
+ * 验证调用时的参数
+ * https://stackoverflow.com/questions/3555472/mockito-verify-method-arguments
+ * https://ioflood.com/blog/mockito-verify/
+ */
+@Test
+public void testArgumentCaptor() {
+    List mockList = Mockito.mock(List.class);
+    mockList.add(new MyArgument("Dexter"));
 
-## 测试`mock`对象是否已调用指定函数
+    ArgumentCaptor<MyArgument> argumentCaptor = ArgumentCaptor.forClass(MyArgument.class);
+    Mockito.verify(mockList).add(argumentCaptor.capture());
+    // 验证方法使用预期的参数调用
+    Assert.assertEquals("Dexter", argumentCaptor.getValue().getName());
+}
 
-> todo ...
+public static class MyArgument {
+    private String name;
+
+    public MyArgument(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+}
+```
+
+
 
 ## 模拟抛出异常
 
@@ -213,13 +266,64 @@ public void testDifferentWithDoReturnAndDoAnswer() {
 
 
 
-## 验证调用次数
+## 验证调用次数或者未调用
 
-> todo ...
+```java
+/**
+ * 验证调用次数或者未调用
+ */
+@Test
+public void verifying_number_of_invocations() {
+    List list = Mockito.mock(List.class);
+    list.add(1);
+    list.add(2);
+    list.add(2);
+    list.add(3);
+    list.add(3);
+    list.add(3);
+    //验证是否被调用一次，等效于下面的times(1)
+    Mockito.verify(list).add(1);
+    Mockito.verify(list, Mockito.times(1)).add(1);
+    //验证是否被调用2次
+    Mockito.verify(list, Mockito.times(2)).add(2);
+    //验证是否被调用3次
+    Mockito.verify(list, Mockito.times(3)).add(3);
+    //验证是否从未被调用过
+    Mockito.verify(list, Mockito.never()).add(4);
+    //验证至少调用一次
+    Mockito.verify(list, Mockito.atLeastOnce()).add(1);
+    //验证至少调用2次
+    Mockito.verify(list, Mockito.atLeast(2)).add(2);
+    //验证至多调用3次
+    Mockito.verify(list, Mockito.atMost(3)).add(3);
+}
+```
 
-## 执行顺序
+## 验证调用顺序
 
-> todo ...
+```java
+/**
+ * 验证调用顺序
+ */
+@Test
+public void verification_in_order() {
+    List list = Mockito.mock(List.class);
+    List list2 = Mockito.mock(List.class);
+    list.add(1);
+    list2.add("hello");
+    list.add(2);
+    list2.add("world");
+    //将需要排序的mock对象放入InOrder
+    InOrder inOrder = Mockito.inOrder(list, list2);
+    //下面的代码不能颠倒顺序，验证执行顺序
+    inOrder.verify(list).add(1);
+    inOrder.verify(list2).add("hello");
+    inOrder.verify(list).add(2);
+    inOrder.verify(list2).add("world");
+}
+```
+
+
 
 ## 真实对象`spy`
 

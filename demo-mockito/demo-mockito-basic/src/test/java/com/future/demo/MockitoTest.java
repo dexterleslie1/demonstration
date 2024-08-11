@@ -6,8 +6,10 @@ import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
+import org.mockito.exceptions.verification.WantedButNotInvoked;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
@@ -71,7 +73,7 @@ public class MockitoTest {
     }
 
     /**
-     * 验证调用次数
+     * 验证调用次数或者未调用
      */
     @Test
     public void verifying_number_of_invocations() {
@@ -100,7 +102,7 @@ public class MockitoTest {
     }
 
     /**
-     * 执行顺序
+     * 验证调用顺序
      */
     @Test
     public void verification_in_order() {
@@ -194,5 +196,58 @@ public class MockitoTest {
 
         String str = myFinalClass.sayHello();
         Assert.assertEquals("H", str);
+    }
+
+    // 使用Mockito.clearInvocations清除之前的mock调用信息
+    // https://stackoverflow.com/questions/30081161/mockito-does-verify-method-reboot-number-of-times
+    @Test
+    public void testClearInvocations() {
+        List mockList = Mockito.mock(List.class);
+        mockList.add("1");
+        Mockito.verify(mockList).add("1");
+
+        mockList.add("2");
+        Mockito.verify(mockList).add("2");
+        Mockito.verify(mockList).add("1");
+
+        // 使用clearInvocations清除之前的调用信息
+        Mockito.clearInvocations(mockList);
+        mockList.add("2");
+        Mockito.verify(mockList).add("2");
+        try {
+            // 被clearInvocations，所以之前add("1")的调用信息不存在
+            Mockito.verify(mockList).add("1");
+            Assert.fail("预期异常没有抛出");
+        } catch (Throwable throwable) {
+            Assert.assertTrue(throwable instanceof WantedButNotInvoked);
+        }
+    }
+
+    /**
+     * 验证调用时的参数
+     * https://stackoverflow.com/questions/3555472/mockito-verify-method-arguments
+     * https://ioflood.com/blog/mockito-verify/
+     */
+    @Test
+    public void testArgumentCaptor() {
+        List mockList = Mockito.mock(List.class);
+        mockList.add(new MyArgument("Dexter"));
+
+        ArgumentCaptor<MyArgument> argumentCaptor = ArgumentCaptor.forClass(MyArgument.class);
+        Mockito.verify(mockList).add(argumentCaptor.capture());
+        // 验证方法使用预期的参数调用
+        Assert.assertEquals("Dexter", argumentCaptor.getValue().getName());
+    }
+
+    public static class MyArgument {
+        private String name;
+
+        public MyArgument(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return name;
+        }
     }
 }
