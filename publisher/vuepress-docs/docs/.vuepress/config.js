@@ -331,6 +331,7 @@ module.exports = {
                         'spring-boot的@EnableXxx使用.md',
                         '通过parent或dependencymanagement方式管理spring-boot依赖.md',
                         '横向扩展.md',
+                        'spring-boot-quartz.md',
                     ]
                 }
             ], '/java/': [
