@@ -264,6 +264,7 @@ module.exports = {
                         'spring-boot集成redisson.md',
                         'redisson用法.md',
                         'kubernetes运行redis.md',
+                        '持久化.md',
                     ]
                 }
             ], '/mybatis/': [
