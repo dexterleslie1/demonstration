@@ -44,24 +44,6 @@ mvn wrapper:wrapper -Dmaven=3.5.4
 
 
 
-## maven 插件
-
-
-
-### 使用 maven-clean-plugin 插件删除指定文件
-
-参考
-
-> demo-mave-clean-plugin
-
-执行 mvn clean 时 maven-clean-plugin 会根据配置删除指定文件
-
-```sh
-mvn clean
-```
-
-
-
 ## 配置maven的mvn deploy用户凭证
 
 在~/.m2/settings.xml中加入
