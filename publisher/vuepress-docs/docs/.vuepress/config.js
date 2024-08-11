@@ -289,6 +289,7 @@ module.exports = {
                         'dependencymanagement用法.md',
                         'maven的optional用法.md',
                         'maven发布带main函数可执行jar.md',
+                        'maven插件.md',
                     ]
                 }
             ], '/git/': [
