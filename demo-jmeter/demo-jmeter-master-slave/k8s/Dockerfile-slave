@@ -1,7 +1,8 @@
 FROM demo-k8s-jmeter-base:latest
 
-COPY jmeter-slave-tmpl /usr/local/jmeter/bin/jmeter
-RUN chmod +x /usr/local/jmeter/bin/jmeter
+RUN grep -q "^HEAP=\"" /usr/local/jmeter/bin/jmeter \
+    && sed -i '/^HEAP=\"/c HEAP=\"-Xmx3g -Xms3g\"' /usr/local/jmeter/bin/jmeter \
+    || sed -i '/^# resolve links/i HEAP=\"-Xmx3g -Xms3g\"' /usr/local/jmeter/bin/jmeter
 COPY jmeter.properties /usr/local/jmeter/bin/jmeter.properties
 
 EXPOSE 1099 50000
