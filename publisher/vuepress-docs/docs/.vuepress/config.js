@@ -74,8 +74,7 @@ module.exports = {
             }, {
                 text: '后端相关技术',
                 items: [
-                    { text: 'MySQL', link: '/MySQL/' },
-                    { text: 'MariaDB', link: '/MariaDB/' },
+                    { text: 'MySQL、MariaDB', link: '/mysql-n-mariadb/' },
                     { text: 'MyBatis-plus', link: '/mybatis/' },
                     { text: 'Redis', link: '/redis/' },
                     { text: 'Maven', link: '/maven/' },
@@ -155,22 +154,23 @@ module.exports = {
                     'intellij全家桶破解.md',
                 ],
             }],
-            '/MySQL/': [
+            '/mysql-n-mariadb/': [
                 {
-                    title: "MySQL学习",
+                    title: "MySQL、MariaDB学习",
                     children: [
-                        '使用docker-compose运行MySQL.md',
+                        '运行mysql和mariadb.md',
+                        'binlog.md',
+                        'mysql-cli快捷键.md',
                         'mysql备份和还原.md',
-                        'mysql存储过程.md',
+                        'mysql锁.md',
+                        '事务.md',
+                        '分区表.md',
+                        '初始化数据库.md',
+                        '变量.md',
                         '启用或关闭慢日志.md',
+                        '存储过程.md',
                         '性能分析.md',
-                    ]
-                }
-            ], '/MariaDB/': [
-                {
-                    title: "MariaDB学习",
-                    children: [
-                        '使用容器运行.md',
+                        '用户和权限管理.md',
                         '自动更新数据库.md',
                     ]
                 }

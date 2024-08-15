@@ -1,5 +1,9 @@
 # `arthas`使用
 
+## 参考资料
+
+>[用arthas排查java服务内存占用过高 arthas堆外内存分析](https://blog.51cto.com/u_16099193/9207218)
+
 ## `arthas`安装和运行
 
 >[参考链接](https://arthas.aliyun.com/doc/quick-start.html)
