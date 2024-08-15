@@ -2,7 +2,7 @@
 
 ## 使用容器运行单机版`mysql`
 
->示例详细用法请参考 [链接](https://github.com/dexterleslie1/demonstration/tree/master/demo-mysql/mysql-server/standalone)
+>示例详细用法请参考 [链接](https://gitee.com/dexterleslie/demonstration/tree/master/demo-mysql/mysql-server/standalone)
 
 1. 准备实验环境
 
@@ -72,7 +72,7 @@
 
 ## 使用容器运行单机版`mariadb`
 
-> 使用`docker`运行单机版`mariadb`参考[链接](https://github.com/dexterleslie1/demonstration/tree/master/demo-mariadb/mariadb-server/standalone)
+> 使用`docker`运行单机版`mariadb`参考[链接](https://gitee.com/dexterleslie/demonstration/tree/master/demo-mysql-n-mariadb/mariadb-server/standalone)
 
 `.env`定义数据库密码
 
