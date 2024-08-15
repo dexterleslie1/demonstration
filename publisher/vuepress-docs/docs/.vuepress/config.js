@@ -347,6 +347,10 @@ module.exports = {
                         'metaspace与permgen.md',
                         '合理设置jvm内存.md',
                         'jmh.md',
+                        'arthas使用.md',
+                        'cpu性能分析.md',
+                        'jprofiler用法.md',
+                        'oom分析.md',
                     ]
                 }
             ], '/logback/': [
