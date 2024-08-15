@@ -1,14 +1,11 @@
 version: "3.0"
 
-# 创建网络
-networks:
-  net:
-    name: demo-elasticsearch8
-
 services:
   demo-elasticsearch8:
-    container_name: demo-elasticsearch8
-    image: docker.118899.net:10001/yyd-public/demo-elasticsearch8
+    build:
+      context: .
+      dockerfile: Dockerfile-elasticsearch
+    image: demo-elasticsearch8-dev
     environment:
       - ES_JAVA_OPTS=-Xms512m -Xmx512m
       - discovery.type=single-node
@@ -21,19 +18,16 @@ services:
       - xpack.security.enabled=false
       - xpack.security.http.ssl.enabled=false
       - xpack.security.transport.ssl.enabled=false
+    volumes:
+      - ./elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
     ports:
       - 9200:9200
-    networks:
-      - net
 
   demo-kibana8:
-    container_name: demo-kibana8
     image: kibana:8.1.2
     environment:
       ELASTICSEARCH_HOSTS: http://demo-elasticsearch8:9200
     ports:
       - 5601:5601
-    networks:
-      - net
     depends_on:
       - demo-elasticsearch8

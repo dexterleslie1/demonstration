@@ -1,14 +1,11 @@
 version: "3.0"
 
-# 创建网络
-networks:
-  net:
-    name: demo-elasticsearch
-
 services:
   demo-elasticsearch:
-    container_name: demo-elasticsearch
-    image: docker.118899.net:10001/yyd-public/demo-elasticsearch
+    build:
+      context: .
+      dockerfile: Dockerfile-elasticsearch
+    image: demo-elasticsearch-dev
     environment:
       - ES_JAVA_OPTS=-Xms512m -Xmx512m
       - discovery.type=single-node
@@ -22,29 +19,22 @@ services:
       - 9300:9300
     volumes:
      - ~/data-demo-elasticsearch7:/usr/share/elasticsearch/data
-    networks:
-      - net
+     - ./elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
 
   demo-kibana:
-    container_name: demo-kibana
     image: kibana:7.8.0
     environment:
       - ELASTICSEARCH_HOSTS=http://demo-elasticsearch:9200
     ports:
       - 5601:5601
-    networks:
-      - net
     depends_on:
       - demo-elasticsearch
 
   demo-elasticsearch-ik-ext:
-    container_name: demo-elasticsearch-ik-ext
     image: openresty/openresty
     volumes:
      - ./ik_dict.txt:/usr/local/openresty/nginx/html/ik_dict.txt
      - ./nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf
     #ports:
     # - 80:80
-    networks:
-     - net
 

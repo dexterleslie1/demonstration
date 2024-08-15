@@ -92,6 +92,7 @@ module.exports = {
                     { text: 'Openresty', link: '/openresty/' },
                     { text: 'JMeter用法', link: '/jmeter/' },
                     { text: 'Kubernetes', link: '/kubernetes/' },
+                    { text: 'Elasticsearch、Kibana', link: '/elasticsearch/' },
                 ]
             },
             {
@@ -553,6 +554,14 @@ module.exports = {
                     title: "Java相关库使用",
                     children: [
                         'awaitility使用.md',
+                    ]
+                }
+            ], '/elasticsearch/': [
+                {
+                    title: "ElasticSearch、Kibana使用",
+                    children: [
+                        '运行elasticsearch.md',
+                        '常见错误.md',
                     ]
                 }
             ],

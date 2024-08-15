@@ -32,19 +32,6 @@
 *较新版本elasticsearch推荐使用这个客户端操作elasticsearch*<br>
 [Elasticsearch Java API Client](https://www.elastic.co/guide/en/elasticsearch/client/java-api-client/current/index.html)
 
-## 使用docker运行elasticsearch、kibana
-
-```shell script
-# 启动elasticsearch
-docker-compose up -d
-
-# 删除elasticsearch
-docker-compose down
-
-# 访问kibana
-http://localhost:5601
-```
-
 ## RESTful操作elasticsearch
 
 ### 使用 _analyze 查看分词情况

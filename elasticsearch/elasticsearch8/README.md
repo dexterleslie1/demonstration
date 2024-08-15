@@ -19,13 +19,3 @@
 [Java Low Level REST Client](https://www.elastic.co/guide/en/elasticsearch/client/java-rest/current/java-rest-low.html) <br><br>
 *较新版本elasticsearch推荐使用这个客户端操作elasticsearch*<br>
 [Elasticsearch Java API Client](https://www.elastic.co/guide/en/elasticsearch/client/java-api-client/current/index.html)
-
-## 使用docker-compose运行elasticsearch
-
-```shell script
-# 启动elasticsearch
-docker-compose up -d
-
-# 删除elasticsearch
-docker-compose down
-```
