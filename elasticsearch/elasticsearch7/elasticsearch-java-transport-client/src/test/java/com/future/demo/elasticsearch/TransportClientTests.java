@@ -1,5 +1,7 @@
 package com.future.demo.elasticsearch;
 
+import com.future.common.json.JSONUtil;
+import lombok.Data;
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.DocWriteResponse;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
@@ -17,6 +19,7 @@ import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
+import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.IndexNotFoundException;
 import org.elasticsearch.index.query.Operator;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -25,7 +28,6 @@ import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryAction;
 import org.elasticsearch.index.reindex.DeleteByQueryRequestBuilder;
 import org.elasticsearch.rest.RestStatus;
-import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.terms.LongTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
@@ -43,6 +45,9 @@ import org.junit.Test;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class TransportClientTests {
@@ -80,33 +85,33 @@ public class TransportClientTests {
         // https://www.elastic.co/guide/en/elasticsearch/client/java-api/6.8/java-admin-indices.html
         XContentBuilder builder = XContentFactory.jsonBuilder()
                 .startObject()
-                    .startObject("properties")
-                        .startObject("id")
-                            .field("type", "long")
-                            .field("store", false)
-                        .endObject()
-                        .startObject("province")
-                            .field("type", "keyword")
-                            .field("store", false)
-                        .endObject()
-                        .startObject("title")
-                            .field("type", "text")
-                            .field("store", false)
-                            .field("index", true)
-                            .field("analyzer", "ik_max_word")
-                        .endObject()
-                        .startObject("content")
-                            .field("type", "text")
-                            .field("store", false)
-                            .field("index", true)
-                            .field("analyzer", "ik_max_word")
-                        .endObject()
-                        .startObject("views")
-                            .field("type", "integer")
-                            .field("store", false)
-                            .field("index", true)
-                        .endObject()
-                    .endObject()
+                .startObject("properties")
+                .startObject("id")
+                .field("type", "long")
+                .field("store", false)
+                .endObject()
+                .startObject("province")
+                .field("type", "keyword")
+                .field("store", false)
+                .endObject()
+                .startObject("title")
+                .field("type", "text")
+                .field("store", false)
+                .field("index", true)
+                .field("analyzer", "ik_max_word")
+                .endObject()
+                .startObject("content")
+                .field("type", "text")
+                .field("store", false)
+                .field("index", true)
+                .field("analyzer", "ik_max_word")
+                .endObject()
+                .startObject("views")
+                .field("type", "integer")
+                .field("store", false)
+                .field("index", true)
+                .endObject()
+                .endObject()
                 .endObject();
         AcknowledgedResponse acknowledgedResponse = client.admin().indices().preparePutMapping(IndexDemo)
                 .setType("_doc")
@@ -116,21 +121,21 @@ public class TransportClientTests {
         // 创建文档
         // https://www.elastic.co/guide/en/elasticsearch/client/java-api/6.8/java-docs-index.html
         // NOTE: 在版本6.8.0 content内容为“我是黎明前的黑暗”时，批量创建索引api会报错，解决办法升级到7.8.0
-        idToTitleAndContentMapper.put(1L, new Object[] {"Elasticsearch -发- 版本：6.8.8", "文章参考如下链接，但有些内容可能过时，以实践结果为主：", "广东", 10});
-        idToTitleAndContentMapper.put(2L, new Object[] {"35个项目首次参赛的背后——版本北京冬奥会推动中国冬季运动跨越式发展", "7日，当中国高山滑雪选手徐铭甫在北京冬奥会男子滑降比赛中冲过终点时，中国高山滑雪运动也在这一刻取得了历史性的突破——这是历史上中国选手首次参加并完成奥运会高山滑雪男子滑降的比赛。", "广东", 5});
-        idToTitleAndContentMapper.put(3L, new Object[] {"北京冬奥会 | 燃！这个冬天，看中国的00后在干什么", "他们不畏中国强手敢打敢拼", "广东", 20});
-        idToTitleAndContentMapper.put(4L, new Object[] {"日本运动员发文点赞冬奥志愿者 广东网友热议“好暖”", "太田雄贵在推文中说，“在前往开幕式会场的大巴上，冬奥志愿者们用英文提示大家当天的注意事项，可能因为反复练习，使用的文稿纸张有不少折痕。当志愿者略带紧张地宣读完毕后，车上的乘客纷纷用热烈的掌声赞美他们的努力，现场呈现出一幅很棒的画面”。", "北京", 100});
-        idToTitleAndContentMapper.put(5L, new Object[] {"春节假期全国揽收投递快递包裹7.49亿件", "春节期间，全国中国邮政快递业运行情况总体安全稳定，邮政快递服务业务量增幅突破较大。其中，揽收快递包裹4.2亿件，与2019年、2020年、2021年农历同期相比分别增长545%、338%、12.04%；投递快递包裹3.29亿件，与2019年、2020年、2021年农历同期相比分别增长645%、280%、21.6%。", "上海", 50});
+        idToTitleAndContentMapper.put(1L, new Object[]{"Elasticsearch -发- 版本：6.8.8", "文章参考如下链接，但有些内容可能过时，以实践结果为主：", "广东", 10});
+        idToTitleAndContentMapper.put(2L, new Object[]{"35个项目首次参赛的背后——版本北京冬奥会推动中国冬季运动跨越式发展", "7日，当中国高山滑雪选手徐铭甫在北京冬奥会男子滑降比赛中冲过终点时，中国高山滑雪运动也在这一刻取得了历史性的突破——这是历史上中国选手首次参加并完成奥运会高山滑雪男子滑降的比赛。", "广东", 5});
+        idToTitleAndContentMapper.put(3L, new Object[]{"北京冬奥会 | 燃！这个冬天，看中国的00后在干什么", "他们不畏中国强手敢打敢拼", "广东", 20});
+        idToTitleAndContentMapper.put(4L, new Object[]{"日本运动员发文点赞冬奥志愿者 广东网友热议“好暖”", "太田雄贵在推文中说，“在前往开幕式会场的大巴上，冬奥志愿者们用英文提示大家当天的注意事项，可能因为反复练习，使用的文稿纸张有不少折痕。当志愿者略带紧张地宣读完毕后，车上的乘客纷纷用热烈的掌声赞美他们的努力，现场呈现出一幅很棒的画面”。", "北京", 100});
+        idToTitleAndContentMapper.put(5L, new Object[]{"春节假期全国揽收投递快递包裹7.49亿件", "春节期间，全国中国邮政快递业运行情况总体安全稳定，邮政快递服务业务量增幅突破较大。其中，揽收快递包裹4.2亿件，与2019年、2020年、2021年农历同期相比分别增长545%、338%、12.04%；投递快递包裹3.29亿件，与2019年、2020年、2021年农历同期相比分别增长645%、280%、21.6%。", "上海", 50});
         Set<Long> keySet = idToTitleAndContentMapper.keySet();
         keySet.forEach(idTemporary -> {
             try {
                 XContentBuilder builderTemporary = XContentFactory.jsonBuilder()
                         .startObject()
-                            .field("id", idTemporary)
-                            .field("title", idToTitleAndContentMapper.get(idTemporary)[0])
-                            .field("content", idToTitleAndContentMapper.get(idTemporary)[1])
-                            .field("province", idToTitleAndContentMapper.get(idTemporary)[2])
-                            .field("views", idToTitleAndContentMapper.get(idTemporary)[3])
+                        .field("id", idTemporary)
+                        .field("title", idToTitleAndContentMapper.get(idTemporary)[0])
+                        .field("content", idToTitleAndContentMapper.get(idTemporary)[1])
+                        .field("province", idToTitleAndContentMapper.get(idTemporary)[2])
+                        .field("views", idToTitleAndContentMapper.get(idTemporary)[3])
                         .endObject();
                 IndexResponse indexResponse = client.prepareIndex(IndexDemo, "_doc", String.valueOf(idTemporary))
                         .setSource(builderTemporary)
@@ -149,7 +154,7 @@ public class TransportClientTests {
     @After
     public void after() throws IOException {
         // https://www.elastic.co/guide/en/elasticsearch/client/java-api/6.8/transport-client.html
-        if(client != null) {
+        if (client != null) {
             client.close();
         }
     }
@@ -174,7 +179,7 @@ public class TransportClientTests {
         Assert.assertEquals(String.valueOf(id), getResponse.getId());
         Assert.assertEquals(IndexDemo, getResponse.getIndex());
         Assert.assertTrue(getResponse.isExists());
-        Assert.assertEquals(id, new Long((Integer)getResponse.getSource().get("id")));
+        Assert.assertEquals(id, new Long((Integer) getResponse.getSource().get("id")));
         Assert.assertEquals(idToTitleAndContentMapper.get(id)[0], getResponse.getSource().get("title"));
         Assert.assertEquals(idToTitleAndContentMapper.get(id)[1], getResponse.getSource().get("content"));
 
@@ -262,10 +267,10 @@ public class TransportClientTests {
 
     @Test
     public void test_wildcard_query() {
-        SearchResponse searchResponse = client.prepareSearch(IndexDemo).setQuery(QueryBuilders.wildcardQuery("title","发?")).get();
+        SearchResponse searchResponse = client.prepareSearch(IndexDemo).setQuery(QueryBuilders.wildcardQuery("title", "发?")).get();
         Assert.assertEquals(2, searchResponse.getHits().getTotalHits().value);
 
-        searchResponse = client.prepareSearch(IndexDemo).setQuery(QueryBuilders.wildcardQuery("title","发*")).get();
+        searchResponse = client.prepareSearch(IndexDemo).setQuery(QueryBuilders.wildcardQuery("title", "发*")).get();
         Assert.assertEquals(3, searchResponse.getHits().getTotalHits().value);
     }
 
@@ -286,27 +291,27 @@ public class TransportClientTests {
 
         XContentBuilder xContentBuilder = XContentFactory.jsonBuilder()
                 .startObject()
-                    .startObject("properties")
-                        .startObject("id")
-                            .field("type", "long")
-                            .field("store", false)
-                        .endObject()
-                        .startObject("name")
-                            .field("type", "keyword")
-                            .field("store", false)
-                        .endObject()
-                    .endObject()
+                .startObject("properties")
+                .startObject("id")
+                .field("type", "long")
+                .field("store", false)
+                .endObject()
+                .startObject("name")
+                .field("type", "keyword")
+                .field("store", false)
+                .endObject()
+                .endObject()
                 .endObject();
 
         AcknowledgedResponse acknowledgedResponse = client.admin().indices().preparePutMapping(indexname).setType("_doc").setSource(xContentBuilder).get();
         Assert.assertTrue(acknowledgedResponse.isAcknowledged());
 
         int total = 10;
-        for(int i=1; i<=total; i++) {
+        for (int i = 1; i <= total; i++) {
             xContentBuilder = XContentFactory.jsonBuilder()
                     .startObject()
-                        .field("id", i)
-                        .field("name", "name" + i)
+                    .field("id", i)
+                    .field("name", "name" + i)
                     .endObject();
             IndexResponse indexResponse = client.prepareIndex(indexname, "_doc", String.valueOf(i))
                     .setSource(xContentBuilder)
@@ -449,8 +454,8 @@ public class TransportClientTests {
         // 省份是广东时title必须包含“干什么”
         queryBuilder = QueryBuilders.boolQuery()
                 .should(QueryBuilders.boolQuery()
-                            .must(QueryBuilders.termQuery("province", "广东"))
-                            .must(QueryBuilders.termQuery("title", "干什么")))
+                        .must(QueryBuilders.termQuery("province", "广东"))
+                        .must(QueryBuilders.termQuery("title", "干什么")))
                 .should(QueryBuilders.termQuery("province", "北京"));
         searchResponse = client.prepareSearch(IndexDemo).setQuery(queryBuilder)
                 .addSort(SortBuilders.fieldSort("id").order(SortOrder.DESC)).get();
@@ -461,11 +466,11 @@ public class TransportClientTests {
         // title不能包含跨越
         // content包含中国或者突破
         queryBuilder = QueryBuilders.boolQuery()
-            .must(QueryBuilders.termsQuery("province", "广东", "北京"))
-            // title不能包含“跨越”关键词
-            .mustNot(QueryBuilders.termQuery("title", "跨越"))
-            // content中包含“中国”或者“突破”关键词
-            .must(QueryBuilders.matchQuery("content", "中国突破").operator(Operator.OR));
+                .must(QueryBuilders.termsQuery("province", "广东", "北京"))
+                // title不能包含“跨越”关键词
+                .mustNot(QueryBuilders.termQuery("title", "跨越"))
+                // content中包含“中国”或者“突破”关键词
+                .must(QueryBuilders.matchQuery("content", "中国突破").operator(Operator.OR));
         searchResponse = client.prepareSearch(IndexDemo).setQuery(queryBuilder).get();
         Assert.assertEquals("3", searchResponse.getHits().getHits()[0].getId());
 
@@ -567,9 +572,9 @@ public class TransportClientTests {
 //        searchResponse.getAggregations().forEach(System.out::println);
 
         // 判断是否有三个省份
-        Assert.assertEquals(3, ((StringTerms)searchResponse.getAggregations().get("groupProvince")).getBuckets().size());
-        Set<String> provinceSet = idToTitleAndContentMapper.values().stream().map(objects -> (String)objects[2]).collect(Collectors.toSet());
-        ((StringTerms)searchResponse.getAggregations().get("groupProvince")).getBuckets().forEach(bucket -> Assert.assertTrue(provinceSet.contains(bucket.getKeyAsString())));
+        Assert.assertEquals(3, ((StringTerms) searchResponse.getAggregations().get("groupProvince")).getBuckets().size());
+        Set<String> provinceSet = idToTitleAndContentMapper.values().stream().map(objects -> (String) objects[2]).collect(Collectors.toSet());
+        ((StringTerms) searchResponse.getAggregations().get("groupProvince")).getBuckets().forEach(bucket -> Assert.assertTrue(provinceSet.contains(bucket.getKeyAsString())));
 
         // 广东doc=2
         Assert.assertEquals(2, ((StringTerms) searchResponse.getAggregations().get("groupProvince")).getBucketByKey("广东").getDocCount());
@@ -579,15 +584,15 @@ public class TransportClientTests {
         Assert.assertEquals(1, ((StringTerms) searchResponse.getAggregations().get("groupProvince")).getBucketByKey("北京").getDocCount());
 
         // 广东=25
-        Assert.assertEquals(25.0, ((InternalSum)((StringTerms)searchResponse.getAggregations().get("groupProvince")).getBucketByKey("广东").getAggregations().get("groupViewsSum")).getValue(), 0);
+        Assert.assertEquals(25.0, ((InternalSum) ((StringTerms) searchResponse.getAggregations().get("groupProvince")).getBucketByKey("广东").getAggregations().get("groupViewsSum")).getValue(), 0);
         // 上海=50
-        Assert.assertEquals(50.0, ((InternalSum)((StringTerms)searchResponse.getAggregations().get("groupProvince")).getBucketByKey("上海").getAggregations().get("groupViewsSum")).getValue(), 0);
+        Assert.assertEquals(50.0, ((InternalSum) ((StringTerms) searchResponse.getAggregations().get("groupProvince")).getBucketByKey("上海").getAggregations().get("groupViewsSum")).getValue(), 0);
         // 北京=100
-        Assert.assertEquals(100.0, ((InternalSum)((StringTerms)searchResponse.getAggregations().get("groupProvince")).getBucketByKey("北京").getAggregations().get("groupViewsSum")).getValue(), 0);
+        Assert.assertEquals(100.0, ((InternalSum) ((StringTerms) searchResponse.getAggregations().get("groupProvince")).getBucketByKey("北京").getAggregations().get("groupViewsSum")).getValue(), 0);
 
-        Assert.assertEquals(20.0, ((InternalMax)((StringTerms) searchResponse.getAggregations().get("groupProvince")).getBucketByKey("广东").getAggregations().get("groupViewsMax")).getValue(), 0);
-        Assert.assertEquals(50.0, ((InternalMax)((StringTerms) searchResponse.getAggregations().get("groupProvince")).getBucketByKey("上海").getAggregations().get("groupViewsMax")).getValue(), 0);
-        Assert.assertEquals(100.0, ((InternalMax)((StringTerms) searchResponse.getAggregations().get("groupProvince")).getBucketByKey("北京").getAggregations().get("groupViewsMax")).getValue(), 0);
+        Assert.assertEquals(20.0, ((InternalMax) ((StringTerms) searchResponse.getAggregations().get("groupProvince")).getBucketByKey("广东").getAggregations().get("groupViewsMax")).getValue(), 0);
+        Assert.assertEquals(50.0, ((InternalMax) ((StringTerms) searchResponse.getAggregations().get("groupProvince")).getBucketByKey("上海").getAggregations().get("groupViewsMax")).getValue(), 0);
+        Assert.assertEquals(100.0, ((InternalMax) ((StringTerms) searchResponse.getAggregations().get("groupProvince")).getBucketByKey("北京").getAggregations().get("groupViewsMax")).getValue(), 0);
     }
 
     @Test
@@ -607,12 +612,12 @@ public class TransportClientTests {
 
         XContentBuilder xContentBuilder = XContentFactory.jsonBuilder()
                 .startObject()
-                    .startObject("properties")
-                        .startObject("groupId")
-                            .field("type", "long")
-                            .field("store", false)
-                        .endObject()
-                    .endObject()
+                .startObject("properties")
+                .startObject("groupId")
+                .field("type", "long")
+                .field("store", false)
+                .endObject()
+                .endObject()
                 .endObject();
 
         AcknowledgedResponse acknowledgedResponse = client.admin().indices().preparePutMapping(indexname).setType("_doc").setSource(xContentBuilder).get();
@@ -621,7 +626,7 @@ public class TransportClientTests {
         TermsAggregationBuilder termsAggregationBuilder = AggregationBuilders.terms("byGroupId").field("groupId");
 
         SearchResponse searchResponse = client.prepareSearch(indexname).addAggregation(termsAggregationBuilder).get();
-        Assert.assertEquals(0, ((LongTerms)searchResponse.getAggregations().get("byGroupId")).getBuckets().size());
+        Assert.assertEquals(0, ((LongTerms) searchResponse.getAggregations().get("byGroupId")).getBuckets().size());
 
         List<Long> groupIdList = Arrays.asList(1L, 2L, 2L, 3L, 5L, 5L);
         groupIdList.forEach(groupId -> {
@@ -645,11 +650,11 @@ public class TransportClientTests {
         termsAggregationBuilder = AggregationBuilders.terms("byGroupId").field("groupId");
 
         searchResponse = client.prepareSearch(indexname).addAggregation(termsAggregationBuilder).get();
-        Assert.assertEquals(4, ((LongTerms)searchResponse.getAggregations().get("byGroupId")).getBuckets().size());
-        Assert.assertEquals(1, ((LongTerms)searchResponse.getAggregations().get("byGroupId")).getBucketByKey("1").getDocCount());
-        Assert.assertEquals(2, ((LongTerms)searchResponse.getAggregations().get("byGroupId")).getBucketByKey("2").getDocCount());
-        Assert.assertEquals(1, ((LongTerms)searchResponse.getAggregations().get("byGroupId")).getBucketByKey("3").getDocCount());
-        Assert.assertEquals(2, ((LongTerms)searchResponse.getAggregations().get("byGroupId")).getBucketByKey("5").getDocCount());
+        Assert.assertEquals(4, ((LongTerms) searchResponse.getAggregations().get("byGroupId")).getBuckets().size());
+        Assert.assertEquals(1, ((LongTerms) searchResponse.getAggregations().get("byGroupId")).getBucketByKey("1").getDocCount());
+        Assert.assertEquals(2, ((LongTerms) searchResponse.getAggregations().get("byGroupId")).getBucketByKey("2").getDocCount());
+        Assert.assertEquals(1, ((LongTerms) searchResponse.getAggregations().get("byGroupId")).getBucketByKey("3").getDocCount());
+        Assert.assertEquals(2, ((LongTerms) searchResponse.getAggregations().get("byGroupId")).getBucketByKey("5").getDocCount());
     }
 
     @Test
@@ -661,7 +666,7 @@ public class TransportClientTests {
         Assert.assertEquals(DocWriteResponse.Result.DELETED, deleteResponse.getResult());
 
         SearchResponse searchResponse = client.prepareSearch(IndexDemo).setQuery(QueryBuilders.matchAllQuery()).get();
-        Assert.assertEquals(idToTitleAndContentMapper.size()-1, searchResponse.getHits().getTotalHits().value);
+        Assert.assertEquals(idToTitleAndContentMapper.size() - 1, searchResponse.getHits().getTotalHits().value);
         searchResponse.getHits().forEach(hit -> Assert.assertNotEquals("1", hit.getId()));
 
         // 根据查询删除
@@ -675,7 +680,7 @@ public class TransportClientTests {
         Assert.assertEquals(1, bulkByScrollResponse.getDeleted());
 
         searchResponse = client.prepareSearch(IndexDemo).setQuery(QueryBuilders.matchAllQuery()).get();
-        Assert.assertEquals(idToTitleAndContentMapper.size()-2, searchResponse.getHits().getTotalHits().value);
+        Assert.assertEquals(idToTitleAndContentMapper.size() - 2, searchResponse.getHits().getTotalHits().value);
         searchResponse.getHits().forEach(hit -> {
             Assert.assertNotEquals("1", hit.getId());
             Assert.assertNotEquals("2", hit.getId());
@@ -703,11 +708,11 @@ public class TransportClientTests {
                 bulkRequestBuilder.add(client.prepareIndex(IndexDemo, "_doc", String.valueOf(key))
                         .setSource(XContentFactory.jsonBuilder()
                                 .startObject()
-                                    .field("id", key)
-                                    .field("title", idToTitleAndContentMapper.get(key)[0])
-                                    .field("content", idToTitleAndContentMapper.get(key)[1])
-                                    .field("province", idToTitleAndContentMapper.get(key)[2])
-                                    .field("views", idToTitleAndContentMapper.get(key)[3])
+                                .field("id", key)
+                                .field("title", idToTitleAndContentMapper.get(key)[0])
+                                .field("content", idToTitleAndContentMapper.get(key)[1])
+                                .field("province", idToTitleAndContentMapper.get(key)[2])
+                                .field("views", idToTitleAndContentMapper.get(key)[3])
                                 .endObject()));
             } catch (IOException e) {
                 e.printStackTrace();
@@ -727,47 +732,47 @@ public class TransportClientTests {
 
         String index = "demo_elk_es_nested_data_type";
 
-        if(client.admin().indices().prepareExists(index).get().isExists()) {
+        if (client.admin().indices().prepareExists(index).get().isExists()) {
             AcknowledgedResponse acknowledgedResponse = client.admin().indices().prepareDelete(index).get();
             Assert.assertTrue(acknowledgedResponse.isAcknowledged());
         }
 
         XContentBuilder xContentBuilder = XContentFactory.jsonBuilder()
                 .startObject()
-                    .startObject("properties")
-                        .startObject("title")
-                            .field("type", "text")
-                        .endObject()
-                        .startObject("body")
-                            .field("type", "text")
-                        .endObject()
-                        .startObject("tags")
-                            .field("type", "keyword")
-                        .endObject()
-                        .startObject("published_on")
-                            .field("type", "keyword")
-                        .endObject()
-                        .startObject("comments")
-                            .field("type", "nested")
-                            .startObject("properties")
-                                .startObject("name")
-                                    .field("type", "text")
-                                .endObject()
-                                .startObject("comment")
-                                    .field("type", "text")
-                                .endObject()
-                                .startObject("age")
-                                    .field("type", "short")
-                                .endObject()
-                                .startObject("rating")
-                                    .field("type", "short")
-                                .endObject()
-                                .startObject("commented_on")
-                                    .field("type", "keyword")
-                                .endObject()
-                            .endObject()
-                        .endObject()
-                    .endObject()
+                .startObject("properties")
+                .startObject("title")
+                .field("type", "text")
+                .endObject()
+                .startObject("body")
+                .field("type", "text")
+                .endObject()
+                .startObject("tags")
+                .field("type", "keyword")
+                .endObject()
+                .startObject("published_on")
+                .field("type", "keyword")
+                .endObject()
+                .startObject("comments")
+                .field("type", "nested")
+                .startObject("properties")
+                .startObject("name")
+                .field("type", "text")
+                .endObject()
+                .startObject("comment")
+                .field("type", "text")
+                .endObject()
+                .startObject("age")
+                .field("type", "short")
+                .endObject()
+                .startObject("rating")
+                .field("type", "short")
+                .endObject()
+                .startObject("commented_on")
+                .field("type", "keyword")
+                .endObject()
+                .endObject()
+                .endObject()
+                .endObject()
                 .endObject();
         CreateIndexResponse createIndexResponse = client.admin().indices().prepareCreate(index).addMapping("blog", xContentBuilder).get();
         Assert.assertTrue(createIndexResponse.isAcknowledged());
@@ -775,41 +780,41 @@ public class TransportClientTests {
 
         xContentBuilder = XContentFactory.jsonBuilder()
                 .startObject()
-                    .field("title", "Invest Money")
-                    .field("body", "Please start investing money as soon...")
-                    .field("tags", Arrays.asList("money", "invest"))
-                    .field("published_on", "18 Oct 2017")
-                    .startArray("comments")
-                        .startObject()
-                            .field("name", "William")
-                            .field("age", 34)
-                            .field("rating", 8)
-                            .field("comment", "Nice article..")
-                            .field("commented_on", "30 Nov 2017")
-                        .endObject()
-                        .startObject()
-                            .field("name", "John")
-                            .field("age", 38)
-                            .field("rating", 9)
-                            .field("comment", "I started investing after reading this.")
-                            .field("commented_on", "25 Nov 2017")
-                        .endObject()
-                        .startObject()
-                            .field("name", "Smith")
-                            .field("age", 33)
-                            .field("rating", 7)
-                            .field("comment", "Very good post")
-                            .field("commented_on", "20 Nov 2017")
-                        .endObject()
-                    .endArray()
+                .field("title", "Invest Money")
+                .field("body", "Please start investing money as soon...")
+                .field("tags", Arrays.asList("money", "invest"))
+                .field("published_on", "18 Oct 2017")
+                .startArray("comments")
+                .startObject()
+                .field("name", "William")
+                .field("age", 34)
+                .field("rating", 8)
+                .field("comment", "Nice article..")
+                .field("commented_on", "30 Nov 2017")
+                .endObject()
+                .startObject()
+                .field("name", "John")
+                .field("age", 38)
+                .field("rating", 9)
+                .field("comment", "I started investing after reading this.")
+                .field("commented_on", "25 Nov 2017")
+                .endObject()
+                .startObject()
+                .field("name", "Smith")
+                .field("age", 33)
+                .field("rating", 7)
+                .field("comment", "Very good post")
+                .field("commented_on", "20 Nov 2017")
+                .endObject()
+                .endArray()
                 .endObject();
         IndexResponse indexResponse = client.prepareIndex(index, "blog", "1").setSource(xContentBuilder).setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE).get();
         Assert.assertEquals(DocWriteResponse.Result.CREATED, indexResponse.getResult());
         Assert.assertEquals(RestStatus.CREATED, indexResponse.status());
 
         QueryBuilder queryBuilder = QueryBuilders.nestedQuery("comments", QueryBuilders.boolQuery()
-                                                    .must(QueryBuilders.termQuery("comments.name", "john"))
-                                                    .must(QueryBuilders.termQuery("comments.age", 34)), ScoreMode.None);
+                .must(QueryBuilders.termQuery("comments.name", "john"))
+                .must(QueryBuilders.termQuery("comments.age", 34)), ScoreMode.None);
         SearchResponse searchResponse = client.prepareSearch(index).setQuery(queryBuilder).get();
         Assert.assertEquals(0, searchResponse.getHits().getTotalHits().value);
 
@@ -829,27 +834,27 @@ public class TransportClientTests {
     public void testScroll() throws IOException {
         String index = "demo_index_scroll";
 
-        if(client.admin().indices().prepareExists(index).get().isExists()) {
+        if (client.admin().indices().prepareExists(index).get().isExists()) {
             AcknowledgedResponse acknowledgedResponse = client.admin().indices().prepareDelete(index).get();
             Assert.assertTrue(acknowledgedResponse.isAcknowledged());
         }
 
         XContentBuilder xContentBuilder = XContentFactory.jsonBuilder()
                 .startObject()
-                    .startObject("properties")
-                        .startObject("id")
-                            .field("type", "long")
-                        .endObject()
-                    .endObject()
+                .startObject("properties")
+                .startObject("id")
+                .field("type", "long")
+                .endObject()
+                .endObject()
                 .endObject();
         CreateIndexResponse createIndexResponse = client.admin().indices().prepareCreate(index).addMapping("_doc", xContentBuilder).get();
         Assert.assertTrue(createIndexResponse.isAcknowledged());
         Assert.assertTrue(createIndexResponse.isShardsAcknowledged());
 
         int total = 101;
-        int size =3;
+        int size = 3;
         List<Long> expectedList = new ArrayList<>();
-        for(long i=1; i<=total; i++) {
+        for (long i = 1; i <= total; i++) {
             xContentBuilder = XContentFactory.jsonBuilder()
                     .startObject()
                     .field("id", i)
@@ -872,23 +877,182 @@ public class TransportClientTests {
         do {
             count++;
             totalCount = totalCount + scrollResp.getHits().getHits().length;
-            if(scrollResp.getHits() != null) {
+            if (scrollResp.getHits() != null) {
                 scrollResp.getHits().forEach(hit -> actualList.add(Long.parseLong(hit.getSourceAsMap().get("id").toString())));
             }
 
             scrollResp = client.prepareSearchScroll(scrollResp.getScrollId())
                     .setScroll(new TimeValue(60000)).execute().actionGet();
-        } while(scrollResp.getHits().getHits().length != 0);
+        } while (scrollResp.getHits().getHits().length != 0);
 
         int page;
-        if(total%size == 0) {
-            page = total/size;
+        if (total % size == 0) {
+            page = total / size;
         } else {
-            page = (total+size)/size;
+            page = (total + size) / size;
         }
         Assert.assertEquals(page, count);
         Assert.assertEquals(total, totalCount);
         Assert.assertEquals(expectedList.size(), actualList.size());
         expectedList.forEach(id -> Assert.assertTrue(actualList.contains(id)));
+    }
+
+    private final static Random R = new Random(System.currentTimeMillis());
+    private final static int MaximumMessageId = 10000000;
+
+    /**
+     * 测试是否因为删除延迟导致插入数据丢失
+     * 结论：不存在删除延迟导致插入数据丢失问题
+     *
+     * @throws InterruptedException
+     * @throws IOException
+     */
+    @Test
+    public void testIfDeletionDelayLeadToInsertionDatumMissing() throws InterruptedException, IOException {
+        // 创建消息索引
+        String indexChatMessage = "chat_message";
+        IndicesExistsResponse indicesExistsResponse = client.admin().indices().prepareExists(indexChatMessage).get();
+
+        if (indicesExistsResponse.isExists()) {
+            AcknowledgedResponse acknowledgedResponse = client.admin().indices().prepareDelete(indexChatMessage).get();
+            Assert.assertTrue(acknowledgedResponse.isAcknowledged());
+        }
+
+        XContentBuilder xContentBuilderSettings = XContentFactory.jsonBuilder()
+                .startObject()
+                .startObject("analysis")
+                .startObject("normalizer")
+                .startObject("keyword_lowercase")
+                .field("type", "custom")
+                .field("filter", "lowercase")
+                .endObject()
+                .endObject()
+                .startObject("analyzer")
+                .startObject("ik_smart_pinyin")
+                .field("type", "custom")
+                .field("tokenizer", "ik_smart")
+                .field("filter", Arrays.asList("my_pinyin", "word_delimiter"))
+                .endObject()
+                .startObject("ik_max_word_pinyin")
+                .field("type", "custom")
+                .field("tokenizer", "ik_max_word")
+                .field("filter", Arrays.asList("my_pinyin", "word_delimiter"))
+                .endObject()
+                .endObject()
+                .startObject("filter")
+                .startObject("my_pinyin")
+                .field("type", "pinyin")
+                .field("keep_separate_first_letter", true)
+                .field("keep_full_pinyin", true)
+                .field("keep_original", true)
+                .field("limit_first_letter_length", 16)
+                .field("lowercase", true)
+                .field("remove_duplicated_term", true)
+                .endObject()
+                .endObject()
+                .endObject()
+                .endObject();
+
+        XContentBuilder xContentBuilder = XContentFactory.jsonBuilder()
+                .startObject()
+                .startObject("properties")
+                .startObject("id")
+                .field("type", "long")
+                .field("store", false)
+                .endObject()
+                // 此索引所属的用户id
+                .startObject("userId")
+                .field("type", "long")
+                .field("store", false)
+                .endObject()
+                .startObject("content")
+                .field("type", "text")
+                .field("store", false)
+                .field("analyzer", "ik_max_word")
+                .endObject()
+                // 专门用于存储文件、图片、视频类型消息原始content JSON
+                .startObject("contentJSON")
+                .field("type", "keyword")
+                .field("store", false)
+                .endObject()
+                .endObject()
+                .endObject();
+
+        client.admin().indices()
+                .prepareCreate(indexChatMessage)
+                .addMapping("_doc", xContentBuilder)
+                .setSettings(xContentBuilderSettings)
+                .get();
+
+        int total = 1000;
+
+        // 生成随机的消息id
+        List<Integer> randomMessageIdList = new ArrayList<>();
+        while (randomMessageIdList.size() < total) {
+            int randomInt = R.nextInt(MaximumMessageId);
+
+            if (randomInt <= 0 || randomMessageIdList.contains(randomInt)) {
+                continue;
+            }
+
+            randomMessageIdList.add(randomInt);
+        }
+        Assert.assertEquals(total, randomMessageIdList.size());
+
+        String content = "nTA132Xw5OlUzEMbwqEHtGPx2ktroW2ZFVUAM6i9bSMnbWuGZTCwYS7mZ3vVFbvdUpQo7sXN3LKsQEYNDL3lgzfO3W5ubIjf9uWMNz97hoT7600x5HTyRHDxT0mQalVvVDMZXaAFItzDAlwWnRW9XG2fGvjQOsVIkv3gWOsdc3sFC4H6bcFTFk3pptD13IqMxafNBSfS2D6Dkb4wj1ApSEVxOyO8Fp1zHhOzzZrSM31MYF3EWVfeGxQhptBRQKVKkU8jpzV07oH5rOk0pGQJQ6nBWXk0FNJjO1PFtcuS1Mmqft4iF2w3H1Jx1HgekowZE3iKSTuULs571bdeIvgxq1zkba5ulCxAdevGXK1WpA8BeVKuHnSyelZ2kGpcWLTfmvLdtWkV0dCNlVTkZnjZrP7SCZBYvlV9dYELRnDRRd9AVyaQUcQ9TwdHb6QoOaRPOub8UTjVBSqzGPq5gqaahOMijdoQz4VmSe1Ft8K0nimZeCff6Fni8VDwqB4xZp1tiHqlFK02QTJnm0SKUm32Tb8YssVOrBrGznBYPkRI1ptvDhcDpfq0MRTA4wFHV0mQoNlDwP8EHxORswtUXyozymXRTOZO4ra3BTJspXDT8WrtEI8SIgGmE1FpEkRztZsc9N4kAGTPJmjXFzIFhL1xm9tXd9Xu5UUGSBNVknRTbUZnIXohi0MUATuCduusFMzlaDz2TWxm660fc0jW3R7kWtPgJFEL78fu9NpQrPmVbInkcBoEDYR3LH8pWkZY6d430JSZkF42QHUqDbtVAwk6VwvFQIwWyGoMI0HBPaJ4p14vj1f0t0cBrX0P95IBfQxbkN4RjdUtHVqNREPMuLgS46VJJxoZzDlPhPw61YR8RczkrA9yBK0Ml2yTwivIpb4gzhoQH6zBwMWAwHsGovFFMAa8uPK81cXbmluCaGKvwnEBzQviuzcPPH7g9w7fzED1Q2luf8JTtak86MVUjhF96wYnXg4qp3gB9lroT4oF";
+
+        int concurrentThreads = 100;
+        int userIdSize = 5;
+        ExecutorService executorService = Executors.newCachedThreadPool();
+        for (int i = 0; i < concurrentThreads; i++) {
+            executorService.submit(() -> {
+                try {
+                    for (int j = 0; j < total; j++) {
+                        int messageId = randomMessageIdList.get(j);
+
+                        // 删除之前的messageId对应的索引
+                        DeleteByQueryRequestBuilder deleteByQueryRequestBuilder = new DeleteByQueryRequestBuilder(this.client, DeleteByQueryAction.INSTANCE);
+                        deleteByQueryRequestBuilder.filter(QueryBuilders.termQuery("id", messageId));
+                        deleteByQueryRequestBuilder.source(indexChatMessage);
+                        deleteByQueryRequestBuilder.get();
+
+                        for (int k = 1; k <= userIdSize; k++) {
+                            long userId = k;
+                            ESIndexChatMessageDTO esIndexChatMessageDTO = new ESIndexChatMessageDTO();
+                            esIndexChatMessageDTO.setId(messageId);
+                            esIndexChatMessageDTO.setUserId(userId);
+                            esIndexChatMessageDTO.setContent(content);
+                            esIndexChatMessageDTO.setContentJSON(content);
+                            String idStr = messageId + "#" + userId;
+                            IndexResponse indexResponse = client.prepareIndex(indexChatMessage, "_doc", idStr)
+                                    .setSource(JSONUtil.ObjectMapperInstance.writeValueAsString(esIndexChatMessageDTO), XContentType.JSON)
+                                    .get();
+                            Assert.assertEquals("id=" + messageId + "聊天消息索引数据同步失败", DocWriteResponse.Result.CREATED, indexResponse.getResult());
+                        }
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            });
+        }
+        executorService.shutdown();
+        while (!executorService.awaitTermination(1, TimeUnit.SECONDS)) ;
+
+        Thread.sleep(3000);
+
+        // 检查数据是否完整
+        SearchResponse searchResponse = client.prepareSearch(indexChatMessage).setTypes("_doc").setQuery(QueryBuilders.matchAllQuery()).get();
+        Assert.assertEquals(randomMessageIdList.size() * userIdSize, searchResponse.getHits().getTotalHits().value);
+    }
+
+    /**
+     * 聊天消息索引DTO
+     */
+    @Data
+    private static class ESIndexChatMessageDTO {
+        private long id;
+        private long userId;
+        private String content;
+        private String contentJSON;
     }
 }
