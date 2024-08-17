@@ -567,6 +567,7 @@ module.exports = {
                     children: [
                         '运行elasticsearch.md',
                         '常见错误.md',
+                        '性能.md',
                     ]
                 }
             ],
