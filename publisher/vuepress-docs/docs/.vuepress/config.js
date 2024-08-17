@@ -158,6 +158,7 @@ module.exports = {
                 {
                     title: "MySQL、MariaDB学习",
                     children: [
+                        '版本和兼容性.md',
                         '运行mysql和mariadb.md',
                         'binlog.md',
                         'mysql-cli快捷键.md',
