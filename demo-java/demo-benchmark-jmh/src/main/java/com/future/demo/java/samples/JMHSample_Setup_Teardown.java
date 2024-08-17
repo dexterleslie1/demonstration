@@ -10,9 +10,8 @@ import java.util.concurrent.TimeUnit;
 
 // https://blog.csdn.net/wyaoyao93/article/details/115727005
 
-@Warmup(iterations = 2, time = 1, timeUnit = TimeUnit.SECONDS)
-// 进行3次基准测试，每次基准测试持续3秒
-@Measurement(iterations = 2, time = 1, timeUnit = TimeUnit.SECONDS)
+@Warmup(iterations = 3, time = 2, timeUnit = TimeUnit.SECONDS)
+@Measurement(iterations = 2, time = 2, timeUnit = TimeUnit.SECONDS)
 // 提供报告结果的默认时间单位
 @OutputTimeUnit(TimeUnit.SECONDS)
 @State(Scope.Benchmark)
@@ -20,27 +19,47 @@ import java.util.concurrent.TimeUnit;
 @Fork(value = 1, jvmArgs = {"-Xmx2G", "-server"})
 @Threads(1)
 public class JMHSample_Setup_Teardown {
-    // Trial：Setup和TearDown默认的配置，该套件方法会在每一个基准测试方法的所有批次执行的前后被执行。
-    // Iteration：由于我们可以设置Warmup和Measurement，因此每一个基准测试方法都会被执行若干个批次，如果想要在每一个基准测试批次执行的前后调用套件方法，则可以将Level设置为Iteration。
-    // Invocation：将Level设置为Invocation意味着在每一个批次的度量过程中，每一次对基准方法的调用前后都会执行套件方法。
+    // Trial是JMH性能测试中的最高层级，它代表了一次完整的基准测试过程。
+    // 在每次Benchmark测试之前或之后，可以定义一些操作作为Trial级别的操作，这些操作会在每次完整的测试过程之前或之后执行。
+    // Trial级别的操作允许开发者在测试前后进行资源的准备和清理工作，如数据库的初始化、缓存的清理等。
     @Setup(Level.Trial)
-    public void setup() {
-        // System.out.println("setup...");
+    public void setupTrial() {
+         System.out.println("++++++++ Trial setup");
+    }
+    @TearDown(Level.Trial)
+    public void teardownTrial() {
+         System.out.println("++++++++ Trial teardown");
     }
 
+    // Iteration是JMH性能测试中的一个重要层级，它代表了一次测试迭代过程。
+    // 在预热（Warmup）和测量（Measurement）阶段，都会进行多次Iteration来收集数据。
+    @Setup(Level.Iteration)
+    public void setupIteration() {
+        System.out.println("++++++++ Iteration setup");
+    }
     @TearDown(Level.Iteration)
-    public void teardown() {
-        // System.out.println("teardown..");
+    public void teardownIteration() {
+        System.out.println("++++++++ Iteration teardown");
+    }
+
+    // Invocation是JMH性能测试中最细粒度的层级，它代表了一次benchmark方法的调用。
+    @Setup(Level.Invocation)
+    public void setupInvocation() {
+        System.out.println("++++++++ Invocation setup");
+    }
+    @TearDown(Level.Invocation)
+    public void teardownInvocation() {
+        System.out.println("++++++++ Invocation teardown");
     }
 
     @Benchmark
-    public void benchmark1() {
-
+    public void benchmark1() throws InterruptedException {
+        TimeUnit.SECONDS.sleep(1);
     }
 
     @Benchmark
-    public void benchmark2() {
-
+    public void benchmark2() throws InterruptedException {
+        TimeUnit.SECONDS.sleep(1);
     }
 
     public static void main(String[] args) throws RunnerException {
