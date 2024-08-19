@@ -352,6 +352,7 @@ module.exports = {
                         'cpu性能分析.md',
                         'jprofiler用法.md',
                         'oom分析.md',
+                        '异常.md',
                     ]
                 }
             ], '/logback/': [
