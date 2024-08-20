@@ -1,0 +1,82 @@
+# 全局配置
+global:
+  scrape_interval:     15s # 将搜刮间隔设置为每15秒一次。默认是每1分钟一次。
+  evaluation_interval: 15s # 每15秒评估一次规则。默认是每1分钟一次。
+
+# Alertmanager 配置
+alerting:
+  alertmanagers:
+  - static_configs:
+    - targets: ['alertmanager:9093']
+
+# 报警(触发器)配置
+rule_files:
+  - "alert-rule.yml"
+
+# 搜刮配置
+scrape_configs:
+  - job_name: 'prometheus'
+    # 覆盖全局默认值，每5秒从该作业中刮取一次目标
+    scrape_interval: 5s
+    static_configs:
+    - targets: ['localhost:9090', '192.168.1.181:8081']
+  - job_name: 'alertmanager'
+    scrape_interval: 15s
+    static_configs:
+    - targets: ['alertmanager:9093']
+  # - job_name: 'cadvisor'
+  #   scrape_interval: 15s
+  #   static_configs:
+  #   - targets: ['cadvisor:8080']
+  #     labels:
+  #       instance: Prometheus服务器 
+
+  - job_name: 'node-exporter'
+    scrape_interval: 15s
+    static_configs:
+    - targets: ['node_exporter:9100']
+      labels:
+        instance: Prometheus服务器
+    - targets: ['192.168.1.205:9100']
+      labels:
+        instance: centOS8测试服务器
+
+  - job_name: 'process-exporter'
+    scrape_interval: 15s
+    static_configs:
+    - targets: ['192.168.1.205:9256']
+      labels:
+        instance: centOS8测试服务器
+    - targets: ['192.168.1.204:9256']
+      labels:
+        instance: centOS8-204
+
+  - job_name: 'blackbox-http'  
+    metrics_path: /probe  
+    params:  
+      # 使用blackbox.yml中配置的http_get_custom_header模块  
+      module: [http_get_custom_header]
+    static_configs:
+      # 因为没有多个不同的target，所以临时增加两个相同的target用于测试用途
+      - targets:
+        # 探测目标  
+        - http://192.168.235.128:18080/api/v1/alive/check
+        labels:
+          instance: target-1
+      - targets:
+        # 探测目标  
+        - http://192.168.235.128:18080/api/v1/alive/check
+        labels:
+          instance: target-2
+    relabel_configs:
+      # 重标签配置将__address__（Prometheus默认为每个目标提供的地址标签）的值复制到__param_target标签。这是必需的，因为Blackbox Exporter通过__param_target参数接收目标地址。
+      - source_labels: [__address__]  
+        target_label: __param_target
+      # 注意：因为static_configs指定target时已经指定instance标签值，所以这里不需要relabel标签
+      # 重标签配置将__param_target的值复制到instance标签。这通常用于在Prometheus的UI或Grafana等监控工具中更清晰地识别目标实例。
+      #- source_labels: [__param_target]  
+      #  target_label: instance
+      # 重标签配置将__address__标签的值替换为Blackbox Exporter的地址（blackbox_exporter:9115）。这是因为实际的探测请求应该发送给Blackbox Exporter，而不是直接发送给目标服务。Blackbox Exporter会代理这些请求到目标服务，并根据响应生成度量指标。
+      - target_label: __address__  
+        # 指定blackbox exporter的ip地址和端口
+        replacement: blackbox_exporter:9115

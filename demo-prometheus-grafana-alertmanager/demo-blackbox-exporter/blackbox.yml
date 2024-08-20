@@ -1,0 +1,35 @@
+modules:
+  # 配置http get
+  # prometheus module参数指定的值
+  http_get_2xx:  
+    prober: http  
+    timeout: 5s  
+    http:  
+      method: GET  
+      valid_status_codes: [200, 201, 202, 203, 204, 205, 206, 207, 208, 226]
+
+  # 配置http post JSON
+  # prometheus module参数指定的值
+  http_post_json:  
+    prober: http  
+    timeout: 10s  
+    http:  
+      method: POST  
+      headers:  
+        Content-Type: application/json  
+      body: '{"key":"value"}'  
+      valid_status_codes: [200, 201]  
+      # 其他HTTP POST JSON请求的配置...  
+  
+  # 配置http自定义头
+  # prometheus module参数指定的值
+  http_get_custom_header:  
+    prober: http  
+    timeout: 5s  
+    http:  
+      method: GET
+      headers:
+        # 自定义http请求头
+        mySecret: xxxxx 
+      valid_status_codes: [200]  
+      # 其他带有自定义HTTP请求头的配置...

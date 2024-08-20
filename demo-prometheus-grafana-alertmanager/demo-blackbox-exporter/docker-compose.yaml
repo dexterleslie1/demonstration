@@ -1,0 +1,77 @@
+version: '3'
+
+services:  
+  blackbox_exporter:  
+    image: prom/blackbox-exporter  
+    ports:  
+      - "9115:9115"  
+    volumes:  
+      - ./blackbox.yml:/config/blackbox.yml  
+    command:  
+      - '--config.file=/config/blackbox.yml'  
+      - '--web.listen-address=0.0.0.0:9115'
+
+  prometheus:
+    image: prom/prometheus:v2.37.6
+    restart: always
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./alert-rule.yml:/etc/prometheus/alert-rule.yml
+      # - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      #热加载配置
+      - '--web.enable-lifecycle'
+      #api配置
+      #- '--web.enable-admin-api'
+      #历史数据最大保留时间，默认15天
+      - '--storage.tsdb.retention.time=30d'  
+    ports:
+      - '9090:9090'
+
+  alertmanager:
+    image: prom/alertmanager:v0.25.0
+    restart: always
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./alertmanager.yml:/etc/alertmanager/config.yml
+    command:
+      - '--config.file=/etc/alertmanager/config.yml'
+      - '--storage.path=/alertmanager'
+    ports:
+      - '9093:9093'
+
+  node_exporter:
+    image: prom/node-exporter:v1.5.0
+    restart: always
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    ports:
+      - '9100:9100'
+
+  grafana:
+    image: grafana/grafana:9.4.3
+    restart: always
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./grafana-provisioning/datasources.yaml:/etc/grafana/provisioning/datasources/default.yaml:ro
+      - ./grafana-provisioning/dashboards.yaml:/etc/grafana/provisioning/dashboards/default.yaml:ro
+      - ./grafana-provisioning/7587.json:/var/lib/grafana/dashboards/7587.json:ro
+    env_file:
+      - ./grafana-config.monitoring
+    ports:
+      - '3000:3000'
+    depends_on:
+      - prometheus
