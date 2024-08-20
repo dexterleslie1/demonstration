@@ -25,7 +25,8 @@ scrape_configs:
     static_configs:
     - targets: ['alertmanager:9093']
 
-  - job_name: 'blackbox-http'  
+  - job_name: 'blackbox-http'
+    scrape_interval: 15s
     metrics_path: /probe  
     params:  
       # 使用blackbox.yml中配置的http_get_custom_header模块  
