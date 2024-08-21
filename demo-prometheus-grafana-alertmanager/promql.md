@@ -11,7 +11,7 @@ PromQL（Prometheus Query Language）是Prometheus监控系统内置的一种查
 ## 启动`promql`测试实验环境
 
 1. 启动`prometheus`服务，参考 <a href='/prometheus-grafana-alertmanager/使用docker-compose运行prometheus-grafana-alertmanager/' target='_blank'>链接</a>
-2. 启动自定义`exporter`服务，参考 <a href='/prometheus/自定义exporter/' target='_blank'>链接</a>
+2. 启动自定义`exporter`服务，参考 <a href='/prometheus-grafana-alertmanager/prometheus自定义exporter.html' target='_blank'>链接</a>
 
 
 

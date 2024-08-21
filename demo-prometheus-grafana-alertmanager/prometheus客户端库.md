@@ -6,7 +6,7 @@
 
 > 注意：`prometheus`被设计为拉取指标模式，`simpleclient`不存在主动连接`prometheus`服务器推送指标数据的概念。
 >
-> `simpleclient`详细使用方法请参考 [链接](https://gitee.com/dexterleslie/demonstration/tree/master/demo-prometheus-grafana-alertmanager/demo-prometheus/demo-simpleclient)
+> `simpleclient`详细使用方法请参考 [链接](https://gitee.com/dexterleslie/demonstration/tree/master/demo-prometheus-grafana-alertmanager/demo-prometheus-simpleclient)
 
 Prometheus `simpleclient` 是 Prometheus 官方提供的 Java 客户端库，它允许 Java 应用程序创建和暴露 metrics，这些 metrics 可以被 Prometheus 服务器拉取以进行监控和告警。`simpleclient` 提供了一组简单的 API，用于定义和注册计数器（Counter）、直方图（Histogram）、摘要（Summary）和仪表（Gauge）等类型的 metrics。
 

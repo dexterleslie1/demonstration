@@ -1,8 +1,8 @@
 # `grafana`自动导入`dashboards`和`datasources`
 
 > `datasource`数据源`provisioning yaml`文件配置[链接](https://grafana.com/docs/grafana/latest/administration/provisioning/#example-data-source-config-file)
->
-> 示例的详细代码请参考 [链接](https://gitee.com/dexterleslie/demonstration/tree/master/demo-prometheus-grafana-alertmanager/demo-grafana/demo-provisioning-automatically)
+
+示例的详细代码请参考 [链接](https://gitee.com/dexterleslie/demonstration/tree/master/demo-prometheus-grafana-alertmanager/demo-grafana-provisioning-automatically)
 
 `docker-compose.yaml`内容如下：
 

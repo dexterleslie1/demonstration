@@ -26,7 +26,7 @@ source_dir_to_target_dir_map["../../front-end/html+js+css/demo-less-sass-scss-po
 source_dir_to_target_dir_map["../../front-end/html+js+css/demo-less-sass-scss-postcss/demo-scss"]="scss"
 source_dir_to_target_dir_map["../../demo-prometheus-grafana-alertmanager"]="prometheus-grafana-alertmanager"
 # source_dir_to_target_dir_map["../../demo-prometheus-grafana-alertmanager/demo-grafana"]="grafana"
-source_dir_to_target_dir_map["../../demo-prometheus-grafana-alertmanager/demo-prometheus"]="prometheus"
+# source_dir_to_target_dir_map["../../demo-prometheus-grafana-alertmanager/demo-prometheus"]="prometheus"
 source_dir_to_target_dir_map["../../demo-redis"]="redis"
 source_dir_to_target_dir_map["../../demo-mybatis"]="mybatis"
 source_dir_to_target_dir_map["../../demo-maven"]="maven"

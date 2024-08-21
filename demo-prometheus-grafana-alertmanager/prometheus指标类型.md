@@ -1,6 +1,6 @@
 # 指标类型
 
-> 指标类型的使用示例请参考 [simpleclient](https://gitee.com/dexterleslie/demonstration/tree/master/demo-prometheus-grafana-alertmanager/demo-prometheus/demo-simpleclient)
+> 指标类型的使用示例请参考 [simpleclient](https://gitee.com/dexterleslie/demonstration/tree/master/demo-prometheus-grafana-alertmanager/demo-prometheus-simpleclient)
 
 ## Counter（计数器）
 

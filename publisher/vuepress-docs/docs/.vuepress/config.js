@@ -20,25 +20,6 @@ const lessSassPostcssSidebar = {
     ]
 }
 
-const prometheusGrafanaAlertmanagerSidebar = {
-    title: "Prometheus+Grafana+AlertManager",
-    path: '/prometheus-grafana-alertmanager/',
-    children: [
-        '使用docker-compose运行prometheus-grafana-alertmanager.md',
-        'prometheus设置.md',
-        '使用docker运行grafana.md',
-        'grafana手动导入dashboard.md',
-        'grafana自动导入dashboards和datasources.md',
-        'prometheus自定义exporter.md',
-        'promql.md',
-        'prometheus标签.md',
-        'prometheus指标类型.md',
-        'prometheus客户端库.md',
-        'prometheus拉取目标配置.md',
-        'exporter使用.md',
-    ]
-}
-
 module.exports = {
     title: '我的知识库',
     plugins: [
@@ -244,11 +225,23 @@ module.exports = {
                     ]
                 }
             ], '/prometheus-grafana-alertmanager/': [
-                prometheusGrafanaAlertmanagerSidebar
-            ], '/grafana/': [
-                prometheusGrafanaAlertmanagerSidebar
-            ], '/prometheus/': [
-                prometheusGrafanaAlertmanagerSidebar
+                {
+                    title: "Prometheus使用",
+                    children: [
+                        '使用docker-compose运行prometheus-grafana-alertmanager.md',
+                        'prometheus设置.md',
+                        '使用docker运行grafana.md',
+                        'grafana手动导入dashboard.md',
+                        'grafana自动导入dashboards和datasources.md',
+                        'prometheus自定义exporter.md',
+                        'promql.md',
+                        'prometheus标签.md',
+                        'prometheus指标类型.md',
+                        'prometheus客户端库.md',
+                        'prometheus拉取目标配置.md',
+                        'exporter使用.md',
+                    ]
+                }
             ], '/redis/': [
                 {
                     title: "Redis",

@@ -27,6 +27,6 @@ docker compose up -d
 docker compose down -v
 ```
 
-如果需要测试使用`node_exporter`监控其他主机操作系统，请参考 <a href="/prometheus/exporter使用.html#使用docker-compose运行node-exporter" target="_blank">链接</a> 在系统上使用`docker compose`运行`node_exporter`服务。
+如果需要测试使用`node_exporter`监控其他主机操作系统，请参考 <a href="/prometheus-grafana-alertmanager/exporter使用.html#使用docker-compose运行node-exporter" target="_blank">链接</a> 在系统上使用`docker compose`运行`node_exporter`服务。
 
-如果需要测试使用`process_exporter`监控其他主机操作系统进程，请参考 <a href="/prometheus/exporter使用.html#使用docker-compose运行process-exporter" target="_blank">链接</a> 在系统上使用`docker compose`运行`process_exporter`服务。
+如果需要测试使用`process_exporter`监控其他主机操作系统进程，请参考 <a href="/prometheus-grafana-alertmanager/exporter使用.html#使用docker-compose运行process-exporter" target="_blank">链接</a> 在系统上使用`docker compose`运行`process_exporter`服务。
