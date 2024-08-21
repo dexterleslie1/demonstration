@@ -25,6 +25,7 @@ const prometheusGrafanaAlertmanagerSidebar = {
     path: '/prometheus-grafana-alertmanager/',
     children: [
         '使用docker-compose运行prometheus-grafana-alertmanager.md',
+        'prometheus设置.md',
         {
             title: "Grafana使用",
             children: [
