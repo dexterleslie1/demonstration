@@ -26,25 +26,16 @@ const prometheusGrafanaAlertmanagerSidebar = {
     children: [
         '使用docker-compose运行prometheus-grafana-alertmanager.md',
         'prometheus设置.md',
-        {
-            title: "Grafana使用",
-            children: [
-                '/grafana/使用docker运行.md',
-                '/grafana/手动导入dashboard.md',
-                '/grafana/自动导入dashboards和datasources.md',
-            ]
-        }, {
-            title: "Prometheus使用",
-            children: [
-                '/prometheus/标签.md',
-                '/prometheus/指标类型.md',
-                '/prometheus/客户端库.md',
-                '/prometheus/拉取目标配置.md',
-                '/prometheus/自定义exporter.md',
-                '/prometheus/promql.md',
-                '/prometheus/exporter使用.md',
-            ]
-        }
+        '使用docker运行grafana.md',
+        'grafana手动导入dashboard.md',
+        'grafana自动导入dashboards和datasources.md',
+        'prometheus自定义exporter.md',
+        'promql.md',
+        'prometheus标签.md',
+        'prometheus指标类型.md',
+        'prometheus客户端库.md',
+        'prometheus拉取目标配置.md',
+        'exporter使用.md',
     ]
 }
 

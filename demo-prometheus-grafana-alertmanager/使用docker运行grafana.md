@@ -1,4 +1,4 @@
-# 使用`docker`运行
+# 使用`docker`运行`grafana`
 
 > 参考这个资料使用`docker`运行`grafana`[链接](https://grafana.com/docs/grafana/latest/setup-grafana/installation/docker/)
 

@@ -11,7 +11,7 @@
     </parent>
 
     <groupId>com.future.demo</groupId>
-    <artifactId>prometheus-micrometer</artifactId>
+    <artifactId>demo-prometheus-micrometer</artifactId>
     <version>1.0.0</version>
 
     <dependencies>

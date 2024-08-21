@@ -1,4 +1,4 @@
-# 自动导入`dashboards`和`datasources`
+# `grafana`自动导入`dashboards`和`datasources`
 
 > `datasource`数据源`provisioning yaml`文件配置[链接](https://grafana.com/docs/grafana/latest/administration/provisioning/#example-data-source-config-file)
 >
