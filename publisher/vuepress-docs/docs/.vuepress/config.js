@@ -478,6 +478,7 @@ module.exports = {
                     children: [
                         '',
                         '自定义插件.md',
+                        '定时器.md',
                     ]
                 }
             ], '/spring-cloud/': [
