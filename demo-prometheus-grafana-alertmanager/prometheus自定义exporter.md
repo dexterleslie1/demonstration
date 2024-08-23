@@ -2,7 +2,7 @@
 
 ## 使用`simpleclient`编写自定义`exporter（又称为metrics endpoint）`
 
-参考[`demo-simpleclient`](https://gitee.com/dexterleslie/demonstration/tree/master/demo-prometheus-grafana-alertmanager/demo-prometheus/demo-simpleclient)编写自定`exporter`
+参考[`demo-simpleclient`](https://gitee.com/dexterleslie/demonstration/tree/master/demo-prometheus-grafana-alertmanager/demo-prometheus-simpleclient)编写自定`exporter`
 
 在`prometheus.yml`配置文件中配置自定义`exporter`为拉取目标
 
