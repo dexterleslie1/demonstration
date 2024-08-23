@@ -240,6 +240,7 @@ module.exports = {
                         'prometheus客户端库.md',
                         'prometheus拉取目标配置.md',
                         'exporter使用.md',
+                        '告警设置.md',
                     ]
                 }
             ], '/redis/': [
