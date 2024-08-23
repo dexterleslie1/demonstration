@@ -158,6 +158,7 @@ module.exports = {
                         'docker-volume.md',
                         'docker-swarm.md',
                         'docker命令.md',
+                        '资源限制.md',
                     ]
                 }
             ],
