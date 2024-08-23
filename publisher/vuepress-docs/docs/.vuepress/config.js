@@ -117,7 +117,9 @@ module.exports = {
                 children: ['todo列表.md', '什么是语法.md',
                     '音标.md', '词性或词类.md',
                     '句子成分.md', '句型.md', '语态.md',
-                    '时态.md', '主谓一致.md'],
+                    '时态.md', '主谓一致.md',
+                    '短语.md',
+                ],
             }],
             '/intellij-idea/': [{
                 title: "IntelliJ IDEA的使用",
