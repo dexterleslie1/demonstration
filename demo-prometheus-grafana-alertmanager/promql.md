@@ -123,3 +123,14 @@ irate(nginx_http_requests_total{host!="127.0.0.1"}[5m]) > 50 and irate(nginx_htt
 - **结果**：在过去120秒内的某个时间段（实际上是最后60秒），瞬时变化率表明每秒2.5个HTTP请求。然而，重要的是要理解`irate`给出的是基于最后两个数据点的瞬时估算，它可能无法反映整个时间范围内的平均情况。
 
 通过这个例子，我们可以看到`rate`和`irate`在计算时间序列变化率时的不同。`rate`提供了更平滑、更稳定的平均增长率，而`irate`则能够更快地响应数据中的最新变化。
+
+
+
+## 分组
+
+按`exported_instance`分组求指标的`irate`，注意：不能删除`sum`函数，如果删除`sum`函数，`irate`返回关于多个标签的指标，此时指定`by (exported_instance)`时`promql`不知道如何聚合被`group by (exported_instance)`后重复的指标。
+
+```bash
+sum(irate(my_custom_counter_total[1m])) by (exported_instance)
+```
+
