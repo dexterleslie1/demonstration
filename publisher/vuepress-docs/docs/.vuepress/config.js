@@ -120,6 +120,7 @@ module.exports = {
                     '句子成分.md', '句型.md', '语态.md',
                     '时态.md', '主谓一致.md',
                     '短语.md',
+                    '音标.md',
                 ],
             }],
             '/intellij-idea/': [{
