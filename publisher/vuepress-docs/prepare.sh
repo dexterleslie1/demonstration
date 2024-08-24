@@ -59,6 +59,7 @@ source_dir_to_target_dir_map["../../demo-aliyun"]="aliyun"
 source_dir_to_target_dir_map["../../demo-vmware"]="vmware"
 source_dir_to_target_dir_map["../../demo-java/demo-library"]="java-library"
 source_dir_to_target_dir_map["../../elasticsearch"]="elasticsearch"
+source_dir_to_target_dir_map["../../demo-terraform"]="terraform"
 
 for key in ${!source_dir_to_target_dir_map[@]}; do
     # 删除符号链接目录

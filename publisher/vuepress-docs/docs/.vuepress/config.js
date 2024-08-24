@@ -65,6 +65,7 @@ module.exports = {
                     { text: 'JMeter用法', link: '/jmeter/' },
                     { text: 'Kubernetes', link: '/kubernetes/' },
                     { text: 'Elasticsearch、Kibana', link: '/elasticsearch/' },
+                    { text: 'Terraform', link: '/terraform/' },
                 ]
             },
             {
@@ -559,6 +560,14 @@ module.exports = {
                         '运行elasticsearch.md',
                         '常见错误.md',
                         '性能.md',
+                    ]
+                }
+            ], '/terraform/': [
+                {
+                    title: "Terraform使用",
+                    children: [
+                        '安装.md',
+                        'providers.md',
                     ]
                 }
             ],

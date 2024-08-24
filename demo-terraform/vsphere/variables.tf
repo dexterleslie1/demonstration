@@ -49,5 +49,8 @@ variable "ipv4_gateway" {
 }
 variable "vm_folder" {
   type    = string
-  default = "vm/private"
+  # 放到private目录
+  default = "private"
+  # 没有对应目录留空即可
+  default = ""
 }

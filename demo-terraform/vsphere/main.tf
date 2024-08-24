@@ -46,7 +46,8 @@ resource "vsphere_virtual_machine" "demo_vm1" {
   memory_share_count = (4096 * 20)
   guest_id           = data.vsphere_virtual_machine.template.guest_id
   scsi_type          = data.vsphere_virtual_machine.template.scsi_type
-  folder             = "/${data.vsphere_datacenter.datacenter.name}/${var.vm_folder}"
+  # folder             = "/${data.vsphere_datacenter.datacenter.name}/${var.vm_folder}"
+  folder             = "${var.vm_folder}"
   # 必须设置efi和secure_boot，否则无法引导系统
   firmware                = "efi"
   efi_secure_boot_enabled = true
