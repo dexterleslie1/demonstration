@@ -95,8 +95,7 @@ module.exports = {
                 text: '操作系统',
                 items: [
                     { text: 'Shell脚本编程', link: '/shell脚本编程/' },
-                    { text: 'Ubuntu使用', link: '/ubuntu使用/' },
-                    { text: 'Linux使用', link: '/linux使用/' },
+                    { text: 'linux、ubuntu使用', link: '/linux使用/' },
                 ]
             },
             {
@@ -200,18 +199,6 @@ module.exports = {
                         '关联数组.md',
                     ]
                 }
-            ],
-            '/ubuntu使用/': [
-                {
-                    title: "Ubuntu使用",
-                    children: [
-                        '配置基于ubuntu的软件开发环境.md',
-                        '安装googlepinyin输入法.md',
-                        'sources.list.md',
-                        '取消unattended-upgrades.md',
-                        'ubuntu或者debian安装工具.md',
-                    ]
-                }
             ], '/linux使用/': [
                 {
                     title: "Linux使用",
@@ -222,6 +209,11 @@ module.exports = {
                         'systemd、systemctl服务.md',
                         '搭建nfs服务器.md',
                         'dns.md',
+                        'ubuntu-sources.list.md',
+                        'ubuntu或者debian安装工具.md',
+                        'ubuntu-取消unattended-upgrades.md',
+                        'ubuntu-安装googlepinyin输入法.md',
+                        '配置基于ubuntu的软件开发环境.md',
                     ]
                 }
             ], '/基准和性能测试/': [

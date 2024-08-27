@@ -1,4 +1,4 @@
-# 取消`unattended-upgrades`
+# `ubuntu`取消`unattended-upgrades`
 
 查看`unattended-upgrades`状态
 
