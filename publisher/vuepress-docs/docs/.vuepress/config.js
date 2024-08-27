@@ -88,6 +88,7 @@ module.exports = {
                     { text: 'Lua的使用', link: '/lua/' },
                     { text: 'Postman使用', link: '/postman/' },
                     { text: 'VMWare', link: '/vmware/' },
+                    { text: 'Golang', link: '/golang/' },
                 ]
             },
             {
@@ -573,6 +574,13 @@ module.exports = {
                     children: [
                         '安装.md',
                         'providers.md',
+                    ]
+                }
+            ], '/golang/': [
+                {
+                    title: "Golang使用",
+                    children: [
+                        'goreleaser使用.md',
                     ]
                 }
             ],
