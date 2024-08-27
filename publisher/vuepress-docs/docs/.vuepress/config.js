@@ -137,6 +137,7 @@ module.exports = {
                     children: [
                         '版本和兼容性.md',
                         '运行mysql和mariadb.md',
+                        'mysql客户端工具.md',
                         'binlog.md',
                         'mysql-cli快捷键.md',
                         'mysql备份和还原.md',
@@ -150,6 +151,9 @@ module.exports = {
                         '性能分析.md',
                         '用户和权限管理.md',
                         '自动更新数据库.md',
+                        '系统数据库和表.md',
+                        '函数.md',
+                        '计算数据和索引大小.md',
                     ]
                 }
             ],
