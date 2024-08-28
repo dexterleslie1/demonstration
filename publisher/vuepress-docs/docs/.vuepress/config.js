@@ -191,6 +191,9 @@ module.exports = {
                 {
                     title: "Shell脚本编程",
                     children: [
+                        'shell的概念.md',
+                        'zsh使用.md',
+                        '语法基础.md',
                         '在脚本头声明脚本的用法.md',
                         '设置shell行为的命令.md',
                         '函数的用法.md',
@@ -214,6 +217,7 @@ module.exports = {
                         'ubuntu-取消unattended-upgrades.md',
                         'ubuntu-安装googlepinyin输入法.md',
                         '配置基于ubuntu的软件开发环境.md',
+                        'ubuntu启用ssh服务.md',
                     ]
                 }
             ], '/基准和性能测试/': [
