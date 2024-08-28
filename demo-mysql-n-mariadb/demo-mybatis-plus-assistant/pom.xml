@@ -11,7 +11,7 @@
     </parent>
 
     <groupId>com.future.demo</groupId>
-    <artifactId>demo-performance-mybatis-plus-assistant</artifactId>
+    <artifactId>demo-mybatis-plus-assistant</artifactId>
     <version>1.0.0</version>
 
     <properties>

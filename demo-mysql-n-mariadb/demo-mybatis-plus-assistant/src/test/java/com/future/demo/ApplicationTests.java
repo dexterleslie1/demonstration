@@ -23,6 +23,11 @@ public class ApplicationTests {
     @Autowired
     UserService userService;
 
+    /**
+     * 多个线程读取数据，模拟cpu高情况
+     *
+     * @throws InterruptedException
+     */
     @Test
     public void test() throws InterruptedException {
         int maximumId = 1000000;

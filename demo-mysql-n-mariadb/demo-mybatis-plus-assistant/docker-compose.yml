@@ -5,7 +5,7 @@ services:
   db:
     build:
       context: ./
-    image: demo-performance-mybatis-plus-db-dev
+    image: demo-mybatis-plus-db-dev
     environment:
       - MYSQL_ROOT_PASSWORD=123456
       - TZ=Asia/Shanghai
