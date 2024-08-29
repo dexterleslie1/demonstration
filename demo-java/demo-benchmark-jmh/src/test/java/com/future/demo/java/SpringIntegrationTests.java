@@ -57,7 +57,7 @@ public class SpringIntegrationTests {
     @Setup(Level.Trial)
     public void setup() {
         //容器获取
-        context = SpringApplication.run(ApplicationTest.class);
+        context = SpringApplication.run(Application.class);
         //获取对象
         testService = context.getBean(TestService.class);
     }
