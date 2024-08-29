@@ -218,6 +218,7 @@ module.exports = {
                         'ubuntu-安装googlepinyin输入法.md',
                         '配置基于ubuntu的软件开发环境.md',
                         'ubuntu启用ssh服务.md',
+                        '操作系统页面缓存、目录项缓存、索引节点缓存.md',
                     ]
                 }
             ], '/基准和性能测试/': [
