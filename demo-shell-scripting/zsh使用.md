@@ -159,7 +159,11 @@ Oh My Zsh 的特点包括：
 ### 安装自定义`oh my zsh`
 
 ```bash
+# ubuntu安装
 sudo apt install zsh -y && sudo apt install git -y && sh -c "$(curl -fsSL https://gitee.com/dexterleslie/oh-my-zsh/raw/master/install.sh)"
+
+# centOS8安装
+yum install zsh -y && yum install git -y && sh -c "$(curl -fsSL https://gitee.com/dexterleslie/oh-my-zsh/raw/master/install.sh)"
 ```
 
 
