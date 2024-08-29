@@ -15,4 +15,8 @@ services:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_general_ci
       - --skip-character-set-client-handshake
+    deploy:
+      resources:
+        limits:
+          memory: 2g
     network_mode: host
