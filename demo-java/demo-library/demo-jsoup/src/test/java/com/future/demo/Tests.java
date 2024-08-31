@@ -68,4 +68,13 @@ public class Tests {
             }
         }
     }
+
+    /**
+     * 获取节点文本
+     */
+    @Test
+    public void testGetNodeText() {
+        Document document = Jsoup.parse("<title>百度一下</title>");
+        Assert.assertEquals("百度一下", document.select("title").text());
+    }
 }
