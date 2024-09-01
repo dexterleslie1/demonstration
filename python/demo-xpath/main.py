@@ -52,4 +52,14 @@ if __name__ == "__main__":
     elements = htmlObject.xpath("//a[contains(text(), 'second')]")
     print("//a[contains(text(), 'second')]查询文本包含：", len(elements))
 
+    # 查询节点有指定的属性
+    # https://stackoverflow.com/questions/3737906/xpath-how-to-check-if-an-attribute-exists
+    elements = htmlObject.xpath("//a[@href]")
+    print("//a[@href]节点数：", len(elements))
+
+    # 属性值以xxx开始
+    # https://stackoverflow.com/questions/26366391/xpath-selecting-attributes-using-starts-with
+    elements = htmlObject.xpath("//a[starts-with(@href, 'link2')]")
+    print("//a[starts-with(@href, 'link2')]：", len(elements))
+
     pass
