@@ -40,7 +40,7 @@ source_dir_to_target_dir_map["../../demo-encrypt-decrypt"]="密码算法"
 source_dir_to_target_dir_map["../../demo-openldap"]="openldap"
 source_dir_to_target_dir_map["../../demo-jira"]="jira"
 source_dir_to_target_dir_map["../../demo-软件工程"]="软件工程"
-source_dir_to_target_dir_map["../../demo-jsoup"]="jsoup"
+# source_dir_to_target_dir_map["../../demo-jsoup"]="jsoup"
 # source_dir_to_target_dir_map["../../performance/jvm"]="jvm性能"
 source_dir_to_target_dir_map["../../demo-数据结构和算法"]="数据结构和算法"
 source_dir_to_target_dir_map["../../demo-minio"]="minio"
@@ -61,6 +61,7 @@ source_dir_to_target_dir_map["../../demo-java/demo-library"]="java-library"
 source_dir_to_target_dir_map["../../elasticsearch"]="elasticsearch"
 source_dir_to_target_dir_map["../../demo-terraform"]="terraform"
 source_dir_to_target_dir_map["../../demo-golang"]="golang"
+source_dir_to_target_dir_map["../../python"]="python"
 
 for key in ${!source_dir_to_target_dir_map[@]}; do
     # 删除符号链接目录

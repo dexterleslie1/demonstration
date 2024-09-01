@@ -83,12 +83,12 @@ module.exports = {
                     { text: 'OpenLDAP', link: '/openldap/' },
                     { text: 'Jira', link: '/jira/' },
                     { text: '软件工程', link: '/软件工程/' },
-                    { text: 'Jsoup', link: '/jsoup/' },
                     { text: 'IntelliJ IDEA的使用', link: '/intellij-idea/' },
                     { text: 'Lua的使用', link: '/lua/' },
                     { text: 'Postman使用', link: '/postman/' },
                     { text: 'VMWare', link: '/vmware/' },
                     { text: 'Golang', link: '/golang/' },
+                    { text: 'Python', link: '/python/' },
                 ]
             },
             {
@@ -398,14 +398,6 @@ module.exports = {
                         'drawio使用.md',
                     ]
                 }
-            ], '/jsoup/': [
-                {
-                    title: "jsoup使用",
-                    children: [
-                        '',
-                        'jsoup的用法.md',
-                    ]
-                }
             ], '/jvm性能/': [
                 {
                     title: "JVM性能相关",
@@ -554,6 +546,7 @@ module.exports = {
                     title: "Java相关库使用",
                     children: [
                         'awaitility使用.md',
+                        'jsoup使用.md',
                     ]
                 }
             ], '/elasticsearch/': [
@@ -578,6 +571,14 @@ module.exports = {
                     title: "Golang使用",
                     children: [
                         'goreleaser使用.md',
+                    ]
+                }
+            ], '/python/': [
+                {
+                    title: "Python使用",
+                    children: [
+                        'centOS6升级python2.6到python2.7.md',
+                        'xpath使用.md',
                     ]
                 }
             ],
