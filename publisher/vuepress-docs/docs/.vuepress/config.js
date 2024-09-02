@@ -547,6 +547,7 @@ module.exports = {
                     children: [
                         'awaitility使用.md',
                         'jsoup使用.md',
+                        'hutool使用.md',
                     ]
                 }
             ], '/elasticsearch/': [

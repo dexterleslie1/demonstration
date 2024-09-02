@@ -150,3 +150,20 @@ public void testGetNodeText() {
 }
 ```
 
+
+
+### 通过`xpath`获取节点的文本
+
+```java
+/**
+ * 通过xpath获取节点的文本
+ */
+@Test
+public void testXpath() {
+    Document document = Jsoup.parse("<title>百度一下</title>");
+    List<TextNode> textNodeList = document.selectXpath("//title/text()", TextNode.class);
+    String title = textNodeList.get(0).toString();
+    Assert.assertEquals("百度一下", title);
+}
+```
+

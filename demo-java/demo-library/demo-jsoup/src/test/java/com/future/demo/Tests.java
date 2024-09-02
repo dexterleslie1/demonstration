@@ -4,12 +4,14 @@ import org.apache.commons.io.IOUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 
 public class Tests {
     @Test
@@ -76,5 +78,16 @@ public class Tests {
     public void testGetNodeText() {
         Document document = Jsoup.parse("<title>百度一下</title>");
         Assert.assertEquals("百度一下", document.select("title").text());
+    }
+
+    /**
+     * 通过xpath获取节点的文本
+     */
+    @Test
+    public void testXpath() {
+        Document document = Jsoup.parse("<title>百度一下</title>");
+        List<TextNode> textNodeList = document.selectXpath("//title/text()", TextNode.class);
+        String title = textNodeList.get(0).toString();
+        Assert.assertEquals("百度一下", title);
     }
 }
