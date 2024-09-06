@@ -49,7 +49,6 @@ services:
 
   alertmanager:
     image: prom/alertmanager:v0.25.0
-    restart: always
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ./alertmanager.yml:/etc/alertmanager/config.yml
