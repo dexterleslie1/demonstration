@@ -109,6 +109,7 @@ module.exports = {
                 items: [
                     { text: '亚马逊', link: '/aws/' },
                     { text: '阿里云', link: '/aliyun/' },
+                    { text: '谷歌云', link: '/gcp/' },
                 ]
             },
             { text: '我的Github', link: 'https://github.com/dexterleslie1', target: '_blank' },
@@ -589,6 +590,13 @@ module.exports = {
                     title: "Chrome用法",
                     children: [
                         '',
+                    ]
+                }
+            ], '/gcp/': [
+                {
+                    title: "谷歌云",
+                    children: [
+                        'gce使用.md',
                     ]
                 }
             ],
