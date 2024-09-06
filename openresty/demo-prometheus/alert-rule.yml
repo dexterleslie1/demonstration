@@ -11,7 +11,7 @@ groups:
       summary: "{{ $labels.job }} 任务发现exporter服务 {{ $labels.instance }} 下线异常"
       description: "{{ $labels.job }} 任务发现exporter服务 {{ $labels.instance }} 下线异常"
   - alert: 发现CC攻击告警
-    expr: irate(nginx_http_requests_total{host!="127.0.0.1"}[5m]) > 50 and irate(nginx_http_requests_total{host!="127.0.0.1"}[5m] offset 30m) > 0 and irate(nginx_http_requests_total{host!="127.0.0.1"}[5m])/irate(nginx_http_requests_total{host!="127.0.0.1"}[5m] offset 30m) >= 10
+    expr: (irate(nginx_http_requests_total{host!="127.0.0.1"}[5m]) > 50 and irate(nginx_http_requests_total{host!="127.0.0.1"}[5m] offset 30m) > 0 and irate(nginx_http_requests_total{host!="127.0.0.1"}[5m])/irate(nginx_http_requests_total{host!="127.0.0.1"}[5m] offset 30m) >= 3) or irate(nginx_http_requests_total{host!="127.0.0.1",status!="200"}[5m]) >= 10
     for: 60s
     labels:
       severity: critical
