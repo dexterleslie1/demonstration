@@ -33,6 +33,8 @@ HtmlUnit是一个功能强大的无头浏览器，它为Web自动化测试、爬
 
 ## `htmlunit`使用
 
+>[参考链接](https://www.scrapingbee.com/blog/getting-started-with-htmlunit/)
+
 详细用法请参考 [链接](https://gitee.com/dexterleslie/demonstration/tree/master/demo-java/demo-library/demo-htmlunit)
 
 ```java
