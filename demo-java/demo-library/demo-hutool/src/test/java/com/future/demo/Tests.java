@@ -22,7 +22,6 @@ public class Tests {
         Assert.assertTrue(content.contains("form"));
 
         // 测试post提交JSON数据
-        // Map.of("name", "张三", "age", 30)
         String json = JSONUtil.toJsonStr(new HashMap() {{
             this.put("name", "张三");
             this.put("age", 30);
@@ -37,7 +36,7 @@ public class Tests {
         // 自定义请求
         response = HttpRequest.get("http://httpbin.org/get")
                 .form(new HashMap() {{
-                    this.put("key", "value");
+                    put("key", "value");
                 }})
                 .header("Authorization", "Bearer your_token_here") // 添加请求头
                 .timeout(5000) // 设置超时时间
