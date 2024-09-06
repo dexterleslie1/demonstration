@@ -89,6 +89,7 @@ module.exports = {
                     { text: 'VMWare', link: '/vmware/' },
                     { text: 'Golang', link: '/golang/' },
                     { text: 'Python', link: '/python/' },
+                    { text: 'Chrome用法', link: '/chrome/' },
                 ]
             },
             {
@@ -580,6 +581,13 @@ module.exports = {
                     children: [
                         'centOS6升级python2.6到python2.7.md',
                         'xpath使用.md',
+                    ]
+                }
+            ], '/chrome/': [
+                {
+                    title: "Chrome用法",
+                    children: [
+                        '',
                     ]
                 }
             ],
