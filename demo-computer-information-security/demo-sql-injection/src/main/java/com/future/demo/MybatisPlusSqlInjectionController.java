@@ -56,4 +56,17 @@ public class MybatisPlusSqlInjectionController {
         List<User> userList = this.userMapper.listByIds(idList);
         return ResponseUtils.successList(userList.stream().map(o -> o.getUsername()).collect(Collectors.toList()));
     }
+
+    /**
+     * 协助存储过程sql注入测试
+     *
+     * @param username
+     * @return
+     */
+    @GetMapping("mybatis-plus/testProcedureSqlInjection")
+    ListResponse<String> testMybatisPlusProcedureSqlInjection(
+            @RequestParam(name = "username", defaultValue = "") String username) {
+        List<User> userList = this.userMapper.getByUsernameViaProcedure(username);
+        return ResponseUtils.successList(userList.stream().map(o -> o.getUsername()).collect(Collectors.toList()));
+    }
 }

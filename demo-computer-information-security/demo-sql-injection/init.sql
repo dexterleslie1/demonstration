@@ -21,3 +21,17 @@ create table if not exists `secret_data`(
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 collate=utf8mb4_general_ci;
 
 insert into `secret_data`(col1, col2) values('secret-col1','secret-col2');
+
+delimiter |
+
+drop procedure if exists proc_sql_injection_assistant;
+
+create procedure proc_sql_injection_assistant(in v_username varchar(1024))
+begin
+    set @v_dynamic_sql=concat('select * from `user` where username=''', v_username, '''');
+    prepare p_statement from @v_dynamic_sql;
+    execute p_statement;
+    deallocate prepare p_statement;
+end|
+
+delimiter ;
