@@ -37,22 +37,81 @@ HtmlUnit是一个功能强大的无头浏览器，它为Web自动化测试、爬
 
 详细用法请参考 [链接](https://gitee.com/dexterleslie/demonstration/tree/master/demo-java/demo-library/demo-htmlunit)
 
-```java
-try (final WebClient webClient = new WebClient()) {
-    // 配置WebClient（可选），例如设置浏览器代理、禁用/启用JavaScript等
-    // 例如，禁用CSS以加快页面加载速度（但可能导致页面渲染不正确）
-    webClient.getOptions().setJavaScriptEnabled(true);
-     webClient.getOptions().setCssEnabled(false);
+- 使用`htmlunit`抓取指定`url`内容
 
-    // 加载网页
-    HtmlPage page = webClient.getPage(url);
+  ```java
+  // 使用球探体育协助测试htmlunit
+  // https://www.titan007.com/
+  // 选择一场英超赛事并获取欧洲赔率链接如下所示：
+  String url = "https://1x2.titan007.com/oddslist/2590935.htm";
+  String content = HttpUtil.get(url, StandardCharsets.UTF_8);
+  
+  Document document = Jsoup.parse(content);
+  
+  // 因为使用hutool HttpUtil爬取指定url内容后不会执行javascript
+  // 所以无法爬取javascript动态生成的内容
+  Element elementTable = document.getElementById("oddsList_tab");
+  Assert.assertNull(elementTable);
+  
+  try (final WebClient webClient = new WebClient()) {
+      // 配置WebClient（可选），例如设置浏览器代理、禁用/启用JavaScript等
+      // 例如，禁用CSS以加快页面加载速度（但可能导致页面渲染不正确）
+      webClient.getOptions().setJavaScriptEnabled(true);
+      webClient.getOptions().setCssEnabled(false);
+  
+      // 加载网页
+      HtmlPage page = webClient.getPage(url);
+  
+      content = page.asXml();
+      document = Jsoup.parse(content);
+  
+      // 使用htmlunit会执行javascript
+      // 所以能够抓取javascript渲染的动态内容
+      elementTable = document.getElementById("oddsList_tab");
+      Assert.assertNotNull(elementTable);
+  }
+  ```
 
-    content = page.asXml();
-    document = Jsoup.parse(content);
+- 等待`javascript`加载完毕动态内容再抓取
 
-    // 使用htmlunit会执行javascript
-    // 所以能够抓取javascript渲染的动态内容
-    elementTable = document.getElementById("oddsList_tab");
-    Assert.assertNotNull(elementTable);
-}
-```
+  ```java
+  // 使用球探体育协助测试htmlunit
+  // https://www.titan007.com/
+  // 选择一系列英超未来赛程链接如下所示：
+  String url = "https://zq.titan007.com/cn/League/36.html";
+  try (final WebClient webClient = new WebClient()) {
+      webClient.getOptions().setJavaScriptEnabled(true);
+      webClient.getOptions().setCssEnabled(false);
+  
+      HtmlPage page = webClient.getPage(url);
+  
+      String content = page.asXml();
+      Document document = Jsoup.parse(content);
+  
+      Element elementTable = document.getElementById("Table3");
+      Elements elementTrList = elementTable.select(">tbody>tr[id]");
+      // javascript未完成加载动态内容，所以没有tr
+      Assert.assertTrue(elementTrList.isEmpty());
+  }
+  
+  try (final WebClient webClient = new WebClient()) {
+      webClient.getOptions().setJavaScriptEnabled(true);
+      webClient.getOptions().setCssEnabled(false);
+  
+      HtmlPage page = webClient.getPage(url);
+  
+      // 等待javascript加载动态内容完毕
+      // 最大等待5秒
+      webClient.waitForBackgroundJavaScript(5000);
+  
+      String content = page.asXml();
+      Document document = Jsoup.parse(content);
+  
+      Element elementTable = document.getElementById("Table3");
+      Elements elementTrList = elementTable.select(">tbody>tr[id]");
+      // javascript未完成加载动态内容，所以没有tr
+      Assert.assertTrue(!elementTrList.isEmpty());
+  }
+  ```
+
+  
