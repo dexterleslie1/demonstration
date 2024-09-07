@@ -67,3 +67,55 @@ user.setEmail("test1@baomidou.com");
 userMapper.insert(user);
 ```
 
+
+
+## `mapper`调用存储过程
+
+详细用法请参考 [链接](https://gitee.com/dexterleslie/demonstration/blob/master/demo-computer-information-security/demo-sql-injection/src/main/java/com/future/demo/mapper/UserMapper.java#L31)
+
+- 定义存储过程
+
+  ```sql
+  delimiter |
+  
+  drop procedure if exists proc_sql_injection_assistant;
+  
+  create procedure proc_sql_injection_assistant(in v_username varchar(1024))
+  begin
+      set @v_dynamic_sql=concat('select * from `user` where username=''', v_username, '''');
+      prepare p_statement from @v_dynamic_sql;
+      execute p_statement;
+      deallocate prepare p_statement;
+  end|
+  
+  delimiter ;
+  ```
+
+- `mapper`调用存储过程
+
+  ```java
+  package com.future.demo.mapper;
+  
+  import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+  import com.future.demo.User;
+  import org.apache.ibatis.annotations.Options;
+  import org.apache.ibatis.annotations.Param;
+  import org.apache.ibatis.annotations.Select;
+  import org.apache.ibatis.mapping.StatementType;
+  
+  import java.util.List;
+  
+  public interface UserMapper extends BaseMapper<User> {
+      /**
+       * 协助存储过程sql注入测试
+       *
+       * @param username
+       * @return
+       */
+      @Select("call proc_sql_injection_assistant(#{username,mode=IN,jdbcType=VARCHAR})")
+      @Options(statementType = StatementType.CALLABLE)
+      List<User> getByUsernameViaProcedure(@Param("username") String username);
+  }
+  ```
+
+  
