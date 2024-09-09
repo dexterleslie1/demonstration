@@ -26,8 +26,8 @@ public class MemoryAssistantPreparationTests {
     public void testPrepareDatum() throws InterruptedException {
         int randomStrMinLength = 32;
         int randomStrMaxLength = 1024;
-        int totalCount = 1000000;
-        int batchCount = 10000;
+        int totalCount = 3 * 1000000;
+        int batchCount = 100000;
         int totalConcurrentThread = totalCount / batchCount;
         ExecutorService executorService = Executors.newCachedThreadPool();
         for (int i = 0; i < totalConcurrentThread; i++) {
@@ -37,6 +37,8 @@ public class MemoryAssistantPreparationTests {
                         MemoryAssistantEntity entity = new MemoryAssistantEntity();
                         entity.setRandomStr(RandomStringUtils.randomAlphanumeric(randomStrMinLength, randomStrMaxLength));
                         memoryAssistantMapper.insert(entity);
+                        entity.setExtraIndexId(entity.getId());
+                        memoryAssistantMapper.updateById(entity);
                     }
                 } catch (Exception ex) {
                     ex.printStackTrace();

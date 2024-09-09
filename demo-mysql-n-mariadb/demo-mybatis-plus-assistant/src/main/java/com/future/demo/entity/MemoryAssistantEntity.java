@@ -11,4 +11,5 @@ public class MemoryAssistantEntity {
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
     private String randomStr;
+    private Long extraIndexId;
 }

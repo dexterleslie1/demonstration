@@ -21,8 +21,8 @@ import java.util.concurrent.TimeUnit;
 @OutputTimeUnit(TimeUnit.SECONDS)
 @Fork(1)  //整体平均执行1次
 @Warmup(iterations = 5, time = 2, timeUnit = TimeUnit.SECONDS) //预热1s
-@Measurement(iterations = 3, time = 15, timeUnit = TimeUnit.SECONDS) //测试也是1s、五遍
-@Threads(-1)
+@Measurement(iterations = 30000, time = 15, timeUnit = TimeUnit.SECONDS) //测试也是1s、五遍
+@Threads(256)
 public class MemoryAssistantJmhTests {
 
     MemoryAssistantMapper memoryAssistantMapper;
@@ -40,7 +40,7 @@ public class MemoryAssistantJmhTests {
                 .forks(1)
                 // 发生错误停止测试
                 .shouldFailOnError(true)
-                .jvmArgs("-Xmx2G",
+                .jvmArgs("-Xmx4G",
                         "-server"/*,
                         "-XX:+UseG1GC",
                         "-XX:InitialHeapSize=8g",
@@ -66,6 +66,7 @@ public class MemoryAssistantJmhTests {
         this.memoryAssistantMapper = context.getBean(MemoryAssistantMapper.class);
 
         idList = this.memoryAssistantMapper.selectIds();
+        System.out.println("加载id个数为：" + idList.size());
     }
 
     /**
@@ -87,7 +88,18 @@ public class MemoryAssistantJmhTests {
     @Benchmark
     public void test(Blackhole blackhole) {
         Long randId = idList.get(R.nextInt(idList.size()));
-        MemoryAssistantEntity entity = memoryAssistantMapper.selectById(randId);
-        blackhole.consume(entity);
+        /*MemoryAssistantEntity entity = memoryAssistantMapper.selectById(randId);
+        blackhole.consume(entity);*/
+
+        long startId = randId;
+        int randRange = R.nextInt(2000);
+        if (randRange == 0) {
+            randRange = 1;
+        }
+        long endId = startId + randRange;
+        int randIndex = R.nextInt(randRange);
+        int randLength = R.nextInt(randRange);
+        List<MemoryAssistantEntity> entityList = memoryAssistantMapper.list(startId, endId, randIndex, randLength);
+        entityList.forEach(blackhole::consume);
     }
 }
