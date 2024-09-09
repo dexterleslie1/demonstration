@@ -1,8 +1,8 @@
-# 安装 Docker
+# 安装`Docker`
 
-## centOS8 上安装 Docker
+## `centOS8`上安装`Docker`
 
-**使用 docker 官方 yum 源在线安装最新版本的 docker**
+**使用`docker`官方`yum`源在线安装最新版本的`docker`**
 
 1. 准备一台 centOS8（centOS stream 8 也是兼容的）虚拟机，本次演示使用的 centOS8 系统信息如下：
 
@@ -68,4 +68,36 @@
    docker run --rm hello-world
    ```
 
-   
+
+
+
+## 启用`docker daemon`的调试模式
+
+>[参考链接](https://platform9.com/kb/kubernetes/enable-debug-logging-for-docker-daemon)
+
+编辑`/etc/docker/daemon.json`加入如下配置
+
+```json
+"debug": true
+```
+
+重启`docker daemon`
+
+```bash
+systemctl restart docker
+```
+
+执行`docker`或`docker compose`相关命令
+
+```bash
+docker run --rm hello-world
+
+docker pull nginx
+```
+
+查看`docker daemon`日志
+
+```bash
+journalctl -f -u docker
+```
+
