@@ -147,7 +147,7 @@ PrivateTmp=true
 WantedBy=multi-user.target
 ```
 
-使用`journalctl`查看服务器启动日志，`-f`相当于`tail -f`
+使用`journalctl`查看服务器启动日志，`-f`相当于`tail -f`，提示：`journalctl`使用二进制方式被存储在`/var/log/journal`或`/run/log/journal`目录中
 
 ```sh
 journalctl -u jmeter-server -f
