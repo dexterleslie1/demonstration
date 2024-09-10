@@ -90,6 +90,7 @@ module.exports = {
                     { text: 'Golang', link: '/golang/' },
                     { text: 'Python', link: '/python/' },
                     { text: 'Chrome用法', link: '/chrome/' },
+                    { text: 'Wireshark使用', link: '/wireshark/' },
                 ]
             },
             {
@@ -598,6 +599,13 @@ module.exports = {
                     title: "谷歌云",
                     children: [
                         'gce使用.md',
+                    ]
+                }
+            ], '/wireshark/': [
+                {
+                    title: "Wireshark使用",
+                    children: [
+                        '安装.md',
                     ]
                 }
             ],

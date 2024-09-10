@@ -64,6 +64,7 @@ source_dir_to_target_dir_map["../../demo-golang"]="golang"
 source_dir_to_target_dir_map["../../python"]="python"
 source_dir_to_target_dir_map["../../demo-chrome"]="chrome"
 source_dir_to_target_dir_map["../../demo-gcp"]="gcp"
+source_dir_to_target_dir_map["../../demo-wireshark"]="wireshark"
 
 for key in ${!source_dir_to_target_dir_map[@]}; do
     # 删除符号链接目录
