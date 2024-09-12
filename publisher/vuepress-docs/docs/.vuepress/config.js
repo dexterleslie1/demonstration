@@ -467,6 +467,7 @@ module.exports = {
                         'lua-resty-limit-traffic库使用.md',
                         'https设置.md',
                         '横向扩展.md',
+                        '通过环境变量传递参数.md',
                     ]
                 }
             ], '/性能测试/': [
