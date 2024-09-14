@@ -26,11 +26,11 @@ public class MemoryAssistantPreparationTests {
     public void testPrepareDatum() throws InterruptedException {
         int randomStrMinLength = 32;
         int randomStrMaxLength = 1024;
-        int totalCount = 3 * 1000000;
-        int batchCount = 100000;
-        int totalConcurrentThread = totalCount / batchCount;
+        int totalCount = 10 * 1000000;
+        int concurrentThreads = 50;
+        int batchCount = totalCount / concurrentThreads;
         ExecutorService executorService = Executors.newCachedThreadPool();
-        for (int i = 0; i < totalConcurrentThread; i++) {
+        for (int i = 0; i < concurrentThreads; i++) {
             executorService.submit(() -> {
                 try {
                     for (int j = 0; j < batchCount; j++) {
