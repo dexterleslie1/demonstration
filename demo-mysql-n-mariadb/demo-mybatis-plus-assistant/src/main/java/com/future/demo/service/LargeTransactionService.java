@@ -20,14 +20,12 @@ public class LargeTransactionService {
 
     /**
      * 执行大事务
+     * @param statementCount 事务中执行的语句数
      */
     @Transactional(rollbackFor = Throwable.class)
-    public void execute() {
+    public void execute(int statementCount) {
         int randomStrMinLength = 32;
         int randomStrMaxLength = 1024;
-
-        // 事务中执行的语句数
-        int statementCount = 128;
 
         // 插入多条数据，稍后会删除
         List<Long> idList = new ArrayList<>();
