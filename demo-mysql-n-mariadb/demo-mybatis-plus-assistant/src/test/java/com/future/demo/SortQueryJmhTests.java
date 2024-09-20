@@ -92,14 +92,14 @@ public class SortQueryJmhTests {
         Long randId = idList.get(R.nextInt(idList.size()));
 
         long startId = randId;
-        int randRange = R.nextInt(4000);
+        int randRange = R.nextInt(2000);
         if (randRange == 0) {
             randRange = 1;
         }
         long endId = startId + randRange;
-//        int randIndex = R.nextInt(randRange);
-//        int randLength = R.nextInt(randRange);
-        List<MemoryAssistantEntity> entityList = this.sortQueryService.test(startId, endId, 0, 1);
+        int randIndex = R.nextInt(randRange);
+        int randLength = R.nextInt(randRange);
+        List<MemoryAssistantEntity> entityList = this.sortQueryService.test(startId, endId, randIndex, randLength);
         entityList.forEach(blackhole::consume);
     }
 }
