@@ -18,7 +18,7 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 协助测试 sort_buffer_size 参数
+ * 协助测试 sort_buffer_size 参数对内存使用率影响
  */
 @BenchmarkMode(Mode.Throughput)
 @State(Scope.Benchmark) //使用的SpringBoot容器，都是无状态单例Bean，无安全问题，可以直接使用基准作用域BenchMark

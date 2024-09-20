@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
+import java.util.Map;
 
 public interface MemoryAssistantMapper extends MPJBaseMapper<MemoryAssistantEntity> {
     @Select("select id from memory_assistant")
@@ -16,4 +17,17 @@ public interface MemoryAssistantMapper extends MPJBaseMapper<MemoryAssistantEnti
                                      @Param("endId") long endId,
                                      @Param("startIndex") int startIndex,
                                      @Param("length") int length);
+
+    /**
+     * 用于协助测试tmp_table_size参数对内存使用率影响
+     *
+     * @param startId
+     * @param endId
+     * @return
+     */
+    @Select("SELECT randomStr,count(id) FROM memory_assistant \n" +
+            "WHERE (extraIndexId >= #{startId} AND extraIndexId <= #{endId})\n" +
+            "group by randomStr")
+    List<Map<String, Object>> testGroupBy(@Param("startId") long startId,
+                                          @Param("endId") long endId);
 }

@@ -1,7 +1,7 @@
 package com.future.demo;
 
 import com.future.demo.mapper.MemoryAssistantMapper;
-import com.future.demo.service.JoinQueryService;
+import com.future.demo.service.TempTableService;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 import org.openjdk.jmh.runner.Runner;
@@ -18,8 +18,7 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 /**
- * join查询性能测试
- * 1、协助测试 join_buffer_size 参数
+ * 协助测试 tmp_table_size 参数
  */
 @BenchmarkMode(Mode.Throughput)
 @State(Scope.Benchmark) //使用的SpringBoot容器，都是无状态单例Bean，无安全问题，可以直接使用基准作用域BenchMark
@@ -28,10 +27,10 @@ import java.util.concurrent.TimeUnit;
 @Warmup(iterations = 5, time = 2, timeUnit = TimeUnit.SECONDS) //预热1s
 @Measurement(iterations = 30000, time = 15, timeUnit = TimeUnit.SECONDS) //测试也是1s、五遍
 @Threads(128)
-public class JoinQueryJmhTests {
+public class TempTableJmhTests {
 
     MemoryAssistantMapper memoryAssistantMapper;
-    JoinQueryService joinQueryService;
+    TempTableService tempTableService;
     List<Long> idList;
     Random R = new Random(System.currentTimeMillis());
 
@@ -41,7 +40,7 @@ public class JoinQueryJmhTests {
     public static void main(String[] args) throws RunnerException {
         //使用注解之后只需要配置一下include即可，fork和warmup、measurement都是注解
         Options opt = new OptionsBuilder()
-                .include(JoinQueryJmhTests.class.getSimpleName())
+                .include(TempTableJmhTests.class.getSimpleName())
                 // 断点调试时fork=0
                 .forks(1)
                 // 发生错误停止测试
@@ -70,7 +69,7 @@ public class JoinQueryJmhTests {
         context = SpringApplication.run(Application.class);
         //获取对象
         this.memoryAssistantMapper = context.getBean(MemoryAssistantMapper.class);
-        this.joinQueryService = context.getBean(JoinQueryService.class);
+        this.tempTableService = context.getBean(TempTableService.class);
 
         idList = this.memoryAssistantMapper.selectIds();
         System.out.println("加载id个数为：" + idList.size());
@@ -98,9 +97,7 @@ public class JoinQueryJmhTests {
             randRange = 1;
         }
         long endId = startId + randRange;
-        int randIndex = R.nextInt(randRange);
-        int randLength = R.nextInt(randRange);
-        List<Map<String, Object>> mapList = this.joinQueryService.test(startId, endId, randIndex, randLength);
-        mapList.forEach(blackhole::consume);
+        List<Map<String, Object>> returnList = this.tempTableService.test(startId, endId);
+        returnList.forEach(blackhole::consume);
     }
 }

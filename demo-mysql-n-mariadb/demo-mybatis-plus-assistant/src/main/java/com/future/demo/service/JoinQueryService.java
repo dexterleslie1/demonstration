@@ -18,7 +18,7 @@ public class JoinQueryService {
     @Resource
     MemoryAssistantJoinMapper memoryAssistantJoinMapper;
 
-    public List<Map<String, Object>> testJoin(long startId, long endId, int startIndex, int length) {
+    public List<Map<String, Object>> test(long startId, long endId, int startIndex, int length) {
         MPJLambdaWrapper<MemoryAssistantEntity> queryWrapper
                 = new MPJLambdaWrapper<>();
         queryWrapper
@@ -27,7 +27,6 @@ public class JoinQueryService {
                 .leftJoin(MemoryAssistantJoinEntity.class, MemoryAssistantJoinEntity::getRandomStr, MemoryAssistantEntity::getRandomStr)
                 .ge(MemoryAssistantEntity::getExtraIndexId, startId)
                 .le(MemoryAssistantEntity::getExtraIndexId, endId)
-//                .orderByDesc(MemoryAssistantEntity::getRandomStr)
                 .last("limit " + startIndex + "," + length);
 
         return this.memoryAssistantMapper.selectJoinMaps(queryWrapper);
