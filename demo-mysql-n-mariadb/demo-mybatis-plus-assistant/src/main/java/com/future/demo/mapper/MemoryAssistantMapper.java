@@ -1,13 +1,13 @@
 package com.future.demo.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.future.demo.entity.MemoryAssistantEntity;
+import com.github.yulichang.base.MPJBaseMapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
 
-public interface MemoryAssistantMapper extends BaseMapper<MemoryAssistantEntity> {
+public interface MemoryAssistantMapper extends MPJBaseMapper<MemoryAssistantEntity> {
     @Select("select id from memory_assistant")
     List<Long> selectIds();
 

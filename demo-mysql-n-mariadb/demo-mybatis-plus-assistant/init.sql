@@ -19,3 +19,13 @@ CREATE TABLE IF NOT EXISTS `memory_assistant`
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 collate=utf8mb4_general_ci;
 
 create index memory_assistant_idx1 on memory_assistant(extraIndexId);
+
+# 用于协助测试mysql join_buffer_size
+CREATE TABLE IF NOT EXISTS `memory_assistant_join`
+(
+    id BIGINT(20) NOT NULL auto_increment primary key COMMENT '主键ID',
+    randomStr VARCHAR(1024) not null,
+    randomStr2 VARCHAR(1024) not null
+    ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 collate=utf8mb4_general_ci;
+
+create index memory_assistant_join_idx1 on memory_assistant_join(randomStr);

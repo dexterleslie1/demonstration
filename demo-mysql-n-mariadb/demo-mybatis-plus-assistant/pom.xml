@@ -91,6 +91,13 @@
             <artifactId>jmh-generator-annprocess</artifactId>
             <version>1.27</version>
         </dependency>
+
+        <!-- 用于mybatis-plus join查询插件 -->
+        <dependency>
+            <groupId>com.github.yulichang</groupId>
+            <artifactId>mybatis-plus-join</artifactId>
+            <version>1.4.13</version>
+        </dependency>
     </dependencies>
 
     <build>
