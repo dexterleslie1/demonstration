@@ -1,5 +1,6 @@
 package com.future.demo;
 
+import com.future.demo.entity.MemoryAssistantEntity;
 import com.future.demo.mapper.MemoryAssistantMapper;
 import com.future.demo.service.TempTableService;
 import org.openjdk.jmh.annotations.*;
@@ -13,7 +14,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
@@ -97,7 +97,7 @@ public class TempTableJmhTests {
             randRange = 1;
         }
         long endId = startId + randRange;
-        List<Map<String, Object>> returnList = this.tempTableService.test(startId, endId);
+        List<MemoryAssistantEntity> returnList = this.tempTableService.test(startId, endId);
         returnList.forEach(blackhole::consume);
     }
 }

@@ -6,7 +6,6 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
-import java.util.Map;
 
 public interface MemoryAssistantMapper extends MPJBaseMapper<MemoryAssistantEntity> {
     @Select("select id from memory_assistant")
@@ -20,14 +19,19 @@ public interface MemoryAssistantMapper extends MPJBaseMapper<MemoryAssistantEnti
 
     /**
      * 用于协助测试tmp_table_size参数对内存使用率影响
+     * <p>
+     * 参考以下资料通过union查询触发内存temp table
+     * https://dev.mysql.com/doc/refman/8.4/en/internal-temporary-tables.html
      *
      * @param startId
      * @param endId
      * @return
      */
-    @Select("SELECT randomStr,count(id) FROM memory_assistant \n" +
-            "WHERE (extraIndexId >= #{startId} AND extraIndexId <= #{endId})\n" +
-            "group by randomStr")
-    List<Map<String, Object>> testGroupBy(@Param("startId") long startId,
+    @Select("SELECT id,randomStr,extraIndexId FROM memory_assistant " +
+            "WHERE extraIndexId >= #{startId} AND extraIndexId <= #{endId} " +
+            "union " +
+            "SELECT id,randomStr,extraIndexId FROM memory_assistant " +
+            "WHERE extraIndexId >= #{startId} AND extraIndexId <= #{endId}")
+    List<MemoryAssistantEntity> testUnion(@Param("startId") long startId,
                                           @Param("endId") long endId);
 }
