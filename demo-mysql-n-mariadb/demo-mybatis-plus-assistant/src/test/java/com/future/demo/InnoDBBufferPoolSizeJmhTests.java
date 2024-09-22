@@ -16,6 +16,9 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * 辅助测试innodb_buffer_pool_size参数
+ */
 @BenchmarkMode(Mode.Throughput)
 @State(Scope.Benchmark) //使用的SpringBoot容器，都是无状态单例Bean，无安全问题，可以直接使用基准作用域BenchMark
 @OutputTimeUnit(TimeUnit.SECONDS)
@@ -23,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 @Warmup(iterations = 5, time = 2, timeUnit = TimeUnit.SECONDS) //预热1s
 @Measurement(iterations = 30000, time = 15, timeUnit = TimeUnit.SECONDS) //测试也是1s、五遍
 @Threads(256)
-public class MemoryAssistantJmhTests {
+public class InnoDBBufferPoolSizeJmhTests {
 
     MemoryAssistantMapper memoryAssistantMapper;
     List<Long> idList;
@@ -35,7 +38,7 @@ public class MemoryAssistantJmhTests {
     public static void main(String[] args) throws RunnerException {
         //使用注解之后只需要配置一下include即可，fork和warmup、measurement都是注解
         Options opt = new OptionsBuilder()
-                .include(MemoryAssistantJmhTests.class.getSimpleName())
+                .include(InnoDBBufferPoolSizeJmhTests.class.getSimpleName())
                 // 断点调试时fork=0
                 .forks(1)
                 // 发生错误停止测试
