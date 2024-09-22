@@ -2,9 +2,11 @@ package com.future.demo;
 
 import com.future.demo.entity.MemoryAssistantEntity;
 import com.future.demo.entity.MemoryAssistantJoinEntity;
+import com.future.demo.entity.MemoryAssistantMyISAMEntity;
 import com.future.demo.entity.User;
 import com.future.demo.mapper.MemoryAssistantJoinMapper;
 import com.future.demo.mapper.MemoryAssistantMapper;
+import com.future.demo.mapper.MemoryAssistantMyISAMMapper;
 import com.future.demo.mapper.UserMapper;
 import com.future.demo.service.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +34,8 @@ public class DatumPreparationTests {
     MemoryAssistantMapper memoryAssistantMapper;
     @Resource
     MemoryAssistantJoinMapper memoryAssistantJoinMapper;
+    @Resource
+    MemoryAssistantMyISAMMapper memoryAssistantMyISAMMapper;
 
     /**
      * 用于准备测试数据
@@ -40,11 +44,14 @@ public class DatumPreparationTests {
      */
     @Test
     public void test() throws InterruptedException {
+        int totalCount, batchCount, randomStrMinLength, randomStrMaxLength, concurrentThreads;
+        ExecutorService executorService;
+
         log.debug("正在准备用户测试数据");
-        int totalCount = 1000000;
-        int batchCount = 10000;
+        totalCount = 1000000;
+        batchCount = 10000;
         int totalConcurrentThread = totalCount / batchCount;
-        ExecutorService executorService = Executors.newCachedThreadPool();
+        executorService = Executors.newCachedThreadPool();
         for (int i = 0; i < totalConcurrentThread; i++) {
             int finalI = i;
             int finalBatchCount = batchCount;
@@ -60,18 +67,20 @@ public class DatumPreparationTests {
         while (!executorService.awaitTermination(1, TimeUnit.SECONDS)) ;
 
         log.debug("正在准备memory_assistant和memory_assistant_join测试数据");
-        int randomStrMinLength = 32;
-        int randomStrMaxLength = 1024;
+        randomStrMinLength = 32;
+        randomStrMaxLength = 1024;
         totalCount = 5 * 1000000;
-        int concurrentThreads = 50;
+        concurrentThreads = 50;
         batchCount = totalCount / concurrentThreads;
         executorService = Executors.newCachedThreadPool();
         for (int i = 0; i < concurrentThreads; i++) {
             int finalBatchCount1 = batchCount;
+            int finalRandomStrMinLength = randomStrMinLength;
+            int finalRandomStrMaxLength = randomStrMaxLength;
             executorService.submit(() -> {
                 try {
                     for (int j = 0; j < finalBatchCount1; j++) {
-                        String randomStr = RandomStringUtils.randomAlphanumeric(randomStrMinLength, randomStrMaxLength);
+                        String randomStr = RandomStringUtils.randomAlphanumeric(finalRandomStrMinLength, finalRandomStrMaxLength);
                         MemoryAssistantEntity entity = new MemoryAssistantEntity();
                         entity.setRandomStr(randomStr);
                         memoryAssistantMapper.insert(entity);
@@ -81,9 +90,38 @@ public class DatumPreparationTests {
                         // 准备memory_assistant_join数据
                         MemoryAssistantJoinEntity joinEntity = new MemoryAssistantJoinEntity();
                         joinEntity.setRandomStr(randomStr);
-                        randomStr = RandomStringUtils.randomAlphanumeric(randomStrMinLength, randomStrMaxLength);
+                        randomStr = RandomStringUtils.randomAlphanumeric(finalRandomStrMinLength, finalRandomStrMaxLength);
                         joinEntity.setRandomStr2(randomStr);
                         memoryAssistantJoinMapper.insert(joinEntity);
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            });
+        }
+        executorService.shutdown();
+        while (!executorService.awaitTermination(1, TimeUnit.SECONDS)) ;
+
+        log.debug("正在准备memory_assistant_myisam测试数据");
+        randomStrMinLength = 32;
+        randomStrMaxLength = 1024;
+        totalCount = 5 * 1000000;
+        concurrentThreads = 50;
+        batchCount = totalCount / concurrentThreads;
+        executorService = Executors.newCachedThreadPool();
+        for (int i = 0; i < concurrentThreads; i++) {
+            int finalBatchCount1 = batchCount;
+            int finalRandomStrMinLength1 = randomStrMinLength;
+            int finalRandomStrMaxLength1 = randomStrMaxLength;
+            executorService.submit(() -> {
+                try {
+                    for (int j = 0; j < finalBatchCount1; j++) {
+                        String randomStr = RandomStringUtils.randomAlphanumeric(finalRandomStrMinLength1, finalRandomStrMaxLength1);
+                        MemoryAssistantMyISAMEntity entity = new MemoryAssistantMyISAMEntity();
+                        entity.setRandomStr(randomStr);
+                        memoryAssistantMyISAMMapper.insert(entity);
+                        entity.setExtraIndexId(entity.getId());
+                        memoryAssistantMyISAMMapper.updateById(entity);
                     }
                 } catch (Exception ex) {
                     ex.printStackTrace();

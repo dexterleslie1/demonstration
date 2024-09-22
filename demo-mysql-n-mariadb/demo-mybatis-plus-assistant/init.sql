@@ -26,6 +26,17 @@ CREATE TABLE IF NOT EXISTS `memory_assistant_join`
     id BIGINT(20) NOT NULL auto_increment primary key COMMENT '主键ID',
     randomStr VARCHAR(1024) not null,
     randomStr2 VARCHAR(1024) not null
-    ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 collate=utf8mb4_general_ci;
+) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 collate=utf8mb4_general_ci;
 
 create index memory_assistant_join_idx1 on memory_assistant_join(randomStr);
+
+# 用于协助 read_buffer_size 测试
+CREATE TABLE IF NOT EXISTS `memory_assistant_myisam`
+(
+    id BIGINT(20) NOT NULL auto_increment COMMENT '主键ID',
+    randomStr VARCHAR(1024) not null,
+    extraIndexId BIGINT(20),
+    PRIMARY KEY (id)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 collate=utf8mb4_general_ci;
+
+create index memory_assistant_myisam_idx1 on memory_assistant_myisam(extraIndexId);
