@@ -105,10 +105,35 @@ public class MemoryUsageJmhTests {
      */
     @Benchmark
     public void test(Blackhole blackhole) {
+        /*// 测试join查询内存利用率
+        List<Map<String, Object>> mapList = this.joinQueryService.test(startId, endId, randIndex, randLength);
+        mapList.forEach(blackhole::consume);*/
+        int randInt = R.nextInt(5);
+        if (randInt == 0) {
+            this.testInnodbBufferPoolSizeMemoryConsumption(blackhole);
+        } else if (randInt == 1) {
+            this.testBinlogCacheSizeMemoryConsumption(blackhole);
+        } else if (randInt == 2) {
+            this.testReadBufferSizeMemoryConsumption(blackhole);
+        } else if (randInt == 3) {
+            this.testSortBufferSizeMemoryConsumption(blackhole);
+        } else {
+            this.testTempTableSizeMemoryConsumption(blackhole);
+        }
+    }
+
+    final static int RandomBound = 2000;
+
+    /**
+     * 测试innodb_buffer_pool_size内存利用率
+     *
+     * @param blackhole
+     */
+    void testInnodbBufferPoolSizeMemoryConsumption(Blackhole blackhole) {
         Long randId = idList.get(R.nextInt(idList.size()));
 
         long startId = randId;
-        int randRange = R.nextInt(2000);
+        int randRange = R.nextInt(RandomBound);
         if (randRange == 0) {
             randRange = 1;
         }
@@ -116,45 +141,75 @@ public class MemoryUsageJmhTests {
         int randIndex = R.nextInt(randRange);
         int randLength = R.nextInt(randRange);
 
-        // 测试innodb_buffer_pool_size内存利用率
         List<MemoryAssistantEntity> entityList = memoryAssistantMapper.list(startId, endId, randIndex, randLength);
         entityList.forEach(blackhole::consume);
+    }
 
-//        // 测试join查询内存利用率
-//        List<Map<String, Object>> mapList = this.joinQueryService.test(startId, endId, randIndex, randLength);
-//        mapList.forEach(blackhole::consume);
+    /**
+     * 测试大事务binlog_cache_size内存利用率
+     *
+     * @param blackhole
+     */
+    void testBinlogCacheSizeMemoryConsumption(Blackhole blackhole) {
+        int statementCount = R.nextInt(64);
+        this.largeTransactionService.execute(statementCount);
+    }
 
-//        // 测试大事务binlog_cache_size内存利用率
-//        this.largeTransactionService.execute(4096);
+    /**
+     * 测试read_buffer_size内存利用率
+     *
+     * @param blackhole
+     */
+    void testReadBufferSizeMemoryConsumption(Blackhole blackhole) {
+        Long randId = idList.get(R.nextInt(idList.size()));
 
-        // *测试read_buffer_size内存利用率
-        randId = idListMyisam.get(R.nextInt(idListMyisam.size()));
-
-        startId = randId;
-        randRange = R.nextInt(2000);
+        long startId = randId;
+        int randRange = R.nextInt(RandomBound);
         if (randRange == 0) {
             randRange = 1;
         }
-        endId = startId + randRange;
+        long endId = startId + randRange;
         List<MemoryAssistantMyISAMEntity> returnList = this.memoryAssistantMyISAMMapper.testReadBufferSize(startId, endId, UUID.randomUUID().toString());
         returnList.forEach(blackhole::consume);
+    }
 
-        // *测试sort_buffer_size内存利用率
-        randId = idList.get(R.nextInt(idList.size()));
+    /**
+     * 测试sort_buffer_size内存利用率
+     *
+     * @param blackhole
+     */
+    void testSortBufferSizeMemoryConsumption(Blackhole blackhole) {
+        Long randId = idList.get(R.nextInt(idList.size()));
 
-        startId = randId;
-        randRange = R.nextInt(2000);
+        long startId = randId;
+        int randRange = R.nextInt(RandomBound);
         if (randRange == 0) {
             randRange = 1;
         }
-        endId = startId + randRange;
-        randIndex = R.nextInt(randRange);
-        randLength = R.nextInt(randRange);
-        entityList = this.sortQueryService.test(startId, endId, randIndex, randLength);
-        entityList.forEach(blackhole::consume);
+        long endId = startId + randRange;
+        int randIndex = R.nextInt(randRange);
+        int randLength = R.nextInt(randRange);
 
-        // *测试tmp_table_size内存利用率
-        entityList = this.tempTableService.test(startId, endId);
+        List<MemoryAssistantEntity> entityList = this.sortQueryService.test(startId, endId, randIndex, randLength);
+        entityList.forEach(blackhole::consume);
+    }
+
+    /**
+     * 测试tmp_table_size内存利用率
+     *
+     * @param blackhole
+     */
+    void testTempTableSizeMemoryConsumption(Blackhole blackhole) {
+        Long randId = idList.get(R.nextInt(idList.size()));
+
+        long startId = randId;
+        int randRange = R.nextInt(RandomBound);
+        if (randRange == 0) {
+            randRange = 1;
+        }
+        long endId = startId + randRange;
+
+        List<MemoryAssistantEntity> entityList = this.tempTableService.test(startId, endId);
         entityList.forEach(blackhole::consume);
     }
 }
