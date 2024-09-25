@@ -1,0 +1,33 @@
+[mysqld]
+slow_query_log=0.01
+long_query_time=1
+slow_query_log_file=slow-query.log
+innodb_flush_log_at_trx_commit=0
+innodb_file_per_table=1
+
+# 一旦提供log_bin参数无论是何值或者不提供值时，表示启用binlog功能
+# 不提供log_bin表示禁用binlog功能
+log_bin
+expire_logs_days=10
+binlog_format=mixed
+max_binlog_size=1024m
+# 指定binlog文件的前缀
+log_basename=master1
+# mysql5.7需要设置此参数才能够启动
+server-id=10001
+
+max_connections=1024
+
+innodb_buffer_pool_size=5m
+innodb_log_buffer_size=128k
+# mysql8报告变量不存在导致不能启动
+query_cache_size=0
+key_buffer_size=8
+thread_stack=146k
+sort_buffer_size=64k
+read_buffer_size=32k
+read_rnd_buffer_size=32k
+max_heap_table_size=16K
+tmp_table_size=1k
+join_buffer_size=32k
+binlog_cache_size=16k
