@@ -32,7 +32,7 @@ import java.util.concurrent.TimeUnit;
 @Fork(1)  //整体平均执行1次
 @Warmup(iterations = 5, time = 2, timeUnit = TimeUnit.SECONDS) //预热1s
 @Measurement(iterations = 30000, time = 15, timeUnit = TimeUnit.SECONDS) //测试也是1s、五遍
-@Threads(128)
+@Threads(8)
 public class MemoryUsageJmhTests {
 
     MemoryAssistantMapper memoryAssistantMapper;

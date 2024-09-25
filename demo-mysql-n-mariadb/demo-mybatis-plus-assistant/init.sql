@@ -28,7 +28,8 @@ CREATE TABLE IF NOT EXISTS `memory_assistant_join`
     randomStr2 VARCHAR(1024) not null
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 collate=utf8mb4_general_ci;
 
-create index memory_assistant_join_idx1 on memory_assistant_join(randomStr);
+# mysql5.7报告索引字段太长错误，无法创建索引
+# create index memory_assistant_join_idx1 on memory_assistant_join(randomStr);
 
 # 用于协助 read_buffer_size 测试
 CREATE TABLE IF NOT EXISTS `memory_assistant_myisam`
