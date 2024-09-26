@@ -9,3 +9,8 @@ RUN tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz 
 
 COPY db.sql /docker-entrypoint-initdb.d/
 COPY my-customize.cnf /etc/mysql/conf.d/my-customize.cnf
+
+# https://dba.stackexchange.com/questions/335925/mariadb-11-2-using-too-much-ram
+# https://stackoverflow.com/questions/60430448/mysterious-mariadb-10-4-1-ram-ussage
+# https://stackoverflow.com/questions/78071133/mariadb-not-releasing-ram-after-jobs-finish
+# ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so.2
