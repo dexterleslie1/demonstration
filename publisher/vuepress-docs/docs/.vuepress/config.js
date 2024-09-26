@@ -271,8 +271,7 @@ module.exports = {
                     children: [
                         '',
                         'spring-boot项目配置mybatis-plus.md',
-                        'querywrapper用法.md',
-                        'mapper用法.md',
+                        '用法.md',
                     ]
                 }
             ], '/maven/': [
