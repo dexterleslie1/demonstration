@@ -8,7 +8,6 @@ RUN curl --silent --output dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz https
 RUN tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
 
 COPY db.sql /docker-entrypoint-initdb.d/
-COPY my-customize.cnf /etc/mysql/conf.d/my-customize.cnf
 
 # https://dba.stackexchange.com/questions/335925/mariadb-11-2-using-too-much-ram
 # https://stackoverflow.com/questions/60430448/mysterious-mariadb-10-4-1-ram-ussage

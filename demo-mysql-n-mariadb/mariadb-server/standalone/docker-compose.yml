@@ -20,8 +20,9 @@ services:
      # 设置innodb-buffer-pool-size
      # https://stackoverflow.com/questions/64825998/how-to-change-the-default-config-for-mysql-when-using-docker-image
      - --innodb-buffer-pool-size=1g
-    #volumes:
+    volumes:
     #  - ~/data-demo-mariadb-standalone-server:/var/lib/mysql
+      - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf:ro
     environment:
       - LANG=C.UTF-8
       - TZ=Asia/Shanghai
