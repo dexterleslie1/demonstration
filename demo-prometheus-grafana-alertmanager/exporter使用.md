@@ -1,6 +1,8 @@
-# exporter的使用
+# `exporter`的使用
 
-## 使用`docker-compose`运行`node_exporter`
+
+
+## `node_exporter`使用
 
 `docker-compose.yaml`内容如下：
 
@@ -49,7 +51,9 @@ scrape_configs:
 
 登录`grafana`导入`id`为`1860`的`node_exporter dashboard`
 
-## 使用`docker-compose`运行`process_exporter`
+
+
+## `process_exporter`使用
 
 > process-Exporter是一个开源的Prometheus指标导出器，主要用于监控Linux或Unix系统上的进程状态和资源使用情况。
 
@@ -307,3 +311,39 @@ docker compose up -d
 docker compose down -v
 ```
 
+
+
+## `mysqld-exporter`使用
+
+>[监控MySQL运行状态：MySQLD Exporter](https://yunlzheng.gitbook.io/prometheus-book/part-ii-prometheus-jin-jie/exporter/commonly-eporter-usage/use-promethues-monitor-mysql)
+
+`mysqld-exporter`详细用法请参考 [链接](https://gitee.com/dexterleslie/demonstration/tree/master/demo-prometheus-grafana-alertmanager/demo-mysqld-exporter)
+
+`docker-compose.yaml`运行`mysqld-exporter`
+
+```yaml
+version: '3'
+
+services:  
+  mysqld_exporter:  
+    image: prom/mysqld-exporter:v0.12.1
+    ports:  
+      - "9104:9104"
+    environment:
+      - DATA_SOURCE_NAME=root:123456@(192.168.235.128:3306)/
+```
+
+`prometheus`配置收集`mysqld-exporter`数据
+
+```yaml
+scrape_configs:
+  # prometheus收集mysqld exporter容器的运行数据
+  - job_name: 'mysqld_exporter'
+    scrape_interval: 15s
+    static_configs:
+    - targets: ['mysqld_exporter:9104']
+```
+
+运行`mysqld-exporter`容器后，访问`http://localhost:9104/`查看`mysqld-exporter`是否正常运行
+
+`grafana`导入`7362 dashboards`
