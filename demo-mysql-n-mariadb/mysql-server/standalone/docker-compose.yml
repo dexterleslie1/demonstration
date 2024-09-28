@@ -8,11 +8,13 @@ services:
     command:
      - --character-set-server=utf8mb4
      - --collation-server=utf8mb4_general_ci
-     - --skip-character-set-client-handshake 
+     - --skip-character-set-client-handshake
     volumes:
     #  - ~/data-demo-mysql-standalone-server:/var/lib/mysql
      - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf
     environment:
+      # 解决mysql cli中文乱码问题
+      # https://blog.csdn.net/qq_44766883/article/details/128065916
       - LANG=C.UTF-8
       - TZ=Asia/Shanghai
       - MYSQL_ROOT_PASSWORD=123456
