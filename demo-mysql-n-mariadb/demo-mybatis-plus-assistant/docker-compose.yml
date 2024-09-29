@@ -11,8 +11,11 @@ services:
     environment:
       - MYSQL_ROOT_PASSWORD=123456
       - TZ=Asia/Shanghai
+      # 解决mysql cli中文乱码问题
+      # https://blog.csdn.net/qq_44766883/article/details/128065916
+      - LANG=C.UTF-8
     volumes:
-      - ./my-memory-leak.cnf:/etc/mysql/conf.d/my.cnf
+      - ./my.cnf:/etc/mysql/conf.d/my.cnf
       - data-demo:/var/lib/mysql
     command:
       - --character-set-server=utf8mb4

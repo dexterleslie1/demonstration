@@ -157,6 +157,11 @@ module.exports = {
                         '系统数据库和表.md',
                         '函数.md',
                         '计算数据和索引大小.md',
+                        '命令.md',
+                        '原理.md',
+                        '配置参数.md',
+                        '内存.md',
+                        'too-many-connections处理.md',
                     ]
                 }
             ],
