@@ -170,6 +170,7 @@ module.exports = {
                         'docker-swarm.md',
                         'docker命令.md',
                         '资源限制.md',
+                        'dockerize用法.md',
                     ]
                 }
             ],
