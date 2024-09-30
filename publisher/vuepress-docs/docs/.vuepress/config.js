@@ -91,6 +91,7 @@ module.exports = {
                     { text: 'Python', link: '/python/' },
                     { text: 'Chrome用法', link: '/chrome/' },
                     { text: 'Wireshark使用', link: '/wireshark/' },
+                    { text: 'Gost使用', link: '/gost/' },
                 ]
             },
             {
@@ -612,6 +613,13 @@ module.exports = {
                     title: "Wireshark使用",
                     children: [
                         '安装.md',
+                    ]
+                }
+            ], '/gost/': [
+                {
+                    title: "Gost使用",
+                    children: [
+                        '',
                     ]
                 }
             ],
