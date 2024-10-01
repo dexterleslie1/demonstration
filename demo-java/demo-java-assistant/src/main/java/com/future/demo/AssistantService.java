@@ -18,16 +18,14 @@ public class AssistantService {
         ExecutorService executorService = Executors.newCachedThreadPool();
         // 创建256个线程
         for (int i = 0; i < 256; i++) {
-            executorService.submit(new Runnable() {
-                @Override
-                public void run() {
-                    // 每个线程函数递归调用的深度为8*1024
-                    int maxDepth = 8 * 1024;
-                    try {
-                        investigateXssRecursion(maxDepth);
-                    } catch (StackOverflowError e) {
-                        System.out.println("Stack overflow occurred in thread " + Thread.currentThread().getName());
-                    }
+            executorService.submit(() -> {
+                // 每个线程函数递归调用的深度
+                // 207942这个值是通过测试-Xss10m时得出的
+                int maxDepth = 207942;
+                try {
+                    investigateXssRecursion(maxDepth);
+                } catch (StackOverflowError e) {
+                    System.out.println("Stack overflow occurred in thread " + Thread.currentThread().getName());
                 }
             });
         }
