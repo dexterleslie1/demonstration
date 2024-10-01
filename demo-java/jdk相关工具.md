@@ -1,11 +1,11 @@
 # `jdk`相关工具
 
-## jps
+## `jps`
 
 > [参考链接1](https://blog.csdn.net/wisgood/article/details/38942449)
 > [参考链接2](https://docs.oracle.com/javase/7/docs/technotes/tools/share/jps.html)
 
-显示本机所有java进程，-m 显示传递给main方法的参数，-l 显示main方法包的完整路径或者jar文件的完整路径，-v 显示传递给jvm的参数
+显示本机所有java进程，`-m`显示传递给`main`方法的参数，`-l`显示`main`方法包的完整路径或者`jar`文件的完整路径，`-v`显示传递给`jvm`的参数
 
 ```sh
 jps -mlv
@@ -14,54 +14,55 @@ jps -mlv
 jps -l
 ```
 
-- 配置支持远程jps命令
+- 配置支持远程`jps`命令
 
-  启动本地jstatd（rmi协议）服务，使本地jvm可以被jps、visualVM（jconsole连接不了）远程监控
-  https://blog.csdn.net/p358278505/article/details/81213747
-
+  启动本地`jstatd`（`rmi`协议）服务，使本地`jvm`可以被`jps`、`visualVM`（`jconsole`连接不了）远程监控
   
-
+  https://blog.csdn.net/p358278505/article/details/81213747
+  
+  
+  
   创建文件内容如下
-
+  
   ```sh
   vi /usr/lib/jvm/java-1.8.0-openjdk-1.8.0.232.b09-0.el7_7.x86_64/bin/jstats.all.policy
   ```
-
+  
   ```json
   grant codebase "file:${java.home}/../lib/tools.jar" {
   	permission java.security.AllPermission;
   };
   ```
-
   
-
-  启动jstatd服务
-
+  
+  
+  启动`jstatd`服务
+  
   ```sh
   ./jstatd -J-Djava.security.policy=jstatd.all.policy -J-Djava.rmi.server.hostname=192.168.1.173
   ```
-
   
-
-  客户机远程连接jstatd服务
-
+  
+  
+  客户机远程连接`jstatd`服务
+  
   ```sh
   jps -mlv rmi://192.168.1.173:19000
   ```
-
   
+  
+  
+  注意：实质上`jconsole`不能远程连接`jstatd`，使用`visualVM`远程连接`jstatd`后，不能查看`cpu`、`thread`情况，似乎此远程`rmi`方案还不如`jmx`方案，所以暂时放弃不使用此方案远程监控，继续使用`jmx`远程监控方法
 
-  注意：实质上jconsole不能远程连接jstatd，使用visualVM远程连接jstatd后，不能查看cpu、thread情况，似乎此远程rmi方案还不如jmx方案，所以暂时放弃不使用此方案远程监控，继续使用jmx远程监控方法
-
-## jinfo
+## `jinfo`
 
 >[参考链接1](https://www.jianshu.com/p/8d8aef212b25)
 
-这个命令作用是实时查看和调整虚拟机运行参数。 之前的jps -v口令只能查看到显示指定的参数，如果想要查看未被显示指定的参数的值就要使用jinfo口令
+这个命令作用是实时查看和调整虚拟机运行参数。 之前的`jps -v`口令只能查看到显示指定的参数，如果想要查看未被显示指定的参数的值就要使用`jinfo`口令
 
-TODO 研究学习怎么使用jinfo动态修改jvm运行参数
+`TODO`研究学习怎么使用`jinfo`动态修改`jvm`运行参数
 
-输出当前 jvm 进程的全部参数和系统属性
+输出当前`jvm`进程的全部参数和系统属性
 
 ```sh
 jinfo [进程id]
@@ -79,7 +80,9 @@ jinfo -sysprops [进程pid]
 jinfo -flags [进程pid]
 ```
 
-## jmap
+
+
+## `jmap`
 
 > [参考链接1](https://blog.csdn.net/weixin_42040639/article/details/103771358)
 
@@ -97,7 +100,7 @@ jmap -finalizerinfo [进程id]
 
 
 
-打印堆的对象统计，包括对象数、内存大小等。NOTE：会STW
+打印堆的对象统计，包括对象数、内存大小等。注意：会STW
 
 -histo:live这个命令执行，JVM会先触发gc，然后再统计信息。
 
@@ -127,9 +130,13 @@ jmap -dump:live,format=b,file=heapdump.hprof [进程id]
 jmap -dump:format=b,file=heapdump.hprof [进程id]
 ```
 
-## jhat
 
-NOTE：不使用jhat分析heapdump文件，因为当使用jhat解析1g以上的heapdump文件时非常慢，也不能使用MAT，因为如果解析8g的heapdump MAT会报告OOM，使用jprofiler能够解决以上问题
+
+## `jhat`
+
+注意：不使用jhat分析heapdump文件，因为当使用jhat解析1g以上的heapdump文件时非常慢，也不能使用MAT，因为如果解析8g的heapdump MAT会报告OOM，使用jprofiler能够解决以上问题
+
+
 
 ## `jstat`
 
@@ -174,11 +181,11 @@ jstat -gc 29683 5000
 
 显示内存使用百分比
 
-> **-gcutil**：与`-gc`相似，但显示的是已用空间占总空间的百分比，而不是绝对字节数。这对于快速评估内存使用率和垃圾收集效率非常有用。
-
 ```bash
 jstat -gcutil 77553
 ```
+
+`-gcutil`：与`-gc`相似，但显示的是已用空间占总空间的百分比，而不是绝对字节数。这对于快速评估内存使用率和垃圾收集效率非常有用。
 
 上面命令输出解析：
 
@@ -198,11 +205,11 @@ jstat -gcutil 77553
 
 显示内存各个代的容量
 
->**-gccapacity**：显示各个内存池的容量和它们当前的使用情况（以字节为单位）。这包括年轻代中的Eden区、两个Survivor区（From和To），以及年老代和永久代（或元空间，取决于JVM版本）。
-
 ```bash
 jstat -gccapacity 77553
 ```
+
+`-gccapacity`：显示各个内存池的容量和它们当前的使用情况（以字节为单位）。这包括年轻代中的Eden区、两个Survivor区（From和To），以及年老代和永久代（或元空间，取决于JVM版本）。
 
 上面命令输出解析：
 

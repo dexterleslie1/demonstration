@@ -345,16 +345,13 @@ module.exports = {
                     title: "Java相关",
                     children: [
                         'entity、vo、dto、po、do.md',
-                        'GC.md',
                         'java命令行参数.md',
                         'jdk相关工具.md',
-                        'metaspace与permgen.md',
-                        '合理设置jvm内存.md',
+                        'jvm内存.md',
                         'jmh.md',
                         'arthas使用.md',
                         'cpu性能分析.md',
                         'jprofiler用法.md',
-                        'oom分析.md',
                         '异常.md',
                     ]
                 }

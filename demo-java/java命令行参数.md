@@ -41,7 +41,9 @@ java -Xms512m -Xmx1024m -jar your-application.jar
 - 在某些情况下，如果 `-Xms` 设置的过大，而物理内存不足，可能会导致 JVM 启动失败。
 - 堆内存的大小对 Java 应用程序的性能有显著影响，但也需要考虑其他因素，如垃圾收集器的选择和配置。
 
-## -Xss
+
+
+## `-Xss`
 
 `-Xss` 是 Java 虚拟机（JVM）启动时的一个参数，用于设置每个线程的堆栈大小。堆栈是线程用于存储局部变量和执行环境（如方法调用和返回地址）的内存区域。`-Xss` 参数允许你指定这个内存区域的大小，单位是字节（byte），但通常我们会使用更易于理解的单位，如千字节（KB）或兆字节（MB），通过在数字后加 `k` 或 `m` 来表示。
 
@@ -50,16 +52,12 @@ java -Xms512m -Xmx1024m -jar your-application.jar
 - 设置每个线程的堆栈大小为 512KB：
 
   ```bash
-  bash复制代码
-  
   java -Xss512k YourClassName
   ```
-
+  
 - 或者，使用兆字节单位（虽然通常不太常用这么大的值作为线程堆栈大小）：
 
   ```bash
-  bash复制代码
-  
   java -Xss1m YourClassName
   ```
 
@@ -71,9 +69,18 @@ java -Xms512m -Xmx1024m -jar your-application.jar
 4. **调整堆栈大小**：调整堆栈大小是优化 JVM 性能时可能需要考虑的一个方面，特别是在处理深度递归调用或大量本地变量的应用程序中。然而，通常建议仅在确实需要时才调整此参数，因为不恰当的调整可能会导致不必要的内存消耗或性能问题。
 5. **使用场景**：如果你的应用程序频繁地遇到 `StackOverflowError`，并且确定这是由于堆栈空间不足引起的，那么增加 `-Xss` 参数的值可能是一个解决方案。然而，在大多数情况下，更好的做法是优化代码，减少递归深度或避免在单个方法中分配大量局部变量。
 
+
+
+### 找出`-Xss10m`支持的递归深度
+
+- 启动测试中添加`-Xss10m`参数
+- 通过测试 [链接](https://gitee.com/dexterleslie/demonstration/blob/master/demo-java/demo-java-assistant/src/test/java/com/future/demo/XssMaximumRecursionDepthTests.java) 找出`-Xss10m`支持的最大递归深度
+
+
+
 ### 测试`-Xss`参数
 
-1. 编辑辅助项目[demo-java-assistant](https://github.com/dexterleslie1/demonstration/tree/master/demo-java/demo-java-assistant)
+1. 编辑辅助项目 [demo-java-assistant](https://gitee.com/dexterleslie/demonstration/tree/master/demo-java/demo-java-assistant)
 
    ```bash
    mvn package
@@ -81,10 +88,11 @@ java -Xms512m -Xmx1024m -jar your-application.jar
 
 2. 运行辅助项目中的`-Xss`测试
 
-   > 结论：当`-Xss`设置为`-Xss512k`时，递归深度为`8*1024`时会报告`StackOverflowError`错误，说明`-Xss`的大小影响函数调用深度是否报告`StackOverflowError`错误
-
    ```bash
-   java -jar -Xss1m -XX:+PrintGC -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:./gc.log -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=128m -XX:+HeapDumpOnOutOfMemoryError -XX:+CrashOnOutOfMemoryError -XX:HeapDumpPath=./ target/demo.jar xss
+   java -Xss11m -jar target/demo.jar xss
    ```
 
-3. 使用`jstat`或者`arthas memory`观察`jvm`内存使用情况，发现`jvm`内存几乎没有因为辅助项目启动256个线程并递归调用深度为`8*1024`而占用更多，todo 为何没有和相关资料说的，创建更多线程会占用更多的`jvm`内存呢？
+3. 结论
+
+   - 当`-Xss`设置为`-Xss512k`时，会报告`StackOverflowError`错误，说明`-Xss`的大小影响函数调用深度是否报告`StackOverflowError`错误
+   - 递归深度越深占用栈内存越多
