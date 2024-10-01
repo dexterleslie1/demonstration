@@ -98,19 +98,16 @@ public class AssistantService {
     public void investigateMemoryAllocation() throws InterruptedException {
         System.out.println("开始调用investigateMemoryAllocation...");
         ExecutorService executorService = Executors.newCachedThreadPool();
-        // 创建256个线程
-        for (int i = 0; i < 512; i++) {
-            executorService.submit(new Runnable() {
-                @Override
-                public void run() {
-                    // 每个线程函数递归调用的深度为1000
-                    int maximumDepth = 1024;
-                    try {
-                        while (true)
-                            investigateMemoryAllocationRecursion(maximumDepth, 1);
-                    } catch (StackOverflowError e) {
-                        System.out.println("Stack overflow occurred in thread " + Thread.currentThread().getName());
-                    }
+        // 创建多个线程
+        for (int i = 0; i < 128; i++) {
+            executorService.submit(() -> {
+                // 每个线程函数递归调用的深度
+                int maximumDepth = 4096;
+                try {
+                    while (true)
+                        investigateMemoryAllocationRecursion(maximumDepth, 1);
+                } catch (StackOverflowError e) {
+                    System.out.println("Stack overflow occurred in thread " + Thread.currentThread().getName());
                 }
             });
         }
