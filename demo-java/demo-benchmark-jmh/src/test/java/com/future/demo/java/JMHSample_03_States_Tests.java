@@ -13,7 +13,6 @@ import java.util.concurrent.TimeUnit;
 @Measurement(iterations = 2, time = 1, timeUnit = TimeUnit.SECONDS)
 // 提供报告结果的默认时间单位
 @OutputTimeUnit(TimeUnit.SECONDS)
-@Threads(1)
 public class JMHSample_03_States_Tests {
     // https://blog.csdn.net/m0_37607945/article/details/111479890
     // https://github.com/melix/jmh-gradle-example/blob/master/src/jmh/java/org/openjdk/jmh/samples/JMHSample_03_States.java
@@ -24,32 +23,29 @@ public class JMHSample_03_States_Tests {
     // 基础测试间变量共享
     @State(Scope.Group)
     public static class MyState {
-        public int x = 0;
+        public Object internalObject = new Object();
     }
 
     @Benchmark
     @Group(value = "myGroup")
     public void benchmark1(MyState state) throws InterruptedException {
-        state.x++;
-        System.out.println(Thread.currentThread().getName() + " x=" + state.x);
-        TimeUnit.MILLISECONDS.sleep(1000);
+        System.out.println(Thread.currentThread().getName() + " ,internalObject=" + state.internalObject);
+        TimeUnit.SECONDS.sleep(1);
     }
 
     @Benchmark
     @Group(value = "myGroup")
     public void benchmark2(MyState state) throws InterruptedException {
-        state.x++;
-        System.out.println(Thread.currentThread().getName() + " x=" + state.x);
-        TimeUnit.MILLISECONDS.sleep(1000);
+        System.out.println(Thread.currentThread().getName() + " ,internalObject=" + state.internalObject);
+        TimeUnit.SECONDS.sleep(1);
     }
 
-    /*@Benchmark
+    @Benchmark
     @Group(value = "myGroup2")
     public void benchmark3(MyState state) throws InterruptedException {
-        state.x++;
-        System.out.println(Thread.currentThread().getName() + " x=" + state.x);
-        TimeUnit.MILLISECONDS.sleep(1000);
-    }*/
+        System.out.println(Thread.currentThread().getName() + " ,internalObject=" + state.internalObject);
+        TimeUnit.SECONDS.sleep(1);
+    }
 
     /**
      * @param args
