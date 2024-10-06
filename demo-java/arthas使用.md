@@ -337,6 +337,24 @@ Affect(class count: 3 , method count: 3) cost in 156 ms, listenerId: 5
         `---[72.40% 2363.455824ms ] com.future.demo.performance.ArthasService:traceMethodLv2() #32
 ```
 
+
+
+统计指定包下执行时间大于`1`秒的函数
+
+>[根据调用耗时过滤](https://arthas.aliyun.com/doc/trace.html#%E6%A0%B9%E6%8D%AE%E8%B0%83%E7%94%A8%E8%80%97%E6%97%B6%E8%BF%87%E6%BB%A4)
+
+- 运行辅助测试 [链接](https://gitee.com/dexterleslie/demonstration/tree/master/demo-java/demo-java-assistant)
+
+- 访问`http://localhost:8080/api/v1/arthas/trace`触发调用`trace`
+
+- 统计命令
+
+  ```bash
+  trace com.future.demo.* * '#cost > 1000'
+  ```
+
+
+
 ## `stack`使用
 
 > `stack`命令能主动搜索 class-pattern／method-pattern 对应的方法完整的上游调用链路。[参考链接](https://arthas.aliyun.com/doc/trace.html)
