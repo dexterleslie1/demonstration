@@ -12,4 +12,5 @@ CheckRule "$XSS >= 8" BLOCK;
 BasicRule wl:2;
 BasicRule wl:16;
 BasicRule wl:1001 "mz:$URL:/api/v1/client/register|$BODY_VAR:additionalinformation";
+BasicRule wl:1001 "mz:$URL:/api/v1/client/register|$ARGS_VAR:additionalinformation";
 BasicRule wl:1015 "mz:$URL:/api/v1/message/ack|$BODY_VAR:ids";
