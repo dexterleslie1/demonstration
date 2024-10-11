@@ -40,6 +40,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ./alertmanager.yml:/etc/alertmanager/config.yml
+      - ./customize-email.tmpl:/usr/local/alertmanager/template/customize-email.tmpl
       - data-demo-prometheus-alertmanager:/alertmanager
     command:
       - '--config.file=/etc/alertmanager/config.yml'

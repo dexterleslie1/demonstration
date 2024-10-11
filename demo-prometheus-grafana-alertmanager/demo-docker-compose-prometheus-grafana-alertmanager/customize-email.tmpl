@@ -1,0 +1,5 @@
+{{ define "email.to.html" }}
+{{ range .Alerts }}
+{{ .Annotations.summary }}<br>
+{{ end }}
+{{ end }}

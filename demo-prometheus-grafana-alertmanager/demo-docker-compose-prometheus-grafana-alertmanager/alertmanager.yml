@@ -10,6 +10,9 @@ global:
   # 进行tls验证
   smtp_require_tls: false
 
+templates:
+  - '/usr/local/alertmanager/template/*.tmpl'
+
 route:
   # 这个设置指定了告警应该基于哪些标签（label）进行分组。在这个例子中，所有具有相同 alertname 标签值的告警将被归为一组。
   # 这有助于将相关的告警聚合在一起，避免因为同一问题而收到多个重复的告警通知。
@@ -32,6 +35,8 @@ receivers:
   # 收邮件的邮箱
   email_configs:
   - to: 'xxx@qq.com'
+    html: '{{ template "email.to.html" . }}' # 设定邮箱的内容模板
+    headers: { Subject: "促销活动" }
 
 inhibit_rules:
  - source_match:
