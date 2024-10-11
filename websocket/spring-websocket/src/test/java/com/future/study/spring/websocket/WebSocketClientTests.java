@@ -39,8 +39,8 @@ public class WebSocketClientTests {
      */
     @Test
     public void testConnect() throws ExecutionException, InterruptedException, IOException {
-        String host = System.getenv("host");
-        int port = Integer.parseInt(System.getenv("port"));
+        String host = "localhost";
+        int port = 8085;
 
         ExecutorService executorService = Executors.newCachedThreadPool();
         for(int i=0; i<1000; i++) {

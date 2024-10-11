@@ -11,7 +11,6 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
  * https://docs.spring.io/spring/docs/current/spring-framework-reference/web.html#websocket
  */
 @SpringBootApplication
-@ComponentScan
 public class Application {
     /**
      *
