@@ -294,6 +294,7 @@ module.exports = {
                         'maven的optional用法.md',
                         'maven发布带main函数可执行jar.md',
                         'maven插件.md',
+                        'maven-wrapper用法.md',
                     ]
                 }
             ], '/git/': [
