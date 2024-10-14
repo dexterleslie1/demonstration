@@ -66,6 +66,7 @@ module.exports = {
                     { text: 'Kubernetes', link: '/kubernetes/' },
                     { text: 'Elasticsearch、Kibana', link: '/elasticsearch/' },
                     { text: 'Terraform', link: '/terraform/' },
+                    { text: 'NodeJS', link: '/nodejs/' },
                 ]
             },
             {
@@ -619,6 +620,13 @@ module.exports = {
                     title: "Gost使用",
                     children: [
                         '',
+                    ]
+                }
+            ], '/nodejs/': [
+                {
+                    title: "NodeJS使用",
+                    children: [
+                        'npm命令.md',
                     ]
                 }
             ],
