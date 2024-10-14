@@ -177,6 +177,7 @@ module.exports = {
                         'docker命令.md',
                         '资源限制.md',
                         'dockerize用法.md',
+                        'dockerhub加速代理.md',
                     ]
                 }
             ],
