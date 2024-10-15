@@ -96,3 +96,104 @@ mkdir my-esm-lib && cd my-esm-lib
 npm init esm --yes
 ```
 
+
+
+## `npm`和`npx`区别
+
+> [npm vs npx — What’s the Difference?](https://www.freecodecamp.org/news/npm-vs-npx-whats-the-difference/)
+
+`npm`（`node`包管理器）是安装`Node.js`时随附的依赖项/包管理器。它为开发人员提供了一种全局和本地安装包的方法。
+
+有时您可能想查看特定包并尝试一些命令。但如果不在本地`node_modules`文件夹中安装依赖项，则无法执行此操作。
+
+这就是`npx`发挥作用的地方。
+
+`npm`本身不运行任何包。如果要使用`npm`运行包，则必须在`package.json`文件中指定该包。
+
+当可执行文件通过`npm`软件包安装时，`npm`会创建指向它们的链接：
+
+- 本地安装在`./node_modules/.bin/`目录中创建链接
+- 全局安装在全局`bin/`目录中创建链接（例如：`Linux`上的`/usr/local/bin`或`Windows`上的`%AppData%/npm`）
+
+要使用`npm`执行包，您必须输入本地路径，如下所示：
+
+```bash
+./node_modules/.bin/your-package
+```
+
+或者您可以通过将其添加到`package.json`文件中的脚本部分来运行本地安装的包，如下所示：
+
+```json
+{
+  "name": "your-application",
+  "version": "1.0.0",
+  "scripts": {
+    "your-package": "your-package"
+  }
+}
+
+```
+
+然后您可以使用`npm run`运行脚本：
+
+```bash
+npm run your-package
+```
+
+您可以看到，使用普通的`npm`运行包需要相当多的手续。
+
+幸运的是，这正是`npx`派上用场的地方。
+
+您可以运行以下命令来查看`npx`是否已安装在您当前的`npm`版本中：
+
+```bash
+which npx
+```
+
+如果没有，你可以像这样安装：
+
+```bash
+npm install -g npx
+```
+
+如果您希望执行本地安装的包，您只需输入：
+
+```bash
+npx your-package
+```
+
+`npx`将检查`<command>`或`<package>`是否存在于`$PATH`或本地项目二进制文件中，如果存在，则执行它。
+
+另一个主要优点是能够执行以前未安装的包。
+
+让我们通过运行来测试一下：
+
+```bash
+npx cowsay wow
+```
+
+这很棒，因为有时您只想使用一些`CLI`工具，但不想为了测试而全局安装它们。
+
+这意味着您可以节省一些磁盘空间，只在需要时运行它们。这也意味着您的全局变量将受到更少的污染。
+
+让我们使用`npx`尝试`create-react-app`的下一个`dist`标签，它将在沙盒目录中创建应用程序。
+
+```bash
+npx create-react-app@next sandbox
+```
+
+`npx`将临时安装`create-react-app`的下一个版本，然后执行它来搭建应用程序并安装其依赖项。
+
+安装完成后，我们可以像这样导航到该应用程序：
+
+```bash
+cd sandbox
+```
+
+然后使用以下命令启动它：
+
+```bash
+npm start
+```
+
+它将自动在您的默认浏览器窗口中打开`React`应用程序。 现在我们有一个在`create-react-app`包的下一个版本上运行的应用程序！
