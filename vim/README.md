@@ -312,3 +312,23 @@ N 搜索上一个关键词
 ctrl+f 下一页
 
 ctrl+b上一页
+
+
+
+## `vi/vim`打开中文乱码
+
+>[链接](https://blog.csdn.net/KimBing/article/details/81779768)
+
+### 方案1
+
+新建`~/.vimrc`内容如下：
+
+```bash
+set encoding=utf-8
+```
+
+
+
+### 方案2
+
+在`vi/vim`命令模式中输入`set encoding=utf-8`
