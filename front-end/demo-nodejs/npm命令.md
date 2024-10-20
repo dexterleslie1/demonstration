@@ -197,3 +197,17 @@ npm start
 ```
 
 它将自动在您的默认浏览器窗口中打开`React`应用程序。 现在我们有一个在`create-react-app`包的下一个版本上运行的应用程序！
+
+
+
+## `npm install`
+
+- 调试`npm install`
+
+  >https://dev.to/matheusabr/enhance-your-npm-installations-with-loglevel-26cc
+
+  ```bash
+  npm install --verbose
+  ```
+
+  
