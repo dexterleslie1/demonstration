@@ -1,4 +1,4 @@
-package com.future.study.spring.websocket;
+package com.future.demo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +17,7 @@ public class ConfigWebSocket implements WebSocketConfigurer {
      */
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(createWebSocketHandler(), "/websocketEndpoint").addInterceptors(websocketInterceptor());
+        registry.addHandler(createWebSocketHandler(), "/connector").addInterceptors(websocketInterceptor());
     }
 
     /**
