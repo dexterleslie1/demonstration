@@ -36,6 +36,8 @@
 
 >[Deploying a docker registry mirror as a container](https://medium.com/@shaikrish27/deploying-a-docker-registry-mirror-as-a-container-59565ff92c48)
 
+注意：此方案通讯流量没有加密使用一段时间后会被`GFW`封锁导致不能继续使用。
+
 `docker-compose.yaml`内容如下：
 
 ```yaml
@@ -65,6 +67,28 @@ services:
 
 
 
-## 方案3：使用`cloudflare worker`代理
+## 方案3：配置`docker daemon`代理
+
+>[代理配置](https://blog.csdn.net/a_917/article/details/140685790)
+
+在`/etc/docker/daemon.json`配置文件中加入如下内容：
+
+```json
+"proxies": {
+    "http-proxy": "http://192.168.235.128:1080",
+    "https-proxy": "http://192.168.235.128:1080",
+    "no-proxy": "127.0.0.0/8,192.168.1.1/24,192.168.235.1/24"
+}
+```
+
+重启`docker daemon`
+
+```bash
+sudo systemctl restart docker
+```
+
+
+
+## 方案4：使用`cloudflare worker`代理
 
 `todo`
