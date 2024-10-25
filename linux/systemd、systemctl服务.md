@@ -97,6 +97,33 @@ Type= 指令可以是以下之一：
 
 
 
+#### `Restart=always`、`RestartSec=15`指令用法
+
+>https://gcore.com/learning/how-to-automatically-restart-a-linux-service/
+
+在`service`启动失败后等待`15`秒后自动重启，样例如下：
+
+```properties
+[Unit]
+Description=Chat System Console service
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/usr/local/chat/
+User=tomcat
+ExecStart=java -jar -Xmx512m /usr/local/chat/app-console.war
+PrivateTmp=false
+Restart=always
+RestartSec=15
+
+[Install]
+WantedBy=multi-user.target
+
+```
+
+
+
 ### `centOS7`、`centOS8`配置`systemd`服务
 
 新建文件`/etc/systemd/system/chat-payment.service`内容如下：
