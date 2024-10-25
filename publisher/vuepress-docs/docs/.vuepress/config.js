@@ -100,6 +100,7 @@ module.exports = {
                 items: [
                     { text: 'Shell脚本编程', link: '/shell脚本编程/' },
                     { text: 'linux、ubuntu使用', link: '/linux使用/' },
+                    { text: 'macOS', link: '/macos/' },
                 ]
             },
             {
@@ -628,6 +629,13 @@ module.exports = {
                     title: "NodeJS使用",
                     children: [
                         'npm命令.md',
+                    ]
+                }
+            ], '/macos/': [
+                {
+                    title: "macOS使用",
+                    children: [
+                        '和宿主机共享文件夹.md',
                     ]
                 }
             ],
