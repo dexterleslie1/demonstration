@@ -34,7 +34,7 @@ public class RedissonReadWriteLockTests {
         List<Integer> concurrentCountSampleList = new ArrayList<>();
         Random random = new Random();
         ExecutorService executorService = Executors.newCachedThreadPool();
-        for(int i=0; i<50; i++) {
+        for (int i = 0; i < 50; i++) {
             executorService.submit(() -> {
                 RReadWriteLock readWriteLock = redisson.getReadWriteLock(lockname);
                 RLock rLock = readWriteLock.readLock();
@@ -42,12 +42,12 @@ public class RedissonReadWriteLockTests {
                     rLock.lock();
 
                     int count = counter.incrementAndGet();
-                    if(count > 1) {
+                    if (count > 1) {
                         concurrentCountSampleList.add(count);
                     }
 
                     int randomInt = random.nextInt(1000);
-                    if(randomInt > 0) {
+                    if (randomInt > 0) {
                         try {
                             TimeUnit.MILLISECONDS.sleep(randomInt);
                         } catch (InterruptedException e) {
@@ -55,7 +55,7 @@ public class RedissonReadWriteLockTests {
                         }
                     }
                 } finally {
-                    if(rLock.isHeldByCurrentThread()) {
+                    if (rLock.isHeldByCurrentThread()) {
                         counter.decrementAndGet();
                         rLock.unlock();
                     }
@@ -63,7 +63,7 @@ public class RedissonReadWriteLockTests {
             });
         }
         executorService.shutdown();
-        while(!executorService.awaitTermination(1, TimeUnit.SECONDS));
+        while (!executorService.awaitTermination(1, TimeUnit.SECONDS)) ;
 
         Assert.assertTrue(concurrentCountSampleList.size() > 0);
     }
@@ -77,7 +77,7 @@ public class RedissonReadWriteLockTests {
         List<Integer> concurrentCountSampleList = new ArrayList<>();
         Random random = new Random();
         ExecutorService executorService = Executors.newCachedThreadPool();
-        for(int i=0; i<50; i++) {
+        for (int i = 0; i < 50; i++) {
             executorService.submit(() -> {
                 RReadWriteLock readWriteLock = redisson.getReadWriteLock(lockname);
                 RLock rLock = readWriteLock.writeLock();
@@ -85,12 +85,12 @@ public class RedissonReadWriteLockTests {
                     rLock.lock();
 
                     int count = counter.incrementAndGet();
-                    if(count > 1) {
+                    if (count > 1) {
                         concurrentCountSampleList.add(count);
                     }
 
                     int randomInt = random.nextInt(100);
-                    if(randomInt > 0) {
+                    if (randomInt > 0) {
                         try {
                             TimeUnit.MILLISECONDS.sleep(randomInt);
                         } catch (InterruptedException e) {
@@ -98,7 +98,7 @@ public class RedissonReadWriteLockTests {
                         }
                     }
                 } finally {
-                    if(rLock.isHeldByCurrentThread()) {
+                    if (rLock.isHeldByCurrentThread()) {
                         counter.decrementAndGet();
                         rLock.unlock();
                     }
@@ -106,7 +106,7 @@ public class RedissonReadWriteLockTests {
             });
         }
         executorService.shutdown();
-        while(!executorService.awaitTermination(1, TimeUnit.SECONDS));
+        while (!executorService.awaitTermination(1, TimeUnit.SECONDS)) ;
 
         Assert.assertEquals(0, concurrentCountSampleList.size());
     }
@@ -120,11 +120,11 @@ public class RedissonReadWriteLockTests {
     public void testReadWriteLock() throws InterruptedException {
         final String lockname = "test-readwrite-lock";
 
-        final Map<String, Boolean> readingMapper  = new ConcurrentHashMap<>();
+        final Map<String, Boolean> readingMapper = new ConcurrentHashMap<>();
         final Map<String, Boolean> writingMapper = new ConcurrentHashMap<>();
         List<Boolean> statusList = new ArrayList<>();
         ExecutorService executorService = Executors.newCachedThreadPool();
-        for(int i=0; i<50; i++) {
+        for (int i = 0; i < 50; i++) {
             executorService.submit(() -> {
                 RReadWriteLock readWriteLock = redisson.getReadWriteLock(lockname);
                 RLock rLock = null;
@@ -160,7 +160,7 @@ public class RedissonReadWriteLockTests {
             });
         }
 
-        for(int i=0; i<50; i++) {
+        for (int i = 0; i < 50; i++) {
             executorService.submit(() -> {
                 RReadWriteLock readWriteLock = redisson.getReadWriteLock(lockname);
                 RLock rLock = null;
@@ -197,7 +197,7 @@ public class RedissonReadWriteLockTests {
         }
 
         executorService.shutdown();
-        while(!executorService.awaitTermination(1, TimeUnit.SECONDS));
+        while (!executorService.awaitTermination(1, TimeUnit.SECONDS)) ;
 
         Assert.assertEquals(0, statusList.size());
     }
@@ -220,7 +220,7 @@ public class RedissonReadWriteLockTests {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             } finally {
-                if(rLock != null && rLock.isHeldByCurrentThread()) {
+                if (rLock != null && rLock.isHeldByCurrentThread()) {
                     try {
                         rLock.unlock();
                     } catch (Exception ignored) {
@@ -240,7 +240,7 @@ public class RedissonReadWriteLockTests {
         } catch (InterruptedException e) {
             e.printStackTrace();
         } finally {
-            if(rLock != null && rLock.isHeldByCurrentThread()) {
+            if (rLock != null && rLock.isHeldByCurrentThread()) {
                 try {
                     rLock.unlock();
                 } catch (Exception ignored) {
@@ -252,15 +252,94 @@ public class RedissonReadWriteLockTests {
         Assert.assertTrue(endTime.getTime() - startTime.getTime() >= 4800);
     }
 
+    private boolean isWriteLockExit = false;
+
+    @Test
+    public void testReadLockHigherPriorityThanWriteLock() throws InterruptedException {
+        ExecutorService executorService = Executors.newCachedThreadPool();
+
+        String key = UUID.randomUUID().toString();
+
+        executorService.submit(() -> {
+            try {
+                TimeUnit.SECONDS.sleep(5);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            Date startTime = new Date();
+
+            RReadWriteLock readWriteLock = redisson.getReadWriteLock(key);
+            RLock rLock = null;
+//            boolean isAcquired = false;
+            try {
+                rLock = readWriteLock.writeLock();
+                /*isAcquired = */
+                rLock.tryLock(30, 60, TimeUnit.SECONDS);
+
+                Date endTime = new Date();
+                System.out.println("写锁耗时：" + (endTime.getTime() - startTime.getTime()));
+
+                isWriteLockExit = true;
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } finally {
+                if (rLock != null && rLock.isHeldByCurrentThread()) {
+                    try {
+                        rLock.unlock();
+                    } catch (Exception ignored) {
+
+                    }
+                }
+            }
+        });
+
+        for (int i = 0; i < 128; i++) {
+            executorService.submit(new Runnable() {
+                @Override
+                public void run() {
+                    while (!isWriteLockExit) {
+                        RReadWriteLock readWriteLock = redisson.getReadWriteLock(key);
+                        RLock rLock = null;
+                        try {
+                            rLock = readWriteLock.readLock();
+                            boolean isAcquired = rLock.tryLock(5, 60, TimeUnit.SECONDS);
+
+                            if (isAcquired) {
+                                TimeUnit.SECONDS.sleep(5);
+                            }
+
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        } finally {
+                            if (rLock != null && rLock.isHeldByCurrentThread()) {
+                                try {
+                                    rLock.unlock();
+                                } catch (Exception ignored) {
+
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        executorService.shutdown();
+        while (!executorService.awaitTermination(1, TimeUnit.SECONDS)) {
+
+        }
+    }
+
     private void displayInfo(Map<String, Boolean> readingMapper, Map<String, Boolean> writingMapper, List<Boolean> statusList) {
-        if(readingMapper.size() > 0 && writingMapper.size() > 0) {
+        if (readingMapper.size() > 0 && writingMapper.size() > 0) {
 //            logger.info("有读写并发reading={},writing={}", readingMapper.size(), writingMapper.size());
             statusList.add(true);
         }
     }
 
     @Before
-    public void setup(){
+    public void setup() {
         String host = MyConfig.Host;
         int port = MyConfig.Port;
         String password = MyConfig.Password;
@@ -271,8 +350,8 @@ public class RedissonReadWriteLockTests {
     }
 
     @After
-    public void teardown(){
-        if(redisson != null){
+    public void teardown() {
+        if (redisson != null) {
             redisson.shutdown();
         }
     }
