@@ -94,6 +94,70 @@ docker compose exec -it nexus cat /nexus-data/admin.password
 docker compose down -v
 ```
 
+`nginx`或`openresty`代理`nexus3`配置文件`nginx.conf`内容如下：
+
+```nginx
+worker_processes auto;
+worker_rlimit_nofile 65535;
+
+error_log  logs/error.log;
+error_log  logs/error.log  notice;
+error_log  logs/error.log  info;
+
+events {
+    worker_connections  65535;
+}
+
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+
+    #access_log  logs/access.log  main;
+
+    sendfile        on;
+    #tcp_nopush     on;
+
+    #keepalive_timeout  0;
+    keepalive_timeout  65;
+
+    gzip on;
+    gzip_min_length 1k;
+    gzip_buffers 16 64k;
+    gzip_http_version 1.1;
+    gzip_comp_level 6;
+    gzip_types application/json text/plain application/javascript text/css application/xml;
+    gzip_vary on;
+    server_tokens off;
+    access_log off;
+    client_max_body_size 50m;
+
+    upstream server_backend_nexus3 {
+        # nexus3服务器源地址
+        server x.x.x.x:10000;
+    }
+
+    server {
+        listen 80;
+        server_name maven.xxx.net;
+        
+        location / {
+            proxy_http_version 1.1;
+            proxy_set_header Connection "";
+            proxy_set_header Host $host:80;
+            proxy_set_header X-Real-IP        $remote_addr;
+            proxy_set_header X-Forwarded-For  $remote_addr;
+            proxy_set_header X-NginX-Proxy true;
+            proxy_pass http://server_backend_nexus3;
+        }
+    }
+}
+
+```
+
 
 
 ## 发布构件到私有`nexus`仓库中
