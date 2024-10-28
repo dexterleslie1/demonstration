@@ -636,6 +636,7 @@ module.exports = {
                     title: "macOS使用",
                     children: [
                         '和宿主机共享文件夹.md',
+                        'xcode.md',
                     ]
                 }
             ],
