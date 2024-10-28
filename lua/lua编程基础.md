@@ -268,6 +268,35 @@ print("布尔变量值为： " .. tostring(booleanVariable))
 
 
 
+### `table`转换为`JSON string`
+
+>https://stackoverflow.com/questions/24908199/convert-json-string-to-lua-table
+
+安装`liblua5.3-dev`协助`lua-cjson`库编译
+
+```bash
+sudo apt install liblua5.3-dev
+```
+
+安装`lua-cjson`库
+
+```bash
+sudo luarocks install lua-cjson
+```
+
+用于测试`JSON`库的`lua`脚本
+
+```lua
+local json = require('cjson')
+local my_table = {data = {{value1 = "test1", value2 = "test2"}, {value3 = "test3", value4 = "test4"}}}
+local json_string = json.encode(my_table)
+print(json_string)  -- {"data":[{"value1":"test1","value2":"test2"},{"value4":"test4","value3":"test3"}]}
+local tab = json.decode(json_string)
+print(tab)
+```
+
+
+
 ## 标准库用法
 
 >示例详细用法请参考 [链接](https://gitee.com/dexterleslie/demonstration/blob/master/lua/demo-standard-libraries.lua)
