@@ -1,4 +1,4 @@
-package com.future.demo.ali.oss;
+package com.future.demo;
 
 import com.aliyun.oss.OSS;
 import com.aliyun.oss.OSSClientBuilder;
