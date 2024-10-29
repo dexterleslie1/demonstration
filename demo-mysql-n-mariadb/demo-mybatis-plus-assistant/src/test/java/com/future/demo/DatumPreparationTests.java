@@ -48,11 +48,11 @@ public class DatumPreparationTests {
         ExecutorService executorService;
 
         log.debug("正在准备用户测试数据");
-        totalCount = 1000000;
-        batchCount = 10000;
-        int totalConcurrentThread = totalCount / batchCount;
+        totalCount = 5 * 1000000;
+        concurrentThreads = 50;
+        batchCount = totalCount / concurrentThreads;
         executorService = Executors.newCachedThreadPool();
-        for (int i = 0; i < totalConcurrentThread; i++) {
+        for (int i = 0; i < concurrentThreads; i++) {
             int finalI = i;
             int finalBatchCount = batchCount;
             executorService.submit(() -> {
