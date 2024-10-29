@@ -543,6 +543,7 @@ module.exports = {
                     title: "阿里云使用",
                     children: [
                         '阿里云容器镜像服务.md',
+                        'oss服务.md',
                     ]
                 }
             ], '/vmware/': [
