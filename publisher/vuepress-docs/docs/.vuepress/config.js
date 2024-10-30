@@ -311,6 +311,7 @@ module.exports = {
                         '初始化非空目录指向远程仓库.md',
                         'git凭证管理.md',
                         'gitee.md',
+                        'github.md',
                         '设置自签名ssl证书不验证.md',
                     ]
                 }
