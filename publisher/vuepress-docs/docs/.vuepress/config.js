@@ -610,6 +610,7 @@ module.exports = {
                 {
                     title: "谷歌云",
                     children: [
+                        '谷歌信息.md',
                         'gce使用.md',
                     ]
                 }
