@@ -239,11 +239,47 @@ jstat -gccapacity 77553
 
 ## `jcmd`
 
-`jcmd`是JDK 1.7及以后版本中引入的一个多功能的命令行工具，它提供了一种简单而强大的方式来管理和监控Java进程。
+`jcmd`是`JDK 1.7`及以后版本中引入的一个多功能的命令行工具，它提供了一种简单而强大的方式来管理和监控`Java`进程。
 
-显示所有线程
+### 查看`jcmd`有哪些命令
+
+```
+jcmd pid help
+```
+
+### 查看`jdk`版本
 
 ```bash
-./jcmd <pid> Thread.print
+jcmd pid VM.version
+```
+
+### 显示进程已运行的时间
+
+```bash
+jcmd pid VM.uptime
+```
+
+### 查看`jvm`启动参数、启动命令、`classpath`信息
+
+```bash
+jcmd pid VM.command_line
+```
+
+### 查看`jvm`进程支持的`properties`
+
+```bash
+jcmd pid VM.system_properties
+```
+
+### 查看`jvm`启动参数（包括指定的和默认的参数）
+
+```bash
+jcmd pid VM.flags
+```
+
+### 显示所有线程
+
+```bash
+jcmd pid Thread.print
 ```
 
