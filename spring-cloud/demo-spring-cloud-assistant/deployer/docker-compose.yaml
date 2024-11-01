@@ -19,9 +19,10 @@ services:
       restart_policy:
         condition: on-failure
         delay: 15s
-    #   placement:
-    #     constraints:
-    #       - node.labels.mylabel==ml1
+      placement:
+        constraints:
+          # 指定数据库调度到mylabel==db节点上
+          - node.labels.mylabel==db
 
   redis:
     image: redis:6.2.4
