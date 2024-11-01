@@ -180,6 +180,7 @@ module.exports = {
                         '资源限制.md',
                         'dockerize用法.md',
                         'dockerhub加速代理.md',
+                        'docker日志.md',
                     ]
                 }
             ],
