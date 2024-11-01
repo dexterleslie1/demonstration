@@ -89,3 +89,15 @@ mysqlbinlog --base64-output=auto --verbose mysql-bin.000005 > 1.sql
 mysqlbinlog --start-position=256442 --stop-datetime='2017-12-14 15:02:32' master1-bin.000003y>1.sql
 ```
 
+
+
+## 自动清除`binlog`
+
+在`MySQL`性能测试过程会产生大量的`binlog`导致硬盘空间占满，需要自动释放`binlog`。
+
+使用以下脚本自动释放`binlog`
+
+```bash
+while :; do; mysql -uroot -p123456 -h127.0.0.1 -e "reset master;"; echo "成功执行SQL"; sleep 120; done
+```
+
