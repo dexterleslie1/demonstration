@@ -2,6 +2,18 @@
 
 
 
+## `docker builder`
+
+删除`docker build`缓存
+
+>`https://docs.docker.com/reference/cli/docker/builder/prune/`
+
+```bash
+docker builder prune
+```
+
+
+
 ## `docker build`
 
 ```shell
