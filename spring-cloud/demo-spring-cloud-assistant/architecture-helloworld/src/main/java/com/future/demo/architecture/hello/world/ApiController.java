@@ -23,8 +23,10 @@ public class ApiController {
 
     @GetMapping(value = "/api/v1/test1", produces = MediaType.TEXT_PLAIN_VALUE)
     public ResponseEntity<String> test1(@RequestParam(value = "hostnameZuul") String hostnameZuul) throws UnknownHostException {
-        String uuidString = UUID.randomUUID().toString();
-        this.redisTemplate.opsForValue().set(uuidString, uuidString);
+        for (int i = 0; i < 100; i++) {
+            String uuidString = UUID.randomUUID().toString();
+            this.redisTemplate.opsForValue().set(uuidString, uuidString);
+        }
 
         try (SqlSession session = sqlSessionFactory.openSession()) {
             session.selectOne("com.future.demo.architecture.hello.world.SelectMapper.selectNow");

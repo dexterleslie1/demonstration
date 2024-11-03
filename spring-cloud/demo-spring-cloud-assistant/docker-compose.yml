@@ -10,11 +10,40 @@ services:
     ports:
       - "3306:3306"
 
-  redis:
-    image: redis:6.2.4
-    # 设置redis密码
-    command: redis-server --requirepass 123456
+  node1:
+    image: redis:7.2.4
+    command: redis-server /usr/local/etc/redis/redis.conf
+    volumes:
+      - ./redis.cluster.conf:/usr/local/etc/redis/redis.conf
     environment:
       - TZ=Asia/Shanghai
     ports:
       - "6379:6379"
+
+  node2:
+    image: redis:7.2.4
+    command: redis-server /usr/local/etc/redis/redis.conf
+    volumes:
+      - ./redis.cluster.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - "6380:6379"
+
+  node3:
+    image: redis:7.2.4
+    command: redis-server /usr/local/etc/redis/redis.conf
+    volumes:
+      - ./redis.cluster.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - "6381:6379"
+
+  creator:
+    image: redis:7.2.4
+    entrypoint: [ /bin/sh, -c, 'echo "yes" | redis-cli --cluster create node1:6379 node2:6379 node3:6379' ]
+    depends_on:
+      - node1
+      - node2
+      - node3

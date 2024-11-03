@@ -24,9 +24,9 @@ services:
           # 指定数据库调度到mylabel==db节点上
           - node.labels.mylabel==db
 
-  redis:
-    image: redis:6.2.4
-    command: redis-server --requirepass 123456
+  node1:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-cloud-assistant-redis:1.0.0
+    command: redis-server /usr/local/etc/redis/redis.conf --cluster-announce-ip node1
     environment:
       - TZ=Asia/Shanghai
     deploy:
@@ -34,8 +34,41 @@ services:
       restart_policy:
         condition: on-failure
         delay: 15s
-    # ports:
-    #   - "6379:6379"
+
+  node2:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-cloud-assistant-redis:1.0.0
+    command: redis-server /usr/local/etc/redis/redis.conf --cluster-announce-ip node2
+    environment:
+      - TZ=Asia/Shanghai
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 15s
+
+  node3:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-cloud-assistant-redis:1.0.0
+    command: redis-server /usr/local/etc/redis/redis.conf --cluster-announce-ip node3
+    environment:
+      - TZ=Asia/Shanghai
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 15s
+
+  creator:
+    image: redis:7.2.4
+    entrypoint: [ /bin/sh, -c, 'sleep 10; echo "yes" | redis-cli --cluster create node1:6379 node2:6379 node3:6379' ]
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 15s
+    depends_on:
+      - node1
+      - node2
+      - node3
 
   eureka:
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-cloud-assistant-eureka:1.0.0
@@ -46,7 +79,7 @@ services:
       - "9999:9999"
     depends_on:
       - db
-      - redis
+      - creator
     logging:
       driver: json-file
       options:
@@ -58,8 +91,8 @@ services:
         condition: on-failure
         delay: 15s
 
-  zuul:
-    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-cloud-assistant-zuul:1.0.0
+  gateway:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-cloud-assistant-gateway:1.0.0
     environment:
       - JAVA_OPTS=-Xms512m -Xmx512m
       - TZ=Asia/Shanghai

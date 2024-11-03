@@ -10,17 +10,23 @@ current_dir=`pwd`
 
 (cd .. && mvn package)
 
+echo "开始编译redis容器镜像。。。"
+(cd ../ && \
+  docker build --tag $dockerRegistryPrefix/demo-spring-cloud-assistant-redis:$projectVersion \
+  --file Dockerfile-redis . >> $current_dir/.build.log 2>&1) || \
+  { echo '编译redis容器镜像失败！详细原因查看 .build.log 日志'; exit; }
+
 echo "开始编译eureka容器镜像。。。"
 (cd ../architecture-eureka && \
   docker build --tag $dockerRegistryPrefix/demo-spring-cloud-assistant-eureka:$projectVersion \
   --file Dockerfile . >> $current_dir/.build.log 2>&1) || \
   { echo '编译eureka容器镜像失败！详细原因查看 .build.log 日志'; exit; }
 
-echo "开始编译zuul容器镜像。。。"
-(cd ../architecture-zuul && \
-  docker build --tag $dockerRegistryPrefix/demo-spring-cloud-assistant-zuul:$projectVersion \
+echo "开始编译gateway容器镜像。。。"
+(cd ../architecture-gateway && \
+  docker build --tag $dockerRegistryPrefix/demo-spring-cloud-assistant-gateway:$projectVersion \
   --file Dockerfile . >> $current_dir/.build.log 2>&1) || \
-  { echo '编译zuul容器镜像失败！详细原因查看 .build.log 日志'; exit; }
+  { echo '编译gateway容器镜像失败！详细原因查看 .build.log 日志'; exit; }
 
 echo "开始编译helloworld容器镜像。。。"
 (cd ../architecture-helloworld && \
