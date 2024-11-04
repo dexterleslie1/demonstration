@@ -111,37 +111,73 @@ docker compose down -v
 
 ## `cluster`模式（集群模式）
 
+
+
+### 基于`docker compose`集群
+
 > [使用`docker compose`建立`redis cluster`](https://blog.yowko.com/docker-compose-redis-cluster/)
 
-复制 [redis cluster](https://gitee.com/dexterleslie/demonstration/tree/master/demo-redis/redis-server/docker-based/mode-cluster) 相关配置到本地
-
-切换到`mode-cluster`目录内
-
-```bash
-cd mode-cluster
-```
+复制`https://gitee.com/dexterleslie/demonstration/tree/master/demo-redis/redis-server/docker-based/mode-cluster`示例到本地
 
 启动`redis cluster`服务
 
 ```bash
-docker compose up -d
+# 基于redis6的集群
+docker compose -f docker-compose-redis6.yml up -d
+
+# 基于redis7的集群
+# 注意：经过多次测试重启集群后容器ip地址变动也不会影响集群ok状态。
+docker compose -f docker-compose-redis7.yml up -d
 ```
 
 查看集群状态信息
 
 ```bash
-docker compose exec -it demo-redis-cluster-node1 redis-cli -p 6380 cluster info
+docker compose exec -it node1 redis-cli -p 6380 cluster info
 ```
 
 查看集群节点信息
 
 ```bash
-docker compose exec -it demo-redis-cluster-node1 redis-cli -p 6380 cluster nodes
+docker compose exec -it node1 redis-cli -p 6380 cluster nodes
 ```
 
 删除`redis cluster`服务
 
 ```bash
-docker compose down -v
+docker compose -f docker-compose-redis6.yml down -v
+
+docker compose -f docker-compose-redis7.yml down -v
+```
+
+
+
+### 基于`docker swarm`集群
+
+>注意：在使用`docker swarm`运行`redis`集群并且没有使用`nfs`存储时，需要绑定`redis`节点到指定的`swarm`节点中，否则在集群重启后会导致集群`down`。
+
+复制`https://gitee.com/dexterleslie/demonstration/tree/master/demo-redis/redis-server/docker-based/mode-cluster`示例到本地，其中`docker-stack.yml`文件是`redis`集群在`docker swarm`部署的核心配置。
+
+在`swarm`管理节点上执行以下命令部署`redis`集群
+
+```bash
+docker stack deploy test1 -c docker-stack.yaml
+```
+
+在`swarm`管理节点上查看`redis`集群状态
+
+```bash
+docker exec -it `docker ps |grep node1 | awk '{print $1}'` redis-cli -c cluster info
+docker exec -it `docker ps |grep node1 | awk '{print $1}'` redis-cli -c cluster nodes
+```
+
+测试`swarm`中的`redis`集群是否丢失数据
+
+```bash
+# 生成数据
+for i in {1..15}; do docker exec -it `docker ps|grep node1|awk '{print $1}'` redis-cli -c set key$i value$i; done
+
+# 经过多次重启或者关闭swarm节点后，执行以下命令依然能够读取redis集群中的数据，表示redis集群数据不丢失
+for i in {1..15}; do v_val=$(docker exec -it $(docker ps|grep node1|awk '{print $1}') redis-cli -c get key$i); echo key$i=$v_val; done
 ```
 
