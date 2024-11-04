@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   db:
-    image: mariadb:10.4.19
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-cloud-assistant-db:1.0.0
     # ports:
     #   - "3306:3306"
     environment:
@@ -125,8 +125,9 @@ services:
       - data-node6:/data
 
   creator:
-    image: redis:7.2.4
-    entrypoint: [ /bin/sh, -c, 'sleep 10; echo "yes" | redis-cli --cluster create node1:6379 node2:6379 node3:6379 node4:6379 node5:6379 node6:6379' ]
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-cloud-assistant-redis:1.0.0
+    command: "node1:6379 node2:6379 node3:6379 node4:6379 node5:6379 node6:6379"
+    entrypoint: [ "/usr/local/etc/redis/init-redis-cluster.sh" ]
     deploy:
       replicas: 1
       restart_policy:

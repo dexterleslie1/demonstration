@@ -28,7 +28,7 @@ public class MyGatewayFilterFactory extends AbstractGatewayFilterFactory<Object>
             }
 
             request = request.mutate()
-                    .uri(URI.create("/api/v1/test1?hostnameZuul=" + hostname))
+                    .uri(URI.create("/api/v1/test1?hostnameGateway=" + hostname))
                     .build();
             return chain.filter(exchange.mutate().request(request).build());
         };

@@ -2,7 +2,7 @@ version: "3.0"
 
 services:
   db:
-    image: mariadb:10.4.19
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-cloud-assistant-db:1.0.0
     environment:
       - MYSQL_ROOT_PASSWORD=123456
       - TZ=Asia/Shanghai
@@ -41,8 +41,12 @@ services:
       - "6381:6379"
 
   creator:
-    image: redis:7.2.4
-    entrypoint: [ /bin/sh, -c, 'echo "yes" | redis-cli --cluster create node1:6379 node2:6379 node3:6379' ]
+    build:
+      context: .
+      dockerfile: ./Dockerfile-redis
+    image: demo-spring-cloud-assistant-redis-cluster-initializer
+    command: "node1:6379 node2:6379 node3:6379"
+    entrypoint: ["/usr/local/etc/redis/init-redis-cluster.sh"]
     depends_on:
       - node1
       - node2

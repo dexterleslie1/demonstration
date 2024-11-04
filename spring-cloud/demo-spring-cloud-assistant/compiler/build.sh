@@ -16,6 +16,12 @@ echo "开始编译redis容器镜像。。。"
   --file Dockerfile-redis . >> $current_dir/.build.log 2>&1) || \
   { echo '编译redis容器镜像失败！详细原因查看 .build.log 日志'; exit; }
 
+echo "开始编译db容器镜像。。。"
+(cd ../ && \
+  docker build --tag $dockerRegistryPrefix/demo-spring-cloud-assistant-db:$projectVersion \
+  --file Dockerfile-db . >> $current_dir/.build.log 2>&1) || \
+  { echo '编译db容器镜像失败！详细原因查看 .build.log 日志'; exit; }
+
 echo "开始编译eureka容器镜像。。。"
 (cd ../architecture-eureka && \
   docker build --tag $dockerRegistryPrefix/demo-spring-cloud-assistant-eureka:$projectVersion \
