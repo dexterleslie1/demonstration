@@ -1,0 +1,127 @@
+version: '3.8'
+
+services:
+  node1:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-my-redis7-swarm:latest
+    command: redis-server /usr/local/etc/redis/redis.conf --cluster-announce-ip node1
+    environment:
+      - TZ=Asia/Shanghai
+    # todo 暂时未实现外部服务连接swarm内的集群
+    # ports:
+    #   - 6380:6379
+    deploy:
+      replicas: 1
+      # 任何时候节点都是启动状态的
+      restart_policy:
+        condition: any
+        delay: 15s
+      placement:
+        constraints:
+          - node.hostname==manager
+    volumes:
+      - data-demo-redis-mode-cluster-node1:/data
+
+  node2:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-my-redis7-swarm:latest
+    command: redis-server /usr/local/etc/redis/redis.conf --cluster-announce-ip node2
+    environment:
+      - TZ=Asia/Shanghai
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 15s
+      placement:
+        constraints:
+          - node.hostname==manager
+    volumes:
+      - data-demo-redis-mode-cluster-node2:/data
+
+  node3:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-my-redis7-swarm:latest
+    command: redis-server /usr/local/etc/redis/redis.conf --cluster-announce-ip node3
+    environment:
+      - TZ=Asia/Shanghai
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 15s
+      placement:
+        constraints:
+          - node.hostname==worker1
+    volumes:
+      - data-demo-redis-mode-cluster-node3:/data
+
+  node4:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-my-redis7-swarm:latest
+    command: redis-server /usr/local/etc/redis/redis.conf --cluster-announce-ip node4
+    environment:
+      - TZ=Asia/Shanghai
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 15s
+      placement:
+        constraints:
+          - node.hostname==worker1
+    volumes:
+      - data-demo-redis-mode-cluster-node4:/data
+
+  node5:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-my-redis7-swarm:latest
+    command: redis-server /usr/local/etc/redis/redis.conf --cluster-announce-ip node5
+    environment:
+      - TZ=Asia/Shanghai
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 15s
+      placement:
+        constraints:
+          - node.hostname==worker2
+    volumes:
+      - data-demo-redis-mode-cluster-node5:/data
+
+
+  node6:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-my-redis7-swarm:latest
+    command: redis-server /usr/local/etc/redis/redis.conf --cluster-announce-ip node6
+    environment:
+      - TZ=Asia/Shanghai
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 15s
+      placement:
+        constraints:
+          - node.hostname==worker2
+    volumes:
+      - data-demo-redis-mode-cluster-node6:/data
+
+  creator:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-my-redis7-swarm:latest
+    entrypoint: [/bin/sh, -c, 'sleep 10; echo "yes" | redis-cli --cluster create node1:6379 node2:6379 node3:6379 node4:6379 node5:6379 node6:6379']
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 15s
+    depends_on:
+      - node1
+      - node2
+      - node3
+      - node4
+      - node5
+      - node6
+
+volumes:
+  data-demo-redis-mode-cluster-node1:
+  data-demo-redis-mode-cluster-node2:
+  data-demo-redis-mode-cluster-node3:
+  data-demo-redis-mode-cluster-node4:
+  data-demo-redis-mode-cluster-node5:
+  data-demo-redis-mode-cluster-node6:

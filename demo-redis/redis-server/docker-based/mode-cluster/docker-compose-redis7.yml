@@ -1,0 +1,74 @@
+version: "3.0"
+
+# 基于redis7的集群
+services:
+  node1:
+    image: redis:7.2.4
+    command: redis-server /usr/local/etc/redis/redis.conf
+    volumes:
+      - ./redis.cluster.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - 6380:6379
+
+  node2:
+    image: redis:7.2.4
+    command: redis-server /usr/local/etc/redis/redis.conf
+    volumes:
+      - ./redis.cluster.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - 6381:6379
+
+  node3:
+    image: redis:7.2.4
+    command: redis-server /usr/local/etc/redis/redis.conf
+    volumes:
+      - ./redis.cluster.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - 6382:6379
+
+  node4:
+    image: redis:7.2.4
+    command: redis-server /usr/local/etc/redis/redis.conf
+    volumes:
+      - ./redis.cluster.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - 6383:6379
+
+  node5:
+    image: redis:7.2.4
+    command: redis-server /usr/local/etc/redis/redis.conf
+    volumes:
+      - ./redis.cluster.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - 6384:6379
+
+  node6:
+    image: redis:7.2.4
+    command: redis-server /usr/local/etc/redis/redis.conf
+    volumes:
+      - ./redis.cluster.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - 6385:6379
+
+  creator:
+    image: redis:7.2.4
+    entrypoint: [/bin/sh, -c, 'echo "yes" | redis-cli --cluster create --cluster-replicas 1 node1:6379 node2:6379 node3:6379 node4:6379 node5:6379 node6:6379']
+    depends_on:
+      - node1
+      - node2
+      - node3
+      - node4
+      - node5
+      - node6
