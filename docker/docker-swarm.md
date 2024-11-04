@@ -1,5 +1,9 @@
 # `docker swarm`使用
 
+注意：`docker swarm`没有内置支持各个容器副本独立的数据存储卷功能，似乎`mesos`支持这个特性。
+
+
+
 ## `docker swarm`环境搭建
 
 注意：公司环境和`google`环境在`centOS8.5`、`centOS stream 8`上搭建`swarm`后`overlay`网络都无法正常工作；公司环境`ubuntu20.4`上搭建`swarm`后 `overlay`网络也是无法正常工作；只有`centOS7`搭建`swarm`后`overlay`网络能够正常工作。
