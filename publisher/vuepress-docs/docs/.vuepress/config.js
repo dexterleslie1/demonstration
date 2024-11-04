@@ -275,6 +275,7 @@ module.exports = {
                         'redisson用法.md',
                         'kubernetes运行redis.md',
                         '持久化.md',
+                        'redis管理.md',
                     ]
                 }
             ], '/mybatis/': [
