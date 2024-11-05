@@ -107,367 +107,367 @@ dcli docker install
 
 #### 安装`master`节点
 
-- 关闭`swap`，否则`kubelet`服务不能运行，删除`/etc/fstab`文件中的文件类型为`swap`的记录并重启系统即可关闭`swap`
+关闭`swap`，否则`kubelet`服务不能运行，删除`/etc/fstab`文件中的文件类型为`swap`的记录并重启系统即可关闭`swap`
 
-- 设置主机名称
+设置主机名称
 
-  ```bash
-  hostnamectl set-hostname k8s-master
-  ```
-  
-- 设置静态`ip`地址
+```bash
+hostnamectl set-hostname k8s-master
+```
 
-- 配置`/etc/hosts`，否则`kubelet`服务不能运行
+设置静态`ip`地址
 
-  ```bash
-  # x.x.x.x是k8s-master ip地址
-  x.x.x.x k8s-master
-  ```
-  
-- 配置`k8s yum`源，编辑`/etc/yum.repos.d/kubernetes.repo`内容如下：
+配置`/etc/hosts`，否则`kubelet`服务不能运行
 
-  ```
-  [kubernetes]
-  name=Kubernetes
-  baseurl=https://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64
-  enabled=1
-  gpgcheck=0
-  repo_gpgcheck=0
-  gpgkey=https://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg
-  # https://mirrors.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg
-  ```
+```bash
+# x.x.x.x是k8s-master ip地址
+x.x.x.x k8s-master
+```
 
-- 使用`yum`安装`kubelet-1.23.0`、`kubeadm-1.23.0`、`kubectl-1.23.0`
+配置`k8s yum`源，编辑`/etc/yum.repos.d/kubernetes.repo`内容如下：
 
-  ```bash
-  yum install kubelet-1.23.0 kubeadm-1.23.0 kubectl-1.23.0 -y
-  ```
+```properties
+[kubernetes]
+name=Kubernetes
+baseurl=https://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64
+enabled=1
+gpgcheck=0
+repo_gpgcheck=0
+gpgkey=https://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg
+# https://mirrors.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg
+```
 
-- `systemctl enable kubelet`
+使用`yum`安装`kubelet-1.23.0`、`kubeadm-1.23.0`、`kubectl-1.23.0`
 
-  ```bash
-  systemctl enable kubelet
-  ```
+```bash
+yum install kubelet-1.23.0 kubeadm-1.23.0 kubectl-1.23.0 -y
+```
 
-- 执行`kubeadm init`初始化`master`节点，注意：如果`kubeadm init`命令执行失败，可以通过命令`kubeadm reset`重置`k8s`集群后再重新执行`kubeadm init`命令。
+`systemctl enable kubelet`
 
-  ```bash
-  kubeadm init \
-      --apiserver-advertise-address=x.x.x.x \
-      --image-repository registry.aliyuncs.com/google_containers \
-      --kubernetes-version v1.23.0 \
-      --service-cidr=10.1.0.0/16 \
-      --pod-network-cidr=10.244.0.0/16
-  ```
+```bash
+systemctl enable kubelet
+```
 
-- 配置`kubectl`命令运行环境
+执行`kubeadm init`初始化`master`节点，注意：如果`kubeadm init`命令执行失败，可以通过命令`kubeadm reset`重置`k8s`集群后再重新执行`kubeadm init`命令。
 
-  ```bash
-  mkdir -p $HOME/.kube \
-  && sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config \
-  && sudo chown $(id -u):$(id -g) $HOME/.kube/config
-  ```
+```bash
+kubeadm init \
+    --apiserver-advertise-address=x.x.x.x \
+    --image-repository registry.aliyuncs.com/google_containers \
+    --kubernetes-version v1.23.0 \
+    --service-cidr=10.1.0.0/16 \
+    --pod-network-cidr=10.244.0.0/16
+```
 
-- 启动`flannel`网络
+配置`kubectl`命令运行环境
 
-  ```bash
-  kubectl apply -f kube-flannel.yml
-  ```
+```bash
+mkdir -p $HOME/.kube \
+&& sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config \
+&& sudo chown $(id -u):$(id -g) $HOME/.kube/config
+```
 
-  `kube-flannel.yaml`内容如下：
+启动`flannel`网络
 
-  ```yaml
-  ---
-  kind: Namespace
-  apiVersion: v1
-  metadata:
-    name: kube-flannel
-    labels:
-      pod-security.kubernetes.io/enforce: privileged
-  ---
+```bash
+kubectl apply -f kube-flannel.yml
+```
+
+`kube-flannel.yaml`内容如下：
+
+```yaml
+---
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: kube-flannel
+  labels:
+    pod-security.kubernetes.io/enforce: privileged
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: flannel
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - get
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - nodes/status
+  verbs:
+  - patch
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: flannel
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  apiVersion: rbac.authorization.k8s.io/v1
-  metadata:
-    name: flannel
-  rules:
-  - apiGroups:
-    - ""
-    resources:
-    - pods
-    verbs:
-    - get
-  - apiGroups:
-    - ""
-    resources:
-    - nodes
-    verbs:
-    - get
-    - list
-    - watch
-  - apiGroups:
-    - ""
-    resources:
-    - nodes/status
-    verbs:
-    - patch
-  ---
-  kind: ClusterRoleBinding
-  apiVersion: rbac.authorization.k8s.io/v1
-  metadata:
-    name: flannel
-  roleRef:
-    apiGroup: rbac.authorization.k8s.io
-    kind: ClusterRole
-    name: flannel
-  subjects:
-  - kind: ServiceAccount
-    name: flannel
-    namespace: kube-flannel
-  ---
-  apiVersion: v1
-  kind: ServiceAccount
-  metadata:
-    name: flannel
-    namespace: kube-flannel
-  ---
-  kind: ConfigMap
-  apiVersion: v1
-  metadata:
-    name: kube-flannel-cfg
-    namespace: kube-flannel
-    labels:
-      tier: node
-      app: flannel
-  data:
-    cni-conf.json: |
-      {
-        "name": "cbr0",
-        "cniVersion": "0.3.1",
-        "plugins": [
-          {
-            "type": "flannel",
-            "delegate": {
-              "hairpinMode": true,
-              "isDefaultGateway": true
-            }
-          },
-          {
-            "type": "portmap",
-            "capabilities": {
-              "portMappings": true
-            }
+  name: flannel
+subjects:
+- kind: ServiceAccount
+  name: flannel
+  namespace: kube-flannel
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: flannel
+  namespace: kube-flannel
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: kube-flannel-cfg
+  namespace: kube-flannel
+  labels:
+    tier: node
+    app: flannel
+data:
+  cni-conf.json: |
+    {
+      "name": "cbr0",
+      "cniVersion": "0.3.1",
+      "plugins": [
+        {
+          "type": "flannel",
+          "delegate": {
+            "hairpinMode": true,
+            "isDefaultGateway": true
           }
-        ]
-      }
-    net-conf.json: |
-      {
-        "Network": "10.244.0.0/16",
-        "Backend": {
-          "Type": "vxlan"
+        },
+        {
+          "type": "portmap",
+          "capabilities": {
+            "portMappings": true
+          }
         }
+      ]
+    }
+  net-conf.json: |
+    {
+      "Network": "10.244.0.0/16",
+      "Backend": {
+        "Type": "vxlan"
       }
-  ---
-  apiVersion: apps/v1
-  kind: DaemonSet
-  metadata:
-    name: kube-flannel-ds
-    namespace: kube-flannel
-    labels:
-      tier: node
+    }
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: kube-flannel-ds
+  namespace: kube-flannel
+  labels:
+    tier: node
+    app: flannel
+spec:
+  selector:
+    matchLabels:
       app: flannel
-  spec:
-    selector:
-      matchLabels:
+  template:
+    metadata:
+      labels:
+        tier: node
         app: flannel
-    template:
-      metadata:
-        labels:
-          tier: node
-          app: flannel
-      spec:
-        affinity:
-          nodeAffinity:
-            requiredDuringSchedulingIgnoredDuringExecution:
-              nodeSelectorTerms:
-              - matchExpressions:
-                - key: kubernetes.io/os
-                  operator: In
-                  values:
-                  - linux
-        hostNetwork: true
-        priorityClassName: system-node-critical
-        tolerations:
-        - operator: Exists
-          effect: NoSchedule
-        serviceAccountName: flannel
-        initContainers:
-        - name: install-cni-plugin
-         #image: flannelcni/flannel-cni-plugin:v1.1.0 for ppc64le and mips64le (dockerhub limitations may apply)
-          image: docker.io/rancher/mirrored-flannelcni-flannel-cni-plugin:v1.1.0
-          command:
-          - cp
-          args:
-          - -f
-          - /flannel
-          - /opt/cni/bin/flannel
-          volumeMounts:
-          - name: cni-plugin
-            mountPath: /opt/cni/bin
-        - name: install-cni
-         #image: flannelcni/flannel:v0.20.2 for ppc64le and mips64le (dockerhub limitations may apply)
-          image: docker.io/rancher/mirrored-flannelcni-flannel:v0.20.2
-          command:
-          - cp
-          args:
-          - -f
-          - /etc/kube-flannel/cni-conf.json
-          - /etc/cni/net.d/10-flannel.conflist
-          volumeMounts:
-          - name: cni
-            mountPath: /etc/cni/net.d
-          - name: flannel-cfg
-            mountPath: /etc/kube-flannel/
-        containers:
-        - name: kube-flannel
-         #image: flannelcni/flannel:v0.20.2 for ppc64le and mips64le (dockerhub limitations may apply)
-          image: docker.io/rancher/mirrored-flannelcni-flannel:v0.20.2
-          command:
-          - /opt/bin/flanneld
-          args:
-          - --ip-masq
-          - --kube-subnet-mgr
-          resources:
-            requests:
-              cpu: "100m"
-              memory: "50Mi"
-            limits:
-              cpu: "100m"
-              memory: "50Mi"
-          securityContext:
-            privileged: false
-            capabilities:
-              add: ["NET_ADMIN", "NET_RAW"]
-          env:
-          - name: POD_NAME
-            valueFrom:
-              fieldRef:
-                fieldPath: metadata.name
-          - name: POD_NAMESPACE
-            valueFrom:
-              fieldRef:
-                fieldPath: metadata.namespace
-          - name: EVENT_QUEUE_DEPTH
-            value: "5000"
-          volumeMounts:
-          - name: run
-            mountPath: /run/flannel
-          - name: flannel-cfg
-            mountPath: /etc/kube-flannel/
-          - name: xtables-lock
-            mountPath: /run/xtables.lock
-        volumes:
-        - name: run
-          hostPath:
-            path: /run/flannel
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/os
+                operator: In
+                values:
+                - linux
+      hostNetwork: true
+      priorityClassName: system-node-critical
+      tolerations:
+      - operator: Exists
+        effect: NoSchedule
+      serviceAccountName: flannel
+      initContainers:
+      - name: install-cni-plugin
+       #image: flannelcni/flannel-cni-plugin:v1.1.0 for ppc64le and mips64le (dockerhub limitations may apply)
+        image: docker.io/rancher/mirrored-flannelcni-flannel-cni-plugin:v1.1.0
+        command:
+        - cp
+        args:
+        - -f
+        - /flannel
+        - /opt/cni/bin/flannel
+        volumeMounts:
         - name: cni-plugin
-          hostPath:
-            path: /opt/cni/bin
+          mountPath: /opt/cni/bin
+      - name: install-cni
+       #image: flannelcni/flannel:v0.20.2 for ppc64le and mips64le (dockerhub limitations may apply)
+        image: docker.io/rancher/mirrored-flannelcni-flannel:v0.20.2
+        command:
+        - cp
+        args:
+        - -f
+        - /etc/kube-flannel/cni-conf.json
+        - /etc/cni/net.d/10-flannel.conflist
+        volumeMounts:
         - name: cni
-          hostPath:
-            path: /etc/cni/net.d
+          mountPath: /etc/cni/net.d
         - name: flannel-cfg
-          configMap:
-            name: kube-flannel-cfg
+          mountPath: /etc/kube-flannel/
+      containers:
+      - name: kube-flannel
+       #image: flannelcni/flannel:v0.20.2 for ppc64le and mips64le (dockerhub limitations may apply)
+        image: docker.io/rancher/mirrored-flannelcni-flannel:v0.20.2
+        command:
+        - /opt/bin/flanneld
+        args:
+        - --ip-masq
+        - --kube-subnet-mgr
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "50Mi"
+          limits:
+            cpu: "100m"
+            memory: "50Mi"
+        securityContext:
+          privileged: false
+          capabilities:
+            add: ["NET_ADMIN", "NET_RAW"]
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: EVENT_QUEUE_DEPTH
+          value: "5000"
+        volumeMounts:
+        - name: run
+          mountPath: /run/flannel
+        - name: flannel-cfg
+          mountPath: /etc/kube-flannel/
         - name: xtables-lock
-          hostPath:
-            path: /run/xtables.lock
-            type: FileOrCreate
-  ```
+          mountPath: /run/xtables.lock
+      volumes:
+      - name: run
+        hostPath:
+          path: /run/flannel
+      - name: cni-plugin
+        hostPath:
+          path: /opt/cni/bin
+      - name: cni
+        hostPath:
+          path: /etc/cni/net.d
+      - name: flannel-cfg
+        configMap:
+          name: kube-flannel-cfg
+      - name: xtables-lock
+        hostPath:
+          path: /run/xtables.lock
+          type: FileOrCreate
+```
 
 
 #### 安装`worker`节点
 
-- 关闭`swap`，否则`kubelet`服务不能运行，删除`/etc/fstab`文件中的文件类型为`swap`的记录并重启系统即可关闭`swap`
+关闭`swap`，否则`kubelet`服务不能运行，删除`/etc/fstab`文件中的文件类型为`swap`的记录并重启系统即可关闭`swap`
 
-- 设置主机名称
+设置主机名称
 
-  ```bash
-  hostnamectl set-hostname k8s-node1
-  hostnamectl set-hostname k8s-node2
-  ```
+```bash
+hostnamectl set-hostname k8s-node1
+hostnamectl set-hostname k8s-node2
+```
 
-- 设置静态`ip`地址
+设置静态`ip`地址
 
-- 配置`k8s yum`源，编辑`/etc/yum.repos.d/kubernetes.repo`内容如下：
+配置`k8s yum`源，编辑`/etc/yum.repos.d/kubernetes.repo`内容如下：
 
-  ```
-  [kubernetes]
-  name=Kubernetes
-  baseurl=https://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64
-  enabled=1
-  gpgcheck=0
-  repo_gpgcheck=0
-  gpgkey=https://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg
-  # https://mirrors.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg
-  ```
+```properties
+[kubernetes]
+name=Kubernetes
+baseurl=https://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64
+enabled=1
+gpgcheck=0
+repo_gpgcheck=0
+gpgkey=https://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg
+# https://mirrors.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg
+```
 
-- 使用`yum`安装`kubelet-1.23.0`、`kubeadm-1.23.0`、`kubectl-1.23.0`
+使用`yum`安装`kubelet-1.23.0`、`kubeadm-1.23.0`、`kubectl-1.23.0`
 
-  ```bash
-  yum install kubelet-1.23.0 kubeadm-1.23.0 kubectl-1.23.0 -y
-  ```
+```bash
+yum install kubelet-1.23.0 kubeadm-1.23.0 kubectl-1.23.0 -y
+```
 
-- `systemctl enable kubelet`
+`systemctl enable kubelet`
 
-  ```bash
-  systemctl enable kubelet
-  ```
+```bash
+systemctl enable kubelet
+```
 
-- 在`master`节点执行下面命令获取`kubeadm join`命令用于`worker`节点加入`k8s`集群
+在`master`节点执行下面命令获取`kubeadm join`命令用于`worker`节点加入`k8s`集群
 
-  ```
-  kubeadm token create --print-join-command
-  ```
+```bash
+kubeadm token create --print-join-command
+```
 
-- 在`worker`节点执行上面命令获取的`kubeadm join`命令即可把`worker`节点加入到`k8s`集群，注意：执行命令后需要等待几分钟`worker`节点加入集群并`Ready`状态。
+在`worker`节点执行上面命令获取的`kubeadm join`命令即可把`worker`节点加入到`k8s`集群，注意：执行命令后需要等待几分钟`worker`节点加入集群并`Ready`状态。
 
 
 
 ### 检查`k8s`服务是否正常
 
-- 在`master`节点查看基础容器运行状态
+在`master`节点查看基础容器运行状态
 
-  ```bash
-  kubectl get pods -n kube-system
-  ```
+```bash
+kubectl get pods -n kube-system
+```
 
-- 在`master`节点查看所有节点状态，注意：刚刚安装完的环境需要等待几分钟节点到`Ready`状态。
+在`master`节点查看所有节点状态，注意：刚刚安装完的环境需要等待几分钟节点到`Ready`状态。
 
-  ```bash
-  kubectl get nodes
-  ```
+```bash
+kubectl get nodes
+```
 
-- 部署`nginx`服务，注意：需要安装`worker`节点才能够运行`nginx`，否则`nginx`无法调度。
+部署`nginx`服务，注意：需要安装`worker`节点才能够运行`nginx`，否则`nginx`无法调度。
 
-  ```bash
-  kubectl create deployment nginx --image=nginx
-  ```
+```bash
+kubectl create deployment nginx --image=nginx
+```
 
-- 使用`NodePort`方式暴露`nginx`服务，其中`target-port`为容器中应用监听的`port`，`port`为服务通过服务集群`ip`地址访问的`port`
+使用`NodePort`方式暴露`nginx`服务，其中`target-port`为容器中应用监听的`port`，`port`为服务通过服务集群`ip`地址访问的`port`
 
-  ```bash
-  kubectl expose deployment nginx --target-port=80 --port=80 --type=NodePort --overrides '{ "apiVersion": "v1","spec":{"ports":[{"port":80,"protocol":"TCP","targetPort":80,"nodePort":30000}]}}'
-  ```
+```bash
+kubectl expose deployment nginx --target-port=80 --port=80 --type=NodePort --overrides '{ "apiVersion": "v1","spec":{"ports":[{"port":80,"protocol":"TCP","targetPort":80,"nodePort":30000}]}}'
+```
 
-- 查看`nginx NodePort`端口并使用浏览器访问成功
+查看`nginx NodePort`端口并使用浏览器访问成功
 
-  ```bash
-  kubectl get pod,service
-  ```
+```bash
+kubectl get pod,service
+```
 
-- 使用`curl`测试`nginx`是否正常
+使用`curl`测试`nginx`是否正常
 
-  ```bash
-  curl localhost:30000
-  ```
+```bash
+curl localhost:30000
+```
 
