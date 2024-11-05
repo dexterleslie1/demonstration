@@ -154,7 +154,7 @@ docker compose -f docker-compose-redis7.yml down -v
 
 ### 基于`docker swarm`集群
 
->注意：在使用`docker swarm`运行`redis`集群并且没有使用`nfs`存储时，需要绑定`redis`节点到指定的`swarm`节点中，否则在集群重启后会导致集群`down`。
+>注意：在使用`docker swarm`运行`redis`集群并且没有使用`nfs`存储时，需要绑定`redis`节点到指定的`swarm`节点中，否则在集群重启后会导致集群`down`。在使用`nfs`存储时则理论上不需要绑定`redis`节点到`swarm`节点中（未做实验）。
 
 复制`https://gitee.com/dexterleslie/demonstration/tree/master/demo-redis/redis-server/docker-based/mode-cluster`示例到本地，其中`docker-stack.yml`文件是`redis`集群在`docker swarm`部署的核心配置。
 
@@ -181,3 +181,4 @@ for i in {1..15}; do docker exec -it `docker ps|grep node1|awk '{print $1}'` red
 for i in {1..15}; do v_val=$(docker exec -it $(docker ps|grep node1|awk '{print $1}') redis-cli -c get key$i); echo key$i=$v_val; done
 ```
 
+获取通过示例`https://gitee.com/dexterleslie/demonstration/tree/master/spring-cloud/demo-spring-cloud-assistant`测试`swarm`中的`redis`集群是否会丢失数据。
