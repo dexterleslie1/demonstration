@@ -701,10 +701,13 @@ kubectl delete all --all -n custom-namespace
 
 ## `kubectl label`修改资源标签
 
-```bash
-### 为pod打标签
 
-# 1.yaml内容如下:
+
+### 为`pod`打标签
+
+`1.yaml`内容如下：
+
+```yaml
 apiVersion: v1
 kind: Pod
 metadata:
@@ -713,35 +716,57 @@ spec:
  containers:
  - name: nginx
    image: nginx
-   
-# 创建资源
+```
+
+创建资源
+
+```bash
 kubectl create -f 1.yaml
+```
 
-# 显示标签
+显示标签
+
+```bash
 kubectl get pod --show-labels
+```
 
-# 添加标签
+添加标签
+
+```bash
 kubectl label pod pod1 creation_method=manual
+```
 
-# 修改标签
+修改标签
+
+```bash
 kubectl label pod pod1 creation_method=manual1 --overwrite
+```
 
-# 删除资源
+删除资源
+
+```bash
 kubectl delete -f 1.yaml
+```
 
 
 
+### 使用标签和选择器来约束`pod`调度
 
+显示工作节点的标签
 
-### 使用标签和选择器来约束pod调度
-
-# 显示工作节点的标签
+```bash
 kubectl get nodes --show-labels
+```
 
-# 使用标签分类工作节点
+使用标签分类工作节点
+
+```bash
 kubectl label node demo-k8s-node0 gpu=true
+```
 
-# 1.yaml内容如下:
+`1.yaml`内容如下：
+
+```yaml
 apiVersion: v1
 kind: Pod
 metadata:
@@ -753,9 +778,20 @@ spec:
  containers:
  - name: nginx
    image: nginx
-   
-# 删除资源
+```
+
+删除资源
+
+```bash
 kubectl delete -f 1.yaml
+```
+
+
+
+### 为`node`打标签
+
+```bash
+kubectl label node k8s-node1 support-only-perf-target=
 ```
 
 
@@ -814,36 +850,57 @@ kubectl delete pod nginx
 
 ## `kubectl exec`
 
-### 在`pod`中执行命令
+
+
+### 在`pod`中执行一次命令
+
+创建pod
 
 ```bash
-### 执行一次命令
-# 创建pod
-kubectl run nginx --image=docker.118899.net:10001/yyd-public/demo-k8s-nodejs --port=8080
+kubectl run nginx --image=nginx --port=8080
+```
 
-# 在pod中执行命令，双横杠代表这kubectl命令结束。在两个横杠之后的内容是指在pod内部需要执行的命令。如果需要执行的命令没有以横杠开始的参数，横杠也不是必需的。例如: kubectl exec nginx curl -s http://10.1.1.1，如果这里不使用横杠，-s选项会被解析成kubectl exec选项，会导致结果异常和歧义错误。
+在`pod`中执行命令，双横杠代表这`kubectl`命令结束。在两个横杠之后的内容是指在`pod`内部需要执行的命令。如果需要执行的命令没有以横杠开始的参数，横杠也不是必需的。例如：`kubectl exec nginx curl -s http://10.1.1.1`，如果这里不使用横杠，`-s`选项会被解析成`kubectl exec`选项，会导致结果异常和歧义错误。
+
+```bash
 kubectl exec nginx -- date
+```
 
-# 删除pod
-kubectl delete pod nginx
+删除`pod`
 
-
-
-### 登录shell执行任意多条命令
-# 创建pod
-kubectl run nginx --image=docker.118899.net:10001/yyd-public/demo-k8s-nodejs --port=8080
-
-# 登录shell执行任务多条命令
-kubectl exec -it nginx  bash
-
-# 删除pod
+```bash
 kubectl delete pod nginx
 ```
 
-### 连接`pod`中指定的容器
+
+
+### 登录`shell`执行任意多条命令
+
+创建`pod`
 
 ```bash
-# 创建pod中有多个容器，1.yaml文件内容如下：
+kubectl run nginx --image=nginx --port=8080
+```
+
+登录`shell`执行任务多条命令
+
+```bash
+kubectl exec -it nginx bash
+```
+
+删除`pod`
+
+```bash
+kubectl delete pod nginx
+```
+
+
+
+### 连接`pod`中指定的容器
+
+创建`pod`中有多个容器，`1.yaml`文件内容如下：
+
+```yaml
 apiVersion: v1
 kind: Pod
 metadata:
@@ -855,19 +912,26 @@ spec:
  - name: curl
    image: curlimages/curl
    command: ["/bin/sh", "-c", "sleep 7200"]
-   
-# 启动pod
-kubectl apply -f 1.yaml
-
-# 连接curl容器，使用curl通过localhost测试nginx服务
-kubectl exec -it test-pod -c curl /bin/sh
-curl localhost
-
-# 删除pod
-kubectl delete -f 1.yaml
 ```
 
+启动`pod`
 
+```bash
+kubectl apply -f 1.yaml
+```
+
+连接`curl`容器，使用`curl`通过`localhost`测试`nginx`服务
+
+```bash
+kubectl exec -it test-pod -c curl /bin/sh
+curl localhost
+```
+
+删除`pod`
+
+```bash
+kubectl delete -f 1.yaml
+```
 
 
 
@@ -1141,5 +1205,61 @@ kubectl top node
 
 ```sh
 kubectl top pod
+```
+
+
+
+## `kubectl describe`
+
+当`pod`状态一直为`Pending`时，通过`kubectl describe`查看`pod`调度失败的原因
+
+```bash
+kubectl describe pod redis-node-0
+```
+
+查看节点信息，例如：污点信息
+
+```bash
+kubectl describe node demo-k8s-node1
+```
+
+
+
+## `kubectl taint`
+
+删除节点污点
+
+```bash
+# 删除node-type=production:NoSchedule
+kubectl taint node demo-k8s-node1 node-type=production:NoSchedule-
+
+# 删除污点support-only-openresty:NoSchedule
+kubectl taint node k8s-node-openresty support-only-openresty:NoSchedule-
+```
+
+
+
+## `kubectl cordon/uncordon`
+
+标记节点为不可调度（但对其上的`pod`不做任何事情）
+
+```bash
+kubectl cordon demo-k8s-node2
+```
+
+取消标记
+
+```bash
+kubectl uncordon demo-k8s-node2
+```
+
+
+
+## `kubectl drain`
+
+疏散节点上的`pod`，`--ignore-daemonsets`是忽略节点上的`daemonset`，否则会报告错误
+
+```bash
+kubectl drain k8s-node2 --ignore-daemonsets
 ```
 
