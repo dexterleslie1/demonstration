@@ -372,3 +372,27 @@ docker stack deploy test1 -c docker-compose.yaml
 docker node rm <nodeid>
 ```
 
+
+
+查看`stack`中所有服务
+
+```sh
+docker stack services test1
+```
+
+
+
+### 删除`stack`中的`service`
+
+查看`stack test1`中的`service`列表
+
+```bash
+docker stack services test1
+```
+
+删除`service`
+
+```bash
+docker service rm test1_creator
+```
+

@@ -156,6 +156,8 @@ docker compose -f docker-compose-redis7.yml down -v
 
 >注意：在使用`docker swarm`运行`redis`集群并且没有使用`nfs`存储时，需要绑定`redis`节点到指定的`swarm`节点中，否则在集群重启后会导致集群`down`。在使用`nfs`存储时则理论上不需要绑定`redis`节点到`swarm`节点中（未做实验）。
 
+注意：通过`docker stack rm test1`删除`redis`集群后，需要手动在每个`swarm`节点上删除`redis`节点数据卷（命令`docker volume rm $(docker volume ls | grep cluster-node | awk '{print $2}')`），否则在下次创建集群时会报告错误导致无法创建新的`redis`集群。
+
 复制`https://gitee.com/dexterleslie/demonstration/tree/master/demo-redis/redis-server/docker-based/mode-cluster`示例到本地，其中`docker-stack.yml`文件是`redis`集群在`docker swarm`部署的核心配置。
 
 在`swarm`管理节点上执行以下命令部署`redis`集群
@@ -177,11 +179,19 @@ docker exec -it `docker ps |grep node1 | awk '{print $1}'` redis-cli -c cluster 
 # 生成数据
 for i in {1..15}; do docker exec -it `docker ps|grep node1|awk '{print $1}'` redis-cli -c set key$i value$i; done
 
-# 经过多次重启或者关闭swarm节点后，执行以下命令依然能够读取redis集群中的数据，表示redis集群数据不丢失
-for i in {1..15}; do v_val=$(docker exec -it $(docker ps|grep node1|awk '{print $1}') redis-cli -c get key$i); echo key$i=$v_val; done
+# 删除service模拟节点失败
+docker service rm test1_node1
+docker service rm test1_node3
+docker service rm test1_node5
+
+# 重建集群
+docker stack deploy test1 -c docker-stack.yaml
+
+# 执行以下命令依然能够读取redis集群中的数据，表示redis集群数据不丢失
+for i in {1..15}; do v_val=$(docker exec -it $(docker ps|grep node2|awk '{print $1}') redis-cli -c get key$i); echo key$i=$v_val; done
 ```
 
-获取通过示例`https://gitee.com/dexterleslie/demonstration/blob/master/spring-cloud/demo-spring-cloud-assistant/deployer/docker-stack.yaml`测试`swarm`中的`redis`集群是否会丢失数据。
+或者可以通过示例`https://gitee.com/dexterleslie/demonstration/blob/master/spring-cloud/demo-spring-cloud-assistant/deployer/docker-stack.yaml`测试`swarm`中的`redis`集群是否会丢失数据。
 
 
 
