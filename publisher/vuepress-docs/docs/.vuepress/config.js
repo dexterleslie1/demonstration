@@ -269,11 +269,10 @@ module.exports = {
                 {
                     title: "Redis",
                     children: [
-                        'docker运行redis.md',
+                        '容器运行redis.md',
                         'spring-boot项目集成redis.md',
                         'spring-boot集成redisson.md',
                         'redisson用法.md',
-                        'kubernetes运行redis.md',
                         '持久化.md',
                         'redis管理.md',
                     ]
