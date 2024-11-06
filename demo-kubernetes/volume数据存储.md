@@ -397,169 +397,191 @@ kubectl get pvc
 
 ### 使用`storageclass(存储类别)`实现持久卷的动态卷配置
 
-> https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner/blob/master/deploy/test-claim.yaml
-> https://zahui.fan/posts/179eb842/
+> `https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner/blob/master/deploy/test-claim.yaml
+> https://zahui.fan/posts/179eb842/`
 
 卷置备程序会根据`pvc`自动创建`pv`，不需要集群管理员预先创建`pv`，集群管理员只需要定义一个或者多个`StorageClass`对象。
 
-- 搭建`nfs`服务器，请参考 <a href="/linux使用/搭建nfs服务器.html" target="_blank">链接</a>
 
-- `k8s`集群中配置`nfs`卷置备程序
 
-  ```bash
-  # 配置nfs卷置备程序
-  # 用于创建nfs置备程序的相关rbac的rbac.yaml
-  apiVersion: v1
-  kind: ServiceAccount
-  metadata:
+#### 部署`nfs`存储置备服务
+
+搭建`nfs`服务器，请参考 <a href="/linux使用/搭建nfs服务器.html" target="_blank">链接</a>
+
+配置`nfs`卷置备服务`deployment.yaml`内容如下：
+
+```yaml
+# 用于创建nfs置备程序的相关rbac
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: nfs-client-provisioner
+  namespace: default
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: nfs-client-provisioner-runner
+rules:
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["persistentvolumes"]
+    verbs: ["get", "list", "watch", "create", "delete"]
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["get", "list", "watch", "update"]
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["storageclasses"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "update", "patch"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: run-nfs-client-provisioner
+subjects:
+  - kind: ServiceAccount
     name: nfs-client-provisioner
     namespace: default
-  ---
+roleRef:
   kind: ClusterRole
-  apiVersion: rbac.authorization.k8s.io/v1
-  metadata:
-    name: nfs-client-provisioner-runner
-  rules:
-    - apiGroups: [""]
-      resources: ["nodes"]
-      verbs: ["get", "list", "watch"]
-    - apiGroups: [""]
-      resources: ["persistentvolumes"]
-      verbs: ["get", "list", "watch", "create", "delete"]
-    - apiGroups: [""]
-      resources: ["persistentvolumeclaims"]
-      verbs: ["get", "list", "watch", "update"]
-    - apiGroups: ["storage.k8s.io"]
-      resources: ["storageclasses"]
-      verbs: ["get", "list", "watch"]
-    - apiGroups: [""]
-      resources: ["events"]
-      verbs: ["create", "update", "patch"]
-  ---
-  kind: ClusterRoleBinding
-  apiVersion: rbac.authorization.k8s.io/v1
-  metadata:
-    name: run-nfs-client-provisioner
-  subjects:
-    - kind: ServiceAccount
-      name: nfs-client-provisioner
-      namespace: default
-  roleRef:
-    kind: ClusterRole
-    name: nfs-client-provisioner-runner
-    apiGroup: rbac.authorization.k8s.io
-  ---
-  kind: Role
-  apiVersion: rbac.authorization.k8s.io/v1
-  metadata:
-    name: leader-locking-nfs-client-provisioner
-    namespace: default
-  rules:
-    - apiGroups: [""]
-      resources: ["endpoints"]
-      verbs: ["get", "list", "watch", "create", "update", "patch"]
-  ---
-  kind: RoleBinding
-  apiVersion: rbac.authorization.k8s.io/v1
-  metadata:
-    name: leader-locking-nfs-client-provisioner
-    namespace: default
-  subjects:
-    - kind: ServiceAccount
-      name: nfs-client-provisioner
-      namespace: default
-  roleRef:
-    kind: Role
-    name: leader-locking-nfs-client-provisioner
-    apiGroup: rbac.authorization.k8s.io
-  
-  # 创建相关资源
-  kubectl create -f rbac.yaml 
-  
-  # 用于创建nfs置备程序的pod
-  apiVersion: apps/v1
-  kind: Deployment
-  metadata:
+  name: nfs-client-provisioner-runner
+  apiGroup: rbac.authorization.k8s.io
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: leader-locking-nfs-client-provisioner
+  namespace: default
+rules:
+  - apiGroups: [""]
+    resources: ["endpoints"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: leader-locking-nfs-client-provisioner
+  namespace: default
+subjects:
+  - kind: ServiceAccount
     name: nfs-client-provisioner
-    labels:
-      app: nfs-client-provisioner
     namespace: default
-  spec:
-    replicas: 1
-    strategy:
-      type: Recreate
-    selector:
-      matchLabels:
+roleRef:
+  kind: Role
+  name: leader-locking-nfs-client-provisioner
+  apiGroup: rbac.authorization.k8s.io
+  
+# 用于创建nfs置备程序的pod
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nfs-client-provisioner
+  labels:
+    app: nfs-client-provisioner
+  namespace: default
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: nfs-client-provisioner
+  template:
+    metadata:
+      labels:
         app: nfs-client-provisioner
-    template:
-      metadata:
-        labels:
-          app: nfs-client-provisioner
-      spec:
-        serviceAccountName: nfs-client-provisioner
-        containers:
-          - name: nfs-client-provisioner
-            image: registry.cn-hangzhou.aliyuncs.com/iuxt/nfs-subdir-external-provisioner:v4.0.2
-            volumeMounts:
-              - name: nfs-client-root
-                mountPath: /persistentvolumes
-            env:
-              # 必须与storageclass.yaml中的provisioner的名称一致
-              - name: PROVISIONER_NAME
-                value: k8s-sigs.io/nfs-subdir-external-provisioner
-              - name: NFS_SERVER
-                value: 192.168.235.191
-              - name: NFS_PATH
-                value: /data
-        volumes:
-          - name: nfs-client-root
-            nfs:
-              server: 192.168.235.191
-              path: /data
-              
-  # 创建deployment
-  kubectl create -f deployment.yaml
-  
-  # 创建storageclass
-  apiVersion: storage.k8s.io/v1
-  kind: StorageClass
-  metadata:
-    name: nfs-client
-  # 必须与deployment.yaml中的PROVISIONER_NAME一致
-  provisioner: k8s-sigs.io/nfs-subdir-external-provisioner # or choose another name, must match deployment's env PROVISIONER_NAME'
-  parameters:
-    # https://help.aliyun.com/document_detail/144398.html
-    archiveOnDelete: "false"
-  
-  kubectl create -f storageclass.yaml
-  
-  # 指定storageclass创建pvc
-  kind: PersistentVolumeClaim
-  apiVersion: v1
-  metadata:
-    name: test-claim
-  spec:
-    storageClassName: nfs-client
-    accessModes:
-      - ReadWriteMany
-    resources:
-      requests:
-        storage: 1Gi
-       
-  # 创建pvc会自动创建pv，nfs置备程序会自动在nfs服务器/data目录下创建pv对应的目录，在删除pvc时候也同时会自动删除此pv目录
-  kubectl create -f test-claim.yaml 
-  
-  # 查看pv和pvc列表
-  kubectl get pv
-  kubectl get pvc
-  
-  # 删除pvc会自动删除关联的pv
-  kubectl delete -f test-claim.yaml 
-  
-  # 查看pv和pvc列表
-  kubectl get pvc
-  kubectl get pv
-  ```
+    spec:
+      serviceAccountName: nfs-client-provisioner
+      containers:
+        - name: nfs-client-provisioner
+          image: registry.cn-hangzhou.aliyuncs.com/iuxt/nfs-subdir-external-provisioner:v4.0.2
+          volumeMounts:
+            - name: nfs-client-root
+              mountPath: /persistentvolumes
+          env:
+            # 必须与storageclass.yaml中的provisioner的名称一致
+            - name: PROVISIONER_NAME
+              value: k8s-sigs.io/nfs-subdir-external-provisioner
+            - name: NFS_SERVER
+              value: 192.168.235.191
+            - name: NFS_PATH
+              value: /data
+      volumes:
+        - name: nfs-client-root
+          nfs:
+            server: 192.168.235.191
+            path: /data
+            
+# 创建storageclass
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: nfs-client
+# 必须与deployment.yaml中的PROVISIONER_NAME一致
+provisioner: k8s-sigs.io/nfs-subdir-external-provisioner # or choose another name, must match deployment's env PROVISIONER_NAME'
+parameters:
+  # https://help.aliyun.com/document_detail/144398.html
+  archiveOnDelete: "false"
+```
 
-  
+部署`nfs`存储置备服务
+
+```bash
+kubectl create -f deployment.yaml
+```
+
+
+
+#### 测试`nfs`存储置备服务是否正常
+
+指定`storageclass`创建`pvc`，文件`test-claim.yaml`内容如下：
+
+```yaml
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: test-claim
+spec:
+  storageClassName: nfs-client
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+```
+
+创建`pvc`会自动创建`pv`，`nfs`置备程序会自动在`nfs`服务器`/data`目录下创建`pv`对应的目录，在删除`pvc`时候也同时会自动删除此`pv`目录
+
+```bash
+kubectl create -f test-claim.yaml 
+```
+
+查看`pv`和`pvc`列表
+
+```bash
+kubectl get pv
+kubectl get pvc
+```
+
+删除`pvc`会自动删除关联的`pv`
+
+```bash
+kubectl delete -f test-claim.yaml 
+```
+
+查看`pv`和`pvc`列表
+
+```bash
+kubectl get pvc
+kubectl get pv
+```
+
+
 
