@@ -1,6 +1,6 @@
 # `spring-boot`项目集成`redis`
 
-> `spring-boot`项目集成`spring-boot-starter-data-redis`具体配置参考 [链接](https://github.com/dexterleslie1/demonstration/tree/master/demo-redis/redistemplate/redistemplate-cluster)
+> `spring-boot`项目集成`spring-boot-starter-data-redis`具体配置参考`https://gitee.com/dexterleslie/demonstration/tree/master/demo-redis/redistemplate/redistemplate-cluster`
 
 `maven pom.xml`配置`spring-boot-starter-data-redis`如下：
 
@@ -42,10 +42,10 @@ spring.redis.cluster.nodes=localhost:6380,localhost:6381,localhost:6382
 spring.redis.cluster.max-redirects=6
 ```
 
-在代码中注入并引用`RedisTemplate`
+在代码中注入并引用`StringRedisTemplate`，参考`key string`序列化`https://blog.csdn.net/Muscleheng/article/details/135323270`
 
 ```java
 @Autowired
-RedisTemplate<String, String> redisTemplate = null;
+StringRedisTemplate redisTemplate = null;
 ```
 
