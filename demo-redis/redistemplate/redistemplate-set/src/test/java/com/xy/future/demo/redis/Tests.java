@@ -5,10 +5,12 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @RunWith(SpringRunner.class)
@@ -16,7 +18,7 @@ import java.util.stream.Collectors;
 public class Tests {
 
     @Autowired
-    private RedisTemplate redisTemplate = null;
+    private StringRedisTemplate redisTemplate = null;
 
     @Test
     public void test() {
@@ -27,7 +29,7 @@ public class Tests {
         // sadd：添加元素
         // smember：获取集合的所有元素，结果是无序的
         List<String> expectedList = new ArrayList<>();
-        for(int i=0; i<total; i++) {
+        for (int i = 0; i < total; i++) {
             this.redisTemplate.opsForSet().add(key, String.valueOf(i));
             expectedList.add(String.valueOf(i));
         }
@@ -62,5 +64,15 @@ public class Tests {
         isMember = this.redisTemplate.opsForSet().isMember(key, pop);
         Assert.assertTrue(expectedList.contains(pop));
         Assert.assertFalse(isMember);
+
+        //region 测试set和get
+
+        for (int i = 0; i <= 15; i++) {
+            this.redisTemplate.opsForValue().set("key" + i, "value" + i);
+            String value = this.redisTemplate.opsForValue().get("key" + i);
+            Assert.assertEquals("value" + i, value);
+        }
+
+        //endregion
     }
 }
