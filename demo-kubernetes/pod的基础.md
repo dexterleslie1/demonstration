@@ -181,6 +181,85 @@ kubectl exec base-pod -n dev -it -c busybox /bin/sh
 tail -f /tmp/hello.txt
 ```
 
+
+
+### 指定`pod`中`command`执行的脚本
+
+`1.yaml`内容如下：
+
+```yaml
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: demo
+spec:
+  manualSelector: true
+  completions: 1 # 总共需要执行多少个pod
+  parallelism: 1 # 并行运行pod的数量，如果不指定表示一个一个执行
+  selector:
+    matchLabels:
+      app: demo
+  template:
+    metadata:
+      labels:
+        app: demo
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: demo
+          image: busybox
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - /my-scripts/entrypoint.sh
+          volumeMounts:
+            - name: entrypoint-sh
+              mountPath: /my-scripts/
+      volumes:
+        - name: entrypoint-sh
+          configMap:
+            name: demo-configuration
+            items:
+              - key: entrypoint.sh
+                path: entrypoint.sh
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: demo-configuration
+  namespace: "default"
+data:
+  entrypoint.sh: |-
+    #!/bin/bash
+    
+    for i in $(seq 1 15)
+    do
+      echo "key$i=value$i"
+    done
+
+```
+
+启动`pod`
+
+```bash
+kubectl apply -f 1.yaml
+```
+
+查看`pod`日志是否符合预期
+
+```bash
+kubectl logs -f `kubectl get pod |grep demo- | awk '{print $1}'`
+```
+
+删除`pod`
+
+```bash
+kubectl delete -f 1.yaml
+```
+
+
+
 ### 在`kubernetes`中覆盖命令和参数
 
 ```bash
