@@ -255,48 +255,6 @@ docker run -it user
 
 
 
-## dockerfile ENTRYPOINT 指令用法
-
-
-
-### ENTRYPOINT 指令执行多条命令
-
-参考
-
-> https://stackoverflow.com/questions/54121031/multiple-commands-on-docker-entrypoint
-
-dockerfile 内容
-
-```dockerfile
-FROM ubuntu
-
-ENTRYPOINT [ "/bin/sh", "-c", "date > /tmp/1.txt && cat /tmp/1.txt && sleep infinity" ]
-
-```
-
-docker-compose.yaml 内容
-
-```yaml
-version: "3.0"
-
-services:
-  demo-test:
-    build:
-      context: .
-    container_name: demo-test
-    image: my-demo-test
-
-```
-
-编译并启动服务
-
-```sh
-docker compose build
-docker compose up
-```
-
-
-
 ## docker compose
 
 ### docker compose yaml 指定 command
