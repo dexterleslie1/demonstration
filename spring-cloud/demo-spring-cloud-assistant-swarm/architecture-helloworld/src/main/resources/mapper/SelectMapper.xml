@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace= "com.future.demo.architecture.hello.world.SelectMapper" >
+    <!--<select id="selectNow" resultType="Date">
+      select now()
+    </select>-->
+
+    <select id="getTest1ByKey" resultType="String" parameterType="String">
+        select `value` from test1 where `key`=#{key}
+    </select>
+</mapper>

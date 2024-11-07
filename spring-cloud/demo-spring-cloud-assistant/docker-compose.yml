@@ -51,3 +51,46 @@ services:
       - node1
       - node2
       - node3
+
+  elasticsearch:
+    build:
+      context: .
+      dockerfile: ./Dockerfile-elasticsearch
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-cloud-assistant-elasticsearch:1.0.0
+    environment:
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - discovery.type=single-node
+      # http.cors表示允许elasticsearch-head连接并管理
+      - http.cors.enabled=true
+      - http.cors.allow-origin=*
+      - TZ=Asia/Shanghai
+    ports:
+      - '9200:9200'
+
+  kibana:
+    image: kibana:7.8.0
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    ports:
+      - '5601:5601'
+    depends_on:
+      - elasticsearch
+
+  logstash:
+    image: logstash:7.8.0
+    volumes:
+      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    environment:
+      - xpack.monitoring.elasticsearch.hosts=[ "http://elasticsearch:9200" ]
+      - LS_JAVA_OPTS=-Xmx512m -Xms512m
+    ports:
+      - '5044:5044'
+
+  # 定时删除过期索引
+  curator:
+    image: untergeek/curator:5.7.6
+    volumes:
+      - ./curator.yml:/.curator/curator.yml
+      - ./action.yml:/.curator/action.yml
+    entrypoint: /bin/sh
+    command: -c "while true; do /curator/curator --config /.curator/curator.yml /.curator/action.yml && echo \"成功执行curator命令\"; sleep 10; done;"

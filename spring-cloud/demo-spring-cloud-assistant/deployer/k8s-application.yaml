@@ -45,13 +45,13 @@ spec:
       volumes:
         - name: config
           configMap:
-            name: redis-configuration
+            name: app-configuration
             items:
               - key: redis-cluster.conf
                 path: redis.conf
         - name: liveness-and-readiness-config
           configMap:
-            name: redis-configuration
+            name: app-configuration
             items:
               - key: ping_liveness_n_readines_local.sh
                 path: ping_liveness_n_readines_local.sh
@@ -133,7 +133,7 @@ spec:
       volumes:
         - name: init-redis-cluster-sh
           configMap:
-            name: redis-configuration
+            name: app-configuration
             items:
               - key: init-redis-cluster.sh
                 path: init-redis-cluster.sh
@@ -283,6 +283,8 @@ spec:
               value: "redis-cluster-service:6379"
             - name: "internalDbServer"
               value: "db-service"
+            - name: "internalLogstashUrl"
+              value: "logstash-service:5044"
 
 ---
 apiVersion: v1
@@ -340,10 +342,198 @@ spec:
     app: gateway
 
 ---
+# ELK
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: elasticsearch
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: elasticsearch
+  serviceName: elasticsearch-service
+  template:
+    metadata:
+      labels:
+        app: elasticsearch
+    spec:
+      containers:
+        - name: elasticsearch
+          image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-cloud-assistant-elasticsearch:1.0.0
+          imagePullPolicy: Always
+          env:
+            - name: "ES_JAVA_OPTS"
+              value: "-Xms512m -Xmx512m"
+            - name: "discovery.type"
+              value: "single-node"
+            - name: "http.cors.enabled"
+              value: "true"
+            - name: "http.cors.allow-origin"
+              value: "*"
+            - name: "TZ"
+              value: "Asia/Shanghai"
+          volumeMounts:
+            - name: data-elasticsearch
+              mountPath: /usr/share/elasticsearch/data
+  volumeClaimTemplates:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: data-elasticsearch
+        labels:
+          app: elasticsearch
+      spec:
+        accessModes:
+          - "ReadWriteOnce"
+        resources:
+          requests:
+            storage: "8Gi"
+        storageClassName: nfs-client
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: elasticsearch-service
+spec:
+  type: ClusterIP
+  selector:
+    app: elasticsearch
+  ports:
+    - port: 9200
+      targetPort: 9200
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kibana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kibana
+  template:
+    metadata:
+      labels:
+        app: kibana
+    spec:
+      containers:
+        - name: kibana
+          image: kibana:7.8.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: "TZ"
+              value: "Asia/Shanghai"
+            - name: "ELASTICSEARCH_HOSTS"
+              value: "http://elasticsearch-service:9200"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kibana-service-nodeport
+spec:
+  type: NodePort
+  ports:
+    - port: 5601
+      targetPort: 5601
+      nodePort: 30002
+  selector:
+    app: kibana
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: logstash
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: logstash
+  template:
+    metadata:
+      labels:
+        app: logstash
+    spec:
+      containers:
+        - name: logstash
+          image: logstash:7.8.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: "TZ"
+              value: "Asia/Shanghai"
+            - name: "xpack.monitoring.elasticsearch.hosts"
+              value: "http://elasticsearch-service:9200"
+            - name: "LS_JAVA_OPTS"
+              value: "-Xmx512m -Xms512m"
+          volumeMounts:
+            - name: config
+              mountPath: /usr/share/logstash/pipeline/
+      volumes:
+        - name: config
+          configMap:
+            name: app-configuration
+            items:
+              - key: logstash.conf
+                path: logstash.conf
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: logstash-service
+spec:
+  type: ClusterIP
+  selector:
+    app: logstash
+  ports:
+    - port: 5044
+      targetPort: 5044
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: curator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: curator
+  template:
+    metadata:
+      labels:
+        app: curator
+    spec:
+      containers:
+        - name: curator
+          image: untergeek/curator:5.7.6
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -c
+            - "while true; do /curator/curator --config /.curator/curator.yml /.curator/action.yml && echo \"成功执行curator命令\"; sleep 10; done;"
+          env:
+            - name: "TZ"
+              value: "Asia/Shanghai"
+          volumeMounts:
+            - name: config
+              mountPath: /.curator/
+      volumes:
+        - name: config
+          configMap:
+            name: app-configuration
+            items:
+              - key: curator.yml
+                path: curator.yml
+              - key: action.yml
+                path: action.yml
+
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: redis-configuration
+  name: app-configuration
   namespace: "default"
 data:
   redis-cluster.conf: |-
@@ -1793,3 +1983,70 @@ data:
     do
       redis-cli -c -h redis-cluster-0.redis-cluster-headless set key$i value$i && echo "成功set key$i"
     done
+
+  logstash.conf: |
+    input {
+        tcp {
+            port=>5044
+            codec=>json
+        }
+    }
+    
+    output {
+        elasticsearch {
+            hosts=>["elasticsearch-service:9200"]
+            index => "future-%{+yyyy-MM-dd}"
+        }
+    }
+
+  curator.yml: |
+    # Remember, leave a key empty if there is no value.  None will be a string,
+    ## not a Python "NoneType"
+    
+    client:
+      hosts: elasticsearch-service
+      port: 9200
+      url_prefix:
+      use_ssl: False
+      certificate:
+      client_cert:
+      client_key:
+      ssl_no_validate: False
+      http_auth:
+      timeout: 30
+      master_only: False
+    
+    logging:
+      loglevel: INFO
+      logfile: /tmp/curator.log
+      logformat: default
+      blacklist: ['elasticsearch', 'urllib3']
+
+  action.yml: |
+    ---
+    # Remember, leave a key empty if there is no value.  None will be a string,
+    # not a Python "NoneType"
+    #
+    # Also remember that all examples have 'disable_action' set to True.  If you
+    # want to use this action as a template, be sure to set this to False after
+    # copying it.
+    actions:
+      1:
+        action: delete_indices
+        description: >-
+          Delete indices older than 20 days (based on index name), for logstash-
+          prefixed indices. Ignore the error if the filter does not result in an
+          actionable list of indices (ignore_empty_list) and exit cleanly.
+        options:
+          ignore_empty_list: True
+          disable_action: False
+        filters:
+          - filtertype: pattern
+            kind: prefix
+            value: future-
+          - filtertype: age
+            source: name
+            direction: older
+            timestring: '%Y-%m-%d'
+            unit: days
+            unit_count: 30

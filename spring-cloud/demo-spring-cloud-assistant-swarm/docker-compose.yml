@@ -1,0 +1,53 @@
+version: "3.0"
+
+services:
+  db:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-cloud-assistant-db:1.0.0
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - TZ=Asia/Shanghai
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci --skip-character-set-client-handshake
+    ports:
+      - "3306:3306"
+
+  node1:
+    image: redis:7.2.4
+    command: redis-server /usr/local/etc/redis/redis.conf
+    volumes:
+      - ./redis.cluster.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - "6379:6379"
+
+  node2:
+    image: redis:7.2.4
+    command: redis-server /usr/local/etc/redis/redis.conf
+    volumes:
+      - ./redis.cluster.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - "6380:6379"
+
+  node3:
+    image: redis:7.2.4
+    command: redis-server /usr/local/etc/redis/redis.conf
+    volumes:
+      - ./redis.cluster.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - "6381:6379"
+
+  creator:
+    build:
+      context: .
+      dockerfile: ./Dockerfile-redis
+    image: demo-spring-cloud-assistant-redis-cluster-initializer
+    command: "node1:6379 node2:6379 node3:6379"
+    entrypoint: ["/usr/local/etc/redis/init-redis-cluster.sh"]
+    depends_on:
+      - node1
+      - node2
+      - node3

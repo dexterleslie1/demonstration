@@ -1,0 +1,6 @@
+FROM redis:7.2.4
+
+ADD redis.cluster.conf /usr/local/etc/redis/redis.conf
+
+ADD init-redis-cluster.sh /usr/local/etc/redis/init-redis-cluster.sh
+RUN chmod +x /usr/local/etc/redis/init-redis-cluster.sh

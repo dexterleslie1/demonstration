@@ -1,5 +1,6 @@
 package com.future.demo.architecture.hello.world;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,7 @@ import java.net.UnknownHostException;
 import java.util.UUID;
 
 @RestController
+@Slf4j
 public class ApiController {
     @Autowired
     StringRedisTemplate redisTemplate;
@@ -52,11 +54,15 @@ public class ApiController {
 
         String hostname = InetAddress.getLocalHost().getHostName();
 
-        return ResponseEntity.ok(
-                "网关的主机名称：" + hostnameGateway +
-                        "，helloworld的主机名称：" + hostname +
-                        "，redis缓存数据是" + (consistent ? "完整的" : "不完整的") +
-                        "，db数据是" + (dbConsistent ? "完整的" : "不完整的"));
+        String responseStr = "网关的主机名称：" + hostnameGateway +
+                "，helloworld的主机名称：" + hostname +
+                "，redis缓存数据是" + (consistent ? "完整的" : "不完整的") +
+                "，db数据是" + (dbConsistent ? "完整的" : "不完整的");
+        if (log.isDebugEnabled()) {
+            log.debug(responseStr);
+        }
+
+        return ResponseEntity.ok(responseStr);
     }
 
 }

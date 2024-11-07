@@ -337,7 +337,7 @@ docker stack deploy test1 --compose-file docker-compose.yaml
 
 ## 使用基于`spring-cloud`的微服务测试`swarm`集群
 
-通过辅助测试 [示例](https://gitee.com/dexterleslie/demonstration/tree/master/spring-cloud/demo-spring-cloud-assistant) 制作测试用的`docker`镜像
+通过辅助测试示例`https://gitee.com/dexterleslie/demonstration/tree/master/spring-cloud/demo-spring-cloud-assistant-swarm`制作测试用的`docker`镜像
 
 ```sh
 cd compiler
