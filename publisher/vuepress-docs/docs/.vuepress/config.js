@@ -558,6 +558,7 @@ module.exports = {
                         'vsphere安装.md',
                         'vmware-tools.md',
                         'vmware序列号.md',
+                        'vmware-workstation.md',
                     ]
                 }
             ], '/java-library/': [

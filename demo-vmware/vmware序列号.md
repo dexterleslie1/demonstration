@@ -2,4 +2,4 @@
 
 ## `vmware workstation 17`序列号
 
-- JU090-6039P-08409-8J0QH-2YR7F
+- `JU090-6039P-08409-8J0QH-2YR7F`
