@@ -67,6 +67,7 @@ module.exports = {
                     { text: 'Elasticsearch、Kibana', link: '/elasticsearch/' },
                     { text: 'Terraform', link: '/terraform/' },
                     { text: 'NodeJS', link: '/nodejs/' },
+                    { text: 'ELK', link: '/elk/' },
                 ]
             },
             {
@@ -573,9 +574,13 @@ module.exports = {
                 {
                     title: "ElasticSearch、Kibana使用",
                     children: [
+                        '概念.md',
                         '运行elasticsearch.md',
                         '常见错误.md',
                         '性能.md',
+                        'curator.md',
+                        'postman操作elasticsearch.md',
+                        '客户端.md',
                     ]
                 }
             ], '/terraform/': [
@@ -643,6 +648,13 @@ module.exports = {
                     children: [
                         '和宿主机共享文件夹.md',
                         'xcode.md',
+                    ]
+                }
+            ], '/elk/': [
+                {
+                    title: "ELK",
+                    children: [
+                        '容器运行.md',
                     ]
                 }
             ],

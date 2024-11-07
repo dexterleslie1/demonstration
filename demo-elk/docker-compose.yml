@@ -1,14 +1,8 @@
 version: "3.0"
 
-# 创建网络
-networks:
-  net:
-    name: demo-elk-elasticsearch
-
 services:
   demo-elk-elasticsearch:
-    container_name: demo-elk-elasticsearch
-    image: docker.118899.net:10001/yyd-public/demo-elk-elasticsearch
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-elk-elasticsearch
     environment:
       - ES_JAVA_OPTS=-Xms512m -Xmx512m
       - discovery.type=single-node
@@ -22,23 +16,17 @@ services:
       - 9300:9300
     #volumes:
     #  - ~/data-demo-elk-elasticsearch:/usr/share/elasticsearch/data
-    networks:
-      - net
 
   demo-elk-kibana:
-    container_name: demo-elk-kibana
     image: kibana:7.8.0
     environment:
       ELASTICSEARCH_HOSTS: http://demo-elk-elasticsearch:9200
     ports:
       - 5601:5601
-    networks:
-      - net
     depends_on:
       - demo-elk-elasticsearch
 
   demo-elk-logstash:
-    container_name: demo-elk-logstash
     image: logstash:7.8.0
     environment:
       - xpack.monitoring.elasticsearch.hosts=[ "http://demo-elk-elasticsearch:9200" ]
@@ -47,18 +35,13 @@ services:
       - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
     ports:
       - 5044:5044
-    networks:
-      - net
 
   # 定时删除过期索引
   demo-elk-curator:
-    container_name: demo-elk-curator
     image: untergeek/curator:5.7.6
     volumes:
       - ./curator.yml:/.curator/curator.yml
       - ./action.yml:/.curator/action.yml
     entrypoint: /bin/sh
     command: -c "while true; do /curator/curator --config /.curator/curator.yml /.curator/action.yml; sleep 10; done;"
-    networks:
-      - net
 

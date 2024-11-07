@@ -24,13 +24,7 @@
 
 > todo: 索引数据结构，集群索引如何分片和提供服务的。
 
-## elasticsearch java客户端分类
 
-> [Java Transport Client](https://www.elastic.co/guide/en/elasticsearch/client/java-api/6.8/index.html) <br>
-[Java High Level REST Client](https://www.elastic.co/guide/en/elasticsearch/client/java-rest/current/java-rest-high.html) <br>
-[Java Low Level REST Client](https://www.elastic.co/guide/en/elasticsearch/client/java-rest/current/java-rest-low.html) <br><br>
-*较新版本elasticsearch推荐使用这个客户端操作elasticsearch*<br>
-[Elasticsearch Java API Client](https://www.elastic.co/guide/en/elasticsearch/client/java-api-client/current/index.html)
 
 ## RESTful操作elasticsearch
 

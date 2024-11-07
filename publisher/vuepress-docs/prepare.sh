@@ -68,6 +68,7 @@ source_dir_to_target_dir_map["../../demo-wireshark"]="wireshark"
 source_dir_to_target_dir_map["../../demo-gost"]="gost"
 source_dir_to_target_dir_map["../../front-end/demo-nodejs"]="nodejs"
 source_dir_to_target_dir_map["../../demo-mac"]="macos"
+source_dir_to_target_dir_map["../../demo-elk"]="elk"
 
 for key in ${!source_dir_to_target_dir_map[@]}; do
     # 删除符号链接目录

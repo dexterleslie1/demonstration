@@ -55,7 +55,7 @@
         </then>
     </if>
 
-    <root level="debug">
+    <root level="info">
         <if condition='!property("isProdution").equals("true")'>
             <then>
                 <appender-ref ref="console"/>
@@ -73,7 +73,13 @@
                 <appender-ref ref="console"/>
             </then>
         </if>
+        <if condition='!property("logstash.url").equals("")'>
+            <then>
+                <appender-ref ref="logstash"/>
+            </then>
+        </if>
     </logger>
+
     <!--    <logger name="com.future.demo.elk.HttpTraceLoggingFilter" level="debug" additivity="false">-->
     <!--        <if condition='!property("isProdution").equals("true")'>-->
     <!--            <then>-->
@@ -81,13 +87,6 @@
     <!--            </then>-->
     <!--        </if>-->
     <!--    </logger>-->
-    <logger name="com.future.demo.elk" level="debug" additivity="false">
-        <if condition='!property("logstash.url").equals("")'>
-            <then>
-                <appender-ref ref="logstash"/>
-            </then>
-        </if>
-    </logger>
     <!--    <logger name="com.future.demo.elk.HttpTraceLoggingFilter" level="debug" additivity="false">-->
     <!--        <if condition='!property("logstash.url").equals("")'>-->
     <!--            <then>-->
