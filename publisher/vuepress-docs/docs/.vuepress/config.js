@@ -43,6 +43,7 @@ module.exports = {
                 items: [
                     { text: 'React技术', link: '/React技术/' },
                     { text: 'less、sass/scss、postcss', link: '/less-sass-postcss/' },
+                    { text: 'Android相关', link: '/android/' },
                 ]
             }, {
                 text: '后端相关技术',
@@ -656,6 +657,14 @@ module.exports = {
                     title: "ELK",
                     children: [
                         '容器运行.md',
+                    ]
+                }
+            ], '/android/': [
+                {
+                    title: "Android相关",
+                    children: [
+                        'android-studio.md',
+                        'gradle.md',
                     ]
                 }
             ],
