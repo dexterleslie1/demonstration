@@ -68,7 +68,6 @@ module.exports = {
                     { text: 'Elasticsearch、Kibana', link: '/elasticsearch/' },
                     { text: 'Terraform', link: '/terraform/' },
                     { text: 'NodeJS', link: '/nodejs/' },
-                    { text: 'ELK', link: '/elk/' },
                 ]
             },
             {
@@ -109,6 +108,8 @@ module.exports = {
                 text: '运维',
                 items: [
                     { text: '监控Prometheus+Grafana+AlertManager', link: '/prometheus-grafana-alertmanager/' },
+                    { text: 'ELK', link: '/elk/' },
+                    { text: 'Skywalking', link: '/skywalking/' },
                 ]
             }, {
                 text: '云提供商',
@@ -665,6 +666,15 @@ module.exports = {
                     children: [
                         'android-studio.md',
                         'gradle.md',
+                    ]
+                }
+            ], '/skywalking/': [
+                {
+                    title: "Skywalking",
+                    children: [
+                        'agent设置.md',
+                        '运行demo.md',
+                        'skywalking-ui.md',
                     ]
                 }
             ],

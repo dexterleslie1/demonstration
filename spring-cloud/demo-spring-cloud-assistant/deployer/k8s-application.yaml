@@ -6,13 +6,13 @@ spec:
   replicas: 6
   selector:
     matchLabels:
-      app.kubernetes.io/name: redis-cluster
+      app: redis-cluster
   # 对应的 redis-headless 无头服务没有用到所以不存在
   serviceName: redis-cluster-headless
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: redis-cluster
+        app: redis-cluster
     spec:
       terminationGracePeriodSeconds: 30
       containers:
@@ -61,7 +61,7 @@ spec:
       metadata:
         name: redis-data
         labels:
-          app.kubernetes.io/name: redis-cluster
+          app: redis-cluster
       spec:
         accessModes:
           - "ReadWriteOnce"
@@ -80,7 +80,7 @@ spec:
   type: ClusterIP
   sessionAffinity: None
   selector:
-    app.kubernetes.io/name: redis-cluster
+    app: redis-cluster
   ports:
     - port: 6379
       targetPort: 6379
@@ -94,7 +94,7 @@ spec:
   type: ClusterIP
   clusterIP: None
   selector:
-    app.kubernetes.io/name: redis-cluster
+    app: redis-cluster
   ports:
     - port: 6379
       targetPort: 6379
@@ -536,6 +536,140 @@ metadata:
   name: app-configuration
   namespace: "default"
 data:
+  ping_liveness_n_readines_local.sh: |-
+    #!/bin/sh
+
+    export REDISCLI_AUTH="123456"
+
+    response=$(
+      redis-cli -h localhost -p 6379 ping
+    )
+    if [ "$response" != "PONG" ]; then
+      echo "$response"
+      exit 1
+    fi
+
+  # 初始化redis集群
+  init-redis-cluster.sh: |-
+    #!/bin/sh
+
+    echo "Start to ping node0 ..."
+    while [ "PONG" != "`redis-cli -h redis-cluster-0.redis-cluster-headless ping`" ]
+    do
+      echo "Wait for node0 ..."
+      sleep 1
+    done
+
+    echo "Start to ping node1 ..."
+    while [ "PONG" != "`redis-cli -h redis-cluster-1.redis-cluster-headless ping`" ]
+    do
+      echo "Wait for node1 ..."
+      sleep 1
+    done
+
+    echo "Start to ping node2 ..."
+    while [ "PONG" != "`redis-cli -h redis-cluster-2.redis-cluster-headless ping`" ]
+    do
+      echo "Wait for node2 ..."
+      sleep 1
+    done
+
+    echo "Start to ping node3 ..."
+    while [ "PONG" != "`redis-cli -h redis-cluster-3.redis-cluster-headless ping`" ]
+    do
+      echo "Wait for node3 ..."
+      sleep 1
+    done
+
+    echo "Start to ping node4 ..."
+    while [ "PONG" != "`redis-cli -h redis-cluster-4.redis-cluster-headless ping`" ]
+    do
+      echo "Wait for node4 ..."
+      sleep 1
+    done
+
+    echo "Start to ping node5 ..."
+    while [ "PONG" != "`redis-cli -h redis-cluster-5.redis-cluster-headless ping`" ]
+    do
+      echo "Wait for node5 ..."
+      sleep 1
+    done
+
+    echo "yes" | redis-cli --cluster create redis-cluster-0.redis-cluster-headless:6379 redis-cluster-1.redis-cluster-headless:6379 redis-cluster-2.redis-cluster-headless:6379 redis-cluster-3.redis-cluster-headless:6379 redis-cluster-4.redis-cluster-headless:6379 redis-cluster-5.redis-cluster-headless:6379 && echo "成功创建redis集群"
+
+    sleep 5
+
+    for i in `seq 1 15`
+    do
+      redis-cli -c -h redis-cluster-0.redis-cluster-headless set key$i value$i && echo "成功set key$i"
+    done
+
+  logstash.conf: |
+    input {
+        tcp {
+            port=>5044
+            codec=>json
+        }
+    }
+
+    output {
+        elasticsearch {
+            hosts=>["elasticsearch-service:9200"]
+            index => "future-%{+yyyy-MM-dd}"
+        }
+    }
+
+  curator.yml: |
+    # Remember, leave a key empty if there is no value.  None will be a string,
+    ## not a Python "NoneType"
+
+    client:
+      hosts: elasticsearch-service
+      port: 9200
+      url_prefix:
+      use_ssl: False
+      certificate:
+      client_cert:
+      client_key:
+      ssl_no_validate: False
+      http_auth:
+      timeout: 30
+      master_only: False
+
+    logging:
+      loglevel: INFO
+      logfile: /tmp/curator.log
+      logformat: default
+      blacklist: ['elasticsearch', 'urllib3']
+
+  action.yml: |
+    ---
+    # Remember, leave a key empty if there is no value.  None will be a string,
+    # not a Python "NoneType"
+    #
+    # Also remember that all examples have 'disable_action' set to True.  If you
+    # want to use this action as a template, be sure to set this to False after
+    # copying it.
+    actions:
+      1:
+        action: delete_indices
+        description: >-
+          Delete indices older than 20 days (based on index name), for logstash-
+          prefixed indices. Ignore the error if the filter does not result in an
+          actionable list of indices (ignore_empty_list) and exit cleanly.
+        options:
+          ignore_empty_list: True
+          disable_action: False
+        filters:
+          - filtertype: pattern
+            kind: prefix
+            value: future-
+          - filtertype: age
+            source: name
+            direction: older
+            timestring: '%Y-%m-%d'
+            unit: days
+            unit_count: 30
   redis-cluster.conf: |-
     # Redis configuration file example.
     #
@@ -1915,138 +2049,3 @@ data:
     # Maximum number of set/hash/zset/list fields that will be processed from
     # the main dictionary scan
     # active-defrag-max-scan-fields 1000
-
-  ping_liveness_n_readines_local.sh: |-
-    #!/bin/sh
-    
-    export REDISCLI_AUTH="123456"
-    
-    response=$(
-      redis-cli -h localhost -p 6379 ping
-    )
-    if [ "$response" != "PONG" ]; then
-      echo "$response"
-      exit 1
-    fi
-
-  # 初始化redis集群
-  init-redis-cluster.sh: |-
-    #!/bin/sh
-    
-    echo "Start to ping node0 ..."
-    while [ "PONG" != "`redis-cli -h redis-cluster-0.redis-cluster-headless ping`" ]
-    do
-      echo "Wait for node0 ..."
-      sleep 1
-    done
-    
-    echo "Start to ping node1 ..."
-    while [ "PONG" != "`redis-cli -h redis-cluster-1.redis-cluster-headless ping`" ]
-    do
-      echo "Wait for node1 ..."
-      sleep 1
-    done
-    
-    echo "Start to ping node2 ..."
-    while [ "PONG" != "`redis-cli -h redis-cluster-2.redis-cluster-headless ping`" ]
-    do
-      echo "Wait for node2 ..."
-      sleep 1
-    done
-    
-    echo "Start to ping node3 ..."
-    while [ "PONG" != "`redis-cli -h redis-cluster-3.redis-cluster-headless ping`" ]
-    do
-      echo "Wait for node3 ..."
-      sleep 1
-    done
-    
-    echo "Start to ping node4 ..."
-    while [ "PONG" != "`redis-cli -h redis-cluster-4.redis-cluster-headless ping`" ]
-    do
-      echo "Wait for node4 ..."
-      sleep 1
-    done
-    
-    echo "Start to ping node5 ..."
-    while [ "PONG" != "`redis-cli -h redis-cluster-5.redis-cluster-headless ping`" ]
-    do
-      echo "Wait for node5 ..."
-      sleep 1
-    done
-    
-    echo "yes" | redis-cli --cluster create redis-cluster-0.redis-cluster-headless:6379 redis-cluster-1.redis-cluster-headless:6379 redis-cluster-2.redis-cluster-headless:6379 redis-cluster-3.redis-cluster-headless:6379 redis-cluster-4.redis-cluster-headless:6379 redis-cluster-5.redis-cluster-headless:6379 && echo "成功创建redis集群"
-
-    sleep 5
-  
-    for i in `seq 1 15`
-    do
-      redis-cli -c -h redis-cluster-0.redis-cluster-headless set key$i value$i && echo "成功set key$i"
-    done
-
-  logstash.conf: |
-    input {
-        tcp {
-            port=>5044
-            codec=>json
-        }
-    }
-    
-    output {
-        elasticsearch {
-            hosts=>["elasticsearch-service:9200"]
-            index => "future-%{+yyyy-MM-dd}"
-        }
-    }
-
-  curator.yml: |
-    # Remember, leave a key empty if there is no value.  None will be a string,
-    ## not a Python "NoneType"
-    
-    client:
-      hosts: elasticsearch-service
-      port: 9200
-      url_prefix:
-      use_ssl: False
-      certificate:
-      client_cert:
-      client_key:
-      ssl_no_validate: False
-      http_auth:
-      timeout: 30
-      master_only: False
-    
-    logging:
-      loglevel: INFO
-      logfile: /tmp/curator.log
-      logformat: default
-      blacklist: ['elasticsearch', 'urllib3']
-
-  action.yml: |
-    ---
-    # Remember, leave a key empty if there is no value.  None will be a string,
-    # not a Python "NoneType"
-    #
-    # Also remember that all examples have 'disable_action' set to True.  If you
-    # want to use this action as a template, be sure to set this to False after
-    # copying it.
-    actions:
-      1:
-        action: delete_indices
-        description: >-
-          Delete indices older than 20 days (based on index name), for logstash-
-          prefixed indices. Ignore the error if the filter does not result in an
-          actionable list of indices (ignore_empty_list) and exit cleanly.
-        options:
-          ignore_empty_list: True
-          disable_action: False
-        filters:
-          - filtertype: pattern
-            kind: prefix
-            value: future-
-          - filtertype: age
-            source: name
-            direction: older
-            timestring: '%Y-%m-%d'
-            unit: days
-            unit_count: 30
