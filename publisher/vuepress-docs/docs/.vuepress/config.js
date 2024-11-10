@@ -57,7 +57,6 @@ module.exports = {
                     { text: 'Java相关库', link: '/java-library/' },
                     { text: 'Spring Boot', link: '/spring-boot/' },
                     { text: 'Spring Cloud', link: '/spring-cloud/' },
-                    { text: 'Logback', link: '/logback/' },
                     { text: 'Minio', link: '/minio/' },
                     { text: 'Locust', link: '/locust/' },
                     { text: 'Docker容器', link: '/docker容器/' },
@@ -366,13 +365,6 @@ module.exports = {
                         '异常.md',
                     ]
                 }
-            ], '/logback/': [
-                {
-                    title: "Logback",
-                    children: [
-                        '配置和使用.md',
-                    ]
-                }
             ], '/计算机信息安全/': [
                 {
                     title: "信息安全",
@@ -571,6 +563,7 @@ module.exports = {
                         'jsoup使用.md',
                         'hutool使用.md',
                         'htmlunit使用.md',
+                        'logback使用.md',
                     ]
                 }
             ], '/elasticsearch/': [
