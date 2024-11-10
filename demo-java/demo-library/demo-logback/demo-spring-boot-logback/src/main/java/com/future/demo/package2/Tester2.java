@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 public class Tester2 {
     private final static Logger logger = LoggerFactory.getLogger(Tester2.class);
 
-    public void method(){
+    public void method() {
         logger.debug("Tester2 method is called");
     }
 }

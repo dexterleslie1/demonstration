@@ -6,14 +6,19 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import java.util.UUID;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = {Application.class}, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 public class ApplicationTests {
     final static Logger logger = LoggerFactory.getLogger(Application.class);
     final static Logger namedLogger = LoggerFactory.getLogger("namedLogger");
+    final static Logger mdcLogger = LoggerFactory.getLogger("mdcLogger");
+    final static Logger jsonLogger = LoggerFactory.getLogger("jsonLogger");
 
     @Test
     public void test() throws Exception {
@@ -26,6 +31,13 @@ public class ApplicationTests {
 
         Tester2 tester2 = new Tester2();
         tester2.method();
+
+        // slf4j mdc用法
+        MDC.put("my-mdc1", UUID.randomUUID().toString());
+        mdcLogger.debug("测试slf4j mdc");
+
+        // json encoder测试
+        jsonLogger.debug("测试json encoder");
     }
 
 }

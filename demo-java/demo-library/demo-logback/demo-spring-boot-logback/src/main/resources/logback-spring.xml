@@ -61,6 +61,23 @@
         </encoder>
     </appender>
 
+    <!-- 测试mdc -->
+    <appender name="mdcAppender" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>
+                [%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} %logger{15}.%method\(%file:%line\) : my-mdc1=%X{my-mdc1} %message %n
+            </pattern>
+        </encoder>
+    </appender>
+
+    <!-- 测试json encoder -->
+    <appender name="jsonAppender" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder charset="UTF-8" class="net.logstash.logback.encoder.LogstashEncoder">
+            <customFields>{"module": "my-module"}</customFields>
+        </encoder>
+    </appender>
+
+
     <!-- https://stackoverflow.com/questions/30571319/spring-boot-logging-pattern -->
     <!-- use Spring default values -->
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
@@ -152,5 +169,15 @@
 
     <logger name="namedLogger" level="debug" additivity="false">
         <appender-ref ref="namedConsoleAppender"/>
+    </logger>
+
+    <!-- 测试mdc -->
+    <logger name="mdcLogger" level="debug" additivity="false">
+        <appender-ref ref="mdcAppender"/>
+    </logger>
+
+    <!-- 测试json encoder -->
+    <logger name="jsonLogger" level="debug" additivity="false">
+        <appender-ref ref="jsonAppender"/>
     </logger>
 </configuration>
