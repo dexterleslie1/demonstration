@@ -348,6 +348,7 @@ module.exports = {
                         '横向扩展.md',
                         'spring-boot-quartz.md',
                         '@Autowired和@Resource的区别.md',
+                        'spring-boot-actuator.md',
                     ]
                 }
             ], '/java/': [
