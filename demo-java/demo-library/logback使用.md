@@ -218,6 +218,69 @@ public class ApplicationTests {
 
 ```
 
+
+
+## `logback`读取`spring`配置
+
+下面的详细用法请参考`https://gitee.com/dexterleslie/demonstration/tree/master/demo-java/demo-library/demo-logback/demo-spring-boot-logback`
+
+使用`properties resource`读取`spring`配置并注入到`logback`上下文中
+
+```xml
+<configuration debug="false">
+    <property resource="application.properties"/>
+    <springProfile name="!prod">
+        <property resource="application-dev.properties"/>
+    </springProfile>
+    <springProfile name="prod">
+        <property resource="application-prod.properties"/>
+    </springProfile>
+</configuration>
+```
+
+- `<property resource="application.properties"/>`读取`application.properties`配置文件
+- `<springProfile name="!prod">`用于判断`spring profile`
+
+使用`springProperty`读取`spring`配置并注入到`logback`上下文中
+
+```xml
+<configuration debug="false">
+	<springProperty scope="context" name="logstash.url" source="spring.elk.logstash.tcp.url" defaultValue=""/>
+</configuration>
+```
+
+- 读取`spring`中`spring.elk.logstash.tcp.url`配置并注入到`logback`上线文中的`logstash.url property`中
+
+引用`logback`上下文中的`property`
+
+```xml
+<!-- 引用案例1 -->
+<if condition='!property("spring.elk.logstash.tcp.url").equals("")'>
+    <then>
+        ...
+    </then>
+</if>
+
+<!-- 引用案例2 -->
+<if condition='!property("spring.application.production").equals("true")'>
+    <then>
+        <appender-ref ref="console"/>
+    </then>
+</if>
+
+<!-- 引用案例3 -->
+<if condition='!property("spring.elk.logstash.tcp.url").equals("")'>
+    <then>
+        <appender name="logstash" class="net.logstash.logback.appender.LogstashAccessTcpSocketAppender">
+            <destination>${spring.elk.logstash.tcp.url}</destination>
+            ...
+        </appender>
+    </then>
+</if>
+```
+
+
+
 ## 其他
 
 > todo ...

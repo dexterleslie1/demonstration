@@ -1,8 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration debug="false">
-    <springProperty scope="context" name="logstash.url" source="spring.elk.logstash.tcp.url" defaultValue=""/>
-    <springProperty scope="context" name="applicationName" source="spring.application.name"/>
-    <springProperty scope="context" name="isProdution" source="spring.application.production"/>
+
+    <!-- 注入配置文件中的配置到logback上下文中 -->
+    <property resource="application.properties"/>
+    <springProfile name="!prod">
+        <property resource="application-dev.properties"/>
+    </springProfile>
+    <springProfile name="prod">
+        <property resource="application-prod.properties"/>
+    </springProfile>
+
+    <!-- 可以使用下面方式注入配置文件中的配置到logback上下文中，推荐使用上面的方式注入配置 -->
+    <!--<springProperty scope="context" name="logstash.url" source="spring.elk.logstash.tcp.url" defaultValue=""/>-->
+    <!--<springProperty scope="context" name="applicationName" source="spring.application.name"/>-->
+    <!--<springProperty scope="context" name="isProdution" source="spring.application.production"/>-->
 
     <!-- 开发环境启用控制台打印日志 -->
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
@@ -14,10 +25,10 @@
     </appender>
 
     <!-- application.properties配置spring.elk.logstash.tcp.url后才启用LogstashAppender -->
-    <if condition='!property("logstash.url").equals("")'>
+    <if condition='!property("spring.elk.logstash.tcp.url").equals("")'>
         <then>
             <appender name="logstash" class="net.logstash.logback.appender.LogstashAccessTcpSocketAppender">
-                <destination>${logstash.url}</destination>
+                <destination>${spring.elk.logstash.tcp.url}</destination>
 
                 <!--
                     不需要使用复杂的LoggingEventCompositeJsonEncoder配置，使用LogstashEncoder并添加自定义field
@@ -56,24 +67,24 @@
     </if>
 
     <root level="info">
-        <if condition='!property("isProdution").equals("true")'>
+        <if condition='!property("spring.application.production").equals("true")'>
             <then>
                 <appender-ref ref="console"/>
             </then>
         </if>
-        <if condition='!property("logstash.url").equals("")'>
+        <if condition='!property("spring.elk.logstash.tcp.url").equals("")'>
             <then>
                 <appender-ref ref="logstash"/>
             </then>
         </if>
     </root>
     <logger name="com.future.demo.elk" level="debug" additivity="false">
-        <if condition='!property("isProdution").equals("true")'>
+        <if condition='!property("spring.application.production").equals("true")'>
             <then>
                 <appender-ref ref="console"/>
             </then>
         </if>
-        <if condition='!property("logstash.url").equals("")'>
+        <if condition='!property("spring.elk.logstash.tcp.url").equals("")'>
             <then>
                 <appender-ref ref="logstash"/>
             </then>
@@ -81,14 +92,14 @@
     </logger>
 
     <!--    <logger name="com.future.demo.elk.HttpTraceLoggingFilter" level="debug" additivity="false">-->
-    <!--        <if condition='!property("isProdution").equals("true")'>-->
+    <!--        <if condition='!property("spring.application.production").equals("true")'>-->
     <!--            <then>-->
     <!--                <appender-ref ref="consoleAccess"/>-->
     <!--            </then>-->
     <!--        </if>-->
     <!--    </logger>-->
     <!--    <logger name="com.future.demo.elk.HttpTraceLoggingFilter" level="debug" additivity="false">-->
-    <!--        <if condition='!property("logstash.url").equals("")'>-->
+    <!--        <if condition='!property("spring.elk.logstash.tcp.url").equals("")'>-->
     <!--            <then>-->
     <!--                <appender-ref ref="logstashAccess"/>-->
     <!--            </then>-->
