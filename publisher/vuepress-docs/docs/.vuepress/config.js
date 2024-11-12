@@ -253,7 +253,7 @@ module.exports = {
                 {
                     title: "Prometheus使用",
                     children: [
-                        '使用docker-compose运行prometheus-grafana-alertmanager.md',
+                        '使用docker-compose运行prometheus.md',
                         'prometheus设置.md',
                         '使用docker运行grafana.md',
                         'grafana手动导入dashboard.md',

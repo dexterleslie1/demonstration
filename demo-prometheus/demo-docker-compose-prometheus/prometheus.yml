@@ -56,3 +56,11 @@ scrape_configs:
     - targets: ['192.168.1.204:9256']
       labels:
         instance: centOS8-204
+
+  - job_name: 'spring-boot actuator'
+    scrape_interval: 15s
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+    - targets: ['192.168.235.128:8081']
+      labels:
+        instance: 'spring-boot actuator'
