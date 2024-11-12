@@ -211,6 +211,10 @@ spec:
               value: "-Xms256m -Xmx256m"
             - name: "SW_AGENT_NAME"
               value: "service-eureka"
+            - name: "SW_AGENT_INSTANCE_NAME"
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
             - name: "SW_AGENT_COLLECTOR_BACKEND_SERVICES"
               value: "skywalking-oap-server-service:11800"
             - name: "SW_GRPC_LOG_SERVER_HOST"
@@ -258,6 +262,10 @@ spec:
               value: "eureka-service"
             - name: "SW_AGENT_NAME"
               value: "service-zuul"
+            - name: "SW_AGENT_INSTANCE_NAME"
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
             - name: "SW_AGENT_COLLECTOR_BACKEND_SERVICES"
               value: "skywalking-oap-server-service:11800"
             - name: "SW_GRPC_LOG_SERVER_HOST"
@@ -306,6 +314,10 @@ spec:
               value: "eureka-service"
             - name: "SW_AGENT_NAME"
               value: "service-level-first-provider"
+            - name: "SW_AGENT_INSTANCE_NAME"
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
             - name: "SW_AGENT_COLLECTOR_BACKEND_SERVICES"
               value: "skywalking-oap-server-service:11800"
             - name: "SW_GRPC_LOG_SERVER_HOST"
@@ -340,6 +352,10 @@ spec:
               value: "eureka-service"
             - name: "SW_AGENT_NAME"
               value: "service-level-second-provider"
+            - name: "SW_AGENT_INSTANCE_NAME"
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
             - name: "SW_AGENT_COLLECTOR_BACKEND_SERVICES"
               value: "skywalking-oap-server-service:11800"
             - name: "SW_GRPC_LOG_SERVER_HOST"

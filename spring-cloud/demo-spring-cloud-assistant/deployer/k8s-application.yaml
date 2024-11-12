@@ -231,6 +231,10 @@ spec:
               value: "logstash-service:5044"
             - name: "SW_AGENT_NAME"
               value: "architecture-eureka"
+            - name: "SW_AGENT_INSTANCE_NAME"
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
             - name: "SW_AGENT_COLLECTOR_BACKEND_SERVICES"
               value: "skywalking-oap-server-service:11800"
 ---
@@ -283,6 +287,10 @@ spec:
               value: "logstash-service:5044"
             - name: "SW_AGENT_NAME"
               value: "architecture-helloworld"
+            - name: "SW_AGENT_INSTANCE_NAME"
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
             - name: "SW_AGENT_COLLECTOR_BACKEND_SERVICES"
               value: "skywalking-oap-server-service:11800"
 
@@ -331,6 +339,10 @@ spec:
               value: "logstash-service:5044"
             - name: "SW_AGENT_NAME"
               value: "architecture-gateway"
+            - name: "SW_AGENT_INSTANCE_NAME"
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
             - name: "SW_AGENT_COLLECTOR_BACKEND_SERVICES"
               value: "skywalking-oap-server-service:11800"
 

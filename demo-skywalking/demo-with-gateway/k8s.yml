@@ -261,6 +261,10 @@ spec:
               value: "logstash-service:5044"
             - name: "SW_AGENT_NAME"
               value: "service-eureka"
+            - name: "SW_AGENT_INSTANCE_NAME"
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
             - name: "SW_AGENT_COLLECTOR_BACKEND_SERVICES"
               value: "skywalking-oap-server-service:11800"
 ---
@@ -308,6 +312,10 @@ spec:
               value: "eureka-service"
             - name: "SW_AGENT_NAME"
               value: "service-gateway"
+            - name: "SW_AGENT_INSTANCE_NAME"
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
             - name: "SW_AGENT_COLLECTOR_BACKEND_SERVICES"
               value: "skywalking-oap-server-service:11800"
 
@@ -356,6 +364,10 @@ spec:
               value: "eureka-service"
             - name: "SW_AGENT_NAME"
               value: "service-level-first-provider"
+            - name: "SW_AGENT_INSTANCE_NAME"
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
             - name: "SW_AGENT_COLLECTOR_BACKEND_SERVICES"
               value: "skywalking-oap-server-service:11800"
 
@@ -390,6 +402,10 @@ spec:
               value: "eureka-service"
             - name: "SW_AGENT_NAME"
               value: "service-level-second-provider"
+            - name: "SW_AGENT_INSTANCE_NAME"
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
             - name: "SW_AGENT_COLLECTOR_BACKEND_SERVICES"
               value: "skywalking-oap-server-service:11800"
 

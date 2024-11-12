@@ -56,6 +56,7 @@ services:
       - JAVA_OPTS=-Xms256m -Xmx256m
       - TZ=Asia/Shanghai
       - SW_AGENT_NAME=service-eureka
+      - SW_AGENT_INSTANCE_NAME=service-eureka-instance-0
       - SW_AGENT_COLLECTOR_BACKEND_SERVICES=demo-skywalking-oap-server:11800
     ports:
       - '9999:9999'
@@ -68,6 +69,9 @@ services:
       - JAVA_OPTS=-Xms256m -Xmx256m
       - TZ=Asia/Shanghai
       - eurekaServer=demo-skywalking-service-eureka
+      - SW_AGENT_NAME=service-zuul
+      - SW_AGENT_INSTANCE_NAME=service-zuul-instance-0
+      - SW_AGENT_COLLECTOR_BACKEND_SERVICES=demo-skywalking-oap-server:11800
     ports:
       - '8080:8081'
     depends_on:
@@ -80,6 +84,7 @@ services:
       - TZ=Asia/Shanghai
       - eurekaServer=demo-skywalking-service-eureka
       - SW_AGENT_NAME=service-level-first-provider
+      - SW_AGENT_INSTANCE_NAME=service-level-first-provider-instance-0
       - SW_AGENT_COLLECTOR_BACKEND_SERVICES=demo-skywalking-oap-server:11800
     depends_on:
       - demo-skywalking-service-eureka
@@ -91,6 +96,7 @@ services:
       - TZ=Asia/Shanghai
       - eurekaServer=demo-skywalking-service-eureka
       - SW_AGENT_NAME=service-level-second-provider
+      - SW_AGENT_INSTANCE_NAME=service-level-second-provider-instance-0
       - SW_AGENT_COLLECTOR_BACKEND_SERVICES=demo-skywalking-oap-server:11800
     depends_on:
       - demo-skywalking-service-eureka
