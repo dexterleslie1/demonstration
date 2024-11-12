@@ -30,6 +30,10 @@ public class MyGlobalFilter implements GlobalFilter, Ordered {
         log.debug("请求前uri={},params={}", uri, request.getQueryParams());
         Mono<Void> mono = chain.filter(exchange);
         log.debug("请求后response={}", exchange.getResponse());
+
+        // 清除mdc，否则tid会传递到其他请求中
+        MDC.remove("TID");
+
         return mono;
     }
 

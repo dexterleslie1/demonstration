@@ -1,6 +1,6 @@
 #!/bin/bash
 
-projectVersion=1.0.0
+projectVersion=1.0.1
 dockerRegistryPrefix=registry.cn-hangzhou.aliyuncs.com/future-public
 
 # 当前工作目录

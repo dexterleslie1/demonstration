@@ -158,7 +158,7 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
         - name: db
-          image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-cloud-assistant-db:1.0.0
+          image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-cloud-assistant-db:1.0.1
           imagePullPolicy: Always
           args:
             - --character-set-server=utf8mb4
@@ -204,7 +204,7 @@ spec:
 # eureka
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: eureka
 spec:
@@ -212,6 +212,7 @@ spec:
   selector:
     matchLabels:
       app: eureka
+  serviceName: eureka-service
   template:
     metadata:
       labels:
@@ -219,30 +220,24 @@ spec:
     spec:
       containers:
         - name: eureka
-          image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-cloud-assistant-eureka:1.0.0
+          image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-cloud-assistant-eureka:1.0.1
           imagePullPolicy: Always
           env:
             - name: "TZ"
               value: "Asia/Shanghai"
             - name: "JAVA_OPTS"
               value: "-Xms512m -Xmx512m"
+            - name: "internalLogstashUrl"
+              value: "logstash-service:5044"
+            - name: "SW_AGENT_NAME"
+              value: "architecture-eureka"
+            - name: "SW_AGENT_COLLECTOR_BACKEND_SERVICES"
+              value: "skywalking-oap-server-service:11800"
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: eureka-service
-spec:
-  type: ClusterIP
-  selector:
-    app: eureka
-  ports:
-    - port: 9999
-      targetPort: 9999
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: eureka-service-nodeport
 spec:
   type: NodePort
   ports:
@@ -255,7 +250,7 @@ spec:
 # helloworld
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: helloworld
 spec:
@@ -263,6 +258,7 @@ spec:
   selector:
     matchLabels:
       app: helloworld
+  serviceName: helloworld-service
   template:
     metadata:
       labels:
@@ -270,7 +266,7 @@ spec:
     spec:
       containers:
         - name: helloworld
-          image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-cloud-assistant-helloworld:1.0.0
+          image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-cloud-assistant-helloworld:1.0.1
           imagePullPolicy: Always
           env:
             - name: "TZ"
@@ -285,6 +281,10 @@ spec:
               value: "db-service"
             - name: "internalLogstashUrl"
               value: "logstash-service:5044"
+            - name: "SW_AGENT_NAME"
+              value: "architecture-helloworld"
+            - name: "SW_AGENT_COLLECTOR_BACKEND_SERVICES"
+              value: "skywalking-oap-server-service:11800"
 
 ---
 apiVersion: v1
@@ -302,7 +302,7 @@ spec:
 # gateway
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: gateway
 spec:
@@ -310,6 +310,7 @@ spec:
   selector:
     matchLabels:
       app: gateway
+  serviceName: gateway-service
   template:
     metadata:
       labels:
@@ -317,7 +318,7 @@ spec:
     spec:
       containers:
         - name: gateway
-          image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-cloud-assistant-gateway:1.0.0
+          image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-cloud-assistant-gateway:1.0.1
           imagePullPolicy: Always
           env:
             - name: "TZ"
@@ -326,12 +327,18 @@ spec:
               value: "-Xms512m -Xmx512m"
             - name: "internalEurekaServer"
               value: "eureka-service"
+            - name: "internalLogstashUrl"
+              value: "logstash-service:5044"
+            - name: "SW_AGENT_NAME"
+              value: "architecture-gateway"
+            - name: "SW_AGENT_COLLECTOR_BACKEND_SERVICES"
+              value: "skywalking-oap-server-service:11800"
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: gateway-service-nodeport
+  name: gateway-service
 spec:
   type: NodePort
   ports:
@@ -360,7 +367,7 @@ spec:
     spec:
       containers:
         - name: elasticsearch
-          image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-cloud-assistant-elasticsearch:1.0.0
+          image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-cloud-assistant-elasticsearch:1.0.1
           imagePullPolicy: Always
           env:
             - name: "ES_JAVA_OPTS"
@@ -405,7 +412,7 @@ spec:
 
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: kibana
 spec:
@@ -413,6 +420,7 @@ spec:
   selector:
     matchLabels:
       app: kibana
+  serviceName: kibana-service
   template:
     metadata:
       labels:
@@ -431,7 +439,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: kibana-service-nodeport
+  name: kibana-service
 spec:
   type: NodePort
   ports:
@@ -443,7 +451,7 @@ spec:
 
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: logstash
 spec:
@@ -451,6 +459,7 @@ spec:
   selector:
     matchLabels:
       app: logstash
+  serviceName: logstash-service
   template:
     metadata:
       labels:
@@ -492,7 +501,7 @@ spec:
 
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: curator
 spec:
@@ -500,6 +509,7 @@ spec:
   selector:
     matchLabels:
       app: curator
+  serviceName: curator-service
   template:
     metadata:
       labels:
@@ -529,6 +539,91 @@ spec:
               - key: action.yml
                 path: action.yml
 
+# skywalking
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: skywalking-oap-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: skywalking-oap-server
+  serviceName: skywalking-oap-server-service
+  template:
+    metadata:
+      labels:
+        app: skywalking-oap-server
+    spec:
+      containers:
+        - name: skywalking-oap-server
+          image: apache/skywalking-oap-server:9.3.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: "TZ"
+              value: "Asia/Shanghai"
+            - name: "SW_STORAGE_ES_CLUSTER_NODES"
+              value: "elasticsearch-service:9200"
+            - name: "SW_STORAGE_ES_RECORD_DATA_TTL"
+              value: "15"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: skywalking-oap-server-service
+spec:
+  type: ClusterIP
+  selector:
+    app: skywalking-oap-server
+  ports:
+    - name: "p1"
+      port: 12800
+      targetPort: 12800
+    - name: "p2"
+      port: 11800
+      targetPort: 11800
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: skywalking-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: skywalking-ui
+  serviceName: skywalking-ui-service
+  template:
+    metadata:
+      labels:
+        app: skywalking-ui
+    spec:
+      containers:
+        - name: skywalking-ui
+          image: apache/skywalking-ui:9.3.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: "TZ"
+              value: "Asia/Shanghai"
+            - name: "SW_OAP_ADDRESS"
+              value: "http://skywalking-oap-server-service:12800"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: skywalking-ui-service
+spec:
+  type: NodePort
+  ports:
+    - port: 8080
+      targetPort: 8080
+      nodePort: 30003
+  selector:
+    app: skywalking-ui
+
+
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -554,46 +649,48 @@ data:
     #!/bin/sh
 
     echo "Start to ping node0 ..."
-    while [ "PONG" != "`redis-cli -h redis-cluster-0.redis-cluster-headless ping`" ]
+    while [ "PONG" != "`redis-cli -h redis-cluster-0.redis-cluster-headless ping 2>/dev/null`" ]
     do
       echo "Wait for node0 ..."
-      sleep 1
+      sleep 5
     done
 
     echo "Start to ping node1 ..."
-    while [ "PONG" != "`redis-cli -h redis-cluster-1.redis-cluster-headless ping`" ]
+    while [ "PONG" != "`redis-cli -h redis-cluster-1.redis-cluster-headless ping 2>/dev/null`" ]
     do
       echo "Wait for node1 ..."
-      sleep 1
+      sleep 5
     done
 
     echo "Start to ping node2 ..."
-    while [ "PONG" != "`redis-cli -h redis-cluster-2.redis-cluster-headless ping`" ]
+    while [ "PONG" != "`redis-cli -h redis-cluster-2.redis-cluster-headless ping 2>/dev/null`" ]
     do
       echo "Wait for node2 ..."
-      sleep 1
+      sleep 5
     done
 
     echo "Start to ping node3 ..."
-    while [ "PONG" != "`redis-cli -h redis-cluster-3.redis-cluster-headless ping`" ]
+    while [ "PONG" != "`redis-cli -h redis-cluster-3.redis-cluster-headless ping 2>/dev/null`" ]
     do
       echo "Wait for node3 ..."
-      sleep 1
+      sleep 5
     done
 
     echo "Start to ping node4 ..."
-    while [ "PONG" != "`redis-cli -h redis-cluster-4.redis-cluster-headless ping`" ]
+    while [ "PONG" != "`redis-cli -h redis-cluster-4.redis-cluster-headless ping 2>/dev/null`" ]
     do
       echo "Wait for node4 ..."
-      sleep 1
+      sleep 5
     done
 
     echo "Start to ping node5 ..."
-    while [ "PONG" != "`redis-cli -h redis-cluster-5.redis-cluster-headless ping`" ]
+    while [ "PONG" != "`redis-cli -h redis-cluster-5.redis-cluster-headless ping 2>/dev/null`" ]
     do
       echo "Wait for node5 ..."
-      sleep 1
+      sleep 5
     done
+    
+    sleep 5
 
     echo "yes" | redis-cli --cluster create redis-cluster-0.redis-cluster-headless:6379 redis-cluster-1.redis-cluster-headless:6379 redis-cluster-2.redis-cluster-headless:6379 redis-cluster-3.redis-cluster-headless:6379 redis-cluster-4.redis-cluster-headless:6379 redis-cluster-5.redis-cluster-headless:6379 && echo "成功创建redis集群"
 
@@ -601,7 +698,7 @@ data:
 
     for i in `seq 1 15`
     do
-      redis-cli -c -h redis-cluster-0.redis-cluster-headless set key$i value$i && echo "成功set key$i"
+      redis-cli -c -h redis-cluster-0.redis-cluster-headless set key$i value$i 1>/dev/null && echo "成功set key$i"
     done
 
   logstash.conf: |
