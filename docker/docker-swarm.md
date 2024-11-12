@@ -337,27 +337,7 @@ docker stack deploy test1 --compose-file docker-compose.yaml
 
 ## 使用基于`spring-cloud`的微服务测试`swarm`集群
 
-通过辅助测试示例`https://gitee.com/dexterleslie/demonstration/tree/master/spring-cloud/demo-spring-cloud-assistant-swarm`制作测试用的`docker`镜像
-
-```sh
-cd compiler
-# 编译镜像
-./build.sh
-# 推送镜像
-./push.sh
-```
-
-运行`stack`
-
-```sh
-docker stack deploy test1 -c docker-compose.yaml
-```
-
-- `docker-compose.yaml`的内容是`deployer/docker-compose.yaml`文件的内容。
-
-打开浏览器查看`eureka`微服务是否正常注册`http://192.168.1.205:9999/`
-
-打开浏览器测试微服务是否正常`http://192.168.1.203:8080/api/v1/gateway/test1`
+参考文档运行 <a href="/spring-cloud/assistant示例.html#运行assisant-swarm示例" target="_blank">辅助示例</a>
 
 
 
