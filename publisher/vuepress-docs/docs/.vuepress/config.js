@@ -106,7 +106,7 @@ module.exports = {
             {
                 text: '运维',
                 items: [
-                    { text: '监控Prometheus+Grafana+AlertManager', link: '/prometheus-grafana-alertmanager/' },
+                    { text: '监控Prometheus', link: '/prometheus/' },
                     { text: 'ELK', link: '/elk/' },
                     { text: 'Skywalking', link: '/skywalking/' },
                 ]
@@ -249,7 +249,7 @@ module.exports = {
                         '网络测试.md',
                     ]
                 }
-            ], '/prometheus-grafana-alertmanager/': [
+            ], '/prometheus/': [
                 {
                     title: "Prometheus使用",
                     children: [
