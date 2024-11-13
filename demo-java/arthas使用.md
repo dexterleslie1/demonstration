@@ -1,12 +1,26 @@
 # `arthas`使用
 
-## 参考资料
+>用`arthas`排查`java`服务内存占用过高`arthas`堆外内存分析`https://blog.51cto.com/u_16099193/9207218`
 
->[用arthas排查java服务内存占用过高 arthas堆外内存分析](https://blog.51cto.com/u_16099193/9207218)
+测试下面的`arthas`相关命令需要辅助示例`https://gitee.com/dexterleslie/demonstration/tree/master/demo-java/demo-java-assistant`协助。
+
+编译辅助示例
+
+```bash
+mvn package
+```
+
+运行辅助示例
+
+```bash
+java -jar target/demo.jar
+```
+
+
 
 ## `arthas`安装和运行
 
->[参考链接](https://arthas.aliyun.com/doc/quick-start.html)
+>参考链接`https://arthas.aliyun.com/doc/quick-start.html`
 >
 >注意：如果`java`应用使用`systemctl`运行，请不要把`xxx.service`配置文件中的`PrivateTmp`设置为`true`，否则`arthas`会报告`Unable to open socket file`错误。
 
@@ -19,7 +33,7 @@
 
    `math-game`是一个简单的程序，每隔一秒生成一个随机数，再执行质因数分解，并打印出分解结果。
 
-   `math-game`源代码：[查看在新窗口打开](https://github.com/alibaba/arthas/blob/master/math-game/src/main/java/demo/MathGame.java)
+   `math-game`源代码`https://github.com/alibaba/arthas/blob/master/math-game/src/main/java/demo/MathGame.java`
 
 2. 启动 arthas
 
@@ -32,7 +46,7 @@
 
    - 执行该程序的用户需要和目标进程具有相同的权限。比如以`admin`用户来执行：`sudo su admin && java -jar arthas-boot.jar` 或 `sudo -u admin -EH java -jar arthas-boot.jar`。
    - 如果 attach 不上目标进程，可以查看`~/logs/arthas/` 目录下的日志。
-   - 如果下载速度比较慢，可以使用 aliyun 的镜像：`java -jar arthas-boot.jar --repo-mirror aliyun --use-http`
+   - 如果下载速度比较慢，可以使用`aliyun`的镜像：`java -jar arthas-boot.jar --repo-mirror aliyun --use-http`
    - ``java -jar arthas-boot.jar -h` 打印更多参数信息。
 
    选择应用 java 进程：
@@ -77,7 +91,7 @@
 
 >查看`jvm`线程、内存、`GC`情况
 >
->[参考链接](https://arthas.aliyun.com/doc/dashboard.html)
+>参考链接`https://arthas.aliyun.com/doc/dashboard.html`
 
 指定每1秒刷新一次，单位毫秒
 
@@ -271,93 +285,166 @@ heapdump
 
 ## TODO vmtool
 
+
+
 ## `monitor`使用
 
-> 对匹配 class-pattern／method-pattern／condition-express的类、方法的调用进行监控。统计每个周期内方法调用次数和平均调用耗时（毫秒数）。[参考链接](https://arthas.aliyun.com/doc/monitor.html)
+> 对匹配 class-pattern／method-pattern／condition-express的类、方法的调用进行监控。统计每个周期内方法调用次数和平均调用耗时（毫秒数）。参考链接`https://arthas.aliyun.com/doc/monitor.html`
 
-对类`com.future.demo.performance.ApiArthasController`的`monitorMethod`方法每5秒为一个周期进行监控
-
-```bash
-monitor -c 5 com.future.demo.performance.ApiArthasController monitorMethod
-```
-
-## `watch`使用
-
-> 让你能方便的观察到指定函数的调用情况。能观察到的范围为：返回值、抛出异常、入参，通过编写`OGNL`表达式进行对应变量的查看。[参考链接](https://arthas.aliyun.com/doc/watch.html)
-
-查看指定的方法入参和返回值，输出结果的属性遍历深度为2
-
-```sh
-watch com.future.demo.performance.ArthasService watchMethod "{params,returnObj}" -x 2
-```
-
-在方法调用前后打印成员变量watchCount的值
-
-```sh
-watch com.future.demo.performance.ArthasService watchMethod "{target.watchCount}" -x 2 -b -s
-```
-
-捕捉4次后自动退出命令
-
-```sh
-watch com.future.demo.performance.ArthasService watchMethod "{target.watchCount}" -x 2 -b -s -n 4
-```
-
-过滤第二个参数等于0才输出ognl表达式
-
-```sh
-watch com.future.demo.performance.ArthasService watchMethod "{params,target}" "params[1]==0" -x 2
-```
-
-## `trace`使用
-
-> trace 命令能主动搜索 class-pattern／method-pattern 对应的方法调用路径，渲染和统计整个调用链路上的所有性能开销和追踪调用链路。[参考链接](https://arthas.aliyun.com/doc/trace.html)
-
-追踪指定方法traceMethodLv1调用链路开销
+对类`com.future.demo.performance.ApiArthasController`的`monitorMethod`方法每`5`秒为一个周期进行监控
 
 ```bash
-trace com.future.demo.performance.ArthasService traceMethodLv1
+monitor -c 5 com.future.demo.ArthasController monitorMethod
+```
 
-[arthas@12006]$ trace com.future.demo.performance.ArthasService traceMethodLv1
-Press Q or Ctrl+C to abort.
-Affect(class count: 3 , method count: 3) cost in 156 ms, listenerId: 5
-`---ts=2024-07-02 09:00:03;thread_name=http-nio-8080-exec-12;id=158;is_daemon=true;priority=5;TCCL=org.springframework.boot.web.embedded.tomcat.TomcatEmbeddedWebappClassLoader@20edb5bc
-    `---[2903.8607ms] com.future.demo.performance.ArthasService:traceMethodLv1()
-        +---[18.10% 525.461178ms ] com.future.demo.performance.ArthasService:sleepRandomly() #31
-        `---[81.88% 2377.696287ms ] com.future.demo.performance.ArthasService:traceMethodLv2() #32
+- `-c` 参数表示每`5`秒为一个周期对方法`monitorMethod`进行监控，直到`ctrl+c`终止。
 
-`---ts=2024-07-02 09:00:07;thread_name=http-nio-8080-exec-13;id=159;is_daemon=true;priority=5;TCCL=org.springframework.boot.web.embedded.tomcat.TomcatEmbeddedWebappClassLoader@20edb5bc
-    `---[3543.337142ms] com.future.demo.performance.ArthasService:traceMethodLv1()
-        +---[30.99% 1097.937776ms ] com.future.demo.performance.ArthasService:sleepRandomly() #31
-        `---[69.00% 2444.977755ms ] com.future.demo.performance.ArthasService:traceMethodLv2() #32
+调用接口`http://localhost:8080/api/v1/arthas/monitor`触发方法被调用。
 
-`---ts=2024-07-02 09:00:15;thread_name=http-nio-8080-exec-14;id=160;is_daemon=true;priority=5;TCCL=org.springframework.boot.web.embedded.tomcat.TomcatEmbeddedWebappClassLoader@20edb5bc
-    `---[3264.46721ms] com.future.demo.performance.ArthasService:traceMethodLv1()
-        +---[27.60% 900.833107ms ] com.future.demo.performance.ArthasService:sleepRandomly() #31
-        `---[72.40% 2363.455824ms ] com.future.demo.performance.ArthasService:traceMethodLv2() #32
+
+
+## `watch`命令
+
+> 让你能方便的观察到指定函数的调用情况。能观察到的范围为：返回值、抛出异常、入参，通过编写`OGNL`表达式进行对应变量的查看。参考链接`https://arthas.aliyun.com/doc/watch.html`
+
+注意：下面的实验需要通过调用接口`http://localhost:8080/api/v1/arthas/watch`触发。
+
+观察函数调用返回时的参数、this 对象和返回值
+
+```bash
+watch com.future.demo.ArthasService watchMethod "{params,target,returnObj}" -x 2
+```
+
+- `"{params,target,returnObj}"` 指定了你对方法监控时感兴趣的内容，这里表示你想查看方法的参数（`params`）和返回值（`returnObj`）。
+- `-x 2` 表示在输出结果时，对于参数和返回值的复杂对象，应该展开两层来显示其内部结构。这意味着如果参数或返回值是一个对象，其直接属性会被显示；如果这些属性本身也是对象，那么这些对象的直接属性也会被显示，但不会再深入展开。
+
+
+
+查看指定的方法入参和返回值，输出结果的属性遍历深度为`2`
+
+```sh
+watch com.future.demo.ArthasService watchMethod "{params,returnObj}" -x 2
 ```
 
 
 
-统计指定包下执行时间大于`1`秒的函数
+在方法调用前后打印成员变量`watchCount`的值
 
->[根据调用耗时过滤](https://arthas.aliyun.com/doc/trace.html#%E6%A0%B9%E6%8D%AE%E8%B0%83%E7%94%A8%E8%80%97%E6%97%B6%E8%BF%87%E6%BB%A4)
+```sh
+watch com.future.demo.ArthasService watchMethod "{target.watchCount}" -x 2 -b -s
+```
 
-- 运行辅助测试 [链接](https://gitee.com/dexterleslie/demonstration/tree/master/demo-java/demo-java-assistant)
+- 在**函数调用之前**观察。
+- 在**函数返回之后**观察
 
-- 访问`http://localhost:8080/api/v1/arthas/trace`触发调用`trace`
 
-- 统计命令
+
+捕捉`4`次后自动退出命令
+
+```sh
+watch com.future.demo.ArthasService watchMethod "{target.watchCount}" -x 2 -b -s -n 4
+```
+
+
+
+过滤第二个参数等于`0`才输出`ognl`表达式
+
+```sh
+watch com.future.demo.ArthasService watchMethod "{params,target}" "params[1]==0" -x 2
+```
+
+
+
+方法抛出异常时被捕捉
+
+```bash
+watch com.future.demo.ArthasService watchMethod "{params,target,returnObj,throwExp}" -e -x 2
+```
+
+- `-e`表示抛出异常时才触发
+- `express`中，表示异常信息的变量是`throwExp`
+
+
+
+按照方法调用耗时过滤
+
+```bash
+watch com.future.demo.ArthasService watchMethod '{params, returnObj}' '#cost>200' -x 2
+```
+
+- `#cost>200`(单位是`ms`)表示只有当耗时大于`200ms`时才会输出，过滤掉执行时间小于`200ms`的调用
+
+
+
+返回值第二个参数为`0`才捕捉
+
+```bash
+watch com.future.demo.ArthasService watchMethod "{params,target,returnObj,throwExp}" "returnObj[1]==0" -x 2
+```
+
+
+
+返回值第一个参数为包含`aa`才捕捉
+
+```bash
+watch com.future.demo.ArthasService watchMethod "{params,target,returnObj,throwExp}" 'returnObj[0].contains("aa")' -x 2
+```
+
+
+
+## `trace`命令
+
+> trace 命令能主动搜索 class-pattern／method-pattern 对应的方法调用路径，渲染和统计整个调用链路上的所有性能开销和追踪调用链路。参考链接`https://arthas.aliyun.com/doc/trace.html`
+
+- 追踪指定方法`traceMethodLv1`调用链路开销
+
+  ```bash
+  trace com.future.demo.performance.ArthasService traceMethodLv1
+  
+  [arthas@12006]$ trace com.future.demo.performance.ArthasService traceMethodLv1
+  Press Q or Ctrl+C to abort.
+  Affect(class count: 3 , method count: 3) cost in 156 ms, listenerId: 5
+  `---ts=2024-07-02 09:00:03;thread_name=http-nio-8080-exec-12;id=158;is_daemon=true;priority=5;TCCL=org.springframework.boot.web.embedded.tomcat.TomcatEmbeddedWebappClassLoader@20edb5bc
+      `---[2903.8607ms] com.future.demo.performance.ArthasService:traceMethodLv1()
+          +---[18.10% 525.461178ms ] com.future.demo.performance.ArthasService:sleepRandomly() #31
+          `---[81.88% 2377.696287ms ] com.future.demo.performance.ArthasService:traceMethodLv2() #32
+  
+  `---ts=2024-07-02 09:00:07;thread_name=http-nio-8080-exec-13;id=159;is_daemon=true;priority=5;TCCL=org.springframework.boot.web.embedded.tomcat.TomcatEmbeddedWebappClassLoader@20edb5bc
+      `---[3543.337142ms] com.future.demo.performance.ArthasService:traceMethodLv1()
+          +---[30.99% 1097.937776ms ] com.future.demo.performance.ArthasService:sleepRandomly() #31
+          `---[69.00% 2444.977755ms ] com.future.demo.performance.ArthasService:traceMethodLv2() #32
+  
+  `---ts=2024-07-02 09:00:15;thread_name=http-nio-8080-exec-14;id=160;is_daemon=true;priority=5;TCCL=org.springframework.boot.web.embedded.tomcat.TomcatEmbeddedWebappClassLoader@20edb5bc
+      `---[3264.46721ms] com.future.demo.performance.ArthasService:traceMethodLv1()
+          +---[27.60% 900.833107ms ] com.future.demo.performance.ArthasService:sleepRandomly() #31
+          `---[72.40% 2363.455824ms ] com.future.demo.performance.ArthasService:traceMethodLv2() #32
+  ```
+
+  
+
+
+
+- 统计指定包下执行时间大于`1`秒的函数
+
+  >根据调用耗时过滤`https://arthas.aliyun.com/doc/trace.html#%E6%A0%B9%E6%8D%AE%E8%B0%83%E7%94%A8%E8%80%97%E6%97%B6%E8%BF%87%E6%BB%A4`
+
+  运行辅助示例`https://gitee.com/dexterleslie/demonstration/tree/master/demo-java/demo-java-assistant`
+
+  访问`http://localhost:8080/api/v1/arthas/trace`触发调用`trace`
+
+  统计命令
 
   ```bash
   trace com.future.demo.* * '#cost > 1000'
   ```
 
+  
 
 
-## `stack`使用
 
-> `stack`命令能主动搜索 class-pattern／method-pattern 对应的方法完整的上游调用链路。[参考链接](https://arthas.aliyun.com/doc/trace.html)
+## `stack`命令
+
+> `stack`命令能主动搜索 class-pattern／method-pattern 对应的方法完整的上游调用链路。参考链接`https://arthas.aliyun.com/doc/trace.html`
 
 追踪指定方法`traceMethodLv1`上游调用链路
 
@@ -453,6 +540,80 @@ ts=2024-07-02 09:03:33;thread_name=http-nio-8080-exec-17;id=163;is_daemon=true;p
         at java.lang.Thread.run(Thread.java:834)
 
 ```
+
+
+
+## `sm`命令
+
+Arthas中的`sm`命令是“Search-Method”的简写，该命令用于搜索并展示所有已经加载到JVM中的类的方法信息。以下是关于`sm`命令的详细解释：
+
+**功能**
+
+`sm`命令可以列出指定类（或符合特定模式的类）的所有方法信息，包括方法的名称、参数类型、返回类型等。这对于了解类的功能、接口以及进行代码调试非常有帮助。
+
+**使用方法**
+
+1. 基本语法：
+
+   ```
+   sm [class-pattern] [method-pattern]
+   ```
+
+   - `class-pattern`：类名表达式匹配，支持通配符（如`*`）和正则表达式（需开启`-E`选项）。
+   - `method-pattern`：方法名表达式匹配，同样支持通配符和正则表达式。
+
+2. 常用选项：
+
+   - `-d`：展示每个方法的详细信息，包括方法的签名、参数类型、返回类型等。
+   - `-E`：开启正则表达式匹配，默认为通配符匹配。
+
+3. 示例：
+
+   - 展示`java.lang.String`类加载的所有方法：
+
+     ```
+     sm java.lang.String
+     ```
+
+   - 展示`java.lang.String`类中名为`toString`的方法的详细信息：
+
+     ```
+     sm -d java.lang.String toString
+     ```
+
+   - 使用正则表达式匹配类名（如匹配所有以`Controller`结尾的类），并展示其方法信息：
+
+     ```
+     sm -E .*Controller$
+     ```
+
+   - 使用正则表达式匹配类名（如匹配所有在包`com.future`内以`Controller`结尾的类），并展示其方法信息：
+
+     ```
+     sm -E com.future.*Controller$
+     ```
+
+   - 查看是否存在`com.future.demo.ArthasController#monitorMethod`方法
+
+     ```bash
+     sm -d com.future.demo.ArthasController monitorMethod
+     ```
+
+     
+
+**注意事项**
+
+- `sm`命令只能看到由当前类所声明的方法，无法看到父类或接口的方法。
+- 在使用通配符进行匹配时，需要注意匹配的范围和精度，以避免匹配到过多的类导致信息混乱。
+- 当类名或方法名包含特殊字符或空格时，需要使用引号将其括起来。
+
+**应用场景**
+
+- **代码调试**：在调试过程中，可以通过`sm`命令查看某个类的方法信息，以了解该类的功能和接口。
+- **性能分析**：在性能分析过程中，可以通过`sm`命令查看某个类的方法调用情况，以找出性能瓶颈或优化点。
+- **代码审查**：在代码审查过程中，可以通过`sm`命令查看某个类的方法签名和参数类型等信息，以判断代码是否符合规范或存在潜在问题。
+
+总之，`sm`命令是Arthas中非常实用的一个命令，它可以帮助开发者快速了解类的方法信息，为代码调试、性能分析和代码审查等工作提供有力支持。
 
 
 

@@ -12,66 +12,50 @@ import java.util.Random;
 import java.util.UUID;
 
 @RestController
-@RequestMapping(value="/api/v1/arthas")
+@RequestMapping(value = "/api/v1/arthas")
 @Slf4j
 public class ArthasController {
-	@Autowired
-	ArthasService arthasService = null;
+    @Autowired
+    ArthasService arthasService = null;
 
-	private boolean monitorStop = true;
+    @GetMapping("monitor")
+    public ObjectResponse<String> monitorStart(
+            @RequestParam(value = "loopCount", defaultValue = "100") int loopCount,
+            @RequestParam(value = "sleepInterval", defaultValue = "100") int sleepInterval) throws InterruptedException {
+        int count = 0;
+        do {
+            this.monitorMethod(sleepInterval);
+            count++;
+        } while (loopCount > 0 && count < loopCount);
 
-	@GetMapping("monitor/start")
-	public ObjectResponse<String> monitorStart(
-			@RequestParam(value = "loopCount", defaultValue = "100") int loopCount,
-			@RequestParam(value = "sleepInterval", defaultValue = "100") int sleepInterval) throws InterruptedException {
-		monitorStop = false;
-		int count = 0;
-		while(!monitorStop) {
-			this.monitorMethod(sleepInterval);
+        ObjectResponse<String> response = new ObjectResponse<>();
+        response.setData("调用成功");
+        return response;
+    }
 
-			count++;
-			if(loopCount > 0 && count >= loopCount) {
-				break;
-			}
-		}
+    private void monitorMethod(int sleepInterval) throws InterruptedException {
+        if (sleepInterval > 0) {
+            Thread.sleep(sleepInterval);
+        }
+    }
 
-		ObjectResponse<String> response = new ObjectResponse<>();
-		response.setData("调用成功");
-		return response;
-	}
+    @GetMapping("watch")
+    public ObjectResponse<String> watch() throws Exception {
+        String uuid = UUID.randomUUID().toString();
+        int intP = new Random().nextInt(3);
+        this.arthasService.watchMethod(uuid, intP);
 
-	private void monitorMethod(int sleepInterval) throws InterruptedException {
-		if(sleepInterval > 0) {
-			Thread.sleep(sleepInterval);
-		}
-	}
+        ObjectResponse<String> response = new ObjectResponse<>();
+        response.setData("调用成功");
+        return response;
+    }
 
-	@GetMapping("monitor/stop")
-	public ObjectResponse<String> monitorStop() {
-		this.monitorStop = true;
+    @GetMapping("trace")
+    public ObjectResponse<String> trace() throws InterruptedException {
+        this.arthasService.traceMethodLv1();
 
-		ObjectResponse<String> response = new ObjectResponse<>();
-		response.setData("调用成功");
-		return response;
-	}
-
-	@GetMapping("watch")
-	public ObjectResponse<String> watch() {
-		String uuid = UUID.randomUUID().toString();
-		int intP = new Random().nextInt(3);
-		this.arthasService.watchMethod(uuid, intP);
-
-		ObjectResponse<String> response = new ObjectResponse<>();
-		response.setData("调用成功");
-		return response;
-	}
-
-	@GetMapping("trace")
-	public ObjectResponse<String> trace() throws InterruptedException {
-		this.arthasService.traceMethodLv1();
-
-		ObjectResponse<String> response = new ObjectResponse<>();
-		response.setData("调用成功");
-		return response;
-	}
+        ObjectResponse<String> response = new ObjectResponse<>();
+        response.setData("调用成功");
+        return response;
+    }
 }
