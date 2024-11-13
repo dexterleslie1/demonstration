@@ -364,6 +364,7 @@ module.exports = {
                         'cpu性能分析.md',
                         'jprofiler用法.md',
                         '异常.md',
+                        '生产环境问题排查.md',
                     ]
                 }
             ], '/计算机信息安全/': [
