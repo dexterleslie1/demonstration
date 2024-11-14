@@ -287,7 +287,7 @@ heapdump
 
 
 
-## `monitor`使用
+## `monitor`命令
 
 > 对匹配 class-pattern／method-pattern／condition-express的类、方法的调用进行监控。统计每个周期内方法调用次数和平均调用耗时（毫秒数）。参考链接`https://arthas.aliyun.com/doc/monitor.html`
 
@@ -614,6 +614,232 @@ Arthas中的`sm`命令是“Search-Method”的简写，该命令用于搜索并
 - **代码审查**：在代码审查过程中，可以通过`sm`命令查看某个类的方法签名和参数类型等信息，以判断代码是否符合规范或存在潜在问题。
 
 总之，`sm`命令是Arthas中非常实用的一个命令，它可以帮助开发者快速了解类的方法信息，为代码调试、性能分析和代码审查等工作提供有力支持。
+
+
+
+## `sc`命令
+
+Arthas中的sc命令是“Search-Class”的简写，主要用于搜索并查看已经加载到JVM中的类信息。以下是关于Arthas sc命令的详细介绍：
+
+**基本用法**
+
+在Arthas的交互式命令行界面中，输入`sc`命令后跟上类名或类名的部分匹配模式，即可搜索出符合条件的类信息。例如：
+
+- `sc java.lang.String`：搜索并显示`java.lang.String`类的信息。
+- `sc demo.*`：使用通配符搜索`demo`包下的所有类。
+
+**参数说明**
+
+sc命令支持多个参数，以提供更详细的类信息或进行更复杂的搜索。以下是一些常用的参数：
+
+- `-d`：显示类的详细信息，包括类名、是否是接口、是否是注解、是否是枚举等，以及类的修饰符、注解、实现的接口、继承的父类等信息。
+- `-f`：显示类的字段信息。
+- `-x`：决定静态变量的遍历深度。例如，`-x 1`会打印出静态属性的第一层属性。
+- `-E`：支持正则表达式搜索，可以搜索符合正则表达式的类名。
+
+**示例**
+
+1. **搜索并显示类的详细信息**：
+
+   ```shell
+   sc -d demo.MathGame
+   ```
+
+   这条命令将搜索`demo.MathGame`类，并显示其详细信息，包括类名、修饰符、注解、实现的接口、继承的父类等。
+
+2. **搜索并显示类的字段信息**：
+
+   ```shell
+   sc -d -f demo.MathGame
+   ```
+
+   除了显示类的详细信息外，这条命令还将显示`demo.MathGame`类的字段信息。
+
+3. **使用正则表达式搜索类**：
+
+   ```shell
+   sc -E ".*Test$"
+   ```
+
+   这条命令将搜索所有以`Test`结尾的类名。
+
+**注意事项**
+
+- 在使用sc命令时，需要确保所搜索的类已经加载到JVM中。如果类尚未加载，sc命令将无法搜索到该类。
+- sc命令的结果可能受到JVM的类加载器机制的影响。在某些情况下，可能需要指定特定的类加载器来搜索类。
+
+总的来说，Arthas的sc命令是一个强大的工具，可以帮助Java开发者快速搜索并查看已经加载到JVM中的类信息。通过合理使用sc命令及其参数，开发者可以更有效地进行Java应用的在线诊断和调试。
+
+
+
+## `jad`命令
+
+Arthas中的`jad`命令是一个强大的工具，它允许开发者反编译已经加载到JVM中的Java类，并查看其源代码。这对于理解第三方库或框架的内部实现，以及调试和诊断Java应用中的问题时非常有用。
+
+**基本用法**
+
+在Arthas的交互式命令行界面中，使用`jad`命令后跟上要反编译的类的全限定名（包括包名和类名），即可查看该类的源代码。例如：
+
+```shell
+jad com.example.MyClass
+```
+
+这将反编译`com.example.MyClass`类，并在控制台上显示其源代码。
+
+**参数和选项**
+
+`jad`命令支持一些参数和选项，以提供更灵活的反编译功能：
+
+- **类名模式**：`_class-pattern_` 是必填参数，用于指定要反编译的类名。支持通配符匹配，例如 `com.example.*` 可以匹配`com.example`包下的所有类。
+- **类加载器**：可以通过 `-c` 选项指定类加载器的哈希码，以选择特定的类加载器。当存在多个类加载器加载了相同名称的类时，这个选项非常有用。
+- **正则表达式**：使用 `-E` 选项可以启用正则表达式匹配类名，而不是默认的通配符匹配。
+- **源代码格式**：`--source-only` 选项可以让 `jad` 命令仅输出反编译得到的源代码，而不包含类加载器信息等额外元数据。
+- **行号**：`--lineNumber [true|false]` 选项可以控制是否在输出的源代码中包含行号。默认为 `true`，如果设置为 `false`，则不显示行号。
+- **输出目录**：使用 `-d` 或 `--directory` 选项可以指定一个目录，将反编译得到的源代码保存到该目录中，而不是显示在控制台上。
+
+**示例**
+
+1. **反编译单个类**：
+
+```shell
+jad com.example.MyClass
+```
+
+1. **使用正则表达式匹配类名**：
+
+```shell
+jad -E "com\.example\..*Service$"
+```
+
+这将匹配所有以`Service`结尾的，位于`com.example`包及其子包下的类。
+
+1. **指定类加载器**：
+
+```shell
+jad -c <classloader-hash> com.example.MyClass
+```
+
+你需要先使用Arthas的`sc -d`命令或其他方法来获取类加载器的哈希码。
+
+1. **反编译并保存到文件**：
+
+```shell
+jad --source-only com.future.demo.ArthasService > /home/dexterleslie/1.java
+```
+
+**注意事项**
+
+- 反编译得到的源代码可能与原始源代码不完全一致，因为反编译过程可能无法完全恢复原始代码的某些部分（如注释、泛型类型参数的具体化等）。
+- 在使用`jad`命令时，需要确保所反编译的类已经加载到JVM中。如果类尚未加载，`jad`命令将无法找到该类。
+- 由于反编译涉及到对字节码的分析和转换，因此可能会对性能产生一定影响。在生产环境中使用时，请谨慎操作。
+
+
+
+## `mc`命令
+
+Arthas（Alibaba Java Diagnostic Tool）是一款面向Java应用的开源诊断工具，它提供了丰富的功能来帮助开发者定位和解决Java应用中的问题。`mc`（Memory Compiler）命令是Arthas中的一个重要功能，它允许开发者在运行时动态编译和执行Java代码。
+
+以下是`mc`命令的一些关键用法和示例：
+
+**基本用法**
+
+```shell
+mc -c <className> <source>
+```
+
+- `-c`：指定要编译的类名。
+- `<source>`：Java源代码，可以是直接写在命令行中的代码片段，也可以是一个文件路径。
+
+**示例**
+
+1. **直接编写代码片段**
+
+```shell
+mc -c HelloWorld 'public class HelloWorld { public static void main(String[] args) { System.out.println("Hello, World!"); } }' -e
+```
+
+这个命令会在内存中编译一个名为`HelloWorld`的类，并立即执行它的`main`方法。`-e`选项表示执行编译后的类。
+
+1. **从文件中读取源代码**
+
+假设你有一个名为`HelloWorld.java`的文件，内容如下：
+
+```java
+public class HelloWorld {
+    public static void main(String[] args) {
+        System.out.println("Hello, World!");
+    }
+}
+```
+
+你可以使用以下命令来编译并执行它：
+
+```shell
+mc -c HelloWorld /path/to/HelloWorld.java -e
+```
+
+同样，`-e`选项表示执行编译后的类。
+
+**注意事项**
+
+- **依赖管理**：`mc`命令只能编译简单的Java类，如果类依赖于其他库或包，你可能需要手动将这些依赖添加到类路径中。
+- **安全性**：动态编译和执行代码可能会带来安全风险，特别是在生产环境中。确保你信任并理解正在执行的代码。
+- **性能**：虽然`mc`命令在开发和调试阶段非常有用，但在生产环境中频繁使用可能会影响性能。
+
+**高级用法**
+
+- **指定输出目录**：你可以使用`-d`选项来指定编译后的类文件的输出目录。
+- **指定类加载器**：使用`-l`选项可以指定用于加载编译后的类的类加载器。
+
+```shell
+mc -c ArthasService /home/dexterleslie/1.java -d /home/dexterleslie -l <classLoaderHash>
+```
+
+`<classLoaderHash>`是目标类加载器的哈希值，你可以使用Arthas的`sc`（Search Class）命令来查找类加载器的哈希值。
+
+**总结**
+
+`mc`命令是Arthas中非常强大的一个功能，它允许开发者在运行时动态编译和执行Java代码，这对于快速调试和验证代码非常有帮助。然而，在使用时需要注意安全性和性能问题，特别是在生产环境中。
+
+
+
+## 在线热更新`class`
+
+注意：不知道什么原因没有成功加载新的`class`到`jvm`中。
+
+获取`classloader hash`值
+
+```bash
+sc -d com.future.demo.ArthasService
+```
+
+反编译输出源码到`ArthasService.java`文件
+
+```bash
+jad --source-only com.future.demo.ArthasService > /home/dexterleslie/ArthasService.java
+```
+
+手动修改`ArthasService.java`源码
+
+通过`ArthasService.java`源码编译`ArthasService.class`
+
+```bash
+mc -c 31cefde0 /home/dexterleslie/ArthasService.java -d /home/dexterleslie
+```
+
+- `-c 31cefde0`是命令`sc -d com.future.demo.ArthasService`获取的`classloader hash`值
+
+重新加载`ArthasService.class`字节码到`jvm`
+
+```bash
+redefine -c 31cefde0 /home/dexterleslie/com/future/demo/ArthasService.class
+```
+
+查看方法逻辑是否被修改
+
+```bash
+watch com.future.demo.ArthasService watchMethod '{params,target,returnObj}' -x 2 -b -s
+```
 
 
 
