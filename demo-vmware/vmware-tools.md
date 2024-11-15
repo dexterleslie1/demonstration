@@ -1,5 +1,9 @@
 # `vmware tools`使用
 
+注意：使用`vmware workstation 17.5.0`安装`windows10`并完全安装`vmware tools`不会出现黑屏问题。
+
+
+
 ## 安装`vmware tools`
 
 ### `ubuntu`安装`vmware tools`
@@ -25,3 +29,9 @@
    ```
 
 5. 重启系统
+
+
+
+### `macOS`安装`vmware tools`
+
+注意：`macOS 13.0.1`安装`vmware tools`时需要打开`System Settings`>`Privacy & Security`解除`vmware tools`阻拦，否则`vmware tools`会提示安装失败。
