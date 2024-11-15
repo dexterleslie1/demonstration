@@ -648,6 +648,8 @@ module.exports = {
                     children: [
                         '和宿主机共享文件夹.md',
                         'xcode.md',
+                        'cocoapods.md',
+                        'homebrew.md',
                     ]
                 }
             ], '/elk/': [
