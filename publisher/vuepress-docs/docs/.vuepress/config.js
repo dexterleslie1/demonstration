@@ -93,6 +93,7 @@ module.exports = {
                     { text: 'Chrome用法', link: '/chrome/' },
                     { text: 'Wireshark使用', link: '/wireshark/' },
                     { text: 'Gost使用', link: '/gost/' },
+                    { text: 'Ruby', link: '/ruby/' },
                 ]
             },
             {
@@ -671,6 +672,13 @@ module.exports = {
                         'agent设置.md',
                         '运行demo.md',
                         'skywalking-ui.md',
+                    ]
+                }
+            ], '/ruby/': [
+                {
+                    title: "Ruby",
+                    children: [
+                        '管理.md',
                     ]
                 }
             ],
