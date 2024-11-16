@@ -650,6 +650,7 @@ module.exports = {
                         'xcode.md',
                         'cocoapods.md',
                         'homebrew.md',
+                        'sourcetree.md',
                     ]
                 }
             ], '/elk/': [
