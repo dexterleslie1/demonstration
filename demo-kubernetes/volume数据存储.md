@@ -1,8 +1,19 @@
 # `volume`数据存储
 
+
+
+## `todo`
+
+- 是否可以通过`volumes csi driver`配置`nfs`卷`volumes`>`csi`>`nfs`配置
+- `https://github.com/kubernetes-csi/csi-driver-nfs`动态置备
+- `csi`架构
+- 参考`https://kubernetes.io/docs/concepts/storage/persistent-volumes/`重新整理存储文档
+
+
+
 ## 简单存储
 
-### EmptyDir
+### `EmptyDir`
 
 > pod创建时会自动创建一个空的目录，无需指定宿主机目录，因为k8s系统会自动分配一个目录，**在pod销毁时，emptydir中的数据也会被永久删除。**
 > 使用emptydir实现pod内的容器共享数据
@@ -81,15 +92,15 @@ curl 10.244.2.55
 
 
 
-### GitRepo卷
+### `GitRepo`卷
 
-> NOTE: 暂时没有需要使用这种类型的卷，所以不研究。
+> 注意：暂时没有需要使用这种类型的卷，所以不研究。
 
 
 
-### HostPath
+### `HostPath`
 
-> HostPath存储不会随着pod销毁而被删除。但是HostPath不能用于跨节点的数据持久化。
+> `HostPath`存储不会随着`pod`销毁而被删除。但是`HostPath`不能用于跨节点的数据持久化。
 
 ```yaml
 apiVersion: v1
@@ -142,7 +153,15 @@ kubectl logs -f pod1 -c busybox
 
 
 
-### NFS
+### `NFS`
+
+
+
+#### 不通过`pv`和`pvc`直接使用`nfs`存储
+
+注意：下面实验会在`nfs`服务器创建`/data/demo-nfs/sub1`目录；下面实验不能指定`nfs mount`参数。
+
+`1.yaml`内容如下：
 
 ```yaml
 apiVersion: v1
@@ -171,19 +190,130 @@ spec:
  volumes:
  - name: logs-volume
    nfs:
-    server: 192.168.1.186
+    server: 192.168.235.191
     path: /data
+```
 
-# 创建pod
-kubectl apply -f 1.yaml 
+创建`pod`
 
-# 查询pod
+```bash
+kubectl apply -f 1.yaml
+```
+
+查询`pod`
+
+```bash
 kubectl get pod -o wide
+```
 
-# 请求nginx产生日志
+请求`nginx`产生日志
+
+```bash
 curl 10.244.2.58
+```
 
-# 打印pod日志
+打印`pod`日志
+
+```bash
+kubectl logs -f pod1 -c busybox
+```
+
+
+
+#### 通过`pv`和`pvc`使用`nfs`存储
+
+注意：下面实验会在`nfs`服务器创建`/data/demo-nfs/sub1`目录；下面实验支持指定`nfs mount`参数。
+
+`1.yaml`内容如下：
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+ name: pod1
+spec:
+ containers:
+ - name: nginx
+   image: nginx:1.17.1
+   ports:
+   - containerPort: 80
+   volumeMounts:
+   - name: logs-volume
+     mountPath: /var/log/nginx
+     # 在nfs挂载点下创建子目录demo-nfs/sub1，绝对路径为/data/demo-nfs/sub1
+     # 但是pod内的路径还是/var/log/nginx
+     subPath: demo-nfs/sub1
+ - name: busybox
+   image: busybox
+   command: ["/bin/sh", "-c", "tail -f /logs/access.log"]
+   volumeMounts:
+   - name: logs-volume
+     mountPath: /logs
+     subPath: demo-nfs/sub1
+ volumes:
+ - name: logs-volume
+   persistentVolumeClaim:
+    claimName: pvc1
+    readOnly: false
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+ name: pvc1
+spec:
+ volumeName: pv1
+ accessModes:
+ - ReadWriteMany
+ resources:
+  requests:
+   storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+ name: pv1
+spec:
+ capacity: 
+  storage: 2Gi
+ accessModes:
+ - ReadWriteMany
+ persistentVolumeReclaimPolicy: Delete
+ mountOptions:
+    - vers=3
+    - nolock
+    - proto=tcp
+    - rsize=1048576
+    - wsize=1048576
+    - timeo=600
+    - hard
+    - retrans=2
+ nfs:
+  path: /data
+  server: 192.168.235.191
+
+```
+
+创建`pod`
+
+```bash
+kubectl apply -f 1.yaml
+```
+
+查询`pod`
+
+```bash
+kubectl get pod -o wide
+```
+
+请求`nginx`产生日志
+
+```bash
+curl 10.244.2.58
+```
+
+打印`pod`日志
+
+```bash
 kubectl logs -f pod1 -c busybox
 ```
 
@@ -191,7 +321,9 @@ kubectl logs -f pod1 -c busybox
 
 ## 高级存储
 
-### pv和pvc
+
+
+### `pv`和`pvc`
 
 > pv(Persistent Volume)是持久化卷的意思，是对底层共享存储的一种抽象。集群管理元管理底层的pv。
 >
@@ -406,6 +538,8 @@ kubectl get pvc
 
 #### 部署`nfs`存储置备服务
 
+注意：声明`pvc`后，`nfs`置备程序会在`nfs`服务器创建名为`/data/{namespace}-{pvcname}-{pvname}`的子目录。例如：`/data/default-test-claim-pvc-b7c2c473-d3f3-4d6f-9b2d-f791d283b4c4`
+
 搭建`nfs`服务器，请参考 <a href="/linux使用/搭建nfs服务器.html" target="_blank">链接</a>
 
 配置`nfs`卷置备服务`deployment.yaml`内容如下：
@@ -584,4 +718,39 @@ kubectl get pv
 ```
 
 
+
+#### `storageclass provisioner`配置字段
+
+在Kubernetes中，StorageClass的provisioner是一个关键组件，它负责根据PersistentVolumeClaim（PVC）的需求动态创建PersistentVolume（PV）。以下是关于StorageClass provisioner的详细解释：
+
+**一、定义与作用**
+
+- **定义**：Provisioner是指定用于创建持久卷的存储提供商。它是StorageClass对象中的一个重要字段，用于定义如何以及使用哪个存储系统来动态地准备存储资源。
+- **作用**：当Kubernetes集群中的Pod需要存储资源时，它会通过PVC来请求。如果集群中配置了相应的StorageClass和provisioner，那么系统就会自动调用这个provisioner来创建满足PVC需求的PV。
+
+**二、配置与实现**
+
+- **配置方式**：在创建StorageClass对象时，管理员需要指定provisioner字段，以及其他相关参数如parameters（存储提供商特定的参数）、reclaimPolicy（回收策略）等。
+- **实现原理**：Provisioner通常是一个独立的程序，它遵循Kubernetes定义的规范，能够监听PVC的创建事件，并根据PVC的规格和StorageClass的配置来动态创建PV。这些PV随后可以被PVC绑定并使用。
+
+**三、常见Provisioner类型**
+
+- **内置Provisioner**：Kubernetes内置支持多种存储系统的Provisioner，如AWSElasticBlockStore、AzureDisk、GCEPersistentDisk等。这些Provisioner通常以“kubernetes.io/”为前缀命名。
+- **外部Provisioner**：对于没有内置支持的存储系统，管理员可以运行和指定外部Provisioner。这些外部Provisioner需要遵循Kubernetes定义的规范，并能够与Kubernetes集群进行交互。
+
+**四、使用场景与优势**
+
+- **使用场景**：在大规模的Kubernetes集群中，可能有成千上万个PVC需要管理。使用StorageClass和provisioner可以大大简化运维管理成本，实现存储资源的自动化管理和动态分配。
+- **优势**：
+  - **自动化**：通过Provisioner，可以实现存储资源的自动化创建和管理，减少人工干预。
+  - **灵活性**：管理员可以根据不同的存储需求配置不同的StorageClass和provisioner，以满足不同应用程序的存储要求。
+  - **可扩展性**：Kubernetes支持多种存储系统和Provisioner，因此可以轻松扩展集群的存储能力。
+
+**五、注意事项**
+
+- **命名规范**：StorageClass对象的命名很重要，因为它将在创建PVC时被引用。管理员应该准确命名具有不同存储特性的StorageClass。
+- **更新限制**：一旦创建了StorageClass对象，就不能再对其更新。如果需要更改配置，只能删除原对象并重新创建。
+- **挂载选项与回收策略**：在配置StorageClass时，管理员还需要注意挂载选项（mountOptions）和回收策略（reclaimPolicy）的设置。这些设置将影响PV的创建和使用方式。
+
+综上所述，StorageClass的provisioner是Kubernetes中实现存储资源自动化管理和动态分配的关键组件。通过合理配置和使用provisioner，可以大大提高集群的存储管理效率和灵活性。
 
