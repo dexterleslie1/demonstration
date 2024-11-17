@@ -185,6 +185,7 @@ module.exports = {
                         'dockerhub加速代理.md',
                         'docker日志.md',
                         'entrypoint、cmd、command.md',
+                        '镜像仓库.md',
                     ]
                 }
             ],
