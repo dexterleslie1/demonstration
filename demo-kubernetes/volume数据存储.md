@@ -279,14 +279,16 @@ spec:
  - ReadWriteMany
  persistentVolumeReclaimPolicy: Delete
  mountOptions:
-    - vers=3
-    - nolock
-    - proto=tcp
-    - rsize=1048576
-    - wsize=1048576
-    - timeo=600
-    - hard
-    - retrans=2
+  - vers=3
+  - nolock
+  - proto=tcp
+  - rsize=1048576
+  - wsize=1048576
+  - timeo=600
+  - hard
+  - retrans=2
+  # 阿里云nfs参数
+  #- noresvport
  nfs:
   path: /data
   server: 192.168.235.191
@@ -527,18 +529,26 @@ kubectl get pvc
 
 
 
-### 使用`storageclass(存储类别)`实现持久卷的动态卷配置
-
-> `https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner/blob/master/deploy/test-claim.yaml
-> https://zahui.fan/posts/179eb842/`
+### `storageclass`实现基于`nfs`动态置备
 
 卷置备程序会根据`pvc`自动创建`pv`，不需要集群管理员预先创建`pv`，集群管理员只需要定义一个或者多个`StorageClass`对象。
 
 
 
-#### 部署`nfs`存储置备服务
+#### 基于`nfs-subdir-external-provisioner`
 
-注意：声明`pvc`后，`nfs`置备程序会在`nfs`服务器创建名为`/data/{namespace}-{pvcname}-{pvname}`的子目录。例如：`/data/default-test-claim-pvc-b7c2c473-d3f3-4d6f-9b2d-f791d283b4c4`
+> `https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner/blob/master/deploy/test-claim.yaml`
+>
+> `https://zahui.fan/posts/179eb842/`
+
+
+
+**部署`nfs`存储置备服务**
+
+注意：
+
+- 声明`pvc`后，`nfs`置备程序会在`nfs`服务器创建名为`/data/{namespace}-{pvcname}-{pvname}`的子目录。例如：`/data/default-test-claim-pvc-b7c2c473-d3f3-4d6f-9b2d-f791d283b4c4`
+- 阿里云主机需要安装`nfs`客户端，否则`nfs provisioner`无法`mount`，安装`nfs`客户端命令`sudo yum install nfs-utils`
 
 搭建`nfs`服务器，请参考 <a href="/linux使用/搭建nfs服务器.html" target="_blank">链接</a>
 
@@ -663,6 +673,17 @@ provisioner: k8s-sigs.io/nfs-subdir-external-provisioner # or choose another nam
 parameters:
   # https://help.aliyun.com/document_detail/144398.html
   archiveOnDelete: "false"
+mountOptions:
+  - vers=3
+  - nolock
+  - proto=tcp
+  - rsize=1048576
+  - wsize=1048576
+  - timeo=600
+  - hard
+  - retrans=2
+  # 阿里云nfs参数
+  #- noresvport
 ```
 
 部署`nfs`存储置备服务
@@ -673,7 +694,7 @@ kubectl create -f deployment.yaml
 
 
 
-#### 测试`nfs`存储置备服务是否正常
+**测试`nfs`存储置备服务是否正常**
 
 指定`storageclass`创建`pvc`，文件`test-claim.yaml`内容如下：
 
@@ -719,7 +740,470 @@ kubectl get pv
 
 
 
-#### `storageclass provisioner`配置字段
+#### 基于`csi-driver-nfs`
+
+>`https://github.com/kubernetes-csi/csi-driver-nfs`
+
+注意：因为镜像位于`registry.k8s.io`仓库中，所以配置`csi-driver-nfs`需要配置`docker`使用`proxy`才能成功部署服务。
+
+`deployment.yaml`内容如下（下面的配置只需要修改`nfs`服务器地址和`nfs`挂载目录即可）：
+
+```yaml
+apiVersion: storage.k8s.io/v1
+kind: CSIDriver
+metadata:
+  name: nfs.csi.k8s.io
+spec:
+  attachRequired: false
+  volumeLifecycleModes:
+    - Persistent
+  fsGroupPolicy: File
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: csi-nfs-controller-sa
+  namespace: kube-system
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: csi-nfs-node-sa
+  namespace: kube-system
+---
+
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: nfs-external-provisioner-role
+rules:
+  - apiGroups: [""]
+    resources: ["persistentvolumes"]
+    verbs: ["get", "list", "watch", "create", "patch", "delete"]
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["get", "list", "watch", "update"]
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["storageclasses"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["snapshot.storage.k8s.io"]
+    resources: ["volumesnapshotclasses", "volumesnapshots"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["snapshot.storage.k8s.io"]
+    resources: ["volumesnapshotcontents"]
+    verbs: ["get", "list", "watch", "update", "patch"]
+  - apiGroups: ["snapshot.storage.k8s.io"]
+    resources: ["volumesnapshotcontents/status"]
+    verbs: ["get", "update", "patch"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["csinodes"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get"]
+---
+
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: nfs-csi-provisioner-binding
+subjects:
+  - kind: ServiceAccount
+    name: csi-nfs-controller-sa
+    namespace: kube-system
+roleRef:
+  kind: ClusterRole
+  name: nfs-external-provisioner-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: csi-nfs-controller
+  namespace: kube-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: csi-nfs-controller
+  template:
+    metadata:
+      labels:
+        app: csi-nfs-controller
+    spec:
+      hostNetwork: true  # controller also needs to mount nfs to create dir
+      dnsPolicy: ClusterFirstWithHostNet  # available values: Default, ClusterFirstWithHostNet, ClusterFirst
+      serviceAccountName: csi-nfs-controller-sa
+      nodeSelector:
+        kubernetes.io/os: linux  # add "kubernetes.io/role: master" to run controller on master node
+      priorityClassName: system-cluster-critical
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      tolerations:
+        - key: "node-role.kubernetes.io/master"
+          operator: "Exists"
+          effect: "NoSchedule"
+        - key: "node-role.kubernetes.io/controlplane"
+          operator: "Exists"
+          effect: "NoSchedule"
+        - key: "node-role.kubernetes.io/control-plane"
+          operator: "Exists"
+          effect: "NoSchedule"
+      containers:
+        - name: csi-provisioner
+          image: registry.k8s.io/sig-storage/csi-provisioner:v5.0.2
+          args:
+            - "-v=2"
+            - "--csi-address=$(ADDRESS)"
+            - "--leader-election"
+            - "--leader-election-namespace=kube-system"
+            - "--extra-create-metadata=true"
+            - "--feature-gates=HonorPVReclaimPolicy=true"
+            - "--timeout=1200s"
+          env:
+            - name: ADDRESS
+              value: /csi/csi.sock
+          volumeMounts:
+            - mountPath: /csi
+              name: socket-dir
+          resources:
+            limits:
+              memory: 400Mi
+            requests:
+              cpu: 10m
+              memory: 20Mi
+          securityContext:
+            capabilities:
+              drop:
+                - ALL
+        - name: csi-snapshotter
+          image: registry.k8s.io/sig-storage/csi-snapshotter:v8.0.1
+          args:
+            - "--v=2"
+            - "--csi-address=$(ADDRESS)"
+            - "--leader-election-namespace=kube-system"
+            - "--leader-election"
+            - "--timeout=1200s"
+          env:
+            - name: ADDRESS
+              value: /csi/csi.sock
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /csi
+          resources:
+            limits:
+              memory: 200Mi
+            requests:
+              cpu: 10m
+              memory: 20Mi
+          securityContext:
+            capabilities:
+              drop:
+                - ALL
+        - name: liveness-probe
+          image: registry.k8s.io/sig-storage/livenessprobe:v2.13.1
+          args:
+            - --csi-address=/csi/csi.sock
+            - --probe-timeout=3s
+            - --http-endpoint=localhost:29652
+            - --v=2
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /csi
+          resources:
+            limits:
+              memory: 100Mi
+            requests:
+              cpu: 10m
+              memory: 20Mi
+          securityContext:
+            capabilities:
+              drop:
+                - ALL
+        - name: nfs
+          image: registry.k8s.io/sig-storage/nfsplugin:v4.9.0
+          securityContext:
+            privileged: true
+            capabilities:
+              add: ["SYS_ADMIN"]
+              drop:
+                - ALL
+            allowPrivilegeEscalation: true
+          imagePullPolicy: IfNotPresent
+          args:
+            - "-v=5"
+            - "--nodeid=$(NODE_ID)"
+            - "--endpoint=$(CSI_ENDPOINT)"
+          env:
+            - name: NODE_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: CSI_ENDPOINT
+              value: unix:///csi/csi.sock
+          livenessProbe:
+            failureThreshold: 5
+            httpGet:
+              host: localhost
+              path: /healthz
+              port: 29652
+            initialDelaySeconds: 30
+            timeoutSeconds: 10
+            periodSeconds: 30
+          volumeMounts:
+            - name: pods-mount-dir
+              mountPath: /var/lib/kubelet/pods
+              mountPropagation: "Bidirectional"
+            - mountPath: /csi
+              name: socket-dir
+          resources:
+            limits:
+              memory: 200Mi
+            requests:
+              cpu: 10m
+              memory: 20Mi
+      volumes:
+        - name: pods-mount-dir
+          hostPath:
+            path: /var/lib/kubelet/pods
+            type: Directory
+        - name: socket-dir
+          emptyDir: {}
+
+---
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: csi-nfs-node
+  namespace: kube-system
+spec:
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: csi-nfs-node
+  template:
+    metadata:
+      labels:
+        app: csi-nfs-node
+    spec:
+      hostNetwork: true  # original nfs connection would be broken without hostNetwork setting
+      dnsPolicy: ClusterFirstWithHostNet  # available values: Default, ClusterFirstWithHostNet, ClusterFirst
+      serviceAccountName: csi-nfs-node-sa
+      priorityClassName: system-node-critical
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      nodeSelector:
+        kubernetes.io/os: linux
+      tolerations:
+        - operator: "Exists"
+      containers:
+        - name: liveness-probe
+          image: registry.k8s.io/sig-storage/livenessprobe:v2.13.1
+          args:
+            - --csi-address=/csi/csi.sock
+            - --probe-timeout=3s
+            - --http-endpoint=localhost:29653
+            - --v=2
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /csi
+          resources:
+            limits:
+              memory: 100Mi
+            requests:
+              cpu: 10m
+              memory: 20Mi
+          securityContext:
+            capabilities:
+              drop:
+                - ALL
+        - name: node-driver-registrar
+          image: registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.11.1
+          args:
+            - --v=2
+            - --csi-address=/csi/csi.sock
+            - --kubelet-registration-path=$(DRIVER_REG_SOCK_PATH)
+          livenessProbe:
+            exec:
+              command:
+                - /csi-node-driver-registrar
+                - --kubelet-registration-path=$(DRIVER_REG_SOCK_PATH)
+                - --mode=kubelet-registration-probe
+            initialDelaySeconds: 30
+            timeoutSeconds: 15
+          env:
+            - name: DRIVER_REG_SOCK_PATH
+              value: /var/lib/kubelet/plugins/csi-nfsplugin/csi.sock
+            - name: KUBE_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /csi
+            - name: registration-dir
+              mountPath: /registration
+          resources:
+            limits:
+              memory: 100Mi
+            requests:
+              cpu: 10m
+              memory: 20Mi
+          securityContext:
+            capabilities:
+              drop:
+                - ALL
+        - name: nfs
+          securityContext:
+            privileged: true
+            capabilities:
+              add: ["SYS_ADMIN"]
+              drop:
+                - ALL
+            allowPrivilegeEscalation: true
+          image: registry.k8s.io/sig-storage/nfsplugin:v4.9.0
+          args:
+            - "-v=5"
+            - "--nodeid=$(NODE_ID)"
+            - "--endpoint=$(CSI_ENDPOINT)"
+          env:
+            - name: NODE_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: CSI_ENDPOINT
+              value: unix:///csi/csi.sock
+          livenessProbe:
+            failureThreshold: 5
+            httpGet:
+              host: localhost
+              path: /healthz
+              port: 29653
+            initialDelaySeconds: 30
+            timeoutSeconds: 10
+            periodSeconds: 30
+          imagePullPolicy: "IfNotPresent"
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /csi
+            - name: pods-mount-dir
+              mountPath: /var/lib/kubelet/pods
+              mountPropagation: "Bidirectional"
+          resources:
+            limits:
+              memory: 300Mi
+            requests:
+              cpu: 10m
+              memory: 20Mi
+      volumes:
+        - name: socket-dir
+          hostPath:
+            path: /var/lib/kubelet/plugins/csi-nfsplugin
+            type: DirectoryOrCreate
+        - name: pods-mount-dir
+          hostPath:
+            path: /var/lib/kubelet/pods
+            type: Directory
+        - hostPath:
+            path: /var/lib/kubelet/plugins_registry
+            type: Directory
+          name: registration-dir
+
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: nfs-client
+provisioner: nfs.csi.k8s.io
+parameters:
+  server: 192.168.235.191
+  share: /data
+  # csi.storage.k8s.io/provisioner-secret is only needed for providing mountOptions in DeleteVolume
+  # csi.storage.k8s.io/provisioner-secret-name: "mount-options"
+  # csi.storage.k8s.io/provisioner-secret-namespace: "default"
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+mountOptions:
+  - vers=3
+  - nolock
+  - proto=tcp
+  - rsize=1048576
+  - wsize=1048576
+  - timeo=600
+  - hard
+  - retrans=2
+  # 阿里云nfs参数
+  #- noresvport
+```
+
+部署`nfs`存储置备服务
+
+```bash
+kubectl create -f deployment.yaml
+```
+
+指定`storageclass`创建`pvc`，文件`test-claim.yaml`内容如下：
+
+```yaml
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: test-claim
+spec:
+  storageClassName: nfs-client
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+```
+
+创建`pvc`会自动创建`pv`，`nfs`置备程序会自动在`nfs`服务器`/data`目录下创建`pv`对应的目录，在删除`pvc`时候也同时会自动删除此`pv`目录
+
+```bash
+kubectl create -f test-claim.yaml 
+```
+
+查看`pv`和`pvc`列表
+
+```bash
+kubectl get pv
+kubectl get pvc
+```
+
+删除`pvc`会自动删除关联的`pv`
+
+```bash
+kubectl delete -f test-claim.yaml 
+```
+
+查看`pv`和`pvc`列表
+
+```bash
+kubectl get pvc
+kubectl get pv
+```
+
+
+
+### `storageclass provisioner`配置字段
 
 在Kubernetes中，StorageClass的provisioner是一个关键组件，它负责根据PersistentVolumeClaim（PVC）的需求动态创建PersistentVolume（PV）。以下是关于StorageClass provisioner的详细解释：
 
