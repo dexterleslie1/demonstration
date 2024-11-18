@@ -749,6 +749,7 @@ kubectl get pv
 `deployment.yaml`内容如下（下面的配置只需要修改`nfs`服务器地址和`nfs`挂载目录即可）：
 
 ```yaml
+# driverinfo
 apiVersion: storage.k8s.io/v1
 kind: CSIDriver
 metadata:
@@ -759,6 +760,7 @@ spec:
     - Persistent
   fsGroupPolicy: File
 
+# rbac
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -826,6 +828,7 @@ roleRef:
   name: nfs-external-provisioner-role
   apiGroup: rbac.authorization.k8s.io
 
+# controller
 ---
 kind: Deployment
 apiVersion: apps/v1
@@ -983,6 +986,7 @@ spec:
         - name: socket-dir
           emptyDir: {}
 
+# node
 ---
 kind: DaemonSet
 apiVersion: apps/v1
@@ -1126,6 +1130,7 @@ spec:
             type: Directory
           name: registration-dir
 
+# storageclass
 ---
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
