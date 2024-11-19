@@ -551,6 +551,7 @@ module.exports = {
                         'oss服务.md',
                         '阿里云存储服务.md',
                         '阿里云网络.md',
+                        '阿里云容器服务.md',
                     ]
                 }
             ], '/vmware/': [
