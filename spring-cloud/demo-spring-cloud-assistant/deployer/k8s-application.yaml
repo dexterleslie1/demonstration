@@ -67,7 +67,7 @@ spec:
           - "ReadWriteOnce"
         resources:
           requests:
-            storage: "8Gi"
+            storage: "20Gi"
         storageClassName: nfs-client
 ---
 # 客户端连接redis集群用的service，使用无头服务直接解析到redis节点
@@ -186,7 +186,7 @@ spec:
           - "ReadWriteOnce"
         resources:
           requests:
-            storage: "8Gi"
+            storage: "20Gi"
         storageClassName: nfs-client
 ---
 apiVersion: v1
@@ -407,7 +407,7 @@ spec:
           - "ReadWriteOnce"
         resources:
           requests:
-            storage: "8Gi"
+            storage: "20Gi"
         storageClassName: nfs-client
 ---
 apiVersion: v1
