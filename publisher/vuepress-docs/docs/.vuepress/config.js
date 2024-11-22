@@ -539,7 +539,9 @@ module.exports = {
                 {
                     title: "亚马逊使用",
                     children: [
+                        '信息.md',
                         'aws-sdk.md',
+                        'eks.md',
                     ]
                 }
             ], '/aliyun/': [
