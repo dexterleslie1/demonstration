@@ -32,6 +32,10 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
+          resources:
+            requests:
+              cpu: 200m
+              memory: 128Mi
           ports:
             - name: redis
               containerPort: 6379
@@ -127,6 +131,10 @@ spec:
           command:
             - sh
             - /init-redis-cluster/init-redis-cluster.sh
+          resources:
+            requests:
+              cpu: 50m
+              memory: 32Mi
           volumeMounts:
             - name: init-redis-cluster-sh
               mountPath: /init-redis-cluster/
@@ -169,6 +177,10 @@ spec:
               value: "Asia/Shanghai"
             - name: MARIADB_ROOT_PASSWORD
               value: "123456"
+          resources:
+            requests:
+              cpu: 500m
+              memory: 512Mi
           ports:
             - containerPort: 3306
           volumeMounts:
@@ -195,6 +207,7 @@ metadata:
   name: db-service
 spec:
   type: ClusterIP
+  clusterIP: None
   selector:
     app: db
   ports:
@@ -237,13 +250,17 @@ spec:
                   fieldPath: metadata.name
             - name: "SW_AGENT_COLLECTOR_BACKEND_SERVICES"
               value: "skywalking-oap-server-service:11800"
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: eureka-service
 spec:
-  type: NodePort
+  type: LoadBalancer
   ports:
     - port: 9999 # 服务端口80
       targetPort: 9999 # pod端口8080
@@ -293,6 +310,10 @@ spec:
                   fieldPath: metadata.name
             - name: "SW_AGENT_COLLECTOR_BACKEND_SERVICES"
               value: "skywalking-oap-server-service:11800"
+          resources:
+            requests:
+              cpu: 500m
+              memory: 512Mi
 
 ---
 apiVersion: v1
@@ -301,6 +322,7 @@ metadata:
   name: helloworld-service
 spec:
   type: ClusterIP
+  clusterIP: None
   selector:
     app: helloworld
   ports:
@@ -345,6 +367,10 @@ spec:
                   fieldPath: metadata.name
             - name: "SW_AGENT_COLLECTOR_BACKEND_SERVICES"
               value: "skywalking-oap-server-service:11800"
+          resources:
+            requests:
+              cpu: 500m
+              memory: 512Mi
 
 ---
 apiVersion: v1
@@ -352,7 +378,7 @@ kind: Service
 metadata:
   name: gateway-service
 spec:
-  type: NodePort
+  type: LoadBalancer
   ports:
     - port: 8080 # 服务端口80
       targetPort: 8080 # pod端口8080
@@ -392,6 +418,10 @@ spec:
               value: "*"
             - name: "TZ"
               value: "Asia/Shanghai"
+          resources:
+            requests:
+              cpu: 300m
+              memory: 512Mi
           volumeMounts:
             - name: data-elasticsearch
               mountPath: /usr/share/elasticsearch/data
@@ -416,6 +446,7 @@ metadata:
   name: elasticsearch-service
 spec:
   type: ClusterIP
+  clusterIP: None
   selector:
     app: elasticsearch
   ports:
@@ -447,13 +478,17 @@ spec:
               value: "Asia/Shanghai"
             - name: "ELASTICSEARCH_HOSTS"
               value: "http://elasticsearch-service:9200"
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: kibana-service
 spec:
-  type: NodePort
+  type: LoadBalancer
   ports:
     - port: 5601
       targetPort: 5601
@@ -488,6 +523,10 @@ spec:
               value: "http://elasticsearch-service:9200"
             - name: "LS_JAVA_OPTS"
               value: "-Xmx512m -Xms512m"
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
           volumeMounts:
             - name: config
               mountPath: /usr/share/logstash/pipeline/
@@ -505,6 +544,7 @@ metadata:
   name: logstash-service
 spec:
   type: ClusterIP
+  clusterIP: None
   selector:
     app: logstash
   ports:
@@ -538,6 +578,10 @@ spec:
           env:
             - name: "TZ"
               value: "Asia/Shanghai"
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
           volumeMounts:
             - name: config
               mountPath: /.curator/
@@ -579,6 +623,10 @@ spec:
               value: "elasticsearch-service:9200"
             - name: "SW_STORAGE_ES_RECORD_DATA_TTL"
               value: "15"
+          resources:
+            requests:
+              cpu: 500m
+              memory: 512Mi
 ---
 apiVersion: v1
 kind: Service
@@ -586,6 +634,7 @@ metadata:
   name: skywalking-oap-server-service
 spec:
   type: ClusterIP
+  clusterIP: None
   selector:
     app: skywalking-oap-server
   ports:
@@ -621,13 +670,17 @@ spec:
               value: "Asia/Shanghai"
             - name: "SW_OAP_ADDRESS"
               value: "http://skywalking-oap-server-service:12800"
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: skywalking-ui-service
 spec:
-  type: NodePort
+  type: LoadBalancer
   ports:
     - port: 8080
       targetPort: 8080
@@ -702,11 +755,11 @@ data:
       sleep 5
     done
     
-    sleep 5
+    sleep 25
 
     echo "yes" | redis-cli --cluster create redis-cluster-0.redis-cluster-headless:6379 redis-cluster-1.redis-cluster-headless:6379 redis-cluster-2.redis-cluster-headless:6379 redis-cluster-3.redis-cluster-headless:6379 redis-cluster-4.redis-cluster-headless:6379 redis-cluster-5.redis-cluster-headless:6379 && echo "成功创建redis集群"
 
-    sleep 5
+    sleep 15
 
     for i in `seq 1 15`
     do
