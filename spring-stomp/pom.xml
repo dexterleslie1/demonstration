@@ -10,7 +10,7 @@
 	</parent>
 
 	<properties>
-		<springboot.version>2.0.4.RELEASE</springboot.version>
+		<springboot.version>2.5.12</springboot.version>
 	</properties>
 	
 	<dependencies>
