@@ -90,6 +90,69 @@ kubectl delete -f 1.yaml
 
 通过集群内分配的虚拟机`ip`访问服务。
 
+
+
+### `ClusterIP`类型服务测试
+
+提醒：
+
+- 在`ACK serverless`做此测试，`nginx-service`不会分配`external ip`。
+- 在`GKE Standard`做此测试，`nginx-service`不会分配`external ip`，但是分配的`cluster ip`是外网`ip`地址。`todo`为何`cluster ip`是外网`ip`地址？
+- 在`EKS`做此测试，`nginx-service`不会分配`external ip`。
+
+
+
+部署`yaml`内容如下：
+
+```yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+ name: nginx
+spec:
+ serviceName: nginx-service
+ replicas: 1
+ selector:
+  matchLabels:
+   app: kubia
+ template:
+  metadata:
+   labels:
+    app: kubia
+  spec:
+   containers:
+    - name: kubia
+      image: nginx
+---
+apiVersion: v1
+kind: Service
+metadata:
+ name: nginx-service
+spec:
+ selector:
+  app: kubia
+ ports:
+  - port: 80
+    targetPort: 80
+
+```
+
+获取`nginx-service`服务的集群`ip`地址
+
+```bash
+kubectl get service -o wide
+```
+
+在`k8s master`节点上访问`nginx-service`服务
+
+```bash
+curl 10.1.124.174
+```
+
+- `10.1.124.174`为`nginx-service`服务集群`ip`地址。
+
+
+
 ### 使用`kubectl expose`创建服务
 
 > 不使用`yaml`方式，使用`cli`方式创建服务
@@ -213,11 +276,11 @@ kubectl delete pod nginx
 
 
 
-### 配置服务上的会话亲和性`sessionAffinity`
+### 会话亲和性`sessionAffinity`
 
-```shell
-### 测试sessionAffinity: None，服务会随机分配pod响应请求
-# 1.yaml内容如下: 
+`1.yaml`内容如下：
+
+```yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -235,8 +298,17 @@ spec:
    containers:
     - name: kubia
       image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-k8s-nodejs
-  
-# 测试sessionAffinity=None，请求被随机分配到3个pod中，2.yaml内容如下:
+```
+
+
+
+#### `sessionAffinity: None`
+
+>服务会随机分配`pod`响应请求
+
+`2.yaml`内容如下：
+
+```yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -248,18 +320,32 @@ spec:
  ports:
   - port: 80
     targetPort: 8080
-    
-# 查询服务列表
+```
+
+查询服务列表
+
+```bash
 kubectl get service
+```
 
-# 服务随机分配pod
-curl 10.1.103.203
-curl 10.1.103.203
-curl 10.1.103.203
-curl 10.1.103.203
+服务随机分配`pod`
 
-### 测试sessionAffinity=ClientIP请求被指定分配到某个pod中
-# 2.yaml内容如下:
+```bash
+curl 10.1.103.203
+curl 10.1.103.203
+curl 10.1.103.203
+curl 10.1.103.203
+```
+
+
+
+#### `sessionAffinity: ClientIP`
+
+>请求被指定分配到某个`pod`中
+
+`2.yaml`内容如下：
+
+```yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -271,21 +357,21 @@ spec:
  ports:
   - port: 80
     targetPort: 8080
+```
 
-# 查询服务列表
+查询服务列表
+
+```bash
 kubectl get service
+```
 
-# 服务分配固定的pod
-curl 10.1.79.183
-curl 10.1.79.183
-curl 10.1.79.183
-curl 10.1.79.183
+服务分配固定的`pod`
 
-# 删除服务
-kubectl delete -f 2.yaml
-
-# 删除deployment
-kubectl delete -f 1.yaml
+```bash
+curl 10.1.79.183
+curl 10.1.79.183
+curl 10.1.79.183
+curl 10.1.79.183
 ```
 
 
@@ -587,10 +673,11 @@ spec:
 ---
 # 用于进入shell调试无头服务
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
- name: headless-deployment-busybox
+ name: busybox
 spec:
+ serviceName: busybox-service
  selector:
   matchLabels:
    app: busybox-1
@@ -611,7 +698,7 @@ kubectl get pods -o wide
 kubectl get service
 
 # 进入busybox容器测试headless service
-kubectl exec -it headless-deployment-busybox-b9db9bbb-vsrvm /bin/sh
+kubectl exec -it busybox-0 /bin/sh
 kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl exec [POD] -- [COMMAND] instead.
 # ping无头服务时，会解析到pod的ip地址
 / # ping headless-service
@@ -778,8 +865,8 @@ spec:
    containers:
     - name: kubia
       image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-k8s-nodejs
-
-# 2.yaml NodePort服务内容如下:
+---
+# NodePort服务内容如下:
 apiVersion: v1
 kind: Service
 metadata:
@@ -817,24 +904,31 @@ You've hit deployment1-9677d889-p66gb 4 times
 
 
 
-## 通过`Google Kubernetes Engine`的`LoadBalancer`将服务暴露出来
+## `LoadBalancer`类型服务
 
-> `todo`在`GKE`上实现
+在云提供商上运行的`Kubernetes`集群通常支持从云基础架构自动提供负载均衡器。所有需要做的就是设置服务的类型为`LoadBalancer`而不是`NodePort`。负载均衡器拥有自己独一无二的可公开访问的`ip`地址，并将所有连接重定向到服务。可以通过负载均衡器的`ip`地址访问服务。
+
+如果`Kubernetes`在不支持`LoadBalancer`服务的环境中运行，则不会调配负载均衡器，但该服务仍将表现的像一个`NodePort`服务。这是因为`LoadBalancer`服务是`NodePort`服务的扩展。可以在支持`LoadBalancer`服务的`GKE`上运行此示例。
+
+提醒：
+
+- 各个提供商都内置支持此类型服务，并且正确地分配`external ip`。
+- 在`ACK serverless`做此测试`nginx-service`服务会分配`external ip`并且可以通过`external ip+80端口`成功访问`nginx`服务。
+- 在`GKE Standard`和`Autopilot`做此测试`nginx-service`服务会分配`external ip`并且可以通过`external ip+服务端口`成功访问`nginx`服务。
+- 在`EKS`做此测试`nginx-service`服务会分配`external ip（例如：a0fcd89e2c9614eb5b4e9a06e06f3b0d-22354364.ap-northeast-1.elb.amazonaws.com）`并且可以通过此`external ip+服务端口`成功访问`nginx`服务。
 
 
 
-## 通过`Ingress`暴露服务
+`1.yaml`内容如下：
 
-> `todo`没有在本地k8s集群中成功启动`ingress-controller`
-
-```bash
-# 用于创建pod，1.yaml内容如下:
+```yaml
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
- name: deployment1
+ name: nginx
 spec:
- replicas: 3
+ serviceName: nginx-service
+ replicas: 1
  selector:
   matchLabels:
    app: kubia
@@ -845,25 +939,840 @@ spec:
   spec:
    containers:
     - name: kubia
-      image: docker.118899.net:10001/yyd-public/demo-k8s-nodejs
-  
-# 创建pod
-kubectl create -f 1.yaml
-
-# 用于创建service，2.yaml内容如下:
+      image: nginx
+---
 apiVersion: v1
 kind: Service
 metadata:
- name: myservice1
+ name: nginx-service
 spec:
- type: NodePort
+ type: LoadBalancer
  ports:
-  - port: 80 # 服务端口80
-    targetPort: 8080 # pod端口8080 
-    nodePort: 30000 # NodePort端口30000
+  - port: 80
+    targetPort: 80
+    nodePort: 30000
  selector:
   app: kubia
-  
-# 创建service
-kubectl create -f 2.yaml
 ```
+
+运行服务
+
+```bash
+kubectl apply -f 1.yaml
+```
+
+访问`http://192.168.235.145:30000/`测试服务是否正常
+
+
+
+## `Ingress`类型服务
+
+`todo` `ingressClass`用法
+
+第三方`ingress controller`实现方案`https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/#additional-controllers`
+
+提醒：
+
+- 使用`ACK serverless`测试（注意：手动删除` ingressClassName: nginx`配置）：`todo`使用`ingressClassName`类型为`alb`创建`ingress`后阿里云却没有生成端点提供访问，`https://help.aliyun.com/zh/ack/serverless-kubernetes/user-guide/alb-ingress-overview?spm=5176.28197681.0.0.13eb5ff6hlyC2t`，创建了私网类型`clb`实例
+- 使用`GKE Standard`测试（注意：手动删除` ingressClassName: nginx`配置）：能够给`ingress`分配`ip`地址并且通过`/etc/hosts`把`a.com`和`b.com`绑定到`ip`地址后能够使用`a.com`访问`nginx-service1`服务，使用`b.com`访问`nginx-service2`服务。
+- 使用`EKS`测试：创建`ingress`后没有分配外网`ip`地址，因为集群中没有配置`todo AWS Load Balancer Controller`，`https://docs.aws.amazon.com/zh_cn/eks/latest/userguide/lbc-manifest.html`。
+
+
+
+### 使用`nginx ingress`本地`k8s`测试
+
+注意：因为本地`k8s`没有`LoadBalancer`的支持，所以需要使用`NodePort`模式测试`nginx ingress`服务。
+
+本示例使用`k8s`社区提供的`nginx ingress`解决方案`https://github.com/kubernetes/ingress-nginx`
+
+**部署`nginx ingress controller`服务**
+
+`nginx ingress controller`部署`yaml`参考`https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.6.4/deploy/static/provider/cloud/deploy.yaml`编写（注意：因为`controller`相关镜像需要访问`registry.k8s.io`拉取，在国内需要配置`docker proxy`才能够成功部署），内容如下：
+
+```yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    app.kubernetes.io/instance: ingress-nginx
+    app.kubernetes.io/name: ingress-nginx
+  name: ingress-nginx
+---
+apiVersion: v1
+automountServiceAccountToken: true
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/instance: ingress-nginx
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/version: 1.6.3
+  name: ingress-nginx
+  namespace: ingress-nginx
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/component: admission-webhook
+    app.kubernetes.io/instance: ingress-nginx
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/version: 1.6.3
+  name: ingress-nginx-admission
+  namespace: ingress-nginx
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/instance: ingress-nginx
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/version: 1.6.3
+  name: ingress-nginx
+  namespace: ingress-nginx
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - get
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  - pods
+  - secrets
+  - endpoints
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - services
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - networking.k8s.io
+  resources:
+  - ingresses
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - networking.k8s.io
+  resources:
+  - ingresses/status
+  verbs:
+  - update
+- apiGroups:
+  - networking.k8s.io
+  resources:
+  - ingressclasses
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - coordination.k8s.io
+  resourceNames:
+  - ingress-nginx-leader
+  resources:
+  - leases
+  verbs:
+  - get
+  - update
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - create
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+- apiGroups:
+  - discovery.k8s.io
+  resources:
+  - endpointslices
+  verbs:
+  - list
+  - watch
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    app.kubernetes.io/component: admission-webhook
+    app.kubernetes.io/instance: ingress-nginx
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/version: 1.6.3
+  name: ingress-nginx-admission
+  namespace: ingress-nginx
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - create
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/instance: ingress-nginx
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/version: 1.6.3
+  name: ingress-nginx
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  - endpoints
+  - nodes
+  - pods
+  - secrets
+  - namespaces
+  verbs:
+  - list
+  - watch
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  verbs:
+  - get
+- apiGroups:
+  - ""
+  resources:
+  - services
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - networking.k8s.io
+  resources:
+  - ingresses
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+- apiGroups:
+  - networking.k8s.io
+  resources:
+  - ingresses/status
+  verbs:
+  - update
+- apiGroups:
+  - networking.k8s.io
+  resources:
+  - ingressclasses
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - discovery.k8s.io
+  resources:
+  - endpointslices
+  verbs:
+  - list
+  - watch
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/component: admission-webhook
+    app.kubernetes.io/instance: ingress-nginx
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/version: 1.6.3
+  name: ingress-nginx-admission
+rules:
+- apiGroups:
+  - admissionregistration.k8s.io
+  resources:
+  - validatingwebhookconfigurations
+  verbs:
+  - get
+  - update
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/instance: ingress-nginx
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/version: 1.6.3
+  name: ingress-nginx
+  namespace: ingress-nginx
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: ingress-nginx
+subjects:
+- kind: ServiceAccount
+  name: ingress-nginx
+  namespace: ingress-nginx
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/component: admission-webhook
+    app.kubernetes.io/instance: ingress-nginx
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/version: 1.6.3
+  name: ingress-nginx-admission
+  namespace: ingress-nginx
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: ingress-nginx-admission
+subjects:
+- kind: ServiceAccount
+  name: ingress-nginx-admission
+  namespace: ingress-nginx
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/instance: ingress-nginx
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/version: 1.6.3
+  name: ingress-nginx
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ingress-nginx
+subjects:
+- kind: ServiceAccount
+  name: ingress-nginx
+  namespace: ingress-nginx
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/component: admission-webhook
+    app.kubernetes.io/instance: ingress-nginx
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/version: 1.6.3
+  name: ingress-nginx-admission
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ingress-nginx-admission
+subjects:
+- kind: ServiceAccount
+  name: ingress-nginx-admission
+  namespace: ingress-nginx
+---
+apiVersion: v1
+data:
+  allow-snippet-annotations: "true"
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/instance: ingress-nginx
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/version: 1.6.3
+  name: ingress-nginx-controller
+  namespace: ingress-nginx
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/instance: ingress-nginx
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/version: 1.6.3
+  name: ingress-nginx-controller
+  namespace: ingress-nginx
+spec:
+  # externalTrafficPolicy: Local
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - appProtocol: http
+    name: http
+    port: 80
+    protocol: TCP
+    targetPort: http
+    nodePort: 31000
+  - appProtocol: https
+    name: https
+    port: 443
+    protocol: TCP
+    targetPort: https
+    nodePort: 31001
+  selector:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/instance: ingress-nginx
+    app.kubernetes.io/name: ingress-nginx
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/instance: ingress-nginx
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/version: 1.6.3
+  name: ingress-nginx-controller-admission
+  namespace: ingress-nginx
+spec:
+  ports:
+  - appProtocol: https
+    name: https-webhook
+    port: 443
+    targetPort: webhook
+  selector:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/instance: ingress-nginx
+    app.kubernetes.io/name: ingress-nginx
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/instance: ingress-nginx
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/version: 1.6.3
+  name: ingress-nginx-controller
+  namespace: ingress-nginx
+spec:
+  minReadySeconds: 0
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: controller
+      app.kubernetes.io/instance: ingress-nginx
+      app.kubernetes.io/name: ingress-nginx
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: controller
+        app.kubernetes.io/instance: ingress-nginx
+        app.kubernetes.io/name: ingress-nginx
+    spec:
+      containers:
+      - args:
+        - /nginx-ingress-controller
+        - --publish-service=$(POD_NAMESPACE)/ingress-nginx-controller
+        - --election-id=ingress-nginx-leader
+        - --controller-class=k8s.io/ingress-nginx
+        - --ingress-class=nginx
+        - --configmap=$(POD_NAMESPACE)/ingress-nginx-controller
+        - --validating-webhook=:8443
+        - --validating-webhook-certificate=/usr/local/certificates/cert
+        - --validating-webhook-key=/usr/local/certificates/key
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: LD_PRELOAD
+          value: /usr/local/lib/libmimalloc.so
+        image: registry.k8s.io/ingress-nginx/controller:v1.6.3@sha256:b92667e0afde1103b736e6a3f00dd75ae66eec4e71827d19f19f471699e909d2
+        imagePullPolicy: IfNotPresent
+        lifecycle:
+          preStop:
+            exec:
+              command:
+              - /wait-shutdown
+        livenessProbe:
+          failureThreshold: 5
+          httpGet:
+            path: /healthz
+            port: 10254
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        name: controller
+        ports:
+        - containerPort: 80
+          name: http
+          protocol: TCP
+        - containerPort: 443
+          name: https
+          protocol: TCP
+        - containerPort: 8443
+          name: webhook
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /healthz
+            port: 10254
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        resources:
+          requests:
+            cpu: 100m
+            memory: 90Mi
+        securityContext:
+          allowPrivilegeEscalation: true
+          capabilities:
+            add:
+            - NET_BIND_SERVICE
+            drop:
+            - ALL
+          runAsUser: 101
+        volumeMounts:
+        - mountPath: /usr/local/certificates/
+          name: webhook-cert
+          readOnly: true
+      dnsPolicy: ClusterFirst
+      nodeSelector:
+        kubernetes.io/os: linux
+      serviceAccountName: ingress-nginx
+      terminationGracePeriodSeconds: 300
+      volumes:
+      - name: webhook-cert
+        secret:
+          secretName: ingress-nginx-admission
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  labels:
+    app.kubernetes.io/component: admission-webhook
+    app.kubernetes.io/instance: ingress-nginx
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/version: 1.6.3
+  name: ingress-nginx-admission-create
+  namespace: ingress-nginx
+spec:
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: admission-webhook
+        app.kubernetes.io/instance: ingress-nginx
+        app.kubernetes.io/name: ingress-nginx
+        app.kubernetes.io/part-of: ingress-nginx
+        app.kubernetes.io/version: 1.6.3
+      name: ingress-nginx-admission-create
+    spec:
+      containers:
+      - args:
+        - create
+        - --host=ingress-nginx-controller-admission,ingress-nginx-controller-admission.$(POD_NAMESPACE).svc
+        - --namespace=$(POD_NAMESPACE)
+        - --secret-name=ingress-nginx-admission
+        env:
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        image: registry.k8s.io/ingress-nginx/kube-webhook-certgen:v20220916-gd32f8c343@sha256:39c5b2e3310dc4264d638ad28d9d1d96c4cbb2b2dcfb52368fe4e3c63f61e10f
+        imagePullPolicy: IfNotPresent
+        name: create
+        securityContext:
+          allowPrivilegeEscalation: false
+      nodeSelector:
+        kubernetes.io/os: linux
+      restartPolicy: OnFailure
+      securityContext:
+        fsGroup: 2000
+        runAsNonRoot: true
+        runAsUser: 2000
+      serviceAccountName: ingress-nginx-admission
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  labels:
+    app.kubernetes.io/component: admission-webhook
+    app.kubernetes.io/instance: ingress-nginx
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/version: 1.6.3
+  name: ingress-nginx-admission-patch
+  namespace: ingress-nginx
+spec:
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: admission-webhook
+        app.kubernetes.io/instance: ingress-nginx
+        app.kubernetes.io/name: ingress-nginx
+        app.kubernetes.io/part-of: ingress-nginx
+        app.kubernetes.io/version: 1.6.3
+      name: ingress-nginx-admission-patch
+    spec:
+      containers:
+      - args:
+        - patch
+        - --webhook-name=ingress-nginx-admission
+        - --namespace=$(POD_NAMESPACE)
+        - --patch-mutating=false
+        - --secret-name=ingress-nginx-admission
+        - --patch-failure-policy=Fail
+        env:
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        image: registry.k8s.io/ingress-nginx/kube-webhook-certgen:v20220916-gd32f8c343@sha256:39c5b2e3310dc4264d638ad28d9d1d96c4cbb2b2dcfb52368fe4e3c63f61e10f
+        imagePullPolicy: IfNotPresent
+        name: patch
+        securityContext:
+          allowPrivilegeEscalation: false
+      nodeSelector:
+        kubernetes.io/os: linux
+      restartPolicy: OnFailure
+      securityContext:
+        fsGroup: 2000
+        runAsNonRoot: true
+        runAsUser: 2000
+      serviceAccountName: ingress-nginx-admission
+---
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
+metadata:
+  labels:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/instance: ingress-nginx
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/version: 1.6.3
+  name: nginx
+spec:
+  controller: k8s.io/ingress-nginx
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  labels:
+    app.kubernetes.io/component: admission-webhook
+    app.kubernetes.io/instance: ingress-nginx
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/version: 1.6.3
+  name: ingress-nginx-admission
+webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: ingress-nginx-controller-admission
+      namespace: ingress-nginx
+      path: /networking/v1/ingresses
+  failurePolicy: Fail
+  matchPolicy: Equivalent
+  name: validate.nginx.ingress.kubernetes.io
+  rules:
+  - apiGroups:
+    - networking.k8s.io
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - ingresses
+  sideEffects: None
+```
+
+部署`nginx ingress controller`
+
+```bash
+kubectl apply -f deploy.yaml
+```
+
+查看`controller`是否成功部署
+
+```bash
+# 预期名为ingress-nginx-controller-*的pod需要Running状态
+kubectl get pods --namespace=ingress-nginx
+
+# 预期名为ingress-nginx-controller的LoadBalancer存在，http端口为31000，https端口为31001
+kubectl get service ingress-nginx-controller --namespace=ingress-nginx
+```
+
+- 如果您的`Kubernetes`集群是支持`LoadBalancer`类型服务的“真实”集群，它将为入口控制器分配一个外部`IP`地址或`FQDN`。它将是`EXTERNAL-IP`字段。如果该字段显示`<pending>`，则表示您的`Kubernetes`集群无法配置负载均衡器（通常是因为它不支持`LoadBalancer`类型的服务）。
+
+
+
+**测试`ingress controller`**
+
+用于创建`Ingress`的`1.yaml`内容如下：
+
+```yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+ name: nginx-service1
+spec:
+ serviceName: nginx-service1
+ replicas: 1
+ selector:
+  matchLabels:
+   app: nginx-service1
+ template:
+  metadata:
+   labels:
+    app: nginx-service1
+  spec:
+   containers:
+    - name: nginx-service1
+      image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-k8s-nodejs
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+ name: nginx-service2
+spec:
+ serviceName: nginx-service2
+ replicas: 1
+ selector:
+  matchLabels:
+   app: nginx-service2
+ template:
+  metadata:
+   labels:
+    app: nginx-service2
+  spec:
+   containers:
+    - name: nginx-service2
+      image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-k8s-nodejs
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+ name: nginx-service1
+spec:
+ type: ClusterIP
+ clusterIP: None
+ ports:
+  - port: 80
+    targetPort: 8080
+ selector:
+  app: nginx-service1
+---
+apiVersion: v1
+kind: Service
+metadata:
+ name: nginx-service2
+spec:
+ type: ClusterIP
+ clusterIP: None
+ ports:
+  - port: 80
+    targetPort: 8080
+ selector:
+  app: nginx-service2
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kubia
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: a.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: nginx-service1
+                port:
+                  number: 80
+    - host: b.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: nginx-service2
+                port:
+                  number: 80
+
+```
+
+配置`/etc/hosts`添加如下内容：
+
+```
+192.168.235.145 a.com
+192.168.235.145 b.com
+```
+
+- 其中`192.168.235.145`为`k8s`集群`master`节点`ip`地址
+
+当访问`http://a.com:31000/（31000为LoadBalancer nodePort端口）`时请求被`nginx-service1`处理
+
+当访问`http://b.com:31000/（31000为LoadBalancer nodePort端口）`时请求被`nginx-service2`处理
+
+
+
+## `gateway`
+
+`todo` `https://blog.csdn.net/kfashfasf/article/details/143179388`
