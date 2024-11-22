@@ -626,6 +626,8 @@ module.exports = {
                     children: [
                         '谷歌信息.md',
                         'gce使用.md',
+                        'gcp项目管理.md',
+                        'gke.md',
                     ]
                 }
             ], '/wireshark/': [
