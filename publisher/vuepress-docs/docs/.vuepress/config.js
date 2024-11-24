@@ -139,6 +139,7 @@ module.exports = {
                     '快捷键.md',
                     'intellij全家桶破解.md',
                     'AI插件.md',
+                    '创建并管理项目.md',
                 ],
             }],
             '/mysql-n-mariadb/': [
