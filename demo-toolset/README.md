@@ -1,24 +1,54 @@
+# 工具集
+
+
+
 ## 录屏工具
 
-### 录屏幕转换为 gif
 
-> 支持windows、macOS录屏幕并转换为gif，NOTE：从dmg安装成功后需要手动删除安全隔离属性才能够打开软件，否则报告没有权限打开该软件错误。
-> https://github.com/wulkano/Kap
->
-> 支持windows录屏幕并转换为gif
-> https://www.screentogif.com/
+
+### 录屏转换为`gif`
+
+支持`windows`、`macOS`录屏幕并转换为`gif`，注意：从`dmg`安装成功后需要手动删除安全隔离属性才能够打开软件，否则报告没有权限打开该软件错误。`https://github.com/wulkano/Kap`
+
+支持`windows`录屏幕并转换为`gif`，`https://www.screentogif.com/`
+
+
 
 ## 截图工具
 
-### Snipaste
+### `snipaste`
 
-> https://www.snipaste.com
->
-> 支持windows、macOS，NOTE：从dmg安装成功后需要手动删除安全隔离属性才能够打开软件，否则报告没有权限打开该软件错误。
+>`https://www.snipaste.com`
 
-截图快捷键
+支持`windows`、`macOS`、`ubuntu`，注意：从`dmg`安装成功后需要手动删除安全隔离属性才能够打开软件，否则报告没有权限打开该软件错误。
 
-```sh
-f1 功能键
+截图快捷键为`f1`功能键
+
+
+
+#### `ubuntu20.04`安装
+
+下载`Linux AppImage`，`https://www.snipaste.com/download.html`
+
+移动`Snipaste-2.10.2-x86_64.AppImage`到`/usr/local`目录并授予执行权限
+
+```bash
+sudo mv Snipaste-2.10.2-x86_64.AppImage /usr/local/ && sudo chmod +x /usr/local/Snipaste-2.10.2-x86_64.AppImage
 ```
+
+运行软件
+
+```bash
+cd /usr/local && ./Snipaste-2.10.2-x86_64.AppImage
+```
+
+按`f1`截图
+
+通过`Show Applications`>`Startup Application`功能设置`snipaste`开机自启动，开机自启动配置信息如下：
+
+- `Name`填写`snipaste`
+- `Command`填写`/usr/local/Snipaste-2.10.2-x86_64.AppImage`
+- `Comment`不填写
+
+点击`Add`按钮保存开机自启动。
 

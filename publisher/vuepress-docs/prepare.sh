@@ -69,6 +69,7 @@ source_dir_to_target_dir_map["../../demo-elk"]="elk"
 source_dir_to_target_dir_map["../../demo-android"]="android"
 source_dir_to_target_dir_map["../../demo-skywalking"]="skywalking"
 source_dir_to_target_dir_map["../../demo-ruby"]="ruby"
+source_dir_to_target_dir_map["../../demo-toolset"]="toolset"
 
 for key in ${!source_dir_to_target_dir_map[@]}; do
     # 删除符号链接目录

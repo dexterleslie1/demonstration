@@ -94,6 +94,7 @@ module.exports = {
                     { text: 'Wireshark使用', link: '/wireshark/' },
                     { text: 'Gost使用', link: '/gost/' },
                     { text: 'Ruby', link: '/ruby/' },
+                    { text: '工具集', link: '/toolset/' },
                 ]
             },
             {
@@ -696,6 +697,8 @@ module.exports = {
                         '管理.md',
                     ]
                 }
+            ], '/toolset/': [
+                ''
             ],
             '/': ['/'],
         }
