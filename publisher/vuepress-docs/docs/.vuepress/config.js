@@ -138,6 +138,7 @@ module.exports = {
                     '多重光标同时编辑.md',
                     '快捷键.md',
                     'intellij全家桶破解.md',
+                    'AI插件.md',
                 ],
             }],
             '/mysql-n-mariadb/': [
@@ -531,6 +532,7 @@ module.exports = {
                         'configmap和secret.md',
                         '计算资源管理.md',
                         'helm.md',
+                        'dashboard.md',
                     ]
                 }
             ], '/postman/': [
