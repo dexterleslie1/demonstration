@@ -747,6 +747,22 @@ helm template -s templates/1.yaml .
 
 
 
+### `helm upgrade`
+
+
+
+#### 从本地`tgz chart`文件安装
+
+下载`tgz`文件`https://github.com/kubernetes/dashboard/releases/download/kubernetes-dashboard-7.10.0/kubernetes-dashboard-7.10.0.tgz`
+
+通过本地`tgz`文件安装`kubernetes dashboard`
+
+```bash
+helm upgrade --install kubernetes-dashboard ./kubernetes-dashboard-7.10.0.tgz --create-namespace --namespace kubernetes-dashboard
+```
+
+
+
 ## 内置函数
 
 

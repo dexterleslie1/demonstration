@@ -535,6 +535,7 @@ module.exports = {
                         '计算资源管理.md',
                         'helm.md',
                         'dashboard.md',
+                        '监控.md',
                     ]
                 }
             ], '/postman/': [
