@@ -1,5 +1,9 @@
 # `AI`插件
 
+说明：使用百度`Baidu Comate`作为`AI`插件（使用百度帐号登录`Baidu Comate`即可使用`Comate`智能代码补全功能）。
+
+
+
 作出以下尝试，但没有成功：
 
 - `JetBrains`的`AI Assistant`需要登录，放弃。
