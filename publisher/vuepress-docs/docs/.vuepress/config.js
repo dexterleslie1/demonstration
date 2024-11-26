@@ -354,7 +354,7 @@ module.exports = {
                         'spring-boot-quartz.md',
                         '@Autowired和@Resource的区别.md',
                         'spring-boot-actuator.md',
-                        'spring-boot-ioc-di.md',
+                        'spring-boot容器.md',
                     ]
                 }
             ], '/java/': [
