@@ -2,6 +2,7 @@ package com.future.demo;
 
 import org.junit.Assert;
 import org.springframework.core.io.*;
+import org.springframework.util.ResourceUtils;
 import org.springframework.util.StreamUtils;
 
 import java.io.*;
@@ -13,6 +14,11 @@ public class Application {
         // 测试ClassPathResource
         ClassPathResource resource = new ClassPathResource("file-none-exists.properties");
         Assert.assertFalse(resource.exists());
+
+        // 注意：在jar发布包中，不能使用ResourceUtils.getFile()获取文件，因为它会抛出FileNotFoundException
+        // 使用ClassPathResource.getInputStream()方法获取InputStream
+        // File file = ResourceUtils.getFile("classpath:file.properties");
+        // System.out.println("使用ResourceUtils.getFile(\"classpath:file.properties\")读取文件：" + file);
 
         // 模拟读取第三方库的classpath资源
         resource = new ClassPathResource("external.properties");

@@ -1,33 +1,37 @@
 # `spring`的`resource`使用
 
-> 例子的详细请参考 [链接](https://github.com/dexterleslie1/demonstration/tree/master/demo-spring-boot/demo-spring-resource)
->
-> 例子的解析：例子中有`demo-third-party-library`和`demo-tester`两个子项目，`demo-third-party-library`用于模拟第三方库，`demo-tester`作为测试用途的项目用于测试引用`demo-third-party-library`后读取其中的`classpath  external.properties`资源，以达到测试证明`ClassPathResource`是否有能力读取`jar`中的`classpath`资源目的。
->
-> 运行例子步骤：
->
-> > 注意：不能从源代码运行此例子。
->
-> 1. 编译并安装`demo-third-party-library`到本地`maven`
->
->    ```bash
->    cd demo-third-party-library 
->    mvn package install
->    ```
->
-> 2. 编译`demo-tester`
->
->    ```bash
->    cd demo-tester
->    mvn package
->    ```
->
-> 3. 运行测试
->
->    ```bash
->    cd demo-tester
->    java -jar target/demo.jar
->    ```
+注意：在`jar`发布包中，不能使用`ResourceUtils.getFile()`获取文件，因为它会抛出`FileNotFoundException`，使用`ClassPathResource.getInputStream()`方法获取`InputStream`。
+
+示例的详细用法请参考`https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-resource`
+
+示例的解析：例子中有`demo-third-party-library`和`demo-tester`两个子项目，`demo-third-party-library`用于模拟第三方库，`demo-tester`作为测试用途的项目用于测试引用`demo-third-party-library`后读取其中的`classpath external.properties`资源，以达到测试证明`ClassPathResource`是否有能力读取`jar`中的`classpath`资源目的。
+
+运行示例的步骤：
+
+>注意：不能从源代码运行此例子。
+
+编译并安装`demo-third-party-library`到本地`maven`
+
+```bash
+cd demo-third-party-library 
+mvn package install
+```
+
+编译`demo-tester`
+
+```bash
+cd demo-tester
+mvn package
+```
+
+运行测试
+
+```bash
+cd demo-tester
+java -jar target/demo.jar
+```
+
+
 
 ## `ClassPathResource#exists`方法判断`classpath`资源是否存在
 
@@ -35,6 +39,8 @@
 ClassPathResource resource = new ClassPathResource("file-none-exists.properties");
 Assert.assertFalse(resource.exists());
 ```
+
+
 
 ## 使用`InputStream`读取`classpath`资源
 
@@ -54,6 +60,8 @@ try {
 }
 ```
 
+
+
 ## 在应用发布为`jar`后，调用`ClassPathResource#getFile`会报告`FileNotFoundException`
 
 ```java
@@ -68,6 +76,8 @@ try {
     // 预期异常
 }
 ```
+
+
 
 ## `ResourceLoader`的使用
 
