@@ -355,6 +355,7 @@ module.exports = {
                         '@Autowired和@Resource的区别.md',
                         'spring-boot-actuator.md',
                         'spring-boot容器.md',
+                        'spring-boot-aop.md',
                     ]
                 }
             ], '/java/': [
