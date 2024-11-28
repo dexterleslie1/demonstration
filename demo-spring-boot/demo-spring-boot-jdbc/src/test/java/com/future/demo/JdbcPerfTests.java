@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 @Threads(value = -1) // detecting CPU count
 @BenchmarkMode(Mode.Throughput)
 @OutputTimeUnit(TimeUnit.SECONDS)
-public class JdbcTests {
+public class JdbcPerfTests {
 
     List<Long> userIdList = new ArrayList<>();
 
@@ -123,7 +123,7 @@ public class JdbcTests {
     public static void main(String[] args) throws RunnerException {
         //使用注解之后只需要配置一下include即可，fork和warmup、measurement都是注解
         Options opt = new OptionsBuilder()
-                .include(JdbcTests.class.getSimpleName())
+                .include(JdbcPerfTests.class.getSimpleName())
                 // 发生错误停止测试
                 .shouldFailOnError(true)
                 .build();

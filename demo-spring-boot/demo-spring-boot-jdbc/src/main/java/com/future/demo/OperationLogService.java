@@ -1,13 +1,14 @@
 package com.future.demo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.yyd.common.bean.ModelMapperUtil;
-import com.yyd.common.exception.BusinessException;
-import com.yyd.common.http.response.PageResponse;
+import com.future.common.bean.ModelMapperUtil;
+import com.future.common.exception.BusinessException;
+import com.future.common.http.PageResponse;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -72,9 +73,6 @@ public class OperationLogService {
 
         Assert.isTrue(size >= 1 && size <= 1000, "参数错误1");
 
-//        String sqlSelect = "select now()";
-//        String str1 = this.jdbcTemplate.queryForObject(sqlSelect, String.class);
-
         // https://stackoverflow.com/questions/34216124/jdbctemplate-count-queryforint-and-pass-multiple-parameters
         int start = (page - 1) * size;
         String sqlSelect = "select * from operation_log where auth_id=?";
@@ -83,14 +81,14 @@ public class OperationLogService {
         }
         sqlSelect = sqlSelect + " order by id desc limit ?,?";
 
-        List<Map<String, Object>> resultSetList;
+        List<OperationLogModel> operationLogModelList;
         if (operationTypeList != null && operationTypeList.size() > 0) {
-            resultSetList = this.jdbcTemplate.queryForList(sqlSelect, contextUserId, operationTypeList, start, size);
+            operationLogModelList = this.jdbcTemplate.query(sqlSelect, new Object[]{contextUserId, operationTypeList, start, size}, new BeanPropertyRowMapper<>());
         } else {
-            resultSetList = this.jdbcTemplate.queryForList(sqlSelect, contextUserId, start, size);
+            operationLogModelList = this.jdbcTemplate.query(sqlSelect, new Object[]{contextUserId, start, size}, new BeanPropertyRowMapper<>());
         }
 
-        if (resultSetList != null && resultSetList.size() > 0) {
+        if (operationLogModelList != null && operationLogModelList.size() > 0) {
             String sqlCount = "select count(id) from operation_log where auth_id=?";
             if (operationTypeList != null && operationTypeList.size() > 0) {
                 sqlCount = sqlCount + " and operation_type in (?)";
@@ -103,33 +101,7 @@ public class OperationLogService {
                 totalCount = this.jdbcTemplate.queryForObject(sqlCount, Integer.class, contextUserId);
             }
 
-            List<OperationLogModel> modelList = resultSetList.stream().map(o -> {
-                Long id = (Long) o.get("id");
-                Long authId = (Long) o.get("auth_id");
-                Long operatorId = (Long) o.get("operator_id");
-                Long passiveId = (Long) o.get("passive_id");
-                Integer operationTypeValue = (Integer) o.get("operation_type");
-                OperationType operationType = OperationType.fromValue(operationTypeValue);
-                String content = (String) o.get("content");
-//                LocalDateTime createTimeLocalDateTime = (LocalDateTime) o.get("create_time");
-//                Date createTime = Date.from(createTimeLocalDateTime.toInstant(ZoneOffset.ofHours(8)));
-
-                Timestamp timestamp = (Timestamp)o.get("create_time");
-                Date createTime = new Date(timestamp.getTime());
-
-                OperationLogModel model = new OperationLogModel() {{
-                    setId(id);
-                    setAuthId(authId);
-                    setOperatorId(operatorId);
-                    setPassiveId(passiveId);
-                    setOperationType(operationType);
-                    setContent(content);
-                    setCreateTime(createTime);
-                }};
-                return model;
-            }).collect(Collectors.toList());
-
-            List<OperationLogVo> operationLogVoList = modelList.stream().map(o -> {
+            List<OperationLogVo> operationLogVoList = operationLogModelList.stream().map(o -> {
                 OperationLogVo vo = ModelMapperUtil.ModelMapperInstance.map(o, OperationLogVo.class);
                 vo.setOperationType(o.getOperationType().getDescription());
                 return vo;

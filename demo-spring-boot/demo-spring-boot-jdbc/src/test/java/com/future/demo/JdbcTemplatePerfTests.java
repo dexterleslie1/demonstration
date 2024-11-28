@@ -1,6 +1,6 @@
 package com.future.demo;
 
-import com.yyd.common.exception.BusinessException;
+import com.future.common.exception.BusinessException;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.runner.Runner;
@@ -29,7 +29,7 @@ import java.util.concurrent.TimeUnit;
 // 指定并发执行线程数
 // https://stackoverflow.com/questions/39644383/jmh-run-benchmark-concurrently
 @Threads(-1)
-public class JdbcTemplateTests {
+public class JdbcTemplatePerfTests {
 
     Random random = new Random();
     OperationLogService operationLogService;
@@ -43,7 +43,7 @@ public class JdbcTemplateTests {
     public static void main(String[] args) throws RunnerException {
         //使用注解之后只需要配置一下include即可，fork和warmup、measurement都是注解
         Options opt = new OptionsBuilder()
-                .include(JdbcTemplateTests.class.getSimpleName())
+                .include(JdbcTemplatePerfTests.class.getSimpleName())
                 // 发生错误停止测试
                 .shouldFailOnError(true)
                 .build();
