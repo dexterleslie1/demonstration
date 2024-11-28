@@ -171,6 +171,7 @@ module.exports = {
                         '配置参数.md',
                         '内存.md',
                         'too-many-connections处理.md',
+                        'sql.md',
                     ]
                 }
             ],
