@@ -70,6 +70,17 @@
 
 
 
+## windows 上安装 docker
+
+### windows11 上安装 docker
+
+windows11 版本 23H2（OS 内部版本 22631.2861）专业工作站版，Docker Desktop 4.35.1
+
+- windows11 启用 hyper-v 特性后重启系统
+- 安装 Docker Desktop 后即可使用
+
+
+
 
 ## 启用`docker daemon`的调试模式
 
