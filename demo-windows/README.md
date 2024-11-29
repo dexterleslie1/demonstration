@@ -20,3 +20,8 @@
    - （可选）点击“停止”按钮以立即停止当前正在运行的Windows Update服务。
    - 点击“应用”和“确定”按钮保存更改。
 
+
+
+## 启用`hyper-v`特性
+
+windows11 启用`hyper-v`特性，`https://www.bdrsuite.com/blog/how-to-enable-hyper-v-in-windows-11-and-windows-server-2022/`
