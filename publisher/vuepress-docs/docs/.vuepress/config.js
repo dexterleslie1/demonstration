@@ -324,6 +324,8 @@ module.exports = {
                         'github.md',
                         '设置自签名ssl证书不验证.md',
                         '原理.md',
+                        '变基.md',
+                        '命令.md',
                     ]
                 }
             ], '/mockito/': [
