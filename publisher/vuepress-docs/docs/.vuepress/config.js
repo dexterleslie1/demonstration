@@ -574,6 +574,7 @@ module.exports = {
                         'vmware-tools.md',
                         'vmware序列号.md',
                         'vmware-workstation.md',
+                        '操作系统安装.md',
                     ]
                 }
             ], '/java-library/': [
