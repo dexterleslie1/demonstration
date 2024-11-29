@@ -358,6 +358,7 @@ module.exports = {
                         'spring-boot-actuator.md',
                         'spring-boot容器.md',
                         'spring-boot-aop.md',
+                        'spring-boot事务.md',
                     ]
                 }
             ], '/java/': [
