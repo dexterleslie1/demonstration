@@ -361,6 +361,7 @@ module.exports = {
                         'spring-boot容器.md',
                         'spring-boot-aop.md',
                         'spring-boot事务.md',
+                        'spring-boot-mvc.md',
                     ]
                 }
             ], '/java/': [
