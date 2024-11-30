@@ -83,7 +83,7 @@ public class ControllerTests {
                 .queryParam("a", "1")
                 .queryParam("b", "2")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED));
-        response.andExpect(status().isForbidden());
+        response.andExpect(status().isUnauthorized());
 
         // 场景: 测试集成mybatis-plus测试，查看是否正确加载mybatis-plus
         this.userMapper.delete(Wrappers.query());

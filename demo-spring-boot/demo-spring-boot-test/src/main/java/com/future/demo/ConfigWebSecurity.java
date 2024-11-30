@@ -19,18 +19,20 @@ public class ConfigWebSecurity extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
-            // 禁止csrf
-            .csrf().disable()
-            // 无状态应用
-            .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            // 自定义登录验证过滤器
-            .and().addFilterBefore(customizeAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
-            .authorizeRequests()
-            .anyRequest().authenticated()
+                // 禁止csrf
+                .csrf().disable()
+                // 无状态应用
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                // 自定义登录验证过滤器
+                .and().addFilterBefore(customizeAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
+                .authorizeRequests()
+                .anyRequest().authenticated()
 
-            .and()
-            // 禁用form登录
-            .formLogin().disable();
+                .and()
+                // 禁用form登录
+                .formLogin().disable()
+                .exceptionHandling()
+                .authenticationEntryPoint(new CustomizeAuthenticationEntryPoint());
     }
 
     @Bean

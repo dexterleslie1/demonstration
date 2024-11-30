@@ -1,6 +1,7 @@
 package com.future.demo.test;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.future.common.exception.BusinessException;
 import com.future.demo.Application;
 import com.future.demo.TestService;
 import com.future.demo.UserModel;
@@ -58,8 +59,8 @@ public class FeignClientTests {
         try {
             this.testSupportDemoFeignClient.minus(1, 2, StringUtils.EMPTY);
             Assert.fail("预期异常没有抛出");
-        } catch (FeignException ex) {
-            Assert.assertEquals(403, ex.status());
+        } catch (BusinessException ex) {
+            Assert.assertEquals("没有登录", ex.getMessage());
         }
 
         // 场景: 测试集成mybatis-plus测试，查看是否正确加载mybatis-plus
