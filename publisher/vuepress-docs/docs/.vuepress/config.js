@@ -49,7 +49,6 @@ module.exports = {
                 text: '后端相关技术',
                 items: [
                     { text: 'MySQL、MariaDB', link: '/mysql-n-mariadb/' },
-                    { text: 'MyBatis-plus', link: '/mybatis/' },
                     { text: 'Redis', link: '/redis/' },
                     { text: 'Maven', link: '/maven/' },
                     { text: 'Mockito', link: '/mockito/' },
@@ -286,15 +285,6 @@ module.exports = {
                         'redis管理.md',
                     ]
                 }
-            ], '/mybatis/': [
-                {
-                    title: "MyBatis",
-                    children: [
-                        '',
-                        'spring-boot项目配置mybatis-plus.md',
-                        '用法.md',
-                    ]
-                }
             ], '/maven/': [
                 {
                     title: "Maven",
@@ -363,6 +353,7 @@ module.exports = {
                         'spring-boot事务.md',
                         'spring-boot-mvc.md',
                         'swagger2-knife4j.md',
+                        'ibatis、mybatis、mybatis-plus.md',
                     ]
                 }
             ], '/java/': [

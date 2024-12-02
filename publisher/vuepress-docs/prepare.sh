@@ -26,7 +26,6 @@ source_dir_to_target_dir_map["../../front-end/html+js+css/demo-less-sass-scss-po
 source_dir_to_target_dir_map["../../front-end/html+js+css/demo-less-sass-scss-postcss/demo-scss"]="scss"
 source_dir_to_target_dir_map["../../demo-prometheus"]="prometheus"
 source_dir_to_target_dir_map["../../demo-redis"]="redis"
-source_dir_to_target_dir_map["../../demo-mybatis"]="mybatis"
 source_dir_to_target_dir_map["../../demo-maven"]="maven"
 source_dir_to_target_dir_map["../../demo-git"]="git"
 source_dir_to_target_dir_map["../../demo-mockito"]="mockito"

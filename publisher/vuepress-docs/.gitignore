@@ -13,7 +13,6 @@ docs/grafana
 docs/prometheus
 docs/mysql-n-mariadb
 docs/redis
-docs/mybatis
 docs/maven
 docs/git
 docs/mockito
