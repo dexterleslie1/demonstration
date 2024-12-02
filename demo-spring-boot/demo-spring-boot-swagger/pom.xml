@@ -11,7 +11,7 @@
     </parent>
 
 	<groupId>com.future.demo</groupId>
-    <artifactId>swagger-demo</artifactId>
+    <artifactId>demo-spring-boot-swagger</artifactId>
     <version>1.0.0</version>
     <packaging>jar</packaging>
 
@@ -32,16 +32,8 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-<!--        <dependency>-->
-<!--			<groupId>io.springfox</groupId>-->
-<!--			<artifactId>springfox-swagger2</artifactId>-->
-<!--			<version>${swagger.version}</version>-->
-<!--		</dependency>-->
-<!--		<dependency>-->
-<!--			<groupId>io.springfox</groupId>-->
-<!--			<artifactId>springfox-swagger-ui</artifactId>-->
-<!--			<version>${swagger.version}</version>-->
-<!--		</dependency>-->
+
+        <!-- swagger3依赖 -->
         <dependency>
             <groupId>io.springfox</groupId>
             <artifactId>springfox-boot-starter</artifactId>
