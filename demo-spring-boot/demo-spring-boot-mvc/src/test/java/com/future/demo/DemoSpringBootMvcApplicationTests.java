@@ -2,7 +2,11 @@ package com.future.demo;
 
 import com.future.common.json.JSONUtil;
 import com.future.demo.controller.Person;
+import com.future.demo.interceptor.MyHandlerInterceptor;
+import com.future.demo.vo.request.PersonAddVo;
+import com.future.demo.vo.request.PersonUpdateVo;
 import jakarta.servlet.http.Cookie;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -12,8 +16,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -22,6 +25,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class DemoSpringBootMvcApplicationTests {
     @Autowired
     MockMvc mockMvc;
+    @Autowired
+    MyHandlerInterceptor myHandlerInterceptor;
 
     @Test
     void contextLoads() throws Exception {
@@ -156,6 +161,17 @@ class DemoSpringBootMvcApplicationTests {
                 .andExpect(status().isOk())
                 .andExpect(content().string("name=" + name + ",age=" + age + ",hobby=[coding, 读书],address=Person.Address(city=广州市, country=中国)"));
 
+        // 测试请求路径参数
+        this.mockMvc.perform(get("/api/v1/test7/" + name + "/" + age))
+                .andExpect(status().isOk())
+                .andExpect(content().string("name=Dexter,age=18"));
+        this.mockMvc.perform(get("/api/v1/test7/ /" + age))
+                .andExpect(status().isOk())
+                .andExpect(content().string("name= ,age=18"));
+        this.mockMvc.perform(get("/api/v1/test7/" + name + "/0"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("name=Dexter,age=0"));
+
         // 测试文件上传
         this.mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/test6")
                         .file(new MockMultipartFile("fileList", "hello".getBytes()))
@@ -173,12 +189,176 @@ class DemoSpringBootMvcApplicationTests {
         // 测试JSON响应体
         this.mockMvc.perform(get("/api/v1/response/test1"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("{\"name\":\"张三\",\"age\":20,\"hobby\":[\"吃饭\",\"睡觉\",\"打豆豆\"],\"address\":{\"city\":\"北京市\",\"country\":\"海淀区\"}}"));
+                .andExpect(content().string("{\"id\":null,\"name\":\"张三\",\"age\":20,\"hobby\":[\"吃饭\",\"睡觉\",\"打豆豆\"],\"address\":{\"city\":\"北京市\",\"country\":\"海淀区\"}}"));
 
         // 测试下载文件
         this.mockMvc.perform(get("/api/v1/response/test2"))
                 .andExpect(status().isOk())
                 .andExpect(content().string("Hello!"));
+
+        // endregion
+
+        // region 测试restful api
+
+        // 新增person
+        PersonAddVo personAddVo = new PersonAddVo();
+        personAddVo.setName("张三");
+        personAddVo.setSex("男");
+        personAddVo.setSex1("男");
+        personAddVo.setAge(18);
+        personAddVo.setHobby(new String[]{"吃饭", "睡觉", "打豆豆"});
+        personAddVo.setAddress(new Person.Address("北京市", "海淀区"));
+        this.mockMvc.perform(post("/api/v1/restful/person")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(JSONUtil.ObjectMapperInstance.writeValueAsBytes(personAddVo)))
+                .andExpect(status().isOk())
+                .andExpect(content().string("{\"errorCode\":0,\"errorMessage\":null,\"data\":{\"id\":10,\"name\":\"张三\",\"age\":18,\"hobby\":[\"吃饭\",\"睡觉\",\"打豆豆\"],\"address\":{\"city\":\"北京市\",\"country\":\"海淀区\"}}}"));
+
+        // 根据id获取person
+        this.mockMvc.perform(get("/api/v1/restful/person/2"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("{\"errorCode\":0,\"errorMessage\":null,\"data\":{\"id\":2,\"name\":\"张三\",\"hobby\":[\"吃饭\",\"睡觉\",\"打豆豆\"],\"address\":{\"city\":\"北京市\",\"country\":\"海淀区\"}}}"));
+
+        // 根据id更新person
+        PersonUpdateVo personUpdateVo = new PersonUpdateVo();
+        personUpdateVo.setId(10L);
+        personUpdateVo.setName("张三");
+        personUpdateVo.setAge(18);
+        personUpdateVo.setHobby(new String[]{"吃饭", "睡觉", "打豆豆"});
+        personUpdateVo.setAddress(new Person.Address("北京市", "海淀区"));
+        this.mockMvc.perform(put("/api/v1/restful/person")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(JSONUtil.ObjectMapperInstance.writeValueAsBytes(personUpdateVo)))
+                .andExpect(status().isOk())
+                .andExpect(content().string("{\"errorCode\":0,\"errorMessage\":null,\"data\":{\"id\":10,\"name\":\"张三\",\"hobby\":[\"吃饭\",\"睡觉\",\"打豆豆\"],\"address\":{\"city\":\"北京市\",\"country\":\"海淀区\"}}}"));
+
+        // 根据id删除person
+        this.mockMvc.perform(delete("/api/v1/restful/person/11"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("{\"errorCode\":0,\"errorMessage\":null,\"data\":\"成功删除id=11\"}"));
+
+        // endregion
+
+        // region 测试拦截器
+
+        // 拦截/hello请求
+        this.mockMvc.perform(get("/hello"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Hello!"));
+        Assertions.assertTrue(this.myHandlerInterceptor.isPreHandle());
+        Assertions.assertTrue(this.myHandlerInterceptor.isPostHandle());
+        Assertions.assertTrue(this.myHandlerInterceptor.isAfterCompletion());
+        this.myHandlerInterceptor.reset();
+        // 拦截/hello请求但preHandle返回false
+        this.mockMvc.perform(get("/hello").param("preHandleReturnFalse", "false"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(""));
+        Assertions.assertTrue(this.myHandlerInterceptor.isPreHandle());
+        Assertions.assertFalse(this.myHandlerInterceptor.isPostHandle());
+        Assertions.assertFalse(this.myHandlerInterceptor.isAfterCompletion());
+        this.myHandlerInterceptor.reset();
+        // 不拦截/hella请求
+        this.mockMvc.perform(get("/hella"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Hell?!"));
+        Assertions.assertFalse(this.myHandlerInterceptor.isPreHandle());
+        Assertions.assertFalse(this.myHandlerInterceptor.isPostHandle());
+        Assertions.assertFalse(this.myHandlerInterceptor.isAfterCompletion());
+        this.myHandlerInterceptor.reset();
+
+        // endregion
+
+        // region 测试异常处理
+
+        // 测试算数异常
+        this.mockMvc.perform(get("/api/v1/exception/test1"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("{\"errorCode\":0,\"errorMessage\":\"算数异常\",\"data\":null}"));
+        // 测试空指针异常
+        this.mockMvc.perform(get("/api/v1/exception/test2"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("{\"errorCode\":0,\"errorMessage\":\"空指针异常\",\"data\":null}"));
+        // 测试自定义异常
+        this.mockMvc.perform(get("/api/v1/exception/test3"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("{\"errorCode\":0,\"errorMessage\":\"自定义异常\",\"data\":null}"));
+
+        // endregion
+
+        // region 测试spring数据校验
+
+        // 英语语言
+        personAddVo = new PersonAddVo();
+        personAddVo.setName(" ");
+        personAddVo.setSex("男");
+        personAddVo.setSex1("男");
+        personAddVo.setAge(-1);
+        personAddVo.setHobby(new String[]{"吃饭", "睡觉", "打豆豆"});
+        personAddVo.setAddress(new Person.Address("北京市", "海淀区"));
+        this.mockMvc.perform(post("/api/v1/restful/person")
+                        .header("Accept-Language", "en-US")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(JSONUtil.ObjectMapperInstance.writeValueAsBytes(personAddVo)))
+                .andExpect(status().isOk())
+                .andExpect(content().string("{\"errorCode\":0,\"errorMessage\":\"参数校验失败\",\"data\":{\"name\":\"name is required\",\"age\":\"年龄不能小于0\"}}"));
+
+        // 中文语言
+        personAddVo = new PersonAddVo();
+        personAddVo.setName(" ");
+        personAddVo.setSex("男");
+        personAddVo.setSex1("男");
+        personAddVo.setAge(-1);
+        personAddVo.setHobby(new String[]{"吃饭", "睡觉", "打豆豆"});
+        personAddVo.setAddress(new Person.Address("北京市", "海淀区"));
+        this.mockMvc.perform(post("/api/v1/restful/person")
+                        .header("Accept-Language", "zh-CN")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(JSONUtil.ObjectMapperInstance.writeValueAsBytes(personAddVo)))
+                .andExpect(status().isOk())
+                .andExpect(content().string("{\"errorCode\":0,\"errorMessage\":\"参数校验失败\",\"data\":{\"name\":\"名称必须\",\"age\":\"年龄不能小于0\"}}"));
+
+        // 测试Pattern校验
+        personAddVo = new PersonAddVo();
+        personAddVo.setName("张三");
+        personAddVo.setSex("男1");
+        personAddVo.setSex1("男");
+        personAddVo.setAge(12);
+        personAddVo.setHobby(new String[]{"吃饭", "睡觉", "打豆豆"});
+        personAddVo.setAddress(new Person.Address("北京市", "海淀区"));
+        this.mockMvc.perform(post("/api/v1/restful/person")
+                        .header("Accept-Language", "zh-CN")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(JSONUtil.ObjectMapperInstance.writeValueAsBytes(personAddVo)))
+                .andExpect(status().isOk())
+                .andExpect(content().string("{\"errorCode\":0,\"errorMessage\":\"参数校验失败\",\"data\":{\"sex\":\"性别只能是男或者女\"}}"));
+
+        // 测试自定义校验注解
+        personAddVo = new PersonAddVo();
+        personAddVo.setName("张三");
+        personAddVo.setSex("男");
+        personAddVo.setSex1("男1");
+        personAddVo.setAge(12);
+        personAddVo.setHobby(new String[]{"吃饭", "睡觉", "打豆豆"});
+        personAddVo.setAddress(new Person.Address("北京市", "海淀区"));
+        this.mockMvc.perform(post("/api/v1/restful/person")
+                        .header("Accept-Language", "zh-CN")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(JSONUtil.ObjectMapperInstance.writeValueAsBytes(personAddVo)))
+                .andExpect(status().isOk())
+                .andExpect(content().string("{\"errorCode\":0,\"errorMessage\":\"参数校验失败\",\"data\":{\"sex1\":\"性别只能是男或者女\"}}"));
+        personAddVo = new PersonAddVo();
+        personAddVo.setName("张三");
+        personAddVo.setSex("男");
+        personAddVo.setSex1("男1");
+        personAddVo.setAge(12);
+        personAddVo.setHobby(new String[]{"吃饭", "睡觉", "打豆豆"});
+        personAddVo.setAddress(new Person.Address("北京市", "海淀区"));
+        this.mockMvc.perform(post("/api/v1/restful/person")
+                        .header("Accept-Language", "en-US")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(JSONUtil.ObjectMapperInstance.writeValueAsBytes(personAddVo)))
+                .andExpect(status().isOk())
+                .andExpect(content().string("{\"errorCode\":0,\"errorMessage\":\"参数校验失败\",\"data\":{\"sex1\":\"Gender is male or female\"}}"));
 
         // endregion
     }

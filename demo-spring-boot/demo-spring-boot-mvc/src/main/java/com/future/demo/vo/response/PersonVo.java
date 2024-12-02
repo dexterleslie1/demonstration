@@ -1,16 +1,21 @@
-package com.future.demo.controller;
+package com.future.demo.vo.response;
 
+import com.future.demo.controller.Person;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+// 返回person数据vo
 @Data
-public class Person {
+public class PersonVo {
     Long id;
     private String name;
-    private int age;
+
+    // 注意：不添加age字段是为了模拟脱敏需求，不返回年龄数据给前端
+    // private int age;
+
     private String [] hobby;
-    private Address address;
+    private Person.Address address;
 
     @Data
     @AllArgsConstructor

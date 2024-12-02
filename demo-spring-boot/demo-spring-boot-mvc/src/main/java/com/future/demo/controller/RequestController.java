@@ -44,6 +44,12 @@ public class RequestController {
         return "name=" + person.getName() + ",age=" + person.getAge() + ",hobby=" + Arrays.toString(person.getHobby()) + ",address=" + person.getAddress().toString();
     }
 
+    // 测试请求路径参数
+    @RequestMapping("test7/{name}/{age}")
+    public String test(@PathVariable(value = "name") String name, @PathVariable("age") int age) {
+        return "name=" + name + ",age=" + age;
+    }
+
     // 测试文件上传
     @RequestMapping("test6")
     public String test6(Person person

@@ -51,6 +51,12 @@
             <artifactId>future-common</artifactId>
             <version>1.1.5</version>
         </dependency>
+
+        <!-- spring数据校验依赖 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
