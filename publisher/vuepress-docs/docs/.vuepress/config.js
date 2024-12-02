@@ -362,6 +362,7 @@ module.exports = {
                         'spring-boot-aop.md',
                         'spring-boot事务.md',
                         'spring-boot-mvc.md',
+                        'swagger2-knife4j.md',
                     ]
                 }
             ], '/java/': [
