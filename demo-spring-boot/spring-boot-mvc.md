@@ -53,5 +53,239 @@ Spring MVC的工作原理可以概括为以下几个核心步骤：
 
 - `@RequestMapping`路径配置中使用通配符`?`、`*`、`**`
 - `@RequestMapping`的`method`、`params`、`headers`、`consumers`、`produces`请求限制
-- 请求参数处理`@RequestParam`、`@RequestBody`等
+- 请求参数处理`@RequestParam`、`@RequestBody`、`@PathVariable`等
 - 响应处理`JSON`和文件下载响应
+- 编写`restful`风格的`api`
+- 拦截器`HandlerInterceptor`用法
+- 异常处理`@ExceptionHandler`、`@ControllerAdvice`、`@RestControllerAdvice`用法
+- 数据校验
+
+
+
+## `restful`风格的`api`
+
+`api http method`设计规则如下：
+
+- 在新增数据时使用`POST`方法
+- 在读取数据时使用`GET`方法
+- 在更新数据时使用`PUT`方法
+- 在删除数据时使用`DELETE`方法。
+
+`api`的`URL`路径部分设计规则如下，本示例中：
+
+- 新增`person`的`api`被设计为`POST /person`
+- 更新`person`的`api`被设计为`PUT /person`
+- 根据`id`查询`person`的`api`被设计为`GET /person/{id}`
+- 根据`id`删除`person`的`api`被设计为`DELETE /person/{id}`
+- 查询`person`列表的`api`被设计为`GET /persons`
+
+`api`和前端数据交互设计规则如下：
+
+- 新增`person`时前端提交的`vo`为`PersonAddVo`
+- 修改`person`时前端提交的`vo`为`PersonUpdateVo`
+- 后端返回`person`数据给前端时的`vo`为`PersonVo`
+
+
+
+## 数据校验
+
+
+
+### 基本用法
+
+`maven`引入`org.springframework.boot:spring-boot-starter-validation`依赖
+
+```xml
+<dependencies>
+	<dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-validation</artifactId>
+    </dependency>
+</dependencies>
+```
+
+`PersonAddVo`添加校验注解
+
+```java
+// 新增person vo
+@Data
+public class PersonAddVo {
+
+    // 使用@NotBlank注解，表示name字段不能为null，且不能为空白字符串
+    // {person.name.required}是为了国际化，具体的错误信息可以通过配置文件来配置
+    @NotBlank(message = "{person.name.required}")
+    private String name;
+
+    @Max(value = 150, message = "年龄不能大于150")
+    @Min(value = 0, message = "年龄不能小于0")
+    private int age;
+}
+```
+
+控制器添加`@Validated`注解启用数据校验
+
+```java
+@RequestMapping(value = "/person", method = RequestMethod.POST)
+public ObjectResponse<Person> add(@RequestBody @Validated PersonAddVo vo/* 使用vo接收前端提交的数据 */) {
+```
+
+全局异常处理添加数据校验失败异常`MethodArgumentNotValidException`处理
+
+```java
+// 全局异常处理器
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+    // 处理spring数据校验失败异常
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ObjectResponse<Map<String, String>> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
+        ObjectResponse<Map<String, String>> response = new ObjectResponse<>();
+        response.setErrorMessage("参数校验失败");
+        Map<String, String> map = e.getFieldErrors().stream().collect(Collectors.toMap(FieldError::getField, FieldError::getDefaultMessage));
+        response.setData(map);
+        return response;
+    }
+}
+```
+
+
+
+### 校验失败国际化处理
+
+`PersonAddVo`添加国际化消息`key`，如：`@NotBlank(message = "{person.name.required}")`
+
+```java
+// 新增person vo
+@Data
+public class PersonAddVo {
+    // 使用@NotBlank注解，表示name字段不能为null，且不能为空白字符串
+    // {person.name.required}是为了国际化，具体的错误信息可以通过配置文件来配置
+    @NotBlank(message = "{person.name.required}")
+    private String name;
+}
+```
+
+新建`i18n`国际化文件：
+
+`messages.properties`默认语言（当前没有配置的语言）文件内容如下：
+
+```properties
+person.name.required=name is required
+
+```
+
+`messages_en_US.properties`英语配置文件内容如下：
+
+```properties
+person.name.required=name is required
+
+```
+
+`messages_zh_CN.properties`中文配置文件内容如下：
+
+```properties
+person.name.required=名称必须
+
+```
+
+请求头加入`Accept-Language`表示客户端当前语言，例如：`Accept-Language: en-US`表示英语，`Accept-Language: zh-CN`表示中文
+
+```java
+// 中文语言
+person = new Person();
+person.setId(10L);
+person.setName(" ");
+person.setAge(-1);
+person.setHobby(new String[]{"吃饭", "睡觉", "打豆豆"});
+person.setAddress(new Person.Address("北京市", "海淀区"));
+this.mockMvc.perform(post("/api/v1/restful/person")
+                .header("Accept-Language", "zh-CN")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(JSONUtil.ObjectMapperInstance.writeValueAsBytes(person)))
+        .andExpect(status().isOk())
+        .andExpect(content().string("{\"errorCode\":0,\"errorMessage\":\"参数校验失败\",\"data\":{\"name\":\"名称必须\",\"age\":\"年龄不能小于0\"}}"));
+
+```
+
+
+
+### `Pattern`校验
+
+使用正则表达式校验`person`性别`男`或者`女`
+
+```java
+@Pattern(regexp = "^[男|女]$", message = "性别只能是男或者女")
+private String sex;
+```
+
+
+
+### 自定义校验注解
+
+自定义注解类
+
+```java
+package com.future.demo.annotations;
+
+import jakarta.validation.Constraint;
+import jakarta.validation.Payload;
+
+import java.lang.annotation.Documented;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+
+import static java.lang.annotation.ElementType.*;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+@Documented
+@Constraint(validatedBy = {GenderValidator.class})
+@Target({FIELD})
+@Retention(RUNTIME)
+public @interface Gender {
+    // 国际化对应的key
+    String message() default "{person.gender.error}";
+
+    Class<?>[] groups() default {};
+
+    Class<? extends Payload>[] payload() default {};
+}
+
+```
+
+自定义校验器
+
+```java
+package com.future.demo.annotations;
+
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
+
+public class GenderValidator implements ConstraintValidator<Gender, String> {
+
+    @Override
+    public boolean isValid(String value, ConstraintValidatorContext context) {
+        return "男".equals(value) || "女".equals(value);
+    }
+}
+
+```
+
+`i18n`配置如下：
+
+```properties
+# messages.properties配置如下：
+person.gender.error=Gender is male or female
+
+# messages_en_US.properties配置如下：
+person.gender.error=Gender is male or female
+
+# messages_zh_CN.properties配置如下：
+person.gender.error=性别只能是男或者女
+```
+
+引用自定义注解
+
+```java
+@Gender
+private String sex1;
+```
+
