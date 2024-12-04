@@ -342,6 +342,97 @@ spring.datasource.url=jdbc:mariadb://localhost:3306/demo?allowMultiQueries=true
 
 
 
+### 缓存
+
+
+
+#### 什么是 MyBatis 缓存？
+
+MyBatis缓存是MyBatis提供的一种性能优化机制，它通过减少Java Application与数据库的交互次数来提升程序的运行效率。以下是对MyBatis缓存的详细介绍：
+
+**一、MyBatis缓存的分类**
+
+MyBatis缓存主要分为一级缓存和二级缓存。
+
+1. **一级缓存**
+   - 一级缓存是MyBatis的默认缓存，也称为本地缓存或SqlSession级别的缓存。
+   - 它是基于SqlSession的缓存，即在同一个SqlSession中执行的多次查询会将查询结果缓存在本地内存中。
+   - 当同一个SqlSession中执行相同的SQL查询时，MyBatis会首先检查一级缓存，如果缓存中已经存在相同的查询结果，就直接返回缓存中的数据，而不会再次向数据库发出查询请求。
+   - 一级缓存的作用是提高相同查询的响应速度，减少数据库访问次数。
+   - 一级缓存的失效情况包括：不同SqlSession对应不同的一级缓存；同一个SqlSession单查询条件不同；同一个SqlSession两次查询期间执行了任何一次增删改操作；同一个SqlSession两次查询期间手动清空了缓存。
+2. **二级缓存**
+   - 二级缓存是映射器级别的缓存，也称为全局范围的缓存。
+   - 除了当前SqlSession能用外，其他的SqlSession也可以使用。
+   - 二级缓存需要在mapper文件中进行配置，并且pojo需要实现序列化的接口。
+   - 二级缓存的作用是在多个SqlSession之间共享缓存数据，从而提高应用程序的性能。它适用于需要缓存共享的数据，如基础数据表（如国家、城市）等，以减少数据库查询的负担。
+   - 二级缓存的配置包括在mybatis的sqlMapConfig.xml中配置、在mapper.xml中配置、在select标签中配置以及在mapper映射文件中开启二级缓存等步骤。
+
+**二、MyBatis缓存的工作原理**
+
+1. **一级缓存的工作原理**
+   - 当一个SqlSession第一次执行查询操作时，MyBatis会将查询结果存储在一级缓存中。
+   - 如果在同一个SqlSession中再次执行相同的查询操作，MyBatis会直接从一级缓存中获取数据，而不是再次向数据库发出查询请求。
+   - 当执行增删改操作时，MyBatis会清空一级缓存，以确保缓存中的数据是最新的。
+2. **二级缓存的工作原理**
+   - 当一个SqlSession执行查询操作时，如果一级缓存中没有数据，MyBatis会检查二级缓存。
+   - 如果二级缓存中有数据，MyBatis会直接从二级缓存中获取数据。
+   - 如果二级缓存中也没有数据，MyBatis会向数据库发出查询请求，并将查询结果存储到二级缓存中。
+   - 当执行增删改操作时，MyBatis会清空与当前mapper相关的二级缓存。
+
+**三、MyBatis缓存的配置与使用**
+
+1. **一级缓存的配置**
+   - 一级缓存是MyBatis的默认缓存，无需进行额外配置即可使用。
+   - 可以通过SqlSession的clearCache()方法手动清空一级缓存。
+2. **二级缓存的配置**
+   - 需要在mybatis-config.xml文件中开启二级缓存。
+   - 在mapper.xml文件中配置<cache/>标签来启用二级缓存。
+   - 可以配置二级缓存的eviction（驱逐策略）、flushInterval（刷新间隔）、size（缓存大小）和readOnly（只读性）等属性。
+
+**四、MyBatis缓存的注意事项**
+
+1. **缓存数据的更新**
+   - 当数据库中的数据发生变化时，需要及时清空相关的缓存，以确保缓存中的数据是最新的。
+   - 可以通过执行增删改操作来清空一级缓存和与当前mapper相关的二级缓存。
+2. **缓存的适用场景**
+   - 缓存适用于经常查询并且不经常改变的数据，如公司的介绍、新闻等。
+   - 对于经常改变的数据或数据的正确与否对最终结果影响很大的数据，如商品的库存、股市的牌价等，不适合使用缓存。
+3. **自定义缓存**
+   - MyBatis还提供了自定义缓存的功能，可以根据实际需求实现自定义的缓存机制。
+
+综上所述，MyBatis缓存是一种有效的性能优化机制，通过合理配置和使用缓存，可以显著提高应用程序的运行效率。
+
+
+
+#### 启用一级缓存
+
+MyBatis 一级缓存默认是启用状态。
+
+在业务方法中使用 @Transactional 开启事务（同一个 SqlSession）即可以使用一级缓存特性，参考 EmployeeService 中的 testLevel1Cache 方法
+
+
+
+#### 启用二级缓存
+
+MyBatis 二级缓存默认是不启用的，参考 EmployeeService 中的 testLevel2Cache 方法
+
+1. Bean 实现 Serializable 接口以支持 Bean 实例的序列化
+
+   ```java
+   public class Employee implements Serializable {
+   ```
+
+2. Mapper 配置文件里面加入 `<cache/>`启用二级缓存
+
+   ```xml
+   <mapper namespace="com.future.demo.mapper.EmployeeMapper">
+       <!-- 启用MyBatis二级缓存 -->
+       <cache/>
+   </mapper>
+   ```
+
+   
+
 ## `MyBatis-plus`
 
 ### `spring-boot`项目集成`MyBatis-plus`

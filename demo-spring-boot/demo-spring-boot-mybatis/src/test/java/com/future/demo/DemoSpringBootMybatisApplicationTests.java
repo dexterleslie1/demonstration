@@ -4,6 +4,7 @@ import com.future.demo.bean.Customer;
 import com.future.demo.bean.Employee;
 import com.future.demo.bean.Order;
 import com.future.demo.mapper.*;
+import com.future.demo.service.EmployeeService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,9 @@ class DemoSpringBootMybatisApplicationTests {
     OrderMapper orderMapper;
     @Autowired
     CustomerMapper customerMapper;
+
+    @Autowired
+    EmployeeService employeeService;
 
     @Test
     void contextLoads() {
@@ -305,6 +309,18 @@ class DemoSpringBootMybatisApplicationTests {
         Assertions.assertEquals(10, employees.size());
         Assertions.assertEquals("张三1-1", employees.get(1).getEmpName());
         Assertions.assertEquals(21, employees.get(1).getAge());
+
+        // endregion
+
+        // region 测试MyBatis缓存
+
+        // 测试一级缓存
+        // 通过控制台观察是否只执行了一次sql查询
+        this.employeeService.testLevel1Cache(id);
+
+        // 测试二级缓存
+        // 通过控制台观察是否只执行了一次sql查询
+        this.employeeService.testLevel2Cache(id);
 
         // endregion
     }
