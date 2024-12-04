@@ -354,6 +354,7 @@ module.exports = {
                         'spring-mvc.md',
                         'swagger2-knife4j.md',
                         'ibatis、mybatis、mybatis-plus.md',
+                        'spring-boot.md',
                     ]
                 }
             ], '/java/': [
