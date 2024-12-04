@@ -1,11 +1,14 @@
 package com.future.demo.config;
 
 import com.github.pagehelper.PageInterceptor;
+import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.Properties;
 
+// 配置mapper扫描包路径
+@MapperScan("com.future.demo.mapper")
 @Configuration
 public class MybatisConfig {
     /**

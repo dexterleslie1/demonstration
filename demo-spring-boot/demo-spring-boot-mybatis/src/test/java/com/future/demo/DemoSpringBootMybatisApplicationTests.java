@@ -3,6 +3,7 @@ package com.future.demo;
 import com.future.demo.bean.Customer;
 import com.future.demo.bean.Employee;
 import com.future.demo.bean.Order;
+import com.future.demo.bean.Student;
 import com.future.demo.mapper.*;
 import com.future.demo.service.EmployeeService;
 import com.github.pagehelper.Page;
@@ -30,6 +31,9 @@ class DemoSpringBootMybatisApplicationTests {
     OrderMapper orderMapper;
     @Autowired
     CustomerMapper customerMapper;
+
+    @Autowired
+    StudentMapper studentMapper;
 
     @Autowired
     EmployeeService employeeService;
@@ -371,6 +375,19 @@ class DemoSpringBootMybatisApplicationTests {
         Assertions.assertEquals(3, page.getPageSize());
         Assertions.assertEquals(4, page.getPages());
         Assertions.assertEquals("张三1-9", page.getList().get(page.getList().size() - 1).getEmpName());
+
+        // endregion
+
+        // region 测试MybatisX插件生成的mapper
+
+        Student student = new Student();
+        student.setName("张三");
+        student.setAge(20);
+        student.setScore(new BigDecimal(100));
+        this.studentMapper.insert(student);
+        id = student.getId();
+        student = this.studentMapper.selectByPrimaryKey(id);
+        Assertions.assertEquals("张三", student.getName());
 
         // endregion
     }

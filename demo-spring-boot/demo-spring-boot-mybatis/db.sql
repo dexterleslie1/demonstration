@@ -31,3 +31,10 @@ insert into `order`(id, address, amount, customer_id) values(2, '上海市', 300
 insert into `order`(id, address, amount, customer_id) values(3, '广州市', 400.56, 2);
 insert into `order`(id, address, amount, customer_id) values(4, '深圳市', 500.56, 3);
 insert into `order`(id, address, amount, customer_id) values(5, '深圳市', 500.56, 3);
+
+create table if not exists student (
+    id          bigint primary key auto_increment,
+    name        varchar(255) not null,
+    age         int not null,
+    score       decimal(15,5) not null
+) engine=InnoDB default charset=utf8mb4 collate=utf8mb4_general_ci;

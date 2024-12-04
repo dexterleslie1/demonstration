@@ -16,6 +16,28 @@
 
 
 
+### 从数据库生成 mapper、mapper配置、bean
+
+详细用法请使用 student 数据表协助生成操作。
+
+在 IDEA 中新增数据库数据源
+
+展开新增后的数据源选中需要生成 mapper 的数据表，点击右键弹出上下文菜单后点击 MybatisX-Generator 功能，配置信息如下：
+
+- module path 选择相应的目标模块
+- base package 为 com.future.demo
+- relative package 为 bean
+
+点击 Next 按钮，配置信息如下：
+
+- annotation 选择 None
+- options 勾选 Comment、Lombok、Model
+- template 选择 default-all（表示生成 mapper 接口、mapper 配置文件、bean）
+
+点击 Finish 按钮等待 mapper、mapper 配置文件、bean 生成完毕。
+
+
+
 ## `MyBatis`
 
 >详细用法请参考示例`https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-boot-mybatis`
