@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.future.demo.mapper.EmployeeParamMapper">
+    <!--
+        1、方法只有一个参数时，使用#{参数名/map key}获取参数值
+        2、方法有多个参数时，需要使用@Param标注的参数并使用@Param标注的参数名获取参数值
+    -->
+    <select id="test1" resultType="com.future.demo.bean.Employee">
+        select *
+        from employee
+        where id = #{id}
+    </select>
+    <select id="test2" resultType="com.future.demo.bean.Employee">
+        select *
+        from employee
+        where id = #{idList[0]}
+    </select>
+    <select id="test3" resultType="com.future.demo.bean.Employee">
+        select *
+        from employee
+        where id = #{id}
+          and emp_name = #{empName}
+    </select>
+    <select id="test4" resultType="com.future.demo.bean.Employee">
+        select *
+        from employee
+        where id = #{id}
+          and emp_name = #{name}
+    </select>
+    <select id="test5" resultType="com.future.demo.bean.Employee">
+        select *
+        from employee
+        where id = #{id}
+          and emp_name = #{name}
+    </select>
+    <select id="test6" resultType="com.future.demo.bean.Employee">
+        select *
+        from employee
+        where id = #{id}
+          and emp_name = #{employee.empName}
+    </select>
+</mapper>

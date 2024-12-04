@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+  db:
+    build:
+      context: ./
+      dockerfile: ./Dockerfile-db
+    image: demo-mybatis-db-dev
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - TZ=Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+    ports:
+      - "3306:3306"
