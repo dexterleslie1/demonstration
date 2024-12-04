@@ -5,6 +5,8 @@ import com.future.demo.bean.Employee;
 import com.future.demo.bean.Order;
 import com.future.demo.mapper.*;
 import com.future.demo.service.EmployeeService;
+import com.github.pagehelper.Page;
+import com.github.pagehelper.PageInfo;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -321,6 +323,54 @@ class DemoSpringBootMybatisApplicationTests {
         // 测试二级缓存
         // 通过控制台观察是否只执行了一次sql查询
         this.employeeService.testLevel2Cache(id);
+
+        // endregion
+
+        // region 测试pagehelper分页插件
+
+        PageInfo<Employee> page = this.employeeService.findByPage(1, 10);
+        Assertions.assertEquals(10, page.getList().size());
+        Assertions.assertEquals(10, page.getTotal());
+        Assertions.assertEquals(1, page.getPageNum());
+        Assertions.assertEquals(10, page.getPageSize());
+        Assertions.assertEquals(1, page.getPages());
+        Assertions.assertEquals("张三1-0", page.getList().get(0).getEmpName());
+
+        page = this.employeeService.findByPage(1, 3);
+        Assertions.assertEquals(3, page.getList().size());
+        Assertions.assertEquals(10, page.getTotal());
+        Assertions.assertEquals(1, page.getPageNum());
+        Assertions.assertEquals(3, page.getPageSize());
+        Assertions.assertEquals(4, page.getPages());
+        Assertions.assertEquals("张三1-0", page.getList().get(0).getEmpName());
+        page = this.employeeService.findByPage(-1, 3);
+        Assertions.assertEquals(3, page.getList().size());
+        Assertions.assertEquals(10, page.getTotal());
+        Assertions.assertEquals(1, page.getPageNum());
+        Assertions.assertEquals(3, page.getPageSize());
+        Assertions.assertEquals(4, page.getPages());
+        Assertions.assertEquals("张三1-0", page.getList().get(0).getEmpName());
+        page = this.employeeService.findByPage(2, 3);
+        Assertions.assertEquals(3, page.getList().size());
+        Assertions.assertEquals(10, page.getTotal());
+        Assertions.assertEquals(2, page.getPageNum());
+        Assertions.assertEquals(3, page.getPageSize());
+        Assertions.assertEquals(4, page.getPages());
+        Assertions.assertEquals("张三1-3", page.getList().get(0).getEmpName());
+        page = this.employeeService.findByPage(4, 3);
+        Assertions.assertEquals(1, page.getList().size());
+        Assertions.assertEquals(10, page.getTotal());
+        Assertions.assertEquals(4, page.getPageNum());
+        Assertions.assertEquals(3, page.getPageSize());
+        Assertions.assertEquals(4, page.getPages());
+        Assertions.assertEquals("张三1-9", page.getList().get(page.getList().size() - 1).getEmpName());
+        page = this.employeeService.findByPage(100000, 3);
+        Assertions.assertEquals(1, page.getList().size());
+        Assertions.assertEquals(10, page.getTotal());
+        Assertions.assertEquals(4, page.getPageNum());
+        Assertions.assertEquals(3, page.getPageSize());
+        Assertions.assertEquals(4, page.getPages());
+        Assertions.assertEquals("张三1-9", page.getList().get(page.getList().size() - 1).getEmpName());
 
         // endregion
     }

@@ -431,7 +431,88 @@ MyBatis 二级缓存默认是不启用的，参考 EmployeeService 中的 testLe
    </mapper>
    ```
 
-   
+
+
+### 分页
+
+#### pagehelper
+
+>pagehelper 官方参考`https://github.com/pagehelper/Mybatis-PageHelper/blob/master/wikis/zh/HowToUse.md`
+>
+>详细用法请参考 EmployeeService 中的 findByPage 方法
+
+引入依赖
+
+```xml
+<!-- 分页插件 -->
+<dependency>
+    <groupId>com.github.pagehelper</groupId>
+    <artifactId>pagehelper-spring-boot-starter</artifactId>
+    <version>2.1.0</version>
+</dependency>
+```
+
+插件配置类
+
+```java
+package com.future.demo.config;
+
+import com.github.pagehelper.PageInterceptor;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import java.util.Properties;
+
+@Configuration
+public class MybatisConfig {
+    /**
+     * pagehelper分页插件配置
+     *
+     * @return
+     */
+    @Bean
+    public PageInterceptor pageInterceptor() {
+        PageInterceptor interceptor = new PageInterceptor();
+        Properties properties = new Properties();
+        // 启用合理化，如果pageNum<1会查询第一页，如果pageNum>pages会查询最后一页
+        properties.setProperty("reasonable", "true");
+        interceptor.setProperties(properties);
+        return interceptor;
+    }
+}
+
+```
+
+分页查询
+
+```java
+package com.future.demo.service;
+
+import com.future.demo.bean.Employee;
+import com.future.demo.mapper.EmployeeMapper;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+public class EmployeeService {
+    @Autowired
+    EmployeeMapper employeeMapper;
+
+    /**
+     * 用于协助测试pagehelper分页插件
+     */
+    public PageInfo<Employee> findByPage(int pageNum, int pageSize) {
+        return PageHelper.<Employee>startPage(pageNum, pageSize)
+                .doSelectPageInfo(() -> this.employeeMapper.listAll());
+    }
+}
+
+```
+
+
 
 ## `MyBatis-plus`
 

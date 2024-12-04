@@ -2,6 +2,8 @@ package com.future.demo.service;
 
 import com.future.demo.bean.Employee;
 import com.future.demo.mapper.EmployeeMapper;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,9 +28,23 @@ public class EmployeeService {
         return this.employeeMapper.getById(id);
     }
 
+    /**
+     * 用于协助测试二级缓存
+     *
+     * @param id
+     * @return
+     */
     public Employee testLevel2Cache(Long id) {
         this.employeeMapper.getById(id);
 
         return this.employeeMapper.getById(id);
+    }
+
+    /**
+     * 用于协助测试pagehelper分页插件
+     */
+    public PageInfo<Employee> findByPage(int pageNum, int pageSize) {
+        return PageHelper.<Employee>startPage(pageNum, pageSize)
+                .doSelectPageInfo(() -> this.employeeMapper.listAll());
     }
 }
