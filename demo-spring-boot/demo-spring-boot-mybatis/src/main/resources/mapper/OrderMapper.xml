@@ -34,10 +34,12 @@
         <!--
             select="com.future.demo.mapper.CustomerMapper.findById"表示使用CustomerMapper的findById SQL查询订单
             column="{id=customer_id}"表示使用列customer_id的值作为findById SQL的id参数值
+            fetchType="lazy"启用延迟加载
         -->
         <association property="customer"
                      select="com.future.demo.mapper.CustomerMapper.findById"
-                     column="{id=customer_id}"/>
+                     column="{id=customer_id}"
+                     fetchType="lazy"/>
     </resultMap>
     <select id="findByIdWithCustomerStep" resultMap="orderStepResultMap">
         select *

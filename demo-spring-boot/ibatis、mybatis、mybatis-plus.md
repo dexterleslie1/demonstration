@@ -261,6 +261,8 @@ mybatis.configuration.map-underscore-to-camel-case=true
 
 ### 启用延迟加载特性
 
+#### 全局方式
+
 `application.properties`配置如下：
 
 ```properties
@@ -285,6 +287,32 @@ mybatis.configuration.aggressive-lazy-loading=false
 
 
 
+#### 局部方式
+
+详细用法请参考 OrderMapper 中的 findByIdWithCustomerStep 方法
+
+在 ResultMap 中配置 fetchType=lazy
+
+```xml
+<resultMap id="orderStepResultMap" type="com.future.demo.bean.Order">
+    <id column="id" property="id"/>
+    <result column="amount" property="amount"/>
+    <result column="address" property="address"/>
+    <result column="customer_id" property="customerId"/>
+    <!--
+        select="com.future.demo.mapper.CustomerMapper.findById"表示使用CustomerMapper的findById SQL查询订单
+        column="{id=customer_id}"表示使用列customer_id的值作为findById SQL的id参数值
+        fetchType="lazy"启用延迟加载
+    -->
+    <association property="customer"
+                 select="com.future.demo.mapper.CustomerMapper.findById"
+                 column="{id=customer_id}"
+                 fetchType="lazy"/>
+</resultMap>
+```
+
+
+
 ### 支持一个连接中执行多条 SQL
 
 application.properties 配置添加 allowMultiQueries=true
@@ -306,6 +334,20 @@ spring.datasource.url=jdbc:mariadb://localhost:3306/demo?allowMultiQueries=true
 3. 考虑使用参数化查询或其他安全措施来进一步降低风险。
 
 总之，`allowMultiQueries=true`是一个有用的功能，但使用时需要权衡其带来的便利性和可能的安全风险。
+
+
+
+### 使用注解的方式配置 mapper
+
+详细用法请参考 EmployeeAnnotationMapper
+
+新增 Employee 的例子如下：
+
+```java
+@Insert("insert into employee (id, emp_name, age, emp_salary) values (#{id}, #{empName}, #{age}, #{empSalary})")
+@Options(useGeneratedKeys = true, keyProperty = "id")
+void insert(Employee employee);
+```
 
 
 

@@ -38,6 +38,9 @@ class DemoSpringBootMybatisApplicationTests {
     @Autowired
     EmployeeService employeeService;
 
+    @Autowired
+    EmployeeAnnotationMapper employeeAnnotationMapper;
+
     @Test
     void contextLoads() {
         this.employeeMapper.deleteAll();
@@ -172,6 +175,7 @@ class DemoSpringBootMybatisApplicationTests {
 
         // 根据订单id查询订单信息并且同时查询订单对应的客户信息，使用分步查询方法
         order = this.orderMapper.findByIdWithCustomerStep(orderId);
+        System.out.println("=============================================================");
         Assertions.assertNotNull(order);
         Assertions.assertEquals(orderId, order.getId());
         Assertions.assertEquals("北京市", order.getAddress());
@@ -388,6 +392,23 @@ class DemoSpringBootMybatisApplicationTests {
         id = student.getId();
         student = this.studentMapper.selectByPrimaryKey(id);
         Assertions.assertEquals("张三", student.getName());
+
+        // endregion
+
+        // region 测试注解方式编程
+
+        employee = new Employee();
+        employee.setEmpName("张三");
+        employee.setAge(20);
+        employee.setEmpSalary(1000.0);
+        this.employeeAnnotationMapper.insert(employee);
+        id = employee.getId();
+        employee = this.employeeAnnotationMapper.findById(id);
+        Assertions.assertEquals("张三", employee.getEmpName());
+
+        employees = this.employeeAnnotationMapper.findByIds(Collections.singletonList(id));
+        Assertions.assertEquals(1, employees.size());
+        Assertions.assertEquals("张三", employees.get(0).getEmpName());
 
         // endregion
     }
