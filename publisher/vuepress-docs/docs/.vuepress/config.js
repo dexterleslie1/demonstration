@@ -335,7 +335,6 @@ module.exports = {
                         'spring-boot全局异常处理.md',
                         'spring-security.md',
                         'spring-boot中@Import用法.md',
-                        'spring-boot自定义属性.md',
                         'spring-boot的condition用法.md',
                         'spring-boot自定义自动配置.md',
                         'spring的resource使用.md',
