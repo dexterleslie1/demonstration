@@ -494,3 +494,38 @@ public class ApplicationTests {
 
 ```
 
+
+
+## 测试
+
+### mockmvc 测试
+
+详细用法请参考`https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-boot-mockmvc`
+
+自动配置 mockmvc
+
+```java
+@SpringBootTest
+// 自动配置mockmvc
+@AutoConfigureMockMvc
+class DemoSpringBootMockmvcApplicationTests {
+```
+
+注入 mockmvc 实例
+
+```java
+@Autowired
+MockMvc mockMvc;
+```
+
+调用 mockmvc
+
+```java
+@Test
+void contextLoads() throws Exception {
+    this.mockMvc.perform(MockMvcRequestBuilders.get("/"))
+            .andExpect(status().isOk())
+            .andExpect(content().string("{\"errorCode\":0,\"errorMessage\":null,\"data\":{\"name\":\"张三\",\"age\":18}}"));
+}
+```
+
