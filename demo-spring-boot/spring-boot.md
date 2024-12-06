@@ -317,3 +317,180 @@ spring.profiles.active=dev
 java -jar myapp.jar --spring.profiles.active=dev
 ```
 
+
+
+### 自定义 Starter
+
+详细用法请参考`https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-boot-starter`
+
+
+
+#### 自定义 Starter 插件
+
+创建普通的 SpringBoot 项目
+
+通过 @ConfigurationProperties(prefix = "com.future.demo.test") 自定义插件支持的配置属性
+
+```java
+package com.future.demo.properties;
+
+import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import java.util.List;
+import java.util.Map;
+
+@Data
+@ConfigurationProperties(prefix = "com.future.demo.test")
+public class TestProperties {
+    private String prop1;
+    private int prop2;
+    private List<String> prop3;
+    private Map<String, String> prop4;
+    private NestedTestProperties nested;
+
+    @Data
+    public static class NestedTestProperties {
+        private String prop1;
+        private int prop2;
+    }
+}
+
+```
+
+定义 service、controller 等组件
+
+```java
+package com.future.demo.service;
+
+import com.future.demo.properties.TestProperties;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+@Service
+public class TestService {
+    @Autowired
+    TestProperties testProperties;
+
+    public TestProperties getTestProperties() {
+        return testProperties;
+    }
+}
+
+package com.future.demo.controller;
+
+import com.future.common.http.ObjectResponse;
+import com.future.demo.properties.TestProperties;
+import com.future.demo.service.TestService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class TestController {
+    @Autowired
+    private TestService testService;
+
+    @GetMapping("/")
+    public ObjectResponse<TestProperties> index() {
+        ObjectResponse<TestProperties> response = new ObjectResponse<>();
+        response.setData(testService.getTestProperties());
+        return response;
+    }
+}
+
+```
+
+插件自动配置类 DemoPluginAutoConfiguration
+
+```java
+package com.future.demo.config;
+
+import com.future.demo.properties.TestProperties;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+
+// 当 TestProperties 类存在时，加载该配置类
+@ConditionalOnClass(value = TestProperties.class)
+// 启用自定义属性
+@EnableConfigurationProperties(TestProperties.class)
+public class DemoPluginAutoConfiguration {
+}
+
+```
+
+插件支持引入依赖后自动加载和配置，配置文件 resources/META-INF/spring.factories 内容如下：
+
+```properties
+# 引入依赖后spring会自动扫描这个入口自动配置插件
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  com.future.demo.config.DemoPluginAutoConfiguration
+```
+
+编译并安装插件到本地 maven 中
+
+```bash
+./mvnw install
+```
+
+
+
+#### 引用自定义 Starter 插件
+
+maven 依赖中引用插件
+
+```xml
+<!-- 引用自定义插件 -->
+<dependency>
+    <groupId>com.future.demo</groupId>
+    <artifactId>demo-plugin-spring-boot-starter</artifactId>
+    <version>1.0.0</version>
+</dependency>
+```
+
+测试引用的插件
+
+```java
+package com.future.demo;
+
+import com.future.demo.service.TestService;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.web.servlet.MockMvc;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@Slf4j
+@RunWith(SpringRunner.class)
+@SpringBootTest(classes = {Application.class})
+@AutoConfigureMockMvc
+public class ApplicationTests {
+    @Autowired
+    MockMvc mockMvc;
+    @Autowired
+    TestService testService;
+
+    @Test
+    public void contextLoads() throws Exception {
+        this.mockMvc.perform(get("/"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("{\"errorCode\":0,\"errorMessage\":null,\"data\":{\"prop1\":\"astring1\",\"prop2\":18080,\"prop3\":[\"av1\",\"av2\"],\"prop4\":{\"k1\":\"avv1\",\"k2\":\"avv2\"},\"nested\":{\"prop1\":\"anv1x\",\"prop2\":18090}}}"));
+
+        Assertions.assertEquals("astring1", this.testService.getTestProperties().getProp1());
+        Assertions.assertEquals(2, this.testService.getTestProperties().getProp3().size());
+        Assertions.assertEquals("avv1", this.testService.getTestProperties().getProp4().get("k1"));
+        Assertions.assertEquals("anv1x", this.testService.getTestProperties().getNested().getProp1());
+        Assertions.assertEquals(18090, this.testService.getTestProperties().getNested().getProp2());
+    }
+}
+
+```
+
