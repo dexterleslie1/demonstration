@@ -1,0 +1,3 @@
+# 引入依赖后spring会自动扫描这个入口自动配置插件
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  com.future.demo.config.DemoPluginAutoConfiguration
