@@ -19,7 +19,6 @@ import java.util.Date;
 import java.util.List;
 
 @SpringBootTest
-@Profile("test")
 class DemoSpringBootIocDiApplicationTests {
 
     // 注入ConfigurableApplicationContext实例
@@ -164,13 +163,6 @@ class DemoSpringBootIocDiApplicationTests {
         Assertions.assertEquals("测试", name);
         String id = ioc.getBean(MyBean9.class).getId();
         Assertions.assertNotNull(id);
-
-        // 测试@Profile
-        // 默认的profile为default
-        // 通过java -jar myapp.jar --spring.profiles.active=dev指定profile
-        // 通过设置application.properties文件中的spring.profiles.active=dev指定profile
-        String url = ioc.getBean(MyService1.class).myDatasource.getUrl();
-        Assertions.assertEquals("dev-ds", url);
 
         // 测试bean生命周期方法init和destroy
         MyBeanLifeCycle myBeanLifeCycle = ioc.getBean(MyBeanLifeCycle.class);

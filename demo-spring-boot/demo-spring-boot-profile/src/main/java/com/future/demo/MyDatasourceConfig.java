@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Profile;
 
 @Configuration
 public class MyDatasourceConfig {
+    // active profile为dev或default时，创建该bean
     @Profile({"dev", "default"})
     @Bean
     public MyDatasource myDevDatasource() {

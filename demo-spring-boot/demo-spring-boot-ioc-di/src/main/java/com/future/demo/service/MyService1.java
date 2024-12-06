@@ -39,7 +39,4 @@ public class MyService1 {
     @Qualifier("myBean62")
     @Autowired
     public MyBean6 xxx2;
-
-    @Autowired
-    public MyDatasource myDatasource;
 }

@@ -5,14 +5,21 @@ spring:
 
 ---
 # 开发环境profile
-server:
-  port: 8081
+my:
+  p1: dev1
 spring:
   profiles: dev
 
 ---
 # 生产环境profile
-server:
-  port: 8080
+my:
+  p1: prod1
 spring:
   profiles: prod
+
+---
+# 测试环境profile
+my:
+  p1: test1
+spring:
+  profiles: test

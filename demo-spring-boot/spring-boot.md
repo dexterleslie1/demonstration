@@ -205,3 +205,115 @@ public class ApiController {
 
 
 
+### Profile 环境切换
+
+详细用法请参考示例`https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-boot-profile`
+
+#### 使用 @Profile 注解指定特定的 Profile 环境才创建 bean
+
+```java
+package com.future.demo;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
+
+@Configuration
+public class MyDatasourceConfig {
+    // active profile为dev或default时，创建该bean
+    @Profile({"dev", "default"})
+    @Bean
+    public MyDatasource myDevDatasource() {
+        return new MyDatasource("dev-ds");
+    }
+
+    @Profile("test")
+    @Bean
+    public MyDatasource myTestDatasource() {
+        return new MyDatasource("test-ds");
+    }
+
+    @Profile("prod")
+    @Bean
+    public MyDatasource myProdDatasource() {
+        return new MyDatasource("prod-ds");
+    }
+}
+
+```
+
+
+
+#### properties 文件配置各个 Profile 配置
+
+application-dev.properties 内容如下：
+
+```properties
+my.p2=dev2
+```
+
+application-test.properties 内容如下：
+
+```properties
+my.p2=test2
+```
+
+application-pod.properties 内容如下：
+
+```properties
+my.p2=prod2
+```
+
+
+
+#### yaml 文件配置各个 Profile 配置
+
+application.yaml 内容如下：
+
+```yaml
+---
+# 开发环境profile
+my:
+  p1: dev1
+spring:
+  profiles: dev
+
+---
+# 生产环境profile
+my:
+  p1: prod1
+spring:
+  profiles: prod
+
+---
+# 测试环境profile
+my:
+  p1: test1
+spring:
+  profiles: test
+```
+
+
+
+#### 切换 Profile 方法
+
+方法1：在单元测试时使用 @ActiveProfiles("test") 切换 Profile
+
+```java
+@SpringBootTest(classes = Application.class)
+@ActiveProfiles("test")
+public class ApplicationTests {
+```
+
+方法2：在 application.properties 配置中使用 spring.profiles.active=dev 切换 Profile
+
+```properties
+spring.profiles.active=dev
+```
+
+方法3：在 java 命令行中切换 Profile
+
+```bash
+java -jar myapp.jar --spring.profiles.active=dev
+```
+
