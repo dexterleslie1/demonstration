@@ -1,5 +1,7 @@
 # `mvc`
 
+详细用法请参考`https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-boot-mvc`
+
 
 
 ## `mvc`是什么？
@@ -47,18 +49,405 @@ Spring MVC的工作原理可以概括为以下几个核心步骤：
 
 
 
-## 知识点
+## `@RequestMapping`路径配置中使用通配符`?`、`*`、`**`
 
->详细用法请参考`https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-boot-mvc`
+```java
+package com.future.demo.controller;
 
-- `@RequestMapping`路径配置中使用通配符`?`、`*`、`**`
-- `@RequestMapping`的`method`、`params`、`headers`、`consumers`、`produces`请求限制
-- 请求参数处理`@RequestParam`、`@RequestBody`、`@PathVariable`等
-- 响应处理`JSON`和文件下载响应
-- 编写`restful`风格的`api`
-- 拦截器`HandlerInterceptor`用法
-- 异常处理`@ExceptionHandler`、`@ControllerAdvice`、`@RestControllerAdvice`用法
-- 数据校验
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+// ?：代表匹配任意一个字符
+// *：代表匹配任意多个字符
+// **：代表匹配任意多层路径
+@Controller
+public class DemoController {
+    @ResponseBody
+    @RequestMapping("/hello")
+    public String hello() {
+        return "Hello!";
+    }
+
+    @ResponseBody
+    @RequestMapping("/hell?")
+    public String hello2() {
+        return "Hell?!";
+    }
+
+    @ResponseBody
+    @RequestMapping("/hell*")
+    public String hello3() {
+        return "Hell*!";
+    }
+
+    @ResponseBody
+    @RequestMapping("/hello/**")
+    public String hello4() {
+        return "Hello/**!";
+    }
+}
+```
+
+```java
+// region 测试路径中使用通配符
+
+this.mockMvc.perform(get("/hello"))
+        .andExpect(status().isOk())
+        .andExpect(content().string("Hello!"));
+
+// 测试路径中使用?符号
+this.mockMvc.perform(get("/hella"))
+        .andExpect(status().isOk())
+        .andExpect(content().string("Hell?!"));
+this.mockMvc.perform(get("/hell1"))
+        .andExpect(status().isOk())
+        .andExpect(content().string("Hell?!"));
+
+// 测试路径中使用*符号
+this.mockMvc.perform(get("/hell"))
+        .andExpect(status().isOk())
+        .andExpect(content().string("Hell*!"));
+this.mockMvc.perform(get("/hellaaaaa"))
+        .andExpect(status().isOk())
+        .andExpect(content().string("Hell*!"));
+this.mockMvc.perform(get("/hell11111"))
+        .andExpect(status().isOk())
+        .andExpect(content().string("Hell*!"));
+
+// 测试路径中使用**符号
+this.mockMvc.perform(get("/hello/1"))
+        .andExpect(status().isOk())
+        .andExpect(content().string("Hello/**!"));
+this.mockMvc.perform(get("/hello/1/2"))
+        .andExpect(status().isOk())
+        .andExpect(content().string("Hello/**!"));
+this.mockMvc.perform(get("/hello/12/3/4/5"))
+        .andExpect(status().isOk())
+        .andExpect(content().string("Hello/**!"));
+
+// endregion
+```
+
+
+
+## `@RequestMapping`的`method`、`params`、`headers`、`consumers`、`produces`请求限制
+
+```java
+package com.future.demo.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+// 测试@RequestMapping注解的限制
+@Controller
+public class RequestMappingLimitationController {
+    // 限制请求方法，只允许POST请求
+    @ResponseBody
+    @RequestMapping(value = "/test1", method = RequestMethod.POST)
+    public String test1() {
+        return "test1";
+    }
+
+    // 限制请求参数
+    @ResponseBody
+    @RequestMapping(value = "/test2", params = {"age=18", "username", "gender!=1"})
+    public String test2() {
+        return "test2";
+    }
+
+    // 限制请求头
+    @ResponseBody
+    @RequestMapping(value = "/test3", headers = {"age=18", "username"})
+    public String test3() {
+        return "test3";
+    }
+
+    // 限制请求体类型
+    @ResponseBody
+    @RequestMapping(value = "/test4", consumes = {"application/json"})
+    public String test4() {
+        return "test4";
+    }
+
+    // 限制响应体类型
+    @ResponseBody
+    @RequestMapping(value = "/test5", produces = {"text/html"})
+    public String test5() {
+        return "<h1>test5</h1>";
+    }
+}
+```
+
+```java
+// region 测试@RequestMapping注解的限制
+
+// 测试限制请求方法
+this.mockMvc.perform(post("/test1"))
+        .andExpect(status().isOk())
+        .andExpect(content().string("test1"));
+this.mockMvc.perform(get("/test1"))
+        .andExpect(status().isMethodNotAllowed());
+
+// 测试限制请求参数
+this.mockMvc.perform(post("/test2")
+                .queryParam("username", "").queryParam("age", "18"))
+        .andExpect(status().isOk())
+        .andExpect(content().string("test2"));
+this.mockMvc.perform(post("/test2")
+                .queryParam("username", "").queryParam("age", "19"))
+        .andExpect(status().isBadRequest());
+this.mockMvc.perform(post("/test2")
+                .queryParam("age", "18"))
+        .andExpect(status().isBadRequest());
+this.mockMvc.perform(post("/test2")
+                .queryParam("username", "").queryParam("age", "18").queryParam("gender", "1"))
+        .andExpect(status().isBadRequest());
+
+// 测试限制请求头
+this.mockMvc.perform(post("/test3")
+                .header("username", "").header("age", "18"))
+        .andExpect(status().isOk())
+        .andExpect(content().string("test3"));
+this.mockMvc.perform(post("/test3")
+                .header("username", "").header("age", "19"))
+        .andExpect(status().isNotFound());
+this.mockMvc.perform(post("/test3")
+                .header("age", "18"))
+        .andExpect(status().isNotFound());
+
+// 测试请求体类型
+this.mockMvc.perform(post("/test4")
+                .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().string("test4"));
+this.mockMvc.perform(post("/test4"))
+        .andExpect(status().isUnsupportedMediaType());
+
+// 测试请求体类型
+this.mockMvc.perform(post("/test5"))
+        .andExpect(status().isOk())
+        .andExpect(content().string("<h1>test5</h1>"));
+
+// endregion
+```
+
+
+
+## 请求参数处理`@RequestParam`、`@RequestBody`、`@PathVariable`等
+
+```java
+package com.future.demo.controller;
+
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+
+// 测试请求参数
+@RestController
+@RequestMapping("/api/v1")
+public class RequestController {
+    // 测试@RequestParam
+    @RequestMapping("test1")
+    public String test1(@RequestParam(value = "name", required = false) String name,
+                        @RequestParam(value = "age", defaultValue = "15") Integer age) {
+        return "name=" + name + ",age=" + age;
+    }
+
+    // 测试pojo
+    @RequestMapping("test2")
+    public String test2(Person person) {
+        return "name=" + person.getName() + ",age=" + person.getAge() + ",hobby=" + Arrays.toString(person.getHobby()) + ",address=" + person.getAddress().toString();
+    }
+
+    // 测试@RequestHeader
+    @RequestMapping("test3")
+    public String test3(@RequestHeader(value = "name") String name,
+                        @RequestHeader(value = "age") Integer age) {
+        return "name=" + name + ",age=" + age;
+    }
+
+    // 测试@CookieValue
+    @RequestMapping("test4")
+    public String test4(@CookieValue(value = "name") String name,
+                        @CookieValue(value = "age", defaultValue = "15") Integer age) {
+        return "name=" + name + ",age=" + age;
+    }
+
+    // 测试@RequestBody获取JSON请求体
+    @RequestMapping("test5")
+    public String test5(@RequestBody Person person) {
+        return "name=" + person.getName() + ",age=" + person.getAge() + ",hobby=" + Arrays.toString(person.getHobby()) + ",address=" + person.getAddress().toString();
+    }
+
+    // 测试请求路径参数
+    @RequestMapping("test7/{name}/{age}")
+    public String test(@PathVariable(value = "name") String name, @PathVariable("age") int age) {
+        return "name=" + name + ",age=" + age;
+    }
+
+    // 测试文件上传
+    @RequestMapping("test6")
+    public String test6(Person person
+            , @RequestParam("fileList") MultipartFile[] fileList) {
+        return "name=" + person.getName() + ",age=" + person.getAge() + ",hobby="
+                + Arrays.toString(person.getHobby())
+                + ",address=" + person.getAddress().toString()
+                + ",fileList=" + Arrays.stream(fileList).map(f -> {
+            try {
+                return new String(f.getBytes(), StandardCharsets.UTF_8);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }).toList();
+    }
+}
+```
+
+```java
+// region 测试请求参数
+
+// 测试@RequestParam注解
+String name = "Dexter";
+Integer age = 18;
+this.mockMvc.perform(get("/api/v1/test1").queryParam("name", name).queryParam("age", age + ""))
+        .andExpect(status().isOk())
+        .andExpect(content().string("name=" + name + ",age=" + age));
+this.mockMvc.perform(get("/api/v1/test1").queryParam("name", name))
+        .andExpect(status().isOk())
+        .andExpect(content().string("name=" + name + ",age=15"));
+this.mockMvc.perform(get("/api/v1/test1"))
+        .andExpect(status().isOk())
+        .andExpect(content().string("name=null" + ",age=15"));
+
+// 测试pojo获取参数
+this.mockMvc.perform(get("/api/v1/test2").queryParam("name", name).queryParam("age", age + "")
+                .queryParam("hobby", "coding").queryParam("hobby", "读书")
+                .queryParam("address.country", "中国").queryParam("address.city", "广州市"))
+        .andExpect(status().isOk())
+        .andExpect(content().string("name=" + name + ",age=" + age + ",hobby=[coding, 读书],address=Person.Address(city=广州市, country=中国)"));
+
+// 测试@RequestHeader注解
+this.mockMvc.perform(get("/api/v1/test3").header("name", name).header("age", age + ""))
+        .andExpect(status().isOk())
+        .andExpect(content().string("name=" + name + ",age=" + age));
+
+// 测试@CookieValue注解
+this.mockMvc.perform(get("/api/v1/test4").cookie(new Cookie("name", name)).cookie(new Cookie("age", age + "")))
+        .andExpect(status().isOk())
+        .andExpect(content().string("name=" + name + ",age=" + age));
+
+// 测试@RequestBody注解
+Person person = new Person();
+person.setName("Dexter");
+person.setAge(18);
+person.setHobby(new String[]{"coding", "读书"});
+person.setAddress(new Person.Address("广州市", "中国"));
+this.mockMvc.perform(post("/api/v1/test5").contentType(MediaType.APPLICATION_JSON).content(JSONUtil.ObjectMapperInstance.writeValueAsBytes(person)))
+        .andExpect(status().isOk())
+        .andExpect(content().string("name=" + name + ",age=" + age + ",hobby=[coding, 读书],address=Person.Address(city=广州市, country=中国)"));
+
+// 测试请求路径参数
+this.mockMvc.perform(get("/api/v1/test7/" + name + "/" + age))
+        .andExpect(status().isOk())
+        .andExpect(content().string("name=Dexter,age=18"));
+this.mockMvc.perform(get("/api/v1/test7/ /" + age))
+        .andExpect(status().isOk())
+        .andExpect(content().string("name= ,age=18"));
+this.mockMvc.perform(get("/api/v1/test7/" + name + "/0"))
+        .andExpect(status().isOk())
+        .andExpect(content().string("name=Dexter,age=0"));
+
+// 测试文件上传
+this.mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/test6")
+                .file(new MockMultipartFile("fileList", "hello".getBytes()))
+                .file(new MockMultipartFile("fileList", "hello1".getBytes()))
+                .queryParam("name", name).queryParam("age", age + "")
+                .queryParam("hobby", "coding").queryParam("hobby", "读书")
+                .queryParam("address.country", "中国").queryParam("address.city", "广州市"))
+        .andExpect(status().isOk())
+        .andExpect(content().string("name=" + name + ",age=" + age + ",hobby=[coding, 读书],address=Person.Address(city=广州市, country=中国),fileList=[hello, hello1]"));
+
+// endregion
+```
+
+
+
+## 响应处理`JSON`和文件下载响应
+
+```java
+package com.future.demo.controller;
+
+
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+
+// 测试响应体
+@RestController
+@RequestMapping("/api/v1/response")
+public class ResponseController {
+
+    // 测试JSON响应体
+    @RequestMapping("/test1")
+    public Person test1() {
+        Person person = new Person();
+        person.setName("张三");
+        person.setAge(20);
+        person.setHobby(new String[]{"吃饭", "睡觉", "打豆豆"});
+        person.setAddress(new Person.Address("北京市", "海淀区"));
+        return person;
+    }
+
+    // 测试文件下载响应体
+    // HttpEntity代表整个请求体，其中包含了请求头和请求体
+    // ResponseEntity代表整个响应体，其中包含了响应头和响应体
+    @RequestMapping("/test2")
+    public ResponseEntity<InputStreamResource> test2() throws IOException {
+        ClassPathResource resource = new ClassPathResource("test.txt");
+        InputStream inputStream = resource.getInputStream();
+
+        InputStreamResource inputStreamResource = new InputStreamResource(inputStream);
+
+        String filename = URLEncoder.encode("测试文件.txt", StandardCharsets.UTF_8);
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .contentLength(inputStream.available())
+                .header("Content-Disposition", "attachment;filename=" + filename)
+                .body(inputStreamResource);
+    }
+}
+```
+
+```java
+// region 测试响应体
+
+// 测试JSON响应体
+this.mockMvc.perform(get("/api/v1/response/test1"))
+        .andExpect(status().isOk())
+        .andExpect(content().string("{\"id\":null,\"name\":\"张三\",\"age\":20,\"hobby\":[\"吃饭\",\"睡觉\",\"打豆豆\"],\"address\":{\"city\":\"北京市\",\"country\":\"海淀区\"}}"));
+
+// 测试下载文件
+this.mockMvc.perform(get("/api/v1/response/test2"))
+        .andExpect(status().isOk())
+        .andExpect(content().string("Hello!"));
+
+// endregion
+```
 
 
 
@@ -84,6 +473,361 @@ Spring MVC的工作原理可以概括为以下几个核心步骤：
 - 新增`person`时前端提交的`vo`为`PersonAddVo`
 - 修改`person`时前端提交的`vo`为`PersonUpdateVo`
 - 后端返回`person`数据给前端时的`vo`为`PersonVo`
+
+
+
+### 示例
+
+```java
+package com.future.demo.controller;
+
+import com.future.common.http.ObjectResponse;
+import com.future.demo.vo.request.PersonAddVo;
+import com.future.demo.vo.request.PersonUpdateVo;
+import com.future.demo.vo.response.PersonVo;
+import org.springframework.beans.BeanUtils;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
+// 演示restful风格的控制器
+// 演示spring框架的数据校验功能
+@RestController
+@RequestMapping("/api/v1/restful")
+public class RestfulController {
+
+    // 新增person
+    @RequestMapping(value = "/person", method = RequestMethod.POST)
+    public ObjectResponse<Person> add(@RequestBody @Validated PersonAddVo vo/* 使用vo接收前端提交的数据 */) {
+        Person person = new Person();
+        BeanUtils.copyProperties(vo, person);
+        person.setId(10L);
+        ObjectResponse<Person> response = new ObjectResponse<>();
+        response.setData(person);
+        return response;
+    }
+
+    // 根据id获取person
+    @RequestMapping(value = "/person/{id}", method = RequestMethod.GET)
+    public ObjectResponse<PersonVo> get(@PathVariable("id") Long id) {
+        Person person = new Person();
+        person.setId(id);
+        person.setName("张三");
+        person.setAge(18);
+        person.setHobby(new String[]{"吃饭", "睡觉", "打豆豆"});
+        person.setAddress(new Person.Address("北京市", "海淀区"));
+
+        PersonVo vo = new PersonVo();
+        BeanUtils.copyProperties(person, vo);
+
+        ObjectResponse<PersonVo> response = new ObjectResponse<>();
+        response.setData(vo);
+        return response;
+    }
+
+    // 根据id更新person
+    @RequestMapping(value = "/person", method = RequestMethod.PUT)
+    public ObjectResponse<PersonVo> update(@RequestBody PersonUpdateVo vo) {
+        PersonVo personVo = new PersonVo();
+        BeanUtils.copyProperties(vo, personVo);
+        ObjectResponse<PersonVo> response = new ObjectResponse<>();
+        response.setData(personVo);
+        return response;
+    }
+
+    // 根据id删除person
+    @RequestMapping(value = "/person/{id}", method = RequestMethod.DELETE)
+    public ObjectResponse<String> delete(@PathVariable("id") Long id) {
+        ObjectResponse<String> response = new ObjectResponse<>();
+        response.setData("成功删除id=" + id);
+        return response;
+    }
+}
+```
+
+```java
+// region 测试restful api
+
+// 新增person
+PersonAddVo personAddVo = new PersonAddVo();
+personAddVo.setName("张三");
+personAddVo.setSex("男");
+personAddVo.setSex1("男");
+personAddVo.setAge(18);
+personAddVo.setHobby(new String[]{"吃饭", "睡觉", "打豆豆"});
+personAddVo.setAddress(new Person.Address("北京市", "海淀区"));
+this.mockMvc.perform(post("/api/v1/restful/person")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(JSONUtil.ObjectMapperInstance.writeValueAsBytes(personAddVo)))
+        .andExpect(status().isOk())
+        .andExpect(content().string("{\"errorCode\":0,\"errorMessage\":null,\"data\":{\"id\":10,\"name\":\"张三\",\"age\":18,\"hobby\":[\"吃饭\",\"睡觉\",\"打豆豆\"],\"address\":{\"city\":\"北京市\",\"country\":\"海淀区\"}}}"));
+
+// 根据id获取person
+this.mockMvc.perform(get("/api/v1/restful/person/2"))
+        .andExpect(status().isOk())
+        .andExpect(content().string("{\"errorCode\":0,\"errorMessage\":null,\"data\":{\"id\":2,\"name\":\"张三\",\"hobby\":[\"吃饭\",\"睡觉\",\"打豆豆\"],\"address\":{\"city\":\"北京市\",\"country\":\"海淀区\"}}}"));
+
+// 根据id更新person
+PersonUpdateVo personUpdateVo = new PersonUpdateVo();
+personUpdateVo.setId(10L);
+personUpdateVo.setName("张三");
+personUpdateVo.setAge(18);
+personUpdateVo.setHobby(new String[]{"吃饭", "睡觉", "打豆豆"});
+personUpdateVo.setAddress(new Person.Address("北京市", "海淀区"));
+this.mockMvc.perform(put("/api/v1/restful/person")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(JSONUtil.ObjectMapperInstance.writeValueAsBytes(personUpdateVo)))
+        .andExpect(status().isOk())
+        .andExpect(content().string("{\"errorCode\":0,\"errorMessage\":null,\"data\":{\"id\":10,\"name\":\"张三\",\"hobby\":[\"吃饭\",\"睡觉\",\"打豆豆\"],\"address\":{\"city\":\"北京市\",\"country\":\"海淀区\"}}}"));
+
+// 根据id删除person
+this.mockMvc.perform(delete("/api/v1/restful/person/11"))
+        .andExpect(status().isOk())
+        .andExpect(content().string("{\"errorCode\":0,\"errorMessage\":null,\"data\":\"成功删除id=11\"}"));
+
+// endregion
+```
+
+
+
+## 拦截器`HandlerInterceptor`用法
+
+MyHandlerInterceptor 拦截器
+
+```java
+package com.future.demo.interceptor;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.Data;
+import org.springframework.stereotype.Component;
+import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.servlet.ModelAndView;
+
+@Data
+@Component
+public class MyHandlerInterceptor implements HandlerInterceptor {
+
+    boolean isPreHandle = false;
+    boolean isPostHandle = false;
+    boolean isAfterCompletion = false;
+
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        isPreHandle = true;
+
+        String preHandleReturnFalse = request.getParameter("preHandleReturnFalse");
+        if (preHandleReturnFalse != null)
+            return false;
+        return true;
+    }
+
+    @Override
+    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
+        isPostHandle = true;
+    }
+
+    @Override
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
+        isAfterCompletion = true;
+    }
+
+    public void reset() {
+        isPreHandle = false;
+        isPostHandle = false;
+        isAfterCompletion = false;
+    }
+
+}
+```
+
+配置 MyHandlerInterceptor 拦截器拦截的 URL 路径部分
+
+```java
+package com.future.demo.config;
+
+import com.future.demo.interceptor.MyHandlerInterceptor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+@Configuration
+public class SpringMvcConfig implements WebMvcConfigurer /* WebMvcConfigurer对spring mvc进行配置 */ {
+
+    @Autowired
+    MyHandlerInterceptor myHandlerInterceptor;
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(myHandlerInterceptor)
+                // 只对/hello路径进行拦截
+                .addPathPatterns("/hello");
+    }
+}
+```
+
+测试拦截器
+
+```java
+// region 测试拦截器
+
+// 拦截/hello请求
+this.mockMvc.perform(get("/hello"))
+        .andExpect(status().isOk())
+        .andExpect(content().string("Hello!"));
+Assertions.assertTrue(this.myHandlerInterceptor.isPreHandle());
+Assertions.assertTrue(this.myHandlerInterceptor.isPostHandle());
+Assertions.assertTrue(this.myHandlerInterceptor.isAfterCompletion());
+this.myHandlerInterceptor.reset();
+// 拦截/hello请求但preHandle返回false
+this.mockMvc.perform(get("/hello").param("preHandleReturnFalse", "false"))
+        .andExpect(status().isOk())
+        .andExpect(content().string(""));
+Assertions.assertTrue(this.myHandlerInterceptor.isPreHandle());
+Assertions.assertFalse(this.myHandlerInterceptor.isPostHandle());
+Assertions.assertFalse(this.myHandlerInterceptor.isAfterCompletion());
+this.myHandlerInterceptor.reset();
+// 不拦截/hella请求
+this.mockMvc.perform(get("/hella"))
+        .andExpect(status().isOk())
+        .andExpect(content().string("Hell?!"));
+Assertions.assertFalse(this.myHandlerInterceptor.isPreHandle());
+Assertions.assertFalse(this.myHandlerInterceptor.isPostHandle());
+Assertions.assertFalse(this.myHandlerInterceptor.isAfterCompletion());
+this.myHandlerInterceptor.reset();
+
+// endregion
+```
+
+
+
+## 异常处理`@ExceptionHandler`、`@ControllerAdvice`、`@RestControllerAdvice`用法
+
+### 局部异常处理
+
+```java
+package com.future.demo.controller;
+
+
+import com.future.common.exception.BusinessException;
+import com.future.common.http.ObjectResponse;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/api/v1/exception")
+public class ExceptionController {
+
+    // 抛出算数术异常
+    @RequestMapping("test1")
+    public ObjectResponse<String> throwArithmeticException() {
+        throw new ArithmeticException("算数异常");
+    }
+
+    // 抛出空指针异常
+    @RequestMapping("test2")
+    public ObjectResponse<String> throwNullPointerException() {
+        throw new NullPointerException("空指针异常");
+    }
+
+    // 抛出自定义异常
+    @RequestMapping("test3")
+    public ObjectResponse<String> throwBusinessException() throws BusinessException {
+        throw new BusinessException("自定义异常");
+    }
+
+    // 抛出其他异常
+    /*@RequestMapping("test4")
+    public ObjectResponse<String> throwException() throws Exception {
+        throw new Exception("其他异常");
+    }*/
+
+    // 本controller处理算数术异常
+    @ExceptionHandler(ArithmeticException.class)
+    public ObjectResponse<String> handleArithmeticException(ArithmeticException e) {
+        ObjectResponse<String> response = new ObjectResponse<>();
+        response.setErrorMessage(e.getMessage());
+        return response;
+    }
+
+    // 处理其他没有被处理的异常
+    /*@ExceptionHandler(Throwable.class)
+    public ObjectResponse<String> handleThrowable(Throwable e) {
+        ObjectResponse<String> response = new ObjectResponse<>();
+        response.setErrorMessage("其他没有被处理的异常");
+        return response;
+    }*/
+}
+```
+
+### 全局异常处理
+
+```java
+package com.future.demo.exceptions;
+
+import com.future.common.exception.BusinessException;
+import com.future.common.http.ObjectResponse;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.Map;
+import java.util.stream.Collectors;
+
+// 全局异常处理器
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    // 处理空指针异常
+    @ExceptionHandler(NullPointerException.class)
+    public ObjectResponse<String> handleNullPointerException(NullPointerException e) {
+        ObjectResponse<String> response = new ObjectResponse<>();
+        response.setErrorMessage("空指针异常");
+        return response;
+    }
+
+    // 处理BusinessException异常
+    @ExceptionHandler(BusinessException.class)
+    public ObjectResponse<String> handleBusinessException(BusinessException e) {
+        ObjectResponse<String> response = new ObjectResponse<>();
+        response.setErrorMessage(e.getMessage());
+        return response;
+    }
+
+    // 处理spring数据校验失败异常
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ObjectResponse<Map<String, String>> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
+        ObjectResponse<Map<String, String>> response = new ObjectResponse<>();
+        response.setErrorMessage("参数校验失败");
+        Map<String, String> map = e.getFieldErrors().stream().collect(Collectors.toMap(FieldError::getField, FieldError::getDefaultMessage));
+        response.setData(map);
+        return response;
+    }
+}
+```
+
+### 异常处理测试
+
+```java
+// region 测试异常处理
+
+// 测试算数异常
+this.mockMvc.perform(get("/api/v1/exception/test1"))
+        .andExpect(status().isOk())
+        .andExpect(content().string("{\"errorCode\":0,\"errorMessage\":\"算数异常\",\"data\":null}"));
+// 测试空指针异常
+this.mockMvc.perform(get("/api/v1/exception/test2"))
+        .andExpect(status().isOk())
+        .andExpect(content().string("{\"errorCode\":0,\"errorMessage\":\"空指针异常\",\"data\":null}"));
+// 测试自定义异常
+this.mockMvc.perform(get("/api/v1/exception/test3"))
+        .andExpect(status().isOk())
+        .andExpect(content().string("{\"errorCode\":0,\"errorMessage\":\"自定义异常\",\"data\":null}"));
+
+// endregion
+```
 
 
 
