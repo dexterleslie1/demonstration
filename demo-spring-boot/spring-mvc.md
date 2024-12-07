@@ -779,6 +779,17 @@ import java.util.stream.Collectors;
 // 全局异常处理器
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    // SpringBoot3需要以下配置处理NoResourceFoundException异常，https://github.com/spring-projects/spring-boot/issues/38733
+    // 处理404不存在资源异常
+    @ExceptionHandler(NoResourceFoundException.class)
+    @ResponseBody
+    public ResponseEntity<ObjectResponse<String>> handleNotFound(NoResourceFoundException e) {
+        ObjectResponse<String> response = new ObjectResponse<>();
+        String message = "资源 " + e.getResourcePath() + " 不存在！";
+        response.setErrorMessage(message);
+        response.setErrorCode(ErrorCodeConstant.ErrorCodeCommon);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).contentType(MediaType.APPLICATION_JSON).body(response);
+    }
 
     // 处理空指针异常
     @ExceptionHandler(NullPointerException.class)
@@ -827,6 +838,36 @@ this.mockMvc.perform(get("/api/v1/exception/test3"))
         .andExpect(content().string("{\"errorCode\":0,\"errorMessage\":\"自定义异常\",\"data\":null}"));
 
 // endregion
+```
+
+
+
+### SpringBoot2 特别提醒
+
+在处理 SpringBoot2 404 异常时需要特殊配置，否则 Spring 框架不会抛出 NoHandlerFoundException
+
+application.properties 加入如下配置：
+
+```properties
+# 设置下面两个选项才能启用在404情况下抛出NoHandlerFoundException
+# https://stackoverflow.com/questions/54116245/404-exception-not-handled-in-spring-controlleradvice
+# https://blog.csdn.net/INHERO/article/details/121531224
+spring.mvc.throw-exception-if-no-handler-found=true
+spring.resources.add-mappings=false
+```
+
+404 全局异常处理逻辑
+
+```java
+@ExceptionHandler(NoHandlerFoundException.class)
+@ResponseBody
+public ResponseEntity<ObjectResponse<String>> handleNotFound(NoHandlerFoundException e) {
+    ObjectResponse<String> response = new ObjectResponse<>();
+    String message = "资源 " + e.getRequestURL() + " 不存在！";
+    response.setErrorMessage(message);
+    response.setErrorCode(ErrorCodeConstant.ErrorCodeCommon);
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST).contentType(MediaType.APPLICATION_JSON).body(response);
+}
 ```
 
 

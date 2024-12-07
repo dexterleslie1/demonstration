@@ -281,7 +281,7 @@ class DemoSpringBootMvcApplicationTests {
         // 测试自定义异常
         this.mockMvc.perform(get("/api/v1/exception/test3"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("{\"errorCode\":0,\"errorMessage\":\"自定义异常\",\"data\":null}"));
+                .andExpect(content().string("{\"errorCode\":90000,\"errorMessage\":\"自定义异常\",\"data\":null}"));
 
         // endregion
 
