@@ -334,7 +334,6 @@ module.exports = {
                         'spring-boot项目的测试.md',
                         'spring-security.md',
                         'spring-boot中@Import用法.md',
-                        'spring-boot的condition用法.md',
                         'spring的resource使用.md',
                         'spring-boot的DataSourceInitializer使用.md',
                         'spring-boot的PasswordEncoder使用.md',
