@@ -54,7 +54,7 @@ public class ApplicationTests {
         try {
             this.bookService.buy(userId, bookId, bookNum, true, 0, false);
             Assertions.fail();
-        } catch (Throwable e) {
+        } catch (CustomCheckedException e) {
             Assertions.assertEquals(e.getMessage(), "模拟业务异常");
             Assertions.assertEquals(account1.getBalance(), this.accountDao.get(userId).getBalance());
             Assertions.assertEquals(book1.getStock(), this.bookDao.get(bookId).getStock());
