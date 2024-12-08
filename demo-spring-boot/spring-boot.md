@@ -531,3 +531,372 @@ void contextLoads() throws Exception {
 }
 ```
 
+
+
+## 生命周期
+
+>示例详细用法请参考`https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-boot-lifecycle`
+
+
+
+### SpringApplicationRunListener（全阶段）
+
+SpringApplicationRunListener是Spring Boot框架中的一个重要接口，它主要用于监听Spring Boot应用启动过程中的不同阶段。通过实现这个接口，开发者可以在应用启动的过程中插入自定义的逻辑，如日志记录、性能监控或额外的资源加载等。以下是对SpringApplicationRunListener的详细解析：
+
+**一、接口定义与功能**
+
+SpringApplicationRunListener接口定义了一系列回调方法，这些方法在应用启动的不同阶段被调用。这些阶段包括：
+
+1. **准备环境（EnvironmentPrepared）**：在读取应用程序配置、解析命令行参数后，准备运行环境。此时，可以访问和修改应用程序的环境属性。
+2. **准备上下文（ContextPrepared）**：在应用上下文被创建并准备好但尚未刷新时。此时，可以访问和修改应用程序上下文的配置。
+3. **上下文加载完成（ContextLoaded）**：在应用上下文加载完成但还未启动时。此时，可以执行一些在上下文刷新之前的自定义逻辑。
+4. **上下文启动（Started）**：应用上下文刷新并启动。此时，可以执行一些在所有Bean初始化之后的操作。
+5. **运行完成（Running/Ready）**：整个应用完全启动并准备处理请求。此时，可以执行一些应用程序启动后的最终检查或操作。注意，在Spring Boot 2.6及以上版本中，`running`方法被`ready`方法替换，以更准确地表示应用已经完全准备好处理外部请求的状态。
+6. **启动失败（Failed）**：应用在启动过程中发生错误或异常。此时，可以处理启动失败的情况，如记录错误日志、发送通知等。
+
+**二、实现与注册**
+
+要实现SpringApplicationRunListener接口，开发者需要完成以下步骤：
+
+1. **创建实现类**：创建一个类并实现SpringApplicationRunListener接口，同时重写其定义的回调方法。在方法中插入自定义的逻辑。
+2. **注册监听器**：要使Spring Boot能够发现并使用自定义的监听器，需要在`META-INF/spring.factories`文件中进行注册。通常，Spring Boot会自动加载该文件中的配置，并将注册的监听器添加到应用启动流程中。
+
+**三、使用示例**
+
+以下是一个简单的SpringApplicationRunListener实现示例：
+
+```java
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.SpringApplicationRunListener;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.core.env.ConfigurableEnvironment;
+import java.time.Duration;
+ 
+public class CustomSpringApplicationRunListener implements SpringApplicationRunListener {
+ 
+    public CustomSpringApplicationRunListener(SpringApplication application, String[] args) {
+        // 构造函数中可以访问SpringApplication实例和启动参数
+    }
+ 
+    @Override
+    public void starting() {
+        System.out.println("应用正在启动...");
+    }
+ 
+    @Override
+    public void environmentPrepared(ConfigurableEnvironment environment) {
+        System.out.println("环境已经准备好...");
+    }
+ 
+    @Override
+    public void contextPrepared(ConfigurableApplicationContext context) {
+        System.out.println("上下文已准备...");
+    }
+ 
+    @Override
+    public void contextLoaded(ConfigurableApplicationContext context) {
+        System.out.println("上下文已加载...");
+    }
+ 
+    @Override
+    public void started(ConfigurableApplicationContext context, Duration timeTaken) {
+        System.out.println("应用已启动! 启动耗时: " + timeTaken.toMillis() + " 毫秒");
+    }
+ 
+    @Override
+    public void ready(ConfigurableApplicationContext context, Duration timeTaken) {
+        System.out.println("应用已准备就绪! 启动耗时: " + timeTaken.toMillis() + " 毫秒");
+    }
+ 
+    @Override
+    public void failed(ConfigurableApplicationContext context, Throwable exception) {
+        System.out.println("应用启动失败: " + exception.getMessage());
+    }
+}
+```
+
+然后，在`META-INF/spring.factories`文件中注册该监听器：
+
+```
+org.springframework.boot.SpringApplicationRunListener=\
+com.example.CustomSpringApplicationRunListener
+```
+
+**四、注意事项**
+
+1. **版本兼容性**：不同版本的Spring Boot可能对SpringApplicationRunListener的回调方法有所调整，因此在使用时需要确保与所使用Spring Boot版本的兼容性。
+2. **性能影响**：在应用启动过程中插入自定义逻辑可能会对启动性能产生影响，因此需要根据实际需求谨慎使用。
+3. **错误处理**：在实现自定义逻辑时，需要注意异常处理，以避免因异常导致应用启动失败。
+
+综上所述，SpringApplicationRunListener为开发者提供了在应用启动过程中插入自定义逻辑的灵活机制，有助于实现更丰富的应用启动行为和监控需求。
+
+
+
+### ApplicationListener（全阶段）
+
+ApplicationListener是Spring框架中的一个重要接口，它允许开发者监听并处理应用程序中的事件。以下是关于ApplicationListener的详细解析：
+
+**一、接口定义与功能**
+
+ApplicationListener接口定义了一个`onApplicationEvent`方法，该方法在监听到事件发布后被自动调用。事件发布者并不需要知道哪些监听器会监听该事件，也不需要关心监听器如何实现事件处理逻辑。这种机制实现了发布者与监听者之间的解耦，提高了系统的可扩展性和可维护性。
+
+**二、事件机制的主要组成部分**
+
+Spring框架中的事件机制主要包括以下几个组成部分：
+
+1. **事件（Event）**：事件是应用程序中可能发生的事情，它通常是一个继承自`ApplicationEvent`的类。开发者可以定义自己的事件类，以便在应用程序中传递关键信息。
+2. **事件发布者（ApplicationEventPublisher）**：事件发布者负责发布事件。在Spring中，`ApplicationEventPublisher`接口是事件发布者的标准接口，它定义了发布事件的方法`publishEvent(Event event)`。Spring中的容器，如`ApplicationContext`，实现了这个接口，允许在应用程序中发布事件。
+3. **事件监听器（ApplicationListener）**：事件监听器负责监听并处理特定类型的事件。`ApplicationListener`接口是事件监听器的标准接口，它定义了用于处理事件的方法`onApplicationEvent(Event event)`。开发者可以实现这个接口，以便在事件发生时执行自定义的逻辑。
+4. **事件广播器（ApplicationEventMulticaster）**：事件广播器是框架内部的组件，负责将事件分发给所有注册的监听器。Spring提供了多个事件广播器的实现，其中`SimpleApplicationEventMulticaster`是一个简单的单线程实现。
+
+**三、使用方法**
+
+要使用ApplicationListener，开发者需要实现该接口，并将实现类注册到Spring容器中。当容器中有相应的事件触发时，Spring会自动调用监听器的`onApplicationEvent`方法。
+
+**四、自定义事件与监听器**
+
+开发者可以自定义事件和监听器，以满足特定的业务需求。自定义事件需要继承`ApplicationEvent`类，并在构造函数中传递事件源。自定义监听器需要实现`ApplicationListener`接口，并在`onApplicationEvent`方法中编写事件处理逻辑。
+
+**五、内置事件**
+
+Spring框架提供了一些内置事件，这些事件在特定的时间点被自动发布。例如：
+
+- **ContextRefreshedEvent**：当`ApplicationContext`被初始化或刷新时发布。
+- **ContextClosedEvent**：当`ApplicationContext`被关闭时发布。
+- **RequestHandledEvent**：这是一个web-specific事件，告诉所有bean HTTP请求已经被服务。
+
+**六、应用场景**
+
+ApplicationListener在Spring框架中有着广泛的应用场景，例如：
+
+- **通知服务**：在完成某项操作后发布事件，由专门的服务监听并执行相应的动作，如发送邮件或短信通知。
+- **日志记录**：发布日志相关的事件，可以被不同的监听器接收以进行日志处理。
+- **异步处理**：在某个操作完成后发布事件，由另一个线程或服务来处理后续逻辑，如文件上传后的处理等。
+
+**七、注意事项**
+
+1. **避免循环依赖**：在事件处理过程中，避免创建与事件发布者或监听器本身存在循环依赖的Bean。
+2. **性能影响**：由于事件监听器在事件发生时被自动调用，因此可能会对应用的性能产生影响。因此，在使用时需要谨慎考虑是否需要在事件发生时执行这些操作。
+3. **异常处理**：在实现事件监听器时，需要注意异常处理，以避免因异常导致应用崩溃或不稳定。
+
+综上所述，ApplicationListener是Spring框架中一个非常有用的接口，它允许开发者以解耦的方式监听并处理应用程序中的事件。通过合理使用ApplicationListener，可以提高系统的可扩展性和可维护性，并满足各种业务需求。
+
+
+
+### BootstrapRegistryInitializer（引导初始化阶段）
+
+BootstrapRegistryInitializer是Spring Boot框架中的一个重要组件，它主要用于在应用启动阶段初始化和注册一些在ApplicationContext准备好之前就需要被创建和共享的对象。以下是对BootstrapRegistryInitializer的详细解析：
+
+**一、接口定义与功能**
+
+BootstrapRegistryInitializer接口定义了一个`initialize`方法，该方法接收一个`BootstrapRegistry`类型的参数。`BootstrapRegistry`是一个简单的对象注册表，它在启动和环境后处理期间都可用，直到ApplicationContext准备好为止。这个注册表可以用于注册那些可能创建成本较高或在ApplicationContext可用之前就需要被共享的实例。
+
+**二、实现与加载**
+
+1. **实现接口**：
+
+   BootstrapRegistryInitializer接口的实现类需要重写`initialize`方法，并在该方法中执行必要的初始化和注册操作。
+
+2. **加载机制**：
+
+   Spring Boot通过SpringFactoriesLoader机制来加载实现了BootstrapRegistryInitializer接口的类。这些类的全限定名会被配置在`META-INF/spring.factories`文件中，并且与`org.springframework.boot.BootstrapRegistryInitializer`这个key相关联。
+
+   例如，在Spring Cloud Config中，就通过`BootstrapRegistryInitializer`将配置中心的相关信息注册到了Spring容器中。其对应的实现类是`ConfigClientRetryBootstrapper`，并且这个实现类会在`spring-cloud-config-client`这个jar包的`META-INF/spring.factories`文件中被配置。
+
+**三、使用场景与示例**
+
+BootstrapRegistryInitializer通常用于需要在ApplicationContext准备好之前就被创建和共享的场景。例如，在Spring Cloud Config中，客户端需要向配置中心（Config Server）发送请求来获取应用程序的配置信息。这些配置信息需要在ApplicationContext创建之前就被加载和解析，因此就可以通过实现BootstrapRegistryInitializer接口来完成这个任务。
+
+**四、注意事项**
+
+1. **版本兼容性**：
+
+   不同版本的Spring Boot可能会对BootstrapRegistryInitializer的加载和初始化机制有所不同，因此在使用时需要确保与所使用Spring Boot版本的兼容性。
+
+2. **性能影响**：
+
+   由于BootstrapRegistryInitializer是在ApplicationContext准备好之前执行的，因此它可能会对应用的启动性能产生影响。因此，在使用时需要谨慎考虑是否需要在启动阶段执行这些操作。
+
+3. **错误处理**：
+
+   在实现BootstrapRegistryInitializer时，需要注意异常处理，以避免因异常导致应用启动失败。
+
+**五、总结**
+
+BootstrapRegistryInitializer是Spring Boot框架中的一个重要组件，它允许开发者在应用启动阶段初始化和注册一些需要在ApplicationContext准备好之前就被创建和共享的对象。通过实现这个接口，开发者可以在应用启动的过程中插入自定义的逻辑，以满足特定的需求。同时，也需要注意版本兼容性、性能影响和错误处理等方面的问题。
+
+
+
+### ApplicationContextInitializer（IOC 容器初始化阶段）
+
+ApplicationContextInitializer是Spring框架中的一个扩展接口，它在应用程序上下文（ApplicationContext）创建之前提供了自定义初始化的能力。通过实现该接口，开发者可以在应用程序上下文启动之前执行一些额外的配置或准备工作。以下是对ApplicationContextInitializer的详细解析：
+
+**一、接口定义与功能**
+
+ApplicationContextInitializer接口定义了一个`initialize`方法，该方法接收一个泛型参数`C extends ConfigurableApplicationContext`，表示正在创建的应用程序上下文。在该方法中，开发者可以对应用程序上下文进行各种自定义操作，例如添加属性源、注册Bean定义、设置环境变量等。
+
+**二、应用场景**
+
+ApplicationContextInitializer通常用于以下场景：
+
+1. **动态加载配置**：在应用程序上下文创建之前加载一些动态的配置，例如从外部配置文件中读取配置信息并注入到Spring的环境中。
+2. **执行额外的初始化逻辑**：如果有一些需要在应用程序上下文启动之前执行的初始化逻辑，例如初始化数据库连接池或启动一些后台任务，可以通过实现ApplicationContextInitializer来实现这些逻辑。
+
+**三、实现与注册**
+
+1. **实现接口**：
+
+   创建一个类并实现ApplicationContextInitializer接口，同时重写`initialize`方法。在方法中执行所需的初始化逻辑。
+
+2. **注册ApplicationContextInitializer**：
+
+   要使Spring能够发现并使用自定义的ApplicationContextInitializer，可以通过以下三种方式进行注册：
+
+   - 在spring.factories文件中配置：在 resources/META-INF/spring.factories 文件中添加配置，指定ApplicationContextInitializer的实现类。例如：
+
+     ```
+     org.springframework.context.ApplicationContextInitializer=com.example.demo.CustomApplicationContextInitializer
+     ```
+
+   - 代码注册：在创建SpringApplication实例后，通过调用 addInitializers 方法将自定义的ApplicationContextInitializer添加到SpringApplication中。例如：
+
+     ```java
+     SpringApplication springApplication = new SpringApplication(SpringbootApplication.class);
+     springApplication.addInitializers(new CustomApplicationContextInitializer());
+     springApplication.run();
+     ```
+
+   - 配置文件注册：在 application.properties 或 application.yml 配置文件中添加 context.initializer.classes 属性，指定ApplicationContextInitializer的实现类。例如：
+
+     ```properties
+     context.initializer.classes=com.example.demo.CustomApplicationContextInitializer
+     ```
+
+**四、执行顺序**
+
+ApplicationContextInitializer的执行顺序可以通过实现`Ordered`接口或使用`@Order`注解来指定。如果没有指定顺序，则按照默认的顺序执行。
+
+**五、注意事项**
+
+1. **避免循环依赖**：在初始化过程中，避免创建与ApplicationContext本身存在循环依赖的Bean。
+2. **性能影响**：由于ApplicationContextInitializer在ApplicationContext创建之前执行，因此可能会对应用的启动性能产生影响。因此，在使用时需要谨慎考虑是否需要在启动阶段执行这些操作。
+3. **错误处理**：在实现ApplicationContextInitializer时，需要注意异常处理，以避免因异常导致应用启动失败。
+
+**六、示例**
+
+以下是一个简单的ApplicationContextInitializer实现示例：
+
+```java
+import org.springframework.context.ApplicationContextInitializer;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.MapPropertySource;
+ 
+import java.util.HashMap;
+import java.util.Map;
+ 
+public class CustomApplicationContextInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+ 
+    @Override
+    public void initialize(ConfigurableApplicationContext applicationContext) {
+        // 自定义属性资源
+        Map<String, Object> map = new HashMap<>();
+        map.put("customProperty", "自定义属性");
+ 
+        // 通过自动配置上下文获取环境对象
+        ConfigurableEnvironment environment = applicationContext.getEnvironment();
+ 
+        // 添加自定义属性源到环境对象中
+        environment.getPropertySources().addLast(new MapPropertySource("mapPropertySource", map));
+    }
+}
+```
+
+通过上述方式，开发者可以在Spring应用程序启动之前执行自定义的初始化逻辑，以满足特定的需求。
+
+
+
+### ApplicationRunner（Spring 应用就绪阶段）
+
+ApplicationRunner是Spring Boot框架中的一个接口，它允许开发者在Spring Boot应用程序启动后执行特定的任务或逻辑。以下是关于ApplicationRunner的详细解析：
+
+**一、接口定义与功能**
+
+ApplicationRunner接口定义了一个`run`方法，该方法在Spring Boot应用程序启动完成后被调用。开发者可以在这个方法中编写希望在应用程序启动后执行的代码逻辑，如加载数据、调用外部服务或执行其他业务逻辑。
+
+**二、使用方法**
+
+要使用ApplicationRunner，开发者需要创建一个实现了ApplicationRunner接口的类，并实现其`run`方法。然后，将这个类注册为Spring的组件（通常是通过在类上添加`@Component`注解）。这样，当Spring Boot应用程序启动时，Spring会自动调用这个类的`run`方法。
+
+**三、参数与访问启动参数**
+
+`run`方法接受一个`ApplicationArguments`类型的参数，该参数提供了对启动参数的访问。通过`ApplicationArguments`，开发者可以获取命令行参数、选项和非选项参数等信息，从而更灵活地配置和初始化应用程序。
+
+**四、应用场景**
+
+ApplicationRunner在Spring Boot应用程序中有多种应用场景，包括但不限于：
+
+1. **服务启动后数据初始化**：在应用启动时加载初始化数据，如将初始数据加载到数据库、从文件读取数据、缓存热点数据等。
+2. **应用启动时加载配置信息**：在某些情况下，应用可能需要在启动时加载外部配置信息或数据库中的参数到内存中进行缓存。
+3. **启动时验证环境配置**：在应用启动时验证环境配置的正确性，如验证许可证的有效性、检查系统环境变量等。
+4. **启动定时任务**：在应用启动时重新激活或启动定时任务。
+
+**五、执行顺序与多个ApplicationRunner**
+
+如果应用程序中有多个实现了ApplicationRunner接口的类，并且这些类需要在特定的顺序下执行，开发者可以使用`@Order`注解来指定执行顺序。`@Order`注解的值越小，表示优先级越高，即越先执行。
+
+**六、注意事项**
+
+1. **异常处理**：在实现ApplicationRunner的`run`方法时，需要注意异常处理，以避免因异常导致应用崩溃或不稳定。
+2. **性能影响**：由于ApplicationRunner在应用程序启动时执行，因此可能会对启动性能产生影响。开发者需要谨慎考虑在`run`方法中执行的操作是否必要，并尽量优化这些操作的性能。
+3. **避免循环依赖**：在实现ApplicationRunner时，需要避免与Spring容器中的其他Bean产生循环依赖。
+
+综上所述，ApplicationRunner是Spring Boot框架中一个非常有用的接口，它允许开发者在应用程序启动后执行特定的任务或逻辑。通过合理使用ApplicationRunner，开发者可以更灵活地配置和初始化应用程序，并满足各种业务需求。
+
+
+
+### CommandLineRunner（Spring 应用就绪阶段）
+
+CommandLineRunner是Spring Boot框架中的一个重要接口，它允许开发者在Spring Boot应用程序启动后执行特定的代码逻辑。以下是对CommandLineRunner的详细解释：
+
+**一、接口定义与功能**
+
+CommandLineRunner接口定义了一个`run`方法，该方法在Spring Boot应用程序启动完成后被自动调用。通过实现CommandLineRunner接口，开发者可以定义一些需要在应用程序启动后执行的初始化操作，例如加载初始化数据、启动后打印应用信息、启动异步任务等。
+
+**二、使用方法**
+
+要使用CommandLineRunner，开发者需要完成以下步骤：
+
+1. 创建一个实现CommandLineRunner接口的类，并实现其`run`方法。
+2. 在`run`方法中编写需要在应用程序启动后执行的代码逻辑。
+3. 将这个类注册为Spring的组件，通常是通过在类上添加`@Component`注解。
+
+这样，当Spring Boot应用程序启动时，Spring会自动调用这个类的`run`方法。
+
+**三、参数与命令行参数**
+
+`run`方法接受一个字符串数组参数，这个数组包含了应用程序启动时传递的命令行参数。这为开发者提供了一种在应用程序启动时动态配置或执行不同逻辑的机会。例如，可以根据命令行参数的不同来加载不同的配置文件或执行不同的初始化操作。
+
+**四、应用场景**
+
+CommandLineRunner在Spring Boot应用程序中有多种应用场景，包括但不限于：
+
+1. **数据初始化**：在应用程序启动后加载初始化数据，如从数据库中加载配置信息或初始化一些全局变量。
+2. **应用信息打印**：在应用程序启动后打印一些有用的信息，如应用程序的版本号、内存使用情况等，以帮助开发者了解应用程序的运行状态和性能。
+3. **异步任务启动**：在应用程序启动后启动一些异步任务，如发送电子邮件或进行一些批处理操作。
+4. **参数校验**：在实现CommandLineRunner接口时，可以进行一些参数校验，以确保应用程序在运行之前满足一些必要的条件或参数要求，从而提高应用程序的健壮性和安全性。
+
+**五、与ApplicationRunner的区别**
+
+CommandLineRunner与ApplicationRunner都是Spring Boot中用于在应用程序启动后执行特定逻辑的接口。它们的主要区别在于`run`方法的参数不同：
+
+- CommandLineRunner的`run`方法接受一个字符串数组参数，该参数包含了应用程序启动时传递的命令行参数。
+- ApplicationRunner的`run`方法则接受一个`ApplicationArguments`对象作为参数，该对象提供了对启动参数的更高级别的访问，包括选项和非选项参数等。
+
+**六、注意事项**
+
+1. **异常处理**：在实现CommandLineRunner的`run`方法时，需要注意异常处理，以避免因异常导致应用崩溃或不稳定。
+2. **性能影响**：由于CommandLineRunner在应用程序启动时执行，因此可能会对启动性能产生影响。开发者需要谨慎考虑在`run`方法中执行的操作是否必要，并尽量优化这些操作的性能。
+3. **执行顺序**：如果有多个实现了CommandLineRunner接口的类，并且这些类需要在特定的顺序下执行，开发者可以使用`@Order`注解来指定执行顺序。
+
+综上所述，CommandLineRunner是Spring Boot框架中一个非常有用的接口，它允许开发者在应用程序启动后执行特定的代码逻辑。通过合理使用CommandLineRunner，开发者可以更灵活地配置和初始化应用程序，并满足各种业务需求。
