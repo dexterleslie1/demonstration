@@ -598,6 +598,10 @@ maven 配置新增 spring-boot-admin-starter-server 依赖：
 
 ```xml
 <dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-web</artifactId>
+</dependency>
+<dependency>
     <groupId>de.codecentric</groupId>
     <artifactId>spring-boot-admin-starter-server</artifactId>
     <version>2.3.1</version>
@@ -641,4 +645,102 @@ spring.boot.admin.client.instance.prefer-ip=true
 ```
 
 访问 Admin 服务 `http://localhost:8082/`，此时能够看到 Admin 客户端成功注册到 Admin 服务端中。
+
+
+
+### 安全防护配置
+
+>下载对应的版本的 SpringBoot Admin 源代码再打开文档查看安全防护配置。
+
+通过整合 Spring Security 实现安全防护功能。
+
+maven 添加 Spring Security 依赖
+
+```xml
+<!-- SpringBoot Admin 安全防护配置依赖于 Spring Security -->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-security</artifactId>
+</dependency>
+```
+
+新增 Spring Security 配置类 SecuritySecureConfig
+
+```java
+package com.future.demo.config;
+
+import de.codecentric.boot.admin.server.config.AdminServerProperties;
+import org.springframework.boot.autoconfigure.security.SecurityProperties;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+
+import java.util.UUID;
+
+// SpringBoot Admin 安全防护的 Spring Security 配置
+@Configuration(proxyBeanMethods = false)
+public class SecuritySecureConfig extends WebSecurityConfigurerAdapter {
+
+    private final AdminServerProperties adminServer;
+    private final SecurityProperties security;
+
+    public SecuritySecureConfig(AdminServerProperties adminServer, SecurityProperties security) {
+        this.adminServer = adminServer;
+        this.security = security;
+    }
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        SavedRequestAwareAuthenticationSuccessHandler successHandler = new SavedRequestAwareAuthenticationSuccessHandler();
+        successHandler.setTargetUrlParameter("redirectTo");
+        successHandler.setDefaultTargetUrl(this.adminServer.path("/"));
+
+        http.authorizeRequests(
+                        (authorizeRequests) -> authorizeRequests.antMatchers(this.adminServer.path("/assets/**")).permitAll() // <1>
+                                .antMatchers(this.adminServer.path("/login")).permitAll().anyRequest().authenticated() // <2>
+                ).formLogin(
+                        (formLogin) -> formLogin.loginPage(this.adminServer.path("/login")).successHandler(successHandler).and() // <3>
+                ).logout((logout) -> logout.logoutUrl(this.adminServer.path("/logout"))).httpBasic(Customizer.withDefaults()) // <4>
+                .csrf((csrf) -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()) // <5>
+                        .ignoringRequestMatchers(
+                                new AntPathRequestMatcher(this.adminServer.path("/instances"),
+                                        HttpMethod.POST.toString()), // <6>
+                                new AntPathRequestMatcher(this.adminServer.path("/instances/*"),
+                                        HttpMethod.DELETE.toString()), // <6>
+                                new AntPathRequestMatcher(this.adminServer.path("/actuator/**")) // <7>
+                        ))
+                .rememberMe((rememberMe) -> rememberMe.key(UUID.randomUUID().toString()).tokenValiditySeconds(1209600));
+    }
+
+    // Required to provide UserDetailsService for "remember functionality"
+    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.inMemoryAuthentication().withUser(this.security.getUser().getName())
+                .password("{noop}" + this.security.getUser().getPassword()).roles("USER");
+    }
+
+}
+```
+
+application.properties 配置 Spring Security 帐号和密码
+
+```properties
+# SpringBoot Admin 安全防护的 Spring Security 配置
+spring.security.user.name=root
+spring.security.user.password=123456
+```
+
+SpringBoot Admin 客户端配置 SpringBoot Admin 服务器的帐号密码，否则 SpringBoot Admin 客户端无法注册到 SpringBoot Admin 服务器，本示例在 demo-spring-boot-actuator 模块的 application.properties 配置文件中添加以下内容：
+
+```properties
+# 配置SpringBoot Admin 服务端帐号密码
+spring.boot.admin.client.username=root
+spring.boot.admin.client.password=123456
+```
 
