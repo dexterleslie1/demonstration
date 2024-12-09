@@ -847,3 +847,28 @@ spring.boot.admin.notify.mail.to=xxx@qq.com
 ```
 
 测试关闭其中一个 SpringBoot Admin 客户端，稍等一会儿后会收到关于服务下线的邮件通知。
+
+
+
+## actuator 定制端点
+
+
+
+### 定制 health 端点
+
+```java
+@Component
+public class CustomHealthIndicator extends AbstractHealthIndicator {
+    @Override
+    protected void doHealthCheck(Health.Builder builder) throws Exception {
+        // 构建up状态
+        builder.up().withDetail("detail1", "Detail value 1")
+                .withDetail("detail2", "Detail value 2");
+
+        // 构建down状态
+        /*builder.down().withDetail("error", "Error value")
+                .withException(new Exception("测试异常"));*/
+    }
+}
+```
+
