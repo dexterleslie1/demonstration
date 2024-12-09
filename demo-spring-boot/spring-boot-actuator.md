@@ -813,3 +813,37 @@ eureka.instance.prefer-ip-address=true
 ```
 
 访问 SpringBoot Admin 服务器`http://localhost:8082/`，此时发现 demo-spring-boot-actuator-discovery-client 会自动注册到 SpringBoot Admin 服务中。
+
+
+
+### 邮件通知配置
+
+SpringBoot Admin 服务端 maven 添加 mail 依赖
+
+```xml
+<!-- 邮件通知依赖 -->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-mail</artifactId>
+</dependency>
+```
+
+application.properties 配置 smtp
+
+```properties
+# 邮件通知
+spring.mail.protocol=smtp
+spring.mail.host=smtp.qq.com
+spring.mail.port=465
+spring.mail.username=xxx@qq.com
+spring.mail.password=xxx
+# 配置smtp ssl
+spring.mail.properties.mail.smtp.ssl.enable=true
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
+spring.mail.properties.mail.smtp.starttls.require=true
+spring.boot.admin.notify.mail.from=xxx@qq.com
+spring.boot.admin.notify.mail.to=xxx@qq.com
+```
+
+测试关闭其中一个 SpringBoot Admin 客户端，稍等一会儿后会收到关于服务下线的邮件通知。
