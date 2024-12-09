@@ -744,3 +744,72 @@ spring.boot.admin.client.username=root
 spring.boot.admin.client.password=123456
 ```
 
+
+
+### 通过注册中心集成客户端
+
+提示：不需要配置 SpringBoot Admin 客户端 maven 依赖和客户端信息。
+
+SpringBoot Admin 服务端注册到注册中心后自动发现并配置 SpringBoot Admin 客户端进行监控。
+
+本示例使用 Eureka 作为注册中心自动集成 SpringBoot Admin 客户端。
+
+先运行一个 Eureka 注册中心
+
+配置 demo-spring-boot-admin-server（SpringBoot Admin 服务端）注册到 Eureka 注册中心
+
+添加 maven Eureka 依赖
+
+```xml
+<!-- 向eureka注册自己需要引入下面的spring-cloud-starter-netflix-eureka-client依赖 -->
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+</dependency>
+```
+
+配置 Eureka 注册中心信息并忽略不监控自己
+
+```properties
+# eureka注册中心注册地址
+eureka.client.serviceUrl.defaultZone=http://localhost:9999/eureka/
+# eureka实例面板显示实例的主机ip
+eureka.instance.prefer-ip-address=true
+# 忽略自身 SpringBoot Admin 服务器监控
+spring.boot.admin.discovery.ignored-services=demo-spring-boot-admin-server
+```
+
+配置 demo-spring-boot-actuator-discovery-client（SpringBoot Admin 客户端）注册到 Eureka 注册中心后 SpringBoot Admin 服务器端会自动发现并配置 SpringBoot Admin 客户端
+
+配置 SpringBoot Admin 客户端 actuator 配置，maven 中添加 actuator 依赖
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
+```
+
+```properties
+# 暴露所有actuator所有端点
+management.endpoints.web.exposure.include=*
+```
+
+配置客户端注册到 Eureka 注册中心
+
+```xml
+<!-- 向eureka注册自己需要引入下面的spring-cloud-starter-netflix-eureka-client依赖 -->
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+</dependency>
+```
+
+```properties
+# eureka注册中心注册地址
+eureka.client.serviceUrl.defaultZone=http://localhost:9999/eureka/
+# eureka实例面板显示实例的主机ip
+eureka.instance.prefer-ip-address=true
+```
+
+访问 SpringBoot Admin 服务器`http://localhost:8082/`，此时发现 demo-spring-boot-actuator-discovery-client 会自动注册到 SpringBoot Admin 服务中。

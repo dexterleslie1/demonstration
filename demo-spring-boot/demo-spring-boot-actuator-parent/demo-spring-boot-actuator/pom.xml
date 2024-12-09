@@ -44,9 +44,9 @@
 
         <!-- SpringBoot Admin 客户端依赖 -->
         <dependency>
-                <groupId>de.codecentric</groupId>
-                <artifactId>spring-boot-admin-starter-client</artifactId>
-                <version>2.3.1</version>
+            <groupId>de.codecentric</groupId>
+            <artifactId>spring-boot-admin-starter-client</artifactId>
+            <version>2.3.1</version>
         </dependency>
     </dependencies>
 </project>

@@ -2,6 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <parent>
         <groupId>com.future.demo</groupId>
         <artifactId>demo-spring-boot-actuator-parent</artifactId>
@@ -9,10 +10,10 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>demo-spring-boot-admin-server</artifactId>
+    <artifactId>demo-spring-cloud-eureka-server</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>demo-spring-boot-admin-server</name>
-    <description>demo-spring-boot-admin-server</description>
+    <name>demo-spring-cloud-eureka-server</name>
+    <description>demo-spring-cloud-eureka-server</description>
     <url/>
     <licenses>
         <license/>
@@ -28,37 +29,15 @@
     </scm>
 
     <dependencies>
-        <!-- 向eureka注册自己需要引入下面的spring-cloud-starter-netflix-eureka-client依赖 -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>de.codecentric</groupId>
-            <artifactId>spring-boot-admin-starter-server</artifactId>
-            <version>2.3.1</version>
+            <artifactId>spring-cloud-starter-netflix-eureka-server</artifactId>
         </dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
-        </dependency>
-
-        <!-- SpringBoot Admin 安全防护配置依赖于 Spring Security -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
     </dependencies>
 
