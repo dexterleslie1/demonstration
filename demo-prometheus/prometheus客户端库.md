@@ -6,7 +6,7 @@
 
 > 注意：`prometheus`被设计为拉取指标模式，`simpleclient`不存在主动连接`prometheus`服务器推送指标数据的概念。
 >
-> `simpleclient`详细使用方法请参考 [链接](https://gitee.com/dexterleslie/demonstration/tree/master/demo-prometheus-grafana-alertmanager/demo-prometheus-simpleclient)
+> `simpleclient`详细使用方法请参考`https://gitee.com/dexterleslie/demonstration/tree/master/demo-prometheus/demo-prometheus-simpleclient`
 
 Prometheus `simpleclient` 是 Prometheus 官方提供的 Java 客户端库，它允许 Java 应用程序创建和暴露 metrics，这些 metrics 可以被 Prometheus 服务器拉取以进行监控和告警。`simpleclient` 提供了一组简单的 API，用于定义和注册计数器（Counter）、直方图（Histogram）、摘要（Summary）和仪表（Gauge）等类型的 metrics。
 
@@ -132,3 +132,54 @@ public class MyMetricsServlet extends MetricsServlet {
 ```
 
 打开浏览器访问`http://localhost:8080/metrics`（这个指标接口可以暴露给`prometheus`拉取数据）查看指标数据
+
+
+
+### `micrometer`
+
+micrometer 不是 prometheus 的客户端库，但是 micrometer 默认被集成到 SpringBoot Actuator 中并且很方便地扩展自定义指标到 /actuator/metrics 端点中。
+
+
+
+### `simpleclient`和`micrometer`比较
+
+Prometheus的simpleclient和Micrometer都是用于监控和度量数据的工具，但它们在使用场景、集成方式和功能特性上有所不同。以下是对两者的详细比较：
+
+**一、Prometheus Simpleclient**
+
+1. 定义与用途：
+   - Prometheus Simpleclient是Prometheus官方提供的Java客户端库，用于收集和暴露应用程序的监控指标给Prometheus服务器。
+2. 工作原理：
+   - Simpleclient内部封装了基本的数据结构和数据采集方式，提供自定义监控指标的核心接口。
+   - 通过simpleclient_httpserver模块，可以实现一个简单的HTTP服务器，当向该服务器发送获取样本数据的请求后，它会自动调用所有Collector的collect()方法，并将所有样本数据转换为Prometheus要求的数据输出格式规范。
+3. 使用方式：
+   - 通常需要在项目中添加simpleclient相关的依赖，并编写自定义的Collector类来实现监控指标的收集。
+   - 然后，通过启动HTTP服务器来暴露监控指标，Prometheus服务器会主动拉取这些指标。
+
+**二、Micrometer**
+
+1. 定义与用途：
+   - Micrometer是一个应用度量库，用于监控和报告JVM应用的各种度量指标，如CPU使用率、内存占用、HTTP请求响应时间等。
+   - 它支持多种监控后端，包括Prometheus、Atlas、Graphite、InfluxDB等。
+2. 工作原理：
+   - Micrometer通过MeterRegistry来创建和管理各种Meter（度量接口），如Counter、Gauge、Timer等。
+   - MeterRegistry是Meter的工厂和缓存中心，每个JVM应用在使用Micrometer时必须创建一个MeterRegistry的具体实现。
+   - Micrometer支持自定义命名规则和标签（Tag），以便更好地组织和查询度量数据。
+3. 使用方式：
+   - 对于Spring Boot项目，可以通过添加spring-boot-starter-actuator和micrometer-core依赖来集成Micrometer。
+   - 在配置文件中指定监控后端（如Prometheus），并配置相应的度量指标。
+   - 通过Actuator提供的/metrics端点，可以访问和查询度量数据。
+
+**三、比较与选择**
+
+1. 集成方式：
+   - Simpleclient需要手动编写代码来收集和暴露监控指标，适用于对监控需求有较高自定义要求的场景。
+   - Micrometer则提供了更为丰富和灵活的度量类型和配置选项，且易于与Spring Boot等框架集成，适用于快速构建和部署监控系统的场景。
+2. 功能特性：
+   - Simpleclient专注于提供基本的监控指标收集和暴露功能，适合对监控需求较为简单的场景。
+   - Micrometer则提供了更多的度量类型和高级特性，如标签、命名规则转换等，适用于对监控需求较为复杂的场景。
+3. 生态系统：
+   - Prometheus Simpleclient是Prometheus生态系统的一部分，与Prometheus服务器和Grafana等数据可视化工具紧密集成。
+   - Micrometer则是一个独立的度量库，可以与其他监控后端和可视化工具配合使用，提供了更广泛的生态系统支持。
+
+综上所述，Prometheus Simpleclient和Micrometer各有优缺点，选择哪个取决于具体的监控需求和项目背景。对于需要高度自定义监控指标和与Prometheus紧密集成的场景，可以选择Simpleclient；而对于需要快速构建和部署监控系统、且对度量类型和配置选项有较高要求的场景，则可以选择Micrometer。

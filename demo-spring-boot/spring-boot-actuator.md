@@ -872,3 +872,87 @@ public class CustomHealthIndicator extends AbstractHealthIndicator {
 }
 ```
 
+启动应用后再次访问`http://localhost:8081/mydemo/health`端点查看到新增了名为 custom 的组件。
+
+
+
+### 定制 info 端点
+
+方法1：使用 application.properties 配置的方式定制 info 端点
+
+```properties
+# 使用配置的方式定制 info 端点
+info.app.name=Spring Sample Application
+info.app.description=This is my first spring boot application
+info.app.version=1.0.0
+info.java-vendor = ${java.specification.vendor}
+info.customize.info1=Information 1
+info.customize.info2=Information 2
+```
+
+
+
+方法2：派生于 InfoContributor 定制 info 端点
+
+```java
+package com.future.demo;
+
+import org.springframework.boot.actuate.info.Info;
+import org.springframework.boot.actuate.info.InfoContributor;
+import org.springframework.stereotype.Component;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * @author Dexterleslie.Chan
+ */
+@Component
+public class CustomizeInfoContributor implements InfoContributor {
+    @Override
+    public void contribute(Info.Builder builder) {
+        Map<String, Object> info = new HashMap<>();
+        info.put("info1", "information one");
+        info.put("info2", "information two");
+        builder.withDetails(info);
+    }
+}
+
+```
+
+启动应用后再次访问`http://localhost:8081/mydemo/info`端点查看到新增的 info 信息了。
+
+
+
+### 定制 metrics 端点
+
+提示：自定义指标是通过 micrometer 的接口添加自定义指标。
+
+新增自定义指标
+
+```java
+// 用于协助/actuator/logfile测试产生日志
+// 用于协助测试自定义指标开发
+@GetMapping("/")
+public String index() {
+    log.info("Hello World!");
+
+    // 自定义指标测试
+    Metrics.counter("demo.index.counter", "uri", "/").increment();
+    Timer timer = Metrics.timer("demo.index.timer", "uri", "/");
+    timer.record(() -> {
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    });
+
+    return "Hello World";
+}
+```
+
+访问接口`http://localhost:8080/`以产生自定义指标数据
+
+查看`http://localhost:8081/mydemo/metrics`端点新增了 demo.index.counter 和 demo.index.timer 自定义指标。
+
