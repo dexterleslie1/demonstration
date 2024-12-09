@@ -956,3 +956,48 @@ public String index() {
 
 查看`http://localhost:8081/mydemo/metrics`端点新增了 demo.index.counter 和 demo.index.timer 自定义指标。
 
+
+
+### 定制 Endpoint
+
+新增自定义 Endpoint
+
+```java
+package com.future.demo;
+
+import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
+import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
+import org.springframework.boot.actuate.endpoint.annotation.WriteOperation;
+import org.springframework.stereotype.Component;
+
+import java.util.HashMap;
+import java.util.Map;
+
+// 自定义endpoint
+@Component
+@Endpoint(id = "custom")
+public class CustomEndpoint {
+    private final Map<String, Object> map = new HashMap<String, Object>() {{
+        put("name", "custom");
+        put("age", 18);
+    }};
+    @ReadOperation
+    public Map<String, Object> get() {
+        return map;
+    }
+
+    @WriteOperation
+    public void post(String key, Object value) {
+        map.put(key, value);
+    }
+}
+```
+
+访问`http://localhost:8081/mydemo`查看新增了 /mydemo/custom 端点
+
+测试 /mydemo/custom 端点读取数据
+
+```bash
+curl -i -X GET http://localhost:8081/mydemo/custom
+```
+
