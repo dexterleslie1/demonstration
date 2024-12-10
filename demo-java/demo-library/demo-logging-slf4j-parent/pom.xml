@@ -10,6 +10,7 @@
         <module>demo-jul</module>
         <module>demo-log4j</module>
         <module>demo-log4j2</module>
+        <module>demo-jcl</module>
     </modules>
 
 </project>
