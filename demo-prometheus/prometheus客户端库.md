@@ -137,6 +137,8 @@ public class MyMetricsServlet extends MetricsServlet {
 
 ### `micrometer`
 
+Micrometer 为最流行的可观察性系统提供了一个外观，让您可以对基于 JVM 的应用程序代码进行检测，而无需锁定供应商。类似于 SLF4J，但用于可观察性。
+
 micrometer 不是 prometheus 的客户端库，但是 micrometer 默认被集成到 SpringBoot Actuator 中并且很方便地扩展自定义指标到 /actuator/metrics 端点中。
 
 
