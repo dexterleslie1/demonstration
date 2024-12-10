@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+    status属性定义了Log4j2在初始化和运行过程中输出到控制台的日志信息的详细程度。这些日志信息主要用于调试和监控Log4j2的配置和运行状态。用于控制Log4j2日志框架本身的日志级别。
+    monitorInterval属性设置为60秒，表示Log4j2将每60秒自动检测配置文件的更改并重新加载
+-->
+<Configuration status="error" monitorInterval="60">
+    <!-- 定义appender -->
+    <Appenders>
+        <!-- 控制台appender设置 -->
+        <Console name="stdout" target="SYSTEM_OUT">
+            <!-- 控制台只输出info及以上级别的信息（onMatch），其他的直接拒绝（onMismatch） -->
+            <ThresholdFilter level="debug" onMatch="ACCEPT" onMismatch="DENY"/>
+            <!-- 日志的格式 -->
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%-5level] %l{10} - %msg%n"/>
+        </Console>
+
+        <!-- 文件appender设置 -->
+        <File name="file" fileName="my.log" append="true">
+            <!-- 定义日志的格式 -->
+            <PatternLayout>
+                <Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%-5level] %l{10} - %msg%n</Pattern>
+            </PatternLayout>
+        </File>
+    </Appenders>
+
+    <!-- 定义logger，只有定义了logger并引入的appender，appender才会生效 -->
+    <Loggers>
+        <!-- 根root的logger -->
+        <Root level="info">
+            <!-- 引用上面定义的stdout appender -->
+            <AppenderRef ref="stdout"/>
+            <AppenderRef ref="file"/>
+        </Root>
+        <!-- 自定义的logger -->
+        <Logger name="com.future.demo" level="info" additivity="false">
+            <AppenderRef ref="stdout"/>
+            <AppenderRef ref="file"/>
+        </Logger>
+    </Loggers>
+
+</Configuration>
