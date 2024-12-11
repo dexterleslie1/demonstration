@@ -7,10 +7,10 @@
         <version>1.0.0</version>
     </parent>
 
-    <artifactId>demo-slf4j</artifactId>
+    <artifactId>demo-logback-java</artifactId>
     <packaging>jar</packaging>
 
-    <name>demo-slf4j</name>
+    <name>demo-logback-java</name>
     <url>http://maven.apache.org</url>
 
     <properties>
@@ -18,35 +18,7 @@
     </properties>
 
     <dependencies>
-        <!-- slf4j + slf4j-simple 依赖 -->
-        <!--<dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <version>2.0.16</version>
-        </dependency>-->
-
-        <!-- slf4j + log4j 1.x 依赖 -->
-        <!--<dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <version>2.0.16</version>
-        </dependency>-->
-
-        <!-- slf4j + log4j2 依赖 -->
-        <!--<dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-slf4j-impl</artifactId>
-            <version>2.24.2</version>
-        </dependency>-->
-
-        <!-- slf4j + jul 依赖 -->
-        <!--<dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-jdk14</artifactId>
-            <version>1.7.25</version>
-        </dependency>-->
-
-        <!-- slf4j + logback 依赖 -->
+        <!-- logback-classic 依赖 -->
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
