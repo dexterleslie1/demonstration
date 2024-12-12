@@ -576,6 +576,7 @@ module.exports = {
                         'hutool使用.md',
                         'htmlunit使用.md',
                         '日志框架.md',
+                        '测试.md',
                     ]
                 }
             ], '/elasticsearch/': [
