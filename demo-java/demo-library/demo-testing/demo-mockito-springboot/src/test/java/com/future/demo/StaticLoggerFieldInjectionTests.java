@@ -1,6 +1,5 @@
 package com.future.demo;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -9,21 +8,30 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.client.RestTemplate;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 @RunWith(SpringRunner.class)
 @SpringBootTest(
-        classes={Application.class},
+        classes = {Application.class},
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
 )
+@AutoConfigureMockMvc
 public class StaticLoggerFieldInjectionTests {
+    @Autowired
+    MockMvc mockMvc;
+
     @LocalServerPort
     int port;
 
@@ -58,11 +66,10 @@ public class StaticLoggerFieldInjectionTests {
     }
 
     @Test
-    public void test1() {
-        ResponseEntity<String> response = this.restTemplate.getForEntity(
-                "http://localhost:"+ port + "/api/test1",
-                String.class);
-        Assert.assertEquals("Hello ....", response.getBody());
+    public void test1() throws Exception {
+        this.mockMvc.perform(get("/api/test1"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Hello ...."));
 
         // 用于验证是否使用指定的参数调用log.info(...)方法
         Mockito.verify(log).info("Api for testing is called.");

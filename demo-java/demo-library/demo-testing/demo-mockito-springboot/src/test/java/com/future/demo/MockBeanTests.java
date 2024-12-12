@@ -5,12 +5,17 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.web.servlet.MockMvc;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * 演示 @MockBean 用法
@@ -20,7 +25,11 @@ import org.springframework.test.context.junit4.SpringRunner;
         classes = {Application.class},
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
 )
+@AutoConfigureMockMvc
 public class MockBeanTests {
+
+    @Autowired
+    MockMvc mockMvc;
 
     @LocalServerPort
     int port;
@@ -37,12 +46,11 @@ public class MockBeanTests {
      * 正如当前测试那样使用 @MockBean 注入 MyServiceInner
      */
     @Test
-    public void test() {
+    public void test() throws Exception {
         Mockito.doReturn("param1=p2").when(this.myServiceInner).test1(Mockito.anyString());
-        ResponseEntity<String> response = this.restTemplate.getForEntity(
-                "http://localhost:" + port + "/api/test2?param1=p1",
-                String.class);
-        Assert.assertEquals("param1=p2", response.getBody());
+        this.mockMvc.perform(get("/api/test2?param1=p1"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("param1=p2"));
     }
 
     /**

@@ -15,11 +15,10 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * 演示 @InjectMocks+@Mock 用法
- *
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest(
-        classes={Application.class},
+        classes = {Application.class},
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
 )
 public class InjectMocksNMockTests {
@@ -46,7 +45,7 @@ public class InjectMocksNMockTests {
      */
     @Ignore
     @Test
-    public void test1() {
+    public void test1() throws Exception {
         Mockito.doReturn("param1=p2").when(this.myServiceInner).test1(Mockito.anyString());
         ResponseEntity<String> response = this.restTemplate.getForEntity(
                 "http://localhost:8080/api/test2?param1=p1",

@@ -51,7 +51,6 @@ module.exports = {
                     { text: 'MySQL、MariaDB', link: '/mysql-n-mariadb/' },
                     { text: 'Redis', link: '/redis/' },
                     { text: 'Maven', link: '/maven/' },
-                    { text: 'Mockito', link: '/mockito/' },
                     { text: 'Java相关', link: '/java/' },
                     { text: 'Java相关库', link: '/java-library/' },
                     { text: 'Spring Boot', link: '/spring-boot/' },
@@ -316,14 +315,6 @@ module.exports = {
                         '原理.md',
                         '变基.md',
                         '命令.md',
-                    ]
-                }
-            ], '/mockito/': [
-                {
-                    title: "Mockito",
-                    children: [
-                        'maven项目配置mockito.md',
-                        'mockito的使用.md',
                     ]
                 }
             ], '/spring-boot/': [
