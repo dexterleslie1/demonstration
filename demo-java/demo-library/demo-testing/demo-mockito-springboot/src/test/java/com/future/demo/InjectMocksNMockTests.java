@@ -40,7 +40,7 @@ public class InjectMocksNMockTests {
     }
 
     /**
-     * NOTE: 下面通过 restful api 调用接口时， MyServiceInner没有被 @Mock，所以测试不能通过
+     * NOTE: 下面通过 restful api 调用接口时， Spring 上下文中的 MyServiceInner 没有被 mock 的 myServiceInner 实例替换，所以测试不能通过
      * 只有直接调用 MyService 服务才能够被 mock，如上面测试 test()
      */
     @Ignore
