@@ -7,6 +7,7 @@
 注意：
 
 - docs 中每个 markdown 目录都必须要包含一个 README.md 文件，否则 sidebar 不能够正常生成。
+- 没有找到解决方案在不修改 md 中的`![Logo](logo.svg)`情况下同时兼容 Typora 和 VuePress 1.x 的图片显示。 
 
 
 
@@ -80,7 +81,7 @@ npm run docs:dev
 
 把图片 logo.svg 放置于 /docs/.vuepress/public 目录中
 
-在 markdown 文档中引用图片`![Logo](/logo.svg)`
+在 markdown 文档中引用图片`![Logo](logo.svg)`
 
 
 
