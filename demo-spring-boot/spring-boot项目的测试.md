@@ -8,9 +8,12 @@
 
 ### 使用`openfeign`进行`web`环境测试
 
-> 案例的详细请参考 [链接](https://github.com/dexterleslie1/demonstration/tree/master/demo-spring-boot/demo-spring-boot-openfeign-client)
->
-> 注意：目前项目中使用这种方法+`mock`技术实现各个微服务独立的集成测试。
+> 案例的详细请参考`https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-boot-openfeign-client`
+
+注意：
+
+- 目前项目中使用这种方法+`mock`技术实现各个微服务独立的集成测试。
+- 建议使用 mockmvc 替代此测试方案。
 
 `pom.xml`配置引用`openfeign`依赖如下：
 
@@ -176,13 +179,15 @@ public class ApiTests {
 
 ## 集成测试或单元测试
 
+
+
 ### `mockmvc`测试
 
-> 案例的详细请参考 [链接](https://github.com/dexterleslie1/demonstration/blob/master/demo-spring-boot/demo-spring-boot-test/src/test/java/com/future/demo/test/ControllerTests.java)
->
-> `MockMvc` 是 Spring Framework 提供的一个用于测试 Spring MVC 控制器（Controller）的类。它允许你以编程的方式执行 HTTP 请求，并验证返回的结果。这对于在开发过程中编写单元测试或集成测试非常有用，因为它不需要启动一个完整的 HTTP 服务器。
+> 案例的详细请参考`https://gitee.com/dexterleslie/demonstration/blob/master/demo-spring-boot/demo-spring-boot-test/src/test/java/com/future/demo/test/MockMvcTests.java`
 
-在`pom.xml`中引入测试依赖
+`MockMvc` 是 Spring Framework 提供的一个用于测试 Spring MVC 控制器（Controller）的类。它允许你以编程的方式执行 HTTP 请求，并验证返回的结果。这对于在开发过程中编写单元测试或集成测试非常有用，因为它不需要启动一个完整的 HTTP 服务器。
+
+在`pom`中引入测试依赖
 
 ```xml
 <dependency>
@@ -192,9 +197,9 @@ public class ApiTests {
 </dependency>
 ```
 
-在测试类`ControllerTests`中添加`@AutoConfigureMockMvc`启用`mockmvc`测试。
+在测试类`MockMvcTests`中添加`@AutoConfigureMockMvc`启用`mockmvc`测试。
 
-在测试类`ControllerTests`中添加如下代码注入`MockMvc`实例
+在测试类`MockMvcTests`中添加如下代码注入`MockMvc`实例
 
 ```java
 @Resource
@@ -214,7 +219,7 @@ response.andExpect(status().isOk())
         .andExpect(jsonPath("$.data", is(3)));
 ```
 
-完整的测试用例`ControllerTests`如下：
+完整的测试用例`MockMvcTests`如下：
 
 ```java
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -317,11 +322,13 @@ public class ControllerTests {
 
 ```
 
+
+
 ### `service`单元测试
 
->案例的详细请参考 [链接](https://github.com/dexterleslie1/demonstration/blob/master/demo-spring-boot/demo-spring-boot-test/src/test/java/com/future/demo/test/ServiceTests.java)
->
->在Spring Boot中，对服务层（Service）进行单元测试是一个常见的做法，以确保业务逻辑的正确性。这通常涉及到模拟（Mock）依赖项，如数据访问对象（DAO）或外部服务，以隔离正在测试的服务层逻辑。
+>案例的详细请参考`https://gitee.com/dexterleslie/demonstration/blob/master/demo-spring-boot/demo-spring-boot-test/src/test/java/com/future/demo/test/ServiceTests.java`
+
+在Spring Boot中，对服务层（Service）进行单元测试是一个常见的做法，以确保业务逻辑的正确性。这通常涉及到模拟（Mock）依赖项，如数据访问对象（DAO）或外部服务，以隔离正在测试的服务层逻辑。
 
 `ServiceTests`测试用例内容如下：
 

@@ -36,7 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(classes = {Application.class})
 // 启用mockmvc测试
 @AutoConfigureMockMvc
-public class ControllerTests {
+public class MockMvcTests {
 
     @Resource
     UserMapper userMapper;
