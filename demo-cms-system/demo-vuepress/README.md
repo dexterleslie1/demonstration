@@ -1,22 +1,26 @@
-# vuepress 使用
-
-## 环境配置
-
-vuepress2 需要 nodejs v18.16.0+，nodejs v15.14.0 不能启动 vuepress。`vuepress1.x`使用`nodejs v20.12.2`兼容。
-
-## 第一个 vuepress 入门例子
-
-注意：docs 中每个 markdown 目录都必须要包含一个 README.md 文件，否则 sidebar 不能够正常生成。
+# vuepress
 
 
 
-### vuepress1.x
+## vuepress 1.x
 
-> 注意：`vuepress1.x`不处理`markdown`中引用的本地图片，所以需要使用阿里云存储发布图片。
+注意：
 
-参考
-https://v1.vuepress.vuejs.org/guide/getting-started.html
-demo-vuepress1-getting-started
+- docs 中每个 markdown 目录都必须要包含一个 README.md 文件，否则 sidebar 不能够正常生成。
+
+
+
+### 环境配置
+
+nodejs v15.14.0 不能启动 vuepress。`vuepress1.x`使用`nodejs v20.12.2`兼容。
+
+
+
+### 新建项目
+
+>`https://v1.vuepress.vuejs.org/guide/getting-started.html`
+
+详细用法请参考`https://gitee.com/dexterleslie/demonstration/tree/master/demo-cms-system/demo-vuepress/demo-vuepress1-getting-started`
 
 创建并切换到新目录
 
@@ -66,13 +70,87 @@ package.json 添加 scripts
 npm run docs:dev
 ```
 
-打开浏览器访问 http://localhost:8080/
+打开浏览器访问`http://localhost:8080/`
 
-### vuepress2.x
 
-参考
-vuepress 官方文档 [Gettting Started](https://v2.vuepress.vuejs.org/guide/getting-started.html#getting-started)
-demo-vuepress2-getting-started
+
+### 图片处理
+
+>`https://code.luasoftware.com/tutorials/vuepress/vuepress-linking-to-images`
+
+把图片 logo.svg 放置于 /docs/.vuepress/public 目录中
+
+在 markdown 文档中引用图片`![Logo](/logo.svg)`
+
+
+
+### nav 和 sidebar
+
+详细用法请参考`https://gitee.com/dexterleslie/demonstration/tree/master/demo-cms-system/demo-vuepress/demo-vuepress1-all`
+
+
+
+### 插件
+
+#### `vuepress-plugin-mermaidjs`插件
+
+> `vuepress-plugin-mermaidjs`插件用于解析`markdown`中的`mermaid`代码块转换为`html`中的`svg`指令。
+
+安装`vuepress-plugin-mermaidjs`插件，注意：`vuepress1.x`只能兼容到`vuepress-plugin-mermaidjs-1.9.1`，更新版本的`vuepress-plugin-mermaidjs`兼容`vuepress2.x`。
+
+```bash
+npm install --save-dev vuepress-plugin-mermaidjs@1.9.1
+```
+
+`.vuepress/config.js`中配置`vuepress-plugin-mermaidjs`插件
+
+```js
+module.exports = {
+    ...
+    plugins: [
+        'mermaidjs'
+    ]
+}
+```
+
+`markdown`文件中使用`mermaid`语法画时序图
+
+```mermaid
+sequenceDiagram  
+    participant Client  
+    participant KongAPIGateway  
+    participant BackendServer1  
+    participant BackendServer2  
+    Client->>KongAPIGateway: 发送TCP请求  
+    KongAPIGateway->>BackendServer1: 转发TCP请求  
+    BackendServer1-->>KongAPIGateway: 返回TCP响应  
+    KongAPIGateway-->>Client: 将TCP响应返回给客户端  
+    alt 其他后端服务器  
+        KongAPIGateway->>BackendServer2: 转发TCP请求  
+        BackendServer2-->>KongAPIGateway: 返回TCP响应  
+        KongAPIGateway-->>Client: 将TCP响应返回给客户端  
+    end
+```
+
+`vuepress1.x`会自动编译`mermaid`语法时序图到`html svg`指令。
+
+
+
+## vuepress2
+
+
+
+### 环境配置
+
+vuepress2 需要 nodejs v18.16.0+，nodejs v15.14.0 不能启动 vuepress。
+
+
+
+### 新建项目
+
+> 文档 Gettting Started`https://v2.vuepress.vuejs.org/guide/getting-started.html#getting-started`
+
+详细用法请参考`https://gitee.com/dexterleslie/demonstration/tree/master/demo-cms-system/demo-vuepress/demo-vuepress2-getting-started`
 
 创建并切换到新目录
 
@@ -150,57 +228,5 @@ export default defineUserConfig({
 npm run docs:dev
 ```
 
-打开浏览器访问 http://localhost:8080/ 即可查看效果
+打开浏览器访问`http://localhost:8080/`即可查看效果
 
-## vuepress nav 和 sidebar
-
-### vuepress1.x
-
-参考
-demo-vuepress1-all
-
-## 插件
-
-### `vuepress1.x`使用`vuepress-plugin-mermaidjs`插件
-
-> `vuepress-plugin-mermaidjs`插件用于解析`markdown`中的`mermaid`代码块转换为`html`中的`svg`指令。
-
-安装`vuepress-plugin-mermaidjs`插件
-
-> `vuepress1.x`只能兼容到`vuepress-plugin-mermaidjs-1.9.1`，更新版本的`vuepress-plugin-mermaidjs`兼容`vuepress2.x`。
-
-```bash
-npm install --save-dev vuepress-plugin-mermaidjs@1.9.1
-```
-
-`.vuepress/config.js`中配置`vuepress-plugin-mermaidjs`插件
-
-```js
-module.exports = {
-    ...
-    plugins: [
-        'mermaidjs'
-    ]
-}
-```
-
-`markdown`文件中使用`mermaid`语法画时序图
-
-```mermaid
-sequenceDiagram  
-    participant Client  
-    participant KongAPIGateway  
-    participant BackendServer1  
-    participant BackendServer2  
-    Client->>KongAPIGateway: 发送TCP请求  
-    KongAPIGateway->>BackendServer1: 转发TCP请求  
-    BackendServer1-->>KongAPIGateway: 返回TCP响应  
-    KongAPIGateway-->>Client: 将TCP响应返回给客户端  
-    alt 其他后端服务器  
-        KongAPIGateway->>BackendServer2: 转发TCP请求  
-        BackendServer2-->>KongAPIGateway: 返回TCP响应  
-        KongAPIGateway-->>Client: 将TCP响应返回给客户端  
-    end
-```
-
-`vuepress1.x`会自动编译`mermaid`语法时序图到`html svg`指令。
