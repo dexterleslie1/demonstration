@@ -30,8 +30,10 @@
                 </configuration>
                 <executions>
                     <execution>
+                        <!-- test 阶段执行该插件 -->
                         <phase>test</phase>
                         <goals>
+                            <!-- 执行插件的 mygoal1 和 mygoal2 -->
                             <goal>mygoal1</goal>
                             <goal>mygoal2</goal>
                         </goals>
