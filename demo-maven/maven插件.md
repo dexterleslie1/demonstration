@@ -93,6 +93,48 @@ mvn package
 
 
 
+## `maven-tomcat-plugin`插件
+
+### `tomcat7-maven-plugin`
+
+>`maven`插件`tomcat7-maven-plugin`的使用`https://blog.csdn.net/xiaojin21cen/article/details/78570254`
+
+详细用法请参考`https://gitee.com/dexterleslie/demonstration/tree/master/demo-maven/demo-maven-tomcat-plugin/demo-maven-tomcat7-plugin`
+
+运行`tomcat7-maven-plugin`
+
+```bash
+mvn tomcat7:run
+```
+
+发布`war`
+
+```bash
+mvn clean package
+```
+
+
+
+### `tomcat9-maven-plugin`
+
+>`maven`插件`tomcat9-maven-plugin`的使用`https://search.maven.org/artifact/org.opoo.maven/tomcat9-maven-plugin/3.0.1/maven-plugin`
+
+详细用法请参考`https://gitee.com/dexterleslie/demonstration/tree/master/demo-maven/demo-maven-tomcat-plugin/demo-maven-tomcat9-plugin`
+
+运行`tomcat9-maven-plugin`
+
+```bash
+mvn tomcat9:run
+```
+
+发布`war`
+
+```bash
+mvn clean package
+```
+
+
+
 ## 自定义插件
 
 ### 创建和打包插件
