@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.future.demo</groupId>
-    <artifactId>demo-spring-mvc-java-based-config</artifactId>
+    <artifactId>demo-spring-security-without-springboot</artifactId>
     <version>1.0.0</version>
     <packaging>war</packaging>
 
@@ -26,7 +26,17 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-webmvc</artifactId>
-            <version>5.1.15.RELEASE</version>
+            <version>5.1.5.RELEASE</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-web</artifactId>
+            <version>5.1.5.RELEASE</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-config</artifactId>
+            <version>5.1.5.RELEASE</version>
         </dependency>
     </dependencies>
 

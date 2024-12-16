@@ -247,51 +247,169 @@
 
     
 
-## `spring-boot`项目配置`spring-security`依赖
+## 配置`Spring Security`依赖
 
-> 详细配置请参考 [链接](https://github.com/dexterleslie1/demonstration/tree/master/demo-spring-boot/demo-spring-security/spring-security-form-login)
+### 基于非`SpringBoot`项目配置
 
-`maven`配置`spring-security`依赖，配置`org.springframework.boot:spring-boot-starter-security`依赖后默认自动启用`spring-security`机制
+详细用法请参考`https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-security/demo-spring-security-without-springboot`
+
+WebSecurityConfig
+
+```java
+// Spring Security 配置类
+// 开启Spring Security的Web安全支持
+@EnableWebSecurity
+public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
+    // 定义用户信息服务
+    @Bean
+    protected UserDetailsService userDetailsService() {
+        InMemoryUserDetailsManager manager = new InMemoryUserDetailsManager();
+        manager.createUser(User.withUsername("abc1").password("123456").authorities("p1").build());
+        manager.createUser(User.withUsername("abc2").password("123456").authorities("p2").build());
+        return manager;
+    }
+
+    // 密码编码器
+    @Bean
+    PasswordEncoder passwordEncoder() {
+        return NoOpPasswordEncoder.getInstance();
+    }
+
+    // 安全拦截配置
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        // 定义哪些URL路径需要被保护，以及这些路径应该应用哪些安全规则。通过这个方法，你可以指定哪些角色或权限的用户可以访问特定的资源。
+        http.authorizeRequests()
+                // /r/** 路径下的所有资源都需要身份认证后才能访问
+                .antMatchers("/r/**").authenticated()
+                // 其他所有请求都可以访问
+                .anyRequest().permitAll()
+                // 表单登录配置
+                .and()
+                .formLogin()
+                // 自定义登录成功的页面地址
+                .successForwardUrl("/login-success");
+    }
+}
+
+```
+
+Spring 应用初始化时加载 WebSecurityConfig 配置
+
+```java
+// SpringApplicationInitializer 类等价于 xml 配置的 web.xml 配置文件
+public class SpringApplicationInitializer
+        extends AbstractAnnotationConfigDispatcherServletInitializer {
+
+    @Override
+    protected Class<?>[] getRootConfigClasses() {
+        // 加载 @ComponentScan 配置
+        return new Class[]{ApplicationConfig.class, WebSecurityConfig.class};
+    }
+    
+    ...
+}
+```
+
+Spring Security 初始化类
+
+```java
+package com.future.demo.init;
+
+import org.springframework.security.web.context.AbstractSecurityWebApplicationInitializer;
+
+public class SpringSecurityApplicationInitializer extends AbstractSecurityWebApplicationInitializer {
+}
+```
+
+运行示例
+
+```bash
+mvn tomcat7:run
+```
+
+未登录前访问`http://localhost:8080/r/r1`资源会被从定向到登录界面
+
+测试 abc1 没有权限访问资源 /r/r2
+
+- 使用 abc1 登录`http://localhost:8080/login`
+- 成功访问资源 /r/r1 `http://localhost:8080/r/r1`
+- 访问资源 /r/r2 失败 `http://localhost:8080/r/r2`，报告 403 错误
+
+访问`http://localhost:8080/logout`退出登录
+
+
+
+### 基于`SpringBoot`项目配置
+
+详细用法请参考`https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-security/demo-spring-security-with-springboot`
+
+pom 依赖
 
 ```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-
-    <parent>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.2.7.RELEASE</version>
-    </parent>
-
-    <groupId>com.future.demo</groupId>
-    <artifactId>spring-security-form-login</artifactId>
-    <version>1.0.0</version>
-    <packaging>war</packaging>
-
-    <dependencies>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-security</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-thymeleaf</artifactId>
-        </dependency>
-    </dependencies>
-</project>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-web</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-security</artifactId>
+</dependency>
 ```
+
+WebSecurityConfig 配置
+
+```java
+@Configuration
+public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
+    // 定义用户信息服务
+    @Bean
+    protected UserDetailsService userDetailsService() {
+        InMemoryUserDetailsManager manager = new InMemoryUserDetailsManager();
+        manager.createUser(User.withUsername("abc1").password("123456").authorities("p1").build());
+        manager.createUser(User.withUsername("abc2").password("123456").authorities("p2").build());
+        return manager;
+    }
+
+    // 密码编码器
+    @Bean
+    PasswordEncoder passwordEncoder() {
+        return NoOpPasswordEncoder.getInstance();
+    }
+
+    // 安全拦截配置
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        // 定义哪些URL路径需要被保护，以及这些路径应该应用哪些安全规则。通过这个方法，你可以指定哪些角色或权限的用户可以访问特定的资源。
+        http.authorizeRequests()
+                // /r/r1 路径下的资源需要拥有 p1 权限的用户才能访问
+                .antMatchers("/r/r1").hasAuthority("p1")
+                // /r/r2 路径下的资源需要拥有 p2 权限的用户才能访问
+                .antMatchers("/r/r2").hasAuthority("p2")
+                // /r/** 路径下的所有资源都需要身份认证后才能访问
+                .antMatchers("/r/**").authenticated()
+                // 其他所有请求都可以访问
+                .anyRequest().permitAll()
+                // 表单登录配置
+                .and()
+                .formLogin()
+                // 自定义登录成功的页面地址
+                .successForwardUrl("/login-success");
+    }
+}
+```
+
+未登录前访问`http://localhost:8080/r/r1`资源会被从定向到登录界面
+
+测试 abc1 没有权限访问资源 /r/r2
+
+- 使用 abc1 登录`http://localhost:8080/login`
+- 成功访问资源 /r/r1 `http://localhost:8080/r/r1`
+- 访问资源 /r/r2 失败 `http://localhost:8080/r/r2`，报告 403 错误
+
+访问`http://localhost:8080/logout`退出登录
+
+
 
 ## `AuthenticationManagerBuilder`使用
 
