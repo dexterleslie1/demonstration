@@ -49,6 +49,40 @@ Spring MVC的工作原理可以概括为以下几个核心步骤：
 
 
 
+## mvc 项目的创建和配置
+
+
+
+### 基于 xml 配置
+
+>`https://springjava.com/spring-mvc/spring-mvc-with-xml-configuration-example/`
+
+详细用法请参考`https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-mvc-xml-based-config`
+
+启用 tomcat
+
+```bash
+mvn tomcat7:run
+```
+
+访问`http://localhost:8080/`测试示例
+
+
+
+### 基于 java 配置
+
+详细用法请参考`https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-mvc-java-based-config`
+
+启用 tomcat
+
+```bash
+mvn tomcat7:run
+```
+
+访问`http://localhost:8080/`测试示例
+
+
+
 ## `@RequestMapping`路径配置中使用通配符`?`、`*`、`**`
 
 ```java
