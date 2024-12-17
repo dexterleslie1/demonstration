@@ -1,22 +1,13 @@
 version: "3.0"
 
-# 创建网络
-networks:
-  net:
-    name: demo-jpa
-
 services:
   # 启动mariadb
   demo-jpa-db:
     build:
       context: ./
-    container_name: demo-jpa-db
-    image: docker.118899.net:10001/yyd-public/demo-jpa-db
     environment:
       - MYSQL_ROOT_PASSWORD=123456
       - TZ=Asia/Shanghai
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci --skip-character-set-client-handshake --innodb-buffer-pool-size=${dbInnodbBufferPoolSize}m
     ports:
       - 50000:3306
-    networks:
-      - net

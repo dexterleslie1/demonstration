@@ -1,13 +1,13 @@
 package com.future.demo.jpa;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.yyd.common.bean.ModelMapperUtil;
-import com.yyd.common.exception.BusinessException;
-import com.yyd.common.http.response.PageResponse;
+import com.future.common.exception.BusinessException;
+import com.future.common.http.PageResponse;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -89,7 +89,8 @@ public class OperationLogService {
             List<OperationLogModel> modelList = new ArrayList<>(pageObject.getContent());
 
             List<OperationLogVo> operationLogVoList = modelList.stream().map(o -> {
-                OperationLogVo vo = ModelMapperUtil.ModelMapperInstance.map(o, OperationLogVo.class);
+                OperationLogVo vo = new OperationLogVo();
+                BeanUtils.copyProperties(o, vo);
                 vo.setOperationType(o.getOperationType().getDescription());
                 return vo;
             }).collect(Collectors.toList());

@@ -1,6 +1,6 @@
 package com.future.demo.jpa;
 
-import com.yyd.common.exception.BusinessException;
+import com.future.common.exception.BusinessException;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.runner.Runner;
