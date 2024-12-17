@@ -1,8 +1,8 @@
 package com.future.demo;
 
-import com.yyd.common.http.ResponseUtils;
-import com.yyd.common.http.response.ObjectResponse;
-import com.yyd.common.json.JSONUtil;
+import com.future.common.http.ObjectResponse;
+import com.future.common.http.ResponseUtils;
+import com.future.common.json.JSONUtil;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.access.AccessDeniedException;
@@ -73,6 +73,10 @@ public class ConfigWebSecurity extends WebSecurityConfigurerAdapter {
 
                 .and()
                 .authorizeRequests()
+                // 同时拥有r1和r2角色的用户都可以调用次方法。
+                .antMatchers("/api/v1/test3").access("hasRole('r1') and hasRole('r2')")
+                // 拥有权限 auth:test5才能调用此方法。
+                .antMatchers("/api/v1/test5").hasAuthority("perm:test5")
                 .antMatchers("/api/auth/login").permitAll()
                 .anyRequest().authenticated()
 
@@ -92,7 +96,7 @@ public class ConfigWebSecurity extends WebSecurityConfigurerAdapter {
                 mapReturn.put("loginname", authentication.getName());
                 mapReturn.put("token", token);
                 ObjectResponse<Map<String, Object>> responseO = ResponseUtils.successObject(mapReturn);
-                ConfigWebSecurity.this.tokenStore.store(token, (MyUser)authentication.getPrincipal());
+                ConfigWebSecurity.this.tokenStore.store(token, (MyUser) authentication.getPrincipal());
                 response.setCharacterEncoding(StandardCharsets.UTF_8.name());
                 response.getWriter().write(JSONUtil.ObjectMapperInstance.writeValueAsString(responseO));
             }
@@ -152,28 +156,28 @@ public class ConfigWebSecurity extends WebSecurityConfigurerAdapter {
             @Override
             public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
                 // 测试@Secured注解
-                if(username.equals("user-with-role-r1-and-role-r2")) {
+                if (username.equals("user-with-role-r1-and-role-r2")) {
                     return new MyUser(username,
                             passwordEncoder.encode("123456"),
                             Arrays.asList(new SimpleGrantedAuthority("ROLE_r1"),
                                     new SimpleGrantedAuthority("ROLE_r2")));
-                } else if(username.equals("user-with-only-role-r1")) {
+                } else if (username.equals("user-with-only-role-r1")) {
                     return new MyUser(username,
                             passwordEncoder.encode("123456"),
                             Collections.singletonList(new SimpleGrantedAuthority("ROLE_r1")));
-                } else if(username.equals("user-with-only-role-r2")) {
+                } else if (username.equals("user-with-only-role-r2")) {
                     return new MyUser(username,
                             passwordEncoder.encode("123456"),
                             Collections.singletonList(new SimpleGrantedAuthority("ROLE_r2")));
-                } else if(username.equals("user-with-none-role")) {
+                } else if (username.equals("user-with-none-role")) {
                     return new MyUser(username,
                             passwordEncoder.encode("123456"),
                             new ArrayList<>());
-                } else if(username.equals("user-with-perm-test5")) {
+                } else if (username.equals("user-with-perm-test5")) {
                     return new MyUser(username,
                             passwordEncoder.encode("123456"),
                             Collections.singletonList(new SimpleGrantedAuthority("perm:test5")));
-                } else if(username.equals("user-with-allow-uri-test6")) {
+                } else if (username.equals("user-with-allow-uri-test6")) {
                     return new MyUser(username,
                             passwordEncoder.encode("123456"),
                             Collections.singletonList(new SimpleGrantedAuthority("/api/v1/test6")));

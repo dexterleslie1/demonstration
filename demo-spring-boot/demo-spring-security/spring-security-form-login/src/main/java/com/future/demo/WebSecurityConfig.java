@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -34,7 +35,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 // 指定form登录界面 URL
                 .formLogin().loginPage("/login")
                 // 指定form登录成功后跳转的 URL
-                .defaultSuccessUrl("/welcome");
+                .defaultSuccessUrl("/welcome")
+                // 会话管理配置
+                .and()
+                // 指定会话创建策略，这里是 IF_REQUIRED 表示只有在需要时才创建会话
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED);
     }
 
     @Bean
