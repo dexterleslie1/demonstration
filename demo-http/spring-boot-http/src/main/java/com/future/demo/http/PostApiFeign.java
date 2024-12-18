@@ -1,6 +1,5 @@
 package com.future.demo.http;
 
-import com.yyd.common.http.response.ObjectResponse;
 import feign.Headers;
 import feign.Param;
 import feign.RequestLine;

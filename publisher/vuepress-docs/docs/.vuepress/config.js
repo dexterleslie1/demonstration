@@ -340,6 +340,7 @@ module.exports = {
                         'swagger2-knife4j.md',
                         'ibatis、mybatis、mybatis-plus.md',
                         'spring-boot.md',
+                        'spring-boot-thymeleaf.md',
                     ]
                 }
             ], '/java/': [

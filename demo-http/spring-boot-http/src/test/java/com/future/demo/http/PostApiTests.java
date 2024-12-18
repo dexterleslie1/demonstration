@@ -1,9 +1,6 @@
 package com.future.demo.http;
 
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.yyd.common.http.response.ObjectResponse;
-import com.yyd.common.json.JSONUtil;
 import feign.*;
 import feign.codec.ErrorDecoder;
 import feign.form.FormEncoder;

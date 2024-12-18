@@ -1,12 +1,9 @@
 package com.future.demo.http;
 
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.yyd.common.json.JSONUtil;
 import feign.*;
 import feign.codec.ErrorDecoder;
 import feign.form.FormEncoder;
-import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
