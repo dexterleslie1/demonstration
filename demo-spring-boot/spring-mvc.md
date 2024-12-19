@@ -1108,3 +1108,102 @@ person.gender.error=性别只能是男或者女
 private String sex1;
 ```
 
+
+
+## 跨域配置
+
+### 局部配置
+
+使用 @CrossOrigin 注解指定 controller 下所有接口支持跨域
+
+```java
+@Controller
+// controller 下所有接口都支持跨域请求，并且只允许 abc.com 域名下的前端进行访问
+@CrossOrigin(origins = "abc.com")
+public class DemoController {
+```
+
+使用 curl 测试跨域
+
+- 成功跨域访问
+
+  ```bash
+  curl -H "Origin: abc.com" --verbose  http://localhost:8080/hello
+  ```
+
+- 失败跨域访问，响应 403 错误和 Invalid CORS request 错误信息
+
+  ```bash
+  curl -H "Origin: abc1.com" --verbose  http://localhost:8080/hello
+  ```
+
+
+
+使用 @CrossOrigin 注解指定单个接口支持跨域
+
+```java
+// 当前接口支持跨域请求，并且只允许 abc.com 域名下的前端进行访问
+@CrossOrigin(origins = "abc.com")
+@ResponseBody
+@RequestMapping("/hello")
+public String hello() {
+    return "Hello!";
+}
+```
+
+使用 curl 测试跨域
+
+- 成功跨域访问
+
+  ```bash
+  curl -H "Origin: abc.com" --verbose  http://localhost:8080/hello
+  ```
+
+- 失败跨域访问，响应 403 错误和 Invalid CORS request 错误信息
+
+  ```bash
+  curl -H "Origin: abc1.com" --verbose  http://localhost:8080/hello
+  ```
+
+
+
+### 全局配置
+
+>`https://stackoverflow.com/questions/51720552/enabling-cors-globally-in-spring-boot`
+
+java 配置
+
+```java
+// 全局跨域配置
+@Bean
+public CorsFilter corsFilter() {
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    CorsConfiguration config = new CorsConfiguration();
+    // 允许跨域携带cookie
+    config.setAllowCredentials(true);
+    // 只允许 abc.com 跨域访问
+    config.setAllowedOrigins(Collections.singletonList("abc.com"));
+    config.setAllowedHeaders(Arrays.asList("Origin", "Content-Type", "Accept"));
+    config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "OPTIONS", "DELETE", "PATCH"));
+    // 所有路径都允许跨域访问
+    source.registerCorsConfiguration("/**", config);
+    return new CorsFilter(source);
+}
+```
+
+使用 curl 测试跨域
+
+- 成功跨域访问
+
+  ```bash
+  curl -H "Origin: abc.com" --verbose  http://localhost:8080/hello
+  ```
+
+- 失败跨域访问，响应 403 错误和 Invalid CORS request 错误信息
+
+  ```bash
+  curl -H "Origin: abc1.com" --verbose  http://localhost:8080/hello
+  ```
+
+  
+

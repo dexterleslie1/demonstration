@@ -18,4 +18,20 @@ public class SpringMvcConfig implements WebMvcConfigurer /* WebMvcConfigurer对s
                 // 只对/hello路径进行拦截
                 .addPathPatterns("/hello");
     }
+
+    // 全局跨域配置
+    /*@Bean
+    public CorsFilter corsFilter() {
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        CorsConfiguration config = new CorsConfiguration();
+        // 允许跨域携带cookie
+        config.setAllowCredentials(true);
+        // 只允许 abc.com 跨域访问
+        config.setAllowedOrigins(Collections.singletonList("abc.com"));
+        config.setAllowedHeaders(Arrays.asList("Origin", "Content-Type", "Accept"));
+        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "OPTIONS", "DELETE", "PATCH"));
+        // 所有路径都允许跨域访问
+        source.registerCorsConfiguration("/**", config);
+        return new CorsFilter(source);
+    }*/
 }
