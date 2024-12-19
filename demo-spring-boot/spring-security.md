@@ -806,6 +806,44 @@ public ObjectResponse<String> test2() {
 
 
 
+## 跨域配置
+
+详细用法请参考示例`https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-security/demo-spring-security-cors`
+
+```java
+@Configuration
+public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http.authorizeRequests().anyRequest().permitAll()
+                .and().cors().configurationSource(corsConfigurationSource -> {
+                    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+                    CorsConfiguration config = new CorsConfiguration();
+                    // 允许跨域携带cookie
+                    config.setAllowCredentials(true);
+                    // 只允许 abc.com 跨域访问
+                    config.setAllowedOrigins(Collections.singletonList("abc.com"));
+                    config.setAllowedHeaders(Arrays.asList("Origin", "Content-Type", "Accept"));
+                    config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "OPTIONS", "DELETE", "PATCH"));
+                    // 所有路径都允许跨域访问
+                    source.registerCorsConfiguration("/**", config);
+                    return config;
+                })
+                .and().csrf().disable();
+    }
+}
+```
+
+测试跨域配置
+
+```bash
+curl -H "Origin: abc.com" -H "Access-Control-Request-Method: GET" -H "Access-Control-Request-Headers: accept, content-type" -X OPTIONS --verbose  http://localhost:8080/
+```
+
+- 服务器会返回 Access-Control-Allow-Origin: abc.com、Access-Control-Allow-Methods: GET,HEAD,POST、Access-Control-Allow-Headers: accept, content-type、Access-Control-Max-Age: 1800、Allow: GET, HEAD, POST, PUT, DELETE, OPTIONS, PATCH 等响应头表示支持跨域
+
+
+
 ## 示例自定义登录界面
 
 > 登录才能访问受保护界面`https://spring.io/guides/gs/securing-web/`
