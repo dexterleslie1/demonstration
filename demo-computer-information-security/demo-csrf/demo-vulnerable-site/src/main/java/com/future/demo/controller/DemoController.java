@@ -9,7 +9,10 @@ import java.math.BigDecimal;
 import java.security.Principal;
 
 @Controller
-@CrossOrigin(origins = "*", allowCredentials = "true")
+@CrossOrigin(origins = "*",
+        // 支持 ajax 跨域请求，允许携带 cookie
+        // https://cloud.tencent.com/developer/article/1467263
+        allowCredentials = "true")
 public class DemoController {
     @GetMapping("/")
     public String index(Model model, Principal principal) {
