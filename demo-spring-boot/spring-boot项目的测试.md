@@ -177,6 +177,82 @@ public class ApiTests {
 
 
 
+### 使用 RestTemplate 测试
+
+详细用法请参考示例`https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-boot-resttemplate`
+
+
+
+#### JSON 响应转换为 Java 对象
+
+```java
+// 测试 JSON 响应转换为 Java 对象
+ResponseEntity<ObjectResponse<Map<String, Object>>> response = this.restTemplate.exchange(this.getBasePath() + "/api/v1/test1", HttpMethod.POST, null, new ParameterizedTypeReference<ObjectResponse<Map<String, Object>>>() {
+});
+Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
+ObjectResponse<Map<String, Object>> objectResponse = response.getBody();
+Assert.assertNotNull(objectResponse);
+Assert.assertTrue(objectResponse.getData().containsKey("k1"));
+Assert.assertEquals("v1", objectResponse.getData().get("k1"));
+```
+
+
+
+### 使用 Rest Assured 测试
+
+详细用法请参考 <a href="/java-library/rest-assured.html" target="_target">链接</a>
+
+
+
+### Rest Assured 和 RestTemplate 比较
+
+在选择 Rest Assured 和 RestTemplate 时，需要根据具体的使用场景和需求来决定。以下是两者的比较和一些建议：
+
+**RestTemplate**
+
+1. 用途：
+   - RestTemplate 是 Spring 框架提供的一个用于访问 RESTful 服务的客户端。
+   - 它主要用于服务之间的同步调用，可以发送 HTTP 请求并处理响应。
+2. 优点：
+   - 支持连接池、超时时间设置等高级配置。
+   - 提供了丰富的请求和响应处理功能。
+3. 缺点：
+   - 编写请求方法相对繁琐，容易出错。
+   - 不适合大规模服务调用的场景，可能导致服务调用链路阻塞。
+4. 适用场景：
+   - 适用于服务之间的简单同步调用。
+   - 当需要精细控制 HTTP 请求和响应时，RestTemplate 是一个不错的选择。
+
+**Rest Assured**
+
+1. 用途：
+   - Rest Assured 是一个 Java DSL（领域特定语言），用于简化基于 HTTP 的服务的测试。
+   - 它主要用于自动化测试，特别是接口自动化测试。
+2. 优点：
+   - 简化了基于 HTTP 的服务的测试过程。
+   - 支持多种 HTTP 请求方法（如 POST、GET、PUT、DELETE 等）。
+   - 提供了丰富的断言和验证功能，便于测试响应数据。
+3. 缺点：
+   - 主要用于测试，而不是生产环境中的服务调用。
+   - 相对于 RestTemplate，它在服务调用方面的功能较为有限。
+4. 适用场景：
+   - 适用于接口自动化测试。
+   - 当需要验证 HTTP 服务的响应数据时，Rest Assured 是一个强大的工具。
+
+**选择建议**
+
+- 如果你需要进行服务之间的同步调用：
+  - 首选 RestTemplate，因为它提供了丰富的请求和响应处理功能，并且与 Spring 框架紧密集成。
+- 如果你需要进行接口自动化测试：
+  - 首选 Rest Assured，因为它简化了测试过程，并提供了丰富的断言和验证功能。
+- 综合考虑：
+  - 如果你的项目既需要服务调用又需要接口测试，可以考虑同时使用 RestTemplate 和 Rest Assured。
+  - RestTemplate 用于生产环境中的服务调用，而 Rest Assured 用于测试环境中的接口测试。
+
+总之，RestTemplate 和 Rest Assured 各有优势和适用场景。在选择时，需要根据具体的使用需求、项目规模和测试要求来决定。
+
+
+
 ## 集成测试或单元测试
 
 
@@ -184,6 +260,8 @@ public class ApiTests {
 ### `mockmvc`测试
 
 > 案例的详细请参考`https://gitee.com/dexterleslie/demonstration/blob/master/demo-spring-boot/demo-spring-boot-test/src/test/java/com/future/demo/test/MockMvcTests.java`
+
+注意：mockmvc 不使用正在运行的 Servlet 容器。
 
 `MockMvc` 是 Spring Framework 提供的一个用于测试 Spring MVC 控制器（Controller）的类。它允许你以编程的方式执行 HTTP 请求，并验证返回的结果。这对于在开发过程中编写单元测试或集成测试非常有用，因为它不需要启动一个完整的 HTTP 服务器。
 
