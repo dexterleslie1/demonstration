@@ -357,7 +357,7 @@ module.exports = {
                         'jprofiler用法.md',
                         '异常.md',
                         '生产环境问题排查.md',
-                        'tomcat.md',
+                        'tomcat.md'
                     ]
                 }
             ], '/计算机信息安全/': [
@@ -570,6 +570,7 @@ module.exports = {
                         'htmlunit使用.md',
                         '日志框架.md',
                         '测试.md',
+                        'rest-assured.md',
                     ]
                 }
             ], '/elasticsearch/': [
