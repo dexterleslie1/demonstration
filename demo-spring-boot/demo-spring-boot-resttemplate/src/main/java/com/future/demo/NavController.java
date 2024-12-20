@@ -1,4 +1,4 @@
-package com.future.demo.rest.template;
+package com.future.demo;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;

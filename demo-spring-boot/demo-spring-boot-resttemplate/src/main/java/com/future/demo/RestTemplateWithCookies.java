@@ -1,4 +1,4 @@
-package com.future.demo.rest.template;
+package com.future.demo;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.yyd.common.exception.BusinessException;

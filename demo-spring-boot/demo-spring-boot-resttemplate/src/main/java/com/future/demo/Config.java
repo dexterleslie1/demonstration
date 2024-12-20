@@ -1,4 +1,4 @@
-package com.future.demo.rest.template;
+package com.future.demo;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

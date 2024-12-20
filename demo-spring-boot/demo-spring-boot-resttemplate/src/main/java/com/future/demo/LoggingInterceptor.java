@@ -1,4 +1,4 @@
-package com.future.demo.rest.template;
+package com.future.demo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
