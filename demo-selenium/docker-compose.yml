@@ -1,82 +1,9 @@
 version: "3.0"
 
-networks:
-  net:
-    name: demo-selenium-net
-
-# 环境docker-compose.yml编写参考
-# https://www.hduzn.cn/2022/05/29/Docker%E7%89%88Selenium%E4%BD%BF%E7%94%A8%E6%96%B9%E6%B3%95/
-
+# https://hub.docker.com/r/selenium/standalone-firefox
 services:
-  # selenium grid chrome节点
-  demo-selenium-chrome:
-    container_name: demo-selenium-chrome
-    image: selenium/node-chrome:latest
-    depends_on:
-      - demo-selenium-selenium-hub
-    environment:
-      - SE_EVENT_BUS_HOST=demo-selenium-hub
-      - SE_EVENT_BUS_PUBLISH_PORT=4442
-      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
-    networks:
-      - net
+  demo-firefox:
+    image: selenium/standalone-firefox:latest
     ports:
-      # VNC客户端连接端口
-      - "5900:5900"
-      # noVNC连接端口
-      # 打开浏览器查看noVNC http://127.0.0.1:7900/ 默认密码: secret
-      - "7900:7900"
-
-  # 运行指定版本的selenium节点
-  demo-selenium-chrome-960:
-    container_name: demo-selenium-chrome-960
-    image: selenium/node-chrome:96.0
-    depends_on:
-      - demo-selenium-selenium-hub
-    environment:
-      - SE_EVENT_BUS_HOST=demo-selenium-hub
-      - SE_EVENT_BUS_PUBLISH_PORT=4442
-      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
-    networks:
-      - net
-    ports:
-      - "5902:5900"
-      - "7902:7900"
-
-  # selenium grid firefox节点
-  demo-selenium-firefox:
-    container_name: demo-selenium-firefox
-    image: selenium/node-firefox:latest
-    depends_on:
-      - demo-selenium-selenium-hub
-    environment:
-      - SE_EVENT_BUS_HOST=demo-selenium-hub
-      - SE_EVENT_BUS_PUBLISH_PORT=4442
-      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
-    networks:
-      - net
-    ports:
-      - "5901:5900"
-      - "7901:7900"
-
-  # selenium grid hub
-  demo-selenium-selenium-hub:
-    container_name: demo-selenium-hub
-    image: selenium/hub:latest
-    ports:
-      - "4442:4442"
-      - "4443:4443"
-      # 查看 selenium hub状态 http://127.0.0.1:4444/
       - "4444:4444"
-    networks:
-      - net
-
-  demo-selenium-openresty:
-    container_name: demo-selenium-openresty
-    image: openresty/openresty:1.19.9.1-14-buster-fat
-    ports:
-      - 80:80
-    volumes:
-      - ./web-auxiliary-tool-for-testing/index.html:/usr/local/openresty/nginx/html/web-auxiliary-tool-for-testing/index.html
-    networks:
-      - net
+      - "7900:7900"

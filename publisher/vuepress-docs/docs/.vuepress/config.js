@@ -93,6 +93,7 @@ module.exports = {
                     { text: 'Gost使用', link: '/gost/' },
                     { text: 'Ruby', link: '/ruby/' },
                     { text: '工具集', link: '/toolset/' },
+                    { text: 'Selenium', link: '/selenium/' },
                 ]
             },
             {
@@ -690,6 +691,8 @@ module.exports = {
                     ]
                 }
             ], '/toolset/': [
+                ''
+            ], '/selenium/': [
                 ''
             ],
             '/': ['/'],
