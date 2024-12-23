@@ -1,5 +1,6 @@
-package com.future.demo.http.basic;
+package com.future.demo;
 
+import com.future.common.http.ObjectResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;

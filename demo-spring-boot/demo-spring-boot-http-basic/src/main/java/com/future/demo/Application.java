@@ -1,4 +1,4 @@
-package com.future.demo.http.basic;
+package com.future.demo;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -7,7 +7,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @author dexterleslie@gmail.com
  */
 @SpringBootApplication
-//@ComponentScan(basePackages = "com.future.study")
 public class Application {
     /**
      *
