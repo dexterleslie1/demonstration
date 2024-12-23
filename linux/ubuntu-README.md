@@ -222,7 +222,13 @@ sudo -E -u dexterleslie gsettings set org.gnome.desktop.interface enable-animati
 
 ## ubuntu 通过命令行设置静态 ip 地址
 
-https://www.freecodecamp.org/news/setting-a-static-ip-in-ubuntu-linux-ip-address-tutorial/
+> `https://www.freecodecamp.org/news/setting-a-static-ip-in-ubuntu-linux-ip-address-tutorial/`
+
+ubuntu 安装 netplan
+
+```bash
+sudo apt install netplan.io
+```
 
 编辑 netplan 配置文件 /etc/netplan/00-installer-config.yaml，修改 ip 地址为 192.168.1.205/24
 
@@ -257,4 +263,6 @@ sudo apt install firefox
 ```bash
 apt update && apt install procps
 ```
+
+
 
