@@ -31,3 +31,14 @@ Assert.assertEquals("field1", response1.getData().getField1());
 Assert.assertEquals("field2", response1.getData().getField2());
 ```
 
+
+
+## HTTP Basic 验证
+
+```java
+Response response = RestAssured
+        // HTTP Basic 认证
+        .given().auth().basic("client1", "123")
+        .get(this.getBasePath() + "/test1").then().statusCode(200)
+        .extract().response();
+```

@@ -21,7 +21,10 @@ class DemoRestAssuredApplicationTests {
     @Test
     void contextLoads() {
         // 转换 JSON 响应为 Java 对象
-        Response response = RestAssured.get(this.getBasePath() + "/test1").then().statusCode(200)
+        Response response = RestAssured
+                // HTTP Basic 认证
+                .given().auth().basic("client1", "123")
+                .get(this.getBasePath() + "/test1").then().statusCode(200)
                 .extract().response();
         ObjectResponse<MyBean> response1 = response.as(new TypeRef<ObjectResponse<MyBean>>() {
         });
