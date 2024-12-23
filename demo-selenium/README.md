@@ -314,3 +314,39 @@ services:
   python3 main.py
   ```
 
+
+
+## Java 使用 Selenium
+
+详细用法请参考示例`https://gitee.com/dexterleslie/demonstration/tree/master/demo-selenium/demo-java`
+
+pom 依赖配置如下：
+
+```xml
+<!-- selenium 依赖 -->
+<dependency>
+    <groupId>org.seleniumhq.selenium</groupId>
+    <artifactId>selenium-java</artifactId>
+    <version>4.12.1</version>
+</dependency>
+```
+
+测试用例：
+
+```java
+public class AppTests {
+    @Test
+    public void test() throws MalformedURLException {
+        // 创建 WebDriver 实例
+        WebDriver driver = new RemoteWebDriver(new URL("http://localhost:4444/wd/hub"), new FirefoxOptions());
+
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
+        driver.get("https://www.baidu.com");
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
+
+        // 关闭浏览器
+        driver.quit();
+    }
+}
+```
+
