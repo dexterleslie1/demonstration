@@ -154,9 +154,10 @@ version: "3.0"
 services:
   demo-firefox:
     image: selenium/standalone-firefox:latest
-    ports:
-      - "4444:4444"
-      - "7900:7900"
+    # ports:
+    #   - "4444:4444"
+    #   - "7900:7900"
+    network_mode: host
 
 ```
 
@@ -317,6 +318,8 @@ services:
 
 
 ## Java 使用 Selenium
+
+>`https://medium.com/@riddhipandya153/how-to-build-a-selenium-maven-project-86394f2d70e1`
 
 详细用法请参考示例`https://gitee.com/dexterleslie/demonstration/tree/master/demo-selenium/demo-java`
 

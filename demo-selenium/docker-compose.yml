@@ -4,6 +4,7 @@ version: "3.0"
 services:
   demo-firefox:
     image: selenium/standalone-firefox:latest
-    ports:
-      - "4444:4444"
-      - "7900:7900"
+    # ports:
+    #   - "4444:4444"
+    #   - "7900:7900"
+    network_mode: host
