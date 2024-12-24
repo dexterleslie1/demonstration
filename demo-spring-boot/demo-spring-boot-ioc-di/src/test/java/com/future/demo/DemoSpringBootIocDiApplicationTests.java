@@ -11,7 +11,6 @@ import org.springframework.beans.factory.NoUniqueBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.context.annotation.Profile;
 import org.springframework.util.Assert;
 
 import java.util.Arrays;
@@ -24,6 +23,8 @@ class DemoSpringBootIocDiApplicationTests {
     // 注入ConfigurableApplicationContext实例
     @Autowired
     private ConfigurableApplicationContext ioc;
+    @Autowired
+    MyBean6Config myBean6Config;
 
     @Test
     void contextLoads() throws InterruptedException {
@@ -82,6 +83,10 @@ class DemoSpringBootIocDiApplicationTests {
         MyBean1 myBean1 = (MyBean1) ioc.getBean("myBean1");
         MyBean1 myBean2 = (MyBean1) ioc.getBean("myBean1");
         Assertions.assertSame(myBean1, myBean2);
+
+        MyBean6 myBean60 = (MyBean6) ioc.getBean("myBean61");
+        MyBean6 myBean61 = myBean6Config.myBean61();
+        Assertions.assertSame(myBean60, myBean61);
 
         // 测试@Configuration配置类配置的myBean2
         Assertions.assertNotNull(ioc.getBean("myBean2"));
