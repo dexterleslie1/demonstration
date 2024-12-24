@@ -496,7 +496,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
 ### `UserDetailsService`方式
 
-> 可通过此方式从数据库读取用户信息，甚至可以从任何其他数据源读取用户信息。
+
+
+#### 自定义 UserDetailsService
+
+>可通过此方式从数据库读取用户信息，甚至可以从任何其他数据源读取用户信息。
 
 `MyUserDetailsService`
 
@@ -514,6 +518,32 @@ public class MyUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return new User("user3", this.passwordEncoder.encode("123456"), AuthorityUtils.commaSeparatedStringToAuthorityList("role3"));
+    }
+}
+```
+
+
+
+#### 基于内存的 UserDetailsService
+
+>`https://docs.spring.io/spring-security/reference/servlet/authentication/passwords/in-memory.html`
+
+```java
+@Configuration
+public class ConfigSecurity {
+    @Bean
+    PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public UserDetailsService users() {
+        UserDetails user = User.builder()
+                .username("user3")
+                .password(this.passwordEncoder().encode("123456"))
+                .roles("role3")
+                .build();
+        return new InMemoryUserDetailsManager(user);
     }
 }
 ```
