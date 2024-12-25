@@ -664,6 +664,7 @@ module.exports = {
                     title: "ELK",
                     children: [
                         '容器运行.md',
+                        'kibana.md',
                     ]
                 }
             ], '/android/': [
