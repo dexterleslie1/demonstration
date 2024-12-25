@@ -1319,9 +1319,11 @@ B 网站验证通过以后，就会颁发新的令牌。
 
 >`https://www.ruanyifeng.com/blog/2019/04/github-oauth.html`
 
+注意：下面的实验已经使用 postman 测试通过。
 
 
-**第三方登录的原理**
+
+#### 原理
 
 所谓第三方登录，实质就是 OAuth 授权。用户想要登录 A 网站，A 网站让用户提供第三方网站的数据，证明自己的身份。获取第三方网站的身份数据，就需要 OAuth 授权。
 
@@ -1336,7 +1338,7 @@ B 网站验证通过以后，就会颁发新的令牌。
 
 下面就是这个流程的代码实现。
 
-**应用登记**
+#### 应用登记
 
 一个应用要求 OAuth 授权，必须先到对方网站登记，让对方知道是谁在请求。
 
@@ -1346,13 +1348,164 @@ B 网站验证通过以后，就会颁发新的令牌。
 
 ![img](https://cdn.beekka.com/blogimg/asset/201904/bg2019042102.jpg)
 
-应用的名称随便填，主页 URL 填写`http://localhost:8080`，跳转网址填写 `http://localhost:8080/oauth/redirect`。
+应用的名称随便填，主页 URL 填写`https://www.baidu.com`，跳转网址填写 `https://www.baidu.com`。
 
 提交表单以后，GitHub 应该会返回客户端 ID（client ID）和客户端密钥（client secret），这就是应用的身份识别码。
 
+#### 浏览器跳转 GitHub 登录和授权界面
+
+示例的首页很简单，就是一个链接，让用户跳转到 GitHub。
+
+![img](https://cdn.beekka.com/blogimg/asset/201904/bg2019042103.jpg)
+
+跳转的 URL 如下。
+
+```
+https://github.com/login/oauth/authorize?
+  client_id=7e015d8ce32370079895&
+  redirect_uri=https://www.baidu.com
+```
+
+这个 URL 指向 GitHub 的 OAuth 授权网址，带有两个参数：`client_id`告诉 GitHub 谁在请求，`redirect_uri`是稍后跳转回来的网址。
+
+用户点击到了 GitHub，GitHub 会要求用户登录，确保是本人在操作。
+
+#### 获取授权码
+
+登录后，GitHub 询问用户，该应用正在请求数据，你是否同意授权。
+
+![img](https://cdn.beekka.com/blogimg/asset/201904/bg2019042104.png)
+
+用户同意授权， GitHub 就会跳转到`redirect_uri`指定的跳转网址，并且带上授权码，跳转回来的 URL 就是下面的样子。
+
+```
+https://www.baidu.com?
+  code=859310e7cecc9196f4af
+```
+
+后端收到这个请求以后，就拿到了授权码（`code`参数）。
+
+#### 获取令牌
+
+后端使用这个授权码，向 GitHub 请求令牌。
+
+```javascript
+const tokenResponse = await axios({
+  method: 'post',
+  url: 'https://github.com/login/oauth/access_token?' +
+    `client_id=${clientID}&` +
+    `client_secret=${clientSecret}&` +
+    `code=${requestToken}`,
+  headers: {
+    accept: 'application/json'
+  }
+});
+```
+
+上面代码中，GitHub 的令牌接口`https://github.com/login/oauth/access_token`需要提供三个参数。
+
+- `client_id`：客户端的 ID
+- `client_secret`：客户端的密钥
+- `code`：授权码
+
+作为回应，GitHub 会返回一段 JSON 数据，里面包含了令牌`accessToken`。
+
+```javascript
+const accessToken = tokenResponse.data.access_token;
+```
+
+#### 调用 API 获取用户数据
+
+有了令牌以后，就可以向 API 请求数据了。
+
+```javascript
+const result = await axios({
+  method: 'get',
+  url: `https://api.github.com/user`,
+  headers: {
+    accept: 'application/json',
+    Authorization: `token ${accessToken}`
+  }
+});
+```
+
+上面代码中，GitHub API 的地址是`https://api.github.com/user`，请求的时候必须在 HTTP 头信息里面带上令牌`Authorization: token 361507da`。
+
+然后，就可以拿到用户数据，得到用户的身份。
+
+```javascript
+const name = result.data.name;
+ctx.response.redirect(`/welcome.html?name=${name}`);
+```
 
 
 
+## Spring Security OAuth2.0
+
+详细用法请参考示例：
+
+- `https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-security/spring-security-oauth2-without-jwt`
 
 
+
+### token 超时设置
+
+分别设置每个客户端超时
+
+```java
+clients.inMemory()
+    .withClient("client1")
+    .secret(passwordEncoder.encode(ClientSecret))
+    // authorization_code 授权码模式，，跳转到登录页面需要用户登录后并授权后才能够获取token
+    // implicit 静默授权模式，跳转到登录页面需要用户登录后并授权才能够获取token
+    .authorizedGrantTypes("authorization_code", "implicit", "refresh_token")
+    .scopes("all")
+    .autoApprove(false)
+    .redirectUris("http://www.baidu.com")
+    .accessTokenValiditySeconds(3600)
+    .refreshTokenValiditySeconds(3600)
+```
+
+设置全局超时
+
+```java
+@Bean
+AuthorizationServerTokenServices tokenServices() {
+    DefaultTokenServices defaultTokenServices = new DefaultTokenServices();
+    defaultTokenServices.setClientDetailsService(clientDetailsService);
+    defaultTokenServices.setTokenStore(tokenStore());
+    defaultTokenServices.setSupportRefreshToken(true);
+    // 设置token有效期为7200秒，也就是两个小时
+    // defaultTokenServices.setAccessTokenValiditySeconds(7200);
+    defaultTokenServices.setAccessTokenValiditySeconds(2);
+    // 设置refresh_token有效期为3天
+    // defaultTokenServices.setRefreshTokenValiditySeconds(259200);
+    defaultTokenServices.setRefreshTokenValiditySeconds(5);
+    return defaultTokenServices;
+}
+```
+
+
+
+### todo 列表
+
+- 有哪些端点
+- 客户端信息从数据库加载
+- 自定义登录和授权确认界面
+- 支持验证码、短信、人脸识别、邮箱、authenticator登录
+- 授权码模式如何在移动端实现呢？
+- 如何自动获取公钥
+- 生产级别示例的完整版
+- 根据`https://www.ruanyifeng.com/blog/2019/04/github-oauth.html`指引实现一个基于 Spring MVC 的示例
+- 参考此资料`https://cloud.tencent.com/developer/article/2248770`总结
+- 端点响应自定义格式 JSON
+- 自定义端点 URL
+- 测试 resourceId 和 scope
+- approval 定制
+- refresh token 过期如何处理？
+- github 登录成功回调后如何保存 github 账号信息到本地数据库
+- 分布式系统统一认证鉴权需求
+- SAML 协议
+- RBAC、ACL、数据权限
+- 有没有基于 SpringBoot 开箱即用的 RBAC 是插件呢？
 
