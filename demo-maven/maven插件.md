@@ -115,16 +115,16 @@ mvn clean package
 
 
 
-### `tomcat9-maven-plugin`
+### `tomcat9 maven`插件
 
->`maven`插件`tomcat9-maven-plugin`的使用`https://search.maven.org/artifact/org.opoo.maven/tomcat9-maven-plugin/3.0.1/maven-plugin`
+>使用`org.codehaus.cargo:cargo-maven2-plugin`插件
 
 详细用法请参考`https://gitee.com/dexterleslie/demonstration/tree/master/demo-maven/demo-maven-tomcat-plugin/demo-maven-tomcat9-plugin`
 
-运行`tomcat9-maven-plugin`
+运行
 
 ```bash
-mvn tomcat9:run
+mvn package cargo:run
 ```
 
 发布`war`

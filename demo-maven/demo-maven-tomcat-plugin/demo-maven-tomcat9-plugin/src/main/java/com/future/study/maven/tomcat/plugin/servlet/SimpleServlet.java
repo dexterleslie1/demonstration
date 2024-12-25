@@ -27,6 +27,6 @@ public class SimpleServlet extends HttpServlet {
     	}
         resp.setContentType("text/plain;charset=utf-8");
         Date date = new Date();
-        resp.getWriter().write("系统当前时间:" + date);
+        resp.getWriter().write("来自 Servlet 系统当前时间:" + date);
     }
 }
