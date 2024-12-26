@@ -11,7 +11,6 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 @EnableDiscoveryClient
 public class ApplicationServiceC {
     /**
-     *
      * @param args
      */
     public static void main(String[] args) {

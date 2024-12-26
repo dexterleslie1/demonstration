@@ -578,11 +578,167 @@ todo Circuit Breaker 和 Resilience4J 关系
 
 ## 服务配置和管理
 
+
+
+### 定义
+
+微服务服务配置和管理是微服务架构中的关键环节，它涉及到服务的启动、运行、性能、安全性和可扩展性等多个方面。以下是对微服务服务配置和管理的详细阐述：
+
+**一、微服务配置管理的概念**
+
+微服务配置管理是指在微服务架构中对各个服务的配置数据进行统一管理和控制的过程。这些配置数据包括但不限于数据库连接信息、API密钥、环境变量、服务端口、日志级别等。有效的配置管理能够确保服务在不同环境中的一致性，并快速响应业务需求变化。
+
+**二、微服务配置管理的策略**
+
+1. **外部化配置**：将应用程序的配置文件从代码中分离，使其能独立于应用程序进行管理。这种策略允许开发人员在不修改代码的情况下更改配置，提升了配置的灵活性和可管理性。
+2. **动态配置**：支持在运行时修改配置，而无需重启服务。这能够根据业务需求实时调整配置，提高系统响应速度和可用性，同时降低运维成本。
+3. **版本控制与审计**：对配置文件进行版本控制，可以追踪任何更改并回滚到以前的版本。同时，确保所有配置变更都有记录，便于审计和排查问题。
+
+**三、微服务配置管理的最佳实践**
+
+1. **使用环境变量**：对于敏感信息（如数据库密码），建议使用环境变量存储，避免将其硬编码在配置文件中。这不仅提高了安全性，也使得配置更加灵活。
+2. **采用加密机制**：确保敏感配置项（如API密钥）采用加密存储，防止配置被未授权访问。可以使用专门的加密工具或服务进行管理。
+3. **定期审计配置**：定期检查和审计配置变更，确保没有未授权的访问或更改。可以利用工具对配置历史进行保存和审核，增强系统的安全性。
+4. **选择合适的配置管理工具**：常用的配置管理工具有Spring Cloud Config、Apollo、Disconf等，它们提供了集中化的配置管理服务，支持多种配置源和动态更新。选择适合团队和项目的工具，可以提高配置管理的效率和效果。
+5. **结合CI/CD工具实现自动化部署**：结合持续集成和持续部署（CI/CD）工具，实现配置的自动化部署和更新。这可以显著降低配置管理的复杂性，提高部署的效率和可靠性。
+
+**四、微服务配置管理的挑战与解决方案**
+
+1. **挑战**：随着微服务数量的增加和复杂度的提升，配置管理的难度也会增加。如何确保所有服务的配置数据一致、准确和安全成为了一个重要的问题。
+2. 解决方案：
+   - 建立统一的配置管理平台和规范，确保所有服务都遵循相同的配置管理策略。
+   - 引入自动化工具和流程，减少人为错误和重复劳动。
+   - 定期对配置数据进行审计和检查，及时发现和解决问题。
+
+综上所述，微服务服务配置和管理是微服务架构中不可或缺的一部分。通过外部化配置、动态更新、版本控制与审计等策略以及最佳实践的应用，可以确保服务在不同环境中的一致性、安全性和可扩展性。同时，选择合适的配置管理工具和结合CI/CD工具实现自动化部署也是提高配置管理效率和效果的关键。
+
+
+
 ### Config + Bus
 
-> Nacos 逐渐替代 Config + Bus
+> 注意：Nacos 逐渐替代 Config + Bus，所以不做实验。
+
+
+
+### SpringCloud Config Server
+
+>使用 Consul 或者 Nacos 替代，很久之前已经做过实验`https://gitee.com/dexterleslie/demonstration/tree/master/spring-cloud/spring-cloud-config-center`。
+
+
 
 ### Consul
+
+详细用法请参考示例`https://gitee.com/dexterleslie/demonstration/tree/master/spring-cloud/spring-cloud-consul-parent`
+
+
+
+#### 基本配置
+
+访问 Consul `http://localhost:8500/` 按照约定添加 yaml 配置
+
+- profile=default 时 yaml 配置 config/spring-cloud-service-c/data（config 是约定的目录前缀，spring-cloud-service-c 是微服务名称，data 是约定的配置文件名称）
+
+  ```yaml
+  my:
+   k1: default,version=1
+  ```
+
+- profile=dev 时 yaml 配置 config/spring-cloud-service-c-dev/data（config 是约定的目录前缀，spring-cloud-service-c 是微服务名称，-dev 是 dev profile，data 是约定的配置文件名称）
+
+  ```yaml
+  my:
+   k1: dev,version=1
+  ```
+
+- profile=prod 时 yaml 配置 config/spring-cloud-service-c-prod/data（config 是约定的目录前缀，spring-cloud-service-c 是微服务名称，-prod 是 prod profile，data 是约定的配置文件名称）
+
+  ```yaml
+  my:
+   k1: prod,version=1
+  ```
+
+pom 添加 Consul 配置客户端依赖
+
+```xml
+<!-- Consul 作为服务配置和管理服务器的依赖 -->
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-consul-config</artifactId>
+</dependency>
+```
+
+bootstrap.yml 内容如下：
+
+```yaml
+spring:
+  application:
+    name: spring-cloud-service-c
+  cloud:
+    consul:
+      host: 127.0.0.1
+      port: 8500
+      discovery:
+        service-name: ${spring.application.name}
+      # 配置 Consul 作为服务配置和管理服务器
+      config:
+        # Consul 不同 profile 配置目录路径使用 '-' 分隔，
+        # 例如： config/spring-cloud-service-c-dev/data、config/spring-cloud-service-c-prod/data
+        profile-separator: '-'
+        format: YAML
+        # 5 从 Consul 刷新一次配置
+        watch:
+          wait-time: 5
+  # 加载 Consul 配置中心的 config/spring-cloud-service-c-prod/data 目录下的配置文件
+  profiles:
+    active: prod
+
+```
+
+application.yml 内容如下：
+
+```yaml
+server:
+  port: 8083
+```
+
+使用 @Value 注入配置 my.k1
+
+```java
+@RestController
+// 自定从 Consul 配置中心刷新到最新配置
+@RefreshScope
+public class ApiController {
+    @Value("${my.k1:}")
+    private String k1;
+
+    /**
+     * @param name
+     * @return
+     */
+    @RequestMapping(value = "/api/v1/c/sayHello", method = RequestMethod.POST)
+    public String sayHello(@RequestParam(value = "name", defaultValue = "") String name) {
+        return "Hello " + name + "!!!，配置k1=" + k1;
+    }
+}
+```
+
+访问`http://localhost:8081/api/v1/a/sayHello?name=Dexter`查看是否成功加载 my.k1 配置。
+
+
+
+#### @RefreshScope 自动刷新配置
+
+在 @Value 所在类添加 @RefreshScope 自动刷新配置 
+
+```java
+// 自定从 Consul 配置中心刷新到最新配置
+@RefreshScope
+public class ApiController {
+    @Value("${my.k1:}")
+    private String k1;
+```
+
+
 
 ### Nacos
 
