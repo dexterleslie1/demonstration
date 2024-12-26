@@ -131,7 +131,7 @@ public class SwaggerConfig {
 
 
 
-## `Knifef4j`
+## `Knife4j`
 
 >`Knife4j`官方参考资料`https://doc.xiaominfo.com/`
 >

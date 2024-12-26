@@ -492,8 +492,6 @@ module.exports = {
                 {
                     title: "SpringCloud用法",
                     children: [
-                        'springcloud和springboot版本兼容性.md',
-                        '服务网关.md',
                         'assistant示例.md',
                     ]
                 }
