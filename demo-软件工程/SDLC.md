@@ -77,3 +77,36 @@ SDLC 过程的细节因团队而异。不过，下面我们会概述一些常见
 敏捷模型将 SDLC 阶段安排为几个开发周期。开发团队快速地迭代各个阶段，在每个周期中只交付小规模的、增量的软件变更。他们持续地评估需求、计划和结果，以便能够快速响应变化。敏捷模型既是迭代的，也是增量的，这使得它比其他过程模型更有效。
 
 优点和缺点：在面临复杂项目时，快速的开发周期能够帮助团队在问题出现的早期或其恶化为重大问题之前识别和解决问题。它们还可以让客户和涉众参与进来，在整个项目生命周期中获得反馈。然而，过度依赖客户反馈可能导致过度的范围变更或项目中途终止。
+
+
+
+
+
+## SDLC Java 实践
+
+目标：架构师能力
+
+**实现**
+
+- Java 的基础
+- SSM、Spring Cloud
+- MySQL
+- Redis
+- RabbitMQ
+
+**测试**
+
+- JUnit、Mockito
+- JMH、JMeter
+
+**部署**
+
+- Linux 的使用
+- Docker、Docker Compose、Docker Swarm
+- Ansible
+
+**维护**
+
+- 监控：prometheus、skywalking、ELK
+- 安全防护：openresty + lua 实现 CC 防御、naxsi
+- 在线调试（Arthas、JWDP）
