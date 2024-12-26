@@ -17,11 +17,12 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
         </dependency>
+        <!-- SpringCloud Consul 客户端依赖 -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-consul-discovery</artifactId>
         </dependency>
-        <!-- spring-cloud使用consul必须要引用actuator、web否则服务器不能在consul控制台中显示 -->
+        <!-- SpringCloud使用Consul必须要引用actuator、web否则服务器不能在Consul控制台中显示 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
