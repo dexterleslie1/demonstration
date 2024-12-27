@@ -21,6 +21,6 @@ public class ApiController {
      */
     @RequestMapping(value = "/api/v1/sayHello", method = RequestMethod.POST)
     public String sayHello(@RequestParam(value = "name", defaultValue = "") String name) {
-        return "Hello " + name + "!!(Ribbon) port=" + port;
+        return "Hello " + name + "!!(LoadBalancer) port=" + port;
     }
 }

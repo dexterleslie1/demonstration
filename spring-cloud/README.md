@@ -364,8 +364,6 @@ docker-compose up -d
 
 > 服务调用实现如下：
 >
-> LoadBalancer
->
 > Feign（停止更新，不需要学习，已经被openfeign取代）
 >
 > OpenFeign
@@ -380,7 +378,21 @@ docker-compose up -d
 
 进程内负载均衡（负载均衡 + RestTemplate ）。
 
+
+
+#### 运行示例
+
 详细用法请参考示例`https://gitee.com/dexterleslie/demonstration/tree/master/spring-cloud/spring-cloud-ribbon-parent`
+
+启动 Consul
+
+```bash
+docker compose up -d
+```
+
+启动 ApplicationRibbon、ApplicationHelloworld（修改端口后启动两个 ApplicationHelloworld 应用）
+
+访问`http://localhost:8081/api/v1/external/sayHello?name=Dexter`测试 Ribbon + RestTemplate 负载均衡。
 
 
 
@@ -454,6 +466,133 @@ public class ApplicationRibbon {
 
 
 
+### LoadBalancer
+
+
+
+#### 介绍
+
+SpringCloud LoadBalancer是Spring Cloud提供的一个客户端负载均衡器，它取代了传统的Ribbon组件，为微服务架构提供了更加灵活和强大的负载均衡功能。以下是对SpringCloud LoadBalancer的详细解析：
+
+**一、定义与职责**
+
+负载均衡器（LoadBalancer）是一种网络设备或软件机制，用于分发传入的网络流量负载请求到多个后端目标服务器上，从而实现系统资源的均衡利用和提高系统的可用性和性能。SpringCloud LoadBalancer作为客户端负载均衡器，它的主要职责是根据配置的负载均衡策略，从服务注册中心获取的服务实例列表中选择一个实例来处理请求。
+
+**二、工作原理**
+
+客户端负载均衡是一种将请求分发到多个服务实例的机制。每个发起服务调用的客户端都存有完整的目标服务地址列表，根据配置的负载均衡策略，由客户端自己决定向哪台服务器发起调用。这种方式相较于传统的网关层负载均衡，具有网络开销小、配置灵活等优点。
+
+在Spring Cloud中，当客户端发起服务调用请求时，请求首先到达带有`@LoadBalanced`注解的`RestTemplate`或`LBRestTemplate`。`RestTemplate`或`LBRestTemplate`接收到请求后，会先经过一系列的拦截器（Interceptor）处理，这些拦截器可以用于实现认证、限流等功能。拦截器处理完成后，请求会被传送到LoadBalancer组件。LoadBalancer会根据配置的负载均衡策略和后端服务实例列表，选择一个合适的目标服务器。选定的目标服务器地址将被封装在一个新的HTTP请求中，然后由LoadBalancer将这个新的HTTP请求返回给`RestTemplate`或`LBRestTemplate`。最后，`RestTemplate`或`LBRestTemplate`将根据LoadBalancer返回的地址信息，直接与服务网关交互并完成服务调用。
+
+**三、负载均衡策略**
+
+SpringCloud LoadBalancer支持多种负载均衡策略，以满足不同场景的需求。常见的负载均衡策略包括：
+
+1. **轮询（Round Robin）**：按顺序将每个新请求分配给下一个服务器。当到达列表末尾时，它会重新开始。这是最简单的负载均衡策略，适用于服务器性能相似且负载相对均衡的情况。
+2. **随机（Random）**：随机选择一个服务器来处理新的请求。适用于服务器数量较多且请求分布均匀的场景。
+3. **最少连接（Least Connections）**：选择当前连接数最少的服务器来处理新的请求。这种方法考虑了服务器的当前负载，适用于请求处理时间波动较大的场景。
+4. **加权轮询（Weighted Round Robin）**：给每个服务器分配一个权重，服务器的权重越高，分配给该服务器的请求就越多。适用于服务器性能不均或希望给特定服务器更多流量的情况。
+5. **加权随机（Weighted Random）**：与加权轮询类似，但是按照权重值来随机选择后端服务器。也可以用来处理后端服务器性能不均衡的情况，但是分发更随机。
+6. **最短响应时间（Shortest Response Time）**：测量每个后端服务器的响应时间，并将请求发送到响应时间最短的服务器。这可以确保客户端获得最快的响应，适用于要求低延迟的应用。
+7. **IP哈希（IP Hash）**：使用客户端的IP地址来计算哈希值，然后将请求发送到与哈希值对应的后端服务器。这种策略可用于确保来自同一客户端的请求都被发送到同一台后端服务器，适用于需要会话保持的情况。
+
+SpringCloud LoadBalancer默认的负载均衡策略是轮询。如果需要自定义负载均衡策略，可以实现`ReactorServiceInstanceLoadBalancer`接口，并在配置类中注册自定义的负载均衡器。
+
+**四、配置与使用**
+
+要配置和使用SpringCloud LoadBalancer，需要按照以下步骤进行：
+
+1. **添加依赖**：确保项目包含SpringCloud LoadBalancer的依赖。如果使用Maven，可以在`pom.xml`文件中添加相应的依赖项。
+2. **创建RestTemplate Bean**：在配置类中，创建一个带有`@LoadBalanced`注解的`RestTemplate` Bean。这个注解会告诉Spring Cloud使用LoadBalancer来处理该`RestTemplate`的请求。
+3. **使用服务名称**：在请求URL中使用服务名称而不是具体的IP地址或主机名。例如，如果服务注册在Eureka上，并且服务名称为`my-service`，则请求URL应该是`http://my-service/some-endpoint`。
+
+**五、优势与意义**
+
+SpringCloud LoadBalancer通过客户端负载均衡的方式，实现了更加高效和灵活的服务调用方式。它具有以下优势：
+
+1. **动态配置**：支持动态更新配置，当后端服务实例发生变化时，可以快速响应并调整负载均衡策略。
+2. **健康检查**：通过内置的健康检查机制，自动识别并排除故障实例，保证服务的可用性。
+3. **集成RestTemplate**：通过给`RestTemplate`打标签的方式，将其转化为经过负载均衡器处理的`LBRestTemplate`，实现了对现有代码的无侵入式改造。
+4. **多种负载均衡策略**：支持多种负载均衡算法，以满足不同场景的需求。
+
+总之，SpringCloud LoadBalancer是微服务架构中不可或缺的重要组件之一，对于提升系统的性能和稳定性具有重要意义。
+
+
+
+#### 运行示例
+
+详细用法请参考示例`https://gitee.com/dexterleslie/demonstration/tree/master/spring-cloud/spring-cloud-loadbalancer-parent`
+
+启动 Consul
+
+```bash
+docker compose up -d
+```
+
+启动 ApplicationLoadBalancer、ApplicationHelloworld（修改端口后启动两个 ApplicationHelloworld 应用）
+
+访问`http://localhost:8081/api/v1/external/sayHello?name=Dexter`测试 LoadBalancer + RestTemplate 负载均衡。
+
+
+
+#### 基本配置
+
+pom 引入 LoadBalancer 依赖
+
+```xml
+<!-- SpringCloud LoadBalancer 依赖 -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-loadbalancer</artifactId>
+        </dependency>
+```
+
+RestTemplate 使用 @LoadBalanced 注解
+
+```java
+// 创建RestTemplate并开启负载均衡
+@Bean
+@LoadBalanced
+RestTemplate restTemplate() {
+    return new RestTemplate();
+}
+```
+
+
+
+#### 负载均衡算法切换
+
+```java
+@Configuration
+@LoadBalancerClients(
+        // spring-cloud-helloworld 使用 LoadBalancerConfig 配置的负载均衡算法 RoundRobinLoadBalancer
+        @LoadBalancerClient(value = "spring-cloud-helloworld", configuration = LoadBalancerConfig.class))
+public class LoadBalancerConfig {
+    // 创建RestTemplate并开启负载均衡
+    @Bean
+    @LoadBalanced
+    RestTemplate restTemplate() {
+        return new RestTemplate();
+    }
+
+    @Bean
+    ReactorLoadBalancer<ServiceInstance> loadBalancer(Environment environment,
+                                                      LoadBalancerClientFactory loadBalancerClientFactory) {
+        String name = environment.getProperty(LoadBalancerClientFactory.PROPERTY_NAME);
+        // 随机负载均衡算法
+        /*return new RandomLoadBalancer(loadBalancerClientFactory
+                .getLazyProvider(name, ServiceInstanceListSupplier.class),
+                name);*/
+        // 轮询负载均衡算法
+        return new RoundRobinLoadBalancer(loadBalancerClientFactory
+                .getLazyProvider(name, ServiceInstanceListSupplier.class),
+                name);
+    }
+}
+```
+
+
+
 ### OpenFeign
 
 > https://www.jianshu.com/p/c0cb63e7640c
@@ -476,8 +615,6 @@ public class ApplicationRibbon {
 > 
 >
 > 参考spring-cloud/spring-cloud-feign-demo
-
-### LoadBalancer
 
 
 
