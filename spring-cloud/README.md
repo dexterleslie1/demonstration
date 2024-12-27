@@ -364,26 +364,61 @@ docker-compose up -d
 
 > 服务调用实现如下：
 >
-> Ribbon（停止更新，许多遗留项目还在使用，所以需要学习）
->
 > LoadBalancer
 >
 > Feign（停止更新，不需要学习，已经被openfeign取代）
 >
 > OpenFeign
 
+
+
 ### Ribbon
 
-> 进程内负载均衡（负载均衡+RestTemplate）。
+> 注意：停止更新，许多遗留项目还在使用，所以需要学习。
 >
-> 参考 spring-cloud/spring-cloud-ribbon-parent demo
+> Ribbon 实现客户端的负载均衡`http://www.cnblogs.com/chry/p/7263281.html`
 
-#### 使用IRule替换负载均衡算法
+进程内负载均衡（负载均衡 + RestTemplate ）。
 
-> 默认负载均衡算法是RoundRobinRule
+详细用法请参考示例`https://gitee.com/dexterleslie/demonstration/tree/master/spring-cloud/spring-cloud-ribbon-parent`
+
+
+
+#### 基本配置
+
+pom 引入 Ribbon 依赖
+
+```xml
+<!-- SpringCloud Ribbon 客户端依赖 -->
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-netflix-ribbon</artifactId>
+</dependency>
+```
+
+RestTemplate 使用 @LoadBalanced 注解
 
 ```java
-// 定义IRule配置类
+/**
+ * 无论是否何种Ribbon负载均衡算法都需要配置下面的RestTemplate
+ * @return
+ */
+@Bean
+@LoadBalanced
+RestTemplate restTemplate() {
+    return new RestTemplate();
+}
+```
+
+
+
+#### 使用 IRule 替换负载均衡算法
+
+> 默认负载均衡算法是 RoundRobinRule
+
+```java
+// 注意：自动IRule一定需要放置到与Application启动类所在的包和子包外，例如：com.future.demo.myrule
+// 否则@RibbonClient注解不生效
 @Configuration
 public class MyRuleRandom {
     @Bean
@@ -393,12 +428,31 @@ public class MyRuleRandom {
     }
 }
 
-// 配置Application启动类加载MyRuleRandom配置@RibbonClient
 @SpringBootApplication
-@EnableEurekaClient
 @RibbonClient(name = "spring-cloud-helloworld", configuration = MyRuleRandom.class)
+@EnableDiscoveryClient
 public class ApplicationRibbon {
+    /**
+     *
+     * @param args
+     */
+    public static void main(String[] args) {
+        SpringApplication.run(ApplicationRibbon.class, args);
+    }
+
+    /**
+     * 无论是否何种Ribbon负载均衡算法都需要配置下面的RestTemplate
+     * @return
+     */
+    @Bean
+    @LoadBalanced
+    RestTemplate restTemplate() {
+        return new RestTemplate();
+    }
+}
 ```
+
+
 
 ### OpenFeign
 

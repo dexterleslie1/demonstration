@@ -1,9 +1,11 @@
-eureka:
-  client:
-    serviceUrl:
-      defaultZone: http://localhost:8080/eureka/
 spring:
   application:
     name: spring-cloud-ribbon
+  cloud:
+    consul:
+      host: 127.0.0.1
+      port: 8500
+      discovery:
+        service-name: ${spring.application.name}
 server:
   port: 8081
