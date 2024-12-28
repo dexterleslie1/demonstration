@@ -595,26 +595,497 @@ public class LoadBalancerConfig {
 
 ### OpenFeign
 
-> https://www.jianshu.com/p/c0cb63e7640c
->
-> OpenFeign是一个声明式web服务客户端，让编写Web服务客户端变得更加容易，只需要创建一个接口并在接口上添加注解即可。Feign也可以支持拔插式的编码器和解码器。SpringCloud对Feign进行了封装，使其支持了Spring MVC标准注解和HttpMessageConverters。Feign可以与Eureka和Ribbon组合使用以支持负载均衡。
->
-> 前面在使用Ribbon时候，利用RestTemplete对http请求封装处理形成一套模板化的调用方法。但是在实际开发过程中，由于对服务依赖的调用可能不止一处，往往一个接口会被多处调用，所以通常都会针对每个微服务自行封装一些客户端类来包装这些依赖服务的调用，所以Feign在此基础上做了进一步的封装，我们只需要在一个微服务接口上标注一个Feign注解即可完成对服务提供方的接口绑定，简化了Spring Cloud Ribbon时，自动封装服务调用客户端的开发量。
->
-> 和Ribbon对比，Feign只需要在服务调用接口上加一个注解就可以了，优雅而简单的实现了服务调用。
-> 
->
->
-> 知识点：
->
-> - openfeign超时配置
->
-> - openfeign日志配置
-> - feign添加请求头信息，使用@RequestHeader注解 https://www.cnblogs.com/laeni/p/12733920.html
->
-> 
->
-> 参考spring-cloud/spring-cloud-feign-demo
+>`https://www.jianshu.com/p/c0cb63e7640c`
+
+
+
+#### 定义
+
+OpenFeign是一个声明式的Web服务客户端，它使得编写Web服务客户端变得更加容易。以下是对OpenFeign的详细介绍：
+
+**一、简介与背景**
+
+OpenFeign是在Spring Cloud生态系统中的一个组件，它整合了Ribbon（客户端负载均衡器）和Eureka（服务发现组件），从而简化了微服务之间的调用。通过定义一个接口并使用注解的方式，开发者可以轻松地创建一个Web服务客户端，而不需要编写大量的模板代码。OpenFeign会自动生成接口的实现类，并使用Ribbon来调用相应的服务。
+
+**二、核心组件与功能**
+
+OpenFeign的核心组件包括Encoder（编码器）、Decoder（解码器）、Contract（契约）等。这些组件共同协作，实现了对HTTP请求的封装和调用。其中：
+
+- **Encoder**：负责将请求对象编码为HTTP请求体。
+- **Decoder**：负责将HTTP响应体解码为响应对象。
+- **Contract**：定义了OpenFeign的注解和它们的含义，例如@FeignClient注解用于声明一个Feign客户端。
+
+**三、使用与配置**
+
+1. **添加依赖**：在Spring Cloud项目中，使用OpenFeign首先需要添加相应的依赖。通常，这可以通过在pom.xml文件中添加spring-cloud-starter-openfeign依赖来实现。
+2. **开启OpenFeign**：在主应用类上添加@EnableFeignClients注解，以启用OpenFeign的功能。
+3. **创建Feign客户端接口**：通过定义一个接口，并使用@FeignClient注解来指定服务提供者的名称和URL，可以创建一个Feign客户端。在接口中，可以使用Spring MVC的注解来定义需要调用的HTTP方法和路径。
+4. **配置**：OpenFeign提供了多种配置选项，以满足不同的需求。例如，可以通过配置文件或配置类来设置日志级别、连接超时时间和请求处理超时时间等。
+
+**四、日志配置**
+
+OpenFeign提供了日志打印功能，通过配置调整日志级别，开发者可以了解请求的细节。这有助于在调试和定位问题时获取更多的信息。日志级别包括：
+
+- **NONE**：不记录任何信息（默认）。
+- **BASIC**：仅记录请求方法、URL以及响应状态码和执行时间。
+- **HEADERS**：除了记录BASIC级别的信息外，还会记录请求和响应的头信息。
+- **FULL**：记录所有请求与响应的明细，包括头信息、请求体、元数据等。
+
+**五、超时配置**
+
+为了避免服务调用连接和处理时间超时，可以对Feign的连接超时时间和请求处理超时时间进行配置。这可以通过在配置类中定义Request.Options对象，或者在配置文件中指定相关属性来实现。
+
+**六、优势与适用场景**
+
+OpenFeign的优势在于其易用性、集成性和轻量级特性。它简化了微服务之间的调用，使得开发者可以更加专注于业务逻辑的实现。同时，由于与Spring Cloud的紧密集成，OpenFeign可以方便地利用Spring Cloud提供的各种功能，如熔断、限流等。这使得OpenFeign在构建轻量级的微服务架构时具有显著的优势。
+
+然而，需要注意的是，OpenFeign可能不适合处理大量并发请求或复杂业务场景。在这些情况下，可能需要考虑使用更强大的RPC框架，如Dubbo等。
+
+**七、总结**
+
+OpenFeign是一个功能强大且易于使用的Web服务客户端，它简化了微服务之间的通信和调用。通过合理的配置和使用，OpenFeign可以帮助开发者构建高效、可靠的微服务架构。
+
+
+
+#### 运行示例
+
+详细用法请参考示例`https://gitee.com/dexterleslie/demonstration/tree/master/spring-cloud/spring-cloud-feign-demo`
+
+启动 Consul
+
+```bash
+docker compose up -d
+```
+
+启动 ApplicationEureka、ApplicationConsumer、ApplicationProvider（修改端口后启动两个应用）
+
+访问`http://localhost:8080/api/v1/external/product/1`测试应用是否正常
+
+
+
+#### 基本配置
+
+pom 引用 SpringCloud OpenFeign 依赖
+
+```xml
+<!-- SpringCloud OpenFeign 依赖 -->
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-openfeign</artifactId>
+    <exclusions>
+        <!-- 排除 Ribbon 以证明 OpenFeign + Consul 是依赖 SpringCloud LoadBalancer 提供的负载均衡算法支持 -->
+        <exclusion>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-netflix-ribbon</artifactId>
+        </exclusion>
+    </exclusions>
+</dependency>
+```
+
+创建 OpenFeign 客户端
+
+```java
+@FeignClient(
+        contextId = "productFeign1",
+        value = "spring-cloud-feign-demo-provider",
+        path = "/api/v1/product")
+public interface ProductFeign {
+    @GetMapping("{productId}")
+    ObjectResponse<Product> info(@PathVariable("productId") Integer productId) throws BusinessException;
+
+    @GetMapping("get")
+    Product get(@RequestParam(value = "productId", required = false) Integer productId);
+
+    @PostMapping("add")
+    String add(@RequestHeader(value = "customHeader") String customHeader,
+               @RequestBody(required = false) Product product);
+
+    @GetMapping("timeout")
+    String timeout();
+}
+```
+
+Application 中启用 OpenFeign 客户端的支持
+
+```java
+@SpringBootApplication
+// 应用程序中启用Feign客户端的支持
+@EnableFeignClients(
+        clients = {
+                ProductFeign.class
+        }
+)
+@EnableFutureExceptionHandler
+public class ApplicationConsumer {
+    public static void main(String[] args) {
+        SpringApplication.run(ApplicationConsumer.class, args);
+    }
+}
+```
+
+注入并调用 OpenFeign 客户端
+
+```java
+@Resource
+ProductFeign productFeign;
+
+@GetMapping("{productId}")
+public ObjectResponse<Product> info(@PathVariable("productId") Integer productId) throws BusinessException {
+    ObjectResponse<Product> response = this.productFeign.info(productId);
+    return response;
+}
+```
+
+
+
+#### 负载均衡
+
+org.springframework.boot:spring-boot-starter-parent:2.2.7.RELEASE + org.springframework.cloud:spring-cloud-dependencies:Hoxton.SR10 + OpenFeign + Eureka 默认使用 OpenFeign + Ribbon（为 OpenFeign 提供负载均衡算法支持），注意：使用 JMeter 压力测试才能够触发 Ribbon 负载均衡起作用。
+
+org.springframework.boot:spring-boot-starter-parent:2.2.7.RELEASE + org.springframework.cloud:spring-cloud-dependencies:Hoxton.SR10 + OpenFeign + Consul 默认使用 OpenFeign + LoadBalancer（为 OpenFeign 提供负载均衡算法支持）。
+
+访问`http://localhost:8080/api/v1/external/product/1`测试
+
+
+
+#### 超时设置
+
+org.springframework.boot:spring-boot-starter-parent:3.3.7 + org.springframework.cloud:spring-cloud-dependencies:2023.0.4 版本的 OpenFeign 超时设置
+
+```properties
+# 注意：org.springframework.boot:spring-boot-starter-parent:3.3.7 + org.springframework.cloud:spring-cloud-dependencies:2023.0.4 版本的 OpenFeign 超时设置
+# 该属性控制Feign客户端在尝试连接到目标服务时等待响应的最长时间。如果在这个时间内没有成功建立连接，
+# 则会抛出超时异常。这有助于防止客户端在目标服务不可用时长时间挂起，从而提高系统的健壮性和响应性。
+# default 表示全局 OpenFeign 设置
+spring.cloud.openfeign.client.config.default.connect-timeout=75000
+# 该属性用于控制服务间调用的响应时间，防止因某个服务响应过慢而导致整个调用链路的阻塞或失败。
+# 它确保了Feign客户端在发起远程HTTP请求时，能够根据预设的超时时间限制，及时终止那些响应过慢的请求，从而保护系统的稳定性和响应性。
+# default 表示全局 OpenFeign 设置
+spring.cloud.openfeign.client.config.default.read-timeout=75000
+
+# 指定 productFeign1 Feign 的超时设置
+spring.cloud.openfeign.client.config.productFeign1.connect-timeout=75000
+spring.cloud.openfeign.client.config.productFeign1.read-timeout=75000
+```
+
+org.springframework.boot:spring-boot-starter-parent:2.2.7.RELEASE + org.springframework.cloud:spring-cloud-dependencies:Hoxton.SR10 版本的 OpenFeign 超时设置
+
+```properties
+# 注意：org.springframework.boot:spring-boot-starter-parent:2.2.7.RELEASE + org.springframework.cloud:spring-cloud-dependencies:Hoxton.SR10 版本的 OpenFeign 超时设置
+feign.client.config.default.connect-timeout=75000
+feign.client.config.default.read-timeout=75000
+```
+
+访问`http://localhost:8080/api/v1/external/product/timeout`测试
+
+
+
+#### 重试机制
+
+配置如下：
+
+```java
+// 设置重试机制
+@Bean
+Retryer retryer() {
+    // 不启用重试机制
+    // return Retryer.NEVER_RETRY;
+    // 每次重试的时间间隔为 1 秒，period 和 maxPeriod 设置为相等，最大重试次数为 3 次
+    return new Retryer.Default(1000, 1000, 3);
+}
+```
+
+访问`http://localhost:8080/api/v1/external/product/timeout`测试
+
+
+
+#### 替换底层使用 HttpClient5 通讯
+
+pom 配置
+
+```xml
+<!-- 替换底层使用 HttpClient5 通讯依赖 -->
+<dependency>
+    <groupId>org.apache.httpcomponents.client5</groupId>
+    <artifactId>httpclient5</artifactId>
+</dependency>
+<dependency>
+    <groupId>io.github.openfeign</groupId>
+    <artifactId>feign-hc5</artifactId>
+</dependency>
+```
+
+修改 application.properties 替换 HttpClient5
+
+```properties
+# 替换底层使用 HttpClient5 通讯
+spring.cloud.openfeign.httpclient.hc5.enabled=true
+```
+
+访问`http://localhost:8080/api/v1/external/product/timeout`测试，查看错误堆栈显示使用 HttpClient5 作为底层通讯组件。
+
+
+
+#### 日志级别设置
+
+日志级别：
+
+- NONE：不打印日志。
+- BASIC：仅记录请求方法和URL以及响应状态码和执行时间。
+- HEADERS：记录基本信息以及请求和响应标头。
+- FULL：记录请求和响应的标头、正文和元数据。
+
+application.properties 设置日志级别
+
+```properties
+# 配置 feign 客户端日志级别为 debug（只支持设置为 debug 级别），再配合使用 Logger.Level 设置不同的日志级别
+# https://blog.csdn.net/weixin_43472934/article/details/122253068
+logging.level.com.future.demo.spring.cloud.feign.common.feign=debug
+```
+
+Java 设置日志级别
+
+```java
+@Configuration
+public class FeignConfig {
+    // 设置 OpenFeign 日志级别
+    @Bean
+    Logger.Level feignLogLevel() {
+        return Logger.Level.FULL;
+    }
+}
+```
+
+访问`http://localhost:8080/api/v1/external/product/1`测试
+
+
+
+#### 启用请求和响应压缩
+
+application.properties 添加配置如下：
+
+```properties
+# 启用请求和响应压缩
+spring.cloud.openfeign.compression.request.enabled=true
+spring.cloud.openfeign.compression.response.enabled=true
+spring.cloud.openfeign.compression.request.mime-types=text/xml,application/xml,application/json
+spring.cloud.openfeign.compression.request.min-request-size=2048
+```
+
+访问`http://localhost:8080/api/v1/external/product/1`测试，如果请求头有 Accept-Encoding: gzip 和 Accept-Encoding: deflate 表示已经启用请求和响应压缩。
+
+
+
+#### 自定义请求拦截器并添加请求头和请求参数
+
+定义请求拦截器
+
+```java
+/**
+ * 所有feign调用http头都注入my-header参数
+ * https://developer.aliyun.com/article/1058305
+ */
+@Slf4j
+public class MyRequestInterceptor implements RequestInterceptor {
+    @Override
+    public void apply(RequestTemplate template) {
+        template.header("my-header", "my-value");
+
+        // https://stackoverflow.com/questions/559155/how-do-i-get-a-httpservletrequest-in-my-spring-beans
+        if (RequestContextHolder.getRequestAttributes() != null) {
+            HttpServletRequest request =
+                    ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes())
+                            .getRequest();
+            String contextUserId = request.getParameter("contextUserId");
+            if (StringUtils.hasText(contextUserId)) {
+                template.query("contextUserId", contextUserId);
+                log.debug("feign客户端成功注入上下文参数，contextUserId={}", contextUserId);
+            }
+        }
+    }
+}
+```
+
+注入请求拦截器
+
+```java
+// 自定义 OpenFeign 请求拦截器
+@Bean
+RequestInterceptor requestInterceptor() {
+    return new MyRequestInterceptor();
+}
+```
+
+访问`http://localhost:8080/api/v1/external/product/1`测试，查看日志会输出请求头和请求参数值。
+
+
+
+#### Feign 客户端添加请求头
+
+>使用 @RequestHeader 注解`https://www.cnblogs.com/laeni/p/12733920.html`
+
+```java
+@FeignClient(
+        contextId = "productFeign1",
+        value = "spring-cloud-feign-demo-provider",
+        path = "/api/v1/product")
+public interface ProductFeign {
+    @PostMapping("add")
+    String add(@RequestHeader(value = "customHeader") String customHeader,
+               @RequestBody(required = false) Product product);
+}
+```
+
+使用 curl 请求接口并查看日志输出的请求头
+
+```bash
+curl -X POST http://localhost:8080/api/v1/external/product/add
+```
+
+
+
+#### 响应错误处理 ErrorDecoder
+
+OpenFeign是一个声明式的Web服务客户端，它使得写HTTP客户端变得更简单，主要用于微服务架构中，以简化服务间的调用。ErrorDecoder是OpenFeign中的一个重要接口，它在处理HTTP响应中的错误时发挥着关键作用。以下是对OpenFeign ErrorDecoder的详细解释：
+
+**一、ErrorDecoder的作用**
+
+ErrorDecoder接口用于处理HTTP响应中的错误。当OpenFeign客户端发送请求并接收到响应时，如果响应状态码表示错误（如4xx或5xx），则ErrorDecoder会被调用以决定是否将响应视为异常。通过自定义ErrorDecoder，可以对错误进行更精细的处理，比如根据不同的错误码返回不同的异常类型，或者在某些情况下忽略错误。
+
+**二、可能使用ErrorDecoder的场景**
+
+1. **特定错误码处理**：根据HTTP响应的不同错误码执行不同的逻辑。
+2. **忽略某些错误**：在某些情况下，可能希望忽略某些特定的错误（如404 Not Found），并返回一个默认值或空对象，而不是抛出异常。
+3. **增强错误日志**：通过自定义ErrorDecoder来增强错误日志，记录更多的上下文信息，以便于调试和监控。
+4. **统一异常处理**：将HTTP错误转换为统一的异常类型，并在应用程序的其他部分进行捕获和处理。
+
+**三、自定义ErrorDecoder的步骤**
+
+1. **创建实现类**：创建一个实现ErrorDecoder接口的类。该类需要实现decode方法，该方法接收一个Response对象作为参数，并返回一个Exception对象。在decode方法中，可以根据响应的状态码和其他信息来决定是否将响应视为异常，并返回相应的异常类型。
+2. **配置Feign客户端**：在Feign客户端的配置中指定自定义的ErrorDecoder。这通常是在一个带有@Configuration注解的配置类中，通过@Bean注解来定义一个ErrorDecoder类型的Bean。
+
+**四、示例代码**
+
+以下是一个自定义ErrorDecoder的示例代码：
+
+```java
+import feign.Response;
+import feign.codec.DecodeException;
+import feign.codec.ErrorDecoder;
+import feign.RetryableException;
+ 
+public class CustomErrorDecoder implements ErrorDecoder {
+    @Override
+    public Exception decode(Response response) {
+        if (response.status() >= 400 && response.status() < 500) {
+            // 处理客户端错误（如404, 401等）
+            if (response.status() == 404) {
+                return new ResourceNotFoundException("Resource not found");
+            } else if (response.status() == 401) {
+                return new UnauthorizedException("Unauthorized");
+            }
+            // 其他客户端错误可以统一处理或抛出异常
+            return new DecodeException(response.request().toString(), response);
+        } else if (response.status() >= 500) {
+            // 处理服务器错误（如500, 502等）
+            return new ServerErrorException("Server error");
+        }
+        // 对于成功的响应，返回null表示没有错误
+        return null;
+    }
+ 
+    // 自定义异常类
+    public static class ResourceNotFoundException extends RuntimeException {
+        public ResourceNotFoundException(String message) {
+            super(message);
+        }
+    }
+ 
+    public static class UnauthorizedException extends RuntimeException {
+        public UnauthorizedException(String message) {
+            super(message);
+        }
+    }
+ 
+    public static class ServerErrorException extends RuntimeException {
+        public ServerErrorException(String message) {
+            super(message);
+        }
+    }
+}
+```
+
+然后，在Feign客户端的配置中指定这个自定义的ErrorDecoder：
+
+```java
+import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+ 
+@Configuration
+@EnableFeignClients
+public class FeignConfig {
+    @Bean
+    public ErrorDecoder errorDecoder() {
+        return new CustomErrorDecoder();
+    }
+}
+```
+
+**五、注意事项**
+
+1. **执行顺序**：在OpenFeign中，如果同时存在自定义Decoder和ErrorDecoder，当调用服务出现异常时，会先执行ErrorDecoder来处理异常，并将处理结果返回给调用方。如果调用服务正常返回结果，则先执行自定义Decoder对返回结果进行处理。
+2. **测试与验证**：为了测试并验证自定义ErrorDecoder是否正常工作，可以编写单元测试或集成测试来模拟不同的HTTP响应，并检查是否抛出了预期的异常。
+
+通过以上步骤和示例代码，可以灵活地自定义OpenFeign中的ErrorDecoder来处理各种HTTP响应错误。
+
+
+
+自定义 ErrorDecoder
+
+```java
+/**
+ * openfeign自定义错误处理
+ * 问题：在调用feign过程中，需要经常编写代码判断errorCode是否不等于0，是则编写代码抛出业务异常，否则继续执行当前业务代码
+ * 解决：使用openfeign自定义错误处理后，调用feign不再需要编写代码判断errorCode
+ */
+public class CustomizeErrorDecoder extends ErrorDecoder.Default {
+
+    @Override
+    public Exception decode(String methodKey, Response response) {
+        if (response.status() == HttpStatus.BAD_REQUEST.value() ||
+                response.status() == HttpStatus.FORBIDDEN.value() ||
+                response.status() == HttpStatus.UNAUTHORIZED.value()) {
+            String JSON = response.body().toString();
+            try {
+                JsonNode node = JSONUtil.ObjectMapperInstance.readTree(JSON);
+                return new BusinessException(node.get("errorCode").asInt(), node.get("errorMessage").asText());
+            } catch (IOException ex) {
+                // 当发生http 400错误时，返回数据不为json格式，则继续使用系统默认处理错误
+                response = response.toBuilder()
+                        .status(response.status())
+                        .reason(response.reason())
+                        .request(response.request())
+                        .headers(response.headers())
+                        .body(JSON, Util.UTF_8)
+                        .build();
+                return super.decode(methodKey, response);
+            }
+        }
+        return super.decode(methodKey, response);
+    }
+}
+```
+
+注入自定义 ErrorDecoder
+
+```java
+// 自定义 OpenFeign 错误解码器
+@Bean
+ErrorDecoder errorDecoder() {
+    return new CustomizeErrorDecoder();
+}
+```
 
 
 

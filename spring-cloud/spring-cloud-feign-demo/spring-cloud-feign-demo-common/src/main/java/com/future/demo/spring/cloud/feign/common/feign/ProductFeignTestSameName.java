@@ -1,8 +1,8 @@
 package com.future.demo.spring.cloud.feign.common.feign;
 
+import com.future.common.exception.BusinessException;
+import com.future.common.http.ObjectResponse;
 import com.future.demo.spring.cloud.feign.common.entity.Product;
-import com.yyd.common.exception.BusinessException;
-import com.yyd.common.http.response.ObjectResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 

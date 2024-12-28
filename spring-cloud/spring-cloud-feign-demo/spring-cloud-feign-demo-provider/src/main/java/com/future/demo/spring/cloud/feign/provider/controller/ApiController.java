@@ -1,22 +1,25 @@
 package com.future.demo.spring.cloud.feign.provider.controller;
 
+import com.future.common.http.ObjectResponse;
 import com.future.demo.spring.cloud.feign.common.entity.Product;
-import com.yyd.common.http.ResponseUtils;
-import com.yyd.common.http.response.ObjectResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/product")
 public class ApiController {
+    @Value("${server.port}")
+    private int port;
+
     // 测试@PathVariable
     @GetMapping("{productId}")
     public ObjectResponse<Product> info(
@@ -31,7 +34,7 @@ public class ApiController {
         log.info("my-headder={},contextUserId={},contextUserIdFromRequest={}", myHeader, contextUserId, contextUserIdFromRequest);
         Product product = new Product();
         product.setId(productId);
-        product.setName("测试产品");
+        product.setName("测试产品，端口：" + port);
         product.setPrice(12.33);
         ObjectResponse<Product> response = new ObjectResponse<>();
         response.setData(product);
@@ -54,11 +57,11 @@ public class ApiController {
     public String add(@RequestHeader(value = "customHeader") String customHeader,
                       @RequestBody(required = false) Product product) {
         log.info("customHeader=" + customHeader);
-        if(product!=null) {
+        if (product != null) {
             log.info(product.toString());
         }
 
-        if(product!=null) {
+        if (product != null) {
             return "新增成功";
         } else {
             return "新增失败";
@@ -67,7 +70,7 @@ public class ApiController {
 
     @GetMapping("timeout")
     public String timeout() throws InterruptedException {
-        TimeUnit.SECONDS.sleep(2);
+        TimeUnit.SECONDS.sleep(62);
         return "成功调用";
     }
 

@@ -1,16 +1,17 @@
 package com.future.demo.spring.cloud.feign.consumer;
 
+import com.future.common.exception.EnableFutureExceptionHandler;
 import com.future.demo.spring.cloud.feign.common.feign.ProductFeign;
 import com.future.demo.spring.cloud.feign.common.feign.ProductFeignTestSameName;
 import com.future.demo.spring.cloud.feign.common.feign.ProductFeignWithConfig;
 import com.future.demo.spring.cloud.feign.common.feign.ProductFeignWithSpecifyUrl;
-import com.yyd.common.exception.ExceptionController;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
-import org.springframework.context.annotation.Import;
 
 @SpringBootApplication
+// 应用程序中启用Feign客户端的支持
 @EnableFeignClients(
         clients = {
                 ProductFeign.class,
@@ -19,7 +20,8 @@ import org.springframework.context.annotation.Import;
                 ProductFeignWithConfig.class
         }
 )
-@Import(value = {ExceptionController.class})
+@EnableFutureExceptionHandler
+@EnableDiscoveryClient
 public class ApplicationConsumer {
     public static void main(String[] args) {
         SpringApplication.run(ApplicationConsumer.class, args);

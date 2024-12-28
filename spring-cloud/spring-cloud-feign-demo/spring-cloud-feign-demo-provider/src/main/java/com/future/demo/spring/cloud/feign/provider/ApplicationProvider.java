@@ -1,12 +1,13 @@
 package com.future.demo.spring.cloud.feign.provider;
 
-import com.yyd.common.exception.ExceptionController;
+import com.future.common.exception.EnableFutureExceptionHandler;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Import;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
 @SpringBootApplication
-@Import(value = {ExceptionController.class})
+@EnableFutureExceptionHandler
+@EnableDiscoveryClient
 public class ApplicationProvider {
     public static void main(String[] args) {
         SpringApplication.run(ApplicationProvider.class, args);
