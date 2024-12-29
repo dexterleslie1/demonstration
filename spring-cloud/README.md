@@ -1097,13 +1097,400 @@ ErrorDecoder errorDecoder() {
 
 
 
-## 服务熔断和服务降级
+## 服务熔断、降级、限流
+
+### SpringCloud CircuitBreaker
+
+SpringCloud CircuitBreaker是Spring Cloud提供的一个用于处理分布式系统中服务调用的容错机制。以下是对SpringCloud CircuitBreaker的详细介绍：
+
+**一、概述**
+
+SpringCloud CircuitBreaker提供了一个跨越不同断路器实现的抽象，允许开发者选择最适合自己应用程序需求的断路器实现。它支持多种断路器实现，如Resilience4j、Hystrix等。其中，Resilience4j是Spring Cloud官方推荐的断路器实现，它是一个轻量级的容错库，专为Java 8及更高版本设计。
+
+**二、主要功能**
+
+1. **熔断**：当某个服务的错误率达到一定的阈值时，断路器会迅速切换到打开状态，阻止新的请求继续访问该服务，从而防止系统资源的过度消耗和级联失败的发生。
+2. **自动恢复**：经过一段时间后，断路器会自动从打开状态切换到半开状态，允许部分请求通过以测试服务是否恢复正常。如果测试请求成功，断路器会关闭；否则，会重新打开。
+3. **监控和报警**：SpringCloud CircuitBreaker提供了实时监控和报警功能，可以实时监控断路器的状态、请求成功率、失败率等指标，并在异常情况下发送报警信息。
+
+**三、核心组件**
+
+1. **断路器实例**：每个断路器实例都对应一个具体的服务调用。开发者可以通过配置断路器实例的属性来控制熔断器的行为，如失败率阈值、打开状态下的等待时间等。
+2. **熔断器状态**：断路器具有三种普通状态（关闭、打开、半开）和两个特殊状态（禁用和强制打开）。这些状态之间的转换取决于服务的调用情况和配置的策略。
+
+**四、配置与使用**
+
+1. **引入依赖**：在项目的pom.xml文件中引入SpringCloud CircuitBreaker的依赖，如Resilience4j的依赖。
+2. **配置属性**：在应用程序的配置文件中配置断路器的属性，如失败率阈值、打开状态下的等待时间、半开状态下允许的最大请求数等。这些配置可以根据实际需求进行调整。
+3. **使用注解**：在需要熔断的服务调用方法上使用`@CircuitBreaker`注解，并指定备用方法（fallback）或回退逻辑。当断路器打开时，会调用备用方法或执行回退逻辑。
+
+**五、与其他组件的集成**
+
+SpringCloud CircuitBreaker可以与Spring Cloud的其他组件进行集成，如Spring Cloud Gateway、Spring Cloud OpenFeign等。通过集成这些组件，可以实现更强大的服务治理和容错能力。
+
+**六、注意事项**
+
+1. **合理设置阈值**：在设置失败率阈值时，需要根据服务的实际情况进行合理设置。如果设置得过高，可能会导致服务在正常情况下也被熔断；如果设置得过低，则可能无法有效防止级联失败的发生。
+2. **监控和报警**：建议开启实时监控和报警功能，以便在断路器状态发生变化时及时获取通知并进行处理。
+3. **定期评估和调整**：随着系统的运行和服务的变化，需要定期评估和调整断路器的配置和策略，以确保其始终能够有效地保护系统。
+
+综上所述，SpringCloud CircuitBreaker是一个强大的容错机制，可以帮助开发者在分布式系统中实现服务调用的容错和降级。通过合理配置和使用断路器，可以提高系统的可用性和稳定性，为用户提供更好的服务体验。
+
+
 
 ### Hystrix
 
-### Resilience4J（Circuit Breaker 标准）
+注意：进入维护模式，使用 Resilience4J 替代。
 
-todo Circuit Breaker 和 Resilience4J 关系
+
+
+### Resilience4J
+
+#### 介绍
+
+Resilience4j是一个专为Java应用设计的轻量级容错库，以下是对Resilience4j的详细介绍：
+
+**一、简介**
+
+Resilience4j受Netflix Hystrix的启发，但专为Java 8和函数式编程而设计。与Hystrix相比，Resilience4j更加轻量级，因为它只使用Vavr库，没有任何其他外部库依赖项。Resilience4j提供了高阶函数（装饰器），以通过断路器、速率限制器、重试或隔板（Bulkhead）增强任何功能接口、lambda表达式或方法引用。此外，Resilience4j可以在任何功能接口、lambda表达式或方法引用上堆叠多个装饰器，且允许开发者选择所需的装饰器。
+
+**二、核心组件**
+
+Resilience4j提供了丰富的模块化且灵活的容错选项，这些核心组件各自承担不同的职责，能够单独使用或组合使用，以应对不同类型的故障场景。具体组件包括：
+
+1. **断路器（Circuit Breaker）**：当下游服务出现问题时，Resilience4j的断路器可以阻止应用程序持续向故障的服务发送请求，从而提高应用程序的整体可用性。
+2. **限流器（Rate Limiter）**：Resilience4j可以防止应用程序向下游服务发送过多的请求，从而防止下游服务过载。限流器通过限制单位时间内允许的请求数量，确保系统在高负载下仍能稳定运行。
+3. **重试（Retry）**：在网络不稳定或服务暂时不可用的情况下，Resilience4j可以自动重试失败的操作。
+4. **隔板（Bulkhead）**：类似于船舶的舱壁设计，用于将系统划分为多个独立的部分，以防止某个部分的故障影响整个系统。Resilience4j的隔板通过限制并发调用的数量，确保关键资源的可用性。
+5. **缓存（Cache）**：用于存储请求的响应结果，减少对后端服务的频繁调用，提高系统的响应速度和可用性。Resilience4j的缓存模块可以与断路器和重试机制结合使用，优化容错策略。
+6. **时间器（Time Limiter）**：用于限制调用的最大执行时间，防止长时间阻塞导致系统资源被占用。Resilience4j的时间器通过设置超时时间，当调用超过指定时间后自动中断。
+
+**三、特点与优势**
+
+1. **轻量级且模块化**：Resilience4j采用模块化设计，开发者可以根据实际需求选择所需的功能模块，避免引入不必要的依赖，保持项目的轻量性。
+2. **函数式编程支持**：Resilience4j完全基于Java 8的函数式编程理念，能够与现代Java应用无缝集成，提升代码的可读性和可维护性。
+3. **易于配置和扩展**：通过简单的配置文件或代码方式，开发者可以轻松定制各个模块的行为。此外，Resilience4j提供丰富的扩展点，允许用户根据具体需求进行自定义。
+4. **良好的集成能力**：Resilience4j能够与Spring Boot等主流框架良好集成，简化了在现有项目中引入容错机制的过程。同时，它也兼容多种监控工具，方便进行性能监控和故障诊断。
+5. **活跃的社区和文档支持**：Resilience4j拥有活跃的开源社区，提供详尽的文档和丰富的示例，帮助开发者快速上手并解决实际问题。
+
+**四、使用场景**
+
+Resilience4j主要应用于微服务架构中，提供服务间调用的稳定性和弹性。例如，在一个微服务应用中，可能需要调用一个可能会失败的远程服务。此时，可以使用Resilience4j的熔断器和重试功能来增强服务调用。如果服务调用失败的次数超过了设定的阈值，熔断器就会打开，阻止进一步的服务调用。然后，可以使用重试对象来自动重试失败的服务调用。
+
+**五、总结**
+
+Resilience4j以其简单易用、灵活配置和良好的性能表现，成为许多Java开发者在构建高可用系统时的首选工具。通过使用Resilience4j，开发者可以更好地应对故障和异常，提高系统的可靠性和可用性。
+
+
+
+#### 基本配置
+
+>OpenFeign + Resilience4J 组合，OpenFeign 提供远程调用能力，Resilience4J 提供服务熔断和降级能力。SpringBoot 版本 3.3.7 + SpringCloud 版本 2023.0.4 + JDK 版本 17。
+
+pom 添加如下配置：
+
+```xml
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-openfeign</artifactId>
+</dependency>
+
+<!-- Resilience4J 依赖 -->
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-circuitbreaker-resilience4j</artifactId>
+</dependency>
+<!-- Resilience4J 需要 AOP 支持才能够正常运作 -->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-aop</artifactId>
+</dependency>
+```
+
+application.yaml 配置 circuitbreaker Resilience4J
+
+```yaml
+spring:
+  cloud:
+    openfeign:
+      circuitbreaker:
+        # 启用 OpenFeign 的断路器功能
+        enabled: true
+        # 支持 default 默认配置和指定 feign 的配置
+        group:
+          enabled: true
+resilience4j:
+  timelimiter:
+    configs:
+      default:
+        # 设置了超时持续时间为10秒。这意味着，如果一个远程调用的响应时间超过了10秒，它将触发一个超时异常
+        timeout-duration: 10s
+  circuitbreaker:
+    configs:
+      default:
+        # 设置了失败率阈值为50%。这意味着，如果在一个滑动窗口时间段内，远程调用的失败率达到了或超过了50%，断路器将会打开，阻止进一步的调用，以保护系统免受进一步的失败影响。
+        failure-rate-threshold: 50
+        # 设置了慢调用的持续时间阈值为5秒。这意味着，如果一个远程调用的响应时间超过了5秒，它将被视为一个慢调用。
+        slow-call-duration-threshold: 1s
+        # 设置了慢调用率阈值为30%。这意味着，在一个滑动窗口时间段内，如果远程调用的慢调用比率达到了或超过了30%，断路器将会打开。这
+        slow-call-rate-threshold: 30
+        # 设置了滑动窗口的类型为基于计数的类型，大小为6。这意味着断路器将使用一个大小为6的计数器来跟踪最近的调用结果。
+        sliding-window-type: COUNT_BASED
+        # 设置了滑动窗口的大小为6。这意味着断路器将使用一个大小为6的计数器来跟踪最近的调用结果，以便进行失败率计算和慢调用的统计。
+        sliding-window-size: 6
+        # 设置了在断路器打开之前，至少需要6次调用才能触发断路器的状态转换。这意味着，在断路器完全打开之前，必须收集足够的数据来评估系统的健康状况。
+        minimum-number-of-calls: 6
+        # 设置了在断路器打开后，自动从开放状态转换到半开状态的标志为true。这意味着，一旦断路器打开，它将尝试在一段时间后重新允许少量的调用通过
+        automatic-transition-from-open-to-half-open-enabled: true
+        # 设置了在断路器打开状态下，等待5秒后自动转换到半开状态。这意味着，一旦断路器打开，它将等待5秒钟后再尝试允许少量的调用通过
+        wait-duration-in-open-state: 5s
+        # 设置了在断路器半开状态下，允许2次调用通过。这意味着，当断路器从打开状态转换到半开状态时，它将只允许少量的调用尝试执行远程服务的方法
+        permitted-number-of-calls-in-half-open-state: 2
+        record-exceptions:
+          # 指定了在断路器统计失败率时，哪些异常类型应该被记录为失败的调用。这里包括了所有继承自java.lang.Exception的异常类
+          - java.lang.Exception
+
+#      default:
+#        # 设置了失败率阈值为50%。这意味着，如果在一个滑动窗口时间段内，远程调用的失败率达到了或超过了50%，断路器将会打开，阻止进一步的调用，以保护系统免受进一步的失败影响。
+#        failure-rate-threshold: 50
+#        # 设置了慢调用的持续时间阈值为5秒。这意味着，如果一个远程调用的响应时间超过了5秒，它将被视为一个慢调用。
+#        slow-call-duration-threshold: 1s
+#        # 设置了慢调用率阈值为30%。这意味着，在一个滑动窗口时间段内，如果远程调用的慢调用比率达到了或超过了30%，断路器将会打开。这
+#        slow-call-rate-threshold: 30
+#        # 设置了滑动窗口的类型为基于时间的类型
+#        sliding-window-type: TIME_BASED
+#        # 设置了滑动窗口的大小为5。这意味着断路器将使用一个大小为5的时间窗口来跟踪最近的调用结果，以便进行失败率计算和慢调用的统计。
+#        sliding-window-size: 5
+#        # 设置了在断路器打开之前，至少需要5次调用才能触发断路器的状态转换。这意味着，在断路器完全打开之前，必须收集足够的数据来评估系统的健康状况。
+#        minimum-number-of-calls: 5
+#        # 设置了在断路器打开后，自动从开放状态转换到半开状态的标志为true。这意味着，一旦断路器打开，它将尝试在一段时间后重新允许少量的调用通过
+#        automatic-transition-from-open-to-half-open-enabled: true
+#        # 设置了在断路器打开状态下，等待5秒后自动转换到半开状态。这意味着，一旦断路器打开，它将等待5秒钟后再尝试允许少量的调用通过
+#        wait-duration-in-open-state: 5s
+#        # 设置了在断路器半开状态下，允许2次调用通过。这意味着，当断路器从打开状态转换到半开状态时，它将只允许少量的调用尝试执行远程服务的方法
+#        permitted-number-of-calls-in-half-open-state: 2
+#        record-exceptions:
+#          # 指定了在断路器统计失败率时，哪些异常类型应该被记录为失败的调用。这里包括了所有继承自java.lang.Exception的异常类
+#          - java.lang.Exception
+    instances:
+      # 指定了名为demo-service-provider的远程服务实例，并使用默认配置（default）来配置断路器参数
+      demo-service-provider:
+        base-config: default
+```
+
+Feign 客户端 FeignClientProvider
+
+```java
+@FeignClient(value = "demo-service-provider", path = "/api/v1")
+public interface FeignClientProvider {
+    @GetMapping("test1")
+    // 配置 Feign 客户端 circuitbreaker resilience4j 服务熔断和降级
+    @CircuitBreaker(name = "demo-service-provider", fallbackMethod = "test1Fallback")
+    public ObjectResponse<String> test1(@RequestParam(value = "flag", defaultValue = "") String flag) throws Throwable;
+
+    // 服务降级 fallback 方法
+    default public ObjectResponse<String> test1Fallback(Throwable throwable) {
+        ObjectResponse<String> response = new ObjectResponse<>();
+        response.setErrorMessage(throwable.getMessage());
+        return response;
+    }
+}
+
+```
+
+调用 Feign 客户端
+
+```java
+@RestController
+@RequestMapping("/api/v1")
+public class DemoController {
+    @Resource
+    FeignClientProvider feignClientProvider;
+
+    @GetMapping("test1")
+    public ObjectResponse<String> test1(@RequestParam(value = "flag", defaultValue = "") String flag) throws Throwable {
+        return this.feignClientProvider.test1(flag);
+    }
+}
+```
+
+启用 Feign 客户端
+
+```java
+@SpringBootApplication
+@EnableDiscoveryClient
+@EnableFeignClients(clients = {FeignClientProvider.class})
+public class ApplicationConsumer {
+    public static void main(String[] args) {
+        SpringApplication.run(ApplicationConsumer.class, args);
+    }
+}
+```
+
+运行 ApplicationTests#testForCountBased 测试用例
+
+
+
+#### 运行示例
+
+注意：运行 ApplicationTests 中不同的测试用例时，在每个测试用例之间需要重启 ApplicationConsumer，否则上次的测试会影响此次的测试。
+
+启动 Consul
+
+```bash
+docker compose up -d
+```
+
+启动 ApplicationProvider、ApplicationConsumer 应用
+
+运行 ApplicationTests#testForCountBased 测试用例
+
+
+
+#### 基于计数窗口
+
+application.yaml 配置如下：
+
+```yaml
+spring:
+  cloud:
+    openfeign:
+      circuitbreaker:
+        # 启用 OpenFeign 的断路器功能
+        enabled: true
+        # 支持 default 默认配置和指定 feign 的配置
+        group:
+          enabled: true
+resilience4j:
+  timelimiter:
+    configs:
+      default:
+        # 设置了超时持续时间为10秒。这意味着，如果一个远程调用的响应时间超过了10秒，它将触发一个超时异常
+        timeout-duration: 10s
+  circuitbreaker:
+    configs:
+      default:
+        # 设置了失败率阈值为50%。这意味着，如果在一个滑动窗口时间段内，远程调用的失败率达到了或超过了50%，断路器将会打开，阻止进一步的调用，以保护系统免受进一步的失败影响。
+        failure-rate-threshold: 50
+        # 设置了慢调用的持续时间阈值为5秒。这意味着，如果一个远程调用的响应时间超过了5秒，它将被视为一个慢调用。
+        slow-call-duration-threshold: 1s
+        # 设置了慢调用率阈值为30%。这意味着，在一个滑动窗口时间段内，如果远程调用的慢调用比率达到了或超过了30%，断路器将会打开。这
+        slow-call-rate-threshold: 30
+        # 设置了滑动窗口的类型为基于计数的类型，大小为6。这意味着断路器将使用一个大小为6的计数器来跟踪最近的调用结果。
+        sliding-window-type: COUNT_BASED
+        # 设置了滑动窗口的大小为6。这意味着断路器将使用一个大小为6的计数器来跟踪最近的调用结果，以便进行失败率计算和慢调用的统计。
+        sliding-window-size: 6
+        # 设置了在断路器打开之前，至少需要6次调用才能触发断路器的状态转换。这意味着，在断路器完全打开之前，必须收集足够的数据来评估系统的健康状况。
+        minimum-number-of-calls: 6
+        # 设置了在断路器打开后，自动从开放状态转换到半开状态的标志为true。这意味着，一旦断路器打开，它将尝试在一段时间后重新允许少量的调用通过
+        automatic-transition-from-open-to-half-open-enabled: true
+        # 设置了在断路器打开状态下，等待5秒后自动转换到半开状态。这意味着，一旦断路器打开，它将等待5秒钟后再尝试允许少量的调用通过
+        wait-duration-in-open-state: 5s
+        # 设置了在断路器半开状态下，允许2次调用通过。这意味着，当断路器从打开状态转换到半开状态时，它将只允许少量的调用尝试执行远程服务的方法
+        permitted-number-of-calls-in-half-open-state: 2
+        record-exceptions:
+          # 指定了在断路器统计失败率时，哪些异常类型应该被记录为失败的调用。这里包括了所有继承自java.lang.Exception的异常类
+          - java.lang.Exception
+    instances:
+      # 指定了名为demo-service-provider的远程服务实例，并使用默认配置（default）来配置断路器参数
+      demo-service-provider:
+        base-config: default
+```
+
+重启 ApplicationConsumer 应用，运行 ApplicationTests#testForCoutBased 测试用例
+
+
+
+#### 基于慢调用
+
+application.yaml 配置如下：
+
+```yaml
+spring:
+  cloud:
+    openfeign:
+      circuitbreaker:
+        # 启用 OpenFeign 的断路器功能
+        enabled: true
+        # 支持 default 默认配置和指定 feign 的配置
+        group:
+          enabled: true
+resilience4j:
+  timelimiter:
+    configs:
+      default:
+        # 设置了超时持续时间为10秒。这意味着，如果一个远程调用的响应时间超过了10秒，它将触发一个超时异常
+        timeout-duration: 10s
+  circuitbreaker:
+    configs:
+      default:
+        # 设置了慢调用的持续时间阈值为5秒。这意味着，如果一个远程调用的响应时间超过了5秒，它将被视为一个慢调用。
+        slow-call-duration-threshold: 1s
+        # 设置了慢调用率阈值为30%。这意味着，在一个滑动窗口时间段内，如果远程调用的慢调用比率达到了或超过了30%，断路器将会打开。这
+        slow-call-rate-threshold: 30
+    instances:
+      # 指定了名为demo-service-provider的远程服务实例，并使用默认配置（default）来配置断路器参数
+      demo-service-provider:
+        base-config: default
+```
+
+重启 ApplicationConsumer 应用，运行 ApplicationTests#testForSlowCall 测试用例
+
+
+
+#### 基于时间窗口
+
+application.yaml 配置如下：
+
+```yaml
+spring:
+  cloud:
+    openfeign:
+      circuitbreaker:
+        # 启用 OpenFeign 的断路器功能
+        enabled: true
+        # 支持 default 默认配置和指定 feign 的配置
+        group:
+          enabled: true
+resilience4j:
+  timelimiter:
+    configs:
+      default:
+        # 设置了超时持续时间为10秒。这意味着，如果一个远程调用的响应时间超过了10秒，它将触发一个超时异常
+        timeout-duration: 10s
+  circuitbreaker:
+    configs:
+      default:
+        # 设置了失败率阈值为50%。这意味着，如果在一个滑动窗口时间段内，远程调用的失败率达到了或超过了50%，断路器将会打开，阻止进一步的调用，以保护系统免受进一步的失败影响。
+        failure-rate-threshold: 50
+        # 设置了慢调用的持续时间阈值为5秒。这意味着，如果一个远程调用的响应时间超过了5秒，它将被视为一个慢调用。
+        slow-call-duration-threshold: 1s
+        # 设置了慢调用率阈值为30%。这意味着，在一个滑动窗口时间段内，如果远程调用的慢调用比率达到了或超过了30%，断路器将会打开。这
+        slow-call-rate-threshold: 30
+        # 设置了滑动窗口的类型为基于时间的类型
+        sliding-window-type: TIME_BASED
+        # 设置了滑动窗口的大小为5。这意味着断路器将使用一个大小为5的时间窗口来跟踪最近的调用结果，以便进行失败率计算和慢调用的统计。
+        sliding-window-size: 5
+        # 设置了在断路器打开之前，至少需要5次调用才能触发断路器的状态转换。这意味着，在断路器完全打开之前，必须收集足够的数据来评估系统的健康状况。
+        minimum-number-of-calls: 5
+        # 设置了在断路器打开后，自动从开放状态转换到半开状态的标志为true。这意味着，一旦断路器打开，它将尝试在一段时间后重新允许少量的调用通过
+        automatic-transition-from-open-to-half-open-enabled: true
+        # 设置了在断路器打开状态下，等待5秒后自动转换到半开状态。这意味着，一旦断路器打开，它将等待5秒钟后再尝试允许少量的调用通过
+        wait-duration-in-open-state: 5s
+        # 设置了在断路器半开状态下，允许2次调用通过。这意味着，当断路器从打开状态转换到半开状态时，它将只允许少量的调用尝试执行远程服务的方法
+        permitted-number-of-calls-in-half-open-state: 2
+        record-exceptions:
+          # 指定了在断路器统计失败率时，哪些异常类型应该被记录为失败的调用。这里包括了所有继承自java.lang.Exception的异常类
+          - java.lang.Exception
+    instances:
+      # 指定了名为demo-service-provider的远程服务实例，并使用默认配置（default）来配置断路器参数
+      demo-service-provider:
+        base-config: default
+```
+
+重启 ApplicationConsumer 应用，运行 ApplicationTests#testForTimeBased 测试用例
+
+
 
 ### Sentinel
 
