@@ -1195,7 +1195,7 @@ pom 添加如下配置：
     <artifactId>spring-cloud-starter-openfeign</artifactId>
 </dependency>
 
-<!-- Resilience4J 依赖 -->
+<!-- Resilience4J circuitbreaker 依赖 -->
 <dependency>
     <groupId>org.springframework.cloud</groupId>
     <artifactId>spring-cloud-starter-circuitbreaker-resilience4j</artifactId>
@@ -1347,7 +1347,7 @@ docker compose up -d
 
 
 
-#### 基于计数窗口
+#### 基于计数窗口（CircuitBreaker）
 
 application.yaml 配置如下：
 
@@ -1397,11 +1397,30 @@ resilience4j:
         base-config: default
 ```
 
+Feign 客户端注解 @CircuitBreaker
+
+```java
+@FeignClient(value = "demo-service-provider", path = "/api/v1")
+public interface FeignClientProvider {
+    @GetMapping("test1")
+    // 配置 Feign 客户端 circuitbreaker resilience4j 服务熔断和降级
+    @CircuitBreaker(name = "demo-service-provider", fallbackMethod = "test1Fallback")
+    public ObjectResponse<String> test1(@RequestParam(value = "flag", defaultValue = "") String flag) throws Throwable;
+
+    // 服务降级 fallback 方法
+    default public ObjectResponse<String> test1Fallback(Throwable throwable) {
+        ObjectResponse<String> response = new ObjectResponse<>();
+        response.setErrorMessage(throwable.getMessage());
+        return response;
+    }
+}
+```
+
 重启 ApplicationConsumer 应用，运行 ApplicationTests#testForCoutBased 测试用例
 
 
 
-#### 基于慢调用
+#### 基于慢调用（CircuitBreaker）
 
 application.yaml 配置如下：
 
@@ -1434,11 +1453,30 @@ resilience4j:
         base-config: default
 ```
 
+Feign 客户端注解 @CircuitBreaker
+
+```java
+@FeignClient(value = "demo-service-provider", path = "/api/v1")
+public interface FeignClientProvider {
+    @GetMapping("test1")
+    // 配置 Feign 客户端 circuitbreaker resilience4j 服务熔断和降级
+    @CircuitBreaker(name = "demo-service-provider", fallbackMethod = "test1Fallback")
+    public ObjectResponse<String> test1(@RequestParam(value = "flag", defaultValue = "") String flag) throws Throwable;
+
+    // 服务降级 fallback 方法
+    default public ObjectResponse<String> test1Fallback(Throwable throwable) {
+        ObjectResponse<String> response = new ObjectResponse<>();
+        response.setErrorMessage(throwable.getMessage());
+        return response;
+    }
+}
+```
+
 重启 ApplicationConsumer 应用，运行 ApplicationTests#testForSlowCall 测试用例
 
 
 
-#### 基于时间窗口
+#### 基于时间窗口（CircuitBreaker）
 
 application.yaml 配置如下：
 
@@ -1488,7 +1526,48 @@ resilience4j:
         base-config: default
 ```
 
+Feign 客户端注解 @CircuitBreaker
+
+```java
+@FeignClient(value = "demo-service-provider", path = "/api/v1")
+public interface FeignClientProvider {
+    @GetMapping("test1")
+    // 配置 Feign 客户端 circuitbreaker resilience4j 服务熔断和降级
+    @CircuitBreaker(name = "demo-service-provider", fallbackMethod = "test1Fallback")
+    public ObjectResponse<String> test1(@RequestParam(value = "flag", defaultValue = "") String flag) throws Throwable;
+
+    // 服务降级 fallback 方法
+    default public ObjectResponse<String> test1Fallback(Throwable throwable) {
+        ObjectResponse<String> response = new ObjectResponse<>();
+        response.setErrorMessage(throwable.getMessage());
+        return response;
+    }
+}
+```
+
 重启 ApplicationConsumer 应用，运行 ApplicationTests#testForTimeBased 测试用例
+
+
+
+#### 舱壁隔离（Bulkhead）
+
+>todo 实验未成功
+
+pom 引入舱壁隔离依赖
+
+```xml
+<!-- 舱壁隔离（Bulkhead）依赖 -->
+<dependency>
+    <groupId>io.github.resilience4j</groupId>
+    <artifactId>resilience4j-bulkhead</artifactId>
+</dependency>
+```
+
+
+
+#### 限流（RateLimiter）
+
+>todo 未做实验
 
 
 

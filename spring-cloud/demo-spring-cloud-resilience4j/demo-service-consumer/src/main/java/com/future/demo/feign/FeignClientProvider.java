@@ -11,6 +11,8 @@ public interface FeignClientProvider {
     @GetMapping("test1")
     // 配置 Feign 客户端 circuitbreaker resilience4j 服务熔断和降级
     @CircuitBreaker(name = "demo-service-provider", fallbackMethod = "test1Fallback")
+    /*// 配置 Feign 客户端 resilience4j bulkhead（舱壁隔离）
+    @Bulkhead(name = "demo-service-provider", fallbackMethod = "test1Fallback", type = Bulkhead.Type.SEMAPHORE)*/
     public ObjectResponse<String> test1(@RequestParam(value = "flag", defaultValue = "") String flag) throws Throwable;
 
     // 服务降级 fallback 方法

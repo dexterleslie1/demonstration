@@ -262,4 +262,41 @@ public class ApplicationTests {
 
         // endregion
     }
+
+    /*@Test
+    public void testBulkhead() throws InterruptedException {
+        ExecutorService executorService = Executors.newCachedThreadPool();
+        for (int i = 0; i < 2; i++) {
+            executorService.submit(() -> {
+                try {
+                    String string = RestAssured.given()
+                            .param("flag", "bulkheadsleep")
+                            .get("http://localhost:8080/api/v1/test1")
+                            .then().statusCode(200)
+                            .extract().asString();
+                    Assert.assertEquals("{\"errorCode\":0,\"errorMessage\":null,\"data\":\"flag=bulkheadsleep\"}", string);
+                } catch (Throwable throwable) {
+                    throwable.printStackTrace();
+                }
+            });
+        }
+
+//        TimeUnit.MILLISECONDS.sleep(500);
+//        executorService.submit(() -> {
+//            try {
+//                String string = RestAssured.given()
+//                        .param("flag", "bulkheadsleep")
+//                        .get("http://localhost:8080/api/v1/test1")
+//                        .then().statusCode(200)
+//                        .extract().asString();
+//                Assert.assertEquals("{\"errorCode\":0,\"errorMessage\":\"Bulkhead 'demo-service-provider' is full and does not permit further calls\",\"data\":null}", string);
+//            } catch (Throwable throwable) {
+//                throwable.printStackTrace();
+//            }
+//        });
+
+        executorService.shutdown();
+        while (!executorService.awaitTermination(1, TimeUnit.SECONDS)) {
+        }
+    }*/
 }

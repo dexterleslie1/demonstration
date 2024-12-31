@@ -21,6 +21,10 @@ public class DemoController {
             TimeUnit.MILLISECONDS.sleep(1100);
         }
 
+        if ("bulkheadsleep".equals(flag)) {
+            TimeUnit.MILLISECONDS.sleep(3000);
+        }
+
         ObjectResponse<String> response = new ObjectResponse<>();
         response.setData("flag=" + flag);
         return response;
