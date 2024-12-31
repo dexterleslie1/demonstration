@@ -19,7 +19,6 @@
 		<module>service-b</module>
 		<module>service-c</module>
 		<module>gateway</module>
-		<module>zipkin</module>
 	</modules>
 
 	<dependencyManagement>

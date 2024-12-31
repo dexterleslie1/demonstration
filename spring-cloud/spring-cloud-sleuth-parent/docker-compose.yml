@@ -1,0 +1,9 @@
+version: "3.0"
+
+services:
+  demo-zipkin-server:
+    image: openzipkin/zipkin
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - '9411:9411'
