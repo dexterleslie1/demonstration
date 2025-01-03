@@ -43,3 +43,7 @@
    > 参考 [链接](https://askubuntu.com/questions/1336435/how-do-i-get-traditional-chinese-input-with-pinyin-on-ubuntu-20-04)
 
    使用`ctrl + shift + f`切换到繁体输入(切换之后永久改变)
+
+7. googlepinyin 输入法输入中文句号、逗号、冒号
+
+   使用 ctrl + . 切换支持输入中文句号、逗号、冒号

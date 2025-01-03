@@ -2458,19 +2458,340 @@ public class ApiController {
 
 
 
-## springcloudalibaba nacos
+## SpringCloud Alibaba
 
-> 知识点：
+>`https://spring-cloud-alibaba-group.github.io/github-pages/hoxton/zh-cn/index.html`
+
+
+
+###  Nacos
+
+详细用法请参考示例`https://gitee.com/dexterleslie/demonstration/tree/master/spring-cloud/spring-cloud-nacos`
+
+
+
+#### Docker 运行 Nacos
+
+>`https://blog.csdn.net/qq_27615455/article/details/125168548`
 >
-> - springcloudalibaba和nacos集成配置
-> - nacos服务注册基本配置
-> - nacos服务注册Group、Namespace配置
->
-> 参考spring-cloud/spring-cloud-nacos
+>Docker 运行 nacos2.x 需要暴露 9848 和 9849 端口`https://github.com/alibaba/nacos/issues/6154`
 
-## springcloudalibaba sentinel
+docker-compose.yaml 内容如下：
 
-> 知识点：
->
-> - springcloudalibaba和sentinel集成配置
+```yaml
+version: "3.0"
 
+services:
+  # https://blog.csdn.net/qq_27615455/article/details/125168548
+
+  # docker运行nacos2.x需要暴露9848和9849端口
+  # https://github.com/alibaba/nacos/issues/6154
+  demo-spring-cloud-nacos-server:
+    image: nacos/nacos-server:v2.2.0
+    environment:
+      - TZ=Asia/Shanghai
+      - MODE=standalone
+      #- PREFER_HOST_MODE=hostname
+    ports:
+      - '8848:8848'
+      - '9848:9848'
+      #- '9849:9849'
+```
+
+启动 Nacos
+
+```bash
+docker compose up -d
+```
+
+访问`http://localhost:8848/nacos`登录 Nacos 控制台，帐号：nacos，密码：nacos。
+
+
+
+#### 运行示例
+
+运行 Nacos
+
+```bash
+docker compose up -d
+```
+
+手动在 Nacos 配置中心中创建配置文件 demo-springcloud-helloworld-dev.properties，内容为 my.config=v1
+
+手动在 Nacos 配置中心创建 ns_dev 命名空间，在 ns_dev 命名空间下创建 demo-springcloud-zuul-dev.properties 文件，内容为 my.config=ns_dev,DEV_GROUP,demo-springcloud-zuul-dev.properties，Group 为 DEV_GROUP
+
+启动 ApplicationZuul、ApplicationHelloworld 应用
+
+测试服务注册和发现
+
+- 访问`http://localhost:8080/api/v1/zuul/test1?param1=dexter`
+
+测试服务配置
+
+- 访问`http://localhost:8080/api/v1/zuul/test1?param1=dexter`查看当前 myConfig 返回值为 v1
+- 访问 Nacos 控制台手动修改 demo-springcloud-helloworld-dev.properties 内容为 my.config=v2
+- 再次访问`http://localhost:8080/api/v1/zuul/test1?param1=dexter`查看当前 myConfig 返回值为 v2
+
+测试服务配置 Group、Namespace
+
+- 访问`http://localhost:8080/api/v1/zuul/test2`测试
+
+
+
+#### 服务注册和发现配置
+
+父 pom 配置如下：
+
+```xml
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-parent</artifactId>
+            <version>2.2.7.RELEASE</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-dependencies</artifactId>
+            <version>Hoxton.SR10</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+        <!-- nacos依赖 -->
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-alibaba-dependencies</artifactId>
+            <version>2.2.9.RELEASE</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
+```
+
+各个微服务项目的 pom 配置如下：
+
+```xml
+<!-- nacos注册中心依赖配置 -->
+<dependency>
+    <groupId>com.alibaba.cloud</groupId>
+    <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+</dependency>
+```
+
+application.properties 配置服务注册与发现
+
+```properties
+# nacos注册中心配置
+spring.cloud.nacos.discovery.server-addr=localhost:8848
+```
+
+访问`http://localhost:8848/nacos` Nacos 控制台查看已注册服务
+
+定义 HelloworldClient Feign 客户端
+
+```java
+@FeignClient(value = "demo-springcloud-helloworld")
+public interface HelloworldClient {
+    @GetMapping(value = "/api/v1/test1")
+    ResponseEntity<String> test1(@RequestParam(value = "param1") String param1);
+}
+```
+
+调用 Feign 客户端
+
+```java
+@RestController
+@RequestMapping("/api/v1/zuul")
+@RefreshScope
+public class ApiController {
+    @Autowired
+    HelloworldClient helloworldClient;
+
+    @GetMapping(value = "test1")
+    public ResponseEntity<String> test1(@RequestParam(value = "param1", defaultValue = "") String param1) {
+        return helloworldClient.test1(param1);
+    }
+}
+```
+
+
+
+#### 服务配置和管理
+
+##### 基本配置
+
+父 pom 配置如下：
+
+```xml
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-parent</artifactId>
+            <version>2.2.7.RELEASE</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-dependencies</artifactId>
+            <version>Hoxton.SR10</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+        <!-- nacos依赖 -->
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-alibaba-dependencies</artifactId>
+            <version>2.2.9.RELEASE</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
+```
+
+各个微服务项目的 pom 配置如下：
+
+```xml
+<!-- nacos服务配置依赖配置 -->
+<dependency>
+    <groupId>com.alibaba.cloud</groupId>
+    <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+</dependency>
+```
+
+bootstrap.properties 配置如下：
+
+```properties
+# nacos服务配置设置
+# 手动在nacos创建配置文件demo-springcloud-helloworld-dev.properties，内容为：my.config=v1
+spring.cloud.nacos.config.server-addr=localhost:8848
+spring.cloud.nacos.config.file-extension=properties
+spring.profiles.active=dev
+```
+
+Java 中引用 properties 配置
+
+```java
+@RestController
+// nacos配置修改后会自动刷新
+@RefreshScope
+public class ApiController {
+    @Value("${server.port}")
+    private int serverPort;
+    @Value("${my.config}")
+    private String myConfig;
+
+    @GetMapping(value = "/api/v1/test1")
+    public ResponseEntity<String> test1(@RequestParam(value = "param1", defaultValue = "") String param1) {
+        return ResponseEntity.ok("你的请求参数param1=" + param1 + "，myConfig配置值:" + myConfig + "，端口: " + serverPort);
+    }
+}
+```
+
+
+
+##### 自动刷新配置
+
+在引用配置的类中添加 @RefreshScope 注解
+
+```java
+@RestController
+// nacos配置修改后会自动刷新
+@RefreshScope
+public class ApiController {
+    @Value("${server.port}")
+    private int serverPort;
+    @Value("${my.config}")
+    private String myConfig;
+
+    @GetMapping(value = "/api/v1/test1")
+    public ResponseEntity<String> test1(@RequestParam(value = "param1", defaultValue = "") String param1) {
+        return ResponseEntity.ok("你的请求参数param1=" + param1 + "，myConfig配置值:" + myConfig + "，端口: " + serverPort);
+    }
+}
+```
+
+
+
+##### Nacos DataId 和配置文件的命名规则
+
+默认情况：${spring.application.name}-${spring.profiles.active}.${spring.cloud.nacos.config.file-extension}
+
+指定配置：${spring.cloud.nacos.config.prefix}-${spring.profiles.active}.${spring.cloud.nacos.config.file-extension}
+
+
+
+##### 根据 Namespace、Group、DataId 加载配置
+
+在Nacos配置管理系统中，Namespace、Group和DataId是三个至关重要的概念。以下是对这三个概念的详细解释：
+
+### Namespace
+
+Namespace在Nacos中主要用于进行配置隔离。不同的命名空间下，可以存在相同的Group或DataId的配置。Namespace的常用场景之一是不同环境的配置的区分隔离，例如开发测试环境和生产环境的资源（如配置、服务）隔离等。通过Namespace，我们可以轻松实现不同开发环境的配置隔离，确保各个环境的配置互不干扰。
+
+### Group
+
+Group在Nacos中主要用于区分不同的微服务或应用组件。当不同的应用或组件使用了相同的配置类型时，我们可以利用Group来区分它们。例如，一个应用可能使用了database_url配置和MQ_topic配置，我们可以将这些配置分别划分到不同的Group中，以便更好地管理和维护。默认情况下，所有的配置集都属于DEFAULT_GROUP，但用户可以根据需要创建自定义的分组。
+
+Group在Nacos中的作用主要包括：
+
+- **配置隔离**：通过分组，可以将不同项目或不同环境的配置进行隔离，避免配置之间的冲突。
+- **逻辑区分**：对于同名但属于不同项目或不同环境的配置，可以通过分组进行区分，提高配置的可读性和可维护性。
+- **权限管理**：在一些场景下，可以通过分组进行权限控制，限制不同用户对配置集的访问和操作。
+
+### DataId
+
+DataId是Nacos中用于唯一标识配置信息的标识符。每个DataId对应一个具体的配置信息，例如一个数据库连接信息或消息队列的配置。通过DataId，我们可以轻松地查找、获取和更新配置信息。
+
+DataId在Nacos中的主要作用包括：
+
+- **唯一标识配置文件**：在Nacos中，每个配置文件通过DataId进行唯一标识。
+- **区分不同业务模块的配置**：通过自定义DataId格式，可以将配置文件与具体业务模块关联，从而更方便地管理和查找配置。
+
+在实际应用中，DataId的设计通常遵循以下原则：
+
+- **描述性强**：DataId应能直观地描述配置的用途、所属模块和环境。
+- **可扩展性好**：避免在DataId中使用绝对路径或硬编码的命名方式，确保未来能够根据业务变化灵活扩展。
+- **避免歧义**：DataId应尽量避免使用相似或容易混淆的命名方式。
+
+### 三者之间的关系
+
+在Nacos中，Namespace、Group和DataId三者之间可以看作是一个层次结构。最外层的Namespace用于区分不同的开发环境或部署环境，它提供了配置隔离的功能。Group位于Namespace之下，用于区分不同的微服务或应用组件。而DataId则位于最内层，用于唯一标识具体的配置信息。
+
+通过合理地设置Namespace、Group和DataId，我们可以实现配置信息的有效管理和维护。例如，我们可以为每个环境创建一个独立的Namespace，然后在每个Namespace下为每个微服务或应用组件创建一个Group，最后在Group下为每个配置信息创建一个唯一的DataId。这样，我们就可以轻松地管理和维护各个环境的配置信息，确保系统的正常运行。
+
+总的来说，Namespace、Group和DataId是Nacos配置管理系统的核心要素。理解这三者的关系并正确应用它们，是实现高效配置管理的关键。
+
+
+
+bootstrap.properties 配置如下：
+
+```properties
+# 演示DataId、Group、Namespace用法
+# NOTE: 以下配置只能在bootstrap.properties中配置，否则不生效
+spring.cloud.nacos.config.server-addr=localhost:8848
+# 加载 properties 配置文件
+spring.cloud.nacos.config.file-extension=properties
+# 配置文件所在的命令空间为 ns_dev
+spring.cloud.nacos.config.namespace=ns_dev
+# 配置文件所在的 Group 为 DEV_GROUP
+spring.cloud.nacos.config.group=DEV_GROUP
+spring.profiles.active=dev
+```
+
+手动在 Nacos 配置中心创建 ns_dev 命名空间，在 ns_dev 命名空间下创建 demo-springcloud-zuul-dev.properties 文件，内容为 my.config=ns_dev,DEV_GROUP,demo-springcloud-zuul-dev.properties，Group 为 DEV_GROUP
+
+
+
+### Sentinel
+
+详细用法请参考示例`https://gitee.com/dexterleslie/demonstration/tree/master/spring-cloud/spring-cloud-sentinel`
+
+
+
+#### 和 SpringCloud Alibaba 集成的配置
