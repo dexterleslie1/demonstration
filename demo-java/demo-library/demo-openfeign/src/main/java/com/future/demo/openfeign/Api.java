@@ -1,7 +1,7 @@
 package com.future.demo.openfeign;
 
-import com.yyd.common.exception.BusinessException;
-import com.yyd.common.http.response.ObjectResponse;
+import com.future.common.exception.BusinessException;
+import com.future.common.http.ObjectResponse;
 import feign.Headers;
 import feign.Param;
 import feign.RequestLine;

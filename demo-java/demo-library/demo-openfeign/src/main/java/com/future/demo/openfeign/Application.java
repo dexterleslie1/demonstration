@@ -1,8 +1,8 @@
 package com.future.demo.openfeign;
 
+import com.future.common.exception.ExceptionController;
 import com.future.demo.openfeign.util.Const;
 import com.future.demo.openfeign.util.Util;
-import com.yyd.common.exception.ExceptionController;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

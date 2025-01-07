@@ -1,10 +1,9 @@
 package com.future.demo.openfeign;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.yyd.common.exception.BusinessException;
-import com.yyd.common.http.response.ObjectResponse;
-import com.yyd.common.json.JSONUtil;
+import com.future.common.exception.BusinessException;
+import com.future.common.http.ObjectResponse;
+import com.future.common.json.JSONUtil;
 import feign.*;
 import feign.codec.ErrorDecoder;
 import feign.form.FormEncoder;

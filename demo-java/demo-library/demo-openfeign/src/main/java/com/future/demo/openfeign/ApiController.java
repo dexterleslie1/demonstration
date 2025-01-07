@@ -1,8 +1,8 @@
 package com.future.demo.openfeign;
 
+import com.future.common.http.ObjectResponse;
 import com.future.demo.openfeign.util.Const;
 import com.future.demo.openfeign.util.Util;
-import com.yyd.common.http.response.ObjectResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.connector.ClientAbortException;
 import org.apache.commons.lang3.StringUtils;
