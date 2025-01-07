@@ -358,15 +358,11 @@ docker-compose up -d
 
 注意：阿里巴巴主流注册中心
 
+详细用法请参考文档 <a href="/spring-cloud/#nacos-3" target="_blank">链接</a>
+
 
 
 ## 服务调用和负载均衡
-
-> 服务调用实现如下：
->
-> Feign（停止更新，不需要学习，已经被openfeign取代）
->
-> OpenFeign
 
 
 
@@ -1140,6 +1136,10 @@ SpringCloud CircuitBreaker可以与Spring Cloud的其他组件进行集成，如
 
 ### Hystrix
 
+>注意：feign 客户端调用服务时达到 ribbon.ReadTimeout 超时，即使 execution.isolation.thread.timeoutInMilliseconds 未达到超时时间也会 fallback
+>
+>配置方式分为 2 种：服务提供者配置服务降级、服务调用者 feign 配置服务降级
+
 注意：进入维护模式，使用 Resilience4J 替代。
 
 
@@ -1577,23 +1577,7 @@ pom 引入舱壁隔离依赖
 
 ### Sentinel
 
-
-
-> 服务降级(fallback)、服务熔断(circuitbreaker)、服务限流。
->
-> 参考spring-cloud/spring-cloud-hystrix
-
-### 服务降级
-
-> NOTE: feign客户端调用服务时达到ribbon.ReadTimeout超时，即使execution.isolation.thread.timeoutInMilliseconds未达到超时时间也会fallback
->
-> 配置方式分为2种：服务提供者配置服务降级、服务调用者feign配置服务降级
-
-### 服务熔断
-
-> 参考spring-cloud/spring-cloud-hystrix/README.md
-
-### 服务限流
+详细用法请参考文档 <a href="/spring-cloud/#sentinel-2" target="_blank">链接</a>
 
 
 
@@ -2456,6 +2440,8 @@ public class ApiController {
 
 ### Nacos
 
+详细用法请参考文档 <a href="/spring-cloud/#nacos-3" target="_blank">链接</a>
+
 
 
 ## SpringCloud Alibaba
@@ -2730,11 +2716,11 @@ public class ApiController {
 
 在Nacos配置管理系统中，Namespace、Group和DataId是三个至关重要的概念。以下是对这三个概念的详细解释：
 
-### Namespace
+**Namespace**
 
 Namespace在Nacos中主要用于进行配置隔离。不同的命名空间下，可以存在相同的Group或DataId的配置。Namespace的常用场景之一是不同环境的配置的区分隔离，例如开发测试环境和生产环境的资源（如配置、服务）隔离等。通过Namespace，我们可以轻松实现不同开发环境的配置隔离，确保各个环境的配置互不干扰。
 
-### Group
+**Group**
 
 Group在Nacos中主要用于区分不同的微服务或应用组件。当不同的应用或组件使用了相同的配置类型时，我们可以利用Group来区分它们。例如，一个应用可能使用了database_url配置和MQ_topic配置，我们可以将这些配置分别划分到不同的Group中，以便更好地管理和维护。默认情况下，所有的配置集都属于DEFAULT_GROUP，但用户可以根据需要创建自定义的分组。
 
@@ -2744,7 +2730,7 @@ Group在Nacos中的作用主要包括：
 - **逻辑区分**：对于同名但属于不同项目或不同环境的配置，可以通过分组进行区分，提高配置的可读性和可维护性。
 - **权限管理**：在一些场景下，可以通过分组进行权限控制，限制不同用户对配置集的访问和操作。
 
-### DataId
+**DataId**
 
 DataId是Nacos中用于唯一标识配置信息的标识符。每个DataId对应一个具体的配置信息，例如一个数据库连接信息或消息队列的配置。通过DataId，我们可以轻松地查找、获取和更新配置信息。
 
@@ -2759,7 +2745,7 @@ DataId在Nacos中的主要作用包括：
 - **可扩展性好**：避免在DataId中使用绝对路径或硬编码的命名方式，确保未来能够根据业务变化灵活扩展。
 - **避免歧义**：DataId应尽量避免使用相似或容易混淆的命名方式。
 
-### 三者之间的关系
+**三者之间的关系**
 
 在Nacos中，Namespace、Group和DataId三者之间可以看作是一个层次结构。最外层的Namespace用于区分不同的开发环境或部署环境，它提供了配置隔离的功能。Group位于Namespace之下，用于区分不同的微服务或应用组件。而DataId则位于最内层，用于唯一标识具体的配置信息。
 
@@ -2790,8 +2776,1033 @@ spring.profiles.active=dev
 
 ### Sentinel
 
+>SpringCloud Alibaba 配置 Sentinel 官方文档`https://spring-cloud-alibaba-group.github.io/github-pages/hoxton/zh-cn/index.html`
+
 详细用法请参考示例`https://gitee.com/dexterleslie/demonstration/tree/master/spring-cloud/spring-cloud-sentinel`
 
 
 
+#### 介绍
+
+Alibaba Sentinel是阿里巴巴开源的一款面向分布式微服务架构的轻量级高可用流量控制组件。以下是对Alibaba Sentinel的详细介绍：
+
+一、诞生与发展
+
+- 2012年，Sentinel诞生于阿里巴巴，其主要目标是流量控制。
+- 2013~2017年，Sentinel迅速发展，并成为阿里巴巴所有微服务的基本组成部分。它已在6000多个应用程序中使用，涵盖了几乎所有核心电子商务场景。
+- 2018年，Sentinel演变为一个开源项目。
+- 2020年，Sentinel Golang发布。
+
+二、主要功能
+
+Sentinel以流量为切入点，从多个维度帮助用户保护服务的稳定性，其主要功能包括：
+
+- **流量控制**：Sentinel可以监控和控制服务的流量，防止突发流量导致系统崩溃。它支持多种流控模式，如直接流控、关联流控、链路流控等，可以根据实际场景灵活选择。
+- **熔断降级**：当调用链路中的某个资源出现不稳定状态时（如调用超时或异常比例升高），Sentinel可以对该资源的调用进行限制，让请求快速失败，避免影响到其它资源而导致级联错误。
+- **系统负载保护**：Sentinel可以监控系统的负载情况，当系统负载过高时，自动触发保护策略，防止系统崩溃。
+
+三、应用场景
+
+Sentinel承接了阿里巴巴近10年的双十一大促流量的核心场景，如秒杀（即突发流量控制在系统容量可以承受的范围）、消息削峰填谷、集群流量控制、实时熔断下游不可用应用等。
+
+四、主要特性
+
+- **丰富的实时监控**：Sentinel提供实时的监控功能，可以在控制台中看到接入应用的单台机器秒级数据，甚至500台以下规模的集群的汇总运行情况。
+- **广泛的开源生态**：Sentinel提供开箱即用的与其它开源框架/库的整合模块，例如与Spring Cloud、Apache Dubbo、gRPC、Quarkus等的整合。用户只需要引入相应的依赖并进行简单的配置即可快速地接入Sentinel。
+- **完善的SPI扩展机制**：Sentinel提供简单易用、完善的SPI扩展接口，用户可以通过实现扩展接口来快速地定制逻辑，如定制规则管理、适配动态数据源等。
+
+五、核心组件
+
+- **核心库（Java客户端）**：不依赖任何框架/库，能够运行于所有Java运行时环境，同时对Dubbo/Spring Cloud等框架也有较好的支持。
+- **控制台（Dashboard）**：基于Spring Boot开发，打包后可以直接运行，不需要额外的Tomcat等应用容器。控制台主要负责管理推送规则、监控、集群限流分配管理、机器发现等。
+
+六、使用与配置
+
+- 用户可以从Sentinel的[官方GitHub页面](https://github.com/alibaba/Sentinel/releases)下载最新版本的控制台jar包，或者使用源码构建。
+- 启动控制台后，用户可以通过浏览器访问控制台页面，并使用默认的用户名和密码（均为sentinel，从1.6.0版本起支持自定义）进行登录。
+- 在项目中引入Sentinel，需要在项目的pom文件中添加相应的依赖，并在配置文件中进行简单的配置。
+- 用户可以通过Sentinel提供的API来定义一个资源，使其能够被Sentinel保护起来。通常情况下，可以使用方法名、URL甚至是服务名来作为资源名来描述某个资源。
+- Sentinel支持多种规则配置，如流量控制规则、熔断降级规则等，这些规则都可以在控制台中进行动态调整。
+
+总的来说，Alibaba Sentinel是一款功能强大、易于使用且生态广泛的微服务流量控制组件，它能够帮助用户有效地保护服务的稳定性并提高系统的可用性。
+
+
+
+#### Docker 运行 Sentinel
+
+>注意：Sentinel 没有官方的 Docker 镜像，目前实验使用的非官方镜像为 bladex/sentinel-dashboard:1.7.0，事实上可以自己编译 Sentinel Docker 镜像。
+
+docker-compose.yaml 配置如下：
+
+```yaml
+version: "3.0"
+
+services:
+  demo-spring-cloud-sentinel:
+    image: bladex/sentinel-dashboard:1.8.0
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - '8858:8858'
+```
+
+启动 Sentinel 服务
+
+```bash
+docker compose up -d
+```
+
+访问 Sentinel 控制台`http://localhost:8858/`，帐号：sentinel，密码：sentinel
+
+
+
 #### 和 SpringCloud Alibaba 集成的配置
+
+父 pom 依赖
+
+```xml
+<dependencyManagement>
+    <dependencies>
+       <dependency>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-starter-parent</artifactId>
+          <version>2.2.7.RELEASE</version>
+          <type>pom</type>
+          <scope>import</scope>
+       </dependency>
+       <dependency>
+          <groupId>org.springframework.cloud</groupId>
+          <artifactId>spring-cloud-dependencies</artifactId>
+          <version>Hoxton.SR10</version>
+          <type>pom</type>
+          <scope>import</scope>
+       </dependency>
+       <!-- SpringCloud Alibaba 依赖 -->
+       <dependency>
+          <groupId>com.alibaba.cloud</groupId>
+          <artifactId>spring-cloud-alibaba-dependencies</artifactId>
+          <version>2.2.9.RELEASE</version>
+          <type>pom</type>
+          <scope>import</scope>
+       </dependency>
+    </dependencies>
+</dependencyManagement>
+```
+
+各个微服务 pom Sentinel 依赖配置
+
+```xml
+<!-- sentinel依赖配置 -->
+<dependency>
+    <groupId>com.alibaba.cloud</groupId>
+    <artifactId>spring-cloud-starter-alibaba-sentinel</artifactId>
+</dependency>
+```
+
+各个微服务 application.properties 配置
+
+```properties
+# sentinel配置
+spring.cloud.sentinel.transport.dashboard=localhost:8858
+```
+
+
+
+#### 运行示例
+
+启动 Sentinel 服务
+
+```bash
+docker compose up -d
+```
+
+启动 ApplicationGateway、ApplicationHelloworld 应用
+
+访问`http://localhost:8080/api/v1/test1`产生 Sentinel 测试数据
+
+访问`http://localhost:8858/` Sentinel 控制台查看测试数据
+
+
+
+#### 流控规则
+
+##### 介绍
+
+Sentinel是一个开源的系统保护和流量控制组件，主要设计用于保护微服务架构中的服务。它提供了丰富的流量控制和熔断机制，通过流量控制规则来限制系统的访问频率和并发量，从而确保服务的稳定性和可用性。以下是对Sentinel流控规则的详细介绍：
+
+一、流控规则的基本属性
+
+流控规则主要由以下几个关键属性组成：
+
+1. **资源名**：唯一名称，默认请求路径，是限流规则的作用对象。
+2. **针对来源**：Sentinel可以针对调用者进行限流，填写微服务名，默认为default（不区分来源）。
+3. **阈值类型/单机阈值**：包括QPS（每秒钟的请求数量）和并发线程数。当调用该API的QPS或并发线程数达到阈值时，会触发限流。
+4. **流控模式**：
+   - **直接**：API达到限流条件时，直接限流。
+   - **关联**：当关联的资源达到阈值时，限流自己。
+   - **链路**：只记录指定链路上的流量，指定资源从入口资源进来的流量如果达到阈值，则进行限流。这类似于针对来源的配置项，但区别在于链路流控是针对上级接口，粒度更细。
+5. **流控效果**：
+   - **快速失败**：直接失败，抛异常。
+   - **Warm Up**：根据冷加载因子（codeFactor，默认3）的值，从阈值/codeFactor开始，经过预热时长后，逐渐达到设置的QPS阈值。这种方式适用于流量突然增加时，给系统一个预热的时间，避免系统被压垮。
+   - **排队等待**：匀速排队，让请求以匀速的速度通过。这种方式适用于处理间隔性突发的流量，例如消息队列。但需要注意的是，匀速排队模式暂时不支持QPS大于1000的场景。阈值类型必须设置为QPS，否则无效。
+
+二、流控规则的具体应用
+
+1. **QPS限流**：通过设定QPS阈值来控制接口的访问频率。例如，单机阈值设定为1，表示当前这个接口1秒只能被访问一次，超过这个阈值就会被Sentinel阻塞。
+2. **并发线程数限流**：通过设定并发线程数阈值来控制同时访问接口的线程数量。例如，阈值设置为5，表示同时进入到此方法的线程最多有5个，超过5个的线程都会被拒绝。
+3. **关联流控**：当A接口关联的资源B达到阈值后，就限流A接口本身。这种方式适用于需要保护关键资源或接口的场景。
+4. **链路流控**：当从某个接口过来的资源达到限流条件时，开启限流。这种方式适用于需要从整体上控制应用入口流量的场景。
+5. **Warm Up流控**：通过冷启动方式，让流量缓慢增加，在一定时间内逐渐增加到阈值上限。这种方式适用于防止秒杀瞬间造成系统崩溃的场景。
+6. **匀速排队流控**：严格控制请求通过的间隔时间，让请求以均匀的速度通过。这种方式适用于处理间隔性突发的流量场景。
+
+三、流控规则的配置方式
+
+流控规则可以通过Sentinel控制台进行配置和管理。开发者可以根据实际需求，灵活地组合使用不同的流控规则和效果，以实现更加复杂的流量控制策略。
+
+综上所述，Sentinel的流控规则为微服务架构中的服务提供了强大的流量控制和保护能力。通过合理配置流控规则，可以有效地避免系统被突发的流量高峰冲垮，从而保障应用的高可用性和稳定性。
+
+
+
+##### 流控模式 - 直接
+
+API 达到限流条件时，直接限流。
+
+访问`http://localhost:8858/#/dashboard/flow/demo-springcloud-gateway`新增流控规则，流控规则信息如下：
+
+- 资源名为`/api/v1/test1`
+- 针对来源为`default`
+- 阈值类型为`QPS`
+- 单机阈值为`1`
+- 是否集群为`不勾选`
+- 流控模式为`直接`
+- 流控效果为`快速失败`
+
+点击`新增`按钮新增流控规则，1 秒内连续访问`http://localhost:8080/api/v1/test1`会报告`Blocked by Sentinel: FlowException`错误。
+
+
+
+##### 流控模式 - 关联
+
+当关联的资源达到阈值时，限流自己。
+
+访问`http://localhost:8858/#/dashboard/flow/demo-springcloud-gateway`新增流控规则，流控规则信息如下：
+
+- 资源名为`/api/v1/test1`
+- 针对来源为`default`
+- 阈值类型为`QPS`
+- 单机阈值为`1`
+- 是否集群为`不勾选`
+- 流控模式为`关联`
+- 关联资源为`/api/v1/test2`
+- 流控效果为`快速失败`
+
+点击`新增`按钮新增流控规则（表示资源`/api/v1/test2`达到阈值时资源`/api/v1/test1`限流）。
+
+启动 JMeter 给资源`/api/v1/test2`压力，此时请求资源`/api/v1/test1`会被限流并报告`Blocked by Sentinel: FlowException`错误。
+
+
+
+##### 流控模式 - 链路
+
+只记录指定链路上的流量，指定资源从入口资源进来的流量如果达到阈值，则进行限流。这类似于针对来源的配置项，但区别在于链路流控是针对上级接口，粒度更细。
+
+application.properties 添加如下配置：
+
+```properties
+# 当spring.cloud.sentinel.web-context-unify设置为false时，Sentinel会区分每一个具体的URL路径，
+# 每个不同的URL都会被视为一个独立的资源。这提供了更细粒度的控制，允许开发者为每一个具体的URL路径定义不同的流控、熔断等规则。
+spring.cloud.sentinel.web-context-unify=false
+```
+
+通过资源`/api/v1/test1`和`/api/v2/test2`调用资源`common1`
+
+```java
+@RestController
+@RequestMapping("/api/v1")
+public class ApiController {
+    @Resource
+    CommonService commonService;
+
+    @GetMapping(value = "test1")
+    public ResponseEntity<String> test1() {
+        this.commonService.test1();
+        return ResponseEntity.ok("/api/v1/test1 " + UUID.randomUUID());
+    }
+
+    @GetMapping(value = "test2")
+    public ResponseEntity<String> test2() {
+        this.commonService.test1();
+        return ResponseEntity.ok("/api/v1/test2 " + UUID.randomUUID());
+    }
+}
+```
+
+```java
+@Service
+public class CommonService {
+    @SentinelResource(value="common1")
+    public void test1() {
+
+    }
+}
+```
+
+访问`http://localhost:8858/#/dashboard/flow/demo-springcloud-gateway`新增流控规则，流控规则信息如下：
+
+- 资源名为`common1`
+- 针对来源为`default`
+- 阈值类型为`QPS`
+- 单机阈值为`1`
+- 是否集群为`不勾选`
+- 流控模式为`链路`
+- 入口资源为`/api/v1/test1`
+- 流控效果为`快速失败`
+
+点击`新增`按钮新增流控规则（表示通过资源`/api/v1/test1`调用资源`common1`限流，通过资源`/api/v1/test2`调用资源`common1`不限流）。
+
+访问`http://localhost:8080/api/v1/test1`限流，访问`http://localhost:8080/api/v1/test2`不限流。
+
+
+
+##### 流控效果 - 快速失败
+
+直接失败，抛 FlowException 异常。
+
+访问`http://localhost:8858/#/dashboard/flow/demo-springcloud-gateway`新增流控规则，流控规则信息如下：
+
+- 资源名为`/api/v1/test1`
+- 针对来源为`default`
+- 阈值类型为`QPS`
+- 单机阈值为`1`
+- 是否集群为`不勾选`
+- 流量模式为`直接`
+- 流控效果为`快速失败`
+
+点击`新增`按钮新增流控规则。
+
+访问`http://localhost:8080/api/v1/test1`限流报告`Blocked by Sentinel (flow limiting)`错误。
+
+
+
+##### 流控效果 - Warm Up
+
+根据冷加载因子（codeFactor，默认3）的值，从阈值/codeFactor开始，经过预热时长后，逐渐达到设置的QPS阈值。这种方式适用于流量突然增加时，给系统一个预热的时间，避免系统被压垮。
+
+访问`http://localhost:8858/#/dashboard/flow/demo-springcloud-gateway`新增流控规则，流控规则信息如下：
+
+- 资源名为`/api/v1/test1`
+- 针对来源为`default`
+- 阈值类型为`QPS`
+- 单机阈值为`10`
+- 是否集群为`不勾选`
+- 流量模式为`直接`
+- 流控效果为`Warm Up`
+- 预热时长为`10`秒
+
+点击`新增`按钮新增流控规则。
+
+访问`http://localhost:8080/api/v1/test1`，前 10 秒会单机阈值为 10/3 = 3.3 QPS（连续请求 /api/v1/test1 会报告限流错误），10 秒后单机阈值恢复为 10 QPS（连续请求 /api/v1/test1 不会报告限流错误，因为阈值恢复为 10 QPS）。
+
+
+
+##### 流控效果 - 排队等待
+
+匀速排队，让请求以匀速的速度通过。这种方式适用于处理间隔性突发的流量，例如消息队列。但需要注意的是，匀速排队模式暂时不支持QPS大于1000的场景。阈值类型必须设置为QPS，否则无效。
+
+访问`http://localhost:8858/#/dashboard/flow/demo-springcloud-gateway`新增流控规则，流控规则信息如下：
+
+- 资源名为`/api/v1/test1`
+- 针对来源为`default`
+- 阈值类型为`QPS`
+- 单机阈值为`1`
+- 是否集群为`不勾选`
+- 流量模式为`直接`
+- 流控效果为`排队等待`
+- 超时时间为`10000`毫秒
+
+点击`新增`按钮新增流控规则。
+
+使用 JMeter 创建线程数为 20，0 秒启动完毕，循环 1 次，请求`http://localhost:8080/api/v1/test1`。有 11 个请求以 1 QPS 速率被处理，9 个请求被拒绝（因为超时时间为`10000`毫秒，阈值为`1 QPS`）。
+
+
+
+##### 阈值类型 - 线程数
+
+通过设定并发线程数阈值来控制同时访问接口的线程数量。例如，阈值设置为5，表示同时进入到此方法的线程最多有5个，超过5个的线程都会被拒绝。
+
+访问`http://localhost:8858/#/dashboard/flow/demo-springcloud-gateway`新增流控规则，流控规则信息如下：
+
+- 资源名为`/api/v1/test1`
+- 针对来源为`default`
+- 阈值类型为`线程数`
+- 单机阈值为`1`
+- 是否集群为`不勾选`
+- 流量模式为`直接`
+
+点击`新增`按钮新增流控规则。
+
+使用 JMeter 创建线程数为 20，0 秒启动完毕，无限循环，请求`http://localhost:8080/api/v1/test1`。在 JMeter 压力测试过程中访问`http://localhost:8080/api/v1/test1`因为没有足够的线程处理请求所以会被限流。
+
+
+
+#### 熔断规则
+
+##### 介绍
+
+Sentinel是一款面向分布式服务架构的轻量级流量控制组件，主要通过流量控制、熔断降级和系统自适应保护等手段，确保服务的稳定性和可用性。在Sentinel中，熔断机制是一种重要的保护策略，它类似于电路中的熔断器，能够在服务出现故障或负载过高时切断请求，从而防止系统崩溃。以下是关于Sentinel熔断规则的详细介绍：
+
+一、熔断机制的工作原理
+
+熔断机制的工作原理通常包括以下几个步骤：
+
+1. **监控服务**：持续监控服务的健康状态和负载情况。
+2. **触发熔断**：当服务出现故障（如响应时间过长、异常比例过高等）或负载过高时，触发熔断机制。
+3. **熔断动作**：执行熔断动作，例如拒绝新的请求、调用降级策略等，以保护系统免受进一步影响。
+4. **恢复服务**：在一段时间后（即熔断时长结束后），尝试恢复服务，并根据恢复情况决定是否继续熔断。此时服务会进入半开状态（HALF-OPEN状态），允许一定量的请求通过以测试服务是否已恢复。如果请求成功，则关闭熔断器；如果请求失败，则再次触发熔断。
+
+二、常见的熔断规则类型
+
+Sentinel提供了多种熔断规则类型，以适应不同的业务场景和需求。以下是几种常见的熔断规则：
+
+1. **慢调用比例（SLOW_REQUEST_RATIO）**：
+   - **定义**：选择以慢调用比例作为阈值，需要设置允许的慢调用RT（即最大的响应时间）。请求的响应时间大于该值则统计为慢调用。
+   - **触发条件**：当单位统计时长内请求数目大于设置的最小请求数目，并且慢调用的比例大于阈值时，触发熔断。
+   - **恢复条件**：经过熔断时长后，服务进入半开状态。若接下来的一个请求响应时间小于设置的慢调用RT，则结束熔断；否则，会再次被熔断。
+2. **异常比例（ERROR_RATIO）**：
+   - **定义**：当单位统计时长内请求数目大于设置的最小请求数目，并且异常的比例大于阈值时，触发熔断。
+   - **触发条件**：异常比率的阈值范围是[0.0, 1.0]，代表0%至100%。
+   - **恢复条件**：经过熔断时长后，服务进入半开状态。若接下来的一个请求成功完成（没有错误），则结束熔断；否则，会再次被熔断。
+3. **异常数（ERROR_COUNT）**：
+   - **定义**：当单位统计时长内的异常数目超过阈值时，触发熔断。
+   - **触发条件**：无需考虑请求数目和异常比例，只需异常数目超过设定阈值。
+   - **恢复条件**：经过熔断时长后，服务进入半开状态。若接下来的一个请求成功完成（没有错误），则结束熔断；否则，会再次被熔断。
+
+三、熔断规则的配置与应用
+
+在Sentinel中，熔断规则可以通过配置文件或动态配置中心进行设置。配置完成后，Sentinel将自动根据这些规则对流量进行控制和降级操作。同时，Sentinel还提供了实时监控功能，可以实时查看系统的运行状态和各项指标，便于问题排查和规则优化。
+
+此外，为了获得最佳效果，用户需要根据实际业务场景和系统特点进行合理的规则配置和优化工作。例如，可以根据服务的响应时间、异常比例、请求量等指标来设置合适的熔断阈值，以确保服务在高并发和故障场景下仍能保持良好的运行状态。
+
+综上所述，Sentinel的熔断规则是保护分布式服务架构稳定性和可用性的重要手段。通过合理配置和应用这些规则，用户可以有效地防止系统因流量过大或故障而崩溃，从而提高服务的稳定性和可用性。
+
+
+
+##### 慢调用比例
+
+访问`http://localhost:8858/#/dashboard/degrade/demo-springcloud-gateway`新增规则，规则信息如下：
+
+- 资源名为`/api/v1/test1`
+- 熔断策略为`慢调用比例`
+- 最大 RT 为`1000`毫秒（超过 1 秒的接口被认为慢调用）
+- 比例阈值为`0.5`（慢调用比例超过 50% 触发熔断）
+- 熔断时长为`10`秒（熔断持续时间为 10 秒，之后自动切换为半开状态）
+- 最小请求数`5`（最小请求数为 5 次才触发熔断机制）
+- 统计时长`2000`毫秒（统计时间窗口为 2 秒）
+
+使用 JMeter 创建线程数为 10，0 秒启动完毕，无限循环，请求`http://localhost:8080/api/v1/test1?sleepInSeconds=3`。在 JMeter 压力测试过程中访问`http://localhost:8080/api/v1/test1`熔断报告错误。
+
+
+
+##### 异常比例
+
+访问`http://localhost:8858/#/dashboard/degrade/demo-springcloud-gateway`新增规则，规则信息如下：
+
+- 资源名为`/api/v1/test2`
+- 熔断策略为`异常比例`
+- 比例阈值为`0.5`（比例超过 50% 触发熔断）
+- 熔断时长为`10`秒（熔断持续时间为 10 秒，之后自动切换为半开状态）
+- 最小请求数`5`（最小请求数为 5 次才触发熔断机制）
+- 统计时长`2000`毫秒（统计时间窗口为 2 秒）
+
+使用 JMeter 创建线程数为 10，0 秒启动完毕，无限循环，请求`http://localhost:8080/api/v1/test2?flag=exception`。在 JMeter 压力测试过程中访问`http://localhost:8080/api/v1/test2`熔断报告错误。
+
+
+
+##### 异常数
+
+访问`http://localhost:8858/#/dashboard/degrade/demo-springcloud-gateway`新增规则，规则信息如下：
+
+- 资源名为`/api/v1/test2`
+- 熔断策略为`异常数`
+- 异常数`3`（异常数量超过 3 触发熔断）
+- 熔断时长为`10`秒（熔断持续时间为 10 秒，之后自动切换为半开状态）
+- 最小请求数`5`（最小请求数为 5 次才触发熔断机制）
+- 统计时长`2000`毫秒（统计时间窗口为 2 秒）
+
+使用 JMeter 创建线程数为 10，0 秒启动完毕，无限循环，请求`http://localhost:8080/api/v1/test2?flag=exception`。在 JMeter 压力测试过程中访问`http://localhost:8080/api/v1/test2`熔断报告错误。
+
+
+
+#### @SentinelResource 注解
+
+
+
+##### 介绍
+
+`@SentinelResource` 是 Alibaba Sentinel 提供的一个注解，用于定义资源，并可以与 Sentinel 的流控、降级等规则进行关联。通过该注解，开发者可以非常方便地在代码中对某些方法进行保护，防止在高并发或异常情况下导致系统崩溃。
+
+以下是 `@SentinelResource` 注解的一些关键属性和用法：
+
+**关键属性**
+
+1. **value**：资源的唯一标识名称。这个名称用于在 Sentinel 控制台配置规则。如果不指定，则默认为方法的全限定名（类名+方法名）。
+2. **entryType**：指定资源的入口类型。可选值有 `EntryType.IN`（表示普通入口，默认值）和 `EntryType.OUT`（表示异步出口）。
+3. **blockHandler**：指定处理被限流或被降级逻辑的处理器方法名。该方法必须与原方法在同一个类中，且返回类型、方法参数列表（除了第一个参数类型为 `BlockException`）需要与原方法一致。
+4. **fallback**：指定默认的降级返回值。当方法被限流、降级、系统异常时，会直接返回该值。注意，`fallback` 和 `blockHandler` 是互斥的，不能同时使用。
+5. **defaultFallback**：指定类级别的默认降级返回值。当方法被限流、降级、系统异常时，如果该方法没有定义 `fallback`，则会使用这个类级别的默认降级值。`defaultFallback` 需要定义在类上。
+6. **exceptionsToIgnore**：指定哪些异常类型会被忽略，不进行降级处理。
+
+**使用示例**
+
+基本使用
+
+```java
+import com.alibaba.csp.sentinel.annotation.SentinelResource;
+import com.alibaba.csp.sentinel.slots.block.BlockException;
+ 
+public class MyService {
+ 
+    @SentinelResource(value = "myMethod", fallback = "defaultFallback")
+    public String myMethod() {
+        // 业务逻辑
+        return "Hello, Sentinel!";
+    }
+ 
+    public String defaultFallback() {
+        return "Fallback response for myMethod";
+    }
+}
+```
+
+在这个例子中，如果 `myMethod` 被限流或降级，将会调用 `defaultFallback` 方法。
+
+使用 blockHandler
+
+```java
+import com.alibaba.csp.sentinel.annotation.SentinelResource;
+import com.alibaba.csp.sentinel.slots.block.BlockException;
+ 
+public class MyService {
+ 
+    @SentinelResource(value = "myMethod", blockHandler = "handleBlock")
+    public String myMethod() {
+        // 业务逻辑
+        return "Hello, Sentinel!";
+    }
+ 
+    public String handleBlock(BlockException ex) {
+        // 处理被限流的逻辑
+        return "Blocked by Sentinel: " + ex.getMessage();
+    }
+}
+```
+
+在这个例子中，如果 `myMethod` 被限流，将会调用 `handleBlock` 方法来处理限流逻辑。
+
+**注意事项**
+
+- `blockHandler` 和 `fallback` 方法的参数列表必须与原方法一致（除了 `blockHandler` 方法第一个参数是 `BlockException` 类型）。
+- 如果使用了 `blockHandler` 或 `fallback` 方法，需要确保这些方法在同一个类中定义。
+- `SentinelResource` 注解主要用于对单个方法的保护，对于更复杂的场景，可以考虑使用 Sentinel 的编程 API 来定义资源。
+
+通过使用 `@SentinelResource` 注解，开发者可以非常方便地在代码中集成 Sentinel 的流量控制和降级功能，提高系统的稳定性和可用性。
+
+
+
+##### 自定义资源名称限流
+
+```java
+@GetMapping(value = "test3")
+@SentinelResource(value = "test3")
+public ResponseEntity<String> test3() {
+    return ResponseEntity.ok("/api/v1/test3 " + UUID.randomUUID());
+}
+```
+
+流控规则信息：
+
+- 资源名为`test3`
+- 针对来源为`default`
+- 阈值类型为`QPS`
+- 单机阈值为`1`
+- 是否集群为`不勾选`
+- 流控模式为`直接`
+- 流控效果为`快速失败`
+
+请求`http://localhost:8080/api/v1/test3`测试自定义资源名称限流效果。
+
+
+
+##### 自定义限流返回 blockHandler
+
+`blockHandler` 是在流量控制触发时调用
+
+```java
+@GetMapping(value = "test3")
+@SentinelResource(value = "test3", blockHandler = "blockHandler")
+public ObjectResponse<String> test3() {
+    ObjectResponse<String> response = new ObjectResponse<>();
+    response.setData("/api/v1/test3 " + UUID.randomUUID());
+    return response;
+}
+
+public ObjectResponse<String> blockHandler(BlockException ex) {
+    ObjectResponse<String> response = new ObjectResponse<>();
+    response.setData("被限流降级了");
+    return response;
+}
+```
+
+流控规则信息：
+
+- 资源名为`test3`
+- 针对来源为`default`
+- 阈值类型为`QPS`
+- 单机阈值为`1`
+- 是否集群为`不勾选`
+- 流控模式为`直接`
+- 流控效果为`快速失败`
+
+请求`http://localhost:8080/api/v1/test3`测试效果。
+
+
+
+##### 自定义服务降级 fallback
+
+`fallback` 是在熔断降级触发时调用
+
+```java
+@GetMapping(value = "test3")
+@SentinelResource(value = "test3", fallback = "fallback")
+public ObjectResponse<String> test3(@RequestParam(value = "flag", defaultValue = "") String flag) {
+    if ("exception".equals(flag)) {
+        throw new RuntimeException("预期异常");
+    }
+    ObjectResponse<String> response = new ObjectResponse<>();
+    response.setData("/api/v1/test3 " + UUID.randomUUID());
+    return response;
+}
+
+public ObjectResponse<String> fallback(@RequestParam(value = "flag", defaultValue = "") String flag, Throwable ex) {
+    ObjectResponse<String> response = new ObjectResponse<>();
+    response.setData("服务降级了");
+    return response;
+}
+```
+
+熔断规则信息：
+
+- 资源名为`test3`
+- 熔断策略为`异常比例`
+- 比例阈值为`0.5`
+- 熔断时长为`10`秒
+- 最小请求数为`5`
+- 统计时长为`1000`毫秒
+
+使用 JMeter 创建线程数为 10，0 秒启动完毕，无限循环，请求`http://localhost:8080/api/v1/test3?flag=exception`。在 JMeter 压力测试过程中访问`http://localhost:8080/api/v1/test3`熔断报告错误。
+
+
+
+##### blockHandler 和 fallback 区别
+
+在微服务架构中，Sentinel 是一个非常流行的开源流量控制、熔断降级组件，由阿里巴巴开源。它主要用于服务的稳定性保障，确保在高并发、系统不稳定等场景下，服务不会崩溃，并能够在必要时进行降级处理。在 Sentinel 中，`@SentinelResource` 注解是一个关键的工具，用于对方法调用进行流量控制和熔断降级处理。
+
+`@SentinelResource` 注解提供了两个重要的属性：`blockHandler` 和 `fallback`，它们用于定义在特定条件下调用的降级逻辑。
+
+**`blockHandler`**
+
+`blockHandler` 用于处理流量控制（如 QPS 超出限制）的情况。当方法的调用被 Sentinel 流量控制规则拦截时，会调用 `blockHandler` 指定的方法。
+
+- **使用方式**：`blockHandler` 属性值应该是一个方法名，该方法需要在同一个类中定义，并且方法签名要与原方法一致，或者多一个 `BlockException` 类型的参数。
+- **返回值**：`blockHandler` 方法的返回值类型必须与原方法一致。
+
+```java
+@SentinelResource(value = "exampleMethod", blockHandler = "blockHandlerMethod")
+public String exampleMethod() {
+    // 原始业务逻辑
+    return "Hello, Sentinel!";
+}
+ 
+public String blockHandlerMethod(BlockException ex) {
+    // 降级处理逻辑
+    return "Blocked by Sentinel!";
+}
+```
+
+**`fallback`**
+
+`fallback` 用于处理熔断降级的情况，比如服务调用失败、异常抛出等。当方法的调用被 Sentinel 熔断规则拦截时，会调用 `fallback` 指定的方法。
+
+- **使用方式**：`fallback` 属性值也应该是一个方法名，该方法需要在同一个类中定义，并且方法签名要与原方法一致，或者多一个 `Throwable` 类型的参数（用于接收原始方法抛出的异常）。
+- **返回值**：`fallback` 方法的返回值类型必须与原方法一致。
+
+```java
+@SentinelResource(value = "exampleMethod", fallback = "fallbackMethod")
+public String exampleMethod() {
+    // 原始业务逻辑
+    return "Hello, Sentinel!";
+}
+ 
+public String fallbackMethod(Throwable ex) {
+    // 降级处理逻辑
+    return "Fallback by Sentinel!";
+}
+```
+
+**区别与选择**
+
+- **触发条件**：`blockHandler` 是在流量控制触发时调用，而 `fallback` 是在熔断降级触发时调用。
+- **参数**：`blockHandler` 方法多一个 `BlockException` 参数，`fallback` 方法多一个 `Throwable` 参数。
+- **使用场景**：根据实际需求选择使用哪个属性。如果需要处理流量控制的情况，使用 `blockHandler`；如果需要处理服务异常或熔断的情况，使用 `fallback`。
+
+**注意事项**
+
+- `blockHandler` 和 `fallback` 方法必须定义在同一个类中，并且不能是静态方法。
+- 方法签名需要匹配或增加一个特定的异常参数。
+- 返回值类型必须与原方法一致。
+
+通过合理使用 `@SentinelResource` 注解的 `blockHandler` 和 `fallback` 属性，可以大大提高微服务系统的稳定性和可靠性。
+
+
+
+#### 热点规则
+
+##### 介绍
+
+Sentinel热点规则主要用于对热点参数进行流量控制，以保护系统免受突发高流量的冲击。以下是对Sentinel热点规则的详细介绍：
+
+一、热点参数限流概述
+
+热点参数限流是一种特殊的流量控制策略，它针对的是那些经常被访问的热点数据。通过统计传入参数中的热点参数，并根据配置的限流阈值与模式，对包含热点参数的资源调用进行限流。这种策略可以有效地防止某些热点数据被过度访问，从而保护系统的稳定性和可用性。
+
+二、热点规则配置
+
+在Sentinel中，热点规则的配置通常包括以下几个关键要素：
+
+1. **资源名称**：需要限流的资源名称，通常与接口路径或方法名称相对应。
+2. **热点参数索引**：指定要进行限流的热点参数在请求参数中的位置（从0开始计数）。
+3. **限流阈值**：在指定时间窗口内，允许该热点参数被访问的最大次数。一旦超过这个阈值，就会触发限流策略。
+4. **限流模式**：Sentinel支持多种限流模式，如直接失败、预热模式、排队等待等。不同的限流模式适用于不同的场景和需求。
+
+三、热点规则示例
+
+假设有一个电商系统，需要对商品ID进行热点参数限流。以下是一个简单的示例：
+
+1. **配置热点规则**：
+   - 资源名称：`getProductById`
+   - 热点参数索引：0（假设商品ID是请求的第一个参数）
+   - 限流阈值：10（每秒允许访问10次）
+   - 限流模式：直接失败（超过阈值后直接返回限流提示）
+2. **代码示例**：
+
+```java
+@RestController
+public class ProductController {
+ 
+    @GetMapping("/product/{id}")
+    @SentinelResource(value = "getProductById", blockHandler = "handleBlock")
+    public Product getProductById(@PathVariable("id") String productId) {
+        // 查询商品信息的逻辑
+        return new Product(productId, "商品名称", "商品描述", 100.0);
+    }
+ 
+    public Product handleBlock(String productId, BlockException ex) {
+        // 限流处理逻辑，如返回默认商品信息或提示用户稍后再试
+        return new Product("defaultId", "默认商品", "默认描述", 0.0);
+    }
+}
+```
+
+在上述代码中，`@SentinelResource`注解用于定义资源，并指定了限流处理的方法`handleBlock`。当请求的商品ID超过限流阈值时，会触发`handleBlock`方法，返回默认的商品信息或提示用户稍后再试。
+
+四、热点参数例外项
+
+Sentinel还支持热点参数例外项的配置，允许对特定的热点参数值设置不同的限流阈值。例如，对于某些热门商品，可以设置更高的访问阈值以满足用户的正常需求。
+
+五、注意事项
+
+1. **参数类型支持**：Sentinel热点规则支持多种参数类型，但具体支持哪些类型取决于Sentinel的版本和配置。
+2. **性能影响**：热点参数限流会对系统性能产生一定的影响，特别是在高并发场景下。因此，在配置热点规则时，需要权衡限流效果和性能开销。
+3. **规则持久化**：为了确保热点规则在重启后仍然有效，建议将规则持久化到数据库或配置中心等持久化存储中。
+
+综上所述，Sentinel热点规则是一种有效的流量控制策略，可以帮助开发者保护系统免受突发高流量的冲击。通过合理配置热点规则，可以确保系统的稳定性和可用性。
+
+
+
+##### 基本使用
+
+```java
+@GetMapping(value = "test3")
+@SentinelResource(value = "test3")
+public ObjectResponse<String> test3(@RequestParam(value = "flag", required = false) String flag,
+                                    @RequestParam(value = "p2", required = false) String p2) {
+    if ("exception".equals(flag)) {
+        throw new RuntimeException("预期异常");
+    }
+    ObjectResponse<String> response = new ObjectResponse<>();
+    response.setData("/api/v1/test3 " + UUID.randomUUID());
+    return response;
+}
+```
+
+热点规则信息：
+
+- 资源名为`test3`
+- 限流模式为`QPS模式`
+- 参数索引为`0`（表示带第一个参数的请求被限流）
+- 单机阈值为`1`
+- 统计窗口时长为`1`秒
+- 是否集群为`不勾选`
+
+带参数 flag 的请求被限流`http://localhost:8080/api/v1/test3?flag=1`，不带参数的 flag 的请求不会被限流`http://localhost:8080/api/v1/test3?p2=1`
+
+
+
+##### 参数例外项
+
+```java
+@GetMapping(value = "test3")
+@SentinelResource(value = "test3")
+public ObjectResponse<String> test3(@RequestParam(value = "flag", required = false) String flag,
+                                    @RequestParam(value = "p2", required = false) String p2) {
+    if ("exception".equals(flag)) {
+        throw new RuntimeException("预期异常");
+    }
+    ObjectResponse<String> response = new ObjectResponse<>();
+    response.setData("/api/v1/test3 " + UUID.randomUUID());
+    return response;
+}
+```
+
+热点规则信息：
+
+- 资源名为`test3`
+- 限流模式为`QPS模式`
+- 参数索引为`0`（表示带第一个参数的请求被限流）
+- 单机阈值为`1`
+- 统计窗口时长为`1`秒
+- 是否集群为`不勾选`
+- 参数例外项的参数类型为`java.lang.String`
+- 参数例外项的参数值为`2`
+- 参数例外项的限流阈值为`200`
+
+参数 flag=1 的请求被限流为`1 QPS http://localhost:8080/api/v1/test3?flag=1`，参数 flag=2 的请求被限流为`200 QPS http://localhost:8080/api/v1/test3?flag=2`
+
+
+
+#### 授权规则
+
+##### 介绍
+
+Sentinel的授权规则是一种用于控制服务调用方来源的访问控制机制。以下是关于Sentinel授权规则的详细介绍：
+
+一、基本概念
+
+- **授权规则**：用于对请求方的来源进行判断和控制，决定是否允许访问受保护的资源。
+- **白名单**：只有来源在白名单内的调用者才允许访问资源。
+- **黑名单**：来源在黑名单内的调用者不允许访问资源，其余来源的调用者则可以访问。
+
+二、如何获取请求来源（origin）
+
+Sentinel通过`RequestOriginParser`接口的`parseOrigin`方法来获取请求的来源。默认情况下，Sentinel不管请求者从哪里来，返回值都是"default"，即所有请求的来源都被认为是一样的值"default"。因此，需要自定义这个接口的实现，让不同的请求返回不同的origin。
+
+自定义`RequestOriginParser`接口的实现类时，可以从请求的Header中获取某个参数来标明调用方的身份，例如从请求的Header中获取"origin"字段或"source"字段的值作为调用方的身份标识。
+
+三、配置授权规则
+
+在Sentinel控制台中，可以新增授权规则，配置受保护的资源、调用方名单（origin）以及授权类型（白名单或黑名单）。
+
+- **资源名**：受保护的资源，例如`/order/query`。
+- **流控应用**：调用方名单（origin），可以配置多个来源，用逗号分隔。
+- **授权类型**：设置调用方名单是白名单还是黑名单。
+
+四、自定义异常处理
+
+当请求被Sentinel拦截时，会抛出`BlockException`异常。为了更好地向调用方提供错误信息，可以自定义异常处理逻辑。
+
+实现`BlockExceptionHandler`接口，并重写其`handle`方法。该方法有三个参数：`HttpServletRequest request`、`HttpServletResponse response`和`BlockException e`。其中，`BlockException`是Sentinel拦截时抛出的异常，包含多个不同的子类，如`FlowException`（限流异常）、`DegradeException`（降级异常）等。根据异常的类型，可以返回不同的错误信息和状态码。
+
+五、规则持久化
+
+Sentinel默认将规则保存在内存中，重启服务后规则会丢失。为了实现规则的持久化，可以采用以下两种方式：
+
+- **Pull模式**：Sentinel控制台将配置的规则推送到Sentinel客户端，客户端将配置规则保存在本地文件或数据库中，以后会定时去本地文件或数据库中查询，更新本地规则。
+- **Push模式**：Sentinel控制台将配置规则推送到远程配置中心（如Nacos），Sentinel客户端监听远程配置中心，获取配置变更的推送消息，完成本地配置更新。
+
+通过以上方式，可以实现Sentinel授权规则的持久化，确保规则在服务重启后仍然有效。
+
+综上所述，Sentinel的授权规则是一种强大的访问控制机制，可以根据请求方的来源进行细粒度的控制。通过自定义请求来源的获取方式、配置授权规则以及自定义异常处理逻辑，可以实现对服务调用方的有效管理和控制。
+
+
+
+##### 黑名单
+
+自定义请求解析器，用于解析请求参数并自动注入到 Sentinel 上下文中
+
+```java
+// Sentinel 授权规则的请求参数自定义解析器
+@Component
+public class MyRequestOriginParser implements RequestOriginParser {
+    @Override
+    public String parseOrigin(HttpServletRequest httpServletRequest) {
+        return httpServletRequest.getParameter("myp1");
+    }
+}
+```
+
+授权规则信息：
+
+- 资源名为`test3`
+- 流控应用为`1,5`
+- 授权类型为`黑名单`
+
+请求`http://localhost:8080/api/v1/test3?myp1=`白名单，请求`http://localhost:8080/api/v1/test3?myp1=1`黑名单
+
+
+
+##### 白名单
+
+和黑名单用法类似。
+
+
+
+#### 规则持久化
+
+##### 介绍
+
+Sentinel规则持久化是指将配置在Sentinel控制台的流量控制、熔断降级等规则存储到持久化存储系统中，使得即使服务重启或者Sentinel守护进程重启，规则也能自动恢复，无需重新手动配置。以下是对Sentinel规则持久化的详细介绍：
+
+一、持久化方式
+
+1. **Push模式**：
+   - 规则中心统一推送，客户端通过注册监听器的方式时刻监听变化。例如，使用Nacos、Zookeeper等配置中心。
+   - 当规则出现修改时，Sentinel控制台将规则推送至客户端，接着客户端会更新内存中的信息，并且将这部分数据写入到本地磁盘文件（或其他持久化存储）进行持久化保存。但这种方式是基于定时更新实现的，所以规则更新会存在延迟。
+   - 当采用Push模式时，规则是存储在远程配置中心的，因此当出现服务迁移时，不影响规则信息。这种方式有更好的实时性和一致性保证，是生产环境下一般采用的方式。
+2. **Pull模式**：
+   - 客户端定期轮询拉取规则。
+   - 这种方式简单且无任何依赖，但不保证一致性，实时性也无法保证。此外，拉取过于频繁也可能会有性能问题。
+
+二、Push模式实现示例（以Nacos为例）
+
+1. **引入依赖**：
+
+   在需要持久化规则的服务中引入Sentinel监听Nacos的依赖。例如，在`pom.xml`中添加以下依赖：
+
+   ```xml
+   <dependency>
+   	<groupId>com.alibaba.csp</groupId>
+   	<artifactId>sentinel-datasource-nacos</artifactId>
+   </dependency>
+   ```
+
+2. **配置Nacos地址**：
+
+   在服务中的`application.yml`或`bootstrap.yml`文件中配置Nacos地址及监听的配置信息。例如：
+
+   ```yaml
+   spring:
+     cloud:
+   	sentinel:
+   	  datasource:
+   		flow:
+   		  nacos:
+   			server-addr: localhost:8848 # Nacos地址
+   			dataId: orderservice-flow-rules # 数据ID
+   			groupId: SENTINEL_GROUP # 分组ID
+   			rule-type: flow # 规则类型
+   ```
+
+3. **修改Sentinel控制台源码**（如果需要）：
+
+   如果Sentinel控制台默认不支持Nacos持久化，则需要修改其源码。具体步骤包括解压源码包、修改`pom.xml`文件中的Nacos依赖、将测试包下的Nacos支持代码拷贝到主包下、修改Nacos地址配置、配置Nacos数据源以及修改前端页面等。
+
+4. **启动服务**：
+
+   启动修改后的Sentinel控制台和需要持久化规则的服务。服务会从Nacos中读取规则并应用到Sentinel框架内。
+
+5. **测试**：
+
+   在Sentinel控制台中创建或更新规则后，这些规则会被推送到Nacos中保存。客户端启动时会从Nacos中读取规则。可以测试重启服务后规则是否仍然有效，以验证持久化是否成功。
+
+三、注意事项
+
+1. **规则一致性**：
+
+   在Push模式下，由于规则是统一推送和监听的，因此可以保证规则的一致性。但在Pull模式下，由于客户端是定期轮询拉取规则的，因此可能存在规则不一致的情况。
+
+2. **性能开销**：
+
+   Push模式需要客户端监听远程配置中心的变化并实时更新本地规则，这可能会增加一定的性能开销。而Pull模式则相对简单，但可能会因为频繁拉取规则而影响性能。
+
+3. **服务迁移**：
+
+   当采用Push模式时，由于规则是存储在远程配置中心的，因此服务迁移时不需要迁移规则文件。而采用Pull模式时，则需要确保规则文件在服务迁移时能够正确迁移。
+
+4. **版本兼容性**：
+
+   在升级Sentinel或相关依赖时，需要注意版本兼容性问题。不同版本的Sentinel可能支持不同的持久化方式和配置方式。
+
+综上所述，Sentinel规则持久化是确保服务稳定性和可用性的重要手段之一。在生产环境下，建议采用Push模式进行规则持久化，并结合具体的业务场景和需求选择合适的配置中心和持久化存储方式。
+
+
+
+##### 配置
+
+pom 依赖配置
+
+```xml
+<!-- Sentinel 持久化配置到 Nacos 依赖 -->
+<dependency>
+    <groupId>com.alibaba.csp</groupId>
+    <artifactId>sentinel-datasource-nacos</artifactId>
+</dependency>
+```
+
+application.properties 配置
+
+```properties
+# Sentinel 持久化配置到 Nacos 配置
+spring.cloud.sentinel.datasource.ds1.nacos.server-addr=localhost:8848
+spring.cloud.sentinel.datasource.ds1.nacos.group-id=DEFAULT_GROUP
+spring.cloud.sentinel.datasource.ds1.nacos.data-id=${spring.application.name}
+spring.cloud.sentinel.datasource.ds1.nacos..data-type=json
+# flow：流控规则。这是 Sentinel 最核心、最直观的一种规则，主要用于控制请求的 QPS（每秒查询率）或并发线程数，以防止系统被过大的流量压垮。
+# degrade：熔断规则。当系统的某个资源不稳定或出现故障时，为了防止故障的进一步扩散，可以使用熔断规则来快速失败这个资源的请求。熔断规则通常基于一些条件（如慢调用比例、异常比例或异常数）来触发。
+# param-flow：热点规则。热点规则用于对某个资源中的某个或某些参数进行单独的流控。这可以帮助系统保护那些因为某些特殊参数值而导致的高并发请求。
+# system：系统规则。系统规则是从系统的整体角度出发，对系统的入口流量、CPU 使用率、线程数等指标进行整体控制，以防止系统整体过载。
+# authority：授权规则。授权规则用于对资源的访问进行黑白名单控制。这可以帮助系统实现细粒度的访问控制。
+spring.cloud.sentinel.datasource.ds1.nacos..rule-type=flow
+```
+
+登录 Nacos 创建 Sentinel 规则的配置如下：
+
+- Data ID 为 demo-springcloud-gateway（demo-springcloud-gateway 为微服务名称）
+
+- Group 为 DEFAULT_GROUP
+
+- Format 为 JSON
+
+- Configuration Content 为
+
+  ```json
+  [{
+      "resource": "test3",
+      "limitApp": "default",
+      "grade": 1,
+      "count": 1,
+      "strategy": 0,
+      "controlBehavior": 0,
+      "clusterMode": false
+  },{
+      "resource": "/api/v1/test1",
+      "limitApp": "default",
+      "grade": 1,
+      "count": 2,
+      "strategy": 0,
+      "controlBehavior": 0,
+      "clusterMode": false
+  }]
+  ```
+
+请求`http://localhost:8080/api/v1/test1`和`http://localhost:8080/api/v1/test3`测试效果。
+

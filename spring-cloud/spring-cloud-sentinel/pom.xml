@@ -2,12 +2,6 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<parent>
-		<groupId>org.springframework.boot</groupId>
-		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.2.7.RELEASE</version>
-	</parent>
-
 	<groupId>com.future.demo</groupId>
 	<artifactId>demo-springcloud-parent</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
@@ -16,7 +10,7 @@
 	<modules>
 		<module>demo-springcloud-common</module>
 		<module>demo-springcloud-helloworld</module>
-		<module>demo-springcloud-zuul</module>
+		<module>demo-springcloud-gateway</module>
 	</modules>
 
 	<dependencies>
@@ -30,17 +24,24 @@
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
-				<groupId>org.springframework.cloud</groupId>
-				<artifactId>spring-cloud-dependencies</artifactId>
-				<version>Hoxton.SR10</version>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-starter-parent</artifactId>
+				<version>2.6.13</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
-			<!-- nacos依赖 -->
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-dependencies</artifactId>
+				<version>2021.0.5</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<!-- SpringCloud Alibaba 依赖 -->
 			<dependency>
 				<groupId>com.alibaba.cloud</groupId>
 				<artifactId>spring-cloud-alibaba-dependencies</artifactId>
-				<version>2.2.9.RELEASE</version>
+				<version>2021.0.5.0</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
