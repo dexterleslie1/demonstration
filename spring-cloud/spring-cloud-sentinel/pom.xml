@@ -8,8 +8,6 @@
 	<packaging>pom</packaging>
 
 	<modules>
-		<module>demo-springcloud-common</module>
-		<module>demo-springcloud-helloworld</module>
 		<module>demo-springcloud-gateway</module>
 	</modules>
 

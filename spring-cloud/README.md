@@ -1085,6 +1085,14 @@ ErrorDecoder errorDecoder() {
 
 
 
+#### 自定义 fallback
+
+> todo
+
+
+
+
+
 ## 分布式事务
 
 ### Seata
@@ -3806,3 +3814,8 @@ spring.cloud.sentinel.datasource.ds1.nacos..rule-type=flow
 
 请求`http://localhost:8080/api/v1/test1`和`http://localhost:8080/api/v1/test3`测试效果。
 
+
+
+#### 和 SpringCloud Gateway 集成
+
+>todo `https://github.com/alibaba/Sentinel/wiki/%E7%BD%91%E5%85%B3%E9%99%90%E6%B5%81`
