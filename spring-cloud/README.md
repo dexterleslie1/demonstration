@@ -1293,6 +1293,8 @@ ACID 原则对于确保数据库系统的可靠性和完整性至关重要。然
 
 ### Seata
 
+详细用法请参考示例`https://gitee.com/dexterleslie/demonstration/tree/master/spring-cloud/demo-spring-cloud-alibaba-seata`
+
 
 
 #### 介绍
