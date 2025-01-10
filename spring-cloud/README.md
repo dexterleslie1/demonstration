@@ -1754,7 +1754,7 @@ ALTER TABLE `undo_log` ADD INDEX `ix_log_created` (`log_created`);
 
 分别配置 3 个应用都注册到 Nacos 注册中心
 
-分别配置 3 个应用集成到 Seata 服务
+分别配置 3 个应用集成到 Seata 服务（注意：seata-spring-boot-starter 版本需要和 Seata 服务器版本对应，否则不能自动回滚事务）
 
 pom 依赖配置如下：
 
