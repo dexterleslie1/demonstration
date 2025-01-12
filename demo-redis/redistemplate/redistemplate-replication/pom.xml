@@ -3,10 +3,6 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.xy.demo</groupId>
-    <artifactId>redistemplate-replication</artifactId>
-    <version>0.0.1</version>
-    <packaging>jar</packaging>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -14,12 +10,14 @@
         <version>2.7.2</version>
     </parent>
 
+    <groupId>com.future.demo</groupId>
+    <artifactId>redistemplate-replication</artifactId>
+    <version>0.0.1</version>
+    <packaging>jar</packaging>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>1.8</java.version>
-		<swagger.version>2.9.2</swagger.version>
-        <log4j.version>1.2.17</log4j.version>
-        <junit.verion>4.12</junit.verion>
     </properties>
 
     <dependencies>
@@ -33,24 +31,15 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- SpringBoot Redis 依赖 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-redis</artifactId>
         </dependency>
+        <!-- Redis 连接池依赖 -->
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-pool2</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-            <version>${log4j.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>${junit.verion}</version>
         </dependency>
     </dependencies>
 

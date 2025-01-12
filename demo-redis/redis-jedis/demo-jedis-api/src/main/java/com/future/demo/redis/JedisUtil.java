@@ -1,10 +1,10 @@
 package com.future.demo.redis;
 
-import java.util.Properties;
-
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
+
+import java.util.Properties;
 
 /**
  * redis工具类

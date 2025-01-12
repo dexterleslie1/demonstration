@@ -12,35 +12,28 @@ import org.springframework.data.redis.connection.lettuce.LettuceClientConfigurat
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettucePoolingClientConfiguration;
 
-/**
- *
- */
 @Configuration
 public class RedisConfiguration {
-    /**
-     *
-     * @return
-     */
     @Bean
-    public RedisConnectionFactory redisConnectionFactory(){
+    public RedisConnectionFactory redisConnectionFactory() {
         GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
         poolConfig.setMaxTotal(256);
         LettuceClientConfiguration clientConfig = LettucePoolingClientConfiguration.builder()
                 // 在所有节点负载均衡读取
-//                 .readFrom(ReadFrom.ANY)
+                // .readFrom(ReadFrom.ANY)
                 // 从所有slave节点负载均衡读取
-                 .readFrom(ReadFrom.ANY_REPLICA)
+                .readFrom(ReadFrom.ANY_REPLICA)
                 // 随机选择一个slave节点读取
-//                 .readFrom(ReadFrom.REPLICA)
-//                 .readFrom(ReadFrom.REPLICA_PREFERRED)
+                // .readFrom(ReadFrom.REPLICA)
+                // .readFrom(ReadFrom.REPLICA_PREFERRED)
                 .poolConfig(poolConfig)
                 .clientResources(ClientResources.builder().build())
                 .clientOptions(ClientOptions.builder().build())
                 .build();
 
         RedisStandaloneConfiguration serverConfig = new RedisStandaloneConfiguration("redis-service", 6379);
-//        RedisStandaloneConfiguration serverConfig = new RedisStandaloneConfiguration("localhost", 6379);
-//        serverConfig.setPassword("123456");
+        /*RedisStandaloneConfiguration serverConfig = new RedisStandaloneConfiguration("localhost", 6379);
+        serverConfig.setPassword("123456");*/
         return new LettuceConnectionFactory(serverConfig, clientConfig);
     }
 }
