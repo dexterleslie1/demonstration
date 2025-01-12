@@ -1445,7 +1445,7 @@ Seata支持多种事务模式，以满足不同业务场景的需求：
 
 #### Docker 运行 Seata
 
->参考文档配置 Docker 运行 Seata 服务`https://seata.apache.org/zh-cn/docs/ops/deploy-by-docker-compose/#file-db`
+>参考文档配置 Docker 运行 Seata 服务`https://seata.apache.org/zh-cn/docs/ops/deploy-by-docker-compose/#nacos%E6%B3%A8%E5%86%8C%E4%B8%AD%E5%BF%83db%E5%AD%98%E5%82%A8`
 
 此示例演示 Nacos 注册中心，DB 存储 Seata 服务
 

@@ -283,6 +283,8 @@ module.exports = {
                         'redisson用法.md',
                         '持久化.md',
                         'redis管理.md',
+                        '数据类型和命令.md',
+                        '客户端.md'
                     ]
                 }
             ], '/maven/': [
