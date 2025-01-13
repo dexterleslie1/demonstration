@@ -1,26 +1,19 @@
 version: "3.0"
 
-# 创建网络
-networks:
-  net:
-    name: demo-redis-cache-penetration-net
-
 services:
   # 启动mariadb
-  demo-redis-cache-penetration-db:
-    container_name: demo-redis-cache-penetration-db
-    image: docker.118899.net:10001/yyd-public/demo-redis-cache-penetration-db
+  db:
+    build:
+      context: ./
+      dockerfile: ./Dockerfile
     environment:
       - MYSQL_ROOT_PASSWORD=123456
       - TZ=Asia/Shanghai
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci --skip-character-set-client-handshake
     ports:
-      - 3306:3306
-    networks:
-      - net
+      - '3306:3306'
 
-  demo-redis-cache-penetration-redis-server:
-    container_name: demo-redis-cache-penetration-redis-server
+  redis:
     image: redis:5.0.14
     # 设置redis密码
     command: redis-server /usr/local/etc/redis/redis.conf --requirepass 123456
@@ -29,6 +22,4 @@ services:
     environment:
       - TZ=Asia/Shanghai
     ports:
-      - 6379:6379
-    networks:
-      - net
+      - '6379:6379'
