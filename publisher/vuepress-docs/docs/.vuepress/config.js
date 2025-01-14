@@ -496,6 +496,7 @@ module.exports = {
                     children: [
                         '',
                         'assistant示例.md',
+                        '分布式ID.md',
                     ]
                 }
             ], '/ssl-tls-https/': [
