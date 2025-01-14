@@ -1,5 +1,7 @@
 package com.future.demo;
 
+import cn.hutool.core.lang.Snowflake;
+import cn.hutool.core.util.IdUtil;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
 import cn.hutool.http.HttpUtil;
@@ -43,5 +45,23 @@ public class Tests {
                 .execute(); // 发送请求
         content = response.body();
         Assert.assertTrue(content.contains("args"));
+    }
+
+    // 在分布式环境中，唯一ID生成应用十分广泛，生成方法也多种多样，Hutool针对一些常用生成策略做了简单封装。
+    // https://doc.hutool.cn/pages/IdUtil/
+    @Test
+    public void testIdUtil() {
+        // 根据本地网卡 MAC 地址计算数据中心 ID
+        // WORKER_ID 为 Snowflake 中的 MAX_WORKER_ID
+        Snowflake snowflake = IdUtil.getSnowflake();
+        long id = snowflake.nextId();
+        long id2 = snowflake.nextId();
+        long id3 = IdUtil.getSnowflakeNextId();
+
+        Assert.assertEquals(snowflake.getDataCenterId(id), snowflake.getDataCenterId(id2));
+        Assert.assertEquals(snowflake.getWorkerId(id), snowflake.getWorkerId(id2));
+
+        Assert.assertEquals(snowflake.getDataCenterId(id), snowflake.getDataCenterId(id3));
+        Assert.assertEquals(snowflake.getWorkerId(id), snowflake.getWorkerId(id3));
     }
 }
