@@ -278,7 +278,6 @@ module.exports = {
                     title: "Redis",
                     children: [
                         '容器运行redis.md',
-                        'spring-boot集成redisson.md',
                         'redisson用法.md',
                         '持久化.md',
                         'redis管理.md',

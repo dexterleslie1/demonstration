@@ -223,7 +223,7 @@ sysbench --test=fileio --file-total-size=20G cleanup
 
 运行测试步骤如下：
 
-1. 参考 <a href="/prometheus-grafana-alertmanager/使用docker-compose运行prometheus-grafana-alertmanager.html" target="_blank">链接</a> 运行`prometheus+node_exporter+process_exporter`监控
+1. 参考 <a href="/prometheus-grafana-alertmanager/使用docker-compose运行prometheus.html" target="_blank">链接</a> 运行`prometheus+node_exporter+process_exporter`监控
 1. 通过`node_exporter`的`Storage Disk`试图中的各项指标（重点关注`Instantaneous Queue Size`和`Disk Average Wait Time`指标是否不为0，是则表示有`I/O`请求在排队和`I/O`需要等待，`I/O`设备极度繁忙）综合分析判断`I/O`是否达到瓶颈。
 
 ### 使用`iotop`命令分析`I/O`情况
