@@ -44,7 +44,7 @@ public class Tests {
     @Test
     public void testTransactionExecWithFailed() {
         Transaction transaction = null;
-        try(Jedis jedis = JedisUtil.getInstance().getJedis()) {
+        try (Jedis jedis = JedisUtil.getInstance().getJedis()) {
             jedis.flushDB();
 
             transaction = jedis.multi();
@@ -53,21 +53,24 @@ public class Tests {
             transaction.set("k2", uuidStr);
             transaction.set("k1", "v1");
             transaction.incr("k1");
+            transaction.set("k1", "v2");
 
             List<Object> objectList = transaction.exec();
             Assert.assertEquals("OK", objectList.get(0));
             Assert.assertTrue(objectList.get(2).toString().contains("ERR value is not an integer or out of range"));
 
             // redis事务没有回滚概念，已经成功执行的命令不会回滚
-            Assert.assertTrue(jedis.exists("k2"));
-            Assert.assertEquals("v1", jedis.get("k1"));
+            Assert.assertEquals(uuidStr, jedis.get("k2"));
+            // 在 Redis 事务中中途有命令执行失败，后续命令还是会继续执行
+            Assert.assertEquals("v2", jedis.get("k1"));
         }
     }
 
+    // 演示取消事务执行
     @Test
     public void testTransactionDiscard() {
         Transaction transaction = null;
-        try(Jedis jedis = JedisUtil.getInstance().getJedis()) {
+        try (Jedis jedis = JedisUtil.getInstance().getJedis()) {
             jedis.flushDB();
 
             transaction = jedis.multi();
@@ -85,20 +88,24 @@ public class Tests {
     // jedis事务使用watch乐观锁机制
     @Test
     public void testWatch() throws InterruptedException {
+        // 清空 db
+        try (Jedis jedis = JedisUtil.getInstance().getJedis()) {
+            jedis.flushDB();
+        }
+
         AtomicInteger successIndicator = new AtomicInteger();
         AtomicInteger failIndicator = new AtomicInteger();
         ExecutorService executorService = Executors.newCachedThreadPool();
-        for(int i=0; i<2; i++) {
+        for (int i = 0; i < 2; i++) {
             executorService.submit(() -> {
                 Jedis jedis = null;
-                Transaction transaction = null;
                 try {
                     jedis = JedisUtil.getInstance().getJedis();
-                    jedis.flushDB();
 
+                    // 对 k1 加乐观锁
                     jedis.watch("k1");
 
-                    transaction = jedis.multi();
+                    Transaction transaction = jedis.multi();
 
                     try {
                         Thread.sleep(500);
@@ -107,12 +114,11 @@ public class Tests {
                     }
 
                     String uuidStr = UUID.randomUUID().toString();
-                    // 被watch的key执行失败，k2和k3的操作也执行失败
                     transaction.sadd("k2", uuidStr);
                     transaction.incr("k3");
                     transaction.set("k1", uuidStr);
                     List<Object> objectList = transaction.exec();
-                    if(objectList == null || objectList.size() <= 0) {
+                    if (objectList == null || objectList.size() <= 0) {
                         failIndicator.incrementAndGet();
                     } else {
                         successIndicator.incrementAndGet();
@@ -129,12 +135,13 @@ public class Tests {
             });
         }
         executorService.shutdown();
-        while(!executorService.awaitTermination(1, TimeUnit.SECONDS));
+        while (!executorService.awaitTermination(1, TimeUnit.SECONDS)) ;
 
+        // 只能有一个线程执行成功
         Assert.assertEquals(1, failIndicator.get());
         Assert.assertEquals(1, successIndicator.get());
         try (Jedis jedis = JedisUtil.getInstance().getJedis()) {
-            Assert.assertEquals(new Long(1), jedis.scard("k2"));
+            Assert.assertEquals(Long.valueOf(1), jedis.scard("k2"));
             Assert.assertEquals("1", jedis.get("k3"));
         }
     }

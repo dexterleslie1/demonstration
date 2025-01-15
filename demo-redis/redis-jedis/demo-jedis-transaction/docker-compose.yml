@@ -1,0 +1,13 @@
+version: "3.0"
+
+services:
+  # 启动redis
+  demo-redis-server:
+    image: redis:5.0.14
+    # 设置redis密码
+    command: redis-server /usr/local/etc/redis/redis.conf --requirepass 123456
+    volumes:
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - TZ=Asia/Shanghai
+    network_mode: host
