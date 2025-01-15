@@ -284,7 +284,8 @@ module.exports = {
                         '数据类型和命令.md',
                         '客户端.md',
                         '应用缓存.md',
-                        '事务.md'
+                        '事务.md',
+                        'Lua脚本.md'
                     ]
                 }
             ], '/maven/': [

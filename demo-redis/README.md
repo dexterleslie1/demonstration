@@ -106,38 +106,6 @@ subscribe channel1
 publish channel1 hello
 ```
 
-## 事务
-
-> 参考 demo-redis/redis-jedis/demo-redis-transaction demo
->
-> redis事务三大特性（https://blog.csdn.net/Mudrock__/article/details/127514693）：
->
-> - **单独隔离**：事务中的所有命令都会被序列化，并依次执行。事务在执行时，不会被其他命令打断
-> - **无隔离级别概念**：事务中的所有命令被提交执行前均不会执行，而是进入队列等待执行
-> - **不保证原子性**：事务中的命令发生[运行时异常](https://so.csdn.net/so/search?q=运行时异常&spm=1001.2101.3001.7020)时（可编译通过），该命令不执行并抛出异常，但其他命令照常执行，事务并不发生回滚
-
-## lua脚本
-
-> 参考 demo-redis/redis-jedis/demo-jedis-lua-script demo
-
-```shell
-# 使用eval函数执行lua脚本，1表示有1个key参数
-# https://www.jianshu.com/p/4558689c13be
-eval 'return "hello " .. KEYS[1] .. " " .. ARGV[1]' 1 redis world
-
-# 使用redis.call调用redis命令
-eval 'return redis.call("set", "k1", "sv1")' 0
-get "k1"
-
-# 调用lua脚本文件
-# 1.lua脚本文件内容如下：
-return 'hello ' .. KEYS[1]
-# 调用1.lua脚本文件，返回值hello redis
-redis-cli -a 123456 --eval ./1.lua redis
-```
-
-
-
 
 
 ## 集群
