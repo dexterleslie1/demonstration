@@ -134,6 +134,12 @@ public class Tests {
 
 
 
+## 自定义分布式锁
+
+详细用法请参考示例`https://gitee.com/dexterleslie/demonstration/tree/master/demo-redis/demo-customize-redis-distributed-lock`
+
+
+
 ## 锁的标准用法
 
 详细代码请参考`https://gitee.com/dexterleslie/demonstration/tree/master/demo-redis/demo-spring-boot-redisson`
