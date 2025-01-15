@@ -1,0 +1,233 @@
+version: "3.1"
+
+services:
+  # Redis Standalone 模式
+  redis-standalone:
+    image: redis:5.0.14
+    command: redis-server /usr/local/etc/redis/redis.conf --requirepass 123456
+    volumes:
+      - ./redis-standalone.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - TZ=Asia/Shanghai
+    network_mode: host
+
+  # Redis Replication 模式
+  redis-replication-node1:
+    build:
+      context: .
+      dockerfile: ./Dockerfile-replication
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6479
+    environment:
+      - TZ=Asia/Shanghai
+    network_mode: host
+
+  redis-replication-node2:
+    build:
+      context: .
+      dockerfile: ./Dockerfile-replication
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6480
+    environment:
+      - TZ=Asia/Shanghai
+    network_mode: host
+    depends_on:
+      - redis-replication-node1
+  redis-replication-node2-slave-join:
+    build:
+      context: .
+      dockerfile: ./Dockerfile-replication
+    command: sh -c "dockerize -wait tcp://localhost:6479 -timeout 120s -wait-retry-interval 5s
+      && dockerize -wait tcp://localhost:6480 -timeout 120s -wait-retry-interval 5s
+      && redis-cli -h localhost -p 6480 slaveof localhost 6479
+      && redis-cli -h localhost -p 6480 config rewrite
+      && echo \"成功join slave\""
+    environment:
+      - TZ=Asia/Shanghai
+    network_mode: host
+    depends_on:
+      - redis-replication-node1
+
+  redis-replication-node3:
+    build:
+      context: .
+      dockerfile: ./Dockerfile-replication
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6481
+    environment:
+      - TZ=Asia/Shanghai
+    network_mode: host
+    depends_on:
+      - redis-replication-node1
+  redis-replication-node3-slave-join:
+    build:
+      context: .
+      dockerfile: ./Dockerfile-replication
+    command: sh -c "dockerize -wait tcp://localhost:6479 -timeout 120s -wait-retry-interval 5s
+      && dockerize -wait tcp://localhost:6481 -timeout 120s -wait-retry-interval 5s
+      && redis-cli -h localhost -p 6481 slaveof localhost 6479
+      && redis-cli -h localhost -p 6481 config rewrite
+      && echo \"成功join slave\""
+    environment:
+      - TZ=Asia/Shanghai
+    network_mode: host
+    depends_on:
+      - redis-replication-node1
+
+  # Redis Sentinel 模式
+  demo-redis-sentinel-repl-node1:
+    build:
+      context: .
+      dockerfile: ./Dockerfile-replication
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6579 --replica-announce-ip localhost --replica-announce-port 6579
+    environment:
+      - TZ=Asia/Shanghai
+    network_mode: host
+
+  demo-redis-sentinel-repl-node2:
+    build:
+      context: .
+      dockerfile: ./Dockerfile-replication
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6580 --replica-announce-ip localhost --replica-announce-port 6580
+    environment:
+      - TZ=Asia/Shanghai
+    network_mode: host
+    depends_on:
+      - demo-redis-sentinel-repl-node1
+  demo-redis-sentinel-repl-node2-slave-join:
+    build:
+      context: .
+      dockerfile: ./Dockerfile-replication
+    command: sh -c "dockerize -wait tcp://localhost:6579 -timeout 120s -wait-retry-interval 5s
+      && dockerize -wait tcp://localhost:6580 -timeout 120s -wait-retry-interval 5s
+      && redis-cli -h localhost -p 6580 slaveof localhost 6579
+      && redis-cli -h localhost -p 6580 config rewrite
+      && echo \"成功join slave\""
+    environment:
+      - TZ=Asia/Shanghai
+    network_mode: host
+    depends_on:
+      - demo-redis-sentinel-repl-node1
+
+  demo-redis-sentinel-repl-node3:
+    build:
+      context: .
+      dockerfile: ./Dockerfile-replication
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6581 --replica-announce-ip localhost --replica-announce-port 6581
+    environment:
+      - TZ=Asia/Shanghai
+    network_mode: host
+    depends_on:
+      - demo-redis-sentinel-repl-node1
+  demo-redis-sentinel-repl-node3-slave-join:
+    build:
+      context: .
+      dockerfile: ./Dockerfile-replication
+    command: sh -c "dockerize -wait tcp://localhost:6579 -timeout 120s -wait-retry-interval 5s
+      && dockerize -wait tcp://localhost:6581 -timeout 120s -wait-retry-interval 5s
+      && redis-cli -h localhost -p 6581 slaveof localhost 6579
+      && redis-cli -h localhost -p 6581 config rewrite
+      && echo \"成功join slave\""
+    environment:
+      - TZ=Asia/Shanghai
+    network_mode: host
+    depends_on:
+      - demo-redis-sentinel-repl-node1
+
+  demo-redis-sentinel-node1:
+    build:
+      context: .
+      dockerfile: ./Dockerfile-sentinel
+    command: redis-sentinel /usr/local/etc/redis/redis-sentinel.conf --port 26579
+    environment:
+      - TZ=Asia/Shanghai
+    network_mode: host
+    depends_on:
+      - demo-redis-sentinel-repl-node1
+
+  demo-redis-sentinel-node2:
+    build:
+      context: .
+      dockerfile: ./Dockerfile-sentinel
+    command: redis-sentinel /usr/local/etc/redis/redis-sentinel.conf --port 26580
+    environment:
+      - TZ=Asia/Shanghai
+    network_mode: host
+    depends_on:
+      - demo-redis-sentinel-node1
+
+  demo-redis-sentinel-node3:
+    build:
+      context: .
+      dockerfile: ./Dockerfile-sentinel
+    command: redis-sentinel /usr/local/etc/redis/redis-sentinel.conf --port 26581
+    environment:
+      - TZ=Asia/Shanghai
+    network_mode: host
+    depends_on:
+      - demo-redis-sentinel-node1
+
+  # Redis Cluster 模式
+  node1:
+    image: redis:6.2.6-bullseye
+    # 必须设置cluster-announce-ip才能够在创建集群时节点join到master，否则会一直waiting...
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6679 --cluster-announce-ip 127.0.0.1
+    volumes:
+      - ./redis-cluster.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - TZ=Asia/Shanghai
+    network_mode: 'host'
+
+  node2:
+    image: redis:6.2.6-bullseye
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6680 --cluster-announce-ip 127.0.0.1
+    volumes:
+      - ./redis-cluster.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - TZ=Asia/Shanghai
+    network_mode: 'host'
+
+  node3:
+    image: redis:6.2.6-bullseye
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6681 --cluster-announce-ip 127.0.0.1
+    volumes:
+      - ./redis-cluster.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - TZ=Asia/Shanghai
+    network_mode: 'host'
+
+  node4:
+    image: redis:6.2.6-bullseye
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6682 --cluster-announce-ip 127.0.0.1
+    volumes:
+      - ./redis-cluster.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - TZ=Asia/Shanghai
+    network_mode: 'host'
+
+  node5:
+    image: redis:6.2.6-bullseye
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6683 --cluster-announce-ip 127.0.0.1
+    volumes:
+      - ./redis-cluster.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - TZ=Asia/Shanghai
+    network_mode: 'host'
+
+  node6:
+    image: redis:6.2.6-bullseye
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6684 --cluster-announce-ip 127.0.0.1
+    volumes:
+      - ./redis-cluster.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - TZ=Asia/Shanghai
+    network_mode: 'host'
+
+  creator:
+    image: redis:6.2.6-bullseye
+    entrypoint: [ /bin/sh, -c, 'echo "yes" | redis-cli --cluster create --cluster-replicas 1 127.0.0.1:6679 127.0.0.1:6680 127.0.0.1:6681 127.0.0.1:6682 127.0.0.1:6683 127.0.0.1:6684' ]
+    depends_on:
+      - node1
+      - node2
+      - node3
+      - node4
+      - node5
+      - node6
+    network_mode: 'host'
