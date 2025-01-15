@@ -4,7 +4,7 @@
 
 ## `SpringBoot`应用集成`redisson`
 
-详细用法请参考示例`https://gitee.com/dexterleslie/demonstration/tree/master/demo-redis/spring-boot-redisson-integration`
+详细用法请参考示例`https://gitee.com/dexterleslie/demonstration/tree/master/demo-redis/demo-spring-boot-redisson`
 
 项目`maven`的`pom.xml`配置
 
@@ -18,41 +18,82 @@
 
 **Redis Standalone 模式配置**
 
-**Redis Replication 模式配置**
+```java
+@Configuration
+public class RedissonConfig {
+    @Bean
+    RedissonClient redissonClient() {
+        // Redis Standalone 模式配置
+        Config config = new Config();
+        config.useSingleServer()
+                .setAddress("redis://localhost:6379")
+                .setPassword("123456");
 
-**Redis Sentinel 模式配置**
-
-**Redis Cluster 模式配置**
-
-`spring-boot`项目的`application.properties`配置
-
-```properties
-spring.redis.host=localhost
-spring.redis.port=6379
-spring.redis.password=123456
+        return Redisson.create(config);
+    }
+}
 ```
 
-创建`RedissonClient`
+**Redis Replication 模式配置**
 
 ```java
 @Configuration
-public class ConfigRedis {
-    @Value("${spring.redis.host}")
-    private String redisHost = null;
-    @Value("${spring.redis.port}")
-    private int redisPort = 0;
-    @Value("${spring.redis.password}")
-    private String redisPassword = null;
-
+public class RedissonConfig {
     @Bean
-    RedissonClient redissonClient(){
+    RedissonClient redissonClient() {
+        // Redis Replication 模式配置
         Config config = new Config();
-        SingleServerConfig singleServerConfig = config
-                .useSingleServer()
-                .setAddress("redis://"+redisHost+":"+redisPort);
-        if(!StringUtils.isEmpty(redisPassword)) {
-            singleServerConfig.setPassword(redisPassword);
-        }
+        config.useReplicatedServers()
+                .addNodeAddress(
+                        "redis://localhost:6479"
+                        , "redis://localhost:6480"
+                        , "redis://localhost:6481");
+
+        return Redisson.create(config);
+    }
+}
+```
+
+**Redis Sentinel 模式配置**
+
+```java
+@Configuration
+public class RedissonConfig {
+    @Bean
+    RedissonClient redissonClient() {
+        // Redis Sentinel 模式配置
+        Config config = new Config();
+        config.useSentinelServers()
+                .setMasterName("mymaster")
+                // 下面配置 Sentinel 节点
+                .addSentinelAddress(
+                        "redis://localhost:26579",
+                        "redis://localhost:26580",
+                        "redis://localhost:26581");
+
+        return Redisson.create(config);
+    }
+}
+```
+
+**Redis Cluster 模式配置**
+
+```java
+@Configuration
+public class RedissonConfig {
+    @Bean
+    RedissonClient redissonClient() {
+        // Redis Cluster 模式配置
+        Config config = new Config();
+        config.useClusterServers()
+                .addNodeAddress(
+                        "redis://localhost:6679",
+                        "redis://localhost:6680",
+                        "redis://localhost:6681",
+                        "redis://localhost:6682",
+                        "redis://localhost:6683",
+                        "redis://localhost:6684");
+
         return Redisson.create(config);
     }
 }
@@ -95,7 +136,7 @@ public class Tests {
 
 ## 锁的标准用法
 
-详细代码请参考 [链接](https://gitee.com/dexterleslie/demonstration/blob/master/demo-redis/redisson/redisson-lock/src/test/java/com/xy/demo/redisson/lock/RedissonLockTests.java#L38)
+详细代码请参考`https://gitee.com/dexterleslie/demonstration/tree/master/demo-redis/demo-spring-boot-redisson`
 
 示例代码如下：
 
