@@ -1,0 +1,26 @@
+version: "3.1"
+
+services:
+  db:
+    image: mariadb:10.4.19
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+    environment:
+      - LANG=C.UTF-8
+      - TZ=Asia/Shanghai
+      - MYSQL_ROOT_PASSWORD=123456
+    volumes:
+      - ./db.sql:/docker-entrypoint-initdb.d/db.sql
+    network_mode: host
+
+  redis:
+    image: redis:5.0.14
+    # 设置redis密码
+    command: redis-server /usr/local/etc/redis/redis.conf --requirepass 123456
+    volumes:
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - TZ=Asia/Shanghai
+    network_mode: host

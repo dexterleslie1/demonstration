@@ -1,4 +1,4 @@
-package com.xy.future.demo.redis;
+package com.future.demo;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = {Application.class})
-public class Tests {
+public class ApplicationTests {
 
     @Autowired
     private StringRedisTemplate redisTemplate = null;
