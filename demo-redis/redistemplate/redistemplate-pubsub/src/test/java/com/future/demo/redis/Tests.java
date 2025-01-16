@@ -25,7 +25,6 @@ public class Tests {
     @Autowired
     Receiver receiver;
 
-    @Ignore
     @Test
     public void test() throws InterruptedException {
         int count = new Random().nextInt(100);
@@ -41,7 +40,6 @@ public class Tests {
         Assert.assertEquals(count, receiver.getCount());
     }
 
-    @Ignore
     @Test
     public void testPerformance() throws InterruptedException {
         int concurrentThreads = 5;

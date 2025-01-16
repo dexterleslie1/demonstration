@@ -1,4 +1,4 @@
-package com.future.study.jedis.cluster.pubsub;
+package com.future.demo;
 
 import java.util.HashSet;
 import java.util.Properties;
