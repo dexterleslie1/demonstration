@@ -135,6 +135,8 @@ public class Tests {
 
 ## 使用 RedisTemplate 测试
 
+>`https://www.cnblogs.com/Howinfun/p/11803747.html`
+
 详细用法请参考示例`https://gitee.com/dexterleslie/demonstration/tree/master/demo-redis/redistemplate/redistemplate-lua-script`
 
 ```java
