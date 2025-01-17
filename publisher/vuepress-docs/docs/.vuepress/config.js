@@ -151,7 +151,7 @@ module.exports = {
                         'mysql客户端工具.md',
                         'binlog.md',
                         'mysql-cli快捷键.md',
-                        'mysql备份和还原.md',
+                        '备份和还原.md',
                         'mysql锁.md',
                         '事务.md',
                         '分区表.md',
