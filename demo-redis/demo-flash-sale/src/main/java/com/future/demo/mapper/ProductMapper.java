@@ -1,6 +1,7 @@
 package com.future.demo.mapper;
 
 import com.future.demo.entity.ProductModel;
+import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
@@ -17,4 +18,7 @@ public interface ProductMapper {
 
     @Update("UPDATE t_product SET stock = #{stock} WHERE id = #{productId}")
     void updateStock(long productId, int stock);
+
+    @Insert("INSERT INTO t_product(id, name, stock) select #{id}, #{name}, #{stock} from dual where not exists (select 1 from t_product where id = #{id})")
+    int insert(ProductModel productModel);
 }
