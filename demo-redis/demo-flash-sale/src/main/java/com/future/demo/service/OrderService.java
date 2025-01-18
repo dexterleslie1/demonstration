@@ -125,6 +125,7 @@ public class OrderService {
         String userIdStr = String.valueOf(userId);
         String amountStr = String.valueOf(amount);
 
+        // 库存余量不足时表示后续的所有请求无效
         String key = KeyProductSoldOutPrefix + productIdStr;
         if (Boolean.TRUE.equals(this.redisTemplate.hasKey(key))) {
             throw new Exception("库存不足");
