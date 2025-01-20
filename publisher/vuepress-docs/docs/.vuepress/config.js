@@ -283,7 +283,6 @@ module.exports = {
                         'redis管理.md',
                         '数据类型和命令.md',
                         '客户端.md',
-                        '应用缓存.md',
                         '事务.md',
                         'Lua脚本.md',
                         '应用场景.md'
