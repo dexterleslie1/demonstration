@@ -277,10 +277,9 @@ module.exports = {
                 {
                     title: "Redis",
                     children: [
-                        '容器运行redis.md',
+                        '各种模式.md',
                         'redisson用法.md',
                         '持久化.md',
-                        'redis管理.md',
                         '数据类型和命令.md',
                         '客户端.md',
                         '事务.md',

@@ -1,35 +1,32 @@
 version: "3.0"
 
-networks:
-  net:
-    external: true
-    name: demo-redis-server-cluster-net
-
 services:
-  demo-redis-cluster-node-extra:
-    container_name: demo-redis-cluster-node-extra
-    image: my-redis-cluster:5.0.14
-    command: redis-server /usr/local/etc/redis/redis.conf --port 6390 --cluster-announce-ip ${varHostIp}
+  # 添加新的 master 节点到集群中
+  node-extra-master:
+    image: redis:6.2.6-bullseye
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6390 --cluster-announce-ip 127.0.0.1
     environment:
       - TZ=Asia/Shanghai
     volumes:
       - ./redis.cluster.conf:/usr/local/etc/redis/redis.conf
-    ports:
-      - 6390:6390
-      - 16390:16390
-    networks:
-      - net
-  demo-redis-cluster-node-extra-slave:
-    container_name: demo-redis-cluster-node-extra-slave
-    image: my-redis-cluster:5.0.14
-    command: redis-server /usr/local/etc/redis/redis.conf --port 6391 --cluster-announce-ip ${varHostIp}
+    # ports:
+    #   - 6390:6390
+    #   - 16390:16390
+    # networks:
+    #   - net
+    network_mode: host
+
+  node-extra-slave:
+    image: redis:6.2.6-bullseye
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6391 --cluster-announce-ip 127.0.0.1
     environment:
       - TZ=Asia/Shanghai
     volumes:
       - ./redis.cluster.conf:/usr/local/etc/redis/redis.conf
-    ports:
-      - 6391:6391
-      - 16391:16391
-    networks:
-      - net
+    # ports:
+    #   - 6391:6391
+    #   - 16391:16391
+    # networks:
+    #   - net
+    network_mode: host
   
