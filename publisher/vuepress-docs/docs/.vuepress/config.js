@@ -574,6 +574,7 @@ module.exports = {
                         '日志框架.md',
                         '测试.md',
                         'rest-assured.md',
+                        '缓存框架.md',
                     ]
                 }
             ], '/elasticsearch/': [
