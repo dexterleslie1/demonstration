@@ -30,7 +30,7 @@ Remote Address 无法伪造，因为建立 TCP 连接需要三次握手，如果
 
 ## 什么是`$proxy_add_x_forwarded_for`？
 
->[$proxy_add_x_forwarded_for 说明](https://blog.csdn.net/bigtree_3721/article/details/72820594)
+>$proxy_add_x_forwarded_for 说明`https://blog.csdn.net/bigtree_3721/article/details/72820594`
 
 `$proxy_add_x_forwarded_for` 是 Nginx 中的一个内置变量，它用于在转发请求时，将客户端的原始 IP 地址（或经过其他代理服务器后的 IP 地址列表）添加到 `X-Forwarded-For` 请求头中。这个变量非常有用，尤其是在你的应用部署在反向代理（如 Nginx）之后，并且你希望获取到真实的客户端 IP 地址时。
 
@@ -38,44 +38,65 @@ Remote Address 无法伪造，因为建立 TCP 连接需要三次握手，如果
 
 ## 调试`x-forwarded-for`
 
-`x-forwarded-for`详细用法请参考 [链接](https://gitee.com/dexterleslie/demonstration/blob/master/openresty/x-forwarded-for/nginx-frontend.conf)
+`x-forwarded-for`详细用法请参考`https://gitee.com/dexterleslie/demonstration/blob/master/openresty/x-forwarded-for/nginx-frontend.conf`
 
 步骤如下：
 
-1. 先运行基于`springboot`的辅助调试项目 [链接](https://gitee.com/dexterleslie/demonstration/tree/master/openresty/x-forwarded-for/demo-backend)
+1. 先运行基于`springboot`的辅助调试项目`https://gitee.com/dexterleslie/demonstration/tree/master/openresty/x-forwarded-for/demo-backend`
 
 2. 使用配置`nginx-frontend.conf`运行`openresty`
 
    ```bash
-   docker run --rm --net=host --name=demo-openresty -v $(pwd)/nginx-frontend.conf:/usr/local/openresty/nginx/conf/nginx.conf 192.168.235.138:80/library/demo-openresty-base-dev
+   docker run --rm --net=host --name=demo-openresty -v $(pwd)/nginx-frontend.conf:/usr/local/openresty/nginx/conf/nginx.conf registry.cn-hangzhou.aliyuncs.com/future-public/demo-openresty-base-dev
    ```
 
 3. 测试是否能够注入`x-forwarded-for`，预期是不能够注入`x-forwarded-for`
 
    ```bash
-   curl http://192.168.235.129/api/v1/info -H "x-forwarded-for: 8888"
+   curl http://192.168.235.128/api/v1/info -H "x-forwarded-for: 8888"
    ```
 
    
 
 ## 调试`$proxy_add_x_forwarded_for`
 
-`$proxy_add_x_forwarded_for`详细用法请参考 [链接](https://gitee.com/dexterleslie/demonstration/blob/master/openresty/x-forwarded-for/nginx-backend.conf)
+`$proxy_add_x_forwarded_for`详细用法请参考`https://gitee.com/dexterleslie/demonstration/blob/master/openresty/x-forwarded-for/nginx-backend.conf`
 
 步骤如下：
 
-1. 先运行基于`springboot`的辅助调试项目 [链接](https://gitee.com/dexterleslie/demonstration/tree/master/openresty/x-forwarded-for/demo-backend)
+1. 先运行基于`springboot`的辅助调试项目`https://gitee.com/dexterleslie/demonstration/tree/master/openresty/x-forwarded-for/demo-backend`
 
 2. 使用配置`nginx-backend.conf`运行`openresty`
 
    ```bash
-   docker run --rm --net=host --name=demo-openresty -v $(pwd)/nginx-backend.conf:/usr/local/openresty/nginx/conf/nginx.conf 192.168.235.138:80/library/demo-openresty-base-dev
+   docker run --rm --net=host --name=demo-openresty -v $(pwd)/nginx-backend.conf:/usr/local/openresty/nginx/conf/nginx.conf registry.cn-hangzhou.aliyuncs.com/future-public/demo-openresty-base-dev
    ```
 
 3. 测试是否能够注入`x-forwarded-for`，预期是能够注入`x-forwarded-for`
 
    ```bash
-   curl http://192.168.235.129/api/v1/info -H "x-forwarded-for: 8888"
+   curl http://192.168.235.128/api/v1/info -H "x-forwarded-for: 8888"
    ```
 
-   
+
+
+
+## 设置和获取客户端`ip`地址
+
+>示例的详细用法请参考`https://gitee.com/dexterleslie/demonstration/tree/master/openresty/demo-set-and-get-client-ip`
+
+演示面向客户端的`openresty`如何防止伪造`x-forwarded-for`头，演示面向客户端的`openresty`如何获取客户端`ip`地址，位于`cdn`代理的`openresty`如何获取客户端`ip`地址。
+
+编译并运行示例
+
+```bash
+docker compose build
+docker compose up
+```
+
+通过修改示例中的`frontend`变量调试应用并借助下面命令辅助调试，当`frontend=true`时无法伪造`x-forwarded-for`头，当`frontend=false`时支持传递`x-forwarded-for`头
+
+```bash
+curl http://192.168.235.128 -H "x-forwarded-for: a, b, c"
+```
+
