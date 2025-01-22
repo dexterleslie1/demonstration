@@ -1,8 +1,8 @@
-package com.future.demo.canal;
+package com.future.demo;
 
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.future.demo.canal.mapper.TestMapper;
+import com.future.demo.mapper.TestMapper;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = {Application.class}, webEnvironment = SpringBootTest.WebEnvironment.NONE)
-public class Tests {
+public class ApplicationTests {
 
     @Resource
     Receiver receiver;
@@ -40,7 +40,8 @@ public class Tests {
         int loopInsert = 500;
         int loopDelete = 10000;
         int loopUpdate = 10000;
-        /* ----------------------------测试insert */
+
+        // 测试 insert
         ExecutorService executorService = Executors.newCachedThreadPool();
 
         for (int j = 0; j < concurrent; j++) {
@@ -56,7 +57,7 @@ public class Tests {
         executorService.shutdown();
         while (!executorService.awaitTermination(1, TimeUnit.SECONDS)) ;
 
-        /* ----------------------------测试update */
+        // 测试 update
         TimeUnit.SECONDS.sleep(1);
         executorService = Executors.newCachedThreadPool();
 
@@ -90,7 +91,7 @@ public class Tests {
         executorService.shutdown();
         while (!executorService.awaitTermination(1, TimeUnit.SECONDS)) ;
 
-        /* ----------------------------测试delete */
+        // 测试 delete
         executorService = Executors.newCachedThreadPool();
 
         // 查询所有id
@@ -127,7 +128,7 @@ public class Tests {
         Assert.assertEquals(countUpdate, this.receiver.getCounterUpdate().get());
         Assert.assertEquals(countDelete, this.receiver.getCounterDelete().get());
 
-        /* ----------------------------测试一条update语句修改多条记录情况 */
+        // 测试一条update语句修改多条记录情况
         executorService = Executors.newCachedThreadPool();
 
         for (int j = 0; j < concurrent; j++) {
@@ -156,7 +157,7 @@ public class Tests {
 
         Assert.assertEquals(count, this.receiver.getCounterUpdate().get());
 
-        /* ----------------------------测试一条delete语句删除多条记录情况 */
+        // 测试一条delete语句删除多条记录情况
         this.clearCounter();
 
         count = this.testMapper.selectCount(Wrappers.query());
@@ -166,7 +167,6 @@ public class Tests {
         TimeUnit.SECONDS.sleep(2);
 
         Assert.assertEquals(count, this.receiver.getCounterDelete().get());
-
     }
 
     void clearCounter() {

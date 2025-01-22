@@ -1,18 +1,13 @@
 version: "3.0"
 
-# 创建网络
-networks:
-  net:
-    name: demo-canal-net
-
 # todo 未成功配置canal-admin
 # https://blog.csdn.net/weixin_40715787/article/details/126084643
 # https://github.com/alibaba/canal/wiki/Canal-Admin-Docker
 # https://github.com/alibaba/canal/wiki/Docker-QuickStart
 services:
-  demo-canal-db:
-    container_name: demo-canal-db
-    image: docker.118899.net:10001/yyd-public/demo-canal-db
+  db:
+    image: mariadb:10.4.19
+    # image: mysql:5.7
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci --skip-character-set-client-handshake
     volumes:
       - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf
@@ -21,48 +16,34 @@ services:
       - LANG=C.UTF-8
       - TZ=Asia/Shanghai
       - MYSQL_ROOT_PASSWORD=123456
-    ports:
-      - 3306:3306
-    networks:
-      - net
+    network_mode: host
 
-  demo-canal-server:
-    container_name: demo-canal-server
+  canal-server:
     image: canal/canal-server:v1.1.5
-    ports:
-      - 11111:11111
     environment:
       - TZ=Asia/Shanghai
     volumes:
       - ./canal.properties:/home/admin/canal-server/conf/canal.properties
       - ./instance.properties:/home/admin/canal-server/conf/example/instance.properties
-    networks:
-      - net
     depends_on:
-      - demo-canal-rabbitmq
-      - demo-canal-db
+      - rabbitmq
+      - db
+    network_mode: host
 
-#  demo-canal-admin:
-#    container_name: demo-canal-admin
-#    image: canal/canal-admin:v1.1.5
-#    ports:
-#      - 8089:8089
-#    environment:
-#      - server.port=8089
-#      - canal.adminUser=admin
-#      - canal.adminPasswd=123456
+  # canal-admin:
+  #   image: canal/canal-admin:v1.1.5
+  #   environment:
+  #     - server.port=8089
+  #     - canal.adminUser=admin
+  #     - canal.adminPasswd=123456
+  #   network_mode: host
 
-  demo-canal-rabbitmq:
-   container_name: demo-canal-rabbitmq
+  rabbitmq:
    image: library/rabbitmq:3.9.13-management
    environment:
     - RABBITMQ_DEFAULT_USER=root
     - RABBITMQ_DEFAULT_PASS=123456
     - TZ=Asia/Shanghai
-   ports:
-    - 5672:5672
-    - 15672:15672
-   networks:
-    - net
+   network_mode: host
 
 

@@ -1,4 +1,4 @@
-package com.future.demo.canal;
+package com.future.demo;
 
 import com.alibaba.otter.canal.client.CanalConnector;
 import com.alibaba.otter.canal.client.CanalConnectors;
@@ -22,7 +22,7 @@ public class CanalClient {
      */
     public void handleMessages() {
         CanalConnector connector = CanalConnectors.newSingleConnector(new
-                InetSocketAddress("192.168.1.181",
+                InetSocketAddress("localhost",
                 11111), "example", "canal", "canal");
         int batchSize = 1000;
         System.out.println("canal启动并开始监听数据 ...... ");

@@ -1,4 +1,4 @@
-package com.future.demo.canal;
+package com.future.demo;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Configuration;

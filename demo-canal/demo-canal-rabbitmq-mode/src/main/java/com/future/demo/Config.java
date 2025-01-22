@@ -1,4 +1,4 @@
-package com.future.demo.canal;
+package com.future.demo;
 
 import org.springframework.amqp.core.AcknowledgeMode;
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;

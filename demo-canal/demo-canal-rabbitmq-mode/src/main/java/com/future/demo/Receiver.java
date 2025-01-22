@@ -1,9 +1,9 @@
-package com.future.demo.canal;
+package com.future.demo;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.future.common.json.JSONUtil;
 import com.rabbitmq.client.Channel;
-import com.yyd.common.json.JSONUtil;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.ExchangeTypes;

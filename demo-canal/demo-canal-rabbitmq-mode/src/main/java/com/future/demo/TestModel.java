@@ -1,4 +1,4 @@
-package com.future.demo.canal;
+package com.future.demo;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
