@@ -65,6 +65,8 @@ module.exports = {
                     { text: 'Elasticsearch、Kibana', link: '/elasticsearch/' },
                     { text: 'Terraform', link: '/terraform/' },
                     { text: 'NodeJS', link: '/nodejs/' },
+                    { text: 'Canal', link: '/canal/' },
+                    { text: 'Debezium', link: '/debezium/' },
                 ]
             },
             {
@@ -696,6 +698,10 @@ module.exports = {
             ], '/toolset/': [
                 ''
             ], '/selenium/': [
+                ''
+            ], '/canal/': [
+                ''
+            ], '/debezium/': [
                 ''
             ],
             '/': ['/'],

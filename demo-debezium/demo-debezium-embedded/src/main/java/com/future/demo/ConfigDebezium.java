@@ -71,7 +71,7 @@ public class ConfigDebezium {
                 .with("offset.storage.file.filename", "/tmp/offset-" + randomString + ".dat")
                 .with("offset.flush.interval.ms", "10000")
                 .with("database.hostname", "localhost")
-                .with("database.port", "50000")
+                .with("database.port", "3306")
                 .with("database.user", "root")
                 .with("database.password", "123456")
                 .with("database.dbname", "demo_db")

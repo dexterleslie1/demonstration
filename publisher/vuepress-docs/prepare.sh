@@ -69,6 +69,8 @@ source_dir_to_target_dir_map["../../demo-skywalking"]="skywalking"
 source_dir_to_target_dir_map["../../demo-ruby"]="ruby"
 source_dir_to_target_dir_map["../../demo-toolset"]="toolset"
 source_dir_to_target_dir_map["../../demo-selenium"]="selenium"
+source_dir_to_target_dir_map["../../demo-canal"]="canal"
+source_dir_to_target_dir_map["../../demo-debezium"]="debezium"
 
 for key in ${!source_dir_to_target_dir_map[@]}; do
     # 删除符号链接目录
