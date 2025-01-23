@@ -1,5 +1,6 @@
-package com.future.demo;
+package com.future.demo.bigkey;
 
+import com.future.demo.Application;
 import org.junit.Assert;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
