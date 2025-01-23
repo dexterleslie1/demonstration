@@ -1,5 +1,6 @@
 package com.future.demo;
 
+import org.junit.jupiter.api.Assertions;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 import org.openjdk.jmh.runner.Runner;
@@ -17,22 +18,17 @@ import java.util.Collections;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-// https://blog.csdn.net/a23452/article/details/126680840
 @BenchmarkMode(Mode.Throughput)
 @State(Scope.Benchmark) //使用的SpringBoot容器，都是无状态单例Bean，无安全问题，可以直接使用基准作用域BenchMark
 @OutputTimeUnit(TimeUnit.SECONDS)
 @Warmup(iterations = 3, time = 1, timeUnit = TimeUnit.SECONDS) //预热1s
 @Measurement(iterations = 3, time = 5, timeUnit = TimeUnit.SECONDS) //测试也是1s、五遍
-// 指定并发执行线程数
-// https://stackoverflow.com/questions/39644383/jmh-run-benchmark-concurrently
 @Threads(64)
 public class PerfTests {
 
-    StringRedisTemplate redisTemplate;
-
     //springBoot容器
     ApplicationContext context;
-    String keyForGetting = UUID.randomUUID().toString();
+    StringRedisTemplate redisTemplate;
 
     DefaultRedisScript<String> defaultRedisScript;
 
@@ -60,9 +56,6 @@ public class PerfTests {
         //获取对象
         redisTemplate = context.getBean(StringRedisTemplate.class);
 
-        // 准备 get 性能测试数据
-        this.redisTemplate.opsForValue().set(keyForGetting, keyForGetting);
-
         defaultRedisScript = new DefaultRedisScript<>();
         defaultRedisScript.setLocation(new ClassPathResource("test.lua"));
         defaultRedisScript.setResultType(String.class);
@@ -85,8 +78,9 @@ public class PerfTests {
 
     @Benchmark
     public void testGet(Blackhole blackhole) {
-        String result = this.redisTemplate.opsForValue().get(keyForGetting);
-        blackhole.consume(result);
+        String uuidStr = UUID.randomUUID().toString();
+        String uuidStrResult = this.redisTemplate.opsForValue().get(uuidStr);
+        blackhole.consume(uuidStrResult);
     }
 
     @Benchmark
@@ -97,10 +91,11 @@ public class PerfTests {
         blackhole.consume(uuidStrResult);
     }
 
-    @Benchmark
+    // 注意：ReadFrom.REPLICA_PREFERRED 时不能运行下面测试，因为不能在 slave 节点执行 set 命令
+    /*@Benchmark
     public void testSetAndGetByUsingLuaScript(Blackhole blackhole) {
         String uuidStr = UUID.randomUUID().toString();
         String uuidStrResult = this.redisTemplate.execute(defaultRedisScript, Collections.emptyList(), uuidStr);
         blackhole.consume(uuidStrResult);
-    }
+    }*/
 }

@@ -26,7 +26,7 @@ public class ApplicationTests {
     // Redis Sentinel 模式正常情况下不会发生主和从节点复制延迟
     @Test
     public void testMasterAndSlaveReplicationDelay() {
-        int loopCount = 10000;
+        int loopCount = 50000;
         for (int i = 0; i < loopCount; i++) {
             String uuidStr = UUID.randomUUID().toString();
             this.redisTemplate.opsForValue().set(uuidStr, uuidStr);
