@@ -1,5 +1,6 @@
 package com.future.demo;
 
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -14,10 +15,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(
-        classes = {Application.class},
-        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
-)
+@SpringBootTest(classes = {Application.class})
+@Slf4j
 public class Tests {
 
     /**
@@ -77,11 +76,10 @@ public class Tests {
         stopWatchList.forEach(stopWatch -> {
             // 获取任务两个步骤总执行时间
             long totalTimeMilllis = stopWatch.getTotalTimeMillis();
-            System.out.println(stopWatch.getId() + "执行时间: " + totalTimeMilllis + " 毫秒");
+            log.debug(stopWatch.getId() + "执行时间: " + totalTimeMilllis + " 毫秒");
 
-            //
             String stopWatchStr = stopWatch.prettyPrint();
-            System.out.println(stopWatchStr);
+            log.debug(stopWatchStr);
         });
     }
 
