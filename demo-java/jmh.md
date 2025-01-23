@@ -389,7 +389,7 @@ public class JMHSample_Setup_Teardown {
 
 ## `jmh`和`spring`集成
 
-详细配置请参考 [链接](https://gitee.com/dexterleslie/demonstration/blob/master/demo-java/demo-benchmark-jmh/src/test/java/com/future/demo/java/SpringIntegrationTests.java)
+详细配置请参考`https://gitee.com/dexterleslie/demonstration/blob/master/demo-java/demo-benchmark-jmh/src/test/java/com/future/demo/java/SpringIntegrationTests.java`
 
 示例：
 
@@ -474,3 +474,10 @@ public class SpringIntegrationTests {
 }
 ```
 
+
+
+## 参数化测试
+
+注意：参数化测试中的参数在 @Setup 和 @TearDown 方法中也能够引用。
+
+详细用法请参考示例`https://gitee.com/dexterleslie/demonstration/blob/master/demo-java/demo-benchmark-jmh/src/test/java/com/future/demo/java/ParametersTests.java`

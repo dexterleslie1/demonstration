@@ -1,10 +1,12 @@
-# `openresty lua`脚本相关
+# `lua`脚本相关
 
 > 注意：下面所有演示需要先参考 <a href="/openresty/编译docker基础镜像.html" target="_blank">链接</a> 编译`openresty`基础镜像
 
+
+
 ## 引用第三方`lua`库
 
->详细示例请参考 [链接](https://gitee.com/dexterleslie/demonstration/tree/master/openresty/lua-scripting/demo-lua-package-path-and-require)
+>详细示例请参考`https://gitee.com/dexterleslie/demonstration/tree/master/openresty/lua-scripting/demo-lua-package-path-and-require`
 
 使用`lua_package_path`指定`lua`库的路径
 
@@ -30,7 +32,7 @@ location / {
 
 ## `lua`入门
 
-> `openresty lua`入门演示详细请参考 [链接](https://gitee.com/dexterleslie/demonstration/tree/master/openresty/lua-scripting/demo-getting-started)
+> `openresty lua`入门演示详细请参考`https://gitee.com/dexterleslie/demonstration/tree/master/openresty/lua-scripting/demo-getting-started`
 
 编译演示
 
@@ -50,7 +52,7 @@ docker compose up -d
 
 ## `lua`生成`uuid`
 
-> 演示详细请参考 [链接](https://gitee.com/dexterleslie/demonstration/tree/master/openresty/lua-scripting/demo-uuid)
+> 演示详细请参考`https://gitee.com/dexterleslie/demonstration/tree/master/openresty/lua-scripting/demo-uuid`
 
 编译演示
 
@@ -70,7 +72,7 @@ docker compose up -d
 
 ## `lua`各个`phase`的用法
 
->演示详细用法请参考 [链接](https://gitee.com/dexterleslie/demonstration/tree/master/openresty/lua-scripting/demo-lua-phase)
+>演示详细用法请参考`https://gitee.com/dexterleslie/demonstration/tree/master/openresty/lua-scripting/demo-lua-phase`
 
 各个`phase`执行顺序如下图：
 
@@ -78,7 +80,7 @@ docker compose up -d
 
 ### `init_by_lua`
 
-> [参考链接](https://openresty-reference.readthedocs.io/en/latest/Directives/#init_by_lua)
+> 参考链接`https://openresty-reference.readthedocs.io/en/latest/Directives/#init_by_lua`
 
 `init_by_lua` 是 OpenResty（一个基于 Nginx 与 LuaJIT 的 Web 平台）中的一个指令，它允许用户在 Nginx 启动时执行 Lua 脚本代码。这个特性非常有用，因为它允许开发者在 Nginx 服务器启动时执行一些初始化操作，比如加载配置文件、初始化数据库连接池、预加载模块等。
 
@@ -112,7 +114,7 @@ docker compose up -d
 
 ### `init_worker_by_lua`
 
->[参考链接](https://openresty-reference.readthedocs.io/en/latest/Directives/#init_worker_by_lua)
+>参考链接`https://openresty-reference.readthedocs.io/en/latest/Directives/#init_worker_by_lua`
 
 `init_worker_by_lua` 是 OpenResty（一个基于 Nginx 与 LuaJIT 的 Web 平台）中的一个指令，它允许用户在 Nginx 的每个 worker 进程启动时执行 Lua 脚本代码。与 `init_by_lua` 不同，`init_worker_by_lua` 是在每个 worker 进程启动后立即执行的，而不是在 Nginx master 进程启动时执行。
 
@@ -152,7 +154,7 @@ init_worker_by_lua_block {
 
 ### `log_by_lua`
 
->[参考链接](https://openresty-reference.readthedocs.io/en/latest/Directives/#log_by_lua)
+>参考链接`https://openresty-reference.readthedocs.io/en/latest/Directives/#log_by_lua`
 
 `log_by_lua` 是 OpenResty（一个基于 Nginx 与 Lua 的动态 Web 平台）或任何支持 `ngx_lua` 模块的 Nginx 版本中的一个指令，它允许你在 Nginx 的日志处理阶段执行 Lua 代码。这个指令通常用于在请求被处理完毕后，但在发送响应给客户端之前，执行一些自定义的日志记录、监控或统计任务。
 
@@ -299,6 +301,6 @@ location / {
 
 ## todo `lua api`
 
->[nginx for lua api之获取请求中的参数](http://www.shixinke.com/openresty/openresty-get-request-arguments)
+>nginx for lua api 之获取请求中的参数 `http://www.shixinke.com/openresty/openresty-get-request-arguments`
 >
->[nginx lua api](https://github.com/openresty/lua-nginx-module)
+>nginx lua api `https://github.com/openresty/lua-nginx-module`

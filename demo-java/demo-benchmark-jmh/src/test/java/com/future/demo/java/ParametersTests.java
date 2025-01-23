@@ -11,13 +11,13 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 import java.util.concurrent.TimeUnit;
 
 // https://www.cnblogs.com/54chensongxia/p/15485421.html
-@BenchmarkMode(Mode.AverageTime)
+@BenchmarkMode(Mode.Throughput)
 @Warmup(iterations = 3, time = 1)
-@Measurement(iterations = 5, time = 5)
-@Threads(4)
+@Measurement(iterations = 3, time = 3)
+@Threads(64)
 @Fork(1)
 @State(value = Scope.Benchmark)
-@OutputTimeUnit(TimeUnit.NANOSECONDS)
+@OutputTimeUnit(TimeUnit.SECONDS)
 public class ParametersTests {
 
     @Param(value = {"10", "50", "100"})
