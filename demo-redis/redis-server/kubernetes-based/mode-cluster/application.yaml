@@ -100,13 +100,13 @@ spec:
           #     command:
           #       - sh
           #       - /health/ping_liveness_n_readines_local.sh
-          # resources:
-          #   limits:
-          #     cpu: 200m
-          #   requests: {}
+          resources:
+            limits:
+              cpu: 200m
+            requests: {}
           volumeMounts:
-            - name: redis-data
-              mountPath: /data
+            # - name: redis-data
+            #   mountPath: /data
             - name: config
               mountPath: /usr/local/etc/redis/
             - name: liveness-and-readiness-config
