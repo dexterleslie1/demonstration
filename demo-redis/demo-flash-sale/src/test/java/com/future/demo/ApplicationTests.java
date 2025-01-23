@@ -111,7 +111,7 @@ public class ApplicationTests {
     }
 
     @Test
-    public void testBasedRedis() throws Exception {
+    public void testBasedRedisWithLuaScript() throws Exception {
         // 还原测试数据
         this.reset();
 
@@ -120,7 +120,7 @@ public class ApplicationTests {
         Integer amount = 2;
 
         // region 测试成功创建订单
-        this.orderService.createOrderBasedRedis(userId, productId, amount);
+        this.orderService.createOrderBasedRedisWithLuaScript(userId, productId, amount);
         TimeUnit.MILLISECONDS.sleep(500);
         List<OrderModel> orderModelList = this.orderMapper.selectAll();
         Assert.assertEquals(1, orderModelList.size());
@@ -140,7 +140,7 @@ public class ApplicationTests {
         for (int i = 0; i < concurrentThreads; i++) {
             executorService.submit(() -> {
                 try {
-                    this.orderService.createOrderBasedRedis(userId, productId, amount);
+                    this.orderService.createOrderBasedRedisWithLuaScript(userId, productId, amount);
                 } catch (Exception e) {
                     //
                 }
@@ -170,7 +170,86 @@ public class ApplicationTests {
             executorService.submit(() -> {
                 try {
                     Long userIdT = finalI + 1L;
-                    this.orderService.createOrderBasedRedis(userIdT, productId, amount);
+                    this.orderService.createOrderBasedRedisWithLuaScript(userIdT, productId, amount);
+                } catch (Exception e) {
+                    //
+                }
+            });
+        }
+        executorService.shutdown();
+
+        while (!executorService.awaitTermination(10, TimeUnit.MILLISECONDS)) ;
+        TimeUnit.MILLISECONDS.sleep(500);
+
+        orderModelList = this.orderMapper.selectAll();
+        Assert.assertEquals(5, orderModelList.size());
+        Assert.assertEquals(0, this.productMapper.getById(productId).getStock().intValue());
+        Assert.assertEquals(0, Integer.parseInt(Objects.requireNonNull(this.redisTemplate.opsForValue().get(OrderService.KeyProductStockPrefix + productId))));
+
+        // endregion
+    }
+
+    @Test
+    public void testBasedRedisWithoutLuaScript() throws Exception {
+        // 还原测试数据
+        this.reset();
+
+        Long userId = 1L;
+        Long productId = 1L;
+        Integer amount = 2;
+
+        // region 测试成功创建订单
+        this.orderService.createOrderBasedRedisWithoutLuaScript(userId, productId, amount);
+        TimeUnit.MILLISECONDS.sleep(500);
+        List<OrderModel> orderModelList = this.orderMapper.selectAll();
+        Assert.assertEquals(1, orderModelList.size());
+        Assert.assertEquals(userId, orderModelList.get(0).getUserId());
+        Assert.assertEquals(productId, orderModelList.get(0).getProductId());
+        Assert.assertEquals(amount, orderModelList.get(0).getAmount());
+
+        // endregion
+
+        // region 测试用户重复下单
+
+        // 还原测试数据
+        this.reset();
+
+        ExecutorService executorService = Executors.newCachedThreadPool();
+        int concurrentThreads = 128;
+        for (int i = 0; i < concurrentThreads; i++) {
+            executorService.submit(() -> {
+                try {
+                    this.orderService.createOrderBasedRedisWithoutLuaScript(userId, productId, amount);
+                } catch (Exception e) {
+                    //
+                }
+            });
+        }
+        executorService.shutdown();
+        while (!executorService.awaitTermination(10, TimeUnit.MILLISECONDS)) ;
+        TimeUnit.MILLISECONDS.sleep(500);
+
+        orderModelList = this.orderMapper.selectAll();
+        Assert.assertEquals(1, orderModelList.size());
+        Assert.assertEquals(userId, orderModelList.get(0).getUserId());
+        Assert.assertEquals(productId, orderModelList.get(0).getProductId());
+        Assert.assertEquals(amount, orderModelList.get(0).getAmount());
+
+        // endregion
+
+        // region 测试超卖
+
+        // 还原测试数据
+        this.reset();
+
+        executorService = Executors.newCachedThreadPool();
+        concurrentThreads = 256;
+        for (int i = 0; i < concurrentThreads; i++) {
+            int finalI = i;
+            executorService.submit(() -> {
+                try {
+                    Long userIdT = finalI + 1L;
+                    this.orderService.createOrderBasedRedisWithoutLuaScript(userIdT, productId, amount);
                 } catch (Exception e) {
                     //
                 }

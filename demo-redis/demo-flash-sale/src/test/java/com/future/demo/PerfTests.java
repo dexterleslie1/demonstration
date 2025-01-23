@@ -40,6 +40,10 @@ public class PerfTests {
 
     List<Long> productIdList = null;
 
+    // 100,10 表示共 100 个商品，每个商品库存为 10 个
+    @Param(value = {"100,10", "1000,1000000"})
+    String totalProductCountAndProductStockStr;
+
     public static void main(String[] args) throws RunnerException {
         //使用注解之后只需要配置一下include即可，fork和warmup、measurement都是注解
         Options opt = new OptionsBuilder()
@@ -67,7 +71,10 @@ public class PerfTests {
         orderMapper = context.getBean(OrderMapper.class);
         redisTemplate = context.getBean(StringRedisTemplate.class);
 
-        this.reset();
+        Object[] objs = this.parseParam(totalProductCountAndProductStockStr);
+        int totalProductCount = (int) objs[0];
+        int productStock = (int) objs[1];
+        this.reset(totalProductCount, productStock);
     }
 
     /**
@@ -96,12 +103,12 @@ public class PerfTests {
     }
 
     @Benchmark
-    public void testCreateOrderBasedRedis() {
+    public void testCreateOrderBasedRedisWithLuaScript() {
         Long productId = productIdList.get(RANDOM.nextInt(productIdList.size()));
         Long userId = RANDOM.nextLong();
         Integer amount = 2;
         try {
-            orderService.createOrderBasedRedis(userId, productId, amount);
+            orderService.createOrderBasedRedisWithLuaScript(userId, productId, amount);
         } catch (Exception ex) {
             if (!ex.getMessage().contains("库存不足")
                     && !ex.getMessage().contains("重复下单")
@@ -111,18 +118,33 @@ public class PerfTests {
         }
     }
 
-    void reset() {
-        int stock = 10;
+    @Benchmark
+    public void testCreateOrderBasedRedisWithoutLuaScript() {
+        Long productId = productIdList.get(RANDOM.nextInt(productIdList.size()));
+        Long userId = RANDOM.nextLong();
+        Integer amount = 2;
+        try {
+            orderService.createOrderBasedRedisWithoutLuaScript(userId, productId, amount);
+        } catch (Exception ex) {
+            if (!ex.getMessage().contains("库存不足")
+                    && !ex.getMessage().contains("重复下单")
+                    && !ex.getMessage().contains("扣减")) {
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    void reset(int totalProductCount, int productStock) {
         productIdList = new ArrayList<>();
-        for (long i = 2; i <= 100; i++) {
+        for (long i = 2; i <= totalProductCount; i++) {
             ProductModel productModel = new ProductModel();
             productModel.setId(i);
             productModel.setName("商品" + i);
-            productModel.setStock(stock);
+            productModel.setStock(productStock);
             this.productMapper.insert(productModel);
             productIdList.add(i);
 
-            this.productMapper.updateStock(i, stock);
+            this.productMapper.updateStock(i, productStock);
 
             // 秒杀前提前加载商品库存信息到 Redis 中
             String keyProductStock = OrderService.KeyProductStockPrefix + productModel.getId();
@@ -134,5 +156,12 @@ public class PerfTests {
         }
         // 删除所有订单
         this.orderMapper.deleteAll();
+    }
+
+    Object[] parseParam(String totalProductCountAndProductStockStr) {
+        String[] strs = totalProductCountAndProductStockStr.split(",");
+        int totalProductCount = Integer.parseInt(strs[0]);
+        int productStock = Integer.parseInt(strs[1]);
+        return new Object[]{totalProductCount, productStock};
     }
 }
