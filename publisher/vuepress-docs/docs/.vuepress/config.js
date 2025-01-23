@@ -286,7 +286,8 @@ module.exports = {
                         '客户端.md',
                         '事务.md',
                         'Lua脚本.md',
-                        '应用场景.md'
+                        '应用场景.md',
+                        'bigkey.md',
                     ]
                 }
             ], '/maven/': [
