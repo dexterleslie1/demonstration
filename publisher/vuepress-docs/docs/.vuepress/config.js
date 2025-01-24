@@ -287,6 +287,7 @@ module.exports = {
                         '事务.md',
                         'Lua脚本.md',
                         '应用场景.md',
+                        '最佳实践.md',
                     ]
                 }
             ], '/maven/': [
