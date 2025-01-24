@@ -258,6 +258,12 @@ public class StreamTests {
         Assert.assertEquals("fun2-2", functionVoList.get(3).getName());
     }
 
+    // todo
+    @Test
+    public void testGroupingBy() {
+
+    }
+
     @Data
     public static class MenuVo {
         private String name;
