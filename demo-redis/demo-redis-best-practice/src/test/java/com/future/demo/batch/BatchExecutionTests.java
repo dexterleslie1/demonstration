@@ -1,5 +1,6 @@
-package com.future.demo;
+package com.future.demo.batch;
 
+import com.future.demo.Application;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -17,17 +18,58 @@ import java.util.Objects;
 
 @SpringBootTest(classes = {Application.class})
 @Slf4j
-public class ApplicationTests {
-
+public class BatchExecutionTests {
     final static Long TotalCount = 100000L;
-
     @Autowired
     StringRedisTemplate redisTemplate;
 
-    // 测试 pipeline
+    // 测试不使用批量执行
+    @Test
+    public void testWithoutBatchExecution() {
+        Objects.requireNonNull(this.redisTemplate.getConnectionFactory()).getConnection().flushDb();
+
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
+        for (int i = 0; i < TotalCount; i++) {
+            String key = "key" + i;
+            String value = "value" + i;
+            this.redisTemplate.opsForValue().set(key, value);
+        }
+        stopWatch.stop();
+        log.debug("共耗时：" + stopWatch.getTotalTimeSeconds() + "秒");
+
+        Assertions.assertEquals(TotalCount, this.redisTemplate.getConnectionFactory().getConnection().dbSize());
+    }
+
+    // 测试使用 mset 批量执行
+    @Test
+    public void testBatchExecutionByUsingMSet() {
+        Objects.requireNonNull(this.redisTemplate.getConnectionFactory()).getConnection().flushDb();
+
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
+
+        Map<String, String> map = new HashMap<>();
+        for (int i = 0; i < TotalCount; i++) {
+            String key = "key" + i;
+            String value = "value" + i;
+            map.put(key, value);
+
+            if ((i + 1) % 1000 == 0) {
+                this.redisTemplate.opsForValue().multiSet(map);
+                map = new HashMap<>();
+            }
+        }
+        stopWatch.stop();
+        log.debug("共耗时：" + stopWatch.getTotalTimeSeconds() + "秒");
+
+        Assertions.assertEquals(TotalCount, this.redisTemplate.getConnectionFactory().getConnection().dbSize());
+    }
+
+    // 测试使用 pipeline 批量执行
     // https://blog.csdn.net/yzh_1346983557/article/details/119837981
     @Test
-    public void testPipeline() {
+    public void testBatchExecutionByUsingPipeline() {
         Objects.requireNonNull(this.redisTemplate.getConnectionFactory()).getConnection().flushDb();
 
         StopWatch stopWatch = new StopWatch();
@@ -56,7 +98,6 @@ public class ApplicationTests {
                 map = new HashMap<>();
             }
         }
-
         stopWatch.stop();
         log.debug("共耗时：" + stopWatch.getTotalTimeSeconds() + "秒");
 
