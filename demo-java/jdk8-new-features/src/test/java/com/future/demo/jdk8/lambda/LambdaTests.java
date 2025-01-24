@@ -13,6 +13,7 @@ public class LambdaTests {
 
         int a = 1;
         int b = 2;
+        // 使用匿名内部类语法是很冗余的
         int intReturn = new LambdaWithArgsInterface() {
             @Override
             public int add(int a, int b) {
@@ -21,6 +22,7 @@ public class LambdaTests {
         }.add(a, b);
         Assert.assertEquals(a + b, intReturn);
 
+        // Lambda表达式的好处：可以简化匿名内部类，让代码更加精简
         intReturn = ((LambdaWithArgsInterface) (a1, b1) -> a1 + b1).add(a, b);
         Assert.assertEquals(a + b, intReturn);
     }
