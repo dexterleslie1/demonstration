@@ -10,7 +10,6 @@ public interface LambdaWithArgsInterface {
 
     // 因为接口使用@FunctionalInterface标记，只支持一个接口有且只有一个抽象方法
     // int sub(int a, int b);
-
     default String defaultMethod(String str) {
         return "echo:" + str;
     }

@@ -365,6 +365,7 @@ module.exports = {
                         '生产环境问题排查.md',
                         'tomcat.md',
                         'double类型运算精度问题.md',
+                        'JDK8新特性.md',
                     ]
                 }
             ], '/计算机信息安全/': [
