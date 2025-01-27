@@ -711,3 +711,117 @@ public class Jdk8InterfaceImplTests {
 }
 
 ```
+
+
+
+## 内置的函数式接口
+
+
+
+### 介绍
+
+Java 的内置函数式接口是 Java 8 引入的一个关键特性，用于支持 Lambda 表达式和方法引用。这些接口定义在 `java.util.function` 包中，每个接口都代表了一种特定的函数签名。以下是 Java 内置的主要函数式接口：
+
+1. `java.util.function.Function<T,R>`
+   - 代表一个接受一个参数并产生一个结果的函数。
+   - 主要方法：`R apply(T t)`
+2. `java.util.function.Consumer<T>`
+   - 代表一个接受单个输入参数并且不返回结果的操作。
+   - 主要方法：`void accept(T t)`
+3. `java.util.function.Supplier<T>`
+   - 代表一个无参数且不返回结果的操作，但会返回一个值。
+   - 主要方法：`T get()`
+4. `java.util.function.Predicate<T>`
+   - 代表一个参数的布尔值函数。
+   - 主要方法：`boolean test(T t)`
+5. `java.util.function.UnaryOperator<T>`
+   - 代表一个操作，它接受一个类型的参数并返回相同类型的结果。是 `Function<T,T>` 的一个特化。
+   - 主要方法：`T apply(T t)`
+6. `java.util.function.BinaryOperator<T>`
+   - 代表一个操作，它接受两个相同类型的参数并返回一个相同类型的结果。是 `BiFunction<T,T,T>` 的一个特化。
+   - 主要方法：`T apply(T t1, T t2)`
+7. `java.util.function.BiFunction<T,U,R>`
+   - 代表一个接受两个参数并产生一个结果的函数。
+   - 主要方法：`R apply(T t, U u)`
+8. `java.util.function.BiConsumer<T,U>`
+   - 代表一个接受两个输入参数并且不返回结果的操作。
+   - 主要方法：`void accept(T t, U u)`
+9. `java.util.function.ToDoubleFunction<T>`
+   - 代表一个接受一个参数并产生一个 `double` 结果的函数。
+   - 主要方法：`double applyAsDouble(T value)`
+10. `java.util.function.ToIntFunction<T>`
+    - 代表一个接受一个参数并产生一个 `int` 结果的函数。
+    - 主要方法：`int applyAsInt(T value)`
+11. `java.util.function.ToLongFunction<T>`
+    - 代表一个接受一个参数并产生一个 `long` 结果的函数。
+    - 主要方法：`long applyAsLong(T value)`
+12. `java.util.function.ToDoubleBiFunction<T,U>`
+    - 代表一个接受两个参数并产生一个 `double` 结果的函数。
+    - 主要方法：`double applyAsDouble(T t, U u)`
+13. `java.util.function.ToIntBiFunction<T,U>`
+    - 代表一个接受两个参数并产生一个 `int` 结果的函数。
+    - 主要方法：`int applyAsInt(T t, U u)`
+14. `java.util.function.ToLongBiFunction<T,U>`
+    - 代表一个接受两个参数并产生一个 `long` 结果的函数。
+    - 主要方法：`long applyAsLong(T t, U u)`
+15. `java.util.function.ObjIntConsumer<T>`
+    - 代表一个接受一个对象和一个 `int` 参数并且不返回结果的操作。
+    - 主要方法：`void accept(T t, int value)`
+16. `java.util.function.ObjLongConsumer<T>`
+    - 代表一个接受一个对象和一个 `long` 参数并且不返回结果的操作。
+    - 主要方法：`void accept(T t, long value)`
+17. `java.util.function.ObjDoubleConsumer<T>`
+    - 代表一个接受一个对象和一个 `double` 参数并且不返回结果的操作。
+    - 主要方法：`void accept(T t, double value)`
+
+这些接口极大地简化了使用 Lambda 表达式和方法引用的场景，使代码更加简洁和易读。例如，使用 `Function<T,R>` 接口可以方便地表示一个转换操作，而 `Consumer<T>` 接口则可以用于表示一个无返回值的操作。
+
+
+
+### 用法
+
+详细用法请参考示例`https://gitee.com/dexterleslie/demonstration/tree/master/demo-java/jdk8-new-features/src/main/java/com/future/demo/jdk8/builtin/function`
+
+```java
+@Slf4j
+public class BuiltinFunctionTests {
+    @Test
+    public void test() {
+        // region 内置函数式接口 Supplier
+
+        Supplier<String> supplier = () -> "Hello world!";
+        String str = supplier.get();
+        Assert.assertEquals("Hello world!", str);
+
+        // endregion
+
+        // region 内置函数式接口 Consumer
+
+        Consumer<String> consumer = param1 -> log.debug(param1.toUpperCase());
+        consumer.accept("Hello world!");
+
+        // endregion
+
+        // region 内置函数式接口 Function
+
+        // 使用 Function 接口实现 (a+b)*c
+        Function<BigDecimal[], BigDecimal[]> function1 = param1 -> new BigDecimal[]{param1[2], param1[0].add(param1[1])};
+        Function<BigDecimal[], BigDecimal> function2 = param1 -> param1[0].multiply(param1[1]);
+        BigDecimal result = function1.andThen(function2).apply(new BigDecimal[]{new BigDecimal("1"), new BigDecimal("2"), new BigDecimal("3")});
+        Assert.assertEquals(new BigDecimal("9"), result);
+
+        // endregion
+
+        // region 内置函数式接口 Predicate
+
+        Predicate<String> predicate = param1 -> param1.length() > 3;
+        boolean b = predicate.test("Hello");
+        Assert.assertTrue(b);
+        b = predicate.test("He");
+        Assert.assertFalse(b);
+
+        // endregion
+    }
+}
+```
+
