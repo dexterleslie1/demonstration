@@ -825,3 +825,283 @@ public class BuiltinFunctionTests {
 }
 ```
 
+
+
+## 方法引用
+
+
+
+### 介绍
+
+在 Java 中，方法引用（Method References）是 Java 8 引入的一项特性，它提供了一种简洁的方式来引用方法或构造函数。方法引用是 Lambda 表达式的一种简洁写法，主要用于与函数式接口（Functional Interface）一起使用。函数式接口是只包含一个抽象方法的接口。
+
+方法引用主要有四种形式：
+
+1. **静态方法引用** - 使用类名来引用静态方法。
+
+   ```java
+   Integer::parseInt
+   ```
+   
+2. **特定对象的实例方法引用** - 使用特定对象来引用实例方法。
+
+   ```java
+   myString::length
+   ```
+   
+3. **特定类型的任意对象的实例方法引用** - 使用类名来引用该类型的任意对象的实例方法。
+
+   ```java
+   String::length
+   ```
+   
+4. **构造函数引用** - 使用类名来引用构造函数。
+
+   ```java
+   ArrayList::new
+   ```
+
+**示例代码**
+
+静态方法引用
+
+```java
+import java.util.function.Function;
+ 
+public class MethodReferenceExample {
+    public static void main(String[] args) {
+        Function<String, Integer> parseIntFunction = Integer::parseInt;
+        Integer result = parseIntFunction("123");
+        System.out.println(result); // 输出: 123
+    }
+}
+```
+
+特定对象的实例方法引用
+
+```java
+import java.util.function.Consumer;
+ 
+public class MethodReferenceExample {
+    public static void main(String[] args) {
+        String myString = "Hello, World!";
+        Consumer<Void> printLengthConsumer = myString::length; // 这里需要适配一下，因为 length 返回 int，Consumer 接受 void
+        int length = printLengthConsumer.accept(null); // 传入 null，因为我们实际上不依赖 Consumer 的输入参数
+        System.out.println(length); // 输出: 13
+    }
+}
+```
+
+注意：上面的例子只是为了展示语法，实际应用中通常不会这样使用。更常见的做法是：
+
+```java
+Consumer<String> printLengthConsumer = s -> System.out.println(s.length());
+printLengthConsumer.accept("Hello, World!"); // 输出: 13
+```
+
+特定类型的任意对象的实例方法引用
+
+```java
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Function;
+ 
+public class MethodReferenceExample {
+    public static void main(String[] args) {
+        List<String> strings = Arrays.asList("apple", "banana", "cherry");
+        Function<String, Integer> stringLengthFunction = String::length;
+        List<Integer> lengths = strings.stream().map(stringLengthFunction).collect(Collectors.toList());
+        System.out.println(lengths); // 输出: [5, 6, 6]
+    }
+}
+```
+
+构造函数引用
+
+```java
+import java.util.function.Supplier;
+import java.util.ArrayList;
+ 
+public class MethodReferenceExample {
+    public static void main(String[] args) {
+        Supplier<ArrayList<String>> arrayListSupplier = ArrayList::new;
+        ArrayList<String> list = arrayListSupplier.get();
+        list.add("Hello");
+        System.out.println(list); // 输出: [Hello]
+    }
+}
+```
+
+**总结**
+
+方法引用是 Java 8 中引入的一种简洁的语法糖，主要用于替代简单的 Lambda 表达式。通过使用方法引用，可以使代码更加简洁、易读。它主要有四种形式：静态方法引用、特定对象的实例方法引用、特定类型的任意对象的实例方法引用和构造函数引用。
+
+
+
+### 为何 JDK8 引入方法引用特性
+
+```java
+// 测试为何JDK8引入方法引用特性
+@Test
+public void testWhyIntroduceMethodReferencesFeature() {
+    // 不使用方法引用的函数式接口，代码冗长
+    Supplier<Integer> supplierMaximumInteger1 = () -> {
+        Integer[] integerArr = new Integer[]{23, 2, 54, 19};
+        Integer maximumValue = null;
+        for (Integer i : integerArr) {
+            if (maximumValue == null) {
+                maximumValue = i;
+            }
+
+            if (i > maximumValue) {
+                maximumValue = i;
+            }
+        }
+
+        return maximumValue;
+    };
+    Assert.assertEquals(Integer.valueOf(54), supplierMaximumInteger1.get());
+
+    // 使用方法引用的函数式接口，代码简洁
+    Supplier<Integer> supplierMaximumInteger2 = MethodReferencesTests::getMaximumInteger;
+    Assert.assertEquals(Integer.valueOf(54), supplierMaximumInteger2.get());
+}
+```
+
+
+
+### 实例方法引用
+
+```java
+/**
+ * 实例方法引用
+ */
+@Test
+public void test_instance_method_reference() {
+    TestClassInstanceMethodReference instance = new TestClassInstanceMethodReference(5);
+    Jdk8Interface jdk8Interface = instance::testAdd;
+    int result = jdk8Interface.add(1, 2);
+    Assert.assertEquals(3 + instance.getAdditional(), result);
+
+    Date now = new Date();
+    Supplier<Long> supplier = now::getTime;
+    Long milliseconds = supplier.get();
+    log.debug("milliseconds=" + milliseconds);
+}
+
+static class TestClassInstanceMethodReference {
+    private final int additional;
+
+    public TestClassInstanceMethodReference(int additional) {
+        this.additional = additional;
+    }
+
+    public int getAdditional() {
+        return this.additional;
+    }
+
+    int testAdd(int a, int b) {
+        return a + b + additional;
+    }
+}
+```
+
+
+
+### 静态方法引用
+
+```java
+/**
+ * 静态方法引用
+ */
+@Test
+public void test_static_method_reference() {
+    Jdk8Interface jdk8Interface = MethodReferencesTests::testAdd;
+    int result = jdk8Interface.add(1, 2);
+    Assert.assertEquals(3, result);
+
+    Supplier<Long> supplier = System::currentTimeMillis;
+    Long milliseconds = supplier.get();
+    log.debug("milliseconds=" + milliseconds);
+}
+
+static int testAdd(int a, int b) {
+    return a + b;
+}
+```
+
+
+
+### 类名引用实例方法
+
+```java
+/**
+ * 类名引用实例方法
+ * 注意：实际上是将方法调用第一个参数作为实例引用方法的调用者，例如：将 function1.apply("Hello") 方法调用第一个参数 Hello 作为 String 实例引用方法的调用者 "Hello".length()
+ */
+@Test
+public void test_instance_method_reference_of_particular_type() {
+    InstanceMethodReferenceOfParticularTypeInterface referenceInterface = InstanceMethodReferenceOfParticularTypeClass::getStr;
+    // 相当于调用 new InstanceMethodReferenceOfParticularTypeClass("测试") 实例的 getStr 方法
+    Assert.assertEquals("测试", referenceInterface.get(new InstanceMethodReferenceOfParticularTypeClass("测试")));
+
+    Function<String, Integer> function1 = String::length;
+    // 相当于调用 "Hello".length() 方法
+    Integer length = function1.apply("Hello");
+    Assert.assertEquals(Integer.valueOf(5), length);
+
+    BiFunction<String, Integer, String> biFunction = String::substring;
+    // 相当于调用 "Hello World!".substring(3) 方法
+    String subStr = biFunction.apply("Hello World!", 3);
+    Assert.assertEquals("lo World!", subStr);
+}
+```
+
+
+
+### 构造方法引用
+
+```java
+public class ConstructorMethodReferenceEntity {
+    private String str;
+
+    public ConstructorMethodReferenceEntity(String str) {
+        this.str = str;
+    }
+
+    public String getStr() {
+        return this.str;
+    }
+}
+```
+
+```java
+public interface ConstructorMethodReferenceInterface {
+    ConstructorMethodReferenceEntity get(String str);
+}
+```
+
+```java
+/**
+ * 构造方法引用
+ */
+@Test
+public void test_constructor_method_reference() {
+    ConstructorMethodReferenceInterface referenceInterface = ConstructorMethodReferenceEntity::new;
+    Assert.assertEquals("测试", referenceInterface.get("测试").getStr());
+}
+```
+
+
+
+### 数组构造器方法引用
+
+```java
+// 数组构造器方法引用
+@Test
+public void testArrayConstructorMethodReference() {
+    Function<Integer, String[]> function = String[]::new;
+    String[] strArr = function.apply(10);
+    Assert.assertEquals(10, strArr.length);
+}
+```
