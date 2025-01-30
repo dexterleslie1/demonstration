@@ -426,7 +426,7 @@ public void testSwitchToIframeAndFindElements() throws InterruptedException {
 
 
 
-### 选择器
+### 非 xpath 选择器
 
 
 
@@ -441,5 +441,25 @@ public void testFindElementByUsingCssSelectorWithMultipleClassNames() throws Int
     elementList.get(0).click();
 
     TimeUnit.SECONDS.sleep(2);
+}
+```
+
+
+
+### xpath 选择器
+
+#### 根据 class 和元素 innerHTML 定位元素
+
+>`https://stackoverflow.com/questions/26370554/how-to-locate-an-element-by-class-name-and-its-text-in-python-selenium`
+
+```java
+// 测试根据 class 和元素 innerHTML 定位元素
+// https://stackoverflow.com/questions/26370554/how-to-locate-an-element-by-class-name-and-its-text-in-python-selenium
+@Test
+public void testFindElementByUsingXPathWithClassNameAndInnerHTML() throws InterruptedException {
+    driver.get("http://localhost:8080");
+
+    WebElement element = driver.findElement(By.xpath("//span[@class='c-text' and text()='早']"));
+    Assert.assertNotNull(element);
 }
 ```
