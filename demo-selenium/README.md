@@ -319,37 +319,127 @@ services:
 
 ## Java 使用 Selenium
 
->`https://medium.com/@riddhipandya153/how-to-build-a-selenium-maven-project-86394f2d70e1`
-
 详细用法请参考示例`https://gitee.com/dexterleslie/demonstration/tree/master/demo-selenium/demo-java`
 
-pom 依赖配置如下：
+
+
+### SpringBoot 项目集成 Selenium Java 客户端驱动
+
+SpringBoot 项目 pom 依赖配置引用如下配置：
 
 ```xml
 <!-- selenium 依赖 -->
 <dependency>
     <groupId>org.seleniumhq.selenium</groupId>
     <artifactId>selenium-java</artifactId>
-    <version>4.12.1</version>
 </dependency>
 ```
 
-测试用例：
+
+
+### 创建和销毁 WebDriver 实例
+
+>`https://medium.com/@riddhipandya153/how-to-build-a-selenium-maven-project-86394f2d70e1`
 
 ```java
-public class AppTests {
-    @Test
-    public void test() throws MalformedURLException {
+// 测试 WebDriver 创建和销毁
+@RunWith(SpringRunner.class)
+@SpringBootTest(classes = {Application.class}, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+public class WebDriverCreationAndDestroyTests {
+    WebDriver driver;
+
+    @Before
+    public void before() throws MalformedURLException {
         // 创建 WebDriver 实例
-        WebDriver driver = new RemoteWebDriver(new URL("http://localhost:4444/wd/hub"), new FirefoxOptions());
+        driver = new RemoteWebDriver(new URL("http://localhost:4444/wd/hub"), new FirefoxOptions());
+        driver.manage().timeouts().implicitlyWait(5, TimeUnit.SECONDS);
+    }
 
-        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
-        driver.get("https://www.baidu.com");
-        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
+    @After
+    public void after() {
+        if (driver != null) {
+            // 关闭浏览器
+            driver.quit();
+        }
+    }
 
-        // 关闭浏览器
-        driver.quit();
+    @Test
+    public void test() throws InterruptedException {
+        driver.get("http://localhost:8080");
+        TimeUnit.SECONDS.sleep(5);
     }
 }
 ```
 
+
+
+### implicitlyWait
+
+mplicitlyWait() 设置一个隐式等待时间。 Selenium 会在查找元素时，自动等待最长指定的时间。 如果元素在等待时间内出现，则测试继续；如果元素在等待时间内未出现，则抛出异常。 
+
+```java
+// 测试 implicitlyWait timeout
+@Test
+public void testImplicitlyWait() throws InterruptedException {
+    driver.get("http://localhost:8080");
+
+    // implicitlyWait() 设置一个隐式等待时间。 Selenium 会在查找元素时，自动等待最长指定的时间。 如果元素在等待时间内出现，则测试继续；如果元素在等待时间内未出现，则抛出异常。 
+    driver.manage().timeouts().implicitlyWait(15, TimeUnit.SECONDS);
+
+    StopWatch stopWatch = new StopWatch();
+    stopWatch.start();
+    try {
+        driver.findElement(By.id(UUID.randomUUID().toString()));
+        Assert.fail();
+    } catch (NoSuchElementException ignored) {
+
+    }
+    stopWatch.stop();
+    double seconds = stopWatch.getTotalTimeSeconds();
+    Assert.assertTrue(seconds >= 15);
+}
+```
+
+
+
+### 切换 iframe
+
+>`https://www.selenium.dev/documentation/webdriver/interactions/frames/`
+
+```java
+// 测试切换 iframe 并查找元素
+@Test
+public void testSwitchToIframeAndFindElements() throws InterruptedException {
+    driver.get("http://localhost:8080");
+
+    // 切换到 iframe 上下文
+    WebElement iframe1 = driver.findElement(By.id("iframe1"));
+    driver.switchTo().frame(iframe1);
+
+    // 在 iframe 中查找元素并点击
+    List<WebElement> elementList = driver.findElements(By.cssSelector("[class=\"ntes-nav-index-title ntes-nav-entry-wide c-fl\"]"));
+    elementList.get(0).click();
+
+    TimeUnit.SECONDS.sleep(5);
+}
+```
+
+
+
+### 选择器
+
+
+
+#### 据多个 css class 查询元素
+
+```java
+// 测试根据多个 css class 查询元素
+@Test
+public void testFindElementByUsingCssSelectorWithMultipleClassNames() throws InterruptedException {
+    driver.get("https://www.baidu.com");
+    List<WebElement> elementList = driver.findElements(By.cssSelector("[class=\"mnav c-font-normal c-color-t\"]"));
+    elementList.get(0).click();
+
+    TimeUnit.SECONDS.sleep(2);
+}
+```
