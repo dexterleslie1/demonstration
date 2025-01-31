@@ -1105,3 +1105,1274 @@ public void testArrayConstructorMethodReference() {
     Assert.assertEquals(10, strArr.length);
 }
 ```
+
+
+
+## 集合 Stream 操作
+
+
+
+### 介绍
+
+Java Stream 是 Java 8 及更高版本引入的一个强大的特性，它允许你以声明式的方式处理集合数据。  它提供了一种简洁、高效且并行友好的方式来执行常见的集合操作，例如过滤、映射、排序、聚合等等。
+
+以下是 Java Stream 的一些核心概念和常用操作：
+
+**1. 创建 Stream:**
+
+你可以从各种数据源创建 Stream，例如：
+
+* **集合:**  `list.stream()`  或者 `list.parallelStream()` (并行流)
+* **数组:** `Arrays.stream(array)`
+* **文件:** `Files.lines(path)`
+* **数值范围:** `IntStream.range(1, 10)`  (1 到 9)
+* **其他:**  许多类都提供方法生成 Stream，例如 `String.chars()`
+
+**2. 中间操作:**  中间操作返回一个新的 Stream，可以链式调用。  常见的中间操作包括：
+
+* **`filter(Predicate)`:**  过滤元素，保留满足条件的元素。
+* **`map(Function)`:**  将元素映射到另一个对象。
+* **`flatMap(Function)`:**  将元素映射到一个 Stream，然后将所有 Stream  “扁平化”成一个 Stream。
+* **`sorted()`:**  对元素排序。
+* **`distinct()`:**  去除重复元素。
+* **`limit(n)`:**  限制返回的元素数量。
+* **`skip(n)`:**  跳过前 n 个元素。
+* **`peek(Consumer)`:**  对每个元素执行一个操作，但不会改变 Stream 本身。  主要用于调试。
+
+
+**3. 终端操作:**  终端操作会产生一个结果，并且会关闭 Stream。  常见的终端操作包括：
+
+* **`collect(Collector)`:**  将 Stream 元素收集到一个集合中 (例如 `Collectors.toList()`, `Collectors.toSet()`, `Collectors.joining(",")`)
+* **`forEach(Consumer)`:**  对每个元素执行一个操作。
+* **`reduce(BinaryOperator)`:**  将 Stream 元素归约成一个单一值。
+* **`count()`:**  返回 Stream 中元素的数量。
+* **`min(Comparator)`:**  返回 Stream 中最小元素。
+* **`max(Comparator)`:**  返回 Stream 中最大元素。
+* **`findFirst()`:**  返回 Stream 中第一个元素 (Optional)。
+* **`findAny()`:**  返回 Stream 中任意一个元素 (Optional)。
+* **`allMatch(Predicate)`:**  判断所有元素是否都满足条件。
+* **`anyMatch(Predicate)`:**  判断是否存在至少一个元素满足条件。
+* **`noneMatch(Predicate)`:**  判断是否没有元素满足条件。
+
+
+**4.  例子:**
+
+```java
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class StreamExample {
+    public static void main(String[] args) {
+        List<Integer> numbers = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+
+        // 筛选出偶数，然后求平方，最后收集到一个新的列表
+        List<Integer> evenSquares = numbers.stream()
+                .filter(n -> n % 2 == 0)
+                .map(n -> n * n)
+                .collect(Collectors.toList());
+
+        System.out.println(evenSquares); // 输出：[4, 16, 36, 64, 100]
+
+
+        // 计算所有数字的和
+        int sum = numbers.stream().mapToInt(Integer::intValue).sum();
+        System.out.println(sum); // 输出：55
+    }
+}
+```
+
+这个只是 Java Stream 的一个简要介绍，它还有许多更高级的特性，例如并行流、自定义 Collector 等，需要进一步学习和实践才能掌握。 你可以参考 Java 官方文档或其他学习资源来深入了解。  请问你对 Java Stream 的哪个方面特别感兴趣，或者你想了解哪个具体的例子？
+
+
+
+### 为何引入集合 Stream 操作
+
+JDK 8 引入集合 Stream 操作是为了提升 Java 集合处理的效率、可读性和表达能力。  传统上，处理集合需要大量的循环和临时变量，导致代码冗长且难以理解。Stream API 使用声明式编程风格，让代码更简洁、易读，并支持并行处理以提高性能。
+
+**例子：查找一个学生列表中所有成绩大于 90 分的学生姓名。**
+
+**传统方法 (使用循环):**
+
+```java
+import java.util.ArrayList;
+import java.util.List;
+
+class Student {
+    String name;
+    int score;
+
+    public Student(String name, int score) {
+        this.name = name;
+        this.score = score;
+    }
+}
+
+public class TraditionalApproach {
+    public static void main(String[] args) {
+        List<Student> students = new ArrayList<>();
+        students.add(new Student("Alice", 85));
+        students.add(new Student("Bob", 92));
+        students.add(new Student("Charlie", 98));
+        students.add(new Student("David", 78));
+
+        List<String> highScoreStudents = new ArrayList<>();
+        for (Student student : students) {
+            if (student.score > 90) {
+                highScoreStudents.add(student.name);
+            }
+        }
+        System.out.println(highScoreStudents); // 输出：[Bob, Charlie]
+    }
+}
+```
+
+**Stream API 方法:**
+
+```java
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+class Student {
+    String name;
+    int score;
+
+    public Student(String name, int score) {
+        this.name = name;
+        this.score = score;
+    }
+}
+
+public class StreamApproach {
+    public static void main(String[] args) {
+        List<Student> students = new ArrayList<>();
+        students.add(new Student("Alice", 85));
+        students.add(new Student("Bob", 92));
+        students.add(new Student("Charlie", 98));
+        students.add(new Student("David", 78));
+
+        List<String> highScoreStudents = students.stream()
+                .filter(student -> student.score > 90)
+                .map(student -> student.name)
+                .collect(Collectors.toList());
+
+        System.out.println(highScoreStudents); // 输出：[Bob, Charlie]
+    }
+}
+```
+
+对比可以看出，Stream API 版本更简洁、更易读。它将筛选和映射操作清晰地表达为链式调用，避免了显式的循环和临时变量。  对于更复杂的数据处理，Stream API 的优势更加明显，并且它还支持并行化，可以进一步提高处理效率，特别是当学生列表非常庞大时。  这就是 JDK 8 引入 Stream 的主要原因之一：提供一种更优雅、高效的数据处理方式。
+
+
+
+### 获取 Stream 的方法
+
+```java
+// 获取 Stream 实例的方法
+@Test
+public void testGetStreamInstance() {
+    // 根据 Collection 获取 Stream 实例
+    List<String> list = new ArrayList<>();
+    Stream<String> stream1 = list.stream();
+    Assert.assertNotNull(stream1);
+
+    Set<String> set = new HashSet<>();
+    Stream<String> stream2 = set.stream();
+    Assert.assertNotNull(stream2);
+
+    Map<String, String> map = new HashMap<>();
+
+    Stream<String> stream3 = map.keySet().stream();
+    Stream<String> stream4 = map.values().stream();
+    Assert.assertNotNull(stream3);
+    Assert.assertNotNull(stream4);
+
+    Stream<Map.Entry<String, String>> stream5 = map.entrySet().stream();
+    Assert.assertNotNull(stream5);
+
+    // 使用 Stream 的静态 of 方法构造 Stream 实例
+    Stream<String> stream6 = Stream.of("a", "b", "c");
+    Assert.assertEquals(3, stream6.count());
+    String[] strs = {"a", "b", "c"};
+    Stream<String> stream7 = Stream.of(strs);
+    Assert.assertEquals(3, stream7.count());
+}
+```
+
+
+
+### Stream forEach 方法
+
+```java
+// 测试 Stream forEach 用法
+@Test
+public void testStreamForEach() {
+    Stream<String> stream1 = Arrays.asList("a", "b").stream();
+    stream1.forEach(e -> log.debug("element=" + e));
+
+    Map<String, String> map = new HashMap<String, String>() {{
+        this.put("k1", "v1");
+        this.put("k2", "v2");
+    }};
+    map.entrySet().forEach(entry -> log.debug("key={}, value={}", entry.getKey(), entry.getValue()));
+}
+```
+
+
+
+### Stream count 方法
+
+```java
+// 测试 Stream count 用法
+@Test
+public void testStreamCount() {
+    Stream<String> stream1 = Arrays.asList("a", "b", "c").stream();
+    Assert.assertEquals(3, stream1.count());
+}
+```
+
+
+
+### Stream filter 方法
+
+```java
+// 测试 Stream filter 用法
+@Test
+public void testStreamFilter() {
+    // 过滤
+    List<UserEntity> userEntityList = new ArrayList<>();
+    userEntityList.add(new UserEntity("zhangsan", 20));
+    userEntityList.add(new UserEntity("lisi", 13));
+    userEntityList.add(new UserEntity("wangwu", 45));
+    userEntityList.add(new UserEntity("guyt", 34));
+    List<UserEntity> userEntityListFiltered = userEntityList.stream()
+            .filter(userEntity -> userEntity.getAge() > 25).collect(Collectors.toList());
+    Assert.assertEquals(2, userEntityListFiltered.size());
+    Assert.assertEquals(userEntityList.get(2), userEntityListFiltered.get(0));
+    Assert.assertEquals(userEntityList.get(3), userEntityListFiltered.get(1));
+}
+```
+
+
+
+### Stream skip 和 limit 方法
+
+```java
+// 测试 skip 和 limit
+@Test
+public void testStreamSkipAndLimit() {
+    // 模拟获取第二页skip和limit
+    List<UserEntity> userEntityList = new ArrayList<>();
+    userEntityList.add(new UserEntity("zhangsan", 20));
+    userEntityList.add(new UserEntity("lisi", 13));
+    userEntityList.add(new UserEntity("wangwu", 45));
+    userEntityList.add(new UserEntity("guyt", 34));
+    List<UserEntity> userEntityList2Page = userEntityList.stream().skip(2).limit(2).collect(Collectors.toList());
+    Assert.assertEquals(2, userEntityList2Page.size());
+    Assert.assertEquals(userEntityList.get(2), userEntityList2Page.get(0));
+    Assert.assertEquals(userEntityList.get(3), userEntityList2Page.get(1));
+}
+```
+
+
+
+### Stream map 方法
+
+Java Stream 的 `map()` 方法是一个中间操作，它接受一个函数作为参数，并将该函数应用于 Stream 中的每个元素，然后返回一个包含转换后元素的新 Stream。  换句话说，`map()` 方法用于将 Stream 中的元素转换成另一种类型或进行某种转换。
+
+**语法:**
+
+```java
+<R> Stream<R> map(Function<? super T, ? extends R> mapper);
+```
+
+* `T`:  原始 Stream 元素的类型。
+* `R`:  转换后元素的类型。
+* `mapper`: 一个 `Function` 接口的实例，它接受一个 `T` 类型参数并返回一个 `R` 类型结果。  这个函数定义了如何转换每个元素。
+
+**常用例子:**
+
+1. **将字符串转换为大写:**
+
+```java
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class MapExample {
+    public static void main(String[] args) {
+        List<String> strings = Arrays.asList("apple", "banana", "orange");
+
+        List<String> uppercaseStrings = strings.stream()
+                .map(String::toUpperCase) // 使用方法引用
+                .collect(Collectors.toList());
+
+        System.out.println(uppercaseStrings); // 输出：[APPLE, BANANA, ORANGE]
+    }
+}
+```
+
+2. **将整数转换为平方:**
+
+```java
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class MapIntegerExample {
+    public static void main(String[] args) {
+        List<Integer> numbers = Arrays.asList(1, 2, 3, 4, 5);
+
+        List<Integer> squares = numbers.stream()
+                .map(n -> n * n) // 使用 Lambda 表达式
+                .collect(Collectors.toList());
+
+        System.out.println(squares); // 输出：[1, 4, 9, 16, 25]
+    }
+}
+```
+
+3. **将对象转换为特定属性:**
+
+假设你有一个 `Person` 对象：
+
+```java
+class Person {
+    String name;
+    int age;
+
+    public Person(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+
+    public String getName() {
+        return name;
+    }
+}
+```
+
+你可以使用 `map()` 方法提取所有人的名字：
+
+```java
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class MapObjectExample {
+    public static void main(String[] args) {
+        List<Person> people = Arrays.asList(new Person("Alice", 30), new Person("Bob", 25));
+
+        List<String> names = people.stream()
+                .map(Person::getName) // 使用方法引用
+                .collect(Collectors.toList());
+
+        System.out.println(names); // 输出：[Alice, Bob]
+    }
+}
+```
+
+4. **`flatMap()` 与 `map()` 的区别:**
+
+`flatMap()` 与 `map()` 类似，但它将每个元素映射到一个 Stream，然后将这些 Stream 扁平化成一个新的 Stream。  如果你的 `mapper` 函数返回一个 Stream，则应该使用 `flatMap()`。
+
+
+**需要注意的是:**
+
+* `map()` 是一个中间操作，它不会立即执行任何操作，只有当遇到终端操作（例如 `collect()`、`forEach()` 等）时，才会执行转换操作。
+* `map()` 方法不会修改原始 Stream，它会返回一个新的 Stream。
+
+总而言之，`map()` 方法是 Java Stream 中非常常用的一个方法，它提供了灵活的转换机制，可以方便地对 Stream 中的元素进行各种类型的转换，使其成为数据处理过程中不可或缺的一部分。
+
+
+
+**map 使用示例**
+
+```java
+// List<UserEntity>转换为List<String>
+List<UserEntity> userEntityList = new ArrayList<>();
+userEntityList.add(new UserEntity("zhangsan", 20));
+userEntityList.add(new UserEntity("lisi", 13));
+userEntityList.add(new UserEntity("wangwu", 45));
+userEntityList.add(new UserEntity("guyt", 34));
+userEntityList.add(new UserEntity("guyt", 34));
+List<String> nameList = userEntityList.stream().map(userEntity -> userEntity.getName()).collect(Collectors.toList());
+AtomicInteger counter = new AtomicInteger(0);
+userEntityList.forEach(userEntity -> Assert.assertEquals(userEntity.getName(), nameList.get(counter.getAndIncrement())));
+```
+
+
+
+### Stream sorted 方法
+
+```java
+// 排序
+userEntityList = new ArrayList<>();
+userEntityList.add(new UserEntity("zhangsan", 20));
+userEntityList.add(new UserEntity("lisi", 13));
+userEntityList.add(new UserEntity("wangwu", 45));
+userEntityList.add(new UserEntity("guyt", 34));
+List<UserEntity> userEntityListSorted = userEntityList.stream()
+        .sorted((o1, o2) -> o1.getAge() - o2.getAge()).collect(Collectors.toList());
+Assert.assertEquals(13, userEntityListSorted.get(0).getAge());
+Assert.assertEquals(20, userEntityListSorted.get(1).getAge());
+Assert.assertEquals(34, userEntityListSorted.get(2).getAge());
+Assert.assertEquals(45, userEntityListSorted.get(3).getAge());
+```
+
+
+
+### Stream distinct 方法
+
+UserEntityDistinct 类
+
+```java
+@Data
+@AllArgsConstructor
+public class UserEntityDistinct {
+    private String name;
+    private int age;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        UserEntityDistinct o1 = (UserEntityDistinct) o;
+        return Objects.equals(age, o1.age) && Objects.equals(name, o1.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.name, this.age);
+    }
+
+    private List<NestedClass> myList;
+
+    @Data
+    @AllArgsConstructor
+    public static class NestedClass {
+        private Long id;
+    }
+}
+```
+
+StreamUtil
+
+```java
+public class StreamUtil {
+    public StreamUtil() {
+    }
+
+    public static <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
+        Set<Object> seen = ConcurrentHashMap.newKeySet();
+        return (t) -> {
+            return seen.add(keyExtractor.apply(t));
+        };
+    }
+}
+```
+
+测试代码
+
+```java
+// distinct根据hashCode和equals方法去重
+List<UserEntityDistinct> userEntityDistinctList = new ArrayList<>();
+userEntityDistinctList.add(new UserEntityDistinct("zhangsan", 20, null));
+userEntityDistinctList.add(new UserEntityDistinct("lisi", 13, null));
+userEntityDistinctList.add(new UserEntityDistinct("wangwu", 45, null));
+userEntityDistinctList.add(new UserEntityDistinct("guyt", 34, Arrays.asList(new UserEntityDistinct.NestedClass(1L), new UserEntityDistinct.NestedClass(2L))));
+userEntityDistinctList.add(new UserEntityDistinct("guyt", 34, Arrays.asList(new UserEntityDistinct.NestedClass(1L))));
+// 需要重写 UserEntityDistinct 的 hashCode 和 equals 方法以协助无参数 distinct 去重
+Assert.assertEquals(userEntityDistinctList.size() - 1, userEntityDistinctList.stream().distinct().collect(Collectors.toList()).size());
+Assert.assertEquals(userEntityDistinctList.size() - 1, userEntityDistinctList.stream().filter(StreamUtil.distinctByKey(UserEntityDistinct::getName)).collect(Collectors.toList()).size());
+
+// List<Map<String, Object>>去重
+// distinctByKey方法使用
+// https://www.cnblogs.com/zwh0910/p/15877284.html
+List<Map<String, Object>> mapList = new ArrayList<>();
+Map<String, Object> oMap = new HashMap<>();
+oMap.put("id", 1L);
+oMap.put("code", "1-1");
+mapList.add(oMap);
+oMap = new HashMap<>();
+oMap.put("id", 2L);
+oMap.put("code", "1-2");
+mapList.add(oMap);
+oMap = new HashMap<>();
+oMap.put("id", 1L);
+oMap.put("code", "1-3");
+mapList.add(oMap);
+Assert.assertEquals(mapList.size() - 1, mapList.stream().filter(StreamUtil.distinctByKey(o -> o.get("id"))).collect(Collectors.toList()).size());
+```
+
+
+
+### Stream match 方法
+
+```java
+// 匹配anyMatch
+userEntityList = new ArrayList<>();
+userEntityList.add(new UserEntity("zhangsan", 20));
+userEntityList.add(new UserEntity("lisi", 13));
+userEntityList.add(new UserEntity("wangwu", 45));
+userEntityList.add(new UserEntity("guyt", 34));
+boolean matchResult = userEntityList.stream()
+        .anyMatch(userEntity -> userEntity.getName().equals("wangwu"));
+Assert.assertTrue(matchResult);
+
+matchResult = userEntityList.stream()
+        .anyMatch(userEntity -> userEntity.getName().equals("wangwu5"));
+Assert.assertFalse(matchResult);
+
+// 匹配noneMatch
+userEntityList = new ArrayList<>();
+userEntityList.add(new UserEntity("zhangsan", 20));
+userEntityList.add(new UserEntity("lisi", 13));
+userEntityList.add(new UserEntity("wangwu", 45));
+userEntityList.add(new UserEntity("guyt", 34));
+matchResult = userEntityList.stream()
+        .noneMatch(userEntity -> userEntity.getName().equals("wangwu"));
+Assert.assertFalse(matchResult);
+
+matchResult = userEntityList.stream()
+        .noneMatch(userEntity -> userEntity.getName().equals("wangwu5"));
+Assert.assertTrue(matchResult);
+
+// 匹配allMatch
+userEntityList = new ArrayList<>();
+userEntityList.add(new UserEntity("zhangsan", 20));
+userEntityList.add(new UserEntity("lisi", 13));
+matchResult = userEntityList.stream()
+        .allMatch(userEntity -> userEntity.getAge() == 20 || userEntity.getAge() == 13);
+Assert.assertTrue(matchResult);
+
+matchResult = userEntityList.stream()
+        .allMatch(userEntity -> userEntity.getAge() == 20 && userEntity.getAge() == 13);
+Assert.assertFalse(matchResult);
+```
+
+
+
+### Stream find 方法
+
+**findFirst 和 findAny 区别**
+
+`findFirst()` 和 `findAny()` 是 Java Stream API 中的两个终端操作，它们都用于查找 Stream 中的元素，但它们在以下方面有所区别：
+
+**1. 返回值:**
+
+* `findFirst()`：返回 Stream 中的**第一个**元素，如果 Stream 为空则返回一个空的 `Optional`。
+* `findAny()`：返回 Stream 中的**任意一个**元素，如果 Stream 为空则返回一个空的 `Optional`。
+
+
+**2. 并行流行为:**
+
+这是两者最主要的区别。  在**串行流**中，`findFirst()` 和 `findAny()` 的行为完全相同，因为它们都会从 Stream 的开头开始遍历，并返回遇到的第一个元素。
+
+但是在**并行流**中，它们的行为不同：
+
+* `findFirst()`：仍然保证返回 Stream 中的第一个元素。  并行流会对元素进行分区，每个分区独立搜索，找到第一个元素后，会通知其他分区停止搜索，最终返回第一个找到的元素。  这保证了结果的顺序性，但可能会略微降低性能，因为它需要额外的协调工作。
+
+* `findAny()`：可以返回 Stream 中的任何一个元素。 并行流会对元素进行分区，每个分区独立搜索，哪个分区先找到元素，就返回哪个元素。  这不需要协调，因此在并行流中通常比 `findFirst()` 效率更高。  但是，它并不能保证返回的是 Stream 中的第一个元素。
+
+
+**3. 使用场景:**
+
+* `findFirst()`：适用于需要保证返回 Stream 中第一个元素的情况，例如处理有序数据，或者需要根据顺序选择特定元素。
+
+* `findAny()`：适用于只需要 Stream 中的任何一个元素，而元素的顺序无关紧要的情况。  在并行流中，`findAny()` 通常效率更高，因为它可以更快地找到一个满足条件的元素，无需等待其他分区完成搜索。
+
+
+**总结:**
+
+| 特性       | `findFirst()`                          | `findAny()`                                        |
+| ---------- | -------------------------------------- | -------------------------------------------------- |
+| 返回值     | Stream 中的第一个元素                  | Stream 中的任意一个元素                            |
+| 串行流行为 | 返回第一个元素                         | 返回第一个元素                                     |
+| 并行流行为 | 返回第一个元素，需要协调，性能可能略低 | 返回任意一个元素，无需协调，性能通常更高           |
+| 使用场景   | 需要第一个元素，元素顺序很重要         | 只需要任意一个元素，元素顺序不重要，尤其适合并行流 |
+
+总而言之，在大多数情况下，如果不需要保证返回第一个元素且使用并行流，`findAny()` 是更好的选择，因为它通常效率更高。  只有当元素顺序很重要时，才应该使用 `findFirst()`。  如果使用串行流，则两者没有区别。
+
+
+
+**测试 find 方法**
+
+```java
+// 测试 Stream find 方法
+@Test
+public void testFind() {
+    Stream<Integer> stream = Stream.of(1, 2, 3, 4, 5);
+    Optional<Integer> result = stream.findFirst();
+    Assert.assertEquals(Integer.valueOf(1), result.get());
+    stream = Stream.of(1, 2, 3, 4, 5);
+    result = stream.findAny();
+    Assert.assertEquals(Integer.valueOf(1), result.get());
+}
+```
+
+
+
+### Stream max、min 方法
+
+```java
+// 最大最小值
+userEntityDistinctList = new ArrayList<>();
+userEntityDistinctList.add(new UserEntityDistinct("zhangsan", 20, null));
+userEntityDistinctList.add(new UserEntityDistinct("lisi", 13, null));
+userEntityDistinctList.add(new UserEntityDistinct("wangwu", 45, null));
+userEntityDistinctList.add(new UserEntityDistinct("guyt", 34, null));
+UserEntityDistinct userEntityDistinctMax = userEntityDistinctList.stream()
+        .max((o1, o2) -> o1.getAge() - o2.getAge())
+        .orElse(null);
+Assert.assertEquals(userEntityDistinctList.get(2), userEntityDistinctMax);
+
+UserEntityDistinct userEntityDistinctMin = userEntityDistinctList.stream()
+        .min((o1, o2) -> o1.getAge() - o2.getAge())
+        .orElse(null);
+Assert.assertEquals(userEntityDistinctList.get(1), userEntityDistinctMin);
+```
+
+
+
+### Stream reduce 方法
+
+**介绍**
+
+Java Stream 的 `reduce()` 方法是一个终端操作，它可以将 Stream 中的元素组合成一个单一的结果。  它通过重复地将一个累加器（accumulator）应用于 Stream 中的元素，最终得到一个累积值。
+
+`reduce()` 方法有两种重载形式：
+
+**1.  `reduce(BinaryOperator<T> accumulator)`:**
+
+这种形式接受一个 `BinaryOperator` 作为参数，该操作符是一个函数，它接受两个同类型的参数，并返回一个同类型的结果。  `reduce()` 方法会从 Stream 的第一个元素开始，将累加器应用于相邻的两个元素，然后将结果与下一个元素进行累加，以此类推，直到 Stream 中的所有元素都被处理完毕。
+
+* **`T`**: Stream 中元素的类型。
+* **`BinaryOperator<T>`**:  一个函数，它接受两个 `T` 类型的参数，并返回一个 `T` 类型的结果。  这个函数定义了如何组合两个元素。
+
+**例子：求整数列表的和**
+
+```java
+import java.util.Arrays;
+import java.util.List;
+
+public class ReduceExample1 {
+    public static void main(String[] args) {
+        List<Integer> numbers = Arrays.asList(1, 2, 3, 4, 5);
+        Integer sum = numbers.stream().reduce((a, b) -> a + b).orElse(0); //orElse(0) 处理空流的情况
+        System.out.println("Sum: " + sum); // Output: Sum: 15
+    }
+}
+```
+
+在这个例子中，`BinaryOperator` 是 `(a, b) -> a + b`，它将两个整数相加。  `orElse(0)` 用于处理空 Stream 的情况，如果没有元素，则返回 0。
+
+
+**2. `reduce(T identity, BinaryOperator<T> accumulator)`:**
+
+这种形式除了 `BinaryOperator` 外，还接受一个 `identity` 参数。  `identity` 是一个初始值，它在 Stream 为空的情况下作为结果返回。  如果 Stream 不为空，则 `reduce()` 方法会从 `identity` 开始，将累加器应用于 `identity` 和 Stream 的第一个元素，然后将结果与下一个元素进行累加，以此类推。
+
+* **`T`**: Stream 中元素的类型。
+* **`T identity`**:  初始值。
+* **`BinaryOperator<T>`**:  一个函数，它接受两个 `T` 类型的参数，并返回一个 `T` 类型的结果。
+
+
+**例子：求整数列表的和，初始值为 0**
+
+```java
+import java.util.Arrays;
+import java.util.List;
+
+public class ReduceExample2 {
+    public static void main(String[] args) {
+        List<Integer> numbers = Arrays.asList(1, 2, 3, 4, 5);
+        Integer sum = numbers.stream().reduce(0, (a, b) -> a + b); //0是初始值
+        System.out.println("Sum: " + sum); // Output: Sum: 15
+    }
+}
+```
+
+
+**3.  `reduce(U identity, BiFunction<U, ? super T, U> accumulator, BinaryOperator<U> combiner)`:**
+
+这种形式用于并行流。它比前两种形式更复杂，用于处理并行流中的结果合并。  `accumulator` 函数用于处理单个分区的结果，`combiner` 函数用于合并不同分区的结果。 详细解释较复杂，通常在处理并行流且结果类型与Stream元素类型不同的情况下使用。
+
+
+**总结:**
+
+`reduce()` 方法提供了一种强大的方式来将 Stream 中的元素聚合为单个结果。 选择哪种 `reduce()` 方法取决于你的具体需求和是否使用并行流。  对于简单的聚合操作，第一种或第二种形式就足够了。  对于复杂的并行聚合操作，则需要使用第三种形式，并正确处理 `accumulator` 和 `combiner` 函数。  记住处理空流的情况，使用 `orElse()` 方法或提供合适的初始值。
+
+
+
+**示例**
+
+```java
+// 使用reduce实现年龄相加
+userEntityList = new ArrayList<>();
+userEntityList.add(new UserEntity("zhangsan", 20));
+userEntityList.add(new UserEntity("lisi", 13));
+userEntityList.add(new UserEntity("wangwu", 45));
+userEntityList.add(new UserEntity("guyt", 34));
+AtomicInteger totalAgeSum = new AtomicInteger(0);
+userEntityList.forEach(userEntity -> totalAgeSum.addAndGet(userEntity.getAge()));
+int totalAge = userEntityList.stream()
+        // 先变换List<UserEntity>为List<Integer>
+        .map(userEntity -> userEntity.getAge())
+        // 实现年龄相加
+        .reduce((a, b) -> a + b)
+        // List<UserEntity>为空时获取orElse值
+        .orElse(0);
+Assert.assertEquals(totalAgeSum.get(), totalAge);
+```
+
+
+
+### Stream mapToInt 方法
+
+```java
+// 测试 Stream mapToInt
+@Test
+public void testMapToInt() {
+    List<ListEntry> list = new ArrayList<ListEntry>() {{
+        this.add(new ListEntry(1));
+        this.add(new ListEntry(2));
+        this.add(new ListEntry(3));
+    }};
+    IntStream intStream = list.stream().mapToInt(o -> o.getNumber());
+    Assert.assertEquals(1, intStream.findFirst().getAsInt());
+}
+```
+
+
+
+### Stream concat 方法
+
+```java
+// 测试 Stream concat
+@Test
+public void testConcat() {
+    Stream<String> stream1 = Stream.of("a", "b");
+    Stream<String> stream2 = Stream.of("c", "d");
+    Stream<String> stream3 = Stream.concat(stream1, stream2);
+    Assert.assertEquals(4, stream3.count());
+}
+```
+
+
+
+### Stream 转换为 Array
+
+```java
+// 测试 Stream 转换为 Array
+@Test
+public void testStreamToArray() {
+    List<String> originalList = new ArrayList<String>() {{
+        this.add("a");
+        this.add("b");
+        this.add("c");
+        this.add("b");
+    }};
+    String[] strArr = originalList.stream().toArray(String[]::new);
+    Assert.assertArrayEquals(originalList.toArray(new String[]{}), strArr);
+}
+```
+
+
+
+### Stream collect 方法
+
+```java
+// 测试 stream collect
+@Test
+public void testCollect() {
+    List<String> originalList = new ArrayList<String>() {{
+        this.add("a");
+        this.add("b");
+        this.add("c");
+        this.add("b");
+    }};
+    // List 转换为 List
+    List<String> list = originalList.stream().collect(Collectors.toCollection(ArrayList::new));
+    Assert.assertEquals(originalList, list);
+    list = originalList.stream().collect(Collectors.toList());
+    Assert.assertEquals(originalList, list);
+
+    // List 转换为 HashSet
+    Set<String> hashSet = originalList.stream().collect(Collectors.toCollection(HashSet::new));
+    Assert.assertEquals(originalList.size() - 1, hashSet.size());
+    Assert.assertEquals(Arrays.copyOf(originalList.toArray(), originalList.size() - 1), hashSet.toArray());
+    hashSet = originalList.stream().collect(Collectors.toSet());
+    Assert.assertEquals(originalList.size() - 1, hashSet.size());
+    Assert.assertEquals(Arrays.copyOf(originalList.toArray(), originalList.size() - 1), hashSet.toArray());
+
+    // List 转换为 HashMap
+    List<UserEntityDistinct> userEntityDistinctList = new ArrayList<>();
+    userEntityDistinctList.add(new UserEntityDistinct("zhangsan", 20, null));
+    userEntityDistinctList.add(new UserEntityDistinct("lisi", 13, null));
+    userEntityDistinctList.add(new UserEntityDistinct("wangwu", 45, null));
+    userEntityDistinctList.add(new UserEntityDistinct("guyt", 34, null));
+    userEntityDistinctList.add(new UserEntityDistinct("guyt", 34, null));
+    Map<String, Integer> map = userEntityDistinctList.stream().collect(Collectors.toMap(UserEntityDistinct::getName, UserEntityDistinct::getAge, (a, b) -> a/* 重复键合并策略，返回第一个年龄值 */));
+    Assert.assertEquals(4, map.size());
+    Assert.assertTrue(map.containsKey("zhangsan"));
+}
+```
+
+
+
+### Stream 聚合函数
+
+```java
+// 测试 Stream 聚合函数
+@Test
+public void testAggregation() {
+    List<UserEntityDistinct> userEntityDistinctList = new ArrayList<>();
+    userEntityDistinctList.add(new UserEntityDistinct("zhangsan", 20, null));
+    userEntityDistinctList.add(new UserEntityDistinct("lisi", 13, null));
+    userEntityDistinctList.add(new UserEntityDistinct("wangwu", 45, null));
+    userEntityDistinctList.add(new UserEntityDistinct("guyt", 34, null));
+    userEntityDistinctList.add(new UserEntityDistinct("guyt", 34, null));
+
+    // maxBy
+    UserEntityDistinct userEntityDistinct = userEntityDistinctList.stream().collect(Collectors.maxBy((a, b) -> a.getAge() - b.getAge())).get();
+    Assert.assertEquals(45, userEntityDistinct.getAge());
+
+    // minBy
+    userEntityDistinct = userEntityDistinctList.stream().collect(Collectors.minBy((a, b) -> a.getAge() - b.getAge())).get();
+    Assert.assertEquals(13, userEntityDistinct.getAge());
+
+    // 求和
+    int totalAge = userEntityDistinctList.stream().collect(Collectors.summingInt(o -> o.getAge()));
+    Assert.assertEquals(146, totalAge);
+
+    // 求平均
+    int averageAge = userEntityDistinctList.stream().collect(Collectors.averagingInt(o -> o.getAge())).intValue();
+    Assert.assertEquals(29, averageAge);
+
+    // 统计数量
+    int count = userEntityDistinctList.stream().collect(Collectors.counting()).intValue();
+    Assert.assertEquals(5, count);
+}
+```
+
+
+
+### Stream 分组
+
+```java
+// 测试分组
+@Test
+public void testGroupingBy() {
+    List<UserEntityDistinct> userEntityDistinctList = new ArrayList<>();
+    userEntityDistinctList.add(new UserEntityDistinct("zhangsan", 20, null));
+    userEntityDistinctList.add(new UserEntityDistinct("wangwu", 13, null));
+    userEntityDistinctList.add(new UserEntityDistinct("wangwu", 45, null));
+    userEntityDistinctList.add(new UserEntityDistinct("guyt", 34, null));
+    userEntityDistinctList.add(new UserEntityDistinct("guyt", 34, null));
+
+    // 根据年龄分组
+    Map<Integer, List<UserEntityDistinct>> map = userEntityDistinctList.stream().collect(Collectors.groupingBy(o -> o.getAge()));
+    Assert.assertEquals(2, map.get(34).size());
+
+    // 根据年龄区间分组
+    Map<String, List<UserEntityDistinct>> map1 = userEntityDistinctList.stream().collect(Collectors.groupingBy(o -> {
+        if (o.getAge() <= 20) {
+            return "<=20";
+        } else if (o.getAge() <= 40) {
+            return "<=40";
+        } else {
+            return "其他";
+        }
+    }));
+    Assert.assertEquals(3, map1.size());
+    Assert.assertEquals(2, map1.get("<=20").size());
+    Assert.assertEquals(2, map1.get("<=40").size());
+    Assert.assertEquals(1, map1.get("其他").size());
+
+    // 多级分组
+    Map<String, Map<Integer, List<UserEntityDistinct>>> map2 = userEntityDistinctList.stream().collect(Collectors.groupingBy(UserEntityDistinct::getName, Collectors.groupingBy(UserEntityDistinct::getAge)));
+    Assert.assertEquals(3, map2.size());
+    Assert.assertEquals(1, map2.get("guyt").size());
+    Assert.assertEquals(2, map2.get("guyt").get(34).size());
+    Assert.assertEquals(2, map2.get("wangwu").size());
+    Assert.assertEquals(1, map2.get("wangwu").get(13).size());
+    Assert.assertEquals(1, map2.get("wangwu").get(45).size());
+}
+```
+
+
+
+### Stream 分区
+
+```java
+// 测试分区
+@Test
+public void testPartitionBy() {
+    List<UserEntityDistinct> userEntityDistinctList = new ArrayList<>();
+    userEntityDistinctList.add(new UserEntityDistinct("zhangsan", 20, null));
+    userEntityDistinctList.add(new UserEntityDistinct("wangwu", 13, null));
+    userEntityDistinctList.add(new UserEntityDistinct("wangwu", 45, null));
+    userEntityDistinctList.add(new UserEntityDistinct("guyt", 34, null));
+    userEntityDistinctList.add(new UserEntityDistinct("guyt", 34, null));
+
+    Map<Boolean, List<UserEntityDistinct>> map1 = userEntityDistinctList.stream().collect(Collectors.partitioningBy(o -> o.getAge() > 30));
+    Assert.assertEquals(2, map1.size());
+    Assert.assertEquals(2, map1.get(Boolean.FALSE).size());
+    Assert.assertEquals(3, map1.get(Boolean.TRUE).size());
+}
+```
+
+
+
+### Stream joining
+
+```java
+// 测试 joining
+@Test
+public void testJoining() {
+    List<UserEntityDistinct> userEntityDistinctList = new ArrayList<>();
+    userEntityDistinctList.add(new UserEntityDistinct("zhangsan", 20, null));
+    userEntityDistinctList.add(new UserEntityDistinct("wangwu", 13, null));
+    userEntityDistinctList.add(new UserEntityDistinct("wangwu", 45, null));
+    userEntityDistinctList.add(new UserEntityDistinct("guyt", 34, null));
+    userEntityDistinctList.add(new UserEntityDistinct("guyt", 34, null));
+
+    String str = userEntityDistinctList.stream().map(UserEntityDistinct::getName).collect(Collectors.joining("_", "|", "|"));
+    Assert.assertEquals(str, "|zhangsan_wangwu_wangwu_guyt_guyt|");
+}
+```
+
+
+
+### 并行流
+
+#### 获取并行流
+
+在 Java 中，获取并行流主要有两种方式：
+
+**1. 使用 `parallelStream()` 方法:**
+
+这是最常用的方法，可以直接从一个集合（例如 `List`、`Set`、`Array`）或其他支持流操作的数据结构获取一个并行流。  `parallelStream()` 方法会创建一个新的并行流，它会利用多核处理器来并行执行流操作。
+
+```java
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.IntStream;
+
+public class ParallelStreamExample {
+    public static void main(String[] args) {
+        // 从列表获取并行流
+        List<Integer> numbers = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+        numbers.parallelStream().forEach(System.out::println);
+
+
+        // 从数组获取并行流
+        int[] numbersArray = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+        Arrays.stream(numbersArray).parallel().forEach(System.out::println); // 使用parallel()方法
+
+        // 从IntStream获取并行流
+        IntStream.range(1,11).parallel().forEach(System.out::println);
+    }
+}
+```
+
+
+**2. 使用 `stream().parallel()` 方法:**
+
+这种方法可以将一个已存在的串行流转换为并行流。  如果你已经创建了一个串行流，但后来需要将其转换为并行流，可以使用这种方法。
+
+```java
+import java.util.Arrays;
+import java.util.List;
+
+public class ParallelStreamExample2 {
+    public static void main(String[] args) {
+        List<Integer> numbers = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+        numbers.stream().parallel().forEach(System.out::println); //将串行流转换为并行流
+    }
+}
+```
+
+
+**需要注意的几点：**
+
+* **性能:**  并行流并不总是比串行流更快。  对于小型数据集，并行流的开销可能会超过其带来的性能提升。  只有在处理大型数据集时，并行流才能充分发挥其优势。
+
+* **线程安全:**  在并行流中，你需要确保你的操作是线程安全的。  如果你的操作会修改共享状态，则需要使用同步机制来避免数据竞争。
+
+* **数据分割:**  并行流会将数据分割成多个部分，每个部分由不同的线程处理。  数据的分割方式会影响并行流的性能。  默认情况下，Java 会使用一种高效的分割算法，但你也可以自定义分割策略。
+
+* **开销:** 创建和管理并行流会有一定的开销，因此对于小型数据集，使用并行流可能反而会降低性能。
+
+
+选择哪种方式取决于你的具体情况。  如果你是从一个集合开始处理数据，那么直接使用 `parallelStream()` 是最方便的方法。  如果已经存在一个串行流，则可以使用 `parallel()` 方法将其转换为并行流。  记住在使用并行流时要考虑线程安全和性能问题。
+
+总而言之，`parallelStream()` 是从集合直接创建并行流的首选方法，而 `stream().parallel()` 用于将已有的串行流转换为并行流。  选择哪个方法取决于你的代码结构和数据来源。
+
+
+
+#### 性能
+
+```java
+// 并行和非并行 Stream 性能测试对比
+@BenchmarkMode(Mode.Throughput)
+@State(Scope.Benchmark) //使用的SpringBoot容器，都是无状态单例Bean，无安全问题，可以直接使用基准作用域BenchMark
+@OutputTimeUnit(TimeUnit.SECONDS)
+@Warmup(iterations = 3, time = 1, timeUnit = TimeUnit.SECONDS) //预热1s
+@Measurement(iterations = 3, time = 5, timeUnit = TimeUnit.SECONDS) //测试也是1s、五遍
+@Threads(-1)
+public class PerfTests {
+
+    Integer sumTotal = null;
+    List<Integer> dataList = null;
+
+    public static void main(String[] args) throws RunnerException {
+        //使用注解之后只需要配置一下include即可，fork和warmup、measurement都是注解
+        Options opt = new OptionsBuilder()
+                .include(PerfTests.class.getSimpleName())
+                // 断点调试时fork=0
+                .forks(1)
+                // 发生错误停止测试
+                .shouldFailOnError(true)
+                .jvmArgs("-Xmx2G", "-server")
+                .build();
+        new Runner(opt).run();
+    }
+
+    /**
+     * 初始化
+     */
+    @Setup(Level.Trial)
+    public void setup() {
+        dataList = new ArrayList<>();
+        sumTotal = 0;
+        for (int i = 0; i < 1000000; i++) {
+            dataList.add(i);
+            sumTotal += i;
+        }
+    }
+
+    /**
+     * 测试的后处理操作
+     */
+    @TearDown(Level.Trial)
+    public void teardown() {
+    }
+
+    @Benchmark
+    public void testNoneParallel(Blackhole blackhole) {
+        Stream<Integer> stream = this.dataList.stream();
+        Integer sum = stream.collect(Collectors.summingInt(o -> o));
+        Assert.assertEquals(sumTotal, sum);
+        blackhole.consume(sum);
+    }
+
+    @Benchmark
+    public void testParallel(Blackhole blackhole) {
+        Stream<Integer> stream = this.dataList.parallelStream();
+        Integer sum = stream.collect(Collectors.summingInt(o -> o));
+        Assert.assertEquals(sumTotal, sum);
+        blackhole.consume(sum);
+    }
+}
+```
+
+```
+Benchmark                    Mode  Cnt     Score      Error  Units
+PerfTests.testNoneParallel  thrpt    3   836.622 ± 2146.560  ops/s
+PerfTests.testParallel      thrpt    3  1956.849 ±  441.611  ops/s
+```
+
+
+
+## Optional
+
+### 介绍
+
+JDK 8 的 `Optional` 是一个容器类，它可以包含一个非空值，或者不包含任何值（表示空值）。它旨在解决 Java 中臭名昭著的 `NullPointerException`（空指针异常）问题，并提供一种更优雅的方式来处理可能为空的值。
+
+以下是 `Optional` 的一些关键特性和使用方法：
+
+**1. 创建 Optional 对象:**
+
+* **`Optional.of(T value)`:** 创建一个包含指定值的 `Optional` 对象。如果 `value` 为 `null`，则会抛出 `NullPointerException`。
+* **`Optional.ofNullable(T value)`:** 创建一个包含指定值的 `Optional` 对象。如果 `value` 为 `null`，则返回一个空的 `Optional` 对象。
+* **`Optional.empty()`:** 创建一个空的 `Optional` 对象。
+
+**示例:**
+
+```java
+Optional<String> optionalString = Optional.of("Hello"); // 包含值
+Optional<String> optionalNull = Optional.ofNullable(null); // 空
+Optional<String> emptyOptional = Optional.empty(); // 空
+```
+
+**2. 检查 Optional 对象是否包含值:**
+
+* **`isPresent()`:** 返回一个布尔值，指示 `Optional` 对象是否包含值。
+* **`ifPresent(Consumer<? super T> consumer)`:** 如果 `Optional` 对象包含值，则执行指定的 `Consumer` 操作。
+
+**示例:**
+
+```java
+if (optionalString.isPresent()) {
+    System.out.println(optionalString.get()); // 获取值
+}
+
+optionalString.ifPresent(System.out::println); // 使用方法引用简化
+```
+
+**3. 获取 Optional 对象的值:**
+
+* **`get()`:** 返回 `Optional` 对象包含的值。如果 `Optional` 对象为空，则抛出 `NoSuchElementException`。  **应该尽量避免直接使用 `get()`，因为它容易导致 `NullPointerException`。**
+* **`orElse(T other)`:** 如果 `Optional` 对象包含值，则返回该值；否则，返回指定的默认值。
+* **`orElseGet(Supplier<? extends T> other)`:** 如果 `Optional` 对象包含值，则返回该值；否则，调用指定的 `Supplier` 来生成一个默认值。  这比 `orElse` 更高效，因为它只有在需要时才生成默认值。
+* **`orElseThrow(Supplier<? extends X> exceptionSupplier)`:** 如果 `Optional` 对象包含值，则返回该值；否则，抛出指定的异常。
+
+
+**示例:**
+
+```java
+String value = optionalString.orElse("World"); // 如果optionalString为空，则value为"World"
+String value2 = optionalString.orElseGet(() -> "World"); // 类似orElse，但延迟计算
+String value3 = optionalNull.orElseThrow(() -> new IllegalArgumentException("Value cannot be null")); // 抛出异常
+```
+
+**4.  映射和过滤:**
+
+* **`map(Function<? super T, ? extends U> mapper)`:** 对 `Optional` 对象包含的值应用一个映射函数。如果 `Optional` 对象为空，则返回一个空的 `Optional` 对象。
+* **`flatMap(Function<? super T, ? extends Optional<? extends U>> mapper)`:**  类似于 `map`，但映射函数返回一个 `Optional` 对象。 这允许对嵌套的 `Optional` 对象进行处理。
+* **`filter(Predicate<? super T> predicate)`:**  如果 `Optional` 对象包含的值满足指定的谓词，则返回该 `Optional` 对象；否则，返回一个空的 `Optional` 对象。
+
+**示例:**
+
+```java
+Optional<Integer> optionalLength = optionalString.map(String::length); // 获取字符串长度
+
+Optional<String> upperCaseOptional = optionalString.map(String::toUpperCase); // 转大写
+
+Optional<String> filteredOptional = optionalString.filter(s -> s.startsWith("H")); // 过滤
+```
+
+
+总而言之，`Optional` 提供了一种更安全、更清晰的方式来处理可能为空的值，避免了大量的 `null` 检查，提高了代码的可读性和可维护性。  记住优先使用 `orElse`、`orElseGet`、`ifPresent` 等方法来处理 `Optional` 对象，避免使用 `get()` 方法，以减少 `NullPointerException` 的风险。
+
+
+
+### 以前对 null 的处理方式
+
+```java
+// 以前对 null 的处理方式，需要使用 if else 判断变量是否为 null 导致代码不优雅
+String username = "Dexter";
+if (username != null) {
+    Assert.assertNotNull(username);
+} else {
+    Assert.assertNull(username);
+}
+```
+
+
+
+### 创建方式
+
+```java
+// Optional.of(null)会抛出NullPointerException
+try {
+    Optional.of(null);
+    Assert.fail("预期异常没有抛出");
+} catch (NullPointerException ex) {
+}
+
+// Optional.ofNullable(null).get()会抛出异常
+try {
+    Optional.ofNullable(null).get();
+    Assert.fail("预期异常没有抛出");
+} catch (NoSuchElementException ex) {
+
+}
+
+// Optional.ofNullable(null)不会抛出异常
+Optional.ofNullable(null);
+
+// Optional.empty() 创建空 Optional 对象
+String str = (String) Optional.empty().orElse("Hello world!");
+Assert.assertEquals("Hello world!", str);
+```
+
+
+
+### 判断是否有值
+
+```java
+// isPresent用法
+Assert.assertFalse(Optional.ofNullable(null).isPresent());
+Assert.assertTrue(Optional.ofNullable("").isPresent());
+Assert.assertTrue(Optional.of(new ArrayList<>()).isPresent());
+```
+
+
+
+### 获取值
+
+```java
+// 如果为空则 get 方法抛出 NoSuchElementException
+try {
+    Optional.ofNullable(null).get();
+    Assert.fail();
+} catch (NoSuchElementException ignored) {
+}
+
+// 如果为空则orElse返回默认值
+Assert.assertEquals("default", Optional.ofNullable(null).orElse("default"));
+Assert.assertEquals("myValue", Optional.ofNullable("myValue").orElse("default"));
+
+// 如果为空则调用orElseGet提供的 Supplier 获取值
+AtomicInteger atomicInteger3 = new AtomicInteger();
+Assert.assertEquals("default", Optional.ofNullable(null).orElseGet(() -> {
+    atomicInteger3.incrementAndGet();
+    return "default";
+}));
+Assert.assertEquals(1, atomicInteger3.get());
+```
+
+
+
+### ifPresent 用法
+
+如果值存在则调用 ifPresent 提供的 Consumer，否则不调用
+
+```java
+// 如果值存在则调用 ifPresent 提供的 Consumer，否则不调用
+AtomicInteger atomicInteger = new AtomicInteger();
+Optional.ofNullable(null).ifPresent(value -> atomicInteger.incrementAndGet());
+Assert.assertEquals(0, atomicInteger.get());
+
+AtomicInteger atomicInteger1 = new AtomicInteger();
+Optional.ofNullable("Dexter").ifPresent(value -> atomicInteger1.incrementAndGet());
+Assert.assertEquals(1, atomicInteger1.get());
+```
+
+
+
+### map 用法
+
+```java
+// map 用法
+InternalOrder order = null;
+String ordername = Optional.ofNullable(order).map(orderT -> orderT.getName()).map(ordernameT -> ordernameT.toLowerCase()).orElse("default");
+Assert.assertEquals("default", ordername);
+ordername = Optional.ofNullable(new InternalOrder("Dexter")).map(orderT -> orderT.getName()).map(ordernameT -> ordernameT.toLowerCase()).orElse("default");
+Assert.assertEquals("dexter", ordername);
+```
+
+
+
+### filter 用法
+
+```java
+// filter 用法
+Assert.assertFalse(Optional.ofNullable(null).filter(value -> "Dexter".equals(value)).isPresent());
+Assert.assertFalse(Optional.ofNullable("dexter").filter(value -> "Dexter".equals(value)).isPresent());
+Assert.assertTrue(Optional.ofNullable("Dexter").filter(value -> "Dexter".equals(value)).isPresent());
+```
