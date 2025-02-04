@@ -2376,3 +2376,328 @@ Assert.assertFalse(Optional.ofNullable(null).filter(value -> "Dexter".equals(val
 Assert.assertFalse(Optional.ofNullable("dexter").filter(value -> "Dexter".equals(value)).isPresent());
 Assert.assertTrue(Optional.ofNullable("Dexter").filter(value -> "Dexter".equals(value)).isPresent());
 ```
+
+
+
+## 新的日期和时间 API
+
+### 介绍
+
+Java 8 引入了全新的日期时间 API，以取代旧的 `java.util.Date`、`java.util.Calendar` 等类，这些旧的类存在设计缺陷，例如线程不安全和易混淆的API。新的API位于 `java.time` 包及其子包中，提供了更清晰、更简洁、更易于使用的日期和时间处理方式。  主要的新增类包括：
+
+* **`java.time.LocalDate`:**  表示日期，例如 2024-03-08，不包含时间信息。
+* **`java.time.LocalTime`:** 表示时间，例如 10:30:15，不包含日期信息。
+* **`java.time.LocalDateTime`:**  表示日期和时间，例如 2024-03-08T10:30:15。
+* **`java.time.ZonedDateTime`:**  表示包含时区信息的日期和时间。这是处理不同时区日期时间非常重要的一个类。
+* **`java.time.Instant`:**  表示自纪元（1970-01-01T00:00:00Z）以来的时间，以纳秒为单位，通常用于与旧的日期时间API兼容或与数据库交互。
+* **`java.time.Duration`:**  表示两个时间点之间的时间差，以纳秒为单位。
+* **`java.time.Period`:** 表示两个日期之间的时间差，以年、月、日为单位。
+* **`java.time.format.DateTimeFormatter`:** 用于格式化和解析日期和时间字符串。
+
+
+**一些例子:**
+
+```java
+import java.time.*;
+import java.time.format.DateTimeFormatter;
+
+public class JavaTimeExample {
+    public static void main(String[] args) {
+        // 创建 LocalDate 对象
+        LocalDate today = LocalDate.now();
+        System.out.println("今天的日期: " + today);
+
+        // 创建 LocalDateTime 对象
+        LocalDateTime now = LocalDateTime.now();
+        System.out.println("当前日期和时间: " + now);
+
+        // 创建 ZonedDateTime 对象，指定时区
+        ZonedDateTime zonedNow = ZonedDateTime.now(ZoneId.of("America/New_York"));
+        System.out.println("纽约的当前日期和时间: " + zonedNow);
+
+        // 创建日期和时间对象，指定日期和时间
+        LocalDateTime specificDateTime = LocalDateTime.of(2024, 3, 8, 10, 30, 15);
+        System.out.println("指定的日期和时间: " + specificDateTime);
+
+        // 计算两个日期之间的差值
+        LocalDate date1 = LocalDate.of(2023, 1, 1);
+        LocalDate date2 = LocalDate.of(2024, 3, 8);
+        Period period = Period.between(date1, date2);
+        System.out.println("两个日期之间的差值: " + period);
+
+        // 格式化日期和时间
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        String formattedDateTime = now.format(formatter);
+        System.out.println("格式化后的日期和时间: " + formattedDateTime);
+
+        // 解析日期时间字符串
+        LocalDateTime parsedDateTime = LocalDateTime.parse("2024-03-08 10:30:15", formatter);
+        System.out.println("解析后的日期和时间: " + parsedDateTime);
+    }
+}
+```
+
+这个例子展示了如何创建、操作和格式化日期时间对象。  新的API更加面向对象，并且提供了更好的可读性和可维护性。  它避免了旧API中许多容易出错的地方，并且更好地支持国际化。  学习和使用 `java.time` 包中的类可以显著提高你处理日期和时间的效率和代码质量。
+
+
+
+### 旧版本日期时间 API 存在的问题
+
+问题如下：
+
+- 设计很差：在 java.util 和 java.sql 的包中都有日期类，java.util.Date 同时包含日期和时间，而 java.sql.Date 仅包含日期。此外用于格式化和解析的类在 java.text 包中定义。
+- 非线程安全： java.util.Date 是非线程安全的，所有的日期类都是可变的。这是 Java 日期类最大的问题之一。
+- 时区处理麻烦：日期类并不提供国际化，没有时区支持，因此 Java 引入了 java.util.Calendar 和 java.util.TimeZone 类，但他们同样存在上述所有问题。
+
+示例代码：
+
+```java
+// region 旧版本日期时间 API 存在的问题
+
+// 1、设计很差：在 java.util 和 java.sql 的包中都有日期类，java.util.Date 同时包含日期和时间，而 java.sql.Date 仅包含日期。此外用于格式化和解析的类在 java.text 包中定义。
+// 2、非线程安全： java.util.Date 是非线程安全的，所有的日期类都是可变的。这是 Java 日期类最大的问题之一。
+// 3、时区处理麻烦：日期类并不提供国际化，没有时区支持，因此 Java 引入了 java.util.Calendar 和 java.util.TimeZone 类，但他们同样存在上述所有问题。
+
+// 输出为 Thu Oct 23 00:00:00 CST 3890 时间不合理
+Date date = new Date(1990, 9, 23);
+System.out.println(date);
+
+// 线程不安全
+SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+ExecutorService executorService = Executors.newCachedThreadPool();
+for (int i = 0; i < 20; i++) {
+    executorService.submit(() -> {
+        try {
+            Date date1 = simpleDateFormat.parse("2019-09-23");
+            System.out.println(date1);
+        } catch (Exception ex) {
+
+        }
+    });
+}
+executorService.shutdown();
+while (!executorService.awaitTermination(1, TimeUnit.SECONDS)) ;
+
+// endregion
+```
+
+
+
+### LocalDate
+
+```java
+// region `java.time.LocalDate`: 表示日期，例如 2024-03-08，不包含时间信息。
+
+// 当前时间
+LocalDate localDate = LocalDate.now();
+System.out.println("localData=" + localDate);
+
+// 创建指定时间
+localDate = LocalDate.of(2019, 5, 12);
+System.out.println("localDate=" + localDate);
+
+// endregion
+```
+
+
+
+### LocalTime
+
+```java
+// region **`java.time.LocalTime`:** 表示时间，例如 10:30:15，不包含日期信息。
+
+LocalTime localTime = LocalTime.now();
+System.out.println("localTime = " + localTime);
+
+localTime = LocalTime.of(13, 12, 15);
+System.out.println("localTime = " + localTime);
+
+// endregion
+```
+
+
+
+### LocalDateTime
+
+```java
+// region **`java.time.LocalDateTime`:**  表示日期和时间，例如 2024-03-08T10:30:15。
+
+LocalDateTime localDateTime = LocalDateTime.now();
+System.out.println("localDateTime = " + localDateTime);
+
+localDateTime = LocalDateTime.of(2015, 2, 5, 13, 25, 21);
+System.out.println("localDateTime = " + localDateTime);
+
+// endregion
+```
+
+
+
+### 修改日期和时间
+
+```java
+// region 修改日期和时间
+
+// 使用设置方式修改日期和时间
+localDate = localDate.withYear(2011);
+System.out.println("localDate = " + localDate);
+
+// 使用增加或者减去方式修改日期和时间
+localDate = localDate.plusYears(10);
+System.out.println("localDate = " + localDate);
+
+// endregion
+```
+
+
+
+### 比较日期和时间
+
+```java
+// region 比较日期和时间
+
+localDateTime = LocalDateTime.of(2015, 2, 23, 13, 22, 11);
+LocalDateTime now = LocalDateTime.now();
+System.out.println("localDateTime.isAfter(now) = " + localDateTime.isAfter(now));
+System.out.println("localDateTime.isBefore(now) = " + localDateTime.isBefore(now));
+System.out.println("localDateTime.isEqual(now) = " + localDateTime.isEqual(now));
+
+// endregion
+```
+
+
+
+### 时间格式化和解析
+
+```java
+// region 时间格式化和解析
+
+// 时间格式化
+DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+localDateTime = LocalDateTime.now();
+String localDateTimeStr = localDateTime.format(dateTimeFormatter);
+System.out.println("localDateTimeStr = " + localDateTimeStr);
+
+// 解析日期和时间
+localDateTime = LocalDateTime.parse(localDateTimeStr, dateTimeFormatter);
+System.out.println("localDateTime = " + localDateTime);
+
+// endregion
+```
+
+
+
+### Instant
+
+`java.time.Instant` 类表示的是自 Unix 纪元 (1970-01-01T00:00:00Z) 以来的时间，以纳秒为单位。它是一个时间戳，不包含任何日期或时区信息（虽然它总是以 UTC 为基准）。  因此，`Instant` 的使用场景主要集中在以下几个方面：
+
+1. **与旧的日期时间 API 兼容:**  `Instant` 可以方便地与 `java.util.Date` 类进行转换。  这是在迁移到 Java 8 新日期时间 API 时一个重要的桥梁，让你能够逐步替换旧代码，而不会直接破坏与旧系统的兼容性。
+
+2. **数据库交互:**  许多数据库系统使用 Unix 时间戳来存储时间数据。 `Instant` 提供了方便的方法来将时间戳转换为 `Instant` 对象，反之亦然，从而简化了与数据库的交互。
+
+3. **网络通信:**  在网络通信中，经常需要传输时间信息。使用 `Instant` 可以确保时间信息在不同的系统之间能够一致地表示和解析，因为它基于一个通用的时间基准。
+
+4. **需要高精度的时间戳:**  `Instant` 使用纳秒来表示时间，因此它比 `java.util.Date` 提供了更高的精度。  在需要精确到纳秒级别的时间戳时，`Instant` 是最佳选择。
+
+5. **记录事件的时间戳:**  在日志记录、事件跟踪等场景中，可以使用 `Instant` 来记录事件发生的确切时间。
+
+
+**示例:**
+
+```java
+import java.time.Instant;
+import java.util.Date;
+
+public class InstantExample {
+    public static void main(String[] args) {
+        // 获取当前时间戳
+        Instant now = Instant.now();
+        System.out.println("当前时间戳: " + now);
+
+        // 将 Instant 转换为 Date 对象
+        Date date = Date.from(now);
+        System.out.println("转换为 Date 对象: " + date);
+
+        // 将 Date 对象转换为 Instant 对象
+        Instant instantFromDate = date.toInstant();
+        System.out.println("从 Date 对象转换回 Instant 对象: " + instantFromDate);
+
+
+        // 将时间戳转换为特定时区的日期时间
+        //  注意：Instant 本身不包含时区信息, 需要使用 ZonedDateTime 来表示特定时区的日期和时间
+        java.time.ZonedDateTime zonedDateTime = now.atZone(java.time.ZoneId.of("America/New_York"));
+        System.out.println("纽约时间: " + zonedDateTime);
+
+        //  计算时间差
+        Instant later = Instant.now().plusSeconds(60); // 60秒后
+        java.time.Duration duration = java.time.Duration.between(now, later);
+        System.out.println("时间差: " + duration);
+    }
+}
+```
+
+总而言之，`Instant` 类主要用于处理与时间戳相关的操作，特别是那些需要高精度或与旧系统兼容的场景。  记住，`Instant` 本身只代表一个时间点，不包含任何时区信息，你需要结合 `ZoneId` 和 `ZonedDateTime` 来处理与时区相关的操作。
+
+
+
+### Duration/Period 类计算日期和时间差
+
+```java
+// region Duration/Period 类计算日期和时间差
+
+LocalTime localTime1 = LocalTime.of(13, 23, 35);
+LocalTime localTime2 = LocalTime.now();
+Duration duration1 = Duration.between(localTime2, localTime1);
+System.out.println("相差秒数 = " + duration1.toSeconds());
+
+LocalDate localDate1 = LocalDate.of(2011, 2, 23);
+LocalDate localDate2 = LocalDate.now();
+Period period = Period.between(localDate1, localDate2);
+System.out.println("相差天数 = " + period.getDays());
+
+// endregion
+```
+
+
+
+### 时间调整器
+
+```java
+// region 时间调整器
+
+localDateTime = LocalDateTime.now();
+localDateTime = localDateTime.with(temporal -> {
+    // 设置下个月第一天
+    temporal = ((LocalDateTime) temporal).plusMonths(1).withDayOfMonth(1);
+    return temporal;
+});
+System.out.println("localDateTime = " + localDateTime);
+
+localDateTime = LocalDateTime.now();
+localDateTime = localDateTime.with(TemporalAdjusters.firstDayOfNextMonth());
+System.out.println("localDateTime = " + localDateTime);
+
+// endregion
+```
+
+
+
+### 日期时间的时区
+
+```java
+// region 日期时间的时区
+
+// 获取所有时区
+ZoneId.getAvailableZoneIds().forEach(System.out::println);
+
+ZonedDateTime zonedDateTime1 = ZonedDateTime.now(ZoneId.of("Asia/Shanghai"));
+System.out.println("zonedDateTime1 = " + zonedDateTime1);
+
+// 修改时区
+zonedDateTime1 = zonedDateTime1.withZoneSameInstant(ZoneId.of("America/Vancouver"));
+System.out.println("zonedDateTime1 = " + zonedDateTime1);
+zonedDateTime1 = zonedDateTime1.withZoneSameInstant(ZoneId.of("Asia/Shanghai"));
+System.out.println("zonedDateTime1 = " + zonedDateTime1);
+
+// endregion
+```
