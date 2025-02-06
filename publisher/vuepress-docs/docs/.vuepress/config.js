@@ -366,6 +366,7 @@ module.exports = {
                         'tomcat.md',
                         'double类型运算精度问题.md',
                         'JDK8新特性.md',
+                        'JUC.md',
                     ]
                 }
             ], '/计算机信息安全/': [
