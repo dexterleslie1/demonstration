@@ -676,7 +676,7 @@ executor.shutdown();
 
 
 
-#### 获取结果
+#### 用法 - 获取结果
 
 让我们详细比较 `CompletableFuture` 的四个获取结果的方法：`get()`、`get(long timeout, TimeUnit unit)`、`join()` 和 `getNow(T valueIfAbsent)`。 它们的主要区别在于阻塞行为、超时机制和异常处理方式。
 
@@ -846,6 +846,331 @@ executor.submit(() -> {
     finalStringCompletableFuture.complete("complete signal");
 });
 Assert.assertEquals("complete signal", stringCompletableFuture.get());
+
+executor.shutdown();
+
+// endregion
+```
+
+
+
+#### 用法 - 对结果处理方式
+
+在 Java 中，`CompletableFuture` 提供了一种强大而灵活的方式来处理异步编程。它允许你通过不同的回调方式来处理异步计算的结果或异常。以下是几种常见的 `CompletableFuture` 回调处理方式：
+
+1. **thenAccept**：当 `CompletableFuture` 完成时，执行一个接受结果的消费者（Consumer）。如果 `CompletableFuture` 异常完成，则回调不会被调用。
+
+   ```java
+   CompletableFuture<Void> future = CompletableFuture.supplyAsync(() -> {
+       // 模拟异步计算
+       return "Result";
+   }).thenAccept(result -> {
+       System.out.println("Result: " + result);
+   });
+   ```
+
+2. **thenApply**：当 `CompletableFuture` 完成时，应用一个函数（Function）到结果上，并返回一个新的 `CompletableFuture`。
+
+   ```java
+   CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> "Result")
+       .thenApply(result -> result + " Processed");
+   future.thenAccept(processedResult -> {
+       System.out.println("Processed Result: " + processedResult);
+   });
+   ```
+
+3. **thenCompose**：当 `CompletableFuture` 完成时，应用一个函数（Function）到结果上，该函数返回另一个 `CompletableFuture`，并返回这个新的 `CompletableFuture`。
+
+   ```java
+   CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> "Result")
+       .thenCompose(result -> CompletableFuture.supplyAsync(() -> result + " Further Processed"));
+   future.thenAccept(furtherProcessedResult -> {
+       System.out.println("Further Processed Result: " + furtherProcessedResult);
+   });
+   ```
+
+4. **thenRun**：当 `CompletableFuture` 完成时，执行一个无参数的 Runnable。它不关心结果。
+
+   ```java
+   CompletableFuture<Void> future = CompletableFuture.supplyAsync(() -> "Result")
+       .thenRun(() -> System.out.println("Computation completed"));
+   ```
+
+5. **exceptionally**：当 `CompletableFuture` 异常完成时，执行一个函数（Function）来处理异常，并返回一个新的结果。
+
+   ```java
+   CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> {
+       throw new RuntimeException("Error");
+   }).exceptionally(ex -> {
+       return "Fallback Result";
+   });
+   future.thenAccept(result -> {
+       System.out.println("Result: " + result);
+   });
+   ```
+
+6. **handle**：当 `CompletableFuture` 完成时，无论正常还是异常，都执行一个双函数（BiFunction），它接受结果和异常（如果有的话），并返回一个新的结果。
+
+   ```java
+   CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> {
+       throw new RuntimeException("Error");
+   }).handle((result, ex) -> {
+       if (ex != null) {
+           return "Handled Error: " + ex.getMessage();
+       } else {
+           return "Result: " + result;
+       }
+   });
+   future.thenAccept(handledResult -> {
+       System.out.println("Handled Result: " + handledResult);
+   });
+   ```
+
+7. **whenComplete**：当 `CompletableFuture` 完成时，无论正常还是异常，都执行一个双消费者（BiConsumer），它接受结果和异常（如果有的话）。
+
+   ```java
+   CompletableFuture<Void> future = CompletableFuture.supplyAsync(() -> "Result")
+       .whenComplete((result, ex) -> {
+           if (ex != null) {
+               System.out.println("Error: " + ex.getMessage());
+           } else {
+               System.out.println("Result: " + result);
+           }
+       });
+   ```
+
+8. **join** 和 **get**：阻塞当前线程直到 `CompletableFuture` 完成，并获取结果。通常不推荐在异步代码中直接使用这些方法，因为它们会破坏异步性。
+
+   ```java
+   try {
+       CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> "Result");
+       String result = future.join(); // 或者 future.get();
+       System.out.println("Result: " + result);
+   } catch (InterruptedException | ExecutionException e) {
+       e.printStackTrace();
+   }
+   ```
+
+这些回调方法提供了丰富的组合能力，使得你可以灵活地处理异步计算的结果和异常。根据具体的需求，你可以选择最适合的方式来处理 `CompletableFuture`。
+
+**示例：**
+
+```java
+// region 对结果处理方式
+
+executor = Executors.newCachedThreadPool();
+
+// thenApply() 系列方法: 用于对完成的结果进行转换。它们接受一个函数作为参数，该函数将 CompletableFuture 的结果作为输入，并返回一个新的 CompletionStage，其结果是应用了该函数后的结果。thenApplyAsync() 会异步执行转换函数。
+stringCompletableFuture = CompletableFuture.supplyAsync(() -> "s1", executor).thenApply(v -> v + ":s2").thenApply(v -> v + ":s3");
+Assert.assertEquals("s1:s2:s3", stringCompletableFuture.get());
+// 异常发生时立刻终止执行后续的 thenApply
+stringCompletableFuture = CompletableFuture.supplyAsync(() -> "s1", executor).thenApply(v -> {
+    boolean b = true;
+    if (b) {
+        throw new RuntimeException(new Exception("testing"));
+    }
+    return v + ":s2";
+}).thenApply(v -> v + ":s3").exceptionally(e -> null);
+Assert.assertNull(stringCompletableFuture.get());
+
+// handle() 方法：和 thenApply() 方法类似，但当 `CompletableFuture` 完成时，无论正常还是异常，都执行一个双函数（BiFunction），它接受结果和异常（如果有的话），并返回一个新的结果。
+stringCompletableFuture = CompletableFuture.supplyAsync(() -> {
+    boolean b = true;
+    if (b) {
+        throw new RuntimeException(new Exception("testing"));
+    }
+    return "s1";
+}, executor).handle((v, e) -> v + ":s2").handle((v, e) -> v + ":s3").exceptionally(e -> null);
+Assert.assertEquals("null:s2:s3", stringCompletableFuture.get());
+
+// **thenAccept**：当 `CompletableFuture` 完成时，执行一个接受结果的消费者（Consumer）。如果 `CompletableFuture` 异常完成，则回调不会被调用。
+List<String> signalList = new ArrayList<>();
+CompletableFuture<Void> voidCompletableFuture = CompletableFuture.supplyAsync(() -> "s1", executor).thenAccept(signalList::add);
+voidCompletableFuture.get();
+Assert.assertEquals(1, signalList.size());
+Assert.assertEquals("s1", signalList.get(0));
+
+// **thenRun**：当 `CompletableFuture` 完成时，执行一个无参数的 Runnable。它不关心结果。
+signalList = new ArrayList<>();
+List<String> finalSignalList = signalList;
+voidCompletableFuture = CompletableFuture.supplyAsync(() -> "s1", executor).thenRun(() -> {
+    finalSignalList.add("step1");
+});
+voidCompletableFuture.get();
+Assert.assertEquals(1, signalList.size());
+Assert.assertEquals("step1", signalList.get(0));
+
+executor.shutdown();
+
+// endregion
+```
+
+
+
+#### 用法 - 对结果处理方式 - applyToEither
+
+`applyToEither()` 方法用于两个 CompletableFuture 中，任何一个先完成就执行指定的函数，并返回一个新的 CompletableFuture。它不关心哪个 CompletableFuture 先完成，只关心第一个完成的结果。
+
+`applyToEither()` 有两个版本：
+
+* **`applyToEither(CompletionStage<? extends T> other, Function<? super T, U> fn)`:**  同步版本。当 `this` CompletableFuture 或 `other` CompletableFuture 中任意一个首先完成时，将完成的结果作为参数传递给 `fn` 函数执行。返回一个新的 CompletableFuture，其结果是 `fn` 函数的返回值。
+
+* **`applyToEitherAsync(CompletionStage<? extends T> other, Function<? super T, U> fn)`:** 异步版本。与同步版本类似，但是 `fn` 函数会在另一个线程中执行。返回一个新的 CompletableFuture，其结果是 `fn` 函数的返回值。还可以选择指定一个 Executor 来执行 `fn` 函数。 `applyToEitherAsync(CompletionStage<? extends T> other, Function<? super T, U> fn, Executor executor)`
+
+
+**示例：**
+
+```java
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+
+public class ApplyToEitherExample {
+
+    public static void main(String[] args) {
+        CompletableFuture<String> future1 = CompletableFuture.supplyAsync(() -> {
+            try {
+                TimeUnit.SECONDS.sleep(2);
+                return "Future 1 Result";
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        CompletableFuture<String> future2 = CompletableFuture.supplyAsync(() -> {
+            try {
+                TimeUnit.SECONDS.sleep(1);
+                return "Future 2 Result";
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        CompletableFuture<String> combinedFuture = future1.applyToEither(future2, result -> {
+            System.out.println("First completed future result: " + result);
+            return result.toUpperCase();
+        });
+
+        System.out.println("Result of combined future: " + combinedFuture.join()); // 输出 Future 2 Result 的大写形式
+    }
+}
+
+```
+
+在这个例子中，`future2` 比 `future1` 先完成，所以 `applyToEither` 使用 `future2` 的结果 `"Future 2 Result"` 调用了提供的函数，并将结果转换为大写。
+
+
+**关键点:**
+
+* `applyToEither()` 只会执行一次，使用第一个完成的 CompletableFuture 的结果。
+*  如果两个 CompletableFuture 都抛出异常，则新的 CompletableFuture 将以第一个抛出的异常完成 exceptionally。
+
+希望这个解释能够帮助你理解 `applyToEither()` 的用法。 如果你还有其他问题，请随时提出。
+
+**示例：**
+
+```java
+// region applyToEither `applyToEither()` 方法用于两个 CompletableFuture 中，任何一个先完成就执行指定的函数，并返回一个新的 CompletableFuture。它不关心哪个 CompletableFuture 先完成，只关心第一个完成的结果。
+
+executor = Executors.newCachedThreadPool();
+
+CompletableFuture<String> player1 = CompletableFuture.supplyAsync(() -> {
+    try {
+        TimeUnit.SECONDS.sleep(2);
+    } catch (InterruptedException ignored) {
+
+    }
+    return "Player1";
+}, executor);
+
+CompletableFuture<String> player2 = CompletableFuture.supplyAsync(() -> {
+    try {
+        TimeUnit.SECONDS.sleep(3);
+    } catch (InterruptedException ignored) {
+
+    }
+    return "Player2";
+}, executor);
+
+CompletableFuture<String> completableFuture4 = player1.applyToEither(player2, v -> v + " 胜出");
+// Player1 比 Player2 快，所以 Player1 胜出
+Assert.assertEquals("Player1 胜出", completableFuture4.get());
+
+executor.shutdown();
+
+// endregion
+```
+
+
+
+#### 用法 - 对结果处理方式 - thenCombine
+
+`thenCombine()` 方法用于将两个 CompletableFuture 的结果合并成一个新的 CompletableFuture。它会在两个 CompletableFuture 都完成后，将它们的结果作为参数传递给指定的 BiFunction，并将 BiFunction 的返回值作为新的 CompletableFuture 的结果。
+
+`thenCombine()` 有两个版本：
+
+* **`thenCombine(CompletionStage<? extends U> other, BiFunction<? super T,? super U,? extends V> fn)`:** 同步版本。当 `this` CompletableFuture 和 `other` CompletableFuture 都完成后，将它们的结果作为参数传递给 `fn` 函数执行。返回一个新的 CompletableFuture，其结果是 `fn` 函数的返回值。
+
+* **`thenCombineAsync(CompletionStage<? extends U> other, BiFunction<? super T,? super U,? extends V> fn)`:** 异步版本。与同步版本类似，但是 `fn` 函数会在另一个线程中执行。返回一个新的 CompletableFuture，其结果是 `fn` 函数的返回值。还可以选择指定一个 Executor 来执行 `fn` 函数。`thenCombineAsync(CompletionStage<? extends U> other, BiFunction<? super T,? super U,? extends V> fn, Executor executor)`
+
+
+**示例：**
+
+```java
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+
+public class ThenCombineExample {
+
+    public static void main(String[] args) {
+        CompletableFuture<String> future1 = CompletableFuture.supplyAsync(() -> {
+            try {
+                TimeUnit.SECONDS.sleep(2);
+                return "Hello";
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        CompletableFuture<String> future2 = CompletableFuture.supplyAsync(() -> {
+            try {
+                TimeUnit.SECONDS.sleep(1);
+                return "World";
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        CompletableFuture<String> combinedFuture = future1.thenCombine(future2, (result1, result2) -> {
+            return result1 + " " + result2;
+        });
+
+        System.out.println("Result of combined future: " + combinedFuture.join()); // 输出 "Hello World"
+    }
+}
+```
+
+在这个例子中，`future1` 返回 "Hello"，`future2` 返回 "World"。`thenCombine` 将这两个结果传递给 BiFunction，BiFunction 将它们拼接成 "Hello World"，并作为新的 CompletableFuture 的结果返回。
+
+
+**关键点:**
+
+* `thenCombine()` 要求两个 CompletableFuture 都成功完成才能执行。如果任何一个 CompletableFuture 完成 exceptionally，则组合的 CompletableFuture 也会完成 exceptionally。
+* BiFunction 的参数类型必须与两个 CompletableFuture 的结果类型兼容。
+
+
+希望这个解释能够帮助你理解 `thenCombine()` 的用法。如果你还有其他问题，请随时提出。
+
+**示例：**
+
+```java
+// region thenCombine：`thenCombine()` 方法用于将两个 CompletableFuture 的结果合并成一个新的 CompletableFuture。它会在两个 CompletableFuture 都完成后，将它们的结果作为参数传递给指定的 BiFunction，并将 BiFunction 的返回值作为新的 CompletableFuture 的结果。
+
+executor = Executors.newCachedThreadPool();
+
+CompletableFuture<Integer> completableFuture51 = CompletableFuture.supplyAsync(() -> 1, executor);
+CompletableFuture<Integer> completableFuture52 = CompletableFuture.supplyAsync(() -> 2, executor);
+CompletableFuture<Integer> completableFuture53 = completableFuture51.thenCombine(completableFuture52, Integer::sum);
+Assert.assertEquals(Integer.valueOf(3), completableFuture53.get());
 
 executor.shutdown();
 
