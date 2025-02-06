@@ -11,7 +11,7 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @SuperBuilder
 @NoArgsConstructor
-public class AsyncInvocationRestModel extends AsyncInvocationModel{
+public class AsyncInvocationRestModel extends AsyncInvocationModel {
     private String authenticationBasicUser;
     private String authenticationBasicPassword;
     private String host;

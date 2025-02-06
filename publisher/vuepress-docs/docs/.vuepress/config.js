@@ -580,6 +580,7 @@ module.exports = {
                         'rest-assured.md',
                         '缓存框架.md',
                         'stopwatch.md',
+                        'lombok.md',
                     ]
                 }
             ], '/elasticsearch/': [

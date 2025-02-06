@@ -2,17 +2,12 @@ package com.future.demo.lombok;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import java.io.IOException;
 import java.util.Map;
 
-/**
- *
- */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -24,7 +19,6 @@ public class AsyncInvocationModel {
     private Map<String, Object> parameters;
 
     /**
-     *
      * @return
      */
     public String toJson() {
@@ -38,16 +32,15 @@ public class AsyncInvocationModel {
     }
 
     /**
-     *
      * @param json
      * @return
      */
-    public static AsyncInvocationModel fromJson(String json, Class<? extends AsyncInvocationModel> cls) {
+    public static AsyncInvocationModel fromJson(String json, Class<? extends AsyncInvocationModel> cls) throws IOException {
         AsyncInvocationModel asyncInvocationModel = null;
         try {
             asyncInvocationModel = OMInstance.readValue(json, cls);
         } catch (IOException e) {
-            e.printStackTrace();
+            throw e;
         }
         return asyncInvocationModel;
     }
