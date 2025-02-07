@@ -1316,6 +1316,12 @@ public void testStreamForEach() {
         this.put("k2", "v2");
     }};
     map.entrySet().forEach(entry -> log.debug("key={}, value={}", entry.getKey(), entry.getValue()));
+
+    // 测试带索引的遍历
+    // https://stackoverflow.com/questions/18552005/is-there-a-concise-way-to-iterate-over-a-stream-with-indices-in-java-8
+    List<String> list = Arrays.asList("a", "b", "c");
+    List<String> stringList = IntStream.range(0, list.size()).filter(i -> !list.get(i).equals("b")).mapToObj(list::get).collect(Collectors.toList());
+    Assert.assertArrayEquals(new String[]{"a", "c"}, stringList.toArray());
 }
 ```
 
