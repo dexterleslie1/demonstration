@@ -1288,5 +1288,999 @@ try{
 * 需要所有任务都完成才能继续执行后续操作，使用 `allOf`。
 * 只需要任意一个任务完成即可继续执行后续操作，使用 `anyOf`。
 
-
 记住处理异常，`join()` 方法会抛出异常，需要用 `try-catch` 块捕获或者使用 `handle` 方法优雅处理。  在实际应用中，根据你的需求选择合适的异常处理策略。
+
+
+
+## 锁
+
+
+
+#### 悲观锁和乐观锁
+
+乐观锁和悲观锁是两种不同的并发控制策略，它们在处理数据并发访问时采取不同的方法：
+
+**悲观锁 (Pessimistic Locking):**
+
+* **核心思想:**  悲观锁总是假设并发冲突总是会发生，因此它在访问数据时会先获取锁，确保在整个操作过程中不会有其他线程修改数据。  只有获取到锁的线程才能访问数据，其他线程必须等待。
+* **实现方式:**  通常使用数据库锁机制或代码锁机制（例如 Java 中的 `synchronized` 关键字或 `ReentrantLock`）。
+* **优点:**  简单易懂，能够保证数据的完整性和一致性。
+* **缺点:**  性能较低，因为锁的竞争会导致线程阻塞，降低并发效率。  如果锁竞争激烈，程序性能会严重下降。  容易产生死锁问题。
+
+
+**乐观锁 (Optimistic Locking):**
+
+* **核心思想:**  乐观锁总是假设并发冲突很少发生，因此它在访问数据时不加锁。  它会在更新数据之前检查数据是否被修改过。如果数据没有被修改，则更新数据；如果数据已经被修改，则通常会回滚事务或抛出异常，让程序员处理冲突。
+* **实现方式:**  通常使用版本号或时间戳机制。  在数据库中，可以通过添加版本号列来实现乐观锁。  在代码中，可以使用 CAS (Compare And Swap) 指令或原子操作。
+* **优点:**  性能较高，因为没有锁的竞争，并发效率高。  减少了死锁的可能性。
+* **缺点:**  需要额外的机制来检测并发冲突，增加程序复杂度。  如果并发冲突频繁发生，则乐观锁的效率反而会降低。  可能出现ABA问题。
+
+
+**版本号实现乐观锁示例 (数据库层面):**
+
+假设数据库表 `users` 中有 `id` 和 `version` 两个字段，`version` 用于表示版本号。
+
+更新语句：
+
+```sql
+UPDATE users SET name = 'newName', version = version + 1 WHERE id = 1 AND version = 1;
+```
+
+这条语句只会在 `id` 为 1 且 `version` 为 1 的情况下更新数据，并把 `version` 加 1。如果另一个线程已经修改了该记录，`version` 值就不再是 1，更新语句将不会执行，从而避免了数据冲突。
+
+
+**CAS 实现乐观锁示例 (代码层面):**
+
+Java 中的 `AtomicInteger` 类就使用了 CAS 机制来实现乐观锁。
+
+```java
+import java.util.concurrent.atomic.AtomicInteger;
+
+public class OptimisticLockExample {
+    private AtomicInteger count = new AtomicInteger(0);
+
+    public int increment() {
+        int expectedValue = count.get();
+        while (!count.compareAndSet(expectedValue, expectedValue + 1)) {
+            expectedValue = count.get(); // 重新获取当前值
+        }
+        return count.get();
+    }
+}
+```
+
+`compareAndSet` 方法会比较当前值和期望值是否相等，如果相等则更新为新值，并返回 `true`；否则返回 `false`，需要重新获取当前值并再次尝试。
+
+
+**选择策略:**
+
+选择乐观锁还是悲观锁取决于具体的应用场景：
+
+* **并发冲突频繁:**  选择悲观锁，以保证数据的完整性。
+* **并发冲突较少:**  选择乐观锁，以提高性能。
+* **对一致性要求高:**  选择悲观锁。
+* **对性能要求高:**  选择乐观锁。
+
+
+总而言之，乐观锁和悲观锁各有优缺点，需要根据实际情况选择合适的并发控制策略。  在实际应用中，也可能结合两种锁的优势，例如在某些场景下使用悲观锁，在其他场景下使用乐观锁。  此外，还要注意乐观锁的ABA问题，以及在高并发场景下可能存在的性能瓶颈。
+
+
+
+### synchronized
+
+#### 介绍
+
+Java 的 `synchronized` 关键字是用于实现同步的机制，它可以保证在同一时刻只有一个线程可以访问被 `synchronized` 修饰的代码块或方法。这主要用于解决多线程环境下的并发问题，例如避免数据竞争和保证线程安全。
+
+`synchronized` 可以用在以下两种地方：
+
+**1. synchronized 方法:**
+
+将 `synchronized` 关键字放在方法声明之前，可以使整个方法成为同步方法。  这意味着当一个线程正在执行该同步方法时，其他线程将无法执行该方法，直到当前线程执行完毕释放锁。
+
+```java
+public class Counter {
+    private int count = 0;
+
+    public synchronized void increment() { // synchronized 方法
+        count++;
+    }
+
+    public int getCount() {
+        return count;
+    }
+}
+```
+
+在这个例子中，`increment()` 方法是同步方法。  每个线程在调用 `increment()` 方法时都会获取同一把锁（锁是 `Counter` 对象本身），从而保证了 `count` 变量的原子性操作。
+
+
+**2. synchronized 代码块:**
+
+将 `synchronized` 关键字与代码块一起使用，可以更精细地控制同步的范围。  `synchronized` 代码块需要指定一个锁对象，只有获取到该锁对象的线程才能执行该代码块。
+
+```java
+public class Counter {
+    private int count = 0;
+    private final Object lock = new Object(); // 锁对象
+
+    public void increment() {
+        synchronized (lock) { // synchronized 代码块
+            count++;
+        }
+    }
+
+    public int getCount() {
+        return count;
+    }
+}
+```
+
+在这个例子中，`lock` 对象充当锁。  所有线程在进入 `synchronized` 代码块之前都必须获取 `lock` 对象的锁。  这比 `synchronized` 方法更灵活，因为它允许你只同步需要同步的部分代码，而不是整个方法。
+
+
+**锁的机制:**
+
+`synchronized` 关键字底层依赖于 Java 对象头中的锁标记。  当一个线程获取锁时，JVM 会修改对象头中的锁标记，表示该对象已经被锁住。  其他线程试图获取该锁时，会阻塞直到锁被释放。  释放锁发生在 `synchronized` 代码块或方法执行完毕时。
+
+
+**隐式锁和显式锁:**
+
+* **隐式锁 (Intrinsic Lock):**  当使用 `synchronized` 方法时，锁对象是该方法所属的对象实例。  也称为“对象锁”或“监视器锁”。
+* **显式锁 (Explicit Lock):**  当使用 `synchronized` 代码块时，锁对象可以是任何对象，由开发者指定。
+
+
+**潜在问题:**
+
+* **性能损耗:**  `synchronized` 会带来一定的性能损耗，因为它涉及到线程的阻塞和上下文切换。  过度使用 `synchronized` 可能会导致程序性能下降。
+* **死锁:**  如果多个线程相互持有对方需要的锁，则可能发生死锁，导致程序无法继续执行。
+* **活锁:**  线程不断尝试获取锁但始终无法获取，导致程序无法继续执行。
+
+
+**替代方案:**
+
+对于高并发场景，可以考虑使用更高效的同步机制，例如：
+
+* **ReentrantLock:**  一个可重入的互斥锁，提供比 `synchronized` 更丰富的功能，例如公平锁、超时获取锁等。
+* **ConcurrentHashMap:**  一个线程安全的 HashMap 实现，用于高效地处理并发访问。
+* **AtomicInteger, AtomicLong 等原子类:**  提供原子性的操作，避免数据竞争。
+
+选择哪种同步机制取决于具体的应用场景和性能要求。  对于简单的同步需求，`synchronized` 足够使用；对于更复杂的场景，可能需要考虑使用更高级的同步机制。  在高并发场景下，应优先考虑使用无锁数据结构或其他更高效的并发编程技术，以最大限度地提高性能。
+
+
+
+#### 对象锁和类锁
+
+Java 中的 `synchronized` 关键字可以用于实现对象锁和类锁，它们在作用范围和粒度上有所不同：
+
+**1. 对象锁 (Instance Lock):**
+
+* **作用范围:**  `synchronized` 修饰实例方法 (非静态方法) 或同步代码块，其中 `this` 作为锁对象。  这意味着只有持有该对象锁的线程才能执行该方法或代码块。  不同的对象实例拥有独立的锁。
+
+* **代码示例:**
+
+```java
+public class MyObject {
+    public synchronized void synchronizedMethod() {
+        // ... synchronized code ...
+    }
+
+    public void otherMethod() {
+        synchronized (this) {
+            // ... synchronized code ...
+        }
+    }
+}
+```
+
+在这个例子中，`synchronizedMethod()` 使用隐式对象锁 `this`，而 `otherMethod()` 使用显式对象锁 `this`。  如果创建了两个 `MyObject` 实例，`obj1` 和 `obj2`，那么 `obj1.synchronizedMethod()` 和 `obj2.synchronizedMethod()` 可以同时执行，因为它们持有的是不同的对象锁。
+
+
+**2. 类锁 (Class Lock):**
+
+* **作用范围:** `synchronized` 修饰静态方法 (static 方法) 或同步代码块，其中 `MyObject.class` (或其他类名.class) 作为锁对象。这意味着所有线程在访问该静态方法或代码块时，都需要竞争同一个锁，只有一个线程可以执行。
+
+* **代码示例:**
+
+```java
+public class MyObject {
+    public static synchronized void synchronizedStaticMethod() {
+        // ... synchronized code ...
+    }
+
+    public static void otherStaticMethod() {
+        synchronized (MyObject.class) {
+            // ... synchronized code ...
+        }
+    }
+}
+```
+
+在这个例子中，`synchronizedStaticMethod()` 和 `otherStaticMethod()` 都使用了 `MyObject.class` 作为锁对象。  任何线程想要执行这些静态方法，都必须获得这个类锁。
+
+
+**对象锁和类锁的区别总结:**
+
+| 特性     | 对象锁 (Instance Lock)                  | 类锁 (Class Lock)                    |
+| -------- | --------------------------------------- | ------------------------------------ |
+| 锁对象   | `this` (或在同步代码块中指定的任意对象) | `ClassName.class` (或其他类名.class) |
+| 作用范围 | 实例方法或同步代码块                    | 静态方法或同步代码块                 |
+| 锁粒度   | 细粒度，每个对象实例拥有独立的锁        | 粗粒度，所有对象实例共享同一个锁     |
+| 竞争强度 | 相对较低                                | 相对较高，容易成为瓶颈               |
+
+
+**选择对象锁还是类锁:**
+
+* 使用对象锁来保护实例变量或与特定对象实例相关的数据。
+* 使用类锁来保护静态变量或与类本身相关的数据。
+
+选择哪种类型的锁取决于你要保护的数据范围和并发控制的粒度。  如果需要更高的并发性，通常建议使用对象锁。  如果需要保证对共享静态资源的独占访问，则应该使用类锁。  但是，要小心类锁的竞争，因为它可能成为性能瓶颈。
+
+记住，不当的锁使用可能会导致死锁或性能问题。  需要仔细设计和测试你的代码，以确保正确和高效地使用 `synchronized`。
+
+
+
+#### 示例
+
+```java
+// region synchronized 锁测试
+
+SynchronizedTestingAssistantObject synchronizedTestingAssistantObject1 = new SynchronizedTestingAssistantObject();
+SynchronizedTestingAssistantObject synchronizedTestingAssistantObject2 = new SynchronizedTestingAssistantObject();
+
+// 两个 synchronized 并且同一个实例的方法，锁互斥
+CompletableFuture<Void> completableFuture1 = CompletableFuture.runAsync(() -> synchronizedTestingAssistantObject1.instanceMethod1WithSynchronized("c1"), this.executor);
+CompletableFuture<Void> completableFuture2 = CompletableFuture.runAsync(() -> synchronizedTestingAssistantObject1.instanceMethod2WithSynchronized("c2"), this.executor);
+CompletableFuture.allOf(completableFuture1, completableFuture2).join();
+Assert.assertTrue(MyCheckPoint.isBefore("c1", "c2"));
+MyCheckPoint.clear();
+
+// 一个 synchronized 实例方法，一个普通实例方法，同一个实例，锁不互斥
+completableFuture1 = CompletableFuture.runAsync(() -> synchronizedTestingAssistantObject1.instanceMethod1WithSynchronized("c1"), this.executor);
+completableFuture2 = CompletableFuture.runAsync(() -> synchronizedTestingAssistantObject1.instanceMethod3WithoutSynchronized("c2"), this.executor);
+CompletableFuture.allOf(completableFuture1, completableFuture2).join();
+Assert.assertTrue(MyCheckPoint.isBefore("c2", "c1"));
+MyCheckPoint.clear();
+
+// 两个 synchronized 并且不是同一个实例的方法，锁不互斥
+completableFuture1 = CompletableFuture.runAsync(() -> synchronizedTestingAssistantObject1.instanceMethod1WithSynchronized("c1"), this.executor);
+completableFuture2 = CompletableFuture.runAsync(() -> synchronizedTestingAssistantObject2.instanceMethod3WithoutSynchronized("c2"), this.executor);
+CompletableFuture.allOf(completableFuture1, completableFuture2).join();
+Assert.assertTrue(MyCheckPoint.isBefore("c2", "c1"));
+MyCheckPoint.clear();
+
+// 两个 synchronized 静态方法并且是同一个实例，锁互斥
+completableFuture1 = CompletableFuture.runAsync(() -> synchronizedTestingAssistantObject1.staticMethod1WithSynchronized("c1"), this.executor);
+completableFuture2 = CompletableFuture.runAsync(() -> synchronizedTestingAssistantObject1.staticMethod2WithSynchronized("c2"), this.executor);
+CompletableFuture.allOf(completableFuture1, completableFuture2).join();
+Assert.assertTrue(MyCheckPoint.isBefore("c1", "c2"));
+MyCheckPoint.clear();
+
+// 两个 synchronized 静态方法并且不是同一个实例，锁互斥
+completableFuture1 = CompletableFuture.runAsync(() -> synchronizedTestingAssistantObject1.staticMethod1WithSynchronized("c1"), this.executor);
+completableFuture2 = CompletableFuture.runAsync(() -> synchronizedTestingAssistantObject2.staticMethod2WithSynchronized("c2"), this.executor);
+CompletableFuture.allOf(completableFuture1, completableFuture2).join();
+Assert.assertTrue(MyCheckPoint.isBefore("c1", "c2"));
+MyCheckPoint.clear();
+
+// 一个 synchronized 静态方法，一个 synchronized 实例方法，同一个实例，锁不互斥
+completableFuture1 = CompletableFuture.runAsync(() -> synchronizedTestingAssistantObject1.staticMethod1WithSynchronized("c1"), this.executor);
+completableFuture2 = CompletableFuture.runAsync(() -> synchronizedTestingAssistantObject1.instanceMethod2WithSynchronized("c2"), this.executor);
+CompletableFuture.allOf(completableFuture1, completableFuture2).join();
+Assert.assertTrue(MyCheckPoint.isBefore("c2", "c1"));
+MyCheckPoint.clear();
+
+// 一个 synchronized 静态方法，一个 synchronized 实例方法，不是同一个实例，锁不互斥
+completableFuture1 = CompletableFuture.runAsync(() -> synchronizedTestingAssistantObject1.staticMethod1WithSynchronized("c1"), this.executor);
+completableFuture2 = CompletableFuture.runAsync(() -> synchronizedTestingAssistantObject2.instanceMethod2WithSynchronized("c2"), this.executor);
+CompletableFuture.allOf(completableFuture1, completableFuture2).join();
+Assert.assertTrue(MyCheckPoint.isBefore("c2", "c1"));
+MyCheckPoint.clear();
+
+// endregion
+```
+
+
+
+#### 性能
+
+```java
+public static class MyObject {
+    public synchronized void methodSimulateLongRunTaskWithSynchronized() {
+        try {
+            TimeUnit.MILLISECONDS.sleep(5);
+        } catch (InterruptedException ignored) {
+
+        }
+    }
+
+    public void methodSimulateLongRunTaskWithoutSynchronized() {
+        try {
+            TimeUnit.MILLISECONDS.sleep(5);
+        } catch (InterruptedException ignored) {
+
+        }
+    }
+
+    final static int AmountVar = 320;
+    final static double DoubleVar = 12.328383984984;
+
+    public synchronized double methodWithSynchronized() {
+        return AmountVar * (DoubleVar - 1);
+    }
+
+    public double methodWithoutSynchronized() {
+        return AmountVar * (DoubleVar - 1);
+    }
+}
+```
+
+```java
+/**
+ * 测试模拟耗时逻辑并且使用 synchronized
+ *
+ * @param blackhole
+ */
+@Benchmark
+public void testMethodSimulateLongRunTaskWithSynchronized(Blackhole blackhole) {
+    myObject.methodSimulateLongRunTaskWithSynchronized();
+}
+
+/**
+ * 测试模拟耗时逻辑并且不使用 synchronized
+ *
+ * @param blackhole
+ */
+@Benchmark
+public void testMethodSimulateLongRunTaskWithoutSynchronized(Blackhole blackhole) {
+    myObject.methodSimulateLongRunTaskWithoutSynchronized();
+}
+
+/**
+ * 测试方法 synchronized 性能
+ *
+ * @param blackhole
+ */
+@Benchmark
+public void testMethodWithSynchronized(Blackhole blackhole) {
+    blackhole.consume(myObject.methodWithSynchronized());
+}
+
+/**
+ * 测试方法没有 synchronized 性能
+ *
+ * @param blackhole
+ */
+@Benchmark
+public void testMethodWithoutSynchronized(Blackhole blackhole) {
+    blackhole.consume(myObject.methodWithoutSynchronized());
+}
+```
+
+```
+Benchmark                                                             Mode  Cnt          Score           Error  Units
+LockBenchmarkTests.testMethodSimulateLongRunTaskWithSynchronized     thrpt    3        186.583 ±       515.280  ops/s
+LockBenchmarkTests.testMethodSimulateLongRunTaskWithoutSynchronized  thrpt    3       1453.983 ±        80.062  ops/s
+LockBenchmarkTests.testMethodWithSynchronized                        thrpt    3   41255924.770 ±  12131495.283  ops/s
+LockBenchmarkTests.testMethodWithoutSynchronized                     thrpt    3  919558366.757 ± 730791882.673  ops/s
+```
+
+- synchronized 会导致并发线程竞争锁资源导致排队处理并发性能下降。
+
+
+
+### ReentrantLock - 公平锁和非公平锁
+
+#### 介绍
+
+Java中的公平锁和非公平锁是`ReentrantLock`类提供的两种不同的锁获取策略。它们的区别在于线程获取锁的顺序：
+
+**1. 非公平锁 (Non-Fair Lock):**
+
+* **特性:**  线程尝试获取锁时，不考虑等待队列中的顺序。  如果锁空闲，则直接尝试获取，即使队列中有其他线程等待更长时间。这类似于现实生活中“先到先得”的场景。
+
+* **性能:**  通常比公平锁性能更高，因为避免了队列管理的开销。  减少了线程上下文切换的次数，因为线程可以抢占锁，而不需要一直等待。
+
+* **适用场景:**  在大多数情况下，非公平锁是首选，因为它具有更高的吞吐量和性能。 尤其适用于锁竞争不激烈的情况。
+
+
+**2. 公平锁 (Fair Lock):**
+
+* **特性:**  线程获取锁时，严格按照等待队列中的顺序进行。  先到达的线程先获得锁。  这确保了所有线程都有公平的机会获取锁。
+
+* **性能:**  通常比非公平锁性能略低，因为需要维护等待队列和管理线程的等待顺序，增加了开销。 也会增加线程上下文切换的次数。
+
+* **适用场景:**  公平锁适用于需要保证所有线程都能得到公平对待的场景，例如避免饥饿现象（某些线程长期无法获取锁）。  但需要权衡性能。
+
+
+
+**ReentrantLock 的构造函数:**
+
+`ReentrantLock` 类有两个构造函数：
+
+* `ReentrantLock():` 创建一个非公平锁 (默认)。
+* `ReentrantLock(boolean fair):` 创建一个公平锁或非公平锁，根据 `fair` 参数的值决定 (true 为公平锁，false 为非公平锁)。
+
+
+**代码示例:**
+
+```java
+import java.util.concurrent.locks.ReentrantLock;
+
+public class FairAndUnfairLocks {
+    public static void main(String[] args) {
+        // 非公平锁
+        ReentrantLock unfairLock = new ReentrantLock();
+
+        // 公平锁
+        ReentrantLock fairLock = new ReentrantLock(true);
+
+        // ... 使用 unfairLock 和 fairLock ...
+    }
+}
+```
+
+**总结:**
+
+| 特性       | 非公平锁 (Non-Fair)                              | 公平锁 (Fair)                                     |
+| ---------- | ------------------------------------------------ | ------------------------------------------------- |
+| 获取锁顺序 | 不考虑等待队列顺序，直接尝试获取                 | 严格按照等待队列顺序获取                          |
+| 性能       | 通常更高                                         | 通常较低                                          |
+| 适用场景   | 锁竞争不激烈，追求高吞吐量                       | 需要保证所有线程公平，避免饥饿现象                |
+| 默认情况   | `ReentrantLock()` 构造函数创建的锁是**非公平锁** | 需要显式指定 `new ReentrantLock(true)` 才为公平锁 |
+
+
+在大多数情况下，除非你有非常严格的公平性要求，否则非公平锁是更好的选择，因为它具有更高的性能。  公平锁虽然保证公平性，但性能损失可能很大，在高并发场景下可能会导致吞吐量下降。  选择哪种类型的锁取决于你的应用程序的特定需求和性能要求。
+
+
+
+#### 示例
+
+```java
+// region 公平锁和非公平锁
+
+// 非公平锁测试
+ReentrantLock reentrantLock = new ReentrantLock();
+AtomicLong counter = new AtomicLong(1000);
+AtomicLong lockCounter1 = new AtomicLong();
+AtomicLong lockCounter2 = new AtomicLong();
+AtomicLong lockCounter3 = new AtomicLong();
+ReentrantLock finalReentrantLock3 = reentrantLock;
+AtomicLong finalCounter3 = counter;
+AtomicLong finalLockCounter3 = lockCounter1;
+CompletableFuture<Void> completableFuture1 = CompletableFuture.runAsync(() -> {
+    while (true) {
+        try {
+            finalReentrantLock3.lock();
+
+            try {
+                TimeUnit.MILLISECONDS.sleep(1);
+            } catch (InterruptedException ignored) {
+
+            }
+
+            if (finalCounter3.get() <= 0) {
+                break;
+            }
+            finalCounter3.decrementAndGet();
+            finalLockCounter3.incrementAndGet();
+        } finally {
+            finalReentrantLock3.unlock();
+        }
+    }
+}, this.executor);
+ReentrantLock finalReentrantLock4 = reentrantLock;
+AtomicLong finalCounter4 = counter;
+AtomicLong finalLockCounter4 = lockCounter2;
+CompletableFuture<Void> completableFuture2 = CompletableFuture.runAsync(() -> {
+    while (true) {
+        try {
+            finalReentrantLock4.lock();
+
+            try {
+                TimeUnit.MILLISECONDS.sleep(1);
+            } catch (InterruptedException ignored) {
+
+            }
+
+            if (finalCounter4.get() <= 0) {
+                break;
+            }
+            finalCounter4.decrementAndGet();
+            finalLockCounter4.incrementAndGet();
+        } finally {
+            finalReentrantLock4.unlock();
+        }
+    }
+}, this.executor);
+ReentrantLock finalReentrantLock5 = reentrantLock;
+AtomicLong finalCounter5 = counter;
+AtomicLong finalLockCounter5 = lockCounter3;
+CompletableFuture<Void> completableFuture3 = CompletableFuture.runAsync(() -> {
+    while (true) {
+        try {
+            finalReentrantLock5.lock();
+
+            try {
+                TimeUnit.MILLISECONDS.sleep(1);
+            } catch (InterruptedException ignored) {
+
+            }
+
+            if (finalCounter5.get() <= 0) {
+                break;
+            }
+            finalCounter5.decrementAndGet();
+            finalLockCounter5.incrementAndGet();
+        } finally {
+            finalReentrantLock5.unlock();
+        }
+    }
+}, this.executor);
+CompletableFuture.allOf(completableFuture1, completableFuture2, completableFuture3).join();
+// 从输出结果中可以看出各个线程获取到的锁的次数不平均
+log.debug("lockCounter1=" + lockCounter1.get() + ",lockCounter2=" + lockCounter2.get() + ",lockCounter3=" + lockCounter3.get());
+
+// 公平锁测试
+reentrantLock = new ReentrantLock(true);
+counter = new AtomicLong(1000);
+lockCounter1 = new AtomicLong();
+lockCounter2 = new AtomicLong();
+lockCounter3 = new AtomicLong();
+ReentrantLock finalReentrantLock = reentrantLock;
+AtomicLong finalCounter = counter;
+AtomicLong finalLockCounter = lockCounter1;
+completableFuture1 = CompletableFuture.runAsync(() -> {
+    while (true) {
+        try {
+            finalReentrantLock.lock();
+
+            try {
+                TimeUnit.MILLISECONDS.sleep(1);
+            } catch (InterruptedException ignored) {
+
+            }
+
+            if (finalCounter.get() <= 0) {
+                break;
+            }
+            finalCounter.decrementAndGet();
+            finalLockCounter.incrementAndGet();
+        } finally {
+            finalReentrantLock.unlock();
+        }
+    }
+}, this.executor);
+ReentrantLock finalReentrantLock1 = reentrantLock;
+AtomicLong finalCounter1 = counter;
+AtomicLong finalLockCounter1 = lockCounter2;
+completableFuture2 = CompletableFuture.runAsync(() -> {
+    while (true) {
+        try {
+            finalReentrantLock1.lock();
+
+            try {
+                TimeUnit.MILLISECONDS.sleep(1);
+            } catch (InterruptedException ignored) {
+
+            }
+
+            if (finalCounter1.get() <= 0) {
+                break;
+            }
+            finalCounter1.decrementAndGet();
+            finalLockCounter1.incrementAndGet();
+        } finally {
+            finalReentrantLock1.unlock();
+        }
+    }
+}, this.executor);
+ReentrantLock finalReentrantLock2 = reentrantLock;
+AtomicLong finalCounter2 = counter;
+AtomicLong finalLockCounter2 = lockCounter3;
+completableFuture3 = CompletableFuture.runAsync(() -> {
+    while (true) {
+        try {
+            finalReentrantLock2.lock();
+
+            try {
+                TimeUnit.MILLISECONDS.sleep(1);
+            } catch (InterruptedException ignored) {
+
+            }
+
+            if (finalCounter2.get() <= 0) {
+                break;
+            }
+            finalCounter2.decrementAndGet();
+            finalLockCounter2.incrementAndGet();
+        } finally {
+            finalReentrantLock2.unlock();
+        }
+    }
+}, this.executor);
+CompletableFuture.allOf(completableFuture1, completableFuture2, completableFuture3).join();
+// 从输出结果中可以看出各个线程获取到的锁的次数平均
+log.debug("lockCounter1=" + lockCounter1.get() + ",lockCounter2=" + lockCounter2.get() + ",lockCounter3=" + lockCounter3.get());
+
+// endregion
+```
+
+
+
+#### 性能
+
+```java
+ReentrantLock reentrantLockUnfair = new ReentrantLock();
+ReentrantLock reentrantLockFair = new ReentrantLock(true);
+```
+
+```java
+/**
+ * 测试非公平锁性能
+ */
+@Benchmark
+public void testReentrantLockUnfair() {
+    try {
+        reentrantLockUnfair.lock();
+    } finally {
+        reentrantLockUnfair.unlock();
+    }
+}
+
+/**
+ * 测试公平锁性能
+ */
+@Benchmark
+public void testReentrantLockFair() {
+    try {
+        reentrantLockFair.lock();
+    } finally {
+        reentrantLockFair.unlock();
+    }
+}
+```
+
+```
+Benchmark                                    Mode  Cnt         Score         Error  Units
+LockBenchmarkTests.testReentrantLockFair    thrpt    3     20858.606 ±   16254.369  ops/s
+LockBenchmarkTests.testReentrantLockUnfair  thrpt    3  48043004.839 ± 4146679.284  ops/s
+```
+
+- 非公平锁性能明显高于公平锁性能
+
+
+
+### 死锁和排查
+
+#### 什么是死锁呢？
+
+Java 多线程死锁指的是两个或多个线程因为互相持有对方需要的资源，而永久地阻塞，无法继续执行的情况。  这就像一个僵局，每个线程都在等待其他线程释放它需要的资源，但这些资源永远不会被释放。
+
+**死锁产生的四个必要条件:**
+
+为了发生死锁，必须同时满足以下四个条件：
+
+1. **互斥 (Mutual Exclusion):**  资源只能被一个线程独占访问。  这意味着多个线程不能同时访问同一个资源。
+
+2. **持有并等待 (Hold and Wait):**  一个线程持有至少一个资源，并等待获取其他线程持有的资源。
+
+3. **不可抢占 (No Preemption):**  资源不能被抢占。  一个线程已经获得的资源，在未主动释放之前，不能被其他线程强行夺走。
+
+4. **循环等待 (Circular Wait):**  存在一个循环等待的资源链，例如线程 A 等待线程 B 释放资源，线程 B 等待线程 C 释放资源，而线程 C 又等待线程 A 释放资源，形成一个闭环。
+
+
+**死锁的示例:**
+
+假设有两个线程 `Thread1` 和 `Thread2`，它们需要访问两个资源 `ResourceA` 和 `ResourceB`。
+
+* `Thread1` 获取了 `ResourceA`，然后试图获取 `ResourceB`。
+* `Thread2` 获取了 `ResourceB`，然后试图获取 `ResourceA`。
+
+现在，`Thread1` 和 `Thread2` 都被阻塞了：`Thread1` 等待 `Thread2` 释放 `ResourceB`，`Thread2` 等待 `Thread1` 释放 `ResourceA`。  这就是死锁。
+
+
+**死锁的代码示例:**
+
+```java
+public class DeadlockExample {
+    private static Object resourceA = new Object();
+    private static Object resourceB = new Object();
+
+    public static void main(String[] args) {
+        Thread thread1 = new Thread(() -> {
+            synchronized (resourceA) {
+                System.out.println("Thread 1: Holding resource A");
+                try {
+                    Thread.sleep(1000); // Simulate some work
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                synchronized (resourceB) {
+                    System.out.println("Thread 1: Holding resource B");
+                }
+            }
+        });
+
+        Thread thread2 = new Thread(() -> {
+            synchronized (resourceB) {
+                System.out.println("Thread 2: Holding resource B");
+                try {
+                    Thread.sleep(1000); // Simulate some work
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                synchronized (resourceA) {
+                    System.out.println("Thread 2: Holding resource A");
+                }
+            }
+        });
+
+        thread1.start();
+        thread2.start();
+    }
+}
+```
+
+在这个例子中，`thread1` 获取 `resourceA` 后尝试获取 `resourceB`，而 `thread2` 获取 `resourceB` 后尝试获取 `resourceA`，从而导致死锁。
+
+
+**避免死锁的方法:**
+
+* **避免循环依赖:**  仔细设计代码，避免形成循环依赖的锁获取顺序。
+* **使用一致的锁获取顺序:**  如果多个线程需要访问多个锁，确保所有线程都以相同的顺序获取这些锁。
+* **使用超时机制:**  在尝试获取锁时设置超时时间，如果在超时时间内无法获取锁，则进行适当的处理，例如重试或放弃。
+* **使用更高级的锁机制:**  例如 `ReentrantReadWriteLock`，可以提高并发性。
+* **死锁检测工具:**  使用一些工具来检测和诊断死锁问题。
+
+死锁是一个复杂的问题，需要仔细分析代码和线程的执行流程才能有效避免。  良好的代码设计和测试至关重要。  仔细考虑资源的访问顺序，并采取预防措施，可以最大限度地减少死锁的发生。
+
+
+
+#### 死锁有哪些情况呢？
+
+Java 多线程死锁发生在两个或多个线程互相持有对方需要的资源，并且都在等待对方释放资源的情况。  这会导致所有参与死锁的线程都永久阻塞，无法继续执行。
+
+以下是几种常见的 Java 多线程死锁情况，并附带代码示例：
+
+**1. 互相持有锁的情况:**
+
+这是最常见的一种死锁情况。两个线程分别持有不同的锁，并且都需要获取对方持有的锁才能继续执行，最终导致互相等待，形成死锁。
+
+```java
+public class DeadlockExample1 {
+    private static Object lock1 = new Object();
+    private static Object lock2 = new Object();
+
+    public static void main(String[] args) {
+        Thread thread1 = new Thread(() -> {
+            synchronized (lock1) {
+                System.out.println("Thread 1: Holding lock 1...");
+                try {
+                    Thread.sleep(1000); // 模拟一些工作
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                synchronized (lock2) {
+                    System.out.println("Thread 1: Holding lock 2...");
+                }
+            }
+        });
+
+        Thread thread2 = new Thread(() -> {
+            synchronized (lock2) {
+                System.out.println("Thread 2: Holding lock 2...");
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                synchronized (lock1) {
+                    System.out.println("Thread 2: Holding lock 1...");
+                }
+            }
+        });
+
+        thread1.start();
+        thread2.start();
+    }
+}
+```
+
+在这个例子中，`thread1` 先获得 `lock1`，然后尝试获取 `lock2`，而 `thread2` 先获得 `lock2`，然后尝试获取 `lock1`。  如果 `thread1` 和 `thread2` 几乎同时运行，就可能发生死锁。
+
+**2.  循环依赖的情况:**
+
+多个线程之间形成循环依赖，每个线程都持有某个锁，并等待另一个线程释放它所持有的锁，形成一个闭环。
+
+```java
+public class DeadlockExample2 {
+    private static Object lock1 = new Object();
+    private static Object lock2 = new Object();
+    private static Object lock3 = new Object();
+
+    public static void main(String[] args) {
+        Thread thread1 = new Thread(() -> {
+            synchronized (lock1) {
+                synchronized (lock2) {
+                    synchronized (lock3) {
+                        // ...
+                    }
+                }
+            }
+        });
+
+        Thread thread2 = new Thread(() -> {
+            synchronized (lock3) {
+                synchronized (lock1) {
+                    synchronized (lock2) {
+                        // ...
+                    }
+                }
+            }
+        });
+        // ... more threads with different lock acquisition order forming a cycle ...
+
+        thread1.start();
+        thread2.start();
+    }
+}
+```
+
+这个例子中，如果有多个线程以不同的顺序获取这三个锁，就可能形成循环依赖并导致死锁。
+
+**3.  与 I/O 操作结合的情况:**
+
+线程在等待 I/O 操作完成的同时持有锁，而其他线程需要获取这个锁，导致死锁。  这种情况常常发生在网络编程或者数据库操作中。
+
+**避免死锁的方法:**
+
+- **避免循环依赖:**  仔细设计代码，避免多个线程之间形成循环依赖的锁获取顺序。
+- **使用一致的锁获取顺序:**  如果多个线程需要访问多个锁，确保所有线程都以相同的顺序获取这些锁。
+- **使用超时机制:**  在尝试获取锁时设置超时时间，如果在超时时间内无法获取锁，则进行适当的处理，例如重试或放弃。
+- **避免在持有锁时进行 I/O 操作:**  将 I/O 操作与锁获取分开，避免阻塞其他线程。
+- **使用更高级的锁机制:**  例如 `ReentrantReadWriteLock`，可以提高并发性。
+- **死锁检测工具:**  使用一些工具来检测和诊断死锁问题。
+
+记住，死锁是一个复杂的问题，需要仔细分析代码和线程的执行流程才能有效避免。  上面只是一些常见的死锁情况，实际情况可能更复杂。  良好的代码设计和测试至关重要。
+
+
+
+#### 死锁示例和排查
+
+示例代码：
+
+```java
+public class DeadLockTests {
+    /**
+     * 演示三条线程死锁情况
+     */
+    @Test
+    public void test() {
+        ExecutorService executor = Executors.newCachedThreadPool();
+
+        Object object1 = new Object();
+        Object object2 = new Object();
+        Object object3 = new Object();
+
+        CompletableFuture<Void> completableFuture1 = CompletableFuture.runAsync(() -> {
+            synchronized (object1) {
+                try {
+                    TimeUnit.SECONDS.sleep(1);
+                } catch (InterruptedException ignored) {
+                }
+                synchronized (object2) {
+                    try {
+                        TimeUnit.SECONDS.sleep(1);
+                    } catch (InterruptedException ignored) {
+                    }
+                    synchronized (object3) {
+                        try {
+                            TimeUnit.SECONDS.sleep(1);
+                        } catch (InterruptedException ignored) {
+                        }
+                    }
+                }
+            }
+        }, executor);
+        CompletableFuture<Void> completableFuture2 = CompletableFuture.runAsync(() -> {
+            synchronized (object2) {
+                try {
+                    TimeUnit.SECONDS.sleep(1);
+                } catch (InterruptedException ignored) {
+                }
+                synchronized (object1) {
+                    try {
+                        TimeUnit.SECONDS.sleep(1);
+                    } catch (InterruptedException ignored) {
+                    }
+                    synchronized (object3) {
+                        try {
+                            TimeUnit.SECONDS.sleep(1);
+                        } catch (InterruptedException ignored) {
+                        }
+                    }
+                }
+            }
+        }, executor);
+        CompletableFuture<Void> completableFuture3 = CompletableFuture.runAsync(() -> {
+            synchronized (object3) {
+                try {
+                    TimeUnit.SECONDS.sleep(1);
+                } catch (InterruptedException ignored) {
+                }
+                synchronized (object2) {
+                    try {
+                        TimeUnit.SECONDS.sleep(1);
+                    } catch (InterruptedException ignored) {
+                    }
+                    synchronized (object1) {
+                        try {
+                            TimeUnit.SECONDS.sleep(1);
+                        } catch (InterruptedException ignored) {
+                        }
+                    }
+                }
+            }
+        }, executor);
+        CompletableFuture.allOf(completableFuture1, completableFuture2, completableFuture3).join();
+
+        executor.shutdown();
+    }
+}
+```
+
+排查：
+
+- 获取 java 进程 id
+
+  ```bash
+  jps -l
+  ```
+
+- 查看线程死锁信息，其中 xxx 为 jps -l 查到的进程 id
+
+  ```bash
+  jstack xxx
+  ```
+
+- jstack 线程死锁信息如下：
+
+  ```
+  Found one Java-level deadlock:
+  =============================
+  "pool-1-thread-1":
+    waiting to lock monitor 0x00007ff804000fd0 (object 0x0000000715d7e6b8, a java.lang.Object),
+    which is held by "pool-1-thread-2"
+  
+  "pool-1-thread-2":
+    waiting to lock monitor 0x00007ff7f8000e70 (object 0x0000000715d7e6a8, a java.lang.Object),
+    which is held by "pool-1-thread-1"
+  
+  Java stack information for the threads listed above:
+  ===================================================
+  "pool-1-thread-1":
+  	at com.future.demo.DeadLockTests.lambda$test$0(DeadLockTests.java:30)
+  	- waiting to lock <0x0000000715d7e6b8> (a java.lang.Object)
+  	- locked <0x0000000715d7e6a8> (a java.lang.Object)
+  	at com.future.demo.DeadLockTests$$Lambda$40/0x00007ff840015000.run(Unknown Source)
+  	at java.util.concurrent.CompletableFuture$AsyncRun.run(java.base@17.0.11/CompletableFuture.java:1804)
+  	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@17.0.11/ThreadPoolExecutor.java:1136)
+  	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@17.0.11/ThreadPoolExecutor.java:635)
+  	at java.lang.Thread.run(java.base@17.0.11/Thread.java:842)
+  "pool-1-thread-2":
+  	at com.future.demo.DeadLockTests.lambda$test$1(DeadLockTests.java:50)
+  	- waiting to lock <0x0000000715d7e6a8> (a java.lang.Object)
+  	- locked <0x0000000715d7e6b8> (a java.lang.Object)
+  	at com.future.demo.DeadLockTests$$Lambda$41/0x00007ff840015228.run(Unknown Source)
+  	at java.util.concurrent.CompletableFuture$AsyncRun.run(java.base@17.0.11/CompletableFuture.java:1804)
+  	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@17.0.11/ThreadPoolExecutor.java:1136)
+  	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@17.0.11/ThreadPoolExecutor.java:635)
+  	at java.lang.Thread.run(java.base@17.0.11/Thread.java:842)
+  
+  Found 1 deadlock.
+  
+  ```
+
+  - 显示线程 pool-1-thread-1 和线程 pool-1-thread-2 相互等待。
+
