@@ -1167,12 +1167,126 @@ public class ThenCombineExample {
 
 executor = Executors.newCachedThreadPool();
 
-CompletableFuture<Integer> completableFuture51 = CompletableFuture.supplyAsync(() -> 1, executor);
-CompletableFuture<Integer> completableFuture52 = CompletableFuture.supplyAsync(() -> 2, executor);
-CompletableFuture<Integer> completableFuture53 = completableFuture51.thenCombine(completableFuture52, Integer::sum);
-Assert.assertEquals(Integer.valueOf(3), completableFuture53.get());
+CompletableFuture<List<Integer>> completableFuture51 = CompletableFuture.supplyAsync(() -> {
+    try {
+        TimeUnit.SECONDS.sleep(2);
+    } catch (InterruptedException ignored) {
+
+    }
+    return new ArrayList<Integer>() {{
+        this.add(1);
+        this.add(2);
+    }};
+}, executor);
+CompletableFuture<List<Integer>> completableFuture52 = CompletableFuture.supplyAsync(() -> {
+    try {
+        TimeUnit.SECONDS.sleep(1);
+    } catch (InterruptedException ignored) {
+
+    }
+    return new ArrayList<Integer>() {{
+        this.add(3);
+        this.add(4);
+    }};
+}, executor);
+CompletableFuture<List<Integer>> completableFuture53 = completableFuture51.thenCombine(completableFuture52, (a, b) -> {
+    a.addAll(b);
+    return a;
+});
+Assert.assertEquals(Arrays.asList(1, 2, 3, 4), completableFuture53.get());
 
 executor.shutdown();
 
 // endregion
 ```
+
+
+
+#### 用法 - CompletableFuture allOf 和 anyOf
+
+注意：参考下面示例即可，没有自己编写示例实验。
+
+`CompletableFuture` 的 `allOf` 和 `anyOf` 方法都用于组合多个 `CompletableFuture`，但它们的行为有所不同：
+
+**`allOf`:**
+
+* **作用:**  等待所有输入的 `CompletableFuture` 都完成。  只有当所有 future 都完成（无论成功或失败）后，`allOf` 返回的 `CompletableFuture` 才会完成。
+* **返回值:** 返回一个新的 `CompletableFuture`，其结果是一个 `void`，表示所有输入的 `CompletableFuture` 都已完成。你可以用 `thenRun`、`thenAccept` 或 `thenApply` 等方法在所有 future 完成后执行后续操作。
+* **异常处理:** 如果任何一个输入的 `CompletableFuture` 抛出异常，该异常会被收集到返回的 `CompletableFuture` 中，你可以在 `exceptionally` 或 `handle` 方法中进行处理。  但 `allOf` 不会阻止其他 future 的执行。
+* **用法示例:**
+
+```java
+CompletableFuture<String> future1 = CompletableFuture.supplyAsync(() -> {
+    // 模拟耗时操作1
+    Thread.sleep(1000);
+    return "Future 1";
+});
+
+CompletableFuture<String> future2 = CompletableFuture.supplyAsync(() -> {
+    // 模拟耗时操作2
+    Thread.sleep(1500);
+    return "Future 2";
+});
+
+CompletableFuture<String> future3 = CompletableFuture.supplyAsync(() -> {
+    // 模拟耗时操作3  故意抛出异常
+    Thread.sleep(500);
+    throw new RuntimeException("Future 3 failed!");
+});
+
+CompletableFuture<Void> allFutures = CompletableFuture.allOf(future1, future2, future3);
+
+allFutures.join(); // 等待所有 future 完成
+
+System.out.println("All futures completed.");
+
+allFutures.handle((v,e)->{
+    if(e!=null) System.out.println("Exception occured: " + e.getMessage());
+    return null;
+}).join();
+
+
+```
+
+
+**`anyOf`:**
+
+* **作用:** 等待任意一个输入的 `CompletableFuture` 完成。只要任何一个 future 完成（无论是成功还是失败），`anyOf` 返回的 `CompletableFuture` 就会完成，并返回第一个完成的 future 的结果。
+* **返回值:** 返回一个新的 `CompletableFuture`，其结果是第一个完成的 `CompletableFuture` 的结果。
+* **异常处理:** 如果第一个完成的 `CompletableFuture` 抛出异常，该异常会被传播到返回的 `CompletableFuture`。
+* **用法示例:**
+
+```java
+CompletableFuture<String> future1 = CompletableFuture.supplyAsync(() -> {
+    Thread.sleep(1000);
+    return "Future 1";
+});
+
+CompletableFuture<String> future2 = CompletableFuture.supplyAsync(() -> {
+    Thread.sleep(1500);
+    return "Future 2";
+});
+
+CompletableFuture<String> future3 = CompletableFuture.supplyAsync(() -> {
+    Thread.sleep(500);
+    throw new RuntimeException("Future 3 failed!");
+});
+
+CompletableFuture<Object> anyFuture = CompletableFuture.anyOf(future1, future2, future3);
+
+try{
+    System.out.println("First completed future result: " + anyFuture.join());
+}catch(Exception e){
+    System.out.println("Exception occured: " + e.getMessage());
+}
+```
+
+**总结:**
+
+选择 `allOf` 还是 `anyOf` 取决于你的需求：
+
+* 需要所有任务都完成才能继续执行后续操作，使用 `allOf`。
+* 只需要任意一个任务完成即可继续执行后续操作，使用 `anyOf`。
+
+
+记住处理异常，`join()` 方法会抛出异常，需要用 `try-catch` 块捕获或者使用 `handle` 方法优雅处理。  在实际应用中，根据你的需求选择合适的异常处理策略。

@@ -303,10 +303,33 @@ public class CompletableFutureTests {
 
         executor = Executors.newCachedThreadPool();
 
-        CompletableFuture<Integer> completableFuture51 = CompletableFuture.supplyAsync(() -> 1, executor);
-        CompletableFuture<Integer> completableFuture52 = CompletableFuture.supplyAsync(() -> 2, executor);
-        CompletableFuture<Integer> completableFuture53 = completableFuture51.thenCombine(completableFuture52, Integer::sum);
-        Assert.assertEquals(Integer.valueOf(3), completableFuture53.get());
+        CompletableFuture<List<Integer>> completableFuture51 = CompletableFuture.supplyAsync(() -> {
+            try {
+                TimeUnit.SECONDS.sleep(2);
+            } catch (InterruptedException ignored) {
+
+            }
+            return new ArrayList<Integer>() {{
+                this.add(1);
+                this.add(2);
+            }};
+        }, executor);
+        CompletableFuture<List<Integer>> completableFuture52 = CompletableFuture.supplyAsync(() -> {
+            try {
+                TimeUnit.SECONDS.sleep(1);
+            } catch (InterruptedException ignored) {
+
+            }
+            return new ArrayList<Integer>() {{
+                this.add(3);
+                this.add(4);
+            }};
+        }, executor);
+        CompletableFuture<List<Integer>> completableFuture53 = completableFuture51.thenCombine(completableFuture52, (a, b) -> {
+            a.addAll(b);
+            return a;
+        });
+        Assert.assertEquals(Arrays.asList(1, 2, 3, 4), completableFuture53.get());
 
         executor.shutdown();
 
