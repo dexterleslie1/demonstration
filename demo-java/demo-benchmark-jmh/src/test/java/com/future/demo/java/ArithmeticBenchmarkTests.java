@@ -9,12 +9,11 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.text.DecimalFormat;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 测试 double 数据类型格式化性能
+ * 测试算术运算性能
  */
 // https://blog.csdn.net/a23452/article/details/126680840
 @BenchmarkMode(Mode.Throughput)
@@ -25,14 +24,14 @@ import java.util.concurrent.TimeUnit;
 // 指定并发执行线程数
 // https://stackoverflow.com/questions/39644383/jmh-run-benchmark-concurrently
 @Threads(-1)
-public class DoubleFormatBenchmarkTests {
+public class ArithmeticBenchmarkTests {
 
     Random random = new Random(System.currentTimeMillis());
 
     public static void main(String[] args) throws RunnerException {
         //使用注解之后只需要配置一下include即可，fork和warmup、measurement都是注解
         Options opt = new OptionsBuilder()
-                .include(DoubleFormatBenchmarkTests.class.getSimpleName())
+                .include(ArithmeticBenchmarkTests.class.getSimpleName())
                 // 断点调试时fork=0
                 .forks(1)
                 // 发生错误停止测试
@@ -56,31 +55,24 @@ public class DoubleFormatBenchmarkTests {
     public void teardown() {
     }
 
+    final static int TotalAmount = 10000;
+    final static int AmountVar = 320;
     final static double DoubleVar = 123.45678966666;
-    final static String StringFormat = "%.6f";
 
     @Benchmark
-    public void testStringFormatWithDoubleParse(Blackhole blackhole) {
-        double d = Double.parseDouble(String.format(StringFormat, DoubleVar));
-        blackhole.consume(d);
+    public void testPrimitiveDataType(Blackhole blackhole) {
+        double d1 = AmountVar * (DoubleVar - 1);
+        double d2 = (d1 - (TotalAmount - AmountVar)) / TotalAmount;
+        blackhole.consume(d2);
     }
 
     final static int Scale = 6;
 
     @Benchmark
-    public void testBigDecimal(Blackhole blackhole) {
-        BigDecimal bigDecimal = new BigDecimal(DoubleVar).setScale(Scale, RoundingMode.DOWN);
-        double d = bigDecimal.doubleValue();
-        blackhole.consume(d);
-    }
-
-    final static String DecimalFormatString = "#.######";
-
-    @Benchmark
-    public void testDecimalFormat(Blackhole blackhole) {
-        DecimalFormat decimalFormat = new DecimalFormat(DecimalFormatString);
-        decimalFormat.setRoundingMode(RoundingMode.DOWN);
-        double d = Double.parseDouble(decimalFormat.format(DoubleVar));
-        blackhole.consume(d);
+    public void testBigDecimalDataType(Blackhole blackhole) {
+        double d1 = AmountVar * (DoubleVar - 1);
+        double d2 = (d1 - (TotalAmount - AmountVar)) / TotalAmount;
+        BigDecimal bigDecimal1 = new BigDecimal(d2).setScale(Scale, RoundingMode.DOWN);
+        blackhole.consume(bigDecimal1.doubleValue());
     }
 }
