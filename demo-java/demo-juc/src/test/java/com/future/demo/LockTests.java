@@ -5,12 +5,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Test;
 
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 @Slf4j
 public class LockTests {
@@ -25,7 +24,7 @@ public class LockTests {
 
     @Test
     public void testSynchronized() {
-        // region synchronized 锁测试
+        // region synchronized 锁几种情况测试
 
         SynchronizedTestingAssistantObject synchronizedTestingAssistantObject1 = new SynchronizedTestingAssistantObject();
         SynchronizedTestingAssistantObject synchronizedTestingAssistantObject2 = new SynchronizedTestingAssistantObject();
@@ -251,5 +250,120 @@ public class LockTests {
         log.debug("lockCounter1=" + lockCounter1.get() + ",lockCounter2=" + lockCounter2.get() + ",lockCounter3=" + lockCounter3.get());
 
         // endregion
+    }
+
+    /**
+     * 演示使用读写锁解决并发读写问题
+     */
+    @Test
+    public void testConcurrentReadWriteScenarioIssueSolvedByUsingReentrantReadWriteLock() throws InterruptedException {
+        ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
+
+        ShareResource shareResource = new ShareResource();
+
+        AtomicInteger flag = new AtomicInteger();
+        AtomicInteger flagRead = new AtomicInteger();
+        AtomicInteger flagWrite = new AtomicInteger();
+        CyclicBarrier cyclicBarrierRead = new CyclicBarrier(2, flagRead::incrementAndGet);
+        CyclicBarrier cyclicBarrierWrite = new CyclicBarrier(2, flagWrite::incrementAndGet);
+
+        ExecutorService executor = Executors.newCachedThreadPool();
+
+        for (int i = 0; i < 10; i++) {
+            executor.submit(() -> {
+
+                // 特意让程序先获取写锁
+                try {
+                    TimeUnit.MILLISECONDS.sleep(20);
+                } catch (InterruptedException ignored) {
+
+                }
+
+                ReentrantReadWriteLock.ReadLock lock = null;
+                try {
+                    lock = readWriteLock.readLock();
+                    lock.lock();
+
+                    int value = shareResource.getValue();
+                    if (value > 0) {
+                        flag.incrementAndGet();
+                    }
+
+                    try {
+                        // 读写锁支持并发读
+                        cyclicBarrierRead.await();
+                    } catch (InterruptedException | BrokenBarrierException ignored) {
+
+                    }
+                } finally {
+                    if (lock != null) {
+                        lock.unlock();
+                    }
+                }
+            });
+        }
+
+        for (int i = 0; i < 10; i++) {
+            executor.submit(() -> {
+                ReentrantReadWriteLock.WriteLock lock = null;
+                try {
+                    lock = readWriteLock.writeLock();
+                    lock.lock();
+
+                    // 模拟业务卡顿，所有读锁被阻塞
+                    try {
+                        TimeUnit.MILLISECONDS.sleep(20);
+                    } catch (InterruptedException ignored) {
+
+                    }
+
+                    shareResource.decrement();
+
+                    try {
+                        // 读写锁不支持并发写
+                        cyclicBarrierWrite.await(10, TimeUnit.MILLISECONDS);
+                    } catch (InterruptedException | BrokenBarrierException | TimeoutException ignored) {
+                    }
+                } finally {
+                    if (lock != null) {
+                        lock.unlock();
+                    }
+                }
+            });
+        }
+
+        executor.shutdown();
+        while (!executor.awaitTermination(50, TimeUnit.MILLISECONDS)) ;
+
+        // 读写锁支持并发读
+        org.junit.Assert.assertEquals(5, flagRead.get());
+        // 读写锁不支持并发写
+        org.junit.Assert.assertEquals(0, flagWrite.get());
+        // 读写锁不支持并发读写
+        org.junit.Assert.assertEquals(0, shareResource.getValue());
+        org.junit.Assert.assertEquals(0, flag.get());
+    }
+
+    static class ShareResource {
+        private int value = 1;
+
+        public int getValue() {
+            return value;
+        }
+
+        public void decrement() {
+            if (value == 0) {
+                return;
+            }
+
+            // 如果 decrement 方法没有并发锁控制，则 value-- 会被多次执行
+            try {
+                TimeUnit.MILLISECONDS.sleep(5);
+            } catch (InterruptedException ignored) {
+
+            }
+
+            value--;
+        }
     }
 }
