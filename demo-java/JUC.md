@@ -4074,5 +4074,165 @@ public class SemaphoreExample {
 
 选择使用哪个同步工具取决于你的具体需求。  如果需要控制对共享资源的并发访问，`Semaphore` 是一个不错的选择。  如果只需要控制一个线程访问共享资源，则可以使用 `Mutex` 或 `ReentrantLock`。  如果需要等待多个线程完成操作，则可以使用 `CountDownLatch`。
 
-
 记住在使用 `Semaphore` 后，要确保所有线程都释放了许可证，否则可能会导致资源泄漏。  在 `finally` 块中释放许可证是一个很好的实践。
+
+
+
+## 阻塞队列
+
+### 介绍
+
+Java 的 `BlockingQueue` 接口是一个队列，它实现了阻塞的队列操作。这意味着当队列为空时，从队列中获取元素的操作将会阻塞（等待），直到有元素被添加到队列中；当队列已满时，向队列中添加元素的操作将会阻塞，直到队列中有空闲空间。这种阻塞特性使得 `BlockingQueue` 非常适合用于生产者-消费者模式和其他需要线程间同步的场景。
+
+让我们更详细地探讨 `BlockingQueue`：
+
+**主要方法:**
+
+* **`put(E e)`:**  将元素 `e` 添加到队列中。如果队列已满，则阻塞直到有空间可用。
+* **`take()`:** 从队列中移除并返回头部的元素。如果队列为空，则阻塞直到有元素可用。
+* **`offer(E e)`:**  尝试将元素 `e` 添加到队列中。如果队列已满，则返回 `false` 而不阻塞。
+* **`poll()`:** 尝试从队列中移除并返回头部的元素。如果队列为空，则返回 `null` 而不阻塞。
+* **`offer(E e, long timeout, TimeUnit unit)`:** 尝试将元素 `e` 添加到队列中。如果队列已满，则阻塞最多指定的时间。
+* **`poll(long timeout, TimeUnit unit)`:** 尝试从队列中移除并返回头部的元素。如果队列为空，则阻塞最多指定的时间。
+* **`remainingCapacity()`:** 返回队列中剩余的容量。
+* **`size()`:** 返回队列中元素的数量。
+
+
+**BlockingQueue 的实现类:**
+
+Java 提供了几个 `BlockingQueue` 的实现类，每个类都有其自身的特性：
+
+* **`ArrayBlockingQueue`:** 基于数组的循环队列，具有固定大小。
+* **`LinkedBlockingQueue`:** 基于链表的队列，可以选择固定大小或无界大小。
+* **`PriorityBlockingQueue`:**  优先级队列，元素按照其自然顺序或自定义 Comparator 排序。注意，它不是阻塞的，`put` 操作永远不会阻塞，但 `take` 操作会阻塞直到队列非空。
+* **`DelayQueue`:**  延迟队列，只在元素的延迟时间到期后才能获取。
+* **`SynchronousQueue`:**  特殊的队列，容量为 0，每个 put 操作必须等待一个相应的 take 操作，反之亦然。
+
+
+**使用场景:**
+
+`BlockingQueue` 常用于以下场景：
+
+* **生产者-消费者模式:** 生产者线程将数据添加到队列中，消费者线程从队列中获取数据。`BlockingQueue` 提供了线程安全的队列操作，避免了数据竞争。
+* **线程池:**  线程池可以使用 `BlockingQueue` 来管理待执行的任务。
+* **异步任务处理:**  将耗时的任务添加到 `BlockingQueue` 中，由单独的线程进行处理。
+
+
+**例子 (生产者-消费者):**
+
+```java
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+
+public class BlockingQueueExample {
+    public static void main(String[] args) {
+        BlockingQueue<Integer> queue = new LinkedBlockingQueue<>(10); // 容量为 10
+
+        // 生产者线程
+        Thread producer = new Thread(() -> {
+            for (int i = 0; i < 20; i++) {
+                try {
+                    queue.put(i);
+                    System.out.println("Producer produced: " + i);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        // 消费者线程
+        Thread consumer = new Thread(() -> {
+            for (int i = 0; i < 20; i++) {
+                try {
+                    int item = queue.take();
+                    System.out.println("Consumer consumed: " + item);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        producer.start();
+        consumer.start();
+    }
+}
+```
+
+这个例子展示了一个简单的生产者-消费者模型，使用 `LinkedBlockingQueue` 来实现线程间的同步。
+
+希望以上信息能帮助你理解 Java `BlockingQueue`。  如果你有任何其他问题，请随时提出。
+
+
+
+### 入列和出列操作
+
+操作分为：add()+remove()、offer()+poll()、offer(T element, int timeout, TimeUnit unit)+poll(int timeout, TimeUnit unit)、put()+take()。
+
+```java
+public class BlockingQueueTests {
+
+    @Test
+    public void test() throws InterruptedException {
+        // region add、remove，add 已满抛出异常，remove 为空抛出异常
+        BlockingQueue<String> blockingQueue = new ArrayBlockingQueue<>(2);
+        Assert.assertTrue(blockingQueue.add("a"));
+        Assert.assertTrue(blockingQueue.add("b"));
+        try {
+            // 队列已满抛出异常
+            blockingQueue.add("c");
+            Assert.fail();
+        } catch (IllegalStateException ignored) {
+
+        }
+
+        Assert.assertEquals("a", blockingQueue.remove());
+        Assert.assertEquals("b", blockingQueue.remove());
+        try {
+            // 队列为空抛出异常
+            Assert.assertNull(blockingQueue.remove());
+            Assert.fail();
+        } catch (NoSuchElementException ignored) {
+
+        }
+
+        // endregion
+
+        // region offer、poll，offer 已满返回 false，poll 为空返回 null
+
+        blockingQueue = new ArrayBlockingQueue<>(2);
+        Assert.assertTrue(blockingQueue.offer("a"));
+        Assert.assertTrue(blockingQueue.offer("b"));
+        Assert.assertFalse(blockingQueue.offer("c"));
+
+        Assert.assertEquals("a", blockingQueue.poll());
+        Assert.assertEquals("b", blockingQueue.poll());
+        Assert.assertNull(blockingQueue.poll());
+
+        blockingQueue = new ArrayBlockingQueue<>(2);
+        Assert.assertTrue(blockingQueue.offer("a"));
+        Assert.assertTrue(blockingQueue.offer("b"));
+        Assert.assertFalse(blockingQueue.offer("c", 100, TimeUnit.MILLISECONDS));
+
+        Assert.assertEquals("a", blockingQueue.poll());
+        Assert.assertEquals("b", blockingQueue.poll());
+        Assert.assertNull(blockingQueue.poll(100, TimeUnit.MILLISECONDS));
+
+        // endregion
+
+        // region put、take，put 已满阻塞，take 为空阻塞
+
+        blockingQueue = new ArrayBlockingQueue<>(2);
+        blockingQueue.put("a");
+        blockingQueue.put("b");
+        // 注意：阻塞
+        /*blockingQueue.put("c");*/
+
+        Assert.assertEquals("a", blockingQueue.take());
+        Assert.assertEquals("b", blockingQueue.take());
+        // 注意：阻塞
+        /*blockingQueue.take();*/
+
+        // endregion
+    }
+}
+```
