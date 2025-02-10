@@ -867,6 +867,509 @@ public class ThreadCommunicationByUsingReentrantLockAndConditionTests {
 
 
 
+## 集合的线程安全
+
+### 介绍
+
+Java集合框架中许多类在多线程环境下不是线程安全的，这意味着如果多个线程同时访问和修改同一个集合对象，可能会导致数据不一致、异常或程序崩溃等问题。  这主要是因为这些集合类的内部实现通常没有同步机制来保护对集合的并发访问。
+
+**哪些集合类是线程不安全的？**
+
+大部分常用的 Java 集合类，如果不加任何同步处理，都是线程不安全的。  例如：
+
+* `ArrayList`
+* `LinkedList`
+* `HashMap`
+* `HashSet`
+* `TreeMap`
+* `TreeSet`
+* `Hashtable` (虽然 `Hashtable` 本身是同步的，但其性能较低)
+
+
+**线程不安全问题具体表现：**
+
+* **数据不一致:**  多个线程同时修改集合，可能会导致数据丢失、重复或损坏。
+* **`ConcurrentModificationException`:**  当一个线程迭代集合时，另一个线程修改了集合，就会抛出 `ConcurrentModificationException`。  这是因为迭代器在迭代过程中会跟踪集合的修改情况，如果检测到集合被修改，就会抛出此异常。
+* **死锁:**  在某些情况下，多个线程竞争同一个集合的锁，可能会导致死锁。
+* **其他异常:**  可能抛出其他类型的异常，例如 `NullPointerException` 或 `IndexOutOfBoundsException`。
+
+
+**解决线程不安全问题的方法：**
+
+1. **使用线程安全的集合类:** Java 提供了一些线程安全的集合类，例如：
+
+   * `ConcurrentHashMap`：线程安全的 `HashMap` 实现。
+   * `CopyOnWriteArrayList`：写入时复制的 `ArrayList` 实现。  读操作非常快，但写操作比较慢，因为每次写操作都会复制整个集合。
+   * `CopyOnWriteArraySet`：写入时复制的 `HashSet` 实现。
+   * `Vector`：同步的 `ArrayList` 实现，但是性能较低，已被 `CopyOnWriteArrayList` 等替代。
+   * `Stack`：同步的栈实现，性能也较低。
+   * `ConcurrentSkipListMap` 和 `ConcurrentSkipListSet`：基于跳表的线程安全实现，性能通常优于 `TreeMap` 和 `TreeSet` 的同步版本。
+
+
+2. **使用同步块 (`synchronized`)：**  可以使用 `synchronized` 块来同步对集合的访问：
+
+   ```java
+   public void addToList(List<String> list, String item) {
+       synchronized (list) { // 同步整个list
+           list.add(item);
+       }
+   }
+   ```
+
+   这会确保一次只有一个线程可以访问和修改集合。 但是，这种方法在高并发环境下性能会比较低，因为只有一个线程能访问。
+
+3. **使用锁 (`ReentrantLock`)：**  可以使用 `ReentrantLock` 来实现更精细的锁控制：
+
+   ```java
+   private final ReentrantLock lock = new ReentrantLock();
+   public void addToList(List<String> list, String item) {
+       lock.lock();
+       try {
+           list.add(item);
+       } finally {
+           lock.unlock();
+       }
+   }
+   ```
+
+   `ReentrantLock` 比 `synchronized` 提供了更灵活的锁机制，例如可以设置公平锁和非公平锁，以及中断等待的线程。 但是也更复杂。
+
+
+4. **使用 `Collections.synchronizedXXX()` 方法:**  Java 提供了一些工具方法，可以将非线程安全的集合包装成线程安全的集合：
+
+   ```java
+   List<String> synchronizedList = Collections.synchronizedList(new ArrayList<>());
+   ```
+
+   这种方法相对简单，但是性能仍然不如 `ConcurrentHashMap` 等专门设计的线程安全集合类。
+
+
+**选择合适的方案:**
+
+选择哪种方法取决于具体的应用场景和性能要求。  对于高并发环境，建议使用专门设计的线程安全集合类，例如 `ConcurrentHashMap` 和 `CopyOnWriteArrayList`。  对于简单的场景，可以使用同步块或 `Collections.synchronizedXXX()` 方法。  切记要根据你的具体需求和性能目标来选择最佳方案。
+
+总而言之，理解 Java 集合的线程安全问题非常重要，在多线程编程中务必谨慎处理集合的并发访问，以避免出现难以预测的错误。
+
+
+
+### ArrayList 线程不安全示例
+
+以下是一些展示 `ArrayList` 线程不安全性的示例代码：
+
+**示例 1:  `ConcurrentModificationException`**
+
+这个例子演示了当一个线程迭代 `ArrayList` 时，另一个线程修改 `ArrayList` 会导致 `ConcurrentModificationException`。
+
+```java
+import java.util.ArrayList;
+import java.util.List;
+
+public class ArrayListUnsafeExample1 {
+
+    public static void main(String[] args) {
+        List<Integer> list = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            list.add(i);
+        }
+
+        Thread thread1 = new Thread(() -> {
+            for (Integer num : list) {
+                System.out.println("Thread 1: " + num);
+                try {
+                    Thread.sleep(100); // 模拟一些操作
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        Thread thread2 = new Thread(() -> {
+            for (int i = 0; i < 5; i++) {
+                list.remove(0); // 在迭代过程中修改List
+                System.out.println("Thread 2 removed an element.");
+            }
+        });
+
+        thread1.start();
+        thread2.start();
+    }
+}
+```
+
+运行此代码，很大概率会抛出 `ConcurrentModificationException`。
+
+
+**示例 2: 数据不一致**
+
+这个例子演示了多个线程同时向 `ArrayList` 添加元素，可能导致数据丢失或不一致。
+
+```java
+import java.util.ArrayList;
+import java.util.List;
+
+public class ArrayListUnsafeExample2 {
+
+    static List<Integer> list = new ArrayList<>();
+
+    public static void main(String[] args) throws InterruptedException {
+        Thread thread1 = new Thread(() -> {
+            for (int i = 0; i < 1000; i++) {
+                list.add(i);
+            }
+        });
+
+        Thread thread2 = new Thread(() -> {
+            for (int i = 1000; i < 2000; i++) {
+                list.add(i);
+            }
+        });
+
+        thread1.start();
+        thread2.start();
+        thread1.join();
+        thread2.join();
+
+        System.out.println("List size: " + list.size());  //可能小于2000
+        System.out.println("List content: " + list); // 内容可能不完整或重复
+    }
+}
+```
+
+由于线程的执行顺序不确定，`list.add()` 操作不是原子的，最终 `list` 的大小可能小于 2000，并且元素可能不完整或重复。
+
+这些例子展示了在没有同步机制的情况下使用 `ArrayList` 的危险性。  为了避免这些问题，应该使用线程安全的集合类或在访问 `ArrayList` 时使用同步机制。  记住，这些例子可能需要多次运行才能重现错误，因为线程调度是不可预测的。
+
+
+
+### ArrayList 线程不安全解决方案
+
+Java 的 `ArrayList` 线程不安全是因为它的方法不是原子操作，多个线程同时操作 `ArrayList`  可能会导致数据损坏或不一致。  解决方法主要分为以下几类，我会更详细地解释每一类：
+
+**1. 使用线程安全的集合类:**
+
+这是最直接、最简单的方法，Java 提供了几个线程安全的 `List` 实现，无需自己处理同步：
+
+* **`Vector`:**  这是最古老的线程安全 `List` 实现。它的所有方法都使用了 `synchronized` 关键字进行同步，这保证了线程安全。然而，这种同步机制是粗粒度的，所有方法都串行执行，导致性能在高并发环境下非常低。  除非你的应用并发量非常小，否则不推荐使用 `Vector`。
+
+* **`CopyOnWriteArrayList`:**  这是更现代、更高效的线程安全 `List` 实现。它的核心思想是“写时复制”（Copy-On-Write）：当进行写入操作（例如 `add`、`remove`、`set` 等）时，它会创建一个新的数组，在新数组上进行修改，然后将新的数组赋值给原来的引用。读取操作则直接访问原数组，无需加锁，因此读取性能很高。  写入操作虽然需要复制数组，但如果读操作远多于写操作，`CopyOnWriteArrayList` 的性能优势就非常明显。  需要注意的是，读取到的数据可能不是最新的，因为写入操作是在新的数组上进行的。
+
+**2. 使用同步机制:**
+
+如果出于某些原因（例如，兼容性或性能微调），你仍然需要使用 `ArrayList`，那么可以使用 Java 的同步机制来确保线程安全：
+
+* **`Collections.synchronizedList()`:**  这是最方便的方法，它可以将一个普通的 `ArrayList` 包装成一个线程安全的 `List`。  它内部使用了 `ReentrantLock` 来实现同步，性能比 `Vector` 好得多。
+
+```java
+List<String> list = Collections.synchronizedList(new ArrayList<>());
+```
+
+* **手动加锁 (使用 `synchronized` 块或 `ReentrantLock`)**:  这提供了最精细的控制，你可以根据你的具体需求，选择合适的锁粒度。  但是，这需要更小心的编程，以避免死锁或其他并发问题。  这对于更复杂的场景，或者需要对锁进行更精细控制时，才会考虑这种方法。
+
+```java
+List<String> list = new ArrayList<>();
+private final Object lock = new Object(); // or ReentrantLock lock = new ReentrantLock();
+
+// ...
+
+synchronized (lock) { // or lock.lock(); ... lock.unlock();
+    list.add("element");
+}
+```
+
+**3. 使用并发编程工具:**
+
+对于更高级的并发场景，可以考虑使用 Java 并发工具包 (java.util.concurrent) 中的其他数据结构：
+
+* **`ConcurrentHashMap` (如果数据是键值对):**  如果你的数据可以表示为键值对，`ConcurrentHashMap` 通常是更好的选择。它提供了更高的并发性能，比手动同步 `HashMap` 更高效。
+
+**选择哪个方案的建议：**
+
+* **高并发，读多写少:** `CopyOnWriteArrayList` 通常是最佳选择。
+* **高并发，读写比例接近，或写操作频繁:**  `Collections.synchronizedList()` 是一个不错的折中方案，性能比 `Vector` 好得多。
+* **极低并发:** `Collections.synchronizedList()` 也足够。
+* **非常低并发，简单场景，不需要高性能:** `Vector` 可以勉强接受，但不推荐。
+* **需要更细粒度的控制，或性能要求极高，且非常了解并发编程:**  手动加锁（`synchronized` 或 `ReentrantLock`）可能需要考虑，但它需要非常谨慎的编程。
+* **数据是键值对:** 使用 `ConcurrentHashMap`。
+
+记住，选择合适的方案需要根据你的具体应用场景，权衡性能、内存占用和代码复杂度等因素。  不要盲目选择，在做出决定之前，务必仔细考虑你的应用需求和并发特性。
+
+
+
+### ArrayList 线程不安全各个解决方案性能对比
+
+示例代码：
+
+```java
+/**
+ * 测试集合线程安全性能
+ */
+// https://blog.csdn.net/a23452/article/details/126680840
+@BenchmarkMode(Mode.Throughput)
+@State(Scope.Benchmark) //使用的SpringBoot容器，都是无状态单例Bean，无安全问题，可以直接使用基准作用域BenchMark
+@OutputTimeUnit(TimeUnit.SECONDS)
+@Warmup(iterations = 3, time = 1, timeUnit = TimeUnit.SECONDS) //预热1s
+@Measurement(iterations = 3, time = 5, timeUnit = TimeUnit.SECONDS) //测试也是1s、五遍
+// 指定并发执行线程数
+// https://stackoverflow.com/questions/39644383/jmh-run-benchmark-concurrently
+@Threads(-1)
+public class CollectionThreadSafetyProblemBenchmarkTests {
+
+    final static int IntStart = 0;
+    final static int IntEnd = 10000;
+
+    List<Integer> arrayList = new ArrayList<>();
+    List<Integer> vector = new Vector<>();
+    List<Integer> synchronizedList = Collections.synchronizedList(new ArrayList<>());
+    List<Integer> copyOnWriteArrayList = new CopyOnWriteArrayList<>();
+
+    public static void main(String[] args) throws RunnerException {
+        //使用注解之后只需要配置一下include即可，fork和warmup、measurement都是注解
+        Options opt = new OptionsBuilder()
+                .include(CollectionThreadSafetyProblemBenchmarkTests.class.getSimpleName())
+                // 断点调试时fork=0
+                .forks(1)
+                // 发生错误停止测试
+                .shouldFailOnError(true)
+                .jvmArgs("-Xmx2G")
+                .build();
+        new Runner(opt).run();
+    }
+
+    /**
+     * 初始化，获取springBoot容器，run即可，同时得到相关的测试对象
+     */
+    @Setup(Level.Trial)
+    public void setup() {
+    }
+
+    /**
+     * 测试的后处理操作，关闭容器，资源清理
+     */
+    @TearDown(Level.Trial)
+    public void teardown() {
+    }
+
+    /**
+     * 测试 ArrayList 性能
+     */
+    @Benchmark
+    public void testArrayList(Blackhole blackhole) {
+        int randomInt = RandomUtils.nextInt(0, 3);
+        if (randomInt == 0) {
+            randomInt = RandomUtils.nextInt(IntStart, IntEnd);
+            arrayList.add(randomInt);
+        } else if (randomInt == 1) {
+            randomInt = RandomUtils.nextInt(IntStart, IntEnd);
+            try {
+                arrayList.remove(randomInt);
+            } catch (IndexOutOfBoundsException ignored) {
+
+            }
+        } else {
+            randomInt = RandomUtils.nextInt(IntStart, IntEnd);
+            try {
+                blackhole.consume(arrayList.get(randomInt));
+            } catch (IndexOutOfBoundsException ignored) {
+
+            }
+        }
+    }
+
+    /**
+     * 测试 Vector 性能
+     */
+    @Benchmark
+    public void testVector(Blackhole blackhole) {
+        int randomInt = RandomUtils.nextInt(0, 3);
+        if (randomInt == 0) {
+            randomInt = RandomUtils.nextInt(IntStart, IntEnd);
+            vector.add(randomInt);
+        } else if (randomInt == 1) {
+            randomInt = RandomUtils.nextInt(IntStart, IntEnd);
+            try {
+                vector.remove(randomInt);
+            } catch (ArrayIndexOutOfBoundsException ignored) {
+
+            }
+        } else {
+            randomInt = RandomUtils.nextInt(IntStart, IntEnd);
+            try {
+                blackhole.consume(vector.get(randomInt));
+            } catch (ArrayIndexOutOfBoundsException ignored) {
+
+            }
+        }
+    }
+
+    /**
+     * 测试 synchronizedList 性能
+     */
+    @Benchmark
+    public void testSynchronizedList(Blackhole blackhole) {
+        int randomInt = RandomUtils.nextInt(0, 3);
+        if (randomInt == 0) {
+            randomInt = RandomUtils.nextInt(IntStart, IntEnd);
+            synchronizedList.add(randomInt);
+        } else if (randomInt == 1) {
+            randomInt = RandomUtils.nextInt(IntStart, IntEnd);
+            try {
+                synchronizedList.remove(randomInt);
+            } catch (IndexOutOfBoundsException ignored) {
+
+            }
+        } else {
+            randomInt = RandomUtils.nextInt(IntStart, IntEnd);
+            try {
+                blackhole.consume(synchronizedList.get(randomInt));
+            } catch (IndexOutOfBoundsException | IllegalStateException ignored) {
+
+            }
+        }
+    }
+
+    /**
+     * 测试 copyOnWriteArrayList 性能
+     */
+    @Benchmark
+    public void testCopyOnWriteArrayList(Blackhole blackhole) {
+        int randomInt = RandomUtils.nextInt(0, 3);
+        if (randomInt == 0) {
+            randomInt = RandomUtils.nextInt(IntStart, IntEnd);
+            copyOnWriteArrayList.add(randomInt);
+        } else if (randomInt == 1) {
+            randomInt = RandomUtils.nextInt(IntStart, IntEnd);
+            try {
+                copyOnWriteArrayList.remove(randomInt);
+            } catch (IndexOutOfBoundsException ignored) {
+
+            }
+        } else {
+            randomInt = RandomUtils.nextInt(IntStart, IntEnd);
+            try {
+                blackhole.consume(copyOnWriteArrayList.get(randomInt));
+            } catch (IndexOutOfBoundsException | IllegalStateException ignored) {
+
+            }
+        }
+    }
+}
+```
+
+JMH 结果：
+
+```
+Benchmark                                                              Mode  Cnt        Score         Error  Units
+CollectionThreadSafetyProblemBenchmarkTests.testArrayList             thrpt    3   425181.365 ± 2411007.900  ops/s
+CollectionThreadSafetyProblemBenchmarkTests.testCopyOnWriteArrayList  thrpt    3   271624.334 ±  369097.490  ops/s
+CollectionThreadSafetyProblemBenchmarkTests.testSynchronizedList      thrpt    3  2821699.919 ± 4372499.634  ops/s
+CollectionThreadSafetyProblemBenchmarkTests.testVector                thrpt    3  2534076.175 ± 5384026.966  ops/s
+```
+
+
+
+### HashSet 线程不安全解决方案
+
+Java 的 `HashSet`  和 `ArrayList` 一样，不是线程安全的。多个线程同时操作同一个 `HashSet`  可能会导致数据不一致、丢失元素或其他异常情况。解决方法和 `ArrayList`  类似，主要有以下几种：
+
+**1. 使用线程安全的集合类：**  Java 没有直接提供线程安全的 `HashSet` 实现，但我们可以利用 `Collections.synchronizedSet()` 方法来创建一个线程安全的 `Set`。
+
+```java
+Set<String> set = Collections.synchronizedSet(new HashSet<>());
+```
+
+这个方法使用一个内部锁来同步 `HashSet` 的所有方法，保证了线程安全。  但是，和 `Collections.synchronizedList()` 一样，这种同步方式是粗粒度的，所有操作都需要获得同一个锁，在高并发情况下性能会下降。
+
+
+**2. 使用并发编程工具：**  `ConcurrentHashMap`  虽然是 `Map`，但它可以很方便地用作线程安全的 `Set`。  你可以只使用 `ConcurrentHashMap` 的 `keySet()` 方法来获取一个线程安全的 `Set`  视图：
+
+```java
+Map<String, Boolean> map = new ConcurrentHashMap<>();
+Set<String> set = map.keySet(); // set is thread-safe
+```
+
+因为 `ConcurrentHashMap`  使用了更细粒度的锁机制，所以它的并发性能比 `Collections.synchronizedSet()`  要高得多。  这种方法尤其适用于需要高并发性能的场景。
+
+
+**3. 手动加锁：**  类似于 `ArrayList`，你可以使用 `synchronized` 块或 `ReentrantLock`  来手动同步对 `HashSet` 的访问。 这种方式需要更细致的控制，但同时也增加了代码的复杂性和出错的可能性。  除非你有非常特殊的需求，否则不推荐这种方法。
+
+```java
+Set<String> set = new HashSet<>();
+private final Object lock = new Object(); // or ReentrantLock lock = new ReentrantLock();
+
+// ...
+
+synchronized (lock) { // or lock.lock(); ... lock.unlock();
+    set.add("element");
+}
+```
+
+
+**选择哪个方案的建议：**
+
+* **大多数情况，并发量适中：**  `Collections.synchronizedSet(new HashSet<>())`  是一个简单易用的选择，除非你的并发量非常高。
+
+* **高并发，需要高性能：**  使用 `ConcurrentHashMap` 的 `keySet()` 方法创建一个线程安全的 `Set`  是更好的选择。  `ConcurrentHashMap` 的分段锁机制使其在高并发场景下性能更佳。
+
+* **极低并发，对性能要求不高：**  `Collections.synchronizedSet(new HashSet<>())` 也足够。
+
+* **需要非常细粒度的控制，且非常了解并发编程：** 手动加锁（`synchronized` 或 `ReentrantLock`）是最后的选择，但需要非常小心地处理，以避免死锁等问题。
+
+总的来说，除非你的并发量极高或者对性能有非常严格的要求，否则 `Collections.synchronizedSet()` 通常是一个足够好且简单的解决方案。  对于高并发场景，`ConcurrentHashMap.keySet()` 提供了更好的性能。  手动加锁的方法应该仅在有非常特殊的需求且你对并发编程非常熟悉的情况下使用。  记住，在选择之前，要仔细考虑你的应用场景和并发特性。
+
+
+
+### HashMap 线程不安全解决方案
+
+Java 的 `HashMap` 不是线程安全的，在多线程环境下并发访问可能会导致数据损坏、死循环甚至程序崩溃。  解决方法主要有以下几种：
+
+**1. 使用线程安全的 Map 实现:**
+
+这是最直接、最推荐的解决方法。Java 提供了几个线程安全的 `Map` 实现，无需自己处理同步：
+
+* **`ConcurrentHashMap`:** 这是最常用的线程安全 `Map` 实现。它采用了一种细粒度的锁机制，将 `HashMap` 分成多个段（segment），每个段拥有自己的锁。这样，多个线程可以同时访问不同的段，从而提高并发性能。  在大多数情况下，`ConcurrentHashMap` 是处理多线程 `HashMap` 问题的最佳选择。  它提供了与 `HashMap` 类似的 API，迁移成本较低。
+
+* **`Collections.synchronizedMap()`:**  类似于 `ArrayList` 和 `HashSet` 的情况，你可以使用 `Collections.synchronizedMap()` 方法将一个普通的 `HashMap` 包装成一个线程安全的 `Map`。  但是，这个方法使用了单一的锁来同步所有操作，在高并发情况下性能会严重下降，因此不推荐在高并发环境下使用。
+
+
+**2. 手动加锁 (使用 `synchronized` 块或 `ReentrantLock`)**
+
+这是最底层的解决方案，需要开发者自己管理锁，控制对 `HashMap` 的访问。  这需要非常谨慎的编程，以避免死锁或其他并发问题。  除非你对并发编程非常熟悉，并且需要对锁进行非常精细的控制，否则不推荐使用这种方法。  这对于学习并发编程原理很有帮助，但在实际应用中，通常应该优先使用 `ConcurrentHashMap`。
+
+```java
+HashMap<String, Integer> map = new HashMap<>();
+private final Object lock = new Object(); // or ReentrantLock lock = new ReentrantLock();
+
+// ...
+
+synchronized (lock) { // or lock.lock(); ... lock.unlock();
+    map.put("key", 1);
+}
+```
+
+**3. 使用其他并发数据结构 (根据具体需求)**
+
+在一些特殊场景下，其他并发数据结构可能更合适：
+
+* **如果你的操作主要集中在读取上，且写入操作相对较少:** 考虑 `ConcurrentHashMap` 的 `computeIfAbsent()` 方法，这样能最大限度地减少对共享资源的修改操作，提高性能。
+
+* **如果你的数据是只读的（immutable）:** 你可以创建多个 `HashMap` 实例，每个线程使用一个实例。这可以避免锁竞争，但要注意数据的一致性问题。  这种方法只适用于读取操作，写入操作则需要引入更复杂的同步策略。
+
+
+**选择哪个方案的建议：**
+
+* **绝大多数情况：** `ConcurrentHashMap` 是最佳选择，因为它提供了高性能的并发访问能力，并且 API 与 `HashMap` 相似，易于使用。
+
+* **低并发场景，简单代码：** `Collections.synchronizedMap()` 可用，但性能不如 `ConcurrentHashMap`。
+
+* **高并发场景，需要精确控制锁:** 手动加锁的方法只在你有非常特殊的需求且你对并发编程非常熟悉的情况下使用。
+
+
+**总结：**
+
+对于线程安全的 `HashMap`，`ConcurrentHashMap` 通常是首选。  它兼顾了性能和易用性。  避免使用 `Collections.synchronizedMap()` 和手动加锁的方式，除非你对并发编程非常了解，并且有充分的理由选择它们。  在选择任何解决方案之前，务必仔细评估你的应用程序的并发特性和性能需求。
+
+
+
 ## 锁
 
 
