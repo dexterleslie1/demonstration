@@ -11,11 +11,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.annotation.Resource;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.Date;
+import java.util.Random;
+import java.util.UUID;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @RunWith(SpringRunner.class)
@@ -32,33 +31,24 @@ public class ReadWriteLockTests {
     public void testConcurrentRead() throws InterruptedException {
         final String lockname = "test-readwrite-lock";
 
-        AtomicInteger counter = new AtomicInteger();
-        List<Integer> concurrentCountSampleList = new ArrayList<>();
-        Random random = new Random();
+        int concurrentThreads = 50;
+        AtomicInteger flag = new AtomicInteger();
+        // 并发线程达到 concurrentThreads 时 flag 自增表示读锁支持并发读
+        CyclicBarrier cyclicBarrier = new CyclicBarrier(concurrentThreads, flag::incrementAndGet);
         ExecutorService executorService = Executors.newCachedThreadPool();
-        for (int i = 0; i < 50; i++) {
+        for (int i = 0; i < concurrentThreads; i++) {
             executorService.submit(() -> {
-                RReadWriteLock readWriteLock = redisson.getReadWriteLock(lockname);
-                RLock rLock = readWriteLock.readLock();
+                RLock rLock = null;
                 try {
+                    RReadWriteLock readWriteLock = redisson.getReadWriteLock(lockname);
+                    rLock = readWriteLock.readLock();
                     rLock.lock();
 
-                    int count = counter.incrementAndGet();
-                    if (count > 1) {
-                        concurrentCountSampleList.add(count);
-                    }
-
-                    int randomInt = random.nextInt(1000);
-                    if (randomInt > 0) {
-                        try {
-                            TimeUnit.MILLISECONDS.sleep(randomInt);
-                        } catch (InterruptedException e) {
-                            //
-                        }
-                    }
+                    // 所有线程达到屏障点，await 才继续运行
+                    cyclicBarrier.await(1, TimeUnit.SECONDS);
+                } catch (InterruptedException | TimeoutException | BrokenBarrierException ignored) {
                 } finally {
-                    if (rLock.isHeldByCurrentThread()) {
-                        counter.decrementAndGet();
+                    if (rLock != null && rLock.isHeldByCurrentThread()) {
                         rLock.unlock();
                     }
                 }
@@ -67,7 +57,7 @@ public class ReadWriteLockTests {
         executorService.shutdown();
         while (!executorService.awaitTermination(1, TimeUnit.SECONDS)) ;
 
-        Assert.assertTrue(concurrentCountSampleList.size() > 0);
+        Assert.assertEquals(1, flag.get());
     }
 
     // 测试不支持并发写
@@ -75,33 +65,24 @@ public class ReadWriteLockTests {
     public void testNotSupportConcurrentWrite() throws InterruptedException {
         final String lockname = "test-readwrite-lock";
 
-        AtomicInteger counter = new AtomicInteger();
-        List<Integer> concurrentCountSampleList = new ArrayList<>();
-        Random random = new Random();
+        int concurrentThreads = 50;
+        AtomicInteger flag = new AtomicInteger();
+        // 并发线程达到 2 时 flag 自增表示写锁不支持并发写
+        CyclicBarrier cyclicBarrier = new CyclicBarrier(2, flag::incrementAndGet);
+
         ExecutorService executorService = Executors.newCachedThreadPool();
-        for (int i = 0; i < 50; i++) {
+        for (int i = 0; i < concurrentThreads; i++) {
             executorService.submit(() -> {
                 RReadWriteLock readWriteLock = redisson.getReadWriteLock(lockname);
-                RLock rLock = readWriteLock.writeLock();
+                RLock rLock = null;
                 try {
+                    rLock = readWriteLock.writeLock();
                     rLock.lock();
 
-                    int count = counter.incrementAndGet();
-                    if (count > 1) {
-                        concurrentCountSampleList.add(count);
-                    }
-
-                    int randomInt = random.nextInt(100);
-                    if (randomInt > 0) {
-                        try {
-                            TimeUnit.MILLISECONDS.sleep(randomInt);
-                        } catch (InterruptedException e) {
-                            //
-                        }
-                    }
+                    cyclicBarrier.await(60, TimeUnit.MILLISECONDS);
+                } catch (BrokenBarrierException | InterruptedException | TimeoutException ignored) {
                 } finally {
-                    if (rLock.isHeldByCurrentThread()) {
-                        counter.decrementAndGet();
+                    if (rLock != null && rLock.isHeldByCurrentThread()) {
                         rLock.unlock();
                     }
                 }
@@ -110,7 +91,7 @@ public class ReadWriteLockTests {
         executorService.shutdown();
         while (!executorService.awaitTermination(1, TimeUnit.SECONDS)) ;
 
-        Assert.assertEquals(0, concurrentCountSampleList.size());
+        Assert.assertEquals(0, flag.get());
     }
 
     /**
@@ -122,91 +103,53 @@ public class ReadWriteLockTests {
     public void testReadWriteLock() throws InterruptedException {
         final String lockname = "test-readwrite-lock";
 
-        final Map<String, Boolean> readingMapper = new ConcurrentHashMap<>();
-        final Map<String, Boolean> writingMapper = new ConcurrentHashMap<>();
-        List<Boolean> statusList = new ArrayList<>();
+        AtomicInteger flag = new AtomicInteger();
+        // 并发线程达到 2 时 flag 自增表示读写锁不支持并发读写
+        CyclicBarrier cyclicBarrier = new CyclicBarrier(2, flag::incrementAndGet);
+
         ExecutorService executorService = Executors.newCachedThreadPool();
-        for (int i = 0; i < 50; i++) {
-            executorService.submit(() -> {
-                RReadWriteLock readWriteLock = redisson.getReadWriteLock(lockname);
-                RLock rLock = null;
-                String uuid = UUID.randomUUID().toString();
-                try {
-                    rLock = readWriteLock.readLock();
-                    rLock.lock();
+        executorService.submit(() -> {
+            RReadWriteLock readWriteLock = redisson.getReadWriteLock(lockname);
+            RLock rLock = null;
+            try {
+                rLock = readWriteLock.readLock();
+                rLock.lock();
 
-                    int randomInt = Random.nextInt(100);
-                    if (randomInt <= 0) {
-                        randomInt = 1;
-                    }
+                cyclicBarrier.await(60, TimeUnit.MILLISECONDS);
+            } catch (Exception ignored) {
 
-                    readingMapper.put(uuid, true);
-
-                    displayInfo(readingMapper, writingMapper, statusList);
-
-                    try {
-                        Thread.sleep(randomInt);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-
-                    displayInfo(readingMapper, writingMapper, statusList);
-                } catch (Exception ex) {
-                    log.error(ex.getMessage(), ex);
-                } finally {
-                    readingMapper.remove(uuid);
-                    if (rLock != null && rLock.isHeldByCurrentThread()) {
-                        rLock.unlock();
-                    }
+            } finally {
+                if (rLock != null && rLock.isHeldByCurrentThread()) {
+                    rLock.unlock();
                 }
-            });
-        }
+            }
+        });
 
-        for (int i = 0; i < 50; i++) {
-            executorService.submit(() -> {
-                RReadWriteLock readWriteLock = redisson.getReadWriteLock(lockname);
-                RLock rLock = null;
-                String uuid = UUID.randomUUID().toString();
-                try {
-                    rLock = readWriteLock.writeLock();
-                    rLock.lock();
+        executorService.submit(() -> {
+            RReadWriteLock readWriteLock = redisson.getReadWriteLock(lockname);
+            RLock rLock = null;
+            try {
+                rLock = readWriteLock.writeLock();
+                rLock.lock();
 
-                    int randomInt = Random.nextInt(100);
-                    if (randomInt <= 0) {
-                        randomInt = 1;
-                    }
-
-                    writingMapper.put(uuid, true);
-
-                    displayInfo(readingMapper, writingMapper, statusList);
-
-                    try {
-                        Thread.sleep(randomInt);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-
-                    displayInfo(readingMapper, writingMapper, statusList);
-                } catch (Exception ex) {
-                    log.error(ex.getMessage(), ex);
-                } finally {
-                    writingMapper.remove(uuid);
-                    if (rLock != null && rLock.isHeldByCurrentThread()) {
-                        rLock.unlock();
-                    }
+                cyclicBarrier.await(60, TimeUnit.MILLISECONDS);
+            } catch (Exception ignored) {
+            } finally {
+                if (rLock != null && rLock.isHeldByCurrentThread()) {
+                    rLock.unlock();
                 }
-            });
-        }
+            }
+        });
 
         executorService.shutdown();
         while (!executorService.awaitTermination(1, TimeUnit.SECONDS)) ;
 
-        Assert.assertEquals(0, statusList.size());
+        Assert.assertEquals(0, flag.get());
     }
 
     // 测试读写锁try lock
     @Test
-    public void testReadWriteTryLock() throws InterruptedException {
+    public void testReadWriteTryLock() {
         ExecutorService executorService = Executors.newCachedThreadPool();
 
         String key = UUID.randomUUID().toString();
@@ -333,10 +276,119 @@ public class ReadWriteLockTests {
         }
     }
 
-    private void displayInfo(Map<String, Boolean> readingMapper, Map<String, Boolean> writingMapper, List<Boolean> statusList) {
-        if (readingMapper.size() > 0 && writingMapper.size() > 0) {
-//            logger.info("有读写并发reading={},writing={}", readingMapper.size(), writingMapper.size());
-            statusList.add(true);
+    /**
+     * 演示使用读写锁解决并发读写问题
+     */
+    @Test
+    public void testConcurrentReadWriteScenarioIssueSolvedByUsingReadWriteLock() throws InterruptedException {
+        String key = UUID.randomUUID().toString();
+        RReadWriteLock readWriteLock = redisson.getReadWriteLock(key);
+
+        ShareResource shareResource = new ShareResource();
+
+        AtomicInteger flag = new AtomicInteger();
+        AtomicInteger flagRead = new AtomicInteger();
+        AtomicInteger flagWrite = new AtomicInteger();
+        CyclicBarrier cyclicBarrierRead = new CyclicBarrier(2, flagRead::incrementAndGet);
+        CyclicBarrier cyclicBarrierWrite = new CyclicBarrier(2, flagWrite::incrementAndGet);
+
+        ExecutorService executor = Executors.newFixedThreadPool(50);
+
+        for (int i = 0; i < 10; i++) {
+            executor.submit(() -> {
+
+                // 特意让程序先获取写锁
+                try {
+                    TimeUnit.MILLISECONDS.sleep(20);
+                } catch (InterruptedException ignored) {
+
+                }
+
+                RLock rLock = null;
+                try {
+                    rLock = readWriteLock.readLock();
+                    rLock.lock();
+
+                    int value = shareResource.getValue();
+                    if (value > 0) {
+                        flag.incrementAndGet();
+                    }
+
+                    try {
+                        // 读写锁支持并发读
+                        cyclicBarrierRead.await();
+                    } catch (InterruptedException | BrokenBarrierException ignored) {
+
+                    }
+                } finally {
+                    if (rLock != null) {
+                        rLock.unlock();
+                    }
+                }
+            });
+        }
+
+        for (int i = 0; i < 10; i++) {
+            executor.submit(() -> {
+                RLock rLock = null;
+                try {
+                    rLock = readWriteLock.writeLock();
+                    rLock.lock();
+
+                    // 模拟业务卡顿，所有读锁被阻塞
+                    try {
+                        TimeUnit.MILLISECONDS.sleep(20);
+                    } catch (InterruptedException ignored) {
+
+                    }
+
+                    shareResource.decrement();
+
+                    try {
+                        // 读写锁不支持并发写
+                        cyclicBarrierWrite.await(10, TimeUnit.MILLISECONDS);
+                    } catch (InterruptedException | BrokenBarrierException | TimeoutException ignored) {
+                    }
+                } finally {
+                    if (rLock != null) {
+                        rLock.unlock();
+                    }
+                }
+            });
+        }
+
+        executor.shutdown();
+        while (!executor.awaitTermination(50, TimeUnit.MILLISECONDS)) ;
+
+        // 读写锁支持并发读
+        Assert.assertEquals(5, flagRead.get());
+        // 读写锁不支持并发写
+        Assert.assertEquals(0, flagWrite.get());
+        // 读写锁不支持并发读写
+        Assert.assertEquals(0, shareResource.getValue());
+        Assert.assertEquals(0, flag.get());
+    }
+
+    static class ShareResource {
+        private int value = 1;
+
+        public int getValue() {
+            return value;
+        }
+
+        public void decrement() {
+            if (value == 0) {
+                return;
+            }
+
+            // 如果 decrement 方法没有并发锁控制，则 value-- 会被多次执行
+            try {
+                TimeUnit.MILLISECONDS.sleep(5);
+            } catch (InterruptedException ignored) {
+
+            }
+
+            value--;
         }
     }
 }
