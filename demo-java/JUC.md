@@ -1,5 +1,9 @@
 # JUC
 
+详细用法请参考示例`https://gitee.com/dexterleslie/demonstration/tree/master/demo-java/demo-juc`
+
+
+
 ## 基础概念
 
 
@@ -4236,3 +4240,140 @@ public class BlockingQueueTests {
     }
 }
 ```
+
+
+
+## 线程池
+
+### 介绍
+
+Java线程池是管理和复用线程的一种机制，它可以有效地避免频繁创建和销毁线程的开销，提高程序性能。  线程池的核心思想是预先创建一定数量的线程，并将它们放入一个池中，当需要执行任务时，从池中获取一个空闲线程来执行，执行完毕后线程返回池中等待下次使用。
+
+**主要类：`java.util.concurrent.ExecutorService`**
+
+`ExecutorService` 接口是 Java 线程池的核心接口，它定义了提交任务、关闭线程池等方法。  常用的实现类是 `ThreadPoolExecutor`。
+
+**`ThreadPoolExecutor` 的核心参数：**
+
+* **`corePoolSize`:**  核心线程数。即使没有任务需要执行，也会保持核心线程数的线程存活。
+* **`maximumPoolSize`:** 最大线程数。当任务队列已满，并且活动线程数小于最大线程数时，会创建新的线程来执行任务，直到达到最大线程数。
+* **`keepAliveTime`:**  空闲线程存活时间。当活动线程数大于核心线程数时，如果空闲线程超过 `keepAliveTime`，则会终止这些空闲线程。
+* **`unit`:**  `keepAliveTime` 的时间单位 (例如：`TimeUnit.SECONDS`)。
+* **`workQueue`:** 任务队列。用于存储等待执行的任务。常用的队列类型有：
+    * `ArrayBlockingQueue`：基于数组的有界队列。
+    * `LinkedBlockingQueue`：基于链表的无界队列 (可能会导致内存溢出)。
+    * `SynchronousQueue`：不存储任务的队列，每个 put 操作必须等待一个 take 操作。
+    * `PriorityBlockingQueue`：优先级队列。
+* **`threadFactory`:** 线程工厂。用于创建线程。通常使用默认的工厂即可。
+* **`handler`:** 拒绝策略。当任务队列已满，并且活动线程数已达到最大线程数时，会执行拒绝策略。常用的拒绝策略有：
+    * `AbortPolicy`：默认策略，抛出 `RejectedExecutionException`。
+    * `CallerRunsPolicy`：在调用 `execute` 方法的线程中执行任务。
+    * `DiscardPolicy`：丢弃任务。
+    * `DiscardOldestPolicy`：丢弃队列中最旧的任务。
+
+
+**创建线程池的方式：**
+
+除了直接使用 `ThreadPoolExecutor` 构造函数外，Java 还提供了 `Executors` 类，它提供了一些便捷方法来创建不同类型的线程池：
+
+* **`Executors.newCachedThreadPool()`:** 创建一个可缓存的线程池。线程数可以动态调整，没有核心线程数限制，空闲线程会被回收。适合处理大量短期的任务。
+* **`Executors.newFixedThreadPool(int nThreads)`:** 创建一个固定大小的线程池。线程数固定为 `nThreads`，不会动态调整。适合处理数量可预测的任务。
+* **`Executors.newScheduledThreadPool(int corePoolSize)`:** 创建一个支持定时和周期性任务的线程池。
+* **`Executors.newSingleThreadExecutor()`:** 创建一个只有一个线程的线程池。适合处理需要按顺序执行的任务。
+
+
+**提交任务：**
+
+使用 `ExecutorService` 的 `submit()` 或 `execute()` 方法提交任务：
+
+* **`submit()`:**  返回一个 `Future` 对象，可以用来获取任务执行结果，并可以中断任务。
+* **`execute()`:**  不返回任何值，无法获取任务执行结果。
+
+
+**关闭线程池：**
+
+使用 `ExecutorService` 的 `shutdown()` 或 `shutdownNow()` 方法关闭线程池：
+
+* **`shutdown()`:**  优雅地关闭线程池，不再接受新的任务，等待已提交的任务执行完毕后关闭。
+* **`shutdownNow()`:**  立即关闭线程池，尝试中断正在执行的任务，并返回未执行的任务列表。
+
+
+**示例：使用 `ThreadPoolExecutor` 创建线程池**
+
+```java
+import java.util.concurrent.*;
+
+public class ThreadPoolExample {
+    public static void main(String[] args) {
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(
+                5, // corePoolSize
+                10, // maximumPoolSize
+                60L, // keepAliveTime
+                TimeUnit.SECONDS, // unit
+                new LinkedBlockingQueue<>(100), // workQueue
+                new ThreadPoolExecutor.AbortPolicy() // handler
+        );
+
+        for (int i = 0; i < 100; i++) {
+            executor.execute(() -> {
+                System.out.println("Thread " + Thread.currentThread().getName() + " is running.");
+                try {
+                    Thread.sleep(2000); // 模拟任务执行
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            });
+        }
+
+        executor.shutdown();
+        try {
+            if (!executor.awaitTermination(60, TimeUnit.SECONDS)) {
+                executor.shutdownNow();
+            }
+        } catch (InterruptedException ex) {
+            executor.shutdownNow();
+        }
+    }
+}
+```
+
+这个例子展示了如何使用 `ThreadPoolExecutor` 创建一个线程池，并提交任务。  记住根据你的实际需求选择合适的参数和拒绝策略。  不恰当的参数选择可能导致性能问题或者资源浪费。
+
+希望以上信息能够帮助你理解 Java 线程池。  如有任何疑问，请继续提问。
+
+
+
+### 创建线程池的方式有哪些呢？
+
+Java 创建线程池主要有两种方式：
+
+1. **使用 `Executors` 工厂类：**  这是最简单方便的方式，`Executors` 提供了一系列静态工厂方法，可以创建不同类型的线程池。  但是，这种方式在某些场景下可能会存在问题，例如默认的线程池大小可能不适合你的应用场景，并且有些方法创建的线程池在某些异常情况下可能会导致资源泄漏。因此，它更适合简单的应用场景。
+
+   `Executors` 提供的几种线程池类型包括：
+
+   * `newCachedThreadPool()`：创建一个可缓存的线程池，线程数根据需要动态调整，空闲线程会在一段时间后被回收。适合执行大量短时间任务。
+   * `newFixedThreadPool(int nThreads)`：创建一个固定大小的线程池，当所有线程都在工作时，新任务将排队等待。适合执行需要控制线程数量的任务。
+   * `newScheduledThreadPool(int corePoolSize)`：创建一个支持定时和周期性任务执行的线程池。
+   * `newSingleThreadExecutor()`：创建一个只有一个线程的线程池，保证任务按顺序执行。适合需要保证任务顺序执行的场景。
+
+
+2. **使用 `ThreadPoolExecutor` 构造器：**  这是更灵活和强大的方式，允许你精确控制线程池的各个参数，可以根据你的具体需求定制线程池的行为。  你需要手动设置以下参数：
+
+   * `corePoolSize`：核心线程数，即使线程空闲也不会被回收。
+   * `maximumPoolSize`：最大线程数，当任务队列已满且核心线程都在工作时，线程池会创建新的线程，直到达到最大线程数。
+   * `keepAliveTime`：空闲线程存活时间，超过此时间空闲线程会被回收。
+   * `unit`：`keepAliveTime` 的时间单位。
+   * `workQueue`：任务队列，用于存储等待执行的任务。常用的队列类型包括：
+      * `ArrayBlockingQueue`：有界阻塞队列，FIFO。
+      * `LinkedBlockingQueue`：无界阻塞队列，FIFO。
+      * `SynchronousQueue`：同步队列，不存储任务，直接将任务交给线程执行。
+      * `PriorityBlockingQueue`：优先级队列，任务按照优先级执行。
+   * `threadFactory`：线程工厂，用于创建线程，可以自定义线程名称等属性。
+   * `handler`：拒绝策略，当线程池已满且无法创建新线程时，如何处理新的任务。常用的拒绝策略包括：
+      * `AbortPolicy`：直接抛出 `RejectedExecutionException`。
+      * `CallerRunsPolicy`：在调用线程中执行任务。
+      * `DiscardPolicy`：直接丢弃任务。
+      * `DiscardOldestPolicy`：丢弃队列中最旧的任务，然后尝试再次提交新任务。
+
+
+总而言之，`Executors` 提供了方便快捷的创建线程池的方法，适合简单的应用场景；而 `ThreadPoolExecutor` 提供了更精细的控制，适合对性能要求较高或需要自定义线程池行为的复杂应用场景。  建议在大多数情况下使用 `ThreadPoolExecutor` ，这样可以更好地掌控线程池的行为，避免潜在的问题。
