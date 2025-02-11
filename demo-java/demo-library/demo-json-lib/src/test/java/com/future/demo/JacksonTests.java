@@ -1,4 +1,4 @@
-package com.future.demo.java.json;
+package com.future.demo;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -7,13 +7,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.apache.commons.lang3.time.DateFormatUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -34,7 +36,7 @@ public class JacksonTests {
         long userId = 12345l;
         String loginname = "dexter";
         boolean enable = true;
-        Date createTime = new Date();
+        LocalDateTime createTime = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
         BeanClass beanClass = new BeanClass();
         beanClass.setUserId(userId);
         beanClass.setLoginname(loginname);
@@ -55,11 +57,11 @@ public class JacksonTests {
      */
     @Test
     public void json2bean() throws IOException {
-        String json = "{\"userId\":12345,\"loginname\":\"dexter\",\"createTime\":1577874822420,\"enable\":true}";
+        String json = "{\"userId\":12345,\"loginname\":\"dexter\",\"createTime\":\"2025-02-11 16:46:04\",\"enable\":true}";
 
         long userId = 12345l;
         String loginname = "dexter";
-        Date createTime = new Date(1577874822420l);
+        LocalDateTime createTime = LocalDateTime.parse("2025-02-11 16:46:04", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 
         ObjectMapper OMInstance = new ObjectMapper();
         BeanClass beanClass = OMInstance.readValue(json, BeanClass.class);
@@ -110,14 +112,14 @@ public class JacksonTests {
         long userId = 12345l;
         String loginname = "dexter";
         boolean enable = true;
-        Date createTime = new Date();
+        LocalDateTime createTime = LocalDateTime.now();
         BeanClass beanClass = new BeanClass();
         beanClass.setUserId(userId);
         beanClass.setLoginname(loginname);
         beanClass.setEnable(enable);
         beanClass.setCreateTime(createTime);
 
-        String createTimeStringExpected = DateFormatUtils.format(createTime, "yyyy-MM-dd HH:mm:ss");
+        String createTimeStringExpected = createTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 
         ObjectMapper OMInstance = new ObjectMapper();
         String json = OMInstance.writeValueAsString(beanClass);
@@ -134,7 +136,7 @@ public class JacksonTests {
         long userId = 12345l;
         String loginname = "dexter";
         boolean enable = true;
-        Date createTime = new Date();
+        LocalDateTime createTime = LocalDateTime.now();
         BeanClass beanClass = new BeanClass();
         beanClass.setUserId(userId);
         beanClass.setLoginname(loginname);
@@ -164,7 +166,7 @@ public class JacksonTests {
         long userId = 12345l;
         String loginname = "dexter";
         boolean enable = true;
-        Date createTime = new Date();
+        LocalDateTime createTime = LocalDateTime.now();
 
         List<BeanClass> beanClasseList = new ArrayList<BeanClass>();
         for (int i = 1; i <= 5; i++) {
@@ -207,5 +209,19 @@ public class JacksonTests {
         // https://stackoverflow.com/questions/32683785/create-java-8-stream-from-arraynode
         List<String> list = StreamSupport.stream(arrayNode.spliterator(), false).map(JsonNode::asText).collect(Collectors.toList());
         Assert.assertArrayEquals(new String[]{"1", "2", "3"}, list.toArray(new String[]{}));
+    }
+
+    /**
+     * 测试后端如何返回带有枚举类型数据给前端
+     *
+     * @throws JsonProcessingException
+     */
+    @Test
+    public void testEnum() throws JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        BeanClass beanClass = new BeanClass();
+        beanClass.setStatus(Status.Paying.toDto());
+        String JSON = objectMapper.writeValueAsString(beanClass);
+        Assert.assertEquals("{\"userId\":0,\"loginname\":null,\"createTime\":null,\"status\":{\"name\":\"Paying\",\"description\":\"支付中\"}}", JSON);
     }
 }

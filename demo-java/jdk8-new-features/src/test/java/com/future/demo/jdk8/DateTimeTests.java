@@ -6,6 +6,7 @@ import org.junit.Test;
 import java.text.SimpleDateFormat;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.util.Date;
 import java.util.concurrent.ExecutorService;
@@ -96,14 +97,21 @@ public class DateTimeTests {
         System.out.println("localDateTime.isBefore(now) = " + localDateTime.isBefore(now));
         System.out.println("localDateTime.isEqual(now) = " + localDateTime.isEqual(now));
 
+        // 截断毫秒以比较时间
+        now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS /* 截断到秒 */);
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        String localDateTimeStr = now.format(dateTimeFormatter);
+        localDateTime = LocalDateTime.parse(localDateTimeStr, dateTimeFormatter);
+        System.out.println("localDateTime.equals(now) = " + localDateTime.equals(now));
+
         // endregion
 
         // region 时间格式化和解析
 
         // 时间格式化
-        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         localDateTime = LocalDateTime.now();
-        String localDateTimeStr = localDateTime.format(dateTimeFormatter);
+        localDateTimeStr = localDateTime.format(dateTimeFormatter);
         System.out.println("localDateTimeStr = " + localDateTimeStr);
 
         // 解析日期和时间
