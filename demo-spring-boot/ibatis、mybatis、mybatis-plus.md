@@ -677,6 +677,61 @@ EnumPerfTests.testEnumStoringAsVarchar  thrpt    3  4550.752 ± 6471.301  ops/s
 
 
 
+### 使用 LocalDateTime 类型代替 java.util.Date 类型
+
+```sql
+create table if not exists `order` (
+    id          bigint primary key auto_increment,
+    address     varchar(255) not null,
+    amount      decimal(15,5) not null,
+    customer_id bigint not null,
+    create_time datetime not null
+) engine=InnoDB default charset=utf8mb4 collate=utf8mb4_general_ci;
+```
+
+```java
+@Data
+public class Order {
+    private Long id;
+    private String address;
+    private BigDecimal amount;
+    private Long customerId;
+    private LocalDateTime createTime;
+
+    /**
+     * 订单对应的客户
+     */
+    private Customer customer;
+}
+```
+
+```java
+@Insert("insert into `order`(address,amount,customer_id,create_time) values(#{address},#{amount},#{customerId},#{createTime})")
+@Options(useGeneratedKeys = true, keyProperty = "id")
+int add(Order order);
+```
+
+```java
+// region 测试 LocalDateTime
+
+LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
+order = new Order();
+order.setAddress("address");
+order.setAmount(BigDecimal.valueOf(100));
+order.setCustomerId(1L);
+order.setCreateTime(now);
+int result = this.orderMapper.add(order);
+Assertions.assertEquals(1, result);
+id = order.getId();
+order = this.orderMapper.findByIdWithCustomer(id);
+this.orderMapper.delete(id);
+Assertions.assertEquals(now, order.getCreateTime());
+
+// endregion
+```
+
+
+
 ## `MyBatis-plus`
 
 ### `spring-boot`项目集成`MyBatis-plus`

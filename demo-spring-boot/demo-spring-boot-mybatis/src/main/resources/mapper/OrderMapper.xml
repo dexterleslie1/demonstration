@@ -6,6 +6,7 @@
         <result column="amount" property="amount"/>
         <result column="address" property="address"/>
         <result column="customer_id" property="customerId"/>
+        <result column="create_time" property="createTime"/>
         <!-- 使用association标签标注order和customer是一对一关系 -->
         <association property="customer" javaType="com.future.demo.bean.Customer">
             <id column="cId" property="id"/>

@@ -6,7 +6,6 @@ import com.future.demo.bean.Order;
 import com.future.demo.bean.Student;
 import com.future.demo.mapper.*;
 import com.future.demo.service.EmployeeService;
-import com.github.pagehelper.Page;
 import com.github.pagehelper.PageInfo;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -14,8 +13,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @SpringBootTest
 class DemoSpringBootMybatisApplicationTests {
@@ -409,6 +409,23 @@ class DemoSpringBootMybatisApplicationTests {
         employees = this.employeeAnnotationMapper.findByIds(Collections.singletonList(id));
         Assertions.assertEquals(1, employees.size());
         Assertions.assertEquals("张三", employees.get(0).getEmpName());
+
+        // endregion
+
+        // region 测试 LocalDateTime
+
+        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
+        order = new Order();
+        order.setAddress("address");
+        order.setAmount(BigDecimal.valueOf(100));
+        order.setCustomerId(1L);
+        order.setCreateTime(now);
+        int result = this.orderMapper.add(order);
+        Assertions.assertEquals(1, result);
+        id = order.getId();
+        order = this.orderMapper.findByIdWithCustomer(id);
+        this.orderMapper.delete(id);
+        Assertions.assertEquals(now, order.getCreateTime());
 
         // endregion
     }

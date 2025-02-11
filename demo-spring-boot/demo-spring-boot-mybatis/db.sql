@@ -23,14 +23,15 @@ create table if not exists `order` (
     id          bigint primary key auto_increment,
     address     varchar(255) not null,
     amount      decimal(15,5) not null,
-    customer_id bigint not null
+    customer_id bigint not null,
+    create_time datetime not null
 ) engine=InnoDB default charset=utf8mb4 collate=utf8mb4_general_ci;
 
-insert into `order`(id, address, amount, customer_id) values(1, '北京市', 200.56, 1);
-insert into `order`(id, address, amount, customer_id) values(2, '上海市', 300.56, 1);
-insert into `order`(id, address, amount, customer_id) values(3, '广州市', 400.56, 2);
-insert into `order`(id, address, amount, customer_id) values(4, '深圳市', 500.56, 3);
-insert into `order`(id, address, amount, customer_id) values(5, '深圳市', 500.56, 3);
+insert into `order`(id, address, amount, customer_id, create_time) values(1, '北京市', 200.56, 1, now());
+insert into `order`(id, address, amount, customer_id, create_time) values(2, '上海市', 300.56, 1, now());
+insert into `order`(id, address, amount, customer_id, create_time) values(3, '广州市', 400.56, 2, now());
+insert into `order`(id, address, amount, customer_id, create_time) values(4, '深圳市', 500.56, 3, now());
+insert into `order`(id, address, amount, customer_id, create_time) values(5, '深圳市', 500.56, 3, now());
 
 create table if not exists student (
     id          bigint primary key auto_increment,
