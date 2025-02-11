@@ -140,3 +140,76 @@ public void testEnum() throws JsonProcessingException {
 ## Jackson
 
 >`https://gitee.com/dexterleslie/demonstration/tree/master/demo-java/demo-library/demo-json-lib`
+
+### maven 项目 pom 配置
+
+```xml
+<dependency>
+    <groupId>com.fasterxml.jackson.core</groupId>
+    <artifactId>jackson-databind</artifactId>
+    <version>2.9.4</version>
+</dependency>
+<dependency>
+    <groupId>com.fasterxml.jackson.datatype</groupId>
+    <artifactId>jackson-datatype-jsr310</artifactId>
+    <version>2.9.4</version>
+</dependency>
+```
+
+
+
+### LocalDateTime、LocalDate、LocalTime 序列化配置
+
+pom 配置引入如下依赖
+
+```xml
+<dependency>
+    <groupId>com.fasterxml.jackson.datatype</groupId>
+    <artifactId>jackson-datatype-jsr310</artifactId>
+    <version>2.9.4</version>
+</dependency>
+```
+
+配置 LocalDateTime 字段序列化和反序列化
+
+```java
+@Data
+public class BeanClass {
+    private long userId;
+    private String loginname;
+    @JsonIgnore
+    private boolean enable;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    private LocalDateTime createTime;
+
+    private StatusEnumDTO status;
+}
+```
+
+```java
+/**
+ *
+ */
+@Test
+public void bean2json() throws IOException {
+    long userId = 12345l;
+    String loginname = "dexter";
+    boolean enable = true;
+    LocalDateTime createTime = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
+    BeanClass beanClass = new BeanClass();
+    beanClass.setUserId(userId);
+    beanClass.setLoginname(loginname);
+    beanClass.setEnable(enable);
+    beanClass.setCreateTime(createTime);
+
+    ObjectMapper OMInstance = new ObjectMapper();
+    String json = OMInstance.writeValueAsString(beanClass);
+    beanClass = OMInstance.readValue(json, BeanClass.class);
+    Assert.assertEquals(userId, beanClass.getUserId());
+    Assert.assertEquals(loginname, beanClass.getLoginname());
+    Assert.assertEquals(false, beanClass.isEnable());
+    Assert.assertEquals(createTime, beanClass.getCreateTime());
+}
+```
