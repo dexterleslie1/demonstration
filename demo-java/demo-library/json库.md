@@ -160,6 +160,8 @@ public void testEnum() throws JsonProcessingException {
 
 ### LocalDateTime、LocalDate、LocalTime 序列化配置
 
+>`https://blog.csdn.net/REX1024/article/details/123657816`
+
 pom 配置引入如下依赖
 
 ```xml
