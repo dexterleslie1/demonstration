@@ -578,6 +578,105 @@ public class EmployeeService {
 
 
 
+### 枚举类型存储
+
+#### MySQL 枚举类型
+
+MySQL 的枚举类型 (ENUM) 允许你定义一组预定义的字符串值，列的值只能从该集合中选择。  它在存储空间和数据完整性方面具有一定的优势。
+
+**创建枚举类型列:**
+
+使用 `ENUM` 关键字在创建表时定义枚举类型列：
+
+```sql
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    status ENUM('active', 'inactive', 'pending')
+);
+```
+
+这创建了一个名为 `users` 的表，其中 `status` 列是一个枚举类型，允许的值为 `'active'`, `'inactive'`, 和 `'pending'`。
+
+**插入数据:**
+
+你可以使用枚举列的允许值来插入数据：
+
+```sql
+INSERT INTO users (status) VALUES ('active');
+INSERT INTO users (status) VALUES ('inactive');
+```
+
+尝试插入不在允许值列表中的值会报错：
+
+```sql
+INSERT INTO users (status) VALUES ('deleted'); -- 报错
+```
+
+**修改枚举类型列的值:**
+
+你可以更新 `status` 列的值，但新值必须是已定义的枚举值之一：
+
+```sql
+UPDATE users SET status = 'pending' WHERE id = 1;
+```
+
+**查询数据:**
+
+你可以像查询其他列一样查询枚举类型列：
+
+```sql
+SELECT * FROM users WHERE status = 'active';
+```
+
+**枚举类型的重要特性和注意事项:**
+
+- **存储方式:**  MySQL 内部以整数存储枚举值，'active'，'inactive'，'pending' 分别对应整数 1, 2, 3  (顺序和定义顺序一致)。  这使得存储空间相对较小。
+- **添加/删除枚举值:**  修改枚举类型定义（添加或删除枚举值）会比较复杂。  如果你添加了新的枚举值，旧的数据仍然有效，新值对应新的整数。但如果你删除了枚举值，包含该值的记录仍然存在，但是其整数可能变成 NULL 或其他值，这需要谨慎处理，可能需要数据迁移。
+- **空值:**  枚举类型列可以存储 NULL 值。
+- **索引:**  枚举类型列可以被索引，这可以提高查询效率。
+- **字符串比较:**  在比较时，使用单引号括起来枚举值 (例如 `'active'` )。
+- **性能:**  由于 MySQL 内部使用整数存储，枚举类型通常比 VARCHAR 类型在存储空间和查询速度方面更具优势，尤其是在大量数据的情况下。
+- **可读性:**  枚举类型提高了数据的可读性和可理解性，因为值是具有语义意义的字符串。
+
+**与其他数据类型的比较:**
+
+相比 `VARCHAR` 类型，枚举类型有以下优势：
+
+- **数据完整性:**  保证列的值只能从预定义的集合中选择，避免了无效数据。
+- **存储空间:**  通常比 `VARCHAR` 占用更少的存储空间。
+- **性能:**  查询速度可能更快。
+
+但是，枚举类型的灵活性较差，修改枚举值需要谨慎处理，可能会影响现有数据。  因此，在选择使用枚举类型时，需要权衡其优缺点，并考虑未来的可扩展性。  如果需要高度的灵活性，则可能更适合使用 `VARCHAR` 类型或其他更灵活的数据类型，并结合应用层逻辑进行数据验证。
+
+
+
+#### 如何存储枚举类型呢？
+
+>`https://blog.csdn.net/JoeBlackzqq/article/details/90216582`
+
+总结：存储枚举类型方式：使用 int 数据类型存储、使用 varchar 数据类型存储、使用 MySQL enum 数据类型存储，推荐使用 MySQL enum 数据类型存储。
+
+参考示例`https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-boot-mybatis`中的 EnumTests、EnumPerfTests 分别使用三种数据类型存储枚举，并分别比较三种数据类型的存储空间使用率和查询性能。
+
+数据量均为  100w 时查询性能比较结果：
+
+```
+Benchmark                                Mode  Cnt     Score      Error  Units
+EnumPerfTests.testEnumStoringAsEnum     thrpt    3  4747.686 ± 8779.277  ops/s
+EnumPerfTests.testEnumStoringAsInt      thrpt    3  4699.738 ± 5563.983  ops/s
+EnumPerfTests.testEnumStoringAsVarchar  thrpt    3  4550.752 ± 6471.301  ops/s
+```
+
+- 似乎查询性能差异不大
+
+数据量均为 100w 是存储空间使用率比较结果：
+
+- t_enum_storing_as_int 表为 32047104 字节
+- t_enum_storing_as_varchar 表为 37289984 字节
+- t_enum_storing_as_enum 表为 28901376 字节
+
+
+
 ## `MyBatis-plus`
 
 ### `spring-boot`项目集成`MyBatis-plus`

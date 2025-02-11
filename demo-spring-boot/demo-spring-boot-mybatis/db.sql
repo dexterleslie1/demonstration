@@ -38,3 +38,18 @@ create table if not exists student (
     age         int not null,
     score       decimal(15,5) not null
 ) engine=InnoDB default charset=utf8mb4 collate=utf8mb4_general_ci;
+
+create table if not exists t_enum_storing_as_int (
+    id          bigint primary key auto_increment,
+    `status`    int not null
+) engine=InnoDB default charset=utf8mb4 collate=utf8mb4_general_ci;
+
+create table if not exists t_enum_storing_as_varchar (
+    id          bigint primary key auto_increment,
+    `status`    varchar(128) not null
+) engine=InnoDB default charset=utf8mb4 collate=utf8mb4_general_ci;
+
+create table if not exists t_enum_storing_as_enum (
+    id          bigint primary key auto_increment,
+    `status`    enum('Create','Paying','InProgress','Failed','Reversed')
+) engine=InnoDB default charset=utf8mb4 collate=utf8mb4_general_ci;
