@@ -4758,5 +4758,142 @@ public class InheritableThreadLocalExample {
 * 对于需要父子线程间共享数据的场景，构造器参数传递或方法参数传递是更好的选择，比共享变量更安全、更易于维护。
 * `InheritableThreadLocal` 应该谨慎使用，只在需要子线程继承父线程上下文信息时使用，并且要理解其局限性（只在创建子线程时继承，之后父线程修改不会影响子线程）。
 
-
 记住，`ThreadLocal` 主要用于线程隔离，而非线程间通信。  如果需要线程间通信，请使用其他更合适的机制。
+
+
+
+## Fork/Join 机制
+
+>todo 是否能够解决金额组合的 roi 计算问题？
+
+Java Fork/Join 框架是一个用于并行执行任务的框架，它基于**分治法 (Divide and Conquer)** 的思想。它将一个大的任务递归地分解成更小的子任务，直到子任务足够小以至于可以快速执行，然后将子任务的结果合并起来得到最终结果。Fork/Join 框架特别适用于那些可以被递归分解成独立子任务的任务。
+
+**核心组件：**
+
+* **`ForkJoinPool`:**  一个线程池，用于管理和执行 Fork/Join 任务。它使用工作窃取算法 (work-stealing)，使得空闲线程可以从繁忙线程中窃取任务来执行，从而提高效率。
+
+* **`RecursiveAction`:**  一个抽象类，用于表示没有返回值的任务。
+
+* **`RecursiveTask`:**  一个抽象类，用于表示有返回值的任务。
+
+
+**工作窃取算法 (Work-Stealing):**
+
+Fork/Join 框架的核心是工作窃取算法。每个线程都有自己的双端队列 (deque)，用于存储它需要执行的任务。当一个线程完成其队列中的所有任务后，它会尝试从其他线程的队列中“窃取”任务来执行。这使得线程池中的所有线程都能得到充分利用，提高了并行效率。
+
+
+**例子：**  计算一个数组中所有元素的和。
+
+```java
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.RecursiveTask;
+
+public class ForkJoinSumCalculator extends RecursiveTask<Long> {
+    private final long[] numbers;
+    private final int start;
+    private final int end;
+
+    public ForkJoinSumCalculator(long[] numbers) {
+        this(numbers, 0, numbers.length);
+    }
+
+    private ForkJoinSumCalculator(long[] numbers, int start, int end) {
+        this.numbers = numbers;
+        this.start = start;
+        this.end = end;
+    }
+
+    @Override
+    protected Long compute() {
+        if (end - start <= 1000) { // 设置阈值，小于阈值则直接计算
+            return computeSequentially();
+        }
+        int mid = (start + end) / 2;
+        ForkJoinSumCalculator leftTask = new ForkJoinSumCalculator(numbers, start, mid);
+        ForkJoinSumCalculator rightTask = new ForkJoinSumCalculator(numbers, mid, end);
+
+        // 执行子任务
+        leftTask.fork(); // 异步执行
+        long rightResult = rightTask.compute(); // 同步执行
+        long leftResult = leftTask.join(); // 获取左子任务的结果
+
+        return leftResult + rightResult;
+    }
+
+    private long computeSequentially() {
+        long sum = 0;
+        for (int i = start; i < end; i++) {
+            sum += numbers[i];
+        }
+        return sum;
+    }
+
+    public static void main(String[] args) {
+        long[] numbers = new long[10000000]; // 1000万个数字
+        for (int i = 0; i < numbers.length; i++) {
+            numbers[i] = i;
+        }
+
+        ForkJoinPool pool = new ForkJoinPool();
+        long sum = pool.invoke(new ForkJoinSumCalculator(numbers));
+        System.out.println("Sum: " + sum);
+    }
+}
+```
+
+在这个例子中：
+
+1. `ForkJoinSumCalculator` 继承了 `RecursiveTask<Long>`，因为它需要返回一个 `long` 值（数组元素的和）。
+2. `compute()` 方法是递归的核心。它首先检查数组大小是否小于阈值 (1000)。如果小于阈值，则直接顺序计算并返回结果。否则，它将数组分成两半，创建两个 `ForkJoinSumCalculator` 子任务，分别处理数组的两半。  使用 `fork()` 方法异步执行左子任务，`compute()` 方法同步执行右子任务，`join()` 方法等待左子任务完成并获取结果。
+3. `main` 方法创建一个 `ForkJoinPool` 并使用 `invoke()` 方法执行任务。
+
+
+**RecursiveAction 例子 (无返回值):**
+
+```java
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.RecursiveAction;
+
+public class ForkJoinPrintTask extends RecursiveAction {
+    private final int[] arr;
+    private final int start;
+    private final int end;
+
+    public ForkJoinPrintTask(int[] arr) {
+        this(arr, 0, arr.length);
+    }
+
+    private ForkJoinPrintTask(int[] arr, int start, int end) {
+        this.arr = arr;
+        this.start = start;
+        this.end = end;
+    }
+
+    @Override
+    protected void compute() {
+        if (end - start <= 10) {
+            for (int i = start; i < end; i++) {
+                System.out.print(arr[i] + " ");
+            }
+        } else {
+            int mid = (start + end) / 2;
+            ForkJoinPrintTask leftTask = new ForkJoinPrintTask(arr, start, mid);
+            ForkJoinPrintTask rightTask = new ForkJoinPrintTask(arr, mid, end);
+            invokeAll(leftTask, rightTask); // 并行执行子任务
+        }
+    }
+
+    public static void main(String[] args) {
+        int[] numbers = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,16,17,18,19,20};
+        ForkJoinPool pool = new ForkJoinPool();
+        pool.invoke(new ForkJoinPrintTask(numbers));
+        System.out.println();
+    }
+}
+```
+
+
+这两个例子展示了 `RecursiveTask` 和 `RecursiveAction` 的使用方式。  选择哪个类取决于你的任务是否需要返回值。  Fork/Join 框架是一个强大的工具，可以显著提高某些类型任务的性能，尤其是在多核处理器上。  但是，它也有一定的开销，因此对于非常小的任务，使用 Fork/Join 框架可能反而会降低性能。  你需要根据具体的应用场景和任务特性来选择合适的并行计算方法。
+
+
+记住，选择合适的阈值非常重要。阈值太小，会增加任务管理的开销；阈值太大，则无法充分利用并行计算的优势。  你需要根据你的硬件和任务特点进行实验，找到最佳的阈值。
