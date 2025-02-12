@@ -4375,5 +4375,388 @@ Java 创建线程池主要有两种方式：
       * `DiscardPolicy`：直接丢弃任务。
       * `DiscardOldestPolicy`：丢弃队列中最旧的任务，然后尝试再次提交新任务。
 
-
 总而言之，`Executors` 提供了方便快捷的创建线程池的方法，适合简单的应用场景；而 `ThreadPoolExecutor` 提供了更精细的控制，适合对性能要求较高或需要自定义线程池行为的复杂应用场景。  建议在大多数情况下使用 `ThreadPoolExecutor` ，这样可以更好地掌控线程池的行为，避免潜在的问题。
+
+
+
+## ThreadLocal
+
+### 介绍
+
+ThreadLocal，翻译过来叫做线程局部变量，它是一种能够让每个线程都拥有自己独立副本的变量。  这意味着每个线程对这个变量的操作不会影响其他线程，从而避免了多线程环境下的数据竞争和共享资源的同步问题。
+
+**它解决了什么问题？**
+
+主要解决了在多线程环境下共享变量的并发访问问题。  如果没有ThreadLocal，多个线程访问同一个变量时，需要使用同步机制（比如锁）来保证数据一致性，这会带来性能损耗和代码复杂度增加。  ThreadLocal巧妙地绕过了这个问题，每个线程拥有自己的副本，所以无需同步。
+
+**它的作用是什么？**
+
+ThreadLocal的主要作用就是为每个线程提供一个独立的变量副本，使其拥有线程私有的状态。这在以下场景中非常有用：
+
+* **避免线程间的共享数据干扰：**  例如，数据库连接、用户会话信息等，每个线程需要使用自己的连接或会话，避免互相影响。使用ThreadLocal可以很方便地为每个线程分配一个独立的连接或会话。
+
+* **简化代码：**  通过ThreadLocal，可以避免在多线程代码中使用大量的锁机制，从而简化代码，提高代码的可读性和可维护性。
+
+* **提供线程上下文信息：**  ThreadLocal可以存储与当前线程相关的上下文信息，方便在不同的方法或类中访问这些信息，而无需显式地传递参数。
+
+
+**需要注意的是：**
+
+* ThreadLocal并非真正的“局部变量”，它只是通过一个Map来管理每个线程的变量副本。这意味着如果线程数量过多，可能会占用较多的内存。
+
+* ThreadLocal变量的生命周期和线程的生命周期密切相关。当线程结束时，ThreadLocal变量对应的副本也会被销毁。  如果忘记调用`remove()`方法，可能会导致内存泄漏（尤其是在线程池中使用时）。  因此，在使用完 ThreadLocal 变量后，务必调用 `remove()` 方法释放资源。
+
+总而言之，ThreadLocal 是一个方便且高效的工具，可以有效地解决多线程环境下共享变量的并发问题，但需要谨慎使用，避免内存泄漏等问题。
+
+
+
+### 应用场景
+
+ThreadLocal 的应用场景非常广泛，几乎任何需要在多线程环境下避免共享变量竞争的地方都可以使用它。以下是一些具体的应用场景：
+
+**1. 数据库连接管理:**
+
+每个线程都应该拥有自己的数据库连接，避免连接池资源竞争和死锁。使用 ThreadLocal 可以为每个线程存储一个独立的数据库连接，在需要时获取，使用完毕后释放。
+
+**2. 用户会话信息:**
+
+在 Web 应用中，每个线程处理一个用户的请求。使用 ThreadLocal 可以存储用户的会话信息，例如用户名、用户 ID、权限等，方便在不同的方法或类中访问这些信息，而无需在方法间传递参数。
+
+**3. 事务管理:**
+
+在事务处理中，每个线程都需要维护自己的事务上下文。ThreadLocal 可以存储事务相关的状态信息，例如事务 ID、事务状态等。
+
+**4. 日志跟踪:**
+
+ThreadLocal 可以存储与当前线程相关的日志信息，方便追踪和调试多线程程序。例如，可以存储请求 ID，方便在不同日志文件中关联同一请求的日志。
+
+**5. 安全上下文:**
+
+在安全敏感的应用中，ThreadLocal 可以存储用户的身份验证信息，例如用户名、密码、安全令牌等，方便在不同的方法或类中访问这些信息，同时保证安全。
+
+**6. 跟踪调试:**
+
+在多线程调试时，可以使用 ThreadLocal 存储调试信息，例如线程 ID、堆栈信息等，方便跟踪和定位问题。
+
+**7. 语言环境:**
+
+一些应用需要根据用户的语言设置来显示不同的内容。可以使用 ThreadLocal 来存储用户的语言环境信息，方便在不同的方法或类中访问。
+
+**8.  用户数据上下文:**  电商系统中，一个用户的请求可能需要跨多个服务，每个服务都可能需要访问用户信息。 使用 ThreadLocal 可以将用户信息存储在请求线程中，方便各个服务访问。
+
+
+**总结:**
+
+总的来说，ThreadLocal 的应用场景主要集中在需要为每个线程提供独立上下文信息或避免共享资源竞争的场景。它可以简化代码、提高性能，并提升多线程程序的可维护性和可读性。  但是需要注意的是，需要谨慎管理 ThreadLocal 变量的生命周期，避免内存泄漏。  尤其是在线程池中使用时，务必在合适的时候调用 `remove()` 方法，释放资源。
+
+
+
+### 原理
+
+ThreadLocal 的原理是为每个线程提供一个独立的变量副本，从而避免多线程环境下的共享变量竞争问题。它并非真的“局部变量”，而是通过一个 Map 来实现的。这个 Map 的键是 Thread 对象，值是该线程对应的 ThreadLocal 变量的值。
+
+具体来说，ThreadLocal 的工作机制如下：
+
+1. **ThreadLocalMap:**  ThreadLocal 本身并不存储值，它持有的是一个弱引用指向 ThreadLocalMap。每个 Thread 对象都持有一个 ThreadLocalMap 对象作为其成员变量。ThreadLocalMap 是一个类似于 HashMap 的结构，用于存储线程局部变量的值。
+
+2. **get() 方法:** 当调用 ThreadLocal 的 `get()` 方法时，它会获取当前线程 (`Thread.currentThread()`)，然后在这个线程的 ThreadLocalMap 中查找与当前 ThreadLocal 对象对应的值。如果找到，则返回该值；如果没有找到，则创建一个新的值，并将其存储到 ThreadLocalMap 中，然后返回该值。
+
+3. **set() 方法:** 当调用 ThreadLocal 的 `set()` 方法时，它也会获取当前线程，然后在这个线程的 ThreadLocalMap 中设置与当前 ThreadLocal 对象对应的值。
+
+4. **remove() 方法:**  调用 `remove()` 方法可以显式地从当前线程的 ThreadLocalMap 中移除与当前 ThreadLocal 对象对应的值。这很重要，因为如果 ThreadLocal 对象不再被使用，但其值仍然存在于 ThreadLocalMap 中，可能会导致内存泄漏。
+
+
+**内存泄漏问题:**
+
+ThreadLocal 的 `ThreadLocalMap` 使用弱引用来引用 ThreadLocal 对象。这意味着，当 ThreadLocal 对象没有其他强引用指向它时，垃圾回收器可以回收它。但是，`ThreadLocalMap` 使用强引用来引用值。如果 ThreadLocal 对象被回收了，而其值仍然存在于 `ThreadLocalMap` 中，并且线程又一直存活，那么这个值就无法被回收，从而导致内存泄漏。这就是 ThreadLocal 可能导致内存泄漏的原因。为了避免这个问题，应该在不再需要 ThreadLocal 的时候，调用 `remove()` 方法来显式地移除值。
+
+**总结:**
+
+ThreadLocal 通过 ThreadLocalMap 实现线程隔离，为每个线程提供独立的变量副本。但是需要注意的是，需要合理使用 `remove()` 方法避免内存泄漏。  它在多线程编程中非常有用，可以有效地避免共享变量的竞争和同步问题，但需要开发者谨慎处理，避免内存泄露。
+
+希望以上解释能够帮助你理解 ThreadLocal 的原理。  你还有什么其他问题吗？
+
+
+
+### ThreadLocal 中的 ThreadLocalMap 为何要使用弱引用呢？
+
+Java `ThreadLocal` 内部使用 `ThreadLocalMap` 来存储线程局部变量。这个 `ThreadLocalMap` 的键是 `ThreadLocal` 实例本身，值是存储在 `ThreadLocal` 中的实际对象。  `ThreadLocalMap` 使用弱引用作为键，而不是强引用，**是为了防止内存泄漏，特别是当ThreadLocal对象不再被使用时**。
+
+
+如果不使用弱引用，当 ThreadLocal 对象不再被任何强引用持有（例如，一个局部 ThreadLocal 变量超出作用域），但线程仍然存活时，`ThreadLocalMap` 中的键值对会一直存在，因为 `ThreadLocalMap` 持有对 ThreadLocal 对象的强引用。这样，即使 ThreadLocal 对象已经不再需要，它所占用的内存也无法被释放，最终导致内存泄漏。
+
+
+**以下是一个正确演示弱引用如何避免 `ThreadLocal` 内存泄漏的例子：**  这个例子模拟一个场景，其中一个 ThreadLocal 在方法中创建并使用，该方法结束后，ThreadLocal 对象应被垃圾回收。
+
+
+```java
+import java.lang.ref.WeakReference;
+import java.util.HashMap;
+import java.util.Map;
+
+public class ThreadLocalWeakReferenceExample {
+
+    private static class MyThreadLocal extends ThreadLocal<byte[]> {
+        @Override
+        protected byte[] initialValue() {
+            return new byte[1024 * 1024]; // 1MB
+        }
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+        // 创建一个ThreadLocal对象
+        MyThreadLocal myThreadLocal = new MyThreadLocal();
+
+        // 在一个方法中使用ThreadLocal
+        useThreadLocal(myThreadLocal);
+
+        // 等待垃圾回收
+        System.gc();
+        Thread.sleep(1000);
+
+        // 验证是否已回收
+        if (myThreadLocal.get() == null) {
+            System.out.println("ThreadLocal and its value have been garbage collected.");
+        } else {
+            System.out.println("Memory leak might have occurred!");
+        }
+
+    }
+
+    public static void useThreadLocal(MyThreadLocal threadLocal) {
+        byte[] data = threadLocal.get();
+        // 使用data
+        System.out.println("Using data in ThreadLocal: " + data.length);
+        threadLocal.remove(); // 手动移除，尽管超出作用域后会自动移除，但为了更清晰地演示，显式移除
+    }
+}
+```
+
+在这个例子中：
+
+1. `MyThreadLocal` 继承了 `ThreadLocal` 并重写了 `initialValue()` 方法，以便在第一次获取 `ThreadLocal` 值时自动分配 1MB 内存。
+2. `useThreadLocal` 方法模拟一个使用 `ThreadLocal` 的场景。方法结束后，`ThreadLocal` 对象及其关联的数据应该被垃圾回收。
+3. `main` 方法创建 `MyThreadLocal` 实例，调用 `useThreadLocal`，然后手动触发垃圾回收，并等待一段时间，最后检查 `ThreadLocal` 是否被回收。
+
+**如果 `ThreadLocalMap` 使用强引用，那么即使 `myThreadLocal` 超出了作用域，它仍然会被 `ThreadLocalMap` 保持引用，从而导致内存泄漏。**  由于使用了弱引用，`myThreadLocal` 会被垃圾回收，从而释放内存。
+
+
+**总结:**  `ThreadLocalMap` 使用弱引用作为键，可以有效防止 `ThreadLocal` 变量导致的内存泄漏，尤其是在线程长期运行且大量创建和销毁 `ThreadLocal` 变量的场景下。  然而，这需要开发者注意在使用 `ThreadLocal` 后及时调用 `remove()` 方法清理，以避免一些意外情况。  但是即使不调用remove方法，由于弱引用的特性，最终仍然会被垃圾回收。
+
+这个例子更清晰、准确地解释了 `ThreadLocal` 中弱引用的作用，避免了之前例子中静态变量造成的误导。
+
+
+
+### 基本使用
+
+```java
+public class ThreadLocalTests {
+    @Test
+    public void test() throws InterruptedException {
+        // region 不使用 ThreadLocal 多线程访问同一变量会错乱
+
+        AtomicInteger flag = new AtomicInteger();
+        VariableContainer variableContainer = new VariableContainer();
+
+        ExecutorService threadPool = Executors.newCachedThreadPool();
+
+        for (int i = 0; i < 10; i++) {
+            AtomicInteger finalFlag1 = flag;
+            threadPool.submit(() -> {
+                String uuid = UUID.randomUUID().toString();
+                variableContainer.setValue(uuid);
+
+                int milliseconds = RandomUtils.nextInt(0, 1000);
+                if (milliseconds == 0) {
+                    milliseconds = 1;
+                }
+                try {
+                    TimeUnit.MILLISECONDS.sleep(milliseconds);
+                } catch (InterruptedException ignored) {
+
+                }
+
+                String result = variableContainer.getValue();
+                try {
+                    Assert.assertEquals(uuid, result);
+                } catch (Throwable throwable) {
+                    finalFlag1.incrementAndGet();
+                }
+            });
+        }
+
+        threadPool.shutdown();
+        while (!threadPool.awaitTermination(1, TimeUnit.SECONDS)) ;
+
+        Assert.assertTrue(flag.get() > 0);
+
+        // endregion
+
+        // region 使用 ThreadLocal 多线程访问同一变量不会错乱
+
+        flag = new AtomicInteger();
+        VariableContainerByUsingThreadLocal variableContainerByUsingThreadLocal = new VariableContainerByUsingThreadLocal();
+
+        threadPool = Executors.newCachedThreadPool();
+
+        for (int i = 0; i < 10; i++) {
+            AtomicInteger finalFlag = flag;
+            threadPool.submit(() -> {
+                String uuid = UUID.randomUUID().toString();
+                variableContainerByUsingThreadLocal.setValue(uuid);
+
+                int milliseconds = RandomUtils.nextInt(0, 1000);
+                if (milliseconds == 0) {
+                    milliseconds = 1;
+                }
+                try {
+                    TimeUnit.MILLISECONDS.sleep(milliseconds);
+                } catch (InterruptedException ignored) {
+
+                }
+
+                String result = variableContainerByUsingThreadLocal.getValue();
+                try {
+                    Assert.assertEquals(uuid, result);
+                } catch (Throwable throwable) {
+                    finalFlag.incrementAndGet();
+                }
+            });
+        }
+
+        threadPool.shutdown();
+        while (!threadPool.awaitTermination(1, TimeUnit.SECONDS)) ;
+
+        Assert.assertTrue(flag.get() == 0);
+
+        // endregion
+    }
+
+    public static class VariableContainer {
+        private String value;
+
+        public void setValue(String value) {
+            this.value = value;
+        }
+
+        public String getValue() {
+            return this.value;
+        }
+    }
+
+    public static class VariableContainerByUsingThreadLocal {
+        private ThreadLocal<String> threadLocal = new ThreadLocal<>();
+
+        public void setValue(String value) {
+            this.threadLocal.set(value);
+        }
+
+        public String getValue() {
+            return this.threadLocal.get();
+        }
+    }
+}
+```
+
+
+
+### 父子线程场景用法
+
+在父子线程场景下，`ThreadLocal` 的行为需要注意，因为它**不具有继承性**。父线程的 `ThreadLocal` 变量的值不会自动传递给子线程。每个线程都拥有自己独立的 `ThreadLocal` 变量副本。
+
+
+因此，在父子线程场景中使用 `ThreadLocal`，需要根据具体需求选择不同的策略：
+
+**1.  不共享数据：**
+
+如果父子线程不需要共享数据，那么 `ThreadLocal` 可以直接使用，每个线程拥有独立的变量副本。这是最简单的情况。
+
+```java
+public class ThreadLocalNoSharing {
+    private static ThreadLocal<String> threadLocal = new ThreadLocal<>();
+
+    public static void main(String[] args) throws InterruptedException {
+        threadLocal.set("Parent Thread Value");
+        System.out.println("Parent thread: " + threadLocal.get());
+
+        Thread childThread = new Thread(() -> {
+            System.out.println("Child thread: " + threadLocal.get()); // null or initialValue()
+            threadLocal.set("Child Thread Value");
+            System.out.println("Child thread after setting: " + threadLocal.get());
+        });
+        childThread.start();
+        childThread.join();
+        System.out.println("Parent thread after child: " + threadLocal.get());
+    }
+}
+```
+
+在这个例子中，父线程和子线程各自拥有独立的 `ThreadLocal` 变量副本，它们互不影响。
+
+
+**2.  需要在父子线程间传递数据：**
+
+如果需要在父子线程之间共享数据，不能直接使用 `ThreadLocal` 的继承特性（因为它没有），需要通过其他机制传递：
+
+* **构造器参数传递:**  在创建子线程时，将父线程的 `ThreadLocal` 值作为参数传递给子线程：
+
+```java
+public class ThreadLocalConstructor {
+    private ThreadLocal<String> threadLocal = new ThreadLocal<>();
+
+    public ThreadLocalConstructor(String initialValue) {
+        threadLocal.set(initialValue);
+    }
+
+    public String getValue() {
+        return threadLocal.get();
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+        ThreadLocalConstructor parent = new ThreadLocalConstructor("Parent Value");
+        Thread childThread = new Thread(() -> {
+            ThreadLocalConstructor child = new ThreadLocalConstructor(parent.getValue());
+            System.out.println("Child thread: " + child.getValue());
+        });
+        childThread.start();
+        childThread.join();
+    }
+}
+```
+
+* **方法参数传递:**  父线程在创建子线程之前，将 `ThreadLocal` 的值保存到一个变量中，然后将这个变量作为参数传递给子线程。
+
+
+* **共享变量（不推荐，除非有绝对必要，并注意同步）:**  使用共享变量，但需要额外的同步机制来保证线程安全。  这种方法复杂且容易出错。
+
+
+**3.  使用InheritableThreadLocal (特殊情况):**
+
+`InheritableThreadLocal` 是 `ThreadLocal` 的一个子类，它允许子线程继承父线程的 `ThreadLocal` 变量的值。  但是，**这种继承只发生在创建子线程时，子线程创建后，父线程对ThreadLocal的修改不会影响子线程。**  `InheritableThreadLocal`  主要用于在父子线程间传递一些配置信息或上下文环境，而不是频繁修改的数据。
+
+
+```java
+public class InheritableThreadLocalExample {
+    private static InheritableThreadLocal<String> inheritableThreadLocal = new InheritableThreadLocal<>();
+
+    public static void main(String[] args) throws InterruptedException {
+        inheritableThreadLocal.set("Parent Thread Value");
+        Thread childThread = new Thread(() -> {
+            System.out.println("Child thread: " + inheritableThreadLocal.get());
+        });
+        childThread.start();
+        childThread.join();
+    }
+}
+
+```
+
+
+**选择策略:**
+
+* 对于简单的场景，无需父子线程间共享数据，直接使用 `ThreadLocal` 即可。
+* 对于需要父子线程间共享数据的场景，构造器参数传递或方法参数传递是更好的选择，比共享变量更安全、更易于维护。
+* `InheritableThreadLocal` 应该谨慎使用，只在需要子线程继承父线程上下文信息时使用，并且要理解其局限性（只在创建子线程时继承，之后父线程修改不会影响子线程）。
+
+
+记住，`ThreadLocal` 主要用于线程隔离，而非线程间通信。  如果需要线程间通信，请使用其他更合适的机制。
