@@ -1,4 +1,4 @@
-package com.future.demo.quartz;
+package com.future.demo;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;

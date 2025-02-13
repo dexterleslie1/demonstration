@@ -1,4 +1,4 @@
-package com.future.demo.quartz;
+package com.future.demo;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;

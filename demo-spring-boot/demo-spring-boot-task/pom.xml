@@ -8,8 +8,8 @@
         <version>2.2.7.RELEASE</version>
     </parent>
 
-	<groupId>com.future.demo.java</groupId>
-    <artifactId>demo-spring-boot-quartz</artifactId>
+	<groupId>com.future.demo</groupId>
+    <artifactId>demo-spring-boot-task</artifactId>
 	<version>1.0.0</version>
 
 	<dependencies>
