@@ -336,7 +336,7 @@ module.exports = {
                         'spring-boot外部restcontroller.md',
                         '通过parent或dependencymanagement方式管理spring-boot依赖.md',
                         '横向扩展.md',
-                        'spring-boot-quartz.md',
+                        '任务调度框架.md',
                         '@Autowired和@Resource的区别.md',
                         'spring-boot-actuator.md',
                         'spring容器.md',
