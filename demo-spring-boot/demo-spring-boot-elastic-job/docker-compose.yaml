@@ -1,0 +1,9 @@
+version: "3.3"
+
+services:
+  demo-zookeeper:
+    image: zookeeper:3.4.9
+    environment:
+      - TZ=Asia/Shanghai
+      - JVMFLAGS=-Xmx512m -Xms512m -server
+    network_mode: host
