@@ -289,7 +289,7 @@ class DemoSpringBootMybatisApplicationTests {
         Assertions.assertEquals(age, employees.get(0).getAge());
         Assertions.assertTrue(empSalary == employees.get(0).getEmpSalary());
 
-        // 测试使用foreach标签批量插入
+        // 测试使用foreach标签批量更新
         this.employeeMapper.deleteAll();
         employees = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
@@ -304,7 +304,6 @@ class DemoSpringBootMybatisApplicationTests {
         Assertions.assertEquals(10, employees.size());
         List<Long> ids = employees.stream().map(Employee::getId).toList();
 
-        // 测试使用foreach标签批量更新
         employees = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
             employee = new Employee();

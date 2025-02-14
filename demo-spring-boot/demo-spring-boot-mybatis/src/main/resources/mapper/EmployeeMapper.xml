@@ -18,6 +18,12 @@
         </foreach>
     </insert>
 
+    <insert id="insertBatch2">
+        <foreach item="e" collection="employees" separator=";">
+        insert into employee(emp_name, age, emp_salary) values (#{e.empName}, #{e.age}, #{e.empSalary})
+        </foreach>
+    </insert>
+
     <update id="update">
         update employee
         set emp_name   = #{empName},
@@ -122,4 +128,12 @@
             where id = #{e.id}
         </foreach>
     </update>
+
+    <update id="truncate">
+        truncate table employee
+    </update>
+
+    <select id="count" resultType="int">
+        select count(id) from employee
+    </select>
 </mapper>

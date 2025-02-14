@@ -732,6 +732,24 @@ Assertions.assertEquals(now, order.getCreateTime());
 
 
 
+### 批量插入
+
+>`https://blog.csdn.net/chang100111/article/details/115664432`
+
+详细用法请参考示例 `https://gitee.com/dexterleslie/demonstration/blob/master/demo-spring-boot/demo-spring-boot-mybatis/src/test/java/com/future/demo/BatchInsertTests.java`
+
+插入 100w 数据，各种批量插入方式性能对比结果如下：
+
+```
+使用 for 循环一条一条插入数据 - 耗时 406081 毫秒
+使用 foreach 动态生成 insert values (...),(...),(...) - 耗时 21504 毫秒
+使用 foreach 动态生成  insert values (...); insert values (...); insert values (...); - 耗时 158774 毫秒
+MyBatis batch 模式插入数据 - 耗时 162665 毫秒
+使用 CompletableFuture 多线程并发插入数据 - 耗时 11408 毫秒
+```
+
+
+
 ## `MyBatis-plus`
 
 ### `spring-boot`项目集成`MyBatis-plus`

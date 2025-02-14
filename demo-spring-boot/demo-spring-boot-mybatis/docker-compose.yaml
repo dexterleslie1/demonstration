@@ -14,5 +14,4 @@ services:
       - --skip-character-set-client-handshake
     volumes:
       - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf:ro
-    ports:
-      - "3306:3306"
+    network_mode: host

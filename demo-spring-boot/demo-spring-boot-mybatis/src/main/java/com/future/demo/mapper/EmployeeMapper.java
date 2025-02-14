@@ -21,6 +21,10 @@ public interface EmployeeMapper {
 
     void deleteAll();
 
+    void truncate();
+
+    int count();
+
     // region 测试动态SQL
 
     List<Employee> findByNameAndSalary(@Param("name") String name, @Param("salary") Double salary);
@@ -33,6 +37,7 @@ public interface EmployeeMapper {
 
     // 使用foreach标签批量插入
     void insertBatch(@Param("employees") List<Employee> employees);
+    void insertBatch2(@Param("employees") List<Employee> employees);
 
     void updateBatch(@Param("employees") List<Employee> employees);
 
