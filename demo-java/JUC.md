@@ -4895,5 +4895,16 @@ public class ForkJoinPrintTask extends RecursiveAction {
 
 这两个例子展示了 `RecursiveTask` 和 `RecursiveAction` 的使用方式。  选择哪个类取决于你的任务是否需要返回值。  Fork/Join 框架是一个强大的工具，可以显著提高某些类型任务的性能，尤其是在多核处理器上。  但是，它也有一定的开销，因此对于非常小的任务，使用 Fork/Join 框架可能反而会降低性能。  你需要根据具体的应用场景和任务特性来选择合适的并行计算方法。
 
-
 记住，选择合适的阈值非常重要。阈值太小，会增加任务管理的开销；阈值太大，则无法充分利用并行计算的优势。  你需要根据你的硬件和任务特点进行实验，找到最佳的阈值。
+
+
+
+## 并发编程的框架
+
+- ExecutorService+CompletableFuture(JUC 框架)
+- Fork/Join 框架
+- SpringBatch
+- Akka 框架
+- Project Reactor 框架
+- RxJava 框架
+- Spark

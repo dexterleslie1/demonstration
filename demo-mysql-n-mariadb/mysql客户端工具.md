@@ -46,5 +46,56 @@ sudo apt install ./mysql-workbench-community_8.0.29-1ubuntu20.04_amd64.deb
 
 
 
+## Navicat for MySQL
 
+Upper case keywords 功能会把所有的 SQL 都 Upper case
+
+
+
+## HeidiSQL
+
+- 不支持手动触发 keyword upper case 功能
+- 不支持直接 ubuntu 运行
+
+
+
+## DBeaver
+
+- 无法连接 MariaDB，因为 MariaDB jdbc 驱动在线下载失败
+
+
+
+## SQLyog
+
+使用此工具作为首选的 MySQL GUI 客户端工具，因为其支持精准的 keyword upper case 功能。
+
+
+
+### ubuntu 安装
+
+>`https://forum.winehq.org/viewtopic.php?t=33543`
+
+安装 wine
+
+```bash
+sudo apt install wine
+```
+
+访问 `https://github.com/webyog/sqlyog-community/wiki/Downloads` 下载 SQLyog-13.3.0-0.x64Community.exe 安装程序
+
+使用 wine 运行并安装 SQLyog-13.3.0-0.x64Community.exe，根据安装程序提示安装 SQLyog
+
+```bash
+LANG=zh_CN.UTF-8 wine SQLyog-13.3.0-0.x64Community.exe
+```
+
+- LANG=zh_CN.UTF-8 使 SQLyog 程序正确显示中文。
+
+安装完毕后重启 ubuntu 操作系统
+
+使用 wine 运行 SQLyog 程序
+
+```bash
+LANG=zh_CN.UTF-8 wine ~/.wine/drive_c/Program\ Files/SQLyog\ Community/SQLyogCommunity.exe
+```
 
