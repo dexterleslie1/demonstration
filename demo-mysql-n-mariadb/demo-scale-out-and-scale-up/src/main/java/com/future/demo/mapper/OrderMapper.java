@@ -1,8 +1,11 @@
 package com.future.demo.mapper;
 
+import com.future.demo.bean.DeleteStatus;
 import com.future.demo.bean.Order;
+import com.future.demo.bean.Status;
 import org.apache.ibatis.annotations.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Mapper
@@ -32,6 +35,21 @@ public interface OrderMapper {
     @Update("truncate table `order`")
     void truncate();
 
-    @Select("select * from `order` where user_id=#{userId} order by id desc")
-    List<Order> findByUserId(@Param("userId") Long userId);
+    @Select("select distinct user_id from `order`")
+    List<Long> listUserIdAll();
+
+    @Select("select distinct merchant_id from `order`")
+    List<Long> listMerchantIdAll();
+
+    @Select("select id from `order`")
+    List<Long> listIdAll();
+
+    List<Order> list(@Param("userId") Long userId,
+                     @Param("merchantId") Long merchantId,
+                     @Param("status") Status status,
+                     @Param("deleteStatus") DeleteStatus deleteStatus,
+                     @Param("startTime") LocalDateTime startTime,
+                     @Param("endTime") LocalDateTime endTime,
+                     @Param("start") Long start,
+                     @Param("size") Long size);
 }

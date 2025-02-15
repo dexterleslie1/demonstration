@@ -15,5 +15,10 @@ CREATE TABLE IF NOT EXISTS `order`(
     received_time DATETIME DEFAULT NULL COMMENT '签收时间',
     cancel_time DATETIME DEFAULT NULL COMMENT '取消时间',
     delete_status ENUM('Normal','Deleted') NOT NULL COMMENT '订单删除状态',
-    INDEX idx_order_user_id(user_id) USING BTREE
+    INDEX idx_order_user_id(user_id) USING BTREE,
+    INDEX idx_order_merchant_id(merchant_id) USING BTREE,
+    INDEX idx_order_user_id_and_status_and_delete_status_and_create_time(user_id,status,delete_status,create_time) USING BTREE,
+    INDEX idx_order_user_id_and_delete_status_and_create_time(user_id,delete_status,create_time) USING BTREE,
+    INDEX idx_order_merchantId_and_status_and_deleteStatus_and_createTime(merchant_id,status,delete_status,create_time) USING BTREE,
+    INDEX idx_order_merchantId_and_deleteStatus_and_createTime(merchant_id,delete_status,create_time) USING BTREE
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

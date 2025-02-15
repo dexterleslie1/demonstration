@@ -1,11 +1,11 @@
 package com.future.demo;
 
-import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.RandomUtil;
 import com.future.demo.bean.DeleteStatus;
 import com.future.demo.bean.Order;
 import com.future.demo.bean.Status;
 import com.future.demo.mapper.OrderMapper;
+import com.future.demo.util.OrderRandomlyUtil;
 import org.junit.jupiter.api.Assertions;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
@@ -17,14 +17,13 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -39,10 +38,16 @@ import java.util.stream.IntStream;
 @Threads(-1)
 public class OrderPerfTests {
 
-    @Param(value = {"50000000"/*"10000", "100000", "1000000", "10000000", "20000000", "30000000"*/})
+    @Param(value = {"10000", "100000", "1000000", "2000000", "3000000", "4000000", "5000000",/*"10000000", "20000000", "30000000"*//*, "50000000", "100000000"*/})
     private long totalCount = 0;
 
     OrderMapper orderMapper;
+
+    long[] userIdArray = null;
+    long[] orderIdArray = null;
+    long[] merchantIdArray = null;
+
+    List<Supplier<List<Order>>> queryFunctionList = null;
 
     //springBoot容器
     private ApplicationContext context;
@@ -55,7 +60,7 @@ public class OrderPerfTests {
                 .forks(1)
                 // 发生错误停止测试
                 .shouldFailOnError(true)
-                .jvmArgs("-Xmx2G", "-server")
+                .jvmArgs("-Xmx3G", "-server")
                 .build();
         new Runner(opt).run();
     }
@@ -81,6 +86,7 @@ public class OrderPerfTests {
         long runLoopCount = (totalCount - remainder) / availableProcessors;
 
         ExecutorService threadPool = Executors.newCachedThreadPool();
+        OrderRandomlyUtil orderRandomlyUtil = new OrderRandomlyUtil(totalCount);
         int finalConcurrentThreads = concurrentThreads;
         CompletableFuture.allOf(IntStream.range(0, concurrentThreads).mapToObj(index -> CompletableFuture.runAsync(() -> {
             long internalRunLoopCount = runLoopCount;
@@ -90,15 +96,7 @@ public class OrderPerfTests {
 
             List<Order> orderList = new ArrayList<>();
             for (int i = 0; i < internalRunLoopCount; i++) {
-                Order order = new Order();
-                order.setId(IdUtil.getSnowflake().nextId());
-                order.setCreateTime(LocalDateTime.now());
-                order.setUserId(RandomUtil.randomLong());
-                order.setMerchantId(RandomUtil.randomLong());
-                order.setTotalAmount(new BigDecimal(1000));
-                order.setTotalCount(10);
-                order.setStatus(Status.Unpay);
-                order.setDeleteStatus(DeleteStatus.Normal);
+                Order order = orderRandomlyUtil.createRandomly();
                 orderList.add(order);
 
                 if (orderList.size() == 1000) {
@@ -113,6 +111,88 @@ public class OrderPerfTests {
         threadPool.shutdown();
 
         Assertions.assertEquals(totalCount, this.orderMapper.count());
+
+        // 加载所有用户ID
+        userIdArray = this.orderMapper.listUserIdAll().stream().mapToLong(o -> o).toArray();
+        // 加载所有商家ID
+        merchantIdArray = this.orderMapper.listMerchantIdAll().stream().mapToLong(o -> o).toArray();
+        // 加载所有订单ID
+        orderIdArray = this.orderMapper.listIdAll().stream().mapToLong(o -> o).toArray();
+
+        queryFunctionList = Arrays.asList(
+                () -> {
+                    // 根据订单ID查询
+                    Long orderId = orderIdArray[RandomUtil.randomInt(0, orderIdArray.length)];
+                    return Collections.singletonList(this.orderMapper.get(orderId));
+                },
+                /*() -> {
+                    // 用户查询所有状态的订单
+                    Long userId = userIdArray[RandomUtil.randomInt(0, userIdArray.length)];
+                    return this.orderMapper.list(userId, null, DeleteStatus.Normal, null, null, 0L, 20L);
+                },
+                () -> {
+                    // 用户查询指定状态的订单
+                    Long userId = userIdArray[RandomUtil.randomInt(0, userIdArray.length)];
+                    Status status = OrderRandomlyUtil.getStatusRandomly();
+                    return this.orderMapper.list(userId, status, DeleteStatus.Normal, null, null, 0L, 20L);
+                },*/
+                () -> {
+                    // 用户查询指定日期范围+所有状态的订单
+                    Long userId = userIdArray[RandomUtil.randomInt(0, userIdArray.length)];
+                    // 日期范围随机开始时间点
+                    LocalDateTime startTime = OrderRandomlyUtil.getCreateTimeRandomly();
+                    LocalDateTime endTime = OrderRandomlyUtil.getCreateTimeRandomly();
+                    if (startTime.isAfter(endTime)) {
+                        LocalDateTime localDateTimeTemp = endTime;
+                        endTime = startTime;
+                        startTime = localDateTimeTemp;
+                    }
+                    return this.orderMapper.list(userId, null, null, DeleteStatus.Normal, startTime, endTime, 0L, 20L);
+                },
+                () -> {
+                    // 用户查询指定日期范围+指定状态的订单
+                    Long userId = userIdArray[RandomUtil.randomInt(0, userIdArray.length)];
+                    // 日期范围随机开始时间点
+                    LocalDateTime startTime = OrderRandomlyUtil.getCreateTimeRandomly();
+                    LocalDateTime endTime = OrderRandomlyUtil.getCreateTimeRandomly();
+                    if (startTime.isAfter(endTime)) {
+                        LocalDateTime localDateTimeTemp = endTime;
+                        endTime = startTime;
+                        startTime = localDateTimeTemp;
+                    }
+                    Status status = OrderRandomlyUtil.getStatusRandomly();
+                    return this.orderMapper.list(userId, null, status, DeleteStatus.Normal, startTime, endTime, 0L, 20L);
+                },
+                () -> {
+                    // 商家查询指定日期范围+所有状态的订单
+                    Long merchantId = merchantIdArray[RandomUtil.randomInt(0, merchantIdArray.length)];
+                    // 日期范围随机开始时间点
+                    LocalDateTime startTime = OrderRandomlyUtil.getCreateTimeRandomly();
+                    LocalDateTime endTime = OrderRandomlyUtil.getCreateTimeRandomly();
+                    if (startTime.isAfter(endTime)) {
+                        LocalDateTime localDateTimeTemp = endTime;
+                        endTime = startTime;
+                        startTime = localDateTimeTemp;
+                    }
+                    DeleteStatus deleteStatus = OrderRandomlyUtil.getDeleteStatusRandomly();
+                    return this.orderMapper.list(null, merchantId, null, deleteStatus, startTime, endTime, 0L, 20L);
+                },
+                () -> {
+                    // 商家查询指定日期范围+指定状态的订单
+                    Long merchantId = merchantIdArray[RandomUtil.randomInt(0, merchantIdArray.length)];
+                    // 日期范围随机开始时间点
+                    LocalDateTime startTime = OrderRandomlyUtil.getCreateTimeRandomly();
+                    LocalDateTime endTime = OrderRandomlyUtil.getCreateTimeRandomly();
+                    if (startTime.isAfter(endTime)) {
+                        LocalDateTime localDateTimeTemp = endTime;
+                        endTime = startTime;
+                        startTime = localDateTimeTemp;
+                    }
+                    Status status = OrderRandomlyUtil.getStatusRandomly();
+                    DeleteStatus deleteStatus = OrderRandomlyUtil.getDeleteStatusRandomly();
+                    return this.orderMapper.list(null, merchantId, status, deleteStatus, startTime, endTime, 0L, 20L);
+                }
+        );
     }
 
     /**
@@ -124,10 +204,16 @@ public class OrderPerfTests {
         ((ConfigurableApplicationContext) context).close();
     }
 
+//    @Benchmark
+//    public void testInsertion(Blackhole blackhole) {
+//        Order order = OrderUtil.createRandomly();
+//        this.orderMapper.add(order);
+//    }
+
     @Benchmark
-    public void test(Blackhole blackhole) {
-        Long userId = RandomUtil.randomLong();
-        List<Order> orderList = this.orderMapper.findByUserId(userId);
+    public void testFind(Blackhole blackhole) {
+        Supplier<List<Order>> supplier = queryFunctionList.get(RandomUtil.randomInt(0, queryFunctionList.size()));
+        List<Order> orderList = supplier.get();
         blackhole.consume(orderList);
     }
 }
