@@ -42,6 +42,14 @@ sudo mv Snipaste-2.10.2-x86_64.AppImage /usr/local/ && sudo chmod +x /usr/local/
 cd /usr/local && ./Snipaste-2.10.2-x86_64.AppImage
 ```
 
+- 如果报告 `./Snipaste-2.10.5-x86_64.AppImage: error while loading shared libraries: libOpenGL.so.0: cannot open shared object file: No such file or directory` 错误，则运行以下命令安装 libOpenGL
+
+  >`https://stackoverflow.com/questions/65751536/importerror-libopengl-so-0-cannot-open-shared-object-file-no-such-file-or-dir`
+
+  ```
+  sudo apt install libopengl0
+  ```
+
 按`f1`截图
 
 通过`Show Applications`>`Startup Application`功能设置`snipaste`开机自启动，开机自启动配置信息如下：
