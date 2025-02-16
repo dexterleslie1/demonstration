@@ -29,7 +29,7 @@ import java.util.concurrent.TimeUnit;
 public class EnumPerfTests {
 
     // 订单状态 0-创建，1-支付中，2-支付成功，3-支付失败，4-取消订单
-    List<Integer> statusList = new ArrayList<>() {{
+    List<Integer> statusList = new ArrayList<Integer>() {{
         this.add(0);
         this.add(1);
         this.add(2);
@@ -82,21 +82,21 @@ public class EnumPerfTests {
 
     @Benchmark
     public void testEnumStoringAsInt(Blackhole blackhole) {
-        int status = statusList.get(RandomUtils.secure().randomInt(0, statusLength));
+        int status = statusList.get(RandomUtils.nextInt(0, statusLength));
         int count = this.enumMapper.countEnumStoringAsIntByStatus(status);
         blackhole.consume(count);
     }
 
     @Benchmark
     public void testEnumStoringAsVarchar(Blackhole blackhole) {
-        Status status = statusArr[RandomUtils.secure().randomInt(0, statusArrLength)];
+        Status status = statusArr[RandomUtils.nextInt(0, statusArrLength)];
         int count = this.enumMapper.countEnumStoringAsVarcharByStatus(status);
         blackhole.consume(count);
     }
 
     @Benchmark
     public void testEnumStoringAsEnum(Blackhole blackhole) {
-        Status status = statusArr[RandomUtils.secure().randomInt(0, statusArrLength)];
+        Status status = statusArr[RandomUtils.nextInt(0, statusArrLength)];
         int count = this.enumMapper.countEnumStoringAsEnumByStatus(status);
         blackhole.consume(count);
     }

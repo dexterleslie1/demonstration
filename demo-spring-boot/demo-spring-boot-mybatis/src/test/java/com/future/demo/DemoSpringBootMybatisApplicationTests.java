@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @SpringBootTest
 class DemoSpringBootMybatisApplicationTests {
@@ -96,7 +97,7 @@ class DemoSpringBootMybatisApplicationTests {
             this.employeeMapper.insert(employee);
         }
         List<Employee> employeeList = this.employeeMapper.listAll();
-        List<String> empNameList = employeeList.stream().map(Employee::getEmpName).toList();
+        List<String> empNameList = employeeList.stream().map(Employee::getEmpName).collect(Collectors.toList());
         for (int i = 0; i < 5; i++) {
             empName = "张三" + i;
             Assertions.assertTrue(empNameList.contains(empName));
@@ -108,9 +109,9 @@ class DemoSpringBootMybatisApplicationTests {
 
         // 测试方法单个参数
         this.employeeParamMapper.test1(1L);
-        this.employeeParamMapper.test2(List.of(1L, 2L, 3L));
+        this.employeeParamMapper.test2(Arrays.asList(1L, 2L, 3L));
         this.employeeParamMapper.test3(new Employee());
-        this.employeeParamMapper.test4(new HashMap<>() {{
+        this.employeeParamMapper.test4(new HashMap<String, Object>() {{
             this.put("id", 1L);
             this.put("name", "张三");
         }});
@@ -302,7 +303,7 @@ class DemoSpringBootMybatisApplicationTests {
         this.employeeMapper.insertBatch(employees);
         employees = this.employeeMapper.listAll();
         Assertions.assertEquals(10, employees.size());
-        List<Long> ids = employees.stream().map(Employee::getId).toList();
+        List<Long> ids = employees.stream().map(Employee::getId).collect(Collectors.toList());
 
         employees = new ArrayList<>();
         for (int i = 0; i < 10; i++) {

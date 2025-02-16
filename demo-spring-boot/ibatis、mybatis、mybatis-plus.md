@@ -42,6 +42,15 @@
 
 >详细用法请参考示例`https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-boot-mybatis`
 
+
+
+### MyBatis 和 SpringBoot 兼容性
+
+- SpringBoot 3.4.0 和 mybatis-spring-boot-starter 3.0.3以上兼容
+- SpringBoot 2.2.7.RELEASE 和 mybatis-spring-boot-starter 2.3.2以下兼容
+
+
+
 ### `spring boot`集成`MyBatis`
 
 `maven`新增`mybatis`和`mariadb jdbc`驱动依赖

@@ -56,7 +56,7 @@ public class EnumTests {
     public void testEnumStorageSpaceUsage() {
         int totalCount = 1000000;
         // 订单状态 0-创建，1-支付中，2-支付成功，3-支付失败，4-取消订单
-        List<Integer> statusList = new ArrayList<>() {{
+        List<Integer> statusList = new ArrayList<Integer>() {{
             this.add(0);
             this.add(1);
             this.add(2);
@@ -66,7 +66,7 @@ public class EnumTests {
         List<EnumStoringAsInt> enumStoringAsIntList = new ArrayList<>();
         for (int i = 0; i < totalCount; i++) {
             EnumStoringAsInt bean = new EnumStoringAsInt();
-            int status = statusList.get(RandomUtils.secure().nextInt(0, statusList.size()));
+            int status = statusList.get(RandomUtils.nextInt(0, statusList.size()));
             bean.setStatus(status);
             enumStoringAsIntList.add(bean);
             if (enumStoringAsIntList.size() == 1000) {
@@ -79,7 +79,7 @@ public class EnumTests {
         List<EnumStoringAsVarchar> enumStoringAsVarcharList = new ArrayList<>();
         for (int i = 0; i < totalCount; i++) {
             EnumStoringAsVarchar bean = new EnumStoringAsVarchar();
-            Status status = statusArr[RandomUtils.secure().nextInt(0, statusArr.length)];
+            Status status = statusArr[RandomUtils.nextInt(0, statusArr.length)];
             bean.setStatus(status);
             enumStoringAsVarcharList.add(bean);
             if (enumStoringAsVarcharList.size() == 1000) {
@@ -91,7 +91,7 @@ public class EnumTests {
         List<EnumStoringAsEnum> enumStoringAsEnumList = new ArrayList<>();
         for (int i = 0; i < totalCount; i++) {
             EnumStoringAsEnum bean = new EnumStoringAsEnum();
-            Status status = statusArr[RandomUtils.secure().nextInt(0, statusArr.length)];
+            Status status = statusArr[RandomUtils.nextInt(0, statusArr.length)];
             bean.setStatus(status);
             enumStoringAsEnumList.add(bean);
             if (enumStoringAsEnumList.size() == 1000) {
