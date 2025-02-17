@@ -173,6 +173,7 @@ module.exports = {
                         '内存.md',
                         'too-many-connections处理.md',
                         'sql.md',
+                        '分库分表.md',
                     ]
                 }
             ],
