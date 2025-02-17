@@ -200,4 +200,80 @@ public void testIdUtil() {
 
 ### 美团 Leaf
 
->参考`https://github.com/gz-yami/mall4cloud/tree/master/mall4cloud-leaf`实现 Leaf，没有做实验。
+>`https://github.com/Meituan-Dianping/Leaf/blob/feature/spring-boot-starter/README_CN.md`
+
+详细用法请参考示例 `https://gitee.com/dexterleslie/demonstration/tree/master/spring-cloud/demo-distributed-id-leaf`
+
+美团 Leaf 雪花算法依赖于 zookeeper
+
+zookeeper 服务 docker-compose.yaml 配置如下：
+
+```yaml
+version: "3.0"
+
+services:
+  demo-zookeeper:
+    image: zookeeper:3.8.4
+    environment:
+      - TZ=Asia/Shanghai
+      - JVMFLAGS=-Xmx512m -Xms512m -server
+    network_mode: host
+```
+
+新增 pom 配置如下：
+
+```xml
+<!-- 分布式ID leaf 依赖 -->
+<dependency>
+    <!-- 官方依赖没有发布到 maven 仓库中 -->
+    <groupId>com.tencent.devops.leaf</groupId>
+    <artifactId>leaf-boot-starter</artifactId>
+    <version>1.0.2-RELEASE</version>
+</dependency>
+<dependency>
+    <groupId>org.apache.curator</groupId>
+    <artifactId>curator-recipes</artifactId>
+    <version>5.7.1</version>
+</dependency>
+```
+
+应用 application.properties 配置如下：
+
+```properties
+# 启用雪花算法生成分布式ID
+leaf.snowflake.enable=true
+# zookeeper地址
+leaf.snowflake.address=127.0.0.1:2181
+```
+
+应用中使用 Leaf 生成分布式ID
+
+```java
+@RunWith(SpringRunner.class)
+@SpringBootTest(classes = Application.class)
+@Slf4j
+public class ApplicationTests {
+
+    @Autowired
+    SnowflakeService snowflakeService;
+
+    @Test
+    public void contextLoads() throws InterruptedException {
+        int evenCounter = 0;
+        int oddsCounter = 0;
+        for (int i = 0; i < 100; i++) {
+            Result result = this.snowflakeService.getId("x");
+            log.debug("status {}, id {}", result.getStatus(), result.getId());
+            TimeUnit.MILLISECONDS.sleep(RandomUtils.nextInt(1, 100));
+
+            if (result.getId() % 2 == 0) {
+                evenCounter++;
+            } else {
+                oddsCounter++;
+            }
+        }
+
+        log.debug("even {}, odds {}", evenCounter, oddsCounter);
+    }
+}
+```

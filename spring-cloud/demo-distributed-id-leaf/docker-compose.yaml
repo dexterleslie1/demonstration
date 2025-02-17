@@ -2,7 +2,6 @@ version: "3.0"
 
 services:
   demo-zookeeper:
-#    image: zookeeper:3.4.9
     image: zookeeper:3.8.4
     environment:
       - TZ=Asia/Shanghai

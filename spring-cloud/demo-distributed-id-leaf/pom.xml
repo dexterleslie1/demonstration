@@ -21,6 +21,7 @@
 
         <!-- 分布式ID leaf 依赖 -->
         <dependency>
+            <!-- 官方依赖没有发布到 maven 仓库中 -->
             <groupId>com.tencent.devops.leaf</groupId>
             <artifactId>leaf-boot-starter</artifactId>
             <version>1.0.2-RELEASE</version>
