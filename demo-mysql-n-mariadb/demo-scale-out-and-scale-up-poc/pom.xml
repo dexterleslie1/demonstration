@@ -9,7 +9,7 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.future.demo</groupId>
-    <artifactId>demo-scale-out-and-scale-up</artifactId>
+    <artifactId>demo-scale-out-and-scale-up-poc</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>demo-spring-boot-mybatis</name>
     <description>demo-spring-boot-mybatis</description>

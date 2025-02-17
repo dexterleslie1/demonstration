@@ -147,7 +147,7 @@ public class OrderPerfTests {
                         endTime = startTime;
                         startTime = localDateTimeTemp;
                     }
-                    return this.orderMapper.list(userId, null, null, DeleteStatus.Normal, startTime, endTime, 0L, 20L);
+                    return this.orderMapper.listByUserId(userId, null, DeleteStatus.Normal, startTime, endTime, 0L, 20L);
                 },
                 () -> {
                     // 用户查询指定日期范围+指定状态的订单
@@ -161,7 +161,7 @@ public class OrderPerfTests {
                         startTime = localDateTimeTemp;
                     }
                     Status status = OrderRandomlyUtil.getStatusRandomly();
-                    return this.orderMapper.list(userId, null, status, DeleteStatus.Normal, startTime, endTime, 0L, 20L);
+                    return this.orderMapper.listByUserId(userId, status, DeleteStatus.Normal, startTime, endTime, 0L, 20L);
                 },
                 () -> {
                     // 商家查询指定日期范围+所有状态的订单
@@ -175,7 +175,7 @@ public class OrderPerfTests {
                         startTime = localDateTimeTemp;
                     }
                     DeleteStatus deleteStatus = OrderRandomlyUtil.getDeleteStatusRandomly();
-                    return this.orderMapper.list(null, merchantId, null, deleteStatus, startTime, endTime, 0L, 20L);
+                    return this.orderMapper.listByMerchantId(merchantId, null, deleteStatus, startTime, endTime, 0L, 20L);
                 },
                 () -> {
                     // 商家查询指定日期范围+指定状态的订单
@@ -190,7 +190,7 @@ public class OrderPerfTests {
                     }
                     Status status = OrderRandomlyUtil.getStatusRandomly();
                     DeleteStatus deleteStatus = OrderRandomlyUtil.getDeleteStatusRandomly();
-                    return this.orderMapper.list(null, merchantId, status, deleteStatus, startTime, endTime, 0L, 20L);
+                    return this.orderMapper.listByMerchantId(merchantId, status, deleteStatus, startTime, endTime, 0L, 20L);
                 }
         );
     }

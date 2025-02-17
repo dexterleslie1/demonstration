@@ -44,12 +44,19 @@ public interface OrderMapper {
     @Select("select id from `order`")
     List<Long> listIdAll();
 
-    List<Order> list(@Param("userId") Long userId,
-                     @Param("merchantId") Long merchantId,
-                     @Param("status") Status status,
-                     @Param("deleteStatus") DeleteStatus deleteStatus,
-                     @Param("startTime") LocalDateTime startTime,
-                     @Param("endTime") LocalDateTime endTime,
-                     @Param("start") Long start,
-                     @Param("size") Long size);
+    List<Order> listByUserId(@Param("userId") Long userId,
+                             @Param("status") Status status,
+                             @Param("deleteStatus") DeleteStatus deleteStatus,
+                             @Param("startTime") LocalDateTime startTime,
+                             @Param("endTime") LocalDateTime endTime,
+                             @Param("start") Long start,
+                             @Param("size") Long size);
+
+    List<Order> listByMerchantId(@Param("merchantId") Long merchantId,
+                                 @Param("status") Status status,
+                                 @Param("deleteStatus") DeleteStatus deleteStatus,
+                                 @Param("startTime") LocalDateTime startTime,
+                                 @Param("endTime") LocalDateTime endTime,
+                                 @Param("start") Long start,
+                                 @Param("size") Long size);
 }

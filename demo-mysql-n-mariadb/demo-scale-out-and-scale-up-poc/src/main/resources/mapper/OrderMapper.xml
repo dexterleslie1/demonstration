@@ -15,15 +15,31 @@
         <result column="cancel_time" property="cancelTime"/>
         <result column="delete_status" property="deleteStatus"/>
     </resultMap>
-    <select id="list" resultMap="orderResultMap">
+    <select id="listByUserId" resultMap="orderResultMap">
         select *
         from `order`
         <where>
             <if test="userId!=null">
                 user_id=#{userId}
             </if>
+            <if test="status!=null">
+                and status=#{status}
+            </if>
+            <if test="deleteStatus!=null">
+                and delete_status=#{deleteStatus}
+            </if>
+            and create_time&gt;=#{startTime} and create_time&lt;=#{endTime}
+        </where>
+        order by id desc
+        limit #{start},#{size}
+    </select>
+
+    <select id="listByMerchantId" resultMap="orderResultMap">
+        select *
+        from `order`
+        <where>
             <if test="merchantId!=null">
-                and merchant_id=#{merchantId}
+                merchant_id=#{merchantId}
             </if>
             <if test="status!=null">
                 and status=#{status}
