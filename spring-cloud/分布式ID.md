@@ -160,13 +160,19 @@
 
 ### 自己实现
 
->参考`https://www.cnblogs.com/relucent/p/4955340.html`自己实现雪花算法，没有做实验。
+>`https://www.cnblogs.com/relucent/p/4955340.html`
+
+详细用法请参考示例 `https://gitee.com/dexterleslie/demonstration/tree/master/spring-cloud/demo-distributed-id-twitter`
+
+注意：似乎雪花算法有问题，生成的分布式ID总是偶数的，所以在 Sharding-JDBC 中无法使用此工具生成分布式ID并应用。
 
 
 
 ### Hutool 工具包
 
 >详细用法请参考示例中的`https://gitee.com/dexterleslie/demonstration/blob/master/demo-java/demo-library/demo-hutool/src/test/java/com/future/demo/Tests.java`中的 testIdUtil 测试用例
+
+注意：似乎雪花算法有问题，生成的分布式ID总是偶数的，所以在 Sharding-JDBC 中无法使用此工具生成分布式ID并应用。
 
 ```java
 // 在分布式环境中，唯一ID生成应用十分广泛，生成方法也多种多样，Hutool针对一些常用生成策略做了简单封装。
