@@ -45,6 +45,9 @@ public interface OrderMapper {
     @Select("select id from `order`")
     List<Long> listIdAll();
 
+    @Select("select * from `order`")
+    List<Order> listAll();
+
     List<Order> listByUserId(@Param("userId") Long userId,
                              @Param("status") Status status,
                              @Param("deleteStatus") DeleteStatus deleteStatus,
@@ -60,4 +63,19 @@ public interface OrderMapper {
                                  @Param("endTime") LocalDateTime endTime,
                                  @Param("start") Long start,
                                  @Param("size") Long size);
+
+    /**
+     * Sharding-JDBC 会计算所有 id 对应数据所在的实际表
+     *
+     * @param idList
+     * @return
+     */
+    @Select("<script>" +
+            "   select * from `order`" +
+            "   where id in(" +
+            "   <foreach item=\"e\" collection=\"idList\" separator=\",\">" +
+            "       #{e}" +
+            "   </foreach>)" +
+            "</script>")
+    List<Order> listById(@Param("idList") List<Long> idList);
 }

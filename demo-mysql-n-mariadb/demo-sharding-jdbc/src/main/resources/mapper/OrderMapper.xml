@@ -28,7 +28,9 @@
             <if test="deleteStatus!=null">
                 and delete_status=#{deleteStatus}
             </if>
-            and create_time&gt;=#{startTime} and create_time&lt;=#{endTime}
+            <if test="startTime!=null and endTime!=null">
+                and create_time&gt;=#{startTime} and create_time&lt;=#{endTime}
+            </if>
         </where>
         order by id desc
         limit #{start},#{size}
@@ -47,7 +49,9 @@
             <if test="deleteStatus!=null">
                 and delete_status=#{deleteStatus}
             </if>
-            and create_time&gt;=#{startTime} and create_time&lt;=#{endTime}
+            <if test="startTime!=null and endTime!=null">
+                and create_time&gt;=#{startTime} and create_time&lt;=#{endTime}
+            </if>
         </where>
         order by id desc
         limit #{start},#{size}
