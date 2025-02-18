@@ -252,6 +252,18 @@ leaf.snowflake.enable=true
 leaf.snowflake.address=127.0.0.1:2181
 ```
 
+Application 添加 @EnableLeafServer 注解
+
+```java
+@SpringBootApplication
+@EnableLeafServer
+public class Application {
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+    }
+}
+```
+
 应用中使用 Leaf 生成分布式ID
 
 ```java
