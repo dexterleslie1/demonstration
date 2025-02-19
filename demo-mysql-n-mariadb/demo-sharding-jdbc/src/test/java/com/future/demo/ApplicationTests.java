@@ -215,4 +215,13 @@ public class ApplicationTests {
 
         // endregion
     }
+
+    /**
+     * 测试标准分片策略的范围分片算法
+     */
+    @Test
+    public void testStandardStrategyRangeShardingAlgorithm() {
+        List<Order> orderList = this.orderMapper.listByUserIdRange(1L, 10000L);
+        Assertions.assertEquals(0, orderList.size());
+    }
 }

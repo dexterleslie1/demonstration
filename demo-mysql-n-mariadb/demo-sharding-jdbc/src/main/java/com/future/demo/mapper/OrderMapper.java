@@ -78,4 +78,7 @@ public interface OrderMapper {
             "   </foreach>)" +
             "</script>")
     List<Order> listById(@Param("idList") List<Long> idList);
+
+    @Select("select * from `order` where user_id>=#{startUserId} and user_id<=#{endUserId}")
+    List<Order> listByUserIdRange(@Param("startUserId") Long startUserId, @Param("endUserId") Long endUserId);
 }
