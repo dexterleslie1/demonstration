@@ -33,8 +33,8 @@ import java.util.stream.IntStream;
 @BenchmarkMode(Mode.Throughput)
 @State(Scope.Benchmark) //使用的SpringBoot容器，都是无状态单例Bean，无安全问题，可以直接使用基准作用域BenchMark
 @OutputTimeUnit(TimeUnit.SECONDS)
-@Warmup(iterations = 3, time = 1, timeUnit = TimeUnit.SECONDS) //预热1s
-@Measurement(iterations = 3, time = 15, timeUnit = TimeUnit.SECONDS) //测试也是1s、五遍
+@Warmup(iterations = 3, time = 5, timeUnit = TimeUnit.SECONDS) //预热1s
+@Measurement(iterations = 3, time = 30, timeUnit = TimeUnit.SECONDS) //测试也是1s、五遍
 @Threads(-1)
 public class OrderPerfTests {
 
@@ -125,28 +125,12 @@ public class OrderPerfTests {
                     Long orderId = orderIdArray[RandomUtil.randomInt(0, orderIdArray.length)];
                     return Collections.singletonList(this.orderMapper.get(orderId));
                 },
-                /*() -> {
-                    // 用户查询所有状态的订单
-                    Long userId = userIdArray[RandomUtil.randomInt(0, userIdArray.length)];
-                    return this.orderMapper.list(userId, null, DeleteStatus.Normal, null, null, 0L, 20L);
-                },
-                () -> {
-                    // 用户查询指定状态的订单
-                    Long userId = userIdArray[RandomUtil.randomInt(0, userIdArray.length)];
-                    Status status = OrderRandomlyUtil.getStatusRandomly();
-                    return this.orderMapper.list(userId, status, DeleteStatus.Normal, null, null, 0L, 20L);
-                },*/
                 () -> {
                     // 用户查询指定日期范围+所有状态的订单
                     Long userId = userIdArray[RandomUtil.randomInt(0, userIdArray.length)];
                     // 日期范围随机开始时间点
                     LocalDateTime startTime = OrderRandomlyUtil.getCreateTimeRandomly();
-                    LocalDateTime endTime = OrderRandomlyUtil.getCreateTimeRandomly();
-                    if (startTime.isAfter(endTime)) {
-                        LocalDateTime localDateTimeTemp = endTime;
-                        endTime = startTime;
-                        startTime = localDateTimeTemp;
-                    }
+                    LocalDateTime endTime = startTime.plusMonths(1);
                     return this.orderMapper.listByUserId(userId, null, DeleteStatus.Normal, startTime, endTime, 0L, 20L);
                 },
                 () -> {
@@ -154,12 +138,7 @@ public class OrderPerfTests {
                     Long userId = userIdArray[RandomUtil.randomInt(0, userIdArray.length)];
                     // 日期范围随机开始时间点
                     LocalDateTime startTime = OrderRandomlyUtil.getCreateTimeRandomly();
-                    LocalDateTime endTime = OrderRandomlyUtil.getCreateTimeRandomly();
-                    if (startTime.isAfter(endTime)) {
-                        LocalDateTime localDateTimeTemp = endTime;
-                        endTime = startTime;
-                        startTime = localDateTimeTemp;
-                    }
+                    LocalDateTime endTime = startTime.plusMonths(1);
                     Status status = OrderRandomlyUtil.getStatusRandomly();
                     return this.orderMapper.listByUserId(userId, status, DeleteStatus.Normal, startTime, endTime, 0L, 20L);
                 },
@@ -168,12 +147,7 @@ public class OrderPerfTests {
                     Long merchantId = merchantIdArray[RandomUtil.randomInt(0, merchantIdArray.length)];
                     // 日期范围随机开始时间点
                     LocalDateTime startTime = OrderRandomlyUtil.getCreateTimeRandomly();
-                    LocalDateTime endTime = OrderRandomlyUtil.getCreateTimeRandomly();
-                    if (startTime.isAfter(endTime)) {
-                        LocalDateTime localDateTimeTemp = endTime;
-                        endTime = startTime;
-                        startTime = localDateTimeTemp;
-                    }
+                    LocalDateTime endTime = startTime.plusMonths(1);
                     DeleteStatus deleteStatus = OrderRandomlyUtil.getDeleteStatusRandomly();
                     return this.orderMapper.listByMerchantId(merchantId, null, deleteStatus, startTime, endTime, 0L, 20L);
                 },
@@ -182,12 +156,7 @@ public class OrderPerfTests {
                     Long merchantId = merchantIdArray[RandomUtil.randomInt(0, merchantIdArray.length)];
                     // 日期范围随机开始时间点
                     LocalDateTime startTime = OrderRandomlyUtil.getCreateTimeRandomly();
-                    LocalDateTime endTime = OrderRandomlyUtil.getCreateTimeRandomly();
-                    if (startTime.isAfter(endTime)) {
-                        LocalDateTime localDateTimeTemp = endTime;
-                        endTime = startTime;
-                        startTime = localDateTimeTemp;
-                    }
+                    LocalDateTime endTime = startTime.plusMonths(1);
                     Status status = OrderRandomlyUtil.getStatusRandomly();
                     DeleteStatus deleteStatus = OrderRandomlyUtil.getDeleteStatusRandomly();
                     return this.orderMapper.listByMerchantId(merchantId, status, deleteStatus, startTime, endTime, 0L, 20L);
