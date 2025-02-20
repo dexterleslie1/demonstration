@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -46,6 +47,8 @@ public class OrderPerfTests {
 
     @Param(value = {"1w", "10w", "100w", "200w", "300w", "400w", "500w", "1kw", "2kw", "3kw", "5kw", "10kw"})
     String springProfile;
+    @Param(value = {"512m", "2g"})
+    String databaseMemory;
 
     OrderMapper orderMapper;
 
@@ -73,7 +76,7 @@ public class OrderPerfTests {
      * 初始化，获取springBoot容器，run即可，同时得到相关的测试对象
      */
     @Setup(Level.Trial)
-    public void setup() throws IOException {
+    public void setup() throws IOException, InterruptedException {
         // region 启动当前 Spring profile 对应的数据库，其他 profile 的关闭
 
         String command = "docker compose stop";
@@ -88,6 +91,8 @@ public class OrderPerfTests {
         int code = exec.execute(commandLine);
         Assertions.assertEquals(0, code, errStream.toString(StandardCharsets.UTF_8));
 
+        TimeUnit.SECONDS.sleep(15);
+
         command = "docker compose up -d db-" + springProfile;
         //接收正常结果流
         susStream = new ByteArrayOutputStream();
@@ -97,8 +102,12 @@ public class OrderPerfTests {
         exec = new DefaultExecutor();
         streamHandler = new PumpStreamHandler(susStream, errStream);
         exec.setStreamHandler(streamHandler);
-        code = exec.execute(commandLine);
+        code = exec.execute(commandLine, new HashMap<>() {{
+            this.put("innodbBufferPoolSize", databaseMemory);
+        }});
         Assertions.assertEquals(0, code, errStream.toString(StandardCharsets.UTF_8));
+
+        TimeUnit.SECONDS.sleep(15);
 
         // endregion
 
