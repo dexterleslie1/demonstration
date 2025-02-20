@@ -15,7 +15,7 @@ services:
       - --port=3306
     volumes:
       - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf:ro
-      - ./db.sql:/docker-entrypoint-initdb.d/db.sql
+      - ./db.sql:/docker-entrypoint-initdb.d/db.sql:ro
     network_mode: host
   # 10w记录
   db-10w:
@@ -28,10 +28,10 @@ services:
       - --collation-server=utf8mb4_general_ci
       - --skip-character-set-client-handshake
       - --innodb-buffer-pool-size=${innodbBufferPoolSize}
-      - --port=3307
+      - --port=3306
     volumes:
       - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf:ro
-      - ./db.sql:/docker-entrypoint-initdb.d/db.sql
+      - ./db.sql:/docker-entrypoint-initdb.d/db.sql:ro
     network_mode: host
   # 100w记录
   db-100w:
@@ -44,10 +44,10 @@ services:
       - --collation-server=utf8mb4_general_ci
       - --skip-character-set-client-handshake
       - --innodb-buffer-pool-size=${innodbBufferPoolSize}
-      - --port=3308
+      - --port=3306
     volumes:
       - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf:ro
-      - ./db.sql:/docker-entrypoint-initdb.d/db.sql
+      - ./db.sql:/docker-entrypoint-initdb.d/db.sql:ro
     network_mode: host
   # 200w记录
   db-200w:
@@ -60,10 +60,10 @@ services:
       - --collation-server=utf8mb4_general_ci
       - --skip-character-set-client-handshake
       - --innodb-buffer-pool-size=${innodbBufferPoolSize}
-      - --port=3309
+      - --port=3306
     volumes:
       - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf:ro
-      - ./db.sql:/docker-entrypoint-initdb.d/db.sql
+      - ./db.sql:/docker-entrypoint-initdb.d/db.sql:ro
     network_mode: host
   # 300w记录
   db-300w:
@@ -76,10 +76,10 @@ services:
       - --collation-server=utf8mb4_general_ci
       - --skip-character-set-client-handshake
       - --innodb-buffer-pool-size=${innodbBufferPoolSize}
-      - --port=3310
+      - --port=3306
     volumes:
       - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf:ro
-      - ./db.sql:/docker-entrypoint-initdb.d/db.sql
+      - ./db.sql:/docker-entrypoint-initdb.d/db.sql:ro
     network_mode: host
   # 400w记录
   db-400w:
@@ -92,10 +92,10 @@ services:
       - --collation-server=utf8mb4_general_ci
       - --skip-character-set-client-handshake
       - --innodb-buffer-pool-size=${innodbBufferPoolSize}
-      - --port=3311
+      - --port=3306
     volumes:
       - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf:ro
-      - ./db.sql:/docker-entrypoint-initdb.d/db.sql
+      - ./db.sql:/docker-entrypoint-initdb.d/db.sql:ro
     network_mode: host
   # 500w记录
   db-500w:
@@ -108,10 +108,10 @@ services:
       - --collation-server=utf8mb4_general_ci
       - --skip-character-set-client-handshake
       - --innodb-buffer-pool-size=${innodbBufferPoolSize}
-      - --port=3312
+      - --port=3306
     volumes:
       - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf:ro
-      - ./db.sql:/docker-entrypoint-initdb.d/db.sql
+      - ./db.sql:/docker-entrypoint-initdb.d/db.sql:ro
     network_mode: host
   # 1kw记录
   db-1kw:
@@ -124,10 +124,10 @@ services:
       - --collation-server=utf8mb4_general_ci
       - --skip-character-set-client-handshake
       - --innodb-buffer-pool-size=${innodbBufferPoolSize}
-      - --port=3313
+      - --port=3306
     volumes:
       - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf:ro
-      - ./db.sql:/docker-entrypoint-initdb.d/db.sql
+      - ./db.sql:/docker-entrypoint-initdb.d/db.sql:ro
     network_mode: host
   # 2kw记录
   db-2kw:
@@ -140,10 +140,10 @@ services:
       - --collation-server=utf8mb4_general_ci
       - --skip-character-set-client-handshake
       - --innodb-buffer-pool-size=${innodbBufferPoolSize}
-      - --port=3314
+      - --port=3306
     volumes:
       - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf:ro
-      - ./db.sql:/docker-entrypoint-initdb.d/db.sql
+      - ./db.sql:/docker-entrypoint-initdb.d/db.sql:ro
     network_mode: host
   # 3kw记录
   db-3kw:
@@ -156,10 +156,10 @@ services:
       - --collation-server=utf8mb4_general_ci
       - --skip-character-set-client-handshake
       - --innodb-buffer-pool-size=${innodbBufferPoolSize}
-      - --port=3315
+      - --port=3306
     volumes:
       - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf:ro
-      - ./db.sql:/docker-entrypoint-initdb.d/db.sql
+      - ./db.sql:/docker-entrypoint-initdb.d/db.sql:ro
     network_mode: host
   # 5k记录
   db-5kw:
@@ -172,10 +172,10 @@ services:
       - --collation-server=utf8mb4_general_ci
       - --skip-character-set-client-handshake
       - --innodb-buffer-pool-size=${innodbBufferPoolSize}
-      - --port=3316
+      - --port=3306
     volumes:
       - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf:ro
-      - ./db.sql:/docker-entrypoint-initdb.d/db.sql
+      - ./db.sql:/docker-entrypoint-initdb.d/db.sql:ro
     network_mode: host
   # 10kw记录
   db-10kw:
@@ -188,8 +188,8 @@ services:
       - --collation-server=utf8mb4_general_ci
       - --skip-character-set-client-handshake
       - --innodb-buffer-pool-size=${innodbBufferPoolSize}
-      - --port=3317
+      - --port=3306
     volumes:
       - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf:ro
-      - ./db.sql:/docker-entrypoint-initdb.d/db.sql
+      - ./db.sql:/docker-entrypoint-initdb.d/db.sql:ro
     network_mode: host

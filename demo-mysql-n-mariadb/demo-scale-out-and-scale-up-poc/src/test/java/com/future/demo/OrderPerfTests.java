@@ -6,6 +6,7 @@ import com.future.demo.bean.Order;
 import com.future.demo.bean.Status;
 import com.future.demo.mapper.OrderMapper;
 import com.future.demo.util.OrderRandomlyUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecutor;
 import org.apache.commons.exec.PumpStreamHandler;
@@ -43,6 +44,7 @@ import java.util.stream.IntStream;
 @Warmup(iterations = 3, time = 120, timeUnit = TimeUnit.SECONDS) //预热1s
 @Measurement(iterations = 3, time = 60, timeUnit = TimeUnit.SECONDS) //测试也是1s、五遍
 @Threads(-1)
+@Slf4j
 public class OrderPerfTests {
 
     @Param(value = {"1w", "10w", "100w", "200w", "300w", "400w", "500w", "1kw", "2kw", "3kw", "5kw", "10kw"})
@@ -124,6 +126,8 @@ public class OrderPerfTests {
         int totalCountInDB = this.orderMapper.count();
         // 如果当前数据库记录总数不等于预期记录数，则初始化
         if (totalCount != totalCountInDB) {
+            log.info("databaseMemory {} springProfile {} 当前数据库记录总数 {} 不等于 预期记录数 {} 需要重新初始化数据", databaseMemory, springProfile, totalCountInDB, totalCount);
+
             this.orderMapper.truncate();
 
             int availableProcessors = Runtime.getRuntime().availableProcessors();
@@ -158,6 +162,8 @@ public class OrderPerfTests {
                 }
             }, threadPool)).collect(Collectors.toList()).toArray(CompletableFuture[]::new)).join();
             threadPool.shutdown();
+        } else {
+            log.info("databaseMemory {} springProfile {} 当前数据库记录总数等于预期记录数 {}", databaseMemory, springProfile, totalCount);
         }
 
         totalCountInDB = this.orderMapper.count();
