@@ -6,6 +6,7 @@ import com.future.demo.bean.Order;
 import com.future.demo.bean.Status;
 import com.future.demo.mapper.OrderMapper;
 import com.future.demo.util.OrderRandomlyUtil;
+import com.tencent.devops.leaf.service.SnowflakeService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecutor;
@@ -20,14 +21,14 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.core.io.ClassPathResource;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -55,9 +56,10 @@ public class OrderPerfTests {
     String databaseMemory;
 
     OrderMapper orderMapper;
+    SnowflakeService snowflakeService;
 
     long[] userIdArray = null;
-    long[] orderIdArray = null;
+    BigDecimal[] orderIdArray = null;
     long[] merchantIdArray = null;
 
     //springBoot容器
@@ -89,25 +91,43 @@ public class OrderPerfTests {
         //接收异常结果流
         ByteArrayOutputStream errStream = new ByteArrayOutputStream();
         CommandLine commandLine = CommandLine.parse(command);
-        DefaultExecutor exec = new DefaultExecutor();
+        DefaultExecutor exec = DefaultExecutor.builder().get();
         PumpStreamHandler streamHandler = new PumpStreamHandler(susStream, errStream);
         exec.setStreamHandler(streamHandler);
         int code = exec.execute(commandLine);
-        Assertions.assertEquals(0, code, errStream.toString(StandardCharsets.UTF_8));
+        Assertions.assertEquals(0, code, errStream.toString(StandardCharsets.UTF_8.name()));
 
-        command = "docker compose up -d db-" + springProfile;
+        Properties properties = new Properties();
+        properties.load(new ClassPathResource("application.properties").getInputStream());
+        String dataSourceNames = properties.getProperty("spring.shardingsphere.datasource.names");
+        String[] dataSourceNamesSplit = dataSourceNames.split(",");
+        for (int i = 1; i <= dataSourceNamesSplit.length; i++) {
+            command = "docker compose up -d db-" + springProfile + "-" + i;
+            //接收正常结果流
+            susStream = new ByteArrayOutputStream();
+            //接收异常结果流
+            errStream = new ByteArrayOutputStream();
+            commandLine = CommandLine.parse(command);
+            exec = DefaultExecutor.builder().get();
+            streamHandler = new PumpStreamHandler(susStream, errStream);
+            exec.setStreamHandler(streamHandler);
+            code = exec.execute(commandLine, new HashMap<String, String>() {{
+                this.put("innodbBufferPoolSize", databaseMemory);
+            }});
+            Assertions.assertEquals(0, code, errStream.toString(StandardCharsets.UTF_8.name()));
+        }
+
+        command = "docker compose up -d demo-zookeeper";
         //接收正常结果流
         susStream = new ByteArrayOutputStream();
         //接收异常结果流
         errStream = new ByteArrayOutputStream();
         commandLine = CommandLine.parse(command);
-        exec = new DefaultExecutor();
+        exec = DefaultExecutor.builder().get();
         streamHandler = new PumpStreamHandler(susStream, errStream);
         exec.setStreamHandler(streamHandler);
-        code = exec.execute(commandLine, new HashMap<>() {{
-            this.put("innodbBufferPoolSize", databaseMemory);
-        }});
-        Assertions.assertEquals(0, code, errStream.toString(StandardCharsets.UTF_8));
+        code = exec.execute(commandLine);
+        Assertions.assertEquals(0, code, errStream.toString(StandardCharsets.UTF_8.name()));
 
         TimeUnit.SECONDS.sleep(SecondsWaitForDockerContainerToStopOrStart);
 
@@ -121,8 +141,9 @@ public class OrderPerfTests {
 
         //获取对象
         orderMapper = context.getBean(OrderMapper.class);
+        snowflakeService = context.getBean(SnowflakeService.class);
 
-        int totalCount = Integer.parseInt(context.getEnvironment().getProperty("totalCount"));
+        int totalCount = Integer.parseInt(Objects.requireNonNull(context.getEnvironment().getProperty("totalCount")));
         int totalCountInDB = this.orderMapper.count();
         // 如果当前数据库记录总数不等于预期记录数，则初始化
         if (totalCount != totalCountInDB) {
@@ -150,6 +171,8 @@ public class OrderPerfTests {
                 List<Order> orderList = new ArrayList<>();
                 for (int i = 0; i < internalRunLoopCount; i++) {
                     Order order = orderRandomlyUtil.createRandomly();
+                    Long snowflakeId = this.snowflakeService.getId("order").getId();
+                    OrderRandomlyUtil.injectUserIdGenIntoOrderId(snowflakeId, order.getUserId(), order);
                     orderList.add(order);
 
                     if (orderList.size() == 1000) {
@@ -160,7 +183,7 @@ public class OrderPerfTests {
                 if (!orderList.isEmpty()) {
                     this.orderMapper.addBatch(orderList);
                 }
-            }, threadPool)).collect(Collectors.toList()).toArray(CompletableFuture[]::new)).join();
+            }, threadPool)).collect(Collectors.toList()).toArray(new CompletableFuture[]{})).join();
             threadPool.shutdown();
         } else {
             log.info("databaseMemory {} springProfile {} 当前数据库记录总数等于预期记录数 {}", databaseMemory, springProfile, totalCount);
@@ -174,7 +197,7 @@ public class OrderPerfTests {
         // 加载所有商家ID
         merchantIdArray = this.orderMapper.listMerchantIdAll().stream().mapToLong(o -> o).toArray();
         // 加载所有订单ID
-        orderIdArray = this.orderMapper.listIdAll().stream().mapToLong(o -> o).toArray();
+        orderIdArray = this.orderMapper.listIdAll().toArray(new BigDecimal[]{});
     }
 
     /**
@@ -186,12 +209,6 @@ public class OrderPerfTests {
         ((ConfigurableApplicationContext) context).close();
     }
 
-//    @Benchmark
-//    public void testInsertion(Blackhole blackhole) {
-//        Order order = OrderUtil.createRandomly();
-//        this.orderMapper.add(order);
-//    }
-
     /**
      * 根据订单ID查询
      *
@@ -200,7 +217,7 @@ public class OrderPerfTests {
     @Benchmark
     public void testGetById(Blackhole blackhole) {
         // 根据订单ID查询
-        Long orderId = orderIdArray[RandomUtil.randomInt(0, orderIdArray.length)];
+        BigDecimal orderId = orderIdArray[RandomUtil.randomInt(0, orderIdArray.length)];
         Order order = this.orderMapper.get(orderId);
         blackhole.consume(order);
     }
