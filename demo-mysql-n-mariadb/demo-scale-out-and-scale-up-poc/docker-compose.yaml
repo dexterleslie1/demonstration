@@ -10,7 +10,7 @@ services:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_general_ci
       - --skip-character-set-client-handshake
-      - --innodb-buffer-pool-size=512m
+      - --innodb-buffer-pool-size=4g
     volumes:
       - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf:ro
       - ./db.sql:/docker-entrypoint-initdb.d/db.sql

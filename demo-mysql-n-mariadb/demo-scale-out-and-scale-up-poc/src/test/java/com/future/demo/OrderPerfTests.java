@@ -18,12 +18,12 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -38,16 +38,14 @@ import java.util.stream.IntStream;
 @Threads(-1)
 public class OrderPerfTests {
 
-    @Param(value = {"10000", "100000", "1000000", "2000000", "3000000", "4000000", "5000000",/*"10000000", "20000000", "30000000"*//*, "50000000", "100000000"*/})
-    private long totalCount = 0;
+    @Param(value = {"10000", "100000", "1000000", "2000000", "3000000", "4000000", "5000000", "10000000", "20000000", "30000000", "50000000", "100000000"})
+    private long totalCountParam = 0;
 
     OrderMapper orderMapper;
 
     long[] userIdArray = null;
     long[] orderIdArray = null;
     long[] merchantIdArray = null;
-
-    List<Supplier<List<Order>>> queryFunctionList = null;
 
     //springBoot容器
     private ApplicationContext context;
@@ -60,7 +58,7 @@ public class OrderPerfTests {
                 .forks(1)
                 // 发生错误停止测试
                 .shouldFailOnError(true)
-                .jvmArgs("-Xmx3G", "-server")
+                .jvmArgs("-Xmx20G", "-server")
                 .build();
         new Runner(opt).run();
     }
@@ -75,7 +73,14 @@ public class OrderPerfTests {
         //获取对象
         orderMapper = context.getBean(OrderMapper.class);
 
-        this.orderMapper.truncate();
+        // 数据库总记录数大于当前totalCountParam，则删除之前的数据
+        int totalCountInDB = this.orderMapper.count();
+        if (totalCountInDB > totalCountParam) {
+            this.orderMapper.truncate();
+        }
+
+        totalCountInDB = this.orderMapper.count();
+        int totalCount = (int) totalCountParam - totalCountInDB;
 
         int availableProcessors = Runtime.getRuntime().availableProcessors();
         long remainder = totalCount % availableProcessors;
@@ -110,7 +115,7 @@ public class OrderPerfTests {
         }, threadPool)).collect(Collectors.toList()).toArray(CompletableFuture[]::new)).join();
         threadPool.shutdown();
 
-        Assertions.assertEquals(totalCount, this.orderMapper.count());
+        Assertions.assertEquals(totalCountParam, this.orderMapper.count());
 
         // 加载所有用户ID
         userIdArray = this.orderMapper.listUserIdAll().stream().mapToLong(o -> o).toArray();
@@ -118,50 +123,6 @@ public class OrderPerfTests {
         merchantIdArray = this.orderMapper.listMerchantIdAll().stream().mapToLong(o -> o).toArray();
         // 加载所有订单ID
         orderIdArray = this.orderMapper.listIdAll().stream().mapToLong(o -> o).toArray();
-
-        queryFunctionList = Arrays.asList(
-                () -> {
-                    // 根据订单ID查询
-                    Long orderId = orderIdArray[RandomUtil.randomInt(0, orderIdArray.length)];
-                    return Collections.singletonList(this.orderMapper.get(orderId));
-                },
-                () -> {
-                    // 用户查询指定日期范围+所有状态的订单
-                    Long userId = userIdArray[RandomUtil.randomInt(0, userIdArray.length)];
-                    // 日期范围随机开始时间点
-                    LocalDateTime startTime = OrderRandomlyUtil.getCreateTimeRandomly();
-                    LocalDateTime endTime = startTime.plusMonths(1);
-                    return this.orderMapper.listByUserId(userId, null, DeleteStatus.Normal, startTime, endTime, 0L, 20L);
-                },
-                () -> {
-                    // 用户查询指定日期范围+指定状态的订单
-                    Long userId = userIdArray[RandomUtil.randomInt(0, userIdArray.length)];
-                    // 日期范围随机开始时间点
-                    LocalDateTime startTime = OrderRandomlyUtil.getCreateTimeRandomly();
-                    LocalDateTime endTime = startTime.plusMonths(1);
-                    Status status = OrderRandomlyUtil.getStatusRandomly();
-                    return this.orderMapper.listByUserId(userId, status, DeleteStatus.Normal, startTime, endTime, 0L, 20L);
-                },
-                () -> {
-                    // 商家查询指定日期范围+所有状态的订单
-                    Long merchantId = merchantIdArray[RandomUtil.randomInt(0, merchantIdArray.length)];
-                    // 日期范围随机开始时间点
-                    LocalDateTime startTime = OrderRandomlyUtil.getCreateTimeRandomly();
-                    LocalDateTime endTime = startTime.plusMonths(1);
-                    DeleteStatus deleteStatus = OrderRandomlyUtil.getDeleteStatusRandomly();
-                    return this.orderMapper.listByMerchantId(merchantId, null, deleteStatus, startTime, endTime, 0L, 20L);
-                },
-                () -> {
-                    // 商家查询指定日期范围+指定状态的订单
-                    Long merchantId = merchantIdArray[RandomUtil.randomInt(0, merchantIdArray.length)];
-                    // 日期范围随机开始时间点
-                    LocalDateTime startTime = OrderRandomlyUtil.getCreateTimeRandomly();
-                    LocalDateTime endTime = startTime.plusMonths(1);
-                    Status status = OrderRandomlyUtil.getStatusRandomly();
-                    DeleteStatus deleteStatus = OrderRandomlyUtil.getDeleteStatusRandomly();
-                    return this.orderMapper.listByMerchantId(merchantId, status, deleteStatus, startTime, endTime, 0L, 20L);
-                }
-        );
     }
 
     /**
@@ -179,10 +140,84 @@ public class OrderPerfTests {
 //        this.orderMapper.add(order);
 //    }
 
+    /**
+     * 根据订单ID查询
+     *
+     * @param blackhole
+     */
     @Benchmark
-    public void testFind(Blackhole blackhole) {
-        Supplier<List<Order>> supplier = queryFunctionList.get(RandomUtil.randomInt(0, queryFunctionList.size()));
-        List<Order> orderList = supplier.get();
+    public void testGetById(Blackhole blackhole) {
+        // 根据订单ID查询
+        Long orderId = orderIdArray[RandomUtil.randomInt(0, orderIdArray.length)];
+        Order order = this.orderMapper.get(orderId);
+        blackhole.consume(order);
+    }
+
+    /**
+     * 用户查询指定日期范围+所有状态的订单
+     *
+     * @param blackhole
+     */
+    @Benchmark
+    public void testListByUserIdAndWithoutStatus(Blackhole blackhole) {
+        // 用户查询指定日期范围+所有状态的订单
+        Long userId = userIdArray[RandomUtil.randomInt(0, userIdArray.length)];
+        // 日期范围随机开始时间点
+        LocalDateTime startTime = OrderRandomlyUtil.getCreateTimeRandomly();
+        LocalDateTime endTime = startTime.plusMonths(1);
+        List<Order> orderList = this.orderMapper.listByUserId(userId, null, DeleteStatus.Normal, startTime, endTime, 0L, 20L);
+        blackhole.consume(orderList);
+    }
+
+    /**
+     * 用户查询指定日期范围+指定状态的订单
+     *
+     * @param blackhole
+     */
+    @Benchmark
+    public void testListByUserIdAndStatus(Blackhole blackhole) {
+        // 用户查询指定日期范围+指定状态的订单
+        Long userId = userIdArray[RandomUtil.randomInt(0, userIdArray.length)];
+        // 日期范围随机开始时间点
+        LocalDateTime startTime = OrderRandomlyUtil.getCreateTimeRandomly();
+        LocalDateTime endTime = startTime.plusMonths(1);
+        Status status = OrderRandomlyUtil.getStatusRandomly();
+        List<Order> orderList = this.orderMapper.listByUserId(userId, status, DeleteStatus.Normal, startTime, endTime, 0L, 20L);
+        blackhole.consume(orderList);
+    }
+
+    /**
+     * 商家查询指定日期范围+所有状态的订单
+     *
+     * @param blackhole
+     */
+    @Benchmark
+    public void testListByMerchantIdAndWithoutStatus(Blackhole blackhole) {
+        // 商家查询指定日期范围+所有状态的订单
+        Long merchantId = merchantIdArray[RandomUtil.randomInt(0, merchantIdArray.length)];
+        // 日期范围随机开始时间点
+        LocalDateTime startTime = OrderRandomlyUtil.getCreateTimeRandomly();
+        LocalDateTime endTime = startTime.plusMonths(1);
+        DeleteStatus deleteStatus = OrderRandomlyUtil.getDeleteStatusRandomly();
+        List<Order> orderList = this.orderMapper.listByMerchantId(merchantId, null, deleteStatus, startTime, endTime, 0L, 20L);
+        blackhole.consume(orderList);
+    }
+
+    /**
+     * 商家查询指定日期范围+指定状态的订单
+     *
+     * @param blackhole
+     */
+    @Benchmark
+    public void testListByMerchantIdAndStatus(Blackhole blackhole) {
+        // 商家查询指定日期范围+指定状态的订单
+        Long merchantId = merchantIdArray[RandomUtil.randomInt(0, merchantIdArray.length)];
+        // 日期范围随机开始时间点
+        LocalDateTime startTime = OrderRandomlyUtil.getCreateTimeRandomly();
+        LocalDateTime endTime = startTime.plusMonths(1);
+        Status status = OrderRandomlyUtil.getStatusRandomly();
+        DeleteStatus deleteStatus = OrderRandomlyUtil.getDeleteStatusRandomly();
+        List<Order> orderList = this.orderMapper.listByMerchantId(merchantId, status, deleteStatus, startTime, endTime, 0L, 20L);
         blackhole.consume(orderList);
     }
 }
