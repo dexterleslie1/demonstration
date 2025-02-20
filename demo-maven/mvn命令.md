@@ -97,3 +97,14 @@ mvn dependency:tree -Dincludes=*logback*
 ```sh
 mvn dependency:tree -Dverbose -Dincludes=*:*log4j*
 ```
+
+
+
+## mvn 命令指定 Spring Profile
+
+```bash
+./mvnw test -Dtest=OrderPerfAssistantTests -Dspring.profiles.active=1w
+```
+
+- 使用 -Dspring.profiles.active=1w 指定 profile 为 1w
+
