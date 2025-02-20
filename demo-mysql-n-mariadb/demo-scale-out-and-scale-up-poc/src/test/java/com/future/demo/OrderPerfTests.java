@@ -6,6 +6,9 @@ import com.future.demo.bean.Order;
 import com.future.demo.bean.Status;
 import com.future.demo.mapper.OrderMapper;
 import com.future.demo.util.OrderRandomlyUtil;
+import org.apache.commons.exec.CommandLine;
+import org.apache.commons.exec.DefaultExecutor;
+import org.apache.commons.exec.PumpStreamHandler;
 import org.junit.jupiter.api.Assertions;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
@@ -17,6 +20,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,13 +39,13 @@ import java.util.stream.IntStream;
 @BenchmarkMode(Mode.Throughput)
 @State(Scope.Benchmark) //使用的SpringBoot容器，都是无状态单例Bean，无安全问题，可以直接使用基准作用域BenchMark
 @OutputTimeUnit(TimeUnit.SECONDS)
-@Warmup(iterations = 3, time = 5, timeUnit = TimeUnit.SECONDS) //预热1s
-@Measurement(iterations = 3, time = 30, timeUnit = TimeUnit.SECONDS) //测试也是1s、五遍
+@Warmup(iterations = 3, time = 120, timeUnit = TimeUnit.SECONDS) //预热1s
+@Measurement(iterations = 3, time = 60, timeUnit = TimeUnit.SECONDS) //测试也是1s、五遍
 @Threads(-1)
 public class OrderPerfTests {
 
-    @Param(value = {"10000", "100000", "1000000", "2000000", "3000000", "4000000", "5000000", "10000000", "20000000", "30000000", "50000000", "100000000"})
-    private long totalCountParam = 0;
+    @Param(value = {"1w", "10w", "100w", "200w", "300w", "400w", "500w", "1kw", "2kw", "3kw", "5kw", "10kw"})
+    String springProfile;
 
     OrderMapper orderMapper;
 
@@ -67,55 +73,86 @@ public class OrderPerfTests {
      * 初始化，获取springBoot容器，run即可，同时得到相关的测试对象
      */
     @Setup(Level.Trial)
-    public void setup() {
+    public void setup() throws IOException {
+        // region 启动当前 Spring profile 对应的数据库，其他 profile 的关闭
+
+        String command = "docker compose stop";
+        //接收正常结果流
+        ByteArrayOutputStream susStream = new ByteArrayOutputStream();
+        //接收异常结果流
+        ByteArrayOutputStream errStream = new ByteArrayOutputStream();
+        CommandLine commandLine = CommandLine.parse(command);
+        DefaultExecutor exec = new DefaultExecutor();
+        PumpStreamHandler streamHandler = new PumpStreamHandler(susStream, errStream);
+        exec.setStreamHandler(streamHandler);
+        int code = exec.execute(commandLine);
+        Assertions.assertEquals(0, code, errStream.toString(StandardCharsets.UTF_8));
+
+        command = "docker compose up -d db-" + springProfile;
+        //接收正常结果流
+        susStream = new ByteArrayOutputStream();
+        //接收异常结果流
+        errStream = new ByteArrayOutputStream();
+        commandLine = CommandLine.parse(command);
+        exec = new DefaultExecutor();
+        streamHandler = new PumpStreamHandler(susStream, errStream);
+        exec.setStreamHandler(streamHandler);
+        code = exec.execute(commandLine);
+        Assertions.assertEquals(0, code, errStream.toString(StandardCharsets.UTF_8));
+
+        // endregion
+
         //容器获取
-        context = SpringApplication.run(Application.class);
+        // https://stackoverflow.com/questions/31267274/spring-boot-programmatically-setting-profiles
+        SpringApplication application = new SpringApplication(Application.class);
+        application.setAdditionalProfiles(springProfile);
+        context = application.run();
+
         //获取对象
         orderMapper = context.getBean(OrderMapper.class);
 
-        // 数据库总记录数大于当前totalCountParam，则删除之前的数据
+        int totalCount = Integer.parseInt(context.getEnvironment().getProperty("totalCount"));
         int totalCountInDB = this.orderMapper.count();
-        if (totalCountInDB > totalCountParam) {
+        // 如果当前数据库记录总数不等于预期记录数，则初始化
+        if (totalCount != totalCountInDB) {
             this.orderMapper.truncate();
+
+            int availableProcessors = Runtime.getRuntime().availableProcessors();
+            long remainder = totalCount % availableProcessors;
+            int concurrentThreads = availableProcessors;
+            if (remainder != 0) {
+                concurrentThreads = concurrentThreads + 1;
+            }
+            long runLoopCount = (totalCount - remainder) / availableProcessors;
+
+            ExecutorService threadPool = Executors.newCachedThreadPool();
+            OrderRandomlyUtil orderRandomlyUtil = new OrderRandomlyUtil(totalCount);
+            int finalConcurrentThreads = concurrentThreads;
+            CompletableFuture.allOf(IntStream.range(0, concurrentThreads).mapToObj(index -> CompletableFuture.runAsync(() -> {
+                long internalRunLoopCount = runLoopCount;
+                if (remainder != 0 && index + 1 == finalConcurrentThreads) {
+                    internalRunLoopCount = remainder;
+                }
+
+                List<Order> orderList = new ArrayList<>();
+                for (int i = 0; i < internalRunLoopCount; i++) {
+                    Order order = orderRandomlyUtil.createRandomly();
+                    orderList.add(order);
+
+                    if (orderList.size() == 1000) {
+                        this.orderMapper.addBatch(orderList);
+                        orderList = new ArrayList<>();
+                    }
+                }
+                if (!orderList.isEmpty()) {
+                    this.orderMapper.addBatch(orderList);
+                }
+            }, threadPool)).collect(Collectors.toList()).toArray(CompletableFuture[]::new)).join();
+            threadPool.shutdown();
         }
 
         totalCountInDB = this.orderMapper.count();
-        int totalCount = (int) totalCountParam - totalCountInDB;
-
-        int availableProcessors = Runtime.getRuntime().availableProcessors();
-        long remainder = totalCount % availableProcessors;
-        int concurrentThreads = availableProcessors;
-        if (remainder != 0) {
-            concurrentThreads = concurrentThreads + 1;
-        }
-        long runLoopCount = (totalCount - remainder) / availableProcessors;
-
-        ExecutorService threadPool = Executors.newCachedThreadPool();
-        OrderRandomlyUtil orderRandomlyUtil = new OrderRandomlyUtil(totalCount);
-        int finalConcurrentThreads = concurrentThreads;
-        CompletableFuture.allOf(IntStream.range(0, concurrentThreads).mapToObj(index -> CompletableFuture.runAsync(() -> {
-            long internalRunLoopCount = runLoopCount;
-            if (remainder != 0 && index + 1 == finalConcurrentThreads) {
-                internalRunLoopCount = remainder;
-            }
-
-            List<Order> orderList = new ArrayList<>();
-            for (int i = 0; i < internalRunLoopCount; i++) {
-                Order order = orderRandomlyUtil.createRandomly();
-                orderList.add(order);
-
-                if (orderList.size() == 1000) {
-                    this.orderMapper.addBatch(orderList);
-                    orderList = new ArrayList<>();
-                }
-            }
-            if (!orderList.isEmpty()) {
-                this.orderMapper.addBatch(orderList);
-            }
-        }, threadPool)).collect(Collectors.toList()).toArray(CompletableFuture[]::new)).join();
-        threadPool.shutdown();
-
-        Assertions.assertEquals(totalCountParam, this.orderMapper.count());
+        Assertions.assertEquals(totalCount, totalCountInDB);
 
         // 加载所有用户ID
         userIdArray = this.orderMapper.listUserIdAll().stream().mapToLong(o -> o).toArray();
