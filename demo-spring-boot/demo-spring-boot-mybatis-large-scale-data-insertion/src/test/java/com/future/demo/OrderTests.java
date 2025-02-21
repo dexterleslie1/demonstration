@@ -133,6 +133,38 @@ public class OrderTests {
             if (!orderList.isEmpty()) {
                 orderMapper.addBatch(orderList);
             }
+
+//            SqlSessionFactory sqlSessionFactory = applicationContext.getBean(SqlSessionFactory.class);
+//            SqlSession sqlSession = null;
+//            try {
+//                sqlSession = sqlSessionFactory.openSession(ExecutorType.BATCH, false);
+//                OrderMapper orderMapperInternal = sqlSession.getMapper(OrderMapper.class);
+//
+//                int count = 0;
+//                for (int i = 0; i < internalRunLoopCount; i++) {
+//                    Order order = orderRandomlyUtil.createRandomly();
+//                    orderMapperInternal.add(order);
+//                    count++;
+//
+//                    if (count == 1000) {
+//                        sqlSession.commit();
+//                        count = 0;
+//                    }
+//                }
+//                if (count > 0) {
+//                    sqlSession.commit();
+//                    count = 0;
+//                }
+//            } catch (Exception ex) {
+//                if (sqlSession != null) {
+//                    sqlSession.rollback();
+//                }
+//                throw ex;
+//            } finally {
+//                if (sqlSession != null) {
+//                    sqlSession.close();
+//                }
+//            }
         }, threadPool)).collect(Collectors.toList()).toArray(CompletableFuture[]::new)).join();
         threadPool.shutdown();
 
