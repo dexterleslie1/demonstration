@@ -18,10 +18,10 @@ public interface OrderMapper {
     void add(Order order);
 
     @Insert("<script>" +
-            "insert into `order`(create_time,user_id,merchant_id,total_amount,total_count,status,pay_time,delivery_time," +
+            "insert into `order`(id,create_time,user_id,merchant_id,total_amount,total_count,status,pay_time,delivery_time," +
             "received_time,cancel_time,delete_status) values " +
             "   <foreach item=\"e\" collection=\"orderList\" separator=\",\">" +
-            "       (#{e.createTime},#{e.userId},#{e.merchantId},#{e.totalAmount},#{e.totalCount},#{e.status},#{e.payTime}," +
+            "       (#{e.id},#{e.createTime},#{e.userId},#{e.merchantId},#{e.totalAmount},#{e.totalCount},#{e.status},#{e.payTime}," +
             "       #{e.deliveryTime},#{e.receivedTime},#{e.cancelTime},#{e.deleteStatus})" +
             "   </foreach>" +
             "</script>")
