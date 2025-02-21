@@ -10,6 +10,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecutor;
 import org.apache.commons.exec.PumpStreamHandler;
+import org.apache.ibatis.session.ExecutorType;
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
 import org.junit.jupiter.api.Assertions;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
@@ -25,7 +28,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -41,8 +43,8 @@ import java.util.stream.IntStream;
 @BenchmarkMode(Mode.Throughput)
 @State(Scope.Benchmark) //使用的SpringBoot容器，都是无状态单例Bean，无安全问题，可以直接使用基准作用域BenchMark
 @OutputTimeUnit(TimeUnit.SECONDS)
-@Warmup(iterations = 3, time = 120, timeUnit = TimeUnit.SECONDS) //预热1s
-@Measurement(iterations = 3, time = 60, timeUnit = TimeUnit.SECONDS) //测试也是1s、五遍
+@Warmup(iterations = 3, time = 5, timeUnit = TimeUnit.SECONDS) //预热1s
+@Measurement(iterations = 3, time = 30, timeUnit = TimeUnit.SECONDS) //测试也是1s、五遍
 @Threads(-1)
 @Slf4j
 public class OrderPerfTests {
@@ -147,18 +149,36 @@ public class OrderPerfTests {
                     internalRunLoopCount = remainder;
                 }
 
-                List<Order> orderList = new ArrayList<>();
-                for (int i = 0; i < internalRunLoopCount; i++) {
-                    Order order = orderRandomlyUtil.createRandomly();
-                    orderList.add(order);
+                SqlSessionFactory sqlSessionFactory = context.getBean(SqlSessionFactory.class);
+                SqlSession sqlSession = null;
+                try {
+                    sqlSession = sqlSessionFactory.openSession(ExecutorType.BATCH, false);
+                    OrderMapper orderMapperInternal = sqlSession.getMapper(OrderMapper.class);
 
-                    if (orderList.size() == 1000) {
-                        this.orderMapper.addBatch(orderList);
-                        orderList = new ArrayList<>();
+                    int count = 0;
+                    for (int i = 0; i < internalRunLoopCount; i++) {
+                        Order order = orderRandomlyUtil.createRandomly();
+                        orderMapperInternal.add(order);
+                        count++;
+
+                        if (count == 1000) {
+                            sqlSession.commit();
+                            count = 0;
+                        }
                     }
-                }
-                if (!orderList.isEmpty()) {
-                    this.orderMapper.addBatch(orderList);
+                    if (count > 0) {
+                        sqlSession.commit();
+                        count = 0;
+                    }
+                } catch (Exception ex) {
+                    if (sqlSession != null) {
+                        sqlSession.rollback();
+                    }
+                    throw ex;
+                } finally {
+                    if (sqlSession != null) {
+                        sqlSession.close();
+                    }
                 }
             }, threadPool)).collect(Collectors.toList()).toArray(CompletableFuture[]::new)).join();
             threadPool.shutdown();
