@@ -7,6 +7,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecutor;
 import org.apache.commons.exec.PumpStreamHandler;
+import org.apache.ibatis.session.ExecutorType;
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -120,7 +123,7 @@ public class OrderTests {
                 internalRunLoopCount = remainder;
             }
 
-            List<Order> orderList = new ArrayList<>();
+            /*List<Order> orderList = new ArrayList<>();
             for (int i = 0; i < internalRunLoopCount; i++) {
                 Order order = orderRandomlyUtil.createRandomly();
                 orderList.add(order);
@@ -132,39 +135,39 @@ public class OrderTests {
             }
             if (!orderList.isEmpty()) {
                 orderMapper.addBatch(orderList);
-            }
+            }*/
 
-//            SqlSessionFactory sqlSessionFactory = applicationContext.getBean(SqlSessionFactory.class);
-//            SqlSession sqlSession = null;
-//            try {
-//                sqlSession = sqlSessionFactory.openSession(ExecutorType.BATCH, false);
-//                OrderMapper orderMapperInternal = sqlSession.getMapper(OrderMapper.class);
-//
-//                int count = 0;
-//                for (int i = 0; i < internalRunLoopCount; i++) {
-//                    Order order = orderRandomlyUtil.createRandomly();
-//                    orderMapperInternal.add(order);
-//                    count++;
-//
-//                    if (count == 1000) {
-//                        sqlSession.commit();
-//                        count = 0;
-//                    }
-//                }
-//                if (count > 0) {
-//                    sqlSession.commit();
-//                    count = 0;
-//                }
-//            } catch (Exception ex) {
-//                if (sqlSession != null) {
-//                    sqlSession.rollback();
-//                }
-//                throw ex;
-//            } finally {
-//                if (sqlSession != null) {
-//                    sqlSession.close();
-//                }
-//            }
+            SqlSessionFactory sqlSessionFactory = applicationContext.getBean(SqlSessionFactory.class);
+            SqlSession sqlSession = null;
+            try {
+                sqlSession = sqlSessionFactory.openSession(ExecutorType.BATCH, false);
+                OrderMapper orderMapperInternal = sqlSession.getMapper(OrderMapper.class);
+
+                int count = 0;
+                for (int i = 0; i < internalRunLoopCount; i++) {
+                    Order order = orderRandomlyUtil.createRandomly();
+                    orderMapperInternal.add(order);
+                    count++;
+
+                    if (count == 1000) {
+                        sqlSession.commit();
+                        count = 0;
+                    }
+                }
+                if (count > 0) {
+                    sqlSession.commit();
+                    count = 0;
+                }
+            } catch (Exception ex) {
+                if (sqlSession != null) {
+                    sqlSession.rollback();
+                }
+                throw ex;
+            } finally {
+                if (sqlSession != null) {
+                    sqlSession.close();
+                }
+            }
         }, threadPool)).collect(Collectors.toList()).toArray(CompletableFuture[]::new)).join();
         threadPool.shutdown();
 
@@ -177,12 +180,12 @@ public class OrderTests {
 
     static Stream<Arguments> parameterizedTestParametersSupplier() {
         return Stream.of(
-//                Arguments.of(10000 * 100, "512m", 1),
-//                Arguments.of(10000 * 100, "512m", 2),
-//                Arguments.of(10000 * 100, "512m", 3),
-//                Arguments.of(10000 * 100, "512m", 4),
-//                Arguments.of(10000 * 100, "512m", 5),
-//                Arguments.of(10000 * 100, "512m", 6),
+                Arguments.of(10000 * 100, "512m", 1),
+                Arguments.of(10000 * 100, "512m", 2),
+                Arguments.of(10000 * 100, "512m", 3),
+                Arguments.of(10000 * 100, "512m", 4),
+                Arguments.of(10000 * 100, "512m", 5),
+                Arguments.of(10000 * 100, "512m", 6),
                 Arguments.of(10000 * 100, "2g", 1),
                 Arguments.of(10000 * 100, "2g", 2),
                 Arguments.of(10000 * 100, "2g", 3),

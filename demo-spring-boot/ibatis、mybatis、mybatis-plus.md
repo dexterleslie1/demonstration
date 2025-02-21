@@ -745,7 +745,153 @@ Assertions.assertEquals(now, order.getCreateTime());
 
 >`https://blog.csdn.net/chang100111/article/details/115664432`
 
-详细用法请参考示例 `https://gitee.com/dexterleslie/demonstration/blob/master/demo-spring-boot/demo-spring-boot-mybatis/src/test/java/com/future/demo/BatchInsertTests.java`
+详细用法请参考示例 `https://gitee.com/dexterleslie/demonstration/blob/master/demo-spring-boot/demo-spring-boot-mybatis-large-scale-data-insertion`
+
+结论：使用 CompletableFuture+MyBatis 事务批量插入数据速度最佳。
+
+
+
+#### 介绍
+
+优化 MySQL 批量插入数据的性能是一个复杂的问题，需要从多个方面入手。 没有一个放之四海而皆准的最佳方案，最佳策略取决于你的数据量、硬件资源、数据结构和可接受的错误率。 以下是一些关键的优化策略：
+
+1. 选择合适的批量插入方法:
+
+    INSERT INTO ... VALUES (...),(...),(...) (批量插入): 这是最常用的方法，一次性插入多行。 比单行插入快得多。 批量大小需要测试，过大可能导致内存溢出，过小则提升有限。 通常几百到几千行是一个不错的起点，但需要根据实际情况调整。
+
+    LOAD DATA INFILE: 如果数据预先存储在文本文件中（例如 CSV），这是最快的方法。它绕过了 MySQL 服务器的连接层，直接将数据加载到表中。 需要服务器有足够的权限访问数据文件，文件格式需符合要求。 特别适合处理非常大的数据集。
+
+    使用存储过程: 可以将批量插入逻辑封装到存储过程中，这在一定程度上可以优化网络传输和数据库处理，特别是在分布式环境下。
+
+2. 优化表结构和索引:
+
+    禁用键约束和索引 (临时): 在导入数据前，暂时禁用外键约束和索引 (ALTER TABLE ... DISABLE KEYS) 可以显著提高速度。 导入完成后再重新启用 (ALTER TABLE ... ENABLE KEYS)。 这会牺牲数据完整性，仅在数据导入完成后保证数据一致性即可。
+
+    选择合适的存储引擎: InnoDB 和 MyISAM 的性能差异很大。 对于大量数据的导入，MyISAM 通常更快（因为它使用表锁，比 InnoDB 的行锁机制更简单），但它不支持事务。 如果数据一致性至关重要，则必须使用 InnoDB。
+
+    合理的字段类型和长度: 避免使用过大的数据类型，选择最合适的类型可以节省存储空间和提高效率。
+
+3. 优化数据库服务器配置:
+
+    足够的内存: MySQL 需要足够的内存来缓存数据和索引，从而减少磁盘 I/O 操作。 调整 innodb_buffer_pool_size (InnoDB) 或 key_buffer_size (MyISAM) 等参数。 (注意：MyISAM 已经过时，不推荐在新项目中使用)
+
+    快速存储: 使用 SSD 硬盘可以显著提高导入速度。
+
+    优化服务器参数: 根据服务器配置和数据特性调整 MySQL 服务器参数，例如 bulk_insert_buffer_size，max_allowed_packet 等。 这需要深入了解 MySQL 参数的意义和影响。
+
+    调整线程数: MySQL 允许并发插入，可以适当调整 innodb_thread_concurrency 参数 (InnoDB)，但过高的并发可能会导致资源竞争。
+
+4. 使用事务 (谨慎):
+
+事务可以保证数据的一致性，但过大的事务会导致锁等待时间过长，影响性能。 可以考虑分批提交事务，例如每插入一定数量的数据就提交一次事务。 START TRANSACTION, COMMIT 控制事务范围。
+
+5. 数据预处理:
+
+在导入数据之前，对数据进行预处理，例如数据清洗、转换等，可以减少导入时间并避免不必要的错误。
+
+6. 其他优化策略:
+
+    使用合适的客户端: 选择高效的 MySQL 客户端，例如 mysqlimport，可以提供更快的导入速度。
+
+    多线程/多进程导入: 考虑使用多线程或多进程的方式并行导入数据，但这需要仔细处理资源竞争问题。
+
+    分表分库: 对于极大的数据集，可以考虑分库分表来降低单表的数据量，提高性能。
+
+总结:
+
+优化批量插入的性能是一个迭代过程。 需要先尝试一些简单的优化方法，例如调整批量大小和禁用索引，然后根据实际情况逐步尝试更高级的优化策略。 在进行大规模数据导入之前，务必在测试环境中进行充分的测试和性能评估，选择最适合自己情况的方案。 同时，记得在导入前备份数据！
+
+
+
+#### 多线程插入
+
+结论：增加并发线程数为 CPU 总数的 2、3、4、5、6 倍，数据插入速度没有明显变化。
+
+100w 数据量，数据库内存 2g 条件下：
+
+- 并发线程数为 1 倍 CPU 总数，日志输出为 totalCount=1000000,databaseMemory=2g,availableProcessorsMultiplier=1 耗时 13373 毫秒
+- 并发线程数为 2 倍 CPU 总数，日志输出为 totalCount=1000000,databaseMemory=2g,availableProcessorsMultiplier=2 耗时 13137 毫秒
+- 并发线程数为 3 倍 CPU 总数，日志输出为 totalCount=1000000,databaseMemory=2g,availableProcessorsMultiplier=3 耗时 12596 毫秒
+- 并发线程数为 4 倍 CPU 总数，日志输出为 totalCount=1000000,databaseMemory=2g,availableProcessorsMultiplier=4 耗时 12757 毫秒
+- 并发线程数为 5 倍 CPU 总数，日志输出为 totalCount=1000000,databaseMemory=2g,availableProcessorsMultiplier=5 耗时 12462 毫秒
+- 并发线程数为 6 倍 CPU 总数，日志输出为 totalCount=1000000,databaseMemory=2g,availableProcessorsMultiplier=6 耗时 12538 毫秒
+
+
+
+#### innodb-buffer-pool-size 大小
+
+结论：增加 innodb 内存大小数据插入速度没有明显变化。
+
+100w 数据量，并发线程数为 4 倍 CPU 总数（32 线程）
+
+- 数据库内存 512m，日志输出为 totalCount=1000000,databaseMemory=512m,availableProcessorsMultiplier=4 耗时 14999 毫秒
+- 数据库内存 2g，日志输出为 totalCount=1000000,databaseMemory=2g,availableProcessorsMultiplier=4 耗时 13485 毫秒
+
+
+
+#### bulk_insert_buffer_size 和 max_allowed_packet 参数
+
+结论：这两个参数对 innodb 引擎的数据插入速度没有影响。
+
+
+
+#### innodb_thread_concurrency 参数
+
+结论：此参数对数据插入速度没有明显影响。
+
+
+
+#### 使用事务
+
+结论：使用此方法有一点加快数据插入速度。
+
+代码如下：
+
+```java
+SqlSessionFactory sqlSessionFactory = applicationContext.getBean(SqlSessionFactory.class);
+SqlSession sqlSession = null;
+try {
+    sqlSession = sqlSessionFactory.openSession(ExecutorType.BATCH, false);
+    OrderMapper orderMapperInternal = sqlSession.getMapper(OrderMapper.class);
+
+    int count = 0;
+    for (int i = 0; i < internalRunLoopCount; i++) {
+        Order order = orderRandomlyUtil.createRandomly();
+        orderMapperInternal.add(order);
+        count++;
+
+        if (count == 1000) {
+            sqlSession.commit();
+            count = 0;
+        }
+    }
+    if (count > 0) {
+        sqlSession.commit();
+        count = 0;
+    }
+} catch (Exception ex) {
+    if (sqlSession != null) {
+        sqlSession.rollback();
+    }
+    throw ex;
+} finally {
+    if (sqlSession != null) {
+        sqlSession.close();
+    }
+}
+```
+
+100w 数据量，并发线程数为 4 倍 CPU 总数（32 线程），数据库内存 2g，日志输出 totalCount=1000000,databaseMemory=2g,availableProcessorsMultiplier=4 耗时 9568 毫秒
+
+
+
+#### 启用 bin_log
+
+结论：启用此特性对数据插入速度没有明显影响。
+
+
+
+#### 各种批量插入方式性能对比
 
 插入 100w 数据，各种批量插入方式性能对比结果如下：
 

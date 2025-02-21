@@ -9,7 +9,6 @@ innodb_log_file_size=512m
 innodb_log_buffer_size=256m
 innodb_file_per_table=1
 max_binlog_size=512m
-#bulk_insert_buffer_size=256m
 
 # 一旦提供log_bin参数无论是何值或者不提供值时，表示启用binlog功能
 # 不提供log_bin表示禁用binlog功能
