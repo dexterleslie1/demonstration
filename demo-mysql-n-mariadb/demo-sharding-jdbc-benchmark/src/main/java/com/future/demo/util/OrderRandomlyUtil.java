@@ -114,9 +114,9 @@ public class OrderRandomlyUtil {
      * @param order
      */
     public static void injectUserIdGenIntoOrderId(Long orderId, Long userId, Order order) {
-        String userIdStr = String.valueOf(userId);
-        String userIdSuffix = userIdStr.substring(userIdStr.length() - 3);
-        BigDecimal orderIdWithGen = new BigDecimal(orderId + userIdSuffix);
-        order.setId(orderIdWithGen);
+//        String userIdStr = String.valueOf(userId);
+//        String userIdSuffix = userIdStr.substring(userIdStr.length() - 3);
+//        BigDecimal orderIdWithGen = new BigDecimal(orderId + userIdSuffix);
+//        order.setId(orderIdWithGen);
     }
 }

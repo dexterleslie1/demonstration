@@ -5,31 +5,30 @@ import com.future.demo.bean.Order;
 import com.future.demo.bean.Status;
 import org.apache.ibatis.annotations.*;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Mapper
 public interface OrderMapper {
-    @Insert("insert into `order`(id,create_time,user_id,merchant_id,total_amount,total_count,status,pay_time,delivery_time," +
+    @Insert("insert into `order`(create_time,user_id,merchant_id,total_amount,total_count,status,pay_time,delivery_time," +
             "received_time,cancel_time,delete_status) " +
-            "values(#{id},#{createTime},#{userId},#{merchantId},#{totalAmount},#{totalCount}," +
+            "values(#{createTime},#{userId},#{merchantId},#{totalAmount},#{totalCount}," +
             "#{status},#{payTime},#{deliveryTime},#{receivedTime},#{cancelTime},#{deleteStatus})")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     void add(Order order);
 
     @Insert("<script>" +
-            "insert into `order`(id,create_time,user_id,merchant_id,total_amount,total_count,status,pay_time,delivery_time," +
+            "insert into `order`(create_time,user_id,merchant_id,total_amount,total_count,status,pay_time,delivery_time," +
             "received_time,cancel_time,delete_status) values " +
             "   <foreach item=\"e\" collection=\"orderList\" separator=\",\">" +
-            "       (#{e.id},#{e.createTime},#{e.userId},#{e.merchantId},#{e.totalAmount},#{e.totalCount},#{e.status},#{e.payTime}," +
+            "       (#{e.createTime},#{e.userId},#{e.merchantId},#{e.totalAmount},#{e.totalCount},#{e.status},#{e.payTime}," +
             "       #{e.deliveryTime},#{e.receivedTime},#{e.cancelTime},#{e.deleteStatus})" +
             "   </foreach>" +
             "</script>")
     void addBatch(@Param("orderList") List<Order> orderList);
 
     @Select("select * from `order` where id=#{id}")
-    Order get(@Param("id") BigDecimal id);
+    Order get(@Param("id") Long id);
 
     @Select("select count(id) from `order`")
     int count();
@@ -44,7 +43,7 @@ public interface OrderMapper {
     List<Long> listMerchantIdAll();
 
     @Select("select id from `order`")
-    List<BigDecimal> listIdAll();
+    List<Long> listIdAll();
 
     @Select("select * from `order`")
     List<Order> listAll();
@@ -78,7 +77,7 @@ public interface OrderMapper {
             "       #{e}" +
             "   </foreach>)" +
             "</script>")
-    List<Order> listById(@Param("idList") List<BigDecimal> idList);
+    List<Order> listById(@Param("idList") List<Long> idList);
 
     @Select("select * from `order` where user_id>=#{startUserId} and user_id<=#{endUserId}")
     List<Order> listByUserIdRange(@Param("startUserId") Long startUserId, @Param("endUserId") Long endUserId);

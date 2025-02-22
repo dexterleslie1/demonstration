@@ -7,7 +7,8 @@ import java.time.LocalDateTime;
 
 @Data
 public class Order {
-    private BigDecimal id;
+//    private BigDecimal id;
+    private Long id;
     private LocalDateTime createTime;
     private Long userId;
     private Long merchantId;

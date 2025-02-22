@@ -1,9 +1,7 @@
 package com.future.demo;
 
 import cn.hutool.core.util.RandomUtil;
-import com.future.demo.bean.DeleteStatus;
 import com.future.demo.bean.Order;
-import com.future.demo.bean.Status;
 import com.future.demo.mapper.OrderMapper;
 import com.future.demo.util.OrderRandomlyUtil;
 import com.tencent.devops.leaf.service.SnowflakeService;
@@ -25,9 +23,7 @@ import org.springframework.core.io.ClassPathResource;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -42,24 +38,25 @@ import java.util.stream.IntStream;
 @BenchmarkMode(Mode.Throughput)
 @State(Scope.Benchmark) //使用的SpringBoot容器，都是无状态单例Bean，无安全问题，可以直接使用基准作用域BenchMark
 @OutputTimeUnit(TimeUnit.SECONDS)
-@Warmup(iterations = 3, time = 120, timeUnit = TimeUnit.SECONDS) //预热1s
-@Measurement(iterations = 3, time = 60, timeUnit = TimeUnit.SECONDS) //测试也是1s、五遍
+@Warmup(iterations = 3, time = 1, timeUnit = TimeUnit.SECONDS) //预热1s
+@Measurement(iterations = 3, time = 5, timeUnit = TimeUnit.SECONDS) //测试也是1s、五遍
 @Threads(-1)
 @Slf4j
 public class OrderPerfTests {
 
     final static int SecondsWaitForDockerContainerToStopOrStart = 15;
+    final static String StrConstOrder = "order";
 
-    @Param(value = {"1w", "10w", "100w", "200w", "300w", "400w", "500w", "1kw", "2kw", "3kw", "5kw", "10kw"})
+    @Param(value = {"100w"/*, "10w", "100w", "200w", "300w", "400w", "500w", "1kw", "2kw", "3kw", "5kw", "10kw"*/})
     String springProfile;
-    @Param(value = {"512m", "2g"})
+    @Param(value = {"512m"/*, "2g"*/})
     String databaseMemory;
 
     OrderMapper orderMapper;
     SnowflakeService snowflakeService;
 
     long[] userIdArray = null;
-    BigDecimal[] orderIdArray = null;
+    long[] orderIdArray = null;
     long[] merchantIdArray = null;
 
     //springBoot容器
@@ -73,7 +70,7 @@ public class OrderPerfTests {
                 .forks(1)
                 // 发生错误停止测试
                 .shouldFailOnError(true)
-                .jvmArgs("-Xmx20G", "-server")
+                .jvmArgs("-Xmx4G", "-server")
                 .build();
         new Runner(opt).run();
     }
@@ -171,7 +168,7 @@ public class OrderPerfTests {
                 List<Order> orderList = new ArrayList<>();
                 for (int i = 0; i < internalRunLoopCount; i++) {
                     Order order = orderRandomlyUtil.createRandomly();
-                    Long snowflakeId = this.snowflakeService.getId("order").getId();
+                    Long snowflakeId = this.snowflakeService.getId(StrConstOrder).getId();
                     OrderRandomlyUtil.injectUserIdGenIntoOrderId(snowflakeId, order.getUserId(), order);
                     orderList.add(order);
 
@@ -197,7 +194,7 @@ public class OrderPerfTests {
         // 加载所有商家ID
         merchantIdArray = this.orderMapper.listMerchantIdAll().stream().mapToLong(o -> o).toArray();
         // 加载所有订单ID
-        orderIdArray = this.orderMapper.listIdAll().toArray(new BigDecimal[]{});
+        orderIdArray = this.orderMapper.listIdAll().stream().mapToLong(o -> o).toArray();
     }
 
     /**
@@ -217,76 +214,76 @@ public class OrderPerfTests {
     @Benchmark
     public void testGetById(Blackhole blackhole) {
         // 根据订单ID查询
-        BigDecimal orderId = orderIdArray[RandomUtil.randomInt(0, orderIdArray.length)];
+        Long orderId = orderIdArray[RandomUtil.randomInt(0, orderIdArray.length)];
         Order order = this.orderMapper.get(orderId);
         blackhole.consume(order);
     }
 
-    /**
-     * 用户查询指定日期范围+所有状态的订单
-     *
-     * @param blackhole
-     */
-    @Benchmark
-    public void testListByUserIdAndWithoutStatus(Blackhole blackhole) {
-        // 用户查询指定日期范围+所有状态的订单
-        Long userId = userIdArray[RandomUtil.randomInt(0, userIdArray.length)];
-        // 日期范围随机开始时间点
-        LocalDateTime startTime = OrderRandomlyUtil.getCreateTimeRandomly();
-        LocalDateTime endTime = startTime.plusMonths(1);
-        List<Order> orderList = this.orderMapper.listByUserId(userId, null, DeleteStatus.Normal, startTime, endTime, 0L, 20L);
-        blackhole.consume(orderList);
-    }
-
-    /**
-     * 用户查询指定日期范围+指定状态的订单
-     *
-     * @param blackhole
-     */
-    @Benchmark
-    public void testListByUserIdAndStatus(Blackhole blackhole) {
-        // 用户查询指定日期范围+指定状态的订单
-        Long userId = userIdArray[RandomUtil.randomInt(0, userIdArray.length)];
-        // 日期范围随机开始时间点
-        LocalDateTime startTime = OrderRandomlyUtil.getCreateTimeRandomly();
-        LocalDateTime endTime = startTime.plusMonths(1);
-        Status status = OrderRandomlyUtil.getStatusRandomly();
-        List<Order> orderList = this.orderMapper.listByUserId(userId, status, DeleteStatus.Normal, startTime, endTime, 0L, 20L);
-        blackhole.consume(orderList);
-    }
-
-    /**
-     * 商家查询指定日期范围+所有状态的订单
-     *
-     * @param blackhole
-     */
-    @Benchmark
-    public void testListByMerchantIdAndWithoutStatus(Blackhole blackhole) {
-        // 商家查询指定日期范围+所有状态的订单
-        Long merchantId = merchantIdArray[RandomUtil.randomInt(0, merchantIdArray.length)];
-        // 日期范围随机开始时间点
-        LocalDateTime startTime = OrderRandomlyUtil.getCreateTimeRandomly();
-        LocalDateTime endTime = startTime.plusMonths(1);
-        DeleteStatus deleteStatus = OrderRandomlyUtil.getDeleteStatusRandomly();
-        List<Order> orderList = this.orderMapper.listByMerchantId(merchantId, null, deleteStatus, startTime, endTime, 0L, 20L);
-        blackhole.consume(orderList);
-    }
-
-    /**
-     * 商家查询指定日期范围+指定状态的订单
-     *
-     * @param blackhole
-     */
-    @Benchmark
-    public void testListByMerchantIdAndStatus(Blackhole blackhole) {
-        // 商家查询指定日期范围+指定状态的订单
-        Long merchantId = merchantIdArray[RandomUtil.randomInt(0, merchantIdArray.length)];
-        // 日期范围随机开始时间点
-        LocalDateTime startTime = OrderRandomlyUtil.getCreateTimeRandomly();
-        LocalDateTime endTime = startTime.plusMonths(1);
-        Status status = OrderRandomlyUtil.getStatusRandomly();
-        DeleteStatus deleteStatus = OrderRandomlyUtil.getDeleteStatusRandomly();
-        List<Order> orderList = this.orderMapper.listByMerchantId(merchantId, status, deleteStatus, startTime, endTime, 0L, 20L);
-        blackhole.consume(orderList);
-    }
+//    /**
+//     * 用户查询指定日期范围+所有状态的订单
+//     *
+//     * @param blackhole
+//     */
+//    @Benchmark
+//    public void testListByUserIdAndWithoutStatus(Blackhole blackhole) {
+//        // 用户查询指定日期范围+所有状态的订单
+//        Long userId = userIdArray[RandomUtil.randomInt(0, userIdArray.length)];
+//        // 日期范围随机开始时间点
+//        LocalDateTime startTime = OrderRandomlyUtil.getCreateTimeRandomly();
+//        LocalDateTime endTime = startTime.plusMonths(1);
+//        List<Order> orderList = this.orderMapper.listByUserId(userId, null, DeleteStatus.Normal, startTime, endTime, 0L, 20L);
+//        blackhole.consume(orderList);
+//    }
+//
+//    /**
+//     * 用户查询指定日期范围+指定状态的订单
+//     *
+//     * @param blackhole
+//     */
+//    @Benchmark
+//    public void testListByUserIdAndStatus(Blackhole blackhole) {
+//        // 用户查询指定日期范围+指定状态的订单
+//        Long userId = userIdArray[RandomUtil.randomInt(0, userIdArray.length)];
+//        // 日期范围随机开始时间点
+//        LocalDateTime startTime = OrderRandomlyUtil.getCreateTimeRandomly();
+//        LocalDateTime endTime = startTime.plusMonths(1);
+//        Status status = OrderRandomlyUtil.getStatusRandomly();
+//        List<Order> orderList = this.orderMapper.listByUserId(userId, status, DeleteStatus.Normal, startTime, endTime, 0L, 20L);
+//        blackhole.consume(orderList);
+//    }
+//
+//    /**
+//     * 商家查询指定日期范围+所有状态的订单
+//     *
+//     * @param blackhole
+//     */
+//    @Benchmark
+//    public void testListByMerchantIdAndWithoutStatus(Blackhole blackhole) {
+//        // 商家查询指定日期范围+所有状态的订单
+//        Long merchantId = merchantIdArray[RandomUtil.randomInt(0, merchantIdArray.length)];
+//        // 日期范围随机开始时间点
+//        LocalDateTime startTime = OrderRandomlyUtil.getCreateTimeRandomly();
+//        LocalDateTime endTime = startTime.plusMonths(1);
+//        DeleteStatus deleteStatus = OrderRandomlyUtil.getDeleteStatusRandomly();
+//        List<Order> orderList = this.orderMapper.listByMerchantId(merchantId, null, deleteStatus, startTime, endTime, 0L, 20L);
+//        blackhole.consume(orderList);
+//    }
+//
+//    /**
+//     * 商家查询指定日期范围+指定状态的订单
+//     *
+//     * @param blackhole
+//     */
+//    @Benchmark
+//    public void testListByMerchantIdAndStatus(Blackhole blackhole) {
+//        // 商家查询指定日期范围+指定状态的订单
+//        Long merchantId = merchantIdArray[RandomUtil.randomInt(0, merchantIdArray.length)];
+//        // 日期范围随机开始时间点
+//        LocalDateTime startTime = OrderRandomlyUtil.getCreateTimeRandomly();
+//        LocalDateTime endTime = startTime.plusMonths(1);
+//        Status status = OrderRandomlyUtil.getStatusRandomly();
+//        DeleteStatus deleteStatus = OrderRandomlyUtil.getDeleteStatusRandomly();
+//        List<Order> orderList = this.orderMapper.listByMerchantId(merchantId, status, deleteStatus, startTime, endTime, 0L, 20L);
+//        blackhole.consume(orderList);
+//    }
 }

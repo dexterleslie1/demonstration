@@ -23,6 +23,8 @@ import java.util.stream.Collectors;
 @SpringBootTest
 public class ApplicationTests {
 
+    final static String StrConstOrder = "order";
+
     @Resource
     OrderMapper orderMapper;
     @Autowired
@@ -30,7 +32,7 @@ public class ApplicationTests {
 
     @Test
     public void contextLoads() {
-        int totalCount = 5;
+        int totalCount = 15;
 
         this.orderMapper.truncate();
 
@@ -47,12 +49,12 @@ public class ApplicationTests {
             Status status = OrderRandomlyUtil.getStatusRandomly();
             order.setStatus(status);
             order.setDeleteStatus(OrderRandomlyUtil.getDeleteStatusRandomly());
-            Long snowflakeId = this.snowflakeService.getId("order").getId();
+            Long snowflakeId = this.snowflakeService.getId(StrConstOrder).getId();
             OrderRandomlyUtil.injectUserIdGenIntoOrderId(snowflakeId, userId, order);
             this.orderMapper.add(order);
             orderList.add(order);
 
-            BigDecimal id = order.getId();
+            Long id = order.getId();
 
             order = this.orderMapper.get(id);
             Assertions.assertEquals(id, order.getId());
@@ -60,10 +62,10 @@ public class ApplicationTests {
             Assertions.assertEquals(now, order.getCreateTime());
         }
 
-        Map<BigDecimal, Order> idToOrderMap = orderList.stream().collect(Collectors.toMap(Order::getId, o -> o));
+        Map<Long, Order> idToOrderMap = orderList.stream().collect(Collectors.toMap(Order::getId, o -> o));
         List<Order> orderListResult = this.orderMapper.listById(orderList.stream().map(Order::getId).collect(Collectors.toList()));
         Assertions.assertEquals(orderList.size(), orderListResult.size());
-        Map<BigDecimal, Order> finalIdToOrderMap1 = idToOrderMap;
+        Map<Long, Order> finalIdToOrderMap1 = idToOrderMap;
         orderListResult.forEach(o -> {
             Assertions.assertEquals(finalIdToOrderMap1.get(o.getId()).getCreateTime(), o.getCreateTime());
             Assertions.assertEquals(finalIdToOrderMap1.get(o.getId()).getUserId(), o.getUserId());
@@ -85,7 +87,7 @@ public class ApplicationTests {
             order.setTotalCount(10);
             order.setStatus(OrderRandomlyUtil.getStatusRandomly());
             order.setDeleteStatus(OrderRandomlyUtil.getDeleteStatusRandomly());
-            Long snowflakeId = this.snowflakeService.getId("order").getId();
+            Long snowflakeId = this.snowflakeService.getId(StrConstOrder).getId();
             OrderRandomlyUtil.injectUserIdGenIntoOrderId(snowflakeId, userId, order);
             orderList.add(order);
         }
@@ -95,7 +97,7 @@ public class ApplicationTests {
         idToOrderMap = orderList.stream().collect(Collectors.toMap(Order::getId, o -> o));
         orderListResult = this.orderMapper.listById(orderList.stream().map(Order::getId).collect(Collectors.toList()));
         Assertions.assertEquals(orderList.size(), orderListResult.size());
-        Map<BigDecimal, Order> finalIdToOrderMap = idToOrderMap;
+        Map<Long, Order> finalIdToOrderMap = idToOrderMap;
         orderListResult.forEach(o -> {
             Assertions.assertEquals(finalIdToOrderMap.get(o.getId()).getCreateTime(), o.getCreateTime());
             Assertions.assertEquals(finalIdToOrderMap.get(o.getId()).getUserId(), o.getUserId());
@@ -123,19 +125,5 @@ public class ApplicationTests {
         Assertions.assertEquals(expectedOrder.getId(), orderList.get(0).getId());
 
         // endregion
-    }
-
-    @Test
-    public void test() throws InterruptedException {
-//        for (int i = 0; i < 16; i++) {
-//            long id = this.snowflakeService.getId("x").getId();
-//            TimeUnit.MILLISECONDS.sleep(RandomUtil.randomInt(0, 50));
-//            System.out.println(id%16);
-//        }
-        long id = this.snowflakeService.getId("x").getId();
-        long userId = 3232558898349L % 16;
-        String longStr = id + String.valueOf(userId);
-        BigDecimal idN = new BigDecimal(longStr);
-        System.out.println("idN = " + idN);
     }
 }
