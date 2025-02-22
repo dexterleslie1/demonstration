@@ -745,7 +745,7 @@ Assertions.assertEquals(now, order.getCreateTime());
 
 >`https://blog.csdn.net/chang100111/article/details/115664432`
 
-详细用法请参考示例 `https://gitee.com/dexterleslie/demonstration/blob/master/demo-spring-boot/demo-spring-boot-mybatis-large-scale-data-insertion`
+详细用法请参考示例 `https://gitee.com/dexterleslie/demonstration/blob/master/demo-spring-boot/demo-spring-boot-mybatis-benchmark`
 
 结论：使用 CompletableFuture+MyBatis 事务批量插入数据速度最佳。
 
