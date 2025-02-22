@@ -71,6 +71,7 @@ source_dir_to_target_dir_map["../../demo-toolset"]="toolset"
 source_dir_to_target_dir_map["../../demo-selenium"]="selenium"
 source_dir_to_target_dir_map["../../demo-canal"]="canal"
 source_dir_to_target_dir_map["../../demo-debezium"]="debezium"
+source_dir_to_target_dir_map["../../demo-zookeeper"]="zookeeper"
 
 for key in ${!source_dir_to_target_dir_map[@]}; do
     # 删除符号链接目录

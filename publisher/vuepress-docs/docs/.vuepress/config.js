@@ -67,6 +67,7 @@ module.exports = {
                     { text: 'NodeJS', link: '/nodejs/' },
                     { text: 'Canal', link: '/canal/' },
                     { text: 'Debezium', link: '/debezium/' },
+                    { text: 'Zookeeper', link: '/zookeeper/' },
                 ]
             },
             {
@@ -713,6 +714,9 @@ module.exports = {
                 ''
             ], '/debezium/': [
                 ''
+            ], '/zookeeper/': [
+                '',
+                'curator-framework.md',
             ],
             '/': ['/'],
         }

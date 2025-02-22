@@ -1,19 +1,11 @@
 version: "3.0"
 
-# 创建网络
-networks:
-  net:
-    name: demo-zookeeper-net
-
 services:
   demo-zookeeper:
-    container_name: demo-zookeeper
     image: zookeeper:3.4.9
     environment:
       - TZ=Asia/Shanghai
       - JVMFLAGS=-Xmx512m -Xms512m -server
-    ports:
-      - 2181:2181
-    networks:
-      - net
-
+#    ports:
+#      - 2181:2181
+    network_mode: host
