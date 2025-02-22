@@ -6,4 +6,5 @@ services:
     environment:
       - TZ=Asia/Shanghai
       - JVMFLAGS=-Xmx512m -Xms512m -server
-    network_mode: host
+    ports:
+      - "2181:2181"

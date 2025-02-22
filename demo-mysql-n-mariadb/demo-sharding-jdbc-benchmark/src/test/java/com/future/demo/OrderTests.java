@@ -23,6 +23,8 @@ import java.util.stream.IntStream;
 @Slf4j
 public class OrderTests {
 
+    final static String StrConstOrder = "order";
+
     @Autowired
     OrderMapper orderMapper;
     @Autowired
@@ -59,6 +61,7 @@ public class OrderTests {
             List<Order> orderList = new ArrayList<>();
             for (int i = 0; i < internalRunLoopCount; i++) {
                 Order order = orderRandomlyUtil.createRandomly();
+                order.setId(this.snowflakeService.getId(StrConstOrder).getId());
                 orderList.add(order);
 
                 if (orderList.size() == 1000) {
