@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.future.demo</groupId>
-    <artifactId>demo-spring-boot-mybatis-large-scale-data-insertion</artifactId>
+    <artifactId>demo-spring-boot-mybatis-benchmark</artifactId>
     <version>1.0.0</version>
 
     <properties>
