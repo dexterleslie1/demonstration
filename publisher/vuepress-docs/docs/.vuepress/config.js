@@ -587,6 +587,7 @@ module.exports = {
                         'lombok.md',
                         'json库.md',
                         'apache-commons-exec.md',
+                        'ssh客户端.md',
                     ]
                 }
             ], '/elasticsearch/': [
