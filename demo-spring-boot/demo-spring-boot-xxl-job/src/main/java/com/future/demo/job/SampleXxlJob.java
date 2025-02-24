@@ -43,4 +43,10 @@ public class SampleXxlJob {
         XxlJobHelper.log("分片参数：当前分片序号 = {}, 总分片数 = {}", shardIndex, shardTotal);
         log.debug("分片参数：当前分片序号 = {}, 总分片数 = {}", shardIndex, shardTotal);
     }
+
+    @XxlJob("paramJobHandler")
+    public void paramJobHandler() {
+        String jobParam = XxlJobHelper.getJobParam();
+        log.debug("jobParam {}", jobParam);
+    }
 }
