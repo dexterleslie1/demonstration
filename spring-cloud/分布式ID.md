@@ -210,6 +210,10 @@ public void testIdUtil() {
 
 详细用法请参考示例 `https://gitee.com/dexterleslie/demonstration/tree/master/spring-cloud/demo-distributed-id-leaf`
 
+
+
+#### 配置和使用
+
 美团 Leaf 雪花算法依赖于 zookeeper
 
 zookeeper 服务 docker-compose.yaml 配置如下：
@@ -294,4 +298,17 @@ public class ApplicationTests {
         log.debug("even {}, odds {}", evenCounter, oddsCounter);
     }
 }
+```
+
+
+
+#### 避免 snowflake workerId 重复
+
+通过随机生成 leaf.snowflake.port 避免 workderId 重复
+
+```properties
+# Leaf 通过第一个网卡 ip地址+leaf.snowflake.port 生成 wokerId，
+# 如果在同一台主机中运行两个 Leaf 服务，则 workerId 会重复，
+# 通过手动配置随机生成 leaf.snowflake.port 避免重复的 workerId
+leaf.snowflake.port=${random.int%1000000000}
 ```
