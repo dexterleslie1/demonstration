@@ -41,3 +41,41 @@ services:
 #      - 2181:2181
     network_mode: host
 ```
+
+
+
+## 客户端工具
+
+
+
+### ZooKeeper Assistant
+
+特点：
+
+- 支持 ubuntu
+- 缺点：每次刷新后节点数自动闭合需要手动重新展开
+
+
+
+安装
+
+下载 ZA-2.0.0.4-linux-x64.tar.gz，地址 `https://www.redisant.cn/za`
+
+解压 ZA-2.0.0.4-linux-x64.tar.gz
+
+```bash
+tar -xvzf ZA-2.0.0.4-linux-x64.tar.gz
+```
+
+进入解压后的目录并授予 ZooKeeperAssistant 执行权限
+
+```bash
+sudo chmod +x ZooKeeperAssistant
+```
+
+运行 ZooKeeperAssistant
+
+```bash
+./ZooKeeperAssistant
+```
+
