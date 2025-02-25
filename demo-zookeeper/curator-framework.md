@@ -2,6 +2,14 @@
 
 
 
+## 和 Zookeeper 兼容性
+
+org.apache.curator:curator-recipes 2.13.0 以下版本和 zookeeper:3.4.9 兼容
+
+org.apache.curator:curator-recipes 3.0.0 到 5.7.1 版本和 zookeeper:3.8.4 兼容
+
+
+
 ## SpringBoot 集成
 
 pom 配置引用 curator framework 依赖：
