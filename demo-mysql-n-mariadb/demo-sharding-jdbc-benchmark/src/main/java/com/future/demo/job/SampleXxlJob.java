@@ -12,6 +12,7 @@ import org.apache.curator.framework.recipes.barriers.DistributedDoubleBarrier;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StopWatch;
+import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,17 +41,25 @@ public class SampleXxlJob {
      */
     @XxlJob("shardingJobHandler")
     public void shardingJobHandler() throws Exception {
+        String jobParam = XxlJobHelper.getJobParam();
         // 分片参数
         int shardIndex = XxlJobHelper.getShardIndex();
         int shardTotal = XxlJobHelper.getShardTotal();
 
-        XxlJobHelper.log("分片参数：当前分片序号 = {}, 总分片数 = {}", shardIndex, shardTotal);
-        log.info("分片参数：当前分片序号 = {}, 总分片数 = {}", shardIndex, shardTotal);
+        XxlJobHelper.log("分片参数：当前分片序号 = {}, 总分片数 = {}, 任务参数 = {}", shardIndex, shardTotal, jobParam);
+        log.info("分片参数：当前分片序号 = {}, 总分片数 = {}, 任务参数 = {}", shardIndex, shardTotal, jobParam);
 
         DistributedDoubleBarrier barrier = null;
         try {
             // 插入数据记录总数
-            int totalCount = 500000;
+            int totalCount = 10000 * 100 / shardTotal;
+            if (!StringUtils.isEmpty(jobParam)) {
+                int intTemporary = Integer.parseInt(jobParam);
+                if (intTemporary < 10000) {
+                    intTemporary = 10000;
+                }
+                totalCount = intTemporary / shardTotal;
+            }
 
             this.orderMapper.truncate();
 

@@ -33,7 +33,7 @@ public class OrderTests {
     @Test
     public void test() {
         // 插入数据记录总数
-        int totalCount = 1000000;
+        int totalCount = 10000 * 100;
 
         this.orderMapper.truncate();
 

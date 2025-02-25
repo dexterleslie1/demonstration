@@ -15,22 +15,23 @@ services:
     volumes:
       - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf:ro
       - ./db.sql:/docker-entrypoint-initdb.d/db.sql:ro
+    restart: always
     network_mode: host
-  db-1w-2:
-    image: mariadb:10.4.19
-    environment:
-      - MYSQL_ROOT_PASSWORD=123456
-      - TZ=Asia/Shanghai
-    command:
-      - --character-set-server=utf8mb4
-      - --collation-server=utf8mb4_general_ci
-      - --skip-character-set-client-handshake
-      - --innodb-buffer-pool-size=${innodbBufferPoolSize}
-      - --port=3307
-    volumes:
-      - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf:ro
-      - ./db.sql:/docker-entrypoint-initdb.d/db.sql:ro
-    network_mode: host
+#  db-1w-2:
+#    image: mariadb:10.4.19
+#    environment:
+#      - MYSQL_ROOT_PASSWORD=123456
+#      - TZ=Asia/Shanghai
+#    command:
+#      - --character-set-server=utf8mb4
+#      - --collation-server=utf8mb4_general_ci
+#      - --skip-character-set-client-handshake
+#      - --innodb-buffer-pool-size=${innodbBufferPoolSize}
+#      - --port=3307
+#    volumes:
+#      - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf:ro
+#      - ./db.sql:/docker-entrypoint-initdb.d/db.sql:ro
+#    network_mode: host
 #  db-1w-3:
 #    image: mariadb:10.4.19
 #    environment:
@@ -912,11 +913,3 @@ services:
 #      - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf:ro
 #      - ./db.sql:/docker-entrypoint-initdb.d/db.sql:ro
 #    network_mode: host
-
-  demo-zookeeper:
-    image: zookeeper:3.8.4
-    environment:
-      - TZ=Asia/Shanghai
-      - JVMFLAGS=-Xmx512m -Xms512m -server
-    ports:
-      - "2181:2181"
