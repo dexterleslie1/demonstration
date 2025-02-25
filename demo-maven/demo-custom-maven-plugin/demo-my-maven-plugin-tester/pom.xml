@@ -30,7 +30,7 @@
                 </configuration>
                 <executions>
                     <execution>
-                        <!-- test 阶段执行该插件 -->
+                        <!-- test 阶段执行该插件，插件中已经定义默认 phase，在此其实可以不需要重复指定 -->
                         <phase>test</phase>
                         <goals>
                             <!-- 执行插件的 mygoal1 和 mygoal2 -->

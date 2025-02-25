@@ -215,7 +215,7 @@ pom 配置中加入以下依赖：
             </configuration>
             <executions>
                 <execution>
-                    <!-- test 阶段执行该插件 -->
+                    <!-- test 阶段执行该插件，插件中已经定义默认 phase，在此其实可以不需要重复指定 -->
                     <phase>test</phase>
                     <goals>
                         <!-- 执行插件的 mygoal1 和 mygoal2 -->
@@ -253,3 +253,72 @@ default 生命周期的 deploy 阶段会触发调用插件
 mvn deploy
 ```
 
+
+
+## spring-boot-maven-plugin 插件
+
+>`https://docs.spring.io/spring-boot/docs/3.1.6/maven-plugin/reference/htmlsingle/`
+
+注意：环境变量 $JAVA_HOME 指向的 jdk 和 java -version 使用的 jdk 需要一致，否则会 mvn package 时会报错。
+
+
+
+### 以 spring-boot-starter-parent 为 parent
+
+pom 配置文件添加配置如下：
+
+```xml
+<parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>3.4.0</version>
+</parent>
+
+<build>
+    <finalName>demo</finalName>
+    <plugins>
+        <plugin>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-maven-plugin</artifactId>
+        </plugin>
+    </plugins>
+</build>
+```
+
+
+
+### 不以 spring-boot-starter-parent 为 parent
+
+pom 配置文件添加配置如下：
+
+```xml
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-dependencies</artifactId>
+            <version>3.4.0</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
+
+<build>
+    <finalName>demo</finalName>
+    <plugins>
+        <plugin>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-maven-plugin</artifactId>
+            <!-- SpringBoot 项目指向的 parent 不是 spring-boot-starter-parent 时，需要显式指定插件执行的目标 repackage -->
+            <executions>
+                <execution>
+                    <goals>
+                        <goal>repackage</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
+```
