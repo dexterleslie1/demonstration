@@ -34,8 +34,8 @@ module.exports = {
             {
                 text: '性能相关',
                 items: [
-                    { text: '系统基准和性能测试', link: '/基准和性能测试/' },
                     { text: 'JVM性能', link: '/jvm性能/' },
+                    { text: '基准测试', link: '/benchmark/' },
                 ]
             },
             {
@@ -247,16 +247,6 @@ module.exports = {
                         '操作系统页面缓存、目录项缓存、索引节点缓存.md',
                         'debian系统安装.md',
                         'ssh客户端.md',
-                    ]
-                }
-            ], '/基准和性能测试/': [
-                {
-                    title: "系统基准和性能测试",
-                    children: [
-                        '监控方案.md',
-                        '测试工具安装.md',
-                        'IO测试.md',
-                        '网络测试.md',
                     ]
                 }
             ], '/prometheus/': [
@@ -719,6 +709,13 @@ module.exports = {
             ], '/zookeeper/': [
                 '',
                 'curator-framework.md',
+            ], '/benchmark/': [
+                '',
+                '监控方案.md',
+                '测试工具安装.md',
+                'IO测试.md',
+                '网络测试.md',
+                '应用或组件基准测试.md',
             ],
             '/': ['/'],
         }
