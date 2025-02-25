@@ -107,4 +107,86 @@ public class ApplicationTests {
 
         // endregion
     }
+
+    /**
+     * 测试 DistributedDoubleBarrier enter 后没有 leave 是否依旧正常
+     */
+    @Test
+    public void testDistributedDoubleBarrierEnterWithoutLeaving() throws InterruptedException {
+        String path = "/my-path";
+        int memberQty = 2;
+
+        ExecutorService threadPool = Executors.newCachedThreadPool();
+
+        for (int i = 0; i < memberQty; i++) {
+            threadPool.submit(() -> {
+                log.info("线程 {} 开始", Thread.currentThread().getName());
+                try {
+                    TimeUnit.SECONDS.sleep(RandomUtils.nextInt(0, 6));
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                DistributedDoubleBarrier distributedDoubleBarrier = new DistributedDoubleBarrier(curatorFramework, path, memberQty);
+                try {
+                    // 等到 memberQty=2 才继续执行
+                    distributedDoubleBarrier.enter();
+
+                    log.info("线程 {} 继续执行", Thread.currentThread().getName());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                } finally {
+                    // 注意：必须要调用 leave 方法，否则同一个 path 下的 DistributedDoubleBarrier 在后续调用栅栏效果会不生效
+                    /*try {
+                        // 等到 memberQty=2 才继续执行
+                        distributedDoubleBarrier.leave();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    } finally {
+                        log.info("线程 {} 结束执行", Thread.currentThread().getName());
+                    }*/
+                }
+            });
+        }
+
+        threadPool.shutdown();
+        while (!threadPool.awaitTermination(10, TimeUnit.MILLISECONDS)) ;
+
+        log.info("-------------------------- 第二次测试 --------------------------");
+        threadPool = Executors.newCachedThreadPool();
+
+        for (int i = 0; i < memberQty; i++) {
+            threadPool.submit(() -> {
+                log.info("线程 {} 开始", Thread.currentThread().getName());
+                try {
+                    TimeUnit.SECONDS.sleep(RandomUtils.nextInt(0, 6));
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                DistributedDoubleBarrier distributedDoubleBarrier = new DistributedDoubleBarrier(curatorFramework, path, memberQty);
+                try {
+                    // 等到 memberQty=2 才继续执行
+                    distributedDoubleBarrier.enter();
+
+                    log.info("线程 {} 继续执行", Thread.currentThread().getName());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                } finally {
+                    // 注意：必须要调用 leave 方法，否则同一个 path 下的 DistributedDoubleBarrier 在后续调用栅栏效果会不生效
+                    /*try {
+                        // 等到 memberQty=2 才继续执行
+                        distributedDoubleBarrier.leave();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    } finally {
+                        log.info("线程 {} 结束执行", Thread.currentThread().getName());
+                    }*/
+                }
+            });
+        }
+
+        threadPool.shutdown();
+        while (!threadPool.awaitTermination(10, TimeUnit.MILLISECONDS)) ;
+    }
 }

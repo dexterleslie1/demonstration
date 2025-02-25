@@ -66,6 +66,8 @@ CuratorFramework curatorFramework;
 >
 >栅栏分为手动模式和自动模式，手动模式（使用 DistributedBarrier 实现）需要主控角色设置栅栏（调用 setBarrier 方法）、移除栅栏（调用 removeBarrier 方法），被控角色等待（调用 waitOnBarrier 方法）栅栏移除才能够继续执行。自动模式（使用 DistributedDoubleBarrier 实现）在创建 DistributedDoubleBarrier 时需要定义 memberQty，各个线程调用 enter 方法等待直到所有 member 都到达栅栏点后才能够继续执行，各个线程调用 leave 方法等待直到所有 member 都到达栅栏点后才能够退出。
 
+注意：DistributedDoubleBarrier 在结束时必须要调用 leave 方法，否则同一个 path 下的 DistributedDoubleBarrier 在后续调用栅栏效果会不生效
+
 ```java
 // region 测试 barrier
 // https://www.cnblogs.com/LiZhiW/p/4937547.html
