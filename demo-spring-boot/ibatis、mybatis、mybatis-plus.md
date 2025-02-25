@@ -747,7 +747,10 @@ Assertions.assertEquals(now, order.getCreateTime());
 
 详细用法请参考示例 `https://gitee.com/dexterleslie/demonstration/blob/master/demo-spring-boot/demo-spring-boot-mybatis-benchmark`
 
-结论：使用 CompletableFuture+MyBatis 事务批量插入数据速度最佳。
+结论：
+
+- 使用 CompletableFuture+MyBatis 事务批量插入数据速度最佳。
+- 单机数据库性能不会随着 CPU 增加而线性增加，需要使用分布式数据库方案以水平扩展数据库以提高性能。
 
 
 
@@ -888,6 +891,22 @@ try {
 #### 启用 bin_log
 
 结论：启用此特性对数据插入速度没有明显影响。
+
+
+
+#### 数据服务器 CPU 数
+
+CPU 类型：Intel(R) Xeon(R) Platinum 8269CY CPU @ 2.50GHz
+
+测试结果如下：
+
+- 2 核，100w 数据量，输出日志 totalCount=1000000 耗时 16949 毫秒
+- 4 核，100w 数据量，输出日志 totalCount=1000000 耗时 10646 毫秒
+- 6 核，100w 数据量，输出日志 totalCount=1000000 耗时 9138 毫秒
+
+测试结论：
+
+- 添加超过 4 核后的 CPU 对应批量插入速度没有明显影响。
 
 
 

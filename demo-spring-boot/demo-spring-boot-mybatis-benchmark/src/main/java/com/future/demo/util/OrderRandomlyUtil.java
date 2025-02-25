@@ -1,6 +1,5 @@
 package com.future.demo.util;
 
-import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.RandomUtil;
 import com.future.demo.bean.DeleteStatus;
 import com.future.demo.bean.Order;
@@ -97,7 +96,6 @@ public class OrderRandomlyUtil {
      */
     public Order createRandomly() {
         Order order = new Order();
-        order.setId(IdUtil.getSnowflake().nextId());
         order.setCreateTime(getCreateTimeRandomly());
         order.setUserId(getUserIdRandomly());
         order.setMerchantId(getMerchantIdRandomly());
