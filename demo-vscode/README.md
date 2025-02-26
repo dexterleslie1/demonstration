@@ -1,3 +1,21 @@
+## ubuntu20 安装 visual code
+
+> 不能使用 snap 安装visual code，因为 snap visual code 是阉割版，不能切换中文输入法。
+>
+> 可以使用 dcli 安装 visual code
+
+```shell
+# 参考文档
+# https://code.visualstudio.com/docs/setup/linux
+
+# 下载visual code deb安装包到本地
+
+# 从deb安装包安装visual code
+sudo apt install ./code_xxxxx.deb
+```
+
+
+
 ## typora/markdown插件安装
 
 > 在插件管理器搜索typora，选择安装下载量排第一的插件，这样就能够在vscode像typora那样编辑md文件

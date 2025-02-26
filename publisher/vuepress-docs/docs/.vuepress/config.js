@@ -233,17 +233,13 @@ module.exports = {
                     title: "Linux使用",
                     children: [
                         '命令行工具列表.md',
-                        'centos相关.md',
+                        'centos.md',
                         'lvm逻辑卷管理.md',
                         'systemd、systemctl服务.md',
                         '搭建nfs服务器.md',
                         'dns.md',
-                        'ubuntu或者debian安装工具.md',
-                        'ubuntu-取消unattended-upgrades.md',
-                        'ubuntu-安装googlepinyin输入法.md',
-                        'ubuntu.md',
+                        'ubuntu-n-debian.md',
                         '操作系统页面缓存、目录项缓存、索引节点缓存.md',
-                        'debian系统安装.md',
                         'ssh客户端.md',
                     ]
                 }

@@ -1,4 +1,4 @@
-# `centOS`相关
+# `centOS`
 
 ## `yum install`时报告源错误处理
 
