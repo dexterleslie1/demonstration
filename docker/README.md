@@ -255,60 +255,6 @@ docker run -it user
 
 
 
-## docker compose
-
-### docker compose yaml 指定 command
-
-docker-compose.yaml 内容如下：
-
-```yaml
-version: "3.0"
-
-services:
-  demo-test:
-    container_name: demo-test
-    image: centos
-    command: /bin/sh -c "date > /1.txt && cat /1.txt"
-
-```
-
-启动服务，控制台会输出当前时间
-
-```sh
-docker compose up
-```
-
-
-
-### 使用 docker compose 仅对单个服务 service 进行操作
-
-仅更新 yyd-websocket-service
-
-```sh
-docker compose pull yyd-websocket-service
-```
-
-强制重建 yyd-websocket-service，--no-deps 表示依赖的相关容器不会被重建
-
-```sh
-docker compose up -d --no-deps --force-recreate yyd-websocket-service
-```
-
-
-
-### 获取docker-compose up返回状态值
-
-> https://github.com/docker/compose/issues/10225
-
-```
-# 在当前目录执行以下命令，不使用--abort-on-container-exit时下面脚本不会执行echo
-docker-compose up --abort-on-container-exit || { echo '执行失败'; }
-```
-
-
-
-
-
 ## 运行容器的用户和卷、目录、文件权限
 
 备注： 如果不使用 dockerfile USER 指令或者 docker run --user 参数指定运行容器用户，则默认使用 root 用户运行容器，对所有目录都有写权限。如果使用 USER 指令或者 --user 参数指定运行容器用户，则需要使用 chmod 或者 chown 授予当前用户或者修改目录、文件的属主以获得对目录、文件写入权限。

@@ -183,7 +183,7 @@ module.exports = {
                     title: "docker容器学习",
                     children: [
                         'docker的安装.md',
-                        'docker-compose设置项目名称.md',
+                        'docker-compose.md',
                         'docker-volume.md',
                         'docker-swarm.md',
                         'docker命令.md',
