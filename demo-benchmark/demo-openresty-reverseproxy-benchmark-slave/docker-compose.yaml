@@ -1,6 +1,7 @@
 version: "3.0"
 
 services:
+  # 用于单个 OpenResty 基准测试
   openresty:
     build:
       context: .
@@ -9,4 +10,7 @@ services:
       - TZ=Asia/Shanghai
     volumes:
       - ./nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf:ro
-    network_mode: host
+    restart: always
+    ports:
+      - '80:80'
+      
