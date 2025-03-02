@@ -1,0 +1,13 @@
+version: "3.0"
+
+services:
+  demo:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - JAVA_OPTS= -Xmx512m
+      - TZ=Asia/Shanghai
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-boot-mvc
+    ports:
+      - "8080:8080"

@@ -2,9 +2,13 @@
 
 
 
-## 打包、部署、运维
+## 打包和部署
 
-使用 `https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-boot-mvc` 测试 spring boot 应用打包、部署、运维
+
+
+### 非 Docker
+
+详细用法请参考示例 `https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-boot-mvc`
 
 打包
 
@@ -19,6 +23,66 @@ java -jar target/demo-spring-boot-mvc-0.0.1-SNAPSHOT.jar
 ```
 
 访问`http://localhost:8080/hello`返回 Hello! 表示应用运行正常
+
+
+
+### 基于 Docker
+
+详细用法请参考示例 `https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-boot-mvc`
+
+Dockerfile 内容如下：
+
+```dockerfile
+#FROM openjdk:8-jdk-slim
+FROM openjdk:17-jdk-slim
+
+ADD target/demo.jar /usr/share/demo.jar
+
+ENV JAVA_OPTS=""
+
+ENTRYPOINT java ${JAVA_OPTS} -jar /usr/share/demo.jar --spring.profiles.active=prod
+
+```
+
+docker-compose.yaml 内容如下：
+
+```yaml
+version: "3.0"
+
+services:
+  demo:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - JAVA_OPTS= -Xmx512m
+      - TZ=Asia/Shanghai
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-boot-mvc
+    ports:
+      - "8080:8080"
+```
+
+build.sh 内容如下：
+
+```bash
+#!/bin/bash
+
+set -e
+
+./mvnw package -Dmaven.test.skip=true
+
+docker compose build
+```
+
+push.sh 内容如下：
+
+```bash
+#!/bin/bash
+
+set -e
+
+docker compose push
+```
 
 
 
