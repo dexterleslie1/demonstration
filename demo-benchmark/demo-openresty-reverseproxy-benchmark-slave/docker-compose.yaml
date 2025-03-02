@@ -1,7 +1,7 @@
 version: "3.0"
 
 services:
-  # 用于单个 OpenResty 基准测试
+  # 用于 OpenResty 横向扩展基准测试 Slave
   openresty:
     build:
       context: .

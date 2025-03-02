@@ -127,3 +127,74 @@ docker-compose up --abort-on-container-exit || { echo '执行失败'; }
    ```
 
    
+
+## 指定或者扩展服务实例的数量
+
+注意：nginx 服务不能指定端口，否则会端口冲突导致不能启动多个实例。
+
+详细用法请参考示例 `https://gitee.com/dexterleslie/demonstration/tree/master/docker/demo-docker-compose/docker-compose-replicas.yaml`
+
+
+
+### yaml 文件指定服务实例的数量
+
+通过 yaml 文件的 deploy.replicas 配置多个实例
+
+```yaml
+version: "3.0"
+
+services:
+  nginx:
+    image: nginx
+    deploy:
+      # 表示两个实例
+      replicas: 2
+    # ports:
+    #   - '80:80'
+```
+
+启动
+
+```bash
+docker compose -f docker-compose-replicas.yaml up -d
+```
+
+查看实例数量
+
+```bash
+docker compose -f docker-compose-replicas.yaml ps
+```
+
+
+
+### 手动扩展服务实例的数量
+
+yaml 文件和普通的 yaml 文件一致
+
+```yaml
+version: "3.0"
+
+services:
+  nginx:
+    image: nginx
+    # ports:
+    #   - '80:80'
+```
+
+启动
+
+```bash
+docker compose -f docker-compose-replicas.yaml up -d
+```
+
+手动扩展实例数量
+
+```bash
+docker compose -f docker-compose-replicas.yaml up -d --scale nginx=3
+```
+
+查看实例数量
+
+```bash
+docker compose -f docker-compose-replicas.yaml ps
+```
