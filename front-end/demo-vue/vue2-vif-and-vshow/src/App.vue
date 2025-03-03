@@ -14,8 +14,25 @@
     <hr/>
     <div>使用v-show显示或者隐藏div</div>
     <div v-show="true" style="width:100px;height:100px;background-color: antiquewhite;"></div>
+
+    <hr/>
+    <div>通过点击按钮切换显示的 DIV</div>
+    <div><button @click="showIndex=(showIndex+1)%3">点击我切换显示的 DIV</button></div>
+    <div v-show="this.showIndex==0" style="width:100px;height:100px;background-color: antiquewhite;">1</div>
+    <div v-show="this.showIndex==1" style="width:100px;height:100px;background-color: antiquewhite;">2</div>
+    <div v-show="this.showIndex==2" style="width:100px;height:100px;background-color: antiquewhite;">3</div>
   </div>
 </template>
+
+<script>
+export default {
+  data() {
+    return {
+      showIndex: 0
+    }
+  },
+}
+</script>
 
 <style>
 #app {
