@@ -42,6 +42,8 @@ module.exports = {
                 text: '前端相关技术',
                 items: [
                     { text: 'React技术', link: '/React技术/' },
+                    { text: 'Vue', link: '/vue/' },
+                    { text: 'Nuxt', link: '/nuxt/' },
                     { text: 'less、sass/scss、postcss', link: '/less-sass-postcss/' },
                     { text: 'Android相关', link: '/android/' },
                 ]
@@ -195,8 +197,7 @@ module.exports = {
                         '镜像仓库.md',
                     ]
                 }
-            ],
-            '/React技术/': [
+            ], '/React技术/': [
                 {
                     title: "React学习",
                     children: [
@@ -206,6 +207,10 @@ module.exports = {
                         '样式的管理.md',
                     ]
                 }
+            ], '/vue/': [
+                '',
+            ], '/nuxt/': [
+                '',
             ], '/less-sass-postcss/': [
                 lessSassPostcssSidebar
             ], '/less/': [

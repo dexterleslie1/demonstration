@@ -210,4 +210,12 @@ npm start
   npm install --verbose
   ```
 
+- npm install 时指定 registry
+
+  >`https://stackoverflow.com/questions/35622933/how-to-specify-registry-while-doing-npm-install-with-git-remote-url`
+
+  ```bash
+  sudo npm install -g create-nuxt-app@2.15.0 --registry=https://registry.npmmirror.com
+  ```
+
   
