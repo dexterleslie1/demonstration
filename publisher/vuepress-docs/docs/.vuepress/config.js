@@ -208,7 +208,7 @@ module.exports = {
                     ]
                 }
             ], '/vue/': [
-                '',
+                '脚手架创建项目.md',
             ], '/nuxt/': [
                 '',
                 '集成element-ui.md',
