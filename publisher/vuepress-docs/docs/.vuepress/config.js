@@ -211,6 +211,7 @@ module.exports = {
                 '',
             ], '/nuxt/': [
                 '',
+                '集成element-ui',
             ], '/less-sass-postcss/': [
                 lessSassPostcssSidebar
             ], '/less/': [
