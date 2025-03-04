@@ -22,12 +22,18 @@ VuePress 2 我们也投入了精力，它也支持 Vue 3 和 Vite，与 VuePress
 
 ## 创建项目
 
-创建一个空项目
+查看 node 版本
+
+```bash
+node --version
+v20.12.2
+```
+
+创建一个空目录
 
 ```bash
 mkdir test
 cd test
-npm init
 ```
 
 为现有项目添加 vite 依赖
