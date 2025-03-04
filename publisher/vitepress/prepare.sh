@@ -12,13 +12,10 @@ for key in ${!source_dir_to_target_dir_map[@]}; do
     rm -rf docs/${source_dir_to_target_dir_map[$key]}
     mkdir -p docs/${source_dir_to_target_dir_map[$key]}
     # 查询源目录中 *.md 文件
-    md_file_list=(`find $key -maxdepth 1 -iname "*\.md" -printf '%f\n'`)
+    file_list=(`find $key -maxdepth 1 \( -iname "*\.md" -o -iname "*\.png" \) -printf '%f\n'`)
 
-    # 创建所有 *.md 文件软链接到 docs 中
-    for md_file in ${md_file_list[@]}; do
-        # ln -s ../../$key/$md_file docs/${source_dir_to_target_dir_map[$key]}/$md_file
-        cp $key/$md_file docs/${source_dir_to_target_dir_map[$key]}/$md_file
+    # 复制所有 *.md 文件到 docs 中
+    for file in ${file_list[@]}; do
+        cp $key/$file docs/${source_dir_to_target_dir_map[$key]}/$file
     done
 done
-
-ls -alh docs/cms
