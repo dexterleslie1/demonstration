@@ -20,3 +20,6 @@
 #     done
 # done
 echo "Hello world!!"
+pwd
+ls -alh .
+ls -alh ../
