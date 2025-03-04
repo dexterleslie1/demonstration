@@ -10,7 +10,7 @@ export default defineConfig({
       { text: '首页', link: '/' },
       {
         text: '前端', items: [
-          { text: 'VitePress', link: '/vitepress' },
+          { text: 'VitePress', link: '/cms/vitepress.md' },
         ]
       }
     ],
