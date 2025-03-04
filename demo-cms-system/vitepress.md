@@ -183,8 +183,8 @@ export default {
 
 - 有 `sections` 名
 
-![vitepress-dropdown-menu-sections-with-name](/home/dexterleslie/workspace-git/demonstration/demo-cms-system/vitepress-dropdown-menu-sections-with-name.png)
+![vitepress-dropdown-menu-sections-with-name](vitepress-dropdown-menu-sections-with-name.png)
 
 - 没有 `sections` 名
 
-![vitepress-dropdown-menu-sections-with-name](/home/dexterleslie/workspace-git/demonstration/demo-cms-system/vitepress-dropdown-menu-sections-without-name.png)
+![vitepress-dropdown-menu-sections-with-name](vitepress-dropdown-menu-sections-without-name.png)
