@@ -20,3 +20,5 @@ for key in ${!source_dir_to_target_dir_map[@]}; do
         cp $key/$md_file docs/${source_dir_to_target_dir_map[$key]}/$md_file
     done
 done
+
+ls -alh docs/cms
