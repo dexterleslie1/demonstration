@@ -5,3 +5,4 @@ docs/.vitepress/cache
 .vscode
 
 docs/cms
+docs/vite
