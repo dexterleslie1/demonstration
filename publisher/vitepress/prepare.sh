@@ -7,6 +7,7 @@
 declare -A source_dir_to_target_dir_map
 source_dir_to_target_dir_map["../../demo-cms-system"]="cms"
 source_dir_to_target_dir_map["../../front-end/demo-vite"]="vite"
+source_dir_to_target_dir_map["../../demo-cloudflare"]="cloudflare"
 
 for key in ${!source_dir_to_target_dir_map[@]}; do
     # 删除符号链接目录

@@ -194,3 +194,192 @@ export default {
 - 没有 `sections` 名
 
 ![vitepress-dropdown-menu-sections-with-name](vitepress-dropdown-menu-sections-without-name.png)
+
+
+
+## 侧边栏
+
+>[官方文档侧边栏配置参考](https://vitepress.dev/zh/reference/default-theme-sidebar)
+
+
+
+### 全站侧边栏
+
+>不管当前路由是什么，侧边栏都是相同的。
+
+```json
+export default {
+  themeConfig: {
+    sidebar: [
+      {
+        text: 'Guide',
+        items: [
+          { text: 'Introduction', link: '/introduction' },
+          { text: 'Getting Started', link: '/getting-started' },
+        ]
+      }
+    ]
+  }
+}
+```
+
+
+
+### 带“部分”的侧边栏
+
+>用”部分“区分不同区域的侧边栏
+
+```json
+export default {
+  themeConfig: {
+    sidebar: [
+      {
+        text: 'Section Title A',
+        items: [
+          { text: 'Item A', link: '/item-a' },
+          { text: 'Item B', link: '/item-b' },
+        ]
+      },
+      {
+        text: 'Section Title B',
+        items: [
+          { text: 'Item C', link: '/item-c' },
+          { text: 'Item D', link: '/item-d' },
+        ]
+      }
+    ]
+  }
+}
+```
+
+
+
+### 多级嵌入侧边栏
+
+```json
+export default {
+  themeConfig: {
+    sidebar: [
+      {
+        text: 'Level 1',
+        items: [
+          {
+            text: 'Level 2',
+            items: [
+              {
+                text: 'Level 3',
+                items: [
+                    {
+                        text: 'Level 4-1',
+                        link: 'l4-1'
+                    },{
+                        text: 'Level 4-2',
+                        link: 'l4-2'
+                    }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+
+
+### 多侧边栏
+
+可能会根据页面路径显示不同的侧边栏。例如，如本站点所示，可能希望在文档中创建单独的侧边栏，例如“指南”页面和“配置参考”页面。
+
+为此，首先将你的页面组织到每个所需部分的目录中：
+
+```
+.
+├─ guide/
+│  ├─ index.md
+│  ├─ one.md
+│  └─ two.md
+└─ config/
+   ├─ index.md
+   ├─ three.md
+   └─ four.md
+```
+
+然后，更新配置以定义每个部分的侧边栏。这一次，应该传递一个对象而不是数组。
+
+```json
+export default {
+  themeConfig: {
+    sidebar: {
+      // 当用户位于 `guide` 目录时，会显示此侧边栏
+      '/guide/': [
+        {
+          text: 'Guide',
+          items: [
+            { text: 'Index', link: '/guide/' },
+            { text: 'One', link: '/guide/one' },
+            { text: 'Two', link: '/guide/two' }
+          ]
+        }
+      ],
+
+      // 当用户位于 `config` 目录时，会显示此侧边栏
+      '/config/': [
+        {
+          text: 'Config',
+          items: [
+            { text: 'Index', link: '/config/' },
+            { text: 'Three', link: '/config/three' },
+            { text: 'Four', link: '/config/four' }
+          ]
+        }
+      ]
+    }
+  }
+}
+```
+
+
+
+## link 结尾带"/"和不带"/"区别
+
+每个 `link` 都应指定以 `/` 开头的实际文件的路径。如果在链接末尾添加斜杠，它将显示相应目录的 `index.md`。
+
+```json
+export default {
+  themeConfig: {
+    sidebar: [
+      {
+        text: 'Guide',
+        items: [
+          // 显示的是 `/guide/index.md` 页面
+          { text: 'Introduction', link: '/guide/' }
+        ]
+      }
+    ]
+  }
+}
+```
+
+
+
+## aside 容器
+
+>[CSDN aside 容器设置参考](https://blog.csdn.net/delete_you/article/details/129938705)
+
+```json
+export default defineConfig({
+  themeConfig: {
+    // aside，设定为false将关闭右侧栏，文档内容会填充剩余空白部分
+    aside: true,
+    // outline设置为deep可以解析2-6层深度的标题嵌套
+    outline: "deep",
+    // 设置所有aside的标题
+    outlineTitle: "页面导航",
+  }
+})
+
+```
+
