@@ -22,6 +22,11 @@ export default defineConfig({
           { text: 'VitePress', link: '/cms/vitepress.md' },
         ]
       },
+      {
+        text: 'Linux', items: [
+          { text: 'DNS', link: '/linux/dns.md' },
+        ]
+      },
       { text: 'CloudFlare', link: '/cloudflare/README.md' },
     ],
 

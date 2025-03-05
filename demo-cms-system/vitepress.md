@@ -25,7 +25,7 @@ VuePress 2 我们也投入了精力，它也支持 Vue 3 和 Vite，与 VuePress
 查看 node 版本
 
 ```bash
-node --version
+$ node --version
 v20.12.2
 ```
 
