@@ -393,6 +393,122 @@ github.com.		3600	IN	TXT	"MS=6BF03E6AF5CB689E315FB6199603BABF2C88D805"
 
 
 
+#### CName 类型
+
+>[什么是 CName 类型 DNS 记录，他的使用场景](https://gcore.com/learning/dns-cname-record-explained/)
+
+CNAME 记录是企业品牌和网站管理领域的重要工具，可用于多种用途。首先，想想子域名“store.example.com”或“blog.example.com”——它们代表网站的不同部分，为访问者提供特定类型的内容。使用 CNAME 记录可以创建“store”或“blog”等子域名。CNAME 记录的另一个用途是启用内容交付网络 (CDN)，从而缩短页面加载时间并提高用户体验。在本文中，我们将深入研究 CNAME 记录的工作原理、探索其用例并学习实施 CNAME 记录的最佳实践。
+
+**什么是 CNAME 记录？**
+
+CNAME 是规范名称的缩写，是一种 DNS（域名系统）记录。CNAME 记录用于两种情况：
+
+- 创建指向不同服务器的子域
+- 将访问者从一个域发送到另一个域
+
+让我们从第一个情况开始。假设您有一个在线商店，并且想要创建子域“shop.example.com”。您可以创建 CNAME 记录以指向主域（example.com）或使用其提供的 URL 指向其他来源（例如第三方网站）。例如，如果您有一个 Shopify 帐户，则可以使用 CNAME 记录（shop.example.com）将您的客户发送到您的 Shopify 网站（shops.myshopify.com）。
+
+在第二种情况下，CNAME 记录用作从一个域名到另一个域名的指针或别名。它允许您将一个域名与另一个域名的 IP 地址相关联。简单来说，CNAME 记录就像域名的昵称或快捷方式。
+
+**CNAME 记录的组成部分有哪些？**
+
+下表是 CNAME 记录的示例：
+
+| Hostname         | Record Type | Value                         | TTL          |
+| ---------------- | ----------- | ----------------------------- | ------------ |
+| www.example.com  | CNAME       | @ (example.com)               | 1800 seconds |
+| blog.example.com | CNAME       | blogalias.com                 | 3600 seconds |
+| mail.example.com | CNAME       | domainverify.googlehosted.com | 3600 seconds |
+
+让我们详细研究一下这些组件及其功能。
+
+- **Hostname**：主机名是用于识别和区分网络内设备的标识符或唯一标签。在域名系统 (DNS) 中，主机名通常与域名相关联。例如，在域名“www.example.com”中，“www”是代表“example.com”域内特定服务器或服务的主机名。主机名有助于将网络请求路由到适当的设备或服务器。除了网站之外，它还可用于访问电子邮件服务器、FTP 服务器或任何其他网络连接设备等资源。
+- **Record Type**：CNAME 记录的记录类型始终设置为“CNAME”，以便 DNS 解析器可以将其识别为 CNAME。这允许解析器跟踪别名并解析规范名称，从而检索相应的 IP 地址或其他服务器类型。
+- **Value**：这表示 DNS 解析器应将指定主机名的查询重定向到的目的地或目标。例如，如果您需要在 Google 中验证您的域名，则需要添加一个 CNAME 记录，其中包含他们提供的唯一值，例如“domainverify.googlehosted.com”。
+- **TTL（生存时间）**：CNAME 记录的 TTL 值决定了 DNS 解析器和缓存服务器在检查更新之前应缓存记录的时间长度。它以秒为单位指定。例如，TTL 为 3600 表示一小时的缓存时间。
+
+**CNAME 记录的使用案例**
+
+CNAME 记录在引导流量、设置子域或实施第三方服务方面提供了灵活性。无论是重定向域、管理内容交付网络 (CDN) 还是促进电子邮件服务，CNAME 记录都使网站所有者能够自定义和优化其在线状态，无论其业务类型或规模如何。让我们更深入地了解 CNAME 记录的一些使用案例。
+
+- 域名重定向
+
+  CNAME 记录可以将流量从一个域名重定向到另一个域名，从而可以轻松地在网站之间切换或将访问者重定向到不同的在线位置。为域名创建 CNAME 记录时，它充当别名或昵称，允许源域名指向与目标域名相同的 IP 地址。
+
+  示例：在线服装零售商 John’s Apparel 决定重塑其网站并切换到新域名“new-johnsapparel.com”。为了确保无缝过渡，该公司将为旧域名“old-johnsapparel.com”设置 CNAME 记录，将用户重定向到新网站。当用户在 Web 浏览器中输入“old-johnsapparel.com”时，CNAME 记录会将他们定向到新网站。用户无需学习或记住新 URL，从而消除了更改域名时可能造成的业务损失。
+
+  以下是域名重定向的示例 CNAME 记录：
+
+  | **Type** | **Hostname**        | **Value**           |
+  | -------- | ------------------- | ------------------- |
+  | CNAME    | old-johnapparel.com | new-johnapparel.com |
+
+- 子域名设置
+
+  CNAME 记录通常用于创建指向单独服务器或服务的子域名。这有助于组织独立安排和处理其网站的特定部分。
+
+  示例：ABC Corporation 是一家拥有众多服务和部门的软件开发公司。它希望在特定子域名下组织和管理其不同的服务。例如，子域名“support.abc-corp.com”需要指向其客户支持门户的“support-target-server.com”。这使他们能够独立处理业务的不同部分，同时保持具有良好用户体验的在线状态。
+
+  以下是子域名设置的示例 CNAME 记录：
+
+  | **Type** | **Hostname**         | **Value**                 |
+  | -------- | -------------------- | ------------------------- |
+  | CNAME    | support.abc-corp.com | support-target-server.com |
+
+- 内容交付网络 (CDN)
+
+  CNAME 记录可用于集成 CDN，CDN 可在多个服务器上缓存和分发网站内容，从而提高网站性能和全球可访问性。
+
+  示例：Shoes & More 是一家在线商店，向全球客户销售各种鞋类产品和配饰。他们的业务增长迅速，导致网站流量增加，需要优化网站的性能和加载速度。该公司决定集成 CDN 来提高网站的性能。为此，他们注册了 CDN 服务，并被建议设置 CNAME 记录。
+
+  以下是内容交付网络的 CNAME 记录示例：
+
+  | **Type** | **Hostname**     | **Value**                |
+  | -------- | ---------------- | ------------------------ |
+  | CNAME    | shoesandmore.com | cdn-provider-example.com |
+
+- 电子邮件服务
+
+  CNAME 记录使域名所有者能够配置来自第三方提供商的电子邮件服务。例如，通过创建 CNAME 记录，您可以将域名的电子邮件子域名（例如“mail.example.com”）与专用的电子邮件服务提供商（如 Google 或 Microsoft）关联。
+
+  示例：Handmade Crafts & Treasures 是一家小型电子商务企业，在线销售手工艺品和手工艺品。他们希望通过使用专业的电子邮件服务来增强电子邮件通信，因此他们决定注册第三方电子邮件服务提供商。要进行设置，他们需要为新的电子邮件服务创建 CNAME 记录。
+
+  以下是电子邮件服务的 CNAME 记录示例：
+
+  | **Type** | **Hostname**                      | **Value**         |
+  | -------- | --------------------------------- | ----------------- |
+  | CNAME    | mail.handmadecrafts-treasures.com | mail.provider.com |
+
+- 第三方服务集成
+
+  通过利用 CNAME 记录，组织可以轻松集成第三方服务，例如电子商务平台、客户支持系统或分析工具，从而确保无缝的用户体验。例如，如果您需要为网站使用 Google Analytics，则需要将 CNAME 记录添加到 DNS 记录以验证您的域名。
+
+  示例：XYZ Goods 在线商店是一家通过其网站销售各种产品的电子商务企业。他们希望集成 Google Analytics，以获得有关其网站流量和客户行为的宝贵见解。为此，他们需要将 CNAME 记录添加到其 DNS 记录以验证其 Google Analytics 的域名。
+
+  以下是第三方服务（Google Analytics）集成的 CNAME 记录：
+
+  | **Type** | **Hostname**                  | **Value**            |
+  | -------- | ----------------------------- | -------------------- |
+  | CNAME    | www.xyz-goods-onlinestore.com | analytics.google.com |
+
+**DNS 如何管理和解析 CNAME 记录？**
+
+管理和解析 CNAME 记录需要使用 DNS，即域名系统。
+
+![img](dns-cname-record-explained-1.png)
+
+以下是 DNS 管理和解析 CNAME 记录的步骤：
+
+1. 用户发送请求。该过程从用户发送请求开始，例如在其 Web 浏览器中输入网站的 URL。
+2. DNS 解析器。用户设备通常由互联网服务提供商 (ISP) 或公共 DNS 提供商操作，充当 DNS 解析器。DNS 解析器负责处理 DNS 查询并将域名解析为 IP 地址。
+3. DNS 根服务器。如果 DNS 解析器在其缓存中没有请求的信息，它会通过向根 DNS 服务器发送请求来启动 DNS 查询。根 DNS 服务器是 DNS 解析过程的起点，负责提供有关顶级域 (TLD) 服务器的信息。
+4. TLD DNS 服务器。根 DNS 服务器通过提供负责所请求域的特定 TLD 的 TLD DNS 服务器的 IP 地址来响应解析器的查询。例如，如果请求的域是“example.com”，则会识别“.com”TLD 的 TLD DNS 服务器。
+5. 权威 DNS 服务器。 DNS 解析器联系 TLD DNS 服务器以获取负责域“example.com”的权威 DNS 服务器的 IP 地址。权威 DNS 服务器是维护域的特定 DNS 记录（包括 CNAME 记录）的地方。之后，DNS 解析器会缓存获取的信息，这有助于更快地响应后续查询并减少 DNS 基础设施的负载。
+
+总而言之，DNS 通过使用解析器系统地查询权威 DNS 服务器来管理 CNAME 记录，跟踪沿途遇到的任何 CNAME 记录，直到到达最终目的地。缓存可提高效率并减少重复查询的需要。
+
+
+
 ### 其他 DNS 工具
 
 除了`dig`，还有一些其他小工具也可以使用。
