@@ -47,4 +47,17 @@ public class ApiController {
         response.setData("成功创建用户");
         return response;
     }
+
+    // 用于协助测试 MockMvc 读取 JSON 字符串内容
+    @GetMapping("getUser")
+    ObjectResponse<UserModel> getUser() {
+        UserModel userModel = new UserModel();
+        userModel.setId(10001l);
+        userModel.setAge(30);
+        userModel.setName("中文测试");
+        userModel.setEmail("dexterleslie@gmail.com");
+        ObjectResponse<UserModel> response = new ObjectResponse<>();
+        response.setData(userModel);
+        return response;
+    }
 }

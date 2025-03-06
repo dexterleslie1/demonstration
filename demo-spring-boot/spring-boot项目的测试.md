@@ -445,3 +445,18 @@ public class ServiceTests {
 }
 ```
 
+
+
+## MockMvc 测试从 JSON 返回中读取数据
+
+>[stack overflow 从 JSON 返回中读取数据](https://stackoverflow.com/questions/47763332/how-to-extract-value-from-json-response-when-using-spring-mockmvc)
+
+```java
+// MockMvc 读取 JSON 字符串内容
+response = mockMvc.perform(get("/api/v1/getUser")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + UUID.randomUUID().toString()))
+        .andExpect(status().isOk());
+// https://stackoverflow.com/questions/47763332/how-to-extract-value-from-json-response-when-using-spring-mockmvc
+String email = JsonPath.read(response.andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8), "$.data.email");
+Assert.assertEquals("dexterleslie@gmail.com", email);
+```
