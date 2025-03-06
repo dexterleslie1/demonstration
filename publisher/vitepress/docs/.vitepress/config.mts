@@ -15,20 +15,55 @@ export default defineConfig({
 
     // https://vitepress.dev/reference/default-theme-config
     nav: [
-      { text: '首页', link: '/' },
       {
+        text: '首页', link: '/'
+      }, {
         text: '前端', items: [
           { text: 'Vite', link: '/vite/README.md' },
           { text: 'VitePress', link: '/cms/vitepress.md' },
         ]
-      },
-      {
+      }, {
+        text: '后端', items: [
+          { text: 'SpringBoot', link: '/springboot/快速创建spring-boot项目.md' },
+        ]
+      }, {
         text: 'Linux', items: [
           { text: 'DNS', link: '/linux/dns.md' },
         ]
+      }, {
+        text: 'CloudFlare', link: '/cloudflare/README.md'
       },
-      { text: 'CloudFlare', link: '/cloudflare/README.md' },
     ],
+
+    sidebar: {
+      '/springboot/': [
+        {
+          text: 'SpringBoot',
+          items: [
+            { text: '快速创建SpringBoot项目', link: '/springboot/快速创建spring-boot项目.md' },
+            { text: 'SpringBoot项目的测试', link: '/springboot/spring-boot项目的测试.md' },
+            { text: 'Spring Security', link: '/springboot/spring-security.md' },
+            { text: 'Spring的Resource使用', link: '/springboot/spring的resource使用.md' },
+            { text: 'SpringBoot的DataSourceInitializer使用', link: '/springboot/spring-boot的DataSourceInitializer使用.md' },
+            { text: 'SpringBoot的PasswordEncoder使用', link: '/springboot/spring-boot的PasswordEncoder使用.md' },
+            { text: 'SpringBoot外部Restcontroller', link: '/springboot/spring-boot外部restcontroller.md' },
+            { text: '通过parent或dependencymanagement方式管理SpringBoot依赖', link: '/springboot/通过parent或dependencymanagement方式管理spring-boot依赖.md' },
+            { text: '横向扩展', link: '/springboot/横向扩展.md' },
+            { text: '任务调度框架', link: '/springboot/任务调度框架.md' },
+            { text: '@Autowired和@Resource的区别', link: '/springboot/@Autowired和@Resource的区别.md' },
+            { text: 'SpringBoot Actuator', link: '/springboot/spring-boot-actuator.md' },
+            { text: 'Spring容器', link: '/springboot/spring容器.md' },
+            { text: 'Spring AOP', link: '/springboot/spring-aop.md' },
+            { text: 'Spring事务', link: '/springboot/spring事务.md' },
+            { text: 'Spring MVC', link: '/springboot/spring-mvc.md' },
+            { text: 'Swagger2和Knife4j', link: '/springboot/swagger2-knife4j.md' },
+            { text: 'ibatis、mybatis、mybatis-plus', link: '/springboot/ibatis、mybatis、mybatis-plus.md' },
+            { text: 'SpringBoot', link: '/springboot/spring-boot.md' },
+            { text: 'SpringBoot Thymeleaf', link: '/springboot/spring-boot-thymeleaf.md' },
+          ]
+        }
+      ],
+    },
 
     socialLinks: [
       { icon: 'github', link: 'https://github.com/dexterleslie1' }
