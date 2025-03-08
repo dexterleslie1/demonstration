@@ -7,8 +7,9 @@ docs/.vitepress/cache
 docs/cms
 docs/vite
 docs/vue
+docs/element-ui
+docs/html-js-css
 docs/cloudflare
 docs/linux
 docs/springboot
 docs/redis
-docs/html-js-css
