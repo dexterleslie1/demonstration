@@ -6,6 +6,7 @@ docs/.vitepress/cache
 
 docs/cms
 docs/vite
+docs/vue
 docs/cloudflare
 docs/linux
 docs/springboot

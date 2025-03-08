@@ -20,6 +20,7 @@ export default defineConfig({
       }, {
         text: '前端', items: [
           { text: 'Vite', link: '/vite/README.md' },
+          { text: 'Vue', link: '/vue/脚手架创建项目.md' },
           { text: 'VitePress', link: '/cms/vitepress.md' },
           { text: 'Html、Javascript、CSS', link: '/html-js-css/css.md' },
         ]
@@ -87,6 +88,15 @@ export default defineConfig({
           text: 'Html、Javascript、CSS',
           items: [
             { text: 'CSS', link: '/html-js-css/css.md' },
+          ]
+        }
+      ],
+      '/vue/': [
+        {
+          text: 'Vue',
+          items: [
+            { text: '脚手架创建项目', link: '/vue/脚手架创建项目.md' },
+            { text: '指令', link: '/vue/指令.md' },
           ]
         }
       ],
