@@ -21,10 +21,12 @@ export default defineConfig({
         text: '前端', items: [
           { text: 'Vite', link: '/vite/README.md' },
           { text: 'VitePress', link: '/cms/vitepress.md' },
+          { text: 'Html、Javascript、CSS', link: '/html-js-css/css.md' },
         ]
       }, {
         text: '后端', items: [
           { text: 'SpringBoot', link: '/springboot/快速创建spring-boot项目.md' },
+          { text: 'Redis', link: '/redis/各种模式.md' },
         ]
       }, {
         text: 'Linux', items: [
@@ -60,6 +62,31 @@ export default defineConfig({
             { text: 'ibatis、mybatis、mybatis-plus', link: '/springboot/ibatis、mybatis、mybatis-plus.md' },
             { text: 'SpringBoot', link: '/springboot/spring-boot.md' },
             { text: 'SpringBoot Thymeleaf', link: '/springboot/spring-boot-thymeleaf.md' },
+          ]
+        }
+      ],
+      '/redis/': [
+        {
+          text: 'Redis',
+          items: [
+            { text: '各种模式', link: '/redis/各种模式.md' },
+            { text: 'Redisson', link: '/redis/redisson用法.md' },
+            { text: '持久化', link: '/redis/持久化.md' },
+            { text: '数据类型和命令', link: '/redis/数据类型和命令.md' },
+            { text: '客户端', link: '/redis/客户端.md' },
+            { text: '事务', link: '/redis/事务.md' },
+            { text: 'Lua脚本', link: '/redis/Lua脚本.md' },
+            { text: '应用场景', link: '/redis/应用场景.md' },
+            { text: '最佳实践', link: '/redis/最佳实践.md' },
+            { text: '基准测试', link: '/redis/基准测试.md' },
+          ]
+        }
+      ],
+      '/html-js-css/': [
+        {
+          text: 'Html、Javascript、CSS',
+          items: [
+            { text: 'CSS', link: '/html-js-css/css.md' },
           ]
         }
       ],
