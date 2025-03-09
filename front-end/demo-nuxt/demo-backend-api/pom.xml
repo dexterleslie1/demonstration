@@ -10,7 +10,6 @@
         <version>2.2.7.RELEASE</version>
     </parent>
 
-
     <groupId>com.future.demo</groupId>
     <artifactId>demo-backend-api</artifactId>
     <version>1.0.0</version>
@@ -21,11 +20,10 @@
     </properties>
 
     <dependencies>
-        <!-- yyd-common -->
         <dependency>
-            <groupId>com.yyd.sdk</groupId>
-            <artifactId>yyd-common</artifactId>
-            <version>3.8.80</version>
+            <groupId>com.github.dexterleslie1</groupId>
+            <artifactId>future-common</artifactId>
+            <version>1.1.6</version>
         </dependency>
 
         <dependency>
@@ -76,15 +74,13 @@
 
     <!-- 引用yyd nexus仓库 -->
     <repositories>
+       <repository>
+           <id>jitpack</id>
+           <url>https://jitpack.io</url>
+       </repository>
         <repository>
-            <id>yyd-nexus</id>
-            <url>http://maven.118899.net/repository/maven-releases/</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
+            <id>aliyun-maven</id>
+            <url>https://maven.aliyun.com/repository/public</url>
         </repository>
     </repositories>
 </project>

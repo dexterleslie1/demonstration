@@ -26,7 +26,7 @@ export default {
     }).catch(function(error) {
         console.log(`my error=${error}`)
     }).finally(function() {
-        console.log(`/data/data.json request finally`)
+        console.log(`/api/v1/test1 request finally`)
     })
     console.log(dataCross.data)
 

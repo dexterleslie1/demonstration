@@ -8,6 +8,7 @@ declare -A source_dir_to_target_dir_map
 source_dir_to_target_dir_map["../../demo-cms-system"]="cms"
 source_dir_to_target_dir_map["../../front-end/demo-vite"]="vite"
 source_dir_to_target_dir_map["../../front-end/demo-vue"]="vue"
+source_dir_to_target_dir_map["../../front-end/demo-nuxt"]="nuxt"
 source_dir_to_target_dir_map["../../front-end/demo-element-ui"]="element-ui"
 source_dir_to_target_dir_map["../../front-end/html+js+css"]="html-js-css"
 source_dir_to_target_dir_map["../../demo-cloudflare"]="cloudflare"

@@ -21,6 +21,7 @@ export default defineConfig({
         text: '前端', items: [
           { text: 'Vite', link: '/vite/README.md' },
           { text: 'Vue', link: '/vue/脚手架创建项目.md' },
+          { text: 'Nuxt', link: '/nuxt/README.md' },
           { text: 'Element-UI', link: '/element-ui/README.md' },
           { text: 'VitePress', link: '/cms/vitepress.md' },
           { text: 'Html、Javascript、CSS', link: '/html-js-css/css.md' },
@@ -110,6 +111,17 @@ export default defineConfig({
             { text: '脚手架创建项目', link: '/vue/脚手架创建项目.md' },
             { text: '指令', link: '/vue/指令.md' },
             { text: '集成 Element-UI', link: '/vue/集成element-ui.md' },
+          ]
+        }
+      ],
+      '/nuxt/': [
+        {
+          text: 'Nuxt',
+          items: [
+            { text: 'Nuxt基础', link: '/nuxt/README.md' },
+            { text: '路由', link: '/nuxt/路由.md' },
+            { text: '集成 Element-UI', link: '/nuxt/集成element-ui.md' },
+            { text: '数据交互和跨域', link: '/nuxt/数据交互和跨域.md' },
           ]
         }
       ],

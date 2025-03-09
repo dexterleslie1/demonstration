@@ -1,10 +1,8 @@
 # 集成 Element-UI
 
-详细用法请参考示例`https://gitee.com/dexterleslie/demonstration/tree/master/front-end/demo-nuxt/element-ui%E5%AE%89%E8%A3%85%E4%B8%8E%E9%85%8D%E7%BD%AE`
+> 详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/master/front-end/demo-nuxt/element-ui%E5%AE%89%E8%A3%85%E4%B8%8E%E9%85%8D%E7%BD%AE)
 
-
-
-安装 element-ui 依赖
+安装 Element-UI 依赖
 
 ```bash
 npm install element-ui --save

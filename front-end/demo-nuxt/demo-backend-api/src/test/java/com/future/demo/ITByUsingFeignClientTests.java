@@ -1,8 +1,7 @@
-package com.future.demo.test;
+package com.future.demo;
 
-import com.future.demo.Application;
-import com.future.demo.test.config.TestSupportConfiguration;
-import com.future.demo.test.feign.TestSupportDemoFeignClient;
+import com.future.demo.config.TestSupportConfiguration;
+import com.future.demo.feign.TestSupportDemoFeignClient;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;

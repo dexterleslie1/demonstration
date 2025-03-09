@@ -48,7 +48,7 @@ sudo npm install -g create-nuxt-app --registry=https://registry.npmmirror.com
 
 ## 创建、运行、编译、发布项目
 
-详细用法请参考示例`https://gitee.com/dexterleslie/demonstration/tree/master/front-end/demo-nuxt/demo-init-nuxt`
+> 详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/master/front-end/demo-nuxt/demo-init-nuxt)
 
 
 
