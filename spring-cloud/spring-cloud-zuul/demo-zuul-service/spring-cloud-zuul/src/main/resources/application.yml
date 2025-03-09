@@ -15,6 +15,10 @@ zuul:
       path: /api/v1/download/**
       url: http://localhost:18090
       strip-prefix: false
+    helloworld:
+      path: /api/v1/hello/**
+      service-id: helloworld
+      strip-prefix: false
 
 eureka:
   client:

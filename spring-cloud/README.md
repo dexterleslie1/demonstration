@@ -2582,6 +2582,59 @@ docker compose up -d
 
 
 
+#### 路径重写（Path Rewriting）
+
+>[How to change service path in Zuul route](https://github.com/spring-cloud/spring-cloud-netflix/issues/1893)
+
+把 /api/v1/hello 开头的请求路径重写为 /api/v1/a/b/hello 路径
+
+```java
+@Component
+public class PathRewriteZuulFilter extends ZuulFilter {
+    @Override
+    public String filterType() {
+        return "pre";
+    }
+
+    @Override
+    public int filterOrder() {
+        return PreDecorationFilter.FILTER_ORDER + 1;
+    }
+
+    @Override
+    public boolean shouldFilter() {
+        RequestContext context = RequestContext.getCurrentContext();
+        String originalRequestPath = (String) context.get(REQUEST_URI_KEY);
+        // 只过滤 /api/v1/hello 开始的请求
+        return originalRequestPath.startsWith("/api/v1/hello");
+    }
+
+    @Override
+    public Object run() {
+        RequestContext context = RequestContext.getCurrentContext();
+        String originalRequestPath = (String) context.get(REQUEST_URI_KEY);
+        String modifiedRequestPath = "/api/v1/a/b" + originalRequestPath.replace("/api/v1/hello", StringUtils.EMPTY);
+        context.put(REQUEST_URI_KEY, modifiedRequestPath);
+        return null;
+    }
+}
+```
+
+application.yaml 配置如下：
+
+```yaml
+zuul:
+  routes:
+    helloworld:
+      path: /api/v1/hello/**
+      service-id: helloworld
+      strip-prefix: false
+```
+
+详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/master/spring-cloud/spring-cloud-zuul/demo-zuul-service)
+
+
+
 
 ### Gateway
 

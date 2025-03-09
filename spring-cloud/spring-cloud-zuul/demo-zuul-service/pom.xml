@@ -25,6 +25,7 @@
     <modules>
         <module>spring-cloud-eureka</module>
         <module>spring-cloud-zuul</module>
+        <module>helloworld</module>
     </modules>
 
     <dependencies>
