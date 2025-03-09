@@ -28,6 +28,7 @@ export default defineConfig({
       }, {
         text: '后端', items: [
           { text: 'SpringBoot', link: '/springboot/快速创建spring-boot项目.md' },
+          { text: 'SpringCloud', link: '/springcloud/README.md' },
           { text: 'Redis', link: '/redis/各种模式.md' },
         ]
       }, {
@@ -64,6 +65,16 @@ export default defineConfig({
             { text: 'ibatis、mybatis、mybatis-plus', link: '/springboot/ibatis、mybatis、mybatis-plus.md' },
             { text: 'SpringBoot', link: '/springboot/spring-boot.md' },
             { text: 'SpringBoot Thymeleaf', link: '/springboot/spring-boot-thymeleaf.md' },
+          ]
+        }
+      ],
+      '/springcloud/': [
+        {
+          text: 'SpringCloud',
+          items: [
+            { text: 'SpringCloud的基础', link: '/springcloud/README.md' },
+            { text: 'Assistant示例', link: '/springcloud/assistant示例.md' },
+            { text: '分布式ID', link: '/springcloud/分布式ID.md' },
           ]
         }
       ],
