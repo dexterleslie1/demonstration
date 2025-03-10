@@ -155,3 +155,47 @@ public void testSignWithRSAAndVerify() throws NoSuchAlgorithmException, InvalidK
 }
 ```
 
+
+
+## 过期特性
+
+>详细用法请参考本站 [示例](https://github.com/dexterleslie1/demonstration/blob/master/demo-encrypt-decrypt/src/test/java/com/future/demo/JWTTests.java)
+
+```java
+/**
+ * 测试 jwt 过期特性
+ */
+@Test
+public void testExpiration() throws InterruptedException {
+    String secret = "123456";
+
+    Long userId = 12345678l;
+    String loginname = "ak123456";
+
+    Date expiresAt = Date.from(LocalDateTime.now().plusSeconds(2).toInstant(ZoneOffset.ofHours(8)));
+    Map<String, Object> headerMap = new HashMap<>();
+    headerMap.put("alg", "HS256");
+    String token = JWT.create()
+            // header
+            .withHeader(headerMap)
+            // payload
+            .withClaim("userId", userId)
+            .withClaim("loginname", loginname)
+            .withExpiresAt(expiresAt)
+            // 使用密码创建HMAC256密码算法对象
+            .sign(Algorithm.HMAC256(secret));
+
+    // 使用密码创建HMAC256密码算法对象
+    Algorithm algorithm = Algorithm.HMAC256(secret);
+    JWTVerifier jwtVerifier = JWT.require(algorithm).build();
+    jwtVerifier.verify(token);
+
+    TimeUnit.SECONDS.sleep(3);
+    try {
+        jwtVerifier.verify(token);
+        Assert.fail();
+    } catch (TokenExpiredException ignored) {
+        // Token 过期抛出 TokenExpiredException 异常
+    }
+}
+```

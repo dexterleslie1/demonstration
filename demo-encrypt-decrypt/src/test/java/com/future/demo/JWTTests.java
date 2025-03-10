@@ -3,6 +3,7 @@ package com.future.demo;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import org.junit.Assert;
@@ -16,7 +17,11 @@ import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 public class JWTTests {
 
@@ -226,5 +231,42 @@ public class JWTTests {
         Date expireAt = decodedJWT.getExpiresAt();
         Assert.assertNull(issueAt);
         Assert.assertNull(expireAt);
+    }
+
+    /**
+     * 测试 jwt 过期特性
+     */
+    @Test
+    public void testExpiration() throws InterruptedException {
+        String secret = "123456";
+
+        Long userId = 12345678l;
+        String loginname = "ak123456";
+
+        Date expiresAt = Date.from(LocalDateTime.now().plusSeconds(2).toInstant(ZoneOffset.ofHours(8)));
+        Map<String, Object> headerMap = new HashMap<>();
+        headerMap.put("alg", "HS256");
+        String token = JWT.create()
+                // header
+                .withHeader(headerMap)
+                // payload
+                .withClaim("userId", userId)
+                .withClaim("loginname", loginname)
+                .withExpiresAt(expiresAt)
+                // 使用密码创建HMAC256密码算法对象
+                .sign(Algorithm.HMAC256(secret));
+
+        // 使用密码创建HMAC256密码算法对象
+        Algorithm algorithm = Algorithm.HMAC256(secret);
+        JWTVerifier jwtVerifier = JWT.require(algorithm).build();
+        jwtVerifier.verify(token);
+
+        TimeUnit.SECONDS.sleep(3);
+        try {
+            jwtVerifier.verify(token);
+            Assert.fail();
+        } catch (TokenExpiredException ignored) {
+            // Token 过期抛出 TokenExpiredException 异常
+        }
     }
 }
