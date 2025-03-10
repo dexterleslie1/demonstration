@@ -16,6 +16,7 @@ source_dir_to_target_dir_map["../../linux"]="linux"
 source_dir_to_target_dir_map["../../demo-spring-boot"]="springboot"
 source_dir_to_target_dir_map["../../spring-cloud"]="springcloud"
 source_dir_to_target_dir_map["../../demo-redis"]="redis"
+source_dir_to_target_dir_map["../../demo-encrypt-decrypt"]="密码算法"
 
 
 for key in ${!source_dir_to_target_dir_map[@]}; do

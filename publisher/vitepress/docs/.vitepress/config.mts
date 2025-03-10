@@ -38,6 +38,10 @@ export default defineConfig({
         ]
       }, {
         text: 'CloudFlare', link: '/cloudflare/README.md'
+      }, {
+        text: '网络安全', items: [
+          { text: '密码算法', link: '/密码算法/README.md' },
+        ]
       },
     ],
 
@@ -122,6 +126,18 @@ export default defineConfig({
             { text: '路由', link: '/nuxt/路由.md' },
             { text: '集成 Element-UI', link: '/nuxt/集成element-ui.md' },
             { text: '数据交互和跨域', link: '/nuxt/数据交互和跨域.md' },
+          ]
+        }
+      ],
+      '/密码算法/': [
+        {
+          text: '密码算法',
+          items: [
+            { text: '介绍', link: '/密码算法/README.md' },
+            { text: '摘要算法', link: '/密码算法/摘要算法.md' },
+            { text: '对称密码算法', link: '/密码算法/对称密码算法.md' },
+            { text: '非对称密码算法', link: '/密码算法/非对称密码算法.md' },
+            { text: 'JWT', link: '/密码算法/jwt.md' },
           ]
         }
       ],
