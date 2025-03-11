@@ -33,6 +33,7 @@ export default defineConfig({
           { text: 'SpringBoot', link: '/springboot/快速创建spring-boot项目.md' },
           { text: 'SpringCloud', link: '/springcloud/README.md' },
           { text: 'Redis', link: '/redis/各种模式.md' },
+          { text: 'Docker、Compose', link: '/docker/README.md' },
         ]
       }, {
         text: 'Linux', items: [
@@ -140,6 +141,25 @@ export default defineConfig({
             { text: '对称密码算法', link: '/密码算法/对称密码算法.md' },
             { text: '非对称密码算法', link: '/密码算法/非对称密码算法.md' },
             { text: 'JWT', link: '/密码算法/jwt.md' },
+          ]
+        }
+      ],
+      '/docker/': [
+        {
+          text: 'Docker、Compose',
+          items: [
+            { text: '基本用法', link: '/docker/README.md' },
+            { text: 'Docker安装', link: '/docker/docker的安装.md' },
+            { text: 'Docker Compose', link: '/docker/docker-compose.md' },
+            { text: '存储卷', link: '/docker/docker-volume.md' },
+            { text: 'Swarm', link: '/docker/docker-swarm.md' },
+            { text: 'Docker命令', link: '/docker/docker命令.md' },
+            { text: '资源限制', link: '/docker/资源限制.md' },
+            { text: 'Dockerize', link: '/docker/dockerize用法.md' },
+            { text: '加速代理', link: '/docker/dockerhub加速代理.md' },
+            { text: '日志', link: '/docker/docker日志.md' },
+            { text: 'entrypoint、cmd、command', link: '/docker/entrypoint、cmd、command.md' },
+            { text: '镜像仓库', link: '/docker/镜像仓库.md' },
           ]
         }
       ],

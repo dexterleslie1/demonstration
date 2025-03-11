@@ -198,3 +198,29 @@ docker compose -f docker-compose-replicas.yaml up -d --scale nginx=3
 ```bash
 docker compose -f docker-compose-replicas.yaml ps
 ```
+
+
+
+## compose 文件配置
+
+### restart 策略
+
+>[restart 策略官方参考](https://docs.docker.com/reference/compose-file/services/#restart)
+
+restart 定义平台在容器终止时应用的策略。
+
+- no：默认重启策略。它在任何情况下都不会重启容器。
+- always：该策略始终重启容器，直到将其移除。
+- on-failure[:max-retries]：如果退出代码指示错误，该策略将重启容器。（可选）限制 Docker 守护程序尝试重启的次数。
+- unless-stopped：无论退出代码如何，该策略都会重启容器，但当服务停止或移除时会停止重启。
+
+例如如下配置：
+
+```yaml
+restart: "no"
+restart: always
+restart: on-failure
+restart: on-failure:3
+restart: unless-stopped
+```
+

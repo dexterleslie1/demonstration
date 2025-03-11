@@ -17,7 +17,7 @@ source_dir_to_target_dir_map["../../demo-spring-boot"]="springboot"
 source_dir_to_target_dir_map["../../spring-cloud"]="springcloud"
 source_dir_to_target_dir_map["../../demo-redis"]="redis"
 source_dir_to_target_dir_map["../../demo-encrypt-decrypt"]="密码算法"
-
+source_dir_to_target_dir_map["../../docker"]="docker"
 
 for key in ${!source_dir_to_target_dir_map[@]}; do
     # 删除符号链接目录
