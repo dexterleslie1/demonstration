@@ -4,6 +4,8 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   title: "我的分享",
   description: "分享技术和信息",
+  // https://vitepress.dev/reference/site-config#ignoredeadlinks
+  ignoreDeadLinks: true,
   themeConfig: {
     // https://blog.csdn.net/delete_you/article/details/129938705
     // aside，设定为false将关闭右侧栏，文档内容会填充剩余空白部分
