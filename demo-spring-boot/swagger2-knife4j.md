@@ -54,9 +54,9 @@ Swagger2可以自动生成API文档，减少了手动编写文档的工作量，
 
 ## `Swagger2`
 
->`Swagger2`具体配置和用法请参考示例`https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-boot-swagger`
+>`Swagger2`具体配置和用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-boot-swagger)
 
-`spring-boot`项目中添加如下依赖
+`SpringBoot`项目中添加如下依赖
 
 ```xml
 <!-- swagger3依赖 -->
@@ -85,8 +85,6 @@ public class Application {
 @Configuration
 @EnableSwagger2
 public class SwaggerConfig {
-    @Autowired
-    private TypeResolver typeResolver;
 
     /**
      *
@@ -127,16 +125,101 @@ public class SwaggerConfig {
 
 通过`@ApiModel`、`@ApiModelProperty`、`@Api`、`@ApiOperation`、`@ApiParam`、`@ApiResponse`等注解创建`Swagger`文档
 
-启动`spring boot`应用，访问`http://localhost:8080/swagger-ui/index.html`查看`Swagger`文档
+启动`SpringBoot`应用，访问`http://localhost:8080/swagger-ui/index.html`查看`Swagger`文档
 
 
+
+注意：Spring Security 如果拦截 Swagger URL，则使用下面配置放行：
+
+```java
+.authorizeRequests()
+// 放行指定uri
+.antMatchers(
+        // 允许swagger2
+        "/swagger-ui/**",
+        // 允许swagger2
+        "/swagger-resources/**",
+        // 允许swagger2
+        "/v2/api-docs").permitAll()
+.anyRequest().authenticated()
+```
+
+
+
+注意：SpringBoot2.6 和 Swagger 集成报错解决办法
+
+>[SpringBoot+Swagger整合（SpringBoot 2.6版本）](https://blog.csdn.net/Liujiaxinqq/article/details/130611388)
+
+- 报错信息如下：
+
+  ```java
+  org.springframework.context.ApplicationContextException: Failed to start bean 'documentationPluginsBootstrapper'; nested exception is java.lang.NullPointerException
+  	at org.springframework.context.support.DefaultLifecycleProcessor.doStart(DefaultLifecycleProcessor.java:181)
+  	at org.springframework.context.support.DefaultLifecycleProcessor.access$200(DefaultLifecycleProcessor.java:54)
+  	at org.springframework.context.support.DefaultLifecycleProcessor$LifecycleGroup.start(DefaultLifecycleProcessor.java:356)
+  	at java.lang.Iterable.forEach(Iterable.java:75)
+  	at org.springframework.context.support.DefaultLifecycleProcessor.startBeans(DefaultLifecycleProcessor.java:155)
+  	at org.springframework.context.support.DefaultLifecycleProcessor.onRefresh(DefaultLifecycleProcessor.java:123)
+  	at org.springframework.context.support.AbstractApplicationContext.finishRefresh(AbstractApplicationContext.java:937)
+  	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:586)
+  	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:145)
+  	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:745)
+  	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:423)
+  	at org.springframework.boot.SpringApplication.run(SpringApplication.java:307)
+  	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1317)
+  	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1306)
+  	at com.future.auth.ApplicationAuth.main(ApplicationAuth.java:15)
+  Caused by: java.lang.NullPointerException: null
+  	at springfox.documentation.spring.web.WebMvcPatternsRequestConditionWrapper.getPatterns(WebMvcPatternsRequestConditionWrapper.java:56)
+  	at springfox.documentation.RequestHandler.sortedPaths(RequestHandler.java:113)
+  	at springfox.documentation.spi.service.contexts.Orderings.lambda$byPatternsCondition$3(Orderings.java:89)
+  	at java.util.Comparator.lambda$comparing$77a9974f$1(Comparator.java:469)
+  	at java.util.TimSort.countRunAndMakeAscending(TimSort.java:355)
+  	at java.util.TimSort.sort(TimSort.java:220)
+  	at java.util.Arrays.sort(Arrays.java:1512)
+  	at java.util.ArrayList.sort(ArrayList.java:1464)
+  	at java.util.stream.SortedOps$RefSortingSink.end(SortedOps.java:387)
+  	at java.util.stream.Sink$ChainedReference.end(Sink.java:258)
+  	at java.util.stream.Sink$ChainedReference.end(Sink.java:258)
+  	at java.util.stream.Sink$ChainedReference.end(Sink.java:258)
+  	at java.util.stream.Sink$ChainedReference.end(Sink.java:258)
+  	at java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:483)
+  	at java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:472)
+  	at java.util.stream.ReduceOps$ReduceOp.evaluateSequential(ReduceOps.java:708)
+  	at java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+  	at java.util.stream.ReferencePipeline.collect(ReferencePipeline.java:499)
+  	at springfox.documentation.spring.web.plugins.WebMvcRequestHandlerProvider.requestHandlers(WebMvcRequestHandlerProvider.java:81)
+  	at java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:193)
+  	at java.util.ArrayList$ArrayListSpliterator.forEachRemaining(ArrayList.java:1384)
+  	at java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:482)
+  	at java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:472)
+  	at java.util.stream.ReduceOps$ReduceOp.evaluateSequential(ReduceOps.java:708)
+  	at java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+  	at java.util.stream.ReferencePipeline.collect(ReferencePipeline.java:499)
+  	at springfox.documentation.spring.web.plugins.AbstractDocumentationPluginsBootstrapper.withDefaults(AbstractDocumentationPluginsBootstrapper.java:107)
+  	at springfox.documentation.spring.web.plugins.AbstractDocumentationPluginsBootstrapper.buildContext(AbstractDocumentationPluginsBootstrapper.java:91)
+  	at springfox.documentation.spring.web.plugins.AbstractDocumentationPluginsBootstrapper.bootstrapDocumentationPlugins(AbstractDocumentationPluginsBootstrapper.java:82)
+  	at springfox.documentation.spring.web.plugins.DocumentationPluginsBootstrapper.start(DocumentationPluginsBootstrapper.java:100)
+  	at org.springframework.context.support.DefaultLifecycleProcessor.doStart(DefaultLifecycleProcessor.java:178)
+  	... 14 common frames omitted
+  ```
+
+- application.properties 配置如下：
+
+  ```properties
+  # SpringBoot2.6和Swagger集成报错解决办法
+  # https://blog.csdn.net/Liujiaxinqq/article/details/130611388
+  spring.mvc.pathmatch.matching-strategy=ant_path_matcher
+  ```
+
+  
 
 ## `Knife4j`
 
->`Knife4j`官方参考资料`https://doc.xiaominfo.com/`
+>[`Knife4j`官方参考资料](https://doc.xiaominfo.com/)
 >
->`spring boot 3`配置`Knife4j`参考`https://doc.xiaominfo.com/docs/quick-start`
+>[`SpringBoot3`配置`Knife4j`参考](https://doc.xiaominfo.com/docs/quick-start)
 >
->`Knife4j`具体配置和用法请参考示例`https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-boot-knife4j`
+>`Knife4j`具体配置和用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-boot-knife4j)
 
-启动`spring boot`应用后，访问`http://localhost:8080/doc.html`查看`Knife4j`文档
+启动`SpringBoot`应用后，访问`http://localhost:8080/doc.html`查看`Knife4j`文档
