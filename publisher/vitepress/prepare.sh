@@ -24,7 +24,7 @@ for key in ${!source_dir_to_target_dir_map[@]}; do
     rm -rf docs/${source_dir_to_target_dir_map[$key]}
     mkdir -p docs/${source_dir_to_target_dir_map[$key]}
     # 查询源目录中 *.md 文件
-    file_list=(`find $key -maxdepth 1 \( -iname "*\.md" -o -iname "*\.png" \) -printf '%f\n'`)
+    file_list=(`find $key -maxdepth 1 \( -iname "*\.md" -o -iname "*\.png" -o -iname "*\.jpg" \) -printf '%f\n'`)
 
     # 复制所有 *.md 文件到 docs 中
     for file in ${file_list[@]}; do
