@@ -9,7 +9,7 @@
     <!-- https://www.jb51.net/article/180823.htm -->
     <hr>
     <div>
-      使用v-for循环普通数组
+      遍历普通数组
     </div>
     <div>
       <span style="margin: 5px;border-style: solid;border-width: 1px;" v-for="(item, index) in datum1">{{ index }} - {{
@@ -18,7 +18,7 @@
 
     <hr>
     <div>
-      使用v-for循环对象数组
+      遍历对象数组
     </div>
     <div>
       <div style="margin: 5px;border-style: solid;border-width: 1px;" v-for="(item, index) in datum2">{{ index }} - {{
@@ -31,11 +31,22 @@
 
     <hr>
     <div>
-      使用v-for循环对象
+      遍历对象
     </div>
     <div>
       <div style="margin: 5px;border-style: solid;border-width: 1px;" v-for="(val, key, index) in datum3">
         {{ index }} - {{ key }} - {{ val }}
+      </div>
+    </div>
+
+    <hr>
+    <div>
+      动态 ref 对象
+    </div>
+    <div>
+      <div v-for="(item, index) in this.dataList">
+        <button @click="handleClick(item)">点击我input聚焦</button>
+        <input :ref="`input${item}`" />
       </div>
     </div>
 
@@ -46,6 +57,7 @@
 export default {
   data() {
     return {
+      dataList: ['a', 'b', 'c'],
       datum1: [1, 2, 3, 4, 5],
       datum2: [{
         text: 'item1',
@@ -71,6 +83,11 @@ export default {
         name: 'Dexterleslie',
         age: 22
       }
+    }
+  },
+  methods: {
+    handleClick(item) {
+      this.$refs[`input${item}`][0].focus()
     }
   }
 }
