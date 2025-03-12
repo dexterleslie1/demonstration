@@ -1,7 +1,9 @@
 import axios from "axios";
 
 // 全局配置
+// 设置基础 URL 为 /
 axios.defaults.baseURL = "/";
+// 设置全局超时为 5000 毫秒
 axios.defaults.timeout = 5000;
 // request、response 拦截器
 axios.interceptors.request.use((config) => {
@@ -205,7 +207,7 @@ $(document).ready(function () {
     })
 
     $('#btnDelete').click(function () {
-        // 测试全局配置
+        // 测试单独配置实例
         api1.delete("api/v1/delete", {
             needHeader: true,
             params: { param1: "deleteObjectId#1111" }
@@ -253,7 +255,7 @@ $(document).ready(function () {
     })
 
     $('#btnGetTextPlain').click(function () {
-        // // 测试get text/plain返回
+        // 测试get text/plain返回
         api1.get('/api/v1/1.txt', {
             params: { param1: 'Dexterleslie123' },
             needHeader: true

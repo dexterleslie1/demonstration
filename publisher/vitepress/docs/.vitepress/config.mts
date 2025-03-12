@@ -27,6 +27,7 @@ export default defineConfig({
           { text: 'Element-UI', link: '/element-ui/README.md' },
           { text: 'VitePress', link: '/cms/vitepress.md' },
           { text: 'Html、Javascript、CSS', link: '/html-js-css/css.md' },
+          { text: 'Axios', link: '/axios/README.md' },
         ]
       }, {
         text: '后端', items: [

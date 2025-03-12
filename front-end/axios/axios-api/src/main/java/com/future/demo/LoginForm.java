@@ -1,4 +1,4 @@
-package com.future.demo.axios;
+package com.future.demo;
 
 import lombok.Data;
 
