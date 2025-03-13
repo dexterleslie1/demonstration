@@ -39,6 +39,14 @@ export default defineConfig({
       }, {
         text: 'Linux', items: [
           { text: 'DNS', link: '/linux/dns.md' },
+          { text: 'Ubuntu/Debian', link: '/linux/ubuntu-n-debian.md' },
+          { text: 'CentOS', link: '/linux/centos.md' },
+          { text: '命令行工具', link: '/linux/命令行工具列表.md' },
+          { text: 'LVM逻辑卷', link: '/linux/lvm逻辑卷管理.md' },
+          { text: 'systemd、systemctl服务', link: '/linux/systemd、systemctl服务.md' },
+          { text: '搭建NFS服务器', link: '/linux/搭建nfs服务器.md' },
+          { text: '操作系统页面缓存、目录项缓存、索引节点缓存', link: '/linux/操作系统页面缓存、目录项缓存、索引节点缓存.md' },
+          { text: 'SSH客户端', link: '/linux/ssh客户端.md' },
         ]
       }, {
         text: 'CloudFlare', link: '/cloudflare/README.md'
