@@ -67,6 +67,12 @@
       <div :style="[styleObject, styleObject2]">内容</div>
     </div>
 
+    <hr />
+    <div>绑定内嵌样式 - 三目运算符设置样式字符串</div>
+    <div>
+      <div :style="this.applyMyFontBold ? 'font-weight:bold;' : ''">内容</div>
+    </div>
+
   </div>
 </template>
 
