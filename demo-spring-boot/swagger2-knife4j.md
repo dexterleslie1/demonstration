@@ -54,7 +54,11 @@ Swagger2可以自动生成API文档，减少了手动编写文档的工作量，
 
 ## `Swagger2`
 
->`Swagger2`具体配置和用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-boot-swagger)
+
+
+### SpringBoot 项目集成 Swagger2
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-boot-swagger)
 
 `SpringBoot`项目中添加如下依赖
 
@@ -212,7 +216,14 @@ public class SwaggerConfig {
   spring.mvc.pathmatch.matching-strategy=ant_path_matcher
   ```
 
-  
+
+
+
+### 配置 Enum（枚举）类型 Swagger 文档
+
+>提醒：尝试 [链接](https://www.google.com/search?channel=fs&client=ubuntu&q=java+swagger+enum) 多种方式配置 Enum Swagger 文档都不起作用，暂时放弃。
+
+
 
 ## `Knife4j`
 
