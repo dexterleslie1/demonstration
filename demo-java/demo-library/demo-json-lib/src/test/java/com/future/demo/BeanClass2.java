@@ -11,7 +11,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-public class BeanClass {
+public class BeanClass2 {
     private long userId;
     private String loginname;
     @JsonIgnore
@@ -21,6 +21,7 @@ public class BeanClass {
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime createTime;
 
-    // BeanClass 用于演示基于 Jackson 库自定义枚举类型对应的 DTO 返回预期格式的 JSON 数据给前端
-    private StatusEnumDTO status;
+    // BeanClass2 用于演示基于 Jackson 库自定义枚举类型的 Serializer 返回预期格式的 JSON 数据给前端
+    @JsonSerialize(using = Status.StatusSerializer.class)
+    private Status status;
 }

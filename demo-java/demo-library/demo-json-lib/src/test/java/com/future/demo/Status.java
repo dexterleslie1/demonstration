@@ -1,5 +1,11 @@
 package com.future.demo;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+
+import java.io.IOException;
+
 public enum Status {
 
     Create("创建"),
@@ -23,27 +29,25 @@ public enum Status {
         return StatusEnumDTO.builder().name(this).description(this.getDescription()).build();
     }
 
-    // 注意：使用自定义 DTO 封装枚举类型返回给前端
-    /*public static class MyEnumSerializer extends JsonSerializer<Enum<?>> {
-        @Override
-        public void serialize(Enum value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
-            Map<String, Object> result = new HashMap<>();
-            result.put("name", value.name());
-
-            // 获取所有字段 (可选)
-            Field[] fields = value.getClass().getDeclaredFields();
-            for (Field field : fields) {
-
-                if (Modifier.isPrivate(field.getModifiers()) && !field.getName().equals("$VALUES")) {
-                    try {
-                        field.setAccessible(true);
-                        result.put(field.getName(), field.get(value));
-                    } catch (IllegalAccessException e) {
-                        e.printStackTrace(); // 处理异常
-                    }
-                }
-            }
-            gen.writeObject(result);
+    // 基于 Jackson 库自定义枚举类型的 Serializer 返回预期格式的 JSON 数据给前端
+    public static class StatusSerializer extends StdSerializer<Status> {
+        public StatusSerializer() {
+            this(Status.class);
         }
-    }*/
+
+        public StatusSerializer(Class t) {
+            super(t);
+        }
+
+        @Override
+        public void serialize(Status status, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {
+            jsonGenerator.writeStartObject();
+            jsonGenerator.writeFieldName("name");
+            jsonGenerator.writeString(status.name());
+            jsonGenerator.writeFieldName("description");
+            jsonGenerator.writeString(status.getDescription());
+            jsonGenerator.writeEndObject();
+        }
+
+    }
 }

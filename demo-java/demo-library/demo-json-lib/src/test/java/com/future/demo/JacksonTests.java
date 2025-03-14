@@ -223,5 +223,10 @@ public class JacksonTests {
         beanClass.setStatus(Status.Paying.toDto());
         String JSON = objectMapper.writeValueAsString(beanClass);
         Assert.assertEquals("{\"userId\":0,\"loginname\":null,\"createTime\":null,\"status\":{\"name\":\"Paying\",\"description\":\"支付中\"}}", JSON);
+
+        BeanClass2 beanClass2 = new BeanClass2();
+        beanClass2.setStatus(Status.Paying);
+        JSON = objectMapper.writeValueAsString(beanClass2);
+        Assert.assertEquals("{\"userId\":0,\"loginname\":null,\"createTime\":null,\"status\":{\"name\":\"Paying\",\"description\":\"支付中\"}}", JSON);
     }
 }
