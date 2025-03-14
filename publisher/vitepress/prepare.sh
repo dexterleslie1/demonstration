@@ -19,6 +19,7 @@ source_dir_to_target_dir_map["../../spring-cloud"]="springcloud"
 source_dir_to_target_dir_map["../../demo-redis"]="redis"
 source_dir_to_target_dir_map["../../demo-encrypt-decrypt"]="密码算法"
 source_dir_to_target_dir_map["../../docker"]="docker"
+source_dir_to_target_dir_map["../../demo-软件工程"]="软件工程"
 
 for key in ${!source_dir_to_target_dir_map[@]}; do
     # 删除符号链接目录

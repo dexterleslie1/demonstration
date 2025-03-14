@@ -54,6 +54,10 @@ export default defineConfig({
         text: '网络安全', items: [
           { text: '密码算法', link: '/密码算法/README.md' },
         ]
+      }, {
+        text: '其他', items: [
+          { text: '软件工程', link: '/软件工程/SDLC.md' },
+        ]
       },
     ],
 
@@ -170,6 +174,16 @@ export default defineConfig({
             { text: '日志', link: '/docker/docker日志.md' },
             { text: 'entrypoint、cmd、command', link: '/docker/entrypoint、cmd、command.md' },
             { text: '镜像仓库', link: '/docker/镜像仓库.md' },
+          ]
+        }
+      ],
+      '/软件工程/': [
+        {
+          text: '软件工程',
+          items: [
+            { text: '软件开发生命周期', link: '/软件工程/SDLC.md' },
+            { text: 'DrawIO使用', link: '/软件工程/drawio使用.md' },
+            { text: 'UML建模与设计.md', link: '/软件工程/uml建模与设计.md' },
           ]
         }
       ],
