@@ -35,13 +35,14 @@ export default defineConfig({
           { text: 'SpringCloud', link: '/springcloud/README.md' },
           { text: 'Redis', link: '/redis/各种模式.md' },
           { text: 'Docker、Compose', link: '/docker/README.md' },
+          { text: 'Java相关库', link: '/java-library/lombok.md' },
         ]
       }, {
         text: 'Linux', items: [
-          { text: 'DNS', link: '/linux/dns.md' },
           { text: 'Ubuntu/Debian', link: '/linux/ubuntu-n-debian.md' },
           { text: 'CentOS', link: '/linux/centos.md' },
           { text: '命令行工具', link: '/linux/命令行工具列表.md' },
+          { text: 'DNS', link: '/linux/dns.md' },
           { text: 'LVM逻辑卷', link: '/linux/lvm逻辑卷管理.md' },
           { text: 'systemd、systemctl服务', link: '/linux/systemd、systemctl服务.md' },
           { text: '搭建NFS服务器', link: '/linux/搭建nfs服务器.md' },
@@ -184,6 +185,26 @@ export default defineConfig({
             { text: '软件开发生命周期', link: '/软件工程/SDLC.md' },
             { text: 'DrawIO使用', link: '/软件工程/drawio使用.md' },
             { text: 'UML建模与设计.md', link: '/软件工程/uml建模与设计.md' },
+          ]
+        }
+      ],
+      '/java-library/': [
+        {
+          text: 'Java相关库',
+          items: [
+            { text: 'Lombok', link: '/java-library/lombok.md' },
+            { text: 'Awaitility', link: '/java-library/awaitility使用.md' },
+            { text: 'Jsoup', link: '/java-library/jsoup使用.md' },
+            { text: 'Hutool', link: '/java-library/hutool使用.md' },
+            { text: 'HtmlUnit', link: '/java-library/htmlunit使用.md' },
+            { text: '日志框架', link: '/java-library/日志框架.md' },
+            { text: '测试', link: '/java-library/测试.md' },
+            { text: 'rest-assured', link: '/java-library/rest-assured.md' },
+            { text: '缓存框架', link: '/java-library/缓存框架.md' },
+            { text: 'Stopwatch', link: '/java-library/stopwatch.md' },
+            { text: 'JSON相关库', link: '/java-library/json库.md' },
+            { text: 'Apache Commons Exec', link: '/java-library/apache-commons-exec.md' },
+            { text: 'SSH客户端库', link: '/java-library/ssh客户端.md' },
           ]
         }
       ],

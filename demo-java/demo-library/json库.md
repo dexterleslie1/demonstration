@@ -1,4 +1,4 @@
-# json 库
+# JSON 库
 
 
 
@@ -117,7 +117,7 @@ public enum Status {
 
 **方法四示例代码：**
 
->详细用法请参考示例`https://gitee.com/dexterleslie/demonstration/tree/master/demo-java/demo-library/demo-json-lib`
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/master/demo-java/demo-library/demo-json-lib)
 
 ```java
 /**
