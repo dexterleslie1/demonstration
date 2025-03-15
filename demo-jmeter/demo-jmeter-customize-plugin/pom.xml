@@ -40,7 +40,7 @@
 
     <build>
         <plugins>
-            <!-- 把依赖的jar包拷到lib目录下 -->
+            <!-- 把依赖的jar包拷到lib目录下，注意：必须使用此方法复制依赖，否则在在运行测试时报告ApacheJMeter_core和ApacheJMeter_java相关兼容性错误 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
