@@ -89,13 +89,13 @@ mvn test
 显示项目中 logback 版本信息
 
 ```sh
-mvn dependency:tree -Dincludes=*logback*
+mvn dependency:tree -Dincludes="*logback*"
 ```
 
 根据 artifactId 为 log4j 搜索
 
 ```sh
-mvn dependency:tree -Dverbose -Dincludes=*:*log4j*
+mvn dependency:tree -Dverbose -Dincludes="*:*log4j*"
 ```
 
 
