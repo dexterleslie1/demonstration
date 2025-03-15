@@ -21,6 +21,7 @@ source_dir_to_target_dir_map["../../demo-encrypt-decrypt"]="密码算法"
 source_dir_to_target_dir_map["../../docker"]="docker"
 source_dir_to_target_dir_map["../../demo-软件工程"]="软件工程"
 source_dir_to_target_dir_map["../../demo-java/demo-library"]="java-library"
+source_dir_to_target_dir_map["../../demo-jmeter"]="jmeter"
 
 for key in ${!source_dir_to_target_dir_map[@]}; do
     # 删除符号链接目录

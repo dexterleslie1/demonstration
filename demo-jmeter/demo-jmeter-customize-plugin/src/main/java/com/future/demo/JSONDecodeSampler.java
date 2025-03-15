@@ -11,8 +11,11 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 
-public class JsonDecodeSampler extends AbstractJavaSamplerClient {
-    private static final Logger log = LoggerFactory.getLogger(JsonDecodeSampler.class);
+/**
+ * 测试 JSON 解码性能
+ */
+public class JSONDecodeSampler extends AbstractJavaSamplerClient {
+    private static final Logger log = LoggerFactory.getLogger(JSONDecodeSampler.class);
 
     final static String JSON = "{\"errorCode\":0,\"errorMessage\":null,\"dataObject\":\"你好\"}";
 
@@ -24,12 +27,9 @@ public class JsonDecodeSampler extends AbstractJavaSamplerClient {
             // 样本测试开始，自动统计样本持续测试时间，不需要手动计算
             result.sampleStart();
 
-            // TimeUnit.SECONDS.sleep(1);
-
             JSONObject jsonObject = JSONUtil.parseObj(JSON);
             int errorCode = jsonObject.getInt("errorCode");
 
-            /*int errorCode = 0;*/
             if (errorCode > 0) {
                 // 注入变量registerSuccess，能够使用vars.get("registerSuccess")获取变量值
                 javaSamplerContext.getJMeterVariables().put("registerSuccess", "false");

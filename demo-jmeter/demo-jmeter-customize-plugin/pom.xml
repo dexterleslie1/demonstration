@@ -24,21 +24,10 @@
             <version>${jmeter.version}</version>
         </dependency>
 
-        <!--<dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>2.13.5</version>
-        </dependency>-->
         <dependency>
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-json</artifactId>
             <version>5.8.28</version>
-        </dependency>
-
-        <dependency>
-            <groupId>redis.clients</groupId>
-            <artifactId>jedis</artifactId>
-            <version>5.0.2</version>
         </dependency>
 
         <dependency>
@@ -65,16 +54,16 @@
                         </goals>
                         <configuration>
                             <artifactItems>
-                                <artifactItem>
+                                <!--<artifactItem>
                                     <groupId>redis.clients</groupId>
                                     <artifactId>jedis</artifactId>
-                                    <!-- 默认使用项目中声明的依赖版本 -->
-                                    <!--<version>5.0.2</version>-->
+                                    &lt;!&ndash; 默认使用项目中声明的依赖版本 &ndash;&gt;
+                                    &lt;!&ndash;<version>5.0.2</version>&ndash;&gt;
                                     <overWrite>true</overWrite>
                                     <outputDirectory>${project.build.directory}/required-lib</outputDirectory>
-                                    <!-- 复制后的文件名称 -->
-                                    <!--<destFileName>optional-new-name.jar</destFileName>-->
-                                </artifactItem>
+                                    &lt;!&ndash; 复制后的文件名称 &ndash;&gt;
+                                    &lt;!&ndash;<destFileName>optional-new-name.jar</destFileName>&ndash;&gt;
+                                </artifactItem>-->
                                 <artifactItem>
                                     <groupId>cn.hutool</groupId>
                                     <artifactId>hutool-json</artifactId>

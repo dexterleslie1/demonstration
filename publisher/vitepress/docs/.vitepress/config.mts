@@ -36,6 +36,7 @@ export default defineConfig({
           { text: 'Redis', link: '/redis/各种模式.md' },
           { text: 'Docker、Compose', link: '/docker/README.md' },
           { text: 'Java相关库', link: '/java-library/lombok.md' },
+          { text: 'JMeter', link: '/jmeter/README.md' },
         ]
       }, {
         text: 'Linux', items: [
@@ -205,6 +206,16 @@ export default defineConfig({
             { text: 'JSON相关库', link: '/java-library/json库.md' },
             { text: 'Apache Commons Exec', link: '/java-library/apache-commons-exec.md' },
             { text: 'SSH客户端库', link: '/java-library/ssh客户端.md' },
+          ]
+        }
+      ],
+      '/jmeter/': [
+        {
+          text: 'JMeter',
+          items: [
+            { text: '基础', link: '/jmeter/README.md' },
+            { text: '自定义插件', link: '/jmeter/自定义插件.md' },
+            { text: '定时器', link: '/jmeter/定时器.md' },
           ]
         }
       ],
