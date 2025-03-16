@@ -50,26 +50,26 @@ public class RedisBenchmarkSetByUsingRedisTemplateSampler extends AbstractJavaSa
         this.keyToWrite = UUID.randomUUID().toString();
 
         if (this.connectionFactory == null) {
-            if (password != null && !password.isEmpty()) {
-                if (!this.cluster) {
-                    RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration(host, port);
+            if (!this.cluster) {
+                RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration(host, port);
+                if (password != null && !password.isEmpty()) {
                     configuration.setPassword(password);
-                    this.connectionFactory = new LettuceConnectionFactory(configuration);
-                } else {
-                    RedisClusterConfiguration configuration = new RedisClusterConfiguration();
-                    configuration.setClusterNodes(new HashSet<RedisNode>() {{
-                        this.add(new RedisNode(host, port));
-                    }});
-                    this.connectionFactory = new LettuceConnectionFactory(configuration);
                 }
-                ((LettuceConnectionFactory) this.connectionFactory).afterPropertiesSet();
+                this.connectionFactory = new LettuceConnectionFactory(configuration);
+            } else {
+                RedisClusterConfiguration configuration = new RedisClusterConfiguration();
+                configuration.setClusterNodes(new HashSet<RedisNode>() {{
+                    this.add(new RedisNode(host, port));
+                }});
+                this.connectionFactory = new LettuceConnectionFactory(configuration);
+            }
+            ((LettuceConnectionFactory) this.connectionFactory).afterPropertiesSet();
 
-                this.redisTemplate = new StringRedisTemplate(this.connectionFactory);
-                this.redisTemplate.afterPropertiesSet();
+            this.redisTemplate = new StringRedisTemplate(this.connectionFactory);
+            this.redisTemplate.afterPropertiesSet();
 
-                if (log.isDebugEnabled()) {
-                    log.debug("成功创建 RedisTemplate 实例 host {} port {} password *** 线程 {}", host, port, Thread.currentThread().getName());
-                }
+            if (log.isDebugEnabled()) {
+                log.debug("成功创建 RedisTemplate 实例 host {} port {} password *** 线程 {}", host, port, Thread.currentThread().getName());
             }
         } else {
             if (log.isDebugEnabled()) {
