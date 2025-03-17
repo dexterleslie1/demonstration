@@ -73,10 +73,10 @@
               </elementProp>
             </collectionProp>
           </elementProp>
-          <stringProp name="classname">com.future.demo.RedisBenchmarkSetByUsingRedisTemplateSampler</stringProp>
+          <stringProp name="classname">com.future.demo.RedisBenchmarkSetByUsingJedisSampler</stringProp>
         </JavaSampler>
         <hashTree/>
-        <ResultCollector guiclass="SummaryReport" testclass="ResultCollector" testname="Summary Report" enabled="true">
+        <ResultCollector guiclass="SummaryReport" testclass="ResultCollector" testname="Summary Report" enabled="false">
           <boolProp name="ResultCollector.error_logging">false</boolProp>
           <objProp>
             <name>saveConfig</name>

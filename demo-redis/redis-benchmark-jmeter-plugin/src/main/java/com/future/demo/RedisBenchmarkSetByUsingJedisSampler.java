@@ -11,6 +11,9 @@ import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisCluster;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 
 /**
@@ -18,6 +21,7 @@ import java.util.UUID;
  */
 public class RedisBenchmarkSetByUsingJedisSampler extends AbstractJavaSamplerClient {
     private static final Logger log = LoggerFactory.getLogger(RedisBenchmarkSetByUsingJedisSampler.class);
+    private static final Random RANDOM = new Random();
 
     /**
      * 是否连接redis集群
@@ -31,10 +35,15 @@ public class RedisBenchmarkSetByUsingJedisSampler extends AbstractJavaSamplerCli
      * redis集群客户端
      */
     JedisCluster jedisCluster;
+    private final int totalKeyListSize = 100;
     /**
      * 用于测试 set 指令性能的 Key 和 Value
      */
-    private String keyToWrite;
+    private List<String> keyListToWrite = new ArrayList<String>() {{
+        for (int i = 0; i < totalKeyListSize; i++) {
+            this.add(UUID.randomUUID().toString());
+        }
+    }};
 
     @Override
     public void setupTest(JavaSamplerContext context) {
@@ -42,8 +51,6 @@ public class RedisBenchmarkSetByUsingJedisSampler extends AbstractJavaSamplerCli
         int port = context.getIntParameter("port", 6379);
         String password = context.getParameter("password", "");
         this.cluster = Boolean.parseBoolean(context.getParameter("cluster", "false"));
-
-        this.keyToWrite = UUID.randomUUID().toString();
 
         // 非redis集群
         if (!this.cluster) {
@@ -128,14 +135,15 @@ public class RedisBenchmarkSetByUsingJedisSampler extends AbstractJavaSamplerCli
 
             result.setSampleLabel(Label);
 
+            String keyToWrite = this.keyListToWrite.get(RANDOM.nextInt(totalKeyListSize));
             if (!this.cluster) {
-                this.jedis.set(this.keyToWrite, this.keyToWrite);
+                this.jedis.set(keyToWrite, keyToWrite);
             } else {
-                this.jedisCluster.set(this.keyToWrite, this.keyToWrite);
+                this.jedisCluster.set(keyToWrite, keyToWrite);
             }
 
             if (log.isDebugEnabled()) {
-                log.debug("写性能测试随机 key {} value {} 并使用此key和value set", this.keyToWrite, this.keyToWrite);
+                log.debug("写性能测试随机 key {} value {} 并使用此key和value set", keyToWrite, keyToWrite);
             }
 
             // 标记样本成功

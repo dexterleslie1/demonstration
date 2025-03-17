@@ -1,46 +1,22 @@
 package com.future.demo;
 
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.HostAndPort;
+import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.JedisPoolConfig;
 
-/**
- * Jedis 工具类
- */
-@ConditionalOnProperty(value = "cluster", havingValue = "false", matchIfMissing = true)
+import java.util.HashSet;
+import java.util.Set;
+
+@ConditionalOnProperty(value = "cluster", havingValue = "true")
 @Component
-public class JedisStandaloneUtil implements InitializingBean {
-    @Value("${spring.redis.host:localhost}")
-    String host;
-    @Value("${spring.redis.port:6379}")
-    int port;
-    @Value("${spring.redis.password:123456}")
-    String password;
+public class JedisClusterUtil implements InitializingBean {
+    private JedisCluster jedisCluster;
 
-    private JedisPool jedisPool = null;
-
-    /**
-     * 从jedis连接池中获取获取jedis对象
-     *
-     * @return
-     */
-    public Jedis getJedis() {
-        return jedisPool.getResource();
-    }
-
-    /**
-     * 回收jedis(放到finally中)
-     *
-     * @param jedis
-     */
-    public void returnJedis(Jedis jedis) {
-        if (null != jedis) {
-            jedis.close();
-        }
+    public JedisCluster getJedisCluster() {
+        return this.jedisCluster;
     }
 
     @Override
@@ -49,7 +25,6 @@ public class JedisStandaloneUtil implements InitializingBean {
         int maxIdle = 300;
         int maxWaitMillis = 1000;
         boolean testOnBorrow = false;
-        int timeout = 10000;
 
         JedisPoolConfig config = new JedisPoolConfig();
         //控制一个pool可分配多少个jedis实例，通过pool.getResource()来获取；
@@ -62,7 +37,11 @@ public class JedisStandaloneUtil implements InitializingBean {
         //在borrow一个jedis实例时，是否提前进行validate操作；如果为true，则得到的jedis实例均是可用的；
         config.setTestOnBorrow(testOnBorrow);
 
-        jedisPool = new JedisPool(config, host, port, timeout, password);
+        Set<HostAndPort> jedisClusterNodes = new HashSet<>();
+        jedisClusterNodes.add(new HostAndPort("192.168.1.185", 6380));
+        jedisClusterNodes.add(new HostAndPort("192.168.1.185", 6381));
+        jedisClusterNodes.add(new HostAndPort("192.168.1.185", 6382));
+        this.jedisCluster = new JedisCluster(jedisClusterNodes, config);
     }
 }
 
