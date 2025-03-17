@@ -203,3 +203,22 @@ cssh -l root 192.168.1.2 192.168.1.3
 terminal_font=10x20
 ```
 
+
+
+
+
+## mussh
+
+提醒：todo 未研究。
+
+
+
+## pdsh
+
+提醒：todo 未研究。
+
+
+
+## pssh
+
+提醒：todo 未研究。
