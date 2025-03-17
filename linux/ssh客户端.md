@@ -191,3 +191,15 @@ cssh -l root 192.168.1.2 192.168.1.3
 - `-l root`：这个选项指定了要用于登录远程服务器的用户名，这里是`root`。`-l`是`--login`的简写，表示登录名。
 - 如果我想向某个终端发送某些内容，我只需单击所需的 XTerm 即可切换焦点，然后像平常一样在该窗口中键入内容。
 
+
+
+### 设置控制台字体大小
+
+>[参考链接](https://unix.stackexchange.com/questions/230106/cluster-ssh-specify-terminal-font)
+
+编辑 ~/.clusterssh/config 修改 terminal_font=6x13 为下面内容：
+
+```properties
+terminal_font=10x20
+```
+
