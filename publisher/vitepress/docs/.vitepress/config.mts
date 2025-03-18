@@ -59,6 +59,7 @@ export default defineConfig({
       }, {
         text: '其他', items: [
           { text: '软件工程', link: '/软件工程/SDLC.md' },
+          { text: 'Git', link: '/git/README.md' },
         ]
       },
     ],
@@ -216,6 +217,25 @@ export default defineConfig({
             { text: '基础', link: '/jmeter/README.md' },
             { text: '自定义插件', link: '/jmeter/自定义插件.md' },
             { text: '定时器', link: '/jmeter/定时器.md' },
+          ]
+        }
+      ],
+      '/git/': [
+        {
+          text: 'Git',
+          items: [
+            { text: '基础', link: '/git/README.md' },
+            { text: '分支', link: '/git/分支.md' },
+            { text: '标签', link: '/git/标签.md' },
+            { text: '基于分支和标签的版本管理', link: '/git/基于分支和标签的版本管理.md' },
+            { text: '初始化非空目录指向远程仓库', link: '/git/初始化非空目录指向远程仓库.md' },
+            { text: 'git凭证管理', link: '/git/git凭证管理.md' },
+            { text: 'gitee', link: '/git/gitee.md' },
+            { text: 'github', link: '/git/github.md' },
+            { text: '设置自签名ssl证书不验证', link: '/git/设置自签名ssl证书不验证.md' },
+            { text: '原理', link: '/git/原理.md' },
+            { text: '变基', link: '/git/变基.md' },
+            { text: '命令', link: '/git/命令.md' },
           ]
         }
       ],
