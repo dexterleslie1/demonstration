@@ -49,6 +49,7 @@ export default defineConfig({
           { text: '搭建NFS服务器', link: '/linux/搭建nfs服务器.md' },
           { text: '操作系统页面缓存、目录项缓存、索引节点缓存', link: '/linux/操作系统页面缓存、目录项缓存、索引节点缓存.md' },
           { text: 'SSH客户端', link: '/linux/ssh客户端.md' },
+          { text: 'Shell编程', link: '/shell-scripting/shell的概念.md' },
         ]
       }, {
         text: 'CloudFlare', link: '/cloudflare/README.md'
@@ -236,6 +237,23 @@ export default defineConfig({
             { text: '原理', link: '/git/原理.md' },
             { text: '变基', link: '/git/变基.md' },
             { text: '命令', link: '/git/命令.md' },
+          ]
+        }
+      ],
+      '/shell-scripting/': [
+        {
+          text: 'Shell 编程',
+          items: [
+            { text: 'Shell 的概念', link: '/shell-scripting/shell的概念.md' },
+            { text: 'Zsh 使用', link: '/shell-scripting/zsh使用.md' },
+            { text: '语法基础', link: '/shell-scripting/语法基础.md' },
+            { text: '在脚本头声明脚本的用法', link: '/shell-scripting/在脚本头声明脚本的用法.md' },
+            { text: '设置 Shell 行为的命令', link: '/shell-scripting/设置shell行为的命令.md' },
+            { text: '函数的用法', link: '/shell-scripting/函数的用法.md' },
+            { text: '标准 Shell 脚本结构', link: '/shell-scripting/标准shell脚本结构.md' },
+            { text: '数组', link: '/shell-scripting/数组.md' },
+            { text: '关联数组', link: '/shell-scripting/关联数组.md' },
+            { text: 'IO 重定向', link: '/shell-scripting/io-redirection.md' },
           ]
         }
       ],

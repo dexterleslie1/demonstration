@@ -141,18 +141,51 @@ userdel user1
 userdel -r user1
 ```
 
+
+
 ## 配置环境变量
 
-### ubuntu和centOS8配置环境变量
 
-> 在/etc/profile.d/目录设置 xxxx.sh
 
-```shell
+### Ubuntu 和 CentOS8 配置环境变量
+
+在 /etc/profile.d/ 目录设置 xxxx.sh
+
+```bash
 [root@localhost ~]# cd /etc/profile.d/
 [root@localhost profile.d]# cat go.sh
 #!/bin/bash
 export PATH=$PATH:/usr/local/go/bin
 ```
+
+
+
+### Ubuntu /etc/profile.d/xxx.sh 为何 SSH 远程连接时不会被加载呢？
+
+在 Ubuntu 系统中，`/etc/profile` 和 `/etc/profile.d/` 目录下的脚本主要用于配置系统级的环境变量和启动时的初始化设置。这些文件通常在用户登录时由 shell 读取和执行。然而，对于 SSH 远程连接，具体的行为可能会因所使用的 shell 类型（如 Bash、Zsh 等）以及 SSH 配置的不同而有所差异。
+
+以下是一些可能导致 `/etc/profile.d/xxx.sh` 在 SSH 连接时不被加载的原因：
+
+1. Shell 类型和配置：
+   - 如果你使用的是 Bash，通常 `/etc/profile` 会被读取，并进而读取 `/etc/profile.d/` 目录下的脚本。但如果 SSH 配置为使用非交互式 shell（例如通过 `ssh user@host command`），则可能不会加载这些文件。
+   - 对于非 Bash shell（如 Zsh），可能需要额外的配置来确保 `/etc/profile` 或 `/etc/profile.d/` 下的脚本被加载。例如，Zsh 通常使用 `/etc/zsh/zshenv`、`/etc/zsh/zprofile` 等文件。
+2. SSH 配置：
+   - SSH 服务器或客户端的配置文件（如 `/etc/ssh/sshd_config` 或 `~/.ssh/config`）中的某些设置可能会影响环境变量的加载。例如，`PermitUserEnvironment` 选项控制是否允许用户通过 SSH 会话加载其 `~/.ssh/environment` 文件。
+3. 环境变量加载顺序：
+   - 在登录过程中，环境变量的加载顺序可能因不同的 shell 和系统配置而异。例如，Bash 会按照 `/etc/profile` -> `/etc/bash.bashrc` -> `~/.bash_profile`、`~/.bash_login` 或 `~/.profile` 的顺序加载配置文件。如果某个文件中有 `exit` 命令，则后续文件将不会被加载。
+4. 使用非登录 Shell：
+   - 如果 SSH 连接配置为使用非登录 Shell（例如通过 SSH 隧道或某些特定命令），则可能不会执行 `/etc/profile` 和 `/etc/profile.d/` 下的脚本。非登录 Shell 通常只读取 `~/.bashrc` 或其他对应的 shell 配置文件。
+
+为了解决这个问题，你可以：
+
+- 确保你使用的是登录 Shell，并且 SSH 配置允许加载用户的环境。
+- 检查你的 shell 配置文件（如 `.bashrc`、`.bash_profile` 等），看看是否有代码阻止了 `/etc/profile` 的加载。
+- 如果使用非 Bash shell，检查该 shell 的配置文件和文档，了解如何正确加载环境变量。
+- 使用 `ssh -v user@host` 命令增加 SSH 连接的详细输出，查看是否有关于环境变量加载的更多信息。
+
+通过这些步骤，你应该能够诊断和解决 SSH 连接时环境变量不被加载的问题。
+
+
 
 ## rc.local配置
 
