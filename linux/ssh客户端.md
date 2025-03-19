@@ -123,6 +123,8 @@ LANG=zh_CN.UTF-8 wine msiexec /i MobaXterm_installer_25.0.msi
 
 ## ClusterSSH
 
+
+
 ### 介绍
 
 ClusterSSH是一个高效的SSH协议工具，为IT管理员提供了便捷的远程管理解决方案。以下是对ClusterSSH的详细介绍：
@@ -195,6 +197,18 @@ cssh -l root 192.168.1.2 192.168.1.3
 
 
 
+模拟用户登录 bash 并执行指定命令
+
+>提醒：目的是为了加载 /etc/profile.d/xxx.sh 脚本中设置的环境变量。
+
+```bash
+$ cssh -l dexterleslie 192.168.1.181 -a 'bash --login -i'
+
+# cssh 登录后输入 env 命令打印环境变量以确认是否加载 /etc/profile.d/xxx.sh 脚本中设置的环境变量
+```
+
+
+
 ### 设置控制台字体大小
 
 >[参考链接](https://unix.stackexchange.com/questions/230106/cluster-ssh-specify-terminal-font)
@@ -233,4 +247,73 @@ terminal_font=10x20
 
 ## pssh
 
-提醒：todo 未研究。
+### 介绍
+
+PSSH（Parallel SSH）是一种用于在多个远程主机上并行执行SSH命令的工具。它允许用户通过一个命令同时连接到多个服务器，并在这些服务器上执行相同的操作或命令。这种并行处理能力极大地提高了系统管理员在多服务器环境中进行管理和维护的效率。
+
+PSSH的主要功能包括：
+
+1. **并行执行**：允许用户同时向多个远程主机发送命令，显著减少执行相同任务所需的总时间。
+2. **主机列表管理**：通过主机文件（通常是一个包含主机名和（可选）用户名的列表）来管理目标主机。
+3. **输出收集**：将每个主机的命令输出收集到本地文件中，便于后续分析和处理。
+4. **错误处理**：提供错误处理和重试机制，确保命令在尽可能多的主机上成功执行。
+5. **安全性**：虽然PSSH本身不直接增强SSH的安全性，但它允许使用SSH密钥进行无密码登录，从而提高了自动化脚本的安全性。
+
+使用PSSH时，用户需要确保：
+
+- 已在所有目标主机上设置了SSH访问权限。
+- （可选）配置了SSH密钥对以实现无密码登录。
+- 安装了PSSH工具（在某些Linux发行版上可能需要手动安装）。
+
+PSSH的基本用法通常涉及指定主机文件、要执行的命令以及输出文件的路径。例如，使用`pssh -h hosts.txt -i uptime`命令可以在`hosts.txt`文件中列出的所有主机上执行`uptime`命令，并将输出保存到本地文件中（默认情况下，每个主机的输出将保存在以主机名命名的单独文件中）。
+
+总之，PSSH是一种强大的工具，能够显著提高在多服务器环境中进行管理和维护的效率和便捷性。
+
+
+
+### 使用
+
+>[参考链接1](https://www.cyberciti.biz/cloud-computing/how-to-use-pssh-parallel-ssh-program-on-linux-unix/)
+>
+>[参考链接2](https://www.voidking.com/dev-pssh-manage-linux/)
+
+安装
+
+```bash
+sudo apt install pssh
+```
+
+查看版本
+
+```bash
+parallel-ssh --version
+```
+
+提醒：在使用 pssh 连接远程主机前，需要先参考 <a href="/linux/命令行工具列表.html#免密码配置" target="_blank">链接</a> 配置 SSH 免密码登录
+
+
+
+使用 -H 直接指定主机 IP 地址（免去指定主机文件列表）
+
+```bash
+$ parallel-ssh -l root -H 192.168.1.185 -H 192.168.1.185 -i 'date'
+[1] 22:23:14 [SUCCESS] 192.168.1.185
+2025年 03月 18日 星期二 22:23:14 CST
+[2] 22:23:14 [SUCCESS] 192.168.1.185
+2025年 03月 18日 星期二 22:23:14 CST
+```
+
+- -l 表示登录使用的用户名
+- -H 表示主机字符串，内容格式 `[user@]host[:port]`
+- -i 表示每个服务器内部处理信息输出
+
+
+
+模拟用户登录 bash 并执行指定命令
+
+>提醒：目的是为了加载 /etc/profile.d/xxx.sh 脚本中设置的环境变量。
+
+```bash
+$ parallel-ssh -l dexterleslie -H 192.168.1.181 -i 'bash --login -c "env"' 
+# 查看命令打印环境变量以确认是否加载 /etc/profile.d/xxx.sh 脚本中设置的环境变量
+```
