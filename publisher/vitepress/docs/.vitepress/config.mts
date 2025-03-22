@@ -52,8 +52,6 @@ export default defineConfig({
           { text: 'Shell编程', link: '/shell-scripting/shell的概念.md' },
         ]
       }, {
-        text: 'CloudFlare', link: '/cloudflare/README.md'
-      }, {
         text: '网络安全', items: [
           { text: '密码算法', link: '/密码算法/README.md' },
         ]
@@ -61,6 +59,7 @@ export default defineConfig({
         text: '其他', items: [
           { text: '软件工程', link: '/软件工程/SDLC.md' },
           { text: 'Git', link: '/git/README.md' },
+          { text: 'CloudFlare', link: '/cloudflare/README.md' },
         ]
       }, {
         text: '测试和性能', items: [
