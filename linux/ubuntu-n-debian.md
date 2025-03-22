@@ -411,32 +411,32 @@ sudo systemctl restart xrdp
 
 ## ubuntu快捷键
 
-> **Terminal**
->
-> - Ctrl + Alt + T 打开终端
->
-> - Ctrl + Shfit + T 在当前终端中打开新的tab
->
-> - Ctrl + Shift + Q 关闭当前终端，即使有多个tab
-> - Ctrl + Shift + W / Ctrl + D关闭当前tab
-> - Ctrl + Page Up 切换到前一个tab，NOTE: macbook使用 Ctrl + Fn + Up，参考https://askubuntu.com/questions/105224/ctrl-page-down-ctrl-page-up
-> - Ctrl + Page Down 切换到后一个tab，NOTE: macbook使用 Ctrl + Fn + Down，参考https://askubuntu.com/questions/105224/ctrl-page-down-ctrl-page-up
->
-> 
->
-> **窗口操作**
->
-> - Ctrl + Shift + N 新建窗口，例如在vscode中，使用此快捷键会新建一个vscode窗口
->
-> - Alt + F4 关闭当前窗口
->
-> - Ctrl + Alt + D 显示/隐藏桌面，如果快捷键不起作用，是因为系统默认此快捷键disable状态，通过参考https://askubuntu.com/questions/175369/how-do-i-disable-ctrl-alt-d-in-gnome-shell 启用此快捷键，步骤点击 Settings > Keybord Shortcuts > Navigation > Hide all normal windows 在弹出窗口中输入 Ctrl + Alt + D 绑定快捷键
->
-> - Alt + Tab 切换窗口
->
-> - command/windows + up 最大化当前窗口
->
-> - command/windows + down 还原当前窗口原始大小
+
+
+**Terminal**
+
+- Ctrl + Alt + T 打开终端
+- Ctrl + Shfit + T 在当前终端中打开新的tab
+- Ctrl + Shift + Q 关闭当前终端，即使有多个tab
+- Ctrl + Shift + W / Ctrl + D关闭当前tab
+- Ctrl + Page Up 切换到前一个tab，注意：macbook使用 Ctrl + Fn + Up，参考https://askubuntu.com/questions/105224/ctrl-page-down-ctrl-page-up
+- Ctrl + Page Down 切换到后一个tab，注意：macbook使用 Ctrl + Fn + Down，参考https://askubuntu.com/questions/105224/ctrl-page-down-ctrl-page-up
+
+
+
+**窗口操作**
+
+- Ctrl + Shift + N 新建窗口，例如在vscode中，使用此快捷键会新建一个vscode窗口
+
+- Alt + F4 关闭当前窗口
+
+- Ctrl + Alt + D 显示/隐藏桌面，如果快捷键不起作用，是因为系统默认此快捷键disable状态，通过参考https://askubuntu.com/questions/175369/how-do-i-disable-ctrl-alt-d-in-gnome-shell 启用此快捷键，步骤点击 Settings > Keybord Shortcuts > Navigation > Hide all normal windows 在弹出窗口中输入 Ctrl + Alt + D 绑定快捷键
+
+- Alt + Tab 切换窗口
+
+- command/windows + up 最大化当前窗口
+
+- command/windows + down 还原当前窗口原始大小
 
 
 
