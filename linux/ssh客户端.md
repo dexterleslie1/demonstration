@@ -125,6 +125,16 @@ LANG=zh_CN.UTF-8 wine msiexec /i MobaXterm_installer_25.0.msi
 
 
 
+### 使用总结
+
+总结如下：
+
+- 支持交互式输入命令
+- 控制台输出中文时乱码
+- 缺点：通过反向 scp 方式批量上传或者下载文件
+
+
+
 ### 介绍
 
 ClusterSSH是一个高效的SSH协议工具，为IT管理员提供了便捷的远程管理解决方案。以下是对ClusterSSH的详细介绍：
@@ -246,6 +256,16 @@ terminal_font=10x20
 
 
 ## pssh
+
+
+
+### 使用总结
+
+总结如下：
+
+- 不支持交互式输入命令
+
+
 
 ### 介绍
 
