@@ -54,8 +54,23 @@ Upper case keywords 功能会把所有的 SQL 都 Upper case
 
 ## HeidiSQL
 
-- 不支持手动触发 keyword upper case 功能
-- 不支持直接 ubuntu 运行
+- 支持关键词自动 uppercase 功能
+
+
+
+### 安装
+
+#### Ubuntu
+
+>[参考链接2](https://snapcraft.io/install/heidisql-wine/ubuntu)
+>
+>[参考链接1](https://github.com/Kianda/heidisql-snap)
+
+```bash
+sudo snap install heidisql-wine
+```
+
+通过应用中心输入 Heidi 启动应用。
 
 
 
@@ -98,4 +113,3 @@ LANG=zh_CN.UTF-8 wine SQLyog-13.3.0-0.x64Community.exe
 ```bash
 LANG=zh_CN.UTF-8 wine ~/.wine/drive_c/Program\ Files/SQLyog\ Community/SQLyogCommunity.exe
 ```
-
