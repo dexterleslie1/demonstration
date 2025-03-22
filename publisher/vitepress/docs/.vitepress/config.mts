@@ -62,6 +62,7 @@ export default defineConfig({
           { text: 'CloudFlare', link: '/cloudflare/README.md' },
           { text: 'Dcli', link: '/dcli/README.md' },
           { text: '科学上网', link: '/科学上网/README.md' },
+          { text: 'frp 内网穿透', link: '/frp/README.md' },
         ]
       }, {
         text: '测试和性能', items: [
