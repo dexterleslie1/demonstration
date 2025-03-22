@@ -62,6 +62,12 @@ export default defineConfig({
           { text: '软件工程', link: '/软件工程/SDLC.md' },
           { text: 'Git', link: '/git/README.md' },
         ]
+      }, {
+        text: '测试和性能', items: [
+          { text: '基准测试', link: '/benchmark/README.md' },
+          { text: 'SpringBoot 项目的测试', link: '/springboot/spring-boot项目的测试.md' },
+          { text: 'Java 相关测试框架', link: '/java-library/测试.md' },
+        ]
       },
     ],
 
@@ -254,6 +260,21 @@ export default defineConfig({
             { text: '数组', link: '/shell-scripting/数组.md' },
             { text: '关联数组', link: '/shell-scripting/关联数组.md' },
             { text: 'IO 重定向', link: '/shell-scripting/io-redirection.md' },
+          ]
+        }
+      ],
+      '/benchmark/': [
+        {
+          text: '基准测试',
+          items: [
+            { text: '基础', link: '/benchmark/README.md' },
+            { text: 'CPU 测试', link: '/benchmark/CPU测试.md' },
+            { text: 'IO 测试', link: '/benchmark/IO测试.md' },
+            { text: '内存测试', link: '/benchmark/内存测试.md' },
+            { text: '网络测试', link: '/benchmark/网络测试.md' },
+            { text: '基准测试工具', link: '/benchmark/基准测试工具.md' },
+            { text: '应用或组件基准测试', link: '/benchmark/应用或组件基准测试.md' },
+            { text: '监控方案', link: '/benchmark/监控方案.md' },
           ]
         }
       ],

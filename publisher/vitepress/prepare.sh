@@ -24,6 +24,7 @@ source_dir_to_target_dir_map["../../demo-java/demo-library"]="java-library"
 source_dir_to_target_dir_map["../../demo-jmeter"]="jmeter"
 source_dir_to_target_dir_map["../../demo-git"]="git"
 source_dir_to_target_dir_map["../../demo-shell-scripting"]="shell-scripting"
+source_dir_to_target_dir_map["../../demo-benchmark"]="benchmark"
 
 for key in ${!source_dir_to_target_dir_map[@]}; do
     # 删除符号链接目录
