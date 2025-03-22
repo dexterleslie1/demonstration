@@ -60,6 +60,7 @@ export default defineConfig({
           { text: '软件工程', link: '/软件工程/SDLC.md' },
           { text: 'Git', link: '/git/README.md' },
           { text: 'CloudFlare', link: '/cloudflare/README.md' },
+          { text: 'Dcli', link: '/dcli/README.md' },
         ]
       }, {
         text: '测试和性能', items: [

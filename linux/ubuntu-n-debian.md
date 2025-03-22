@@ -38,19 +38,7 @@
 
 > 支持`java`应用的开发。
 
-1. 配置`dcli`命令
-
-   > 注意：如果提示curl command not found，ubuntu系统运行 sudo apt install curl -y，centOS系统运行 yum install curl -y
-
-   ```bash
-   sudo rm -f /usr/bin/dcli && sudo curl https://fut001.oss-cn-hangzhou.aliyuncs.com/dcli/dcli-linux-x86_64 --output /usr/bin/dcli && sudo chmod +x /usr/bin/dcli
-   ```
-
-2. 检查`dcli`命令是否配置成功，结果输出`dcli`版本说明配置成功
-
-   ```bash
-   sudo dcli -v
-   ```
+1. 参考 <a href="/dcli/README.html" target="_blank">链接</a> 配置 dcli 程序
 
 3. 启用`ssh`暴力破解保护、安装并配置`xrdp`服务、安装`tomcat`、安装`jdk`、安装`idea`、安装`maven`、安装`docker`、设置上海时区
 
