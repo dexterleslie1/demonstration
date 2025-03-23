@@ -28,6 +28,7 @@ source_dir_to_target_dir_map["../../demo-benchmark"]="benchmark"
 source_dir_to_target_dir_map["../../demo-dcli"]="dcli"
 source_dir_to_target_dir_map["../../demo-科学上网"]="科学上网"
 source_dir_to_target_dir_map["../../demo-frp"]="frp"
+source_dir_to_target_dir_map["../../demo-golang"]="golang"
 
 for key in ${!source_dir_to_target_dir_map[@]}; do
     # 删除符号链接目录

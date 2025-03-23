@@ -70,6 +70,10 @@ export default defineConfig({
           { text: 'SpringBoot 项目的测试', link: '/springboot/spring-boot项目的测试.md' },
           { text: 'Java 相关测试框架', link: '/java-library/测试.md' },
         ]
+      }, {
+        text: '编程语言', items: [
+          { text: 'Go', link: '/golang/README.md' },
+        ]
       },
     ],
 
@@ -277,6 +281,15 @@ export default defineConfig({
             { text: '基准测试工具', link: '/benchmark/基准测试工具.md' },
             { text: '应用或组件基准测试', link: '/benchmark/应用或组件基准测试.md' },
             { text: '监控方案', link: '/benchmark/监控方案.md' },
+          ]
+        }
+      ],
+      '/golang/': [
+        {
+          text: 'Go语言',
+          items: [
+            { text: '基础', link: '/golang/README.md' },
+            { text: 'goreleaser', link: '/golang/goreleaser使用.md' },
           ]
         }
       ],

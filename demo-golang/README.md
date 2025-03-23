@@ -1,66 +1,91 @@
-# golang语言基础
+# Go
 
-## 开发ide安装和配置
+
+
+## 开发 IDE 安装和配置
 
 > 使用vscode作为go开发ide，安装vscode之后直接创建go文件编写go代码即可从源代码执行程序，根据vscode弹出提示安装golang相关插件以便debug使用。
 
-## go环境配置和安装
 
-> 使用dcli程序安装go环境
-> 安装命令 dcli go install
 
-### macOS安装go
+## 安装
 
-**下载go pkg并安装，下载地址：https://studygolang.com/dl**
 
-```shell
-# 编辑~/.bash_profile添加如下内容：
+
+### Ubuntu
+
+参考 <a href="/dcli/README.html#安装" target="_blank">链接</a> 安装 dcli 程序
+
+使用 dcli 程序安装 Go
+
+```bash
+sudo dcli golang install
+```
+
+安装成功后重启操作系统以加载最新的环境变量
+
+
+
+### MacOS
+
+通过 [链接](https://studygolang.com/dl) 下载 pkg 安装包并根据提示安装 Go
+
+ 编辑 ~/.bash_profile 添加如下内容：
+
+```bash
 export GOPROXY=https://goproxy.io
 export GO111MODULE=on
 PATH=$PATH:~/go/bin
 export PATH
+```
 
-# 检查
+验证 Go 是否成功安装
+
+```bash
 go version
 ```
 
-### centOS8安装go
 
-**参考资料：https://blog.csdn.net/shuaihj/article/details/123018041**
 
-**下载go安装包，下载地址：https://studygolang.com/dl**
+### CentOS8
 
-```shell
-# 编辑~/.bash_profile添加如下内容：
+>[参考链接](https://blog.csdn.net/shuaihj/article/details/123018041)
+
+通过 [链接](https://studygolang.com/dl) 下载 Go Linux 发行包，例如：go1.20.12.linux-amd64.tar.gz
+
+编辑 ~/.bash_profile 添加如下内容：
+
+```bash
 export GOPROXY=https://goproxy.io
 export GO111MODULE=on
 PATH=$PATH:~/go/bin
 export PATH
+```
 
-# 检查
+验证 Go 是否成功安装
+
+```bash
 go version
 ```
 
 
 
-### w2k16安装go
+### Windows Server 2016 Datacenter
 
-> golang msi安装程序下载地址
-> https://go.dev/dl/
->
-> windows平台从msi安装golang
-> https://silentinstallhq.com/go-programming-language-silent-install-how-to-guide/
+> [参考链接](https://silentinstallhq.com/go-programming-language-silent-install-how-to-guide/)
 
-```shell
-# 下载msi安装程序
+通过 [链接](https://go.dev/dl/) 下载 Go MSI 安装程序并根据 MSI 提示安装 Go
 
-# 打开msi安装程序根据提示一步步安装golang
+设置环环境变量
 
-# 设置环境变量
+```properties
 GOPROXY=https://goproxy.io
 GO111MODULE=on
+```
 
-# 打开cmd验证golang是否成功安装
+打开 CMD 验证 Go 是否成功安装
+
+```bash
 go version
 ```
 
@@ -296,7 +321,7 @@ https://dave.cheney.net/2014/09/14/go-list-your-swiss-army-knife
 
 ### 用法
 
-返回当前目录在使用 import 时的路径，-f '{{ .ImportPath }}' 和不添加 -f 一致是默认格式
+返回当前目录在使用 `import` 时的路径，`-f '\{\{ .ImportPath \}\}'` 和不添加 `-f` 一致是默认格式
 
 ```shell
 go list
@@ -304,7 +329,7 @@ go list
 go list -f '{{ .ImportPath }}'
 ```
 
-查看指定package import 路径
+查看指定 `package import` 路径
 
 ```shell
 go list github.com/juju/juju
@@ -345,6 +370,7 @@ go list -f '{{ .Deps }}'
 #### 参考资料
 
 > https://pkg.go.dev/golang.org/x/tools/go/packages/packagestest
+>
 > 参考 demo-package-packagestest demo
 
 

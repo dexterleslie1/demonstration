@@ -1,10 +1,12 @@
-# `goreleaser`使用
+# `goreleaser`
 
 > [官方goreleaser文档（参考官方资料就足够）](https://goreleaser.com/intro/)
 
-## `goreleaser`安装
 
-### `macOS`安装`goreleaser`
+
+## 安装
+
+### `MacOS`
 
 ```bash
 brew install goreleaser
@@ -12,7 +14,9 @@ brew install goreleaser
 goreleaser --version
 ```
 
-### `centOS8`安装`goreleaser`
+
+
+### `CentOS8`
 
 ```shell
 # 参考 https://goreleaser.com/install/#yum
@@ -28,7 +32,9 @@ gpgcheck=0' | sudo tee /etc/yum.repos.d/goreleaser.repo
 sudo yum install goreleaser -y
 ```
 
-### `ubuntu`安装`goreleaser`
+
+
+### `Ubuntu`
 
 ```bash
 sudo snap install goreleaser --classic
@@ -36,7 +42,7 @@ sudo snap install goreleaser --classic
 
 
 
-## `goreleaser`使用
+## 使用
 
 `goreleaser`详细配置和用法请参考 [链接](https://gitee.com/dexterleslie/demonstration/tree/master/demo-golang/demo-goreleaser)
 
