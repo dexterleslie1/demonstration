@@ -30,6 +30,10 @@ source_dir_to_target_dir_map["../../demo-科学上网"]="科学上网"
 source_dir_to_target_dir_map["../../demo-frp"]="frp"
 source_dir_to_target_dir_map["../../demo-golang"]="golang"
 source_dir_to_target_dir_map["../../ansible"]="ansible"
+source_dir_to_target_dir_map["../../aws"]="aws"
+source_dir_to_target_dir_map["../../demo-aliyun"]="aliyun"
+source_dir_to_target_dir_map["../../demo-gcp"]="gcp"
+source_dir_to_target_dir_map["../../demo-ssl-tls-https"]="ssl-tls-https"
 
 for key in ${!source_dir_to_target_dir_map[@]}; do
     # 删除符号链接目录

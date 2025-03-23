@@ -26,8 +26,8 @@ import java.util.concurrent.TimeUnit;
 @BenchmarkMode(Mode.Throughput)
 @State(Scope.Benchmark)
 @OutputTimeUnit(TimeUnit.SECONDS)
-@Warmup(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS) //预热1s
-@Measurement(iterations = 30000, time = 30, timeUnit = TimeUnit.SECONDS) //测试也是1s、五遍
+@Warmup(iterations = 3, time = 1, timeUnit = TimeUnit.SECONDS) //预热1s
+@Measurement(iterations = 2, time = 30, timeUnit = TimeUnit.SECONDS) //测试也是1s、五遍
 @Threads(128)
 public class PerfJmhTests {
 

@@ -593,3 +593,61 @@ apt update && apt install procps
 
 注意：在安装过程中需要启用`mirror`（任意选择一个`mirror`）并设置使用`http proxy`（否则安装因为网络问题极慢）。
 
+
+
+## 生成 SSH 密钥对
+
+### 方法1
+
+>提醒：推荐使用此方法简洁。
+>
+>[参考链接](https://cloud.google.com/compute/docs/connect/create-ssh-keys)
+
+在 Linux 和 macOS 工作站上，使用 ssh-keygen 实用程序创建新的 SSH 密钥对。以下示例创建 RSA 密钥对。
+
+打开终端并使用带有 -C 标志的 ssh-keygen 命令创建一个新的 SSH 密钥对。
+
+```bash
+ssh-keygen -t rsa -f ~/.ssh/KEY_FILENAME -C USERNAME
+```
+
+替换以下内容：
+
+- KEY_FILENAME：您的 SSH 密钥文件的名称。
+
+  例如，文件名为 my-ssh-key 会生成一个名为 my-ssh-key 的私钥文件和一个名为 my-ssh-key.pub 的公钥文件。
+
+- USERNAME：您在虚拟机上的用户名。例如，cloudysanfrancisco 或 cloudysanfrancisco_gmail_com。
+
+  对于 Linux 虚拟机，USERNAME 不能是 root，除非您将虚拟机配置为允许 root 登录。有关更多信息，请参阅以 root 用户身份连接到虚拟机。
+
+  对于使用 Active Directory (AD) 的 Windows 虚拟机，用户名必须以 DOMAIN\ 格式加上 AD 域。例如，ad.example.com AD 中的用户 cloudysanfrancisco 的 USERNAME 为 example\cloudysanfrancisco。
+
+ssh-keygen 将您的私钥文件保存到 ~/.ssh/KEY_FILENAME，将您的公钥文件保存到 ~/.ssh/KEY_FILENAME.pub。
+
+用户 cloudysanfrancisco 的公钥如下所示：
+
+```
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDAu5kKQCPF... cloudysanfrancisco
+```
+
+上传公钥到远程主机
+
+- 参考 <a href="/linux/命令行工具列表.html#免密码配置" target="_blank">链接</a> 使用 ssh-copy-id 复制公钥到远程主机
+- 或者如果是 GCE 主机，参考 <a href="/gcp/gce使用.html#配置-ssh-连接" target="_blank">链接</a> 上传公钥到远程主机
+
+通过私钥 SSH 连接到远程主机
+
+```bash
+ssh USERNAME@x.x.x.x
+```
+
+- 提醒：不需要手动指定私钥文件路径，SSH 会自动在 ~/.ssh 目录中找到连接远程主机所需要的私钥文件
+
+
+
+### 方法2
+
+>提醒：推荐使用方法1
+
+参考 <a href="/ssl-tls-https/密钥和证书的管理.html#生成ssh服务的公钥和私钥" target="_blank">链接</a> 为 SSH 创建密钥对。

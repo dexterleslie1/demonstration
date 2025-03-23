@@ -3,8 +3,7 @@ package com.future.demo;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.future.common.json.JSONUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -20,8 +19,8 @@ import java.util.Map;
 /**
  *
  */
+@Slf4j
 public class WebSocketRequestHandler extends TextWebSocketHandler {
-    private final static Logger logger = LoggerFactory.getLogger(WebSocketRequestHandler.class);
 
     private final static String KeyAction = "action";
 
@@ -53,7 +52,7 @@ public class WebSocketRequestHandler extends TextWebSocketHandler {
         if (StringUtils.isEmpty(clientId)) {
             CloseStatus closeStatus = CloseStatus.NORMAL.withReason("没有提供clientId");
             session.close(closeStatus);
-            logger.warn("服务器端主动主动断开链接，因为没有提供clientId");
+            log.warn("服务器端主动主动断开链接，因为没有提供clientId");
             return;
         }
 
@@ -82,14 +81,14 @@ public class WebSocketRequestHandler extends TextWebSocketHandler {
         }};
         String JSON = JSONUtil.ObjectMapperInstance.writeValueAsString(Collections.singletonList(message));
         session.sendMessage(new TextMessage(JSON));
-        logger.debug(clientId + " 连接websocket服务器");
+        log.debug(clientId + " 连接websocket服务器");
 //        }
     }
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         String payload = message.getPayload();
-        logger.info("收到来自客户消息：" + payload);
+        log.info("收到来自客户消息：" + payload);
         if (!StringUtils.isEmpty(payload)) {
             ObjectMapper objectMapper = new ObjectMapper();
             Map<String, String> data = null;
@@ -126,7 +125,7 @@ public class WebSocketRequestHandler extends TextWebSocketHandler {
 
     @Override
     public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
-        logger.error(exception.getMessage(), exception);
+        log.error(exception.getMessage(), exception);
         super.handleTransportError(session, exception);
     }
 
@@ -145,7 +144,7 @@ public class WebSocketRequestHandler extends TextWebSocketHandler {
 //                ((ScheduledThreadPoolExecutor) this.scheduledExecutorService).remove(runnable);
 //            }
         }
-        logger.debug("session关闭后回调 sessionId {} clientId {}", session.getId(), clientId);
+        log.debug("session关闭后回调 sessionId {} clientId {}", session.getId(), clientId);
     }
 
 //    /**

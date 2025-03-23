@@ -1,15 +1,14 @@
 package com.future.demo;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.socket.config.annotation.*;
+import org.springframework.web.socket.config.annotation.EnableWebSocket;
+import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
+import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
 
 @Configuration
 @EnableWebSocket
 public class ConfigWebSocket implements WebSocketConfigurer {
-    private final static Logger logger = LoggerFactory.getLogger(ConfigWebSocket.class);
 
     /**
      *

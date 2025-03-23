@@ -54,12 +54,12 @@ export default defineConfig({
       }, {
         text: '网络安全', items: [
           { text: '密码算法', link: '/密码算法/README.md' },
+          { text: 'ssl、tls、https', link: '/ssl-tls-https/概念.md' },
         ]
       }, {
         text: '其他', items: [
           { text: '软件工程', link: '/软件工程/SDLC.md' },
           { text: 'Git', link: '/git/README.md' },
-          { text: 'CloudFlare', link: '/cloudflare/README.md' },
           { text: 'Dcli', link: '/dcli/README.md' },
           { text: '科学上网', link: '/科学上网/README.md' },
           { text: 'frp 内网穿透', link: '/frp/README.md' },
@@ -77,6 +77,13 @@ export default defineConfig({
       }, {
         text: '编程语言', items: [
           { text: 'Go', link: '/golang/README.md' },
+        ]
+      }, {
+        text: '云提供商', items: [
+          { text: '亚马逊', link: '/aws/README.md' },
+          { text: '阿里云', link: '/aliyun/阿里云帐号信息.md' },
+          { text: '谷歌云', link: '/gcp/README.md' },
+          { text: 'CloudFlare', link: '/cloudflare/README.md' },
         ]
       },
     ],
@@ -294,6 +301,52 @@ export default defineConfig({
           items: [
             { text: '基础', link: '/golang/README.md' },
             { text: 'goreleaser', link: '/golang/goreleaser使用.md' },
+          ]
+        }
+      ],
+      '/aws/': [
+        {
+          text: '亚马逊',
+          items: [
+            { text: '基础', link: '/aws/README.md' },
+            { text: '信息', link: '/aws/信息.md' },
+            { text: 'SDK', link: '/aws/aws-sdk.md' },
+            { text: 'Elastic Kubernetes Service(EKS)', link: '/aws/eks.md' },
+          ]
+        }
+      ],
+      '/aliyun/': [
+        {
+          text: '阿里云',
+          items: [
+            { text: '帐号信息', link: '/aliyun/阿里云帐号信息.md' },
+            { text: '容器镜像服务', link: '/aliyun/阿里云容器镜像服务.md' },
+            { text: 'OSS 服务', link: '/aliyun/oss服务.md' },
+            { text: '存储服务', link: '/aliyun/阿里云存储服务.md' },
+            { text: '网络', link: '/aliyun/阿里云网络.md' },
+            { text: '容器服务', link: '/aliyun/阿里云容器服务.md' },
+          ]
+        }
+      ],
+      '/gcp/': [
+        {
+          text: '谷歌云',
+          items: [
+            { text: '基础', link: '/gcp/README.md' },
+            { text: '信息', link: '/gcp/谷歌信息.md' },
+            { text: 'GCE', link: '/gcp/gce使用.md' },
+            { text: '项目管理', link: '/gcp/gcp项目管理.md' },
+            { text: 'GKE', link: '/gcp/gke.md' },
+          ]
+        }
+      ],
+      '/ssl-tls-https/': [
+        {
+          text: 'ssl、tls、https',
+          items: [
+            { text: '概念', link: '/ssl-tls-https/概念.md' },
+            { text: '密钥和证书的管理', link: '/ssl-tls-https/密钥和证书的管理.md' },
+            { text: 'https中间人攻击', link: '/ssl-tls-https/https中间人攻击.md' },
           ]
         }
       ],
