@@ -71,6 +71,10 @@ export default defineConfig({
           { text: 'Java 相关测试框架', link: '/java-library/测试.md' },
         ]
       }, {
+        text: '运维', items: [
+          { text: 'Ansible', link: '/ansible/README.md' },
+        ]
+      }, {
         text: '编程语言', items: [
           { text: 'Go', link: '/golang/README.md' },
         ]

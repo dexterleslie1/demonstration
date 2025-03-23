@@ -337,3 +337,9 @@ $ parallel-ssh -l root -H 192.168.1.185 -H 192.168.1.185 -i 'date'
 $ parallel-ssh -l dexterleslie -H 192.168.1.181 -i 'bash --login -c "env"' 
 # 查看命令打印环境变量以确认是否加载 /etc/profile.d/xxx.sh 脚本中设置的环境变量
 ```
+
+
+
+## Ansible
+
+参考 <a href="/ansible/README.html#ad-hoc-方式执行命令" target="_blank">链接</a> 使用 ad-hoc 方式执行命令。

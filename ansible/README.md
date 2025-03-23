@@ -1,8 +1,16 @@
-# ansible使用
+# ansible
 
-## 配置ansible环境
 
-> 使用dcli setup.sh安装并配置ansible环境
+
+## 安装
+
+参考 <a href="/dcli/README.html#安装" target="_blank">链接</a> 安装 dcli 程序
+
+安装 ansible
+
+```bash
+sudo dcli ansible install
+```
 
 
 
@@ -42,20 +50,26 @@ ansible demoservers -m shell -a "date"
 
 
 
-## ad-hoc命令用法
+## ad-hoc 方式执行命令
 
-> https://docs.ansible.com/ansible/latest/command_guide/intro_adhoc.html
+> [参考链接](https://docs.ansible.com/ansible/latest/command_guide/intro_adhoc.html)
 
-```
-# 指定ip执行命令
-# -i, --inventory: specify inventory host path or comma separated host list
-# -k, --ask-pass: ask for connection password
-#
-# 通过 -i 指定主机ip
-# https://stackoverflow.com/questions/17188147/how-to-run-ansible-without-specifying-the-inventory-but-the-host-directly
+指定执行命令的主机 IP
+
+>[参考链接](https://stackoverflow.com/questions/17188147/how-to-run-ansible-without-specifying-the-inventory-but-the-host-directly)
+
+```bash
 ansible all -i 192.168.1.187,192.168.1.188, -k -m shell -a "date"
+```
 
-# 指定主机组执行命令，demoservers在/etc/ansible/hosts已经配置的主机组
+- -i, --inventory 指定清单主机路径或逗号分隔的主机列表
+- -k, --ask-pass 询问连接密码
+
+
+
+指定执行命令的主机组，demoservers 在 /etc/ansible/hosts 已经配置的主机组
+
+```bash
 ansible demoservers -m shell -a "date"
 ```
 
