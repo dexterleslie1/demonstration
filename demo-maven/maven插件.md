@@ -322,3 +322,68 @@ pom 配置文件添加配置如下：
     </plugins>
 </build>
 ```
+
+
+
+## maven-surefire-plugin 插件
+
+### 介绍
+
+maven-surefire-plugin是Maven的一个插件，主要用于执行Java应用程序中的单元测试。以下是关于maven-surefire-plugin的详细介绍：
+
+一、主要功能
+
+1. **执行单元测试**：maven-surefire-plugin能够自动发现并执行项目中的测试类，默认使用JUnit来执行测试，但也可以配置为支持其他测试框架，如TestNG。
+2. **报告生成**：该插件提供详细的测试结果报告，包括测试用例的数量、成功/失败/忽略的数量等，这些报告通常生成在项目的target/surefire-reports目录下。
+3. **集成测试框架**：maven-surefire-plugin不仅支持JUnit，还通过配置可以支持其他的测试框架，增加了测试的灵活性和兼容性。
+4. **定制测试执行**：用户可以通过配置来定制测试的执行方式，例如指定特定的测试类或方法进行执行，或者排除某些测试类和方法。
+
+二、使用方法
+
+1. **添加依赖**：在项目的pom.xml文件中添加maven-surefire-plugin插件的配置。
+2. **配置插件**：根据需要对插件进行配置，比如指定要包含或排除的测试类，设置JVM参数等。
+3. **执行测试**：通过Maven命令来执行测试，例如使用“mvn test”命令。如果想要跳过测试，可以在命令行中使用“-DskipTests”或“-Dmaven.test.skip=true”参数。
+
+三、配置选项
+
+maven-surefire-plugin提供了多种配置选项，以满足不同的测试需求：
+
+1. **forkCount**：指定在测试过程中JVM fork的数量，多JVM并行可以提升测试执行的性能。
+2. **reuseForks**：控制是否重用已经fork出来的JVM实例，以避免每次测试都启动新的JVM。
+3. **argLine**：用于向fork出来的JVM添加命令行参数，可以指定JVM参数、系统属性、内存限制等。
+4. **parallel**：允许并行执行测试类或测试方法，提高测试执行速度。
+5. **includes和excludes**：用于指定哪些测试类应该包含在测试执行中，哪些类应该排除。
+6. **runOrder**：用于指定测试类或测试方法的执行顺序。
+
+四、注意事项
+
+1. 在使用maven-surefire-plugin时，应确保项目中已经包含了相应的测试框架依赖，如JUnit或TestNG。
+2. 配置插件时，应注意版本兼容性，使用与Maven和测试框架兼容的插件版本。
+3. 定制测试执行时，应谨慎选择包含和排除的测试类和方法，以确保测试的完整性和准确性。
+
+综上所述，maven-surefire-plugin是一个功能强大且灵活的Maven插件，能够帮助开发者在构建过程中自动执行单元测试，并生成详细的测试结果报告。通过合理配置和使用该插件，可以提高代码质量和项目稳定性。
+
+
+
+### 跳过单元测试
+
+>[参考链接](https://maven.apache.org/surefire/maven-surefire-plugin/examples/skipping-tests.html)
+
+POM 配置如下：
+
+```xml
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-surefire-plugin</artifactId>
+    <configuration>
+        <skipTests>true</skipTests>
+    </configuration>
+</plugin>
+```
+
+或者在使用 mvn package 时跳过单元测试
+
+```bash
+mvn package -Dmaven.test.skip
+```
+
