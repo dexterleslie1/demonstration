@@ -37,6 +37,7 @@ export default defineConfig({
           { text: 'Docker、Compose', link: '/docker/README.md' },
           { text: 'Java相关库', link: '/java-library/lombok.md' },
           { text: 'JMeter', link: '/jmeter/README.md' },
+          { text: 'MySQL、MariaDB', link: '/mysql-n-mariadb/README.md' },
         ]
       }, {
         text: 'Linux', items: [
@@ -347,6 +348,42 @@ export default defineConfig({
             { text: '概念', link: '/ssl-tls-https/概念.md' },
             { text: '密钥和证书的管理', link: '/ssl-tls-https/密钥和证书的管理.md' },
             { text: 'https中间人攻击', link: '/ssl-tls-https/https中间人攻击.md' },
+          ]
+        }
+      ],
+      '/mysql-n-mariadb/': [
+        {
+          text: 'MySQL、MariaDB',
+          items: [
+            { text: '基础', link: '/mysql-n-mariadb/README.md' },
+            { text: 'Binlog', link: '/mysql-n-mariadb/binlog.md' },
+            { text: 'Cli 快捷键', link: '/mysql-n-mariadb/mysql-cli快捷键.md' },
+            { text: '客户端', link: '/mysql-n-mariadb/mysql客户端工具.md' },
+            { text: '锁', link: '/mysql-n-mariadb/mysql锁.md' },
+            { text: 'performance_schema', link: '/mysql-n-mariadb/performance_schema.md' },
+            { text: 'SQL', link: '/mysql-n-mariadb/sql.md' },
+            { text: 'Too many connections', link: '/mysql-n-mariadb/too-many-connections处理.md' },
+            { text: '事务', link: '/mysql-n-mariadb/事务.md' },
+            { text: '内存', link: '/mysql-n-mariadb/内存.md' },
+            { text: '函数', link: '/mysql-n-mariadb/函数.md' },
+            { text: '分区表', link: '/mysql-n-mariadb/分区表.md' },
+            { text: '分库分表', link: '/mysql-n-mariadb/分库分表.md' },
+            { text: '初始化数据库', link: '/mysql-n-mariadb/初始化数据库.md' },
+            { text: '原理', link: '/mysql-n-mariadb/原理.md' },
+            { text: '变量', link: '/mysql-n-mariadb/变量.md' },
+            { text: '启用或关闭慢日志', link: '/mysql-n-mariadb/启用或关闭慢日志.md' },
+            { text: '命令', link: '/mysql-n-mariadb/命令.md' },
+            { text: '基准测试', link: '/mysql-n-mariadb/基准测试.md' },
+            { text: '备份和还原', link: '/mysql-n-mariadb/备份和还原.md' },
+            { text: '存储过程', link: '/mysql-n-mariadb/存储过程.md' },
+            { text: '性能分析', link: '/mysql-n-mariadb/性能分析.md' },
+            { text: '版本和兼容性', link: '/mysql-n-mariadb/版本和兼容性.md' },
+            { text: '用户和权限管理', link: '/mysql-n-mariadb/用户和权限管理.md' },
+            { text: '系统数据库和表', link: '/mysql-n-mariadb/系统数据库和表.md' },
+            { text: '自动更新数据库', link: '/mysql-n-mariadb/自动更新数据库.md' },
+            { text: '计算数据和索引大小', link: '/mysql-n-mariadb/计算数据和索引大小.md' },
+            { text: '运行 MySQL 和 MariaDB', link: '/mysql-n-mariadb/运行mysql和mariadb.md' },
+            { text: '配置参数', link: '/mysql-n-mariadb/配置参数.md' },
           ]
         }
       ],
