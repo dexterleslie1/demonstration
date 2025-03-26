@@ -2,10 +2,7 @@ package com.future.demo.vo.request;
 
 import com.future.demo.annotations.Gender;
 import com.future.demo.controller.Person;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -30,7 +27,9 @@ public class PersonAddVo {
     @Gender
     private String sex1;
 
-    private String [] hobby;
+    @NotNull(message = "请指定爱好")
+    @Size(min = 1, message = "请指定爱好")
+    private String[] hobby;
     private Person.Address address;
 
     @Data

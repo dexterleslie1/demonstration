@@ -908,6 +908,8 @@ public ResponseEntity<ObjectResponse<String>> handleNotFound(NoHandlerFoundExcep
 
 ## 数据校验
 
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/blob/master/demo-spring-boot/demo-spring-boot-mvc/src/main/java/com/future/demo/controller/RestfulController.java)
+
 
 
 ### 基本用法
@@ -938,6 +940,17 @@ public class PersonAddVo {
     @Max(value = 150, message = "年龄不能大于150")
     @Min(value = 0, message = "年龄不能小于0")
     private int age;
+}
+```
+
+校验数组长度
+
+```java
+@Data
+public class PersonAddVo {
+    @NotNull(message = "请指定爱好")
+    @Size(min = 1, message = "请指定爱好")
+    private String[] hobby;
 }
 ```
 

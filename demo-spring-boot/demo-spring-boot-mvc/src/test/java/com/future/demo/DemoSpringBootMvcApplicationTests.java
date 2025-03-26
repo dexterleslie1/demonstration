@@ -360,6 +360,20 @@ class DemoSpringBootMvcApplicationTests {
                 .andExpect(status().isOk())
                 .andExpect(content().string("{\"errorCode\":0,\"errorMessage\":\"参数校验失败\",\"data\":{\"sex1\":\"Gender is male or female\"}}"));
 
+        // 测试校验 String[] 数组长度
+        personAddVo = new PersonAddVo();
+        personAddVo.setName("张三");
+        personAddVo.setSex("男");
+        personAddVo.setSex1("男");
+        personAddVo.setAge(12);
+        personAddVo.setAddress(new Person.Address("北京市", "海淀区"));
+        this.mockMvc.perform(post("/api/v1/restful/person")
+                        .header("Accept-Language", "en-US")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(JSONUtil.ObjectMapperInstance.writeValueAsBytes(personAddVo)))
+                .andExpect(status().isOk())
+                .andExpect(content().string("{\"errorCode\":0,\"errorMessage\":\"参数校验失败\",\"data\":{\"hobby\":\"请指定爱好\"}}"));
+
         // endregion
     }
 
