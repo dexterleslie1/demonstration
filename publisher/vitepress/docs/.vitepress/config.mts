@@ -388,6 +388,16 @@ export default defineConfig({
           ]
         }
       ],
+      '/cloudflare/': [
+        {
+          text: 'CloudFlare',
+          items: [
+            { text: '基础', link: '/cloudflare/README.md' },
+            { text: 'Workers', link: '/cloudflare/workers.md' },
+            { text: '帐号信息', link: '/cloudflare/帐号信息.md' },
+          ]
+        }
+      ],
     },
 
     socialLinks: [
