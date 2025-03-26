@@ -943,7 +943,7 @@ public class PersonAddVo {
 }
 ```
 
-校验数组长度
+数组校验
 
 ```java
 @Data
@@ -975,6 +975,44 @@ public class GlobalExceptionHandler {
         Map<String, String> map = e.getFieldErrors().stream().collect(Collectors.toMap(FieldError::getField, FieldError::getDefaultMessage));
         response.setData(map);
         return response;
+    }
+}
+```
+
+
+
+### 方法参数校验
+
+>提醒：方法参数校验需要在方法所属的类上添加 @Validated 注解，否则校验注解不起作用。
+
+例子1：
+
+```java
+@RestController
+@RequestMapping(value = "/api/v1")
+// 注意：方法参数校验必须在类中添加 @Validated 注解，否则校验注解不生效
+@Validated
+public class ValidationController {
+    @GetMapping(value = "testSingleParam")
+    public ObjectResponse<String> testSingleParam(
+            @NotNull(message = "{param.required.p1}")
+            @NotBlank(message = "{param.required.p1}")
+            @RequestParam(value = "p1", defaultValue = "") String p1) {
+        return ResponseUtils.successObject("成功调用");
+    }
+}
+```
+
+例子2：
+
+```java
+@Service
+// 注意：方法参数校验必须在类中添加 @Validated 注解，否则校验注解不生效
+@Validated
+public class ValidationService {
+    public void testSingleParam(
+            @NotNull(message = "{param.required.p1}")
+            @NotBlank(message = "{param.required.p1}") String p1) {
     }
 }
 ```
@@ -1119,6 +1157,80 @@ person.gender.error=性别只能是男或者女
 ```java
 @Gender
 private String sex1;
+```
+
+
+
+### 校验失败异常处理
+
+
+
+#### MethodArgumentNotValidException
+
+```java
+// 处理spring数据校验失败异常
+@ExceptionHandler(MethodArgumentNotValidException.class)
+public ObjectResponse<Map<String, String>> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
+    ObjectResponse<Map<String, String>> response = new ObjectResponse<>();
+    response.setErrorMessage("参数校验失败");
+    Map<String, String> map = e.getFieldErrors().stream().collect(Collectors.toMap(FieldError::getField, FieldError::getDefaultMessage));
+    response.setData(map);
+    return response;
+}
+```
+
+
+
+#### MissingServletRequestParameterException
+
+```java
+// 处理MissingServletRequestParameterException
+@ExceptionHandler(MissingServletRequestParameterException.class)
+public @ResponseBody
+ResponseEntity<ObjectResponse<String>> handleMissingServletRequestParameterException(MissingServletRequestParameterException e) {
+    ObjectResponse<String> response = new ObjectResponse<>();
+    response.setErrorCode(ErrorCodeConstant.ErrorCodeCommon);
+    String message = "缺失参数 \"" + e.getParameterName() + "\"！";
+    response.setErrorMessage(message);
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST).contentType(MediaType.APPLICATION_JSON).body(response);
+}
+```
+
+
+
+#### MethodArgumentTypeMismatchException
+
+```java
+// 处理MethodArgumentTypeMismatchException
+@ExceptionHandler(MethodArgumentTypeMismatchException.class)
+public @ResponseBody
+ResponseEntity<ObjectResponse<String>> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException e) {
+    ObjectResponse<String> response = new ObjectResponse<>();
+    response.setErrorCode(ErrorCodeConstant.ErrorCodeCommon);
+    String message = "参数 " + e.getName() + " 值: " + String.valueOf(e.getValue()) + " 类型不匹配！";
+    response.setErrorMessage(message);
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST).contentType(MediaType.APPLICATION_JSON).body(response);
+}
+```
+
+
+
+#### ConstraintViolationException
+
+```java
+@ExceptionHandler(ConstraintViolationException.class)
+public @ResponseBody
+ResponseEntity<ObjectResponse<String>> handleConstraintViolationException(ConstraintViolationException e) {
+    ObjectResponse<String> response = new ObjectResponse<>();
+    response.setErrorCode(ErrorCodeConstant.ErrorCodeCommon);
+    String message = e.getConstraintViolations().iterator().next().getMessage();
+
+    if(log.isDebugEnabled())
+        log.debug("参数校验失败，message={}", message);
+
+    response.setErrorMessage(message);
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST).contentType(MediaType.APPLICATION_JSON).body(response);
+}
 ```
 
 

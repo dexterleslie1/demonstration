@@ -3,6 +3,7 @@ package com.future.demo.exceptions;
 import com.future.common.constant.ErrorCodeConstant;
 import com.future.common.exception.BusinessException;
 import com.future.common.http.ObjectResponse;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tomcat.util.http.fileupload.impl.FileSizeLimitExceededException;
 import org.apache.tomcat.util.http.fileupload.impl.SizeLimitExceededException;
@@ -243,6 +244,20 @@ public class GlobalExceptionHandler {
         ObjectResponse<String> response = new ObjectResponse<>();
         response.setErrorMessage(message);
         response.setErrorCode(ErrorCodeConstant.ErrorCodeCommon);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).contentType(MediaType.APPLICATION_JSON).body(response);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public @ResponseBody
+    ResponseEntity<ObjectResponse<String>> handleConstraintViolationException(ConstraintViolationException e) {
+        ObjectResponse<String> response = new ObjectResponse<>();
+        response.setErrorCode(ErrorCodeConstant.ErrorCodeCommon);
+        String message = e.getConstraintViolations().iterator().next().getMessage();
+
+        if(log.isDebugEnabled())
+            log.debug("参数校验失败，message={}", message);
+
+        response.setErrorMessage(message);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).contentType(MediaType.APPLICATION_JSON).body(response);
     }
 }

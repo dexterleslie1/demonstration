@@ -302,6 +302,12 @@ class DemoSpringBootMvcApplicationTests {
                 .andExpect(status().isOk())
                 .andExpect(content().string("{\"errorCode\":0,\"errorMessage\":\"参数校验失败\",\"data\":{\"name\":\"name is required\",\"age\":\"年龄不能小于0\"}}"));
 
+        this.mockMvc.perform(get("/api/v1/testSingleParam")
+                        .header("Accept-Language", "en-US")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("{\"errorCode\":90000,\"errorMessage\":\"Parameter p1 not provide!\",\"data\":null}"));
+
         // 中文语言
         personAddVo = new PersonAddVo();
         personAddVo.setName(" ");
@@ -316,6 +322,12 @@ class DemoSpringBootMvcApplicationTests {
                         .content(JSONUtil.ObjectMapperInstance.writeValueAsBytes(personAddVo)))
                 .andExpect(status().isOk())
                 .andExpect(content().string("{\"errorCode\":0,\"errorMessage\":\"参数校验失败\",\"data\":{\"name\":\"名称必须\",\"age\":\"年龄不能小于0\"}}"));
+
+        this.mockMvc.perform(get("/api/v1/testSingleParam")
+                        .header("Accept-Language", "zh-CN")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("{\"errorCode\":90000,\"errorMessage\":\"没有提供p1参数！\",\"data\":null}"));
 
         // 测试Pattern校验
         personAddVo = new PersonAddVo();
