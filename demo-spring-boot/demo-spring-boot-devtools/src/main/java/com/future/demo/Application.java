@@ -1,4 +1,4 @@
-package com.future.demo.spring.boot.dev.tools;
+package com.future.demo;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -9,10 +9,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class Application {
     /**
-     *
      * @param args
      */
-    public static void main(String []args){
+    public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
     }
 }

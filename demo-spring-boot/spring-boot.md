@@ -953,3 +953,85 @@ leaf.snowflake.port=${random.int%1000000000}
 
 - leaf.snowflake.port 会随机生成一个整数并求余
 - 此配置由 RandomValuePropertySource 解析
+
+
+
+## spring-boot-devtools
+
+### 介绍
+
+spring-boot-devtools是Spring为开发者提供的一个热加载工具包，旨在提高开发人员的生产力，并加速Spring Boot应用程序的开发。以下是对spring-boot-devtools的详细介绍：
+
+一、主要功能
+
+1. **自动重新加载**：当应用程序中的代码或资源文件（如HTML、CSS、JavaScript等）发生变化时，spring-boot-devtools会自动重新加载应用程序，而无需手动重新启动服务器。这可以节省大量时间，尤其是在开发过程中进行代码调试和迭代时。
+2. **实时监控**：提供了实时的应用程序监控功能，包括应用程序的运行状态、内存使用情况、线程状态等信息。这有助于开发人员快速了解应用程序的状态和性能，并及时发现和解决问题。
+3. **自动配置**：可以根据开发环境自动配置应用程序，如启用H2数据库控制台、禁用安全等，以减少开发人员手动配置应用程序的需求。
+4. **日志管理**：提供了一个集中的日志管理功能，可以显示应用程序的日志信息，并在出现问题时提供更详细的错误堆栈跟踪，有助于开发人员快速定位和解决问题。
+
+二、配置方法
+
+1. **引入依赖**：在Spring Boot项目的`pom.xml`文件中添加spring-boot-devtools的依赖项。需要设置`<scope>`为`runtime`，表示DevTools仅在运行时生效，不会打包到最终的可执行JAR文件中；同时设置`<optional>`为`true`，表示该依赖是可选的，不会传递到其他依赖项目中。
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-devtools</artifactId>
+    <scope>runtime</scope>
+    <optional>true</optional>
+</dependency>
+```
+
+1. **配置文件**：在`application.yml`或`application.properties`文件中添加相关配置，以启用自动重启功能并指定监视的路径。例如：
+
+```yaml
+spring:
+  devtools:
+    restart:
+      enabled: true # 启用自动重启功能
+      additional-paths: src/main/java # 监视的路径
+```
+
+1. **设置自动重启更新**：确保在IDE中开启了自动编译功能，并配置快捷键以加快热部署的响应速度。例如，在IntelliJ IDEA中，可以使用快捷键Ctrl+Shift+A打开Registry，并搜索`compiler.automake.postpone.when.idle.less.than`，将其值设置为较小的数字（如500）。
+
+三、注意事项
+
+1. **性能影响**：spring-boot-devtools主要用于开发环境，因为它可能会影响应用程序的性能。因此，在生产环境中不应部署DevTools。
+2. **安全性**：确保不要在生产环境中部署DevTools，因为它可能打开一些不安全的端点。
+3. **缓存管理**：spring-boot-devtools默认禁用缓存选项，以避免在开发过程中因缓存而导致无法看到刚刚做出的更改。如果不希望应用属性默认值，可以在`application.properties`中将`spring.devtools.add-properties`设置为`false`。
+4. **日志记录**：在开发Spring MVC和Spring WebFlux应用程序时，可能需要更多关于Web请求的信息。此时，可以将Web日志组启用为DEBUG日志记录，以获取有关传入请求、处理它的处理程序、响应结果和其他详细信息。
+
+四、工作原理
+
+spring-boot-devtools使用了两个ClassLoader类加载器来实现热部署。一个ClassLoader加载那些不会改变的类（如第三方Jar包），另一个ClassLoader（称为restart ClassLoader）加载会发生变化的类。当代码发生更改时，原来的restart ClassLoader被释放并重新创建一个新的restart ClassLoader来加载更改后的类。由于需要加载的类相对较少，因此可以实现较快的重启时间（通常在5秒以内）。
+
+综上所述，spring-boot-devtools是一个功能强大的工具，可以显著提高Spring Boot应用程序的开发效率。通过自动重新加载、实时监控、自动配置和日志管理等功能，开发人员可以更快地构建和调试应用程序。然而，在使用时需要注意其性能影响和安全性问题，并确保仅在开发环境中使用。
+
+
+
+### 使用
+
+>[参考链接](https://docs.spring.io/spring-boot/docs/current/reference/html/using-spring-boot.html#using-boot-devtools)
+>
+>[DevTools 无效的解决办法](https://blog.csdn.net/qq_34491508/article/details/83830075)
+
+POM 添加如下配置：
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-devtools</artifactId>
+    <!-- 表示DevTools仅在运行时生效，不会打包到最终的可执行JAR文件中 -->
+    <scope>runtime</scope>
+    <optional>true</optional>
+</dependency>
+```
+
+勾选 Settings > Build、Execution、Deployment > Compiler > Make project automatically
+
+搜索并打开 Registry，在 Registry 中搜索 automake 并勾选 compiler.automake.allow.when.app.running（注意：在 IDEA 2021 之后，此设置已移至高级设置。文件 -> 设置... -> 高级设置，然后选中允许 Allow auto-make to start ...）
+
+重启 IDEA
+
+注意：编辑源代码后需要按 Ctrl+S 才会触发 DevTools 热加载。
+

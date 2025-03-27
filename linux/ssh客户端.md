@@ -94,6 +94,7 @@ sudo dpkg -i finalshell_linux_x64.deb
 - 使用 wine 在 ubuntu 上安装
 - 支持文件拖拽上传和右键点击下载功能（不需要频繁切换，方便）
 - 终端窗口打开太多时，终端窗口 TAB 排成一行不方便切换（致命原因导致不使用此软件）
+- Windows Server 2016 Datacenter 上推荐使用此软件
 
 
 

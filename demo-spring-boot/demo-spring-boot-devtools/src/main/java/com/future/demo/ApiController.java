@@ -1,4 +1,4 @@
-package com.future.demo.spring.boot.dev.tools;
+package com.future.demo;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
