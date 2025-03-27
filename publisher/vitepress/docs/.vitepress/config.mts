@@ -39,7 +39,8 @@ export default defineConfig({
           { text: 'SpringCloud', link: '/springcloud/README.md' },
           { text: 'Redis', link: '/redis/各种模式.md' },
           { text: 'Docker、Compose', link: '/docker/README.md' },
-          { text: 'Java相关库', link: '/java-library/lombok.md' },
+          { text: 'Java', link: '/java/README.md' },
+          { text: 'Java 相关库', link: '/java-library/lombok.md' },
           { text: 'JMeter', link: '/jmeter/README.md' },
           { text: 'MySQL、MariaDB', link: '/mysql-n-mariadb/README.md' },
         ]
@@ -413,6 +414,28 @@ export default defineConfig({
             { text: '创建并管理项目', link: '/idea/创建并管理项目.md' },
             { text: '多重光标同时编辑', link: '/idea/多重光标同时编辑.md' },
             { text: '快捷键', link: '/idea/快捷键.md' },
+          ]
+        }
+      ],
+      '/java/': [
+        {
+          text: 'Java',
+          items: [
+            { text: '基础', link: '/java/README.md' },
+            { text: 'Arthas', link: '/java/arthas使用.md' },
+            { text: 'CPU 性能分析', link: '/java/cpu性能分析.md' },
+            { text: 'double类型运算精度问题', link: '/java/double类型运算精度问题.md' },
+            { text: 'entity、vo、dto、po、do', link: '/java/entity、vo、dto、po、do.md' },
+            { text: 'java 命令行参数', link: '/java/java命令行参数.md' },
+            { text: 'JDK8 新特性', link: '/java/JDK8新特性.md' },
+            { text: 'JDK 相关工具', link: '/java/jdk相关工具.md' },
+            { text: 'JMH', link: '/java/jmh.md' },
+            { text: 'JProfiler', link: '/java/jprofiler用法.md' },
+            { text: 'JUC', link: '/java/JUC.md' },
+            { text: 'JVM 内存', link: '/java/jvm内存.md' },
+            { text: 'Tomcat', link: '/java/tomcat.md' },
+            { text: '异常', link: '/java/异常.md' },
+            { text: '生产环境问题排查', link: '/java/生产环境问题排查.md' },
           ]
         }
       ],
