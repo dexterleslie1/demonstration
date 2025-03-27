@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.future.demo</groupId>
-	<artifactId>commons-compress</artifactId>
+	<artifactId>demo-commons-compress</artifactId>
 	<version>1.0.0</version>
 
 	<properties>
