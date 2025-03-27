@@ -1,4 +1,4 @@
-package com.future.demo.commons.io;
+package com.future.demo;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;

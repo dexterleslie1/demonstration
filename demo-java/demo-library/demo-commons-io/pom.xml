@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.future.demo</groupId>
-	<artifactId>commons-io</artifactId>
+	<artifactId>demo-commons-io</artifactId>
 	<version>1.0.0</version>
 
 	<properties>

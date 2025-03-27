@@ -237,7 +237,7 @@ export default defineConfig({
             { text: '缓存框架', link: '/java-library/缓存框架.md' },
             { text: 'Stopwatch', link: '/java-library/stopwatch.md' },
             { text: 'JSON相关库', link: '/java-library/json库.md' },
-            { text: 'Apache Commons Exec', link: '/java-library/apache-commons-exec.md' },
+            { text: 'Apache Commons', link: '/java-library/apache-commons.md' },
             { text: 'SSH客户端库', link: '/java-library/ssh客户端.md' },
           ]
         }
