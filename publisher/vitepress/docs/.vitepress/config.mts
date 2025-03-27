@@ -45,26 +45,17 @@ export default defineConfig({
           { text: 'CentOS', link: '/linux/centos.md' },
           { text: '命令行工具', link: '/linux/命令行工具列表.md' },
           { text: 'DNS', link: '/linux/dns.md' },
-          { text: 'LVM逻辑卷', link: '/linux/lvm逻辑卷管理.md' },
-          { text: 'systemd、systemctl服务', link: '/linux/systemd、systemctl服务.md' },
-          { text: '搭建NFS服务器', link: '/linux/搭建nfs服务器.md' },
+          { text: 'LVM 逻辑卷', link: '/linux/lvm逻辑卷管理.md' },
+          { text: 'systemd、systemctl 服务', link: '/linux/systemd、systemctl服务.md' },
+          { text: '搭建 NFS 服务器', link: '/linux/搭建nfs服务器.md' },
           { text: '操作系统页面缓存、目录项缓存、索引节点缓存', link: '/linux/操作系统页面缓存、目录项缓存、索引节点缓存.md' },
-          { text: 'SSH客户端', link: '/linux/ssh客户端.md' },
-          { text: 'Shell编程', link: '/shell-scripting/shell的概念.md' },
+          { text: 'SSH 客户端', link: '/linux/ssh客户端.md' },
+          { text: 'Shell 编程', link: '/shell-scripting/shell的概念.md' },
         ]
       }, {
         text: '网络安全', items: [
           { text: '密码算法', link: '/密码算法/README.md' },
           { text: 'ssl、tls、https', link: '/ssl-tls-https/概念.md' },
-        ]
-      }, {
-        text: '其他', items: [
-          { text: '软件工程', link: '/软件工程/SDLC.md' },
-          { text: 'Git', link: '/git/README.md' },
-          { text: 'Dcli', link: '/dcli/README.md' },
-          { text: '科学上网', link: '/科学上网/README.md' },
-          { text: 'frp 内网穿透', link: '/frp/README.md' },
-          { text: 'MS Word 转换为 PDF', link: '/msdoc-to-pdf/README.md' },
         ]
       }, {
         text: '测试和性能', items: [
@@ -86,6 +77,16 @@ export default defineConfig({
           { text: '阿里云', link: '/aliyun/阿里云帐号信息.md' },
           { text: '谷歌云', link: '/gcp/README.md' },
           { text: 'CloudFlare', link: '/cloudflare/README.md' },
+        ]
+      }, {
+        text: '其他', items: [
+          { text: '软件工程', link: '/软件工程/SDLC.md' },
+          { text: 'Git', link: '/git/README.md' },
+          { text: 'Dcli', link: '/dcli/README.md' },
+          { text: '科学上网', link: '/科学上网/README.md' },
+          { text: 'frp 内网穿透', link: '/frp/README.md' },
+          { text: 'Word 转换为 PDF', link: '/msdoc-to-pdf/README.md' },
+          { text: 'IDEA', link: '/idea/README.md' },
         ]
       },
     ],
@@ -395,6 +396,19 @@ export default defineConfig({
             { text: '基础', link: '/cloudflare/README.md' },
             { text: 'Workers', link: '/cloudflare/workers.md' },
             { text: '帐号信息', link: '/cloudflare/帐号信息.md' },
+          ]
+        }
+      ],
+      '/idea/': [
+        {
+          text: 'IDEA',
+          items: [
+            { text: '基础', link: '/idea/README.md' },
+            { text: '全家桶破解', link: '/idea/intellij全家桶破解.md' },
+            { text: 'AI 插件', link: '/idea/AI插件.md' },
+            { text: '创建并管理项目', link: '/idea/创建并管理项目.md' },
+            { text: '多重光标同时编辑', link: '/idea/多重光标同时编辑.md' },
+            { text: '快捷键', link: '/idea/快捷键.md' },
           ]
         }
       ],

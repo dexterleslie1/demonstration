@@ -1033,5 +1033,5 @@ POM 添加如下配置：
 
 重启 IDEA
 
-注意：编辑源代码后需要按 Ctrl+S 才会触发 DevTools 热加载。
+注意：编辑源代码后需要按 ctrl+s 才会触发 DevTools 热加载。
 
