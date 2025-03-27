@@ -7,6 +7,10 @@ export default defineConfig({
   // https://vitepress.dev/reference/site-config#ignoredeadlinks
   ignoreDeadLinks: true,
   themeConfig: {
+    // 启用本地全文检索功能
+    search: {
+      provider: 'local'
+    },
     // https://blog.csdn.net/delete_you/article/details/129938705
     // aside，设定为false将关闭右侧栏，文档内容会填充剩余空白部分
     aside: true,

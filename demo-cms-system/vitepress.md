@@ -1,6 +1,8 @@
 # VitePress
 
 >[VitePress 官方网站](https://vitepress.dev)
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/master/demo-cms-system/demo-vitepress)
 
 
 
@@ -383,3 +385,26 @@ export default defineConfig({
 
 ```
 
+
+
+## 启用搜索功能
+
+>[参考链接](https://vitepress.dev/reference/default-theme-search)
+
+借助 minisearch，VitePress 支持使用浏览器内索引进行模糊全文搜索。要启用此功能，只需在 .vitepress/config.ts 文件中将 themeConfig.search.provider 选项设置为“local”：
+
+```javascript
+import { defineConfig } from 'vitepress'
+
+export default defineConfig({
+  themeConfig: {
+    search: {
+      provider: 'local'
+    }
+  }
+})
+```
+
+示例结果：
+
+![screenshot of the search modal](search.png)
