@@ -85,6 +85,14 @@ convert /home/dexterleslie/temp/1.docx -> /home/dexterleslie/temp/1.pdf using fi
 - --outdir - 表示转换后文件的目标文件夹。
 - 1.docx - 要转换的文件的路径。
 
+上面 libreoffice 命令不支持并发执行，否则报告错误。参考 [链接](https://ask.libreoffice.org/t/how-can-i-run-multiple-instances-of-soffice-under-linux/22258) 设置 libreoffice 支持并发转换
+
+```bash
+libreoffice -env:SingleAppInstance=false -env:UserInstallation=file:///tmp/LibO_Process_[UUID random number] --headless --convert-to pdf --outdir . 1.doc
+```
+
+- [UUID random number] 为随机生成的 UUID 值，以隔离每个 libreoffice 进程。
+
 
 
 ## Pandoc
