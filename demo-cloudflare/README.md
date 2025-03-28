@@ -356,3 +356,29 @@ Websocket 源站 IP 地址：35.209.82.60，端口：8085
 在域名 Rules 中添加一条 Origin Rules 用于修改 Websocket 连接目标端口为 8085
 
 ![image-20250323214620669](image-20250323214620669.png)
+
+
+
+## SSL/TLS 设置
+
+
+
+### 加密模式
+
+>[官方参考链接](https://developers.cloudflare.com/ssl/origin-configuration/ssl-modes/)
+
+您的区域的 SSL/TLS 加密模式控制 Cloudflare 如何管理两个连接：一个在您的访问者和 Cloudflare 之间，另一个在 Cloudflare 和您的原始服务器之间。
+
+如果可能，Cloudflare 强烈建议使用“完整”或“完整（严格）”模式来防止恶意连接到您的源站。
+
+加密模式如下：
+
+- **Off (not secure)**：未应用加密。关闭 SSL 会禁用 HTTPS，并导致浏览器显示警告，提示您的网站不安全。
+- **Flexible**：仅在访问者和 Cloudflare 之间启用加密。这将避免浏览器安全警告，但 Cloudflare 和您的源之间的所有连接都是通过 HTTP 建立的。
+- **Full**：启用端到端加密。当您的源服务器支持 SSL 认证但不使用有效的、公开信任的证书时，请使用此模式。
+- **Full (Strict)**：启用端到端加密并强制验证原始证书。使用 Cloudflare 的 Origin CA 为您的原始证书生成证书。
+- **Strict (SSL-Only Origin Pull)**：在 Cloudflare 和您的源站之间强制加密。使用此模式可确保与您的源站的连接始终加密，无论您的访问者提出什么请求。
+
+如图所示加密模式功能：
+
+![image-20250328190838890](image-20250328190838890.png)
