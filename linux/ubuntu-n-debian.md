@@ -226,11 +226,11 @@ lsb_release -a
 
 ```properties
 deb http://mirrors.aliyun.com/debian/ buster main non-free contrib
-deb http://mirrors.aliyun.com/debian-security buster/updates main
+deb http://mirrors.aliyun.com/debian-security buster-security main
 deb http://mirrors.aliyun.com/debian/ buster-updates main non-free contrib
 deb http://mirrors.aliyun.com/debian/ buster-backports main non-free contrib
 deb-src http://mirrors.aliyun.com/debian/ buster main non-free contrib
-deb-src http://mirrors.aliyun.com/debian-security buster/updates main
+deb-src http://mirrors.aliyun.com/debian-security buster-security main
 deb-src http://mirrors.aliyun.com/debian/ buster-updates main non-free contrib
 deb-src http://mirrors.aliyun.com/debian/ buster-backports main non-free contrib
 ```
@@ -239,9 +239,9 @@ deb-src http://mirrors.aliyun.com/debian/ buster-backports main non-free contrib
 
 ```properties
 deb http://mirrors.aliyun.com/debian/ buster main non-free contrib
-deb http://mirrors.aliyun.com/debian-security buster/updates main
+deb http://mirrors.aliyun.com/debian-security buster-security main
 deb-src http://mirrors.aliyun.com/debian/ buster main non-free contrib
-deb-src http://mirrors.aliyun.com/debian-security buster/updates main
+deb-src http://mirrors.aliyun.com/debian-security buster-security main
 ```
 
 `ubuntu`中国内阿里源`/etc/apt/sources.list`配置如下：
@@ -651,3 +651,22 @@ ssh USERNAME@x.x.x.x
 >提醒：推荐使用方法1
 
 参考 <a href="/ssl-tls-https/密钥和证书的管理.html#生成ssh服务的公钥和私钥" target="_blank">链接</a> 为 SSH 创建密钥对。
+
+
+
+## Ubuntu20.04 容器镜像中文乱码
+
+在使用 Ubuntu20.04 中的 libreoffice 命令转换 Word 到 Pdf 文件过程中，遇到转换后的 Pdf 中文乱码问题。详情请参考本站 <a href="/word-to-pdf/README.html#docker-安装-libreoffice" target="_blank">链接</a>。最终发现其原因是因为 Ubuntu20.04 容器镜像中缺少支持中文的字体库。参考如下链接：
+
+- `https://developer.baidu.com/article/details/2812003`
+- `https://blog.csdn.net/qq_42610612/article/details/146418774?sharetype=blogdetail&shareId=146418774&sharerefer=APP&sharefrom=link`
+
+安装支持中文的字体库
+
+```bash
+# 安装支持中文字体库，否则 libreoffice 在某些不被支持的字体在转换后乱码
+apt install fonts-noto-cjk fonts-noto-cjk-extra fonts-noto-color-emoji fonts-noto-mono language-pack-zh* -y
+```
+
+
+
