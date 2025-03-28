@@ -191,4 +191,112 @@ Artifact Registry 提供用于管理私有软件包和 Docker 容器映像的单
 
 
 
+## Cloud Run
+
+>[Cloud Run 是什么](https://cloud.google.com/run/docs/overview/what-is-cloud-run?hl=zh-cn)
+
+
+
+### 介绍
+
+Cloud Run 是一个托管式计算平台，可让您直接在 Google 可伸缩的基础架构之上运行容器。
+
+如果您可以构建使用任何编程语言编写的代码的容器映像，则可以在 Cloud Run 上部署该代码。实际上，构建容器映像是可选操作。如果您使用的是 Go、Node.js、Python、Java、.NET Core、Ruby 或支持的框架，则可以使用[基于来源的部署](https://cloud.google.com/run/docs/deploying-source-code?hl=zh-cn)选项，它会按照您所用语言的最佳实践构建容器。
+
+Google 构建了可与 Google Cloud上的其他服务完美搭配使用的 Cloud Run，以便您可以构建功能齐全的应用。
+
+简而言之，Cloud Run 可让开发者将时间花在编写代码上，将很少的时间花在运行、配置和伸缩 Cloud Run 服务上。您无需创建集群或管理基础架构即可高效使用 Cloud Run。
+
+
+
+### 服务和作业：运行代码的两种方式
+
+在 Cloud Run 上，代码可以作为服务或作为*作业*连续运行。服务和作业都是在同一环境中运行，并且可以使用与 Google Cloud上的其他服务相同的集成。
+
+- **Cloud Run 服务**。用于运行响应 Web 请求、事件或函数的代码。
+- **Cloud Run 作业**。用于运行执行操作（作业）并在操作完成时退出的代码。
+
+
+
+### 将容器映像部署到 Cloud Run
+
+>[官方参考链接](https://cloud.google.com/run/docs/deploying)
+
+<a href="/gcp/README.html#上传阿里云镜像到制品库中" target="_blank">上传镜像到标准制品库中</a>
+
+使用控制台部署容器映像，请执行以下操作：
+
+1. 在 Google Cloud 控制台中，转到 [Cloud Run](https://console.cloud.google.com/run) 页面。
+
+2. 点击**部署容器**，然后选择**服务**，以显示“创建服务”表单。
+
+   - 在该表单中选择部署选项：
+
+     - 如果您要手动部署容器，请选择**从现有容器映像部署一个修订版本**并指定容器映像。
+     - 如果要自动进行持续部署，请选择“从源代码库中持续部署新修订版本”并按照[持续部署的说明](https://cloud.google.com/run/docs/continuous-deployment-with-cloud-build?hl=zh-cn#setup-cd)进行操作。
+
+     这里选择 `从现有容器映像部署一个修订版本并指定容器映像`，点击 `选择` 功能弹出 `选择容器映像 ` 对话框根据提示选择以上步骤中上传到标准制品库中的镜像即可。
+
+   - 输入所需的服务名称。服务名称不得超过 49 个字符，并且在每个区域和项目中必须是唯一的。服务名称一旦指定便无法更改，并且公开显示。
+
+   - 选择您想要使用的服务[区域](https://cloud.google.com/run/docs/deploying?hl=zh-cn#before-you-begin)。 区域选择器会显示[价格层级](https://cloud.google.com/run/pricing?hl=zh-cn)、[网域映射](https://cloud.google.com/run/docs/mapping-custom-domains?hl=zh-cn)的可用性，并突出显示[碳影响最低](https://cloud.google.com/sustainability/region-carbon?hl=zh-cn#region-picker)的区域。这里选择 us-central1  (爱荷华)  
+
+   - 根据需要设置[结算](https://cloud.google.com/run/docs/configuring/billing-settings?hl=zh-cn)。这里选择 `基于请求（仅在处理请求时才会收费。如果没有请求，CPU 会受到限制。）`
+
+   - 在**服务扩缩**下，如果您使用默认的 Cloud Run [自动扩缩](https://cloud.google.com/run/docs/about-instance-autoscaling?hl=zh-cn)，请视情况指定[实例数下限](https://cloud.google.com/run/docs/configuring/min-instances?hl=zh-cn)。如果您使用[手动扩缩](https://cloud.google.com/run/docs/configuring/services/manual-scaling?hl=zh-cn)，请为服务指定实例数。这里选择 `自动扩缩`，`实例数下线` 设置为 `0`
+
+   - 根据需要设定表单中的 [*Ingress*](https://cloud.google.com/run/docs/securing/ingress?hl=zh-cn) 设置。这里选择 `全部（允许直接从互联网访问您的服务）`。
+
+   - 在“身份验证”下，配置以下内容：
+
+     - 如果您要创建公共 API 或网站，请选择**允许未通过身份验证的调用**。选中此复选框后，系统会将 IAM Invoker 角色分配给特殊标识符 `allUser`。您可以在创建服务后[使用 IAM 修改此设置](https://cloud.google.com/run/docs/securing/authenticating?hl=zh-cn#service-to-service)。
+     - 如果您需要通过身份验证加以保护的安全服务，请选择**需要身份验证**。
+
+     这里选择 `允许未通过身份验证的调用`。
+
+   - 点击**容器、卷、网络、安全性**以在相应的标签页中设置其他可选设置：
+
+     - 并发
+     - 容器配置
+     - CPU 上限
+     - 内存限制
+     - 请求超时
+     - 密文
+     - 环境变量
+     - 执行环境
+     - HTTP/2
+     - 服务帐号
+     - Cloud SQL 连接
+     - VPC 连接
+
+3. 完成服务配置后，请点击**创建**以将映像部署到 Cloud Run，然后等待部署完成。
+
+4. 点击显示的网址链接，以打开已部署服务的唯一、稳定的端点。访问端点以测试服务（国内能够访问端点，例如： `https://converter-xxx.us-central1.run.app`）。
+
+
+
+### 为 Cloud Run 添加自定义域名
+
+>[参考链接](https://cloud.google.com/run/docs/mapping-custom-domains?hl=zh-cn#run)
+
+<a href="/gcp/README.html#使用-gsc-添加自定义域名" target="_blank">使用 GSC 添加自定义域名</a>
+
+转到 Cloud Run [自定义域名管理功能](https://console.cloud.google.com/run/domains)，点击 `Add mapping` 功能
+
+选择已通过 GSC 验证并添加的自定义域名，填写子域名后点击 `Continue` 按钮，如图：![image-20250328225154837](image-20250328225154837.png)
+
+在 CloudFlare 域名中添加 CNAME 类型的 DNS 记录：
+
+- Type 为 CNAME
+- Name 为 converter（和 Cloud Run 中子域名对应）
+- Content 为 xxx.googlehosted.com（Cloud Run 分配的）
+- Proxied 为打开状态
+
+等待到自定义域名成功添加到 Cloud Run 后
+
+通过 `https://converter.example.com/api/v1/converter/wordToPdf` 测试自定义域名是否配置成功（注意：不能成功通过自定义域名访问服务，因为 Cloud Run 返回 302 重定向给 CloudFlare，请参考下面步骤解决此问题）。
+
+CloudFlare 没有使用 HTTPS 和 Cloud Run 通讯，所以导致 Cloud Run 返回 302 重定向代码，此问题的参考 [链接](https://stackoverflow.com/questions/57700973/getting-302-redirects-on-any-service-that-i-redeploy)，通过参考本站 <a href="/cloudflare/README.html#加密模式" target="_blank">链接</a> 配置域名启动 Full 的加密模式即可解决此问题。
+
+
 
