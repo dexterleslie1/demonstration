@@ -69,11 +69,13 @@ export default {
     },
 
     handleClick3() {
-      // 使用索引修改数组值不能自动更新到视图中
-      this.arr1[1] = 888
+      // 使用索引修改数组值不能自动更新到视图中，push 和 pop 方法正常
+      // this.arr1[1] = 888
+      // this.arr1.push("999")
+      // this.arr1.pop()
 
       // 解决方案1、使用this.$forceUpdate()
-      // this.$forceUpdate()
+      this.$forceUpdate()
 
       // 解决方案2、使用this.$set()
       // this.$set(this.arr1, 1, '888')
