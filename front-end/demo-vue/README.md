@@ -528,7 +528,22 @@ nav a.router-link-exact-active {
 
 
 
+## Vue UUID 库
 
+[npm 库中的 uuid 库](https://www.npmjs.com/package/uuid)
+
+Vue 项目安装 uuid 库
+
+```bash
+npm install uuid
+```
+
+调用 uuid 库生成 uuid
+
+```javascript
+import { v4 as uuidv4 } from 'uuid';
+uuidv4(); // ⇨ '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d'
+```
 
 
 
