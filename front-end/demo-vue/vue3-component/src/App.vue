@@ -7,6 +7,7 @@
     </div>
     <div class="body">
       <div class="body-navigator">
+        <!-- 引用自定义组件 -->
         <ComponentNavigator ref="myNavigator"></ComponentNavigator>
       </div>
       <div class="body-content">
@@ -21,6 +22,7 @@
 
 <script>
 import ComponentHeader from "@/components/ComponentHeader";
+// 导入自定义组件
 import ComponentNavigator from "@/components/ComponentNavigator";
 import ComponentContent from "@/components/ComponentContent";
 import ComponentFooter from "@/components/ComponentFooter";
@@ -29,6 +31,7 @@ export default {
   name: 'App',
   components: {
     ComponentHeader,
+    // 注册自定义组件
     ComponentNavigator,
     ComponentContent,
     ComponentFooter
