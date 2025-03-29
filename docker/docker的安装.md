@@ -2,7 +2,23 @@
 
 ## `centOS8`上安装`Docker`
 
-**使用`docker`官方`yum`源在线安装最新版本的`docker`**
+
+
+### 使用 dcli 安装
+
+<a href="/dcli/README.html#安装" target="_blank">安装并配置 dcli</a>
+
+使用 dcli 根据提示安装
+
+```bash
+sudo dcli docker install
+```
+
+重新启动操作系统
+
+
+
+### 使用`docker`官方`yum`源在线安装最新版本
 
 1. 准备一台 centOS8（centOS stream 8 也是兼容的）虚拟机，本次演示使用的 centOS8 系统信息如下：
 

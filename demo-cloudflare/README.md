@@ -382,3 +382,115 @@ Websocket 源站 IP 地址：35.209.82.60，端口：8085
 如图所示加密模式功能：
 
 ![image-20250328190838890](image-20250328190838890.png)
+
+
+
+
+
+## Zero Trust
+
+### 介绍
+
+Cloudflare Zero Trust是Cloudflare提供的一种IT安全模型，它要求对所有尝试访问专用网络资源的用户和设备进行严格的身份验证，无论它们位于网络边界的内部还是外部。以下是对Cloudflare Zero Trust的详细解释：
+
+一、定义与原理
+
+Cloudflare Zero Trust是一种全面的网络安全方法，它结合了几种不同的安全原则和技术，如零信任网络访问（ZTNA）、身份验证、访问控制等。这种模型的核心思想是“永不信任，始终验证”，即每次访问都需要经过身份验证和授权，以确保网络资源的安全性。
+
+二、主要功能
+
+1. **严格的身份验证**：Cloudflare Zero Trust要求对每次访问都进行身份验证，包括用户和设备。这可以通过多种方式进行，如密码、生物识别、数字证书等。
+2. **细粒度的访问控制**：根据用户的身份、设备状态、访问时间和地点等因素，Cloudflare Zero Trust可以实施细粒度的访问控制策略。这可以确保只有符合条件的用户才能访问特定的网络资源。
+3. **实时威胁监测与响应**：Cloudflare Zero Trust平台能够实时监测网络流量和访问行为，并自动响应潜在的威胁。这包括阻止恶意流量、隔离受感染的设备等。
+4. **与现有技术的集成**：Cloudflare Zero Trust能够与现有的身份、端点和云提供商无缝集成，避免供应商锁定。这使得组织能够灵活地利用原有的技术堆栈，同时享受Cloudflare Zero Trust带来的安全优势。
+
+三、应用场景
+
+1. **远程办公**：对于远程办公的用户来说，Cloudflare Zero Trust可以提供一个安全、稳定的网络连接，确保数据传输的机密性和完整性。
+2. **企业内网**：在企业内网中，Cloudflare Zero Trust可以保护敏感数据和关键业务应用，防止未经授权的访问和数据泄露。
+3. **云服务**：对于使用云服务的组织来说，Cloudflare Zero Trust可以提供额外的安全层，确保云服务的安全性和可用性。
+
+四、优势
+
+1. **提高安全性**：通过严格的身份验证和细粒度的访问控制，Cloudflare Zero Trust可以显著提高网络资源的安全性。
+2. **优化用户体验**：Cloudflare Zero Trust平台能够提供无缝的访问体验，同时确保安全性。用户无需担心复杂的身份验证流程或访问限制。
+3. **降低管理成本**：通过自动化的威胁监测与响应以及与其他技术的集成，Cloudflare Zero Trust可以降低组织的安全管理成本。
+
+五、实施步骤
+
+1. **评估需求**：首先，组织需要评估自己的安全需求和现有技术堆栈，以确定是否适合采用Cloudflare Zero Trust。
+2. **规划部署**：根据评估结果，组织可以规划Cloudflare Zero Trust的部署策略，包括选择适当的身份验证方法、配置访问控制策略等。
+3. **集成与测试**：将Cloudflare Zero Trust与现有的身份、端点和云提供商集成，并进行测试以确保其正常工作。
+4. **监控与优化**：部署后，组织需要持续监控Cloudflare Zero Trust的性能和安全性，并根据需要进行优化和调整。
+
+综上所述，Cloudflare Zero Trust是一种强大的IT安全模型，它要求对所有尝试访问专用网络资源的用户和设备进行严格的身份验证和授权。通过实施Cloudflare Zero Trust，组织可以显著提高网络资源的安全性，优化用户体验，并降低管理成本。
+
+
+
+### 隧道 Tunnels
+
+Cloudflare Tunnel 为您提供了一种安全的方式，无需公开可路由的 IP 地址即可将您的资源连接到 Cloudflare。使用 Tunnel，您无需将流量发送到外部 IP — 相反，您基础设施中的轻量级守护程序 (cloudflared) 会创建到 Cloudflare 全球网络的仅出站连接。Cloudflare Tunnel 可以将 HTTP Web 服务器、SSH 服务器、远程桌面和其他协议安全地连接到 Cloudflare。这样，您的源站就可以通过 Cloudflare 提供流量，而不会受到绕过 Cloudflare 的攻击。
+
+
+
+#### 创建
+
+>[参考链接](https://post.smzdm.com/p/admp85dn/)
+
+转到 CloudFlare 首页点击左边导航栏中的 `Zero Trust` 菜单
+
+![image-20250329063637577](image-20250329063637577.png)
+
+点击 `Networks` > `Tunnels` > `Add a tunnel` 功能
+
+![image-20250329064444008](image-20250329064444008.png)
+
+点击 `Select Cloudflared` 功能
+
+![image-20250329064654537](image-20250329064654537.png)
+
+输入 tunnel 的名称，点击 `Save tunnel` 功能
+
+![image-20250329070657276](image-20250329070657276.png)
+
+点击 `Docker` 使用 Docker 运行 cloudflared，点击 `复制` 按钮复制 `docker run ...` 命令，最后点击 `Next`
+
+![image-20250329065921088](image-20250329065921088.png)
+
+Subdomain 填写 `my-tunnel`，Domain 选择自定义的域名（例如：example.com），Service Type 选择 HTTP，Service URL 填写 `192.168.1.181:8080`（这是内网的 HTTP 服务），点击 `Save tunnel`
+
+![image-20250329070938164](image-20250329070938164.png)
+
+在内网中新建 CentOS8 并参考 <a href="/docker/docker的安装.html#使用-dcli-安装" target="_blank">链接</a> 安装 Docker，调整上面复制的 `docker run ...` 命令并在 CentOS8 中运行
+
+```bash
+docker run -d --restart unless-stopped cloudflare/cloudflared:latest tunnel --no-autoupdate run --token xxx
+```
+
+访问 `https://my-tunnel.example.com` 测试隧道是否正常。
+
+
+
+#### 添加 Public Hostname
+
+>提示：添加 Public Hostname 实质上是暴露一个内网服务。
+>
+>[参考链接](https://post.smzdm.com/p/admp85dn/)
+
+转到 CloudFlare 首页点击左边导航栏中的 `Zero Trust` 菜单
+
+![image-20250329063637577](image-20250329063637577.png)
+
+点击 `Tunnels`，选中相应的隧道并点击 `Configure`
+
+![image-20250329083345738](image-20250329083345738.png)
+
+切换到 `Public Hostname` 标签页并点击 `Add a public hostname`
+
+![image-20250329083823840](image-20250329083823840.png)
+
+暴露位于 `192.168.1.181:8080` 的内网 HTTP 服务，Subdomain 填写 `web`，Domain 选择 example.com，稍后使用 `https://web.example.com` 访问 HTTP 服务。Service Type 选择 HTTP 表示 HTTP 服务，Service URL 填写 `192.168.1.181:8080` 表示内网服务所在的 IP+端口。点击 `Save hostname` 保存。
+
+![image-20250329084607254](image-20250329084607254.png)
+
+等待一段时间后，使用 `https://web.example.com` 访问 HTTP 服务成功。
