@@ -50,6 +50,15 @@
       </div>
     </div>
 
+    <hr>
+    <div>
+      v-for 一个范围
+    </div>
+    <div>
+      <div v-for="index in this.count">
+        {{ index }}
+      </div>
+    </div>
   </div>
 </template>
 
@@ -57,6 +66,8 @@
 export default {
   data() {
     return {
+      // 协助测试 v-for 一个范围
+      count: 3,
       dataList: ['a', 'b', 'c'],
       datum1: [1, 2, 3, 4, 5],
       datum2: [{
