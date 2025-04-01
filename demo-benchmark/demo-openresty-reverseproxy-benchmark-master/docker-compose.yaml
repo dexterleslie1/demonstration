@@ -1,0 +1,14 @@
+version: "3.0"
+
+services:
+  # 用于 OpenResty 横向扩展基准测试 Master
+  openresty:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-openresty-base-dev
+    environment:
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf:ro
+    restart: always
+    ports:
+      - '80:80'
+      

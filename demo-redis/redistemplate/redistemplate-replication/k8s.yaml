@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: demo-redistemplate-replication
+  labels:
+    app: demo-redistemplate-replication
+spec:
+  containers:
+    - name: demo-redistemplate-replication
+      image: docker.118899.net:10001/yyd-public/demo-redistemplate-replication
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-redistemplate-replication
+spec:
+  type: NodePort
+  ports:
+    - port: 8080
+      targetPort: 8080
+      nodePort: 30000
+  selector:
+    app: demo-redistemplate-replication

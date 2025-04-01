@@ -1,0 +1,15 @@
+---
+apiVersion: 1
+
+datasources:
+- name: InfluxDB
+  type: influxdb
+  typeLogoUrl: public/app/plugins/datasource/influxdb/img/influxdb_logo.svg
+  access: proxy
+  url: http://demo-influxdb:8086
+  password: ''
+  user: ''
+  database: jmeter
+  basicAuth: false
+  isDefault: true
+  jsonData: {}

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>JVM性能相关测试</title>
+    <script type="text/javascript" src="https://lib.baomitu.com/jquery/1.12.4/jquery.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+
+            $("#btnMemoryLeakStart").click(function() {
+                $.ajax({
+                    type: "GET",
+                    url: "/api/v1/gc/memoryLeak/start",
+                    success: function(data) {
+                        alert(data.data)
+                    },
+                    error(xhr,status,error) {
+                        alert(xhr);
+                    }
+                })
+            })
+
+            $("#btnMemoryLeakStop").click(function() {
+                $.ajax({
+                    type: "GET",
+                    url: "/api/v1/gc/memoryLeak/stop",
+                    success: function(data) {
+                        alert(data.data)
+                    },
+                    error(xhr,status,error) {
+                        alert(xhr);
+                    }
+                })
+            })
+
+            $("#btnMemoryLeakRelease").click(function() {
+                $.ajax({
+                    type: "GET",
+                    url: "/api/v1/gc/memoryLeak/release",
+                    success: function(data) {
+                        alert(data.data)
+                    },
+                    error(xhr,status,error) {
+                        alert(xhr);
+                    }
+                })
+            })
+
+            $("#btnMemoryLeakPerformGC").click(function() {
+                $.ajax({
+                    type: "GET",
+                    url: "/api/v1/gc/memoryLeak/performgc",
+                    success: function(data) {
+                        alert(data.data)
+                    },
+                    error(xhr,status,error) {
+                        alert(xhr);
+                    }
+                })
+            })
+
+            $("#btnMonitorStart").click(function() {
+                var monitorInvocationCount = $("#monitorInvocationCount").val()
+                var monitorInvocationInterval = $("#monitorInvocationInterval").val()
+                $.ajax({
+                    type: "GET",
+                    url: "/api/v1/arthas/monitor/start",
+                    data: {
+                        loopCount: monitorInvocationCount,
+                        sleepInterval: monitorInvocationInterval
+                    },
+                    success: function(data) {
+                        alert(data.data)
+                    },
+                    error(xhr,status,error) {
+                        alert(xhr);
+                    }
+                })
+            })
+            $("#btnMonitorStop").click(function() {
+                $.ajax({
+                    type: "GET",
+                    url: "/api/v1/arthas/monitor/stop",
+                    success: function(data) {
+                        alert(data.data)
+                    },
+                    error(xhr,status,error) {
+                        alert(xhr);
+                    }
+                })
+            })
+
+            $("#btnWatch").click(function() {
+                $.ajax({
+                    type: "GET",
+                    url: "/api/v1/arthas/watch",
+                    success: function(data) {
+                        alert(data.data)
+                    },
+                    error(xhr,status,error) {
+                        alert(xhr);
+                    }
+                })
+            })
+
+            $("#btnTrace").click(function() {
+                $.ajax({
+                    type: "GET",
+                    url: "/api/v1/arthas/trace",
+                    success: function(data) {
+                        alert(data.data)
+                    },
+                    error(xhr,status,error) {
+                        alert(xhr);
+                    }
+                })
+            })
+        })
+    </script>
+</head>
+<body>
+    <h3>Memory leak测试</h3>
+    <input type="button" value="开始" id="btnMemoryLeakStart"/>
+    <input type="button" value="停止" id="btnMemoryLeakStop"/>
+    <input type="button" value="释放" id="btnMemoryLeakRelease"/>
+    <input type="button" value="System.gc()" id="btnMemoryLeakPerformGC"/>
+    <hr>
+
+    <h3>arthas monitor测试，monitor com.future.demo.performance.ApiArthasController#monitorMethod</h3>
+    方法调用次数：<input type="text" id="monitorInvocationCount"> 次（默认无限次），
+    方法调用间隔：<input type="text" id="monitorInvocationInterval"> 毫秒（默认没有间隔）
+    <input type="button" value="开始" id="btnMonitorStart"/>
+    <input type="button" value="停止" id="btnMonitorStop"/>
+    <hr>
+
+    <h3>arthas watch测试</h3>
+    <input type="button" value="调用watch" id="btnWatch"/>
+    <hr>
+
+    <h3>arthas trace、stack测试</h3>
+    <input type="button" value="调用trace" id="btnTrace"/>
+    <hr>
+</body>
+</html>

@@ -1,0 +1,49 @@
+version: "3.0"
+
+# todo 未成功配置canal-admin
+# https://blog.csdn.net/weixin_40715787/article/details/126084643
+# https://github.com/alibaba/canal/wiki/Canal-Admin-Docker
+# https://github.com/alibaba/canal/wiki/Docker-QuickStart
+services:
+  db:
+    image: mariadb:10.4.19
+    # image: mysql:5.7
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci --skip-character-set-client-handshake
+    volumes:
+      - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf
+      - ./grant.sql:/docker-entrypoint-initdb.d/grant.sql
+    environment:
+      - LANG=C.UTF-8
+      - TZ=Asia/Shanghai
+      - MYSQL_ROOT_PASSWORD=123456
+    network_mode: host
+
+  canal-server:
+    image: canal/canal-server:v1.1.5
+    environment:
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./canal.properties:/home/admin/canal-server/conf/canal.properties
+      - ./instance.properties:/home/admin/canal-server/conf/example/instance.properties
+    depends_on:
+      - rabbitmq
+      - db
+    network_mode: host
+
+  # canal-admin:
+  #   image: canal/canal-admin:v1.1.5
+  #   environment:
+  #     - server.port=8089
+  #     - canal.adminUser=admin
+  #     - canal.adminPasswd=123456
+  #   network_mode: host
+
+  rabbitmq:
+   image: library/rabbitmq:3.9.13-management
+   environment:
+    - RABBITMQ_DEFAULT_USER=root
+    - RABBITMQ_DEFAULT_PASS=123456
+    - TZ=Asia/Shanghai
+   network_mode: host
+
+

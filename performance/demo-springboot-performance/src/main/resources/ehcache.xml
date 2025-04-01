@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ehcache 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xsi:noNamespaceSchemaLocation="http://ehcache.org/ehcache.xsd"
+    updateCheck="false">
+    <cache name="cache1" maxElementsInMemory="100000"/>
+<!--    <cache name="cacheMemoryHolder" maxElementsInMemory="4"/>-->
+    <cache name="cacheMemoryHolder" maxElementsInMemory="30000000"/>
+</ehcache>

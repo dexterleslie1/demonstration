@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>信息提示框</title>
+
+    <!-- 新 Bootstrap 核心 CSS 文件 -->
+    <link href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <!-- jQuery文件。务必在bootstrap.min.js 之前引入 -->
+    <script src="https://cdn.bootcss.com/jquery/2.1.1/jquery.min.js"></script>
+    <!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
+    <script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $("#btnToggleMyAlert").bind("click", function () {
+                // 克隆myAlertTemplate消息提示框
+                // https://api.jquery.com/clone/
+                var myAlert = $("#myAlertTemplate").clone()
+                // 删除消息提示u框模板中的id属性
+                myAlert.removeAttr("id")
+                // myAlert自动隐藏
+                // https://stackoverflow.com/questions/23101966/bootstrap-alert-auto-close
+                myAlert.fadeTo(3000, 500).slideUp(500, function() {
+                    // slideUp之后自动从dom中删除myAlert，否则myAlert会隐藏在dom中
+                    $(this).alert("close");
+                })
+                myAlert.mousedown(function() {
+                    // stop函数使用
+                    // https://www.runoob.com/jquery/eff-stop.html
+                    // 点击消息提示框后取消自动slideUp
+                    $(this).stop(true, true)
+                })
+                myAlert.appendTo("#myAlertContainer")
+            })
+        })
+    </script>
+</head>
+<body>
+<div class="container" style="width:50%;margin-top:20px;">
+    <div><h2>使用jQuery操作bootstrap信息提示框</h2></div>
+    <input id="btnToggleMyAlert" type="button" value="点击我显示或者隐藏信息提示框" style="margin-bottom: 10px"/>
+    <div id="myAlertContainer" style="position: absolute;width: 385px;"></div>
+    <div id="myAlertTemplate" style="display:none" class="alert alert-danger alert-dismissible fade out">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        <strong>错误!</strong> 失败的操作。
+    </div>
+
+    <!-- 参考 https://blog.csdn.net/qq_27870421/article/details/97261115 -->
+    <div><h2>基本信息提示框</h2></div>
+    <div class="alert alert-success">
+        <strong>成功!</strong> 指定操作成功提示信息。
+    </div>
+    <div class="alert alert-info">
+        <strong>信息!</strong> 请注意这个信息。
+    </div>
+    <div class="alert alert-warning">
+        <strong>警告!</strong> 设置警告信息。
+    </div>
+    <div class="alert alert-danger">
+        <strong>错误!</strong> 失败的操作
+    </div>
+    <div class="alert alert-primary">
+        <strong>首选!</strong> 这是一个重要的操作信息。
+    </div>
+    <div class="alert alert-secondary">
+        <strong>次要的!</strong> 显示一些不重要的信息。
+    </div>
+    <div class="alert alert-dark">
+        <strong>深灰色!</strong> 深灰色提示框。
+    </div>
+    <div class="alert alert-light">
+        <strong>浅灰色!</strong>浅灰色提示框。
+    </div>
+    <hr/>
+
+    <div><h2>提示框添加链接</h2></div>
+    <div class="alert alert-success">
+        <strong>成功!</strong> 你应该认真阅读 <a href="#" class="alert-link">这条信息</a>。
+    </div>
+    <div class="alert alert-info">
+        <strong>信息!</strong> 你应该认真阅读 <a href="#" class="alert-link">这条信息</a>。
+    </div>
+    <div class="alert alert-warning">
+        <strong>警告!</strong> 你应该认真阅读 <a href="#" class="alert-link">这条信息</a>。
+    </div>
+    <div class="alert alert-danger">
+        <strong>错误!</strong> 你应该认真阅读 <a href="#" class="alert-link">这条信息</a>。
+    </div>
+    <div class="alert alert-primary">
+        <strong>首选!</strong> 你应该认真阅读 <a href="#" class="alert-link">这条信息</a>。
+    </div>
+    <div class="alert alert-secondary">
+        <strong>次要的!</strong> 你应该认真阅读 <a href="#" class="alert-link">这条信息</a>。
+    </div>
+    <div class="alert alert-dark">
+        <strong>深灰色!</strong>你应该认真阅读 <a href="#" class="alert-link">这条信息</a>。
+    </div>
+    <div class="alert alert-light">
+        <strong>灰色!</strong> 你应该认真阅读 <a href="#" class="alert-link">这条信息</a>。
+    </div>
+    <hr/>
+
+    <div><h2>提示框动画</h2></div>
+    <p>.fade 和 .show 类用于设置提示框在关闭时的淡出和淡入效果：</p>
+    <div class="alert alert-success alert-dismissible">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        <strong>成功!</strong> 指定操作成功提示信息。
+    </div>
+    <div class="alert alert-info alert-dismissible">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        <strong>信息!</strong> 请注意这个信息。
+    </div>
+    <div class="alert alert-warning alert-dismissible">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        <strong>警告!</strong> 设置警告信息。
+    </div>
+    <div class="alert alert-danger alert-dismissible">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        <strong>错误!</strong> 失败的操作。
+    </div>
+    <div class="alert alert-primary alert-dismissible">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        <strong>首选!</strong> 这是一个重要的操作信息。
+    </div>
+    <div class="alert alert-secondary alert-dismissible">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        <strong>次要的!</strong> 显示一些不重要的信息。
+    </div>
+    <div class="alert alert-dark alert-dismissible">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        <strong>深灰色!</strong> 深灰色提示框。
+    </div>
+    <div class="alert alert-light alert-dismissible">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        <strong>浅灰色!</strong>浅灰色提示框。
+    </div>
+</div>
+</body>
+</html>

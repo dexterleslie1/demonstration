@@ -1,0 +1,85 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.future.demo</groupId>
+    <artifactId>demo-maven-tomcat9-plugin</artifactId>
+    <version>1.0.0</version>
+    <packaging>war</packaging>
+
+    <properties>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.11</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>3.0.1</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <finalName>tomcat-test</finalName>
+        <plugins>
+            <!-- https://stackoverflow.com/questions/59924534/how-to-run-embedded-tomcat-9-inside-maven-3-for-integration-testing-purposes -->
+            <plugin>
+                <groupId>org.codehaus.cargo</groupId>
+                <artifactId>cargo-maven2-plugin</artifactId>
+                <version>1.7.9</version>
+                <configuration>
+                    <container>
+                        <containerId>tomcat9x</containerId>
+                        <zipUrlInstaller>
+                            <url>
+                                https://fut001.oss-cn-hangzhou.aliyuncs.com/tomcat/tomcat-9.0.29.zip
+                            </url>
+                        </zipUrlInstaller>
+                    </container>
+                    <deployables>
+                        <deployable>
+                            <groupId>org.codehaus.cargo</groupId>
+                            <artifactId>simple-war</artifactId>
+                            <type>war</type>
+                            <location>${project.build.directory}/tomcat-test.war</location>
+                            <properties>
+                                <context>/</context>
+                            </properties>
+                        </deployable>
+                    </deployables>
+                    <executions>
+                        <execution>
+                            <id>start-server</id>
+                            <phase>pre-integration-test</phase>
+                            <goals>
+                                <goal>start</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <id>stop-server</id>
+                            <phase>post-integration-test</phase>
+                            <goals>
+                                <goal>stop</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </configuration>
+            </plugin>
+
+            <!-- 需要配置 maven-war-plugin 版本，否则在 mvn clean package 时会报错 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>3.4.0</version>
+            </plugin>
+        </plugins>
+    </build>
+</project>

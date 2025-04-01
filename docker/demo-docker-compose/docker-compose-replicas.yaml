@@ -1,0 +1,10 @@
+version: "3.0"
+
+services:
+  nginx:
+    image: nginx
+    # deploy:
+    #   # 表示两个实例
+    #   replicas: 2
+    # ports:
+    #   - '80:80'

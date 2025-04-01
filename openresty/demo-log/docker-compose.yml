@@ -1,0 +1,12 @@
+version: "3.0"
+
+services:
+  demo-openresty-log:
+    container_name: demo-openresty-log
+    image: docker.118899.net:10001/yyd-public/demo-openresty-log
+    volumes:
+     - ./nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - 80:80

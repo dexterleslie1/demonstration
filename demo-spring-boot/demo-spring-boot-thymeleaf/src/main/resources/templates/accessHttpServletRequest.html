@@ -1,0 +1,7 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<div>
+    <!-- https://stackoverflow.com/questions/36553659/thymeleaf-how-to-check-current-url -->
+    <div>
+        ${#httpServletRequest.getRequestURI()}: <span th:text="${#httpServletRequest.getRequestURI()}"></span>
+    <hr/>
+</div>

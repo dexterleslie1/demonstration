@@ -1,0 +1,46 @@
+global:
+  # smtp服务器
+  smtp_smarthost: 'smtp.qq.com:465'
+  # 发邮件的邮箱
+  smtp_from: 'xxx@qq.com'
+  # 发邮件的邮箱用户名，也就是你的邮箱　　　　　
+  smtp_auth_username: 'xxx@qq.com'
+  # 发邮件的邮箱密码
+  smtp_auth_password: 'xxx'
+  # 进行tls验证
+  smtp_require_tls: false
+
+templates:
+  - '/usr/local/alertmanager/template/*.tmpl'
+
+route:
+  # 这个设置指定了告警应该基于哪些标签（label）进行分组。在这个例子中，所有具有相同 alertname 标签值的告警将被归为一组。
+  # 这有助于将相关的告警聚合在一起，避免因为同一问题而收到多个重复的告警通知。
+  group_by: ['alertname']
+  # 这个设置定义了Alertmanager在发送一组新告警之前等待的时间。也就是说，如果在一个告警组（由 group_by 指定的标签决定）中，
+  # 第一个告警发生后10秒内又有新的相同组的告警产生，那么这些告警将被视为同一批次的告警，并一起发送通知。这有助于减少因为短时间内多个相似告警而导致的通知泛滥。
+  group_wait: 10s
+  # 这个设置定义了Alertmanager在发送第一批告警通知后，等待发送下一批告警通知的时间间隔。如果在一个告警组中，
+  # 第一批告警发送后10秒内又有新的告警产生（且这些告警不属于之前已发送的批次），那么这些新的告警将等待这个间隔后再发送通知。这有助于控制告警通知的频率，避免用户被过多的告警通知淹没。
+  group_interval: 10s
+  # 这个设置定义了Alertmanager在发送了告警通知后，如果告警状态仍然未解决（即告警仍然是激活状态），则再次发送相同告警通知的时间间隔。在这个例子中，
+  # 如果告警在首次通知后10分钟内仍然未解决，那么将再次发送告警通知。这有助于确保用户持续关注那些长时间未解决的告警。
+  repeat_interval: 10m
+  # 这个设置指定了当告警满足上述条件时，应该发送给哪个接收器（receiver）。在这个例子中，告警将通过电子邮件（email）发送。
+  # 你需要在Alertmanager的配置中定义一个名为 email 的接收器，该接收器应包含发送电子邮件所需的所有配置信息，如SMTP服务器地址、发件人邮箱等。
+  receiver: email
+
+receivers:
+- name: 'email'
+  # 收邮件的邮箱
+  email_configs:
+  - to: 'xxx@qq.com'
+    html: '{{ template "email.to.html" . }}' # 设定邮箱的内容模板
+    headers: { Subject: "促销活动" }
+
+inhibit_rules:
+ - source_match:
+     severity: 'critical'
+   target_match:
+     severity: 'warning'
+   equal: ['alertname', 'dev', 'instance']

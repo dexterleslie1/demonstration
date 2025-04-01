@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+- name: Default1860 # A uniquely identifiable name for the provider
+  type: file
+  options:
+    path: /var/lib/grafana/dashboards/1860.json
+- name: Default4202 # A uniquely identifiable name for the provider
+  type: file
+  options:
+    path: /var/lib/grafana/dashboards/4202.json

@@ -1,0 +1,33 @@
+version: "3.0"
+
+networks:
+  net:
+    name: demo-squid-net
+
+services:
+  demo-squid-server:
+   container_name: demo-squid-server
+   image: ubuntu/squid
+   volumes:
+    - ./squid.conf:/etc/squid/squid.conf
+   environment:
+    - TZ=Asia/Shanghai
+   ports:
+    - 3128:3128
+   networks:
+    - net
+
+  demo-squid-openresty:
+    container_name: demo-squid-openresty
+    image: openresty/openresty
+    volumes:
+     - ./nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf
+     - ./cert.crt:/usr/local/openresty/nginx/conf/cert.crt
+     - ./key.pem:/usr/local/openresty/nginx/conf/key.pem
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - 80:80
+      - 443:443
+    networks:
+      - net

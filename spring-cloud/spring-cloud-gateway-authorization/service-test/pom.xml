@@ -1,0 +1,49 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<artifactId>service-test</artifactId>
+    <packaging>jar</packaging>
+
+    <parent>
+        <groupId>com.future.demo</groupId>
+        <artifactId>gateway-authorization-parent</artifactId>
+        <version>1.0.0</version>
+    </parent>
+
+    <properties>
+        <feign.version>10.10.1</feign.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.yyd.sdk</groupId>
+            <artifactId>yyd-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.future.demo</groupId>
+            <artifactId>service-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.github.openfeign</groupId>
+            <artifactId>feign-core</artifactId>
+            <version>${feign.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.openfeign</groupId>
+            <artifactId>feign-jackson</artifactId>
+            <version>${feign.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.openfeign.form</groupId>
+            <artifactId>feign-form</artifactId>
+            <version>3.8.0</version>
+        </dependency>
+    </dependencies>
+</project>

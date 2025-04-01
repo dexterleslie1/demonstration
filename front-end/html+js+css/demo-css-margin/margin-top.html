@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <!--
+        下面演示 outer 和 inner div 时，inner div 指定 margin-top 没有作用情况
+
+        https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_box_model/Mastering_margin_collapsing
+        https://stackoverflow.com/questions/9519841/why-does-this-css-margin-top-style-not-work
+        https://stackoverflow.com/questions/17731738/why-is-css-style-for-top-and-bottom-margins-not-applied-to-inner-div
+    -->
+    <div style="height:500px;width:400px;background-color: orange;">
+        <!-- 
+            NOTE: 下面 inner div margin-top:40px和margin-bottom:40px;没有起作用，
+            通过为 inner div 添加 display:inline-block 样式使margin-top和margin-bottom起作用
+        -->
+        <div style="height:100px;width:100px;background-color:skyblue;margin-left:20px;margin-top:40px;margin-bottom:40px;"></div>
+        <div style="height:100px;width:100px;background-color:purple;margin-left:20px;margin-top:40px;margin-bottom:40px;"></div>
+    </div>
+</body>
+</html>

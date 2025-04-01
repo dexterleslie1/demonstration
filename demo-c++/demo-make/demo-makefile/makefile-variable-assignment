@@ -1,0 +1,12 @@
+# https://stackoverflow.com/questions/24777289/what-is-in-makefile
+
+KDIR ?= "foo"
+# ?= 表示如果变量已经设置则不会设置其已经存在的值，否则设置
+KDIR ?= "bar"
+
+test:
+	echo $(KDIR)
+
+myName = Dex ter
+test1:
+	echo "Hello $(myName)"

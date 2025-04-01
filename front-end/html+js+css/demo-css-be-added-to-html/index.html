@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        /*
+            有三种方式添加css到html
+            https://www.w3schools.com/html/html_css.asp
+
+            1、内联 - 通过在 HTML 元素内使用 style 属性
+            2、内部 - 通过在 <head> 部分使用 <style> 元素
+            3、外部 - 通过使用 <link> 元素链接到外部 CSS 文件
+        */
+        .demo2>div {
+            width: 200px;
+            height: 100px;
+            background-color: green;
+        }
+    </style>
+    <link rel="stylesheet" href="index.css">
+</head>
+
+<body>
+    <div>通过内联方式添加css</div>
+    <div class="demo1">
+        <div style="width:200px;height:100px;background-color: green;"></div>
+    </div>
+    <hr>
+
+    <div>通过内部方式添加css</div>
+    <div class="demo2">
+        <div></div>
+    </div>
+    <hr>
+
+    <div>通过外部方式添加css</div>
+    <div class="demo3">
+        <div></div>
+    </div>
+    <hr>
+</body>
+
+</html>

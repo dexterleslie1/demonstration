@@ -1,0 +1,275 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis-master
+  namespace: "default"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: redis-master
+  # 对应的 redis-headless 无头服务没有用到所以不存在
+  serviceName: redis-master-headless
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: redis-master
+    spec:
+      # securityContext:
+      #   fsGroup: 1001
+      # serviceAccountName: release-name-redis
+      # automountServiceAccountToken: true
+      # affinity:
+      #   podAffinity:
+          
+      #   podAntiAffinity:
+      #     preferredDuringSchedulingIgnoredDuringExecution:
+      #       - podAffinityTerm:
+      #           labelSelector:
+      #             matchLabels:
+      #               app.kubernetes.io/instance: release-name
+      #               app.kubernetes.io/name: redis
+      #               app.kubernetes.io/component: master
+      #           topologyKey: kubernetes.io/hostname
+      #         weight: 1
+      #   nodeAffinity:
+          
+      # enableServiceLinks: true
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: redis
+          image: redis:5.0.14-bullseye
+          imagePullPolicy: "IfNotPresent"
+          # securityContext:
+          #   allowPrivilegeEscalation: false
+          #   capabilities:
+          #     drop:
+          #     - ALL
+          #   runAsGroup: 0
+          #   runAsNonRoot: true
+          #   runAsUser: 1001
+          #   seccompProfile:
+          #     type: RuntimeDefault
+          command:
+            - redis-server
+          args:
+            - /usr/local/etc/redis/redis.conf
+            # - --requirepass
+            # - "123456"
+          env:
+            - name: TZ
+              value: "Asia/Shanghai"
+          ports:
+            - name: redis
+              containerPort: 6379
+          livenessProbe:
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            # One second longer than command timeout should prevent generation of zombie processes.
+            timeoutSeconds: 6
+            successThreshold: 1
+            failureThreshold: 5
+            exec:
+              command:
+                - sh
+                - /health/ping_liveness_n_readines_local.sh
+          readinessProbe:
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 2
+            successThreshold: 1
+            failureThreshold: 5
+            exec:
+              command:
+                - sh
+                - /health/ping_liveness_n_readines_local.sh
+          resources:
+            limits: {}
+            requests: {}
+          volumeMounts:
+            # - name: redis-data
+            #   mountPath: /data
+            - name: config
+              mountPath: /usr/local/etc/redis/
+            - name: liveness-and-readiness-config
+              mountPath: /health/
+      volumes:
+        - name: config
+          configMap:
+            name: redis-configuration
+            items:
+            - key: redis.conf
+              path: redis.conf
+        - name: liveness-and-readiness-config
+          configMap:
+            name: redis-configuration
+            items:
+            - key: ping_liveness_n_readines_local.sh
+              path: ping_liveness_n_readines_local.sh
+  # volumeClaimTemplates:
+  #   - apiVersion: v1
+  #     kind: PersistentVolumeClaim
+  #     metadata:
+  #       name: redis-data
+  #       labels:
+  #         app.kubernetes.io/name: redis-master
+  #     spec:
+  #       accessModes:
+  #         - "ReadWriteOnce"
+  #       resources:
+  #         requests:
+  #           storage: "8Gi"
+  #       storageClassName: nfs-client
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis-slave
+  namespace: "default"
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: redis-slave
+  # 对应的 redis-headless 无头服务没有用到所以不存在
+  serviceName: redis-slave-headless
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: redis-slave
+    spec:
+      # securityContext:
+      #   fsGroup: 1001
+      # serviceAccountName: release-name-redis
+      # automountServiceAccountToken: true
+      # affinity:
+      #   podAffinity:
+          
+      #   podAntiAffinity:
+      #     preferredDuringSchedulingIgnoredDuringExecution:
+      #       - podAffinityTerm:
+      #           labelSelector:
+      #             matchLabels:
+      #               app.kubernetes.io/instance: release-name
+      #               app.kubernetes.io/name: redis
+      #               app.kubernetes.io/component: master
+      #           topologyKey: kubernetes.io/hostname
+      #         weight: 1
+      #   nodeAffinity:
+          
+      # enableServiceLinks: true
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: redis
+          image: redis:5.0.14-bullseye
+          imagePullPolicy: "IfNotPresent"
+          # securityContext:
+          #   allowPrivilegeEscalation: false
+          #   capabilities:
+          #     drop:
+          #     - ALL
+          #   runAsGroup: 0
+          #   runAsNonRoot: true
+          #   runAsUser: 1001
+          #   seccompProfile:
+          #     type: RuntimeDefault
+          command:
+            - redis-server
+          args:
+            - /usr/local/etc/redis/redis.conf
+            # - --requirepass
+            # - "123456"
+          env:
+            - name: TZ
+              value: "Asia/Shanghai"
+          ports:
+            - name: redis
+              containerPort: 6379
+          livenessProbe:
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            # One second longer than command timeout should prevent generation of zombie processes.
+            timeoutSeconds: 6
+            successThreshold: 1
+            failureThreshold: 5
+            exec:
+              command:
+                - sh
+                - /health/ping_liveness_n_readines_local.sh
+          readinessProbe:
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 2
+            successThreshold: 1
+            failureThreshold: 5
+            exec:
+              command:
+                - sh
+                - /health/ping_liveness_n_readines_local.sh
+          resources:
+            limits: {}
+            requests: {}
+          volumeMounts:
+            # - name: redis-data
+            #   mountPath: /data
+            # 需要使用redis临时配置目录有写的权限，否则redis-cli -h localhost -p 6379 config rewrite会报告错误
+            - name: redis-conf-tmp
+              mountPath: /usr/local/etc/redis/
+            - name: liveness-and-readiness-config
+              mountPath: /health/
+            - name: init-redis-slave-config
+              mountPath: /init-scripts/
+          lifecycle:
+            postStart:
+              exec:
+                command:
+                - sh
+                - /init-scripts/init-redis-slave.sh
+      initContainers:
+      - name: init-redis-slave
+        image: redis:5.0.14-bullseye
+        command:
+        - sh
+        - -c
+        - "cp /my-redis-conf/redis.conf /usr/local/etc/redis/redis.conf && chmod 755 /usr/local/etc/redis/redis.conf && echo '成功复制configmap redis.conf'"
+        volumeMounts:
+        - name: redis-conf-tmp
+          mountPath: /usr/local/etc/redis/
+        - name: config
+          mountPath: /my-redis-conf/
+      volumes:
+        - name: config
+          configMap:
+            name: redis-configuration
+            items:
+            - key: redis.conf
+              path: redis.conf
+        - name: liveness-and-readiness-config
+          configMap:
+            name: redis-configuration
+            items:
+            - key: ping_liveness_n_readines_local.sh
+              path: ping_liveness_n_readines_local.sh
+        - name: init-redis-slave-config
+          configMap:
+            name: redis-configuration
+            items:
+            - key: init-redis-slave.sh
+              path: init-redis-slave.sh
+        - name: redis-conf-tmp
+          emptyDir: {}
+  # volumeClaimTemplates:
+  #   - apiVersion: v1
+  #     kind: PersistentVolumeClaim
+  #     metadata:
+  #       name: redis-data
+  #       labels:
+  #         app.kubernetes.io/name: redis-slave
+  #     spec:
+  #       accessModes:
+  #         - "ReadWriteOnce"
+  #       resources:
+  #         requests:
+  #           storage: "8Gi"
+  #       storageClassName: nfs-client

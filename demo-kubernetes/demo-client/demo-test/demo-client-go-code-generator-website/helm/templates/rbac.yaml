@@ -1,0 +1,35 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: website-cr
+rules:
+  - apiGroups:
+      - ""
+    verbs:
+      - get
+      - list
+      - watch
+    resources:
+      - pods
+  - apiGroups:
+      - "extensions.example.com"
+    verbs:
+      - get
+      - list
+      - watch
+    resources:
+      - websites
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: website-crb
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: website-cr
+subjects:
+  - kind: ServiceAccount
+    name: website-sa
+    namespace: kube-system

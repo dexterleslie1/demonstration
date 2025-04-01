@@ -1,0 +1,1 @@
+console.log("This is a message from file common.js")

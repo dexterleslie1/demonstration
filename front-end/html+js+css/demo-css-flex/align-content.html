@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>演示align-content用法</title>
+    <style>
+        /*https://www.runoob.com/cssref/css3-pr-align-content.html*/
+    </style>
+</head>
+
+<body>
+
+    <div style="width:100%;display:flex;justify-content: space-around;">
+        <div>
+            <div>align-items: flex-start</div>
+            <div
+                style="width: 70px;height: 180px;display: flex;flex-direction:row;border-style: solid;border-width: 1px;border-color: red;align-items: flex-start;flex-wrap: wrap;">
+                <div style="width: 70px;height: 20px;background-color: #2c3e50;">box1</div>
+                <div style="width: 70px;height: 30px;background-color: #42b983;">box2</div>
+                <div style="width: 70px;height: 40px;background-color: #888888;">box3</div>
+                <div style="width: 70px;height: 50px;background-color: yellowgreen;">box4</div>
+            </div>
+        </div>
+        <div style="align-self: center;">VS</div>
+        <div>
+            <div>align-content: flex-start</div>
+            <div
+                style="width: 70px;height: 180px;display: flex;flex-direction:row;border-style: solid;border-width: 1px;border-color: red;align-content: flex-start;flex-wrap: wrap;">
+                <div style="width: 70px;height: 20px;background-color: #2c3e50;">box1</div>
+                <div style="width: 70px;height: 30px;background-color: #42b983;">box2</div>
+                <div style="width: 70px;height: 40px;background-color: #888888;">box3</div>
+                <div style="width: 70px;height: 50px;background-color: yellowgreen;">box4</div>
+            </div>
+        </div>
+    </div>
+    <hr>
+
+    <div style="width:100%;display:flex;justify-content: space-around;">
+        <div>
+            <div>align-items: flex-end</div>
+            <div
+                style="width: 70px;height: 150px;display: flex;flex-direction:row;border-style: solid;border-width: 1px;border-color: red;align-items: flex-end;flex-wrap: wrap;">
+                <div style="width: 70px;height: 20px;background-color: #2c3e50;">box1</div>
+                <div style="width: 70px;height: 30px;background-color: #42b983;">box2</div>
+                <div style="width: 70px;height: 40px;background-color: #888888;">box3</div>
+                <div style="width: 70px;height: 50px;background-color: yellowgreen;">box4</div>
+            </div>
+        </div>
+        <div style="align-self: center;">VS</div>
+        <div>
+            <div>align-content: flex-end</div>
+            <div
+                style="width: 70px;height: 150px;display: flex;flex-direction:row;border-style: solid;border-width: 1px;border-color: red;align-content: flex-end;flex-wrap: wrap;">
+                <div style="width: 70px;height: 20px;background-color: #2c3e50;">box1</div>
+                <div style="width: 70px;height: 30px;background-color: #42b983;">box2</div>
+                <div style="width: 70px;height: 40px;background-color: #888888;">box3</div>
+                <div style="width: 70px;height: 50px;background-color: yellowgreen;">box4</div>
+            </div>
+        </div>
+    </div>
+    <hr>
+
+    <div style="width:100%;display:flex;justify-content: space-around;">
+        <div>
+            <div>align-items: center</div>
+            <div
+                style="width: 70px;height: 150px;display: flex;flex-direction:row;border-style: solid;border-width: 1px;border-color: red;align-items: center;flex-wrap: wrap;">
+                <div style="width: 70px;height: 20px;background-color: #2c3e50;">box1</div>
+                <div style="width: 70px;height: 30px;background-color: #42b983;">box2</div>
+                <div style="width: 70px;height: 40px;background-color: #888888;">box3</div>
+                <div style="width: 70px;height: 50px;background-color: yellowgreen;">box4</div>
+            </div>
+        </div>
+        <div style="align-self: center;">VS</div>
+        <div>
+            <div>align-content: center</div>
+            <div
+                style="width: 70px;height: 150px;display: flex;flex-direction:row;border-style: solid;border-width: 1px;border-color: red;align-content: center;flex-wrap: wrap;">
+                <div style="width: 70px;height: 20px;background-color: #2c3e50;">box1</div>
+                <div style="width: 70px;height: 30px;background-color: #42b983;">box2</div>
+                <div style="width: 70px;height: 40px;background-color: #888888;">box3</div>
+                <div style="width: 70px;height: 50px;background-color: yellowgreen;">box4</div>
+            </div>
+        </div>
+    </div>
+    <hr>
+
+    <div style="width:100%;display:flex;justify-content: space-around;">
+        <div>
+            <div>align-items: stretch</div>
+            <div
+                style="width: 70px;height: 200px;display: flex;flex-direction:row;border-style: solid;border-width: 1px;border-color: red;align-items: stretch;flex-wrap: wrap;">
+                <div
+                    style="width: 70px;/* 注意：使用align-items: stretch不能指定元素高度 *//*height: 20px;*/background-color: #2c3e50;">
+                    box1
+                </div>
+                <div
+                    style="width: 70px;/* 注意：使用align-items: stretch不能指定元素高度 *//*height: 30px;*/background-color: #42b983;">
+                    box2
+                </div>
+                <div
+                    style="width: 70px;/* 注意：使用align-items: stretch不能指定元素高度 *//*height: 40px;*/background-color: #888888;">
+                    box3
+                </div>
+                <div
+                    style="width: 70px;/* 注意：使用align-items: stretch不能指定元素高度 *//*height: 40px;*/background-color: yellowgreen;">
+                    box4</div>
+            </div>
+        </div>
+        <div style="align-self: center;">VS</div>
+        <div>
+            <div>align-content: stretch</div>
+            <div
+                style="width: 70px;height: 200px;display: flex;flex-direction:row;border-style: solid;border-width: 1px;border-color: red;align-content: stretch;flex-wrap: wrap;">
+                <div
+                    style="width: 70px;/* 注意：使用align-items: stretch不能指定元素高度 *//*height: 20px;*/background-color: #2c3e50;">
+                    box1
+                </div>
+                <div
+                    style="width: 70px;/* 注意：使用align-items: stretch不能指定元素高度 *//*height: 30px;*/background-color: #42b983;">
+                    box2
+                </div>
+                <div
+                    style="width: 70px;/* 注意：使用align-items: stretch不能指定元素高度 *//*height: 40px;*/background-color: #888888;">
+                    box3
+                </div>
+                <div
+                    style="width: 70px;/* 注意：使用align-items: stretch不能指定元素高度 *//*height: 40px;*/background-color: yellowgreen;">
+                    box4</div>
+            </div>
+        </div>
+    </div>
+    <hr>
+
+    <div style="width:100%;display:flex;justify-content: space-around;">
+        <div>
+            <div>align-items: space-around</div>
+            <div
+                style="width: 70px;height: 200px;display: flex;flex-direction:row;border-style: solid;border-width: 1px;border-color: red;align-items: space-around;flex-wrap: wrap;">
+                <div style="width: 70px;height: 20px;background-color: #2c3e50;">box1</div>
+                <div style="width: 70px;height: 30px;background-color: #42b983;">box2</div>
+                <div style="width: 70px;height: 40px;background-color: #888888;">box3</div>
+                <div style="width: 70px;height: 50px;background-color: yellowgreen;">box4</div>
+            </div>
+        </div>
+        <div style="align-self: center;">VS</div>
+        <div>
+            <div>align-content: space-around</div>
+            <div
+                style="width: 70px;height: 200px;display: flex;flex-direction:row;border-style: solid;border-width: 1px;border-color: red;align-content: space-around;flex-wrap: wrap;">
+                <div style="width: 70px;height: 20px;background-color: #2c3e50;">box1</div>
+                <div style="width: 70px;height: 30px;background-color: #42b983;">box2</div>
+                <div style="width: 70px;height: 40px;background-color: #888888;">box3</div>
+                <div style="width: 70px;height: 50px;background-color: yellowgreen;">box4</div>
+            </div>
+        </div>
+    </div>
+    <hr>
+
+    <div style="width:100%;display:flex;justify-content: space-around;">
+        <div>
+            <div>align-items: space-between</div>
+            <div
+                style="width: 70px;height: 200px;display: flex;flex-direction:row;border-style: solid;border-width: 1px;border-color: red;align-items: space-between;flex-wrap: wrap;">
+                <div style="width: 70px;height: 20px;background-color: #2c3e50;">box1</div>
+                <div style="width: 70px;height: 30px;background-color: #42b983;">box2</div>
+                <div style="width: 70px;height: 40px;background-color: #888888;">box3</div>
+                <div style="width: 70px;height: 50px;background-color: yellowgreen;">box4</div>
+            </div>
+        </div>
+        <div style="align-self: center;">VS</div>
+        <div>
+            <div>align-content: space-between</div>
+            <div
+                style="width: 70px;height: 200px;display: flex;flex-direction:row;border-style: solid;border-width: 1px;border-color: red;align-content: space-between;flex-wrap: wrap;">
+                <div style="width: 70px;height: 20px;background-color: #2c3e50;">box1</div>
+                <div style="width: 70px;height: 30px;background-color: #42b983;">box2</div>
+                <div style="width: 70px;height: 40px;background-color: #888888;">box3</div>
+                <div style="width: 70px;height: 50px;background-color: yellowgreen;">box4</div>
+            </div>
+        </div>
+    </div>
+    <hr>
+
+</body>
+
+</html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .box {
+            background-color: rebeccapurple;
+            border-radius: 10px;
+            width: 100px;
+            height: 100px;
+        }
+
+        .box:hover {
+            animation: rotate 3s linear;
+            /* infinite表示无限次重复 */
+            animation-iteration-count: infinite;
+        }
+
+        @keyframes rotate {
+            0% {
+                transform: rotate(0);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!--
+        https://developer.mozilla.org/en-US/docs/Web/CSS/animation-iteration-count
+    -->
+
+    <div class="box"></div>
+</body>
+
+</html>

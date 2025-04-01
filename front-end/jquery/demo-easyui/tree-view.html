@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" type="text/css" href="https://www.jeasyui.com/easyui/themes/default/easyui.css">
+    <link rel="stylesheet" type="text/css" href="https://www.jeasyui.com/easyui/themes/icon.css">
+    <script type="text/javascript" src="https://lib.baomitu.com/jquery/1.12.4/jquery.min.js"></script>
+    <script type="text/javascript" src="https://www.jeasyui.com/easyui/jquery.easyui.min.js"></script>
+    <script type="text/javascript">
+        // https://www.jeasyui.net/plugins/185.html
+        var editNode;
+        $(document).ready(function () {
+            $('#tt').tree({
+                // 启用拖拽
+                dnd: true,
+                data: [{
+                    text: 'Item1',
+                    // 节点没有icon
+                    iconCls: 'icon-blank',
+                    children: [{
+                        text: 'Item11',
+                        iconCls: 'icon-blank'
+                    }, {
+                        text: 'Item12',
+                        iconCls: 'icon-blank'
+                    }]
+                }, {
+                    text: 'Item2',
+                    iconCls: 'icon-blank'
+                }],
+                // 节点编辑后触发事件
+                onAfterEdit: function (node) {
+                    console.log("编辑后的节点名称为: " + node.text)
+                },
+                // 节点拖拽后触发事件
+                onStopDrag: function(node) {
+                    console.log(node)
+                    // 获取当前节点的上级节点，如果是顶级节点则返回null
+                    console.log($("#tt").tree("getParent", node.target))
+                },
+                // 在节点编辑状态中，如果选择其他节点则终止节点编辑状态
+                onSelect: function (node) {
+                    if (editNode) {
+                        // $('#tt').tree('update', {
+                        //     target: editNode.target,
+                        //     text: editNode.text
+                        // });
+
+                        $("#tt").tree("endEdit", editNode.target)
+                        editNode = null
+                    }
+                },
+                onContextMenu: function (e, node) {
+                    e.preventDefault();
+                    // select the node
+                    $('#tt').tree('select', node.target);
+                    // display context menu
+                    $('#mm').menu('show', {
+                        left: e.pageX,
+                        top: e.pageY
+                    });
+                }
+            });
+        });
+
+        // 新增节点
+        function appendNode() {
+            var selectedNode = $('#tt').tree('getSelected')
+            $('#tt').tree('append', {
+                parent: selectedNode.target,
+                data: [{
+                    id: 23,
+                    text: 'node23',
+                    iconCls: 'icon-blank'
+                }, {
+                    text: 'node24',
+                    iconCls: 'icon-blank',
+                    children: [{
+                        text: 'node241',
+                        iconCls: 'icon-blank'
+                    }, {
+                        text: 'node242',
+                        iconCls: 'icon-blank'
+                    }]
+                }]
+            });
+        }
+
+        // 编辑节点
+        function funEditNode() {
+            // todo 第二次编辑同一个节点会undefined
+            editNode = $('#tt').tree('getSelected')
+            $("#tt").tree("beginEdit", editNode.target)
+        }
+
+        // 删除节点
+        function removeNode() {
+            var selectedNode = $('#tt').tree('getSelected')
+            $('#tt').tree('remove', selectedNode.target)    
+        }
+
+        // 展开全部
+        function expandAll() {
+            $('#tt').tree('expandAll')    
+        }
+
+        // 折叠全部
+        function collapseAll() {
+            $('#tt').tree('collapseAll')   
+        }
+    </script>
+</head>
+
+<body>
+    <!-- <input id="btnAppendNode" type="button" value="新增节点" />
+    <input id="btnEditNode" type="button" value="编辑节点" /> -->
+
+    <!-- 定义一颗空的数，使用javascript填充数据 -->
+    <ul id="tt"></ul>
+
+    <div id="mm" class="easyui-menu" style="width:120px;">
+        <div onclick="appendNode()" data-options="iconCls:'icon-add'">新增节点</div>
+        <div onclick="funEditNode()" data-options="iconCls:'icon-edit'">编辑节点</div>
+        <div onclick="removeNode()" data-options="iconCls:'icon-remove'">删除节点</div>
+        <div onclick="expandAll()">展开全部</div>
+        <div onclick="collapseAll()">折叠全部</div>
+    </div>
+</body>
+
+</html>

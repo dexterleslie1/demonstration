@@ -1,0 +1,143 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis-cluster
+  namespace: "default"
+spec:
+  replicas: 6
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: redis-cluster
+  # 对应的 redis-headless 无头服务没有用到所以不存在
+  serviceName: redis-cluster-headless
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: redis-cluster
+    spec:
+      # securityContext:
+      #   fsGroup: 1001
+      # serviceAccountName: release-name-redis
+      # automountServiceAccountToken: true
+      # affinity:
+      #   podAffinity:
+          
+      #   podAntiAffinity:
+      #     preferredDuringSchedulingIgnoredDuringExecution:
+      #       - podAffinityTerm:
+      #           labelSelector:
+      #             matchLabels:
+      #               app.kubernetes.io/instance: release-name
+      #               app.kubernetes.io/name: redis
+      #               app.kubernetes.io/component: master
+      #           topologyKey: kubernetes.io/hostname
+      #         weight: 1
+      #   nodeAffinity:
+          
+      # enableServiceLinks: true
+      terminationGracePeriodSeconds: 30
+      # # 定向调度到性能测试专用k8s节点中
+      # # 通过kubectl taint node k8s-node-openresty support-only-perf-target:NoSchedule添加污点，为了不让jmeter slave daemonset调度到此节点
+      # # 通过kubectl label node k8s-node-openresty support-only-perf-target=添加标签，为了让redis通过标签选择器指定调度到此节点
+      # tolerations:
+      #   - effect: NoSchedule
+      #     key: support-only-perf-target
+      # nodeSelector:
+      #   support-only-perf-target: ""
+      containers:
+        - name: redis
+          # image: redis:5.0.14-bullseye
+          # 注意：使用这个新的镜像似乎redis.conf的持久化配置不生效依旧使用rdb方式
+          # image: redis:7.2.4-bookworm
+          image: redis:7.2.4
+          imagePullPolicy: IfNotPresent
+          # securityContext:
+          #   allowPrivilegeEscalation: false
+          #   capabilities:
+          #     drop:
+          #     - ALL
+          #   runAsGroup: 0
+          #   runAsNonRoot: true
+          #   runAsUser: 1001
+          #   seccompProfile:
+          #     type: RuntimeDefault
+          command:
+            - redis-server
+          args:
+            - /usr/local/etc/redis/redis.conf
+            # 需要指定cluster-announce-ip，否则在集群内使用ip地址通讯，在宿主机重启后因为ip地址变动集群变为fail状态
+            - --cluster-announce-ip $(MY_POD_NAME).redis-cluster-headless
+            # - --requirepass
+            # - "123456"
+          env:
+            - name: TZ
+              value: "Asia/Shanghai"
+            - name: MY_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          ports:
+            - name: redis
+              containerPort: 6379
+          # livenessProbe:
+          #   initialDelaySeconds: 0
+          #   periodSeconds: 1
+          #   # One second longer than command timeout should prevent generation of zombie processes.
+          #   timeoutSeconds: 5
+          #   successThreshold: 1
+          #   failureThreshold: 5
+          #   exec:
+          #     command:
+          #       - sh
+          #       - /health/ping_liveness_n_readines_local.sh
+          # readinessProbe:
+          #   initialDelaySeconds: 0
+          #   periodSeconds: 1
+          #   timeoutSeconds: 5
+          #   successThreshold: 1
+          #   failureThreshold: 5
+          #   exec:
+          #     command:
+          #       - sh
+          #       - /health/ping_liveness_n_readines_local.sh
+          resources:
+            limits:
+              cpu: 200m
+            requests: {}
+          volumeMounts:
+            # - name: redis-data
+            #   mountPath: /data
+            - name: config
+              mountPath: /usr/local/etc/redis/
+            - name: liveness-and-readiness-config
+              mountPath: /health/
+      volumes:
+        - name: config
+          configMap:
+            name: redis-configuration
+            items:
+            - key: redis-cluster.conf
+              path: redis.conf
+        - name: liveness-and-readiness-config
+          configMap:
+            name: redis-configuration
+            items:
+            - key: ping_liveness_n_readines_local.sh
+              path: ping_liveness_n_readines_local.sh
+        # - name: redis-data
+        #   emptyDir: {}
+  
+  volumeClaimTemplates:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: redis-data
+        labels:
+          app.kubernetes.io/name: redis-cluster
+      spec:
+        accessModes:
+          - "ReadWriteOnce"
+        resources:
+          requests:
+            storage: "8Gi"
+        storageClassName: nfs-client

@@ -1,0 +1,90 @@
+// 定义变量
+@link-color: red;
+@link-color-hover: darken(@link-color, 10%);
+
+// 使用变量
+.demo1 a {
+    color: @link-color;
+}
+
+.demo2 a:hover {
+    color: @link-color-hover;
+}
+
+@my-selector: demo2 div;
+
+// 在选择器中使用变量
+.@{my-selector} {
+    width: 50px;
+    height: 25px;
+    background-color: green;
+}
+
+@images: "../images";
+
+// 在url中使用变量
+.demo3 div {
+    width: 50px;
+    height: 50px;
+    background: url("@{images}/cute.jpg");
+    background-size: contain;
+}
+
+@property: color;
+
+// 在属性中使用变量
+.demo5 div {
+    width: 50px;
+    height: 25px;
+    @{property}: #0ee;
+    background-@{property}: #999;
+}
+
+// 属性当作变量使用
+.demo6 div {
+    width: 50px;
+    height: $width;
+    background-color: green;
+}
+
+// 变量默认值
+@import "lib.less";
+// 使用下面颜色值覆盖lib.less中默认的颜色值
+@base-color: yellow;
+
+// 使用&符号引用父选择器
+.demo8 a {
+    margin: 5px;
+    color: blue;
+
+    &:hover {
+        color: green;
+    }
+}
+.demo8>div {
+    margin: 5px;
+    width: 100px;
+    height: 25px;
+    background-color: green;
+}
+.demo8 .demo8- {
+    &1:hover {
+        color: red;
+    }
+    &1-1:hover {
+        color: blue;
+    }
+}
+
+// 使用&符号引用多级父选择器
+.demo9 {
+    .l1 {
+        .l2 {
+            & .l3 {
+                width: 50px;
+                height: 25px;
+                background-color: green;
+            }
+        }
+    }
+}

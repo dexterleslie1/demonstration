@@ -1,0 +1,109 @@
+unclassified:
+  location:
+    url: http://192.168.1.181:8080/
+
+jenkins:
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+       - id: admin
+         password: 'Aa321321!@#'
+  authorizationStrategy:
+    globalMatrix:
+      permissions:
+        - "Overall/Administer:admin"
+        - "Overall/Read:authenticated"
+  remotingSecurity:
+    enabled: true
+  
+  # 配置节点
+  # https://github.com/jenkinsci/configuration-as-code-plugin/blob/a6983ff60e0cf198ce02d7992bcba927197174db/demos/build_agents/README.md?plain=1#L37
+  nodes:
+    - permanent:
+        labelString: "centos8-slave"
+        mode: NORMAL
+        name: "centos8-slave"
+        numExecutors: 4
+        remoteFS: "/data/jenkins"
+        launcher:
+          SSHLauncher:
+            host: "192.168.1.187"
+            port: 22
+            credentialsId: 'centos8-slave-root-ssh'
+            launchTimeoutSeconds: 120
+            maxNumRetries: 3
+            retryWaitTime: 30
+            # 配置 NonVerifyingKeyVerificationStrategy
+            # https://github.com/jenkinsci/configuration-as-code-plugin/issues/1915
+            sshHostKeyVerificationStrategy:
+              manuallyTrustedKeyVerificationStrategy:
+                requireInitialManualTrust: false
+
+security:
+  queueItemAuthenticator:
+    authenticators:
+      - global:
+          strategy: triggeringUsersAuthorizationStrategy
+
+# 创建credentials
+# https://www.eficode.com/blog/start-jenkins-config-as-code
+credentials:
+  system:
+    domainCredentials:
+      - credentials:
+          - usernamePassword:
+              scope:    SYSTEM
+              id:       'centos8-slave-root-ssh'
+              username: 'root'
+              password: 'Root@123'
+      # 配置全局credentials
+      # https://github.com/jenkinsci/configuration-as-code-plugin/blob/master/docs/features/secrets.adoc
+      - credentials:
+          - usernamePassword:
+              scope:    SYSTEM
+              id:       'git-access-token'
+              username: 'root'
+              password: 'token-string-here123456'
+              scope: GLOBAL
+      - credentials:
+          - usernamePassword:
+              scope:    SYSTEM
+              id:       'harbor-token'
+              username: 'admin'
+              password: 'Harbor12345'
+              scope: GLOBAL
+
+# https://github.com/jenkinsci/job-dsl-plugin/blob/master/docs/JCasC.md
+# https://github.com/jenkinsci/job-dsl-plugin/blob/master/docs/Handling-Credentials.md
+jobs:
+  - script: |
+      pipelineJob('demo-devops-test') {
+        description('用于演示devops流程')
+        definition {
+          cpsScm {
+            lightweight(true)
+            scm {
+              git {
+                remote {
+                  url("http://demo-gitlab-server/root/test.git")
+                  credentials('git-access-token')
+                }
+                branch("*/main")
+              }
+            }
+            scriptPath("Jenkinsfile")
+          }
+        }
+      }
+
+# jobs:
+#   - script: |
+#       multibranchPipelineJob('configuration-as-code') {
+#           branchSources {
+#               git {
+#                   id = 'configuration-as-code'
+#                   remote('https://github.com/jenkinsci/configuration-as-code-plugin.git')
+#               }
+#           }
+#       }

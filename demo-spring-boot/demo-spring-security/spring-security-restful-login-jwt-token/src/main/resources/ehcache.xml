@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ehcache 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xsi:noNamespaceSchemaLocation="http://ehcache.org/ehcache.xsd"
+    updateCheck="false">
+    <cache name="cacheSmsCaptcha" maxElementsInMemory="10000"/>
+	<cache name="cacheLoginFailureCount" maxElementsInMemory="10000"/>
+	<cache name="cachePasswordLoginCaptcha" maxElementsInMemory="10000"/>
+	<cache name="cacheTokenToUser" maxElementsInMemory="10000"/>
+</ehcache>

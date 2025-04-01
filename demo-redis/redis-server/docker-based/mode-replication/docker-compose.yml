@@ -1,0 +1,97 @@
+# redis主从复制基本配置
+# https://blog.csdn.net/m0_69007223/article/details/128265457?app_version=6.1.9&csdn_share_tail=%7B%22type%22%3A%22blog%22%2C%22rType%22%3A%22article%22%2C%22rId%22%3A%22128265457%22%2C%22source%22%3A%22dexterchan%22%7D&utm_source=app
+
+version: "3.0"
+
+services:
+  demo-redis-replication-node1:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    image: my-redis-repl:5.0.14
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6379
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - 6379:6379
+
+  demo-redis-replication-node2:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    image: my-redis-repl:5.0.14
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6379
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - 6380:6379
+    depends_on:
+      - demo-redis-replication-node1
+  demo-redis-replication-node2-slave-join:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    image: my-redis-repl:5.0.14
+    command: sh -c "dockerize -wait tcp://demo-redis-replication-node1:6379 -timeout 120s -wait-retry-interval 5s
+                    && dockerize -wait tcp://demo-redis-replication-node2:6379 -timeout 120s -wait-retry-interval 5s
+                    && redis-cli -h demo-redis-replication-node2 slaveof demo-redis-replication-node1 6379
+                    && redis-cli -h demo-redis-replication-node2 config rewrite
+                    && echo \"成功join slave\""
+    environment:
+      - TZ=Asia/Shanghai
+    depends_on:
+      - demo-redis-replication-node1
+  
+  demo-redis-replication-node3:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    image: my-redis-repl:5.0.14
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6379
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - 6381:6379
+    depends_on:
+      - demo-redis-replication-node1
+  demo-redis-replication-node3-slave-join:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    image: my-redis-repl:5.0.14
+    command: sh -c "dockerize -wait tcp://demo-redis-replication-node1:6379 -timeout 120s -wait-retry-interval 5s
+                    && dockerize -wait tcp://demo-redis-replication-node3:6379 -timeout 120s -wait-retry-interval 5s
+                    && redis-cli -h demo-redis-replication-node3 slaveof demo-redis-replication-node1 6379
+                    && redis-cli -h demo-redis-replication-node3 config rewrite
+                    && echo \"成功join slave\""
+    environment:
+      - TZ=Asia/Shanghai
+    depends_on:
+      - demo-redis-replication-node1
+
+  demo-redis-replication-node4:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    image: my-redis-repl:5.0.14
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6379
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - 6382:6379
+    depends_on:
+      - demo-redis-replication-node1
+  demo-redis-replication-node4-slave-join:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    image: my-redis-repl:5.0.14
+    command: sh -c "dockerize -wait tcp://demo-redis-replication-node1:6379 -timeout 120s -wait-retry-interval 5s
+                    && dockerize -wait tcp://demo-redis-replication-node4:6379 -timeout 120s -wait-retry-interval 5s
+                    && redis-cli -h demo-redis-replication-node4 slaveof demo-redis-replication-node1 6379
+                    && redis-cli -h demo-redis-replication-node4 config rewrite
+                    && echo \"成功join slave\""
+    environment:
+      - TZ=Asia/Shanghai
+    depends_on:
+      - demo-redis-replication-node1

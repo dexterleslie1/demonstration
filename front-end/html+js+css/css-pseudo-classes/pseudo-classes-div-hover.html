@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>演示div使用hover伪类</title>
+
+    <style type="text/css">
+        .divDemo {
+            color: #D6D6D6;
+        }
+
+        .divDemo:hover {
+            color: #B2B2B2;
+        }
+
+        .div2>div {
+            width: 200px;
+            height: 200px;
+            background-color: green;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .div2>div>div {
+            width: 150px;
+            height: 150px;
+            background-color: yellow;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .div2>div>div>div {
+            width: 100px;
+            height: 100px;
+            background-color: red;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .div2>div>div>div>div {
+            width: 50px;
+            height: 50px;
+            background-color: aqua;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .div2:hover div:not(:hover) {
+            opacity: 0.2;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="divDemo">
+        Hover时字体颜色会变化
+    </div>
+    <hr>
+
+    <div class="div2">
+        <div>
+            <div>
+                <div>
+                    <div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <hr>
+</body>
+
+</html>

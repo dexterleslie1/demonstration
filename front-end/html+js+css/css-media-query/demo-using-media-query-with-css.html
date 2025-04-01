@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <!--
+        https://css-tricks.com/a-complete-guide-to-css-media-queries/
+        根据不同的屏幕尺寸使用不同的css
+    -->
+    <style>
+        .div1 {
+            width: 100px;
+            height: 100px;
+        }
+
+        @media only screen and (max-width: 600px) {
+            .div1 {
+                background-color: red;
+            }
+        }
+
+        @media only screen and (min-width: 600px) and (max-width: 700px) {
+            .div1 {
+                background-color: yellow;
+            }
+        }
+
+        @media only screen and (min-width: 700px) {
+            .div1 {
+                background-color: skyblue;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="div1">
+
+    </div>
+</body>
+</html>

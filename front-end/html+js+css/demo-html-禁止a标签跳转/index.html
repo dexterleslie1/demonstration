@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div>演示禁止a标签点击后跳转</div>
+    <div class="demo1">
+        <a href="https://www.baidu.com" onclick="return onclick1()">跳转到百度</a>
+    </div>
+    <hr>
+
+    <script>
+        function onclick1() {
+            alert("你点击了a标签，但是不会跳转")
+            // 返回 false 表示a标签点击后不会跳转
+            return false
+        }
+    </script>
+</body>
+</html>

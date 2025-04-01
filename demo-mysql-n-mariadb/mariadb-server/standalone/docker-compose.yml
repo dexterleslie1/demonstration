@@ -1,0 +1,42 @@
+version: "3.0"
+
+services:
+  # docker 运行 centos/mariadb
+  # https://hub.docker.com/r/centos/mariadb
+  # 使用指定字符集启动mariadb
+  # https://stackoverflow.com/questions/45729326/how-to-change-the-default-character-set-of-mysql-using-docker-compose/53629912
+  
+  # 挂载数据库初始化脚本db.sql
+  # NOTE: db.sql脚本挂载前已存，否则映射到容器的db.sql为目录类型，宿主机的db.sql需要chmod a+r db.sql赋予r权限，否则容器启动过程中会失败并且提示permission denied。
+  # docker run --rm --name mariadb-demo -p 3306:3306 -v /data/data-mariadb-demo:/var/lib/mysql -v $(pwd)/db.sql:/docker-entrypoint-initdb.d/db.sql -e MYSQL_ROOT_PASSWORD=123456 -e TZ=Asia/Shanghai mariadb:10.4.19  --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci --skip-character-set-client-handshake
+  db:
+    build:
+      context: ./
+    image: demo-mariadb-standalone-server
+    command:
+     - --character-set-server=utf8mb4
+     - --collation-server=utf8mb4_general_ci
+     - --skip-character-set-client-handshake
+     # 设置innodb-buffer-pool-size
+     # https://stackoverflow.com/questions/64825998/how-to-change-the-default-config-for-mysql-when-using-docker-image
+     - --innodb-buffer-pool-size=1g
+    volumes:
+    #  - ~/data-demo-mariadb-standalone-server:/var/lib/mysql
+      - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf:ro
+    environment:
+      # 解决mysql cli中文乱码问题
+      # https://blog.csdn.net/qq_44766883/article/details/128065916
+      - LANG=C.UTF-8
+      - TZ=Asia/Shanghai
+      - MYSQL_ROOT_PASSWORD=${dbPassword}
+    ports:
+      - 3306:3306
+
+  db-updator:
+    image: demo-mariadb-standalone-server
+    environment:
+      - TZ=Asia/Shanghai
+    command: sh -c "dockerize -wait tcp://db:3306 -timeout 120s -wait-retry-interval 5s
+      && mysql -uroot -p${dbPassword} -P3306 -hdb demo_db < /docker-entrypoint-initdb.d/db.sql
+      && echo \"成功执行数据库脚本\""
+

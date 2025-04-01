@@ -1,0 +1,21 @@
+version: "3.0"
+
+# 创建网络
+networks:
+  net:
+    name: demo-captcha-redis-memory-usage
+
+services:
+  # 启动redis
+  demo-captcha-redis-memory-usage-redis:
+    container_name: demo-captcha-redis-memory-usage-redis
+    image: redis:3.0.4
+    # 设置redis密码
+    command: redis-server --requirepass 123456
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - 6379:6379
+    networks:
+      - net
+

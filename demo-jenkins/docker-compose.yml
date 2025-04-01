@@ -1,0 +1,51 @@
+version: "3.0"
+
+networks:
+  net:
+    name: demo-jenkins-net
+
+services:
+  demo-jenkins-server:
+    build:
+      context: ./
+    container_name: demo-jenkins-server
+    image: demo-jenkins-server-image
+    ports:
+      - 50001:8080
+      - 50000:50000
+    environment:
+      - TZ=Asia/Shanghai
+    networks:
+      - net
+
+  demo-gitlab-server:
+    container_name: demo-gitlab-server
+    image: gitlab/gitlab-ce:16.2.2-ce.0
+    ports:
+      - 50002:80
+    environment:
+      TZ: Asia/Shanghai
+      GITLAB_OMNIBUS_CONFIG: |
+        # # external_url 'http://0.0.0.0'
+        # 减少内存使用配置
+        # https://docs.gitlab.com/omnibus/settings/memory_constrained_envs.html
+        postgresql['shared_buffers'] = "512MB"
+        puma['worker_processes'] = 0
+        prometheus_monitoring['enable'] = false
+        sidekiq['max_concurrency'] = 3
+        # 设置root密码，NOTE: 不能是12345678、Root@123这些简单的密码，否则容器初始化失败
+        # https://stackoverflow.com/questions/56631893/how-do-i-start-a-gitlab-ce-container-via-docker-compose-with-admin-credentials-a
+        gitlab_rails['initial_root_password'] = 'Aa321321!@#'
+
+      # https://gitlab.com/gitlab-org/omnibus-gitlab/-/issues/2837
+      GITLAB_POST_RECONFIGURE_SCRIPT: |
+        # 禁止signup、禁止admin approval signup、创建access token
+        gitlab-rails runner "ApplicationSetting.last.update_attribute(:signup_enabled, false); ApplicationSetting.last.update_attribute(:require_admin_approval_after_user_signup, false); token = User.find_by_username('root').personal_access_tokens.create(scopes: ['admin_mode','api'], name: 'Automation token', expires_at: 365.days.from_now); token.set_token('token-string-here123456'); token.save!" || true
+        echo "成功禁止signup、禁止admin approval signup、创建access token"
+        # 创建test项目
+        curl --header "Authorization: Bearer token-string-here123456" --header "Content-Type: application/json" --data '{"name": "test", "description": "test","namespace": "root", "initialize_with_readme": "true", "visibility": "private"}' -X POST http://localhost/api/v4/projects
+        echo "成功创建test项目"
+
+    networks:
+      - net
+

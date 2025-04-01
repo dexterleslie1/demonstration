@@ -1,0 +1,13 @@
+version: "3.0"
+
+# # 创建网络
+# networks:
+#   net:
+#     name: demo-maven-net
+
+services:
+  demo-maven:
+    container_name: demo-maven
+    image: docker.118899.net:10001/demo/demo-maven:1.0.0
+    # networks:
+    #   - net

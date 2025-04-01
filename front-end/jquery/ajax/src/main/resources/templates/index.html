@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <input type="button" value="$.ajax的GET请求返回http 400错误" id="btnTestGetWithHttp400"/>
+    <br/>
+    <input type="button" value="$.ajax的GET请求" id="btnTestGet"/>
+    <br/>
+    <input type="button" value="$.ajax的POST请求" id="btnTestPost"/>
+    <br/>
+    <input type="button" value="$.get请求" id="btn1"/>
+    <br/>
+    <input type="button" value="$.post请求" id="btn2"/>
+</body>
+<script type="text/javascript" src="https://lib.baomitu.com/jquery/1.12.4/jquery.min.js"></script>
+<script type="text/javascript">
+  $(document).ready(function() {
+      // jQuery ajax全局异常处理
+      // https://stackoverflow.com/questions/4341933/wrap-jquerys-ajax-method-to-define-global-error-handling
+      $(document).ajaxError(function myErrorHandler(event, xhr, ajaxOptions, thrownError) {
+          if (xhr.responseJSON) {
+              if (xhr.responseJSON.errorCode > 0) {
+                  alert(xhr.responseJSON.errorMessage)
+              } else {
+                  alert("调用服务接口出现错误，原因: " + JSON.stringify(xhr.responseJSON))
+              }
+          } else if (xhr.responseText) {
+              alert("调用服务接口出现错误，原因: " + xhr.responseText)
+          } else {
+              alert("调用服务接口出现错误")
+          }
+      })
+
+      $("#btnTestGetWithHttp400").click(function() {
+          $.ajax({
+              type: "GET",
+              url: "/api/v1/get?exception=true",
+              headers: {
+                  Authorization: "myAccessToken"
+              },
+              success: function(data) {
+                  console.log(data)
+              },
+              error(xhr,status,error) {
+                  console.log(xhr)
+              }
+          })
+      })
+
+      $("#btnTestGet").click(function() {
+          $.ajax({
+              type: "GET",
+              url: "/api/v1/get",
+              // 设置header
+              // https://blog.csdn.net/zzk220106/article/details/81316092
+              headers: {
+                  Authorization: "myAccessToken"
+              },
+              success: function(data) {
+                  console.log(data)
+              },
+              error(xhr,status,error) {
+                  console.log(xhr)
+              }
+          })
+      })
+
+      $("#btnTestPost").click(function() {
+          $.ajax({
+              type: "POST",
+              url: "/api/v1/post",
+              data: {param1: "p1"},
+              // 设置header
+              // https://blog.csdn.net/zzk220106/article/details/81316092
+              headers: {
+                  Authorization: "myAccessToken"
+              },
+              success: function(data) {
+                  console.log(data)
+              },
+              error(xhr,status,error) {
+                  console.log(xhr)
+              }
+          })
+      })
+
+      $("#btn1").click(function() {
+          $.get("/api/v1/get",function(data, status) {
+              console.log(data)
+          })
+      })
+
+      // https://stackoverflow.com/questions/2697719/error-handling-with-post
+      // https://api.jquery.com/jquery.post/
+      $("#btn2").click(function() {
+          $.post("/api/v1/post",function(data) {
+              console.log(`调用成功，数据：${JSON.stringify(data)}`)
+          }).fail(function(error) {
+              console.log(`调用失败，错误：${JSON.stringify(error)}`)
+          }).always(function() {
+              console.log("完成");
+          });
+      })
+  })
+</script>
+</html>

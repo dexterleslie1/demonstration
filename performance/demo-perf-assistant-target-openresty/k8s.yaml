@@ -1,0 +1,954 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+ name: openresty-np-svc
+spec:
+ type: NodePort
+ ports:
+  - port: 80
+    targetPort: 80
+    nodePort: 31000
+ selector:
+  app: openresty
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+ name: grafana-np-svc
+spec:
+ type: NodePort
+ ports:
+  - port: 3000
+    targetPort: 3000
+    nodePort: 30001
+ selector:
+  app: grafana-perf
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+ name: target-openresty
+spec:
+ type: ClusterIP
+ selector:
+  app: openresty
+ ports:
+  - name: http
+    port: 80
+    targetPort: 80
+  - name: prometheus
+    port: 9145
+    targetPort: 9145
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: openresty
+spec:
+ replicas: 1
+ selector:
+  matchLabels:
+   app: openresty
+ template:
+  metadata:
+   labels:
+    app: openresty
+  spec:
+   # 定向调度到openresty专用k8s节点中
+   # 通过kubectl taint node k8s-node-openresty support-only-perf-target:NoSchedule添加污点，为了不让jmeter slave daemonset调度到此节点
+   # 通过kubectl label node k8s-node-openresty support-only-perf-target=添加标签，为了让openresty通过标签选择器指定调度到此节点
+   tolerations:
+   - effect: NoSchedule
+     key: support-only-perf-target
+   nodeSelector:
+    support-only-perf-target: ""
+   containers:
+   - name: demo-perf-assistant-target-openresty-dev
+     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-perf-assistant-target-openresty-dev
+     imagePullPolicy: IfNotPresent
+    #  resources:
+    #   limits:
+    #    cpu: 100m
+     env:
+     - name: "TZ"
+       value: "Asia/Shanghai"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+ name: prometheus
+spec:
+ type: ClusterIP
+ selector:
+  app: prometheus
+ ports:
+  - port: 9090
+    targetPort: 9090
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: prometheus
+spec:
+ replicas: 1
+ selector:
+  matchLabels:
+   app: prometheus
+ template:
+  metadata:
+   labels:
+    app: prometheus
+  spec:
+   # 指定调度到master节点上
+   nodeSelector:
+    node-role.kubernetes.io/master: ""
+   tolerations:
+   - effect: NoSchedule
+     key: node-role.kubernetes.io/master
+   containers:
+   - name: prometheus
+     image: prom/prometheus:v2.37.6
+     imagePullPolicy: IfNotPresent
+     args:
+     - '--config.file=/etc/prometheus/prometheus.yml'
+     - '--storage.tsdb.path=/prometheus'
+     - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+     - '--web.console.templates=/usr/share/prometheus/consoles'
+     #热加载配置
+     - '--web.enable-lifecycle'
+     #api配置
+     #- '--web.enable-admin-api'
+     #历史数据最大保留时间，默认15天
+     - '--storage.tsdb.retention.time=30d'
+    #  command: ["sh", "-c", "sleep 7200"]
+     env:
+     - name: "TZ"
+       value: "Asia/Shanghai"
+     volumeMounts:
+     - name: prometheus-cm
+       mountPath: /etc/prometheus/prometheus.yml
+       subPath: prometheus.yml
+     - name: prometheus-cm
+       mountPath: /etc/prometheus/alert-rule.yml
+       subPath: alert-rule.yml
+   volumes:
+   - name: prometheus-cm
+     configMap:
+      name: prometheus-cm
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: grafana-perf
+spec:
+ replicas: 1
+ selector:
+  matchLabels:
+   app: grafana-perf
+ template:
+  metadata:
+   labels:
+    app: grafana-perf
+  spec:
+   # 指定调度到master节点上
+   nodeSelector:
+    node-role.kubernetes.io/master: ""
+   tolerations:
+   - effect: NoSchedule
+     key: node-role.kubernetes.io/master
+   containers:
+   - name: grafana
+     image: grafana/grafana:9.4.3
+     imagePullPolicy: IfNotPresent
+     envFrom:
+     - configMapRef:
+        name: grafana-cm-2
+     env:
+     - name: "TZ"
+       value: "Asia/Shanghai"
+     volumeMounts:
+     - name: grafana-cm-1
+       mountPath: /etc/grafana/provisioning/datasources/default.yaml
+       subPath: datasources.yaml
+     - name: grafana-cm-1
+       mountPath: /etc/grafana/provisioning/dashboards/default.yaml
+       subPath: dashboards.yaml
+     - name: grafana-cm-1
+       mountPath: /var/lib/grafana/dashboards/10223.json
+       subPath: 10223.json
+   volumes:
+   - name: grafana-cm-1
+     configMap:
+      name: grafana-cm-1
+   - name: grafana-cm-2
+     configMap:
+      name: grafana-cm-2
+
+---
+apiVersion: v1
+data:
+  alert-rule.yml: |-
+    groups:
+    - name: Prometheus alert
+      rules:
+      # 对任何实例超过30秒无法联系的情况发出警报
+      - alert: 服务告警
+        expr: up == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "服务异常,实例:{{ $labels.instance }}"
+          description: "{{ $labels.job }} 服务已关闭"
+  prometheus.yml: "# 全局配置\nglobal:\n  scrape_interval:     15s # 将搜刮间隔设置为每15秒一次。默认是每1分钟一次。\n
+    \ evaluation_interval: 15s # 每15秒评估一次规则。默认是每1分钟一次。\n\n# Alertmanager 配置\n# alerting:\n#
+    \  alertmanagers:\n#   - static_configs:\n#     - targets: ['alertmanager:9093']\n\n#
+    报警(触发器)配置\nrule_files:\n  - \"alert-rule.yml\"\n\n# 搜刮配置\nscrape_configs:\n  -
+    job_name: \"prometheus\"\n    static_configs:\n      - targets: [\"prometheus:9090\"]\n
+    \ # openresty metrics端点配置\n  - job_name: 'openresty'\n    static_configs:\n      -
+    targets: ['target-openresty:9145']\n  # - job_name: 'alertmanager'\n  #   scrape_interval:
+    15s\n  #   static_configs:\n  #   - targets: ['alertmanager:9093']\n  # - job_name:
+    'cadvisor'\n  #   scrape_interval: 15s\n  #   static_configs:\n  #   - targets:
+    ['cadvisor:8080']\n  #     labels:\n  #       instance: Prometheus服务器 \n\n  #
+    - job_name: 'node-exporter'\n  #   scrape_interval: 15s\n  #   static_configs:\n
+    \ #   - targets: ['node_exporter:9100']\n  #     labels:\n  #       instance:
+    Prometheus服务器\n  #   - targets: ['192.168.1.205:9100']\n  #     labels:\n  #       instance:
+    centOS8测试服务器\n\n  # - job_name: 'process-exporter'\n  #   scrape_interval: 15s\n
+    \ #   static_configs:\n  #   - targets: ['192.168.1.205:9256']\n  #     labels:\n
+    \ #       instance: centOS8测试服务器\n  #   - targets: ['192.168.1.204:9256']\n  #
+    \    labels:\n  #       instance: centOS8-204"
+kind: ConfigMap
+metadata:
+  name: prometheus-cm
+
+---
+apiVersion: v1
+data:
+  10223.json: |-
+    {
+        "annotations": {
+          "list": [
+            {
+              "builtIn": 1,
+              "datasource": {
+                "type": "datasource",
+                "uid": "grafana"
+              },
+              "enable": true,
+              "hide": true,
+              "iconColor": "rgba(0, 211, 255, 1)",
+              "name": "Annotations & Alerts",
+              "target": {
+                "limit": 100,
+                "matchAny": false,
+                "tags": [],
+                "type": "dashboard"
+              },
+              "type": "dashboard"
+            }
+          ]
+        },
+        "description": "Nginx dashboard for nginx-lua-prometheus",
+        "editable": true,
+        "fiscalYearStartMonth": 0,
+        "gnetId": 10223,
+        "graphTooltip": 0,
+        "id": 2,
+        "links": [],
+        "liveNow": false,
+        "panels": [
+          {
+            "aliasColors": {
+              "reading": "semi-dark-red",
+              "waiting": "semi-dark-green",
+              "writing": "semi-dark-orange"
+            },
+            "bars": false,
+            "dashLength": 10,
+            "dashes": false,
+            "datasource": {
+              "type": "prometheus",
+              "uid": "PBFA97CFB590B2093"
+            },
+            "fill": 1,
+            "fillGradient": 0,
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 0,
+              "y": 0
+            },
+            "hiddenSeries": false,
+            "id": 6,
+            "legend": {
+              "alignAsTable": false,
+              "avg": false,
+              "current": false,
+              "max": false,
+              "min": false,
+              "rightSide": false,
+              "show": true,
+              "total": false,
+              "values": false
+            },
+            "lines": true,
+            "linewidth": 1,
+            "links": [],
+            "nullPointMode": "null",
+            "options": {
+              "alertThreshold": true
+            },
+            "percentage": false,
+            "pluginVersion": "9.4.3",
+            "pointradius": 2,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [],
+            "spaceLength": 10,
+            "stack": false,
+            "steppedLine": false,
+            "targets": [
+              {
+                "datasource": {
+                  "type": "prometheus",
+                  "uid": "PBFA97CFB590B2093"
+                },
+                "expr": "nginx_http_connections{instance=\"$server\"}",
+                "format": "time_series",
+                "intervalFactor": 1,
+                "legendFormat": "{{state}}",
+                "refId": "A"
+              }
+            ],
+            "thresholds": [],
+            "timeRegions": [],
+            "title": "Nginx HTTP Connections",
+            "tooltip": {
+              "shared": true,
+              "sort": 0,
+              "value_type": "individual"
+            },
+            "type": "graph",
+            "xaxis": {
+              "mode": "time",
+              "show": true,
+              "values": []
+            },
+            "yaxes": [
+              {
+                "format": "short",
+                "logBase": 1,
+                "show": true
+              },
+              {
+                "format": "short",
+                "logBase": 1,
+                "show": true
+              }
+            ],
+            "yaxis": {
+              "align": false
+            }
+          },
+          {
+            "aliasColors": {},
+            "bars": false,
+            "dashLength": 10,
+            "dashes": false,
+            "datasource": {
+              "type": "prometheus",
+              "uid": "PBFA97CFB590B2093"
+            },
+            "fill": 1,
+            "fillGradient": 0,
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 12,
+              "y": 0
+            },
+            "hiddenSeries": false,
+            "id": 10,
+            "legend": {
+              "alignAsTable": true,
+              "avg": false,
+              "current": true,
+              "max": false,
+              "min": false,
+              "rightSide": true,
+              "show": true,
+              "sort": "current",
+              "sortDesc": true,
+              "total": false,
+              "values": true
+            },
+            "lines": true,
+            "linewidth": 1,
+            "links": [],
+            "nullPointMode": "null",
+            "options": {
+              "alertThreshold": true
+            },
+            "percentage": false,
+            "pluginVersion": "9.4.3",
+            "pointradius": 2,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [],
+            "spaceLength": 10,
+            "stack": false,
+            "steppedLine": false,
+            "targets": [
+              {
+                "datasource": {
+                  "type": "prometheus",
+                  "uid": "PBFA97CFB590B2093"
+                },
+                "expr": "sum(irate(nginx_http_requests_total{instance=\"$server\", host!~\"|127.0.0.1\"}[5m])) by (host)",
+                "format": "time_series",
+                "intervalFactor": 1,
+                "legendFormat": "{{host}}",
+                "refId": "A"
+              }
+            ],
+            "thresholds": [],
+            "timeRegions": [],
+            "title": "Requests Per Host",
+            "tooltip": {
+              "shared": true,
+              "sort": 0,
+              "value_type": "individual"
+            },
+            "type": "graph",
+            "xaxis": {
+              "mode": "time",
+              "show": true,
+              "values": []
+            },
+            "yaxes": [
+              {
+                "format": "short",
+                "logBase": 1,
+                "show": true
+              },
+              {
+                "format": "short",
+                "logBase": 1,
+                "show": true
+              }
+            ],
+            "yaxis": {
+              "align": false
+            }
+          },
+          {
+            "aliasColors": {},
+            "bars": false,
+            "dashLength": 10,
+            "dashes": false,
+            "datasource": {
+              "type": "prometheus",
+              "uid": "PBFA97CFB590B2093"
+            },
+            "fill": 2,
+            "fillGradient": 0,
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 0,
+              "y": 8
+            },
+            "hiddenSeries": false,
+            "id": 4,
+            "legend": {
+              "avg": false,
+              "current": false,
+              "max": false,
+              "min": false,
+              "show": false,
+              "total": false,
+              "values": false
+            },
+            "lines": true,
+            "linewidth": 1,
+            "links": [],
+            "nullPointMode": "null",
+            "options": {
+              "alertThreshold": true
+            },
+            "percentage": false,
+            "pluginVersion": "9.4.3",
+            "pointradius": 2,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [
+              {
+                "alias": "50th percentile",
+                "color": "#FFCB7D"
+              },
+              {
+                "alias": "75th percentile",
+                "color": "#FFB357"
+              },
+              {
+                "alias": "95th percentile",
+                "color": "#FF780A"
+              },
+              {
+                "alias": "99.9th percentile",
+                "color": "#FA6400"
+              }
+            ],
+            "spaceLength": 10,
+            "stack": false,
+            "steppedLine": false,
+            "targets": [
+              {
+                "datasource": {
+                  "type": "prometheus",
+                  "uid": "PBFA97CFB590B2093"
+                },
+                "expr": "histogram_quantile(0.5, rate(nginx_http_request_duration_seconds_bucket{instance=\"$server\", host=\"$host\"}[1m]))",
+                "format": "time_series",
+                "intervalFactor": 1,
+                "legendFormat": "50th percentile",
+                "refId": "D"
+              },
+              {
+                "datasource": {
+                  "type": "prometheus",
+                  "uid": "PBFA97CFB590B2093"
+                },
+                "expr": "histogram_quantile(0.75, rate(nginx_http_request_duration_seconds_bucket{instance=\"$server\", host=\"$host\"}[1m]))",
+                "format": "time_series",
+                "hide": false,
+                "intervalFactor": 1,
+                "legendFormat": "75th percentile",
+                "refId": "A"
+              },
+              {
+                "datasource": {
+                  "type": "prometheus",
+                  "uid": "PBFA97CFB590B2093"
+                },
+                "expr": "histogram_quantile(0.95, rate(nginx_http_request_duration_seconds_bucket{instance=\"$server\", host=\"$host\"}[1m]))",
+                "format": "time_series",
+                "hide": false,
+                "intervalFactor": 1,
+                "legendFormat": "95th percentile",
+                "refId": "B"
+              },
+              {
+                "datasource": {
+                  "type": "prometheus",
+                  "uid": "PBFA97CFB590B2093"
+                },
+                "expr": "histogram_quantile(0.999, rate(nginx_http_request_duration_seconds_bucket{instance=\"$server\", host=\"$host\"}[1m]))",
+                "format": "time_series",
+                "hide": false,
+                "intervalFactor": 1,
+                "legendFormat": "99.9th percentile",
+                "refId": "C"
+              }
+            ],
+            "thresholds": [],
+            "timeRegions": [],
+            "title": "Request Duration Percentile - $host",
+            "tooltip": {
+              "shared": true,
+              "sort": 0,
+              "value_type": "individual"
+            },
+            "type": "graph",
+            "xaxis": {
+              "mode": "time",
+              "show": true,
+              "values": []
+            },
+            "yaxes": [
+              {
+                "format": "s",
+                "logBase": 2,
+                "show": true
+              },
+              {
+                "format": "short",
+                "logBase": 1,
+                "show": true
+              }
+            ],
+            "yaxis": {
+              "align": false
+            }
+          },
+          {
+            "cards": {},
+            "color": {
+              "cardColor": "#FA6400",
+              "colorScale": "sqrt",
+              "colorScheme": "interpolateOranges",
+              "exponent": 0.5,
+              "mode": "opacity"
+            },
+            "dataFormat": "tsbuckets",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "PBFA97CFB590B2093"
+            },
+            "fieldConfig": {
+              "defaults": {
+                "custom": {
+                  "hideFrom": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": false
+                  },
+                  "scaleDistribution": {
+                    "type": "linear"
+                  }
+                }
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 12,
+              "y": 8
+            },
+            "heatmap": {},
+            "hideZeroBuckets": false,
+            "highlightCards": true,
+            "id": 2,
+            "interval": "20s",
+            "legend": {
+              "show": false
+            },
+            "links": [],
+            "options": {
+              "calculate": false,
+              "calculation": {},
+              "cellGap": 2,
+              "cellValues": {
+                "decimals": 0
+              },
+              "color": {
+                "exponent": 0.5,
+                "fill": "#FA6400",
+                "mode": "opacity",
+                "reverse": false,
+                "scale": "exponential",
+                "scheme": "Oranges",
+                "steps": 128
+              },
+              "exemplars": {
+                "color": "rgba(255,0,255,0.7)"
+              },
+              "filterValues": {
+                "le": 1e-9
+              },
+              "legend": {
+                "show": false
+              },
+              "rowsFrame": {
+                "layout": "auto"
+              },
+              "showValue": "never",
+              "tooltip": {
+                "show": true,
+                "yHistogram": false
+              },
+              "yAxis": {
+                "axisPlacement": "left",
+                "reverse": false,
+                "unit": "s"
+              }
+            },
+            "pluginVersion": "9.4.3",
+            "reverseYBuckets": false,
+            "targets": [
+              {
+                "datasource": {
+                  "type": "prometheus",
+                  "uid": "PBFA97CFB590B2093"
+                },
+                "expr": "idelta(nginx_http_request_duration_seconds_bucket{instance=\"$server\",host=\"$host\"}[1m])",
+                "format": "heatmap",
+                "instant": false,
+                "interval": "20s",
+                "intervalFactor": 2,
+                "legendFormat": "{{le}}",
+                "refId": "A"
+              }
+            ],
+            "title": "Request Duration Histogram - $host",
+            "tooltip": {
+              "show": true,
+              "showHistogram": false
+            },
+            "tooltipDecimals": 0,
+            "type": "heatmap",
+            "xAxis": {
+              "show": true
+            },
+            "yAxis": {
+              "format": "s",
+              "logBase": 1,
+              "show": true
+            },
+            "yBucketBound": "auto"
+          },
+          {
+            "aliasColors": {
+              "302": "light-purple",
+              "304": "semi-dark-purple",
+              "409": "semi-dark-red"
+            },
+            "bars": false,
+            "dashLength": 10,
+            "dashes": false,
+            "datasource": {
+              "type": "prometheus",
+              "uid": "PBFA97CFB590B2093"
+            },
+            "fill": 1,
+            "fillGradient": 0,
+            "gridPos": {
+              "h": 8,
+              "w": 24,
+              "x": 0,
+              "y": 16
+            },
+            "hiddenSeries": false,
+            "id": 8,
+            "legend": {
+              "alignAsTable": true,
+              "avg": false,
+              "current": true,
+              "max": true,
+              "min": true,
+              "rightSide": true,
+              "show": true,
+              "total": false,
+              "values": true
+            },
+            "lines": true,
+            "linewidth": 1,
+            "links": [],
+            "nullPointMode": "null",
+            "options": {
+              "alertThreshold": true
+            },
+            "percentage": false,
+            "pluginVersion": "9.4.3",
+            "pointradius": 2,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [
+              {
+                "alias": "200",
+                "color": "#56A64B"
+              },
+              {
+                "alias": "500",
+                "color": "#C4162A"
+              },
+              {
+                "alias": "502",
+                "color": "#E02F44"
+              }
+            ],
+            "spaceLength": 10,
+            "stack": false,
+            "steppedLine": false,
+            "targets": [
+              {
+                "datasource": {
+                  "type": "prometheus",
+                  "uid": "PBFA97CFB590B2093"
+                },
+                "expr": "rate(nginx_http_requests_total{instance=\"$server\", host=\"$host\"}[2m])",
+                "format": "time_series",
+                "intervalFactor": 1,
+                "legendFormat": "{{status}}",
+                "refId": "A"
+              }
+            ],
+            "thresholds": [],
+            "timeRegions": [],
+            "title": "Requests by Status - $host",
+            "tooltip": {
+              "shared": true,
+              "sort": 0,
+              "value_type": "individual"
+            },
+            "type": "graph",
+            "xaxis": {
+              "mode": "time",
+              "show": true,
+              "values": []
+            },
+            "yaxes": [
+              {
+                "format": "short",
+                "logBase": 1,
+                "show": true
+              },
+              {
+                "format": "short",
+                "logBase": 1,
+                "show": true
+              }
+            ],
+            "yaxis": {
+              "align": false
+            }
+          }
+        ],
+        "refresh": "10s",
+        "revision": 1,
+        "schemaVersion": 38,
+        "style": "dark",
+        "tags": [],
+        "templating": {
+          "list": [
+            {
+              "current": {
+                "selected": false,
+                "text": "target-openresty:9145",
+                "value": "target-openresty:9145"
+              },
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "definition": "label_values(nginx_http_connections, instance)",
+              "hide": 0,
+              "includeAll": false,
+              "label": "instance",
+              "multi": false,
+              "name": "server",
+              "options": [],
+              "query": {
+                "query": "label_values(nginx_http_connections, instance)",
+                "refId": "Prometheus-server-Variable-Query"
+              },
+              "refresh": 1,
+              "regex": "",
+              "skipUrlSync": false,
+              "sort": 0,
+              "tagValuesQuery": "",
+              "tagsQuery": "",
+              "type": "query",
+              "useTags": false
+            },
+            {
+              "current": {
+                "isNone": true,
+                "selected": false,
+                "text": "None",
+                "value": ""
+              },
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "definition": "label_values(nginx_http_request_duration_seconds_bucket{instance=\"$server\"}, host)",
+              "hide": 0,
+              "includeAll": false,
+              "label": "host",
+              "multi": false,
+              "name": "host",
+              "options": [],
+              "query": {
+                "query": "label_values(nginx_http_request_duration_seconds_bucket{instance=\"$server\"}, host)",
+                "refId": "Prometheus-host-Variable-Query"
+              },
+              "refresh": 1,
+              "regex": "",
+              "skipUrlSync": false,
+              "sort": 0,
+              "tagValuesQuery": "",
+              "tagsQuery": "",
+              "type": "query",
+              "useTags": false
+            }
+          ]
+        },
+        "time": {
+          "from": "now-1h",
+          "to": "now"
+        },
+        "timepicker": {
+          "refresh_intervals": [
+            "5s",
+            "10s",
+            "30s",
+            "1m",
+            "5m",
+            "15m",
+            "30m",
+            "1h",
+            "2h",
+            "1d"
+          ],
+          "time_options": [
+            "5m",
+            "15m",
+            "1h",
+            "6h",
+            "12h",
+            "24h",
+            "2d",
+            "7d",
+            "30d"
+          ]
+        },
+        "timezone": "",
+        "title": "Nginx Lua",
+        "uid": "b_lN9SZWz",
+        "version": 1,
+        "weekStart": ""
+      }
+  dashboards.yaml: |-
+    apiVersion: 1
+
+    providers:
+    - name: Default-10223 # A uniquely identifiable name for the provider
+      type: file
+      options:
+        path: /var/lib/grafana/dashboards/10223.json
+  datasources.yaml: |-
+    ---
+    apiVersion: 1
+
+    datasources:
+    - name: Prometheus
+      type: prometheus
+      access: proxy
+      url: http://prometheus:9090
+      password: ''
+      user: ''
+      basicAuth: false
+      isDefault: true
+      jsonData: {}
+kind: ConfigMap
+metadata:
+  name: grafana-cm-1
+
+---
+apiVersion: v1
+data:
+  grafana-config.monitoring: |-
+    GF_SECURITY_ADMIN_PASSWORD=admin
+    GF_USERS_ALLOW_SIGN_UP=false
+kind: ConfigMap
+metadata:
+  name: grafana-cm-2

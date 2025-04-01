@@ -1,0 +1,103 @@
+version: '3.3'
+
+services:
+  prometheus:
+    image: prom/prometheus:v2.37.6
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./alert-rule.yml:/etc/prometheus/alert-rule.yml
+      - data-demo-prometheus:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      #热加载配置
+      - '--web.enable-lifecycle'
+      #api配置
+      #- '--web.enable-admin-api'
+      #历史数据最大保留时间，默认15天
+      - '--storage.tsdb.retention.time=30d'  
+    ports:
+      - '9090:9090'
+    # depends_on:
+    #   - cadvisor
+
+
+  alertmanager:
+    image: prom/alertmanager:v0.25.0
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./alertmanager.yml:/etc/alertmanager/config.yml
+      - ./customize-email.tmpl:/usr/local/alertmanager/template/customize-email.tmpl
+      - data-demo-prometheus-alertmanager:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/config.yml'
+      - '--storage.path=/alertmanager'
+    ports:
+      - '9093:9093'
+
+  # cadvisor:
+  #   image: google/cadvisor:latest
+  #   restart: always
+  #   volumes:
+  #     - /etc/localtime:/etc/localtime:ro
+  #     - /:/rootfs:ro
+  #     - /var/run:/var/run:rw
+  #     - /sys:/sys:ro
+  #     - /var/lib/docker/:/var/lib/docker:ro
+  #   ports:
+  #     - '8080:8080'
+
+  node_exporter:
+    image: prom/node-exporter:v1.5.0
+    restart: always
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    ports:
+      - '9100:9100'
+
+  grafana:
+    image: grafana/grafana:9.4.3
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./grafana-provisioning/datasources.yaml:/etc/grafana/provisioning/datasources/default.yaml:ro
+      - ./grafana-provisioning/dashboards.yaml:/etc/grafana/provisioning/dashboards/default.yaml:ro
+      - ./grafana-provisioning/1860.json:/var/lib/grafana/dashboards/1860.json:ro
+      - ./grafana-provisioning/4202.json:/var/lib/grafana/dashboards/4202.json:ro
+      - data-demo-prometheus-grafana:/var/lib/grafana
+    env_file:
+      - ./grafana-config.monitoring
+    ports:
+      - '3000:3000'
+    depends_on:
+      - prometheus
+
+volumes:
+  data-demo-prometheus:
+  data-demo-prometheus-grafana:
+  data-demo-prometheus-alertmanager:

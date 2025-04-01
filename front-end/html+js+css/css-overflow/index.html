@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style type="text/css">
+        p {
+            width: 150px;
+            height: 100px;
+        }
+
+        p.visible {
+            overflow: visible;
+        }
+
+        p.hidden {
+            overflow: hidden;
+        }
+
+        p.clip {
+            overflow: clip;
+            overflow-clip-margin: 1em;
+        }
+
+        p.scroll {
+            overflow: scroll;
+        }
+
+        p.auto {
+            overflow: auto;
+        }
+
+        p.overlay {
+            overflow: overlay;
+        }
+    </style>
+</head>
+
+<body>
+    <!--
+        https://developer.mozilla.org/en-US/docs/Web/CSS/overflow
+    -->
+    <div style="display:flex;width:100%;flex-direction: row;">
+        <div>
+            <code>visible</code>
+            <p class="visible">
+                Maya Angelou: "I've learned that people will forget what you said, people
+                will forget what you did, but people will never forget how you made them
+                feel."
+            </p>
+        </div>
+
+        <div>
+            <code>hidden</code>
+            <p class="hidden">
+                Maya Angelou: "I've learned that people will forget what you said, people
+                will forget what you did, but people will never forget how you made them
+                feel."
+            </p>
+        </div>
+
+        <div>
+            <code>clip</code>
+            <p class="clip">
+                Maya Angelou: "I've learned that people will forget what you said, people
+                will forget what you did, but people will never forget how you made them
+                feel."
+            </p>
+        </div>
+
+        <div>
+            <code>scroll</code>
+            <p class="scroll">
+                Maya Angelou: "I've learned that people will forget what you said, people
+                will forget what you did, but people will never forget how you made them
+                feel."
+            </p>
+        </div>
+
+        <div>
+            <code>auto</code>
+            <p class="auto">
+                Maya Angelou: "I've learned that people will forget what you said, people
+                will forget what you did, but people will never forget how you made them
+                feel."
+            </p>
+        </div>
+
+        <div>
+            <code>overlay</code>
+            <p class="overlay">
+                Maya Angelou: "I've learned that people will forget what you said, people
+                will forget what you did, but people will never forget how you made them
+                feel."
+            </p>
+        </div>
+    </div>
+
+</body>
+
+</html>

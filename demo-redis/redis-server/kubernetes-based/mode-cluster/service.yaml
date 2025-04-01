@@ -1,0 +1,29 @@
+# 客户端连接redis集群用的service，使用无头服务直接解析到redis节点
+apiVersion: v1
+kind: Service
+metadata:
+ name: redis-cluster-service
+spec:
+ clusterIP: None
+ type: ClusterIP
+ sessionAffinity: None
+ selector:
+  app.kubernetes.io/name: redis-cluster
+ ports:
+  - port: 6379
+    targetPort: 6379
+
+---
+# 集群节点之间通讯用的service
+apiVersion: v1
+kind: Service
+metadata:
+ name: redis-cluster-headless
+spec:
+ type: ClusterIP
+ clusterIP: None
+ selector:
+  app.kubernetes.io/name: redis-cluster
+ ports:
+  - port: 6379
+    targetPort: 6379

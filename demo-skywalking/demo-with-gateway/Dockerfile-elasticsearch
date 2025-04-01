@@ -1,0 +1,14 @@
+FROM elasticsearch:7.14.1
+
+# 在线安装ik分词器
+# https://www.cnblogs.com/szwdun/p/10664348.html
+RUN echo y | /usr/share/elasticsearch/bin/elasticsearch-plugin install https://fut001.oss-cn-hangzhou.aliyuncs.com/elasticsearch/elasticsearch-analysis-ik-7.14.1.zip
+
+# 安装拼音插件
+# https://github.com/medcl/elasticsearch-analysis-pinyin
+RUN /usr/share/elasticsearch/bin/elasticsearch-plugin install https://fut001.oss-cn-hangzhou.aliyuncs.com/elasticsearch/elasticsearch-analysis-pinyin-7.14.1.zip
+
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod a+x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]

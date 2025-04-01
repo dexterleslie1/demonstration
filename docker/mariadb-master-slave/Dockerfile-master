@@ -1,0 +1,5 @@
+from mariadb:10.4.19
+
+copy db-master.sql /docker-entrypoint-initdb.d/
+copy mysql-master.cnf /etc/mysql/conf.d/my.cnf
+

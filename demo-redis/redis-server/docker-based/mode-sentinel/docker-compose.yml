@@ -1,0 +1,124 @@
+# Redis哨兵模式的配置
+# https://blog.csdn.net/sinat_27956747/article/details/131256431?app_version=6.1.9&csdn_share_tail=%7B%22type%22%3A%22blog%22%2C%22rType%22%3A%22article%22%2C%22rId%22%3A%22131256431%22%2C%22source%22%3A%22dexterchan%22%7D&utm_source=app
+
+version: "3.0"
+
+services:
+  demo-redis-sentinel-repl-node1:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6379 --replica-announce-ip 127.0.0.1 --replica-announce-port 6379
+    environment:
+      - TZ=Asia/Shanghai
+    network_mode: host
+
+  demo-redis-sentinel-repl-node2:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6380 --replica-announce-ip 127.0.0.1 --replica-announce-port 6380
+    environment:
+      - TZ=Asia/Shanghai
+    network_mode: host
+    depends_on:
+      - demo-redis-sentinel-repl-node1
+  demo-redis-sentinel-repl-node2-slave-join:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    command: sh -c "dockerize -wait tcp://127.0.0.1:6379 -timeout 120s -wait-retry-interval 5s
+                    && dockerize -wait tcp://127.0.0.1:6380 -timeout 120s -wait-retry-interval 5s
+                    && redis-cli -h 127.0.0.1 -p 6380 slaveof 127.0.0.1 6379
+                    && redis-cli -h 127.0.0.1 -p 6380 config rewrite
+                    && echo \"成功join slave\""
+    environment:
+      - TZ=Asia/Shanghai
+    network_mode: host
+    depends_on:
+      - demo-redis-sentinel-repl-node1
+  
+  demo-redis-sentinel-repl-node3:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6381 --replica-announce-ip 127.0.0.1 --replica-announce-port 6381
+    environment:
+      - TZ=Asia/Shanghai
+    network_mode: host
+    depends_on:
+      - demo-redis-sentinel-repl-node1
+  demo-redis-sentinel-repl-node3-slave-join:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    command: sh -c "dockerize -wait tcp://127.0.0.1:6379 -timeout 120s -wait-retry-interval 5s
+                    && dockerize -wait tcp://127.0.0.1:6381 -timeout 120s -wait-retry-interval 5s
+                    && redis-cli -h 127.0.0.1 -p 6381 slaveof 127.0.0.1 6379
+                    && redis-cli -h 127.0.0.1 -p 6381 config rewrite
+                    && echo \"成功join slave\""
+    environment:
+      - TZ=Asia/Shanghai
+    network_mode: host
+    depends_on:
+      - demo-redis-sentinel-repl-node1
+
+  demo-redis-sentinel-repl-node4:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6382 --replica-announce-ip 127.0.0.1 --replica-announce-port 6382
+    environment:
+      - TZ=Asia/Shanghai
+    network_mode: host
+    depends_on:
+      - demo-redis-sentinel-repl-node1
+  demo-redis-sentinel-repl-node4-slave-join:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    command: sh -c "dockerize -wait tcp://127.0.0.1:6379 -timeout 120s -wait-retry-interval 5s
+                    && dockerize -wait tcp://127.0.0.1:6382 -timeout 120s -wait-retry-interval 5s
+                    && redis-cli -h 127.0.0.1 -p 6382 slaveof 127.0.0.1 6379
+                    && redis-cli -h 127.0.0.1 -p 6382 config rewrite
+                    && echo \"成功join slave\""
+    environment:
+      - TZ=Asia/Shanghai
+    network_mode: host
+    depends_on:
+      - demo-redis-sentinel-repl-node1
+
+
+  # Sentinel配置
+  demo-redis-sentinel-node1:
+    build:
+      context: .
+      dockerfile: ./Dockerfile-sentinel
+    command: redis-sentinel /usr/local/etc/redis/redis-sentinel.conf --port 26379
+    environment:
+      - TZ=Asia/Shanghai
+    network_mode: host
+    depends_on:
+      - demo-redis-sentinel-repl-node1
+  
+  demo-redis-sentinel-node2:
+    build:
+      context: .
+      dockerfile: ./Dockerfile-sentinel
+    command: redis-sentinel /usr/local/etc/redis/redis-sentinel.conf --port 26380
+    environment:
+      - TZ=Asia/Shanghai
+    network_mode: host
+    depends_on:
+      - demo-redis-sentinel-node1
+
+  demo-redis-sentinel-node3:
+    build:
+      context: .
+      dockerfile: ./Dockerfile-sentinel
+    command: redis-sentinel /usr/local/etc/redis/redis-sentinel.conf --port 26381
+    environment:
+      - TZ=Asia/Shanghai
+    network_mode: host
+    depends_on:
+      - demo-redis-sentinel-node1

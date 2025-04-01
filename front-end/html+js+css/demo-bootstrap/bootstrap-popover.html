@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>popover</title>
+
+    <!-- 新 Bootstrap 核心 CSS 文件 -->
+    <link href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <!-- jQuery文件。务必在bootstrap.min.js 之前引入 -->
+    <script src="https://cdn.bootcss.com/jquery/2.1.1/jquery.min.js"></script>
+    <!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
+    <script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+
+        })
+    </script>
+    <style type="text/css">
+        /**
+        https://iowiki.com/bootstrap/bootstrap_popover_plugin.html
+         */
+        .my-popover.popover {
+            top: 0 !important;
+            right: 0 !important;
+            left: auto !important;
+            max-width: 70% !important;
+            width: 70% !important;
+            height: 100% !important;
+        }
+
+        .my-popover.popover.right {
+            margin-left: 0 !important;
+        }
+
+        .my-popover.popover .arrow {
+            display: none;
+        }
+
+        .my-search-popover.bottom {
+            margin-top: 0 !important;
+        }
+
+        .my-search-popover .arrow {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<div class="container" style="margin-top:20px;">
+    <div class="container" style="padding: 100px 50px 10px;">
+        <button type="button" class="btn btn-default popover-show"
+                title="Popover title" data-container="body"
+                data-toggle="popover" data-placement="left"
+                data-content="Some content in Popover with show method">
+            Popover on left
+        </button>
+        <button type="button" class="btn btn-primary popover-hide"
+                title="Popover title" data-container="body"
+                data-toggle="popover" data-placement="top"
+                data-content="Some content in Popover-hide method">
+            Popover on top
+        </button>
+        <button type="button" class="btn btn-success popover-destroy"
+                title="Popover title" data-container="body"
+                data-toggle="popover" data-placement="bottom"
+                data-content="Some content in Popover-destroy method">
+            Popover on bottom
+        </button>
+        <button type="button" class="btn btn-warning popover-toggle"
+                title="Popover title" data-container="body"
+                data-toggle="popover" data-placement="top"
+                data-content="Some content in Popover-toggle method">
+            Popover on right
+        </button>
+        <br><br><br><br><br><br>
+        <p class="popover-options">
+            <a href="#" type="button" class="btn btn-warning"
+               title="" data-container="body"
+               data-toggle="popover" data-content="">
+                Popover
+            </a>
+        </p>
+
+        <div id="my-popover-title" style="display: none;">
+            <div style="display: flex; justify-content: flex-end;">
+                <input type="button" value="X" id="btnMyPopoverHide"/>
+            </div>
+        </div>
+        <div id="my-popover-content" style="display: none;">
+            <select>
+                <option>option1</option>
+                <option>option2</option>
+            </select>
+        </div>
+
+        <hr/>
+        <div>演示input text focus显示popover模拟实现显示搜索历史记录</div>
+        <!-- data-content属性可以是字符串或者html内容 -->
+        <input id="eleInputSearchKeyword" type="text" placeholder="输入搜索内容" data-container="body"
+               data-placement="bottom"
+               data-content=""/>
+        <div id="my-search-popover-content" style="display: none;">
+            <select>
+                <option>option1</option>
+                <option>option2</option>
+            </select>
+        </div>
+
+        <script>
+            $(function () {
+                $('.popover-show').popover('show');
+            });
+            $(function () {
+                $('.popover-hide').popover('hide');
+            });
+            $(function () {
+                $('.popover-destroy').popover('destroy');
+            });
+            $(function () {
+                $('.popover-toggle').popover('toggle');
+            });
+            $(function () {
+                // popover添加自定义class
+                // https://stackoverflow.com/questions/12170357/dynamically-add-a-class-to-bootstraps-popover-container
+                var varContent = $("#my-popover-content").html()
+                var varTitle = $("#my-popover-title").html()
+                $(".popover-options a").popover({html: true, content: varContent, title: varTitle})
+                    .data('bs.popover').tip().addClass('my-popover');
+                $('body').on('click', '#btnMyPopoverHide', function () {
+                    $(".popover-options a").popover("hide")
+                });
+
+                // https://www.runoob.com/bootstrap/bootstrap-popover-plugin.html
+                function showMySearchPopover() {
+                    if ($(".my-search-popover").length <= 0) {
+                        $("#eleInputSearchKeyword").popover("show")
+                    }
+                    var left = $("#eleInputSearchKeyword").offset().left
+                    var width = $("#eleInputSearchKeyword").width() + 30
+                    $(".my-search-popover.popover").css({
+                        "min-width": width + "px",
+                        "max-width": 3 * width + "px",
+                        "left": left + "px"
+                    })
+                }
+
+                var varContent = $("#my-search-popover-content").html()
+                $("#eleInputSearchKeyword").popover({
+                    html: true,
+                    trigger: "manual"/*手动显示或者隐藏popover*/,
+                    content: varContent
+                }).data('bs.popover').tip().addClass('my-search-popover');
+                $("#eleInputSearchKeyword").focus(function () {
+                    showMySearchPopover()
+                })
+                $('#eleInputSearchKeyword').keyup(function (e) {
+                    var key = e.which;
+                    if (key == 13) {
+                        $("#eleInputSearchKeyword").popover("hide")
+                        return false;
+                    } else {
+                        showMySearchPopover()
+                    }
+                });
+            });
+        </script>
+    </div>
+</div>
+</body>
+</html>

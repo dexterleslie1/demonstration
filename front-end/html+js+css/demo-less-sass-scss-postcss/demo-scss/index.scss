@@ -1,0 +1,70 @@
+$demo1-background-color: green;
+
+.demo1 div {
+    width: 50px;
+    height: 25px;
+    background-color: $demo1-background-color;
+}
+
+.demo2 {
+    .parent {
+        width: 50px;
+        height: 50px;
+        background-color: green;
+
+        .child {
+            width: 25px;
+            height: 25px;
+            background-color: yellow;
+        }
+    }
+}
+
+.demo3 {
+    $background-color: blue;
+
+    button {
+        border-style: none;
+        background-color: $background-color;
+        color: white;
+        padding: .5em 1em;
+        font-weight: 400;
+        border-radius: .3em;
+        transition: background-color .2s;
+    }
+
+    button:not([disabled]) {
+        cursor: pointer;
+    }
+
+    button:not([disabled]):hover {
+        background-color: darken($background-color, 10%);
+    }
+
+    button[disabled] {
+        background-color: lighten($background-color, 25%);
+    }
+}
+
+.demo5>div {
+    width: 100px;
+    height: 40px;
+    background-color: green;
+}
+
+$hover-color: blue;
+
+.demo5>div:hover {
+    --hover-color: #{$hover-color};
+    background-color: var(--hover-color);
+}
+
+.demo6>div {
+    width: 100px;
+    height: 40px;
+    background-color: green;
+
+    &:hover {
+        background-color: blue;
+    }
+}

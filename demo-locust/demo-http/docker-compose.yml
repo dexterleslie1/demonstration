@@ -1,0 +1,11 @@
+version: '3'
+
+# https://docs.locust.io/en/1.5.2/running-locust-docker.html
+services:
+  locust:
+    build:
+      context: ./
+    image: 192.168.235.138/library/demo-locust-dev
+    ports:
+     - "8089:8089"
+    command: -f /mnt/locust/locustfile.py -H http://locust:8089

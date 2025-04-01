@@ -1,0 +1,38 @@
+# 全局配置
+global:
+  scrape_interval:     15s # 将搜刮间隔设置为每15秒一次。默认是每1分钟一次。
+  # evaluation_interval是Prometheus监控系统中的一个重要配置参数，它指定了Prometheus评估告警规则的周期。
+  # 这个周期决定了Prometheus多久会检查一次告警规则，并根据监控数据的最新状态更新告警状态
+  evaluation_interval: 30s
+
+# 这是一个关于告警的配置部分
+alerting:
+  # 指定了Alertmanager的配置列表
+  alertmanagers:
+  # 表示使用静态配置的方式来指定Alertmanager实例的地址。静态配置意味着这些地址是硬编码在配置文件中的，不会动态改变
+  - static_configs:
+    # 指定了Alertmanager实例的地址和端口。这里，alertmanager是Alertmanager服务的主机名（或IP地址），
+    # 而9093是Alertmanager服务监听的端口。这意味着Prometheus将向alertmanager:9093发送告警信息
+    - targets: ['alertmanager:9093']
+
+# 报警(触发器)配置
+rule_files:
+  - "alert-rule.yml"
+
+# 搜刮配置
+scrape_configs:
+  - job_name: 'prometheus'
+    # 覆盖全局默认值，每5秒从该作业中刮取一次目标
+    scrape_interval: 5s
+    static_configs:
+    - targets: ['localhost:9090']
+  - job_name: 'alertmanager'
+    scrape_interval: 15s
+    static_configs:
+    - targets: ['alertmanager:9093']
+
+  # prometheus收集mysqld exporter容器的运行数据
+  - job_name: 'mysqld_exporter'
+    scrape_interval: 15s
+    static_configs:
+    - targets: ['mysqld_exporter:9104']

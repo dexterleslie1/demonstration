@@ -1,0 +1,32 @@
+version: '3.0' 
+
+services:  
+  openldap:  
+    image: osixia/openldap:latest   
+    # ports:  
+    #   - "389:389"  # LDAP  
+    #   - "636:636"  # LDAPS  
+    environment:  
+      LDAP_ORGANISATION: "Example Inc."  
+      LDAP_DOMAIN: "example.org" 
+      #  设置LDAP的根域（可以根据需要修改） 
+      LDAP_ROOT: "dc=example,dc=org"
+      # 设置管理员的用户名为“admin” 
+      LDAP_ADMIN_USERNAME: admin
+      # 设置管理员的密码（请替换YourPasswordHere为您的实际密码）
+      LDAP_ADMIN_PASSWORD: "123456"  
+    # volumes:
+    #   # 将/var/lib/ldap和/etc/ldap/slapd.d目录挂载到主机上的./ldap_data和./ldap_config目录，以便持久化数据。 
+    #   - ./ldap_data:/var/lib/ldap  
+    #   - ./ldap_config:/etc/ldap/slapd.d  
+  
+  # 这是一个可选的phpLDAPadmin容器，用于管理LDAP  
+  phpldapadmin:  
+    image: osixia/phpldapadmin:latest   
+    ports:  
+      - "18080:80"  
+    environment:  
+      PHPLDAPADMIN_LDAP_HOSTS: "openldap"  
+      PHPLDAPADMIN_HTTPS: "false"  
+    depends_on:  
+      - openldap

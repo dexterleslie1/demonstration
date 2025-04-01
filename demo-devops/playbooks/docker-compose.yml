@@ -1,0 +1,68 @@
+version: '3.0'
+
+networks:
+  net:
+    name: demo-devops-net
+
+# todo 持久化容器数据
+
+services:
+  demo-devops-jenkins:
+    build:
+      context: ./
+    container_name: demo-devops-jenkins
+    image: demo-devops-jenkins
+    ports:
+      - 8080:8080
+      - 50000:50000
+    environment:
+      - TZ=Asia/Shanghai
+    restart: always
+    networks:
+      - net
+
+  demo-devops-gitlab:
+    container_name: demo-devops-gitlab
+    image: gitlab/gitlab-ce:16.2.2-ce.0
+    ports:
+      - 80:80
+    # volumes:
+    #   - /data/data-gitlab/config:/etc/gitlab
+    #   - /data/data-gitlab/logs:/var/log/gitlab
+    #   - /data/data-gitlab/data:/var/opt/gitlab
+    environment:
+      TZ: Asia/Shanghai
+      GITLAB_OMNIBUS_CONFIG: |
+        # # external_url 'http://0.0.0.0'
+        # 减少内存使用配置
+        # https://docs.gitlab.com/omnibus/settings/memory_constrained_envs.html
+        postgresql['shared_buffers'] = "512MB"
+        puma['worker_processes'] = 0
+        prometheus_monitoring['enable'] = false
+        sidekiq['max_concurrency'] = 3
+        gitlab_rails['initial_root_password'] = 'Aa321321!@#'
+      GITLAB_POST_RECONFIGURE_SCRIPT: |
+        # 禁止signup、禁止admin approval signup、创建access token
+        gitlab-rails runner "ApplicationSetting.last.update_attribute(:signup_enabled, false); ApplicationSetting.last.update_attribute(:require_admin_approval_after_user_signup, false); token = User.find_by_username('root').personal_access_tokens.create(scopes: ['admin_mode','api'], name: 'Automation token', expires_at: 365.days.from_now); token.set_token('token-string-here123456'); token.save!" || true
+        echo "成功禁止signup、禁止admin approval signup、创建access token"
+        # 创建demo-devops项目
+        curl --header "Authorization: Bearer token-string-here123456" --header "Content-Type: application/json" --data '{"name": "demo-devops", "description": "用于协助演示devops流程项目","namespace": "root", "initialize_with_readme": "true", "visibility": "private"}' -X POST http://localhost/api/v4/projects
+        echo "成功创建demo-devops项目"
+
+        curl --header "Authorization: Bearer token-string-here123456" --header "Content-Type: application/json" --data '{"name": "demo-devops-architecture-parent", "description": "用于协助演示devops流程的architecture-parent项目","namespace": "root", "initialize_with_readme": "true", "visibility": "private"}' -X POST http://localhost/api/v4/projects
+        echo "成功创建demo-devops-architecture-parent项目"
+        curl --header "Authorization: Bearer token-string-here123456" --header "Content-Type: application/json" --data '{"name": "demo-devops-architecture-zuul", "description": "用于协助演示devops流程的architecture-zuul项目","namespace": "root", "initialize_with_readme": "true", "visibility": "private"}' -X POST http://localhost/api/v4/projects
+        echo "成功创建demo-devops-architecture-zuul项目"
+        curl --header "Authorization: Bearer token-string-here123456" --header "Content-Type: application/json" --data '{"name": "demo-devops-architecture-eureka", "description": "用于协助演示devops流程的architecture-eureka项目","namespace": "root", "initialize_with_readme": "true", "visibility": "private"}' -X POST http://localhost/api/v4/projects
+        echo "成功创建demo-devops-architecture-eureka"
+        curl --header "Authorization: Bearer token-string-here123456" --header "Content-Type: application/json" --data '{"name": "demo-devops-architecture-common", "description": "用于协助演示devops流程的architecture-common项目","namespace": "root", "initialize_with_readme": "true", "visibility": "private"}' -X POST http://localhost/api/v4/projects
+        echo "成功创建demo-devops-architecture-common项目"
+        curl --header "Authorization: Bearer token-string-here123456" --header "Content-Type: application/json" --data '{"name": "demo-devops-architecture-helloworld", "description": "用于协助演示devops流程的architecture-helloworld项目","namespace": "root", "initialize_with_readme": "true", "visibility": "private"}' -X POST http://localhost/api/v4/projects
+        echo "成功创建demo-devops-architecture-helloworld项目"
+        curl --header "Authorization: Bearer token-string-here123456" --header "Content-Type: application/json" --data '{"name": "demo-devops-architecture-deployer", "description": "用于协助演示devops流程的architecture-deployer项目","namespace": "root", "initialize_with_readme": "true", "visibility": "private"}' -X POST http://localhost/api/v4/projects
+        echo "成功创建demo-devops-architecture-deployer项目"
+
+    restart: always
+    networks:
+      - net
+  

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style type="text/css">
+        .elementDiv1 {
+            margin: 0 auto;
+            background-color: orange;
+            width: 300px;
+            height: 100px;
+            /* 使用名为myAnimation持续2秒 */
+            animation: myAnimation 2s;
+        }
+
+        @keyframes myAnimation {
+            0% {
+                transform: translateX(0px);
+            }
+
+            100% {
+                transform: translateX(150px);
+            }
+        }
+
+        .elementDiv2 {
+            margin: 0 auto;
+            background-color: orange;
+            width: 200px;
+            height: 100px;
+            animation: myAnimation2 3s linear alternate infinite;
+        }
+
+        @keyframes myAnimation2 {
+            from {
+                
+            }
+
+            to {
+                background-color: skyblue;
+                width: 250px;
+                height: 150px;
+            }
+        }
+
+    </style>
+</head>
+
+<body>
+    <!--
+        https://www.freecodecamp.org/news/css-transition-examples/
+    -->
+    <div>animation基本使用</div>
+    <div style="width:100%;">
+        <div class="elementDiv1"></div>
+    </div>
+    <hr/>
+
+    <div>animation background-color、width、height</div>
+    <div style="width:100%;">
+        <div class="elementDiv2"></div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,195 @@
+version: "3.8"
+
+services:
+  # 1w记录
+  db-1w:
+    image: mariadb:10.4.19
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - TZ=Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+      - --innodb-buffer-pool-size=${innodbBufferPoolSize}
+      - --port=3306
+    volumes:
+      - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf:ro
+      - ./db.sql:/docker-entrypoint-initdb.d/db.sql:ro
+    network_mode: host
+  # 10w记录
+  db-10w:
+    image: mariadb:10.4.19
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - TZ=Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+      - --innodb-buffer-pool-size=${innodbBufferPoolSize}
+      - --port=3306
+    volumes:
+      - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf:ro
+      - ./db.sql:/docker-entrypoint-initdb.d/db.sql:ro
+    network_mode: host
+  # 100w记录
+  db-100w:
+    image: mariadb:10.4.19
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - TZ=Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+      - --innodb-buffer-pool-size=${innodbBufferPoolSize}
+      - --port=3306
+    volumes:
+      - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf:ro
+      - ./db.sql:/docker-entrypoint-initdb.d/db.sql:ro
+    network_mode: host
+  # 200w记录
+  db-200w:
+    image: mariadb:10.4.19
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - TZ=Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+      - --innodb-buffer-pool-size=${innodbBufferPoolSize}
+      - --port=3306
+    volumes:
+      - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf:ro
+      - ./db.sql:/docker-entrypoint-initdb.d/db.sql:ro
+    network_mode: host
+  # 300w记录
+  db-300w:
+    image: mariadb:10.4.19
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - TZ=Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+      - --innodb-buffer-pool-size=${innodbBufferPoolSize}
+      - --port=3306
+    volumes:
+      - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf:ro
+      - ./db.sql:/docker-entrypoint-initdb.d/db.sql:ro
+    network_mode: host
+  # 400w记录
+  db-400w:
+    image: mariadb:10.4.19
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - TZ=Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+      - --innodb-buffer-pool-size=${innodbBufferPoolSize}
+      - --port=3306
+    volumes:
+      - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf:ro
+      - ./db.sql:/docker-entrypoint-initdb.d/db.sql:ro
+    network_mode: host
+  # 500w记录
+  db-500w:
+    image: mariadb:10.4.19
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - TZ=Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+      - --innodb-buffer-pool-size=${innodbBufferPoolSize}
+      - --port=3306
+    volumes:
+      - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf:ro
+      - ./db.sql:/docker-entrypoint-initdb.d/db.sql:ro
+    network_mode: host
+  # 1kw记录
+  db-1kw:
+    image: mariadb:10.4.19
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - TZ=Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+      - --innodb-buffer-pool-size=${innodbBufferPoolSize}
+      - --port=3306
+    volumes:
+      - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf:ro
+      - ./db.sql:/docker-entrypoint-initdb.d/db.sql:ro
+    network_mode: host
+  # 2kw记录
+  db-2kw:
+    image: mariadb:10.4.19
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - TZ=Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+      - --innodb-buffer-pool-size=${innodbBufferPoolSize}
+      - --port=3306
+    volumes:
+      - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf:ro
+      - ./db.sql:/docker-entrypoint-initdb.d/db.sql:ro
+    network_mode: host
+  # 3kw记录
+  db-3kw:
+    image: mariadb:10.4.19
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - TZ=Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+      - --innodb-buffer-pool-size=${innodbBufferPoolSize}
+      - --port=3306
+    volumes:
+      - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf:ro
+      - ./db.sql:/docker-entrypoint-initdb.d/db.sql:ro
+    network_mode: host
+  # 5k记录
+  db-5kw:
+    image: mariadb:10.4.19
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - TZ=Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+      - --innodb-buffer-pool-size=${innodbBufferPoolSize}
+      - --port=3306
+    volumes:
+      - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf:ro
+      - ./db.sql:/docker-entrypoint-initdb.d/db.sql:ro
+    network_mode: host
+  # 10kw记录
+  db-10kw:
+    image: mariadb:10.4.19
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - TZ=Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+      - --innodb-buffer-pool-size=${innodbBufferPoolSize}
+      - --port=3306
+    volumes:
+      - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf:ro
+      - ./db.sql:/docker-entrypoint-initdb.d/db.sql:ro
+    network_mode: host

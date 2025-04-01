@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!--debug:当此属性设置为true时，将打印出logback内部日志信息，实时查看logback运行状态。默认值为false。-->
+<!--scan：性设置为true时，配置文件如果发生改变，将会被重新加载，默认值为true-->
+<!--scanPeriod:如果无时间单位，默认毫秒，默认的时间间隔为1分钟-->
+<!--<configuration debug="false">-->
+<configuration scan="true" scanPeriod="3 seconds">
+    <!-- levels: ALL,TRACE,DEBUG,INFO,WARN,ERROR,OFF -->
+    <!-- Dim log level of variable -->
+    <property name="log_level" value="INFO" />
+
+    <!-- Output to Console -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+        <!--        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+                    <level>INFO</level>
+                    <onMatch>ACCEPT</onMatch>
+                    <onMismatch>DENY</onMismatch>
+                </filter>  -->
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>[%-5level]%d{yyyy/MM/dd HH:mm:ss.SSS} Msg: %msg%n</pattern>
+            <!--<pattern>[%-5level]%d{yyyy/MM/dd HH:mm:ss.SSS}[%class:%line]Msg: %msg%n</pattern>-->
+            <charset>utf-8</charset>
+        </encoder>
+    </appender>
+
+
+    <!-- 配置当前项目指定目录或指定包的日志级别，控制台(Console)测试成功 -->
+    <!-- 设置mapper目录为DEBUG就可看到相关sql输出 -->
+        <logger name="com.google.firebase" level="DEBUG"/>
+
+    <!--print http request-->
+    <logger name="org.apache.http" level="DEBUG" additivity="false">
+        <appender-ref ref="CONSOLE" />
+    </logger>
+
+    <root level="${log_level}">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+
+</configuration>

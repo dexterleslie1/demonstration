@@ -1,0 +1,23 @@
+version: "3.0"
+
+networks:
+ net:
+  name: demo-http-cache-net
+
+
+services:
+ demo-http-cache-openresty:
+  container_name: demo-http-cache-openresty
+  image: docker.118899.net:10001/yyd-public/demo-http-cache-openresty
+  environment:
+   - LANG=C.UTF-8
+   - TZ=Asia/Shanghai
+  volumes:
+   - ./sources.list:/etc/apt/sources.list
+   - ./nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf
+   - ./1.html:/usr/local/openresty/nginx/html/1.html
+   - ./test-expires.js:/usr/local/openresty/nginx/html/test-expires.js
+   - ./test-no-store.js:/usr/local/openresty/nginx/html/test-no-store.js
+   - ./test-no-cache.js:/usr/local/openresty/nginx/html/test-no-cache.js
+  ports:
+   - 80:80

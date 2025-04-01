@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <!--
+        https://developer.mozilla.org/en-US/docs/Web/API/Element/closest
+    -->
+    <div>演示document closest函数用法</div>
+    <div class="demo1">
+        <article>
+            <div id="div-01">
+                Here is div-01
+                <div id="div-02">
+                    Here is div-02
+                    <div id="div-03">Here is div-03</div>
+                </div>
+            </div>
+        </article>
+        <button type="button" onclick="javascript:click1()">点击我查看控制台输出</button>
+    </div>
+    <hr>
+
+    <script>
+        function click1() {
+            const el = document.getElementById("div-03");
+
+            // the closest ancestor with the id of "div-02"
+            console.log(el.closest("#div-02")); // <div id="div-02">
+
+            // the closest ancestor which is a div in a div
+            console.log(el.closest("div div")); // <div id="div-03">
+
+            // the closest ancestor which is a div and has a parent article
+            console.log(el.closest("article > div")); // <div id="div-01">
+
+            // the closest ancestor which is not a div
+            console.log(el.closest(":not(div)")); // <article>
+
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,30 @@
+version: '3'
+
+# https://docs.locust.io/en/1.5.2/running-locust-docker.html
+services:
+  master:
+    build:
+      context: ./
+    image: 192.168.235.138/library/my-locust-dev
+    ports:
+     - "8089:8089"
+    command: -f /mnt/locust/locustfile.py --master -H http://master:8089
+    deploy: 
+      replicas: 1 
+      placement:  
+        constraints:
+          # 只运行在swarm的manager节点上
+          - node.labels.mylabel==manager
+
+  worker:
+    build:
+      context: ./
+    image: 192.168.235.138/library/my-locust-dev
+    deploy:
+      # 多少个worker，和cpu数量相等为宜
+      replicas: 6
+      placement:  
+        constraints:
+          # 只运行在swarm的worker节点上
+          - node.labels.mylabel==worker
+    command: -f /mnt/locust/locustfile.py --worker --master-host master

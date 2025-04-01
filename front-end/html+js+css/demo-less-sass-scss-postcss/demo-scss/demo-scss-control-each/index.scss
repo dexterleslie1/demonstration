@@ -1,0 +1,16 @@
+// https://sass-lang.com/documentation/at-rules/control/each/
+
+// @each 遍历 maps
+$icons: (
+    "eye": "\f112",
+    "start": "\f12e",
+    "stop": "\f12f"
+);
+
+@each $name, $glyph in $icons {
+    .icon-#{$name}:before {
+        display: inline-block;
+        font-family: "Icon Font";
+        content: $glyph;
+    }
+}

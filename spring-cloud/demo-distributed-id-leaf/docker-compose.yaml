@@ -1,0 +1,10 @@
+version: "3.0"
+
+services:
+  demo-zookeeper:
+    image: zookeeper:3.8.4
+    environment:
+      - TZ=Asia/Shanghai
+      - JVMFLAGS=-Xmx512m -Xms512m -server
+    ports:
+      - "2181:2181"

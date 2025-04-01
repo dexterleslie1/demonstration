@@ -1,0 +1,22 @@
+[mysqld]
+max_connections=250
+slow_query_log=1
+long_query_time=1
+slow_query_log_file=slow-query.log
+innodb_flush_log_at_trx_commit=0
+max_allowed_packet=10m
+key_buffer_size=512m
+innodb_log_file_size=512m
+innodb_log_buffer_size=256m
+innodb_file_per_table=1
+max_binlog_size=512m
+
+# 一旦提供log_bin参数无论是何值或者不提供值时，表示启用binlog功能
+# 不提供log_bin表示禁用binlog功能
+log_bin
+expire_logs_days=10
+binlog_format=mixed
+max_binlog_size=1024m
+# 指定binlog文件的前缀
+log_basename=master1
+server_id=10001

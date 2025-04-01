@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style type="text/css">
+        .backgroundColorYellowGreen {
+            background-color: yellowgreen;
+        }
+    </style>
+</head>
+<body>
+
+<div>使用th:include标签引用页面</div>
+<div th:include="folder1/hello-suffix"></div>
+<hr/>
+
+<div>访问HttpServletRequest对象</div>
+<a target="_blank" href="/accessHttpServletRequest">点击我打开新页面访问HttpServletRequest对象</a>
+<hr/>
+
+<div>使用\[\[\]\]直接显示表达式值</div>
+<div>[[${#httpServletRequest.getRequestURI()}]]</div>
+<hr/>
+
+<!-- https://stackoverflow.com/questions/25071985/thymeleaf-thtext-put-a-text-without-removing-html-structures -->
+<div>th:text显示去除外部标签</div>
+<div>
+    <!-- th:remove="tag"表示删除h1标签 -->
+    <h1 th:text="${#httpServletRequest.getRequestURI()}" th:remove="tag"></h1>
+</div>
+<hr/>
+
+<!-- https://stackoverflow.com/questions/25133807/thymeleaf-how-to-use-conditionals-to-dynamically-add-remove-a-css-class -->
+<div>动态添加class</div>
+<div style="width:20px;height:20px;" class="noneExists" th:classappend="${1==1}?'backgroundColorYellowGreen':''"></div>
+<hr/>
+
+<div>th:if演示，th:if在条件false时元素html不会被添加到页面中</div>
+<div th:if="1==2">8888</div>
+<hr/>
+
+<div>th:hidden演示，th:hidden使用hidden属性控制元素的可见性</div>
+<div th:hidden="1==1">8888</div>
+<hr/>
+
+<div>th:style控制display属性演示</div>
+<div th:style="1==1?'display: block;':'display: none;'">8888</div>
+<div th:style="1!=1?'display: block;':'display: none;'">9999</div>
+<hr/>
+
+</body>
+</html>

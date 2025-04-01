@@ -1,0 +1,96 @@
+version: "3.0"
+
+services:
+  db:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-cloud-assistant-db:1.0.0
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - TZ=Asia/Shanghai
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci --skip-character-set-client-handshake
+    ports:
+      - "3306:3306"
+
+  node1:
+    image: redis:7.2.4
+    command: redis-server /usr/local/etc/redis/redis.conf
+    volumes:
+      - ./redis.cluster.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - "6379:6379"
+
+  node2:
+    image: redis:7.2.4
+    command: redis-server /usr/local/etc/redis/redis.conf
+    volumes:
+      - ./redis.cluster.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - "6380:6379"
+
+  node3:
+    image: redis:7.2.4
+    command: redis-server /usr/local/etc/redis/redis.conf
+    volumes:
+      - ./redis.cluster.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - "6381:6379"
+
+  creator:
+    build:
+      context: .
+      dockerfile: ./Dockerfile-redis
+    image: demo-spring-cloud-assistant-redis-cluster-initializer
+    command: "node1:6379 node2:6379 node3:6379"
+    entrypoint: ["/usr/local/etc/redis/init-redis-cluster.sh"]
+    depends_on:
+      - node1
+      - node2
+      - node3
+
+  elasticsearch:
+    build:
+      context: .
+      dockerfile: ./Dockerfile-elasticsearch
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-cloud-assistant-elasticsearch:1.0.0
+    environment:
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - discovery.type=single-node
+      # http.cors表示允许elasticsearch-head连接并管理
+      - http.cors.enabled=true
+      - http.cors.allow-origin=*
+      - TZ=Asia/Shanghai
+    ports:
+      - '9200:9200'
+
+  kibana:
+    image: kibana:7.8.0
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    ports:
+      - '5601:5601'
+    depends_on:
+      - elasticsearch
+
+  logstash:
+    image: logstash:7.8.0
+    volumes:
+      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    environment:
+      - xpack.monitoring.elasticsearch.hosts=[ "http://elasticsearch:9200" ]
+      - LS_JAVA_OPTS=-Xmx512m -Xms512m
+    ports:
+      - '5044:5044'
+
+  # 定时删除过期索引
+  curator:
+    image: untergeek/curator:5.7.6
+    volumes:
+      - ./curator.yml:/.curator/curator.yml
+      - ./action.yml:/.curator/action.yml
+    entrypoint: /bin/sh
+    command: -c "while true; do /curator/curator --config /.curator/curator.yml /.curator/action.yml && echo \"成功执行curator命令\"; sleep 10; done;"

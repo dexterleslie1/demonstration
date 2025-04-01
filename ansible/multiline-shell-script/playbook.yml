@@ -1,0 +1,13 @@
+- hosts: localhost
+  tasks:
+   - name: "演示使用>多行脚本"
+     shell: >
+             echo "111"
+             >
+             .1.txt
+
+   - name: "演示使用|多行脚本"
+     shell: |
+             echo "222" > .2.txt
+             echo "333" > .3.txt
+             

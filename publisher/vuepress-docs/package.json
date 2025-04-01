@@ -1,0 +1,16 @@
+{
+  "name": "vuepress-docs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "docs:dev": "./prepare.sh && vuepress dev docs",
+    "docs:build": "vuepress build docs"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "vuepress": "^1.9.10",
+    "vuepress-plugin-mermaidjs": "^1.9.1"
+  }
+}

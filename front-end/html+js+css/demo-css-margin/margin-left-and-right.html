@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div>演示margin: 0 auto; 没有使 button 居中显示</div>
+    <div style="width:100%;background-color: yellow;">
+        <!--
+            因为margin: 0 auto;作用于display: block元素，而button display: inline-block，
+            所以需要指定 button display: block 属性 margin: 0 auto;才起作用
+            https://stackoverflow.com/questions/33059927/why-does-margin0-auto-not-work-on-this-input-button
+        -->
+        <button style="margin: 0 auto;">测试按钮</button>
+    </div>
+    <hr/>
+</body>
+</html>

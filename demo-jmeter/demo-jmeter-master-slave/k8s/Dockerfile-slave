@@ -1,0 +1,13 @@
+FROM demo-k8s-jmeter-base:latest
+
+RUN grep -q "^HEAP=\"" /usr/local/jmeter/bin/jmeter \
+    && sed -i '/^HEAP=\"/c HEAP=\"-Xmx3g -Xms3g\"' /usr/local/jmeter/bin/jmeter \
+    || sed -i '/^# resolve links/i HEAP=\"-Xmx3g -Xms3g\"' /usr/local/jmeter/bin/jmeter
+COPY jmeter.properties /usr/local/jmeter/bin/jmeter.properties
+
+EXPOSE 1099 50000
+
+ENTRYPOINT $JMETER_HOME/bin/jmeter-server \
+-Dserver.rmi.localport=50000 \
+-Dserver_port=1099 \
+-Jserver.rmi.ssl.disable=true

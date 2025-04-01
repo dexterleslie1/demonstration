@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .a ~ .b {
+            background-color: powderblue;
+        }
+    </style>
+</head>
+
+<body>
+    <!--
+        选择同级元素的后续所有匹配元素，如例子所示： 选择 .a 元素的同级元素 .b 并且是在 .a 元素之后出现的
+        https://stackoverflow.com/questions/10782054/what-does-the-tilde-squiggle-twiddle-css-selector-mean
+    -->
+    <ol>
+        <li class="b">b</li>
+        <li class="a">a</li>
+        <li class="x">x</li>
+        <li class="b">b</li>
+        <li class="b">b</li>
+    </ol>
+</body>
+
+</html>

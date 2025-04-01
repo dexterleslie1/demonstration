@@ -1,0 +1,12 @@
+.search-header-container {
+    border-bottom: 1px solid black;
+    padding: .5rem 1rem;
+}
+
+.search-header-container input[type=text] {
+    padding: .3rem 1rem;
+}
+
+.search-header-container input[type=button] {
+    margin-left: 1rem;
+}

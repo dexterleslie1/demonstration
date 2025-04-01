@@ -1,0 +1,5 @@
+FROM mobz/elasticsearch-head:5
+
+# 解决elasticsearch-head5和高版本elasticsearch不兼容问题
+# https://blog.csdn.net/qq_35956041/article/details/101444499
+ADD vendor.js /usr/src/app/_site/vendor.js

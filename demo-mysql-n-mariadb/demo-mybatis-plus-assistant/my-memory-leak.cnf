@@ -1,0 +1,25 @@
+# 此配置用于协助测试system和jemalloc内存管理器是否存在内存泄漏问题
+[mysqld]
+slow_query_log=0.01
+long_query_time=1
+slow_query_log_file=slow-query.log
+innodb_flush_log_at_trx_commit=0
+innodb_file_per_table=1
+
+max_connections=1024
+
+innodb_buffer_pool_size=128m
+innodb_log_buffer_size=512k
+# mysql8报告变量不存在导致不能启动
+query_cache_size=0
+key_buffer_size=512k
+thread_stack=128k
+# 设置为4m这么大的值是为了不触发Created_tmp_files，在内存中排序
+sort_buffer_size=4m
+read_buffer_size=512k
+read_rnd_buffer_size=512k
+# 设置为32m这么大的值是为了不触发Created_tmp_disk_tables，在内存中创建内部临时表
+max_heap_table_size=32m
+tmp_table_size=32m
+join_buffer_size=512k
+binlog_cache_size=512k

@@ -1,0 +1,41 @@
+dataSources:
+  ds1:
+    # 数据源使用的连接池类型
+    dataSourceClassName: com.zaxxer.hikari.HikariDataSource
+    driverClassName: org.mariadb.jdbc.Driver
+    jdbcUrl: jdbc:mariadb://localhost:3306/demo?allowMultiQueries=true
+    username: root
+    password: 123456
+
+rules:
+  - !SHARDING
+    tables:
+      # 配置逻辑表order的分片规则
+      order:
+        # 列id使用内置的雪花算法生成分布式id
+#        keyGenerateStrategy:
+#          column: id
+#          keyGeneratorName: snowflake
+        # 指定order表的数据分布情况，配置数据节点
+#        actualDataNodes: ds1.order_$->{0..1}
+        # order表的分片策略，分片策略包括分片键和分片算法
+        tableStrategy:
+#          standard:
+#            shardingColumn: id
+#            shardingAlgorithmName: order_inline
+          none:
+    # 配置order_inline分片算法
+    shardingAlgorithms:
+      order_inline:
+        type: inline
+        props:
+          algorithm-expression: order_$->{id % 2}
+
+    # 配置主键自动生成算法
+    keyGenerators:
+      snowflake:
+        type: SNOWFLAKE
+
+# 打开sql输出日志
+#props:
+#  sql-show: true

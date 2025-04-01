@@ -1,0 +1,15 @@
+version: "3.0"
+
+services:
+  # 启动rabbitmq
+  rabbitmq:
+    build:
+      context: ./
+    #image: library/rabbitmq:3.7.16-rc.3-management
+    image: demo-rabbitmq-dev
+    environment:
+      - RABBITMQ_DEFAULT_USER=root
+      - RABBITMQ_DEFAULT_PASS=123456
+      # TODO: 时区设置不起作用
+      - TZ=Asia/Shanghai
+    network_mode: host

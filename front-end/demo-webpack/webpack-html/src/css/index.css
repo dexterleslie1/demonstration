@@ -1,0 +1,4 @@
+body {
+    /* 遇到url()webpack会自动解析并打包图片 */
+    background-image: url('../images/2zrdI1g.jpeg');
+}

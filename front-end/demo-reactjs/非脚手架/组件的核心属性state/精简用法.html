@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <!-- reactjs追加dom的容器 -->
+    <div id="test"></div>
+
+    <script type="text/javascript" src="../js/react.development.js" ></script>
+    <script type="text/javascript" src="../js/react-dom.development.js" ></script>
+    <script type="text/javascript" src="../js/babel.min.js" ></script>
+
+    <!-- 因为使用jsx语法编写虚拟dom代码，所以这里type必须为text/babel -->
+    <script type="text/babel">
+        class Weatcher extends React.Component {
+
+            // 使用类赋值语句初始化 state 成员变量
+            state = {isHot: false}
+            
+            render() {
+                return <h1 onClick={this.changeWeather}>今天天气很{this.state.isHot?"炎热":"凉爽"}</h1>
+            }
+
+            // 使用箭头函数是因为使 this 指向当前 Weatcher 实例，否则 this 为 undefined
+            changeWeather = ()=>{
+                // 修改并合并新的state
+                this.setState({isHot: !this.state.isHot})
+            }
+        }
+
+        // 渲染自定义组件到页面容器中
+        ReactDOM.render(<Weatcher/>, document.getElementById("test"))
+    </script>
+</body>
+</html>

@@ -1,0 +1,118 @@
+version: "3.0"
+
+services:
+  demo-skywalking-elasticsearch:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-skywalking-elasticsearch
+    environment:
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - discovery.type=single-node
+      # http.cors表示允许elasticsearch-head连接并管理
+      - http.cors.enabled=true
+      - http.cors.allow-origin=*
+      - TZ=Asia/Shanghai
+#    ports:
+#      - 9200:9200
+#      # Java transport client需要连接这个端口去操作elasticsearch
+#      - 9300:9300
+
+  demo-skywalking-kibana:
+    image: kibana:7.14.1
+    environment:
+      ELASTICSEARCH_HOSTS: http://demo-skywalking-elasticsearch:9200
+    ports:
+      - '5601:5601'
+    depends_on:
+      - demo-skywalking-elasticsearch
+
+  demo-skywalking-oap-server:
+    image: apache/skywalking-oap-server:9.3.0
+    environment:
+#      - SW_STORAGE=elasticsearch7
+      - SW_STORAGE_ES_CLUSTER_NODES=demo-skywalking-elasticsearch:9200
+      # trace日志保留15天
+      - SW_STORAGE_ES_RECORD_DATA_TTL=15
+      - TZ=Asia/Shanghai
+    restart: always
+    # 容器环境可以不暴露端口
+    ports:
+      - '12800:12800'
+      - '11800:11800'
+    depends_on:
+      - demo-skywalking-elasticsearch
+
+  demo-skywalking-ui:
+    image: apache/skywalking-ui:9.3.0
+    environment:
+      - SW_OAP_ADDRESS=http://demo-skywalking-oap-server:12800
+      - TZ=Asia/Shanghai
+    ports:
+      - '8088:8080'
+    depends_on:
+      - demo-skywalking-oap-server
+
+  demo-skywalking-logstash:
+    image: logstash:7.14.1
+    environment:
+      - xpack.monitoring.elasticsearch.hosts=[ "http://demo-skywalking-elasticsearch:9200" ]
+      - LS_JAVA_OPTS=-Xmx512m -Xms512m
+    volumes:
+      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    # 容器环境可以不暴露端口
+    ports:
+      - '5044:5044'
+
+  demo-skywalking-service-eureka:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-skywalking-service-eureka
+    environment:
+      - JAVA_OPTS=-Xms256m -Xmx256m
+      - TZ=Asia/Shanghai
+      - logstashServer=demo-skywalking-logstash:5044
+      - SW_AGENT_NAME=service-eureka
+      - SW_AGENT_INSTANCE_NAME=service-eureka-instance-0
+      - SW_AGENT_COLLECTOR_BACKEND_SERVICES=demo-skywalking-oap-server:11800
+    ports:
+      - '9999:9999'
+    depends_on:
+      - demo-skywalking-logstash
+      - demo-skywalking-oap-server
+
+  demo-skywalking-service-gateway:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-skywalking-service-gateway
+    environment:
+      - JAVA_OPTS=-Xms256m -Xmx256m
+      - TZ=Asia/Shanghai
+      - logstashServer=demo-skywalking-logstash:5044
+      - eurekaServer=demo-skywalking-service-eureka
+      - SW_AGENT_NAME=service-gateway
+      - SW_AGENT_INSTANCE_NAME=service-gateway-instance-0
+      - SW_AGENT_COLLECTOR_BACKEND_SERVICES=demo-skywalking-oap-server:11800
+    ports:
+      - '8080:8080'
+    depends_on:
+      - demo-skywalking-service-eureka
+
+  demo-skywalking-service-level-first-provider:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-skywalking-service-level-first-provider
+    environment:
+      - JAVA_OPTS=-Xms256m -Xmx256m
+      - TZ=Asia/Shanghai
+      - logstashServer=demo-skywalking-logstash:5044
+      - eurekaServer=demo-skywalking-service-eureka
+      - SW_AGENT_NAME=service-level-first-provider
+      - SW_AGENT_INSTANCE_NAME=service-level-first-provider-instance-0
+      - SW_AGENT_COLLECTOR_BACKEND_SERVICES=demo-skywalking-oap-server:11800
+    depends_on:
+      - demo-skywalking-service-eureka
+
+  demo-skywalking-service-level-second-provider:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-skywalking-service-level-second-provider
+    environment:
+      - JAVA_OPTS=-Xms256m -Xmx256m
+      - TZ=Asia/Shanghai
+      - logstashServer=demo-skywalking-logstash:5044
+      - eurekaServer=demo-skywalking-service-eureka
+      - SW_AGENT_NAME=service-level-second-provider
+      - SW_AGENT_INSTANCE_NAME=service-level-second-provider-instance-0
+      - SW_AGENT_COLLECTOR_BACKEND_SERVICES=demo-skywalking-oap-server:11800
+    depends_on:
+      - demo-skywalking-service-eureka

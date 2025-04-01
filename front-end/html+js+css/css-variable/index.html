@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        :root {
+            --my-background-color: red;
+            --my-color: red;
+        }
+
+        /* 当 body 添加 class on 时 css 变量值变为 yellow，否则为 red */
+        body.on {
+            --my-background-color: yellow;
+        }
+
+        .div1 {
+            width: 100px;
+            height: 100px;
+            background-color: var(--my-background-color);
+        }
+
+        .demo2>div {
+            width: 300px;
+            height: 150px;
+            background-color: var(--my-color);
+        }
+
+        /* 此变量能够作用在.scope1和.scope2中 */
+        .demo3 {
+            --my-bg-color: red;
+        }
+        /* 此变量只能够作用在.scope1中，.scope2没有作用 */
+        /* .demo3 .scope1 {
+            --my-bg-color: red;
+        } */
+        .demo3>div>div {
+            width: 300px;
+            height: 100px;
+            background-color: var(--my-bg-color);
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!--
+        https://www.freecodecamp.org/news/what-are-css-variables-and-how-to-use-them/
+    -->
+    <div>演示 css 变量的基本用法</div>
+    <div class="div1"></div>
+    <hr/>
+
+    <div>通过html设置css变量</div>
+    <div class="demo2" style="--my-color: green;">
+        <div></div>
+    </div>
+    <hr>
+
+    <!-- 要修改:root作用域的css变量，需要在body或者html中使用style属性修改，在body内的任何元素通过style属性都无法修改:root作用域css变量 -->
+    <!-- 通过style无法修改.scope1和.scope2作用域的css变量 -->
+    <!-- <div style="--my-bg-color: green;"> -->
+    <div>
+        css变量作用域
+    </div>
+    <!-- 通过style同时修改.scope1和.scope2作用域的css变量 -->
+    <!-- <div class="demo3" style="--my-bg-color: green;"> -->
+    <div class="demo3">
+        <!-- 通过style修改.scope1作用域内的css变量，不会影响.scope2作用域 -->
+        <!-- <div class="scope1" style="--my-bg-color: green;"> -->
+        <div class="scope1">
+            <div></div>
+        </div>
+        <div class="scope2">
+            <div></div>
+        </div>
+    </div>
+    <hr>
+</body>
+</html>

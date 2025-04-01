@@ -1,0 +1,21 @@
+groups:
+- name: Prometheus alert
+  rules:
+  # 对任何实例超过60秒无法联系的情况发出警报
+  - alert: exporter服务下线告警
+    expr: up == 0
+    for: 60s
+    labels:
+      severity: critical
+    annotations:
+      summary: "{{ $labels.job }} 任务发现exporter服务 {{ $labels.instance }} 下线异常"
+      description: "{{ $labels.job }} 任务发现exporter服务 {{ $labels.instance }} 下线异常"
+  # blackbox exporter告警规则
+  - alert: 应用服务下线告警
+    expr: probe_success == 0
+    for: 60s
+    labels:
+      severity: critical
+    annotations:
+      summary: "{{ $labels.job }} 探针发现应用 {{ $labels.instance }} 服务已经下线"
+      description: "{{ $labels.job }} 探针发现应用 {{ $labels.instance }} 服务已经下线"

@@ -1,0 +1,43 @@
+$themes: (
+    light: (
+        background-color: green,
+        color: yellow,
+    ),
+    dark: (
+        background-color: black,
+        color: white,
+    )
+);
+
+.demo1>div {
+    width: 200px;
+    height: 100px;
+}
+
+@mixin themify($themes) {
+    @each $name, $values in $themes {
+        @if $name == light {
+            html[data-theme=#{$name}],html {
+                $theme-map: $values !global;
+                @content;
+            }
+        } @else {
+            html[data-theme=#{$name}] {
+                $theme-map: $values !global;
+                @content;
+            }
+        }
+        
+    }
+}
+
+@function themed($key) {
+    @return map-get($theme-map, $key);
+}
+
+@include themify($themes) {
+    .demo1>div {
+        background-color: themed(background-color);
+        color: themed(color)
+    }
+}

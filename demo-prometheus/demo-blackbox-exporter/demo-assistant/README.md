@@ -1,0 +1,1 @@
+# 用于辅助`blackbox exporter`测试

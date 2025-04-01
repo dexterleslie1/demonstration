@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        /*
+            animation: 
+                animation-name @keyframes 的名称
+                animation-duration 每次animation持续时间，例如：1s
+                animation-timing-function
+                animation-delay animation启动延迟时间，例如：1s
+                animation-iteration-count 重复次数
+        */
+        .elementDiv1 {
+            margin: 0 auto;
+            background-color: orange;
+            width: 200px;
+            height: 100px;
+            animation: movement1 2s linear 0s infinite;
+            animation-direction: alternate;
+        }
+
+        @keyframes movement1 {
+            from {
+                transform: translateX(0);
+            }
+
+            to {
+                transform: translateX(200px);
+            }
+        }
+
+        .elementDiv2 {
+            margin: 0 auto;
+            background-color: orange;
+            width: 200px;
+            height: 100px;
+            animation: movement2 2s infinite linear;
+            animation-direction: alternate-reverse;
+        }
+
+        @keyframes movement2 {
+            from {
+                transform: translateX(0);
+            }
+
+            to {
+                transform: translateX(200px);
+            }
+        }
+
+        /* https://www.damiisdandy.com/articles/create-infinite-auto-scroll-animation-with-pure-css/ */
+        .div3 {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .div3 .scrollpanel {
+            width: 200px;
+            border: 1px solid black;
+            overflow: hidden;
+            position: relative;
+            background-color: blue;
+            height: 50px;
+        }
+
+        .div3 .scroll-element {
+            width: inherit;
+            height: inherit;
+            position: absolute;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            background-color: aqua;
+        }
+
+        .div3 .scroll-element>div {
+            color: white;
+        }
+
+        .div3 .primary {
+            animation: animation-primary 5s linear 0s infinite normal none;
+
+        }
+
+        .div3 .secondary {
+            animation: animation-secondary 5s linear 0s infinite normal none;
+
+        }
+
+        @keyframes animation-primary {
+            from {
+                transform: translateX(0);
+            }
+
+            to {
+                transform: translateX(-100%);
+            }
+        }
+
+        @keyframes animation-secondary {
+            from {
+                transform: translateX(100%);
+            }
+
+            to {
+                transform: translateX(0%);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!--
+        https://developer.mozilla.org/en-US/docs/Web/CSS/animation-direction
+    -->
+
+    <div>animation-direction: alternate</div>
+    <div style="width:100%">
+        <div class="elementDiv1"></div>
+    </div>
+    <hr />
+
+    <div>animation-direction: reverse</div>
+    <div style="width:100%">
+        <div class="elementDiv2"></div>
+    </div>
+    <hr />
+
+    <div>水平无限循环滚动</div>
+    <div class="div3">
+        <div class="scrollpanel">
+            <div class="scroll-element primary">
+                <div>1</div>
+                <div>2</div>
+                <div>3</div>
+                <div>4</div>
+                <div>5</div>
+            </div>
+            <div class="scroll-element secondary">
+                <div>1</div>
+                <div>2</div>
+                <div>3</div>
+                <div>4</div>
+                <div>5</div>
+            </div>
+        </div>
+    </div>
+    <hr>
+</body>
+
+</html>

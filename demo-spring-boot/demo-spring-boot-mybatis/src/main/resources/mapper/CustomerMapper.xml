@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.future.demo.mapper.CustomerMapper">
+    <resultMap id="customerResultMap" type="com.future.demo.bean.Customer">
+        <id column="cId" property="id"/>
+        <result column="customer_name" property="customerName"/>
+        <result column="phone" property="phone"/>
+        <!-- 使用collection标签标注customer和order是一对多关系 -->
+        <collection property="orders" ofType="com.future.demo.bean.Order">
+            <id column="id" property="id"/>
+            <result column="address" property="address"/>
+            <result column="amount" property="amount"/>
+            <result column="customer_id" property="customerId"/>
+        </collection>
+    </resultMap>
+    <select id="findByIdWithOrders" resultMap="customerResultMap">
+        select c.id as cId, c.customer_name, c.phone, o.*
+        from customer c
+                 left join `order` o on c.id = o.customer_id
+        where c.id = #{id}
+    </select>
+
+    <select id="findById" resultType="com.future.demo.bean.Customer">
+        select *
+        from customer
+        where id = #{id}
+    </select>
+
+    <resultMap id="customerStepResultMap" type="com.future.demo.bean.Customer">
+        <id column="id" property="id"/>
+        <result column="customer_name" property="customerName"/>
+        <result column="phone" property="phone"/>
+        <!--
+            select="com.future.demo.mapper.OrderMapper.findByCustomerId"表示使用OrderMapper的findByCustomerId SQL查询订单
+            column="{customerId=id}"表示使用列id的值作为findByCustomerId SQL的customerId参数值
+        -->
+        <collection property="orders"
+                    select="com.future.demo.mapper.OrderMapper.findByCustomerId"
+                    column="{customerId=id}"/>
+    </resultMap>
+    <select id="findByIdWithOrdersStep" resultMap="customerStepResultMap">
+        select *
+        from customer
+        where id = #{id}
+    </select>
+</mapper>

@@ -1,0 +1,40 @@
+version: "3.0"
+
+services:
+  demo-elasticsearch:
+    build:
+      context: .
+      dockerfile: Dockerfile-elasticsearch
+    image: demo-elasticsearch-dev
+    environment:
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - discovery.type=single-node
+      # http.cors表示允许elasticsearch-head连接并管理
+      - http.cors.enabled=true
+      - http.cors.allow-origin=*
+      - TZ=Asia/Shanghai
+    ports:
+      - 9200:9200
+      # Java transport client需要连接这个端口去操作elasticsearch
+      - 9300:9300
+    volumes:
+     - ~/data-demo-elasticsearch7:/usr/share/elasticsearch/data
+     - ./elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+
+  demo-kibana:
+    image: kibana:7.8.0
+    environment:
+      - ELASTICSEARCH_HOSTS=http://demo-elasticsearch:9200
+    ports:
+      - 5601:5601
+    depends_on:
+      - demo-elasticsearch
+
+  demo-elasticsearch-ik-ext:
+    image: openresty/openresty
+    volumes:
+     - ./ik_dict.txt:/usr/local/openresty/nginx/html/ik_dict.txt
+     - ./nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf
+    #ports:
+    # - 80:80
+

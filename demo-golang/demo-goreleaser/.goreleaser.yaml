@@ -1,0 +1,102 @@
+# This is an example .goreleaser.yml file with some sane defaults.
+# Make sure to check the documentation at http://goreleaser.com
+project_name: "demo-goreleaser"
+before:
+  hooks:
+    - go mod tidy -go=1.19
+    - echo "编译打包前执行..."
+builds:
+  - id: "program1"
+    env:
+      - CGO_ENABLED=0
+    # 编译linux、windows、macOS平台对应的程序
+    goos:
+      - linux
+      - windows
+      - darwin
+    dir: ./program1
+    main: ./
+    ignore:
+      # 忽略 macOS 386 cpu架构编译
+      - goos: darwin
+        goarch: 386
+      # 忽略 linux 386 cpu架构编译
+      - goos: linux
+        goarch: 386
+      # 忽略 linux arm64 cpu架构编译
+      - goos: linux
+        goarch: arm64
+      # 忽略 windows 386 cpu架构编译
+      - goos: windows
+        goarch: 386
+
+    asmflags:
+      # 移除debug.PrintStack()路径前缀
+      # https://goreleaser.com/customization/builds/
+      - all=-trimpath={{ .Env.MY_CURRENT_WORKDIR }}
+
+    gcflags:
+      # 移除debug.PrintStack()路径前缀
+      # https://goreleaser.com/customization/builds/
+      - all=-trimpath={{ .Env.MY_CURRENT_WORKDIR }}
+
+    binary: program1
+  - id: "program2"
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+      - darwin
+    dir: ./program2
+    main: ./
+    ignore:
+      - goos: darwin
+        goarch: 386
+      - goos: linux
+        goarch: 386
+      - goos: linux
+        goarch: arm64
+      - goos: windows
+        goarch: 386
+    binary: program2
+    hooks:
+      post: echo "编译完成后调用脚本..."
+
+archives:
+  - id: "program1"
+    # replacements:
+    #   386: i386
+    #   amd64: x86_64
+    format: tar.gz
+    wrap_in_directory: true
+    format_overrides:
+    - goos: windows
+      format: zip
+    name_template: "{{ .ProjectName }}-program1-{{ .Os }}_{{ .Arch }}"
+    builds:
+      - "program1"
+
+  - id: "program2"
+    # replacements:
+    #   386: i386
+    #   amd64: x86_64
+    format: tar.gz
+    wrap_in_directory: true
+    format_overrides:
+    - goos: windows
+      format: zip
+    name_template: "{{ .ProjectName }}-program2-{{ .Os }}_{{ .Arch }}"
+    builds:
+      - "program2"
+
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ .Tag }}-next"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'

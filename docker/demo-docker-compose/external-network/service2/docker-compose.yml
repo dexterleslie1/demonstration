@@ -1,0 +1,15 @@
+version: "3.0"
+
+networks:
+  net:
+    external: true
+    name: demo-external-network-net
+
+services:
+  service2:
+    container_name: service2
+    image: busybox
+    command: sleep 3600
+    networks:
+      - net
+      

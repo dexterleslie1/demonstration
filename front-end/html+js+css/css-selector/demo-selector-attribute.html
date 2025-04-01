@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .demo1 input[type=button]:hover {
+            border: 5px solid red;
+        }
+
+        .demo1 input[disabled]:hover {
+            border: 5px solid green;
+        }
+    </style>
+</head>
+
+<body>
+    <!--
+        https://stackoverflow.com/questions/9271424/how-do-i-target-elements-with-an-attribute-that-has-any-value-in-css
+    -->
+    <div>演示根据属性选择元素</div>
+    <div class="demo1">
+        <input type="button" value="Button">
+        <input type="submit" value="Submit">
+        <input type="button" disabled value="Button in disabled state">
+    </div>
+</body>
+
+</html>

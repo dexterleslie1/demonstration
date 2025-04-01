@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        html {
+            /* 设置rem的基准参考为10px，因为浏览器默认字体大小为16px，16px*62.5%=10px */
+            font-size: 62.5%;
+        }
+
+        .div1 .div11 {
+            font-size: 1.5rem;
+        }
+
+        .div1 .div12 {
+            font-size: 3.2rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div style="font-size: 1.6rem;">演示rem单位的用法</div>
+    <div class="div1">
+        <div class="div11">15px</div>
+        <div class="div12">32px</div>
+    </div>
+    <hr>
+</body>
+
+</html>

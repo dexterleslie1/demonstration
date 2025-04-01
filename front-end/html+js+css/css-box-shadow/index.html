@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .my-div {
+            width: 50px;
+            height: 50px;
+            background-color: yellow;
+            box-shadow: 0 5px 0 rgba(255, 0, 0, 1), 0 10px 0 rgba(0, 255, 0, 1);
+        }
+    </style>
+</head>
+<body>
+    <!--
+        https://developer.mozilla.org/en-US/docs/Web/CSS/box-shadow
+    -->
+    <div>
+        box-shadow语法：box-shadow: offset-x offset-y blur-radius spread-radius color
+        offset-x和offset-y为阴影的相对于当前元素的偏移
+        spread-radius为阴影相对于当前的元素的投影增量
+        blur-radius为为阴影的模糊半径
+    </div>
+    <div style="width:100%;">
+        <div style="margin:0 auto;background-color: green;height:100px;width:100px;box-shadow: 5px 5px 10px -5px black;"></div>
+    </div>
+    <hr/>
+
+
+    <div>box-shadow只提供三个值时指定了 offset-x、offset-y、blur-radius的值</div>
+    <div style="width:100%;">
+        <div style="background-color: green;height: 100px;width: 100px;box-shadow: 50px 5px 50px black;"></div>
+    </div>
+    <hr/>
+
+    <div>演示指定多个box-shadow</div>
+    <div class="my-div"></div>
+    <hr/>
+
+    <div>
+        box-shadow inset用法，如果提供2个length值则表示offset-x、offset-y，如果提供3个length值则表示offset-x、offset-y、blur-radius，
+        如果提供4个length值则表示offset-x、offset-y、blur-radius、spread-radius
+    </div>
+    <div style="width:100%;">
+        <div style="margin:0 auto;background-color: green;height:100px;width:100px;box-shadow: inset 5px 5px 10px -5px black;"></div>
+    </div>
+</body>
+</html>

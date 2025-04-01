@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            position: relative;
+        }
+
+        .div11 {
+            position: absolute;
+            width: 350px;
+            height: 200px;
+            background-color: aqua;
+            /* 通过 calc 计算 div 居中的 left 位置 */
+            left: calc(50% - 175px);
+        }
+    </style>
+</head>
+<body>
+    <!--
+        https://developer.mozilla.org/en-US/docs/Web/CSS/calc
+    -->
+    <div>演示 calc 的 百分比减去像素 用法</div>
+    <div style="height: 200px;">
+        <div class="div11">
+
+        </div>
+    </div>
+    <hr/>
+</body>
+</html>

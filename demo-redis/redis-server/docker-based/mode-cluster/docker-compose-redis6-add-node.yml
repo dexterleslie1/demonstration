@@ -1,0 +1,32 @@
+version: "3.0"
+
+services:
+  # 添加新的 master 节点到集群中
+  node-extra-master:
+    image: redis:6.2.6-bullseye
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6390 --cluster-announce-ip 127.0.0.1
+    environment:
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./redis.cluster.conf:/usr/local/etc/redis/redis.conf
+    # ports:
+    #   - 6390:6390
+    #   - 16390:16390
+    # networks:
+    #   - net
+    network_mode: host
+
+  node-extra-slave:
+    image: redis:6.2.6-bullseye
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6391 --cluster-announce-ip 127.0.0.1
+    environment:
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./redis.cluster.conf:/usr/local/etc/redis/redis.conf
+    # ports:
+    #   - 6391:6391
+    #   - 16391:16391
+    # networks:
+    #   - net
+    network_mode: host
+  

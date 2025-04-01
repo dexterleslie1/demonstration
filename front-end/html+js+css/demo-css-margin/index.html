@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .demo2 svg {
+            display: block;
+            width: 30px;
+            height: 30px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <!-- 
+        margin属性用法
+        https://www.w3schools.com/cssref/pr_margin.php
+
+        margin有4个值时分别设置margin-top、margin-right、margin-bottom、margin-left
+        margin有3个值时分别设置margin-top、margin-right和margin-left、margin-bottom
+        margin有2个值时分别设置margin-top和margin-bottom、margin-right和margin-left
+        margin有1个值时分别设置margin-top和margin-right和margin-bottom和margin-left
+    -->
+
+    <!-- 
+        div居中显示
+        当元素设置指定宽度和display:block时，margin: 0 auto 表示居中显示元素
+        https://stackoverflow.com/questions/5520161/centering-css-margin-left-and-right-auto-but-funny-results
+    -->
+    <div>演示margin: 0 auto;居中用法</div>
+    <div style="margin:0 auto;display:block;width:400px;height:100px;background-color: orange;"></div>
+    <hr>
+
+    <!--
+        因为svg元素默认display为inline，所以margin: 0 auto;不起作用，通过设置svg display:block后则起作用
+    -->
+    <div>margin: 0 auto;对于display:inline-block或者inline元素不起作用</div>
+    <div class="demo2">
+        <svg t="1711850836141" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"
+            p-id="19229">
+            <path d="M232 392L512 672l280-280z" p-id="19230"></path>
+        </svg>
+    </div>
+</body>
+</html>

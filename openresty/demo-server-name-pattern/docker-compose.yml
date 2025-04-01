@@ -1,0 +1,13 @@
+version: "3.0"
+
+services:
+  demo-openresty-server-name-pattern:
+    container_name: demo-openresty-server-name-pattern
+    image: docker.118899.net:10001/yyd-public/demo-openresty-server-name-pattern
+    volumes:
+     - ./nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf
+     - ./default.conf:/usr/local/openresty/nginx/conf/default.conf
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - 261:261

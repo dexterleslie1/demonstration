@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <hr/>
+    span标签默认是行内元素，在声明其display:block后变为块元素，此时支持指定宽度和高度。
+    <span style="background-color: blueviolet;display: block;width: 200px;height: 200px;">2222</span>
+    <span style="background-color: aquamarine;">在span中的文本</span>
+    
+    <hr/>
+    div标签默认是块元素，在声明其display:inline后变为行内元素，此时不支持指定宽度和高度。
+    <br/>
+    <div style="background-color: blue;display: inline;width: 200px;height: 200px;padding: 20px 50px;margin:20px 50px;">1111</div>
+    <span style="background-color: aquamarine;">在span中的文本</span>
+
+    <hr/>
+    下面演示在不声明display:block元素宽度时，元素宽度会自动调整至其父级容器宽度，以填满父级容器宽度。
+    <div style="background-color: red;width: 200px;height: 200px;">
+        <span style="display: block;background-color: yellowgreen;height: 10px;"></span>
+    </div>
+</body>
+</html>

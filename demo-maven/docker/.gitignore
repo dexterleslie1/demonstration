@@ -1,0 +1,4 @@
+.m2/repository
+.m2/*.log
+.m2/settings-docker.xml
+mytarget

@@ -1,0 +1,17 @@
+version: "3.0"
+
+services:
+  # https://blog.csdn.net/qq_27615455/article/details/125168548
+
+  # Docker 运行 nacos2.x 需要暴露 9848 和 9849 端口
+  # https://github.com/alibaba/nacos/issues/6154
+  demo-spring-cloud-nacos-server:
+    image: nacos/nacos-server:v2.2.0
+    environment:
+      - TZ=Asia/Shanghai
+      - MODE=standalone
+      #- PREFER_HOST_MODE=hostname
+    ports:
+      - '8848:8848'
+      - '9848:9848'
+      #- '9849:9849'

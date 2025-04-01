@@ -1,0 +1,103 @@
+- hosts: all
+  tasks:
+    - package_facts:
+        manager: auto
+
+    - name: "保证unzip命令已经安装"
+      yum:
+        name: unzip
+        state: installed
+
+    - name: "yum install yum-utils -y"
+      yum:
+        name: yum-utils
+        state: installed
+
+    - name: "yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo"
+      shell: yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+
+    - name: "yum remove podman-manpages"
+      yum:
+        name: podman-manpages
+        state: removed
+
+    - name: "yum remove podman"
+      yum:
+        name: podman
+        state: removed
+
+    - name: "下载docker-23.0.5-1-rpms.zip到目录/tmp"
+      get_url:
+        url: https://bucketxyh.oss-cn-hongkong.aliyuncs.com/docker/docker-23.0.5-1-rpms.zip
+        dest: /tmp/docker-23.0.5-1-rpms.zip
+        checksum: md5:4e08a727cd89b9f7ea33a4de5464723b
+    - name: "解压/tmp/docker-23.0.5-1-rpms.zip到/tmp/docker-23.0.5-1-rpms"
+      shell: rm -rf /tmp/docker-23.0.5-1-rpms && unzip /tmp/docker-23.0.5-1-rpms.zip -d /tmp/docker-23.0.5-1-rpms
+
+    - name: "使用yum命令安装docker"
+      shell: cd /tmp/docker-23.0.5-1-rpms && yum install -y *.rpm --allowerasing
+
+    - name: "mkdir -p /etc/docker"
+      shell: mkdir -p /etc/docker
+      ignore_errors: yes
+
+    - name: "copy daemon.json to /etc/docker/daemon.json"
+      copy:
+        src: daemon.json
+        dest: /etc/docker/daemon.json
+
+    - name: "systemctl enable docker and systemctl start docker"
+      systemd:
+        name: docker
+        state: restarted
+        enabled: yes
+
+    - name: "Download docker-compose-Linux-x86_64"
+      get_url:
+       url: https://bucketxyh.oss-cn-hongkong.aliyuncs.com/docker/docker-compose-Linux-x86_64
+       dest: /tmp/docker-compose-Linux-x86_64
+       checksum: md5:8f68ae5d2334eecb0ee50b809b5cec58
+    - name: "cp /tmp/docker-compose-Linux-x86_64 /usr/local/bin/docker-compose"
+      shell: cp /tmp/docker-compose-Linux-x86_64 /usr/local/bin/docker-compose
+    - name: "ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose"
+      shell: ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+      ignore_errors: yes
+    - name: "chmod +x /usr/local/bin/docker-compose"
+      shell: chmod +x /usr/local/bin/docker-compose
+
+    - name: "安装git命令"
+      yum:
+        name: git
+        state: installed
+
+    #region 安装jdk用于运行jenkins agent程序
+
+    # 判断是否已安装java
+    # 参考 https://stackoverflow.com/questions/30388361/ansible-command-to-check-the-java-version-in-different-servers
+    - name: "判断是否已安装java"
+      command: java -version
+      register: var_java_version
+      ignore_errors: true
+
+    # centOS安装jdk
+    - name: 下载jdk rpm
+      get_url:
+        url: https://bucketxyh.oss-cn-hongkong.aliyuncs.com/jdk/jdk-8u144-linux-x64.rpm
+        dest: /tmp/jdk-8u144-linux-x64.rpm
+      when: var_java_version is failed and "jdk1.8.0_144" not in ansible_facts.packages
+
+    - name: 安装jdk
+      yum:
+        name: /tmp/jdk-8u144-linux-x64.rpm
+        state: installed
+        disable_gpg_check: yes
+      when: var_java_version is failed and "jdk1.8.0_144" not in ansible_facts.packages
+
+    - file:
+        path: /tmp/jdk-8u144-linux-x64.rpm
+        state: absent
+
+    #endregion
+
+    - name: "重启系统"
+      reboot:

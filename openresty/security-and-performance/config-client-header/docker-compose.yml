@@ -1,0 +1,10 @@
+version: "3.0"
+
+services:
+  demo-openresty-client-header:
+    container_name: demo-openresty-client-header
+    image: docker.118899.net:10001/yyd-public/demo-openresty-client-header:1.0.0
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - 80:80

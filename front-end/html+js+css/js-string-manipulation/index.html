@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <script>
+        // 演示substr用法
+        var testString = "attachment; file=\"1.pcap\"";
+        testString = testString.replaceAll("\"", "").replace("'", "");
+        var fileName = testString.substr(testString.indexOf("=") + 1)
+        console.log("testString=" + testString + "使用substr获取文件名fileName=" + fileName);
+
+        // 判断字符串是否为空
+        // https://stackoverflow.com/questions/154059/how-do-i-check-for-an-empty-undefined-null-string-in-javascript
+        var testString = null
+        if(!testString || !testString.trim()) {
+            console.log(`testString is null`)
+        }
+        var testString = undefined
+        if(!testString || !testString.trim()) {
+            console.log(`testString is undefined`)
+        }
+        var testString = ""
+        if(!testString.trim()) {
+            console.log(`testString is ""`)
+        }
+        var testString = "  "
+        if(!testString.trim()) {
+            console.log(`testString is "  "`)
+        }
+    </script>
+</head>
+
+<body>
+
+</body>
+
+</html>

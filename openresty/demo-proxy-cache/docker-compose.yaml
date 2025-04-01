@@ -1,0 +1,42 @@
+version: "3.0"
+
+networks:
+ net:
+  name: demo-proxy-cache-net
+
+
+services:
+ demo-proxy-cache-backend-openresty:
+  container_name: demo-proxy-cache-backend-openresty
+  image: docker.118899.net:10001/yyd-public/demo-proxy-cache-openresty
+  environment:
+   - LANG=C.UTF-8
+   - TZ=Asia/Shanghai
+  volumes:
+   - ./nginx-backend.conf:/usr/local/openresty/nginx/conf/nginx.conf
+   #- ./1.html:/usr/local/openresty/nginx/html/1.html
+   #- ./test-expires.js:/usr/local/openresty/nginx/html/test-expires.js
+   #- ./test-no-store.js:/usr/local/openresty/nginx/html/test-no-store.js
+   #- ./test-no-cache.js:/usr/local/openresty/nginx/html/test-no-cache.js
+  ports:
+   - 81:80
+  networks:
+   - net
+
+ demo-proxy-cache-frontend-openresty:
+  container_name: demo-proxy-cache-frontend-openresty
+  image: docker.118899.net:10001/yyd-public/demo-proxy-cache-openresty
+  environment:
+   - LANG=C.UTF-8
+   - TZ=Asia/Shanghai
+  volumes:
+   - ./nginx-proxy-cache.conf:/usr/local/openresty/nginx/conf/nginx.conf
+   #- ./1.html:/usr/local/openresty/nginx/html/1.html
+   #- ./test-expires.js:/usr/local/openresty/nginx/html/test-expires.js
+   #- ./test-no-store.js:/usr/local/openresty/nginx/html/test-no-store.js
+   #- ./test-no-cache.js:/usr/local/openresty/nginx/html/test-no-cache.js
+  ports:
+   - 80:80
+  networks:
+   - net
+

@@ -1,0 +1,362 @@
+# skywalking部署
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: elasticsearch
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: elasticsearch
+  serviceName: elasticsearch-service
+  template:
+    metadata:
+      labels:
+        app: elasticsearch
+    spec:
+      containers:
+        - name: elasticsearch
+          image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-skywalking-elasticsearch
+          imagePullPolicy: Always
+          env:
+            - name: "TZ"
+              value: "Asia/Shanghai"
+            - name: "ES_JAVA_OPTS"
+              value: "-Xms512m -Xmx512m"
+            - name: "discovery.type"
+              value: "single-node"
+            - name: "http.cors.enabled"
+              value: "true"
+            - name: "http.cors.allow-origin"
+              value: "*"
+          volumeMounts:
+            - name: data-elasticsearch
+              mountPath: /usr/share/elasticsearch/data
+  volumeClaimTemplates:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: data-elasticsearch
+        labels:
+          app: elasticsearch
+      spec:
+        accessModes:
+          - "ReadWriteOnce"
+        resources:
+          requests:
+            storage: "8Gi"
+        storageClassName: nfs-client
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: elasticsearch-service
+spec:
+  type: ClusterIP
+  selector:
+    app: elasticsearch
+  ports:
+    - port: 9200
+      targetPort: 9200
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: kibana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kibana
+  serviceName: kibana-service
+  template:
+    metadata:
+      labels:
+        app: kibana
+    spec:
+      containers:
+        - name: kibana
+          image: kibana:7.14.1
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: "TZ"
+              value: "Asia/Shanghai"
+            - name: "ELASTICSEARCH_HOSTS"
+              value: "http://elasticsearch-service:9200"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kibana-service-nodeport
+spec:
+  type: NodePort
+  ports:
+    - port: 5601
+      targetPort: 5601
+      nodePort: 30003
+  selector:
+    app: kibana
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: skywalking-oap-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: skywalking-oap-server
+  serviceName: skywalking-oap-server-service
+  template:
+    metadata:
+      labels:
+        app: skywalking-oap-server
+    spec:
+      containers:
+        - name: skywalking-oap-server
+          image: apache/skywalking-oap-server:8.7.0-es7
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: "TZ"
+              value: "Asia/Shanghai"
+            - name: "SW_STORAGE"
+              value: "elasticsearch7"
+            - name: "SW_STORAGE_ES_CLUSTER_NODES"
+              value: "elasticsearch-service:9200"
+            - name: "SW_STORAGE_ES_RECORD_DATA_TTL"
+              value: "15"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: skywalking-oap-server-service
+spec:
+  type: ClusterIP
+  selector:
+    app: skywalking-oap-server
+  ports:
+    - name: "p1"
+      port: 12800
+      targetPort: 12800
+    - name: "p2"
+      port: 11800
+      targetPort: 11800
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: skywalking-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: skywalking-ui
+  serviceName: skywalking-ui-service
+  template:
+    metadata:
+      labels:
+        app: skywalking-ui
+    spec:
+      containers:
+        - name: skywalking-ui
+          image: apache/skywalking-ui:8.7.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: "TZ"
+              value: "Asia/Shanghai"
+            - name: "SW_OAP_ADDRESS"
+              value: "http://skywalking-oap-server-service:12800"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: skywalking-ui-service-nodeport
+spec:
+  type: NodePort
+  ports:
+    - port: 8080
+      targetPort: 8080
+      nodePort: 30001
+  selector:
+    app: skywalking-ui
+
+---
+# 应用部署
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: eureka
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: eureka
+  serviceName: eureka-service
+  template:
+    metadata:
+      labels:
+        app: eureka
+    spec:
+      containers:
+        - name: eureka
+          image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-skywalking-service-eureka
+          imagePullPolicy: Always
+          env:
+            - name: "TZ"
+              value: "Asia/Shanghai"
+            - name: "JAVA_OPTS"
+              value: "-Xms256m -Xmx256m"
+            - name: "SW_AGENT_NAME"
+              value: "service-eureka"
+            - name: "SW_AGENT_INSTANCE_NAME"
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: "SW_AGENT_COLLECTOR_BACKEND_SERVICES"
+              value: "skywalking-oap-server-service:11800"
+            - name: "SW_GRPC_LOG_SERVER_HOST"
+              value: "skywalking-oap-server-service"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: eureka-service
+spec:
+  type: NodePort
+  ports:
+    - port: 9999
+      targetPort: 9999
+      nodePort: 30002
+  selector:
+    app: eureka
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: zuul
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: zuul
+  serviceName: zuul-service
+  template:
+    metadata:
+      labels:
+        app: zuul
+    spec:
+      containers:
+        - name: zuul
+          image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-skywalking-service-zuul
+          imagePullPolicy: Always
+          env:
+            - name: "TZ"
+              value: "Asia/Shanghai"
+            - name: "JAVA_OPTS"
+              value: "-Xms256m -Xmx256m"
+            - name: "eurekaServer"
+              value: "eureka-service"
+            - name: "SW_AGENT_NAME"
+              value: "service-zuul"
+            - name: "SW_AGENT_INSTANCE_NAME"
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: "SW_AGENT_COLLECTOR_BACKEND_SERVICES"
+              value: "skywalking-oap-server-service:11800"
+            - name: "SW_GRPC_LOG_SERVER_HOST"
+              value: "skywalking-oap-server-service"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zuul-service
+spec:
+  type: NodePort
+  ports:
+    - port: 8081
+      targetPort: 8081
+      nodePort: 30000
+  selector:
+    app: zuul
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: level-first-provider
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: level-first-provider
+  serviceName: level-first-provider-service
+  template:
+    metadata:
+      labels:
+        app: level-first-provider
+    spec:
+      containers:
+        - name: level-first-provider
+          image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-skywalking-service-level-first-provider
+          imagePullPolicy: Always
+          env:
+            - name: "TZ"
+              value: "Asia/Shanghai"
+            - name: "JAVA_OPTS"
+              value: "-Xms256m -Xmx256m"
+            - name: "eurekaServer"
+              value: "eureka-service"
+            - name: "SW_AGENT_NAME"
+              value: "service-level-first-provider"
+            - name: "SW_AGENT_INSTANCE_NAME"
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: "SW_AGENT_COLLECTOR_BACKEND_SERVICES"
+              value: "skywalking-oap-server-service:11800"
+            - name: "SW_GRPC_LOG_SERVER_HOST"
+              value: "skywalking-oap-server-service"
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: level-second-provider
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: level-second-provider
+  serviceName: level-second-provider-service
+  template:
+    metadata:
+      labels:
+        app: level-second-provider
+    spec:
+      containers:
+        - name: level-second-provider
+          image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-skywalking-service-level-second-provider
+          imagePullPolicy: Always
+          env:
+            - name: "TZ"
+              value: "Asia/Shanghai"
+            - name: "JAVA_OPTS"
+              value: "-Xms256m -Xmx256m"
+            - name: "eurekaServer"
+              value: "eureka-service"
+            - name: "SW_AGENT_NAME"
+              value: "service-level-second-provider"
+            - name: "SW_AGENT_INSTANCE_NAME"
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: "SW_AGENT_COLLECTOR_BACKEND_SERVICES"
+              value: "skywalking-oap-server-service:11800"
+            - name: "SW_GRPC_LOG_SERVER_HOST"
+              value: "skywalking-oap-server-service"

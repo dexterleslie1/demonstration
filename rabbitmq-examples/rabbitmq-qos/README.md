@@ -1,0 +1,1 @@
+# 演示rabbitmq qos（prefetch_count）

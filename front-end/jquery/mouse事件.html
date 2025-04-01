@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script type="text/javascript" src="https://lib.baomitu.com/jquery/1.12.4/jquery.min.js"></script>
+    <script type="text/javascript">
+        // https://www.jb51.net/article/241478.htm
+        // https://blog.csdn.net/qq_39232387/article/details/110194560
+        $(document).ready(function() {
+            // mouseenter、mouseleave演示
+            // 在父元素和子元素之间进出不会再触发事件
+            $("#box1-1").mouseenter(function() {
+                console.log($(this).attr("id") + " mouseenter")
+            })
+            $("#box1-1").mouseleave(function() {
+                console.log($(this).attr("id") + " mouseleave")
+            })
+
+            // mouseover、mouseout演示
+            // 在父元素和子元素之间进出会再次出发事件
+            $("#box2-1").mouseover(function() {
+                console.log($(this).attr("id") + " mouseover")
+            })
+            $("#box2-1").mouseout(function() {
+                console.log($(this).attr("id") + " mouseout")
+            })
+
+            // hover演示
+            // hover是mouseenter和mouseleave的合并写法
+            $("#box3-1").hover(function() {
+                console.log($(this).attr("id") + " hover enter")
+            }, function() {
+                console.log($(this).attr("id") + " hover leave")
+            })
+
+            // mousemove、mousedown、mouseup
+            $("#box5-1").mousemove(function() {
+                console.log($(this).attr("id") + " mousemove")
+            })
+            $("#box5-1").mousedown(function() {
+                console.log($(this).attr("id") + " mousedown")
+            })
+            $("#box5-1").mouseup(function() {
+                console.log($(this).attr("id") + " mouseup")
+            })
+        })
+    </script>
+</head>
+<body>
+    <div>
+        <ul>
+            <li>mouseenter 事件只有在鼠标指针进入被选元素时被触发</li>
+            <li>mouseleave 事件只有在鼠标指针离开被选元素时被触发。</li>
+        </ul>
+        <div id="box1-1" style="width: 100px;height: 100px;background-color: yellow;">
+            <div id="box1-2" style="width: 50px;height: 50px;background-color: yellowgreen;"></div>
+        </div>
+        <hr/>
+    </div>
+
+    <div>
+        <ul>
+            <li>mouseover 事件在鼠标指针进入被选元素或任意子元素时都会被触发</li>
+            <li>mouseout 事件在鼠标指针离开被选元素或任意子元素时都会被触发</li>
+        </ul>
+        <div id="box2-1" style="width: 100px;height: 100px;background-color: yellow;">
+            <div id="box2-2" style="width: 50px;height: 50px;background-color: yellowgreen;"></div>
+        </div>
+        <hr/>
+    </div>
+
+    <div>
+        <ul>
+            <li>hover 事件对mouseenter和mouseleave合并书写</li>
+        </ul>
+        <div id="box3-1" style="width: 100px;height: 100px;background-color: yellow;">
+            <div id="box3-2" style="width: 50px;height: 50px;background-color: yellowgreen;"></div>
+        </div>
+        <hr/>
+    </div>
+
+    <div>
+        <ul>
+            <li>mousemove、mousedown、mouseup 事件</li>
+        </ul>
+        <div id="box5-1" style="width: 100px;height: 100px;background-color: yellow;">
+            <div id="box5-2" style="width: 50px;height: 50px;background-color: yellowgreen;"></div>
+        </div>
+        <hr/>
+    </div>
+</body>
+</html>

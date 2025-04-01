@@ -1,0 +1,11 @@
+version: "3.0"
+
+services:
+  openresty:
+    build:
+      context: ./
+    image: demo-lua-phase-dev
+    environment:
+      - TZ=Aisa/Shanghai
+    ports:
+      - '80:80'

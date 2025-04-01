@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style type="text/css">
+        /*
+        演示float特性：
+        1、将元素排除在普通流之外
+        2、元素将不在页面中占据空间
+        3、将浮动的元素放置在包含框的左边或者右边
+        4、浮动的元素依旧位于包含框之内
+        5、浮动元素的外边缘不会超过其父元素的内边缘
+        */
+        #box {
+            width: 600px;
+            height: 600px;
+            background-color: aqua;
+        }
+
+        #box > div:first-child {
+            width: 200px;
+            height: 200px;
+            background-color: green;
+            float: right;
+        }
+
+        #box > div:nth-child(2) {
+            width: 200px;
+            height: 200px;
+            background-color: bisque;
+        }
+
+        #box > div:nth-child(3) {
+            width: 200px;
+            height: 200px;
+            background-color: blue;
+        }
+    </style>
+</head>
+<body>
+    <div id="box">
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+</body>
+</html>

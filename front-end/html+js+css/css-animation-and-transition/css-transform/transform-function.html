@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .div2 {
+            position: relative;
+            height: 110px;
+        }
+        .div2 .div21 {
+            position: absolute;
+            top: 0;
+            left: 300px;
+            width: 100px;
+            height: 100px;
+            background-color: green;
+
+            transform: translate(200px, -30px) scale(1.5);
+        }
+    </style>
+</head>
+
+<body>
+    <!--
+        transform允许您旋转、缩放、倾斜或平移元素
+        https://developer.mozilla.org/en-US/docs/Web/CSS/transform-function
+        https://www.freecodecamp.org/news/complete-guide-to-css-transform-functions-and-properties/
+    -->
+
+    <div>
+        translate用法
+        <!--
+            https://developer.mozilla.org/en-US/docs/Web/CSS/transform-function/translate
+        -->
+    </div>
+    <!-- transform:translate(150px) 表示相对于其原始位置x坐标偏移150px -->
+    <div style="width:300px;height:100px;background-color:orange;transform:translate(150px);">
+        transform:translate(150px)
+    </div>
+
+    <div style="height:20px;"></div>
+    <!-- transform:translate(-350px) 表示相对于其原始位置x坐标偏移-350px -->
+    <div
+        style="position:relative;width:300px;height:100px;left:400px;background-color:orange;transform:translate(-350px);">
+        transform:translate(-350px)
+    </div>
+
+    <div style="height:20px;"></div>
+    <!-- transform:translate(100%) 表示相对于其原始位置x坐标偏移，其中偏移量为其自身宽度的100% -->
+    <div style="width:300px;height:100px;background-color:orange;transform:translate(100%);">
+        transform:translate(100%)
+    </div>
+    <hr />
+
+    <div>同时多个transform translate x、y和scale</div>
+    <div class="div2">
+        <div class="div21"></div>
+    </div>
+    <hr>
+</body>
+
+</html>

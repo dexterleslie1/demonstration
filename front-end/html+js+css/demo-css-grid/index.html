@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        /* https://www.ruanyifeng.com/blog/2019/03/grid-layout-tutorial.html */
+        .div1 .container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            /* 可以指定第二列宽度 */
+            /* grid-template-columns: 1fr 200px 1fr; */
+            grid-template-rows: repeat(4, 1fr);
+            /* 列间距 */
+            column-gap: 40px;
+            /* 行间距 */
+            row-gap: 10px;
+        }
+
+        .div1 .container .item {
+            padding: 20px;
+            background-color: green;
+            border-radius: 5px;
+            color: white;
+            font-size: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .div1 .container .one {
+            grid-column: span 2;
+        }
+
+        .div1 .container .two {
+            grid-row: span 3;
+        }
+
+        .div1 .container .three {
+            grid-area: span 2 / span 2;
+        }
+
+        .div2 .container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .div2 .container .item {
+            /* padding: 20px; */
+            background-color: green;
+        }
+
+        .div2 .container .item:nth-of-type(2) {
+            height: 100px;
+        }
+
+        .div2 .container .item:nth-of-type(2) {
+            height: 200px;
+        }
+
+        .demo1 {
+            height: 160px;
+        }
+        .demo1 .container {
+            position: absolute;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            background-color: yellowgreen;
+        }
+        .demo1 .container .item {
+            background-color: green;
+            height: 150px;
+            width: 200px;
+        }
+        .demo1 .container .item:nth-of-type(2) {
+            /* 使用width=100%设置当前grid item宽度一样 */
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div>grid 基本使用</div>
+    <div class="div1">
+        <div class="container">
+            <div class="item">1</div>
+            <div class="item one">2</div>
+            <!-- <div class="item">3</div> -->
+            <div class="item three">4</div>
+            <!-- <div class="item">5</div> -->
+            <div class="item two">6</div>
+            <!-- <div class="item">7</div> -->
+            <!-- <div class="item">8</div> -->
+            <!-- <div class="item">9</div> -->
+            <div class="item">10</div>
+            <div class="item">11</div>
+            <!-- <div class="item">12</div> -->
+        </div>
+    </div>
+    <hr>
+
+    <div>grid item同样的高度，NOTE: 无论其中一个item声明了高度，其他item都会跟随这个item同样的高度</div>
+    <div class="div2">
+        <div class="container">
+            <div class="item"></div>
+            <div class="item"></div>
+            <div class="item"></div>
+            <div class="item"></div>
+        </div>
+    </div>
+    <hr>
+
+    <div>grid同样的宽度，NOTE：通过设置其中一个grid item width:100%达到设置相同宽度结果。</div>
+    <div class="demo1">
+        <div class="container">
+            <div class="item"></div>
+            <div class="item"></div>
+            <div class="item"></div>
+            <div class="item"></div>
+        </div>
+    </div>
+    <hr>
+</body>
+
+</html>

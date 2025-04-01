@@ -1,0 +1,16 @@
+LearningMode;
+SecRulesEnabled;
+DeniedUrl "/request_denied";
+
+## Check & Blocking Rules
+CheckRule "$SQL >= 8" BLOCK;
+CheckRule "$RFI >= 8" BLOCK;
+CheckRule "$TRAVERSAL >= 4" BLOCK;
+CheckRule "$EVADE >= 4" BLOCK;
+CheckRule "$XSS >= 8" BLOCK;
+
+BasicRule wl:2;
+BasicRule wl:16;
+BasicRule wl:1001 "mz:$URL:/api/v1/client/register|$BODY_VAR:additionalinformation";
+BasicRule wl:1001 "mz:$URL:/api/v1/client/register|$ARGS_VAR:additionalinformation";
+BasicRule wl:1015 "mz:$URL:/api/v1/message/ack|$BODY_VAR:ids";

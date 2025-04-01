@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style type="text/css">
+        /* 演示两列div并且水平居中 */
+        #box {
+            background-color: blue;
+            /* 父div宽度自动适应子div的宽度之和 */
+            display: inline-block;
+            /* 
+                inline-block布局产生间隙的原因及解决办法（水平、垂直）
+                参考：https://blog.csdn.net/gladys_1111/article/details/77279985
+            */
+            font-size: 0;
+            letter-spacing: -3px;
+        }
+
+        #box div:first-child {
+            width: 200px;
+            height: 200px;
+            background-color: aqua;
+            display: inline-block;
+        }
+
+        #box div:last-child {
+            width: 200px;
+            height: 200px;
+            background-color: aquamarine;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body style="text-align: center;/* 使inline-block元素居中 */">
+    <div id="box">
+        <div style="font-size: 16px;text-align: left;">111</div>
+        <div style="font-size: 16px;text-align: left;">222</div>
+    </div>
+</body>
+</html>

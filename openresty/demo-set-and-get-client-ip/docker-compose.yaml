@@ -1,0 +1,10 @@
+version: "3.0"
+
+services:
+  openresty:
+    build:
+      context: ./
+    image: demo-openresty-dev
+    environment:
+      - TZ=Asia/Shanghai
+    network_mode: host

@@ -1,0 +1,15 @@
+version: "3.0"
+
+services:
+  demo:
+    build:
+      context: ./
+    image: demo-dockerize-template
+    volumes:
+      - ./nginx.tmpl:/usr/local/openresty/nginx/conf/nginx.tmpl
+    environment:
+      - rabbitmqServerHost=${rabbitmqServerHost}
+      - rabbitmqServerPort=${rabbitmqServerPort}
+      - TZ=Asia/Shanghai
+    ports:
+      - ${listenPort}:80

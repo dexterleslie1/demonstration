@@ -1,0 +1,34 @@
+version: "3.0"
+
+# 创建网络
+networks:
+  net:
+    external: true
+    name: demo-redis-server-sentinel-net
+
+services:
+  demo-redis-sentinel-repl-node-extra:
+    container_name: demo-redis-sentinel-repl-node-extra
+    image: my-redis:5.0.14
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6379 --replica-announce-ip ${varHostIp} --replica-announce-port 6390
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - 6390:6379
+    networks:
+      - net
+  demo-redis-sentinel-repl-node-extra-slave-join:
+    container_name: demo-redis-sentinel-repl-node-extra-slave-join
+    image: my-redis:5.0.14
+    command: sh -c "dockerize -wait tcp://demo-redis-sentinel-repl-node1:6379 -timeout 120s -wait-retry-interval 5s
+                    && dockerize -wait tcp://demo-redis-sentinel-repl-node-extra:6379 -timeout 120s -wait-retry-interval 5s
+                    && redis-cli -h demo-redis-sentinel-repl-node-extra slaveof demo-redis-sentinel-repl-node1 6379
+                    && redis-cli -h demo-redis-sentinel-repl-node-extra config rewrite
+                    && echo \"成功join slave\""
+    environment:
+      - TZ=Asia/Shanghai
+    networks:
+      - net
+    depends_on:
+      - demo-redis-sentinel-repl-node-extra
+  

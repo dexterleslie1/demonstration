@@ -1,0 +1,54 @@
+- hosts: localhost
+  tasks:
+   # 参考此链接读取文件内容并转换为ansible JSON对象
+   # https://www.middlewareinventory.com/blog/ansible-playbook-read-json-file/
+   - name: "使用cat命令读取new.json"
+     shell: cat new.json
+     register: varNewJSONFileContent
+
+  #  # 调试打印varNewJSONFileContent变量
+  #  - debug:
+  #     var: varNewJSONFileContent
+
+   - name: "把new.json文件的内容转换为JSON对象并保存到varNewJSONObject中"
+     set_fact:
+      varNewJSONObject: "{{ varNewJSONFileContent.stdout | from_json }}"
+
+   # 调试打印varNewJSONObject对象
+   - debug:
+      var: varNewJSONObject
+
+   - name: "使用cat命令读取old.json"
+     shell: cat old.json
+     register: varOldJSONFileContent
+
+  #  # 调试打印varOldJSONFileContent变量
+  #  - debug:
+  #     var: varOldJSONFileContent
+
+   - name: "把old.json文件的内容转换为JSON对象并保存到varOldJSONObject中"
+     set_fact:
+      varOldJSONObject: "{{ varOldJSONFileContent.stdout | from_json }}"
+
+   # 调试打印varOldJSONObject对象
+   - debug:
+      var: varOldJSONObject
+  
+   # 参考此链接合并两个JSON对象
+   # https://stackoverflow.com/questions/55321850/ansible-merge-json-object
+   # NOTE: 如果两个JSON对象存在键一样，则combine参数的JSON对象覆盖前面对象的对应键的值
+   - set_fact: 
+      varMergedJSONObject: "{{ varOldJSONObject | combine(varNewJSONObject) }}"
+   
+   # 打印两个合并后的JSON对象
+   - debug:
+      var: varMergedJSONObject
+
+   # 参考以下链接输出JSON对象到文件中
+   # https://stackoverflow.com/questions/63416703/how-to-write-a-json-file-using-ansible
+   # https://stackoverflow.com/questions/64394451/ansible-pretty-print-json
+   # 输出合并后的JSON对象到文件中
+   - copy:
+      dest: merged.json
+      content: "{{ varMergedJSONObject | to_nice_json }}" 
+   

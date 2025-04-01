@@ -1,0 +1,67 @@
+pipeline {
+    // 这个agent不能删除，否则报告缺失agent导致语法错误
+    agent any
+    
+    stages {
+        stage('编译代码和镜像') {
+            agent {
+                label 'centos8-slave'
+            }
+        
+            steps {
+                // checkout源代码到本地
+                dir('springcloud-architecture') {
+                    dir('architecture-parent') {
+                        git branch: 'main', changelog: false, credentialsId: 'git-access-token', url: 'http://192.168.1.151/root/demo-devops-architecture-parent.git'
+                    }
+                    dir('architecture-eureka') {
+                        git branch: 'main', changelog: false, credentialsId: 'git-access-token', url: 'http://192.168.1.151/root/demo-devops-architecture-eureka.git'
+                    }
+                    dir('architecture-zuul') {
+                        git branch: 'main', changelog: false, credentialsId: 'git-access-token', url: 'http://192.168.1.151/root/demo-devops-architecture-zuul.git'
+                    }
+                    dir('architecture-common') {
+                        git branch: 'main', changelog: false, credentialsId: 'git-access-token', url: 'http://192.168.1.151/root/demo-devops-architecture-common.git'
+                    }
+                    dir('architecture-helloworld') {
+                        git branch: 'main', changelog: false, credentialsId: 'git-access-token', url: 'http://192.168.1.151/root/demo-devops-architecture-helloworld.git'
+                    }
+                }
+                // 编译源代码
+                dir('springcloud-architecture/architecture-parent') {
+                    sh 'sh build.sh'
+                }
+                
+                script {
+                    // 推送镜像
+                    docker.withRegistry('http://192.168.1.151:81', 'harbor-token') {
+                        docker.image('192.168.1.151:81/demo-devops/architecture-eureka:1.0.0').push()
+                        docker.image('192.168.1.151:81/demo-devops/architecture-zuul:1.0.0').push()
+                        docker.image('192.168.1.151:81/demo-devops/architecture-helloworld:1.0.0').push()
+                    }
+                }
+            }
+        }
+        
+        stage('发布镜像到uat或者sit环境') {
+            agent {
+                label 'centos8-uat'
+            }
+        
+            steps {
+                // 拉取最新deployer代码
+                git branch: 'main', changelog: false, credentialsId: 'git-access-token', url: 'http://192.168.1.151/root/demo-devops-architecture-deployer.git'
+                
+                script {
+                    docker.withRegistry('http://192.168.1.151:81', 'harbor-token') {
+                        // 拉取最新镜像
+                        sh 'docker-compose -f docker-compose-uat.yml pull'
+                    }
+                }
+                
+                // 使用最新镜像重启应用
+                sh 'docker-compose -f docker-compose-uat.yml up -d'
+            }
+        }
+    }
+}

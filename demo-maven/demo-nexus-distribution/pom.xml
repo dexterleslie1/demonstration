@@ -1,0 +1,58 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>com.future.demo</groupId>
+	<artifactId>demo-nexus-distribution</artifactId>
+	<!-- 版本SNAPSHOT会自动发布到snapshot仓库 -->
+	<version>0.0.1-SNAPSHOT</version>
+	<!-- 版本没有SNAPSHOT会自动发布到release仓库 -->
+	<!--<version>0.0.1</version>-->
+	<packaging>jar</packaging>
+
+	<properties>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
+	</properties>
+	
+	<dependencies>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.11</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<distributionManagement>
+		<!-- release仓库的地址 -->
+		<repository>
+			<id>demo-nexus-deployer</id>
+			<url>http://localhost:8081/repository/maven-releases/</url>
+		</repository>
+		<!-- snapshot仓库的地址 -->
+		<snapshotRepository>
+			<id>demo-nexus-deployer</id>
+			<url>http://localhost:8081/repository/maven-snapshots/</url>
+		</snapshotRepository>
+	</distributionManagement>
+
+	<build>
+		<plugins>
+			<plugin>
+				<!-- 包含此插件后mvn deploy会自动发布源代码 -->
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>3.2.0</version>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+</project>

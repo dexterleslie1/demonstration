@@ -1,0 +1,12 @@
+// https://www.geeksforgeeks.org/what-is-the-content-directive-used-for/
+// @content 代表 @include 时提供的 mixin body
+
+@mixin example {
+    @content;
+}
+
+body {
+    @include example {
+        color: white
+    }
+}

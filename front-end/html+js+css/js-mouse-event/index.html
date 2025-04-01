@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <script>
+        // http://senlt.cn/article/518249494.html
+        // http://c.biancheng.net/view/5944.html
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('div1').onmousedown = () => {
+                console.log('onmousedown')
+            }
+            document.getElementById('div1').onmouseup = () => {
+                console.log('onmouseup')
+            }
+
+            document.getElementById('div21').onmouseover = () => {
+                console.log('onmouseover')
+            }
+            document.getElementById('div21').onmouseout = () => {
+                console.log('onmouseout')
+            }
+
+            document.getElementById('div31').onmouseenter = () => {
+                console.log('onmouseenter')
+            }
+            document.getElementById('div31').onmouseleave = () => {
+                console.log('onmouseleave')
+            }
+
+            document.getElementById('div41').onmousemove = (event) => {
+                console.log(`onmousemove,offsetX=${event.offsetX},offsetY=${event.offsetY}`)
+            }
+
+            //#region document
+
+            document.onmousedown = () => {
+                console.log(`document onmousedown`)
+            }
+            document.onmouseup = () => {
+                console.log(`document onmouseup`)
+            }
+            document.onmousemove = (event) => {
+                console.log(`offsetX=${event.offsetX},offsetY=${event.offsetY}`)
+            }
+
+            //#endregion
+
+            //#region 测试touch事件
+
+            document.getElementById("div51").addEventListener("touchstart", ()=> {
+                console.log(`元素touchstart事件被触发`)
+            })
+
+            //#endregion
+        })
+
+        document.addEventListener("touchstart",(e)=>{
+            // https://stackoverflow.com/questions/61017220/how-to-get-touch-position-direction-in-javascript
+            console.log(`document touchstart x=${e.touches[0].clientX},y=${e.touches[0].clientY}`)
+        })
+
+        document.addEventListener("touchend",(e)=>{
+            // https://stackoverflow.com/questions/61017220/how-to-get-touch-position-direction-in-javascript
+            console.log(`document touchend x=${e.changedTouches[0].clientX},y=${e.changedTouches[0].clientY}`)
+        })
+
+        document.addEventListener("touchmove", (e)=> {
+            // https://stackoverflow.com/questions/61017220/how-to-get-touch-position-direction-in-javascript
+            console.log(`touchmove offsetX=${e.changedTouches[0].clientX},offsetY=${e.changedTouches[0].clientY}`)
+        },false)
+    </script>
+
+</head>
+
+<body>
+    <hr>
+    <div>mousedown和mouseup事件</div>
+    <div>
+        <div id="div1" style="width:50px;height:50px;background-color: antiquewhite;"></div>
+    </div>
+
+    <hr>
+    <div>mouseover和mouseout事件，鼠标移动到自身时候会触发事件，同时移动到其子元素身上也会触发事件</div>
+    <div>
+        <div id="div21" style="width:100px;height:100px;background-color: antiquewhite;">
+            <div id="div22" style="width:50px;height:50px;background-color:aqua;">
+            </div>
+        </div>
+    </div>
+
+    <hr>
+    <div>mouseenter和mouseleave事件，鼠标移动到自身是会触发事件，但是移动到其子元素身上不会触发事件</div>
+    <div>
+        <div id="div31" style="width:100px;height:100px;background-color: antiquewhite;">
+            <div id="div32" style="width:50px;height:50px;background-color:aqua;">
+            </div>
+        </div>
+    </div>
+
+    <hr>
+    <div>mousemove事件，鼠标移动到自身时候会触发事件，同时移动到其子元素身上也会触发事件</div>
+    <div>
+        <div id="div41" style="width:100px;height:100px;background-color: antiquewhite;">
+            <div id="div42" style="width:50px;height:50px;background-color:aqua;">
+            </div>
+        </div>
+    </div>
+
+    <hr>
+    <div>演示docuemnt的onmousedown、onmouseup、onmousemove事件处理</div>
+    <div style="height:50px;">
+
+    </div>
+    <hr/>
+
+    <div>测试元素的touch事件</div>
+    <div id="div51" style="width:100px;height:100px;background-color:skyblue;"></div>
+</body>
+
+</html>

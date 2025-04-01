@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .div1 .container {
+            background-color: #2a9d8f;
+            padding: 10px;
+            width: 50px;
+        }
+
+        .div1 .item {
+            background-color: #e9c46a;
+            padding: 5px;
+            margin-bottom: 5px;
+        }
+
+        .div1 .max-content {
+            width: max-content;
+        }
+
+        .div2 .container {
+            background-color: #2a9d8f;
+            padding: 10px;
+            width: 50px;
+        }
+
+        .div2 .item {
+            background-color: #e9c46a;
+            padding: 5px;
+            margin-bottom: 5px;
+        }
+
+        .div2 .min-content {
+            width: min-content;
+        }
+
+        .div22 .container {
+            background-color: #2a9d8f;
+            padding: 10px;
+            width: 50px;
+        }
+
+        .div22 .item {
+            background-color: #e9c46a;
+            padding: 5px;
+            margin-bottom: 5px;
+        }
+
+        .div22 img {
+            width: 80px;
+            display: block;
+        }
+
+        .div22 .min-content {
+            width: min-content;
+        }
+
+        .div31 .parent{
+            position: relative;
+            width: 200px;
+            height: 100px;
+            background-color: green;
+        }
+        .div31 .parent .child {
+            position: absolute;
+            width: inherit;
+            height: inherit;
+            background-color: yellow;
+        }
+
+        .div32 {
+            margin-top: 10px;
+        }
+        .div32 .parent{
+            position: relative;
+            width: 50%;
+            height: 100px;
+            background-color: green;
+        }
+        .div32 .parent .child {
+            position: absolute;
+            /* 继承父元素的50%值，所以此时width=50%表示为父元素的宽度的50% */
+            width: inherit;
+            height: inherit;
+            background-color: yellow;
+        }
+    </style>
+</head>
+
+<body>
+    <!--
+        https://shinyu0430.github.io/2021/09/21/maxwidthminwidthfitcontent/
+    -->
+    <div>演示 width: max-content 用法，表示父元素自动调整其宽度以包含其所有子元素并且不会换行</div>
+    <div class="div1">
+        <div class="container">
+            <div class="item">
+                Lorem ipsum dolor sit amet consectetur adipisicing
+            </div>
+            <div class="item max-content">
+                max-content!max-content!max-content!max-content!
+            </div>
+        </div>
+    </div>
+    <hr>
+
+    <div>演示 width: min-content 用法，表示父元素自动调整其宽度以包含其子元素中最长的宽度以防止溢出并会自动换行</div>
+    <div class="div2">
+        <div class="container">
+            <div class="item">
+                Lorem ipsum, dolor sit amet consecteturctetur adipi elit. Maiores
+            </div>
+            <div class="item min-content">
+                Lorem ipsum, dolor sit amet consecteturctetur adipi elit. Maiores
+            </div>
+        </div>
+    </div>
+
+    <div class="div22">
+
+
+        <div class="container">
+            <div class="item">
+                <img src="https://cdn.pixabay.com/photo/2020/07/21/16/24/landscape-5426755_1280.jpg" alt="">
+                <p>Lorem ipsum dolor sita met </p>
+
+            </div>
+            <div class="item min-content">
+                <img src="https://cdn.pixabay.com/photo/2020/07/21/16/24/landscape-5426755_1280.jpg" alt="">
+                <p>Lorem ipsum dolor sita met </p>
+            </div>
+        </div>
+
+
+    </div>
+    <hr>
+
+    <div>演示 width: inherit(继承父元素声明的宽高值) 用法，同时演示父元素relative和子元素absolute时子元素自动适应撑满父元素的宽高</div>
+    <div class="div31">
+        <div class="parent">
+            <div class="child">
+                Child div
+            </div>
+        </div>
+    </div>
+
+    <div class="div32">
+        <div class="parent">
+            <div class="child">
+                Child div
+            </div>
+        </div>
+    </div>
+    <hr>
+
+</body>
+
+</html>

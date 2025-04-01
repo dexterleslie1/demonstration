@@ -1,0 +1,19 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.future.demo</groupId>
+    <artifactId>demo-logging-slf4j-parent</artifactId>
+    <version>1.0.0</version>
+    <packaging>pom</packaging>
+    <modules>
+        <module>demo-jul</module>
+        <module>demo-log4j</module>
+        <module>demo-log4j2</module>
+        <module>demo-jcl</module>
+        <module>demo-slf4j</module>
+        <module>demo-logback-java</module>
+        <module>demo-spring-boot-logback</module>
+    </modules>
+
+</project>

@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: spring-cloud-service-c
+  cloud:
+    consul:
+      host: 127.0.0.1
+      port: 8500
+      discovery:
+        service-name: ${spring.application.name}
+      # 配置 Consul 作为服务配置和管理服务器
+      config:
+        # Consul 不同 profile 配置目录路径使用 '-' 分隔，
+        # 例如： config/spring-cloud-service-c-dev/data、config/spring-cloud-service-c-prod/data
+        profile-separator: '-'
+        format: YAML
+        # 5 从 Consul 刷新一次配置
+        watch:
+          wait-time: 5
+  # 加载 Consul 配置中心的 config/spring-cloud-service-c-prod/data 目录下的配置文件
+  profiles:
+    active: prod

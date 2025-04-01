@@ -1,0 +1,22 @@
+version: "3.0"
+
+# 创建网络
+networks:
+  net:
+    name: yyd-auth-net
+
+services:
+  demo-apns-pushy:
+    container_name: demo-apns-pushy
+    image: docker.118899.net:10001/yyd-public/demo-apns-pushy:1.0.0
+    environment:
+      - JAVA_OPTS=-Xms256m -Xmx256m
+      - certificateBase64=${certificateBase64}
+      - passphrase=${passphrase}
+      - production=${production}
+      - apnsId=${apnsId}
+      - TZ=Asia/Shanghai
+    ports:
+      - 8080:8080
+    networks:
+      - net

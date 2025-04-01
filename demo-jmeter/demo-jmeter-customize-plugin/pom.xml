@@ -1,0 +1,103 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.future.demo</groupId>
+    <artifactId>demo-jmeter-customize-plugin</artifactId>
+    <version>1.0.0</version>
+
+    <properties>
+        <jmeter.version>5.6.2</jmeter.version>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.jmeter</groupId>
+            <artifactId>ApacheJMeter_core</artifactId>
+            <version>${jmeter.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.jmeter</groupId>
+            <artifactId>ApacheJMeter_java</artifactId>
+            <version>${jmeter.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-json</artifactId>
+            <version>5.8.28</version>
+        </dependency>
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.11</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- 把依赖的jar包拷到lib目录下，注意：必须使用此方法复制依赖，否则在在运行测试时报告ApacheJMeter_core和ApacheJMeter_java相关兼容性错误 -->
+            <!--<plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.6.1</version>
+                <executions>
+                    <execution>
+                        <id>copy</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                &lt;!&ndash;<artifactItem>
+                                    <groupId>redis.clients</groupId>
+                                    <artifactId>jedis</artifactId>
+                                    &lt;!&ndash; 默认使用项目中声明的依赖版本 &ndash;&gt;
+                                    &lt;!&ndash;<version>5.0.2</version>&ndash;&gt;
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>${project.build.directory}/required-lib</outputDirectory>
+                                    &lt;!&ndash; 复制后的文件名称 &ndash;&gt;
+                                    &lt;!&ndash;<destFileName>optional-new-name.jar</destFileName>&ndash;&gt;
+                                </artifactItem>&ndash;&gt;
+                                <artifactItem>
+                                    <groupId>cn.hutool</groupId>
+                                    <artifactId>hutool-json</artifactId>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>${project.build.directory}/required-lib</outputDirectory>
+                                </artifactItem>
+                            </artifactItems>
+                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                            <overWriteReleases>false</overWriteReleases>
+                            <overWriteSnapshots>false</overWriteSnapshots>
+                            <overWriteIfNewer>true</overWriteIfNewer>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>-->
+            <!-- 使用下面插件打包包括所有依赖的jar -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>assemble-all</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <!-- reactjs追加dom的容器 -->
+    <div id="test"></div>
+
+    <script type="text/javascript" src="../../js/react.development.js" ></script>
+    <script type="text/javascript" src="../../js/react-dom.development.js" ></script>
+    <script type="text/javascript" src="../../js/babel.min.js" ></script>
+
+    <!-- 因为使用jsx语法编写虚拟dom代码，所以这里type必须为text/babel -->
+    <script type="text/babel">
+        const vdom = (
+            <h1>Hello, React</h1>
+        )
+
+        // 渲染虚拟dom到页面容器中
+        ReactDOM.render(vdom, document.getElementById("test"))
+    </script>
+</body>
+</html>

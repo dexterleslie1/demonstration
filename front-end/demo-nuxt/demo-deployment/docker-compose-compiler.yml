@@ -1,0 +1,15 @@
+version: "3.0"
+
+services:
+  demo-nuxt-compiler:
+    container_name: demo-nuxt-compiler
+    image: node:16.14.0
+    command: |
+      sh -c "npm install --no-package-lock --registry=https://registry.npm.taobao.org && 
+      rm -rf .nuxt && rm -f package-lock.json && npm run build"
+    working_dir: /nuxt
+    volumes:
+      - ./:/nuxt
+    environment:
+      - TZ=Asia/Shanghai
+      - NODE_ENV=production

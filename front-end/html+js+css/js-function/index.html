@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script type="text/javascript">
+        // 定义匿名函数并且马上执行该函数
+        // https://zhidao.baidu.com/question/156291805.html
+        // NOTE: 最后的()表示马上调用并执行函数的意思
+        (function () {
+            console.log("匿名函数被执行")
+        })()
+
+        //#region 演示实例方法和静态方法
+
+        function MyClass() {
+
+        }
+
+        // 声明静态方法
+        MyClass.method1 = function () {
+            console.log('这是MyClass.method1静态方法')
+        }
+
+        // 声明实例方法
+        MyClass.prototype.method2 = function () {
+            console.log("这里MyClass实例的实例方法method2")
+        }
+
+        // 静态方法调用
+        MyClass.method1()
+        // 实例方法调用
+        let myClass = new MyClass()
+        myClass.method2()
+
+        //#endregion
+
+        //#region 构造函数
+
+        // 构造函数就是一个普通函数，声明方法和普通函数基本没有区别
+        // 我们习惯声明构造函数首字母大写，普通函数一般首字母小写
+
+        // 构造函数和普通函数调用方式不同：普通函数直接调用，而构造函数需要使用new关键字调用
+        function Person(name, age) {
+            this.name = name
+            this.age = age
+
+            this.display = function() {
+                console.log(`name=${this.name},age=${this.age}`)
+            }
+        }
+
+        let person = new Person('Dexter', 34)
+        person.display()
+
+        // 以下输出可以证明Person实质就是一个普通函数
+        console.log(`typeof Person: ${typeof Person}`)
+        // 以下输出可以证明javascript里所有实例都是Object子类型的对象
+        console.log(`typeof person: ${typeof person}`)
+        console.log(`person instanceof Object: ${person instanceof Object}`)
+        console.log(`person instanceof Person: ${person instanceof Person}`)
+
+        //#endregion
+    </script>
+</head>
+
+<body>
+
+</body>
+
+</html>

@@ -1,0 +1,51 @@
+# This is an example .goreleaser.yml file with some sane defaults.
+# Make sure to check the documentation at http://goreleaser.com
+project_name: "demo-lib-sysinfo"
+before:
+  hooks:
+    - go mod tidy -go=1.19
+    - echo "编译打包前执行..."
+builds:
+  - id: "program1"
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      # - windows
+      - darwin
+    dir: ./
+    main: ./
+    ignore:
+      - goos: darwin
+        goarch: 386
+      - goos: linux
+        goarch: 386
+      - goos: linux
+        goarch: arm64
+      - goos: windows
+        goarch: 386
+    binary: dtest
+archives:
+  - id: "program1"
+    # replacements:
+    #   386: i386
+    #   amd64: x86_64
+    format: tar.gz
+    wrap_in_directory: true
+    format_overrides:
+    - goos: windows
+      format: zip
+    name_template: "{{ .ProjectName }}-program1-{{ .Os }}_{{ .Arch }}"
+    builds:
+      - "program1"
+
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ .Tag }}-next"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'

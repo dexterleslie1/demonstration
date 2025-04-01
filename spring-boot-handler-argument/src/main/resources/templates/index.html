@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script type="text/javascript" src="https://cdn.bootcss.com/jquery/2.1.1/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdn.staticfile.org/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $("#btnSetCookie").bind("click", function () {
+                // https://www.runoob.com/jquery/jquery-cookie-plugin.html
+                // https://stackoverflow.com/questions/22371826/how-do-i-set-a-cookie-to-expire-after-1-minute-or-30-seconds-in-jquery
+                // 以秒数设置cookie过期时间
+                // https://stackoverflow.com/questions/33232270/jquery-cookie-expiry-time
+                $.cookie("accessToken", "myAccessToken", {expires: 10 / (24 * 3600), path: "/"})
+                alert("成功设置cookie")
+            })
+
+            $("#btnGetCookie").bind("click", function () {
+                var accessToken = $.cookie("accessToken")
+                alert("cookie: accessToken=" + accessToken)
+            })
+        })
+    </script>
+</head>
+<body>
+<div>
+    演示客户端使用jQuery设置cookie值
+</div>
+<div>
+    <input id="btnSetCookie" type="button" value="使用jQuery cookie插件设置10秒后过期的cookie"/>
+    <input id="btnGetCookie" type="button" value="使用jQuery cookie插件读取cookie"/>
+</div>
+<hr/>
+</body>
+</html>

@@ -1,0 +1,1 @@
+# 演示rabbitmq交换机direct模式

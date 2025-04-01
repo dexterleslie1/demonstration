@@ -1,0 +1,13 @@
+.todo-list-container .todo-list-footer-container {
+    display: flex;
+    justify-content: space-between;
+}
+
+.todo-list-container .todo-list-footer-container input[type=button] {
+    background-color: #b31d3f;
+    border: none;
+    color: white;
+    padding: .2rem .8rem;
+    cursor: pointer;
+    border-radius: .2rem;
+}

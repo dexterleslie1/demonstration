@@ -1,0 +1,21 @@
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:9090/eureka/
+
+spring:
+  cloud:
+    config:
+      # 自动发现配置中心
+      discovery:
+        enabled: true
+        service-id: config-center-server
+      # 配置仓库分支main(相当于master)
+      label: main
+      # default: 对应获取application.properties
+      # dev: 对应获取application-dev.properties
+      profile: dev
+      # 指定配置中心uri
+#      uri: http://localhost:8888
+      # 对应获取配置文件前缀 application-xxx.properties
+      name: application

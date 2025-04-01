@@ -1,0 +1,122 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis
+  namespace: "default"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: redis
+  # 对应的 redis-headless 无头服务没有用到所以不存在
+  serviceName: redis-headless
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: redis
+    spec:
+      # securityContext:
+      #   fsGroup: 1001
+      # serviceAccountName: release-name-redis
+      # automountServiceAccountToken: true
+      # affinity:
+      #   podAffinity:
+          
+      #   podAntiAffinity:
+      #     preferredDuringSchedulingIgnoredDuringExecution:
+      #       - podAffinityTerm:
+      #           labelSelector:
+      #             matchLabels:
+      #               app.kubernetes.io/instance: release-name
+      #               app.kubernetes.io/name: redis
+      #               app.kubernetes.io/component: master
+      #           topologyKey: kubernetes.io/hostname
+      #         weight: 1
+      #   nodeAffinity:
+          
+      # enableServiceLinks: true
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: redis
+          image: redis:5.0.14
+          imagePullPolicy: "IfNotPresent"
+          # securityContext:
+          #   allowPrivilegeEscalation: false
+          #   capabilities:
+          #     drop:
+          #     - ALL
+          #   runAsGroup: 0
+          #   runAsNonRoot: true
+          #   runAsUser: 1001
+          #   seccompProfile:
+          #     type: RuntimeDefault
+          command:
+            - redis-server
+          args:
+            - /usr/local/etc/redis/redis.conf
+            - --requirepass
+            - "123456"
+          env:
+            - name: TZ
+              value: "Asia/Shanghai"
+          ports:
+            - name: redis
+              containerPort: 6379
+          livenessProbe:
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            # One second longer than command timeout should prevent generation of zombie processes.
+            timeoutSeconds: 6
+            successThreshold: 1
+            failureThreshold: 5
+            exec:
+              command:
+                - sh
+                - /health/ping_liveness_n_readines_local.sh
+          readinessProbe:
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 2
+            successThreshold: 1
+            failureThreshold: 5
+            exec:
+              command:
+                - sh
+                - /health/ping_liveness_n_readines_local.sh
+          resources:
+            limits: {}
+            requests: {}
+          volumeMounts:
+            - name: redis-data
+              mountPath: /data
+            - name: config
+              mountPath: /usr/local/etc/redis/
+            - name: liveness-and-readiness-config
+              mountPath: /health/
+      volumes:
+        - name: config
+          configMap:
+            name: redis-configuration
+            items:
+            - key: redis.conf
+              path: redis.conf
+        - name: liveness-and-readiness-config
+          configMap:
+            name: redis-configuration
+            items:
+            - key: ping_liveness_n_readines_local.sh
+              path: ping_liveness_n_readines_local.sh
+  volumeClaimTemplates:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: redis-data
+        labels:
+          app.kubernetes.io/name: redis
+      spec:
+        accessModes:
+          - "ReadWriteOnce"
+        resources:
+          requests:
+            storage: "8Gi"
+        storageClassName: nfs-client

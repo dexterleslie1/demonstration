@@ -1,0 +1,219 @@
+version: '3.8'
+
+services:
+  db:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-cloud-assistant-db:1.0.0
+    # ports:
+    #   - "3306:3306"
+    environment:
+      - MARIADB_ROOT_PASSWORD=123456
+      - TZ=Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+    deploy:
+      # https://docs.docker.com/reference/compose-file/deploy/#replicas
+      replicas: 1
+      # https://docs.docker.com/reference/compose-file/deploy/#restart_policy
+      restart_policy:
+        condition: any
+        delay: 15s
+      placement:
+        constraints:
+          # 指定数据库调度到worker2节点上
+          - node.hostname==worker2
+
+  node1:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-cloud-assistant-redis:1.0.0
+    command: redis-server /usr/local/etc/redis/redis.conf --cluster-announce-ip node1
+    environment:
+      - TZ=Asia/Shanghai
+    deploy:
+      replicas: 1
+      # 任何时候节点都不能关闭
+      restart_policy:
+        condition: any
+        delay: 15s
+      placement:
+        constraints:
+          - node.hostname==manager
+    volumes:
+      - data-node1:/data
+
+  node2:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-cloud-assistant-redis:1.0.0
+    command: redis-server /usr/local/etc/redis/redis.conf --cluster-announce-ip node2
+    environment:
+      - TZ=Asia/Shanghai
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 15s
+      placement:
+        constraints:
+          - node.hostname==worker1
+    volumes:
+      - data-node2:/data
+
+  node3:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-cloud-assistant-redis:1.0.0
+    command: redis-server /usr/local/etc/redis/redis.conf --cluster-announce-ip node3
+    environment:
+      - TZ=Asia/Shanghai
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 15s
+      placement:
+        constraints:
+          - node.hostname==worker2
+    volumes:
+      - data-node3:/data
+
+  node4:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-cloud-assistant-redis:1.0.0
+    command: redis-server /usr/local/etc/redis/redis.conf --cluster-announce-ip node4
+    environment:
+      - TZ=Asia/Shanghai
+    deploy:
+      replicas: 1
+      # 任何时候节点都不能关闭
+      restart_policy:
+        condition: any
+        delay: 15s
+      placement:
+        constraints:
+          - node.hostname==manager
+    volumes:
+      - data-node4:/data
+
+  node5:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-cloud-assistant-redis:1.0.0
+    command: redis-server /usr/local/etc/redis/redis.conf --cluster-announce-ip node5
+    environment:
+      - TZ=Asia/Shanghai
+    deploy:
+      replicas: 1
+      # 任何时候节点都不能关闭
+      restart_policy:
+        condition: any
+        delay: 15s
+      placement:
+        constraints:
+          - node.hostname==worker1
+    volumes:
+      - data-node5:/data
+
+  node6:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-cloud-assistant-redis:1.0.0
+    command: redis-server /usr/local/etc/redis/redis.conf --cluster-announce-ip node6
+    environment:
+      - TZ=Asia/Shanghai
+    deploy:
+      replicas: 1
+      # 任何时候节点都不能关闭
+      restart_policy:
+        condition: any
+        delay: 15s
+      placement:
+        constraints:
+          - node.hostname==worker2
+    volumes:
+      - data-node6:/data
+
+  creator:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-cloud-assistant-redis:1.0.0
+    command: "node1:6379 node2:6379 node3:6379 node4:6379 node5:6379 node6:6379"
+    entrypoint: [ "/usr/local/etc/redis/init-redis-cluster.sh" ]
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 15s
+    depends_on:
+      - node1
+      - node2
+      - node3
+      - node4
+      - node5
+      - node6
+
+  eureka:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-cloud-assistant-eureka:1.0.0
+    environment:
+      - JAVA_OPTS=-Xms512m -Xmx512m
+      - TZ=Asia/Shanghai
+    ports:
+      - "9999:9999"
+    depends_on:
+      - db
+      - creator
+    logging:
+      driver: json-file
+      options:
+        max-size: "64m"
+        max-file: "5"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 15s
+
+  gateway:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-cloud-assistant-gateway:1.0.0
+    environment:
+      - JAVA_OPTS=-Xms512m -Xmx512m
+      - TZ=Asia/Shanghai
+    ports:
+      - "8080:8080"
+    depends_on:
+      - demo-spring-cloud-assistant-eureka
+    logging:
+      driver: json-file
+      options:
+        max-size: "64m"
+        max-file: "5"
+    deploy:
+      # 默认模式，内部采用轮询的方式把请求分配置到各个实例中
+      mode: replicated
+      replicas: 2
+      restart_policy:
+        condition: any
+        delay: 15s
+
+  helloworld:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-cloud-assistant-helloworld:1.0.0
+    environment:
+      - JAVA_OPTS=-Xms512m -Xmx512m
+      - TZ=Asia/Shanghai
+    depends_on:
+      - demo-spring-cloud-assistant-eureka
+    logging:
+      driver: json-file
+      options:
+        max-size: "64m"
+        max-file: "5"
+    deploy:
+      # 默认模式，内部采用轮询的方式把请求分配置到各个实例中
+      mode: replicated
+      replicas: 2
+      restart_policy:
+        condition: any
+        delay: 15s
+
+  #demo-centos:
+  #  image: centos:centos7
+  #  environment:
+  #    - TZ=Asia/Shanghai
+  #  command: sleep 3600
+
+volumes:
+  data-node1:
+  data-node2:
+  data-node3:
+  data-node4:
+  data-node5:
+  data-node6:

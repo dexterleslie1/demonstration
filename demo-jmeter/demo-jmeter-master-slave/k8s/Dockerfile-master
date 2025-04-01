@@ -1,0 +1,9 @@
+FROM demo-k8s-jmeter-base:latest
+
+RUN grep -q "^HEAP=\"" /usr/local/jmeter/bin/jmeter \
+    && sed -i '/^HEAP=\"/c HEAP=\"-Xmx2g -Xms2g\"' /usr/local/jmeter/bin/jmeter \
+    || sed -i '/^# resolve links/i HEAP=\"-Xmx2g -Xms2g\"' /usr/local/jmeter/bin/jmeter
+
+COPY jmeter.properties /usr/local/jmeter/bin/jmeter.properties
+		
+EXPOSE 60000

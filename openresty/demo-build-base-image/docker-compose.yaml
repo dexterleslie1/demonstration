@@ -1,0 +1,14 @@
+version: "3.0"
+
+services:
+  openresty:
+    build:
+      context: ./
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-openresty-base-dev
+    environment:
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./sample.conf:/usr/local/openresty/nginx/conf/nginx.conf
+      - ./sample.rules:/usr/local/openresty/nginx/conf/naxsi.rules
+    network_mode: host
+    

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>jQuery实现</title>
+
+    <script type="text/javascript" src="https://cdn.bootcss.com/jquery/2.1.1/jquery.min.js"></script>
+
+    <style type="text/css">
+        .search-history-popover {
+            position: absolute;
+            border-style: solid;
+            border-width: 1px;
+            min-width: 250px;
+            background-color: antiquewhite;
+        }
+
+        .search-history-popover .item {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .search-history-popover .keyword {
+            flex: 1;
+        }
+
+        .note-entry {
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+
+        .note-entry .note-item {
+            border-style: solid;
+            border-width: 1px;
+            border-radius: 5px;
+            margin: 10px;
+            display: flex;
+            padding: 10px;
+        }
+
+        .dialog {
+            position: absolute;
+            top: 0px;
+            left: 0px;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: gray;
+            opacity: 0.8;
+        }
+
+        .dialog .frame {
+            background-color: greenyellow;
+        }
+    </style>
+
+    <script type="text/javascript">
+        var categoryId = 0
+        var datumCategory = {
+            text: '分类',
+            children: [
+                {
+                    id: ++categoryId,
+                    text: '分类1',
+                    children: [
+                        {
+                            id: ++categoryId,
+                            text: '分类1-1'
+                        }, {
+                            id: ++categoryId,
+                            text: '分类1-2'
+                        }
+                    ]
+                }, {
+                    id: ++categoryId,
+                    text: '分类2',
+                    children: [
+                        {
+                            id: ++categoryId,
+                            text: '分类2-1'
+                        }, {
+                            id: ++categoryId,
+                            text: '分类2-2'
+                        }
+                    ]
+                }
+            ]
+        }
+
+        $(document).ready(function () {
+            // 创建分类管理树
+            create_tree()
+
+            // 绑定事件
+            bind_events()
+        })
+
+        function bind_events() {
+
+            //#region 分类管理
+
+            // 删除分类
+            $('body').on('click', '.category-tree .item-delete', function () {
+                confirmDialog("提示", "确定删除分类吗？", function () {
+                
+                })
+            })
+            // 新增分类
+            $('body').on('click', '.category-tree .item-add', function () {
+
+            })
+
+            //#endregion
+        }
+
+        //#region 创建分类管理树相关函数
+
+        function create_tree() {
+            var eleUl = $('<ul class="category-tree"></ul>')
+            var eleLi = create_li(datumCategory)
+            eleUl.append(eleLi)
+            $('[attrExt1=categoryTreeContainer]').append(eleUl)
+        }
+
+        function create_li(node) {
+            var eleLi
+            if (node.id && node.id > 0) {
+                eleLi = $('<li>' +
+                    '        <div style="display: flex;justify-content: flex-end;">' +
+                    '            <div style="flex: 1;">' + node.text + '</div>' +
+                    '            <input type="button" value="-" class="item-delete" ' +
+                    '                   attrExt1="' + node.id + '"/>' +
+                    '            <input type="button" value="+" class="item-add" ' +
+                    '                   attrExt1="' + node.id + '"/>' +
+                    '        </div>' +
+                    '    </li>')
+            } else {
+                eleLi = $('<li>' + node.text + '</li>')
+            }
+
+            if (node.children && node.children.length > 0) {
+                var eleUl = $('<ul></ul>')
+                eleLi.append(eleUl)
+                for (var i = 0; i < node.children.length; i++) {
+                    var eleLiChild = create_li(node.children[i])
+                    eleUl.append(eleLiChild)
+                }
+            }
+
+            return eleLi
+        }
+
+        //#endregion
+
+        //#region 公共dialog
+
+        function confirmDialog(title, content, callbackYes) {
+            var eleConfirmDialog = $('[attrExt1=confirm-dialog]')
+            eleConfirmDialog.find('[attrExt1=title]').html(title)
+            eleConfirmDialog.find('[attrExt1=content]').html(content)
+            eleConfirmDialog.find('[attrExt1=btnYes]').unbind('click').bind('click', function () {
+                if (callbackYes)
+                    callbackYes()
+
+                eleConfirmDialog.hide()
+            })
+            eleConfirmDialog.show()
+        }
+
+        //#endregion
+    </script>
+</head>
+
+<body>
+
+    <div style="display: flex;">
+        <div style="flex: 2;display: flex;flex-direction: column;">
+            <div>
+                <input type="text" placeholder="输入搜索内容" />
+                <input type="button" value="搜索" />
+
+                <!-- 搜索历史记录面板 -->
+                <div class="search-history-popover" style="display: none;">
+                    <div class="item">
+                        <div class="keyword">关键字1</div>
+                        <input type="button" value="X" />
+                    </div>
+                    <div class="item">
+                        <div class="keyword">关键字2</div>
+                        <input type="button" value="X" />
+                    </div>
+                    <div style="display: flex;justify-content: flex-end;"><input type="button" value="清除历史" /></div>
+                </div>
+            </div>
+
+            <!-- 分类树容器 -->
+            <div attrExt1="categoryTreeContainer">
+            </div>
+        </div>
+        <div style="flex: 8">
+            <div>
+                <input type="button" value="+" />
+            </div>
+
+            <div class="note-entry">
+                <div>2022-07-06 13:00:00</div>
+                <div style="display: flex;align-items: center;">
+                    <div class="note-item">
+                        <div>内容1</div>
+                        <input type="button" value="X" />
+                    </div>
+                    <div class="note-item">
+                        <div>内容1</div>
+                        <input type="button" value="X" />
+                    </div>
+                    <input type="button" value="-" />
+                    <input style="margin-left: 10px;" type="button" value="+" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div
+        style="position: absolute;top:0px;right:0px;border-style:solid;border-width:1px;height: 100%;width:70%;display:none;background-color: antiquewhite;">
+        <div style="display: flex;">
+            <div style="flex: 1">搜索结果</div>
+            <div><input type="button" value="X" /></div>
+        </div>
+        <div>
+            <div class="note-entry">
+                <div>2022-07-06 13:00:00</div>
+                <div style="display: flex;align-items: center;">
+                    <div class="note-item">
+                        <div>内容1</div>
+                        <input type="button" value="X" />
+                    </div>
+                    <div class="note-item">
+                        <div>内容1</div>
+                        <input type="button" value="X" />
+                    </div>
+                    <input type="button" value="-" />
+                    <input style="margin-left: 10px;" type="button" value="+" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div attrExt1="confirm-dialog" class="dialog" style="display: none;">
+        <div class="frame">
+            <div attrExt1="title">提示</div>
+            <div attrExt1="content">是否确定删除分类吗？</div>
+            <div>
+                <input type="button" value="取消" onclick="javascript:$('[attrExt1=confirm-dialog]').hide()" />
+                <input attrExt1="btnYes" type="button" value="确定" />
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

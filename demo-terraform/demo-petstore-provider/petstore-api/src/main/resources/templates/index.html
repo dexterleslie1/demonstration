@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Pets List</title>
+    <style type="text/css">
+
+    </style>
+</head>
+<body>
+<div th:each="pet: ${petList}" style="border-style:solid;border-width:1px;border-color: black">
+    <div>id:
+        <span th:text="${pet.getId()}"/>
+    </div>
+    <div>
+        name:
+        <span th:text="${pet.getName()}"/>
+    </div>
+    <div>
+        age:
+        <span th:text="${pet.getAge()}"/>
+    </div>
+    <div>
+        createTime:
+        <span th:text="${pet.getCreateTime()}"/>
+    </div>
+</body>
+</html>

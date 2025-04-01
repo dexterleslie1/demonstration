@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <style>
+        #div1 {
+            margin: 10px;
+            background-color: antiquewhite;
+            width: 50px;
+            height: 50px;
+            border-style: dashed;
+            border-width: 20px;
+            border-color: gray;
+            padding: 10px;
+            overflow: hidden;
+        }
+
+        #div12 {
+            margin: 10px;
+            background-color: antiquewhite;
+            width: 50px;
+            height: 50px;
+            border-style: dashed;
+            border-width: 20px;
+            border-color: gray;
+            padding: 10px;
+            overflow: scroll;
+            direction: rtl;
+        }
+
+        #div2 {
+            margin: 10px;
+            background-color: antiquewhite;
+            width: 50px;
+            height: 50px;
+            border-style: dashed;
+            border-width: 20px;
+            border-color: gray;
+            padding: 10px;
+            overflow: scroll;
+        }
+
+        #div3 {
+            margin: 10px;
+            background-color: antiquewhite;
+            width: 50px;
+            height: 50px;
+            border-style: dashed;
+            border-width: 20px;
+            border-color: gray;
+            padding: 10px;
+            overflow: scroll;
+        }
+
+        #div51 {
+            position: relative;
+            margin: 10px;
+            background-color: antiquewhite;
+            width: 250px;
+            height: 250px;
+            border-style: dashed;
+            border-width: 20px;
+            border-color: gray;
+            padding: 10px;
+        }
+
+        #div52 {
+            margin: 10px;
+            background-color: aqua;
+            width: 100px;
+            height: 100px;
+            border-style: dashed;
+            border-width: 20px;
+            border-color: gray;
+            padding: 10px;
+        }
+
+        #div6 {
+            margin: 10px;
+            background-color: aqua;
+            width: 50px;
+            height: 50px;
+            border-style: dashed;
+            border-width: 20px;
+            border-color: gray;
+            padding: 10px;
+        }
+
+        #div7 {
+            margin: 10px;
+            background-color: aqua;
+            width: 50px;
+            height: 50px;
+            border-style: dashed;
+            border-width: 20px;
+            border-color: gray;
+            padding: 10px;
+        }
+
+        #div8 {
+            margin: 10px;
+            background-color: aqua;
+            width: 50px;
+            height: 50px;
+            border-style: dashed;
+            border-width: 20px;
+            border-color: gray;
+            padding: 10px;
+        }
+    </style>
+
+    <script>
+        function demo1() {
+            // 没有scrollbar时
+            var element = document.getElementById('div1')
+
+            var clientWidth = element.clientWidth
+            var clientHeight = element.clientHeight
+
+            var clientLeft = element.clientLeft
+            var clientTop = element.clientTop
+
+            var str = `没有scrollbar时` +
+                `clientWidth=${clientWidth},` +
+                `clientHeight=${clientHeight},` +
+                `clientLeft=${clientLeft},` +
+                `clientTop=${clientTop},`
+            alert(str)
+
+            // 有scrollbar时
+            var element = document.getElementById('div12')
+
+            var clientWidth = element.clientWidth
+            var clientHeight = element.clientHeight
+
+            var clientLeft = element.clientLeft
+            var clientTop = element.clientTop
+
+            var str = `有scrollbar时` +
+                `clientWidth=${clientWidth},` +
+                `clientHeight=${clientHeight},` +
+                `clientLeft=${clientLeft},` +
+                `clientTop=${clientTop},`
+            alert(str)
+        }
+
+        function demo2() {
+            var element = document.getElementById('div2')
+
+            var scrollWidth = element.scrollWidth
+            var scrollHeight = element.scrollHeight
+
+            alert(`scrollWidth=${scrollWidth},scrollHeight=${scrollHeight}`)
+        }
+
+        function demo3() {
+            var element = document.getElementById('div3')
+
+            var offsetWidth = element.offsetWidth
+            var offsetHeight = element.offsetHeight
+
+            alert(`offsetWidth=${offsetWidth},offsetHeight=${offsetHeight}`)
+        }
+
+        function demo5() {
+            var element = document.getElementById('div52')
+
+            var offsetLeft = element.offsetLeft
+            var offsetTop = element.offsetTop
+
+            alert(`offsetLeft=${offsetLeft},offsetTop=${offsetTop}`)
+        }
+
+        function demo8() {
+            var element = document.getElementById('div8')
+
+            var boundingClientRect = element.getBoundingClientRect()
+
+            alert(`left=${boundingClientRect.left},top=${boundingClientRect.top},
+            right=${boundingClientRect.right},bottom=${boundingClientRect.bottom},
+            width=${boundingClientRect.width},height=${boundingClientRect.height},
+            x=${boundingClientRect.x},y=${boundingClientRect.y}`)
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            var element = document.getElementById('div6')
+            element.onmousedown = (event) => {
+                alert(`offsetX=${event.offsetX},offsetY=${event.offsetY}`)
+            }
+
+            element = document.getElementById('div7')
+            element.onmousedown = (event) => {
+                alert(`clientX=${event.clientX},clientY=${event.clientY}`)
+            }
+        })
+
+
+
+    </script>
+
+</head>
+
+<body>
+
+    <hr>
+    <div>
+        演示clientWidth(不包括border的尺寸)、clientHeight、clientLeft、clientTop属性<br>
+        不存在垂直滚动条clientWidth=paddingWidth+contentWidth，例子 70px=10px*2+50px<br>
+        存在垂直滚动条clientWidth=paddingWidth+contentWidth-scollbarWidth，例子 55px=10px*2+50px-15px<br>
+        默认情况下clientLeft和clientTop实际是border的宽度<br>
+        如果文字方向从右往左(默认从左往右,通过设置 direction: rtl;)进行排列,且存在垂直滚动条的情况下clientLeft=borderWidth+scrollWidth<br>
+        https://blog.csdn.net/yb305/article/details/109990818
+    </div>
+    <div style="border-style:solid;border-width:1px;">
+        <button onclick="demo1()">点击我</button>
+
+        <div id="div1">
+            内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容
+        </div>
+
+        <div id="div12">
+            内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容
+        </div>
+    </div>
+
+    <hr>
+    <div>
+        演示scrollWidth、scrollHeight<br>
+        scrollWith元素的可滚动区域包括溢出不可见部分
+    </div>
+    <div>
+        <button onclick="demo2()">点击我</button>
+        <div id="div2">
+            内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容
+        </div>
+    </div>
+
+    <hr>
+    <div>
+        演示offsetWidth、offsetHeight(包括border的尺寸)<br>
+        offsetWidth=width+borderWidth*2*padding*2，例子: 110px=50px+20px*2+10px*2<br>
+        https://blog.51cto.com/u_15127622/2757550
+    </div>
+    <div>
+        <button onclick="demo3()">点击我</button>
+
+        <div id="div3">
+            内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容
+        </div>
+    </div>
+
+    <hr>
+    <div>
+        演示offsetLeft、offsetTop<br>
+        offsetLeft=父元素(距离该子元素最近的进行过定位的父元素（position：absolute relative
+        fixed），如果其父元素中不存在定位则offsetParent为：body元素)的padding+元素自己的margin<br>
+        https://blog.csdn.net/willard_cui/article/details/81712989
+    </div>
+    <div>
+        <button onclick="demo5()">点击我</button>
+
+        <div id="div51">
+            <div id="div52"></div>
+        </div>
+    </div>
+
+    <hr>
+    <div>
+        offsetX、offsetY: 鼠标相对于事件源元素的X,Y坐标。比如说，我给黄色的盒子定义一个点击事件，则这个offset的坐标原点就在这个黄色盒子的左上角<br>
+        https://blog.csdn.net/qq_44603011/article/details/117768212
+    </div>
+    <div>
+        <div id="div6">点击我</div>
+    </div>
+
+    <hr>
+    <div>
+        clientX、clientY: 鼠标相对于浏览器窗口可视区域的X，Y坐标（窗口坐标），可视区域不包括工具栏和滚动条。<br>
+        https://blog.csdn.net/qq_44603011/article/details/117768212
+    </div>
+    <div>
+        <div id="div7"></div>
+    </div>
+
+    <hr>
+    <div>
+        getBoundingClientRect(以viewport的left=0、top=0作为参考的定位)<br>
+        https://developer.mozilla.org/en-US/docs/Web/API/Element/getBoundingClientRect
+    </div>
+    <div>
+        <button onclick="demo8()">点击我</button>
+        <div id="div8"></div>
+    </div>
+
+</body>
+
+</html>

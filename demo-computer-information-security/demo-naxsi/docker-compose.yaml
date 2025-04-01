@@ -1,0 +1,12 @@
+version: "3.0"
+
+services:
+  openresty:
+    image: demo-openresty:1.1.1
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - '80:80'
+    volumes:
+      - ./nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf
+      - ./naxsi.rules:/usr/local/openresty/nginx/conf/naxsi.rules

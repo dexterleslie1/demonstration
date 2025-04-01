@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .parent {
+            font-size: 20px;
+        }
+
+        .parent .kid {
+            font-size: 2em;
+        }
+    </style>
+</head>
+<body>
+    <!--
+        https://www.freecodecamp.org/news/css-unit-guide/
+        https://medium.com/%E9%BA%A5%E5%85%8B%E7%9A%84%E5%8D%8A%E8%B7%AF%E5%87%BA%E5%AE%B6%E7%AD%86%E8%A8%98/css-%E5%B0%8F%E6%8A%80%E5%B7%A7%E5%88%86%E4%BA%AB-em-%E5%96%AE%E4%BD%8D%E7%9A%84%E5%BC%B7%E5%A4%A7%E7%94%A8%E9%80%94-457dc30a83b4
+    -->
+    <!--
+        透過簡單三點認識「em」單位
+            1、在 CSS 中，em 單位是相對長度單位，它是相對於該元素本身字體大小（font-size 屬性）的值。
+            2、若在一個沒有設定 font-size 的「元素」上，有其他屬性是以 em 做為長度單位，它則會繼承「父元素」的 font-size 屬性值，做為 em 單位的參考值。
+            3、針對第二點，若父元素也無設定 font-size 屬性值，則繼續往上繼承，直到根元素；若 CSS 中皆無設定，則依照瀏覽器預設值：通常是 16px。
+        
+        父元素.parent设定font-size为20px，子元素id=child继承父元素font-size为20px，所以字体大小font-size为40px。
+        子元素id=grand-child集成父元素id=child的font-size为40px，所以字体大小font-size为80px。
+    -->
+    <div>em基本用法</div>
+    <div class="demo1">
+        <div class="parent">
+            <div id="child" class="kid">
+                I'm child
+                <div id="grand-child" class="kid">
+                    I'm grand child
+                </div>
+            </div>
+        </div>
+    </div>
+    <hr>
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>数组操作</title>
+</head>
+
+<body>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      //#region 数组遍历
+      // https://m.php.cn/faq/489620.html
+
+      // 使用forEach遍历
+      varArray = [1, 2, 3, 4, 5]
+      console.log(`--------------- 使用forEach遍历 ---------------`)
+      varArray.forEach((item, index) => {
+        console.log(item, index)
+      });
+
+      // 使用map遍历
+      console.log(`--------------- 使用map遍历 ---------------`)
+      varArray.map((item, index) => {
+        console.log(item, index)
+      })
+
+      // 使用map遍历并返回新的数组
+      console.log(`--------------- 使用map遍历并返回新的数组 ---------------`)
+      varArray = varArray.map((item, index) => {
+        return item * item
+      })
+      console.log(`使用map遍历并返回新的数组=${varArray}`)
+
+      //#endregion
+
+      //#region 复制数组元素
+
+      // 使用ES6展开语法复制数组
+      // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax
+      // https://www.freecodecamp.org/news/how-to-clone-an-array-in-javascript-1d3183468f6a/
+      let myArr = [1, 2, 3]
+      let myArrCopy = [...myArr]
+      console.log(`使用ES6展开语法复制的数组：${myArrCopy}`)
+
+      //#endregion
+
+      //#region 往数组插入元素
+
+      // 使用unshift在数组头部插入元素
+      // https://www.freecodecamp.org/news/how-to-insert-an-element-into-an-array-in-javascript/
+      myArr = [1, 2, 3]
+      let myArrOrigin = [...myArr]
+      myArr.unshift(0)
+      console.log(`unshift前数组：${myArrOrigin}，后数组：${myArr}`)
+
+      // 使用push在数组尾部追加元素
+      myArr = [1, 2, 3]
+      myArrOrigin = [...myArr]
+      myArr.push(5)
+      console.log(`push前数组：${myArrOrigin}，后数组：${myArr}`)
+
+      //#endregion
+
+      //#region 数组reduce方法使用
+
+      // https://www.jb51.net/article/254405.htm
+
+      myArr = [1, 2, 3]
+      // 循环从数组第二个元素开始，因为没有指定reduce prev初始值，所以prev第一个值为数组的第一个元素1
+      sum = myArr.reduce((prev, current) => {
+        return prev + current
+      })
+      console.log(`sum=${sum}`)
+
+      // 循环从数组第一个元素开始，因为指定reduce prev初始值0，所以prev第一个值为0
+      sum = myArr.reduce((prev, current) => {
+        return prev + current
+      }, 0)
+      console.log(`sum=${sum}`)
+
+      //#endregion
+    })
+  </script>
+</body>
+
+</html>

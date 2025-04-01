@@ -1,0 +1,51 @@
+version: "3.0"
+
+services:
+  openresty:
+    build:
+      context: ./
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-perf-assistant-target-openresty-dev
+    environment:
+      - TZ=Asia/Shanghai
+    restart: always
+    ports:
+      - '80:80'
+      - '9145:9145'
+
+  prometheus:
+    image: prom/prometheus:v2.37.6
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./alert-rule.yml:/etc/prometheus/alert-rule.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      #热加载配置
+      - '--web.enable-lifecycle'
+      #api配置
+      #- '--web.enable-admin-api'
+      #历史数据最大保留时间，默认15天
+      - '--storage.tsdb.retention.time=30d'
+    environment:
+      - TZ=Asia/Shanghai
+    restart: always
+    ports:
+      - '9090:9090'
+
+  grafana:
+    image: grafana/grafana:9.4.3
+    volumes:
+      - ./grafana-provisioning/datasources.yaml:/etc/grafana/provisioning/datasources/default.yaml:ro
+      - ./grafana-provisioning/dashboards.yaml:/etc/grafana/provisioning/dashboards/default.yaml:ro
+      - ./grafana-provisioning/10223.json:/var/lib/grafana/dashboards/10223.json:ro
+    env_file:
+      - ./grafana-config.monitoring
+    environment:
+      - TZ=Asia/Shanghai
+    restart: always
+    ports:
+      - '3000:3000'
+    depends_on:
+      - prometheus

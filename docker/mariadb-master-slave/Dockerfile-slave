@@ -1,0 +1,4 @@
+from mariadb:10.4.19
+
+copy mysql-slave.cnf /etc/mysql/conf.d/my.cnf
+

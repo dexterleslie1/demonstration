@@ -1,0 +1,13 @@
+# https://docs.ansible.com/ansible/latest/collections/ansible/builtin/find_module.html
+- hosts: localhost
+  tasks:
+   - name: "find /home子目录"
+     find:
+      paths: /home
+      file_type: directory
+     register: varFiles
+   - name: "打印/home子目录"
+     debug:
+      msg: "{{ item.path.split('/').2 }}"
+     with_items: 
+      - "{{ varFiles.files }}"

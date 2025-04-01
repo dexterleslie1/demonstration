@@ -1,0 +1,20 @@
+POST http://localhost:8080/api/v1/postWithFileUpload
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="files"; filename="x1.txt"
+
+< ./1.txt
+--WebAppBoundary--
+
+--WebAppBoundary
+Content-Disposition: form-data; name="files"; filename="x2.txt"
+
+< ./2.txt
+--WebAppBoundary--
+
+###
+# 下面 98a20117-614c-466d-98d3-424be2dbafef.txt 文件是 /tmp/ 目录中已经存在的文件
+GET http://localhost:8080/api/v1/98a20117-614c-466d-98d3-424be2dbafef.txt
+
+###

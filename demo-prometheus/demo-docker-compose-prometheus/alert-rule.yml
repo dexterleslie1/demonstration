@@ -1,0 +1,12 @@
+groups:
+- name: Prometheus alert
+  rules:
+  # 对任何实例超过60秒无法联系的情况发出警报
+  - alert: 服务告警
+    expr: up == 0
+    for: 60s
+    labels:
+      severity: critical
+    annotations:
+      summary: "折扣（CC)：{{ $labels.instance }}"
+      description: "{{ $labels.job }} 服务已关闭"

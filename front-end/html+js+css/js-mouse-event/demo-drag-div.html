@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <script>
+        var dragger;
+        document.addEventListener('DOMContentLoaded', () => {
+            //#region 实现鼠标拖动div
+            dragger = new Dragger("div51")
+            //#endregion
+        })
+
+        /**
+         * 拖拽类
+         */
+        function Dragger(elementId) {
+            var elementObject = document.getElementById(elementId)
+
+            this.divMover = new DivMover(elementObject)
+            this.pointerTracker = new PointerTracker()
+
+            document.onmouseup = () => {
+                dragger.stop()
+            }
+            document.addEventListener("touchend",(event) => {
+                dragger.stop()
+            })
+
+            document.onmousemove = (event) => {
+                dragger.drag(event)
+            }
+            document.addEventListener("touchmove",(event) => {
+                dragger.drag(event)
+            }, {passive: false/* https://stackoverflow.com/questions/49500339/cant-prevent-touchmove-from-scrolling-window-on-ios */})
+
+            elementObject.onmousedown = (event) => {
+                dragger.start(event)
+            }
+            elementObject.addEventListener("touchstart", (event) => {
+                dragger.start(event)
+            }, false)
+
+            this.start = function (event) {
+                this.pointerTracker.markOriginalPosition(event)
+                this.divMover.markOriginalPosition()
+            }
+
+            this.stop = function () {
+                this.pointerTracker.unmarkOriginalPosition()
+                this.divMover.unmarkOriginalPosition()
+            }
+
+            this.drag = function (event) {
+                if (this.pointerTracker.tracking) {
+                    event.preventDefault()
+                    this.pointerTracker.updatePosition(event)
+                    var offset = this.pointerTracker.getOffset()
+                    this.divMover.move(offset.x, offset.y)
+                }
+            }
+
+            this.move = function(x, y) {
+                this.divMover.move(x, y)
+            }
+
+            /**
+             * 鼠标跟踪器
+             */
+            function PointerTracker() {
+                // 是否处于跟踪状态
+                this.tracking = false
+
+                // 鼠标mousedown时的坐标
+                this.originalX = 0
+                this.originalY = 0
+
+                // 鼠标当前坐标
+                this.currentX = 0
+                this.currentY = 0
+
+                /**
+                 * 标记鼠标mousedown时的坐标
+                 */
+                this.markOriginalPosition = function (event) {
+                    this.tracking = true
+                    this.originalX = event.clientX || event.touches[0].clientX
+                    this.originalY = event.clientY || event.touches[0].clientY
+
+                    console.log(`PointerTracker markOriginalPosition,
+                    this.originalX=${this.originalX},this.originalY=${this.originalY}`)
+                }
+
+                /**
+                 * mouseup时取消标记鼠标mousedown时的原始坐标
+                 */
+                this.unmarkOriginalPosition = function () {
+                    this.tracking = false
+
+                    this.originalX = this.currentX
+                    this.originalY = this.currentY
+
+                    console.log(`PointerTracker unmarkOriginalPosition,
+                    this.originalX=${this.originalX},this.originalY=${this.originalY}`)
+                }
+
+                /**
+                 * 在mousemove过程中更新鼠标当前坐标
+                 */
+                this.updatePosition = function (event) {
+                    if (!this.tracking) {
+                        console.log('PointerTracker isn\'t in tracking mode')
+                        return
+                    }
+
+                    this.currentX = event.clientX || event.changedTouches[0].clientX
+                    this.currentY = event.clientY || event.changedTouches[0].clientY
+
+                    console.log(`PointerTracker update this.currentX and this.currentY,
+                    this.currentX=${this.currentX},this.currentY=${this.currentY}`)
+                }
+
+                /**
+                 * 获取鼠标已经移动的偏移量
+                 * @return {
+                 *  offsetX: x
+                 *  offsetY: x
+                 * }
+                 */
+                this.getOffset = function () {
+                    var x = this.currentX - this.originalX
+                    var y = this.currentY - this.originalY
+
+                    console.log(`PointerTracker offsetX=${x},offsetY=${y}`)
+
+                    return {
+                        x: x,
+                        y: y
+                    }
+                }
+            }
+
+            /**
+             * 用于移动div类
+             */
+            function DivMover(elementObject) {
+                this.originalX = 0
+                this.originalY = 0
+                this.element = elementObject
+
+                /**
+                 * 标记div原始position
+                 */
+                this.markOriginalPosition = function () {
+                    // this.originalX = parseInt(this.element.style.left ? this.element.style.left.replaceAll('px', '') : 0)
+                    // this.originalY = parseInt(this.element.style.top ? this.element.style.top.replaceAll('px', '') : 0)
+                    var rect = elementObject.getBoundingClientRect();
+                    this.originalX = rect.left
+                    this.originalY = rect.top
+                }
+
+                /**
+                 * 清除div原始position标记
+                 */
+                this.unmarkOriginalPosition = function () {
+                    // this.element = null
+                }
+
+                /**
+                 * 移动div offsetX和offsetY偏移量
+                 */
+                this.move = function (offsetX, offsetY) {
+                    if (this.element) {
+                        var left = this.originalX + offsetX
+                        var top = this.originalY + offsetY
+                        var viewportWidth = window.innerWidth
+                        var viewportHeight = window.innerHeight
+                        var offsetWidth = this.element.offsetWidth
+                        var offsetHeight = this.element.offsetHeight
+
+                        // 不能超出viewport边界
+                        if(top<0) {
+                            top = 0
+                        }
+                        if(left<0) {
+                            left = 0
+                        }
+                        if(top+offsetHeight>viewportHeight) {
+                            top = viewportHeight - offsetHeight
+                        }
+                        if(left+offsetWidth>viewportWidth) {
+                            left = viewportWidth - offsetWidth
+                        }
+
+                        this.element.style.left =  left + 'px'
+                        this.element.style.top = top + 'px'
+                    }
+                }
+            }
+        }
+
+        var x = 0
+        var y = 0
+        function setP() {
+            x = x + 10
+            y = y + 10
+            dragger.move(x, y)
+        }
+    </script>
+
+</head>
+
+<body>
+    <hr>
+    <div>实现鼠标拖动div</div>
+    <div>
+        <button onclick="setP()">
+            点击我
+        </button>
+    </div>
+    <div>
+        <div id="div51" style="position:fixed;top:100px;right:0px;width:100px;height:100px;background-color: antiquewhite;">
+            <div id="div52" style="width:50px;height:50px;background-color:aqua;">
+            </div>
+        </div>
+    </div>
+
+    <style>
+        html, body {
+            height: 2000px;
+        }
+    </style>
+</body>
+
+</html>

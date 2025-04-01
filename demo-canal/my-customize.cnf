@@ -1,0 +1,11 @@
+[mysqld]
+slow_query_log=1
+long_query_time=1
+slow_query_log_file=slow-query.log
+
+# 启用binlog
+log_bin=my-binlog
+expire_logs_days=10
+binlog_format=row
+max_binlog_size=512m
+server_id=1

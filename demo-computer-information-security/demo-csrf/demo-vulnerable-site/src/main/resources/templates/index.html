@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+Hello, [[${username}]]
+
+<form action="/transfer" method="post" target="_blank">
+    <!-- csrf 攻击 token 防御机制启用后，表单提交需要提供 csrf token，否则会提示 403 forbidden 错误 -->
+    <!--<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>-->
+    目标账户：<input type="text" name="targetAccount" value="001"/>
+    金额：<input type="text" name="amount" value="10"/>
+    <input type="submit" value="确认转账"/>
+</form>
+
+<a href="/logout">退出</a>
+</body>
+</html>

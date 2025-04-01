@@ -1,0 +1,14 @@
+version: "3.0"
+
+# 创建网络
+networks:
+  net:
+    name: demo-external-network-net
+
+services:
+  demo-external-network-busybox:
+    container_name: demo-external-network-busybox
+    image: busybox
+    networks:
+      - net
+

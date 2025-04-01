@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="Ambit-font.css">
+    <style>
+        body {
+            font-family: "Ambit", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+        }
+
+        body>* {
+            margin: 20px 20px;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <button type="button" class="btn btn-primary">Primary</button>
+        <button type="button" class="btn btn-secondary">Secondary</button>
+        <button type="button" class="btn btn-success">Success</button>
+        <button type="button" class="btn btn-danger">Danger</button>
+        <button type="button" class="btn btn-warn">Warning</button>
+        <button type="button" class="btn btn-info">Info</button>
+        <button type="button" class="btn btn-light">Light</button>
+        <button type="button" class="btn btn-dark">Dark</button>
+    </div>
+
+    <div>
+        <a href="#" class="btn btn-primary">Link</a>
+        <button type="submit" class="btn btn-primary">Submit Button</button>
+        <input type="submit" class="btn btn-primary" value="Input Submit">
+        <input type="reset" class="btn btn-primary" value="Reset">
+        <input type="button" class="btn btn-primary" value="Input Button">
+    </div>
+
+    <div>
+        <button type="button" class="btn btn-outline primary">Primary</button>
+        <button type="button" class="btn btn-outline secondary">Secondary</button>
+        <button type="button" class="btn btn-outline success">Success</button>
+        <button type="button" class="btn btn-outline danger">Danger</button>
+        <button type="button" class="btn btn-outline warn">Warning</button>
+        <button type="button" class="btn btn-outline info">Info</button>
+        <button type="button" class="btn btn-outline light">Light</button>
+        <button type="button" class="btn btn-outline dark">Dark</button>
+    </div>
+
+    <div>
+        <button type="button" class="btn btn-primary" disabled>Primary</button>
+        <button type="button" class="btn btn-secondary" disabled>Secondary</button>
+        <button type="button" class="btn btn-success" disabled>Success</button>
+        <button type="button" class="btn btn-danger" disabled>Danger</button>
+        <button type="button" class="btn btn-warn" disabled>Warn</button>
+        <button type="button" class="btn btn-info" disabled>Info</button>
+        <button type="button" class="btn btn-dark" disabled>Dark</button>
+
+        <button type="button" class="btn btn-outline primary" disabled>Primary</button>
+        <button type="button" class="btn btn-outline secondary" disabled>Secondary</button>
+    </div>
+
+    <div class="toggle-state">
+        <button type="button" class="btn btn-primary">Primary</button>
+        <button type="button" class="btn btn-secondary">Secondary</button>
+    </div>
+
+    <script>
+        let buttonList = document.querySelectorAll(".toggle-state>button")
+        buttonList.forEach((el)=> {
+            el.addEventListener("click",()=>{
+                el.classList.toggle("active")
+            })
+        })
+    </script>
+</body>
+</html>

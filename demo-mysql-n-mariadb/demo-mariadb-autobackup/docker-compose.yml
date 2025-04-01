@@ -1,0 +1,50 @@
+version: "3.0"
+
+# 创建网络
+networks:
+  net:
+    name: demo-mariadb-backup-net
+
+services:
+  demo-mariadb-backup-server:
+    build:
+      context: ./
+    container_name: demo-mariadb-backup-server
+    image: demo-mariadb-backup-server
+    command:
+     - --character-set-server=utf8mb4
+     - --collation-server=utf8mb4_general_ci
+     - --skip-character-set-client-handshake
+     # 设置innodb-buffer-pool-size
+     # https://stackoverflow.com/questions/64825998/how-to-change-the-default-config-for-mysql-when-using-docker-image
+     - --innodb-buffer-pool-size=1g
+    environment:
+      - LANG=C.UTF-8
+      - TZ=Asia/Shanghai
+      - MYSQL_ROOT_PASSWORD=123456
+    ports:
+      - 3306:3306
+    networks:
+      - net
+
+  demo-mariadb-auto-backup:
+    build:
+      context: ./
+      dockerfile: Dockerfile-autobackup
+    container_name: demo-mariadb-auto-backup
+    image: demo-mariadb-auto-backup
+    # volumes:
+    #   - ./auto-backup.sh:/data/auto-backup/auto-backup.sh
+    environment:
+      - DBHOST=demo-mariadb-backup-server
+      - DBUSER=root
+      - DBPASSWORD=123456
+      - DBNAME=demo_db
+      - BUCKETNAME=backup-db-all
+      # 桶下的子目录
+      - BUCKETSUBDIR=demo-test
+      - AWS_ACCESS_KEY_ID=
+      - AWS_SECRET_ACCESS_KEY=
+    networks:
+      - net
+

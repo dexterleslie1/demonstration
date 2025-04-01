@@ -1,0 +1,1 @@
+* * * * * cd /data/auto-backup/ && ./auto-backup.sh > /proc/$(cat /var/run/crond.pid)/fd/1 2>&1

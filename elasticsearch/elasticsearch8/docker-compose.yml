@@ -1,0 +1,33 @@
+version: "3.0"
+
+services:
+  demo-elasticsearch8:
+    build:
+      context: .
+      dockerfile: Dockerfile-elasticsearch
+    image: demo-elasticsearch8-dev
+    environment:
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - discovery.type=single-node
+      # http.cors表示允许elasticsearch-head连接并管理
+      - http.cors.enabled=true
+      - http.cors.allow-origin=*
+      - TZ=Asia/Shanghai
+      # 禁用ssl通讯，否则需要配置证书才能够连接9200端口
+      # https://www.elastic.co/guide/en/elastic-stack-get-started/current/get-started-stack-docker.html#run-docker-secure
+      - xpack.security.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      - xpack.security.transport.ssl.enabled=false
+    volumes:
+      - ./elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+    ports:
+      - 9200:9200
+
+  demo-kibana8:
+    image: kibana:8.1.2
+    environment:
+      ELASTICSEARCH_HOSTS: http://demo-elasticsearch8:9200
+    ports:
+      - 5601:5601
+    depends_on:
+      - demo-elasticsearch8

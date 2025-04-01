@@ -1,0 +1,12 @@
+version: "3.0"
+
+services:
+  logstash-input-jdbc-demo:
+    container_name: logstash-input-jdbc-demo
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/logstash-input-jdbc-demo
+    environment:
+      - "LS_JAVA_OPTS=-Xmx512m -Xms512m"
+      # 禁用监控功能，否则容器会尝试连接elasticsearch而报错
+      - "XPACK_MONITORING_ENABLED=false"
+    volumes:
+      - ~/data-logstash:/usr/share/logstash/data-logstash

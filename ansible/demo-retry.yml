@@ -1,0 +1,26 @@
+# 演示命令或者模块执行失败重试
+# https://www.middlewareinventory.com/blog/ansible-retry-examples/
+# https://stackoverflow.com/questions/44134642/how-to-retry-ansible-task-that-may-fail
+
+# 运行demo
+# ansible-playbook demo-retry.yml
+# 在重试时间内使用touch .test.log命令创建文件则playbook成功执行
+- hosts: localhost
+  tasks:
+    - name: Validate if the file is present
+      file:
+        path: ./.test.log
+        state: file
+      register: lsresult
+      # 不能没有until否则不失败重试
+      until: "lsresult is not failed"
+      retries: 10
+      delay: 2
+
+    # # 和上面等价
+    # - name: Validate if the file is present
+    #   shell: ls -lrt ./.test.log
+    #   register: lsresult
+    #   until: "lsresult is not failed"
+    #   retries: 10
+    #   delay: 2

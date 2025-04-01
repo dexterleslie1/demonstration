@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <!--
+        https://css-tricks.com/a-complete-guide-to-css-media-queries/
+        通过javascript使用media query，当屏幕尺寸变化时候console.log并且判断是否小于500px
+    -->
+    <script>
+        // 创建关注的 media query 表达式
+        let mediaQuery = window.matchMedia("only screen and (min-width: 500px)")
+
+        function handleScreenSizeChange(mediaQuery) {
+            // 如果 media query 大于 500px
+            if(mediaQuery.matches) {
+                console.log("screen width greater than 500px")
+            } else {
+                console.log("screen width less than 500px")
+            }
+        }
+
+        // 监听指定的 media query 变化事件
+        mediaQuery.addListener(handleScreenSizeChange)
+
+        // 页面初始化后调用一次change
+        handleScreenSizeChange(mediaQuery)
+    </script>
+</head>
+<body>
+    
+</body>
+</html>

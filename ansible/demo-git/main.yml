@@ -1,0 +1,36 @@
+# 演示git自动checkout和push
+- hosts: localhost
+  tasks:
+    - name: "删除demo-devops"
+      file:
+        path: ./demo-devops
+        state: absent
+
+    # checkout代码
+    # https://docs.ansible.com/ansible/latest/collections/ansible/builtin/git_module.html
+    - name: "checkout代码"
+      git:
+        repo: http://root:token-string-here123456@localhost/root/demo-devops.git
+        dest: ./demo-devops
+      register: var_result
+      # 不能没有until否则不失败重试
+      until: "var_result is not failed"
+      retries: 100
+      delay: 6
+
+    - name: "推送代码到远程"
+      shell: |
+        cd ./demo-devops
+        echo 'Hello Dexter!' > README.md
+        git add .
+        git commit -m 'init commit'
+        git push
+      register: var_result
+      until: "var_result is not failed"
+      retries: 100
+      delay: 6
+
+    - name: "删除demo-devops"
+      file:
+        path: ./demo-devops
+        state: absent

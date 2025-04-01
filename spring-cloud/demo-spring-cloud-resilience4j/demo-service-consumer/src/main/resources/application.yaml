@@ -1,0 +1,95 @@
+spring:
+  application:
+    name: demo-service-consumer
+  cloud:
+    consul:
+      host: 127.0.0.1
+      port: 8500
+      discovery:
+        service-name: ${spring.application.name}
+    circuitbreaker:
+      resilience4j:
+        enable-semaphore-default-bulkhead: true
+    openfeign:
+      circuitbreaker:
+        # 启用 OpenFeign 的断路器功能
+        enabled: true
+        # 支持 default 默认配置和指定 feign 的配置
+        group:
+          enabled: true
+
+resilience4j:
+#  # 舱壁隔离配置
+#  bulkhead:
+#    configs:
+#      default:
+#        max-concurrent-calls: 2
+#        max-wait-duration: 1s
+#    instances:
+#      demo-service-provider:
+#        base-config: default
+  timelimiter:
+    configs:
+      default:
+        # 设置了超时持续时间为10秒。这意味着，如果一个远程调用的响应时间超过了10秒，它将触发一个超时异常
+        timeout-duration: 10s
+  circuitbreaker:
+    configs:
+      default:
+        # 设置了失败率阈值为50%。这意味着，如果在一个滑动窗口时间段内，远程调用的失败率达到了或超过了50%，断路器将会打开，阻止进一步的调用，以保护系统免受进一步的失败影响。
+        failure-rate-threshold: 50
+        # 设置了慢调用的持续时间阈值为5秒。这意味着，如果一个远程调用的响应时间超过了5秒，它将被视为一个慢调用。
+        slow-call-duration-threshold: 1s
+        # 设置了慢调用率阈值为30%。这意味着，在一个滑动窗口时间段内，如果远程调用的慢调用比率达到了或超过了30%，断路器将会打开。这
+        slow-call-rate-threshold: 30
+        # 设置了滑动窗口的类型为基于计数的类型，大小为6。这意味着断路器将使用一个大小为6的计数器来跟踪最近的调用结果。
+        sliding-window-type: COUNT_BASED
+        # 设置了滑动窗口的大小为6。这意味着断路器将使用一个大小为6的计数器来跟踪最近的调用结果，以便进行失败率计算和慢调用的统计。
+        sliding-window-size: 6
+        # 设置了在断路器打开之前，至少需要6次调用才能触发断路器的状态转换。这意味着，在断路器完全打开之前，必须收集足够的数据来评估系统的健康状况。
+        minimum-number-of-calls: 6
+        # 设置了在断路器打开后，自动从开放状态转换到半开状态的标志为true。这意味着，一旦断路器打开，它将尝试在一段时间后重新允许少量的调用通过
+        automatic-transition-from-open-to-half-open-enabled: true
+        # 设置了在断路器打开状态下，等待5秒后自动转换到半开状态。这意味着，一旦断路器打开，它将等待5秒钟后再尝试允许少量的调用通过
+        wait-duration-in-open-state: 5s
+        # 设置了在断路器半开状态下，允许2次调用通过。这意味着，当断路器从打开状态转换到半开状态时，它将只允许少量的调用尝试执行远程服务的方法
+        permitted-number-of-calls-in-half-open-state: 2
+        record-exceptions:
+          # 指定了在断路器统计失败率时，哪些异常类型应该被记录为失败的调用。这里包括了所有继承自java.lang.Exception的异常类
+          - java.lang.Exception
+
+#      default:
+#        # 设置了失败率阈值为50%。这意味着，如果在一个滑动窗口时间段内，远程调用的失败率达到了或超过了50%，断路器将会打开，阻止进一步的调用，以保护系统免受进一步的失败影响。
+#        failure-rate-threshold: 50
+#        # 设置了慢调用的持续时间阈值为5秒。这意味着，如果一个远程调用的响应时间超过了5秒，它将被视为一个慢调用。
+#        slow-call-duration-threshold: 1s
+#        # 设置了慢调用率阈值为30%。这意味着，在一个滑动窗口时间段内，如果远程调用的慢调用比率达到了或超过了30%，断路器将会打开。这
+#        slow-call-rate-threshold: 30
+#        # 设置了滑动窗口的类型为基于时间的类型
+#        sliding-window-type: TIME_BASED
+#        # 设置了滑动窗口的大小为5。这意味着断路器将使用一个大小为5的时间窗口来跟踪最近的调用结果，以便进行失败率计算和慢调用的统计。
+#        sliding-window-size: 5
+#        # 设置了在断路器打开之前，至少需要5次调用才能触发断路器的状态转换。这意味着，在断路器完全打开之前，必须收集足够的数据来评估系统的健康状况。
+#        minimum-number-of-calls: 5
+#        # 设置了在断路器打开后，自动从开放状态转换到半开状态的标志为true。这意味着，一旦断路器打开，它将尝试在一段时间后重新允许少量的调用通过
+#        automatic-transition-from-open-to-half-open-enabled: true
+#        # 设置了在断路器打开状态下，等待5秒后自动转换到半开状态。这意味着，一旦断路器打开，它将等待5秒钟后再尝试允许少量的调用通过
+#        wait-duration-in-open-state: 5s
+#        # 设置了在断路器半开状态下，允许2次调用通过。这意味着，当断路器从打开状态转换到半开状态时，它将只允许少量的调用尝试执行远程服务的方法
+#        permitted-number-of-calls-in-half-open-state: 2
+#        record-exceptions:
+#          # 指定了在断路器统计失败率时，哪些异常类型应该被记录为失败的调用。这里包括了所有继承自java.lang.Exception的异常类
+#          - java.lang.Exception
+    instances:
+      # 指定了名为demo-service-provider的远程服务实例，并使用默认配置（default）来配置断路器参数
+      demo-service-provider:
+        base-config: default
+
+server:
+  port: 8080
+
+#logging:
+#  level:
+#    root: debug
+#    org.apache.http: info
+#    sun.rmi: info

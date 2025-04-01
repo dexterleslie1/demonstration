@@ -1,0 +1,26 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: spring-boot-tester
+
+logging:
+  level:
+    com.future.demo: debug
+
+com:
+  future:
+    demo:
+      test:
+        prop1: astring1
+        prop2: 18080
+        prop3:
+          - av1
+          - av2
+        prop4:
+          k1: avv1
+          k2: avv2
+        nested:
+          prop1: anv1x
+          prop2: 18090

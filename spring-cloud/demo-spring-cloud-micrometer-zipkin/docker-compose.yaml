@@ -1,0 +1,14 @@
+version: "3.0"
+
+services:
+  demo-zipkin-server:
+    image: openzipkin/zipkin
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - '9411:9411'
+  demo-consul-server:
+    image: consul
+    command: agent -server -ui -node=server-1 -bootstrap-expect=1 -client=0.0.0.0
+    ports:
+      - "8500:8500"

@@ -1,0 +1,24 @@
+version: "3.0"
+
+services:
+  # https://hub.docker.com/_/mysql?tab=description  
+  db:
+    # image: mysql:5.7
+    # mysql 8.0.18才开始支持explain analyze命令
+    image: mysql:8.0.18
+    command:
+     - --character-set-server=utf8mb4
+     - --collation-server=utf8mb4_general_ci
+     - --skip-character-set-client-handshake
+    volumes:
+    #  - ~/data-demo-mysql-standalone-server:/var/lib/mysql
+     - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf
+    environment:
+      # 解决mysql cli中文乱码问题
+      # https://blog.csdn.net/qq_44766883/article/details/128065916
+      - LANG=C.UTF-8
+      - TZ=Asia/Shanghai
+      - MYSQL_ROOT_PASSWORD=123456
+    ports:
+      - '3306:3306'
+

@@ -1,0 +1,26 @@
+version: "3.0"
+
+# 创建网络
+networks:
+  net:
+    name: network-internal-master
+
+services:
+  demo-mariadb-master:
+    container_name: demo-mariadb-master
+    image: docker.118899.net:10001/yyd-public/demo-mariadb-master
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - TZ=Asia/Shanghai
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci --skip-character-set-client-handshake
+    ports:
+      - 3306:3306
+    networks:
+      - net
+
+  demo-mariadb-master-config:
+    container_name: demo-mariadb-master-config
+    image: docker.118899.net:10001/yyd-public/demo-mariadb-master-config
+    command: sh -c "dockerize -wait tcp://demo-mariadb-master:3306 -timeout 120s -wait-retry-interval 5s && sh docker-master-auto-config.sh"
+    networks:
+      - net

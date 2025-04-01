@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        /*
+            0度表示 to top
+            color-stop 一个 length 值时表示颜色的开始位置
+            color-stop 两个 length 值时表示硬过渡颜色的开始和结束位置
+        */
+        .div1 {
+            width: 100px;
+            height: 150px;
+            /* 默认 to bottom */
+            background: linear-gradient(#e66465, #9198e5);
+        }
+
+        .div21 {
+            margin: 10px;
+            display: inline-block;
+            width: 150px;
+            height: 50px;
+            background: linear-gradient(0deg, #e66465, #9198e5);
+        }
+
+        .div22 {
+            margin: 10px;
+            display: inline-block;
+            width: 150px;
+            height: 50px;
+            background: linear-gradient(90deg, #e66465, #9198e5);
+        }
+
+        .div23 {
+            margin: 10px;
+            display: inline-block;
+            width: 150px;
+            height: 50px;
+            background: linear-gradient(180deg, #e66465, #9198e5);
+        }
+
+        .div31 {
+            width: 100px;
+            height: 100px;
+            /* Color stop: A gradient going from the bottom to top,
+            starting blue, turning green at 40% of its length,
+            and finishing red */
+            background: linear-gradient(0deg, blue, green 20%, red)
+        }
+
+        .div41 {
+            width: 100px;
+            height: 100px;
+            /* Multi-position color stop: A gradient tilted 45 degrees,
+            with a red bottom-left half and a blue top-right half,
+            with a hard line where the gradient changes from red to blue */
+            background: linear-gradient(45deg, red 0 50%, blue 50% 100%)
+        }
+    </style>
+</head>
+
+<body>
+    <!--
+        https://developer.mozilla.org/en-US/docs/Web/CSS/gradient/linear-gradient
+    -->
+    <div>演示线性渐变的基本用法</div>
+    <div class="div1">
+
+    </div>
+    <hr />
+
+    <div>演示0deg、90deg、180deg用法，0deg=to top、90deg=to right、180deg=to bottom</div>
+    <div class="div21">
+        0deg
+    </div>
+    <div class="div22">
+        90deg
+    </div>
+    <div class="div23">
+        180deg
+    </div>
+    <hr />
+
+    <div>演示背景颜色按照比例渐变</div>
+    <div class="div31"></div>
+    <hr />
+
+    <div>
+
+    </div>
+    <div class="div41"></div>
+    <hr/>
+</body>
+
+</html>

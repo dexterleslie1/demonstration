@@ -1,0 +1,7 @@
+.demo1 {
+    &>div {
+        width: 200px;
+        height: 100px;
+        background-color: $background-color;
+    }
+}

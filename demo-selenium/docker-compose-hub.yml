@@ -1,0 +1,60 @@
+version: "3.0"
+
+services:
+  # chrome节点
+  demo-chrome:
+    image: selenium/node-chrome:latest
+    depends_on:
+      - demo-hub
+    environment:
+      - SE_EVENT_BUS_HOST=demo-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+    ports:
+      # VNC客户端连接端口
+      - "5900:5900"
+      # noVNC连接端口
+      # 打开浏览器查看noVNC http://127.0.0.1:7900/ 默认密码: secret
+      - "7900:7900"
+
+  # chrome-v96.0 节点
+  demo-chrome-960:
+    image: selenium/node-chrome:96.0
+    depends_on:
+      - demo-hub
+    environment:
+      - SE_EVENT_BUS_HOST=demo-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+    ports:
+      - "5902:5900"
+      - "7902:7900"
+
+  # firefox节点
+  demo-firefox:
+    image: selenium/node-firefox:latest
+    depends_on:
+      - demo-hub
+    environment:
+      - SE_EVENT_BUS_HOST=demo-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+    ports:
+      - "5901:5900"
+      - "7901:7900"
+
+  # selenium grid hub
+  demo-hub:
+    image: selenium/hub:latest
+    ports:
+      - "4442:4442"
+      - "4443:4443"
+      # 查看 selenium hub状态 http://127.0.0.1:4444/
+      - "4444:4444"
+
+  demo-openresty:
+    image: openresty/openresty:1.19.9.1-14-buster-fat
+    ports:
+      - 80:80
+    volumes:
+      - ./web-auxiliary-tool-for-testing/index.html:/usr/local/openresty/nginx/html/web-auxiliary-tool-for-testing/index.html

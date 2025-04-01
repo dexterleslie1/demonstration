@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration debug="false">
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <property resource="application.properties"/>
+    <springProfile name="!prod">
+        <property resource="application-dev.properties"/>
+    </springProfile>
+    <springProfile name="prod">
+        <property resource="application-prod.properties"/>
+    </springProfile>
+
+    <!--
+        https://stackoverflow.com/questions/24235296/how-to-define-logback-variables-properties-before-logback-auto-load-logback-xml
+    -->
+    <property name="logstash_server" value="${spring.application.logstash.server}"/>
+
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+            <charset>utf8</charset>
+        </encoder>
+    </appender>
+
+    <!-- 注意：使用以下方式无论skywalking哪个版本都无法解决Trace ID为N/A问题 -->
+    <!--<appender name="grpc-log" class="org.apache.skywalking.apm.toolkit.log.logback.v1.x.log.GRPCLogClientAppender">
+        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+            <layout class="org.apache.skywalking.apm.toolkit.log.logback.v1.x.mdc.TraceIdMDCPatternLogbackLayout">
+                <Pattern>%msg%n</Pattern>
+            </layout>
+        </encoder>
+    </appender>-->
+
+    <!-- mdc会注入traceId，所以使用此方法不会丢失链路日志 -->
+    <appender name="logstash" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+        <destination>${logstash_server}</destination>
+
+        <encoder charset="UTF-8" class="net.logstash.logback.encoder.LogstashEncoder">
+            <customFields>{"module":"service-gateway"}</customFields>
+        </encoder>
+    </appender>
+
+    <root level="debug">
+        <!--<appender-ref ref="grpc-log"/>-->
+        <appender-ref ref="console"/>
+        <appender-ref ref="logstash"/>
+    </root>
+
+    <logger name="org.springframework.beans" level="info"/>
+    <logger name="org.springframework.core" level="info"/>
+</configuration>

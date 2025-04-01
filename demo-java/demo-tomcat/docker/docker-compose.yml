@@ -1,0 +1,15 @@
+version: "3.0"
+
+services:
+  demo-tomcat9:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    volumes:
+      - ./target/tomcat-java-web.war:/usr/local/tomcat/webapps/tomcat-java-web.war
+    environment:
+      - TZ=Asia/Shanghai
+      - JAVA_OPTS=-server -Xmx512m -Xms512m
+    ports:
+      - 8080:8080
+

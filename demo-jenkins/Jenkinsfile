@@ -1,0 +1,12 @@
+pipeline {
+    // 这个agent不能删除，否则报告缺失agent导致语法错误
+    agent any
+    
+    stages {
+        stage('执行步骤') {
+            steps {
+                sh 'uname -a'
+            }
+        }
+    }
+}

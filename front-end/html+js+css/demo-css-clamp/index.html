@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .div1 {
+            /* 表示font-size 当前值为2.5vw，但是最小值不能小于1px，最大值不能大于60px */
+            font-size: clamp(1px, 2.5vw, 60px);
+        }
+    </style>
+</head>
+<body>
+    <div>演示clamp用法</div>
+    <div class="div1">
+        font-size: clamp(1px, 2.5vw, 25px)
+    </div>
+    <hr>
+</body>
+</html>

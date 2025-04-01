@@ -1,0 +1,162 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: demo-elasticsearch
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demo-elasticsearch
+  # 对应的服务没有用到所以不存在
+  serviceName: demo-elasticsearch-service
+  template:
+    metadata:
+      labels:
+        app: demo-elasticsearch
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: demo-elasticsearch
+          image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-elk-elasticsearch
+          imagePullPolicy: Always
+          env:
+            - name: "ES_JAVA_OPTS"
+              value: "-Xms512m -Xmx512m"
+            - name: "discovery.type"
+              value: "single-node"
+            - name: "http.cors.enabled"
+              value: "true"
+            - name: "http.cors.allow-origin"
+              value: "*"
+            - name: "TZ"
+              value: "Asia/Shanghai"
+          volumeMounts:
+            - name: demo-elasticsearch-data
+              mountPath: /usr/share/elasticsearch/data
+  volumeClaimTemplates:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: demo-elasticsearch-data
+        labels:
+          app: demo-elasticsearch
+      spec:
+        accessModes:
+          - "ReadWriteOnce"
+        resources:
+          requests:
+            storage: "8Gi"
+        storageClassName: nfs-client
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-elk-elasticsearch
+spec:
+  type: ClusterIP
+  selector:
+    app: demo-elasticsearch
+  ports:
+    - port: 9200
+      targetPort: 9200
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-kibana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demo-kibana
+  template:
+    metadata:
+      labels:
+        app: demo-kibana
+    spec:
+      containers:
+        - name: demo-kibana
+          image: kibana:7.8.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: "TZ"
+              value: "Asia/Shanghai"
+            - name: "ELASTICSEARCH_HOSTS"
+              value: "http://demo-elk-elasticsearch:9200"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-kibana-service-nodeport
+spec:
+  type: NodePort
+  ports:
+    - port: 5601
+      targetPort: 5601
+      nodePort: 30000
+  selector:
+    app: demo-kibana
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-logstash
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demo-logstash
+  template:
+    metadata:
+      labels:
+        app: demo-logstash
+    spec:
+      containers:
+        - name: demo-logstash
+          image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-elk-logstash 
+          imagePullPolicy: Always
+          env:
+            - name: "TZ"
+              value: "Asia/Shanghai"
+            - name: "xpack.monitoring.elasticsearch.hosts"
+              value: "http://demo-elk-elasticsearch:9200"
+            - name: "LS_JAVA_OPTS"
+              value: "-Xmx512m -Xms512m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-logstash-service-nodeport
+spec:
+  type: NodePort
+  ports:
+    - port: 5044
+      targetPort: 5044
+      nodePort: 30001
+  selector:
+    app: demo-logstash
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-curator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demo-curator
+  template:
+    metadata:
+      labels:
+        app: demo-curator
+    spec:
+      containers:
+        - name: demo-curator
+          image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-elk-curator
+          imagePullPolicy: Always
+          env:
+            - name: "TZ"
+              value: "Asia/Shanghai"

@@ -1,0 +1,44 @@
+---
+- hosts: localhost
+  vars:
+    my_var1: "value1"
+    # my_bool: "False"
+
+  tasks:
+    - name: "打印ansible_facts变量"
+      debug:
+        var: ansible_facts
+    - name: "打印ansible_facts.ansible_distribution变量"
+      debug:
+        msg: "{{ ansible_distribution }}"
+    # 检查操作系统类型
+    # https://superuser.com/questions/1395954/ansible-playbook-to-determine-os-release
+    - name: "使用ansible_facts变量判断操作系统类型"
+      debug:
+        msg: "此操作系统为centOS8"
+      when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "8"
+
+    # 自定义变量并修改其值
+    # https://stackoverflow.com/questions/39072079/how-can-i-dynamically-change-an-ansible-variable
+    - name: "打印自定义变量my_var1"
+      debug: 
+        var: my_var1
+    - name: "设置my_var1变量到新的值"
+      set_fact:
+        my_var1: "value2"
+    - name: "打印自定义变量my_var1新值"
+      debug:
+        var: my_var1
+    - name: "使用 msg={{ my_var1 }}方式打印变量my_var1新值"
+      debug:
+        msg: "{{ my_var1 }}"
+
+    # https://stackoverflow.com/questions/39539559/ansible-procesor-count-vs-processor-cores-vs-processor-vcpus
+    - name: "获取cpu个数"
+      debug:
+        msg: "{{ ansible_processor_vcpus }}"
+
+    - name: "布尔变量默认值和强制类型转换"
+      debug:
+        msg: "my_bool={{ my_bool | default(False) | bool }}"
+

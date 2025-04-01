@@ -1,0 +1,16 @@
+.todo-list-container .todo-list-ul-container {
+    list-style-type: none;
+    padding: 0;
+    /* border: 1px solid grey; */
+}
+
+.todo-list-container .todo-list-ul-container li {
+    display: flex;
+    justify-content: space-between;
+    padding: .2rem;
+    border: 1px solid grey;
+    border-bottom: none;
+}
+.todo-list-container .todo-list-ul-container li:nth-last-of-type(1) {
+    border-bottom: 1px solid grey;
+}

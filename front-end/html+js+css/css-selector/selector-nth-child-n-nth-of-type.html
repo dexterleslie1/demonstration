@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .div1 p:nth-child(4) {
+            color: yellow;
+        }
+
+        .div2 p:nth-child(3) {
+            color: red;
+        }
+
+        .div3 p:nth-of-type(3) {
+            color: red;
+        }
+
+        .div5 p:nth-of-type(3) {
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+    <!--
+        nth-child 选择指定索引的子元素(在不同类型的子元素中)
+        https://www.freecodecamp.org/news/nth-child-vs-nth-of-type-selector-in-css/
+    -->
+
+    <div>下面演示不存在索引为 4 的 p 元素，所以样式 color: yellow 不起作用</div>
+    <div class="div1">
+        <h1>First heading 1 element</h1>
+        <p>First paragraph element</p>
+        <p>Second paragraph element</p>
+        <h2>First heading 2 element</h2>
+        <p>Third paragraph element</p>
+        <h3>First heading 3 element</h3>
+        <p>Fourth paragraph element</p>
+        <p>Fifth paragraph element</p>
+    </div>
+    <hr />
+
+    <div>
+        p:nth-child(3) 选择器将仅将 DeepPink 应用于第四个 p 节点，因为它是其父元素的第三个子元素。
+    </div>
+    <div class="div2">
+        <article>
+            <h1>Article's first heading 1 element</h1>
+            <p>Article's first paragraph element</p>
+            <h2>Article's first heading 2 element</h2>
+            <p>Article's second paragraph element</p>
+            <section>
+                <h3>Article's first heading 3 element</h3>
+                <p>Article's third paragraph element</p>
+                <p>Article's fourth paragraph element</p>
+            </section>
+            <h2>Article's second heading 2 element</h2>
+            <p>Article's fifth paragraph element</p>
+            <p>Article's sixth paragraph element</p>
+        </article>
+
+    </div>
+    <hr />
+
+    <!--
+        nth-of-type 选择指定索引的子元素(在同类型的子元素中)
+        https://www.freecodecamp.org/news/nth-child-vs-nth-of-type-selector-in-css/
+    -->
+    <div>
+        样式会应用到第5个子元素中，因为它是其父元素下的第3个 p 子元素
+    </div>
+    <div class="div3">
+        <h1>First heading 1 element</h1>
+        <p>First paragraph element</p>
+        <p>Second paragraph element</p>
+        <h2>First heading 2 element</h2>
+        <p>Third paragraph element - here</p>
+        <h3>First heading 3 element</h3>
+        <p>Fourth paragraph element</p>
+        <p>Fifth paragraph element</p>
+
+    </div>
+    <hr />
+
+    <div>
+        样式会被应用到第8、10个子元素中，因为它分别是各自其父元素的第3个 p 子元素
+    </div>
+    <div class="div5">
+        <article>
+            <h1>Article's first heading 1 element</h1>
+            <p> Article's first paragraph element</p>
+            <h2>Article's first heading 2 element</h2>
+            <p>Article's second paragraph element</p>
+            <section>
+                <h3>Article's first heading 3 element</h3>
+                <p>Article's third paragraph element</p>
+                <p>Article's fourth paragraph element</p>
+                <p>Article's fourth paragraph element - here</p>
+            </section>
+            <h2>Article's second heading 2 element</h2>
+            <p>Article's fifth paragraph element - here</p>
+            <p>Article's sixth paragraph element</p>
+        </article>
+
+    </div>
+    <hr />
+</body>
+
+</html>

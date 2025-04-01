@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+* {
+  box-sizing: border-box;
+}
+
+.left {
+  background-color: #2196F3;
+  padding: 20px;
+  float: left;
+  width: 20%; /* The width is 20%, by default */
+}
+
+.main {
+  background-color: #f1f1f1;
+  padding: 20px;
+  float: left;
+  width: 60%; /* The width is 60%, by default */
+}
+
+.right {
+  background-color: #04AA6D;
+  padding: 20px;
+  float: left;
+  width: 20%; /* The width is 20%, by default */
+}
+
+/* Use a media query to add a break point at 800px: */
+@media screen and (max-width: 800px) {
+  .left, .main, .right {
+    width: 100%; /* The width is 100%, when the viewport is 800px or smaller */
+  }
+}
+
+
+
+@media only screen and (max-width:600px) {
+    .divMaxWidth600px {
+        background-color:red;
+    }
+}
+
+.divMinWidthRange {
+    background-color: lightblue;
+}
+@media screen and (min-width: 400px) {
+    .divMinWidthRange {
+        background-color: lightgreen;
+    }
+}
+@media screen and (min-width: 800px) {
+    .divMinWidthRange {
+        background-color: lavender;
+    }
+}
+
+@media screen and (orientation: landscape) {
+    .divOrientation {
+        background-color:blue;
+    }
+}
+
+.divMaxWidth {
+    margin-left:50px;
+}
+@media (max-width:768px) {
+    .divMaxWidth {
+        margin-left:0px;
+    }
+}
+</style>
+</head>
+<body>
+
+<h2>Media Queries</h2>
+<p>Resize the browser window.</p>
+
+<p>Make sure you reach the breakpoint at 800px when resizing this frame.</p>
+
+<div class="left">
+  <p>Left Menu</p>
+</div>
+
+<div class="main">
+  <p>Main Content</p>
+</div>
+
+<div class="right">
+  <p>Right Content</p>
+</div>
+
+<hr>
+<div class="divMaxWidth600px">
+  @media only screen and (max-width:600px) background-color change
+</div>
+
+<div class="divMinWidthRange">
+  Div min-width background-color change
+</div>
+
+<div class="divOrientation">
+  Div orientation change
+</div>
+
+<div class="divMaxWidth">
+  Div max-width margin-left change
+</div>
+
+</body>
+</html>
+

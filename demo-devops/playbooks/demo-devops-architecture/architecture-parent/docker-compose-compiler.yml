@@ -1,0 +1,24 @@
+version: "3.0"
+
+services:
+  demo-devops-compiler:
+    container_name: demo-devops-compiler
+    image: maven:3.3-jdk-8
+    command: |
+      sh -c "
+            rm -rf /usr/src/mytarget/*
+            cd architecture-parent
+            mvn clean package
+            # cp ../architecture-eureka/target/*.jar ./mytarget/
+            # cp ../architecture-zuul/target/*.jar ./mytarget/
+            # cp ../architecture-helloworld/target/*.jar ./mytarget/
+            # mvn clean
+            "
+    working_dir: /usr/src/mymaven
+    volumes:
+      - ./.m2:/root/.m2
+      - ./settings.xml:/root/.m2/settings.xml
+      - ../:/usr/src/mymaven
+      # - ./mytarget:/usr/src/mytarget
+    environment:
+      - TZ=Asia/Shanghai

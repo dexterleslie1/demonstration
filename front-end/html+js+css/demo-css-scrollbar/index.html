@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .div1 {
+            background-color: black;
+            padding: 30px;
+        }
+        .div1>div {
+            width: 300px;
+            height: 150px;
+            background-color: red;
+            overflow: scroll;
+            /*
+                scrollbar-color:
+                    color 第一个颜色用于指定滚动条滑块颜色
+                    color 第二个颜色用于指定滚动条轨道颜色
+            */
+            scrollbar-color: gray white;
+        }
+    </style>
+</head>
+
+<body>
+    <!--
+        https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_scrollbars_styling
+    -->
+    <div>演示scrollbar样式基本设置</div>
+    <div class="div1">
+        <div>
+            Is that Eric Garner worked
+            for some time for the Parks and Rec.
+            Horticultural Department, which means,
+            perhaps, that with his very large hands,
+            perhaps, in all likelihood,
+            he put gently into the earth
+            some plants which, most likely,
+            some of them, in all likelihood,
+            continue to grow, continue
+            to do what such plants do, like house
+            and feed small and necessary creatures,
+            like being pleasant to touch and smell,
+            like converting sunlight
+            into food, like making it easier
+            for us to breathe.
+        </div>
+    </div>
+    <hr>
+</body>
+
+</html>

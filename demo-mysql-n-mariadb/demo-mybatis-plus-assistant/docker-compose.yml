@@ -1,0 +1,43 @@
+version: "3.0"
+
+services:
+  # 启动mariadb
+  db:
+    build:
+      context: ./
+    image: demo-mybatis-plus-db-dev
+    # mysql5.7需要指定此用户，否则报告read-only file system错误
+    user: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - TZ=Asia/Shanghai
+      # 解决mysql cli中文乱码问题
+      # https://blog.csdn.net/qq_44766883/article/details/128065916
+      - LANG=C.UTF-8
+    volumes:
+      - ./my.cnf:/etc/mysql/conf.d/my.cnf
+      - data-demo:/var/lib/mysql
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+    deploy:
+      resources:
+        limits:
+          memory: 4g
+    network_mode: host
+
+  # 自动清除binlog日志，否则在运行内存溢出等长时间测试时因为binlog过大导致硬盘空间占满
+  db-binlog-purge:
+    image: demo-mybatis-plus-db-dev
+    user: mysql
+    environment:
+      - TZ=Asia/Shanghai
+      # 解决mysql cli中文乱码问题
+      # https://blog.csdn.net/qq_44766883/article/details/128065916
+      - LANG=C.UTF-8
+    command: sh -c "while :; do mysql -uroot -p123456 -h127.0.0.1 -e \"reset master;\"; echo '成功执行SQL命令'; sleep 120; done"
+    network_mode: host
+
+volumes:
+  data-demo:

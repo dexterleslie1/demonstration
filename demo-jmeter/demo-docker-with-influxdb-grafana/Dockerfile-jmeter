@@ -1,0 +1,21 @@
+FROM openjdk:8-jdk-slim-bullseye
+
+COPY sources.list /etc/apt/sources.list
+
+RUN apt-get clean && \
+    apt-get update && \
+    apt-get install -y curl
+
+RUN curl https://fut001.oss-cn-hangzhou.aliyuncs.com/jmeter/apache-jmeter-5.6.2.tgz --output /tmp/apache-jmeter-5.6.2.tgz && \
+    cd /tmp && tar -xvzf apache-jmeter-5.6.2.tgz && mv /tmp/apache-jmeter-5.6.2 /usr/local/jmeter && \
+    rm -f /tmp/apache-jmeter-5.6.2.tgz
+
+# COPY ./target/demo-jmeter-customize-plugin-1.0.0.jar /usr/local/jmeter/lib/ext/demo-jmeter-customize-plugin-1.0.0.jar
+# COPY ./target/demo-jmeter-customize-plugin-1.0.0-jar-with-dependencies.jar /usr/local/jmeter/lib/ext/demo-jmeter-customize-plugin-1.0.0-jar-with-dependencies.jar
+# RUN chown root:root /usr/local/jmeter/lib/ext/demo-jmeter*.jar
+
+ENV JMETER_HOME /usr/local/jmeter
+		
+ENV PATH $JMETER_HOME/bin:$PATH
+
+EXPOSE 60000

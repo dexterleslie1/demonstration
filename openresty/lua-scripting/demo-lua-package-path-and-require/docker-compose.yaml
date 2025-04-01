@@ -1,0 +1,11 @@
+version: "3.0"
+
+services:
+  openresty:
+    build:
+      context: ./
+    image: demo-lua-package-path-and-require-dev
+    environment:
+      - TZ=Aisa/Shanghai
+    ports:
+      - '80:80'

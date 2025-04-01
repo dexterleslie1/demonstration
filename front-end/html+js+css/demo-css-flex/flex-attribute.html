@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .div3 {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .div3 .container {
+            width: 10%;
+            /* width: 600px; */
+            background-color: green;
+            display: flex;
+            justify-content: space-around;
+        }
+        .div3 .container .item {
+            background-color: red;
+            /* margin-top: 10px;
+            margin-bottom: 10px; */
+            margin: 10px 5%;
+            padding-top: 40px;
+            padding-bottom: 40px;
+            /* flex: 0 0 100% 表示每个 flex item 自适应为父容器的宽度大小 */
+            flex: 0 0 100%;
+            /* flex: 0 0 100% 等价于下面的写法 */
+            /* flex-grow: 0;
+            flex-shrink: 0;
+            flex-basis: 100%; */
+            border: 1px solid black;
+            text-align: center;
+            transform: translateX(-55%);
+        }
+    </style>
+</head>
+<body>
+    <!--
+        https://www.runoob.com/cssref/css3-pr-flex.html
+        
+        flex 属性是 flex-grow、flex-shrink、flex-basis 的缩写
+        
+        flex 属性提供一个值时：
+            如果提供的值为 flex-grow 的合法值，那么表达式会被展开为 flex: <flex-grow> 1 0
+            如果提供的值为 flex-basis 的合法值，那么表达式会被展开为 flex: 1 1 <flex-basis>
+
+        flex 属性提供三个值时，提供值的顺序分别对应 <flex-grow>、<flex-shrink>、<flex-basis>
+
+
+        https://www.runoob.com/cssref/css3-pr-flex-grow.html   
+        flex-grow 用于设置或检索弹性盒子的扩展比率，例如： 有两个 flex item flex-grow分别为1和2，那么这两个 item 把 flex 布局空间分为 3 等分，
+        其中第一个 item 占空间为 1/3，第二个 item 占空间为 2/3。
+
+        https://www.runoob.com/cssref/css3-pr-flex-shrink.html
+        flex-shrink 用于设置如果所有item宽度总和大于父容器时，item被动收缩时计算的收缩比例，flex-shrink: 0表示item不会被收缩。
+
+        https://www.runoob.com/cssref/css3-pr-flex-basis.html
+        flex-basis 用于设置item的初始宽度，例如： flex-basis: 100% 表示item为其父元素的宽度大小。
+    -->
+    <div style="width: 60%;height: 100px;margin-left: auto;margin-right: auto;display: flex;">
+        <div style="width: 150px;background-color:blue;"></div>
+        <div style="flex: 1;background-color: blueviolet;"></div>
+        <div style="width: 150px;background-color: blue;"></div>
+    </div>
+    <hr/>
+
+    <div style="width: 60%;height: 100px;margin-left: auto;margin-right: auto;display: flex;">
+        <div style="flex: 1;background-color: blue;"></div>
+        <div style="flex: 1;background-color: blueviolet;"></div>
+        <div style="flex: 2;background-color: brown;"></div>
+    </div>
+    <hr>
+
+    <div>演示 flex: 0 0 100% 情况，等价于 flex-basis: 100%</div>
+    <div class="div3">
+        <div class="container">
+            <div class="item">1</div>
+            <div class="item">2</div>
+            <div class="item">3</div>
+            <div class="item">4</div>
+        </div>
+    </div>
+    <hr>
+</body>
+</html>

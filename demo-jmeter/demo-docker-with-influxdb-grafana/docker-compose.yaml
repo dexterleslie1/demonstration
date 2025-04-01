@@ -1,0 +1,70 @@
+# https://zhuanlan.zhihu.com/p/621684630?utm_id=0
+version: "3.0"
+
+networks:
+  net:
+    name: demo-jmeter-docker-net
+
+services:
+  demo-jmeter:
+    build:
+      context: ./
+      dockerfile: Dockerfile-jmeter
+    image: demo-jmeter-with-influxdb-grafana
+    environment:
+      - TZ=Asia/Shanghai
+    command: sleep 999999
+    restart: always
+    networks:
+      - net
+    logging:
+      driver: json-file
+      options:
+        max-size: "64m"
+        max-file: "5"
+
+  demo-influxdb:
+    image: influxdb:1.8.10
+    environment:
+      - TZ=Asia/Shanghai
+    # ports:
+    #   - 8086:8086
+    restart: always
+    networks:
+      - net
+    logging:
+      driver: json-file
+      options:
+        max-size: "64m"
+        max-file: "5"
+  # 用于初始化influxdb
+  # 创建jmeter数据库
+  demo-influxdb-db-creator:
+    image: influxdb:1.8.10
+    command: influx --host demo-influxdb -execute 'create database jmeter'
+    environment:
+      - TZ=Asia/Shanghai
+    networks:
+      - net
+    depends_on:
+      - demo-influxdb
+
+  demo-grafana:
+    image: grafana/grafana:6.6.2
+    environment:
+      - TZ=Asia/Shanghai
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+    volumes:
+      - ./datasources.yaml:/etc/grafana/provisioning/datasources/default.yaml
+      - ./dashboards.yaml:/etc/grafana/provisioning/dashboards/default.yaml
+      - ./jmeter.json:/var/lib/grafana/dashboards/jmeter.json
+    ports:
+      - 3000:3000
+    restart: always
+    networks:
+      - net
+    logging:
+      driver: json-file
+      options:
+        max-size: "64m"
+        max-file: "5"
