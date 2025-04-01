@@ -22,8 +22,6 @@ export default defineConfig({
     // https://vitepress.dev/reference/default-theme-config
     nav: [
       {
-        text: '首页', link: '/'
-      }, {
         text: '前端', items: [
           { text: 'Vite', link: '/vite/README.md' },
           { text: 'Vue', link: '/vue/README.md' },
