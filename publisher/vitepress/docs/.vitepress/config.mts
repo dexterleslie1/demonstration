@@ -41,6 +41,7 @@ export default defineConfig({
           { text: 'Java 相关库', link: '/java-library/lombok.md' },
           { text: 'JMeter', link: '/jmeter/README.md' },
           { text: 'MySQL、MariaDB', link: '/mysql-n-mariadb/README.md' },
+          { text: 'NodeJS', link: '/nodejs/README.md' },
         ]
       }, {
         text: 'Linux', items: [
@@ -446,6 +447,15 @@ export default defineConfig({
             { text: '基础', link: '/python/README.md' },
             { text: 'Xpath', link: '/python/xpath使用.md' },
             { text: 'CentOS6 升级 Python2.6 到 Python2.7', link: '/python/centOS6升级python2.6到python2.7.md' },
+          ]
+        }
+      ],
+      '/nodejs/': [
+        {
+          text: 'NodeJS',
+          items: [
+            { text: '基础', link: '/nodejs/README.md' },
+            { text: 'Npm', link: '/nodejs/npm命令.md' },
           ]
         }
       ],
