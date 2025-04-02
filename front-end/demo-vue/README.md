@@ -1280,3 +1280,214 @@ module.exports = defineConfig({
 - **组合式 API** 是 Vue 3 推荐的新范式，尤其适合中大型项目。
 - **选项式 API** 仍被支持，适合简单组件或 Vue 2 迁移项目。
 - 两者可共存于同一项目中，但推荐新项目优先使用组合式 API。
+
+
+
+## 创建并发布自定义组件
+
+### 基于 Vue2
+
+#### 使用 Vue CLI
+
+使用 Vue CLI 创建项目
+
+```bash
+$ vue demo-vue2-cli-my-component-lib
+Vue CLI v5.0.8
+? Please pick a preset: Manually select features
+? Check the features needed for your project: Babel
+? Choose a version of Vue.js that you want to start the project with 2.x
+? Where do you prefer placing config for Babel, ESLint, etc.? In package.json
+? Save this as a preset for future projects? No
+```
+
+配置 vue.config.js 内容如下：
+
+```javascript
+const { defineConfig } = require('@vue/cli-service')
+module.exports = defineConfig({
+  transpileDependencies: true,
+  // configureWebpack 用于直接对内部的 Webpack 配置对象进行扩展或覆盖。
+  // 在这里，通过 configureWebpack 添加了 output 和 externals 配置，主要目的是修改打包输出的格式和指定外部依赖。
+  configureWebpack: {
+    // 这部分配置主要用于打包一个库（Library），指定打包后的文件如何暴露给外部使用。
+    // 如果你的 Vue 项目是为了开发一个组件库（而不仅仅是一个独立应用），这些配置非常关键，因为它们决定了你的组件库如何被其他项目引入和使用。
+    output: {
+      // 指定库的导出方式是 default，即暴露组件的默认导出。
+      // 如果你的组件库默认导出的是一个 Vue 组件（如 export default {}），需要设置为 default。
+      libraryExport: 'default',
+      // 指定库的打包格式为 UMD（Universal Module Definition）。
+      // UMD 是一种通用模块定义规范，可兼容多种加载方式（如 CommonJS、AMD 和全局变量）。
+      // 这种格式适合发布到 npm，同时支持在浏览器环境中通过 <script> 标签直接引入。
+      libraryTarget: 'umd',
+      // 指定库的全局变量名称为 MyComponentLib。
+      // 如果库通过 <script> 的方式引入，MyComponent 会作为全局变量暴露。
+      library: 'MyComponentLib'
+    },
+    // externals 配置用于将某些依赖标记为外部依赖，从而避免在打包时将它们一起捆绑进来。
+    // vue: 'vue' 表示 Vue 本身不会被打包到生成的库中，而是假定在运行时由宿主环境（即最终使用组件库的项目）提供 Vue。
+    // 如果你的组件库依赖 Vue 或其他第三方库，并且希望宿主项目来提供这些依赖，就可以使用 externals。
+    externals: { vue: 'vue' }
+  },
+  // 该配置用于控制 Vue CLI 如何处理项目中的 CSS。
+  // extract: false 表示 不将 CSS 提取到独立的文件中，而是将 CSS 直接注入到 JavaScript 文件中。
+  // 默认情况下，Vue CLI 在生产环境中会将 CSS 提取成单独的文件（例如 .css 文件），以便优化浏览器的加载性能。
+  // 设置 extract: false 后，CSS 会以 <style> 标签的形式嵌入到 HTML 中，或者以内联的方式注入到 JavaScript 打包结果中。
+  css: { extract: false }
+})
+
+```
+
+创建入口文件 src/index.js 内容如下：
+
+```javascript
+// 在自定义 Vue 组件库的项目中通常被用作插件的入口文件，主要作用是方便开发者将该组件库作为一个插件引入到 Vue 项目中，同时按需导出单个组件，供开发者选择使用。
+// 这部分代码导入了两个 Vue 组件 MyComponent1 和 MyComponent2，它们位于 src/components 目录下。
+import MyComponent1 from './components/MyComponent1.vue';
+import MyComponent2 from './components/MyComponent2.vue';
+
+// install 方法是 Vue 插件的约定方法，Vue.use() 会调用这个方法。
+// 在这里，install 方法接收 Vue 构造函数作为参数，并通过 Vue.component 全局注册两个组件 MyComponent1 和 MyComponent2。
+// 这样，当插件被安装后，这两个组件就可以在任何地方的模板中直接使用，比如 <MyComponent1 /> 和 <MyComponent2 />。
+const install = function (Vue) {
+    // 注册组件到 Vue 的名称，在调用时直接使用该名称作为标签
+    Vue.component('MyComponent1', MyComponent1)
+    Vue.component('MyComponent2', MyComponent2)
+};
+
+// 自动注册插件（针对 Vue 2.x 的浏览器环境）
+// 如果该库是通过 <script> 标签直接引入的（通常用于浏览器环境），window.Vue 会存在，表示全局的 Vue 构造函数。
+// 代码会自动检测到全局的 Vue 对象，并调用 install(window.Vue)，将组件自动注册到全局。
+// 这使得开发者无需手动调用 Vue.use()，即可直接使用组件。
+if (typeof window !== 'undefined' && window.Vue) {
+    install(window.Vue);
+}
+
+// 导出组件和插件方法
+// install 方法：使得该库可以作为 Vue 插件使用，通过 Vue.use() 来安装。
+// MyComponent1 和 MyComponent2：单独导出组件，支持按需引入。
+// 
+// 开发者可以按需引入某个组件，而不是必须引入整个插件。例如：
+//      import { MyComponent1 } from 'my-component-library';
+//      Vue.component('MyComponent1', MyComponent1);
+//
+export default {
+    install,
+    MyComponent1,
+    MyComponent2,
+};
+
+```
+
+修改 package.json
+
+```json
+{
+  "scripts": {
+    "build": "vue-cli-service build --target lib --name my-component-lib src/index.js"
+  },
+  "main": "dist/my-component-lib.umd.min.js"
+}
+
+```
+
+- `"build": "vue-cli-service build --target lib --name my-component-lib src/index.js"` 解析：
+  - 这段配置主要用于设置自定义 Vue 组件库的打包和入口文件，以便于该组件库可以发布为一个通用的 JavaScript 库，供其他项目使用。
+  - **`--target lib`**：指定打包的目标为库（library），而不是应用程序。这会生成一个适合作为第三方库分发的文件，而不是一个可直接运行的 HTML 文件。
+  - **`--name my-component-lib`**：指定生成的库的名称为 `my-component-lib`。这会影响生成文件的全局变量名称（如果使用 UMD 格式）。例如：会在 dist 目录下生成以 `my-component-lib` 开头文件 my-component-lib.common.js、my-component-lib.umd.js、my-component-lib.umd.min.js。
+  - **`src/index.js`**：指定打包的入口文件为 `src/index.js`。这个文件通常是组件库的入口，负责导出所有组件和插件方法。
+- `"main": "dist/my-component-lib.umd.min.js"` 解析：
+  - `main` 字段是 Node.js 的约定字段，用于指定模块的入口文件。
+  - 当该组件库被发布到 npm 并被其他项目安装时，Node.js 会根据这个字段找到库的入口文件。
+  - 在这里，`dist/my-component-lib.umd.min.js` 是打包后生成的库的最小化文件 UMD 格式（是一种通用的模块定义格式，支持在 Node.js、AMD（Asynchronous Module Definition）和浏览器环境中使用。这使得组件库可以在各种环境中使用，无论是通过 `<script>` 标签引入，还是通过模块化工具（如 Webpack、Rollup）引入。）。
+
+编译组件
+
+```bash
+npm run build
+```
+
+本地调试和引用组件
+
+>npm link 用法请参考本站 <a href="/nodejs/npm命令.html#npm-link" target="_blank">链接</a>
+
+- 链接自定义组件库到全局 node_modules 中
+
+  ```bash
+  cd demo-vue2-cli-my-component-lib
+  
+  # 会使用自定义组件库目录作为 import from 'demo-vue2-cli-my-component-lib'
+  npm link
+  ```
+
+- 引用自定义组件库
+
+  创建 Vue2 项目：参考本站 <a href="/vue/脚手架创建项目.html#创建-vue2" target="_blank">链接</a>
+
+  添加自定义组件库依赖
+
+  ```bash
+  npm link demo-vue2-cli-my-component-lib
+  ```
+
+  在 src/main.js 中注册组件库
+
+  ```javascript
+  import Vue from 'vue'
+  import App from './App.vue'
+  // 导入组件库
+  import MyComponentPlugin from 'demo-vue2-cli-my-component-lib'
+  // 单独引用组件
+  import { MyComponent1 } from 'demo-vue2-cli-my-component-lib'
+  
+  Vue.config.productionTip = false
+  // 注册组件库到 Vue 中，Vue.use 函数会自动调用组件库中的 install 函数
+  Vue.use(MyComponentPlugin)
+  // 通过 <my-component-1></my-component-1> 单独引用组件库
+  Vue.component('my-component-1', MyComponent1)
+  
+  new Vue({
+    render: h => h(App),
+  }).$mount('#app')
+  ```
+
+  在 src/App.vue 中引用组件库中的组件
+
+  ```vue
+  <template>
+    <div id="app">
+      <MyComponent1></MyComponent1>
+      <MyComponent2></MyComponent2>
+      <my-component-1></my-component-1>
+    </div>
+  </template>
+  
+  <script>
+  
+  export default {
+    name: 'App',
+  }
+  </script>
+  
+  <style>
+  #app {
+    font-family: Avenir, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-align: center;
+    color: #2c3e50;
+    margin-top: 60px;
+  }
+  </style>
+  
+  ```
+
+参考 <a href="/nodejs/README.html#发布组件到-npm-registry" target="_blank">链接</a> 发布到 npm registry
+
+
+
+#### 使用 Vite
+
+
+
+### 基于 Vue3

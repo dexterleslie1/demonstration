@@ -1,0 +1,23 @@
+{
+  "name": "demo-vue2-cli-my-component-lib",
+  "version": "0.1.0",
+  "private": false,
+  "scripts": {
+    "build": "vue-cli-service build --target lib --name my-component-lib src/index.js"
+  },
+  "dependencies": {
+    "core-js": "^3.8.3",
+    "vue": "^2.6.14"
+  },
+  "devDependencies": {
+    "@vue/cli-plugin-babel": "~5.0.0",
+    "@vue/cli-service": "~5.0.0",
+    "vue-template-compiler": "^2.6.14"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ],
+  "main": "dist/my-component-lib.umd.min.js"
+}
