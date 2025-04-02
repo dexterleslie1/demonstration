@@ -670,3 +670,29 @@ apt install fonts-noto-cjk fonts-noto-cjk-extra fonts-noto-color-emoji fonts-not
 
 
 
+## Ubuntu 配置应用支持在应用中心搜索并打开
+
+下面演示配置 Cursor IDE 支持在应用中心打开
+
+通过 [链接](https://www.cursor.com/cn/downloads) 下载 Cursor .AppImage (X64) 文件
+
+移动并授权 AppImage 执行权限
+
+```bash
+sudo mv ~/Downloads/Cursor-0.48.6-x86_64.AppImage /usr/local/ && sudo chmod +x /usr/local/Cursor-0.48.6-x86_64.AppImage
+```
+
+新建文件`/usr/share/applications/cursor.desktop`内容如下：
+
+```properties
+[Desktop Entry]
+Encoding=UTF-8
+Name=Cursor AI Editor
+Exec=/usr/local/Cursor-0.48.6-x86_64.AppImage
+# Icon=/usr/local/android-studio/bin/studio.svg
+Terminal=false
+Type=Application
+StartupNotify=true
+```
+
+在应用中心输入 `cursor` 搜索并打开应用
