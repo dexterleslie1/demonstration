@@ -308,6 +308,88 @@ npm list @vue/cli-service
 ### npm registry
 
 - 网址：`https://www.npmjs.com/`
-- 帐号：`gmail`
+- 帐号：`dl`
+- 邮箱：`gmail`
 - 密码：`SecretX--#||(UpX),.12`
+
+
+
+## 发布组件到 npm registry
+
+在本地登录 npm registry
+
+```bash
+npm login --registry=https://registry.npmjs.com
+```
+
+- 按 Enter 后命令会打开浏览器要求你登录 npm registry，输入帐号和密码即可。
+
+下载用于测试组件发布的项目到本地 `https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-vue/demo-vue2-cli-my-component-lib`
+
+发布组件到 npm registry
+
+```bash
+cd demo-vue2-cli-my-component-lib
+npm publish --registry=https://registry.npmjs.com
+```
+
+参考本站 <a href="/vue/脚手架创建项目.html#创建-vue2" target="_blank">链接</a> 创建 Vue2 测试项目
+
+在测试项目中安装自定义组件依赖
+
+```bash
+npm install demo-vue2-cli-my-component-lib
+```
+
+在测试项目 src/main.js 中注册组件库
+
+```javascript
+import Vue from 'vue'
+import App from './App.vue'
+// 导入组件库
+import MyComponentPlugin from 'demo-vue2-cli-my-component-lib'
+// 单独引用组件
+import { MyComponent1 } from 'demo-vue2-cli-my-component-lib'
+
+Vue.config.productionTip = false
+// 注册组件库到 Vue 中，Vue.use 函数会自动调用组件库中的 install 函数
+Vue.use(MyComponentPlugin)
+// 通过 <my-component-1></my-component-1> 单独引用组件库
+Vue.component('my-component-1', MyComponent1)
+
+new Vue({
+  render: h => h(App),
+}).$mount('#app')
+```
+
+在测试项目 src/App.vue 中引用组件库中的组件
+
+```vue
+<template>
+  <div id="app">
+    <MyComponent1></MyComponent1>
+    <MyComponent2></MyComponent2>
+    <my-component-1></my-component-1>
+  </div>
+</template>
+
+<script>
+
+export default {
+  name: 'App',
+}
+</script>
+
+<style>
+#app {
+  font-family: Avenir, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-align: center;
+  color: #2c3e50;
+  margin-top: 60px;
+}
+</style>
+
+```
 
