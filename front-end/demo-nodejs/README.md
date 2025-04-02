@@ -300,3 +300,14 @@ npm list @vue/cli-service
 ## `nvm`
 
 注意：尝试过使用`nvm`管理`nodejs`版本自由切换，但是由于`nvm`安装脚本和`raw.gitcontent.com`通讯和`nvm ls-remote`命令在国内运行卡住没有响应等问题，放弃使用`nvm`管理`nodejs`版本。
+
+
+
+## 帐号信息
+
+### npm registry
+
+- 网址：`https://www.npmjs.com/`
+- 帐号：`gmail`
+- 密码：`SecretX--#||(UpX),.12`
+
