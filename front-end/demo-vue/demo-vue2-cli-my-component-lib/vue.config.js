@@ -21,7 +21,7 @@ module.exports = defineConfig({
     // externals 配置用于将某些依赖标记为外部依赖，从而避免在打包时将它们一起捆绑进来。
     // vue: 'vue' 表示 Vue 本身不会被打包到生成的库中，而是假定在运行时由宿主环境（即最终使用组件库的项目）提供 Vue。
     // 如果你的组件库依赖 Vue 或其他第三方库，并且希望宿主项目来提供这些依赖，就可以使用 externals。
-    externals: { vue: 'vue' }
+    externals: process.env.NODE_ENV === 'production' ? { vue: 'vue' } : {}
   },
   // 该配置用于控制 Vue CLI 如何处理项目中的 CSS。
   // extract: false 表示 不将 CSS 提取到独立的文件中，而是将 CSS 直接注入到 JavaScript 文件中。

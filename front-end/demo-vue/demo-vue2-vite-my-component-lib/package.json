@@ -1,10 +1,11 @@
 {
-  "name": "demo-vue2-cli-my-component-lib",
-  "version": "0.1.0",
+  "name": "demo-vue2-vite-my-component-lib",
+  "version": "0.1.1",
   "private": false,
   "scripts": {
-    "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build --target lib --name my-component-lib src/index.js"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "dependencies": {
     "core-js": "^3.8.3",
@@ -13,6 +14,8 @@
   "devDependencies": {
     "@vue/cli-plugin-babel": "~5.0.0",
     "@vue/cli-service": "~5.0.0",
+    "vite": "^4.5.11",
+    "vite-plugin-vue2": "^2.0.3",
     "vue-template-compiler": "^2.6.14"
   },
   "browserslist": [
@@ -20,5 +23,5 @@
     "last 2 versions",
     "not dead"
   ],
-  "main": "dist/my-component-lib.umd.min.js"
+  "main": "dist/my-component-lib.umd.js"
 }

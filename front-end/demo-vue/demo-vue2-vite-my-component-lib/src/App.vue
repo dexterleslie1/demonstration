@@ -10,7 +10,7 @@ import MyComponent1 from './components/MyComponent1.vue';
 export default {
   name: 'App',
   components: {
-    MyComponent1
+    MyComponent1,
   }
 }
 </script>
