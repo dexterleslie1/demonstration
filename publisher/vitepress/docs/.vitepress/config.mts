@@ -81,7 +81,7 @@ export default defineConfig({
           { text: '亚马逊', link: '/aws/README.md' },
           { text: '阿里云', link: '/aliyun/阿里云帐号信息.md' },
           { text: '谷歌云', link: '/gcp/README.md' },
-          { text: 'CloudFlare', link: '/cloudflare/README.md' },
+          { text: 'Cloudflare', link: '/cloudflare/README.md' },
         ]
       }, {
         text: '其他', items: [
@@ -392,16 +392,6 @@ export default defineConfig({
             { text: '计算数据和索引大小', link: '/mysql-n-mariadb/计算数据和索引大小.md' },
             { text: '运行 MySQL 和 MariaDB', link: '/mysql-n-mariadb/运行mysql和mariadb.md' },
             { text: '配置参数', link: '/mysql-n-mariadb/配置参数.md' },
-          ]
-        }
-      ],
-      '/cloudflare/': [
-        {
-          text: 'CloudFlare',
-          items: [
-            { text: '基础', link: '/cloudflare/README.md' },
-            { text: 'Workers', link: '/cloudflare/workers.md' },
-            { text: '帐号信息', link: '/cloudflare/帐号信息.md' },
           ]
         }
       ],
