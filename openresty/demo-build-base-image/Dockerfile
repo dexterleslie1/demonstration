@@ -1,6 +1,38 @@
+# 用于从源代码编译openresty docker镜像
+FROM debian:buster AS builder
+
+RUN rm -f /etc/localtime && cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+
+ADD sources.list /etc/apt/sources.list
+RUN apt update
+RUN apt install make libreadline-dev libpcre3-dev libssl-dev zlib1g-dev gcc perl wget -y
+# debian报告gmake command not found错误，centOS8不会报告这个错误
+RUN ln -s /usr/bin/make /usr/bin/gmake
+
+ARG varNaxsiVersion=1.3
+ARG varOpenrestyVersion=1.19.9.1
+
+RUN cd /tmp && wget https://fut001.oss-cn-hangzhou.aliyuncs.com/nginx/naxsi-$varNaxsiVersion.tar.gz
+RUN cd /tmp && wget https://fut001.oss-cn-hangzhou.aliyuncs.com/nginx/openresty-$varOpenrestyVersion.tar.gz
+
+RUN rm -rf /usr/local/openresty
+RUN rm -rf /usr/local/openresty.tar
+RUN cd /tmp && rm -rf openresty-$varOpenrestyVersion && tar -xzf openresty-$varOpenrestyVersion.tar.gz
+RUN cd /tmp && rm -rf naxsi-$varNaxsiVersion && tar -xzf naxsi-$varNaxsiVersion.tar.gz
+
+# https://github.com/knyar/nginx-lua-prometheus/issues/67
+# --with-http_stub_status_module为了lua脚本支持读取ngx.var.connections_reading变量
+# 否则nginx-lua-prometheus插件不能正常运行
+RUN cd /tmp/openresty-$varOpenrestyVersion && ./configure --add-module=/tmp/naxsi-$varNaxsiVersion/naxsi_src --with-http_stub_status_module
+RUN cd /tmp/openresty-$varOpenrestyVersion && gmake && gmake install
+
+RUN cp /tmp/naxsi-$varNaxsiVersion/naxsi_config/naxsi_core.rules /usr/local/openresty/nginx/conf
+
+RUN cd /usr/local && tar -czf openresty.tar openresty
+
 FROM debian:buster
 
-COPY openresty.tar /usr/local
+COPY --from=builder /usr/local/openresty.tar /usr/local
 
 RUN cd /usr/local && tar -xvzf openresty.tar
 
@@ -10,9 +42,9 @@ RUN rm -f openresty.tar
 RUN ln -sf /dev/stdout /usr/local/openresty/nginx/logs/access.log
 RUN ln -sf /dev/stderr /usr/local/openresty/nginx/logs/error.log
 
-add sources.list /etc/apt/sources.list
-run apt update
-run apt install vim -y
+ADD sources.list /etc/apt/sources.list
+RUN apt update
+RUN apt install vim -y
 # run apt install logrotate -y
 # run apt install systemd -y
 # run systemctl enable cron
