@@ -8,7 +8,8 @@ services:
       - TZ=Asia/Shanghai
     volumes:
       - ./nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf:ro
-    restart: always
-    ports:
-      - '80:80'
+    restart: unless-stopped
+    # ports:
+    #   - '80:80'
+    network_mode: host
       
