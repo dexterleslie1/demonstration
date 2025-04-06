@@ -1116,3 +1116,58 @@ a::after { content: " →"; } /* 元素后追加箭头 */
 
 >详细用法请参考本站示例 [链接](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/html+js+css/css-variable)
 
+
+
+### 根据条件设置变量的值
+
+>在 body 标签中添加 class="on" 会使用 body.on 中设置的 --my-background-color: yellow 值。
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        /* 使用 :root 伪类定义变量的默认值 */
+        :root {
+            --my-background-color: red;
+            --my-color: red;
+        }
+
+        /* 当 body 添加 class on 时 css 变量值变为 yellow，否则为 red */
+        body.on {
+            --my-background-color: yellow;
+        }
+
+        .div1 {
+            width: 100px;
+            height: 100px;
+            background-color: var(--my-background-color);
+        }
+
+        .demo2>div {
+            width: 300px;
+            height: 150px;
+            background-color: var(--my-color);
+        }
+    </style>
+</head>
+<body>
+    <!--
+        https://www.freecodecamp.org/news/what-are-css-variables-and-how-to-use-them/
+    -->
+    <div>演示 css 变量的基本用法</div>
+    <div class="div1"></div>
+    <hr/>
+
+    <div>通过html设置css变量</div>
+    <div class="demo2" style="--my-color: green;">
+        <div></div>
+    </div>
+    <hr>
+</body>
+</html>
+```
+
