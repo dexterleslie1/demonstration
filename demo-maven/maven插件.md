@@ -325,6 +325,14 @@ pom 配置文件添加配置如下：
 
 
 
+### 使用插件启动 Spring Boot 应用
+
+```bash
+mvn spring-boot:run
+```
+
+
+
 ## maven-surefire-plugin 插件
 
 ### 介绍
