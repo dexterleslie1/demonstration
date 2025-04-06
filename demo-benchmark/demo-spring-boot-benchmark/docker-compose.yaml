@@ -6,8 +6,10 @@ services:
       context: .
       dockerfile: Dockerfile
     environment:
-      - JAVA_OPTS= -Xmx512m
+      - JAVA_OPTS=-Xmx4g
       - TZ=Asia/Shanghai
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-boot-benchmark
-    ports:
-      - "8080:8080"
+#    ports:
+#      - "8080:8080"
+    restart: unless-stopped
+    network_mode: host

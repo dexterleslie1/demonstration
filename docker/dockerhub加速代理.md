@@ -81,6 +81,8 @@ services:
 }
 ```
 
+- 提醒：以上 registry.cn-hangzhou.aliyuncs.com 可以替换为 *.aliyuncs.com
+
 重启`docker daemon`
 
 ```bash

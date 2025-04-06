@@ -3,7 +3,7 @@ version: "3.0"
 services:
   springboot:
     environment:
-      - JAVA_OPTS=-Xmx2g
+      - JAVA_OPTS=-Xmx4g
       - TZ=Asia/Shanghai
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-boot-benchmark
     restart: unless-stopped

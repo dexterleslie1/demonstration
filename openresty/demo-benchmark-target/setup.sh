@@ -71,15 +71,15 @@ yum install libuuid-devel -y
 # 配置geoip2
 #/usr/local/openresty/bin/opm get anjia0532/lua-resty-maxminddb
 #rm -rf /tmp/libmaxminddb-1.6.0
-#curl --output /tmp/libmaxminddb-1.6.0.tar.gz https://bucketxyh.oss-cn-hongkong.aliyuncs.com/nginx/libmaxminddb-1.6.0.tar.gz
+#curl --output /tmp/libmaxminddb-1.6.0.tar.gz https://fut001.oss-cn-hangzhou.aliyuncs.com/nginx/libmaxminddb-1.6.0.tar.gz
 #tar -xvzf /tmp/libmaxminddb-1.6.0.tar.gz -C /tmp
 #(cd /tmp/libmaxminddb-1.6.0 && ./configure && make && make check && make install)
 #echo "/usr/local/lib" > /etc/ld.so.conf.d/local.conf
 #ldconfig
-#curl --output /usr/local/openresty/GeoLite2-City.mmdb https://bucketxyh.oss-cn-hongkong.aliyuncs.com/nginx/GeoLite2-City.mmdb
+#curl --output /usr/local/openresty/GeoLite2-City.mmdb https://fut001.oss-cn-hangzhou.aliyuncs.com/nginx/GeoLite2-City.mmdb
 
 # 配置ip2region
-curl --output /usr/local/openresty/ip2region.db https://bucketxyh.oss-cn-hongkong.aliyuncs.com/ip/ip2region.db
+curl --output /usr/local/openresty/ip2region.db https://fut001.oss-cn-hangzhou.aliyuncs.com/ip/ip2region.db
 
 cp nginx.conf /usr/local/openresty/nginx/conf/
 sed -i "s/##upstreamBackendd##/xxx.xxx.xxx.xxx/" /usr/local/openresty/nginx/conf/nginx.conf

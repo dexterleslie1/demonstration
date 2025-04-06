@@ -12,13 +12,14 @@
 
 
 
-结论：暂时使用 FinalShell
+结论：
+
+- Ubuntu 没有批量实例操作需求时使用 Termius
+- Windows 使用 MobaXterm
 
 
 
 ## Termius
-
-注意：软件过期后不支持拖拽文件上传和下载功能，所以放弃此软件。
 
 
 

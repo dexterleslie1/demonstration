@@ -15,3 +15,69 @@
 7. **优化和验证**：根据测试结果对系统进行优化，如调整配置、优化代码、升级硬件等。然后重新执行基准测试，验证优化效果。
 
 基准测试对于确保软件系统的性能和稳定性至关重要。通过持续的基准测试，组织可以及时发现并解决性能问题，提高系统的整体效率和用户体验。同时，基准测试也是评估新技术、新硬件引入前后性能变化的有效手段。
+
+
+
+## 制作 SpringBoot 应用容器镜像作为基准测试目标
+
+编译 SpringBoot 基准测试项目，源代码 [链接](https://gitee.com/dexterleslie/demonstration/tree/main/demo-benchmark/demo-spring-boot-benchmark)
+
+>注意：编译此项目需要使用 JDK17。
+
+```bash
+./build.sh
+```
+
+推送容器镜像
+
+```bash
+./push.sh
+```
+
+
+
+## 部署基于容器的单个 SpringBoot 基准测试目标
+
+步骤如下：
+
+在开发环境实例中制作 SpringBoot 应用容器镜像作为基准测试目标：参考 <a href="/benchmark/README.html#制作-springboot-应用容器镜像作为基准测试目标" target="_blank">链接</a>
+
+在部署环境实例中使用容器运行 SpringBoot 应用作为基准测试目标
+
+- 创建 CentOS8 实例
+
+- 内核参数文件描述符限制调优：参考 <a href="/linux/README.html#设置" target="_blank">链接</a>
+
+- 参考 <a href="/docker/docker的安装.html#使用-dcli-安装" target="_blank">链接</a> 安装 Docker 环境
+
+- 运行 SpringBoot 应用
+
+  ```bash
+  docker compose up -d
+  ```
+
+- 访问 `http://192.168.1.x` 测试基准测试目标是否正常启动。
+
+  
+
+
+## 部署基于容器单个 OpenResty 基准测试目标
+
+步骤如下：
+
+- 创建 CentOS8 实例
+
+- 内核参数文件描述符限制调优：参考 <a href="/linux/README.html#设置" target="_blank">链接</a>
+
+- 参考 <a href="/docker/docker的安装.html#使用-dcli-安装" target="_blank">链接</a> 安装 Docker 环境
+
+- 复制本站示例用于启动基准测试目标 [链接](https://gitee.com/dexterleslie/demonstration/tree/master/demo-benchmark/demo-openresty-standalone-benchmark)
+
+- 启动基准测试目标
+
+  ```bash
+  docker compose up -d
+  ```
+
+- 访问 `http://192.168.1.x` 测试基准测试目标是否正常启动。
+

@@ -42,9 +42,11 @@ export default defineConfig({
           { text: 'JMeter', link: '/jmeter/README.md' },
           { text: 'MySQL、MariaDB', link: '/mysql-n-mariadb/README.md' },
           { text: 'NodeJS', link: '/nodejs/README.md' },
+          { text: 'OpenResty', link: '/openresty/编译docker基础镜像.md' },
         ]
       }, {
         text: 'Linux', items: [
+          { text: 'Linux 相关', link: '/linux/README.md' },
           { text: 'Ubuntu/Debian', link: '/linux/ubuntu-n-debian.md' },
           { text: 'CentOS', link: '/linux/centos.md' },
           { text: '命令行工具', link: '/linux/命令行工具列表.md' },
@@ -446,6 +448,22 @@ export default defineConfig({
           items: [
             { text: '基础', link: '/nodejs/README.md' },
             { text: 'Npm', link: '/nodejs/npm命令.md' },
+          ]
+        }
+      ],
+      '/openresty/': [
+        {
+          text: 'OpenResty',
+          items: [
+            { text: '基础', link: '/openresty/README.md' },
+            { text: 'Https 设置', link: '/openresty/https设置.md' },
+            { text: 'lua-resty-limit-traffic 库使用', link: '/openresty/lua-resty-limit-traffic库使用.md' },
+            { text: 'Lua 脚本', link: '/openresty/lua脚本.md' },
+            { text: 'x-forwarded-for 用法', link: '/openresty/x-forwarded-for用法.md' },
+            { text: '横向扩展', link: '/openresty/横向扩展.md' },
+            { text: '监控', link: '/openresty/监控.md' },
+            { text: '编译容器基础镜像', link: '/openresty/编译docker基础镜像.md' },
+            { text: '通过环境变量传递参数', link: '/openresty/通过环境变量传递参数.md' },
           ]
         }
       ],
