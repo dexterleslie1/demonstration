@@ -299,3 +299,8 @@ docker compose build
 docker compose up
 ```
 
+
+
+## 查看容器网络命名空间的连接状态（无需进入容器） 
+
+>详细用法请参考本站 <a href="/linux/命令行工具列表.html#查看容器网络命名空间的连接状态-无需进入容器" target="_blank">链接</a>
