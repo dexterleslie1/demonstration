@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .div1>div {
+            background-color: green;
+            margin: 5px;
+            width: 40px;
+            height: 20px;
+        }
+
+        /* 不起作用，因为.a元素在.b元素之前 */
+        .div1 .b+.a {
+            color: red;
+        }
+
+        .div1 .b+.c {
+            color: red;
+        }
+        /* 不起作用，因为.d元素不是紧跟在.b元素之后 */
+        .div1 .b+.d {
+            color: red;
+        }
+
+        .demo2 .a ~ .b {
+            background-color: powderblue;
+        }
+    </style>
+</head>
+
+<body>
+<!--
+    https://www.w3.org/TR/CSS21/selector.html#adjacent-selectors
+-->
+<div>演示紧跟其后的兄弟元素选择器（adjacent sibling），注意：.c 紧跟 .b 其后，所以 .b+.c 样式起作用，其他 .b+.a、.b+.d 不紧跟 .b 其后，所以样式不起作用</div>
+<div class="div1">
+    <div class="a">a</div>
+    <div class="b">b</div>
+    <div class="c">c</div>
+    <div class="d">d</div>
+</div>
+<hr>
+
+<!--
+        选择同级元素的后续所有匹配元素，如例子所示： 选择 .a 元素的同级元素 .b 并且是在 .a 元素之后出现的
+        https://stackoverflow.com/questions/10782054/what-does-the-tilde-squiggle-twiddle-css-selector-mean
+    -->
+<div>
+    演示随后的兄弟元素选择器（subsequent sibling）
+</div>
+<div class="demo2">
+    <ol>
+        <li class="b">b</li>
+        <li class="a">a</li>
+        <li class="x">x</li>
+        <li class="b">b</li>
+        <li class="b">b</li>
+    </ol>
+</div>
+</body>
+</html>

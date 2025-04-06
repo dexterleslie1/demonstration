@@ -29,6 +29,7 @@
             background-color: green;
         }
 
+        /* 避免 hover 子元素时父元素也触发 hover 效果 */
         .demo2 .parent:hover:not(:has(.child:hover)) {
             background-color: blue;
         }
@@ -115,17 +116,17 @@
     <!--
         https://www.zhangxinxu.com/wordpress/2022/08/css-has-pseudo-class/
 
-        NOTE：低版本的firefox、chrome浏览器不支持:has伪类
+        注意：低版本的firefox、chrome浏览器不支持:has伪类
     -->
 
-    <div>使用has选择前兄弟元素</div>
+    <div>使用has选择兄弟元素</div>
     <div class="div1">
         <ol>
             <li class="b">b</li>
             <li class="a">a</li>
             <li class="x">x</li>
-            <li class="b active">b</li>
             <li class="b">b</li>
+            <li class="b active">b</li>
         </ol>
     </div>
     <hr>

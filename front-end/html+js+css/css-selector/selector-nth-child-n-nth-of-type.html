@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <style>
+        /* nth-child 匹配任何类型的子元素 */
         .div1 p:nth-child(4) {
             color: yellow;
         }
@@ -44,7 +45,7 @@
     <hr />
 
     <div>
-        p:nth-child(3) 选择器将仅将 DeepPink 应用于第四个 p 节点，因为它是其父元素的第三个子元素。
+        p:nth-child(3) 选择器仅应用于第 4 个 p 节点，因为它是其父元素 section 的第 3 个子元素。
     </div>
     <div class="div2">
         <article>
@@ -70,7 +71,7 @@
         https://www.freecodecamp.org/news/nth-child-vs-nth-of-type-selector-in-css/
     -->
     <div>
-        样式会应用到第5个子元素中，因为它是其父元素下的第3个 p 子元素
+        样式会应用到第 5 个子元素中，因为它是其父元素下的第 3 个 p 子元素
     </div>
     <div class="div3">
         <h1>First heading 1 element</h1>
@@ -81,12 +82,11 @@
         <h3>First heading 3 element</h3>
         <p>Fourth paragraph element</p>
         <p>Fifth paragraph element</p>
-
     </div>
     <hr />
 
     <div>
-        样式会被应用到第8、10个子元素中，因为它分别是各自其父元素的第3个 p 子元素
+        样式会被应用到第 8、10 个子元素中，因为它分别是各自其父元素 article、section 的第 3 个 p 子元素
     </div>
     <div class="div5">
         <article>

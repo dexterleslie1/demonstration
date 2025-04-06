@@ -1,7 +1,3 @@
-# CSS
-
-
-
 ## Flex 布局
 
 >提醒：为父级盒子设置 flex 布局后，子元素的 float、clear 和 vertical-align 属性将失效。
@@ -328,4 +324,795 @@ align-items 和 align-content 的区别：
 子元素声明order属性，用于控制子元素的排列顺序，数值越小，排列越靠前，默认值为0。
 
 详细用法请参考示例 `https://gitee.com/dexterleslie/demonstration/blob/master/front-end/html+js+css/demo-css-flex/order.html`
+
+
+
+## 选择器
+
+>详细用法请参考本站 <a href="https://gitee.com/dexterleslie/demonstration/tree/main/front-end/html+js+css/css-selector" target="_blank">链接</a>
+
+
+
+### 介绍
+
+CSS 选择器是用于精准定位 HTML 元素的模式，以下是其完整分类和用法详解：
+
+一、基础选择器
+
+1. **类型选择器**
+   直接匹配 HTML 标签名：
+
+   ```css
+   p { color: black; } /* 所有段落 */
+   div { margin: 10px; } /* 所有 div */
+   ```
+
+2. **类选择器**
+   以 `.` 开头，匹配 class 属性：
+
+   ```css
+   .warning { background: yellow; } /* class="warning" 的元素 */
+   ```
+
+3. **ID 选择器**
+   以 `#` 开头，匹配 id 属性（唯一性）：
+
+   ```css
+   #header { height: 80px; } /* id="header" 的元素 */
+   ```
+
+4. **通配符选择器**
+   `*` 匹配所有元素：
+
+   ```css
+   * { box-sizing: border-box; } /* 全局样式 */
+   ```
+
+------
+
+二、属性选择器（重点）
+
+通过 `[]` 匹配元素的属性或属性值：
+
+```css
+/* 存在 title 属性 */
+[title] { cursor: help; }
+ 
+/* 精确匹配 href 值 */
+a[href="https://example.com"] { color: red; }
+ 
+/* 属性值包含 "icon" */
+img[alt*="icon"] { border: 2px solid blue; }
+ 
+/* 以 "data-" 开头的自定义属性 */
+[data-role="nav"] { display: flex; }
+```
+
+------
+
+三、组合器（关系选择器）
+
+1. **后代选择器**（空格）
+   匹配嵌套元素：
+
+   ```css
+   nav a { text-decoration: none; } /* nav 内的所有链接 */
+   ```
+
+2. **子选择器**（`>`）
+   仅匹配直接子元素：
+
+   ```css
+   ul > li { list-style: none; } /* 仅 ul 的直接 li */
+   ```
+
+3. **相邻兄弟选择器**（`+`）
+   匹配紧接在后的第一个兄弟元素：
+
+   ```css
+   h2 + p { margin-top: 5px; } /* h2 后的第一个 p */
+   ```
+
+4. **通用兄弟选择器**（`~`）
+   匹配之后的所有同级元素：
+
+   ```css
+   h1 ~ p { color: gray; } /* h1 之后的所有 p */
+   ```
+
+------
+
+四、伪类选择器
+
+1. **状态伪类**
+
+   ```css
+   a:hover { text-decoration: underline; } /* 鼠标悬停 */
+   input:focus { border-color: blue; } /* 聚焦状态 */
+   ```
+
+2. **结构伪类**
+
+   ```css
+   li:first-child { font-weight: bold; } /* 第一个 li */
+   tr:nth-child(2n) { background: #f5f5f5; } /* 偶数行 */
+   ```
+
+3. **逻辑伪类**
+
+   ```css
+   p:not(.intro) { font-size: 14px; } /* 排除 class="intro" 的 p */
+   div:has(> img) { padding: 10px; } /* 包含直接子 img 的 div（较新语法） */
+   ```
+
+------
+
+五、伪元素选择器
+
+以 `::` 开头，操作元素的特定部分：
+
+```css
+p::first-line { font-weight: bold; } /* 首行文字 */
+div::before { content: "▶ "; } /* 元素前插入内容 */
+a::after { content: " →"; } /* 元素后追加箭头 */
+```
+
+------
+
+六、优先级与特异性
+
+- **优先级规则**：`!important` > 内联样式 > ID > 类/伪类/属性 > 类型/伪元素 > 通配符
+
+- 特异性计算
+
+  ：通过
+
+   
+
+  ```
+  (a, b, c, d)
+  ```
+
+   
+
+  四元组比较，例如：
+
+  - `#nav .item` → (0, 1, 1, 0)
+  - `div#header` → (0, 1, 0, 1)
+
+------
+
+七、浏览器兼容性注意
+
+- **新版选择器**（如 `:has()`、`:is()`）需确认目标浏览器支持
+- **伪元素双冒号**（`::`）是 CSS3 标准，旧版单冒号（`:`）仍兼容但建议更新
+
+掌握这些选择器可精准控制页面样式，建议通过 https://specificity.keegan.st/ 工具调试优先级问题。
+
+
+
+### 属性选择器
+
+>[参考链接](https://stackoverflow.com/questions/9271424/how-do-i-target-elements-with-an-attribute-that-has-any-value-in-css)
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        /* type=button 的 input */
+        .demo1 input[type=button]:hover {
+            border: 5px solid red;
+        }
+
+        /* 有 disabled 属性的 input */
+        .demo1 input[disabled]:hover {
+            border: 5px solid green;
+        }
+    </style>
+</head>
+
+<body>
+    <!--
+        https://stackoverflow.com/questions/9271424/how-do-i-target-elements-with-an-attribute-that-has-any-value-in-css
+    -->
+    <div>演示根据属性选择元素</div>
+    <div class="demo1">
+        <input type="button" value="Button">
+        <input type="submit" value="Submit">
+        <input type="button" disabled value="Button in disabled state">
+    </div>
+</body>
+
+</html>
+```
+
+
+
+### 兄弟元素选择器
+
+
+
+#### 紧跟其后的兄弟元素选择器
+
+>[参考链接](https://www.w3.org/TR/CSS21/selector.html#adjacent-selectors)
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .div1>div {
+            background-color: green;
+            margin: 5px;
+            width: 40px;
+            height: 20px;
+        }
+
+        /* 不起作用，因为.a元素在.b元素之前 */
+        .div1 .b+.a {
+            color: red;
+        }
+
+        .div1 .b+.c {
+            color: red;
+        }
+        /* 不起作用，因为.d元素不是紧跟在.b元素之后 */
+        .div1 .b+.d {
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+    <!--
+        https://www.w3.org/TR/CSS21/selector.html#adjacent-selectors
+    -->
+<div>演示相邻兄弟元素选择器，注意：+选择器之后的元素一定要紧跟在+选择器之前的元素，否则不匹配</div>
+<div class="div1">
+    <div class="a">a</div>
+    <div class="b">b</div>
+    <div class="c">c</div>
+    <div class="d">d</div>
+</div>
+<hr>
+</body>
+</html>
+```
+
+
+
+#### 随后的兄弟元素选择器
+
+>[选择同级元素的后续所有匹配元素，如例子所示： 选择 .a 元素的同级元素 .b 并且是在 .a 元素之后出现的](https://stackoverflow.com/questions/10782054/what-does-the-tilde-squiggle-twiddle-css-selector-mean)
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .demo2 .a ~ .b {
+            background-color: powderblue;
+        }
+    </style>
+</head>
+
+<body>
+<!--
+        选择同级元素的后续所有匹配元素，如例子所示： 选择 .a 元素的同级元素 .b 并且是在 .a 元素之后出现的
+        https://stackoverflow.com/questions/10782054/what-does-the-tilde-squiggle-twiddle-css-selector-mean
+    -->
+<div>
+    演示随后的兄弟元素选择器（subsequent sibling）
+</div>
+<div class="demo2">
+    <ol>
+        <li class="b">b</li>
+        <li class="a">a</li>
+        <li class="x">x</li>
+        <li class="b">b</li>
+        <li class="b">b</li>
+    </ol>
+</div>
+</body>
+</html>
+```
+
+
+
+### has 选择器
+
+#### 判断有符合条件的兄弟元素
+
+>[参考链接](https://www.zhangxinxu.com/wordpress/2022/08/css-has-pseudo-class/)
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        /* 表示当有兄弟元素.b.active时才匹配.x元素 */
+        .div1 .x:has(~ .b.active) {
+            background-color: green;
+        }
+    </style>
+</head>
+
+<body>
+    <!--
+        https://www.zhangxinxu.com/wordpress/2022/08/css-has-pseudo-class/
+
+        注意：低版本的firefox、chrome浏览器不支持:has伪类
+    -->
+
+    <div>使用has选择兄弟元素</div>
+    <div class="div1">
+        <ol>
+            <li class="b">b</li>
+            <li class="a">a</li>
+            <li class="x">x</li>
+            <li class="b">b</li>
+            <li class="b active">b</li>
+        </ol>
+    </div>
+    <hr>
+</body>
+
+</html>
+```
+
+
+
+#### 判断有符合条件的子元素
+
+判断元素有 p 标签类型的子元素
+
+>[参考链接](https://www.freecodecamp.org/news/how-to-use-the-has-selector-in-css/)
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .demo1>div {
+            width: 200px;
+            height: 100px;
+            background-color: green;
+            margin: 10px;
+        }
+
+        .demo1>div:has(p) {
+            background-color: yellowgreen;
+        }
+    </style>
+</head>
+
+<body>
+    <!--
+        https://www.freecodecamp.org/news/how-to-use-the-has-selector-in-css/
+    -->
+    <div>有子元素p的div background-color才变色</div>
+    <div class="demo1">
+        <div>你好</div>
+        <div>
+            <p>你好</p>
+        </div>
+    </div>
+    <hr>
+</body>
+
+</html>
+```
+
+
+
+子元素 hover 时，父元素 hover 效果失效示例1
+
+>[参考链接](https://stackoverflow.com/questions/17923922/hover-on-child-should-turn-off-hover-effect-on-parent)
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .demo2 .parent {
+            width: 300px;
+            height: 100px;
+            background-color: green;
+        }
+        
+        /* 避免 hover 子元素时父元素也触发 hover 效果 */
+        .demo2 .parent:hover:not(:has(.child:hover)) {
+            background-color: blue;
+        }
+
+        .demo2 .child {
+            width: 150px;
+            height: 50px;
+            background-color: yellowgreen;
+        }
+
+        .demo2 .child:hover {
+            background-color: aqua;
+        }
+    </style>
+</head>
+
+<body>
+    <!--
+        https://stackoverflow.com/questions/17923922/hover-on-child-should-turn-off-hover-effect-on-parent
+    -->
+    <div>使用has关闭父元素hover效果当hover到子元素</div>
+    <div class="demo2">
+        <div class="parent">
+            <div class="child">
+
+            </div>
+        </div>
+    </div>
+    <hr>
+</body>
+
+</html>
+```
+
+
+
+子元素 hover 时，父元素 hover 效果失效示例2
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .demo3 .search-bar {
+            background-color: grey;
+            display: flex;
+            align-items: center;
+            border-radius: 5em;
+            height: 2.5em;
+        }
+
+        .demo3 .search-bar .svg-search {
+            height: 100%;
+            aspect-ratio: 1/1;
+            margin-right: .5em;
+            cursor: pointer;
+            border-radius: 5em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: .5em;
+        }
+
+        .demo3 .search-bar .svg-search:hover {
+            background-color: yellowgreen;
+        }
+
+        .demo3 .search-bar input[type=text] {
+            border-style: none;
+            background-color: transparent;
+            outline: none;
+            width: 11em;
+            font-size: 1em;
+        }
+
+        .demo3 .search-bar input[type=text]::placeholder {
+            color: black;
+        }
+
+        .demo3 .search-bar:hover:not(:has(.svg-search:hover)) {
+            background-color: green;
+        }
+
+        .demo3 .search-bar:hover:not(:has(.svg-search:hover)) input[type=text]::placeholder {
+            color: yellow;
+        }
+    </style>
+</head>
+
+<body>
+    <div>使用has关闭父元素hover效果当hover到子元素2</div>
+    <div class="demo3">
+        <div class="search-bar">
+            <div class="svg-search">
+                <svg t="1711244811887" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"
+                    p-id="63824">
+                    <path
+                        d="M212.194304 726.972416c33.760256 33.760256 73.08288 60.269568 116.876288 78.792704 45.357056 19.18464 93.518848 28.911616 143.147008 28.911616s97.788928-9.728 143.145984-28.911616c25.648128-10.848256 49.750016-24.457216 72.112128-40.63744l156.345344 156.484608c6.677504 6.683648 15.43168 10.025984 24.18688 10.025984 8.74496 0 17.490944-3.334144 24.1664-10.00448 13.35808-13.345792 13.36832-34.994176 0.021504-48.35328L739.03616 719.985664c30.533632-32.160768 54.736896-69.082112 71.99744-109.889536 19.183616-45.357056 28.911616-93.518848 28.911616-143.147008s-9.728-97.789952-28.911616-143.147008c-18.523136-43.792384-45.033472-83.115008-78.792704-116.876288-33.76128-33.760256-73.083904-60.270592-116.876288-78.793728-45.35808-19.18464-93.518848-28.911616-143.147008-28.911616s-97.789952 9.728-143.147008 28.911616c-43.793408 18.523136-83.116032 45.033472-116.876288 78.793728s-60.269568 73.083904-78.792704 116.876288c-19.183616 45.357056-28.911616 93.518848-28.911616 143.147008s9.728 97.789952 28.911616 143.147008C151.923712 653.888512 178.434048 693.21216 212.194304 726.972416zM260.547584 255.279104c56.539136-56.539136 131.710976-87.676928 211.670016-87.676928 79.958016 0 155.13088 31.137792 211.670016 87.676928s87.675904 131.710976 87.675904 211.670016S740.425728 622.08 683.887616 678.619136c-56.539136 56.539136-131.712 87.676928-211.670016 87.676928-79.95904 0-155.13088-31.136768-211.670016-87.675904s-87.675904-131.712-87.675904-211.670016S204.008448 311.81824 260.547584 255.279104z"
+                        fill="#272636" p-id="63825"></path>
+                </svg>
+            </div>
+
+            <input type="text" placeholder="Search">
+        </div>
+    </div>
+    <hr>
+</body>
+
+</html>
+```
+
+
+
+#### has(:not()) 和 :not(:has()) 区别
+
+>[参考链接](https://www.matuzo.at/blog/2022/100daysof-day50/)
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .demo5 .parent {
+            width: 200px;
+            height: 100px;
+            background-color: green;
+            margin: 10px;
+        }
+
+        .demo5 .child {
+            width: 50%;
+            height: 50%;
+            background-color: antiquewhite;
+        }
+
+        /* 这个表示选择.parent:hover包含任何子元素除了.child:hover。所以会导致此选择器对于第二个div没有作用 */
+        /* .demo5 .parent:hover:has(:not(.child:hover)) {
+            background-color: yellowgreen;
+        } */
+        /* 这个表示选择.parent:hover包含没有子元素.child:hover。所以此选择器正是我们想要的 */
+        .demo5 .parent:hover:not(:has(.child:hover)) {
+            background-color: yellowgreen;
+        }
+    </style>
+</head>
+
+<body>
+    <!--
+        https://www.matuzo.at/blog/2022/100daysof-day50/
+    -->
+    <div>has(:not())和:not(:has())区别</div>
+    <div class="demo5">
+        <div class="parent">
+            <div class="child"></div>
+        </div>
+
+        <div class="parent">
+            <div class="child"></div>
+            <div class="child-placeholder"></div>
+        </div>
+    </div>
+    <hr>
+</body>
+
+</html>
+```
+
+
+
+### nth-child 和 nth-of-type 选择器
+
+>[nth-child 选择指定索引的子元素(在不同类型的子元素中)](https://www.freecodecamp.org/news/nth-child-vs-nth-of-type-selector-in-css/)
+>
+>[nth-of-type 选择指定索引的子元素(在同类型的子元素中)](https://www.freecodecamp.org/news/nth-child-vs-nth-of-type-selector-in-css/)
+>
+>提醒：索引从 1 开始。
+
+#### 不存在索引为 4 的 p 元素，样式不起作用
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        /* nth-child 匹配任何类型的子元素 */
+        .div1 p:nth-child(4) {
+            color: yellow;
+        }
+    </style>
+</head>
+
+<body>
+    <!--
+        nth-child 选择指定索引的子元素(在不同类型的子元素中)
+        https://www.freecodecamp.org/news/nth-child-vs-nth-of-type-selector-in-css/
+    -->
+
+    <div>下面演示不存在索引为 4 的 p 元素，所以样式 color: yellow 不起作用</div>
+    <div class="div1">
+        <h1>First heading 1 element</h1>
+        <p>First paragraph element</p>
+        <p>Second paragraph element</p>
+        <h2>First heading 2 element</h2>
+        <p>Third paragraph element</p>
+        <h3>First heading 3 element</h3>
+        <p>Fourth paragraph element</p>
+        <p>Fifth paragraph element</p>
+    </div>
+    <hr />
+</body>
+
+</html>
+```
+
+
+
+#### p:nth-child(3)
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .div2 p:nth-child(3) {
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+    <div>
+        p:nth-child(3) 选择器仅应用于第 4 个 p 节点，因为它是其父元素 section 的第 3 个子元素。
+    </div>
+    <div class="div2">
+        <article>
+            <h1>Article's first heading 1 element</h1>
+            <p>Article's first paragraph element</p>
+            <h2>Article's first heading 2 element</h2>
+            <p>Article's second paragraph element</p>
+            <section>
+                <h3>Article's first heading 3 element</h3>
+                <p>Article's third paragraph element</p>
+                <p>Article's fourth paragraph element</p>
+            </section>
+            <h2>Article's second heading 2 element</h2>
+            <p>Article's fifth paragraph element</p>
+            <p>Article's sixth paragraph element</p>
+        </article>
+
+    </div>
+    <hr />
+</body>
+
+</html>
+```
+
+
+
+#### p:nth-of-type(3)
+
+样式会应用到第 5 个子元素中，因为它是其父元素下的第 3 个 p 子元素
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .div3 p:nth-of-type(3) {
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+    <!--
+        nth-of-type 选择指定索引的子元素(在同类型的子元素中)
+        https://www.freecodecamp.org/news/nth-child-vs-nth-of-type-selector-in-css/
+    -->
+    <div>
+        样式会应用到第 5 个子元素中，因为它是其父元素下的第 3 个 p 子元素
+    </div>
+    <div class="div3">
+        <h1>First heading 1 element</h1>
+        <p>First paragraph element</p>
+        <p>Second paragraph element</p>
+        <h2>First heading 2 element</h2>
+        <p>Third paragraph element - here</p>
+        <h3>First heading 3 element</h3>
+        <p>Fourth paragraph element</p>
+        <p>Fifth paragraph element</p>
+    </div>
+    <hr />
+</body>
+
+</html>
+```
+
+
+
+样式会被应用到第 8、10 个子元素中，因为它分别是各自其父元素 article、section 的第 3 个 p 子元素
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .div5 p:nth-of-type(3) {
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+    <div>
+        样式会被应用到第 8、10 个子元素中，因为它分别是各自其父元素 article、section 的第 3 个 p 子元素
+    </div>
+    <div class="div5">
+        <article>
+            <h1>Article's first heading 1 element</h1>
+            <p> Article's first paragraph element</p>
+            <h2>Article's first heading 2 element</h2>
+            <p>Article's second paragraph element</p>
+            <section>
+                <h3>Article's first heading 3 element</h3>
+                <p>Article's third paragraph element</p>
+                <p>Article's fourth paragraph element</p>
+                <p>Article's fourth paragraph element - here</p>
+            </section>
+            <h2>Article's second heading 2 element</h2>
+            <p>Article's fifth paragraph element - here</p>
+            <p>Article's sixth paragraph element</p>
+        </article>
+
+    </div>
+    <hr />
+</body>
+
+</html>
+```
+
+
+
+## 变量
+
+>详细用法请参考本站示例 [链接](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/html+js+css/css-variable)
 

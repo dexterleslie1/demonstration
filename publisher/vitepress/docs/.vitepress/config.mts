@@ -28,7 +28,7 @@ export default defineConfig({
           { text: 'Nuxt', link: '/nuxt/README.md' },
           { text: 'Element-UI', link: '/element-ui/README.md' },
           { text: 'VitePress', link: '/cms/vitepress.md' },
-          { text: 'Html、Javascript、CSS', link: '/html-js-css/css.md' },
+          { text: 'Html、Javascript、CSS', link: '/html-js-css/README.md' },
           { text: 'Axios', link: '/axios/README.md' },
         ]
       }, {
@@ -158,6 +158,7 @@ export default defineConfig({
         {
           text: 'Html、Javascript、CSS',
           items: [
+            { text: '基础', link: '/html-js-css/README.md' },
             { text: 'CSS', link: '/html-js-css/css.md' },
           ]
         }
