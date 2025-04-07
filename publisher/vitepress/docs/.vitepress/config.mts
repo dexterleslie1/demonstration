@@ -160,6 +160,7 @@ export default defineConfig({
           items: [
             { text: '基础', link: '/html-js-css/README.md' },
             { text: 'CSS', link: '/html-js-css/css.md' },
+            { text: '媒体查询', link: '/html-js-css/media-query.md' },
           ]
         }
       ],
