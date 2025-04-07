@@ -1171,3 +1171,50 @@ a::after { content: " →"; } /* 元素后追加箭头 */
 </html>
 ```
 
+
+
+## 黑暗或明亮模式切换
+
+>dark or light mode.
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/html+js+css/demo-css-dark-mode)
+
+```html
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        :root {
+            --background-color: yellowgreen;
+            --color: blue;
+        }
+
+        html[data-theme=dark] {
+            --background-color: black;
+            --color: white;
+        }
+
+        .demo1>div {
+            width: 200px;
+            height: 100px;
+            background-color: var(--background-color);
+            color: var(--color);
+        }
+    </style>
+</head>
+<body>
+    <!--
+        https://css-tricks.com/dark-modes-with-css/
+    -->
+    <div>使用css实现高亮和黑暗模式切换</div>
+    <div class="demo1">
+        <div>Hello world!</div>
+    </div>
+    <hr>
+</body>
+</html>
+```
+
