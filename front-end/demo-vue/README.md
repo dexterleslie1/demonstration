@@ -1686,3 +1686,50 @@ npm run build
 ### 基于 Vue3
 
 >todo 暂时不研究
+
+
+
+## 黑暗或明亮主题切换
+
+>dark or light mode.
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-vue/demo-vue2-dark-mode)
+
+示例中主要通过 src/components/ThemeToggle.vue 控件中 `document.documentElement.setAttribute('data-theme', this.isDarkMode ? 'dark' : 'light')` 代码为 `<html>` 标签添加 `data-theme=dark` 或 `data-theme=light` 属性，在 src/App.vue 中根据样式条件设置 css 变量值来达到切换主题效果，根据样式条件设置 css 变量值代码如下：
+
+```html
+<style>
+:root {
+  --bg-color: #ffffff;
+  --text-color: #2c3e50;
+  --hover-bg-color: rgba(0, 0, 0, 0.1);
+}
+
+/*  表示当 HTML 元素的 data-theme 属性值为 "dark" 时，应用以下样式规则 */
+[data-theme="dark"] {
+  --bg-color: #1a1a1a;
+  --text-color: #ffffff;
+  --hover-bg-color: rgba(255, 255, 255, 0.1);
+}
+
+#app {
+  font-family: Avenir, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-align: center;
+  color: var(--text-color);
+  background-color: var(--bg-color);
+  min-height: 100vh;
+  margin: 0;
+  padding-top: 60px;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+</style>
+```
+
