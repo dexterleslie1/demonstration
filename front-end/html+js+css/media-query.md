@@ -210,3 +210,56 @@
 </html>
 ```
 
+
+
+## 使用媒体查询判断系统当前主题
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/blob/main/front-end/html+js+css/css-media-query/demo-media-query-dark-mode.html)
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .demo1>div {
+            width: 200px;
+            height: 100px;
+            background-color: var(--background-color);
+            color: var(--color);
+        }
+
+        :root {
+            --background-color: yellowgreen;
+            --color: blue;
+        }
+
+        /* 这是一个CSS媒体查询，用于检测用户是否将系统主题设置为深色模式（Dark Mode）*/
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --background-color: black;
+                --color: white;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!--
+        https://stackoverflow.com/questions/50840168/how-to-detect-if-the-os-is-in-dark-mode-in-browsers
+    -->
+    <div>演示使用media query检测系统是否黑暗模式</div>
+    <div class="demo1">
+        <div>
+            Hello world!
+        </div>
+    </div>
+    <hr>
+</body>
+
+</html>
+```
+
