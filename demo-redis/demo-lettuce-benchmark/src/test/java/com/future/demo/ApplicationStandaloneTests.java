@@ -2,6 +2,7 @@ package com.future.demo;
 
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisFuture;
+import io.lettuce.core.ScriptOutputType;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.async.RedisAsyncCommands;
 import io.lettuce.core.api.sync.RedisCommands;
@@ -50,6 +51,16 @@ public class ApplicationStandaloneTests {
         sync.set(key, key);
         String value = sync.get(key);
         Assertions.assertEquals(key, value);
+
+        // 同步阻塞执行 Lua 脚本
+        String scriptSha = sync.scriptLoad(Const.LuaScript);
+        key = UUID.randomUUID().toString();
+        String result = sync.evalsha(scriptSha, ScriptOutputType.STATUS, new String[0], key);
+        Assertions.assertEquals(key, result);
+
+        key = UUID.randomUUID().toString();
+        result = sync.eval(Const.LuaScript, ScriptOutputType.STATUS, new String[0], key);
+        Assertions.assertEquals(key, result);
 
         // 异步非阻塞
         RedisAsyncCommands<String, String> async = connection.async();
