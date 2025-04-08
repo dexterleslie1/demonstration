@@ -1733,3 +1733,49 @@ body {
 </style>
 ```
 
+
+
+## 模板语法
+
+>[官方参考链接](https://vuejs.org/guide/essentials/template-syntax.html)
+
+### 介绍
+
+Vue 使用基于 HTML 的模板语法，允许您以声明方式将渲染的 DOM 绑定到底层组件实例的数据。所有 Vue 模板都是语法有效的 HTML，可由符合规范的浏览器和 HTML 解析器进行解析。
+
+底层，Vue 将模板编译为高度优化的 JavaScript 代码。结合响应式系统，Vue 可以智能地找出需要重新渲染的最少组件数量，并在应用程序状态发生变化时应用最少的 DOM 操作。
+
+如果您熟悉虚拟 DOM 概念并且喜欢 JavaScript 的原始功能，您也可以直接编写渲染函数而不是模板，并使用可选的 JSX 支持。但请注意，它们不能像模板一样享受相同级别的编译时优化。
+
+
+
+### 使用 JavaScript 表达式
+
+到目前为止，我们只在模板中绑定了简单的属性键。但 Vue 实际上支持所有数据绑定中 JavaScript 表达式的全部功能：
+
+```vue
+{{ number + 1 }}
+
+{{ ok ? 'YES' : 'NO' }}
+
+{{ message.split('').reverse().join('') }}
+
+<div :id="`list-${id}`"></div>
+```
+
+这些表达式将在当前组件实例的数据范围内被评估为 JavaScript。
+
+在 Vue 模板中，JavaScript 表达式可以在以下位置使用：
+
+- 文本内部插值（mustaches）
+- 在任何 Vue 指令的属性值中（以 v- 开头的特殊属性）
+
+示例：
+
+```vue
+<el-tooltip class="item" :effect="darkMode?'light':'dark'" content="切换主题" placement="right">
+	...
+</el-tooltip>
+```
+
+示例中绑定属性 `:effect` 中使用三元运算符 `darkMode?'light':'dark'` JavaScript 表达式根据 `darkMode` 布尔值返回 `light` 或者 `dark`。
