@@ -30,12 +30,13 @@ public class LockPerformanceTests {
 
     @Benchmark
     public void test1() throws InterruptedException {
-        RLock mylock = redisson.getLock(Key);
+        RLock mylock = null;
         boolean isAcquired = false;
         try {
+            mylock = redisson.getLock(Key);
             isAcquired = mylock.tryLock(10, 10000, TimeUnit.MILLISECONDS);
         } finally {
-            if (isAcquired) {
+            if (mylock != null && isAcquired) {
                 try {
                     mylock.unlock();
                 } catch (Exception ex) {
@@ -67,7 +68,7 @@ public class LockPerformanceTests {
                 .forks(1)
                 // 发生错误停止测试
                 .shouldFailOnError(true)
-                .jvmArgs("-Xmx2G",
+                .jvmArgs("-Xmx4G",
                         "-server")
                 .build();
         new Runner(opt).run();
