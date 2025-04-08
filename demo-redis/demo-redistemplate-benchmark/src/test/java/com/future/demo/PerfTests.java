@@ -12,7 +12,10 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.util.StreamUtils;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -25,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 @Measurement(iterations = 3, time = 5, timeUnit = TimeUnit.SECONDS) //测试也是1s、五遍
 // 指定并发执行线程数
 // https://stackoverflow.com/questions/39644383/jmh-run-benchmark-concurrently
-@Threads(64)
+@Threads(512)
 public class PerfTests {
 
     StringRedisTemplate redisTemplate;
@@ -54,7 +57,7 @@ public class PerfTests {
      * 初始化，获取springBoot容器，run即可，同时得到相关的测试对象
      */
     @Setup(Level.Trial)
-    public void setup() {
+    public void setup() throws IOException {
         //容器获取
         context = SpringApplication.run(Application.class);
         //获取对象
@@ -64,7 +67,11 @@ public class PerfTests {
         this.redisTemplate.opsForValue().set(keyForGetting, keyForGetting);
 
         defaultRedisScript = new DefaultRedisScript<>();
-        defaultRedisScript.setLocation(new ClassPathResource("test.lua"));
+        /*defaultRedisScript.setLocation(new ClassPathResource("test.lua"));*/
+        ClassPathResource classPathResource = new ClassPathResource("test.lua");
+        String script = StreamUtils.copyToString(classPathResource.getInputStream(), StandardCharsets.UTF_8);
+        classPathResource.getInputStream().close();
+        defaultRedisScript.setScriptText(script);
         defaultRedisScript.setResultType(String.class);
     }
 
