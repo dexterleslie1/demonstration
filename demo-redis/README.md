@@ -143,3 +143,109 @@ Redis使用高效的内存分配器（如jemalloc）来管理内存，减少内�
 > https://blog.csdn.net/m0_70651612/article/details/124901452
 >
 > 参考 demo-redis/redisson/redisson-lock demo
+
+
+
+## Hash Tag
+
+### 介绍
+
+**Redis Hash Tag（哈希标签）** 是 Redis 集群中用于控制键分布的一种机制，它允许通过特定的语法将一组键强制分配到同一个哈希槽（hash slot）中，从而确保这些键存储在同一个节点上。
+
+**工作原理**
+
+1. **哈希槽分配**：
+   Redis 集群将 16384 个哈希槽分配到不同的节点上，键通过哈希函数计算后映射到对应的哈希槽，再由哈希槽决定键存储在哪个节点。
+2. **Hash Tag 的作用**：
+   当键名中包含 `{}` 大括号时，Redis 会仅对 `{}` 内的内容计算哈希值，而不是整个键名。例如：
+   - 键 `user:1000:profile` 和 `user:1000:orders` 会被分配到不同的哈希槽。
+   - 键 `user:{1000}:profile` 和 `user:{1000}:orders` 由于 `{}` 内内容相同（均为 `1000`），会被分配到同一个哈希槽。
+
+**语法规则**
+
+- **格式**：`{tag}`，其中 `tag` 是大括号内的任意字符串。
+
+- **优先级**：只有当键名中包含 `{}` 且 `{}` 内有内容时，Redis 才会使用 `{}` 内的内容计算哈希值。
+
+- 示例：
+
+  ```plaintext
+  user:{123}:name     -> 使用 "123" 计算哈希值
+  product:{456}:info -> 使用 "456" 计算哈希值
+  order:789           -> 不使用 Hash Tag，完整键名计算哈希值
+  ```
+
+**应用场景**
+
+1. **事务操作**：
+   将需要原子性操作的键放在同一节点。例如，用户账户的余额和冻结金额需要一起更新，可以使用 Hash Tag 确保它们在同一节点：
+
+   ```plaintext
+   account:{123}:balance
+   account:{123}:frozen
+   ```
+
+2. **批量操作**：
+   对一组相关键进行批量操作时，使用 Hash Tag 可以避免跨节点操作。例如，批量获取用户的订单信息：
+
+   ```plaintext
+   order:{123}:item1
+   order:{123}:item2
+   ```
+
+3. **数据聚合**：
+   将同一实体的数据存储在同一节点，方便查询。例如，用户的个人资料和社交关系：
+
+   ```plaintext
+   user:{123}:profile
+   user:{123}:friends
+   ```
+
+4. **分布式锁**：
+   使用 Hash Tag 确保分布式锁的键在同一节点，避免锁竞争问题。例如：
+
+   ```plaintext
+   lock:{resource_id}
+   ```
+
+**注意事项**
+
+1. **数据倾斜**：
+   过度使用 Hash Tag 或设计不当可能导致数据分布不均。例如，所有键都使用相同的 `{}` 内容（如 `{common}`），会导致所有键被分配到同一节点，造成热点问题。
+2. **键名设计**：
+   Hash Tag 应在键名设计时考虑，避免后期修改带来的复杂性。
+3. **跨节点操作限制**：
+   Redis 集群中，涉及多个键的操作（如 `MGET`、`MSET`）要求这些键在同一哈希槽中，否则会报错 `CROSSSLOT`。
+
+**示例代码**
+
+```python
+import redis
+ 
+# 连接 Redis 集群
+r = redis.RedisCluster(startup_nodes=[{"host": "127.0.0.1", "port": "7000"}], decode_responses=True)
+ 
+# 使用 Hash Tag 存储用户数据
+r.hset("user:{123}:profile", "name", "Alice")
+r.hset("user:{123}:profile", "email", "alice@example.com")
+ 
+r.hset("user:{123}:orders", "order1", "Laptop")
+r.hset("user:{123}:orders", "order2", "Phone")
+ 
+# 获取用户数据
+profile = r.hgetall("user:{123}:profile")
+orders = r.hgetall("user:{123}:orders")
+ 
+print("Profile:", profile)
+print("Orders:", orders)
+```
+
+**总结**
+
+Redis Hash Tag 是一种强大的工具，用于在 Redis 集群中控制键的分布。通过合理使用 Hash Tag，可以实现：
+
+- 事务操作的原子性
+- 批量操作的高效性
+- 数据聚合的便利性
+
+但同时也需要注意数据倾斜和键名设计的问题，确保集群的性能和扩展性。
