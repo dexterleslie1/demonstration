@@ -25,10 +25,11 @@ public class ApplicationTests {
         DefaultRedisScript<String> script = new DefaultRedisScript<>();
         script.setLocation(new ClassPathResource("1.lua"));
         script.setResultType(String.class);
-        String str = this.redisTemplate.execute(script, Arrays.asList("k1", "k2"), "v1", "v2");
-        Assertions.assertEquals("k1 k2 v1 v2", str);
-        Assertions.assertEquals("v1", this.redisTemplate.opsForValue().get("k1"));
-        Assertions.assertEquals("v2", this.redisTemplate.opsForValue().get("k2"));
+        // 使用 hash tag {x} 以解决在 redis 集群中 key 不在同一插槽报错问题
+        String str = this.redisTemplate.execute(script, Arrays.asList("k1{x}", "k2{x}"), "v1", "v2");
+        Assertions.assertEquals("k1{x} k2{x} v1 v2", str);
+        Assertions.assertEquals("v1", this.redisTemplate.opsForValue().get("k1{x}"));
+        Assertions.assertEquals("v2", this.redisTemplate.opsForValue().get("k2{x}"));
 
         // endregion
 
@@ -42,10 +43,10 @@ public class ApplicationTests {
                 "redis.call('set', KEYS[2], ARGV[2])\n" +
                 "return KEYS[1] .. ' ' .. KEYS[2] .. ' ' .. ARGV[1] .. ' ' .. ARGV[2]");
         script.setResultType(String.class);
-        str = this.redisTemplate.execute(script, Arrays.asList("k1", "k2"), "v1", "v2");
-        Assertions.assertEquals("k1 k2 v1 v2", str);
-        Assertions.assertEquals("v1", this.redisTemplate.opsForValue().get("k1"));
-        Assertions.assertEquals("v2", this.redisTemplate.opsForValue().get("k2"));
+        str = this.redisTemplate.execute(script, Arrays.asList("{y}k1", "{y}k2"), "v1", "v2");
+        Assertions.assertEquals("{y}k1 {y}k2 v1 v2", str);
+        Assertions.assertEquals("v1", this.redisTemplate.opsForValue().get("{y}k1"));
+        Assertions.assertEquals("v2", this.redisTemplate.opsForValue().get("{y}k2"));
 
         // endregion
     }

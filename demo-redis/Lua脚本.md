@@ -368,7 +368,13 @@ return x
 
 
 
-## 使用 redis-cli 测试
+### 集群中 Lua 脚本
+
+>[RedisTemplate 在 Redis 集群中使用 Lua 脚本本站参考示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-redis/redistemplate/redistemplate-lua-script)
+
+
+
+## 使用 cli 测试
 
 ```shell
 # 使用eval函数执行lua脚本，1表示有1个key参数，redis 对应 KEYS[1], world 对应 ARGV[1]
