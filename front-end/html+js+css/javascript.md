@@ -61,3 +61,57 @@ console.log(message); // 输出: Hello, my name is Bob Smith.
 - 模板字符串本身并不会自动进行 HTML 转义。如果你需要在模板字符串中插入用户输入的内容以防止 XSS 攻击，需要手动进行转义。
 
 模板字符串是现代 JavaScript 开发中非常实用的一个特性，它大大简化了字符串的创建和操作，提高了代码的可读性和可维护性。
+
+
+
+## prototype
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/html+js+css/js-prototype)
+
+特点如下：
+
+- 任何函数都有 prototype 属性，并且 prototype 是 Object 类型的一个实例
+- prototype 对象属性 constructor 指向该函数本身
+- 给 prototype 对象添加属性/方法，函数所有实例对象自动拥有 prototype 中的属性/方法
+
+示例：
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script type="text/javascript">
+        // 任何函数都有 prototype 属性，并且 prototype 是 Object 类型的一个实例
+        console.log(`typeof Date: ${typeof Date}`)
+        console.log(`typeof Date.prototype: ${typeof Date.prototype}`)
+
+        function MyFunction() {
+
+        }
+        console.log(`typeof MyFunction: ${typeof MyFunction}`)
+        console.log(`typeof MyFunction.prototype: ${typeof MyFunction.prototype}`)
+
+        // constructor
+        // prototype 对象属性 constructor 指向该函数本身
+        console.log(`Date.prototype.constructor===Date: ${Date.prototype.constructor===Date}`)
+        console.log(`MyFunction.prototype.constructor===MyFunction: ${MyFunction.prototype.constructor===MyFunction}`)
+    
+        // prototype添加方法
+        // 给 prototype 对象添加属性/方法，函数所有实例对象自动拥有 prototype 中的属性/方法
+        MyFunction.prototype.sayHello = function() {
+            console.log('Hello Dexterleslie')
+        }
+        let myFunction = new MyFunction()
+        myFunction.sayHello()
+    </script>
+</head>
+<body>
+    
+</body>
+</html>
+```
+
