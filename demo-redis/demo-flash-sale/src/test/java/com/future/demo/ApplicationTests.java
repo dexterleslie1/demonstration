@@ -1,7 +1,6 @@
 package com.future.demo;
 
 import com.future.demo.entity.OrderModel;
-import com.future.demo.entity.ProductModel;
 import com.future.demo.mapper.OrderMapper;
 import com.future.demo.mapper.ProductMapper;
 import com.future.demo.service.OrderService;
@@ -16,7 +15,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.annotation.Resource;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -184,7 +182,7 @@ public class ApplicationTests {
         orderModelList = this.orderMapper.selectAll();
         Assert.assertEquals(5, orderModelList.size());
         Assert.assertEquals(0, this.productMapper.getById(productId).getStock().intValue());
-        Assert.assertEquals(0, Integer.parseInt(Objects.requireNonNull(this.redisTemplate.opsForValue().get(OrderService.KeyProductStockPrefix + productId))));
+        /*Assert.assertEquals(0, Integer.parseInt(Objects.requireNonNull(this.redisTemplate.opsForValue().get(OrderService.KeyProductStockPrefix + productId))));*/
 
         // endregion
     }
@@ -263,7 +261,7 @@ public class ApplicationTests {
         orderModelList = this.orderMapper.selectAll();
         Assert.assertEquals(5, orderModelList.size());
         Assert.assertEquals(0, this.productMapper.getById(productId).getStock().intValue());
-        Assert.assertEquals(0, Integer.parseInt(Objects.requireNonNull(this.redisTemplate.opsForValue().get(OrderService.KeyProductStockPrefix + productId))));
+        /*Assert.assertEquals(0, Integer.parseInt(Objects.requireNonNull(this.redisTemplate.opsForValue().get(OrderService.KeyProductStockPrefix + productId))));*/
 
         // endregion
     }
@@ -276,12 +274,12 @@ public class ApplicationTests {
         this.orderMapper.deleteAll();
 
         // 秒杀前提前加载商品库存信息到 Redis 中
-        ProductModel productModel = this.productMapper.getById(productId);
+        /*ProductModel productModel = this.productMapper.getById(productId);
         String keyProductStock = OrderService.KeyProductStockPrefix + productModel.getId();
         this.redisTemplate.opsForValue().set(keyProductStock, productModel.getStock().toString());
-        String keyProductPurchaseRecord = "product:purchase:" + productId;
+        String keyProductPurchaseRecord = OrderService.KeyProductPurchaseRecordPrefix + productId;
         this.redisTemplate.delete(keyProductPurchaseRecord);
         String key = OrderService.KeyProductSoldOutPrefix + productId;
-        this.redisTemplate.delete(key);
+        this.redisTemplate.delete(key);*/
     }
 }

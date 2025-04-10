@@ -1,20 +1,7 @@
 version: "3.1"
 
 services:
-  service:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-service
-    environment:
-      - JAVA_OPTS=-Xmx4g
-      - TZ=Asia/Shanghai
-    network_mode: host
-
   db:
-    build:
-      context: db
-      dockerfile: Dockerfile
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-db
     command:
       - --character-set-server=utf8mb4
@@ -24,60 +11,65 @@ services:
       - LANG=C.UTF-8
       - TZ=Asia/Shanghai
       - MYSQL_ROOT_PASSWORD=123456
+    restart: unless-stopped
     network_mode: host
 
   redis:
-    build:
-      context: redis
-      dockerfile: Dockerfile
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-redis
     # 设置redis密码
     command: redis-server /usr/local/etc/redis/redis-standalone.conf --requirepass 123456
     environment:
       - TZ=Asia/Shanghai
+    restart: unless-stopped
     network_mode: host
 
   node1:
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-redis
     # 必须设置cluster-announce-ip才能够在创建集群时节点join到master，否则会一直waiting...
-    command: redis-server /usr/local/etc/redis/redis.conf --port 6380 --cluster-announce-ip 127.0.0.1
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6380 --cluster-announce-ip 192.168.1.190
     environment:
       - TZ=Asia/Shanghai
+    restart: unless-stopped
     network_mode: 'host'
 
   node2:
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-redis
-    command: redis-server /usr/local/etc/redis/redis.conf --port 6381 --cluster-announce-ip 127.0.0.1
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6381 --cluster-announce-ip 192.168.1.190
     environment:
       - TZ=Asia/Shanghai
+    restart: unless-stopped
     network_mode: 'host'
 
   node3:
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-redis
-    command: redis-server /usr/local/etc/redis/redis.conf --port 6382 --cluster-announce-ip 127.0.0.1
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6382 --cluster-announce-ip 192.168.1.190
     environment:
       - TZ=Asia/Shanghai
+    restart: unless-stopped
     network_mode: 'host'
 
   node4:
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-redis
-    command: redis-server /usr/local/etc/redis/redis.conf --port 6383 --cluster-announce-ip 127.0.0.1
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6383 --cluster-announce-ip 192.168.1.190
     environment:
       - TZ=Asia/Shanghai
+    restart: unless-stopped
     network_mode: 'host'
 
   node5:
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-redis
-    command: redis-server /usr/local/etc/redis/redis.conf --port 6384 --cluster-announce-ip 127.0.0.1
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6384 --cluster-announce-ip 192.168.1.190
     environment:
       - TZ=Asia/Shanghai
+    restart: unless-stopped
     network_mode: 'host'
 
   node6:
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-redis
-    command: redis-server /usr/local/etc/redis/redis.conf --port 6385 --cluster-announce-ip 127.0.0.1
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6385 --cluster-announce-ip 192.168.1.190
     environment:
       - TZ=Asia/Shanghai
+    restart: unless-stopped
     network_mode: 'host'
 
   creator:

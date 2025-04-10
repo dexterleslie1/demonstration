@@ -2,7 +2,7 @@
 local productId = ARGV[1]
 local userId = ARGV[2]
 local amount = tonumber(ARGV[3])
-local keyProductStock = "product:stock:" .. productId
+local keyProductStock = "product{" .. productId .. "}:stock"
 local productStock = tonumber(redis.call("get", keyProductStock))
 if productStock < amount then
     -- 库存不足
@@ -10,7 +10,7 @@ if productStock < amount then
 end
 
 -- 判断用户是否重复下单
-local keyProductPurchaseRecord = "product:purchase:" .. productId
+local keyProductPurchaseRecord = "product{" .. productId .. "}:purchase"
 local purchaseRecord = redis.call("sismember", keyProductPurchaseRecord, userId)
 if purchaseRecord == 1 then
     -- 用户重复下单
