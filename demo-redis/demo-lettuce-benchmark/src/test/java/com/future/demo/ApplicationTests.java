@@ -1,52 +1,30 @@
 package com.future.demo;
 
-import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisFuture;
 import io.lettuce.core.ScriptOutputType;
-import io.lettuce.core.api.StatefulRedisConnection;
-import io.lettuce.core.api.async.RedisAsyncCommands;
-import io.lettuce.core.api.sync.RedisCommands;
+import io.lettuce.core.cluster.api.async.RedisClusterAsyncCommands;
+import io.lettuce.core.cluster.api.sync.RedisClusterCommands;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import javax.annotation.Resource;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 @SpringBootTest(classes = {Application.class})
 @Slf4j
-public class ApplicationStandaloneTests {
-
-    RedisClient client;
-    StatefulRedisConnection<String, String> connection;
-
-    @BeforeEach
-    public void before() {
-        // 单机版 Redis 连接
-        client = RedisClient.create("redis://123456@localhost:6379");
-        connection = client.connect();
-    }
-
-    @AfterEach
-    public void after() {
-        if (this.connection != null) {
-            this.connection.close();
-            this.connection = null;
-        }
-        if (client != null) {
-            client.shutdown();
-            client = null;
-        }
-    }
+public class ApplicationTests {
+    @Resource
+    RedisClusterCommands<String, String> sync;
+    @Resource
+    RedisClusterAsyncCommands<String, String> async;
 
     @Test
     public void test() throws InterruptedException {
         // 同步阻塞
-        RedisCommands<String, String> sync = connection.sync();
         String key = UUID.randomUUID().toString();
         sync.set(key, key);
         String value = sync.get(key);
@@ -55,15 +33,14 @@ public class ApplicationStandaloneTests {
         // 同步阻塞执行 Lua 脚本
         String scriptSha = sync.scriptLoad(Const.LuaScript);
         key = UUID.randomUUID().toString();
-        String result = sync.evalsha(scriptSha, ScriptOutputType.STATUS, new String[0], key);
+        String result = sync.evalsha(scriptSha, ScriptOutputType.STATUS, new String[]{key}, key);
         Assertions.assertEquals(key, result);
 
         key = UUID.randomUUID().toString();
-        result = sync.eval(Const.LuaScript, ScriptOutputType.STATUS, new String[0], key);
+        result = sync.eval(Const.LuaScript, ScriptOutputType.STATUS, new String[]{key}, key);
         Assertions.assertEquals(key, result);
 
         // 异步非阻塞
-        RedisAsyncCommands<String, String> async = connection.async();
         key = UUID.randomUUID().toString();
         RedisFuture<String> redisFuture = async.set(key, key);
         String finalKey = key;

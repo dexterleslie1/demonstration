@@ -1,30 +1,32 @@
 package com.future.demo;
 
-import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.FactoryBean;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
-import redis.clients.jedis.HostAndPort;
-import redis.clients.jedis.JedisCluster;
+import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 
-import java.util.HashSet;
-import java.util.Set;
-
-@ConditionalOnProperty(value = "cluster", havingValue = "true")
 @Component
-public class JedisClusterUtil implements InitializingBean {
-    private JedisCluster jedisCluster;
+@ConditionalOnProperty(value = "spring.redis.host")
+public class JedisPoolFactoryBean implements FactoryBean<JedisPool>, DisposableBean {
+    @Value("${spring.redis.host}")
+    String springRedisHost;
+    @Value("${spring.redis.port}")
+    int springRedisPort;
+    @Value("${spring.redis.password}")
+    String springRedisPassword;
 
-    public JedisCluster getJedisCluster() {
-        return this.jedisCluster;
-    }
+    JedisPool jedisPool;
 
     @Override
-    public void afterPropertiesSet() throws Exception {
+    public JedisPool getObject() {
         int maxTotal = 600;
         int maxIdle = 300;
         int maxWaitMillis = 1000;
         boolean testOnBorrow = false;
+        int timeout = 10000;
 
         JedisPoolConfig config = new JedisPoolConfig();
         //控制一个pool可分配多少个jedis实例，通过pool.getResource()来获取；
@@ -37,11 +39,25 @@ public class JedisClusterUtil implements InitializingBean {
         //在borrow一个jedis实例时，是否提前进行validate操作；如果为true，则得到的jedis实例均是可用的；
         config.setTestOnBorrow(testOnBorrow);
 
-        Set<HostAndPort> jedisClusterNodes = new HashSet<>();
-        jedisClusterNodes.add(new HostAndPort("192.168.1.185", 6380));
-        jedisClusterNodes.add(new HostAndPort("192.168.1.185", 6381));
-        jedisClusterNodes.add(new HostAndPort("192.168.1.185", 6382));
-        this.jedisCluster = new JedisCluster(jedisClusterNodes, config);
+        jedisPool = new JedisPool(config, this.springRedisHost, this.springRedisPort, timeout, this.springRedisPassword);
+        return jedisPool;
+    }
+
+    @Override
+    public Class<?> getObjectType() {
+        return JedisPool.class;
+    }
+
+    @Override
+    public boolean isSingleton() {
+        return true;
+    }
+
+    @Override
+    public void destroy() {
+        if (this.jedisPool != null) {
+            this.jedisPool.close();
+            this.jedisPool = null;
+        }
     }
 }
-

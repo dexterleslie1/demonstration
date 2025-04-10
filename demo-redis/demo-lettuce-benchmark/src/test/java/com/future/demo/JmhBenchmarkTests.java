@@ -1,5 +1,7 @@
 package com.future.demo;
 
+import io.lettuce.core.ScriptOutputType;
+import io.lettuce.core.cluster.api.sync.RedisClusterCommands;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 import org.openjdk.jmh.runner.Runner;
@@ -10,14 +12,11 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.util.StreamUtils;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.UUID;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 // https://blog.csdn.net/a23452/article/details/126680840
@@ -28,27 +27,26 @@ import java.util.concurrent.TimeUnit;
 @Measurement(iterations = 3, time = 5, timeUnit = TimeUnit.SECONDS) //测试也是1s、五遍
 // 指定并发执行线程数
 // https://stackoverflow.com/questions/39644383/jmh-run-benchmark-concurrently
-@Threads(512)
-public class PerfTests {
+@Threads(256)
+public class JmhBenchmarkTests {
 
-    StringRedisTemplate redisTemplate;
+    final static Random RANDOM = new Random(System.currentTimeMillis());
 
-    //springBoot容器
     ApplicationContext context;
-    String keyForGetting = UUID.randomUUID().toString();
+    RedisClusterCommands<String, String> sync;
 
-    DefaultRedisScript<String> defaultRedisScript;
+    int keyLength = 300;
+    String script;
 
     public static void main(String[] args) throws RunnerException {
         //使用注解之后只需要配置一下include即可，fork和warmup、measurement都是注解
         Options opt = new OptionsBuilder()
-                .include(PerfTests.class.getSimpleName())
+                .include(JmhBenchmarkTests.class.getSimpleName())
                 // 断点调试时fork=0
                 .forks(1)
                 // 发生错误停止测试
                 .shouldFailOnError(true)
-                .jvmArgs("-Xmx2G",
-                        "-server")
+                .jvmArgs("-Xmx4G", "-server")
                 .build();
         new Runner(opt).run();
     }
@@ -61,18 +59,11 @@ public class PerfTests {
         //容器获取
         context = SpringApplication.run(Application.class);
         //获取对象
-        redisTemplate = context.getBean(StringRedisTemplate.class);
+        sync = context.getBean(RedisClusterCommands.class);
 
-        // 准备 get 性能测试数据
-        this.redisTemplate.opsForValue().set(keyForGetting, keyForGetting);
-
-        defaultRedisScript = new DefaultRedisScript<>();
-        /*defaultRedisScript.setLocation(new ClassPathResource("test.lua"));*/
         ClassPathResource classPathResource = new ClassPathResource("test.lua");
-        String script = StreamUtils.copyToString(classPathResource.getInputStream(), StandardCharsets.UTF_8);
+        script = StreamUtils.copyToString(classPathResource.getInputStream(), StandardCharsets.UTF_8);
         classPathResource.getInputStream().close();
-        defaultRedisScript.setScriptText(script);
-        defaultRedisScript.setResultType(String.class);
     }
 
     /**
@@ -86,28 +77,16 @@ public class PerfTests {
 
     @Benchmark
     public void testSet() {
-        String uuidStr = UUID.randomUUID().toString();
-        this.redisTemplate.opsForValue().set(uuidStr, uuidStr);
+        int randInt = RANDOM.nextInt(keyLength);
+        String key = String.valueOf(randInt);
+        this.sync.set(key, key);
     }
 
     @Benchmark
-    public void testGet(Blackhole blackhole) {
-        String result = this.redisTemplate.opsForValue().get(keyForGetting);
-        blackhole.consume(result);
-    }
-
-    @Benchmark
-    public void testSetAndGet(Blackhole blackhole) {
-        String uuidStr = UUID.randomUUID().toString();
-        this.redisTemplate.opsForValue().set(uuidStr, uuidStr);
-        String uuidStrResult = this.redisTemplate.opsForValue().get(uuidStr);
-        blackhole.consume(uuidStrResult);
-    }
-
-    @Benchmark
-    public void testSetAndGetByUsingLuaScript(Blackhole blackhole) {
-        String uuidStr = UUID.randomUUID().toString();
-        String uuidStrResult = this.redisTemplate.execute(defaultRedisScript, Collections.emptyList(), uuidStr);
-        blackhole.consume(uuidStrResult);
+    public void testLuaScript(Blackhole blackhole) {
+        int randInt = RANDOM.nextInt(keyLength);
+        String key = String.valueOf(randInt);
+        key = this.sync.eval(script, ScriptOutputType.STATUS, new String[]{key}, key);
+        blackhole.consume(key);
     }
 }

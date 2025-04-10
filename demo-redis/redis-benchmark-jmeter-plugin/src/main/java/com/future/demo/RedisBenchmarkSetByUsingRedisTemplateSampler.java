@@ -29,76 +29,62 @@ public class RedisBenchmarkSetByUsingRedisTemplateSampler extends AbstractJavaSa
     private static final Random RANDOM = new Random();
 
     /**
-     * 是否连接redis集群
-     */
-    private boolean cluster;
-    /**
      * RedisTemplate 连接工厂
      */
-    RedisConnectionFactory connectionFactory = null;
+    static RedisConnectionFactory connectionFactory = null;
     /**
      * RedisTemplate 客户端
      */
-    StringRedisTemplate redisTemplate;
+    static StringRedisTemplate redisTemplate;
 
-    private final int totalKeyListSize = 100;
-    /**
-     * 用于测试 set 指令性能的 Key 和 Value
-     */
-    private List<String> keyListToWrite = new ArrayList<String>() {{
-        for (int i = 0; i < totalKeyListSize; i++) {
-            this.add(UUID.randomUUID().toString());
-        }
-    }};
+    private final int KeyLength = 300;
 
     @Override
     public void setupTest(JavaSamplerContext context) {
         String host = context.getParameter("host", "127.0.0.1");
         int port = context.getIntParameter("port", 6379);
         String password = context.getParameter("password", "");
-        this.cluster = Boolean.parseBoolean(context.getParameter("cluster", "false"));
+        boolean cluster = Boolean.parseBoolean(context.getParameter("cluster", "false"));
 
-        if (this.connectionFactory == null) {
-            if (!this.cluster) {
-                GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
-                poolConfig.setMaxTotal(512);
-                LettuceClientConfiguration clientConfig = LettucePoolingClientConfiguration.builder()
-                        .poolConfig(poolConfig)
-                        .clientResources(ClientResources.builder().build())
-                        .clientOptions(ClientOptions.builder().build())
-                        .build();
+        synchronized (RedisBenchmarkSetByUsingRedisTemplateSampler.class) {
+            if (connectionFactory == null) {
+                if (!cluster) {
+                    GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
+                    poolConfig.setMaxTotal(512);
+                    LettuceClientConfiguration clientConfig = LettucePoolingClientConfiguration.builder()
+                            .poolConfig(poolConfig)
+                            .clientResources(ClientResources.builder().build())
+                            .clientOptions(ClientOptions.builder().build())
+                            .build();
 
-                RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration(host, port);
-                if (password != null && !password.isEmpty()) {
-                    configuration.setPassword(password);
+                    RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration(host, port);
+                    if (password != null && !password.isEmpty()) {
+                        configuration.setPassword(password);
+                    }
+                    connectionFactory = new LettuceConnectionFactory(configuration, clientConfig);
+                } else {
+                    GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
+                    poolConfig.setMaxTotal(512);
+                    LettuceClientConfiguration clientConfig = LettucePoolingClientConfiguration.builder()
+                            .poolConfig(poolConfig)
+                            .clientResources(ClientResources.builder().build())
+                            .clientOptions(ClientOptions.builder().build())
+                            .build();
+
+                    RedisClusterConfiguration configuration = new RedisClusterConfiguration();
+                    configuration.setClusterNodes(new HashSet<RedisNode>() {{
+                        this.add(new RedisNode(host, port));
+                    }});
+                    connectionFactory = new LettuceConnectionFactory(configuration, clientConfig);
                 }
-                this.connectionFactory = new LettuceConnectionFactory(configuration, clientConfig);
-            } else {
-                GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
-                poolConfig.setMaxTotal(512);
-                LettuceClientConfiguration clientConfig = LettucePoolingClientConfiguration.builder()
-                        .poolConfig(poolConfig)
-                        .clientResources(ClientResources.builder().build())
-                        .clientOptions(ClientOptions.builder().build())
-                        .build();
+                ((LettuceConnectionFactory) connectionFactory).afterPropertiesSet();
 
-                RedisClusterConfiguration configuration = new RedisClusterConfiguration();
-                configuration.setClusterNodes(new HashSet<RedisNode>() {{
-                    this.add(new RedisNode(host, port));
-                }});
-                this.connectionFactory = new LettuceConnectionFactory(configuration, clientConfig);
-            }
-            ((LettuceConnectionFactory) this.connectionFactory).afterPropertiesSet();
+                redisTemplate = new StringRedisTemplate(this.connectionFactory);
+                redisTemplate.afterPropertiesSet();
 
-            this.redisTemplate = new StringRedisTemplate(this.connectionFactory);
-            this.redisTemplate.afterPropertiesSet();
-
-            if (log.isDebugEnabled()) {
-                log.debug("成功创建 RedisTemplate 实例 host {} port {} password *** 线程 {}", host, port, Thread.currentThread().getName());
-            }
-        } else {
-            if (log.isDebugEnabled()) {
-                log.debug("意料之外，connectionFactory 实例已经初始化");
+                if (log.isDebugEnabled()) {
+                    log.debug("成功创建 RedisTemplate 实例 host {} port {} password *** 线程 {}", host, port, Thread.currentThread().getName());
+                }
             }
         }
     }
@@ -106,16 +92,18 @@ public class RedisBenchmarkSetByUsingRedisTemplateSampler extends AbstractJavaSa
 
     @Override
     public void teardownTest(JavaSamplerContext context) {
-        if (this.connectionFactory != null) {
-            try {
-                ((DisposableBean) this.connectionFactory).destroy();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-            this.connectionFactory = null;
+        synchronized (RedisBenchmarkSetByUsingRedisTemplateSampler.class) {
+            if (connectionFactory != null) {
+                try {
+                    ((DisposableBean) connectionFactory).destroy();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+                connectionFactory = null;
 
-            if (log.isDebugEnabled()) {
-                log.debug("成功关闭 RedisTemplate 实例");
+                if (log.isDebugEnabled()) {
+                    log.debug("成功关闭 RedisTemplate 实例");
+                }
             }
         }
     }
@@ -145,11 +133,12 @@ public class RedisBenchmarkSetByUsingRedisTemplateSampler extends AbstractJavaSa
 
             result.setSampleLabel(Label);
 
-            String keyToWrite = this.keyListToWrite.get(RANDOM.nextInt(totalKeyListSize));
-            this.redisTemplate.opsForValue().set(keyToWrite, keyToWrite);
+            int randInt = RANDOM.nextInt(KeyLength);
+            String key = String.valueOf(randInt);
+            redisTemplate.opsForValue().set(key, key);
 
             if (log.isDebugEnabled()) {
-                log.debug("写性能测试随机 key {} value {} 并使用此key和value set", keyToWrite, keyToWrite);
+                log.debug("写性能测试随机 key {} value {} 并使用此key和value set", key, key);
             }
 
             // 标记样本成功
