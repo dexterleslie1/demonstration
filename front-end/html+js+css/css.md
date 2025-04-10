@@ -1282,6 +1282,355 @@ a::after { content: " →"; } /* 元素后追加箭头 */
 
 
 
+## position
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/html+js+css/demo-css-position)
+>
+>[参考链接](https://developer.mozilla.org/en-US/docs/Web/CSS/position)
+
+### fixed
+
+>让元素固定在可视区域的固定位置，不受页面的滚动影响。
+
+### static
+
+>该元素根据文档的正常流程定位。 top、right、bottom、left 和 z-index 属性无效。 这是默认值。
+>
+>postion 的默认值为 static
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .div1>div {
+            width: 50px;
+            height: 50px;
+            margin: 10px;
+            background-color: green;
+        }
+
+        /* 该元素根据文档的正常流程定位。 top、right、bottom、left 和 z-index 属性无效。 这是默认值。*/
+        .div1 .div12 {
+            position: static;
+            left: 10px;
+            top: 200px;
+            background-color: red;
+            z-index: 1000;
+        }
+    </style>
+</head>
+
+<body>
+    <!--
+        该元素根据文档的正常流程定位。 top、right、bottom、left 和 z-index 属性无效。 这是默认值。
+        
+        postion的默认值为static
+        
+        https://developer.mozilla.org/en-US/docs/Web/CSS/position
+    -->
+    <div>
+        演示position:static用法
+    </div>
+    <div class="div1">
+        <div class="div11"></div>
+        <div class="div12"></div>
+        <div class="div13"></div>
+    </div>
+    <hr>
+</body>
+
+</html>
+```
+
+### relative
+
+>相对自己布局流位置相对定位。被相对定位后，原有的布局流位置依然占据空间。
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .div2 {
+            background-color: aqua;
+        }
+
+        .div2>div:first-child {
+            width: 200px;
+            height: 200px;
+            background-color: blue;
+        }
+
+        .div2>div:nth-child(2) {
+            width: 200px;
+            height: 200px;
+            background-color: blueviolet;
+            /* 
+                relative特性：
+                1、相对自己布局流位置相对定位
+                2、被相对定位后，原有的布局流位置依然占据空间
+            */
+            position: relative;
+            top: 150px;
+            left: 150px;
+        }
+
+        .div2>div:nth-child(3) {
+            width: 200px;
+            height: 200px;
+            background-color: brown;
+        }
+    </style>
+</head>
+
+<body>
+    <div>演示position:relative用法</div>
+    <div class="div2">
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+    <hr>
+</body>
+
+</html>
+```
+
+### absolute
+
+>以最近的父级非 static 定位的元素为参考点，定位指定的偏移量。
+
+示例：absolute 的父元素声明为 relative
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .div3 {
+            background-color: aqua;
+        }
+
+        .div3>div:first-child {
+            width: 200px;
+            height: 200px;
+            background-color: blue;
+        }
+
+        .div3>div:nth-child(2) {
+            width: 500px;
+            height: 500px;
+            background-color: blueviolet;
+        }
+
+        .div3 .father {
+            width: 200px;
+            height: 200px;
+            background-color: burlywood;
+
+            /* 最近的父级非static定位参考点 */
+            position: relative;
+            margin: 30px;
+        }
+
+        .div3 .son {
+            width: 100px;
+            height: 100px;
+            background-color: chartreuse;
+
+            /* 
+                absolute特性：
+                1、以最近的父级非static定位的元素为参考点，定位指定的偏移量
+            */
+            position: absolute;
+            top: 100px;
+            left: 100px;
+        }
+
+        .div3>div:nth-child(3) {
+            width: 200px;
+            height: 200px;
+            background-color: brown;
+        }
+    </style>
+</head>
+
+<body>
+    <div>演示position:absolute用法</div>
+    <div class="div3">
+        <div></div>
+        <div>
+            <div class="father">
+                <div class="son"></div>
+            </div>
+        </div>
+        <div></div>
+    </div>
+    <hr>
+</body>
+
+</html>
+```
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .div6 {
+            position: relative;
+            background-color: green;
+            width: 500px;
+            height: 500px;
+        }
+
+        .div6 .box {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background-color: yellow;
+            border-width: 1px;
+            border-color: black;
+            border-style: solid;
+        }
+    </style>
+</head>
+
+<body>
+    <div>演示position:relative+position:absolute组合定位用法</div>
+    <!-- https://www.cnblogs.com/feicheninfo/articles/11004410.html -->
+    <div class="div6">
+        <div class="box" style="top:10px;left:10px;"></div>
+        <div class="box" style="right:10px;bottom:10px;"></div>
+    </div>
+</body>
+
+</html>
+```
+
+
+
+示例：absolute 的父元素没有声明为非 static 元素（默认为 static），所以以 body 为参考定位
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .div5 {
+            background-color: aqua;
+        }
+
+        .div5>div:first-child {
+            width: 200px;
+            height: 200px;
+            background-color: blue;
+        }
+
+        .div5>div:nth-child(2) {
+            width: 200px;
+            height: 200px;
+            background-color: blueviolet;
+
+            /* 
+                absolute特性：
+                1、被定位后，原有的布局流位置不占据布局空间
+                2、如果所有父级元素都没有声明非static定位的则以body为参考点
+            */
+            position: absolute;
+            top: 200px;
+            left: 200px;
+        }
+
+        .div5>div:nth-child(3) {
+            width: 200px;
+            height: 200px;
+            background-color: brown;
+        }
+    </style>
+</head>
+
+<body>
+    <div>演示position:absolute因为没有父元素声明为非position:static，所以以body为参考定位</div>
+    <div class="div5">
+        <div></div>
+        <div>这是div5 position:absolute演示</div>
+        <div></div>
+    </div>
+</body>
+
+</html>
+```
+
+
+
+示例：absolute 居中显示
+
+>position: absolute 的元素居中时需要同时指定 margin: 0 auto;left: 0;right: 0;
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .demo1 .container {
+            background-color: green;
+            position: relative;
+            height: 50px;
+        }
+        .demo1 .container .widget {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background-color: yellow;
+            /* position: absolute的元素居中时需要同时指定margin: 0 auto;left: 0;right: 0; */
+            margin: 0 auto;
+            left: 0;
+            right: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div>演示position: absolute居中显示</div>
+    <div class="demo1">
+        <div class="container">
+            <div class="widget"></div>
+        </div>
+    </div>
+    <hr>
+</body>
+
+</html>
+```
+
+
+
 ## 黑暗或明亮模式切换
 
 >dark or light mode.
