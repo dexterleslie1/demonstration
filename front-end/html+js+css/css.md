@@ -1809,6 +1809,12 @@ a::after { content: " →"; } /* 元素后追加箭头 */
 
 
 
+## object-fit
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/html+js+css/css-object-fit)
+
+
+
 ## 黑暗或明亮模式切换
 
 >dark or light mode.
