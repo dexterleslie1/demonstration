@@ -1631,6 +1631,184 @@ a::after { content: " →"; } /* 元素后追加箭头 */
 
 
 
+## float
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/html+js+css/css-float)
+
+
+
+示例 1：
+
+>示例演示 float 特性：
+>
+>- 将元素排除在普通流之外
+>- 元素将不在页面中占据空间
+>- 将浮动的元素放置在包含框的左边或者右边
+>- 浮动的元素依旧位于包含框之内
+>- 浮动元素的外边缘不会超过其父元素的内边缘
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style type="text/css">
+        /*
+        演示float特性：
+        1、将元素排除在普通流之外
+        2、元素将不在页面中占据空间
+        3、将浮动的元素放置在包含框的左边或者右边
+        4、浮动的元素依旧位于包含框之内
+        5、浮动元素的外边缘不会超过其父元素的内边缘
+        */
+        #box {
+            width: 600px;
+            height: 600px;
+            background-color: aqua;
+        }
+
+        #box > div:first-child {
+            width: 200px;
+            height: 200px;
+            background-color: green;
+            float: right;
+        }
+
+        #box > div:nth-child(2) {
+            width: 200px;
+            height: 200px;
+            background-color: bisque;
+        }
+
+        #box > div:nth-child(3) {
+            width: 200px;
+            height: 200px;
+            background-color: blue;
+        }
+    </style>
+</head>
+<body>
+    <div id="box">
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+</body>
+</html>
+```
+
+
+
+示例 2：
+
+>示例演示 float 特性：
+>
+>- 浮动的元素可以向左或者向右移动，直到它的外边缘碰到包含框或者另一个浮动框的边框为止
+>- 浮动元素不会互相重叠
+>- 父元素的宽度大于等于所有浮动的子元素宽度之和时，浮动元素不会上下浮动，否则最后浮动的元素会换行
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style type="text/css">
+        /*
+        演示float特性：
+        1、浮动的元素可以向左或者向右移动，直到它的外边缘碰到包含框或者另一个浮动框的边框为止
+        2、浮动元素不会互相重叠
+        3、父元素的宽度大于等于所有浮动的子元素宽度之和时，浮动元素不会上下浮动，否则最后浮动的元素会换行
+        */
+        #box {
+            width: 600px;
+            height: 510px;
+            background-color: aqua;
+        }
+
+        #box > div:first-child {
+            width: 200px;
+            height: 200px;
+            background-color: green;
+            float: right;
+        }
+
+        #box > div:nth-child(2) {
+            width: 200px;
+            height: 200px;
+            background-color: bisque;
+            float: right;
+        }
+
+        #box > div:nth-child(3) {
+            width: 300px;
+            height: 300px;
+            background-color: blue;
+            float: right;
+        }
+    </style>
+</head>
+<body>
+    <div id="box">
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+</body>
+</html>
+```
+
+
+
+示例 3：
+
+>示例演示 float 特性：
+>
+>- 任何元素一旦浮动，display 属性将完全失效均可设置高度，并且不会独占一行
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style type="text/css">
+        /*
+        span标签是inline元素，没有宽高并且不会独占一行
+        演示float特性：
+        1、任何元素一旦浮动，display属性将完全失效均可设置高度，并且不会独占一行
+        */
+        #box1 {
+            float: left;
+            width: 200px;
+            height: 200px;
+            background-color: blueviolet;
+        }
+
+        #box2 {
+            float: left;
+            width: 200px;
+            height: 200px;
+            background-color: brown;
+        }
+    </style>
+</head>
+<body>
+    <span id="box1">6666666</span>
+    <span id="box2">8888888</span>
+</body>
+</html>
+```
+
+
+
 ## 黑暗或明亮模式切换
 
 >dark or light mode.
