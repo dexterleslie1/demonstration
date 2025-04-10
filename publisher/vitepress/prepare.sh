@@ -42,6 +42,7 @@ source_dir_to_target_dir_map["../../demo-http"]="http"
 source_dir_to_target_dir_map["../../python"]="python"
 source_dir_to_target_dir_map["../../front-end/demo-nodejs"]="nodejs"
 source_dir_to_target_dir_map["../../openresty"]="openresty"
+source_dir_to_target_dir_map["../../demo-english"]="english"
 
 for key in ${!source_dir_to_target_dir_map[@]}; do
     # 删除符号链接目录

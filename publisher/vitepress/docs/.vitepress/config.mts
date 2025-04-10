@@ -95,6 +95,7 @@ export default defineConfig({
           { text: 'Word 转换为 PDF', link: '/word-to-pdf/README.md' },
           { text: 'IDEA', link: '/idea/README.md' },
           { text: 'HTTP 相关', link: '/http/README.md' },
+          { text: '英语学习', link: '/english/README.md' },
         ]
       },
     ],
@@ -467,6 +468,27 @@ export default defineConfig({
             { text: '监控', link: '/openresty/监控.md' },
             { text: '编译容器基础镜像', link: '/openresty/编译docker基础镜像.md' },
             { text: '通过环境变量传递参数', link: '/openresty/通过环境变量传递参数.md' },
+          ]
+        }
+      ],
+      '/english/': [
+        {
+          text: '英语学习',
+          items: [
+            { text: '基础', link: '/english/README.md' },
+            { text: 'TODO 列表', link: '/english/todo列表.md' },
+            { text: '主谓一致', link: '/english/主谓一致.md' },
+            { text: '什么是语法', link: '/english/什么是语法.md' },
+            { text: '句型', link: '/english/句型.md' },
+            { text: '句子成分', link: '/english/句子成分.md' },
+            { text: '复合句或从句', link: '/english/复合句或从句.md' },
+            { text: '强调句', link: '/english/强调句.md' },
+            { text: '时态', link: '/english/时态.md' },
+            { text: '短语', link: '/english/短语.md' },
+            { text: '词性或词类', link: '/english/词性或词类.md' },
+            { text: '语态', link: '/english/语态.md' },
+            { text: '语气', link: '/english/语气.md' },
+            { text: '音标', link: '/english/音标.md' },
           ]
         }
       ],
