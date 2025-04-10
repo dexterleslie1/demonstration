@@ -2,10 +2,7 @@ package com.future.demo.controller;
 
 import com.future.common.http.ObjectResponse;
 import com.future.demo.service.OrderService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.Random;
@@ -18,7 +15,7 @@ public class ApiController {
     @Resource
     OrderService orderService;
 
-    @GetMapping(value = "purchaseProduct")
+    @PostMapping(value = "purchaseProduct")
     public ObjectResponse<String> purchaseProduct(
             @RequestParam(value = "userId") Long userId,
             @RequestParam(value = "productId") Long productId,
