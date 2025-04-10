@@ -23,6 +23,7 @@ export default defineConfig({
     nav: [
       {
         text: '前端', items: [
+          { text: 'UI、UX、平面设计', link: '/front-end/README.md' },
           { text: 'Vite', link: '/vite/README.md' },
           { text: 'Vue', link: '/vue/README.md' },
           { text: 'Nuxt', link: '/nuxt/README.md' },
