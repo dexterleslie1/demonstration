@@ -1250,6 +1250,38 @@ a::after { content: " →"; } /* 元素后追加箭头 */
 
 
 
+## display
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/html+js+css/demo-css-display)
+
+### block（块）
+
+>元素能够声明宽度和高度并且独占一行。div 默认是块元素。
+>
+>注意：在不声明元素宽度时，元素宽度会自动调整至其父级容器宽度，以填满父级容器宽度。
+
+### inline（行内）
+
+>元素的高度和宽度由内容决定，用户无法直接设置其高度和宽度，并且不会独占一行。此外，inline 元素可以设置水平方向的 padding 和 margin，但竖直方向的 padding 和 margin 则无效。
+>
+>span 默认是行内元素。
+
+### inline-block
+
+>元素能够声明宽度和高度并且不会独占一行。此外，inline 元素可以设置水平和竖直方向的 padding 和 margin。
+
+### table-cell
+
+>表格单元方式排列。
+>
+>注意：能够声明宽度但是不能够声明高度，高度会自动被拉伸到适合单元格高度。
+
+### none
+
+>元素被隐藏并且不会占据布局空间。visibility: hidden 元素隐藏并且会占据布局空间。
+
+
+
 ## 黑暗或明亮模式切换
 
 >dark or light mode.
