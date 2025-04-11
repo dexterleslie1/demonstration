@@ -37,6 +37,7 @@ public class JmhBenchmarkTests {
 
     int keyLength = 300;
     String script;
+    String testFunctionScript;
 
     public static void main(String[] args) throws RunnerException {
         //使用注解之后只需要配置一下include即可，fork和warmup、measurement都是注解
@@ -64,6 +65,10 @@ public class JmhBenchmarkTests {
         ClassPathResource classPathResource = new ClassPathResource("test.lua");
         script = StreamUtils.copyToString(classPathResource.getInputStream(), StandardCharsets.UTF_8);
         classPathResource.getInputStream().close();
+
+        classPathResource = new ClassPathResource("test_function.lua");
+        testFunctionScript = StreamUtils.copyToString(classPathResource.getInputStream(), StandardCharsets.UTF_8);
+        classPathResource.getInputStream().close();
     }
 
     /**
@@ -89,4 +94,12 @@ public class JmhBenchmarkTests {
         key = this.sync.eval(script, ScriptOutputType.STATUS, new String[]{key}, key);
         blackhole.consume(key);
     }
+
+    /*@Benchmark
+    public void testFunction(Blackhole blackhole) {
+        int randInt = RANDOM.nextInt(keyLength);
+        String key = String.valueOf(randInt);
+        key = this.sync.fcall("my_test1", ScriptOutputType.STATUS, new String[]{key}, key);
+        blackhole.consume(key);
+    }*/
 }

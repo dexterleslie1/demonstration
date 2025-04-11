@@ -149,7 +149,7 @@ export default defineConfig({
             { text: '数据类型和命令', link: '/redis/数据类型和命令.md' },
             { text: '客户端', link: '/redis/客户端.md' },
             { text: '事务', link: '/redis/事务.md' },
-            { text: 'Lua脚本', link: '/redis/Lua脚本.md' },
+            { text: '脚本编程', link: '/redis/脚本编程.md' },
             { text: '应用场景', link: '/redis/应用场景.md' },
             { text: '最佳实践', link: '/redis/最佳实践.md' },
             { text: '基准测试', link: '/redis/基准测试.md' },

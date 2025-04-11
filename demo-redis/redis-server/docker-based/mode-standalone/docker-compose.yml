@@ -4,12 +4,12 @@ services:
   # 启动redis
   redis:
     # image: redis:5.0.14
-    image: redis:6.2.6-bullseye
+    # image: redis:6.2.6-bullseye
+    image: redis:7.2.4
     # 设置redis密码
     command: redis-server /usr/local/etc/redis/redis.conf --requirepass 123456
     volumes:
-      - ./redis.conf:/usr/local/etc/redis/redis.conf
+      - ./redis7.conf:/usr/local/etc/redis/redis.conf
     environment:
       - TZ=Asia/Shanghai
     network_mode: host
-
