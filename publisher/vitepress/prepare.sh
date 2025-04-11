@@ -44,6 +44,7 @@ source_dir_to_target_dir_map["../../front-end/demo-nodejs"]="nodejs"
 source_dir_to_target_dir_map["../../openresty"]="openresty"
 source_dir_to_target_dir_map["../../demo-english"]="english"
 source_dir_to_target_dir_map["../../front-end"]="front-end"
+source_dir_to_target_dir_map["../../front-end/electron"]="electron"
 
 for key in ${!source_dir_to_target_dir_map[@]}; do
     # 删除符号链接目录

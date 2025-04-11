@@ -31,6 +31,7 @@ export default defineConfig({
           { text: 'VitePress', link: '/cms/vitepress.md' },
           { text: 'Html、Javascript、CSS', link: '/html-js-css/README.md' },
           { text: 'Axios', link: '/axios/README.md' },
+          { text: 'Electron', link: '/electron/README.md' },
         ]
       }, {
         text: '后端', items: [
