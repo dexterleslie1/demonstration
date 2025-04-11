@@ -6,9 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <script type="text/javascript">
-        // * 任何函数都有prototype属性，并且prototype是Object类型的一个实例
-        // * prototype对象属性constructor执行函数对象
-        // * 给prototype对象添加属性/方法，函数所有实例对象自动拥有prototype中的属性/方法
+        // 任何函数都有 prototype 属性，并且 prototype 是 Object 类型的一个实例
         console.log(`typeof Date: ${typeof Date}`)
         console.log(`typeof Date.prototype: ${typeof Date.prototype}`)
 
@@ -19,10 +17,12 @@
         console.log(`typeof MyFunction.prototype: ${typeof MyFunction.prototype}`)
 
         // constructor
+        // prototype 对象属性 constructor 指向该函数本身
         console.log(`Date.prototype.constructor===Date: ${Date.prototype.constructor===Date}`)
         console.log(`MyFunction.prototype.constructor===MyFunction: ${MyFunction.prototype.constructor===MyFunction}`)
     
         // prototype添加方法
+        // 给 prototype 对象添加属性/方法，函数所有实例对象自动拥有 prototype 中的属性/方法
         MyFunction.prototype.sayHello = function() {
             console.log('Hello Dexterleslie')
         }

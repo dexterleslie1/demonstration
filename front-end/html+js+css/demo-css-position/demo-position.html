@@ -13,10 +13,12 @@
             background-color: green;
         }
 
+        /* 该元素根据文档的正常流程定位。 top、right、bottom、left 和 z-index 属性无效。 这是默认值。*/
         .div1 .div12 {
             position: static;
             left: 10px;
             top: 200px;
+            background-color: red;
             z-index: 1000;
         }
 
@@ -34,15 +36,14 @@
             width: 200px;
             height: 200px;
             background-color: blueviolet;
-
             /* 
                 relative特性：
                 1、相对自己布局流位置相对定位
                 2、被相对定位后，原有的布局流位置依然占据空间
             */
             position: relative;
-            top: 200px;
-            left: 200px;
+            top: 150px;
+            left: 150px;
         }
 
         .div2>div:nth-child(3) {

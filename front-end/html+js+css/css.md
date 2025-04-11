@@ -1250,6 +1250,571 @@ a::after { content: " →"; } /* 元素后追加箭头 */
 
 
 
+## display
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/html+js+css/demo-css-display)
+
+### block（块）
+
+>元素能够声明宽度和高度并且独占一行。div 默认是块元素。
+>
+>注意：在不声明元素宽度时，元素宽度会自动调整至其父级容器宽度，以填满父级容器宽度。
+
+### inline（行内）
+
+>元素的高度和宽度由内容决定，用户无法直接设置其高度和宽度，并且不会独占一行。此外，inline 元素可以设置水平方向的 padding 和 margin，但竖直方向的 padding 和 margin 则无效。
+>
+>span 默认是行内元素。
+
+### inline-block
+
+>元素能够声明宽度和高度并且不会独占一行。此外，inline 元素可以设置水平和竖直方向的 padding 和 margin。
+
+### table-cell
+
+>表格单元方式排列。
+>
+>注意：能够声明宽度但是不能够声明高度，高度会自动被拉伸到适合单元格高度。
+
+### none
+
+>元素被隐藏并且不会占据布局空间。visibility: hidden 元素隐藏并且会占据布局空间。
+
+
+
+## position
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/html+js+css/demo-css-position)
+>
+>[参考链接](https://developer.mozilla.org/en-US/docs/Web/CSS/position)
+
+### fixed
+
+>让元素固定在可视区域的固定位置，不受页面的滚动影响。
+
+### static
+
+>该元素根据文档的正常流程定位。 top、right、bottom、left 和 z-index 属性无效。 这是默认值。
+>
+>postion 的默认值为 static
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .div1>div {
+            width: 50px;
+            height: 50px;
+            margin: 10px;
+            background-color: green;
+        }
+
+        /* 该元素根据文档的正常流程定位。 top、right、bottom、left 和 z-index 属性无效。 这是默认值。*/
+        .div1 .div12 {
+            position: static;
+            left: 10px;
+            top: 200px;
+            background-color: red;
+            z-index: 1000;
+        }
+    </style>
+</head>
+
+<body>
+    <!--
+        该元素根据文档的正常流程定位。 top、right、bottom、left 和 z-index 属性无效。 这是默认值。
+        
+        postion的默认值为static
+        
+        https://developer.mozilla.org/en-US/docs/Web/CSS/position
+    -->
+    <div>
+        演示position:static用法
+    </div>
+    <div class="div1">
+        <div class="div11"></div>
+        <div class="div12"></div>
+        <div class="div13"></div>
+    </div>
+    <hr>
+</body>
+
+</html>
+```
+
+### relative
+
+>相对自己布局流位置相对定位。被相对定位后，原有的布局流位置依然占据空间。
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .div2 {
+            background-color: aqua;
+        }
+
+        .div2>div:first-child {
+            width: 200px;
+            height: 200px;
+            background-color: blue;
+        }
+
+        .div2>div:nth-child(2) {
+            width: 200px;
+            height: 200px;
+            background-color: blueviolet;
+            /* 
+                relative特性：
+                1、相对自己布局流位置相对定位
+                2、被相对定位后，原有的布局流位置依然占据空间
+            */
+            position: relative;
+            top: 150px;
+            left: 150px;
+        }
+
+        .div2>div:nth-child(3) {
+            width: 200px;
+            height: 200px;
+            background-color: brown;
+        }
+    </style>
+</head>
+
+<body>
+    <div>演示position:relative用法</div>
+    <div class="div2">
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+    <hr>
+</body>
+
+</html>
+```
+
+### absolute
+
+>以最近的父级非 static 定位的元素为参考点，定位指定的偏移量。
+
+示例：absolute 的父元素声明为 relative
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .div3 {
+            background-color: aqua;
+        }
+
+        .div3>div:first-child {
+            width: 200px;
+            height: 200px;
+            background-color: blue;
+        }
+
+        .div3>div:nth-child(2) {
+            width: 500px;
+            height: 500px;
+            background-color: blueviolet;
+        }
+
+        .div3 .father {
+            width: 200px;
+            height: 200px;
+            background-color: burlywood;
+
+            /* 最近的父级非static定位参考点 */
+            position: relative;
+            margin: 30px;
+        }
+
+        .div3 .son {
+            width: 100px;
+            height: 100px;
+            background-color: chartreuse;
+
+            /* 
+                absolute特性：
+                1、以最近的父级非static定位的元素为参考点，定位指定的偏移量
+            */
+            position: absolute;
+            top: 100px;
+            left: 100px;
+        }
+
+        .div3>div:nth-child(3) {
+            width: 200px;
+            height: 200px;
+            background-color: brown;
+        }
+    </style>
+</head>
+
+<body>
+    <div>演示position:absolute用法</div>
+    <div class="div3">
+        <div></div>
+        <div>
+            <div class="father">
+                <div class="son"></div>
+            </div>
+        </div>
+        <div></div>
+    </div>
+    <hr>
+</body>
+
+</html>
+```
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .div6 {
+            position: relative;
+            background-color: green;
+            width: 500px;
+            height: 500px;
+        }
+
+        .div6 .box {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background-color: yellow;
+            border-width: 1px;
+            border-color: black;
+            border-style: solid;
+        }
+    </style>
+</head>
+
+<body>
+    <div>演示position:relative+position:absolute组合定位用法</div>
+    <!-- https://www.cnblogs.com/feicheninfo/articles/11004410.html -->
+    <div class="div6">
+        <div class="box" style="top:10px;left:10px;"></div>
+        <div class="box" style="right:10px;bottom:10px;"></div>
+    </div>
+</body>
+
+</html>
+```
+
+
+
+示例：absolute 的父元素没有声明为非 static 元素（默认为 static），所以以 body 为参考定位
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .div5 {
+            background-color: aqua;
+        }
+
+        .div5>div:first-child {
+            width: 200px;
+            height: 200px;
+            background-color: blue;
+        }
+
+        .div5>div:nth-child(2) {
+            width: 200px;
+            height: 200px;
+            background-color: blueviolet;
+
+            /* 
+                absolute特性：
+                1、被定位后，原有的布局流位置不占据布局空间
+                2、如果所有父级元素都没有声明非static定位的则以body为参考点
+            */
+            position: absolute;
+            top: 200px;
+            left: 200px;
+        }
+
+        .div5>div:nth-child(3) {
+            width: 200px;
+            height: 200px;
+            background-color: brown;
+        }
+    </style>
+</head>
+
+<body>
+    <div>演示position:absolute因为没有父元素声明为非position:static，所以以body为参考定位</div>
+    <div class="div5">
+        <div></div>
+        <div>这是div5 position:absolute演示</div>
+        <div></div>
+    </div>
+</body>
+
+</html>
+```
+
+
+
+示例：absolute 居中显示
+
+>position: absolute 的元素居中时需要同时指定 margin: 0 auto;left: 0;right: 0;
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .demo1 .container {
+            background-color: green;
+            position: relative;
+            height: 50px;
+        }
+        .demo1 .container .widget {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background-color: yellow;
+            /* position: absolute的元素居中时需要同时指定margin: 0 auto;left: 0;right: 0; */
+            margin: 0 auto;
+            left: 0;
+            right: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div>演示position: absolute居中显示</div>
+    <div class="demo1">
+        <div class="container">
+            <div class="widget"></div>
+        </div>
+    </div>
+    <hr>
+</body>
+
+</html>
+```
+
+
+
+## float
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/html+js+css/css-float)
+
+
+
+示例 1：
+
+>示例演示 float 特性：
+>
+>- 将元素排除在普通流之外
+>- 元素将不在页面中占据空间
+>- 将浮动的元素放置在包含框的左边或者右边
+>- 浮动的元素依旧位于包含框之内
+>- 浮动元素的外边缘不会超过其父元素的内边缘
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style type="text/css">
+        /*
+        演示float特性：
+        1、将元素排除在普通流之外
+        2、元素将不在页面中占据空间
+        3、将浮动的元素放置在包含框的左边或者右边
+        4、浮动的元素依旧位于包含框之内
+        5、浮动元素的外边缘不会超过其父元素的内边缘
+        */
+        #box {
+            width: 600px;
+            height: 600px;
+            background-color: aqua;
+        }
+
+        #box > div:first-child {
+            width: 200px;
+            height: 200px;
+            background-color: green;
+            float: right;
+        }
+
+        #box > div:nth-child(2) {
+            width: 200px;
+            height: 200px;
+            background-color: bisque;
+        }
+
+        #box > div:nth-child(3) {
+            width: 200px;
+            height: 200px;
+            background-color: blue;
+        }
+    </style>
+</head>
+<body>
+    <div id="box">
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+</body>
+</html>
+```
+
+
+
+示例 2：
+
+>示例演示 float 特性：
+>
+>- 浮动的元素可以向左或者向右移动，直到它的外边缘碰到包含框或者另一个浮动框的边框为止
+>- 浮动元素不会互相重叠
+>- 父元素的宽度大于等于所有浮动的子元素宽度之和时，浮动元素不会上下浮动，否则最后浮动的元素会换行
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style type="text/css">
+        /*
+        演示float特性：
+        1、浮动的元素可以向左或者向右移动，直到它的外边缘碰到包含框或者另一个浮动框的边框为止
+        2、浮动元素不会互相重叠
+        3、父元素的宽度大于等于所有浮动的子元素宽度之和时，浮动元素不会上下浮动，否则最后浮动的元素会换行
+        */
+        #box {
+            width: 600px;
+            height: 510px;
+            background-color: aqua;
+        }
+
+        #box > div:first-child {
+            width: 200px;
+            height: 200px;
+            background-color: green;
+            float: right;
+        }
+
+        #box > div:nth-child(2) {
+            width: 200px;
+            height: 200px;
+            background-color: bisque;
+            float: right;
+        }
+
+        #box > div:nth-child(3) {
+            width: 300px;
+            height: 300px;
+            background-color: blue;
+            float: right;
+        }
+    </style>
+</head>
+<body>
+    <div id="box">
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+</body>
+</html>
+```
+
+
+
+示例 3：
+
+>示例演示 float 特性：
+>
+>- 任何元素一旦浮动，display 属性将完全失效均可设置高度，并且不会独占一行
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style type="text/css">
+        /*
+        span标签是inline元素，没有宽高并且不会独占一行
+        演示float特性：
+        1、任何元素一旦浮动，display属性将完全失效均可设置高度，并且不会独占一行
+        */
+        #box1 {
+            float: left;
+            width: 200px;
+            height: 200px;
+            background-color: blueviolet;
+        }
+
+        #box2 {
+            float: left;
+            width: 200px;
+            height: 200px;
+            background-color: brown;
+        }
+    </style>
+</head>
+<body>
+    <span id="box1">6666666</span>
+    <span id="box2">8888888</span>
+</body>
+</html>
+```
+
+
+
+## object-fit
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/html+js+css/css-object-fit)
+
+
+
 ## 黑暗或明亮模式切换
 
 >dark or light mode.
