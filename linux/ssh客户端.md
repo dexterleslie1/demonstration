@@ -345,3 +345,38 @@ $ parallel-ssh -l dexterleslie -H 192.168.1.181 -i 'bash --login -c "env"'
 ## Ansible
 
 参考 <a href="/ansible/README.html#ad-hoc-方式执行命令" target="_blank">链接</a> 使用 ad-hoc 方式执行命令。
+
+
+
+## Electerm
+
+>`https://github.com/electerm/electerm`
+
+### 总结
+
+todo
+
+
+
+### 安装
+
+#### Ubuntu 安装
+
+使用 snap 安装
+
+```bash
+sudo snap install electerm --classic
+```
+
+#### MacOS 安装
+
+通过 [链接](https://github.com/electerm/electerm) 下载 electerm dmg
+
+双击 dmg 安装 electerm
+
+删除 /Applications/electerm.app com.apple.quarantine xattr
+
+```bash
+xattr -r -d com.apple.quarantine /Applications/electerm.app
+```
+
