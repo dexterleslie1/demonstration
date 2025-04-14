@@ -1,12 +1,11 @@
 package com.future.demo.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
-@AllArgsConstructor
-public class PreOrderDto {
+public class OrderDetailDTO {
+    private Long id;
+    private Long orderId;
     private Long productId;
-    private Long userId;
     private Integer amount;
 }

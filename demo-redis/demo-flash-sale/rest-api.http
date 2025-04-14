@@ -1,6 +1,16 @@
+### 远程秒杀
 POST http://192.168.1.185/api/v1/purchaseProduct?userId=1&productId=1&amount=1
 Accept: application/json
 
-###
+### 远程秒杀数据库同步状态查询
+GET http://192.168.1.185/api/v1/checkDbSyncStatus?dbSyncStatusId=3e81beff-d925-4a22-a4ba-b489ed152e40
+
+### 本地秒杀
 POST http://localhost:8080/api/v1/purchaseProduct?userId=1&productId=1&amount=1
 Accept: application/json
+
+### 本地秒杀数据库同步状态查询
+GET http://localhost:8080/api/v1/checkDbSyncStatus?dbSyncStatusId=de3be03c-7ba9-4a84-82b3-1bec40413a40
+
+### 本地 - 用户查询自己订单列表
+GET http://localhost:8080/api/v1/listOrders?userId=42660282

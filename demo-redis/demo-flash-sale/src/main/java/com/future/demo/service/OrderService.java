@@ -1,9 +1,14 @@
 package com.future.demo.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.future.common.exception.BusinessException;
-import com.future.demo.dto.PreOrderDto;
+import com.future.demo.dto.OrderDTO;
+import com.future.demo.dto.OrderDetailDTO;
+import com.future.demo.dto.PreOrderDTO;
+import com.future.demo.entity.OrderDetailModel;
 import com.future.demo.entity.OrderModel;
 import com.future.demo.entity.ProductModel;
+import com.future.demo.mapper.OrderDetailMapper;
 import com.future.demo.mapper.OrderMapper;
 import com.future.demo.mapper.ProductMapper;
 import io.lettuce.core.cluster.api.sync.RedisClusterCommands;
@@ -11,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.aop.framework.AopContext;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -23,21 +29,20 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.Date;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 public class OrderService {
-    //    public final static String KeyProductStockPrefix = "product:stock:";
     public final static String KeyproductStockWithHashTag = "product{%s}:stock";
-    //    public final static String KeyProductPurchaseRecordPrefix = "product:purchase:";
     public final static String KeyProductPurchaseRecordWithHashTag = "product{%s}:purchase";
 
-    public final static String KeyProductSoldOutPrefix = "product:soldout:";
-
-    public final static int ProductCount = 100;
+    public final static int ProductCount = 300;
+    public final static int ProductStock = 1000;
+    public final static int UserCount = 10000 * 10000;
 
     static DefaultRedisScript<Long> defaultRedisScript = null;
     static String Script = null;
@@ -60,19 +65,21 @@ public class OrderService {
     }
 
     OrderService orderServiceProxy = null;
-    BlockingQueue<PreOrderDto> blockingQueue = new ArrayBlockingQueue<>(1024 * 1024);
+    BlockingQueue<PreOrderDTO> blockingQueue = new ArrayBlockingQueue<>(1024 * 1024);
     ExecutorService executor = Executors.newFixedThreadPool(1);
     ExecutorService executorRunner = Executors.newFixedThreadPool(64);
 
     @Resource
     RedisClusterCommands<String, String> sync;
+    @Resource
+    ObjectMapper objectMapper;
 
     @PostConstruct
     public void init() {
         /*executor.submit(() -> {
             while (true) {
                 try {
-                    PreOrderDto preOrderDto = blockingQueue.take();
+                    PreOrderDTO preOrderDto = blockingQueue.take();
                     if (preOrderDto.getProductId() == null) {
                         break;
                     }
@@ -95,17 +102,18 @@ public class OrderService {
 
         // region 准备协助基准测试的数据
 
+        this.orderDetailMapper.deleteAll();
         this.orderMapper.deleteAll();
 
         for (long i = 1; i <= ProductCount; i++) {
             // 准备 redis 数据辅助基于缓存的测试
-            Integer productStock = 1000000000;
+            Integer productStock = OrderService.ProductStock;
             String keyProductStock = String.format(OrderService.KeyproductStockWithHashTag, i);
             this.redisTemplate.opsForValue().set(keyProductStock, String.valueOf(productStock));
             String keyProductPurchaseRecord = String.format(OrderService.KeyProductPurchaseRecordWithHashTag, i);
             this.redisTemplate.delete(keyProductPurchaseRecord);
-            String key = OrderService.KeyProductSoldOutPrefix + i;
-            this.redisTemplate.delete(key);
+            /*String key = OrderService.KeyProductSoldOutPrefix + i;
+            this.redisTemplate.delete(key);*/
 
             // 准备 db 数据辅助基于数据库的测试
             this.productMapper.delete(i);
@@ -122,7 +130,7 @@ public class OrderService {
     @PreDestroy
     public void destroy() throws InterruptedException {
         // BlockingQueue 退出信号
-        this.blockingQueue.put(new PreOrderDto(null, null, null));
+        this.blockingQueue.put(new PreOrderDTO(null, null, null));
 
         executorRunner.shutdown();
         while (!this.executorRunner.awaitTermination(10, TimeUnit.MILLISECONDS)) ;
@@ -136,6 +144,8 @@ public class OrderService {
     StringRedisTemplate redisTemplate;
     @Resource
     OrderMapper orderMapper;
+    @Resource
+    OrderDetailMapper orderDetailMapper;
     @Resource
     ProductMapper productMapper;
     @Resource
@@ -172,25 +182,16 @@ public class OrderService {
 
     // 基于 Redis+Lua脚本 实现商品秒杀，注意：只能够与 Redis Standalone 模式配合运行，与 Redis 其他模式配合运行会报错。
     // 结论：性能高于基于数据库的实现的 3 倍
-    public void createOrderBasedRedisWithLuaScript(Long userId, Long productId, Integer amount) throws Exception {
+    public String createOrderBasedRedisWithLuaScript(Long userId, Long productId, Integer amount) throws Exception {
         String productIdStr = String.valueOf(productId);
         String userIdStr = String.valueOf(userId);
         String amountStr = String.valueOf(amount);
-
-        // 库存余量不足时表示后续的所有请求无效
-        /*String key = KeyProductSoldOutPrefix + productIdStr;
-        if (Boolean.TRUE.equals(this.redisTemplate.hasKey(key))) {
-            throw new BusinessException("库存不足");
-        }*/
 
         // 判断库存是否充足、用户是否重复下单
         Long result = this.redisTemplate.execute(defaultRedisScript, Collections.singletonList(productIdStr), productIdStr, userIdStr, amountStr);
         /*Long result = sync.eval(Script, ScriptOutputType.INTEGER, new String[]{productIdStr}, productIdStr, userIdStr, amountStr);*/
         if (result != null) {
             if (result == 1) {
-                String key = KeyProductSoldOutPrefix + productIdStr;
-                this.redisTemplate.opsForValue().set(key, "");
-                /*sync.set(key, "");*/
                 throw new BusinessException("库存不足");
             } else if (result == 2) {
                 throw new BusinessException("用户重复下单");
@@ -199,13 +200,30 @@ public class OrderService {
             }
         }
 
+        /*String preOrderId = UUID.randomUUID().toString();
+        ObjectNode orderObjectNode = this.objectMapper.createObjectNode();
+        orderObjectNode.put("userId", userId);
+        ArrayNode itemArrayNode = this.objectMapper.createArrayNode();
+        ObjectNode itemObjectNode = this.objectMapper.createObjectNode();
+        itemObjectNode.put("productId", productId);
+        itemObjectNode.put("amount", amount);
+        itemArrayNode.add(itemObjectNode);
+        orderObjectNode.set("items", itemArrayNode);
+        this.redisTemplate.opsForValue().set(preOrderId, orderObjectNode.asText());
+        return preOrderId;*/
+
+        // 秒杀成功后，返回订单数据库同步状态查询回执 ID 给界面，以实现订单同步后界面自动跳转到订单查询界面
+        String dbSyncStatusId = UUID.randomUUID().toString();
+        this.redisTemplate.opsForValue().set(dbSyncStatusId, "");
+        return dbSyncStatusId;
+
         // 获取 OrderService 的代理对象，否则 createOrderInternal 方法的 @Transactional 注解不生效
         /*OrderService proxy = (OrderService) AopContext.currentProxy();
         proxy.createOrderInternal(userId, productId, amount);*/
 //        if (this.orderServiceProxy == null) {
 //            this.orderServiceProxy = (OrderService) AopContext.currentProxy();
 //        }
-//        this.blockingQueue.put(new PreOrderDto(productId, userId, amount));
+//        this.blockingQueue.put(new PreOrderDTO(productId, userId, amount));
     }
 
     public void createOrderBasedRedisWithoutLuaScript(Long userId, Long productId, Integer amount) throws Exception {
@@ -257,33 +275,72 @@ public class OrderService {
         /*if (this.orderServiceProxy == null) {
             this.orderServiceProxy = (OrderService) AopContext.currentProxy();
         }
-        this.blockingQueue.put(new PreOrderDto(productId, userId, amount));*/
+        this.blockingQueue.put(new PreOrderDTO(productId, userId, amount));*/
     }
 
     // 抛出异常后回滚事务
     @Transactional(rollbackFor = Exception.class)
     public void createOrderInternal(Long userId, Long productId, Integer amount) throws Exception {
         // 判断用户是否重复下单
-        OrderModel orderModel = this.orderMapper.getByUserIdAndProductId(userId, productId);
-        if (orderModel != null) {
+        OrderDetailModel orderDetailModel = this.orderDetailMapper.getByUserIdAndProductId(userId, productId);
+        if (orderDetailModel != null) {
             throw new BusinessException("用户重复下单");
         }
 
         // 创建订单
-        orderModel = new OrderModel();
+        OrderModel orderModel = new OrderModel();
         orderModel.setUserId(userId);
-        orderModel.setProductId(productId);
-        orderModel.setAmount(amount);
-        orderModel.setCreateTime(new Date());
+        /*orderModel.setProductId(productId);
+        orderModel.setAmount(amount);*/
+        orderModel.setCreateTime(LocalDateTime.now());
         int count = this.orderMapper.insert(orderModel);
         if (count <= 0) {
             throw new BusinessException("创建订单失败");
         }
+
+        orderDetailModel = new OrderDetailModel();
+        orderDetailModel.setOrderId(orderModel.getId());
+        orderDetailModel.setUserId(userId);
+        orderDetailModel.setProductId(productId);
+        orderDetailModel.setAmount(amount);
+        this.orderDetailMapper.insert(orderDetailModel);
 
         // 扣减库存
         count = this.productMapper.decreaseStock(productId, amount);
         if (count <= 0) {
             throw new BusinessException("扣减库存失败");
         }
+    }
+
+    /**
+     * 根据用户查询其所属订单
+     *
+     * @param userId
+     * @return
+     */
+    public List<OrderDTO> list(Long userId) {
+        List<OrderModel> orderList = this.orderMapper.list(userId);
+        List<Long> orderIdList = orderList.stream().map(OrderModel::getId).collect(Collectors.toList());
+        if(orderIdList.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<OrderDetailModel> orderDetailList = this.orderDetailMapper.list(orderIdList);
+        Map<Long, List<OrderDetailModel>> orderDetailGroupByOrderId = orderDetailList.stream().collect(Collectors.groupingBy(OrderDetailModel::getOrderId));
+        return orderList.stream().map(o -> {
+            OrderDTO orderDTO = new OrderDTO();
+            BeanUtils.copyProperties(o, orderDTO);
+            Long orderId = o.getId();
+            if (orderDetailGroupByOrderId.containsKey(orderId)) {
+                List<OrderDetailModel> orderDetailListTemporary = orderDetailGroupByOrderId.get(orderId);
+                List<OrderDetailDTO> orderDetailDTOList = orderDetailListTemporary.stream().map(oInternal1 -> {
+                    OrderDetailDTO orderDetailDTO = new OrderDetailDTO();
+                    BeanUtils.copyProperties(oInternal1, orderDetailDTO);
+                    return orderDetailDTO;
+                }).collect(Collectors.toList());
+                orderDTO.setOrderDetailList(orderDetailDTOList);
+            }
+            return orderDTO;
+        }).collect(Collectors.toList());
     }
 }
