@@ -2,18 +2,6 @@
 
 
 
-## 录屏工具
-
-
-
-### 录屏转换为`gif`
-
-支持`windows`、`macOS`录屏幕并转换为`gif`，注意：从`dmg`安装成功后需要手动删除安全隔离属性才能够打开软件，否则报告没有权限打开该软件错误。`https://github.com/wulkano/Kap`
-
-支持`windows`录屏幕并转换为`gif`，`https://www.screentogif.com/`
-
-
-
 ## 截图工具
 
 ### `snipaste`

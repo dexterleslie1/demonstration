@@ -32,6 +32,9 @@ export default defineConfig({
           { text: 'Html、Javascript、CSS', link: '/html-js-css/README.md' },
           { text: 'Axios', link: '/axios/README.md' },
           { text: 'Electron', link: '/electron/README.md' },
+          { text: '多媒体技术', link: '/多媒体技术/README.md' },
+          { text: 'Adobe', link: '/adobe/README.md' },
+          { text: 'Figma', link: '/figma/README.md' },
         ]
       }, {
         text: '后端', items: [
