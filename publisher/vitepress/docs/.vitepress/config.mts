@@ -491,6 +491,7 @@ export default defineConfig({
             { text: '语态', link: '/english/语态.md' },
             { text: '语气', link: '/english/语气.md' },
             { text: '音标', link: '/english/音标.md' },
+            { text: '实践阅读', link: '/english/实践阅读.md' },
           ]
         }
       ],
