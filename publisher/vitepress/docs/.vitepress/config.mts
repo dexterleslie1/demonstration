@@ -48,6 +48,7 @@ export default defineConfig({
           { text: 'MySQL、MariaDB', link: '/mysql-n-mariadb/README.md' },
           { text: 'NodeJS', link: '/nodejs/README.md' },
           { text: 'OpenResty', link: '/openresty/编译docker基础镜像.md' },
+          { text: 'Maven', link: '/maven/README.md' },
         ]
       }, {
         text: 'Linux', items: [
@@ -495,6 +496,24 @@ export default defineConfig({
             { text: '语气', link: '/english/语气.md' },
             { text: '音标', link: '/english/音标.md' },
             { text: '实践阅读', link: '/english/实践阅读.md' },
+          ]
+        }
+      ],
+      '/maven/': [
+        {
+          text: 'Maven',
+          items: [
+            { text: '基础', link: '/maven/README.md' },
+            { text: 'DependencyManagement', link: '/maven/dependencymanagement用法.md' },
+            { text: 'Maven Wrapper', link: '/maven/maven-wrapper用法.md' },
+            { text: '仓库', link: '/maven/maven仓库.md' },
+            { text: '发布可执行 Jar', link: '/maven/maven发布带main函数可执行jar.md' },
+            { text: '插件', link: '/maven/maven插件.md' },
+            { text: 'Optional 用法', link: '/maven/maven的optional用法.md' },
+            { text: 'Scope 用法', link: '/maven/maven的scope用法.md' },
+            { text: 'mvn 命令', link: '/maven/mvn命令.md' },
+            { text: '多模块配置', link: '/maven/多模块配置.md' },
+            { text: '指定 JDK 版本', link: '/maven/指定jdk版本.md' },
           ]
         }
       ],
