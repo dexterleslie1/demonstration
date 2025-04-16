@@ -26,7 +26,7 @@ services:
   node1:
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-redis
     # 必须设置cluster-announce-ip才能够在创建集群时节点join到master，否则会一直waiting...
-    command: redis-server /usr/local/etc/redis/redis.conf --port 6380 --cluster-announce-ip 192.168.1.190
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6380 --cluster-announce-ip ${redisClusterAnnounceIp}
     environment:
       - TZ=Asia/Shanghai
     restart: unless-stopped
@@ -34,7 +34,7 @@ services:
 
   node2:
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-redis
-    command: redis-server /usr/local/etc/redis/redis.conf --port 6381 --cluster-announce-ip 192.168.1.190
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6381 --cluster-announce-ip ${redisClusterAnnounceIp}
     environment:
       - TZ=Asia/Shanghai
     restart: unless-stopped
@@ -42,7 +42,7 @@ services:
 
   node3:
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-redis
-    command: redis-server /usr/local/etc/redis/redis.conf --port 6382 --cluster-announce-ip 192.168.1.190
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6382 --cluster-announce-ip ${redisClusterAnnounceIp}
     environment:
       - TZ=Asia/Shanghai
     restart: unless-stopped
@@ -50,7 +50,7 @@ services:
 
   node4:
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-redis
-    command: redis-server /usr/local/etc/redis/redis.conf --port 6383 --cluster-announce-ip 192.168.1.190
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6383 --cluster-announce-ip ${redisClusterAnnounceIp}
     environment:
       - TZ=Asia/Shanghai
     restart: unless-stopped
@@ -58,7 +58,7 @@ services:
 
   node5:
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-redis
-    command: redis-server /usr/local/etc/redis/redis.conf --port 6384 --cluster-announce-ip 192.168.1.190
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6384 --cluster-announce-ip ${redisClusterAnnounceIp}
     environment:
       - TZ=Asia/Shanghai
     restart: unless-stopped
@@ -66,7 +66,7 @@ services:
 
   node6:
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-redis
-    command: redis-server /usr/local/etc/redis/redis.conf --port 6385 --cluster-announce-ip 192.168.1.190
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6385 --cluster-announce-ip ${redisClusterAnnounceIp}
     environment:
       - TZ=Asia/Shanghai
     restart: unless-stopped
