@@ -218,3 +218,88 @@ git remote -v
 ```sh
 git remote set-url origin https://github.com/username/new-repo.git
 ```
+
+
+
+## GUI 客户端
+
+
+
+### GitExtensions
+
+>支持 Windows。
+
+#### 介绍
+
+**GitExtensions** 是一个功能强大且开源的 Git 图形用户界面（GUI）工具，专为 Windows 平台设计，旨在简化 Git 的使用并提升开发效率。它提供了直观的界面和丰富的功能，使开发者能够更轻松地管理 Git 仓库、执行版本控制操作以及与团队协作。
+
+------
+
+**主要特点**
+
+1. **直观的图形界面**
+   GitExtensions 提供了一个用户友好的界面，使开发者可以通过图形化操作完成常见的 Git 任务，如提交、推送、拉取、分支管理等，而无需记忆复杂的命令行指令。
+2. **与 Windows 资源管理器集成**
+   它集成了 Windows 资源管理器，允许用户直接在文件资源管理器中查看 Git 仓库的状态，执行 Git 操作，而无需打开单独的应用程序。
+3. **与 Visual Studio 集成**
+   GitExtensions 提供了 Visual Studio 插件，使开发者可以直接在 Visual Studio 中使用 Git 功能，无需切换工具，从而提高开发效率。
+4. **内置差异和合并工具**
+   工具内置了差异（diff）和合并（merge）功能，用户可以直观地查看文件的更改，并轻松解决合并冲突。
+5. **子模块支持**
+   GitExtensions 支持 Git 子模块，方便开发者管理和更新项目中的子模块，适合复杂项目的开发。
+6. **历史记录查看**
+   提供了详细的提交历史记录查看功能，包括图形化的提交树（commit tree），方便用户浏览和管理项目的历史记录。
+7. **多语言支持**
+   支持多种语言界面，方便全球开发者使用。
+8. **脚本和插件扩展**
+   支持脚本和插件扩展，用户可以根据自己的需求定制和扩展功能。
+
+------
+
+**适用场景**
+
+- **新手开发者**：对于不熟悉 Git 命令行的开发者，GitExtensions 提供了直观的界面，降低了学习曲线。
+- **团队协作**：通过图形化界面，团队成员可以更方便地协作开发，管理分支和合并代码。
+- **复杂项目管理**：支持子模块和详细的历史记录查看，适合管理大型和复杂的项目。
+- **集成开发环境（IDE）用户**：与 Visual Studio 的集成使开发者无需离开 IDE 即可使用 Git 功能。
+
+------
+
+**安装与使用**
+
+1. 安装
+   - 下载 GitExtensions 的安装包（可从 [GitHub Releases](https://github.com/gitextensions/gitextensions/releases) 获取）。
+   - 运行安装程序，按照提示完成安装。
+   - 安装过程中可以选择安装与 Visual Studio 的集成插件。
+2. 基本使用
+   - **克隆仓库**：通过 GitExtensions 可以轻松克隆远程仓库到本地。
+   - **提交更改**：在界面中查看修改的文件，选择要提交的文件，填写提交信息并提交。
+   - **推送和拉取**：将本地更改推送到远程仓库，或从远程仓库拉取最新更改。
+   - **分支管理**：创建、切换、合并和删除分支。
+   - **解决冲突**：在合并时，如果发生冲突，GitExtensions 会提示冲突的文件，用户可以在界面中解决冲突。
+
+------
+
+**优势**
+
+- **开源免费**：GitExtensions 是开源软件，用户可以免费使用，并且可以根据需要自定义和扩展功能。
+- **跨平台支持**：虽然主要针对 Windows，但通过 Mono 等工具，GitExtensions 也可以在 Linux 和 macOS 上运行。
+- **社区支持**：作为开源项目，GitExtensions 拥有活跃的社区，用户可以获取帮助、报告问题或贡献代码。
+
+------
+
+**总结**
+
+GitExtensions 是一个功能全面、易于使用的 Git 图形用户界面工具，特别适合 Windows 平台的开发者。它通过直观的界面和强大的功能，简化了 Git 的使用，提高了开发效率，是团队协作和复杂项目管理的理想选择。无论是新手还是有经验的开发者，都能从 GitExtensions 中受益。
+
+
+
+#### 安装
+
+在 Windows 11 中安装
+
+下载最新版本的 [GitExtensions](https://github.com/gitextensions/gitextensions/releases)，例如：GitExtensions-x64-5.2.1.18061-0d74cfdc3.msi，根据 msi 安装程序提示安装 GitExtensions
+
+下载最新版本 Git 客户端 [链接](https://git-scm.com/downloads/win)，例如：Git-2.49.0-64-bit.exe，根据 exe 安装程序提示安装 Git 客户端
+
+双击 GitExtensions 即可运行。
