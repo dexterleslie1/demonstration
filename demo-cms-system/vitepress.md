@@ -22,6 +22,24 @@ VuePress 2 我们也投入了精力，它也支持 Vue 3 和 Vite，与 VuePress
 
 
 
+## Windows 11 系统上启动已有的 VitePress 项目
+
+安装 NodeJS v20.19.0：参考本站 <a href="/nodejs/README.html#windows-安装-nodejs" target="_blank">链接</a>
+
+切换到 VitePress 项目所在的目录，安装项目相关依赖
+
+```bash
+npm install --registry=https://registry.npmmirror.com
+```
+
+启动项目
+
+```bash
+npm run docs:dev
+```
+
+
+
 ## 创建项目
 
 查看 node 版本
