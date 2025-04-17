@@ -303,3 +303,38 @@ GitExtensions 是一个功能全面、易于使用的 Git 图形用户界面工�
 下载最新版本 Git 客户端 [链接](https://git-scm.com/downloads/win)，例如：Git-2.49.0-64-bit.exe，根据 exe 安装程序提示安装 Git 客户端
 
 双击 GitExtensions 即可运行。
+
+
+
+## 多平台换行符问题（LF or CRLF）
+
+>[参考链接](http://kuanghy.github.io/2017/03/19/git-lf-or-crlf)
+
+在不同的系统平台上使用的换行符是不一样的。UNIX/Linux 使用的是 0x0A（LF），早期的 Mac OS 使用的是 0x0D（CR），后来的 OS X 在更换内核后与 UNIX 保持一致了。但 DOS/Windows 一直使用 0x0D0A（CRLF） 作为换行符。
+
+跨平台协作开发是常有的，不统一的换行符确实对跨平台的文件交换带来了麻烦。最大的问题是，在不同平台上，换行符发生改变时，Git 会认为整个文件被修改，这就造成我们没法 diff，不能正确反映本次的修改。还好 Git 在设计时就考虑了这一点，其提供了一个 autocrlf 的配置项，用于在提交和检出时自动转换换行符，该配置有三个可选项：
+
+- true：提交时转换为 LF，检出时转换为 CRLF
+- false：提交检出均不转换
+- input：提交时转换为LF，检出时不转换
+
+查看当前 CRLF 设置
+
+```bash
+git config core.autocrlf
+```
+
+用如下命令即可完成 CRLF 配置：
+
+```bash
+# 提交时转换为LF，检出时转换为CRLF
+git config --global core.autocrlf true
+
+# 提交时转换为LF，检出时不转换
+git config --global core.autocrlf input
+
+# 提交检出均不转换
+git config --global core.autocrlf false
+```
+
+在 Windows 11 上把文件中的 CRLF 转换为 LF，可以通过 notepad++ 的 `编辑` > `文档格式转换` > `转换为 Unix (LF)` 功能转换。
