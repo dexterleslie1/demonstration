@@ -25,16 +25,18 @@ public class DemoController {
 
     @PostConstruct
     public void init() {
+        // 生成10w个随机key放到内中
         for (int i = 0; i < totalKey; i++) {
             String key = UUID.randomUUID().toString();
             redisKeyList.add(key);
         }
+
+        // 把随机key set 到 redis 中
         if (this.redisTemplate != null) {
             Map<String, String> map = new HashMap<>();
             for (int i = 0; i < totalKey; i++) {
                 String key = redisKeyList.get(i);
-                String value = key;
-                map.put(key, value);
+                map.put(key, key);
 
                 if ((i + 1) % 1000 == 0) {
                     Map<String, String> finalMap = map;
@@ -56,6 +58,11 @@ public class DemoController {
         }
     }
 
+    /**
+     * 不操作 redis 直接在内存中返回 uuid
+     *
+     * @return
+     */
     @GetMapping(value = "/")
     public ObjectResponse<String> index() {
         String uuid = this.redisKeyList.get((int) RANDOM.nextLong(totalKey));
@@ -67,6 +74,11 @@ public class DemoController {
 
     final static Random RANDOM = new Random(System.currentTimeMillis());
 
+    /**
+     * 协助测试 redis get 性能
+     *
+     * @return
+     */
     @GetMapping(value = "redisGet")
     public ObjectResponse<String> redisGet() {
         String key = this.redisKeyList.get((int) RANDOM.nextLong(totalKey));
@@ -77,6 +89,11 @@ public class DemoController {
         return response;
     }
 
+    /**
+     * 协助测试 redis set 性能
+     *
+     * @return
+     */
     @GetMapping(value = "redisSet")
     public ObjectResponse<String> redisSet() {
         String key = this.redisKeyList.get((int) RANDOM.nextLong(totalKey));

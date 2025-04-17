@@ -71,7 +71,7 @@
 
 - 参考 <a href="/docker/docker的安装.html#使用-dcli-安装" target="_blank">链接</a> 安装 Docker 环境
 
-- 复制本站示例用于启动基准测试目标 [链接](https://gitee.com/dexterleslie/demonstration/tree/master/demo-benchmark/demo-openresty-standalone-benchmark)
+- 复制本站示例用于启动基准测试目标 [链接](https://gitee.com/dexterleslie/demonstration/tree/main/demo-benchmark/demo-openresty-standalone-benchmark)
 
 - 启动基准测试目标
 

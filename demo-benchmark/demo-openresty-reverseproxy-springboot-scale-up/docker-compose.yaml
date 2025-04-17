@@ -8,12 +8,13 @@ services:
     volumes:
       - ./nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf:ro
     restart: unless-stopped
-    # ports:
-    #   - '80:80'
-    network_mode: host
+    ports:
+      - '80:80'
+    depends_on:
+      - springboot
   springboot:
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-boot-benchmark
     environment:
-      - JAVA_OPTS=-Xmx4g
+      - JAVA_OPTS=-Xmx2g
       - TZ=Asia/Shanghai
     restart: unless-stopped
