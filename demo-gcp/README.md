@@ -193,6 +193,8 @@ Artifact Registry 提供用于管理私有软件包和 Docker 容器映像的单
 
 ## Cloud Run
 
+>提醒：使用 Cloud Run 启动 SpringBoot 应用太慢，所以暂时放弃此方案免费运行 SpringBoot 应用镜像。
+>
 >[Cloud Run 是什么](https://cloud.google.com/run/docs/overview/what-is-cloud-run?hl=zh-cn)
 
 
