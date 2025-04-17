@@ -49,6 +49,7 @@ source_dir_to_target_dir_map["../../front-end/多媒体技术"]="多媒体技术
 source_dir_to_target_dir_map["../../front-end/demo-adobe"]="adobe"
 source_dir_to_target_dir_map["../../front-end/demo-figma"]="figma"
 source_dir_to_target_dir_map["../../demo-maven"]="maven"
+source_dir_to_target_dir_map["../../demo-windows"]="windows"
 
 for key in ${!source_dir_to_target_dir_map[@]}; do
     # 删除符号链接目录

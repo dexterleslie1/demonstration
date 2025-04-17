@@ -25,3 +25,36 @@
 ## 启用`hyper-v`特性
 
 windows11 启用`hyper-v`特性，`https://www.bdrsuite.com/blog/how-to-enable-hyper-v-in-windows-11-and-windows-server-2022/`
+
+
+
+## Cygwin
+
+>提醒：支持和 Ubuntu 一样正常使用 find、grep 等命令。
+
+
+
+### 安装
+
+Windows 11 安装 Cygwin
+
+通过 [链接](https://www.cygwin.com/) 下载最新版本 Cygwin，例如：setup-x86_64.exe，运行安装程序并选择通过互联网在线安装，选择阿里云镜像网站和所有组件安装 Cygwin。
+
+
+
+### 使用
+
+#### 切换到 c: 盘
+
+```bash
+cd /cygdrive/c
+pwd
+```
+
+
+
+#### 在当前目录打开文件管理器
+
+```bash
+cygstart .
+```
