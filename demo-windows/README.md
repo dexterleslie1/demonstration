@@ -22,6 +22,27 @@
 
 
 
+### `Windows 11`  禁用自动更新功能
+
+停止更新服务：
+
+- 按 Win + R，输入 services.msc，回车。
+- 找到 Windows Update 服务，右键选择“停止”。
+
+禁用服务启动：
+
+- 双击 Windows Update，在“启动类型”中选择“禁用”。
+
+恢复选项：
+
+- 在“恢复”选项卡中，将所有失败操作设置为“无操作”。
+
+应用更改：
+
+- 点击“确定”并重启计算机。
+
+
+
 ## 启用`hyper-v`特性
 
 windows11 启用`hyper-v`特性，`https://www.bdrsuite.com/blog/how-to-enable-hyper-v-in-windows-11-and-windows-server-2022/`
