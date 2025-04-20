@@ -103,6 +103,7 @@ export default defineConfig({
           { text: 'HTTP 相关', link: '/http/README.md' },
           { text: '英语学习', link: '/english/README.md' },
           { text: 'Windows 系统', link: '/windows/README.md' },
+          { text: '腾讯', link: '/tencent/README.md' },
         ]
       },
     ],
