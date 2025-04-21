@@ -137,7 +137,7 @@ docker inspect -f '{{ .Name }} {{ .LogPath }}' $(docker ps -qa)
 docker run --name test2 centos /bin/sh -c "for i in {1..10000000}; do echo \$i; done;"
 ```
 
-显示所有容器实例日志存储存储使用情况，再通过显示的日志路径中id部分找出对应的容器实例。https://stackoverflow.com/questions/59765204/how-to-list-docker-logs-size-for-all-containers
+显示所有容器实例日志存储存储使用情况，再通过显示的日志路径中id部分找出对应的容器实例。`https://stackoverflow.com/questions/59765204/how-to-list-docker-logs-size-for-all-containers`
 
 ```sh
 sudo du -ch $(docker inspect --format='{{.LogPath}}' $(docker ps -qa)) | sort -h
@@ -147,7 +147,7 @@ sudo du -ch $(docker inspect --format='{{.LogPath}}' $(docker ps -qa)) | sort -h
 
 ### 分析容器的卷存储空间使用情况
 
-> NOTE： 绑定卷无法通过下面方法查看存储空间使用情况，但可以通过查看宿主机卷挂载点硬盘存储使用情况间接分析容器绑定卷存储空间使用情况。
+> 注意：绑定卷无法通过下面方法查看存储空间使用情况，但可以通过查看宿主机卷挂载点硬盘存储使用情况间接分析容器绑定卷存储空间使用情况。
 
 创建命名卷模拟占用大量存储空间
 
@@ -155,7 +155,7 @@ sudo du -ch $(docker inspect --format='{{.LogPath}}' $(docker ps -qa)) | sort -h
 docker run --name b2 -v vol1:/data centos /bin/sh -c "for i in {1..10000000}; do echo \$i >> /data/1.txt; done;"
 ```
 
-针对匿名卷需要通过下面命令(列出所有容器实例对应的卷，包括命名卷、绑定卷、匿名卷)配合查到匿名卷对应的容器，https://stackoverflow.com/questions/30133664/how-do-you-list-volumes-in-docker-containers
+针对匿名卷需要通过下面命令(列出所有容器实例对应的卷，包括命名卷、绑定卷、匿名卷)配合查到匿名卷对应的容器，`https://stackoverflow.com/questions/30133664/how-do-you-list-volumes-in-docker-containers`
 
 ```sh
 docker inspect -f '{{ .Name }} {{ .Mounts }}' $(docker ps -qa)
