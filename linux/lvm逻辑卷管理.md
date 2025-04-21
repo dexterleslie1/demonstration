@@ -81,7 +81,16 @@ mkfs.xfs /dev/vg0/lv1
 mount /dev/vg0/lv1 /data
 ```
 
-`Logical volume`扩容
+
+
+## 逻辑卷扩容
+
+添加`pv`到`vg`中
+
+```bash
+# 其中/dev/sdd1是physical volume名称
+vgextend vg0 /dev/sdd1
+```
 
 ```bash
 # 逻辑卷/dev/vg0/lv1扩容1g
@@ -96,18 +105,11 @@ lvextend -L 12g /dev/vg0/lv1
 # -l +100%FREE表示把逻辑卷所属的vg剩余空间全部用于扩容
 lvextend -l +100%FREE /dev/vg0/lv1
 
-# 专门用于扩展或缩小ext2、ext3和ext4文件系统的大小
+# 注意：专门用于扩展或缩小ext2、ext3和ext4文件系统的大小
 resize2fs /dev/vg0/lv1
 
-# xfs文件系统使用以下命令使文件resize
+# 注意：xfs文件系统使用以下命令使文件resize
 xfs_growfs /dev/vg0/lv1
-```
-
-添加`pv`到`vg`中，以达到扩容效果
-
-```bash
-# 其中/dev/sdd1是physical volume名称
-vgextend vg0 /dev/sdd1
 ```
 
 
