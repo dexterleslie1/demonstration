@@ -128,3 +128,19 @@ docker pull nginx
 journalctl -f -u docker
 ```
 
+
+
+## 迁移 Docker 数据目录
+
+复制数据目录
+
+```bash
+cp -rp /var/lib/docker /data/data-docker
+```
+
+编辑 /etc/docker/daemon.json 添加如下配置
+
+```json
+"data-root": "/data/data-docker"
+```
+
