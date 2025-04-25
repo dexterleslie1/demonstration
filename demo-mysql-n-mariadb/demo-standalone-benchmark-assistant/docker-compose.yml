@@ -1,0 +1,18 @@
+version: "3.0"
+
+services:
+  db:
+    build:
+      context: ./
+    image: demo-mariadb-standalone-server
+    user: mysql
+    command:
+     - --character-set-server=utf8mb4
+     - --collation-server=utf8mb4_general_ci
+     - --skip-character-set-client-handshake
+     - --innodb-buffer-pool-size=5g
+    environment:
+      - LANG=C.UTF-8
+      - TZ=Asia/Shanghai
+      - MYSQL_ROOT_PASSWORD=${dbPassword}
+    network_mode: host
