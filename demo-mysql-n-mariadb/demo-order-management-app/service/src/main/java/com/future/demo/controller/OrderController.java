@@ -9,6 +9,7 @@ import com.future.demo.entity.Status;
 import com.future.demo.mapper.OrderMapper;
 import com.future.demo.service.OrderService;
 import com.future.demo.util.OrderRandomlyUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.math.RandomUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,10 +18,10 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/order")
+@Slf4j
 public class OrderController {
     @Resource
     OrderService orderService;
@@ -29,11 +30,15 @@ public class OrderController {
     @Resource
     OrderMapper orderMapper;
 
-    private List<Long> orderIdList;
+    private int orderIdMax = 0;
 
     @PostConstruct
     public void init() {
-        this.orderIdList = this.orderMapper.selectAllId();
+        Long orderIdMaxLong = this.orderMapper.getOrderIdMax();
+        if (orderIdMaxLong != null) {
+            this.orderIdMax = orderIdMaxLong.intValue();
+        }
+        log.info("成功加载最大订单ID值{}", this.orderIdMax);
     }
 
     /**
@@ -60,8 +65,7 @@ public class OrderController {
      */
     @GetMapping(value = "getById")
     public ObjectResponse<OrderDTO> getById() {
-        int randInt = RandomUtils.nextInt(this.orderIdList.size());
-        Long orderId = this.orderIdList.get(randInt);
+        long orderId = RandomUtils.nextInt(this.orderIdMax) + 1;
         OrderDTO orderDTO = this.orderService.getById(orderId);
         return ResponseUtils.successObject(orderDTO);
     }

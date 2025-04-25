@@ -20,8 +20,8 @@ public interface OrderMapper {
     @Select("SELECT * FROM t_order")
     List<OrderModel> selectAll();
 
-    @Select("select distinct id from t_order")
-    List<Long> selectAllId();
+    @Select("select max(id) from t_order")
+    Long getOrderIdMax();
 
     List<OrderModel> listByUserId(@Param("userId") Long userId,
                                   @Param("status") Status status,
@@ -32,12 +32,12 @@ public interface OrderMapper {
                                   @Param("size") Long size);
 
     List<OrderModel> listByMerchantId(@Param("merchantId") Long merchantId,
-                                            @Param("status") Status status,
-                                            @Param("deleteStatus") DeleteStatus deleteStatus,
-                                            @Param("startTime") LocalDateTime startTime,
-                                            @Param("endTime") LocalDateTime endTime,
-                                            @Param("start") Long start,
-                                            @Param("size") Long size);
+                                      @Param("status") Status status,
+                                      @Param("deleteStatus") DeleteStatus deleteStatus,
+                                      @Param("startTime") LocalDateTime startTime,
+                                      @Param("endTime") LocalDateTime endTime,
+                                      @Param("start") Long start,
+                                      @Param("size") Long size);
 
     @Select("select * from t_order where id=#{orderId}")
     OrderModel getById(@Param("orderId") Long orderId);
