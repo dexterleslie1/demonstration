@@ -49,6 +49,7 @@ export default defineConfig({
           { text: 'NodeJS', link: '/nodejs/README.md' },
           { text: 'OpenResty', link: '/openresty/编译docker基础镜像.md' },
           { text: 'Maven', link: '/maven/README.md' },
+          { text: 'Zookeeper', link: '/zookeeper/README.md' },
         ]
       }, {
         text: 'Linux', items: [
@@ -517,6 +518,15 @@ export default defineConfig({
             { text: 'mvn 命令', link: '/maven/mvn命令.md' },
             { text: '多模块配置', link: '/maven/多模块配置.md' },
             { text: '指定 JDK 版本', link: '/maven/指定jdk版本.md' },
+          ]
+        }
+      ],
+      '/zookeeper/': [
+        {
+          text: 'Zookeeper',
+          items: [
+            { text: '基础', link: '/zookeeper/README.md' },
+            { text: 'Curator Framework', link: '/zookeeper/curator-framework.md' },
           ]
         }
       ],

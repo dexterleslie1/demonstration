@@ -11,6 +11,8 @@ import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class Tests {
     @Test
@@ -50,7 +52,7 @@ public class Tests {
     // 在分布式环境中，唯一ID生成应用十分广泛，生成方法也多种多样，Hutool针对一些常用生成策略做了简单封装。
     // https://doc.hutool.cn/pages/IdUtil/
     @Test
-    public void testIdUtil() {
+    public void testIdUtil() throws InterruptedException {
         // 根据本地网卡 MAC 地址计算数据中心 ID
         // WORKER_ID 为 Snowflake 中的 MAX_WORKER_ID
         Snowflake snowflake = IdUtil.getSnowflake();
@@ -63,5 +65,20 @@ public class Tests {
 
         Assert.assertEquals(snowflake.getDataCenterId(id), snowflake.getDataCenterId(id3));
         Assert.assertEquals(snowflake.getWorkerId(id), snowflake.getWorkerId(id3));
+
+        // 注意：下面代码不要删除，用于测试"在并发很低时，生成的分布式ID总是偶数的"
+        /*Map<Integer, Integer> map = new HashMap<>();
+        for (int i = 0; i < 1000; i++) {
+            id = IdUtil.getSnowflakeNextId();
+            Integer remain = (int) (id % 8);
+            if (!map.containsKey(remain)) {
+                map.put(remain, 0);
+            }
+            map.put(remain, map.get(remain) + 1);
+            TimeUnit.MILLISECONDS.sleep(10);
+        }
+        for (Integer key : map.keySet()) {
+            System.out.println("key=" + key + ",value=" + map.get(key));
+        }*/
     }
 }
