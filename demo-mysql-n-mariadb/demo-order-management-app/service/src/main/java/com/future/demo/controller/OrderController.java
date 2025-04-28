@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import java.math.BigInteger;
 import java.time.LocalDateTime;
 
 @RestController
@@ -30,15 +31,19 @@ public class OrderController {
     @Resource
     OrderMapper orderMapper;
 
-    private int orderIdMax = 0;
+    // long 类型
+    /*private long[] idArray;*/
+    // int 类型
+    /*private int[] idArray;*/
+    // biginteger 类型
+    private BigInteger[] idArray;
+    // uuid string 类型
+    /*private String[] idArray;*/
 
     @PostConstruct
     public void init() {
-        Long orderIdMaxLong = this.orderMapper.getOrderIdMax();
-        if (orderIdMaxLong != null) {
-            this.orderIdMax = orderIdMaxLong.intValue();
-        }
-        log.info("成功加载最大订单ID值{}", this.orderIdMax);
+        this.idArray = this.orderMapper.selectAllIds();
+        log.info("成功加载{}个订单ID", this.idArray.length);
     }
 
     /**
@@ -65,7 +70,16 @@ public class OrderController {
      */
     @GetMapping(value = "getById")
     public ObjectResponse<OrderDTO> getById() {
-        long orderId = RandomUtils.nextInt(this.orderIdMax) + 1;
+        int randInt = RandomUtils.nextInt(this.idArray.length);
+        // long 类型
+        /*Long orderId = this.idArray[randInt];*/
+        // int 类型
+        /*Integer orderId = this.idArray[randInt];*/
+        // biginteger 类型
+        BigInteger orderId = this.idArray[randInt];
+        // uuid string 类型
+        /*String orderId = this.idArray[randInt];*/
+
         OrderDTO orderDTO = this.orderService.getById(orderId);
         return ResponseUtils.successObject(orderDTO);
     }
