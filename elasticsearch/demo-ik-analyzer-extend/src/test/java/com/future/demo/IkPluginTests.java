@@ -1,9 +1,7 @@
-package com.future.demo.elasticsearch;
+package com.future.demo;
 
-import lombok.extern.slf4j.Slf4j;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.elasticsearch.action.DocWriteResponse;
-import org.elasticsearch.action.admin.indices.analyze.AnalyzeAction;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchResponse;
