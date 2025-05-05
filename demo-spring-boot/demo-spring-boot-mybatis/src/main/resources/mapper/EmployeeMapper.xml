@@ -10,7 +10,7 @@
         insert into employee(emp_name, age, emp_salary)
         values (#{empName}, #{age}, #{empSalary})
     </insert>
-    <insert id="insertBatch">
+    <insert id="insertBatch" useGeneratedKeys="true" keyProperty="id">
         insert into employee(emp_name, age, emp_salary)
         values
         <foreach item="e" collection="employees" separator=",">

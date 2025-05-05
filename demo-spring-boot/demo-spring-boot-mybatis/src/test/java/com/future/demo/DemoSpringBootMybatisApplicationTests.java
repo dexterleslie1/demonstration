@@ -301,6 +301,7 @@ class DemoSpringBootMybatisApplicationTests {
             employees.add(employee);
         }
         this.employeeMapper.insertBatch(employees);
+        employees.forEach(o -> Assertions.assertTrue(o.getId() > 0));
         employees = this.employeeMapper.listAll();
         Assertions.assertEquals(10, employees.size());
         List<Long> ids = employees.stream().map(Employee::getId).collect(Collectors.toList());

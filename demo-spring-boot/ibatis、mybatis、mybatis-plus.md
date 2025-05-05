@@ -924,6 +924,58 @@ MyBatis batch 模式插入数据 - 耗时 162665 毫秒
 
 
 
+#### 批量插入获取自増 id
+
+MyBatis Spring 依赖设置如下版本
+
+```xml
+<!-- mybatis依赖 -->
+<dependency>
+    <groupId>org.mybatis.spring.boot</groupId>
+    <artifactId>mybatis-spring-boot-starter</artifactId>
+    <version>3.0.4</version>
+</dependency>
+```
+
+不能使用 mariadb jdbc 驱动，只能使用 mysql jdbc 驱动，否则只返回第一条记录的自増 id，其他记录为 null
+
+```xml
+<!-- mariadb驱动依赖 -->
+<!--<dependency>
+    <groupId>org.mariadb.jdbc</groupId>
+    <artifactId>mariadb-java-client</artifactId>
+    &lt;!&ndash; 指定mariadb版本 &ndash;&gt;
+    &lt;!&ndash;<version>3.4.0</version>&ndash;&gt;
+    <scope>runtime</scope>
+</dependency>-->
+<!-- MySQL驱动才支持insert values (...),(...)批量插入返回自増id，mariadb驱动只返回第一条记录的自増id -->
+<dependency>
+    <groupId>com.mysql</groupId>
+    <artifactId>mysql-connector-j</artifactId>
+</dependency>
+```
+
+批量插入的 xml 配置
+
+```xml
+<insert id="insertBatch" useGeneratedKeys="true" keyProperty="id">
+    insert into employee(emp_name, age, emp_salary)
+    values
+    <foreach item="e" collection="employees" separator=",">
+        (#{e.empName}, #{e.age}, #{e.empSalary})
+    </foreach>
+</insert>
+```
+
+测试
+
+```java
+this.employeeMapper.insertBatch(employees);
+employees.forEach(o -> Assertions.assertTrue(o.getId() > 0));
+```
+
+
+
 ## `MyBatis-plus`
 
 ### `spring-boot`项目集成`MyBatis-plus`

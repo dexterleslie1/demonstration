@@ -49,12 +49,17 @@
             <version>3.0.4</version>
         </dependency>
         <!-- mariadb驱动依赖 -->
-        <dependency>
+        <!--<dependency>
             <groupId>org.mariadb.jdbc</groupId>
             <artifactId>mariadb-java-client</artifactId>
-            <!-- 指定mariadb版本 -->
-            <!--<version>3.4.0</version>-->
+            &lt;!&ndash; 指定mariadb版本 &ndash;&gt;
+            &lt;!&ndash;<version>3.4.0</version>&ndash;&gt;
             <scope>runtime</scope>
+        </dependency>-->
+        <!-- MySQL驱动才支持insert values (...),(...)批量插入返回自増id，mariadb驱动只返回第一条记录的自増id -->
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
         </dependency>
 
         <dependency>
