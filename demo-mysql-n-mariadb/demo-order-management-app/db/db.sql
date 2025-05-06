@@ -22,9 +22,8 @@ create table if not exists t_order(
     createTime      datetime not null
 ) engine=innodb character set utf8mb4 collate utf8mb4_general_ci;
 
-create index idx_order_userId_createTime_deleteStatus_status
-    on t_order(userId,createTime,deleteStatus,status);
-create index idx_order_status_deleteStatus_createTime_id on t_order(status, deleteStatus, createTime, id);
+/*create index idx_order_userId_createTime_deleteStatus_status on t_order(userId,createTime,deleteStatus,status);
+create index idx_order_status_deleteStatus_createTime_id on t_order(status, deleteStatus, createTime, id);*/
 
 create table if not exists t_order_detail (
     id          bigint not null auto_increment primary key,
@@ -46,13 +45,24 @@ create table if not exists t_order_detail (
     constraint unique_order_detail_userId_n_productId unique(userId,productId)
 ) engine=innodb character set utf8mb4 collate utf8mb4_general_ci;
 
-create index idx_orderDetail_merchantId
-    on t_order_detail(merchantId);
-create index idx_orderDetail_merchantId_orderId on t_order_detail(merchantId, orderId);
+/*create index idx_orderDetail_merchantId on t_order_detail(merchantId);
+create index idx_orderDetail_merchantId_orderId on t_order_detail(merchantId, orderId);*/
 
 create table if not exists t_product(
     id          bigint not null auto_increment primary key,
     `name`      varchar(255) not null,
     merchantId  bigint not null comment '商家ID',
     stock       int not null
+) engine=innodb character set utf8mb4 collate utf8mb4_general_ci;
+
+create table if not exists t_id_cache_assistant (
+    id          bigint not null auto_increment primary key,
+    /* long 类型 */
+    /*orderId     bigint not null*/
+    /* int 类型 */
+    /*orderId     int not null*/
+    /* biginteger 类型 */
+    /*orderId     decimal(20,0) not null*/
+    /* uuid string 类型 */
+    orderId     varchar(36) not null
 ) engine=innodb character set utf8mb4 collate utf8mb4_general_ci;

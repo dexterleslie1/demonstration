@@ -77,9 +77,8 @@
             <version>2.3.2</version>
         </dependency>
         <dependency>
-            <groupId>org.mariadb.jdbc</groupId>
-            <artifactId>mariadb-java-client</artifactId>
-            <scope>runtime</scope>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
         </dependency>
 
         <!-- MySQL 事务自动管理依赖 -->
@@ -103,6 +102,19 @@
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-all</artifactId>
             <version>5.8.35</version>
+        </dependency>
+
+        <!-- 分布式ID leaf 依赖 -->
+        <dependency>
+            <!-- 官方依赖没有发布到 maven 仓库中 -->
+            <groupId>com.tencent.devops.leaf</groupId>
+            <artifactId>leaf-boot-starter</artifactId>
+            <version>1.0.2-RELEASE</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.curator</groupId>
+            <artifactId>curator-recipes</artifactId>
+            <version>5.7.1</version>
         </dependency>
     </dependencies>
 

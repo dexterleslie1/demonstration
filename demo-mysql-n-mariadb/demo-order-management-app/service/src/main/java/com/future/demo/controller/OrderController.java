@@ -6,18 +6,15 @@ import com.future.common.http.ResponseUtils;
 import com.future.demo.dto.OrderDTO;
 import com.future.demo.entity.DeleteStatus;
 import com.future.demo.entity.Status;
-import com.future.demo.mapper.OrderMapper;
+import com.future.demo.service.IdCacheAssistantService;
 import com.future.demo.service.OrderService;
 import com.future.demo.util.OrderRandomlyUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang.math.RandomUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import java.math.BigInteger;
 import java.time.LocalDateTime;
 
 @RestController
@@ -29,22 +26,7 @@ public class OrderController {
     @Resource
     OrderRandomlyUtil orderRandomlyUtil;
     @Resource
-    OrderMapper orderMapper;
-
-    // long 类型
-    /*private long[] idArray;*/
-    // int 类型
-    /*private int[] idArray;*/
-    // biginteger 类型
-    private BigInteger[] idArray;
-    // uuid string 类型
-    /*private String[] idArray;*/
-
-    @PostConstruct
-    public void init() {
-        this.idArray = this.orderMapper.selectAllIds();
-        log.info("成功加载{}个订单ID", this.idArray.length);
-    }
+    IdCacheAssistantService idCacheAssistantService;
 
     /**
      * 创建订单
@@ -70,16 +52,14 @@ public class OrderController {
      */
     @GetMapping(value = "getById")
     public ObjectResponse<OrderDTO> getById() {
-        int randInt = RandomUtils.nextInt(this.idArray.length);
         // long 类型
-        /*Long orderId = this.idArray[randInt];*/
+        /*Long orderId = this.idCacheAssistantService.getRandomly();*/
         // int 类型
-        /*Integer orderId = this.idArray[randInt];*/
+        /*Integer orderId = this.idCacheAssistantService.getRandomly();*/
         // biginteger 类型
-        BigInteger orderId = this.idArray[randInt];
+        /*BigInteger orderId = this.idCacheAssistantService.getRandomly();*/
         // uuid string 类型
-        /*String orderId = this.idArray[randInt];*/
-
+        String orderId = this.idCacheAssistantService.getRandomly();
         OrderDTO orderDTO = this.orderService.getById(orderId);
         return ResponseUtils.successObject(orderDTO);
     }
@@ -146,5 +126,29 @@ public class OrderController {
         return ResponseUtils.successList(
                 this.orderService.listByMerchantIdAndStatus(
                         merchantId, status, deleteStatus, createTime, endTime));
+    }
+
+    /**
+     * 批量初始化订单数据
+     *
+     * @return
+     */
+    @GetMapping(value = "initInsertBatch")
+    public ObjectResponse<String> initInsertBatch() {
+        this.orderService.insertBatch();
+        ObjectResponse<String> response = new ObjectResponse<>();
+        response.setData("成功批量初始化订单");
+        return response;
+    }
+
+    /**
+     * 初始化id缓存辅助数据
+     *
+     * @return
+     */
+    @GetMapping(value = "init")
+    public ObjectResponse<String> init() {
+        this.idCacheAssistantService.initData();
+        return ResponseUtils.successObject("成功初始化");
     }
 }

@@ -3,7 +3,7 @@ package com.future.demo.entity;
 import lombok.Data;
 
 @Data
-public class OrderDetailModel {
+public class IdCacheAssistantEntity {
     private Long id;
 
     // long 类型
@@ -14,9 +14,4 @@ public class OrderDetailModel {
     /*private BigInteger orderId;*/
     // uuid string 类型
     private String orderId;
-
-    private Long userId;
-    private Long productId;
-    private Long merchantId;
-    private Integer amount;
 }
