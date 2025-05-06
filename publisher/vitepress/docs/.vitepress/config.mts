@@ -50,6 +50,7 @@ export default defineConfig({
           { text: 'OpenResty', link: '/openresty/编译docker基础镜像.md' },
           { text: 'Maven', link: '/maven/README.md' },
           { text: 'Zookeeper', link: '/zookeeper/README.md' },
+          { text: 'ElasticSearch', link: '/elasticsearch/README.md' },
         ]
       }, {
         text: 'Linux', items: [
@@ -527,6 +528,17 @@ export default defineConfig({
           items: [
             { text: '基础', link: '/zookeeper/README.md' },
             { text: 'Curator Framework', link: '/zookeeper/curator-framework.md' },
+          ]
+        }
+      ],
+      '/elasticsearch/': [
+        {
+          text: 'ElasticSearch',
+          items: [
+            { text: '基础', link: '/elasticsearch/README.md' },
+            { text: 'Curator', link: '/elasticsearch/curator.md' },
+            { text: 'Postman 操作', link: '/elasticsearch/postman操作elasticsearch.md' },
+            { text: '常见错误', link: '/elasticsearch/常见错误.md' },
           ]
         }
       ],

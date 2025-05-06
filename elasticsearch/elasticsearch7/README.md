@@ -8,24 +8,6 @@
 > - 实现京东商品查询逻辑
 > - elastcisearch多租户可行性分析
 
-## es介绍
-
-## es、lucene、solr区别
-
-> es：基于lucene搜索引擎
->
-> solr：基于lucene搜索引擎
->
-> lucene：Lucene是非常优秀的成熟的 开源的 免费的纯 纯java 语言的全文索引检索工具包jar。 是搜索引擎的底层。
->
-> todo
-
-## es数据结构
-
-> todo: 索引数据结构，集群索引如何分片和提供服务的。
-
-
-
 ## RESTful操作elasticsearch
 
 ### 使用 _analyze 查看分词情况
@@ -1478,14 +1460,6 @@ POST /test_beehive_han_v1/_analyze
 ```
 
 
-
-## 使用Java Transport Client操作elasticsearch
-
-> 具体用法参考代码<br>
-[Java Transport Client](https://www.elastic.co/guide/en/elasticsearch/client/java-api/6.8/index.html)
-
-## Elasticsearch中什么是 tokenizer、analyzer、filter ?
-[Elasticsearch中什么是 tokenizer、analyzer、filter ?](https://cloud.tencent.com/developer/article/1706529)
 
 ## 进阶编
 
