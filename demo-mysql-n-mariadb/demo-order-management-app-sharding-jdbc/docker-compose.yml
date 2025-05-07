@@ -1,0 +1,87 @@
+version: "3.1"
+
+services:
+  service:
+    build:
+      context: ./service
+      dockerfile: Dockerfile
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-order-management-app-service
+    environment:
+      - JAVA_OPTS=-Xmx1g
+      - TZ=Asia/Shanghai
+    network_mode: host
+    depends_on:
+      - db-common
+      - db-order1
+      - db-order2
+      - db-order3
+      - zookeeper
+
+  db-common:
+    build:
+      context: db
+      dockerfile: Dockerfile
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-order-management-app-db
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+      - --innodb-buffer-pool-size=512m
+    environment:
+      - LANG=C.UTF-8
+      - TZ=Asia/Shanghai
+      - MYSQL_ROOT_PASSWORD=123456
+    ports:
+      - '3306:3306'
+
+  db-order1:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-order-management-app-db
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+      - --innodb-buffer-pool-size=512m
+    environment:
+      - LANG=C.UTF-8
+      - TZ=Asia/Shanghai
+      - MYSQL_ROOT_PASSWORD=123456
+    ports:
+      - '3307:3306'
+
+  db-order2:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-order-management-app-db
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+      - --innodb-buffer-pool-size=512m
+    environment:
+      - LANG=C.UTF-8
+      - TZ=Asia/Shanghai
+      - MYSQL_ROOT_PASSWORD=123456
+    ports:
+      - '3308:3306'
+
+  db-order3:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-order-management-app-db
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+      - --innodb-buffer-pool-size=512m
+    environment:
+      - LANG=C.UTF-8
+      - TZ=Asia/Shanghai
+      - MYSQL_ROOT_PASSWORD=123456
+    ports:
+      - '3309:3306'
+
+  zookeeper:
+    image: zookeeper:3.8.4
+    environment:
+      - TZ=Asia/Shanghai
+      - JVMFLAGS=-Xmx512m -Xms512m -server
+      # 禁用 zookeeper AdminServer
+      # https://hub.docker.com/_/zookeeper
+      - ZOO_ADMINSERVER_ENABLED=false
+    network_mode: host
