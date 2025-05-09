@@ -4,9 +4,10 @@ USE demo;
 
 -- 用于协助测试垂直分库
 CREATE TABLE IF NOT EXISTS `user`(
-     id BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT '订单ID' ,
+     id BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT '用户ID' ,
      create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-     `name` VARCHAR(128) NOT NULL COMMENT '用户名称'
+     `name` VARCHAR(128) NOT NULL COMMENT '用户名称',
+    balance decimal(20,5) not null default 0 comment '用户余额'
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- 用于协助演示绑定表关系

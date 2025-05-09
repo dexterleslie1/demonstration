@@ -15,6 +15,7 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.aop.framework.AopContext;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,7 +33,8 @@ import java.util.stream.Collectors;
 @Slf4j
 public class OrderService {
 
-    public final static int ProductStock = 100000000;
+    @Value("${productStock:100000000}")
+    Integer productStock;
 
     @Resource
     OrderRandomlyUtil orderRandomlyUtil;
@@ -45,7 +47,6 @@ public class OrderService {
 
         for (int i = 0; i < this.orderRandomlyUtil.productIdArray.length; i++) {
             long productId = this.orderRandomlyUtil.productIdArray[i];
-            Integer productStock = OrderService.ProductStock;
 
             // 准备 db 数据辅助基于数据库的测试
             this.productMapper.delete(productId);
@@ -320,5 +321,12 @@ public class OrderService {
         }
 
         return orderDTOList;
+    }
+
+    /**
+     * 还原商品库存
+     */
+    public void restoreProductStock() {
+        this.productMapper.restoreStock(productStock);
     }
 }

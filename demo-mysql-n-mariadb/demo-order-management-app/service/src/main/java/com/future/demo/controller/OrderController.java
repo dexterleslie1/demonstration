@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import java.math.BigInteger;
 import java.time.LocalDateTime;
 
 @RestController
@@ -57,9 +58,9 @@ public class OrderController {
         // int 类型
         /*Integer orderId = this.idCacheAssistantService.getRandomly();*/
         // biginteger 类型
-        /*BigInteger orderId = this.idCacheAssistantService.getRandomly();*/
+        BigInteger orderId = this.idCacheAssistantService.getRandomly();
         // uuid string 类型
-        String orderId = this.idCacheAssistantService.getRandomly();
+        /*String orderId = this.idCacheAssistantService.getRandomly();*/
         OrderDTO orderDTO = this.orderService.getById(orderId);
         return ResponseUtils.successObject(orderDTO);
     }

@@ -55,6 +55,10 @@ public class OrderRandomlyUtil {
         }
     }
 
+    public int getProductIdBoundaryLimitation() {
+        return this.productIdBoundaryLimitation;
+    }
+
     /**
      * 随机获取订单状态枚举常量
      *

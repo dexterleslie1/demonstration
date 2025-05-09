@@ -3,6 +3,7 @@ package com.future.demo.mapper;
 import com.future.demo.entity.IdCacheAssistantEntity;
 import org.apache.ibatis.annotations.*;
 
+import java.math.BigInteger;
 import java.util.List;
 
 @Mapper
@@ -27,9 +28,9 @@ public interface IdCacheAssistantMapper {
     // int 类型
     /*Integer[] listOrderId(@Param("idLowerBoundary") long idLowerBoundary, @Param("pageSize") int pageSize);*/
     // biginteger 类型
-    /*BigInteger[] listOrderId(@Param("idLowerBoundary") long idLowerBoundary, @Param("pageSize") int pageSize);*/
+    BigInteger[] listOrderId(@Param("idLowerBoundary") long idLowerBoundary, @Param("pageSize") int pageSize);
     // uuid string 类型
-    String[] listOrderId(@Param("idLowerBoundary") long idLowerBoundary, @Param("pageSize") int pageSize);
+    /*String[] listOrderId(@Param("idLowerBoundary") long idLowerBoundary, @Param("pageSize") int pageSize);*/
 
     @Update("truncate table t_id_cache_assistant")
     void truncate();

@@ -3,14 +3,12 @@ package com.future.demo;
 import com.future.demo.dto.OrderDTO;
 import com.future.demo.entity.OrderDetailModel;
 import com.future.demo.entity.OrderModel;
-import com.future.demo.entity.ProductModel;
 import com.future.demo.mapper.OrderDetailMapper;
 import com.future.demo.mapper.OrderMapper;
 import com.future.demo.mapper.ProductMapper;
 import com.future.demo.service.OrderService;
 import com.future.demo.util.OrderRandomlyUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang.math.RandomUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -141,21 +139,7 @@ public class ApplicationTests {
         // 删除所有订单
         this.orderDetailMapper.deleteAll();
         this.orderMapper.deleteAll();
-
-        for (long i = 1; i <= this.orderRandomlyUtil.getProductIdBoundaryLimitation(); i++) {
-            Integer productStock = 10;
-
-            // 准备 db 数据辅助基于数据库的测试
-            this.productMapper.delete(i);
-            ProductModel productModel = new ProductModel();
-            productModel.setId(i);
-            productModel.setName("产品" + i);
-            productModel.setStock(productStock);
-
-            long merchantId = RandomUtils.nextInt(this.orderRandomlyUtil.getMerchantIdBoundaryLimitation()) + 1;
-            productModel.setMerchantId(merchantId);
-
-            this.productMapper.insert(productModel);
-        }
+        // 还原商品库存
+        this.orderService.restoreProductStock();
     }
 }

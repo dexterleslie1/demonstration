@@ -3,6 +3,7 @@ package com.future.demo.mapper;
 import com.future.demo.entity.OrderDetailModel;
 import org.apache.ibatis.annotations.*;
 
+import java.math.BigInteger;
 import java.util.List;
 
 @Mapper
@@ -18,17 +19,17 @@ public interface OrderDetailMapper {
         // int 类型
     /*List<OrderDetailModel> list(List<Integer> orderIdList);*/
     // biginteger 类型
-    /*List<OrderDetailModel> list(List<BigInteger> orderIdList);*/
+    List<OrderDetailModel> list(List<BigInteger> orderIdList);
     // uuid string 类型
-    List<OrderDetailModel> list(List<String> orderIdList);
+    /*List<OrderDetailModel> list(List<String> orderIdList);*/
 
-    @Insert("insert ignore into t_order_detail(orderId,userId,productId,merchantId,amount) values(#{orderDetail.orderId},#{orderDetail.userId},#{orderDetail.productId},#{orderDetail.merchantId},#{orderDetail.amount})")
+    @Insert("insert ignore into t_order_detail(id,orderId,userId,productId,merchantId,amount) values(#{orderDetail.id},#{orderDetail.orderId},#{orderDetail.userId},#{orderDetail.productId},#{orderDetail.merchantId},#{orderDetail.amount})")
     int insert(@Param(value = "orderDetail") OrderDetailModel orderDetailModel);
 
     @Insert("<script>" +
-            "   insert ignore into t_order_detail(orderId,userId,productId,merchantId,amount) values " +
+            "   insert ignore into t_order_detail(id,orderId,userId,productId,merchantId,amount) values " +
             "   <foreach collection=\"orderDetailModelList\" item=\"e\" separator=\",\">" +
-            "       (#{e.orderId},#{e.userId},#{e.productId},#{e.merchantId},#{e.amount})" +
+            "       (#{e.id},#{e.orderId},#{e.userId},#{e.productId},#{e.merchantId},#{e.amount})" +
             "   </foreach>" +
             "</script>")
     void insertBatch(List<OrderDetailModel> orderDetailModelList);

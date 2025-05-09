@@ -24,6 +24,9 @@ public class MyDatabaseStandardPreciseShardingAlgorithm implements PreciseShardi
         log.info("All datasources {} logicTableName {} columnName {} value {}", collection, logicTableName, columnName, value);
 
         String dataSourceName = "ds" + (value % collection.size() + 1);
+
+        log.info("数据源 {}", dataSourceName);
+
         if (!collection.contains(dataSourceName)) {
             throw new UnsupportedOperationException("数据源 " + dataSourceName + " 不存在");
         }

@@ -1,11 +1,13 @@
 package com.future.demo;
 
 import cn.hutool.core.util.RandomUtil;
+import com.future.common.exception.BusinessException;
 import com.future.demo.bean.*;
 import com.future.demo.mapper.DictMapper;
 import com.future.demo.mapper.OrderMapper;
 import com.future.demo.mapper.ProductMapper;
 import com.future.demo.mapper.UserMapper;
+import com.future.demo.service.OrderService;
 import com.future.demo.util.OrderRandomlyUtil;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -31,6 +33,8 @@ public class ApplicationTests {
     DictMapper dictMapper;
     @Resource
     ProductMapper productMapper;
+    @Resource
+    OrderService orderService;
 
     @Test
     public void contextLoads() {
@@ -223,5 +227,46 @@ public class ApplicationTests {
     public void testStandardStrategyRangeShardingAlgorithm() {
         List<Order> orderList = this.orderMapper.listByUserIdRange(1L, 10000L);
         Assertions.assertEquals(0, orderList.size());
+    }
+
+    /**
+     * 测试事务
+     */
+    @Test
+    public void testTransaction() throws BusinessException {
+        // 创建用户
+        User user = new User();
+        user.setName("测试用户1");
+        user.setCreateTime(LocalDateTime.now());
+        BigDecimal balance = new BigDecimal("1000.00000");
+        user.setBalance(balance);
+        this.userMapper.add(user);
+
+        Long userId = user.getId();
+
+        // 创建订单成功
+        BigDecimal amount = new BigDecimal(100);
+        this.orderService.create(userId, amount);
+        List<Order> orderList = this.orderMapper.listByUserId(userId, null, null, null, null, null, null);
+        Assertions.assertEquals(1, orderList.size());
+        user = this.userMapper.get(userId);
+        Assertions.assertEquals(balance.subtract(amount), user.getBalance());
+
+        // 创建订单失败，余额不足
+        try {
+            amount = new BigDecimal(1000);
+            this.orderService.create(userId, amount);
+            Assertions.fail();
+        } catch (BusinessException ex) {
+            Assertions.assertEquals("余额不足", ex.getMessage());
+        }
+
+        // 验证事务中的数据是否完整
+        orderList = this.orderMapper.listByUserId(userId, null, null, null, null, null, null);
+        // 之前的一笔订单数据
+        Assertions.assertEquals(1, orderList.size());
+        user = this.userMapper.get(userId);
+        // 之前的余额数据
+        Assertions.assertEquals(balance.subtract(new BigDecimal("100")), user.getBalance());
     }
 }

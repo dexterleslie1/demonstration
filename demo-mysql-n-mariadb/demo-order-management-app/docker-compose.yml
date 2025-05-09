@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-order-management-app-service
     environment:
-      - JAVA_OPTS=-Xmx4g
+      - JAVA_OPTS=-Xmx1g
       - TZ=Asia/Shanghai
     network_mode: host
     depends_on:

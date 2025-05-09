@@ -31,4 +31,7 @@ public interface ProductMapper {
 
     @Delete("DELETE FROM t_product WHERE id=#{productId}")
     void delete(Long productId);
+
+    @Update("update t_product set stock=#{productStock}")
+    void restoreStock(@Param("productStock") Integer productStock);
 }

@@ -24,6 +24,9 @@ public class MyTableStandardPreciseShardingAlgorithm implements PreciseShardingA
         log.info("All tables {} logicTableName {} columnName {} value {}", collection, logicTableName, columnName, value);
 
         String tableName = logicTableName + "_" + (value % collection.size() + 1);
+
+        log.info("物理表 {}", tableName);
+
         if (!collection.contains(tableName)) {
             throw new UnsupportedOperationException("数据表 " + tableName + " 不存在");
         }

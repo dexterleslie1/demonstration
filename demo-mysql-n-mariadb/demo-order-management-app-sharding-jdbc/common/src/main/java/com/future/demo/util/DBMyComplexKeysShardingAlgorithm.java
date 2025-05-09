@@ -19,6 +19,9 @@ public class DBMyComplexKeysShardingAlgorithm implements ComplexKeysShardingAlgo
      */
     private static final String COLUMN_USER_ID = "userId";
 
+    private static final BigInteger BIG_INTEGER_16 = new BigInteger("16");
+    private static final BigInteger BIG_INTEGER_1 = new BigInteger("1");
+
     @Override
     public Collection<String> doSharding(Collection<String> availableTargetNames, ComplexKeysShardingValue<BigDecimal> shardingValue) {
         // 只支持订单id范围查询
@@ -48,7 +51,10 @@ public class DBMyComplexKeysShardingAlgorithm implements ComplexKeysShardingAlgo
         // 通过订单ID和用户ID计算所有表名称
         return ids.stream()
                 // 截取 订单号或客户id的后2位
-                .map(id -> (id.toBigInteger().mod(new BigInteger(String.valueOf(availableTargetNames.size()))).intValue() + 1))
+                .map(id -> id.toBigInteger().mod(BIG_INTEGER_16))
+                .distinct()
+                // 截取 订单号或客户id的后2位
+                .map(idSuffix -> (idSuffix.mod(new BigInteger(String.valueOf(availableTargetNames.size()))).add(BIG_INTEGER_1)))
                 // 去重
                 .distinct()
                 // 获取到真实的表

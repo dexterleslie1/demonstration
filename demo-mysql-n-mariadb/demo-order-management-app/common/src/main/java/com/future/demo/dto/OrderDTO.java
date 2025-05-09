@@ -6,6 +6,7 @@ import com.future.demo.entity.DeleteStatus;
 import com.future.demo.entity.Status;
 import lombok.Data;
 
+import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -16,9 +17,9 @@ public class OrderDTO {
     // int 类型
     /*private Integer id;*/
     // biginteger 类型
-    /*private BigInteger id;*/
+    private BigInteger id;
     // uuid string 类型
-    private String id;
+    /*private String id;*/
 
     private Long userId;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")

@@ -33,7 +33,9 @@
             </if>
         </where>
         order by id desc
-        limit #{start},#{size}
+        <if test="size!=null and size>0">
+            limit #{start},#{size}
+        </if>
     </select>
 
     <select id="listByMerchantId" resultMap="orderResultMap">

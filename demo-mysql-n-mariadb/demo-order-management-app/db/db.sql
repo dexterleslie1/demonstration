@@ -8,9 +8,9 @@ create table if not exists t_order(
     /* int 类型 */
     /*id              int not null auto_increment primary key,*/
     /* biginteger 类型 */
-    /*id              decimal(20,0) not null primary key,*/
+    id              decimal(20,0) not null primary key,
     /* uuid string 类型 */
-    id              varchar(36) not null primary key,
+    /*id              varchar(36) not null primary key,*/
 
     userId          bigint not null,
     `status`        ENUM('Unpay','Undelivery','Unreceive','Received','Canceled') NOT NULL COMMENT '订单状态：未支付、未发货、未收货、已签收、买家取消',
@@ -26,16 +26,16 @@ create table if not exists t_order(
 create index idx_order_status_deleteStatus_createTime_id on t_order(status, deleteStatus, createTime, id);*/
 
 create table if not exists t_order_detail (
-    id          bigint not null auto_increment primary key,
+    id          bigint not null primary key,
 
     /* long 类型 */
     /*orderId     bigint not null,*/
     /* int 类型 */
     /*orderId     int not null,*/
     /* biginteger 类型 */
-    /*orderId     decimal(20,0) not null,*/
+    orderId     decimal(20,0) not null,
     /* uuid string 类型 */
-    orderId     varchar(36) not null,
+    /*orderId     varchar(36) not null,*/
 
     userId      bigint not null comment '协助简化和提高用户重复下单判断逻辑',
     productId   bigint not null,
@@ -62,7 +62,7 @@ create table if not exists t_id_cache_assistant (
     /* int 类型 */
     /*orderId     int not null*/
     /* biginteger 类型 */
-    /*orderId     decimal(20,0) not null*/
+    orderId     decimal(20,0) not null
     /* uuid string 类型 */
-    orderId     varchar(36) not null
+    /*orderId     varchar(36) not null*/
 ) engine=innodb character set utf8mb4 collate utf8mb4_general_ci;
