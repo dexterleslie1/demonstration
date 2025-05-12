@@ -513,3 +513,20 @@ ulimit -n
 cat /proc/sys/fs/file-max
 ```
 
+
+
+## SSH 服务
+
+
+
+### 在一段时间内没有活动会自动断开
+
+>[参考链接](https://developer.aliyun.com/article/1448310)
+
+- 使用 SSH 连接到服务器。
+- 打开 SSH 配置文件（通常为 /etc/ssh/sshd_config）。
+- 寻找 ClientAliveInterval 和 ClientAliveCountMax 这两个选项。
+- ClientAliveInterval 指定了服务器向客户端发送保持活动消息的时间间隔，单位是秒。将其设置为一个较大的值（比如 600 表示 10 分钟）。
+- ClientAliveCountMax 指定了服务器在未收到客户端响应后断开连接之前发送保持活动消息的次数。将其设置为一个适当的值，以确保连接不会过于频繁地断开（比如 3）。
+- 保存并关闭文件。
+- 重启操作系统，使更改生效。
