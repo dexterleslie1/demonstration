@@ -183,6 +183,10 @@ public class OrderService {
             Long userId = o.getUserId();
 
             OrderDetailModel orderDetailModel = new OrderDetailModel();
+
+            Long orderDetailId = this.snowflakeService.getId("orderDetail").getId();
+            orderDetailModel.setId(orderDetailId);
+
             orderDetailModel.setOrderId(o.getId());
             orderDetailModel.setUserId(userId);
             orderDetailModel.setProductId(productModel.getId());
