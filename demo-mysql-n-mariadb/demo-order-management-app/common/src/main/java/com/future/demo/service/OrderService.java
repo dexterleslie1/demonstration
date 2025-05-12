@@ -44,11 +44,12 @@ public class OrderService {
     @PostConstruct
     public void init() {
         // region 准备协助基准测试的数据
+        this.productMapper.truncate();
 
+        List<ProductModel> productModelList = new ArrayList<>();
         for (int i = 0; i < this.orderRandomlyUtil.productIdArray.length; i++) {
             long productId = this.orderRandomlyUtil.productIdArray[i];
             // 准备 db 数据辅助基于数据库的测试
-            this.productMapper.delete(productId);
             ProductModel productModel = new ProductModel();
             productModel.setId(productId);
             productModel.setName("产品" + productId);
@@ -56,8 +57,12 @@ public class OrderService {
 
             long merchantId = this.orderRandomlyUtil.getMerchantIdRandomly();
             productModel.setMerchantId(merchantId);
+            productModelList.add(productModel);
 
-            this.productMapper.insert(productModel);
+            if (productModelList.size() == 1000 || (i + 1) == this.orderRandomlyUtil.productIdArray.length) {
+                this.productMapper.insertBatch(productModelList);
+                productModelList =new ArrayList<>();
+            }
         }
 
         // endregion
@@ -209,8 +214,8 @@ public class OrderService {
     /*public OrderDTO getById(Integer orderId) {*/
     // biginteger 类型
     public OrderDTO getById(BigInteger orderId) {
-    // uuid string 类型
-    /*public OrderDTO getById(String orderId) {*/
+        // uuid string 类型
+        /*public OrderDTO getById(String orderId) {*/
         OrderModel orderModel = this.orderMapper.getById(orderId);
         if (orderModel == null) {
             return null;

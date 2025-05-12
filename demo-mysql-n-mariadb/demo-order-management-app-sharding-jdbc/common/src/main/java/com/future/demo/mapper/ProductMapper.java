@@ -26,12 +26,23 @@ public interface ProductMapper {
     @Update("UPDATE t_product SET stock = #{stock} WHERE id = #{productId}")
     void updateStock(long productId, int stock);
 
-    @Insert("INSERT IGNORE INTO t_product(id, name, stock, merchantId) values(#{id}, #{name}, #{stock}, #{merchantId})")
-    int insert(ProductModel productModel);
+//    @Insert("INSERT IGNORE INTO t_product(id, name, stock, merchantId) values(#{id}, #{name}, #{stock}, #{merchantId})")
+//    int insert(ProductModel productModel);
+
+    @Insert("<script>" +
+            "   insert into t_product(id, name, stock, merchantId) values " +
+            "   <foreach collection=\"productModelList\" item=\"e\" separator=\",\">" +
+            "       (#{e.id},#{e.name},#{e.stock},#{e.merchantId})" +
+            "   </foreach>" +
+            "</script>")
+    void insertBatch(List<ProductModel> productModelList);
 
     @Delete("DELETE FROM t_product WHERE id=#{productId}")
     void delete(Long productId);
 
     @Update("update t_product set stock=#{productStock}")
     void restoreStock(@Param("productStock") Integer productStock);
+
+    @Update("truncate table t_product")
+    void truncate();
 }

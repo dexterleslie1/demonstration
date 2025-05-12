@@ -44,7 +44,9 @@ public class OrderService {
     @PostConstruct
     public void init() {
         // region 准备协助基准测试的数据
+        this.productMapper.truncate();
 
+        List<ProductModel> productModelList = new ArrayList<>();
         for (int i = 0; i < this.orderRandomlyUtil.productIdArray.length; i++) {
             long productId = this.orderRandomlyUtil.productIdArray[i];
 
@@ -58,7 +60,12 @@ public class OrderService {
             long merchantId = this.orderRandomlyUtil.getMerchantIdRandomly();
             productModel.setMerchantId(merchantId);
 
-            this.productMapper.insert(productModel);
+            productModelList.add(productModel);
+
+            if (productModelList.size() == 1000 || (i + 1) == this.orderRandomlyUtil.productIdArray.length) {
+                this.productMapper.insertBatch(productModelList);
+                productModelList = new ArrayList<>();
+            }
         }
 
         // endregion
