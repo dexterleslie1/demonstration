@@ -46,6 +46,7 @@ export default defineConfig({
           { text: 'Java 相关库', link: '/java-library/lombok.md' },
           { text: 'JMeter', link: '/jmeter/README.md' },
           { text: 'MySQL、MariaDB', link: '/mysql-n-mariadb/README.md' },
+          { text: 'TiDB', link: '/tidb/README.md' },
           { text: 'NodeJS', link: '/nodejs/README.md' },
           { text: 'OpenResty', link: '/openresty/编译docker基础镜像.md' },
           { text: 'Maven', link: '/maven/README.md' },

@@ -53,6 +53,7 @@ source_dir_to_target_dir_map["../../demo-windows"]="windows"
 source_dir_to_target_dir_map["../../demo-tencent"]="tencent"
 source_dir_to_target_dir_map["../../demo-zookeeper"]="zookeeper"
 source_dir_to_target_dir_map["../../elasticsearch"]="elasticsearch"
+source_dir_to_target_dir_map["../../demo-tidb"]="tidb"
 
 for key in ${!source_dir_to_target_dir_map[@]}; do
     # 删除符号链接目录
