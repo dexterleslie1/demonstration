@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.future.demo.mapper.OrderMapper">
+    <resultMap id="orderResultMap" type="com.future.demo.bean.Order">
+        <id column="id" property="id"/>
+        <result column="amount" property="amount"/>
+        <result column="address" property="address"/>
+        <result column="customer_id" property="customerId"/>
+        <result column="create_time" property="createTime"/>
+        <!-- 使用association标签标注order和customer是一对一关系 -->
+        <association property="customer" javaType="com.future.demo.bean.Customer">
+            <id column="cId" property="id"/>
+            <result column="customer_name" property="customerName"/>
+            <result column="phone" property="phone"/>
+        </association>
+    </resultMap>
+    <select id="findByIdWithCustomer" resultMap="orderResultMap">
+        select o.*, c.id as cId, c.customer_name, c.phone
+        from `order` o
+                 left join customer c on o.customer_id = c.id
+        where o.id = #{id}
+    </select>
+
+    <select id="findByCustomerId" resultType="com.future.demo.bean.Order">
+        select *
+        from `order`
+        where customer_id = #{customerId}
+    </select>
+
+    <resultMap id="orderStepResultMap" type="com.future.demo.bean.Order">
+        <id column="id" property="id"/>
+        <result column="amount" property="amount"/>
+        <result column="address" property="address"/>
+        <result column="customer_id" property="customerId"/>
+        <!--
+            select="com.future.demo.mapper.CustomerMapper.findById"表示使用CustomerMapper的findById SQL查询订单
+            column="{id=customer_id}"表示使用列customer_id的值作为findById SQL的id参数值
+            fetchType="lazy"启用延迟加载
+        -->
+        <association property="customer"
+                     select="com.future.demo.mapper.CustomerMapper.findById"
+                     column="{id=customer_id}"
+                     fetchType="lazy"/>
+    </resultMap>
+    <select id="findByIdWithCustomerStep" resultMap="orderStepResultMap">
+        select *
+        from `order`
+        where id = #{id}
+    </select>
+</mapper>

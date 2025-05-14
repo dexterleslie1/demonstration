@@ -1,0 +1,32 @@
+version: "3.8"
+
+services:
+  db1:
+    image: mariadb:10.4.19
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - TZ=Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+    volumes:
+      - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf:ro
+      - ./db.sql:/docker-entrypoint-initdb.d/db.sql:ro
+    ports:
+      - "3306:3306"
+
+  db2:
+    image: mariadb:10.4.19
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - TZ=Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+    volumes:
+      - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf:ro
+      - ./db2.sql:/docker-entrypoint-initdb.d/db2.sql:ro
+    ports:
+      - '3307:3306'

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.future.demo.mapper.EmployeeReturnValueMapper">
+    <select id="count" resultType="Long">
+        select count(id)
+        from employee
+    </select>
+    <select id="getSalaryById" resultType="BigDecimal">
+        select emp_salary
+        from employee
+        where id = #{id}
+    </select>
+
+    <!-- 返回List resultType只需要指定元素类型即可 -->
+    <select id="listAll" resultType="com.future.demo.bean.Employee">
+        select *
+        from employee
+    </select>
+
+    <!-- 返回map resultType只需要指定map中的value类型即可 -->
+    <select id="listAllMap" resultType="com.future.demo.bean.Employee">
+        select *
+        from employee
+    </select>
+
+    <resultMap id="myResultMap" type="com.future.demo.bean.Employee">
+            <id property="id" column="id"/>
+            <result property="empName" column="emp_name"/>
+            <result property="age" column="age"/>
+            <result property="empSalary" column="emp_salary"/>
+    </resultMap>
+    <select id="get" resultMap="myResultMap">
+        select * from employee where id = #{id}
+    </select>
+</mapper>
