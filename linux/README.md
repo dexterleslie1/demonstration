@@ -490,27 +490,24 @@ cat /proc/sys/fs/file-max
 
 #### 设置
 
-编辑 /etc/security/limits.conf 添加如下配置：
+修改 nofile 配置：
 
-```
-* soft nofile 65535
-* hard nofile 65535
+```bash
+sudo grep -q "^\* soft nofile" /etc/security/limits.conf && sudo sed -i '/^\* soft nofile/c \* soft nofile 65535' /etc/security/limits.conf || sudo sed -i '/^# End of file/i \* soft nofile 65535' /etc/security/limits.conf
+sudo grep -q "^\* hard nofile" /etc/security/limits.conf && sudo sed -i '/^\* hard nofile/c \* hard nofile 65535' /etc/security/limits.conf || sudo sed -i '/^# End of file/i \* hard nofile 65535' /etc/security/limits.conf
 ```
 
-设置 file-max：编辑 /etc/sysctl.conf 添加如下配置：
+修改 file-max 配置：
 
-```
-fs.file-max=10000000
+```bash
+sudo grep -q "^fs.file-max=" /etc/sysctl.conf && sudo sed -i '/^fs.file-max=/c fs.file-max=10000000' /etc/sysctl.conf || sudo sed -i '$a\fs.file-max=10000000' /etc/sysctl.conf
 ```
 
 重启系统后，查看配置是否生效
 
 ```bash
-# 查看 nofile
-ulimit -n
-
-# 查看 file-max
-cat /proc/sys/fs/file-max
+# 查看 nofile 和 file-max
+ulimit -n && cat /proc/sys/fs/file-max
 ```
 
 

@@ -576,6 +576,10 @@ TiDB 支持部署和运行在 Intel x86-64 架构的 64 位通用硬件服务器
 
 - TiDB 和 TiKV 比较消耗 CPU。
 
+#### 设置 root 用户统一登录
+
+在各个实例中设置 root 统一密码或者统一的免密码登录，因为稍后 tiup 命令使用 root 用户登录各个实例。
+
 #### 在中控机上部署 TiUP 组件
 
 在中控机上部署 TiUP 组件有两种方式：在线部署和离线部署。
@@ -753,30 +757,6 @@ pd_servers:
     # # numa node bindings.
     # numa_node: "0,1"
     # # The following configs are used to overwrite the `server_configs.pd` values.
-    # config:
-    #   schedule.max-merge-region-size: 20
-    #   schedule.max-merge-region-keys: 200000
-  - host: 192.168.1.93
-    # ssh_port: 22
-    # name: "pd-1"
-    # client_port: 2379
-    # peer_port: 2380
-    # deploy_dir: "/tidb-deploy/pd-2379"
-    # data_dir: "/tidb-data/pd-2379"
-    # log_dir: "/tidb-deploy/pd-2379/log"
-    # numa_node: "0,1"
-    # config:
-    #   schedule.max-merge-region-size: 20
-    #   schedule.max-merge-region-keys: 200000
-  - host: 192.168.1.94
-    # ssh_port: 22
-    # name: "pd-1"
-    # client_port: 2379
-    # peer_port: 2380
-    # deploy_dir: "/tidb-deploy/pd-2379"
-    # data_dir: "/tidb-data/pd-2379"
-    # log_dir: "/tidb-deploy/pd-2379/log"
-    # numa_node: "0,1"
     # config:
     #   schedule.max-merge-region-size: 20
     #   schedule.max-merge-region-keys: 200000
@@ -1893,6 +1873,203 @@ tiup cluster destroy ${cluster-name}
 
 
 
+### 扩缩容
+
+TiDB 集群可以在不中断线上服务的情况下进行扩容和缩容。
+
+本文介绍如何使用 TiUP 扩容缩容集群中的 TiDB、TiKV、PD、TiCDC 或者 TiFlash 节点。
+
+你可以通过 `tiup cluster list` 查看当前的集群名称列表。
+
+#### 扩容 TiDB/PD/TiKV 节点
+
+如果要添加一个 TiDB 节点，IP 地址为 10.0.1.5，可以按照如下步骤进行操作。
+
+>注意：添加 PD 节点和添加 TiDB 节点的步骤类似。添加 TiKV 节点前，建议预先根据集群的负载情况调整 PD 调度参数。
+
+1. 编写扩容拓扑配置
+
+   >注意
+   >
+   >- 默认情况下，可以不填写端口以及目录信息。但在单机多实例场景下，则需要分配不同的端口以及目录，如果有端口或目录冲突，会在部署或扩容时提醒。
+   >- 从 TiUP v1.0.0 开始，扩容配置会继承原集群配置的 global 部分。
+
+   在 scale-out.yml 文件添加扩容拓扑配置：
+
+   TiDB 配置文件参考：
+
+   ```yaml
+   tidb_servers:
+     - host: 10.0.1.5
+       ssh_port: 22
+       port: 4000
+       status_port: 10080
+       deploy_dir: /tidb-deploy/tidb-4000
+       log_dir: /tidb-deploy/tidb-4000/log
+   ```
+
+   TiKV 配置文件参考：
+
+   ```yaml
+   tikv_servers:
+     - host: 10.0.1.5
+       ssh_port: 22
+       port: 20160
+       status_port: 20180
+       deploy_dir: /tidb-deploy/tikv-20160
+       data_dir: /tidb-data/tikv-20160
+       log_dir: /tidb-deploy/tikv-20160/log
+   ```
+
+   PD 配置文件参考：
+
+   ```ini
+   pd_servers:
+     - host: 10.0.1.5
+       ssh_port: 22
+       name: pd-1
+       client_port: 2379
+       peer_port: 2380
+       deploy_dir: /tidb-deploy/pd-2379
+       data_dir: /tidb-data/pd-2379
+       log_dir: /tidb-deploy/pd-2379/log
+   ```
+
+   可以使用 `tiup cluster edit-config <cluster-name>` 查看当前集群的配置信息，因为其中的 `global` 和 `server_configs` 参数配置默认会被 `scale-out.yml` 继承，因此也会在 `scale-out.yml` 中生效。
+
+2. 执行扩容命令
+
+   执行 scale-out 命令前，先使用 `check` 及 `check --apply` 命令，检查和自动修复集群存在的潜在风险：
+
+   >注意：针对 scale-out 命令的检查功能在 tiup cluster v1.9.3 及后续版本中支持，请操作前先升级 tiup cluster 版本。
+
+   （1）检查集群存在的潜在风险：
+
+   ```sh
+   tiup cluster check <cluster-name> scale-out.yml --cluster --user root [-p] [-i /home/root/.ssh/gcp_rsa]
+   ```
+
+   （2）自动修复集群存在的潜在风险：
+
+   ```sh
+   tiup cluster check <cluster-name> scale-out.yml --cluster --apply --user root [-p] [-i /home/root/.ssh/gcp_rsa]
+   ```
+
+   （3）执行 scale-out 命令扩容 TiDB 集群：
+
+   ```sh
+   tiup cluster scale-out <cluster-name> scale-out.yml [-p] [-i /home/root/.ssh/gcp_rsa]
+   ```
+
+   以上操作示例中：
+
+   - 扩容配置文件为 `scale-out.yml`。
+   - `--user root` 表示通过 root 用户登录到目标主机完成集群部署，该用户需要有 ssh 到目标机器的权限，并且在目标机器有 sudo 权限。也可以用其他有 ssh 和 sudo 权限的用户完成部署。
+   - [-i] 及 [-p] 为可选项，如果已经配置免密登录目标机，则不需填写。否则选择其一即可，[-i] 为可登录到目标机的 root 用户（或 --user 指定的其他用户）的私钥，也可使用 [-p] 交互式输入该用户的密码。
+
+   预期日志结尾输出 `Scaled cluster `<cluster-name>` out successfully` 信息，表示扩容操作成功。
+
+3. 刷新集群配置
+
+   >注意
+   >
+   >- 刷新集群配置仅适用于扩容 PD 节点，扩容 TiDB 或 TiKV 节点时无需执行此操作。
+   >- 如果你使用的是 TiUP v1.15.0 或之后版本，请跳过该操作，因为 TiUP 会完成相应操作；如果你使用的是 TiUP v1.15.0 之前的版本，则需执行以下步骤。
+
+   （1）更新集群配置：
+
+   ```sh
+   tiup cluster reload <cluster-name> --skip-restart
+   ```
+
+   （2）更新 Prometheus 配置并重启：
+
+   ```sh
+   tiup cluster reload <cluster-name> -R prometheus
+   ```
+
+4. 查看集群状态
+
+   ```sh
+   tiup cluster display <cluster-name>
+   ```
+
+   打开浏览器访问监控平台 [http://10.0.1.5:3000](http://10.0.1.5:3000/)，监控整个集群和新增节点的状态。
+
+#### 缩容 TiDB/PD/TiKV 节点
+
+如果要移除 IP 地址为 10.0.1.5 的一个 TiKV 节点，可以按照如下步骤进行操作。
+
+>注意
+>
+>- 移除 TiDB、PD 节点和移除 TiKV 节点的步骤类似。
+>- 由于 TiKV 和 TiFlash 组件是异步下线的，且下线过程耗时较长，所以 TiUP 对 TiKV 和 TiFlash 组件做了特殊处理，详情参考 [下线特殊处理](https://docs.pingcap.com/zh/tidb/stable/tiup-component-cluster-scale-in/#下线特殊处理)。
+>- TiKV 中的 PD Client 会缓存 PD 节点的列表。当前版本的 TiKV 有定期自动更新 PD 节点的机制，可以降低 TiKV 缓存的 PD 节点列表过旧这一问题出现的概率。但你应尽量避免在扩容新 PD 后直接一次性缩容所有扩容前就已经存在的 PD 节点。如果需要，请确保在下线所有之前存在的 PD 节点前将 PD 的 leader 切换至新扩容的 PD 节点。
+
+1. 查看节点 ID 信息
+
+   ```sh
+   tiup cluster display <cluster-name>
+   ```
+
+2. 执行缩容操作
+
+   ```sh
+   tiup cluster scale-in <cluster-name> --node 10.0.1.5:20160
+   ```
+
+   其中 `--node` 参数为需要下线节点的 ID。
+
+   预期输出 Scaled cluster `<cluster-name>` in successfully 信息，表示缩容操作成功。
+
+3. 刷新集群配置
+
+   >注意
+   >
+   >- 刷新集群配置仅适用于缩容 PD 节点，缩容 TiDB 或 TiKV 节点时无需执行此操作。
+   >- 如果你使用的是 TiUP v1.15.0 或之后版本，请跳过该操作，因为 TiUP 会完成相应操作；如果你使用的是 TiUP v1.15.0 之前的版本，则需执行以下步骤。
+
+   （1）更新集群配置：
+
+   ```sh
+   tiup cluster reload <cluster-name> --skip-restart
+   ```
+
+   （2）更新 Prometheus 配置并重启：
+
+   ```sh
+   tiup cluster reload <cluster-name> -R prometheus
+   ```
+
+4. 查看集群状态
+
+   下线需要一定时间，下线节点的状态变为 Tombstone 就说明下线成功。
+
+   执行如下命令检查节点是否下线成功：
+
+   ```sh
+   tiup cluster display <cluster-name>
+   ```
+
+   打开浏览器访问监控平台 [http://10.0.1.5:3000](http://10.0.1.5:3000/)，监控整个集群的状态。
+
+5. 清理 Tombstone 节点
+
+   由于 TiKV 和 TiFlash 组件的下线是异步的（需要先通过 API 执行移除操作）并且下线过程耗时较长（需要持续观察节点是否已经下线成功），所以对 TiKV 和 TiFlash 组件做了特殊处理：
+
+   - 对 TiKV 和 TiFlash 组件的操作
+     - tiup-cluster 通过 API 将其下线后直接退出而不等待下线完成
+     - 执行 `tiup cluster display` 查看下线节点的状态，等待其状态变为 Tombstone
+     - 执行 `tiup cluster prune` 命令清理 Tombstone 节点，该命令会执行以下操作：
+       - 停止已经下线掉的节点的服务
+       - 清理已经下线掉的节点的相关数据文件
+       - 更新集群的拓扑，移除已经下线掉的节点
+   - 对其他组件的操作
+     - 下线 PD 组件时，会通过 API 将指定节点从集群中删除掉（这个过程很快），然后停掉指定 PD 的服务并且清除该节点的相关数据文件
+     - 下线其他组件时，直接停止并且清除节点的相关数据文件
+
+
+
 ## 修改 root 密码
 
 使用 MySQL 客户端连接到 TiDB 并修改密码
@@ -2005,4 +2182,28 @@ tiup cluster clean <cluster-name> --all
 ```bash
 tiup cluster destroy <cluster-name>
 ```
+
+
+
+## 基准测试
+
+### 测试配置
+
+使用谷歌 GCE E2 实例测试。E2 实例配置如下：
+
+| **组件** | **CPU** | **内存** | **硬盘类型** | **网络**         | **实例数量** |
+| :------- | :------ | :------- | :----------- | :--------------- | :----------- |
+| TiProxy  | 8 核    | 6 GB     | SSD          | 万兆网卡（1 块） | 1            |
+| TiDB     | 8 核    | 8 GB     | SSD          | 万兆网卡（1 块） | 3            |
+| PD       | 4 核    | 8 GB     | SSD          | 万兆网卡（1 块） | 1            |
+| TiKV     | 8 核    | 32 GB    | SSD          | 万兆网卡（1 块） | 3            |
+| 监控     | 4 核    | 8 GB     | SSD          | 万兆网卡（1 块） | 1            |
+
+
+
+### 部署
+
+参考本站 <a href="/tidb/README.html#部署生产环境集群" target="_blank">链接</a> 部署集群。
+
+
 
