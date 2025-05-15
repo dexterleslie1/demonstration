@@ -1967,7 +1967,7 @@ TiDB 集群可以在不中断线上服务的情况下进行扩容和缩容。
    - `--user root` 表示通过 root 用户登录到目标主机完成集群部署，该用户需要有 ssh 到目标机器的权限，并且在目标机器有 sudo 权限。也可以用其他有 ssh 和 sudo 权限的用户完成部署。
    - [-i] 及 [-p] 为可选项，如果已经配置免密登录目标机，则不需填写。否则选择其一即可，[-i] 为可登录到目标机的 root 用户（或 --user 指定的其他用户）的私钥，也可使用 [-p] 交互式输入该用户的密码。
 
-   预期日志结尾输出 `Scaled cluster `<cluster-name>` out successfully` 信息，表示扩容操作成功。
+   预期日志结尾输出 `Scaled cluster <cluster-name> out successfully` 信息，表示扩容操作成功。
 
 3. 刷新集群配置
 
