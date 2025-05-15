@@ -41,10 +41,13 @@ create table if not exists t_order_detail (
     productId   bigint not null,
     merchantId  bigint not null comment '商家ID',
     amount      int not null,
-    constraint fk_order_detail_orderId foreign key(orderId) references t_order(id),
+    /*分布式数据库不支持外键特性，所以在orderId中建立索引即可*/
+    /*constraint fk_order_detail_orderId foreign key(orderId) references t_order(id),*/
     constraint unique_order_detail_userId_n_productId unique(userId,productId)
 ) engine=innodb character set utf8mb4 collate utf8mb4_general_ci;
 
+/* 订单getById时使用此索引获取订单明细 */
+create index idx_orderDetail_orderId on t_order_detail(orderId);
 /*create index idx_orderDetail_merchantId on t_order_detail(merchantId);
 create index idx_orderDetail_merchantId_orderId on t_order_detail(merchantId, orderId);*/
 

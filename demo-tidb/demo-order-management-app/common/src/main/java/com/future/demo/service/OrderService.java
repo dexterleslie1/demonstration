@@ -12,8 +12,6 @@ import com.future.demo.util.OrderRandomlyUtil;
 import com.tencent.devops.leaf.service.SnowflakeService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
-import org.apache.ibatis.session.SqlSessionFactory;
-import org.springframework.aop.framework.AopContext;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,7 +22,10 @@ import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.math.BigInteger;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -38,8 +39,6 @@ public class OrderService {
     OrderRandomlyUtil orderRandomlyUtil;
     @Autowired
     SnowflakeService snowflakeService;
-    @Autowired
-    SqlSessionFactory sqlSessionFactory;
 
     @PostConstruct
     public void init() {
@@ -61,7 +60,7 @@ public class OrderService {
 
             if (productModelList.size() == 1000 || (i + 1) == this.orderRandomlyUtil.productIdArray.length) {
                 this.productMapper.insertBatch(productModelList);
-                productModelList =new ArrayList<>();
+                productModelList = new ArrayList<>();
             }
         }
 
@@ -75,22 +74,15 @@ public class OrderService {
     @Resource
     ProductMapper productMapper;
 
-    // 基于数据库实现商品秒杀
-    public void createOrderBasedDB(Long userId, Long productId, Integer amount) throws Exception {
+    // 抛出异常后回滚事务
+    @Transactional(rollbackFor = Exception.class, transactionManager = "orderTransactionManager")
+    public void createOrder(Long userId, Long productId, Integer amount) throws Exception {
         // 判断库存是否充足
         ProductModel productModel = this.productMapper.getById(productId);
         if (productModel.getStock() <= 0) {
             throw new BusinessException("库存不足");
         }
 
-        // 获取 OrderService 的代理对象，否则 createOrderInternal 方法的 @Transactional 注解不生效
-        OrderService proxy = (OrderService) AopContext.currentProxy();
-        proxy.createOrderInternal(userId, productId, amount);
-    }
-
-    // 抛出异常后回滚事务
-    @Transactional(rollbackFor = Exception.class)
-    public void createOrderInternal(Long userId, Long productId, Integer amount) throws Exception {
         // 创建订单
         OrderModel orderModel = new OrderModel();
 
@@ -120,7 +112,7 @@ public class OrderService {
             throw new BusinessException("创建订单失败");
         }
 
-        ProductModel productModel = this.productMapper.getById(productId);
+        productModel = this.productMapper.getById(productId);
 
         OrderDetailModel orderDetailModel = new OrderDetailModel();
 

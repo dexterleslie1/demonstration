@@ -44,7 +44,7 @@ public class ApplicationTests {
         Integer amount = 2;
 
         // region 测试成功创建订单
-        this.orderService.createOrderBasedDB(userId, productId, amount);
+        this.orderService.createOrder(userId, productId, amount);
         List<OrderModel> orderModelList = this.orderMapper.selectAll();
         Assertions.assertEquals(1, orderModelList.size());
         Assertions.assertEquals(userId, orderModelList.get(0).getUserId());
@@ -67,7 +67,7 @@ public class ApplicationTests {
         for (int i = 0; i < concurrentThreads; i++) {
             executorService.submit(() -> {
                 try {
-                    this.orderService.createOrderBasedDB(userId, productId, amount);
+                    this.orderService.createOrder(userId, productId, amount);
                 } catch (Exception e) {
                     //
                 }
@@ -100,7 +100,7 @@ public class ApplicationTests {
             executorService.submit(() -> {
                 try {
                     Long userIdT = finalI + 1L;
-                    this.orderService.createOrderBasedDB(userIdT, productId, amount);
+                    this.orderService.createOrder(userIdT, productId, amount);
                 } catch (Exception e) {
                     //
                 }

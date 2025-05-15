@@ -2,8 +2,8 @@ package com.future.demo.service;
 
 import cn.hutool.core.util.RandomUtil;
 import com.future.demo.entity.IdCacheAssistantEntity;
-import com.future.demo.mapper.IdCacheAssistantMapper;
 import com.future.demo.mapper.OrderMapper;
+import com.future.demo.mapperidca.IdCacheAssistantMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 

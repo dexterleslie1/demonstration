@@ -40,7 +40,7 @@ public class OrderController {
         Long userId = this.orderRandomlyUtil.getUserIdRandomly();
         Long productId = this.orderRandomlyUtil.getProductIdRandomly();
         Integer amount = 1;
-        this.orderService.createOrderBasedDB(userId, productId, amount);
+        this.orderService.createOrder(userId, productId, amount);
         ObjectResponse<String> response = new ObjectResponse<>();
         response.setData("成功创建订单");
         return response;

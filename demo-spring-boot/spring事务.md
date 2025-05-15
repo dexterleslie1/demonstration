@@ -414,4 +414,25 @@ try {
 
 ## 事务失效有哪些情况呢？
 
-todo
+### MyBatis 配置多数据源时
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-mysql-n-mariadb/demo-order-management-app)
+
+配置事物管理器
+
+```java
+@Bean(name = "orderTransactionManager")
+@Primary
+public PlatformTransactionManager transactionManager(@Qualifier("orderDataSource") DataSource dataSource) {
+    return new DataSourceTransactionManager(dataSource);
+}
+```
+
+在支持事务的方法中配置事务管理器
+
+```java
+// 抛出异常后回滚事务
+@Transactional(rollbackFor = Exception.class, transactionManager = "orderTransactionManager")
+public void createOrder(Long userId, Long productId, Integer amount) throws Exception {
+```
+

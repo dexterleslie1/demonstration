@@ -1,4 +1,4 @@
-package com.future.demo.mapper;
+package com.future.demo.mapperidca;
 
 import com.future.demo.entity.IdCacheAssistantEntity;
 import org.apache.ibatis.annotations.*;
