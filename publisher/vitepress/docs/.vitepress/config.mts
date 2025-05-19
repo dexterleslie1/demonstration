@@ -52,6 +52,7 @@ export default defineConfig({
           { text: 'Maven', link: '/maven/README.md' },
           { text: 'Zookeeper', link: '/zookeeper/README.md' },
           { text: 'ElasticSearch', link: '/elasticsearch/README.md' },
+          { text: 'Cassandra', link: '/cassandra/README.md' },
         ]
       }, {
         text: 'Linux', items: [
