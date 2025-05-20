@@ -988,12 +988,18 @@ spring.datasource.db1.jdbc-url=jdbc:mysql://localhost:3306/demo?allowMultiQuerie
 spring.datasource.db1.username=root
 spring.datasource.db1.password=123456
 spring.datasource.db1.driver-class-name=com.mysql.cj.jdbc.Driver
+spring.datasource.db1.type=com.zaxxer.hikari.HikariDataSource
+spring.datasource.db1.maximumPoolSize=512
+spring.datasource.db1.minimumIdle=32
 
 # 数据源2配置
 spring.datasource.db2.jdbc-url=jdbc:mysql://localhost:3307/demo?allowMultiQueries=true
 spring.datasource.db2.username=root
 spring.datasource.db2.password=123456
 spring.datasource.db2.driver-class-name=com.mysql.cj.jdbc.Driver
+spring.datasource.db2.type=com.zaxxer.hikari.HikariDataSource
+spring.datasource.db2.maximumPoolSize=512
+spring.datasource.db2.minimumIdle=32
 ```
 
 数据源1 Java 配置
