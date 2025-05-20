@@ -3,6 +3,8 @@ version: "3.1"
 services:
     cassandra:
       image: cassandra:latest
+      environment:
+        - MAX_HEAP_SIZE=1G
       network_mode: host
 
     # 自动执行初始化脚本
@@ -12,10 +14,9 @@ services:
         - CQLSH_HOST=localhost
         - CQLSH_PORT=9042
         - CQLVERSION=3.4.7
+        - MAX_HEAP_SIZE=1G
       volumes:
         - ./init.cql:/scripts/data.cql
       network_mode: host
       depends_on:
         - cassandra
-
-
