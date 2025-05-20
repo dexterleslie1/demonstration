@@ -96,6 +96,7 @@ sudo dpkg -i finalshell_linux_x64.deb
 - 支持文件拖拽上传和右键点击下载功能（不需要频繁切换，方便）
 - 终端窗口打开太多时，终端窗口 TAB 排成一行不方便切换（致命原因导致不使用此软件）
 - Windows Server 2016 Datacenter 上推荐使用此软件
+- 超过10个实例时不要使用此客户端，因为此时新增的实例配置不再被 MobaXterm 保存。
 
 
 
