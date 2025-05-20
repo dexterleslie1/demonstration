@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.future.demo.mapper.OrderMapper">
+    <select id="listByUserId" resultType="com.future.demo.entity.OrderModel">
+        select *
+        from t_order
+        <where>
+            <if test="userId!=null">
+                userId=#{userId}
+            </if>
+            <if test="status!=null">
+                and status=#{status}
+            </if>
+            <if test="deleteStatus!=null">
+                and deleteStatus=#{deleteStatus}
+            </if>
+            and createTime&gt;=#{startTime} and createTime&lt;=#{endTime}
+        </where>
+        order by id desc
+        limit #{start},#{size}
+    </select>
+
+    <select id="listByMerchantId" resultType="com.future.demo.entity.OrderModel">
+        select tOrder.*
+        from t_order tOrder
+        inner join t_order_detail detail on tOrder.id=detail.orderId
+        <where>
+            <if test="merchantId!=null">
+                merchantId=#{merchantId}
+            </if>
+            <if test="status!=null">
+                and status=#{status}
+            </if>
+            <if test="deleteStatus!=null">
+                and deleteStatus=#{deleteStatus}
+            </if>
+            and createTime&gt;=#{startTime} and createTime&lt;=#{endTime}
+        </where>
+        order by tOrder.id desc
+        limit #{start},#{size}
+    </select>
+</mapper>

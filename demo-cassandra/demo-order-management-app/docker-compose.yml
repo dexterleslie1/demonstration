@@ -1,0 +1,33 @@
+version: "3.1"
+
+services:
+#  service:
+#    build:
+#      context: ./service
+#      dockerfile: Dockerfile
+#    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-order-management-app-service
+#    environment:
+#      - JAVA_OPTS=-Xmx1g
+#      - TZ=Asia/Shanghai
+#    network_mode: host
+#    depends_on:
+#      - cassandra
+
+  cassandra:
+    image: cassandra:latest
+    environment:
+      - MAX_HEAP_SIZE=1G
+    volumes:
+      - ./init.cql:/scripts/data.cql:ro
+      - ./cassandra.yaml:/etc/cassandra/cassandra.yaml
+    network_mode: host
+
+  zookeeper:
+    image: zookeeper:3.8.4
+    environment:
+      - TZ=Asia/Shanghai
+      - JVMFLAGS=-Xmx512m -Xms512m -server
+      # 禁用 zookeeper AdminServer
+      # https://hub.docker.com/_/zookeeper
+      - ZOO_ADMINSERVER_ENABLED=false
+    network_mode: host
