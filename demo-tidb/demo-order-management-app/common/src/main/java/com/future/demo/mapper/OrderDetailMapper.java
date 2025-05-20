@@ -9,7 +9,7 @@ import java.util.List;
 @Mapper
 public interface OrderDetailMapper {
     @Select("<script>" +
-            "SELECT * FROM t_order_detail where orderId in " +
+            "SELECT id,orderId,userId,productId,merchantId,amount FROM t_order_detail where orderId in " +
             "   <foreach item=\"item\" collection=\"orderIdList\" separator=\",\" open=\"(\" close=\")\">" +
             "       #{item}" +
             "   </foreach>" +

@@ -1088,6 +1088,31 @@ server_configs:
 
 
 
+### 应用配置
+
+详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-tidb/demo-order-management-app)
+
+
+
+#### JDBC 驱动
+
+```properties
+# https://github.com/mysql/mysql-connector-j/blob/release/8.0/src/main/resources/com/mysql/cj/configurations/maxPerformance.properties
+spring.datasource.order.jdbc-url=jdbc:mysql://192.168.1.88:6000/demo?allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true&useServerPrepStmts=true&cachePrepStmts=true&cacheCallableStmts=true&cacheServerConfiguration=true&useLocalSessionState=true&elideSetAutoCommits=true&alwaysSendSetIsolation=false&enableQueryTimeouts=false&connectionAttributes=none&useConfigs=maxPerformance
+```
+
+
+
+#### Hikari 连接池
+
+```properties
+spring.datasource.order.type=com.zaxxer.hikari.HikariDataSource
+spring.datasource.order.maximumPoolSize=512
+spring.datasource.order.minimumIdle=32
+```
+
+
+
 ## 在线修改集群配置
 
 >[参考官方文档](https://docs.pingcap.com/zh/tidb/stable/dynamic-config/#%E5%9C%A8%E7%BA%BF%E4%BF%AE%E6%94%B9%E9%9B%86%E7%BE%A4%E9%85%8D%E7%BD%AE)

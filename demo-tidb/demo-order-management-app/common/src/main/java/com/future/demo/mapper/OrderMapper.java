@@ -57,7 +57,7 @@ public interface OrderMapper {
                                       @Param("start") Long start,
                                       @Param("size") Long size);
 
-    @Select("select * from t_order where id=#{orderId}")
+    @Select("select id,userId,`status`,payTime,deliveryTime,receivedTime,cancelTime,deleteStatus,createTime from t_order where id=#{orderId}")
         // long 类型
         /*OrderModel getById(@Param("orderId") Long orderId);*/
         // int 类型
