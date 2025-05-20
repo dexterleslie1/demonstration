@@ -72,8 +72,6 @@ public class OrderService {
     OrderMapper orderMapper;
     @Resource
     OrderDetailMapper orderDetailMapper;
-//    @Resource
-//    ProductMapper productMapper;
 
     public void insertBatch() throws BusinessException {
         List<OrderModel> orderModelList = new ArrayList<>();

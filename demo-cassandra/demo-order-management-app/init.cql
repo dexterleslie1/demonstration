@@ -1,4 +1,4 @@
-CREATE KEYSPACE IF NOT EXISTS demo WITH REPLICATION ={'class' : 'SimpleStrategy','replication_factor' : '1'};
+CREATE KEYSPACE IF NOT EXISTS demo WITH REPLICATION ={'class' : 'NetworkTopologyStrategy','replication_factor' : '3'};
 
 USE demo;
 
@@ -49,11 +49,3 @@ CREATE TABLE IF NOT EXISTS t_order_detail
     amount      int,
     PRIMARY KEY ((order_id), id) -- 复合主键，order_id为分区键，detail_id为聚类键
 ) WITH CLUSTERING ORDER BY (id ASC);
-
-drop table if exists t_product;
-create table if not exists t_product(
-    id          bigint primary key,
-    name        text,
-    merchantId  bigint,
-    stock       int
-);

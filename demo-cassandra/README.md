@@ -108,7 +108,7 @@ describe keyspaces;
 
 ## 部署
 
-### Docker 部署
+### Docker 部署单机
 
 >[官方参考文档](https://cassandra.apache.org/doc/latest/cassandra/installing/installing.html#install-with-docker)
 
@@ -121,8 +121,14 @@ version: "3.0"
 
 services:
   cassandra:
-    image: cassandra:latest
-    network_mode: host
+   image: cassandra:5.0.4
+   environment:
+     - MAX_HEAP_SIZE=1G
+     # 是MAX_HEAP_SIZE的1/4
+     - HEAP_NEWSIZE=256MB
+   volumes:
+     - ./data.cql:/scripts/data.cql:ro
+   network_mode: host
     
 ```
 
@@ -136,6 +142,123 @@ docker compose up -d
 
 ```bash
 docker compose exec -it cassandra cqlsh
+```
+
+
+
+### Docker 部署集群
+
+详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-cassandra/demo-order-management-app)
+
+init.cql 内容如下：
+
+```CQL
+CREATE KEYSPACE IF NOT EXISTS demo WITH REPLICATION ={'class' : 'NetworkTopologyStrategy','replication_factor' : '3'};
+
+USE demo;
+
+drop table if exists t_order;
+CREATE TABLE IF NOT EXISTS t_order
+(
+    id            decimal primary key,
+    user_id       bigint,
+    status        text,      -- 使用text代替ENUM，Cassandra不支持ENUM类型
+    pay_time      timestamp, -- 使用timestamp代替datetime
+    delivery_time timestamp,
+    received_time timestamp,
+    cancel_time   timestamp,
+    delete_status text,
+    create_time   timestamp
+);
+
+drop table if exists t_order_list_by_userId;
+CREATE TABLE IF NOT EXISTS t_order_list_by_userId
+(
+    id            decimal,
+    user_id       bigint,
+    status        text,
+    pay_time      timestamp, -- 使用timestamp代替datetime
+    delivery_time timestamp,
+    received_time timestamp,
+    cancel_time   timestamp,
+    delete_status text,
+    create_time   timestamp,
+    primary key ((user_id),status,delete_status,create_time,id)
+);
+
+/*似乎order by很多限制不容易实现业务逻辑*/
+/*CREATE MATERIALIZED VIEW mv_list_by_user_id AS
+SELECT * FROM t_order
+where user_id is not null and create_time is not null
+    and status is not null and delete_status is not null and id is not null
+PRIMARY KEY ((user_id),status,delete_status,create_time,id);*/
+
+drop table if exists t_order_detail;
+CREATE TABLE IF NOT EXISTS t_order_detail
+(
+    id          bigint,
+    order_id    decimal,
+    user_id     bigint,
+    product_id  bigint,
+    merchant_id bigint,
+    amount      int,
+    PRIMARY KEY ((order_id), id) -- 复合主键，order_id为分区键，detail_id为聚类键
+) WITH CLUSTERING ORDER BY (id ASC);
+
+```
+
+192.168.1.90 docker-compose.yaml 内容如下：
+
+```yaml
+version: "3.1"
+
+services:
+  node1:
+    image: cassandra:5.0.4
+    environment:
+      - CASSANDRA_SEEDS=192.168.1.90,192.168.1.91,192.168.1.92
+    volumes:
+      - ./init.cql:/scripts/data.cql:ro
+    restart: unless-stopped
+    network_mode: host
+```
+
+192.168.1.91 docker-compose.yaml 内容如下：
+
+```yaml
+version: "3.1"
+
+services:
+  node1:
+    image: cassandra:5.0.4
+    environment:
+      - CASSANDRA_SEEDS=192.168.1.90,192.168.1.91,192.168.1.92
+    restart: unless-stopped
+    network_mode: host
+```
+
+192.168.1.92 docker-compose.yaml 内容如下：
+
+```yaml
+version: "3.1"
+
+services:
+  node1:
+    image: cassandra:5.0.4
+    environment:
+      - CASSANDRA_SEEDS=192.168.1.90,192.168.1.91,192.168.1.92
+    restart: unless-stopped
+    network_mode: host
+```
+
+登录 192.168.1.90 查看集群状态
+
+```sh
+# 进入 cassandra 容器
+docker compose exec -it node1 bash
+
+# 查看集群状态
+nodetool status
 ```
 
 
@@ -361,10 +484,11 @@ Java 配置：
 public class ConfigCassandra {
     @Bean(destroyMethod = "close")
     public CqlSession cqlSession() {
-        String host = "localhost";
         int port = 9042;
         return CqlSession.builder()
-                .addContactPoint(new InetSocketAddress(host, port))
+                .addContactPoint(new InetSocketAddress("192.168.1.90", port))
+                .addContactPoint(new InetSocketAddress("192.168.1.91", port))
+                .addContactPoint(new InetSocketAddress("192.168.1.92", port))
                 // 指定本地数据中心名称
                 .withLocalDatacenter("datacenter1")
                 .withKeyspace("demo")
@@ -1185,3 +1309,243 @@ SELECT * FROM products WHERE name = 'example' AND price > 100;
   SAI 索引的性能依赖于查询模式，建议结合 Cassandra 的分区键和聚类键设计，以实现最佳查询效率。
 - **版本兼容性**
   SAI 索引在较新版本的 Cassandra 中支持较好，使用前需确认集群版本是否兼容。
+
+
+
+## 反范式设计
+
+### 介绍
+
+#### **1. 什么是反范式设计？**
+
+反范式设计（Denormalization）是一种与关系型数据库范式化（Normalization）相反的数据建模方法。在 Cassandra 中，反范式设计通过**冗余存储数据**或**合并相关数据**来优化查询性能，避免昂贵的表连接操作。
+
+#### **2. 为什么 Cassandra 需要反范式设计？**
+
+- **分布式架构**：Cassandra 是分布式数据库，表连接（JOIN）在分布式环境中效率极低，甚至不支持。
+- **查询驱动设计**：Cassandra 的数据模型必须围绕**查询模式**设计，而非数据关系。
+- **性能优化**：通过反范式化减少查询时的数据访问次数，提升读取性能。
+
+------
+
+#### **3. 反范式设计的核心原则**
+
+**(1) 查询优先**
+
+- **明确查询需求**：所有表的设计必须基于已知的查询模式。
+- **示例**：
+  如果需要查询“用户及其订单信息”，可以设计一个合并表，将用户信息和订单信息冗余存储在一起。
+
+**(2) 冗余数据**
+
+- **存储冗余字段**：避免查询时需要访问多个表。
+- **示例**：
+  在订单表中冗余存储用户姓名，而不是通过外键关联用户表。
+
+**(3) 避免表连接**
+
+- **完全避免 JOIN**：Cassandra 不支持 JOIN 操作，所有数据必须通过单表查询获取。
+- **替代方案**：
+  使用宽行（Wide Row）或嵌套结构（如 JSON、集合类型）存储相关数据。
+
+**(4) 宽行设计**
+
+- **分区键和聚类键**：
+  利用 Cassandra 的分区键（Partition Key）和聚类键（Clustering Key）将相关数据存储在同一分区中。
+- **示例**：
+  在用户时间线表中，以用户 ID 为分区键，时间戳为聚类键，将用户发布的所有帖子按时间顺序存储在同一分区中。
+
+------
+
+#### **4. 反范式设计的常见模式**
+
+**(1) 宽行模式（Wide Row）**
+
+- **适用场景**：
+  需要按某个键（如用户 ID）查询一组相关数据（如用户的时间线、订单历史）。
+
+- 示例：
+
+  ```cql
+  CREATE TABLE user_timeline (
+      user_id UUID,
+      post_time TIMESTAMP,
+      post_content TEXT,
+      PRIMARY KEY ((user_id), post_time)
+  ) WITH CLUSTERING ORDER BY (post_time DESC);
+  ```
+
+  - **分区键**：`user_id`，确保同一用户的所有帖子存储在同一分区。
+  - **聚类键**：`post_time`，按时间排序。
+
+**(2) 嵌套集合**
+
+- **适用场景**：
+  需要存储一对多或多对多关系，且不需要频繁更新。
+
+- 示例：
+
+  ```cql
+  CREATE TABLE user_with_tags (
+      user_id UUID,
+      username TEXT,
+      tags SET<TEXT>,  -- 使用集合类型存储标签
+      PRIMARY KEY (user_id)
+  );
+  ```
+
+**(3) 冗余字段**
+
+- **适用场景**：
+  避免查询时需要访问多个表。
+
+- 示例：
+
+  ```cql
+  CREATE TABLE orders_with_user_info (
+      order_id UUID,
+      user_id UUID,
+      user_name TEXT,  -- 冗余存储用户名
+      order_amount DECIMAL,
+      PRIMARY KEY (order_id)
+  );
+  ```
+
+------
+
+#### **5. 反范式设计的优缺点**
+
+**优点**
+
+- **查询性能高**：单表查询即可获取所有数据。
+- **适合分布式**：无需表连接，适合 Cassandra 的分布式架构。
+- **简单高效**：减少查询复杂度，提升系统吞吐量。
+
+**缺点**
+
+- **数据冗余**：增加存储空间占用。
+- **更新复杂**：更新冗余数据时需要同步多个表或字段。
+- **一致性维护**：需要确保冗余数据的一致性（可通过 Cassandra 的轻量级事务或应用层逻辑实现）。
+
+------
+
+#### **6. 何时使用反范式设计？**
+
+- **读多写少**：查询频率远高于更新频率。
+- **固定查询模式**：查询需求明确且稳定。
+- **性能敏感**：需要极致的读取性能。
+
+**何时避免反范式设计？**
+
+- **写频繁**：频繁更新冗余数据会导致性能下降。
+- **查询模式多变**：查询需求不确定或频繁变化。
+
+------
+
+#### **7. 反范式设计的最佳实践**
+
+1. **明确查询需求**：
+   所有表的设计必须基于已知的查询模式。
+2. **合理冗余**：
+   只冗余必要的字段，避免过度冗余。
+3. **使用宽行和嵌套结构**：
+   利用 Cassandra 的分区键和聚类键优化数据布局。
+4. **批量更新**：
+   更新冗余数据时，尽量使用批量操作（如 BATCH 语句）减少网络开销。
+5. **监控一致性**：
+   定期检查冗余数据的一致性，必要时通过应用层逻辑修复。
+
+------
+
+#### **8. 示例：用户订单系统**
+
+**需求**：
+
+- 查询用户订单列表。
+- 查询订单详情（包括用户信息）。
+
+**反范式设计**：
+
+```cql
+-- 订单表（冗余用户信息）
+CREATE TABLE orders (
+    order_id UUID,
+    user_id UUID,
+    user_name TEXT,  -- 冗余存储用户名
+    order_date TIMESTAMP,
+    amount DECIMAL,
+    PRIMARY KEY (order_id)
+);
+ 
+-- 用户订单索引表（按用户 ID 查询订单）
+CREATE TABLE user_orders (
+    user_id UUID,
+    order_date TIMESTAMP,
+    order_id UUID,
+    amount DECIMAL,
+    PRIMARY KEY ((user_id), order_date, order_id)
+) WITH CLUSTERING ORDER BY (order_date DESC);
+```
+
+- 查询用户订单列表：
+
+  ```sql
+  SELECT order_id, order_date, amount FROM user_orders WHERE user_id = ?;
+  ```
+
+- 查询订单详情：
+
+  ```sql
+  SELECT * FROM orders WHERE order_id = ?;
+  ```
+
+------
+
+#### **总结**
+
+Cassandra 的反范式设计是一种以查询为中心的数据建模方法，通过冗余数据和宽行设计优化读取性能。虽然会增加存储空间和维护复杂度，但在读多写少、查询模式固定的场景下，反范式设计是 Cassandra 数据建模的最佳实践。
+
+
+
+### 实践
+
+详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-cassandra/demo-order-management-app)
+
+```CQL
+drop table if exists t_order;
+CREATE TABLE IF NOT EXISTS t_order
+(
+    id            decimal primary key,
+    user_id       bigint,
+    status        text,      -- 使用text代替ENUM，Cassandra不支持ENUM类型
+    pay_time      timestamp, -- 使用timestamp代替datetime
+    delivery_time timestamp,
+    received_time timestamp,
+    cancel_time   timestamp,
+    delete_status text,
+    create_time   timestamp
+);
+
+drop table if exists t_order_list_by_userId;
+CREATE TABLE IF NOT EXISTS t_order_list_by_userId
+(
+    id            decimal,
+    user_id       bigint,
+    status        text,
+    pay_time      timestamp, -- 使用timestamp代替datetime
+    delivery_time timestamp,
+    received_time timestamp,
+    cancel_time   timestamp,
+    delete_status text,
+    create_time   timestamp,
+    primary key ((user_id),status,delete_status,create_time,id)
+);
+```
+
+上面 CQL 分别设计 t_order 用于根据订单 id 查询订单信息，t_order_list_by_userId 用于根据用户 id 查询订单列表。
+
+
+
+## 分页
+
+todo

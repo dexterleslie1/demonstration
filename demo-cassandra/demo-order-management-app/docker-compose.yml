@@ -13,14 +13,32 @@ services:
 #    depends_on:
 #      - cassandra
 
-  cassandra:
-    image: cassandra:latest
+  node1:
+    image: cassandra:5.0.4
     environment:
       - MAX_HEAP_SIZE=1G
+      - HEAP_NEWSIZE=256M
+      - CASSANDRA_SEEDS=node1,node2,node3  # 指定种子节点
     volumes:
       - ./init.cql:/scripts/data.cql:ro
-      - ./cassandra.yaml:/etc/cassandra/cassandra.yaml
-    network_mode: host
+    ports:
+      - "9042:9042"
+  node2:
+    image: cassandra:5.0.4
+    environment:
+      - MAX_HEAP_SIZE=1G
+      - HEAP_NEWSIZE=256M
+      - CASSANDRA_SEEDS=node1,node2,node3
+    ports:
+      - "9043:9042"  # 映射到不同端口，避免冲突
+  node3:
+    image: cassandra:5.0.4
+    environment:
+      - MAX_HEAP_SIZE=1G
+      - HEAP_NEWSIZE=256M
+      - CASSANDRA_SEEDS=node1,node2,node3
+    ports:
+      - "9045:9042"  # 映射到不同端口，避免冲突
 
   zookeeper:
     image: zookeeper:3.8.4

@@ -10,10 +10,11 @@ import java.net.InetSocketAddress;
 public class ConfigCassandra {
     @Bean(destroyMethod = "close")
     public CqlSession cqlSession() {
-        String host = "localhost";
         int port = 9042;
         return CqlSession.builder()
-                .addContactPoint(new InetSocketAddress(host, port))
+                .addContactPoint(new InetSocketAddress("192.168.1.90", port))
+                .addContactPoint(new InetSocketAddress("192.168.1.91", port))
+                .addContactPoint(new InetSocketAddress("192.168.1.92", port))
                 // 指定本地数据中心名称
                 .withLocalDatacenter("datacenter1")
                 .withKeyspace("demo")
