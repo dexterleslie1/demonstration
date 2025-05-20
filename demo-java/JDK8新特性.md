@@ -2638,6 +2638,13 @@ public class InstantExample {
         Instant later = Instant.now().plusSeconds(60); // 60秒后
         java.time.Duration duration = java.time.Duration.between(now, later);
         System.out.println("时间差: " + duration);
+        
+        // Instant 和 LocalDateTime 相互转换
+        // https://stackoverflow.com/questions/52264768/how-to-convert-from-instant-to-localdate
+        Instant instant = Instant.now();
+        localDateTime = instant.atZone(ZoneId.of("Asia/Shanghai")).toLocalDateTime();
+        Instant instant1 = localDateTime.atZone(ZoneId.of("Asia/Shanghai")).toInstant();
+        Assert.assertEquals(instant, instant1);
     }
 }
 ```

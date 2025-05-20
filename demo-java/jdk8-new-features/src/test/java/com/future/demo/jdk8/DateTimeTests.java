@@ -1,6 +1,7 @@
 package com.future.demo.jdk8;
 
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.text.SimpleDateFormat;
@@ -144,6 +145,13 @@ public class DateTimeTests {
         Instant later = Instant.now().plusSeconds(60); // 60秒后
         java.time.Duration duration = java.time.Duration.between(nowInstant, later);
         System.out.println("时间差: " + duration);
+
+        // Instant 和 LocalDateTime 相互转换
+        // https://stackoverflow.com/questions/52264768/how-to-convert-from-instant-to-localdate
+        Instant instant = Instant.now();
+        localDateTime = instant.atZone(ZoneId.of("Asia/Shanghai")).toLocalDateTime();
+        Instant instant1 = localDateTime.atZone(ZoneId.of("Asia/Shanghai")).toInstant();
+        Assert.assertEquals(instant, instant1);
 
         // endregion
 
