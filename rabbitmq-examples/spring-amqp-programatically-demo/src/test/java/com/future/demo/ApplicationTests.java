@@ -1,14 +1,13 @@
-package com.future.study.rabbitmq.spring.amqp.demo;
+package com.future.demo;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
-import org.springframework.amqp.rabbit.connection.Connection;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
-import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter;
+import org.springframework.util.StringUtils;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -31,6 +30,18 @@ public class ApplicationTests {
         this.host = host;
         this.username = username;
         this.password = password;
+
+        if(!StringUtils.hasText(this.host)) {
+            this.host = "localhost";
+        }
+
+        if(!StringUtils.hasText(this.username)) {
+            this.username = "root";
+        }
+
+        if(!StringUtils.hasText(this.password)) {
+            this.password = "123456";
+        }
     }
 
     /**

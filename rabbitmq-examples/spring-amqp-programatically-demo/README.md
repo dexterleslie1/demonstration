@@ -1,1 +1,0 @@
-编程式演示spring-amqp api使用
