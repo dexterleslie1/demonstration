@@ -1,8 +1,5 @@
-package com.future.study.spring.amqp.configuration;
+package com.future.demo;
 
-import com.future.study.spring.amqp.demo.configuration.Application;
-import com.future.study.spring.amqp.demo.configuration.Config;
-import com.future.study.spring.amqp.demo.configuration.Receiver;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.amqp.core.AmqpTemplate;

@@ -1,4 +1,4 @@
-package com.future.study.spring.amqp.demo.configuration;
+package com.future.demo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
