@@ -298,3 +298,83 @@ public class ApplicationTests {
     }
 }
 ```
+
+
+
+### 使用 @RabbitListener 注解方式配置
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/rabbitmq-examples/spring-amqp-annotation-rabbitlistener)
+
+Java 配置
+
+```java
+@Configuration
+public class Config {
+
+    public static final String exchangeName = "spring-amqp-annotaion-rabbitlistener-exchange-demo";
+    static final String queueName = "spring-amqp-annotaion-rabbitlistener-queue-demo";
+
+    @Bean
+    public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(
+            ConnectionFactory connectionFactory) {
+        SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
+        factory.setConnectionFactory(connectionFactory);
+        factory.setConcurrentConsumers(3);
+        factory.setMaxConcurrentConsumers(10);
+        return factory;
+    }
+}
+```
+
+Receiver 配置
+
+```java
+@Component
+@RabbitListener(bindings = @QueueBinding(
+        value = @Queue(value = Config.queueName, autoDelete = "true"),
+        exchange = @Exchange(value= Config.exchangeName, type=ExchangeTypes.FANOUT),
+        key = ""
+), containerFactory = "rabbitListenerContainerFactory")
+public class Receiver {
+    private static final Logger logger = LoggerFactory.getLogger(Receiver.class);
+
+    private CountDownLatch latch = new CountDownLatch(2);
+
+    @RabbitHandler
+    public void receiveMessage(String message,
+                               Channel channel,
+                               @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws Exception {
+        logger.info("Received <" + message + ">");
+        latch.countDown();
+        channel.basicAck(deliveryTag, false);
+    }
+
+    public CountDownLatch getLatch() {
+        return latch;
+    }
+
+}
+```
+
+测试
+
+```java
+@RunWith(SpringRunner.class)
+@SpringBootTest(classes={Application.class})
+public class ApplicationTests {
+    @Autowired
+    private AmqpTemplate amqpTemplate = null;
+    @Autowired
+    private Receiver receiver = null;
+
+    @Test
+    public void test1() throws InterruptedException, TimeoutException {
+        for(int i=0; i<2; i++) {
+            amqpTemplate.convertAndSend(Config.exchangeName, null, "Hello from RabbitMQ!" + i);
+        }
+        if(!receiver.getLatch().await(2000, TimeUnit.MILLISECONDS)) {
+            throw new TimeoutException();
+        }
+    }
+}
+```

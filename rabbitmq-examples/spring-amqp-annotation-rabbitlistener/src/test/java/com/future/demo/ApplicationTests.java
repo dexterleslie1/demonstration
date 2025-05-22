@@ -1,4 +1,4 @@
-package com.future.study.spring.amqp.annotation.rabbitlistener;
+package com.future.demo;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
