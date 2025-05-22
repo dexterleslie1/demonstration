@@ -54,7 +54,7 @@ public class IdCacheAssistantService {
                 int pageSize = 10000 * 20;
                 AtomicLong counter = new AtomicLong();
                 while (!stop) {
-                    long idRandom = RandomUtil.randomLong(idMin, idMax);
+                    long idRandom = RandomUtil.randomLong(idMin, idMax + 1);
                     BigInteger[] orderIdArrRandomResult = this.idCacheAssistantMapper.listOrderId(idRandom, pageSize);
                     if (orderIdArrRandomResult.length == pageSize) {
                         orderIdArrRandom = orderIdArrRandomResult;

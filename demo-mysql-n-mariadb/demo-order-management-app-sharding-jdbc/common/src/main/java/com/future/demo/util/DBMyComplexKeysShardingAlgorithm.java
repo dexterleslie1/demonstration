@@ -1,11 +1,11 @@
 package com.future.demo.util;
 
+import com.future.demo.service.OrderService;
 import com.google.common.collect.Range;
 import org.apache.shardingsphere.api.sharding.complex.ComplexKeysShardingAlgorithm;
 import org.apache.shardingsphere.api.sharding.complex.ComplexKeysShardingValue;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -18,9 +18,6 @@ public class DBMyComplexKeysShardingAlgorithm implements ComplexKeysShardingAlgo
      * 用户id列名
      */
     private static final String COLUMN_USER_ID = "userId";
-
-    private static final BigInteger BIG_INTEGER_16 = new BigInteger("16");
-    private static final BigInteger BIG_INTEGER_1 = new BigInteger("1");
 
     @Override
     public Collection<String> doSharding(Collection<String> availableTargetNames, ComplexKeysShardingValue<BigDecimal> shardingValue) {
@@ -51,10 +48,10 @@ public class DBMyComplexKeysShardingAlgorithm implements ComplexKeysShardingAlgo
         // 通过订单ID和用户ID计算所有表名称
         return ids.stream()
                 // 截取 订单号或客户id的后2位
-                .map(id -> id.toBigInteger().mod(BIG_INTEGER_16))
+                .map(id -> id.toBigInteger().and(OrderService.ShiftLeftBigInteger).mod(OrderService.TotalShardBigInteger))
                 .distinct()
                 // 截取 订单号或客户id的后2位
-                .map(idSuffix -> (idSuffix.mod(new BigInteger(String.valueOf(availableTargetNames.size()))).add(BIG_INTEGER_1)))
+                .map(idSuffix -> (idSuffix.divide(OrderService.EachDatasourceTableTotalShardBigInteger).add(OrderService.BIG_INTEGER_1)))
                 // 去重
                 .distinct()
                 // 获取到真实的表

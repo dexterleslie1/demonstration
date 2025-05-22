@@ -1,5 +1,6 @@
 package com.future.demo.util;
 
+import com.future.demo.service.OrderService;
 import com.google.common.collect.Range;
 import org.apache.shardingsphere.api.sharding.complex.ComplexKeysShardingAlgorithm;
 import org.apache.shardingsphere.api.sharding.complex.ComplexKeysShardingValue;
@@ -55,11 +56,15 @@ public class TableMyComplexKeysShardingAlgorithm implements ComplexKeysShardingA
         // 通过订单ID和用户ID计算所有表名称
         return ids.stream()
                 // 截取 订单号或客户id的后2位
-                .map(id -> id.toBigInteger().mod(BIG_INTEGER_16))
-                // 去重
+                .map(id -> {
+                    BigInteger remain = id.toBigInteger().and(OrderService.ShiftLeftBigInteger).mod(OrderService.TotalShardBigInteger);
+                    int datasourceIndex = remain.divide(OrderService.EachDatasourceTableTotalShardBigInteger).intValue();
+                    int tableIndex = remain.subtract(
+                                    BigInteger.valueOf((long) datasourceIndex * OrderService.eachDatasourceTableTotalShard))
+                            .intValue();
+                    return tableIndex + 1;
+                })
                 .distinct()
-                // 对可用的表名求余数，获取到真实的表的后缀
-                .map(idSuffix -> idSuffix.mod(new BigInteger(String.valueOf(availableTargetNames.size()))).add(BIG_INTEGER_1))
                 // 获取到真实的表
                 .map(tableSuffix -> availableTargetNames.stream().filter(targetName -> targetName.endsWith(String.valueOf(tableSuffix))).findFirst().orElse(null))
                 .filter(Objects::nonNull)

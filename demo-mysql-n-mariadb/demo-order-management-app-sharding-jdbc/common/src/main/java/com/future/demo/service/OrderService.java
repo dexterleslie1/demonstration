@@ -32,6 +32,19 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class OrderService {
+    // 保留用户id的位数
+    public final static int UserIdBitsToRetain = 12;
+    // 用于保留或者从订单id中提取指定位数用户id
+    public final static long ShiftLeftLong = (1L << UserIdBitsToRetain) - 1L;
+    public final static BigInteger ShiftLeftBigInteger = java.math.BigInteger.valueOf(ShiftLeftLong);
+    // 数据源分片总数
+    public final static int datasourceTotalShard = 5;
+    // 每个数据源表分片总数
+    public final static int eachDatasourceTableTotalShard = 32;
+    // 分片总数
+    public final static BigInteger TotalShardBigInteger = java.math.BigInteger.valueOf(datasourceTotalShard * eachDatasourceTableTotalShard);
+    public final static BigInteger BIG_INTEGER_1 = new BigInteger("1");
+    public final static BigInteger EachDatasourceTableTotalShardBigInteger = BigInteger.valueOf(eachDatasourceTableTotalShard);
 
     @Value("${productStock:100000000}")
     Integer productStock;
@@ -98,9 +111,9 @@ public class OrderService {
         OrderModel orderModel = new OrderModel();
 
         Long orderId = this.snowflakeService.getId("order").getId();
-        Long userIdStripOff = userId % 16;
+        Long userIdStripOff = userId & ShiftLeftLong;
         String orderIdBinaryStr = Long.toBinaryString(orderId) +
-                StringUtils.leftPad(Long.toBinaryString(userIdStripOff), 4, "0");
+                StringUtils.leftPad(Long.toBinaryString(userIdStripOff), UserIdBitsToRetain, "0");
         BigInteger orderIdBig = new BigInteger(orderIdBinaryStr, 2);
         orderModel.setId(orderIdBig);
 
@@ -156,9 +169,9 @@ public class OrderService {
 
             // biginteger 类型
             Long orderId = this.snowflakeService.getId("order").getId();
-            Long userIdStripOff = userId % 16;
+            Long userIdStripOff = userId & ShiftLeftLong;
             String orderIdBinaryStr = Long.toBinaryString(orderId) +
-                    StringUtils.leftPad(Long.toBinaryString(userIdStripOff), 4, "0");
+                    StringUtils.leftPad(Long.toBinaryString(userIdStripOff), UserIdBitsToRetain, "0");
             BigInteger orderIdBigInt = new BigInteger(orderIdBinaryStr, 2);
             orderModel.setId(orderIdBigInt);
 
