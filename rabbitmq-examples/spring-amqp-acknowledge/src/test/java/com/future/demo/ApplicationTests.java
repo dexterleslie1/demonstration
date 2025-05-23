@@ -1,4 +1,4 @@
-package com.future.study.spring.amqp.acknowledge;
+package com.future.demo;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -14,7 +14,7 @@ import java.util.concurrent.TimeoutException;
  * @author Dexterleslie.Chan
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes={Application.class})
+@SpringBootTest(classes = {Application.class})
 public class ApplicationTests {
     @Autowired
     private AmqpTemplate amqpTemplate = null;
@@ -23,10 +23,10 @@ public class ApplicationTests {
 
     @Test
     public void test1() throws InterruptedException, TimeoutException {
-        for(int i=0; i<2; i++) {
+        for (int i = 0; i < 2; i++) {
             amqpTemplate.convertAndSend(Config.topicExchangeName, null, "Hello from RabbitMQ!" + i);
         }
-        if(!receiver.getLatch().await(2000, TimeUnit.MILLISECONDS)) {
+        if (!receiver.getLatch().await(2000, TimeUnit.MILLISECONDS)) {
             throw new TimeoutException();
         }
     }

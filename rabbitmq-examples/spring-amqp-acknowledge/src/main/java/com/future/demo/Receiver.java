@@ -1,4 +1,4 @@
-package com.future.study.spring.amqp.acknowledge;
+package com.future.demo;
 
 import com.rabbitmq.client.Channel;
 import org.slf4j.Logger;
