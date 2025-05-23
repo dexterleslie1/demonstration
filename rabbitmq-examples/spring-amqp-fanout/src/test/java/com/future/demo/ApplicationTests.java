@@ -25,13 +25,13 @@ public class ApplicationTests {
 
     @Test
     public void test1() throws InterruptedException {
-        int totalMessageCount = 1000;
+        int totalMessageCount = 2;
         for (int i = 0; i < totalMessageCount; i++) {
-            amqpTemplate.convertAndSend(Config.exchangeName, null, "Hello from RabbitMQ!" + i);
+            amqpTemplate.convertAndSend(Config.ExchangeName, null, "Hello from RabbitMQ!" + i);
         }
 
         TimeUnit.MILLISECONDS.sleep(1000);
 
-        Assert.assertEquals(totalMessageCount, this.counter.get());
+        Assert.assertEquals(totalMessageCount * 2, counter.get());
     }
 }

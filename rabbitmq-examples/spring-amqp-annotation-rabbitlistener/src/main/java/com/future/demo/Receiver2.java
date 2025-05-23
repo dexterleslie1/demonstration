@@ -9,7 +9,8 @@ import org.springframework.amqp.support.AmqpHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
 
-import java.util.concurrent.CountDownLatch;
+import javax.annotation.Resource;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author Dexterleslie.Chan
@@ -17,25 +18,21 @@ import java.util.concurrent.CountDownLatch;
 @Component
 @RabbitListener(bindings = @QueueBinding(
         value = @Queue(value = Config.queueName, autoDelete = "true"),
-        exchange = @Exchange(value= Config.exchangeName, type=ExchangeTypes.FANOUT),
-        key = ""
-), containerFactory = "rabbitListenerContainerFactory")
-public class Receiver {
-    private static final Logger logger = LoggerFactory.getLogger(Receiver.class);
+        exchange = @Exchange(value = Config.exchangeName, type = ExchangeTypes.FANOUT, autoDelete = "true")
+))
+public class Receiver2 {
+    private static final Logger logger = LoggerFactory.getLogger(Receiver2.class);
 
-    private CountDownLatch latch = new CountDownLatch(2);
+    @Resource
+    AtomicInteger counter;
 
     @RabbitHandler
     public void receiveMessage(String message,
                                Channel channel,
                                @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws Exception {
         logger.info("Received <" + message + ">");
-        latch.countDown();
+        counter.incrementAndGet();
         channel.basicAck(deliveryTag, false);
-    }
-
-    public CountDownLatch getLatch() {
-        return latch;
     }
 
 }

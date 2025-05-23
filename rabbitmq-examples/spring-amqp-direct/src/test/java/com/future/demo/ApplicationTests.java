@@ -1,5 +1,6 @@
-package com.future.demo.amqp;
+package com.future.demo;
 
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.amqp.core.AmqpTemplate;
@@ -7,27 +8,30 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import javax.annotation.Resource;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author Dexterleslie.Chan
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes={Application.class})
+@SpringBootTest(classes = {Application.class})
 public class ApplicationTests {
     @Autowired
     private AmqpTemplate amqpTemplate = null;
-    @Autowired
-    private Receiver receiver = null;
+    @Resource
+    AtomicInteger counter;
 
     @Test
-    public void test1() throws InterruptedException, TimeoutException {
-        for(int i=0; i<2; i++) {
+    public void test1() throws InterruptedException {
+        int totalMessageCount = 2;
+        for (int i = 0; i < totalMessageCount; i++) {
             amqpTemplate.convertAndSend(Config.ExchangeName, Config.RoutingKey, "Hello from RabbitMQ!" + i);
         }
-        if(!receiver.getLatch().await(2000, TimeUnit.MILLISECONDS)) {
-            throw new TimeoutException();
-        }
+
+        TimeUnit.MILLISECONDS.sleep(1000);
+
+        Assert.assertEquals(totalMessageCount, counter.get());
     }
 }
