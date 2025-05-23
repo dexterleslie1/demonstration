@@ -1,12 +1,11 @@
 package com.future.demo;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.annotation.Resource;
 import java.util.concurrent.TimeUnit;
@@ -15,23 +14,26 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * @author Dexterleslie.Chan
  */
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = {Application.class})
+@Slf4j
 public class ApplicationTests {
     @Autowired
     private AmqpTemplate amqpTemplate = null;
     @Resource
     AtomicInteger counter;
+    @Resource
+    AtomicInteger batchCounter;
 
     @Test
     public void test1() throws InterruptedException {
-        int totalMessageCount = 1000;
+        int totalMessageCount = 1024;
         for (int i = 0; i < totalMessageCount; i++) {
             amqpTemplate.convertAndSend(Config.exchangeName, null, "Hello from RabbitMQ!" + i);
         }
 
-        TimeUnit.MILLISECONDS.sleep(1000);
+        TimeUnit.MILLISECONDS.sleep(2000);
 
-        Assert.assertEquals(totalMessageCount, this.counter.get());
+        Assertions.assertEquals(totalMessageCount, this.counter.get());
+        log.info("批量回调共{}次", batchCounter.get());
     }
 }

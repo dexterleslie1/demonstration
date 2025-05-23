@@ -761,15 +761,23 @@ spring.rabbitmq.listener.simple.max-concurrency=10
 
 ### 配置和基本使用
 
->详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/rabbitmq-examples/spring-amqp-configuration-demo)
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/rabbitmq-examples/spring-amqp-configuration)
 
 POM 配置
 
 ```xml
-<dependency>
+<parent>
     <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-amqp</artifactId>
-</dependency>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>2.7.18</version>
+    <relativePath/> <!-- lookup parent from repository -->
+</parent>
+<dependencies>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-amqp</artifactId>
+    </dependency>
+</dependencies>
 ```
 
 application.properties 配置
@@ -779,117 +787,16 @@ spring.rabbitmq.host=${rabbitmq.ip:localhost}
 spring.rabbitmq.port=${rabbitmq.port:5672}
 spring.rabbitmq.username=${rabbitmq.username:root}
 spring.rabbitmq.password=${rabbitmq.password:123456}
-```
 
-Java 配置
-
-```java
-@Configuration
-public class Config {
-    // 交换机名称
-    public static final String topicExchangeName = "spring-boot-exchange";
-    // 队列名称
-    static final String queueName = "spring-boot";
-
-    // 创建队列
-    @Bean
-    Queue queue() {
-        return new Queue(queueName, false, false, true);
-    }
-
-    // 创建交换机
-    @Bean
-    TopicExchange exchange() {
-        return new TopicExchange(topicExchangeName, false, true);
-    }
-
-    // 绑定队列到交换机
-    @Bean
-    Binding binding(Queue queue, TopicExchange exchange) {
-        return BindingBuilder.bind(queue).to(exchange).with("foo.bar.*");
-    }
-
-    @Bean
-    SimpleMessageListenerContainer container(ConnectionFactory connectionFactory,
-                                             MessageListenerAdapter listenerAdapter) {
-        SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
-        container.setConnectionFactory(connectionFactory);
-        container.setQueueNames(queueName);
-        container.setMessageListener(listenerAdapter);
-        return container;
-    }
-
-    @Bean
-    MessageListenerAdapter listenerAdapter(Receiver receiver) {
-        return new MessageListenerAdapter(receiver, "receiveMessage");
-    }
-}
-```
-
-Receiver 消息监听
-
-```java
-@Component
-public class Receiver {
-    private static final Logger logger = LoggerFactory.getLogger(Receiver.class);
-
-    private CountDownLatch latch = new CountDownLatch(1);
-
-    public void receiveMessage(String message) {
-        logger.info("Received <" + message + ">");
-        latch.countDown();
-    }
-
-    public CountDownLatch getLatch() {
-        return latch;
-    }
-
-}
-```
-
-测试
-
-```java
-@RunWith(SpringRunner.class)
-@SpringBootTest(classes={Application.class})
-public class ApplicationTests {
-    @Autowired
-    private AmqpTemplate amqpTemplate = null;
-    @Autowired
-    private Receiver receiver = null;
-
-    @Test
-    public void test1() throws InterruptedException, TimeoutException {
-        amqpTemplate.convertAndSend(Config.topicExchangeName, "foo.bar.baz", "Hello from RabbitMQ!");
-        if(!receiver.getLatch().await(2000, TimeUnit.MILLISECONDS)) {
-            throw new TimeoutException();
-        }
-    }
-}
-```
-
-
-
-### 使用 @RabbitListener 注解方式配置
-
->详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/rabbitmq-examples/spring-amqp-annotation-rabbitlistener)
-
-application.properties 配置
-
-```properties
-spring.rabbitmq.host=${rabbitmq.ip:localhost}
-spring.rabbitmq.port=${rabbitmq.port:5672}
-spring.rabbitmq.username=${rabbitmq.username:root}
-spring.rabbitmq.password=${rabbitmq.password:123456}
-# 消费者配置
-# 设置手动 ACK
-spring.rabbitmq.listener.simple.acknowledge-mode=manual
-# 设置 QoS，每次预取 1 条消息
-spring.rabbitmq.listener.simple.prefetch=1
-# 设置并发消费者数量
-spring.rabbitmq.listener.simple.concurrency=3
-# 设置最大并发消费者数量
-spring.rabbitmq.listener.simple.max-concurrency=10
+## 提醒：也可以通过Java配置listener
+## 设置手动 ACK
+#spring.rabbitmq.listener.simple.acknowledge-mode=manual
+## 设置 QoS，每次预取 1 条消息
+#spring.rabbitmq.listener.simple.prefetch=1
+## 设置并发消费者数量
+#spring.rabbitmq.listener.simple.concurrency=3
+## 设置最大并发消费者数量
+#spring.rabbitmq.listener.simple.max-concurrency=10
 ```
 
 Java 配置
@@ -901,15 +808,37 @@ public class Config {
     public static final String exchangeName = "spring-amqp-annotaion-rabbitlistener-exchange-demo";
     static final String queueName = "spring-amqp-annotaion-rabbitlistener-queue-demo";
 
-    /*@Bean
+    @Bean
     public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(
             ConnectionFactory connectionFactory) {
         SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
         factory.setConnectionFactory(connectionFactory);
         factory.setConcurrentConsumers(3);
         factory.setMaxConcurrentConsumers(10);
+        // 手动ack模式
+        factory.setAcknowledgeMode(AcknowledgeMode.MANUAL);
+
+        // 设置批量处理模式，注意：批量处理模式只支持使用Java配置
+        // https://docs.spring.io/spring-amqp/reference/amqp/receiving-messages/batch.html
+        // 启用批量处理
+        factory.setBatchListener(true);
+        // 每个批次最大消息数
+        factory.setBatchSize(8);
+        // 启用消费者端批量处理
+        factory.setConsumerBatchEnabled(true);
+
         return factory;
-    }*/
+    }
+
+    @Bean
+    AtomicInteger counter() {
+        return new AtomicInteger();
+    }
+
+    @Bean
+    AtomicInteger batchCounter() {
+        return new AtomicInteger();
+    }
 }
 ```
 
@@ -917,26 +846,27 @@ Receiver 配置
 
 ```java
 @Component
-@RabbitListener(bindings = @QueueBinding(
-        value = @Queue(value = Config.queueName, autoDelete = "true"),
-        exchange = @Exchange(value= Config.exchangeName, type=ExchangeTypes.FANOUT, autoDelete = "true"),
-))
 public class Receiver {
     private static final Logger logger = LoggerFactory.getLogger(Receiver.class);
 
-    private CountDownLatch latch = new CountDownLatch(2);
+    @Resource
+    AtomicInteger counter;
+    @Resource
+    AtomicInteger batchCounter;
 
-    @RabbitHandler
-    public void receiveMessage(String message,
-                               Channel channel,
-                               @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws Exception {
-        logger.info("Received <" + message + ">");
-        latch.countDown();
-        channel.basicAck(deliveryTag, false);
-    }
+    @RabbitListener(bindings = @QueueBinding(
+            value = @Queue(value = Config.queueName, autoDelete = "true"),
+            exchange = @Exchange(value = Config.exchangeName, type = ExchangeTypes.FANOUT, autoDelete = "true")
+    ))
+    public void receiveMessage(List<Message<String>> messageList, Channel channel) throws Exception {
+        for (Message<String> message : messageList) {
+            logger.info("Received <" + message.getPayload() + ">");
+            Long deliveryTag = (Long) message.getHeaders().get(AmqpHeaders.DELIVERY_TAG);
+            channel.basicAck(deliveryTag, false);
+            counter.incrementAndGet();
+        }
 
-    public CountDownLatch getLatch() {
-        return latch;
+        batchCounter.incrementAndGet();
     }
 
 }
@@ -945,22 +875,27 @@ public class Receiver {
 测试
 
 ```java
-@RunWith(SpringRunner.class)
-@SpringBootTest(classes={Application.class})
+@SpringBootTest(classes = {Application.class})
+@Slf4j
 public class ApplicationTests {
     @Autowired
     private AmqpTemplate amqpTemplate = null;
-    @Autowired
-    private Receiver receiver = null;
+    @Resource
+    AtomicInteger counter;
+    @Resource
+    AtomicInteger batchCounter;
 
     @Test
-    public void test1() throws InterruptedException, TimeoutException {
-        for(int i=0; i<2; i++) {
+    public void test1() throws InterruptedException {
+        int totalMessageCount = 1024;
+        for (int i = 0; i < totalMessageCount; i++) {
             amqpTemplate.convertAndSend(Config.exchangeName, null, "Hello from RabbitMQ!" + i);
         }
-        if(!receiver.getLatch().await(2000, TimeUnit.MILLISECONDS)) {
-            throw new TimeoutException();
-        }
+
+        TimeUnit.MILLISECONDS.sleep(2000);
+
+        Assertions.assertEquals(totalMessageCount, this.counter.get());
+        log.info("批量回调共{}次", batchCounter.get());
     }
 }
 ```
@@ -1099,5 +1034,65 @@ public class ApplicationTests {
 
         connectionFactory.destroy();
     }
+}
+```
+
+
+
+### 批量处理
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/rabbitmq-examples/spring-amqp-configuration)
+
+核心配置如下：
+
+```java
+@Bean
+public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(
+        ConnectionFactory connectionFactory) {
+    SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
+    factory.setConnectionFactory(connectionFactory);
+    factory.setConcurrentConsumers(3);
+    factory.setMaxConcurrentConsumers(10);
+    // 手动ack模式
+    factory.setAcknowledgeMode(AcknowledgeMode.MANUAL);
+
+    // 设置批量处理模式，注意：批量处理模式只支持使用Java配置
+    // https://docs.spring.io/spring-amqp/reference/amqp/receiving-messages/batch.html
+    // 启用批量处理
+    factory.setBatchListener(true);
+    // 每个批次最大消息数
+    factory.setBatchSize(8);
+    // 启用消费者端批量处理
+    factory.setConsumerBatchEnabled(true);
+
+    return factory;
+}
+```
+
+```java
+@Component
+public class Receiver {
+    private static final Logger logger = LoggerFactory.getLogger(Receiver.class);
+
+    @Resource
+    AtomicInteger counter;
+    @Resource
+    AtomicInteger batchCounter;
+
+    @RabbitListener(bindings = @QueueBinding(
+            value = @Queue(value = Config.queueName, autoDelete = "true"),
+            exchange = @Exchange(value = Config.exchangeName, type = ExchangeTypes.FANOUT, autoDelete = "true")
+    ))
+    public void receiveMessage(List<Message<String>> messageList, Channel channel) throws Exception {
+        for (Message<String> message : messageList) {
+            logger.info("Received <" + message.getPayload() + ">");
+            Long deliveryTag = (Long) message.getHeaders().get(AmqpHeaders.DELIVERY_TAG);
+            channel.basicAck(deliveryTag, false);
+            counter.incrementAndGet();
+        }
+
+        batchCounter.incrementAndGet();
+    }
+
 }
 ```

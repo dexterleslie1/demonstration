@@ -16,18 +16,17 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author Dexterleslie.Chan
  */
 @Component
-@RabbitListener(bindings = @QueueBinding(
-        value = @Queue(value = Config.QueueName, autoDelete = "true"),
-        exchange = @Exchange(value = Config.ExchangeName, type = ExchangeTypes.DIRECT, autoDelete = "true"),
-        key = Config.RoutingKey
-))
 public class Receiver2 {
     private static final Logger logger = LoggerFactory.getLogger(Receiver2.class);
 
     @Resource
     AtomicInteger counter;
 
-    @RabbitHandler
+    @RabbitListener(bindings = @QueueBinding(
+            value = @Queue(value = Config.QueueName, autoDelete = "true"),
+            exchange = @Exchange(value = Config.ExchangeName, type = ExchangeTypes.DIRECT, autoDelete = "true"),
+            key = Config.RoutingKey
+    ))
     public void receiveMessage(String message,
                                Channel channel,
                                @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws Exception {
