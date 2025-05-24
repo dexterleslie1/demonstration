@@ -53,6 +53,7 @@ export default defineConfig({
           { text: 'Zookeeper', link: '/zookeeper/README.md' },
           { text: 'ElasticSearch', link: '/elasticsearch/README.md' },
           { text: 'Cassandra', link: '/cassandra/README.md' },
+          { text: 'RabbitMQ', link: '/rabbitmq/README.md' },
         ]
       }, {
         text: 'Linux', items: [
