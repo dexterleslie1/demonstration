@@ -1096,3 +1096,90 @@ public class Receiver {
 
 }
 ```
+
+
+
+## 基准测试
+
+### Docker 单机版
+
+#### 配置
+
+如下：
+
+- 测试平台 VMware ESXi, 7.0.3, 20328353、Intel(R) Xeon(R) Platinum 8269CY CPU @ 2.50GHz
+- 4个8C6G实例，用于运行 demo-spring-amqp-benchmark 应用
+- 1个16C16G实例，用于运行 RabbitMQ 服务
+- 1个8C4G实例，用于运行 OpenResty 服务
+- 1个足够CPU和内存实例，用于运行 wrk 工具。
+
+
+
+#### 测试结果
+
+消息发送速度
+
+```sh
+$ wrk -t8 -c2048 -d60s --latency --timeout 30 http://192.168.1.185/api/v1/send
+Running 1m test @ http://192.168.1.185/api/v1/send
+  8 threads and 2048 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     2.28s     3.77s   16.35s    82.88%
+    Req/Sec     4.23k     2.33k   15.32k    79.66%
+  Latency Distribution
+     50%   21.99ms
+     75%    3.45s 
+     90%    8.78s 
+     99%   13.99s 
+  988436 requests in 1.00m, 239.43MB read
+Requests/sec:  16447.36
+Transfer/sec:      3.98MB
+```
+
+消息消费速度为 8k/s。
+
+RabbitMQ 实例 CPU 未全部使用
+
+```
+    0[||||||||||||||||||||||||||||||||||||                                                                   31.8%]   8[                                                                                                        0.0%]
+    1[||||||||||||||||||||||||||||                                                                           24.8%]   9[|                                                                                                       0.7%]
+    2[|||||||||||||||||||||||||||||||||||||||||                                                              37.0%]  10[||||||||                                                                                                7.2%]
+    3[|||||||||||||||||||||||||||                                                                            23.7%]  11[|||                                                                                                     2.0%]
+    4[|||||||||||||||||||||||||||                                                                            24.7%]  12[|                                                                                                       0.7%]
+    5[|||||||||||||||||||||||||                                                                              21.4%]  13[||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||                     74.5%]
+    6[|||||||||||||||||||||||||                                                                              22.9%]  14[                                                                                                        0.0%]
+    7[|||||||||||||||||||||                                                                                  18.3%]  15[                                                                                                        0.0%]
+  Mem[||||||||||||||||||||||||||||||||||||||||||                                                       3.13G/15.6G] Tasks: 91, 514 thr, 312 kthr; 2 running
+  Swp[                                                                                                    0K/4.93G] Load average: 1.57 1.07 0.50 
+                                                                                                                    Uptime: 18:05:27
+
+  [Main] [I/O]
+    PID USER       PRI  NI  VIRT   RES   SHR S  CPU%▽MEM%   TIME+  Command
+   7823 systemd-co  20   0 12.3G 2259M  7520 S 273.3 14.1 27:23.23 /usr/local/lib/erlang/erts-10.4.4/bin/beam.smp -W w -A 256 -MBas ageffcbf -MHas ageffcbf -MBlmbcs 512 -MHlmbcs 512 -MMmcs 30 -P 1048576 -t 5000000 -stbt db -zdbbl 1
+   8173 systemd-co  20   0 12.3G 2259M  7520 R  73.7 14.1  4:27.61 /usr/local/lib/erlang/erts-10.4.4/bin/beam.smp -W w -A 256 -MBas ageffcbf -MHas ageffcbf -MBlmbcs 512 -MHlmbcs 512 -MMmcs 30 -P 1048576 -t 5000000 -stbt db -zdbbl 1
+   8144 systemd-co  20   0 12.3G 2259M  7520 S  35.9 14.1  1:23.55 /usr/local/lib/erlang/erts-10.4.4/bin/beam.smp -W w -A 256 -MBas ageffcbf -MHas ageffcbf -MBlmbcs 512 -MHlmbcs 512 -MMmcs 30 -P 1048576 -t 5000000 -stbt db -zdbbl 1
+   8142 systemd-co  20   0 12.3G 2259M  7520 S  30.7 14.1 10:51.31 /usr/local/lib/erlang/erts-10.4.4/bin/beam.smp -W w -A 256 -MBas ageffcbf -MHas ageffcbf -MBlmbcs 512 -MHlmbcs 512 -MMmcs 30 -P 1048576 -t 5000000 -stbt db -zdbbl 1
+   8146 systemd-co  20   0 12.3G 2259M  7520 S  24.1 14.1  0:55.58 /usr/local/lib/erlang/erts-10.4.4/bin/beam.smp -W w -A 256 -MBas ageffcbf -MHas ageffcbf -MBlmbcs 512 -MHlmbcs 512 -MMmcs 30 -P 1048576 -t 5000000 -stbt db -zdbbl 1
+   8145 systemd-co  20   0 12.3G 2259M  7520 S  23.5 14.1  1:16.57 /usr/local/lib/erlang/erts-10.4.4/bin/beam.smp -W w -A 256 -MBas ageffcbf -MHas ageffcbf -MBlmbcs 512 -MHlmbcs 512 -MMmcs 30 -P 1048576 -t 5000000 -stbt db -zdbbl 1
+   8143 systemd-co  20   0 12.3G 2259M  7520 S  22.8 14.1  3:05.28 /usr/local/lib/erlang/erts-10.4.4/bin/beam.smp -W w -A 256 -MBas ageffcbf -MHas ageffcbf -MBlmbcs 512 -MHlmbcs 512 -MMmcs 30 -P 1048576 -t 5000000 -stbt db -zdbbl 1
+   8148 systemd-co  20   0 12.3G 2259M  7520 S  21.5 14.1  0:36.67 /usr/local/lib/erlang/erts-10.4.4/bin/beam.smp -W w -A 256 -MBas ageffcbf -MHas ageffcbf -MBlmbcs 512 -MHlmbcs 512 -MMmcs 30 -P 1048576 -t 5000000 -stbt db -zdbbl 1
+   8147 systemd-co  20   0 12.3G 2259M  7520 S  20.9 14.1  0:42.27 /usr/local/lib/erlang/erts-10.4.4/bin/beam.smp -W w -A 256 -MBas ageffcbf -MHas ageffcbf -MBlmbcs 512 -MHlmbcs 512 -MMmcs 30 -P 1048576 -t 5000000 -stbt db -zdbbl 1
+   8149 systemd-co  20   0 12.3G 2259M  7520 S  17.6 14.1  0:35.66 /usr/local/lib/erlang/erts-10.4.4/bin/beam.smp -W w -A 256 -MBas ageffcbf -MHas ageffcbf -MBlmbcs 512 -MHlmbcs 512 -MMmcs 30 -P 1048576 -t 5000000 -stbt db -zdbbl 1
+  89368 root        20   0  237M  6788  3848 R   2.0  0.0  0:00.67 htop
+   8151 systemd-co  20   0 12.3G 2259M  7520 S   0.7 14.1  0:24.88 /usr/local/lib/erlang/erts-10.4.4/bin/beam.smp -W w -A 256 -MBas ageffcbf -MHas ageffcbf -MBlmbcs 512 -MHlmbcs 512 -MMmcs 30 -P 1048576 -t 5000000 -stbt db -zdbbl 1
+   8152 systemd-co  20   0 12.3G 2259M  7520 S   0.7 14.1  0:21.93 /usr/local/lib/erlang/erts-10.4.4/bin/beam.smp -W w -A 256 -MBas ageffcbf -MHas ageffcbf -MBlmbcs 512 -MHlmbcs 512 -MMmcs 30 -P 1048576 -t 5000000 -stbt db -zdbbl 1
+   8184 systemd-co  20   0 12.3G 2259M  7520 S   0.7 14.1  0:07.72 /usr/local/lib/erlang/erts-10.4.4/bin/beam.smp -W w -A 256 -MBas ageffcbf -MHas ageffcbf -MBlmbcs 512 -MHlmbcs 512 -MMmcs 30 -P 1048576 -t 5000000 -stbt db -zdbbl 1
+      1 root        20   0  233M 11248  8100 S   0.0  0.1  0:02.95 /usr/lib/systemd/systemd --switched-root --system --deserialize 17
+    997 root        20   0 89740 14732 11608 S   0.0  0.1  0:00.46 /usr/lib/systemd/systemd-journald
+   1034 root        20   0  113M 10608  7612 S   0.0  0.1  0:00.41 /usr/lib/systemd/systemd-udevd
+   1245 rpc         20   0 67216  5612  4880 S   0.0  0.0  0:00.07 /usr/bin/rpcbind -w -f
+   1248 root        16  -4  145M  2176  1540 S   0.0  0.0  0:00.11 /sbin/auditd
+   1249 root        16  -4  145M  2176  1540 S   0.0  0.0  0:00.00 /sbin/auditd
+   1250 root        16  -4 48636  3180  2816 S   0.0  0.0  0:00.02 /usr/sbin/sedispatch
+   1251 root        16  -4  145M  2176  1540 S   0.0  0.0  0:00.01 /sbin/auditd
+   1279 root        20   0  392M 11652  9940 S   0.0  0.1  0:00.10 /usr/sbin/sssd -i --logger=files
+   1280 root        20   0  534M 15556 12932 S   0.0  0.1  0:00.18 /usr/libexec/udisks2/udisksd
+   1283 dbus        20   0 64552  6980  4864 S   0.0  0.0  0:01.25 /usr/bin/dbus-daemon --system --address=systemd: --nofork --nopidfile --systemd-activation --syslog-only
+   1289 root        20   0 50276  5300  4236 S   0.0  0.0  0:00.02 /usr/sbin/smartd -n -q never
+```
+

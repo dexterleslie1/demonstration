@@ -1,0 +1,25 @@
+version: "3.1"
+
+services:
+  service:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-amqp-benchmark-service
+    environment:
+      - JAVA_OPTS=-Xmx1g
+      - TZ=Asia/Shanghai
+    network_mode: host
+
+  # 启动rabbitmq
+  rabbitmq:
+    build:
+      context: ./
+      dockerfile: Dockerfile-rabbitmq
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-amqp-benchmark-rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=root
+      - RABBITMQ_DEFAULT_PASS=123456
+      # TODO: 时区设置不起作用
+      - TZ=Asia/Shanghai
+    network_mode: host

@@ -6,7 +6,6 @@ import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -42,17 +41,7 @@ public class Config {
     }
 
     @Bean
-    CountDownLatch countDownLatch() {
-        return new CountDownLatch(TotalMessageCount);
-    }
-
-    @Bean
     AtomicInteger counter() {
-        return new AtomicInteger();
-    }
-
-    @Bean
-    AtomicInteger batchCounter() {
         return new AtomicInteger();
     }
 }
