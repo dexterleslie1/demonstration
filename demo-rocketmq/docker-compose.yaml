@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  namesrv:
+    image: apache/rocketmq:4.9.6
+    ports:
+      - 9876:9876
+    command: sh mqnamesrv
+    # network_mode: host
+
+  broker:
+    image: apache/rocketmq:4.9.6
+    ports:
+      - 10909:10909
+      - 10911:10911
+      - 10912:10912
+    environment:
+      - NAMESRV_ADDR=namesrv:9876
+    volumes:
+      - ./broker.conf:/home/rocketmq/rocketmq-4.9.6/conf/broker.conf
+    depends_on:
+      - namesrv
+    command: sh mqbroker -c /home/rocketmq/rocketmq-4.9.6/conf/broker.conf
+    # network_mode: host
+
+  dashboard:
+    image: apacherocketmq/rocketmq-dashboard:latest
+    ports:
+      - 8080:8080
+    environment:
+      - JAVA_OPTS=-Drocketmq.namesrv.addr=namesrv:9876
+    # network_mode: host
