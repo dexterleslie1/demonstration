@@ -29,9 +29,16 @@ public class ConfigConsumer {
         consumer.setNamesrvAddr(this.namesrvaddr);
         // 订阅指定的主题和标签（* 表示所有标签）
         consumer.subscribe("TestTopic", "*");
+        // 支持批量处理消息
+        consumer.setConsumeMessageBatchMaxSize(256);
+        // 设置并发线程数
+        consumer.setConsumeThreadMin(16);
+        consumer.setConsumeThreadMax(64);
 
         // 注册消息监听器
         consumer.registerMessageListener((MessageListenerConcurrently) (msgs, context) -> {
+            /*if (msgs.size() > 1)
+                log.info("消息数{}条", msgs.size());*/
             for (MessageExt msg : msgs) {
                 /*log.info("Received message: " + new String(msg.getBody()));*/
                 counter.incrementAndGet();

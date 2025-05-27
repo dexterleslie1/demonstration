@@ -148,6 +148,11 @@ public class Config {
         consumer.setNamesrvAddr("localhost:9876");
         // 订阅指定的主题和标签（* 表示所有标签）
         consumer.subscribe("TestTopic", "*");
+        // 支持批量处理消息
+        consumer.setConsumeMessageBatchMaxSize(256);
+        // 设置并发线程数
+        consumer.setConsumeThreadMin(16);
+        consumer.setConsumeThreadMax(64);
 
         // 注册消息监听器
         consumer.registerMessageListener((MessageListenerConcurrently) (msgs, context) -> {
@@ -181,15 +186,26 @@ public class ApplicationTests {
 
     @Test
     public void test1() throws InterruptedException, MQBrokerException, RemotingException, MQClientException {
-        for (int i = 0; i < Config.TotalMessageCount; i++) {
-            // 创建消息实例，指定 topic、Tag和消息体
-            Message msg = new Message("TestTopic", "TagA", ("Hello RocketMQ").getBytes());
-            // 发送消息并获取发送结果
-            SendResult sendResult = producer.send(msg);
-            Assertions.assertEquals(SendStatus.SEND_OK, sendResult.getSendStatus());
+        // 并发发送消息以测试批量处理消息
+        AtomicInteger iCounter = new AtomicInteger();
+        ExecutorService threadPool = Executors.newCachedThreadPool();
+        for (int i = 0; i < 8; i++) {
+            threadPool.submit(() -> {
+                try {
+                    while (iCounter.getAndIncrement() < Config.TotalMessageCount) {
+                        // 创建消息实例，指定 topic、Tag和消息体
+                        Message msg = new Message("TestTopic", "TagA", ("Hello RocketMQ").getBytes());
+                        // 发送消息并获取发送结果
+                        SendResult sendResult = producer.send(msg);
+                        Assertions.assertEquals(SendStatus.SEND_OK, sendResult.getSendStatus());
+                    }
+                } catch (Exception ex) {
+                    log.error(ex.getMessage(), ex);
+                }
+            });
         }
 
-        TimeUnit.SECONDS.sleep(2);
+        TimeUnit.SECONDS.sleep(3);
 
         Assertions.assertEquals(Config.TotalMessageCount, counter.get());
     }

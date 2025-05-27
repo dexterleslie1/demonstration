@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Configuration
 public class Config {
     public final static String ProducerAndConsumerGroup = "demo-producer-and-consumer-group";
-    public final static int TotalMessageCount = 2;
+    public final static int TotalMessageCount = 2000;
 
     @Value("${namesrvaddr}")
     String namesrvaddr;
