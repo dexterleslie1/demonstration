@@ -1,0 +1,108 @@
+version: "3.1"
+
+services:
+  db:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-db
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+    environment:
+      - LANG=C.UTF-8
+      - TZ=Asia/Shanghai
+      - MYSQL_ROOT_PASSWORD=123456
+    restart: unless-stopped
+    network_mode: host
+
+  redis:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-redis
+    # 设置redis密码
+    command: redis-server /usr/local/etc/redis/redis-standalone.conf --requirepass 123456
+    environment:
+      - TZ=Asia/Shanghai
+    restart: unless-stopped
+    network_mode: host
+
+  node1:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-redis
+    # 必须设置cluster-announce-ip才能够在创建集群时节点join到master，否则会一直waiting...
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6380 --cluster-announce-ip ${redisClusterAnnounceIp}
+    environment:
+      - TZ=Asia/Shanghai
+    restart: unless-stopped
+    network_mode: 'host'
+  node2:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-redis
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6381 --cluster-announce-ip ${redisClusterAnnounceIp}
+    environment:
+      - TZ=Asia/Shanghai
+    restart: unless-stopped
+    network_mode: 'host'
+  node3:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-redis
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6382 --cluster-announce-ip ${redisClusterAnnounceIp}
+    environment:
+      - TZ=Asia/Shanghai
+    restart: unless-stopped
+    network_mode: 'host'
+  node4:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-redis
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6383 --cluster-announce-ip ${redisClusterAnnounceIp}
+    environment:
+      - TZ=Asia/Shanghai
+    restart: unless-stopped
+    network_mode: 'host'
+  node5:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-redis
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6384 --cluster-announce-ip ${redisClusterAnnounceIp}
+    environment:
+      - TZ=Asia/Shanghai
+    restart: unless-stopped
+    network_mode: 'host'
+  node6:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-redis
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6385 --cluster-announce-ip ${redisClusterAnnounceIp}
+    environment:
+      - TZ=Asia/Shanghai
+    restart: unless-stopped
+    network_mode: 'host'
+  node7:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-redis
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6386 --cluster-announce-ip ${redisClusterAnnounceIp}
+    environment:
+      - TZ=Asia/Shanghai
+    restart: unless-stopped
+    network_mode: 'host'
+  node8:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-redis
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6387 --cluster-announce-ip ${redisClusterAnnounceIp}
+    environment:
+      - TZ=Asia/Shanghai
+    restart: unless-stopped
+    network_mode: 'host'
+  node9:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-redis
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6388 --cluster-announce-ip ${redisClusterAnnounceIp}
+    environment:
+      - TZ=Asia/Shanghai
+    restart: unless-stopped
+    network_mode: 'host'
+  node10:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-redis
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6389 --cluster-announce-ip ${redisClusterAnnounceIp}
+    environment:
+      - TZ=Asia/Shanghai
+    restart: unless-stopped
+    network_mode: 'host'
+
+  creator:
+    image: redis:6.2.6-bullseye
+    entrypoint: [ /bin/sh, -c, 'echo "yes" | redis-cli --cluster create --cluster-replicas 1 127.0.0.1:6380 127.0.0.1:6381 127.0.0.1:6382 127.0.0.1:6383 127.0.0.1:6384 127.0.0.1:6385 127.0.0.1:6386 127.0.0.1:6387 127.0.0.1:6388 127.0.0.1:6389' ]
+    depends_on:
+      - node1
+      - node2
+      - node3
+      - node4
+      - node5
+      - node6
+    network_mode: 'host'

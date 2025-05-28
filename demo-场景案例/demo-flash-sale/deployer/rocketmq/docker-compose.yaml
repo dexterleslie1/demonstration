@@ -1,0 +1,25 @@
+version: "3.8"
+
+services:
+  namesrv:
+    image: apache/rocketmq:4.9.6
+    command: sh mqnamesrv
+    restart: unless-stopped
+    network_mode: host
+  broker:
+    image: apache/rocketmq:4.9.6
+    environment:
+      - NAMESRV_ADDR=localhost:9876
+    volumes:
+      - ./broker.conf:/home/rocketmq/rocketmq-4.9.6/conf/broker.conf
+    depends_on:
+      - namesrv
+    command: sh mqbroker -c /home/rocketmq/rocketmq-4.9.6/conf/broker.conf
+    restart: unless-stopped
+    network_mode: host
+  dashboard:
+    image: apacherocketmq/rocketmq-dashboard:latest
+    environment:
+      - JAVA_OPTS=-Drocketmq.namesrv.addr=localhost:9876
+    restart: unless-stopped
+    network_mode: host

@@ -1,0 +1,15 @@
+version: "3.1"
+
+services:
+  crond:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-crond
+    environment:
+      - JAVA_OPTS=-Xmx2g
+      - TZ=Asia/Shanghai
+    logging:
+      driver: json-file
+      options:
+        max-size: "128m"
+        max-file: "10"
+    restart: unless-stopped
+    network_mode: host
