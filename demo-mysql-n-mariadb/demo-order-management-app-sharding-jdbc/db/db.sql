@@ -23,13 +23,14 @@ create table if not exists t_order_detail (
     userId      bigint not null comment '协助简化和提高用户重复下单判断逻辑',
     productId   bigint not null,
     merchantId  bigint not null comment '商家ID',
-    amount      int not null,
+    amount      int not null/*,
     constraint fk_order_detail_orderId foreign key(orderId) references t_order(id),
-    constraint unique_order_detail_userId_n_productId unique(userId,productId)
+    constraint unique_order_detail_userId_n_productId unique(userId,productId)*/
 ) engine=innodb character set utf8mb4 collate utf8mb4_general_ci;
 
 /*create index idx_orderDetail_merchantId on t_order_detail(merchantId);
 create index idx_orderDetail_merchantId_orderId on t_order_detail(merchantId, orderId);*/
+create index idx_order_detail_orderId on t_order_detail(orderId);
 
 delimiter |
 
@@ -58,11 +59,11 @@ begin not atomic
         EXECUTE stmt;
         DEALLOCATE PREPARE stmt;
 
-        set @index_name = concat('idx_order', var_counter, '_userId_createTime_deleteStatus_status');
+        /*set @index_name = concat('idx_order', var_counter, '_userId_createTime_deleteStatus_status');
         set @sql = concat('create index ', @index_name, ' on ', @table_name, '(userId,createTime,deleteStatus,status);');
         PREPARE stmt FROM @sql;
         EXECUTE stmt;
-        DEALLOCATE PREPARE stmt;
+        DEALLOCATE PREPARE stmt;*/
 
         /* create index idx_order1_status_deleteStatus_createTime_id on t_order1(status, deleteStatus, createTime, id); */
 
