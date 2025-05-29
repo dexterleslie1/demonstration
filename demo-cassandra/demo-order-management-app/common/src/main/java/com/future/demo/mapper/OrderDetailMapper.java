@@ -1,13 +1,12 @@
 package com.future.demo.mapper;
 
-import com.datastax.oss.driver.api.core.CqlSession;
-import com.datastax.oss.driver.api.core.cql.*;
+import com.datastax.driver.core.*;
 import com.future.common.exception.BusinessException;
 import com.future.demo.entity.OrderDetailModel;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,7 +14,16 @@ import java.util.List;
 public class OrderDetailMapper {
 
     @Resource
-    CqlSession cqlSession;
+    Session session;
+
+    private PreparedStatement preparedStatementInsert;
+
+    @PostConstruct
+    public void init() {
+        String cql = "INSERT INTO t_order_detail (id,order_id,user_id,product_id,merchant_id,amount) " +
+                "VALUES (?, ?, ?, ?, ?, ?)";
+        preparedStatementInsert = session.prepare(cql);
+    }
 
     /*@Select("<script>" +
             "SELECT * FROM t_order_detail where orderId in " +
@@ -23,7 +31,7 @@ public class OrderDetailMapper {
             "       #{item}" +
             "   </foreach>" +
             "</script>")*/
-    public List<OrderDetailModel> list(List<BigDecimal> orderIdList) {
+    public List<OrderDetailModel> list(List<Long> orderIdList) {
         StringBuilder builder = new StringBuilder();
         builder.append("select * from t_order_detail where order_id in(");
         for (int i = 0; i < orderIdList.size(); i++) {
@@ -34,14 +42,14 @@ public class OrderDetailMapper {
         }
         builder.append(")");
         String cql = builder.toString();
-        PreparedStatement prepared = this.cqlSession.prepare(cql);
-        BoundStatement bound = prepared.bind(orderIdList.toArray(new BigDecimal[0]));
-        ResultSet result = this.cqlSession.execute(bound);
+        PreparedStatement prepared = session.prepare(cql);
+        BoundStatement bound = prepared.bind(orderIdList.toArray(new Long[0]));
+        ResultSet result = session.execute(bound);
 
         List<OrderDetailModel> modelList = new ArrayList<>();
         for (Row row : result) {
             long id = row.getLong("id");
-            BigDecimal orderId = row.getBigDecimal("order_id");
+            long orderId = row.getLong("order_id");
             long userId = row.getLong("user_id");
             long productId = row.getLong("product_id");
             long merchantId = row.getLong("merchant_id");
@@ -56,12 +64,9 @@ public class OrderDetailMapper {
             modelList.add(model);
         }
         return modelList;
+
     }
 
-    //
-//    @Insert("insert ignore into t_order_detail(id,orderId,userId,productId,merchantId,amount) values(#{orderDetail.id},#{orderDetail.orderId},#{orderDetail.userId},#{orderDetail.productId},#{orderDetail.merchantId},#{orderDetail.amount})")
-//    int insert(@Param(value = "orderDetail") OrderDetailModel orderDetailModel);
-//
     /*@Insert("<script>" +
             "   insert ignore into t_order_detail(id,orderId,userId,productId,merchantId,amount) values " +
             "   <foreach collection=\"orderDetailModelList\" item=\"e\" separator=\",\">" +
@@ -69,17 +74,12 @@ public class OrderDetailMapper {
             "   </foreach>" +
             "</script>")*/
     public void insertBatch(List<OrderDetailModel> orderDetailModelList) throws BusinessException {
-        String cql = "INSERT INTO t_order_detail (id,order_id,user_id,product_id,merchant_id,amount) " +
-                "VALUES (?, ?, ?, ?, ?, ?)";
-
-        PreparedStatement prepared = cqlSession.prepare(cql);
-
         // 创建批量语句
-        BatchStatement batch = BatchStatement.newInstance(BatchType.LOGGED);
+        BatchStatement batch = new BatchStatement(BatchStatement.Type.LOGGED);
 
         for (int i = 0; i < orderDetailModelList.size(); i++) {
             OrderDetailModel model = orderDetailModelList.get(i);
-            BoundStatement bound = prepared.bind(
+            BoundStatement bound = preparedStatementInsert.bind(
                     model.getId(),
                     model.getOrderId(),
                     model.getUserId(),
@@ -91,12 +91,13 @@ public class OrderDetailMapper {
         }
 
         // 执行批量插入
-        ResultSet result = cqlSession.execute(batch);
+        ResultSet result = session.execute(batch);
         if (!result.wasApplied()) {
             throw new BusinessException("t_order_detail批量插入失败");
         }
     }
-//
+
+    //
 //    @Select("select * from t_order_detail where userId=#{userId} and productId=#{productId}")
 //    OrderDetailModel getByUserIdAndProductId(
 //            @Param(value = "userId") Long userId,
@@ -104,7 +105,7 @@ public class OrderDetailMapper {
 //
     public void truncate() throws BusinessException {
         String cql = "truncate table t_order_detail";
-        ResultSet result = this.cqlSession.execute(cql);
+        ResultSet result = session.execute(cql);
         if (!result.wasApplied()) {
             throw new BusinessException("truncate t_order_detail表失败");
         }

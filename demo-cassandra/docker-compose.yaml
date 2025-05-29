@@ -2,11 +2,12 @@ version: "3.0"
 
 services:
   cassandra:
-   image: cassandra:5.0.4
+  #  image: cassandra:5.0.4
+   image: cassandra:3.11.4
    environment:
      - MAX_HEAP_SIZE=1G
      # 是MAX_HEAP_SIZE的1/4
-     - HEAP_NEWSIZE=256MB
+     - HEAP_NEWSIZE=256M
    volumes:
      - ./data.cql:/scripts/data.cql:ro
    network_mode: host

@@ -23,7 +23,8 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>1.8</java.version>
-        <cassandra.driver.version>4.13.0</cassandra.driver.version>
+        <!--<cassandra.driver.version>4.13.0</cassandra.driver.version>-->
+        <cassandra.driver.version>4.2.2</cassandra.driver.version>
     </properties>
 
     <dependencies>
@@ -72,24 +73,44 @@
             <version>5.7.1</version>
         </dependency>
 
-        <!-- DataStax Java Driver核心模块 -->
+        <!--&lt;!&ndash; DataStax Java Driver核心模块 &ndash;&gt;
         <dependency>
             <groupId>com.datastax.oss</groupId>
             <artifactId>java-driver-core</artifactId>
             <version>${cassandra.driver.version}</version>
         </dependency>
-        <!-- 查询构建器模块 -->
+        &lt;!&ndash; 查询构建器模块 &ndash;&gt;
         <dependency>
             <groupId>com.datastax.oss</groupId>
             <artifactId>java-driver-query-builder</artifactId>
             <version>${cassandra.driver.version}</version>
         </dependency>
-        <!-- 对象映射运行时依赖 -->
+        &lt;!&ndash; 对象映射运行时依赖 &ndash;&gt;
         <dependency>
             <groupId>com.datastax.oss</groupId>
             <artifactId>java-driver-mapper-runtime</artifactId>
             <version>${cassandra.driver.version}</version>
+        </dependency>-->
+        <dependency>
+            <groupId>com.datastax.cassandra</groupId>
+            <artifactId>cassandra-driver-core</artifactId>
+            <version>3.11.4</version>
         </dependency>
+        <dependency>
+            <groupId>com.codahale.metrics</groupId>
+            <artifactId>metrics-core</artifactId>
+            <version>3.0.2</version>
+        </dependency>
+        <!--<dependency>
+            <groupId>com.datastax.cassandra</groupId>
+            <artifactId>cassandra-driver-mapping</artifactId>
+            <version>3.11.4</version>
+        </dependency>
+        <dependency>
+            <groupId>com.datastax.cassandra</groupId>
+            <artifactId>cassandra-driver-extras</artifactId>
+            <version>3.11.4</version>
+        </dependency>-->
 
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -99,6 +120,16 @@
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-all</artifactId>
             <version>5.8.35</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.netflix.hystrix</groupId>
+            <artifactId>hystrix-core</artifactId>
+            <version>1.5.18</version>
         </dependency>
     </dependencies>
 

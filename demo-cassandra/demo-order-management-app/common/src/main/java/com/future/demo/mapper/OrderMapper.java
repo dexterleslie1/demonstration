@@ -1,46 +1,51 @@
 package com.future.demo.mapper;
 
-import com.datastax.oss.driver.api.core.CqlSession;
-import com.datastax.oss.driver.api.core.cql.*;
+import com.datastax.driver.core.*;
 import com.future.common.exception.BusinessException;
 import com.future.demo.entity.DeleteStatus;
 import com.future.demo.entity.OrderModel;
 import com.future.demo.entity.Status;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Component
 public class OrderMapper {
 
     @Resource
-    CqlSession cqlSession;
+    Session session;
+
+    private PreparedStatement preparedStatementInsert;
+
+    @PostConstruct
+    public void init() {
+        String cql = "INSERT INTO t_order(id,user_id,create_time,status,delete_status) " +
+                "VALUES (?, ?, ?, ?, ?)";
+        preparedStatementInsert = session.prepare(cql);
+    }
 
     public void insertBatch(List<OrderModel> orderModelList) throws BusinessException {
         // region 订单ID为主键的订单表
 
-        String cql = "INSERT INTO t_order(id,user_id,create_time,status,delete_status) " +
-                "VALUES (?, ?, ?, ?, ?)";
-
-        PreparedStatement prepared = cqlSession.prepare(cql);
-
         // 创建批量语句
-        BatchStatement batch = BatchStatement.newInstance(BatchType.LOGGED);
+        BatchStatement batch = new BatchStatement(BatchStatement.Type.LOGGED);
 
         // 添加多个订单到批量语句
         ZoneId zoneId = ZoneId.of("Asia/Shanghai");
         for (int i = 0; i < orderModelList.size(); i++) {
             OrderModel model = orderModelList.get(i);
-            BoundStatement bound = prepared.bind(
+            BoundStatement bound = preparedStatementInsert.bind(
                     model.getId(),
                     model.getUserId(),
-                    model.getCreateTime().atZone(zoneId).toInstant(),
+                    Date.from(model.getCreateTime().atZone(zoneId).toInstant()),
                     model.getStatus().name(),
                     model.getDeleteStatus().name()
             );
@@ -48,54 +53,54 @@ public class OrderMapper {
         }
 
         // 执行批量插入
-        ResultSet result = cqlSession.execute(batch);
+        ResultSet result = session.execute(batch);
         if (!result.wasApplied()) {
             throw new BusinessException("t_order 批量插入失败");
         }
 
         // endregion
 
-        // region 根据用户ID查询的订单索引表
-
-        cql = "INSERT INTO t_order_list_by_userId(id,user_id,create_time,status,delete_status) " +
-                "VALUES (?, ?, ?, ?, ?)";
-
-        prepared = cqlSession.prepare(cql);
-
-        // 创建批量语句
-        batch = BatchStatement.newInstance(BatchType.LOGGED);
-
-        // 添加多个订单到批量语句
-        for (int i = 0; i < orderModelList.size(); i++) {
-            OrderModel model = orderModelList.get(i);
-            BoundStatement bound = prepared.bind(
-                    model.getId(),
-                    model.getUserId(),
-                    model.getCreateTime().atZone(zoneId).toInstant(),
-                    model.getStatus().name(),
-                    model.getDeleteStatus().name()
-            );
-            batch = batch.add(bound);
-        }
-
-        // 执行批量插入
-        result = cqlSession.execute(batch);
-        if (!result.wasApplied()) {
-            throw new BusinessException("t_order_list_by_userId 批量插入失败");
-        }
-
-        // endregion
+//            // region 根据用户ID查询的订单索引表
+//
+//            cql = "INSERT INTO t_order_list_by_userId(id,user_id,create_time,status,delete_status) " +
+//                    "VALUES (?, ?, ?, ?, ?)";
+//
+//            prepared = session.prepare(cql);
+//
+//            // 创建批量语句
+//            batch = new BatchStatement(BatchStatement.Type.LOGGED);
+//
+//            // 添加多个订单到批量语句
+//            for (int i = 0; i < orderModelList.size(); i++) {
+//                OrderModel model = orderModelList.get(i);
+//                BoundStatement bound = prepared.bind(
+//                        model.getId(),
+//                        model.getUserId(),
+//                        model.getCreateTime().atZone(zoneId).toInstant(),
+//                        model.getStatus().name(),
+//                        model.getDeleteStatus().name()
+//                );
+//                batch = batch.add(bound);
+//            }
+//
+//            // 执行批量插入
+//            result = session.execute(batch);
+//            if (!result.wasApplied()) {
+//                throw new BusinessException("t_order_list_by_userId 批量插入失败");
+//            }
+//
+//            // endregion
     }
 
     public void truncate() throws BusinessException {
         String cql = "truncate table t_order";
-        ResultSet result = this.cqlSession.execute(cql);
+        ResultSet result = session.execute(cql);
         if (!result.wasApplied()) {
             throw new BusinessException("truncate t_order 表失败");
         }
 
         cql = "truncate table t_order_list_by_userId";
-        result = this.cqlSession.execute(cql);
+        result = session.execute(cql);
         if (!result.wasApplied()) {
             throw new BusinessException("truncate t_order_list_by_userId 表失败");
         }
@@ -104,7 +109,7 @@ public class OrderMapper {
     /*@Select("SELECT * FROM t_order")*/
     public List<OrderModel> selectAll() {
         String cql = "select * from t_order";
-        ResultSet result = this.cqlSession.execute(cql);
+        ResultSet result = session.execute(cql);
         List<OrderModel> orderModelList = new ArrayList<>();
         for (Row row : result) {
             OrderModel model = convertRowToOrderModel(row);
@@ -178,7 +183,7 @@ public class OrderMapper {
         builder.append(" limit ?");
 
         String cql = builder.toString();
-        PreparedStatement prepared = this.cqlSession.prepare(cql);
+        PreparedStatement prepared = session.prepare(cql);
         ZoneId zoneId = ZoneId.of("Asia/Shanghai");
         BoundStatement bound;
         if (status != null) {
@@ -190,7 +195,7 @@ public class OrderMapper {
                     userId,
                     startTime.atZone(zoneId).toInstant(), endTime.atZone(zoneId).toInstant(), size.intValue());
         }
-        ResultSet result = this.cqlSession.execute(bound);
+        ResultSet result = session.execute(bound);
         List<OrderModel> orderModelList = new ArrayList<>();
         for (Row row : result) {
             OrderModel model = convertRowToOrderModel(row);
@@ -259,9 +264,9 @@ public class OrderMapper {
     /*@Select("select * from t_order where id=#{orderId}")*/
     public OrderModel getById(BigDecimal orderId) {
         String cql = "select * from t_order where id=?";
-        PreparedStatement prepared = this.cqlSession.prepare(cql);
+        PreparedStatement prepared = session.prepare(cql);
         BoundStatement bound = prepared.bind(orderId);
-        ResultSet result = this.cqlSession.execute(bound);
+        ResultSet result = session.execute(bound);
         Row row = result.one();
         return convertRowToOrderModel(row);
     }
@@ -270,26 +275,31 @@ public class OrderMapper {
         if (row == null) {
             return null;
         }
-        BigDecimal id = row.getBigDecimal("id");
+        long id = row.getLong("id");
         long userId = row.getLong("user_id");
         Status status = Status.valueOf(row.getString("status"));
         ZoneId zoneId = ZoneId.of("Asia/Shanghai");
 
-        Instant payTimeInstant = row.getInstant("pay_time");
+        Date dateTemporary = row.getTimestamp("pay_time");
+        Instant payTimeInstant = dateTemporary == null ? null : dateTemporary.toInstant();
         LocalDateTime payTime = payTimeInstant == null ? null : LocalDateTime.ofInstant(payTimeInstant, zoneId);
 
-        Instant deliveryTimeInstant = row.getInstant("delivery_time");
+        dateTemporary = row.getTimestamp("delivery_time");
+        Instant deliveryTimeInstant = dateTemporary == null ? null : dateTemporary.toInstant();
         LocalDateTime deliveryTime = deliveryTimeInstant == null ? null : LocalDateTime.ofInstant(deliveryTimeInstant, zoneId);
 
-        Instant receivedTimeInstant = row.getInstant("received_time");
+        dateTemporary = row.getTimestamp("received_time");
+        Instant receivedTimeInstant = dateTemporary == null ? null : dateTemporary.toInstant();
         LocalDateTime receivedTime = receivedTimeInstant == null ? null : LocalDateTime.ofInstant(receivedTimeInstant, zoneId);
 
-        Instant cancelTimeInstant = row.getInstant("cancel_time");
+        dateTemporary = row.getTimestamp("cancel_time");
+        Instant cancelTimeInstant = dateTemporary == null ? null : dateTemporary.toInstant();
         LocalDateTime cancelTime = cancelTimeInstant == null ? null : LocalDateTime.ofInstant(cancelTimeInstant, zoneId);
 
         DeleteStatus deleteStatus = DeleteStatus.valueOf(row.getString("delete_status"));
 
-        Instant createTimeInstant = row.getInstant("create_time");
+        dateTemporary = row.getTimestamp("create_time");
+        Instant createTimeInstant = dateTemporary == null ? null : dateTemporary.toInstant();
         LocalDateTime createTime = createTimeInstant == null ? null : LocalDateTime.ofInstant(createTimeInstant, zoneId);
 
         OrderModel model = new OrderModel();

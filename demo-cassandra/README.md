@@ -121,11 +121,11 @@ version: "3.0"
 
 services:
   cassandra:
-   image: cassandra:5.0.4
+   image: cassandra:3.11.4
    environment:
      - MAX_HEAP_SIZE=1G
      # 是MAX_HEAP_SIZE的1/4
-     - HEAP_NEWSIZE=256MB
+     - HEAP_NEWSIZE=256M
    volumes:
      - ./data.cql:/scripts/data.cql:ro
    network_mode: host
@@ -141,7 +141,13 @@ docker compose up -d
 进入 cqlsh
 
 ```bash
-docker compose exec -it cassandra cqlsh
+docker compose exec -it cassandra cqlsh --request-timeout=120000
+```
+
+初始化数据表
+
+```CQL
+source '/scripts/data.cql';
 ```
 
 
@@ -153,14 +159,14 @@ docker compose exec -it cassandra cqlsh
 init.cql 内容如下：
 
 ```CQL
-CREATE KEYSPACE IF NOT EXISTS demo WITH REPLICATION ={'class' : 'NetworkTopologyStrategy','replication_factor' : '3'};
+CREATE KEYSPACE IF NOT EXISTS demo WITH REPLICATION ={'class' : 'SimpleStrategy','replication_factor' : '3'};
 
 USE demo;
 
 drop table if exists t_order;
 CREATE TABLE IF NOT EXISTS t_order
 (
-    id            decimal primary key,
+    id            bigint primary key,
     user_id       bigint,
     status        text,      -- 使用text代替ENUM，Cassandra不支持ENUM类型
     pay_time      timestamp, -- 使用timestamp代替datetime
@@ -174,7 +180,7 @@ CREATE TABLE IF NOT EXISTS t_order
 drop table if exists t_order_list_by_userId;
 CREATE TABLE IF NOT EXISTS t_order_list_by_userId
 (
-    id            decimal,
+    id            bigint,
     user_id       bigint,
     status        text,
     pay_time      timestamp, -- 使用timestamp代替datetime
@@ -197,7 +203,7 @@ drop table if exists t_order_detail;
 CREATE TABLE IF NOT EXISTS t_order_detail
 (
     id          bigint,
-    order_id    decimal,
+    order_id    bigint,
     user_id     bigint,
     product_id  bigint,
     merchant_id bigint,
@@ -207,6 +213,26 @@ CREATE TABLE IF NOT EXISTS t_order_detail
 
 ```
 
+用于编译容器镜像的 Dockerfile-cassandra 内容如下：
+
+```dockerfile
+FROM cassandra:3.11.4
+
+COPY cassandra.yaml /etc/cassandra/cassandra.yaml
+```
+
+cassandra.yaml 配置文件制作步骤参考本站 <a href="/cassandra/README.html#服务配置" target="_blank">链接</a>，配置文件添加如下内容：
+
+```yaml
+# 添加超时设置，否则在select count(id) from xxx时候会报告超时错误。提醒：客户端 cqlsh 在连接时同样需要提供 timeout 参数，否则会报告客户端超时，cqlsh --request-timeout=120000
+read_request_timeout_in_ms: 120000
+range_request_timeout_in_ms: 120000
+
+# 修改下面设置为25，否则在批量插入时显示超出批量处理大小警告信息
+# https://stackoverflow.com/questions/50385262/cassandra-batch-prepared-statement-size-warning
+batch_size_warn_threshold_in_kb: 25
+```
+
 192.168.1.90 docker-compose.yaml 内容如下：
 
 ```yaml
@@ -214,7 +240,10 @@ version: "3.1"
 
 services:
   node1:
-    image: cassandra:5.0.4
+  	build:
+      context: ./
+      dockerfile: Dockerfile-cassandra
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-order-management-app-cassandra
     environment:
       - CASSANDRA_SEEDS=192.168.1.90,192.168.1.91,192.168.1.92
     volumes:
@@ -230,7 +259,7 @@ version: "3.1"
 
 services:
   node1:
-    image: cassandra:5.0.4
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-order-management-app-cassandra
     environment:
       - CASSANDRA_SEEDS=192.168.1.90,192.168.1.91,192.168.1.92
     restart: unless-stopped
@@ -244,11 +273,24 @@ version: "3.1"
 
 services:
   node1:
-    image: cassandra:5.0.4
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-order-management-app-cassandra
     environment:
       - CASSANDRA_SEEDS=192.168.1.90,192.168.1.91,192.168.1.92
     restart: unless-stopped
     network_mode: host
+```
+
+登录 192.168.1.90 查看初始化表
+
+```sh
+# 进入 cassandra 容器
+docker compose exec -it node1 bash
+
+# 进入 cqlsh
+cqlsh --request-timeout=120000
+
+# 初始化表
+source '/scripts/data.cql';
 ```
 
 登录 192.168.1.90 查看集群状态
@@ -319,7 +361,7 @@ SELECT * FROM store.shopping_cart;
 登录 cqlsh 客户端
 
 ```sh
-cqlsh
+cqlsh --request-timeout=120000
 ```
 
 手动执行脚本
@@ -452,28 +494,20 @@ Netflix开源的Cassandra客户端，基于Thrift协议（较旧），适合遗�
 
 ### **DataStax Java Driver**
 
->详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-cassandra/demo-client-datastax)
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-cassandra/demo-client-datastax)，提醒：本示例演示连接 Cassandra3.11.4。
 
 POM 配置：
 
 ```xml
-<!-- DataStax Java Driver核心模块 -->
 <dependency>
-    <groupId>com.datastax.oss</groupId>
-    <artifactId>java-driver-core</artifactId>
-    <version>${cassandra.driver.version}</version>
+    <groupId>com.datastax.cassandra</groupId>
+    <artifactId>cassandra-driver-core</artifactId>
+    <version>3.11.4</version>
 </dependency>
-<!-- 查询构建器模块 -->
 <dependency>
-    <groupId>com.datastax.oss</groupId>
-    <artifactId>java-driver-query-builder</artifactId>
-    <version>${cassandra.driver.version}</version>
-</dependency>
-<!-- 对象映射运行时依赖 -->
-<dependency>
-    <groupId>com.datastax.oss</groupId>
-    <artifactId>java-driver-mapper-runtime</artifactId>
-    <version>${cassandra.driver.version}</version>
+    <groupId>com.codahale.metrics</groupId>
+    <artifactId>metrics-core</artifactId>
+    <version>3.0.2</version>
 </dependency>
 ```
 
@@ -482,19 +516,21 @@ Java 配置：
 ```java
 @Configuration
 public class ConfigCassandra {
+    
     @Bean(destroyMethod = "close")
-    public CqlSession cqlSession() {
-        int port = 9042;
-        return CqlSession.builder()
-                .addContactPoint(new InetSocketAddress("192.168.1.90", port))
-                .addContactPoint(new InetSocketAddress("192.168.1.91", port))
-                .addContactPoint(new InetSocketAddress("192.168.1.92", port))
-                // 指定本地数据中心名称
-                .withLocalDatacenter("datacenter1")
-                .withKeyspace("demo")
+    public Cluster cluster() {
+        return Cluster.builder()
+                .addContactPoint("localhost").withPort(9042)
                 .build();
     }
+
+    // session 是线程安全的，共用同一个 session
+    @Bean(destroyMethod = "close")
+    public Session session(Cluster cluster) {
+        return cluster.connect("demo");
+    }
 }
+
 ```
 
 单条插入和批量插入：
@@ -503,30 +539,38 @@ public class ConfigCassandra {
 @SpringBootTest
 @Slf4j
 public class ApplicationTests {
+
     @Autowired
-    CqlSession cqlSession;
+    Session session;
+
+    private PreparedStatement preparedStatementOrderInsertion;
+
+    @PostConstruct
+    public void init() {
+        // cql 只需要 prepare 一次
+        String cql = "INSERT INTO t_order (id, user_id, status, pay_time, delivery_time, received_time, cancel_time, delete_status, create_time) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        this.preparedStatementOrderInsertion = session.prepare(cql);
+    }
 
     @Test
     public void test() {
         // region 测试单条插入
 
-        String cql = "INSERT INTO t_order (id, user_id, status, pay_time, delivery_time, received_time, cancel_time, delete_status, create_time) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
-        PreparedStatement prepared = cqlSession.prepare(cql);
-        BoundStatement bound = prepared.bind(
+        BoundStatement bound = preparedStatementOrderInsertion.bind(
                 BigDecimal.valueOf(1L), // id
                 1001L,                  // user_id
                 "Unpay",                // status
-                Instant.now(),          // pay_time
+                // https://stackoverflow.com/questions/39926022/codec-not-found-for-requested-operation-timestamp-java-lang-long
+                Date.from(Instant.now()),          // pay_time
                 null,                   // delivery_time
                 null,                   // received_time
                 null,                   // cancel_time
                 "Normal",               // delete_status
-                Instant.now()           // create_time
+                Date.from(Instant.now())           // create_time
         );
 
-        ResultSet result = cqlSession.execute(bound);
+        ResultSet result = session.execute(bound);
         Assertions.assertTrue(result.wasApplied());
 
         // endregion
@@ -534,37 +578,34 @@ public class ApplicationTests {
         // region 测试批量插入
 
         // 准备批量插入语句
-        cql = "INSERT INTO t_order (id, user_id, status, pay_time, delivery_time, received_time, cancel_time, delete_status, create_time) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
-        prepared = cqlSession.prepare(cql);
 
         // 创建批量语句
-        BatchStatement batch = BatchStatement.newInstance(BatchType.LOGGED);
+        BatchStatement batch = new BatchStatement(BatchStatement.Type.LOGGED);
 
         // 添加多个订单到批量语句
         for (int i = 0; i < 5; i++) {
-            bound = prepared.bind(
+            bound = preparedStatementOrderInsertion.bind(
                     BigDecimal.valueOf(100L + i), // id
                     1001L,                        // user_id
                     "Unpay",                      // status
-                    Instant.now(),                // pay_time
+                    Date.from(Instant.now()),                // pay_time
                     null,                         // delivery_time
                     null,                         // received_time
                     null,                         // cancel_time
                     "Normal",                     // delete_status
-                    Instant.now()                 // create_time
+                    Date.from(Instant.now())                 // create_time
             );
             batch = batch.add(bound);
         }
 
         // 执行批量插入
-        result = cqlSession.execute(batch);
+        result = session.execute(batch);
         Assertions.assertTrue(result.wasApplied());
 
         // endregion
     }
 }
+
 ```
 
 
@@ -1543,6 +1584,33 @@ CREATE TABLE IF NOT EXISTS t_order_list_by_userId
 ```
 
 上面 CQL 分别设计 t_order 用于根据订单 id 查询订单信息，t_order_list_by_userId 用于根据用户 id 查询订单列表。
+
+
+
+## 服务配置
+
+>使用 cassandra.yaml 配置 Cassandra 服务。
+
+使用 Docker Compose 启动对应版本的 Cassandra 后复制 cassandra.yaml 配置文件
+
+```sh
+docker compose cp node1:/etc/cassandra/cassandra.yaml .
+```
+
+添加如下配置到配置文件中：
+
+```yaml
+read_request_timeout_in_ms: 60000
+range_request_timeout_in_ms: 60000
+```
+
+创建新的 Cassandra 镜像，注意：不能直接使用 volumes 挂在 cassandra.yaml 配置到容器中，因为 Cassandra 集群中多个节点使用同一个配置文件会冲突。
+
+```dockerfile
+FROM cassandra:3.11.4
+
+COPY cassandra.yaml /etc/cassandra/cassandra.yaml
+```
 
 
 

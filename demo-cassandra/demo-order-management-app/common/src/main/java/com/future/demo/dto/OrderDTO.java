@@ -6,14 +6,12 @@ import com.future.demo.entity.DeleteStatus;
 import com.future.demo.entity.Status;
 import lombok.Data;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
 public class OrderDTO {
-    private BigDecimal id;
-
+    private Long id;
     private Long userId;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private LocalDateTime createTime;

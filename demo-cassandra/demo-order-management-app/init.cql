@@ -1,11 +1,11 @@
-CREATE KEYSPACE IF NOT EXISTS demo WITH REPLICATION ={'class' : 'NetworkTopologyStrategy','replication_factor' : '3'};
+CREATE KEYSPACE IF NOT EXISTS demo WITH REPLICATION ={'class' : 'SimpleStrategy','replication_factor' : '3'};
 
 USE demo;
 
 drop table if exists t_order;
 CREATE TABLE IF NOT EXISTS t_order
 (
-    id            decimal primary key,
+    id            bigint primary key,
     user_id       bigint,
     status        text,      -- 使用text代替ENUM，Cassandra不支持ENUM类型
     pay_time      timestamp, -- 使用timestamp代替datetime
@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS t_order
 drop table if exists t_order_list_by_userId;
 CREATE TABLE IF NOT EXISTS t_order_list_by_userId
 (
-    id            decimal,
+    id            bigint,
     user_id       bigint,
     status        text,
     pay_time      timestamp, -- 使用timestamp代替datetime
@@ -42,7 +42,7 @@ drop table if exists t_order_detail;
 CREATE TABLE IF NOT EXISTS t_order_detail
 (
     id          bigint,
-    order_id    decimal,
+    order_id    bigint,
     user_id     bigint,
     product_id  bigint,
     merchant_id bigint,

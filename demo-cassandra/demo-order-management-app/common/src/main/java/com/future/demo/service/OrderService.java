@@ -12,7 +12,6 @@ import com.future.demo.mapper.OrderMapper;
 import com.future.demo.util.OrderRandomlyUtil;
 import com.tencent.devops.leaf.service.SnowflakeService;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,7 +20,6 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -81,12 +79,7 @@ public class OrderService {
             OrderModel orderModel = new OrderModel();
 
             Long orderId = this.snowflakeService.getId("order").getId();
-            Long userIdStripOff = userId % 16;
-            String orderIdBinaryStr = Long.toBinaryString(orderId) +
-                    StringUtils.leftPad(Long.toBinaryString(userIdStripOff), 4, "0");
-            BigInteger orderIdBigInt = new BigInteger(orderIdBinaryStr, 2);
-            BigDecimal orderIdBigDecimal = new BigDecimal(orderIdBigInt);
-            orderModel.setId(orderIdBigDecimal);
+            orderModel.setId(orderId);
 
             orderModel.setUserId(userId);
             LocalDateTime createTime = OrderRandomlyUtil.getCreateTimeRandomly();
@@ -228,19 +221,19 @@ public class OrderService {
             return new ArrayList<>();
         }
 
-        List<BigDecimal> orderIdList = orderList.stream().map(OrderModel::getId).collect(Collectors.toList());
+        List<Long> orderIdList = orderList.stream().map(OrderModel::getId).collect(Collectors.toList());
 
         List<OrderDTO> orderDTOList = null;
         if (!orderList.isEmpty()) {
             List<OrderDetailModel> orderDetailList = this.orderDetailMapper.list(orderIdList);
 
-            Map<BigDecimal, List<OrderDetailModel>> orderDetailGroupByOrderId = orderDetailList.stream().collect(Collectors.groupingBy(OrderDetailModel::getOrderId));
+            Map<Long, List<OrderDetailModel>> orderDetailGroupByOrderId = orderDetailList.stream().collect(Collectors.groupingBy(OrderDetailModel::getOrderId));
 
             orderDTOList = orderList.stream().map(o -> {
                 OrderDTO orderDTO = new OrderDTO();
                 BeanUtils.copyProperties(o, orderDTO);
 
-                BigDecimal orderId = o.getId();
+                Long orderId = o.getId();
 
                 if (orderDetailGroupByOrderId.containsKey(orderId)) {
                     List<OrderDetailModel> orderDetailListTemporary = orderDetailGroupByOrderId.get(orderId);

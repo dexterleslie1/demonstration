@@ -53,23 +53,34 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- DataStax Java Driver核心模块 -->
+        <!-- 以下是 cassandra5 驱动程序 -->
+        <!--&lt;!&ndash; DataStax Java Driver核心模块 &ndash;&gt;
         <dependency>
             <groupId>com.datastax.oss</groupId>
             <artifactId>java-driver-core</artifactId>
             <version>${cassandra.driver.version}</version>
         </dependency>
-        <!-- 查询构建器模块 -->
+        &lt;!&ndash; 查询构建器模块 &ndash;&gt;
         <dependency>
             <groupId>com.datastax.oss</groupId>
             <artifactId>java-driver-query-builder</artifactId>
             <version>${cassandra.driver.version}</version>
         </dependency>
-        <!-- 对象映射运行时依赖 -->
+        &lt;!&ndash; 对象映射运行时依赖 &ndash;&gt;
         <dependency>
             <groupId>com.datastax.oss</groupId>
             <artifactId>java-driver-mapper-runtime</artifactId>
             <version>${cassandra.driver.version}</version>
+        </dependency>-->
+        <dependency>
+            <groupId>com.datastax.cassandra</groupId>
+            <artifactId>cassandra-driver-core</artifactId>
+            <version>3.11.4</version>
+        </dependency>
+        <dependency>
+            <groupId>com.codahale.metrics</groupId>
+            <artifactId>metrics-core</artifactId>
+            <version>3.0.2</version>
         </dependency>
     </dependencies>
 
