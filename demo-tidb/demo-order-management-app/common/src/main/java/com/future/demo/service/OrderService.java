@@ -11,7 +11,6 @@ import com.future.demo.mapper.ProductMapper;
 import com.future.demo.util.OrderRandomlyUtil;
 import com.tencent.devops.leaf.service.SnowflakeService;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -86,16 +84,8 @@ public class OrderService {
         // 创建订单
         OrderModel orderModel = new OrderModel();
 
-        // biginteger 类型
         Long orderId = this.snowflakeService.getId("order").getId();
-        Long userIdStripOff = userId % 16;
-        String orderIdBinaryStr = Long.toBinaryString(orderId) +
-                StringUtils.leftPad(Long.toBinaryString(userIdStripOff), 4, "0");
-        BigInteger orderIdBigInt = new BigInteger(orderIdBinaryStr, 2);
-        orderModel.setId(orderIdBigInt);
-        // uuid string 类型
-        /*String orderId = UUID.randomUUID().toString();
-        orderModel.setId(orderId);*/
+        orderModel.setId(orderId);
 
         orderModel.setUserId(userId);
         LocalDateTime createTime = OrderRandomlyUtil.getCreateTimeRandomly();
@@ -144,16 +134,8 @@ public class OrderService {
             // 创建订单
             OrderModel orderModel = new OrderModel();
 
-            // biginteger 类型
             Long orderId = this.snowflakeService.getId("order").getId();
-            Long userIdStripOff = userId % 16;
-            String orderIdBinaryStr = Long.toBinaryString(orderId) +
-                    StringUtils.leftPad(Long.toBinaryString(userIdStripOff), 4, "0");
-            BigInteger orderIdBigInt = new BigInteger(orderIdBinaryStr, 2);
-            orderModel.setId(orderIdBigInt);
-            // uuid string 类型
-            /*String orderId = UUID.randomUUID().toString();
-            orderModel.setId(orderId);*/
+            orderModel.setId(orderId);
 
             orderModel.setUserId(userId);
             LocalDateTime createTime = OrderRandomlyUtil.getCreateTimeRandomly();
@@ -200,14 +182,7 @@ public class OrderService {
      * @param orderId
      * @return
      */
-    // long 类型
-    /*public OrderDTO getById(Long orderId) {*/
-    // int 类型
-    /*public OrderDTO getById(Integer orderId) {*/
-    // biginteger 类型
-    public OrderDTO getById(BigInteger orderId) {
-        // uuid string 类型
-        /*public OrderDTO getById(String orderId) {*/
+    public OrderDTO getById(Long orderId) {
         OrderModel orderModel = this.orderMapper.getById(orderId);
         if (orderModel == null) {
             return null;
@@ -311,40 +286,19 @@ public class OrderService {
             return new ArrayList<>();
         }
 
-        // long 类型
-        /*List<Long> orderIdList = orderList.stream().map(OrderModel::getId).collect(Collectors.toList());*/
-        // int 类型
-        /*List<Integer> orderIdList = orderList.stream().map(OrderModel::getId).collect(Collectors.toList());*/
-        // biginteger 类型
-        List<BigInteger> orderIdList = orderList.stream().map(OrderModel::getId).collect(Collectors.toList());
-        // uuid string 类型
-        /*List<String> orderIdList = orderList.stream().map(OrderModel::getId).collect(Collectors.toList());*/
+        List<Long> orderIdList = orderList.stream().map(OrderModel::getId).collect(Collectors.toList());
 
         List<OrderDTO> orderDTOList = null;
         if (!orderList.isEmpty()) {
             List<OrderDetailModel> orderDetailList = this.orderDetailMapper.list(orderIdList);
 
-            // long 类型
-            /*Map<Long, List<OrderDetailModel>> orderDetailGroupByOrderId = orderDetailList.stream().collect(Collectors.groupingBy(OrderDetailModel::getOrderId));*/
-            // int 类型
-            /*Map<Integer, List<OrderDetailModel>> orderDetailGroupByOrderId = orderDetailList.stream().collect(Collectors.groupingBy(OrderDetailModel::getOrderId));*/
-            // biginteger 类型
-            Map<BigInteger, List<OrderDetailModel>> orderDetailGroupByOrderId = orderDetailList.stream().collect(Collectors.groupingBy(OrderDetailModel::getOrderId));
-            // uuid string 类型
-            /*Map<String, List<OrderDetailModel>> orderDetailGroupByOrderId = orderDetailList.stream().collect(Collectors.groupingBy(OrderDetailModel::getOrderId));*/
+            Map<Long, List<OrderDetailModel>> orderDetailGroupByOrderId = orderDetailList.stream().collect(Collectors.groupingBy(OrderDetailModel::getOrderId));
 
             orderDTOList = orderList.stream().map(o -> {
                 OrderDTO orderDTO = new OrderDTO();
                 BeanUtils.copyProperties(o, orderDTO);
 
-                // long 类型
-                /*Long orderId = o.getId();*/
-                // int 类型
-                /*Integer orderId = o.getId();*/
-                // biginteger 类型
-                BigInteger orderId = o.getId();
-                // uuid string 类型
-                /*String orderId = o.getId();*/
+                Long orderId = o.getId();
 
                 if (orderDetailGroupByOrderId.containsKey(orderId)) {
                     List<OrderDetailModel> orderDetailListTemporary = orderDetailGroupByOrderId.get(orderId);
