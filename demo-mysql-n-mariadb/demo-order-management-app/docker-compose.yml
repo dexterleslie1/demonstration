@@ -9,9 +9,10 @@ services:
     environment:
       - JAVA_OPTS=-Xmx1g
       - TZ=Asia/Shanghai
-    network_mode: host
     depends_on:
       - db
+      - zookeeper
+    network_mode: host
 
   db:
     build:

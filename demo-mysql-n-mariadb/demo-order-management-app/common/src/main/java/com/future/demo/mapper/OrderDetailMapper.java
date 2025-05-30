@@ -3,7 +3,6 @@ package com.future.demo.mapper;
 import com.future.demo.entity.OrderDetailModel;
 import org.apache.ibatis.annotations.*;
 
-import java.math.BigInteger;
 import java.util.List;
 
 @Mapper
@@ -15,11 +14,11 @@ public interface OrderDetailMapper {
             "   </foreach>" +
             "</script>")
         // long 类型
-        /*List<OrderDetailModel> list(List<Long> orderIdList);*/
-        // int 类型
+    List<OrderDetailModel> list(List<Long> orderIdList);
+    // int 类型
     /*List<OrderDetailModel> list(List<Integer> orderIdList);*/
     // biginteger 类型
-    List<OrderDetailModel> list(List<BigInteger> orderIdList);
+    /*List<OrderDetailModel> list(List<BigInteger> orderIdList);*/
     // uuid string 类型
     /*List<OrderDetailModel> list(List<String> orderIdList);*/
 

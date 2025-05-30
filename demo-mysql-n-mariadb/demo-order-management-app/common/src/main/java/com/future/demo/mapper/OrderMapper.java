@@ -5,7 +5,6 @@ import com.future.demo.entity.OrderModel;
 import com.future.demo.entity.Status;
 import org.apache.ibatis.annotations.*;
 
-import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -59,31 +58,31 @@ public interface OrderMapper {
 
     @Select("select * from t_order where id=#{orderId}")
         // long 类型
-        /*OrderModel getById(@Param("orderId") Long orderId);*/
-        // int 类型
-        /*OrderModel getById(@Param("orderId") Integer orderId);*/
-        // biginteger 类型
-        OrderModel getById(@Param("orderId") BigInteger orderId);
-        // uuid string 类型
+    OrderModel getById(@Param("orderId") Long orderId);
+    // int 类型
+    /*OrderModel getById(@Param("orderId") Integer orderId);*/
+    // biginteger 类型
+    /*OrderModel getById(@Param("orderId") BigInteger orderId);*/
+    // uuid string 类型
     /*OrderModel getById(@Param("orderId") String orderId);*/
 
     @Select("select min(id) from t_order")
         // long 类型
-        /*Long getIdMin();*/
-        // int 类型
-        /*Integer getIdMin();*/
-        // biginteger 类型
-        BigInteger getIdMin();
-        // uuid string 类型
+    Long getIdMin();
+    // int 类型
+    /*Integer getIdMin();*/
+    // biginteger 类型
+    /*BigInteger getIdMin();*/
+    // uuid string 类型
     /*String getIdMin();*/
 
     @Select("select id from t_order where id>#{lowerIdBoundary} order by id asc limit #{pageSize}")
         // long 类型
-        /*Long[] listRangeIds(@Param("lowerIdBoundary") Long lowerIdBoundary, @Param("pageSize") Integer pageSize);*/
-        // int 类型
-        /*Integer[] listRangeIds(@Param("lowerIdBoundary") Integer lowerIdBoundary, @Param("pageSize") Integer pageSize);*/
-        // biginteger 类型
-        BigInteger[] listRangeIds(@Param("lowerIdBoundary") BigInteger lowerIdBoundary, @Param("pageSize") Integer pageSize);
-        // uuid string 类型
+    Long[] listRangeIds(@Param("lowerIdBoundary") Long lowerIdBoundary, @Param("pageSize") Integer pageSize);
+    // int 类型
+    /*Integer[] listRangeIds(@Param("lowerIdBoundary") Integer lowerIdBoundary, @Param("pageSize") Integer pageSize);*/
+    // biginteger 类型
+    /*BigInteger[] listRangeIds(@Param("lowerIdBoundary") BigInteger lowerIdBoundary, @Param("pageSize") Integer pageSize);*/
+    // uuid string 类型
     /*String[] listRangeIds(@Param("lowerIdBoundary") String lowerIdBoundary, @Param("pageSize") Integer pageSize);*/
 }

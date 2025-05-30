@@ -23,6 +23,7 @@ public class OrderDetailMapper {
         String cql = "INSERT INTO t_order_detail (id,order_id,user_id,product_id,merchant_id,amount) " +
                 "VALUES (?, ?, ?, ?, ?, ?)";
         preparedStatementInsert = session.prepare(cql);
+        preparedStatementInsert.setConsistencyLevel(ConsistencyLevel.LOCAL_QUORUM);
     }
 
     /*@Select("<script>" +

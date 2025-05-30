@@ -11,7 +11,6 @@ import com.future.demo.mapper.ProductMapper;
 import com.future.demo.util.OrderRandomlyUtil;
 import com.tencent.devops.leaf.service.SnowflakeService;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -88,11 +86,12 @@ public class OrderService {
 
         // biginteger 类型
         Long orderId = this.snowflakeService.getId("order").getId();
-        Long userIdStripOff = userId % 16;
+        /*Long userIdStripOff = userId % 16;
         String orderIdBinaryStr = Long.toBinaryString(orderId) +
                 StringUtils.leftPad(Long.toBinaryString(userIdStripOff), 4, "0");
         BigInteger orderIdBigInt = new BigInteger(orderIdBinaryStr, 2);
-        orderModel.setId(orderIdBigInt);
+        orderModel.setId(orderIdBigInt);*/
+        orderModel.setId(orderId);
         // uuid string 类型
         /*String orderId = UUID.randomUUID().toString();
         orderModel.setId(orderId);*/
@@ -146,11 +145,12 @@ public class OrderService {
 
             // biginteger 类型
             Long orderId = this.snowflakeService.getId("order").getId();
-            Long userIdStripOff = userId % 16;
+            /*Long userIdStripOff = userId % 16;
             String orderIdBinaryStr = Long.toBinaryString(orderId) +
                     StringUtils.leftPad(Long.toBinaryString(userIdStripOff), 4, "0");
             BigInteger orderIdBigInt = new BigInteger(orderIdBinaryStr, 2);
-            orderModel.setId(orderIdBigInt);
+            orderModel.setId(orderIdBigInt);*/
+            orderModel.setId(orderId);
             // uuid string 类型
             /*String orderId = UUID.randomUUID().toString();
             orderModel.setId(orderId);*/
@@ -201,11 +201,11 @@ public class OrderService {
      * @return
      */
     // long 类型
-    /*public OrderDTO getById(Long orderId) {*/
+    public OrderDTO getById(Long orderId) {
     // int 类型
     /*public OrderDTO getById(Integer orderId) {*/
     // biginteger 类型
-    public OrderDTO getById(BigInteger orderId) {
+    /*public OrderDTO getById(BigInteger orderId) {*/
         // uuid string 类型
         /*public OrderDTO getById(String orderId) {*/
         OrderModel orderModel = this.orderMapper.getById(orderId);
@@ -266,17 +266,6 @@ public class OrderService {
             LocalDateTime startTime,
             LocalDateTime endTime) {
         List<OrderModel> orderModelList = this.orderMapper.listByMerchantId(merchantId, null, deleteStatus, startTime, endTime, 0L, 20L);
-//        List<OrderDetailDTO> orderDetailDTOList;
-//        if (orderDetailModelList != null && !orderDetailModelList.isEmpty()) {
-//            orderDetailDTOList = orderDetailModelList.stream().map(o -> {
-//                OrderDetailDTO orderDetailDTO = new OrderDetailDTO();
-//                BeanUtils.copyProperties(o, orderDetailDTO);
-//                return orderDetailDTO;
-//            }).collect(Collectors.toList());
-//        } else {
-//            orderDetailDTOList = new ArrayList<>();
-//        }
-//        return orderDetailDTOList;
         return convertOrderEntityToOrderDTO(orderModelList);
     }
 
@@ -312,11 +301,11 @@ public class OrderService {
         }
 
         // long 类型
-        /*List<Long> orderIdList = orderList.stream().map(OrderModel::getId).collect(Collectors.toList());*/
+        List<Long> orderIdList = orderList.stream().map(OrderModel::getId).collect(Collectors.toList());
         // int 类型
         /*List<Integer> orderIdList = orderList.stream().map(OrderModel::getId).collect(Collectors.toList());*/
         // biginteger 类型
-        List<BigInteger> orderIdList = orderList.stream().map(OrderModel::getId).collect(Collectors.toList());
+        /*List<BigInteger> orderIdList = orderList.stream().map(OrderModel::getId).collect(Collectors.toList());*/
         // uuid string 类型
         /*List<String> orderIdList = orderList.stream().map(OrderModel::getId).collect(Collectors.toList());*/
 
@@ -325,11 +314,11 @@ public class OrderService {
             List<OrderDetailModel> orderDetailList = this.orderDetailMapper.list(orderIdList);
 
             // long 类型
-            /*Map<Long, List<OrderDetailModel>> orderDetailGroupByOrderId = orderDetailList.stream().collect(Collectors.groupingBy(OrderDetailModel::getOrderId));*/
+            Map<Long, List<OrderDetailModel>> orderDetailGroupByOrderId = orderDetailList.stream().collect(Collectors.groupingBy(OrderDetailModel::getOrderId));
             // int 类型
             /*Map<Integer, List<OrderDetailModel>> orderDetailGroupByOrderId = orderDetailList.stream().collect(Collectors.groupingBy(OrderDetailModel::getOrderId));*/
             // biginteger 类型
-            Map<BigInteger, List<OrderDetailModel>> orderDetailGroupByOrderId = orderDetailList.stream().collect(Collectors.groupingBy(OrderDetailModel::getOrderId));
+            /*Map<BigInteger, List<OrderDetailModel>> orderDetailGroupByOrderId = orderDetailList.stream().collect(Collectors.groupingBy(OrderDetailModel::getOrderId));*/
             // uuid string 类型
             /*Map<String, List<OrderDetailModel>> orderDetailGroupByOrderId = orderDetailList.stream().collect(Collectors.groupingBy(OrderDetailModel::getOrderId));*/
 
@@ -338,11 +327,11 @@ public class OrderService {
                 BeanUtils.copyProperties(o, orderDTO);
 
                 // long 类型
-                /*Long orderId = o.getId();*/
+                Long orderId = o.getId();
                 // int 类型
                 /*Integer orderId = o.getId();*/
                 // biginteger 类型
-                BigInteger orderId = o.getId();
+                /*BigInteger orderId = o.getId();*/
                 // uuid string 类型
                 /*String orderId = o.getId();*/
 

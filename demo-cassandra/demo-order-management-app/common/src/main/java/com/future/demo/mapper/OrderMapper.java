@@ -30,6 +30,7 @@ public class OrderMapper {
         String cql = "INSERT INTO t_order(id,user_id,create_time,status,delete_status) " +
                 "VALUES (?, ?, ?, ?, ?)";
         preparedStatementInsert = session.prepare(cql);
+        preparedStatementInsert.setConsistencyLevel(ConsistencyLevel.LOCAL_QUORUM);
     }
 
     public void insertBatch(List<OrderModel> orderModelList) throws BusinessException {

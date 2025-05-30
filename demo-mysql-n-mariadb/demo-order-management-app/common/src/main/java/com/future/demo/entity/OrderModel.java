@@ -2,18 +2,17 @@ package com.future.demo.entity;
 
 import lombok.Data;
 
-import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
 public class OrderModel {
     // long 类型
-    /*private Long id;*/
+    private Long id;
     // int 类型
     /*private Integer id;*/
     // biginteger 类型
-    private BigInteger id;
+    /*private BigInteger id;*/
     // uuid string 类型
     /*private String id;*/
 

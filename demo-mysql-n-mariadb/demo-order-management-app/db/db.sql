@@ -5,10 +5,11 @@ use demo;
 create table if not exists t_order(
     /* long 类型 */
     /*id              bigint not null auto_increment primary key,*/
+    id              bigint not null primary key,
     /* int 类型 */
     /*id              int not null auto_increment primary key,*/
     /* biginteger 类型 */
-    id              decimal(20,0) not null primary key,
+    /*id              decimal(20,0) not null primary key,*/
     /* uuid string 类型 */
     /*id              varchar(36) not null primary key,*/
 
@@ -29,21 +30,21 @@ create table if not exists t_order_detail (
     id          bigint not null primary key,
 
     /* long 类型 */
-    /*orderId     bigint not null,*/
+    orderId     bigint not null,
     /* int 类型 */
     /*orderId     int not null,*/
     /* biginteger 类型 */
-    orderId     decimal(20,0) not null,
+    /*orderId     decimal(20,0) not null,*/
     /* uuid string 类型 */
     /*orderId     varchar(36) not null,*/
 
     userId      bigint not null comment '协助简化和提高用户重复下单判断逻辑',
     productId   bigint not null,
     merchantId  bigint not null comment '商家ID',
-    amount      int not null,
+    amount      int not null/*,*/
     /*分布式数据库不支持外键特性，所以在orderId中建立索引即可*/
     /*constraint fk_order_detail_orderId foreign key(orderId) references t_order(id),*/
-    constraint unique_order_detail_userId_n_productId unique(userId,productId)
+    /*constraint unique_order_detail_userId_n_productId unique(userId,productId)*/
 ) engine=innodb character set utf8mb4 collate utf8mb4_general_ci;
 
 /* 订单getById时使用此索引获取订单明细 */
@@ -61,11 +62,11 @@ create table if not exists t_product(
 create table if not exists t_id_cache_assistant (
     id          bigint not null auto_increment primary key,
     /* long 类型 */
-    /*orderId     bigint not null*/
+    orderId     bigint not null
     /* int 类型 */
     /*orderId     int not null*/
     /* biginteger 类型 */
-    orderId     decimal(20,0) not null
+    /*orderId     decimal(20,0) not null*/
     /* uuid string 类型 */
     /*orderId     varchar(36) not null*/
 ) engine=innodb character set utf8mb4 collate utf8mb4_general_ci;
