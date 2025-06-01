@@ -163,11 +163,180 @@ docker compose up -d
 
 
 
-### Elasticsearch Java API Client
+### Elasticsearch Java Client
 
-> 提醒：较新版本 `elasticsearch` 推荐使用这个客户端操作 `elasticsearch`。
+> 提醒：`elasticsearch 8.x` 以上官方推荐使用这个客户端操作 `elasticsearch`。
 >
 > [参考链接](https://www.elastic.co/guide/en/elasticsearch/client/java-api-client/current/index.html)
+
+#### 配置和使用
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/elasticsearch/elasticsearch8-java-client)
+
+POM 配置
+
+```xml
+<dependency>
+    <groupId>junit</groupId>
+    <artifactId>junit</artifactId>
+    <version>4.11</version>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>co.elastic.clients</groupId>
+    <artifactId>elasticsearch-java</artifactId>
+    <version>8.1.2</version> <!-- 版本号应与Elasticsearch服务器版本一致 -->
+</dependency>
+<dependency>
+    <groupId>com.fasterxml.jackson.core</groupId>
+    <artifactId>jackson-databind</artifactId>
+    <version>2.18.1</version>
+</dependency>
+<dependency>
+    <groupId>org.projectlombok</groupId>
+    <artifactId>lombok</artifactId>
+    <version>1.18.36</version>
+</dependency>
+```
+
+AbstractTestSupport.java
+
+```java
+public class AbstractTestSupport {
+    protected ElasticsearchClient client = null;
+    private RestClient restClient;
+    private ElasticsearchTransport transport;
+
+    @Before
+    public void setup() {
+        // 1. 创建RestClient（底层HTTP客户端）
+        restClient = RestClient.builder(
+                new HttpHost("localhost", 9200, "http") // 单节点配置
+                // 多节点示例：new HttpHost("host2", 9200, "http"), ...
+        ).build();
+
+        // 2. 创建Transport层（序列化/反序列化）
+        transport = new RestClientTransport(
+                restClient,
+                new JacksonJsonpMapper() // 使用Jackson作为JSON处理器
+        );
+
+        // 3. 创建ElasticsearchClient
+        client = new ElasticsearchClient(transport);
+    }
+
+    @After
+    public void teardown() throws IOException {
+        if (transport != null) {
+            transport.close();
+            transport = null;
+        }
+        if (restClient != null) {
+            restClient.close();
+            restClient = null;
+        }
+    }
+}
+```
+
+测试
+
+```java
+public class ApplicationTests extends AbstractTestSupport {
+    public final static String IndexDemo = "index_demo";
+
+    @Test
+    public void contextLoads() throws IOException {
+        // 删除索引
+        try {
+            DeleteIndexResponse deleteIndexResponse = client.indices().delete(DeleteIndexRequest.of(o -> o.index(IndexDemo)));
+            Assert.assertTrue(deleteIndexResponse.acknowledged());
+        } catch (Exception ex) {
+            // 忽略索引不存在
+        }
+
+        // 创建索引
+        List<String[]> datumList1 = Arrays.asList(
+                new String[]{"1", "a"},
+                new String[]{"2", "a"},
+                new String[]{"3", "a1"},
+                new String[]{"4", "a2"}
+        );
+        CreateIndexRequest createIndexRequest = new CreateIndexRequest.Builder().index(IndexDemo)
+                .mappings(m -> m
+                        .properties("id", p -> p.long_(l -> l.store(false)))
+                        .properties("content", p -> p.text(t -> t
+                                .store(false)
+                                .analyzer("ik_max_word")
+                        ))).build();
+        CreateIndexResponse createIndexResponse = client.indices().create(createIndexRequest);
+        Assert.assertEquals(Boolean.TRUE, createIndexResponse.acknowledged());
+
+        // 插入数据到索引中
+        datumList1.forEach(datum -> {
+            try {
+                IndexRequest<Document> indexRequest = IndexRequest.of(o -> {
+                    return o.index(IndexDemo)
+                            .id(datum[0]) // 设置文档 ID
+                            .document(new Document(datum[0], datum[1]))
+                            .refresh(Refresh.True); // 设置文档内容
+                });
+                IndexResponse indexResponse = client.index(indexRequest);
+                Assert.assertEquals(Result.Created, indexResponse.result());
+            } catch (IOException e) {
+                e.printStackTrace();
+                Assert.fail(e.getMessage());
+            }
+        });
+
+        // region 批量插入
+
+        List<BulkOperation> operations = new ArrayList<>();
+
+        for (String[] datum : datumList1) {
+            operations.add(BulkOperation.of(b -> b
+                    .index(i -> i
+                            .index(IndexDemo)
+                            .id(datum[0]) // 设置文档 ID
+                            .document(new Document(datum[0], datum[1])) // 设置文档内容
+                    )
+            ));
+        }
+
+        BulkRequest request = BulkRequest.of(b -> b
+                .operations(operations)
+                .refresh(Refresh.True) // 设置刷新策略为 IMMEDIATE
+        );
+
+        // 执行批量请求
+        BulkResponse response = client.bulk(request);
+
+        /*// 检查是否有错误
+        if (response.errors()) {
+            System.err.println("批量插入中有错误发生: " + response.items());
+        } else {
+            System.out.println("批量插入成功，共插入 " + response.items().size() + " 个文档");
+        }*/
+        Assert.assertFalse(response.errors());
+        Assert.assertEquals(datumList1.size(), response.items().size());
+
+        // endregion
+    }
+
+    // 定义一个简单的文档类来映射数据
+    @Getter
+    static class Document {
+        private String id;
+        private String content;
+
+        public Document(String id, String content) {
+            this.id = id;
+            this.content = content;
+        }
+    }
+}
+
+```
 
 
 
