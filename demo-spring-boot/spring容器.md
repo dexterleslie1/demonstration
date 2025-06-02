@@ -1026,6 +1026,76 @@ Assertions.assertSame(ioc.getBean(MyBean5.class), ioc.getBean(MyBean5.class));
 
 
 
+##### 自定义对象创建和销毁逻辑
+
+```java
+@Component
+public class ElasticSearchClientFactoryBean implements FactoryBean<ElasticsearchClient>, InitializingBean, DisposableBean {
+
+    protected ElasticsearchClient client = null;
+    private RestClient restClient;
+    private ElasticsearchTransport transport;
+
+    @Override
+    public ElasticsearchClient getObject() {
+        return client;
+    }
+
+    @Override
+    public Class<?> getObjectType() {
+        return ElasticsearchClient.class;
+    }
+
+    @Override
+    public boolean isSingleton() {
+        return true;
+    }
+
+    @Override
+    public void destroy() throws Exception {
+        // region 自定义销毁逻辑
+
+        if (transport != null) {
+            transport.close();
+            transport = null;
+        }
+        if (restClient != null) {
+            restClient.close();
+            restClient = null;
+        }
+
+        // endregion
+    }
+
+    @Override
+    public void afterPropertiesSet() {
+        // region 自定义 ElasticSearchClient 创建逻辑
+
+        Assert.isNull(client, "意料之外错误，client 不为 null");
+
+        // 1. 创建RestClient（底层HTTP客户端）
+        restClient = RestClient.builder(
+                new HttpHost("localhost", 9200, "http") // 单节点配置
+                // 多节点示例：new HttpHost("host2", 9200, "http"), ...
+        ).build();
+
+        // 2. 创建Transport层（序列化/反序列化）
+        transport = new RestClientTransport(
+                restClient,
+                new JacksonJsonpMapper() // 使用Jackson作为JSON处理器
+        );
+
+        // 3. 创建ElasticsearchClient
+        client = new ElasticsearchClient(transport);
+
+        // endregion
+    }
+}
+
+```
+
+
+
 #### `@Condition`用法
 
 > 详细用法请参考示例`https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-boot-condition`
