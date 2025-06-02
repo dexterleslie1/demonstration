@@ -4,6 +4,8 @@ import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
 import org.junit.After;
@@ -25,9 +27,10 @@ public class AbstractTestSupport {
         ).build();
 
         // 2. 创建Transport层（序列化/反序列化）
+        JacksonJsonpMapper mapper = new JacksonJsonpMapper(new ObjectMapper().registerModule(new JavaTimeModule()));
         transport = new RestClientTransport(
                 restClient,
-                new JacksonJsonpMapper() // 使用Jackson作为JSON处理器
+                mapper // 使用Jackson作为JSON处理器
         );
 
         // 3. 创建ElasticsearchClient

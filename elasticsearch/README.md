@@ -168,20 +168,16 @@ docker compose up -d
 > 提醒：`elasticsearch 8.x` 以上官方推荐使用这个客户端操作 `elasticsearch`。
 >
 > [参考链接](https://www.elastic.co/guide/en/elasticsearch/client/java-api-client/current/index.html)
+>
+> 详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/elasticsearch/elasticsearch8-java-client)
 
-#### 配置和使用
 
->详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/elasticsearch/elasticsearch8-java-client)
+
+#### 基本配置和使用
 
 POM 配置
 
 ```xml
-<dependency>
-    <groupId>junit</groupId>
-    <artifactId>junit</artifactId>
-    <version>4.11</version>
-    <scope>test</scope>
-</dependency>
 <dependency>
     <groupId>co.elastic.clients</groupId>
     <artifactId>elasticsearch-java</artifactId>
@@ -242,100 +238,287 @@ public class AbstractTestSupport {
 测试
 
 ```java
-public class ApplicationTests extends AbstractTestSupport {
-    public final static String IndexDemo = "index_demo";
+/**
+ * 测试基本配置和使用
+ *
+ * @throws IOException
+ */
+@Test
+public void testBasicUsage() throws IOException {
+    String index = "demo_index";
+    // 删除索引
+    try {
+        String finalIndex = index;
+        DeleteIndexResponse deleteIndexResponse = client.indices().delete(DeleteIndexRequest.of(o -> o.index(finalIndex)));
+        Assert.assertTrue(deleteIndexResponse.acknowledged());
+    } catch (Exception ex) {
+        // 忽略索引不存在
+    }
 
-    @Test
-    public void contextLoads() throws IOException {
-        // 删除索引
+    // 创建索引
+    List<Map<String, Object>> datumList = new ArrayList<Map<String, Object>>() {{
+        add(new HashMap<String, Object>() {{
+            put("id", "1");
+            put("content", "a");
+            DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            put("createTime", dateTimeFormatter.format(LocalDateTime.now()));
+        }});
+        add(new HashMap<String, Object>() {{
+            put("id", "2");
+            put("content", "a");
+            DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            put("createTime", dateTimeFormatter.format(LocalDateTime.now()));
+        }});
+        add(new HashMap<String, Object>() {{
+            put("id", "3");
+            put("content", "a1");
+            DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            put("createTime", dateTimeFormatter.format(LocalDateTime.now()));
+        }});
+        add(new HashMap<String, Object>() {{
+            put("id", "4");
+            put("content", "a2");
+            DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            put("createTime", dateTimeFormatter.format(LocalDateTime.now()));
+        }});
+    }};
+
+    CreateIndexRequest createIndexRequest = new CreateIndexRequest.Builder().index(index)
+            .mappings(m -> m
+                    .properties("id", p -> p.long_(l -> l.store(false)))
+                    .properties("content", p -> p.text(t -> t
+                            .store(false)
+                            .analyzer("ik_max_word")))
+                    // 用于测试 LocalDateTime 类型
+                    .properties("createTime", p -> p.date(t -> t.store(false).format("yyyy-MM-dd HH:mm:ss")))
+            ).build();
+    CreateIndexResponse createIndexResponse = client.indices().create(createIndexRequest);
+    Assert.assertEquals(Boolean.TRUE, createIndexResponse.acknowledged());
+
+    // 插入数据到索引中
+    datumList.forEach(datum -> {
         try {
-            DeleteIndexResponse deleteIndexResponse = client.indices().delete(DeleteIndexRequest.of(o -> o.index(IndexDemo)));
-            Assert.assertTrue(deleteIndexResponse.acknowledged());
-        } catch (Exception ex) {
-            // 忽略索引不存在
+            IndexRequest<Map<String, Object>> indexRequest = IndexRequest.of(o -> {
+                return o.index(index)
+                        .id(String.valueOf(datum.get("id"))) // 设置文档 ID
+                        .document(datum)
+                        .refresh(Refresh.True); // 设置文档内容
+            });
+            IndexResponse indexResponse = client.index(indexRequest);
+            Assert.assertEquals(Result.Created, indexResponse.result());
+        } catch (IOException e) {
+            e.printStackTrace();
+            Assert.fail(e.getMessage());
         }
+    });
+}
+```
 
-        // 创建索引
-        List<String[]> datumList1 = Arrays.asList(
-                new String[]{"1", "a"},
-                new String[]{"2", "a"},
-                new String[]{"3", "a1"},
-                new String[]{"4", "a2"}
-        );
-        CreateIndexRequest createIndexRequest = new CreateIndexRequest.Builder().index(IndexDemo)
-                .mappings(m -> m
-                        .properties("id", p -> p.long_(l -> l.store(false)))
-                        .properties("content", p -> p.text(t -> t
-                                .store(false)
-                                .analyzer("ik_max_word")
-                        ))).build();
-        CreateIndexResponse createIndexResponse = client.indices().create(createIndexRequest);
-        Assert.assertEquals(Boolean.TRUE, createIndexResponse.acknowledged());
 
-        // 插入数据到索引中
-        datumList1.forEach(datum -> {
-            try {
-                IndexRequest<Document> indexRequest = IndexRequest.of(o -> {
-                    return o.index(IndexDemo)
-                            .id(datum[0]) // 设置文档 ID
-                            .document(new Document(datum[0], datum[1]))
-                            .refresh(Refresh.True); // 设置文档内容
-                });
-                IndexResponse indexResponse = client.index(indexRequest);
-                Assert.assertEquals(Result.Created, indexResponse.result());
-            } catch (IOException e) {
-                e.printStackTrace();
-                Assert.fail(e.getMessage());
-            }
-        });
 
-        // region 批量插入
+#### 批量插入
 
-        List<BulkOperation> operations = new ArrayList<>();
-
-        for (String[] datum : datumList1) {
-            operations.add(BulkOperation.of(b -> b
-                    .index(i -> i
-                            .index(IndexDemo)
-                            .id(datum[0]) // 设置文档 ID
-                            .document(new Document(datum[0], datum[1])) // 设置文档内容
-                    )
-            ));
-        }
-
-        BulkRequest request = BulkRequest.of(b -> b
-                .operations(operations)
-                .refresh(Refresh.True) // 设置刷新策略为 IMMEDIATE
-        );
-
-        // 执行批量请求
-        BulkResponse response = client.bulk(request);
-
-        /*// 检查是否有错误
-        if (response.errors()) {
-            System.err.println("批量插入中有错误发生: " + response.items());
-        } else {
-            System.out.println("批量插入成功，共插入 " + response.items().size() + " 个文档");
-        }*/
-        Assert.assertFalse(response.errors());
-        Assert.assertEquals(datumList1.size(), response.items().size());
-
-        // endregion
+```java
+/**
+ * 测试批量插入
+ *
+ * @throws IOException
+ */
+@Test
+public void testBulkInsertion() throws IOException {
+    String index = "demo_index";
+    // 删除索引
+    try {
+        String finalIndex = index;
+        DeleteIndexResponse deleteIndexResponse = client.indices().delete(DeleteIndexRequest.of(o -> o.index(finalIndex)));
+        Assert.assertTrue(deleteIndexResponse.acknowledged());
+    } catch (Exception ex) {
+        // 忽略索引不存在
     }
 
-    // 定义一个简单的文档类来映射数据
-    @Getter
-    static class Document {
-        private String id;
-        private String content;
+    // 创建索引
+    List<Map<String, Object>> datumList = new ArrayList<Map<String, Object>>() {{
+        add(new HashMap<String, Object>() {{
+            put("id", "1");
+            put("content", "a");
+            DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            put("createTime", dateTimeFormatter.format(LocalDateTime.now()));
+        }});
+        add(new HashMap<String, Object>() {{
+            put("id", "2");
+            put("content", "a");
+            DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            put("createTime", dateTimeFormatter.format(LocalDateTime.now()));
+        }});
+        add(new HashMap<String, Object>() {{
+            put("id", "3");
+            put("content", "a1");
+            DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            put("createTime", dateTimeFormatter.format(LocalDateTime.now()));
+        }});
+        add(new HashMap<String, Object>() {{
+            put("id", "4");
+            put("content", "a2");
+            DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            put("createTime", dateTimeFormatter.format(LocalDateTime.now()));
+        }});
+    }};
 
-        public Document(String id, String content) {
-            this.id = id;
-            this.content = content;
-        }
+    // region 批量插入
+
+    List<BulkOperation> operations = new ArrayList<>();
+
+    for (Map<String, Object> datum : datumList) {
+        String finalIndex3 = index;
+        operations.add(BulkOperation.of(b -> b
+                .index(i -> i
+                        .index(finalIndex3)
+                        .id(String.valueOf(datum.get("id"))) // 设置文档 ID
+                        .document(datum) // 设置文档内容
+                )
+        ));
     }
+
+    List<BulkOperation> finalOperations1 = operations;
+    BulkRequest request = BulkRequest.of(b -> b
+            .operations(finalOperations1)
+            .refresh(Refresh.True) // 设置刷新策略为 IMMEDIATE
+    );
+
+    // 执行批量请求
+    BulkResponse response = client.bulk(request);
+    Assert.assertFalse(response.errors());
+    Assert.assertEquals(datumList.size(), response.items().size());
+    response.items().forEach(o -> Assert.assertNull(o.error()));
+
+    // endregion
+
+    // region 测试批量插入错误处理
+
+    index = "demo_index_errors";
+    try {
+        String finalIndex2 = index;
+        DeleteIndexResponse deleteIndexResponse = client.indices().delete(DeleteIndexRequest.of(o -> o.index(finalIndex2)));
+        Assert.assertTrue(deleteIndexResponse.acknowledged());
+    } catch (Exception ex) {
+        // 忽略索引不存在
+    }
+
+    CreateIndexRequest createIndexRequest = new CreateIndexRequest.Builder().index(index)
+            .mappings(m -> m
+                    .properties("id", p -> p.long_(l -> l.store(false)))
+                    .properties("content", p -> p.text(t -> t
+                            .store(false)
+                            .analyzer("ik_max_word")))
+                    // LocalDateTime 类型没有指定 format 是为了测试批量插入时错误
+                    .properties("createTime", p -> p.date(t -> t.store(false)))
+            ).build();
+    CreateIndexResponse createIndexResponse = client.indices().create(createIndexRequest);
+    Assert.assertEquals(Boolean.TRUE, createIndexResponse.acknowledged());
+
+    operations = new ArrayList<>();
+
+    for (Map<String, Object> datum : datumList) {
+        String finalIndex4 = index;
+        operations.add(BulkOperation.of(b -> b
+                .index(i -> i
+                        .index(finalIndex4)
+                        .id(String.valueOf(datum.get("id"))) // 设置文档 ID
+                        .document(datum) // 设置文档内容
+                )
+        ));
+    }
+
+    List<BulkOperation> finalOperations = operations;
+    request = BulkRequest.of(b -> b
+            .operations(finalOperations)
+            .refresh(Refresh.True) // 设置刷新策略为 IMMEDIATE
+    );
+
+    // 执行批量请求
+    response = client.bulk(request);
+    Assert.assertTrue(response.errors());
+    Assert.assertEquals(datumList.size(), response.items().size());
+    response.items().forEach(o -> Assert.assertNotNull(o.error()));
+    // reason 错误原因样例：failed to parse field [createTime] of type [date] in document with id '1'. Preview of field's value: '2025-06-02 19:32:17'
+    response.items().forEach(o -> Assert.assertTrue(o.error().reason().contains("failed to parse field [createTime] of type [date] in document with id")));
+
+    // endregion
+}
+```
+
+
+
+#### LocalDateTime 类型处理
+
+```java
+/**
+ * 测试 LocalDateTime 类型处理
+ *
+ * @throws IOException
+ */
+@Test
+public void testLocalDateTimeDataType() throws IOException {
+    // region 测试自定义 Bean 中的 LocalDateTime 类型处理
+
+    String index = "demo_index";
+    // 删除索引
+    try {
+        DeleteIndexResponse deleteIndexResponse = client.indices().delete(DeleteIndexRequest.of(o -> o.index(index)));
+        Assert.assertTrue(deleteIndexResponse.acknowledged());
+    } catch (Exception ex) {
+        // 忽略索引不存在
+    }
+
+    // 创建索引
+    List<MyBean> datumList = new ArrayList<MyBean>() {{
+        add(new MyBean(1L, "a", LocalDateTime.now()));
+        add(new MyBean(2L, "a", LocalDateTime.now()));
+        add(new MyBean(3L, "a1", LocalDateTime.now()));
+        add(new MyBean(4L, "a2", LocalDateTime.now()));
+    }};
+
+    CreateIndexRequest createIndexRequest = new CreateIndexRequest.Builder().index(index)
+            .mappings(m -> m
+                    .properties("id", p -> p.long_(l -> l.store(false)))
+                    .properties("content", p -> p.text(t -> t
+                            .store(false)
+                            .analyzer("ik_max_word")))
+                    // 用于测试 LocalDateTime 类型
+                    .properties("createTime", p -> p.date(t -> t.store(false).format("yyyy-MM-dd HH:mm:ss")))
+            ).build();
+    CreateIndexResponse createIndexResponse = client.indices().create(createIndexRequest);
+    Assert.assertEquals(Boolean.TRUE, createIndexResponse.acknowledged());
+
+    // 插入数据到索引中
+    datumList.forEach(datum -> {
+        try {
+            IndexRequest<MyBean> indexRequest = IndexRequest.of(o -> {
+                return o.index(index)
+                        .id(String.valueOf(datum.getId())) // 设置文档 ID
+                        .document(datum)
+                        .refresh(Refresh.True); // 设置文档内容
+            });
+            IndexResponse indexResponse = client.index(indexRequest);
+            Assert.assertEquals(Result.Created, indexResponse.result());
+        } catch (IOException e) {
+            e.printStackTrace();
+            Assert.fail(e.getMessage());
+        }
+    });
+
+    // endregion
 }
 
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public static class MyBean {
+    private Long id;
+    private String content;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime createTime;
+}
 ```
 
 
@@ -355,4 +538,70 @@ public class ApplicationTests extends AbstractTestSupport {
 详细的`jmh`代码请参考`https://gitee.com/dexterleslie/demonstration/blob/master/elasticsearch/elasticsearch7/elasticsearch-java-transport-client/src/test/java/com/future/demo/elasticsearch/IndividualAndBulkAddPerfComparisonTests.java`
 
 实验结论：批量插入性能高于单条插入性能。
+
+
+
+## 数据类型
+
+### keyword
+
+`keyword` 类型用于存储需要完全匹配的字符串，例如：枚举值（如订单状态：`Unpay`、`Undelivery` 等），ID、代码、标签等，分类字段（如产品类别、用户角色）。与 `text` 类型不同，`keyword` 类型不会启用分析器，不会对值进行分词或处理。
+
+
+
+### text
+
+`text` 是 Elasticsearch 中用于存储和分析文本数据的核心字段类型，专为全文搜索设计。支持对文本内容进行分词、索引和模糊匹配，例如：搜索文章、博客、产品描述等长文本内容。实现关键词搜索、自动补全、拼写纠正等功能。通过分析器（Analyzer）将文本拆分为词项（Terms），便于索引和查询。
+
+
+
+### date
+
+`date` 类型用于存储日期和时间信息，例如订单的付款时间、创建时间等。Elasticsearch 的 `date` 类型支持日期范围查询、日期聚合、日期直方图等操作。
+
+```json
+{
+  "mappings": {
+    "properties": {
+      "payTime": {
+        "type": "date",
+        "format": "yyyy-MM-dd HH:mm:ss||epoch_millis",  // 支持多种格式
+        "null_value": null  // 可选：指定 null 值的处理方式
+      }
+    }
+  }
+}
+```
+
+date 类型支持多种日期格式，例如：
+
+- `yyyy-MM-dd HH:mm:ss`（如 `2023-10-01 12:00:00`）
+- `epoch_millis`（Unix 时间戳，毫秒级）
+- `strict_date_optional_time`（严格格式，支持 ISO 8601）
+
+可以通过 `format` 参数指定一个或多个格式。
+
+
+
+## Rest API
+
+### count
+
+>统计索引文档总数。
+
+```json
+GET /t_order/_count
+{
+  "query": {
+    "match_all": {}
+  }
+}
+
+GET /t_order_detail/_count
+{
+  "query": {
+    "match_all": {}
+  }
+}
+```
 
