@@ -1,0 +1,40 @@
+version: "3.1"
+
+services:
+  elasticsearch:
+    image: elasticsearch:8.1.2
+    environment:
+      - ES_JAVA_OPTS=-Xms12g -Xmx12g
+      - discovery.type=single-node
+      # http.cors表示允许elasticsearch-head连接并管理
+      - http.cors.enabled=true
+      - http.cors.allow-origin=*
+      - TZ=Asia/Shanghai
+      # 禁用ssl通讯，否则需要配置证书才能够连接9200端口
+      # https://www.elastic.co/guide/en/elastic-stack-get-started/current/get-started-stack-docker.html#run-docker-secure
+      - xpack.security.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      - xpack.security.transport.ssl.enabled=false
+    volumes:
+      - ./elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+    restart: unless-stopped
+    network_mode: host
+  kibana:
+    image: kibana:8.1.2
+    environment:
+      ELASTICSEARCH_HOSTS: http://localhost:9200
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      - elasticsearch
+
+  zookeeper:
+    image: zookeeper:3.8.4
+    environment:
+      - TZ=Asia/Shanghai
+      - JVMFLAGS=-Xmx512m -Xms512m -server
+      # 禁用 zookeeper AdminServer
+      # https://hub.docker.com/_/zookeeper
+      - ZOO_ADMINSERVER_ENABLED=false
+    restart: unless-stopped
+    network_mode: host

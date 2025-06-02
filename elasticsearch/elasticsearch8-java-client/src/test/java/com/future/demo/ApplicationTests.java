@@ -295,6 +295,7 @@ public class ApplicationTests extends AbstractTestSupport {
     public static class MyBean {
         private Long id;
         private String content;
+        // 处理 LocalDateTime 类型
         @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
         private LocalDateTime createTime;
     }

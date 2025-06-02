@@ -1,0 +1,4 @@
+cluster.name: "docker-cluster"
+network.host: 0.0.0.0
+cluster.max_shards_per_node: 2000
+bootstrap.memory_lock: true

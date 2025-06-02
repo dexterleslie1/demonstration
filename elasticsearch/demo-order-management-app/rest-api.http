@@ -1,0 +1,21 @@
+### 根据订单 ID 查询订单信息
+GET http://localhost:8080/api/v1/order/getById
+
+### 用户查询指定日期范围+所有状态的订单
+GET http://localhost:8080/api/v1/order/listByUserIdAndWithoutStatus
+
+### 用户查询指定日期范围+指定状态的订单
+GET http://localhost:8080/api/v1/order/listByUserIdAndStatus
+
+### 商家查询指定日期范围+所有状态的订单
+GET http://localhost:8080/api/v1/order/listByMerchantIdAndWithoutStatus
+
+### 商家查询指定日期范围+指定状态的订单
+GET http://localhost:8080/api/v1/order/listByMerchantIdAndStatus
+
+### 批量初始化订单数据
+GET http://localhost:8080/api/v1/order/initInsertBatch
+Accept: application/json
+
+### 初始化id缓存辅助数据
+GET http://localhost:8080/api/v1/order/init

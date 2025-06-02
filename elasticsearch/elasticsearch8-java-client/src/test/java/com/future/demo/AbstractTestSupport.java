@@ -27,6 +27,7 @@ public class AbstractTestSupport {
         ).build();
 
         // 2. 创建Transport层（序列化/反序列化）
+        // 支持 LocalDateTime 类型处理
         JacksonJsonpMapper mapper = new JacksonJsonpMapper(new ObjectMapper().registerModule(new JavaTimeModule()));
         transport = new RestClientTransport(
                 restClient,

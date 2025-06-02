@@ -175,9 +175,14 @@ docker compose up -d
 
 #### 基本配置和使用
 
-POM 配置
+非 SpringBoot 项目 POM 配置如下：
 
 ```xml
+<properties>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
+</properties>
+
 <dependency>
     <groupId>co.elastic.clients</groupId>
     <artifactId>elasticsearch-java</artifactId>
@@ -187,6 +192,36 @@ POM 配置
     <groupId>com.fasterxml.jackson.core</groupId>
     <artifactId>jackson-databind</artifactId>
     <version>2.18.1</version>
+</dependency>
+<dependency>
+    <groupId>com.fasterxml.jackson.datatype</groupId>
+    <artifactId>jackson-datatype-jsr310</artifactId>
+    <version>2.18.1</version>
+</dependency>
+<dependency>
+    <groupId>org.projectlombok</groupId>
+    <artifactId>lombok</artifactId>
+    <version>1.18.36</version>
+</dependency>
+```
+
+SpringBoot 项目 POM 配置如下：
+
+```xml
+<properties>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
+</properties>
+
+<dependency>
+    <groupId>co.elastic.clients</groupId>
+    <artifactId>elasticsearch-java</artifactId>
+    <version>8.1.2</version> <!-- 版本号应与Elasticsearch服务器版本一致 -->
+</dependency>
+<dependency>
+    <groupId>jakarta.json</groupId>
+    <artifactId>jakarta.json-api</artifactId>
+    <version>2.0.1</version>
 </dependency>
 <dependency>
     <groupId>org.projectlombok</groupId>
@@ -449,7 +484,115 @@ public void testBulkInsertion() throws IOException {
 
 
 
+#### `term` 等值查询
+
+```java
+/**
+ * 用户查询指定日期范围+指定状态的订单
+ *
+ * @param userId
+ * @param status
+ * @param startTime
+ * @param endTime
+ * @return
+ */
+public List<OrderDTO> listByUserIdAndStatus(
+        Long userId,
+        Status status,
+        LocalDateTime startTime,
+        LocalDateTime endTime) throws IOException {
+
+    // 1. 构建查询条件
+    DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    Query boolQuery = QueryBuilders.bool()
+            .filter(QueryBuilders.term().field("userId").value(userId).build()._toQuery())
+            .filter(QueryBuilders.term().field("status").value(status.name()).build()._toQuery())
+            .filter(QueryBuilders.terms().field("deleteStatus")
+                    .terms(t -> t.value(Arrays.stream(DeleteStatus.values()).map(o -> FieldValue.of(o.name())).collect(Collectors.toList())))
+                    .build()._toQuery())
+            .filter(QueryBuilders.range()
+                    .field("createTime")
+                    .gte(JsonData.of(dateTimeFormatter.format(startTime)))
+                    .lte(JsonData.of(dateTimeFormatter.format(endTime)))
+                    .build()._toQuery()
+            )
+            .build()._toQuery();
+
+    // 2. 构建排序和分页
+    SearchRequest searchRequest = SearchRequest.of(s -> s
+            .index("t_order")
+            .query(boolQuery)
+            .sort(so -> so.field(f -> f.field("id").order(SortOrder.Desc)))
+            .from(0)
+            .size(20)
+    );
+
+    // 3. 执行查询
+    SearchResponse<OrderModel> response = client.search(searchRequest, OrderModel.class);
+
+    // 4. 解析结果
+    List<OrderModel> orderModelList = response.hits().hits().stream()
+            .map(Hit::source)
+            .collect(Collectors.toList());
+
+    return this.convertOrderEntityToOrderDTO(orderModelList);
+}
+```
+
+
+
+#### `term in` 查询
+
+```java
+private List<OrderDetailModel> listOrderDetailByOrderIds(List<Long> orderIdList) throws IOException {
+    // 1. 构建查询条件
+    Query termsQuery = QueryBuilders.terms()
+            .field("orderId")
+            .terms(t -> t.value(orderIdList.stream().map(FieldValue::of).collect(Collectors.toList())))
+            .build()._toQuery();
+
+    // 2. 构建排序和分页
+    SearchRequest searchRequest = SearchRequest.of(s -> s
+            .index("t_order_detail")
+            .query(termsQuery)
+    );
+
+    // 3. 执行查询
+    SearchResponse<OrderDetailModel> response = client.search(searchRequest, OrderDetailModel.class);
+
+    // 4. 解析结果
+    return response.hits().hits().stream()
+            .map(Hit::source)
+            .collect(Collectors.toList());
+}
+```
+
+
+
 #### LocalDateTime 类型处理
+
+POM 配置添加如下依赖
+
+```xml
+<dependency>
+    <groupId>com.fasterxml.jackson.datatype</groupId>
+    <artifactId>jackson-datatype-jsr310</artifactId>
+    <version>2.18.1</version>
+</dependency>
+```
+
+客户端初始化添加如下逻辑：
+
+```java
+// 支持 LocalDateTime 类型处理
+JacksonJsonpMapper mapper = new JacksonJsonpMapper(new ObjectMapper().registerModule(new JavaTimeModule()));
+transport = new RestClientTransport(
+        restClient,
+        mapper // 使用Jackson作为JSON处理器
+);
+```
+
+测试
 
 ```java
 /**
@@ -516,6 +659,7 @@ public void testLocalDateTimeDataType() throws IOException {
 public static class MyBean {
     private Long id;
     private String content;
+    // 处理 LocalDateTime 类型
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;
 }
