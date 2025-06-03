@@ -26,6 +26,20 @@ create table if not exists t_order(
 /*create index idx_order_userId_createTime_deleteStatus_status on t_order(userId,createTime,deleteStatus,status);
 create index idx_order_status_deleteStatus_createTime_id on t_order(status, deleteStatus, createTime, id);*/
 
+/* 根据用户ID查询订单列表索引表 */
+create table if not exists t_order_index_list_by_userid(
+    id              bigint not null primary key,
+    userId          bigint not null,
+    `status`        ENUM('Unpay','Undelivery','Unreceive','Received','Canceled') NOT NULL COMMENT '订单状态：未支付、未发货、未收货、已签收、买家取消',
+    deleteStatus    ENUM('Normal','Deleted') NOT NULL COMMENT '订单删除状态',
+    createTime      datetime not null,
+    orderId         bigint not null
+) engine=innodb character set utf8mb4 collate utf8mb4_general_ci;
+
+/* 订单修改时，用于协助快速修改索引数据 */
+create index idx_t_order_index_list_by_userid_on_orderId on t_order_index_list_by_userid(orderId);
+create index idx_t_order_index_list_by_userid_on_x1 on t_order_index_list_by_userid(userId,deleteStatus,`status`,createTime);
+
 create table if not exists t_order_detail (
     id          bigint not null primary key,
 
