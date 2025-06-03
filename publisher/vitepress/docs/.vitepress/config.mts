@@ -412,6 +412,7 @@ export default defineConfig({
             { text: '计算数据和索引大小', link: '/mysql-n-mariadb/计算数据和索引大小.md' },
             { text: '运行 MySQL 和 MariaDB', link: '/mysql-n-mariadb/运行mysql和mariadb.md' },
             { text: '配置参数', link: '/mysql-n-mariadb/配置参数.md' },
+            { text: '主从配置', link: '/mysql-n-mariadb/主从配置.md' },
           ]
         }
       ],
