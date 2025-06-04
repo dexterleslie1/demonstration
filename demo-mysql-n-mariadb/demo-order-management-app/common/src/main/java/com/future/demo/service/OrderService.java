@@ -200,7 +200,7 @@ public class OrderService {
     /**
      * 协助测试批量建立 listByUserId 索引的性能
      */
-    public void insertBatchOrderIndexListByUesrId() {
+    public void insertBatchOrderIndexListByUserId() {
         List<OrderIndexListByUserIdModel> list = new ArrayList<>();
         for (int i = 0; i < 1000; i++) {
             Long userId = this.orderRandomlyUtil.getUserIdRandomly();

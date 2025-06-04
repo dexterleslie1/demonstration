@@ -67,6 +67,36 @@ begin not atomic
 
         /* create index idx_order1_status_deleteStatus_createTime_id on t_order1(status, deleteStatus, createTime, id); */
 
+        /* 根据用户ID查询订单列表索引表 */
+        SET @table_name = CONCAT('t_order_index_list_by_userid', var_counter);
+        SET @sql = CONCAT(
+            'CREATE TABLE IF NOT EXISTS ', @table_name, ' (',
+            'id              bigint not null primary key,',
+            'userId          bigint not null,',
+            '`status`        ENUM(''Unpay'',''Undelivery'',''Unreceive'',''Received'',''Canceled'') NOT NULL COMMENT ''订单状态：未支付、未发货、未收货、已签收、买家取消'',',
+            'deleteStatus    ENUM(''Normal'',''Deleted'') NOT NULL COMMENT ''订单删除状态'',',
+            'createTime      datetime not null,',
+            'orderId         bigint not null',
+            ') ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;'
+        );
+        -- 准备并执行动态 SQL
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+
+        /* 订单修改时，用于协助快速修改索引数据 */
+        set @index_name = concat('idx_t_order_index_list_by_userid_on_orderId_', var_counter);
+        set @sql = concat('create index ', @index_name, ' on ', @table_name, '(orderId);');
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+
+        set @index_name = concat('idx_t_order_index_list_by_userid_on_x1_', var_counter);
+        set @sql = concat('create index ', @index_name, ' on ', @table_name, '(userId,deleteStatus,`status`,createTime);');
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+
         SET @table_name = CONCAT('t_order_detail', var_counter);
         -- 动态生成 SQL 语句
         SET @sql = CONCAT(

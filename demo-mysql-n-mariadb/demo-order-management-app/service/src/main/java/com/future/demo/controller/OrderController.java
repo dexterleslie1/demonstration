@@ -148,7 +148,7 @@ public class OrderController {
      */
     @GetMapping(value = "initInsertBatchOrderIndexListByUserId")
     public ObjectResponse<String> initInsertBatchOrderIndexListByUserId() {
-        this.orderService.insertBatchOrderIndexListByUesrId();
+        this.orderService.insertBatchOrderIndexListByUserId();
         return ResponseUtils.successObject("成功批量初始化listByUserId索引");
     }
 

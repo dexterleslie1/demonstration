@@ -5,6 +5,7 @@ import com.future.common.exception.BusinessException;
 import com.future.demo.dto.OrderDTO;
 import com.future.demo.dto.OrderDetailDTO;
 import com.future.demo.entity.*;
+import com.future.demo.mapper.IndexMapper;
 import com.future.demo.mapper.OrderDetailMapper;
 import com.future.demo.mapper.OrderMapper;
 import com.future.demo.mapper.ProductMapper;
@@ -90,6 +91,8 @@ public class OrderService {
     OrderDetailMapper orderDetailMapper;
     @Resource
     ProductMapper productMapper;
+    @Resource
+    IndexMapper indexMapper;
 
     // 基于数据库实现商品秒杀
     public void createOrderBasedDB(Long userId, Long productId, Integer amount) throws Exception {
@@ -212,6 +215,35 @@ public class OrderService {
             return orderDetailModel;
         }).collect(Collectors.toList());
         this.orderDetailMapper.insertBatch(orderDetailModelList);
+    }
+
+    /**
+     * 协助测试批量建立 listByUserId 索引的性能
+     */
+    public void insertBatchOrderIndexListByUserId() {
+        List<OrderIndexListByUserIdModel> list = new ArrayList<>();
+        for (int i = 0; i < 1000; i++) {
+            Long userId = this.orderRandomlyUtil.getUserIdRandomly();
+            // 创建订单
+            OrderIndexListByUserIdModel model = new OrderIndexListByUserIdModel();
+
+            Long id = this.snowflakeService.getId("orderIndexListByUserId").getId();
+            model.setId(id);
+            Long orderId = this.snowflakeService.getId("order").getId();
+            model.setOrderId(orderId);
+
+            model.setUserId(userId);
+            LocalDateTime createTime = OrderRandomlyUtil.getCreateTimeRandomly();
+            model.setCreateTime(createTime);
+
+            DeleteStatus deleteStatus = OrderRandomlyUtil.getDeleteStatusRandomly();
+            model.setDeleteStatus(deleteStatus);
+
+            Status status = OrderRandomlyUtil.getStatusRandomly();
+            model.setStatus(status);
+            list.add(model);
+        }
+        this.indexMapper.insertBatchOrderIndexListByUserId(list);
     }
 
     /**

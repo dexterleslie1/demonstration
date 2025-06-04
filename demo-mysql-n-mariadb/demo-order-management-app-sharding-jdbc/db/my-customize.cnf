@@ -14,3 +14,17 @@ innodb_file_per_table=1
 log_error = error.log
 # `show engine innodb status\G`命令的`TRANSACTIONS`栏目中会打印当前等待状态的锁对应的表中详细的持有锁信息
 innodb_status_output_locks=ON
+
+# 启用binlog
+log_bin
+# 推荐使用 ROW 格式，但你也可以选择 STATEMENT 或 MIXED
+binlog_format = mixed
+
+# 不设置此参数时，在没有配置 slave 时不会自动删除多余日志
+slave_connections_needed_for_purge = 0
+# 日志总大小限制为 10g
+max_binlog_total_size = 10g
+
+# 设置单个 binlog 文件的最大大小
+max_binlog_size = 1g
+server-id = 10001

@@ -136,6 +136,17 @@ public class OrderController {
     }
 
     /**
+     * 协助测试批量建立 listByUserId 索引的性能
+     *
+     * @return
+     */
+    @GetMapping(value = "initInsertBatchOrderIndexListByUserId")
+    public ObjectResponse<String> initInsertBatchOrderIndexListByUserId() {
+        this.orderService.insertBatchOrderIndexListByUserId();
+        return ResponseUtils.successObject("成功批量初始化listByUserId索引");
+    }
+
+    /**
      * 初始化id缓存辅助数据
      *
      * @return
