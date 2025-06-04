@@ -512,6 +512,22 @@ ulimit -n && cat /proc/sys/fs/file-max
 
 
 
+### `fs.aio-max-nr`
+
+**fs.aio-max-nr** 是 Linux 系统中的一个内核参数，用于限制系统上可以同时进行的异步 I/O 操作的最大数目。**fs.aio-max-nr** 决定了系统级别所有进程可以同时拥有的异步 I/O 请求数量。当系统中的异步 I/O 请求数达到该参数设定的最大值时，新的异步 I/O 请求将无法被创建，可能会导致应用程序报错或性能下降。
+
+```sh
+# 切换到 root 用户
+sudo -i
+
+echo "fs.aio-max-nr = 1224634" >> /etc/sysctl.conf
+
+# 加载新的 sysctl.conf 配置
+sysctl -p
+```
+
+
+
 ## SSH 服务
 
 
