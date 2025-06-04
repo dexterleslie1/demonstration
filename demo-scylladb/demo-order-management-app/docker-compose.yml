@@ -1,0 +1,46 @@
+version: "3.1"
+
+services:
+  service:
+    build:
+      context: ./service
+      dockerfile: Dockerfile
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-order-management-app-service
+    environment:
+      - JAVA_OPTS=-Xmx1g
+      - TZ=Asia/Shanghai
+
+  node1:
+    build:
+      context: ./
+      dockerfile: Dockerfile-scylladb
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-order-management-app-scylladb
+    environment:
+      - TZ=Asia/Shanghai
+    command: "--seeds node1,node2,node3 --memory 512M"
+    ports:
+      - "9042:9042"
+  node2:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-order-management-app-scylladb
+    environment:
+      - TZ=Asia/Shanghai
+    command: "--seeds node1,node2,node3 --memory 512M"
+    ports:
+      - "9043:9042"  # 映射到不同端口，避免冲突
+  node3:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-order-management-app-scylladb
+    environment:
+      - TZ=Asia/Shanghai
+    command: "--seeds node1,node2,node3 --memory 512M"
+    ports:
+      - "9045:9042"  # 映射到不同端口，避免冲突
+
+  zookeeper:
+    image: zookeeper:3.8.4
+    environment:
+      - TZ=Asia/Shanghai
+      - JVMFLAGS=-Xmx512m -Xms512m -server
+      # 禁用 zookeeper AdminServer
+      # https://hub.docker.com/_/zookeeper
+      - ZOO_ADMINSERVER_ENABLED=false
+    network_mode: host

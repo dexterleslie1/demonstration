@@ -1,0 +1,13 @@
+version: "3.1"
+
+services:
+    scylladb:
+      image: scylladb/scylla:4.4.8
+      environment:
+        - TZ=Asia/Shanghai
+      # 设置本机监听网卡ip地址，否则外部无法连接
+      command: '--listen-address=${listen_address}'
+      volumes:
+        - ./init.cql:/scripts/data.cql:ro
+        - ./scylla.yaml:/etc/scylla/scylla.yaml:ro
+      network_mode: host

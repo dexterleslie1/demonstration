@@ -1,0 +1,4 @@
+FROM scylladb/scylla:4.4.8
+
+COPY scylla.yaml /etc/scylla/scylla.yaml
+COPY init.cql /scripts/data.cql

@@ -1,0 +1,132 @@
+package com.future.demo.controller;
+
+import com.future.common.exception.BusinessException;
+import com.future.common.http.ListResponse;
+import com.future.common.http.ObjectResponse;
+import com.future.common.http.ResponseUtils;
+import com.future.demo.dto.OrderDTO;
+import com.future.demo.entity.DeleteStatus;
+import com.future.demo.entity.Status;
+import com.future.demo.service.OrderService;
+import com.future.demo.util.OrderRandomlyUtil;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import javax.annotation.Resource;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+@RestController
+@RequestMapping("/api/v1/order")
+@Slf4j
+public class OrderController {
+    @Resource
+    OrderService orderService;
+    @Resource
+    OrderRandomlyUtil orderRandomlyUtil;
+//    @Resource
+//    IdCacheAssistantService idCacheAssistantService;
+
+    /**
+     * 根据订单 ID 查询订单信息
+     *
+     * @return
+     */
+    @GetMapping(value = "getById")
+    public ObjectResponse<OrderDTO> getById() {
+//        BigInteger orderId = this.idCacheAssistantService.getRandomly();
+        BigDecimal orderId = null;
+        OrderDTO orderDTO = this.orderService.getById(orderId);
+        return ResponseUtils.successObject(orderDTO);
+    }
+
+    /**
+     * 用户查询指定日期范围+所有状态的订单
+     *
+     * @return
+     */
+    @GetMapping(value = "listByUserIdAndWithoutStatus")
+    public ListResponse<OrderDTO> listByUserIdAndWithoutStatus() {
+        Long userId = this.orderRandomlyUtil.getUserIdRandomly();
+        LocalDateTime createTime = OrderRandomlyUtil.getCreateTimeRandomly();
+        LocalDateTime endTime = createTime.plusMonths(1);
+        return ResponseUtils.successList(
+                this.orderService.listByUserIdAndWithoutStatus(
+                        userId, createTime, endTime));
+    }
+
+    /**
+     * 用户查询指定日期范围+指定状态的订单
+     *
+     * @return
+     */
+    @GetMapping(value = "listByUserIdAndStatus")
+    public ListResponse<OrderDTO> listByUserIdAndStatus() {
+        Long userId = this.orderRandomlyUtil.getUserIdRandomly();
+        LocalDateTime createTime = OrderRandomlyUtil.getCreateTimeRandomly();
+        LocalDateTime endTime = createTime.plusMonths(1);
+        Status status = OrderRandomlyUtil.getStatusRandomly();
+        return ResponseUtils.successList(
+                this.orderService.listByUserIdAndStatus(
+                        userId, status, createTime, endTime));
+    }
+
+    /**
+     * 商家查询指定日期范围+所有状态的订单
+     *
+     * @return
+     */
+    @GetMapping(value = "listByMerchantIdAndWithoutStatus")
+    public ListResponse<OrderDTO> listByMerchantIdAndWithoutStatus() {
+        Long merchantId = this.orderRandomlyUtil.getMerchantIdRandomly();
+        LocalDateTime createTime = OrderRandomlyUtil.getCreateTimeRandomly();
+        LocalDateTime endTime = createTime.plusMonths(1);
+        DeleteStatus deleteStatus = OrderRandomlyUtil.getDeleteStatusRandomly();
+        return ResponseUtils.successList(
+                this.orderService.listByMerchantIdAndWithoutStatus(
+                        merchantId, deleteStatus, createTime, endTime));
+    }
+
+    /**
+     * 商家查询指定日期范围+指定状态的订单
+     *
+     * @return
+     */
+    @GetMapping(value = "listByMerchantIdAndStatus")
+    public ListResponse<OrderDTO> listByMerchantIdAndStatus() {
+        Long merchantId = this.orderRandomlyUtil.getMerchantIdRandomly();
+        LocalDateTime createTime = OrderRandomlyUtil.getCreateTimeRandomly();
+        LocalDateTime endTime = createTime.plusMonths(1);
+        DeleteStatus deleteStatus = OrderRandomlyUtil.getDeleteStatusRandomly();
+        Status status = OrderRandomlyUtil.getStatusRandomly();
+        return ResponseUtils.successList(
+                this.orderService.listByMerchantIdAndStatus(
+                        merchantId, status, deleteStatus, createTime, endTime));
+    }
+
+    /**
+     * 批量初始化订单数据
+     *
+     * @return
+     */
+    @GetMapping(value = "initInsertBatch")
+    public ObjectResponse<String> initInsertBatch() throws BusinessException {
+        this.orderService.insertBatch();
+        ObjectResponse<String> response = new ObjectResponse<>();
+        response.setData("成功批量初始化订单");
+        return response;
+    }
+
+    /**
+     * 协助测试批量建立 listByUserId 索引的性能
+     *
+     * @return
+     */
+    @GetMapping(value = "initInsertBatchOrderIndexListByUserId")
+    public ObjectResponse<String> initInsertBatchOrderIndexListByUserId() throws BusinessException {
+        this.orderService.insertBatchOrderIndexListByUserId();
+        return ResponseUtils.successObject("成功批量初始化listByUserId索引");
+    }
+}
