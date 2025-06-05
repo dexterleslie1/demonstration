@@ -53,6 +53,7 @@ export default defineConfig({
           { text: 'Zookeeper', link: '/zookeeper/README.md' },
           { text: 'ElasticSearch', link: '/elasticsearch/README.md' },
           { text: 'Cassandra', link: '/cassandra/README.md' },
+          { text: 'ScyllaDB', link: '/scylladb/README.md' },
           { text: 'RabbitMQ', link: '/rabbitmqt/README.md' },
           { text: 'RocketMQ', link: '/rocketmq/README.md' },
         ]

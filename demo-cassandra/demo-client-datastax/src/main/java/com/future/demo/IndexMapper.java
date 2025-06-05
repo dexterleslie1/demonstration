@@ -1,8 +1,7 @@
-package com.future.demo.mapper;
+package com.future.demo;
 
 import com.datastax.driver.core.*;
 import com.future.common.exception.BusinessException;
-import com.future.demo.entity.OrderIndexListByUserIdModel;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -39,7 +38,7 @@ public class IndexMapper {
             BoundStatement bound = preparedStatementInsert.bind(
                     model.getUserId(),
                     Date.from(model.getCreateTime().atZone(zoneId).toInstant()),
-                    model.getStatus().name(),
+                    model.getStatus(),
                     model.getOrderId()
             );
             batch = batch.add(bound);

@@ -1,4 +1,5 @@
-FROM scylladb/scylla:4.4.8
+#FROM scylladb/scylla:4.4.8
+FROM scylladb/scylla:2025.1.2
 
 COPY scylla.yaml /etc/scylla/scylla.yaml
 COPY init.cql /scripts/data.cql

@@ -1,12 +1,11 @@
 package com.future.demo.service;
 
+import com.datastax.driver.core.*;
 import com.future.common.exception.BusinessException;
 import com.future.demo.dto.OrderDTO;
 import com.future.demo.dto.OrderDetailDTO;
-import com.future.demo.entity.DeleteStatus;
-import com.future.demo.entity.OrderDetailModel;
-import com.future.demo.entity.OrderModel;
-import com.future.demo.entity.Status;
+import com.future.demo.entity.*;
+import com.future.demo.mapper.IndexMapper;
 import com.future.demo.mapper.OrderDetailMapper;
 import com.future.demo.mapper.OrderMapper;
 import com.future.demo.util.OrderRandomlyUtil;
@@ -38,6 +37,10 @@ public class OrderService {
     OrderRandomlyUtil orderRandomlyUtil;
     @Autowired
     SnowflakeService snowflakeService;
+    @Resource
+    Session session;
+
+    private PreparedStatement preparedStatementUpdateIncreaseCount;
 
     @PostConstruct
     public void init() throws BusinessException {
@@ -64,12 +67,18 @@ public class OrderService {
 //        }
 //
 //        // endregion
+
+        String cql = "update t_count set count=count+? where flag=?";
+        preparedStatementUpdateIncreaseCount = session.prepare(cql);
+        preparedStatementUpdateIncreaseCount.setConsistencyLevel(ConsistencyLevel.LOCAL_ONE);
     }
 
     @Resource
     OrderMapper orderMapper;
     @Resource
     OrderDetailMapper orderDetailMapper;
+    @Resource
+    IndexMapper indexMapper;
 
     public void insertBatch() throws BusinessException {
         List<OrderModel> orderModelList = new ArrayList<>();
@@ -120,6 +129,33 @@ public class OrderService {
             return orderDetailModel;
         }).collect(Collectors.toList());
         this.orderDetailMapper.insertBatch(orderDetailModelList);
+
+        this.updateIncreaseCount("order", orderModelList.size());
+    }
+
+    /**
+     * 协助测试批量建立 listByUserId 索引的性能
+     */
+    public void insertBatchOrderIndexListByUserId() throws BusinessException {
+        List<OrderIndexListByUserIdModel> list = new ArrayList<>();
+        for (int i = 0; i < 100; i++) {
+            Long userId = this.orderRandomlyUtil.getUserIdRandomly();
+            // 创建订单
+            OrderIndexListByUserIdModel model = new OrderIndexListByUserIdModel();
+
+            Long orderId = this.snowflakeService.getId("order").getId();
+            model.setOrderId(orderId);
+
+            model.setUserId(userId);
+            LocalDateTime createTime = OrderRandomlyUtil.getCreateTimeRandomly();
+            model.setCreateTime(createTime);
+
+            Status status = OrderRandomlyUtil.getStatusRandomly();
+            model.setStatus(status);
+            list.add(model);
+        }
+        this.indexMapper.insertBatchOrderIndexListByUserId(list);
+        this.updateIncreaseCount("orderListByUserId", list.size());
     }
 
     /**
@@ -150,7 +186,7 @@ public class OrderService {
             Long userId,
             LocalDateTime startTime,
             LocalDateTime endTime) {
-        List<OrderModel> orderModelList = this.orderMapper.listByUserId(userId, null, null, startTime, endTime, 0L, 20L);
+        List<OrderModel> orderModelList = this.orderMapper.listByUserId(userId, null, startTime, endTime, 0L, 20L);
         return this.convertOrderEntityToOrderDTO(orderModelList);
     }
 
@@ -168,7 +204,7 @@ public class OrderService {
             Status status,
             LocalDateTime startTime,
             LocalDateTime endTime) {
-        List<OrderModel> orderModelList = this.orderMapper.listByUserId(userId, status, null, startTime, endTime, 0L, 20L);
+        List<OrderModel> orderModelList = this.orderMapper.listByUserId(userId, status, startTime, endTime, 0L, 20L);
         return this.convertOrderEntityToOrderDTO(orderModelList);
     }
 
@@ -225,17 +261,18 @@ public class OrderService {
 
         List<OrderDTO> orderDTOList = null;
         if (!orderList.isEmpty()) {
-            List<OrderDetailModel> orderDetailList = this.orderDetailMapper.list(orderIdList);
+//            List<OrderDetailModel> orderDetailList = this.orderDetailMapper.list(orderIdList);
+//
+//            Map<Long, List<OrderDetailModel>> orderDetailGroupByOrderId = orderDetailList.stream().collect(Collectors.groupingBy(OrderDetailModel::getOrderId));
 
-            Map<Long, List<OrderDetailModel>> orderDetailGroupByOrderId = orderDetailList.stream().collect(Collectors.groupingBy(OrderDetailModel::getOrderId));
+            Map<Long, List<OrderDetailModel>> orderDetailGroupByOrderId = null;
 
             orderDTOList = orderList.stream().map(o -> {
                 OrderDTO orderDTO = new OrderDTO();
                 BeanUtils.copyProperties(o, orderDTO);
 
                 Long orderId = o.getId();
-
-                if (orderDetailGroupByOrderId.containsKey(orderId)) {
+                if (orderDetailGroupByOrderId != null && orderDetailGroupByOrderId.containsKey(orderId)) {
                     List<OrderDetailModel> orderDetailListTemporary = orderDetailGroupByOrderId.get(orderId);
                     List<OrderDetailDTO> orderDetailDTOList = orderDetailListTemporary.stream().map(oInternal1 -> {
                         OrderDetailDTO orderDetailDTO = new OrderDetailDTO();
@@ -260,5 +297,13 @@ public class OrderService {
      */
     public void restoreProductStock() throws BusinessException {
 //        this.productMapper.restoreStock(productStock);
+    }
+
+    public void updateIncreaseCount(String flag, long count) throws BusinessException {
+        BoundStatement boundStatement = preparedStatementUpdateIncreaseCount.bind(count, flag);
+        ResultSet resultSet = session.execute(boundStatement);
+        if (!resultSet.wasApplied()) {
+            throw new BusinessException("执行 updateIncreaseCount 失败，count=1");
+        }
     }
 }

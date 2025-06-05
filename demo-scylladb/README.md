@@ -6,6 +6,8 @@
 
 ## 部署
 
+>注意：scylladb 内存参数 `--memory` 不能设置小于1G，否则服务无法启动。
+
 ### Docker 部署单机
 
 >注意：客户端 `com.datastax.cassandra:cassandra-driver-core:3.11.4` 需要使用 `192.168.1.181 ip` 地址连接 scylladb 服务。

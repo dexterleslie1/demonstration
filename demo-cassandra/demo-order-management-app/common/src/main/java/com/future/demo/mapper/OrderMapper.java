@@ -10,7 +10,6 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -24,6 +23,7 @@ public class OrderMapper {
     Session session;
 
     private PreparedStatement preparedStatementInsert;
+    private PreparedStatement preparedStatementListByUserIdAndStatus;
 
     @PostConstruct
     public void init() {
@@ -31,6 +31,14 @@ public class OrderMapper {
                 "VALUES (?, ?, ?, ?, ?)";
         preparedStatementInsert = session.prepare(cql);
         preparedStatementInsert.setConsistencyLevel(ConsistencyLevel.LOCAL_QUORUM);
+
+        StringBuilder builder = new StringBuilder("select order_id from t_order_list_by_userId where user_id=?");
+        builder.append(" and status=?");
+        builder.append(" and create_time>=? and create_time<=?");
+        builder.append(" limit ?");
+        cql = builder.toString();
+        preparedStatementListByUserIdAndStatus = session.prepare(cql);
+        preparedStatementListByUserIdAndStatus.setConsistencyLevel(ConsistencyLevel.LOCAL_ONE);
     }
 
     public void insertBatch(List<OrderModel> orderModelList) throws BusinessException {
@@ -58,39 +66,6 @@ public class OrderMapper {
         if (!result.wasApplied()) {
             throw new BusinessException("t_order 批量插入失败");
         }
-
-        // endregion
-
-//            // region 根据用户ID查询的订单索引表
-//
-//            cql = "INSERT INTO t_order_list_by_userId(id,user_id,create_time,status,delete_status) " +
-//                    "VALUES (?, ?, ?, ?, ?)";
-//
-//            prepared = session.prepare(cql);
-//
-//            // 创建批量语句
-//            batch = new BatchStatement(BatchStatement.Type.LOGGED);
-//
-//            // 添加多个订单到批量语句
-//            for (int i = 0; i < orderModelList.size(); i++) {
-//                OrderModel model = orderModelList.get(i);
-//                BoundStatement bound = prepared.bind(
-//                        model.getId(),
-//                        model.getUserId(),
-//                        model.getCreateTime().atZone(zoneId).toInstant(),
-//                        model.getStatus().name(),
-//                        model.getDeleteStatus().name()
-//                );
-//                batch = batch.add(bound);
-//            }
-//
-//            // 执行批量插入
-//            result = session.execute(batch);
-//            if (!result.wasApplied()) {
-//                throw new BusinessException("t_order_list_by_userId 批量插入失败");
-//            }
-//
-//            // endregion
     }
 
     public void truncate() throws BusinessException {
@@ -123,7 +98,6 @@ public class OrderMapper {
 
     public List<OrderModel> listByUserId(Long userId,
                                          Status status,
-                                         DeleteStatus deleteStatus,
                                          LocalDateTime startTime,
                                          LocalDateTime endTime,
                                          Long start,
@@ -146,56 +120,60 @@ public class OrderMapper {
         order by id desc
         limit #{start},#{size}
     </select>*/
-        StringBuilder builder = new StringBuilder();
-        builder.append("select * from t_order_list_by_userId where user_id=?");
-
-        if (status == null) {
-            builder.append(" and status in(");
-            int counter = 0;
-            for (Status value : Status.values()) {
-                builder.append("'").append(value.name()).append("'");
-                if (counter + 1 < Status.values().length) {
-                    builder.append(",");
-                }
-                counter++;
-            }
-            builder.append(")");
-        } else {
-            builder.append(" and status=?");
-        }
-
-        if (deleteStatus == null) {
-            builder.append(" and delete_status in(");
-            int counter = 0;
-            for (DeleteStatus value : DeleteStatus.values()) {
-                builder.append("'").append(value.name()).append("'");
-                if (counter + 1 < DeleteStatus.values().length) {
-                    builder.append(",");
-                }
-                counter++;
-            }
-            builder.append(")");
-        } else {
-            builder.append(" and delete_status=?");
-        }
-
-        builder.append(" and create_time>=? and create_time<=?");
-        builder.append(" order by status desc,delete_status desc,create_time desc,id desc");
-        builder.append(" limit ?");
-
-        String cql = builder.toString();
-        PreparedStatement prepared = session.prepare(cql);
+//        StringBuilder builder = new StringBuilder();
+//        builder.append("select * from t_order_list_by_userId where user_id=?");
+//
+//        if (status == null) {
+//            builder.append(" and status in(");
+//            int counter = 0;
+//            for (Status value : Status.values()) {
+//                builder.append("'").append(value.name()).append("'");
+//                if (counter + 1 < Status.values().length) {
+//                    builder.append(",");
+//                }
+//                counter++;
+//            }
+//            builder.append(")");
+//        } else {
+//            builder.append(" and status=?");
+//        }
+//
+//        if (deleteStatus == null) {
+//            builder.append(" and delete_status in(");
+//            int counter = 0;
+//            for (DeleteStatus value : DeleteStatus.values()) {
+//                builder.append("'").append(value.name()).append("'");
+//                if (counter + 1 < DeleteStatus.values().length) {
+//                    builder.append(",");
+//                }
+//                counter++;
+//            }
+//            builder.append(")");
+//        } else {
+//            builder.append(" and delete_status=?");
+//        }
+//
+//        builder.append(" and create_time>=? and create_time<=?");
+//        builder.append(" order by status desc,delete_status desc,create_time desc,order_id desc");
+//        builder.append(" limit ?");
+//
+//        String cql = builder.toString();
+//        PreparedStatement prepared = session.prepare(cql);
         ZoneId zoneId = ZoneId.of("Asia/Shanghai");
         BoundStatement bound;
-        if (status != null) {
-            bound = prepared.bind(
-                    userId, status.name(),
-                    startTime.atZone(zoneId).toInstant(), endTime.atZone(zoneId).toInstant(), size.intValue());
-        } else {
-            bound = prepared.bind(
-                    userId,
-                    startTime.atZone(zoneId).toInstant(), endTime.atZone(zoneId).toInstant(), size.intValue());
-        }
+//        if (status != null) {
+        bound = preparedStatementListByUserIdAndStatus.bind(
+                userId, status.name(),
+                Date.from(startTime.atZone(zoneId).toInstant())
+                , Date.from(endTime.atZone(zoneId).toInstant())
+                , size.intValue());
+//        } else {
+//            bound = preparedStatementListByUserIdAndStatus.bind(
+//                    userId,
+//                    Date.from(startTime.atZone(zoneId).toInstant())
+//                    , Date.from(endTime.atZone(zoneId).toInstant())
+//                    , size.intValue());
+//        }
         ResultSet result = session.execute(bound);
         List<OrderModel> orderModelList = new ArrayList<>();
         for (Row row : result) {
@@ -276,43 +254,45 @@ public class OrderMapper {
         if (row == null) {
             return null;
         }
-        long id = row.getLong("id");
-        long userId = row.getLong("user_id");
-        Status status = Status.valueOf(row.getString("status"));
-        ZoneId zoneId = ZoneId.of("Asia/Shanghai");
 
-        Date dateTemporary = row.getTimestamp("pay_time");
-        Instant payTimeInstant = dateTemporary == null ? null : dateTemporary.toInstant();
-        LocalDateTime payTime = payTimeInstant == null ? null : LocalDateTime.ofInstant(payTimeInstant, zoneId);
+        long id = row.getLong("order_id");
+//        long id = row.getLong("id");
+//        long userId = row.getLong("user_id");
+//        Status status = Status.valueOf(row.getString("status"));
+//        ZoneId zoneId = ZoneId.of("Asia/Shanghai");
 
-        dateTemporary = row.getTimestamp("delivery_time");
-        Instant deliveryTimeInstant = dateTemporary == null ? null : dateTemporary.toInstant();
-        LocalDateTime deliveryTime = deliveryTimeInstant == null ? null : LocalDateTime.ofInstant(deliveryTimeInstant, zoneId);
+//        Date dateTemporary = row.getTimestamp("pay_time");
+//        Instant payTimeInstant = dateTemporary == null ? null : dateTemporary.toInstant();
+//        LocalDateTime payTime = payTimeInstant == null ? null : LocalDateTime.ofInstant(payTimeInstant, zoneId);
+//
+//        dateTemporary = row.getTimestamp("delivery_time");
+//        Instant deliveryTimeInstant = dateTemporary == null ? null : dateTemporary.toInstant();
+//        LocalDateTime deliveryTime = deliveryTimeInstant == null ? null : LocalDateTime.ofInstant(deliveryTimeInstant, zoneId);
+//
+//        dateTemporary = row.getTimestamp("received_time");
+//        Instant receivedTimeInstant = dateTemporary == null ? null : dateTemporary.toInstant();
+//        LocalDateTime receivedTime = receivedTimeInstant == null ? null : LocalDateTime.ofInstant(receivedTimeInstant, zoneId);
+//
+//        dateTemporary = row.getTimestamp("cancel_time");
+//        Instant cancelTimeInstant = dateTemporary == null ? null : dateTemporary.toInstant();
+//        LocalDateTime cancelTime = cancelTimeInstant == null ? null : LocalDateTime.ofInstant(cancelTimeInstant, zoneId);
 
-        dateTemporary = row.getTimestamp("received_time");
-        Instant receivedTimeInstant = dateTemporary == null ? null : dateTemporary.toInstant();
-        LocalDateTime receivedTime = receivedTimeInstant == null ? null : LocalDateTime.ofInstant(receivedTimeInstant, zoneId);
-
-        dateTemporary = row.getTimestamp("cancel_time");
-        Instant cancelTimeInstant = dateTemporary == null ? null : dateTemporary.toInstant();
-        LocalDateTime cancelTime = cancelTimeInstant == null ? null : LocalDateTime.ofInstant(cancelTimeInstant, zoneId);
-
-        DeleteStatus deleteStatus = DeleteStatus.valueOf(row.getString("delete_status"));
-
-        dateTemporary = row.getTimestamp("create_time");
-        Instant createTimeInstant = dateTemporary == null ? null : dateTemporary.toInstant();
-        LocalDateTime createTime = createTimeInstant == null ? null : LocalDateTime.ofInstant(createTimeInstant, zoneId);
+//        DeleteStatus deleteStatus = DeleteStatus.valueOf(row.getString("delete_status"));
+//
+//        Date dateTemporary = row.getTimestamp("create_time");
+//        Instant createTimeInstant = dateTemporary == null ? null : dateTemporary.toInstant();
+//        LocalDateTime createTime = createTimeInstant == null ? null : LocalDateTime.ofInstant(createTimeInstant, zoneId);
 
         OrderModel model = new OrderModel();
         model.setId(id);
-        model.setUserId(userId);
-        model.setStatus(status);
-        model.setPayTime(payTime);
-        model.setDeliveryTime(deliveryTime);
-        model.setReceivedTime(receivedTime);
-        model.setCancelTime(cancelTime);
-        model.setDeleteStatus(deleteStatus);
-        model.setCreateTime(createTime);
+//        model.setUserId(userId);
+//        model.setStatus(status);
+//        model.setPayTime(payTime);
+//        model.setDeliveryTime(deliveryTime);
+//        model.setReceivedTime(receivedTime);
+//        model.setCancelTime(cancelTime);
+//        model.setDeleteStatus(deleteStatus);
+//        model.setCreateTime(createTime);
         return model;
     }
 //

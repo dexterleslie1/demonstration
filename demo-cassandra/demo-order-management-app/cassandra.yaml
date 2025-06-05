@@ -1237,5 +1237,5 @@ back_pressure_strategy:
 # otc_backlog_expiration_interval_ms: 200
 
 # 添加超时设置，否则在select count(id) from xxx时候会报告超时错误
-read_request_timeout_in_ms: 120000
-range_request_timeout_in_ms: 120000
+read_request_timeout_in_ms: 300000
+range_request_timeout_in_ms: 300000

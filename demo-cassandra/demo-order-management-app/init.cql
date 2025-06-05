@@ -19,24 +19,13 @@ CREATE TABLE IF NOT EXISTS t_order
 drop table if exists t_order_list_by_userId;
 CREATE TABLE IF NOT EXISTS t_order_list_by_userId
 (
-    id            bigint,
     user_id       bigint,
     status        text,
-    pay_time      timestamp, -- 使用timestamp代替datetime
-    delivery_time timestamp,
-    received_time timestamp,
-    cancel_time   timestamp,
-    delete_status text,
     create_time   timestamp,
-    primary key ((user_id),status,delete_status,create_time,id)
-);
-
-/*似乎order by很多限制不容易实现业务逻辑*/
-/*CREATE MATERIALIZED VIEW mv_list_by_user_id AS
-SELECT * FROM t_order
-where user_id is not null and create_time is not null
-    and status is not null and delete_status is not null and id is not null
-PRIMARY KEY ((user_id),status,delete_status,create_time,id);*/
+    order_id      bigint,
+    /* 使用 user_id,status 作为分区键快速定位数据，使用 create_time,order_id 作为聚类键范围查询和排序 */
+    primary key ((user_id,status),create_time,order_id)
+) with clustering order by (create_time desc,order_id desc);
 
 drop table if exists t_order_detail;
 CREATE TABLE IF NOT EXISTS t_order_detail
@@ -49,3 +38,13 @@ CREATE TABLE IF NOT EXISTS t_order_detail
     amount      int,
     PRIMARY KEY ((order_id), id) -- 复合主键，order_id为分区键，detail_id为聚类键
 ) WITH CLUSTERING ORDER BY (id ASC);
+
+drop table if exists t_count;
+create table if not exists t_count (
+   flag        text,
+   count       counter,
+   primary key (flag)
+);
+
+update t_count set count=count+0 where flag='order';
+update t_count set count=count+0 where flag='orderListByUserId';

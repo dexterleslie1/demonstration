@@ -57,6 +57,7 @@ source_dir_to_target_dir_map["../../demo-tidb"]="tidb"
 source_dir_to_target_dir_map["../../demo-cassandra"]="cassandra"
 source_dir_to_target_dir_map["../../rabbitmq-examples"]="rabbitmq"
 source_dir_to_target_dir_map["../../demo-rocketmq"]="rocketmq"
+source_dir_to_target_dir_map["../../demo-scylladb"]="scylladb"
 
 for key in ${!source_dir_to_target_dir_map[@]}; do
     # 删除符号链接目录

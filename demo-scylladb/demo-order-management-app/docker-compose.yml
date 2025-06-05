@@ -17,23 +17,28 @@ services:
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-order-management-app-scylladb
     environment:
       - TZ=Asia/Shanghai
-    command: "--seeds node1,node2,node3 --memory 512M"
+    command: "--seeds node1 --memory 1G"
     ports:
       - "9042:9042"
   node2:
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-order-management-app-scylladb
     environment:
       - TZ=Asia/Shanghai
-    command: "--seeds node1,node2,node3 --memory 512M"
+    command: "--seeds node1,node2 --memory 1G"
     ports:
       - "9043:9042"  # 映射到不同端口，避免冲突
+    depends_on:
+      - node1
   node3:
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-order-management-app-scylladb
     environment:
       - TZ=Asia/Shanghai
-    command: "--seeds node1,node2,node3 --memory 512M"
+    command: "--seeds node1,node2,node3 --memory 1G"
     ports:
       - "9045:9042"  # 映射到不同端口，避免冲突
+    depends_on:
+      - node1
+      - node2
 
   zookeeper:
     image: zookeeper:3.8.4

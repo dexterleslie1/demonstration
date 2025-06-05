@@ -10,7 +10,6 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -33,24 +32,13 @@ public class OrderMapper {
         preparedStatementInsert = session.prepare(cql);
         preparedStatementInsert.setConsistencyLevel(ConsistencyLevel.LOCAL_QUORUM);
 
-        StringBuilder builder = new StringBuilder("select * from t_order_list_by_userId where user_id=?");
+        StringBuilder builder = new StringBuilder("select order_id from t_order_list_by_userId where user_id=?");
         builder.append(" and status=?");
-        builder.append(" and delete_status in(");
-        int counter = 0;
-        for (DeleteStatus value : DeleteStatus.values()) {
-            builder.append("'").append(value.name()).append("'");
-            if (counter + 1 < DeleteStatus.values().length) {
-                builder.append(",");
-            }
-            counter++;
-        }
-        builder.append(")");
         builder.append(" and create_time>=? and create_time<=?");
-        builder.append(" order by status desc,delete_status desc,create_time desc,order_id desc");
         builder.append(" limit ?");
         cql = builder.toString();
         preparedStatementListByUserIdAndStatus = session.prepare(cql);
-        preparedStatementListByUserIdAndStatus.setConsistencyLevel(ConsistencyLevel.LOCAL_QUORUM);
+        preparedStatementListByUserIdAndStatus.setConsistencyLevel(ConsistencyLevel.LOCAL_ONE);
     }
 
     public void insertBatch(List<OrderModel> orderModelList) throws BusinessException {
@@ -266,10 +254,11 @@ public class OrderMapper {
         if (row == null) {
             return null;
         }
-        long id = row.getLong("id");
-        long userId = row.getLong("user_id");
-        Status status = Status.valueOf(row.getString("status"));
-        ZoneId zoneId = ZoneId.of("Asia/Shanghai");
+        long id = row.getLong("order_id");
+//        long id = row.getLong("id");
+//        long userId = row.getLong("user_id");
+//        Status status = Status.valueOf(row.getString("status"));
+//        ZoneId zoneId = ZoneId.of("Asia/Shanghai");
 
 //        Date dateTemporary = row.getTimestamp("pay_time");
 //        Instant payTimeInstant = dateTemporary == null ? null : dateTemporary.toInstant();
@@ -287,22 +276,22 @@ public class OrderMapper {
 //        Instant cancelTimeInstant = dateTemporary == null ? null : dateTemporary.toInstant();
 //        LocalDateTime cancelTime = cancelTimeInstant == null ? null : LocalDateTime.ofInstant(cancelTimeInstant, zoneId);
 
-        DeleteStatus deleteStatus = DeleteStatus.valueOf(row.getString("delete_status"));
-
-        Date dateTemporary = row.getTimestamp("create_time");
-        Instant createTimeInstant = dateTemporary == null ? null : dateTemporary.toInstant();
-        LocalDateTime createTime = createTimeInstant == null ? null : LocalDateTime.ofInstant(createTimeInstant, zoneId);
+//        DeleteStatus deleteStatus = DeleteStatus.valueOf(row.getString("delete_status"));
+//
+//        Date dateTemporary = row.getTimestamp("create_time");
+//        Instant createTimeInstant = dateTemporary == null ? null : dateTemporary.toInstant();
+//        LocalDateTime createTime = createTimeInstant == null ? null : LocalDateTime.ofInstant(createTimeInstant, zoneId);
 
         OrderModel model = new OrderModel();
         model.setId(id);
-        model.setUserId(userId);
-        model.setStatus(status);
+//        model.setUserId(userId);
+//        model.setStatus(status);
 //        model.setPayTime(payTime);
 //        model.setDeliveryTime(deliveryTime);
 //        model.setReceivedTime(receivedTime);
 //        model.setCancelTime(cancelTime);
-        model.setDeleteStatus(deleteStatus);
-        model.setCreateTime(createTime);
+//        model.setDeleteStatus(deleteStatus);
+//        model.setCreateTime(createTime);
         return model;
     }
 //

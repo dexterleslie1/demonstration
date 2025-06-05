@@ -1,4 +1,4 @@
-package com.future.demo.entity;
+package com.future.demo;
 
 import lombok.Data;
 
@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 @Data
 public class OrderIndexListByUserIdModel {
     private Long userId;
-    private Status status;
+    private String status;
     private LocalDateTime createTime;
     private Long orderId;
 }

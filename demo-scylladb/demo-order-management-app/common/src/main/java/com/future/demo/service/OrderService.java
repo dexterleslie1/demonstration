@@ -1,5 +1,6 @@
 package com.future.demo.service;
 
+import com.datastax.driver.core.*;
 import com.future.common.exception.BusinessException;
 import com.future.demo.dto.OrderDTO;
 import com.future.demo.dto.OrderDetailDTO;
@@ -36,6 +37,10 @@ public class OrderService {
     OrderRandomlyUtil orderRandomlyUtil;
     @Autowired
     SnowflakeService snowflakeService;
+    @Resource
+    Session session;
+
+    private PreparedStatement preparedStatementUpdateIncreaseCount;
 
     @PostConstruct
     public void init() throws BusinessException {
@@ -62,6 +67,10 @@ public class OrderService {
 //        }
 //
 //        // endregion
+
+        String cql = "update t_count set count=count+? where flag=?";
+        preparedStatementUpdateIncreaseCount = session.prepare(cql);
+        preparedStatementUpdateIncreaseCount.setConsistencyLevel(ConsistencyLevel.LOCAL_ONE);
     }
 
     @Resource
@@ -120,6 +129,8 @@ public class OrderService {
             return orderDetailModel;
         }).collect(Collectors.toList());
         this.orderDetailMapper.insertBatch(orderDetailModelList);
+
+        this.updateIncreaseCount("order", orderModelList.size());
     }
 
     /**
@@ -132,8 +143,6 @@ public class OrderService {
             // 创建订单
             OrderIndexListByUserIdModel model = new OrderIndexListByUserIdModel();
 
-            Long id = this.snowflakeService.getId("orderIndexListByUserId").getId();
-            model.setId(id);
             Long orderId = this.snowflakeService.getId("order").getId();
             model.setOrderId(orderId);
 
@@ -141,14 +150,12 @@ public class OrderService {
             LocalDateTime createTime = OrderRandomlyUtil.getCreateTimeRandomly();
             model.setCreateTime(createTime);
 
-            DeleteStatus deleteStatus = OrderRandomlyUtil.getDeleteStatusRandomly();
-            model.setDeleteStatus(deleteStatus);
-
             Status status = OrderRandomlyUtil.getStatusRandomly();
             model.setStatus(status);
             list.add(model);
         }
         this.indexMapper.insertBatchOrderIndexListByUserId(list);
+        this.updateIncreaseCount("orderListByUserId", list.size());
     }
 
     /**
@@ -290,5 +297,13 @@ public class OrderService {
      */
     public void restoreProductStock() throws BusinessException {
 //        this.productMapper.restoreStock(productStock);
+    }
+
+    public void updateIncreaseCount(String flag, long count) throws BusinessException {
+        BoundStatement boundStatement = preparedStatementUpdateIncreaseCount.bind(count, flag);
+        ResultSet resultSet = session.execute(boundStatement);
+        if (!resultSet.wasApplied()) {
+            throw new BusinessException("执行 updateIncreaseCount 失败，count=1");
+        }
     }
 }

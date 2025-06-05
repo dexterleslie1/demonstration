@@ -106,6 +106,14 @@ describe keyspaces;
 
 
 
+### 显示当前 keyspace 中的所有表
+
+```CQL
+describe tables
+```
+
+
+
 ## 部署
 
 ### Docker 部署单机
@@ -224,9 +232,9 @@ COPY cassandra.yaml /etc/cassandra/cassandra.yaml
 cassandra.yaml 配置文件制作步骤参考本站 <a href="/cassandra/README.html#服务配置" target="_blank">链接</a>，配置文件添加如下内容：
 
 ```yaml
-# 添加超时设置，否则在select count(id) from xxx时候会报告超时错误。提醒：客户端 cqlsh 在连接时同样需要提供 timeout 参数，否则会报告客户端超时，cqlsh --request-timeout=120000
-read_request_timeout_in_ms: 120000
-range_request_timeout_in_ms: 120000
+# 添加超时设置，否则在select count(id) from xxx时候会报告超时错误。提醒：客户端 cqlsh 在连接时同样需要提供 timeout 参数，否则会报告客户端超时，cqlsh --request-timeout=300000
+read_request_timeout_in_ms: 300000
+range_request_timeout_in_ms: 300000
 
 # 修改下面设置为25，否则在批量插入时显示超出批量处理大小警告信息
 # https://stackoverflow.com/questions/50385262/cassandra-batch-prepared-statement-size-warning
@@ -919,6 +927,40 @@ CREATE TABLE user_orders (
 
 
 
+#### 实践
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-cassandra/demo-order-management-app)
+
+下面实现根据用户ID、订单状态、创建日期查询订单列表。
+
+表定义：
+
+```CQL
+CREATE TABLE IF NOT EXISTS t_order_list_by_userId
+(
+    user_id       bigint,
+    status        text,
+    create_time   timestamp,
+    order_id      bigint,
+    /* 使用 user_id,status 作为分区键快速定位数据，使用 create_time,order_id 作为聚类键范围查询和排序 */
+    primary key ((user_id,status),create_time,order_id)
+) with clustering order by (create_time desc,order_id desc);
+```
+
+业务 CQL：
+
+```java
+StringBuilder builder = new StringBuilder("select order_id from t_order_list_by_userId where user_id=?");
+builder.append(" and status=?");
+builder.append(" and create_time>=? and create_time<=?");
+builder.append(" limit ?");
+cql = builder.toString();
+preparedStatementListByUserIdAndStatus = session.prepare(cql);
+preparedStatementListByUserIdAndStatus.setConsistencyLevel(ConsistencyLevel.LOCAL_ONE);
+```
+
+
+
 ### 二级索引
 
 #### 介绍
@@ -1172,6 +1214,8 @@ CREATE INDEX IF NOT EXISTS ON orders (status);
 
 
 ### 物质化视图
+
+>注意：默认配置文件中写着 `Materialized views are considered experimental and are not recommended for production use.`，所以在生产设计中不使用此特性。
 
 #### 介绍
 
@@ -1556,7 +1600,7 @@ Cassandra 的反范式设计是一种以查询为中心的数据建模方法，�
 drop table if exists t_order;
 CREATE TABLE IF NOT EXISTS t_order
 (
-    id            decimal primary key,
+    id            bigint primary key,
     user_id       bigint,
     status        text,      -- 使用text代替ENUM，Cassandra不支持ENUM类型
     pay_time      timestamp, -- 使用timestamp代替datetime
@@ -1570,20 +1614,17 @@ CREATE TABLE IF NOT EXISTS t_order
 drop table if exists t_order_list_by_userId;
 CREATE TABLE IF NOT EXISTS t_order_list_by_userId
 (
-    id            decimal,
+    id            bigint,
     user_id       bigint,
     status        text,
-    pay_time      timestamp, -- 使用timestamp代替datetime
-    delivery_time timestamp,
-    received_time timestamp,
-    cancel_time   timestamp,
     delete_status text,
     create_time   timestamp,
-    primary key ((user_id),status,delete_status,create_time,id)
-);
+    order_id      bigint,
+    primary key ((user_id,status),create_time)
+) with clustering order by (create_time desc);
 ```
 
-上面 CQL 分别设计 t_order 用于根据订单 id 查询订单信息，t_order_list_by_userId 用于根据用户 id 查询订单列表。
+上面 CQL 分别设计 t_order 用于根据订单 id 查询订单信息，t_order_list_by_userId 用于 `select order_id from t_order_list_by_userId where user_id=? and status=? and create_time>=? and create_time<=?` 查询订单列表。
 
 
 
@@ -1600,8 +1641,8 @@ docker compose cp node1:/etc/cassandra/cassandra.yaml .
 添加如下配置到配置文件中：
 
 ```yaml
-read_request_timeout_in_ms: 60000
-range_request_timeout_in_ms: 60000
+read_request_timeout_in_ms: 300000
+range_request_timeout_in_ms: 300000
 ```
 
 创建新的 Cassandra 镜像，注意：不能直接使用 volumes 挂在 cassandra.yaml 配置到容器中，因为 Cassandra 集群中多个节点使用同一个配置文件会冲突。
@@ -1616,4 +1657,210 @@ COPY cassandra.yaml /etc/cassandra/cassandra.yaml
 
 ## 分页
 
-todo
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-cassandra/demo-client-datastax)
+
+表定义：
+
+```CQL
+/* 用于协助分页查询 */
+CREATE TABLE IF NOT EXISTS t_order_list_by_userId
+(
+    user_id       bigint,
+    status        text,
+    create_time   timestamp,
+    order_id      bigint,
+    primary key ((user_id,status),create_time,order_id)
+) with clustering order by (create_time desc,order_id desc);
+```
+
+测试分页：
+
+```java
+/**
+ * 测试分页
+ */
+@Test
+public void testPagination() throws BusinessException {
+    // 删除旧数据
+    this.commonMapper.truncate("t_order_list_by_userid");
+
+    // 初始化数据
+    long userId = 1L;
+    String status = "Unpay";
+    Instant now = Instant.now();
+    int totalCount = 5;
+    List<OrderIndexListByUserIdModel> modelList = new ArrayList<>();
+    for (int i = 0; i < totalCount; i++) {
+        OrderIndexListByUserIdModel model = new OrderIndexListByUserIdModel();
+        model.setUserId(userId);
+        model.setStatus(status);
+        model.setCreateTime(now.atZone(ZoneId.of("Asia/Shanghai")).toLocalDateTime());
+
+        long ordeId = i + 1;
+        model.setOrderId(ordeId);
+        modelList.add(model);
+    }
+    this.indexMapper.insertBatchOrderIndexListByUserId(modelList);
+
+    // 获取第一页数据
+    String cql = "select create_time,order_id from t_order_list_by_userid where user_id=?" +
+            " and status=? and create_time>=? and create_time<=?" +
+            " limit ?";
+    PreparedStatement preparedStatement = session.prepare(cql);
+    BoundStatement boundStatement = preparedStatement.bind(userId, "Unpay", Date.from(now), Date.from(now), 3);
+    ResultSet resultSet = session.execute(boundStatement);
+    List<Long> orderIdList = new ArrayList<>();
+    LocalDateTime createTimeLast = null;
+    for (Row row : resultSet) {
+        Long orderId = row.getLong("order_id");
+        orderIdList.add(orderId);
+
+        if (!resultSet.iterator().hasNext()) {
+            java.util.Date createTimeDate = row.getTimestamp("create_time");
+            createTimeLast = createTimeDate.toInstant().atZone(ZoneId.of("Asia/Shanghai")).toLocalDateTime();
+        }
+    }
+    Assertions.assertArrayEquals(new Long[]{5L, 4L, 3L}, orderIdList.toArray(new Long[]{}));
+
+    // 获取第二页数据，使用第一页最后 order_id 记录作为边界查询
+    cql = "select order_id from t_order_list_by_userid where user_id=?" +
+            " and status=? and (create_time,order_id)<(?,?)" +
+            " limit ?";
+    preparedStatement = session.prepare(cql);
+    boundStatement = preparedStatement.bind(userId, "Unpay",
+            Date.from(createTimeLast.atZone(ZoneId.of("Asia/Shanghai")).toInstant()), orderIdList.get(orderIdList.size() - 1), 3);
+    resultSet = session.execute(boundStatement);
+    orderIdList = new ArrayList<>();
+    for (Row row : resultSet) {
+        Long orderId = row.getLong("order_id");
+        orderIdList.add(orderId);
+    }
+    Assertions.assertArrayEquals(new Long[]{2L, 1L}, orderIdList.toArray(new Long[]{}));
+}
+```
+
+
+
+## 集群管理
+
+
+
+### 查看集群状态
+
+登录集群中其中一个节点运行以下命令
+
+```sh
+nodetool status
+```
+
+
+
+### 删除节点
+
+如果目标节点未宕机按照下面步骤删除节点：
+
+- 登录到目标节点（`192.168.1.93`）上执行以下命令，让节点安全地退出集群并迁移数据：
+
+  ```sh
+  nodetool decommission
+  ```
+
+- 删除节点
+
+  ```sh
+  nodetool removenode <host_id>
+  ```
+
+  - `<host-id>` 使用 `nodetool status` 命令获取。
+
+
+
+如果目标节点宕机按照下面步骤删除节点：
+
+- 删除节点
+
+  ```sh
+  nodetool removenode <host_id>
+  ```
+
+  - `<host-id>` 使用 `nodetool status` 命令获取。
+
+
+
+## 数据类型
+
+### `counter`
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-cassandra/demo-client-datastax)
+
+`counter` 类型是一种专门用于计数操作的特殊数据类型。它被设计用来处理高并发的计数器场景，例如页面浏览计数、用户登录次数统计等。与常规的列类型不同，`counter` 类型有一些特定的行为和限制。`counter` 类型的列支持原子性的增减操作，这意味着你可以安全地在多线程或多节点环境下进行并发更新，而不会出现竞争条件。`counter` 列必须存储在专用的表中，不能与其他普通列混合在同一表中。这意味着如果你需要在一个表中同时使用普通列和计数器列，你需要创建两个表。`counter` 列只能通过 `UPDATE` 语句进行增加或减少操作，不能直接设置具体的值。
+
+定义 `counter` 类型 `CQL`
+
+```CQL
+/* 用于协助并发update同一条数据 */
+create table if not exists t_count (
+    flag        text,
+    count       counter,
+    primary key (flag)
+);
+
+/* 初始化 count 的值，不能直接 set，否则报错 */
+update t_count set count=count+0 where flag='order';
+```
+
+代码中增加 `counter` 类型计数
+
+```java
+/**
+ * 测试并发更新同一条数据时数据是否一致
+ */
+@Test
+public void testUpdateConcurrently() throws InterruptedException {
+    // 重置 t_count 计数
+    String cql = "select count from t_count where flag='order'";
+    ResultSet resultSet = session.execute(cql);
+    Row row = resultSet.one();
+    long count = row.getLong("count");
+    cql = "update t_count set count=count-" + count + " where flag='order'";
+    resultSet = session.execute(cql);
+    Assertions.assertTrue(resultSet.wasApplied());
+
+    cql = "update t_count set count=count+? where flag='order'";
+    PreparedStatement preparedStatement = session.prepare(cql);
+    preparedStatement.setConsistencyLevel(ConsistencyLevel.LOCAL_ONE);
+
+    long totalCount = 10000;
+    int concurrentThreads = 128;
+    AtomicInteger counter = new AtomicInteger();
+    ExecutorService threadPool = Executors.newCachedThreadPool();
+    for (int i = 0; i < concurrentThreads; i++) {
+        threadPool.submit(() -> {
+            try {
+                while (true) {
+                    int countInternal = counter.getAndIncrement();
+                    if (countInternal >= totalCount) {
+                        break;
+                    }
+
+                    // 于 cassandra counter 类型列运算的数据类型只能为 long 类型
+                    BoundStatement boundStatement = preparedStatement.bind(1L);
+                    ResultSet resultSet1 = session.execute(boundStatement);
+                    Assertions.assertTrue(resultSet1.wasApplied());
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        });
+    }
+    threadPool.shutdown();
+    while (!threadPool.awaitTermination(100, TimeUnit.MILLISECONDS)) ;
+
+    cql = "select * from t_count where flag='order'";
+    resultSet = session.execute(cql);
+    row = resultSet.one();
+    count = row.getLong("count");
+    Assertions.assertEquals(totalCount, count);
+}
+```
+
