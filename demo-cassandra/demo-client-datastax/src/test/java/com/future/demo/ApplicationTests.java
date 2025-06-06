@@ -16,6 +16,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -254,6 +255,7 @@ public class ApplicationTests {
         orderIdListFetched.add(orderId);
 
         while (true) {
+            // 先获取记录对应的 token
             cql = "select token(id) from t_order where id=" + orderId;
             resultSet = session.execute(cql);
             row = resultSet.one();
@@ -277,6 +279,53 @@ public class ApplicationTests {
             orderId = 1L + i;
             Assertions.assertTrue(orderIdListFetched.contains(orderId));
         }
+    }
+
+    /**
+     * 测试in查询
+     */
+    @Test
+    public void testQueryWhereIn() {
+        long userId = 1L;
+        Instant now = Instant.now();
+        long totalCount = 100;
+
+        // 清空 order 表数据
+        String cql = "truncate table t_order";
+        ResultSet resultSet = session.execute(cql);
+        Assertions.assertTrue(resultSet.wasApplied());
+
+        // 准备测试数据
+        BatchStatement batch = new BatchStatement(BatchStatement.Type.LOGGED);
+        for (int i = 0; i < totalCount; i++) {
+            BoundStatement bound = preparedStatementOrderInsertion.bind(
+                    BigDecimal.valueOf(1L + i), // id
+                    userId,                        // user_id
+                    "Unpay",                      // status
+                    // https://stackoverflow.com/questions/39926022/codec-not-found-for-requested-operation-timestamp-java-lang-long
+                    Date.from(now),                // pay_time
+                    null,                         // delivery_time
+                    null,                         // received_time
+                    null,                         // cancel_time
+                    "Normal",                     // delete_status
+                    Date.from(now)                 // create_time
+            );
+            batch = batch.add(bound);
+        }
+        resultSet = session.execute(batch);
+        Assertions.assertTrue(resultSet.wasApplied());
+
+        // 测试in查询
+        cql = "select * from t_order where id in(?,?)";
+        PreparedStatement preparedStatement = this.session.prepare(cql);
+        BoundStatement boundStatement = preparedStatement.bind(Arrays.asList(BigDecimal.valueOf(1L), BigDecimal.valueOf(2L)).toArray(new BigDecimal[0]));
+        resultSet = this.session.execute(boundStatement);
+        List<Long> orderIdListFetched = new ArrayList<>();
+        for (Row rowInternal : resultSet) {
+            long orderId = rowInternal.getDecimal("id").longValue();
+            orderIdListFetched.add(orderId);
+        }
+        Assertions.assertArrayEquals(new Long[]{1L, 2L}, orderIdListFetched.toArray(new Long[0]));
     }
 
 }

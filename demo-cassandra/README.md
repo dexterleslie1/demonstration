@@ -1930,6 +1930,61 @@ public void testTableDatumFullyScan() {
 
 
 
+## `in` 查询
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-cassandra/demo-client-datastax)
+
+```java
+/**
+ * 测试in查询
+ */
+@Test
+public void testQueryWhereIn() {
+    long userId = 1L;
+    Instant now = Instant.now();
+    long totalCount = 100;
+
+    // 清空 order 表数据
+    String cql = "truncate table t_order";
+    ResultSet resultSet = session.execute(cql);
+    Assertions.assertTrue(resultSet.wasApplied());
+
+    // 准备测试数据
+    BatchStatement batch = new BatchStatement(BatchStatement.Type.LOGGED);
+    for (int i = 0; i < totalCount; i++) {
+        BoundStatement bound = preparedStatementOrderInsertion.bind(
+                BigDecimal.valueOf(1L + i), // id
+                userId,                        // user_id
+                "Unpay",                      // status
+                // https://stackoverflow.com/questions/39926022/codec-not-found-for-requested-operation-timestamp-java-lang-long
+                Date.from(now),                // pay_time
+                null,                         // delivery_time
+                null,                         // received_time
+                null,                         // cancel_time
+                "Normal",                     // delete_status
+                Date.from(now)                 // create_time
+        );
+        batch = batch.add(bound);
+    }
+    resultSet = session.execute(batch);
+    Assertions.assertTrue(resultSet.wasApplied());
+
+    // 测试in查询
+    cql = "select * from t_order where id in(?,?)";
+    PreparedStatement preparedStatement = this.session.prepare(cql);
+    BoundStatement boundStatement = preparedStatement.bind(Arrays.asList(BigDecimal.valueOf(1L), BigDecimal.valueOf(2L)).toArray(new BigDecimal[0]));
+    resultSet = this.session.execute(boundStatement);
+    List<Long> orderIdListFetched = new ArrayList<>();
+    for (Row rowInternal : resultSet) {
+        long orderId = rowInternal.getDecimal("id").longValue();
+        orderIdListFetched.add(orderId);
+    }
+    Assertions.assertArrayEquals(new Long[]{1L, 2L}, orderIdListFetched.toArray(new Long[0]));
+}
+```
+
+
+
 ## 集群管理
 
 
