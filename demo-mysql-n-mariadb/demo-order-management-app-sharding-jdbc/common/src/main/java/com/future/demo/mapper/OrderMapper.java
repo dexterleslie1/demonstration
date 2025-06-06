@@ -47,6 +47,15 @@ public interface OrderMapper {
     @Select("select * from t_order where id=#{orderId}")
     OrderModel getById(@Param("orderId") BigInteger orderId);
 
+    @Select("<script>" +
+            "   select * from t_order where id in(" +
+            "   <foreach collection=\"orderIdList\" item=\"e\" separator=\",\">" +
+            "       (#{e})" +
+            "   </foreach>" +
+            "   )" +
+            "</script>")
+    List<OrderModel> listById(@Param("orderIdList") List<BigInteger> orderIdList);
+
     @Select("select min(id) from t_order")
     BigInteger getIdMin();
 

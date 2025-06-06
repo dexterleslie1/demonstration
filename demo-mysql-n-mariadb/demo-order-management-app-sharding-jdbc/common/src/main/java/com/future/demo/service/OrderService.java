@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -260,6 +261,21 @@ public class OrderService {
 
         List<OrderDTO> orderDTOList = this.convertOrderEntityToOrderDTO(Collections.singletonList(orderModel));
         return orderDTOList.get(0);
+    }
+
+    /**
+     * 用于协助测试根据订单ID in查询的性能
+     *
+     * @param orderIdList
+     * @return
+     */
+    public List<OrderDTO> listById(List<BigInteger> orderIdList) {
+        Assert.isTrue(orderIdList != null && !orderIdList.isEmpty(), "请指定订单ID列表");
+        List<OrderModel> orderModelList = this.orderMapper.listById(orderIdList);
+        if (orderModelList == null || orderModelList.isEmpty()) {
+            return new ArrayList<>();
+        }
+        return this.convertOrderEntityToOrderDTO(orderModelList);
     }
 
     /**
