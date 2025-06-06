@@ -45,3 +45,10 @@ create table if not exists t_id_cache_assistant (
     id          bigint not null auto_increment primary key,
     orderId     bigint not null
 ) engine=innodb character set utf8mb4 collate utf8mb4_general_ci;
+
+create table if not exists t_count(
+    flag        varchar(32) not null primary key,
+    `count`     bigint not null default 0
+) engine=innodb character set utf8mb4 collate utf8mb4_general_ci;
+
+insert into t_count(flag,`count`) values("order",0);

@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/order")
@@ -55,6 +57,22 @@ public class OrderController {
         Long orderId = this.idCacheAssistantService.getRandomly();
         OrderDTO orderDTO = this.orderService.getById(orderId);
         return ResponseUtils.successObject(orderDTO);
+    }
+
+    /**
+     * 用于协助测试根据订单ID in查询的性能
+     *
+     * @return
+     */
+    @GetMapping(value = "listById")
+    public ListResponse<OrderDTO> listById() {
+        List<Long> orderIdList = new ArrayList<>();
+        for (int i = 0; i < 15; i++) {
+            Long orderId = this.idCacheAssistantService.getRandomly();
+            orderIdList.add(orderId);
+        }
+        List<OrderDTO> orderDTOList = this.orderService.listById(orderIdList);
+        return ResponseUtils.successList(orderDTOList);
     }
 
     /**

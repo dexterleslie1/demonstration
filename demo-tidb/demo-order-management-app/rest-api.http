@@ -5,6 +5,9 @@ Accept: application/json
 ### 根据订单 ID 查询订单信息
 GET http://localhost:8080/api/v1/order/getById
 
+### 根据订单 ID 列表查询订单列表
+GET http://localhost:8080/api/v1/order/listById
+
 ### 用户查询指定日期范围+所有状态的订单
 GET http://localhost:8080/api/v1/order/listByUserIdAndWithoutStatus
 

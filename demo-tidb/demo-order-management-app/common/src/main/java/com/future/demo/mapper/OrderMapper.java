@@ -46,6 +46,15 @@ public interface OrderMapper {
     @Select("select id,userId,`status`,payTime,deliveryTime,receivedTime,cancelTime,deleteStatus,createTime from t_order where id=#{orderId}")
     OrderModel getById(@Param("orderId") Long orderId);
 
+    @Select("<script>" +
+            "select id,userId,`status`,payTime,deliveryTime,receivedTime,cancelTime,deleteStatus,createTime from t_order where id in(" +
+            "   <foreach collection=\"orderIdList\" item=\"orderId\" separator=\",\">" +
+            "       #{orderId}" +
+            "   </foreach>" +
+            ")" +
+            "</script>")
+    List<OrderModel> listById(@Param("orderIdList") List<Long> orderIdList);
+
     @Select("select min(id) from t_order")
     Long getIdMin();
 

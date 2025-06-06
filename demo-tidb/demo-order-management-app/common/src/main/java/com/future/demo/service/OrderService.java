@@ -5,6 +5,7 @@ import com.future.common.exception.BusinessException;
 import com.future.demo.dto.OrderDTO;
 import com.future.demo.dto.OrderDetailDTO;
 import com.future.demo.entity.*;
+import com.future.demo.mapper.CommonMapper;
 import com.future.demo.mapper.OrderDetailMapper;
 import com.future.demo.mapper.OrderMapper;
 import com.future.demo.mapper.ProductMapper;
@@ -16,8 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -38,7 +39,7 @@ public class OrderService {
     @Autowired
     SnowflakeService snowflakeService;
 
-    @PostConstruct
+    //    @PostConstruct
     public void init() {
         // region 准备协助基准测试的数据
         this.productMapper.truncate();
@@ -71,6 +72,8 @@ public class OrderService {
     OrderDetailMapper orderDetailMapper;
     @Resource
     ProductMapper productMapper;
+    @Resource
+    CommonMapper commonMapper;
 
     // 抛出异常后回滚事务
     @Transactional(rollbackFor = Exception.class, transactionManager = "orderTransactionManager")
@@ -125,6 +128,8 @@ public class OrderService {
         if (count <= 0) {
             throw new BusinessException("扣减库存失败");
         }
+
+        this.commonMapper.updateIncreaseCount("order", 1);
     }
 
     public void insertBatch() {
@@ -174,6 +179,8 @@ public class OrderService {
             return orderDetailModel;
         }).collect(Collectors.toList());
         this.orderDetailMapper.insertBatch(orderDetailModelList);
+
+        this.commonMapper.updateIncreaseCount("order", orderModelList.size());
     }
 
     /**
@@ -190,6 +197,21 @@ public class OrderService {
 
         List<OrderDTO> orderDTOList = this.convertOrderEntityToOrderDTO(Collections.singletonList(orderModel));
         return orderDTOList.get(0);
+    }
+
+    /**
+     * 用于协助测试根据订单ID in查询的性能
+     *
+     * @param orderIdList
+     * @return
+     */
+    public List<OrderDTO> listById(List<Long> orderIdList) {
+        Assert.isTrue(orderIdList != null && !orderIdList.isEmpty(), "请指定订单ID列表");
+        List<OrderModel> orderModelList = this.orderMapper.listById(orderIdList);
+        if (orderModelList == null || orderModelList.isEmpty()) {
+            return new ArrayList<>();
+        }
+        return this.convertOrderEntityToOrderDTO(orderModelList);
     }
 
     /**
