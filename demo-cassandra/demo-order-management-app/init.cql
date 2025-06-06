@@ -36,8 +36,8 @@ CREATE TABLE IF NOT EXISTS t_order_detail
     product_id  bigint,
     merchant_id bigint,
     amount      int,
-    PRIMARY KEY ((order_id), id) -- 复合主键，order_id为分区键，detail_id为聚类键
-) WITH CLUSTERING ORDER BY (id ASC);
+    PRIMARY KEY (order_id)
+);
 
 drop table if exists t_count;
 create table if not exists t_count (

@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -19,11 +19,16 @@ import java.util.List;
 @Component
 public class OrderMapper {
 
+    public final static String OrderColumnForSelection = "id,user_id,status,pay_time,delivery_time,received_time,cancel_time,delete_status,create_time";
+
     @Resource
     Session session;
 
     private PreparedStatement preparedStatementInsert;
     private PreparedStatement preparedStatementListByUserIdAndStatus;
+    private PreparedStatement preparedStatementGetById;
+    private PreparedStatement preparedStatementListById;
+
 
     @PostConstruct
     public void init() {
@@ -39,6 +44,14 @@ public class OrderMapper {
         cql = builder.toString();
         preparedStatementListByUserIdAndStatus = session.prepare(cql);
         preparedStatementListByUserIdAndStatus.setConsistencyLevel(ConsistencyLevel.LOCAL_ONE);
+
+        cql = "select * from t_order where id=?";
+        preparedStatementGetById = session.prepare(cql);
+        preparedStatementGetById.setConsistencyLevel(ConsistencyLevel.LOCAL_ONE);
+
+        cql = "select " + OrderColumnForSelection + " from t_order where id in(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+        preparedStatementListById = session.prepare(cql);
+        preparedStatementListById.setConsistencyLevel(ConsistencyLevel.LOCAL_ONE);
     }
 
     public void insertBatch(List<OrderModel> orderModelList) throws BusinessException {
@@ -241,13 +254,26 @@ public class OrderMapper {
     }
 
     /*@Select("select * from t_order where id=#{orderId}")*/
-    public OrderModel getById(BigDecimal orderId) {
-        String cql = "select * from t_order where id=?";
-        PreparedStatement prepared = session.prepare(cql);
-        BoundStatement bound = prepared.bind(orderId);
+    public OrderModel getById(Long orderId) {
+        BoundStatement bound = preparedStatementGetById.bind(orderId);
         ResultSet result = session.execute(bound);
         Row row = result.one();
         return convertRowToOrderModel(row);
+    }
+
+    public List<OrderModel> listById(List<Long> orderIdList) {
+        BoundStatement bound = this.preparedStatementListById.bind(orderIdList.toArray(new Long[0]));
+        ResultSet result = session.execute(bound);
+        return convertRowToOrderModel(result);
+    }
+
+    List<OrderModel> convertRowToOrderModel(ResultSet resultSet) {
+        List<OrderModel> orderModelList = new ArrayList<>();
+        for (Row row : resultSet) {
+            OrderModel orderModel = convertRowToOrderModel(row);
+            orderModelList.add(orderModel);
+        }
+        return orderModelList;
     }
 
     OrderModel convertRowToOrderModel(Row row) {
@@ -255,50 +281,85 @@ public class OrderMapper {
             return null;
         }
 
-        long id = row.getLong("order_id");
-//        long id = row.getLong("id");
-//        long userId = row.getLong("user_id");
-//        Status status = Status.valueOf(row.getString("status"));
-//        ZoneId zoneId = ZoneId.of("Asia/Shanghai");
+        long id = row.getLong("id");
+        long userId = row.getLong("user_id");
+        Status status = Status.valueOf(row.getString("status"));
+        ZoneId zoneId = ZoneId.of("Asia/Shanghai");
 
-//        Date dateTemporary = row.getTimestamp("pay_time");
-//        Instant payTimeInstant = dateTemporary == null ? null : dateTemporary.toInstant();
-//        LocalDateTime payTime = payTimeInstant == null ? null : LocalDateTime.ofInstant(payTimeInstant, zoneId);
-//
-//        dateTemporary = row.getTimestamp("delivery_time");
-//        Instant deliveryTimeInstant = dateTemporary == null ? null : dateTemporary.toInstant();
-//        LocalDateTime deliveryTime = deliveryTimeInstant == null ? null : LocalDateTime.ofInstant(deliveryTimeInstant, zoneId);
-//
-//        dateTemporary = row.getTimestamp("received_time");
-//        Instant receivedTimeInstant = dateTemporary == null ? null : dateTemporary.toInstant();
-//        LocalDateTime receivedTime = receivedTimeInstant == null ? null : LocalDateTime.ofInstant(receivedTimeInstant, zoneId);
-//
-//        dateTemporary = row.getTimestamp("cancel_time");
-//        Instant cancelTimeInstant = dateTemporary == null ? null : dateTemporary.toInstant();
-//        LocalDateTime cancelTime = cancelTimeInstant == null ? null : LocalDateTime.ofInstant(cancelTimeInstant, zoneId);
+        Date dateTemporary = row.getTimestamp("pay_time");
+        Instant payTimeInstant = dateTemporary == null ? null : dateTemporary.toInstant();
+        LocalDateTime payTime = payTimeInstant == null ? null : LocalDateTime.ofInstant(payTimeInstant, zoneId);
 
-//        DeleteStatus deleteStatus = DeleteStatus.valueOf(row.getString("delete_status"));
-//
-//        Date dateTemporary = row.getTimestamp("create_time");
-//        Instant createTimeInstant = dateTemporary == null ? null : dateTemporary.toInstant();
-//        LocalDateTime createTime = createTimeInstant == null ? null : LocalDateTime.ofInstant(createTimeInstant, zoneId);
+        dateTemporary = row.getTimestamp("delivery_time");
+        Instant deliveryTimeInstant = dateTemporary == null ? null : dateTemporary.toInstant();
+        LocalDateTime deliveryTime = deliveryTimeInstant == null ? null : LocalDateTime.ofInstant(deliveryTimeInstant, zoneId);
+
+        dateTemporary = row.getTimestamp("received_time");
+        Instant receivedTimeInstant = dateTemporary == null ? null : dateTemporary.toInstant();
+        LocalDateTime receivedTime = receivedTimeInstant == null ? null : LocalDateTime.ofInstant(receivedTimeInstant, zoneId);
+
+        dateTemporary = row.getTimestamp("cancel_time");
+        Instant cancelTimeInstant = dateTemporary == null ? null : dateTemporary.toInstant();
+        LocalDateTime cancelTime = cancelTimeInstant == null ? null : LocalDateTime.ofInstant(cancelTimeInstant, zoneId);
+
+        DeleteStatus deleteStatus = DeleteStatus.valueOf(row.getString("delete_status"));
+
+        dateTemporary = row.getTimestamp("create_time");
+        Instant createTimeInstant = dateTemporary == null ? null : dateTemporary.toInstant();
+        LocalDateTime createTime = createTimeInstant == null ? null : LocalDateTime.ofInstant(createTimeInstant, zoneId);
 
         OrderModel model = new OrderModel();
         model.setId(id);
-//        model.setUserId(userId);
-//        model.setStatus(status);
-//        model.setPayTime(payTime);
-//        model.setDeliveryTime(deliveryTime);
-//        model.setReceivedTime(receivedTime);
-//        model.setCancelTime(cancelTime);
-//        model.setDeleteStatus(deleteStatus);
-//        model.setCreateTime(createTime);
+        model.setUserId(userId);
+        model.setStatus(status);
+        model.setPayTime(payTime);
+        model.setDeliveryTime(deliveryTime);
+        model.setReceivedTime(receivedTime);
+        model.setCancelTime(cancelTime);
+        model.setDeleteStatus(deleteStatus);
+        model.setCreateTime(createTime);
         return model;
     }
-//
+
+    //
 //    @Select("select min(id) from t_order")
 //    BigInteger getIdMin();
 //
-//    @Select("select id from t_order where id>#{lowerIdBoundary} order by id asc limit #{pageSize}")
-//    BigInteger[] listRangeIds(@Param("lowerIdBoundary") BigInteger lowerIdBoundary, @Param("pageSize") Integer pageSize);
+    public Long[] listRangeIds(Long orderIdBoundary, Integer pageSize) {
+        // 查询第一条记录
+        if (orderIdBoundary == null) {
+            pageSize = 1;
+            String cql = "select * from t_order limit " + pageSize;
+            ResultSet resultSet = this.session.execute(cql);
+            Row row = resultSet.one();
+            if (row == null) {
+                return null;
+            }
+
+            return new Long[]{row.getLong("id")};
+        } else {
+            // 先获取记录对应的 token
+            String cql = "select token(id) from t_order where id=" + orderIdBoundary;
+            ResultSet resultSet = this.session.execute(cql);
+            Row row = resultSet.one();
+            long token = row.getLong(0);
+
+            // 获取 token 之后的数据
+            cql = "select * from t_order where token(id)>" + token + " limit " + pageSize;
+            resultSet = session.execute(cql);
+
+            if (!resultSet.iterator().hasNext()) {
+                // 没有更多数据时
+                return null;
+            }
+
+            List<Long> orderIdList = new ArrayList<>();
+            for (Row rowInternal : resultSet) {
+                Long orderId = rowInternal.getLong("id");
+                orderIdList.add(orderId);
+            }
+
+            return orderIdList.toArray(new Long[]{});
+        }
+    }
 }

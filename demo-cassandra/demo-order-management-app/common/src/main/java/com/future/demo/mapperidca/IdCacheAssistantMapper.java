@@ -3,7 +3,6 @@ package com.future.demo.mapperidca;
 import com.future.demo.entity.IdCacheAssistantEntity;
 import org.apache.ibatis.annotations.*;
 
-import java.math.BigInteger;
 import java.util.List;
 
 @Mapper
@@ -23,7 +22,7 @@ public interface IdCacheAssistantMapper {
     Long getIdMax();
 
     @Select("select orderId from t_id_cache_assistant where id>=#{idLowerBoundary} order by id asc limit #{pageSize}")
-    BigInteger[] listOrderId(@Param("idLowerBoundary") long idLowerBoundary, @Param("pageSize") int pageSize);
+    Long[] listOrderId(@Param("idLowerBoundary") long idLowerBoundary, @Param("pageSize") int pageSize);
 
     @Update("truncate table t_id_cache_assistant")
     void truncate();

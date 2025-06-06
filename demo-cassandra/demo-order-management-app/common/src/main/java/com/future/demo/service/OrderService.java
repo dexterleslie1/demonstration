@@ -15,10 +15,10 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -164,7 +164,7 @@ public class OrderService {
      * @param orderId
      * @return
      */
-    public OrderDTO getById(BigDecimal orderId) {
+    public OrderDTO getById(Long orderId) {
         OrderModel orderModel = this.orderMapper.getById(orderId);
         if (orderModel == null) {
             return null;
@@ -172,6 +172,21 @@ public class OrderService {
 
         List<OrderDTO> orderDTOList = this.convertOrderEntityToOrderDTO(Collections.singletonList(orderModel));
         return orderDTOList.get(0);
+    }
+
+    /**
+     * 用于协助测试根据订单ID in查询的性能
+     *
+     * @param orderIdList
+     * @return
+     */
+    public List<OrderDTO> listById(List<Long> orderIdList) {
+        Assert.isTrue(orderIdList != null && !orderIdList.isEmpty(), "请指定订单ID列表");
+        List<OrderModel> orderModelList = this.orderMapper.listById(orderIdList);
+        if (orderModelList == null || orderModelList.isEmpty()) {
+            return new ArrayList<>();
+        }
+        return this.convertOrderEntityToOrderDTO(orderModelList);
     }
 
     /**
