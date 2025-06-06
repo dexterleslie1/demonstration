@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -39,7 +40,7 @@ public class OrderService {
     @Autowired
     SnowflakeService snowflakeService;
 
-    //    @PostConstruct
+    @PostConstruct
     public void init() {
         // region 准备协助基准测试的数据
         this.productMapper.truncate();

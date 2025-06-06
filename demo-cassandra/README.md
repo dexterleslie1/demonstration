@@ -1741,6 +1741,195 @@ public void testPagination() throws BusinessException {
 
 
 
+## 全表记录扫描
+
+### 原理
+
+在 Cassandra 3.11.4 中，分页扫描全表数据可以通过使用 **CQL 的 `LIMIT` 和 `TOKEN` 函数**来实现。由于 Cassandra 是一个分布式数据库，没有直接的“全表扫描”命令，但你可以通过分页查询来模拟这一过程。以下是实现步骤和示例：
+
+------
+
+**实现步骤**
+
+1. 使用 `TOKEN` 函数：
+   - Cassandra 使用分区键（Partition Key）来分布数据。通过 `TOKEN` 函数，你可以获取分区键的哈希值，从而在分页查询中跟踪进度。
+   - 每次查询时，记录最后一个分区的 `TOKEN` 值，并在下一次查询中使用它作为起始点。
+2. 使用 `LIMIT`：
+   - 使用 `LIMIT` 子句限制每次查询返回的行数，实现分页。
+3. 迭代查询：
+   - 通过循环或脚本，逐步增加 `TOKEN` 的起始值，直到所有数据被查询完毕。
+
+------
+
+**示例代码**
+
+假设你有一个表 `t_order`，其分区键是 `order_id`，你想分页查询所有数据：
+
+```cql
+-- 第一次查询，获取前 N 条记录
+SELECT * FROM t_order LIMIT 100;
+ 
+-- 记录最后一个分区的 order_id 和 TOKEN 值
+-- 假设最后一个记录的 order_id 是 'order_100'
+-- 使用 cqlsh 的 `TOKEN` 函数获取哈希值
+SELECT TOKEN(order_id) FROM t_order WHERE order_id = 'order_100';
+ 
+-- 假设返回的 TOKEN 值是 123456789
+-- 第二次查询，从该 TOKEN 值之后开始
+SELECT * FROM t_order WHERE TOKEN(order_id) > 123456789 LIMIT 100;
+ 
+-- 重复上述过程，直到没有更多数据返回
+```
+
+------
+
+**注意事项**
+
+1. 性能考虑：
+   - 全表扫描在 Cassandra 中通常不是推荐的操作，因为它会对集群造成较大压力。尽量在非高峰期执行此类操作。
+   - 如果表很大，分页查询可能需要较长时间。
+2. 一致性级别：
+   - 确保使用合适的一致性级别（如 `LOCAL_QUORUM` 或 `ONE`），以平衡性能和数据一致性。
+3. 脚本化：
+   - 由于需要多次查询并记录 `TOKEN` 值，建议使用脚本（如 Python、Java 等）自动化这一过程。
+4. 替代方案：
+   - 如果可能，考虑使用 Spark 或其他批处理工具来处理全表扫描任务，这些工具更适合大数据量的处理。
+
+------
+
+**Python 示例脚本**
+
+以下是一个简单的 Python 脚本示例，使用 `cassandra-driver` 来实现分页查询：
+
+```python
+from cassandra.cluster import Cluster
+from cassandra.auth import PlainTextAuthProvider
+ 
+# 连接到 Cassandra 集群
+auth_provider = PlainTextAuthProvider(username='cassandra', password='cassandra')
+cluster = Cluster(['127.0.0.1'], auth_provider=auth_provider)
+session = cluster.connect('demo')  # 替换为你的 keyspace
+ 
+# 初始化变量
+last_token = None
+page_size = 100
+ 
+while True:
+    # 构建查询
+    if last_token is None:
+        query = "SELECT * FROM t_order LIMIT %s"
+        params = (page_size,)
+    else:
+        query = "SELECT * FROM t_order WHERE TOKEN(order_id) > %s LIMIT %s"
+        params = (last_token, page_size)
+ 
+    # 执行查询
+    rows = session.execute(query, params)
+ 
+    # 处理结果
+    for row in rows:
+        print(row)  # 替换为你的处理逻辑
+ 
+    # 检查是否还有更多数据
+    if not rows or len(rows) < page_size:
+        break
+ 
+    # 获取最后一个分区的 TOKEN 值
+    last_order_id = rows[-1].order_id
+    last_token_row = session.execute("SELECT TOKEN(order_id) FROM t_order WHERE order_id = %s", (last_order_id,))
+    last_token = last_token_row[0][0]  # 假设返回的是一个元组，取第一个元素
+ 
+# 关闭连接
+cluster.shutdown()
+```
+
+------
+
+**总结**
+
+- 在 Cassandra 3.11.4 中，分页扫描全表数据可以通过 `TOKEN` 函数和 `LIMIT` 子句实现。
+- 需要记录最后一个分区的 `TOKEN` 值，并在下一次查询中使用它作为起始点。
+- 考虑性能影响，尽量在非高峰期执行，或使用批处理工具替代。
+- 使用脚本自动化分页查询过程。
+
+
+
+### 实验
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-cassandra/demo-client-datastax)
+
+```java
+/**
+ * 测试全表记录扫描
+ */
+@Test
+public void testTableDatumFullyScan() {
+    long userId = 1L;
+    Instant now = Instant.now();
+    long totalCount = 100;
+
+    // 清空 order 表数据
+    String cql = "truncate table t_order";
+    ResultSet resultSet = session.execute(cql);
+    Assertions.assertTrue(resultSet.wasApplied());
+
+    // 准备测试数据
+    BatchStatement batch = new BatchStatement(BatchStatement.Type.LOGGED);
+    for (int i = 0; i < totalCount; i++) {
+        BoundStatement bound = preparedStatementOrderInsertion.bind(
+                BigDecimal.valueOf(1L + i), // id
+                userId,                        // user_id
+                "Unpay",                      // status
+                // https://stackoverflow.com/questions/39926022/codec-not-found-for-requested-operation-timestamp-java-lang-long
+                Date.from(now),                // pay_time
+                null,                         // delivery_time
+                null,                         // received_time
+                null,                         // cancel_time
+                "Normal",                     // delete_status
+                Date.from(now)                 // create_time
+        );
+        batch = batch.add(bound);
+    }
+    resultSet = session.execute(batch);
+    Assertions.assertTrue(resultSet.wasApplied());
+
+    List<Long> orderIdListFetched = new ArrayList<>();
+    // 先获取第一条数据并记录订单id
+    cql = "select * from t_order limit 1";
+    resultSet = session.execute(cql);
+    Row row = resultSet.one();
+    long orderId = row.getDecimal("id").longValue();
+    orderIdListFetched.add(orderId);
+
+    while (true) {
+        cql = "select token(id) from t_order where id=" + orderId;
+        resultSet = session.execute(cql);
+        row = resultSet.one();
+        long token = row.getLong(0);
+        cql = "select * from t_order where token(id)>" + token + " limit 100000";
+        resultSet = session.execute(cql);
+
+        if (!resultSet.iterator().hasNext()) {
+            // 没有更多数据时退出
+            break;
+        }
+
+        for (Row rowInternal : resultSet) {
+            orderId = rowInternal.getDecimal("id").longValue();
+            orderIdListFetched.add(orderId);
+        }
+    }
+
+    Assertions.assertEquals(totalCount, orderIdListFetched.size());
+    for (int i = 0; i < totalCount; i++) {
+        orderId = 1L + i;
+        Assertions.assertTrue(orderIdListFetched.contains(orderId));
+    }
+}
+```
+
+
+
 ## 集群管理
 
 

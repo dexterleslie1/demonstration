@@ -211,4 +211,72 @@ public class ApplicationTests {
         Assertions.assertArrayEquals(new Long[]{2L, 1L}, orderIdList.toArray(new Long[]{}));
     }
 
+    /**
+     * 测试全表记录扫描
+     */
+    @Test
+    public void testTableDatumFullyScan() {
+        long userId = 1L;
+        Instant now = Instant.now();
+        long totalCount = 100;
+
+        // 清空 order 表数据
+        String cql = "truncate table t_order";
+        ResultSet resultSet = session.execute(cql);
+        Assertions.assertTrue(resultSet.wasApplied());
+
+        // 准备测试数据
+        BatchStatement batch = new BatchStatement(BatchStatement.Type.LOGGED);
+        for (int i = 0; i < totalCount; i++) {
+            BoundStatement bound = preparedStatementOrderInsertion.bind(
+                    BigDecimal.valueOf(1L + i), // id
+                    userId,                        // user_id
+                    "Unpay",                      // status
+                    // https://stackoverflow.com/questions/39926022/codec-not-found-for-requested-operation-timestamp-java-lang-long
+                    Date.from(now),                // pay_time
+                    null,                         // delivery_time
+                    null,                         // received_time
+                    null,                         // cancel_time
+                    "Normal",                     // delete_status
+                    Date.from(now)                 // create_time
+            );
+            batch = batch.add(bound);
+        }
+        resultSet = session.execute(batch);
+        Assertions.assertTrue(resultSet.wasApplied());
+
+        List<Long> orderIdListFetched = new ArrayList<>();
+        // 先获取第一条数据并记录订单id
+        cql = "select * from t_order limit 1";
+        resultSet = session.execute(cql);
+        Row row = resultSet.one();
+        long orderId = row.getDecimal("id").longValue();
+        orderIdListFetched.add(orderId);
+
+        while (true) {
+            cql = "select token(id) from t_order where id=" + orderId;
+            resultSet = session.execute(cql);
+            row = resultSet.one();
+            long token = row.getLong(0);
+            cql = "select * from t_order where token(id)>" + token + " limit 100000";
+            resultSet = session.execute(cql);
+
+            if (!resultSet.iterator().hasNext()) {
+                // 没有更多数据时退出
+                break;
+            }
+
+            for (Row rowInternal : resultSet) {
+                orderId = rowInternal.getDecimal("id").longValue();
+                orderIdListFetched.add(orderId);
+            }
+        }
+
+        Assertions.assertEquals(totalCount, orderIdListFetched.size());
+        for (int i = 0; i < totalCount; i++) {
+            orderId = 1L + i;
+            Assertions.assertTrue(orderIdListFetched.contains(orderId));
+        }
+    }
+
 }
