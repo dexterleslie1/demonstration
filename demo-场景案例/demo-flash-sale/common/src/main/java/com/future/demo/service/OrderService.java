@@ -8,6 +8,7 @@ import com.future.demo.dto.OrderDTO;
 import com.future.demo.dto.OrderDetailDTO;
 import com.future.demo.dto.PreOrderDTO;
 import com.future.demo.entity.*;
+import com.future.demo.mapper.CommonMapper;
 import com.future.demo.mapper.OrderDetailMapper;
 import com.future.demo.mapper.OrderMapper;
 import com.future.demo.mapper.ProductMapper;
@@ -83,6 +84,8 @@ public class OrderService {
     OrderRandomlyUtil orderRandomlyUtil;
     @Autowired
     SnowflakeService snowflakeService;
+    @Resource
+    CommonMapper commonMapper;
 
     public void create(Long userId, Long productId, Integer amount) throws Exception {
         String productIdStr = String.valueOf(productId);
@@ -194,6 +197,7 @@ public class OrderService {
 
         this.orderMapper.insertBatch(orderModelListProcessed);
         this.orderDetailMapper.insertBatch(orderDetailModelListProcessed);
+        this.commonMapper.updateIncreaseCount("order", orderModelListProcessed.size());
     }
 
     /**
