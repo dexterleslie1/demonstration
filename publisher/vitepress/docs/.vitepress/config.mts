@@ -35,6 +35,7 @@ export default defineConfig({
           { text: '多媒体技术', link: '/多媒体技术/README.md' },
           { text: 'Adobe', link: '/adobe/README.md' },
           { text: 'Figma', link: '/figma/README.md' },
+          { text: 'Android', link: '/android/README.md' },
         ]
       }, {
         text: '后端', items: [
@@ -545,6 +546,16 @@ export default defineConfig({
             { text: 'Curator', link: '/elasticsearch/curator.md' },
             { text: 'Postman 操作', link: '/elasticsearch/postman操作elasticsearch.md' },
             { text: '常见错误', link: '/elasticsearch/常见错误.md' },
+          ]
+        }
+      ],
+      '/android/': [
+        {
+          text: 'Android',
+          items: [
+            { text: '基础', link: '/android/README.md' },
+            { text: 'Android Studio', link: '/android/android-studio.md' },
+            { text: 'Gradle', link: '/android/gradle.md' },
           ]
         }
       ],
