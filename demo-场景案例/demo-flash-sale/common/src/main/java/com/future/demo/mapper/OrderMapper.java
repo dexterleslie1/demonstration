@@ -7,12 +7,17 @@ import java.util.List;
 
 @Mapper
 public interface OrderMapper {
-    /*@Select("SELECT * FROM t_order WHERE userId = #{userId} AND productId = #{productId}")
-    OrderModel getByUserIdAndProductId(Long userId, Long productId);*/
 
-    @Insert("INSERT INTO t_order (userId, createTime) VALUES (#{userId}, #{createTime})")
-    @Options(useGeneratedKeys = true, keyColumn = "id", keyProperty = "id")
+    @Insert("INSERT INTO t_order (id, userId, createTime,`status`,deleteStatus) VALUES (#{id}, #{userId}, #{createTime},#{status},#{deleteStatus})")
     int insert(OrderModel orderModel);
+
+    @Insert("<script>" +
+            "   insert into t_order(id,userId,createTime,`status`,deleteStatus) values " +
+            "   <foreach collection=\"orderModelList\" item=\"e\" separator=\",\">" +
+            "       (#{e.id},#{e.userId},#{e.createTime},#{e.status},#{e.deleteStatus})" +
+            "   </foreach>" +
+            "</script>")
+    void insertBatch(@Param("orderModelList") List<OrderModel> orderModelList);
 
     @Delete("DELETE FROM t_order")
     void deleteAll();
@@ -20,6 +25,6 @@ public interface OrderMapper {
     @Select("SELECT * FROM t_order")
     List<OrderModel> selectAll();
 
-    @Select("select * from t_order where userId=#{userId}")
-    List<OrderModel> list(Long userId);
+    /*@Select("select * from t_order where userId=#{userId}")
+    List<OrderModel> list(Long userId);*/
 }

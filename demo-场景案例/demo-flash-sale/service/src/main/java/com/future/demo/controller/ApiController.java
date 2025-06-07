@@ -6,27 +6,30 @@ import com.future.common.http.ObjectResponse;
 import com.future.common.http.ResponseUtils;
 import com.future.demo.dto.OrderDTO;
 import com.future.demo.service.OrderService;
+import com.future.demo.util.OrderRandomlyUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
-import java.util.Random;
 
 @RestController
 @RequestMapping("/api/v1/order")
 public class ApiController {
-    final static Random RANDOM = new Random(System.currentTimeMillis());
     @Resource
     OrderService orderService;
     @Autowired
     StringRedisTemplate redisTemplate;
+    @Resource
+    OrderRandomlyUtil orderRandomlyUtil;
 
     @GetMapping(value = "create")
     public ObjectResponse<String> create() throws Exception {
-        int totalProductCount = this.orderService.getTotalProductCount();
-        long userId = RANDOM.nextInt(OrderService.UserCount) + 1L;
-        long productId = RANDOM.nextInt(totalProductCount) + 1L;
+        long userId = this.orderRandomlyUtil.getUserIdRandomly();
+        long productId = this.orderRandomlyUtil.getProductIdRandomly();
         int amount = 1;
         this.orderService.create(userId, productId, amount);
         ObjectResponse<String> response = new ObjectResponse<>();

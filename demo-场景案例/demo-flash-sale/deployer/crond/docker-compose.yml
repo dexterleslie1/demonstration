@@ -4,7 +4,7 @@ services:
   crond:
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-crond
     environment:
-      - JAVA_OPTS=-Xmx2g
+      - JAVA_OPTS=-Xmx4g
       - TZ=Asia/Shanghai
     logging:
       driver: json-file

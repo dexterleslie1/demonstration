@@ -15,13 +15,21 @@ public interface OrderDetailMapper {
             "</script>")
     List<OrderDetailModel> list(List<Long> orderIdList);
 
-    @Insert("insert into t_order_detail(orderId,userId,productId,amount) values(#{orderDetail.orderId},#{orderDetail.userId},#{orderDetail.productId},#{orderDetail.amount})")
-    void insert(@Param(value = "orderDetail") OrderDetailModel orderDetailModel);
+    @Insert("insert into t_order_detail(id,orderId,userId,productId,merchantId,amount) values(#{orderDetail.id},#{orderDetail.orderId},#{orderDetail.userId},#{orderDetail.productId},#{orderDetail.merchantId},#{orderDetail.amount})")
+    int insert(@Param(value = "orderDetail") OrderDetailModel orderDetailModel);
 
-    @Select("select * from t_order_detail where userId=#{userId} and productId=#{productId}")
+    @Insert("<script>" +
+            "   insert into t_order_detail(id,orderId,userId,productId,merchantId,amount) values " +
+            "   <foreach collection=\"orderDetailModelList\" item=\"e\" separator=\",\">" +
+            "       (#{e.id},#{e.orderId},#{e.userId},#{e.productId},#{e.merchantId},#{e.amount})" +
+            "   </foreach>" +
+            "</script>")
+    void insertBatch(List<OrderDetailModel> orderDetailModelList);
+
+    /*@Select("select * from t_order_detail where userId=#{userId} and productId=#{productId}")
     OrderDetailModel getByUserIdAndProductId(
             @Param(value = "userId") Long userId,
-            @Param(value = "productId") Long productId);
+            @Param(value = "productId") Long productId);*/
 
     @Delete("delete from t_order_detail")
     void deleteAll();

@@ -2,17 +2,17 @@ package com.future.demo.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.future.common.exception.BusinessException;
 import com.future.demo.config.ConfigRocketMQ;
 import com.future.demo.dto.OrderDTO;
 import com.future.demo.dto.OrderDetailDTO;
-import com.future.demo.entity.OrderDetailModel;
-import com.future.demo.entity.OrderModel;
-import com.future.demo.entity.ProductModel;
+import com.future.demo.dto.PreOrderDTO;
+import com.future.demo.entity.*;
 import com.future.demo.mapper.OrderDetailMapper;
 import com.future.demo.mapper.OrderMapper;
 import com.future.demo.mapper.ProductMapper;
+import com.future.demo.util.OrderRandomlyUtil;
+import com.tencent.devops.leaf.service.SnowflakeService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.apache.rocketmq.client.producer.SendResult;
@@ -20,7 +20,6 @@ import org.apache.rocketmq.client.producer.SendStatus;
 import org.apache.rocketmq.common.message.Message;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -67,9 +66,6 @@ public class OrderService {
         }
     }
 
-    @Value("${totalProductCount}")
-    int totalProductCount;
-
     @Resource
     ObjectMapper objectMapper;
 
@@ -83,15 +79,10 @@ public class OrderService {
     ProductMapper productMapper;
     @Resource
     DefaultMQProducer producer;
-
-    /**
-     * 获取商品总数
-     *
-     * @return
-     */
-    public int getTotalProductCount() {
-        return this.totalProductCount;
-    }
+    @Resource
+    OrderRandomlyUtil orderRandomlyUtil;
+    @Autowired
+    SnowflakeService snowflakeService;
 
     public void create(Long userId, Long productId, Integer amount) throws Exception {
         String productIdStr = String.valueOf(productId);
@@ -120,11 +111,11 @@ public class OrderService {
         this.redisTemplate.opsForStream().add(record);*/
         // 创建消息实例，指定 topic、Tag和消息体
 
-        ObjectNode objectNode = this.objectMapper.createObjectNode();
-        objectNode.put("userId", userIdStr)
-                .put("productId", productIdStr)
-                .put("amount", amountStr);
-        String JSON = this.objectMapper.writeValueAsString(objectNode);
+        PreOrderDTO preOrderDTO = new PreOrderDTO();
+        preOrderDTO.setUserId(userId);
+        preOrderDTO.setProductId(productId);
+        preOrderDTO.setAmount(amount);
+        String JSON = this.objectMapper.writeValueAsString(preOrderDTO);
         Message message = new Message(ConfigRocketMQ.ProducerAndConsumerGroup, null, JSON.getBytes());
         // 发送消息并获取发送结果
         SendResult sendResult = producer.send(message);
@@ -144,6 +135,67 @@ public class OrderService {
         this.redisTemplate.opsForValue().set(userIdStr, this.objectMapper.writeValueAsString(orderModel));
     }
 
+    public List<OrderModel> createOrderModel(List<PreOrderDTO> preOrderDTOList) {
+        List<Long> productIdList = preOrderDTOList.stream().map(o -> o.getProductId()).distinct().collect(Collectors.toList());
+        List<ProductModel> productModelList = this.productMapper.list(productIdList);
+        Map<Long, ProductModel> productIdToModelMap = productModelList.stream().collect(Collectors.toMap(ProductModel::getId, o -> o));
+
+        List<OrderModel> orderModelList = new ArrayList<>();
+        for (PreOrderDTO preOrderDTO : preOrderDTOList) {
+            long userId = preOrderDTO.getUserId();
+            long productId = preOrderDTO.getProductId();
+            int amount = preOrderDTO.getAmount();
+
+            ProductModel productModel = productIdToModelMap.get(productId);
+
+            OrderModel orderModel = new OrderModel();
+
+            orderModel.setUserId(userId);
+            LocalDateTime createTime = OrderRandomlyUtil.getCreateTimeRandomly();
+            orderModel.setCreateTime(createTime);
+
+            DeleteStatus deleteStatus = OrderRandomlyUtil.getDeleteStatusRandomly();
+            orderModel.setDeleteStatus(deleteStatus);
+
+            Status status = OrderRandomlyUtil.getStatusRandomly();
+            orderModel.setStatus(status);
+
+            OrderDetailModel orderDetailModel = new OrderDetailModel();
+
+            orderDetailModel.setUserId(userId);
+            orderDetailModel.setProductId(productId);
+            orderDetailModel.setMerchantId(productModel.getMerchantId());
+            orderDetailModel.setAmount(amount);
+            orderModel.setOrderDetailList(Collections.singletonList(orderDetailModel));
+
+            orderModelList.add(orderModel);
+        }
+        return orderModelList;
+    }
+
+    public void insertBatch(List<OrderModel> orderModelList) {
+        List<OrderModel> orderModelListProcessed = new ArrayList<>();
+        List<OrderDetailModel> orderDetailModelListProcessed = new ArrayList<>();
+
+        for (OrderModel orderModel : orderModelList) {
+            Long orderId = this.snowflakeService.getId("order").getId();
+            orderModel.setId(orderId);
+
+            orderModelListProcessed.add(orderModel);
+
+            List<OrderDetailModel> orderDetailModelList = orderModel.getOrderDetailList();
+            for (OrderDetailModel orderDetailModel : orderDetailModelList) {
+                Long orderDetailId = this.snowflakeService.getId("orderDetail").getId();
+                orderDetailModel.setId(orderDetailId);
+                orderDetailModel.setOrderId(orderId);
+                orderDetailModelListProcessed.add(orderDetailModel);
+            }
+        }
+
+        this.orderMapper.insertBatch(orderModelListProcessed);
+        this.orderDetailMapper.insertBatch(orderDetailModelListProcessed);
+    }
+
     /**
      * 根据用户查询其所属订单
      *
@@ -151,7 +203,7 @@ public class OrderService {
      * @return
      */
     public List<OrderDTO> list(Long userId) throws JsonProcessingException {
-        List<OrderModel> orderList = this.orderMapper.list(userId);
+        List<OrderModel> orderList = null;//this.orderMapper.list(userId);
         List<Long> orderIdList = orderList.stream().map(OrderModel::getId).collect(Collectors.toList());
 
         List<OrderDTO> orderDTOList = null;
@@ -207,6 +259,8 @@ public class OrderService {
      * 协助测试用于重新初始化商品信息
      */
     public void initProduct() {
+        long totalProductCount = this.orderRandomlyUtil.productIdArray.length;
+
         // 清空redis缓存所有数据
         try (RedisConnection connection = this.redisTemplate.getConnectionFactory().getConnection()) {
             connection.flushDb();
@@ -226,32 +280,36 @@ public class OrderService {
         List<ProductModel> productModelList = new ArrayList<>();
         // 已经执行的批次数
         int executedBatchCount = 0;
-        for (long i = 1; i <= totalProductCount; i++) {
+        for (int i = 0; i < this.orderRandomlyUtil.productIdArray.length; i++) {
+            long productId = this.orderRandomlyUtil.productIdArray[i];
+
             // 批量初始化商品库存
             Integer productStock = OrderService.ProductStock;
-            String keyProductStock = String.format(OrderService.KeyproductStockWithHashTag, i);
+            String keyProductStock = String.format(OrderService.KeyproductStockWithHashTag, productId);
             productStockMap.put(keyProductStock, String.valueOf(productStock));
-            if (productStockMap.size() == batchSize || i == totalProductCount) {
+            if (productStockMap.size() == batchSize || i == this.orderRandomlyUtil.productIdArray.length) {
                 this.redisTemplate.opsForValue().multiSet(productStockMap);
                 productStockMap = new HashMap<>();
             }
 
             // 批量删除商品购买记录
-            String keyProductPurchaseRecord = String.format(OrderService.KeyProductPurchaseRecordWithHashTag, i);
+            String keyProductPurchaseRecord = String.format(OrderService.KeyProductPurchaseRecordWithHashTag, productId);
             productPurchaseRecordList.add(keyProductPurchaseRecord);
-            if (productPurchaseRecordList.size() == batchSize || i == totalProductCount) {
+            if (productPurchaseRecordList.size() == batchSize || i == this.orderRandomlyUtil.productIdArray.length) {
                 this.redisTemplate.delete(productPurchaseRecordList);
                 productPurchaseRecordList = new ArrayList<>();
             }
 
             // 批量初始化商品db数据
             ProductModel productModel = new ProductModel();
-            productModel.setId(i);
-            productModel.setName("产品" + i);
+            productModel.setId(productId);
+            productModel.setName("产品" + productId);
             productModel.setStock(productStock);
+            long merchantId = this.orderRandomlyUtil.getMerchantIdRandomly();
+            productModel.setMerchantId(merchantId);
             productModelList.add(productModel);
-            if (productModelList.size() == batchSize || i == totalProductCount) {
-                this.productMapper.insert(productModelList);
+            if (productModelList.size() == batchSize || i == this.orderRandomlyUtil.productIdArray.length) {
+                this.productMapper.insertBatch(productModelList);
                 productModelList = new ArrayList<>();
 
                 executedBatchCount++;

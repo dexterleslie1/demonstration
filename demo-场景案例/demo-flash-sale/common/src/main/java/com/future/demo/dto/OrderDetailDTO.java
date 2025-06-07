@@ -7,5 +7,6 @@ public class OrderDetailDTO {
     private Long id;
     private Long orderId;
     private Long productId;
+    private Long merchantId;
     private Integer amount;
 }

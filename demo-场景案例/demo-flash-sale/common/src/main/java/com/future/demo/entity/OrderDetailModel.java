@@ -8,5 +8,6 @@ public class OrderDetailModel {
     private Long orderId;
     private Long userId;
     private Long productId;
+    private Long merchantId;
     private Integer amount;
 }

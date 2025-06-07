@@ -10,6 +10,12 @@ public class OrderModel {
     private Long id;
     private Long userId;
     private LocalDateTime createTime;
+    private Status status;
+    private LocalDateTime payTime;
+    private LocalDateTime deliveryTime;
+    private LocalDateTime receivedTime;
+    private LocalDateTime cancelTime;
+    private DeleteStatus deleteStatus;
 
     private List<OrderDetailModel> orderDetailList;
 }
