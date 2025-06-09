@@ -1,9 +1,10 @@
 package com.future.demo.crond;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.future.demo.config.ConfigRocketMQ;
 import com.future.demo.dto.PreOrderDTO;
 import com.future.demo.entity.OrderModel;
-import com.future.demo.mapper.OrderMapper;
 import com.future.demo.service.OrderService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
@@ -38,8 +39,6 @@ public class ConfigRocketMQConsumer {
     @Autowired
     StringRedisTemplate redisTemplate;
     @Resource
-    OrderMapper orderMapper;
-    @Resource
     OrderService orderService;
 
     @Bean(initMethod = "start", destroyMethod = "shutdown")
@@ -51,7 +50,8 @@ public class ConfigRocketMQConsumer {
         // 订阅指定的主题和标签（* 表示所有标签）
         consumer.subscribe(com.future.demo.config.ConfigRocketMQ.ProducerAndConsumerGroup, "*");
         // 支持批量处理消息
-        consumer.setConsumeMessageBatchMaxSize(256);
+        consumer.setConsumeMessageBatchMaxSize(1024);
+        consumer.setPullBatchSize(256);
         // 设置并发线程数
         consumer.setConsumeThreadMin(16);
         consumer.setConsumeThreadMax(64);
@@ -92,6 +92,51 @@ public class ConfigRocketMQConsumer {
                         }
                     }
                 });
+
+                return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
+            } catch (Exception ex) {
+                log.error(ex.getMessage(), ex);
+            }
+
+            return ConsumeConcurrentlyStatus.RECONSUME_LATER;
+        });
+        return consumer;
+    }
+
+    /**
+     * 监听Cassandra索引创建消息
+     *
+     * @return
+     * @throws MQClientException
+     */
+    @Bean(initMethod = "start", destroyMethod = "shutdown")
+    public DefaultMQPushConsumer consumerCassandraIndexCreation() throws MQClientException {
+        // 创建消费者实例，并设置消费者组名
+        DefaultMQPushConsumer consumer = new DefaultMQPushConsumer(ProducerAndConsumerGroup+"1");
+        // 设置 Name Server 地址，此处为示例，实际使用时请替换为真实的 Name Server 地址
+        consumer.setNamesrvAddr(this.namesrvaddr);
+        // 订阅指定的主题和标签（* 表示所有标签）
+        consumer.subscribe(ConfigRocketMQ.CassandraIndexTopic, "*");
+        // 支持批量处理消息
+        consumer.setConsumeMessageBatchMaxSize(32);
+        consumer.setPullBatchSize(16);
+        // 设置并发线程数
+        consumer.setConsumeThreadMin(16);
+        consumer.setConsumeThreadMax(32);
+
+        // 注册消息监听器
+        consumer.registerMessageListener((MessageListenerConcurrently) (msgs, context) -> {
+            List<OrderModel> orderModelList = new ArrayList<>();
+            try {
+                for (MessageExt messageExt : msgs) {
+                    String JSON = new String(messageExt.getBody(), StandardCharsets.UTF_8);
+                    List<OrderModel> orderModelListTemporary =
+                            objectMapper.readValue(JSON, new TypeReference<List<OrderModel>>() {
+                            });
+                    orderModelList.addAll(orderModelListTemporary);
+                }
+
+                orderService.insertBatchOrderIndexListByUserId(orderModelList);
 
                 return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
             } catch (Exception ex) {

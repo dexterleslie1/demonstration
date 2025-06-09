@@ -130,3 +130,16 @@ services:
       # https://hub.docker.com/_/zookeeper
       - ZOO_ADMINSERVER_ENABLED=false
     network_mode: host
+
+  cassandra:
+    build:
+      context: ./
+      dockerfile: Dockerfile-cassandra
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-cassandra
+    environment:
+      - MAX_HEAP_SIZE=1G
+      - HEAP_NEWSIZE=256M
+    volumes:
+      - ./init.cql:/scripts/data.cql:ro
+    ports:
+      - "9042:9042"

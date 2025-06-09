@@ -1,0 +1,5 @@
+#FROM cassandra:5.0.4
+FROM cassandra:3.11.4
+
+COPY cassandra.yaml /etc/cassandra/cassandra.yaml
+COPY init.cql /scripts/data.cql

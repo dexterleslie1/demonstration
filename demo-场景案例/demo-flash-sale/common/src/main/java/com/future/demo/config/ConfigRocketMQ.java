@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Configuration
 public class ConfigRocketMQ {
     public final static String ProducerAndConsumerGroup = "demo-flash-sale";
+    public final static String CassandraIndexTopic = "cassandra-index-topic";
 
     @Value("${namesrvaddr}")
     String namesrvaddr;

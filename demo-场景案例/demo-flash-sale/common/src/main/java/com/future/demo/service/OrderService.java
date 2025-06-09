@@ -1,24 +1,24 @@
 package com.future.demo.service;
 
+import com.datastax.driver.core.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.future.common.exception.BusinessException;
 import com.future.demo.config.ConfigRocketMQ;
 import com.future.demo.dto.OrderDTO;
-import com.future.demo.dto.OrderDetailDTO;
 import com.future.demo.dto.PreOrderDTO;
 import com.future.demo.entity.*;
-import com.future.demo.mapper.CommonMapper;
-import com.future.demo.mapper.OrderDetailMapper;
-import com.future.demo.mapper.OrderMapper;
-import com.future.demo.mapper.ProductMapper;
+import com.future.demo.mapper.*;
 import com.future.demo.util.OrderRandomlyUtil;
 import com.tencent.devops.leaf.service.SnowflakeService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.rocketmq.client.exception.MQBrokerException;
+import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.client.producer.SendStatus;
 import org.apache.rocketmq.common.message.Message;
+import org.apache.rocketmq.remoting.exception.RemotingException;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
@@ -27,14 +27,18 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StreamUtils;
-import org.springframework.util.StringUtils;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * 注意：实现从用户维度查询订单已经能够演示基于Cassandra建模的基本技能，所以不需要实现从商家维度查询订单功能。
+ */
 @Service
 @Slf4j
 public class OrderService {
@@ -42,7 +46,6 @@ public class OrderService {
     public final static String KeyProductPurchaseRecordWithHashTag = "product{%s}:purchase";
 
     public final static int ProductStock = Integer.MAX_VALUE;
-    public final static int UserCount = 10000 * 10000;
 
     static DefaultRedisScript<Long> defaultRedisScript = null;
     static String Script = null;
@@ -68,6 +71,42 @@ public class OrderService {
     }
 
     @Resource
+    Session session;
+
+    private PreparedStatement preparedStatementUpdateIncreaseCount;
+    private PreparedStatement preparedStatementListByUserIdAndStatus;
+    private PreparedStatement preparedStatementListByUserIdAndWithoutStatus;
+
+    @PostConstruct
+    public void init() {
+        String cql = "update t_count set count=count+? where flag=?";
+        preparedStatementUpdateIncreaseCount = session.prepare(cql);
+        preparedStatementUpdateIncreaseCount.setConsistencyLevel(ConsistencyLevel.LOCAL_ONE);
+
+        cql = "select user_id,status,create_time,order_id from t_order_list_by_userId where user_id=?" + " and status=?" +
+                " and create_time>=? and create_time<=?" +
+                " limit ?";
+        preparedStatementListByUserIdAndStatus = session.prepare(cql);
+        preparedStatementListByUserIdAndStatus.setConsistencyLevel(ConsistencyLevel.LOCAL_ONE);
+
+        cql = "select user_id,status,create_time,order_id from t_order_list_by_userId where user_id=?";
+        cql = cql + " and status in(";
+        int count = 0;
+        for (Status status : Status.values()) {
+            cql = cql + "'" + status.name() + "'";
+            if (count + 1 < Status.values().length) {
+                cql = cql + ",";
+            }
+            count++;
+        }
+        cql = cql + ")";
+        cql = cql + " and create_time>=? and create_time<=?" +
+                " limit ?";
+        preparedStatementListByUserIdAndWithoutStatus = session.prepare(cql);
+        preparedStatementListByUserIdAndWithoutStatus.setConsistencyLevel(ConsistencyLevel.LOCAL_ONE);
+    }
+
+    @Resource
     ObjectMapper objectMapper;
 
     @Autowired
@@ -86,6 +125,8 @@ public class OrderService {
     SnowflakeService snowflakeService;
     @Resource
     CommonMapper commonMapper;
+    @Resource
+    IndexMapper indexMapper;
 
     public void create(Long userId, Long productId, Integer amount) throws Exception {
         String productIdStr = String.valueOf(productId);
@@ -176,7 +217,7 @@ public class OrderService {
         return orderModelList;
     }
 
-    public void insertBatch(List<OrderModel> orderModelList) {
+    public void insertBatch(List<OrderModel> orderModelList) throws JsonProcessingException, MQBrokerException, RemotingException, InterruptedException, MQClientException, BusinessException {
         List<OrderModel> orderModelListProcessed = new ArrayList<>();
         List<OrderDetailModel> orderDetailModelListProcessed = new ArrayList<>();
 
@@ -198,26 +239,90 @@ public class OrderService {
         this.orderMapper.insertBatch(orderModelListProcessed);
         this.orderDetailMapper.insertBatch(orderDetailModelListProcessed);
         this.commonMapper.updateIncreaseCount("order", orderModelListProcessed.size());
+
+        String JSON = this.objectMapper.writeValueAsString(orderModelList);
+        Message message = new Message(ConfigRocketMQ.CassandraIndexTopic, null, JSON.getBytes());
+        // 发送消息并获取发送结果
+        SendResult sendResult = producer.send(message);
+        if (sendResult.getSendStatus() != SendStatus.SEND_OK) {
+            throw new BusinessException("RocketMQ消息发送失败，Topic: " + ConfigRocketMQ.CassandraIndexTopic);
+        }
     }
 
     /**
-     * 根据用户查询其所属订单
+     * 批量建立 listByUserId 索引
+     */
+    public void insertBatchOrderIndexListByUserId(List<OrderModel> orderModelList) throws BusinessException {
+        List<OrderIndexListByUserIdModel> list = new ArrayList<>();
+        for (int i = 0; i < orderModelList.size(); i++) {
+            OrderModel orderModel = orderModelList.get(i);
+            Long userId = orderModel.getUserId();
+            LocalDateTime createTime = orderModel.getCreateTime();
+            Status status = orderModel.getStatus();
+
+            // 创建订单
+            OrderIndexListByUserIdModel model = new OrderIndexListByUserIdModel();
+
+            Long orderId = this.snowflakeService.getId("orderIndexListByUserId").getId();
+            model.setOrderId(orderId);
+
+            model.setUserId(userId);
+            model.setCreateTime(createTime);
+            model.setStatus(status);
+            list.add(model);
+        }
+        this.indexMapper.insertBatchOrderIndexListByUserId(list);
+        this.updateIncreaseCount("orderListByUserId", list.size());
+    }
+
+    public void updateIncreaseCount(String flag, long count) throws BusinessException {
+        BoundStatement boundStatement = preparedStatementUpdateIncreaseCount.bind(count, flag);
+        ResultSet resultSet = session.execute(boundStatement);
+        if (!resultSet.wasApplied()) {
+            throw new BusinessException("执行 updateIncreaseCount 失败，count=1");
+        }
+    }
+
+    /**
+     * 用户查询指定日期范围+指定状态的订单
      *
      * @param userId
      * @return
      */
-    public List<OrderDTO> list(Long userId) throws JsonProcessingException {
-        List<OrderModel> orderList = null;//this.orderMapper.list(userId);
-        List<Long> orderIdList = orderList.stream().map(OrderModel::getId).collect(Collectors.toList());
+    public List<OrderDTO> listByUserIdAndStatus(Long userId,
+                                                Status status,
+                                                LocalDateTime startTime,
+                                                LocalDateTime endTime) {
+        ZoneId zoneId = ZoneId.of("Asia/Shanghai");
+        BoundStatement bound = preparedStatementListByUserIdAndStatus.bind(
+                userId, status.name(),
+                Date.from(startTime.atZone(zoneId).toInstant())
+                , Date.from(endTime.atZone(zoneId).toInstant())
+                , 15);
+        ResultSet result = session.execute(bound);
+        List<OrderModel> orderModelList = new ArrayList<>();
+        for (Row row : result) {
+            long userIdTemporary = row.getLong("user_id");
+            long orderId = row.getLong("order_id");
+            Status statusTemporary = Status.valueOf(row.getString("status"));
+            LocalDateTime createTime = row.getTimestamp("create_time").toInstant().atZone(zoneId).toLocalDateTime();
+
+            OrderModel model = new OrderModel();
+            model.setId(orderId);
+            model.setUserId(userIdTemporary);
+            model.setStatus(statusTemporary);
+            model.setCreateTime(createTime);
+            orderModelList.add(model);
+        }
 
         List<OrderDTO> orderDTOList = null;
-        if (!orderList.isEmpty()) {
-            List<OrderDetailModel> orderDetailList = this.orderDetailMapper.list(orderIdList);
-            Map<Long, List<OrderDetailModel>> orderDetailGroupByOrderId = orderDetailList.stream().collect(Collectors.groupingBy(OrderDetailModel::getOrderId));
-            orderDTOList = orderList.stream().map(o -> {
+        if (!orderModelList.isEmpty()) {
+            /*List<OrderDetailModel> orderDetailList = this.orderDetailMapper.list(orderIdList);
+            Map<Long, List<OrderDetailModel>> orderDetailGroupByOrderId = orderDetailList.stream().collect(Collectors.groupingBy(OrderDetailModel::getOrderId));*/
+            orderDTOList = orderModelList.stream().map(o -> {
                 OrderDTO orderDTO = new OrderDTO();
                 BeanUtils.copyProperties(o, orderDTO);
-                Long orderId = o.getId();
+                /*Long orderId = o.getId();
                 if (orderDetailGroupByOrderId.containsKey(orderId)) {
                     List<OrderDetailModel> orderDetailListTemporary = orderDetailGroupByOrderId.get(orderId);
                     List<OrderDetailDTO> orderDetailDTOList = orderDetailListTemporary.stream().map(oInternal1 -> {
@@ -226,7 +331,7 @@ public class OrderService {
                         return orderDetailDTO;
                     }).collect(Collectors.toList());
                     orderDTO.setOrderDetailList(orderDetailDTOList);
-                }
+                }*/
                 return orderDTO;
             }).collect(Collectors.toList());
         }
@@ -236,7 +341,7 @@ public class OrderService {
         }
 
         // 查询 redis 缓存中是否有订单信息
-        if (Boolean.TRUE.equals(this.redisTemplate.hasKey(String.valueOf(userId)))) {
+        /*if (Boolean.TRUE.equals(this.redisTemplate.hasKey(String.valueOf(userId)))) {
             String JSON = this.redisTemplate.opsForValue().get(String.valueOf(userId));
             if (StringUtils.hasText(JSON)) {
                 OrderModel orderModel = this.objectMapper.readValue(JSON, OrderModel.class);
@@ -254,7 +359,90 @@ public class OrderService {
                     orderDTOList.add(0, orderDTO);
                 }
             }
+        }*/
+
+        return orderDTOList;
+    }
+
+    /**
+     * 用户查询指定日期范围+所有状态的订单
+     *
+     * @param userId
+     * @param startTime
+     * @param endTime
+     * @return
+     */
+    public List<OrderDTO> listByUserIdAndWithoutStatus(
+            Long userId,
+            LocalDateTime startTime,
+            LocalDateTime endTime) {
+        ZoneId zoneId = ZoneId.of("Asia/Shanghai");
+        BoundStatement bound = preparedStatementListByUserIdAndWithoutStatus.bind(
+                userId,
+                Date.from(startTime.atZone(zoneId).toInstant())
+                , Date.from(endTime.atZone(zoneId).toInstant())
+                , 15);
+        ResultSet result = session.execute(bound);
+        List<OrderModel> orderModelList = new ArrayList<>();
+        for (Row row : result) {
+            long userIdTemporary = row.getLong("user_id");
+            long orderId = row.getLong("order_id");
+            Status statusTemporary = Status.valueOf(row.getString("status"));
+            LocalDateTime createTime = row.getTimestamp("create_time").toInstant().atZone(zoneId).toLocalDateTime();
+
+            OrderModel model = new OrderModel();
+            model.setId(orderId);
+            model.setUserId(userIdTemporary);
+            model.setStatus(statusTemporary);
+            model.setCreateTime(createTime);
+            orderModelList.add(model);
         }
+
+        List<OrderDTO> orderDTOList = null;
+        if (!orderModelList.isEmpty()) {
+            /*List<OrderDetailModel> orderDetailList = this.orderDetailMapper.list(orderIdList);
+            Map<Long, List<OrderDetailModel>> orderDetailGroupByOrderId = orderDetailList.stream().collect(Collectors.groupingBy(OrderDetailModel::getOrderId));*/
+            orderDTOList = orderModelList.stream().map(o -> {
+                OrderDTO orderDTO = new OrderDTO();
+                BeanUtils.copyProperties(o, orderDTO);
+                /*Long orderId = o.getId();
+                if (orderDetailGroupByOrderId.containsKey(orderId)) {
+                    List<OrderDetailModel> orderDetailListTemporary = orderDetailGroupByOrderId.get(orderId);
+                    List<OrderDetailDTO> orderDetailDTOList = orderDetailListTemporary.stream().map(oInternal1 -> {
+                        OrderDetailDTO orderDetailDTO = new OrderDetailDTO();
+                        BeanUtils.copyProperties(oInternal1, orderDetailDTO);
+                        return orderDetailDTO;
+                    }).collect(Collectors.toList());
+                    orderDTO.setOrderDetailList(orderDetailDTOList);
+                }*/
+                return orderDTO;
+            }).collect(Collectors.toList());
+        }
+
+        if (orderDTOList == null) {
+            orderDTOList = new ArrayList<>();
+        }
+
+        // 查询 redis 缓存中是否有订单信息
+        /*if (Boolean.TRUE.equals(this.redisTemplate.hasKey(String.valueOf(userId)))) {
+            String JSON = this.redisTemplate.opsForValue().get(String.valueOf(userId));
+            if (StringUtils.hasText(JSON)) {
+                OrderModel orderModel = this.objectMapper.readValue(JSON, OrderModel.class);
+                if (orderModel != null) {
+                    List<OrderDetailDTO> orderDetailDTOList = orderModel.getOrderDetailList().stream().map(
+                            o -> {
+                                OrderDetailDTO orderDetailDTO = new OrderDetailDTO();
+                                BeanUtils.copyProperties(o, orderDetailDTO);
+                                return orderDetailDTO;
+                            }
+                    ).collect(Collectors.toList());
+                    OrderDTO orderDTO = new OrderDTO();
+                    BeanUtils.copyProperties(orderModel, orderDTO);
+                    orderDTO.setOrderDetailList(orderDetailDTOList);
+                    orderDTOList.add(0, orderDTO);
+                }
+            }
+        }*/
 
         return orderDTOList;
     }
