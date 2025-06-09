@@ -51,8 +51,6 @@ services:
 broker.conf 内容如下：
 
 ```
-# 增加处理消息的线程数
-sendMessageThreadPoolNums=32
 # 增大队列容量
 maxMessageSize=16777216
 ```
@@ -331,3 +329,91 @@ RocketMQ 实例 CPU 未全部使用
    2863 3000        20   0  104G 13.6G 9291M S   2.7 85.2  0:08.99 /usr/lib/jvm/java-1.8.0-openjdk-1.8.0.372.b07-1.el7_9.x86_64/bin/java -server -Xms4004M -Xmx4004M -Xmn800M -XX:+UseG1GC -XX:G1HeapRegionSize=16m -XX:G1ReservePercen
    2827 3000        20   0  104G 13.6G 9291M S   2.0 85.2  0:09.06 /usr/lib/jvm/java-1.8.0-openjdk-1.8.0.372.b07-1.el7_9.x86_64/bin/java -server -Xms4004M -Xmx4004M -Xmn800M -XX:+UseG1GC -XX:G1HeapRegionSize=16m -XX:G1ReservePercen
 ```
+
+
+
+## 配置项
+
+### broker
+
+#### `maxTransferCountOnMessageInMemory`
+
+在RocketMQ中，`maxTransferCountOnMessageInMemory`是Broker配置文件中的一个重要参数，它用于控制Broker在内存中每次传输的最大消息数量。以下是关于该配置项的详细解释：
+
+参数作用
+
+- **控制消息拉取量**：`maxTransferCountOnMessageInMemory`参数决定了Broker在内存中每次传输给消费者的最大消息数量。如果消费者设置的`pullBatchSize`超过了这个值，Broker仍然只会返回最多`maxTransferCountOnMessageInMemory`条消息。
+- **避免内存溢出**：通过限制每次传输的消息数量，可以防止Broker因一次性传输过多消息而导致内存溢出。
+
+配置方法
+
+- **修改配置文件**：要修改`maxTransferCountOnMessageInMemory`的值，需要编辑Broker的配置文件（通常是`broker.conf`）。在配置文件中找到或添加该参数，并设置为其期望的值。例如，将其设置为1024：
+
+  ```plaintext
+  maxTransferCountOnMessageInMemory=1024
+  ```
+
+- **重启Broker**：修改配置文件后，需要重启Broker服务以使更改生效。
+
+注意事项
+
+- **与客户端参数的关系**：虽然消费者可以通过`pullBatchSize`参数设置每次拉取的消息数量，但这个值不能超过Broker端`maxTransferCountOnMessageInMemory`的设置。因此，在调整客户端参数时，需要确保它们与Broker端的配置相兼容。
+- **性能影响**：增加`maxTransferCountOnMessageInMemory`的值可能会提高消息传输的吞吐量，但同时也会增加Broker的内存压力。因此，在调整该参数时，需要根据实际场景和系统资源进行权衡。
+- **监控与调优**：在生产环境中，建议对Broker的内存使用情况进行监控，并根据监控结果对`maxTransferCountOnMessageInMemory`参数进行调优。
+
+
+
+## 批量消息消费配置调优
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-rocketmq/demo-spring-rocketmq-benchmark)
+
+### 客户端调优
+
+客户端如下：
+
+```xml
+<dependency>
+    <groupId>org.apache.rocketmq</groupId>
+    <artifactId>rocketmq-client</artifactId>
+    <version>4.9.6</version>
+</dependency>
+```
+
+消费者批量消费关键调优配置如下：
+
+```java
+// 设置单个批次最大消息数量为1024，下面两个设置需要同时设置，否则设置无效
+consumer.setConsumeMessageBatchMaxSize(1024);
+consumer.setPullBatchSize(1024);
+
+// 设置并发线程数
+consumer.setConsumeThreadMin(16);
+consumer.setConsumeThreadMax(128);
+```
+
+
+
+### `broker` 调优
+
+关键调优配置如下：
+
+```properties
+# 控制Broker在内存中每次传输的最大消息数量
+maxTransferCountOnMessageInMemory=1024
+```
+
+
+
+### 调优配置实验
+
+调优配置是通过本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-rocketmq/demo-spring-rocketmq-benchmark) 协助测试出来的。实验步骤如下：
+
+1. 启动应用
+
+2. 使用 `ab` 工具生产100万个消息
+
+   ```sh
+   ab -n 1000000 -c 128 -k http://192.168.1.181:8080/api/v1/send
+   ```
+
+3. 等待消息消费完毕后访问统计接口 `http://192.168.1.181:8082/api/v1/statistics` 以查看批量处理情况。
