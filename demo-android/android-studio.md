@@ -6,11 +6,11 @@
 
 
 
-### `windows7`安装
+### `windows7、windows11、windows 2016`安装
 
 注意：用虚拟机安装`android studio`先登陆`vCenter`启用虚拟机虚拟化
 
-下载`android-studio-ide-171.4408382-windows.exe`双击安装
+下载 `android-studio-ide-171.4408382-windows.exe` 或者最新版本的 `android studio` 双击安装
 
 选中`Android SDK`和`Intel HAXM`安装
 
@@ -61,6 +61,19 @@ StartupNotify=true
 通过`launch`应用程序功能输入`android studio`打开`android studio`
 
 在打开项目过程中，如果下载`gradle.zip`过慢，可以参考 <a href="/android/gradle.html#android-studio下载gradle慢的解决办法" target="_blank">链接</a> 解决此问题。
+
+
+
+## 运行谷歌的模拟器（AVD）慢
+
+>注意：个人电脑需要退出省电模式并接通电源，否则 `CPU` 功率太低导致 `AVD` 很慢。
+>
+>提示：
+>
+>- 使用服务器级的 `CPU` 运行 `AVD` 速度更加快。
+>- 使用 `Ubuntu20.4` 运行 `AVD` 速度更加快，可能是因为底层使用 `kvm` 虚拟化原因。
+
+运行谷歌的模拟器很慢，甚至在启动应用后经常会遇到 `ANR` 错误，这是因为运行了比较新版本的安卓操作系统，此时只需要切换到比较低版本的安卓系统（例如：`API 24 "Nougat"; Android 7.0 Google APIs`）并且把 `Emulated Performance` 中的 `Graphics Acceleration` 选中为 `Hardware` ，`AVD RAM（AVD运行内存）` 设置为 `4GB`，`VM Heap size（AVD中的每个应用运行内存）` 设置为 `256MB`。`Startup` 中的 `Default Boot` 设置为 `Cold`。
 
 
 
