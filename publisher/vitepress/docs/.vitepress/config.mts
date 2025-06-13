@@ -357,6 +357,8 @@ export default defineConfig({
             { text: '存储服务', link: '/aliyun/阿里云存储服务.md' },
             { text: '网络', link: '/aliyun/阿里云网络.md' },
             { text: '容器服务', link: '/aliyun/阿里云容器服务.md' },
+            { text: 'ECS', link: '/aliyun/云服务器.md' },
+            { text: 'ROS', link: '/aliyun/ROS.md' },
           ]
         }
       ],
