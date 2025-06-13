@@ -114,6 +114,14 @@ describe tables
 
 
 
+### `cqlsh` 客户端无交互执行命令
+
+```sh
+cqlsh -e "source '/scripts/data.cql'"
+```
+
+
+
 ## 部署
 
 ### Docker 部署单机
