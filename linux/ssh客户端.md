@@ -349,27 +349,45 @@ $ parallel-ssh -l dexterleslie -H 192.168.1.181 -i 'bash --login -c "env"'
 
 
 
-## Electerm
+## `electerm`
 
 >`https://github.com/electerm/electerm`
 
 ### 总结
 
-todo
+- 支持导出导入连接
+- 支持文件上传和下载
+- `Ubuntu` 可以使用此工具作为 `SSH` 客户端。
 
 
 
 ### 安装
 
-#### Ubuntu 安装
+#### `Ubuntu`
 
-使用 snap 安装
+>注意：新版本 `Ubuntu` 可以使用 `snap` 安装最新版本的 `electerm`，但是 `Ubuntu20.4` 只能通过 `deb` 方式安装旧版本 `electerm`，因为 `GLIBC` 兼容性问题。
 
-```bash
+新版本 `Ubuntu` 使用 `snap` 安装
+
+```sh
 sudo snap install electerm --classic
 ```
 
-#### MacOS 安装
+
+
+`Ubuntu20.4` 使用 `deb` 方式安装：
+
+- 下载兼容 `Ubuntu20.4` 的 `deb` 安装包（`electerm v1.72.48` 以下版本才兼容 `Ubuntu20.4`） [链接](https://github.com/electerm/electerm/releases?page=1)
+
+- 使用 `deb` 安装
+
+  ```sh
+  sudo dpkg -i electerm-1.72.48-linux-amd64.deb
+  ```
+
+
+
+#### `macOS`
 
 通过 [链接](https://github.com/electerm/electerm) 下载 electerm dmg
 
