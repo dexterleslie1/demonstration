@@ -1,0 +1,103 @@
+- name: "复制deployer"
+  hosts: all
+  tasks:
+    - name: "复制deployer目录到远程"
+      copy:
+        src: deployer/
+        dest: ~/deployer-flash-sale
+
+- name: "配置数据库的deployer"
+  hosts: db
+  tasks:
+    - name: "配置数据库服务的innodb-buffer-pool-size"
+      lineinfile:
+        path: ~/deployer-flash-sale/db/.env
+        regexp: "^innodb_buffer_pool_size="
+        line: "innodb_buffer_pool_size={{ innodb_buffer_pool_size }}"
+
+- name: "配置Cassandra的deployer"
+  hosts: cassandra
+  vars:
+    # 提取前三个 Cassandra 服务器的 IP 地址
+    cassandra_seeds: "{{ groups['cassandra'][:3] | join(',') }}"
+  tasks:
+    - name: "配置Cassandra服务的cassandra_seeds"
+      lineinfile:
+        path: ~/deployer-flash-sale/cassandra/.env
+        regexp: "^cassandra_seeds="
+        line: "cassandra_seeds={{ cassandra_seeds }}"
+
+- name: "配置zookeeper、redis等公共服务的deployer"
+  hosts: common
+  tasks:
+    - name: "配置Redis服务的cluster announce ip"
+      lineinfile:
+        path: ~/deployer-flash-sale/common/.env
+        regexp: "^redisClusterAnnounceIp="
+        line: "redisClusterAnnounceIp={{ groups['common'][0] }}"
+
+- name: "配置openresty服务的deployer"
+  hosts: openresty
+  tasks:
+    - name: "配置OpenResty服务的nginx.conf"
+      template:
+        src: deployer/openresty/nginx.conf.j2
+        dest: ~/deployer-flash-sale/openresty/nginx.conf
+
+- name: "配置crond服务的deployer"
+  hosts: crond
+  tasks:
+    - name: "配置crond服务的common_db_host"
+      lineinfile:
+        path: ~/deployer-flash-sale/crond/.env
+        regexp: "^common_db_host="
+        line: "common_db_host={{ groups['db'][0] }}"
+    - name: "配置crond服务的common_redis_cluster_nodes"
+      lineinfile:
+        path: ~/deployer-flash-sale/crond/.env
+        regexp: "^common_redis_cluster_nodes="
+        line: "common_redis_cluster_nodes={{ groups['common'][0] }}:6380,{{ groups['common'][0] }}:6381,{{ groups['common'][0] }}:6382,{{ groups['common'][0] }}:6383,{{ groups['common'][0] }}:6384,{{ groups['common'][0] }}:6385,{{ groups['common'][0] }}:6386,{{ groups['common'][0] }}:6387,{{ groups['common'][0] }}:6388,{{ groups['common'][0] }}:6389"
+    - name: "配置crond服务的common_rocketmq_namesrvaddr"
+      lineinfile:
+        path: ~/deployer-flash-sale/crond/.env
+        regexp: "^common_rocketmq_namesrvhost="
+        line: "common_rocketmq_namesrvhost={{ groups['rocketmq'][0] }}"
+    - name: "配置crond服务的common_zookeeper_host"
+      lineinfile:
+        path: ~/deployer-flash-sale/crond/.env
+        regexp: "^common_zookeeper_host="
+        line: "common_zookeeper_host={{ groups['common'][0] }}"
+    - name: "配置crond服务的common_cassandra_contact_points"
+      lineinfile:
+        path: ~/deployer-flash-sale/crond/.env
+        regexp: "^common_cassandra_contact_points="
+        line: "common_cassandra_contact_points={{ groups['cassandra'] | map('regex_replace', '^(.*)$', '\\1:9042') | list | join(',') }}"
+
+- name: "配置api服务的deployer"
+  hosts: api
+  tasks:
+    - name: "配置api服务的common_db_host"
+      lineinfile:
+        path: ~/deployer-flash-sale/service/.env
+        regexp: "^common_db_host="
+        line: "common_db_host={{ groups['db'][0] }}"
+    - name: "配置api服务的common_redis_cluster_nodes"
+      lineinfile:
+        path: ~/deployer-flash-sale/service/.env
+        regexp: "^common_redis_cluster_nodes="
+        line: "common_redis_cluster_nodes={{ groups['common'][0] }}:6380,{{ groups['common'][0] }}:6381,{{ groups['common'][0] }}:6382,{{ groups['common'][0] }}:6383,{{ groups['common'][0] }}:6384,{{ groups['common'][0] }}:6385,{{ groups['common'][0] }}:6386,{{ groups['common'][0] }}:6387,{{ groups['common'][0] }}:6388,{{ groups['common'][0] }}:6389"
+    - name: "配置api服务的common_rocketmq_namesrvaddr"
+      lineinfile:
+        path: ~/deployer-flash-sale/service/.env
+        regexp: "^common_rocketmq_namesrvhost="
+        line: "common_rocketmq_namesrvhost={{ groups['rocketmq'][0] }}"
+    - name: "配置api服务的common_zookeeper_host"
+      lineinfile:
+        path: ~/deployer-flash-sale/service/.env
+        regexp: "^common_zookeeper_host="
+        line: "common_zookeeper_host={{ groups['common'][0] }}"
+    - name: "配置api服务的common_cassandra_contact_points"
+      lineinfile:
+        path: ~/deployer-flash-sale/service/.env
+        regexp: "^common_cassandra_contact_points="
+        line: "common_cassandra_contact_points={{ groups['cassandra'] | map('regex_replace', '^(.*)$', '\\1:9042') | list | join(',') }}"

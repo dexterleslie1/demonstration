@@ -1,0 +1,62 @@
+- name: "销毁api服务"
+  hosts: api
+  tasks:
+    - name: "使用Docker Compose down销毁api服务"
+      shell: |
+        set -e
+        cd ~/deployer-flash-sale/service
+        docker compose down -v
+
+- name: "销毁crond服务"
+  hosts: crond
+  tasks:
+    - name: "使用Docker Compose down销毁crond服务"
+      shell: |
+        set -e
+        cd ~/deployer-flash-sale/crond
+        docker compose down -v
+
+- name: "销毁zookeeper、redis等公共服务"
+  hosts: common
+  tasks:
+    - name: "使用Docker Compose down销毁zookeeper、redis等公共服务"
+      shell: |
+        set -e
+        cd ~/deployer-flash-sale/common
+        docker compose down -v
+
+- name: "销毁数据库服务"
+  hosts: db
+  tasks:
+    - name: "使用Docker Compose down销毁数据库服务"
+      shell: |
+        set -e
+        cd ~/deployer-flash-sale/db
+        docker compose down -v
+
+- name: "销毁RocketMQ服务"
+  hosts: rocketmq
+  tasks:
+    - name: "使用Docker Compose down销毁RocketMQ服务"
+      shell: |
+        set -e
+        cd ~/deployer-flash-sale/rocketmq
+        docker compose down -v
+
+- name: "销毁Cassandra服务"
+  hosts: cassandra
+  tasks:
+    - name: "使用Docker Compose down销毁Cassandra服务"
+      shell: |
+        set -e
+        cd ~/deployer-flash-sale/cassandra
+        docker compose down -v
+
+- name: "销毁OpenResty服务"
+  hosts: openresty
+  tasks:
+    - name: "使用Docker Compose down销毁OpenResty服务"
+      shell: |
+        set -e
+        cd ~/deployer-flash-sale/openresty
+        docker compose down -v

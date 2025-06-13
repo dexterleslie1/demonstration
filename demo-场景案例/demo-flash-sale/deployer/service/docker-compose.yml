@@ -6,5 +6,11 @@ services:
     environment:
       - JAVA_OPTS=-Xmx4g
       - TZ=Asia/Shanghai
+      - common_db_host=${common_db_host}
+      - common_db_port=${common_db_port}
+      - common_redis_cluster_nodes=${common_redis_cluster_nodes}
+      - common_rocketmq_namesrvhost=${common_rocketmq_namesrvhost}
+      - common_zookeeper_host=${common_zookeeper_host}
+      - common_cassandra_contact_points=${common_cassandra_contact_points}
     restart: unless-stopped
     network_mode: host
