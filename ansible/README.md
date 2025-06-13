@@ -50,6 +50,31 @@ ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook playbook.yml --inventory 192.16
 
 
 
+## 禁用主机密钥检查
+
+你可以通过在Ansible配置文件中设置`host_key_checking = False`来禁用主机密钥检查。这通常是在`ansible.cfg`文件中完成的。如果你没有自定义的`ansible.cfg`文件，可以在项目目录中创建一个，并添加以下内容：
+
+```ini
+[defaults]
+host_key_checking = False
+
+```
+
+或者，你可以在运行Ansible命令时通过环境变量禁用主机密钥检查：
+
+```sh
+export ANSIBLE_HOST_KEY_CHECKING=False
+ansible-playbook playbook.yml --inventory inventory.ini
+```
+
+或者
+
+```sh
+ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook playbook.yml --inventory inventory.ini
+```
+
+
+
 ## 变量
 
 
@@ -302,6 +327,125 @@ ansible-playbook playbook.yml --inventory localhost,
 
 
 
+## 特殊变量
+
+>[参考官方文档](https://docs.ansible.com/ansible/latest/reference_appendices/special_variables.html)
+
+### 魔法变量 - `groups`
+
+包含清单中所有组的字典/地图，每个组都有属于它的主机列表。
+
+`inventory.ini`：
+
+```ini
+[testservers]
+192.168.1.90
+192.168.1.91
+192.168.1.92
+
+# 定义全局变量，所有主机组都能够使用
+[all:vars]
+ansible_user=root
+ansible_ssh_pass=Root@123
+```
+
+`playbook.yml`：
+
+```yaml
+- hosts: all
+  vars:
+    my_var: "{{ groups['testservers'][:2] }}"
+  tasks:
+    - debug:
+        var: my_var
+```
+
+调试命令
+
+```sh
+ansible-playbook playbook.yml --inventory inventory.ini
+```
+
+
+
+### 魔法变量 - `inventory_hostname`
+
+当前正在迭代的主机的清单名称。这不受委托的影响，它始终反映任务的原始主机。
+
+只在第一个 `Cassandra` 主机中执行 `shell`：
+
+```yaml
+- name: "初始化Cassandra数据库和表结构"
+  shell: |
+    set -e
+    cd ~/deployer-flash-sale/cassandra
+    docker compose exec node0 sh -c "cqlsh -e \"source '/scripts/data.cql'\""
+   when: inventory_hostname == groups['cassandra'][0]
+```
+
+
+
+## `when` 条件判断
+
+### 判断变量是否定义
+
+Ansible 提供了 `is defined` 测试来检查变量是否已定义。
+
+如果你想检查一个变量是否已经定义，可以使用 `is defined` 测试。
+
+```yaml
+- hosts: all
+  tasks:
+    - name: Print a message if the variable is defined
+      debug:
+        msg: "The variable my_var is defined."
+      when: my_var is defined
+```
+
+如果你想在变量未定义时执行某个任务，可以使用 `is not defined`。
+
+```yaml
+- hosts: all
+  tasks:
+    - name: Print a message if the variable is not defined
+      debug:
+        msg: "The variable my_var is not defined."
+      when: my_var is not defined
+```
+
+
+
+### `and、or` 组合条件
+
+`and` 组合条件
+
+```yaml
+- hosts: all
+  tasks:
+    - name: Print a message if the variable is defined and equals 'yes'
+      debug:
+        msg: "The variable my_var is defined and equals 'yes'."
+      when: my_var is defined and my_var == 'yes'
+```
+
+
+
+## `delegate_to、run_once`
+
+只在第一个 `Cassandra` 主机中执行一次 `shell`：
+
+```yaml
+- name: "初始化Cassandra数据库和表结构"
+  shell: |
+    set -e
+    cd ~/deployer-flash-sale/cassandra
+    docker compose exec node0 sh -c "cqlsh -e \"source '/scripts/data.cql'\""
+  run_once: true
+  delegate_to: "{{ groups['cassandra'][0] }}"
+```
+
+
+
 ## 指定主机的方式
 
 ### 使用 `/etc/ansible/hosts` 指定主机
@@ -437,6 +581,37 @@ ansible-playbook playbook.yml --inventory inventory.ini
 
 
 
+## `Jinja2`
+
+### `join`
+
+使用 `join` 过滤器将列表中的元素连接成一个字符串，并用逗号分隔。
+
+```yaml
+- hosts: all
+  gather_facts: no
+  vars:
+    # 提取前三个 Cassandra 服务器的 IP 地址
+    cassandra_ips: "{{ groups['cassandra'][:3] | join(',') }}"
+
+  tasks:
+    - name: Print the first three Cassandra IPs
+      debug:
+        msg: "The first three Cassandra IPs are: {{ cassandra_ips }}"
+```
+
+- `groups['cassandra']`：
+  - `groups` 是一个 Ansible 提供的变量，包含所有主机组的信息。
+  - `groups['cassandra']` 返回 `cassandra` 组中的所有主机列表。
+- `[:3]`:
+  - 这是 Python 的切片语法，用于获取列表中的前三个元素。
+- `| join(',')`:
+  - 使用 `Jinja2` 的 `join` 过滤器将列表中的元素连接成一个字符串，并用逗号分隔。
+- `cassandra_ips`:
+  - 这是一个自定义变量，用于存储拼接后的 IP 地址字符串。
+
+
+
 ## `debug` 输出命令执行结果
 
 `playbook.yml` 内容如下：
@@ -542,15 +717,85 @@ ansible all -m async_status -a "jid=185559806748.13487"
 
 
 
-### shell模块
+### `copy`
 
-> NOTE: ad-hoc方式不能指定shell模块参数，否则ansible没有结果输出，https://github.com/ansible/ansible/issues/73005
->
-> https://docs.ansible.com/ansible/latest/collections/ansible/builtin/shell_module.html
+>[参考官方文档](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/copy_module.html)
+
+复制本地文件到远程。
+
+
+
+#### 复制本地目录到远程
+
+```yaml
+- name: "复制deployer目录到远程"
+  copy:
+  	# deployer 后面有 /，表示复制 deployer 目录下的文件到 deployer-flash-sale 目录下，
+  	# 如果 deployer 后面没有 /，表示复制 deployer 整个目录到 deployer-flash-sale 目录下（在 deployer-flash-sale 目录下创建 deployer 目录）。
+    src: deployer/
+    dest: ~/deployer-flash-sale
+```
+
+
+
+### `replace`
+
+>[参考官方文档](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/replace_module.html)
+
+替换字符串（注意：不是整行替换）。
+
+```yaml
+- name: "Modify /etc/selinux/config file disable selinux"
+  replace:
+    path: /etc/sysconfig/selinux
+    regexp: SELINUX=enforcing
+    replace: SELINUX=disabled
+```
+
+
+
+### `lineinfile`
+
+>[参考官方文档](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/lineinfile_module.html)
+
+该模块确保文件中有特定的行，或者使用反向引用的正则表达式替换现有的行。
+
+```yaml
+- name: "修改数据库服务的innodb-buffer-pool-size"
+  lineinfile:
+    path: ~/deployer-flash-sale/db/.env
+    regexp: "^innodb_buffer_pool_size="
+    line: "innodb_buffer_pool_size={{innodb_buffer_pool_size}}"
 
 ```
-# 执行命令
+
+
+
+### `shell`
+
+> 注意：`ad-hoc` 方式不能指定 `shell` 模块参数，否则 `ansible` 没有结果输出，`https://github.com/ansible/ansible/issues/73005`
+>
+> [参考官方文档](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/shell_module.html)
+
+执行命令
+
+```sh
 ansible demoservers -m shell -a "echo `date`; echo 'Sleep for 5 seconds...'; sleep 5; echo `date`"
+```
+
+
+
+执行 `Docker Compose` 命令启动 `RocketMQ` 服务
+
+```yaml
+- name: "启动RocketMQ服务"
+  hosts: rocketmq
+  tasks:
+    - name: "使用Docker Compose启动RocketMQ服务"
+      shell: |
+        set -e
+        cd ~/deployer-flash-sale/rocketmq
+        docker compose pull && docker compose up -d
 ```
 
 
