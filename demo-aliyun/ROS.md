@@ -562,3 +562,394 @@ Resources:
 2. 在资源栈列表中 `https://ros.console.aliyun.com/cn-hangzhou/stacks?activeTabKey=changesets` 选中指定的资源栈并切换到 `更改集` 标签页。
 3. 点击 `创建更改集` 按钮，选中 `选择已有模板` 和 `输入模板`，手动把编辑后的 `ROS` 模板内容粘贴到 `模板内容` 输入框中，点击 `下一步` 按钮，点击 `预览模板资源` 按钮以查看资源栈更改情况，确认无误后点击 `创建更改集` 按钮以创建新的更改集。
 4. 更改集创建成功后点击其后面的 `执行` 按钮即可执行更改集修改操作。
+
+
+
+## 综合应用
+
+```yaml
+ROSTemplateFormatVersion: '2015-09-01'
+
+Parameters:
+  # 选择可用区域
+  BmZoneId:
+    Type: String
+    Label: "部署测试组件所在的可用区域"
+    AssociationProperty: ALIYUN::VPC::Zone::ZoneId
+    # 设定参数是否必填。取值：true：参数必填，不可为空。false：参数非必填。
+    Required: true
+
+  # 选择创建管理实例的镜像模板
+  BmImageIdManagement:
+    Type: String
+    Label: "创建管理主机的镜像"
+    AssociationProperty: ALIYUN::ECS::Image::ImageId
+    AssociationPropertyMetadata:
+      SupportedImageOwnerAlias:
+        - self
+      Architecture: x86_64
+    Required: true
+
+  # 选择创建测试节点实例的镜像模板
+  BmImageIdNode:
+    Type: String
+    Label: "创建测试节点主机的镜像"
+    AssociationProperty: ALIYUN::ECS::Image::ImageId
+    AssociationPropertyMetadata:
+      SupportedImageOwnerAlias:
+        - self
+      Architecture: x86_64
+    Required: true
+
+Locals:
+  # 实例的ssh登录密码
+  BmSshPassword:
+    Type: Macro
+    Value: "Root@123"
+  # 管理实例的ip地址
+  BmPrivateIpManagement:
+    Type: Macro
+    Value: "10.0.1.5"
+  # zookeeper、redis 等公共服务
+  BmPrivateIpCommonService:
+    Type: Macro
+    Value: "10.0.1.10"
+  # 数据库服务
+  BmPrivateIpCommonDb:
+    Type: Macro
+    Value: "10.0.1.11"
+  # rocketmq 服务
+  BmPrivateIpRocketMq:
+    Type: Macro
+    Value: "10.0.1.12"
+  # cassandra 服务
+  BmPrivateIpCassandra:
+    Type: Macro
+    Value:
+      - "10.0.1.20"
+      - "10.0.1.21"
+      - "10.0.1.22"
+  # crond 服务
+  BmPrivateIpCrond:
+    Type: Macro
+    Value: "10.0.1.30"
+  # api 服务，运行 service 服务
+  BmPrivateIpApi:
+    Type: Macro
+    Value:
+      - "10.0.1.31"
+      - "10.0.1.32"
+      - "10.0.1.33"
+      - "10.0.1.34"
+  # openresty 服务
+  BmPrivateIpOpenresty:
+    Type: Macro
+    Value: "10.0.1.40"
+
+Resources:
+  BmVpc:
+    Type: ALIYUN::ECS::VPC
+    Properties:
+      # 创建的vpc名称
+      VpcName: bm-vpc
+      # vpc支持的网段
+      CidrBlock: 10.0.0.0/8
+      # 不支持ipv6
+      EnableIpv6: false
+  BmVSwitch:
+    Type: ALIYUN::ECS::VSwitch
+    Properties:
+      # 要创建交换机的专有网络ID
+      VpcId:
+        Ref: BmVpc
+      # 可用区ID
+      ZoneId:
+        Ref: BmZoneId
+      # 交换机名称
+      VSwitchName: bm-vswitch
+      # 交换机网段，必须是所属专有网络的子网段，并且没有被其他交换机占用。
+      CidrBlock: 10.0.1.0/24
+  BmSecurityGroup:
+    Type: ALIYUN::ECS::SecurityGroup
+    Properties:
+      # 安全组所属的vpc网络
+      VpcId:
+        Ref: BmVpc
+      # 安全组名称
+      SecurityGroupName: bm-security-group
+      # 安全组的类型，normal：基本安全组，enterprise：高级安全组
+      SecurityGroupType: normal
+      # 安全组出方向的访问规则。
+      # https://help.aliyun.com/zh/ros/developer-reference/aliyun-ecs-securitygroup?#section-cex-usg-xo8
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          PortRange: 22/22
+          SourceCidrIp: 14.0.0.0/8
+        - IpProtocol: tcp
+          PortRange: 3389/3389
+          SourceCidrIp: 14.0.0.0/8
+
+  # 管理主机
+  BmInstanceManagement:
+    Type: ALIYUN::ECS::Instance
+    Properties:
+      # 指定操作系统的主机名称，hostname命令返回的主机名称
+      HostName: bm-management
+      # 指定阿里云中显示的实例名称
+      InstanceName: bm-management
+      # InstanceType: ecs.e-c1m2.large
+      # 8c16g
+      InstanceType: ecs.c9i.2xlarge
+      # 按量付费
+      InstanceChargeType: PostPaid
+      # ESSD云盘
+      SystemDiskCategory: cloud_essd
+      SystemDiskSize: 40
+
+      # 网络按流量计费
+      AllocatePublicIP: true
+      InternetChargeType: PayByTraffic
+      InternetMaxBandwidthOut: 5
+
+      VpcId:
+        Ref: BmVpc
+      VSwitchId:
+        Ref: BmVSwitch
+      SecurityGroupId:
+        Ref: BmSecurityGroup
+
+      # 创建实例的镜像id
+      ImageId:
+        Ref: BmImageIdManagement
+      Password:
+        Ref: BmSshPassword
+      PrivateIpAddress:
+        Ref: BmPrivateIpManagement
+
+  # zookeeper、redis 等公共服务
+  BmInstanceCommonService:
+    Type: ALIYUN::ECS::Instance
+    Properties:
+      HostName: bm-common-service
+      InstanceName: bm-common-service
+      # InstanceType: ecs.e-c1m2.large
+      # 8c16g
+      InstanceType: ecs.c9i.2xlarge
+      InstanceChargeType: PostPaid
+      SystemDiskCategory: cloud_essd
+      SystemDiskSize: 40
+
+      AllocatePublicIP: true
+      InternetChargeType: PayByTraffic
+      InternetMaxBandwidthOut: 5
+
+      VpcId:
+        Ref: BmVpc
+      VSwitchId:
+        Ref: BmVSwitch
+      SecurityGroupId:
+        Ref: BmSecurityGroup
+
+      ImageId:
+        Ref: BmImageIdNode
+      Password:
+        Ref: BmSshPassword
+      PrivateIpAddress:
+        Ref: BmPrivateIpCommonService
+
+  # 数据库服务
+  BmInstanceCommonDb:
+    Type: ALIYUN::ECS::Instance
+    Properties:
+      HostName: bm-common-db
+      InstanceName: bm-common-db
+      # InstanceType: ecs.e-c1m2.large
+      # 8c32g
+      InstanceType: ecs.g9i.2xlarge
+      InstanceChargeType: PostPaid
+      SystemDiskCategory: cloud_essd
+      SystemDiskSize: 100
+
+      AllocatePublicIP: true
+      InternetChargeType: PayByTraffic
+      InternetMaxBandwidthOut: 5
+
+      VpcId:
+        Ref: BmVpc
+      VSwitchId:
+        Ref: BmVSwitch
+      SecurityGroupId:
+        Ref: BmSecurityGroup
+
+      ImageId:
+        Ref: BmImageIdNode
+      Password:
+        Ref: BmSshPassword
+      PrivateIpAddress:
+        Ref: BmPrivateIpCommonDb
+
+  # rocketmq 服务
+  BmInstanceRocketMq:
+    Type: ALIYUN::ECS::Instance
+    Properties:
+      HostName: bm-rocketmq
+      InstanceName: bm-rocketmq
+      # InstanceType: ecs.e-c1m2.large
+      # 8c16g
+      InstanceType: ecs.c9i.2xlarge
+      InstanceChargeType: PostPaid
+      SystemDiskCategory: cloud_essd
+      SystemDiskSize: 40
+
+      AllocatePublicIP: true
+      InternetChargeType: PayByTraffic
+      InternetMaxBandwidthOut: 5
+
+      VpcId:
+        Ref: BmVpc
+      VSwitchId:
+        Ref: BmVSwitch
+      SecurityGroupId:
+        Ref: BmSecurityGroup
+
+      ImageId:
+        Ref: BmImageIdNode
+      Password:
+        Ref: BmSshPassword
+      PrivateIpAddress:
+        Ref: BmPrivateIpRocketMq
+
+  # cassandra 服务
+  BmInstanceCassandra:
+    Type: ALIYUN::ECS::Instance
+    Count: 3
+    Properties:
+      HostName:
+        Fn::Sub: "bm-cassandra-node${ALIYUN::Index}"
+      InstanceName:
+        Fn::Sub: "bm-cassandra-node${ALIYUN::Index}"
+      # InstanceType: ecs.e-c1m2.large
+      # 8c16g
+      InstanceType: ecs.c9i.2xlarge
+      InstanceChargeType: PostPaid
+      SystemDiskCategory: cloud_essd
+      SystemDiskSize: 100
+
+      AllocatePublicIP: true
+      InternetChargeType: PayByTraffic
+      InternetMaxBandwidthOut: 5
+
+      VpcId:
+        Ref: BmVpc
+      VSwitchId:
+        Ref: BmVSwitch
+      SecurityGroupId:
+        Ref: BmSecurityGroup
+
+      ImageId:
+        Ref: BmImageIdNode
+      Password:
+        Ref: BmSshPassword
+      PrivateIpAddress:
+        Fn::Select:
+          - Ref: ALIYUN::Index
+          - Ref: BmPrivateIpCassandra
+
+  # crond 服务
+  BmInstanceCrond:
+    Type: ALIYUN::ECS::Instance
+    Properties:
+      HostName: bm-app-crond
+      InstanceName: bm-app-crond
+      # InstanceType: ecs.e-c1m2.large
+      # 8c16g
+      InstanceType: ecs.c9i.2xlarge
+      InstanceChargeType: PostPaid
+      SystemDiskCategory: cloud_essd
+      SystemDiskSize: 40
+
+      AllocatePublicIP: true
+      InternetChargeType: PayByTraffic
+      InternetMaxBandwidthOut: 5
+
+      VpcId:
+        Ref: BmVpc
+      VSwitchId:
+        Ref: BmVSwitch
+      SecurityGroupId:
+        Ref: BmSecurityGroup
+
+      ImageId:
+        Ref: BmImageIdNode
+      Password:
+        Ref: BmSshPassword
+      PrivateIpAddress:
+        Ref: BmPrivateIpCrond
+
+  # api 服务，运行 service 服务
+  BmInstanceApi:
+    Type: ALIYUN::ECS::Instance
+    Count: 4
+    Properties:
+      HostName:
+        Fn::Sub: "bm-app${ALIYUN::Index}"
+      InstanceName:
+        Fn::Sub: "bm-app${ALIYUN::Index}"
+      # InstanceType: ecs.e-c1m2.large
+      # 8c16g
+      InstanceType: ecs.c9i.2xlarge
+      InstanceChargeType: PostPaid
+      SystemDiskCategory: cloud_essd
+      SystemDiskSize: 40
+
+      AllocatePublicIP: true
+      InternetChargeType: PayByTraffic
+      InternetMaxBandwidthOut: 5
+
+      VpcId:
+        Ref: BmVpc
+      VSwitchId:
+        Ref: BmVSwitch
+      SecurityGroupId:
+        Ref: BmSecurityGroup
+
+      ImageId:
+        Ref: BmImageIdNode
+      Password:
+        Ref: BmSshPassword
+      PrivateIpAddress:
+        Fn::Select:
+          - Ref: ALIYUN::Index
+          - Ref: BmPrivateIpApi
+
+  # openresty 服务
+  BmInstanceOpenresty:
+    Type: ALIYUN::ECS::Instance
+    Properties:
+      HostName: bm-openresty
+      InstanceName: bm-openresty
+      # InstanceType: ecs.e-c1m2.large
+      # 8c16g
+      InstanceType: ecs.c9i.2xlarge
+      InstanceChargeType: PostPaid
+      SystemDiskCategory: cloud_essd
+      SystemDiskSize: 40
+
+      AllocatePublicIP: true
+      InternetChargeType: PayByTraffic
+      InternetMaxBandwidthOut: 5
+
+      VpcId:
+        Ref: BmVpc
+      VSwitchId:
+        Ref: BmVSwitch
+      SecurityGroupId:
+        Ref: BmSecurityGroup
+
+      ImageId:
+        Ref: BmImageIdNode
+      Password:
+        Ref: BmSshPassword
+      PrivateIpAddress:
+        Ref: BmPrivateIpOpenresty
+```
