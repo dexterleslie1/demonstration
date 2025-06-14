@@ -612,6 +612,51 @@ ansible-playbook playbook.yml --inventory inventory.ini
 
 
 
+### `for`
+
+使用 `for` 循环语法动态生成 `nginx upstream` 配置中的主机列表配置：
+
+```jinja2
+upstream backend {
+    least_conn;
+    keepalive 65535;
+    keepalive_timeout 65; # 与 Spring Boot 的连接超时对齐
+    keepalive_requests 100000; # 单个连接最大请求数
+    # server 192.168.1.187:8080;
+    {% for host in groups['api'] %}
+    server {{ host }}:8080;
+    {% endfor %}
+}
+```
+
+- 循环主机组 `api` 生成 `nginx upstream` 主机列表配置。
+
+
+
+### `map`
+
+`inventory.ini`：
+
+```
+# cassandra 服务
+[cassandra]
+10.0.1.20
+10.0.1.21
+10.0.1.22
+```
+
+根据上面的 `[cassandra]` 主机组动态生成 `common_cassandra_contact_points=10.0.1.20:9042,10.0.1.21:9042,10.0.1.22:9042`
+
+```yaml
+- name: "配置crond服务的common_cassandra_contact_points"
+      lineinfile:
+        path: ~/deployer-flash-sale/crond/.env
+        regexp: "^common_cassandra_contact_points="
+        line: "common_cassandra_contact_points={{ groups['cassandra'] | map('regex_replace', '^(.*)$', '\\1:9042') | list | join(',') }}"
+```
+
+
+
 ## `debug` 输出命令执行结果
 
 `playbook.yml` 内容如下：
@@ -796,6 +841,44 @@ ansible demoservers -m shell -a "echo `date`; echo 'Sleep for 5 seconds...'; sle
         set -e
         cd ~/deployer-flash-sale/rocketmq
         docker compose pull && docker compose up -d
+```
+
+
+
+### `wait_for`
+
+等待主机第一个 `Cassandra` 主机的 `9042` 端口就绪：
+
+```yaml
+- name: "等待Cassandra服务就绪"
+  wait_for:
+    host: "{{ groups['cassandra'][0] }}"
+    port: 9042
+    # 指定在开始检查端口之前等待的秒数。当你希望在服务启动后给它一些时间来初始化，而不是立即开始检查端口是否可用时使用。
+    delay: 5
+    # 指定等待端口可用的最大时间（以秒为单位）。如果在指定的时间内端口没有变为可用状态，任务将失败。用于防止任务无限期地等待，特别是在服务启动失败或配置错误的情况下。
+    timeout: 300
+  delegate_to: localhost
+  run_once: true
+```
+
+- `delay: 5` 指定在开始检查端口之前等待的秒数。
+- `timeout: 300` 指定等待端口可用的最大时间（以秒为单位）。
+
+
+
+### `user`
+
+>[参考官方文档](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/user_module.html)
+
+```yaml
+- name: "创建普通用户dexterleslie，用于rdp登录并运行electerm"
+  user:
+    name: dexterleslie
+    shell: /bin/bash
+    group: dexterleslie
+    state: present
+    password: "{{ 'Root@123' | password_hash('sha512') }}"
 ```
 
 
