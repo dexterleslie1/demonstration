@@ -14,18 +14,6 @@
         set -e
         sudo rm -f /usr/bin/dcli && sudo curl https://fut001.oss-cn-hangzhou.aliyuncs.com/dcli/dcli-linux-x86_64 --output /usr/bin/dcli && sudo chmod +x /usr/bin/dcli
         sudo -E dcli xrdp install --install y
-    - name: "配置systemd的nofile rdp登录才能够生效"
-      lineinfile:
-        path: /etc/systemd/system.conf
-        regexp: '^DefaultLimitNOFILE='
-        line: "DefaultLimitNOFILE=65535"
-        state: present
-    - name: "为用户配置systemd的nofile rdp登录才能够生效"
-      lineinfile:
-        path: /etc/systemd/user.conf
-        regexp: '^DefaultLimitNOFILE='
-        line: "DefaultLimitNOFILE=65535"
-        state: present
 
     - name: "安装electerm"
       shell: |

@@ -378,34 +378,59 @@ sudo systemctl restart xrdp
 
 
 
-### Gnome+xrdp
+### `gnome + xrdp`
 
 > `https://linuxize.com/post/how-to-install-xrdp-on-ubuntu-20-04/`
 
-```bash
+更新 `apt` 源
+
+```sh
 sudo apt update
-
-# 安装Gnome
-sudo apt install ubuntu-desktop
-
-# 安装xrdp
-sudo apt install xrdp
-
-# 查看xrdp运行状态
-sudo systemctl status xrdp
-
-# 添加xrdp用户到ssl-cert组
-sudo adduser xrdp ssl-cert
-
-# 重启xrdp服务
-sudo systemctl restart xrdp
-
-# 使用window自带的mstsc测试远程桌面
 ```
 
+安装 `gnome`
 
+```sh
+sudo apt install ubuntu-desktop
+```
 
+安装 `xrdp`
 
+```sh
+sudo apt install xrdp
+```
+
+查看 `xrdp` 运行状态
+
+```sh
+sudo systemctl status xrdp
+```
+
+配置 `systemd` 的 `nofile rdp` 登录才能够生效，编辑 `/etc/systemd/system.conf` 修改以下内容：
+
+```properties
+DefaultLimitNOFILE=65535
+```
+
+为用户配置 `systemd` 的 `nofile rdp` 登录才能够生效，编辑 `/etc/systemd/user.conf` 修改以下内容：
+
+```properties
+DefaultLimitNOFILE=65535
+```
+
+添加 `xrdp` 用户到 `ssl-cert` 组
+
+```sh
+sudo adduser xrdp ssl-cert
+```
+
+重启 `xrdp` 服务
+
+```sh
+sudo systemctl restart xrdp
+```
+
+使用 `window` 自带的 `mstsc` 测试远程桌面
 
 
 
