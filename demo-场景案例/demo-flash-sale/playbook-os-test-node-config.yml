@@ -1,5 +1,5 @@
-- name: "配置操作系统参数"
-  hosts: all
+- name: "配置测试节点的操作系统参数"
+  hosts: "{{ groups['all'] | difference(groups['management']) }}"
   tasks:
     - name: "修改nofile配置"
       shell: |
