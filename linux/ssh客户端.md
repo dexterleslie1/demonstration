@@ -365,7 +365,10 @@ $ parallel-ssh -l dexterleslie -H 192.168.1.181 -i 'bash --login -c "env"'
 
 #### `Ubuntu`
 
->注意：新版本 `Ubuntu` 可以使用 `snap` 安装最新版本的 `electerm`，但是 `Ubuntu20.4` 只能通过 `deb` 方式安装旧版本 `electerm`，因为 `GLIBC` 兼容性问题。
+>注意：
+>
+>- 新版本 `Ubuntu` 可以使用 `snap` 安装最新版本的 `electerm`，但是 `Ubuntu20.4` 只能通过 `deb` 方式安装旧版本 `electerm`，因为 `GLIBC` 兼容性问题。
+>- 远程 `rdp` 的不能使用 `root` 用户，否则无法打开 `electerm`。需要使用普通用户 `rdp`。
 
 新版本 `Ubuntu` 使用 `snap` 安装
 
