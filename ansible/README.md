@@ -657,6 +657,50 @@ upstream backend {
 
 
 
+### `difference`
+
+从所有主机中去除属于management主机组的主机，生成一个新的主机列表：
+
+- `inventory.ini`：
+
+  ```
+  # api 服务，运行 service 服务
+  [api]
+  10.0.1.31
+  10.0.1.32
+  10.0.1.33
+  10.0.1.34
+  
+  # openresty 服务
+  [openresty]
+  10.0.1.40
+  
+  # 管理主机
+  [management]
+  # 一般不需要修改，因为配置管理机是本地执行ansible
+  127.0.0.1
+  ```
+
+- `playbook`：
+
+  ```yaml
+  - name: "配置测试节点的操作系统参数"
+    hosts: "{{ groups['all'] | difference(groups['management']) }}"
+    tasks:
+      - name: "修改nofile配置"
+        shell: |
+          set -e
+          sudo grep -q "^\* soft nofile" /etc/security/limits.conf && sudo sed -i '/^\* soft nofile/c \* soft nofile 65535' /etc/security/limits.conf || sudo sed -i '/^# End of file/i \* soft nofile 65535' /etc/security/limits.conf
+          sudo grep -q "^\* hard nofile" /etc/security/limits.conf && sudo sed -i '/^\* hard nofile/c \* hard nofile 65535' /etc/security/limits.conf || sudo sed -i '/^# End of file/i \* hard nofile 65535' /etc/security/limits.conf
+      
+  ```
+
+  - groups['all']：获取Ansible中定义的所有主机的列表。在Ansible中，groups是一个字典，包含了所有定义在inventory文件中的主机组。groups['all']会返回一个包含所有主机的列表。
+  - groups['management']：获取名为management的主机组中的主机列表。
+  - difference 过滤器：difference 是Jinja2提供的一个过滤器，用于计算两个列表之间的差集。它会返回一个新列表，包含第一个列表中存在但第二个列表中不存在的元素。
+
+
+
 ## `debug` 输出命令执行结果
 
 `playbook.yml` 内容如下：
