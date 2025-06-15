@@ -32,7 +32,7 @@
 >
 >```
 >
->
+>- 通过设置 `npm` 代理服务器的方式，解决上面 `npm install` 的错误。参考本站 <a href="/nodejs/npm命令.html#设置代理服务器" target="_blank">链接</a>。
 
 创建项目目录
 
@@ -57,6 +57,12 @@ npm install electron --dev
 
 ```json
 {  "scripts": {    "start": "electron ."  }}
+```
+
+`package.json` 中的 `main` 修改为：
+
+```json
+"main": "main.js"
 ```
 
 新建 main.js 内容如下：
@@ -249,6 +255,315 @@ npm run electron:serve
   //   console.error('Vue Devtools failed to install:', e.toString())
   // }
   ```
+
+
+
+## 自定义窗口
+
+### 自定义窗口样式
+
+#### 无边框窗口
+
+>[参考官方文档](https://www.electronjs.org/docs/latest/tutorial/custom-window-styles#frameless-windows)
+
+`main.js`
+
+```javascript
+const { app, BrowserWindow } = require('electron')
+
+function createWindow () {
+  const win = new BrowserWindow({
+    width: 800,
+    height: 600,
+    resizable: false,
+    // 无边框窗口
+    frame: false,
+  })
+
+  win.loadFile('index.html')
+}
+
+app.whenReady().then(() => {
+  createWindow()
+
+  app.on('activate', function () {
+    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+  })
+})
+
+app.on('window-all-closed', function () {
+  if (process.platform !== 'darwin') app.quit()
+})
+
+```
+
+`index.html`
+
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'">
+    <title>Hello World!</title>
+    <style>
+      body {
+        /* 用于 Electron 或基于 WebKit 的应用中，用来指定某个区域是否可拖动窗口 */
+        app-region: drag;
+        /* 禁用文本选择 */
+        user-select: none;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Hello World!</h1>
+    We are using Node.js <span id="node-version"></span>,
+    Chromium <span id="chrome-version"></span>,
+    and Electron <span id="electron-version"></span>.
+  </body>
+</html>
+```
+
+
+
+#### 透明窗口
+
+>[参考官方文档](https://www.electronjs.org/docs/latest/tutorial/custom-window-styles#transparent-windows)
+
+`main.js`
+
+```javascript
+const { app, BrowserWindow } = require('electron')
+
+function createWindow () {
+  const win = new BrowserWindow({
+    width: 100,
+    height: 100,
+    resizable: false,
+    frame: false,
+    transparent: true
+  })
+
+  win.loadFile('index.html')
+}
+
+app.whenReady().then(() => {
+  createWindow()
+
+  app.on('activate', function () {
+    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+  })
+})
+
+app.on('window-all-closed', function () {
+  if (process.platform !== 'darwin') app.quit()
+})
+
+```
+
+`index.html`
+
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'">
+    <link href="./styles.css" rel="stylesheet">
+    <title>Transparent Hello World</title>
+  </head>
+  <body>
+    <div class="white-circle">
+        <div>Hello World!</div>
+    </div>
+  </body>
+</html>
+```
+
+`styles.css`
+
+```css
+body {
+    margin: 0;
+    padding: 0;
+    background-color: rgba(0, 0, 0, 0); /* Transparent background */
+}
+.white-circle {
+    width: 100px;
+    height: 100px;
+    background-color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* 用于 Electron 或基于 WebKit 的应用中，用来指定某个区域是否可拖动窗口 */
+    app-region: drag;
+    /* 禁用文本选择 */
+    user-select: none;
+}
+
+```
+
+
+
+### 自定义标题栏
+
+#### 删除默认标题栏
+
+>[参考官方文档](https://www.electronjs.org/docs/latest/tutorial/custom-title-bar#remove-the-default-title-bar)
+
+在 `Ubuntu20.4` 上测试，删除默认标题栏的效果和无边框窗口的效果一致。
+
+`main.js`
+
+```javascript
+const { app, BrowserWindow } = require('electron')
+
+function createWindow () {
+  const win = new BrowserWindow({
+    // remove the default titlebar
+    titleBarStyle: 'hidden'
+  })
+  win.loadURL('https://example.com')
+}
+
+app.whenReady().then(() => {
+  createWindow()
+})
+```
+
+
+
+#### 添加原生窗口控制器
+
+>[参考官方文档](https://www.electronjs.org/docs/latest/tutorial/custom-title-bar#add-native-window-controls-windows-linux)
+
+在 macOS 上，设置 titleBarStyle: 'hidden' 会移除标题栏，但窗口的交通灯控件仍保留在左上角。但是在 Windows 和 Linux 上，您需要通过在 BrowserWindow 构造函数中设置 BaseWindowContructorOptions 的 titleBarOverlay 参数，将窗口控件重新添加到 BrowserWindow 中。
+
+`main.js`
+
+```javascript
+const { app, BrowserWindow } = require('electron')
+
+function createWindow () {
+  const win = new BrowserWindow({
+    // remove the default titlebar
+    titleBarStyle: 'hidden',
+    // expose window controls in Windows/Linux
+    ...(process.platform !== 'darwin' ? { titleBarOverlay: true } : {})
+  })
+  win.loadURL('https://example.com')
+}
+
+app.whenReady().then(() => {
+  createWindow()
+})
+```
+
+设置 titleBarOverlay: true 是将窗口控件重新暴露到 BrowserWindow 的最简单方法。
+
+
+
+#### 创建自定义标题栏
+
+>[参考官方文档](https://www.electronjs.org/docs/latest/tutorial/custom-title-bar#create-a-custom-title-bar)
+
+`main.js`
+
+```javascript
+const { app, BrowserWindow } = require('electron')
+
+function createWindow () {
+  const win = new BrowserWindow({
+    // remove the default titlebar
+    titleBarStyle: 'hidden',
+    // expose window controls in Windows/Linux
+    ...(process.platform !== 'darwin' ? { titleBarOverlay: true } : {})
+  })
+
+  win.loadFile('index.html')
+}
+
+app.whenReady().then(() => {
+  createWindow()
+})
+```
+
+`index.html`
+
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'">
+    <link href="./styles.css" rel="stylesheet">
+    <title>Custom Titlebar App</title>
+  </head>
+  <body>
+	  <!-- mount your title bar at the top of you application's body tag -->
+    <div class="titlebar">Cool titlebar</div>
+  </body>
+</html>
+```
+
+`styles.css`
+
+```css
+body {
+    margin: 0;
+}
+
+.titlebar {
+  height: 30px;
+  background: blue;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  app-region: drag;
+}
+```
+
+
+
+### 自定义窗口交互
+
+#### 自定义可拖动区域
+
+>[参考官方文档](https://www.electronjs.org/docs/latest/tutorial/custom-window-interactions#custom-draggable-regions)
+
+默认情况下，窗口使用操作系统 Chrome 提供的标题栏进行拖动。移除默认标题栏的应用需要使用 app-region CSS 属性来定义可用于拖动窗口的特定区域。设置 app-region: drag 会将矩形区域标记为可拖动。
+
+需要注意的是，可拖动区域会忽略所有指针事件。例如，与可拖动区域重叠的按钮元素将不会在该重叠区域内触发鼠标点击或鼠标进入/退出事件。设置 app-region: no-drag 可以通过从可拖动区域中排除矩形区域来重新启用指针事件。
+
+为了使整个窗口可拖动，您可以添加 app-region: drag 作为 body 的样式：
+
+```css
+body {
+  app-region: drag;
+}
+```
+
+并请注意，如果您已将整个窗口设置为可拖动，则还必须将按钮标记为不可拖动，否则用户将无法点击它们：
+
+```css
+button {
+  app-region: no-drag;
+}
+```
+
+如果您仅将自定义标题栏设置为可拖动，则还需要使标题栏中的所有按钮不可拖动。
+
+创建可拖动区域时，拖动行为可能与文本选择冲突。例如，拖动标题栏时，可能会意外选中其中的文本内容。为了避免这种情况，您需要在可拖动区域内禁用文本选择，如下所示：
+
+```css
+.titlebar {
+  user-select: none;
+  app-region: drag;
+}
+```
 
 
 
