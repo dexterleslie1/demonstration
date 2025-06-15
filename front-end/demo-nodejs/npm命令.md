@@ -220,7 +220,7 @@ npm start
 
 
 
-## npm link
+## `npm link`
 
 >注意：不知道什么原因，在一个测试项目中想 npm link 两个自定义组件库失败（npm link 第二个自定义组件库时会自动删除前一个）。考虑到实际场景中没有需求同时开发两个自定义组件库所以对此问题不作深入研究。
 
@@ -255,3 +255,29 @@ npm start
    - 如果不再需要使用 `npm link`，可以使用 `npm unlink <模块名>` 命令来解除模块在项目中的链接，使用 `npm unlink` 命令（在模块目录中）来解除模块的全局链接。
 
 综上所述，`npm link` 支持同时链接多个库，但在实际使用中需要注意依赖冲突、版本管理、权限问题以及解除链接等操作。
+
+
+
+## 设置代理服务器
+
+设置代理服务器
+
+```sh
+npm config set proxy http://localhost:1080
+npm config set https-proxy http://localhost:1080
+```
+
+查询代理服务器设置
+
+```sh
+npm config get proxy
+npm config get https-proxy
+```
+
+删除代理服务器设置
+
+```sh
+npm config delete proxy
+npm config delete https-proxy
+```
+
