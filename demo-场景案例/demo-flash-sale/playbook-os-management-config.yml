@@ -1,6 +1,10 @@
 - name: "配置管理主机"
   hosts: management
   tasks:
+    - name: "创建用户组dexterleslie"
+      group:
+        name: dexterleslie
+        state: present
     - name: "创建普通用户dexterleslie，用于rdp登录并运行electerm"
       user:
         name: dexterleslie

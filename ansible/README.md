@@ -867,6 +867,21 @@ ansible demoservers -m shell -a "echo `date`; echo 'Sleep for 5 seconds...'; sle
 
 
 
+### `group`
+
+>[参考官方文档](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/group_module.html)
+
+创建 `dexterleslie` 普通用户组
+
+```yaml
+- name: "创建用户组dexterleslie"
+  group:
+    name: dexterleslie
+    state: present
+```
+
+
+
 ### `user`
 
 >[参考官方文档](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/user_module.html)
