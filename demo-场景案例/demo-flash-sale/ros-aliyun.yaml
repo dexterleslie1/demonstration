@@ -75,6 +75,16 @@ Locals:
   BmPrivateIpOpenresty:
     Type: Macro
     Value: "10.0.1.40"
+  # 非数据库实例规格
+  BmNoneDbInstanceType:
+    Type: Macro
+    # 8c16g
+    Value: ecs.u1-c1m2.2xlarge
+  # 数据库实例规格
+  BmDbInstanceType:
+    Type: Macro
+    # 8c32g
+    Value: ecs.u1-c1m4.2xlarge
 
 Resources:
   BmVpc:
@@ -133,9 +143,8 @@ Resources:
       HostName: bm-management
       # 指定阿里云中显示的实例名称
       InstanceName: bm-management
-      # InstanceType: ecs.e-c1m2.large
-      # 8c16g
-      InstanceType: ecs.u1-c1m2.2xlarge
+      InstanceType:
+        Ref: BmNoneDbInstanceType
       # 按量付费
       InstanceChargeType: PostPaid
       # ESSD云盘
@@ -168,9 +177,8 @@ Resources:
     Properties:
       HostName: bm-common-service
       InstanceName: bm-common-service
-      # InstanceType: ecs.e-c1m2.large
-      # 8c16g
-      InstanceType: ecs.u1-c1m2.2xlarge
+      InstanceType:
+        Ref: BmNoneDbInstanceType
       InstanceChargeType: PostPaid
       SystemDiskCategory: cloud_essd
       SystemDiskSize: 40
@@ -199,9 +207,8 @@ Resources:
     Properties:
       HostName: bm-common-db
       InstanceName: bm-common-db
-      # InstanceType: ecs.e-c1m2.large
-      # 8c32g
-      InstanceType: ecs.u1-c1m4.2xlarge
+      InstanceType:
+        Ref: BmDbInstanceType
       InstanceChargeType: PostPaid
       SystemDiskCategory: cloud_essd
       SystemDiskSize: 100
@@ -230,9 +237,8 @@ Resources:
     Properties:
       HostName: bm-rocketmq
       InstanceName: bm-rocketmq
-      # InstanceType: ecs.e-c1m2.large
-      # 8c16g
-      InstanceType: ecs.u1-c1m2.2xlarge
+      InstanceType:
+        Ref: BmNoneDbInstanceType
       InstanceChargeType: PostPaid
       SystemDiskCategory: cloud_essd
       SystemDiskSize: 40
@@ -264,9 +270,8 @@ Resources:
         Fn::Sub: "bm-cassandra-node${ALIYUN::Index}"
       InstanceName:
         Fn::Sub: "bm-cassandra-node${ALIYUN::Index}"
-      # InstanceType: ecs.e-c1m2.large
-      # 8c16g
-      InstanceType: ecs.u1-c1m2.2xlarge
+      InstanceType:
+        Ref: BmNoneDbInstanceType
       InstanceChargeType: PostPaid
       SystemDiskCategory: cloud_essd
       SystemDiskSize: 100
@@ -297,9 +302,8 @@ Resources:
     Properties:
       HostName: bm-app-crond
       InstanceName: bm-app-crond
-      # InstanceType: ecs.e-c1m2.large
-      # 8c16g
-      InstanceType: ecs.u1-c1m2.2xlarge
+      InstanceType:
+        Ref: BmNoneDbInstanceType
       InstanceChargeType: PostPaid
       SystemDiskCategory: cloud_essd
       SystemDiskSize: 40
@@ -331,9 +335,8 @@ Resources:
         Fn::Sub: "bm-app${ALIYUN::Index}"
       InstanceName:
         Fn::Sub: "bm-app${ALIYUN::Index}"
-      # InstanceType: ecs.e-c1m2.large
-      # 8c16g
-      InstanceType: ecs.u1-c1m2.2xlarge
+      InstanceType:
+        Ref: BmNoneDbInstanceType
       InstanceChargeType: PostPaid
       SystemDiskCategory: cloud_essd
       SystemDiskSize: 40
@@ -364,9 +367,8 @@ Resources:
     Properties:
       HostName: bm-openresty
       InstanceName: bm-openresty
-      # InstanceType: ecs.e-c1m2.large
-      # 8c16g
-      InstanceType: ecs.u1-c1m2.2xlarge
+      InstanceType:
+        Ref: BmNoneDbInstanceType
       InstanceChargeType: PostPaid
       SystemDiskCategory: cloud_essd
       SystemDiskSize: 40
