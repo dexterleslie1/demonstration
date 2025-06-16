@@ -565,6 +565,77 @@ Resources:
 
 
 
+## 资源导入
+
+>[参考官方文档](https://help.aliyun.com/zh/ros/user-guide/resource-import/)
+
+资源导入可以帮助您将已经创建的资源导入到一个资源栈中，从而通过资源栈进行统一的管理和编排。
+
+资源导入是指将现有的资源及其配置导入到ROS的资源栈中，资源导入功能需要与[更改集](https://help.aliyun.com/zh/ros/user-guide/change-set-management/)相结合使用。
+
+
+
+### 使用资源导入创建资源栈
+
+>提醒：暂时未用到，不研究。
+
+如果您需要同时管理大量的云资源，为减少人力消耗，您可以选择使用资源导入将需要管理的云资源添加到新的资源栈中，从而通过资源栈统一管理对应资源。
+
+具体操作，请参见[使用现有资源创建资源栈](https://help.aliyun.com/zh/ros/user-guide/create-a-stack-by-importing-an-existing-resource)。
+
+
+
+### 使用资源导入更新资源栈
+
+>注意：模板中的资源必须包含`DeletionPolicy`属性，否则导入不成功。使用`DeletionPolicy`属性，您可以选择在删除资源栈或移除资源时是否保留该资源。更多信息，请参见[DeletionPolicy属性](https://help.aliyun.com/zh/ros/user-guide/remove-a-resource-from-a-stack#a6edad106ehl2)。
+>
+>[参考官方文档](https://help.aliyun.com/zh/ros/user-guide/import-an-existing-resource-to-a-stack)
+
+如果资源编排控制台上有空资源栈或者资源栈中包含您需要管理的云资源，您可以选择使用资源导入的方式将其他需要管理的资源补充到已有资源栈中，从而达到统一管理的目的。
+
+操作步骤：
+
+1. 登录 [资源编排控制台](https://ros.console.aliyun.com/)。
+
+2. 在左侧导航栏，单击 **资源栈**。
+
+3. 在顶部菜单栏的地域下拉列表，选择资源栈的所在地域，例如：华东1（杭州）。
+
+4. 在 **资源栈列表** 页面，在目标资源栈右侧 **操作 **列，选择 ![](https://help-static-aliyun-doc.aliyuncs.com/assets/img/zh-CN/9333649951/p77718.png) `>` `导入资源`。
+
+5. 在 **选择模板** 页面，将 **模板录入方式** 设置为 **输入模板**，在 **模板内容** 区域修改模板，增加待导入资源，然后单击 **下一步**。
+
+   本示例中，新导入的资源我们命名为 `TemporaryInstance`。示例模板如下所示：
+
+   >**说明**：`DeletionPolicy`：取值为`Retain`，表示删除保护策略为保留资源。为防止资源被误删除，请务必设置该项。
+
+   ```yaml
+   ROSTemplateFormatVersion: '2015-09-01'
+   
+   Resources:
+     TemporaryInstance:
+       Type: ALIYUN::ECS::Instance
+       DeletionPolicy: Delete
+       Properties:
+         InstanceType: ecs.n2.small
+   ```
+
+6. 在 **配置参数** 页面，配置 **资源栈名称**、**更改集名称**。
+
+7. 在 **配置资源栈** 区块，配置相关参数，单击 **下一步**。
+
+8. 在 **识别资源** 页面，输入资源标识符值（例如：`bp1s1yz3aja40j377****`），单击 **下一步**。
+
+9. 在合规预检页面，完成合规预检，然后单击下一步。
+
+10. 在 **检查并确认** 页面，单击 **创建更改集**。
+
+11. 在 **更改集** 页签，单击更改集右侧 **操作** 列的 **执行**，执行更改集，开始资源导入。
+
+12. 在 **资源** 页签，查看 `TemporaryInstance` 资源是否已导入。
+
+
+
 ## 综合应用
 
 ```yaml
