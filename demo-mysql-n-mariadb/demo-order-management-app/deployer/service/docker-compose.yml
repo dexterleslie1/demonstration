@@ -6,5 +6,8 @@ services:
     environment:
       - JAVA_OPTS=-Xmx4g
       - TZ=Asia/Shanghai
+      - common_db_host=${common_db_host}
+      - common_db_port=${common_db_port}
+      - common_zookeeper_host=${common_zookeeper_host}
     restart: unless-stopped
     network_mode: host

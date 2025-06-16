@@ -5,10 +5,7 @@ import com.future.common.exception.BusinessException;
 import com.future.demo.dto.OrderDTO;
 import com.future.demo.dto.OrderDetailDTO;
 import com.future.demo.entity.*;
-import com.future.demo.mapper.IndexMapper;
-import com.future.demo.mapper.OrderDetailMapper;
-import com.future.demo.mapper.OrderMapper;
-import com.future.demo.mapper.ProductMapper;
+import com.future.demo.mapper.*;
 import com.future.demo.util.OrderRandomlyUtil;
 import com.tencent.devops.leaf.service.SnowflakeService;
 import lombok.extern.slf4j.Slf4j;
@@ -72,6 +69,8 @@ public class OrderService {
     OrderDetailMapper orderDetailMapper;
     @Resource
     ProductMapper productMapper;
+    @Resource
+    CommonMapper commonMapper;
     @Resource
     IndexMapper indexMapper;
 
@@ -137,6 +136,8 @@ public class OrderService {
         if (count <= 0) {
             throw new BusinessException("扣减库存失败");
         }
+
+        this.commonMapper.updateIncreaseCount("order", 1);
     }
 
     public void insertBatch() {
@@ -195,6 +196,8 @@ public class OrderService {
             return orderDetailModel;
         }).collect(Collectors.toList());
         this.orderDetailMapper.insertBatch(orderDetailModelList);
+
+        this.commonMapper.updateIncreaseCount("order", orderModelList.size());
     }
 
     /**
