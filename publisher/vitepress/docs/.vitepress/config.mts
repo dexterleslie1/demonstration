@@ -292,6 +292,7 @@ export default defineConfig({
             { text: '原理', link: '/git/原理.md' },
             { text: '变基', link: '/git/变基.md' },
             { text: '命令', link: '/git/命令.md' },
+            { text: 'Pull Request', link: '/git/pr.md' },
           ]
         }
       ],
