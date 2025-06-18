@@ -1,0 +1,35 @@
+- name: "启动api服务"
+  hosts: api
+  tasks:
+    - name: "使用Docker Compose启动api服务"
+      shell: |
+        set -e
+        cd ~/deployer-demo-spring-rocketmq-benchmark/service
+        docker compose pull && docker compose up -d
+
+- name: "启动crond服务"
+  hosts: crond
+  tasks:
+    - name: "使用Docker Compose启动crond服务"
+      shell: |
+        set -e
+        cd ~/deployer-demo-spring-rocketmq-benchmark/crond
+        docker compose pull && docker compose up -d
+
+- name: "启动RocketMQ服务"
+  hosts: rocketmq
+  tasks:
+    - name: "使用Docker Compose启动RocketMQ服务"
+      shell: |
+        set -e
+        cd ~/deployer-demo-spring-rocketmq-benchmark/common
+        docker compose pull && docker compose up -d
+
+- name: "启动OpenResty服务"
+  hosts: openresty
+  tasks:
+    - name: "使用Docker Compose启动OpenResty服务"
+      shell: |
+        set -e
+        cd ~/deployer-demo-spring-rocketmq-benchmark/openresty
+        docker compose pull && docker compose up -d

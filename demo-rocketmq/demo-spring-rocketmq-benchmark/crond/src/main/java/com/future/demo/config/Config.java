@@ -36,14 +36,19 @@ public class Config {
         // 设置单个批次最大消息数量为1024，下面两个设置需要同时设置，否则设置无效
         consumer.setConsumeMessageBatchMaxSize(1024);
         consumer.setPullBatchSize(1024);
+        consumer.setPullThresholdForQueue(65535);
+        consumer.setPullThresholdForTopic(65535);
 
         // 设置并发线程数
-        consumer.setConsumeThreadMin(16);
+        consumer.setConsumeThreadMin(128);
         consumer.setConsumeThreadMax(128);
 
         // 注册消息监听器
         Object objectMutex = new Object();
+        AtomicInteger concurrentCounter = new AtomicInteger();
         consumer.registerMessageListener((MessageListenerConcurrently) (msgs, context) -> {
+            log.info("concurrent:" + concurrentCounter.incrementAndGet() + ",size=" + msgs.size());
+
             for (MessageExt msg : msgs) {
                 /*log.info("Received message: " + new String(msg.getBody()));*/
                 counter.incrementAndGet();
@@ -51,7 +56,7 @@ public class Config {
 
             // 模拟业务延迟，否则批量处理的每个批次消息量会很小
             try {
-                TimeUnit.MILLISECONDS.sleep(50);
+                TimeUnit.MILLISECONDS.sleep(500);
             } catch (Exception ignored) {
 
             }
@@ -63,6 +68,8 @@ public class Config {
                 }
                 this.batchSizeToCountMap().put(batchSize, this.batchSizeToCountMap().get(batchSize) + 1);
             }
+
+            concurrentCounter.decrementAndGet();
 
             return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
         });

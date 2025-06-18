@@ -6,5 +6,6 @@ services:
     environment:
       - JAVA_OPTS=-Xmx4g
       - TZ=Asia/Shanghai
+      - common_rocketmq_namesrvhost=${common_rocketmq_namesrvhost}
     restart: unless-stopped
     network_mode: host

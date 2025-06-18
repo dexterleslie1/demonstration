@@ -1,0 +1,33 @@
+- name: "复制deployer"
+  hosts: "{{ groups['all'] | difference(groups['management']) }}"
+  tasks:
+    - name: "复制deployer目录到远程"
+      copy:
+        src: deployer/
+        dest: ~/deployer-demo-spring-rocketmq-benchmark
+
+- name: "配置openresty服务的deployer"
+  hosts: openresty
+  tasks:
+    - name: "配置OpenResty服务的nginx.conf"
+      template:
+        src: deployer/openresty/nginx.conf.j2
+        dest: ~/deployer-demo-spring-rocketmq-benchmark/openresty/nginx.conf
+
+- name: "配置crond服务的deployer"
+  hosts: crond
+  tasks:
+    - name: "配置crond服务的common_rocketmq_namesrvaddr"
+      lineinfile:
+        path: ~/deployer-demo-spring-rocketmq-benchmark/crond/.env
+        regexp: "^common_rocketmq_namesrvhost="
+        line: "common_rocketmq_namesrvhost={{ groups['rocketmq'][0] }}"
+
+- name: "配置api服务的deployer"
+  hosts: api
+  tasks:
+    - name: "配置api服务的common_rocketmq_namesrvaddr"
+      lineinfile:
+        path: ~/deployer-demo-spring-rocketmq-benchmark/service/.env
+        regexp: "^common_rocketmq_namesrvhost="
+        line: "common_rocketmq_namesrvhost={{ groups['rocketmq'][0] }}"
