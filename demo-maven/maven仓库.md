@@ -36,13 +36,19 @@
     - 是由用户自己搭建的私有仓库，用于存储和共享自己开发的项目构件。
     - 使用私有仓库可以获取到一些不在公共仓库中的构件，满足特定需求。
 
-## 搭建`nexus3`私有仓库
 
-> 选择使用`nexus3`作为私有仓库
+
+## `nexus3`
+
+>选择使用`nexus3`作为私有仓库。
 >
-> [sonatype nexus介绍](https://www.cnblogs.com/aiseek/p/9466247.html)
+>[sonatype nexus介绍](https://www.cnblogs.com/aiseek/p/9466247.html)
 
 Sonatype Nexus。它是Sonatype公司的一个产品，叫Nexus，它是Maven的私服。事实上有三种专门的Maven仓库管理软件可以帮助我们创建私服，有Apache的Archiva;JFrog的Artifactory和Sonatype的Nexus。其中Archiva是开源的，Artifactory和Nexus的核心也是开源的。这里我们重点介绍Sonatype公司的Nexus。Sonatype nexus 分为oss和professional版本。
+
+
+
+### 搭建
 
 `docker-compose.yaml`配置如下：
 
@@ -160,7 +166,9 @@ http {
 
 
 
-## 发布构件到私有`nexus`仓库中
+### 发布构件
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-maven/demo-nexus-distribution)
 
 `maven`项目中`pom.xml`加入如下配置：
 
@@ -239,7 +247,9 @@ mvn deploy
 
 
 
-## 引用私有`nexus`仓库中的构件
+### 引用构件
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-maven/demo-nexus-reference)
 
 项目的`pom.xml`配置如下：
 
@@ -277,6 +287,125 @@ mvn deploy
 </project>
 
 ```
+
+
+
+### 配置 `https`
+
+>注意：配置 `https` 需要使用镜像 `sonatype/nexus3:3.40.1`（不能使用镜像 `sonatype/nexus3:3.30.1`），否则无法加载 `js`、`css`资源导致不能打开页面。
+
+在 `nginx.conf` 配置文件所在目录中生成证书：
+
+```sh
+docker run --rm -it -v $(pwd):/opt/temp nginx sh -c 'cd /opt/temp && openssl req -out cert.csr -new -nodes -newkey rsa:2048 -keyout key.pem'
+
+docker run --rm -it -v $(pwd):/opt/temp nginx sh -c 'cd /opt/temp && openssl x509 -req -days 36500 -in cert.csr -signkey key.pem -out cert.crt && rm cert.csr'
+```
+
+`OpenResty` 的 `docker-compose.yaml`：
+
+```yaml
+version: "3.0"
+
+services:
+  openresty:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-openresty-base-dev
+    environment:
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf:ro
+      - ./cert.crt:/usr/local/openresty/nginx/conf/cert.crt:ro
+      - ./key.pem:/usr/local/openresty/nginx/conf/key.pem:ro
+    restart: unless-stopped
+    network_mode: host
+```
+
+`OpenResty` 的 `nginx.conf` 配置：
+
+```nginx
+worker_processes auto;
+worker_rlimit_nofile 65535;
+
+error_log  logs/error.log;
+error_log  logs/error.log  notice;
+error_log  logs/error.log  info;
+
+events {
+    worker_connections  65535;
+}
+
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+
+    #access_log  logs/access.log  main;
+
+    sendfile        on;
+    #tcp_nopush     on;
+
+    #keepalive_timeout  0;
+    keepalive_timeout  65;
+
+    gzip on;
+    gzip_min_length 1k;
+    gzip_buffers 16 64k;
+    gzip_http_version 1.1;
+    gzip_comp_level 6;
+    gzip_types application/json text/plain application/javascript text/css application/xml;
+    gzip_vary on;
+    server_tokens off;
+    access_log off;
+    client_max_body_size 50m;
+
+    upstream server_backend_nexus3 {
+        # nexus3服务器源地址
+        server 192.168.1.209:8081;
+    }
+
+    server {
+        listen 443 ssl;
+        ssl_certificate cert.crt;
+        ssl_certificate_key key.pem;
+        server_name maven.xxx.net;
+        
+        location / {
+            proxy_http_version 1.1;
+            proxy_set_header Connection "";
+            proxy_set_header Host $host:80;
+            proxy_set_header X-Real-IP        $remote_addr;
+            proxy_set_header X-Forwarded-For  $remote_addr;
+            proxy_set_header X-NginX-Proxy true;
+            proxy_pass http://server_backend_nexus3;
+        }
+    }
+}
+
+```
+
+
+
+### 管理
+
+#### 仓库类型
+
+nexus3仓库类型主要包括以下几种：
+
+1. group（仓库组）
+   - 仓库组没有具体的内容，它会转向其包含的宿主仓库或代理仓库获得实际构件的内容。
+   - 它是多个仓库的集合，可以包含多个hosted、proxy、group类型的仓库。
+   - 在group中还存在优先级的关系，例如，当多个仓库都包含同一镜像时，会按照配置的优先级顺序进行匹配，一旦匹配成功则不再继续向下匹配。
+2. hosted（宿主）
+   - 宿主仓库主要是用来存放一些组织内部的构件，或由于版权原因不能放在公共仓库中的构件。
+   - 宿主仓库指的是用户自己项目所构建组成的仓库。
+3. proxy（代理）
+   - 代理仓库用于代理远程仓库，当客户端请求proxy类型仓库时，如果仓库中依赖存在即返回给客户端，如未存在就从proxy配置的远程仓库中拉取依赖返回给客户端，并在proxy仓库中进行缓存。
+   - 代理仓库也称为缓存仓库，主要用于代理远程的公共仓库，如Maven中央仓库等。
+
+
 
 ## 发布构件到阿里`Maven`公共仓库
 
@@ -348,20 +477,3 @@ mvn deploy
 > todo 抽个时间做测试！
 >
 > https://central.sonatype.com/ gmail@Kl(shift)||
-
-## `nexus3`管理
-
-### 仓库类型
-
-nexus3仓库类型主要包括以下几种：
-
-1. group（仓库组）
-   - 仓库组没有具体的内容，它会转向其包含的宿主仓库或代理仓库获得实际构件的内容。
-   - 它是多个仓库的集合，可以包含多个hosted、proxy、group类型的仓库。
-   - 在group中还存在优先级的关系，例如，当多个仓库都包含同一镜像时，会按照配置的优先级顺序进行匹配，一旦匹配成功则不再继续向下匹配。
-2. hosted（宿主）
-   - 宿主仓库主要是用来存放一些组织内部的构件，或由于版权原因不能放在公共仓库中的构件。
-   - 宿主仓库指的是用户自己项目所构建组成的仓库。
-3. proxy（代理）
-   - 代理仓库用于代理远程仓库，当客户端请求proxy类型仓库时，如果仓库中依赖存在即返回给客户端，如未存在就从proxy配置的远程仓库中拉取依赖返回给客户端，并在proxy仓库中进行缓存。
-   - 代理仓库也称为缓存仓库，主要用于代理远程的公共仓库，如Maven中央仓库等。
