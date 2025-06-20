@@ -1,8 +1,6 @@
-## Flex 布局
+## `flex` 布局
 
 >提醒：为父级盒子设置 flex 布局后，子元素的 float、clear 和 vertical-align 属性将失效。
-
-
 
 ### 介绍
 
@@ -1250,49 +1248,49 @@ a::after { content: " →"; } /* 元素后追加箭头 */
 
 
 
-## display
+## `display`
 
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/html+js+css/demo-css-display)
 
-### block（块）
+### `block（块）`
 
 >元素能够声明宽度和高度并且独占一行。div 默认是块元素。
 >
 >注意：在不声明元素宽度时，元素宽度会自动调整至其父级容器宽度，以填满父级容器宽度。
 
-### inline（行内）
+### `inline（行内）`
 
 >元素的高度和宽度由内容决定，用户无法直接设置其高度和宽度，并且不会独占一行。此外，inline 元素可以设置水平方向的 padding 和 margin，但竖直方向的 padding 和 margin 则无效。
 >
 >span 默认是行内元素。
 
-### inline-block
+### `inline-block`
 
 >元素能够声明宽度和高度并且不会独占一行。此外，inline 元素可以设置水平和竖直方向的 padding 和 margin。
 
-### table-cell
+### `table-cell`
 
 >表格单元方式排列。
 >
 >注意：能够声明宽度但是不能够声明高度，高度会自动被拉伸到适合单元格高度。
 
-### none
+### `none`
 
 >元素被隐藏并且不会占据布局空间。visibility: hidden 元素隐藏并且会占据布局空间。
 
 
 
-## position
+## `position`
 
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/html+js+css/demo-css-position)
 >
 >[参考链接](https://developer.mozilla.org/en-US/docs/Web/CSS/position)
 
-### fixed
+### `fixed`
 
 >让元素固定在可视区域的固定位置，不受页面的滚动影响。
 
-### static
+### `static`
 
 >该元素根据文档的正常流程定位。 top、right、bottom、left 和 z-index 属性无效。 这是默认值。
 >
@@ -1347,7 +1345,7 @@ a::after { content: " →"; } /* 元素后追加箭头 */
 </html>
 ```
 
-### relative
+### `relative`
 
 >相对自己布局流位置相对定位。被相对定位后，原有的布局流位置依然占据空间。
 
@@ -1405,7 +1403,7 @@ a::after { content: " →"; } /* 元素后追加箭头 */
 </html>
 ```
 
-### absolute
+### `absolute`
 
 >以最近的父级非 static 定位的元素为参考点，定位指定的偏移量。
 
@@ -1631,7 +1629,7 @@ a::after { content: " →"; } /* 元素后追加箭头 */
 
 
 
-## float
+## `float`
 
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/html+js+css/css-float)
 
@@ -1809,9 +1807,232 @@ a::after { content: " →"; } /* 元素后追加箭头 */
 
 
 
-## object-fit
+## `object-fit`
 
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/html+js+css/css-object-fit)
+
+
+
+## `transition`
+
+CSS 的 transition 属性用于在元素状态改变时添加平滑的过渡效果，比如当鼠标悬停在元素上、元素被点击或元素的内容发生变化时。通过 transition，你可以控制这些状态变化的动画效果，使其更加流畅和自然。
+
+**基本语法**
+
+```css
+transition: property duration timing-function delay;
+```
+
+- property：指定要过渡的 CSS 属性名称（例如 width, height, opacity 等）。可以使用 all 来过渡所有可过渡的属性。
+
+- duration：过渡效果的持续时间，以秒（s）或毫秒（ms）为单位。
+- timing-function：过渡的时间函数，用于定义过渡的速度曲线。常用的值包括：
+  - ease（默认值）：过渡效果以较慢的速度开始，然后加速，最后减速。
+  - linear：过渡效果以恒定速度进行。
+  - ease-in：过渡效果以较慢的速度开始。
+  - ease-out：过渡效果以较慢的速度结束。
+  - ease-in-out：过渡效果以较慢的速度开始和结束。
+  - cubic-bezier(n,n,n,n)：自定义贝塞尔曲线以定义速度曲线。
+- delay：过渡效果开始前的延迟时间，以秒（s）或毫秒（ms）为单位。
+
+**示例`1`：简单的过渡效果**
+
+```css
+.box {
+  width: 100px;
+  height: 100px;
+  background-color: red;
+  transition: width 2s, height 2s, background-color 2s;
+}
+
+.box:hover {
+  width: 200px;
+  height: 200px;
+  background-color: blue;
+}
+```
+
+- 在这个例子中，当鼠标悬停在 .box 元素上时，元素的宽度、高度和背景颜色会在 2 秒内平滑过渡。
+
+**示例`2`：使用不同的时间函数**
+
+```css
+.box {
+  width: 100px;
+  height: 100px;
+  background-color: red;
+  transition: width 2s ease-in-out;
+}
+
+.box:hover {
+  width: 200px;
+}
+```
+
+- 在这个例子中，宽度过渡使用了 ease-in-out 时间函数，使得过渡效果在开始和结束时都较慢。
+
+**示例`3`：多个属性过渡**
+
+```css
+.box {
+  width: 100px;
+  height: 100px;
+  background-color: red;
+  transition: all 1s ease;
+}
+
+.box:hover {
+  width: 200px;
+  height: 200px;
+  background-color: blue;
+  transform: rotate(45deg);
+}
+```
+
+- 在这个例子中，all 关键字用于过渡所有可过渡的属性，包括宽度、高度、背景颜色和旋转。
+
+**注意事项**
+
+- 不是所有的 CSS 属性都可以过渡。通常，可过渡的属性是那些可以以某种方式插值的属性，例如数值、颜色、位置等。
+- 过渡效果在浏览器中可能需要硬件加速，某些情况下可能会导致性能问题，尤其是在移动设备上。
+- 使用 transition 可以让你的网站或应用程序看起来更加动态和交互友好。
+
+**综合示例**
+
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <title>窗口控制按钮还原</title>
+  <style>
+    body {
+      background: #232635;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .window-controls {
+      display: flex;
+      gap: 32px;
+      background: #232635;
+      padding: 12px 24px;
+      border-radius: 8px;
+    }
+
+    .icon-btn {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      /* 可选：鼠标悬停时高亮 */
+      transition: background 0.5s;
+    }
+
+    /* 可选：鼠标悬停时高亮 */
+    .icon-btn:hover {
+      background: #2d3147;
+      border-radius: 4px;
+    }
+
+    .icon-btn svg rect {
+      transition: all 0.5s;
+    }
+
+    .icon-btn svg line {
+      transition: all 0.5s;
+    }
+
+    .icon-btn:nth-of-type(1):hover svg rect {
+      fill: white;
+    }
+
+    .icon-btn:nth-of-type(2):hover svg rect {
+      stroke: white;
+    }
+
+    .icon-btn:nth-of-type(3):hover svg line {
+      stroke: white;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="window-controls">
+    <!-- 最小化 -->
+    <div class="icon-btn" title="最小化">
+      <svg width="20" height="20">
+        <rect x="4" y="9" width="12" height="2" rx="1" fill="#888b99" />
+      </svg>
+    </div>
+    <!-- 最大化 -->
+    <div class="icon-btn" title="最大化">
+      <svg width="20" height="20">
+        <rect x="5" y="5" width="10" height="10" rx="1" fill="none" stroke="#888b99" stroke-width="2" />
+      </svg>
+    </div>
+    <!-- 关闭 -->
+    <div class="icon-btn" title="关闭">
+      <svg width="20" height="20">
+        <line x1="5" y1="5" x2="15" y2="15" stroke="#888b99" stroke-width="2" stroke-linecap="round" />
+        <line x1="15" y1="5" x2="5" y2="15" stroke="#888b99" stroke-width="2" stroke-linecap="round" />
+      </svg>
+    </div>
+  </div>
+</body>
+
+</html>
+```
+
+
+
+## `gap`
+
+gap 属性定义 flexbox、网格或多列布局中行与列之间的间隙大小。它是以下属性的简写属性：`https://www.w3school.com.cn/cssref/pr_gap.asp`。
+
+**示例：**
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .div1 {
+            display: flex;
+            justify-content: flex-start;
+            gap: 20px;
+        }
+
+        .div1 div {
+            height: 100px;
+            width: 100px;
+            background-color: yellow;
+        }
+    </style>
+</head>
+<body>
+    <!--
+        gap 属性定义 flexbox、网格或多列布局中行与列之间的间隙大小。它是以下属性的简写属性：
+        https://www.w3school.com.cn/cssref/pr_gap.asp
+    -->
+    <div>演示 flex 布局中行之间的间距</div>
+    <div class="div1">
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+    <hr/>
+</body>
+</html>
+```
 
 
 
