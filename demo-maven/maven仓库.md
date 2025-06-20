@@ -290,7 +290,7 @@ mvn deploy
 
 
 
-### 配置 `https`
+### 配置自签名 `https`
 
 >注意：配置 `https` 需要使用镜像 `sonatype/nexus3:3.40.1`（不能使用镜像 `sonatype/nexus3:3.30.1`），否则无法加载 `js`、`css`资源导致不能打开页面。
 
@@ -369,6 +369,104 @@ http {
     server {
         listen 443 ssl;
         ssl_certificate cert.crt;
+        ssl_certificate_key key.pem;
+        server_name maven.xxx.net;
+        
+        location / {
+            proxy_http_version 1.1;
+            proxy_set_header Connection "";
+            proxy_set_header Host $host:80;
+            proxy_set_header X-Real-IP        $remote_addr;
+            proxy_set_header X-Forwarded-For  $remote_addr;
+            proxy_set_header X-NginX-Proxy true;
+            proxy_pass http://server_backend_nexus3;
+        }
+    }
+}
+
+```
+
+
+
+### 配置 `ZeroSSL https`
+
+>注意：配置 `https` 需要使用镜像 `sonatype/nexus3:3.40.1`（不能使用镜像 `sonatype/nexus3:3.30.1`），否则无法加载 `js`、`css`资源导致不能打开页面。
+
+在 `ZeroSSL` 中申请证书，证书里面包括：`certificate.crt` 服务器证书，`ca_bundle.crt` 中间 `ZeroSSL CA` 证书，`private.key` 私钥。
+
+合并 `certificate.crt` 和 `ca_bundle.crt` 证书（注意：要按照顺序合并），具体原因请参考本站 <a href="/ssl-tls-https/概念.html#为何-nginx-不把-ca-根证书下发给客户端呢" target="_blank">链接</a>。
+
+```sh
+cat certificate.crt ca_bundle.crt > fullchain.crt
+```
+
+`OpenResty` 的 `docker-compose.yaml`：
+
+```yaml
+version: "3.0"
+
+services:
+  openresty:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-openresty-base-dev
+    environment:
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf:ro
+      - ./fullchain.crt:/usr/local/openresty/nginx/conf/fullchain.crt:ro
+      - ./key.pem:/usr/local/openresty/nginx/conf/key.pem:ro
+    restart: unless-stopped
+    network_mode: host
+```
+
+`OpenResty` 的 `nginx.conf` 配置：
+
+```nginx
+worker_processes auto;
+worker_rlimit_nofile 65535;
+
+error_log  logs/error.log;
+error_log  logs/error.log  notice;
+error_log  logs/error.log  info;
+
+events {
+    worker_connections  65535;
+}
+
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+
+    #access_log  logs/access.log  main;
+
+    sendfile        on;
+    #tcp_nopush     on;
+
+    #keepalive_timeout  0;
+    keepalive_timeout  65;
+
+    gzip on;
+    gzip_min_length 1k;
+    gzip_buffers 16 64k;
+    gzip_http_version 1.1;
+    gzip_comp_level 6;
+    gzip_types application/json text/plain application/javascript text/css application/xml;
+    gzip_vary on;
+    server_tokens off;
+    access_log off;
+    client_max_body_size 50m;
+
+    upstream server_backend_nexus3 {
+        # nexus3服务器源地址
+        server 192.168.1.209:8081;
+    }
+
+    server {
+        listen 443 ssl;
+        ssl_certificate fullchain.crt;
         ssl_certificate_key key.pem;
         server_name maven.xxx.net;
         
