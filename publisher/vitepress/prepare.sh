@@ -60,6 +60,7 @@ source_dir_to_target_dir_map["../../demo-rocketmq"]="rocketmq"
 source_dir_to_target_dir_map["../../demo-scylladb"]="scylladb"
 source_dir_to_target_dir_map["../../demo-android"]="android"
 source_dir_to_target_dir_map["../../demo-uni-app"]="uni-app"
+source_dir_to_target_dir_map["../../demo-小孩"]="小孩"
 
 for key in ${!source_dir_to_target_dir_map[@]}; do
     # 删除符号链接目录

@@ -113,6 +113,7 @@ export default defineConfig({
           { text: '英语学习', link: '/english/README.md' },
           { text: 'Windows 系统', link: '/windows/README.md' },
           { text: '腾讯', link: '/tencent/README.md' },
+          { text: '小孩成长计划', link: '/小孩/README.md' },
         ]
       },
     ],
