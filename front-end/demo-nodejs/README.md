@@ -6,7 +6,7 @@
 >
 > node.js 是基于 V8 的 JavaScript 运行时，事件驱动、非阻塞，因此轻量、高效。
 
-### 安装nodejs
+### 安装
 
 #### 注意
 
@@ -14,23 +14,11 @@ npm是和Nodejs一起并存的，只要安装了Nodejs，npm也安装好了，�
 
 尝试过在ubuntu上安装nvm来管理多版本nodejs，但是因为nvm是通过shell脚本在线访问raw.githubusercontent.com安装，其中raw.githubusercontent.com国内无法访问，所以放弃此方案。
 
-#### macOS 安装 nodejs
+#### `macOS`
 
-到nodejs官网 https://nodejs.org/en/download 下载 pkg 安装包，双击 pkg 安装包根据提示安装
+到 `nodejs` 官网 `https://nodejs.org/en/download` 下载 `pkg` 安装包，双击 `pkg` 安装包根据提示安装
 
-查看node版本
-
-```sh
-node -v
-```
-
-
-
-#### windows 安装 nodejs
-
-到nodejs官网 https://nodejs.org/en/download 下载 msi 安装包，双击 msi 安装包根据提示安装
-
-查看node版本
+查看 `node` 版本
 
 ```sh
 node -v
@@ -38,9 +26,21 @@ node -v
 
 
 
-#### ubuntu安装nodejs
+#### `Windows`
 
-使用 dcli 安装
+到 `nodejs` 官网 `https://nodejs.org/en/download` 下载 `msi` 安装包，双击 `msi` 安装包根据提示安装
+
+查看 `node` 版本
+
+```sh
+node -v
+```
+
+
+
+#### `Ubuntu`
+
+使用 `dcli` 安装。
 
 
 
