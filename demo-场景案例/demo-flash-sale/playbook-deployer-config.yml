@@ -36,6 +36,15 @@
         regexp: "^redisClusterAnnounceIp="
         line: "redisClusterAnnounceIp={{ groups['common'][0] }}"
 
+- name: "配置Kafka的deployer"
+  hosts: rocketmq
+  tasks:
+    - name: "配置Kafka服务的kafka_advertised_listeners"
+      lineinfile:
+        path: ~/deployer-flash-sale/kafka/.env
+        regexp: "^kafka_advertised_listeners="
+        line: "kafka_advertised_listeners={{ groups['rocketmq'][0] }}"
+
 - name: "配置openresty服务的deployer"
   hosts: openresty
   tasks:
@@ -62,6 +71,11 @@
         path: ~/deployer-flash-sale/crond/.env
         regexp: "^common_rocketmq_namesrvhost="
         line: "common_rocketmq_namesrvhost={{ groups['rocketmq'][0] }}"
+    - name: "配置crond服务的kafka_bootstrap_servers"
+      lineinfile:
+        path: ~/deployer-flash-sale/crond/.env
+        regexp: "^kafka_bootstrap_servers="
+        line: "kafka_bootstrap_servers={{ groups['rocketmq'][0] }}"
     - name: "配置crond服务的common_zookeeper_host"
       lineinfile:
         path: ~/deployer-flash-sale/crond/.env
@@ -91,6 +105,11 @@
         path: ~/deployer-flash-sale/service/.env
         regexp: "^common_rocketmq_namesrvhost="
         line: "common_rocketmq_namesrvhost={{ groups['rocketmq'][0] }}"
+    - name: "配置api服务的kafka_bootstrap_servers"
+      lineinfile:
+        path: ~/deployer-flash-sale/service/.env
+        regexp: "^kafka_bootstrap_servers="
+        line: "kafka_bootstrap_servers={{ groups['rocketmq'][0] }}"
     - name: "配置api服务的common_zookeeper_host"
       lineinfile:
         path: ~/deployer-flash-sale/service/.env

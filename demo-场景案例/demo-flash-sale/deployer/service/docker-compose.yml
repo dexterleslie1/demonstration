@@ -10,6 +10,7 @@ services:
       - common_db_port=${common_db_port}
       - common_redis_cluster_nodes=${common_redis_cluster_nodes}
       - common_rocketmq_namesrvhost=${common_rocketmq_namesrvhost}
+      - kafka_bootstrap_servers=${kafka_bootstrap_servers}
       - common_zookeeper_host=${common_zookeeper_host}
       - common_cassandra_contact_points=${common_cassandra_contact_points}
     restart: unless-stopped

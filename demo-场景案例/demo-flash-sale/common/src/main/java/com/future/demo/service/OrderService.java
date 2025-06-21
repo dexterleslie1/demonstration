@@ -1,10 +1,8 @@
 package com.future.demo.service;
 
 import com.datastax.driver.core.*;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.future.common.exception.BusinessException;
-import com.future.demo.config.ConfigRocketMQ;
 import com.future.demo.dto.OrderDTO;
 import com.future.demo.dto.PreOrderDTO;
 import com.future.demo.entity.*;
@@ -12,19 +10,13 @@ import com.future.demo.mapper.*;
 import com.future.demo.util.OrderRandomlyUtil;
 import com.tencent.devops.leaf.service.SnowflakeService;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.rocketmq.client.exception.MQBrokerException;
-import org.apache.rocketmq.client.exception.MQClientException;
-import org.apache.rocketmq.client.producer.DefaultMQProducer;
-import org.apache.rocketmq.client.producer.SendResult;
-import org.apache.rocketmq.client.producer.SendStatus;
-import org.apache.rocketmq.common.message.Message;
-import org.apache.rocketmq.remoting.exception.RemotingException;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StreamUtils;
 
@@ -35,6 +27,8 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.future.demo.constant.Const.TopicName;
 
 /**
  * 注意：实现从用户维度查询订单已经能够演示基于Cassandra建模的基本技能，所以不需要实现从商家维度查询订单功能。
@@ -117,8 +111,10 @@ public class OrderService {
     OrderDetailMapper orderDetailMapper;
     @Resource
     ProductMapper productMapper;
+//    @Resource
+//    DefaultMQProducer producer;
     @Resource
-    DefaultMQProducer producer;
+    private KafkaTemplate<String, String> kafkaTemplate;
     @Resource
     OrderRandomlyUtil orderRandomlyUtil;
     @Autowired
@@ -160,12 +156,13 @@ public class OrderService {
         preOrderDTO.setProductId(productId);
         preOrderDTO.setAmount(amount);
         String JSON = this.objectMapper.writeValueAsString(preOrderDTO);
-        Message message = new Message(ConfigRocketMQ.ProducerAndConsumerGroup, null, JSON.getBytes());
-        // 发送消息并获取发送结果
-        SendResult sendResult = producer.send(message);
-        if (sendResult.getSendStatus() != SendStatus.SEND_OK) {
-            throw new BusinessException("RocketMQ消息发送失败");
-        }
+//        Message message = new Message(ConfigRocketMQ.ProducerAndConsumerGroup, null, JSON.getBytes());
+//        // 发送消息并获取发送结果
+//        SendResult sendResult = producer.send(message);
+//        if (sendResult.getSendStatus() != SendStatus.SEND_OK) {
+//            throw new BusinessException("RocketMQ消息发送失败");
+//        }
+        kafkaTemplate.send(TopicName, JSON).get();
 
         // 秒杀成功后，把用户订单信息存储到 redis 中，数据同步成功后会自动清除数据
         OrderModel orderModel = new OrderModel();
@@ -217,7 +214,7 @@ public class OrderService {
         return orderModelList;
     }
 
-    public void insertBatch(List<OrderModel> orderModelList) throws JsonProcessingException, MQBrokerException, RemotingException, InterruptedException, MQClientException, BusinessException {
+    public void insertBatch(List<OrderModel> orderModelList) {
         List<OrderModel> orderModelListProcessed = new ArrayList<>();
         List<OrderDetailModel> orderDetailModelListProcessed = new ArrayList<>();
 
@@ -240,13 +237,13 @@ public class OrderService {
         this.orderDetailMapper.insertBatch(orderDetailModelListProcessed);
         this.commonMapper.updateIncreaseCount("order", orderModelListProcessed.size());
 
-        String JSON = this.objectMapper.writeValueAsString(orderModelList);
-        Message message = new Message(ConfigRocketMQ.CassandraIndexTopic, null, JSON.getBytes());
-        // 发送消息并获取发送结果
-        SendResult sendResult = producer.send(message);
-        if (sendResult.getSendStatus() != SendStatus.SEND_OK) {
-            throw new BusinessException("RocketMQ消息发送失败，Topic: " + ConfigRocketMQ.CassandraIndexTopic);
-        }
+//        String JSON = this.objectMapper.writeValueAsString(orderModelList);
+//        Message message = new Message(ConfigRocketMQ.CassandraIndexTopic, null, JSON.getBytes());
+//        // 发送消息并获取发送结果
+//        SendResult sendResult = producer.send(message);
+//        if (sendResult.getSendStatus() != SendStatus.SEND_OK) {
+//            throw new BusinessException("RocketMQ消息发送失败，Topic: " + ConfigRocketMQ.CassandraIndexTopic);
+//        }
     }
 
     /**

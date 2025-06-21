@@ -97,29 +97,63 @@ services:
       - node6
     network_mode: 'host'
 
-  namesrv:
-    image: apache/rocketmq:4.9.6
-    command: sh mqnamesrv
-    restart: unless-stopped
-    network_mode: host
-  broker:
-    image: apache/rocketmq:4.9.6
+#  namesrv:
+#    image: apache/rocketmq:4.9.6
+#    command: sh mqnamesrv
+#    restart: unless-stopped
+#    network_mode: host
+#  broker:
+#    image: apache/rocketmq:4.9.6
+#    environment:
+#      - NAMESRV_ADDR=localhost:9876
+#    volumes:
+#      - ./broker.conf:/home/rocketmq/rocketmq-4.9.6/conf/broker.conf
+#    depends_on:
+#      - namesrv
+#    command: sh mqbroker -c /home/rocketmq/rocketmq-4.9.6/conf/broker.conf
+#    restart: unless-stopped
+#    network_mode: host
+#  dashboard:
+#    image: apacherocketmq/rocketmq-dashboard:latest
+#    environment:
+#      - JAVA_OPTS=-Drocketmq.namesrv.addr=localhost:9876
+#      - server.port=8081
+#    restart: unless-stopped
+#    network_mode: host
+
+  kafka-zookeeper:
+    image: confluentinc/cp-zookeeper:7.3.0
     environment:
-      - NAMESRV_ADDR=localhost:9876
-    volumes:
-      - ./broker.conf:/home/rocketmq/rocketmq-4.9.6/conf/broker.conf
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      # 设置 ZooKeeper 的 JVM 堆内存
+      # ZOOKEEPER_HEAP_OPTS: "-Xms1g -Xmx1g"
+#    ports:
+#      - "2181:2181"
+  kafka:
+    image: confluentinc/cp-kafka:7.3.0
     depends_on:
-      - namesrv
-    command: sh mqbroker -c /home/rocketmq/rocketmq-4.9.6/conf/broker.conf
-    restart: unless-stopped
-    network_mode: host
-  dashboard:
-    image: apacherocketmq/rocketmq-dashboard:latest
+      - kafka-zookeeper
+    ports:
+      - "9092:9092"
     environment:
-      - JAVA_OPTS=-Drocketmq.namesrv.addr=localhost:9876
-      - server.port=8081
-    restart: unless-stopped
-    network_mode: host
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: kafka-zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://${kafka_advertised_listeners}:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      # 设置 Kafka 的 JVM 堆内存
+      KAFKA_HEAP_OPTS: "-Xms1g -Xmx1g"
+      # 禁用自动创建 Topic，否则 Spring Boot 会自动创建 partitions=0 的 topic
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+  # 在 kafka 服务成功启动后自动配置 kafka 服务
+  kafka-topic-config:
+    image: confluentinc/cp-kafka:7.3.0
+    depends_on:
+      - kafka
+    environment:
+      TZ: Asia/Shanghai
+    # 自动创建 topic
+    entrypoint: /usr/bin/kafka-topics --create --bootstrap-server kafka:9092 --replication-factor 1 --partitions 128 --topic my-topic-1
 
   zookeeper:
     image: zookeeper:3.8.4

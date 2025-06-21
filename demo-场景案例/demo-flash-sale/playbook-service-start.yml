@@ -36,13 +36,21 @@
         # 拉取最新镜像并启动
         docker compose pull && docker compose up -d
 
-- name: "启动RocketMQ服务"
+#- name: "启动RocketMQ服务"
+#  hosts: rocketmq
+#  tasks:
+#    - name: "使用Docker Compose启动RocketMQ服务"
+#      shell: |
+#        set -e
+#        cd ~/deployer-flash-sale/rocketmq
+#        docker compose pull && docker compose up -d
+- name: "启动Kafka服务"
   hosts: rocketmq
   tasks:
-    - name: "使用Docker Compose启动RocketMQ服务"
+    - name: "使用Docker Compose启动Kafka服务"
       shell: |
         set -e
-        cd ~/deployer-flash-sale/rocketmq
+        cd ~/deployer-flash-sale/kafka
         docker compose pull && docker compose up -d
 
 - name: "启动Cassandra服务"

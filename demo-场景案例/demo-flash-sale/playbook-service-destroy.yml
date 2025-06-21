@@ -34,13 +34,21 @@
         cd ~/deployer-flash-sale/db
         docker compose down -v
 
-- name: "销毁RocketMQ服务"
+#- name: "销毁RocketMQ服务"
+#  hosts: rocketmq
+#  tasks:
+#    - name: "使用Docker Compose down销毁RocketMQ服务"
+#      shell: |
+#        set -e
+#        cd ~/deployer-flash-sale/rocketmq
+#        docker compose down -v
+- name: "销毁Kafka服务"
   hosts: rocketmq
   tasks:
-    - name: "使用Docker Compose down销毁RocketMQ服务"
+    - name: "使用Docker Compose down销毁Kafka服务"
       shell: |
         set -e
-        cd ~/deployer-flash-sale/rocketmq
+        cd ~/deployer-flash-sale/kafka
         docker compose down -v
 
 - name: "销毁Cassandra服务"
