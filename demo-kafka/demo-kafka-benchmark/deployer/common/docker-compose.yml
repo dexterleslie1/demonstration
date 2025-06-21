@@ -1,0 +1,42 @@
+version: "3.8"
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.3.0
+    environment:
+      TZ: Asia/Shanghai
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    restart: unless-stopped
+  kafka:
+    image: confluentinc/cp-kafka:7.3.0
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      # 映射 JMX 端口到主机
+      - "9997:9997"
+    environment:
+      TZ: Asia/Shanghai
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://${kafka_advertised_listeners}:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      # 设置 Kafka 的 JVM 堆内存
+      KAFKA_HEAP_OPTS: "-Xms4g -Xmx4g"
+      # 配置 JMX 端口和认证，配置了 jmx 端口才能够被外部工具监控
+      KAFKA_JMX_OPTS: "-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.local.only=false -Dcom.sun.management.jmxremote.port=9997 -Dcom.sun.management.jmxremote.rmi.port=9997"
+      # 禁用自动创建 Topic，下面容器自动创建
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+    restart: unless-stopped
+  # 在 kafka 服务成功启动后自动配置 kafka 服务
+  kafka-topic-config:
+    image: confluentinc/cp-kafka:7.3.0
+    depends_on:
+      - kafka
+    environment:
+      TZ: Asia/Shanghai
+    # 自动创建 topic
+    entrypoint: /usr/bin/kafka-topics --create --bootstrap-server kafka:9092 --replication-factor 1 --partitions 128 --topic my-topic-1

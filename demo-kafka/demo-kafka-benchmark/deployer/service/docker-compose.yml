@@ -1,0 +1,11 @@
+version: "3.1"
+
+services:
+  service:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-kafka-benchmark-service
+    environment:
+      - JAVA_OPTS=-Xmx4g
+      - TZ=Asia/Shanghai
+      - kafka_bootstrap_servers=${kafka_bootstrap_servers}
+    restart: unless-stopped
+    network_mode: host

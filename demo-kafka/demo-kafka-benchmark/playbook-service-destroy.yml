@@ -1,0 +1,35 @@
+- name: "销毁api服务"
+  hosts: api
+  tasks:
+    - name: "使用Docker Compose down销毁api服务"
+      shell: |
+        set -e
+        cd ~/deployer-demo-kafka-benchmark/service
+        docker compose down -v
+
+- name: "销毁crond服务"
+  hosts: crond
+  tasks:
+    - name: "使用Docker Compose down销毁crond服务"
+      shell: |
+        set -e
+        cd ~/deployer-demo-kafka-benchmark/crond
+        docker compose down -v
+
+- name: "销毁Kafka服务"
+  hosts: kafka
+  tasks:
+    - name: "使用Docker Compose down销毁Kafka服务"
+      shell: |
+        set -e
+        cd ~/deployer-demo-kafka-benchmark/common
+        docker compose down -v
+
+- name: "销毁OpenResty服务"
+  hosts: openresty
+  tasks:
+    - name: "使用Docker Compose down销毁OpenResty服务"
+      shell: |
+        set -e
+        cd ~/deployer-demo-kafka-benchmark/openresty
+        docker compose down -v
