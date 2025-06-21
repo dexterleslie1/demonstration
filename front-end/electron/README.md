@@ -4,6 +4,8 @@
 
 ## 创建空白的 Electron 项目
 
+>提醒：`node` 版本为 `v20.12.2`。
+>
 >[参考链接](https://www.electronjs.org/zh/docs/latest/tutorial/quick-start)
 >
 >2025/04/11 下面实验失败，错误信息如下：
@@ -45,6 +47,14 @@ mkdir test1
 ```bash
 cd test1
 npm init
+```
+
+创建 `.npmrc` 文件，否则 `npm install` 命令会执行失败
+
+```properties
+electron_mirror=https://npmmirror.com/mirrors/electron/
+electron-builder-binaries_mirror=https://npmmirror.com/mirrors/electron-builder-binaries/
+registry=https://mirrors.cloud.tencent.com/npm/
 ```
 
 将 electron 包安装到应用的开发依赖中
@@ -99,9 +109,7 @@ app.on('window-all-closed', function () {
 <html>
   <head>
     <meta charset="UTF-8">
-    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'">
-    <meta http-equiv="X-Content-Security-Policy" content="default-src 'self'; script-src 'self'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'">
     <title>Hello World!</title>
   </head>
   <body>
@@ -671,4 +679,77 @@ app.on('window-all-closed', function () {
 })
 
 ```
+
+
+
+## 词汇表
+
+>[参考官方文档](https://www.electronjs.org/docs/latest/glossary)
+
+### `process`
+
+进程是正在执行的计算机程序的一个实例。使用主进程和一个或多个渲染进程的 Electron 应用实际上是同时运行多个程序。
+
+在 Node.js 和 Electron 中，每个正在运行的进程都有一个 process 对象。该对象是一个全局变量，提供有关当前进程的信息并对其进行控制。作为全局变量，它始终可供应用程序使用，无需使用 require()。
+
+### `main process`
+
+主进程（通常名为 main.js）是每个 Electron 应用的入口点。它控制应用的生命周期，从打开到关闭。它还管理原生元素，例如菜单、菜单栏、Dock、托盘等。主进程负责创建应用中每个新的渲染进程。完整的 Node API 已内置。
+
+每个应用程序的主进程文件都在 package.json 的 main 属性中指定。这就是 electron . 如何知道启动时要执行哪个文件的方式。
+
+在 Chromium 中，此进程被称为“浏览器进程”。在 Electron 中，为了避免与渲染器进程混淆，它被重命名。
+
+### `renderer process`
+
+渲染进程是应用中的一个浏览器窗口。与主进程不同，渲染进程可以有多个，每个窗口都在单独的进程中运行。渲染进程也可以被隐藏。
+
+
+
+## 主进程模块
+
+>[参考官方文档](https://www.electronjs.org/docs/latest/api/app)
+
+### `app`
+
+控制应用程序的事件生命周期。
+
+以下示例显示如何在关闭最后一个窗口时退出应用程序：
+
+```javascript
+const { app } = require('electron')
+app.on('window-all-closed', () => {
+  app.quit()
+})
+```
+
+#### 事件
+
+>[参考官方文档](https://www.electronjs.org/docs/latest/api/app#events)
+
+应用程序对象发出以下事件：
+
+##### `will-finish-launching`
+
+应用程序完成基本启动时发出。在 Windows 和 Linux 上，will-finish-launching 事件与 ready 事件相同；在 macOS 上，此事件代表 NSApplication 的 applicationWillFinishLaunching 通知。
+
+大多数情况下，您应该在 ready 事件处理程序中完成所有事情。
+
+
+
+## 综合技巧
+
+### 圆角外框
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/electron/demo-圆角外框)
+
+
+
+## `TODO`
+
+- 怎么使 `electron` 外框自动根据 `viewport` 的高度调整呢？
+
+
+
+
 
