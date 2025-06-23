@@ -393,3 +393,22 @@ export default {
 
 ```
 
+
+
+## `package.json scripts` 中的命令添加环境变量
+
+cross-env 是一个跨平台设置环境变量的工具，能统一不同系统下的语法差异。安装 cross-env（全局或项目内）：
+
+```sh
+npm install cross-env --save-dev
+```
+
+修改 package.json 的 start 脚本，将原来的 NODE_ENV=development electron . 替换为 cross-env NODE_ENV=development electron .：
+
+```json
+"scripts": {
+  "start": "cross-env NODE_ENV=development electron .",
+  "test": "echo \"Error: no test specified\" && exit 1"
+}
+```
+
