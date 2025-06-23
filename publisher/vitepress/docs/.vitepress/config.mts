@@ -115,6 +115,7 @@ export default defineConfig({
           { text: 'Windows 系统', link: '/windows/README.md' },
           { text: '腾讯', link: '/tencent/README.md' },
           { text: '小孩成长计划', link: '/小孩/README.md' },
+          { text: '工具集', link: '/toolset/README.md' },
         ]
       },
     ],

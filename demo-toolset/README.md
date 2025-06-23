@@ -14,6 +14,14 @@
 
 
 
+#### `Windows 11` 安装
+
+通过链接 `https://www.snipaste.com/download.html` 下载 `Windows zip` 压缩包，解压压缩包后运行 `exe` 即可运行 `Snipaste`。
+
+运行 `Snipaste` 后设置开机自动启动。
+
+
+
 #### `ubuntu20.04`安装
 
 下载`Linux AppImage`，`https://www.snipaste.com/download.html`
