@@ -37,6 +37,7 @@ export default defineConfig({
           { text: 'Figma', link: '/figma/README.md' },
           { text: 'Android', link: '/android/README.md' },
           { text: 'uni-app', link: '/uni-app/README.md' },
+          { text: 'SVG', link: '/svg/README.md' },
         ]
       }, {
         text: '后端', items: [
