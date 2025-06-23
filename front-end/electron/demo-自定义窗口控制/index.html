@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Hello World!</title>
+    <style>
+        /* 内容和 html、body 没有间距 */
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            /* 文字颜色 */
+            color: #888b99;
+        }
+
+        .app-container {
+            /* padding: 10px; */
+            border-radius: 5px;
+            /* app 的黑暗背景 */
+            background: #232635;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .drag-region {
+            background-color: rgba(0, 0, 0, 0.4);
+            width: 100%;
+            border-radius: 5px 5px 0px 0px;
+            height: 32px;
+            -webkit-app-region: drag;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            user-select: none;
+        }
+
+        .window-controls {
+            display: flex;
+            position: absolute;
+            top: 0;
+            right: 0;
+            -webkit-app-region: no-drag;
+        }
+
+        .window-controls .icon-btn {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .window-controls .icon-btn svg rect {
+            transition: all 0.5s;
+        }
+
+        .window-controls .icon-btn svg line {
+            transition: all 0.5s;
+        }
+
+        .window-controls .icon-btn:nth-of-type(1):hover svg rect {
+            fill: white;
+        }
+
+        .window-controls .icon-btn:nth-of-type(2):hover svg rect {
+            stroke: white;
+        }
+
+        .window-controls .icon-btn:nth-of-type(3):hover svg line {
+            stroke: white;
+        }
+    </style>
+    <script>
+        // 给主进程发送消息
+        const { ipcRenderer } = require("electron")
+        function onMinimize() {
+            ipcRenderer.send("window-minimize")
+        }
+
+        function onMaximum() {
+            ipcRenderer.send("window-maximum")
+        }
+
+        function onExit() {
+            ipcRenderer.send("window-exit")
+        }
+    </script>
+</head>
+
+<body>
+    <!-- 实现圆角效果的 div 容器 -->
+    <div class="app-container">
+        <div class="drag-region">测试标题</div>
+        <div class="window-controls">
+            <!-- 最小化 -->
+            <div class="icon-btn" title="最小化" onclick="onMinimize()">
+                <svg width="20" height="20">
+                    <rect x="4" y="9" width="12" height="2" rx="1" fill="#888b99" />
+                </svg>
+            </div>
+            <!-- 最大化 -->
+            <div class="icon-btn" title="最大化" onclick="onMaximum()">
+                <svg width="20" height="20">
+                    <rect x="5" y="5" width="10" height="10" rx="1" fill="none" stroke="#888b99" stroke-width="2" />
+                </svg>
+            </div>
+            <!-- 关闭 -->
+            <div class="icon-btn" title="关闭" onclick="onExit()">
+                <svg width="20" height="20">
+                    <line x1="5" y1="5" x2="15" y2="15" stroke="#888b99" stroke-width="2" stroke-linecap="round" />
+                    <line x1="15" y1="5" x2="5" y2="15" stroke="#888b99" stroke-width="2" stroke-linecap="round" />
+                </svg>
+            </div>
+        </div>
+        <div style="padding: 10px;font-size: 16px;">演示自定义窗口控制栏</div>
+    </div>
+</body>
+
+</html>

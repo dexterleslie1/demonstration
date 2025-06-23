@@ -680,6 +680,68 @@ app.on('window-all-closed', function () {
 
 
 
+## 渲染器进程和主进程通信
+
+>[参考官方文档](https://www.electronjs.org/zh/docs/latest/api/ipc-renderer)
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/electron/demo-自定义窗口控制)
+
+`ipcRenderer` 是一个 [EventEmitter](https://nodejs.org/api/events.html#events_class_eventemitter) 的实例。 你可以使用它提供的一些方法从渲染进程 (web 页面) 发送同步或异步的消息到主进程。 也可以接收主进程回复的消息。
+
+`index.html` 代码片段：
+
+```html
+<script>
+    // 给主进程发送消息
+    const { ipcRenderer } = require("electron")
+    function onMinimize() {
+        ipcRenderer.send("window-minimize")
+    }
+
+    function onMaximum() {
+        ipcRenderer.send("window-maximum")
+    }
+
+    function onExit() {
+        ipcRenderer.send("window-exit")
+    }
+</script>
+```
+
+`main.js` 代码片段：
+
+```javascript
+function createWindow() {
+    ...
+
+    ipcMain.on('window-minimize', () => {
+        // 窗口最小化
+        win.minimize()
+    })
+
+    ipcMain.on('window-maximum', () => {
+        if (win.isMaximized()) {
+            // 如果最大化则恢复到之前状态
+            win.unmaximize()
+        } else {
+            // 最大化窗口
+            win.maximize()
+        }
+    })
+
+    ipcMain.on('window-exit', () => {
+        // 关闭窗口
+        win.close()
+        // 关闭应用
+        app.quit()
+    })
+}
+```
+
+上面的代码中，在渲染进程中通过 `ipcRenderer` 向主进程 `ipcMain` 发送消息通信。
+
+
+
 ## 快捷键
 
 ### 注册和取消全局快捷键
