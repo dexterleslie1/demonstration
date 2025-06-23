@@ -1,0 +1,12 @@
+{
+  "name": "electron-browserwindow",
+  "version": "1.0.0",
+  "main": "main.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "NODE_ENV=development electron ."
+  },
+  "devDependencies": {
+    "electron": "^13.0.0"
+  }
+}

@@ -634,6 +634,52 @@ globalShortcut.register('Esc', function() {
 
 
 
+## `remote`
+
+>[参考文档](https://wizardforcel.gitbooks.io/electron-doc/content/api/remote.html)
+
+`remote` 模块提供了一种在渲染进程（网页）和主进程之间进行进程间通讯（IPC）的简便途径。
+
+
+
+## 启动 `DevTools` 调试器
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/electron/demo-devtools)
+
+```javascript
+const { app, BrowserWindow } = require('electron')
+
+function createWindow() {
+  const win = new BrowserWindow({
+    width: 800,
+    height: 600,
+  })
+
+  // 开发环境下自动打开 DevTools
+  // 在 package.json 中传递 NODE_ENV 环境变量 "start": "NODE_ENV=development electron ."
+  if (process.env.NODE_ENV === 'development') {
+    win.webContents.openDevTools()
+  }
+
+  win.loadFile('index.html')
+}
+
+app.whenReady().then(() => {
+  createWindow()
+
+  app.on('activate', function () {
+    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+  })
+})
+
+app.on('window-all-closed', function () {
+  if (process.platform !== 'darwin') app.quit()
+})
+
+```
+
+
+
 ## 快捷键
 
 ### 注册和取消全局快捷键
@@ -734,6 +780,146 @@ app.on('window-all-closed', () => {
 应用程序完成基本启动时发出。在 Windows 和 Linux 上，will-finish-launching 事件与 ready 事件相同；在 macOS 上，此事件代表 NSApplication 的 applicationWillFinishLaunching 通知。
 
 大多数情况下，您应该在 ready 事件处理程序中完成所有事情。
+
+
+
+## 配置选项
+
+### `nodeIntegration`
+
+在 Electron 中，`webPreferences.nodeIntegration` 是一个关键配置项，用于控制**渲染进程（前端页面）是否能够直接访问 Node.js 的 API 和功能**。以下是其具体作用的详细说明：
+
+**核心作用**
+
+`nodeIntegration` 决定渲染进程中的 JavaScript 是否可以：
+- 直接调用 Node.js 内置模块（如 `fs`、`path`、`http` 等）；
+- 使用 `require()` 或 `import` 加载本地或第三方 Node.js 模块；
+- 访问 Node.js 运行时环境（如 `process`、`Buffer` 等全局对象）。
+
+**具体行为**
+
+- **当 `nodeIntegration: true` 时**：  
+  渲染进程的 JavaScript 拥有完整的 Node.js 能力。例如，你可以直接在渲染进程的代码中写：
+  ```javascript
+  // 直接读取本地文件（危险！）
+  const fs = require('fs');
+  fs.readFile('/etc/passwd', (err, data) => { ... });
+  
+  // 使用 Node.js 模块
+  const path = require('path');
+  console.log(path.join(__dirname, 'file.txt'));
+  ```
+  这种模式适合需要高度集成 Node.js 能力的场景（如桌面工具类应用），但**存在严重安全风险**（见下文）。
+
+- **当 `nodeIntegration: false` 时（默认值，Electron 12+ 后默认关闭）**：  
+  渲染进程的 JavaScript 被隔离在浏览器环境中，无法直接访问 Node.js API。此时，渲染进程只能通过 **IPC（进程间通信）** 与主进程交互，间接调用 Node.js 功能。例如：
+  ```javascript
+  // 渲染进程（无法直接使用 fs）
+  const { ipcRenderer } = require('electron'); // 注意：若 contextIsolation 为 true，此方式也可能受限
+  ipcRenderer.invoke('read-file', '/etc/passwd').then(data => { ... });
+  ```
+  这种模式更安全，适合需要限制前端权限的应用（如 Web 应用封装）。
+
+**安全风险**
+
+`nodeIntegration: true` 虽然方便，但会显著降低应用的安全性，尤其是当渲染进程加载**不可信的外部内容**（如用户上传的网页、第三方网站）时：
+- 攻击者可通过 XSS 漏洞直接调用 Node.js API，访问/修改本地文件系统；
+- 可能执行系统命令（如通过 `child_process` 模块），导致远程代码执行（RCE）；
+- 敏感信息（如用户隐私数据）可能被泄露到本地或网络。
+
+**最佳实践**
+
+- **避免在生产环境中启用 `nodeIntegration: true`**（除非明确需要且内容绝对可信）。
+- 推荐使用 **上下文隔离（`contextIsolation: true`）** 配合 **预加载脚本（Preload Script）** 暴露有限的 Node.js 能力，平衡功能与安全。例如：
+  ```javascript
+  // 预加载脚本（preload.js）
+  const { contextBridge, ipcRenderer } = require('electron');
+  // 仅暴露必要的 API 给渲染进程
+  contextBridge.exposeInMainWorld('api', {
+    readFile: (path) => ipcRenderer.invoke('read-file', path)
+  });
+  ```
+  渲染进程通过 `window.api.readFile()` 间接调用 Node.js 功能，避免直接暴露危险接口。
+
+**总结**
+
+`nodeIntegration` 是 Electron 中控制渲染进程权限的核心开关：  
+- **`true`**：渲染进程拥有完整 Node.js 能力，方便但危险；  
+- **`false`**（推荐）：渲染进程被隔离，需通过 IPC 或预加载脚本安全调用 Node.js 功能。
+
+
+
+### `contextIsolation`
+
+在 Electron 中，`webPreferences.contextIsolation` 是控制**渲染进程 JavaScript 上下文隔离级别**的核心配置项，主要用于增强应用安全性。以下是其具体作用的详细说明：
+
+**核心作用**
+
+`contextIsolation` 决定渲染进程的 JavaScript 代码是否运行在一个**独立于主进程全局对象的隔离上下文**中。简单来说：
+- **启用（`contextIsolation: true`）**：渲染进程的 JS 上下文与主进程的全局对象（如 `require`、`module`、`process` 等）完全隔离，无法直接访问主进程的原生能力或 Node.js 模块。
+- **禁用（`contextIsolation: false`，默认值在 Electron 12 之前）**：渲染进程的 JS 上下文与主进程共享全局对象，可直接访问主进程的 Node.js 能力和全局变量（若未被其他配置限制）。
+
+**具体行为对比**
+
+1. **当 `contextIsolation: false` 时**  
+
+渲染进程的 JS 上下文与主进程“共享”全局环境，这会导致：
+- 渲染进程可直接访问主进程的全局对象（如 `require`、`process`、`Buffer` 等），即使 `nodeIntegration` 为 `false`（部分能力仍可能被间接利用）。
+- 若同时 `nodeIntegration: true`（如用户代码所示），渲染进程甚至能直接调用 Node.js 模块（如 `fs`、`child_process`），存在**严重安全风险**（例如通过 XSS 攻击执行本地文件读写或系统命令）。
+
+**示例（危险场景）**：  
+若渲染进程加载了不可信的网页（如用户输入的 URL），攻击者可通过 XSS 注入代码，直接利用共享的全局对象执行恶意操作：
+```javascript
+// 渲染进程（contextIsolation: false + nodeIntegration: true）
+const fs = require('fs'); // 直接访问 Node.js 模块（因为 context 未隔离）
+fs.writeFileSync('/tmp/hacked', '恶意内容'); // 直接写入本地文件
+```
+
+2. **当 `contextIsolation: true` 时（推荐）**  
+
+渲染进程的 JS 上下文被隔离到一个独立的沙盒中，与主进程的全局对象完全分离：
+- 渲染进程**无法直接访问**主进程的 `require`、`process` 等全局对象，也无法直接调用 Node.js 模块。
+- 即使 `nodeIntegration: true`，渲染进程的 JS 上下文仍被隔离，无法直接访问 Node.js 能力（需通过预加载脚本显式暴露）。
+- 主进程与渲染进程的通信必须通过 **IPC（进程间通信）** 或 **预加载脚本桥接** 完成，避免直接暴露危险接口。
+
+**示例（安全场景）**：  
+通过预加载脚本（`preload.js`）安全暴露有限能力，渲染进程只能通过预定义的接口调用功能：
+
+```javascript
+// 预加载脚本（preload.js）
+const { contextBridge, ipcRenderer } = require('electron');
+
+// 仅暴露一个安全的文件读取接口（通过 IPC 间接调用）
+contextBridge.exposeInMainWorld('api', {
+  readFile: (path) => ipcRenderer.invoke('read-file', path)
+});
+
+// 渲染进程（contextIsolation: true）
+window.api.readFile('/tmp/test.txt') // 只能通过预暴露的 api 调用，无法直接访问 Node.js
+  .then(content => console.log(content));
+```
+
+**与 `nodeIntegration` 的关系**
+
+`contextIsolation` 和 `nodeIntegration` 共同控制渲染进程的权限，但侧重点不同：
+- `nodeIntegration`：直接决定渲染进程是否拥有 Node.js 能力（如 `require`、`fs`）。
+- `contextIsolation`：决定渲染进程是否能直接访问主进程的全局对象（如 `process`、`ipcRenderer`）。
+
+**关键结论**：  
+即使 `nodeIntegration: false`，若 `contextIsolation: false`，渲染进程仍可能通过其他方式（如直接访问主进程全局对象）间接获取危险能力。因此，**`contextIsolation: true` 是更安全的基础配置**，需配合预加载脚本和 IPC 实现功能。
+
+**最佳实践**
+
+- **生产环境必须启用 `contextIsolation: true`**（Electron 12+ 默认已启用，旧版本需手动设置）。  
+- 避免同时启用 `nodeIntegration: true` 和 `contextIsolation: false`（用户代码中的配置存在高风险）。  
+- 通过**预加载脚本**（`preload.js`）安全暴露必要功能（如 IPC 通道），而非直接开放 Node.js 或主进程能力。  
+- 对于不可信内容（如用户生成的网页），始终使用隔离上下文并严格限制通信接口。
+
+**总结**
+
+`contextIsolation` 是 Electron 中隔离渲染进程与主进程安全边界的核心机制：  
+- **`true`**：渲染进程运行在独立沙盒中，无法直接访问主进程全局对象或 Node.js 模块，大幅提升安全性；  
+- **`false`**（不推荐）：渲染进程与主进程共享上下文，可能因 XSS 等漏洞导致严重的本地或系统级安全风险。
 
 
 
