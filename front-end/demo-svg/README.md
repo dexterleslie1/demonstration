@@ -516,6 +516,22 @@ SVG 的渲染流程可简化为：
 
 
 
+## `svg` 没有指定 `viewBox` 时默认值
+
+在 SVG 中，如果未显式指定 viewBox，其默认值为 0 0 [svg-width] [svg-height]，其中 [svg-width] 和 [svg-height] 是 SVG 元素自身通过 width 和 height 属性定义的物理尺寸。
+
+**示例：**
+
+```html
+<svg width="20" height="20">
+    <rect x="4" y="9" width="12" height="2" rx="1" fill="#888b99" />
+</svg>
+```
+
+- 由于未设置 viewBox，其默认值为 viewBox="0 0 20 20"（即 min-x=0, min-y=0, width=20, height=20）。
+
+
+
 ## 属性
 
 ### `stroke`
