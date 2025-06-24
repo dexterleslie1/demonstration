@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import javax.annotation.Resource;
-import java.math.BigInteger;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -120,9 +119,9 @@ public class ApplicationTests {
         orderModelList = this.orderMapper.selectAll();
 
         // long 类型
-        /*Long orderId = orderModelList.get(0).getId();*/
+        Long orderId = orderModelList.get(0).getId();
         // biginteger 类型
-        BigInteger orderId = orderModelList.get(0).getId();
+        /*BigInteger orderId = orderModelList.get(0).getId();*/
 
         OrderDTO orderDTO = this.orderService.getById(orderId);
         Assertions.assertEquals(orderId, orderDTO.getId());

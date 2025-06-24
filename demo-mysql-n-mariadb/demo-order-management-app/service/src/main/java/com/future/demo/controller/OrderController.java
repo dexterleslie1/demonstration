@@ -10,12 +10,17 @@ import com.future.demo.service.IdCacheAssistantService;
 import com.future.demo.service.OrderService;
 import com.future.demo.util.OrderRandomlyUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.StopWatch;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @RestController
 @RequestMapping("/api/v1/order")
@@ -161,5 +166,34 @@ public class OrderController {
     public ObjectResponse<String> init() {
         this.idCacheAssistantService.initData();
         return ResponseUtils.successObject("成功初始化");
+    }
+
+    /**
+     * 测试线程池并发批量插入
+     *
+     * @return
+     * @throws InterruptedException
+     */
+    @GetMapping("testThreadPoolBatchInsertionConcurrently")
+    public ObjectResponse<String> test() throws InterruptedException {
+        int totalCount = 1000000;
+        AtomicInteger counter = new AtomicInteger();
+        ExecutorService threadPool = Executors.newCachedThreadPool();
+        for (int i = 0; i < 16; i++) {
+            threadPool.submit(() -> {
+                while (true) {
+                    if (counter.getAndAdd(1000) >= totalCount) {
+                        break;
+                    }
+                    orderService.insertBatch();
+                }
+            });
+        }
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
+        threadPool.shutdown();
+        while (!threadPool.awaitTermination(10, TimeUnit.MILLISECONDS)) ;
+        stopWatch.stop();
+        return ResponseUtils.successObject("插入100万数据耗时：" + stopWatch.getTotalTimeMillis() + "毫秒");
     }
 }
