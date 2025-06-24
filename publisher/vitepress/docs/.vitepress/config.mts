@@ -88,6 +88,7 @@ export default defineConfig({
       }, {
         text: '运维', items: [
           { text: 'Ansible', link: '/ansible/README.md' },
+          { text: 'Prometheus', link: '/prometheus/README.md' },
         ]
       }, {
         text: '编程语言', items: [
@@ -563,6 +564,28 @@ export default defineConfig({
             { text: '基础', link: '/android/README.md' },
             { text: 'Android Studio', link: '/android/android-studio.md' },
             { text: 'Gradle', link: '/android/gradle.md' },
+          ]
+        }
+      ],
+      '/prometheus/': [
+        {
+          text: 'Prometheus',
+          items: [
+            { text: '基础', link: '/prometheus/README.md' },
+            { text: 'Exporter', link: '/prometheus/exporter使用.md' },
+            { text: 'Grafana手动导入Dashboard', link: '/prometheus/grafana手动导入dashboard.md' },
+            { text: 'Grafana自动导入Dashboards和Datasources', link: '/prometheus/grafana自动导入dashboards和datasources.md' },
+            { text: 'Prometheus客户端库', link: '/prometheus/prometheus客户端库.md' },
+            { text: 'Prometheus拉取目标配置', link: '/prometheus/prometheus拉取目标配置.md' },
+            { text: 'Prometheus指标类型', link: '/prometheus/prometheus指标类型.md' },
+            { text: 'Prometheus标签', link: '/prometheus/prometheus标签.md' },
+            { text: 'Prometheus监控Spring Boot', link: '/prometheus/prometheus监控spring.md' },
+            { text: 'Prometheus自定义Exporter', link: '/prometheus/prometheus自定义exporter.md' },
+            { text: 'Prometheus设置', link: '/prometheus/prometheus设置.md' },
+            { text: 'Promql', link: '/prometheus/promql.md' },
+            { text: '使用Docker Compose运行Prometheus', link: '/prometheus/使用docker-compose运行prometheus.md' },
+            { text: '使用Docker运行Grafana', link: '/prometheus/使用docker运行grafana.md' },
+            { text: '告警设置', link: '/prometheus/告警设置.md' },
           ]
         }
       ],

@@ -1001,3 +1001,8 @@ public class CustomEndpoint {
 curl -i -X GET http://localhost:8081/mydemo/custom
 ```
 
+
+
+## `Actuator+Prometheus` 监控
+
+通过参考本站 <a href="/prometheus/prometheus监控spring.html" target="_blank">链接</a> 配置 `Actuator+Prometheus` 监控。
