@@ -34,3 +34,22 @@ scrape_configs:
          labels:
            instance: openresty-{{ loop.index }}
 {% endfor %}
+  # Spring Boot Actuator metrics端点配置
+  - job_name: 'Api Actuator'
+    scrape_interval: 15s
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+{% for host in groups['api'] %}
+       - targets: ['{{ host }}:8081']
+         labels:
+           instance: api-service-{{ loop.index }}
+{% endfor %}
+  - job_name: 'Crond Actuator'
+    scrape_interval: 15s
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+{% for host in groups['crond'] %}
+       - targets: ['{{ host }}:8081']
+         labels:
+           instance: crond-service-{{ loop.index }}
+{% endfor %}
