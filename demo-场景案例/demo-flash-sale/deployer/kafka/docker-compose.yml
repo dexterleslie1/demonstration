@@ -21,7 +21,7 @@ services:
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://${kafka_advertised_listeners}:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       # 设置 Kafka 的 JVM 堆内存
-      KAFKA_HEAP_OPTS: "-Xms4g -Xmx4g"
+      KAFKA_HEAP_OPTS: "${kafka_heap_opts}"
       # 禁用自动创建 Topic，否则 Spring Boot 会自动创建 partitions=0 的 topic
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
     restart: unless-stopped

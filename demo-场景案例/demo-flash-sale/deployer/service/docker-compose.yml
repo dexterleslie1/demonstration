@@ -4,7 +4,7 @@ services:
   service:
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-service
     environment:
-      - JAVA_OPTS=-Xmx4g
+      - JAVA_OPTS=${java_opts}
       - TZ=Asia/Shanghai
       - common_db_host=${common_db_host}
       - common_db_port=${common_db_port}
@@ -13,5 +13,10 @@ services:
       - kafka_bootstrap_servers=${kafka_bootstrap_servers}
       - common_zookeeper_host=${common_zookeeper_host}
       - common_cassandra_contact_points=${common_cassandra_contact_points}
+    logging:
+      driver: json-file
+      options:
+        max-size: "128m"
+        max-file: "10"
     restart: unless-stopped
     network_mode: host

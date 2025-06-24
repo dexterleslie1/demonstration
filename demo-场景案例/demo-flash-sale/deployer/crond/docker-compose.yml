@@ -4,7 +4,7 @@ services:
   crond:
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-crond
     environment:
-      - JAVA_OPTS=-Xmx4g
+      - JAVA_OPTS=${java_opts}
       - TZ=Asia/Shanghai
       - common_db_host=${common_db_host}
       - common_db_port=${common_db_port}
