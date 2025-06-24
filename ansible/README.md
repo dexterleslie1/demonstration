@@ -633,6 +633,29 @@ upstream backend {
 
 
 
+使用 `for` 循环语法动态生成 `prometheus` 静态配置：
+
+```yaml
+# 搜刮配置
+scrape_configs:
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["prometheus:9090"]
+  # openresty metrics端点配置
+  - job_name: 'openresty'
+    static_configs:
+#      - targets: ['192.168.1.185:9145']
+#        labels:
+#          instance: openresty-1
+{% for host in groups['openresty'] %}
+       - targets: ['{{ host }}:9145']
+         labels:
+           instance: openresty-{{ loop.index }}
+{% endfor %}
+```
+
+
+
 ### `map`
 
 `inventory.ini`：
