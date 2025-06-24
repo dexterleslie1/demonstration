@@ -36,6 +36,14 @@
         regexp: "^redisClusterAnnounceIp="
         line: "redisClusterAnnounceIp={{ groups['common'][0] }}"
 
+- name: "配置Prometheus服务的deployer"
+  hosts: common
+  tasks:
+    - name: "配置Prometheus服务的prometheus.yml"
+      template:
+        src: deployer/prometheus/prometheus.yml.j2
+        dest: ~/deployer-flash-sale/prometheus/prometheus.yml
+
 - name: "配置Kafka的deployer"
   hosts: rocketmq
   tasks:

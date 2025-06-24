@@ -109,6 +109,8 @@
 
    访问 `RocketMQ` 的监控 `http://10.0.1.12:8080`
 
+   访问 `Prometheus` 监控 `http://10.0.1.10:3000`，帐号 `admin`，密码 `admin`
+
    测试：
 
    ```sh

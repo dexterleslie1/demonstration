@@ -25,6 +25,15 @@
         cd ~/deployer-flash-sale/common
         docker compose pull && docker compose up -d
 
+- name: "启动prometheus公共服务"
+  hosts: common
+  tasks:
+    - name: "使用Docker Compose启动prometheus公共服务"
+      shell: |
+        set -e
+        cd ~/deployer-flash-sale/prometheus
+        docker compose pull && docker compose up -d
+
 - name: "启动数据库服务"
   hosts: db
   tasks:
