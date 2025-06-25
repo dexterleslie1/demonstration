@@ -12,7 +12,7 @@ version: '3.3'
 services:
   node_exporter:
     image: prom/node-exporter:v1.5.0
-    restart: always
+    restart: unless-stopped
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /proc:/host/proc:ro

@@ -9,3 +9,7 @@ providers:
   type: file
   options:
     path: /var/lib/grafana/dashboards/12464.json
+- name: Default-1860 # A uniquely identifiable name for the provider
+  type: file
+  options:
+    path: /var/lib/grafana/dashboards/1860.json

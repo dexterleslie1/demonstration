@@ -23,17 +23,55 @@ scrape_configs:
   - job_name: "prometheus"
     static_configs:
       - targets: ["prometheus:9090"]
+  # node_exporter配置
+  - job_name: 'node-exporter'
+    scrape_interval: 15s
+    static_configs:
+{% for host in groups['common'] %}
+      - targets: ['{{ host }}:9100']
+        labels:
+          instance: common-{{ loop.index }}
+{% endfor %}
+{% for host in groups['db'] %}
+      - targets: ['{{ host }}:9100']
+        labels:
+          instance: db-{{ loop.index }}
+{% endfor %}
+{% for host in groups['cassandra'] %}
+      - targets: ['{{ host }}:9100']
+        labels:
+          instance: cassandra-{{ loop.index }}
+{% endfor %}
+{% for host in groups['crond'] %}
+      - targets: ['{{ host }}:9100']
+        labels:
+          instance: crond-service-{{ loop.index }}
+{% endfor %}
+{% for host in groups['api'] %}
+      - targets: ['{{ host }}:9100']
+        labels:
+          instance: api-service-{{ loop.index }}
+{% endfor %}
+{% for host in groups['openresty'] %}
+      - targets: ['{{ host }}:9100']
+        labels:
+          instance: openresty-{{ loop.index }}
+{% endfor %}
+{% for host in groups['rocketmq'] %}
+      - targets: ['{{ host }}:9100']
+        labels:
+          instance: kafka-{{ loop.index }}
+{% endfor %}
+
   # openresty metrics端点配置
   - job_name: 'openresty'
     static_configs:
-#      - targets: ['192.168.1.185:9145']
-#        labels:
-#          instance: openresty-1
 {% for host in groups['openresty'] %}
        - targets: ['{{ host }}:9145']
          labels:
            instance: openresty-{{ loop.index }}
 {% endfor %}
+
   # Spring Boot Actuator metrics端点配置
   - job_name: 'Api Actuator'
     scrape_interval: 15s

@@ -29,6 +29,7 @@ services:
       - ./grafana-provisioning/dashboards.yaml:/etc/grafana/provisioning/dashboards/default.yaml:ro
       - ./grafana-provisioning/10223.json:/var/lib/grafana/dashboards/10223.json:ro
       - ./grafana-provisioning/12464.json:/var/lib/grafana/dashboards/12464.json:ro
+      - ./grafana-provisioning/1860.json:/var/lib/grafana/dashboards/1860.json:ro
     env_file:
       - ./grafana-config.monitoring
     environment:

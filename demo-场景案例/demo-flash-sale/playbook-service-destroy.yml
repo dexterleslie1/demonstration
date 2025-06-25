@@ -77,3 +77,12 @@
         set -e
         cd ~/deployer-flash-sale/openresty
         docker compose down -v
+
+- name: "销毁node_exporter"
+  hosts: "{{ groups['all'] | difference(groups['management']) }}"
+  tasks:
+    - name: "使用Docker Compose down销毁node_exporter"
+      shell: |
+        set -e
+        cd ~/deployer-flash-sale/node-exporter
+        docker compose down -v

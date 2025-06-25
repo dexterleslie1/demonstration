@@ -97,3 +97,12 @@
         set -e
         cd ~/deployer-flash-sale/openresty
         docker compose pull && docker compose up -d
+
+- name: "启动node_exporter"
+  hosts: "{{ groups['all'] | difference(groups['management']) }}"
+  tasks:
+    - name: "使用Docker Compose启动node_exporter"
+      shell: |
+        set -e
+        cd ~/deployer-flash-sale/node-exporter
+        docker compose up -d       
