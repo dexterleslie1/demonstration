@@ -38,3 +38,47 @@ Pushgateway是Prometheus整体监控方案的一个功能组件，作为一个�
 当部署该组件后，监控源通过主动发送监控数据到Pushgateway，再由Prometheus定时获取信息，实现资源的状态监控。Pushgateway的工作流程大致是：监控源通过Post方式，发送数据到Pushgateway（路径为/metrics）。然后Prometheus服务端设置任务，定时获取Pushgateway上面的监控指标。
 
 Pushgateway支持两种数据推送方式：Prometheus Client SDK推送和API推送。它主要适用于临时性的任务，各个目标主机可以上报数据到Pushgateway，然后Prometheus server统一从Pushgateway拉取数据。同时，Pushgateway也可以作为数据中转站，支持数据生产者随时将数据推送过来，尤其是那些瞬时生成的数据需要一个中转站临时存放。此外，Pushgateway还可以统一收集并持久化推送给它的所有监控数据，起到给Prometheus减压的作用。
+
+
+
+## `Prometheus` 设置
+
+### 设置自动删除过期数据
+
+>[参考链接](https://stackoverflow.com/questions/59298811/increasing-prometheus-storage-retention)
+
+详细设置请参考 [链接](https://gitee.com/dexterleslie/demonstration/blob/main/demo-prometheus/demo-docker-compose-prometheus/docker-compose.yaml#L21)
+
+通过命令行参数`--storage.tsdb.retention.time=30d`设置历史数据最大保留时间，默认15天，此示例中保留30天内的数据。
+
+```yaml
+version: '3.3'
+
+services:
+  prometheus:
+    image: prom/prometheus:v2.37.6
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./alert-rule.yml:/etc/prometheus/alert-rule.yml
+      - data-demo-prometheus:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      #热加载配置
+      - '--web.enable-lifecycle'
+      #api配置
+      #- '--web.enable-admin-api'
+      #历史数据最大保留时间，默认15天
+      - '--storage.tsdb.retention.time=30d'  
+    ports:
+      - '9090:9090'
+```
+

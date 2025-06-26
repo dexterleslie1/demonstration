@@ -10,13 +10,17 @@ PromQL（Prometheus Query Language）是Prometheus监控系统内置的一种查
 
 ## 启动`promql`测试实验环境
 
-1. 启动`prometheus`服务，参考 <a href='/prometheus-grafana-alertmanager/使用docker-compose运行prometheus-grafana-alertmanager/' target='_blank'>链接</a>
-2. 启动自定义`exporter`服务，参考 <a href='/prometheus-grafana-alertmanager/prometheus自定义exporter.html' target='_blank'>链接</a>
-3. 启动`openresty prometheus`服务（协助测试`promql`创建测试数据），参考 <a href="/openresty/监控.html#基于prometheus监控" target="_blank">链接</a>
+1. 启动`prometheus`服务，参考 <a href='/prometheus/使用docker-compose运行prometheus.html' target='_blank'>链接</a>
+2. 启动自定义`exporter`服务，参考 <a href='/prometheus/prometheus自定义exporter.html#使用simpleclient' target='_blank'>链接</a>
+3. 启动`openresty prometheus`服务（协助测试 `promql` 创建测试数据），参考 <a href="/openresty/监控.html#基于prometheus监控" target="_blank">链接</a>
 
 
 
 ## 选择器
+
+访问 `Prometheus promql` 调试器 `http://localhost:9090/`。
+
+ 
 
 ### 即时向量选择器
 
@@ -119,7 +123,7 @@ irate(nginx_http_requests_total{host!="127.0.0.1"}[5m]) > 50 and irate(nginx_htt
 接下来，我们计算同一时间范围内的瞬时增长率。
 
 - **查询**：`irate(http_requests_total[120s])`
-- 计算：`irate`函数只关注时间范围内的最后两个数据点，即160180和160240。计算这两个点之间的增量，并尝试给出每秒的瞬时变化率。但实际上，由于我们只有一个60秒的时间间隔（从160180到160240），`irate`会基于这个间隔来计算：（750-600)/60=2.5i请求/秒，但请注意，PromQL中的`irate`函数会自动处理时间间隔，并给出每秒的瞬时变化率，因此你不需要手动计算时间差。这里的5请求/秒只是一个基于给定数据点的近似值，用于说明`irate`的计算方法。
+- 计算：`irate`函数只关注时间范围内的最后两个数据点，即160180和160240。计算这两个点之间的增量，并尝试给出每秒的瞬时变化率。但实际上，由于我们只有一个60秒的时间间隔（从160180到160240），`irate`会基于这个间隔来计算：（750-600)/60=2.5请求/秒，但请注意，PromQL中的`irate`函数会自动处理时间间隔，并给出每秒的瞬时变化率，因此你不需要手动计算时间差。这里的5请求/秒只是一个基于给定数据点的近似值，用于说明`irate`的计算方法。
 - **结果**：在过去120秒内的某个时间段（实际上是最后60秒），瞬时变化率表明每秒2.5个HTTP请求。然而，重要的是要理解`irate`给出的是基于最后两个数据点的瞬时估算，它可能无法反映整个时间范围内的平均情况。
 
 通过这个例子，我们可以看到`rate`和`irate`在计算时间序列变化率时的不同。`rate`提供了更平滑、更稳定的平均增长率，而`irate`则能够更快地响应数据中的最新变化。
@@ -130,7 +134,7 @@ irate(nginx_http_requests_total{host!="127.0.0.1"}[5m]) > 50 and irate(nginx_htt
 
 按`exported_instance`分组求指标的`irate`，注意：不能删除`sum`函数，如果删除`sum`函数，`irate`返回关于多个标签的指标，此时指定`by (exported_instance)`时`promql`不知道如何聚合被`group by (exported_instance)`后重复的指标。
 
-```bash
+```
 sum(irate(my_custom_counter_total[1m])) by (exported_instance)
 ```
 

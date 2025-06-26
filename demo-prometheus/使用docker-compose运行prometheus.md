@@ -4,7 +4,7 @@
 >
 > 参考`gitee`别人开源的仓库编写`docker-compose`运行`prometheus+grafana+alertmanager https://gitee.com/linge365/docker-prometheus/tree/master`
 
-使用`docker-compose`运行`prometheus+grafana+alertmanager+pushgateway`的详细配置文件请参考`https://gitee.com/dexterleslie/demonstration/tree/master/demo-prometheus-grafana-alertmanager/demo-docker-compose-prometheus-grafana-alertmanager`
+使用`docker-compose`运行`prometheus+grafana+alertmanager+pushgateway`的详细配置文件请参考`https://gitee.com/dexterleslie/demonstration/tree/main/demo-prometheus/demo-docker-compose-prometheus`
 
 运行`prometheus+grafana+alertmanager+pushgateway`服务
 
