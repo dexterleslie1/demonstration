@@ -30,6 +30,7 @@ services:
       - ./grafana-provisioning/10223.json:/var/lib/grafana/dashboards/10223.json:ro
       - ./grafana-provisioning/12464.json:/var/lib/grafana/dashboards/12464.json:ro
       - ./grafana-provisioning/1860.json:/var/lib/grafana/dashboards/1860.json:ro
+      - ./grafana-provisioning/900001.json:/var/lib/grafana/dashboards/900001.json:ro
     env_file:
       - ./grafana-config.monitoring
     environment:

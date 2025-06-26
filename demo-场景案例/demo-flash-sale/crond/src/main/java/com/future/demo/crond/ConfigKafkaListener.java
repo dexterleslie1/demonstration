@@ -2,6 +2,7 @@ package com.future.demo.crond;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.future.demo.config.PrometheusCustomMonitor;
 import com.future.demo.dto.PreOrderDTO;
 import com.future.demo.entity.OrderModel;
 import com.future.demo.service.OrderService;
@@ -35,6 +36,8 @@ public class ConfigKafkaListener {
     StringRedisTemplate redisTemplate;
     @Resource
     OrderService orderService;
+    @Resource
+    PrometheusCustomMonitor monitor;
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory(
@@ -88,6 +91,8 @@ public class ConfigKafkaListener {
                     }
                 }
             });
+
+            this.monitor.incrementOrderSyncCount(orderModelList.size());
         } catch (Exception ex) {
             throw ex;
         } finally {
