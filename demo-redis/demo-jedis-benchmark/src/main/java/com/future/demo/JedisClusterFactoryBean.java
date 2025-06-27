@@ -3,7 +3,7 @@ package com.future.demo;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Component;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.JedisCluster;
@@ -13,7 +13,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Component
-@ConditionalOnProperty(value = "spring.redis.cluster.nodes")
+//@ConditionalOnProperty(value = "spring.redis.cluster.nodes")
+@ConditionalOnExpression("!T(org.springframework.util.StringUtils).isEmpty('${spring.redis.cluster.nodes:}')")
 public class JedisClusterFactoryBean implements FactoryBean<JedisCluster>, DisposableBean {
     @Value("${spring.redis.cluster.nodes}")
     String springRedisClusterNodes;

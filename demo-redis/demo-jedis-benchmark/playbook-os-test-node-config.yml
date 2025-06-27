@@ -1,0 +1,18 @@
+- name: "配置测试节点的操作系统参数"
+  hosts: "{{ groups['all'] | difference(groups['management']) }}"
+  tasks:
+    - name: "修改nofile配置"
+      shell: |
+        set -e
+        sudo grep -q "^\* soft nofile" /etc/security/limits.conf && sudo sed -i '/^\* soft nofile/c \* soft nofile 65535' /etc/security/limits.conf || sudo sed -i '/^# End of file/i \* soft nofile 65535' /etc/security/limits.conf
+        sudo grep -q "^\* hard nofile" /etc/security/limits.conf && sudo sed -i '/^\* hard nofile/c \* hard nofile 65535' /etc/security/limits.conf || sudo sed -i '/^# End of file/i \* hard nofile 65535' /etc/security/limits.conf
+    - name: "修改file-max配置"
+      shell: |
+        set -e
+        sudo grep -q "^fs.file-max=" /etc/sysctl.conf && sudo sed -i '/^fs.file-max=/c fs.file-max=10000000' /etc/sysctl.conf || sudo sed -i '$a\fs.file-max=10000000' /etc/sysctl.conf
+    - name: "修改fs.aio-max-nr配置"
+      shell: |
+        set -e
+        sudo grep -q "^fs.aio-max-nr" /etc/sysctl.conf && sudo sed -i '/^fs.aio-max-nr/c fs.aio-max-nr=1224634' /etc/sysctl.conf || sudo sed -i '$a\fs.aio-max-nr=1224634' /etc/sysctl.conf
+    - name: "修改配置后重启系统"
+      reboot:

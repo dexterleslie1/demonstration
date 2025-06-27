@@ -1,16 +1,6 @@
 version: "3.1"
 
 services:
-  service:
-    build:
-      context: ./
-      dockerfile: Dockerfile
-    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-jedis-benchmark-service
-    environment:
-      - JAVA_OPTS=-Xmx1g
-      - TZ=Asia/Shanghai
-    network_mode: host
-
   redis:
     image: redis:5.0.14
     # 设置redis密码

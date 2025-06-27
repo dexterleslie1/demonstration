@@ -1,0 +1,12 @@
+version: "3.1"
+
+services:
+  service:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-jedis-benchmark-service
+    environment:
+      - JAVA_OPTS=-Xmx4g
+      - TZ=Asia/Shanghai
+      - redisStandaloneHost=${redisStandaloneHost}
+      - redisClusterNodes=${redisClusterNodes}
+    restart: unless-stopped
+    network_mode: host

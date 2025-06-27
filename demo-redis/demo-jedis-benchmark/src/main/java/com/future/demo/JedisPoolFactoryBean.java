@@ -3,13 +3,14 @@ package com.future.demo;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Component;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 
 @Component
-@ConditionalOnProperty(value = "spring.redis.host")
+//@ConditionalOnProperty(value = "spring.redis.host")
+@ConditionalOnExpression("!T(org.springframework.util.StringUtils).isEmpty('${spring.redis.host:}')")
 public class JedisPoolFactoryBean implements FactoryBean<JedisPool>, DisposableBean {
     @Value("${spring.redis.host}")
     String springRedisHost;

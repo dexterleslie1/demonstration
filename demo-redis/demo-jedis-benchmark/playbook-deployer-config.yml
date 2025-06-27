@@ -1,0 +1,40 @@
+- name: "复制deployer"
+  hosts: "{{ groups['all'] | difference(groups['management']) }}"
+  tasks:
+    - name: "复制deployer目录到远程"
+      copy:
+        src: deployer/
+        dest: ~/deployer-demo-jedis-benchmark
+
+- name: "配置Redis服务的deployer"
+  hosts: common
+  tasks:
+    - name: "配置Redis服务的redisClusterAnnounceIp"
+      lineinfile:
+        path: ~/deployer-demo-jedis-benchmark/common/.env
+        regexp: "^redisClusterAnnounceIp="
+        line: "redisClusterAnnounceIp={{ groups['common'][0] }}"
+
+- name: "配置openresty服务的deployer"
+  hosts: openresty
+  tasks:
+    - name: "配置OpenResty服务的nginx.conf"
+      template:
+        src: deployer/openresty/nginx.conf.j2
+        dest: ~/deployer-demo-jedis-benchmark/openresty/nginx.conf
+
+- name: "配置api服务的deployer"
+  hosts: api
+  tasks:
+    - name: "配置api服务的redisClusterNodes"
+      lineinfile:
+        path: ~/deployer-demo-jedis-benchmark/service/.env
+        regexp: "^redisClusterNodes="
+        line: "redisClusterNodes={{ groups['common'][0] }}:6380,{{ groups['common'][0] }}:6381,{{ groups['common'][0] }}:6382"
+      when: redisClusterMode
+    - name: "配置api服务的redisStandaloneHost"
+      lineinfile:
+        path: ~/deployer-demo-jedis-benchmark/service/.env
+        regexp: "^redisStandaloneHost="
+        line: "redisStandaloneHost={{ groups['common'][0] }}"
+      when: not redisClusterMode
