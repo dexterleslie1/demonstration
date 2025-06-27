@@ -146,6 +146,7 @@ export default defineConfig({
             { text: 'ibatis、mybatis、mybatis-plus', link: '/springboot/ibatis、mybatis、mybatis-plus.md' },
             { text: 'SpringBoot', link: '/springboot/spring-boot.md' },
             { text: 'SpringBoot Thymeleaf', link: '/springboot/spring-boot-thymeleaf.md' },
+            { text: '连接池', link: '/springboot/连接池.md' },
           ]
         }
       ],
