@@ -415,6 +415,59 @@ Ansible 提供了 `is defined` 测试来检查变量是否已定义。
 
 
 
+判断变量真假：
+
+- `inventory.ini` 中定义变量
+
+  ```ini
+  # zookeeper、redis、prometheus 等公共服务
+  [common]
+  192.168.1.198
+  
+  # api 服务，运行 service 服务
+  [api]
+  192.168.1.170
+  192.168.1.186
+  192.168.1.187
+  192.168.1.188
+  
+  # openresty 服务
+  [openresty]
+  192.168.1.185
+  
+  # 管理主机
+  [management]
+  # 一般不需要修改，因为配置管理机是本地执行ansible
+  192.168.1.196
+  
+  [api:vars]
+  # redis 是否集群模式
+  redisClusterMode=True
+  ```
+
+- `play book` 中判断变量的真假
+
+  ```yaml
+  - name: "配置api服务的deployer"
+    hosts: api
+    tasks:
+      - name: "配置api服务的redisClusterNodes"
+        lineinfile:
+          path: ~/deployer-demo-jedis-benchmark/service/.env
+          regexp: "^redisClusterNodes="
+          line: "redisClusterNodes={{ groups['common'][0] }}:6380,{{ groups['common'][0] }}:6381,{{ groups['common'][0] }}:6382"
+        when: redisClusterMode
+      - name: "配置api服务的redisStandaloneHost"
+        lineinfile:
+          path: ~/deployer-demo-jedis-benchmark/service/.env
+          regexp: "^redisStandaloneHost="
+          line: "redisStandaloneHost={{ groups['common'][0] }}"
+        when: not redisClusterMode
+  
+  ```
+
+
+
 ### `and、or` 组合条件
 
 `and` 组合条件
