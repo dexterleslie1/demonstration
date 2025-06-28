@@ -9,12 +9,12 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @Slf4j
 public class ConfigMy {
-    @Value("${totalCount}")
-    Integer totalCount;
+    @Value("${totalOrderCount}")
+    Integer totalOrderCount;
 
     @Bean
     OrderRandomlyUtil orderRandomlyUtil() {
-        log.info("totalCount {}", totalCount);
-        return new OrderRandomlyUtil(totalCount);
+        log.info("totalOrderCount {} 配置参数", totalOrderCount);
+        return new OrderRandomlyUtil(totalOrderCount);
     }
 }

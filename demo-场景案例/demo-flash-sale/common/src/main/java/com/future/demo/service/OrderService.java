@@ -4,7 +4,6 @@ import com.datastax.driver.core.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.future.common.exception.BusinessException;
 import com.future.demo.dto.OrderDTO;
-import com.future.demo.dto.PreOrderDTO;
 import com.future.demo.entity.*;
 import com.future.demo.mapper.*;
 import com.future.demo.util.OrderRandomlyUtil;
@@ -12,6 +11,7 @@ import com.tencent.devops.leaf.service.SnowflakeService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -39,7 +39,8 @@ public class OrderService {
     public final static String KeyproductStockWithHashTag = "product{%s}:stock";
     public final static String KeyProductPurchaseRecordWithHashTag = "product{%s}:purchase";
 
-    public final static int ProductStock = Integer.MAX_VALUE;
+    @Value("${productStock:2147483647}")
+    public int productStock;
 
     static DefaultRedisScript<Long> defaultRedisScript = null;
     static String Script = null;
@@ -111,7 +112,7 @@ public class OrderService {
     OrderDetailMapper orderDetailMapper;
     @Resource
     ProductMapper productMapper;
-//    @Resource
+    //    @Resource
 //    DefaultMQProducer producer;
     @Resource
     private KafkaTemplate<String, String> kafkaTemplate;
@@ -151,11 +152,21 @@ public class OrderService {
         this.redisTemplate.opsForStream().add(record);*/
         // 创建消息实例，指定 topic、Tag和消息体
 
-        PreOrderDTO preOrderDTO = new PreOrderDTO();
-        preOrderDTO.setUserId(userId);
-        preOrderDTO.setProductId(productId);
-        preOrderDTO.setAmount(amount);
-        String JSON = this.objectMapper.writeValueAsString(preOrderDTO);
+        OrderModel orderModel = new OrderModel();
+        Long orderId = this.snowflakeService.getId("order").getId();
+        orderModel.setId(orderId);
+        orderModel.setUserId(userId);
+        LocalDateTime createTime = OrderRandomlyUtil.getCreateTimeRandomly();
+        orderModel.setCreateTime(createTime);
+        OrderDetailModel orderDetailModel = new OrderDetailModel();
+        Long orderDetailId = this.snowflakeService.getId("orderDetail").getId();
+        orderDetailModel.setId(orderDetailId);
+        orderDetailModel.setOrderId(orderId);
+        orderDetailModel.setUserId(userId);
+        orderDetailModel.setAmount(amount);
+        orderDetailModel.setProductId(productId);
+        orderModel.setOrderDetailList(Collections.singletonList(orderDetailModel));
+        String JSON = this.objectMapper.writeValueAsString(orderModel);
 //        Message message = new Message(ConfigRocketMQ.ProducerAndConsumerGroup, null, JSON.getBytes());
 //        // 发送消息并获取发送结果
 //        SendResult sendResult = producer.send(message);
@@ -165,35 +176,24 @@ public class OrderService {
         kafkaTemplate.send(TopicName, JSON).get();
 
         // 秒杀成功后，把用户订单信息存储到 redis 中，数据同步成功后会自动清除数据
-        OrderModel orderModel = new OrderModel();
-        orderModel.setUserId(userId);
-        orderModel.setCreateTime(LocalDateTime.now());
-        OrderDetailModel orderDetailModel = new OrderDetailModel();
-        orderDetailModel.setUserId(userId);
-        orderDetailModel.setAmount(amount);
-        orderDetailModel.setProductId(productId);
-        orderModel.setOrderDetailList(Collections.singletonList(orderDetailModel));
         this.redisTemplate.opsForValue().set(userIdStr, this.objectMapper.writeValueAsString(orderModel));
     }
 
-    public List<OrderModel> createOrderModel(List<PreOrderDTO> preOrderDTOList) {
-        List<Long> productIdList = preOrderDTOList.stream().map(o -> o.getProductId()).distinct().collect(Collectors.toList());
+    /**
+     * 模拟真实业务数据，随机填充订单字段
+     *
+     * @param orderModelList
+     * @return
+     */
+    public void fillupOrderRandomly(List<OrderModel> orderModelList) {
+        List<Long> productIdList = orderModelList.stream().map(o -> o.getOrderDetailList().get(0).getProductId()).distinct().collect(Collectors.toList());
         List<ProductModel> productModelList = this.productMapper.list(productIdList);
         Map<Long, ProductModel> productIdToModelMap = productModelList.stream().collect(Collectors.toMap(ProductModel::getId, o -> o));
 
-        List<OrderModel> orderModelList = new ArrayList<>();
-        for (PreOrderDTO preOrderDTO : preOrderDTOList) {
-            long userId = preOrderDTO.getUserId();
-            long productId = preOrderDTO.getProductId();
-            int amount = preOrderDTO.getAmount();
+        for (OrderModel orderModel : orderModelList) {
+            long productId = orderModel.getOrderDetailList().get(0).getProductId();
 
             ProductModel productModel = productIdToModelMap.get(productId);
-
-            OrderModel orderModel = new OrderModel();
-
-            orderModel.setUserId(userId);
-            LocalDateTime createTime = OrderRandomlyUtil.getCreateTimeRandomly();
-            orderModel.setCreateTime(createTime);
 
             DeleteStatus deleteStatus = OrderRandomlyUtil.getDeleteStatusRandomly();
             orderModel.setDeleteStatus(deleteStatus);
@@ -201,36 +201,25 @@ public class OrderService {
             Status status = OrderRandomlyUtil.getStatusRandomly();
             orderModel.setStatus(status);
 
-            OrderDetailModel orderDetailModel = new OrderDetailModel();
-
-            orderDetailModel.setUserId(userId);
-            orderDetailModel.setProductId(productId);
+            OrderDetailModel orderDetailModel = orderModel.getOrderDetailList().get(0);
             orderDetailModel.setMerchantId(productModel.getMerchantId());
-            orderDetailModel.setAmount(amount);
-            orderModel.setOrderDetailList(Collections.singletonList(orderDetailModel));
-
-            orderModelList.add(orderModel);
         }
-        return orderModelList;
     }
 
+    /**
+     * 批量插入订单到数据库
+     *
+     * @param orderModelList
+     */
     public void insertBatch(List<OrderModel> orderModelList) {
         List<OrderModel> orderModelListProcessed = new ArrayList<>();
         List<OrderDetailModel> orderDetailModelListProcessed = new ArrayList<>();
 
         for (OrderModel orderModel : orderModelList) {
-            Long orderId = this.snowflakeService.getId("order").getId();
-            orderModel.setId(orderId);
-
             orderModelListProcessed.add(orderModel);
 
             List<OrderDetailModel> orderDetailModelList = orderModel.getOrderDetailList();
-            for (OrderDetailModel orderDetailModel : orderDetailModelList) {
-                Long orderDetailId = this.snowflakeService.getId("orderDetail").getId();
-                orderDetailModel.setId(orderDetailId);
-                orderDetailModel.setOrderId(orderId);
-                orderDetailModelListProcessed.add(orderDetailModel);
-            }
+            orderDetailModelListProcessed.addAll(orderDetailModelList);
         }
 
         this.orderMapper.insertBatch(orderModelListProcessed);
@@ -253,16 +242,14 @@ public class OrderService {
         List<OrderIndexListByUserIdModel> list = new ArrayList<>();
         for (int i = 0; i < orderModelList.size(); i++) {
             OrderModel orderModel = orderModelList.get(i);
+            Long orderId = orderModel.getId();
             Long userId = orderModel.getUserId();
             LocalDateTime createTime = orderModel.getCreateTime();
             Status status = orderModel.getStatus();
 
             // 创建订单
             OrderIndexListByUserIdModel model = new OrderIndexListByUserIdModel();
-
-            Long orderId = this.snowflakeService.getId("orderIndexListByUserId").getId();
             model.setOrderId(orderId);
-
             model.setUserId(userId);
             model.setCreateTime(createTime);
             model.setStatus(status);
@@ -473,10 +460,9 @@ public class OrderService {
             long productId = this.orderRandomlyUtil.productIdArray[i];
 
             // 批量初始化商品库存
-            Integer productStock = OrderService.ProductStock;
             String keyProductStock = String.format(OrderService.KeyproductStockWithHashTag, productId);
             productStockMap.put(keyProductStock, String.valueOf(productStock));
-            if (productStockMap.size() == batchSize || i == this.orderRandomlyUtil.productIdArray.length) {
+            if (productStockMap.size() == batchSize || i + 1 == this.orderRandomlyUtil.productIdArray.length) {
                 this.redisTemplate.opsForValue().multiSet(productStockMap);
                 productStockMap = new HashMap<>();
             }
@@ -484,7 +470,7 @@ public class OrderService {
             // 批量删除商品购买记录
             String keyProductPurchaseRecord = String.format(OrderService.KeyProductPurchaseRecordWithHashTag, productId);
             productPurchaseRecordList.add(keyProductPurchaseRecord);
-            if (productPurchaseRecordList.size() == batchSize || i == this.orderRandomlyUtil.productIdArray.length) {
+            if (productPurchaseRecordList.size() == batchSize || i + 1 == this.orderRandomlyUtil.productIdArray.length) {
                 this.redisTemplate.delete(productPurchaseRecordList);
                 productPurchaseRecordList = new ArrayList<>();
             }
@@ -497,7 +483,7 @@ public class OrderService {
             long merchantId = this.orderRandomlyUtil.getMerchantIdRandomly();
             productModel.setMerchantId(merchantId);
             productModelList.add(productModel);
-            if (productModelList.size() == batchSize || i == this.orderRandomlyUtil.productIdArray.length) {
+            if (productModelList.size() == batchSize || i + 1 == this.orderRandomlyUtil.productIdArray.length) {
                 this.productMapper.insertBatch(productModelList);
                 productModelList = new ArrayList<>();
 

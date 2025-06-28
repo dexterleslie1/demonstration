@@ -3,7 +3,6 @@ package com.future.demo.crond;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.future.demo.config.PrometheusCustomMonitor;
-import com.future.demo.dto.PreOrderDTO;
 import com.future.demo.entity.OrderModel;
 import com.future.demo.service.OrderService;
 import lombok.extern.slf4j.Slf4j;
@@ -59,13 +58,13 @@ public class ConfigKafkaListener {
         try {
             log.info("concurrent=" + this.concurrentCounter.incrementAndGet() + ",size=" + messages.size() + ",total=" + counter.addAndGet(messages.size()));
 
-            List<PreOrderDTO> preOrderDTOList = new ArrayList<>();
+            List<OrderModel> orderModelList = new ArrayList<>();
             for (String JSON : messages) {
-                PreOrderDTO preOrderDTO = objectMapper.readValue(JSON, PreOrderDTO.class);
-                preOrderDTOList.add(preOrderDTO);
+                OrderModel orderModel = objectMapper.readValue(JSON, OrderModel.class);
+                orderModelList.add(orderModel);
             }
 
-            List<OrderModel> orderModelList = this.orderService.createOrderModel(preOrderDTOList);
+            this.orderService.fillupOrderRandomly(orderModelList);
             this.orderService.insertBatch(orderModelList);
 
             this.redisTemplate.executePipelined(new SessionCallback<String>() {
@@ -73,10 +72,10 @@ public class ConfigKafkaListener {
                 public <K, V> String execute(RedisOperations<K, V> operations) throws DataAccessException {
                     try {
                         RedisOperations<String, String> redisOperations = (RedisOperations<String, String>) operations;
-                        for (PreOrderDTO preOrderDTO : preOrderDTOList) {
+                        for (OrderModel orderModel : orderModelList) {
                             /*log.info("Received message: " + new String(msg.getBody()));*/
-                            long userId = preOrderDTO.getUserId();
-                            long productId = preOrderDTO.getProductId();
+                            long userId = orderModel.getUserId();
+                            long productId = orderModel.getOrderDetailList().get(0).getProductId();
                             String userIdStr = String.valueOf(userId);
                             redisOperations.delete(userIdStr);
 
