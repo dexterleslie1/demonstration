@@ -83,12 +83,12 @@ public class ApplicationTests {
     }
 
     /**
-     * 测试下单业务
+     * 测试普通下单
      *
      * @throws Exception
      */
     @Test
-    public void testCreateOrder() throws Exception {
+    public void testCreateOrderOrdinarily() throws Exception {
         // 还原测试数据
         this.reset();
 
@@ -112,6 +112,66 @@ public class ApplicationTests {
 
         // endregion
 
+        // region 测试超卖
+
+        // 还原测试数据
+        this.reset();
+
+        ExecutorService executorService = Executors.newCachedThreadPool();
+        int concurrentThreads = 256;
+        for (int i = 0; i < concurrentThreads; i++) {
+            int finalI = i;
+            executorService.submit(() -> {
+                try {
+                    Long userIdT = finalI + 1L;
+                    this.orderService.create(userIdT, productId, amount);
+                } catch (Exception e) {
+                    //
+                }
+            });
+        }
+        executorService.shutdown();
+
+        while (!executorService.awaitTermination(10, TimeUnit.MILLISECONDS)) ;
+        TimeUnit.MILLISECONDS.sleep(500);
+
+        orderModelList = this.orderMapper.selectAll();
+        Assertions.assertEquals(5, orderModelList.size());
+        Assertions.assertEquals(0, this.productMapper.getById(productId).getStock().intValue());
+
+        // endregion
+    }
+
+    /**
+     * 测试秒杀下单
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testCreateOrderFlashSale() throws Exception {
+        // 还原测试数据
+        this.reset();
+
+        Long userId = 1L;
+        Long productId = 1L;
+        Integer amount = 1;
+
+        // region 测试成功创建订单
+
+        this.orderService.createFlashSale(userId, productId, amount);
+        TimeUnit.MILLISECONDS.sleep(500);
+        List<OrderModel> orderModelList = this.orderMapper.selectAll();
+        Assertions.assertEquals(1, orderModelList.size());
+        Assertions.assertEquals(userId, orderModelList.get(0).getUserId());
+        List<OrderDetailModel> orderDetailModelList = this.orderDetailMapper.selectAll();
+        Assertions.assertEquals(1, orderDetailModelList.size());
+        Assertions.assertEquals(productId, orderDetailModelList.get(0).getProductId());
+        Assertions.assertEquals(amount, orderDetailModelList.get(0).getAmount());
+        Assertions.assertEquals(userId, orderDetailModelList.get(0).getUserId());
+        Assertions.assertEquals(orderModelList.get(0).getId(), orderDetailModelList.get(0).getOrderId());
+
+        // endregion
+
         // region 测试用户重复下单
 
         // 还原测试数据
@@ -122,7 +182,7 @@ public class ApplicationTests {
         for (int i = 0; i < concurrentThreads; i++) {
             executorService.submit(() -> {
                 try {
-                    this.orderService.create(userId, productId, amount);
+                    this.orderService.createFlashSale(userId, productId, amount);
                 } catch (Exception e) {
                     //
                 }
@@ -156,7 +216,7 @@ public class ApplicationTests {
             executorService.submit(() -> {
                 try {
                     Long userIdT = finalI + 1L;
-                    this.orderService.create(userIdT, productId, amount);
+                    this.orderService.createFlashSale(userIdT, productId, amount);
                 } catch (Exception e) {
                     //
                 }
@@ -169,7 +229,7 @@ public class ApplicationTests {
 
         orderModelList = this.orderMapper.selectAll();
         Assertions.assertEquals(5, orderModelList.size());
-        // todo 同步缓存中库存到数据库库存中
+        // todo 同步缓存中的库存到数据库中
         /*Assertions.assertEquals(0, this.productMapper.getById(productId).getStock().intValue());*/
 
         // endregion

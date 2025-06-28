@@ -1,5 +1,5 @@
 [mysqld]
-max_connections=1024
+max_connections=4096
 slow_query_log=1
 long_query_time=5
 slow_query_log_file=slow-query.log

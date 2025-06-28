@@ -52,6 +52,11 @@
         path: ~/deployer-flash-sale/kafka/.env
         regexp: "^kafka_advertised_listeners="
         line: "kafka_advertised_listeners={{ groups['rocketmq'][0] }}"
+    - name: "配置Kafka服务的kafka_heap_opts"
+      lineinfile:
+        path: ~/deployer-flash-sale/kafka/.env
+        regexp: "^kafka_heap_opts="
+        line: "kafka_heap_opts={{ kafka_heap_opts }}"
 
 - name: "配置openresty服务的deployer"
   hosts: openresty
@@ -64,6 +69,11 @@
 - name: "配置crond服务的deployer"
   hosts: crond
   tasks:
+    - name: "配置crond服务的java_opts"
+      lineinfile:
+        path: ~/deployer-flash-sale/crond/.env
+        regexp: "^java_opts="
+        line: "java_opts={{ java_opts }}"
     - name: "配置crond服务的common_db_host"
       lineinfile:
         path: ~/deployer-flash-sale/crond/.env
@@ -98,6 +108,11 @@
 - name: "配置api服务的deployer"
   hosts: api
   tasks:
+    - name: "配置api服务的java_opts"
+      lineinfile:
+        path: ~/deployer-flash-sale/service/.env
+        regexp: "^java_opts="
+        line: "java_opts={{ java_opts }}"
     - name: "配置api服务的common_db_host"
       lineinfile:
         path: ~/deployer-flash-sale/service/.env

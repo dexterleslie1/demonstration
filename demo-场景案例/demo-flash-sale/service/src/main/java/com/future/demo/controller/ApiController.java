@@ -26,6 +26,12 @@ public class ApiController {
     @Resource
     OrderRandomlyUtil orderRandomlyUtil;
 
+    /**
+     * 普通方式下单
+     *
+     * @return
+     * @throws Exception
+     */
     @GetMapping(value = "create")
     public ObjectResponse<String> create() throws Exception {
         long userId = this.orderRandomlyUtil.getUserIdRandomly();
@@ -34,6 +40,23 @@ public class ApiController {
         this.orderService.create(userId, productId, amount);
         ObjectResponse<String> response = new ObjectResponse<>();
         response.setData("成功下单");
+        return response;
+    }
+
+    /**
+     * 秒杀方式下单
+     *
+     * @return
+     * @throws Exception
+     */
+    @GetMapping(value = "createFlashSale")
+    public ObjectResponse<String> createFlashSale() throws Exception {
+        long userId = this.orderRandomlyUtil.getUserIdRandomly();
+        long productId = this.orderRandomlyUtil.getProductIdRandomly();
+        int amount = 1;
+        this.orderService.createFlashSale(userId, productId, amount);
+        ObjectResponse<String> response = new ObjectResponse<>();
+        response.setData("成功秒杀");
         return response;
     }
 

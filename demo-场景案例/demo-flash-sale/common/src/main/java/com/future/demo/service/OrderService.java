@@ -1,8 +1,10 @@
 package com.future.demo.service;
 
 import com.datastax.driver.core.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.future.common.exception.BusinessException;
+import com.future.demo.dto.IncreaseCountDTO;
 import com.future.demo.dto.OrderDTO;
 import com.future.demo.entity.*;
 import com.future.demo.mapper.*;
@@ -18,6 +20,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StreamUtils;
 
 import javax.annotation.PostConstruct;
@@ -26,9 +29,11 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
-import static com.future.demo.constant.Const.TopicName;
+import static com.future.demo.constant.Const.TopicIncreaseCount;
+import static com.future.demo.constant.Const.TopicOrderInCacheSyncToDb;
 
 /**
  * 注意：实现从用户维度查询订单已经能够演示基于Cassandra建模的基本技能，所以不需要实现从商家维度查询订单功能。
@@ -125,7 +130,68 @@ public class OrderService {
     @Resource
     IndexMapper indexMapper;
 
-    public void create(Long userId, Long productId, Integer amount) throws Exception {
+    /**
+     * 普通下单
+     *
+     * @param userId
+     * @param productId
+     * @param amount
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void create(Long userId, Long productId, Integer amount) throws BusinessException, JsonProcessingException, ExecutionException, InterruptedException {
+        int affectRows = this.productMapper.decreaseStock(productId, amount);
+        if (affectRows <= 0) {
+            throw new BusinessException("库存不足");
+        }
+
+        OrderModel orderModel = new OrderModel();
+        Long orderId = this.snowflakeService.getId("order").getId();
+        orderModel.setId(orderId);
+        orderModel.setUserId(userId);
+
+        LocalDateTime createTime = OrderRandomlyUtil.getCreateTimeRandomly();
+        orderModel.setCreateTime(createTime);
+
+        DeleteStatus deleteStatus = OrderRandomlyUtil.getDeleteStatusRandomly();
+        orderModel.setDeleteStatus(deleteStatus);
+
+        Status status = OrderRandomlyUtil.getStatusRandomly();
+        orderModel.setStatus(status);
+
+        OrderDetailModel orderDetailModel = new OrderDetailModel();
+        Long orderDetailId = this.snowflakeService.getId("orderDetail").getId();
+        orderDetailModel.setId(orderDetailId);
+        orderDetailModel.setOrderId(orderId);
+        orderDetailModel.setUserId(userId);
+        orderDetailModel.setAmount(amount);
+        orderDetailModel.setProductId(productId);
+
+        ProductModel productModel = this.productMapper.getById(productId);
+        orderDetailModel.setMerchantId(productModel.getMerchantId());
+
+        this.orderMapper.insert(orderModel);
+        this.orderDetailMapper.insert(orderDetailModel);
+
+        // 异步更新 t_count
+        IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO();
+        increaseCountDTO.setFlag("order");
+        increaseCountDTO.setCount(1);
+        String JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
+        kafkaTemplate.send(TopicIncreaseCount, JSON).get();
+
+//        // 秒杀成功后，把用户订单信息存储到 redis 中，数据同步成功后会自动清除数据
+//        this.redisTemplate.opsForValue().set(userIdStr, this.objectMapper.writeValueAsString(orderModel));
+    }
+
+    /**
+     * 秒杀
+     *
+     * @param userId
+     * @param productId
+     * @param amount
+     * @throws Exception
+     */
+    public void createFlashSale(Long userId, Long productId, Integer amount) throws Exception {
         String productIdStr = String.valueOf(productId);
         String userIdStr = String.valueOf(userId);
         String amountStr = String.valueOf(amount);
@@ -173,7 +239,7 @@ public class OrderService {
 //        if (sendResult.getSendStatus() != SendStatus.SEND_OK) {
 //            throw new BusinessException("RocketMQ消息发送失败");
 //        }
-        kafkaTemplate.send(TopicName, JSON).get();
+        kafkaTemplate.send(TopicOrderInCacheSyncToDb, JSON).get();
 
         // 秒杀成功后，把用户订单信息存储到 redis 中，数据同步成功后会自动清除数据
         this.redisTemplate.opsForValue().set(userIdStr, this.objectMapper.writeValueAsString(orderModel));
@@ -211,7 +277,7 @@ public class OrderService {
      *
      * @param orderModelList
      */
-    public void insertBatch(List<OrderModel> orderModelList) {
+    public void insertBatch(List<OrderModel> orderModelList) throws Exception {
         List<OrderModel> orderModelListProcessed = new ArrayList<>();
         List<OrderDetailModel> orderDetailModelListProcessed = new ArrayList<>();
 
@@ -224,7 +290,13 @@ public class OrderService {
 
         this.orderMapper.insertBatch(orderModelListProcessed);
         this.orderDetailMapper.insertBatch(orderDetailModelListProcessed);
-        this.commonMapper.updateIncreaseCount("order", orderModelListProcessed.size());
+
+        // 异步更新 t_count
+        IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO();
+        increaseCountDTO.setFlag("order");
+        increaseCountDTO.setCount(orderModelListProcessed.size());
+        String JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
+        kafkaTemplate.send(TopicIncreaseCount, JSON).get();
 
 //        String JSON = this.objectMapper.writeValueAsString(orderModelList);
 //        Message message = new Message(ConfigRocketMQ.CassandraIndexTopic, null, JSON.getBytes());

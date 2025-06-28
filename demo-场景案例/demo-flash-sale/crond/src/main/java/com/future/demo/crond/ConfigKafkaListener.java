@@ -3,7 +3,9 @@ package com.future.demo.crond;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.future.demo.config.PrometheusCustomMonitor;
+import com.future.demo.dto.IncreaseCountDTO;
 import com.future.demo.entity.OrderModel;
+import com.future.demo.mapper.CommonMapper;
 import com.future.demo.service.OrderService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,11 +21,13 @@ import org.springframework.kafka.core.ConsumerFactory;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.future.demo.constant.Const.TopicName;
+import static com.future.demo.constant.Const.*;
 
 
 @Configuration
@@ -37,6 +41,8 @@ public class ConfigKafkaListener {
     OrderService orderService;
     @Resource
     PrometheusCustomMonitor monitor;
+    @Resource
+    CommonMapper commonMapper;
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory(
@@ -53,8 +59,8 @@ public class ConfigKafkaListener {
     private AtomicInteger concurrentCounter = new AtomicInteger();
     private AtomicLong counter = new AtomicLong();
 
-    @KafkaListener(topics = TopicName)
-    public void receiveMessage(List<String> messages) throws JsonProcessingException {
+    @KafkaListener(topics = TopicOrderInCacheSyncToDb)
+    public void receiveMessage(List<String> messages) throws Exception {
         try {
             log.info("concurrent=" + this.concurrentCounter.incrementAndGet() + ",size=" + messages.size() + ",total=" + counter.addAndGet(messages.size()));
 
@@ -99,4 +105,33 @@ public class ConfigKafkaListener {
         }
     }
 
+    @KafkaListener(topics = TopicIncreaseCount)
+    public void receiveMessageIncreaseCount(List<String> messages) throws JsonProcessingException {
+        try {
+            List<IncreaseCountDTO> dtoList = new ArrayList<>();
+            for (String JSON : messages) {
+                IncreaseCountDTO increaseCountDTO = objectMapper.readValue(JSON, IncreaseCountDTO.class);
+                dtoList.add(increaseCountDTO);
+            }
+
+            Map<String, Integer> flagToCountMap = new HashMap<>();
+            for (IncreaseCountDTO dto : dtoList) {
+                String flag = dto.getFlag();
+                int count = dto.getCount();
+                if (!flagToCountMap.containsKey(flag)) {
+                    flagToCountMap.put(flag, 0);
+                }
+                flagToCountMap.put(flag, flagToCountMap.get(flag) + count);
+            }
+
+            for (String flag : flagToCountMap.keySet()) {
+                int count = flagToCountMap.get(flag);
+                this.commonMapper.updateIncreaseCount(flag, count);
+            }
+        } catch (Exception ex) {
+            throw ex;
+        } finally {
+            this.concurrentCounter.decrementAndGet();
+        }
+    }
 }
