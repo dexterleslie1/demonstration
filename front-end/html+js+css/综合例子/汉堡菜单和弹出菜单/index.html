@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="">
+
+<head>
+  <meta charset="UTF-8">
+  <title>菜单导航示例</title>
+  <style>
+    :root {
+      --var-body-background-color: #2e2e2e;
+      --var-menu-border-color: #4b4b4b;
+      --var-menu-background-color: #3d3d3d;
+      --var-color: #e4e3e3;
+      --var-shortcut-color: #888;
+      --var-divider-background-color: #a5a5a5;
+      --var-menu-svg-polygon-fill: #e4e3e3;
+      --var-menu-item-hover-background-color: #666666;
+    }
+
+    html[data-theme=light] {
+      --var-body-background-color: #ffffff;
+      --var-menu-border-color: #c5c5c5;
+      --var-menu-background-color: #ffffff;
+      --var-color: #4e4e4e;
+      --var-shortcut-color: #949494;
+      --var-divider-background-color: #d1d1d1;
+      --var-menu-svg-polygon-fill: #727272;
+      --var-menu-item-hover-background-color: #dadada;
+    }
+
+    body {
+      background-color: var(--var-body-background-color);
+      font-family: "Segoe UI", Arial, sans-serif;
+      margin: 0;
+      padding: 40px;
+    }
+
+    .container {
+      position: relative;
+    }
+
+    .container.active .menu-bar {
+      visibility: visible;
+    }
+
+    .hamburgerMenu {
+      cursor: pointer;
+    }
+
+    .hamburgerMenu:hover rect {
+      fill: white;
+    }
+
+    .menu-bar {
+      position: absolute;
+      left: 10px;
+      top: 20px;
+      display: inline-block;
+      visibility: hidden;
+      background: var(--var-menu-background-color);
+      border-radius: 4px;
+      border-width: 1px;
+      border-color: var(--var-menu-border-color);
+      border-style: solid;
+      /* box-shadow: 0 2px 8px rgba(87, 87, 87, 0.15); */
+      /* min-width: 240px; */
+      padding: 0;
+      font-size: 13px;
+      user-select: none;
+      min-width: 240px;
+      color: var(--var-color);
+    }
+
+    .menu-bar polygon {
+      fill: var(--var-menu-svg-polygon-fill);
+    }
+
+    .menu-bar ul {
+      list-style: none;
+      margin: 0;
+      padding: 5px 0;
+    }
+
+    .menu-bar>ul>li {
+      padding: 5px 36px 5px 36px;
+      cursor: pointer;
+      position: relative;
+      white-space: nowrap;
+      transition: background 0.2s;
+    }
+
+    .menu-bar>ul>li:hover,
+    .menu-bar>ul>li.active {
+      background-color: var(--var-menu-item-hover-background-color);
+    }
+
+    .menu-bar .submenu {
+      /* display: none; */
+      display: block;
+      visibility: hidden;
+      opacity: 0;
+      position: absolute;
+      left: 100%;
+      top: 0;
+      background: var(--var-menu-background-color);
+      border-radius: 4px;
+      border-width: 1px;
+      border-color: var(--var-menu-border-color);
+      border-style: solid;
+      /* box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); */
+      min-width: 200px;
+      z-index: 10;
+      padding: 5px 0;
+      transition: opacity 0.2s;
+    }
+
+    .menu-bar>ul>li:hover .submenu,
+    .menu-bar>ul>li.active .submenu {
+      /* display: block; */
+      visibility: visible;
+      opacity: 1;
+    }
+
+    .submenu li {
+      padding: 5px 36px 5px 36px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.2s;
+    }
+
+    .submenu li:hover {
+      background: var(--var-menu-item-hover-background-color);
+    }
+
+    .submenu li:last-child {
+      border-bottom: none;
+    }
+
+    .shortcut {
+      color: var(--var-shortcut-color);
+      float: right;
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--var-divider-background-color);
+      margin: 2px 0;
+    }
+
+    /* 小三角 */
+    .arrow {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 12px;
+      /* color: #888; */
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container" id="menuContainer">
+    <svg class="hamburgerMenu" onclick="onClickHamburgerMenu()" width="20" height="20" viewBox="0 0 20 20" fill="none"
+      xmlns="http://www.w3.org/2000/svg">
+      <rect x="3" y="5" width="14" height="2" rx="1" fill="#A1A4B3" />
+      <rect x="3" y="10" width="14" height="2" rx="1" fill="#A1A4B3" />
+      <rect x="3" y="15" width="14" height="2" rx="1" fill="#A1A4B3" />
+    </svg>
+    <div class="menu-bar">
+      <ul>
+        <li>Vaults <span class="shortcut">Ctrl+1</span></li>
+        <li>SFTP <span class="shortcut">Ctrl+2</span></li>
+        <li>Settings <span class="shortcut">Ctrl+逗号</span></li>
+        <div class="divider"></div>
+        <li>New Local Terminal</li>
+        <li>New Serial Connection</li>
+        <li>Edit <span class="arrow"><svg width="16" height="16" viewBox="0 0 6 12" fill="none"
+              xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;">
+              <polygon points="2,2 8,6 2,10" />
+            </svg></span>
+          <div class="submenu">
+            <ul>
+              <li>Undo</li>
+              <li>Redo</li>
+              <div class="divider"></div>
+              <li>Cut</li>
+              <li>Copy</li>
+              <li>Paste</li>
+              <li>Delete</li>
+              <li>Select All</li>
+              <div class="divider"></div>
+              <li>Find <span class="shortcut">Ctrl+Shift+F</span></li>
+            </ul>
+          </div>
+        </li>
+        <li>View <span class="arrow"><svg width="16" height="16" viewBox="0 0 6 12" fill="none"
+              xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;">
+              <polygon points="2,2 8,6 2,10" />
+            </svg></span>
+          <div class="submenu" style="min-width: 280px;">
+            <ul>
+              <li>Toggle Full Screen</li>
+              <div class="divider"></div>
+              <li>Show terminal side-panel <span class="shortcut">Ctrl+S</span></li>
+            </ul>
+          </div>
+        </li>
+        <li>Window <span class="arrow"><svg width="16" height="16" viewBox="0 0 6 12" fill="none"
+              xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;">
+              <polygon points="2,2 8,6 2,10" />
+            </svg></span>
+          <div class="submenu" style="min-width: 260px;">
+            <ul>
+              <li>Minimize</li>
+              <li>New Window <span class="shortcut">Ctrl+Shift+N</span></li>
+            </ul>
+          </div>
+        </li>
+        <li>Help <span class="arrow"><svg width="16" height="16" viewBox="0 0 6 12" fill="none"
+              xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;">
+              <polygon points="2,2 8,6 2,10" />
+            </svg></span>
+          <div class="submenu" style="min-width: 160px;">
+            <ul>
+              <li>Learn More</li>
+              <div class="divider"></div>
+              <li>Check for Update</li>
+              <li>About</li>
+            </ul>
+          </div>
+        </li>
+        <div class="divider"></div>
+        <li>Exit</li>
+      </ul>
+    </div>
+  </div>
+</body>
+<script>
+  function onClickHamburgerMenu() {
+    var menuContainer = document.getElementById("menuContainer")
+    if (menuContainer.classList.contains("active")) {
+      menuContainer.classList.remove("active")
+    } else {
+      menuContainer.classList.add("active")
+    }
+  }
+</script>
+
+</html>
