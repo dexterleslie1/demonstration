@@ -531,6 +531,36 @@ a::after { content: " →"; } /* 元素后追加箭头 */
 
 
 
+### 类选择器
+
+#### 复合类选择器
+
+`CSS` 如下：
+
+```css
+.container.active .menu-bar {
+  visibility: visible;
+}
+```
+
+`HTML` 如下：
+
+```html
+<!-- 匹配：同一个元素同时有 container 和 active 类 -->
+<div class="container active">
+  <!-- 内部可能有 .menu-bar 子元素 -->
+</div>
+
+<!-- 不匹配：container 和 active 分属不同元素 -->
+<div class="container">
+  <div class="active"></div> 
+</div>
+```
+
+当某个元素同时拥有 container 和 active 类时，该元素的后代元素中所有 class="menu-bar" 的元素，会被设置为 visibility: visible（可见）。
+
+
+
 ### 兄弟元素选择器
 
 
