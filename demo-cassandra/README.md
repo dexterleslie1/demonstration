@@ -2196,3 +2196,99 @@ public void testUpdateConcurrently() throws InterruptedException {
 }
 ```
 
+
+
+### 时间类型 - `timestamp`
+
+>提醒：`Cassandra` 会自动把 `java.util.Date` 类型的对象转换为 `GMT` 时区保存，所以在 `cqlsh` 中查询到的数据为 `GMT` 时区的数据格式，例如：`2017-02-02 18:23:07.000000+0000`。在插入和读取数据时需要转换读取到的 `timestamp` 到当前时区对应的时间。
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-cassandra/demo-client-datastax)
+
+表结构：
+
+```CQL
+CREATE TABLE IF NOT EXISTS t_order
+(
+    id            decimal PRIMARY KEY,
+    user_id       bigint,
+    status        text,      -- 使用text代替ENUM，Cassandra不支持ENUM类型
+    pay_time      timestamp, -- 使用timestamp代替datetime
+    delivery_time timestamp,
+    received_time timestamp,
+    cancel_time   timestamp,
+    delete_status text,
+    create_time   timestamp
+);
+```
+
+插入数据时，转换为当前时区的 `java.util.Date` 对象：
+
+```java
+private PreparedStatement preparedStatementOrderInsertion;
+
+@PostConstruct
+public void init() {
+    // cql 只需要 prepare 一次
+    String cql = "INSERT INTO t_order (id, user_id, status, pay_time, delivery_time, received_time, cancel_time, delete_status, create_time) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    this.preparedStatementOrderInsertion = session.prepare(cql);
+    this.preparedStatementOrderInsertion.setConsistencyLevel(ConsistencyLevel.LOCAL_QUORUM);
+}
+
+long userId = 1001L;
+ZoneId zoneId = ZoneId.of("Asia/Shanghai");
+LocalDateTime localDateTimeNow = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS);
+BigDecimal orderId = BigDecimal.valueOf(1L);
+
+Date datePayTime = Date.from(localDateTimeNow.atZone(zoneId).toInstant());
+Date dateCreateTime = Date.from(localDateTimeNow.atZone(zoneId).toInstant());
+BoundStatement bound = preparedStatementOrderInsertion.bind(
+    orderId, // id
+    userId,                  // user_id
+    "Unpay",                // status
+    datePayTime,          // pay_time
+    null,                   // delivery_time
+    null,                   // received_time
+    null,                   // cancel_time
+    "Normal",               // delete_status
+    dateCreateTime           // create_time
+);
+
+ResultSet result = session.execute(bound);
+Assertions.assertTrue(result.wasApplied());
+```
+
+读取数据时，转换为当前时区的 `LocalDateTime` 对象：
+
+```java
+private PreparedStatement preparedStatementOrderSelectById;
+
+@PostConstruct
+public void init() {
+    String cql = "select * from t_order where id=?";
+    this.preparedStatementOrderSelectById = session.prepare(cql);
+    this.preparedStatementOrderSelectById.setConsistencyLevel(ConsistencyLevel.LOCAL_ONE);
+}
+
+bound = preparedStatementOrderSelectById.bind(orderId);
+result = session.execute(bound);
+List<Row> rowList = result.all();
+Assertions.assertEquals(1, rowList.size());
+Assertions.assertEquals(orderId, rowList.get(0).getDecimal("id"));
+LocalDateTime actualCreateTime = rowList.get(0).getTimestamp("create_time").toInstant().atZone(zoneId).toLocalDateTime();
+Assertions.assertEquals(localDateTimeNow, actualCreateTime);
+```
+
+根据时间条件查询数据时，转换为当前时区的 `java.util.Date` 对象：
+
+```java
+// 测试根据时间查询
+String cql = "select * from t_order where create_time>=? and create_time<=? ALLOW FILTERING";
+PreparedStatement preparedStatement = session.prepare(cql);
+preparedStatement.setConsistencyLevel(ConsistencyLevel.LOCAL_ONE);
+bound = preparedStatement.bind(dateCreateTime, dateCreateTime);
+result = session.execute(bound);
+rowList = result.all();
+Assertions.assertEquals(1, rowList.size());
+Assertions.assertEquals(orderId, rowList.get(0).getDecimal("id"));
+```

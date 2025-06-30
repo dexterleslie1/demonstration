@@ -11,12 +11,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.math.BigDecimal;
-import java.sql.Date;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -35,6 +36,7 @@ public class ApplicationTests {
     IndexMapper indexMapper;
 
     private PreparedStatement preparedStatementOrderInsertion;
+    private PreparedStatement preparedStatementOrderSelectById;
 
     @PostConstruct
     public void init() {
@@ -42,6 +44,11 @@ public class ApplicationTests {
         String cql = "INSERT INTO t_order (id, user_id, status, pay_time, delivery_time, received_time, cancel_time, delete_status, create_time) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         this.preparedStatementOrderInsertion = session.prepare(cql);
+        this.preparedStatementOrderInsertion.setConsistencyLevel(ConsistencyLevel.LOCAL_QUORUM);
+
+        cql = "select * from t_order where id=?";
+        this.preparedStatementOrderSelectById = session.prepare(cql);
+        this.preparedStatementOrderSelectById.setConsistencyLevel(ConsistencyLevel.LOCAL_ONE);
     }
 
     @Test
@@ -49,22 +56,44 @@ public class ApplicationTests {
         // region 测试单条插入
 
         long userId = 1001L;
-        Instant now = Instant.now();
+        ZoneId zoneId = ZoneId.of("Asia/Shanghai");
+        LocalDateTime localDateTimeNow = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS);
+        BigDecimal orderId = BigDecimal.valueOf(1L);
 
+        Date datePayTime = Date.from(localDateTimeNow.atZone(zoneId).toInstant());
+        Date dateCreateTime = Date.from(localDateTimeNow.atZone(zoneId).toInstant());
         BoundStatement bound = preparedStatementOrderInsertion.bind(
-                BigDecimal.valueOf(1L), // id
+                orderId, // id
                 userId,                  // user_id
                 "Unpay",                // status
-                Date.from(now),          // pay_time
+                datePayTime,          // pay_time
                 null,                   // delivery_time
                 null,                   // received_time
                 null,                   // cancel_time
                 "Normal",               // delete_status
-                Date.from(now)           // create_time
+                dateCreateTime           // create_time
         );
 
         ResultSet result = session.execute(bound);
         Assertions.assertTrue(result.wasApplied());
+
+        bound = preparedStatementOrderSelectById.bind(orderId);
+        result = session.execute(bound);
+        List<Row> rowList = result.all();
+        Assertions.assertEquals(1, rowList.size());
+        Assertions.assertEquals(orderId, rowList.get(0).getDecimal("id"));
+        LocalDateTime actualCreateTime = rowList.get(0).getTimestamp("create_time").toInstant().atZone(zoneId).toLocalDateTime();
+        Assertions.assertEquals(localDateTimeNow, actualCreateTime);
+
+        // 测试根据时间查询
+        String cql = "select * from t_order where create_time>=? and create_time<=? ALLOW FILTERING";
+        PreparedStatement preparedStatement = session.prepare(cql);
+        preparedStatement.setConsistencyLevel(ConsistencyLevel.LOCAL_ONE);
+        bound = preparedStatement.bind(dateCreateTime, dateCreateTime);
+        result = session.execute(bound);
+        rowList = result.all();
+        Assertions.assertEquals(1, rowList.size());
+        Assertions.assertEquals(orderId, rowList.get(0).getDecimal("id"));
 
         // endregion
 
@@ -82,12 +111,12 @@ public class ApplicationTests {
                     userId,                        // user_id
                     "Unpay",                      // status
                     // https://stackoverflow.com/questions/39926022/codec-not-found-for-requested-operation-timestamp-java-lang-long
-                    Date.from(now),                // pay_time
+                    Date.from(localDateTimeNow.atZone(zoneId).toInstant()),                // pay_time
                     null,                         // delivery_time
                     null,                         // received_time
                     null,                         // cancel_time
                     "Normal",                     // delete_status
-                    Date.from(now)                 // create_time
+                    Date.from(localDateTimeNow.atZone(zoneId).toInstant())                 // create_time
             );
             batch = batch.add(bound);
         }
