@@ -3,6 +3,7 @@ package com.future.demo.mapper;
 import com.datastax.driver.core.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.future.common.exception.BusinessException;
+import com.future.demo.config.PrometheusCustomMonitor;
 import com.future.demo.entity.OrderIndexListByUserIdModel;
 import com.future.demo.entity.OrderModel;
 import com.future.demo.entity.Status;
@@ -23,6 +24,8 @@ public class CassandraMapper {
     Session session;
     @Resource
     ObjectMapper objectMapper;
+    @Resource
+    PrometheusCustomMonitor monitor;
 
     private PreparedStatement preparedStatementInsertionListByUserId;
     private PreparedStatement preparedStatementInsertionListByMerchantId;
@@ -112,6 +115,7 @@ public class CassandraMapper {
         }
 
         this.updateIncreaseCount("orderListByUserId", modelList.size());
+        this.monitor.incrementCassandraIndexOrderListByUserId(modelList.size());
     }
 
     /**
@@ -185,6 +189,7 @@ public class CassandraMapper {
         // endregion
 
         this.updateIncreaseCount("orderListByMerchantId", modelList.size());
+        this.monitor.incrementCassandraIndexOrderListByMerchantId(modelList.size());
     }
 
     /**
