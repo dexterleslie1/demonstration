@@ -167,13 +167,14 @@ docker compose up -d
 
 登录 `Grafana`，`http://localhost:3000`，帐号：`admin`，密码：`admin`。
 
-#### 创建用于显示自定义指标的 `Panel`
+#### 创建用于显示自定义 `Counter` 指标的 `Time Series Panel`
 
 步骤如下：
 
 - 点击 `Dashboards` >  `Browse`，显示 `Dashboards` 列表，点击 `New Dashboard` 新增 `Dashboard`
 - 点击 `Add a new panel` 新增自定指标显示 `panel`，配置信息如下：
 
+  - `Visualizations` 类型使用默认值 `Time Series`
   - `Panel options` > `Title` 填写 ` 订单创建速率`
   - `Axis` > `Label` 填写 `每秒创建订单数`
   - `Graph styles` > `Line Interpolation` 选择 `Smooth`
@@ -182,7 +183,19 @@ docker compose up -d
   - 添加第二个 `Query`，`PromQL` 为 `irate(my_order_request_count_total{order="detail"}[$__rate_interval])`，`options` > `legend` 选择 `Custom` 并填写 `Order Detail`
 - 点击 `Save` 保存 `Panel`。
 
+#### 创建用于显示自定义 `Gauge` 指标的 `Stat Panel`
 
+步骤如下：
+
+- 点击 `Dashboards` >  `Browse`，显示 `Dashboards` 列表，点击 `New Dashboard` 新增 `Dashboard`
+- 点击 `Add a new panel` 新增自定指标显示 `panel`，配置信息如下：
+
+  - `Visualizations` 类型使用默认值 `Stat`
+  - `Panel options` > `Title` 填写 ` 订单主表总数`
+  - 添加 `Query`，`PromQL` 为 `my_order_total{order="master"}`
+- `Stat styles` > `Graph mode` 选择 `None`
+- `Standard options` > `Unit` 选择 `Misc` > `Locale Format`
+- 点击 `Save` 保存 `Panel`。
 
 #### 修改 `Dashboard` 名称
 

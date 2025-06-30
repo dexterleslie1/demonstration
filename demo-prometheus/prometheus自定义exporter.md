@@ -380,6 +380,8 @@ scrape_configs:
 
 - 创建自定义指标：
 
+  `PrometheusCustomMonitor.java`：
+
   ```java
   @Component
   public class PrometheusCustomMonitor {
@@ -388,6 +390,11 @@ scrape_configs:
       private Counter orderCounterDetail;
   
       private final MeterRegistry registry;
+  
+      @Resource
+      AtomicInteger orderMasterTotalCount;
+      @Resource
+      AtomicInteger orderDetailTotalCount;
   
       @Autowired
       public PrometheusCustomMonitor(MeterRegistry registry) {
@@ -401,6 +408,8 @@ scrape_configs:
           orderCounterMaster = registry.counter("my.order.request.count", "order", "master");
           // 指标 my_order_request_count 的 tags 为 order='detail'，模拟订单明细表
           orderCounterDetail = registry.counter("my.order.request.count", "order", "detail");
+          registry.gauge("my.order.total", Collections.singletonList(new ImmutableTag("order", "master")), orderMasterTotalCount, AtomicInteger::get);
+          registry.gauge("my.order.total", Collections.singletonList(new ImmutableTag("order", "detail")), orderDetailTotalCount, AtomicInteger::get);
       }
   
       public void incrementOrderCountMaster() {
@@ -411,7 +420,37 @@ scrape_configs:
           orderCounterDetail.increment(2);
       }
   }
+  
   ```
+
+  `ConfigMy.java`：
+
+  ```java
+  @Configuration
+  public class ConfigMy {
+      /**
+       * 订单主表总数，gauge从此数据源获取，模拟从数据库读取订单总数
+       *
+       * @return
+       */
+      @Bean
+      public AtomicInteger orderMasterTotalCount() {
+          return new AtomicInteger();
+      }
+  
+      /**
+       * 订单明细表总数，gauge从此数据源获取，模拟从数据库读取订单总数
+       *
+       * @return
+       */
+      @Bean
+      public AtomicInteger orderDetailTotalCount() {
+          return new AtomicInteger();
+      }
+  }
+  ```
+
+  
 
 - 在业务代码中使用自定义指标：
 
@@ -421,6 +460,10 @@ scrape_configs:
   public class DemoController {
       @Resource
       PrometheusCustomMonitor monitor;
+      @Resource
+      AtomicInteger orderMasterTotalCount;
+      @Resource
+      AtomicInteger orderDetailTotalCount;
   
       @GetMapping("testCounter")
       public ObjectResponse<String> testCounter() {
@@ -428,10 +471,32 @@ scrape_configs:
           this.monitor.incrementOrderCountDetail();
           return ResponseUtils.successObject("成功下单");
       }
+  
+      /**
+       * 测试设置订单主表总记录数
+       *
+       * @return
+       */
+      @GetMapping("testSetOrderMasterTotalCount")
+      public ObjectResponse<String> testSetOrderMasterTotalCount() {
+          this.orderMasterTotalCount.incrementAndGet();
+          return ResponseUtils.successObject("调用成功");
+      }
+  
+      /**
+       * 测试设置订单明细表总记录数
+       *
+       * @return
+       */
+      @GetMapping("testSetOrderDetailTotalCount")
+      public ObjectResponse<String> testSetOrderDetailTotalCount() {
+          this.orderDetailTotalCount.incrementAndGet();
+          return ResponseUtils.successObject("调用成功");
+      }
   }
   ```
 
-- 启动 `SpringBoot` 应用并检查 `Prometheus` 端点是否已经启用，访问 `http://localhost:8081/actuator/prometheus` 并搜索是否存在自定义指标 `my_order_request_count`。
+- 启动 `SpringBoot` 应用并检查 `Prometheus` 端点是否已经启用，访问 `http://localhost:8081/actuator/prometheus` 并搜索是否存在自定义指标 `my_order_request_count` 和 `my_order_total`。
 
 配置 `Prometheus` 抓取指标：
 
@@ -459,6 +524,10 @@ scrape_configs:
 
 ```sh
 wrk -t1 -c1 -d150000s --latency --timeout 30 http://192.168.1.181:8080/api/v1/testCounter
+
+wrk -t1 -c1 -d150000s --latency --timeout 30 http://192.168.1.181:8080/api/v1/testSetOrderMasterTotalCount
+
+wrk -t1 -c1 -d150000s --latency --timeout 30 http://192.168.1.181:8080/api/v1/testSetOrderDetailTotalCount
 ```
 
 
