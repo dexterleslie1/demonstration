@@ -30,6 +30,7 @@ public class CassandraMapper {
     private PreparedStatement preparedStatementInsertionListByUserId;
     private PreparedStatement preparedStatementInsertionListByMerchantId;
     private PreparedStatement preparedStatementUpdateIncreaseCount;
+    private PreparedStatement preparedStatementGetCountByFlag;
 
     @PostConstruct
     public void init() {
@@ -46,6 +47,10 @@ public class CassandraMapper {
         cql = "update t_count set count=count+? where flag=?";
         preparedStatementUpdateIncreaseCount = session.prepare(cql);
         preparedStatementUpdateIncreaseCount.setConsistencyLevel(ConsistencyLevel.LOCAL_ONE);
+
+        cql = "select count from t_count where flag=?";
+        preparedStatementGetCountByFlag = session.prepare(cql);
+        preparedStatementGetCountByFlag.setConsistencyLevel(ConsistencyLevel.LOCAL_ONE);
     }
 
     /**
