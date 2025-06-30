@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.future.demo.config.PrometheusCustomMonitor;
 import com.future.demo.dto.IncreaseCountDTO;
-import com.future.demo.entity.OrderDetailModel;
 import com.future.demo.entity.OrderModel;
 import com.future.demo.entity.ProductModel;
 import com.future.demo.mapper.CommonMapper;
@@ -149,15 +148,23 @@ public class ConfigKafkaListener {
             modelList.add(orderModel);
         }
 
-        // 设置订单的merchantId
-        List<Long> productIdList = modelList.stream().map(o -> o.getOrderDetailList().get(0).getProductId()).distinct().collect(Collectors.toList());
-        List<ProductModel> productModelList = this.productMapper.list(productIdList);
-        Map<Long, ProductModel> productIdToModelMap = productModelList.stream().collect(Collectors.toMap(ProductModel::getId, o -> o));
+        // 普通下单不需要设置merchantId，只有秒杀才需要设置merchantId
+        boolean needToSetMerchantId = false;
         for (OrderModel model : modelList) {
-            long productId = model.getOrderDetailList().get(0).getProductId();
-            ProductModel productModel = productIdToModelMap.get(productId);
-            OrderDetailModel orderDetailModel = model.getOrderDetailList().get(0);
-            orderDetailModel.setMerchantId(productModel.getMerchantId());
+            if (model.getMerchantId() == null) {
+                needToSetMerchantId = true;
+                break;
+            }
+        }
+        if (needToSetMerchantId) {
+            List<Long> productIdList = modelList.stream().map(o -> o.getOrderDetailList().get(0).getProductId()).distinct().collect(Collectors.toList());
+            List<ProductModel> productModelList = this.productMapper.list(productIdList);
+            Map<Long, ProductModel> productIdToModelMap = productModelList.stream().collect(Collectors.toMap(ProductModel::getId, o -> o));
+            for (OrderModel model : modelList) {
+                long productId = model.getOrderDetailList().get(0).getProductId();
+                ProductModel productModel = productIdToModelMap.get(productId);
+                model.setMerchantId(productModel.getMerchantId());
+            }
         }
 
         orderService.insertBatchOrderIndexListByUserId(modelList);

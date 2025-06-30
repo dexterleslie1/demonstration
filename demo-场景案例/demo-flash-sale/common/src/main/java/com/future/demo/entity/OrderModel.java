@@ -16,6 +16,7 @@ public class OrderModel {
     private LocalDateTime receivedTime;
     private LocalDateTime cancelTime;
     private DeleteStatus deleteStatus;
+    private Long merchantId;
 
     private List<OrderDetailModel> orderDetailList;
 }

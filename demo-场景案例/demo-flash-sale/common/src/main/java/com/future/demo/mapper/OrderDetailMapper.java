@@ -15,13 +15,13 @@ public interface OrderDetailMapper {
             "</script>")
     List<OrderDetailModel> list(List<Long> orderIdList);
 
-    @Insert("insert into t_order_detail(id,orderId,userId,productId,merchantId,amount) values(#{orderDetail.id},#{orderDetail.orderId},#{orderDetail.userId},#{orderDetail.productId},#{orderDetail.merchantId},#{orderDetail.amount})")
+    @Insert("insert into t_order_detail(id,orderId,userId,productId,amount) values(#{orderDetail.id},#{orderDetail.orderId},#{orderDetail.userId},#{orderDetail.productId},#{orderDetail.amount})")
     int insert(@Param(value = "orderDetail") OrderDetailModel orderDetailModel);
 
     @Insert("<script>" +
-            "   insert into t_order_detail(id,orderId,userId,productId,merchantId,amount) values " +
+            "   insert into t_order_detail(id,orderId,userId,productId,amount) values " +
             "   <foreach collection=\"orderDetailModelList\" item=\"e\" separator=\",\">" +
-            "       (#{e.id},#{e.orderId},#{e.userId},#{e.productId},#{e.merchantId},#{e.amount})" +
+            "       (#{e.id},#{e.orderId},#{e.userId},#{e.productId},#{e.amount})" +
             "   </foreach>" +
             "</script>")
     void insertBatch(List<OrderDetailModel> orderDetailModelList);

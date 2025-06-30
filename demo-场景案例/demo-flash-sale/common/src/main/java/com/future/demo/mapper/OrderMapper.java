@@ -8,13 +8,13 @@ import java.util.List;
 @Mapper
 public interface OrderMapper {
 
-    @Insert("INSERT INTO t_order (id, userId, createTime,`status`,deleteStatus) VALUES (#{id}, #{userId}, #{createTime},#{status},#{deleteStatus})")
+    @Insert("INSERT INTO t_order (id, userId, createTime,`status`,deleteStatus, merchantId) VALUES (#{id}, #{userId}, #{createTime},#{status},#{deleteStatus},#{merchantId})")
     int insert(OrderModel orderModel);
 
     @Insert("<script>" +
-            "   insert into t_order(id,userId,createTime,`status`,deleteStatus) values " +
+            "   insert into t_order(id,userId,createTime,`status`,deleteStatus,merchantId) values " +
             "   <foreach collection=\"orderModelList\" item=\"e\" separator=\",\">" +
-            "       (#{e.id},#{e.userId},#{e.createTime},#{e.status},#{e.deleteStatus})" +
+            "       (#{e.id},#{e.userId},#{e.createTime},#{e.status},#{e.deleteStatus},#{e.merchantId})" +
             "   </foreach>" +
             "</script>")
     void insertBatch(@Param("orderModelList") List<OrderModel> orderModelList);

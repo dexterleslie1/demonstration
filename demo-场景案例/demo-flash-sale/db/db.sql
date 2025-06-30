@@ -11,6 +11,7 @@ create table if not exists t_order(
     receivedTime    datetime default null comment '签收时间',
     cancelTime      datetime default null comment '取消时间',
     deleteStatus    ENUM('Normal','Deleted') NOT NULL COMMENT '订单删除状态',
+    merchantId  bigint not null comment '商家ID',
     createTime      datetime not null
 ) engine=innodb character set utf8mb4 collate utf8mb4_general_ci;
 
@@ -19,7 +20,6 @@ create table if not exists t_order_detail (
   orderId     bigint not null,
   userId      bigint not null comment '协助简化和提高用户重复下单判断逻辑',
   productId   bigint not null,
-  merchantId  bigint not null comment '商家ID',
   amount      int not null
 ) engine=innodb character set utf8mb4 collate utf8mb4_general_ci;
 

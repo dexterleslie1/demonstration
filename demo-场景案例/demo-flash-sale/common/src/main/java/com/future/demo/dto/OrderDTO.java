@@ -27,5 +27,7 @@ public class OrderDTO {
     private LocalDateTime cancelTime;
     @JsonSerialize(using = DeleteStatus.DeleteStatusSerializer.class)
     private DeleteStatus deleteStatus;
+    private Long merchantId;
+    private String merchantName;
     private List<OrderDetailDTO> orderDetailList;
 }

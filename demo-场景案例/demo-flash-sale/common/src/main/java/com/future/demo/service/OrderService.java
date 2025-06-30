@@ -161,6 +161,9 @@ public class OrderService {
         Status status = OrderRandomlyUtil.getStatusRandomly();
         orderModel.setStatus(status);
 
+        ProductModel productModel = this.productMapper.getById(productId);
+        orderModel.setMerchantId(productModel.getMerchantId());
+
         OrderDetailModel orderDetailModel = new OrderDetailModel();
         Long orderDetailId = this.snowflakeService.getId("orderDetail").getId();
         orderDetailModel.setId(orderDetailId);
@@ -168,9 +171,6 @@ public class OrderService {
         orderDetailModel.setUserId(userId);
         orderDetailModel.setAmount(amount);
         orderDetailModel.setProductId(productId);
-
-        ProductModel productModel = this.productMapper.getById(productId);
-        orderDetailModel.setMerchantId(productModel.getMerchantId());
 
         orderModel.setOrderDetailList(Collections.singletonList(orderDetailModel));
 
@@ -269,8 +269,7 @@ public class OrderService {
             Status status = OrderRandomlyUtil.getStatusRandomly();
             orderModel.setStatus(status);
 
-            OrderDetailModel orderDetailModel = orderModel.getOrderDetailList().get(0);
-            orderDetailModel.setMerchantId(productModel.getMerchantId());
+            orderModel.setMerchantId(productModel.getMerchantId());
         }
     }
 
@@ -320,7 +319,7 @@ public class OrderService {
             Long userId = orderModel.getUserId();
             LocalDateTime createTime = orderModel.getCreateTime();
             Status status = orderModel.getStatus();
-            Long merchantId = orderModel.getOrderDetailList().get(0).getMerchantId();
+            Long merchantId = orderModel.getMerchantId();
             LocalDateTime payTime = orderModel.getPayTime();
             LocalDateTime deliveryTime = orderModel.getDeliveryTime();
             LocalDateTime receivedTime = orderModel.getReceivedTime();
@@ -390,6 +389,7 @@ public class OrderService {
             model.setUserId(userIdTemporary);
             model.setStatus(statusTemporary);
             model.setCreateTime(createTime);
+            model.setMerchantId(merchantId);
             List<OrderIndexListByUserIdModel.OrderIndexListByUserIdDetailModel> detailList =
                     this.objectMapper.readValue(orderDetailJSON, new TypeReference<List<OrderIndexListByUserIdModel.OrderIndexListByUserIdDetailModel>>() {
                     });
@@ -398,7 +398,6 @@ public class OrderService {
                 orderDetailModel.setOrderId(orderId);
                 orderDetailModel.setProductId(o.getProductId());
                 orderDetailModel.setAmount(o.getAmount());
-                orderDetailModel.setMerchantId(merchantId);
                 return orderDetailModel;
             }).collect(Collectors.toList());
             model.setOrderDetailList(orderDetailModelList);
@@ -487,6 +486,7 @@ public class OrderService {
             model.setUserId(userIdTemporary);
             model.setStatus(statusTemporary);
             model.setCreateTime(createTime);
+            model.setMerchantId(merchantId);
             List<OrderIndexListByUserIdModel.OrderIndexListByUserIdDetailModel> detailList =
                     this.objectMapper.readValue(orderDetailJSON, new TypeReference<List<OrderIndexListByUserIdModel.OrderIndexListByUserIdDetailModel>>() {
                     });
@@ -495,7 +495,6 @@ public class OrderService {
                 orderDetailModel.setOrderId(orderId);
                 orderDetailModel.setProductId(o.getProductId());
                 orderDetailModel.setAmount(o.getAmount());
-                orderDetailModel.setMerchantId(merchantId);
                 return orderDetailModel;
             }).collect(Collectors.toList());
             model.setOrderDetailList(orderDetailModelList);
