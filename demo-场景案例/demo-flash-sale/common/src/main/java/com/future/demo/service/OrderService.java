@@ -76,17 +76,14 @@ public class OrderService {
     @Resource
     Session session;
 
-    private PreparedStatement preparedStatementUpdateIncreaseCount;
     private PreparedStatement preparedStatementListByUserIdAndStatus;
     private PreparedStatement preparedStatementListByUserIdAndWithoutStatus;
+    private PreparedStatement preparedStatementListByMerchantIdAndStatus;
+    private PreparedStatement preparedStatementListByMerchantIdAndWithoutStatus;
 
     @PostConstruct
     public void init() {
-        String cql = "update t_count set count=count+? where flag=?";
-        preparedStatementUpdateIncreaseCount = session.prepare(cql);
-        preparedStatementUpdateIncreaseCount.setConsistencyLevel(ConsistencyLevel.LOCAL_ONE);
-
-        cql = "select user_id,status,create_time,order_id,merchant_id,order_detail_json from t_order_list_by_userId where user_id=?" + " and status=?" +
+        String cql = "select user_id,status,create_time,order_id,merchant_id,order_detail_json from t_order_list_by_userId where user_id=?" + " and status=?" +
                 " and create_time>=? and create_time<=?" +
                 " limit ?";
         preparedStatementListByUserIdAndStatus = session.prepare(cql);
@@ -107,6 +104,28 @@ public class OrderService {
                 " limit ?";
         preparedStatementListByUserIdAndWithoutStatus = session.prepare(cql);
         preparedStatementListByUserIdAndWithoutStatus.setConsistencyLevel(ConsistencyLevel.LOCAL_ONE);
+
+        cql = "select merchant_id,status,create_time,order_id,user_id,order_detail_json from t_order_list_by_merchantId where merchant_id=?" + " and status=?" +
+                " and create_time>=? and create_time<=?" +
+                " limit ?";
+        preparedStatementListByMerchantIdAndStatus = session.prepare(cql);
+        preparedStatementListByMerchantIdAndStatus.setConsistencyLevel(ConsistencyLevel.LOCAL_ONE);
+
+        cql = "select merchant_id,status,create_time,order_id,user_id,order_detail_json from t_order_list_by_merchantId where merchant_id=?";
+        cql = cql + " and status in(";
+        count = 0;
+        for (Status status : Status.values()) {
+            cql = cql + "'" + status.name() + "'";
+            if (count + 1 < Status.values().length) {
+                cql = cql + ",";
+            }
+            count++;
+        }
+        cql = cql + ")";
+        cql = cql + " and create_time>=? and create_time<=?" +
+                " limit ?";
+        preparedStatementListByMerchantIdAndWithoutStatus = session.prepare(cql);
+        preparedStatementListByMerchantIdAndWithoutStatus.setConsistencyLevel(ConsistencyLevel.LOCAL_ONE);
     }
 
     @Resource
@@ -131,7 +150,7 @@ public class OrderService {
     @Resource
     CommonMapper commonMapper;
     @Resource
-    IndexMapper indexMapper;
+    CassandraMapper cassandraMapper;
 
     /**
      * 普通下单
@@ -306,52 +325,6 @@ public class OrderService {
         if (sendResult.getSendStatus() != SendStatus.SEND_OK) {
             throw new BusinessException("RocketMQ消息发送失败，Topic: " + ConfigRocketMQ.CassandraIndexTopic);
         }*/
-    }
-
-    /**
-     * 批量建立 listByUserId 索引
-     */
-    public void insertBatchOrderIndexListByUserId(List<OrderModel> orderModelList) throws Exception {
-        List<OrderIndexListByUserIdModel> modelList = new ArrayList<>();
-        for (int i = 0; i < orderModelList.size(); i++) {
-            OrderModel orderModel = orderModelList.get(i);
-            Long orderId = orderModel.getId();
-            Long userId = orderModel.getUserId();
-            LocalDateTime createTime = orderModel.getCreateTime();
-            Status status = orderModel.getStatus();
-            Long merchantId = orderModel.getMerchantId();
-            LocalDateTime payTime = orderModel.getPayTime();
-            LocalDateTime deliveryTime = orderModel.getDeliveryTime();
-            LocalDateTime receivedTime = orderModel.getReceivedTime();
-            LocalDateTime cancelTime = orderModel.getCancelTime();
-
-            // 创建订单
-            OrderIndexListByUserIdModel model = new OrderIndexListByUserIdModel();
-            model.setOrderId(orderId);
-            model.setUserId(userId);
-            model.setCreateTime(createTime);
-            model.setStatus(status);
-            model.setMerchantId(merchantId);
-            model.setPayTime(payTime);
-            model.setDeliveryTime(deliveryTime);
-            model.setReceivedTime(receivedTime);
-            model.setCancelTime(cancelTime);
-            model.setDetailModelList(Collections.singletonList(new OrderIndexListByUserIdModel.OrderIndexListByUserIdDetailModel() {{
-                setProductId(orderModel.getOrderDetailList().get(0).getProductId());
-                setAmount(orderModel.getOrderDetailList().get(0).getAmount());
-            }}));
-            modelList.add(model);
-        }
-        this.indexMapper.insertBatchOrderIndexListByUserId(modelList);
-        this.updateIncreaseCount("orderListByUserId", modelList.size());
-    }
-
-    public void updateIncreaseCount(String flag, long count) throws BusinessException {
-        BoundStatement boundStatement = preparedStatementUpdateIncreaseCount.bind(count, flag);
-        ResultSet resultSet = session.execute(boundStatement);
-        if (!resultSet.wasApplied()) {
-            throw new BusinessException("执行 updateIncreaseCount 失败，count=1");
-        }
     }
 
     /**
@@ -542,6 +515,161 @@ public class OrderService {
                 }
             }
         }*/
+
+        return orderDTOList;
+    }
+
+    /**
+     * 商家查询指定日期范围+指定状态的订单
+     *
+     * @param merchantId
+     * @param status
+     * @param startTime
+     * @param endTime
+     * @return
+     * @throws Exception
+     */
+    public List<OrderDTO> listByMerchantIdAndStatus(
+            Long merchantId,
+            Status status,
+            LocalDateTime startTime,
+            LocalDateTime endTime) throws Exception {
+        // 把上海时区的时间转换为UTC时区的时间，因为Cassandra存储的时间为UTC时间
+        ZoneId zoneId = ZoneId.of("Asia/Shanghai");
+        LocalDateTime startTimeUTC = startTime.atZone(zoneId).withZoneSameInstant(ZoneOffset.UTC).toLocalDateTime();
+        LocalDateTime endTimeUTC = endTime.atZone(zoneId).withZoneSameInstant(ZoneOffset.UTC).toLocalDateTime();
+        Date dateStartTimeUTC = Date.from(startTimeUTC.atZone(zoneId).toInstant());
+        Date dateEndTimeUTC = Date.from(endTimeUTC.atZone(zoneId).toInstant());
+        BoundStatement bound = preparedStatementListByMerchantIdAndStatus.bind(
+                merchantId, status.name(),
+                dateStartTimeUTC,
+                dateEndTimeUTC, 15);
+        ResultSet result = session.execute(bound);
+        List<OrderModel> orderModelList = new ArrayList<>();
+        for (Row row : result) {
+            Long merchantIdTemporary = row.getLong("merchant_id");
+            long userId = row.getLong("user_id");
+            long orderId = row.getLong("order_id");
+            Status statusTemporary = Status.valueOf(row.getString("status"));
+            LocalDateTime createTime = row.getTimestamp("create_time").toInstant().atZone(zoneId).toLocalDateTime();
+            String orderDetailJSON = row.getString("order_detail_json");
+
+            OrderModel model = new OrderModel();
+            model.setId(orderId);
+            model.setUserId(userId);
+            model.setStatus(statusTemporary);
+            model.setCreateTime(createTime);
+            model.setMerchantId(merchantIdTemporary);
+            List<OrderIndexListByUserIdModel.OrderIndexListByUserIdDetailModel> detailList =
+                    this.objectMapper.readValue(orderDetailJSON, new TypeReference<List<OrderIndexListByUserIdModel.OrderIndexListByUserIdDetailModel>>() {
+                    });
+            List<OrderDetailModel> orderDetailModelList = detailList.stream().map(o -> {
+                OrderDetailModel orderDetailModel = new OrderDetailModel();
+                orderDetailModel.setOrderId(orderId);
+                orderDetailModel.setProductId(o.getProductId());
+                orderDetailModel.setAmount(o.getAmount());
+                return orderDetailModel;
+            }).collect(Collectors.toList());
+            model.setOrderDetailList(orderDetailModelList);
+            orderModelList.add(model);
+        }
+
+        List<OrderDTO> orderDTOList = null;
+        if (!orderModelList.isEmpty()) {
+            orderDTOList = orderModelList.stream().map(o -> {
+                OrderDTO orderDTO = new OrderDTO();
+                BeanUtils.copyProperties(o, orderDTO);
+                List<OrderDetailModel> orderDetailModelList = o.getOrderDetailList();
+                List<OrderDetailDTO> orderDetailDTOList = orderDetailModelList.stream().map(oInternal1 -> {
+                    OrderDetailDTO orderDetailDTO = new OrderDetailDTO();
+                    BeanUtils.copyProperties(oInternal1, orderDetailDTO);
+                    return orderDetailDTO;
+                }).collect(Collectors.toList());
+                orderDTO.setOrderDetailList(orderDetailDTOList);
+
+                return orderDTO;
+            }).collect(Collectors.toList());
+        }
+
+        if (orderDTOList == null) {
+            orderDTOList = new ArrayList<>();
+        }
+
+        return orderDTOList;
+    }
+
+    /**
+     * 商家查询指定日期范围+所有状态的订单
+     *
+     * @param merchantId
+     * @param startTime
+     * @param endTime
+     * @return
+     */
+    public List<OrderDTO> listByMerchantIdAndWithoutStatus(
+            Long merchantId,
+            LocalDateTime startTime,
+            LocalDateTime endTime) throws Exception {
+        // 把上海时区的时间转换为UTC时区的时间，因为Cassandra存储的时间为UTC时间
+        ZoneId zoneId = ZoneId.of("Asia/Shanghai");
+        LocalDateTime startTimeUTC = startTime.atZone(zoneId).withZoneSameInstant(ZoneOffset.UTC).toLocalDateTime();
+        LocalDateTime endTimeUTC = endTime.atZone(zoneId).withZoneSameInstant(ZoneOffset.UTC).toLocalDateTime();
+        Date dateStartTimeUTC = Date.from(startTimeUTC.atZone(zoneId).toInstant());
+        Date dateEndTimeUTC = Date.from(endTimeUTC.atZone(zoneId).toInstant());
+        BoundStatement bound = preparedStatementListByMerchantIdAndWithoutStatus.bind(
+                merchantId,
+                dateStartTimeUTC,
+                dateEndTimeUTC, 15);
+        ResultSet result = session.execute(bound);
+        List<OrderModel> orderModelList = new ArrayList<>();
+        for (Row row : result) {
+            Long merchantIdTemporary = row.getLong("merchant_id");
+            long userId = row.getLong("user_id");
+            long orderId = row.getLong("order_id");
+            Status statusTemporary = Status.valueOf(row.getString("status"));
+            LocalDateTime createTime = row.getTimestamp("create_time").toInstant().atZone(zoneId).toLocalDateTime();
+            String orderDetailJSON = row.getString("order_detail_json");
+
+            OrderModel model = new OrderModel();
+            model.setId(orderId);
+            model.setUserId(userId);
+            model.setStatus(statusTemporary);
+            model.setCreateTime(createTime);
+            model.setMerchantId(merchantIdTemporary);
+            List<OrderIndexListByUserIdModel.OrderIndexListByUserIdDetailModel> detailList =
+                    this.objectMapper.readValue(orderDetailJSON, new TypeReference<List<OrderIndexListByUserIdModel.OrderIndexListByUserIdDetailModel>>() {
+                    });
+            List<OrderDetailModel> orderDetailModelList = detailList.stream().map(o -> {
+                OrderDetailModel orderDetailModel = new OrderDetailModel();
+                orderDetailModel.setOrderId(orderId);
+                orderDetailModel.setProductId(o.getProductId());
+                orderDetailModel.setAmount(o.getAmount());
+                return orderDetailModel;
+            }).collect(Collectors.toList());
+            model.setOrderDetailList(orderDetailModelList);
+            orderModelList.add(model);
+        }
+
+        List<OrderDTO> orderDTOList = null;
+        if (!orderModelList.isEmpty()) {
+            orderDTOList = orderModelList.stream().map(o -> {
+                OrderDTO orderDTO = new OrderDTO();
+                BeanUtils.copyProperties(o, orderDTO);
+                List<OrderDetailModel> orderDetailModelList = o.getOrderDetailList();
+                List<OrderDetailDTO> orderDetailDTOList = orderDetailModelList.stream().map(oInternal1 -> {
+                    OrderDetailDTO orderDetailDTO = new OrderDetailDTO();
+                    BeanUtils.copyProperties(oInternal1, orderDetailDTO);
+                    return orderDetailDTO;
+                }).collect(Collectors.toList());
+                orderDTO.setOrderDetailList(orderDetailDTOList);
+
+                return orderDTO;
+            }).collect(Collectors.toList());
+        }
+
+        if (orderDTOList == null) {
+            orderDTOList = new ArrayList<>();
+        }
 
         return orderDTOList;
     }

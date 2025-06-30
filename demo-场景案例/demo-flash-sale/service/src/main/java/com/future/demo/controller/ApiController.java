@@ -90,4 +90,35 @@ public class ApiController {
                 this.orderService.listByUserIdAndWithoutStatus(
                         userId, createTime, endTime));
     }
+
+    /**
+     * 商家查询指定日期范围+指定状态的订单
+     *
+     * @return
+     */
+    @GetMapping(value = "listByMerchantIdAndStatus")
+    public ListResponse<OrderDTO> listByMerchantIdAndStatus() throws Exception {
+        Long merchantId = this.orderRandomlyUtil.getMerchantIdRandomly();
+        LocalDateTime createTime = OrderRandomlyUtil.getCreateTimeRandomly();
+        LocalDateTime endTime = createTime.plusMonths(1);
+        Status status = OrderRandomlyUtil.getStatusRandomly();
+        return ResponseUtils.successList(
+                this.orderService.listByMerchantIdAndStatus(
+                        merchantId, status, createTime, endTime));
+    }
+
+    /**
+     * 商家查询指定日期范围+所有状态的订单
+     *
+     * @return
+     */
+    @GetMapping(value = "listByMerchantIdAndWithoutStatus")
+    public ListResponse<OrderDTO> listByMerchantIdAndWithoutStatus() throws Exception {
+        Long merchantId = this.orderRandomlyUtil.getMerchantIdRandomly();
+        LocalDateTime createTime = OrderRandomlyUtil.getCreateTimeRandomly();
+        LocalDateTime endTime = createTime.plusMonths(1);
+        return ResponseUtils.successList(
+                this.orderService.listByMerchantIdAndWithoutStatus(
+                        merchantId, createTime, endTime));
+    }
 }

@@ -142,6 +142,37 @@ public class ApplicationTests {
         Assertions.assertEquals(amount, orderDTOList.get(0).getOrderDetailList().get(0).getAmount());
         Assertions.assertEquals(merchantId, orderDTOList.get(0).getMerchantId());
 
+        // 测试 listByMerchantIdAndStatus
+        status = orderModelList.get(0).getStatus();
+        orderId = orderModelList.get(0).getId();
+        createTime = orderModelList.get(0).getCreateTime();
+        startTime = createTime;
+        endTime = startTime.plusMonths(1);
+        merchantId = orderModelList.get(0).getMerchantId();
+        orderDTOList = this.orderService.listByMerchantIdAndStatus(merchantId, status, startTime, endTime);
+        Assertions.assertEquals(1, orderDTOList.size());
+        Assertions.assertEquals(orderId, orderDTOList.get(0).getId());
+        Assertions.assertEquals(1, orderDTOList.get(0).getOrderDetailList().size());
+        Assertions.assertEquals(productId, orderDTOList.get(0).getOrderDetailList().get(0).getProductId());
+        Assertions.assertEquals(amount, orderDTOList.get(0).getOrderDetailList().get(0).getAmount());
+        Assertions.assertEquals(merchantId, orderDTOList.get(0).getMerchantId());
+        Assertions.assertEquals(userId, orderDTOList.get(0).getUserId());
+
+        // 测试 listByMerchantIdAndWithoutStatus
+        orderId = orderModelList.get(0).getId();
+        createTime = orderModelList.get(0).getCreateTime();
+        startTime = createTime;
+        endTime = startTime.plusMonths(1);
+        merchantId = orderModelList.get(0).getMerchantId();
+        orderDTOList = this.orderService.listByMerchantIdAndWithoutStatus(merchantId, startTime, endTime);
+        Assertions.assertEquals(1, orderDTOList.size());
+        Assertions.assertEquals(orderId, orderDTOList.get(0).getId());
+        Assertions.assertEquals(1, orderDTOList.get(0).getOrderDetailList().size());
+        Assertions.assertEquals(productId, orderDTOList.get(0).getOrderDetailList().get(0).getProductId());
+        Assertions.assertEquals(amount, orderDTOList.get(0).getOrderDetailList().get(0).getAmount());
+        Assertions.assertEquals(merchantId, orderDTOList.get(0).getMerchantId());
+        Assertions.assertEquals(userId, orderDTOList.get(0).getUserId());
+
         // endregion
 
         // region 测试超卖

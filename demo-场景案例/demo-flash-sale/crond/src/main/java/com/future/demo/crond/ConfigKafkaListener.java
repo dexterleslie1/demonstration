@@ -6,6 +6,7 @@ import com.future.demo.config.PrometheusCustomMonitor;
 import com.future.demo.dto.IncreaseCountDTO;
 import com.future.demo.entity.OrderModel;
 import com.future.demo.entity.ProductModel;
+import com.future.demo.mapper.CassandraMapper;
 import com.future.demo.mapper.CommonMapper;
 import com.future.demo.mapper.ProductMapper;
 import com.future.demo.service.OrderService;
@@ -48,6 +49,8 @@ public class ConfigKafkaListener {
     CommonMapper commonMapper;
     @Resource
     ProductMapper productMapper;
+    @Resource
+    CassandraMapper cassandraMapper;
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory(
@@ -167,6 +170,9 @@ public class ConfigKafkaListener {
             }
         }
 
-        orderService.insertBatchOrderIndexListByUserId(modelList);
+        // 建立 listByUserId Cassandra 索引
+        cassandraMapper.insertBatchOrderIndexListByUserId(modelList);
+        // 建立 listByMerchantId Cassandra 索引
+        cassandraMapper.insertBatchOrderIndexListByMerchantId(modelList);
     }
 }
