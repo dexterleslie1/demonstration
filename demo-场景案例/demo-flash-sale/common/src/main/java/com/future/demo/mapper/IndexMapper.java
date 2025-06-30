@@ -1,6 +1,7 @@
 package com.future.demo.mapper;
 
 import com.datastax.driver.core.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.future.common.exception.BusinessException;
 import com.future.demo.entity.OrderIndexListByUserIdModel;
 import org.springframework.stereotype.Component;
@@ -15,18 +16,20 @@ import java.util.List;
 public class IndexMapper {
     @Resource
     Session session;
+    @Resource
+    ObjectMapper objectMapper;
 
     private PreparedStatement preparedStatementInsert;
 
     @PostConstruct
     public void init() {
-        String cql = "INSERT INTO t_order_list_by_userId(user_id,create_time,status,order_id) " +
-                "VALUES (?, ?, ?, ?)";
+        String cql = "INSERT INTO t_order_list_by_userId(user_id,create_time,status,order_id,merchant_id,pay_time,delivery_time,received_time,cancel_time,order_detail_json) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         preparedStatementInsert = session.prepare(cql);
         preparedStatementInsert.setConsistencyLevel(ConsistencyLevel.LOCAL_QUORUM);
     }
 
-    public void insertBatchOrderIndexListByUserId(List<OrderIndexListByUserIdModel> list) throws BusinessException {
+    public void insertBatchOrderIndexListByUserId(List<OrderIndexListByUserIdModel> list) throws Exception {
         // region 订单ID为主键的订单表
 
         // 创建批量语句
@@ -36,11 +39,20 @@ public class IndexMapper {
         ZoneId zoneId = ZoneId.of("Asia/Shanghai");
         for (int i = 0; i < list.size(); i++) {
             OrderIndexListByUserIdModel model = list.get(i);
+            String orderDetailJSON = this.objectMapper.writeValueAsString(model.getDetailModelList());
+
+            Date createTime = Date.from(model.getCreateTime().atZone(zoneId).toInstant());
             BoundStatement bound = preparedStatementInsert.bind(
                     model.getUserId(),
-                    Date.from(model.getCreateTime().atZone(zoneId).toInstant()),
+                    createTime,
                     model.getStatus().name(),
-                    model.getOrderId()
+                    model.getOrderId(),
+                    model.getMerchantId(),
+                    model.getPayTime() == null ? null : Date.from(model.getPayTime().atZone(zoneId).toInstant()),
+                    model.getDeliveryTime() == null ? null : Date.from(model.getDeliveryTime().atZone(zoneId).toInstant()),
+                    model.getReceivedTime() == null ? null : Date.from(model.getReceivedTime().atZone(zoneId).toInstant()),
+                    model.getCancelTime() == null ? null : Date.from(model.getCancelTime().atZone(zoneId).toInstant()),
+                    orderDetailJSON
             );
             batch = batch.add(bound);
         }

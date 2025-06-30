@@ -1,8 +1,10 @@
 package com.future.demo;
 
 import com.future.common.exception.BusinessException;
+import com.future.demo.dto.OrderDTO;
 import com.future.demo.entity.OrderDetailModel;
 import com.future.demo.entity.OrderModel;
+import com.future.demo.entity.Status;
 import com.future.demo.mapper.OrderDetailMapper;
 import com.future.demo.mapper.OrderMapper;
 import com.future.demo.mapper.ProductMapper;
@@ -15,6 +17,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 import javax.annotation.Resource;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -109,6 +112,35 @@ public class ApplicationTests {
         Assertions.assertEquals(amount, orderDetailModelList.get(0).getAmount());
         Assertions.assertEquals(userId, orderDetailModelList.get(0).getUserId());
         Assertions.assertEquals(orderModelList.get(0).getId(), orderDetailModelList.get(0).getOrderId());
+
+        // 测试 listByUserIdAndStatus
+        Status status = orderModelList.get(0).getStatus();
+        Long orderId = orderModelList.get(0).getId();
+        LocalDateTime createTime = orderModelList.get(0).getCreateTime();
+        LocalDateTime startTime = createTime;
+        LocalDateTime endTime = startTime.plusMonths(1);
+        Long merchantId = orderDetailModelList.get(0).getMerchantId();
+        List<OrderDTO> orderDTOList = this.orderService.listByUserIdAndStatus(userId, status, startTime, endTime);
+        Assertions.assertEquals(1, orderDTOList.size());
+        Assertions.assertEquals(orderId, orderDTOList.get(0).getId());
+        Assertions.assertEquals(1, orderDTOList.get(0).getOrderDetailList().size());
+        Assertions.assertEquals(productId, orderDTOList.get(0).getOrderDetailList().get(0).getProductId());
+        Assertions.assertEquals(amount, orderDTOList.get(0).getOrderDetailList().get(0).getAmount());
+        Assertions.assertEquals(merchantId, orderDTOList.get(0).getOrderDetailList().get(0).getMerchantId());
+
+        // 测试 listByUserIdAndWithoutStatus
+        orderId = orderModelList.get(0).getId();
+        createTime = orderModelList.get(0).getCreateTime();
+        startTime = createTime;
+        endTime = startTime.plusMonths(1);
+        merchantId = orderDetailModelList.get(0).getMerchantId();
+        orderDTOList = this.orderService.listByUserIdAndWithoutStatus(userId, startTime, endTime);
+        Assertions.assertEquals(1, orderDTOList.size());
+        Assertions.assertEquals(orderId, orderDTOList.get(0).getId());
+        Assertions.assertEquals(1, orderDTOList.get(0).getOrderDetailList().size());
+        Assertions.assertEquals(productId, orderDTOList.get(0).getOrderDetailList().get(0).getProductId());
+        Assertions.assertEquals(amount, orderDTOList.get(0).getOrderDetailList().get(0).getAmount());
+        Assertions.assertEquals(merchantId, orderDTOList.get(0).getOrderDetailList().get(0).getMerchantId());
 
         // endregion
 

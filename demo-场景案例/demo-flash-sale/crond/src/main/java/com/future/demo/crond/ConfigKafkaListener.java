@@ -4,8 +4,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.future.demo.config.PrometheusCustomMonitor;
 import com.future.demo.dto.IncreaseCountDTO;
+import com.future.demo.entity.OrderDetailModel;
 import com.future.demo.entity.OrderModel;
+import com.future.demo.entity.ProductModel;
 import com.future.demo.mapper.CommonMapper;
+import com.future.demo.mapper.ProductMapper;
 import com.future.demo.service.OrderService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 import static com.future.demo.constant.Const.*;
 
@@ -43,6 +47,8 @@ public class ConfigKafkaListener {
     PrometheusCustomMonitor monitor;
     @Resource
     CommonMapper commonMapper;
+    @Resource
+    ProductMapper productMapper;
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory(
@@ -107,31 +113,53 @@ public class ConfigKafkaListener {
 
     @KafkaListener(topics = TopicIncreaseCount)
     public void receiveMessageIncreaseCount(List<String> messages) throws JsonProcessingException {
-        try {
-            List<IncreaseCountDTO> dtoList = new ArrayList<>();
-            for (String JSON : messages) {
-                IncreaseCountDTO increaseCountDTO = objectMapper.readValue(JSON, IncreaseCountDTO.class);
-                dtoList.add(increaseCountDTO);
-            }
-
-            Map<String, Integer> flagToCountMap = new HashMap<>();
-            for (IncreaseCountDTO dto : dtoList) {
-                String flag = dto.getFlag();
-                int count = dto.getCount();
-                if (!flagToCountMap.containsKey(flag)) {
-                    flagToCountMap.put(flag, 0);
-                }
-                flagToCountMap.put(flag, flagToCountMap.get(flag) + count);
-            }
-
-            for (String flag : flagToCountMap.keySet()) {
-                int count = flagToCountMap.get(flag);
-                this.commonMapper.updateIncreaseCount(flag, count);
-            }
-        } catch (Exception ex) {
-            throw ex;
-        } finally {
-            this.concurrentCounter.decrementAndGet();
+        List<IncreaseCountDTO> dtoList = new ArrayList<>();
+        for (String JSON : messages) {
+            IncreaseCountDTO increaseCountDTO = objectMapper.readValue(JSON, IncreaseCountDTO.class);
+            dtoList.add(increaseCountDTO);
         }
+
+        Map<String, Integer> flagToCountMap = new HashMap<>();
+        for (IncreaseCountDTO dto : dtoList) {
+            String flag = dto.getFlag();
+            int count = dto.getCount();
+            if (!flagToCountMap.containsKey(flag)) {
+                flagToCountMap.put(flag, 0);
+            }
+            flagToCountMap.put(flag, flagToCountMap.get(flag) + count);
+        }
+
+        for (String flag : flagToCountMap.keySet()) {
+            int count = flagToCountMap.get(flag);
+            this.commonMapper.updateIncreaseCount(flag, count);
+        }
+    }
+
+    /**
+     * 创建订单 cassandra 索引
+     *
+     * @param messages
+     * @throws Exception
+     */
+    @KafkaListener(topics = TopicCreateOrderCassandraIndex)
+    public void receiveMessageCreateOrderCassandraIndex(List<String> messages) throws Exception {
+        List<OrderModel> modelList = new ArrayList<>();
+        for (String message : messages) {
+            OrderModel orderModel = this.objectMapper.readValue(message, OrderModel.class);
+            modelList.add(orderModel);
+        }
+
+        // 设置订单的merchantId
+        List<Long> productIdList = modelList.stream().map(o -> o.getOrderDetailList().get(0).getProductId()).distinct().collect(Collectors.toList());
+        List<ProductModel> productModelList = this.productMapper.list(productIdList);
+        Map<Long, ProductModel> productIdToModelMap = productModelList.stream().collect(Collectors.toMap(ProductModel::getId, o -> o));
+        for (OrderModel model : modelList) {
+            long productId = model.getOrderDetailList().get(0).getProductId();
+            ProductModel productModel = productIdToModelMap.get(productId);
+            OrderDetailModel orderDetailModel = model.getOrderDetailList().get(0);
+            orderDetailModel.setMerchantId(productModel.getMerchantId());
+        }
+
+        orderService.insertBatchOrderIndexListByUserId(modelList);
     }
 }

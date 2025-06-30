@@ -66,7 +66,7 @@ public class ApiController {
      * @return
      */
     @GetMapping(value = "listByUserIdAndStatus")
-    public ListResponse<OrderDTO> listByUserIdAndStatus() {
+    public ListResponse<OrderDTO> listByUserIdAndStatus() throws Exception {
         Long userId = this.orderRandomlyUtil.getUserIdRandomly();
         LocalDateTime createTime = OrderRandomlyUtil.getCreateTimeRandomly();
         LocalDateTime endTime = createTime.plusMonths(1);
@@ -82,7 +82,7 @@ public class ApiController {
      * @return
      */
     @GetMapping(value = "listByUserIdAndWithoutStatus")
-    public ListResponse<OrderDTO> listByUserIdAndWithoutStatus() {
+    public ListResponse<OrderDTO> listByUserIdAndWithoutStatus() throws Exception {
         Long userId = this.orderRandomlyUtil.getUserIdRandomly();
         LocalDateTime createTime = OrderRandomlyUtil.getCreateTimeRandomly();
         LocalDateTime endTime = createTime.plusMonths(1);
