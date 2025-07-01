@@ -30,7 +30,6 @@ import javax.annotation.Resource;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
@@ -147,10 +146,6 @@ public class OrderService {
     OrderRandomlyUtil orderRandomlyUtil;
     @Autowired
     SnowflakeService snowflakeService;
-    @Resource
-    CommonMapper commonMapper;
-    @Resource
-    CassandraMapper cassandraMapper;
 
     /**
      * 普通下单
@@ -204,6 +199,7 @@ public class OrderService {
 
         // 异步更新 t_count
         IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO();
+        increaseCountDTO.setType(IncreaseCountDTO.Type.MySQL);
         increaseCountDTO.setFlag("order");
         increaseCountDTO.setCount(1);
         JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
@@ -313,18 +309,11 @@ public class OrderService {
 
         // 异步更新 t_count
         IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO();
+        increaseCountDTO.setType(IncreaseCountDTO.Type.MySQL);
         increaseCountDTO.setFlag("order");
         increaseCountDTO.setCount(orderModelListProcessed.size());
         String JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
         kafkaTemplate.send(TopicIncreaseCount, JSON).get();
-
-        /*String JSON = this.objectMapper.writeValueAsString(orderModelList);
-        Message message = new Message(ConfigRocketMQ.CassandraIndexTopic, null, JSON.getBytes());
-        // 发送消息并获取发送结果
-        SendResult sendResult = producer.send(message);
-        if (sendResult.getSendStatus() != SendStatus.SEND_OK) {
-            throw new BusinessException("RocketMQ消息发送失败，Topic: " + ConfigRocketMQ.CassandraIndexTopic);
-        }*/
     }
 
     /**
@@ -337,16 +326,13 @@ public class OrderService {
                                                 Status status,
                                                 LocalDateTime startTime,
                                                 LocalDateTime endTime) throws Exception {
-        // 把上海时区的时间转换为UTC时区的时间，因为Cassandra存储的时间为UTC时间
         ZoneId zoneId = ZoneId.of("Asia/Shanghai");
-        LocalDateTime startTimeUTC = startTime.atZone(zoneId).withZoneSameInstant(ZoneOffset.UTC).toLocalDateTime();
-        LocalDateTime endTimeUTC = endTime.atZone(zoneId).withZoneSameInstant(ZoneOffset.UTC).toLocalDateTime();
-        Date dateStartTimeUTC = Date.from(startTimeUTC.atZone(zoneId).toInstant());
-        Date dateEndTimeUTC = Date.from(endTimeUTC.atZone(zoneId).toInstant());
+        Date dateStartTime = Date.from(startTime.atZone(zoneId).toInstant());
+        Date dateEndTime = Date.from(endTime.atZone(zoneId).toInstant());
         BoundStatement bound = preparedStatementListByUserIdAndStatus.bind(
                 userId, status.name(),
-                dateStartTimeUTC,
-                dateEndTimeUTC, 15);
+                dateStartTime,
+                dateEndTime, 15);
         ResultSet result = session.execute(bound);
         List<OrderModel> orderModelList = new ArrayList<>();
         for (Row row : result) {
@@ -434,16 +420,13 @@ public class OrderService {
             Long userId,
             LocalDateTime startTime,
             LocalDateTime endTime) throws Exception {
-        // 把上海时区的时间转换为UTC时区的时间，因为Cassandra存储的时间为UTC时间
         ZoneId zoneId = ZoneId.of("Asia/Shanghai");
-        LocalDateTime startTimeUTC = startTime.atZone(zoneId).withZoneSameInstant(ZoneOffset.UTC).toLocalDateTime();
-        LocalDateTime endTimeUTC = endTime.atZone(zoneId).withZoneSameInstant(ZoneOffset.UTC).toLocalDateTime();
-        Date dateStartTimeUTC = Date.from(startTimeUTC.atZone(zoneId).toInstant());
-        Date dateEndTimeUTC = Date.from(endTimeUTC.atZone(zoneId).toInstant());
+        Date dateStartTime = Date.from(startTime.atZone(zoneId).toInstant());
+        Date dateEndTime = Date.from(endTime.atZone(zoneId).toInstant());
         BoundStatement bound = preparedStatementListByUserIdAndWithoutStatus.bind(
                 userId,
-                dateStartTimeUTC,
-                dateEndTimeUTC, 15);
+                dateStartTime,
+                dateEndTime, 15);
         ResultSet result = session.execute(bound);
         List<OrderModel> orderModelList = new ArrayList<>();
         for (Row row : result) {
@@ -534,16 +517,13 @@ public class OrderService {
             Status status,
             LocalDateTime startTime,
             LocalDateTime endTime) throws Exception {
-        // 把上海时区的时间转换为UTC时区的时间，因为Cassandra存储的时间为UTC时间
         ZoneId zoneId = ZoneId.of("Asia/Shanghai");
-        LocalDateTime startTimeUTC = startTime.atZone(zoneId).withZoneSameInstant(ZoneOffset.UTC).toLocalDateTime();
-        LocalDateTime endTimeUTC = endTime.atZone(zoneId).withZoneSameInstant(ZoneOffset.UTC).toLocalDateTime();
-        Date dateStartTimeUTC = Date.from(startTimeUTC.atZone(zoneId).toInstant());
-        Date dateEndTimeUTC = Date.from(endTimeUTC.atZone(zoneId).toInstant());
+        Date dateStartTime = Date.from(startTime.atZone(zoneId).toInstant());
+        Date dateEndTime = Date.from(endTime.atZone(zoneId).toInstant());
         BoundStatement bound = preparedStatementListByMerchantIdAndStatus.bind(
                 merchantId, status.name(),
-                dateStartTimeUTC,
-                dateEndTimeUTC, 15);
+                dateStartTime,
+                dateEndTime, 15);
         ResultSet result = session.execute(bound);
         List<OrderModel> orderModelList = new ArrayList<>();
         for (Row row : result) {
@@ -610,16 +590,13 @@ public class OrderService {
             Long merchantId,
             LocalDateTime startTime,
             LocalDateTime endTime) throws Exception {
-        // 把上海时区的时间转换为UTC时区的时间，因为Cassandra存储的时间为UTC时间
         ZoneId zoneId = ZoneId.of("Asia/Shanghai");
-        LocalDateTime startTimeUTC = startTime.atZone(zoneId).withZoneSameInstant(ZoneOffset.UTC).toLocalDateTime();
-        LocalDateTime endTimeUTC = endTime.atZone(zoneId).withZoneSameInstant(ZoneOffset.UTC).toLocalDateTime();
-        Date dateStartTimeUTC = Date.from(startTimeUTC.atZone(zoneId).toInstant());
-        Date dateEndTimeUTC = Date.from(endTimeUTC.atZone(zoneId).toInstant());
+        Date dateStartTime = Date.from(startTime.atZone(zoneId).toInstant());
+        Date dateEndTime = Date.from(endTime.atZone(zoneId).toInstant());
         BoundStatement bound = preparedStatementListByMerchantIdAndWithoutStatus.bind(
                 merchantId,
-                dateStartTimeUTC,
-                dateEndTimeUTC, 15);
+                dateStartTime,
+                dateEndTime, 15);
         ResultSet result = session.execute(bound);
         List<OrderModel> orderModelList = new ArrayList<>();
         for (Row row : result) {

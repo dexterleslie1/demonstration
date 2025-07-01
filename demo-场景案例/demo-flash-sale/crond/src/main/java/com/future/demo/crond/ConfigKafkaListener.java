@@ -1,6 +1,5 @@
 package com.future.demo.crond;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.future.demo.config.PrometheusCustomMonitor;
 import com.future.demo.dto.IncreaseCountDTO;
@@ -21,6 +20,9 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.listener.DefaultErrorHandler;
+import org.springframework.util.backoff.FixedBackOff;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -51,6 +53,8 @@ public class ConfigKafkaListener {
     ProductMapper productMapper;
     @Resource
     CassandraMapper cassandraMapper;
+    @Resource
+    KafkaTemplate kafkaTemplate;
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory(
@@ -61,7 +65,26 @@ public class ConfigKafkaListener {
         factory.setBatchListener(true);
         // 设置并发线程数
         factory.setConcurrency(256);
+        // 绑定重试错误处理器
+        factory.setCommonErrorHandler(retryErrorHandler(kafkaTemplate));
         return factory;
+    }
+
+    // 定义重试错误处理器（核心）
+    @Bean
+    public DefaultErrorHandler retryErrorHandler(KafkaTemplate<Object, Object> template) {
+        // 配置重试策略：无限次重试，每次间隔5秒
+        // 5000ms间隔，FixedBackOff.UNLIMITED_ATTEMPTS 表示无限次
+        FixedBackOff fixedBackOff = new FixedBackOff(5000L, /*FixedBackOff.UNLIMITED_ATTEMPTS*/ 180);
+
+        // 使用RetryTopic的ErrorHandler（自动处理重试和DLQ）
+        return new DefaultErrorHandler(
+                // 自定义恢复逻辑（可选，当重试耗尽时触发）
+                (record, ex) -> {
+                    log.error("重试耗尽，消息进入死信队列：{}", record.value());
+                },
+                fixedBackOff
+        );
     }
 
     private AtomicInteger concurrentCounter = new AtomicInteger();
@@ -114,15 +137,22 @@ public class ConfigKafkaListener {
     }
 
     @KafkaListener(topics = TopicIncreaseCount)
-    public void receiveMessageIncreaseCount(List<String> messages) throws JsonProcessingException {
-        List<IncreaseCountDTO> dtoList = new ArrayList<>();
+    public void receiveMessageIncreaseCount(List<String> messages) throws Exception {
+        List<IncreaseCountDTO> dtoListMySQL = new ArrayList<>();
+        List<IncreaseCountDTO> dtoListCassandra = new ArrayList<>();
         for (String JSON : messages) {
             IncreaseCountDTO increaseCountDTO = objectMapper.readValue(JSON, IncreaseCountDTO.class);
-            dtoList.add(increaseCountDTO);
+            IncreaseCountDTO.Type type = increaseCountDTO.getType();
+            if (type == IncreaseCountDTO.Type.MySQL) {
+                dtoListMySQL.add(increaseCountDTO);
+            } else if (type == IncreaseCountDTO.Type.Cassandra) {
+                dtoListCassandra.add(increaseCountDTO);
+            }
         }
 
+        // MySQL计数器
         Map<String, Integer> flagToCountMap = new HashMap<>();
-        for (IncreaseCountDTO dto : dtoList) {
+        for (IncreaseCountDTO dto : dtoListMySQL) {
             String flag = dto.getFlag();
             int count = dto.getCount();
             if (!flagToCountMap.containsKey(flag)) {
@@ -134,6 +164,22 @@ public class ConfigKafkaListener {
         for (String flag : flagToCountMap.keySet()) {
             int count = flagToCountMap.get(flag);
             this.commonMapper.updateIncreaseCount(flag, count);
+        }
+
+        // Cassandra计数器
+        flagToCountMap = new HashMap<>();
+        for (IncreaseCountDTO dto : dtoListCassandra) {
+            String flag = dto.getFlag();
+            int count = dto.getCount();
+            if (!flagToCountMap.containsKey(flag)) {
+                flagToCountMap.put(flag, 0);
+            }
+            flagToCountMap.put(flag, flagToCountMap.get(flag) + count);
+        }
+
+        for (String flag : flagToCountMap.keySet()) {
+            int count = flagToCountMap.get(flag);
+            this.cassandraMapper.updateIncreaseCount(flag, count);
         }
     }
 
@@ -174,5 +220,20 @@ public class ConfigKafkaListener {
         cassandraMapper.insertBatchOrderIndexListByUserId(modelList);
         // 建立 listByMerchantId Cassandra 索引
         cassandraMapper.insertBatchOrderIndexListByMerchantId(modelList);
+
+        // 异步更新 t_count
+        IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO();
+        increaseCountDTO.setType(IncreaseCountDTO.Type.Cassandra);
+        increaseCountDTO.setFlag("orderListByUserId");
+        increaseCountDTO.setCount(modelList.size());
+        String JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
+        kafkaTemplate.send(TopicIncreaseCount, JSON).get();
+
+        increaseCountDTO = new IncreaseCountDTO();
+        increaseCountDTO.setType(IncreaseCountDTO.Type.Cassandra);
+        increaseCountDTO.setFlag("orderListByMerchantId");
+        increaseCountDTO.setCount(modelList.size());
+        JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
+        kafkaTemplate.send(TopicIncreaseCount, JSON).get();
     }
 }

@@ -119,7 +119,6 @@ public class CassandraMapper {
             throw new BusinessException("t_order_list_by_userId 批量插入失败");
         }
 
-        this.updateIncreaseCount("orderListByUserId", modelList.size());
         this.monitor.incrementCassandraIndexOrderListByUserId(modelList.size());
     }
 
@@ -193,7 +192,6 @@ public class CassandraMapper {
 
         // endregion
 
-        this.updateIncreaseCount("orderListByMerchantId", modelList.size());
         this.monitor.incrementCassandraIndexOrderListByMerchantId(modelList.size());
     }
 
