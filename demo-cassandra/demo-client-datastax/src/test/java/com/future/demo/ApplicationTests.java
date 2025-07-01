@@ -1,6 +1,7 @@
 package com.future.demo;
 
 import com.datastax.driver.core.*;
+import com.datastax.driver.core.exceptions.InvalidQueryException;
 import com.future.common.exception.BusinessException;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
@@ -450,6 +451,82 @@ public class ApplicationTests {
         Assertions.assertEquals(1, rowList.get(1).getInt("key1"));
         Assertions.assertEquals("b", rowList.get(1).getString("key2"));
         Assertions.assertEquals("v2", rowList.get(1).getString("value"));
+
+        // endregion
+    }
+
+    /**
+     * 测试禁止更新主键
+     */
+    @Test
+    public void testUpdatePrimaryKeyProhibited() throws BusinessException {
+        // 删除所有数据
+        this.commonMapper.truncate("t_upsert_test1");
+        this.commonMapper.truncate("t_upsert_test2");
+        this.commonMapper.truncate("t_upsert_test3");
+
+        int key1 = 1;
+        String key2 = "a";
+        String cql = "insert into t_upsert_test2(key1,key2,value) values(?,?,?)";
+        PreparedStatement preparedStatement = session.prepare(cql);
+        BoundStatement boundStatement = preparedStatement.bind(1, "a", "v1");
+        ResultSet resultSet = session.execute(boundStatement);
+        Assertions.assertTrue(resultSet.wasApplied());
+
+        // 测试更新非主键
+        cql = "update t_upsert_test2 set value=? where key1=? and key2=?";
+        preparedStatement = session.prepare(cql);
+        boundStatement = preparedStatement.bind("v2", key1, key2);
+        resultSet = session.execute(boundStatement);
+        Assertions.assertTrue(resultSet.wasApplied());
+
+        cql = "select * from t_upsert_test2";
+        preparedStatement = session.prepare(cql);
+        boundStatement = preparedStatement.bind();
+        resultSet = session.execute(boundStatement);
+        List<Row> rowList = resultSet.all();
+        Assertions.assertEquals(1, rowList.size());
+        Assertions.assertEquals("v2", rowList.get(0).getString("value"));
+
+        // region 测试更新主键
+
+        try {
+            cql = "update t_upsert_test2 set key2=? where key1=? and key2=?";
+            // 抛出 com.datastax.driver.core.exceptions.InvalidQueryException: PRIMARY KEY part key2 found in SET part
+            session.prepare(cql);
+            /*boundStatement = preparedStatement.bind("b", key1, key2);
+            resultSet = session.execute(boundStatement);
+            Assertions.assertTrue(resultSet.wasApplied());*/
+            Assertions.fail();
+        } catch (InvalidQueryException ex) {
+            Assertions.assertEquals("PRIMARY KEY part key2 found in SET part", ex.getMessage());
+        }
+
+        // endregion
+
+        // region 更新主键的方案为：先删除旧数据，再插入新数据
+
+        cql = "delete from t_upsert_test2 where key1=? and key2=?";
+        preparedStatement = session.prepare(cql);
+        boundStatement = preparedStatement.bind(key1, key2);
+        resultSet = session.execute(boundStatement);
+        Assertions.assertTrue(resultSet.wasApplied());
+        cql = "insert into t_upsert_test2(key1,key2,value) values(?,?,?)";
+        preparedStatement = session.prepare(cql);
+        boundStatement = preparedStatement.bind(1, "b", "v1");
+        resultSet = session.execute(boundStatement);
+        Assertions.assertTrue(resultSet.wasApplied());
+
+        // 验证数据
+        cql = "select * from t_upsert_test2";
+        preparedStatement = session.prepare(cql);
+        boundStatement = preparedStatement.bind();
+        resultSet = session.execute(boundStatement);
+        rowList = resultSet.all();
+        Assertions.assertEquals(1, rowList.size());
+        Assertions.assertEquals(1, rowList.get(0).getInt("key1"));
+        Assertions.assertEquals("b", rowList.get(0).getString("key2"));
+        Assertions.assertEquals("v1", rowList.get(0).getString("value"));
 
         // endregion
     }

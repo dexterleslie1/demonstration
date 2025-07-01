@@ -2469,7 +2469,7 @@ Cassandra的Upsert通过`INSERT`语句的天然特性实现，核心是根据主
 
 
 
-### 实践
+### 实验
 
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-cassandra/demo-client-datastax)
 
@@ -2606,3 +2606,137 @@ public void testUpsert() throws BusinessException {
     // endregion
 }
 ```
+
+
+
+## 更新主键
+
+### 介绍
+
+在Cassandra中，**主键（Primary Key）是不可直接更新的**，这是由其底层数据模型和存储设计决定的核心特性。以下是详细解释：
+
+1. **主键的不可变性（Immutability）**
+
+Cassandra的主键由**分区键（Partition Key）**和可选的**聚类列（Clustering Columns）**组成，其核心作用是：
+- **唯一标识一行数据**（通过分区键+聚类列的组合）；
+- **决定数据在集群中的分布**（数据按分区键哈希后存储到特定节点）；
+- **定义同一分区内的排序规则**（聚类列决定数据在分区内的物理顺序）。
+
+由于主键直接影响数据的存储位置和查询效率，Cassandra设计时强制要求主键字段在数据插入后**不可修改**。如果允许更新主键，会导致数据需要重新分布到新的分区节点，引发大量数据迁移，严重影响性能和一致性。
+
+2. **尝试更新主键的结果**
+
+如果通过`UPDATE`语句尝试修改主键字段（无论是分区键还是聚类列），Cassandra会直接返回错误（例如：`InvalidQueryException: Cannot update primary key column`）。这是因为主键字段在底层存储中被标记为不可变，不允许修改。
+
+**3. 替代方案：插入新记录并删除旧记录**
+
+如果业务场景需要“修改主键”（例如用户ID变更），正确的做法是：
+1. **插入新记录**：使用新的主键值，复制原记录的其他字段；
+2. **删除旧记录**：删除原主键对应的旧记录。
+
+示例（假设原主键为`user_id`）：
+```sql
+-- 插入新记录（新主键为 new_user_id）
+INSERT INTO users (user_id, name, email) VALUES ('new_user_id', 'Alice', 'alice@new.com');
+
+-- 删除旧记录（原主键为 old_user_id）
+DELETE FROM users WHERE user_id = 'old_user_id';
+```
+
+**注意事项：**
+
+- **事务一致性**：Cassandra不支持跨行原子事务，因此需应用层确保“插入+删除”操作的原子性（例如通过业务逻辑保证，或使用轻量级事务LWT限制旧记录在删除前未被修改）。
+- **关联数据处理**：若旧记录被其他表引用（如外键），需同步清理关联数据（Cassandra无原生外键约束，需应用层维护）。
+
+**总结**
+
+Cassandra**禁止直接更新主键**，因为主键的不可变性是其存储和查询优化的基础。若需变更主键，应通过“插入新记录+删除旧记录”的方式间接实现，并注意应用层的一致性保障。
+
+
+
+### 实验
+
+>提示：更新主键的方案为：先删除旧数据，再插入新数据。
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-cassandra/demo-client-datastax)
+
+测试代码如下：
+
+```java
+/**
+ * 测试禁止更新主键
+ */
+@Test
+public void testUpdatePrimaryKeyProhibited() throws BusinessException {
+    // 删除所有数据
+    this.commonMapper.truncate("t_upsert_test1");
+    this.commonMapper.truncate("t_upsert_test2");
+    this.commonMapper.truncate("t_upsert_test3");
+
+    int key1 = 1;
+    String key2 = "a";
+    String cql = "insert into t_upsert_test2(key1,key2,value) values(?,?,?)";
+    PreparedStatement preparedStatement = session.prepare(cql);
+    BoundStatement boundStatement = preparedStatement.bind(1, "a", "v1");
+    ResultSet resultSet = session.execute(boundStatement);
+    Assertions.assertTrue(resultSet.wasApplied());
+
+    // 测试更新非主键
+    cql = "update t_upsert_test2 set value=? where key1=? and key2=?";
+    preparedStatement = session.prepare(cql);
+    boundStatement = preparedStatement.bind("v2", key1, key2);
+    resultSet = session.execute(boundStatement);
+    Assertions.assertTrue(resultSet.wasApplied());
+
+    cql = "select * from t_upsert_test2";
+    preparedStatement = session.prepare(cql);
+    boundStatement = preparedStatement.bind();
+    resultSet = session.execute(boundStatement);
+    List<Row> rowList = resultSet.all();
+    Assertions.assertEquals(1, rowList.size());
+    Assertions.assertEquals("v2", rowList.get(0).getString("value"));
+
+    // region 测试更新主键
+
+    try {
+        cql = "update t_upsert_test2 set key2=? where key1=? and key2=?";
+        // 抛出 com.datastax.driver.core.exceptions.InvalidQueryException: PRIMARY KEY part key2 found in SET part
+        session.prepare(cql);
+        /*boundStatement = preparedStatement.bind("b", key1, key2);
+        resultSet = session.execute(boundStatement);
+        Assertions.assertTrue(resultSet.wasApplied());*/
+        Assertions.fail();
+    } catch (InvalidQueryException ex) {
+        Assertions.assertEquals("PRIMARY KEY part key2 found in SET part", ex.getMessage());
+    }
+
+    // endregion
+
+    // region 更新主键的方案为：先删除旧数据，再插入新数据
+
+    cql = "delete from t_upsert_test2 where key1=? and key2=?";
+    preparedStatement = session.prepare(cql);
+    boundStatement = preparedStatement.bind(key1, key2);
+    resultSet = session.execute(boundStatement);
+    Assertions.assertTrue(resultSet.wasApplied());
+    cql = "insert into t_upsert_test2(key1,key2,value) values(?,?,?)";
+    preparedStatement = session.prepare(cql);
+    boundStatement = preparedStatement.bind(1, "b", "v1");
+    resultSet = session.execute(boundStatement);
+    Assertions.assertTrue(resultSet.wasApplied());
+
+    // 验证数据
+    cql = "select * from t_upsert_test2";
+    preparedStatement = session.prepare(cql);
+    boundStatement = preparedStatement.bind();
+    resultSet = session.execute(boundStatement);
+    rowList = resultSet.all();
+    Assertions.assertEquals(1, rowList.size());
+    Assertions.assertEquals(1, rowList.get(0).getInt("key1"));
+    Assertions.assertEquals("b", rowList.get(0).getString("key2"));
+    Assertions.assertEquals("v1", rowList.get(0).getString("value"));
+
+    // endregion
+}
+```
+
