@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>对话框</title>
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #3b3b3b;
+        }
+
+        .container {
+            width: 60%;
+            height: 100%;
+            margin-left: auto;
+            margin-right: auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container .item {
+            margin: 10px 0;
+        }
+
+        .popup-confirmation-dialog {
+            background-color: #1d1d1d;
+            border-radius: 15px;
+            border-style: none;
+            color: #d6d6d6;
+        }
+
+        .popup-confirmation-dialog .title {
+            height: 20px;
+        }
+
+        .popup-confirmation-dialog .content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .popup-confirmation-dialog .content .content-title {
+            font-weight: bold;
+            font-size: 16px;
+            color: #fff;
+        }
+
+        .popup-confirmation-dialog .content .content-detail {
+            font-size: 14px;
+            margin: 10px 0;
+        }
+
+        .popup-confirmation-dialog .buttons {
+            display: flex;
+            justify-content: center;
+            padding: 10px;
+        }
+
+        .popup-confirmation-dialog .buttons .buttons-container {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .popup-confirmation-dialog .buttons .buttons-container button{
+            padding: 5px 65px;
+            background-color: #fff;
+            border-radius: 10px;
+            border-style: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+
+        .popup-confirmation-dialog .buttons .buttons-container button:nth-of-type(2){
+            background-color: #00850d;
+            color: #fff;
+        }
+
+        .popup-confirmation-dialog .buttons .buttons-container button:hover:nth-of-type(1){
+            background-color: #e6e6e6;
+        }
+
+        .popup-confirmation-dialog .buttons .buttons-container button:hover:nth-of-type(2){
+            background-color: #00b913;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="item">
+            <!-- 弹出式确认框 -->
+            <div class="popup-confirmation-dialog">
+                <div class="title"></div>
+                <div class="content">
+                    <div class="content-title">确定删除吗？</div>
+                    <div class="content-detail">确定删除删除记录吗？此操作无法撤回！</div>
+                </div>
+                <div class="buttons">
+                    <div class="buttons-container">
+                        <button>取消</button>
+                        <button>确定</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="item">
+            <!-- 弹出式确认框 -->
+            <div class="popup-confirmation-dialog">
+                <div class="title"></div>
+                <div class="content">
+                    <div class="content-title">确定删除吗？</div>
+                </div>
+                <div class="buttons">
+                    <div class="buttons-container">
+                        <button>取消</button>
+                        <button>确定</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
