@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS t_order_list_by_userId
     primary key ((user_id,status),create_time,order_id)
 ) with clustering order by (create_time desc,order_id desc);
 
+drop table if exists t_order_detail;
 CREATE TABLE IF NOT EXISTS t_order_detail
 (
     id          bigint,
@@ -48,3 +49,26 @@ create table if not exists t_count (
 
 /* 初始化 count 的值，不能直接 set，否则报错 */
 update t_count set count=count+0 where flag='order';
+
+/* 用于协助测试 upsert */
+drop table if exists t_upsert_test1;
+create table if not exists t_upsert_test1 (
+    key1 int,
+    key2 text,
+    value text,
+    primary key ( key1 )
+);
+drop table if exists t_upsert_test2;
+create table if not exists t_upsert_test2 (
+  key1 int,
+  key2 text,
+  value text,
+  primary key ( (key1), key2 )
+);
+drop table if exists t_upsert_test3;
+create table if not exists t_upsert_test3 (
+  key1 int,
+  key2 text,
+  value text,
+  primary key ( key1, key2 )
+);

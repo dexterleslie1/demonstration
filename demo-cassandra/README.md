@@ -2292,3 +2292,317 @@ rowList = result.all();
 Assertions.assertEquals(1, rowList.size());
 Assertions.assertEquals(orderId, rowList.get(0).getDecimal("id"));
 ```
+
+
+
+## `upsert` 特性
+
+### 介绍
+
+在Cassandra中，**Upsert（更新或插入）** 是一种常见的操作模式，其核心逻辑是：**根据主键判断记录是否存在，若存在则更新，若不存在则插入**。Cassandra本身没有独立的“Upsert”语法，但通过`INSERT`语句结合主键的唯一性约束，天然实现了Upsert的能力。
+
+**一、Upsert的核心原理**
+
+Cassandra的表通过**主键（Primary Key）** 唯一标识一行数据（主键包括分区键和可选的聚类列）。当执行`INSERT`语句时：  
+- 如果主键对应的行**不存在**，则插入新行；  
+- 如果主键对应的行**已存在**，则更新该行中指定的列（未指定的列保持原有值）。  
+
+**二、基础Upsert实现（无条件覆盖）**
+
+最基础的Upsert操作直接使用`INSERT`语句，无需额外语法。Cassandra会根据主键自动判断是插入还是更新。
+
+**示例表结构**
+
+假设存在表`t_order`，主键为`id`（`DECIMAL`类型）：
+```sql
+CREATE TABLE IF NOT EXISTS t_order (
+    id            DECIMAL PRIMARY KEY,  -- 主键（分区键）
+    user_id       BIGINT,
+    status        TEXT,
+    pay_time      TIMESTAMP,
+    create_time   TIMESTAMP
+);
+```
+
+**Upsert操作示例**
+
+当执行以下`INSERT`语句时：  
+- 若`id=1`不存在，则插入新行；  
+- 若`id=1`已存在，则更新`user_id`、`status`、`pay_time`、`create_time`字段（未指定的字段如`id`保持不变）。
+
+```sql
+INSERT INTO t_order (id, user_id, status, pay_time, create_time)
+VALUES (1, 1001, 'Unpay', toTimestamp('2025-06-30 10:05:39'), toTimestamp('2025-06-30 10:05:39'));
+```
+
+**三、条件Upsert（使用Lightweight Transactions）**
+
+默认的`INSERT`语句是无条件的Upsert（总是覆盖或插入）。若需要**仅在特定条件下执行更新**（例如“仅当某字段为特定值时更新”），需使用Cassandra的**轻量级事务（Lightweight Transactions, LWT）**，通过`IF`子句实现。
+
+**适用场景**  
+
+例如：仅当订单状态为`Unpay`时，才允许更新为`Paid`。
+
+**语法示例**
+
+```sql
+UPDATE t_order 
+SET status = 'Paid', pay_time = toTimestamp('2025-06-30 10:10:00') 
+WHERE id = 1 
+IF status = 'Unpay'; -- 仅当当前状态为'Unpay'时执行更新
+```
+
+**执行结果**  
+
+- 若条件满足（`status='Unpay'`），则更新成功；  
+- 若条件不满足（如`status='Paid'`），则返回`[applied] = false`，表示未执行更新。
+
+**四、批量Upsert**
+
+若需要批量执行多个Upsert操作，可使用Cassandra的`BATCH`语句。批量操作需注意：  
+- 所有操作必须针对**同一分区键**（否则可能降低性能）；  
+- 批量操作是原子性的（要么全部成功，要么全部失败）。
+
+**示例：批量Upsert**
+
+```sql
+BEGIN BATCH
+    INSERT INTO t_order (id, user_id, status, pay_time, create_time) 
+    VALUES (1, 1001, 'Unpay', toTimestamp('2025-06-30 10:05:39'), toTimestamp('2025-06-30 10:05:39'));
+    
+    UPDATE t_order 
+    SET status = 'Processing', delivery_time = toTimestamp('2025-06-30 14:00:00') 
+    WHERE id = 1;
+APPLY BATCH;
+```
+
+**五、注意事项**
+
+1. **主键设计的重要性**：  
+   Upsert的行为完全依赖主键的唯一性。需根据业务需求设计合理的主键（如订单ID、用户ID+时间戳等），避免主键冲突或数据分布不均。
+
+2. **性能影响**：  
+   - 无条件Upsert（普通`INSERT`）性能极高（O(1)复杂度）；  
+   - 条件Upsert（LWT）需通过Paxos协议协商，性能较低（建议仅在必要时使用）；  
+   - 批量Upsert需避免跨分区操作，否则可能引发性能问题。
+
+3. **字段覆盖规则**：  
+   `INSERT`或`UPDATE`语句中仅指定部分字段时，未指定的字段**保持原有值**（不会被置为`NULL`）。例如：  
+   ```sql
+   INSERT INTO t_order (id, user_id) VALUES (1, 1001); -- 仅更新user_id，其他字段（如status）保持不变
+   ```
+
+4. **时间戳的处理**：  
+   Cassandra的`timestamp`类型存储UTC时间。若业务需要记录本地时间（如上海时区），需在应用层将本地时间转换为UTC后再存储（读取时再转换回本地时区）。
+
+**六、Java代码示例（使用DataStax驱动）**
+
+以下是使用Java DataStax驱动实现Upsert的示例代码：
+
+**1. 无条件Upsert（插入或更新）**
+
+```java
+import com.datastax.driver.core.PreparedStatement;
+import com.datastax.driver.core.Session;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
+
+public class CassandraUpsertExample {
+
+    private final Session session;
+
+    public CassandraUpsertExample(Session session) {
+        this.session = session;
+    }
+
+    /**
+     * 执行Upsert（插入或更新）
+     */
+    public void upsertOrder(BigDecimal orderId, Long userId, String status, LocalDateTime payTime, LocalDateTime createTime) {
+        String cql = "INSERT INTO t_order (id, user_id, status, pay_time, create_time) " +
+                     "VALUES (?, ?, ?, ?, ?)";
+
+        PreparedStatement prepared = session.prepare(cql);
+        prepared.setConsistencyLevel(ConsistencyLevel.LOCAL_QUORUM); // 设置一致性级别
+
+        Date payTimeDate = Date.from(payTime.atZone(ZoneId.of("Asia/Shanghai")).toInstant());
+        Date createTimeDate = Date.from(createTime.atZone(ZoneId.of("Asia/Shanghai")).toInstant());
+
+        session.execute(prepared.bind(
+            orderId,
+            userId,
+            status,
+            payTimeDate,
+            createTimeDate
+        ));
+    }
+}
+```
+
+**2. 条件Upsert（使用LWT）**
+
+```java
+public boolean conditionalUpdateStatus(Long orderId, String newStatus, String expectedStatus) {
+    String cql = "UPDATE t_order " +
+                 "SET status = ? " +
+                 "WHERE id = ? " +
+                 "IF status = ?";
+
+    PreparedStatement prepared = session.prepare(cql);
+    ResultSet result = session.execute(prepared.bind(
+        newStatus,
+        orderId,
+        expectedStatus
+    ));
+
+    // 检查是否应用成功（[applied]为true表示条件满足并更新）
+    Row row = result.one();
+    return row != null && row.getBool("[applied]");
+}
+```
+
+**总结**
+
+Cassandra的Upsert通过`INSERT`语句的天然特性实现，核心是根据主键判断记录是否存在。对于需要条件更新的场景，可使用轻量级事务（LWT）。实际开发中需注意主键设计、性能优化和时区处理，以确保数据一致性和操作效率。
+
+
+
+### 实践
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-cassandra/demo-client-datastax)
+
+示例测试的场景如下：
+
+- `primary key(key1)` 为主键，插入新数据时会覆盖之前的数据，导致只有一条数据存在。
+- `primary key((key1),key2)` 为主键（包含聚类键），插入新数据时不会覆盖之前的数据，导致有两条数据存在。
+- `primary key(key1,key2)` 为主键（不包含聚类键），插入新数据时不会覆盖之前的数据，导致有两条数据存在。
+
+表结构如下：
+
+```CQL
+/* 用于协助测试 upsert */
+drop table if exists t_upsert_test1;
+create table if not exists t_upsert_test1 (
+    key1 int,
+    key2 text,
+    value text,
+    primary key ( key1 )
+);
+drop table if exists t_upsert_test2;
+create table if not exists t_upsert_test2 (
+  key1 int,
+  key2 text,
+  value text,
+  primary key ( (key1), key2 )
+);
+drop table if exists t_upsert_test3;
+create table if not exists t_upsert_test3 (
+  key1 int,
+  key2 text,
+  value text,
+  primary key ( key1, key2 )
+);
+```
+
+测试代码如下：
+
+```java
+/**
+ * 测试 upsert 特性
+ *
+ * @throws BusinessException
+ */
+@Test
+public void testUpsert() throws BusinessException {
+    // 删除所有数据
+    this.commonMapper.truncate("t_upsert_test1");
+    this.commonMapper.truncate("t_upsert_test2");
+    this.commonMapper.truncate("t_upsert_test3");
+
+    // region 测试 primary key(key1) 为主键，插入新数据时会覆盖之前的数据，导致只有一条数据存在
+
+    String cql = "insert into t_upsert_test1(key1,key2,value) values(?,?,?)";
+    PreparedStatement preparedStatement = session.prepare(cql);
+    BoundStatement boundStatement = preparedStatement.bind(1, "a", "v1");
+    ResultSet resultSet = session.execute(boundStatement);
+    Assertions.assertTrue(resultSet.wasApplied());
+
+    cql = "insert into t_upsert_test1(key1,key2,value) values(?,?,?)";
+    preparedStatement = session.prepare(cql);
+    boundStatement = preparedStatement.bind(1, "b", "v2");
+    resultSet = session.execute(boundStatement);
+    Assertions.assertTrue(resultSet.wasApplied());
+
+    cql = "select * from t_upsert_test1";
+    preparedStatement = session.prepare(cql);
+    boundStatement = preparedStatement.bind();
+    resultSet = session.execute(boundStatement);
+    List<Row> rowList = resultSet.all();
+    Assertions.assertEquals(1, rowList.size());
+    Assertions.assertEquals(1, rowList.get(0).getInt("key1"));
+    Assertions.assertEquals("b", rowList.get(0).getString("key2"));
+    Assertions.assertEquals("v2", rowList.get(0).getString("value"));
+
+    // endregion
+
+    // region 测试 primary key((key1),key2) 为主键（包含聚类键），插入新数据时不会覆盖之前的数据，导致有两条数据存在
+
+    cql = "insert into t_upsert_test2(key1,key2,value) values(?,?,?)";
+    preparedStatement = session.prepare(cql);
+    boundStatement = preparedStatement.bind(1, "a", "v1");
+    resultSet = session.execute(boundStatement);
+    Assertions.assertTrue(resultSet.wasApplied());
+
+    cql = "insert into t_upsert_test2(key1,key2,value) values(?,?,?)";
+    preparedStatement = session.prepare(cql);
+    boundStatement = preparedStatement.bind(1, "b", "v2");
+    resultSet = session.execute(boundStatement);
+    Assertions.assertTrue(resultSet.wasApplied());
+
+    cql = "select * from t_upsert_test2";
+    preparedStatement = session.prepare(cql);
+    boundStatement = preparedStatement.bind();
+    resultSet = session.execute(boundStatement);
+    rowList = resultSet.all();
+    Assertions.assertEquals(2, rowList.size());
+    Assertions.assertEquals(1, rowList.get(0).getInt("key1"));
+    Assertions.assertEquals("a", rowList.get(0).getString("key2"));
+    Assertions.assertEquals("v1", rowList.get(0).getString("value"));
+    Assertions.assertEquals(1, rowList.get(1).getInt("key1"));
+    Assertions.assertEquals("b", rowList.get(1).getString("key2"));
+    Assertions.assertEquals("v2", rowList.get(1).getString("value"));
+
+    // endregion
+
+    // region 测试 primary key(key1,key2) 为主键（不包含聚类键），插入新数据时不会覆盖之前的数据，导致有两条数据存在
+
+    cql = "insert into t_upsert_test3(key1,key2,value) values(?,?,?)";
+    preparedStatement = session.prepare(cql);
+    boundStatement = preparedStatement.bind(1, "a", "v1");
+    resultSet = session.execute(boundStatement);
+    Assertions.assertTrue(resultSet.wasApplied());
+
+    cql = "insert into t_upsert_test3(key1,key2,value) values(?,?,?)";
+    preparedStatement = session.prepare(cql);
+    boundStatement = preparedStatement.bind(1, "b", "v2");
+    resultSet = session.execute(boundStatement);
+    Assertions.assertTrue(resultSet.wasApplied());
+
+    cql = "select * from t_upsert_test3";
+    preparedStatement = session.prepare(cql);
+    boundStatement = preparedStatement.bind();
+    resultSet = session.execute(boundStatement);
+    rowList = resultSet.all();
+    Assertions.assertEquals(2, rowList.size());
+    Assertions.assertEquals(1, rowList.get(0).getInt("key1"));
+    Assertions.assertEquals("a", rowList.get(0).getString("key2"));
+    Assertions.assertEquals("v1", rowList.get(0).getString("value"));
+    Assertions.assertEquals(1, rowList.get(1).getInt("key1"));
+    Assertions.assertEquals("b", rowList.get(1).getString("key2"));
+    Assertions.assertEquals("v2", rowList.get(1).getString("value"));
+
+    // endregion
+}
+```

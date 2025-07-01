@@ -357,4 +357,101 @@ public class ApplicationTests {
         Assertions.assertArrayEquals(new Long[]{1L, 2L}, orderIdListFetched.toArray(new Long[0]));
     }
 
+    /**
+     * 测试 upsert 特性
+     *
+     * @throws BusinessException
+     */
+    @Test
+    public void testUpsert() throws BusinessException {
+        // 删除所有数据
+        this.commonMapper.truncate("t_upsert_test1");
+        this.commonMapper.truncate("t_upsert_test2");
+        this.commonMapper.truncate("t_upsert_test3");
+
+        // region 测试 primary key(key1) 为主键，插入新数据时会覆盖之前的数据，导致只有一条数据存在
+
+        String cql = "insert into t_upsert_test1(key1,key2,value) values(?,?,?)";
+        PreparedStatement preparedStatement = session.prepare(cql);
+        BoundStatement boundStatement = preparedStatement.bind(1, "a", "v1");
+        ResultSet resultSet = session.execute(boundStatement);
+        Assertions.assertTrue(resultSet.wasApplied());
+
+        cql = "insert into t_upsert_test1(key1,key2,value) values(?,?,?)";
+        preparedStatement = session.prepare(cql);
+        boundStatement = preparedStatement.bind(1, "b", "v2");
+        resultSet = session.execute(boundStatement);
+        Assertions.assertTrue(resultSet.wasApplied());
+
+        cql = "select * from t_upsert_test1";
+        preparedStatement = session.prepare(cql);
+        boundStatement = preparedStatement.bind();
+        resultSet = session.execute(boundStatement);
+        List<Row> rowList = resultSet.all();
+        Assertions.assertEquals(1, rowList.size());
+        Assertions.assertEquals(1, rowList.get(0).getInt("key1"));
+        Assertions.assertEquals("b", rowList.get(0).getString("key2"));
+        Assertions.assertEquals("v2", rowList.get(0).getString("value"));
+
+        // endregion
+
+        // region 测试 primary key((key1),key2) 为主键（包含聚类键），插入新数据时不会覆盖之前的数据，导致有两条数据存在
+
+        cql = "insert into t_upsert_test2(key1,key2,value) values(?,?,?)";
+        preparedStatement = session.prepare(cql);
+        boundStatement = preparedStatement.bind(1, "a", "v1");
+        resultSet = session.execute(boundStatement);
+        Assertions.assertTrue(resultSet.wasApplied());
+
+        cql = "insert into t_upsert_test2(key1,key2,value) values(?,?,?)";
+        preparedStatement = session.prepare(cql);
+        boundStatement = preparedStatement.bind(1, "b", "v2");
+        resultSet = session.execute(boundStatement);
+        Assertions.assertTrue(resultSet.wasApplied());
+
+        cql = "select * from t_upsert_test2";
+        preparedStatement = session.prepare(cql);
+        boundStatement = preparedStatement.bind();
+        resultSet = session.execute(boundStatement);
+        rowList = resultSet.all();
+        Assertions.assertEquals(2, rowList.size());
+        Assertions.assertEquals(1, rowList.get(0).getInt("key1"));
+        Assertions.assertEquals("a", rowList.get(0).getString("key2"));
+        Assertions.assertEquals("v1", rowList.get(0).getString("value"));
+        Assertions.assertEquals(1, rowList.get(1).getInt("key1"));
+        Assertions.assertEquals("b", rowList.get(1).getString("key2"));
+        Assertions.assertEquals("v2", rowList.get(1).getString("value"));
+
+        // endregion
+
+        // region 测试 primary key(key1,key2) 为主键（不包含聚类键），插入新数据时不会覆盖之前的数据，导致有两条数据存在
+
+        cql = "insert into t_upsert_test3(key1,key2,value) values(?,?,?)";
+        preparedStatement = session.prepare(cql);
+        boundStatement = preparedStatement.bind(1, "a", "v1");
+        resultSet = session.execute(boundStatement);
+        Assertions.assertTrue(resultSet.wasApplied());
+
+        cql = "insert into t_upsert_test3(key1,key2,value) values(?,?,?)";
+        preparedStatement = session.prepare(cql);
+        boundStatement = preparedStatement.bind(1, "b", "v2");
+        resultSet = session.execute(boundStatement);
+        Assertions.assertTrue(resultSet.wasApplied());
+
+        cql = "select * from t_upsert_test3";
+        preparedStatement = session.prepare(cql);
+        boundStatement = preparedStatement.bind();
+        resultSet = session.execute(boundStatement);
+        rowList = resultSet.all();
+        Assertions.assertEquals(2, rowList.size());
+        Assertions.assertEquals(1, rowList.get(0).getInt("key1"));
+        Assertions.assertEquals("a", rowList.get(0).getString("key2"));
+        Assertions.assertEquals("v1", rowList.get(0).getString("value"));
+        Assertions.assertEquals(1, rowList.get(1).getInt("key1"));
+        Assertions.assertEquals("b", rowList.get(1).getString("key2"));
+        Assertions.assertEquals("v2", rowList.get(1).getString("value"));
+
+        // endregion
+    }
+
 }
