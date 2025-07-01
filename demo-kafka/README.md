@@ -474,6 +474,8 @@ public class ApiController {
 
 ### 使用 `KafKaAdmin` 修改 `Topic` 分区数
 
+>提醒：使用 `KafkaAdmin` 修改分区数后 `SpringBoot` 应用没有马上重新平衡消费者线程，依旧使用之前的 `1` 条线程，所以在 `Kafka` 服务启动后，使用 `/usr/bin/kafka-topics --create --bootstrap-server kafka:9092 --replication-factor 1 --partitions 128 --topic my-topic-1` 命令修改 `Topic` 分区数。
+
 ```java
 @Component
 public class TopicInitializer implements CommandLineRunner {
@@ -490,3 +492,263 @@ public class TopicInitializer implements CommandLineRunner {
 ```
 
 - 上面的代码修改 `Topic` 的分区数为 `128`，副本数为 `1`。
+
+
+
+### 消费失败重试策略配置
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-kafka/demo-kafka-benchmark)
+
+#### 概念
+
+要实现Kafka监听器的**无限重试且每次重试间隔5秒**，可以通过Spring Kafka的**RetryTopic**功能（推荐，适用于2.7+版本）或自定义重试策略实现。以下是详细解决方案：
+
+**方案一：使用Spring Kafka RetryTopic（推荐）**
+
+RetryTopic是Spring Kafka 2.7+引入的内置功能，支持自动创建重试主题（Retry Topic）和死信主题（DLQ），并可通过配置实现延迟重试。
+
+1. 前提条件
+
+- Spring Kafka版本 ≥ 2.7.0
+- Kafka服务端版本 ≥ 2.4.0（支持延迟消息）
+
+2. 配置步骤
+
+（1）添加依赖
+
+确保`pom.xml`包含Spring Kafka依赖（版本≥2.7.0）：
+```xml
+<dependency>
+    <groupId>org.springframework.kafka</groupId>
+    <artifactId>spring-kafka</artifactId>
+    <version>2.9.11</version> <!-- 或更高版本 -->
+</dependency>
+```
+
+（2）配置RetryTopic策略
+
+通过`RetryTopicConfiguration`定义重试规则，包括无限重试、5秒间隔等。
+
+```java
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.kafka.annotation.EnableKafka;
+import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
+import org.springframework.kafka.core.ConsumerFactory;
+import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.listener.ContainerProperties;
+import org.springframework.kafka.listener.DefaultErrorHandler;
+import org.springframework.kafka.support.serializer.JsonDeserializer;
+import org.springframework.util.backoff.FixedBackOff;
+
+import java.util.HashMap;
+import java.util.Map;
+
+@Configuration
+@EnableKafka
+public class KafkaConfig {
+
+    // Kafka基础配置（根据实际情况调整）
+    @Bean
+    public ConsumerFactory<String, String> consumerFactory() {
+        Map<String, Object> props = new HashMap<>();
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, "your-consumer-group");
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest"); // 从最早偏移量开始消费
+        return new DefaultKafkaConsumerFactory<>(props);
+    }
+
+    // 监听器容器工厂（关键配置）
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<?, ?> kafkaListenerContainerFactory(
+            ConsumerFactory<Object, Object> consumerFactory,
+            KafkaTemplate<Object, Object> kafkaTemplate) {
+
+        ConcurrentKafkaListenerContainerFactory<Object, Object> factory =
+                new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(consumerFactory);
+        factory.setCommonErrorHandler(retryErrorHandler(kafkaTemplate)); // 绑定重试错误处理器
+        return factory;
+    }
+
+    // 定义重试错误处理器（核心）
+    @Bean
+    public DefaultErrorHandler retryErrorHandler(KafkaTemplate<Object, Object> template) {
+        // 配置重试策略：无限次重试，每次间隔5秒
+        FixedBackOff fixedBackOff = new FixedBackOff(5000L, -1); // 5000ms间隔，-1表示无限次
+
+        // 使用RetryTopic的ErrorHandler（自动处理重试和DLQ）
+        return new DefaultErrorHandler(
+                // 自定义恢复逻辑（可选，当重试耗尽时触发）
+                (record, ex) -> {
+                    System.err.println("重试耗尽，消息进入死信队列：" + record.value());
+                },
+                fixedBackOff
+        );
+    }
+}
+```
+
+（3）监听器方法调整
+
+确保监听器方法正确声明，并使用`@KafkaListener`绑定主题。  
+**注意**：若使用批量消费（`List<String>`），需额外配置批量处理的重试逻辑（见下文补充说明）。
+
+```java
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.stereotype.Component;
+import java.util.List;
+
+@Component
+public class KafkaListenerDemo {
+
+    private int concurrentCounter = 0;
+    private int totalCounter = 0;
+
+    @KafkaListener(topics = "your-topic-name") // 替换为实际主题
+    public void receiveMessage(List<String> messages) throws Exception {
+        concurrentCounter++;
+        totalCounter += messages.size();
+        log.info("concurrent={}, size={}, total={}", concurrentCounter, messages.size(), totalCounter);
+
+        // 模拟耗时操作
+        TimeUnit.MILLISECONDS.sleep(500);
+
+        // 模拟业务异常（触发重试）
+        boolean b = true;
+        if (b) {
+            throw new BusinessException("测试异常"); // 自定义异常
+        }
+
+        concurrentCounter--;
+        // 手动提交偏移量（若使用MANUAL_ACK模式）
+        // acknowledgment.acknowledge();
+    }
+}
+```
+
+3. 关键配置说明
+
+- **无限重试**：通过`SimpleRetryPolicy(-1)`设置重试次数为-1（无限）。
+- **5秒间隔**：通过`FixedBackOff(5000L)`设置每次重试间隔5秒。
+- **偏移量提交**：推荐使用`MANUAL_IMMEDIATE`手动提交，避免因处理失败导致偏移量提前提交（需在消息处理成功后调用`acknowledgment.acknowledge()`）。
+- **死信队列（DLQ）**：当重试耗尽（理论上无限重试不会触发），消息会被发送到`${原主题}.dlq`，可单独处理。
+
+**方案二：自定义重试逻辑（旧版本兼容）**
+
+若Spring Kafka版本低于2.7，可通过`SeekToCurrentErrorHandler`结合延迟任务实现重试。
+
+1. 核心思路
+
+- 捕获消费异常后，通过`SeekToCurrentErrorHandler`将偏移量重置到当前位置（实现重试）。
+- 结合`ScheduledExecutorService`延迟5秒后重新消费。
+
+2. 实现代码
+
+```java
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.springframework.kafka.listener.DefaultErrorHandler;
+import org.springframework.util.backoff.FixedBackOff;
+import org.springframework.kafka.support.Acknowledgment;
+import org.springframework.stereotype.Component;
+import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+@Component
+public class CustomErrorHandler extends DefaultErrorHandler {
+
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+
+    @Override
+    public void handle(Exception thrownException, List<ConsumerRecord<?, ?>> records,
+                       Consumer<?, ?> consumer, MessageListenerContainer<?, ?> container) {
+
+        // 记录异常
+        log.error("处理消息失败，触发重试", thrownException);
+
+        // 延迟5秒后重新消费当前记录
+        for (ConsumerRecord<?, ?> record : records) {
+            scheduler.schedule(() -> {
+                try {
+                    // 重新分配分区并定位到当前偏移量（手动触发重试）
+                    consumer.seek(new TopicPartition(record.topic(), record.partition()), record.offset());
+                    // 提交当前批次的偏移量（避免重复消费）
+                    ((Acknowledgment) container).acknowledge();
+                } catch (Exception e) {
+                    log.error("重试任务执行失败", e);
+                }
+            }, 5, TimeUnit.SECONDS);
+        }
+    }
+}
+```
+
+3. 监听器绑定自定义错误处理器
+
+```java
+@KafkaListener(topics = "your-topic-name", errorHandler = "customErrorHandler")
+public void receiveMessage(List<String> messages) throws Exception {
+    // 业务逻辑...
+}
+```
+
+**补充说明（批量消费场景）**
+
+若监听器使用批量消费（`List<String>`），需注意：
+1. **部分失败处理**：默认情况下，批量消费中一条消息失败会导致整个批次重试。若需单独处理失败消息，需：
+   - 设置`ackMode=MANUAL`，手动确认每条消息。
+   - 在异常时仅将失败消息加入重试队列，成功消息立即提交。
+2. **重试间隔**：批量重试时，所有消息会一起延迟重试，无法单独设置每条消息的间隔（如需精细控制，需拆分批量为单条消费）。
+
+**总结**
+
+推荐使用**Spring Kafka RetryTopic**（版本≥2.7），配置简单且功能完善，支持无限重试和延迟间隔。若版本不兼容，可通过自定义`ErrorHandler`结合延迟任务实现，但需注意批量消费的边界条件。
+
+
+
+#### 实验
+
+`ConcurrentKafkaListenerContainerFactory` 配置如下：
+
+```java
+@Bean
+public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory(
+        ConsumerFactory consumerFactory) {
+    ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
+    factory.setConsumerFactory(consumerFactory);
+    // 启用批量消费
+    factory.setBatchListener(true);
+    // 设置并发线程数，需要设置 topic 分区数不为 0 才能并发消费消息。
+    factory.setConcurrency(256);
+    // 绑定重试错误处理器
+    factory.setCommonErrorHandler(retryErrorHandler(kafkaTemplate));
+    return factory;
+}
+```
+
+定义重试错误处理器（核心）：
+
+```java
+// 定义重试错误处理器（核心）
+@Bean
+public DefaultErrorHandler retryErrorHandler(KafkaTemplate<Object, Object> template) {
+    // 配置重试策略：无限次重试，每次间隔5秒
+    // 5000ms间隔，FixedBackOff.UNLIMITED_ATTEMPTS 表示无限次
+    FixedBackOff fixedBackOff = new FixedBackOff(5000L, /*FixedBackOff.UNLIMITED_ATTEMPTS*/ 180);
+
+    // 使用RetryTopic的ErrorHandler（自动处理重试和DLQ）
+    return new DefaultErrorHandler(
+            // 自定义恢复逻辑（可选，当重试耗尽时触发）
+            (record, ex) -> {
+                log.error("重试耗尽，消息进入死信队列：{}", record.value());
+            },
+            fixedBackOff
+    );
+}
+```

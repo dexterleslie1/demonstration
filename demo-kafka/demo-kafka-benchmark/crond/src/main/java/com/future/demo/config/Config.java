@@ -6,7 +6,11 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.listener.DefaultErrorHandler;
+import org.springframework.util.backoff.FixedBackOff;
 
+import javax.annotation.Resource;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -17,6 +21,9 @@ import static com.future.demo.constant.Constant.TopicName;
 @Configuration
 @Slf4j
 public class Config {
+    @Resource
+    KafkaTemplate kafkaTemplate;
+
 //    @Bean
 //    public ConsumerFactory<String, String> consumerFactory() {
 //        Map<String, Object> props = new HashMap<>();
@@ -37,19 +44,49 @@ public class Config {
         factory.setBatchListener(true);
         // 设置并发线程数，需要设置 topic 分区数不为 0 才能并发消费消息。
         factory.setConcurrency(256);
+        // 绑定重试错误处理器
+        factory.setCommonErrorHandler(retryErrorHandler(kafkaTemplate));
         return factory;
+    }
+
+    // 定义重试错误处理器（核心）
+    @Bean
+    public DefaultErrorHandler retryErrorHandler(KafkaTemplate<Object, Object> template) {
+        // 配置重试策略：无限次重试，每次间隔5秒
+        // 5000ms间隔，FixedBackOff.UNLIMITED_ATTEMPTS 表示无限次
+        FixedBackOff fixedBackOff = new FixedBackOff(5000L, /*FixedBackOff.UNLIMITED_ATTEMPTS*/ 180);
+
+        // 使用RetryTopic的ErrorHandler（自动处理重试和DLQ）
+        return new DefaultErrorHandler(
+                // 自定义恢复逻辑（可选，当重试耗尽时触发）
+                (record, ex) -> {
+                    log.error("重试耗尽，消息进入死信队列：{}", record.value());
+                },
+                fixedBackOff
+        );
     }
 
     private AtomicInteger concurrentCounter = new AtomicInteger();
     private AtomicLong counter = new AtomicLong();
 
     @KafkaListener(topics = TopicName)
-    public void receiveMessage(List<String> messages) throws InterruptedException {
-        log.info("concurrent=" + this.concurrentCounter.incrementAndGet() + ",size=" + messages.size() + ",total=" + counter.addAndGet(messages.size()));
+    public void receiveMessage(List<String> messages) throws Exception {
+        try {
+            log.info("concurrent=" + this.concurrentCounter.incrementAndGet()
+                    + ",size=" + messages.size()
+                    + ",total=" + counter.addAndGet(messages.size())
+                    + ",messages=" + String.join(",", messages));
 
-        TimeUnit.MILLISECONDS.sleep(500);
+            TimeUnit.MILLISECONDS.sleep(500);
 
-        this.concurrentCounter.decrementAndGet();
+            // 辅助测试失败重试
+            /*boolean b = true;
+            if (b) {
+                throw new BusinessException("测试异常");
+            }*/
+        } finally {
+            this.concurrentCounter.decrementAndGet();
+        }
     }
 
 }
