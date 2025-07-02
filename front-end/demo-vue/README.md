@@ -363,6 +363,125 @@ html, body {
 
 
 
+### 向 `Vue` 原型链注入自定义方法
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-vue/demo-vue2-cli-my-component-lib)
+
+自定义组件中的 `index.js`：
+
+```javascript
+// install 方法是 Vue 插件的约定方法，Vue.use() 会调用这个方法。
+// 在这里，install 方法接收 Vue 构造函数作为参数，并通过 Vue.component 全局注册两个组件 MyComponent1 和 MyComponent2。
+// 这样，当插件被安装后，这两个组件就可以在任何地方的模板中直接使用，比如 <MyComponent1 /> 和 <MyComponent2 />。
+const install = function (Vue) {
+    // 向 Vue 原型链注入自定义方法
+    // 模仿 element-ui 的 Message 组件下面的调用方式：
+    //      1、this.$message.error('错了哦，这是一条错误消息'); 
+    //      2、this.$message({
+    //          message: '警告哦，这是一条警告消息',
+    //          type: 'warning'
+    //         });
+    function myMessage(options) {
+        var type = options.type
+        var messageText = options.message
+        if (type === 'error') {
+            myMessage.error(messageText)
+        } else {
+            alert(`未知参数类型 options.type=${type}`)
+        }
+    }
+    myMessage.error = function (messageText) {
+        alert(messageText)
+    }
+    Vue.prototype.$message = myMessage
+};
+
+// 自动注册插件（针对 Vue 2.x 的浏览器环境）
+// 如果该库是通过 <script> 标签直接引入的（通常用于浏览器环境），window.Vue 会存在，表示全局的 Vue 构造函数。
+// 代码会自动检测到全局的 Vue 对象，并调用 install(window.Vue)，将组件自动注册到全局。
+// 这使得开发者无需手动调用 Vue.use()，即可直接使用组件。
+if (typeof window !== 'undefined' && window.Vue) {
+    install(window.Vue);
+}
+
+// 导出组件和插件方法
+// install 方法：使得该库可以作为 Vue 插件使用，通过 Vue.use() 来安装。
+// MyComponent1 和 MyComponent2：单独导出组件，支持按需引入。
+// 
+// 开发者可以按需引入某个组件，而不是必须引入整个插件。例如：
+//      import { MyComponent1 } from 'my-component-library';
+//      Vue.component('MyComponent1', MyComponent1);
+//
+export default {
+    install
+};
+
+```
+
+引用自定义组件库，`main.js`：
+
+```javascript
+import Vue from 'vue'
+import App from './App.vue'
+import MyComponentPlugin from "./index"
+
+// 注册自定义组件库到 Vue 中
+Vue.use(MyComponentPlugin)
+
+Vue.config.productionTip = false
+
+new Vue({
+  render: h => h(App),
+}).$mount('#app')
+
+```
+
+在 `Vue` 中调用注入的自定义方法，`App.vue`：
+
+```vue
+<template>
+  <div id="app">
+    <button @click="handleClick1()">使用方法：this.$message.error({ ... })调用</button>&nbsp;&nbsp;
+    <button @click="handleClick2()">使用方法：this.$message({ ... })调用</button>
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'App',
+  components: {
+  },
+  methods: {
+    handleClick1() {
+      // 在 Vue 中使用 this.$message 提示功能，本质是 ​​Element UI 插件向 Vue 原型链注入了 $message 方法​​。
+      this.$message.error('错了哦，这是一条错误消息')
+    },
+    handleClick2() {
+      // 在 Vue 中使用 this.$message 提示功能，本质是 ​​Element UI 插件向 Vue 原型链注入了 $message 方法​​。
+      this.$message({
+        message: '错了哦，这是一条错误消息',
+        type: 'error'
+      })
+    }
+  }
+}
+</script>
+
+<style>
+#app {
+  font-family: Avenir, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-align: center;
+  color: #2c3e50;
+  margin-top: 60px;
+}
+</style>
+
+```
+
+
+
 ## 数据更新但视图不更新问题
 
 >[参考链接](https://stackoverflow.com/questions/44800470/vue-js-updated-array-item-value-doesnt-update-in-page)

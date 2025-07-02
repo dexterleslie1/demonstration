@@ -10,6 +10,27 @@ const install = function (Vue) {
     // 注册组件到 Vue 的名称，在调用时直接使用该名称作为标签
     Vue.component('MyComponent1', MyComponent1)
     Vue.component('MyComponent2', MyComponent2)
+
+    // 向 Vue 原型链注入自定义方法
+    // 模仿 element-ui 的 Message 组件下面的调用方式：
+    //      1、this.$message.error('错了哦，这是一条错误消息'); 
+    //      2、this.$message({
+    //          message: '警告哦，这是一条警告消息',
+    //          type: 'warning'
+    //         });
+    function myMessage(options) {
+        var type = options.type
+        var messageText = options.message
+        if (type === 'error') {
+            myMessage.error(messageText)
+        } else {
+            alert(`未知参数类型 options.type=${type}`)
+        }
+    }
+    myMessage.error = function (messageText) {
+        alert(messageText)
+    }
+    Vue.prototype.$message = myMessage
 };
 
 // 自动注册插件（针对 Vue 2.x 的浏览器环境）
