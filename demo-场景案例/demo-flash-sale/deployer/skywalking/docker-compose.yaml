@@ -1,0 +1,46 @@
+version: "3.0"
+
+services:
+  skywalking-elasticsearch:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-skywalking-elasticsearch
+    environment:
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - discovery.type=single-node
+      # http.cors表示允许elasticsearch-head连接并管理
+      - http.cors.enabled=true
+      - http.cors.allow-origin=*
+      - TZ=Asia/Shanghai
+    restart: unless-stopped
+    network_mode: host
+
+  skywalking-kibana:
+    image: kibana:7.14.1
+    environment:
+      ELASTICSEARCH_HOSTS: http://localhost:9200
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      - skywalking-elasticsearch
+
+  skywalking-oap-server:
+    image: apache/skywalking-oap-server:8.7.0-es7
+    environment:
+      - SW_STORAGE=elasticsearch7
+      - SW_STORAGE_ES_CLUSTER_NODES=localhost:9200
+      # trace日志保留15天
+      - SW_STORAGE_ES_RECORD_DATA_TTL=15
+      - TZ=Asia/Shanghai
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      - skywalking-elasticsearch
+
+  skywalking-ui:
+    image: apache/skywalking-ui:8.7.0
+    environment:
+      - SW_OAP_ADDRESS=http://localhost:12800
+      - TZ=Asia/Shanghai
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      - skywalking-oap-server

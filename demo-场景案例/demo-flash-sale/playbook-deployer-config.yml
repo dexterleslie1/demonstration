@@ -143,3 +143,19 @@
         path: ~/deployer-flash-sale/service/.env
         regexp: "^common_cassandra_contact_points="
         line: "common_cassandra_contact_points={{ groups['cassandra'] | map('regex_replace', '^(.*)$', '\\1:9042') | list | join(',') }}"
+
+    - name: "配置api服务的skywalking_agent_instance_name"
+      lineinfile:
+        path: ~/deployer-flash-sale/service/.env
+        regexp: "^skywalking_agent_instance_name="
+        line: "skywalking_agent_instance_name={{ inventory_hostname }}"
+    - name: "配置api服务的skywalking_agent_collector_backend_services"
+      lineinfile:
+        path: ~/deployer-flash-sale/service/.env
+        regexp: "^skywalking_agent_collector_backend_services="
+        line: "skywalking_agent_collector_backend_services={{ groups['common'][0] }}:11800"
+    - name: "配置api服务的skywalking_grpc_log_server_host"
+      lineinfile:
+        path: ~/deployer-flash-sale/service/.env
+        regexp: "^skywalking_grpc_log_server_host="
+        line: "skywalking_grpc_log_server_host={{ groups['common'][0] }}"

@@ -13,6 +13,10 @@ services:
       - kafka_bootstrap_servers=${kafka_bootstrap_servers}
       - common_zookeeper_host=${common_zookeeper_host}
       - common_cassandra_contact_points=${common_cassandra_contact_points}
+      - SW_AGENT_NAME=${skywalking_agent_name}
+      - SW_AGENT_INSTANCE_NAME=${skywalking_agent_instance_name}
+      - SW_AGENT_COLLECTOR_BACKEND_SERVICES=${skywalking_agent_collector_backend_services}
+      - SW_GRPC_LOG_SERVER_HOST=${skywalking_grpc_log_server_host}
     logging:
       driver: json-file
       options:

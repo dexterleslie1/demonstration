@@ -14,14 +14,17 @@
     <version>${project.parent.version}</version>
     <packaging>jar</packaging>
 
-    <!--<build>
-        <finalName>demo</finalName>
-        <plugins>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </build>-->
-
+    <dependencies>
+        <!-- skywalking 整合 logback -->
+        <!--<dependency>
+            <groupId>org.apache.skywalking</groupId>
+            <artifactId>apm-toolkit-logback-1.x</artifactId>
+            <version>8.7.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.skywalking</groupId>
+            <artifactId>apm-toolkit-trace</artifactId>
+            <version>8.7.0</version>
+        </dependency>-->
+    </dependencies>
 </project>

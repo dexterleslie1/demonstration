@@ -34,6 +34,15 @@
         cd ~/deployer-flash-sale/prometheus
         docker compose down -v
 
+#- name: "销毁Skywalking公共服务"
+#  hosts: common
+#  tasks:
+#    - name: "使用Docker Compose down销毁Skywalking公共服务"
+#      shell: |
+#        set -e
+#        cd ~/deployer-flash-sale/skywalking
+#        docker compose down -v
+
 - name: "销毁数据库服务"
   hosts: db
   tasks:
