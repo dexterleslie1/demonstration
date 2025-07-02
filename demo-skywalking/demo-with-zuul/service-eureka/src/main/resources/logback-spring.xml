@@ -36,12 +36,12 @@
         </encoder>
     </appender>-->
 
-    <root level="debug">
+    <root level="info">
         <appender-ref ref="grpc-log"/>
         <appender-ref ref="console"/>
         <!--<appender-ref ref="logstash"/>-->
     </root>
 
-    <logger name="org.springframework.beans" level="info"/>
-    <logger name="org.springframework.core" level="info"/>
+    <!--<logger name="org.springframework.beans" level="info"/>
+    <logger name="org.springframework.core" level="info"/>-->
 </configuration>

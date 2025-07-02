@@ -64,6 +64,7 @@ source_dir_to_target_dir_map["../../demo-小孩"]="小孩"
 source_dir_to_target_dir_map["../../front-end/demo-svg"]="svg"
 source_dir_to_target_dir_map["../../demo-toolset"]="toolset"
 source_dir_to_target_dir_map["../../demo-prometheus"]="prometheus"
+source_dir_to_target_dir_map["../../demo-skywalking"]="skywalking"
 
 for key in ${!source_dir_to_target_dir_map[@]}; do
     # 删除符号链接目录

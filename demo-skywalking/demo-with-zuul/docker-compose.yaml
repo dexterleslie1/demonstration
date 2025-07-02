@@ -2,6 +2,9 @@ version: "3.0"
 
 services:
   demo-skywalking-elasticsearch:
+    build:
+      context: ./
+      dockerfile: Dockerfile-elasticsearch
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-skywalking-elasticsearch
     environment:
       - ES_JAVA_OPTS=-Xms512m -Xmx512m
@@ -51,52 +54,68 @@ services:
       - demo-skywalking-oap-server
 
   demo-skywalking-service-eureka:
+    build:
+      context: ./service-eureka
+      dockerfile: Dockerfile
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-skywalking-service-eureka
     environment:
-      - JAVA_OPTS=-Xms256m -Xmx256m
+      - JAVA_OPTS=-Xms512m -Xmx512m
       - TZ=Asia/Shanghai
       - SW_AGENT_NAME=service-eureka
       - SW_AGENT_INSTANCE_NAME=service-eureka-instance-0
       - SW_AGENT_COLLECTOR_BACKEND_SERVICES=demo-skywalking-oap-server:11800
+      - SW_GRPC_LOG_SERVER_HOST=demo-skywalking-oap-server
     ports:
       - '9999:9999'
     depends_on:
       - demo-skywalking-oap-server
 
   demo-skywalking-service-zuul:
+    build:
+      context: ./service-zuul
+      dockerfile: Dockerfile
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-skywalking-service-zuul
     environment:
-      - JAVA_OPTS=-Xms256m -Xmx256m
+      - JAVA_OPTS=-Xms512m -Xmx512m
       - TZ=Asia/Shanghai
       - eurekaServer=demo-skywalking-service-eureka
       - SW_AGENT_NAME=service-zuul
       - SW_AGENT_INSTANCE_NAME=service-zuul-instance-0
       - SW_AGENT_COLLECTOR_BACKEND_SERVICES=demo-skywalking-oap-server:11800
+      - SW_GRPC_LOG_SERVER_HOST=demo-skywalking-oap-server
     ports:
       - '8080:8081'
     depends_on:
       - demo-skywalking-service-eureka
 
   demo-skywalking-service-level-first-provider:
+    build:
+      context: ./service-level-first-provider
+      dockerfile: Dockerfile
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-skywalking-service-level-first-provider
     environment:
-      - JAVA_OPTS=-Xms256m -Xmx256m
+      - JAVA_OPTS=-Xms512m -Xmx512m
       - TZ=Asia/Shanghai
       - eurekaServer=demo-skywalking-service-eureka
       - SW_AGENT_NAME=service-level-first-provider
       - SW_AGENT_INSTANCE_NAME=service-level-first-provider-instance-0
       - SW_AGENT_COLLECTOR_BACKEND_SERVICES=demo-skywalking-oap-server:11800
+      - SW_GRPC_LOG_SERVER_HOST=demo-skywalking-oap-server
     depends_on:
       - demo-skywalking-service-eureka
 
   demo-skywalking-service-level-second-provider:
+    build:
+      context: ./service-level-second-provider
+      dockerfile: Dockerfile
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-skywalking-service-level-second-provider
     environment:
-      - JAVA_OPTS=-Xms256m -Xmx256m
+      - JAVA_OPTS=-Xms512m -Xmx512m
       - TZ=Asia/Shanghai
       - eurekaServer=demo-skywalking-service-eureka
       - SW_AGENT_NAME=service-level-second-provider
       - SW_AGENT_INSTANCE_NAME=service-level-second-provider-instance-0
       - SW_AGENT_COLLECTOR_BACKEND_SERVICES=demo-skywalking-oap-server:11800
+      - SW_GRPC_LOG_SERVER_HOST=demo-skywalking-oap-server
     depends_on:
       - demo-skywalking-service-eureka

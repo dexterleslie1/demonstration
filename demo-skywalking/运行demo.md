@@ -116,6 +116,16 @@ docker-compose up -d
 
 模拟接口调用延迟数据`http://localhost:8080/api/v1/test3`
 
+使用 `wrk` 协助生成 `CPM` 测试监控数据：
+
+```sh
+# 调用正常接口
+wrk -t1 -c16 -d150000s --latency --timeout 30 http://localhost:8080/api/v1/test1\?param1\=p1
+
+# 调用慢接口
+wrk -t1 -c16 -d150000s --latency --timeout 30 http://localhost:8080/api/v1/test3
+```
+
 
 
 ### 运行基于`k8s`示例

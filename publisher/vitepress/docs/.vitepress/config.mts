@@ -59,6 +59,7 @@ export default defineConfig({
           { text: 'ScyllaDB', link: '/scylladb/README.md' },
           { text: 'RabbitMQ', link: '/rabbitmqt/README.md' },
           { text: 'RocketMQ', link: '/rocketmq/README.md' },
+          { text: 'Skywalking', link: '/skywalking/README.md' },
         ]
       }, {
         text: 'Linux', items: [
@@ -583,6 +584,17 @@ export default defineConfig({
             { text: '使用Docker Compose运行Prometheus', link: '/prometheus/使用docker-compose运行prometheus.md' },
             { text: '告警设置', link: '/prometheus/告警设置.md' },
             { text: 'Grafana', link: '/prometheus/grafana.md' },
+          ]
+        }
+      ],
+      '/skywalking/': [
+        {
+          text: 'Skywalking',
+          items: [
+            { text: '基础', link: '/skywalking/README.md' },
+            { text: 'Agent设置', link: '/skywalking/agent设置.md' },
+            { text: 'Skywalking UI', link: '/skywalking/skywalking-ui.md' },
+            { text: '运行Demo', link: '/skywalking/运行demo.md' },
           ]
         }
       ],

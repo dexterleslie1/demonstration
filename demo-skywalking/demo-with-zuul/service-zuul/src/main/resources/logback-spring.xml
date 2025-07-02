@@ -25,15 +25,15 @@
         </encoder>
     </appender>
 
-    <root level="debug">
+    <root level="info">
         <appender-ref ref="grpc-log"/>
         <appender-ref ref="console"/>
     </root>
 
-    <logger name="org.springframework.beans" level="info"/>
+    <!--<logger name="org.springframework.beans" level="info"/>
     <logger name="org.springframework.core" level="info"/>
     <logger name="org.springframework.security" level="info"/>
     <logger name="org.springframework.cloud" level="info"/>
     <logger name="com.netflix" level="info"/>
-    <logger name="org.apache.http" level="info"/>
+    <logger name="org.apache.http" level="info"/>-->
 </configuration>
