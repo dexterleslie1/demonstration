@@ -34,7 +34,8 @@
 >
 >```
 >
->- 通过设置 `npm` 代理服务器的方式，解决上面 `npm install` 的错误。参考本站 <a href="/nodejs/npm命令.html#设置代理服务器" target="_blank">链接</a>。
+>- ~~通过设置 `npm` 代理服务器的方式，解决上面 `npm install` 的错误。参考本站 <a href="/nodejs/npm命令.html#设置代理服务器" target="_blank">链接</a>。~~
+>- 参考下面说明，通过配置 `.npmrc` 解决上面的 `npm install` 错误。
 
 创建项目目录
 
@@ -50,6 +51,8 @@ npm init
 ```
 
 创建 `.npmrc` 文件，否则 `npm install` 命令会执行失败
+
+>[参考链接](https://mjpclab.site/uncategorized/npm-install-electron-by-mirror)
 
 ```properties
 electron_mirror=https://npmmirror.com/mirrors/electron/

@@ -1,3 +1,4 @@
+// 导入默认导出
 import MyAddFunction from 'my-package'
 
 console.log(`1+5=${MyAddFunction(1, 5)}`)
