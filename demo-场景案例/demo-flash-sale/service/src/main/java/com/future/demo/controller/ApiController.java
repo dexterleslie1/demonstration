@@ -1,11 +1,14 @@
 package com.future.demo.controller;
 
+import cn.hutool.core.util.RandomUtil;
 import com.future.common.http.ListResponse;
 import com.future.common.http.ObjectResponse;
 import com.future.common.http.ResponseUtils;
 import com.future.demo.dto.OrderDTO;
+import com.future.demo.entity.ProductModel;
 import com.future.demo.entity.Status;
 import com.future.demo.service.OrderService;
+import com.future.demo.service.ProductService;
 import com.future.demo.util.OrderRandomlyUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -15,12 +18,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/order")
 public class ApiController {
     @Resource
     OrderService orderService;
+    @Resource
+    ProductService productService;
     @Autowired
     StringRedisTemplate redisTemplate;
     @Resource
@@ -120,5 +127,18 @@ public class ApiController {
         return ResponseUtils.successList(
                 this.orderService.listByMerchantIdAndWithoutStatus(
                         merchantId, createTime, endTime));
+    }
+
+    @GetMapping("listProductByIds")
+    public ListResponse<ProductModel> listProductByIds() {
+        int size = 25;
+        List<Long> idList = new ArrayList<>();
+        while (idList.size() < size) {
+            long id = RandomUtil.randomInt(1, ProductService.ProductTotalCount + 1);
+            if (!idList.contains(id)) {
+                idList.add(id);
+            }
+        }
+        return ResponseUtils.successList(this.productService.listByIds(idList));
     }
 }
