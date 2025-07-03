@@ -96,7 +96,7 @@
    等待所有测试服务启动完毕后，初始化商品数据：
 
    ```sh
-   curl 10.0.1.31:8080/api/v1/initProduct
+   curl 10.0.1.30:8080/api/v1/initProduct
    ```
 
    测试服务是否正常运行：
