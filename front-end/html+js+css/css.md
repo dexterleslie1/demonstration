@@ -2077,6 +2077,113 @@ gap 属性定义 flexbox、网格或多列布局中行与列之间的间隙大�
 
 
 
+## `vw`、`vh`、`vmin`、`vmax`
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/blob/main/front-end/html+js+css/demo-css-units/demo-unit-vw-vh-vmin-vmax.html)
+
+`vh` 代表 `view height`，指的是螢幕可視範圍高度的百分比。
+
+`vw` 代表 `view width`，是指螢幕可視範圍寬度的百分比。
+
+`vmin`：螢幕可視範圍寬度或高度較小值的百分比。
+
+`vmax`：螢幕可視範圍寬度或高度較大值的百分比。
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .div1>div {
+            margin: 10px;
+        }
+
+        .div1 .unit-vw {
+            width: 10vw;
+            height: 10vh;
+            background-color: green;
+        }
+
+        .div2>div {
+            margin: 10px;
+        }
+
+        .div2 .unit-vmin {
+            width: 10vmin;
+            height: 10vmin;
+            background-color: green;
+        }
+
+        .div2 .unit-vmax {
+            width: 10vmax;
+            height: 10vmax;
+            background-color: green;
+        }
+    </style>
+</head>
+
+<body>
+    <!--
+        https://www.webdesigns.com.tw/css-vhvw.asp
+
+        vh代表view height，指的是螢幕可視範圍高度的百分比，而vw則代表view width，是指螢幕可視範圍寬度的百分比。
+        vmin：螢幕可視範圍寬度或高度較小值的百分比
+        vmax：螢幕可視範圍寬度或高度較大值的百分比
+    -->
+    <div>演示vw、vh</div>
+    <div class="div1">
+        <div class="unit-vw">
+            点击我获取尺寸
+        </div>
+    </div>
+    <hr>
+
+    <div>演示vmin、vmax</div>
+    <div class="div2">
+        <div class="unit-vmin"></div>
+        <div class="unit-vmax"></div>
+    </div>
+    <hr>
+
+    <script>
+        document.querySelector(".div1 .unit-vw").addEventListener("click", (event) => {
+            let viewportWidth = document.documentElement.clientWidth
+            let viewportHeight = document.documentElement.clientHeight
+            alert("vw和vh演示,viewport width:" + viewportWidth +
+                ",viewport height:" + viewportHeight +
+                ",element width:" + event.target.offsetWidth +
+                ",element height:" + event.target.offsetHeight)
+        })
+
+        document.querySelector(".div2 .unit-vmin").addEventListener("click", (event) => {
+            let viewportWidth = document.documentElement.clientWidth
+            let viewportHeight = document.documentElement.clientHeight
+            alert("vmin演示,viewport width:" + viewportWidth +
+                ",viewport height:" + viewportHeight +
+                ",element width:" + event.target.offsetWidth +
+                ",element height:" + event.target.offsetHeight)
+        })
+
+        document.querySelector(".div2 .unit-vmax").addEventListener("click", (event) => {
+            let viewportWidth = document.documentElement.clientWidth
+            let viewportHeight = document.documentElement.clientHeight
+            alert("vmax演示,viewport width:" + viewportWidth +
+                ",viewport height:" + viewportHeight +
+                ",element width:" + event.target.offsetWidth +
+                ",element height:" + event.target.offsetHeight)
+        })
+    </script>
+</body>
+
+</html>
+```
+
+
+
 ## 黑暗或明亮模式切换
 
 >dark or light mode.
