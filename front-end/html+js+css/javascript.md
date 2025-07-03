@@ -425,3 +425,239 @@ console.log(document.documentElement.clientHeight);  // 输出 800（不包含�
 </html>
 ```
 
+
+
+## 获取 `<body>` 的高度和宽度
+
+
+
+### 概念
+
+`document.body.clientWidth` 和 `document.body.clientHeight` 是用于获取 HTML 文档中 `<body>` 元素**内容区域（含内边距但不含边框、外边距和滚动条）的尺寸**的属性。以下是详细解析：
+
+
+#### **核心定义**
+- **`document.body.clientWidth`**：返回 `<body>` 元素的**内容宽度**（单位：像素），计算规则为：  
+  `内容宽度 + 左内边距(padding-left) + 右内边距(padding-right)`（不包含边框、外边距或滚动条）。  
+
+- **`document.body.clientHeight`**：返回 `<body>` 元素的**内容高度**（单位：像素），计算规则为：  
+  `内容高度 + 上内边距(padding-top) + 下内边距(padding-bottom)`（同样不包含边框、外边距或滚动条）。  
+
+
+#### **关键特性**
+##### 1. **基于 `<body>` 元素的内容区域**  
+`<body>` 是 HTML 文档的主体容器，包含页面可见的所有内容（如文本、图片、div 等）。`clientWidth` 和 `clientHeight` 仅关注 `<body>` 元素自身的内容区域，不涉及其子元素的尺寸或溢出情况。  
+
+
+##### 2. **包含内边距（Padding），但不包含边框、外边距或滚动条**  
+- **内边距（Padding）**：会被计入 `clientWidth`/`clientHeight`。例如，若 `<body>` 设置了 `padding: 20px`，则这 20px 会被加到内容宽度/高度中。  
+- **边框（Border）**：不会被计入。即使 `<body>` 有 `border: 1px solid`，也不会影响这两个属性的值。  
+- **外边距（Margin）**：不会被计入。`<body>` 的 `margin` 是其与其他元素（如父元素 `<html>`）的间距，不影响自身内容区域尺寸。  
+- **滚动条**：如果 `<body>` 内容溢出导致出现滚动条，滚动条会**占据内容区域的空间**，因此 `clientWidth`/`clientHeight` 会**减去滚动条的宽度/高度**（例如，垂直滚动条通常占 17px，会导致 `clientWidth` 减少 17px）。  
+
+
+##### 3. **受文档模式（DOCTYPE）和样式影响**  
+- **标准模式（Standard Mode）**：当文档声明了标准 DOCTYPE（如 `<!DOCTYPE html>`）时，`<html>` 元素的高度由 `<body>` 内容决定，`<body>` 的尺寸直接反映页面可见内容的区域。  
+- **怪异模式（Quirks Mode）**：若未声明 DOCTYPE 或使用旧版 IE 的怪异模式，`<body>` 的尺寸计算可能受浏览器默认样式影响（如默认 `margin: 8px`），导致 `clientWidth`/`clientHeight` 包含额外的空白。  
+
+
+#### **与其他属性的对比**
+为避免混淆，以下是相关属性的区别（以 `<body>` 为例）：
+
+| **属性**                               | **描述**                                                     | **是否包含内边距** | **是否包含滚动条**     | **典型用途**                         |
+| -------------------------------------- | ------------------------------------------------------------ | ------------------ | ---------------------- | ------------------------------------ |
+| `document.body.clientWidth`            | `<body>` 内容宽度 + 内边距                                   | 是                 | 否（滚动条会挤占空间） | 计算 `<body>` 可见内容区的宽度       |
+| `document.body.clientHeight`           | `<body>` 内容高度 + 内边距                                   | 是                 | 否（滚动条会挤占空间） | 计算 `<body>` 可见内容区的高度       |
+| `document.body.offsetWidth`            | `<body>` 内容宽度 + 内边距 + 边框                            | 是                 | 是（包含滚动条）       | 计算 `<body>` 占用的总空间（含边框） |
+| `document.documentElement.clientWidth` | `<html>` 元素的内容宽度 + 内边距（标准模式下与视口宽度一致） | 是                 | 否（滚动条挤占空间）   | 替代方案（更稳定）                   |
+
+
+#### **示例说明**
+假设 `<body>` 的 CSS 样式为：  
+```css
+body {
+  margin: 0;          /* 无外边距 */
+  padding: 20px;      /* 上下左右内边距各 20px */
+  border: 5px solid;  /* 边框 5px（不影响 client 尺寸） */
+  overflow: auto;     /* 内容溢出时显示滚动条 */
+}
+```
+且页面内容足够多，导致 `<body>` 出现垂直滚动条（占 17px）和水平滚动条（占 17px）：  
+
+- **`clientWidth`**：内容宽度 + 左内边距（20px） + 右内边距（20px） - 水平滚动条宽度（17px）。  
+  例如，若内容实际宽度为 `1000px`，则 `clientWidth = 1000 + 20 + 20 - 17 = 1023px`。  
+
+- **`clientHeight`**：内容高度 + 上内边距（20px） + 下内边距（20px） - 垂直滚动条高度（17px）。  
+  例如，若内容实际高度为 `800px`，则 `clientHeight = 800 + 20 + 20 - 17 = 823px`。  
+
+
+#### **实际应用场景**
+`document.body.clientWidth` 和 `clientHeight` 主要用于**获取 `<body>` 元素自身的可见内容区域尺寸**，常见用途包括：  
+
+##### 1. **计算页面可用空间**  
+当需要动态调整 `<body>` 内元素的位置或大小时（如弹出层、浮动菜单），可通过这两个属性获取 `<body>` 的实际可用区域（排除滚动条和边框）。  
+
+##### 2. **判断内容是否溢出**  
+结合 `scrollWidth` 和 `scrollHeight`（`<body>` 内容的总宽度和高度，含溢出部分），可判断内容是否超出 `<body>` 的可见区域：  
+```javascript
+const isContentOverflowing = 
+  document.body.scrollWidth > document.body.clientWidth || 
+  document.body.scrollHeight > document.body.clientHeight;
+```
+
+##### 3. **兼容旧版浏览器**  
+在某些旧版浏览器（如 IE）中，`document.documentElement.clientWidth` 可能无法正确反映视口尺寸，此时 `document.body.clientWidth` 可作为备用方案（需结合文档模式判断）。  
+
+
+#### **注意事项**
+- **默认样式的影响**：浏览器默认会给 `<body>` 添加 `margin: 8px`（不同浏览器可能略有差异），这会导致 `<body>` 与 `<html>` 之间出现空白。若需精确计算，建议通过 CSS 重置 `<body>` 的 `margin` 和 `padding`（如 `body { margin: 0; padding: 0; }`）。  
+- **滚动条的动态变化**：当内容溢出状态改变（如窗口缩放导致滚动条出现/消失）时，`clientWidth`/`clientHeight` 会实时更新，因此需在需要时重新获取值。  
+- **与视口的区别**：`document.body.clientWidth` 是 `<body>` 元素自身的内容区域尺寸，而 `window.innerWidth` 是浏览器视口的尺寸（可能包含 `<body>` 外的滚动条）。例如，若 `<body>` 有水平滚动条，`window.innerWidth` 会比 `document.body.clientWidth` 小（因为滚动条占用了视口空间）。  
+
+**总结**：`document.body.clientWidth` 和 `clientHeight` 是获取 `<body>` 元素**内容区域（含内边距）尺寸**的核心属性，适用于需要精确计算 `<body>` 自身可见空间的场景。
+
+
+
+### 实验
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/html+js+css/demo-js-viewport-window-document)
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <button onclick="handleOnclick()">点击我查看viewport、window、document区别</button>
+
+    <style>
+        body {
+            height: 800px;
+            /*
+                body 默认 margin 为 8px，设置 margin: 0; 后，window.innerWidth = document.body.clientWidth，否则会相差 16px。
+                因为 window.innerWidth 表示浏览器​​视口（Viewport）的可见区域宽度​​（用户肉眼可见的网页区域），包含视口内的滚动条（若存在）。例如：若视口实际宽度为 1200px，且有垂直滚动条（占 17px），则 window.innerWidth = 1200px（滚动条属于视口的一部分）。
+                document.body.clientWidth 表示 <body> 元素​​内容区域的宽度​​（即 <body> 内部内容的实际可用空间），计算规则为：内容宽度 + 左内边距(padding-left) + 右内边距(padding-right)（不包含边框、外边距或滚动条）。
+                https://stackoverflow.com/questions/13127887/how-wide-is-the-default-body-margin
+            */
+            margin: 0;
+        }
+    </style>
+    <script>
+        function handleOnclick() {
+            // 通过 window 对象获取 viewport 宽度和高度
+            // https://sabe.io/blog/javascript-width-height-browser-viewport
+            var viewportWidth = window.innerWidth
+            var viewportHeight = window.innerHeight
+            console.log(`viewportWidth=${viewportWidth},viewportHeight=${viewportHeight}`)
+
+            var documentWidth = document.body.clientWidth
+            var documentHeight = document.body.clientHeight
+            console.log(`documentInnerWidth=${documentWidth},documenInnerHeight=${documentHeight}`)
+        }
+    </script>
+</body>
+</html>
+```
+
+
+
+## 为何 `document.body.clientWidth` 和 `window.innerWidth` 不相等呢？
+
+`document.body.clientWidth` 和 `window.innerWidth` 不相等的核心原因是它们的**计算基准不同**：前者是 `<body>` 元素自身的内容区域尺寸（含内边距），后者是浏览器视口的可见区域尺寸（含滚动条）。以下是具体原因和场景分析：
+
+
+### **1. 定义差异：计算基准不同**
+- **`window.innerWidth`**：表示浏览器**视口（Viewport）的可见区域宽度**（用户肉眼可见的网页区域），包含视口内的滚动条（若存在）。  
+  例如：若视口实际宽度为 `1200px`，且有垂直滚动条（占 `17px`），则 `window.innerWidth = 1200px`（滚动条属于视口的一部分）。  
+
+- **`document.body.clientWidth`**：表示 `<body>` 元素**内容区域的宽度**（即 `<body>` 内部内容的实际可用空间），计算规则为：  
+  `内容宽度 + 左内边距(padding-left) + 右内边距(padding-right)`（不包含边框、外边距或滚动条）。  
+
+
+### **2. 关键影响因素**
+#### （1）滚动条的存在
+当页面内容溢出时，`<body>` 可能出现滚动条（垂直或水平），这会直接影响两者的数值：  
+- **`window.innerWidth`**：包含滚动条的宽度（例如，垂直滚动条通常占 `17px`，因此 `window.innerWidth` 会比无滚动条时小 `17px`）。  
+- **`document.body.clientWidth`**：滚动条会**挤占 `<body>` 的内容区域**，因此 `clientWidth` 会**减去滚动条的宽度**（例如，若 `<body>` 内容原本宽度为 `1000px`，垂直滚动条占 `17px`，则 `clientWidth = 1000px - 17px = 983px`）。  
+
+**示例**：  
+假设视口无滚动条时宽度为 `1200px`，`<body>` 有垂直滚动条（占 `17px`）：  
+- `window.innerWidth` = `1200px`（视口总宽度，包含滚动条）。  
+- `document.body.clientWidth` = `<body>` 内容宽度 + 内边距 - 滚动条宽度（若内容宽度为 `1200px`，内边距为 `0`，则 `clientWidth = 1200 - 17 = 1183px`）。  
+
+
+#### （2）`<body>` 的内边距（Padding）
+`document.body.clientWidth` 包含 `<body>` 的内边距，而 `window.innerWidth` 不包含：  
+- 若 `<body>` 设置了 `padding: 20px`（左右各 `20px`），则 `clientWidth` 会额外增加 `40px`（左+右内边距）。  
+- `window.innerWidth` 是视口的总宽度，与 `<body>` 的内边距无关（内边距属于 `<body>` 内部，不影响视口尺寸）。  
+
+**示例**：  
+视口宽度为 `1200px`，`<body>` 样式为 `padding: 20px`，且无滚动条：  
+- `window.innerWidth` = `1200px`（视口总宽度）。  
+- `document.body.clientWidth` = `<body>` 内容宽度 + 左内边距 + 右内边距。若内容宽度为 `1160px`（`1200 - 20*2`），则 `clientWidth = 1160 + 20 + 20 = 1200px`（此时两者相等）。  
+  但如果内容宽度超过 `1160px`（如内容宽度为 `1200px`），则 `<body>` 会出现水平滚动条（占 `17px`），此时 `clientWidth = 1200 + 20 + 20 - 17 = 1223px`，而 `window.innerWidth` 仍为 `1200px`（因滚动条挤占了视口空间）。  
+
+
+#### （3）文档模式（DOCTYPE）的影响
+文档模式决定了浏览器如何解析 HTML 和 CSS，默认模式不同会导致 `<html>` 和 `<body>` 的尺寸计算规则变化：  
+- **标准模式（Standard Mode）**：声明 `<!DOCTYPE html>` 时，`<html>` 元素的高度由 `<body>` 内容决定，`<body>` 的尺寸与视口高度强相关。此时 `window.innerHeight` 通常等于 `document.documentElement.clientHeight`（而非 `document.body.clientHeight`）。  
+- **怪异模式（Quirks Mode）**：未声明 DOCTYPE 或使用旧版 IE 模式时，`<body>` 可能有默认的 `margin: 8px` 和 `padding`，导致 `document.body.clientWidth` 包含额外的空白，与视口尺寸不一致。  
+
+
+#### （4）`<body>` 的样式设置
+`<body>` 的 CSS 样式（如 `width`、`margin`、`overflow`）会直接影响其 `clientWidth`：  
+- 若 `<body>` 设置 `width: 100%`，则其内容宽度会尝试填满父元素（即 `<html>`），但 `<html>` 的宽度通常等于视口宽度（`window.innerWidth`）。此时 `document.body.clientWidth` 可能与 `window.innerWidth` 相等（无内边距/滚动条时）。  
+- 若 `<body>` 设置 `overflow: hidden`（隐藏滚动条），则内容溢出时不会显示滚动条，`document.body.clientWidth` 可能等于 `window.innerWidth`（无滚动条挤占）。  
+
+
+### **总结：何时相等？何时不等？**
+| **场景**                     | `window.innerWidth` 与 `document.body.clientWidth` 是否相等？ | 原因                                                         |
+| ---------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| 无滚动条、`<body>` 无内边距  | 可能相等（需满足 `<body>` 内容宽度 = 视口宽度 - `<body>` 内边距） | `<body>` 内容区域刚好填满视口，且无滚动条挤占空间。          |
+| 有滚动条（垂直或水平）       | 不相等                                                       | 滚动条会挤占 `<body>` 内容区域（`clientWidth` 减去滚动条宽度），但属于视口的一部分（`innerWidth` 包含滚动条）。 |
+| `<body>` 有内边距（Padding） | 可能不等                                                     | `clientWidth` 包含内边距，而 `innerWidth` 不包含。           |
+| 怪异模式（Quirks Mode）      | 通常不等                                                     | `<body>` 可能有默认 `margin` 或 `padding`，导致尺寸计算偏差。 |
+
+
+### **示例验证**
+假设浏览器视口宽度为 `1200px`，测试以下场景：  
+
+#### 场景 1：无滚动条、`<body>` 无内边距  
+```css
+body { margin: 0; padding: 0; overflow: hidden; } /* 隐藏滚动条 */
+```
+- `window.innerWidth` = `1200px`（视口宽度）。  
+- `document.body.clientWidth` = `1200px`（内容宽度 + 0 内边距 - 0 滚动条）。  
+**结果**：相等。  
+
+
+#### 场景 2：有垂直滚动条，`<body>` 无内边距  
+```css
+body { margin: 0; padding: 0; overflow: auto; } /* 内容溢出时显示滚动条 */
+```
+- 页面内容高度足够大（触发垂直滚动条，占 `17px`）。  
+- `window.innerWidth` = `1200px`（视口宽度，包含滚动条）。  
+- `document.body.clientWidth` = `1200px - 17px = 1183px`（滚动条挤占内容区域）。  
+**结果**：不等。  
+
+
+#### 场景 3：`<body>` 有内边距，无滚动条  
+```css
+body { margin: 0; padding: 20px; overflow: hidden; } /* 隐藏滚动条 */
+```
+- `window.innerWidth` = `1200px`（视口宽度）。  
+- `document.body.clientWidth` = `<body>` 内容宽度 + 20px（左内边距） + 20px（右内边距）。  
+  若内容宽度为 `1160px`（`1200 - 20*2`），则 `clientWidth = 1160 + 20 + 20 = 1200px`。  
+  **结果**：相等（内容宽度刚好填满视口减去内边距）。  
+
+
+### **结论**
+`document.body.clientWidth` 和 `window.innerWidth` 不相等的根本原因是：  
+- `window.innerWidth` 是**视口可见区域的总宽度**（含滚动条）；  
+- `document.body.clientWidth` 是**`<body>` 元素内容区域的宽度**（含内边距，不含滚动条）。  
+
+滚动条的存在、`<body>` 的内边距样式、文档模式等因素会导致两者数值差异。实际开发中，若需获取视口尺寸，应优先使用 `window.innerWidth`；若需获取 `<body>` 自身内容区域尺寸，则使用 `document.body.clientWidth`。
+

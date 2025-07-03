@@ -9,8 +9,15 @@
     <button onclick="handleOnclick()">点击我查看viewport、window、document区别</button>
 
     <style>
-        html, body {
+        body {
             height: 800px;
+            /*
+                body 默认 margin 为 8px，设置 margin: 0; 后，window.innerWidth = document.body.clientWidth，否则会相差 16px。
+                因为 window.innerWidth 表示浏览器​​视口（Viewport）的可见区域宽度​​（用户肉眼可见的网页区域），包含视口内的滚动条（若存在）。例如：若视口实际宽度为 1200px，且有垂直滚动条（占 17px），则 window.innerWidth = 1200px（滚动条属于视口的一部分）。
+                document.body.clientWidth 表示 <body> 元素​​内容区域的宽度​​（即 <body> 内部内容的实际可用空间），计算规则为：内容宽度 + 左内边距(padding-left) + 右内边距(padding-right)（不包含边框、外边距或滚动条）。
+                https://stackoverflow.com/questions/13127887/how-wide-is-the-default-body-margin
+            */
+            margin: 0;
         }
     </style>
     <script>
@@ -21,9 +28,9 @@
             var viewportHeight = window.innerHeight
             console.log(`viewportWidth=${viewportWidth},viewportHeight=${viewportHeight}`)
 
-            // var documentWidth = document.body.clientWidth
-            // var documentHeight = document.body.clientHeight
-            // console.log(`documentInnerWidth=${documentWidth},documenInnerHeight=${documentHeight}`)
+            var documentWidth = document.body.clientWidth
+            var documentHeight = document.body.clientHeight
+            console.log(`documentInnerWidth=${documentWidth},documenInnerHeight=${documentHeight}`)
         }
     </script>
 </body>
