@@ -661,3 +661,317 @@ body { margin: 0; padding: 20px; overflow: hidden; } /* 隐藏滚动条 */
 
 滚动条的存在、`<body>` 的内边距样式、文档模式等因素会导致两者数值差异。实际开发中，若需获取视口尺寸，应优先使用 `window.innerWidth`；若需获取 `<body>` 自身内容区域尺寸，则使用 `document.body.clientWidth`。
 
+
+
+## `DOM` 元素的 `clientWidth`、`clientHeight`、`clientLeft`、`clientTop`
+
+>提醒：不包含 `border` 的尺寸。
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/blob/main/front-end/html+js+css/js-clientx-screenx-offsetx-pagex-clientwidth/index.html)
+
+`HTML` 如下：
+
+```html
+<hr>
+<div>
+    演示clientWidth(不包括border的尺寸)、clientHeight、clientLeft、clientTop属性<br>
+    不存在垂直滚动条clientWidth=paddingWidth+contentWidth，例子 70px=10px*2+50px<br>
+    存在垂直滚动条clientWidth=paddingWidth+contentWidth-scollbarWidth，例子 55px=10px*2+50px-15px<br>
+    默认情况下clientLeft和clientTop实际是border的宽度<br>
+    如果文字方向从右往左(默认从左往右,通过设置 direction: rtl;)进行排列,且存在垂直滚动条的情况下clientLeft=borderWidth+scrollWidth<br>
+    https://blog.csdn.net/yb305/article/details/109990818
+</div>
+<div style="border-style:solid;border-width:1px;">
+    <button onclick="demo1()">点击我</button>
+
+    <div id="div1">
+        内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容
+    </div>
+
+    <div id="div12">
+        内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容
+    </div>
+</div>
+```
+
+`CSS` 如下：
+
+```css
+#div1 {
+    margin: 10px;
+    background-color: antiquewhite;
+    width: 50px;
+    height: 50px;
+    border-style: dashed;
+    border-width: 20px;
+    border-color: gray;
+    padding: 10px;
+    overflow: hidden;
+}
+
+#div12 {
+    margin: 10px;
+    background-color: antiquewhite;
+    width: 50px;
+    height: 50px;
+    border-style: dashed;
+    border-width: 20px;
+    border-color: gray;
+    padding: 10px;
+    overflow: scroll;
+    direction: rtl;
+}
+```
+
+`JS` 如下：
+
+```javascript
+function demo1() {
+    // 没有scrollbar时
+    var element = document.getElementById('div1')
+
+    var clientWidth = element.clientWidth
+    var clientHeight = element.clientHeight
+
+    var clientLeft = element.clientLeft
+    var clientTop = element.clientTop
+
+    var str = `没有scrollbar时` +
+        `clientWidth=${clientWidth},` +
+        `clientHeight=${clientHeight},` +
+        `clientLeft=${clientLeft},` +
+        `clientTop=${clientTop},`
+    alert(str)
+
+    // 有scrollbar时
+    var element = document.getElementById('div12')
+
+    var clientWidth = element.clientWidth
+    var clientHeight = element.clientHeight
+
+    var clientLeft = element.clientLeft
+    var clientTop = element.clientTop
+
+    var str = `有scrollbar时` +
+        `clientWidth=${clientWidth},` +
+        `clientHeight=${clientHeight},` +
+        `clientLeft=${clientLeft},` +
+        `clientTop=${clientTop},`
+    alert(str)
+}
+```
+
+
+
+## `DOM` 元素的 `scrollWidth`、`scrollHeight`
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/blob/main/front-end/html+js+css/js-clientx-screenx-offsetx-pagex-clientwidth/index.html)
+
+`HTML` 如下：
+
+```html
+<hr>
+<div>
+    演示scrollWidth、scrollHeight<br>
+    scrollWidth元素的可滚动区域包括溢出不可见部分
+</div>
+<div>
+    <button onclick="demo2()">点击我</button>
+    <div id="div2">
+        内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容
+    </div>
+</div>
+```
+
+`CSS` 如下：
+
+```css
+#div2 {
+    margin: 10px;
+    background-color: antiquewhite;
+    width: 50px;
+    height: 50px;
+    border-style: dashed;
+    border-width: 20px;
+    border-color: gray;
+    padding: 10px;
+    overflow: scroll;
+}
+```
+
+`JS` 如下：
+
+```javascript
+function demo2() {
+    var element = document.getElementById('div2')
+
+    var scrollWidth = element.scrollWidth
+    var scrollHeight = element.scrollHeight
+
+    alert(`scrollWidth=${scrollWidth},scrollHeight=${scrollHeight}`)
+}
+```
+
+
+
+## `offsetWidth`、`offsetHeight`
+
+>提醒：包含 `border` 的尺寸。
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/blob/main/front-end/html+js+css/js-clientx-screenx-offsetx-pagex-clientwidth/index.html)
+
+`HTML` 如下：
+
+```html
+<hr>
+<div>
+    演示offsetWidth、offsetHeight(包括border的尺寸)<br>
+    offsetWidth=width+borderWidth*2*padding*2，例子: 110px=50px+20px*2+10px*2<br>
+    https://blog.51cto.com/u_15127622/2757550
+</div>
+<div>
+    <button onclick="demo3()">点击我</button>
+
+    <div id="div3">
+        内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容
+    </div>
+</div>
+```
+
+`CSS` 如下：
+
+```css
+#div3 {
+    margin: 10px;
+    background-color: antiquewhite;
+    width: 50px;
+    height: 50px;
+    border-style: dashed;
+    border-width: 20px;
+    border-color: gray;
+    padding: 10px;
+    overflow: scroll;
+}
+```
+
+`JS` 如下：
+
+```javascript
+function demo3() {
+    var element = document.getElementById('div3')
+
+    var offsetWidth = element.offsetWidth
+    var offsetHeight = element.offsetHeight
+
+    alert(`offsetWidth=${offsetWidth},offsetHeight=${offsetHeight}`)
+}
+```
+
+
+
+## `offsetLeft`、`offsetTop`
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/blob/main/front-end/html+js+css/js-clientx-screenx-offsetx-pagex-clientwidth/index.html)
+
+`HTML` 如下：
+
+```html
+<hr>
+<div>
+    演示offsetLeft、offsetTop<br>
+    offsetLeft=父元素(距离该子元素最近的进行过定位的父元素（position：absolute relative
+    fixed），如果其父元素中不存在定位则offsetParent为：body元素)的padding+元素自己的margin<br>
+    https://blog.csdn.net/willard_cui/article/details/81712989
+</div>
+<div>
+    <button onclick="demo5()">点击我</button>
+
+    <div id="div51">
+        <div id="div52"></div>
+    </div>
+</div>
+```
+
+`CSS` 如下：
+
+```css
+#div51 {
+    position: relative;
+    margin: 10px;
+    background-color: antiquewhite;
+    width: 250px;
+    height: 250px;
+    border-style: dashed;
+    border-width: 20px;
+    border-color: gray;
+    padding: 10px;
+}
+
+#div52 {
+    margin: 10px;
+    background-color: aqua;
+    width: 100px;
+    height: 100px;
+    border-style: dashed;
+    border-width: 20px;
+    border-color: gray;
+    padding: 10px;
+}
+```
+
+`JS` 如下：
+
+```javascript
+function demo5() {
+    var element = document.getElementById('div52')
+
+    var offsetLeft = element.offsetLeft
+    var offsetTop = element.offsetTop
+
+    alert(`offsetLeft=${offsetLeft},offsetTop=${offsetTop}`)
+}
+```
+
+
+
+## `offsetX`、`offsetY`
+
+`HTML` 如下：
+
+```html
+<hr>
+<div>
+    offsetX、offsetY: 鼠标相对于事件源元素的X,Y坐标。比如说，我给黄色的盒子定义一个点击事件，则这个offset的坐标原点就在这个黄色盒子的左上角（不包含 border）<br>
+    https://blog.csdn.net/qq_44603011/article/details/117768212
+</div>
+<div>
+    <div id="div6">点击我</div>
+</div>
+```
+
+`CSS` 如下：
+
+```css
+#div6 {
+    margin: 10px;
+    background-color: aqua;
+    width: 50px;
+    height: 50px;
+    border-style: dashed;
+    border-width: 20px;
+    border-color: gray;
+    padding: 10px;
+}
+```
+
+`JS` 如下：
+
+```javascript
+document.addEventListener('DOMContentLoaded', () => {
+    var element = document.getElementById('div6')
+    element.onmousedown = (event) => {
+        alert(`offsetX=${event.offsetX},offsetY=${event.offsetY}`)
+    }
+})
+```
+
