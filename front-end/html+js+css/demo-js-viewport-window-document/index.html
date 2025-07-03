@@ -6,14 +6,6 @@
     <title>Document</title>
 </head>
 <body>
-    <!--
-        viewport、window、document 区别
-        https://stackoverflow.com/questions/33770549/viewport-vs-window-vs-document
-        Viewport: 页面的可见区域
-        Window: It is your browser window. The window can be as big as viewport or smaller.
-        Document: It is the webpage. It can be bigger than viewport or even bigger than window.
-    -->
-
     <button onclick="handleOnclick()">点击我查看viewport、window、document区别</button>
 
     <style>
@@ -29,9 +21,9 @@
             var viewportHeight = window.innerHeight
             console.log(`viewportWidth=${viewportWidth},viewportHeight=${viewportHeight}`)
 
-            var documentWidth = document.body.clientWidth
-            var documentHeight = document.body.clientHeight
-            console.log(`documentInnerWidth=${documentWidth},documenInnerHeight=${documentHeight}`)
+            // var documentWidth = document.body.clientWidth
+            // var documentHeight = document.body.clientHeight
+            // console.log(`documentInnerWidth=${documentWidth},documenInnerHeight=${documentHeight}`)
         }
     </script>
 </body>
