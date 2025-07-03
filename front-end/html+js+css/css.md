@@ -1435,7 +1435,7 @@ a::after { content: " →"; } /* 元素后追加箭头 */
 
 ### `absolute`
 
->以最近的父级非 static 定位的元素为参考点，定位指定的偏移量。
+>以最近的父级非 static 定位的元素为参考点，定位指定的偏移量。被定位后，原有的布局流位置不占据布局空间。
 
 示例：absolute 的父元素声明为 relative
 
@@ -1662,6 +1662,11 @@ a::after { content: " →"; } /* 元素后追加箭头 */
 ## `float`
 
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/html+js+css/css-float)
+
+`TODO`：
+
+- 当所有子元素浮动时，父元素无法感知所有子元素的宽度和高度之和。
+- 使用 `clear` 属性清除浮动元素给其他元素带来的影响。
 
 
 
@@ -2063,6 +2068,12 @@ gap 属性定义 flexbox、网格或多列布局中行与列之间的间隙大�
 </body>
 </html>
 ```
+
+
+
+## `z-index`
+
+>声明了非 `static` 定位的元素设置 `z-index` 才有效。
 
 
 
