@@ -1003,6 +1003,30 @@ curl -i -X GET http://localhost:8081/mydemo/custom
 
 
 
+## `/actuator/prometheus` 端点排除以 `kafka`、`spring.kafka`、`lettuce.command` 开头的指标
+
+添加 `MetricsFilterConfig` 即可：
+
+```java
+@Configuration
+public class MetricsFilterConfig {
+
+    @Bean
+    public MeterRegistryCustomizer<MeterRegistry> meterRegistryCustomizer() {
+        return registry -> {
+            // 添加全局过滤器
+            registry.config()
+                    // 过滤所有以 "kafka" 开头的指标
+                    .meterFilter(MeterFilter.denyNameStartsWith("kafka"))
+                    .meterFilter(MeterFilter.denyNameStartsWith("spring.kafka"))
+                    .meterFilter(MeterFilter.denyNameStartsWith("lettuce.command"));
+        };
+    }
+}
+```
+
+
+
 ## `Actuator+Prometheus` 监控
 
 通过参考本站 <a href="/prometheus/prometheus监控spring.html" target="_blank">链接</a> 配置 `Actuator+Prometheus` 监控。
