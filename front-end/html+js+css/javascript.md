@@ -663,7 +663,7 @@ body { margin: 0; padding: 20px; overflow: hidden; } /* 隐藏滚动条 */
 
 
 
-## `DOM` 元素的 `clientWidth`、`clientHeight`、`clientLeft`、`clientTop`
+## `clientWidth`、`clientHeight`、`clientLeft`、`clientTop`
 
 >提醒：不包含 `border` 的尺寸。
 >
@@ -763,7 +763,7 @@ function demo1() {
 
 
 
-## `DOM` 元素的 `scrollWidth`、`scrollHeight`
+## `scrollWidth`、`scrollHeight`
 
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/blob/main/front-end/html+js+css/js-clientx-screenx-offsetx-pagex-clientwidth/index.html)
 
@@ -936,6 +936,8 @@ function demo5() {
 
 ## `offsetX`、`offsetY`
 
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/blob/main/front-end/html+js+css/js-clientx-screenx-offsetx-pagex-clientwidth/index.html)
+
 `HTML` 如下：
 
 ```html
@@ -973,5 +975,102 @@ document.addEventListener('DOMContentLoaded', () => {
         alert(`offsetX=${event.offsetX},offsetY=${event.offsetY}`)
     }
 })
+```
+
+
+
+## `clientX`、`clientY`
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/blob/main/front-end/html+js+css/js-clientx-screenx-offsetx-pagex-clientwidth/index.html)
+
+`HTML` 如下：
+
+```html
+<hr>
+<div>
+    clientX、clientY: 鼠标相对于浏览器窗口可视区域的X，Y坐标（窗口坐标），可视区域不包括工具栏和滚动条。<br>
+    https://blog.csdn.net/qq_44603011/article/details/117768212
+</div>
+<div>
+    <div id="div7"></div>
+</div>
+```
+
+`CSS` 如下：
+
+```css
+#div7 {
+    margin: 10px;
+    background-color: aqua;
+    width: 50px;
+    height: 50px;
+    border-style: dashed;
+    border-width: 20px;
+    border-color: gray;
+    padding: 10px;
+}
+```
+
+`JS` 如下：
+
+```javascript
+document.addEventListener('DOMContentLoaded', () => {
+    element = document.getElementById('div7')
+    element.onmousedown = (event) => {
+        alert(`clientX=${event.clientX},clientY=${event.clientY}`)
+    }
+})
+```
+
+
+
+## `getBoundingClientRect`
+
+>详细用法请参考本站 [示例1](https://gitee.com/dexterleslie/demonstration/blob/main/front-end/html+js+css/js-clientx-screenx-offsetx-pagex-clientwidth/index.html)
+>
+>详细用法请参考本站 [示例2](https://gitee.com/dexterleslie/demonstration/blob/main/front-end/html+js+css/js-clientx-screenx-offsetx-pagex-clientwidth/demo-getboundingclientrect-top-and-left.html)
+
+`HTML` 如下：
+
+```html
+<hr>
+<div>
+    getBoundingClientRect(以viewport的left=0、top=0作为参考的定位)<br>
+    https://developer.mozilla.org/en-US/docs/Web/API/Element/getBoundingClientRect
+</div>
+<div>
+    <button onclick="demo8()">点击我</button>
+    <div id="div8"></div>
+</div>
+```
+
+`CSS` 如下：
+
+```css
+#div8 {
+    margin: 10px;
+    background-color: aqua;
+    width: 50px;
+    height: 50px;
+    border-style: dashed;
+    border-width: 20px;
+    border-color: gray;
+    padding: 10px;
+}
+```
+
+`JS` 如下：
+
+```javascript
+function demo8() {
+    var element = document.getElementById('div8')
+
+    var boundingClientRect = element.getBoundingClientRect()
+
+    alert(`left=${boundingClientRect.left},top=${boundingClientRect.top},
+            right=${boundingClientRect.right},bottom=${boundingClientRect.bottom},
+            width=${boundingClientRect.width},height=${boundingClientRect.height},
+            x=${boundingClientRect.x},y=${boundingClientRect.y}`)
+}
 ```
 
