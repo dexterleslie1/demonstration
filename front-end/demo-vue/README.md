@@ -2078,3 +2078,14 @@ new Vue({
 ### 自定义过渡类
 
 `todo` ...
+
+
+
+## 综合案例
+
+### 模仿 `element-ui` 消息提示
+
+>[`element-ui` 参考](https://element.eleme.cn/#/zh-CN/component/message)
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-vue/demo-vue2-customize-message-hint)
+
