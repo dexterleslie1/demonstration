@@ -1898,3 +1898,183 @@ Vue 使用基于 HTML 的模板语法，允许您以声明方式将渲染的 DOM
 ```
 
 示例中绑定属性 `:effect` 中使用三元运算符 `darkMode?'light':'dark'` JavaScript 表达式根据 `darkMode` 布尔值返回 `light` 或者 `dark`。
+
+
+
+## 过渡动态效果
+
+>[官方参考文档](https://v2.vuejs.org/v2/guide/transitions)
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-vue/demo-vue2-transition)
+
+### 概述
+
+Vue 提供了多种在 DOM 中插入、更新或移除元素时应用过渡效果的方法。这些工具包括：
+
+- 自动应用 CSS 过渡和动画类
+- 集成第三方 CSS 动画库，例如 Animate.css
+- 在过渡钩子期间使用 JavaScript 直接操作 DOM
+- 集成第三方 JavaScript 动画库，例如 Velocity.js
+
+本页仅介绍进入、离开和列表过渡，但您可以查看下一部分，了解如何管理状态过渡。
+
+
+
+### 过渡单个元素/组件
+
+Vue 提供了一个过渡包装器组件，允许您在以下上下文中为任何元素或组件添加进入/离开过渡：
+
+- 条件渲染（使用 v-if）
+- 条件显示（使用 v-show）
+- 动态组件
+- 组件根节点
+
+以下是实际示例：
+
+```html
+<div id="demo">
+  <button v-on:click="show = !show">
+    Toggle
+  </button>
+  <transition name="fade">
+    <p v-if="show">hello</p>
+  </transition>
+</div>
+```
+
+```vue
+new Vue({
+  el: '#demo',
+  data: {
+    show: true
+  }
+})
+```
+
+```css
+.fade-enter-active, .fade-leave-active {
+  transition: opacity .5s;
+}
+.fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
+  opacity: 0;
+}
+```
+
+当插入或移除包含在过渡组件中的元素时，会发生以下情况：
+
+1. Vue 会自动嗅探目标元素是否应用了 CSS 过渡或动画。如果应用了，则会在适当的时机添加/移除 CSS 过渡类。
+2. 如果过渡组件提供了 JavaScript 钩子，则会在适当的时机调用这些钩子。
+3. 如果没有检测到 CSS 过渡/动画，并且也没有提供 JavaScript 钩子，则插入和/或移除的 DOM 操作将在下一帧立即执行（注意：这是一个浏览器动画帧，与 Vue 的 nextTick 概念不同）。
+
+
+
+### 过渡 `Classes`
+
+进入/离开过渡效果有六个类。
+
+1. v-enter：进入过渡效果的起始状态。在元素插入前添加，在元素插入后一帧移除。
+2. v-enter-active：进入过渡效果的有效状态。在整个进入阶段应用。在元素插入前添加，在过渡/动画完成后移除。此类可用于定义进入过渡效果的持续时间、延迟和缓动曲线。
+3. v-enter-to：仅在 2.1.8 及以上版本中可用。进入过渡效果的结束状态。在元素插入后一帧添加（同时移除 v-enter 过渡效果），在过渡/动画完成后移除。
+4. v-leave：离开过渡效果的起始状态。在触发离开过渡效果时立即添加，在一帧后移除。
+5. v-leave-active：离开过渡效果的有效状态。在整个离开阶段应用。在触发离开过渡效果时立即添加，在过渡/动画完成后移除。此类可用于定义离开过渡效果的持续时间、延迟和缓动曲线。
+6. v-leave-to：仅在 2.1.8 及以上版本中可用。离开的结束状态。在触发离开过渡后一帧添加（同时移除 v-leave），在过渡/动画完成后移除。
+
+![Transition Diagram](transition.png)
+
+每个类都会以过渡效果的名称作为前缀。此处，当您使用没有名称的 `<transition>` 元素时，默认使用 v- 前缀。例如，如果您使用 `<transition name="my-transition">` ，则 v-enter 类将改为 my-transition-enter。
+
+v-enter-active 和 v-leave-active 允许您为进入/离开过渡效果指定不同的缓动曲线，您将在下一节中看到相关示例。
+
+
+
+### CSS 过渡
+
+最常见的过渡类型之一是使用 CSS 过渡。以下是示例：
+
+```vue
+<div id="example-1">
+  <button @click="show = !show">
+    Toggle render
+  </button>
+  <transition name="slide-fade">
+    <p v-if="show">hello</p>
+  </transition>
+</div>
+```
+
+```vue
+new Vue({
+  el: '#example-1',
+  data: {
+    show: true
+  }
+})
+```
+
+```css
+/* Enter and leave animations can use different */
+/* durations and timing functions.              */
+.slide-fade-enter-active {
+  transition: all .3s ease;
+}
+.slide-fade-leave-active {
+  transition: all .8s cubic-bezier(1.0, 0.5, 0.8, 1.0);
+}
+.slide-fade-enter, .slide-fade-leave-to
+/* .slide-fade-leave-active below version 2.1.8 */ {
+  transform: translateX(10px);
+  opacity: 0;
+}
+```
+
+
+
+### CSS 动画
+
+CSS 动画的应用方式与 CSS 过渡相同，不同之处在于 v-enter 不会在元素插入后立即移除，而是在 animationend 事件中移除。
+
+以下是示例，为了简洁起见，省略了带前缀的 CSS 规则：
+
+```html
+<div id="example-2">
+  <button @click="show = !show">Toggle show</button>
+  <transition name="bounce">
+    <p v-if="show">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris facilisis enim libero, at lacinia diam fermentum id. Pellentesque habitant morbi tristique senectus et netus.</p>
+  </transition>
+</div>
+```
+
+```vue
+new Vue({
+  el: '#example-2',
+  data: {
+    show: true
+  }
+})
+```
+
+```css
+.bounce-enter-active {
+  animation: bounce-in .5s;
+}
+.bounce-leave-active {
+  animation: bounce-in .5s reverse;
+}
+@keyframes bounce-in {
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1.5);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+```
+
+
+
+### 自定义过渡类
+
+`todo` ...
