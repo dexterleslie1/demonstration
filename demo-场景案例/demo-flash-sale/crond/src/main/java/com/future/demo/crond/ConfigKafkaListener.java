@@ -1,7 +1,9 @@
 package com.future.demo.crond;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.future.demo.config.PrometheusCustomMonitor;
+import com.future.demo.dto.FlashSaleProductCacheUpdateEventDTO;
 import com.future.demo.dto.IncreaseCountDTO;
 import com.future.demo.entity.OrderModel;
 import com.future.demo.entity.ProductModel;
@@ -9,6 +11,7 @@ import com.future.demo.mapper.CassandraMapper;
 import com.future.demo.mapper.CommonMapper;
 import com.future.demo.mapper.ProductMapper;
 import com.future.demo.service.OrderService;
+import com.future.demo.service.ProductService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -25,6 +28,9 @@ import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.util.backoff.FixedBackOff;
 
 import javax.annotation.Resource;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -55,6 +61,8 @@ public class ConfigKafkaListener {
     CassandraMapper cassandraMapper;
     @Resource
     KafkaTemplate kafkaTemplate;
+    @Resource
+    ProductService productService;
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory(
@@ -101,16 +109,25 @@ public class ConfigKafkaListener {
                 orderModelList.add(orderModel);
             }
 
-            this.orderService.fillupOrderRandomly(orderModelList);
+            // 普通下单不需要设置merchantId，只有秒杀才需要设置merchantId
+            boolean needToSetMerchantId = false;
+            for (OrderModel model : orderModelList) {
+                if (model.getMerchantId() == null) {
+                    needToSetMerchantId = true;
+                    break;
+                }
+            }
+            if (needToSetMerchantId)
+                orderService.fillupOrderMerchantId(orderModelList);
             this.orderService.insertBatch(orderModelList);
 
-            this.redisTemplate.executePipelined(new SessionCallback<String>() {
+            /*this.redisTemplate.executePipelined(new SessionCallback<String>() {
                 @Override
                 public <K, V> String execute(RedisOperations<K, V> operations) throws DataAccessException {
                     try {
                         RedisOperations<String, String> redisOperations = (RedisOperations<String, String>) operations;
                         for (OrderModel orderModel : orderModelList) {
-                            /*log.info("Received message: " + new String(msg.getBody()));*/
+                            *//*log.info("Received message: " + new String(msg.getBody()));*//*
                             long userId = orderModel.getUserId();
                             long productId = orderModel.getOrderDetailList().get(0).getProductId();
                             String userIdStr = String.valueOf(userId);
@@ -126,7 +143,7 @@ public class ConfigKafkaListener {
                         throw new RuntimeException(ex);
                     }
                 }
-            });
+            });*/
 
             this.monitor.incrementOrderSyncCount(orderModelList.size());
         } catch (Exception ex) {
@@ -191,49 +208,126 @@ public class ConfigKafkaListener {
      */
     @KafkaListener(topics = TopicCreateOrderCassandraIndex)
     public void receiveMessageCreateOrderCassandraIndex(List<String> messages) throws Exception {
-        List<OrderModel> modelList = new ArrayList<>();
-        for (String message : messages) {
-            OrderModel orderModel = this.objectMapper.readValue(message, OrderModel.class);
-            modelList.add(orderModel);
-        }
-
-        // 普通下单不需要设置merchantId，只有秒杀才需要设置merchantId
-        boolean needToSetMerchantId = false;
-        for (OrderModel model : modelList) {
-            if (model.getMerchantId() == null) {
-                needToSetMerchantId = true;
-                break;
+        try {
+            List<OrderModel> modelList = new ArrayList<>();
+            for (String message : messages) {
+                OrderModel orderModel = this.objectMapper.readValue(message, OrderModel.class);
+                modelList.add(orderModel);
             }
-        }
-        if (needToSetMerchantId) {
-            List<Long> productIdList = modelList.stream().map(o -> o.getOrderDetailList().get(0).getProductId()).distinct().collect(Collectors.toList());
-            List<ProductModel> productModelList = this.productMapper.list(productIdList);
-            Map<Long, ProductModel> productIdToModelMap = productModelList.stream().collect(Collectors.toMap(ProductModel::getId, o -> o));
+
+            // 普通下单不需要设置merchantId，只有秒杀才需要设置merchantId
+            boolean needToSetMerchantId = false;
             for (OrderModel model : modelList) {
-                long productId = model.getOrderDetailList().get(0).getProductId();
-                ProductModel productModel = productIdToModelMap.get(productId);
-                model.setMerchantId(productModel.getMerchantId());
+                if (model.getMerchantId() == null) {
+                    needToSetMerchantId = true;
+                    break;
+                }
             }
+            if (needToSetMerchantId)
+                orderService.fillupOrderMerchantId(modelList);
+
+            // 建立 listByUserId Cassandra 索引
+            cassandraMapper.insertBatchOrderIndexListByUserId(modelList);
+            // 建立 listByMerchantId Cassandra 索引
+            cassandraMapper.insertBatchOrderIndexListByMerchantId(modelList);
+
+            // 异步更新 t_count
+            IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO();
+            increaseCountDTO.setType(IncreaseCountDTO.Type.Cassandra);
+            increaseCountDTO.setFlag("orderListByUserId");
+            increaseCountDTO.setCount(modelList.size());
+            String JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
+            kafkaTemplate.send(TopicIncreaseCount, JSON).get();
+
+            increaseCountDTO = new IncreaseCountDTO();
+            increaseCountDTO.setType(IncreaseCountDTO.Type.Cassandra);
+            increaseCountDTO.setFlag("orderListByMerchantId");
+            increaseCountDTO.setCount(modelList.size());
+            JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
+            kafkaTemplate.send(TopicIncreaseCount, JSON).get();
+        } catch (Exception ex) {
+            log.error(ex.getMessage(), ex);
+            throw ex;
+        }
+    }
+
+    /**
+     * 新增秒杀商品后，设置商品缓存主题
+     *
+     * @param messages
+     * @throws Exception
+     */
+    @KafkaListener(topics = TopicSetupProductFlashSaleCache)
+    public void receiveMessageSetupProductFlashSaleCache(List<String> messages) {
+        if (messages == null || messages.isEmpty()) {
+            if (log.isWarnEnabled())
+                log.warn("意料之外，为何 messages 为空的呢？");
+            return;
         }
 
-        // 建立 listByUserId Cassandra 索引
-        cassandraMapper.insertBatchOrderIndexListByUserId(modelList);
-        // 建立 listByMerchantId Cassandra 索引
-        cassandraMapper.insertBatchOrderIndexListByMerchantId(modelList);
+        // region 设置秒杀商品缓存
 
-        // 异步更新 t_count
-        IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO();
-        increaseCountDTO.setType(IncreaseCountDTO.Type.Cassandra);
-        increaseCountDTO.setFlag("orderListByUserId");
-        increaseCountDTO.setCount(modelList.size());
-        String JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
-        kafkaTemplate.send(TopicIncreaseCount, JSON).get();
+        List<FlashSaleProductCacheUpdateEventDTO> dtoList = messages.stream().map(o -> {
+            FlashSaleProductCacheUpdateEventDTO dto;
+            try {
+                dto = objectMapper.readValue(o, FlashSaleProductCacheUpdateEventDTO.class);
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+            return dto;
+        }).filter(o -> {
+            ProductModel model = o.getProductModel();
+            return model.isFlashSale();
+        }).collect(Collectors.toList());
+        if (log.isDebugEnabled())
+            log.debug("messages {} 成功转换为 dtoList {}", messages, dtoList);
 
-        increaseCountDTO = new IncreaseCountDTO();
-        increaseCountDTO.setType(IncreaseCountDTO.Type.Cassandra);
-        increaseCountDTO.setFlag("orderListByMerchantId");
-        increaseCountDTO.setCount(modelList.size());
-        JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
-        kafkaTemplate.send(TopicIncreaseCount, JSON).get();
+        // 设置秒杀商品的库存到缓存中
+        Map<String, String> productIdCacheKeyToStockAmountMap = dtoList.stream().collect(
+                Collectors.toMap(
+                        o -> String.format(ProductService.KeyFlashSaleProductStockAmountWithHashTag, o.getProductModel().getId()),
+                        o -> String.valueOf(o.getProductModel().getStock())));
+        redisTemplate.opsForValue().multiSet(productIdCacheKeyToStockAmountMap);
+        if (log.isDebugEnabled())
+            log.debug("成功批量设置秒杀商品的库存到缓存中 {}", productIdCacheKeyToStockAmountMap);
+        // 设置秒杀商品的开始时间到缓存中
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        Map<String, String> productIdCacheKeyToStartTimeMap = dtoList.stream().collect(
+                Collectors.toMap(
+                        o -> String.format(ProductService.KeyFlashSaleProductStartTime, o.getProductModel().getId()),
+                        o -> dateTimeFormatter.format(o.getProductModel().getFlashSaleStartTime())));
+        redisTemplate.opsForValue().multiSet(productIdCacheKeyToStartTimeMap);
+        if (log.isDebugEnabled())
+            log.debug("成功批量设置秒杀商品的开始时间到缓存中 {}", productIdCacheKeyToStartTimeMap);
+        // 设置秒杀商品的结束时间到缓存中
+        Map<String, String> productIdCacheKeyToEndTimeMap = dtoList.stream().collect(
+                Collectors.toMap(
+                        o -> String.format(ProductService.KeyFlashSaleProductEndTime, o.getProductModel().getId()),
+                        o -> dateTimeFormatter.format(o.getProductModel().getFlashSaleEndTime())));
+        redisTemplate.opsForValue().multiSet(productIdCacheKeyToEndTimeMap);
+        if (log.isDebugEnabled())
+            log.debug("成功批量设置秒杀商品的结束时间到缓存中 {}", productIdCacheKeyToEndTimeMap);
+
+        // 设置秒杀商品过期时间缓存
+        redisTemplate.executePipelined(new SessionCallback<String>() {
+            @Override
+            public <K, V> String execute(RedisOperations<K, V> operations) throws DataAccessException {
+                RedisOperations<String, String> redisOperations = (RedisOperations<String, String>) operations;
+                for (FlashSaleProductCacheUpdateEventDTO dto : dtoList) {
+                    String productIdStr = String.valueOf(dto.getProductModel().getId());
+                    LocalDateTime flashSaleEndTime = dto.getProductModel().getFlashSaleEndTime();
+                    // 在秒杀结束1分钟后自动删除
+                    int seconds = dto.getSecondAfterWhichExpiredFlashSaleProductForRemoving();
+                    LocalDateTime expirationTime = flashSaleEndTime.plusSeconds(seconds);
+                    long epochSecond = expirationTime.atZone(ZoneId.of("Asia/Shanghai")).toEpochSecond();
+                    redisOperations.opsForZSet().add(ProductService.KeyFlashSaleProductExpirationCache, productIdStr, epochSecond);
+                    if (log.isDebugEnabled())
+                        log.debug("成功设置秒杀商品过期时间缓存 {}", dto);
+                }
+                return null;
+            }
+        });
+
+        // endregion
     }
 }

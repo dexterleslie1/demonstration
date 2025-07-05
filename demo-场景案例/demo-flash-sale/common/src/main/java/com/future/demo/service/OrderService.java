@@ -9,15 +9,17 @@ import com.future.demo.dto.IncreaseCountDTO;
 import com.future.demo.dto.OrderDTO;
 import com.future.demo.dto.OrderDetailDTO;
 import com.future.demo.entity.*;
-import com.future.demo.mapper.*;
+import com.future.demo.mapper.OrderDetailMapper;
+import com.future.demo.mapper.OrderMapper;
+import com.future.demo.mapper.ProductMapper;
 import com.future.demo.util.OrderRandomlyUtil;
 import com.tencent.devops.leaf.service.SnowflakeService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -30,12 +32,12 @@ import javax.annotation.Resource;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
-import static com.future.demo.constant.Const.TopicCreateOrderCassandraIndex;
-import static com.future.demo.constant.Const.TopicIncreaseCount;
+import static com.future.demo.constant.Const.*;
 
 /**
  * 注意：实现从用户维度查询订单已经能够演示基于Cassandra建模的基本技能，所以不需要实现从商家维度查询订单功能。
@@ -43,13 +45,12 @@ import static com.future.demo.constant.Const.TopicIncreaseCount;
 @Service
 @Slf4j
 public class OrderService {
-    public final static String KeyproductStockWithHashTag = "product{%s}:stock";
     public final static String KeyProductPurchaseRecordWithHashTag = "product{%s}:purchase";
 
     @Value("${productStock:2147483647}")
     public int productStock;
 
-    static DefaultRedisScript<Long> defaultRedisScript = null;
+    static DefaultRedisScript<String> defaultRedisScript = null;
     static String Script = null;
 
     static {
@@ -63,7 +64,7 @@ public class OrderService {
             classPathResource.getInputStream().close();
             defaultRedisScript.setScriptText(script);
 
-            defaultRedisScript.setResultType(Long.class);
+            defaultRedisScript.setResultType(String.class);
 
             Script = defaultRedisScript.getScriptAsString();
         } catch (Exception ex) {
@@ -138,8 +139,6 @@ public class OrderService {
     OrderDetailMapper orderDetailMapper;
     @Resource
     ProductMapper productMapper;
-    //    @Resource
-//    DefaultMQProducer producer;
     @Resource
     private KafkaTemplate<String, String> kafkaTemplate;
     @Resource
@@ -219,32 +218,40 @@ public class OrderService {
         String userIdStr = String.valueOf(userId);
         String amountStr = String.valueOf(amount);
 
-        // 判断库存是否充足、用户是否重复下单
-        Long result = this.redisTemplate.execute(defaultRedisScript, Collections.singletonList(productIdStr), productIdStr, userIdStr, amountStr);
-        if (result != null) {
-            if (result == 1) {
-                throw new BusinessException("库存不足");
-            } else if (result == 2) {
-                throw new BusinessException("用户重复下单");
-            } else {
-                throw new BusinessException("下单失败");
-            }
+        // 判断秒杀是否已经开始或者结束
+        String key = String.format(ProductService.KeyFlashSaleProductStartTime, productIdStr);
+        String value = redisTemplate.opsForValue().get(key);
+        if (StringUtils.isBlank(value)) {
+            throw new BusinessException("秒杀商品 " + productIdStr + " 不存在");
+        }
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        LocalDateTime flashSaleStartTime = LocalDateTime.parse(value, dateTimeFormatter);
+        LocalDateTime localDateTimeNow = LocalDateTime.now();
+        if (flashSaleStartTime.isAfter(localDateTimeNow)) {
+            throw new BusinessException("秒杀未开始，开始时间 " + value);
         }
 
-        /*int randInt = RandomUtils.nextInt(Const.StreamCount);
-        String streamName = Const.StreamName + randInt;
-        StringRecord record = StreamRecords.string(new HashMap<String, String>() {{
-            this.put("userId", userIdStr);
-            this.put("productId", productIdStr);
-            this.put("amount", amountStr);
-        }}).withStreamKey(streamName);
-        this.redisTemplate.opsForStream().add(record);*/
-        // 创建消息实例，指定 topic、Tag和消息体
+        key = String.format(ProductService.KeyFlashSaleProductEndTime, productIdStr);
+        value = redisTemplate.opsForValue().get(key);
+        LocalDateTime flashSaleEndTime = LocalDateTime.parse(value, dateTimeFormatter);
+        if (flashSaleEndTime.isBefore(localDateTimeNow)) {
+            throw new BusinessException("秒杀已结束，结束时间 " + value);
+        }
+
+        // 判断库存是否充足、用户是否重复下单
+        String result = this.redisTemplate.execute(defaultRedisScript, Collections.singletonList(productIdStr), productIdStr, userIdStr, amountStr);
+        if (!StringUtils.isBlank(result)) {
+            throw new BusinessException(result);
+        }
 
         OrderModel orderModel = new OrderModel();
         Long orderId = this.snowflakeService.getId("order").getId();
         orderModel.setId(orderId);
         orderModel.setUserId(userId);
+        DeleteStatus deleteStatus = OrderRandomlyUtil.getDeleteStatusRandomly();
+        orderModel.setDeleteStatus(deleteStatus);
+        Status status = OrderRandomlyUtil.getStatusRandomly();
+        orderModel.setStatus(status);
         LocalDateTime createTime = OrderRandomlyUtil.getCreateTimeRandomly();
         orderModel.setCreateTime(createTime);
         OrderDetailModel orderDetailModel = new OrderDetailModel();
@@ -255,35 +262,29 @@ public class OrderService {
         orderDetailModel.setAmount(amount);
         orderDetailModel.setProductId(productId);
         orderModel.setOrderDetailList(Collections.singletonList(orderDetailModel));
-
         String JSON = this.objectMapper.writeValueAsString(orderModel);
         // 秒杀成功后，把用户订单信息存储到 redis 中，cassandra 同步成功后会自动清除数据
         this.redisTemplate.opsForValue().set(userIdStr, JSON);
         kafkaTemplate.send(TopicCreateOrderCassandraIndex, JSON).get();
+
+        // 秒杀成功后，发出同步订单到数据库消息
+        kafkaTemplate.send(TopicOrderInCacheSyncToDb, JSON).get();
     }
 
     /**
-     * 模拟真实业务数据，随机填充订单字段
+     * 数据同步前填充订单商家ID
      *
      * @param orderModelList
      * @return
      */
-    public void fillupOrderRandomly(List<OrderModel> orderModelList) {
+    public void fillupOrderMerchantId(List<OrderModel> orderModelList) {
         List<Long> productIdList = orderModelList.stream().map(o -> o.getOrderDetailList().get(0).getProductId()).distinct().collect(Collectors.toList());
         List<ProductModel> productModelList = this.productMapper.list(productIdList);
         Map<Long, ProductModel> productIdToModelMap = productModelList.stream().collect(Collectors.toMap(ProductModel::getId, o -> o));
 
         for (OrderModel orderModel : orderModelList) {
             long productId = orderModel.getOrderDetailList().get(0).getProductId();
-
             ProductModel productModel = productIdToModelMap.get(productId);
-
-            DeleteStatus deleteStatus = OrderRandomlyUtil.getDeleteStatusRandomly();
-            orderModel.setDeleteStatus(deleteStatus);
-
-            Status status = OrderRandomlyUtil.getStatusRandomly();
-            orderModel.setStatus(status);
-
             orderModel.setMerchantId(productModel.getMerchantId());
         }
     }
@@ -651,71 +652,71 @@ public class OrderService {
         return orderDTOList;
     }
 
-    /**
-     * 协助测试用于重新初始化商品信息
-     */
-    public void initProduct() {
-        long totalProductCount = this.orderRandomlyUtil.productIdArray.length;
-
-        // 清空redis缓存所有数据
-        try (RedisConnection connection = this.redisTemplate.getConnectionFactory().getConnection()) {
-            connection.flushDb();
-        }
-
-        // 清空db中所有商品数据
-        this.productMapper.truncate();
-
-        // 批量大小
-        int batchSize = 1000;
-
-        // 商品库存
-        Map<String, String> productStockMap = new HashMap<>();
-        // 商品购买记录，用于防止一个人多次购买同一个商品
-        List<String> productPurchaseRecordList = new ArrayList<>();
-        // 商品列表
-        List<ProductModel> productModelList = new ArrayList<>();
-        // 已经执行的批次数
-        int executedBatchCount = 0;
-        for (int i = 0; i < this.orderRandomlyUtil.productIdArray.length; i++) {
-            long productId = this.orderRandomlyUtil.productIdArray[i];
-
-            // 批量初始化商品库存
-            String keyProductStock = String.format(OrderService.KeyproductStockWithHashTag, productId);
-            productStockMap.put(keyProductStock, String.valueOf(productStock));
-            if (productStockMap.size() == batchSize || i + 1 == this.orderRandomlyUtil.productIdArray.length) {
-                this.redisTemplate.opsForValue().multiSet(productStockMap);
-                productStockMap = new HashMap<>();
-            }
-
-            // 批量删除商品购买记录
-            String keyProductPurchaseRecord = String.format(OrderService.KeyProductPurchaseRecordWithHashTag, productId);
-            productPurchaseRecordList.add(keyProductPurchaseRecord);
-            if (productPurchaseRecordList.size() == batchSize || i + 1 == this.orderRandomlyUtil.productIdArray.length) {
-                this.redisTemplate.delete(productPurchaseRecordList);
-                productPurchaseRecordList = new ArrayList<>();
-            }
-
-            // 批量初始化商品db数据
-            ProductModel productModel = new ProductModel();
-            productModel.setId(productId);
-            productModel.setName("产品" + productId);
-            productModel.setStock(productStock);
-            long merchantId = this.orderRandomlyUtil.getMerchantIdRandomly();
-            productModel.setMerchantId(merchantId);
-            productModelList.add(productModel);
-            if (productModelList.size() == batchSize || i + 1 == this.orderRandomlyUtil.productIdArray.length) {
-                this.productMapper.insertBatch(productModelList);
-                productModelList = new ArrayList<>();
-
-                executedBatchCount++;
-                if (log.isInfoEnabled()) {
-                    log.info("已经初始化{}个商品信息，剩余{}个商品信息", executedBatchCount * batchSize, totalProductCount - (executedBatchCount * batchSize));
-                }
-            }
-        }
-
-        if (log.isInfoEnabled()) {
-            log.info("成功初始化{}个商品信息", totalProductCount);
-        }
-    }
+//    /**
+//     * 协助测试用于重新初始化商品信息
+//     */
+//    public void initProduct() {
+//        long totalProductCount = this.orderRandomlyUtil.productIdArray.length;
+//
+//        // 清空redis缓存所有数据
+//        try (RedisConnection connection = this.redisTemplate.getConnectionFactory().getConnection()) {
+//            connection.flushDb();
+//        }
+//
+//        // 清空db中所有商品数据
+//        this.productMapper.truncate();
+//
+//        // 批量大小
+//        int batchSize = 1000;
+//
+//        // 商品库存
+//        Map<String, String> productStockMap = new HashMap<>();
+//        // 商品购买记录，用于防止一个人多次购买同一个商品
+//        List<String> productPurchaseRecordList = new ArrayList<>();
+//        // 商品列表
+//        List<ProductModel> productModelList = new ArrayList<>();
+//        // 已经执行的批次数
+//        int executedBatchCount = 0;
+//        for (int i = 0; i < this.orderRandomlyUtil.productIdArray.length; i++) {
+//            long productId = this.orderRandomlyUtil.productIdArray[i];
+//
+//            // 批量初始化商品库存
+//            String keyProductStock = String.format(OrderService.KeyproductStockWithHashTag, productId);
+//            productStockMap.put(keyProductStock, String.valueOf(productStock));
+//            if (productStockMap.size() == batchSize || i + 1 == this.orderRandomlyUtil.productIdArray.length) {
+//                this.redisTemplate.opsForValue().multiSet(productStockMap);
+//                productStockMap = new HashMap<>();
+//            }
+//
+//            // 批量删除商品购买记录
+//            String keyProductPurchaseRecord = String.format(OrderService.KeyProductPurchaseRecordWithHashTag, productId);
+//            productPurchaseRecordList.add(keyProductPurchaseRecord);
+//            if (productPurchaseRecordList.size() == batchSize || i + 1 == this.orderRandomlyUtil.productIdArray.length) {
+//                this.redisTemplate.delete(productPurchaseRecordList);
+//                productPurchaseRecordList = new ArrayList<>();
+//            }
+//
+//            // 批量初始化商品db数据
+//            ProductModel productModel = new ProductModel();
+//            productModel.setId(productId);
+//            productModel.setName("产品" + productId);
+//            productModel.setStock(productStock);
+//            long merchantId = this.orderRandomlyUtil.getMerchantIdRandomly();
+//            productModel.setMerchantId(merchantId);
+//            productModelList.add(productModel);
+//            if (productModelList.size() == batchSize || i + 1 == this.orderRandomlyUtil.productIdArray.length) {
+//                this.productMapper.insertBatch(productModelList);
+//                productModelList = new ArrayList<>();
+//
+//                executedBatchCount++;
+//                if (log.isInfoEnabled()) {
+//                    log.info("已经初始化{}个商品信息，剩余{}个商品信息", executedBatchCount * batchSize, totalProductCount - (executedBatchCount * batchSize));
+//                }
+//            }
+//        }
+//
+//        if (log.isInfoEnabled()) {
+//            log.info("成功初始化{}个商品信息", totalProductCount);
+//        }
+//    }
 }

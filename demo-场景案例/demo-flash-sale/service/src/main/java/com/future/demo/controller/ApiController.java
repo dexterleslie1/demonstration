@@ -7,9 +7,11 @@ import com.future.common.http.ResponseUtils;
 import com.future.demo.dto.OrderDTO;
 import com.future.demo.entity.ProductModel;
 import com.future.demo.entity.Status;
+import com.future.demo.service.MerchantService;
 import com.future.demo.service.OrderService;
 import com.future.demo.service.ProductService;
 import com.future.demo.util.OrderRandomlyUtil;
+import org.apache.commons.lang.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,6 +34,8 @@ public class ApiController {
     StringRedisTemplate redisTemplate;
     @Resource
     OrderRandomlyUtil orderRandomlyUtil;
+    @Resource
+    MerchantService merchantService;
 
     /**
      * 普通方式下单
@@ -140,5 +144,35 @@ public class ApiController {
             }
         }
         return ResponseUtils.successList(this.productService.listByIds(idList));
+    }
+
+    /**
+     * 新增普通商品
+     *
+     * @return
+     * @throws Exception
+     */
+    @GetMapping("addOrdinaryProduct")
+    public ObjectResponse<String> addOrdinaryProduct() throws Exception {
+        String name = RandomStringUtils.randomAlphanumeric(20);
+        Long merchantId = this.merchantService.getIdRandomly();
+        this.productService.add(name, merchantId, 300, false, null, null);
+        return ResponseUtils.successObject("成功新增普通商品");
+    }
+
+    /**
+     * 新增秒杀商品
+     *
+     * @return
+     * @throws Exception
+     */
+    @GetMapping("addFlashSaleProduct")
+    public ObjectResponse<String> addFlashSaleProduct() throws Exception {
+        String name = RandomStringUtils.randomAlphanumeric(20);
+        Long merchantId = this.merchantService.getIdRandomly();
+        LocalDateTime flashSaleStartTime = this.productService.getFlashSaleStartTimeRandomly();
+        LocalDateTime flashSaleEndTime = this.productService.getFlashSaleEndTimeRandomly(flashSaleStartTime);
+        this.productService.add(name, merchantId, 300, true, flashSaleStartTime, flashSaleEndTime);
+        return ResponseUtils.successObject("成功新增秒杀商品");
     }
 }

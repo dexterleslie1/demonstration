@@ -1,22 +1,22 @@
--- 判断库存是否充足
 local productId = ARGV[1]
 local userId = ARGV[2]
 local amount = tonumber(ARGV[3])
-local keyProductStock = "product{" .. productId .. "}:stock"
-local productStock = tonumber(redis.call("get", keyProductStock))
-if productStock < amount then
-    -- 库存不足
-    return 1
+
+-- 判断库存是否充足
+local keyStockAmount = "flash-sale-product:stockAmount:{" .. productId .. "}"
+local stockAmount = tonumber(redis.call("get", keyStockAmount))
+if stockAmount < amount then
+    return '库存不足'
 end
 
 -- 判断用户是否重复下单
-local keyProductPurchaseRecord = "product{" .. productId .. "}:purchase"
-local purchaseRecord = redis.call("sismember", keyProductPurchaseRecord, userId)
+local keyPurchaseRecord = "product{" .. productId .. "}:purchase"
+local purchaseRecord = redis.call("sismember", keyPurchaseRecord, userId)
 if purchaseRecord == 1 then
-    -- 用户重复下单
-    return 2
+    return '重复下单'
 end
 
-redis.call("decrby", keyProductStock, amount)
-redis.call("sadd", keyProductPurchaseRecord, userId)
+redis.call("decrby", keyStockAmount, amount)
+redis.call("sadd", keyPurchaseRecord, userId)
+
 return nil

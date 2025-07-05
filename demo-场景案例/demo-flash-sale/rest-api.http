@@ -21,5 +21,8 @@ GET http://localhost:8080/api/v1/order/listByMerchantIdAndWithoutStatus
 ### 根据商品id查询商品列表
 GET http://localhost:8080/api/v1/order/listProductByIds
 
-### 初始化商品信息
-GET http://localhost:43681/api/v1/initProduct
+### 新增普通商品
+GET http://localhost:8080/api/v1/order/addOrdinaryProduct
+
+### 新增秒杀商品
+GET http://localhost:8080/api/v1/order/addFlashSaleProduct

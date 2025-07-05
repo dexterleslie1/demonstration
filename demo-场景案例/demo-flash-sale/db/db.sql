@@ -30,7 +30,10 @@ create table if not exists t_product(
     id          bigint not null auto_increment primary key,
     `name`      varchar(255) not null,
     merchantId  bigint not null comment '商家ID',
-    stock       int not null
+    stock       int not null comment '商品库存',
+    flashSale   bit not null default 0 comment '是否秒杀商品',
+    flashSaleStartTime  datetime default null comment '秒杀开始时间',
+    flashSaleEndTime    datetime default null comment '秒杀结束时间'
 ) engine=innodb character set utf8mb4 collate utf8mb4_general_ci;
 
 create table if not exists t_count(
@@ -39,3 +42,4 @@ create table if not exists t_count(
 ) engine=innodb character set utf8mb4 collate utf8mb4_general_ci;
 
 insert into t_count(flag,`count`) values("order",0);
+insert into t_count(flag,`count`) values("product",0);

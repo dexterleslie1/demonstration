@@ -153,7 +153,7 @@ services:
     environment:
       TZ: Asia/Shanghai
     # 自动创建 topic
-    entrypoint: /usr/bin/kafka-topics --create --bootstrap-server kafka:9092 --replication-factor 1 --partitions 128 --topic topic-order-in-cache-sync-to-db
+    entrypoint: /usr/bin/kafka-topics --create --bootstrap-server kafka:9092 --replication-factor 1 --partitions 1 --topic topic-order-in-cache-sync-to-db
   kafka-create-topic-increase-count:
     image: confluentinc/cp-kafka:7.3.0
     depends_on:
@@ -170,6 +170,14 @@ services:
       TZ: Asia/Shanghai
     # 自动创建 topic
     entrypoint: /usr/bin/kafka-topics --create --bootstrap-server kafka:9092 --replication-factor 1 --partitions 128 --topic topic-create-order-cassandra-index
+  kafka-create-topic-setup-product-flashsale-cache:
+    image: confluentinc/cp-kafka:7.3.0
+    depends_on:
+      - kafka
+    environment:
+      TZ: Asia/Shanghai
+    # 自动创建 topic
+    entrypoint: /usr/bin/kafka-topics --create --bootstrap-server kafka:9092 --replication-factor 1 --partitions 32 --topic topic-setup-product-flashsale-cache
 
   zookeeper:
     image: zookeeper:3.8.4

@@ -26,8 +26,10 @@ public interface ProductMapper {
     @Update("UPDATE t_product SET stock = #{stock} WHERE id = #{productId}")
     void updateStock(long productId, int stock);
 
-//    @Insert("INSERT INTO t_product(id, name, stock, merchantId) select #{id}, #{name}, #{stock}, #{merchantId} from dual where not exists (select 1 from t_product where id = #{id})")
-//    int insert(ProductModel productModel);
+    @Insert("INSERT INTO t_product(name, stock, merchantId, flashSale, flashSaleStartTime, flashSaleEndTime) " +
+            "values(#{name}, #{stock}, #{merchantId}, #{flashSale}, #{flashSaleStartTime}, #{flashSaleEndTime})")
+    @Options(useGeneratedKeys = true, keyProperty = "id")
+    int insert(ProductModel productModel);
 
     @Insert("<script>" +
             "   insert into t_product(id, name, stock, merchantId) values " +
