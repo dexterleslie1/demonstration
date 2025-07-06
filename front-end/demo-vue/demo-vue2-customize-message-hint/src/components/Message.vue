@@ -1,6 +1,6 @@
 <template>
   <transition name="message-fade">
-    <div v-show="visible" class="custom-message" :class="`message-${type}`" :style="{ top: `${top}px` }">
+    <div v-if="visible" class="custom-message" :class="`message-${type}`" :style="{ top: `${top}px` }">
       <span class="message-content">{{ message }}</span>
     </div>
   </transition>
@@ -88,7 +88,7 @@ export default {
 /* 过渡动画 */
 .message-fade-enter-active,
 .message-fade-leave-active {
-  transition: opacity 0.3s;
+  transition: opacity 3s;
 }
 
 .message-fade-enter,

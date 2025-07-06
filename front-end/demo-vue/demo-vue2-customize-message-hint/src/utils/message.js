@@ -39,12 +39,8 @@ function showMessage(message, options = {}) {
     if (index !== -1) {
       messageDOMList.splice(index, 1);
       // 调整后续消息的 top 值（重新计算所有消息的位置）
-      adjustMessagePositions();
+      // adjustMessagePositions();
     }
-    // 移除 DOM 节点
-    setTimeout(() => {
-      document.body.removeChild(el.$el);
-    }, 10000)
   });
 
   // 返回实例（可选，用于手动关闭）

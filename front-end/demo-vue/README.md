@@ -482,6 +482,157 @@ export default {
 
 
 
+### 自定义属性
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-vue/demo-vue2-customize-properties)
+
+#### 简单数组声明
+
+>适合快速声明不需要的复杂校验的属性。
+
+`CustomizePropertiesByUsingArray.vue`：
+
+```vue
+<template>
+    <div>
+        <!-- 使用简单数组声明自定义属性 -->
+        {{ message }} - {{ count }}
+    </div>
+</template>
+
+<script>
+export default {
+    // 使用简单数组声明自定义属性
+    props: ['message', 'count']
+}
+</script>
+
+<style scoped></style>
+```
+
+传递值给自定义属性
+
+```vue
+<template>
+  <div id="app">
+    <div>简单数组声明自定义属性</div>
+    <CustomizePropertiesByUsingArray message="测试消息" count="8,234"></CustomizePropertiesByUsingArray>
+    <hr />
+  </div>
+</template>
+
+<script>
+import CustomizePropertiesByUsingArray from '@/components/CustomizePropertiesByUsingArray.vue'
+
+export default {
+  name: 'App',
+  components: {
+    CustomizePropertiesByUsingArray
+  }
+}
+</script>
+```
+
+
+
+#### 对象形式声明
+
+>支持类型校验、默认值、是否必填等校验规则，推荐生产环境使用。
+
+`CustomizePropertiesByUsingObject.vue`：
+
+```vue
+<template>
+    <div>
+        <p>Message: {{ message }}</p>
+        <p>Count: {{ count }}</p>
+        <p>User: {{ user.name }}</p>
+        <p>Timeout: {{ timeout }}</p>
+        <p>Status: {{ status }}</p>
+    </div>
+</template>
+
+<script>
+export default {
+    props: {
+        // 基础类型校验（null/undefined 允许任何类型）
+        message: String,
+
+        // 多个可能的类型
+        count: [Number, String], // count 可以是 Number 或 String
+
+        // 必填项 + 类型校验
+        user: {
+            type: Object,
+            required: true // 必须传入，否则控制台警告
+        },
+
+        // 默认值（仅对非必填属性有效）
+        timeout: {
+            type: Number,
+            default: 1000 // 默认值为 1000
+        },
+
+        // 自定义校验函数
+        status: {
+            type: String,
+            validator: function (value) {
+                // 校验值必须是 'active' 或 'inactive'
+                return ['active', 'inactive'].includes(value)
+            }
+        }
+    },
+}
+</script>
+
+<style scoped></style>
+```
+
+传递值给自定义属性：
+
+```vue
+<template>
+  <div id="app">
+    <div>对象形式声明自定义属性</div>
+    <CustomizePropertiesByUsingObject :user="user" message="Hello" count="8,234" status="active"></CustomizePropertiesByUsingObject>
+  </div>
+</template>
+
+<script>
+import HelloWorld from './components/HelloWorld.vue'
+import CustomizePropertiesByUsingObject from '@/components/CustomizePropertiesByUsingObject.vue'
+
+export default {
+  name: 'App',
+  components: {
+    HelloWorld,
+    CustomizePropertiesByUsingObject
+  },
+  data() {
+    return {
+      user: {
+        name: 'Dexter'
+      }
+    }
+  }
+}
+</script>
+
+<style>
+#app {
+  font-family: Avenir, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-align: center;
+  color: #2c3e50;
+  margin-top: 60px;
+}
+</style>
+
+```
+
+
+
 ## 数据更新但视图不更新问题
 
 >[参考链接](https://stackoverflow.com/questions/44800470/vue-js-updated-array-item-value-doesnt-update-in-page)
