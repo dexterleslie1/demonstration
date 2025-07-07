@@ -2310,6 +2310,149 @@ new Vue({
 
 
 
+## 插槽
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-vue/demo-vue2-slot)
+
+在 Vue2 中，插槽（Slot） 是实现组件内容分发的重要机制，允许父组件向子组件传递自定义内容，同时保持子组件的结构灵活性。插槽主要分为三种类型：默认插槽、具名插槽 和 作用域插槽。
+
+
+
+### 默认插槽（匿名插槽）
+
+默认插槽是最基础的插槽类型，适用于子组件需要预留一个通用内容区域的场景。子组件通过 `<slot>` 标签定义一个默认插槽，父组件在使用子组件时，未被包裹的内容会自动填充到该插槽中。
+
+`DefautSlotComponent.vue`：
+
+```vue
+<template>
+    <div>
+        <!-- 默认插槽：父组件未指定内容时会显示此默认文本 -->
+        <slot>这是默认内容（当父组件未传内容时显示）</slot>
+    </div>
+</template>
+
+```
+
+使用默认插槽：
+
+```vue
+<template>
+  <div id="app">
+    <div>默认插槽 - 父组件替换子组件默认插槽</div>
+    <DefaultSlotComponent>
+      <!-- 父组件传递的内容会替换子组件的默认插槽 -->
+      <p>这是父组件传递的自定义内容！</p>
+    </DefaultSlotComponent>
+    <hr />
+
+    <div>默认插槽 - 使用子组件的默认插槽</div>
+    <DefaultSlotComponent>
+      <!-- 父组件不传递内容会使用子组件的默认插槽 -->
+    </DefaultSlotComponent>
+    <hr />
+  </div>
+</template>
+
+<script>
+import DefaultSlotComponent from "@/components/DefaultSlotComponent.vue";
+
+export default {
+  name: 'App',
+  components: {
+    // 注意：必须注册组件，否则使用子组件默认插槽不生效
+    DefaultSlotComponent
+  }
+}
+</script>
+
+<style>
+#app {
+  font-family: Avenir, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-align: center;
+  color: #2c3e50;
+  margin-top: 60px;
+}
+</style>
+
+```
+
+
+
+### 具名插槽（命名插槽）
+
+当子组件需要多个独立的内容区域时（例如卡片的头部、主体、底部），可以使用具名插槽。通过为 <slot> 指定 name 属性，父组件可以明确地将内容分发到指定的插槽位置。
+
+`NamedSlotComponent.vue`：
+
+```vue
+<template>
+    <div class="card">
+        <!-- 头部插槽 -->
+        <slot name="header"></slot>
+        <!-- 主体插槽（默认插槽，可省略 name） -->
+        <slot></slot>
+        <!-- 底部插槽 -->
+        <slot name="footer"></slot>
+    </div>
+</template>
+
+```
+
+父组件通过 `<template>` 标签配合 `v-slot` 指令（或简写 `#`）指定内容对应的插槽名。
+
+```vue
+<template>
+  <div id="app">
+    <div>具名插槽</div>
+    <NamedSlotComponent>
+      <!-- 头部内容：指定 name="header" -->
+      <template #header>
+        <h3>卡片标题</h3>
+      </template>
+
+      <!-- 主体内容：未指定 name 的默认插槽 -->
+      <p>卡片主体内容...</p>
+
+      <!-- 底部内容：指定 name="footer" -->
+      <template v-slot:footer>
+        <button>关闭</button>
+      </template>
+    </NamedSlotComponent>
+    <hr />
+    
+  </div>
+</template>
+
+<script>
+import NamedSlotComponent from "@/components/NamedSlotComponent.vue"
+
+export default {
+  name: 'App',
+  components: {
+    // 注意：必须注册组件，否则使用子组件默认插槽不生效
+    NamedSlotComponent
+  }
+}
+</script>
+
+<style>
+#app {
+  font-family: Avenir, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-align: center;
+  color: #2c3e50;
+  margin-top: 60px;
+}
+</style>
+
+```
+
+
+
 ## 综合案例
 
 ### 模仿 `element-ui` 消息提示
