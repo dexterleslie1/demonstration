@@ -947,12 +947,22 @@ CommandLineRunner与ApplicationRunner都是Spring Boot中用于在应用程序�
 
 >`https://dev.to/mxglt/generate-random-values-in-your-properties-spring-boot-4ppf`
 
+随机获取一个整数
+
 ```properties
 leaf.snowflake.port=${random.int%1000000000}
 ```
 
 - leaf.snowflake.port 会随机生成一个整数并求余
 - 此配置由 RandomValuePropertySource 解析
+
+
+
+随机获取 `uuid`，`application.properties` 配置如下：
+
+```properties
+spring.kafka.consumer.group-id=${random.uuid}
+```
 
 
 
