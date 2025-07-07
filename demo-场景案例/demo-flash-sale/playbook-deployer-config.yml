@@ -35,6 +35,11 @@
         path: ~/deployer-flash-sale/common/.env
         regexp: "^redisClusterAnnounceIp="
         line: "redisClusterAnnounceIp={{ groups['common'][0] }}"
+    - name: "配置wrk2的OpenResty主机ip"
+      lineinfile:
+        path: ~/deployer-flash-sale/common/.env
+        regexp: "^openrestyHost="
+        line: "openrestyHost={{ groups['openresty'][0] }}"
 
 - name: "配置Prometheus服务的deployer"
   hosts: common

@@ -215,3 +215,11 @@ services:
       - http.cors.enabled=true
       - http.cors.allow-origin=*
       - TZ=Asia/Shanghai
+
+  wrk2:
+    build:
+      context: ./
+      dockerfile: Dockerfile-wrk2
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-wrk2
+    environment:
+      - TZ=Asia/Shanghai
