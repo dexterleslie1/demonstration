@@ -13,7 +13,7 @@
         <module>demo-jcl</module>
         <module>demo-slf4j</module>
         <module>demo-logback-java</module>
-        <module>demo-spring-boot-logback</module>
+        <!--<module>demo-spring-boot-logback</module>-->
     </modules>
 
 </project>

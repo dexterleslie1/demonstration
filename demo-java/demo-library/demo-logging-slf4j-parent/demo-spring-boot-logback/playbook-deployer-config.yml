@@ -1,0 +1,24 @@
+- name: "复制deployer"
+  hosts: "{{ groups['all'] | difference(groups['management']) }}"
+  tasks:
+    - name: "复制deployer目录到远程"
+      copy:
+        src: deployer/
+        dest: ~/deployer-demo-spring-boot-logback
+
+- name: "配置openresty服务的deployer"
+  hosts: openresty
+  tasks:
+    - name: "配置OpenResty服务的nginx.conf"
+      template:
+        src: deployer/openresty/nginx.conf.j2
+        dest: ~/deployer-demo-spring-boot-logback/openresty/nginx.conf
+
+- name: "配置api服务的deployer"
+  hosts: api
+  tasks:
+    - name: "配置api服务的java_opts"
+      lineinfile:
+        path: ~/deployer-demo-spring-boot-logback/api/.env
+        regexp: "^java_opts="
+        line: "java_opts={{ java_opts }}"

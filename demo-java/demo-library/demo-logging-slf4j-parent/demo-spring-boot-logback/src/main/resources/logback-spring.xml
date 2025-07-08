@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configuration debug="false">
+<configuration debug="false"
+               asyncLogger="true"
+               asyncLoggerBaseBuffered="true"
+               asyncLoggerBufferSize="4096"
+               asyncLoggerWaitStrategy="Block">
     <!-- 测试 include 标签 -->
     <include resource="included.xml"/>
 
@@ -38,7 +42,8 @@
         <appender name="namedConsoleAppender" class="ch.qos.logback.core.ConsoleAppender">
             <encoder>
                 <pattern>
-                    named ${application_name}-dev - [%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} %logger{15}.%method\(%file:%line\) : %message %n
+                    named ${application_name}-dev - [%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS}
+                    %logger{15}.%method\(%file:%line\) : %message %n
                 </pattern>
             </encoder>
         </appender>
@@ -47,7 +52,8 @@
         <appender name="namedConsoleAppender" class="ch.qos.logback.core.ConsoleAppender">
             <encoder>
                 <pattern>
-                    named ${application_name}-prod - [%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} %logger{15}.%method\(%file:%line\) : %message %n
+                    named ${application_name}-prod - [%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS}
+                    %logger{15}.%method\(%file:%line\) : %message %n
                 </pattern>
             </encoder>
         </appender>
@@ -57,7 +63,8 @@
     <appender name="mdcAppender" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>
-                [%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} %logger{15}.%method\(%file:%line\) : my-mdc1=%X{my-mdc1} %message%n
+                [%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} %logger{15}.%method\(%file:%line\) : my-mdc1=%X{my-mdc1}
+                %message%n
             </pattern>
         </encoder>
     </appender>

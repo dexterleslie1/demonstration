@@ -1,0 +1,12 @@
+version: "3.1"
+
+services:
+  service:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-boot-logback
+    environment:
+      - JAVA_OPTS=-Xmx4g
+      - TZ=Asia/Shanghai
+    network_mode: host
