@@ -154,7 +154,7 @@ public class OrderService {
      * @param amount
      */
     @Transactional(rollbackFor = Exception.class)
-    public void create(Long userId, Long productId, Integer amount) throws BusinessException, JsonProcessingException, ExecutionException, InterruptedException {
+    public Long create(Long userId, Long productId, Integer amount) throws BusinessException, JsonProcessingException, ExecutionException, InterruptedException {
         int affectRows = this.productMapper.decreaseStock(productId, amount);
         if (affectRows <= 0) {
             throw new BusinessException("库存不足");
@@ -193,7 +193,8 @@ public class OrderService {
         // 下单成功后，把用户订单信息存储到 redis 中，cassandra 同步成功后会自动清除数据
         String JSON = this.objectMapper.writeValueAsString(orderModel);
         String userIdStr = String.valueOf(userId);
-        this.redisTemplate.opsForValue().set(userIdStr, JSON);
+        String key = CacheKeyPrefixOrderInCacheBeforeCassandraIndexCreate + userIdStr;
+        redisTemplate.opsForHash().put(key, String.valueOf(orderId), JSON);
         kafkaTemplate.send(TopicCreateOrderCassandraIndex, JSON).get();
 
         // 异步更新 t_count
@@ -203,6 +204,8 @@ public class OrderService {
         increaseCountDTO.setCount(1);
         JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
         kafkaTemplate.send(TopicIncreaseCount, JSON).get();
+
+        return orderId;
     }
 
     /**
@@ -263,8 +266,10 @@ public class OrderService {
         orderDetailModel.setProductId(productId);
         orderModel.setOrderDetailList(Collections.singletonList(orderDetailModel));
         String JSON = this.objectMapper.writeValueAsString(orderModel);
+
         // 秒杀成功后，把用户订单信息存储到 redis 中，cassandra 同步成功后会自动清除数据
-        this.redisTemplate.opsForValue().set(userIdStr, JSON);
+        key = CacheKeyPrefixOrderInCacheBeforeCassandraIndexCreate + userIdStr;
+        redisTemplate.opsForHash().put(key, String.valueOf(orderId), JSON);
         kafkaTemplate.send(TopicCreateOrderCassandraIndex, JSON).get();
 
         // 秒杀成功后，发出同步订单到数据库消息
@@ -386,25 +391,30 @@ public class OrderService {
         }
 
         // 查询 redis 缓存中是否有订单信息
-        /*if (Boolean.TRUE.equals(this.redisTemplate.hasKey(String.valueOf(userId)))) {
-            String JSON = this.redisTemplate.opsForValue().get(String.valueOf(userId));
-            if (StringUtils.hasText(JSON)) {
-                OrderModel orderModel = this.objectMapper.readValue(JSON, OrderModel.class);
-                if (orderModel != null) {
-                    List<OrderDetailDTO> orderDetailDTOList = orderModel.getOrderDetailList().stream().map(
-                            o -> {
-                                OrderDetailDTO orderDetailDTO = new OrderDetailDTO();
-                                BeanUtils.copyProperties(o, orderDetailDTO);
-                                return orderDetailDTO;
-                            }
-                    ).collect(Collectors.toList());
-                    OrderDTO orderDTO = new OrderDTO();
-                    BeanUtils.copyProperties(orderModel, orderDTO);
-                    orderDTO.setOrderDetailList(orderDetailDTOList);
-                    orderDTOList.add(0, orderDTO);
+        String userIdStr = String.valueOf(userId);
+        String key = CacheKeyPrefixOrderInCacheBeforeCassandraIndexCreate + userIdStr;
+        Long length = redisTemplate.opsForHash().size(key);
+        if (length != null && length > 0) {
+            List<String> values = redisTemplate.opsForHash().values(key).stream().map(o -> (String) o).collect(Collectors.toList());
+            if (values != null && !values.isEmpty()) {
+                for (String JSON : values) {
+                    OrderModel orderModel = this.objectMapper.readValue(JSON, OrderModel.class);
+                    if (orderModel != null) {
+                        List<OrderDetailDTO> orderDetailDTOList = orderModel.getOrderDetailList().stream().map(
+                                o -> {
+                                    OrderDetailDTO orderDetailDTO = new OrderDetailDTO();
+                                    BeanUtils.copyProperties(o, orderDetailDTO);
+                                    return orderDetailDTO;
+                                }
+                        ).collect(Collectors.toList());
+                        OrderDTO orderDTO = new OrderDTO();
+                        BeanUtils.copyProperties(orderModel, orderDTO);
+                        orderDTO.setOrderDetailList(orderDetailDTOList);
+                        orderDTOList.add(0, orderDTO);
+                    }
                 }
             }
-        }*/
+        }
 
         return orderDTOList;
     }
@@ -480,25 +490,30 @@ public class OrderService {
         }
 
         // 查询 redis 缓存中是否有订单信息
-        /*if (Boolean.TRUE.equals(this.redisTemplate.hasKey(String.valueOf(userId)))) {
-            String JSON = this.redisTemplate.opsForValue().get(String.valueOf(userId));
-            if (StringUtils.hasText(JSON)) {
-                OrderModel orderModel = this.objectMapper.readValue(JSON, OrderModel.class);
-                if (orderModel != null) {
-                    List<OrderDetailDTO> orderDetailDTOList = orderModel.getOrderDetailList().stream().map(
-                            o -> {
-                                OrderDetailDTO orderDetailDTO = new OrderDetailDTO();
-                                BeanUtils.copyProperties(o, orderDetailDTO);
-                                return orderDetailDTO;
-                            }
-                    ).collect(Collectors.toList());
-                    OrderDTO orderDTO = new OrderDTO();
-                    BeanUtils.copyProperties(orderModel, orderDTO);
-                    orderDTO.setOrderDetailList(orderDetailDTOList);
-                    orderDTOList.add(0, orderDTO);
+        String userIdStr = String.valueOf(userId);
+        String key = CacheKeyPrefixOrderInCacheBeforeCassandraIndexCreate + userIdStr;
+        Long length = redisTemplate.opsForHash().size(key);
+        if (length != null && length > 0) {
+            List<String> values = redisTemplate.opsForHash().values(key).stream().map(o -> (String) o).collect(Collectors.toList());
+            if (values != null && !values.isEmpty()) {
+                for (String JSON : values) {
+                    OrderModel orderModel = this.objectMapper.readValue(JSON, OrderModel.class);
+                    if (orderModel != null) {
+                        List<OrderDetailDTO> orderDetailDTOList = orderModel.getOrderDetailList().stream().map(
+                                o -> {
+                                    OrderDetailDTO orderDetailDTO = new OrderDetailDTO();
+                                    BeanUtils.copyProperties(o, orderDetailDTO);
+                                    return orderDetailDTO;
+                                }
+                        ).collect(Collectors.toList());
+                        OrderDTO orderDTO = new OrderDTO();
+                        BeanUtils.copyProperties(orderModel, orderDTO);
+                        orderDTO.setOrderDetailList(orderDetailDTOList);
+                        orderDTOList.add(0, orderDTO);
+                    }
                 }
             }
-        }*/
+        }
 
         return orderDTOList;
     }

@@ -28,4 +28,9 @@ public class Const {
      * 协助实现下单时随机抽取商品逻辑
      */
     public final static String KeyProductIdAndStockAmountInRedisZSet = "productIdAndStockAmountZSet";
+
+    /**
+     * 用户下单后，缓存订单信息到 redis 中，在 Cassandra 索引建立后自动删除此缓存
+     */
+    public final static String CacheKeyPrefixOrderInCacheBeforeCassandraIndexCreate = "orderInCacheBeforeCassandraIndexCreate:";
 }

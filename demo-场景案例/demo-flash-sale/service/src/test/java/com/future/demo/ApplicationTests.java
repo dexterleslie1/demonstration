@@ -37,6 +37,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import static com.future.demo.constant.Const.CacheKeyPrefixOrderInCacheBeforeCassandraIndexCreate;
+
 @SpringBootTest
 @Slf4j
 public class ApplicationTests {
@@ -136,8 +138,15 @@ public class ApplicationTests {
 
         // region 测试成功创建订单
 
-        this.orderService.create(userId, productId, amount);
-        TimeUnit.MILLISECONDS.sleep(500);
+        // 先删除之前的订单缓存避免对测试产生影响
+        String key = CacheKeyPrefixOrderInCacheBeforeCassandraIndexCreate + userId;
+        redisTemplate.delete(key);
+
+        Long orderId = this.orderService.create(userId, productId, amount);
+        // 检查缓存中的订单信息存在
+        key = CacheKeyPrefixOrderInCacheBeforeCassandraIndexCreate + userId;
+        Object value = redisTemplate.opsForHash().get(key, String.valueOf(orderId));
+        Assertions.assertNotNull(value);
         List<OrderModel> orderModelList = this.orderMapper.selectAll();
         Assertions.assertEquals(1, orderModelList.size());
         Assertions.assertEquals(userId, orderModelList.get(0).getUserId());
@@ -148,13 +157,32 @@ public class ApplicationTests {
         Assertions.assertEquals(userId, orderDetailModelList.get(0).getUserId());
         Assertions.assertEquals(orderModelList.get(0).getId(), orderDetailModelList.get(0).getOrderId());
 
-        // 测试 listByUserIdAndStatus
+        // 测试 listByUserIdAndStatus，不休眠后从 redis 中读取订单信息
         Status status = orderModelList.get(0).getStatus();
-        Long orderId = orderModelList.get(0).getId();
+        orderId = orderModelList.get(0).getId();
         LocalDateTime createTime = orderModelList.get(0).getCreateTime();
         LocalDateTime startTime = createTime;
         LocalDateTime endTime = startTime.plusMonths(1);
         List<OrderDTO> orderDTOList = this.orderService.listByUserIdAndStatus(userId, status, startTime, endTime);
+        Assertions.assertEquals(1, orderDTOList.size());
+        Assertions.assertEquals(orderId, orderDTOList.get(0).getId());
+        Assertions.assertEquals(1, orderDTOList.get(0).getOrderDetailList().size());
+        Assertions.assertEquals(productId, orderDTOList.get(0).getOrderDetailList().get(0).getProductId());
+        Assertions.assertEquals(amount, orderDTOList.get(0).getOrderDetailList().get(0).getAmount());
+        Assertions.assertEquals(merchantId, orderDTOList.get(0).getMerchantId());
+
+        // 测试 listByUserIdAndStatus，休眠后从 Cassandra 中读取订单信息
+        TimeUnit.MILLISECONDS.sleep(500);
+        status = orderModelList.get(0).getStatus();
+        orderId = orderModelList.get(0).getId();
+        createTime = orderModelList.get(0).getCreateTime();
+        startTime = createTime;
+        endTime = startTime.plusMonths(1);
+        // 检查缓存中的订单信息被删除
+        key = CacheKeyPrefixOrderInCacheBeforeCassandraIndexCreate + userId;
+        value = redisTemplate.opsForHash().get(key, String.valueOf(orderId));
+        Assertions.assertNull(value);
+        orderDTOList = this.orderService.listByUserIdAndStatus(userId, status, startTime, endTime);
         Assertions.assertEquals(1, orderDTOList.size());
         Assertions.assertEquals(orderId, orderDTOList.get(0).getId());
         Assertions.assertEquals(1, orderDTOList.get(0).getOrderDetailList().size());
@@ -340,7 +368,7 @@ public class ApplicationTests {
             orderService.createFlashSale(userId, productId, amount);
             Assertions.fail();
         } catch (BusinessException ex) {
-            Assertions.assertTrue(ex.getMessage().contains("秒杀未开始"));
+            Assertions.assertTrue(ex.getMessage().contains("秒杀未开始"), ex.getMessage());
         }
 
         // 测试秒杀已结束

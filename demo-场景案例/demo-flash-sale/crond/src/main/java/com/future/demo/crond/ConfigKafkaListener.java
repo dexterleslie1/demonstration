@@ -245,6 +245,22 @@ public class ConfigKafkaListener {
             increaseCountDTO.setCount(modelList.size());
             JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
             kafkaTemplate.send(TopicIncreaseCount, JSON).get();
+
+            // Cassandra 成功建立后，从缓存中删除订单信息
+            redisTemplate.executePipelined(new SessionCallback<String>() {
+                @Override
+                public <K, V> String execute(RedisOperations<K, V> operations) throws DataAccessException {
+                    RedisOperations<String, String> redisOperations = (RedisOperations<String, String>) operations;
+                    for (OrderModel orderModel : modelList) {
+                        String userIdStr = String.valueOf(orderModel.getUserId());
+                        String orderIdStr = String.valueOf(orderModel.getId());
+                        String key = CacheKeyPrefixOrderInCacheBeforeCassandraIndexCreate + userIdStr;
+                        redisOperations.opsForHash().delete(key, orderIdStr);
+                    }
+
+                    return null;
+                }
+            });
         } catch (Exception ex) {
             log.error(ex.getMessage(), ex);
             throw ex;
