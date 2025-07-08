@@ -7,6 +7,7 @@ import com.future.common.http.ResponseUtils;
 import com.future.demo.dto.OrderDTO;
 import com.future.demo.entity.ProductModel;
 import com.future.demo.entity.Status;
+import com.future.demo.service.CacheService;
 import com.future.demo.service.MerchantService;
 import com.future.demo.service.OrderService;
 import com.future.demo.service.ProductService;
@@ -36,6 +37,8 @@ public class ApiController {
     OrderRandomlyUtil orderRandomlyUtil;
     @Resource
     MerchantService merchantService;
+    @Resource
+    CacheService cacheService;
 
     /**
      * 普通方式下单
@@ -46,7 +49,7 @@ public class ApiController {
     @GetMapping(value = "create")
     public ObjectResponse<String> create() throws Exception {
         long userId = this.orderRandomlyUtil.getUserIdRandomly();
-        long productId = this.orderRandomlyUtil.getProductIdRandomly();
+        long productId = cacheService.getOrdinaryProductIdRandomly();
         int amount = 1;
         this.orderService.create(userId, productId, amount);
         ObjectResponse<String> response = new ObjectResponse<>();
@@ -63,7 +66,7 @@ public class ApiController {
     @GetMapping(value = "createFlashSale")
     public ObjectResponse<String> createFlashSale() throws Exception {
         long userId = this.orderRandomlyUtil.getUserIdRandomly();
-        long productId = this.orderRandomlyUtil.getProductIdRandomly();
+        long productId = cacheService.getFlashSaleProductIdRandomly();
         int amount = 1;
         this.orderService.createFlashSale(userId, productId, amount);
         ObjectResponse<String> response = new ObjectResponse<>();
@@ -109,7 +112,7 @@ public class ApiController {
      */
     @GetMapping(value = "listByMerchantIdAndStatus")
     public ListResponse<OrderDTO> listByMerchantIdAndStatus() throws Exception {
-        Long merchantId = this.orderRandomlyUtil.getMerchantIdRandomly();
+        Long merchantId = merchantService.getIdRandomly();
         LocalDateTime createTime = OrderRandomlyUtil.getCreateTimeRandomly();
         LocalDateTime endTime = createTime.plusMonths(1);
         Status status = OrderRandomlyUtil.getStatusRandomly();
@@ -125,7 +128,7 @@ public class ApiController {
      */
     @GetMapping(value = "listByMerchantIdAndWithoutStatus")
     public ListResponse<OrderDTO> listByMerchantIdAndWithoutStatus() throws Exception {
-        Long merchantId = this.orderRandomlyUtil.getMerchantIdRandomly();
+        Long merchantId = merchantService.getIdRandomly();
         LocalDateTime createTime = OrderRandomlyUtil.getCreateTimeRandomly();
         LocalDateTime endTime = createTime.plusMonths(1);
         return ResponseUtils.successList(

@@ -58,3 +58,19 @@ services:
       TZ: Asia/Shanghai
     # 自动创建 topic
     entrypoint: /usr/bin/kafka-topics --create --bootstrap-server kafka:9092 --replication-factor 1 --partitions 32 --topic topic-setup-product-flashsale-cache
+  kafka-create-topic-add-productId-and-stockAmount-into-redis-zset-after-creation:
+    image: confluentinc/cp-kafka:7.3.0
+    depends_on:
+      - kafka
+    environment:
+      TZ: Asia/Shanghai
+    # 自动创建 topic
+    entrypoint: /usr/bin/kafka-topics --create --bootstrap-server kafka:9092 --replication-factor 1 --partitions 1 --topic topic-add-productId-and-stockAmount-into-redis-zset-after-creation
+  kafka-create-topic-publish-choose-product-randomly-for-ordering:
+    image: confluentinc/cp-kafka:7.3.0
+    depends_on:
+      - kafka
+    environment:
+      TZ: Asia/Shanghai
+    # 自动创建 topic
+    entrypoint: /usr/bin/kafka-topics --create --bootstrap-server kafka:9092 --replication-factor 1 --partitions 1 --topic topic-publish-choose-product-randomly-for-ordering

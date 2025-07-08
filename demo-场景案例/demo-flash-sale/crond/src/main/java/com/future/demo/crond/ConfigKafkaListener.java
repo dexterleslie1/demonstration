@@ -330,4 +330,42 @@ public class ConfigKafkaListener {
 
         // endregion
     }
+
+    /**
+     * 商品创建后设置商品ID和库存到redis zset中，协助实现下单时随机抽取商品逻辑
+     *
+     * @param messages
+     * @throws Exception
+     */
+    @KafkaListener(topics = TopicAddProductIdAndStockAmountIntoRedisZSetAfterCreation)
+    public void receiveMessageAddProductIdAndStockAmountIntoRedisZSetAfterCreation(List<String> messages) {
+        if (messages == null || messages.isEmpty()) {
+            if (log.isWarnEnabled())
+                log.warn("意料之外，为何 messages 为空的呢？");
+            return;
+        }
+
+        List<ProductModel> modelList = messages.stream().map(o -> {
+            try {
+                return objectMapper.readValue(o, ProductModel.class);
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+        }).collect(Collectors.toList());
+
+        redisTemplate.executePipelined(new SessionCallback<String>() {
+            @Override
+            public <K, V> String execute(RedisOperations<K, V> operations) throws DataAccessException {
+                RedisOperations<String, String> redisOperations = (RedisOperations<String, String>) operations;
+                for (ProductModel productModel : modelList) {
+                    String productIdStr = String.valueOf(productModel.getId());
+                    int stockAmount = productModel.getStock();
+                    redisOperations.opsForZSet().add(KeyProductIdAndStockAmountInRedisZSet, productIdStr, stockAmount);
+                }
+                return null;
+            }
+        });
+        if (log.isDebugEnabled())
+            log.debug("成功设置商品信息到 {} {}", KeyProductIdAndStockAmountInRedisZSet, modelList);
+    }
 }

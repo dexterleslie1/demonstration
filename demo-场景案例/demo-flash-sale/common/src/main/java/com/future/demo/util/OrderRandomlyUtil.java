@@ -97,21 +97,21 @@ public class OrderRandomlyUtil {
         return userIdArray[RandomUtil.randomInt(0, userIdBoundaryLimitation)];
     }
 
-    /**
-     * 随机获取商家ID
-     *
-     * @return
-     */
-    public Long getMerchantIdRandomly() {
-        return merchantIdArray[RandomUtil.randomInt(0, merchantIdBoundaryLimitation)];
-    }
+//    /**
+//     * 随机获取商家ID
+//     *
+//     * @return
+//     */
+//    public Long getMerchantIdRandomly() {
+//        return merchantIdArray[RandomUtil.randomInt(0, merchantIdBoundaryLimitation)];
+//    }
 
-    /**
-     * 随机获取商品ID
-     *
-     * @return
-     */
-    public Long getProductIdRandomly() {
-        return productIdArray[RandomUtil.randomInt(0, productIdBoundaryLimitation)];
-    }
+//    /**
+//     * 随机获取商品ID
+//     *
+//     * @return
+//     */
+//    public Long getProductIdRandomly() {
+//        return productIdArray[RandomUtil.randomInt(0, productIdBoundaryLimitation)];
+//    }
 }

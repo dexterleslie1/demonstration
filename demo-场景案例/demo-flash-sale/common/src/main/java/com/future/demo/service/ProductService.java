@@ -18,8 +18,7 @@ import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static com.future.demo.constant.Const.TopicIncreaseCount;
-import static com.future.demo.constant.Const.TopicSetupProductFlashSaleCache;
+import static com.future.demo.constant.Const.*;
 
 @Service
 @Slf4j
@@ -154,7 +153,8 @@ public class ProductService {
         model.setFlashSaleStartTime(flashSaleStartTime);
         model.setFlashSaleEndTime(flashSaleEndTime);
         this.productMapper.insert(model);
-        log.debug("成功插入商品数据到数据库 {}", model);
+        if (log.isDebugEnabled())
+            log.debug("成功插入商品数据到数据库 {}", model);
 
         // 秒杀商品需要初始化 redis 缓存
         if (flashSale) {
@@ -164,15 +164,22 @@ public class ProductService {
             eventDTO.setSecondAfterWhichExpiredFlashSaleProductForRemoving(second);
             String JSON = this.objectMapper.writeValueAsString(eventDTO);
             this.kafkaTemplate.send(TopicSetupProductFlashSaleCache, JSON).get();
-            log.debug("秒杀商品成功发送设置商品缓存消息 {}", JSON);
+            if (log.isDebugEnabled())
+                log.debug("秒杀商品成功发送设置商品缓存消息 {}", JSON);
         }
+
+        // 商品创建后设置商品ID和库存到redis zset中，协助实现下单时随机抽取商品逻辑
+        String JSON = this.objectMapper.writeValueAsString(model);
+        kafkaTemplate.send(TopicAddProductIdAndStockAmountIntoRedisZSetAfterCreation, JSON).get();
+        if (log.isDebugEnabled())
+            log.debug("成功发送商品创建后设置商品ID和库存到redis zset中消息 {}", JSON);
 
         // 异步更新 t_count
         IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO();
         increaseCountDTO.setType(IncreaseCountDTO.Type.MySQL);
         increaseCountDTO.setFlag("product");
         increaseCountDTO.setCount(1);
-        String JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
+        JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
         kafkaTemplate.send(TopicIncreaseCount, JSON).get();
 
         return model.getId();

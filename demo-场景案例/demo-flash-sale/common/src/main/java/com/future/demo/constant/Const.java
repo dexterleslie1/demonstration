@@ -14,4 +14,18 @@ public class Const {
      * 新增秒杀商品后，设置商品缓存主题
      */
     public final static String TopicSetupProductFlashSaleCache = "topic-setup-product-flashsale-cache";
+
+    /**
+     * 商品创建后设置商品ID和库存到redis zset中，协助实现下单时随机抽取商品逻辑
+     */
+    public final static String TopicAddProductIdAndStockAmountIntoRedisZSetAfterCreation = "topic-add-productId-and-stockAmount-into-redis-zset-after-creation";
+    /**
+     * 发布随机抽取的商品到 api 服务以便下单时随机抽取商品
+     */
+    public final static String TopicPublishChooseProductRandomlyForOrdering = "topic-publish-choose-product-randomly-for-ordering";
+
+    /**
+     * 协助实现下单时随机抽取商品逻辑
+     */
+    public final static String KeyProductIdAndStockAmountInRedisZSet = "productIdAndStockAmountZSet";
 }
