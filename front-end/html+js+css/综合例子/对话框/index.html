@@ -1,136 +1,98 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>对话框</title>
+    <title>Document</title>
     <style>
-        html,
-        body {
+        html, body {
             margin: 0;
             padding: 0;
-            background-color: #3b3b3b;
+            background-color: #161c24;
         }
 
-        .container {
-            width: 60%;
-            height: 100%;
-            margin-left: auto;
-            margin-right: auto;
+        .dialog-mask {
+            width: 100vw;
+            height: 100vh;
+            left: 0;
+            top: 0;
+            /* background-color: rgba(0, 0, 0, 0.5); */
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
-        }
-
-        .container .item {
-            margin: 10px 0;
-        }
-
-        .popup-confirmation-dialog {
-            background-color: #1d1d1d;
-            border-radius: 15px;
-            border-style: none;
-            color: #d6d6d6;
-        }
-
-        .popup-confirmation-dialog .title {
-            height: 20px;
-        }
-
-        .popup-confirmation-dialog .content {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .popup-confirmation-dialog .content .content-title {
-            font-weight: bold;
-            font-size: 16px;
-            color: #fff;
-        }
-
-        .popup-confirmation-dialog .content .content-detail {
             font-size: 14px;
-            margin: 10px 0;
         }
 
-        .popup-confirmation-dialog .buttons {
-            display: flex;
-            justify-content: center;
-            padding: 10px;
-        }
-
-        .popup-confirmation-dialog .buttons .buttons-container {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-        }
-
-        .popup-confirmation-dialog .buttons .buttons-container button{
-            padding: 5px 65px;
-            background-color: #fff;
+        .dialog-mask .dialog-container {
+            background-color: #2d3641;
             border-radius: 10px;
-            border-style: none;
+            color: #fff;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
+            padding: 10px 20px 10px 20px;
+        }
+
+        /* .dialog-mask .dialog-container .title {
+            align-self: flex-start;
+            font-weight: bold;
+        } */
+
+        .dialog-mask .dialog-container .content {
+            margin-top: 10px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .dialog-mask .dialog-container .operation {
+            align-self: flex-end;
+        }
+
+        .dialog-mask .dialog-container .operation button {
+            background-color: transparent;
+            color: #fff;
+            border-style: none;
+            padding: 5px 30px;
+            border-radius: 10px;
+        }
+
+        .dialog-mask .dialog-container .operation button:nth-of-type(1) {
+            color: #fff;
+            border-style: solid;
+            border-width: 1px;
+            border-color: #4d4d4d;
+        }
+
+        .dialog-mask .dialog-container .operation button:hover:nth-of-type(1) {
+            background-color: #404d5e;
             cursor: pointer;
         }
-        
 
-        .popup-confirmation-dialog .buttons .buttons-container button:nth-of-type(2){
-            background-color: #00850d;
-            color: #fff;
+        .dialog-mask .dialog-container .operation button:nth-of-type(2) {
+            background-color: #0077ff;
+            border-style: none;
         }
 
-        .popup-confirmation-dialog .buttons .buttons-container button:hover:nth-of-type(1){
-            background-color: #e6e6e6;
+        .dialog-mask .dialog-container .operation button:hover:nth-of-type(2) {
+            cursor: pointer;
+            background-color: #0067dd;
         }
 
-        .popup-confirmation-dialog .buttons .buttons-container button:hover:nth-of-type(2){
-            background-color: #00b913;
-        }
     </style>
 </head>
-
 <body>
-    <div class="container">
-        <div class="item">
-            <!-- 弹出式确认框 -->
-            <div class="popup-confirmation-dialog">
-                <div class="title"></div>
-                <div class="content">
-                    <div class="content-title">确定删除吗？</div>
-                    <div class="content-detail">确定删除删除记录吗？此操作无法撤回！</div>
-                </div>
-                <div class="buttons">
-                    <div class="buttons-container">
-                        <button>取消</button>
-                        <button>确定</button>
-                    </div>
-                </div>
+    <div class="dialog-mask">
+        <div class="dialog-container">
+            <!-- <div class="title">这是标题</div> -->
+            <div class="content">
+                这是内容这是内容这是内容这是内容这是内容
             </div>
-        </div>
-
-        <div class="item">
-            <!-- 弹出式确认框 -->
-            <div class="popup-confirmation-dialog">
-                <div class="title"></div>
-                <div class="content">
-                    <div class="content-title">确定删除吗？</div>
-                </div>
-                <div class="buttons">
-                    <div class="buttons-container">
-                        <button>取消</button>
-                        <button>确定</button>
-                    </div>
-                </div>
+            <div class="operation">
+                <button>取消</button>
+                <button>确定</button>
             </div>
         </div>
     </div>
 </body>
-
 </html>

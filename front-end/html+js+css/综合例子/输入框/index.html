@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            /* background-color: #1a1a30; */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background-color: #1a1a30;
+            padding: 20px;
+            border-radius: 20px;
+        }
+
+        .input-container {
+            background-color: #323247;
+            border-radius: 20px;
+            padding: 7px 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 14px;
+            color: #fff;
+            /* border-color: #6666c9; */
+            border-color: #5a94ff;
+            border-style: solid;
+            border-width: 1px;
+            margin-bottom: 10px;
+        }
+
+        .input-container svg {
+            width: 22px;
+            height: 22px;
+            margin-right: 10px;
+        }
+
+        .input-container svg path {
+            fill: #fff;
+        }
+
+        .input-container .right-side {
+            display: flex;
+            flex-direction: column;
+
+        }
+
+        .input-container input {
+            border-style: none;
+            background-color: transparent;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .input-container input:focus {
+            border-style: none;
+            outline: none;
+            caret-color: #fff;
+        }
+
+        .input-container .hint {
+            /* font-weight: bold; */
+            color: #acacac;
+            font-size: 12px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="input-container">
+            <div class="left-side">
+                <svg t="1751900392778" class="icon" viewBox="0 0 1024 1024" version="1.1"
+                    xmlns="http://www.w3.org/2000/svg" p-id="2329" width="200" height="200">
+                    <path
+                        d="M511.913993 941.605241c-255.612968 0-385.311608-57.452713-385.311608-170.810012 0-80.846632 133.654964-133.998992 266.621871-151.88846L393.224257 602.049387c-79.986561-55.904586-118.86175-153.436587-118.86175-297.240383 0-139.33143 87.211154-222.586259 233.423148-222.586259l7.912649 0c146.211994 0 233.423148 83.254829 233.423148 222.586259 0 54.184445 0 214.67361-117.829666 297.412397l-0.344028 16.685369c132.966907 18.061482 266.105829 71.041828 266.105829 151.716445C897.225601 884.152528 767.526961 941.605241 511.913993 941.605241zM507.957668 141.567613c-79.470519 0-174.250294 28.382328-174.250294 163.241391 0 129.698639 34.230808 213.469511 104.584579 255.784982 8.944734 5.332437 14.277171 14.965228 14.277171 25.286074l0 59.344868c0 15.309256-11.524945 28.0383-26.662187 29.414413-144.319839 14.449185-239.959684 67.429531-239.959684 95.983874 0 92.199563 177.346548 111.637158 325.966739 111.637158 148.792206 0 325.966739-19.26558 325.966739-111.637158 0-28.726356-95.639845-81.534688-239.959684-95.983874-15.48127-1.548127-27.006215-14.621199-26.662187-30.102469l1.376113-59.344868c0.172014-10.148833 5.676466-19.437594 14.277171-24.770032 70.525785-42.487485 103.208466-123.678145 103.208466-255.784982 0-135.031077-94.779775-163.241391-174.250294-163.241391L507.957668 141.567613 507.957668 141.567613z"
+                        fill="#575B66" p-id="2330"></path>
+                </svg>
+            </div>
+            <div class="right-side">
+                <div class="hint">用户名：</div>
+                <div><input type="text" value="Dexter" size="10"></div>
+            </div>
+        </div>
+
+        <div class="input-container">
+            <div class="left-side">
+                <svg t="1751902277963" class="icon" viewBox="0 0 1024 1024" version="1.1"
+                    xmlns="http://www.w3.org/2000/svg" p-id="3335" width="200" height="200">
+                    <path
+                        d="M785.9 452.8H336.8V310.5c0-95.1 77.4-172.4 172.4-172.4h8.2c95.1 0 172.4 77.4 172.4 172.4 0 22.1 17.9 40 40 40s40-17.9 40-40c0-67.4-26.3-130.8-73.9-178.5-47.7-47.7-111.1-73.9-178.5-73.9h-8.2c-67.4 0-130.8 26.3-178.5 73.9-47.7 47.7-73.9 111.1-73.9 178.5v142.2H242c-52.6 0-95.2 42.6-95.2 95.2V858c0 52.6 42.6 95.2 95.2 95.2h543.9c52.6 0 95.2-42.6 95.2-95.2V548c0-52.6-42.6-95.2-95.2-95.2z m-237 261v88.1c0 16.3-13.2 29.5-29.5 29.5h-11c-16.3 0-29.5-13.2-29.5-29.5v-89.1c-16.6-11.4-27.4-30.5-27.4-52.1 0-34.9 28.3-63.2 63.2-63.2s63.2 28.3 63.2 63.2c0 22.3-11.5 41.9-29 53.1z"
+                        fill="#424242" p-id="3336"></path>
+                </svg>
+            </div>
+            <div class="right-side">
+                <div class="hint">密码：</div>
+                <div><input type="password" value="Dexter" size="10"></div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
