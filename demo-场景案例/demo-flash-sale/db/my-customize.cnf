@@ -14,11 +14,13 @@ log_error = error.log
 innodb_status_output_locks=ON
 
 # 启用binlog
-#log_bin
+log_bin
 # 推荐使用 ROW 格式，但你也可以选择 STATEMENT 或 MIXED
-#binlog_format = MIXED
+binlog_format = ROW
 # 设置 binlog 文件在自动删除前的保留天数
-#expire_logs_days = 7
+expire_logs_days = 7
 # 设置单个 binlog 文件的最大大小
-#max_binlog_size = 512M
-#server-id = 10001
+max_binlog_size = 1G
+# 日志总大小限制为 5g
+max_binlog_total_size = 5g
+server-id = 10001

@@ -5,7 +5,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.future.common.exception.BusinessException;
-import com.future.demo.dto.IncreaseCountDTO;
 import com.future.demo.dto.OrderDTO;
 import com.future.demo.dto.OrderDetailDTO;
 import com.future.demo.entity.*;
@@ -198,12 +197,11 @@ public class OrderService {
         kafkaTemplate.send(TopicCreateOrderCassandraIndex, JSON).get();
 
         // 异步更新 t_count
-        IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO();
+        /*IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO(String.valueOf(orderId),"order");
         increaseCountDTO.setType(IncreaseCountDTO.Type.MySQL);
-        increaseCountDTO.setFlag("order");
         increaseCountDTO.setCount(1);
         JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
-        kafkaTemplate.send(TopicIncreaseCount, JSON).get();
+        kafkaTemplate.send(TopicIncreaseCount, JSON).get();*/
 
         return orderId;
     }
@@ -314,12 +312,16 @@ public class OrderService {
         this.orderDetailMapper.insertBatch(orderDetailModelListProcessed);
 
         // 异步更新 t_count
-        IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO();
-        increaseCountDTO.setType(IncreaseCountDTO.Type.MySQL);
-        increaseCountDTO.setFlag("order");
-        increaseCountDTO.setCount(orderModelListProcessed.size());
-        String JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
-        kafkaTemplate.send(TopicIncreaseCount, JSON).get();
+        /*if (!orderModelListProcessed.isEmpty()) {
+            for (OrderModel model : orderModelListProcessed) {
+                Long orderId = model.getId();
+                IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO(String.valueOf(orderId), "order");
+                increaseCountDTO.setType(IncreaseCountDTO.Type.MySQL);
+                increaseCountDTO.setCount(1);
+                String JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
+                kafkaTemplate.send(TopicIncreaseCount, JSON).get();
+            }
+        }*/
     }
 
     /**

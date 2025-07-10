@@ -15,6 +15,11 @@
         set -e
         cd ~/deployer-flash-sale/crond
         docker compose down -v
+    - name: "删除debezium信息"
+      shell: |
+        set -e
+        cd ~/deployer-flash-sale/crond
+        rm -rf debezium
 
 - name: "销毁zookeeper、redis等公共服务"
   hosts: common

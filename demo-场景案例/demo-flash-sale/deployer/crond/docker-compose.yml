@@ -13,10 +13,14 @@ services:
       - kafka_bootstrap_servers=${kafka_bootstrap_servers}
       - common_zookeeper_host=${common_zookeeper_host}
       - common_cassandra_contact_points=${common_cassandra_contact_points}
+      - debezium_offset_storage_file_filename=/var/lib/debezium/offset.dat
+      - debezium_schema_history_internal_file_filename=/var/lib/debezium/dbhistory.dat
+    volumes:
+      - ./debezium:/var/lib/debezium
     logging:
       driver: json-file
       options:
-        max-size: "128m"
-        max-file: "10"
+        max-size: "1g"
+        max-file: "2"
     restart: unless-stopped
     network_mode: host

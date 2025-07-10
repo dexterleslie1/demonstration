@@ -1,4 +1,4 @@
-FROM openjdk:8-jdk-slim
+FROM openjdk:17-jdk-slim
 
 ADD target/flash-sale-service-crond.jar /usr/share/flash-sale-service-crond.jar
 

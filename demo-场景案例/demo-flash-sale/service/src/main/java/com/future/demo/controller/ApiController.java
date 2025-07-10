@@ -173,7 +173,7 @@ public class ApiController {
     public ObjectResponse<String> addFlashSaleProduct() throws Exception {
         String name = RandomStringUtils.randomAlphanumeric(20);
         Long merchantId = this.merchantService.getIdRandomly();
-        LocalDateTime flashSaleStartTime = this.productService.getFlashSaleStartTimeRandomly();
+        LocalDateTime flashSaleStartTime = this.productService.getFlashSaleStartTimeRandomly(0);
         LocalDateTime flashSaleEndTime = this.productService.getFlashSaleEndTimeRandomly(flashSaleStartTime);
         this.productService.add(name, merchantId, 300, true, flashSaleStartTime, flashSaleEndTime);
         return ResponseUtils.successObject("成功新增秒杀商品");

@@ -36,6 +36,11 @@ create table if not exists t_product(
     flashSaleEndTime    datetime default null comment '秒杀结束时间'
 ) engine=innodb character set utf8mb4 collate utf8mb4_general_ci;
 
+/* t_count 幂等协助表，实现不重复递增 t_count 表 */
+create table if not exists t_count_idempotent(
+    idempotentId    varchar(64) not null primary key,
+    createTime      timestamp not null default current_timestamp()
+) engine=innodb character set utf8mb4 collate utf8mb4_general_ci;
 create table if not exists t_count(
     flag        varchar(32) not null primary key,
     `count`     bigint not null default 0
@@ -43,3 +48,5 @@ create table if not exists t_count(
 
 insert into t_count(flag,`count`) values("order",0);
 insert into t_count(flag,`count`) values("product",0);
+insert into t_count(flag,`count`) values("orderListByUserId",0);
+insert into t_count(flag,`count`) values("orderListByMerchantId",0);

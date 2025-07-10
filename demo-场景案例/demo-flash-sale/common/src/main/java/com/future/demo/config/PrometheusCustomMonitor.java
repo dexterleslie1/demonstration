@@ -1,6 +1,5 @@
 package com.future.demo.config;
 
-import com.future.demo.mapper.CassandraCountMapper;
 import com.future.demo.mapper.CommonMapper;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.ImmutableTag;
@@ -30,8 +29,6 @@ public class PrometheusCustomMonitor {
 
     @Resource
     CommonMapper commonMapper;
-    @Resource
-    CassandraCountMapper cassandraCountMapper;
 
     private final MeterRegistry registry;
 
@@ -49,8 +46,9 @@ public class PrometheusCustomMonitor {
         counterCassandraIndexOrderListByMerchantId = registry.counter("flash.sale.cassandra.index.create", "type", "orderListByMerchantId");
 
         registry.gauge("flash.sale.total.count", Collections.singletonList(new ImmutableTag("type", "order")), commonMapper, (o) -> o.getCountByFlag("order"));
-        registry.gauge("flash.sale.total.count", Collections.singletonList(new ImmutableTag("type", "cassandra-index-orderListByUserId")), cassandraCountMapper, (o) -> o.getCountByFlag("orderListByUserId"));
-        registry.gauge("flash.sale.total.count", Collections.singletonList(new ImmutableTag("type", "cassandra-index-orderListByMerchantId")), cassandraCountMapper, (o) -> o.getCountByFlag("orderListByMerchantId"));
+        registry.gauge("flash.sale.total.count", Collections.singletonList(new ImmutableTag("type", "product")), commonMapper, (o) -> o.getCountByFlag("product"));
+        registry.gauge("flash.sale.total.count", Collections.singletonList(new ImmutableTag("type", "cassandra-index-orderListByUserId")), commonMapper, (o) -> o.getCountByFlag("orderListByUserId"));
+        registry.gauge("flash.sale.total.count", Collections.singletonList(new ImmutableTag("type", "cassandra-index-orderListByMerchantId")), commonMapper, (o) -> o.getCountByFlag("orderListByMerchantId"));
     }
 
     public void incrementOrderSyncCount(int count) {

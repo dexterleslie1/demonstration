@@ -10,6 +10,7 @@ import com.future.demo.entity.ProductModel;
 import com.future.demo.mapper.CassandraMapper;
 import com.future.demo.mapper.CommonMapper;
 import com.future.demo.mapper.ProductMapper;
+import com.future.demo.service.CommonService;
 import com.future.demo.service.OrderService;
 import com.future.demo.service.ProductService;
 import lombok.extern.slf4j.Slf4j;
@@ -32,14 +33,11 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
-
-import static com.future.demo.constant.Const.*;
 
 
 @Configuration
@@ -55,6 +53,8 @@ public class ConfigKafkaListener {
     PrometheusCustomMonitor monitor;
     @Resource
     CommonMapper commonMapper;
+    @Resource
+    CommonService commonService;
     @Resource
     ProductMapper productMapper;
     @Resource
@@ -98,7 +98,11 @@ public class ConfigKafkaListener {
     private AtomicInteger concurrentCounter = new AtomicInteger();
     private AtomicLong counter = new AtomicLong();
 
-    @KafkaListener(topics = TopicOrderInCacheSyncToDb)
+    /**
+     * @param messages
+     * @throws Exception
+     */
+    @KafkaListener(topics = com.future.demo.constant.Const.TopicOrderInCacheSyncToDb, concurrency = "1" /* 注意： todo 太大的 concurrency 会拖慢 /actuator/prometheus 接口 */)
     public void receiveMessage(List<String> messages) throws Exception {
         try {
             log.info("concurrent=" + this.concurrentCounter.incrementAndGet() + ",size=" + messages.size() + ",total=" + counter.addAndGet(messages.size()));
@@ -121,30 +125,6 @@ public class ConfigKafkaListener {
                 orderService.fillupOrderMerchantId(orderModelList);
             this.orderService.insertBatch(orderModelList);
 
-            /*this.redisTemplate.executePipelined(new SessionCallback<String>() {
-                @Override
-                public <K, V> String execute(RedisOperations<K, V> operations) throws DataAccessException {
-                    try {
-                        RedisOperations<String, String> redisOperations = (RedisOperations<String, String>) operations;
-                        for (OrderModel orderModel : orderModelList) {
-                            *//*log.info("Received message: " + new String(msg.getBody()));*//*
-                            long userId = orderModel.getUserId();
-                            long productId = orderModel.getOrderDetailList().get(0).getProductId();
-                            String userIdStr = String.valueOf(userId);
-                            redisOperations.delete(userIdStr);
-
-                            String key = String.format(OrderService.KeyProductPurchaseRecordWithHashTag, productId);
-                            redisOperations.opsForSet().remove(key, userIdStr);
-                        }
-
-                        // 返回null即可，因为返回值会被管道的返回值覆盖，外层取不到这里的返回值
-                        return null;
-                    } catch (Exception ex) {
-                        throw new RuntimeException(ex);
-                    }
-                }
-            });*/
-
             this.monitor.incrementOrderSyncCount(orderModelList.size());
         } catch (Exception ex) {
             throw ex;
@@ -153,51 +133,76 @@ public class ConfigKafkaListener {
         }
     }
 
-    @KafkaListener(topics = TopicIncreaseCount)
+    /**
+     * 递增 MySQL 或者 Cassandra 计数器
+     *
+     * @param messages
+     * @throws Exception
+     */
+    @KafkaListener(topics = com.future.demo.constant.Const.TopicIncreaseCount, concurrency = "8")
     public void receiveMessageIncreaseCount(List<String> messages) throws Exception {
         List<IncreaseCountDTO> dtoListMySQL = new ArrayList<>();
-        List<IncreaseCountDTO> dtoListCassandra = new ArrayList<>();
+        /*List<IncreaseCountDTO> dtoListCassandra = new ArrayList<>();*/
         for (String JSON : messages) {
             IncreaseCountDTO increaseCountDTO = objectMapper.readValue(JSON, IncreaseCountDTO.class);
-            IncreaseCountDTO.Type type = increaseCountDTO.getType();
-            if (type == IncreaseCountDTO.Type.MySQL) {
-                dtoListMySQL.add(increaseCountDTO);
-            } else if (type == IncreaseCountDTO.Type.Cassandra) {
+            /*IncreaseCountDTO.Type type = increaseCountDTO.getType();*/
+            /*if (type == IncreaseCountDTO.Type.MySQL) {*/
+            dtoListMySQL.add(increaseCountDTO);
+            /*} else if (type == IncreaseCountDTO.Type.Cassandra) {
                 dtoListCassandra.add(increaseCountDTO);
-            }
+            }*/
         }
 
         // MySQL计数器
-        Map<String, Integer> flagToCountMap = new HashMap<>();
+        // todo 在crond服务关闭重启后select count和计数器不一致
+        /*Map<String, Integer> flagToCountMap = new HashMap<>();*/
         for (IncreaseCountDTO dto : dtoListMySQL) {
+            String idempotentUuid = dto.getIdempotentUuid();
             String flag = dto.getFlag();
             int count = dto.getCount();
-            if (!flagToCountMap.containsKey(flag)) {
+            /*if (!flagToCountMap.containsKey(flag)) {
                 flagToCountMap.put(flag, 0);
             }
-            flagToCountMap.put(flag, flagToCountMap.get(flag) + count);
+
+            if (Boolean.TRUE.equals(redisTemplate.opsForValue().setIfAbsent(idempotentUuid, StringUtils.EMPTY, 300, TimeUnit.SECONDS)))
+                flagToCountMap.put(flag, flagToCountMap.get(flag) + count);
+            else {
+                if (log.isInfoEnabled())
+                    log.info("意图重复消费消息 {}", dto);
+            }*/
+
+            this.commonService.updateIncreaseCount(idempotentUuid, flag, count);
         }
 
-        for (String flag : flagToCountMap.keySet()) {
+        /*for (String flag : flagToCountMap.keySet()) {
             int count = flagToCountMap.get(flag);
-            this.commonMapper.updateIncreaseCount(flag, count);
-        }
+            if (count > 0)
+                this.commonMapper.updateIncreaseCount(flag, count);
+        }*/
 
-        // Cassandra计数器
-        flagToCountMap = new HashMap<>();
-        for (IncreaseCountDTO dto : dtoListCassandra) {
-            String flag = dto.getFlag();
-            int count = dto.getCount();
-            if (!flagToCountMap.containsKey(flag)) {
-                flagToCountMap.put(flag, 0);
-            }
-            flagToCountMap.put(flag, flagToCountMap.get(flag) + count);
-        }
-
-        for (String flag : flagToCountMap.keySet()) {
-            int count = flagToCountMap.get(flag);
-            this.cassandraMapper.updateIncreaseCount(flag, count);
-        }
+//        // Cassandra计数器
+//        Map<String, Integer> flagToCountMap = new HashMap<>();
+//        for (IncreaseCountDTO dto : dtoListCassandra) {
+//            String idempotentUuid = dto.getIdempotentUuid();
+//            String flag = dto.getFlag();
+//            int count = dto.getCount();
+//            if (!flagToCountMap.containsKey(flag)) {
+//                flagToCountMap.put(flag, 0);
+//            }
+//
+//            if (Boolean.TRUE.equals(redisTemplate.opsForValue().setIfAbsent(idempotentUuid, StringUtils.EMPTY, 300, TimeUnit.SECONDS)))
+//                flagToCountMap.put(flag, flagToCountMap.get(flag) + count);
+//            else {
+//                if (log.isInfoEnabled())
+//                    log.info("意图重复消费消息 {}", dto);
+//            }
+//        }
+//
+//        for (String flag : flagToCountMap.keySet()) {
+//            int count = flagToCountMap.get(flag);
+//            if (count > 0)
+//                this.cassandraMapper.updateIncreaseCount(flag, count);
+//        }
     }
 
     /**
@@ -206,7 +211,7 @@ public class ConfigKafkaListener {
      * @param messages
      * @throws Exception
      */
-    @KafkaListener(topics = TopicCreateOrderCassandraIndex)
+    @KafkaListener(topics = com.future.demo.constant.Const.TopicCreateOrderCassandraIndex, concurrency = "16")
     public void receiveMessageCreateOrderCassandraIndex(List<String> messages) throws Exception {
         try {
             List<OrderModel> modelList = new ArrayList<>();
@@ -232,19 +237,21 @@ public class ConfigKafkaListener {
             cassandraMapper.insertBatchOrderIndexListByMerchantId(modelList);
 
             // 异步更新 t_count
-            IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO();
-            increaseCountDTO.setType(IncreaseCountDTO.Type.Cassandra);
-            increaseCountDTO.setFlag("orderListByUserId");
-            increaseCountDTO.setCount(modelList.size());
-            String JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
-            kafkaTemplate.send(TopicIncreaseCount, JSON).get();
+            if (!modelList.isEmpty()) {
+                for (OrderModel model : modelList) {
+                    IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO(String.valueOf(model.getId()), "orderListByUserId");
+                    /*increaseCountDTO.setType(IncreaseCountDTO.Type.Cassandra);*/
+                    increaseCountDTO.setCount(1);
+                    String JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
+                    kafkaTemplate.send(com.future.demo.constant.Const.TopicIncreaseCount, JSON).get();
 
-            increaseCountDTO = new IncreaseCountDTO();
-            increaseCountDTO.setType(IncreaseCountDTO.Type.Cassandra);
-            increaseCountDTO.setFlag("orderListByMerchantId");
-            increaseCountDTO.setCount(modelList.size());
-            JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
-            kafkaTemplate.send(TopicIncreaseCount, JSON).get();
+                    increaseCountDTO = new IncreaseCountDTO(String.valueOf(model.getId()), "orderListByMerchantId");
+                    /*increaseCountDTO.setType(IncreaseCountDTO.Type.Cassandra);*/
+                    increaseCountDTO.setCount(1);
+                    JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
+                    kafkaTemplate.send(com.future.demo.constant.Const.TopicIncreaseCount, JSON).get();
+                }
+            }
 
             // Cassandra 成功建立后，从缓存中删除订单信息
             redisTemplate.executePipelined(new SessionCallback<String>() {
@@ -254,7 +261,7 @@ public class ConfigKafkaListener {
                     for (OrderModel orderModel : modelList) {
                         String userIdStr = String.valueOf(orderModel.getUserId());
                         String orderIdStr = String.valueOf(orderModel.getId());
-                        String key = CacheKeyPrefixOrderInCacheBeforeCassandraIndexCreate + userIdStr;
+                        String key = com.future.demo.constant.Const.CacheKeyPrefixOrderInCacheBeforeCassandraIndexCreate + userIdStr;
                         redisOperations.opsForHash().delete(key, orderIdStr);
                     }
 
@@ -273,7 +280,7 @@ public class ConfigKafkaListener {
      * @param messages
      * @throws Exception
      */
-    @KafkaListener(topics = TopicSetupProductFlashSaleCache)
+    @KafkaListener(topics = com.future.demo.constant.Const.TopicSetupProductFlashSaleCache, concurrency = "1")
     public void receiveMessageSetupProductFlashSaleCache(List<String> messages) {
         if (messages == null || messages.isEmpty()) {
             if (log.isWarnEnabled())
@@ -353,7 +360,7 @@ public class ConfigKafkaListener {
      * @param messages
      * @throws Exception
      */
-    @KafkaListener(topics = TopicAddProductIdAndStockAmountIntoRedisZSetAfterCreation)
+    @KafkaListener(topics = com.future.demo.constant.Const.TopicAddProductIdAndStockAmountIntoRedisZSetAfterCreation, concurrency = "1")
     public void receiveMessageAddProductIdAndStockAmountIntoRedisZSetAfterCreation(List<String> messages) {
         if (messages == null || messages.isEmpty()) {
             if (log.isWarnEnabled())
@@ -376,12 +383,12 @@ public class ConfigKafkaListener {
                 for (ProductModel productModel : modelList) {
                     String productIdStr = String.valueOf(productModel.getId());
                     int stockAmount = productModel.getStock();
-                    redisOperations.opsForZSet().add(KeyProductIdAndStockAmountInRedisZSet, productIdStr, stockAmount);
+                    redisOperations.opsForZSet().add(com.future.demo.constant.Const.KeyProductIdAndStockAmountInRedisZSet, productIdStr, stockAmount);
                 }
                 return null;
             }
         });
         if (log.isDebugEnabled())
-            log.debug("成功设置商品信息到 {} {}", KeyProductIdAndStockAmountInRedisZSet, modelList);
+            log.debug("成功设置商品信息到 {} {}", com.future.demo.constant.Const.KeyProductIdAndStockAmountInRedisZSet, modelList);
     }
 }

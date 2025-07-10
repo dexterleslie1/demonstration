@@ -3,7 +3,6 @@ package com.future.demo.service;
 import cn.hutool.core.util.RandomUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.future.demo.dto.FlashSaleProductCacheUpdateEventDTO;
-import com.future.demo.dto.IncreaseCountDTO;
 import com.future.demo.entity.ProductModel;
 import com.future.demo.mapper.ProductMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +17,8 @@ import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static com.future.demo.constant.Const.*;
+import static com.future.demo.constant.Const.TopicAddProductIdAndStockAmountIntoRedisZSetAfterCreation;
+import static com.future.demo.constant.Const.TopicSetupProductFlashSaleCache;
 
 @Service
 @Slf4j
@@ -175,12 +175,11 @@ public class ProductService {
             log.debug("成功发送商品创建后设置商品ID和库存到redis zset中消息 {}", JSON);
 
         // 异步更新 t_count
-        IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO();
+        /*IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO(String.valueOf(model.getId()), "product");
         increaseCountDTO.setType(IncreaseCountDTO.Type.MySQL);
-        increaseCountDTO.setFlag("product");
         increaseCountDTO.setCount(1);
         JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
-        kafkaTemplate.send(TopicIncreaseCount, JSON).get();
+        kafkaTemplate.send(TopicIncreaseCount, JSON).get();*/
 
         return model.getId();
     }
@@ -194,6 +193,14 @@ public class ProductService {
         LocalDateTime localDateTimeNow = LocalDateTime.now();
         int randomMinute = RandomUtil.randomInt(1, 11);
         return localDateTimeNow.plusMinutes(randomMinute);
+    }
+
+    public LocalDateTime getFlashSaleStartTimeRandomly(long futureOffsetSeconds) {
+        if (futureOffsetSeconds < 5) {
+            futureOffsetSeconds = 5;
+        }
+        LocalDateTime localDateTimeNow = LocalDateTime.now();
+        return localDateTimeNow.plusSeconds(futureOffsetSeconds);
     }
 
     /**
