@@ -1019,6 +1019,16 @@ public class ValidationService {
 
 
 
+### `List<String>` 校验
+
+```java
+// 测试List数据校验
+@NotEmpty(message = "请指定书本列表")
+private List<String> bookList;
+```
+
+
+
 ### 校验失败国际化处理
 
 `PersonAddVo`添加国际化消息`key`，如：`@NotBlank(message = "{person.name.required}")`

@@ -7,6 +7,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 // 新增person vo
 @Data
 public class PersonAddVo {
@@ -31,6 +33,10 @@ public class PersonAddVo {
     @Size(min = 1, message = "请指定爱好")
     private String[] hobby;
     private Person.Address address;
+
+    // 测试List数据校验
+    @NotEmpty(message = "请指定书本列表")
+    private List<String> bookList;
 
     @Data
     @AllArgsConstructor

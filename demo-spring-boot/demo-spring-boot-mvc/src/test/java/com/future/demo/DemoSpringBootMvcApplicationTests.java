@@ -16,6 +16,8 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import java.util.Arrays;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -208,6 +210,7 @@ class DemoSpringBootMvcApplicationTests {
         personAddVo.setAge(18);
         personAddVo.setHobby(new String[]{"吃饭", "睡觉", "打豆豆"});
         personAddVo.setAddress(new Person.Address("北京市", "海淀区"));
+        personAddVo.setBookList(Arrays.asList("book1", "book2"));
         this.mockMvc.perform(post("/api/v1/restful/person")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(JSONUtil.ObjectMapperInstance.writeValueAsBytes(personAddVo)))
@@ -295,6 +298,7 @@ class DemoSpringBootMvcApplicationTests {
         personAddVo.setAge(-1);
         personAddVo.setHobby(new String[]{"吃饭", "睡觉", "打豆豆"});
         personAddVo.setAddress(new Person.Address("北京市", "海淀区"));
+        personAddVo.setBookList(Arrays.asList("book1", "book2"));
         this.mockMvc.perform(post("/api/v1/restful/person")
                         .header("Accept-Language", "en-US")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -316,6 +320,7 @@ class DemoSpringBootMvcApplicationTests {
         personAddVo.setAge(-1);
         personAddVo.setHobby(new String[]{"吃饭", "睡觉", "打豆豆"});
         personAddVo.setAddress(new Person.Address("北京市", "海淀区"));
+        personAddVo.setBookList(Arrays.asList("book1", "book2"));
         this.mockMvc.perform(post("/api/v1/restful/person")
                         .header("Accept-Language", "zh-CN")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -337,6 +342,7 @@ class DemoSpringBootMvcApplicationTests {
         personAddVo.setAge(12);
         personAddVo.setHobby(new String[]{"吃饭", "睡觉", "打豆豆"});
         personAddVo.setAddress(new Person.Address("北京市", "海淀区"));
+        personAddVo.setBookList(Arrays.asList("book1", "book2"));
         this.mockMvc.perform(post("/api/v1/restful/person")
                         .header("Accept-Language", "zh-CN")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -352,6 +358,7 @@ class DemoSpringBootMvcApplicationTests {
         personAddVo.setAge(12);
         personAddVo.setHobby(new String[]{"吃饭", "睡觉", "打豆豆"});
         personAddVo.setAddress(new Person.Address("北京市", "海淀区"));
+        personAddVo.setBookList(Arrays.asList("book1", "book2"));
         this.mockMvc.perform(post("/api/v1/restful/person")
                         .header("Accept-Language", "zh-CN")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -365,6 +372,7 @@ class DemoSpringBootMvcApplicationTests {
         personAddVo.setAge(12);
         personAddVo.setHobby(new String[]{"吃饭", "睡觉", "打豆豆"});
         personAddVo.setAddress(new Person.Address("北京市", "海淀区"));
+        personAddVo.setBookList(Arrays.asList("book1", "book2"));
         this.mockMvc.perform(post("/api/v1/restful/person")
                         .header("Accept-Language", "en-US")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -379,12 +387,29 @@ class DemoSpringBootMvcApplicationTests {
         personAddVo.setSex1("男");
         personAddVo.setAge(12);
         personAddVo.setAddress(new Person.Address("北京市", "海淀区"));
+        personAddVo.setBookList(Arrays.asList("book1", "book2"));
         this.mockMvc.perform(post("/api/v1/restful/person")
                         .header("Accept-Language", "en-US")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(JSONUtil.ObjectMapperInstance.writeValueAsBytes(personAddVo)))
                 .andExpect(status().isOk())
                 .andExpect(content().string("{\"errorCode\":0,\"errorMessage\":\"参数校验失败\",\"data\":{\"hobby\":\"请指定爱好\"}}"));
+
+        // 测试校验 List<String> 数据
+        personAddVo = new PersonAddVo();
+        personAddVo.setName("张三");
+        personAddVo.setSex("男");
+        personAddVo.setSex1("男");
+        personAddVo.setAge(12);
+        personAddVo.setHobby(new String[]{"h1"});
+        personAddVo.setAddress(new Person.Address("北京市", "海淀区"));
+        this.mockMvc.perform(post("/api/v1/restful/person")
+                        .header("Accept-Language", "en-US")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(JSONUtil.ObjectMapperInstance.writeValueAsBytes(personAddVo)))
+                .andExpect(status().isOk())
+                .andExpect(content().string("{\"errorCode\":0,\"errorMessage\":\"参数校验失败\",\"data\":{\"bookList\":\"请指定书本列表\"}}"));
+
 
         // endregion
     }

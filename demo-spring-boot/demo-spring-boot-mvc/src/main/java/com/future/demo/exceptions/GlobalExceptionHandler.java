@@ -75,7 +75,7 @@ public class GlobalExceptionHandler {
     public ObjectResponse<Map<String, String>> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
         ObjectResponse<Map<String, String>> response = new ObjectResponse<>();
         response.setErrorMessage("参数校验失败");
-        Map<String, String> map = e.getFieldErrors().stream().collect(Collectors.toMap(FieldError::getField, FieldError::getDefaultMessage));
+        Map<String, String> map = e.getFieldErrors().stream().collect(Collectors.toMap(FieldError::getField, FieldError::getDefaultMessage, (a, b) -> a/* 重复键合并策略，返回第一个 */));
         response.setData(map);
         return response;
     }
