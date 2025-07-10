@@ -60,6 +60,7 @@ export default defineConfig({
           { text: 'RabbitMQ', link: '/rabbitmqt/README.md' },
           { text: 'RocketMQ', link: '/rocketmq/README.md' },
           { text: 'Skywalking', link: '/skywalking/README.md' },
+          { text: 'Debezium', link: '/debezium/README.md' },
         ]
       }, {
         text: 'Linux', items: [

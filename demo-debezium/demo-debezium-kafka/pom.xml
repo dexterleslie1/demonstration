@@ -5,11 +5,11 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.7.2</version>
+        <version>2.7.18</version>
     </parent>
 
     <groupId>com.future.demo</groupId>
-    <artifactId>demo-debezium-embedded</artifactId>
+    <artifactId>demo-debezium-kafka</artifactId>
     <version>1.0.0</version>
 
     <properties>
@@ -39,11 +39,11 @@
         </dependency>
 
         <!-- debezium依赖 -->
-        <!--<dependency>
-            <groupId>io.debezium</groupId>
-            <artifactId>debezium-api</artifactId>
-            <version>${debezium.version}</version>
-        </dependency>-->
+        <!--		<dependency>-->
+        <!--			<groupId>io.debezium</groupId>-->
+        <!--			<artifactId>debezium-api</artifactId>-->
+        <!--			<version>${debezium.version}</version>-->
+        <!--		</dependency>-->
         <dependency>
             <groupId>io.debezium</groupId>
             <artifactId>debezium-embedded</artifactId>
@@ -54,11 +54,11 @@
             <artifactId>debezium-connector-mysql</artifactId>
             <version>${debezium.version}</version>
         </dependency>
-        <!--<dependency>
+        <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>connect-api</artifactId>
             <version>3.5.1</version>
-        </dependency>-->
+        </dependency>
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>

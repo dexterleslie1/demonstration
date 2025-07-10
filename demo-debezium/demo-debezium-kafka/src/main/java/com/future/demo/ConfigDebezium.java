@@ -46,13 +46,9 @@ public class ConfigDebezium {
     }
 
     private void handleChangeEvent(RecordChangeEvent<SourceRecord> sourceRecordRecordChangeEvent) {
-        log.info("{}", sourceRecordRecordChangeEvent);
-
         SourceRecord sourceRecord = sourceRecordRecordChangeEvent.record();
         Struct sourceRecordChangeValue = (Struct) sourceRecord.value();
         if (sourceRecordChangeValue != null) {
-            // 获取表名称
-            String tableName = ((Struct) sourceRecordChangeValue.get("source")).getString("table");
             Envelope.Operation operation = Envelope.Operation.forCode((String) sourceRecordChangeValue.get("op"));
             String record = operation == Envelope.Operation.DELETE ? "before" : "after";
             Struct struct = (Struct) sourceRecordChangeValue.get(record);
@@ -62,40 +58,35 @@ public class ConfigDebezium {
                     .map(fieldName -> Pair.of(fieldName, struct.get(fieldName)))
                     .collect(toMap(Pair::getKey, Pair::getValue));
 
-            log.info("table={},payload={},operation={}", tableName, payload, operation);
+            log.info("payload={},operation={}", payload, operation);
         }
-
-        /*boolean b = true;
-        if (b) {
-            throw new RuntimeException("测试错误");
-        }*/
     }
 
     public io.debezium.config.Configuration customerConnector() {
-        String uuidStr = "debezium";
+        String randomString = UUID.randomUUID().toString();
         return io.debezium.config.Configuration.create()
                 .with("name", "customer-mysql-connector")
                 .with("connector.class", "io.debezium.connector.mysql.MySqlConnector")
                 .with("offset.storage", "org.apache.kafka.connect.storage.FileOffsetBackingStore")
-                .with("offset.storage.file.filename", "/tmp/offset-" + uuidStr + ".dat")
+                .with("offset.storage.file.filename", "/tmp/offset-" + randomString + ".dat")
                 .with("offset.flush.interval.ms", "10000")
                 .with("database.hostname", "localhost")
                 .with("database.port", "3306")
                 .with("database.user", "root")
                 .with("database.password", "123456")
-                .with("database.dbname", "demo")
-                .with("database.include.list", "demo")
+                .with("database.dbname", "demo_db")
+                .with("database.include.list", "demo_db")
                 .with("include.schema.changes", "false")
                 .with("database.server.id", "10181")
                 .with("database.server.name", "customer-mysql-db-server")
 
                 // debezium2.x配置
                 .with("schema.history.internal", "io.debezium.storage.file.history.FileSchemaHistory")
-                .with("schema.history.internal.file.filename", "/tmp/dbhistory-" + uuidStr + ".dat")
+                .with("schema.history.internal.file.filename", "/tmp/dbhistory-" + randomString + ".dat")
 
                 // debezium1.x配置
-                /*.with("database.history", "io.debezium.relational.history.FileDatabaseHistory")
-                .with("database.history.file.filename", "/tmp/dbhistory-debezium.dat")*/
+                .with("database.history", "io.debezium.relational.history.FileDatabaseHistory")
+                .with("database.history.file.filename", "/tmp/dbhistory-" + randomString + ".dat")
 
                 .with("errors.max.retries", "-1")
                 .with("errors.retry.delay.initial.ms", "300")

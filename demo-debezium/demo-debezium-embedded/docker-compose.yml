@@ -2,9 +2,7 @@ version: '3.0'
 
 services:
   db:
-    build:
-      context: ./
-    image: mariadb:10.4.19
+    image: mariadb:11.4
     environment:
       - MYSQL_ROOT_PASSWORD=123456
       - TZ=Asia/Shanghai
@@ -17,43 +15,3 @@ services:
       - --skip-character-set-client-handshake
       - --innodb-buffer-pool-size=1g
     network_mode: host
-
-#  demo-debezium-zookeeper-server:
-#    container_name: demo-debezium-zookeeper-server
-#    image: wurstmeister/zookeeper
-#    ports:
-#      - "2181:2181"
-#    environment:
-#      - TZ=Asia/Shanghai
-#      - ZOOKEEPER_CLIENT_PORT=2181
-#    networks:
-#      - net
-#
-#  demo-debezium-kafka-server:
-#    container_name: demo-debezium-kafka-server
-#    image: wurstmeister/kafka
-#    depends_on:
-#      - demo-debezium-zookeeper-server
-#    ports:
-#      - "9092:9092"
-#    environment:
-#      - TZ=Asia/Shanghai
-#      - KAFKA_ZOOKEEPER_CONNECT=demo-debezium-zookeeper-server:2181
-#      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
-#      - KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092
-#      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
-#    networks:
-#      - net
-#
-#  demo-debezium-kafka-manager:
-#    container_name: demo-debezium-kafka-manager
-#    image: sheepkiller/kafka-manager
-#    depends_on:
-#      - demo-debezium-kafka-server
-#    environment:
-#      - TZ=Asia/Shanghai
-#      - ZK_HOSTS=demo-debezium-zookeeper-server:2181
-#    ports:
-#      - 9000:9000
-#    networks:
-#      - net

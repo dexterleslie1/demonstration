@@ -1,64 +1,67 @@
 version: '3.0'
 
-networks:
-  net:
-    name: demo-debezium-net
-
 services:
-  zookeeper:
-    image: quay.io/debezium/zookeeper:latest
-    ports:
-      - 2181:2181
-      - 2888:2888
-      - 3888:3888
-    networks:
-      - net
-
-  kafka:
-    image: quay.io/debezium/kafka:latest
-    ports:
-      - 9092:9092
+  db:
+    build:
+      context: ./
+    image: mariadb:10.4.19
     environment:
-      - ZOOKEEPER_CONNECT=zookeeper:2181
+      - MYSQL_ROOT_PASSWORD=123456
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./db.sql:/docker-entrypoint-initdb.d/db.sql:ro
+      - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf:ro
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+      - --innodb-buffer-pool-size=1g
+    network_mode: host
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.3.0
+    environment:
+      TZ: Asia/Shanghai
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      # todo 设置 ZooKeeper 的 JVM 堆内存
+      # ZOOKEEPER_HEAP_OPTS: "-Xms1g -Xmx1g"
+    ports:
+      - "2181:2181"
+  kafka:
+    image: confluentinc/cp-kafka:7.3.0
     depends_on:
       - zookeeper
-    networks:
-      - net
-  
-  connect:
-    image: quay.io/debezium/connect:latest
     ports:
-      - 8083:8083
-      - 5005:5005
+      - "9092:9092"
+      # 映射 JMX 端口到主机
+      - "9997:9997"
+    environment:
+      TZ: Asia/Shanghai
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://${kafka_advertised_listeners}:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      # 设置 Kafka 的 JVM 堆内存
+      KAFKA_HEAP_OPTS: "-Xms1g -Xmx1g"
+      # 配置 JMX 端口和认证，配置了 jmx 端口才能够被外部工具监控
+      KAFKA_JMX_OPTS: "-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.local.only=false -Dcom.sun.management.jmxremote.port=9997 -Dcom.sun.management.jmxremote.rmi.port=9997"
+      # 禁用自动创建 Topic，否则 Spring Boot 会自动创建 partitions=0 的 topic
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+  # 在 kafka 服务成功启动后自动配置 kafka 服务
+  kafka-topic-config:
+    image: confluentinc/cp-kafka:7.3.0
     depends_on:
       - kafka
     environment:
-      - BOOTSTRAP_SERVERS=kafka:9092
-      - GROUP_ID=1
-      - CONFIG_STORAGE_TOPIC=my_connect_configs
-      - OFFSET_STORAGE_TOPIC=my_connect_offsets
-      - STATUS_STORAGE_TOPIC=my_source_connect_statuses
-    networks:
-      - net
-
-  kafka-ui:
-    image: provectuslabs/kafka-ui:latest
+      TZ: Asia/Shanghai
+    # 自动创建 topic
+    entrypoint: /usr/bin/kafka-topics --create --bootstrap-server kafka:9092 --replication-factor 1 --partitions 128 --topic my-topic-1
+  kafka-manager:
+    image: sheepkiller/kafka-manager:latest
     ports:
-      - "9093:8080"
+      - "9000:9000"
     environment:
-      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092
-    depends_on:
-      - kafka
-    networks:
-      - net
-
-  debezium-ui:
-    image: debezium/debezium-ui:latest
-    ports:
-      - "8080:8080"
-    environment:
-      - KAFKA_CONNECT_URIS=http://connect:8083
-    depends_on:
-      - connect
-    networks:
-      - net
+      TZ: Asia/Shanghai
+      ZK_HOSTS: zookeeper:2181
+      APPLICATION_SECRET: "123456"
