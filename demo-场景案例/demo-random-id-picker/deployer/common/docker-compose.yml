@@ -1,0 +1,11 @@
+version: "3.1"
+
+services:
+  redis:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-random-id-picker-redis
+    # 设置redis密码
+    command: redis-server /usr/local/etc/redis/redis-standalone.conf --requirepass 123456
+    environment:
+      - TZ=Asia/Shanghai
+    restart: unless-stopped
+    network_mode: host

@@ -1,0 +1,18 @@
+version: "3.1"
+
+services:
+  service:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-random-id-picker-service
+    environment:
+      - JAVA_OPTS=${java_opts}
+      - TZ=Asia/Shanghai
+      - common_db_host=${common_db_host}
+      - common_db_port=${common_db_port}
+      - common_redis_host=${common_redis_host}
+    logging:
+      driver: json-file
+      options:
+        max-size: "128m"
+        max-file: "10"
+    restart: unless-stopped
+    network_mode: host

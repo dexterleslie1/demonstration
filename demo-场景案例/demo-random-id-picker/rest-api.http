@@ -1,0 +1,19 @@
+### init
+#POST http://localhost:8080/api/v1/id/picker/init?flag=order
+POST http://192.168.1.185/api/v1/id/picker/init?flag=order
+Accept: application/json
+
+### addIdList
+#POST http://localhost:8080/api/v1/id/picker/addIdList?flag=order&idList=1001,1002,1003,1004,1005,1006
+POST http://192.168.1.185/api/v1/id/picker/addIdList?flag=order&idList=1001,1002,1003,1004,1005,1006
+Accept: application/json
+
+### listIdRandomly
+#GET http://localhost:8080/api/v1/id/picker/listIdRandomly?flag=order&size=1024
+GET http://192.168.1.185/api/v1/id/picker/listIdRandomly?flag=order&size=1024
+Accept: application/json
+
+### reset
+#PUT http://localhost:8080/api/v1/id/picker/reset?flag=order
+PUT http://192.168.1.185/api/v1/id/picker/reset?flag=order
+Accept: application/json

@@ -125,4 +125,56 @@
    ansible-playbook playbook-service-destroy.yml --inventory inventory.ini
    ```
 
-   
+
+
+
+## 随机 `ID` 选择器
+
+>背景：在海量订单或者商品数据场景中，需要模拟根据订单 `ID` 或者商品 `ID` 列表查询订单或者商品信息。此时需要借助随机 `ID` 选择器按照一定的频率随机抽取 `ID` 列表。
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-%E5%9C%BA%E6%99%AF%E6%A1%88%E4%BE%8B/demo-random-id-picker)
+
+### 运行并测试示例
+
+编译示例：
+
+```sh
+./build.sh && ./push.sh
+```
+
+复制示例配置：
+
+```sh
+ansible-playbook playbook-deployer-config.yml --inventory inventory.ini
+```
+
+启用示例：
+
+```sh
+ansible-playbook playbook-service-start.yml --inventory inventory.ini
+```
+
+初始化示例：
+
+```sh
+curl -X POST http://192.168.1.185/api/v1/id/picker/init?flag=order
+```
+
+使用 `wrk` 测试 `id` 列表新增性能：
+
+```sh
+wrk -t8 -c16 -d30000000s --latency --timeout 30 http://192.168.1.185/api/v1/id/picker/testAddIdList?flag=order
+```
+
+销毁示例：
+
+```sh
+ansible-playbook playbook-service-destroy.yml --inventory inventory.ini
+```
+
+
+
+### 结论
+
+经过测试，在单表数据量达到 `13` 亿时，插入性能几乎没有损失，依旧保持在每秒插入 `18` 万条记录水平。随机抽取 `ID` 列表接口性能依旧没有明显损失，保持在 `10ms` 到 `60ms` 之间。
+

@@ -1,0 +1,128 @@
+#user  nobody;
+worker_processes auto;
+worker_cpu_affinity auto;  # 自动将进程分散绑定到所有核心
+worker_rlimit_nofile 65535;
+
+#error_log  logs/error.log;
+#error_log  logs/error.log  notice;
+#error_log  logs/error.log  info;
+
+#pid        logs/nginx.pid;
+error_log  logs/error.log  notice;
+
+events {
+    worker_connections  65535;
+}
+
+
+http {
+    #log_format access '[$time_local] "$request" $status $request_body "$http_refferer" "$http_user_agent" $http_x_forwarded_for';
+    include       mime.types;
+    include       /usr/local/openresty/nginx/conf/naxsi_core.rules;
+    default_type  application/octet-stream;
+
+    #log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+    #                  '$status $body_bytes_sent "$http_referer" '
+    #                  '"$http_user_agent" "$http_x_forwarded_for"';
+
+    #access_log  logs/access.log  main;
+
+    sendfile        on;
+    #tcp_nopush     on;
+
+    #keepalive_timeout  0;
+    keepalive_timeout  65;
+    keepalive_requests 100000;
+
+    gzip on;
+    gzip_min_length 1k;
+    gzip_buffers 16 64k;
+    gzip_http_version 1.1;
+    gzip_comp_level 6;
+    gzip_types application/json text/plain application/javascript text/css application/xml;
+    gzip_vary on;
+    server_tokens off;
+    autoindex off;
+    access_log off;
+    client_body_buffer_size  10k;
+    client_header_buffer_size 1k;
+    client_max_body_size 120k;
+    large_client_header_buffers 2 8k;
+    gzip_proxied any;
+
+    # 反向代理配置
+    proxy_buffering on;
+    proxy_buffer_size 8k;
+    proxy_buffers 32 8k;
+    proxy_busy_buffers_size 16k;
+
+    proxy_cache_path /tmp/proxy_cache levels=1:2 keys_zone=cache_one:200m inactive=1d max_size=2g use_temp_path=off;
+
+    lua_shared_dict prometheus_metrics 10M;
+    lua_package_path "/usr/local/openresty/nginx/conf/?.lua;;";
+
+    init_worker_by_lua_block {
+        prometheus = require("prometheus").init("prometheus_metrics")
+
+        metric_requests = prometheus:counter(
+            "nginx_http_requests_total", "Number of HTTP requests", {"host", "status"})
+        metric_latency = prometheus:histogram(
+            "nginx_http_request_duration_seconds", "HTTP request latency", {"host"})
+        metric_connections = prometheus:gauge(
+            "nginx_http_connections", "Number of HTTP connections", {"state"})
+    }
+
+    log_by_lua_block {
+        metric_requests:inc(1, {ngx.var.server_name, ngx.var.status})
+        metric_latency:observe(tonumber(ngx.var.request_time), {ngx.var.server_name})
+    }
+
+    upstream backend {
+        least_conn;
+        keepalive 65535;
+        keepalive_timeout 65; # 与 Spring Boot 的连接超时对齐
+        keepalive_requests 100000; # 单个连接最大请求数
+        # server 192.168.1.187:8080;
+        {% for host in groups['api'] %}
+        server {{ host }}:8080;
+        {% endfor %}
+    }
+
+    server {
+        listen       80;
+        server_name  localhost;
+
+        #charset koi8-r;
+
+        #access_log  logs/host.access.log  main;
+
+        location / {
+            proxy_set_header Host $host:$server_port;
+            proxy_http_version 1.1;
+            proxy_set_header Connection '';
+            proxy_pass http://backend;
+        }
+
+        #location / {
+        #    content_by_lua_block {
+        #        ngx.header.content_type = "application/json;charset=utf-8";
+        #        local uuidStr = "xxx"
+        #        ngx.say("{\"errorCode\":0,\"errorMessage\":null,\"data\":\"UUID:"..uuidStr.."\"}");
+        #    }
+        #}
+    }
+
+    server {
+        listen 9145;
+        # allow 192.168.0.0/16;
+        # deny all;
+        location /metrics {
+            content_by_lua_block {
+                metric_connections:set(ngx.var.connections_reading, {"reading"})
+                metric_connections:set(ngx.var.connections_waiting, {"waiting"})
+                metric_connections:set(ngx.var.connections_writing, {"writing"})
+                prometheus:collect()
+            }
+        }
+    }
+}
