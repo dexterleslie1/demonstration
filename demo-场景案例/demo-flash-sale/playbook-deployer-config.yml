@@ -109,6 +109,11 @@
         path: ~/deployer-flash-sale/crond/.env
         regexp: "^common_cassandra_contact_points="
         line: "common_cassandra_contact_points={{ groups['cassandra'] | map('regex_replace', '^(.*)$', '\\1:9042') | list | join(',') }}"
+    - name: "配置crond服务的random_id_picker_host"
+      lineinfile:
+        path: ~/deployer-flash-sale/crond/.env
+        regexp: "^random_id_picker_host="
+        line: "random_id_picker_host={{ groups['common'][0] }}"
 
 - name: "配置api服务的deployer"
   hosts: api
@@ -164,3 +169,8 @@
         path: ~/deployer-flash-sale/service/.env
         regexp: "^skywalking_grpc_log_server_host="
         line: "skywalking_grpc_log_server_host={{ groups['common'][0] }}"
+    - name: "配置api服务的random_id_picker_host"
+      lineinfile:
+        path: ~/deployer-flash-sale/service/.env
+        regexp: "^random_id_picker_host="
+        line: "random_id_picker_host={{ groups['common'][0] }}"

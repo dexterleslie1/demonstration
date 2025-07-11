@@ -53,50 +53,6 @@ public class ProductService {
     @Resource
     KafkaTemplate<String, String> kafkaTemplate;
 
-//    /**
-//     * 向 redis 缓存初始化商品
-//     */
-//    public void initCaching() throws Exception {
-//        int batchSize = 1000;
-//        int concurrentThreads = 32;
-//        AtomicInteger count = new AtomicInteger();
-//
-//        ExecutorService threadPool = Executors.newCachedThreadPool();
-//        for (int i = 0; i < concurrentThreads; i++) {
-//            threadPool.submit(() -> {
-//                try {
-//                    Map<String, String> productKeyToJSONMap = new HashMap<>();
-//                    int productId;
-//                    while ((productId = count.getAndIncrement()) <= ProductTotalCount) {
-//                        String key = KeyProduct + productId;
-//                        ProductModel model = new ProductModel();
-//                        model.setId((long) productId);
-//                        model.setMerchantId(RandomUtil.randomLong(0, Long.MAX_VALUE));
-//                        model.setName("商品" + productId);
-//                        model.setStock(0);
-//                        String JSON = this.objectMapper.writeValueAsString(model);
-//                        productKeyToJSONMap.put(key, JSON);
-//
-//                        if (productKeyToJSONMap.size() >= batchSize) {
-//                            this.redisTemplate.opsForValue().multiSet(productKeyToJSONMap);
-//                            productKeyToJSONMap = new HashMap<>();
-//                        }
-//
-//                        int countInternal;
-//                        if (((countInternal = count.get()) % (batchSize * 100)) == 0) {
-//                            log.info("count=" + countInternal);
-//                        }
-//                    }
-//                } catch (Exception ex) {
-//                    throw new RuntimeException(ex);
-//                }
-//            });
-//        }
-//
-//        threadPool.shutdown();
-//        while (!threadPool.awaitTermination(100, TimeUnit.MILLISECONDS)) ;
-//    }
-
     public List<ProductModel> listByIds(List<Long> idList) {
 //        List<String> idStrList = idList.stream().map(o -> KeyProduct + o).collect(Collectors.toList());
 //        List<String> jsonList = this.redisTemplate.opsForValue().multiGet(idStrList);

@@ -1,6 +1,10 @@
 package com.future.demo.constant;
 
 public class Const {
+    /**
+     * 向随机 id 选择器添加 id 列表
+     */
+    public final static String TopicRandomIdPickerAddIdList = "topic-random-id-picker-add-id-list";
     public final static String TopicOrderInCacheSyncToDb = "topic-order-in-cache-sync-to-db";
     /**
      * 递增数据库和Cassandra t_count 主题

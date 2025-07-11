@@ -3,8 +3,10 @@ package com.future.demo.crond;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.future.demo.config.PrometheusCustomMonitor;
+import com.future.demo.constant.Const;
 import com.future.demo.dto.FlashSaleProductCacheUpdateEventDTO;
 import com.future.demo.dto.IncreaseCountDTO;
+import com.future.demo.dto.RandomIdPickerAddIdEventDTO;
 import com.future.demo.entity.OrderModel;
 import com.future.demo.entity.ProductModel;
 import com.future.demo.mapper.CassandraMapper;
@@ -13,6 +15,7 @@ import com.future.demo.mapper.ProductMapper;
 import com.future.demo.service.CommonService;
 import com.future.demo.service.OrderService;
 import com.future.demo.service.ProductService;
+import com.future.random.id.picker.RandomIdPickerService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -63,6 +66,8 @@ public class ConfigKafkaListener {
     KafkaTemplate kafkaTemplate;
     @Resource
     ProductService productService;
+    @Resource
+    RandomIdPickerService randomIdPickerService;
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory(
@@ -390,5 +395,32 @@ public class ConfigKafkaListener {
         });
         if (log.isDebugEnabled())
             log.debug("成功设置商品信息到 {} {}", com.future.demo.constant.Const.KeyProductIdAndStockAmountInRedisZSet, modelList);
+    }
+
+    /**
+     * 向随机 id 选择器添加 id 列表
+     *
+     * @param messages
+     * @throws Exception
+     */
+    @KafkaListener(topics = Const.TopicRandomIdPickerAddIdList, concurrency = "1")
+    public void receiveMessageRandomIdPickerAddIdList(List<String> messages) throws Exception {
+        try {
+            List<RandomIdPickerAddIdEventDTO> dtoList = new ArrayList<>();
+            for (String JSON : messages) {
+                RandomIdPickerAddIdEventDTO dto = objectMapper.readValue(JSON, RandomIdPickerAddIdEventDTO.class);
+                dtoList.add(dto);
+            }
+            if (!dtoList.isEmpty()) {
+                Map<String, List<Long>> flagToIdListMap = dtoList.stream().collect(
+                        Collectors.groupingBy(RandomIdPickerAddIdEventDTO::getFlag,
+                                Collectors.mapping(RandomIdPickerAddIdEventDTO::getId, Collectors.toList())));
+                for (String flag : flagToIdListMap.keySet())
+                    randomIdPickerService.addIdList(flag, flagToIdListMap.get(flag));
+            }
+        } catch (Exception ex) {
+            log.error(ex.getMessage(), ex);
+            throw ex;
+        }
     }
 }

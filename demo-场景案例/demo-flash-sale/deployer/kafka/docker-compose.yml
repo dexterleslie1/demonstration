@@ -74,3 +74,11 @@ services:
       TZ: Asia/Shanghai
     # 自动创建 topic
     entrypoint: /usr/bin/kafka-topics --create --bootstrap-server kafka:9092 --replication-factor 1 --partitions 1 --topic topic-publish-choose-product-randomly-for-ordering
+  kafka-create-topic-random-id-picker-add-id-list:
+    image: confluentinc/cp-kafka:7.3.0
+    depends_on:
+      - kafka
+    environment:
+      TZ: Asia/Shanghai
+    # 自动创建 topic
+    entrypoint: /usr/bin/kafka-topics --create --bootstrap-server kafka:9092 --replication-factor 1 --partitions 1 --topic topic-random-id-picker-add-id-list

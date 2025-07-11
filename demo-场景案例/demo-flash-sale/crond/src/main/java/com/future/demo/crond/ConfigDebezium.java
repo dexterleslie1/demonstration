@@ -3,6 +3,7 @@ package com.future.demo.crond;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.future.demo.constant.Const;
 import com.future.demo.dto.IncreaseCountDTO;
+import com.future.demo.dto.RandomIdPickerAddIdEventDTO;
 import io.debezium.data.Envelope;
 import io.debezium.embedded.Connect;
 import io.debezium.engine.DebeziumEngine;
@@ -90,6 +91,13 @@ public class ConfigDebezium {
                     increaseCountDTO.setCount(1);
                     String JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
                     kafkaTemplate.send(Const.TopicIncreaseCount, JSON).get();
+
+                    // 发出向随机 id 选择器添加 id 事件消息
+                    RandomIdPickerAddIdEventDTO dto = new RandomIdPickerAddIdEventDTO();
+                    dto.setFlag("order");
+                    dto.setId(orderId);
+                    JSON = objectMapper.writeValueAsString(dto);
+                    kafkaTemplate.send(Const.TopicRandomIdPickerAddIdList, JSON).get();
                 } else if (operation == Envelope.Operation.CREATE && "t_product".equals(tableName)) {
                     // 新增普通或者秒杀商品
                     Long productId = (Long) payload.get("id");
@@ -98,6 +106,13 @@ public class ConfigDebezium {
                     increaseCountDTO.setCount(1);
                     String JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
                     kafkaTemplate.send(Const.TopicIncreaseCount, JSON).get();
+
+                    // 发出向随机 id 选择器添加 id 事件消息
+                    RandomIdPickerAddIdEventDTO dto = new RandomIdPickerAddIdEventDTO();
+                    dto.setFlag("product");
+                    dto.setId(productId);
+                    JSON = objectMapper.writeValueAsString(dto);
+                    kafkaTemplate.send(Const.TopicRandomIdPickerAddIdList, JSON).get();
                 }
             }
         } catch (Exception ex) {

@@ -194,6 +194,14 @@ services:
       TZ: Asia/Shanghai
     # 自动创建 topic
     entrypoint: /usr/bin/kafka-topics --create --bootstrap-server kafka:9092 --replication-factor 1 --partitions 1 --topic topic-publish-choose-product-randomly-for-ordering
+  kafka-create-topic-random-id-picker-add-id-list:
+    image: confluentinc/cp-kafka:7.3.0
+    depends_on:
+      - kafka
+    environment:
+      TZ: Asia/Shanghai
+    # 自动创建 topic
+    entrypoint: /usr/bin/kafka-topics --create --bootstrap-server kafka:9092 --replication-factor 1 --partitions 1 --topic topic-random-id-picker-add-id-list
 
   zookeeper:
     image: zookeeper:3.8.4
@@ -239,3 +247,25 @@ services:
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-wrk2
     environment:
       - TZ=Asia/Shanghai
+
+  # 随机 id 选择器服务
+  future-random-id-picker-api:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/random-id-picker-service
+    environment:
+      - JAVA_OPTS=-Xmx512m
+      - TZ=Asia/Shanghai
+      - db_host=future-random-id-picker-db
+      - db_port=3306
+    ports:
+      - '50000:8080'
+  future-random-id-picker-db:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/random-id-picker-db
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+      - --innodb-buffer-pool-size=256m
+    environment:
+      - LANG=C.UTF-8
+      - TZ=Asia/Shanghai
+      - MYSQL_ROOT_PASSWORD=123456
