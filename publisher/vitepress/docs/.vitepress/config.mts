@@ -119,6 +119,7 @@ export default defineConfig({
           { text: '腾讯', link: '/tencent/README.md' },
           { text: '小孩成长计划', link: '/小孩/README.md' },
           { text: '工具集', link: '/toolset/README.md' },
+          { text: 'Future', link: '/future/README.md' },
         ]
       },
     ],
