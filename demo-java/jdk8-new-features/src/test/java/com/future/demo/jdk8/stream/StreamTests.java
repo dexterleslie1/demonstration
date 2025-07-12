@@ -228,6 +228,13 @@ public class StreamTests {
         Map<Integer, List<UserEntityDistinct>> map = userEntityDistinctList.stream().collect(Collectors.groupingBy(o -> o.getAge()));
         Assert.assertEquals(2, map.get(34).size());
 
+        // 根据年龄分组并且值部分UserEntityDistinct对象只保留name
+        Map<Integer, List<String>> agetToNameListMap = userEntityDistinctList.stream().collect(
+                Collectors.groupingBy(UserEntityDistinct::getAge, Collectors.mapping(UserEntityDistinct::getName, Collectors.toList())));
+        Assert.assertEquals(2, agetToNameListMap.get(34).size());
+        Assert.assertEquals("guyt", agetToNameListMap.get(34).get(0));
+        Assert.assertEquals("guyt", agetToNameListMap.get(34).get(1));
+
         // 根据年龄区间分组
         Map<String, List<UserEntityDistinct>> map1 = userEntityDistinctList.stream().collect(Collectors.groupingBy(o -> {
             if (o.getAge() <= 20) {
@@ -244,7 +251,8 @@ public class StreamTests {
         Assert.assertEquals(1, map1.get("其他").size());
 
         // 多级分组
-        Map<String, Map<Integer, List<UserEntityDistinct>>> map2 = userEntityDistinctList.stream().collect(Collectors.groupingBy(UserEntityDistinct::getName, Collectors.groupingBy(UserEntityDistinct::getAge)));
+        Map<String, Map<Integer, List<UserEntityDistinct>>> map2 = userEntityDistinctList.stream().collect(
+                Collectors.groupingBy(UserEntityDistinct::getName, Collectors.groupingBy(UserEntityDistinct::getAge)));
         Assert.assertEquals(3, map2.size());
         Assert.assertEquals(1, map2.get("guyt").size());
         Assert.assertEquals(2, map2.get("guyt").get(34).size());

@@ -2009,6 +2009,19 @@ public void testGroupingBy() {
 
 
 
+#### 根据年龄分组并且值部分 `UserEntityDistinct` 只保留 `name`
+
+```java
+// 根据年龄分组并且值部分UserEntityDistinct对象只保留name
+Map<Integer, List<String>> agetToNameListMap = userEntityDistinctList.stream().collect(
+        Collectors.groupingBy(UserEntityDistinct::getAge, Collectors.mapping(UserEntityDistinct::getName, Collectors.toList())));
+Assert.assertEquals(2, agetToNameListMap.get(34).size());
+Assert.assertEquals("guyt", agetToNameListMap.get(34).get(0));
+Assert.assertEquals("guyt", agetToNameListMap.get(34).get(1));
+```
+
+
+
 ### Stream 分区
 
 ```java
