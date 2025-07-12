@@ -1,6 +1,6 @@
 package com.future.demo.controller;
 
-import cn.hutool.core.util.RandomUtil;
+import com.future.common.exception.BusinessException;
 import com.future.common.http.ListResponse;
 import com.future.common.http.ObjectResponse;
 import com.future.common.http.ResponseUtils;
@@ -12,6 +12,7 @@ import com.future.demo.service.MerchantService;
 import com.future.demo.service.OrderService;
 import com.future.demo.service.ProductService;
 import com.future.demo.util.OrderRandomlyUtil;
+import com.future.random.id.picker.RandomIdPickerService;
 import org.apache.commons.lang.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -21,7 +22,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -39,6 +39,8 @@ public class ApiController {
     MerchantService merchantService;
     @Resource
     CacheService cacheService;
+    @Resource
+    RandomIdPickerService randomIdPickerService;
 
     /**
      * 普通方式下单
@@ -136,16 +138,15 @@ public class ApiController {
                         merchantId, createTime, endTime));
     }
 
+    /**
+     * 根据商品id列表查询商品列表信息
+     *
+     * @return
+     * @throws BusinessException
+     */
     @GetMapping("listProductByIds")
-    public ListResponse<ProductModel> listProductByIds() {
-        int size = 25;
-        List<Long> idList = new ArrayList<>();
-        while (idList.size() < size) {
-            long id = RandomUtil.randomInt(1, ProductService.ProductTotalCount + 1);
-            if (!idList.contains(id)) {
-                idList.add(id);
-            }
-        }
+    public ListResponse<ProductModel> listProductByIds() throws BusinessException {
+        List<Long> idList = randomIdPickerService.listIdRandomly("product", 20);
         return ResponseUtils.successList(this.productService.listByIds(idList));
     }
 

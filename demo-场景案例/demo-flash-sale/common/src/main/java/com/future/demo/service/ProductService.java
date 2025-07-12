@@ -53,18 +53,17 @@ public class ProductService {
     @Resource
     KafkaTemplate<String, String> kafkaTemplate;
 
+    /**
+     * 根据商品id列表查询商品列表信息
+     *
+     * @param idList
+     * @return
+     */
     public List<ProductModel> listByIds(List<Long> idList) {
-//        List<String> idStrList = idList.stream().map(o -> KeyProduct + o).collect(Collectors.toList());
-//        List<String> jsonList = this.redisTemplate.opsForValue().multiGet(idStrList);
-//        return jsonList.stream().map(o -> {
-//            try {
-//                return this.objectMapper.readValue(o, ProductModel.class);
-//            } catch (JsonProcessingException e) {
-//                throw new RuntimeException(e);
-//            }
-//        }).collect(Collectors.toList());
-        // todo
-        return null;
+        if (idList == null || idList.isEmpty())
+            return null;
+
+        return productMapper.list(idList);
     }
 
     /**
