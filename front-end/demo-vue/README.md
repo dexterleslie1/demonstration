@@ -635,6 +635,8 @@ export default {
 
 ### 动态挂载自定义组件到特定 `DOM` 节点
 
+>提醒：动态挂载自定义组件到特定 `DOM` 节点通常用于需要存在多个自定义实例的情况，例如：消息提示框。
+>
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-vue/demo-vue2-mount-customize-component-dynamically)
 
 定义自定义组件 `MyComponent.vue`：
