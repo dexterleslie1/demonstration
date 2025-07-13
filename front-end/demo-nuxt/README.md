@@ -247,3 +247,313 @@ Nuxt.js 是一个基于 Vue.js 的高级框架，用于构建服务器端渲染�
 
 Nuxt.js 的目录结构清晰且易于理解，它帮助开发者更好地组织和管理项目代码。通过遵循这个目录结构，你可以确保你的项目具有良好的可维护性和可扩展性。
 
+
+
+## `Axios`
+
+### `Nuxt` 集成 `Axios` 插件
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/master/front-end/demo-nuxt/%E6%95%B0%E6%8D%AE%E4%BA%A4%E4%BA%92%E5%92%8C%E8%B7%A8%E5%9F%9F)
+
+步骤如下：
+
+1. 运行 [示例](https://gitee.com/dexterleslie/demonstration/tree/master/front-end/demo-nuxt/demo-backend-api) 作为测试辅助的接口
+
+2. 添加 `@nuxtjs/axios` 依赖
+
+   ```bash
+   npm install $nuxtjs/axios --save
+   ```
+
+3. 编写 `axios` 插件配置脚本 `plugins/axios.js`：
+
+   ```javascript
+   export default function ({ app, $axios, redirect, route, error }) {
+       console.log(`加载axios自定义插件`)
+   
+       // 设置axios超时设置
+       $axios.defaults.timeout = 30000
+   
+       ...
+   }
+   ```
+
+   
+
+4. 配置 `nuxt.config.js` 中 `modules` 添加 `@nuxtjs/axios`
+
+   ```javascript
+   modules: [
+   	// 添加axios
+   	'@nuxtjs/axios'
+   ],
+   ```
+
+5. 配置 `nuxt.config.js` 中 `plugins` 添加 `axios`：
+
+   ```javascript
+   plugins: [
+       // 加载axios全局配置插件
+       {
+         src: '~/plugins/axios',
+         ssr: true
+       },
+   ],
+   ```
+
+6. 添加如下配置到 `nuxt.config.js` 中启用 `axios` 代理
+
+   ```javascript
+   axios: {
+       // 启用axios代理
+       proxy: true
+   },
+   // 匹配 /api 前缀就转发到 localhost:8080
+   proxy: {
+       '/api/': {
+         target: 'http://localhost:8080',
+         // 当 changeOrigin 设置为 true 时，代理服务器会​​将请求头中的 Host 字段修改为目标服务器（target）的地址​​，使后端服务器认为请求是直接来自客户端，而非代理服务器
+         // 假设你的前端项目运行在 http://localhost:8081，后端接口部署在 http://localhost:8080，前端发送请求 /api/user，代理默认转发到 http://localhost:8080/api/user，
+         // 但请求头的 Host 仍为 localhost:8081（前端地址）。此时配置 changeOrigin: true 会把 Host 从 localhost:8081 修改为 localhost:8080。
+         changeOrigin: true
+       }
+   },
+   ```
+
+
+
+
+### 全局默认设置
+
+在 `plugins/axios.js` 中添加如下配置：
+
+```javascript
+export default function ({ app, $axios, redirect, route, error }) {
+    // 设置axios全局超时设置
+    $axios.defaults.timeout = 30000
+}
+```
+
+ 
+
+### 修改请求头
+
+在 `plugins/axios.js` 中添加如下配置：
+
+```javascript
+export default function ({ app, $axios, redirect, route, error }) {
+    // 请求时拦截器
+    $axios.onRequest(function (config) {
+        // 控制台输出：axios请求时拦截，config={"url":"/api/v1/test1","method":"get","headers":{"common":{"Accept":"application/json, text/plain, */*"},"delete":{},"get":{},"head":{},"post":{"Content-Type":"application/x-www-form-urlencoded"},"put":{"Content-Type":"application/x-www-form-urlencoded"},"patch":{"Content-Type":"application/x-www-form-urlencoded"}},"baseURL":"/","transformRequest":[null],"transformResponse":[null],"timeout":30000,"xsrfCookieName":"XSRF-TOKEN","xsrfHeaderName":"X-XSRF-TOKEN","maxContentLength":-1,"maxBodyLength":-1,"transitional":{"silentJSONParsing":true,"forcedJSONParsing":true,"clarifyTimeoutError":false}}
+        console.log(`axios请求时拦截，config=${JSON.stringify(config)}`)
+
+        // 请求发出前修改请求头
+        config.headers.Authorization = "my token"
+
+        return config
+    })
+}
+```
+
+
+
+### 异常处理
+
+>`Nuxt2` `Axios` 异常处理分为 `CSR` 和 `SSR` 异常处理。
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-nuxt/axios%E6%8B%A6%E6%88%AA%E5%99%A8%E9%85%8D%E7%BD%AE%E4%B8%8Etoken%E6%90%BA%E5%B8%A6)
+
+`onResponse` 业务异常处理：
+
+```javascript
+// 响应时拦截器，csr和ssr都会回调此函数
+$axios.onResponse(function (response) {
+    if (process.server) {
+        // SSR情况
+        // http状态码为200，业务异常发生
+        if (response?.data?.errorCode > 0) {
+            // 这个抛出的异常会被下面的$axio.onError捕获并处理
+            throw new BusinessError(response.data.errorCode, response.data.errorMessage, response.data.data)
+        }
+
+        // 返回业务接口响应的数据，response其他的信息丢弃后续逻辑不会再使用这些信息
+        return response.data;
+    } else {
+        // CSR情况
+        // 控制台输出：axios响应时拦截，response={"data":{"errorCode":0,"errorMessage":null,"data":"Nuxt api返回数据, token=my token"},"status":200,"statusText":"OK","headers":{"cache-control":"no-cache, no-store, max-age=0, must-revalidate","connection":"close","content-type":"application/json","date":"Thu, 10 Jul 2025 06:27:15 GMT","expires":"0","pragma":"no-cache","transfer-encoding":"chunked","x-content-type-options":"nosniff","x-frame-options":"DENY","x-my-request-id":"0431c50e-9150-488c-80d7-e913b8e37a37","x-xss-protection":"1; mode=block"},"config":{"url":"/api/v1/test1","method":"get","headers":{"Accept":"application/json, text/plain, */*","Authorization":"my token"},"baseURL":"/","transformRequest":[null],"transformResponse":[null],"timeout":30000,"xsrfCookieName":"XSRF-TOKEN","xsrfHeaderName":"X-XSRF-TOKEN","maxContentLength":-1,"maxBodyLength":-1,"transitional":{"silentJSONParsing":true,"forcedJSONParsing":true,"clarifyTimeoutError":false}},"request":{}},x-my-request-id="0431c50e-9150-488c-80d7-e913b8e37a37"
+        console.log(`axios响应时拦截，response=${JSON.stringify(response)},x-my-request-id=${JSON.stringify(response.headers['x-my-request-id'])}`)
+
+        // http状态码为200，业务异常发生
+        if (response?.data?.errorCode > 0) {
+            // 这个抛出的异常会被下面的$axio.onError捕获并处理
+            throw new BusinessError(response.data.errorCode, response.data.errorMessage, response.data.data)
+        }
+
+        // 返回业务接口响应的数据，response其他的信息丢弃后续逻辑不会再使用这些信息
+        return response.data;
+    }
+})
+```
+
+`onError` 异常处理：
+
+```javascript
+// axios全局错误处理，csr和ssr都会回调此函数
+$axios.onError(function (err) {
+    // 协助打印 err
+    // console.log(`err 对象 ${err.response}`)
+
+    if (process.server) {
+        // SSR 错误处理
+        // 所有 SSR 错误都需要统一处理
+        const responseData = err.response?.data
+        const errorCode = responseData ? responseData.errorCode : 90000
+        const errorMessage = responseData ? responseData.errorMessage : err.message
+        const data = responseData ? responseData.data : null
+        throw new BusinessError(errorCode, errorMessage, data)
+
+        // 跳转到error.vue页面
+        // return error({ errorCode: 90000, errorMessage: '888888' })
+    } else {
+        // CSR 错误处理
+        const errOrigin = err
+        if (!(err instanceof BusinessError)) {
+            // err.response 的数据样例：{"data":{"errorCode":90000,"errorMessage":"模拟业务异常","data":null},"status":400,"statusText":"Bad Request","headers":{"cache-control":"no-cache, no-store, max-age=0, must-revalidate","connection":"close","content-type":"application/json","date":"Thu, 10 Jul 2025 07:22:38 GMT","expires":"0","pragma":"no-cache","transfer-encoding":"chunked","x-content-type-options":"nosniff","x-frame-options":"DENY","x-my-request-id":"bd3f9310-0488-4da5-a86c-65cc7abdbc38","x-xss-protection":"1; mode=block"},"config":{"url":"/api/v1/test1?exceptionType=bizExceptionWithHttp400","method":"get","headers":{"Accept":"application/json, text/plain, */*","Authorization":"my token"},"baseURL":"/","transformRequest":[null],"transformResponse":[null],"timeout":30000,"xsrfCookieName":"XSRF-TOKEN","xsrfHeaderName":"X-XSRF-TOKEN","maxContentLength":-1,"maxBodyLength":-1,"transitional":{"silentJSONParsing":true,"forcedJSONParsing":true,"clarifyTimeoutError":false}},"request":{}}
+
+            // 转换为 BusinessError 类型异常
+            if (err.response?.data?.errorCode)
+                // 后端接口返回的异常
+                err = new BusinessError(err.response?.data?.errorCode, err.response?.data?.errorMessage, err.response?.data?.data)
+            else
+                // 非后端接口返回的异常，例如：504网关超时
+                err = new BusinessError(90000, err.response?.statusText, null)
+        }
+
+        if (!(errOrigin?.config?.disableGlobalOnErrorHandling === true)) {
+            // 客户端全局异常处理逻辑
+            // 控制台输出：axios全局异常处理逻辑捕获客户端异常，err={"errorCode":90000,"errorMessage":"模拟业务异常","data":null}
+            console.log(`axios全局异常处理逻辑捕获客户端异常，err=${JSON.stringify(err)}`)
+            app.router.app.$message.error(`axios调用出错: ${JSON.stringify(err)}`)
+        }
+
+        // 把异常往上层调用者抛出，以让调用者处理
+        throw err
+    }
+})
+```
+
+页面 `AxiosCsrErrorHandling.vue` `Axios` `CSR` 错误处理：
+
+```vue
+<template>
+    <div>
+        <div>axios csr和ssr错误处理</div>
+        <button @click="handleClick1">没有异常</button>
+        <button @click="handleClick11">业务异常发生，http 200</button>
+        <button @click="handleClick12">业务异常发生，http 400</button>
+        <button @click="handleClick2">不使用客户端全局异常处理逻辑</button>
+    </div>
+</template>
+
+<script>
+
+export default {
+    name: 'AxiosCsrErrorHandling',
+
+    methods: {
+        async handleClick1() {
+            try {
+                let response = await this.$axios.get('/api/v1/test1')
+                // 控制台输出：没有异常，response={"errorCode":0,"errorMessage":null,"data":"Nuxt api返回数据, token=my token"}
+                // console.log(`没有异常，response=${JSON.stringify(response)}`)
+                this.$message({ message: `没有异常，response=${JSON.stringify(response)}`, type: 'success' })
+            } catch (err) {
+                console.log(`有异常，err=${JSON.stringify(err)}`)
+            }
+        },
+        async handleClick11() {
+            try {
+                let response = await this.$axios.get('/api/v1/test1?exceptionType=bizExceptionWithHttp200')
+                console.log(`没有异常，response=${JSON.stringify(response)}`)
+            } catch (err) {
+                // 控制台输出：有异常，err={"errorCode":90000,"errorMessage":"模拟业务异常","data":null}
+                console.log(`有异常，err=${JSON.stringify(err)}`)
+            }
+        },
+        async handleClick12() {
+            try {
+                let response = await this.$axios.get('/api/v1/test1?exceptionType=bizExceptionWithHttp400')
+                console.log(`没有异常，response=${JSON.stringify(response)}`)
+            } catch (err) {
+                // 控制台输出：有异常，err={"errorCode":90000,"errorMessage":"模拟业务异常","data":null}
+                console.log(`有异常，err=${JSON.stringify(err)}`)
+            }
+        },
+        async handleClick2() {
+            try {
+                let response = await this.$axios.get('/api/v1/test1?exceptionType=bizExceptionWithHttp400', { disableGlobalOnErrorHandling: true })
+                console.log(`没有异常，response=${JSON.stringify(response)}`)
+            } catch (err) {
+                this.$message.error(`axios调用出错: ${JSON.stringify(err)}`)
+            }
+        }
+    }
+}
+</script>
+
+```
+
+页面 `AxiosSsrErrorHandling.vue` `Axios` `SSR` 错误处理：
+
+```vue
+<template>
+    <div>
+        <div>页面级别的asyncData自定义try catch错误处理</div>
+        <div v-if="errorMessage">调用接口 /api/v1/test1 失败，errorCode={{ errorCode }}，errorMessage={{ errorMessage }}</div>
+        <div v-if="response">调用接口 /api/v1/test1 成功，服务器响应 {{ response }}</div>
+    </div>
+</template>
+
+<script>
+
+export default {
+    name: 'AxiosSsrErrorHandling',
+    data() {
+        return {
+            errorCode: null,
+            errorMessage: null,
+            response: null
+        }
+    },
+    async asyncData({ app, $axios, error }) {
+        try {
+            let response = await $axios.get('/api/v1/test1?exceptionType=bizExceptionWithHttp200')
+
+            // 返回的对象会合并到组件的 data 中
+            return {
+                response: response
+            }
+        } catch (err) {
+            // 协助打印 err 对象
+            // console.log(`err 对象 ${JSON.stringify(err)}`)
+
+            // 返回 error 自定义错误对象和 vue 数据合并
+            return {
+                errorCode: err.errorCode,
+                errorMessage: err.errorMessage
+            }
+
+            // 注意：这是服务器端调用axios，element-ui不会弹出窗口
+            // app.router.app.$message.error('88888')
+
+            // 跳转到 error.vue 页面
+            // https://stackoverflow.com/questions/56283813/nuxt-js-error-not-defined-when-trying-to-throw-404-in-failed-await-call-with
+            // return error({ errorCode: err.errorCode, errorMessage: err.errorMessage })
+        }
+    }
+}
+
+</script>
+
+```
+

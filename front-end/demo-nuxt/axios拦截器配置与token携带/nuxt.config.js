@@ -56,6 +56,9 @@ export default {
   proxy: {
     '/api/': {
       target: 'http://localhost:8080',
+      // 当 changeOrigin 设置为 true 时，代理服务器会​​将请求头中的 Host 字段修改为目标服务器（target）的地址​​，使后端服务器认为请求是直接来自客户端，而非代理服务器
+      // 假设你的前端项目运行在 http://localhost:8081，后端接口部署在 http://localhost:8080，前端发送请求 /api/user，代理默认转发到 http://localhost:8080/api/user，
+      // 但请求头的 Host 仍为 localhost:8081（前端地址）。此时配置 changeOrigin: true 会把 Host 从 localhost:8081 修改为 localhost:8080。
       changeOrigin: true
     }
   },
@@ -67,21 +70,15 @@ export default {
   router: {
     extendRoutes(routes, resolve) {
       routes.push({
-        name: "pageLevelCatchErrorHandling",
-        path: "/pageLevelCatchErrorHandling",
-        component: resolve(__dirname, "components/PageLevelCatchErrorHandling.vue")
+        name: "axiosSsrErrorHandling",
+        path: "/axiosSsrErrorHandling",
+        component: resolve(__dirname, "components/AxiosSsrErrorHandling.vue")
       })
 
       routes.push({
-        name: "pageLevelThrownByAxiosInterceptorErrorHandling",
-        path: "/pageLevelThrownByAxiosInterceptorErrorHandling",
-        component: resolve(__dirname, "components/PageLevelThrownByAxiosInterceptorErrorHandling.vue")
-      })
-
-      routes.push({
-        name: "axiosCsrAndSsrErrorHandling",
-        path: "/axiosCsrAndSsrErrorHandling",
-        component: resolve(__dirname, "components/AxiosCsrAndSsrErrorHandling.vue")
+        name: "axiosCsrErrorHandling",
+        path: "/axiosCsrErrorHandling",
+        component: resolve(__dirname, "components/AxiosCsrErrorHandling.vue")
       })
     }
   }

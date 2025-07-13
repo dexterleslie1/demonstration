@@ -1,0 +1,2 @@
+### 业务异常，http 400
+GET http://localhost:8080/api/v1/test1?exceptionType=bizExceptionWithHttp400

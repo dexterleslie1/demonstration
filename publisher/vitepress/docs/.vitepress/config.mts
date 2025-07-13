@@ -209,7 +209,6 @@ export default defineConfig({
             { text: 'Nuxt基础', link: '/nuxt/README.md' },
             { text: '路由', link: '/nuxt/路由.md' },
             { text: '集成 Element-UI', link: '/nuxt/集成element-ui.md' },
-            { text: '数据交互和跨域', link: '/nuxt/数据交互和跨域.md' },
           ]
         }
       ],
