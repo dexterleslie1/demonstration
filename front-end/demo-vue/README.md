@@ -2455,6 +2455,87 @@ export default {
 
 
 
+## 修改应用标题
+
+在 Vue2 项目中，`<title><%= htmlWebpackPlugin.options.title %></title>` 这个标题标签的修改方式取决于项目的构建工具配置（通常是 Vue CLI 生成的项目）。以下是具体的修改方法：
+
+
+### **场景 1：单页面应用（SPA，默认情况）**
+如果是 Vue CLI 生成的**单页面应用**，默认的 HTML 模板是 `public/index.html`。此时你看到的 `<%= htmlWebpackPlugin.options.title %>` 实际是 `html-webpack-plugin` 插件的模板语法，用于动态注入标题。
+
+#### 直接修改模板文件（推荐）
+1. 打开项目根目录下的 `public/index.html` 文件。
+2. 找到 `<title>` 标签，将模板语法替换为固定标题：
+   ```html
+   <!-- 原模板语法 -->
+   <title><%= htmlWebpackPlugin.options.title %></title>
+   
+   <!-- 修改为固定标题 -->
+   <title>我的应用标题</title>
+   ```
+3. 保存后重新运行项目（`npm run serve`），标题会直接生效。
+
+
+### **场景 2：需要动态配置标题（如多页面/环境区分）**
+如果需要通过配置动态设置标题（例如不同环境、多页面应用），可以通过 `vue.config.js` 配置 `html-webpack-plugin` 的 `title` 选项。
+
+#### 步骤 1：创建/修改 `vue.config.js`
+如果项目根目录没有 `vue.config.js`，请手动创建一个。
+
+#### 步骤 2：配置 `html-webpack-plugin`
+在 `vue.config.js` 中通过 `configureWebpack` 或 `chainWebpack` 配置 `html-webpack-plugin` 的 `title`：
+```javascript
+// vue.config.js
+module.exports = {
+  configureWebpack: (config) => {
+    // 单页面应用：直接修改 title
+    config.plugins.forEach((plugin) => {
+      if (plugin instanceof require('html-webpack-plugin')) {
+        plugin.options.title = '我的动态标题';
+      }
+    });
+
+    // 多页面应用（假设 pages 配置了多个入口）：
+    // config.plugins.forEach((plugin) => {
+    //   if (plugin instanceof require('html-webpack-plugin')) {
+    //     // 根据页面名称动态设置标题（示例）
+    //     const pageName = plugin.options.filename.split('/')[1]; // 获取页面名（如 'index'）
+    //     plugin.options.title = `${pageName} 页面标题`;
+    //   }
+    // });
+  }
+};
+```
+
+#### 步骤 3：验证效果
+保存后重新运行项目，标题会根据配置动态生效。
+
+
+### **注意事项**
+- 如果你在 `public/index.html` 中看到 `<%= ... %>` 语法但未生效，可能是因为 Vue CLI 版本或配置问题。Vue CLI 默认会将 `public/index.html` 作为静态模板处理，直接修改即可，无需模板语法（除非你手动配置了 `template` 选项）。
+- 若需根据环境（开发/生产）动态调整标题，可以结合环境变量：
+  ```javascript
+  // vue.config.js
+  module.exports = {
+    configureWebpack: (config) => {
+      const isProduction = process.env.NODE_ENV === 'production';
+      config.plugins.forEach((plugin) => {
+        if (plugin instanceof require('html-webpack-plugin')) {
+          plugin.options.title = isProduction ? '生产环境标题' : '开发环境标题';
+        }
+      });
+    }
+  };
+  ```
+
+
+### **总结**
+- 单页面应用直接修改 `public/index.html` 中的 `<title>` 标签。
+- 动态标题通过 `vue.config.js` 配置 `html-webpack-plugin` 的 `title` 选项。
+- 多页面应用需在 `pages` 配置中为每个页面单独设置标题。
+
+
+
 ## 综合案例
 
 ### 模仿 `element-ui` 消息提示
