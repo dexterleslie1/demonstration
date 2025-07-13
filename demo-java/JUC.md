@@ -4569,6 +4569,32 @@ Java 创建线程池主要有两种方式：
 
 
 
+### `ScheduledExecutorService` 使用
+
+>按照固定频率执行指定逻辑。
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-java/demo-juc)
+
+```java
+/**
+ * 测试 ScheduledExecutorService 基本用法
+ */
+@Test
+public void testScheduledExecutorService() throws InterruptedException {
+    ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
+    executorService.scheduleAtFixedRate(() -> {
+        log.info("当前时间：" + LocalDateTime.now());
+    }, 3, 1, TimeUnit.SECONDS);
+
+    TimeUnit.SECONDS.sleep(5);
+
+    executorService.shutdown();
+    while (!executorService.awaitTermination(100, TimeUnit.MILLISECONDS)) ;
+}
+```
+
+
+
 ## ThreadLocal
 
 ### 介绍
