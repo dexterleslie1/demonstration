@@ -11,8 +11,8 @@
 ## 消息提示 Message
 
 >[Element-UI 官方参考消息提示 Message](https://element.eleme.cn/#/zh-CN/component/message)
-
-详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/master/front-end/demo-element-ui/demo-element-ui-message)
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-element-ui/demo-element-ui-message)
 
 点击按钮弹出成功、警告、消息、错误消息提示
 
@@ -73,6 +73,38 @@ handleClickLoading() {
     setTimeout(() => {
         loading.close()
     }, 2000);
+}
+```
+
+
+
+## 确认弹框
+
+>[参考官方文档](https://element.eleme.cn/#/zh-CN/component/message-box)
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-element-ui/demo-messagebox)
+
+```javascript
+handleClickOk() {
+    this.$confirm('确定删除吗？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+    }).then(() => {
+        this.$message(
+            {
+                message: '点击确定',
+                type: 'success'
+            }
+        )
+    }).catch(() => {
+        this.$message(
+            {
+                message: '点击取消',
+                type: 'info'
+            }
+        )
+    });
 }
 ```
 
