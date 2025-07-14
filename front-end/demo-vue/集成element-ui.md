@@ -4,7 +4,7 @@
 
 ## Vue2 集成 Element-UI
 
->详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/master/front-end/demo-vue/vue2-using-element-ui)
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-vue/vue2-using-element-ui)
 
 参考本站 <a href="/vue/脚手架创建项目.html#创建-vue2" target="_blank">链接</a> 初始化 Vue2 项目
 

@@ -54,3 +54,25 @@ export default {
 </script>
 ```
 
+
+
+## 加载中提示
+
+>[参考官方文档](https://element.eleme.cn/#/zh-CN/component/loading)
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-element-ui/element-ui-loading)
+
+```javascript
+handleClickLoading() {
+    const loading = this.$loading({
+        lock: true,
+        text: '加载中...',
+        spinner: 'el-icon-loading',
+        background: 'rgba(0, 0, 0, 0.7)'
+    });
+    setTimeout(() => {
+        loading.close()
+    }, 2000);
+}
+```
+
