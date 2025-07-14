@@ -1,3 +1,8 @@
+### 测试 /api/v1/get 接口
+GET http://localhost:8080/api/v1/get
+Accept: application/json
+
+### 测试上传文件
 POST http://localhost:8080/api/v1/postWithFileUpload
 Content-Type: multipart/form-data; boundary=WebAppBoundary
 
@@ -13,8 +18,6 @@ Content-Disposition: form-data; name="files"; filename="x2.txt"
 < ./2.txt
 --WebAppBoundary--
 
-###
+### 测试下载指定文件
 # 下面 98a20117-614c-466d-98d3-424be2dbafef.txt 文件是 /tmp/ 目录中已经存在的文件
 GET http://localhost:8080/api/v1/98a20117-614c-466d-98d3-424be2dbafef.txt
-
-###

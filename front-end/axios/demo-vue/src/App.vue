@@ -20,14 +20,14 @@ export default {
   },
   methods: {
     handleClick() {
-      this.$axios.get("api/v1/get", {
+      this.$axios.get("/api/v1/get", {
         needHeader: true,
         params: { param1: "Dexterleslie0" },
         headers: { header1: "my-header1", header2: 'my-header2' }
       }).then((data) => {
-        alert(data.data.data)
+        alert(JSON.stringify(data))
       }).catch(function (error) {
-        alert(error.errorMessage)
+        alert(JSON.stringify(error))
       })
     }
   }

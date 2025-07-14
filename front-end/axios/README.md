@@ -5,6 +5,8 @@
 ## Vue2 集成 axios
 
 >[参考链接](https://juejin.cn/post/7080965261448183845)
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/axios/demo-vue)
 
 参考 <a href="/vue/脚手架创建项目.html#创建-vue2" target="_blank">链接</a> 创建 Vue2 项目
 
@@ -14,12 +16,87 @@
 npm install axios
 ```
 
-src/main.js 集成 axios
+`axios` 配置 `src/axios/index.js`：
+
+```javascript
+import axios from 'axios'
+
+// 设置基础 URL 为 /
+axios.defaults.baseURL = "/";
+// 设置全局超时为 5000 毫秒
+axios.defaults.timeout = 5000;
+
+// 请求发出前拦截器
+axios.interceptors.request.use((config) => {
+    // 调试打印
+    // console.log(`请求前拦截config=${JSON.stringify(config)}`);
+
+    // 判断是否需要自动添加header1
+    if (config?.needHeader) {
+        if (!config.headers) {
+            config.headers = {}
+        }
+        config.headers.header1 = 'header1 value'
+    }
+
+    return config;
+}, (error) => {
+    // 暂时不清楚什么情况下request会回调此函数
+    console.log(error);
+});
+
+axios.interceptors.response.use((config) => {
+    // 调试打印
+    // console.log(`请求响应拦截config=${JSON.stringify(config)}`);
+
+    if (config.data.errorCode > 0) {
+        let errorCode = config.data.errorCode
+        let errorMessage = config.data.errorMessage
+
+        if (!errorCode || !errorMessage) {
+            errorCode = 5000
+            errorMessage = '服务器没有返回具体错误信息'
+        }
+
+        return Promise.reject({ errorCode, errorMessage })
+    }
+
+    // 忽略服务器返回config.data.errorCode、config.data.errorMessage直接返回data数据
+    if (config.headers['content-type'] && config.headers['content-type'].startsWith('application/json')) {
+        return config.data.data
+    } else {
+        return config.data
+    }
+}, (error) => {
+    // 调试打印
+    // console.log(`error ${JSON.stringify(error)}`)
+
+    // 非 http 200 时错误处理回调
+    if (error && !error.response) {
+        // 网络错误
+        return Promise.reject({ errorCode: 5000, errorMessage: error.message, httpStatus: -1 })
+    } else {
+        // 调试打印
+        // console.log(`error ${JSON.stringify(error)}`)
+
+        let response = error.response
+        let httpStatus = response.status
+        let errorCode = response?.data?.errorCode ? response.data.errorCode : 5000
+        let errorMessage = response?.data?.errorMessage ? response.data.errorMessage : error.message
+        return Promise.reject({ errorCode, errorMessage, httpStatus })
+    }
+});
+
+export default axios;
+
+```
+
+`src/main.js` 集成 `axios`
 
 ```javascript
 import Vue from 'vue'
 import App from './App.vue'
-import axios from 'axios'
+import axios from './axios'
 
 Vue.config.productionTip = false
 Vue.prototype.$axios = axios
@@ -29,7 +106,7 @@ new Vue({
 }).$mount('#app')
 ```
 
-src/App.vue 中使用 axios
+`src/App.vue` 中使用 `axios`
 
 ```javascript
 handleClick() {
@@ -38,9 +115,9 @@ handleClick() {
         params: { param1: "Dexterleslie0" },
         headers: { header1: "my-header1", header2: 'my-header2' }
     }).then((data) => {
-        alert(data.data.data)
+       	alert(JSON.stringify(data))
     }).catch(function (error) {
-        alert(error.errorMessage)
+        alert(JSON.stringify(error))
     })
 }
 ```
@@ -451,17 +528,21 @@ axios.defaults.timeout = 5000;
 
 
 
-### request 和 response 拦截器
+### 请求和响应拦截器
 
 ```javascript
-// request、response 拦截器
+// 设置基础 URL 为 /
+axios.defaults.baseURL = "/";
+// 设置全局超时为 5000 毫秒
+axios.defaults.timeout = 5000;
+
+// 请求发出前拦截器
 axios.interceptors.request.use((config) => {
-    let json = JSON.stringify(config);
-    let message = `请求前拦截config=${json}`;
-    console.log(message);
+    // 调试打印
+    // console.log(`请求前拦截config=${JSON.stringify(config)}`);
 
     // 判断是否需要自动添加header1
-    if (config && config.needHeader) {
+    if (config?.needHeader) {
         if (!config.headers) {
             config.headers = {}
         }
@@ -473,14 +554,12 @@ axios.interceptors.request.use((config) => {
     // 暂时不清楚什么情况下request会回调此函数
     console.log(error);
 });
+
 axios.interceptors.response.use((config) => {
-    let json = JSON.stringify(config);
-    let message = `请求响应拦截config=${json}`;
-    console.log(message);
+    // 调试打印
+    // console.log(`请求响应拦截config=${JSON.stringify(config)}`);
 
-    // 如果http响应状态码不为200
-    let httpStatus = config.status
-    if (httpStatus !== 200) {
+    if (config.data.errorCode > 0) {
         let errorCode = config.data.errorCode
         let errorMessage = config.data.errorMessage
 
@@ -489,19 +568,7 @@ axios.interceptors.response.use((config) => {
             errorMessage = '服务器没有返回具体错误信息'
         }
 
-        return Promise.reject({ errorCode, errorMessage, httpStatus })
-    }
-
-    if (httpStatus === 200 && config.data.errorCode > 0) {
-        let errorCode = config.data.errorCode
-        let errorMessage = config.data.errorMessage
-
-        if (!errorCode || !errorMessage) {
-            errorCode = 5000
-            errorMessage = '服务器没有返回具体错误信息'
-        }
-
-        return Promise.reject({ errorCode, errorMessage, httpStatus })
+        return Promise.reject({ errorCode, errorMessage })
     }
 
     // 忽略服务器返回config.data.errorCode、config.data.errorMessage直接返回data数据
@@ -511,18 +578,21 @@ axios.interceptors.response.use((config) => {
         return config.data
     }
 }, (error) => {
+    // 调试打印
+    // console.log(`error ${JSON.stringify(error)}`)
+
+    // 非 http 200 时错误处理回调
     if (error && !error.response) {
         // 网络错误
         return Promise.reject({ errorCode: 5000, errorMessage: error.message, httpStatus: -1 })
     } else {
+        // 调试打印
+        // console.log(`error ${JSON.stringify(error)}`)
+
         let response = error.response
         let httpStatus = response.status
-        let errorCode = response.data.errorCode
-        let errorMessage = response.data.errorMessage
-        if (!errorCode || !errorMessage) {
-            errorCode = 5000
-            errorMessage = '服务器没有返回具体错误信息'
-        }
+        let errorCode = response?.data?.errorCode ? response.data.errorCode : 5000
+        let errorMessage = response?.data?.errorMessage ? response.data.errorMessage : error.message
         return Promise.reject({ errorCode, errorMessage, httpStatus })
     }
 });
@@ -530,62 +600,24 @@ axios.interceptors.response.use((config) => {
 
 
 
-## 创建单独配置的 Axios 实例
+## 创建单独配置的实例
 
 ```javascript
-let api1 = axios.create({
+let axiosInstance = axios.create({
     baseURL: "/",
     timeout: 5000
 });
 // request、response 拦截器
-api1.interceptors.request.use((config) => {
-    let json = JSON.stringify(config);
-    let message = `请求前拦截config=${json}`;
-    console.log(message);
-
-    // 判断是否需要自动添加header1
-    if (config && config.needHeader) {
-        if (!config.headers) {
-            config.headers = {}
-        }
-        config.headers.header1 = 'header1 value'
-    }
-
+axiosInstance.interceptors.request.use((config) => {
+    ...
+    
     return config;
 }, (error) => {
     // 暂时不清楚什么情况下request会回调此函数
     console.log(error);
 });
-api1.interceptors.response.use((config) => {
-    let json = JSON.stringify(config);
-    let message = `请求响应拦截config=${json}`;
-    console.log(message);
-
-    // 如果http响应状态码不为200
-    let httpStatus = config.status
-    if (httpStatus !== 200) {
-        let errorCode = config.data.errorCode
-        let errorMessage = config.data.errorMessage
-
-        if (!errorCode || !errorMessage) {
-            errorCode = 5000
-            errorMessage = '服务器没有返回具体错误信息'
-        }
-
-        return Promise.reject({ errorCode, errorMessage, httpStatus })
-    }
-
-    if (httpStatus === 200 && config.data.errorCode > 0) {
-        let errorCode = config.data.errorCode
-        let errorMessage = config.data.errorMessage
-
-        if (!errorCode || !errorMessage) {
-            errorCode = 5000
-            errorMessage = '服务器没有返回具体错误信息'
-        }
-
-        return Promise.reject({ errorCode, errorMessage, httpStatus })
-    }
+axiosInstance.interceptors.response.use((config) => {
+    ...
 
     // 忽略服务器返回config.data.errorCode、config.data.errorMessage直接返回data数据
     if (config.headers['content-type'] && config.headers['content-type'].startsWith('application/json')) {
@@ -598,14 +630,8 @@ api1.interceptors.response.use((config) => {
         // 网络错误
         return Promise.reject({ errorCode: 5000, errorMessage: error.message, httpStatus: -1 })
     } else {
-        let response = error.response
-        let httpStatus = response.status
-        let errorCode = response.data.errorCode
-        let errorMessage = response.data.errorMessage
-        if (!errorCode || !errorMessage) {
-            errorCode = 5000
-            errorMessage = '服务器没有返回具体错误信息'
-        }
+        ...
+        
         return Promise.reject({ errorCode, errorMessage, httpStatus })
     }
 });
