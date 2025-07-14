@@ -3,6 +3,7 @@ package com.future.demo.service;
 import cn.hutool.core.util.RandomUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.future.demo.dto.FlashSaleProductCacheUpdateEventDTO;
+import com.future.demo.dto.ProductDTO;
 import com.future.demo.entity.ProductModel;
 import com.future.demo.mapper.ProductMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +16,9 @@ import org.springframework.util.Assert;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.future.demo.constant.Const.TopicAddProductIdAndStockAmountIntoRedisZSetAfterCreation;
 import static com.future.demo.constant.Const.TopicSetupProductFlashSaleCache;
@@ -24,7 +27,6 @@ import static com.future.demo.constant.Const.TopicSetupProductFlashSaleCache;
 @Slf4j
 public class ProductService {
 
-    public final static String KeyProduct = "product:";
     /**
      * 秒杀商品库存的键
      */
@@ -42,8 +44,6 @@ public class ProductService {
      */
     public final static String KeyFlashSaleProductExpirationCache = "flash-sale-product:expiration";
 
-    public final static int ProductTotalCount = 10000000;
-
     @Autowired
     StringRedisTemplate redisTemplate;
     @Resource
@@ -59,11 +59,31 @@ public class ProductService {
      * @param idList
      * @return
      */
-    public List<ProductModel> listByIds(List<Long> idList) {
+    public List<ProductDTO> listByIds(List<Long> idList) {
         if (idList == null || idList.isEmpty())
             return null;
 
-        return productMapper.list(idList);
+        List<ProductModel> modelList = productMapper.list(idList);
+        if (modelList == null || modelList.isEmpty())
+            return new ArrayList<>();
+
+        return modelList.stream().map(ProductModel::toDTO).collect(Collectors.toList());
+    }
+
+    /**
+     * 根据商品id查询商品信息
+     *
+     * @param id
+     * @return
+     */
+    public ProductDTO getById(Long id) {
+        Assert.isTrue(id != null && id > 0, "请指定商品ID");
+
+        ProductModel model = this.productMapper.getById(id);
+        if (model == null)
+            return null;
+
+        return model.toDTO();
     }
 
     /**

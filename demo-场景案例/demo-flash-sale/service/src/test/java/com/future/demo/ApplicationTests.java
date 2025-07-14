@@ -61,52 +61,6 @@ public class ApplicationTests {
     @Resource
     Session session;
 
-//    /**
-//     * 测试 redis 缓存是否正确
-//     */
-//    @Test
-//    public void testRedis() throws Exception {
-//        // 还原测试数据
-//        this.reset();
-//
-//        Long userId = 1L;
-//        Long productId = 1L;
-//        Integer amount = 1;
-//
-//        // 秒杀前商品的数量
-//        String productKey = null;//String.format(OrderService.KeyproductStockWithHashTag, productId);
-//        int productStockBefore = Integer.parseInt(this.redisTemplate.opsForValue().get(productKey));
-//
-//        this.orderService.create(userId, productId, amount);
-//
-//        // redis缓存中商品数量减1
-//        int productStockAfter = Integer.parseInt(this.redisTemplate.opsForValue().get(productKey));
-//        Assertions.assertEquals(productStockBefore - 1, productStockAfter);
-//
-//        // redis缓存中商品购买有记录
-//        String keyProductPurchaseRecord = String.format(OrderService.KeyProductPurchaseRecordWithHashTag, productId);
-//        Boolean member = this.redisTemplate.opsForSet().isMember(keyProductPurchaseRecord, String.valueOf(userId));
-//        Assertions.assertTrue(member);
-//
-//        // 测试库存不足
-//        amount = Integer.MAX_VALUE;
-//        try {
-//            this.orderService.create(userId, productId, amount);
-//            Assertions.fail();
-//        } catch (BusinessException ex) {
-//            Assertions.assertEquals("库存不足", ex.getMessage());
-//        }
-//
-//        // 测试不能重复购买
-//        amount = 1;
-//        try {
-//            this.orderService.create(userId, productId, amount);
-//            Assertions.fail();
-//        } catch (BusinessException ex) {
-//            Assertions.assertEquals("用户重复下单", ex.getMessage());
-//        }
-//    }
-
     /**
      * 测试普通下单
      *
@@ -246,10 +200,12 @@ public class ApplicationTests {
         int concurrentThreads = 256;
         for (int i = 0; i < concurrentThreads; i++) {
             int finalI = i;
+            Integer finalAmount = amount;
+            Long finalProductId = productId;
             executorService.submit(() -> {
                 try {
                     Long userIdT = finalI + 1L;
-                    this.orderService.create(userIdT, productId, amount);
+                    this.orderService.create(userIdT, finalProductId, finalAmount);
                 } catch (Exception e) {
                     //
                 }
@@ -263,6 +219,30 @@ public class ApplicationTests {
         orderModelList = this.orderMapper.selectAll();
         Assertions.assertEquals(5, orderModelList.size());
         Assertions.assertEquals(0, this.productMapper.getById(productId).getStock().intValue());
+
+        // endregion
+
+        // region 测试不能使用普通方式下单秒杀商品
+
+        name = RandomStringUtils.randomAlphanumeric(20);
+        merchantId = this.merchantService.getIdRandomly();
+        LocalDateTime localDateTimeNow = LocalDateTime.now();
+        // 马上开始秒杀
+        LocalDateTime flashSaleStartTime = localDateTimeNow.plusSeconds(0);
+        // 秒杀活动持续10秒
+        LocalDateTime flashSaleEndTime = flashSaleStartTime.plusSeconds(10);
+        // 秒杀结束2秒后，自动从缓存删除秒杀商品
+        int secondAfterWhichExpiredFlashSaleProductForRemoving = 2;
+        Mockito.doReturn(secondAfterWhichExpiredFlashSaleProductForRemoving).when(productService).getSecondAfterWhichExpiredFlashSaleProductForRemoving();
+        productId = this.productService.add(name, merchantId, stockAmount, true, flashSaleStartTime, flashSaleEndTime);
+        TimeUnit.MILLISECONDS.sleep(500);
+        amount = 1;
+        try {
+            this.orderService.create(userId, productId, amount);
+            Assertions.fail();
+        } catch (BusinessException ex) {
+            Assertions.assertEquals("商品 " + productId + " 为秒杀类型，不支持普通方式下单", ex.getMessage());
+        }
 
         // endregion
     }
@@ -427,9 +407,10 @@ public class ApplicationTests {
         int concurrentThreads = 128;
         for (int i = 0; i < concurrentThreads; i++) {
             Long finalProductId1 = productId;
+            Integer finalAmount = amount;
             executorService.submit(() -> {
                 try {
-                    this.orderService.createFlashSale(userId, finalProductId1, amount);
+                    this.orderService.createFlashSale(userId, finalProductId1, finalAmount);
                 } catch (Exception e) {
                     //
                 }
@@ -465,10 +446,11 @@ public class ApplicationTests {
         for (int i = 0; i < concurrentThreads; i++) {
             int finalI = i;
             Long finalProductId2 = productId;
+            Integer finalAmount1 = amount;
             executorService.submit(() -> {
                 try {
                     Long userIdT = finalI + 1L;
-                    this.orderService.createFlashSale(userIdT, finalProductId2, amount);
+                    this.orderService.createFlashSale(userIdT, finalProductId2, finalAmount1);
                 } catch (Exception e) {
                     //
                 }
@@ -498,6 +480,23 @@ public class ApplicationTests {
         // 检查用户重复秒杀标识是否已经删除
         key = String.format(OrderService.KeyProductPurchaseRecordWithHashTag, productId);
         Assertions.assertNotEquals(Boolean.TRUE, redisTemplate.hasKey(key));
+
+        // endregion
+
+        // region 测试不能秒杀普通商品
+
+        // 创建普通商品
+        name = RandomStringUtils.randomAlphanumeric(20);
+        merchantId = this.merchantService.getIdRandomly();
+        amount = 1;
+        productId = productService.add(name, merchantId, stockAmount, false, null, null);
+        TimeUnit.MILLISECONDS.sleep(500);
+        try {
+            orderService.createFlashSale(userId, productId, amount);
+            Assertions.fail();
+        } catch (BusinessException ex) {
+            Assertions.assertEquals("秒杀商品 " + productId + " 不存在", ex.getMessage());
+        }
 
         // endregion
     }

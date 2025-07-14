@@ -1,7 +1,6 @@
 package com.future.demo.service;
 
 import com.datastax.driver.core.*;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.future.common.exception.BusinessException;
@@ -33,7 +32,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 import static com.future.demo.constant.Const.*;
@@ -151,9 +149,13 @@ public class OrderService {
      * @param userId
      * @param productId
      * @param amount
+     * @param createTime 如果指定订单创建时间，则不会随机生成订单创建时间
      */
     @Transactional(rollbackFor = Exception.class)
-    public Long create(Long userId, Long productId, Integer amount) throws BusinessException, JsonProcessingException, ExecutionException, InterruptedException {
+    public Long create(Long userId,
+                       Long productId,
+                       Integer amount,
+                       LocalDateTime createTime) throws Exception {
         int affectRows = this.productMapper.decreaseStock(productId, amount);
         if (affectRows <= 0) {
             throw new BusinessException("库存不足");
@@ -164,7 +166,8 @@ public class OrderService {
         orderModel.setId(orderId);
         orderModel.setUserId(userId);
 
-        LocalDateTime createTime = OrderRandomlyUtil.getCreateTimeRandomly();
+        if (createTime == null)
+            createTime = OrderRandomlyUtil.getCreateTimeRandomly();
         orderModel.setCreateTime(createTime);
 
         DeleteStatus deleteStatus = OrderRandomlyUtil.getDeleteStatusRandomly();
@@ -174,6 +177,10 @@ public class OrderService {
         orderModel.setStatus(status);
 
         ProductModel productModel = this.productMapper.getById(productId);
+        // 不能使用普通方式向秒杀商品下单
+        if (productModel.isFlashSale()) {
+            throw new BusinessException("商品 " + productId + " 为秒杀类型，不支持普通方式下单");
+        }
         orderModel.setMerchantId(productModel.getMerchantId());
 
         OrderDetailModel orderDetailModel = new OrderDetailModel();
@@ -212,9 +219,13 @@ public class OrderService {
      * @param userId
      * @param productId
      * @param amount
+     * @param createTime 如果指定订单创建时间，则不会随机生成订单创建时间
      * @throws Exception
      */
-    public void createFlashSale(Long userId, Long productId, Integer amount) throws Exception {
+    public void createFlashSale(Long userId,
+                                Long productId,
+                                Integer amount,
+                                LocalDateTime createTime) throws Exception {
         String productIdStr = String.valueOf(productId);
         String userIdStr = String.valueOf(userId);
         String amountStr = String.valueOf(amount);
@@ -253,7 +264,8 @@ public class OrderService {
         orderModel.setDeleteStatus(deleteStatus);
         Status status = OrderRandomlyUtil.getStatusRandomly();
         orderModel.setStatus(status);
-        LocalDateTime createTime = OrderRandomlyUtil.getCreateTimeRandomly();
+        if (createTime == null)
+            createTime = OrderRandomlyUtil.getCreateTimeRandomly();
         orderModel.setCreateTime(createTime);
         OrderDetailModel orderDetailModel = new OrderDetailModel();
         Long orderDetailId = this.snowflakeService.getId("orderDetail").getId();
@@ -289,6 +301,40 @@ public class OrderService {
             long productId = orderModel.getOrderDetailList().get(0).getProductId();
             ProductModel productModel = productIdToModelMap.get(productId);
             orderModel.setMerchantId(productModel.getMerchantId());
+        }
+    }
+
+    /**
+     * 填充订单中商品信息
+     *
+     * @param dtoList
+     */
+    public void fillupOrderListProductInfo(List<OrderDTO> dtoList) {
+        if (dtoList == null || dtoList.isEmpty())
+            return;
+
+        List<Long> productIdList = new ArrayList<>();
+        for (OrderDTO dto : dtoList) {
+            List<OrderDetailDTO> detailDTOList = dto.getOrderDetailList();
+            if (detailDTOList != null && !detailDTOList.isEmpty()) {
+                for (OrderDetailDTO detailDTO : detailDTOList) {
+                    Long productId = detailDTO.getProductId();
+                    if (!productIdList.contains(productId))
+                        productIdList.add(productId);
+                }
+            }
+        }
+
+        List<ProductModel> modelList = this.productMapper.list(productIdList);
+        Map<Long, ProductModel> productIdToModelMap = modelList.stream().collect(Collectors.toMap(ProductModel::getId, o -> o));
+        for (OrderDTO dto : dtoList) {
+            List<OrderDetailDTO> detailDTOList = dto.getOrderDetailList();
+            if (detailDTOList != null && !detailDTOList.isEmpty()) {
+                for (OrderDetailDTO detailDTO : detailDTOList) {
+                    Long productId = detailDTO.getProductId();
+                    detailDTO.setProductName(productIdToModelMap.get(productId).getName());
+                }
+            }
         }
     }
 
@@ -418,6 +464,9 @@ public class OrderService {
             }
         }
 
+        // 填充商品信息
+        this.fillupOrderListProductInfo(orderDTOList);
+
         return orderDTOList;
     }
 
@@ -517,6 +566,9 @@ public class OrderService {
             }
         }
 
+        // 填充商品信息
+        this.fillupOrderListProductInfo(orderDTOList);
+
         return orderDTOList;
     }
 
@@ -593,6 +645,9 @@ public class OrderService {
             orderDTOList = new ArrayList<>();
         }
 
+        // 填充商品信息
+        this.fillupOrderListProductInfo(orderDTOList);
+
         return orderDTOList;
     }
 
@@ -666,74 +721,9 @@ public class OrderService {
             orderDTOList = new ArrayList<>();
         }
 
+        // 填充商品信息
+        this.fillupOrderListProductInfo(orderDTOList);
+
         return orderDTOList;
     }
-
-//    /**
-//     * 协助测试用于重新初始化商品信息
-//     */
-//    public void initProduct() {
-//        long totalProductCount = this.orderRandomlyUtil.productIdArray.length;
-//
-//        // 清空redis缓存所有数据
-//        try (RedisConnection connection = this.redisTemplate.getConnectionFactory().getConnection()) {
-//            connection.flushDb();
-//        }
-//
-//        // 清空db中所有商品数据
-//        this.productMapper.truncate();
-//
-//        // 批量大小
-//        int batchSize = 1000;
-//
-//        // 商品库存
-//        Map<String, String> productStockMap = new HashMap<>();
-//        // 商品购买记录，用于防止一个人多次购买同一个商品
-//        List<String> productPurchaseRecordList = new ArrayList<>();
-//        // 商品列表
-//        List<ProductModel> productModelList = new ArrayList<>();
-//        // 已经执行的批次数
-//        int executedBatchCount = 0;
-//        for (int i = 0; i < this.orderRandomlyUtil.productIdArray.length; i++) {
-//            long productId = this.orderRandomlyUtil.productIdArray[i];
-//
-//            // 批量初始化商品库存
-//            String keyProductStock = String.format(OrderService.KeyproductStockWithHashTag, productId);
-//            productStockMap.put(keyProductStock, String.valueOf(productStock));
-//            if (productStockMap.size() == batchSize || i + 1 == this.orderRandomlyUtil.productIdArray.length) {
-//                this.redisTemplate.opsForValue().multiSet(productStockMap);
-//                productStockMap = new HashMap<>();
-//            }
-//
-//            // 批量删除商品购买记录
-//            String keyProductPurchaseRecord = String.format(OrderService.KeyProductPurchaseRecordWithHashTag, productId);
-//            productPurchaseRecordList.add(keyProductPurchaseRecord);
-//            if (productPurchaseRecordList.size() == batchSize || i + 1 == this.orderRandomlyUtil.productIdArray.length) {
-//                this.redisTemplate.delete(productPurchaseRecordList);
-//                productPurchaseRecordList = new ArrayList<>();
-//            }
-//
-//            // 批量初始化商品db数据
-//            ProductModel productModel = new ProductModel();
-//            productModel.setId(productId);
-//            productModel.setName("产品" + productId);
-//            productModel.setStock(productStock);
-//            long merchantId = this.orderRandomlyUtil.getMerchantIdRandomly();
-//            productModel.setMerchantId(merchantId);
-//            productModelList.add(productModel);
-//            if (productModelList.size() == batchSize || i + 1 == this.orderRandomlyUtil.productIdArray.length) {
-//                this.productMapper.insertBatch(productModelList);
-//                productModelList = new ArrayList<>();
-//
-//                executedBatchCount++;
-//                if (log.isInfoEnabled()) {
-//                    log.info("已经初始化{}个商品信息，剩余{}个商品信息", executedBatchCount * batchSize, totalProductCount - (executedBatchCount * batchSize));
-//                }
-//            }
-//        }
-//
-//        if (log.isInfoEnabled()) {
-//            log.info("成功初始化{}个商品信息", totalProductCount);
-//        }
-//    }
 }
