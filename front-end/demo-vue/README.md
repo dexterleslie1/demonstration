@@ -2536,6 +2536,608 @@ module.exports = {
 
 
 
+## 生命周期
+
+Vue2 的生命周期描述了实例从创建、挂载、更新到销毁的完整过程，每个阶段提供了**钩子函数**（回调函数），允许开发者在特定时机执行自定义逻辑（如数据请求、DOM操作、资源清理等）。以下是 Vue2 生命周期的详细解析：
+
+
+### **一、生命周期阶段与钩子函数顺序**
+Vue2 生命周期可分为 **4 大阶段**，共 **8 个核心钩子函数**，执行顺序如下：
+
+```
+初始化阶段 → 挂载阶段 → 更新阶段 → 销毁阶段
+```
+
+具体顺序：  
+`beforeCreate` → `created` → `beforeMount` → `mounted` → `beforeUpdate` → `updated` → `beforeDestroy` → `destroyed`
+
+
+### **二、各阶段钩子函数详解**
+
+#### **1. 初始化阶段（实例创建与数据绑定）**
+此阶段 Vue 实例完成**初始化配置**（如数据观测、方法挂载、事件绑定），但尚未渲染 DOM。
+
+##### `beforeCreate`（实例初始化后）
+- **触发时机**：实例初始化完成（`new Vue()` 后），但**数据观测（`data`）、方法（`methods`）、计算属性（`computed`）** 尚未初始化，`props` 也未挂载。
+- **可用操作**：  
+  仅能访问实例的 `this`（指向实例本身）、`$options`（配置项）和 `$root`（根实例），无法访问 `data`、`methods` 等。
+- **常见场景**：  
+  极少数需要在实例完全初始化前执行的逻辑（如自定义初始化配置）。
+
+```javascript
+export default {
+  beforeCreate() {
+    console.log('beforeCreate: 实例初始化完成');
+    console.log(this.$options); // 可访问配置项（如 components、data 等）
+    console.log(this.data); // undefined（数据未初始化）
+    console.log(this.msg); // undefined（data 中的属性未挂载）
+  }
+};
+```
+
+##### `created`（实例创建完成）
+- **触发时机**：实例完成**数据观测（`data` 响应式）、方法（`methods`）、计算属性（`computed`）、事件绑定**，但**尚未挂载 DOM**（`$el` 仍为虚拟节点）。
+- **可用操作**：  
+  可访问 `data`、`methods`、`props` 等实例属性，适合进行**数据初始化、异步请求（如获取初始数据）**。
+- **常见场景**：  
+  发送 API 请求获取初始数据（因数据已响应式，后续更新会自动渲染）。
+
+```javascript
+export default {
+  data() {
+    return { msg: 'Hello Vue2' };
+  },
+  created() {
+    console.log('created: 数据与方法已初始化');
+    console.log(this.msg); // 输出：Hello Vue2（data 已响应式）
+    console.log(this.$el); // undefined（DOM 未挂载）
+    // 发送请求获取数据（典型场景）
+    this.fetchData();
+  },
+  methods: {
+    fetchData() {
+      // 模拟 API 请求
+      setTimeout(() => {
+        this.msg = '数据加载完成'; // 触发响应式更新（但 DOM 未渲染）
+      }, 1000);
+    }
+  }
+};
+```
+
+
+#### **2. 挂载阶段（DOM 渲染完成）**
+此阶段 Vue 实例将编译后的模板**挂载到真实 DOM** 上，完成首次渲染。
+
+##### `beforeMount`（挂载前）
+- **触发时机**：模板编译完成（生成虚拟 DOM），但**尚未将虚拟 DOM 渲染到真实 DOM**（`$el` 仍为虚拟节点）。
+- **可用操作**：  
+  可访问编译后的模板内容（如 `this.$options.template`），但无法操作真实 DOM。
+- **常见场景**：  
+  极少数需要干预模板编译的场景（如自定义渲染逻辑）。
+
+```javascript
+export default {
+  beforeMount() {
+    console.log('beforeMount: 模板编译完成，未挂载 DOM');
+    console.log(this.$el); // 虚拟 DOM（如 <div id="app"></div> 的虚拟表示）
+  }
+};
+```
+
+##### `mounted`（挂载完成）
+- **触发时机**：实例已成功挂载到真实 DOM（`$el` 指向真实 DOM 节点），**首次渲染完成**。
+- **可用操作**：  
+  可安全操作真实 DOM（如获取元素尺寸、绑定第三方库），或访问子组件的实例（需确保子组件已挂载）。
+- **常见场景**：  
+  初始化 DOM 相关操作（如 `echarts` 图表渲染、滚动监听）、集成第三方库（如 `jQuery` 插件）。
+
+```javascript
+export default {
+  mounted() {
+    console.log('mounted: DOM 已挂载');
+    console.log(this.$el); // 真实 DOM 节点（如 <div id="app">...</div>）
+    // 操作 DOM（示例：获取元素文本）
+    console.log(this.$el.textContent); // 输出渲染后的内容
+    // 初始化第三方库（如 echarts）
+    this.initChart();
+  },
+  methods: {
+    initChart() {
+      // 假设使用 echarts 渲染图表
+      this.chart = echarts.init(this.$refs.chartContainer);
+      this.chart.setOption({ /* 配置 */ });
+    }
+  }
+};
+```
+
+**注意**：  
+- `mounted` 仅保证当前实例的 DOM 已挂载，**子组件的 `mounted` 可能尚未执行**（若需要等待所有子组件挂载完成，可在 `mounted` 中使用 `$nextTick`）。  
+- 若实例是根实例且挂载到 `body` 或 `html`，`$el` 可能指向 `document.body` 或 `document.documentElement`。  
+
+
+#### **3. 更新阶段（数据变化触发重新渲染）**
+当实例的 `data`、`props` 或 `computed` 变化时，Vue 会触发**重新渲染**，此阶段包含两个钩子函数。
+
+##### `beforeUpdate`（更新前）
+- **触发时机**：数据变化后，**虚拟 DOM 重新渲染前**（此时真实 DOM 尚未更新）。
+- **可用操作**：  
+  可访问旧的 DOM 状态（如旧数据对应的 DOM 内容），但无法直接修改数据（会导致无限循环）。
+- **常见场景**：  
+  需要在 DOM 更新前记录旧状态（如比较新旧值）。
+
+```javascript
+export default {
+  data() {
+    return { count: 0 };
+  },
+  beforeUpdate() {
+    console.log('beforeUpdate: 数据变化，DOM 即将更新');
+    console.log('旧 count:', this.count - 1); // 旧值（假设当前 count 是 1）
+  }
+};
+```
+
+##### `updated`（更新后）
+- **触发时机**：数据变化导致**虚拟 DOM 重新渲染并更新到真实 DOM 后**。
+- **可用操作**：  
+  可访问更新后的 DOM（如获取最新渲染的内容），但需避免在此处修改数据（可能触发重复更新）。
+- **常见场景**：  
+  DOM 更新后执行操作（如滚动到最新内容、重新计算布局）。
+
+```javascript
+export default {
+  updated() {
+    console.log('updated: DOM 已更新');
+    // 示例：滚动到容器底部（假设新增了内容）
+    this.$nextTick(() => {
+      const container = this.$refs.container;
+      container.scrollTop = container.scrollHeight;
+    });
+  }
+};
+```
+
+**注意**：  
+- `updated` 中直接修改数据会导致**无限循环更新**（数据变化 → 触发 `beforeUpdate` → 修改数据 → 再次触发更新...）。  
+- 推荐在 `updated` 中使用 `$nextTick`，确保 DOM 已完全渲染。  
+
+
+#### **4. 销毁阶段（实例清理与释放）**
+当实例被销毁时（如 `v-if` 条件为 `false`、`$destroy()` 手动调用），此阶段释放资源。
+
+##### `beforeDestroy`（销毁前）
+- **触发时机**：实例即将销毁，但**尚未移除事件监听、定时器等资源**。
+- **可用操作**：  
+  清理实例关联的资源（如清除定时器、取消网络请求、解绑全局事件），避免内存泄漏。
+- **常见场景**：  
+  组件卸载前释放资源（最关键的清理阶段）。
+
+```javascript
+export default {
+  data() {
+    return { timer: null };
+  },
+  mounted() {
+    // 模拟定时器
+    this.timer = setInterval(() => {
+      console.log('定时器运行中...');
+    }, 1000);
+  },
+  beforeDestroy() {
+    console.log('beforeDestroy: 实例即将销毁');
+    // 清理定时器（关键！否则会导致内存泄漏）
+    clearInterval(this.timer);
+    this.timer = null;
+  }
+};
+```
+
+##### `destroyed`（销毁后）
+- **触发时机**：实例已完全销毁，**所有子组件、事件监听、响应式系统均被移除**。
+- **可用操作**：  
+  仅能执行与实例无关的收尾操作（如统计日志），但通常无需在此处理资源（因资源应在 `beforeDestroy` 清理）。
+
+
+### **三、生命周期的执行条件**
+- **根实例**：仅执行一次完整的生命周期（初始化 → 挂载 → 销毁）。  
+- **子组件**：每次被父组件重新渲染时（如 `v-if` 切换、`props` 变化），会触发自身的 `beforeDestroy` → `destroyed`（旧实例销毁）和 `beforeCreate` → `created` → `beforeMount` → `mounted`（新实例创建）。  
+
+
+### **四、常见场景总结**
+| 钩子函数        | 典型使用场景                                                 |
+| --------------- | ------------------------------------------------------------ |
+| `created`       | 初始化数据请求、绑定全局事件、设置定时器。                   |
+| `mounted`       | DOM 操作（如初始化图表、绑定第三方库）、子组件通信（需 `$nextTick` 确保子组件挂载）。 |
+| `beforeDestroy` | 清理定时器、取消网络请求、解绑全局事件（防止内存泄漏）。     |
+| `updated`       | DOM 更新后执行操作（如滚动到最新位置），需配合 `$nextTick` 确保 DOM 渲染完成。 |
+
+
+### **五、注意事项**
+1. **避免在 `created`/`mounted` 中频繁操作 DOM**：可能导致性能问题（尤其是列表渲染时）。  
+2. **`updated` 中谨慎修改数据**：可能触发无限循环更新。  
+3. **生命周期与异步请求**：若组件在 `mounted` 前卸载（如 `v-if` 条件快速切换），需取消未完成的请求（可通过 `axios.CancelToken` 或 `AbortController`）。  
+4. **Vue3 生命周期差异**：Vue3 新增了 `setup` 函数（替代部分选项式 API），且 `beforeDestroy`/`destroyed` 重命名为 `beforeUnmount`/`unmounted`（但 Vue2 仍使用原名称）。
+
+
+通过合理使用生命周期钩子函数，可以精准控制代码执行时机，优化应用性能并避免潜在问题。
+
+
+
+## 路由
+
+在 Vue2 中实现页面跳转（路由导航）主要依赖 **Vue Router**（官方路由管理器）。以下是完整的实现方式，涵盖**声明式导航**、**编程式导航**、**参数传递**及常见场景的解决方案：
+
+
+### **一、前提条件：安装并配置 Vue Router**
+若项目未集成 Vue Router，需先完成以下步骤：
+
+#### 1. 安装 Vue Router
+```bash
+npm install vue-router@3  # Vue2 需使用 Vue Router 3.x 版本
+```
+
+#### 2. 配置路由规则
+在 `src/router/index.js` 中定义路由映射（示例）：
+```javascript
+// src/router/index.js
+import Vue from 'vue';
+import VueRouter from 'vue-router';
+
+// 引入目标页面组件
+import Home from '../views/Home.vue';
+import User from '../views/User.vue';
+import Detail from '../views/Detail.vue';
+
+Vue.use(VueRouter);
+
+// 定义路由规则
+const routes = [
+  {
+    path: '/',          // 根路径
+    name: 'Home',       // 路由名称（可选，用于编程式导航）
+    component: Home     // 对应组件
+  },
+  {
+    path: '/user/:id',  // 动态路由（:id 为参数）
+    name: 'User',
+    component: User
+  },
+  {
+    path: '/detail',    // 查询参数示例（通过 ?key=value 传递）
+    name: 'Detail',
+    component: Detail
+  }
+];
+
+// 创建路由实例
+const router = new VueRouter({
+  mode: 'history',      // 路由模式（hash 或 history，推荐 history）
+  base: process.env.BASE_URL, // 基础路径（可选）
+  routes              // 注册路由规则
+});
+
+export default router; // 导出路由实例
+```
+
+#### 3. 挂载路由到 Vue 实例
+在 `main.js` 中引入并挂载路由：
+```javascript
+// main.js
+import Vue from 'vue';
+import App from './App.vue';
+import router from './router'; // 引入路由实例
+
+new Vue({
+  router, // 挂载路由
+  render: h => h(App)
+}).$mount('#app');
+```
+
+
+### **二、页面跳转的两种核心方式**
+Vue2 中实现页面跳转主要有 **声明式导航**（模板中通过 `<router-link>` 标签）和 **编程式导航**（JavaScript 逻辑中通过 `this.$router` 方法）两种方式。
+
+
+#### **1. 声明式导航（`<router-link>` 标签）**
+通过 `<router-link>` 组件生成可点击的链接，点击后跳转到目标路由。适合模板中静态或少量动态的跳转场景。
+
+##### 基础用法：
+```html
+<!-- 跳转到路径 -->
+<router-link to="/user/123">跳转到用户页</router-link>
+
+<!-- 跳转到命名路由（推荐，更清晰） -->
+<router-link :to="{ name: 'User', params: { id: 123 } }">跳转到用户页（命名路由）</router-link>
+
+<!-- 跳转到带查询参数的路由 -->
+<router-link :to="{ path: '/detail', query: { keyword: 'vue2' } }">跳转到详情页（查询参数）</router-link>
+```
+
+##### 关键属性说明：
+- `to`：目标路由的路径或路由对象（必填）。  
+  - 路径字符串（如 `/user/123`）；  
+  - 路由对象（如 `{ name: 'User', params: { id: 123 }, query: { keyword: 'vue2' } }`）。  
+- `active-class`：链接激活时的 CSS 类名（默认 `router-link-active`），可用于高亮当前页面链接。  
+- `exact-active-class`：精确匹配激活时的 CSS 类名（默认 `router-link-exact-active`）。  
+
+
+#### **2. 编程式导航（`this.$router` 方法）**
+通过 JavaScript 逻辑触发跳转（如按钮点击事件、异步请求完成后跳转），使用 `this.$router` 提供的方法。
+
+##### 核心方法：
+- `this.$router.push(path | routeObject)`：跳转到目标路由，**保留当前历史记录**（用户点击浏览器后退会回到上一页）。  
+- `this.$router.replace(path | routeObject)`：跳转到目标路由，**替换当前历史记录**（用户点击后退不会回到当前页）。  
+- `this.$router.go(n)`：前进或后退指定步数（`n` 为整数，`n=1` 前进一页，`n=-1` 后退一页）。  
+
+
+##### 示例代码：
+```javascript
+// 在组件的 methods 中使用
+export default {
+  methods: {
+    // 跳转到路径（push）
+    goToUser() {
+      this.$router.push('/user/123');
+    },
+
+    // 跳转到命名路由（带参数，push）
+    goToUserWithParams() {
+      this.$router.push({
+        name: 'User',       // 路由名称（需与路由配置中的 name 一致）
+        params: { id: 123 }, // 动态路由参数（对应路径 /user/:id）
+        query: { from: 'home' } // 查询参数（最终 URL 为 /user/123?from=home）
+      });
+    },
+
+    // 替换当前路由（无历史记录）
+    replaceToDetail() {
+      this.$router.replace({
+        path: '/detail',
+        query: { keyword: 'vue2' }
+      });
+    },
+
+    // 后退一页
+    goBack() {
+      this.$router.go(-1);
+    },
+
+    // 前进一页
+    goForward() {
+      this.$router.go(1);
+    }
+  }
+};
+```
+
+
+### **三、参数传递与接收**
+跳转时可能需要传递参数（如用户 ID、搜索关键词），Vue Router 支持两种传参方式：
+
+
+#### **1. 动态路由参数（`params`）**
+通过路径中的动态段传递参数（如 `/user/:id`），需在路由配置中定义参数占位符。
+
+##### 传递方式：
+- 声明式导航：`<router-link :to="{ name: 'User', params: { id: 123 } }">`  
+- 编程式导航：`this.$router.push({ name: 'User', params: { id: 123 } })`  
+
+##### 接收参数：
+在目标组件中通过 `this.$route.params` 获取：
+```javascript
+// User.vue 组件中
+export default {
+  mounted() {
+    console.log(this.$route.params.id); // 输出：123（动态参数）
+  }
+};
+```
+
+
+#### **2. 查询参数（`query`）**
+通过 URL 的查询字符串传递参数（如 `/detail?keyword=vue2`），无需在路由配置中定义。
+
+##### 传递方式：
+- 声明式导航：`<router-link :to="{ path: '/detail', query: { keyword: 'vue2' } }">`  
+- 编程式导航：`this.$router.push({ path: '/detail', query: { keyword: 'vue2' } })`  
+
+##### 接收参数：
+在目标组件中通过 `this.$route.query` 获取：
+```javascript
+// Detail.vue 组件中
+export default {
+  mounted() {
+    console.log(this.$route.query.keyword); // 输出：'vue2'（查询参数）
+  }
+};
+```
+
+
+### **四、常见场景与注意事项**
+#### **场景 1：跳转后保留当前页面状态**
+若跳转后需要返回当前页并保留状态（如表单填写），可使用 `keep-alive` 缓存组件：
+```html
+<!-- App.vue 中包裹路由视图 -->
+<template>
+  <div id="app">
+    <keep-alive>
+      <router-view v-if="$route.meta.keepAlive" />
+    </keep-alive>
+    <router-view v-if="!$route.meta.keepAlive" />
+  </div>
+</template>
+```
+在路由配置中标记需要缓存的页面：
+```javascript
+// router/index.js
+const routes = [
+  {
+    path: '/form',
+    name: 'Form',
+    component: Form,
+    meta: { keepAlive: true } // 标记需要缓存
+  }
+];
+```
+
+
+#### **场景 2：动态路由参数变化但组件未更新**
+若同一组件被多次访问（如从 `/user/123` 跳转到 `/user/456`），由于 Vue 组件复用，`created` 等生命周期不会重新执行。可通过以下方式解决：
+- **监听 `$route` 变化**：在组件中监听 `$route.params` 或 `$route.query` 的变化。
+  ```javascript
+  export default {
+    watch: {
+      '$route.params.id'(newId) {
+        // 参数变化时重新加载数据
+        this.fetchUserData(newId);
+      }
+    },
+    methods: {
+      fetchUserData(id) {
+        // 发送请求获取新数据
+      }
+    }
+  };
+  ```
+- **禁用组件复用**：在 `<router-view>` 中添加 `:key` 属性，强制重新渲染组件。
+  ```html
+  <router-view :key="$route.fullPath" />
+  ```
+
+
+#### **场景 3：跳转外部链接**
+若需跳转到非 Vue 应用的外部链接（如 `https://example.com`），直接使用 `<a>` 标签或 `window.location.href`：
+```html
+<!-- 直接跳转外部链接 -->
+<a href="https://example.com" target="_blank">外部链接</a>
+```
+或在 JavaScript 中：
+```javascript
+window.location.href = 'https://example.com';
+```
+
+
+### **总结**
+Vue2 页面跳转的核心是 **Vue Router**，主要方式包括：
+- **声明式导航**（`<router-link>`）：适合模板中的静态/动态链接。  
+- **编程式导航**（`this.$router.push`/`replace`/`go`）：适合 JavaScript 逻辑触发的跳转。  
+
+参数传递通过 `params`（动态路由参数）或 `query`（查询参数）实现，需注意组件缓存和参数变化的场景处理。
+
+
+
+### 实验 - 编程式路由
+
+集成路由组件：
+
+- 安装路由依赖
+
+  ```sh
+  npm install vue-router@3
+  ```
+
+- 创建路由组件配置 `/src/router/index.js`
+
+  ```javascript
+  import Vue from 'vue';
+  import VueRouter from 'vue-router';
+  
+  // 引入目标页面组件
+  import SessionInfo from '@/components/SessionInfo.vue';
+  import ProductList from '@/components/ProductList.vue';
+  
+  Vue.use(VueRouter);
+  
+  // 定义路由规则
+  const routes = [
+      {
+          path: '/',          // 根路径
+          name: 'SessionInfo',       // 路由名称（可选，用于编程式导航）
+          component: SessionInfo     // 对应组件
+      },
+      {
+          path: '/productList',
+          name: 'ProductList',
+          component: ProductList
+      }
+  ];
+  
+  // 创建路由实例
+  const router = new VueRouter({
+      mode: 'history',      // 路由模式（hash 或 history，推荐 history）
+      base: process.env.BASE_URL, // 基础路径（可选）
+      routes              // 注册路由规则
+  });
+  
+  export default router; // 导出路由实例
+  ```
+
+  - 上面配置表示访问 `http://localhost:8080` 时访问组件 `SessionInfo`，访问 `http://localhost:8080/productList` 时访问组件 `ProductList`。
+
+- 注册路由组件到 `Vue` 中
+
+  ```vue
+  import Vue from 'vue'
+  import App from './App.vue'
+  import router from './router'; // 引入路由实例
+  
+  Vue.config.productionTip = false
+  
+  new Vue({
+    router, // 挂载路由
+    render: function (h) { return h(App) },
+  }).$mount('#app')
+  ```
+
+- `/src/App.vue` 配置 `router-view` 组件以动态渲染当前路由组件
+
+  ```vue
+  <template>
+    <div id="app">
+      <!-- router-view 是 Vue Router 的核心组件，用于根据当前路由动态渲染匹配的组件。它是实现单页面应用（SPA）“页面切换”的关键载体。 -->
+      <router-view></router-view>
+    </div>
+  </template>
+  
+  <script>
+  export default {
+    name: 'App',
+    components: {
+    }
+  }
+  </script>
+  
+  <style>
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+  }
+  
+  #app {
+    font-family: Avenir, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  </style>
+  
+  ```
+
+- 点击按钮后动态跳转到 `/productList` 路由
+
+  ```javascript
+  handleClickOk() {
+      if (this.userId)
+          localStorage.setItem("userId", this.userId)
+  
+      this.$router.push('/productList');
+  }
+  ```
+
+  
+
 ## 综合案例
 
 ### 模仿 `element-ui` 消息提示
