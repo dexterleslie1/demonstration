@@ -59,6 +59,14 @@
         {{ index }}
       </div>
     </div>
+
+    <hr>
+    <div>没有包裹标签时</div>
+    <div>
+      <template v-for="index in this.count">
+        {{ index }}<br/>
+      </template>
+    </div>
   </div>
 </template>
 
