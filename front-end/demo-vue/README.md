@@ -3030,6 +3030,22 @@ Vue2 页面跳转的核心是 **Vue Router**，主要方式包括：
 
 ### 实验 - 编程式路由
 
+>注意：在使用带 `query` 参数路由跳转时，需要指定路由配置中的 `name` 属性，而不是指定 `path` 属性，否则在跳转后不会渲染组件。
+>
+>```javascript
+>// 错误跳转方式
+>this.$router.push({
+>    path: "/productInfo",
+>    query: { id: product.id }
+>})
+>
+>// 正确跳转方式
+>this.$router.push({
+>    name: "ProductInfo",
+>    query: { id: product.id }
+>})
+>```
+
 集成路由组件：
 
 - 安装路由依赖
@@ -3136,7 +3152,16 @@ Vue2 页面跳转的核心是 **Vue Router**，主要方式包括：
   }
   ```
 
-  
+
+
+
+### 前进或后退
+
+>`this.$router.go(n)`：前进或后退指定步数（`n` 为整数，`n=1` 前进一页，`n=-1` 后退一页）。
+
+`this.$router.go(-1)` 和 `this.$router.back()` 等价。  
+
+
 
 ## 综合案例
 
