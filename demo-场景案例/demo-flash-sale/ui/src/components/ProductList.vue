@@ -93,6 +93,7 @@ export default {
 
 .container .product-container {
     margin-top: 10px;
+    margin-bottom: 10px;
     display: flex;
     flex-wrap: wrap;
     gap: 20px;
