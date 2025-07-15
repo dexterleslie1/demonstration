@@ -1,0 +1,13 @@
+version: "3.1"
+
+services:
+  ui-vue:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-vue2-app
+    environment:
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf:ro
+    network_mode: host

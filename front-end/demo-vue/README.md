@@ -3163,6 +3163,176 @@ Vue2 页面跳转的核心是 **Vue Router**，主要方式包括：
 
 
 
+## 打包和发布应用
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-vue/vue2-using-element-ui)
+
+在 `package.json` 的 `scripts` 中添加：
+
+```json
+"build": "vue-cli-service build"
+```
+
+打包应用
+
+```sh
+npm run build
+```
+
+使用 `OpenResty` 发布应用
+
+- 编写 `Dockerfile`：
+
+  ```dockerfile
+  FROM registry.cn-hangzhou.aliyuncs.com/future-public/openresty-base:1.1.1
+  
+  RUN rm -rf /usr/local/openresty/nginx/html/*
+  
+  # 注意：不能使用下面的方式复制 dist 目录到 /usr/local/openresty/nginx/html/ 目录中，否则在发布后节目不能正常显示。
+  # COPY dist/* /usr/local/openresty/nginx/html/
+  COPY dist/ /usr/local/openresty/nginx/html/
+  
+  ```
+
+- 编写 `nginx.conf`：
+
+  ```nginx
+  #user  nobody;
+  #worker_processes  1;
+  worker_rlimit_nofile 65535;
+  
+  #error_log  logs/error.log;
+  #error_log  logs/error.log  notice;
+  #error_log  logs/error.log  info;
+  
+  #pid        logs/nginx.pid;
+  error_log  logs/error.log  notice;
+  
+  events {
+      worker_connections  65535;
+  }
+  
+  
+  http {
+      #log_format access '[$time_local] "$request" $status $request_body "$http_refferer" "$http_user_agent" $http_x_forwarded_for';
+      include       mime.types;
+      #include       /usr/local/openresty/nginx/conf/naxsi_core.rules;
+      default_type  application/octet-stream;
+  
+      #log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+      #                  '$status $body_bytes_sent "$http_referer" '
+      #                  '"$http_user_agent" "$http_x_forwarded_for"';
+  
+      #access_log  logs/access.log  main;
+  
+      sendfile        on;
+      #tcp_nopush     on;
+  
+      #keepalive_timeout  0;
+      keepalive_timeout  65;
+  
+      #gzip  on;
+      gzip on;
+      gzip_min_length 1k;
+      gzip_buffers 16 64k;
+      gzip_http_version 1.1;
+      gzip_comp_level 6;
+      gzip_types application/json text/plain application/javascript text/css application/xml;
+      gzip_vary on;
+      server_tokens off;
+      autoindex off;
+      access_log off;
+      client_body_buffer_size  10k;
+      client_header_buffer_size 1k;
+      client_max_body_size 120k;
+      large_client_header_buffers 2 8k;
+      gzip_proxied any;
+  
+      # 反向代理配置
+      proxy_buffering on;
+      proxy_buffer_size 8k;
+      proxy_buffers 32 8k;
+      proxy_busy_buffers_size 16k;
+  
+      proxy_cache_path /tmp/proxy_cache levels=1:2 keys_zone=cache_one:200m inactive=1d max_size=2g use_temp_path=off;
+  
+      upstream backend {
+          keepalive 1024;
+          server localhost:8080;
+      }
+  
+      server {
+          listen       80;
+          server_name  localhost;
+  
+          #charset koi8-r;
+  
+          #access_log  logs/host.access.log  main;
+  
+          location / {
+              root   /usr/local/openresty/nginx/html;
+              index  index.html index.htm;
+              try_files $uri $uri/ /index.html;
+          }
+  
+          # 所有api请求转发到upstream backend
+          location /api/ {
+              proxy_set_header Host $host:$server_port;
+              proxy_set_header x-forwarded-for $remote_addr;
+              proxy_http_version 1.1;
+              proxy_set_header Connection '';
+              proxy_pass http://backend;
+          }
+  
+          location /request_denied {
+              default_type application/json;
+              return 403 '{"errorCode":600,"errorMessage":"您提交数据存在安全问题，被服务器拒绝，修改数据后重试"}';
+          }
+  
+          error_page   500 502 503 504  /50x.html;
+          location = /50x.html {
+              root   /usr/local/openresty/nginx/html;
+          }
+      }
+  }
+  
+  ```
+
+- 编写 `docker-compose.yaml`：
+
+  ```yaml
+  version: "3.1"
+  
+  services:
+    ui-vue:
+      build:
+        context: ./
+        dockerfile: Dockerfile
+      image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-vue2-app
+      environment:
+        - TZ=Asia/Shanghai
+      volumes:
+        - ./nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf:ro
+      network_mode: host
+  
+  ```
+
+- 编译 `Docker` 镜像
+
+  ```sh
+  docker compose build
+  ```
+
+- 启动 `OpenResty`
+
+  ```sh
+  docker compose up -d
+  ```
+
+- 访问应用 `http://localhost/`
+
+
+
 ## 综合案例
 
 ### 模仿 `element-ui` 消息提示
