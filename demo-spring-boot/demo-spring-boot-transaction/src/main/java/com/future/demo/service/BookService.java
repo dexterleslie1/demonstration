@@ -4,6 +4,7 @@ import com.future.demo.bean.Book;
 import com.future.demo.dao.AccountDao;
 import com.future.demo.dao.BookDao;
 import com.future.demo.exceptions.CustomCheckedException;
+import com.future.demo.exceptions.SubCustomCheckedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,8 +28,11 @@ public class BookService {
      * @param sleepSeconds   睡眠秒数，模拟事务处理超时
      */
     @Transactional(timeout = 2/* 事务处理超过2秒失败并自动回滚 */,
-            rollbackFor = CustomCheckedException.class/* 检查型异常（Checked Exception）：默认情况下，检查型异常（即继承自`Exception`但不继承自`RuntimeException`的异常）不会导致事务回滚。如果你希望某个检查型异常也能导致事务回滚，你需要在`rollbackFor`属性中显式指定该异常类型 */
-            , noRollbackFor = NullPointerException.class/* 默认规则会回滚NullPointerException，使用noRollbackException修改此默认行为 */)
+            rollbackFor = Exception.class/* 检查型异常（Checked Exception）：默认情况下，检查型异常（即继承自`Exception`但不继承自`RuntimeException`的异常）不会导致事务回滚。如果你希望某个检查型异常也能导致事务回滚，你需要在`rollbackFor`属性中显式指定该异常类型 */,
+            noRollbackFor = {
+                    NullPointerException.class,/* 默认规则会回滚NullPointerException，使用noRollbackException修改此默认行为 */
+                    // 默认回滚所有异常，在此指定不回滚SubCustomCheckedException
+                    SubCustomCheckedException.class})
     public void buy(Long userId, Long bookId, Integer bookNum, boolean throwException, Integer sleepSeconds,
                     boolean throwNullPointerException) throws CustomCheckedException {
         // 查询图书信息

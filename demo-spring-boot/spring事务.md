@@ -1,6 +1,6 @@
 # 事务
 
->`https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-boot-transaction`
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-boot-transaction)
 
 
 
@@ -64,7 +64,7 @@ try {
 
 
 
-## @Transactional rollbackFor、noRollbackFor
+## `@Transactional rollbackFor`、`noRollbackFor`
 
 提醒：
 
@@ -92,7 +92,7 @@ public void someMethod() throws CustomCheckedException {
 
 总结来说，`@Transactional`注解的默认回滚行为是对于所有未捕获的运行时异常和错误进行回滚，而检查型异常则不会触发回滚，除非在`rollbackFor`属性中显式指定。
 
-### rollbackFor、noRollbackFor 用法
+### `rollbackFor`、`noRollbackFor` 用法
 
 ```java
 /**
@@ -105,8 +105,11 @@ public void someMethod() throws CustomCheckedException {
  * @param sleepSeconds   睡眠秒数，模拟事务处理超时
  */
 @Transactional(timeout = 2/* 事务处理超过2秒失败并自动回滚 */,
-        rollbackFor = CustomCheckedException.class/* 检查型异常（Checked Exception）：默认情况下，检查型异常（即继承自`Exception`但不继承自`RuntimeException`的异常）不会导致事务回滚。如果你希望某个检查型异常也能导致事务回滚，你需要在`rollbackFor`属性中显式指定该异常类型 */
-        , noRollbackFor = NullPointerException.class/* 默认规则会回滚NullPointerException，使用noRollbackException修改此默认行为 */)
+        rollbackFor = Exception.class/* 检查型异常（Checked Exception）：默认情况下，检查型异常（即继承自`Exception`但不继承自`RuntimeException`的异常）不会导致事务回滚。如果你希望某个检查型异常也能导致事务回滚，你需要在`rollbackFor`属性中显式指定该异常类型 */,
+        noRollbackFor = {
+                NullPointerException.class,/* 默认规则会回滚NullPointerException，使用noRollbackException修改此默认行为 */
+                // 默认回滚所有异常，在此指定不回滚SubCustomCheckedException
+                SubCustomCheckedException.class})
 public void buy(Long userId, Long bookId, Integer bookNum, boolean throwException, Integer sleepSeconds,
                 boolean throwNullPointerException) throws CustomCheckedException {
     // 查询图书信息
@@ -414,7 +417,7 @@ try {
 
 ## 事务失效有哪些情况呢？
 
-### MyBatis 配置多数据源时
+### `MyBatis` 配置多数据源时
 
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-mysql-n-mariadb/demo-order-management-app)
 
