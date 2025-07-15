@@ -24,5 +24,9 @@ public class CommonService {
         // 判断是否已经递增过，以免重复递增
         if (affectRow > 0)
             this.commonMapper.updateIncreaseCount(flag, count);
+        else {
+            if (log.isInfoEnabled())
+                log.info("idempotentId {} flag {} count {} 已经递增过，导致放弃此次递增", idempotentId, flag, count);
+        }
     }
 }
