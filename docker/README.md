@@ -222,7 +222,7 @@ docker rm -f test1
 
 
 
-## dockerfile USER 指令用法
+## `dockerfile` 指令 - `USER`
 
 使用 USER 指令指定的用户名将用于运行 Dockerfile 中的所有后续 RUN、CMD 和 ENTRYPOINT 指令。
 
@@ -252,6 +252,141 @@ docker run -it user
 ```
 
 容器输出 www-data 表示当前运行用户为 www-data
+
+
+
+## `dockerfile` 指令 - `ADD`
+
+
+
+### 复制并解压本地压缩包
+
+```dockerfile
+# ADD 自动解压（生成 /tmp/app/...）
+ADD app.tar.gz /tmp
+
+# 若用 COPY，需手动解压（更可控）
+COPY app.tar.gz /tmp
+RUN tar -xzf /tmp/app.tar.gz -C /tmp && rm /tmp/app.tar.gz  # 清理压缩包
+```
+
+
+
+### 下载远程配置文件
+
+```dockerfile
+# 不推荐：ADD 直接下载（依赖远程 URL）
+ADD https://example.com/config.ini /etc/config/
+
+# 推荐：用 RUN + curl（可添加错误处理、清理临时文件）
+RUN curl -fSL https://example.com/config.ini -o /etc/config/config.ini && \
+    chmod 644 /etc/config/config.ini
+```
+
+
+
+## `dockerfile` 指令 - `COPY`
+
+
+
+### 复制本地代码目录
+
+```dockerfile
+# 推荐：用 COPY，行为明确
+COPY ./src /app/src
+
+# 不推荐：虽然 ADD 也能实现，但无必要
+ADD ./src /app/src
+
+# 自动递归复制 dist 目录中的文件和目录到 /usr/local/openresty/nginx/html/ 目录中
+COPY dist/ /usr/local/openresty/nginx/html/
+```
+
+
+
+## `dockerfile` 指令 - `ADD` 和 `COPY` 区别
+
+在 Dockerfile 中，`ADD` 和 `COPY` 都是用于将文件/目录复制到镜像中的指令，但它们的设计目标和功能有明显差异。以下是核心区别的详细对比：
+
+
+### **1. 支持的源类型不同**
+- **`COPY`**：仅支持**本地文件或目录**（必须存在于构建上下文中）。  
+  构建镜像时，Docker 客户端会将构建上下文（通常是 `docker build` 命令所在目录）中的文件打包发送给 Docker 守护进程，`COPY` 只能从该上下文中复制文件。  
+
+- **`ADD`**：支持三种源类型：  
+  - 本地文件/目录（同 `COPY`）；  
+  - **本地压缩包**（如 `.tar`、`.tar.gz`、`.tar.bz2`、`.tar.xz`、`.zip`）；  
+  - **远程 URL**（如 `http://example.com/file.txt`、`https://github.com/xxx.zip`）。  
+
+
+### **2. 对压缩包的处理行为不同**
+- **`COPY`**：无论源是否是压缩包，均直接复制到镜像中，**不会自动解压**。  
+  例如：`COPY app.tar.gz /tmp` 会将 `app.tar.gz` 文件直接复制到镜像的 `/tmp` 目录，不会解压。  
+
+- **`ADD`**：若源是**本地压缩包**（且格式受支持），会**自动解压到目标路径**（类似 `tar -xzf`）。  
+  例如：`ADD app.tar.gz /tmp` 会将 `app.tar.gz` 解压到 `/tmp` 目录（生成 `app/` 等子文件），但 `.zip` 压缩包解压后无顶层目录（需注意路径问题）。  
+
+
+### **3. 对远程资源的处理不同**
+- **`COPY`**：无法直接复制远程 URL 资源（因为构建上下文不包含远程文件）。  
+  若需从远程下载文件，必须配合 `RUN` 指令使用 `curl`、`wget` 等工具（更可控）。  
+
+- **`ADD`**：可以直接复制远程 URL 资源到镜像中（类似 `wget <url> -O <目标路径>`）。  
+  例如：`ADD https://example.com/config.ini /etc/config/` 会下载 `config.ini` 并保存到镜像的 `/etc/config/` 目录。  
+
+
+### **4. 最佳实践与透明度**
+- **`COPY`**：设计目标是「纯本地文件复制」，行为简单透明，符合「镜像构建过程应清晰可追溯」的最佳实践。  
+  推荐优先使用 `COPY`，尤其是当源是本地文件时，避免因 `ADD` 的额外功能（如解压、下载）引入不可预期的问题。  
+
+- **`ADD`**：因支持远程 URL 和自动解压，容易导致构建逻辑隐含外部依赖（如远程资源失效会影响镜像构建），或压缩包解压后路径混乱（如未清理压缩包本身）。  
+  官方文档建议：**仅在需要解压本地压缩包时使用 `ADD`，否则用 `COPY`**；远程资源下载应通过 `RUN` 指令完成（可结合 `curl -O` 或 `wget`，并清理临时文件）。  
+
+
+### **5. 其他细节差异**
+- **目标路径的覆盖行为**：两者均会覆盖目标路径的同名文件，但 `COPY` 更严格（仅复制明确指定的文件），而 `ADD` 可能因解压或下载引入额外文件（需注意清理）。  
+- **元数据保留**：两者均支持 `--chown` 参数修改文件所有者（如 `COPY --chown=user:group file.txt /app`），但 `ADD` 早期版本不支持（现代 Docker 已支持）。  
+
+
+### **总结：如何选择？**
+| 场景                        | 推荐指令          | 原因                                                         |
+| --------------------------- | ----------------- | ------------------------------------------------------------ |
+| 复制本地文件/目录（无压缩） | `COPY`            | 行为透明，符合最佳实践                                       |
+| 复制本地压缩包并自动解压    | `ADD`             | 唯一支持自动解压的指令（但需注意解压后的路径清理）           |
+| 从远程 URL 下载文件         | `RUN`+`curl/wget` | `ADD` 下载远程资源会导致构建依赖外部 URL，不够健壮（推荐用 `RUN` 控制） |
+
+
+### **示例对比**
+#### 场景 1：复制本地代码目录
+```dockerfile
+# 推荐：用 COPY，行为明确
+COPY ./src /app/src
+
+# 不推荐：虽然 ADD 也能实现，但无必要
+ADD ./src /app/src
+```
+
+#### 场景 2：复制并解压本地压缩包
+```dockerfile
+# ADD 自动解压（生成 /tmp/app/...）
+ADD app.tar.gz /tmp
+
+# 若用 COPY，需手动解压（更可控）
+COPY app.tar.gz /tmp
+RUN tar -xzf /tmp/app.tar.gz -C /tmp && rm /tmp/app.tar.gz  # 清理压缩包
+```
+
+#### 场景 3：下载远程配置文件
+```dockerfile
+# 不推荐：ADD 直接下载（依赖远程 URL）
+ADD https://example.com/config.ini /etc/config/
+
+# 推荐：用 RUN + curl（可添加错误处理、清理临时文件）
+RUN curl -fSL https://example.com/config.ini -o /etc/config/config.ini && \
+    chmod 644 /etc/config/config.ini
+```
+
+**结论**：`COPY` 是更安全、透明的基础复制指令，而 `ADD` 仅在需要解压本地压缩包时使用；远程资源下载应通过 `RUN` 指令完成，避免构建逻辑隐含外部依赖。
 
 
 
