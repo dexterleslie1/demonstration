@@ -269,3 +269,14 @@ services:
       - LANG=C.UTF-8
       - TZ=Asia/Shanghai
       - MYSQL_ROOT_PASSWORD=123456
+
+  ui-vue:
+    build:
+      context: ./ui
+      dockerfile: Dockerfile
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-ui-vue
+    environment:
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf:ro
+    network_mode: host

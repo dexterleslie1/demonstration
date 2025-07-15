@@ -71,6 +71,14 @@
         src: deployer/openresty/nginx.conf.j2
         dest: ~/deployer-flash-sale/openresty/nginx.conf
 
+- name: "配置ui服务的deployer"
+  hosts: common
+  tasks:
+    - name: "配置ui服务的nginx.conf"
+      template:
+        src: deployer/ui/nginx.conf.j2
+        dest: ~/deployer-flash-sale/ui/nginx.conf
+
 - name: "配置crond服务的deployer"
   hosts: crond
   tasks:

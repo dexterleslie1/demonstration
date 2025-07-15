@@ -92,6 +92,15 @@
         cd ~/deployer-flash-sale/openresty
         docker compose down -v
 
+- name: "销毁ui服务"
+  hosts: common
+  tasks:
+    - name: "使用Docker Compose down销毁ui服务"
+      shell: |
+        set -e
+        cd ~/deployer-flash-sale/ui
+        docker compose down -v
+
 - name: "销毁node_exporter"
   hosts: "{{ groups['all'] | difference(groups['management']) }}"
   tasks:

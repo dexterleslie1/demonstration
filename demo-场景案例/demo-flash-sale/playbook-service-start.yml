@@ -107,6 +107,15 @@
         cd ~/deployer-flash-sale/openresty
         docker compose pull && docker compose up -d
 
+- name: "启动ui服务"
+  hosts: common
+  tasks:
+    - name: "使用Docker Compose启动ui服务"
+      shell: |
+        set -e
+        cd ~/deployer-flash-sale/ui
+        docker compose pull && docker compose up -d
+
 - name: "启动node_exporter"
   hosts: "{{ groups['all'] | difference(groups['management']) }}"
   tasks:
