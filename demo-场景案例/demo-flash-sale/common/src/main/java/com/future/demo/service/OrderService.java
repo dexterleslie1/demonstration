@@ -7,6 +7,8 @@ import com.future.common.exception.BusinessException;
 import com.future.demo.dto.OrderDTO;
 import com.future.demo.dto.OrderDetailDTO;
 import com.future.demo.entity.*;
+import com.future.demo.exception.ProductTypeNotSupportedException;
+import com.future.demo.exception.StockInsufficientException;
 import com.future.demo.mapper.OrderDetailMapper;
 import com.future.demo.mapper.OrderMapper;
 import com.future.demo.mapper.ProductMapper;
@@ -151,14 +153,25 @@ public class OrderService {
      * @param amount
      * @param createTime 如果指定订单创建时间，则不会随机生成订单创建时间
      */
-    @Transactional(rollbackFor = Exception.class)
+    @Transactional(
+            rollbackFor = Exception.class,
+            noRollbackFor = {
+                    ProductTypeNotSupportedException.class,
+                    StockInsufficientException.class
+            })
     public Long create(Long userId,
                        Long productId,
                        Integer amount,
                        LocalDateTime createTime) throws Exception {
+        ProductModel productModel = this.productMapper.getById(productId);
+        // 不能使用普通方式向秒杀商品下单
+        if (productModel.isFlashSale()) {
+            throw new ProductTypeNotSupportedException("商品 " + productId + " 为秒杀类型，不支持普通方式下单");
+        }
+
         int affectRows = this.productMapper.decreaseStock(productId, amount);
         if (affectRows <= 0) {
-            throw new BusinessException("库存不足");
+            throw new StockInsufficientException("库存不足");
         }
 
         OrderModel orderModel = new OrderModel();
@@ -176,11 +189,6 @@ public class OrderService {
         Status status = OrderRandomlyUtil.getStatusRandomly();
         orderModel.setStatus(status);
 
-        ProductModel productModel = this.productMapper.getById(productId);
-        // 不能使用普通方式向秒杀商品下单
-        if (productModel.isFlashSale()) {
-            throw new BusinessException("商品 " + productId + " 为秒杀类型，不支持普通方式下单");
-        }
         orderModel.setMerchantId(productModel.getMerchantId());
 
         OrderDetailModel orderDetailModel = new OrderDetailModel();
