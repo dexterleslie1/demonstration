@@ -38,6 +38,7 @@ export default defineConfig({
           { text: 'Android', link: '/android/README.md' },
           { text: 'uni-app', link: '/uni-app/README.md' },
           { text: 'SVG', link: '/svg/README.md' },
+          { text: 'React', link: '/react/README.md' },
         ]
       }, {
         text: '后端', items: [
@@ -596,6 +597,17 @@ export default defineConfig({
             { text: 'Agent设置', link: '/skywalking/agent设置.md' },
             { text: 'Skywalking UI', link: '/skywalking/skywalking-ui.md' },
             { text: '运行Demo', link: '/skywalking/运行demo.md' },
+          ]
+        }
+      ],
+      '/react/': [
+        {
+          text: 'React',
+          items: [
+            { text: '基础', link: '/react/README.md' },
+            { text: 'Redux', link: '/react/redux.md' },
+            { text: '样式的管理', link: '/react/样式的管理.md' },
+            { text: '路由', link: '/react/路由.md' },
           ]
         }
       ],

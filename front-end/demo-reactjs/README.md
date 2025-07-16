@@ -4,6 +4,117 @@
 
 
 
+## 使用脚手架创建项目
+
+### 动手还原脚手架
+
+`TODO`：脚手架架构 `react+webpack+es6+eslint`
+
+
+
+### 创建项目
+
+> 实验环境使用的 `node` 版本为 `v20.12.2`。
+>
+> 基于 `create-react-app` 脚手架创建的项目是基于最新版本的 `react`。
+>
+> 通过 `react` 脚手架创建的项目源码 [链接](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-reactjs/hello-react)
+
+安装脚手架
+
+```sh
+sudo npm install -g create-react-app
+```
+
+使用脚手架创建 `hello-react` 项目
+
+```sh
+create-react-app hello-react
+```
+
+进入 `hello-react` 目录
+
+```sh
+cd hello-react
+```
+
+启动 `hello-react` 项目
+
+```sh
+npm start
+```
+
+打开浏览器访问 `http://localhost:3000` 项目首页
+
+
+
+### 创建 `react16` 项目
+
+> `react16` 项目源码 [链接](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-reactjs/hello-react16)
+
+安装脚手架
+
+```bash
+sudo npm install -g create-react-app
+```
+
+使用脚手架创建 `hello-react16` 项目
+
+```bash
+create-react-app hello-react16
+```
+
+进入 `hello-react16` 项目
+
+```bash
+cd hello-react16
+```
+
+此时创建的新项目是基于最新版本的 `react`，需要手动降低 `react` 版本
+
+```sh
+# 把`package.json`中react、react-dom、@testing-library/react降低版本
+npm install react@16.x react-dom@16.x @testing-library/react@9
+```
+
+修改 `index.js` 内容如下：
+
+```jsx
+// 修改 import ReactDOM from 'react-dom/client';
+// createRoot 替换为 render
+import React from 'react';
+import ReactDOM from 'react-dom';
+import './index.css';
+import App from './App';
+import reportWebVitals from './reportWebVitals';
+
+// const root = ReactDOM.createRoot(document.getElementById('root'));
+// root.render(
+//   <React.StrictMode>
+//     <App />
+//   </React.StrictMode>
+// );
+ReactDOM.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>, document.getElementById('root'));
+
+// If you want to start measuring performance in your app, pass a function
+// to log results (for example: reportWebVitals(console.log))
+// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
+reportWebVitals();
+```
+
+启动项目
+
+```sh
+npm start
+```
+
+打开浏览器访问 `http://localhost:3000` 项目首页
+
+
+
 ## 创建不基于脚手架的 `reactjs` 项目
 
 > [`reactjs CDN` 引用](https://stackoverflow.com/questions/68350370/get-rid-of-babelstandalone-warning-message-from-cdn-package/68350422#68350422)
@@ -612,40 +723,528 @@ export default App;
 
 ## 组件的核心属性用法
 
-### state属性用法
+### `state` 属性用法
 
-> 参考 组件的核心属性state demo
+> 详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-reactjs/%E9%9D%9E%E8%84%9A%E6%89%8B%E6%9E%B6/%E7%BB%84%E4%BB%B6%E7%9A%84%E6%A0%B8%E5%BF%83%E5%B1%9E%E6%80%A7state)
 
-### props属性用法
+#### 标准用法
 
-> 参考 组件的核心属性props demo
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <!-- reactjs追加dom的容器 -->
+    <div id="test"></div>
 
-### refs属性用法
+    <script type="text/javascript" src="../js/react.development.js" ></script>
+    <script type="text/javascript" src="../js/react-dom.development.js" ></script>
+    <script type="text/javascript" src="../js/babel.min.js" ></script>
 
-> 参考 组件的核心属性refs demo
+    <!-- 因为使用jsx语法编写虚拟dom代码，所以这里type必须为text/babel -->
+    <script type="text/babel">
+        class Weatcher extends React.Component {
+            constructor(props) {
+                super(props)
+                this.state = {isHot: false}
+                // 使 changeWeather 函数中的 this 指向当前 Weather 实例，否则 this 为 undefined
+                this.changeWeather = this.changeWeather.bind(this)
+            }
+
+            render() {
+                return <h1 onClick={this.changeWeather}>今天天气很{this.state.isHot?"炎热":"凉爽"}</h1>
+            }
+
+            changeWeather() {
+                // 修改并合并新的state
+                this.setState({isHot: !this.state.isHot})
+            }
+        }
+
+        // 渲染自定义组件到页面容器中
+        ReactDOM.render(<Weatcher/>, document.getElementById("test"))
+    </script>
+</body>
+</html>
+```
+
+
+
+#### 精简用法
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <!-- reactjs追加dom的容器 -->
+    <div id="test"></div>
+
+    <script type="text/javascript" src="../js/react.development.js" ></script>
+    <script type="text/javascript" src="../js/react-dom.development.js" ></script>
+    <script type="text/javascript" src="../js/babel.min.js" ></script>
+
+    <!-- 因为使用jsx语法编写虚拟dom代码，所以这里type必须为text/babel -->
+    <script type="text/babel">
+        class Weatcher extends React.Component {
+
+            // 使用类赋值语句初始化 state 成员变量
+            state = {isHot: false}
+            
+            render() {
+                return <h1 onClick={this.changeWeather}>今天天气很{this.state.isHot?"炎热":"凉爽"}</h1>
+            }
+
+            // 使用箭头函数是因为使 this 指向当前 Weatcher 实例，否则 this 为 undefined
+            changeWeather = ()=>{
+                // 修改并合并新的state
+                this.setState({isHot: !this.state.isHot})
+            }
+        }
+
+        // 渲染自定义组件到页面容器中
+        ReactDOM.render(<Weatcher/>, document.getElementById("test"))
+    </script>
+</body>
+</html>
+```
+
+
+
+### `props` 属性用法
+
+> 详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-reactjs/%E9%9D%9E%E8%84%9A%E6%89%8B%E6%9E%B6/%E7%BB%84%E4%BB%B6%E7%9A%84%E6%A0%B8%E5%BF%83%E5%B1%9E%E6%80%A7props)
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <!-- reactjs追加dom的容器 -->
+    <div id="test"></div>
+    <div id="test1"></div>
+
+    <script type="text/javascript" src="../js/react.development.js" ></script>
+    <script type="text/javascript" src="../js/react-dom.development.js" ></script>
+    <script type="text/javascript" src="../js/babel.min.js" ></script>
+    <script type="text/javascript" src="../js/prop-types.js"></script>
+
+    <!-- 因为使用jsx语法编写虚拟dom代码，所以这里type必须为text/babel -->
+    <script type="text/babel">
+        class Person extends React.Component {
+            // https://legacy.reactjs.org/docs/typechecking-with-proptypes.html
+            static propTypes = {
+                // 姓名必须为string类型并且必须提供
+                name: PropTypes.string.isRequired,
+                // 性别必须为string类型
+                sex: PropTypes.string,
+                // 年龄必须为数值类型
+                age: PropTypes.number
+            }
+
+            static defaultProps = {
+                // 性别默认值为 男
+                sex: "男",
+                // 年龄默认值为 18
+                age: 18
+            }
+
+            render() {
+                let {name, sex, age} = this.props
+                return (
+                    <ul>
+                        <li>姓名：{name}</li>
+                        <li>性别：{sex}</li>
+                        <li>年龄：{age+1}</li>
+                    </ul>
+                )
+            }
+        }
+
+        // 渲染自定义组件到页面容器中
+        let data = {name: "张三", sex: "女", age: 19}
+        ReactDOM.render(<Person {...data}/>, document.getElementById("test"))
+        ReactDOM.render(<Person name="李四" sex="男" age={20}/>, document.getElementById("test1"))
+    </script>
+</body>
+</html>
+```
+
+
+
+### `refs` 属性用法
+
+> 详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-reactjs/%E9%9D%9E%E8%84%9A%E6%89%8B%E6%9E%B6/%E7%BB%84%E4%BB%B6%E7%9A%84%E6%A0%B8%E5%BF%83%E5%B1%9E%E6%80%A7refs)
+
+
+
+#### `createRef` 形式的 `ref`
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <!-- reactjs追加dom的容器 -->
+    <div id="test"></div>
+
+    <script type="text/javascript" src="../js/react.development.js" ></script>
+    <script type="text/javascript" src="../js/react-dom.development.js" ></script>
+    <script type="text/javascript" src="../js/babel.min.js" ></script>
+    <script type="text/javascript" src="../js/prop-types.js"></script>
+
+    <!-- 因为使用jsx语法编写虚拟dom代码，所以这里type必须为text/babel -->
+    <script type="text/babel">
+        class MyComponent extends React.Component {
+            input1 = React.createRef()
+            input2 = React.createRef()
+
+            showDataOnClick = ()=> {
+                alert(`左侧input的值为： ${this.input1.current.value}`)
+            }
+
+            showDataOnBlur = ()=>{
+                alert(`右侧input的值为： ${this.input2.current.value}`)
+            }
+
+            render() {
+                return (
+                    <div>
+                        <input ref={this.input1} type="text" placeholder="点击按钮提示数据"/>&nbsp;
+                        <button onClick={this.showDataOnClick}>点击我提示左侧的数据</button>&nbsp;
+                        <input ref={this.input2} type="text" placeholder="失去焦点提示数据" onBlur={this.showDataOnBlur}/>
+                    </div>
+                )
+            }
+        }
+
+        // 渲染自定义组件到页面容器中
+        ReactDOM.render(<MyComponent/>, document.getElementById("test"))
+    </script>
+</body>
+</html>
+```
+
+
+
+#### 回调形式的 `ref`
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <!-- reactjs追加dom的容器 -->
+    <div id="test"></div>
+
+    <script type="text/javascript" src="../js/react.development.js" ></script>
+    <script type="text/javascript" src="../js/react-dom.development.js" ></script>
+    <script type="text/javascript" src="../js/babel.min.js" ></script>
+    <script type="text/javascript" src="../js/prop-types.js"></script>
+
+    <!-- 因为使用jsx语法编写虚拟dom代码，所以这里type必须为text/babel -->
+    <script type="text/babel">
+        class MyComponent extends React.Component {
+            showDataOnClick = ()=> {
+                alert(`左侧input的值为： ${this.input1.value}`)
+            }
+
+            showDataOnBlur = ()=>{
+                alert(`右侧input的值为： ${this.input2.value}`)
+            }
+
+            render() {
+                return (
+                    <div>
+                        <input ref={(c/*当前组件*/)=>{this.input1=c}} type="text" placeholder="点击按钮提示数据"/>&nbsp;
+                        <button onClick={this.showDataOnClick}>点击我提示左侧的数据</button>&nbsp;
+                        <input ref={(c)=>{this.input2=c}} type="text" placeholder="失去焦点提示数据" onBlur={this.showDataOnBlur}/>
+                    </div>
+                )
+            }
+        }
+
+        // 渲染自定义组件到页面容器中
+        ReactDOM.render(<MyComponent/>, document.getElementById("test"))
+    </script>
+</body>
+</html>
+```
+
+
+
+#### 字符串形式的 `ref`
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <!-- reactjs追加dom的容器 -->
+    <div id="test"></div>
+
+    <script type="text/javascript" src="../js/react.development.js" ></script>
+    <script type="text/javascript" src="../js/react-dom.development.js" ></script>
+    <script type="text/javascript" src="../js/babel.min.js" ></script>
+    <script type="text/javascript" src="../js/prop-types.js"></script>
+
+    <!-- 因为使用jsx语法编写虚拟dom代码，所以这里type必须为text/babel -->
+    <script type="text/babel">
+        class MyComponent extends React.Component {
+            showDataOnClick = ()=> {
+                alert(`左侧input的值为： ${this.refs.input1.value}`)
+            }
+
+            showDataOnBlur = ()=>{
+                alert(`右侧input的值为： ${this.refs.input2.value}`)
+            }
+
+            render() {
+                return (
+                    <div>
+                        <input ref="input1" type="text" placeholder="点击按钮提示数据"/>&nbsp;
+                        <button onClick={this.showDataOnClick}>点击我提示左侧的数据</button>&nbsp;
+                        <input ref="input2" type="text" placeholder="失去焦点提示数据" onBlur={this.showDataOnBlur}/>
+                    </div>
+                )
+            }
+        }
+
+        // 渲染自定义组件到页面容器中
+        ReactDOM.render(<MyComponent/>, document.getElementById("test"))
+    </script>
+</body>
+</html>
+```
+
+
 
 ## 事件处理
 
-参考 事件处理 demo、react-handling-event
+>详细用法请参考本站 [示例1](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-reactjs/%E9%9D%9E%E8%84%9A%E6%89%8B%E6%9E%B6/%E4%BA%8B%E4%BB%B6%E5%A4%84%E7%90%86)、[示例2](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-reactjs/react-handling-event)
+
+`index.html`：
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <!-- reactjs追加dom的容器 -->
+    <div id="test"></div>
+
+    <script type="text/javascript" src="../js/react.development.js" ></script>
+    <script type="text/javascript" src="../js/react-dom.development.js" ></script>
+    <script type="text/javascript" src="../js/babel.min.js" ></script>
+    <script type="text/javascript" src="../js/prop-types.js"></script>
+
+    <!-- 因为使用jsx语法编写虚拟dom代码，所以这里type必须为text/babel -->
+    <script type="text/babel">
+        class MyComponent extends React.Component {
+            input1 = React.createRef()
+
+            showDataOnClick = ()=> {
+                alert(`左侧input的值为： ${this.input1.current.value}`)
+            }
+
+            showDataOnBlur = (event/* 事件对象 */)=>{
+                alert(`右侧input的值为： ${event.target.value/* event.target 触发事件的事件源对象 */}`)
+            }
+
+            render() {
+                return (
+                    <div>
+                        <input ref={this.input1} type="text" placeholder="点击按钮提示数据"/>&nbsp;
+                        <button onClick={this.showDataOnClick/* 使用onClick绑定按钮点击事件处理函数 */}>点击我提示左侧的数据</button>&nbsp;
+                        <input type="text" placeholder="失去焦点提示数据" onBlur={this.showDataOnBlur}/>
+                    </div>
+                )
+            }
+        }
+
+        // 渲染自定义组件到页面容器中
+        ReactDOM.render(<MyComponent/>, document.getElementById("test"))
+    </script>
+</body>
+</html>
+```
+
+`App.jsx`：
+
+```jsx
+import logo from './logo.svg';
+import './App.css';
+
+function App() {
+  return (
+    <div className="App">
+      {
+        /*
+          https://www.geeksforgeeks.org/how-to-get-the-enter-key-in-reactjs/ 
+           */
+      }
+      <div>演示onKeyDown事件处理</div>
+      <div className="demo1">
+        <input type="text" onKeyDown={(e) => {
+          console.log(e.key)
+        }} />
+      </div>
+      <hr />
+
+      {
+        /*
+        https://codingbeautydev.com/blog/react-get-input-value-on-enter/
+         */
+      }
+      <div>演示input text输入Enter后获取当前input值</div>
+      <div className="demo2">
+        <input type="text" onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            alert("input当前值：" + e.target.value)
+          }
+        }} />
+      </div>
+      <hr />
+    </div>
+  );
+}
+
+export default App;
+
+```
+
+
 
 ## 样式模块化
 
-参考 react-modular-css
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-reactjs/react-css)
 
-## checkbox的defaultChecked和checked
+变量方式引用样式：
 
-参考 react-checkbox-defaultchecked-and-checked
+- `index.module.css`：
 
-## 综合案例TodoList
+  ```css
+  .mystyle {
+      background-color: green;
+      margin: 10px;
+  }
+  ```
 
-参考 demo-todo-list
+- `index.jsx`：
 
-## react配置http proxy
+  ```jsx
+  import React from 'react'
+  import component1css from "./index.module.css"
+  
+  export default class Component1 extends React.Component {
+      render() {
+          return (
+              <div className={component1css.mystyle}>
+                  Component1
+              </div>
+          )
+      }
+  }
+  ```
 
-配置setupProxy.js文件，不需要npm install http-proxy-middleware，因为react脚手架已经包含此组件。
+  
 
-参考 react-config-http-proxy
+## `checkbox` 的 `defaultChecked` 和 `checked`
 
-## 综合案例 demo-github-search
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-reactjs/react-checkbox-defaultchecked-and-checked)
 
-参考 demo-github-search
+`App.jsx`：
+
+```jsx
+import React from 'react'
+import logo from './logo.svg';
+import './App.css';
+
+export default class App extends React.Component {
+  state = {
+    checked1:true,
+    checked2:true,
+  }
+
+  render() {
+    return (
+      <div className="App">
+        {
+          /*
+          1、checkbox的手动选择和不选中都不能够改变defaultChecked对应state中的变量，因为defaultChecked只在组件初始化渲染一次。
+          2、修改state中的checked变量值不会改变defaultChecked对应checkbox的选中和不选中状态。
+          3、checked+onChange能够自由控制state中的checked变量。
+          4、defaultChecked、defaultValue只在初始渲染时由状态控制，之后更新不再跟状态有关系，而checked、value在全过程中都受状态控制。
+          https://blog.51cto.com/u_15295346/3022088
+           */
+        }
+        <div>defaultChecked用法</div>
+        <div className="demo1">
+          <input type="checkbox" defaultChecked={this.state.checked1}/>
+          <input type="button" value="修改state.checked1=false" onClick={()=>{this.setState({checked1:false})}}/>
+          <input type="button" value="显示checked1的当前值" onClick={()=>{alert(`state.checked1=${this.state.checked1}`)}}/>
+        </div>
+        <hr />
+
+        <div>checked用法</div>
+        <div className="demo2">
+          <input type="checkbox" checked={this.state.checked2} onChange={()=>{this.setState({checked2:!this.state.checked2})}}/>
+          <input type="button" value="修改state.checked2=false" onClick={()=>{this.setState({checked2:false})}}/>
+          <input type="button" value="显示checked2的当前值" onClick={()=>{alert(`state.checked2=${this.state.checked2}`)}}/>
+        </div>
+        <hr />
+      </div>
+    );
+  }
+
+}
+
+```
+
+
+
+## 综合案例 `TodoList`
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-reactjs/demo-todo-list)
+
+
+
+## 配置 `http proxy`
+
+> 提示：配置 `setupProxy.js` 文件，不需要 `npm install http-proxy-middleware`，因为脚手架已经包含此组件。
+>
+> 详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-reactjs/react-config-http-proxy)
+
+
+
+## 综合案例 `demo-github-search`
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-reactjs/demo-github-search)
