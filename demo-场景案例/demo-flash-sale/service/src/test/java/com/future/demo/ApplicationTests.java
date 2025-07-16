@@ -96,7 +96,7 @@ public class ApplicationTests {
         String key = CacheKeyPrefixOrderInCacheBeforeCassandraIndexCreate + userId;
         redisTemplate.delete(key);
 
-        Long orderId = this.orderService.create(userId, productId, amount);
+        Long orderId = this.orderService.create(userId, productId, amount, null);
         // 检查缓存中的订单信息存在
         key = CacheKeyPrefixOrderInCacheBeforeCassandraIndexCreate + userId;
         Object value = redisTemplate.opsForHash().get(key, String.valueOf(orderId));
@@ -205,7 +205,7 @@ public class ApplicationTests {
             executorService.submit(() -> {
                 try {
                     Long userIdT = finalI + 1L;
-                    this.orderService.create(userIdT, finalProductId, finalAmount);
+                    this.orderService.create(userIdT, finalProductId, finalAmount, null);
                 } catch (Exception e) {
                     //
                 }
@@ -238,7 +238,7 @@ public class ApplicationTests {
         TimeUnit.MILLISECONDS.sleep(500);
         amount = 1;
         try {
-            this.orderService.create(userId, productId, amount);
+            this.orderService.create(userId, productId, amount, null);
             Assertions.fail();
         } catch (BusinessException ex) {
             Assertions.assertEquals("商品 " + productId + " 为秒杀类型，不支持普通方式下单", ex.getMessage());
@@ -345,7 +345,7 @@ public class ApplicationTests {
         flashSaleEndTime = productService.getFlashSaleEndTimeRandomly(flashSaleStartTime);
         productId = this.productService.add(name, merchantId, stockAmount, true, flashSaleStartTime, flashSaleEndTime);
         try {
-            orderService.createFlashSale(userId, productId, amount);
+            orderService.createFlashSale(userId, productId, amount, null);
             Assertions.fail();
         } catch (BusinessException ex) {
             Assertions.assertTrue(ex.getMessage().contains("秒杀未开始"), ex.getMessage());
@@ -360,7 +360,7 @@ public class ApplicationTests {
         productId = this.productService.add(name, merchantId, stockAmount, true, flashSaleStartTime, flashSaleEndTime);
         try {
             TimeUnit.MILLISECONDS.sleep(1500);
-            orderService.createFlashSale(userId, productId, amount);
+            orderService.createFlashSale(userId, productId, amount, null);
             Assertions.fail();
         } catch (BusinessException ex) {
             Assertions.assertTrue(ex.getMessage().contains("秒杀已结束"));
@@ -377,7 +377,7 @@ public class ApplicationTests {
         // 等待秒杀商品缓存设置完毕
         TimeUnit.MILLISECONDS.sleep(500);
 
-        this.orderService.createFlashSale(userId, productId, amount);
+        this.orderService.createFlashSale(userId, productId, amount, null);
 
         // 等待订单同步到数据库中
         TimeUnit.MILLISECONDS.sleep(500);
@@ -410,7 +410,7 @@ public class ApplicationTests {
             Integer finalAmount = amount;
             executorService.submit(() -> {
                 try {
-                    this.orderService.createFlashSale(userId, finalProductId1, finalAmount);
+                    this.orderService.createFlashSale(userId, finalProductId1, finalAmount, null);
                 } catch (Exception e) {
                     //
                 }
@@ -450,7 +450,7 @@ public class ApplicationTests {
             executorService.submit(() -> {
                 try {
                     Long userIdT = finalI + 1L;
-                    this.orderService.createFlashSale(userIdT, finalProductId2, finalAmount1);
+                    this.orderService.createFlashSale(userIdT, finalProductId2, finalAmount1, null);
                 } catch (Exception e) {
                     //
                 }
@@ -492,7 +492,7 @@ public class ApplicationTests {
         productId = productService.add(name, merchantId, stockAmount, false, null, null);
         TimeUnit.MILLISECONDS.sleep(500);
         try {
-            orderService.createFlashSale(userId, productId, amount);
+            orderService.createFlashSale(userId, productId, amount, null);
             Assertions.fail();
         } catch (BusinessException ex) {
             Assertions.assertEquals("秒杀商品 " + productId + " 不存在", ex.getMessage());

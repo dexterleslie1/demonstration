@@ -1,16 +1,21 @@
 package com.future.demo.service;
 
 import cn.hutool.core.util.RandomUtil;
+import com.future.demo.config.PrometheusCustomMonitor;
 import com.future.demo.entity.ProductModel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 public class CacheService {
+    @Resource
+    PrometheusCustomMonitor prometheusCustomMonitor;
+
     /**
      * 普通商品列表
      */
@@ -46,8 +51,10 @@ public class CacheService {
      * @return
      */
     public long getOrdinaryProductIdRandomly() {
-        if (ordinaryProductList == null || ordinaryProductList.isEmpty())
+        if (ordinaryProductList == null || ordinaryProductList.isEmpty()) {
+            prometheusCustomMonitor.getCounterOrdinaryPurchaseNoProductListInCache().increment();
             throw new IllegalArgumentException("缓存中没有普通商品列表");
+        }
 
         return ordinaryProductList.get(RandomUtil.randomInt(0, ordinaryProductList.size())).getId();
     }
@@ -58,8 +65,10 @@ public class CacheService {
      * @return
      */
     public long getFlashSaleProductIdRandomly() {
-        if (flashSaleProductList == null || flashSaleProductList.isEmpty())
+        if (flashSaleProductList == null || flashSaleProductList.isEmpty()) {
+            prometheusCustomMonitor.getCounterFlashSalePurchaseNoProductListInCache().increment();
             throw new IllegalArgumentException("缓存中没有秒杀商品列表");
+        }
 
         return flashSaleProductList.get(RandomUtil.randomInt(0, flashSaleProductList.size())).getId();
     }

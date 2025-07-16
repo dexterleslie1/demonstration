@@ -4,6 +4,7 @@ import com.datastax.driver.core.*;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.future.common.exception.BusinessException;
+import com.future.demo.config.PrometheusCustomMonitor;
 import com.future.demo.dto.OrderDTO;
 import com.future.demo.dto.OrderDetailDTO;
 import com.future.demo.entity.*;
@@ -49,7 +50,7 @@ public class OrderService {
     @Value("${productStock:2147483647}")
     public int productStock;
 
-    static DefaultRedisScript<String> defaultRedisScript = null;
+    static DefaultRedisScript<Integer> defaultRedisScript = null;
     static String Script = null;
 
     static {
@@ -63,7 +64,7 @@ public class OrderService {
             classPathResource.getInputStream().close();
             defaultRedisScript.setScriptText(script);
 
-            defaultRedisScript.setResultType(String.class);
+            defaultRedisScript.setResultType(Integer.class);
 
             Script = defaultRedisScript.getScriptAsString();
         } catch (Exception ex) {
@@ -144,6 +145,8 @@ public class OrderService {
     OrderRandomlyUtil orderRandomlyUtil;
     @Autowired
     SnowflakeService snowflakeService;
+    @Resource
+    PrometheusCustomMonitor prometheusCustomMonitor;
 
     /**
      * 普通下单
@@ -166,11 +169,13 @@ public class OrderService {
         ProductModel productModel = this.productMapper.getById(productId);
         // 不能使用普通方式向秒杀商品下单
         if (productModel.isFlashSale()) {
+            prometheusCustomMonitor.getCounterOrdinaryPurchaseFlashSaleProductNotSupported().increment();
             throw new ProductTypeNotSupportedException("商品 " + productId + " 为秒杀类型，不支持普通方式下单");
         }
 
         int affectRows = this.productMapper.decreaseStock(productId, amount);
         if (affectRows <= 0) {
+            prometheusCustomMonitor.getCounterOrdinaryPurchaseInsufficientStock().increment();
             throw new StockInsufficientException("库存不足");
         }
 
@@ -218,6 +223,8 @@ public class OrderService {
         JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
         kafkaTemplate.send(TopicIncreaseCount, JSON).get();*/
 
+        prometheusCustomMonitor.getCounterOrdinaryPurchaseSuccessfully().increment();
+
         return orderId;
     }
 
@@ -242,12 +249,14 @@ public class OrderService {
         String key = String.format(ProductService.KeyFlashSaleProductStartTime, productIdStr);
         String value = redisTemplate.opsForValue().get(key);
         if (StringUtils.isBlank(value)) {
+            prometheusCustomMonitor.getCounterFlashSalePurchaseProductNotExists().increment();
             throw new BusinessException("秒杀商品 " + productIdStr + " 不存在");
         }
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         LocalDateTime flashSaleStartTime = LocalDateTime.parse(value, dateTimeFormatter);
         LocalDateTime localDateTimeNow = LocalDateTime.now();
         if (flashSaleStartTime.isAfter(localDateTimeNow)) {
+            prometheusCustomMonitor.getCounterFlashSalePurchaseNotStartedYet().increment();
             throw new BusinessException("秒杀未开始，开始时间 " + value);
         }
 
@@ -255,13 +264,23 @@ public class OrderService {
         value = redisTemplate.opsForValue().get(key);
         LocalDateTime flashSaleEndTime = LocalDateTime.parse(value, dateTimeFormatter);
         if (flashSaleEndTime.isBefore(localDateTimeNow)) {
+            prometheusCustomMonitor.getCounterFlashSalePurchaseEnded().increment();
             throw new BusinessException("秒杀已结束，结束时间 " + value);
         }
 
         // 判断库存是否充足、用户是否重复下单
-        String result = this.redisTemplate.execute(defaultRedisScript, Collections.singletonList(productIdStr), productIdStr, userIdStr, amountStr);
-        if (!StringUtils.isBlank(result)) {
-            throw new BusinessException(result);
+        Integer result = this.redisTemplate.execute(defaultRedisScript, Collections.singletonList(productIdStr), productIdStr, userIdStr, amountStr);
+        if (result != null && result > 0) {
+            if (result == 1) {
+                prometheusCustomMonitor.getCounterFlashSalePurchaseInsufficientStock().increment();
+                throw new StockInsufficientException("库存不足");
+            } else if (result == 2) {
+                prometheusCustomMonitor.getCounterFlashSalePurchaseAlreadyPurchased().increment();
+                throw new BusinessException("重复下单");
+            } else {
+                prometheusCustomMonitor.getCounterFlashSalePurchaseUnknownException().increment();
+                throw new BusinessException("未知秒杀异常，脚本返回值 " + result);
+            }
         }
 
         OrderModel orderModel = new OrderModel();
@@ -292,6 +311,8 @@ public class OrderService {
 
         // 秒杀成功后，发出同步订单到数据库消息
         kafkaTemplate.send(TopicOrderInCacheSyncToDb, JSON).get();
+
+        prometheusCustomMonitor.getCounterFlashSalePurchaseSuccessfully().increment();
     }
 
     /**
