@@ -336,7 +336,7 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 8,
+        "w": 9,
         "x": 0,
         "y": 2
       },
@@ -366,7 +366,7 @@
           "refId": "A"
         }
       ],
-      "title": "订单数据库同步速率",
+      "title": "秒杀订单同步速度",
       "type": "timeseries"
     },
     {
@@ -429,7 +429,7 @@
       "gridPos": {
         "h": 8,
         "w": 8,
-        "x": 8,
+        "x": 9,
         "y": 2
       },
       "id": 4,
@@ -516,8 +516,8 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 8,
-        "x": 16,
+        "w": 7,
+        "x": 17,
         "y": 2
       },
       "id": 16,
@@ -526,7 +526,7 @@
           "calcs": [],
           "displayMode": "list",
           "placement": "bottom",
-          "showLegend": false
+          "showLegend": true
         },
         "tooltip": {
           "mode": "single",
@@ -541,12 +541,102 @@
           },
           "editorMode": "code",
           "expr": "rate(increase_count_stats_total{job=\"Crond Actuator\", type=\"success\"}[$__rate_interval])",
-          "legendFormat": "__auto",
+          "legendFormat": "{{instance}}",
           "range": true,
           "refId": "A"
         }
       ],
       "title": "计数器指标",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "每秒创建个数",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 10,
+        "x": 0,
+        "y": 10
+      },
+      "id": 18,
+      "options": {
+        "legend": {
+          "calcs": [
+            "last"
+          ],
+          "displayMode": "list",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "sum(rate(product_metrics_total{}[$__rate_interval])) by (instance,type)",
+          "legendFormat": "{{instance}} {{type}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "商品指标",
       "type": "timeseries"
     },
     {
@@ -604,8 +694,8 @@
       },
       "gridPos": {
         "h": 9,
-        "w": 24,
-        "x": 0,
+        "w": 14,
+        "x": 10,
         "y": 10
       },
       "id": 14,
@@ -659,6 +749,6 @@
   "timezone": "",
   "title": "秒杀应用监控",
   "uid": "T7ZgryEHk",
-  "version": 2,
+  "version": 1,
   "weekStart": ""
 }

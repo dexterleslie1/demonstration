@@ -38,8 +38,8 @@
     - name: "配置wrk2的OpenResty主机ip"
       lineinfile:
         path: ~/deployer-flash-sale/common/.env
-        regexp: "^openrestyHost="
-        line: "openrestyHost={{ groups['openresty'][0] }}"
+        regexp: "^crondHost="
+        line: "crondHost={{ groups['crond'][0] }}"
 
 - name: "配置Prometheus服务的deployer"
   hosts: common

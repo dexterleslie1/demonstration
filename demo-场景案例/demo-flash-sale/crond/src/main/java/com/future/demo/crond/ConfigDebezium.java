@@ -86,17 +86,15 @@ public class ConfigDebezium {
                 if (operation == Envelope.Operation.CREATE && "t_order".equals(tableName)) {
                     // 新增订单
                     Long orderId = (Long) payload.get("id");
-                    IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO(String.valueOf(orderId), "order");
-                    /*increaseCountDTO.setType(IncreaseCountDTO.Type.MySQL);*/
-                    /*increaseCountDTO.setCount(1);*/
+                    /*IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO(String.valueOf(orderId), "order");
                     String JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
-                    kafkaTemplate.send(Const.TopicIncreaseCount, JSON).get();
+                    kafkaTemplate.send(Const.TopicIncreaseCount, JSON).get();*/
 
                     // 发出向随机 id 选择器添加 id 事件消息
                     RandomIdPickerAddIdEventDTO dto = new RandomIdPickerAddIdEventDTO();
                     dto.setFlag("order");
                     dto.setId(orderId);
-                    JSON = objectMapper.writeValueAsString(dto);
+                    String JSON = objectMapper.writeValueAsString(dto);
                     kafkaTemplate.send(Const.TopicRandomIdPickerAddIdList, JSON).get();
                 } else if (operation == Envelope.Operation.CREATE && "t_product".equals(tableName)) {
                     // 新增普通或者秒杀商品

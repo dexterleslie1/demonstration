@@ -92,6 +92,16 @@ public class PrometheusCustomMonitor {
      */
     @Getter
     private Counter counterIncreaseCountStatsSuccessfully;
+    /**
+     * 商品指标成功创建普通商品
+     */
+    @Getter
+    private Counter counterProductMetricsCreateOrdinarySuccessfully;
+    /**
+     * 商品指标成功创建秒杀商品
+     */
+    @Getter
+    private Counter counterProductMetricsCreateFlashSaleSuccessfully;
 
     @Resource
     CommonService commonService;
@@ -133,6 +143,10 @@ public class PrometheusCustomMonitor {
         registry.gauge("flash.sale.total.count", Collections.singletonList(new ImmutableTag("type", "product")), commonService, (o) -> o.getCountByFlag("product"));
         registry.gauge("flash.sale.total.count", Collections.singletonList(new ImmutableTag("type", "cassandra-index-orderListByUserId")), commonService, (o) -> o.getCountByFlag("orderListByUserId"));
         registry.gauge("flash.sale.total.count", Collections.singletonList(new ImmutableTag("type", "cassandra-index-orderListByMerchantId")), commonService, (o) -> o.getCountByFlag("orderListByMerchantId"));
+
+        // 商品指标
+        counterProductMetricsCreateOrdinarySuccessfully = registry.counter("product.metrics", "type", "createOrdinarySuccessfully");
+        counterProductMetricsCreateFlashSaleSuccessfully = registry.counter("product.metrics", "type", "createFlashSaleSuccessfully");
     }
 
     public void incrementOrderSyncCount(int count) {

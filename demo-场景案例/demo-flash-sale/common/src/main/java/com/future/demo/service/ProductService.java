@@ -2,6 +2,7 @@ package com.future.demo.service;
 
 import cn.hutool.core.util.RandomUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.future.demo.config.PrometheusCustomMonitor;
 import com.future.demo.dto.FlashSaleProductCacheUpdateEventDTO;
 import com.future.demo.dto.ProductDTO;
 import com.future.demo.entity.ProductModel;
@@ -52,6 +53,8 @@ public class ProductService {
     ProductMapper productMapper;
     @Resource
     KafkaTemplate<String, String> kafkaTemplate;
+    @Resource
+    PrometheusCustomMonitor prometheusCustomMonitor;
 
     /**
      * 根据商品id列表查询商品列表信息
@@ -155,6 +158,11 @@ public class ProductService {
         increaseCountDTO.setCount(1);
         JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
         kafkaTemplate.send(TopicIncreaseCount, JSON).get();*/
+
+        if (flashSale)
+            prometheusCustomMonitor.getCounterProductMetricsCreateFlashSaleSuccessfully().increment();
+        else
+            prometheusCustomMonitor.getCounterProductMetricsCreateOrdinarySuccessfully().increment();
 
         return model.getId();
     }

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.future.common.exception.BusinessException;
 import com.future.demo.config.PrometheusCustomMonitor;
+import com.future.demo.dto.IncreaseCountDTO;
 import com.future.demo.dto.OrderDTO;
 import com.future.demo.dto.OrderDetailDTO;
 import com.future.demo.entity.*;
@@ -217,11 +218,9 @@ public class OrderService {
         kafkaTemplate.send(TopicCreateOrderCassandraIndex, JSON).get();
 
         // 异步更新 t_count
-        /*IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO(String.valueOf(orderId),"order");
-        increaseCountDTO.setType(IncreaseCountDTO.Type.MySQL);
-        increaseCountDTO.setCount(1);
+        IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO(String.valueOf(orderId),"order");
         JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
-        kafkaTemplate.send(TopicIncreaseCount, JSON).get();*/
+        kafkaTemplate.send(TopicIncreaseCount, JSON).get();
 
         prometheusCustomMonitor.getCounterOrdinaryPurchaseSuccessfully().increment();
 
@@ -311,6 +310,11 @@ public class OrderService {
 
         // 秒杀成功后，发出同步订单到数据库消息
         kafkaTemplate.send(TopicOrderInCacheSyncToDb, JSON).get();
+
+        // 异步更新 t_count
+        IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO(String.valueOf(orderId),"order");
+        JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
+        kafkaTemplate.send(TopicIncreaseCount, JSON).get();
 
         prometheusCustomMonitor.getCounterFlashSalePurchaseSuccessfully().increment();
     }
