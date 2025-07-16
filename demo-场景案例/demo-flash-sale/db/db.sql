@@ -46,7 +46,57 @@ create table if not exists t_count(
     `count`     bigint not null default 0
 ) engine=innodb character set utf8mb4 collate utf8mb4_general_ci;
 
-insert into t_count(flag,`count`) values("order",0);
-insert into t_count(flag,`count`) values("product",0);
-insert into t_count(flag,`count`) values("orderListByUserId",0);
-insert into t_count(flag,`count`) values("orderListByMerchantId",0);
+delimiter |
+begin not atomic
+    declare var_counter int default 1;
+    while var_counter<=256 do
+		-- 使用 CONCAT 拼接表名
+        SET @flag = CONCAT('order', var_counter);
+        -- 动态生成 SQL 语句
+        SET @sql = CONCAT(
+            'insert into t_count(flag,`count`) values("', @flag, '",0)'
+        );
+        -- 准备并执行动态 SQL
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+
+        SET @flag = CONCAT('product', var_counter);
+        -- 动态生成 SQL 语句
+        SET @sql = CONCAT(
+            'insert into t_count(flag,`count`) values("', @flag, '",0)'
+        );
+        -- 准备并执行动态 SQL
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+
+        SET @flag = CONCAT('orderListByUserId', var_counter);
+        -- 动态生成 SQL 语句
+        SET @sql = CONCAT(
+            'insert into t_count(flag,`count`) values("', @flag, '",0)'
+        );
+        -- 准备并执行动态 SQL
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+
+        SET @flag = CONCAT('orderListByMerchantId', var_counter);
+        -- 动态生成 SQL 语句
+        SET @sql = CONCAT(
+            'insert into t_count(flag,`count`) values("', @flag, '",0)'
+        );
+        -- 准备并执行动态 SQL
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+
+        set var_counter = var_counter + 1;
+    end while;
+end|
+delimiter ;
+
+-- insert into t_count(flag,`count`) values("order",0);
+-- insert into t_count(flag,`count`) values("product",0);
+-- insert into t_count(flag,`count`) values("orderListByUserId",0);
+-- insert into t_count(flag,`count`) values("orderListByMerchantId",0);

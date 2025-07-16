@@ -68,6 +68,8 @@ public class ConfigKafkaListener {
     ProductService productService;
     @Resource
     RandomIdPickerService randomIdPickerService;
+    @Resource
+    PrometheusCustomMonitor prometheusCustomMonitor;
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory(
@@ -161,23 +163,26 @@ public class ConfigKafkaListener {
         // MySQL计数器
         // todo 在crond服务关闭重启后select count和计数器不一致
         /*Map<String, Integer> flagToCountMap = new HashMap<>();*/
-        for (IncreaseCountDTO dto : dtoListMySQL) {
-            String idempotentUuid = dto.getIdempotentUuid();
-            String flag = dto.getFlag();
-            int count = dto.getCount();
-            /*if (!flagToCountMap.containsKey(flag)) {
-                flagToCountMap.put(flag, 0);
-            }
+//        for (IncreaseCountDTO dto : dtoListMySQL) {
+//            String idempotentUuid = dto.getIdempotentUuid();
+//            String flag = dto.getFlag();
+//            /*int count = dto.getCount();*/
+//            /*if (!flagToCountMap.containsKey(flag)) {
+//                flagToCountMap.put(flag, 0);
+//            }
+//
+//            if (Boolean.TRUE.equals(redisTemplate.opsForValue().setIfAbsent(idempotentUuid, StringUtils.EMPTY, 300, TimeUnit.SECONDS)))
+//                flagToCountMap.put(flag, flagToCountMap.get(flag) + count);
+//            else {
+//                if (log.isInfoEnabled())
+//                    log.info("意图重复消费消息 {}", dto);
+//            }*/
+//
+//            this.commonService.updateIncreaseCount(idempotentUuid, flag, count);
+//        }
 
-            if (Boolean.TRUE.equals(redisTemplate.opsForValue().setIfAbsent(idempotentUuid, StringUtils.EMPTY, 300, TimeUnit.SECONDS)))
-                flagToCountMap.put(flag, flagToCountMap.get(flag) + count);
-            else {
-                if (log.isInfoEnabled())
-                    log.info("意图重复消费消息 {}", dto);
-            }*/
-
-            this.commonService.updateIncreaseCount(idempotentUuid, flag, count);
-        }
+        commonService.updateIncreaseCount(dtoListMySQL);
+        prometheusCustomMonitor.getCounterIncreaseCountStatsSuccessfully().increment(dtoListMySQL.size());
 
         /*for (String flag : flagToCountMap.keySet()) {
             int count = flagToCountMap.get(flag);
@@ -246,13 +251,13 @@ public class ConfigKafkaListener {
                 for (OrderModel model : modelList) {
                     IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO(String.valueOf(model.getId()), "orderListByUserId");
                     /*increaseCountDTO.setType(IncreaseCountDTO.Type.Cassandra);*/
-                    increaseCountDTO.setCount(1);
+                    /*increaseCountDTO.setCount(1);*/
                     String JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
                     kafkaTemplate.send(com.future.demo.constant.Const.TopicIncreaseCount, JSON).get();
 
                     increaseCountDTO = new IncreaseCountDTO(String.valueOf(model.getId()), "orderListByMerchantId");
                     /*increaseCountDTO.setType(IncreaseCountDTO.Type.Cassandra);*/
-                    increaseCountDTO.setCount(1);
+                    /*increaseCountDTO.setCount(1);*/
                     JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
                     kafkaTemplate.send(com.future.demo.constant.Const.TopicIncreaseCount, JSON).get();
                 }

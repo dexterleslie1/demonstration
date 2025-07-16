@@ -10,7 +10,7 @@ public class IncreaseCountDTO {
     private String idempotentUuid;
     /*private Type type;*/
     private String flag;
-    private int count;
+    /*private int count;*/
 
     /**
      * 幂等标识通过 idempotentUuidPrefix+":"+flag 生成，因为同一个订单建立两种 Cassandra 索引需要区分开幂等标识

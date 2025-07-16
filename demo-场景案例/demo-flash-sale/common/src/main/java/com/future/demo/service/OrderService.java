@@ -50,7 +50,7 @@ public class OrderService {
     @Value("${productStock:2147483647}")
     public int productStock;
 
-    static DefaultRedisScript<Integer> defaultRedisScript = null;
+    static DefaultRedisScript<Long> defaultRedisScript = null;
     static String Script = null;
 
     static {
@@ -64,7 +64,7 @@ public class OrderService {
             classPathResource.getInputStream().close();
             defaultRedisScript.setScriptText(script);
 
-            defaultRedisScript.setResultType(Integer.class);
+            defaultRedisScript.setResultType(Long.class);
 
             Script = defaultRedisScript.getScriptAsString();
         } catch (Exception ex) {
@@ -269,7 +269,7 @@ public class OrderService {
         }
 
         // 判断库存是否充足、用户是否重复下单
-        Integer result = this.redisTemplate.execute(defaultRedisScript, Collections.singletonList(productIdStr), productIdStr, userIdStr, amountStr);
+        Long result = this.redisTemplate.execute(defaultRedisScript, Collections.singletonList(productIdStr), productIdStr, userIdStr, amountStr);
         if (result != null && result > 0) {
             if (result == 1) {
                 prometheusCustomMonitor.getCounterFlashSalePurchaseInsufficientStock().increment();

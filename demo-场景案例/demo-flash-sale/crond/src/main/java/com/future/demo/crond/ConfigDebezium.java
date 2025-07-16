@@ -88,7 +88,7 @@ public class ConfigDebezium {
                     Long orderId = (Long) payload.get("id");
                     IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO(String.valueOf(orderId), "order");
                     /*increaseCountDTO.setType(IncreaseCountDTO.Type.MySQL);*/
-                    increaseCountDTO.setCount(1);
+                    /*increaseCountDTO.setCount(1);*/
                     String JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
                     kafkaTemplate.send(Const.TopicIncreaseCount, JSON).get();
 
@@ -103,7 +103,7 @@ public class ConfigDebezium {
                     Long productId = (Long) payload.get("id");
                     IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO(String.valueOf(productId), "product");
                     /*increaseCountDTO.setType(IncreaseCountDTO.Type.MySQL);*/
-                    increaseCountDTO.setCount(1);
+                    /*increaseCountDTO.setCount(1);*/
                     String JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
                     kafkaTemplate.send(Const.TopicIncreaseCount, JSON).get();
 

@@ -1,6 +1,6 @@
 package com.future.demo.config;
 
-import com.future.demo.mapper.CommonMapper;
+import com.future.demo.service.CommonService;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.ImmutableTag;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -87,9 +87,14 @@ public class PrometheusCustomMonitor {
      */
     @Getter
     private Counter counterFlashSalePurchaseSuccessfully;
+    /**
+     * 计数器统计成功递增
+     */
+    @Getter
+    private Counter counterIncreaseCountStatsSuccessfully;
 
     @Resource
-    CommonMapper commonMapper;
+    CommonService commonService;
 
     private final MeterRegistry registry;
 
@@ -121,10 +126,13 @@ public class PrometheusCustomMonitor {
         counterFlashSalePurchaseUnknownException = registry.counter("purchase.stats", "type", "flashSalePurchaseUnknownException");
         counterFlashSalePurchaseSuccessfully = registry.counter("purchase.stats", "type", "flashSalePurchaseSuccessfully");
 
-        registry.gauge("flash.sale.total.count", Collections.singletonList(new ImmutableTag("type", "order")), commonMapper, (o) -> o.getCountByFlag("order"));
-        registry.gauge("flash.sale.total.count", Collections.singletonList(new ImmutableTag("type", "product")), commonMapper, (o) -> o.getCountByFlag("product"));
-        registry.gauge("flash.sale.total.count", Collections.singletonList(new ImmutableTag("type", "cassandra-index-orderListByUserId")), commonMapper, (o) -> o.getCountByFlag("orderListByUserId"));
-        registry.gauge("flash.sale.total.count", Collections.singletonList(new ImmutableTag("type", "cassandra-index-orderListByMerchantId")), commonMapper, (o) -> o.getCountByFlag("orderListByMerchantId"));
+        // 计数器
+        counterIncreaseCountStatsSuccessfully = registry.counter("increase.count.stats", "type", "success");
+
+        registry.gauge("flash.sale.total.count", Collections.singletonList(new ImmutableTag("type", "order")), commonService, (o) -> o.getCountByFlag("order"));
+        registry.gauge("flash.sale.total.count", Collections.singletonList(new ImmutableTag("type", "product")), commonService, (o) -> o.getCountByFlag("product"));
+        registry.gauge("flash.sale.total.count", Collections.singletonList(new ImmutableTag("type", "cassandra-index-orderListByUserId")), commonService, (o) -> o.getCountByFlag("orderListByUserId"));
+        registry.gauge("flash.sale.total.count", Collections.singletonList(new ImmutableTag("type", "cassandra-index-orderListByMerchantId")), commonService, (o) -> o.getCountByFlag("orderListByMerchantId"));
     }
 
     public void incrementOrderSyncCount(int count) {

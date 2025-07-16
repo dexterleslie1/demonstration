@@ -5,7 +5,6 @@ long_query_time=5
 slow_query_log_file=slow-query.log
 innodb_flush_log_at_trx_commit=0
 innodb_file_per_table=1
-innodb_buffer_pool_size=512m
 
 # 设置错误信息输出到error.log文件中
 # 例如：通过启用innodb_print_all_deadlocks输出的死锁日志

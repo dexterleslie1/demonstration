@@ -335,8 +335,8 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 9,
-        "w": 12,
+        "h": 8,
+        "w": 8,
         "x": 0,
         "y": 2
       },
@@ -427,9 +427,9 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 9,
-        "w": 12,
-        "x": 12,
+        "h": 8,
+        "w": 8,
+        "x": 8,
         "y": 2
       },
       "id": 4,
@@ -459,6 +459,94 @@
         }
       ],
       "title": "Cassandra索引创建速率",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "每秒递增次数",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 2
+      },
+      "id": 16,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "rate(increase_count_stats_total{job=\"Crond Actuator\", type=\"success\"}[$__rate_interval])",
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "计数器指标",
       "type": "timeseries"
     },
     {
@@ -518,7 +606,7 @@
         "h": 9,
         "w": 24,
         "x": 0,
-        "y": 11
+        "y": 10
       },
       "id": 14,
       "options": {
@@ -543,7 +631,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "sum(irate(purchase_stats_total{job=\"Api Actuator\"}[$__rate_interval])) by (instance,type)",
+          "expr": "sum(rate(purchase_stats_total{job=\"Api Actuator\"}[$__rate_interval])) by (instance,type)",
           "instant": false,
           "interval": "",
           "legendFormat": "{{instance}} {{type}}",
@@ -571,6 +659,6 @@
   "timezone": "",
   "title": "秒杀应用监控",
   "uid": "T7ZgryEHk",
-  "version": 1,
+  "version": 2,
   "weekStart": ""
 }
