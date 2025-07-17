@@ -1,3 +1,513 @@
+## 钩子
+
+
+
+### 介绍
+
+在 React 中，**钩子（Hooks）** 是 React 16.8 版本引入的一项核心特性，它允许你在**函数组件**中直接使用状态（State）、生命周期逻辑、上下文（Context）等原本只能在类组件中使用的功能。钩子的出现彻底改变了 React 组件的开发模式，让函数组件成为现代 React 应用的主流选择。
+
+
+#### 一、为什么需要钩子？
+在钩子出现前，React 主要通过**类组件**（Class Component）管理状态和生命周期逻辑。但类组件存在一些痛点：
+- **代码冗余**：类组件需要继承 `React.Component`，编写模板代码（如 `constructor`、`render` 方法）。
+- **生命周期复杂**：多个生命周期方法（如 `componentDidMount`、`componentDidUpdate`、`componentWillUnmount`）需要拆分逻辑，容易导致代码分散。
+- **状态逻辑复用困难**：类组件中通过高阶组件（HOC）或 Render Props 复用状态逻辑，但这些模式可能导致组件嵌套过深（“嵌套地狱”）。
+
+钩子的出现解决了这些问题：
+- 函数组件通过钩子直接拥有状态和生命周期能力，无需类语法。
+- 钩子提供了更简洁的语法（如 `useState` 替代 `this.state` 和 `setState`）。
+- 钩子支持逻辑复用（通过自定义钩子），避免组件嵌套。
+
+
+#### 二、钩子的核心特点
+1. **只能在函数组件或自定义钩子中使用**  
+   钩子不能在普通 JavaScript 函数、类组件中使用（除了自定义钩子），确保 React 能正确跟踪状态和副作用。
+
+2. **必须在顶层调用**  
+   钩子不能在条件语句、循环或嵌套函数中调用（除非在自定义钩子内部）。React 依赖钩子的调用顺序来关联状态和副作用（例如，第一次渲染时调用 `useState` 会初始化状态，后续渲染必须按相同顺序调用）。
+
+3. **组合性**  
+   钩子可以组合使用，实现复杂逻辑。例如，用 `useState` 管理状态，用 `useEffect` 处理副作用，用 `useContext` 访问上下文。
+
+
+#### 三、常用内置钩子
+React 内置了多个常用钩子，覆盖了大部分开发场景：
+
+##### 1. `useState`：管理组件状态
+用于在函数组件中声明本地状态（前面已详细介绍）。  
+**示例**：
+```jsx
+import { useState } from 'react';
+
+function Counter() {
+  const [count, setCount] = useState(0); // 初始化状态为 0
+  return <button onClick={() => setCount(count + 1)}>{count}</button>;
+}
+```
+
+##### 2. `useEffect`：处理副作用
+用于处理组件中的副作用（Side Effects），例如数据获取、事件监听、DOM 操作等。它替代了类组件的 `componentDidMount`、`componentDidUpdate` 和 `componentWillUnmount`。  
+**语法**：
+
+```jsx
+useEffect(() => {
+  // 副作用逻辑（如数据请求、订阅事件）
+  return () => {
+    // 清理函数（可选，用于取消副作用，如取消订阅、清除定时器）
+  };
+}, [依赖数组]); // 依赖数组：指定副作用重新执行的时机
+```
+**示例**（数据请求）：
+```jsx
+import { useState, useEffect } from 'react';
+
+function UserData() {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    // 组件挂载或依赖变化时执行（此处无依赖，仅挂载时执行）
+    fetch('/api/user')
+      .then(res => res.json())
+      .then(data => setUser(data));
+    
+    // 清理函数：组件卸载时取消请求（假设使用 AbortController）
+    return () => abortController.abort();
+  }, []); // 空数组表示仅在挂载时执行
+
+  return <div>{user?.name}</div>;
+}
+```
+
+##### 3. `useContext`：访问上下文（Context）
+用于获取 React 上下文（Context）的值，替代类组件的 `static contextType` 或 `Context.Consumer`。  
+**示例**：
+```jsx
+import { createContext, useContext } from 'react';
+
+// 创建上下文
+const ThemeContext = createContext({ color: 'red' });
+
+// 提供上下文的组件
+function App() {
+  return (
+    <ThemeContext.Provider value={{ color: 'blue' }}>
+      <ChildComponent />
+    </ThemeContext.Provider>
+  );
+}
+
+// 使用上下文的组件
+function ChildComponent() {
+  const theme = useContext(ThemeContext); // 获取上下文值
+  return <div style={{ color: theme.color }}>文本颜色</div>;
+}
+```
+
+##### 4. `useReducer`：管理复杂状态
+用于管理复杂的组件状态逻辑（如需要多个子值或多个操作的情况），是 `useState` 的增强版。它通过“reducer 函数”统一管理状态更新逻辑。  
+**语法**：
+```jsx
+const [state, dispatch] = useReducer(reducer, initialState, init);
+```
+**示例**（购物车状态）：
+```jsx
+import { useReducer } from 'react';
+
+// 定义 reducer 函数（处理不同 action 类型）
+function cartReducer(state, action) {
+  switch (action.type) {
+    case 'ADD_ITEM':
+      return { ...state, items: [...state.items, action.payload] };
+    case 'REMOVE_ITEM':
+      return { ...state, items: state.items.filter(item => item.id !== action.payload) };
+    default:
+      return state;
+  }
+}
+
+function Cart() {
+  const [cart, dispatch] = useReducer(cartReducer, { items: [] });
+
+  return (
+    <div>
+      {cart.items.map(item => (
+        <div key={item.id}>
+          {item.name}
+          <button onClick={() => dispatch({ type: 'REMOVE_ITEM', payload: item.id })}>
+            移除
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+##### 5. `useRef`：引用 DOM 或保存可变值
+用于获取 DOM 节点的引用，或保存一个可变的“不触发重新渲染”的值（如定时器 ID、滚动位置等）。  
+**示例**（获取 DOM 引用）：
+```jsx
+import { useRef } from 'react';
+
+function InputFocus() {
+  const inputRef = useRef(null); // 创建 ref 对象
+
+  const handleFocus = () => {
+    inputRef.current.focus(); // 直接操作 DOM
+  };
+
+  return (
+    <div>
+      <input ref={inputRef} />
+      <button onClick={handleFocus}>聚焦输入框</button>
+    </div>
+  );
+}
+```
+
+##### 6. `useMemo`：缓存计算结果
+用于缓存复杂计算的中间结果，避免重复计算导致性能问题（仅当依赖项变化时重新计算）。  
+**示例**（优化列表渲染）：
+```jsx
+import { useMemo } from 'react';
+
+function ExpensiveList({ data }) {
+  // 仅当 data 变化时重新计算排序后的列表
+  const sortedData = useMemo(() => {
+    return [...data].sort((a, b) => a.value - b.value);
+  }, [data]); // 依赖项：data 变化时重新计算
+
+  return (
+    <ul>
+      {sortedData.map(item => (
+        <li key={item.id}>{item.value}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+##### 7. `useCallback`：缓存函数引用
+用于缓存函数引用，避免因父组件重新渲染导致子组件不必要的重新渲染（仅当依赖项变化时重新创建函数）。  
+**示例**（优化子组件渲染）：
+```jsx
+import { useCallback } from 'react';
+
+function Parent() {
+  const handleClick = useCallback(() => {
+    console.log('点击事件');
+  }, []); // 无依赖，仅创建一次
+
+  return <Child onClick={handleClick} />;
+}
+
+function Child({ onClick }) {
+  console.log('Child 重新渲染'); // 仅当 onClick 变化时才会重新渲染
+  return <button onClick={onClick}>点击</button>;
+}
+```
+
+
+#### 四、自定义钩子（Custom Hooks）
+React 钩子的核心优势之一是**逻辑复用**。你可以将多个内置钩子组合成**自定义钩子**，封装可复用的逻辑。自定义钩子本质是一个函数，名称以 `use` 开头（约定）。  
+
+**示例**（自定义表单验证钩子）：
+```jsx
+import { useState, useCallback } from 'react';
+
+// 自定义钩子：表单验证
+function useFormValidation(initialValues, validate) {
+  const [values, setValues] = useState(initialValues);
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // 处理输入变化
+  const handleChange = useCallback((e) => {
+    const { name, value } = e.target;
+    setValues(prev => ({ ...prev, [name]: value }));
+    // 实时验证
+    const newErrors = validate({ ...values, [name]: value });
+    setErrors(newErrors);
+  }, [values, validate]);
+
+  // 提交表单
+  const handleSubmit = useCallback((e) => {
+    e.preventDefault();
+    const validationErrors = validate(values);
+    setErrors(validationErrors);
+    if (Object.keys(validationErrors).length === 0) {
+      setIsSubmitting(true);
+      // 提交逻辑（如 API 请求）
+      console.log('提交数据：', values);
+    }
+  }, [values, validate]);
+
+  return {
+    values,
+    errors,
+    isSubmitting,
+    handleChange,
+    handleSubmit
+  };
+}
+
+// 使用自定义钩子的组件
+function LoginForm() {
+  const validate = (values) => {
+    const errors = {};
+    if (!values.email) errors.email = '请输入邮箱';
+    if (!values.password) errors.password = '请输入密码';
+    return errors;
+  };
+
+  const { values, errors, isSubmitting, handleChange, handleSubmit } = useFormValidation(
+    { email: '', password: '' },
+    validate
+  );
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        name="email"
+        value={values.email}
+        onChange={handleChange}
+        placeholder="邮箱"
+      />
+      {errors.email && <p style={{ color: 'red' }}>{errors.email}</p>}
+
+      <input
+        name="password"
+        value={values.password}
+        onChange={handleChange}
+        placeholder="密码"
+      />
+      {errors.password && <p style={{ color: 'red' }}>{errors.password}</p>}
+
+      <button type="submit" disabled={isSubmitting}>
+        {isSubmitting ? '提交中...' : '登录'}
+      </button>
+    </form>
+  );
+}
+```
+
+
+#### 五、钩子的设计原则
+为了确保钩子的可靠性和可维护性，React 官方提出了两条核心原则：
+1. **只在顶层使用钩子**：不要在循环、条件或嵌套函数中调用钩子（除非在自定义钩子内部）。这确保了 React 能按顺序跟踪状态和副作用。
+2. **只在 React 函数中调用钩子**：钩子只能在 React 函数组件或自定义钩子中调用，不能在普通 JavaScript 函数中使用。
+
+
+#### 总结
+React 钩子是一套用于在函数组件中复用状态逻辑的机制，它让函数组件具备了类组件的所有能力（状态、生命周期、上下文等），同时提供了更简洁的语法和更强的逻辑复用能力。掌握钩子（尤其是 `useState`、`useEffect`、`useContext` 等内置钩子）是现代 React 开发的核心技能。
+
+
+
+### `useState`
+
+在 React 中，`useState` 是最常用的 **Hook（钩子）** 之一，用于在**函数组件**中添加和管理本地状态（State）。它让函数组件具备了类组件中 `this.state` 和 `setState` 的能力，但写法更简洁。
+
+
+#### 一、核心概念
+- **状态（State）**：组件内部可变化的数据，会触发组件重新渲染。
+- **`useState` 的作用**：在函数组件中声明一个状态变量，并提供一个更新该变量的函数。
+
+
+#### 二、基础用法
+##### 1. 导入 `useState`
+首先需要从 React 中导入 `useState`：
+```jsx
+import React, { useState } from 'react';
+```
+
+##### 2. 声明状态
+在函数组件内部调用 `useState`，语法为：
+```jsx
+const [状态变量, 更新状态的函数] = useState(初始值);
+```
+- `状态变量`：当前状态的值（可直接在组件中使用）。
+- `更新状态的函数`：用于修改状态变量的函数（调用后会触发组件重新渲染）。
+- `初始值`：状态的初始值（可以是任意类型：基本类型、对象、数组等）。
+
+
+#### 三、示例：计数器组件
+以一个简单的计数器为例，演示 `useState` 的基本使用：
+
+```jsx
+import React, { useState } from 'react';
+
+function Counter() {
+  // 声明状态：count（初始值为 0），setCount（更新 count 的函数）
+  const [count, setCount] = useState(0);
+
+  return (
+    <div>
+      <p>当前计数：{count}</p>
+      {/* 点击按钮时调用 setCount 更新状态 */}
+      <button onClick={() => setCount(count + 1)}>+1</button>
+      <button onClick={() => setCount(0)}>重置</button>
+    </div>
+  );
+}
+
+export default Counter;
+```
+
+##### 关键点解释：
+- `useState(0)` 初始化 `count` 为 `0`。
+- `setCount` 是更新函数，调用时会触发组件重新渲染，显示新的 `count` 值。
+- 每次点击按钮时，`count` 被更新，组件重新渲染最新状态。
+
+
+#### 四、状态更新的注意事项
+##### 1. 状态是不可变的（Immutable）
+**不要直接修改状态变量**，必须通过 `更新函数` 来修改。例如：
+```jsx
+// 错误！直接修改状态变量不会触发重新渲染
+count = 5; 
+
+// 正确！通过 setCount 更新状态
+setCount(5);
+```
+
+##### 2. 对象/数组类型的更新
+如果状态是对象或数组，更新时需要**创建新副本**（避免直接修改原对象/数组）：
+```jsx
+// 错误：直接修改原对象（React 无法检测到变化）
+const [user, setUser] = useState({ name: '张三', age: 20 });
+user.age = 21; 
+setUser(user); // 不会触发重新渲染！
+
+// 正确：创建新对象（浅拷贝）
+setUser({ ...user, age: 21 }); // 或 Object.assign({}, user, { age: 21 })
+
+// 数组同理（浅拷贝）
+const [list, setList] = useState([1, 2, 3]);
+setList([...list, 4]); // 添加新元素
+setList(list.filter(item => item !== 2)); // 删除元素
+```
+
+##### 3. 异步更新的特性
+`setState`（或 `setCount` 等更新函数）是**异步执行**的，连续多次调用可能不会立即生效。例如：
+```jsx
+// 错误：连续两次更新可能合并为一次
+setCount(count + 1);
+setCount(count + 1); // 最终 count 只会增加 1（因为两次都基于旧的 count 值）
+
+// 正确：使用函数式更新（基于最新状态）
+setCount(prevCount => prevCount + 1);
+setCount(prevCount => prevCount + 1); // 最终 count 增加 2
+```
+**函数式更新**（`setX(prev => ...)`）适用于依赖前一次状态的场景（如异步操作或多次连续更新）。
+
+
+#### 五、多个状态的声明
+一个组件中可以声明**多个独立的状态**，每个状态由自己的 `useState` 管理：
+```jsx
+function UserInfo() {
+  // 状态 1：姓名（字符串）
+  const [name, setName] = useState('张三');
+  // 状态 2：年龄（数字）
+  const [age, setAge] = useState(20);
+  // 状态 3：爱好（数组）
+  const [hobbies, setHobbies] = useState(['阅读', '编程']);
+
+  return (
+    <div>
+      <p>姓名：{name}</p>
+      <input 
+        value={name} 
+        onChange={(e) => setName(e.target.value)} // 双向绑定输入框
+      />
+      
+      <p>年龄：{age}</p>
+      <button onClick={() => setAge(age + 1)}>年龄+1</button>
+
+      <p>爱好：{hobbies.join(', ')}</p>
+      <button onClick={() => setHobbies([...hobbies, '运动'])}>添加爱好</button>
+    </div>
+  );
+}
+```
+
+
+#### 六、初始值的动态计算
+如果初始值需要**动态计算**（例如从本地存储读取），可以将初始值设置为一个函数：
+```jsx
+// 初始值通过函数计算（仅在组件首次渲染时执行）
+const [user, setUser] = useState(() => {
+  const savedUser = localStorage.getItem('user');
+  return savedUser ? JSON.parse(savedUser) : { name: '默认用户' };
+});
+```
+
+
+#### 七、总结
+`useState` 的核心用法：
+1. 导入 `useState`。
+2. 在函数组件中调用 `useState(初始值)`，解构得到状态变量和更新函数。
+3. 通过更新函数修改状态（基本类型直接传新值，对象/数组需创建新副本）。
+4. 状态变化触发组件重新渲染。
+
+**最佳实践**：
+
+- 保持状态局部化（仅需要的组件管理自己的状态）。
+- 使用不可变数据（避免直接修改原状态）。
+- 复杂状态逻辑可考虑使用 `useReducer` 或自定义 Hook。
+
+#### 八、实验
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-reactjs/%E9%9D%9E%E8%84%9A%E6%89%8B%E6%9E%B6/%E7%BB%84%E4%BB%B6%E7%9A%84%E5%87%BD%E6%95%B0%E5%BC%8F%E5%AE%9A%E4%B9%89)
+
+`index.html`：
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <!-- reactjs追加dom的容器 -->
+    <div id="test"></div>
+
+    <script type="text/javascript" src="../js/react.development.js"></script>
+    <script type="text/javascript" src="../js/react-dom.development.js"></script>
+    <script type="text/javascript" src="../js/babel.min.js"></script>
+
+    <!-- 因为使用jsx语法编写虚拟dom代码，所以这里type必须为text/babel -->
+    <script type="text/babel">
+        // 在脚手架创建的项目中，通过 import 导入 useState 函数，如下
+        // import { useState } from 'react'
+        
+        function MyCompoent() {
+            const [value, setValue] = React.useState('Hello React!')
+            return (
+                <div>
+                    <div>{value}</div>
+                    <div>
+                        <button onClick={(e)=>{
+                            setValue("Hello React!!!!!!!!!!!!")
+                        }}>修改变量的值为：Hello React!!!!!!!!!!!!</button>
+                        </div>
+                </div>
+            )
+        }
+
+        // 渲染自定义组件到页面容器中
+        ReactDOM.render(<MyCompoent />, document.getElementById("test"))
+    </script>
+</body>
+
+</html>
+```
+
+
+
 ## `vscode` 安装 `react` 插件
 
 名称：`ES7 React/Redux/GraphQL/React-Native snippets`，作者：`dsznajder`
@@ -763,11 +1273,13 @@ export default class MyComponent extends Component {
 
 ## 组件的核心属性用法
 
+
+
 ### `state` 属性用法
 
 > 详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-reactjs/%E9%9D%9E%E8%84%9A%E6%89%8B%E6%9E%B6/%E7%BB%84%E4%BB%B6%E7%9A%84%E6%A0%B8%E5%BF%83%E5%B1%9E%E6%80%A7state)
 
-#### 标准用法
+#### 类式组件 - 标准用法
 
 ```html
 <!DOCTYPE html>
@@ -814,7 +1326,7 @@ export default class MyComponent extends Component {
 
 
 
-#### 精简用法
+#### 类式组件 - 精简用法
 
 ```html
 <!DOCTYPE html>
@@ -856,6 +1368,12 @@ export default class MyComponent extends Component {
 </body>
 </html>
 ```
+
+
+
+#### 函数式组件 - 用法
+
+>请参考本站 <a href="/react/README.html#八、实验" target="_blank">链接</a>
 
 
 
