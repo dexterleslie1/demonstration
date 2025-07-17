@@ -1,11 +1,19 @@
 import React, { Component } from 'react'
 
-export default class Home extends Component {
+import { withRouter } from 'react-router-dom';
+
+
+class Home extends Component {
   render() {
+    const { location } = this.props;
+    const currentPath = location.pathname;
+
     return (
       <div>
-        Home页面
+        Home当前路由信息：{currentPath}
       </div>
     )
   }
 }
+
+export default withRouter(Home)

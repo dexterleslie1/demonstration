@@ -4,6 +4,7 @@ import './App.css';
 import { NavLink, Route, Switch } from 'react-router-dom';
 import Home from './components/Home';
 import About from './components/About';
+import ReactFunctionComponent from './components/ReactFunctionComponent';
 
 function App() {
   // 添加 react-router-dom 依赖
@@ -39,6 +40,7 @@ function App() {
         }}>
           <NavLink exact activeClassName='my-active' to="/">Home</NavLink>
           <NavLink exact activeClassName='my-active' to="/about">About</NavLink>
+          <NavLink exact activeClassName='my-active' to="/reactFunctionComponent">React Function Component</NavLink>
         </div>
         {/* content */}
         <div style={{
@@ -46,8 +48,10 @@ function App() {
           // backgroundColor: 'red'
         }}>
           <Switch>
-            <Route path='/' component={Home} />
-            <Route path='/about' component={About} />
+            {/* exact 强制路由进行​​精确匹配​​（只有路径完全一致时才渲染对应组件） */}
+            <Route exact path='/' component={Home} />
+            <Route exact path='/about' component={About} />
+            <Route exact path='/reactFunctionComponent' component={ReactFunctionComponent} />
           </Switch>
         </div>
       </div>

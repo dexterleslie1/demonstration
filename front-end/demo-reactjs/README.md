@@ -4,6 +4,13 @@
 
 
 
+快速代码片段：
+
+- 新建 `index.jsx` 文件，输入 `rfc` 弹出智能提示快速生成基于函数的组件。
+- 新建 `index.jsx` 文件，输入 `rcc` 弹出智能提示快速生成基于类的组件。
+
+
+
 ## 使用脚手架创建项目
 
 ### 动手还原脚手架
@@ -24,6 +31,9 @@
 
 ```sh
 sudo npm install -g create-react-app
+
+# 如果在执行 create-react-app hello-react 命令时报告 Permission Denided 错误，则使用下面命令安装脚手架
+npm install -g create-react-app
 ```
 
 使用脚手架创建 `hello-react` 项目
@@ -721,6 +731,36 @@ export default App;
 
 
 
+### 获取自定义组件标签体内容
+
+> 详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-reactjs/demo-get-custom-component-body)
+
+以下是一个简单的示例，展示了如何在自定义组件中访问和使用其标签体内容：
+
+```jsx
+function App() {
+  return (
+    // 自定义 MyComponent 组件并传递一些标签体内容
+    <MyComponent>
+      <a href="https://www.baidu.com" target="_blank">跳转到百度</a>
+    </MyComponent>
+  );
+}
+
+export default class MyComponent extends Component {
+  render() {
+    return (
+      <div>
+        {/* 使用 this.props.children 访问自定义组件传递的标签体内容 */}
+        {this.props.children}
+      </div>
+    )
+  }
+}
+```
+
+
+
 ## 组件的核心属性用法
 
 ### `state` 属性用法
@@ -1143,39 +1183,209 @@ export default App;
 
 
 
-## 样式模块化
+## 样式
+
+`react` 组件中通过 `import 'xxx.css'` 样式文件 `+ className` 的方式引用样式，`react` 会保留原来的样式类名，导致样式可能存在冲突和覆盖的可能性，如下面例子所示方式引用样式：
+
+`XxxComponent/index.css` 内容如下：
+
+```css
+.mystyle {
+    background-color: yellowgreen;
+}
+```
+
+`XxxComponent/index.jsx` 内容如下：
+
+```jsx
+import React from "react";
+import "./index.css"
+
+export default class Component2 extends React.Component {
+    render() {
+        return (
+            <div className="mystyle">
+                Component2
+            </div>
+        )
+    }
+}
+```
+
+`react` 在编译后依旧保留一个名为 `.mystyle` 的全局样式，为了避免组件之间样式的冲突和覆盖，参考样式的模块化解决此问题。
+
+
+
+### 全局样式
 
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-reactjs/react-css)
 
-变量方式引用样式：
+在 `index.css` 中定义全局样式
 
-- `index.module.css`：
+```css
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
 
-  ```css
-  .mystyle {
-      background-color: green;
-      margin: 10px;
-  }
-  ```
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
 
-- `index.jsx`：
+```
 
-  ```jsx
-  import React from 'react'
-  import component1css from "./index.module.css"
-  
-  export default class Component1 extends React.Component {
-      render() {
-          return (
-              <div className={component1css.mystyle}>
-                  Component1
-              </div>
-          )
-      }
-  }
-  ```
+在 `index.js` 中引入全局样式文件 `index.css`
 
-  
+```jsx
+import './index.css';
+```
+
+
+
+### 局部样式（样式的模块化）
+
+> 详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-reactjs/react-css)
+
+样式的模块化，在样式被编译后会随机生成一个独一无二的类名避免样式的冲突和覆盖。如下面例子所示：
+
+`XxxComponent/index.module.css` 内容如下：
+
+```css
+.mystyle {
+    background-color: green;
+    margin: 10px;
+}
+```
+
+`XxxComponent/index.jsx` 内容如下：
+
+```jsx
+import React from 'react'
+import component1css from "./index.module.css"
+
+export default class Component1 extends React.Component {
+    render() {
+        return (
+            <div className={component1css.mystyle}>
+                Component1
+            </div>
+        )
+    }
+}
+```
+
+
+
+### 内联样式
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/blob/main/front-end/demo-reactjs/react-css)
+
+内联样式示例
+
+```jsx
+function App() {
+  return (
+    <div className="App">
+      {/* 演示内联样式的用法 */}
+      <div style={{
+        fontSize: '24px',
+        fontWeight: 'bold',
+        color: 'green',
+        backgroundColor: 'yellow',
+      }}>演示内联样式的用法</div>
+    </div>
+  );
+}
+```
+
+
+
+### 使用`scss`样式
+
+> 详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-reactjs/react-css)
+
+安装 `sass` 依赖用于编译 `scss` 样式文件
+
+```bash
+npm install sass --save-dev
+```
+
+`/src/components/ComponentScss/index.scss` 内容如下：
+
+```scss
+.my-component-scss {
+
+    .nested1 {
+
+        .nested2 {
+            font-size: 24px;
+            font-weight: bold;
+            color: yellowgreen;
+        }
+    }
+}
+```
+
+`/src/components/ComponentScss/index.jsx` 内容如下：
+
+```jsx
+import React from 'react'
+import "./index.scss"
+
+export default class ComponentScss extends React.Component {
+    render() {
+        return (
+            <div className="my-component-scss">
+                <div className='nested1'>
+                    <div className='nested2'>
+                        ComponentScss!
+                    </div>
+                </div>
+            </div>
+        )
+    }
+}
+```
+
+上面例子中，使用 `import './index.scss'` 导入 `scss` 文件后 `react` 项目会自动调用 `sass` 依赖编译 `scss` 样式文件。    
+
+
+
+### 独立样式文件
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-reactjs/react-css)
+
+`index.css`：
+
+```css
+.mystyle {
+    background-color: yellowgreen;
+}
+```
+
+`index.jsx` 引用样式文件：
+
+```jsx
+import React from "react";
+import "./index.css"
+
+export default class Component2 extends React.Component {
+    render() {
+        return (
+            <div className="mystyle">
+                Component2
+            </div>
+        )
+    }
+}
+```
+
+
 
 ## `checkbox` 的 `defaultChecked` 和 `checked`
 
@@ -1242,6 +1452,753 @@ export default class App extends React.Component {
 > 提示：配置 `setupProxy.js` 文件，不需要 `npm install http-proxy-middleware`，因为脚手架已经包含此组件。
 >
 > 详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-reactjs/react-config-http-proxy)
+
+
+
+## 路由
+
+> 下面的实验都是基于`react-router-dom v5`的。
+
+### 路由的基本用法
+
+> 详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-reactjs/demo-react-router)
+
+添加 `react-router-dom` 依赖
+
+```sh
+npm install react-router-dom@5
+```
+
+`index.js`需要使用`<BrowserRouter/>`标签包含`<App/>`标签
+
+```jsx
+ReactDOM.render(
+  <BrowserRouter>
+    <App />
+  </BrowserRouter>, document.getElementById('root'));
+```
+
+`App.js`内容如下：
+
+```jsx
+import logo from './logo.svg';
+import './App.css';
+
+import { NavLink, Route, Switch } from 'react-router-dom';
+import Home from './components/Home';
+import About from './components/About';
+
+function App() {
+  // 添加 react-router-dom 依赖
+
+  return (
+    ...
+          <NavLink exact activeClassName='my-active' to="/">Home</NavLink>
+          <NavLink exact activeClassName='my-active' to="/about">About</NavLink>
+    ...
+          <Switch>
+            <Route exact path='/' component={Home} />
+            <Route exact path='/about' component={About} />
+          </Switch>
+    ...
+  );
+}
+
+export default App;
+
+```
+
+
+
+### `redirect` 用法
+
+> 详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-reactjs/demo-react-router-redirect)
+
+`Switch` 组件用于只渲染与 URL 匹配的第一个 `<Route>` 或 `<Redirect>`。你可以使用 `<Redirect>` 作为默认路由，当用户访问的 URL 与任何 `<Route>` 都不匹配时，将其重定向到某个默认页面。
+
+```jsx
+import { BrowserRouter as Router, Switch, Route, Redirect } from 'react-router-dom';  
+  
+function App() {  
+  return (  
+    <Router>  
+      <Switch>  
+        <Route path="/about" component={About} />  
+        <Route path="/contact" component={Contact} />  
+        <Redirect from="*" to="/about" />  
+      </Switch>  
+    </Router>  
+  );  
+}
+```
+
+在上述示例中，如果用户访问的 URL 不是 `/about` 或 `/contact`，则他们将被重定向到 `/about`。
+
+
+
+### 嵌套路由
+
+> 详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-reactjs/demo-react-router-nested-routing)
+
+子路由路径前缀需要与父路由匹配，例如：`/home/news`、`/home/message`子路有和`/home`父路由匹配。
+
+`App.js`内容如下：
+
+```jsx
+import logo from './logo.svg';
+import './App.css';
+
+import { NavLink, Route, Switch, Redirect } from 'react-router-dom';
+import Home from './components/Home';
+import About from './components/About';
+
+function App() {
+  // 添加 react-router-dom 依赖
+
+  return (
+    ...
+          <NavLink activeClassName='my-active' to="/home">Home</NavLink>
+          <NavLink activeClassName='my-active' to="/about">About</NavLink>
+    ...
+          <Switch>
+            <Route path='/home' component={Home} />
+            <Route path='/about' component={About} />
+            <Redirect from="*" to="/home" />  
+          </Switch>
+     ...  
+  );
+}
+
+export default App;
+
+```
+
+Home组件的`/Home/index.jsx`内容如下：
+
+```jsx
+import React, { Component } from 'react'
+import { NavLink, Switch, Route, Redirect } from 'react-router-dom'
+import News from './News'
+import Message from './Message'
+
+export default class Home extends Component {
+  render() {
+    return (
+      <div>
+        <div>
+          Home页面
+        </div>
+        <div>
+          <NavLink activeClassName='my-active' to="/home/news">News</NavLink>&nbsp;
+          <NavLink activeClassName='my-active' to="/home/message">Message</NavLink>
+        </div>
+        <div>
+          <Switch>
+            <Route path='/home/news' component={News} />
+            <Route path='/home/message' component={Message} />
+            <Redirect from="*" to="/home/news" />
+          </Switch>
+        </div>
+      </div>
+    )
+  }
+}
+
+```
+
+上面的`/Home/index.jsx`中路由`/home/news`、`/home/message`是`/home`路由的嵌套路由。
+
+
+
+### 路由参数
+
+> 详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-reactjs/demo-react-router-parameters)
+
+#### `URL`路由参数
+
+`/Home/Message/index.jsx`内容如下：
+
+```jsx
+import React, { Component } from 'react'
+import { NavLink, Route } from 'react-router-dom'
+import Detail from './Detail'
+
+export default class Message extends Component {
+  state = {
+    messageList: [{
+      id: 1,
+      content: "你好"
+    }, {
+      id: 2,
+      content: "大家好"
+    }]
+  }
+  render() {
+    return (
+      <div>
+        <div>消息列表如下：</div>
+        <hr />
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+        }}>
+          {
+            this.state.messageList.map((el) => {
+              return (
+                <NavLink to={`/home/message/detail/${el.id}/${el.content}`}>{el.content}</NavLink>
+              )
+            })
+          }
+        </div>
+        <hr />
+        <div>
+          <Route path="/home/message/detail/:id/:content" component={Detail} />
+        </div>
+      </div>
+    )
+  }
+}
+
+```
+
+`/Home/Message/Detail/index.jsx`内容如下：
+
+```jsx
+import React, { Component } from 'react'
+
+export default class Detail extends Component {
+  render() {
+    const {id, content} = this.props.match.params
+    return (
+      <div>
+        <div>ID: {id}</div>
+        <div>Content: {content}</div>
+      </div>
+    )
+  }
+}
+
+```
+
+从上面例子可以看出`URL`路由参数主要是通过`<NavLink to={``/home/message/detail/${el.id}/${el.content}``}>{el.content}</NavLink>`、`<Route path="/home/message/detail/:id/:content" component={Detail} />`方式传递路由参数，`const {id, content} = this.props.match.params`方式获取路由参数。
+
+
+
+#### `query`路由参数
+
+安装`query-string`组件用于解析`query`参数
+
+```bash
+npm install query-string
+```
+
+`/Home/Message/index.jsx`内容如下：
+
+```jsx
+import React, { Component } from 'react'
+import { NavLink, Route } from 'react-router-dom'
+import Detail from './Detail'
+
+export default class Message extends Component {
+  state = {
+    messageList: [{
+      id: 1,
+      content: "你好"
+    }, {
+      id: 2,
+      content: "大家好"
+    }]
+  }
+  render() {
+    return (
+      <div>
+        <div>消息列表如下：</div>
+        <hr />
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+        }}>
+          {
+            this.state.messageList.map((el) => {
+              return (
+                // URL路由参数
+                // <NavLink to={`/home/message/detail/${el.id}/${el.content}`}>{el.content}</NavLink>
+
+                // query路由参数
+                <NavLink to={`/home/message/detail?id=${el.id}&content=${el.content}`}>{el.content}</NavLink>
+              )
+            })
+          }
+        </div>
+        <hr />
+        <div>
+          {/* URL路由参数 */}
+          {/* <Route path="/home/message/detail/:id/:content" component={Detail} /> */}
+
+          {/* query路由参数 */}
+          <Route path="/home/message/detail" component={Detail} />
+        </div>
+      </div>
+    )
+  }
+}
+
+```
+
+`/Home/Message/Detail/inex.jsx`内容如下：
+
+```jsx
+import React, { Component } from 'react'
+import qs from "query-string"
+
+export default class Detail extends Component {
+  render() {
+    // URL路由参数
+    // const {id, content} = this.props.match.params
+
+    // query路由参数
+    const {id, content} = qs.parse(this.props.location.search)
+    return (
+      <div>
+        <div>ID: {id}</div>
+        <div>Content: {content}</div>
+      </div>
+    )
+  }
+}
+
+```
+
+从上面例子可以看出`query`路由参数主要是通过`<NavLink to={``/home/message/detail?id=${el.id}&content=${el.content}``}>{el.content}</NavLink>`、`<Route path="/home/message/detail" component={Detail} />`方式传递路由参数，`const {id, content} = qs.parse(this.props.location.search)`方式获取路由参数。
+
+
+
+#### `state`路由参数
+
+`/Home/Message/index.jsx`内容如下：
+
+```jsx
+import React, { Component } from 'react'
+import { NavLink, Route } from 'react-router-dom'
+import Detail from './Detail'
+
+export default class Message extends Component {
+  state = {
+    messageList: [{
+      id: 1,
+      content: "你好"
+    }, {
+      id: 2,
+      content: "大家好"
+    }]
+  }
+  render() {
+    return (
+      <div>
+        <div>消息列表如下：</div>
+        <hr />
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+        }}>
+          {
+            this.state.messageList.map((el) => {
+              return (
+                // URL路由参数
+                // <NavLink to={`/home/message/detail/${el.id}/${el.content}`}>{el.content}</NavLink>
+
+                // query路由参数
+                // <NavLink to={`/home/message/detail?id=${el.id}&content=${el.content}`}>{el.content}</NavLink>
+
+                // state路由参数
+                <NavLink to={{ pathname: '/home/message/detail', state: { id: el.id, content: el.content } }}>{el.content}</NavLink>
+              )
+            })
+          }
+        </div>
+        <hr />
+        <div>
+          {/* URL路由参数 */}
+          {/* <Route path="/home/message/detail/:id/:content" component={Detail} /> */}
+
+          {/* query路由参数 */}
+          {/* <Route path="/home/message/detail" component={Detail} /> */}
+
+          {/* state路由参数 */}
+          <Route path="/home/message/detail" component={Detail} />
+        </div>
+      </div>
+    )
+  }
+}
+
+```
+
+`/Home/Message/Detail/index.jsx`内容如下：
+
+```jsx
+import React, { Component } from 'react'
+import qs from "query-string"
+
+export default class Detail extends Component {
+  render() {
+    // URL路由参数
+    // const {id, content} = this.props.match.params
+
+    // query路由参数
+    // const {id, content} = qs.parse(this.props.location.search)
+
+    // state路由参数
+    const {id, content} = this.props.location.state || {}
+    return (
+      <div>
+        <div>ID: {id}</div>
+        <div>Content: {content}</div>
+      </div>
+    )
+  }
+}
+
+```
+
+从上面例子可以看出`state`路由参数主要是通过`<NavLink to={ { pathname: '/home/message/detail', state: { id: el.id, content: el.content } }}>{el.content}</NavLink>`、`<Route path="/home/message/detail" component={Detail} />`方式传递路由参数，`const {id, content} = this.props.location.state || {}`方式获取路由参数。
+
+
+
+### 编程式路由
+
+> 详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-reactjs/demo-react-router-programmatic-routing)
+
+`/Home/Message/index.jsx`内容如下：
+
+```jsx
+import React, { Component } from 'react'
+import { NavLink, Route } from 'react-router-dom'
+import Detail from './Detail'
+
+export default class Message extends Component {
+  state = {
+    messageList: [{
+      id: 1,
+      content: "你好"
+    }, {
+      id: 2,
+      content: "大家好"
+    }]
+  }
+
+  handlePush = (id, content) => {
+    this.props.history.push(`/home/message/detail/${id}/${content}`)
+  }
+  handleReplace = (id, content) => {
+    this.props.history.replace(`/home/message/detail/${id}/${content}`)
+  }
+
+  render() {
+    return (
+      <div>
+        <div>消息列表如下：</div>
+        <hr />
+        <ul>
+          {
+            this.state.messageList.map((el) => {
+              return (
+                <li>
+                  <NavLink to={`/home/message/detail/${el.id}/${el.content}`}>{el.content}</NavLink>
+                  &nbsp;&nbsp;<button onClick={() => this.handlePush(el.id, el.content)}>push查看</button>
+                  &nbsp;&nbsp;<button onClick={() => this.handleReplace(el.id, el.content)}>replace查看</button>
+                </li>
+              )
+            })
+          }
+        </ul>
+        <hr />
+        <div>
+          <Route path="/home/message/detail/:id/:content" component={Detail} />
+        </div>
+      </div>
+    )
+  }
+}
+
+```
+
+`/Home/Message/Detail/index.jsx`内容如下：
+
+```jsx
+import React, { Component } from 'react'
+import qs from "query-string"
+
+export default class Detail extends Component {
+  render() {
+    const {id, content} = this.props.match.params
+    return (
+      <div>
+        <div>ID: {id}</div>
+        <div>Content: {content}</div>
+      </div>
+    )
+  }
+}
+
+```
+
+编程式路由主要通过调用`this.props.history.push(`/home/message/detail/${id}/${content}`)`、`this.props.history.replace(`/home/message/detail/${id}/${content}`)`接口实现。
+
+
+
+### 获取当前路由信息
+
+在 React 中实现类似 Vue2 的 `v-if="this.$route.path !== '/'"` 条件渲染（根据当前路由路径决定是否显示元素），核心是通过 **React Router 提供的路由信息获取 API** 结合 React 的条件渲染语法（如三元运算符、`if` 语句）实现。以下是具体实现方案，覆盖函数组件和类组件的不同场景，并兼容 React Router v5/v6 版本。
+
+
+#### 一、核心思路
+1. **获取当前路由路径**：通过 React Router 提供的 API（如 `useLocation` 或 `withRouter`）获取当前路径 `pathname`。
+2. **条件渲染**：使用 JavaScript 条件语法（三元运算符、`if` 语句等）根据路径决定是否渲染目标元素。
+
+
+#### 二、具体实现（函数组件）
+React Router v6 推荐使用 `useLocation` 钩子获取路由信息（v5 也可用），以下是函数组件的实现示例：
+
+##### 1. 安装依赖（若未安装）
+确保已安装 `react-router-dom`（v6+）：
+```bash
+npm install react-router-dom@latest
+```
+
+##### 2. 函数组件示例（React Router v6）
+```jsx
+import { useLocation } from 'react-router-dom';
+
+function MyComponent() {
+  // 获取当前路由的 location 对象（包含 pathname）
+  const location = useLocation();
+  // 当前路径（例如：'/', '/about'）
+  const currentPath = location.pathname;
+
+  return (
+    <div>
+      {/* 当路径不等于 '/' 时显示该段落 */}
+      {currentPath !== '/' && (
+        <p>当前不是首页，路径是：{currentPath}</p>
+      )}
+
+      {/* 或用三元运算符（适合需要渲染不同内容时） */}
+      {currentPath !== '/' ? (
+        <p>非首页内容</p>
+      ) : (
+        <p>这是首页</p>
+      )}
+    </div>
+  );
+}
+
+export default MyComponent;
+```
+
+##### 3. 函数组件示例（React Router v5）
+v5 中 `useLocation` 同样可用（语法一致），但如果组件是类组件，需用 `withRouter`（见下文）。
+
+
+#### 三、类组件实现
+类组件无法直接使用 `useLocation` 钩子，需通过 `withRouter` 高阶组件注入路由信息（React Router v5/v6 均支持，但 v6 中 `withRouter` 已被标记为遗留，推荐用钩子）。
+
+##### 1. 类组件示例（React Router v6）
+```jsx
+import { withRouter } from 'react-router-dom';
+
+class MyClassComponent extends React.Component {
+  render() {
+    // 通过 props 获取路由信息（v6 中 withRouter 注入的 props 包含 location）
+    const { location } = this.props;
+    const currentPath = location.pathname;
+
+    return (
+      <div>
+        {currentPath !== '/' && (
+          <p>类组件：当前不是首页</p>
+        )}
+      </div>
+    );
+  }
+}
+
+// 用 withRouter 包裹组件，注入路由信息
+export default withRouter(MyClassComponent);
+```
+
+##### 2. 类组件示例（React Router v5）
+v5 中 `withRouter` 直接注入 `location`、`history`、`match`，用法与 v6 类似：
+```jsx
+import { withRouter } from 'react-router-dom';
+
+class MyClassComponent extends React.Component {
+  render() {
+    const { location } = this.props;
+    const currentPath = location.pathname;
+
+    return (
+      <div>
+        {currentPath !== '/' ? (
+          <p>v5 类组件：非首页内容</p>
+        ) : (
+          <p>v5 类组件：首页</p>
+        )}
+      </div>
+    );
+  }
+}
+
+export default withRouter(MyClassComponent);
+```
+
+#### 四、关键细节说明
+
+1. **`location.pathname` 的值**：  
+   `location.pathname` 是当前 URL 的路径部分（例如 `/about`、`/user/123`），严格匹配字符串（区分大小写）。
+
+2. **精确匹配 vs 模糊匹配**：  
+   若需要类似 Vue 中 `$route.path` 的模糊匹配（例如 `/about` 匹配 `/about/me`），需调整判断逻辑（如使用 `startsWith`）：
+   ```jsx
+   // 当路径以 '/about' 开头时隐藏元素（模糊匹配）
+   {!(currentPath.startsWith('/about')) && <p>非 about 页面</p>}
+   ```
+
+3. **路由版本兼容性**：  
+   - React Router v6 中 `withRouter` 已被标记为遗留（推荐用钩子），但仍可使用。  
+   - v5 及以下版本必须通过 `withRouter` 注入路由信息到类组件。
+
+4. **动态路由处理**：  
+   若路径包含动态参数（如 `/user/:id`），`location.pathname` 会保留参数（如 `/user/123`），判断时需注意是否需要排除参数部分（可通过正则或字符串分割处理）。
+
+
+#### 五、完整示例（React Router v6）
+假设项目结构如下：
+```
+src/
+  components/
+    HomePage.jsx
+    AboutPage.jsx
+  App.js
+```
+
+`App.js` 中配置路由：
+```jsx
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import HomePage from './components/HomePage';
+import AboutPage from './components/AboutPage';
+import MyComponent from './components/MyComponent';
+
+function App() {
+  return (
+    <Router>
+      <div>
+        <nav>
+          <a href="/">首页</a>
+          <a href="/about">关于</a>
+        </nav>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/about" element={<AboutPage />} />
+        </Routes>
+        <MyComponent /> {/* 无论当前路由是什么，都会渲染 MyComponent */}
+      </div>
+    </Router>
+  );
+}
+
+export default App;
+```
+
+`MyComponent.js` 中根据路径显示内容：
+```jsx
+import { useLocation } from 'react-router-dom';
+
+function MyComponent() {
+  const location = useLocation();
+  const isHomePage = location.pathname === '/';
+
+  return (
+    <div>
+      {isHomePage ? (
+        <p>欢迎来到首页！</p>
+      ) : (
+        <p>您当前在 {location.pathname} 页面</p>
+      )}
+    </div>
+  );
+}
+
+export default MyComponent;
+```
+
+
+#### 总结
+- **函数组件**：使用 `useLocation` 获取 `location.pathname`，结合三元运算符或逻辑与（`&&`）实现条件渲染。  
+- **类组件**：通过 `withRouter` 注入路由信息，再通过 `props.location.pathname` 判断路径。  
+- 核心逻辑是通过路由库提供的 API 获取当前路径，再用 React 的条件语法控制元素显示。
+
+
+
+#### 实验
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-reactjs/demo-react-router)
+
+函数式组件获取当前路由信息：
+
+>使用 `useLocation` 函数获取当前路由信息对象。
+
+- `ReactFunctionComponent/index.jsx`：
+
+  ```jsx
+  import React from 'react'
+  import { useLocation } from 'react-router-dom';
+  
+  export default function ReactFunctionComponent() {
+      // 获取当前路由的 location 对象（包含 pathname）
+      const location = useLocation();
+      // 当前路径（例如：'/', '/about'）
+      const currentPath = location.pathname;
+  
+      return (
+          <div>ReactFunctionComponent当前路由信息：{currentPath}</div>
+      )
+  }
+  
+  ```
+
+  
+
+类式组件获取当前路由信息：
+
+>通过 `withRouter` 高阶组件注入路由信息（`React Router v5/v6` 均支持，但 `v6` 中 `withRouter` 已被标记为遗留，推荐用钩子）。
+
+- `Home/index.jsx`：
+
+  ```jsx
+  import React, { Component } from 'react'
+  
+  import { withRouter } from 'react-router-dom';
+  
+  
+  class Home extends Component {
+    render() {
+      const { location } = this.props;
+      const currentPath = location.pathname;
+  
+      return (
+        <div>
+          Home当前路由信息：{currentPath}
+        </div>
+      )
+    }
+  }
+  
+  export default withRouter(Home)
+  
+  ```
+
+  
 
 
 

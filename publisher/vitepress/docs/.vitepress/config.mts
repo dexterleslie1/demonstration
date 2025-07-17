@@ -606,8 +606,6 @@ export default defineConfig({
           items: [
             { text: '基础', link: '/react/README.md' },
             { text: 'Redux', link: '/react/redux.md' },
-            { text: '样式的管理', link: '/react/样式的管理.md' },
-            { text: '路由', link: '/react/路由.md' },
           ]
         }
       ],
