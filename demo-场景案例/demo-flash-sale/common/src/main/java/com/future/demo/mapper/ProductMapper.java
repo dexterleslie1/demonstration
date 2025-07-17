@@ -26,18 +26,18 @@ public interface ProductMapper {
     @Update("UPDATE t_product SET stock = #{stock} WHERE id = #{productId}")
     void updateStock(long productId, int stock);
 
-    @Insert("INSERT INTO t_product(name, stock, merchantId, flashSale, flashSaleStartTime, flashSaleEndTime) " +
-            "values(#{name}, #{stock}, #{merchantId}, #{flashSale}, #{flashSaleStartTime}, #{flashSaleEndTime})")
-    @Options(useGeneratedKeys = true, keyProperty = "id")
+    @Insert("INSERT INTO t_product(id, name, stock, merchantId, flashSale, flashSaleStartTime, flashSaleEndTime) " +
+            "values(#{id}, #{name}, #{stock}, #{merchantId}, #{flashSale}, #{flashSaleStartTime}, #{flashSaleEndTime})")
+    /*@Options(useGeneratedKeys = true, keyProperty = "id")*/
     int insert(ProductModel productModel);
 
-    @Insert("<script>" +
+    /*@Insert("<script>" +
             "   insert into t_product(id, name, stock, merchantId) values " +
             "   <foreach collection=\"productModelList\" item=\"e\" separator=\",\">" +
             "       (#{e.id},#{e.name},#{e.stock},#{e.merchantId})" +
             "   </foreach>" +
             "</script>")
-    void insertBatch(List<ProductModel> productModelList);
+    void insertBatch(List<ProductModel> productModelList);*/
 
 //    @Delete("DELETE FROM t_product WHERE id=#{productId}")
 //    void delete(Long productId);

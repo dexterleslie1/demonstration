@@ -3,10 +3,12 @@ package com.future.demo.service;
 import cn.hutool.core.util.RandomUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.future.demo.config.PrometheusCustomMonitor;
+import com.future.demo.constant.Const;
 import com.future.demo.dto.FlashSaleProductCacheUpdateEventDTO;
 import com.future.demo.dto.ProductDTO;
 import com.future.demo.entity.ProductModel;
 import com.future.demo.mapper.ProductMapper;
+import com.tencent.devops.leaf.service.SnowflakeService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -20,9 +22,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import static com.future.demo.constant.Const.TopicAddProductIdAndStockAmountIntoRedisZSetAfterCreation;
-import static com.future.demo.constant.Const.TopicSetupProductFlashSaleCache;
 
 @Service
 @Slf4j
@@ -55,6 +54,8 @@ public class ProductService {
     KafkaTemplate<String, String> kafkaTemplate;
     @Resource
     PrometheusCustomMonitor prometheusCustomMonitor;
+    @Resource
+    SnowflakeService snowflakeService;
 
     /**
      * 根据商品id列表查询商品列表信息
@@ -124,6 +125,10 @@ public class ProductService {
         }
 
         ProductModel model = new ProductModel();
+
+        Long id = snowflakeService.getId("product").getId();
+        model.setId(id);
+
         model.setName(name);
         model.setMerchantId(merchantId);
         model.setStock(stockAmount);
@@ -141,14 +146,14 @@ public class ProductService {
             eventDTO.setProductModel(model);
             eventDTO.setSecondAfterWhichExpiredFlashSaleProductForRemoving(second);
             String JSON = this.objectMapper.writeValueAsString(eventDTO);
-            this.kafkaTemplate.send(TopicSetupProductFlashSaleCache, JSON).get();
+            this.kafkaTemplate.send(Const.TopicSetupProductFlashSaleCache, JSON).get();
             if (log.isDebugEnabled())
                 log.debug("秒杀商品成功发送设置商品缓存消息 {}", JSON);
         }
 
         // 商品创建后设置商品ID和库存到redis zset中，协助实现下单时随机抽取商品逻辑
         String JSON = this.objectMapper.writeValueAsString(model);
-        kafkaTemplate.send(TopicAddProductIdAndStockAmountIntoRedisZSetAfterCreation, JSON).get();
+        kafkaTemplate.send(Const.TopicAddProductIdAndStockAmountIntoRedisZSetAfterCreation, JSON).get();
         if (log.isDebugEnabled())
             log.debug("成功发送商品创建后设置商品ID和库存到redis zset中消息 {}", JSON);
 

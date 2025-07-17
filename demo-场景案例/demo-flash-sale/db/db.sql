@@ -27,7 +27,8 @@ create table if not exists t_order_detail (
 create index idx_orderDetail_orderId on t_order_detail(orderId);
 
 create table if not exists t_product(
-    id          bigint not null auto_increment primary key,
+    /*id          bigint not null auto_increment primary key,*/
+    id          bigint not null primary key,
     `name`      varchar(255) not null,
     merchantId  bigint not null comment '商家ID',
     stock       int not null comment '商品库存',
@@ -47,7 +48,8 @@ create table if not exists t_count(
 ) engine=innodb character set utf8mb4 collate utf8mb4_general_ci;
 
 delimiter |
-begin not atomic
+create procedure proc_temp()
+begin
     declare var_counter int default 1;
     while var_counter<=256 do
 		-- 使用 CONCAT 拼接表名
@@ -95,6 +97,9 @@ begin not atomic
     end while;
 end|
 delimiter ;
+
+call proc_temp();
+drop procedure if exists proc_temp;
 
 -- insert into t_count(flag,`count`) values("order",0);
 -- insert into t_count(flag,`count`) values("product",0);
