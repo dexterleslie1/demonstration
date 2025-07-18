@@ -396,6 +396,29 @@ context = application.run();
 
 
 
+#### 获取上下文中的 `profile`
+
+注入 `Environment`：
+
+```java
+@Resource
+Environment environment;
+```
+
+通过 `Environment` 获取 `profile` 并作业务处理：
+
+```java
+// 获取上下问中的 profile
+String[] activeProfiles = environment.getActiveProfiles();
+
+// profile 为 test 时不执行指定逻辑
+if (activeProfiles == null || activeProfiles.length == 0 || !activeProfiles[0].equals("test")) {
+    ...
+}
+```
+
+
+
 ### 自定义 Starter
 
 详细用法请参考`https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-boot-starter`

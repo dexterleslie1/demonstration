@@ -232,7 +232,7 @@ Assertions.assertTrue(nameList.contains("org.springframework.context.annotation.
 
 
 
-### bean 注册
+### `bean` 注册
 
 
 
@@ -1176,7 +1176,7 @@ TestService1 testService1Three() {
 
 
 
-### bean 注入
+### `bean` 注入
 
 #### `@Autowired`用法
 
@@ -1422,7 +1422,7 @@ Assertions.assertNotNull(id);
 
 
 
-### bean 生命周期
+### `bean` 生命周期
 
 #### 使用`@Bean`指定`bean`生命周期`init`和`destroy`方法，`InitializingBean`、`DisposableBean`用法，`@PostConstruct`、`@PreDestroy`用法
 
