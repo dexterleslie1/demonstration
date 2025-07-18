@@ -55,7 +55,7 @@
       },
       "gridPos": {
         "h": 2,
-        "w": 7,
+        "w": 6,
         "x": 0,
         "y": 0
       },
@@ -117,8 +117,8 @@
       },
       "gridPos": {
         "h": 2,
-        "w": 6,
-        "x": 7,
+        "w": 3,
+        "x": 6,
         "y": 0
       },
       "id": 12,
@@ -179,8 +179,82 @@
       },
       "gridPos": {
         "h": 2,
-        "w": 6,
-        "x": 13,
+        "w": 5,
+        "x": 9,
+        "y": 0
+      },
+      "id": 20,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.4.3",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "product_pickup_randomly_stats{instance=\"crond-service-1\", job=\"Crond Actuator\", type=\"ordinary\"}",
+          "legendFormat": "普通商品",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "product_pickup_randomly_stats{instance=\"crond-service-1\", job=\"Crond Actuator\", type=\"flashSale\"}",
+          "hide": false,
+          "legendFormat": "秒杀商品",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "随机选择商品缓存总数",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "locale"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 2,
+        "w": 5,
+        "x": 14,
         "y": 0
       },
       "id": 8,

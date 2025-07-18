@@ -135,6 +135,7 @@ public class ProductService {
         model.setFlashSale(flashSale);
         model.setFlashSaleStartTime(flashSaleStartTime);
         model.setFlashSaleEndTime(flashSaleEndTime);
+        model.setCreateTime(LocalDateTime.now());
         this.productMapper.insert(model);
         if (log.isDebugEnabled())
             log.debug("成功插入商品数据到数据库 {}", model);
@@ -152,10 +153,16 @@ public class ProductService {
         }
 
         // 商品创建后设置商品ID和库存到redis zset中，协助实现下单时随机抽取商品逻辑
-        String JSON = this.objectMapper.writeValueAsString(model);
+        /*String JSON = this.objectMapper.writeValueAsString(model);
         kafkaTemplate.send(Const.TopicAddProductIdAndStockAmountIntoRedisZSetAfterCreation, JSON).get();
         if (log.isDebugEnabled())
-            log.debug("成功发送商品创建后设置商品ID和库存到redis zset中消息 {}", JSON);
+            log.debug("成功发送商品创建后设置商品ID和库存到redis zset中消息 {}", JSON);*/
+
+        // 向缓存中添加商品用于下单时随机抽取商品
+        String JSON = this.objectMapper.writeValueAsString(model);
+        kafkaTemplate.send(Const.TopicAddProductToCacheForPickupRandomlyWhenPurchasing, JSON).get();
+        if (log.isDebugEnabled())
+            log.debug("成功发送消息“向缓存中添加商品用于下单时随机抽取商品” {}", JSON);
 
         // 异步更新 t_count
         /*IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO(String.valueOf(model.getId()), "product");

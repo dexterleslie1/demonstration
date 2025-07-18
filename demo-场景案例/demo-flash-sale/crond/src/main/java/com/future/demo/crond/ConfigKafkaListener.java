@@ -14,6 +14,7 @@ import com.future.demo.mapper.CommonMapper;
 import com.future.demo.mapper.ProductMapper;
 import com.future.demo.service.CommonService;
 import com.future.demo.service.OrderService;
+import com.future.demo.service.PickupProductRandomlyWhenPurchasingService;
 import com.future.demo.service.ProductService;
 import com.future.random.id.picker.RandomIdPickerService;
 import lombok.extern.slf4j.Slf4j;
@@ -70,6 +71,9 @@ public class ConfigKafkaListener {
     RandomIdPickerService randomIdPickerService;
     @Resource
     PrometheusCustomMonitor prometheusCustomMonitor;
+    @Resource
+    PickupProductRandomlyWhenPurchasingService pickupProductRandomlyWhenPurchasingService;
+
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory(
@@ -364,42 +368,72 @@ public class ConfigKafkaListener {
         // endregion
     }
 
+//    /**
+//     * 商品创建后设置商品ID和库存到redis zset中，协助实现下单时随机抽取商品逻辑
+//     *
+//     * @param messages
+//     * @throws Exception
+//     */
+//    @KafkaListener(topics = com.future.demo.constant.Const.TopicAddProductIdAndStockAmountIntoRedisZSetAfterCreation, concurrency = "1")
+//    public void receiveMessageAddProductIdAndStockAmountIntoRedisZSetAfterCreation(List<String> messages) {
+//        if (messages == null || messages.isEmpty()) {
+//            if (log.isWarnEnabled())
+//                log.warn("意料之外，为何 messages 为空的呢？");
+//            return;
+//        }
+//
+//        List<ProductModel> modelList = messages.stream().map(o -> {
+//            try {
+//                return objectMapper.readValue(o, ProductModel.class);
+//            } catch (JsonProcessingException e) {
+//                throw new RuntimeException(e);
+//            }
+//        }).collect(Collectors.toList());
+//
+//        redisTemplate.executePipelined(new SessionCallback<String>() {
+//            @Override
+//            public <K, V> String execute(RedisOperations<K, V> operations) throws DataAccessException {
+//                RedisOperations<String, String> redisOperations = (RedisOperations<String, String>) operations;
+//                for (ProductModel productModel : modelList) {
+//                    String productIdStr = String.valueOf(productModel.getId());
+//                    int stockAmount = productModel.getStock();
+//                    redisOperations.opsForZSet().add(com.future.demo.constant.Const.KeyProductIdAndStockAmountInRedisZSet, productIdStr, stockAmount);
+//                }
+//                return null;
+//            }
+//        });
+//        if (log.isDebugEnabled())
+//            log.debug("成功设置商品信息到 {} {}", com.future.demo.constant.Const.KeyProductIdAndStockAmountInRedisZSet, modelList);
+//    }
+
     /**
-     * 商品创建后设置商品ID和库存到redis zset中，协助实现下单时随机抽取商品逻辑
+     * 向缓存中添加商品用于下单时随机抽取商品
      *
      * @param messages
      * @throws Exception
      */
-    @KafkaListener(topics = com.future.demo.constant.Const.TopicAddProductIdAndStockAmountIntoRedisZSetAfterCreation, concurrency = "1")
-    public void receiveMessageAddProductIdAndStockAmountIntoRedisZSetAfterCreation(List<String> messages) {
-        if (messages == null || messages.isEmpty()) {
-            if (log.isWarnEnabled())
-                log.warn("意料之外，为何 messages 为空的呢？");
-            return;
-        }
-
-        List<ProductModel> modelList = messages.stream().map(o -> {
-            try {
-                return objectMapper.readValue(o, ProductModel.class);
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
+    @KafkaListener(topics = Const.TopicAddProductToCacheForPickupRandomlyWhenPurchasing, concurrency = "1")
+    public void receiveMessageAddProductToCacheForPickupRandomlyWhenPurchasing(List<String> messages) {
+        try {
+            if (messages == null || messages.isEmpty()) {
+                if (log.isWarnEnabled())
+                    log.warn("意料之外，为何 messages 为空的呢？");
+                return;
             }
-        }).collect(Collectors.toList());
 
-        redisTemplate.executePipelined(new SessionCallback<String>() {
-            @Override
-            public <K, V> String execute(RedisOperations<K, V> operations) throws DataAccessException {
-                RedisOperations<String, String> redisOperations = (RedisOperations<String, String>) operations;
-                for (ProductModel productModel : modelList) {
-                    String productIdStr = String.valueOf(productModel.getId());
-                    int stockAmount = productModel.getStock();
-                    redisOperations.opsForZSet().add(com.future.demo.constant.Const.KeyProductIdAndStockAmountInRedisZSet, productIdStr, stockAmount);
+            List<ProductModel> modelList = messages.stream().map(o -> {
+                try {
+                    return objectMapper.readValue(o, ProductModel.class);
+                } catch (JsonProcessingException e) {
+                    throw new RuntimeException(e);
                 }
-                return null;
-            }
-        });
-        if (log.isDebugEnabled())
-            log.debug("成功设置商品信息到 {} {}", com.future.demo.constant.Const.KeyProductIdAndStockAmountInRedisZSet, modelList);
+            }).collect(Collectors.toList());
+
+            pickupProductRandomlyWhenPurchasingService.setProductList(modelList);
+        } catch (Exception ex) {
+            log.error(ex.getMessage(), ex);
+            throw ex;
+        }
     }
 
     /**

@@ -19,6 +19,8 @@ public class ProductModel {
     private LocalDateTime flashSaleStartTime;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime flashSaleEndTime;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime createTime;
 
     /**
      * 转换为 DTO 对象

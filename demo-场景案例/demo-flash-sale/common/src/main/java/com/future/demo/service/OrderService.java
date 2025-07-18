@@ -218,7 +218,7 @@ public class OrderService {
         kafkaTemplate.send(TopicCreateOrderCassandraIndex, JSON).get();
 
         // 异步更新 t_count
-        IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO(String.valueOf(orderId),"order");
+        IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO(String.valueOf(orderId), "order");
         JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
         kafkaTemplate.send(TopicIncreaseCount, JSON).get();
 
@@ -261,8 +261,8 @@ public class OrderService {
 
         key = String.format(ProductService.KeyFlashSaleProductEndTime, productIdStr);
         value = redisTemplate.opsForValue().get(key);
-        LocalDateTime flashSaleEndTime = LocalDateTime.parse(value, dateTimeFormatter);
-        if (flashSaleEndTime.isBefore(localDateTimeNow)) {
+        LocalDateTime flashSaleEndTime = !StringUtils.isBlank(value) ? LocalDateTime.parse(value, dateTimeFormatter) : null;
+        if (flashSaleEndTime == null || flashSaleEndTime.isBefore(localDateTimeNow)) {
             prometheusCustomMonitor.getCounterFlashSalePurchaseEnded().increment();
             throw new BusinessException("秒杀已结束，结束时间 " + value);
         }
@@ -312,7 +312,7 @@ public class OrderService {
         kafkaTemplate.send(TopicOrderInCacheSyncToDb, JSON).get();
 
         // 异步更新 t_count
-        IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO(String.valueOf(orderId),"order");
+        IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO(String.valueOf(orderId), "order");
         JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
         kafkaTemplate.send(TopicIncreaseCount, JSON).get();
 

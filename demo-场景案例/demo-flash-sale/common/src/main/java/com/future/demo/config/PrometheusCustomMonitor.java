@@ -1,6 +1,7 @@
 package com.future.demo.config;
 
 import com.future.demo.service.CommonService;
+import com.future.demo.service.PickupProductRandomlyWhenPurchasingService;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.ImmutableTag;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -105,6 +106,8 @@ public class PrometheusCustomMonitor {
 
     @Resource
     CommonService commonService;
+    @Resource
+    PickupProductRandomlyWhenPurchasingService.CountService countService;
 
     private final MeterRegistry registry;
 
@@ -147,6 +150,12 @@ public class PrometheusCustomMonitor {
         // 商品指标
         counterProductMetricsCreateOrdinarySuccessfully = registry.counter("product.metrics", "type", "createOrdinarySuccessfully");
         counterProductMetricsCreateFlashSaleSuccessfully = registry.counter("product.metrics", "type", "createFlashSaleSuccessfully");
+
+        // 下单时随机选择商品缓存
+        registry.gauge("product.pickup.randomly.stats", Collections.singletonList(new ImmutableTag("type", "ordinary")),
+                countService, PickupProductRandomlyWhenPurchasingService.CountService::getOrdinaryProductIdCount);
+        registry.gauge("product.pickup.randomly.stats", Collections.singletonList(new ImmutableTag("type", "flashSale")),
+                countService, PickupProductRandomlyWhenPurchasingService.CountService::getFlashSaleProductIdCount);
     }
 
     public void incrementOrderSyncCount(int count) {

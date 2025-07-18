@@ -1,20 +1,15 @@
 package com.future.demo.config;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.future.demo.entity.ProductModel;
 import com.future.demo.mapper.CassandraMapper;
 import com.future.demo.mapper.CommonMapper;
 import com.future.demo.mapper.ProductMapper;
-import com.future.demo.service.CacheService;
 import com.future.demo.service.OrderService;
-import com.future.demo.service.ProductService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -22,10 +17,6 @@ import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.util.backoff.FixedBackOff;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.List;
-
-import static com.future.demo.constant.Const.TopicPublishChooseProductRandomlyForOrdering;
 
 
 @Configuration
@@ -47,10 +38,10 @@ public class ConfigKafkaListener {
     CassandraMapper cassandraMapper;
     @Resource
     KafkaTemplate kafkaTemplate;
-    @Resource
-    ProductService productService;
-    @Resource
-    CacheService cacheService;
+//    @Resource
+//    ProductService productService;
+//    @Resource
+//    CacheService cacheService;
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory(
@@ -83,30 +74,30 @@ public class ConfigKafkaListener {
         );
     }
 
-    /**
-     * 随机抽取商品列表设置到缓存中
-     *
-     * @param messages
-     * @throws Exception
-     */
-    @KafkaListener(topics = TopicPublishChooseProductRandomlyForOrdering)
-    public void receiveMessage(List<String> messages) throws Exception {
-        try {
-            if (messages == null) {
-                messages = new ArrayList<>();
-            }
-
-            List<ProductModel> modelList = new ArrayList<>();
-            for (String message : messages) {
-                List<ProductModel> modelListInternal = objectMapper.readValue(message, new TypeReference<List<ProductModel>>() {
-                });
-                if (!modelListInternal.isEmpty())
-                    modelList.addAll(modelListInternal);
-            }
-            cacheService.setProductList(modelList);
-        } catch (Exception ex) {
-            log.error(ex.getMessage(), ex);
-            throw ex;
-        }
-    }
+//    /**
+//     * 随机抽取商品列表设置到缓存中
+//     *
+//     * @param messages
+//     * @throws Exception
+//     */
+//    @KafkaListener(topics = TopicPublishChooseProductRandomlyForOrdering)
+//    public void receiveMessage(List<String> messages) throws Exception {
+//        try {
+//            if (messages == null) {
+//                messages = new ArrayList<>();
+//            }
+//
+//            List<ProductModel> modelList = new ArrayList<>();
+//            for (String message : messages) {
+//                List<ProductModel> modelListInternal = objectMapper.readValue(message, new TypeReference<List<ProductModel>>() {
+//                });
+//                if (!modelListInternal.isEmpty())
+//                    modelList.addAll(modelListInternal);
+//            }
+//            cacheService.setProductList(modelList);
+//        } catch (Exception ex) {
+//            log.error(ex.getMessage(), ex);
+//            throw ex;
+//        }
+//    }
 }

@@ -34,7 +34,8 @@ create table if not exists t_product(
     stock       int not null comment '商品库存',
     flashSale   bit not null default 0 comment '是否秒杀商品',
     flashSaleStartTime  datetime default null comment '秒杀开始时间',
-    flashSaleEndTime    datetime default null comment '秒杀结束时间'
+    flashSaleEndTime    datetime default null comment '秒杀结束时间',
+    createTime          datetime not null
 ) engine=innodb character set utf8mb4 collate utf8mb4_general_ci;
 
 /* t_count 幂等协助表，实现不重复递增 t_count 表 */

@@ -18,23 +18,20 @@ public class Const {
      * 新增秒杀商品后，设置商品缓存主题
      */
     public final static String TopicSetupProductFlashSaleCache = "topic-setup-product-flashsale-cache";
-
-    /**
-     * 商品创建后设置商品ID和库存到redis zset中，协助实现下单时随机抽取商品逻辑
-     */
-    public final static String TopicAddProductIdAndStockAmountIntoRedisZSetAfterCreation = "topic-add-productId-and-stockAmount-into-redis-zset-after-creation";
-    /**
-     * 发布随机抽取的商品到 api 服务以便下单时随机抽取商品
-     */
-    public final static String TopicPublishChooseProductRandomlyForOrdering = "topic-publish-choose-product-randomly-for-ordering";
-
-    /**
-     * 协助实现下单时随机抽取商品逻辑
-     */
-    public final static String KeyProductIdAndStockAmountInRedisZSet = "productIdAndStockAmountZSet";
-
     /**
      * 用户下单后，缓存订单信息到 redis 中，在 Cassandra 索引建立后自动删除此缓存
      */
     public final static String CacheKeyPrefixOrderInCacheBeforeCassandraIndexCreate = "orderInCacheBeforeCassandraIndexCreate:";
+    /**
+     * 向缓存中添加商品用于下单时随机抽取商品
+     */
+    public final static String TopicAddProductToCacheForPickupRandomlyWhenPurchasing = "topic-add-product-to-cache-for-pickup-randomly-when-purchasing";
+    /**
+     * 随机选择商品缓存的普通商品 RSet
+     */
+    public final static String KeyRSetProductIdOrdinaryForPickupRandomlyWhenPurchasing = "productIdOrdinaryForPickupRandomlyWhenPurchasing";
+    /**
+     * 随机选择商品缓存的秒杀商品 RSet
+     */
+    public final static String KeyRSetProductIdFlashSaleForPickupRandomlyWhenPurchasing = "productIdFlashSaleForPickupRandomlyWhenPurchasing";
 }
