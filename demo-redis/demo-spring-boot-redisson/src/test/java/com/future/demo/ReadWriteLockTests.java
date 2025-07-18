@@ -1,14 +1,12 @@
 package com.future.demo;
 
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.redisson.api.RLock;
 import org.redisson.api.RReadWriteLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.annotation.Resource;
 import java.util.Date;
@@ -17,7 +15,6 @@ import java.util.UUID;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest
 @Slf4j
 public class ReadWriteLockTests {
@@ -57,7 +54,7 @@ public class ReadWriteLockTests {
         executorService.shutdown();
         while (!executorService.awaitTermination(1, TimeUnit.SECONDS)) ;
 
-        Assert.assertEquals(1, flag.get());
+        Assertions.assertEquals(1, flag.get());
     }
 
     // 测试不支持并发写
@@ -91,7 +88,7 @@ public class ReadWriteLockTests {
         executorService.shutdown();
         while (!executorService.awaitTermination(1, TimeUnit.SECONDS)) ;
 
-        Assert.assertEquals(0, flag.get());
+        Assertions.assertEquals(0, flag.get());
     }
 
     /**
@@ -144,7 +141,7 @@ public class ReadWriteLockTests {
         executorService.shutdown();
         while (!executorService.awaitTermination(1, TimeUnit.SECONDS)) ;
 
-        Assert.assertEquals(0, flag.get());
+        Assertions.assertEquals(0, flag.get());
     }
 
     // 测试读写锁try lock
@@ -181,7 +178,7 @@ public class ReadWriteLockTests {
         try {
             rLock = readWriteLock.readLock();
             boolean acquired = rLock.tryLock(60, 60, TimeUnit.SECONDS);
-            Assert.assertTrue(acquired);
+            Assertions.assertTrue(acquired);
         } catch (InterruptedException e) {
             e.printStackTrace();
         } finally {
@@ -194,7 +191,7 @@ public class ReadWriteLockTests {
             }
         }
         Date endTime = new Date();
-        Assert.assertTrue(endTime.getTime() - startTime.getTime() >= 4800);
+        Assertions.assertTrue(endTime.getTime() - startTime.getTime() >= 4800);
     }
 
     private boolean isWriteLockExit = false;
@@ -361,12 +358,12 @@ public class ReadWriteLockTests {
         while (!executor.awaitTermination(50, TimeUnit.MILLISECONDS)) ;
 
         // 读写锁支持并发读
-        Assert.assertEquals(5, flagRead.get());
+        Assertions.assertEquals(5, flagRead.get());
         // 读写锁不支持并发写
-        Assert.assertEquals(0, flagWrite.get());
+        Assertions.assertEquals(0, flagWrite.get());
         // 读写锁不支持并发读写
-        Assert.assertEquals(0, shareResource.getValue());
-        Assert.assertEquals(0, flag.get());
+        Assertions.assertEquals(0, shareResource.getValue());
+        Assertions.assertEquals(0, flag.get());
     }
 
     static class ShareResource {

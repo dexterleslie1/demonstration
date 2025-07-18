@@ -1,0 +1,14 @@
+### 测试 RMap get
+GET http://localhost:8080/api/v1/map/testRMapGet
+
+### 测试 RMapCache get
+GET http://localhost:8080/api/v1/map/testRMapCacheGet
+
+### 测试 RLocalCachedMap get
+GET http://localhost:8080/api/v1/map/testRLocalCachedMapGet
+
+### 测试 RSet random()
+GET http://localhost:8080/api/v1/set/testRSetRandom1
+
+### 测试 RSet random(20)
+GET http://localhost:8080/api/v1/set/testRSetRandom2

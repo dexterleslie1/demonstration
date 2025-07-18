@@ -1,20 +1,17 @@
 package com.future.demo;
 
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.annotation.Resource;
 import java.util.UUID;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest
 @Slf4j
 public class LockTests {
@@ -69,8 +66,8 @@ public class LockTests {
         while (!service.awaitTermination(100, TimeUnit.MILLISECONDS)) ;
 
         // 只有一个并发请求能够取得锁
-        Assert.assertEquals(1, atomicIntegerAcquired.get());
-        Assert.assertEquals(totalConcurrent - 1, atomicIntegerNotAcquired.get());
+        Assertions.assertEquals(1, atomicIntegerAcquired.get());
+        Assertions.assertEquals(totalConcurrent - 1, atomicIntegerNotAcquired.get());
     }
 
     /**
@@ -123,10 +120,10 @@ public class LockTests {
         service.shutdown();
         while (!service.awaitTermination(100, TimeUnit.MILLISECONDS)) ;
 
-        Assert.assertEquals(1, atomicIntegerAquiredLock.get());
-        Assert.assertEquals(totalThreads - 1, atomicIntegerNotAquiredLock.get());
-        Assert.assertEquals(totalThreads, atomicIntegerLocked.get());
-        Assert.assertFalse(redisson.getLock(key).isLocked());
+        Assertions.assertEquals(1, atomicIntegerAquiredLock.get());
+        Assertions.assertEquals(totalThreads - 1, atomicIntegerNotAquiredLock.get());
+        Assertions.assertEquals(totalThreads, atomicIntegerLocked.get());
+        Assertions.assertFalse(redisson.getLock(key).isLocked());
     }
 
     /**
@@ -164,8 +161,8 @@ public class LockTests {
         executorService.shutdown();
         while (!executorService.awaitTermination(100, TimeUnit.MILLISECONDS)) ;
 
-        Assert.assertTrue(atomicInteger.get() > 0);
-        Assert.assertFalse(redisson.getLock(key).isLocked());
+        Assertions.assertTrue(atomicInteger.get() > 0);
+        Assertions.assertFalse(redisson.getLock(key).isLocked());
     }
 
     /**
@@ -183,11 +180,11 @@ public class LockTests {
             try {
                 RLock rLock = redisson.getLock(keyTemp);
                 boolean acquireLock = rLock.tryLock(10, 50000, TimeUnit.MILLISECONDS);
-                Assert.assertTrue(acquireLock);
+                Assertions.assertTrue(acquireLock);
                 boolean isHeldByCurrentThread = rLock.isHeldByCurrentThread();
-                Assert.assertTrue(isHeldByCurrentThread);
+                Assertions.assertTrue(isHeldByCurrentThread);
                 boolean isLocked = rLock.isLocked();
-                Assert.assertTrue(isLocked);
+                Assertions.assertTrue(isLocked);
                 Thread.sleep(3000);
             } catch (Exception ex) {
                 atomicIntegerException.incrementAndGet();
@@ -203,15 +200,15 @@ public class LockTests {
             try {
                 RLock rLock = redisson.getLock(keyTemp);
                 boolean acquireLock = rLock.tryLock(10, 30000, TimeUnit.MILLISECONDS);
-                Assert.assertFalse(acquireLock);
+                Assertions.assertFalse(acquireLock);
             } catch (Exception ex) {
                 atomicIntegerException.incrementAndGet();
             } finally {
                 RLock rLock = redisson.getLock(keyTemp);
                 boolean isHeldByCurrentThread = rLock.isHeldByCurrentThread();
-                Assert.assertFalse(isHeldByCurrentThread);
+                Assertions.assertFalse(isHeldByCurrentThread);
                 boolean isLocked = rLock.isLocked();
-                Assert.assertTrue(isLocked);
+                Assertions.assertTrue(isLocked);
                 try {
                     rLock.unlock();
                 } catch (Exception ex) {
@@ -227,8 +224,8 @@ public class LockTests {
         future.get();
         future1.get();
 
-        Assert.assertTrue("Exception counter=" + atomicIntegerExceptionCounter.get(), atomicIntegerExceptionCounter.get() > 0);
-        Assert.assertTrue("Exception count=" + atomicIntegerException.get(), atomicIntegerException.get() <= 0);
+        Assertions.assertTrue(atomicIntegerExceptionCounter.get() > 0, "Exception counter=" + atomicIntegerExceptionCounter.get());
+        Assertions.assertTrue(atomicIntegerException.get() <= 0, "Exception count=" + atomicIntegerException.get());
     }
 
     /**
@@ -278,8 +275,8 @@ public class LockTests {
         executorService.shutdown();
         while (!executorService.awaitTermination(100, TimeUnit.MILLISECONDS)) ;
 
-        Assert.assertEquals(1, atomicIntegerOwner.get());
-        Assert.assertEquals(notOwnerCounter, atomicIntegerNotOwner.get());
+        Assertions.assertEquals(1, atomicIntegerOwner.get());
+        Assertions.assertEquals(notOwnerCounter, atomicIntegerNotOwner.get());
     }
 
     /**
@@ -306,7 +303,7 @@ public class LockTests {
         RLock rLock = redisson.getLock(keyTemp);
         boolean isLocked = rLock.isLocked();
         // 验证不会自动释放锁
-        Assert.assertTrue(isLocked);
+        Assertions.assertTrue(isLocked);
     }
 
     @Test
@@ -318,14 +315,14 @@ public class LockTests {
         boolean acquired;
         try {
             acquired = rLock.tryLock(10, 500, TimeUnit.MILLISECONDS);
-            Assert.assertTrue(acquired);
+            Assertions.assertTrue(acquired);
 
             TimeUnit.SECONDS.sleep(1);
         } finally {
             try {
                 // 锁已经超时自动释放，再调用unlock会抛出异常
                 rLock.unlock();
-                Assert.fail("预期异常没有抛出");
+                Assertions.fail("预期异常没有抛出");
             } catch (Exception ignored) {
             }
         }

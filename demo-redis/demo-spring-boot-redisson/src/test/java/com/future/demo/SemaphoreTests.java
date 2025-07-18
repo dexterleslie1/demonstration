@@ -1,12 +1,10 @@
 package com.future.demo;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.redisson.api.RSemaphore;
 import org.redisson.api.RedissonClient;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.annotation.Resource;
 import java.util.concurrent.ExecutorService;
@@ -14,7 +12,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest
 public class SemaphoreTests {
     @Resource
@@ -32,7 +29,7 @@ public class SemaphoreTests {
         final RSemaphore semaphore = redisson.getSemaphore(key);
         semaphore.delete();
         boolean b = semaphore.trySetPermits(5);
-        Assert.assertTrue(b);
+        Assertions.assertTrue(b);
 
         AtomicInteger successAcquire = new AtomicInteger();
         AtomicInteger failAcquire = new AtomicInteger();
@@ -62,7 +59,7 @@ public class SemaphoreTests {
         executorService.shutdown();
         while (!executorService.awaitTermination(1000, TimeUnit.MILLISECONDS)) ;
 
-        Assert.assertEquals(5, successAcquire.get());
-        Assert.assertEquals(5, failAcquire.get());
+        Assertions.assertEquals(5, successAcquire.get());
+        Assertions.assertEquals(5, failAcquire.get());
     }
 }

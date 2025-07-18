@@ -1,12 +1,10 @@
 package com.future.demo;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -14,7 +12,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest
 public class FairLockTests {
     @Resource
@@ -54,11 +51,11 @@ public class FairLockTests {
 
         TimeUnit.SECONDS.sleep(2);
 
-        Assert.assertEquals(5, seqList.size());
-        Assert.assertEquals(seqList.get(0), "thread-1");
-        Assert.assertEquals(seqList.get(1), "thread-2");
-        Assert.assertEquals(seqList.get(2), "thread-3");
-        Assert.assertEquals(seqList.get(3), "thread-4");
-        Assert.assertEquals(seqList.get(4), "thread-5");
+        Assertions.assertEquals(5, seqList.size());
+        Assertions.assertEquals(seqList.get(0), "thread-1");
+        Assertions.assertEquals(seqList.get(1), "thread-2");
+        Assertions.assertEquals(seqList.get(2), "thread-3");
+        Assertions.assertEquals(seqList.get(3), "thread-4");
+        Assertions.assertEquals(seqList.get(4), "thread-5");
     }
 }

@@ -1,0 +1,17 @@
+version: "3.1"
+
+services:
+  service:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-boot-redisson-api
+    environment:
+      - JAVA_OPTS=${java_opts}
+      - redis_mode=${redis_mode}
+      - standalone_address=${standalone_address}
+      - standalone_password=${standalone_password}
+      - replication_addresses=${replication_addresses}
+      - sentinel_master_name=${sentinel_master_name}
+      - sentinel_addresses=${sentinel_addresses}
+      - cluster_addresses=${cluster_addresses}
+      - TZ=Asia/Shanghai
+    restart: unless-stopped
+    network_mode: host

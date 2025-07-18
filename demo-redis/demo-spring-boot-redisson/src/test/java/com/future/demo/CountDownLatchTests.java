@@ -1,12 +1,10 @@
 package com.future.demo;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.redisson.api.RCountDownLatch;
 import org.redisson.api.RedissonClient;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.annotation.Resource;
 import java.util.UUID;
@@ -14,7 +12,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest
 public class CountDownLatchTests {
     @Resource
@@ -34,6 +31,6 @@ public class CountDownLatchTests {
 
         // 等待countdown到0
         boolean b = countDownLatch.await(1, TimeUnit.SECONDS);
-        Assert.assertTrue(b);
+        Assertions.assertTrue(b);
     }
 }

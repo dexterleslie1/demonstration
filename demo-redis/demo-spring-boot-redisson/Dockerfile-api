@@ -1,0 +1,7 @@
+FROM openjdk:17-jdk-slim
+
+ADD target/demo-spring-boot-redisson.jar /usr/share/demo-spring-boot-redisson.jar
+
+ENV JAVA_OPTS=""
+
+ENTRYPOINT java ${JAVA_OPTS} -jar /usr/share/demo-spring-boot-redisson.jar --spring.profiles.active=prod

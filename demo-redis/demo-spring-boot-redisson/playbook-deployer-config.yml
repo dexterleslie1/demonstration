@@ -1,0 +1,58 @@
+- name: "复制deployer"
+  hosts: "{{ groups['all'] | difference(groups['management']) }}"
+  tasks:
+    - name: "复制deployer目录到远程"
+      copy:
+        src: deployer/
+        dest: ~/deployer-demo-spring-boot-redisson
+
+- name: "配置zookeeper、redis等公共服务的deployer"
+  hosts: common
+  tasks:
+    - name: "配置Redis服务的cluster announce ip"
+      lineinfile:
+        path: ~/deployer-demo-spring-boot-redisson/common/.env
+        regexp: "^redisClusterAnnounceIp="
+        line: "redisClusterAnnounceIp={{ groups['common'][0] }}"
+
+- name: "配置openresty服务的deployer"
+  hosts: openresty
+  tasks:
+    - name: "配置OpenResty服务的nginx.conf"
+      template:
+        src: deployer/openresty/nginx.conf.j2
+        dest: ~/deployer-demo-spring-boot-redisson/openresty/nginx.conf
+
+- name: "配置api服务的deployer"
+  hosts: api
+  tasks:
+    - name: "配置api服务的java_opts"
+      lineinfile:
+        path: ~/deployer-demo-spring-boot-redisson/service/.env
+        regexp: "^java_opts="
+        line: "java_opts={{ java_opts }}"
+    - name: "配置api服务的redis_mode"
+      lineinfile:
+        path: ~/deployer-demo-spring-boot-redisson/service/.env
+        regexp: "^redis_mode="
+        line: "redis_mode={{ redis_mode }}"
+    - name: "配置api服务的standalone_address"
+      lineinfile:
+        path: ~/deployer-demo-spring-boot-redisson/service/.env
+        regexp: "^standalone_address="
+        line: "standalone_address=redis://{{ groups['common'][0] }}:6379"
+    - name: "配置api服务的replication_addresses"
+      lineinfile:
+        path: ~/deployer-demo-spring-boot-redisson/service/.env
+        regexp: "^replication_addresses="
+        line: "replication_addresses=redis://{{ groups['common'][0] }}:6479,redis://{{ groups['common'][0] }}:6480,redis://{{ groups['common'][0] }}:6481"
+    - name: "配置api服务的sentinel_addresses"
+      lineinfile:
+        path: ~/deployer-demo-spring-boot-redisson/service/.env
+        regexp: "^sentinel_addresses="
+        line: "sentinel_addresses=redis://{{ groups['common'][0] }}:26579,redis://{{ groups['common'][0] }}:26580,redis://{{ groups['common'][0] }}:26581"
+    - name: "配置api服务的cluster_addresses"
+      lineinfile:
+        path: ~/deployer-demo-spring-boot-redisson/service/.env
+        regexp: "^cluster_addresses="
+        line: "cluster_addresses=redis://{{ groups['common'][0] }}:6679,redis://{{ groups['common'][0] }}:6680,redis://{{ groups['common'][0] }}:6681,redis://{{ groups['common'][0] }}:6682,redis://{{ groups['common'][0] }}:6683,redis://{{ groups['common'][0] }}:6684"

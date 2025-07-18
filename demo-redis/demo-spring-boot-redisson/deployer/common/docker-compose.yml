@@ -1,34 +1,24 @@
 version: "3.1"
 
 services:
-  service:
-    build:
-      context: ./
-      dockerfile: Dockerfile-api
-    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-boot-redisson-api
-    environment:
-      - JAVA_OPTS=-Xmx512m
-      - TZ=Asia/Shanghai
-
   # Redis Standalone 模式
   redis-standalone:
     image: redis:5.0.14
     command: redis-server /usr/local/etc/redis/redis.conf --requirepass 123456
     volumes:
-      - ./deployer/common/redis-standalone.conf:/usr/local/etc/redis/redis.conf:ro
+      - ./redis-standalone.conf:/usr/local/etc/redis/redis.conf:ro
     environment:
       - TZ=Asia/Shanghai
+    restart: unless-stopped
     network_mode: host
 
   # Redis Replication 模式
   redis-replication-node1:
-    build:
-      context: .
-      dockerfile: ./Dockerfile-replication
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-boot-redisson-redis-replication
     command: redis-server /usr/local/etc/redis/redis.conf --port 6479
     environment:
       - TZ=Asia/Shanghai
+    restart: unless-stopped
     network_mode: host
 
   redis-replication-node2:
@@ -36,6 +26,7 @@ services:
     command: redis-server /usr/local/etc/redis/redis.conf --port 6480
     environment:
       - TZ=Asia/Shanghai
+    restart: unless-stopped
     network_mode: host
     depends_on:
       - redis-replication-node1
@@ -58,6 +49,7 @@ services:
     environment:
       - TZ=Asia/Shanghai
     network_mode: host
+    restart: unless-stopped
     depends_on:
       - redis-replication-node1
   redis-replication-node3-slave-join:
@@ -80,6 +72,7 @@ services:
     environment:
       - TZ=Asia/Shanghai
     network_mode: host
+    restart: unless-stopped
 
   demo-redis-sentinel-repl-node2:
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-boot-redisson-redis-replication
@@ -87,6 +80,7 @@ services:
     environment:
       - TZ=Asia/Shanghai
     network_mode: host
+    restart: unless-stopped
     depends_on:
       - demo-redis-sentinel-repl-node1
   demo-redis-sentinel-repl-node2-slave-join:
@@ -108,6 +102,7 @@ services:
     environment:
       - TZ=Asia/Shanghai
     network_mode: host
+    restart: unless-stopped
     depends_on:
       - demo-redis-sentinel-repl-node1
   demo-redis-sentinel-repl-node3-slave-join:
@@ -124,14 +119,12 @@ services:
       - demo-redis-sentinel-repl-node1
 
   demo-redis-sentinel-node1:
-    build:
-      context: .
-      dockerfile: ./Dockerfile-sentinel
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-boot-redisson-redis-sentinel
     command: redis-sentinel /usr/local/etc/redis/redis-sentinel.conf --port 26579
     environment:
       - TZ=Asia/Shanghai
     network_mode: host
+    restart: unless-stopped
     depends_on:
       - demo-redis-sentinel-repl-node1
 
@@ -141,6 +134,7 @@ services:
     environment:
       - TZ=Asia/Shanghai
     network_mode: host
+    restart: unless-stopped
     depends_on:
       - demo-redis-sentinel-node1
 
@@ -150,6 +144,7 @@ services:
     environment:
       - TZ=Asia/Shanghai
     network_mode: host
+    restart: unless-stopped
     depends_on:
       - demo-redis-sentinel-node1
 
@@ -157,57 +152,63 @@ services:
   node1:
     image: redis:6.2.6-bullseye
     # 必须设置cluster-announce-ip才能够在创建集群时节点join到master，否则会一直waiting...
-    command: redis-server /usr/local/etc/redis/redis.conf --port 6679 --cluster-announce-ip 127.0.0.1
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6679 --cluster-announce-ip ${redisClusterAnnounceIp}
     volumes:
-      - ./deployer/common/redis-cluster.conf:/usr/local/etc/redis/redis.conf
+      - ./redis-cluster.conf:/usr/local/etc/redis/redis.conf
     environment:
       - TZ=Asia/Shanghai
     network_mode: 'host'
+    restart: unless-stopped
 
   node2:
     image: redis:6.2.6-bullseye
-    command: redis-server /usr/local/etc/redis/redis.conf --port 6680 --cluster-announce-ip 127.0.0.1
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6680 --cluster-announce-ip ${redisClusterAnnounceIp}
     volumes:
-      - ./deployer/common/redis-cluster.conf:/usr/local/etc/redis/redis.conf
+      - ./redis-cluster.conf:/usr/local/etc/redis/redis.conf
     environment:
       - TZ=Asia/Shanghai
     network_mode: 'host'
+    restart: unless-stopped
 
   node3:
     image: redis:6.2.6-bullseye
-    command: redis-server /usr/local/etc/redis/redis.conf --port 6681 --cluster-announce-ip 127.0.0.1
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6681 --cluster-announce-ip ${redisClusterAnnounceIp}
     volumes:
-      - ./deployer/common/redis-cluster.conf:/usr/local/etc/redis/redis.conf
+      - ./redis-cluster.conf:/usr/local/etc/redis/redis.conf
     environment:
       - TZ=Asia/Shanghai
     network_mode: 'host'
+    restart: unless-stopped
 
   node4:
     image: redis:6.2.6-bullseye
-    command: redis-server /usr/local/etc/redis/redis.conf --port 6682 --cluster-announce-ip 127.0.0.1
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6682 --cluster-announce-ip ${redisClusterAnnounceIp}
     volumes:
-      - ./deployer/common/redis-cluster.conf:/usr/local/etc/redis/redis.conf
+      - ./redis-cluster.conf:/usr/local/etc/redis/redis.conf
     environment:
       - TZ=Asia/Shanghai
     network_mode: 'host'
+    restart: unless-stopped
 
   node5:
     image: redis:6.2.6-bullseye
-    command: redis-server /usr/local/etc/redis/redis.conf --port 6683 --cluster-announce-ip 127.0.0.1
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6683 --cluster-announce-ip ${redisClusterAnnounceIp}
     volumes:
-      - ./deployer/common/redis-cluster.conf:/usr/local/etc/redis/redis.conf
+      - ./redis-cluster.conf:/usr/local/etc/redis/redis.conf
     environment:
       - TZ=Asia/Shanghai
     network_mode: 'host'
+    restart: unless-stopped
 
   node6:
     image: redis:6.2.6-bullseye
-    command: redis-server /usr/local/etc/redis/redis.conf --port 6684 --cluster-announce-ip 127.0.0.1
+    command: redis-server /usr/local/etc/redis/redis.conf --port 6684 --cluster-announce-ip ${redisClusterAnnounceIp}
     volumes:
-      - ./deployer/common/redis-cluster.conf:/usr/local/etc/redis/redis.conf
+      - ./redis-cluster.conf:/usr/local/etc/redis/redis.conf
     environment:
       - TZ=Asia/Shanghai
     network_mode: 'host'
+    restart: unless-stopped
 
   creator:
     image: redis:6.2.6-bullseye
