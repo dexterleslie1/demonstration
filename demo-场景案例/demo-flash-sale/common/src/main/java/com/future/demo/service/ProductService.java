@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.future.demo.config.PrometheusCustomMonitor;
 import com.future.demo.constant.Const;
 import com.future.demo.dto.FlashSaleProductCacheUpdateEventDTO;
+import com.future.demo.dto.IncreaseCountDTO;
 import com.future.demo.dto.ProductDTO;
 import com.future.demo.entity.ProductModel;
 import com.future.demo.mapper.ProductMapper;
@@ -152,12 +153,6 @@ public class ProductService {
                 log.debug("秒杀商品成功发送设置商品缓存消息 {}", JSON);
         }
 
-        // 商品创建后设置商品ID和库存到redis zset中，协助实现下单时随机抽取商品逻辑
-        /*String JSON = this.objectMapper.writeValueAsString(model);
-        kafkaTemplate.send(Const.TopicAddProductIdAndStockAmountIntoRedisZSetAfterCreation, JSON).get();
-        if (log.isDebugEnabled())
-            log.debug("成功发送商品创建后设置商品ID和库存到redis zset中消息 {}", JSON);*/
-
         // 向缓存中添加商品用于下单时随机抽取商品
         String JSON = this.objectMapper.writeValueAsString(model);
         kafkaTemplate.send(Const.TopicAddProductToCacheForPickupRandomlyWhenPurchasing, JSON).get();
@@ -165,11 +160,9 @@ public class ProductService {
             log.debug("成功发送消息“向缓存中添加商品用于下单时随机抽取商品” {}", JSON);
 
         // 异步更新 t_count
-        /*IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO(String.valueOf(model.getId()), "product");
-        increaseCountDTO.setType(IncreaseCountDTO.Type.MySQL);
-        increaseCountDTO.setCount(1);
+        IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO(String.valueOf(model.getId()), "product");
         JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
-        kafkaTemplate.send(TopicIncreaseCount, JSON).get();*/
+        kafkaTemplate.send(Const.TopicIncreaseCount, JSON).get();
 
         if (flashSale)
             prometheusCustomMonitor.getCounterProductMetricsCreateFlashSaleSuccessfully().increment();

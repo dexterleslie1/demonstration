@@ -50,19 +50,34 @@ public class TaskRemoveExpiredProductPickingUpRandomlyWhenPurchasingFromCache {
 
             List<ProductModel> modelList = productMapper.list(idListSlice);
             List<Long> idListExpiredToRemove = new ArrayList<>();
+            List<Long> idListFlashSaleEnded = new ArrayList<>();
             // 30分钟前
-            LocalDateTime localDateTimeExpired = LocalDateTime.now().minusMinutes(30);
+            LocalDateTime localDateTimeNow = LocalDateTime.now();
+            LocalDateTime localDateTimeExpired = localDateTimeNow.minusMinutes(30);
             for (ProductModel model : modelList) {
                 LocalDateTime createTime = model.getCreateTime();
                 // 已经过期的商品
                 if (createTime.isBefore(localDateTimeExpired)) {
                     idListExpiredToRemove.add(model.getId());
                 }
+
+                // 秒杀已经结束的商品
+                if (model.isFlashSale()) {
+                    LocalDateTime flashSaleEndTime = model.getFlashSaleEndTime();
+                    if (flashSaleEndTime.isBefore(localDateTimeNow))
+                        idListFlashSaleEnded.add(model.getId());
+                }
             }
             if (!idListExpiredToRemove.isEmpty()) {
                 rSet.removeAll(idListExpiredToRemove);
                 if (log.isDebugEnabled()) {
-                    log.debug("商品从 RSet {} 删除，已经过期商品id列表 {}", rSet.getName(), idListExpiredToRemove);
+                    log.debug("从 RSet {} 删除已经过期的商品id列表 {}", rSet.getName(), idListExpiredToRemove);
+                }
+            }
+            if (!idListFlashSaleEnded.isEmpty()) {
+                rSet.removeAll(idListFlashSaleEnded);
+                if (log.isDebugEnabled()) {
+                    log.debug("从 RSet {} 删除已经秒杀结束的商品id列表 {}", rSet.getName(), idListFlashSaleEnded);
                 }
             }
 

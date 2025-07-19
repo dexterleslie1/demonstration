@@ -19,18 +19,13 @@ import com.future.demo.service.ProductService;
 import com.future.random.id.picker.RandomIdPickerService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
-import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.listener.DefaultErrorHandler;
-import org.springframework.util.backoff.FixedBackOff;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
@@ -74,38 +69,6 @@ public class ConfigKafkaListener {
     @Resource
     PickupProductRandomlyWhenPurchasingService pickupProductRandomlyWhenPurchasingService;
 
-
-    @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory(
-            ConsumerFactory consumerFactory) {
-        ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(consumerFactory);
-        // 启用批量消费
-        factory.setBatchListener(true);
-        // 设置并发线程数
-        factory.setConcurrency(256);
-        // 绑定重试错误处理器
-        factory.setCommonErrorHandler(retryErrorHandler(kafkaTemplate));
-        return factory;
-    }
-
-    // 定义重试错误处理器（核心）
-    @Bean
-    public DefaultErrorHandler retryErrorHandler(KafkaTemplate<Object, Object> template) {
-        // 配置重试策略：无限次重试，每次间隔5秒
-        // 5000ms间隔，FixedBackOff.UNLIMITED_ATTEMPTS 表示无限次
-        FixedBackOff fixedBackOff = new FixedBackOff(5000L, /*FixedBackOff.UNLIMITED_ATTEMPTS*/ 180);
-
-        // 使用RetryTopic的ErrorHandler（自动处理重试和DLQ）
-        return new DefaultErrorHandler(
-                // 自定义恢复逻辑（可选，当重试耗尽时触发）
-                (record, ex) -> {
-                    log.error("重试耗尽，消息进入死信队列：{}", record.value());
-                },
-                fixedBackOff
-        );
-    }
-
     private AtomicInteger concurrentCounter = new AtomicInteger();
     private AtomicLong counter = new AtomicLong();
 
@@ -113,10 +76,10 @@ public class ConfigKafkaListener {
      * @param messages
      * @throws Exception
      */
-    @KafkaListener(topics = com.future.demo.constant.Const.TopicOrderInCacheSyncToDb, concurrency = "1" /* 注意： todo 太大的 concurrency 会拖慢 /actuator/prometheus 接口 */)
+    @KafkaListener(topics = Const.TopicOrderInCacheSyncToDb, concurrency = "1", containerFactory = "defaultKafkaListenerContainerFactory")
     public void receiveMessage(List<String> messages) throws Exception {
         try {
-            log.info("concurrent=" + this.concurrentCounter.incrementAndGet() + ",size=" + messages.size() + ",total=" + counter.addAndGet(messages.size()));
+            /*log.info("concurrent=" + this.concurrentCounter.incrementAndGet() + ",size=" + messages.size() + ",total=" + counter.addAndGet(messages.size()));*/
 
             List<OrderModel> orderModelList = new ArrayList<>();
             for (String JSON : messages) {
@@ -150,73 +113,17 @@ public class ConfigKafkaListener {
      * @param messages
      * @throws Exception
      */
-    @KafkaListener(topics = com.future.demo.constant.Const.TopicIncreaseCount, concurrency = "8")
+    @KafkaListener(topics = Const.TopicIncreaseCount, concurrency = "4", containerFactory = "defaultKafkaListenerContainerFactory")
     public void receiveMessageIncreaseCount(List<String> messages) throws Exception {
         List<IncreaseCountDTO> dtoListMySQL = new ArrayList<>();
-        /*List<IncreaseCountDTO> dtoListCassandra = new ArrayList<>();*/
         for (String JSON : messages) {
             IncreaseCountDTO increaseCountDTO = objectMapper.readValue(JSON, IncreaseCountDTO.class);
-            /*IncreaseCountDTO.Type type = increaseCountDTO.getType();*/
-            /*if (type == IncreaseCountDTO.Type.MySQL) {*/
             dtoListMySQL.add(increaseCountDTO);
-            /*} else if (type == IncreaseCountDTO.Type.Cassandra) {
-                dtoListCassandra.add(increaseCountDTO);
-            }*/
         }
 
-        // MySQL计数器
         // todo 在crond服务关闭重启后select count和计数器不一致
-        /*Map<String, Integer> flagToCountMap = new HashMap<>();*/
-//        for (IncreaseCountDTO dto : dtoListMySQL) {
-//            String idempotentUuid = dto.getIdempotentUuid();
-//            String flag = dto.getFlag();
-//            /*int count = dto.getCount();*/
-//            /*if (!flagToCountMap.containsKey(flag)) {
-//                flagToCountMap.put(flag, 0);
-//            }
-//
-//            if (Boolean.TRUE.equals(redisTemplate.opsForValue().setIfAbsent(idempotentUuid, StringUtils.EMPTY, 300, TimeUnit.SECONDS)))
-//                flagToCountMap.put(flag, flagToCountMap.get(flag) + count);
-//            else {
-//                if (log.isInfoEnabled())
-//                    log.info("意图重复消费消息 {}", dto);
-//            }*/
-//
-//            this.commonService.updateIncreaseCount(idempotentUuid, flag, count);
-//        }
-
         commonService.updateIncreaseCount(dtoListMySQL);
         prometheusCustomMonitor.getCounterIncreaseCountStatsSuccessfully().increment(dtoListMySQL.size());
-
-        /*for (String flag : flagToCountMap.keySet()) {
-            int count = flagToCountMap.get(flag);
-            if (count > 0)
-                this.commonMapper.updateIncreaseCount(flag, count);
-        }*/
-
-//        // Cassandra计数器
-//        Map<String, Integer> flagToCountMap = new HashMap<>();
-//        for (IncreaseCountDTO dto : dtoListCassandra) {
-//            String idempotentUuid = dto.getIdempotentUuid();
-//            String flag = dto.getFlag();
-//            int count = dto.getCount();
-//            if (!flagToCountMap.containsKey(flag)) {
-//                flagToCountMap.put(flag, 0);
-//            }
-//
-//            if (Boolean.TRUE.equals(redisTemplate.opsForValue().setIfAbsent(idempotentUuid, StringUtils.EMPTY, 300, TimeUnit.SECONDS)))
-//                flagToCountMap.put(flag, flagToCountMap.get(flag) + count);
-//            else {
-//                if (log.isInfoEnabled())
-//                    log.info("意图重复消费消息 {}", dto);
-//            }
-//        }
-//
-//        for (String flag : flagToCountMap.keySet()) {
-//            int count = flagToCountMap.get(flag);
-//            if (count > 0)
-//                this.cassandraMapper.updateIncreaseCount(flag, count);
-//        }
     }
 
     /**
@@ -225,7 +132,7 @@ public class ConfigKafkaListener {
      * @param messages
      * @throws Exception
      */
-    @KafkaListener(topics = com.future.demo.constant.Const.TopicCreateOrderCassandraIndex, concurrency = "16")
+    @KafkaListener(topics = Const.TopicCreateOrderCassandraIndex, containerFactory = "topicCreateOrderCassandraIndexKafkaListenerContainerFactory")
     public void receiveMessageCreateOrderCassandraIndex(List<String> messages) throws Exception {
         try {
             List<OrderModel> modelList = new ArrayList<>();
@@ -294,7 +201,7 @@ public class ConfigKafkaListener {
      * @param messages
      * @throws Exception
      */
-    @KafkaListener(topics = com.future.demo.constant.Const.TopicSetupProductFlashSaleCache, concurrency = "1")
+    @KafkaListener(topics = Const.TopicSetupProductFlashSaleCache, concurrency = "1", containerFactory = "defaultKafkaListenerContainerFactory")
     public void receiveMessageSetupProductFlashSaleCache(List<String> messages) {
         if (messages == null || messages.isEmpty()) {
             if (log.isWarnEnabled())
@@ -368,51 +275,13 @@ public class ConfigKafkaListener {
         // endregion
     }
 
-//    /**
-//     * 商品创建后设置商品ID和库存到redis zset中，协助实现下单时随机抽取商品逻辑
-//     *
-//     * @param messages
-//     * @throws Exception
-//     */
-//    @KafkaListener(topics = com.future.demo.constant.Const.TopicAddProductIdAndStockAmountIntoRedisZSetAfterCreation, concurrency = "1")
-//    public void receiveMessageAddProductIdAndStockAmountIntoRedisZSetAfterCreation(List<String> messages) {
-//        if (messages == null || messages.isEmpty()) {
-//            if (log.isWarnEnabled())
-//                log.warn("意料之外，为何 messages 为空的呢？");
-//            return;
-//        }
-//
-//        List<ProductModel> modelList = messages.stream().map(o -> {
-//            try {
-//                return objectMapper.readValue(o, ProductModel.class);
-//            } catch (JsonProcessingException e) {
-//                throw new RuntimeException(e);
-//            }
-//        }).collect(Collectors.toList());
-//
-//        redisTemplate.executePipelined(new SessionCallback<String>() {
-//            @Override
-//            public <K, V> String execute(RedisOperations<K, V> operations) throws DataAccessException {
-//                RedisOperations<String, String> redisOperations = (RedisOperations<String, String>) operations;
-//                for (ProductModel productModel : modelList) {
-//                    String productIdStr = String.valueOf(productModel.getId());
-//                    int stockAmount = productModel.getStock();
-//                    redisOperations.opsForZSet().add(com.future.demo.constant.Const.KeyProductIdAndStockAmountInRedisZSet, productIdStr, stockAmount);
-//                }
-//                return null;
-//            }
-//        });
-//        if (log.isDebugEnabled())
-//            log.debug("成功设置商品信息到 {} {}", com.future.demo.constant.Const.KeyProductIdAndStockAmountInRedisZSet, modelList);
-//    }
-
     /**
      * 向缓存中添加商品用于下单时随机抽取商品
      *
      * @param messages
      * @throws Exception
      */
-    @KafkaListener(topics = Const.TopicAddProductToCacheForPickupRandomlyWhenPurchasing, concurrency = "1")
+    @KafkaListener(topics = Const.TopicAddProductToCacheForPickupRandomlyWhenPurchasing, concurrency = "1", containerFactory = "defaultKafkaListenerContainerFactory")
     public void receiveMessageAddProductToCacheForPickupRandomlyWhenPurchasing(List<String> messages) {
         try {
             if (messages == null || messages.isEmpty()) {
@@ -442,7 +311,7 @@ public class ConfigKafkaListener {
      * @param messages
      * @throws Exception
      */
-    @KafkaListener(topics = Const.TopicRandomIdPickerAddIdList, concurrency = "1")
+    @KafkaListener(topics = Const.TopicRandomIdPickerAddIdList, concurrency = "1", containerFactory = "defaultKafkaListenerContainerFactory")
     public void receiveMessageRandomIdPickerAddIdList(List<String> messages) throws Exception {
         try {
             List<RandomIdPickerAddIdEventDTO> dtoList = new ArrayList<>();

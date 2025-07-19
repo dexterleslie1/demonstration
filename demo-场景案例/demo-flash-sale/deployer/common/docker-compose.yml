@@ -110,7 +110,7 @@ services:
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-wrk2
     environment:
       - TZ=Asia/Shanghai
-    entrypoint: wrk2 --rate 32 -t4 -c256 -d9999999999999999s --latency --timeout 30 http://${crondHost}:8080/api/v1/addOrdinaryProduct
+    entrypoint: wrk2 --rate 32 -t4 -c128 -d9999999999999999s --latency --timeout 60 http://${crondHost}:8080/api/v1/addOrdinaryProduct
     restart: unless-stopped
     network_mode: host
   # 创建秒杀商品，qps 为 32
@@ -118,7 +118,7 @@ services:
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-wrk2
     environment:
       - TZ=Asia/Shanghai
-    entrypoint: wrk2 --rate 100 -t4 -c256 -d9999999999999999s --latency --timeout 30 http://${crondHost}:8080/api/v1/addFlashSaleProduct
+    entrypoint: wrk2 --rate 64 -t4 -c128 -d9999999999999999s --latency --timeout 60 http://${crondHost}:8080/api/v1/addFlashSaleProduct
     restart: unless-stopped
     network_mode: host
 
