@@ -1005,6 +1005,8 @@ curl -i -X GET http://localhost:8081/mydemo/custom
 
 ## `/actuator/prometheus` 端点排除以 `kafka`、`spring.kafka`、`lettuce.command` 开头的指标
 
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-kafka/demo-kafka-benchmark)
+
 添加 `MetricsFilterConfig` 即可：
 
 ```java

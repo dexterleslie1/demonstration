@@ -1,4 +1,4 @@
-FROM openjdk:8-jdk-slim
+FROM openjdk:17-jdk-slim
 
 ADD target/demo.jar /usr/share/demo.jar
 
