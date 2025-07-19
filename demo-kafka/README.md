@@ -1122,3 +1122,381 @@ spring.kafka.consumer.group-id=my-group
 spring.kafka.consumer.group-id=${random.uuid}
 ```
 
+
+
+### 性能测试
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-kafka/demo-kafka-benchmark)
+
+提醒：实例的内存和 `CPU` 充足。
+
+部署和运行应用：
+
+```sh
+# 复制配置
+ansible-playbook playbook-deployer-config.yml --inventory inventory.ini
+
+# 编译并推送镜像
+./build.sh && ./push.sh
+
+# 运行应用
+ansible-playbook playbook-service-start.yml --inventory inventory.ini
+```
+
+测试 `kafka` 消息发送速度：
+
+```sh
+wrk -t8 -c2048 -d30s --latency --timeout 60 http://192.168.1.185/api/v1/sendToTopic1
+Running 30s test @ http://192.168.1.185/api/v1/sendToTopic1
+  8 threads and 2048 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency    16.18ms    8.31ms 247.86ms   92.04%
+    Req/Sec    16.32k     1.90k   30.68k    86.42%
+  Latency Distribution
+     50%   14.74ms
+     75%   17.64ms
+     90%   22.39ms
+     99%   40.23ms
+  3896189 requests in 30.09s, 0.92GB read
+Requests/sec: 129496.55
+Transfer/sec:     31.37MB
+```
+
+删除应用：
+
+```sh
+ansible-playbook playbook-service-destroy.yml --inventory inventory.ini
+```
+
+
+
+### 各个消费者配置独立
+
+#### 介绍
+
+要让不同的Kafka主题（Topic1和Topic2）使用不同的`max-poll-records`配置，需要为每个主题创建独立的**消费者工厂（ConsumerFactory）**和**监听器容器工厂（ConcurrentKafkaListenerContainerFactory）**，并通过`@KafkaListener`的`containerFactory`属性指定对应的容器工厂。以下是具体实现步骤：
+
+
+##### 步骤1：显式定义两个独立的ConsumerFactory
+在配置类中定义两个`ConsumerFactory` Bean，分别针对Topic1和Topic2设置不同的`max-poll-records`及其他必要配置（如Bootstrap Server、反序列化器等）。
+
+```java
+@Configuration
+@Slf4j
+public class Config {
+    @Resource
+    KafkaTemplate kafkaTemplate;
+
+    // -------------------- 为Topic1定制的ConsumerFactory --------------------
+    @Bean("topic1ConsumerFactory")
+    public ConsumerFactory<String, String> topic1ConsumerFactory() {
+        Map<String, Object> props = new HashMap<>();
+        // 从application.properties中获取Bootstrap Server（兼容原有配置）
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "${kafka_bootstrap_servers:localhost}:9092");
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, "group-topic1"); // 建议为不同主题设置不同Group ID（可选）
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        // 为Topic1单独设置max-poll-records（示例值200）
+        props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 200); 
+        
+        // 其他通用配置（可选）
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        return new DefaultKafkaConsumerFactory<>(props);
+    }
+
+    // -------------------- 为Topic2定制的ConsumerFactory --------------------
+    @Bean("topic2ConsumerFactory")
+    public ConsumerFactory<String, String> topic2ConsumerFactory() {
+        Map<String, Object> props = new HashMap<>();
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "${kafka_bootstrap_servers:localhost}:9092");
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, "group-topic2"); // 不同主题可设置不同Group ID
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        // 为Topic2单独设置max-poll-records（示例值500）
+        props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 500); 
+        
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        return new DefaultKafkaConsumerFactory<>(props);
+    }
+
+    // -------------------- 为Topic1定制的监听器容器工厂 --------------------
+    @Bean("topic1KafkaListenerContainerFactory")
+    public ConcurrentKafkaListenerContainerFactory<String, String> topic1KafkaListenerContainerFactory(
+            @Qualifier("topic1ConsumerFactory") ConsumerFactory<String, String> consumerFactory) {
+        ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(consumerFactory);
+        factory.setBatchListener(true); // 启用批量消费
+        factory.setConcurrency(256); // 并发线程数（根据分区数调整）
+        factory.setCommonErrorHandler(retryErrorHandler(kafkaTemplate)); // 复用错误处理器
+        return factory;
+    }
+
+    // -------------------- 为Topic2定制的监听器容器工厂 --------------------
+    @Bean("topic2KafkaListenerContainerFactory")
+    public ConcurrentKafkaListenerContainerFactory<String, String> topic2KafkaListenerContainerFactory(
+            @Qualifier("topic2ConsumerFactory") ConsumerFactory<String, String> consumerFactory) {
+        ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(consumerFactory);
+        factory.setBatchListener(true);
+        factory.setConcurrency(256);
+        factory.setCommonErrorHandler(retryErrorHandler(kafkaTemplate));
+        return factory;
+    }
+
+    // 错误处理器（保持原有逻辑）
+    @Bean
+    public DefaultErrorHandler retryErrorHandler(KafkaTemplate<Object, Object> template) {
+        FixedBackOff fixedBackOff = new FixedBackOff(5000L, 180); // 5秒间隔，最多重试180次
+        return new DefaultErrorHandler(
+                (record, ex) -> log.error("重试耗尽，消息进入死信队列：{}", record.value()),
+                fixedBackOff
+        );
+    }
+
+    // 原有监听器方法（通过containerFactory指定对应工厂）
+    private AtomicInteger concurrentCounter = new AtomicInteger();
+    private AtomicLong counter = new AtomicLong();
+    @KafkaListener(topics = Constant.Topic1, containerFactory = "topic1KafkaListenerContainerFactory")
+    public void receiveMessageFromTopic1(List<String> messages) throws Exception {
+        try {
+            log.info("concurrent={},size={},total={}", 
+                this.concurrentCounter.incrementAndGet(), 
+                messages.size(), 
+                counter.addAndGet(messages.size()));
+            TimeUnit.MILLISECONDS.sleep(1500);
+        } finally {
+            this.concurrentCounter.decrementAndGet();
+        }
+    }
+
+    private AtomicInteger concurrentCount2 = new AtomicInteger();
+    private AtomicLong counter2 = new AtomicLong();
+    @KafkaListener(topics = Constant.Topic2, containerFactory = "topic2KafkaListenerContainerFactory")
+    public void receiveMessageFromTopic2(List<String> messages) throws Exception {
+        try {
+            log.info("concurrent={},size={},total={}", 
+                this.concurrentCount2.incrementAndGet(), 
+                messages.size(), 
+                counter2.addAndGet(messages.size()));
+            TimeUnit.MILLISECONDS.sleep(1500);
+        } finally {
+            this.concurrentCount2.decrementAndGet();
+        }
+    }
+}
+```
+
+
+##### 关键说明
+1. **独立ConsumerFactory**：  
+   通过`@Bean("topic1ConsumerFactory")`和`@Bean("topic2ConsumerFactory")`定义两个不同的消费者工厂，分别设置各自主题的`MAX_POLL_RECORDS_CONFIG`（如Topic1设为200，Topic2设为500）。
+
+2. **独立监听器容器工厂**：  
+   每个监听器容器工厂（`topic1KafkaListenerContainerFactory`和`topic2KafkaListenerContainerFactory`）绑定对应的消费者工厂，确保使用独立的配置。
+
+3. **通过`containerFactory`指定容器工厂**：  
+   在`@KafkaListener`注解中，通过`containerFactory = "topic1KafkaListenerContainerFactory"`（或`topic2`）明确指定使用哪个容器工厂，从而应用对应的`max-poll-records`。
+
+
+##### 验证效果
+启动应用后，观察日志或通过Kafka监控工具（如Kafka Manager）验证：
+- Topic1的消费者在`poll`时每次最多拉取200条消息（`max.poll.records=200`）。
+- Topic2的消费者每次最多拉取500条消息（`max.poll.records=500`）。
+
+
+##### 注意事项
+- **消费者组ID（Group ID）**：  
+  如果Topic1和Topic2需要独立消费（不共享偏移量），建议为它们设置不同的`GROUP_ID_CONFIG`（如示例中的`group-topic1`和`group-topic2`）。如果需要共享消费进度，可使用相同的Group ID。
+
+- **并发数与分区数**：  
+  `setConcurrency(256)`需确保主题的分区数不少于并发数，否则多余的线程会空闲。例如，若Topic1只有10个分区，`concurrency`应设置为≤10。
+
+- **错误处理与重试**：  
+  示例中复用了原有的`retryErrorHandler`，确保两个主题的消费者使用相同的重试和死信队列逻辑（可根据需要差异化配置）。
+
+通过以上配置，Topic1和Topic2的消费者将使用独立的`max-poll-records`参数，满足差异化需求。
+
+
+
+#### 实验
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-kafka/demo-kafka-benchmark)
+
+`ConfigKafkaListenerContainerFactory.java` 分别定义一个默认的配置和一个专门用于 `Topic1` 的配置：
+
+```java
+@Configuration
+@Slf4j
+public class ConfigKafkaListenerContainerFactory {
+    @Value("${spring.kafka.bootstrap-servers}")
+    private String bootstrapServers;
+
+    @Bean("defaultConsumerFactory")
+    public ConsumerFactory<String, String> defaultConsumerFactory() {
+        Map<String, Object> props = new HashMap<>();
+        // 从application.properties中获取Bootstrap Server（兼容原有配置）
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, "group-topic1"); // 建议为不同主题设置不同Group ID（可选）
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        // 为Topic2单独设置max-poll-records
+        props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 1024);
+        return new DefaultKafkaConsumerFactory<>(props);
+    }
+
+    @Bean("defaultKafkaListenerContainerFactory")
+    public ConcurrentKafkaListenerContainerFactory<String, String> defaultKafkaListenerContainerFactory(
+            @Qualifier("defaultConsumerFactory") ConsumerFactory<String, String> consumerFactory,
+            @Autowired DefaultErrorHandler retryErrorHandler) {
+        ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(consumerFactory);
+        factory.setBatchListener(true);
+        factory.setConcurrency(256);
+        factory.setCommonErrorHandler(retryErrorHandler);
+        return factory;
+    }
+
+    @Bean("topic2ConsumerFactory")
+    public ConsumerFactory<String, String> topic2ConsumerFactory() {
+        Map<String, Object> props = new HashMap<>();
+        // 从application.properties中获取Bootstrap Server（兼容原有配置）
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, "group-topic2"); // 建议为不同主题设置不同Group ID（可选）
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        // 为Topic2单独设置max-poll-records
+        props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 128);
+        return new DefaultKafkaConsumerFactory<>(props);
+    }
+
+    @Bean("topic2KafkaListenerContainerFactory")
+    public ConcurrentKafkaListenerContainerFactory<String, String> topic2KafkaListenerContainerFactory(
+            @Qualifier("topic2ConsumerFactory") ConsumerFactory<String, String> consumerFactory,
+            @Autowired DefaultErrorHandler retryErrorHandler) {
+        ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(consumerFactory);
+        factory.setBatchListener(true);
+        factory.setConcurrency(256);
+        factory.setCommonErrorHandler(retryErrorHandler);
+        return factory;
+    }
+
+    // 定义重试错误处理器（核心）
+    @Bean
+    public DefaultErrorHandler retryErrorHandler() {
+        // 配置重试策略：无限次重试，每次间隔5秒
+        // 5000ms间隔，FixedBackOff.UNLIMITED_ATTEMPTS 表示无限次
+        FixedBackOff fixedBackOff = new FixedBackOff(5000L, /*FixedBackOff.UNLIMITED_ATTEMPTS*/ 180);
+
+        // 使用RetryTopic的ErrorHandler（自动处理重试和DLQ）
+        return new DefaultErrorHandler(
+                // 自定义恢复逻辑（可选，当重试耗尽时触发）
+                (record, ex) -> {
+                    log.error("重试耗尽，消息进入死信队列：{}", record.value());
+                },
+                fixedBackOff
+        );
+    }
+}
+
+```
+
+`ConfigKafkaListener.java` 分别引用不同的配置：
+
+```java
+@Configuration
+@Slf4j
+public class ConfigKafkaListener {
+
+    /*@Bean
+    public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory(
+            ConsumerFactory consumerFactory,
+            @Autowired DefaultErrorHandler retryErrorHandler) {
+        ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(consumerFactory);
+        // 启用批量消费
+        factory.setBatchListener(true);
+        // 设置并发线程数，需要设置 topic 分区数不为 0 才能并发消费消息。
+        factory.setConcurrency(256);
+        // 绑定重试错误处理器
+        factory.setCommonErrorHandler(retryErrorHandler);
+        return factory;
+    }*/
+
+    private AtomicInteger concurrentCounter = new AtomicInteger();
+    private AtomicLong counter = new AtomicLong();
+
+    @KafkaListener(topics = Constant.Topic1, containerFactory = "defaultKafkaListenerContainerFactory")
+    public void receiveMessageFromTopic1(List<String> messages) throws Exception {
+        try {
+            log.info("concurrent=" + this.concurrentCounter.incrementAndGet()
+                    + ",size=" + messages.size()
+                    + ",total=" + counter.addAndGet(messages.size()));
+
+            TimeUnit.MILLISECONDS.sleep(1500);
+
+            // 辅助测试失败重试
+            /*boolean b = true;
+            if (b) {
+                throw new BusinessException("测试异常");
+            }*/
+        } finally {
+            this.concurrentCounter.decrementAndGet();
+        }
+    }
+
+    private AtomicInteger concurrentCount2 = new AtomicInteger();
+    private AtomicLong counter2 = new AtomicLong();
+
+    @KafkaListener(topics = Constant.Topic2, concurrency = "2", containerFactory = "topic2KafkaListenerContainerFactory")
+    public void receiveMessageFromTopic2(List<String> messages) throws Exception {
+        try {
+            log.info("concurrent=" + this.concurrentCount2.incrementAndGet()
+                    + ",size=" + messages.size()
+                    + ",total=" + counter2.addAndGet(messages.size()));
+        } finally {
+            this.concurrentCount2.decrementAndGet();
+        }
+    }
+}
+
+```
+
+测试 `Topic1` 的配置是否生效：
+
+```sh
+wrk -t8 -c2048 -d30s --latency --timeout 60 http://192.168.1.185/api/v1/sendToTopic1
+
+# 查看 crond 的日志输出如下表示配置已经生效
+crond-service-1  | 2025-07-19 10:10:56.569  INFO 7 --- [ainer#0-247-C-1] c.f.demo.config.ConfigKafkaListener      : concurrent=245,size=1024,total=3093694
+crond-service-1  | 2025-07-19 10:10:56.569  INFO 7 --- [tainer#0-22-C-1] c.f.demo.config.ConfigKafkaListener      : concurrent=246,size=1008,total=3094702
+crond-service-1  | 2025-07-19 10:10:56.569  INFO 7 --- [ainer#0-158-C-1] c.f.demo.config.ConfigKafkaListener      : concurrent=247,size=353,total=3095055
+crond-service-1  | 2025-07-19 10:10:56.569  INFO 7 --- [ainer#0-121-C-1] c.f.demo.config.ConfigKafkaListener      : concurrent=248,size=1024,total=3096079
+crond-service-1  | 2025-07-19 10:10:56.570  INFO 7 --- [tainer#0-26-C-1] c.f.demo.config.ConfigKafkaListener      : concurrent=249,size=1024,total=3097103
+crond-service-1  | 2025-07-19 10:10:56.570  INFO 7 --- [tainer#0-14-C-1] c.f.demo.config.ConfigKafkaListener      : concurrent=250,size=1024,total=3098127
+crond-service-1  | 2025-07-19 10:10:56.570  INFO 7 --- [ntainer#0-8-C-1] c.f.demo.config.ConfigKafkaListener      : concurrent=251,size=1003,total=3099130
+crond-service-1  | 2025-07-19 10:10:56.570  INFO 7 --- [ainer#0-177-C-1] c.f.demo.config.ConfigKafkaListener      : concurrent=252,size=1024,total=3100154
+crond-service-1  | 2025-07-19 10:10:56.570  INFO 7 --- [tainer#0-48-C-1] c.f.demo.config.ConfigKafkaListener      : concurrent=253,size=616,total=3100770
+crond-service-1  | 2025-07-19 10:10:56.570  INFO 7 --- [ainer#0-246-C-1] c.f.demo.config.ConfigKafkaListener      : concurrent=254,size=1024,total=3101794
+crond-service-1  | 2025-07-19 10:10:56.570  INFO 7 --- [ainer#0-211-C-1] c.f.demo.config.ConfigKafkaListener      : concurrent=255,size=718,total=3102512
+crond-service-1  | 2025-07-19 10:10:56.571  INFO 7 --- [ainer#0-244-C-1] c.f.demo.config.ConfigKafkaListener      : concurrent=256,size=1024,total=3103536
+```
+
+测试 `Topic2` 的配置是否生效：
+
+```sh
+wrk -t8 -c2048 -d3000000000s --latency --timeout 60 http://192.168.1.185/api/v1/sendToTopic2
+
+# 查看 crond 的日志输出如下表示配置已经生效
+crond-service-1  | 2025-07-19 10:12:04.501  INFO 7 --- [ntainer#1-0-C-1] c.f.demo.config.ConfigKafkaListener      : concurrent=1,size=104,total=2829264
+crond-service-1  | 2025-07-19 10:12:04.501  INFO 7 --- [ntainer#1-1-C-1] c.f.demo.config.ConfigKafkaListener      : concurrent=1,size=36,total=2829300
+crond-service-1  | 2025-07-19 10:12:04.502  INFO 7 --- [ntainer#1-0-C-1] c.f.demo.config.ConfigKafkaListener      : concurrent=1,size=128,total=2829428
+crond-service-1  | 2025-07-19 10:12:04.502  INFO 7 --- [ntainer#1-1-C-1] c.f.demo.config.ConfigKafkaListener      : concurrent=1,size=48,total=2829476
+crond-service-1  | 2025-07-19 10:12:04.502  INFO 7 --- [ntainer#1-0-C-1] c.f.demo.config.ConfigKafkaListener      : concurrent=2,size=49,total=2829525
+crond-service-1  | 2025-07-19 10:12:04.503  INFO 7 --- [ntainer#1-1-C-1] c.f.demo.config.ConfigKafkaListener      : concurrent=1,size=11,total=2829536
+crond-service-1  | 2025-07-19 10:12:04.503  INFO 7 --- [ntainer#1-0-C-1] c.f.demo.config.ConfigKafkaListener      : concurrent=1,size=11,total=2829547
+crond-service-1  | 2025-07-19 10:12:04.503  INFO 7 --- [ntainer#1-1-C-1] c.f.demo.config.ConfigKafkaListener      : concurrent=1,size=31,total=2829578
+crond-service-1  | 2025-07-19 10:12:04.503  INFO 7 --- [ntainer#1-0-C-1] c.f.demo.config.ConfigKafkaListener      : concurrent=1,size=5,total=2829583
+crond-service-1  | 2025-07-19 10:12:04.504  INFO 7 --- [ntainer#1-1-C-1] c.f.demo.config.ConfigKafkaListener      : concurrent=1,size=5,total=2829588
+```
+
