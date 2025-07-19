@@ -32,14 +32,21 @@ public class SetTests {
 
         String key = UUID.randomUUID().toString();
         RSet<Long> rSet = redissonClient.getSet(key);
+
+        // RSet 没有元素时返回 null
+        Long randomLong = rSet.random();
+        Assertions.assertNull(randomLong);
+        Set<Long> randomLongs = rSet.random(1000);
+        Assertions.assertTrue(randomLongs.isEmpty());
+
         Long randomLong1 = RandomUtil.randomLong(0, Long.MAX_VALUE);
         rSet.add(randomLong1);
         Long randomLong2 = RandomUtil.randomLong(0, Long.MAX_VALUE);
         rSet.add(randomLong2);
         Assertions.assertEquals(2, rSet.size());
-        Long randomLong = rSet.random();
+        randomLong = rSet.random();
         Assertions.assertTrue(Objects.equals(randomLong, randomLong1) || Objects.equals(randomLong, randomLong2));
-        Set<Long> randomLongs = rSet.random(1000);
+        randomLongs = rSet.random(1000);
         Assertions.assertEquals(2, randomLongs.size());
         Assertions.assertTrue(randomLongs.toArray(new Long[]{})[0].equals(randomLong1) || randomLongs.toArray(new Long[]{})[0].equals(randomLong2));
         Assertions.assertTrue(randomLongs.toArray(new Long[]{})[1].equals(randomLong1) || randomLongs.toArray(new Long[]{})[1].equals(randomLong2));
