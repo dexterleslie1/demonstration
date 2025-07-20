@@ -1,0 +1,26 @@
+- name: "销毁api服务"
+  hosts: api
+  tasks:
+    - name: "使用Docker Compose down销毁api服务"
+      shell: |
+        set -e
+        cd ~/deployer-product-management-app/service
+        docker compose down -v
+
+- name: "销毁公共服务"
+  hosts: common
+  tasks:
+    - name: "使用Docker Compose down销毁公共服务"
+      shell: |
+        set -e
+        cd ~/deployer-product-management-app/common
+        docker compose down -v
+
+- name: "销毁OpenResty服务"
+  hosts: openresty
+  tasks:
+    - name: "使用Docker Compose down销毁OpenResty服务"
+      shell: |
+        set -e
+        cd ~/deployer-product-management-app/openresty
+        docker compose down -v
