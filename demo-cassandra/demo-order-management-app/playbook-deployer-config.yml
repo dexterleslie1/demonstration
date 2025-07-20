@@ -1,0 +1,46 @@
+- name: "复制deployer"
+  hosts: "{{ groups['all'] | difference(groups['management']) }}"
+  tasks:
+    - name: "复制deployer目录到远程"
+      copy:
+        src: deployer/
+        dest: ~/deployer-order-management-app-cassandra
+
+- name: "配置Cassandra的deployer"
+  hosts: cassandra
+  vars:
+    # 提取前三个 Cassandra 服务器的 IP 地址
+    cassandra_seeds: "{{ groups['cassandra'][:3] | join(',') }}"
+  tasks:
+    - name: "配置Cassandra服务的cassandra_seeds"
+      lineinfile:
+        path: ~/deployer-order-management-app-cassandra/cassandra/.env
+        regexp: "^cassandra_seeds="
+        line: "cassandra_seeds={{ cassandra_seeds }}"
+
+- name: "配置openresty服务的deployer"
+  hosts: openresty
+  tasks:
+    - name: "配置OpenResty服务的nginx.conf"
+      template:
+        src: deployer/openresty/nginx.conf.j2
+        dest: ~/deployer-order-management-app-cassandra/openresty/nginx.conf
+
+- name: "配置api服务的deployer"
+  hosts: api
+  tasks:
+    - name: "配置api服务的java_opts"
+      lineinfile:
+        path: ~/deployer-order-management-app-cassandra/service/.env
+        regexp: "^java_opts="
+        line: "java_opts={{ java_opts }}"
+    - name: "配置api服务的zookeeper_host"
+      lineinfile:
+        path: ~/deployer-order-management-app-cassandra/service/.env
+        regexp: "^zookeeper_host="
+        line: "zookeeper_host={{ groups['common'][0] }}"
+    - name: "配置api服务的cassandra_contact_points"
+      lineinfile:
+        path: ~/deployer-order-management-app-cassandra/service/.env
+        regexp: "^cassandra_contact_points="
+        line: "cassandra_contact_points={{ groups['cassandra'] | map('regex_replace', '^(.*)$', '\\1:9042') | list | join(',') }}"

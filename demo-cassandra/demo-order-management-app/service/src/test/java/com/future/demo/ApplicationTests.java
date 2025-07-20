@@ -42,7 +42,7 @@ public class ApplicationTests {
 
         List<OrderModel> orderModelList = this.orderMapper.selectAll();
 
-        BigDecimal orderId = orderModelList.get(0).getId();
+        Long orderId = orderModelList.get(0).getId();
 
         OrderDTO orderDTO = this.orderService.getById(orderId);
         Assertions.assertEquals(orderId, orderDTO.getId());

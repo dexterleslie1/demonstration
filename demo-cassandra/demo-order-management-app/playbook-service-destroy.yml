@@ -1,0 +1,35 @@
+- name: "销毁api服务"
+  hosts: api
+  tasks:
+    - name: "使用Docker Compose down销毁api服务"
+      shell: |
+        set -e
+        cd ~/deployer-order-management-app-cassandra/service
+        docker compose down -v
+
+- name: "销毁zookeeper、redis等公共服务"
+  hosts: common
+  tasks:
+    - name: "使用Docker Compose down销毁zookeeper、redis等公共服务"
+      shell: |
+        set -e
+        cd ~/deployer-order-management-app-cassandra/common
+        docker compose down -v
+
+- name: "销毁Cassandra服务"
+  hosts: cassandra
+  tasks:
+    - name: "使用Docker Compose down销毁Cassandra服务"
+      shell: |
+        set -e
+        cd ~/deployer-order-management-app-cassandra/cassandra
+        docker compose down -v
+
+- name: "销毁OpenResty服务"
+  hosts: openresty
+  tasks:
+    - name: "使用Docker Compose down销毁OpenResty服务"
+      shell: |
+        set -e
+        cd ~/deployer-order-management-app-cassandra/openresty
+        docker compose down -v

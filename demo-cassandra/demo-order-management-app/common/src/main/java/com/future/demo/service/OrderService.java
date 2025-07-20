@@ -1,5 +1,6 @@
 package com.future.demo.service;
 
+import cn.hutool.core.util.RandomUtil;
 import com.datastax.driver.core.*;
 import com.future.common.exception.BusinessException;
 import com.future.demo.dto.OrderDTO;
@@ -11,6 +12,7 @@ import com.future.demo.mapper.OrderMapper;
 import com.future.demo.util.OrderRandomlyUtil;
 import com.tencent.devops.leaf.service.SnowflakeService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -82,7 +84,7 @@ public class OrderService {
 
     public void insertBatch() throws BusinessException {
         List<OrderModel> orderModelList = new ArrayList<>();
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 128; i++) {
             Long userId = this.orderRandomlyUtil.getUserIdRandomly();
             // 创建订单
             OrderModel orderModel = new OrderModel();
@@ -138,7 +140,7 @@ public class OrderService {
      */
     public void insertBatchOrderIndexListByUserId() throws BusinessException {
         List<OrderIndexListByUserIdModel> list = new ArrayList<>();
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 256; i++) {
             Long userId = this.orderRandomlyUtil.getUserIdRandomly();
             // 创建订单
             OrderIndexListByUserIdModel model = new OrderIndexListByUserIdModel();
@@ -152,6 +154,12 @@ public class OrderService {
 
             Status status = OrderRandomlyUtil.getStatusRandomly();
             model.setStatus(status);
+
+            Long merchantId = RandomUtil.randomLong(0, Long.MAX_VALUE);
+            model.setMerchantId(merchantId);
+
+            model.setOrderDetailJSON(RandomStringUtils.randomAlphanumeric(128));
+
             list.add(model);
         }
         this.indexMapper.insertBatchOrderIndexListByUserId(list);

@@ -5,12 +5,12 @@ services:
     build:
       context: ./service
       dockerfile: Dockerfile
-    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-order-management-app-service
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-order-management-app-cassandra-service
     environment:
       - JAVA_OPTS=-Xmx1g
       - TZ=Asia/Shanghai
 
-  node1:
+  cassandra:
     build:
       context: ./
       dockerfile: Dockerfile-cassandra
@@ -18,43 +18,10 @@ services:
     environment:
       - MAX_HEAP_SIZE=1G
       - HEAP_NEWSIZE=256M
-      - CASSANDRA_SEEDS=node1,node2,node3  # 指定种子节点
     volumes:
       - ./init.cql:/scripts/data.cql:ro
     ports:
       - "9042:9042"
-  node2:
-    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-order-management-app-cassandra
-    environment:
-      - MAX_HEAP_SIZE=1G
-      - HEAP_NEWSIZE=256M
-      - CASSANDRA_SEEDS=node1,node2,node3
-    ports:
-      - "9043:9042"  # 映射到不同端口，避免冲突
-  node3:
-    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-order-management-app-cassandra
-    environment:
-      - MAX_HEAP_SIZE=1G
-      - HEAP_NEWSIZE=256M
-      - CASSANDRA_SEEDS=node1,node2,node3
-    ports:
-      - "9045:9042"  # 映射到不同端口，避免冲突
-
-  db:
-    build:
-      context: db
-      dockerfile: Dockerfile
-    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-order-management-app-db
-    command:
-      - --character-set-server=utf8mb4
-      - --collation-server=utf8mb4_general_ci
-      - --skip-character-set-client-handshake
-      - --innodb-buffer-pool-size=512m
-    environment:
-      - LANG=C.UTF-8
-      - TZ=Asia/Shanghai
-      - MYSQL_ROOT_PASSWORD=123456
-    network_mode: host
 
   zookeeper:
     image: zookeeper:3.8.4

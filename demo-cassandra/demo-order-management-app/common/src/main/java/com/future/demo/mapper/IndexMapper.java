@@ -20,8 +20,9 @@ public class IndexMapper {
 
     @PostConstruct
     public void init() {
-        String cql = "INSERT INTO t_order_list_by_userId(user_id,create_time,status,order_id) " +
-                "VALUES (?, ?, ?, ?)";
+        String cql = "INSERT INTO t_order_list_by_userId(user_id,create_time,status,order_id," +
+                "merchant_id,pay_time,delivery_time,received_time,cancel_time,order_detail_json) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         preparedStatementInsert = session.prepare(cql);
         preparedStatementInsert.setConsistencyLevel(ConsistencyLevel.LOCAL_QUORUM);
     }
@@ -40,7 +41,13 @@ public class IndexMapper {
                     model.getUserId(),
                     Date.from(model.getCreateTime().atZone(zoneId).toInstant()),
                     model.getStatus().name(),
-                    model.getOrderId()
+                    model.getOrderId(),
+                    model.getMerchantId(),
+                    model.getPayTime() == null ? null : Date.from(model.getPayTime().atZone(zoneId).toInstant()),
+                    model.getDeliveryTime() == null ? null : Date.from(model.getDeliveryTime().atZone(zoneId).toInstant()),
+                    model.getReceivedTime() == null ? null : Date.from(model.getReceivedTime().atZone(zoneId).toInstant()),
+                    model.getCancelTime() == null ? null : Date.from(model.getCancelTime().atZone(zoneId).toInstant()),
+                    model.getOrderDetailJSON()
             );
             batch = batch.add(bound);
         }

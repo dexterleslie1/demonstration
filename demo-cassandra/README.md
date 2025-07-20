@@ -1,4 +1,4 @@
-# Cassandra
+# `Cassandra`
 
 
 
@@ -144,9 +144,9 @@ Cassandra 的一致性级别提供了高度灵活性，用户可根据业务需�
 
 
 
-## CQL
+## `CQL`
 
-### 什么是 CQL 呢？
+### 什么是 `CQL` 呢？
 
 Cassandra CQL（Cassandra Query Language）是Apache Cassandra数据库中用于与数据库交互的一种查询语言，以下是详细介绍：
 
@@ -225,6 +225,9 @@ services:
    volumes:
      - ./data.cql:/scripts/data.cql:ro
    network_mode: host
+   # 或者
+   ports:
+     - "9042:9042"
     
 ```
 
@@ -249,6 +252,11 @@ source '/scripts/data.cql';
 
 
 ### Docker 部署集群
+
+>注意：
+>
+>- 同一台主机不部署 `Cassandra` 集群因为端口冲突不好处理，部署单机版 `Cassandra` 作为测试用途即可。
+>- 使用 `Docker Compose` 部署 `Cassandra` 集群时配置 `CASSANDRA_SEEDS=node1,node2,node3` 会导致外部 `SpringBoot` 应用不能连接 `Cassandra` 集群，需要使用 `CASSANDRA_SEEDS=192.168.1.90,192.168.1.91,192.168.1.92` 配置。
 
 详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-cassandra/demo-order-management-app)
 
@@ -2740,3 +2748,51 @@ public void testUpdatePrimaryKeyProhibited() throws BusinessException {
 }
 ```
 
+
+
+## 性能测试
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-cassandra/demo-order-management-app)
+
+提醒：除 `Cassandra` 节点外其他实例的内存和 `CPU` 都充足。三个 `Cassandra` 节点实例规格为 `2c8g`。
+
+部署并运行服务：
+
+```sh
+ # 复制部署配置
+ ansible-playbook playbook-deployer-config.yml --inventory inventory.ini
+ 
+ # 编译并推送镜像
+ ./build.sh && ./push.sh
+ 
+ # 运行服务
+ ansible-playbook playbook-service-start.yml --inventory inventory.ini
+```
+
+测试批量插入的性能：
+
+```sh
+wrk -t8 -c16 -d30s --latency --timeout 60 http://192.168.1.185/api/v1/order/
+insertBatchOrderIndexListByUserId
+Running 30s test @ http://192.168.1.185/api/v1/order/insertBatchOrderIndexListByUserId
+  8 threads and 16 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   115.09ms   57.82ms 381.55ms   65.68%
+    Req/Sec    18.29      8.53    60.00     78.59%
+  Latency Distribution
+     50%  110.97ms
+     75%  151.94ms
+     90%  191.97ms
+     99%  268.18ms
+  4209 requests in 30.04s, 1.10MB read
+Requests/sec:    140.12
+Transfer/sec:     37.63KB
+```
+
+销毁服务：
+
+```sh
+ansible-playbook playbook-service-destroy.yml --inventory inventory.ini
+```
+
+测试结论：在实例规格为 `2c8g` 三个 `Cassandra` 节点的集群时，`Cassandra` 三个节点的 `CPU` 使用率达到 `100%`，数据批量插入速度为 `140*256=35840` 条记录每秒。

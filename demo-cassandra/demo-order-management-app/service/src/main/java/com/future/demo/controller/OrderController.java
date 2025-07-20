@@ -7,7 +7,6 @@ import com.future.common.http.ResponseUtils;
 import com.future.demo.dto.OrderDTO;
 import com.future.demo.entity.DeleteStatus;
 import com.future.demo.entity.Status;
-import com.future.demo.service.IdCacheAssistantService;
 import com.future.demo.service.OrderService;
 import com.future.demo.util.OrderRandomlyUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -28,8 +27,6 @@ public class OrderController {
     OrderService orderService;
     @Resource
     OrderRandomlyUtil orderRandomlyUtil;
-    @Resource
-    IdCacheAssistantService idCacheAssistantService;
 
     /**
      * 根据订单 ID 查询订单信息
@@ -38,7 +35,7 @@ public class OrderController {
      */
     @GetMapping(value = "getById")
     public ObjectResponse<OrderDTO> getById() {
-        Long orderId = this.idCacheAssistantService.getRandomly();
+        Long orderId = null;
         OrderDTO orderDTO = this.orderService.getById(orderId);
         return ResponseUtils.successObject(orderDTO);
     }
@@ -52,7 +49,7 @@ public class OrderController {
     public ListResponse<OrderDTO> listById() {
         List<Long> orderIdList = new ArrayList<>();
         for (int i = 0; i < 15; i++) {
-            Long orderId = this.idCacheAssistantService.getRandomly();
+            Long orderId = null;
             orderIdList.add(orderId);
         }
         List<OrderDTO> orderDTOList = this.orderService.listById(orderIdList);
@@ -124,12 +121,12 @@ public class OrderController {
     }
 
     /**
-     * 批量初始化订单数据
+     * 批量初插入订单数据
      *
      * @return
      */
-    @GetMapping(value = "initInsertBatch")
-    public ObjectResponse<String> initInsertBatch() throws BusinessException {
+    @GetMapping(value = "insertBatchOrder")
+    public ObjectResponse<String> insertBatchOrder() throws BusinessException {
         this.orderService.insertBatch();
         ObjectResponse<String> response = new ObjectResponse<>();
         response.setData("成功批量初始化订单");
@@ -137,24 +134,13 @@ public class OrderController {
     }
 
     /**
-     * 协助测试批量建立 listByUserId 索引的性能
+     * 批量建立 listByUserId 索引
      *
      * @return
      */
-    @GetMapping(value = "initInsertBatchOrderIndexListByUserId")
-    public ObjectResponse<String> initInsertBatchOrderIndexListByUserId() throws BusinessException {
+    @GetMapping(value = "insertBatchOrderIndexListByUserId")
+    public ObjectResponse<String> insertBatchOrderIndexListByUserId() throws BusinessException {
         this.orderService.insertBatchOrderIndexListByUserId();
         return ResponseUtils.successObject("成功批量初始化listByUserId索引");
-    }
-
-    /**
-     * 初始化id缓存辅助数据
-     *
-     * @return
-     */
-    @GetMapping(value = "init")
-    public ObjectResponse<String> init() {
-        this.idCacheAssistantService.initData();
-        return ResponseUtils.successObject("成功初始化");
     }
 }

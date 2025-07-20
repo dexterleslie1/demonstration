@@ -2,9 +2,11 @@ version: "3.1"
 
 services:
   service:
-    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-order-management-app-service
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-order-management-app-cassandra-service
     environment:
-      - JAVA_OPTS=-Xmx4g
+      - JAVA_OPTS=${java_opts}
       - TZ=Asia/Shanghai
+      - zookeeper_host=${zookeeper_host}
+      - cassandra_contact_points=${cassandra_contact_points}
     restart: unless-stopped
     network_mode: host
