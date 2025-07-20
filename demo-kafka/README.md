@@ -1500,3 +1500,80 @@ crond-service-1  | 2025-07-19 10:12:04.503  INFO 7 --- [ntainer#1-0-C-1] c.f.dem
 crond-service-1  | 2025-07-19 10:12:04.504  INFO 7 --- [ntainer#1-1-C-1] c.f.demo.config.ConfigKafkaListener      : concurrent=1,size=5,total=2829588
 ```
 
+
+
+### 高效率发送消息
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-kafka/demo-kafka-benchmark)
+
+```java
+@Test
+public void contextLoads() throws InterruptedException {
+    // 测试异步发送消息以提高消息发送效率
+
+    int totalMessageCount = 1000000;
+    int concurrentThreads = 32;
+    ExecutorService threadPool = Executors.newCachedThreadPool();
+    AtomicInteger counter = new AtomicInteger();
+    StopWatch stopWatch = new StopWatch();
+    stopWatch.start();
+    for (int i = 0; i < concurrentThreads; i++) {
+        threadPool.submit(() -> {
+            int count;
+            List<ListenableFuture<SendResult<String, String>>> futureList = new ArrayList<>();
+            while ((count = counter.getAndIncrement()) <= totalMessageCount) {
+                ListenableFuture<SendResult<String, String>> future =
+                        kafkaTemplate.send(Constant.Topic1, String.valueOf(count));
+
+                // 发送效率低，发送一个消息等待一个消息发送结果响应
+                /*try {
+                    future.get();
+                } catch (Exception e) {
+                    log.error(e.getMessage(), e);
+                    throw new RuntimeException(e);
+                }*/
+
+                // 发送效率高，发送多个消息后异步等待多个消息发送结果响应
+                futureList.add(future);
+                if (futureList.size() >= 1024 || count >= totalMessageCount) {
+                    for (ListenableFuture<SendResult<String, String>> futureInternal : futureList) {
+                        try {
+                            futureInternal.get();
+                        } catch (Exception e) {
+                            log.error(e.getMessage(), e);
+                            throw new RuntimeException(e);
+                        }
+                    }
+                    futureList = new ArrayList<>();
+                }
+            }
+        });
+    }
+    threadPool.shutdown();
+    while (!threadPool.awaitTermination(10, TimeUnit.MILLISECONDS)) ;
+    stopWatch.stop();
+    log.info("发送 {} 个消息耗时 {} 毫秒", totalMessageCount, stopWatch.getTotalTimeMillis());
+
+    // 等待完成消费所有消息
+    TimeUnit.SECONDS.sleep(2);
+    Assertions.assertTrue(configKafkaListener.List.size() >= totalMessageCount, "接收到的消息个数为 " + configKafkaListener.List.size());
+
+    // endregion
+}
+```
+
+```java
+@Configuration
+@Slf4j
+public class ConfigKafkaListener {
+
+    public List<String> List = new ArrayList<>();
+
+    @KafkaListener(topics = Constant.Topic1, containerFactory = "defaultKafkaListenerContainerFactory")
+    public void receiveMessageFromTopicBatchSend1(List<String> messages) {
+        for (String message : messages) {
+            List.add(message + ":" + Constant.Topic1);
+        }
+    }
+}
+```

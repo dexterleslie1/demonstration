@@ -19,6 +19,9 @@ public class ApiController {
     @Resource
     private KafkaTemplate<String, String> kafkaTemplate;
 
+    /**
+     * 用于测试各个消费者配置独立
+     */
     @GetMapping("sendToTopic1")
     public ObjectResponse<String> sendToTopic1() throws ExecutionException, InterruptedException {
         String message = UUID.randomUUID().toString();
@@ -26,6 +29,9 @@ public class ApiController {
         return ResponseUtils.successObject("消息发送成功");
     }
 
+    /**
+     * 用于测试各个消费者配置独立
+     */
     @GetMapping("sendToTopic2")
     public ObjectResponse<String> sendToTopic2() throws ExecutionException, InterruptedException {
         String message = UUID.randomUUID().toString();
