@@ -44,7 +44,7 @@ public class ApplicationTests {
                 List<ListenableFuture<SendResult<String, String>>> futureList = new ArrayList<>();
                 while ((count = counter.getAndIncrement()) <= totalMessageCount) {
                     ListenableFuture<SendResult<String, String>> future =
-                            kafkaTemplate.send(Constant.Topic1, String.valueOf(count));
+                            kafkaTemplate.send(Constant.TopicTestSendPerf, String.valueOf(count));
 
                     // 发送效率低，发送一个消息等待一个消息发送结果响应
                     /*try {

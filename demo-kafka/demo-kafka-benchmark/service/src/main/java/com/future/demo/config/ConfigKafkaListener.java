@@ -14,10 +14,10 @@ public class ConfigKafkaListener {
 
     public List<String> List = new ArrayList<>();
 
-    @KafkaListener(topics = Constant.Topic1, containerFactory = "defaultKafkaListenerContainerFactory")
+    @KafkaListener(topics = Constant.TopicTestSendPerf, containerFactory = "defaultKafkaListenerContainerFactory")
     public void receiveMessageFromTopicBatchSend1(List<String> messages) {
         for (String message : messages) {
-            List.add(message + ":" + Constant.Topic1);
+            List.add(message + ":" + Constant.TopicTestSendPerf);
         }
     }
 }
