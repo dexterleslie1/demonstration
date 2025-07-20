@@ -12,7 +12,7 @@ public interface OrderMapper {
     int insert(OrderModel orderModel);
 
     @Insert("<script>" +
-            "   insert into t_order(id,userId,createTime,`status`,deleteStatus,merchantId) values " +
+            "   insert ignore into t_order(id,userId,createTime,`status`,deleteStatus,merchantId) values " +
             "   <foreach collection=\"orderModelList\" item=\"e\" separator=\",\">" +
             "       (#{e.id},#{e.userId},#{e.createTime},#{e.status},#{e.deleteStatus},#{e.merchantId})" +
             "   </foreach>" +

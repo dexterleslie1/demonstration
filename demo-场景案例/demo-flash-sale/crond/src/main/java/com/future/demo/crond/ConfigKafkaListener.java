@@ -26,6 +26,8 @@ import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.SendResult;
+import org.springframework.util.concurrent.ListenableFuture;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
@@ -34,8 +36,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 
@@ -59,7 +59,7 @@ public class ConfigKafkaListener {
     @Resource
     CassandraMapper cassandraMapper;
     @Resource
-    KafkaTemplate kafkaTemplate;
+    KafkaTemplate<String, String> kafkaTemplate;
     @Resource
     ProductService productService;
     @Resource
@@ -69,15 +69,15 @@ public class ConfigKafkaListener {
     @Resource
     PickupProductRandomlyWhenPurchasingService pickupProductRandomlyWhenPurchasingService;
 
-    private AtomicInteger concurrentCounter = new AtomicInteger();
-    private AtomicLong counter = new AtomicLong();
+//    private AtomicInteger concurrentCounter = new AtomicInteger();
+//    private AtomicLong counter = new AtomicLong();
 
     /**
      * @param messages
      * @throws Exception
      */
-    @KafkaListener(topics = Const.TopicOrderInCacheSyncToDb, concurrency = "1", containerFactory = "defaultKafkaListenerContainerFactory")
-    public void receiveMessage(List<String> messages) throws Exception {
+    @KafkaListener(topics = Const.TopicOrderInCacheSyncToDb, concurrency = "2", containerFactory = "defaultKafkaListenerContainerFactory")
+    public void receiveMessageOrderInCacheSyncToDB(List<String> messages) throws Exception {
         try {
             /*log.info("concurrent=" + this.concurrentCounter.incrementAndGet() + ",size=" + messages.size() + ",total=" + counter.addAndGet(messages.size()));*/
 
@@ -103,7 +103,7 @@ public class ConfigKafkaListener {
         } catch (Exception ex) {
             throw ex;
         } finally {
-            this.concurrentCounter.decrementAndGet();
+            /*this.concurrentCounter.decrementAndGet();*/
         }
     }
 
@@ -127,13 +127,13 @@ public class ConfigKafkaListener {
     }
 
     /**
-     * 创建订单 cassandra 索引
+     * 创建订单 cassandra 索引 listByUserId
      *
      * @param messages
      * @throws Exception
      */
-    @KafkaListener(topics = Const.TopicCreateOrderCassandraIndex, containerFactory = "topicCreateOrderCassandraIndexKafkaListenerContainerFactory")
-    public void receiveMessageCreateOrderCassandraIndex(List<String> messages) throws Exception {
+    @KafkaListener(topics = Const.TopicCreateOrderCassandraIndexListByUserId, containerFactory = "topicCreateOrderCassandraIndexListByUserIdKafkaListenerContainerFactory")
+    public void receiveMessageCreateOrderCassandraIndexListByUserId(List<String> messages) throws Exception {
         try {
             List<OrderModel> modelList = new ArrayList<>();
             for (String message : messages) {
@@ -154,24 +154,19 @@ public class ConfigKafkaListener {
 
             // 建立 listByUserId Cassandra 索引
             cassandraMapper.insertBatchOrderIndexListByUserId(modelList);
-            // 建立 listByMerchantId Cassandra 索引
-            cassandraMapper.insertBatchOrderIndexListByMerchantId(modelList);
 
             // 异步更新 t_count
             if (!modelList.isEmpty()) {
+                List<ListenableFuture<SendResult<String, String>>> futureList = new ArrayList<>();
                 for (OrderModel model : modelList) {
                     IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO(String.valueOf(model.getId()), "orderListByUserId");
-                    /*increaseCountDTO.setType(IncreaseCountDTO.Type.Cassandra);*/
-                    /*increaseCountDTO.setCount(1);*/
                     String JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
-                    kafkaTemplate.send(com.future.demo.constant.Const.TopicIncreaseCount, JSON).get();
-
-                    increaseCountDTO = new IncreaseCountDTO(String.valueOf(model.getId()), "orderListByMerchantId");
-                    /*increaseCountDTO.setType(IncreaseCountDTO.Type.Cassandra);*/
-                    /*increaseCountDTO.setCount(1);*/
-                    JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
-                    kafkaTemplate.send(com.future.demo.constant.Const.TopicIncreaseCount, JSON).get();
+                    ListenableFuture<SendResult<String, String>> future = kafkaTemplate.send(Const.TopicIncreaseCount, JSON);
+                    futureList.add(future);
                 }
+
+                for (ListenableFuture<SendResult<String, String>> future : futureList)
+                    future.get();
             }
 
             // Cassandra 成功建立后，从缓存中删除订单信息
@@ -182,13 +177,61 @@ public class ConfigKafkaListener {
                     for (OrderModel orderModel : modelList) {
                         String userIdStr = String.valueOf(orderModel.getUserId());
                         String orderIdStr = String.valueOf(orderModel.getId());
-                        String key = com.future.demo.constant.Const.CacheKeyPrefixOrderInCacheBeforeCassandraIndexCreate + userIdStr;
+                        String key = Const.CacheKeyPrefixOrderInCacheBeforeCassandraIndexCreate + userIdStr;
                         redisOperations.opsForHash().delete(key, orderIdStr);
                     }
 
                     return null;
                 }
             });
+        } catch (Exception ex) {
+            log.error(ex.getMessage(), ex);
+            throw ex;
+        }
+    }
+
+    /**
+     * 创建订单 cassandra 索引 listByMerchantId
+     *
+     * @param messages
+     * @throws Exception
+     */
+    @KafkaListener(topics = Const.TopicCreateOrderCassandraIndexListByMerchantId, containerFactory = "topicCreateOrderCassandraIndexListByMerchantIdKafkaListenerContainerFactory")
+    public void receiveMessageCreateOrderCassandraIndexListByMerchantId(List<String> messages) throws Exception {
+        try {
+            List<OrderModel> modelList = new ArrayList<>();
+            for (String message : messages) {
+                OrderModel orderModel = this.objectMapper.readValue(message, OrderModel.class);
+                modelList.add(orderModel);
+            }
+
+            // 普通下单不需要设置merchantId，只有秒杀才需要设置merchantId
+            boolean needToSetMerchantId = false;
+            for (OrderModel model : modelList) {
+                if (model.getMerchantId() == null) {
+                    needToSetMerchantId = true;
+                    break;
+                }
+            }
+            if (needToSetMerchantId)
+                orderService.fillupOrderMerchantId(modelList);
+
+            // 建立 listByMerchantId Cassandra 索引
+            cassandraMapper.insertBatchOrderIndexListByMerchantId(modelList);
+
+            // 异步更新 t_count
+            if (!modelList.isEmpty()) {
+                List<ListenableFuture<SendResult<String, String>>> futureList = new ArrayList<>();
+                for (OrderModel model : modelList) {
+                    IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO(String.valueOf(model.getId()), "orderListByMerchantId");
+                    String JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
+                    ListenableFuture<SendResult<String, String>> future = kafkaTemplate.send(Const.TopicIncreaseCount, JSON);
+                    futureList.add(future);
+                }
+
+                for (ListenableFuture<SendResult<String, String>> future : futureList)
+                    future.get();
+            }
         } catch (Exception ex) {
             log.error(ex.getMessage(), ex);
             throw ex;

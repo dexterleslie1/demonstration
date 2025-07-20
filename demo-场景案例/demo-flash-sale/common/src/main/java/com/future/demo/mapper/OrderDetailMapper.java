@@ -19,7 +19,7 @@ public interface OrderDetailMapper {
     int insert(@Param(value = "orderDetail") OrderDetailModel orderDetailModel);
 
     @Insert("<script>" +
-            "   insert into t_order_detail(id,orderId,userId,productId,amount) values " +
+            "   insert ignore into t_order_detail(id,orderId,userId,productId,amount) values " +
             "   <foreach collection=\"orderDetailModelList\" item=\"e\" separator=\",\">" +
             "       (#{e.id},#{e.orderId},#{e.userId},#{e.productId},#{e.amount})" +
             "   </foreach>" +

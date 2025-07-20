@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.future.common.exception.BusinessException;
 import com.future.demo.config.PrometheusCustomMonitor;
+import com.future.demo.constant.Const;
 import com.future.demo.dto.IncreaseCountDTO;
 import com.future.demo.dto.OrderDTO;
 import com.future.demo.dto.OrderDetailDTO;
@@ -25,9 +26,11 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StreamUtils;
+import org.springframework.util.concurrent.ListenableFuture;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -210,17 +213,32 @@ public class OrderService {
         this.orderMapper.insert(orderModel);
         this.orderDetailMapper.insert(orderDetailModel);
 
+        List<ListenableFuture<SendResult<String, String>>> futureList = new ArrayList<>();
         // 下单成功后，把用户订单信息存储到 redis 中，cassandra 同步成功后会自动清除数据
         String JSON = this.objectMapper.writeValueAsString(orderModel);
         String userIdStr = String.valueOf(userId);
         String key = CacheKeyPrefixOrderInCacheBeforeCassandraIndexCreate + userIdStr;
         redisTemplate.opsForHash().put(key, String.valueOf(orderId), JSON);
-        kafkaTemplate.send(TopicCreateOrderCassandraIndex, JSON).get();
+        futureList.add(kafkaTemplate.send(TopicCreateOrderCassandraIndexListByUserId, JSON));
+        futureList.add(kafkaTemplate.send(TopicCreateOrderCassandraIndexListByMerchantId, JSON));
 
         // 异步更新 t_count
         IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO(String.valueOf(orderId), "order");
         JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
-        kafkaTemplate.send(TopicIncreaseCount, JSON).get();
+        futureList.add(kafkaTemplate.send(TopicIncreaseCount, JSON));
+
+        if (!futureList.isEmpty()) {
+            int index = -1;
+            try {
+                for (int i = 0; i < futureList.size(); i++) {
+                    index = i;
+                    futureList.get(i).get();
+                }
+            } catch (Exception ex) {
+                log.error("发送Kafka消息失败，原因：{}，出错的 futureList 索引为 {}", ex.getMessage(), index, ex);
+                throw ex;
+            }
+        }
 
         prometheusCustomMonitor.getCounterOrdinaryPurchaseSuccessfully().increment();
 
@@ -303,18 +321,33 @@ public class OrderService {
         orderModel.setOrderDetailList(Collections.singletonList(orderDetailModel));
         String JSON = this.objectMapper.writeValueAsString(orderModel);
 
+        List<ListenableFuture<SendResult<String, String>>> futureList = new ArrayList<>();
         // 秒杀成功后，把用户订单信息存储到 redis 中，cassandra 同步成功后会自动清除数据
         key = CacheKeyPrefixOrderInCacheBeforeCassandraIndexCreate + userIdStr;
         redisTemplate.opsForHash().put(key, String.valueOf(orderId), JSON);
-        kafkaTemplate.send(TopicCreateOrderCassandraIndex, JSON).get();
+        futureList.add(kafkaTemplate.send(Const.TopicCreateOrderCassandraIndexListByUserId, JSON));
+        futureList.add(kafkaTemplate.send(Const.TopicCreateOrderCassandraIndexListByMerchantId, JSON));
 
         // 秒杀成功后，发出同步订单到数据库消息
-        kafkaTemplate.send(TopicOrderInCacheSyncToDb, JSON).get();
+        futureList.add(kafkaTemplate.send(TopicOrderInCacheSyncToDb, JSON));
 
         // 异步更新 t_count
         IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO(String.valueOf(orderId), "order");
         JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
-        kafkaTemplate.send(TopicIncreaseCount, JSON).get();
+        futureList.add(kafkaTemplate.send(TopicIncreaseCount, JSON));
+
+        if (!futureList.isEmpty()) {
+            int index = -1;
+            try {
+                for (int i = 0; i < futureList.size(); i++) {
+                    index = i;
+                    futureList.get(i).get();
+                }
+            } catch (Exception ex) {
+                log.error("发送Kafka消息失败，原因：{}，出错的 futureList 索引为 {}", ex.getMessage(), index, ex);
+                throw ex;
+            }
+        }
 
         prometheusCustomMonitor.getCounterFlashSalePurchaseSuccessfully().increment();
     }
@@ -389,18 +422,6 @@ public class OrderService {
 
         this.orderMapper.insertBatch(orderModelListProcessed);
         this.orderDetailMapper.insertBatch(orderDetailModelListProcessed);
-
-        // 异步更新 t_count
-        /*if (!orderModelListProcessed.isEmpty()) {
-            for (OrderModel model : orderModelListProcessed) {
-                Long orderId = model.getId();
-                IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO(String.valueOf(orderId), "order");
-                increaseCountDTO.setType(IncreaseCountDTO.Type.MySQL);
-                increaseCountDTO.setCount(1);
-                String JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
-                kafkaTemplate.send(TopicIncreaseCount, JSON).get();
-            }
-        }*/
     }
 
     /**

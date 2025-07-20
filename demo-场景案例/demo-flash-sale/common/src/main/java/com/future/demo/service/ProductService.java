@@ -14,9 +14,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+import org.springframework.util.concurrent.ListenableFuture;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
@@ -141,6 +143,7 @@ public class ProductService {
         if (log.isDebugEnabled())
             log.debug("成功插入商品数据到数据库 {}", model);
 
+        List<ListenableFuture<SendResult<String, String>>> futureList = new ArrayList<>();
         // 秒杀商品需要初始化 redis 缓存
         if (flashSale) {
             int second = getSecondAfterWhichExpiredFlashSaleProductForRemoving();
@@ -148,21 +151,34 @@ public class ProductService {
             eventDTO.setProductModel(model);
             eventDTO.setSecondAfterWhichExpiredFlashSaleProductForRemoving(second);
             String JSON = this.objectMapper.writeValueAsString(eventDTO);
-            this.kafkaTemplate.send(Const.TopicSetupProductFlashSaleCache, JSON).get();
+            futureList.add(this.kafkaTemplate.send(Const.TopicSetupProductFlashSaleCache, JSON));
             if (log.isDebugEnabled())
                 log.debug("秒杀商品成功发送设置商品缓存消息 {}", JSON);
         }
 
         // 向缓存中添加商品用于下单时随机抽取商品
         String JSON = this.objectMapper.writeValueAsString(model);
-        kafkaTemplate.send(Const.TopicAddProductToCacheForPickupRandomlyWhenPurchasing, JSON).get();
+        futureList.add(kafkaTemplate.send(Const.TopicAddProductToCacheForPickupRandomlyWhenPurchasing, JSON));
         if (log.isDebugEnabled())
             log.debug("成功发送消息“向缓存中添加商品用于下单时随机抽取商品” {}", JSON);
 
         // 异步更新 t_count
         IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO(String.valueOf(model.getId()), "product");
         JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
-        kafkaTemplate.send(Const.TopicIncreaseCount, JSON).get();
+        futureList.add(kafkaTemplate.send(Const.TopicIncreaseCount, JSON));
+
+        if (!futureList.isEmpty()) {
+            int index = -1;
+            try {
+                for (int i = 0; i < futureList.size(); i++) {
+                    index = i;
+                    futureList.get(i).get();
+                }
+            } catch (Exception ex) {
+                log.error("发送Kafka消息失败，原因：{}，出错的 futureList 索引为 {}", ex.getMessage(), index, ex);
+                throw ex;
+            }
+        }
 
         if (flashSale)
             prometheusCustomMonitor.getCounterProductMetricsCreateFlashSaleSuccessfully().increment();

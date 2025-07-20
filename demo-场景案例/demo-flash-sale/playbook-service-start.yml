@@ -24,6 +24,9 @@
         set -e
         cd ~/deployer-flash-sale/common
         docker compose pull && docker compose up -d
+        # 重启自动商品创建 wrk2 服务，因为 crond 服务重启会导致 wrk2 服务中断却不会自动恢复导致不能自动创建商品
+        docker compose restart wrk2-create-flashSale-product
+        docker compose restart wrk2-create-ordinary-product
 
 - name: "启动prometheus公共服务"
   hosts: common

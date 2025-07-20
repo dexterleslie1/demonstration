@@ -48,27 +48,52 @@ public class ConfigKafkaListenerContainerFactory {
         return factory;
     }
 
-    @Bean("topicCreateOrderCassandraIndexConsumerFactory")
-    public ConsumerFactory<String, String> topicCreateOrderCassandraIndexConsumerFactory() {
+    @Bean("topicCreateOrderCassandraIndexListByUserIdConsumerFactory")
+    public ConsumerFactory<String, String> topicCreateOrderCassandraIndexListByUserIdConsumerFactory() {
         Map<String, Object> props = new HashMap<>();
         // 从application.properties中获取Bootstrap Server（兼容原有配置）
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, "topicCreateOrderCassandraIndex"); // 建议为不同主题设置不同Group ID（可选）
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, "topicCreateOrderCassandraIndexListByUserId"); // 建议为不同主题设置不同Group ID（可选）
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         // 为Topic2单独设置max-poll-records
-        props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 128);
+        props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 256);
         return new DefaultKafkaConsumerFactory<>(props);
     }
 
-    @Bean("topicCreateOrderCassandraIndexKafkaListenerContainerFactory")
-    public ConcurrentKafkaListenerContainerFactory<String, String> topicCreateOrderCassandraIndexKafkaListenerContainerFactory(
-            @Qualifier("topicCreateOrderCassandraIndexConsumerFactory") ConsumerFactory<String, String> consumerFactory,
+    @Bean("topicCreateOrderCassandraIndexListByUserIdKafkaListenerContainerFactory")
+    public ConcurrentKafkaListenerContainerFactory<String, String> topicCreateOrderCassandraIndexListByUserIdKafkaListenerContainerFactory(
+            @Qualifier("topicCreateOrderCassandraIndexListByUserIdConsumerFactory") ConsumerFactory<String, String> consumerFactory,
             @Autowired DefaultErrorHandler retryErrorHandler) {
         ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory);
         factory.setBatchListener(true);
-        factory.setConcurrency(512);
+        factory.setConcurrency(32);
+        factory.setCommonErrorHandler(retryErrorHandler);
+        return factory;
+    }
+
+    @Bean("topicCreateOrderCassandraIndexListByMerchantIdConsumerFactory")
+    public ConsumerFactory<String, String> topicCreateOrderCassandraIndexListByMerchantIdConsumerFactory() {
+        Map<String, Object> props = new HashMap<>();
+        // 从application.properties中获取Bootstrap Server（兼容原有配置）
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, "topicCreateOrderCassandraIndexListByMerchantId"); // 建议为不同主题设置不同Group ID（可选）
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        // 为Topic2单独设置max-poll-records
+        props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 256);
+        return new DefaultKafkaConsumerFactory<>(props);
+    }
+
+    @Bean("topicCreateOrderCassandraIndexListByMerchantIdKafkaListenerContainerFactory")
+    public ConcurrentKafkaListenerContainerFactory<String, String> topicCreateOrderCassandraIndexListByMerchantIdKafkaListenerContainerFactory(
+            @Qualifier("topicCreateOrderCassandraIndexListByMerchantIdConsumerFactory") ConsumerFactory<String, String> consumerFactory,
+            @Autowired DefaultErrorHandler retryErrorHandler) {
+        ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(consumerFactory);
+        factory.setBatchListener(true);
+        factory.setConcurrency(4);
         factory.setCommonErrorHandler(retryErrorHandler);
         return factory;
     }

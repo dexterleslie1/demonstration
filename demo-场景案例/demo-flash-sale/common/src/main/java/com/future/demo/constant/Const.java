@@ -11,9 +11,13 @@ public class Const {
      */
     public final static String TopicIncreaseCount = "topic-increase-count";
     /**
-     * 创建订单 cassandra 索引消息队列
+     * 创建订单 cassandra 索引 listByUserId
      */
-    public final static String TopicCreateOrderCassandraIndex = "topic-create-order-cassandra-index";
+    public final static String TopicCreateOrderCassandraIndexListByUserId = "topic-create-order-cassandra-index-listByUserId";
+    /**
+     * 创建订单 cassandra 索引 listByMerchantId
+     */
+    public final static String TopicCreateOrderCassandraIndexListByMerchantId = "topic-create-order-cassandra-index-listByMerchantId";
     /**
      * 新增秒杀商品后，设置商品缓存主题
      */
