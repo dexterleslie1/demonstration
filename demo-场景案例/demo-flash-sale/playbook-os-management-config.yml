@@ -36,7 +36,7 @@
         sudo apt install make
         sudo apt install build-essential
         sudo rm -rf ~/wrk
-        git clone https://github.com/wg/wrk.git
+        git clone https://gitee.com/dexterleslie/wrk.git
         cd wrk && make
         sudo cp wrk /usr/local/bin/wrk && sudo chmod +x /usr/local/bin/wrk
         sudo rm -rf ~/wrk

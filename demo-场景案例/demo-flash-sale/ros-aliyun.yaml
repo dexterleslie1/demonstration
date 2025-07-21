@@ -83,8 +83,10 @@ Locals:
   # 数据库实例规格
   BmDbInstanceType:
     Type: Macro
-    # 8c32g
-    Value: ecs.u1-c1m4.2xlarge
+    # # 8c32g
+    # Value: ecs.u1-c1m4.2xlarge
+    # 8c16g
+    Value: ecs.u1-c1m2.2xlarge
 
 Resources:
   BmVpc:
