@@ -156,3 +156,70 @@ IDEA HTTP Client是IntelliJ IDEA自带的一款简洁轻量级的接口调用插
 在 .http 文件中，只需按 ctrl+j，IDEA 将弹出实时模板项，然后输入 fptr，IDEA 将完成示例代码，如图所示：
 
 ![N60nV](N60nV.png)
+
+
+
+#### `POST` 请求提交 `json` 格式数据
+
+```
+### updateIncreaseCount
+POST http://localhost:8080/api/v1/count/updateIncreaseCount
+# 关键：指定请求体为 JSON 格式
+Content-Type: application/json
+
+[{
+  "idempotentUuid": "1:order",
+  "flag": "order"
+},{
+  "idempotentUuid": "2:order",
+  "flag": "order"
+}]
+```
+
+接口定义：
+
+```java
+/**
+ * 递增计数器
+ *
+ * @return
+ */
+@PostMapping(value = "updateIncreaseCount")
+public ObjectResponse<String> updateIncreaseCount(
+        @RequestBody(required = false) List<IncreaseCountDTO> increaseCountDTOList) throws BusinessException {
+    commonService.updateIncreaseCount(increaseCountDTOList);
+    return ResponseUtils.successObject("成功递增");
+}
+```
+
+`IncreaseCountDTO` 定义：
+
+```java
+@Data
+public class IncreaseCountDTO {
+    /**
+     * 幂等标识，防止重复递增计数器
+     */
+    private String idempotentUuid;
+    private String flag;
+
+    /**
+     *
+     */
+    public IncreaseCountDTO() {
+
+    }
+
+    /**
+     * 幂等标识通过 idempotentUuidPrefix+":"+flag 生成，因为同一个订单建立两种 Cassandra 索引需要区分开幂等标识
+     *
+     * @param idempotentUuidPrefix
+     * @param flag
+     */
+    public IncreaseCountDTO(String idempotentUuidPrefix, String flag) {
+        this.idempotentUuid = idempotentUuidPrefix + ":" + flag;
+        this.flag = flag;
+    }
+}
+```
+
