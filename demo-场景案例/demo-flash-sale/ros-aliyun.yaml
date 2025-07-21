@@ -136,6 +136,12 @@ Resources:
         - IpProtocol: tcp
           PortRange: 3389/3389
           SourceCidrIp: 120.0.0.0/8
+        - IpProtocol: tcp
+          PortRange: 22/22
+          SourceCidrIp: 183.0.0.0/8
+        - IpProtocol: tcp
+          PortRange: 3389/3389
+          SourceCidrIp: 183.0.0.0/8
 
   # 管理主机
   BmInstanceManagement:
