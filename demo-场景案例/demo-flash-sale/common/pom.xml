@@ -26,5 +26,11 @@
             <artifactId>apm-toolkit-trace</artifactId>
             <version>8.7.0</version>
         </dependency>-->
+
+        <dependency>
+            <groupId>com.github.dexterleslie1</groupId>
+            <artifactId>future-count-sdk</artifactId>
+            <version>1.0.2</version>
+        </dependency>
     </dependencies>
 </project>

@@ -2,7 +2,6 @@ package com.future.demo;
 
 import com.datastax.driver.core.Session;
 import com.future.common.exception.BusinessException;
-import com.future.demo.dto.IncreaseCountDTO;
 import com.future.demo.dto.OrderDTO;
 import com.future.demo.entity.OrderDetailModel;
 import com.future.demo.entity.OrderModel;
@@ -11,7 +10,6 @@ import com.future.demo.entity.Status;
 import com.future.demo.mapper.OrderDetailMapper;
 import com.future.demo.mapper.OrderMapper;
 import com.future.demo.mapper.ProductMapper;
-import com.future.demo.service.CommonService;
 import com.future.demo.service.MerchantService;
 import com.future.demo.service.OrderService;
 import com.future.demo.service.ProductService;
@@ -32,7 +30,9 @@ import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -60,8 +60,6 @@ public class ApplicationTests {
     MerchantService merchantService;
     @Resource
     Session session;
-    @Resource
-    CommonService commonService;
 
     /**
      * 测试普通下单
@@ -501,41 +499,6 @@ public class ApplicationTests {
         }
 
         // endregion
-    }
-
-    /**
-     * 测试计数器递增
-     */
-    @Test
-    public void testUpdateIncreaseCount() {
-        String flag = "order";
-        long countOrigin = commonService.getCountByFlag(flag);
-        String idemponentIdPrefix1 = UUID.randomUUID().toString();
-        String idemponentIdPrefix2 = UUID.randomUUID().toString();
-        List<IncreaseCountDTO> increaseCountDTOList = new ArrayList<>() {{
-            this.add(new IncreaseCountDTO(idemponentIdPrefix1, flag));
-            this.add(new IncreaseCountDTO(idemponentIdPrefix2, flag));
-        }};
-        commonService.updateIncreaseCount(increaseCountDTOList);
-        long count = commonService.getCountByFlag(flag);
-        Assertions.assertEquals(countOrigin + 2, count);
-
-        // 测试使用相同的 idempotentId 再递增一次，结果不会重复递增
-        commonService.updateIncreaseCount(increaseCountDTOList);
-        count = commonService.getCountByFlag(flag);
-        Assertions.assertEquals(countOrigin + 2, count);
-
-        // 测试有部分 idempotentId 已经递增过情况
-        increaseCountDTOList = new ArrayList<>() {{
-            this.add(new IncreaseCountDTO(UUID.randomUUID().toString(), flag));
-            this.add(new IncreaseCountDTO(UUID.randomUUID().toString(), flag));
-            this.add(new IncreaseCountDTO(UUID.randomUUID().toString(), flag));
-            this.add(new IncreaseCountDTO(idemponentIdPrefix1, flag));
-            this.add(new IncreaseCountDTO(idemponentIdPrefix2, flag));
-        }};
-        commonService.updateIncreaseCount(increaseCountDTOList);
-        count = commonService.getCountByFlag(flag);
-        Assertions.assertEquals(countOrigin + 5, count);
     }
 
     void reset() {

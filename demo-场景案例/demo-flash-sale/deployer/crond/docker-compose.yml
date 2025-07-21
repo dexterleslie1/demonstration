@@ -17,6 +17,8 @@ services:
       - debezium_schema_history_internal_file_filename=/var/lib/debezium/dbhistory.dat
       - random_id_picker_host=${random_id_picker_host}
       - random_id_picker_port=${random_id_picker_port}
+      - future_count_host=${future_count_host}
+      - future_count_port=${future_count_port}
     volumes:
       - ./debezium:/var/lib/debezium
     logging:

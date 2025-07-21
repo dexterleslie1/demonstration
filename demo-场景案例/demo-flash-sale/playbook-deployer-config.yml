@@ -122,6 +122,11 @@
         path: ~/deployer-flash-sale/crond/.env
         regexp: "^random_id_picker_host="
         line: "random_id_picker_host={{ groups['common'][0] }}"
+    - name: "配置crond服务的future_count_host"
+      lineinfile:
+        path: ~/deployer-flash-sale/crond/.env
+        regexp: "^future_count_host="
+        line: "future_count_host={{ groups['common'][0] }}"
 
 - name: "配置api服务的deployer"
   hosts: api
@@ -182,3 +187,8 @@
         path: ~/deployer-flash-sale/service/.env
         regexp: "^random_id_picker_host="
         line: "random_id_picker_host={{ groups['common'][0] }}"
+    - name: "配置api服务的future_count_host"
+      lineinfile:
+        path: ~/deployer-flash-sale/service/.env
+        regexp: "^future_count_host="
+        line: "future_count_host={{ groups['common'][0] }}"

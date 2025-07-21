@@ -2,10 +2,11 @@ package com.future.demo.crond;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.future.count.CountService;
+import com.future.count.IncreaseCountDTO;
 import com.future.demo.config.PrometheusCustomMonitor;
 import com.future.demo.constant.Const;
 import com.future.demo.dto.FlashSaleProductCacheUpdateEventDTO;
-import com.future.demo.dto.IncreaseCountDTO;
 import com.future.demo.dto.RandomIdPickerAddIdEventDTO;
 import com.future.demo.entity.OrderModel;
 import com.future.demo.entity.ProductModel;
@@ -68,6 +69,8 @@ public class ConfigKafkaListener {
     PrometheusCustomMonitor prometheusCustomMonitor;
     @Resource
     PickupProductRandomlyWhenPurchasingService pickupProductRandomlyWhenPurchasingService;
+    @Resource
+    CountService countService;
 
 //    private AtomicInteger concurrentCounter = new AtomicInteger();
 //    private AtomicLong counter = new AtomicLong();
@@ -115,15 +118,20 @@ public class ConfigKafkaListener {
      */
     @KafkaListener(topics = Const.TopicIncreaseCount, concurrency = "4", containerFactory = "defaultKafkaListenerContainerFactory")
     public void receiveMessageIncreaseCount(List<String> messages) throws Exception {
-        List<IncreaseCountDTO> dtoListMySQL = new ArrayList<>();
-        for (String JSON : messages) {
-            IncreaseCountDTO increaseCountDTO = objectMapper.readValue(JSON, IncreaseCountDTO.class);
-            dtoListMySQL.add(increaseCountDTO);
-        }
+        try {
+            List<IncreaseCountDTO> increaseCountDTOList = new ArrayList<>();
+            for (String JSON : messages) {
+                IncreaseCountDTO increaseCountDTO = objectMapper.readValue(JSON, IncreaseCountDTO.class);
+                increaseCountDTOList.add(increaseCountDTO);
+            }
 
-        // todo 在crond服务关闭重启后select count和计数器不一致
-        commonService.updateIncreaseCount(dtoListMySQL);
-        prometheusCustomMonitor.getCounterIncreaseCountStatsSuccessfully().increment(dtoListMySQL.size());
+            // todo 在crond服务关闭重启后select count和计数器不一致
+            countService.updateIncreaseCount(increaseCountDTOList);
+            prometheusCustomMonitor.getCounterIncreaseCountStatsSuccessfully().increment(increaseCountDTOList.size());
+        } catch (Exception ex) {
+            log.error(ex.getMessage(), ex);
+            throw ex;
+        }
     }
 
     /**

@@ -19,10 +19,12 @@ services:
       - SW_GRPC_LOG_SERVER_HOST=${skywalking_grpc_log_server_host}
       - random_id_picker_host=${random_id_picker_host}
       - random_id_picker_port=${random_id_picker_port}
+      - future_count_host=${future_count_host}
+      - future_count_port=${future_count_port}
     logging:
       driver: json-file
       options:
-        max-size: "128m"
-        max-file: "10"
+        max-size: "1g"
+        max-file: "2"
     restart: unless-stopped
     network_mode: host

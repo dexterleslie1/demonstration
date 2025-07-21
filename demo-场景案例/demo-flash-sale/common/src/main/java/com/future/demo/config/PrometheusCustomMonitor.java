@@ -1,19 +1,21 @@
 package com.future.demo.config;
 
-import com.future.demo.service.CommonService;
+import com.future.common.exception.BusinessException;
+import com.future.count.CountService;
 import com.future.demo.service.PickupProductRandomlyWhenPurchasingService;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.ImmutableTag;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
 import java.util.Collections;
 
 @Component
+@Slf4j
 public class PrometheusCustomMonitor {
 
     /**
@@ -104,9 +106,9 @@ public class PrometheusCustomMonitor {
     @Getter
     private Counter counterProductMetricsCreateFlashSaleSuccessfully;
 
-    @Resource
-    CommonService commonService;
-    @Resource
+    @Autowired
+    CountService futureCountService;
+    @Autowired
     PickupProductRandomlyWhenPurchasingService.CountService countService;
 
     private final MeterRegistry registry;
@@ -142,10 +144,38 @@ public class PrometheusCustomMonitor {
         // 计数器
         counterIncreaseCountStatsSuccessfully = registry.counter("increase.count.stats", "type", "success");
 
-        registry.gauge("flash.sale.total.count", Collections.singletonList(new ImmutableTag("type", "order")), commonService, (o) -> o.getCountByFlag("order"));
-        registry.gauge("flash.sale.total.count", Collections.singletonList(new ImmutableTag("type", "product")), commonService, (o) -> o.getCountByFlag("product"));
-        registry.gauge("flash.sale.total.count", Collections.singletonList(new ImmutableTag("type", "cassandra-index-orderListByUserId")), commonService, (o) -> o.getCountByFlag("orderListByUserId"));
-        registry.gauge("flash.sale.total.count", Collections.singletonList(new ImmutableTag("type", "cassandra-index-orderListByMerchantId")), commonService, (o) -> o.getCountByFlag("orderListByMerchantId"));
+        registry.gauge("flash.sale.total.count", Collections.singletonList(new ImmutableTag("type", "order")), futureCountService, (o) -> {
+            try {
+                return o.getCountByFlag("order");
+            } catch (BusinessException e) {
+                log.error(e.getMessage(), e);
+                throw new RuntimeException(e);
+            }
+        });
+        registry.gauge("flash.sale.total.count", Collections.singletonList(new ImmutableTag("type", "product")), futureCountService, (o) -> {
+            try {
+                return o.getCountByFlag("product");
+            } catch (BusinessException e) {
+                log.error(e.getMessage(), e);
+                throw new RuntimeException(e);
+            }
+        });
+        registry.gauge("flash.sale.total.count", Collections.singletonList(new ImmutableTag("type", "cassandra-index-orderListByUserId")), futureCountService, (o) -> {
+            try {
+                return o.getCountByFlag("orderListByUserId");
+            } catch (BusinessException e) {
+                log.error(e.getMessage(), e);
+                throw new RuntimeException(e);
+            }
+        });
+        registry.gauge("flash.sale.total.count", Collections.singletonList(new ImmutableTag("type", "cassandra-index-orderListByMerchantId")), futureCountService, (o) -> {
+            try {
+                return o.getCountByFlag("orderListByMerchantId");
+            } catch (BusinessException e) {
+                log.error(e.getMessage(), e);
+                throw new RuntimeException(e);
+            }
+        });
 
         // 商品指标
         counterProductMetricsCreateOrdinarySuccessfully = registry.counter("product.metrics", "type", "createOrdinarySuccessfully");

@@ -278,6 +278,28 @@ services:
       - TZ=Asia/Shanghai
       - MYSQL_ROOT_PASSWORD=123456
 
+  # future count 服务
+  future-count-api:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/future-count-service
+    environment:
+      - JAVA_OPTS=-Xmx512m
+      - TZ=Asia/Shanghai
+      - db_host=future-count-db
+      - db_port=3306
+    ports:
+      - '50001:8080'
+  future-count-db:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/future-count-db
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+      - --innodb-buffer-pool-size=256m
+    environment:
+      - LANG=C.UTF-8
+      - TZ=Asia/Shanghai
+      - MYSQL_ROOT_PASSWORD=123456
+
   ui-vue:
     build:
       context: ./ui

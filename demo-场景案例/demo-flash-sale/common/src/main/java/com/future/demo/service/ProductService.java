@@ -2,10 +2,10 @@ package com.future.demo.service;
 
 import cn.hutool.core.util.RandomUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.future.count.IncreaseCountDTO;
 import com.future.demo.config.PrometheusCustomMonitor;
 import com.future.demo.constant.Const;
 import com.future.demo.dto.FlashSaleProductCacheUpdateEventDTO;
-import com.future.demo.dto.IncreaseCountDTO;
 import com.future.demo.dto.ProductDTO;
 import com.future.demo.entity.ProductModel;
 import com.future.demo.mapper.ProductMapper;
