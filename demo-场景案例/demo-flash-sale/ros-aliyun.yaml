@@ -189,7 +189,7 @@ Resources:
         Ref: BmNoneDbInstanceType
       InstanceChargeType: PostPaid
       SystemDiskCategory: cloud_essd
-      SystemDiskSize: 40
+      SystemDiskSize: 200
 
       AllocatePublicIP: true
       InternetChargeType: PayByTraffic
@@ -219,7 +219,7 @@ Resources:
         Ref: BmDbInstanceType
       InstanceChargeType: PostPaid
       SystemDiskCategory: cloud_essd
-      SystemDiskSize: 100
+      SystemDiskSize: 200
 
       AllocatePublicIP: true
       InternetChargeType: PayByTraffic
@@ -249,7 +249,7 @@ Resources:
         Ref: BmNoneDbInstanceType
       InstanceChargeType: PostPaid
       SystemDiskCategory: cloud_essd
-      SystemDiskSize: 40
+      SystemDiskSize: 100
 
       AllocatePublicIP: true
       InternetChargeType: PayByTraffic
@@ -282,7 +282,7 @@ Resources:
         Ref: BmNoneDbInstanceType
       InstanceChargeType: PostPaid
       SystemDiskCategory: cloud_essd
-      SystemDiskSize: 100
+      SystemDiskSize: 150
 
       AllocatePublicIP: true
       InternetChargeType: PayByTraffic
@@ -314,7 +314,7 @@ Resources:
         Ref: BmNoneDbInstanceType
       InstanceChargeType: PostPaid
       SystemDiskCategory: cloud_essd
-      SystemDiskSize: 40
+      SystemDiskSize: 100
 
       AllocatePublicIP: true
       InternetChargeType: PayByTraffic
@@ -347,7 +347,7 @@ Resources:
         Ref: BmNoneDbInstanceType
       InstanceChargeType: PostPaid
       SystemDiskCategory: cloud_essd
-      SystemDiskSize: 40
+      SystemDiskSize: 100
 
       AllocatePublicIP: true
       InternetChargeType: PayByTraffic
@@ -379,7 +379,7 @@ Resources:
         Ref: BmNoneDbInstanceType
       InstanceChargeType: PostPaid
       SystemDiskCategory: cloud_essd
-      SystemDiskSize: 40
+      SystemDiskSize: 50
 
       AllocatePublicIP: true
       InternetChargeType: PayByTraffic
