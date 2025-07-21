@@ -12,6 +12,17 @@
         group: dexterleslie
         state: present
         password: "{{ 'Root@123' | password_hash('sha512') }}"
+    - name: "将dexterleslie添加到sudoers"
+      lineinfile:
+        # sudoers文件路径
+        path: /etc/sudoers
+        line: "dexterleslie ALL=(ALL) ALL"  # 允许用户执行所有sudo命令
+        # 可选：允许无密码sudo（根据需求调整）
+        # line: "dexterleslie ALL=(ALL) NOPASSWD:ALL"
+        # 用visudo验证语法，避免错误
+        validate: 'visudo -cf %s'
+        # 确保该行存在
+        state: present
 
     - name: "安装xrdp"
       shell: |
