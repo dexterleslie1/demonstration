@@ -102,7 +102,7 @@
         docker compose down -v
 
 - name: "销毁node_exporter"
-  hosts: "{{ groups['all'] | difference(groups['management']) }}"
+  hosts: "{{ groups['all'] | difference(groups['management']) | difference(groups['test-node']) }}"
   tasks:
     - name: "使用Docker Compose down销毁node_exporter"
       shell: |

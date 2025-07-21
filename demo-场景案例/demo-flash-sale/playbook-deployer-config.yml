@@ -1,5 +1,5 @@
 - name: "复制deployer"
-  hosts: "{{ groups['all'] | difference(groups['management']) }}"
+  hosts: "{{ groups['all'] | difference(groups['management']) | difference(groups['test-node']) }}"
   tasks:
     - name: "复制deployer目录到远程"
       copy:

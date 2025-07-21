@@ -120,7 +120,7 @@
         docker compose pull && docker compose up -d
 
 - name: "启动node_exporter"
-  hosts: "{{ groups['all'] | difference(groups['management']) }}"
+  hosts: "{{ groups['all'] | difference(groups['management']) | difference(groups['test-node']) }}"
   tasks:
     - name: "使用Docker Compose启动node_exporter"
       shell: |
