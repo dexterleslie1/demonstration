@@ -1107,6 +1107,24 @@ ansible demoservers -m shell -a "echo `date`; echo 'Sleep for 5 seconds...'; sle
 
 
 
+添加用户到 `suoders` 列表中：
+
+```yaml
+- name: "将dexterleslie添加到sudoers"
+  lineinfile:
+    # sudoers文件路径
+    path: /etc/sudoers
+    line: "dexterleslie ALL=(ALL) ALL"  # 允许用户执行所有sudo命令
+    # 可选：允许无密码sudo（根据需求调整）
+    # line: "dexterleslie ALL=(ALL) NOPASSWD:ALL"
+    # 用visudo验证语法，避免错误
+    validate: 'visudo -cf %s'
+    # 确保该行存在
+    state: present
+```
+
+
+
 ### script模块
 
 > 此模块会把本地的shell脚本传输到远程服务器后执行脚本。
