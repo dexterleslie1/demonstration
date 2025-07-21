@@ -510,3 +510,112 @@ future-auth-db-backup:
 
 
 
+## `count` 服务
+
+>中文名称为计数器服务。
+>
+>背景：在海量订单或者商品数据场景中，使用 `select count(id) from t_order` 或者 `select count(id) from t_product` 统计订单或者商品总数会很慢，需要一个独立的计数器服务异步地、不重复地统计订单或者商品总数。
+
+
+
+### 服务组件
+
+`future-count` 组件：
+
+>使用 `SpringBoot` 实现以 `restful` 方式提供接口的核心服务。
+
+- `GitHub` 地址：`https://github.com/dexterleslie1/future-count.git`
+
+
+
+`future-count-sdk` 组件：
+
+>`SpringBoot` 应用集成 `future-count` 服务使用的 `sdk`。
+
+- `GitHub` 地址：`https://github.com/dexterleslie1/future-count-sdk.git`
+
+
+
+### `Docker Compose` 运行服务
+
+`docker-compose.yaml` 如下：
+
+```yaml
+version: "3.1"
+
+services:
+  # 计数器服务
+  future-random-id-picker-api:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/future-count-service
+    environment:
+      - JAVA_OPTS=-Xmx512m
+      - TZ=Asia/Shanghai
+      - db_host=future-count-db
+      - db_port=3306
+    ports:
+      - '50001:8080'
+  future-count-db:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/future-count-db
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+      - --innodb-buffer-pool-size=256m
+    environment:
+      - LANG=C.UTF-8
+      - TZ=Asia/Shanghai
+      - MYSQL_ROOT_PASSWORD=123456
+
+```
+
+
+
+### `SpringBoot` 应用集成
+
+`POM` 配置片段：
+
+```xml
+<!-- 随机 id 选择器服务 -->
+<dependency>
+    <groupId>com.github.dexterleslie1</groupId>
+    <artifactId>future-count-sdk</artifactId>
+    <version>1.0.2</version>
+</dependency>
+
+<repositories>
+    <repository>
+        <id>jitpack.io</id>
+        <url>https://jitpack.io</url>
+    </repository>
+</repositories>
+```
+
+`application.properties` 中配置计数器服务：
+
+```properties
+# 计数器服务ip地址
+spring.future.count.host=${future_count_host:localhost}
+# 计数器服务端口
+spring.future.count.port=${future_count_port:50001}
+# 计数器服务支持的flag列表
+spring.future.count.flag-list=order,product,orderListByUserId,orderListByMerchantId
+```
+
+在 `SpringBoot Application` 中启用计数器服务：
+
+```java
+@SpringBootApplication
+@EnableFutureCount
+public class ApplicationService {
+    public static void main(String[] args) {
+        SpringApplication.run(ApplicationService.class, args);
+    }
+}
+```
+
+使用计数器服务接口：
+
+```java
+@Resource
+CountService countService;
+```
