@@ -1,4 +1,4 @@
-# `docker-compose`运行`prometheus`
+## `Docker Compose` 运行 `prometheus`
 
 > 功能介绍：自动运行`prometheus`、`grafana`、`alertmanager`、`pushgateway`、`node_exporter`（监控宿主机）、`cAdvisor`服务（实时收集、聚合、处理和导出运行中容器的信息，包括CPU使用情况、内存使用情况、网络吞吐量及文件系统使用情况等）；自动导入`dashboards`、`datasources`。
 >
@@ -30,3 +30,9 @@ docker compose down -v
 如果需要测试使用`node_exporter`监控其他主机操作系统，请参考 <a href="/prometheus-grafana-alertmanager/exporter使用.html#使用docker-compose运行node-exporter" target="_blank">链接</a> 在系统上使用`docker compose`运行`node_exporter`服务。
 
 如果需要测试使用`process_exporter`监控其他主机操作系统进程，请参考 <a href="/prometheus-grafana-alertmanager/exporter使用.html#使用docker-compose运行process-exporter" target="_blank">链接</a> 在系统上使用`docker compose`运行`process_exporter`服务。
+
+
+
+## 持久化容器数据
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/blob/main/demo-prometheus/demo-docker-compose-prometheus/docker-compose.yaml)
