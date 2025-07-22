@@ -2796,3 +2796,27 @@ ansible-playbook playbook-service-destroy.yml --inventory inventory.ini
 ```
 
 测试结论：在实例规格为 `2c8g` 三个 `Cassandra` 节点的集群时，`Cassandra` 三个节点的 `CPU` 使用率达到 `100%`，数据批量插入速度为 `140*256=35840` 条记录每秒。
+
+
+
+## 持久化容器数据
+
+>[参考文档](https://hub.docker.com/_/cassandra#where-to-store-data)
+
+重要提示：Docker 容器中运行的应用程序可以通过多种方式存储数据。我们鼓励 Cassandra 镜像用户熟悉可用的选项，包括：
+
+- 让 Docker 使用其内部的卷管理功能将数据库文件写入主机系统上的磁盘，从而管理数据库数据的存储。这是默认设置，操作简单，对用户来说也相当透明。缺点是，对于直接在主机系统上运行的工具和应用程序（即容器外部）来说，这些文件可能难以找到。
+- 在主机系统（容器外部）创建一个数据目录，并将其挂载到容器内部可见的目录。这会将数据库文件放置在主机系统上的已知位置，方便主机系统上的工具和应用程序访问这些文件。缺点是用户需要确保该目录存在，并且主机系统上的目录权限和其他安全机制已正确设置。
+
+Docker 文档是了解不同存储选项和变体的良好起点，并且有多个博客和论坛帖子讨论并提供这方面的建议。我们将在此简单展示上述后一种选项的基本步骤：
+
+1. 在主机系统上合适的卷上创建数据目录，例如 /my/own/datadir。
+
+2. 像这样启动你的 cassandra 容器：
+
+   ```sh
+   $ docker run --name some-cassandra -v /my/own/datadir:/var/lib/cassandra -d cassandra:tag
+   ```
+
+该命令的 -v /my/own/datadir:/var/lib/cassandra 部分将底层主机系统中的 /my/own/datadir 目录挂载为容器内的 /var/lib/cassandra，Cassandra 默认会将其数据文件写入其中。
+
