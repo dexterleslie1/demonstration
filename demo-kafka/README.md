@@ -1591,3 +1591,41 @@ public class ConfigKafkaListener {
 ```
 
 测试结果：发送 `1000000` 个消息耗时 `3077` 毫秒。
+
+
+
+## 持久化容器数据
+
+
+
+### `confluentinc/cp-kafka` 镜像持久化
+
+`docker-compose.yaml`：
+
+```yaml
+version: "3.8"
+
+services:
+  kafka:
+    image: confluentinc/cp-kafka:7.3.0
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://${kafka_advertised_listeners}:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      # 设置 Kafka 的 JVM 堆内存
+      KAFKA_HEAP_OPTS: "${kafka_heap_opts}"
+      # 禁用自动创建 Topic，否则 Spring Boot 会自动创建 partitions=0 的 topic
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+    restart: unless-stopped
+    volumes:
+      - data-demo-flash-sale-kafka:/var/lib/kafka
+      
+volumes:
+  data-demo-flash-sale-kafka:
+```
+
