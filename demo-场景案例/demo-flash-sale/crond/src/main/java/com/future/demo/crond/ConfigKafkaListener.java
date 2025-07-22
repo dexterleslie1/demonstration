@@ -11,9 +11,6 @@ import com.future.demo.dto.RandomIdPickerAddIdEventDTO;
 import com.future.demo.entity.OrderModel;
 import com.future.demo.entity.ProductModel;
 import com.future.demo.mapper.CassandraMapper;
-import com.future.demo.mapper.CommonMapper;
-import com.future.demo.mapper.ProductMapper;
-import com.future.demo.service.CommonService;
 import com.future.demo.service.OrderService;
 import com.future.demo.service.PickupProductRandomlyWhenPurchasingService;
 import com.future.demo.service.ProductService;
@@ -52,17 +49,9 @@ public class ConfigKafkaListener {
     @Resource
     PrometheusCustomMonitor monitor;
     @Resource
-    CommonMapper commonMapper;
-    @Resource
-    CommonService commonService;
-    @Resource
-    ProductMapper productMapper;
-    @Resource
     CassandraMapper cassandraMapper;
     @Resource
     KafkaTemplate<String, String> kafkaTemplate;
-    @Resource
-    ProductService productService;
     @Resource
     RandomIdPickerService randomIdPickerService;
     @Resource
@@ -72,18 +61,16 @@ public class ConfigKafkaListener {
     @Resource
     CountService countService;
 
-//    private AtomicInteger concurrentCounter = new AtomicInteger();
-//    private AtomicLong counter = new AtomicLong();
-
     /**
      * @param messages
      * @throws Exception
      */
-    @KafkaListener(topics = Const.TopicOrderInCacheSyncToDb, concurrency = "2", containerFactory = "defaultKafkaListenerContainerFactory")
+    @KafkaListener(topics = Const.TopicOrderInCacheSyncToDb,
+            groupId = "group-" + Const.TopicOrderInCacheSyncToDb,
+            concurrency = "8",
+            containerFactory = "defaultKafkaListenerContainerFactory")
     public void receiveMessageOrderInCacheSyncToDB(List<String> messages) throws Exception {
         try {
-            /*log.info("concurrent=" + this.concurrentCounter.incrementAndGet() + ",size=" + messages.size() + ",total=" + counter.addAndGet(messages.size()));*/
-
             List<OrderModel> orderModelList = new ArrayList<>();
             for (String JSON : messages) {
                 OrderModel orderModel = objectMapper.readValue(JSON, OrderModel.class);
@@ -105,19 +92,47 @@ public class ConfigKafkaListener {
             this.monitor.incrementOrderSyncCount(orderModelList.size());
         } catch (Exception ex) {
             throw ex;
-        } finally {
-            /*this.concurrentCounter.decrementAndGet();*/
         }
     }
 
     /**
-     * 递增 MySQL 或者 Cassandra 计数器
+     * 快速计数器递增
      *
      * @param messages
      * @throws Exception
      */
-    @KafkaListener(topics = Const.TopicIncreaseCount, concurrency = "4", containerFactory = "defaultKafkaListenerContainerFactory")
-    public void receiveMessageIncreaseCount(List<String> messages) throws Exception {
+    @KafkaListener(topics = Const.TopicIncreaseCountFast,
+            groupId = "group-" + Const.TopicIncreaseCountFast,
+            concurrency = "8",
+            containerFactory = "defaultKafkaListenerContainerFactory")
+    public void receiveMessageIncreaseCountFast(List<String> messages) throws Exception {
+        try {
+            List<IncreaseCountDTO> increaseCountDTOList = new ArrayList<>();
+            for (String JSON : messages) {
+                IncreaseCountDTO increaseCountDTO = objectMapper.readValue(JSON, IncreaseCountDTO.class);
+                increaseCountDTOList.add(increaseCountDTO);
+            }
+
+            // todo 在crond服务关闭重启后select count和计数器不一致
+            countService.updateIncreaseCount(increaseCountDTOList);
+            prometheusCustomMonitor.getCounterIncreaseCountStatsSuccessfully().increment(increaseCountDTOList.size());
+        } catch (Exception ex) {
+            log.error(ex.getMessage(), ex);
+            throw ex;
+        }
+    }
+
+    /**
+     * 慢速计数器递增
+     *
+     * @param messages
+     * @throws Exception
+     */
+    @KafkaListener(topics = Const.TopicIncreaseCountSlow,
+            groupId = "group-" + Const.TopicIncreaseCountSlow,
+            concurrency = "2",
+            containerFactory = "defaultKafkaListenerContainerFactory")
+    public void receiveMessageIncreaseCountSlow(List<String> messages) throws Exception {
         try {
             List<IncreaseCountDTO> increaseCountDTOList = new ArrayList<>();
             for (String JSON : messages) {
@@ -140,7 +155,8 @@ public class ConfigKafkaListener {
      * @param messages
      * @throws Exception
      */
-    @KafkaListener(topics = Const.TopicCreateOrderCassandraIndexListByUserId, containerFactory = "topicCreateOrderCassandraIndexListByUserIdKafkaListenerContainerFactory")
+    @KafkaListener(topics = Const.TopicCreateOrderCassandraIndexListByUserId,
+            containerFactory = "topicCreateOrderCassandraIndexListByUserIdKafkaListenerContainerFactory")
     public void receiveMessageCreateOrderCassandraIndexListByUserId(List<String> messages) throws Exception {
         try {
             List<OrderModel> modelList = new ArrayList<>();
@@ -169,7 +185,7 @@ public class ConfigKafkaListener {
                 for (OrderModel model : modelList) {
                     IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO(String.valueOf(model.getId()), "orderListByUserId");
                     String JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
-                    ListenableFuture<SendResult<String, String>> future = kafkaTemplate.send(Const.TopicIncreaseCount, JSON);
+                    ListenableFuture<SendResult<String, String>> future = kafkaTemplate.send(Const.TopicIncreaseCountFast, JSON);
                     futureList.add(future);
                 }
 
@@ -204,7 +220,8 @@ public class ConfigKafkaListener {
      * @param messages
      * @throws Exception
      */
-    @KafkaListener(topics = Const.TopicCreateOrderCassandraIndexListByMerchantId, containerFactory = "topicCreateOrderCassandraIndexListByMerchantIdKafkaListenerContainerFactory")
+    @KafkaListener(topics = Const.TopicCreateOrderCassandraIndexListByMerchantId,
+            containerFactory = "topicCreateOrderCassandraIndexListByMerchantIdKafkaListenerContainerFactory")
     public void receiveMessageCreateOrderCassandraIndexListByMerchantId(List<String> messages) throws Exception {
         try {
             List<OrderModel> modelList = new ArrayList<>();
@@ -233,7 +250,7 @@ public class ConfigKafkaListener {
                 for (OrderModel model : modelList) {
                     IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO(String.valueOf(model.getId()), "orderListByMerchantId");
                     String JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
-                    ListenableFuture<SendResult<String, String>> future = kafkaTemplate.send(Const.TopicIncreaseCount, JSON);
+                    ListenableFuture<SendResult<String, String>> future = kafkaTemplate.send(Const.TopicIncreaseCountSlow, JSON);
                     futureList.add(future);
                 }
 
@@ -252,7 +269,10 @@ public class ConfigKafkaListener {
      * @param messages
      * @throws Exception
      */
-    @KafkaListener(topics = Const.TopicSetupProductFlashSaleCache, concurrency = "1", containerFactory = "defaultKafkaListenerContainerFactory")
+    @KafkaListener(topics = Const.TopicSetupProductFlashSaleCache,
+            groupId = "group-" + Const.TopicSetupProductFlashSaleCache,
+            concurrency = "1",
+            containerFactory = "defaultKafkaListenerContainerFactory")
     public void receiveMessageSetupProductFlashSaleCache(List<String> messages) {
         if (messages == null || messages.isEmpty()) {
             if (log.isWarnEnabled())
@@ -332,7 +352,10 @@ public class ConfigKafkaListener {
      * @param messages
      * @throws Exception
      */
-    @KafkaListener(topics = Const.TopicAddProductToCacheForPickupRandomlyWhenPurchasing, concurrency = "1", containerFactory = "defaultKafkaListenerContainerFactory")
+    @KafkaListener(topics = Const.TopicAddProductToCacheForPickupRandomlyWhenPurchasing,
+            groupId = "group-" + Const.TopicAddProductToCacheForPickupRandomlyWhenPurchasing,
+            concurrency = "1",
+            containerFactory = "defaultKafkaListenerContainerFactory")
     public void receiveMessageAddProductToCacheForPickupRandomlyWhenPurchasing(List<String> messages) {
         try {
             if (messages == null || messages.isEmpty()) {
@@ -362,7 +385,10 @@ public class ConfigKafkaListener {
      * @param messages
      * @throws Exception
      */
-    @KafkaListener(topics = Const.TopicRandomIdPickerAddIdList, concurrency = "1", containerFactory = "defaultKafkaListenerContainerFactory")
+    @KafkaListener(topics = Const.TopicRandomIdPickerAddIdList,
+            groupId = "group-" + Const.TopicRandomIdPickerAddIdList,
+            concurrency = "1",
+            containerFactory = "defaultKafkaListenerContainerFactory")
     public void receiveMessageRandomIdPickerAddIdList(List<String> messages) throws Exception {
         try {
             List<RandomIdPickerAddIdEventDTO> dtoList = new ArrayList<>();

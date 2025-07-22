@@ -7,9 +7,13 @@ public class Const {
     public final static String TopicRandomIdPickerAddIdList = "topic-random-id-picker-add-id-list";
     public final static String TopicOrderInCacheSyncToDb = "topic-order-in-cache-sync-to-db";
     /**
-     * 递增数据库和Cassandra t_count 主题
+     * 快速计数器 count 服务递增
      */
-    public final static String TopicIncreaseCount = "topic-increase-count";
+    public final static String TopicIncreaseCountFast = "topic-increase-count-fast";
+    /***
+     * 慢速计数器 count 服务递增
+     */
+    public final static String TopicIncreaseCountSlow = "topic-increase-count-slow";
     /**
      * 创建订单 cassandra 索引 listByUserId
      */
