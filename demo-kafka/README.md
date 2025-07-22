@@ -592,6 +592,63 @@ docker compose logs -f kafka
 
   
 
+## 日志保留策略
+
+### 基于大小
+
+`docker-compose.yaml`：
+
+```yaml
+version: "3.8"
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.3.0
+    environment:
+      TZ: Asia/Shanghai
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      # todo 设置 ZooKeeper 的 JVM 堆内存
+      # ZOOKEEPER_HEAP_OPTS: "-Xms1g -Xmx1g"
+    ports:
+      - "2181:2181"
+  kafka:
+    image: confluentinc/cp-kafka:7.3.0
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      # 映射 JMX 端口到主机
+      - "9997:9997"
+    environment:
+      TZ: Asia/Shanghai
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://${kafka_advertised_listeners}:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      # 设置 Kafka 的 JVM 堆内存
+      KAFKA_HEAP_OPTS: "-Xms1g -Xmx1g"
+      # 配置 JMX 端口和认证，配置了 jmx 端口才能够被外部工具监控
+      KAFKA_JMX_OPTS: "-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.local.only=false -Dcom.sun.management.jmxremote.port=9997 -Dcom.sun.management.jmxremote.rmi.port=9997"
+      # 禁用自动创建 Topic，否则 Spring Boot 会自动创建 partitions=0 的 topic
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      # ------------------- 日志清理配置 -------------------
+      # 清理策略：启用 delete（按时间/大小删除）
+      KAFKA_LOG_CLEANUP_POLICY: "delete"
+      # 单个分区最大日志大小：2G（根据磁盘容量调整，如 5GB、20GB）
+      KAFKA_LOG_RETENTION_BYTES: "2147483648"  # 设为 -1 表示不限制大小（仅用时间策略）
+      # 日志段大小：512MB（更小的段可提升清理精度，但增加文件数）
+      KAFKA_LOG_SEGMENT_BYTES: "536870912"  #（原默认 1GB）
+```
+
+- 保留日志总大小为 `2g`，单个日志文件大小为 `512m`。
+
+
+
+### 基于时间
+
+>提醒：暂时没有需求所以不作研究。
+
 
 
 ## 监控
