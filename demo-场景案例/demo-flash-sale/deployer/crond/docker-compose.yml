@@ -20,7 +20,7 @@ services:
       - future_count_host=${future_count_host}
       - future_count_port=${future_count_port}
     volumes:
-      - ./debezium:/var/lib/debezium
+      - data-demo-flash-sale-debezium:/var/lib/debezium
     logging:
       driver: json-file
       options:
@@ -28,3 +28,6 @@ services:
         max-file: "2"
     restart: unless-stopped
     network_mode: host
+
+volumes:
+  data-demo-flash-sale-debezium:

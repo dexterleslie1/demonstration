@@ -8,6 +8,8 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
     ports:
       - "2181:2181"
+    volumes:
+      - data-demo-flash-sale-kafka-zookeeper:/var/lib/zookeeper
     restart: unless-stopped
   kafka:
     image: confluentinc/cp-kafka:7.3.0
@@ -24,7 +26,16 @@ services:
       KAFKA_HEAP_OPTS: "${kafka_heap_opts}"
       # 禁用自动创建 Topic，否则 Spring Boot 会自动创建 partitions=0 的 topic
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      # ------------------- 日志清理配置 -------------------
+      # 清理策略：启用 delete（按时间/大小删除）
+      KAFKA_LOG_CLEANUP_POLICY: "delete"
+      # 单个分区最大日志大小：1G（根据磁盘容量调整，如 5GB、20GB）
+      KAFKA_LOG_RETENTION_BYTES: "1073741824"  # 设为 -1 表示不限制大小（仅用时间策略）
+      # 日志段大小：256MB（更小的段可提升清理精度，但增加文件数）
+      KAFKA_LOG_SEGMENT_BYTES: "268435456"  #（原默认 1GB）
     restart: unless-stopped
+    volumes:
+      - data-demo-flash-sale-kafka:/var/lib/kafka
   # 在 kafka 服务成功启动后自动配置 kafka 服务
   kafka-create-topic-order-in-cache-sync-to-db:
     image: confluentinc/cp-kafka:7.3.0
@@ -106,3 +117,7 @@ services:
       TZ: Asia/Shanghai
     # 自动创建 topic
     entrypoint: /usr/bin/kafka-topics --create --bootstrap-server kafka:9092 --replication-factor 1 --partitions 1 --topic topic-add-product-to-cache-for-pickup-randomly-when-purchasing
+
+volumes:
+  data-demo-flash-sale-kafka-zookeeper:
+  data-demo-flash-sale-kafka:

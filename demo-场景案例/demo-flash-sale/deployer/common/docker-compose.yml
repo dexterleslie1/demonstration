@@ -8,6 +8,8 @@ services:
     environment:
       - TZ=Asia/Shanghai
     restart: unless-stopped
+    volumes:
+      - data-demo-flash-sale-redis-standalone:/data
     network_mode: host
 
   node1:
@@ -17,6 +19,8 @@ services:
     environment:
       - TZ=Asia/Shanghai
     restart: unless-stopped
+    volumes:
+      - data-demo-flash-sale-redis-cluster-node1:/data
     network_mode: 'host'
   node2:
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-redis
@@ -24,6 +28,8 @@ services:
     environment:
       - TZ=Asia/Shanghai
     restart: unless-stopped
+    volumes:
+      - data-demo-flash-sale-redis-cluster-node2:/data
     network_mode: 'host'
   node3:
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-redis
@@ -31,6 +37,8 @@ services:
     environment:
       - TZ=Asia/Shanghai
     restart: unless-stopped
+    volumes:
+      - data-demo-flash-sale-redis-cluster-node3:/data
     network_mode: 'host'
   node4:
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-redis
@@ -38,6 +46,8 @@ services:
     environment:
       - TZ=Asia/Shanghai
     restart: unless-stopped
+    volumes:
+      - data-demo-flash-sale-redis-cluster-node4:/data
     network_mode: 'host'
   node5:
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-redis
@@ -45,6 +55,8 @@ services:
     environment:
       - TZ=Asia/Shanghai
     restart: unless-stopped
+    volumes:
+      - data-demo-flash-sale-redis-cluster-node5:/data
     network_mode: 'host'
   node6:
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-redis
@@ -52,6 +64,8 @@ services:
     environment:
       - TZ=Asia/Shanghai
     restart: unless-stopped
+    volumes:
+      - data-demo-flash-sale-redis-cluster-node6:/data
     network_mode: 'host'
   node7:
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-redis
@@ -59,6 +73,8 @@ services:
     environment:
       - TZ=Asia/Shanghai
     restart: unless-stopped
+    volumes:
+      - data-demo-flash-sale-redis-cluster-node7:/data
     network_mode: 'host'
   node8:
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-redis
@@ -66,6 +82,8 @@ services:
     environment:
       - TZ=Asia/Shanghai
     restart: unless-stopped
+    volumes:
+      - data-demo-flash-sale-redis-cluster-node8:/data
     network_mode: 'host'
   node9:
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-redis
@@ -73,6 +91,8 @@ services:
     environment:
       - TZ=Asia/Shanghai
     restart: unless-stopped
+    volumes:
+      - data-demo-flash-sale-redis-cluster-node9:/data
     network_mode: 'host'
   node10:
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-redis
@@ -80,6 +100,8 @@ services:
     environment:
       - TZ=Asia/Shanghai
     restart: unless-stopped
+    volumes:
+      - data-demo-flash-sale-redis-cluster-node10:/data
     network_mode: 'host'
 
   creator:
@@ -92,6 +114,10 @@ services:
       - node4
       - node5
       - node6
+      - node7
+      - node8
+      - node9
+      - node10
     network_mode: 'host'
 
   zookeeper:
@@ -103,6 +129,9 @@ services:
       # https://hub.docker.com/_/zookeeper
       - ZOO_ADMINSERVER_ENABLED=false
     restart: unless-stopped
+    volumes:
+      - data-demo-flash-sale-zookeeper-data:/data
+      - data-demo-flash-sale-zookeeper-datalog:/datalog
     network_mode: host
 
   # 创建普通商品，qps 为 32
@@ -143,6 +172,8 @@ services:
       - LANG=C.UTF-8
       - TZ=Asia/Shanghai
       - MYSQL_ROOT_PASSWORD=123456
+    volumes:
+      - data-demo-flash-sale-future-random-id-picker-db:/var/lib/mysql
 
   # future count 服务
   future-count-api:
@@ -165,3 +196,22 @@ services:
       - LANG=C.UTF-8
       - TZ=Asia/Shanghai
       - MYSQL_ROOT_PASSWORD=123456
+    volumes:
+      - data-demo-flash-sale-future-count-db:/var/lib/mysql
+
+volumes:
+  data-demo-flash-sale-redis-standalone:
+  data-demo-flash-sale-redis-cluster-node1:
+  data-demo-flash-sale-redis-cluster-node2:
+  data-demo-flash-sale-redis-cluster-node3:
+  data-demo-flash-sale-redis-cluster-node4:
+  data-demo-flash-sale-redis-cluster-node5:
+  data-demo-flash-sale-redis-cluster-node6:
+  data-demo-flash-sale-redis-cluster-node7:
+  data-demo-flash-sale-redis-cluster-node8:
+  data-demo-flash-sale-redis-cluster-node9:
+  data-demo-flash-sale-redis-cluster-node10:
+  data-demo-flash-sale-zookeeper-data:
+  data-demo-flash-sale-zookeeper-datalog:
+  data-demo-flash-sale-future-random-id-picker-db:
+  data-demo-flash-sale-future-count-db:

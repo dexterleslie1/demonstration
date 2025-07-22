@@ -6,6 +6,7 @@ services:
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - ./alert-rule.yml:/etc/prometheus/alert-rule.yml
+      - data-demo-flash-sale-prometheus:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -32,6 +33,7 @@ services:
       - ./grafana-provisioning/12464.json:/var/lib/grafana/dashboards/12464.json:ro
       - ./grafana-provisioning/1860.json:/var/lib/grafana/dashboards/1860.json:ro
       - ./grafana-provisioning/900001.json:/var/lib/grafana/dashboards/900001.json:ro
+      - data-demo-flash-sale-grafana:/var/lib/grafana
     env_file:
       - ./grafana-config.monitoring
     environment:
@@ -47,9 +49,15 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ./alertmanager.yml:/etc/alertmanager/config.yml
+      - data-demo-flash-sale-alertmanager:/alertmanager
     command:
       - '--config.file=/etc/alertmanager/config.yml'
       - '--storage.path=/alertmanager'
     restart: unless-stopped
     ports:
       - '9093:9093'
+
+volumes:
+  data-demo-flash-sale-prometheus:
+  data-demo-flash-sale-grafana:
+  data-demo-flash-sale-alertmanager:

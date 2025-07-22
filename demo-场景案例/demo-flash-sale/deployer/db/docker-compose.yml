@@ -13,4 +13,9 @@ services:
       - TZ=Asia/Shanghai
       - MYSQL_ROOT_PASSWORD=123456
     restart: unless-stopped
+    volumes:
+      - data-demo-flash-sale-db:/var/lib/mysql
     network_mode: host
+
+volumes:
+  data-demo-flash-sale-db:

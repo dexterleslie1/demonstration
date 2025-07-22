@@ -5,5 +5,10 @@ services:
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-cassandra
     environment:
       - CASSANDRA_SEEDS=${cassandra_seeds}
+    volumes:
+      - data-demo-flash-sale-cassandra:/var/lib/cassandra
     restart: unless-stopped
     network_mode: host
+
+volumes:
+  data-demo-flash-sale-cassandra:
