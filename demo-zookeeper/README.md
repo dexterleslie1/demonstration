@@ -79,3 +79,65 @@ sudo chmod +x ZooKeeperAssistant
 ./ZooKeeperAssistant
 ```
 
+
+
+## 持久化容器数据
+
+
+
+### `zookeeper` 镜像持久化
+
+>[参考资料](https://hub.docker.com/_/zookeeper#where-to-store-data)
+
+该映像在 /data 和 /datalog 配置了卷，分别用于保存 Zookeeper 内存数据库快照和数据库更新的事务日志。
+
+`docker-compose.yaml`：
+
+```yaml
+version: "3.1"
+
+services:
+  zookeeper:
+    image: zookeeper:3.8.4
+    environment:
+      - TZ=Asia/Shanghai
+      - JVMFLAGS=-Xmx512m -Xms512m -server
+      # 禁用 zookeeper AdminServer
+      # https://hub.docker.com/_/zookeeper
+      - ZOO_ADMINSERVER_ENABLED=false
+    restart: unless-stopped
+    volumes:
+      - data-demo-flash-sale-zookeeper-data:/data
+      - data-demo-flash-sale-zookeeper-datalog:/datalog
+    network_mode: host
+    
+volumes:
+  data-demo-flash-sale-zookeeper-data:
+  data-demo-flash-sale-zookeeper-datalog:
+```
+
+
+
+### `confluentinc/cp-zookeeper` 镜像持久化
+
+`docker-compose.yaml`：
+
+```yaml
+version: "3.8"
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.3.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    volumes:
+      - data-demo-flash-sale-kafka-zookeeper:/var/lib/zookeeper
+    restart: unless-stopped
+    
+volumes:
+  data-demo-flash-sale-kafka-zookeeper:
+```
+
