@@ -4,10 +4,10 @@ import lombok.Data;
 
 @Data
 public class ProductDTO {
-    private Long id;
+    private String id;
     private String name;
     private Integer stock;
-    private Long merchantId;
+    private String merchantId;
     private boolean flashSale;
     /**
      * 距离秒杀开始时间的秒数

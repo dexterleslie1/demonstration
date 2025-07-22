@@ -235,7 +235,7 @@ public class ApiController {
      * @throws Exception
      */
     @GetMapping("addOrdinaryProduct")
-    public ObjectResponse<Long> addOrdinaryProduct(
+    public ObjectResponse<String> addOrdinaryProduct(
             @RequestParam(value = "name", required = false) String name,
             @RequestParam(value = "merchantId", required = false) Long merchantId,
             @RequestParam(value = "stockAmount", required = false) Integer stockAmount
@@ -247,7 +247,7 @@ public class ApiController {
         if (stockAmount == null || stockAmount < 0)
             stockAmount = 300;
         Long productId = this.productService.add(name, merchantId, stockAmount, false, null, null);
-        return ResponseUtils.successObject(productId);
+        return ResponseUtils.successObject(String.valueOf(productId));
     }
 
     /**
@@ -257,7 +257,7 @@ public class ApiController {
      * @throws Exception
      */
     @GetMapping("addFlashSaleProduct")
-    public ObjectResponse<Long> addFlashSaleProduct(
+    public ObjectResponse<String> addFlashSaleProduct(
             @RequestParam(value = "name", required = false) String name,
             @RequestParam(value = "merchantId", required = false) Long merchantId,
             @RequestParam(value = "stockAmount", required = false) Integer stockAmount,
@@ -286,6 +286,6 @@ public class ApiController {
         if (flashSaleEndTime == null)
             flashSaleEndTime = this.productService.getFlashSaleEndTimeRandomly(flashSaleStartTime);
         Long productId = this.productService.add(name, merchantId, stockAmount, true, flashSaleStartTime, flashSaleEndTime);
-        return ResponseUtils.successObject(productId);
+        return ResponseUtils.successObject(String.valueOf(productId));
     }
 }

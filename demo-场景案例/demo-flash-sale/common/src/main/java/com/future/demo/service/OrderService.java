@@ -476,6 +476,7 @@ public class OrderService {
             orderDTOList = orderModelList.stream().map(o -> {
                 OrderDTO orderDTO = new OrderDTO();
                 BeanUtils.copyProperties(o, orderDTO);
+                orderDTO.setId(String.valueOf(o.getId()));
                 List<OrderDetailModel> orderDetailModelList = o.getOrderDetailList();
                 List<OrderDetailDTO> orderDetailDTOList = orderDetailModelList.stream().map(oInternal1 -> {
                     OrderDetailDTO orderDetailDTO = new OrderDetailDTO();
@@ -511,6 +512,7 @@ public class OrderService {
                         ).collect(Collectors.toList());
                         OrderDTO orderDTO = new OrderDTO();
                         BeanUtils.copyProperties(orderModel, orderDTO);
+                        orderDTO.setId(String.valueOf(orderModel.getId()));
                         orderDTO.setOrderDetailList(orderDetailDTOList);
                         orderDTOList.add(0, orderDTO);
                     }
@@ -578,6 +580,7 @@ public class OrderService {
             orderDTOList = orderModelList.stream().map(o -> {
                 OrderDTO orderDTO = new OrderDTO();
                 BeanUtils.copyProperties(o, orderDTO);
+                orderDTO.setId(String.valueOf(o.getId()));
                 List<OrderDetailModel> orderDetailModelList = o.getOrderDetailList();
                 List<OrderDetailDTO> orderDetailDTOList = orderDetailModelList.stream().map(oInternal1 -> {
                     OrderDetailDTO orderDetailDTO = new OrderDetailDTO();
@@ -613,6 +616,7 @@ public class OrderService {
                         ).collect(Collectors.toList());
                         OrderDTO orderDTO = new OrderDTO();
                         BeanUtils.copyProperties(orderModel, orderDTO);
+                        orderDTO.setId(String.valueOf(orderModel.getId()));
                         orderDTO.setOrderDetailList(orderDetailDTOList);
                         orderDTOList.add(0, orderDTO);
                     }
@@ -683,6 +687,7 @@ public class OrderService {
             orderDTOList = orderModelList.stream().map(o -> {
                 OrderDTO orderDTO = new OrderDTO();
                 BeanUtils.copyProperties(o, orderDTO);
+                orderDTO.setId(String.valueOf(o.getId()));
                 List<OrderDetailModel> orderDetailModelList = o.getOrderDetailList();
                 List<OrderDetailDTO> orderDetailDTOList = orderDetailModelList.stream().map(oInternal1 -> {
                     OrderDetailDTO orderDetailDTO = new OrderDetailDTO();
@@ -759,6 +764,7 @@ public class OrderService {
             orderDTOList = orderModelList.stream().map(o -> {
                 OrderDTO orderDTO = new OrderDTO();
                 BeanUtils.copyProperties(o, orderDTO);
+                orderDTO.setId(String.valueOf(o.getId()));
                 List<OrderDetailModel> orderDetailModelList = o.getOrderDetailList();
                 List<OrderDetailDTO> orderDetailDTOList = orderDetailModelList.stream().map(oInternal1 -> {
                     OrderDetailDTO orderDetailDTO = new OrderDetailDTO();

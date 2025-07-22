@@ -32,7 +32,7 @@
 export default {
     data() {
         return {
-            product: null
+            product: {}
         }
     },
     mounted() {

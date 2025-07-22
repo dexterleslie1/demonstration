@@ -11,7 +11,7 @@ import java.util.List;
 
 @Data
 public class OrderDTO {
-    private Long id;
+    private String id;
     private Long userId;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private LocalDateTime createTime;

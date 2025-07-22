@@ -30,6 +30,9 @@ public class ProductModel {
     public ProductDTO toDTO() {
         ProductDTO dto = new ProductDTO();
         BeanUtils.copyProperties(this, dto);
+        dto.setId(String.valueOf(this.id));
+        if (this.merchantId != null)
+            dto.setMerchantId(String.valueOf(this.merchantId));
         if (dto.isFlashSale()) {
             // 秒杀类型商品
             LocalDateTime localDateTimeNow = LocalDateTime.now();
