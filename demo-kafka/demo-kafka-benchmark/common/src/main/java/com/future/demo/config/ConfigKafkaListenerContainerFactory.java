@@ -28,7 +28,7 @@ public class ConfigKafkaListenerContainerFactory {
         Map<String, Object> props = new HashMap<>();
         // 从application.properties中获取Bootstrap Server（兼容原有配置）
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, "group-topic1"); // 建议为不同主题设置不同Group ID（可选）
+        /*props.put(ConsumerConfig.GROUP_ID_CONFIG, "group-topic1"); // 建议为不同主题设置不同Group ID（可选）*/
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         // 为Topic2单独设置max-poll-records

@@ -14,7 +14,9 @@ public class ConfigKafkaListener {
 
     public List<String> List = new ArrayList<>();
 
-    @KafkaListener(topics = Constant.TopicTestSendPerf, containerFactory = "defaultKafkaListenerContainerFactory")
+    @KafkaListener(topics = Constant.TopicTestSendPerf,
+            groupId = "group-topicBatchSend1",
+            containerFactory = "defaultKafkaListenerContainerFactory")
     public void receiveMessageFromTopicBatchSend1(List<String> messages) {
         for (String message : messages) {
             List.add(message + ":" + Constant.TopicTestSendPerf);
