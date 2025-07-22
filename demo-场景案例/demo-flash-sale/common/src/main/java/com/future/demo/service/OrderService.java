@@ -145,8 +145,6 @@ public class OrderService {
     ProductMapper productMapper;
     @Resource
     private KafkaTemplate<String, String> kafkaTemplate;
-    @Resource
-    OrderRandomlyUtil orderRandomlyUtil;
     @Autowired
     SnowflakeService snowflakeService;
     @Resource

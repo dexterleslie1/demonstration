@@ -34,15 +34,13 @@ public class ApiController {
     @Autowired
     StringRedisTemplate redisTemplate;
     @Resource
-    OrderRandomlyUtil orderRandomlyUtil;
-    @Resource
     MerchantService merchantService;
-//    @Resource
-//    CacheService cacheService;
     @Resource
     PickupProductRandomlyWhenPurchasingService pickupProductRandomlyWhenPurchasingService;
     @Resource
     RandomIdPickerService randomIdPickerService;
+    @Resource
+    UserService userService;
 
     /**
      * 普通方式下单
@@ -58,7 +56,7 @@ public class ApiController {
             @RequestParam(value = "randomCreateTime", required = false, defaultValue = "true") boolean randomCreateTime
     ) throws Exception {
         if (userId == null)
-            userId = this.orderRandomlyUtil.getUserIdRandomly();
+            userId = userService.getIdRandomly();
         if (productId == null)
             productId = pickupProductRandomlyWhenPurchasingService.getOrdinaryProductIdRandomly();
         int amount = 1;
@@ -85,7 +83,7 @@ public class ApiController {
             @RequestParam(value = "randomCreateTime", required = false, defaultValue = "true") boolean randomCreateTime
     ) throws Exception {
         if (userId == null)
-            userId = this.orderRandomlyUtil.getUserIdRandomly();
+            userId = userService.getIdRandomly();
         if (productId == null)
             productId = pickupProductRandomlyWhenPurchasingService.getFlashSaleProductIdRandomly();
         int amount = 1;
@@ -111,7 +109,7 @@ public class ApiController {
             @RequestParam(value = "status", required = false) Status status
     ) throws Exception {
         if (userId == null || userId <= 0)
-            userId = this.orderRandomlyUtil.getUserIdRandomly();
+            userId = userService.getIdRandomly();
         LocalDateTime endTime;
         if (latestMonth)
             endTime = LocalDateTime.now();
@@ -136,7 +134,7 @@ public class ApiController {
             @RequestParam(value = "latestMonth", required = false, defaultValue = "false") boolean latestMonth
     ) throws Exception {
         if (userId == null || userId <= 0)
-            userId = this.orderRandomlyUtil.getUserIdRandomly();
+            userId = userService.getIdRandomly();
         LocalDateTime endTime;
         if (latestMonth)
             endTime = LocalDateTime.now();
