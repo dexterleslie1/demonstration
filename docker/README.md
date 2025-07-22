@@ -77,17 +77,17 @@ docker run --rm my-hello-world
 
 
 
-## docker 容器占用存储空间分析
+## 容器占用存储空间分析
 
 ### 备注
 
-下面命令会自动删除 /var/lib/docker/containers 下对应的容器日志卷，但是不会自动删除容器对应的匿名卷和命名卷
+下面命令会自动删除 `/var/lib/docker/containers` 下对应的容器日志卷，但是不会自动删除容器对应的匿名卷和命名卷
 
 ```sh
 docker compose down
 ```
 
-下面命令会自动删除 /var/lib/docker/containers 下对应的容器日志卷，也会自动删除容器对应的匿名卷和命名卷
+下面命令会自动删除 `/var/lib/docker/containers` 下对应的容器日志卷，也会自动删除容器对应的匿名卷和命名卷
 
 ```sh
 docker compose down -v
@@ -95,23 +95,152 @@ docker compose down -v
 
 
 
-### 分析容器的 overlay2 存储空间使用情况
+### 分析容器的 `overlay2` 存储空间使用情况
 
-备注： 删除容器会自动删除 overlay2 对应的存储。
+>提示： 删除容器会自动删除 `overlay2` 对应的存储。
+
+在 Docker 中，`overlay2` 是最常用的存储驱动（尤其在 Linux 系统上），用于管理容器的**层叠文件系统**（Union File System）。`overlay2` 占用磁盘空间的核心原因是 **镜像层、容器可写层及其他相关数据的持久化存储**。以下是具体场景和占用原因的详细说明：
 
 
+#### 一、`overlay2` 的存储结构基础
+`overlay2` 基于 **联合文件系统（UnionFS）**，将镜像拆分为多个**只读层（Image Layers）**，容器运行时在其上叠加一个**可写层（Container Layer）**。所有这些层的数据均存储在宿主机的 `/var/lib/docker/overlay2` 目录下（默认路径）。
 
-创建使用 overlay2 存储空间容器
 
-```sh
-docker run --rm --name test1 centos /bin/sh -c "for i in {1..10000000}; do echo \$i >> /1.txt; done; sleep 3600;"
+#### 二、`overlay2` 占用空间的核心场景
+
+##### 1. **镜像层的累积（最常见原因）**
+每个 Docker 镜像由多个**只读层**叠加而成（由 `Dockerfile` 中的 `RUN`、`COPY`、`ADD` 等指令生成）。即使镜像未被容器使用，这些层仍会永久存储在 `overlay2` 中。具体场景包括：
+- **拉取公共镜像**：如 `docker pull nginx:latest` 会下载 Nginx 镜像的所有层到 `overlay2`。
+- **构建自定义镜像**：`docker build` 时每一步指令生成一个新层，即使后续指令修改了文件，旧层也不会被删除（仅通过硬链接复用未修改部分）。
+- **未被清理的悬空镜像（Dangling Images）**：当重新构建同名镜像时，旧镜像的层若未被其他镜像引用，会成为“悬空层”（标记为 `<none>`），但仍占用空间。
+
+**示例**：一个包含 10 层的镜像，即使仅运行一次容器后删除，这 10 层仍会保留在 `overlay2` 中。
+
+
+##### 2. **容器可写层的写入**
+每个运行中的容器会在 `overlay2` 中生成一个**可写层**（位于 `diff` 目录下），用于存储容器内文件的**修改、新增或删除操作**。即使容器未主动写入数据，某些进程也可能隐式生成写入：
+- **日志输出**：应用日志直接写入容器文件系统（未挂载卷时），会累积在可写层。
+- **临时文件**：如 `/tmp` 目录下的临时文件（未被清理时）。
+- **文件修改**：应用更新配置文件、生成缓存（如 `node_modules`、`~/.m2`）等。
+
+**示例**：一个运行 7 天的日志服务容器，每天生成 1GB 日志，其可写层会占用 7GB 空间。
+
+
+##### 3. **未清理的停止容器**
+即使容器已停止（`docker stop`），其关联的**可写层**和**镜像层引用**仍会保留在 `overlay2` 中。若大量停止容器未清理，会间接占用空间（因为镜像层可能被多个容器共享，但可写层是独立的）。
+
+
+##### 4. **镜像构建过程中的中间层**
+`docker build` 时，每个 `RUN` 指令生成的临时文件（如编译产物、下载的中间包）会被打包到镜像层中。若构建过程中未优化（如未清理临时文件），这些中间文件会被永久保留在 `overlay2` 的镜像层中。  
+**示例**：  
+```dockerfile
+# 未优化的 Dockerfile（残留中间文件）
+RUN wget https://example.com/big-file.tar.gz && tar -xzf big-file.tar.gz
+# 优化后（清理中间文件）
+RUN wget https://example.com/big-file.tar.gz && \
+    tar -xzf big-file.tar.gz && \
+    rm big-file.tar.gz  # 删除临时文件
 ```
 
-分析 overlay2 存储空间使用大小
+
+##### 5. **卷（Volumes）的间接占用（需区分）**
+严格来说，**命名卷（Named Volumes）** 的数据存储在 `/var/lib/docker/volumes` 目录（而非 `overlay2`），但如果容器通过**绑定挂载（Bind Mount）**将宿主机目录挂载到容器内，或使用 `tmpfs` 挂载，这些数据不会占用 `overlay2`。  
+**例外**：若容器内的应用将数据写入未挂载的路径（如 `/app/data`），且未通过卷持久化，这些数据会被写入容器的可写层（属于 `overlay2`）。
+
+
+##### 6. **日志驱动的日志存储**
+若 Docker 守护进程配置了 `json-file` 日志驱动（默认），容器的标准输出/错误日志会写入宿主机的 `/var/lib/docker/containers/<container-id>/<container-id>-json.log` 文件。虽然日志文件本身不在 `overlay2` 中，但如果容器内应用将日志写入文件（而非标准输出），这些文件会存储在容器的可写层（属于 `overlay2`）。
+
+
+#### 三、如何定位 `overlay2` 空间占用来源？
+可通过以下命令排查具体占用：
+
+##### 1. 查看 Docker 磁盘使用概览
+```bash
+docker system df  # 显示镜像、容器、卷的空间占用
+```
+输出示例：
+```
+TYPE            TOTAL     ACTIVE    SIZE      RECLAIMABLE
+Images          50        10        20.5GB    15.2GB (74%)
+Containers      20        2         1.2GB     1.0GB (83%)
+Local Volumes   10        3         5.0GB     4.5GB (90%)
+Build Cache     100       0         50.0GB    50.0GB (100%)
+```
+- 若 `Images` 或 `Local Volumes` 的 `SIZE` 很大，可能是 `overlay2` 占用的主因。
+
+
+##### 2. 查看镜像层的详细占用
+```bash
+# 列出所有镜像及其层大小（按大小排序）
+docker images --format "{{.Repository}}:{{.Tag}} {{.Size}}" | sort -hr
+
+# 查看某个镜像的具体层（替换 <image-id>）
+docker history <image-id> --no-trunc  # 显示每层的大小和指令
+```
+
+
+##### 3. 定位 `overlay2` 目录下的具体文件
+`overlay2` 的目录结构为 `/var/lib/docker/overlay2/<layer-id>/diff`（镜像层）或 `/var/lib/docker/overlay2/<container-id>/diff`（容器可写层）。可通过以下命令查找大文件：
+
+```bash
+# 进入 overlay2 目录（需 root 权限）
+cd /var/lib/docker/overlay2
+
+# 查找最大的目录（镜像层或容器层）
+du -sh * | sort -hr | head -n 10
+
+# 进入具体层目录，进一步定位大文件
+du -sh diff/* | sort -hr | head -n 10
+```
+
+
+#### 四、优化 `overlay2` 空间占用的建议
+1. **清理无用镜像和容器**：  
+   ```bash
+   docker image prune -a  # 清理未被使用的镜像（包括悬空层）
+   docker container prune  # 清理停止的容器
+   ```
+
+2. **优化 Dockerfile 减少层数**：  
+   - 合并 `RUN` 指令（如 `RUN apt-get update && apt-get install -y pkg`）。  
+   - 清理临时文件（如 `rm -rf /tmp/*`）。  
+   - 使用多阶段构建（Multi-stage Build）分离构建环境和运行环境。
+
+3. **限制容器日志大小**：  
+   在 `docker run` 时通过 `--log-opt` 限制日志文件大小和数量：  
+   ```bash
+   docker run --log-opt max-size=10m --log-opt max-file=3 ...
+   ```
+
+4. **使用卷存储大文件**：  
+   将应用的日志、缓存等大文件存储到 Docker 卷（`docker volume create`）或宿主机目录（绑定挂载），避免写入容器的可写层。
+
+5. **定期监控和清理**：  
+   结合 `cron` 或监控工具（如 Prometheus + Grafana）定期检查 `overlay2` 空间使用情况，自动清理过期数据。
+
+
+#### 总结
+`overlay2` 占用空间的核心原因是 **镜像层、容器可写层及相关数据的持久化存储**。通过优化镜像构建、清理无用资源、合理使用卷和日志策略，可以有效控制其空间占用。
+
+
+
+#### 实验测试
+
+创建使用 `overlay2` 存储空间容器
 
 ```sh
+docker run --rm --name test1 busybox /bin/sh -c "for i in {1..10000000}; do echo \$i >> /1.txt; done; sleep 3600;"
+```
+
+分析 `overlay2` 存储空间使用大小
+
+```sh
+# 获取 overlay2 路径
 docker inspect -f '{{ .Name }} {{ .GraphDriver }}' test1
-cd /var/lib/docker
+
+cd /var/lib/docker/overlay2
+# 查看 overlay2 占用的空间
 du -d 1 -h a9acff3198a9e707e92c8db0728e2a83ab17dafafdeffc844acdf710247c38a1/
 ```
 
@@ -125,6 +254,8 @@ docker rm -f test1
 
 ### 分析容器的日志存储空间使用情况
 
+>提示：容器的标准输出/错误日志会写入宿主机的 `/var/lib/docker/containers/<container-id>/<container-id>-json.log` 文件。
+
 查看指定或者所有容器的日志路径
 
 ```sh
@@ -134,7 +265,7 @@ docker inspect -f '{{ .Name }} {{ .LogPath }}' $(docker ps -qa)
 创建容器实例模拟占用大量日志存储空间
 
 ```sh
-docker run --name test2 centos /bin/sh -c "for i in {1..10000000}; do echo \$i; done;"
+docker run --name test2 busybox /bin/sh -c "for i in {1..10000000}; do echo \$i; done;"
 ```
 
 显示所有容器实例日志存储存储使用情况，再通过显示的日志路径中id部分找出对应的容器实例。`https://stackoverflow.com/questions/59765204/how-to-list-docker-logs-size-for-all-containers`
@@ -152,7 +283,7 @@ sudo du -ch $(docker inspect --format='{{.LogPath}}' $(docker ps -qa)) | sort -h
 创建命名卷模拟占用大量存储空间
 
 ```sh
-docker run --name b2 -v vol1:/data centos /bin/sh -c "for i in {1..10000000}; do echo \$i >> /data/1.txt; done;"
+docker run --name b2 -v vol1:/data busybox /bin/sh -c "for i in {1..10000000}; do echo \$i >> /data/1.txt; done;"
 ```
 
 针对匿名卷需要通过下面命令(列出所有容器实例对应的卷，包括命名卷、绑定卷、匿名卷)配合查到匿名卷对应的容器，`https://stackoverflow.com/questions/30133664/how-do-you-list-volumes-in-docker-containers`
@@ -172,8 +303,6 @@ docker system df
 ```sh
 docker system df -v
 ```
-
-
 
 
 
