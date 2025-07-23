@@ -154,14 +154,6 @@ services:
       TZ: Asia/Shanghai
     # 自动创建 topic
     entrypoint: /usr/bin/kafka-topics --create --bootstrap-server kafka:9092 --replication-factor 1 --partitions 1 --topic topic-order-in-cache-sync-to-db
-#  kafka-create-topic-increase-count:
-#    image: confluentinc/cp-kafka:7.3.0
-#    depends_on:
-#      - kafka
-#    environment:
-#      TZ: Asia/Shanghai
-#    # 自动创建 topic
-#    entrypoint: /usr/bin/kafka-topics --create --bootstrap-server kafka:9092 --replication-factor 1 --partitions 8 --topic topic-increase-count
   kafka-create-topic-increase-count-fast:
     image: confluentinc/cp-kafka:7.3.0
     depends_on:
@@ -185,7 +177,7 @@ services:
     environment:
       TZ: Asia/Shanghai
     # 自动创建 topic
-    entrypoint: /usr/bin/kafka-topics --create --bootstrap-server kafka:9092 --replication-factor 1 --partitions 128 --topic topic-create-order-cassandra-index-listByUserId
+    entrypoint: /usr/bin/kafka-topics --create --bootstrap-server kafka:9092 --replication-factor 1 --partitions 32 --topic topic-create-order-cassandra-index-listByUserId
   kafka-create-order-cassandra-index-listByMerchantId:
     image: confluentinc/cp-kafka:7.3.0
     depends_on:
@@ -201,7 +193,7 @@ services:
     environment:
       TZ: Asia/Shanghai
     # 自动创建 topic
-    entrypoint: /usr/bin/kafka-topics --create --bootstrap-server kafka:9092 --replication-factor 1 --partitions 32 --topic topic-setup-product-flashsale-cache
+    entrypoint: /usr/bin/kafka-topics --create --bootstrap-server kafka:9092 --replication-factor 1 --partitions 1 --topic topic-setup-product-flashsale-cache
   kafka-create-topic-add-productId-and-stockAmount-into-redis-zset-after-creation:
     image: confluentinc/cp-kafka:7.3.0
     depends_on:
