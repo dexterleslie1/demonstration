@@ -88,8 +88,7 @@ public class OrderService {
     @PostConstruct
     public void init() {
         String cql = "select user_id,status,create_time,order_id,merchant_id,order_detail_json from t_order_list_by_userId where user_id=?" + " and status=?" +
-                " and create_time>=? and create_time<=?" +
-                " limit ?";
+                " and create_time>=? and create_time<=?";
         preparedStatementListByUserIdAndStatus = session.prepare(cql);
         preparedStatementListByUserIdAndStatus.setConsistencyLevel(ConsistencyLevel.LOCAL_ONE);
 
@@ -104,14 +103,12 @@ public class OrderService {
             count++;
         }
         cql = cql + ")";
-        cql = cql + " and create_time>=? and create_time<=?" +
-                " limit ?";
+        cql = cql + " and create_time>=? and create_time<=?";
         preparedStatementListByUserIdAndWithoutStatus = session.prepare(cql);
         preparedStatementListByUserIdAndWithoutStatus.setConsistencyLevel(ConsistencyLevel.LOCAL_ONE);
 
         cql = "select merchant_id,status,create_time,order_id,user_id,order_detail_json from t_order_list_by_merchantId where merchant_id=?" + " and status=?" +
-                " and create_time>=? and create_time<=?" +
-                " limit ?";
+                " and create_time>=? and create_time<=?";
         preparedStatementListByMerchantIdAndStatus = session.prepare(cql);
         preparedStatementListByMerchantIdAndStatus.setConsistencyLevel(ConsistencyLevel.LOCAL_ONE);
 
@@ -126,8 +123,7 @@ public class OrderService {
             count++;
         }
         cql = cql + ")";
-        cql = cql + " and create_time>=? and create_time<=?" +
-                " limit ?";
+        cql = cql + " and create_time>=? and create_time<=?";
         preparedStatementListByMerchantIdAndWithoutStatus = session.prepare(cql);
         preparedStatementListByMerchantIdAndWithoutStatus.setConsistencyLevel(ConsistencyLevel.LOCAL_ONE);
     }
@@ -144,7 +140,7 @@ public class OrderService {
     @Resource
     ProductMapper productMapper;
     @Resource
-    private KafkaTemplate<String, String> kafkaTemplate;
+    KafkaTemplate<String, String> kafkaTemplate;
     @Autowired
     SnowflakeService snowflakeService;
     @Resource
@@ -438,7 +434,7 @@ public class OrderService {
         BoundStatement bound = preparedStatementListByUserIdAndStatus.bind(
                 userId, status.name(),
                 dateStartTime,
-                dateEndTime, 15);
+                dateEndTime/*, 15*/);
         ResultSet result = session.execute(bound);
         List<OrderModel> orderModelList = new ArrayList<>();
         for (Row row : result) {
@@ -520,6 +516,12 @@ public class OrderService {
 
         // 填充商品信息
         this.fillupOrderListProductInfo(orderDTOList);
+
+        orderDTOList.sort(((o1, o2) -> {
+            Long id1 = Long.parseLong(o1.getId());
+            Long id2 = Long.parseLong(o2.getId());
+            return id2.compareTo(id1);
+        }));
 
         return orderDTOList;
     }
@@ -542,7 +544,7 @@ public class OrderService {
         BoundStatement bound = preparedStatementListByUserIdAndWithoutStatus.bind(
                 userId,
                 dateStartTime,
-                dateEndTime, 15);
+                dateEndTime/*, 15*/);
         ResultSet result = session.execute(bound);
         List<OrderModel> orderModelList = new ArrayList<>();
         for (Row row : result) {
@@ -624,6 +626,12 @@ public class OrderService {
 
         // 填充商品信息
         this.fillupOrderListProductInfo(orderDTOList);
+
+        orderDTOList.sort(((o1, o2) -> {
+            Long id1 = Long.parseLong(o1.getId());
+            Long id2 = Long.parseLong(o2.getId());
+            return id2.compareTo(id1);
+        }));
 
         return orderDTOList;
     }
@@ -649,7 +657,7 @@ public class OrderService {
         BoundStatement bound = preparedStatementListByMerchantIdAndStatus.bind(
                 merchantId, status.name(),
                 dateStartTime,
-                dateEndTime, 15);
+                dateEndTime/*, 15*/);
         ResultSet result = session.execute(bound);
         List<OrderModel> orderModelList = new ArrayList<>();
         for (Row row : result) {
@@ -704,6 +712,12 @@ public class OrderService {
 
         // 填充商品信息
         this.fillupOrderListProductInfo(orderDTOList);
+
+        orderDTOList.sort(((o1, o2) -> {
+            Long id1 = Long.parseLong(o1.getId());
+            Long id2 = Long.parseLong(o2.getId());
+            return id2.compareTo(id1);
+        }));
 
         return orderDTOList;
     }
@@ -726,7 +740,7 @@ public class OrderService {
         BoundStatement bound = preparedStatementListByMerchantIdAndWithoutStatus.bind(
                 merchantId,
                 dateStartTime,
-                dateEndTime, 15);
+                dateEndTime/*, 15*/);
         ResultSet result = session.execute(bound);
         List<OrderModel> orderModelList = new ArrayList<>();
         for (Row row : result) {
@@ -781,6 +795,12 @@ public class OrderService {
 
         // 填充商品信息
         this.fillupOrderListProductInfo(orderDTOList);
+
+        orderDTOList.sort(((o1, o2) -> {
+            Long id1 = Long.parseLong(o1.getId());
+            Long id2 = Long.parseLong(o2.getId());
+            return id2.compareTo(id1);
+        }));
 
         return orderDTOList;
     }
