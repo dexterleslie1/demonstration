@@ -309,6 +309,54 @@
       "sshTunnels": [],
       "connectionHoppings": [],
       "proxy": ""
+    },
+    {
+      "id": "LxPkbaq",
+      "title": "bm-app5",
+      "color": "#28a745",
+      "host": "10.0.1.35",
+      "username": "root",
+      "authType": "password",
+      "password": "Root@123",
+      "port": 22,
+      "runScripts": [
+        {}
+      ],
+      "encode": "utf-8",
+      "enableSsh": true,
+      "enableSftp": true,
+      "envLang": "en_US.UTF-8",
+      "term": "xterm-256color",
+      "displayRaw": false,
+      "cipher": [],
+      "serverHostKey": [],
+      "sshTunnels": [],
+      "connectionHoppings": [],
+      "proxy": ""
+    },
+    {
+      "id": "XoPjKmQ",
+      "title": "bm-app6",
+      "color": "#28a745",
+      "host": "10.0.1.36",
+      "username": "root",
+      "authType": "password",
+      "password": "Root@123",
+      "port": 22,
+      "runScripts": [
+        {}
+      ],
+      "encode": "utf-8",
+      "enableSsh": true,
+      "enableSftp": true,
+      "envLang": "en_US.UTF-8",
+      "term": "xterm-256color",
+      "displayRaw": false,
+      "cipher": [],
+      "serverHostKey": [],
+      "sshTunnels": [],
+      "connectionHoppings": [],
+      "proxy": ""
     }
   ]
 }

@@ -71,6 +71,8 @@ Locals:
       - "10.0.1.32"
       - "10.0.1.33"
       - "10.0.1.34"
+      - "10.0.1.35"
+      - "10.0.1.36"
   # openresty 服务
   BmPrivateIpOpenresty:
     Type: Macro
@@ -337,7 +339,7 @@ Resources:
   # api 服务，运行 service 服务
   BmInstanceApi:
     Type: ALIYUN::ECS::Instance
-    Count: 4
+    Count: 6
     Properties:
       HostName:
         Fn::Sub: "bm-app${ALIYUN::Index}"
