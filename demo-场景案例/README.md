@@ -8,9 +8,25 @@
 
 如下：
 
-- 100万个商品同时被秒杀。
-- 下单接口10+万 qps（下单成功和下单不成功的总 qps）
-- 下单接口10万 tps（下单成功的总 tps）
+- 下单接口 `10+` 万 `qps`（下单成功和下单不成功的总 `qps`）
+- 每秒发放 `32` 个普通商品，`96` 个秒杀商品，每秒发放商品总数 `38400` 个（`(32+96)*300=38400` 个）。
+- 支持高并发根据用户 `ID` 、根据商家 `ID` 查询订单列表。
+- 支持高并发根据订单 `ID`、根据订单 `ID` 列表、根据商品 `ID`、根据商品 `ID` 列表查询订单或者商品列表。
+
+
+
+### `todo`
+
+- 升级 `JDK` 使用虚拟线程以提升性能。
+- 使用 `dubbo` 提升性能。
+- 限制流量保护系统稳定运行。
+- 数据库和 `Cassandra` 海量数据快速自检核对。
+- 商品推荐算法实现。
+- 热点数据缓存以提升性能。
+- 使用 `TiDB` 简化目前的架构。
+- 支持系统所有数据的读取性能横向扩展。
+- 支持 `k8s` 平台部署。
+- 系统掉电数据一致性解决。
 
 
 
@@ -22,12 +38,12 @@
 
 1. 创建管理实例的镜像
 
-   >提醒：配置为 `1C4G`，普通硬盘 `20G`
+   >提醒：配置为 `1C4G`，普通硬盘 `40G`（不需要 `ssd` 硬盘，因为创建实例镜像）
 
    克隆 `demonstration` 项目到实例中
 
    ```sh
-   git clone --depth 1 --branch main https://github.com/dexterleslie1/demonstration.git
+   git clone --depth 1 --branch main https://gitee.com/dexterleslie/demonstration.git
    ```
 
    安装 `sshpass` 程序
@@ -48,7 +64,7 @@
 
 2. 创建测试节点实例的镜像
 
-   >提醒：配置为 `1C4G`，普通硬盘 `20G`
+   >提醒：配置为 `1C4G`，普通硬盘 `40G`（不需要 `ssd` 硬盘，因为创建实例镜像）
 
    安装 `Docker`
 
@@ -63,21 +79,51 @@
    sudo dcli docker install
    ```
 
+   配置测试节点的系统参数
+
+   - 使用 `rdp` 客户端远程登录 `bm-management` 管理主机，切换到 `demonstration/demo-场景案例/demo-flash-sale` 目录
+
+   - 修改 `inventory.ini` 配置中的 `[test-node]` 配置指向测试节点实例
+
+     ```properties
+     [test-node]
+     10.0.1.x
+     ```
+
+   - 执行下面命令配置测试节点：
+
+     ```sh
+     ansible-playbook playbook-os-test-node-config.yml --inventory inventory.ini
+     ```
+
    配置完毕后，使用 `节省停机模式` 关闭实例并创建名为 `bm-template-node` 的自定义镜像。
 
 3. 使用 `ROS` 创建相关测试实例
 
    复制 `ros-aliyun.yml` 内容到阿里云控制创建资源栈并等待资源创建完毕。
 
-4. 配置测试节点的系统参数
+4. 配置测试节点的 `deployer`
 
-   使用 `rdp` 客户端远程登录 `bm-management` 管理主机，切换到 `demonstration/demo-场景案例/demo-flash-sale` 目录，执行下面命令配置测试节点的系统参数：
+   根据实例的配置修改 `inventory.ini` 如下的配置：
 
-   ```sh
-   ansible-playbook playbook-os-test-node-config.yml --inventory inventory.ini
+   ```properties
+   # 数据库服务变量
+   [db:vars]
+   # 数据库 innodb_buffer_pool_size 配置
+   innodb_buffer_pool_size=4g
+   
+   # crond 服务变量
+   [crond:vars]
+   java_opts=-Xmx6g
+   
+   # api 服务变量
+   [api:vars]
+   java_opts=-Xmx4g
+   
+   # rocketmq 服务变量
+   [rocketmq:vars]
+   kafka_heap_opts=-Xms2g -Xmx2g
    ```
-
-5. 配置测试节点的 `deployer`
 
    在管理主机中执行下面命令配置测试节点的 `deployer`：
 
@@ -85,18 +131,12 @@
    ansible-playbook playbook-deployer-config.yml --inventory inventory.ini
    ```
 
-6. 启动所有测试服务
+5. 启动所有测试服务
 
    在管理主机中执行下面命令启动所有测试服务：
 
    ```sh
    ansible-playbook playbook-service-start.yml --inventory inventory.ini
-   ```
-
-   等待所有测试服务启动完毕后，初始化商品数据：
-
-   ```sh
-   curl 10.0.1.30:8080/api/v1/initProduct
    ```
 
    测试服务是否正常运行：
@@ -105,16 +145,22 @@
    curl 10.0.1.40/api/v1/order/create
    ```
 
-7. 实施压力测试
+6. 访问应用界面测试功能 `http://10.0.1.10`
 
-   访问 `RocketMQ` 的监控 `http://10.0.1.12:8080`
+7. 实施压力测试
 
    访问 `Prometheus` 监控 `http://10.0.1.10:3000`，帐号 `admin`，密码 `admin`
 
-   测试：
+   普通方式下单测试：
 
    ```sh
-   wrk -t8 -c4096 -d60s --latency --timeout 30 http://10.0.1.40/api/v1/order/create
+   wrk -t8 -c2048 -d60s --latency --timeout 30 http://10.0.1.40/api/v1/order/create
+   ```
+
+   秒杀方式下单测试：
+
+   ```sh
+   wrk -t8 -c2048 -d60s --latency --timeout 30 http://10.0.1.40/api/v1/order/createFlashSale
    ```
 
 8. 销毁所有测试服务
@@ -133,6 +179,8 @@
 >背景：在海量订单或者商品数据场景中，需要模拟根据订单 `ID` 或者商品 `ID` 列表查询订单或者商品信息。此时需要借助随机 `ID` 选择器按照一定的频率随机抽取 `ID` 列表。
 >
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-%E5%9C%BA%E6%99%AF%E6%A1%88%E4%BE%8B/demo-random-id-picker)
+>
+>生产环境使用的随机 `ID` 选择器请参考本站 <a href="/future/README.html#random-id-picker-服务" target="_blank">链接</a>
 
 ### 运行并测试示例
 
