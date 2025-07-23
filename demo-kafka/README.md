@@ -1651,6 +1651,30 @@ public class ConfigKafkaListener {
 
 
 
+### 消费并发线程数和主题的分区数关系
+
+借助本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-kafka/demo-kafka-benchmark) 协助测试。
+
+使用下面命令协助生成测试数据：
+
+```sh
+ab -n 100000 -c 8 -k http://192.168.1.181:8080/api/v1/sendToTopic1
+```
+
+
+
+#### 当消费线程数大于主题分区数时
+
+消费者端的最大消费线程数等于主题的分区数，不会漏消息。
+
+
+
+#### 当消费线程数小于主题分区数时
+
+消费者端的最大消费线程数等于配置的最大消费线程数，不会漏消息。
+
+
+
 ## 持久化容器数据
 
 
