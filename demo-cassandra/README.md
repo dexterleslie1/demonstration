@@ -2028,6 +2028,10 @@ public void testTableDatumFullyScan() {
 
 ## `in` 查询
 
+
+
+### 基本用法
+
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-cassandra/demo-client-datastax)
 
 ```java
@@ -2076,6 +2080,85 @@ public void testQueryWhereIn() {
         orderIdListFetched.add(orderId);
     }
     Assertions.assertArrayEquals(new Long[]{1L, 2L}, orderIdListFetched.toArray(new Long[0]));
+}
+```
+
+
+
+### `in` 查询多个分区键数据没有全局排序关系
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-cassandra/demo-client-datastax)
+
+```java
+/**
+ * 测试 order by 排序
+ */
+@Test
+public void testOrderBy() throws BusinessException, InterruptedException {
+    // region 测试因为 where in 查询导致全局排序不符合预期异常
+
+    // Cassandra 的数据按分区键（Partition Key）分散存储在不同的节点上，
+    // 每个分区内的数据按聚类列（Clustering Columns）的顺序排序（即表定义的 clustering order by）。
+    // 但不同分区之间的数据没有全局排序关系。
+
+    // 删除旧数据
+    this.commonMapper.truncate("t_order_list_by_userid");
+
+    // 初始化数据
+    long userId = 1L;
+    List<String> statusList = new ArrayList<String>() {{
+        add("Unpay");
+        add("Undelivery");
+        add("Unreceive");
+        add("Received");
+        add("Canceled");
+    }};
+    int totalCount = 5;
+    List<OrderIndexListByUserIdModel> modelList = new ArrayList<>();
+    for (int i = 0; i < totalCount; i++) {
+        OrderIndexListByUserIdModel model = new OrderIndexListByUserIdModel();
+        model.setUserId(userId);
+
+        int randomIndex = RandomUtil.randomInt(0, statusList.size());
+        String status = statusList.get(randomIndex);
+        model.setStatus(status);
+
+        Instant now = Instant.now();
+        model.setCreateTime(now.atZone(ZoneId.of("Asia/Shanghai")).toLocalDateTime());
+
+        long ordeId = i + 1;
+        model.setOrderId(ordeId);
+        modelList.add(model);
+        TimeUnit.MILLISECONDS.sleep(100);
+    }
+    this.indexMapper.insertBatchOrderIndexListByUserId(modelList);
+
+    Instant now = Instant.now();
+    Instant startTime = now.minusSeconds(60);
+    Instant endTime = now.plusSeconds(60);
+    String cql = "select create_time,order_id from t_order_list_by_userid where user_id=?" +
+            " and status in('Unpay','Undelivery','Unreceive','Received','Canceled') and create_time>=? and create_time<=?" +
+            " limit ?";
+    PreparedStatement preparedStatement = session.prepare(cql);
+    BoundStatement boundStatement = preparedStatement.bind(userId, Date.from(startTime), Date.from(endTime), 3);
+    ResultSet resultSet = session.execute(boundStatement);
+    List<Long> orderIdList = new ArrayList<>();
+    for (Row row : resultSet) {
+        Long orderId = row.getLong("order_id");
+        orderIdList.add(orderId);
+    }
+
+    boolean notEquals = false;
+    for (int i = 0; i < new Long[]{5L, 4L, 3L}.length; i++) {
+        Long orderId = orderIdList.toArray(new Long[0])[i];
+        if (!new Long[]{5L, 4L, 3L}[i].equals(orderId)) {
+            notEquals = true;
+            break;
+        }
+    }
+    Assertions.assertTrue(notEquals);
+
+    // endregion
 }
 ```
 
