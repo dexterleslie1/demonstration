@@ -251,7 +251,7 @@ Resources:
         Ref: BmNoneDbInstanceType
       InstanceChargeType: PostPaid
       SystemDiskCategory: cloud_essd
-      SystemDiskSize: 100
+      SystemDiskSize: 200
 
       AllocatePublicIP: true
       InternetChargeType: PayByTraffic

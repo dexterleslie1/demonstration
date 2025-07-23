@@ -8,3 +8,4 @@ services:
     volumes:
       - ./nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf:ro
     network_mode: host
+    restart: unless-stopped
