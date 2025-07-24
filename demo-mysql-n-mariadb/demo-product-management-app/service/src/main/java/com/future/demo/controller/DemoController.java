@@ -5,6 +5,7 @@ import com.future.common.http.ObjectResponse;
 import com.future.common.http.ResponseUtils;
 import com.future.demo.entity.ProductModel;
 import com.future.demo.mapper.ProductMapper;
+import com.future.demo.service.ProductService;
 import com.tencent.devops.leaf.service.SnowflakeService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.RandomStringUtils;
@@ -25,6 +26,8 @@ public class DemoController {
     ProductMapper productMapper;
     @Resource
     SnowflakeService snowflakeService;
+    @Resource
+    ProductService productService;
 
     private List<Long> idList;
 
@@ -56,7 +59,7 @@ public class DemoController {
     public ObjectResponse<String> decreaseProductStockAmount() {
         int randomInt = RandomUtil.randomInt(0, idList.size());
         Long id = idList.get(randomInt);
-        productMapper.decreaseStock(id, 1);
+        productService.decreaseStockAmount(id);
         return ResponseUtils.successObject("成功扣减商品库存");
     }
 
@@ -66,17 +69,8 @@ public class DemoController {
      * @return
      */
     @GetMapping("addProduct")
-    public ObjectResponse<Long> addProduct() {
-        String name = RandomStringUtils.randomAlphanumeric(20);
-        Long merchantId = RandomUtil.randomLong(1, Long.MAX_VALUE);
-        int stockAmount = 999999999;
-        ProductModel model = new ProductModel();
-        Long id = snowflakeService.getId("product").getId();
-        model.setId(id);
-        model.setName(name);
-        model.setMerchantId(merchantId);
-        model.setStock(stockAmount);
-        productMapper.insert(model);
-        return ResponseUtils.successObject(id);
+    public ObjectResponse<String> addProduct() {
+        Long id = productService.add();
+        return ResponseUtils.successObject(String.valueOf(id));
     }
 }
