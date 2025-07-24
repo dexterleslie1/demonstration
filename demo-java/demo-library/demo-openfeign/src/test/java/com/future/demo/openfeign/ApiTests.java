@@ -1,11 +1,10 @@
 package com.future.demo.openfeign;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.future.common.exception.BusinessException;
+import com.future.common.feign.CustomizeErrorDecoder;
+import com.future.common.feign.FeignUtil;
 import com.future.common.http.ObjectResponse;
-import com.future.common.json.JSONUtil;
 import feign.*;
-import feign.codec.ErrorDecoder;
 import feign.form.FormEncoder;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
@@ -19,7 +18,6 @@ import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -51,18 +49,7 @@ public class ApiTests {
                 .logger(new Logger.ErrorLogger()).logLevel(Logger.Level.FULL)
                 // ErrorDecoder
                 // https://cloud.tencent.com/developer/article/1588501
-                .errorDecoder(new ErrorDecoder() {
-                    @Override
-                    public Exception decode(String methodKey, Response response) {
-                        try {
-                            String json = IOUtils.toString(response.body().asInputStream(), StandardCharsets.UTF_8);
-                            ObjectResponse<String> responseError = JSONUtil.ObjectMapperInstance.readValue(json, new TypeReference<ObjectResponse<String>>(){});
-                            return new BusinessException(responseError.getErrorCode(), responseError.getErrorMessage());
-                        } catch (IOException e) {
-                            return e;
-                        }
-                    }
-                })
+                .errorDecoder(new CustomizeErrorDecoder())
                 .requestInterceptor(new RequestInterceptor() {
                     @Override
                     public void apply(RequestTemplate template) {
@@ -77,29 +64,30 @@ public class ApiTests {
 
         List<MyPostVO> myPostVOList = new ArrayList<>();
         try {
-            api.testPost(myPostVOList);
+            ObjectResponse<String> response1 = api.testPost(myPostVOList);
+            FeignUtil.throwBizExceptionIfResponseFailed(response1);
             Assert.fail("预期异常没有抛出");
         } catch (BusinessException ex) {
-            Assert.assertTrue(ex.getErrorCode()>0);
+            Assert.assertTrue(ex.getErrorCode() > 0);
             Assert.assertEquals("没有指定myPostVOList", ex.getErrorMessage());
         }
 
-        for(int i=0; i<2; i++) {
+        for (int i = 0; i < 2; i++) {
             MyPostVO myPostVO = new MyPostVO();
-            myPostVO.setParameter1("parameter#" + (i+1));
+            myPostVO.setParameter1("parameter#" + (i + 1));
             myPostVOList.add(myPostVO);
         }
         ObjectResponse<String> response1 = api.testPost(myPostVOList);
-        Assert.assertFalse(response1.getErrorCode()>0);
+        Assert.assertFalse(response1.getErrorCode() > 0);
         Assert.assertEquals("调用成功", response1.getData());
 
-        for(int i=0; i<2; i++) {
+        for (int i = 0; i < 2; i++) {
             MyPostVO myPostVO = new MyPostVO();
-            myPostVO.setParameter1("parameter#" + (i+1));
+            myPostVO.setParameter1("parameter#" + (i + 1));
             myPostVOList.add(myPostVO);
         }
         response1 = api.testPut("/api/v1/testPut", myPostVOList);
-        Assert.assertFalse(response1.getErrorCode()>0);
+        Assert.assertFalse(response1.getErrorCode() > 0);
         Assert.assertEquals("调用成功", response1.getData());
 
         ObjectResponse<String> response2 = api.testHeaderWithToken();
@@ -117,7 +105,7 @@ public class ApiTests {
             Assert.assertEquals("意料中异常,BAD_REQUEST: 400", ex.getErrorMessage());
         }
 
-        byte []randomBytes = new byte[1024*1024];
+        byte[] randomBytes = new byte[1024 * 1024];
         Random random = new Random();
         random.nextBytes(randomBytes);
         InputStream inputStream = new ByteArrayInputStream(randomBytes);
@@ -131,7 +119,7 @@ public class ApiTests {
         } catch (Exception ex) {
             throw ex;
         } finally {
-            if(outputStream!=null) {
+            if (outputStream != null) {
                 outputStream.close();
                 outputStream = null;
             }
@@ -147,7 +135,8 @@ public class ApiTests {
 
         // 测试delete
         try {
-            api.delete("");
+            ObjectResponse<String> response4 = api.delete("");
+            FeignUtil.throwBizExceptionIfResponseFailed(response4);
             Assert.fail("预期异常没有抛出");
         } catch (BusinessException ex) {
             Assert.assertEquals("没有指定param1参数", ex.getErrorMessage());
@@ -161,7 +150,8 @@ public class ApiTests {
         Assert.assertEquals("提交参数parameter1=" + parameter1, response6.getData());
 
         try {
-            api.postWwwFormUrlencoded(null);
+            ObjectResponse<String> response4 = api.postWwwFormUrlencoded(null);
+            FeignUtil.throwBizExceptionIfResponseFailed(response4);
             Assert.fail("预期异常没有抛出");
         } catch (BusinessException ex) {
             Assert.assertEquals("没有指定param1参数", ex.getErrorMessage());

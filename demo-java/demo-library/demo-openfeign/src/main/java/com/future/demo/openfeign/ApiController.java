@@ -57,7 +57,7 @@ public class ApiController {
 
     @PostMapping("testPost")
     public ObjectResponse<String> testPost(@RequestBody(required = false) List<MyPostVO> myPostVOList) {
-        if(myPostVOList==null || myPostVOList.size()<=0) {
+        if (myPostVOList == null || myPostVOList.size() <= 0) {
             throw new IllegalArgumentException("没有指定myPostVOList");
         }
 
@@ -69,7 +69,7 @@ public class ApiController {
 
     @PutMapping("testPut")
     public ObjectResponse<String> testPut(@RequestBody(required = false) List<MyPostVO> myPostVOList) {
-        if(myPostVOList==null || myPostVOList.size()<=0) {
+        if (myPostVOList == null || myPostVOList.size() <= 0) {
             throw new IllegalArgumentException("没有指定myPostVOList");
         }
 
@@ -103,13 +103,13 @@ public class ApiController {
 
     @PostMapping(value = "upload")
     public ObjectResponse<String> upload(@RequestParam(value = "file", required = false) MultipartFile[] files) throws IOException {
-        if(files==null || files.length<=0) {
+        if (files == null || files.length <= 0) {
             throw new IllegalArgumentException("没有指定上传文件");
         }
 
         List<MultipartFile> multipartFiles = new ArrayList<>();
-        for(MultipartFile fileTemporary : files) {
-            if(!fileTemporary.isEmpty()) {
+        for (MultipartFile fileTemporary : files) {
+            if (!fileTemporary.isEmpty()) {
                 multipartFiles.add(fileTemporary);
             }
         }
@@ -117,8 +117,8 @@ public class ApiController {
         log.debug("上传文件总数:{}", multipartFiles.size());
 
         File temporaryDirectory = Util.getTemporaryDirectory();
-        for(MultipartFile fileTemporary : multipartFiles) {
-            if(fileTemporary.isEmpty()) {
+        for (MultipartFile fileTemporary : multipartFiles) {
+            if (fileTemporary.isEmpty()) {
                 continue;
             }
             String originalFilename = fileTemporary.getOriginalFilename();
@@ -142,12 +142,12 @@ public class ApiController {
         return response;
     }
 
-    @GetMapping(value="download/{filename}")
+    @GetMapping(value = "download/{filename}")
     public ResponseEntity<StreamingResponseBody> range(
             @PathVariable(value = "filename", required = false) String filename,
             @RequestHeader(value = "Range", required = false) String range,
-            HttpServletRequest request){
-        if(StringUtils.isBlank(filename)) {
+            HttpServletRequest request) {
+        if (StringUtils.isBlank(filename)) {
             throw new IllegalArgumentException("没有指定filename");
         }
 
@@ -155,7 +155,7 @@ public class ApiController {
         StringBuilder builderHeaderString = new StringBuilder();
         builderHeaderString.append("请求头，");
         Enumeration<String> headerNames = request.getHeaderNames();
-        while(headerNames.hasMoreElements()) {
+        while (headerNames.hasMoreElements()) {
             String headerName = headerNames.nextElement();
             String headerValue = request.getHeader(headerName);
             builderHeaderString.append(headerName + ": " + headerValue + ";");
@@ -164,23 +164,23 @@ public class ApiController {
 
         File temporaryDirectory = Util.getTemporaryDirectory();
         File fileToDownload = new File(temporaryDirectory, Const.DemoDirectoryName + File.separator + Const.DirectoryUploaded + File.separator + filename);
-        if(!fileToDownload.exists()) {
+        if (!fileToDownload.exists()) {
             String message = String.format("文件 %s 不存在", filename);
             throw new IllegalArgumentException(message);
         }
 
-        if(!StringUtils.isBlank(range)) {
+        if (!StringUtils.isBlank(range)) {
             range = range.replace("bytes=", "");
         }
         long contentLength = fileToDownload.length();
         HttpStatus httpStatus = HttpStatus.OK;
         String contentRange = null;
         long start = 0;
-        long end = contentLength-1;
-        if(!StringUtils.isBlank(range)) {
+        long end = contentLength - 1;
+        if (!StringUtils.isBlank(range)) {
             httpStatus = HttpStatus.PARTIAL_CONTENT;
             start = Long.parseLong(range.split("-")[0]);
-            end = range.split("-").length==1?contentLength-1:Long.parseLong(range.split("-")[1]);
+            end = range.split("-").length == 1 ? contentLength - 1 : Long.parseLong(range.split("-")[1]);
             contentRange = "bytes " + start + "-" + end + "/" + contentLength;
         }
 
@@ -208,12 +208,10 @@ public class ApiController {
                         int bytesRead = inputStream.read(buffer);
                         if (bytesRead == -1) {
                             break;
-                        }
-                        else if (bytesRead <= bytesToCopy) {
+                        } else if (bytesRead <= bytesToCopy) {
                             outputStream.write(buffer, 0, bytesRead);
                             bytesToCopy -= bytesRead;
-                        }
-                        else {
+                        } else {
                             outputStream.write(buffer, 0, (int) bytesToCopy);
                             bytesToCopy = 0;
                         }
@@ -221,11 +219,11 @@ public class ApiController {
 
                     log.debug("成功下载文件 {},content-range={}", fileToDownload.getAbsolutePath(), contentRangeConst);
                 } catch (Exception ex) {
-                    if(!(ex instanceof ClientAbortException)) {
+                    if (!(ex instanceof ClientAbortException)) {
                         log.error(ex.getMessage(), ex);
                     }
                 } finally {
-                    if(inputStream!=null) {
+                    if (inputStream != null) {
                         inputStream.close();
                         inputStream = null;
                     }
@@ -235,11 +233,11 @@ public class ApiController {
 
         ResponseEntity.BodyBuilder builder = ResponseEntity.status(httpStatus)
                 // 必须要指定文件大小，否则浏览器下载文件时不能正确显示下载进度和文件总大小
-                .contentLength(end-start+1)
+                .contentLength(end - start + 1)
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\""+filename+"\"");
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"");
 
-        if(!StringUtils.isBlank(contentRange)) {
+        if (!StringUtils.isBlank(contentRange)) {
             builder.header("Content-Range", contentRange);
         }
 
