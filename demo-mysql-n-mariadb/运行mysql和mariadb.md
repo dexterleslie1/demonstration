@@ -2,6 +2,18 @@
 
 ## 使用容器运行单机版`mysql`
 
+>注意：运行 `mysql:5.7` 需要配置 `user: mysql`，否则会报告 `chown: changing ownership of ‘./sys/devices/virtual/net/lo/phys_port_id’: Read-only file system` 错误：
+>
+>```yaml
+>version: "3.0"
+>
+>services: 
+>  db:
+>    image: mysql:5.7
+>    user: mysql
+>    ...
+>```
+>
 >示例详细用法请参考 [链接](https://gitee.com/dexterleslie/demonstration/tree/master/demo-mysql/mysql-server/standalone)
 
 1. 准备实验环境
