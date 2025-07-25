@@ -30,6 +30,7 @@ public class JedisPoolFactoryBean implements FactoryBean<JedisPool>, DisposableB
         int timeout = 10000;
 
         JedisPoolConfig config = new JedisPoolConfig();
+        config.setJmxEnabled(false);
         //控制一个pool可分配多少个jedis实例，通过pool.getResource()来获取；
         //如果赋值为-1，则表示不限制；如果pool已经分配了maxActive个jedis实例，则此时pool的状态为exhausted(耗尽)。
         config.setMaxTotal(maxTotal);

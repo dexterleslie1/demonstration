@@ -22,7 +22,8 @@ services:
     network_mode: host
 
   node1:
-    image: redis:6.2.6-bullseye
+#    image: redis:6.2.6-bullseye
+    image: redis:5.0.14
     # 必须设置cluster-announce-ip才能够在创建集群时节点join到master，否则会一直waiting...
     command: redis-server /usr/local/etc/redis/redis.conf --port 6380 --cluster-announce-ip ${redisClusterAnnounceIp}
     volumes:
@@ -31,7 +32,8 @@ services:
       - TZ=Asia/Shanghai
     network_mode: 'host'
   node2:
-    image: redis:6.2.6-bullseye
+#    image: redis:6.2.6-bullseye
+    image: redis:5.0.14
     command: redis-server /usr/local/etc/redis/redis.conf --port 6381 --cluster-announce-ip ${redisClusterAnnounceIp}
     volumes:
       - ./redis.cluster6.conf:/usr/local/etc/redis/redis.conf
@@ -39,7 +41,8 @@ services:
       - TZ=Asia/Shanghai
     network_mode: 'host'
   node3:
-    image: redis:6.2.6-bullseye
+#    image: redis:6.2.6-bullseye
+    image: redis:5.0.14
     command: redis-server /usr/local/etc/redis/redis.conf --port 6382 --cluster-announce-ip ${redisClusterAnnounceIp}
     volumes:
       - ./redis.cluster6.conf:/usr/local/etc/redis/redis.conf
@@ -47,7 +50,8 @@ services:
       - TZ=Asia/Shanghai
     network_mode: 'host'
   node4:
-    image: redis:6.2.6-bullseye
+#    image: redis:6.2.6-bullseye
+    image: redis:5.0.14
     command: redis-server /usr/local/etc/redis/redis.conf --port 6383 --cluster-announce-ip ${redisClusterAnnounceIp}
     volumes:
       - ./redis.cluster6.conf:/usr/local/etc/redis/redis.conf
@@ -55,7 +59,8 @@ services:
       - TZ=Asia/Shanghai
     network_mode: 'host'
   node5:
-    image: redis:6.2.6-bullseye
+#    image: redis:6.2.6-bullseye
+    image: redis:5.0.14
     command: redis-server /usr/local/etc/redis/redis.conf --port 6384 --cluster-announce-ip ${redisClusterAnnounceIp}
     volumes:
       - ./redis.cluster6.conf:/usr/local/etc/redis/redis.conf
@@ -63,7 +68,8 @@ services:
       - TZ=Asia/Shanghai
     network_mode: 'host'
   node6:
-    image: redis:6.2.6-bullseye
+#    image: redis:6.2.6-bullseye
+    image: redis:5.0.14
     command: redis-server /usr/local/etc/redis/redis.conf --port 6385 --cluster-announce-ip ${redisClusterAnnounceIp}
     volumes:
       - ./redis.cluster6.conf:/usr/local/etc/redis/redis.conf
@@ -71,7 +77,8 @@ services:
       - TZ=Asia/Shanghai
     network_mode: 'host'
   creator:
-    image: redis:6.2.6-bullseye
+#    image: redis:6.2.6-bullseye
+    image: redis:5.0.14
     entrypoint: [ /bin/sh, -c, 'echo "yes" | redis-cli --cluster create --cluster-replicas 1 127.0.0.1:6380 127.0.0.1:6381 127.0.0.1:6382 127.0.0.1:6383 127.0.0.1:6384 127.0.0.1:6385' ]
     depends_on:
       - node1

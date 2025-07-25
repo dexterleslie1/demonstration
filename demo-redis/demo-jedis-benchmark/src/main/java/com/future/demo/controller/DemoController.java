@@ -3,6 +3,7 @@ package com.future.demo.controller;
 import com.future.common.http.ObjectResponse;
 import com.future.common.http.ResponseUtils;
 import com.future.demo.JedisPoolUtil;
+import com.future.demo.PipelineTestingSupportService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,6 +25,9 @@ public class DemoController {
     JedisPool jedisPool;
     @Autowired(required = false)
     JedisCluster jedisCluster;
+
+    @Autowired
+    PipelineTestingSupportService pipelineTestingSupportService;
 
     /**
      * 测试 set 命令性能
@@ -47,5 +51,16 @@ public class DemoController {
             this.jedisCluster.set(key, value);
         }
         return ResponseUtils.successObject("成功调用 set 命令，key=" + key + ",value=" + value);
+    }
+
+    /**
+     * 测试 pipeline 的性能
+     *
+     * @return
+     */
+    @GetMapping("testPerfPipeline")
+    public ObjectResponse<String> testPerfPipeline() {
+        this.pipelineTestingSupportService.testPerfAll();
+        return ResponseUtils.successObject("成功调用pipeline");
     }
 }
