@@ -29,10 +29,10 @@ services:
       # ------------------- 日志清理配置 -------------------
       # 清理策略：启用 delete（按时间/大小删除）
       KAFKA_LOG_CLEANUP_POLICY: "delete"
-      # 单个分区最大日志大小：1G（根据磁盘容量调整，如 5GB、20GB）
-      KAFKA_LOG_RETENTION_BYTES: "1073741824"  # 设为 -1 表示不限制大小（仅用时间策略）
-      # 日志段大小：256MB（更小的段可提升清理精度，但增加文件数）
-      KAFKA_LOG_SEGMENT_BYTES: "268435456"  #（原默认 1GB）
+      # 单个分区最大日志大小：2G（根据磁盘容量调整，如 5GB、20GB）
+      KAFKA_LOG_RETENTION_BYTES: "2147483648"  # 设为 -1 表示不限制大小（仅用时间策略）
+      # 日志段大小：512MB（更小的段可提升清理精度，但增加文件数）
+      KAFKA_LOG_SEGMENT_BYTES: "536870912"  #（原默认 1GB）
     restart: unless-stopped
     volumes:
       - data-demo-flash-sale-kafka:/var/lib/kafka
@@ -44,7 +44,7 @@ services:
     environment:
       TZ: Asia/Shanghai
     # 自动创建 topic
-    entrypoint: /usr/bin/kafka-topics --create --bootstrap-server kafka:9092 --replication-factor 1 --partitions 1 --topic topic-order-in-cache-sync-to-db
+    entrypoint: /usr/bin/kafka-topics --create --bootstrap-server kafka:9092 --replication-factor 1 --partitions 16 --topic topic-order-in-cache-sync-to-db
   kafka-create-topic-increase-count-fast:
     image: confluentinc/cp-kafka:7.3.0
     depends_on:
@@ -52,7 +52,7 @@ services:
     environment:
       TZ: Asia/Shanghai
     # 自动创建 topic
-    entrypoint: /usr/bin/kafka-topics --create --bootstrap-server kafka:9092 --replication-factor 1 --partitions 8 --topic topic-increase-count-fast
+    entrypoint: /usr/bin/kafka-topics --create --bootstrap-server kafka:9092 --replication-factor 1 --partitions 16 --topic topic-increase-count-fast
   kafka-create-topic-increase-count-slow:
     image: confluentinc/cp-kafka:7.3.0
     depends_on:
@@ -60,7 +60,7 @@ services:
     environment:
       TZ: Asia/Shanghai
     # 自动创建 topic
-    entrypoint: /usr/bin/kafka-topics --create --bootstrap-server kafka:9092 --replication-factor 1 --partitions 2 --topic topic-increase-count-slow
+    entrypoint: /usr/bin/kafka-topics --create --bootstrap-server kafka:9092 --replication-factor 1 --partitions 8 --topic topic-increase-count-slow
   kafka-create-order-cassandra-index-listByUserId:
     image: confluentinc/cp-kafka:7.3.0
     depends_on:
@@ -85,14 +85,6 @@ services:
       TZ: Asia/Shanghai
     # 自动创建 topic
     entrypoint: /usr/bin/kafka-topics --create --bootstrap-server kafka:9092 --replication-factor 1 --partitions 1 --topic topic-setup-product-flashsale-cache
-  kafka-create-topic-add-productId-and-stockAmount-into-redis-zset-after-creation:
-    image: confluentinc/cp-kafka:7.3.0
-    depends_on:
-      - kafka
-    environment:
-      TZ: Asia/Shanghai
-    # 自动创建 topic
-    entrypoint: /usr/bin/kafka-topics --create --bootstrap-server kafka:9092 --replication-factor 1 --partitions 1 --topic topic-add-productId-and-stockAmount-into-redis-zset-after-creation
   kafka-create-topic-random-id-picker-add-id-list:
     image: confluentinc/cp-kafka:7.3.0
     depends_on:
@@ -100,7 +92,7 @@ services:
     environment:
       TZ: Asia/Shanghai
     # 自动创建 topic
-    entrypoint: /usr/bin/kafka-topics --create --bootstrap-server kafka:9092 --replication-factor 1 --partitions 1 --topic topic-random-id-picker-add-id-list
+    entrypoint: /usr/bin/kafka-topics --create --bootstrap-server kafka:9092 --replication-factor 1 --partitions 4 --topic topic-random-id-picker-add-id-list
   kafka-create-topic-add-product-to-cache-for-pickup-randomly-when-purchasing:
     image: confluentinc/cp-kafka:7.3.0
     depends_on:
@@ -108,7 +100,7 @@ services:
     environment:
       TZ: Asia/Shanghai
     # 自动创建 topic
-    entrypoint: /usr/bin/kafka-topics --create --bootstrap-server kafka:9092 --replication-factor 1 --partitions 1 --topic topic-add-product-to-cache-for-pickup-randomly-when-purchasing
+    entrypoint: /usr/bin/kafka-topics --create --bootstrap-server kafka:9092 --replication-factor 1 --partitions 4 --topic topic-add-product-to-cache-for-pickup-randomly-when-purchasing
 
 volumes:
   data-demo-flash-sale-kafka-zookeeper:

@@ -59,6 +59,8 @@ Locals:
       - "10.0.1.20"
       - "10.0.1.21"
       - "10.0.1.22"
+      - "10.0.1.23"
+      - "10.0.1.24"
   # crond 服务
   BmPrivateIpCrond:
     Type: Macro
@@ -251,7 +253,7 @@ Resources:
         Ref: BmNoneDbInstanceType
       InstanceChargeType: PostPaid
       SystemDiskCategory: cloud_essd
-      SystemDiskSize: 200
+      SystemDiskSize: 250
 
       AllocatePublicIP: true
       InternetChargeType: PayByTraffic
@@ -274,7 +276,7 @@ Resources:
   # cassandra 服务
   BmInstanceCassandra:
     Type: ALIYUN::ECS::Instance
-    Count: 3
+    Count: 5
     Properties:
       HostName:
         Fn::Sub: "bm-cassandra-node${ALIYUN::Index}"

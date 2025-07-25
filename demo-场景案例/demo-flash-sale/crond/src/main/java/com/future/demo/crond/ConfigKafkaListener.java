@@ -67,7 +67,7 @@ public class ConfigKafkaListener {
      */
     @KafkaListener(topics = Const.TopicOrderInCacheSyncToDb,
             groupId = "group-" + Const.TopicOrderInCacheSyncToDb,
-            concurrency = "8",
+            concurrency = "16",
             containerFactory = "defaultKafkaListenerContainerFactory")
     public void receiveMessageOrderInCacheSyncToDB(List<String> messages) throws Exception {
         try {
@@ -103,7 +103,7 @@ public class ConfigKafkaListener {
      */
     @KafkaListener(topics = Const.TopicIncreaseCountFast,
             groupId = "group-" + Const.TopicIncreaseCountFast,
-            concurrency = "8",
+            concurrency = "16",
             containerFactory = "defaultKafkaListenerContainerFactory")
     public void receiveMessageIncreaseCountFast(List<String> messages) throws Exception {
         try {
@@ -130,7 +130,7 @@ public class ConfigKafkaListener {
      */
     @KafkaListener(topics = Const.TopicIncreaseCountSlow,
             groupId = "group-" + Const.TopicIncreaseCountSlow,
-            concurrency = "2",
+            concurrency = "8",
             containerFactory = "defaultKafkaListenerContainerFactory")
     public void receiveMessageIncreaseCountSlow(List<String> messages) throws Exception {
         try {
@@ -156,6 +156,7 @@ public class ConfigKafkaListener {
      * @throws Exception
      */
     @KafkaListener(topics = Const.TopicCreateOrderCassandraIndexListByUserId,
+            concurrency = "32",
             containerFactory = "topicCreateOrderCassandraIndexListByUserIdKafkaListenerContainerFactory")
     public void receiveMessageCreateOrderCassandraIndexListByUserId(List<String> messages) throws Exception {
         try {
@@ -221,6 +222,7 @@ public class ConfigKafkaListener {
      * @throws Exception
      */
     @KafkaListener(topics = Const.TopicCreateOrderCassandraIndexListByMerchantId,
+            concurrency = "4",
             containerFactory = "topicCreateOrderCassandraIndexListByMerchantIdKafkaListenerContainerFactory")
     public void receiveMessageCreateOrderCassandraIndexListByMerchantId(List<String> messages) throws Exception {
         try {
@@ -354,7 +356,7 @@ public class ConfigKafkaListener {
      */
     @KafkaListener(topics = Const.TopicAddProductToCacheForPickupRandomlyWhenPurchasing,
             groupId = "group-" + Const.TopicAddProductToCacheForPickupRandomlyWhenPurchasing,
-            concurrency = "1",
+            concurrency = "4",
             containerFactory = "defaultKafkaListenerContainerFactory")
     public void receiveMessageAddProductToCacheForPickupRandomlyWhenPurchasing(List<String> messages) {
         try {
@@ -387,7 +389,7 @@ public class ConfigKafkaListener {
      */
     @KafkaListener(topics = Const.TopicRandomIdPickerAddIdList,
             groupId = "group-" + Const.TopicRandomIdPickerAddIdList,
-            concurrency = "1",
+            concurrency = "4",
             containerFactory = "defaultKafkaListenerContainerFactory")
     public void receiveMessageRandomIdPickerAddIdList(List<String> messages) throws Exception {
         try {
