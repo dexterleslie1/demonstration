@@ -1710,3 +1710,45 @@ volumes:
   data-demo-flash-sale-kafka:
 ```
 
+
+
+## 未被消费所在的日志文件被日志保留策略删除
+
+>说明：系统在高并发时，因为消息消费性能下降，导致大量的消息积压，此时如果配置 `kafka` 日志保留策略是基于大小的，在日志总大小超过阈值后即使日志中包含未被消费的消息也会被日志保留策略删除导致消息丢失。
+
+问题重现：
+
+1. 借助本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-kafka/demo-kafka-benchmark) 重现问题。
+
+2. 调整示例中 `docker-compose.yaml kafka` 日志保留策略部分配置如下：
+
+   ```yaml
+   # ------------------- 日志清理配置 -------------------
+   # 清理策略：启用 delete（按时间/大小删除）
+   KAFKA_LOG_CLEANUP_POLICY: "delete"
+   # 单个分区最大日志大小：1MB（根据磁盘容量调整，如 5GB、20GB）
+   KAFKA_LOG_RETENTION_BYTES: "1048576"  # 设为 -1 表示不限制大小（仅用时间策略）
+   # 日志段大小：256KB（更小的段可提升清理精度，但增加文件数）
+   KAFKA_LOG_SEGMENT_BYTES: "262144"  #（原默认 1GB）
+   ```
+
+   - 日志总大小为 `1MB`，日志段大小为 `256KB`。
+
+3. 使用开发模式启动应用
+
+4. 通过 `wrk` 工具自动发送大量的消息以生成 `kafka` 日志数据
+
+   ```sh
+   wrk -t8 -c32 -d300000000s --latency --timeout 60 http://localhost:8080/api/v1/sendToTopic1
+   ```
+
+5. 进入 `kafka` 所在的容器并观察在日志总大小超过 `1MB` 阈值后会被自动删除，从而导致消息丢失。
+
+   ```sh
+   # 进入 kafka 所在的容器
+   
+   # 切换到 my-topic-1-0 并观察日志被自动删除的过程
+   watch -n 1 "ls -alh"
+   ```
+
+   

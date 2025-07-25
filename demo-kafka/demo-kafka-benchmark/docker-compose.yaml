@@ -59,6 +59,10 @@ services:
       KAFKA_LOG_RETENTION_BYTES: "2147483648"  # 设为 -1 表示不限制大小（仅用时间策略）
       # 日志段大小：512MB（更小的段可提升清理精度，但增加文件数）
       KAFKA_LOG_SEGMENT_BYTES: "536870912"  #（原默认 1GB）
+#      # 单个分区最大日志大小：1MB（根据磁盘容量调整，如 5GB、20GB）
+#      KAFKA_LOG_RETENTION_BYTES: "1048576"  # 设为 -1 表示不限制大小（仅用时间策略）
+#      # 日志段大小：256KB（更小的段可提升清理精度，但增加文件数）
+#      KAFKA_LOG_SEGMENT_BYTES: "262144"  #（原默认 1GB）
   # 在 kafka 服务成功启动后自动配置 kafka 服务
   kafka-create-topic1:
     image: confluentinc/cp-kafka:7.3.0
