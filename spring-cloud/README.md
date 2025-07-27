@@ -4605,6 +4605,10 @@ public class MyRequestOriginParser implements RequestOriginParser {
 
 #### 规则持久化
 
+>提示：`Nacos` 持久化 `Sentinel` 的规则，在 `Sentinel` 中修改规则不会持久化到 `Nacos` 中（只会修改 `Sentinel` 内存中的规则，`Sentinel` 重启会丢失临时修改的规则）。应该修改 `Nacos` 中对应的 `Sentinel` 规则，修改后会自动更新到 `Sentinel` 中，重启 `Sentinel` 后也不会丢失被修改的规则数据。
+
+
+
 ##### 介绍
 
 Sentinel规则持久化是指将配置在Sentinel控制台的流量控制、熔断降级等规则存储到持久化存储系统中，使得即使服务重启或者Sentinel守护进程重启，规则也能自动恢复，无需重新手动配置。以下是对Sentinel规则持久化的详细介绍：
@@ -4742,6 +4746,91 @@ spring.cloud.sentinel.datasource.ds1.nacos.rule-type=flow
   ```
 
 请求`http://localhost:8080/api/v1/test1`和`http://localhost:8080/api/v1/test3`测试效果。
+
+提示：修改 `Nacos` 中的规则会自动同步到 `Sentinel` 中，`Nacos` 中的规则数据会被持久化，`Sentinel` 服务重启后也不会丢失规则数据。
+
+
+
+#### 应用启动时自动创建规则
+
+>提示：使用 `com.alibaba.nacos:nacos-client` 在应用启动时连接 `Nacos` 服务并创建规则。
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-spring-boot/demo-spring-boot-sentinel)
+
+`com.alibaba.nacos:nacos-client` 操作 `Nacos` 请参考本站 <a href="/springcloud/README.html#使用-java-客户端操作-nacos" target="_blank">链接</a>
+
+`POM` 配置：
+
+```xml
+<dependency>
+    <groupId>com.alibaba.nacos</groupId>
+    <artifactId>nacos-client</artifactId>
+    <version>2.2.0</version> <!-- 替换为实际服务端版本（如 2.2.3） -->
+</dependency>
+```
+
+启动时在 `Nacos` 中自动创建 `Sentinel` 规则：
+
+```java
+@Component
+@Slf4j
+public class SentinelRuleInitializer implements CommandLineRunner {
+
+    @Value("${spring.cloud.sentinel.datasource.ds1.nacos.server-addr:localhost:8848}")
+    String sentinelNacosServerAddr;
+
+    @Override
+    public void run(String... args) throws Exception {
+        // region 初始化阿里 Sentinel 规则
+
+        // 清除本地缓存（路径默认 ~/.nacos/config）
+        LocalConfigInfoProcessor.cleanAllSnapshot();
+
+        ConfigService configService = NacosFactory.createConfigService(sentinelNacosServerAddr);
+
+        String dataId = "demo-spring-boot-sentinel";
+        String group = "DEFAULT_GROUP";
+        int timeoutMilliseconds = 3000;
+
+        String config = configService.getConfig(dataId, group, timeoutMilliseconds);
+        if (StringUtils.isBlank(config)) {
+            String content = "[{\n" +
+                    "    \"resource\": \"myTest1\",\n" +
+                    "    \"limitApp\": \"default\",\n" +
+                    "    \"grade\": 1,\n" +
+                    "    \"count\": 1,\n" +
+                    "    \"strategy\": 0,\n" +
+                    "    \"controlBehavior\": 0,\n" +
+                    "    \"clusterMode\": false\n" +
+                    "}]";
+            boolean result = configService.publishConfig(dataId, group, content, ConfigType.JSON.getType());
+            Assert.isTrue(result, "设置 Nacos 中默认的 Sentinel 规则失败");
+            if (log.isDebugEnabled()) {
+                log.debug("成功设置 Nacos 中默认的 Sentinel 规则");
+            }
+        } else {
+            if (log.isDebugEnabled()) {
+                log.debug("Nacos 中已经存在 Sentinel 规则");
+            }
+        }
+
+        // endregion
+    }
+
+}
+```
+
+启动应用后在 `Nacos` 服务中自动创建 `Sentinel` 规则
+
+访问 `Sentinel` 控制台：`http://localhost:8858/`，帐号：`sentinel`，密码：`sentinel`
+
+访问 `Nacos` 控制台：`http://localhost:8848/nacos`，帐号：`nacos`，密码：`nacos`
+
+使用性能测试工具测试协助测试：
+
+```sh
+wrk -t1 -c1 -d300000000s --latency --timeout 60 http://localhost:8080/api/v1/sentinel/test1
+```
 
 
 
