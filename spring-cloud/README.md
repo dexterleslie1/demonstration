@@ -52,9 +52,40 @@ SpringCloud和SpringCloud Alibaba都是微服务架构中的重要工具，它�
 
 
 
-## SpringCloud、SpringCloud Alibaba 和 SpringBoot 兼容性
+## `SpringCloud`、`SpringCloud Alibaba` 和 `SpringBoot` 兼容性
 
 SpringCloud Alibaba、SpringCloud 和 SpringBoot 兼容性列表`https://github.com/alibaba/spring-cloud-alibaba/wiki/%E7%89%88%E6%9C%AC%E8%AF%B4%E6%98%8E`
+
+| Spring Cloud Alibaba Version | Spring Cloud Version  | Spring Boot Version |
+| ---------------------------- | --------------------- | ------------------- |
+| 2022.0.0.0*                  | Spring Cloud 2022.0.0 | 3.0.2               |
+| 2022.0.0.0-RC2               | Spring Cloud 2022.0.0 | 3.0.2               |
+| 2022.0.0.0-RC1               | Spring Cloud 2022.0.0 | 3.0.0               |
+
+| Spring Cloud Alibaba Version | Spring Cloud Version  | Spring Boot Version |
+| ---------------------------- | --------------------- | ------------------- |
+| 2021.0.5.0*                  | Spring Cloud 2021.0.5 | 2.6.13              |
+| 2021.0.4.0                   | Spring Cloud 2021.0.4 | 2.6.11              |
+| 2021.0.1.0                   | Spring Cloud 2021.0.1 | 2.6.3               |
+| 2021.1                       | Spring Cloud 2020.0.1 | 2.4.2               |
+
+| Spring Cloud Alibaba Version      | Spring Cloud Version        | Spring Boot Version |
+| --------------------------------- | --------------------------- | ------------------- |
+| 2.2.10-RC1*                       | Spring Cloud Hoxton.SR12    | 2.3.12.RELEASE      |
+| 2.2.9.RELEASE                     | Spring Cloud Hoxton.SR12    | 2.3.12.RELEASE      |
+| 2.2.8.RELEASE                     | Spring Cloud Hoxton.SR12    | 2.3.12.RELEASE      |
+| 2.2.7.RELEASE                     | Spring Cloud Hoxton.SR12    | 2.3.12.RELEASE      |
+| 2.2.6.RELEASE                     | Spring Cloud Hoxton.SR9     | 2.3.2.RELEASE       |
+| 2.2.1.RELEASE                     | Spring Cloud Hoxton.SR3     | 2.2.5.RELEASE       |
+| 2.2.0.RELEASE                     | Spring Cloud Hoxton.RELEASE | 2.2.X.RELEASE       |
+| 2.1.4.RELEASE                     | Spring Cloud Greenwich.SR6  | 2.1.13.RELEASE      |
+| 2.1.2.RELEASE                     | Spring Cloud Greenwich      | 2.1.X.RELEASE       |
+| 2.0.4.RELEASE(停止维护，建议升级) | Spring Cloud Finchley       | 2.0.X.RELEASE       |
+| 1.5.1.RELEASE(停止维护，建议升级) | Spring Cloud Edgware        | 1.5.X.RELEASE       |
+
+
+
+## `SpringCloud` 和 `SpringBoot` 兼容性
 
 SpringCloud 和 SpringBoot 兼容性列表`https://stackoverflow.com/questions/42659920/is-there-a-compatibility-matrix-of-spring-boot-and-spring-cloud`
 
@@ -3548,6 +3579,84 @@ spring.profiles.active=dev
 
 
 
+#### 使用 `Java` 客户端操作 `Nacos`
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-spring-boot/demo-spring-boot-nacos)
+
+`POM` 配置：
+
+```xml
+<dependency>
+    <groupId>com.alibaba.nacos</groupId>
+    <artifactId>nacos-client</artifactId>
+    <version>2.2.0</version> <!-- 替换为实际服务端版本（如 2.2.3） -->
+</dependency>
+```
+
+测试用例：
+
+```java
+@SpringBootTest
+class ApplicationTests {
+
+    @Test
+    void contextLoads() throws NacosException {
+        String serverAddr = "localhost:8848";
+        ConfigService configService = NacosFactory.createConfigService(serverAddr);
+
+        // dataId: 配置的唯一标识（如 "sentinel-flow-rules"）
+        // group: 配置的分组（如 "DEFAULT_GROUP"）
+        String dataId = "sentinel-flow-rules";
+        String group = "DEFAULT_GROUP";
+        boolean removed = configService.removeConfig(dataId, group);
+        Assertions.assertTrue(removed);
+
+        // 参数说明：
+        // timeoutMs: 超时时间（毫秒，默认 3000ms）
+        String content = configService.getConfig(dataId, group, 3000);
+        Assertions.assertNull(content);
+
+//        // 定义监听器（配置变更时触发）
+//        Listener listener = new Listener() {
+//            @Override
+//            public Executor getExecutor() {
+//                return null; // 使用默认线程池（或自定义线程池）
+//            }
+//
+//            @Override
+//            public void receiveConfigInfo(String configInfo) {
+//                System.out.println("配置变更，新内容：" + configInfo);
+//            }
+//        };
+//        // 添加监听器（需指定 dataId 和 group）
+//        configService.addListener(dataId, group, listener);
+
+        // 参数说明：
+        // dataId: 配置的唯一标识
+        // group: 配置的分组
+        // content: 配置内容（如 JSON 格式的 Sentinel 规则）
+        content = "[\n" +
+                "  {\n" +
+                "    \"resource\": \"myTest1\",\n" +
+                "    \"grade\": 1,\n" +
+                "    \"count\": 5,\n" +
+                "    \"strategy\": 0,\n" +
+                "    \"controlBehavior\": 0,\n" +
+                "    \"limitApp\": \"default\"\n" +
+                "  }\n" +
+                "]";
+        boolean success = configService.publishConfig(dataId, group, content, ConfigType.JSON.getType());
+        Assertions.assertTrue(success);
+
+        String contentActual = configService.getConfig(dataId, group, 3000);
+        Assertions.assertEquals(content, contentActual);
+    }
+
+}
+```
+
+
+
 ### Sentinel
 
 >SpringCloud Alibaba 配置 Sentinel 官方文档`https://spring-cloud-alibaba-group.github.io/github-pages/hoxton/zh-cn/index.html`
@@ -3630,7 +3739,7 @@ docker compose up -d
 
 
 
-#### 和 SpringCloud Alibaba 集成的配置
+#### 和 `SpringCloud Alibaba` 集成
 
 父 pom 依赖
 
@@ -3676,9 +3785,63 @@ docker compose up -d
 各个微服务 application.properties 配置
 
 ```properties
+# 应用的名称会显示在 sentinel dashboard 中
+spring.application.name=xxx
 # sentinel配置
 spring.cloud.sentinel.transport.dashboard=localhost:8858
 ```
+
+
+
+#### 和 `SpringBoot` 集成
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-spring-boot/demo-spring-boot-sentinel)
+
+使用 `Docker Compose` 运行 `Sentinel Dashboard`：
+
+```yaml
+version: "3.1"
+
+services:
+  sentinel-dashboard:
+    image: bladex/sentinel-dashboard:1.8.0
+    environment:
+      - TZ=Asia/Shanghai
+#    ports:
+#      - '8858:8858'
+    network_mode: host
+```
+
+`POM` 添加配置：
+
+```xml
+<!-- sentinel依赖配置 -->
+<dependency>
+    <groupId>com.alibaba.cloud</groupId>
+    <artifactId>spring-cloud-starter-alibaba-sentinel</artifactId>
+    <!-- SpringCloud Alibaba Sentinel 版本需要和 SpringBoot 版本兼容，否则 SpringBoot 应用启动时报错 -->
+    <version>2021.0.6.2</version>
+</dependency>
+```
+
+- `SpringBoot 2.7.18` 和 `spring-cloud-starter-alibaba-sentinel 2021.0.6.2` 兼容，查看更多 `SpringBoot` 和 `SpringCloud Alibaba` 版本兼容性请参考本站 <a href="/springcloud/README.html#springcloud、springcloud-alibaba-和-springboot-兼容性" target="_blank">链接</a>
+
+`application.properties` 配置：
+
+```properties
+# 应用的名称会显示在 sentinel dashboard 中
+# 如果不配置，则显示 SpringBoot 启动类的完整路径，例如：com.future.demo.ApplicationService
+spring.application.name=demo-spring-boot-sentinel
+# sentinel配置
+spring.cloud.sentinel.transport.dashboard=localhost:8858
+# 当spring.cloud.sentinel.web-context-unify设置为false时，Sentinel会区分每一个具体的URL路径，
+# 每个不同的URL都会被视为一个独立的资源。这提供了更细粒度的控制，允许开发者为每一个具体的URL路径定义不同的流控、熔断等规则。
+spring.cloud.sentinel.web-context-unify=false
+```
+
+启动应用请求接口后，`Sentinel Dashboard` 的簇点链路才会显示请求路径数据。
+
+访问 Sentinel 控制台`http://localhost:8858/`，帐号：sentinel，密码：sentinel
 
 
 
@@ -4545,7 +4708,7 @@ spring.cloud.sentinel.datasource.ds1.nacos..data-type=json
 # param-flow：热点规则。热点规则用于对某个资源中的某个或某些参数进行单独的流控。这可以帮助系统保护那些因为某些特殊参数值而导致的高并发请求。
 # system：系统规则。系统规则是从系统的整体角度出发，对系统的入口流量、CPU 使用率、线程数等指标进行整体控制，以防止系统整体过载。
 # authority：授权规则。授权规则用于对资源的访问进行黑白名单控制。这可以帮助系统实现细粒度的访问控制。
-spring.cloud.sentinel.datasource.ds1.nacos..rule-type=flow
+spring.cloud.sentinel.datasource.ds1.nacos.rule-type=flow
 ```
 
 登录 Nacos 创建 Sentinel 规则的配置如下：
