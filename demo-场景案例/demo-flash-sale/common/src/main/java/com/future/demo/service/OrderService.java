@@ -1,5 +1,7 @@
 package com.future.demo.service;
 
+import com.alibaba.csp.sentinel.annotation.SentinelResource;
+import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.datastax.driver.core.*;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -160,6 +162,11 @@ public class OrderService {
                     ProductTypeNotSupportedException.class,
                     StockInsufficientException.class
             })
+    @SentinelResource(value = "createOrderOrdinary", blockHandler = "createOrdinaryBlockHandler",
+            exceptionsToIgnore = {
+                    BusinessException.class,
+                    ProductTypeNotSupportedException.class,
+                    StockInsufficientException.class})
     public Long create(Long userId,
                        Long productId,
                        Integer amount,
@@ -248,6 +255,7 @@ public class OrderService {
      * @param createTime 如果指定订单创建时间，则不会随机生成订单创建时间
      * @throws Exception
      */
+    @SentinelResource(value = "createOrderFlashSale", blockHandler = "createFlashSaleBlockHandler", exceptionsToIgnore = BusinessException.class)
     public void createFlashSale(Long userId,
                                 Long productId,
                                 Integer amount,
@@ -344,6 +352,40 @@ public class OrderService {
         }
 
         prometheusCustomMonitor.getCounterFlashSalePurchaseSuccessfully().increment();
+    }
+
+    /**
+     * 限流时触发
+     *
+     * @param userId
+     * @param productId
+     * @param amount
+     * @param createTime
+     * @throws Exception
+     */
+    public void createFlashSaleBlockHandler(Long userId,
+                                            Long productId,
+                                            Integer amount,
+                                            LocalDateTime createTime,
+                                            BlockException ex) throws Exception {
+        throw new BusinessException("当前秒杀流量过大，请稍后再重试！！！");
+    }
+
+    /**
+     * 限流时触发
+     *
+     * @param userId
+     * @param productId
+     * @param amount
+     * @param createTime
+     * @throws Exception
+     */
+    public Long createOrdinaryBlockHandler(Long userId,
+                                           Long productId,
+                                           Integer amount,
+                                           LocalDateTime createTime,
+                                           BlockException ex) throws Exception {
+        throw new BusinessException("当前下单流量过大，请稍后再重试！！！");
     }
 
     /**

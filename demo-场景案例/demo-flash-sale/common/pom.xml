@@ -32,5 +32,12 @@
             <artifactId>future-count-sdk</artifactId>
             <version>1.0.3</version>
         </dependency>
+
+        <!-- sentinel依赖配置 -->
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-sentinel</artifactId>
+            <version>2021.0.6.2</version>
+        </dependency>
     </dependencies>
 </project>

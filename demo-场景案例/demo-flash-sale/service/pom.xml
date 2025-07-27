@@ -20,6 +20,13 @@
             <artifactId>demo-flash-sale-common</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+        <!-- Sentinel 持久化配置到 Nacos 依赖 -->
+        <dependency>
+            <groupId>com.alibaba.csp</groupId>
+            <artifactId>sentinel-datasource-nacos</artifactId>
+            <version>1.8.6</version>
+        </dependency>
     </dependencies>
 
     <build>

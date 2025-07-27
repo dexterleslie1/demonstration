@@ -127,6 +127,16 @@
         path: ~/deployer-flash-sale/crond/.env
         regexp: "^future_count_host="
         line: "future_count_host={{ groups['common'][0] }}"
+    - name: "配置crond服务的sentinel_transport_dashboard"
+      lineinfile:
+        path: ~/deployer-flash-sale/crond/.env
+        regexp: "^sentinel_transport_dashboard="
+        line: "sentinel_transport_dashboard={{ groups['common'][0] }}:8858"
+    - name: "配置crond服务的sentinel_nacos_server_addr"
+      lineinfile:
+        path: ~/deployer-flash-sale/crond/.env
+        regexp: "^sentinel_nacos_server_addr="
+        line: "sentinel_nacos_server_addr={{ groups['common'][0] }}:8848"
 
 - name: "配置api服务的deployer"
   hosts: api
@@ -192,3 +202,13 @@
         path: ~/deployer-flash-sale/service/.env
         regexp: "^future_count_host="
         line: "future_count_host={{ groups['common'][0] }}"
+    - name: "配置api服务的sentinel_transport_dashboard"
+      lineinfile:
+        path: ~/deployer-flash-sale/service/.env
+        regexp: "^sentinel_transport_dashboard="
+        line: "sentinel_transport_dashboard={{ groups['common'][0] }}:8858"
+    - name: "配置api服务的sentinel_nacos_server_addr"
+      lineinfile:
+        path: ~/deployer-flash-sale/service/.env
+        regexp: "^sentinel_nacos_server_addr="
+        line: "sentinel_nacos_server_addr={{ groups['common'][0] }}:8848"

@@ -40,6 +40,12 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>com.alibaba.nacos</groupId>
+            <artifactId>nacos-client</artifactId>
+            <version>2.2.0</version> <!-- 替换为实际服务端版本（如 2.2.3） -->
+        </dependency>
     </dependencies>
 
     <build>

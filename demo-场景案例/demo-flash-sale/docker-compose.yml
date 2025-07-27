@@ -310,3 +310,21 @@ services:
     volumes:
       - ./nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf:ro
     network_mode: host
+
+  sentinel-dashboard:
+    image: bladex/sentinel-dashboard:1.8.0
+    environment:
+      - TZ=Asia/Shanghai
+    #    ports:
+    #      - '8858:8858'
+    network_mode: host
+
+  nacos-server:
+    image: nacos/nacos-server:v2.2.0
+    environment:
+      - TZ=Asia/Shanghai
+      - MODE=standalone
+    ports:
+      - '8848:8848'
+      - '9848:9848'
+      #- '9849:9849'

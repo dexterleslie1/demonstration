@@ -19,6 +19,8 @@ services:
       - random_id_picker_port=${random_id_picker_port}
       - future_count_host=${future_count_host}
       - future_count_port=${future_count_port}
+      - sentinel_transport_dashboard=${sentinel_transport_dashboard}
+      - sentinel_nacos_server_addr=${sentinel_nacos_server_addr}
     volumes:
       - data-demo-flash-sale-debezium:/var/lib/debezium
     logging:

@@ -39,6 +39,10 @@
       shell: docker pull apache/skywalking-oap-server:8.7.0-es7
     - name: "拉取镜像apache/skywalking-ui:8.7.0"
       shell: docker pull apache/skywalking-ui:8.7.0
+    - name: "拉取镜像bladex/sentinel-dashboard:1.8.0"
+      shell: docker pull bladex/sentinel-dashboard:1.8.0
+    - name: "拉取镜像nacos/nacos-server:v2.2.0"
+      shell: docker pull nacos/nacos-server:v2.2.0
     - name: "拉取镜像registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-cassandra"
       shell: docker pull registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-cassandra
     - name: "拉取镜像registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-service"
