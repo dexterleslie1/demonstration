@@ -416,6 +416,53 @@ ansible-playbook playbook.yml --inventory localhost,
 
 
 
+### 为单个主机指定变量
+
+`inventory.ini` 中为单个主机指定变量：
+
+```ini
+[springboot-app]
+192.168.235.165 my_var1=v1 my_var2=v2
+
+# 定义全局变量，所有主机组都能够使用
+[all:vars]
+ansible_user=root
+ansible_ssh_pass=Root@123
+```
+
+`jinja2` 模板语法 `for` 循环中读取主机变量：
+
+```jinja2
+主机变量如下：
+{% for host in groups['springboot-app'] %}
+    my_var1={{ hostvars[host].my_var1 }},my_var2={{ hostvars[host].my_var2 }}
+{% endfor %}
+```
+
+`hostvars` 读取主机变量：
+
+```yaml
+- hosts: all
+  tasks:
+    - name: "使用 hostvars 读取主机变量"
+      debug:
+        msg: "my_var1={{ hostvars[groups['springboot-app'][0]].my_var1 }},my_var2={{ hostvars[groups['springboot-app'][0]].my_var2 }}"
+
+    - name: "在 for 循环中读取主机变量"
+      template:
+        src: test.txt.j2
+        dest: /root/test.txt
+
+```
+
+运行测试：
+
+```sh
+ansible-playbook playbook.yaml --inventory inventory.ini
+```
+
+
+
 ## 特殊变量
 
 >[参考官方文档](https://docs.ansible.com/ansible/latest/reference_appendices/special_variables.html)
