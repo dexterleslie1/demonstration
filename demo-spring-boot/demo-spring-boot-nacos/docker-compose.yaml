@@ -6,7 +6,14 @@ services:
     environment:
       - TZ=Asia/Shanghai
       - MODE=standalone
+    # 持久化配置
+    # volumes:
+    #  - data-demo-spring-boot-nacos:/home/nacos
     ports:
       - '8848:8848'
       - '9848:9848'
       #- '9849:9849'
+
+# 持久化配置
+# volumes:
+#  data-demo-spring-boot-nacos:

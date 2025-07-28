@@ -3255,13 +3255,13 @@ public class ApiController {
 
 
 
-###  Nacos
+###  `Nacos`
 
 详细用法请参考示例`https://gitee.com/dexterleslie/demonstration/tree/master/spring-cloud/spring-cloud-nacos`
 
 
 
-#### Docker 运行 Nacos
+#### `Docker` 运行 `Nacos`
 
 >`https://blog.csdn.net/qq_27615455/article/details/125168548`
 >
@@ -3275,7 +3275,7 @@ version: "3.0"
 services:
   # https://blog.csdn.net/qq_27615455/article/details/125168548
 
-  # docker运行nacos2.x需要暴露9848和9849端口
+  # Docker 运行 nacos2.x 需要暴露 9848 和 9849 端口
   # https://github.com/alibaba/nacos/issues/6154
   demo-spring-cloud-nacos-server:
     image: nacos/nacos-server:v2.2.0
@@ -3283,10 +3283,18 @@ services:
       - TZ=Asia/Shanghai
       - MODE=standalone
       #- PREFER_HOST_MODE=hostname
+    # 持久化配置
+    # volumes:
+    #  - data-demo-spring-boot-nacos:/home/nacos
     ports:
       - '8848:8848'
       - '9848:9848'
       #- '9849:9849'
+
+# 持久化配置
+# volumes:
+#  data-demo-spring-boot-nacos:
+
 ```
 
 启动 Nacos
@@ -3661,8 +3669,6 @@ class ApplicationTests {
 
 >SpringCloud Alibaba 配置 Sentinel 官方文档`https://spring-cloud-alibaba-group.github.io/github-pages/hoxton/zh-cn/index.html`
 
-详细用法请参考示例`https://gitee.com/dexterleslie/demonstration/tree/master/spring-cloud/spring-cloud-sentinel`
-
 
 
 #### 介绍
@@ -3711,7 +3717,7 @@ Sentinel承接了阿里巴巴近10年的双十一大促流量的核心场景，�
 
 
 
-#### Docker 运行 Sentinel
+#### `Docker` 运行 `Sentinel`
 
 >注意：Sentinel 没有官方的 Docker 镜像，目前实验使用的非官方镜像为 bladex/sentinel-dashboard:1.7.0，事实上可以自己编译 Sentinel Docker 镜像。
 
@@ -3741,7 +3747,9 @@ docker compose up -d
 
 #### 和 `SpringCloud Alibaba` 集成
 
-父 pom 依赖
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/master/spring-cloud/spring-cloud-sentinel)
+
+父 `POM` 配置：
 
 ```xml
 <dependencyManagement>
@@ -3772,7 +3780,7 @@ docker compose up -d
 </dependencyManagement>
 ```
 
-各个微服务 pom Sentinel 依赖配置
+各个微服务 `POM` `Sentinel` 依赖配置
 
 ```xml
 <!-- sentinel依赖配置 -->
@@ -3780,16 +3788,52 @@ docker compose up -d
     <groupId>com.alibaba.cloud</groupId>
     <artifactId>spring-cloud-starter-alibaba-sentinel</artifactId>
 </dependency>
+
+<!-- Sentinel 持久化配置到 Nacos 依赖 -->
+<dependency>
+    <groupId>com.alibaba.csp</groupId>
+    <artifactId>sentinel-datasource-nacos</artifactId>
+</dependency>
 ```
 
-各个微服务 application.properties 配置
+各个微服务 `application.properties` 配置
 
 ```properties
 # 应用的名称会显示在 sentinel dashboard 中
 spring.application.name=xxx
 # sentinel配置
 spring.cloud.sentinel.transport.dashboard=localhost:8858
+
+# Sentinel 持久化配置到 Nacos 配置
+spring.cloud.sentinel.datasource.ds1.nacos.server-addr=localhost:8848
+spring.cloud.sentinel.datasource.ds1.nacos.group-id=DEFAULT_GROUP
+spring.cloud.sentinel.datasource.ds1.nacos.data-id=${spring.application.name}
+spring.cloud.sentinel.datasource.ds1.nacos..data-type=json
+# flow：流控规则。这是 Sentinel 最核心、最直观的一种规则，主要用于控制请求的 QPS（每秒查询率）或并发线程数，以防止系统被过大的流量压垮。
+# degrade：熔断规则。当系统的某个资源不稳定或出现故障时，为了防止故障的进一步扩散，可以使用熔断规则来快速失败这个资源的请求。熔断规则通常基于一些条件（如慢调用比例、异常比例或异常数）来触发。
+# param-flow：热点规则。热点规则用于对某个资源中的某个或某些参数进行单独的流控。这可以帮助系统保护那些因为某些特殊参数值而导致的高并发请求。
+# system：系统规则。系统规则是从系统的整体角度出发，对系统的入口流量、CPU 使用率、线程数等指标进行整体控制，以防止系统整体过载。
+# authority：授权规则。授权规则用于对资源的访问进行黑白名单控制。这可以帮助系统实现细粒度的访问控制。
+spring.cloud.sentinel.datasource.ds1.nacos.rule-type=flow
 ```
+
+运行示例：
+
+- 启动 `Sentinel` 和 `Nacos` 服务
+
+  ```
+  docker compose up -d
+  ```
+
+- 启动 `ApplicationGateway` 应用
+
+- 使用 `api.http` 访问 `http://localhost:8080/api/v1/test3` 产生 `Sentinel` 测试数据
+
+- 访问`http://localhost:8858/` `Sentinel` 控制台查看测试数据
+
+- 访问 `http://localhost:8848` `Nacos` 控制台调整 `Sentinel` 规则。
+
+- 可以针对特定的接口在 `Nacos` 中创建特定的规则。
 
 
 
@@ -3810,6 +3854,17 @@ services:
 #    ports:
 #      - '8858:8858'
     network_mode: host
+
+  nacos-server:
+    image: nacos/nacos-server:v2.2.0
+    environment:
+      - TZ=Asia/Shanghai
+      - MODE=standalone
+    ports:
+      - '8848:8848'
+      - '9848:9848'
+      #- '9849:9849'
+
 ```
 
 `POM` 添加配置：
@@ -3821,6 +3876,13 @@ services:
     <artifactId>spring-cloud-starter-alibaba-sentinel</artifactId>
     <!-- SpringCloud Alibaba Sentinel 版本需要和 SpringBoot 版本兼容，否则 SpringBoot 应用启动时报错 -->
     <version>2021.0.6.2</version>
+</dependency>
+
+<!-- Sentinel 持久化配置到 Nacos 依赖 -->
+<dependency>
+    <groupId>com.alibaba.csp</groupId>
+    <artifactId>sentinel-datasource-nacos</artifactId>
+    <version>1.8.6</version>
 </dependency>
 ```
 
@@ -3837,27 +3899,27 @@ spring.cloud.sentinel.transport.dashboard=localhost:8858
 # 当spring.cloud.sentinel.web-context-unify设置为false时，Sentinel会区分每一个具体的URL路径，
 # 每个不同的URL都会被视为一个独立的资源。这提供了更细粒度的控制，允许开发者为每一个具体的URL路径定义不同的流控、熔断等规则。
 spring.cloud.sentinel.web-context-unify=false
+
+# Sentinel 持久化配置到 Nacos 配置
+spring.cloud.sentinel.datasource.ds1.nacos.server-addr=localhost:8848
+spring.cloud.sentinel.datasource.ds1.nacos.group-id=DEFAULT_GROUP
+spring.cloud.sentinel.datasource.ds1.nacos.data-id=${spring.application.name}
+spring.cloud.sentinel.datasource.ds1.nacos..data-type=json
+# flow：流控规则。这是 Sentinel 最核心、最直观的一种规则，主要用于控制请求的 QPS（每秒查询率）或并发线程数，以防止系统被过大的流量压垮。
+# degrade：熔断规则。当系统的某个资源不稳定或出现故障时，为了防止故障的进一步扩散，可以使用熔断规则来快速失败这个资源的请求。熔断规则通常基于一些条件（如慢调用比例、异常比例或异常数）来触发。
+# param-flow：热点规则。热点规则用于对某个资源中的某个或某些参数进行单独的流控。这可以帮助系统保护那些因为某些特殊参数值而导致的高并发请求。
+# system：系统规则。系统规则是从系统的整体角度出发，对系统的入口流量、CPU 使用率、线程数等指标进行整体控制，以防止系统整体过载。
+# authority：授权规则。授权规则用于对资源的访问进行黑白名单控制。这可以帮助系统实现细粒度的访问控制。
+spring.cloud.sentinel.datasource.ds1.nacos.rule-type=flow
 ```
 
 启动应用请求接口后，`Sentinel Dashboard` 的簇点链路才会显示请求路径数据。
 
-访问 Sentinel 控制台`http://localhost:8858/`，帐号：sentinel，密码：sentinel
+访问 `Sentinel` 控制台`http://localhost:8858/`，帐号：`sentinel`，密码：`sentinel`
 
+访问 `Nacos` 控制台`http://localhost:8848/`，帐号：`nacos`，密码：`nacos`
 
-
-#### 运行示例
-
-启动 Sentinel 服务
-
-```bash
-docker compose up -d
-```
-
-启动 ApplicationGateway、ApplicationHelloworld 应用
-
-访问`http://localhost:8080/api/v1/test1`产生 Sentinel 测试数据
-
-访问`http://localhost:8858/` Sentinel 控制台查看测试数据
+可以针对特定的接口在 `Nacos` 中创建特定的规则。
 
 
 
@@ -4762,6 +4824,16 @@ spring.cloud.sentinel.datasource.ds1.nacos.rule-type=flow
 `POM` 配置：
 
 ```xml
+<!-- Sentinel 持久化配置到 Nacos 依赖 -->
+<dependency>
+    <groupId>com.alibaba.csp</groupId>
+    <artifactId>sentinel-datasource-nacos</artifactId>
+</dependency>
+```
+
+如果应用没有配置上面依赖从 `Nacos` 读取规则数据，则添加下面的依赖（因为上面的依赖自动引入 `nacos-client`）：
+
+```xml
 <dependency>
     <groupId>com.alibaba.nacos</groupId>
     <artifactId>nacos-client</artifactId>
@@ -4778,6 +4850,8 @@ public class SentinelRuleInitializer implements CommandLineRunner {
 
     @Value("${spring.cloud.sentinel.datasource.ds1.nacos.server-addr:localhost:8848}")
     String sentinelNacosServerAddr;
+    @Value("${spring.application.name}")
+    String springApplicationName;
 
     @Override
     public void run(String... args) throws Exception {
@@ -4788,7 +4862,7 @@ public class SentinelRuleInitializer implements CommandLineRunner {
 
         ConfigService configService = NacosFactory.createConfigService(sentinelNacosServerAddr);
 
-        String dataId = "demo-spring-boot-sentinel";
+        String dataId = springApplicationName;
         String group = "DEFAULT_GROUP";
         int timeoutMilliseconds = 3000;
 
@@ -4818,6 +4892,7 @@ public class SentinelRuleInitializer implements CommandLineRunner {
     }
 
 }
+
 ```
 
 启动应用后在 `Nacos` 服务中自动创建 `Sentinel` 规则
@@ -4837,3 +4912,112 @@ wrk -t1 -c1 -d300000000s --latency --timeout 60 http://localhost:8080/api/v1/sen
 #### 和 SpringCloud Gateway 集成
 
 >todo `https://github.com/alibaba/Sentinel/wiki/%E7%BD%91%E5%85%B3%E9%99%90%E6%B5%81`
+
+
+
+#### `Nacos` 配置 `Sentinel` 规则 `json` 格式
+
+```json
+[{
+    "resource": "myTest1",
+    "limitApp": "default",
+    "grade": 1,
+    "count": 1,
+    "strategy": 0,
+    "controlBehavior": 0,
+    "clusterMode": false
+}]
+```
+
+该配置是 Nacos 中存储的 Sentinel **流控规则（Flow Rule）**，用于对特定资源进行流量控制。以下是对各字段的详细解析：
+
+**1. 资源标识（resource）**
+
+- 值：`"myTest1"`  
+- 含义：表示该流控规则作用的**资源名称**（即 Sentinel 中需要限流的入口标识，通常对应一段业务逻辑或接口）。
+
+**2. 来源应用（limitApp）**
+
+- 值：`"default"`  
+- 含义：表示流控规则的**请求来源限制**。`default` 是 Sentinel 的默认值，含义是“不区分调用来源”，即所有调用该资源的请求都会被限流规则约束。  
+- 其他可能值：若指定具体应用名（如 `"appA"`），则仅限制来自 `appA` 的请求；`"*"` 表示拒绝所有来源（不常用）。
+
+**3. 阈值类型（grade）**
+
+- 值：`1`  
+- 含义：表示流控阈值的**统计维度类型**。Sentinel 中 `grade` 的取值由 `RuleConstant` 定义：  
+  - `0`：线程数限流（基于当前请求的线程数）；  
+  - `1`：QPS 限流（基于每秒请求数，最常用）；  
+  - `2`：线程数限流（已弃用）。  
+  此处 `grade=1` 表示规则基于 **QPS（每秒请求数）** 进行限流。
+
+**4. 阈值数量（count）**
+
+- 值：`1`  
+- 含义：表示流控的**具体阈值**。结合 `grade=1`（QPS 限流），此处含义是“每秒最多允许通过 1 个请求”。若实际 QPS 超过 1，触发流控效果。
+
+**5. 流控策略（strategy）**
+
+- 值：`0`  
+- 含义：表示**超出阈值时的处理策略**（流控效果）。Sentinel 中 `strategy` 的取值由 `RuleConstant` 定义：  
+  - `0`：快速失败（默认策略，直接拒绝超出阈值的请求，抛出 `BlockException`）；  
+  - `1`：Warm Up（冷启动，逐渐提高阈值，适用于服务启动初期）；  
+  - `2`：排队等待（请求匀速通过，超出阈值的请求排队等待，直到超时）；  
+  - `3`：预热排队（结合 Warm Up 和排队等待，更平滑的流量过渡）。  
+  此处 `strategy=0` 表示当 QPS 超过 1 时，直接拒绝后续请求。
+
+**6. 控制行为（controlBehavior）**
+
+- 值：`0`  
+- 注意：Sentinel 标准流控规则中**无此字段**，可能是配置冗余或笔误。实际生效的是 `strategy` 字段（二者值相同，均为 `0` 表示快速失败）。
+
+**7. 集群模式（clusterMode）**
+
+- 值：`false`  
+- 含义：表示是否开启**集群流控模式**。`false` 为单机模式（限流阈值基于单个实例的流量），`true` 为集群模式（阈值基于整个集群的总流量，需配合 Sentinel 集群中心使用）。此处为单机限流。
+
+**总结**
+
+该规则对资源 `myTest1` 生效，不区分调用来源，基于 QPS 限流（阈值 1 次/秒），当 QPS 超过阈值时直接拒绝请求（快速失败），采用单机模式。
+
+**注意**：实际使用中需确保 Sentinel 客户端已正确加载 Nacos 中的规则（通过 `NacosConfigUtil` 配置数据源），否则规则不会生效。
+
+
+
+#### 注意说明
+
+##### `@SentinelResource` 注解中的 `blockHandler`、`fallback`  需要和源函数参数列表一致
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/master/spring-cloud/spring-cloud-sentinel)
+
+```java
+@GetMapping(value = "test3")
+@SentinelResource(value = "test3", blockHandler = "blockHandler", fallback = "fallback")
+public ObjectResponse<String> test3(@RequestParam(value = "flag", required = false) String flag,
+                                    @RequestParam(value = "p2", required = false) String p2) {
+    if ("exception".equals(flag)) {
+        throw new RuntimeException("预期异常");
+    }
+    ObjectResponse<String> response = new ObjectResponse<>();
+    response.setData("/api/v1/test3 " + UUID.randomUUID());
+    return response;
+}
+
+public ObjectResponse<String> blockHandler(@RequestParam(value = "flag", defaultValue = "") String flag,
+                                           @RequestParam(value = "p2", required = false) String p2,
+                                           BlockException ex) {
+    ObjectResponse<String> response = new ObjectResponse<>();
+    response.setData("被限流了");
+    return response;
+}
+
+public ObjectResponse<String> fallback(@RequestParam(value = "flag", defaultValue = "") String flag,
+                                       @RequestParam(value = "p2", required = false) String p2,
+                                       Throwable ex) {
+    ObjectResponse<String> response = new ObjectResponse<>();
+    response.setData("服务降级了");
+    return response;
+}
+```
+
+- 上面的 `test3` 函数参数列表需要和 `blockHandler`、`fallback` 函数的参数列表一致，否则在触发限流或者熔断时会报告其他异常，导致不能返回预期的响应。

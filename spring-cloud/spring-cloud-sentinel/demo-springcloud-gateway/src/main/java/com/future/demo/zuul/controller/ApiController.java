@@ -50,13 +50,17 @@ public class ApiController {
         return response;
     }
 
-    public ObjectResponse<String> blockHandler(@RequestParam(value = "flag", defaultValue = "") String flag, BlockException ex) {
+    public ObjectResponse<String> blockHandler(@RequestParam(value = "flag", defaultValue = "") String flag,
+                                               @RequestParam(value = "p2", required = false) String p2,
+                                               BlockException ex) {
         ObjectResponse<String> response = new ObjectResponse<>();
         response.setData("被限流了");
         return response;
     }
 
-    public ObjectResponse<String> fallback(@RequestParam(value = "flag", defaultValue = "") String flag, Throwable ex) {
+    public ObjectResponse<String> fallback(@RequestParam(value = "flag", defaultValue = "") String flag,
+                                           @RequestParam(value = "p2", required = false) String p2,
+                                           Throwable ex) {
         ObjectResponse<String> response = new ObjectResponse<>();
         response.setData("服务降级了");
         return response;
