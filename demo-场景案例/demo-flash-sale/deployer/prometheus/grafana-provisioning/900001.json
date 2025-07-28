@@ -82,7 +82,7 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "flash_sale_total_count{instance=\"crond-service-1\", job=\"Crond Actuator\", type=\"order\"}",
+          "expr": "flash_sale_total_count{job=\"Crond Actuator\", type=\"order\"}",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -144,7 +144,7 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "flash_sale_total_count{instance=\"crond-service-1\", job=\"Crond Actuator\", type=\"product\"}",
+          "expr": "flash_sale_total_count{job=\"Crond Actuator\", type=\"product\"}",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -206,7 +206,7 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "product_pickup_randomly_stats{instance=\"crond-service-1\", job=\"Crond Actuator\", type=\"ordinary\"}",
+          "expr": "product_pickup_randomly_stats{job=\"Crond Actuator\", type=\"ordinary\"}",
           "legendFormat": "普通商品",
           "range": true,
           "refId": "A"
@@ -217,7 +217,7 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "product_pickup_randomly_stats{instance=\"crond-service-1\", job=\"Crond Actuator\", type=\"flashSale\"}",
+          "expr": "product_pickup_randomly_stats{job=\"Crond Actuator\", type=\"flashSale\"}",
           "hide": false,
           "legendFormat": "秒杀商品",
           "range": true,
@@ -280,7 +280,7 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "flash_sale_total_count{instance=\"crond-service-1\", job=\"Crond Actuator\", type=\"cassandra-index-orderListByUserId\"}",
+          "expr": "flash_sale_total_count{job=\"Crond Actuator\", type=\"cassandra-index-orderListByUserId\"}",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -342,7 +342,7 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "flash_sale_total_count{instance=\"crond-service-1\", job=\"Crond Actuator\", type=\"cassandra-index-orderListByMerchantId\"}",
+          "expr": "flash_sale_total_count{job=\"Crond Actuator\", type=\"cassandra-index-orderListByMerchantId\"}",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"

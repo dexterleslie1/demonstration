@@ -87,7 +87,7 @@ scrape_configs:
     metrics_path: '/actuator/prometheus'
     static_configs:
 {% for host in groups['crond'] %}
-       - targets: ['{{ host }}:8081']
+       - targets: ['{{ host }}:{{ hostvars[host].actuator_port }}']
          labels:
-           instance: crond-service-{{ loop.index }}-{{ host }}
+           instance: crond-service-{{ loop.index }}-{{ host }}:{{ hostvars[host].actuator_port }}
 {% endfor %}

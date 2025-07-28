@@ -26,6 +26,10 @@
         path: ~/deployer-flash-sale/cassandra/.env
         regexp: "^cassandra_seeds="
         line: "cassandra_seeds={{ cassandra_seeds }}"
+    - name: "配置Cassandra服务的docker-compose.yml"
+      template:
+        src: deployer/cassandra/docker-compose.yml.j2
+        dest: ~/deployer-flash-sale/cassandra/docker-compose.yml
 
 - name: "配置zookeeper、redis等公共服务的deployer"
   hosts: common
@@ -35,11 +39,16 @@
         path: ~/deployer-flash-sale/common/.env
         regexp: "^redisClusterAnnounceIp="
         line: "redisClusterAnnounceIp={{ groups['common'][0] }}"
-    - name: "配置wrk2的OpenResty主机ip"
+    - name: "配置wrk2的crond主机ip"
       lineinfile:
         path: ~/deployer-flash-sale/common/.env
         regexp: "^crondHost="
         line: "crondHost={{ groups['crond'][0] }}"
+    - name: "配置wrk2的crond端口"
+      lineinfile:
+        path: ~/deployer-flash-sale/common/.env
+        regexp: "^crondPort="
+        line: "crondPort={{ hostvars[groups['crond'][0]].server_port }}"
 
 - name: "配置Prometheus服务的deployer"
   hosts: common
@@ -87,6 +96,16 @@
         path: ~/deployer-flash-sale/crond/.env
         regexp: "^java_opts="
         line: "java_opts={{ java_opts }}"
+    - name: "配置crond服务的server_port"
+      lineinfile:
+        path: ~/deployer-flash-sale/crond/.env
+        regexp: "^server_port="
+        line: "server_port={{ server_port }}"
+    - name: "配置crond服务的actuator_port"
+      lineinfile:
+        path: ~/deployer-flash-sale/crond/.env
+        regexp: "^actuator_port="
+        line: "actuator_port={{ actuator_port }}"
     - name: "配置crond服务的common_db_host"
       lineinfile:
         path: ~/deployer-flash-sale/crond/.env

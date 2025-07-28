@@ -21,6 +21,8 @@ services:
       - future_count_port=${future_count_port}
       - sentinel_transport_dashboard=${sentinel_transport_dashboard}
       - sentinel_nacos_server_addr=${sentinel_nacos_server_addr}
+      - server_port=${server_port}
+      - actuator_port=${actuator_port}
     volumes:
       - data-demo-flash-sale-debezium:/var/lib/debezium
     logging:

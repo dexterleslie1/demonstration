@@ -1,0 +1,22 @@
+version: "3.1"
+
+services:
+  node0:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-cassandra
+    environment:
+      - CASSANDRA_SEEDS=${cassandra_seeds}
+{% if cassandra_max_heap_size is defined and cassandra_max_heap_size | trim != '' %}
+      # MAX_HEAP_SIZE：根据 inventory 配置动态生成
+      - MAX_HEAP_SIZE={{ cassandra_max_heap_size }}
+{% endif %}
+{% if cassandra_heap_newsize is defined and cassandra_heap_newsize | trim != '' %}
+      # HEAP_NEWSIZE：根据 inventory 配置动态生成
+      - HEAP_NEWSIZE={{ cassandra_heap_newsize }}
+{% endif %}
+    volumes:
+      - data-demo-flash-sale-cassandra:/var/lib/cassandra
+    restart: unless-stopped
+    network_mode: host
+
+volumes:
+  data-demo-flash-sale-cassandra:

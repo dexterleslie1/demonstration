@@ -126,4 +126,4 @@
       shell: |
         set -e
         cd ~/deployer-flash-sale/node-exporter
-        docker compose up -d      
+        docker compose up -d
