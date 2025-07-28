@@ -619,3 +619,137 @@ public class ApplicationService {
 @Resource
 CountService countService;
 ```
+
+
+
+## `future-common`
+
+>`future` 公共依赖库，包含工作中常用的工具类。
+>
+>`GitHub` 地址 `https://github.com/dexterleslie1/future-common.git`。
+
+
+
+### 引用
+
+`POM` 配置：
+
+```xml
+<dependency>
+    <groupId>com.github.dexterleslie1</groupId>
+    <artifactId>future-common</artifactId>
+    <version>1.2.3</version>
+</dependency>
+```
+
+
+
+### `Feign`
+
+
+
+#### 判断响应是否有业务异常
+
+>提示：为了解决 `http 200` 响应时有业务异常发生的情况，因为如果直接在 `Feign Decoder` 中抛出 `BusinessException`，会被包裹一层 `FeignException` 异常导致 `try catch` 代码更加臃肿。
+
+参考本站 [`future-count-sdk`](https://github.com/dexterleslie1/future-count-sdk.git) 中的 `CountService` 对此特性的用法。
+
+示例：
+
+```java
+@Slf4j
+public class CountService {
+
+    private Api api;
+
+    /**
+     * @param host
+     * @param port
+     * @param flagList 服务支持的flag列表
+     */
+    public CountService(String host, int port, List<String> flagList) throws BusinessException {
+        ...
+
+        api = Feign.builder()
+             
+       	...
+
+    }
+
+    /**
+     * 根据 flag 查询计数器当前计数
+     *
+     * @param flag
+     * @return
+     * @throws BusinessException
+     */
+    public long getCountByFlag(String flag) throws BusinessException {
+        ObjectResponse<Long> response = api.getCountByFlag(flag);
+        FeignUtil.throwBizExceptionIfResponseFailed(response);
+        return response.getData();
+    }
+
+    /**
+     * 递增计数器
+     *
+     * @param increaseCountDTOList
+     * @throws BusinessException
+     */
+    public void updateIncreaseCount(List<IncreaseCountDTO> increaseCountDTOList) throws BusinessException {
+        ObjectResponse<String> response = api.updateIncreaseCount(increaseCountDTOList);
+        FeignUtil.throwBizExceptionIfResponseFailed(response);
+    }
+}
+```
+
+- 上面 `FeignUtil.throwBizExceptionIfResponseFailed(response);` 就是此特性的用法。
+
+
+
+#### 使用自定义错误处理
+
+>提示：处理非 `http 200` 响应的情况。
+
+参考本站 [`future-count-sdk`](https://github.com/dexterleslie1/future-count-sdk.git) 中的 `CountService` 对此特性的用法。
+
+示例：
+
+```java
+@Slf4j
+public class CountService {
+
+    private Api api;
+
+    /**
+     * @param host
+     * @param port
+     * @param flagList 服务支持的flag列表
+     */
+    public CountService(String host, int port, List<String> flagList) throws BusinessException {
+        ...
+
+        api = Feign.builder()
+                // https://stackoverflow.com/questions/56987701/feign-client-retry-on-exception
+                .retryer(Retryer.NEVER_RETRY)
+                // https://qsli.github.io/2020/04/28/feign-method-timeout/
+                .options(new Request.Options(15, TimeUnit.SECONDS, 15, TimeUnit.SECONDS, false))
+                .encoder(new FormEncoder(new JacksonEncoder()))
+                .decoder(new JacksonDecoder())
+                // feign logger
+                // https://cloud.tencent.com/developer/article/1588501
+                .logger(new Logger.ErrorLogger()).logLevel(Logger.Level.NONE)
+                // ErrorDecoder
+                // https://cloud.tencent.com/developer/article/1588501
+                .errorDecoder(new CustomizeErrorDecoder())
+                .target(Api.class, "http://" + host + ":" + port);
+
+       	...
+
+    }
+
+    ...
+}
+```
+
+- 上面 `.errorDecoder(new CustomizeErrorDecoder())` 就是此特性的用法。
+
