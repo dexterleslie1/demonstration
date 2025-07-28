@@ -430,7 +430,7 @@ ansible_user=root
 ansible_ssh_pass=Root@123
 ```
 
-`jinja2` 模板语法 `for` 循环中读取主机变量：
+`test.txt.j2 jinja2` 模板语法 `for` 循环中读取主机变量：
 
 ```jinja2
 主机变量如下：
@@ -841,6 +841,54 @@ scrape_configs:
          labels:
            instance: openresty-{{ loop.index }}
 {% endfor %}
+```
+
+
+
+### `if else`
+
+`inventory.ini` 定义变量：
+
+```ini
+[springboot-app]
+192.168.235.165
+
+# 定义全局变量，所有主机组都能够使用
+[all:vars]
+ansible_user=root
+ansible_ssh_pass=Root@123
+
+[springboot-app:vars]
+my_var1=
+```
+
+`test.txt.j2`：
+
+```
+主机变量如下：
+{% if my_var1 is defined and my_var1 | trim != '' %}
+      my_var1={{ my_var1 }}
+{% else %}
+      my_var1=未定义或者空
+{% endif %}
+```
+
+`playbook.yaml`：
+
+```yaml
+- hosts: springboot-app
+  tasks:
+    - name: "测试 if else 语句"
+      template:
+        src: test.txt.j2
+        dest: /root/test.txt
+
+```
+
+测试：
+
+```sh
+ansible-playbook playbook.yaml --inventory inventory.ini
 ```
 
 
