@@ -40,17 +40,17 @@ scrape_configs:
 {% for host in groups['cassandra'] %}
       - targets: ['{{ host }}:9100']
         labels:
-          instance: cassandra-{{ loop.index }}
+          instance: cassandra-{{ loop.index }}-{{ host }}
 {% endfor %}
 {% for host in groups['crond'] %}
       - targets: ['{{ host }}:9100']
         labels:
-          instance: crond-service-{{ loop.index }}
+          instance: crond-service-{{ loop.index }}-{{ host }}
 {% endfor %}
 {% for host in groups['api'] %}
       - targets: ['{{ host }}:9100']
         labels:
-          instance: api-service-{{ loop.index }}
+          instance: api-service-{{ loop.index }}-{{ host }}
 {% endfor %}
 {% for host in groups['openresty'] %}
       - targets: ['{{ host }}:9100']
@@ -80,7 +80,7 @@ scrape_configs:
 {% for host in groups['api'] %}
        - targets: ['{{ host }}:8081']
          labels:
-           instance: api-service-{{ loop.index }}
+           instance: api-service-{{ loop.index }}-{{ host }}
 {% endfor %}
   - job_name: 'Crond Actuator'
     scrape_interval: 15s
@@ -89,5 +89,5 @@ scrape_configs:
 {% for host in groups['crond'] %}
        - targets: ['{{ host }}:8081']
          labels:
-           instance: crond-service-{{ loop.index }}
+           instance: crond-service-{{ loop.index }}-{{ host }}
 {% endfor %}
