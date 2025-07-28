@@ -3591,6 +3591,8 @@ spring.profiles.active=dev
 
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-spring-boot/demo-spring-boot-nacos)
 
+提示：`Nacos` 服务器关闭后，`Java` 客户端调用 `getConfig` 方法依旧能够返回数据，这是因为 `Java` 客户端的本地缓存机制。使用 `LocalConfigInfoProcessor.cleanAllSnapshot();` 清除本地缓存（路径默认 `~/.nacos/config`）。
+
 `POM` 配置：
 
 ```xml
