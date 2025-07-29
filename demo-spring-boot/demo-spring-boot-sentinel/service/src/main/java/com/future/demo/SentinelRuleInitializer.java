@@ -39,7 +39,7 @@ public class SentinelRuleInitializer implements CommandLineRunner {
                     "    \"resource\": \"myTest1\",\n" +
                     "    \"limitApp\": \"default\",\n" +
                     "    \"grade\": 1,\n" +
-                    "    \"count\": 1,\n" +
+                    "    \"count\": 100000000,\n" +
                     "    \"strategy\": 0,\n" +
                     "    \"controlBehavior\": 0,\n" +
                     "    \"clusterMode\": false\n" +

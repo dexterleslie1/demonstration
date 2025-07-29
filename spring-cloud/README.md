@@ -3667,7 +3667,7 @@ class ApplicationTests {
 
 
 
-### Sentinel
+### `Sentinel`
 
 >SpringCloud Alibaba 配置 Sentinel 官方文档`https://spring-cloud-alibaba-group.github.io/github-pages/hoxton/zh-cn/index.html`
 
@@ -4466,6 +4466,50 @@ public String fallbackMethod(Throwable ex) {
 
 
 
+##### `exceptionsToIgnore`
+
+>`todo` 没有成功实验演示其作用。
+
+在 Sentinel 的 `@SentinelResource` 注解中，`exceptionsToIgnore` 属性的作用是**指定需要被忽略的异常类型**。当被 `@SentinelResource` 标记的方法在执行过程中抛出这些指定类型的异常时，Sentinel 不会对这些异常进行额外处理（例如不会触发限流、降级的回调逻辑），而是直接让异常按照原本的路径向上传播，由上层调用者处理。
+
+**具体场景说明：**
+
+假设你通过 `@SentinelResource` 定义了一个资源（如接口方法），并配置了限流、降级等规则。当方法执行时：
+- 如果抛出 **Sentinel 内置的 `BlockException`**（例如因流量超过阈值被限流、因服务降级被触发），Sentinel 会默认调用 `blockHandler` 方法处理该异常。
+- 如果抛出 **其他未被忽略的异常**（如业务逻辑中的 `RuntimeException`），Sentinel 可能会根据降级规则触发 `fallback` 方法（如果配置了的话）。
+- **但如果抛出的异常类型被明确配置在 `exceptionsToIgnore` 中**（例如 `BusinessException`），Sentinel 会直接忽略这些异常，不会触发任何限流/降级的处理逻辑，异常会继续向上抛出，由业务代码自己处理。
+
+**示例：**
+
+```java
+@SentinelResource(
+    value = "createOrderFlashSale",
+    blockHandler = "createFlashSaleBlockHandler", // 处理 BlockException（限流/降级）
+    fallback = "createFlashSaleFallback",         // 处理其他异常（降级）
+    exceptionsToIgnore = {BusinessException.class} // 忽略 BusinessException
+)
+public Order createOrderFlashSale(User user, Product product) {
+    // 业务逻辑
+    if (product.getStock() <= 0) {
+        throw new BusinessException("商品已售罄"); // 该异常会被 Sentinel 忽略，直接向上传播
+    }
+    // ...
+}
+```
+在上述示例中：
+- 当抛出 `BusinessException` 时，Sentinel 不会触发 `blockHandler` 或 `fallback`，而是直接将 `BusinessException` 抛给调用方。
+- 当抛出其他异常（如 `NullPointerException`）时，若未配置 `fallback`，则可能被 Sentinel 捕获并根据降级规则处理；若配置了 `fallback`，则会调用 `fallback` 方法。
+
+**注意事项：**
+
+- `exceptionsToIgnore` 仅影响 Sentinel 对异常的**主动处理逻辑**（如限流、降级的回调），但不会阻止异常本身的传播。即使被忽略，异常仍会正常抛出到方法调用栈。
+- 该属性适用于需要区分「Sentinel 触发的异常」（如限流）和「业务自身的异常」（如参数校验失败）的场景，避免业务异常被误判为 Sentinel 的流量控制或降级结果。
+
+
+总结：`exceptionsToIgnore` 是 Sentinel 提供的「异常白名单」机制，用于让特定类型的异常跳过 Sentinel 的处理逻辑，保持业务异常的原有传播行为。
+
+
+
 #### 热点规则
 
 ##### 介绍
@@ -4988,7 +5032,7 @@ wrk -t1 -c1 -d300000000s --latency --timeout 60 http://localhost:8080/api/v1/sen
 
 #### 注意说明
 
-##### `@SentinelResource` 注解中的 `blockHandler`、`fallback`  需要和源函数参数列表一致
+##### `@SentinelResource` 注解中的 `blockHandler`、`fallback`  需要和源函数参数列表、返回值一致
 
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/master/spring-cloud/spring-cloud-sentinel)
 
@@ -5022,4 +5066,4 @@ public ObjectResponse<String> fallback(@RequestParam(value = "flag", defaultValu
 }
 ```
 
-- 上面的 `test3` 函数参数列表需要和 `blockHandler`、`fallback` 函数的参数列表一致，否则在触发限流或者熔断时会报告其他异常，导致不能返回预期的响应。
+- 上面的 `test3` 函数参数列表需要和 `blockHandler`、`fallback` 函数的参数列表、返回值一致，否则在触发限流或者熔断时会报告其他异常，导致不能返回预期的响应。
