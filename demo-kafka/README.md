@@ -488,6 +488,97 @@ Kafka 中**不同的消费者组消费同一个主题时，同一条消息会被
 
 
 
+### `replication-factor`
+
+在 Kafka 中，**`replication-factor`（副本因子）** 是一个核心参数，用于控制**主题分区的冗余程度和数据可靠性**。它决定了每个分区的数据会被复制到多少个 Broker（Kafka 服务节点）上存储。简单来说，副本因子越高，数据的冗余性和容错能力越强，但集群资源消耗也会相应增加。
+
+
+#### **一、核心定义**
+每个 Kafka 主题（Topic）会被划分为多个**分区（Partition）**，而每个分区可以有多个**副本（Replica）**。`replication-factor` 表示每个分区需要创建的副本总数（包括一个 Leader 副本和若干 Follower 副本）。  
+
+例如：  
+- 若 `replication-factor=1`，则每个分区只有 1 个副本（即没有 Follower，仅 Leader 自身）。  
+- 若 `replication-factor=3`，则每个分区会有 3 个副本（1 个 Leader + 2 个 Follower），这 3 个副本会分布在不同的 Broker 上（Kafka 会尽量均匀分布）。  
+
+
+#### **二、副本的角色分工**
+每个分区的副本中，存在两种角色：  
+1. **Leader 副本**：  
+   - 负责处理该分区的所有读写请求（生产者发送的消息会写入 Leader，消费者从 Leader 读取消息）。  
+   - 是分区的“主”副本，其他副本（Follower）会同步 Leader 的数据。  
+
+2. **Follower 副本**：  
+   - 仅负责**被动同步 Leader 的数据**（通过拉取 Leader 的日志并应用到本地）。  
+   - 不处理读写请求，但在 Leader 宕机时，会被选举为新的 Leader（保证分区的高可用）。  
+
+
+#### **三、副本因子的核心作用**
+##### 1. **数据冗余与容错**  
+副本因子越高，分区的冗余副本越多。当某个 Broker 宕机时，该 Broker 上的分区副本会丢失，但其他 Broker 上的 Follower 副本可以顶替 Leader，避免数据丢失和服务中断。  
+
+- 示例：若 `replication-factor=3`，且集群中有 3 个 Broker，每个分区的 3 个副本分别分布在 3 个 Broker 上。此时若 1 个 Broker 宕机，剩下的 2 个 Broker 上的副本仍可提供服务（其中一个 Follower 会被提升为 Leader）。  
+- 若 `replication-factor=1`，且 Broker 宕机，则该 Broker 上的所有分区数据将无法访问（无冗余），需手动恢复。  
+
+
+##### 2. **提高读取性能（可选）**  
+虽然 Follower 副本默认不处理读写请求，但 Kafka 支持通过配置 `replica.lag.time.max.ms` 等参数，允许 Follower 副本提供读服务（需谨慎使用，可能导致数据不一致）。此时，更高的副本因子可以分担 Leader 的读压力。  
+
+
+##### 3. **平衡集群负载**  
+Kafka 会尽量将同一分区的副本均匀分布在不同 Broker 上（例如，若集群有 5 个 Broker，`replication-factor=3`，则每个分区的 3 个副本可能分布在 Broker 1、2、3 或 2、4、5 等组合）。这有助于避免单个 Broker 负载过高（如磁盘、网络压力）。  
+
+
+#### **四、副本因子 vs 分区数**
+需要注意区分两个关键参数：  
+- **分区数（Partitions）**：决定主题的并行度（生产者可并行写入不同分区，消费者可通过多实例并行消费不同分区）。  
+- **副本因子（Replication Factor）**：决定每个分区的冗余程度（数据可靠性和容错能力）。  
+
+**总副本数** = 分区数 × 副本因子。例如：  
+- 若主题有 3 个分区，副本因子为 2，则总共有 3×2=6 个副本（每个分区 2 个副本，分布在不同 Broker 上）。  
+
+
+#### **五、副本因子的设置建议**
+##### 1. **生产环境常用值**  
+大多数生产环境会将 `replication-factor` 设置为 **3**（行业默认推荐）。这是因为：  
+- 3 副本在容错（允许 1 个 Broker 宕机）和资源消耗（相比 5 副本更节省）之间取得了平衡。  
+- 若集群规模较小（如 3 台 Broker），3 副本可覆盖所有 Broker，避免冗余浪费。  
+
+
+##### 2. **根据集群规模调整**  
+- 若集群 Broker 数量较少（如 2 台），副本因子最大只能设为 2（否则无法分布到不同 Broker）。但此时若 1 台 Broker 宕机，剩余 1 台需承载全部负载，仍有风险。  
+- 若集群 Broker 数量较多（如 10 台），可适当降低副本因子（如 2），但仍需至少保留 2 副本以应对单 Broker 故障。  
+
+
+##### 3. **避免过度设置**  
+副本因子过高（如 5 或更多）会导致：  
+- 集群存储资源消耗激增（总副本数 = 分区数 × 副本因子）。  
+- Follower 同步 Leader 数据的网络开销增大（可能影响集群吞吐量）。  
+
+
+##### 4. **最小可靠性要求**  
+若要求“允许最多 N 个 Broker 宕机时仍可用”，则副本因子至少为 `N+1`。例如：  
+- 允许 1 个 Broker 宕机 → 副本因子 ≥ 2。  
+- 允许 2 个 Broker 宕机 → 副本因子 ≥ 3。  
+
+
+#### **六、常见问题与注意事项**
+1. **副本无法分布到所有 Broker**：  
+   Kafka 会尽量将副本均匀分布，但如果 Broker 数量少于副本因子（例如集群只有 2 台 Broker，副本因子设为 3），则无法满足，Kafka 会报警告并仅使用可用 Broker（此时冗余性下降）。  
+
+
+2. **Follower 同步延迟**：  
+   Follower 需与 Leader 保持数据同步（通过 `ISR` 机制维护同步中的副本列表）。若 Follower 长期落后（超过 `replica.lag.time.max.ms`），会被移出 ISR，此时若 Leader 宕机，该 Follower 无法被提升为新 Leader（可能导致数据丢失）。  
+
+
+3. **副本因子与删除策略**：  
+   当删除主题或分区时，所有副本都会被删除（无论副本因子如何设置）。  
+
+
+#### **总结**  
+`replication-factor` 是 Kafka 控制数据可靠性的核心参数，通过增加副本数量提升容错能力，但需在冗余性、资源消耗和性能之间找到平衡。生产环境通常推荐设置为 3，具体需根据集群规模、可靠性要求和性能目标调整。
+
+
+
 ## `Docker Compose` 运行
 
 > [参考链接](https://blog.csdn.net/yudaonihaha/article/details/130768061)
@@ -1751,4 +1842,114 @@ volumes:
    watch -n 1 "ls -alh"
    ```
 
-   
+
+
+
+## 分区迁移到另外一个 `Broker`
+
+>把指定的主题所有分区从一个 `Broker` 迁移到另外一个 `Broker` 中，在分区迁移过程中不丢失消息。
+
+使用本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-kafka/demo-kafka-benchmark) 协助实验。
+
+启动示例：
+
+- 启动 `Kafka` 服务
+
+  ```sh
+  docker compose up -d
+  ```
+
+- 启动 `service` 和 `crond` 应用
+
+- 应用正常启动后，取消 `docker-compose.yaml` 中的 `kafka2` 注释并启动 `Kafka Broker 2`
+
+  ```sh
+  docker compose up -d
+  ```
+
+进入 `kafka2` 容器
+
+```sh
+docker compose exec -it kafka2 bash
+```
+
+检查所有 `Broker` 是否正常响应
+
+```sh
+KAFKA_JMX_OPTS="" /usr/bin/kafka-broker-api-versions --bootstrap-server localhost:9093
+```
+
+- 有 `192.168.1.181:9093` 和 `192.168.1.181:9092` 输出表示 `Broker` 正常。
+
+确保目标 `Broker` 上的所有分区副本均有冗余（至少 1 个其他副本在其他 `Broker` 上），查看分区副本分布
+
+```sh
+KAFKA_JMX_OPTS="" /usr/bin/kafka-topics --bootstrap-server localhost:9093 --describe --topic my-topic-1
+```
+
+- 输出中的 `Replicas` 列若仅包含目标 `Broker ID`（如 `[1]`），说明该分区无冗余，删除会导致数据丢失！
+
+持续 `6` 分钟测试以模拟业务逻辑持续进行中
+
+```sh
+ab -n 25000 -c 32 -k http://192.168.1.181:8080/api/v1/sendToTopic1PartitionReassignAssist
+```
+
+生成重分配方案，所有分区从 `broker 1` 迁移到 `broker 2`
+
+```sh
+KAFKA_JMX_OPTS="" /usr/bin/kafka-reassign-partitions --bootstrap-server localhost:9093 \
+  --generate \
+  --topics-to-move-json-file topics.json \
+  --broker-list "2" > reassign.json
+```
+
+`topics.json`：
+
+```json
+{
+  "topics": [
+    {
+      "topic": "__consumer_offsets"
+    },
+    {
+      "topic": "my-topic-1"
+    },
+    {
+      "topic": "my-topic-2"
+    },
+    {
+      "topic": "topic-test-send-perf"
+    }
+  ],
+  "version": 1
+}
+```
+
+编辑 `reassign.json` 删除其他配置只保留 `Proposed partition reassignment configuration` 配置。
+
+应用重分配方案（生成 `reassign.json` 文件后执行）
+
+```sh
+KAFKA_JMX_OPTS="" /usr/bin/kafka-reassign-partitions --bootstrap-server localhost:9093 \
+  --execute \
+  --reassignment-json-file reassign.json
+```
+
+验证进度
+
+```sh
+KAFKA_JMX_OPTS="" /usr/bin/kafka-reassign-partitions --bootstrap-server localhost:9093 \
+  --verify \
+  --reassignment-json-file reassign.json
+```
+
+再次查看主题的分区全部迁移到 `Broker 2` 上
+
+```sh
+KAFKA_JMX_OPTS="" /usr/bin/kafka-topics --bootstrap-server localhost:9093 --describe --topic my-topic-1
+```
+
+使用 `docker stats` 查看 `Kafka` 容器 `CPU` 使用率时，发现 `kafka1` 容器没有使用 `CPU`，而 `kafka2` 容器在使用 `CPU`。
+
+查看 `crond` 服务日志 `total=25000` 表示没有丢失消息。

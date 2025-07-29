@@ -49,6 +49,12 @@
 			<artifactId>future-common</artifactId>
 			<version>1.2.2</version>
 		</dependency>
+
+		<dependency>
+			<groupId>cn.hutool</groupId>
+			<artifactId>hutool-all</artifactId>
+			<version>5.8.35</version>
+		</dependency>
 	</dependencies>
 
 	<repositories>
