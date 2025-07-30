@@ -8,7 +8,7 @@ services:
     environment:
       - TZ=Asia/Shanghai
     volumes:
-      - ./redis.cluster.conf:/usr/local/etc/redis/redis.conf
+      - ./redis.cluster6.conf:/usr/local/etc/redis/redis.conf
     # ports:
     #   - 6390:6390
     #   - 16390:16390
@@ -22,7 +22,7 @@ services:
     environment:
       - TZ=Asia/Shanghai
     volumes:
-      - ./redis.cluster.conf:/usr/local/etc/redis/redis.conf
+      - ./redis.cluster6.conf:/usr/local/etc/redis/redis.conf
     # ports:
     #   - 6391:6391
     #   - 16391:16391
