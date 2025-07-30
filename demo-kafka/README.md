@@ -1953,3 +1953,5 @@ KAFKA_JMX_OPTS="" /usr/bin/kafka-topics --bootstrap-server localhost:9093 --desc
 使用 `docker stats` 查看 `Kafka` 容器 `CPU` 使用率时，发现 `kafka1` 容器没有使用 `CPU`，而 `kafka2` 容器在使用 `CPU`。
 
 查看 `crond` 服务日志 `total=25000` 表示没有丢失消息。
+
+此时可以安全地关闭并删除 `kafka1` 了。

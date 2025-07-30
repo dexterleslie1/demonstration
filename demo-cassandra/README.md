@@ -253,10 +253,60 @@ source '/scripts/data.cql';
 
 ### Docker 部署集群
 
->注意：
->
->- 同一台主机不部署 `Cassandra` 集群因为端口冲突不好处理，部署单机版 `Cassandra` 作为测试用途即可。
->- 使用 `Docker Compose` 部署 `Cassandra` 集群时配置 `CASSANDRA_SEEDS=node1,node2,node3` 会导致外部 `SpringBoot` 应用不能连接 `Cassandra` 集群，需要使用 `CASSANDRA_SEEDS=192.168.1.90,192.168.1.91,192.168.1.92` 配置。
+
+
+#### 单实例部署集群
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-cassandra/demo-client-datastax)
+
+`docker-compose.yaml`：
+
+```yaml
+version: "3.1"
+
+services:
+    node0:
+      image: cassandra:3.11.4
+      environment:
+        - MAX_HEAP_SIZE=1G
+        # 是MAX_HEAP_SIZE的1/4
+        - HEAP_NEWSIZE=256M
+        - CASSANDRA_SEEDS=node0,node1,node2
+        # 节点向客户端广播的地址是宿主机可访问的 IP
+        - CASSANDRA_BROADCAST_RPC_ADDRESS=${cassandra_broadcast_rpc_address}
+      volumes:
+        - ./init.cql:/scripts/data.cql:ro
+#      network_mode: host
+      ports:
+        - "9042:9042"   # CQL 客户端端口
+    node1:
+      image: cassandra:3.11.4
+      environment:
+        - MAX_HEAP_SIZE=1G
+        # 是MAX_HEAP_SIZE的1/4
+        - HEAP_NEWSIZE=256M
+        - CASSANDRA_SEEDS=node0,node1,node2
+        # 节点向客户端广播的地址是宿主机可访问的 IP
+        - CASSANDRA_BROADCAST_RPC_ADDRESS=${cassandra_broadcast_rpc_address}
+      ports:
+        - "9043:9042"   # CQL 客户端端口
+    node2:
+      image: cassandra:3.11.4
+      environment:
+        - MAX_HEAP_SIZE=1G
+        # 是MAX_HEAP_SIZE的1/4
+        - HEAP_NEWSIZE=256M
+        - CASSANDRA_SEEDS=node0,node1,node2
+        # 节点向客户端广播的地址是宿主机可访问的 IP
+        - CASSANDRA_BROADCAST_RPC_ADDRESS=${cassandra_broadcast_rpc_address}
+      ports:
+        - "9044:9042"   # CQL 客户端端口
+
+```
+
+
+
+#### 多实例部署集群
 
 详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-cassandra/demo-order-management-app)
 
@@ -2188,14 +2238,6 @@ nodetool status
   nodetool decommission
   ```
 
-- 删除节点
-
-  ```sh
-  nodetool removenode <host_id>
-  ```
-
-  - `<host-id>` 使用 `nodetool status` 命令获取。
-
 
 
 如果目标节点宕机按照下面步骤删除节点：
@@ -2207,6 +2249,197 @@ nodetool status
   ```
 
   - `<host-id>` 使用 `nodetool status` 命令获取。
+
+
+
+### 加入并退出集群
+
+使用本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-cassandra/demo-client-datastax) 协助测试。
+
+`.env`：
+
+```ini
+cassandra_broadcast_rpc_address=192.168.1.181
+
+```
+
+启动第一个集群节点 `docker-compose.yaml`：
+
+```yaml
+version: "3.1"
+
+services:
+    node0:
+      image: cassandra:3.11.4
+      environment:
+        - MAX_HEAP_SIZE=1G
+        # 是MAX_HEAP_SIZE的1/4
+        - HEAP_NEWSIZE=256M
+        - CASSANDRA_SEEDS=node0
+        # 节点向客户端广播的地址是宿主机可访问的 IP
+        - CASSANDRA_BROADCAST_RPC_ADDRESS=${cassandra_broadcast_rpc_address}
+      volumes:
+        - ./init.cql:/scripts/data.cql:ro
+#      network_mode: host
+      ports:
+        - "9042:9042"   # CQL 客户端端口
+```
+
+使用 `nodetool status` 查看集群状态只有一个节点。
+
+加入集群：
+
+- 启动第二个集群节点：
+
+  ```yaml
+  version: "3.1"
+  
+  services:
+      node0:
+        image: cassandra:3.11.4
+        environment:
+          - MAX_HEAP_SIZE=1G
+          # 是MAX_HEAP_SIZE的1/4
+          - HEAP_NEWSIZE=256M
+          - CASSANDRA_SEEDS=node0
+          # 节点向客户端广播的地址是宿主机可访问的 IP
+          - CASSANDRA_BROADCAST_RPC_ADDRESS=${cassandra_broadcast_rpc_address}
+        volumes:
+          - ./init.cql:/scripts/data.cql:ro
+  #      network_mode: host
+        ports:
+          - "9042:9042"   # CQL 客户端端口
+      node1:
+        image: cassandra:3.11.4
+        environment:
+          - MAX_HEAP_SIZE=1G
+          # 是MAX_HEAP_SIZE的1/4
+          - HEAP_NEWSIZE=256M
+          - CASSANDRA_SEEDS=node0,node1
+          # 节点向客户端广播的地址是宿主机可访问的 IP
+          - CASSANDRA_BROADCAST_RPC_ADDRESS=${cassandra_broadcast_rpc_address}
+        ports:
+          - "9043:9042"   # CQL 客户端端口
+  ```
+
+  使用 `nodetool status` 查看集群状态有两个节点。
+
+- 启动第三个集群节点：
+
+  ```yaml
+  version: "3.1"
+  
+  services:
+      node0:
+        image: cassandra:3.11.4
+        environment:
+          - MAX_HEAP_SIZE=1G
+          # 是MAX_HEAP_SIZE的1/4
+          - HEAP_NEWSIZE=256M
+          - CASSANDRA_SEEDS=node0
+          # 节点向客户端广播的地址是宿主机可访问的 IP
+          - CASSANDRA_BROADCAST_RPC_ADDRESS=${cassandra_broadcast_rpc_address}
+        volumes:
+          - ./init.cql:/scripts/data.cql:ro
+  #      network_mode: host
+        ports:
+          - "9042:9042"   # CQL 客户端端口
+      node1:
+        image: cassandra:3.11.4
+        environment:
+          - MAX_HEAP_SIZE=1G
+          # 是MAX_HEAP_SIZE的1/4
+          - HEAP_NEWSIZE=256M
+          - CASSANDRA_SEEDS=node0,node1
+          # 节点向客户端广播的地址是宿主机可访问的 IP
+          - CASSANDRA_BROADCAST_RPC_ADDRESS=${cassandra_broadcast_rpc_address}
+        ports:
+          - "9043:9042"   # CQL 客户端端口
+      node2:
+        image: cassandra:3.11.4
+        environment:
+          - MAX_HEAP_SIZE=1G
+          # 是MAX_HEAP_SIZE的1/4
+          - HEAP_NEWSIZE=256M
+          - CASSANDRA_SEEDS=node0,node1,node2
+          # 节点向客户端广播的地址是宿主机可访问的 IP
+          - CASSANDRA_BROADCAST_RPC_ADDRESS=${cassandra_broadcast_rpc_address}
+        ports:
+          - "9044:9042"   # CQL 客户端端口
+  
+  ```
+
+  使用 `nodetool status` 查看集群状态有三个节点。
+
+  ```sh
+  $ nodetool status
+  Datacenter: datacenter1
+  =======================
+  Status=Up/Down
+  |/ State=Normal/Leaving/Joining/Moving
+  --  Address      Load       Tokens       Owns (effective)  Host ID                               Rack
+  UN  172.20.29.4  70.97 KiB  256          33.0%             d561c19a-a62e-401c-b16b-b347eb79fe62  rack1
+  UN  172.20.29.2  81.11 KiB  256          33.8%             c2ab771e-f5b9-42c8-9ab8-4dfdc86a3f7c  rack1
+  UN  172.20.29.3  70.96 KiB  256          33.3%             97716519-7e1c-4ff4-8450-79383755414c  rack1
+  
+  ```
+
+
+
+运行示例中的 `ApplicationTests` 协助生产测试数据。
+
+登录第一个集群节点并记录 `t_order` 总记录数，用作集群节点退出后的数据比对用途
+
+```sh
+# 进入第一个集群节点 cli
+docker compose exec -it node0 bash
+
+$ cqlsh
+$ cqlsh:demo> use demo;
+$ cqlsh:demo> select count(*) from t_order;
+
+ count
+-------
+   104
+
+(1 rows)
+
+Warnings :
+Aggregation query used without partition key
+
+```
+
+
+
+退出集群：
+
+- 登录到第一个节点并退出集群：
+
+  ```sh
+  $ docker compose exec -it node0 bash
+  $ nodetool decommission
+  # 等待命令执行完毕
+  ```
+
+- 登录集群第三个节点并检查数据是否依旧存在
+
+  ```sh
+  $ docker compose exec -it node2 bash
+  $ cqlsh
+  $ cqlsh:demo> use demo;
+  $ cqlsh:demo> select count(*) from t_order;
+  
+   count
+  -------
+     104
+  
+  (1 rows)
+  
+  Warnings :
+  Aggregation query used without partition key
+  ```
+
+  - 和之前的比对一致说明数据依旧存在。
 
 
 

@@ -422,7 +422,7 @@ ansible-playbook playbook.yml --inventory localhost,
 
 ```ini
 [springboot-app]
-192.168.235.165 my_var1=v1 my_var2=v2
+192.168.1.198 my_var1=v1 my_var2=v2
 
 # 定义全局变量，所有主机组都能够使用
 [all:vars]
@@ -439,10 +439,10 @@ ansible_ssh_pass=Root@123
 {% endfor %}
 ```
 
-`hostvars` 读取主机变量：
+`playbook.yaml hostvars` 读取主机变量：
 
 ```yaml
-- hosts: all
+- hosts: springboot-app
   tasks:
     - name: "使用 hostvars 读取主机变量"
       debug:
@@ -453,6 +453,9 @@ ansible_ssh_pass=Root@123
         src: test.txt.j2
         dest: /root/test.txt
 
+    - name: "直接读取主机变量"
+      debug:
+        msg: "my_var1={{ my_var1 }},my_var2={{ my_var2 }}"
 ```
 
 运行测试：

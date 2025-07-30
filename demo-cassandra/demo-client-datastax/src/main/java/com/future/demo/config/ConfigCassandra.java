@@ -24,6 +24,8 @@ public class ConfigCassandra {
     public Cluster cluster() {
         return Cluster.builder()
                 .addContactPoint("localhost").withPort(9042)
+                .addContactPoint("localhost").withPort(9043)
+                .addContactPoint("localhost").withPort(9044)
                 .build();
     }
 
