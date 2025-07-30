@@ -640,6 +640,24 @@ CountService countService;
     <artifactId>future-common</artifactId>
     <version>1.2.3</version>
 </dependency>
+<dependency>
+    <groupId>org.springframework.security</groupId>
+    <artifactId>spring-security-core</artifactId>
+</dependency>
+<dependency>
+    <groupId>com.netflix.hystrix</groupId>
+    <artifactId>hystrix-core</artifactId>
+    <version>1.5.18</version>
+</dependency>
+<dependency>
+    <groupId>io.github.openfeign</groupId>
+    <artifactId>feign-core</artifactId>
+    <version>11.8</version>
+</dependency>
+<dependency>
+    <groupId>javax.validation</groupId>
+    <artifactId>validation-api</artifactId>
+</dependency>
 ```
 
 

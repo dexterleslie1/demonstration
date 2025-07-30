@@ -2263,7 +2263,7 @@ cassandra_broadcast_rpc_address=192.168.1.181
 
 ```
 
-启动第一个集群节点 `docker-compose.yaml`：
+启动第一、二个集群节点 `docker-compose.yaml`：
 
 ```yaml
 version: "3.1"
@@ -2283,46 +2283,30 @@ services:
 #      network_mode: host
       ports:
         - "9042:9042"   # CQL 客户端端口
+    node1:
+      image: cassandra:3.11.4
+      environment:
+        - MAX_HEAP_SIZE=1G
+        # 是MAX_HEAP_SIZE的1/4
+        - HEAP_NEWSIZE=256M
+        - CASSANDRA_SEEDS=node0
+        # 节点向客户端广播的地址是宿主机可访问的 IP
+        - CASSANDRA_BROADCAST_RPC_ADDRESS=${cassandra_broadcast_rpc_address}
+      ports:
+        - "9043:9042"   # CQL 客户端端口
 ```
 
 使用 `nodetool status` 查看集群状态只有一个节点。
 
+启动应用并使用 `wrk` 协助模拟业务逻辑在持续进行中
+
+```sh
+ab -n 20000 -c 32 -k http://localhost:8080/api/v1/testAssistMigrationGenerateDatum
+```
+
+运行约 `1` 分钟后执行下面操作。
+
 加入集群：
-
-- 启动第二个集群节点：
-
-  ```yaml
-  version: "3.1"
-  
-  services:
-      node0:
-        image: cassandra:3.11.4
-        environment:
-          - MAX_HEAP_SIZE=1G
-          # 是MAX_HEAP_SIZE的1/4
-          - HEAP_NEWSIZE=256M
-          - CASSANDRA_SEEDS=node0
-          # 节点向客户端广播的地址是宿主机可访问的 IP
-          - CASSANDRA_BROADCAST_RPC_ADDRESS=${cassandra_broadcast_rpc_address}
-        volumes:
-          - ./init.cql:/scripts/data.cql:ro
-  #      network_mode: host
-        ports:
-          - "9042:9042"   # CQL 客户端端口
-      node1:
-        image: cassandra:3.11.4
-        environment:
-          - MAX_HEAP_SIZE=1G
-          # 是MAX_HEAP_SIZE的1/4
-          - HEAP_NEWSIZE=256M
-          - CASSANDRA_SEEDS=node0,node1
-          # 节点向客户端广播的地址是宿主机可访问的 IP
-          - CASSANDRA_BROADCAST_RPC_ADDRESS=${cassandra_broadcast_rpc_address}
-        ports:
-          - "9043:9042"   # CQL 客户端端口
-  ```
-
-  使用 `nodetool status` 查看集群状态有两个节点。
 
 - 启动第三个集群节点：
 
@@ -2350,7 +2334,7 @@ services:
           - MAX_HEAP_SIZE=1G
           # 是MAX_HEAP_SIZE的1/4
           - HEAP_NEWSIZE=256M
-          - CASSANDRA_SEEDS=node0,node1
+          - CASSANDRA_SEEDS=node0
           # 节点向客户端广播的地址是宿主机可访问的 IP
           - CASSANDRA_BROADCAST_RPC_ADDRESS=${cassandra_broadcast_rpc_address}
         ports:
@@ -2361,7 +2345,7 @@ services:
           - MAX_HEAP_SIZE=1G
           # 是MAX_HEAP_SIZE的1/4
           - HEAP_NEWSIZE=256M
-          - CASSANDRA_SEEDS=node0,node1,node2
+          - CASSANDRA_SEEDS=node0
           # 节点向客户端广播的地址是宿主机可访问的 IP
           - CASSANDRA_BROADCAST_RPC_ADDRESS=${cassandra_broadcast_rpc_address}
         ports:
@@ -2386,31 +2370,6 @@ services:
 
 
 
-运行示例中的 `ApplicationTests` 协助生产测试数据。
-
-登录第一个集群节点并记录 `t_order` 总记录数，用作集群节点退出后的数据比对用途
-
-```sh
-# 进入第一个集群节点 cli
-docker compose exec -it node0 bash
-
-$ cqlsh
-$ cqlsh:demo> use demo;
-$ cqlsh:demo> select count(*) from t_order;
-
- count
--------
-   104
-
-(1 rows)
-
-Warnings :
-Aggregation query used without partition key
-
-```
-
-
-
 退出集群：
 
 - 登录到第一个节点并退出集群：
@@ -2421,25 +2380,8 @@ Aggregation query used without partition key
   # 等待命令执行完毕
   ```
 
-- 登录集群第三个节点并检查数据是否依旧存在
+- 等待 `wrk` 执行完毕后调用接口 `http://localhost:8080/api/v1/testAssistMigrationGetTotalCount` 返回 `"data": 20000` 表示没有丢失数据。
 
-  ```sh
-  $ docker compose exec -it node2 bash
-  $ cqlsh
-  $ cqlsh:demo> use demo;
-  $ cqlsh:demo> select count(*) from t_order;
-  
-   count
-  -------
-     104
-  
-  (1 rows)
-  
-  Warnings :
-  Aggregation query used without partition key
-  ```
-
-  - 和之前的比对一致说明数据依旧存在。
 
 
 
