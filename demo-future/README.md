@@ -510,6 +510,93 @@ future-auth-db-backup:
 
 
 
+### `sentinel-dashboard`
+
+>说明：使用 `bladex/sentinel-dashboard:1.8.0` 镜像无法定义 `JAVA_OPTS`，`docker hub` 地址 `https://hub.docker.com/r/bladex/sentinel-dashboard`。所以自定义 `sentinel-dashboard` 镜像。
+
+#### 制作镜像
+
+参考 `sentinel-dashboard` 官方 `https://github.com/alibaba/Sentinel/tree/master/sentinel-dashboard` 制作镜像。
+
+手动从 `https://github.com/alibaba/Sentinel/releases` 对应版本的 `jar` 并上传到阿里云 `oss` 中。
+
+`Dockerfile`：
+
+```dockerfile
+FROM amd64/buildpack-deps:buster-curl as installer
+
+ARG SENTINEL_VERSION=1.8.0
+
+RUN set -x \
+    && curl -SL --output /home/sentinel-dashboard.jar https://fut001.oss-cn-hangzhou.aliyuncs.com/sentinel/sentinel-dashboard-${SENTINEL_VERSION}.jar
+
+FROM openjdk:8-jre-slim
+
+# copy sentinel jar
+COPY --from=installer ["/home/sentinel-dashboard.jar", "/home/sentinel-dashboard.jar"]
+
+ENV JAVA_OPTS ''
+
+RUN chmod -R +x /home/sentinel-dashboard.jar
+
+EXPOSE 8858
+
+CMD java ${JAVA_OPTS} -Dserver.port=8858 -Dcsp.sentinel.dashboard.server=localhost:8858 -jar /home/sentinel-dashboard.jar
+
+```
+
+`docker-compose.yaml`：
+
+```yaml
+version: "3.1"
+
+services:
+  sentinel-dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/future-sentinel-dashboard:1.8.0
+    environment:
+      - TZ=Asia/Shanghai
+      - JAVA_OPTS=-Xmx256m
+#    ports:
+#      - '8858:8858'
+    network_mode: host
+
+```
+
+编译镜像
+
+```sh
+docker compose build
+```
+
+推送镜像
+
+```sh
+docker compose push
+```
+
+
+
+#### 使用 - `Docker Compose` 方式
+
+```yaml
+version: "3.1"
+
+services:
+  sentinel-dashboard:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/future-sentinel-dashboard:1.8.0
+    environment:
+      - TZ=Asia/Shanghai
+      - JAVA_OPTS=-Xmx256m
+#    ports:
+#      - '8858:8858'
+    network_mode: host
+```
+
+
+
 ## `count` 服务
 
 >中文名称为计数器服务。

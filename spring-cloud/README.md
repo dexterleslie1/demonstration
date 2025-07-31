@@ -3282,6 +3282,10 @@ services:
     environment:
       - TZ=Asia/Shanghai
       - MODE=standalone
+      # 参考官方说明 https://hub.docker.com/r/nacos/nacos-server
+      # 指定 jvm 内存为 256m
+      - JVM_XMS=256m
+      - JVM_XMX=256m
       #- PREFER_HOST_MODE=hostname
     # 持久化配置
     # volumes:
@@ -3730,9 +3734,11 @@ version: "3.0"
 
 services:
   demo-spring-cloud-sentinel:
-    image: bladex/sentinel-dashboard:1.8.0
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/future-sentinel-dashboard:1.8.0
     environment:
       - TZ=Asia/Shanghai
+      # 指定 jvm 内存为 256m
+      - JAVA_OPTS=-Xmx256m
     ports:
       - '8858:8858'
 ```
