@@ -23,9 +23,10 @@ public class ConfigCassandra {
     @Bean(destroyMethod = "close")
     public Cluster cluster() {
         return Cluster.builder()
+                // 如果只有一个 localhost:9042 连接点，
+                // 在执行 nodetool decommission 使节点删除后将无法获取到集群新的拓扑导致报错
                 .addContactPoint("localhost").withPort(9042)
                 .addContactPoint("localhost").withPort(9043)
-//                .addContactPoint("localhost").withPort(9044)
                 .build();
     }
 

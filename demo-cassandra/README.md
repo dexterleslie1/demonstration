@@ -648,7 +648,7 @@ Netflix开源的Cassandra客户端，基于Thrift协议（较旧），适合遗�
 
 ### **DataStax Java Driver**
 
->详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-cassandra/demo-client-datastax)，提醒：本示例演示连接 Cassandra3.11.4。
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-cassandra/demo-client-datastax)，提醒：本示例演示连接 `Cassandra3.11.4`，客户端默认已经配置集群拓扑自动更新机制不需要手动配置。
 
 POM 配置：
 
@@ -674,7 +674,10 @@ public class ConfigCassandra {
     @Bean(destroyMethod = "close")
     public Cluster cluster() {
         return Cluster.builder()
+                // 如果只有一个 localhost:9042 连接点，
+                // 在执行 nodetool decommission 使节点删除后将无法获取到集群新的拓扑导致报错
                 .addContactPoint("localhost").withPort(9042)
+                .addContactPoint("localhost").withPort(9043)
                 .build();
     }
 
