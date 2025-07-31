@@ -16,10 +16,10 @@
         cd ~/deployer-flash-sale/crond
         docker compose pull && docker compose up -d
 
-- name: "启动zookeeper、redis等公共服务"
+- name: "启动zookeeper等公共服务"
   hosts: common
   tasks:
-    - name: "使用Docker Compose启动zookeeper、redis等公共服务"
+    - name: "使用Docker Compose启动zookeeper等公共服务"
       shell: |
         set -e
         cd ~/deployer-flash-sale/common
@@ -27,6 +27,15 @@
         # 重启自动商品创建 wrk2 服务，因为 crond 服务重启会导致 wrk2 服务中断却不会自动恢复导致不能自动创建商品
         docker compose restart wrk2-create-flashSale-product
         docker compose restart wrk2-create-ordinary-product
+
+- name: "启动redis服务"
+  hosts: redis
+  tasks:
+    - name: "使用Docker Compose启动redis服务"
+      shell: |
+        set -e
+        cd ~/deployer-flash-sale/redis
+        docker compose pull && docker compose up -d
 
 - name: "启动prometheus公共服务"
   hosts: common
@@ -92,6 +101,7 @@
         timeout: 300
       delegate_to: "{{ groups['cassandra'][0] }}"
       run_once: true
+      when: scaleout is not defined
     - name: "初始化Cassandra数据库和表结构"
       shell: |
         set -e
@@ -100,6 +110,7 @@
       # 任务只在第一个主机上运行一次
       run_once: true
       delegate_to: "{{ groups['cassandra'][0] }}"
+      when: scaleout is not defined
 
 - name: "启动OpenResty服务"
   hosts: openresty
@@ -118,6 +129,7 @@
         set -e
         cd ~/deployer-flash-sale/ui
         docker compose pull && docker compose up -d
+        docker compose restart
 
 - name: "启动node_exporter"
   hosts: "{{ groups['all'] | difference(groups['management']) | difference(groups['test-node']) }}"

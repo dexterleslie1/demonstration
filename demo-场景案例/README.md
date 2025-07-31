@@ -33,11 +33,7 @@
 
 
 
-### 测试
-
-
-
-#### 阿里云测试
+### 阿里云测试
 
 1. 创建管理实例的镜像
 
@@ -150,7 +146,9 @@
 
 6. 访问应用界面测试功能 `http://10.0.1.10`
 
-7. 实施压力测试
+7. 访问 `Nacos` 控制面板 `http://192.168.1.198:8848/nacos/` 调整普通和秒杀下单的限流规则，帐号：`nacos`，密码：`nacos`。
+
+8. 实施压力测试
 
    访问 `Prometheus` 监控 `http://10.0.1.10:3000`，帐号 `admin`，密码 `admin`
 
@@ -166,13 +164,391 @@
    wrk -t8 -c2048 -d60s --latency --timeout 30 http://10.0.1.40/api/v1/order/createFlashSale
    ```
 
-8. 销毁所有测试服务
+9. 销毁所有测试服务
 
    在管理主机中执行下面命令销毁所有测试服务：
 
    ```sh
    ansible-playbook playbook-service-destroy.yml --inventory inventory.ini
    ```
+
+
+
+### 单机部署后组件分离测试
+
+>说明：单击部署应用后，因为业务规模变大，单机负载增加，组件之间资源相互竞争，影响应用的稳定性。面对此场景模拟应用支持在线扩容并且不影响在线业务。
+
+单机部署：
+
+- 修改 `inventory.ini` 各个 `host` 指向同一个实例取消 `单实例8c16g部署配置` 注释，注释 `scaleout=true` 全局配置。
+
+- 复制 `Anisble` 配置：
+
+  ```sh
+  ansible-playbook playbook-deployer-config.yml --inventory inventory.ini
+  ```
+
+- 编译并推送镜像：
+
+  ```sh
+  ./build.sh && ./push.sh
+  ```
+
+- 运行应用：
+
+  ```sh
+  ansible-playbook playbook-service-start.yml --inventory inventory.ini
+  ```
+
+登录 `Nacos http://192.168.1.198:8848/nacos` 修改秒杀业务限流阈值为 `100`。
+
+使用 `wrk` 协助持续秒杀业务进行中：
+
+```sh
+wrk -t8 -c2048 -d30000000s --latency --timeout 30 http://192.168.1.198/api/v1/order/createFlashSale
+```
+
+查看 `api`、`crond` 服务日志是否会报告异常：
+
+```sh
+# 查看 api 服务日志
+cd deployer-flash-sale/service
+docker compose logs -f --tail 10
+
+# 查看 crond 服务日志
+cd deployer-flash-sale/crond
+docker compose logs -f --tail 10
+```
+
+复制分离 `Ansible` 配置：
+
+- `inventory.ini` 配置中 `[redis]` 使用多实例部署配置
+
+- `inventory.ini` 配置中 `[rocketmq]` 使用多实例部署配置
+
+- `inventory.ini` 配置中 `[cassandra]` 使用多实例部署配置
+
+- `inventory.ini` 配置中 `[api]` 使用多实例部署配置
+
+- `inventory.ini` 配置中 `[openresty]` 使用多实例部署配置
+
+- `inventory.ini` 配置中 `scaleout=true` 全局配置取消注释
+
+- 复制 `Ansible` 配置
+
+  ```sh
+  ansible-playbook playbook-deployer-config.yml --inventory inventory.ini
+  ```
+
+
+
+启动应用相关组件空节点准备加入集群：
+
+- `inventory.ini` 配置中 `[common]` 所有实例配置注释
+
+- `inventory.ini` 配置中 `[db]` 所有实例配置注释
+
+- `inventory.ini` 配置中 `[crond]` 所有实例配置注释
+
+- 启动空节点
+
+  ```sh
+  ansible-playbook playbook-service-start.yml --inventory inventory.ini
+  ```
+
+
+
+`redis` 节点加入集群：
+
+- 登录新节点所在的实例并登录容器
+
+  ```sh
+  cd deployer-flash-sale/redis
+  docker compose exec -it node1 bash
+  ```
+
+- 添加新节点前查看集群状态
+
+  ```sh
+  $ redis-cli -h 192.168.1.198 -p 6380 cluster nodes
+  025da042a31ff9dda4f4cf196387ce9ad50a50d6 192.168.1.198:6389@16389 slave 1bace5b5fdb4d973af22018ab6e423f8000ff2fe 0 1753867312000 1 connected
+  2565a9258683148a0d5993e4c71f459ddee7fcac 192.168.1.198:6388@16388 slave 8fb4186bc7b1cbe6c34c48e43d09945f8ccff52a 0 1753867309000 2 connected
+  45154545fca31f1434d7cac4b7f7012767e56d5a 192.168.1.198:6387@16387 slave cb356f4d477c48613e872b8736a56fff3924fce3 0 1753867308598 4 connected
+  8acdb15a81ef8d4385be40299deb97a18a34884d 192.168.1.198:6384@16384 master - 0 1753867310000 5 connected 13107-16383
+  8fb4186bc7b1cbe6c34c48e43d09945f8ccff52a 192.168.1.198:6381@16381 master - 0 1753867311725 2 connected 3277-6553
+  78b03c0d9217d0c3c3afb3337a154fdc7e1f65ff 192.168.1.198:6386@16386 slave 8acdb15a81ef8d4385be40299deb97a18a34884d 0 1753867312731 5 connected
+  149a0927d896f7b1beac0426a505eb5c65172b98 192.168.1.198:6382@16382 master - 0 1753867309000 3 connected 6554-9829
+  8a1edd6e5b0fcd5f91e9520f1ecccd4537e0c057 192.168.1.198:6385@16385 slave 149a0927d896f7b1beac0426a505eb5c65172b98 0 1753867313736 3 connected
+  1bace5b5fdb4d973af22018ab6e423f8000ff2fe 192.168.1.198:6380@16380 myself,master - 0 1753867307000 1 connected 0-3276
+  cb356f4d477c48613e872b8736a56fff3924fce3 192.168.1.198:6383@16383 master - 0 1753867309707 4 connected 9830-13106
+  ```
+
+- 添加新节点到集群中，注意：此时新节点无法接收和处理请求，因为新节点还没有分配插槽
+
+  ```sh
+  # 添加 192.168.1.201:6380 新节点到现有集群，192.168.1.198:6380 为现有集群中任意一个节点
+  redis-cli --cluster add-node 192.168.1.201:6380 192.168.1.198:6380
+  redis-cli --cluster add-node 192.168.1.201:6381 192.168.1.198:6380
+  redis-cli --cluster add-node 192.168.1.201:6382 192.168.1.198:6380
+  redis-cli --cluster add-node 192.168.1.201:6383 192.168.1.198:6380
+  redis-cli --cluster add-node 192.168.1.201:6384 192.168.1.198:6380
+  redis-cli --cluster add-node 192.168.1.201:6385 192.168.1.198:6380
+  redis-cli --cluster add-node 192.168.1.201:6386 192.168.1.198:6380
+  redis-cli --cluster add-node 192.168.1.201:6387 192.168.1.198:6380
+  redis-cli --cluster add-node 192.168.1.201:6388 192.168.1.198:6380
+  redis-cli --cluster add-node 192.168.1.201:6389 192.168.1.198:6380
+  ```
+
+- 为指定的 `master` 节点配置 `slave` 节点，`2728a594a0498e98e4b83a537e19f9a0a3790f38` 为指定 `master` 节点的 `id`
+
+  ```sh
+  redis-cli -h 192.168.1.198 -p 6380 cluster nodes
+  
+  redis-cli -h 192.168.1.201 -p 6380 cluster replicate 1bace5b5fdb4d973af22018ab6e423f8000ff2fe
+  redis-cli -h 192.168.1.201 -p 6381 cluster replicate 8fb4186bc7b1cbe6c34c48e43d09945f8ccff52a
+  redis-cli -h 192.168.1.201 -p 6382 cluster replicate 149a0927d896f7b1beac0426a505eb5c65172b98
+  redis-cli -h 192.168.1.201 -p 6383 cluster replicate cb356f4d477c48613e872b8736a56fff3924fce3
+  redis-cli -h 192.168.1.201 -p 6384 cluster replicate 8acdb15a81ef8d4385be40299deb97a18a34884d
+  ```
+
+- 手动 `failover` 到新的节点实现主从切换
+
+  ```sh
+  redis-cli -h 192.168.1.201 -p 6380 cluster failover
+  redis-cli -h 192.168.1.201 -p 6381 cluster failover
+  redis-cli -h 192.168.1.201 -p 6382 cluster failover
+  redis-cli -h 192.168.1.201 -p 6383 cluster failover
+  redis-cli -h 192.168.1.201 -p 6384 cluster failover
+  ```
+
+- 再次查看集群状态，`192.168.1.201:6380` 变为 `master`，`192.168.1.198:6380` 变为 `slave` 节点
+
+  ```sh
+  redis-cli -h 192.168.1.201 -p 6380 cluster nodes
+  ```
+
+
+
+`Cassandra` 节点加入集群：
+
+- 登录 `http://192.168.1.198:81/` 填写用户 `ID` 为 `1`，商家 `ID` 为 `2` 后创建商品并下单（大概 `10` 条单），记录用户订单信息在 `Cassandra` 迁移后进行数据比对。
+
+- 分别登录新节点所在的实例，手动添加节点到集群中，下面以第一个节点为例子演示：
+
+  ```sh
+  cd deployer-flash-sale/cassandra
+  
+  # 先删除所有新节点容器，避免蜂拥加入集群导致混乱
+  docker compose down -v
+  
+  # 编辑 .env 修改为下面内容，其中 192.168.1.198 为已经存在的 cassandra 集群节点
+  cassandra_seeds=192.168.1.198
+  # 重启 cassandra 节点
+  docker compose up -d
+  # 进入容器
+  docker compose exec -it node0 bash
+  # 查看 cassandra 集群状态
+  nodetool status
+  # 等待新的节点状态由 UJ 变为 UN 才操作下一个节点加入集群
+  ```
+
+
+
+迁移 `Kafka` 分区：
+
+- 登录新节点所在的实例
+
+- 切换到 `kafka` 目录
+
+  ```sh
+  cd deployer-flash-sale/kafka
+  ```
+
+- 检查 `Kafka` 集群 `Broker` 是否正常响应
+
+  ```sh
+  # 进入分离 kafka 容器
+  docker compose exec -it kafka bash
+  
+  KAFKA_JMX_OPTS="" /usr/bin/kafka-broker-api-versions --bootstrap-server localhost:9092
+  ```
+
+  - 显示 `192.168.1.198:9092` 和 `192.168.1.191:9092` 表示正常。
+
+- 在线迁移所有主题到分离 `kafka`
+
+  查看主题分区所在的 `Broker`
+
+  ```sh
+  KAFKA_JMX_OPTS="" /usr/bin/kafka-topics --bootstrap-server localhost:9092 --describe --topic topic-increase-count-fast
+  ```
+
+  创建 `topics.json`：
+
+  ```json
+  {
+    "topics": [
+      {
+        "topic": "__consumer_offsets"
+      },
+      {
+        "topic": "topic-order-in-cache-sync-to-db"
+      },
+      {
+        "topic": "topic-increase-count-fast"
+      },
+      {
+        "topic": "topic-increase-count-slow"
+      },
+      {
+        "topic": "topic-create-order-cassandra-index-listByUserId"
+      },
+      {
+        "topic": "topic-create-order-cassandra-index-listByMerchantId"
+      },
+      {
+        "topic": "topic-setup-product-flashsale-cache"
+      },
+      {
+        "topic": "topic-random-id-picker-add-id-list"
+      },
+      {
+        "topic": "topic-add-product-to-cache-for-pickup-randomly-when-purchasing"
+      }
+    ],
+    "version": 1
+  }
+  ```
+
+  生成迁移配置，所有分区从 `broker 1` 迁移到 `broker 2`
+
+  ```sh
+  docker compose cp topics.json kafka:/home/appuser
+  
+  KAFKA_JMX_OPTS="" /usr/bin/kafka-reassign-partitions --bootstrap-server localhost:9092 \
+    --generate \
+    --topics-to-move-json-file topics.json \
+    --broker-list "2" > reassign.json
+  
+  docker compose cp kafka:/home/appuser/reassign.json .
+  ```
+
+  编辑 `reassign.json` 删除其他配置只保留 `Proposed partition reassignment configuration` 配置。
+
+  应用迁移配置：
+
+  ```sh
+  docker compose cp reassign.json kafka:/home/appuser
+  
+  KAFKA_JMX_OPTS="" /usr/bin/kafka-reassign-partitions --bootstrap-server localhost:9092 \
+    --execute \
+    --reassignment-json-file reassign.json
+  ```
+
+  查看迁移进度或者迁移结果状态
+
+  ```sh
+  KAFKA_JMX_OPTS="" /usr/bin/kafka-reassign-partitions --bootstrap-server localhost:9092 \
+    --verify \
+    --reassignment-json-file reassign.json
+  ```
+
+  使用 `docker stats` 查看之前的 `kafka` 服务 `CPU` 很低说明成功分离。
+
+
+
+测试分离后的服务
+
+```sh
+curl http://192.168.1.185/api/v1/order/createFlashSale
+```
+
+切换流量到新的 `OpenResty`
+
+```sh
+wrk -t8 -c2048 -d30000000s --latency --timeout 30 http://192.168.1.185/api/v1/order/createFlashSale
+```
+
+重启 `Prometheus` 以监控新的节点
+
+```sh
+cd deployer-flash-sale/prometheus
+docker compose restart
+```
+
+
+
+删除旧节点：
+
+- 删除 `Kafka`
+
+  ```sh
+  cd deployer-flash-sale/kafka
+  docker compose down -v
+  ```
+
+- 删除 `cassandra`
+
+  ```sh
+  cd deployer-flash-sale/cassandra
+  docker compose exec -it node0 bash
+  # 安全地删除节点
+  nodetool decommission
+  # 删除容器
+  docker compose down -v
+  ```
+
+- 删除 `redis`
+
+  ```sh
+  cd deployer-flash-sale/redis
+  docker compose exec -it node1 bash
+  
+  # 获取 slave 节点信息
+  redis-cli -h 192.168.1.201 -p 6380 cluster nodes
+  
+  # 192.168.1.201:6390 是集群中任意一个节点
+  # 6b92155a7e8851b9842c4a3ec38ff9d2b230b33e 是通过 cluster nodes 获取的从 192.168.1.198:6380 节点 id
+  redis-cli --cluster del-node 192.168.1.201:6380 6b92155a7e8851b9842c4a3ec38ff9d2b230b33e
+  
+  docker compose down -v
+  ```
+
+- 删除 `api`
+
+  ```sh
+  cd deployer-flash-sale/service
+  docker compose down -v
+  ```
+
+- 删除 `OpenResty`
+
+  ```sh
+  deployer-flash-sale/openresty
+  docker compose down -v
+  ```
+
+  
+
+更新应用到 `Ansible` 一致状态：
+
+- `inventory.ini` 配置中 `[common]` 修改回当前实例
+
+- `inventory.ini` 配置中 `[db]` 修改回当前实例
+
+- `inventory.ini` 配置中 `[crond]` 修改回当前实例
+
+- 复制 `Ansible` 配置
+
+  ```sh
+  ansible-playbook playbook-deployer-config.yml --inventory inventory.ini
+  ```
+
+- 启动应用为了和 `Ansible` 状态一致
+
+  ```sh
+  ansible-playbook playbook-service-start.yml --inventory inventory.ini
+  ```
 
 
 

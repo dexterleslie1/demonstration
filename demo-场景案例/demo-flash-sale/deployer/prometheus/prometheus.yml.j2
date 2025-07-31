@@ -30,12 +30,17 @@ scrape_configs:
 {% for host in groups['common'] %}
       - targets: ['{{ host }}:9100']
         labels:
-          instance: common-{{ loop.index }}
+          instance: common-{{ loop.index }}-{{ host }}
+{% endfor %}
+{% for host in groups['redis'] %}
+      - targets: ['{{ host }}:9100']
+        labels:
+          instance: redis-{{ loop.index }}-{{ host }}
 {% endfor %}
 {% for host in groups['db'] %}
       - targets: ['{{ host }}:9100']
         labels:
-          instance: db-{{ loop.index }}
+          instance: db-{{ loop.index }}-{{ host }}
 {% endfor %}
 {% for host in groups['cassandra'] %}
       - targets: ['{{ host }}:9100']
@@ -55,12 +60,12 @@ scrape_configs:
 {% for host in groups['openresty'] %}
       - targets: ['{{ host }}:9100']
         labels:
-          instance: openresty-{{ loop.index }}
+          instance: openresty-{{ loop.index }}-{{ host }}
 {% endfor %}
 {% for host in groups['rocketmq'] %}
       - targets: ['{{ host }}:9100']
         labels:
-          instance: kafka-{{ loop.index }}
+          instance: kafka-{{ loop.index }}-{{ host }}
 {% endfor %}
 
   # openresty metrics端点配置
@@ -69,7 +74,7 @@ scrape_configs:
 {% for host in groups['openresty'] %}
        - targets: ['{{ host }}:9145']
          labels:
-           instance: openresty-{{ loop.index }}
+           instance: openresty-{{ loop.index }}-{{ host }}
 {% endfor %}
 
   # Spring Boot Actuator metrics端点配置

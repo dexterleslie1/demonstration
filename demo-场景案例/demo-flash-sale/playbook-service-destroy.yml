@@ -21,13 +21,22 @@
         cd ~/deployer-flash-sale/crond
         rm -rf debezium
 
-- name: "销毁zookeeper、redis等公共服务"
+- name: "销毁zookeeper等公共服务"
   hosts: common
   tasks:
-    - name: "使用Docker Compose down销毁zookeeper、redis等公共服务"
+    - name: "使用Docker Compose down销毁zookeeper等公共服务"
       shell: |
         set -e
         cd ~/deployer-flash-sale/common
+        docker compose down -v
+
+- name: "销毁redis服务"
+  hosts: redis
+  tasks:
+    - name: "使用Docker Compose down销毁redis服务"
+      shell: |
+        set -e
+        cd ~/deployer-flash-sale/redis
         docker compose down -v
 
 - name: "销毁prometheus公共服务"

@@ -1,125 +1,6 @@
 version: "3.1"
 
 services:
-  redis:
-    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-redis
-    # 设置redis密码
-    command: redis-server /usr/local/etc/redis/redis-standalone.conf --requirepass 123456
-    environment:
-      - TZ=Asia/Shanghai
-    restart: unless-stopped
-    volumes:
-      - data-demo-flash-sale-redis-standalone:/data
-    network_mode: host
-
-  node1:
-    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-redis
-    # 必须设置cluster-announce-ip才能够在创建集群时节点join到master，否则会一直waiting...
-    command: redis-server /usr/local/etc/redis/redis.conf --port 6380 --cluster-announce-ip ${redisClusterAnnounceIp}
-    environment:
-      - TZ=Asia/Shanghai
-    restart: unless-stopped
-    volumes:
-      - data-demo-flash-sale-redis-cluster-node1:/data
-    network_mode: 'host'
-  node2:
-    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-redis
-    command: redis-server /usr/local/etc/redis/redis.conf --port 6381 --cluster-announce-ip ${redisClusterAnnounceIp}
-    environment:
-      - TZ=Asia/Shanghai
-    restart: unless-stopped
-    volumes:
-      - data-demo-flash-sale-redis-cluster-node2:/data
-    network_mode: 'host'
-  node3:
-    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-redis
-    command: redis-server /usr/local/etc/redis/redis.conf --port 6382 --cluster-announce-ip ${redisClusterAnnounceIp}
-    environment:
-      - TZ=Asia/Shanghai
-    restart: unless-stopped
-    volumes:
-      - data-demo-flash-sale-redis-cluster-node3:/data
-    network_mode: 'host'
-  node4:
-    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-redis
-    command: redis-server /usr/local/etc/redis/redis.conf --port 6383 --cluster-announce-ip ${redisClusterAnnounceIp}
-    environment:
-      - TZ=Asia/Shanghai
-    restart: unless-stopped
-    volumes:
-      - data-demo-flash-sale-redis-cluster-node4:/data
-    network_mode: 'host'
-  node5:
-    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-redis
-    command: redis-server /usr/local/etc/redis/redis.conf --port 6384 --cluster-announce-ip ${redisClusterAnnounceIp}
-    environment:
-      - TZ=Asia/Shanghai
-    restart: unless-stopped
-    volumes:
-      - data-demo-flash-sale-redis-cluster-node5:/data
-    network_mode: 'host'
-  node6:
-    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-redis
-    command: redis-server /usr/local/etc/redis/redis.conf --port 6385 --cluster-announce-ip ${redisClusterAnnounceIp}
-    environment:
-      - TZ=Asia/Shanghai
-    restart: unless-stopped
-    volumes:
-      - data-demo-flash-sale-redis-cluster-node6:/data
-    network_mode: 'host'
-  node7:
-    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-redis
-    command: redis-server /usr/local/etc/redis/redis.conf --port 6386 --cluster-announce-ip ${redisClusterAnnounceIp}
-    environment:
-      - TZ=Asia/Shanghai
-    restart: unless-stopped
-    volumes:
-      - data-demo-flash-sale-redis-cluster-node7:/data
-    network_mode: 'host'
-  node8:
-    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-redis
-    command: redis-server /usr/local/etc/redis/redis.conf --port 6387 --cluster-announce-ip ${redisClusterAnnounceIp}
-    environment:
-      - TZ=Asia/Shanghai
-    restart: unless-stopped
-    volumes:
-      - data-demo-flash-sale-redis-cluster-node8:/data
-    network_mode: 'host'
-  node9:
-    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-redis
-    command: redis-server /usr/local/etc/redis/redis.conf --port 6388 --cluster-announce-ip ${redisClusterAnnounceIp}
-    environment:
-      - TZ=Asia/Shanghai
-    restart: unless-stopped
-    volumes:
-      - data-demo-flash-sale-redis-cluster-node9:/data
-    network_mode: 'host'
-  node10:
-    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-redis
-    command: redis-server /usr/local/etc/redis/redis.conf --port 6389 --cluster-announce-ip ${redisClusterAnnounceIp}
-    environment:
-      - TZ=Asia/Shanghai
-    restart: unless-stopped
-    volumes:
-      - data-demo-flash-sale-redis-cluster-node10:/data
-    network_mode: 'host'
-
-  creator:
-    image: redis:6.2.6-bullseye
-    entrypoint: [ /bin/sh, -c, 'echo "yes" | redis-cli --cluster create --cluster-replicas 1 127.0.0.1:6380 127.0.0.1:6381 127.0.0.1:6382 127.0.0.1:6383 127.0.0.1:6384 127.0.0.1:6385 127.0.0.1:6386 127.0.0.1:6387 127.0.0.1:6388 127.0.0.1:6389' ]
-    depends_on:
-      - node1
-      - node2
-      - node3
-      - node4
-      - node5
-      - node6
-      - node7
-      - node8
-      - node9
-      - node10
-    network_mode: 'host'
-
   zookeeper:
     image: zookeeper:3.8.4
     environment:
@@ -225,20 +106,21 @@ services:
       - data-demo-flash-sale-nacos-server:/home/nacos
     restart: unless-stopped
 
+  kafka-zookeeper:
+    image: confluentinc/cp-zookeeper:7.3.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2182
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2182:2182"
+    volumes:
+      - data-demo-flash-sale-kafka-zookeeper:/var/lib/zookeeper
+    restart: unless-stopped
+
 volumes:
-  data-demo-flash-sale-redis-standalone:
-  data-demo-flash-sale-redis-cluster-node1:
-  data-demo-flash-sale-redis-cluster-node2:
-  data-demo-flash-sale-redis-cluster-node3:
-  data-demo-flash-sale-redis-cluster-node4:
-  data-demo-flash-sale-redis-cluster-node5:
-  data-demo-flash-sale-redis-cluster-node6:
-  data-demo-flash-sale-redis-cluster-node7:
-  data-demo-flash-sale-redis-cluster-node8:
-  data-demo-flash-sale-redis-cluster-node9:
-  data-demo-flash-sale-redis-cluster-node10:
   data-demo-flash-sale-zookeeper-data:
   data-demo-flash-sale-zookeeper-datalog:
   data-demo-flash-sale-future-random-id-picker-db:
   data-demo-flash-sale-future-count-db:
   data-demo-flash-sale-nacos-server:
+  data-demo-flash-sale-kafka-zookeeper:

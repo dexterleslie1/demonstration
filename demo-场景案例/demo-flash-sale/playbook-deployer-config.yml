@@ -31,14 +31,9 @@
         src: deployer/cassandra/docker-compose.yml.j2
         dest: ~/deployer-flash-sale/cassandra/docker-compose.yml
 
-- name: "配置zookeeper、redis等公共服务的deployer"
+- name: "配置zookeeper等公共服务的deployer"
   hosts: common
   tasks:
-    - name: "配置Redis服务的cluster announce ip"
-      lineinfile:
-        path: ~/deployer-flash-sale/common/.env
-        regexp: "^redisClusterAnnounceIp="
-        line: "redisClusterAnnounceIp={{ groups['common'][0] }}"
     - name: "配置wrk2的crond主机ip"
       lineinfile:
         path: ~/deployer-flash-sale/common/.env
@@ -49,6 +44,19 @@
         path: ~/deployer-flash-sale/common/.env
         regexp: "^crondPort="
         line: "crondPort={{ hostvars[groups['crond'][0]].server_port }}"
+
+- name: "配置redis服务的deployer"
+  hosts: redis
+  tasks:
+    - name: "配置redis服务的docker-compose.yml"
+      template:
+        src: deployer/redis/docker-compose.yaml.j2
+        dest: ~/deployer-flash-sale/redis/docker-compose.yaml
+    - name: "配置Redis服务的cluster announce ip"
+      lineinfile:
+        path: ~/deployer-flash-sale/redis/.env
+        regexp: "^redisClusterAnnounceIp="
+        line: "redisClusterAnnounceIp={{ groups['redis'][0] }}"
 
 - name: "配置Prometheus服务的deployer"
   hosts: common
@@ -61,6 +69,20 @@
 - name: "配置Kafka的deployer"
   hosts: rocketmq
   tasks:
+    - name: "配置Kafka服务的docker-compose.yml"
+      template:
+        src: deployer/kafka/docker-compose.yml.j2
+        dest: ~/deployer-flash-sale/kafka/docker-compose.yml
+    - name: "配置Kafka服务的kafka_broker_id"
+      lineinfile:
+        path: ~/deployer-flash-sale/kafka/.env
+        regexp: "^kafka_broker_id="
+        line: "kafka_broker_id={{ kafka_broker_id }}"
+    - name: "配置Kafka服务的kafka_zookeeper"
+      lineinfile:
+        path: ~/deployer-flash-sale/kafka/.env
+        regexp: "^kafka_zookeeper="
+        line: "kafka_zookeeper={{ groups['common'][0] }}"
     - name: "配置Kafka服务的kafka_advertised_listeners"
       lineinfile:
         path: ~/deployer-flash-sale/kafka/.env
@@ -115,7 +137,7 @@
       lineinfile:
         path: ~/deployer-flash-sale/crond/.env
         regexp: "^common_redis_cluster_nodes="
-        line: "common_redis_cluster_nodes={{ groups['common'][0] }}:6380,{{ groups['common'][0] }}:6381,{{ groups['common'][0] }}:6382,{{ groups['common'][0] }}:6383,{{ groups['common'][0] }}:6384,{{ groups['common'][0] }}:6385,{{ groups['common'][0] }}:6386,{{ groups['common'][0] }}:6387,{{ groups['common'][0] }}:6388,{{ groups['common'][0] }}:6389"
+        line: "common_redis_cluster_nodes={{ groups['redis'][0] }}:6380,{{ groups['redis'][0] }}:6381,{{ groups['redis'][0] }}:6382,{{ groups['redis'][0] }}:6383,{{ groups['redis'][0] }}:6384,{{ groups['redis'][0] }}:6385,{{ groups['redis'][0] }}:6386,{{ groups['redis'][0] }}:6387,{{ groups['redis'][0] }}:6388,{{ groups['redis'][0] }}:6389"
     - name: "配置crond服务的common_rocketmq_namesrvaddr"
       lineinfile:
         path: ~/deployer-flash-sale/crond/.env
@@ -174,7 +196,7 @@
       lineinfile:
         path: ~/deployer-flash-sale/service/.env
         regexp: "^common_redis_cluster_nodes="
-        line: "common_redis_cluster_nodes={{ groups['common'][0] }}:6380,{{ groups['common'][0] }}:6381,{{ groups['common'][0] }}:6382,{{ groups['common'][0] }}:6383,{{ groups['common'][0] }}:6384,{{ groups['common'][0] }}:6385,{{ groups['common'][0] }}:6386,{{ groups['common'][0] }}:6387,{{ groups['common'][0] }}:6388,{{ groups['common'][0] }}:6389"
+        line: "common_redis_cluster_nodes={{ groups['redis'][0] }}:6380,{{ groups['redis'][0] }}:6381,{{ groups['redis'][0] }}:6382,{{ groups['redis'][0] }}:6383,{{ groups['redis'][0] }}:6384,{{ groups['redis'][0] }}:6385,{{ groups['redis'][0] }}:6386,{{ groups['redis'][0] }}:6387,{{ groups['redis'][0] }}:6388,{{ groups['redis'][0] }}:6389"
     - name: "配置api服务的common_rocketmq_namesrvaddr"
       lineinfile:
         path: ~/deployer-flash-sale/service/.env
