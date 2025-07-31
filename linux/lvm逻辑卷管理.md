@@ -105,11 +105,50 @@ lvextend -L 12g /dev/vg0/lv1
 # -l +100%FREE表示把逻辑卷所属的vg剩余空间全部用于扩容
 lvextend -l +100%FREE /dev/vg0/lv1
 
+# 显示当前逻辑卷已经扩容
+lvs
+
+# 文件系统识别新的逻辑卷容量
 # 注意：专门用于扩展或缩小ext2、ext3和ext4文件系统的大小
 resize2fs /dev/vg0/lv1
+# 显示当前文件系统新的容量
+df -h
 
+# 文件系统识别新的逻辑卷容量
 # 注意：xfs文件系统使用以下命令使文件resize
 xfs_growfs /dev/vg0/lv1
+# 显示当前文件系统新的容量
+df -h
+```
+
+
+
+## 物理卷扩容
+
+PV 直接使用整块磁盘（如 /dev/sdb），无需分区，可直接扩展磁盘后刷新 PV：
+
+```sh
+# 假设磁盘 /dev/sdb 已通过云控制台扩容至 200GB
+# 刷新内核识别的磁盘容量（可能需要重启或使用 udevadm）
+udevadm trigger
+udevadm settle
+# 扩展 PV（直接调整 PV 元数据）
+pvresize /dev/sdb
+# 显示当前物理卷已经扩容
+vgs
+
+# 把物理卷的扩容容量分配到逻辑卷中
+# -l选项用于指定逻辑卷扩展时要增加的逻辑扩展数（Logical Extents，简称LE）。逻辑扩展是LVM中用于分配存储空间的基本单位，其大小在卷组创建时确定，通常为4MB（但这不是固定值，可以根据需要调整）。如果你想要向逻辑卷/dev/vg1000/lvol0增加100个逻辑扩展，且每个逻辑扩展的大小为4MB（这取决于卷组的配置），则可以使用命令lvextend -l +100 /dev/vg1000/lvol0。注意这里的+表示增加，如果不加+，则表示设置逻辑卷的总LE数为指定值。
+# -l +100%FREE表示把逻辑卷所属的vg剩余空间全部用于扩容
+lvextend -l +100%FREE /dev/vg0/lv0
+# 显示当前逻辑卷已经扩容
+lvs
+
+# 文件系统识别新的逻辑卷容量
+# 注意：xfs文件系统使用以下命令使文件resize
+xfs_growfs /dev/vg0/lv0
+# 显示当前文件系统新的容量
+df -h
 ```
 
 
