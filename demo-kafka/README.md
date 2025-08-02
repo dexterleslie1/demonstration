@@ -579,8 +579,382 @@ Kafka 会尽量将同一分区的副本均匀分布在不同 Broker 上（例如
 
 
 
-## `Docker Compose` 运行
+### `Connector` 连接器是什么呢？
 
+Kafka Connect 连接器（Connector）是 **Apache Kafka 生态中用于实现不同系统与 Kafka 高效数据集成的标准化组件**，是 Kafka Connect 框架的核心模块。它的主要作用是将外部系统（如数据库、消息队列、文件存储、云服务等）的数据与 Kafka 主题进行双向同步，降低数据集成的复杂度。
+
+
+#### **核心定位：数据管道的“适配器”**
+Kafka Connect 本身是一个分布式数据集成框架，而连接器则是这个框架中的“适配器”。它封装了与特定外部系统交互的逻辑（如读取、写入、转换数据），使得用户无需手动编写复杂的客户端代码，即可快速实现 Kafka 与其他系统的数据流转。
+
+
+#### **连接器的分类**
+根据数据流向，连接器可分为两类：
+
+##### 1. **源连接器（Source Connector）**  
+从外部系统（如 MySQL、MongoDB、文件系统、Kafka 自身等）**拉取数据并写入 Kafka 主题**。  
+**典型场景**：数据库变更捕获（CDC）、日志文件采集、IoT 设备数据上报等。  
+**示例**：Debezium 的 MySQL 源连接器（捕获数据库 Binlog）、File Source Connector（读取本地文件）。
+
+##### 2. **汇连接器（Sink Connector）**  
+从 Kafka 主题**读取数据并写入外部系统**（如 Elasticsearch、HBase、S3、数据仓库等）。  
+**典型场景**：实时数据同步到分析系统、日志归档到对象存储、数据入湖/入仓等。  
+**示例**：Elasticsearch Sink Connector（写入 ES 索引）、JDBC Sink Connector（写入关系型数据库）。
+
+
+#### **连接器的关键特性**
+##### 1. **标准化接口，降低集成成本**  
+连接器通过 Kafka Connect 定义的 API 实现，统一了数据读写的规范（如偏移量管理、错误重试、并行度控制）。开发者只需关注外部系统的特有逻辑（如数据库的分页查询、文件的格式解析），无需处理 Kafka 底层的主题分区、消费者组等细节。
+
+##### 2. **分布式与可扩展**  
+Kafka Connect 支持分布式部署，连接器实例（或其中的任务 Task）可动态扩展。例如，一个源连接器可配置多个任务并行读取不同分片的数据，提升吞吐量；汇连接器也可通过多任务并行写入外部系统，避免单点瓶颈。
+
+##### 3. **配置驱动，声明式管理**  
+连接器的行为通过 JSON 配置文件定义（如数据过滤规则、转换逻辑、连接参数），支持通过 REST API 动态创建、修改、删除连接器实例。例如，启动一个 MySQL 源连接器时，只需提交包含数据库 URL、表名、Kafka 主题名的配置，框架会自动管理任务的分配和运行。
+
+##### 4. **容错与一致性**  
+连接器内置偏移量跟踪（记录已处理数据的进度），支持故障恢复。例如，若源连接器在拉取数据时宕机，重启后会从上次记录的偏移量继续，避免数据丢失或重复。
+
+
+#### **连接器的生态与扩展**
+Kafka Connect 的灵活性体现在其**可扩展的连接器生态**：  
+- **官方连接器**：Kafka 社区提供了一些基础连接器（如文件、JDBC、S3 等），但覆盖范围有限。  
+- **第三方连接器**：Confluent Hub、Apache 软件基金会等平台提供了数百个预构建的连接器（如 Debezium 的 CDC 连接器、Salesforce Sink Connector 等），覆盖主流系统。  
+- **自定义连接器**：若现有连接器无法满足需求，用户可通过 Kafka Connect API 自行开发，仅需实现 Source 或 Sink 接口即可集成到框架中。
+
+
+#### **典型应用场景**
+- **数据库与 Kafka 同步**：通过 Debezium 源连接器捕获 MySQL/PostgreSQL 的 Binlog，实时同步到 Kafka，供下游流处理（如 Flink）消费。  
+- **日志采集到 Kafka**：使用 File Source Connector 读取服务器日志文件，写入 Kafka 后由日志分析系统（如 ELK）消费。  
+- **数据入仓/入湖**：通过 JDBC Sink Connector 将 Kafka 中的实时数据写入 Hive 或 ClickHouse，支持离线分析。  
+
+
+#### **总结**  
+Kafka Connect 连接器是 Kafka 生态中“连接外部世界”的关键桥梁，通过标准化、分布式的设计，极大简化了不同系统与 Kafka 的数据集成过程，是企业构建实时数据管道的核心工具。
+
+
+
+## 概念 - 什么是 `Confluent` 呢？
+
+>官方网站 `https://www.confluent.io/`。
+
+**Confluent** 是一家专注于**事件流（Event Streaming）**领域的软件公司，由 Apache Kafka 的联合创始人**Jay Kreps**、**Neha Narkhede** 和**Jun Rao**于2014年创立。其核心目标是通过构建**企业级事件流平台**，帮助企业更高效地处理实时数据流，释放数据的实时价值。  
+
+Confluent 的核心产品是基于 Apache Kafka 的**增强型平台**（Confluent Platform）和**全托管云服务**（Confluent Cloud），两者均围绕 Kafka 的核心能力扩展，解决了企业在大规模使用 Kafka 时的痛点（如数据集成、运维复杂度、模式管理等）。
+
+
+### **核心定位：Kafka 的“企业级增强平台”**
+Confluent 并非替代 Apache Kafka，而是**基于 Kafka 构建的完整事件流生态**，通过提供工具、服务和优化，降低企业落地 Kafka 的门槛，覆盖从数据采集、传输、存储到处理、分析的全生命周期。
+
+
+### **核心产品与服务**
+Confluent 的核心产品矩阵包括 **Confluent Platform**（自托管）和 **Confluent Cloud**（云托管），两者共享相同的技术栈，但交付方式不同。
+
+
+#### **1. Confluent Platform（自托管版）**
+面向需要自主控制基础设施的企业，提供开箱即用的 Kafka 增强功能，核心组件包括：
+
+##### （1）**Kafka Connect**  
+- **作用**：简化 Kafka 与其他系统（数据库、消息队列、文件系统、云服务等）的**双向数据集成**。  
+- **能力**：支持数百种预构建的连接器（Connector，如 MySQL、PostgreSQL、Elasticsearch、S3、Salesforce 等），无需编写代码即可实现数据的实时抽取（Extract）、加载（Load）和同步（Sync）。  
+- **典型场景**：将关系型数据库的变更数据捕获（CDC）同步到 Kafka，或从 Kafka 实时写入数据仓库。
+
+##### （2）**Schema Registry**  
+- **作用**：管理流数据的**模式（Schema）**，确保生产者和消费者之间的模式兼容性（如 Avro、Protobuf、JSON Schema）。  
+- **能力**：支持模式的版本控制、演进策略（如向前/向后兼容）、存储与验证，避免因模式变更导致的系统故障。  
+- **典型场景**：微服务间通过 Kafka 传递结构化数据时，确保上下游服务的模式一致性。
+
+##### （3）**ksqlDB（原 KSQL）**  
+- **作用**：提供**流 SQL 引擎**，允许用户用 SQL 语句直接处理 Kafka 数据流，无需编写 Java/Scala 代码。  
+- **能力**：支持实时聚合（如每分钟统计订单量）、窗口操作（滚动/滑动窗口）、连接（Stream-Stream Join、Stream-Table Join）等复杂流处理逻辑。  
+- **典型场景**：实时计算用户行为指标（如页面访问量、跳出率）、监控系统告警规则等。
+
+##### （4）**Confluent Control Center**  
+- **作用**：统一的**可视化监控与管理平台**，覆盖 Kafka 集群、连接器、流处理作业的全生命周期管理。  
+- **能力**：实时监控集群健康度（如分区负载、延迟、副本状态）、查看连接器运行状态、调试流处理作业、管理 Schema Registry 模式等。  
+- **典型场景**：运维团队快速定位集群故障，开发团队调试流处理逻辑。
+
+##### （5）**kafka-rest-proxy**  
+- **作用**：提供 RESTful API 接口，允许非 Java 客户端（如 Python、Go、前端应用）通过 HTTP 与 Kafka 交互（生产/消费消息）。  
+- **能力**：简化客户端集成，降低非 Java 技术栈团队的使用门槛。  
+
+
+#### **2. Confluent Cloud（云托管版）**  
+面向希望降低运维成本的企业，提供**全托管的 Kafka 云服务**，基于公有云（AWS、GCP、Azure）构建，核心优势包括：  
+
+- **自动化运维**：自动管理集群扩缩容、故障恢复、软件升级，无需人工干预。  
+- **无缝集成云服务**：与 AWS S3、GCP BigQuery、Azure Synapse 等云数据服务深度集成，简化数据入湖/入仓流程。  
+- **企业级安全**：支持 VPC 网络隔离、加密传输（TLS）、角色权限管理（RBAC）、审计日志等。  
+- **弹性计费**：按使用量付费（流量、存储、计算资源），避免资源浪费。  
+
+
+### **Confluent 与 Apache Kafka 的关系**  
+- **底层依赖**：Confluent Platform 基于 Apache Kafka 开源项目构建，完全兼容 Kafka 的 API（Producer/Consumer、Connect、Streams 等）。  
+- **增强功能**：Confluent 提供的组件（如 Kafka Connect 企业版、Schema Registry、ksqlDB、Control Center）是对 Kafka 原生能力的补充，解决了开源版本在**企业级场景**中的不足（如大规模集群管理、多租户支持、高级监控）。  
+- **技术贡献**：Confluent 团队是 Kafka 社区的核心贡献者，主导了 Kafka 许多功能的设计与优化（如 Kafka Streams、KSQL 的早期开发）。  
+
+
+### **典型应用场景**  
+Confluent 平台适用于需要**实时数据流处理**的企业级场景，常见用例包括：  
+
+#### 1. **实时数据管道（Data Pipeline）**  
+通过 Kafka Connect 连接数据库（如 MySQL CDC）、日志系统（如 Elasticsearch）、云存储（如 S3），将分散的数据实时同步到 Kafka，为下游分析、AI 模型训练提供实时数据源。  
+
+#### 2. **事件驱动架构（Event-Driven Architecture）**  
+通过 Kafka 作为事件总线，解耦微服务间的通信。例如：用户下单事件触发库存扣减、物流派单、积分发放等多个下游服务的异步处理。  
+
+#### 3. **实时分析与决策**  
+结合 ksqlDB 或 Kafka Streams 对实时数据流进行聚合（如实时销售额、用户在线数），将结果输出到 BI 工具（如 Tableau）或数据库，支持业务人员实时决策。  
+
+#### 4. **物联网（IoT）数据处理**  
+通过 Kafka 接收海量设备传感器数据（如温度、湿度），利用 Confluent 的高吞吐能力支撑实时流处理，实现设备状态监控、异常预警。  
+
+
+### **选择 Confluent 的原因**  
+企业在选择事件流平台时，通常面临**开源 Kafka 运维复杂**、**缺乏企业级功能**、**跨系统集成困难**等挑战。Confluent 的核心价值在于：  
+
+- **降低复杂度**：通过预构建连接器、可视化控制台、托管服务，减少开发和运维成本。  
+- **增强可靠性**：提供企业级 SLA（如 99.95% 可用性）、数据备份与恢复、多租户隔离。  
+- **加速创新**：通过流 SQL、模式管理等工具，让企业更聚焦于业务逻辑，而非底层技术实现。  
+
+
+### **总结**  
+Confluent 是**企业级事件流平台的领导者**，通过基于 Kafka 构建的增强工具链（Confluent Platform）和全托管云服务（Confluent Cloud），帮助企业解决实时数据处理中的集成、运维、安全等痛点，是金融、零售、制造、物联网等行业落地实时数字化转型的关键基础设施。
+
+
+
+## `Confluent` 镜像版本和 `Kafka`、`Zookeeper` 版本兼容表
+
+`Kafka` 兼容表：
+
+>`https://docs.confluent.io/platform/current/installation/versions-interoperability.html#cp-and-apache-ak-compatibility`
+
+| Confluent Platform | Apache Kafka® | Release Date      | Confluent Community software End of Support | Confluent Enterprise Standard End of Support | Confluent Enterprise Platinum End of Support |
+| ------------------ | ------------- | ----------------- | ------------------------------------------- | -------------------------------------------- | -------------------------------------------- |
+| 8.0.x              | 4.0.x         | June 11, 2025     | June 11, 2026                               | June 11, 2027                                | June 11, 2028                                |
+| 7.9.x              | 3.9.x         | February 19, 2025 | February 19, 2027                           | February 19, 2027                            | February 19, 2028                            |
+| 7.8.x              | 3.8.x         | December 2, 2024  | December 2, 2026                            | December 2, 2026                             | December 2, 2027                             |
+| 7.7.x              | 3.7.x         | July 26, 2024     | July 26, 2026                               | July 26, 2026                                | July 26, 2027                                |
+| 7.6.x              | 3.6.x         | February 9, 2024  | February 9, 2026                            | February 9, 2026                             | February 9, 2027                             |
+| 7.5.x              | 3.5.x         | August 25, 2023   | August 25, 2025                             | August 25, 2025                              | August 25, 2026                              |
+| 7.4.x              | 3.4.x         | May 3, 2023       | May 3, 2025                                 | May 3, 2025                                  | May 3, 2026                                  |
+| 7.3.x              | 3.3.x         | November 4, 2022  | November 4, 2024                            | November 4, 2024                             | November 4, 2025                             |
+| 7.2.x              | 3.2.x         | July 6, 2022      | July 6, 2024                                | July 6, 2024                                 | July 6, 2025                                 |
+
+`Zookeeper` 兼容表：
+
+>`https://docs.confluent.io/platform/current/installation/versions-interoperability.html#zk`
+
+| Confluent Platform | Apache ZooKeeper™                        |
+| ------------------ | ---------------------------------------- |
+| 8.0.x              | Not supported                            |
+| 7.9.x              | 3.8.4                                    |
+| 7.8.x              | 3.8.4                                    |
+| 7.7.x              | 3.5.6 through 3.8.4 (3.8.4 recommended)  |
+| 7.6.x              | 3.5.6 through 3.8.3 (3.8.3 recommended)  |
+| 7.5.x              | 3.5.6 through 3.8.3 (3.8.3 recommended)  |
+| 7.4.x              | 3.4.10 through 3.8.3 (3.8.3 recommended) |
+| 7.3.x              | 3.4.10 through 3.8.3 (3.8.3 recommended) |
+| 7.2.x              | 3.4.10 through 3.8.3 (3.8.3 recommended) |
+| 7.1.x              | 3.4.10 through 3.8.3 (3.8.3 recommended) |
+
+
+
+## 配置项
+
+### `KAFKA_ADVERTISED_LISTENERS`
+
+在 Apache Kafka 中，`KAFKA_ADVERTISED_LISTENERS` 是一个**关键的网络配置参数**，用于控制 Kafka Broker 向客户端（或其他 Broker）**公布的可连接地址**。它的核心作用是解决“Broker 实际监听地址”与“客户端可访问地址”不一致的问题，尤其在复杂网络环境（如容器化、NAT、多网卡）中至关重要。
+
+#### **核心背景：为什么需要 KAFKA_ADVERTISED_LISTENERS？**
+
+Kafka 的通信流程中，客户端（生产者/消费者）需要知道 Broker 的地址才能连接并发送请求。Broker 启动时会绑定一个**实际监听地址**（由 `listeners` 配置），但由于网络环境的复杂性（例如 Broker 部署在容器内、NAT 网关后，或使用内网 IP 但客户端需通过公网访问），客户端可能无法直接访问 Broker 的实际监听地址。此时，`KAFKA_ADVERTISED_LISTENERS` 用于告诉客户端“应该使用哪个地址连接 Broker”，确保客户端能正确建立连接。
+
+
+#### **关键概念对比：listeners vs. advertised.listeners**
+| 参数                   | 全称            | 作用                                                         | 默认值                       |
+| ---------------------- | --------------- | ------------------------------------------------------------ | ---------------------------- |
+| `listeners`            | Broker 监听地址 | Broker 实际绑定的网络地址（用于接收请求），格式为 `协议://主机:端口` | 无（必须显式配置）           |
+| `advertised.listeners` | Broker 公布地址 | Broker 向客户端/其他 Broker 公布的连接地址（客户端实际使用的地址） | 等于 `listeners`（未配置时） |
+
+
+#### **核心作用详解**
+`KAFKA_ADVERTISED_LISTENERS` 的核心价值是**解耦 Broker 实际监听地址与客户端可访问地址**，常见场景包括：
+
+##### 1. **容器化部署（如 Docker/K8s）**
+当 Broker 运行在容器中时，容器内部的网络可能与外部网络隔离（例如容器使用 `localhost` 监听，但外部客户端需通过宿主机的 IP 或域名访问）。此时：
+- `listeners` 配置为容器内部的监听地址（如 `PLAINTEXT://0.0.0.0:9092`，`0.0.0.0` 表示监听所有网卡）。
+- `advertised.listeners` 配置为宿主机的公网 IP 或域名（如 `PLAINTEXT://kafka-host.example.com:9092`），确保客户端使用该地址连接。
+
+##### 2. **NAT 网络环境**
+Broker 部署在内网（如私有云），但客户端位于公网。此时：
+- `listeners` 绑定内网 IP（如 `PLAINTEXT://192.168.1.100:9092`）。
+- `advertised.listeners` 配置为公网 IP 或域名（如 `PLAINTEXT://kafka-public.example.com:9092`），客户端通过公网地址连接。
+
+##### 3. **多网卡或多地址场景**
+Broker 有多个网卡（如内网卡、公网卡），需要根据客户端来源选择不同的暴露地址：
+- `listeners` 绑定所有网卡（如 `PLAINTEXT://0.0.0.0:9092`）。
+- `advertised.listeners` 按客户端类型区分（如内网客户端用内网 IP，公网客户端用公网 IP）。
+
+##### 4. **集群间通信**
+Kafka 集群中的 Broker 需要互相通信（如复制日志、协调分区）。每个 Broker 的 `advertised.listeners` 会被其他 Broker 用作连接地址，因此需确保集群内所有 Broker 能通过该地址互相访问。
+
+
+#### **配置格式与示例**
+`KAFKA_ADVERTISED_LISTENERS` 支持**多协议、多地址**配置（逗号分隔），每个地址格式为 `[协议]://[主机名/IP]:[端口]`。常见配置方式如下：
+
+##### 示例 1：单协议单地址（基础场景）
+```properties
+# Broker 实际监听所有网卡的 9092 端口（PLAINTEXT 协议）
+listeners=PLAINTEXT://0.0.0.0:9092
+
+# 向客户端公布公网可访问的地址（如宿主机域名）
+advertised.listeners=PLAINTEXT://kafka-broker.example.com:9092
+```
+
+##### 示例 2：多协议多地址（混合场景）
+```properties
+# Broker 实际监听内网 IP 的 PLAINTEXT 和 SSL 端口
+listeners=PLAINTEXT://192.168.1.100:9092,SSL://192.168.1.100:9093
+
+# 向公网客户端公布公网地址（SSL 加密），向内网客户端公布内网地址（PLAINTEXT）
+advertised.listeners=PLAINTEXT://internal-kafka.example.com:9092,SSL://public-kafka.example.com:9093
+```
+
+##### 示例 3：Docker 容器场景
+```properties
+# 容器内监听所有网卡的 9092 端口（PLAINTEXT）
+listeners=PLAINTEXT://0.0.0.0:9092
+
+# 向外部客户端公布宿主机的 IP 和映射端口（假设宿主机将容器 9092 映射到宿主机 9093）
+advertised.listeners=PLAINTEXT://host-machine-ip:9093
+```
+
+
+#### **注意事项**
+1. **协议一致性**：`advertised.listeners` 中每个地址的协议（如 `PLAINTEXT`、`SSL`）必须与 `listeners` 中对应协议的配置一致，否则客户端会因协议不匹配无法连接。
+   
+2. **主机名解析**：公布的地址（如 `kafka-broker.example.com`）必须能被客户端正确解析为 IP 地址（通过 DNS 或 `/etc/hosts`），否则客户端会连接失败。
+
+3. **端口可见性**：公布的端口需确保客户端网络可达（如防火墙开放该端口）。例如，若 Broker 运行在云服务器上，需在安全组中开放 `9092` 端口。
+
+4. **集群内一致性**：集群中所有 Broker 的 `advertised.listeners` 需满足“客户端能访问任意 Broker”的要求（例如，客户端通过任意 Broker 的地址都能连接到整个集群）。
+
+5. **动态环境适配**：在容器化或弹性伸缩场景中（如 K8s StatefulSet），需结合服务发现机制（如 Headless Service）动态更新 `advertised.listeners`，确保地址随 Pod 重建或扩缩容自动调整。
+
+
+#### **常见错误与排查**
+- **客户端连接失败**：检查 `advertised.listeners` 的地址是否可被客户端解析和访问（如 `ping kafka-broker.example.com` 或 `telnet kafka-broker.example.com 9092`）。
+- **集群无法同步**：检查 Broker 间是否能通过 `advertised.listeners` 互相访问（如 `telnet <broker2-advertised-ip> <broker2-port>`）。
+- **协议不匹配**：查看日志是否有 `Unsupported protocol` 错误，确认 `advertised.listeners` 与 `listeners` 的协议一致。
+
+
+#### **总结**
+`KAFKA_ADVERTISED_LISTENERS` 是 Kafka 解决网络寻址问题的核心配置，通过明确“Broker 向客户端公布的连接地址”，确保客户端在不同网络环境下能正确连接到 Broker。其本质是**桥接 Broker 实际监听地址与客户端可访问地址**，是部署 Kafka 集群（尤其是跨网络、容器化场景）时必须重点关注的参数。
+
+
+
+## `Docker Compose` 运行 - `Apache` 镜像
+
+>提示：
+>
+>- 脚本位于 `/opt/kafka/bin/kafka-topics.sh`
+>- 使用 `apache/kafka:4.0.0` 镜像运行，模式为 `KRaft`（不再使用 `zookeeper`）。
+>
+>[参考官方文档](https://kafka.apache.org/quickstart)
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-kafka/demo-kafka-connect)
+
+`.env`：
+
+```ini
+# 设置为 broker 所在实例的 ip 地址
+kafka_advertised_listeners=192.168.1.181
+
+```
+
+`docker-compose.yaml`：
+
+```dockerfile
+version: "3.0"
+
+services:
+  kafka:
+    image: apache/kafka:4.0.0
+    ports:
+      # 客户端通信端口
+      - "9092:9092"
+      # 控制器通信端口（KRaft 模式可选，多节点时需要）
+      - "9093:9093"
+      # 映射 JMX 端口到主机
+      # - "9997:9997"
+    environment:
+      TZ: Asia/Shanghai
+      # 节点唯一 ID（KRaft 模式必需，整数）
+      KAFKA_BROKER_ID: 1
+      # 必需配置：KRaft 模式角色（单节点可设为 broker,controller）
+      KAFKA_PROCESS_ROLES: broker,controller
+      # 控制器集群投票节点列表（单节点时指向自己，格式：nodeId@host:port）
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      # 声明控制器监听器名称，和下面配置的 CONTROLLER 一致
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      # Kafka Broker 向客户端（或其他 Broker）公布的可连接地址
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://${kafka_advertised_listeners}:9092,CONTROLLER://${kafka_advertised_listeners}:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      # 设置 Kafka 的 JVM 堆内存
+      KAFKA_HEAP_OPTS: "-Xms1g -Xmx1g"
+      # 配置 JMX 端口和认证，配置了 jmx 端口才能够被外部工具监控
+      # KAFKA_JMX_OPTS: "-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.local.only=false -Dcom.sun.management.jmxremote.port=9997 -Dcom.sun.management.jmxremote.rmi.port=9997"
+      # 禁用自动创建 Topic，否则 Spring Boot 会自动创建 partitions=0 的 topic
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      # ------------------- 日志清理配置 -------------------
+      # 清理策略：启用 delete（按时间/大小删除）
+      KAFKA_LOG_CLEANUP_POLICY: "delete"
+      # 单个分区最大日志大小：2G（根据磁盘容量调整，如 5GB、20GB）
+      KAFKA_LOG_RETENTION_BYTES: "2147483648"  # 设为 -1 表示不限制大小（仅用时间策略）
+      # 日志段大小：512MB（更小的段可提升清理精度，但增加文件数）
+      KAFKA_LOG_SEGMENT_BYTES: "536870912"  #（原默认 1GB）
+
+```
+
+启动服务：
+
+```sh
+docker compose up -d
+```
+
+创建主题：
+
+```sh
+/opt/kafka/bin/kafka-topics.sh --create --topic quickstart-events --bootstrap-server localhost:9092
+
+# 查看主题信息
+/opt/kafka/bin/kafka-topics.sh --describe --topic quickstart-events --bootstrap-server localhost:9092
+```
+
+写数据到主题中：
+
+```sh
+$ /opt/kafka/bin/kafka-console-producer.sh --topic quickstart-events --bootstrap-server localhost:9092
+>1
+>2
+# 停止 ctrl+c
+```
+
+读取主题中的消息：
+
+```sh
+$ /opt/kafka/bin/kafka-console-consumer.sh --topic quickstart-events --from-beginning --bootstrap-server localhost:9092
+# 停止 ctrl+c
+```
+
+
+
+## `Docker Compose` 运行 - `Confluent` 镜像
+
+> 提示：脚本位于 `/usr/bin/kafka-topics`。
+>
 > [参考链接](https://blog.csdn.net/yudaonihaha/article/details/130768061)
 >
 > 详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-kafka/demo-kafka-benchmark)
@@ -621,6 +995,7 @@ services:
       TZ: Asia/Shanghai
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      # Kafka Broker 向客户端（或其他 Broker）公布的可连接地址
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://${kafka_advertised_listeners}:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       # 设置 Kafka 的 JVM 堆内存
@@ -681,7 +1056,58 @@ docker compose logs -f kafka
   KAFKA_JMX_OPTS="" /usr/bin/kafka-console-producer --topic topic1 --bootstrap-server localhost:9092
   ```
 
-  
+
+
+
+## `Connector` 连接器
+
+>[参考官方快速入门](https://kafka.apache.org/quickstart)
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-kafka/demo-kafka-connect)
+
+启动 `Kafka` 服务：
+
+```sh
+docker compose up -d
+```
+
+切换到 `/opt/kafka` 目录
+
+```sh
+cd /opt/kafka
+```
+
+配置 `connect file` 插件路径
+
+```sh
+echo "plugin.path=libs/connect-file-4.0.0.jar" >> config/connect-standalone.properties
+```
+
+创建测试数据：
+
+```sh
+echo -e "foo\nbar" > test.txt
+```
+
+启动 `Connector`
+
+```sh
+bin/connect-standalone.sh config/connect-standalone.properties config/connect-file-source.properties config/connect-file-sink.properties
+```
+
+查看 `Connector sink` 数据：
+
+```sh
+cat test.sink.txt
+```
+
+消息被存储到主题 `connect-test` 中，查看主题中的消息
+
+```sh
+bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic connect-test --from-beginning
+```
+
+
 
 ## 日志保留策略
 
@@ -786,30 +1212,35 @@ kafka-manager:
 创建名为 `topic1`，分区数为`1`，副本数为`1`的 `topic`：
 
 ```sh
+# confluent 镜像
 KAFKA_JMX_OPTS="" /usr/bin/kafka-topics --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1 --topic topic1
 ```
 
 显示 `topic1` 详情
 
 ```sh
+# confluent 镜像
 KAFKA_JMX_OPTS="" /usr/bin/kafka-topics --describe --bootstrap-server localhost:9092 --topic topic1
 ```
 
 修改 `topic1` 分区数
 
 ```sh
+# confluent 镜像
 KAFKA_JMX_OPTS="" /usr/bin/kafka-topics --alter --bootstrap-server localhost:9092 --topic topic1 --partitions 128
 ```
 
 查询所有 `topic` 列表
 
 ```sh
+# confluent 镜像
 KAFKA_JMX_OPTS="" /usr/bin/kafka-topics --bootstrap-server localhost:9092 --list
 ```
 
 删除 `topic`
 
 ```sh
+# confluent 镜像
 KAFKA_JMX_OPTS="" /usr/bin/kafka-topics --delete --bootstrap-server localhost:9092 --topic topic1
 ```
 

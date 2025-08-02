@@ -1,0 +1,39 @@
+version: "3.0"
+
+services:
+  kafka:
+    image: apache/kafka:4.0.0
+    ports:
+      # 客户端通信端口
+      - "9092:9092"
+      # 控制器通信端口（KRaft 模式可选，多节点时需要）
+      - "9093:9093"
+      # 映射 JMX 端口到主机
+      # - "9997:9997"
+    environment:
+      TZ: Asia/Shanghai
+      # 节点唯一 ID（KRaft 模式必需，整数）
+      KAFKA_BROKER_ID: 1
+      # 必需配置：KRaft 模式角色（单节点可设为 broker,controller）
+      KAFKA_PROCESS_ROLES: broker,controller
+      # 控制器集群投票节点列表（单节点时指向自己，格式：nodeId@host:port）
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      # 声明控制器监听器名称，和下面配置的 CONTROLLER 一致
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      # Kafka Broker 向客户端（或其他 Broker）公布的可连接地址
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://${kafka_advertised_listeners}:9092,CONTROLLER://${kafka_advertised_listeners}:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      # 设置 Kafka 的 JVM 堆内存
+      KAFKA_HEAP_OPTS: "-Xms1g -Xmx1g"
+      # 配置 JMX 端口和认证，配置了 jmx 端口才能够被外部工具监控
+      # KAFKA_JMX_OPTS: "-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.local.only=false -Dcom.sun.management.jmxremote.port=9997 -Dcom.sun.management.jmxremote.rmi.port=9997"
+      # 禁用自动创建 Topic，否则 Spring Boot 会自动创建 partitions=0 的 topic
+      # KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      # ------------------- 日志清理配置 -------------------
+      # 清理策略：启用 delete（按时间/大小删除）
+      KAFKA_LOG_CLEANUP_POLICY: "delete"
+      # 单个分区最大日志大小：2G（根据磁盘容量调整，如 5GB、20GB）
+      KAFKA_LOG_RETENTION_BYTES: "2147483648"  # 设为 -1 表示不限制大小（仅用时间策略）
+      # 日志段大小：512MB（更小的段可提升清理精度，但增加文件数）
+      KAFKA_LOG_SEGMENT_BYTES: "536870912"  #（原默认 1GB）
