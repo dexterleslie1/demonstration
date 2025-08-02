@@ -1,6 +1,4 @@
-# 演示docker相关用法
-
-## run command on host from docker container
+## `run command on host from docker container`
 
 > [how-to-run-shell-script-on-host-from-docker-container](https://stackoverflow.com/questions/32163955/how-to-run-shell-script-on-host-from-docker-container)
 
@@ -11,7 +9,7 @@ docker run --privileged --pid=host -it alpine:3.8 nsenter -t 1 -m -u -n -i sh
 
 
 
-## docker最佳安全实践
+## `docker` 最佳安全实践
 
 > https://blog.aquasec.com/docker-security-best-practices
 >
@@ -21,7 +19,7 @@ docker run --privileged --pid=host -it alpine:3.8 nsenter -t 1 -m -u -n -i sh
 
 
 
-## docker 多阶段构建
+## `docker` 多阶段构建
 
 Dockerfile 多阶段构建是一种优化 Docker 镜像构建的方法，它可以减少 Docker 镜像的大小和运行时的资源消耗。
 Dockerfile 多阶段构建的基本思路是利用多个阶段构建镜像，每个阶段都有一个基础镜像，并在这个基础镜像上进行构建。在每个阶段的最后，通过 COPY 或者 FROM 语句将需要的文件或者库复制到最终的镜像中。这种方法可以减少最终镜像的大小，同时也可以避免在运行时不必要的资源消耗。
@@ -72,8 +70,6 @@ docker build --tag my-hello-world .
 ```shell
 docker run --rm my-hello-world
 ```
-
-
 
 
 
@@ -568,3 +564,9 @@ docker compose up
 ## 查看容器网络命名空间的连接状态（无需进入容器） 
 
 >详细用法请参考本站 <a href="/linux/命令行工具列表.html#查看容器网络命名空间的连接状态-无需进入容器" target="_blank">链接</a>
+
+
+
+## 工具镜像 - `curl`
+
+>镜像中已经包含 `curl` 工具，`image: amd64/buildpack-deps:buster-curl`。
