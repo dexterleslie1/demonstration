@@ -56,7 +56,7 @@ services:
 
 
 
-## `entrypoint`
+## `Dockerfile` 中的 `entrypoint`
 
 
 
@@ -122,6 +122,12 @@ docker run --rm -it --name demo1 entrypoint-demo /bin/bash
 
 ## `docker-compose.yaml`文件中使用`entrypoint`和`command`
 
+>提示：不能在 `docker-compose.yaml` 中编写复杂的脚本，否则在启动容器时报告错误。应该把脚本封装在 `*.sh` 中，然后使用 `entrypoint: sh /debezium-connect-init.sh` 调用。
+
+
+
+示例1：
+
 ```yaml
 version: '3.3'
 
@@ -136,6 +142,73 @@ services:
 ```
 
 
+
+示例2：
+
+- `debezium-connect-init.sh`：
+
+  ```sh
+  #!/bin/sh
+  
+  connector_host="debezium-connect"
+  
+  result=$(
+      curl -f -o /dev/null -X POST -H "Accept:application/json" -H "Content-Type:application/json" \
+          --connect-timeout 5 $connector_host:8083/connectors/ \
+          -d '{ "name": "demo-connector", "config": { "connector.class": "io.debezium.connector.mysql.MySqlConnector", "tasks.max": "1", "database.hostname": "db", "database.port": "3306", "database.user": "root", "database.password": "123456", "database.server.id": "184054", "topic.prefix": "demo-debezum", "database.include.list": "demo", "schema.history.internal.kafka.bootstrap.servers": "kafka:9092", "schema.history.internal.kafka.topic": "schemahistory.demo" } }' \
+          2>&1
+  )
+  exit_code=$?
+  # echo $result
+  # echo $exit_code
+  
+  # 错误信息中是否包含 409，如果包含表示之前已经初始化，不需要重试
+  echo "$result" | grep -q "409"
+  contains409=$?
+  # echo $contains409
+  
+  while [ ! $exit_code -eq 0 ] && [ ! $contains409 -eq 0 ];
+  do
+      echo "`date` - curl执行失败重试";
+      sleep 2;
+  
+      result=$(
+          curl -f -o /dev/null -X POST -H "Accept:application/json" -H "Content-Type:application/json" \
+              --connect-timeout 5 $connector_host:8083/connectors/ \
+              -d '{ "name": "demo-connector", "config": { "connector.class": "io.debezium.connector.mysql.MySqlConnector", "tasks.max": "1", "database.hostname": "db", "database.port": "3306", "database.user": "root", "database.password": "123456", "database.server.id": "184054", "topic.prefix": "demo-debezum", "database.include.list": "demo", "schema.history.internal.kafka.bootstrap.servers": "kafka:9092", "schema.history.internal.kafka.topic": "schemahistory.demo" } }' \
+              2>&1
+      )
+      exit_code=$?
+  
+      echo "$result" | grep -q "409"
+      contains409=$?
+  done
+  
+  if [ ! $exit_code -eq 0 ] && [ $contains409 -eq 0 ]; then
+      echo "`date` - 之前已经初始化过 debezium-connect"
+  else
+      echo "`date` - 成功初始化 debezium-connect"
+  fi
+  
+  ```
+
+- `docker-compose.yaml`：
+
+  ```yaml
+  version: '3.0'
+  
+  services:
+    ...
+    
+    # 初始化 debezium connector
+    debezium-connect-init:
+      image: amd64/buildpack-deps:buster-curl
+      volumes:
+        - ./debezium-connect-init.sh:/debezium-connect-init.sh:ro
+      entrypoint: sh /debezium-connect-init.sh
+  ```
+
+  
 
 ## `docker-compose.yaml`中使用`command`指定参数
 
