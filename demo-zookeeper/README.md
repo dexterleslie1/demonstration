@@ -141,3 +141,22 @@ volumes:
   data-demo-flash-sale-kafka-zookeeper:
 ```
 
+
+
+## 命令行
+
+
+
+### 查看 `zookeeper` 版本
+
+镜像 `zookeeper:3.8.4` 中查看
+
+```sh
+zkServer.sh version
+```
+
+
+
+镜像 `confluentinc/cp-zookeeper:7.3.0` 中查看
+
+>提示：不同通过命令行查看，通过官方兼容表 `https://docs.confluent.io/platform/current/installation/versions-interoperability.html#zk` 查看为 `3.8.3`。
