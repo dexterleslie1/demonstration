@@ -760,50 +760,48 @@ Confluent 是**企业级事件流平台的领导者**，通过基于 Kafka 构�
 
 
 
-## 配置项
-
-### `KAFKA_ADVERTISED_LISTENERS`
+## 配置项 - `KAFKA_ADVERTISED_LISTENERS`
 
 在 Apache Kafka 中，`KAFKA_ADVERTISED_LISTENERS` 是一个**关键的网络配置参数**，用于控制 Kafka Broker 向客户端（或其他 Broker）**公布的可连接地址**。它的核心作用是解决“Broker 实际监听地址”与“客户端可访问地址”不一致的问题，尤其在复杂网络环境（如容器化、NAT、多网卡）中至关重要。
 
-#### **核心背景：为什么需要 KAFKA_ADVERTISED_LISTENERS？**
+### **核心背景：为什么需要 KAFKA_ADVERTISED_LISTENERS？**
 
 Kafka 的通信流程中，客户端（生产者/消费者）需要知道 Broker 的地址才能连接并发送请求。Broker 启动时会绑定一个**实际监听地址**（由 `listeners` 配置），但由于网络环境的复杂性（例如 Broker 部署在容器内、NAT 网关后，或使用内网 IP 但客户端需通过公网访问），客户端可能无法直接访问 Broker 的实际监听地址。此时，`KAFKA_ADVERTISED_LISTENERS` 用于告诉客户端“应该使用哪个地址连接 Broker”，确保客户端能正确建立连接。
 
 
-#### **关键概念对比：listeners vs. advertised.listeners**
+### **关键概念对比：listeners vs. advertised.listeners**
 | 参数                   | 全称            | 作用                                                         | 默认值                       |
 | ---------------------- | --------------- | ------------------------------------------------------------ | ---------------------------- |
 | `listeners`            | Broker 监听地址 | Broker 实际绑定的网络地址（用于接收请求），格式为 `协议://主机:端口` | 无（必须显式配置）           |
 | `advertised.listeners` | Broker 公布地址 | Broker 向客户端/其他 Broker 公布的连接地址（客户端实际使用的地址） | 等于 `listeners`（未配置时） |
 
 
-#### **核心作用详解**
+### **核心作用详解**
 `KAFKA_ADVERTISED_LISTENERS` 的核心价值是**解耦 Broker 实际监听地址与客户端可访问地址**，常见场景包括：
 
-##### 1. **容器化部署（如 Docker/K8s）**
+#### 1. **容器化部署（如 Docker/K8s）**
 当 Broker 运行在容器中时，容器内部的网络可能与外部网络隔离（例如容器使用 `localhost` 监听，但外部客户端需通过宿主机的 IP 或域名访问）。此时：
 - `listeners` 配置为容器内部的监听地址（如 `PLAINTEXT://0.0.0.0:9092`，`0.0.0.0` 表示监听所有网卡）。
 - `advertised.listeners` 配置为宿主机的公网 IP 或域名（如 `PLAINTEXT://kafka-host.example.com:9092`），确保客户端使用该地址连接。
 
-##### 2. **NAT 网络环境**
+#### 2. **NAT 网络环境**
 Broker 部署在内网（如私有云），但客户端位于公网。此时：
 - `listeners` 绑定内网 IP（如 `PLAINTEXT://192.168.1.100:9092`）。
 - `advertised.listeners` 配置为公网 IP 或域名（如 `PLAINTEXT://kafka-public.example.com:9092`），客户端通过公网地址连接。
 
-##### 3. **多网卡或多地址场景**
+#### 3. **多网卡或多地址场景**
 Broker 有多个网卡（如内网卡、公网卡），需要根据客户端来源选择不同的暴露地址：
 - `listeners` 绑定所有网卡（如 `PLAINTEXT://0.0.0.0:9092`）。
 - `advertised.listeners` 按客户端类型区分（如内网客户端用内网 IP，公网客户端用公网 IP）。
 
-##### 4. **集群间通信**
+#### 4. **集群间通信**
 Kafka 集群中的 Broker 需要互相通信（如复制日志、协调分区）。每个 Broker 的 `advertised.listeners` 会被其他 Broker 用作连接地址，因此需确保集群内所有 Broker 能通过该地址互相访问。
 
 
-#### **配置格式与示例**
+### **配置格式与示例**
 `KAFKA_ADVERTISED_LISTENERS` 支持**多协议、多地址**配置（逗号分隔），每个地址格式为 `[协议]://[主机名/IP]:[端口]`。常见配置方式如下：
 
-##### 示例 1：单协议单地址（基础场景）
+#### 示例 1：单协议单地址（基础场景）
 ```properties
 # Broker 实际监听所有网卡的 9092 端口（PLAINTEXT 协议）
 listeners=PLAINTEXT://0.0.0.0:9092
@@ -812,7 +810,7 @@ listeners=PLAINTEXT://0.0.0.0:9092
 advertised.listeners=PLAINTEXT://kafka-broker.example.com:9092
 ```
 
-##### 示例 2：多协议多地址（混合场景）
+#### 示例 2：多协议多地址（混合场景）
 ```properties
 # Broker 实际监听内网 IP 的 PLAINTEXT 和 SSL 端口
 listeners=PLAINTEXT://192.168.1.100:9092,SSL://192.168.1.100:9093
@@ -821,7 +819,7 @@ listeners=PLAINTEXT://192.168.1.100:9092,SSL://192.168.1.100:9093
 advertised.listeners=PLAINTEXT://internal-kafka.example.com:9092,SSL://public-kafka.example.com:9093
 ```
 
-##### 示例 3：Docker 容器场景
+#### 示例 3：Docker 容器场景
 ```properties
 # 容器内监听所有网卡的 9092 端口（PLAINTEXT）
 listeners=PLAINTEXT://0.0.0.0:9092
@@ -831,7 +829,7 @@ advertised.listeners=PLAINTEXT://host-machine-ip:9093
 ```
 
 
-#### **注意事项**
+### **注意事项**
 1. **协议一致性**：`advertised.listeners` 中每个地址的协议（如 `PLAINTEXT`、`SSL`）必须与 `listeners` 中对应协议的配置一致，否则客户端会因协议不匹配无法连接。
    
 2. **主机名解析**：公布的地址（如 `kafka-broker.example.com`）必须能被客户端正确解析为 IP 地址（通过 DNS 或 `/etc/hosts`），否则客户端会连接失败。
@@ -843,14 +841,162 @@ advertised.listeners=PLAINTEXT://host-machine-ip:9093
 5. **动态环境适配**：在容器化或弹性伸缩场景中（如 K8s StatefulSet），需结合服务发现机制（如 Headless Service）动态更新 `advertised.listeners`，确保地址随 Pod 重建或扩缩容自动调整。
 
 
-#### **常见错误与排查**
+### **常见错误与排查**
 - **客户端连接失败**：检查 `advertised.listeners` 的地址是否可被客户端解析和访问（如 `ping kafka-broker.example.com` 或 `telnet kafka-broker.example.com 9092`）。
 - **集群无法同步**：检查 Broker 间是否能通过 `advertised.listeners` 互相访问（如 `telnet <broker2-advertised-ip> <broker2-port>`）。
 - **协议不匹配**：查看日志是否有 `Unsupported protocol` 错误，确认 `advertised.listeners` 与 `listeners` 的协议一致。
 
 
-#### **总结**
+### **总结**
 `KAFKA_ADVERTISED_LISTENERS` 是 Kafka 解决网络寻址问题的核心配置，通过明确“Broker 向客户端公布的连接地址”，确保客户端在不同网络环境下能正确连接到 Broker。其本质是**桥接 Broker 实际监听地址与客户端可访问地址**，是部署 Kafka 集群（尤其是跨网络、容器化场景）时必须重点关注的参数。
+
+
+
+## 配置项 - `auto.offset.reset`
+
+在 Spring Kafka 中，配置 `auto.offset.reset`（偏移量重置策略）是通过消费者工厂（`ConsumerFactory`）或 Spring Boot 自动配置属性实现的。该参数控制消费者组在**无已提交偏移量**（如首次启动）时的消费起始位置。以下是详细的配置方法和场景说明：
+
+
+### **一、核心概念回顾**
+`auto.offset.reset` 的取值和含义：
+- **`latest`（默认）**：消费者从**当前分区的最新消息之后**开始消费（仅消费启动后新产生的消息）。  
+- **`earliest`**：消费者从**分区的最早消息（Offset=0）**开始消费（读取所有历史消息）。  
+- **`none`**：若消费者组无已提交偏移量，抛出 `NoOffsetForPartitionException` 异常（需手动处理）。  
+
+
+### **二、Spring Boot 自动配置（推荐）**
+若使用 Spring Boot 自动配置 Kafka 消费者，可直接在 `application.properties` 或 `application.yml` 中设置全局或针对特定消费者组的 `auto.offset.reset`。
+
+
+#### **1. 全局配置（所有消费者组生效）**
+在 `application.properties` 中添加以下配置：
+```properties
+# application.properties
+spring.kafka.consumer.auto-offset-reset=earliest  # 全局设置为 earliest
+spring.kafka.consumer.enable-auto-commit=true     # 自动提交偏移量（默认 true）
+spring.kafka.consumer.group-id=my-consumer-group  # 消费者组 ID（必填）
+```
+
+
+#### **2. 针对特定消费者组的配置（推荐）**
+若需要为不同的消费者组设置不同的 `auto.offset.reset`，可通过 `@KafkaListener` 注解的 `properties` 属性覆盖全局配置。例如：
+
+```java
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.stereotype.Component;
+
+@Component
+public class MyKafkaConsumer {
+
+    // 消费者组 ID 为 "specific-group"，并设置 auto-offset-reset=earliest
+    @KafkaListener(
+        topics = "my-topic",
+        groupId = "specific-group",
+        properties = {"auto.offset.reset=earliest"}  // 覆盖全局配置
+    )
+    public void listen(String message) {
+        System.out.println("Received: " + message);
+    }
+}
+```
+
+
+### **三、手动配置 ConsumerFactory（高级场景）**
+若需要更细粒度的控制（如动态配置、自定义消费者工厂），可通过 `ConsumerFactory` 手动配置 `auto.offset.reset`。
+
+
+#### **1. 配置步骤**
+1. **定义 `ConsumerFactory` Bean**：通过 `KafkaConsumerFactory` 构建消费者工厂，设置 `auto.offset.reset`。  
+2. **关联 `KafkaListenerContainerFactory`**：将消费者工厂关联到监听器容器工厂，供 `@KafkaListener` 使用。  
+
+
+#### **2. 示例代码**
+```java
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.common.serialization.StringDeserializer;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
+import org.springframework.kafka.core.ConsumerFactory;
+import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
+import java.util.HashMap;
+import java.util.Map;
+
+@Configuration
+public class KafkaConsumerConfig {
+
+    // 1. 定义 ConsumerFactory
+    @Bean
+    public ConsumerFactory<String, String> consumerFactory() {
+        Map<String, Object> configs = new HashMap<>();
+        // 必填配置：Bootstrap Servers、Key/Value 反序列化器
+        configs.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        configs.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        configs.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        
+        // 设置 auto.offset.reset（关键配置）
+        configs.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");  // 或 "latest"
+        
+        // 可选：消费者组 ID（若不设置，需在 @KafkaListener 中指定）
+        configs.put(ConsumerConfig.GROUP_ID_CONFIG, "manual-group");
+        
+        // 可选：自动提交偏移量（默认 true）
+        configs.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, true);
+        
+        return new DefaultKafkaConsumerFactory<>(configs);
+    }
+
+    // 2. 关联 ConsumerFactory 到监听器容器工厂
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(consumerFactory());
+        // 可选：设置并发消费者数量（默认 1）
+        factory.setConcurrency(3);
+        return factory;
+    }
+}
+```
+
+
+### **四、验证配置是否生效**
+部署后，可通过以下方式验证 `auto.offset.reset` 是否生效：
+
+
+#### **1. 查看消费者组偏移量**
+使用 `kafka-consumer-groups` 工具查看消费者组的偏移量：
+```bash
+# 查看消费者组 "my-consumer-group" 的偏移量
+kafka-consumer-groups --bootstrap-server localhost:9092 --describe --group my-consumer-group
+```
+- 若 `CURRENT-OFFSET` 为 `-`（无提交记录），且 `LOG-END-OFFSET` 为历史消息的最大偏移量，说明 `auto.offset.reset=earliest` 生效（消费者从最早消息开始消费）。  
+
+
+#### **2. 观察消费者日志**
+启动消费者后，若日志中出现历史消息的内容，说明 `auto.offset.reset=earliest` 配置成功。  
+
+
+### **五、注意事项**
+1. **消费者组已存在的情况**：  
+   若消费者组已提交过偏移量（如之前运行过消费者），`auto.offset.reset` 不会生效，消费者会从**最后一次提交的偏移量**继续消费。此时需手动重置偏移量（见下文）。  
+
+2. **手动重置偏移量（可选）**：  
+   若需要让已存在的消费者组重新从历史消息开始消费，可使用 `kafka-consumer-groups` 工具重置偏移量：
+   ```bash
+   # 将消费者组 "my-consumer-group" 的偏移量重置为最早（earliest）
+   kafka-consumer-groups --bootstrap-server localhost:9092 \
+     --group my-consumer-group \
+     --reset-offsets --to-earliest \
+     --execute --topic my-topic
+   ```
+
+
+### **总结**
+在 Spring Kafka 中配置 `auto.offset.reset` 的方式包括：
+- **Spring Boot 自动配置**：通过 `application.properties` 全局或针对消费者组设置。  
+- **手动配置 `ConsumerFactory`**：通过代码显式定义消费者工厂，灵活控制配置。  
+
+核心目标是控制消费者在无已提交偏移量时的消费起始位置，适用于首次启动或需要重置偏移量的场景。
 
 
 
@@ -1242,6 +1388,12 @@ KAFKA_JMX_OPTS="" /usr/bin/kafka-topics --bootstrap-server localhost:9092 --list
 ```sh
 # confluent 镜像
 KAFKA_JMX_OPTS="" /usr/bin/kafka-topics --delete --bootstrap-server localhost:9092 --topic topic1
+```
+
+读取主题中所有消息
+
+```sh
+KAFKA_JMX_OPTS="" /usr/bin/kafka-console-consumer.sh --topic quickstart-events --from-beginning --bootstrap-server localhost:9092
 ```
 
 

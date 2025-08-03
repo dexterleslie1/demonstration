@@ -9,6 +9,9 @@ CREATE TABLE IF NOT EXISTS t_user(
     createTime         DATETIME NOT NULL COMMENT '创建时间'
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+insert into t_user(id,username,`password`,createTime) values(1,'user2x','1',now());
+insert into t_user(id,username,`password`,createTime) values(2,'user3x','2',now());
+
 -- 注意：下面只生成一个cdc事件，类型op=r
 /*insert into t_user(username,`password`,createTime) values('user1','123456',now());
 update t_user set username='userx' where username='user1';*/
