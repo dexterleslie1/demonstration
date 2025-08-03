@@ -1,8 +1,4 @@
-# JSON 库
-
-
-
-## 返回给前端的 JSON 数据有枚举类型的最佳实践
+## 返回给前端的 `JSON` 数据有枚举类型的最佳实践
 
 >提醒：推荐使用方法二（自定义 Serializer）比较简洁。
 
@@ -299,11 +295,11 @@ public void testEnum() throws JsonProcessingException {
 
 
 
-## Jackson
+## `Jackson`
 
 >`https://gitee.com/dexterleslie/demonstration/tree/master/demo-java/demo-library/demo-json-lib`
 
-### maven 项目 pom 配置
+### `POM` 配置
 
 ```xml
 <dependency>
@@ -320,11 +316,192 @@ public void testEnum() throws JsonProcessingException {
 
 
 
-### LocalDateTime、LocalDate、LocalTime 序列化配置
+### 测试 `Bean` 转换为 `json` 字符串
+
+>使用 `ObjectMapper#writeValueAsString()` 函数。
+
+```java
+/**
+ * 测试 bean 转换为 json 字符串
+ */
+@Test
+public void testBean2json() throws IOException {
+    long userId = 12345l;
+    String loginname = "dexter";
+    boolean enable = true;
+    LocalDateTime createTime = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
+    BeanClass beanClass = new BeanClass();
+    beanClass.setUserId(userId);
+    beanClass.setLoginname(loginname);
+    beanClass.setEnable(enable);
+    beanClass.setCreateTime(createTime);
+
+    ObjectMapper OMInstance = new ObjectMapper();
+    String json = OMInstance.writeValueAsString(beanClass);
+    beanClass = OMInstance.readValue(json, BeanClass.class);
+    Assert.assertEquals(userId, beanClass.getUserId());
+    Assert.assertEquals(loginname, beanClass.getLoginname());
+    Assert.assertEquals(false, beanClass.isEnable());
+    Assert.assertEquals(createTime, beanClass.getCreateTime());
+}
+```
+
+
+
+### 测试 `json` 字符串转换为 `Bean`
+
+>使用 `ObjectMapper#readValue()` 函数。
+
+```java
+/**
+ * 测试 json 字符串转换为 bean
+ */
+@Test
+public void testJson2Bean() throws IOException {
+    String json = "{\"userId\":12345,\"loginname\":\"dexter\",\"createTime\":\"2025-02-11 16:46:04\",\"enable\":true}";
+
+    long userId = 12345l;
+    String loginname = "dexter";
+    LocalDateTime createTime = LocalDateTime.parse("2025-02-11 16:46:04", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+
+    ObjectMapper OMInstance = new ObjectMapper();
+    BeanClass beanClass = OMInstance.readValue(json, BeanClass.class);
+    Assert.assertEquals(userId, beanClass.getUserId());
+    Assert.assertEquals(loginname, beanClass.getLoginname());
+    Assert.assertEquals(false, beanClass.isEnable());
+    Assert.assertEquals(createTime, beanClass.getCreateTime());
+}
+```
+
+
+
+### 测试 `json` 字符串转换为 `JsonNode`
+
+>使用 `ObjectMapper#readTree()` 函数。
+
+```java
+/**
+ * 测试 json 字符串转换为 JsonNode
+ *
+ * @throws IOException
+ */
+@Test
+public void testJson2JsonNode() throws IOException {
+    String json = "{\"userId\":12345,\"loginname\":\"dexter\",\"createTime\":1577874822420,\"enable\":true}";
+    ObjectMapper OMInstance = new ObjectMapper();
+    JsonNode jsonNode = OMInstance.readTree(json);
+    Assert.assertTrue(jsonNode.get("enable").asBoolean());
+}
+```
+
+
+
+### 测试 `ObjectNode` 用于面向对象创建 `json` 结构对象
+
+>使用 `ObjectMapper#createObjectNode()` 函数。
+
+```java
+/**
+ * 测试 ObjectNode 用于面向对象创建 json 结构对象
+ *
+ * @throws IOException
+ */
+@Test
+public void testObjectNode() throws IOException {
+    ObjectMapper OMInstance = new ObjectMapper();
+    ObjectNode objectNode = OMInstance.createObjectNode();
+    objectNode.put("enable", true);
+    objectNode.put("loginname", "dexter");
+
+    String json = OMInstance.writeValueAsString(objectNode);
+    JsonNode jsonNode = OMInstance.readTree(json);
+    Assert.assertTrue(jsonNode.get("enable").asBoolean());
+    Assert.assertEquals("dexter", jsonNode.get("loginname").asText());
+
+    objectNode = JsonNodeFactory.instance.objectNode();
+    objectNode.put("enable", true);
+    objectNode.put("loginname", "dexter");
+    Assert.assertTrue(jsonNode.get("enable").asBoolean());
+    Assert.assertEquals("dexter", jsonNode.get("loginname").asText());
+}
+```
+
+
+
+### 测试 `json array` 字符串转换为 `java List`
+
+>使用 `ObjectMapper#readValue(json, new TypeReference<List<BeanClass>>() {})` 函数。
+
+```java
+/**
+ * 测试 json array 字符串转换为 java List
+ */
+@Test
+public void testJsonArrayToJavaList() throws IOException {
+    long userId = 12345l;
+    String loginname = "dexter";
+    boolean enable = true;
+    LocalDateTime createTime = LocalDateTime.now();
+
+    List<BeanClass> beanClasseList = new ArrayList<BeanClass>();
+    for (int i = 1; i <= 5; i++) {
+        BeanClass beanClass = new BeanClass();
+        beanClass.setUserId(userId);
+        beanClass.setLoginname(loginname + "#" + i);
+        beanClass.setEnable(enable);
+        beanClass.setCreateTime(createTime);
+    }
+
+    ObjectMapper OMInstance = new ObjectMapper();
+    String json = OMInstance.writeValueAsString(beanClasseList);
+
+    List<BeanClass> beanClassListR = OMInstance.readValue(json, new TypeReference<List<BeanClass>>() {
+    });
+
+    Assert.assertEquals(beanClasseList.size(), beanClassListR.size());
+    for (int i = 0; i < beanClasseList.size(); i++) {
+        Assert.assertEquals(beanClasseList.get(i).getUserId(), beanClassListR.get(i).getUserId());
+        Assert.assertEquals(beanClasseList.get(i).getLoginname(), beanClassListR.get(i).getLoginname());
+        Assert.assertEquals(beanClasseList.get(i).isEnable(), beanClassListR.get(i).isEnable());
+        Assert.assertEquals(beanClasseList.get(i).getCreateTime(), beanClassListR.get(i).getCreateTime());
+    }
+}
+```
+
+
+
+### 测试 `ArrayNode` 用法和转换为 `Stream`
+
+>使用 `(ArrayNode) jsonNode.get("data")` 强制转换为 `ArrayNode`。
+
+```java
+/**
+ * 测试 ArrayNode 用法和转换为 Stream
+ *
+ * @throws Exception
+ */
+@Test
+public void testArrayNodeToStream() throws Exception {
+    Map<String, List<String>> testMapper = new HashMap<>();
+    testMapper.put("data", Arrays.asList("1", "2", "3"));
+    ObjectMapper objectMapper = new ObjectMapper();
+    String JSON = objectMapper.writeValueAsString(testMapper);
+    JsonNode jsonNode = objectMapper.readTree(JSON);
+    ArrayNode arrayNode = (ArrayNode) jsonNode.get("data");
+
+    // https://stackoverflow.com/questions/32683785/create-java-8-stream-from-arraynode
+    List<String> list = StreamSupport.stream(arrayNode.spliterator(), false).map(JsonNode::asText).collect(Collectors.toList());
+    Assert.assertArrayEquals(new String[]{"1", "2", "3"}, list.toArray(new String[]{}));
+}
+```
+
+
+
+### `LocalDateTime`、`LocalDate`、`LocalTime` 序列化配置
 
 >`https://blog.csdn.net/REX1024/article/details/123657816`
 
-pom 配置引入如下依赖
+`POM` 配置
 
 ```xml
 <dependency>
@@ -334,7 +511,7 @@ pom 配置引入如下依赖
 </dependency>
 ```
 
-配置 LocalDateTime 字段序列化和反序列化
+配置 `LocalDateTime` 字段序列化和反序列化
 
 ```java
 @Data

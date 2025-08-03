@@ -29,10 +29,10 @@ public class JacksonTests {
     private final static Logger log = LoggerFactory.getLogger(JacksonTests.class);
 
     /**
-     *
+     * 测试 bean 转换为 json 字符串
      */
     @Test
-    public void bean2json() throws IOException {
+    public void testBean2Json() throws IOException {
         long userId = 12345l;
         String loginname = "dexter";
         boolean enable = true;
@@ -53,10 +53,10 @@ public class JacksonTests {
     }
 
     /**
-     *
+     * 测试 json 字符串转换为 bean
      */
     @Test
-    public void json2bean() throws IOException {
+    public void testJson2Bean() throws IOException {
         String json = "{\"userId\":12345,\"loginname\":\"dexter\",\"createTime\":\"2025-02-11 16:46:04\",\"enable\":true}";
 
         long userId = 12345l;
@@ -72,21 +72,25 @@ public class JacksonTests {
     }
 
     /**
+     * 测试 json 字符串转换为 JsonNode
+     *
      * @throws IOException
      */
     @Test
-    public void json2JsonNode() throws IOException {
+    public void testJson2JsonNode() throws IOException {
         String json = "{\"userId\":12345,\"loginname\":\"dexter\",\"createTime\":1577874822420,\"enable\":true}";
         ObjectMapper OMInstance = new ObjectMapper();
         JsonNode jsonNode = OMInstance.readTree(json);
-        Assert.assertEquals(true, jsonNode.get("enable").asBoolean());
+        Assert.assertTrue(jsonNode.get("enable").asBoolean());
     }
 
     /**
+     * 测试 ObjectNode 用于面向对象创建 json 结构对象
+     *
      * @throws IOException
      */
     @Test
-    public void objectNode() throws IOException {
+    public void testObjectNode() throws IOException {
         ObjectMapper OMInstance = new ObjectMapper();
         ObjectNode objectNode = OMInstance.createObjectNode();
         objectNode.put("enable", true);
@@ -94,13 +98,13 @@ public class JacksonTests {
 
         String json = OMInstance.writeValueAsString(objectNode);
         JsonNode jsonNode = OMInstance.readTree(json);
-        Assert.assertEquals(true, jsonNode.get("enable").asBoolean());
+        Assert.assertTrue(jsonNode.get("enable").asBoolean());
         Assert.assertEquals("dexter", jsonNode.get("loginname").asText());
 
         objectNode = JsonNodeFactory.instance.objectNode();
         objectNode.put("enable", true);
         objectNode.put("loginname", "dexter");
-        Assert.assertEquals(true, jsonNode.get("enable").asBoolean());
+        Assert.assertTrue(jsonNode.get("enable").asBoolean());
         Assert.assertEquals("dexter", jsonNode.get("loginname").asText());
     }
 
@@ -159,10 +163,10 @@ public class JacksonTests {
     }
 
     /**
-     * 演示json array转换为java List
+     * 测试 json array 字符串转换为 java List
      */
     @Test
-    public void jsonArrayToJavaList() throws IOException {
+    public void testJsonArrayToJavaList() throws IOException {
         long userId = 12345l;
         String loginname = "dexter";
         boolean enable = true;
@@ -193,7 +197,7 @@ public class JacksonTests {
     }
 
     /**
-     * 测试ArrayNode转换为Stream
+     * 测试 ArrayNode 用法和转换为 Stream
      *
      * @throws Exception
      */
