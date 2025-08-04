@@ -7,5 +7,6 @@ services:
       - JAVA_OPTS=-Xmx2g
       - TZ=Asia/Shanghai
       - kafka_bootstrap_servers=${kafka_bootstrap_servers}
+      - redisHost=${redisHost}
     restart: unless-stopped
     network_mode: host

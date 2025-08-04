@@ -128,3 +128,13 @@ services:
       TZ: Asia/Shanghai
       ZK_HOSTS: zookeeper:2181
       APPLICATION_SECRET: "123456"
+
+  redis:
+    image: redis:7.2.4
+    # 设置redis密码
+    command: redis-server /usr/local/etc/redis/redis.conf --requirepass 123456
+    volumes:
+      - ./deployer/common/redis7.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - TZ=Asia/Shanghai
+    network_mode: host

@@ -2,17 +2,21 @@ package com.future.demo.config;
 
 import com.future.demo.constant.Constant;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.kafka.annotation.KafkaListener;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Configuration
 @Slf4j
 public class ConfigKafkaListener {
+
+    @Autowired
+    StringRedisTemplate redisTemplate;
 
     private AtomicInteger concurrentCounter = new AtomicInteger();
     private AtomicLong counter = new AtomicLong();
@@ -26,7 +30,10 @@ public class ConfigKafkaListener {
                     + ",size=" + messages.size()
                     + ",total=" + counter.addAndGet(messages.size()));
 
-            TimeUnit.MILLISECONDS.sleep(1500);
+            // 这个计数器用于协助测试 Kafka auto.offset.reset 配置项目
+            redisTemplate.opsForValue().increment(Constant.KeyConfigOptionAutoOffsetResetCounter, messages.size());
+
+            /*TimeUnit.MILLISECONDS.sleep(1500);*/
 
             // 辅助测试失败重试
             /*boolean b = true;

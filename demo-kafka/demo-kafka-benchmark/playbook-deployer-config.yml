@@ -31,6 +31,11 @@
         path: ~/deployer-demo-kafka-benchmark/crond/.env
         regexp: "^kafka_bootstrap_servers="
         line: "kafka_bootstrap_servers={{ groups['kafka'][0] }}"
+    - name: "配置crond服务的redisHost"
+      lineinfile:
+        path: ~/deployer-demo-kafka-benchmark/crond/.env
+        regexp: "^redisHost="
+        line: "redisHost={{ groups['kafka'][0] }}"
 
 - name: "配置api服务的deployer"
   hosts: api
@@ -40,3 +45,8 @@
         path: ~/deployer-demo-kafka-benchmark/service/.env
         regexp: "^kafka_bootstrap_servers="
         line: "kafka_bootstrap_servers={{ groups['kafka'][0] }}"
+    - name: "配置api服务的redisHost"
+      lineinfile:
+        path: ~/deployer-demo-kafka-benchmark/service/.env
+        regexp: "^redisHost="
+        line: "redisHost={{ groups['kafka'][0] }}"

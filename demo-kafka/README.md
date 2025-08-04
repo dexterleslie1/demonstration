@@ -2538,3 +2538,63 @@ KAFKA_JMX_OPTS="" /usr/bin/kafka-topics --bootstrap-server localhost:9093 --desc
 查看 `crond` 服务日志 `total=25000` 表示没有丢失消息。
 
 此时可以安全地关闭并删除 `kafka1` 了。
+
+
+
+## 消费者崩溃或者重启是否会丢失消息呢？
+
+>使用本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-kafka/demo-kafka-benchmark) 协助测试。
+
+### 测试是否会丢失消费者运行前的消息
+
+在开发环境中启动应用的相关容器
+
+启动 `ApplicationService` 应用，但不启动 `ApplicationCrond` 应用
+
+使用 `rest.http` 文件中的 `GET http://localhost:8080/api/v1/sendToTopic1` 向主题发送 `3` 条消息后再启动 `ApplicationCrond` 应用。
+
+`ApplicationCrond` 运行后使用 `rest.http` 文件中的 `GET http://localhost:8080/api/v1/getConfigOptionAutoOffsetResetCounter` 获取计数器，发现计数器依旧为 `0`（并没有消费之前的 `3` 条消息）。
+
+要解决上面的问题需要参考本站 <a href="/kafka/README.html#配置项-auto-offset-reset" target="_blank">链接</a> 调整消费者添加 `props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");` 配置：
+
+```java
+@Bean("defaultConsumerFactory")
+public ConsumerFactory<String, String> defaultConsumerFactory() {
+    Map<String, Object> props = new HashMap<>();
+    // 从application.properties中获取Bootstrap Server（兼容原有配置）
+    props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+    /*props.put(ConsumerConfig.GROUP_ID_CONFIG, "group-topic1"); // 建议为不同主题设置不同Group ID（可选）*/
+    props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+    props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+    // 为Topic2单独设置max-poll-records
+    props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 1024);
+    // 无已提交偏移量（如首次启动）时的消费起始位置
+    props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+    return new DefaultKafkaConsumerFactory<>(props);
+}
+```
+
+
+
+### 测试崩溃或者重启消息者是否会丢失消息
+
+在开发环境中启动应用的相关容器
+
+启动 `ApplicationService` 和 `ApplicationCrond` 应用
+
+借助 `ab` 工具生产消息持续 `3` 分钟：
+
+```sh
+ab -n 12000 -c 32 -k http://localhost:8080/api/v1/sendToTopic1
+```
+
+在测试期间重启或者崩溃 `ApplicationCrond` 应用
+
+```sh
+# 模拟应用崩溃
+ps aux|grep ApplicationCrond
+# 获取上面输出的进程 id
+kill -9 105091
+```
+
+使用 `rest.http` 文件中的 `GET http://localhost:8080/api/v1/getConfigOptionAutoOffsetResetCounter` 获取计数器返回 `"data": 12000` 表示没有丢失消息。

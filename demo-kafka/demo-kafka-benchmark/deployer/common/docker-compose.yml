@@ -56,3 +56,13 @@ services:
       TZ: Asia/Shanghai
     # 自动创建 topic
     entrypoint: /usr/bin/kafka-topics --create --bootstrap-server kafka:9092 --replication-factor 1 --partitions 1 --topic topic-test-send-perf
+
+  redis:
+    image: redis:7.2.4
+    # 设置redis密码
+    command: redis-server /usr/local/etc/redis/redis.conf --requirepass 123456
+    volumes:
+      - ./redis7.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - TZ=Asia/Shanghai
+    network_mode: host
