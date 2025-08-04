@@ -1,0 +1,177 @@
+ROSTemplateFormatVersion: '2015-09-01'
+
+Parameters:
+  # 选择可用区域
+  BmZoneId:
+    Type: String
+    Label: "部署测试组件所在的可用区域"
+    AssociationProperty: ALIYUN::VPC::Zone::ZoneId
+    # 设定参数是否必填。取值：true：参数必填，不可为空。false：参数非必填。
+    Required: true
+
+  # 选择创建管理实例的镜像模板
+  BmImageIdManagement:
+    Type: String
+    Label: "创建管理主机的镜像"
+    AssociationProperty: ALIYUN::ECS::Image::ImageId
+    AssociationPropertyMetadata:
+      SupportedImageOwnerAlias:
+        - self
+      Architecture: x86_64
+    Required: true
+
+  # 选择创建测试节点实例的镜像模板
+  BmImageIdNode:
+    Type: String
+    Label: "创建测试节点主机的镜像"
+    AssociationProperty: ALIYUN::ECS::Image::ImageId
+    AssociationPropertyMetadata:
+      SupportedImageOwnerAlias:
+        - self
+      Architecture: x86_64
+    Required: true
+
+Locals:
+  # 实例的ssh登录密码
+  BmSshPassword:
+    Type: Macro
+    Value: "Root@123"
+  # 管理实例的ip地址
+  BmPrivateIpManagement:
+    Type: Macro
+    Value: "10.0.1.5"
+  # zookeeper、redis 等公共服务
+  BmPrivateIpCommonService:
+    Type: Macro
+    Value: "10.0.1.10"
+  # 实例规格
+  # https://www.aliyun.com/daily-act/ecs/ecs/detail/u
+  BmManagementInstanceType:
+    Type: Macro
+    # 2c4g
+    Value: ecs.u1-c1m2.large
+  BmInstanceType:
+    Type: Macro
+    # 8c32g
+    Value: ecs.u1-c1m4.2xlarge
+
+Resources:
+  BmVpc:
+    Type: ALIYUN::ECS::VPC
+    Properties:
+      # 创建的vpc名称
+      VpcName: bm-vpc
+      # vpc支持的网段
+      CidrBlock: 10.0.0.0/8
+      # 不支持ipv6
+      EnableIpv6: false
+  BmVSwitch:
+    Type: ALIYUN::ECS::VSwitch
+    Properties:
+      # 要创建交换机的专有网络ID
+      VpcId:
+        Ref: BmVpc
+      # 可用区ID
+      ZoneId:
+        Ref: BmZoneId
+      # 交换机名称
+      VSwitchName: bm-vswitch
+      # 交换机网段，必须是所属专有网络的子网段，并且没有被其他交换机占用。
+      CidrBlock: 10.0.1.0/24
+  BmSecurityGroup:
+    Type: ALIYUN::ECS::SecurityGroup
+    Properties:
+      # 安全组所属的vpc网络
+      VpcId:
+        Ref: BmVpc
+      # 安全组名称
+      SecurityGroupName: bm-security-group
+      # 安全组的类型，normal：基本安全组，enterprise：高级安全组
+      SecurityGroupType: normal
+      # 安全组出方向的访问规则。
+      # https://help.aliyun.com/zh/ros/developer-reference/aliyun-ecs-securitygroup?#section-cex-usg-xo8
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          PortRange: 22/22
+          SourceCidrIp: 14.0.0.0/8
+        - IpProtocol: tcp
+          PortRange: 3389/3389
+          SourceCidrIp: 14.0.0.0/8
+        - IpProtocol: tcp
+          PortRange: 22/22
+          SourceCidrIp: 120.0.0.0/8
+        - IpProtocol: tcp
+          PortRange: 3389/3389
+          SourceCidrIp: 120.0.0.0/8
+        - IpProtocol: tcp
+          PortRange: 22/22
+          SourceCidrIp: 183.0.0.0/8
+        - IpProtocol: tcp
+          PortRange: 3389/3389
+          SourceCidrIp: 183.0.0.0/8
+
+  # 管理主机
+  BmInstanceManagement:
+    Type: ALIYUN::ECS::Instance
+    Properties:
+      # 指定操作系统的主机名称，hostname命令返回的主机名称
+      HostName: bm-management
+      # 指定阿里云中显示的实例名称
+      InstanceName: bm-management
+      InstanceType:
+        Ref: BmManagementInstanceType
+      # 按量付费
+      InstanceChargeType: PostPaid
+      # ESSD云盘
+      SystemDiskCategory: cloud_essd
+      SystemDiskSize: 40
+
+      # 网络按流量计费
+      AllocatePublicIP: true
+      InternetChargeType: PayByTraffic
+      InternetMaxBandwidthOut: 5
+
+      VpcId:
+        Ref: BmVpc
+      VSwitchId:
+        Ref: BmVSwitch
+      SecurityGroupId:
+        Ref: BmSecurityGroup
+
+      # 创建实例的镜像id
+      ImageId:
+        Ref: BmImageIdManagement
+      Password:
+        Ref: BmSshPassword
+      PrivateIpAddress:
+        Ref: BmPrivateIpManagement
+
+  # zookeeper、redis 等公共服务
+  BmInstanceCommonService:
+    Type: ALIYUN::ECS::Instance
+    Properties:
+      HostName: bm-common-service
+      InstanceName: bm-common-service
+      InstanceType:
+        Ref: BmInstanceType
+      InstanceChargeType: PostPaid
+      SystemDiskCategory: cloud_essd
+      SystemDiskSize: 2048
+
+      AllocatePublicIP: true
+      InternetChargeType: PayByTraffic
+      InternetMaxBandwidthOut: 5
+
+      VpcId:
+        Ref: BmVpc
+      VSwitchId:
+        Ref: BmVSwitch
+      SecurityGroupId:
+        Ref: BmSecurityGroup
+
+      ImageId:
+        Ref: BmImageIdNode
+      Password:
+        Ref: BmSshPassword
+      PrivateIpAddress:
+        Ref: BmPrivateIpCommonService
