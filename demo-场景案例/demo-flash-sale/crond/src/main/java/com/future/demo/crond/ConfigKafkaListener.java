@@ -333,7 +333,7 @@ public class ConfigKafkaListener {
                 for (FlashSaleProductCacheUpdateEventDTO dto : dtoList) {
                     String productIdStr = String.valueOf(dto.getProductModel().getId());
                     LocalDateTime flashSaleEndTime = dto.getProductModel().getFlashSaleEndTime();
-                    // 在秒杀结束1分钟后自动删除
+                    // 在秒杀结束30秒后自动删除
                     int seconds = dto.getSecondAfterWhichExpiredFlashSaleProductForRemoving();
                     LocalDateTime expirationTime = flashSaleEndTime.plusSeconds(seconds);
                     long epochSecond = expirationTime.atZone(ZoneId.of("Asia/Shanghai")).toEpochSecond();

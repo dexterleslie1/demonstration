@@ -7,6 +7,7 @@ import com.future.demo.config.PrometheusCustomMonitor;
 import com.future.demo.constant.Const;
 import com.future.demo.dto.FlashSaleProductCacheUpdateEventDTO;
 import com.future.demo.dto.ProductDTO;
+import com.future.demo.dto.UpdateProductStockAmountReq;
 import com.future.demo.entity.ProductModel;
 import com.future.demo.mapper.ProductMapper;
 import com.tencent.devops.leaf.service.SnowflakeService;
@@ -104,7 +105,7 @@ public class ProductService {
      * @param flashSaleEndTime
      * @return 商品ID
      */
-    @Transactional(rollbackFor = Exception.class)
+    /*@Transactional(rollbackFor = Exception.class)*/
     public Long add(String name,
                     Long merchantId,
                     int stockAmount,
@@ -219,11 +220,29 @@ public class ProductService {
     }
 
     /**
-     * 在秒杀结束多少秒后自动删除缓存中的秒杀商品，默认一分钟后
+     * 在秒杀结束多少秒后自动删除缓存中的秒杀商品，默认30秒后
      *
      * @return
      */
     public int getSecondAfterWhichExpiredFlashSaleProductForRemoving() {
-        return 60;
+        return 30;
+    }
+
+    /**
+     * 批量修改商品库存
+     *
+     * @param reqList
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void updateStockAmount(List<UpdateProductStockAmountReq> reqList) {
+        if (reqList == null || reqList.isEmpty()) {
+            return;
+        }
+
+        for (UpdateProductStockAmountReq req : reqList) {
+            Long productId = req.getProductId();
+            Integer stockAmount = req.getStockAmount();
+            productMapper.updateStock(productId, stockAmount);
+        }
     }
 }

@@ -276,7 +276,7 @@ public class ApplicationTests {
     }
 
     /**
-     * 测试秒杀下单
+     * 测试秒杀下单，提示：因为需要测试商品过期从缓存删除逻辑，测试过程可能持续2分钟左右，需要耐心等待
      *
      * @throws Exception
      */
@@ -297,8 +297,9 @@ public class ApplicationTests {
         // 秒杀活动持续1秒
         LocalDateTime flashSaleEndTime = flashSaleStartTime.plusSeconds(1);
         // 秒杀结束2秒后，自动从缓存删除秒杀商品
-        int secondAfterWhichExpiredFlashSaleProductForRemoving = 2;
-        Mockito.doReturn(secondAfterWhichExpiredFlashSaleProductForRemoving).when(productService).getSecondAfterWhichExpiredFlashSaleProductForRemoving();
+        int secondAfterWhichExpiredFlashSaleProductForRemoving = productService.getSecondAfterWhichExpiredFlashSaleProductForRemoving();
+        /*int secondAfterWhichExpiredFlashSaleProductForRemoving = 2;
+        Mockito.doReturn(secondAfterWhichExpiredFlashSaleProductForRemoving).when(productService).getSecondAfterWhichExpiredFlashSaleProductForRemoving();*/
         Long productId = this.productService.add(name, merchantId, stockAmount, true, flashSaleStartTime, flashSaleEndTime);
         List<ProductModel> productModelList = this.productMapper.list(Collections.singletonList(productId));
         Assertions.assertEquals(1, productModelList.size());
@@ -329,6 +330,15 @@ public class ApplicationTests {
         Assertions.assertEquals(dateTimeFormatter.format(productModelList.get(0).getFlashSaleEndTime()), value);
 
         // 检查秒杀商品过期时间缓存
+        List<ProductModel> finalProductModelList = productModelList;
+        Awaitility.waitAtMost(5, TimeUnit.SECONDS).pollInterval(100, TimeUnit.MILLISECONDS)
+                .until(() -> {
+                    long epochSecond = finalProductModelList.get(0).getFlashSaleEndTime().plusSeconds(secondAfterWhichExpiredFlashSaleProductForRemoving)
+                            .toEpochSecond(ZoneOffset.ofHours(8));
+                    Set<ZSetOperations.TypedTuple<String>> typedTupleSet =
+                            redisTemplate.opsForZSet().reverseRangeByScoreWithScores(ProductService.KeyFlashSaleProductExpirationCache, epochSecond, epochSecond);
+                    return typedTupleSet != null && typedTupleSet.size() == 1;
+                });
         long epochSecond = productModelList.get(0).getFlashSaleEndTime().plusSeconds(secondAfterWhichExpiredFlashSaleProductForRemoving)
                 .toEpochSecond(ZoneOffset.ofHours(8));
         Set<ZSetOperations.TypedTuple<String>> typedTupleSet =
@@ -340,7 +350,7 @@ public class ApplicationTests {
 
         // 等待到crond删除过期的秒杀商品
         long finalEpochSecond1 = epochSecond;
-        Awaitility.waitAtMost(31, TimeUnit.SECONDS).pollInterval(1, TimeUnit.SECONDS)
+        Awaitility.waitAtMost(65, TimeUnit.SECONDS).pollInterval(1, TimeUnit.SECONDS)
                 .until(() -> {
                     Set<ZSetOperations.TypedTuple<String>> typedTupleSetInternal =
                             redisTemplate.opsForZSet().
@@ -373,6 +383,7 @@ public class ApplicationTests {
         flashSaleEndTime = productService.getFlashSaleEndTimeRandomly(flashSaleStartTime);
         productId = this.productService.add(name, merchantId, stockAmount, true, flashSaleStartTime, flashSaleEndTime);
         try {
+            TimeUnit.MILLISECONDS.sleep(500);
             orderService.createFlashSale(userId, productId, amount, null);
             Assertions.fail();
         } catch (BusinessException ex) {
@@ -494,7 +505,7 @@ public class ApplicationTests {
 
         // 等待到秒杀商品过期自动从缓存中删除
         long finalEpochSecond = epochSecond;
-        Awaitility.waitAtMost(31, TimeUnit.SECONDS).pollInterval(1, TimeUnit.SECONDS)
+        Awaitility.waitAtMost(65, TimeUnit.SECONDS).pollInterval(1, TimeUnit.SECONDS)
                 .until(() -> {
                     Set<ZSetOperations.TypedTuple<String>> typedTupleSetInternal =
                             redisTemplate.opsForZSet().
