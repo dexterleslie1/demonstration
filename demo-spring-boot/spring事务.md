@@ -439,3 +439,101 @@ public PlatformTransactionManager transactionManager(@Qualifier("orderDataSource
 public void createOrder(Long userId, Long productId, Integer amount) throws Exception {
 ```
 
+
+
+## 事务的坑
+
+
+
+### 事务未提交无法读取事务中的数据
+
+示例代码：
+
+```java
+@Transactional(rollbackFor = Exception.class)
+public Long add(String name,
+                Long merchantId,
+                int stockAmount,
+                boolean flashSale,
+                LocalDateTime flashSaleStartTime,
+                LocalDateTime flashSaleEndTime) throws Exception {
+
+    // 不是秒杀商品不需要设置秒杀开始时间和秒杀结束时间
+    if (!flashSale) {
+        flashSaleStartTime = null;
+        flashSaleEndTime = null;
+    }
+
+    if (flashSale) {
+        // 秒杀商品需要指定秒杀开始和结束时间
+        Assert.notNull(flashSaleStartTime, "请指定秒杀开始时间参数flashSaleStartTime");
+        Assert.notNull(flashSaleEndTime, "请指定秒杀开始时间参数flashSaleEndTime");
+
+        // 秒杀开始时间需要早于秒杀结束时间
+        Assert.isTrue(flashSaleStartTime.isBefore(flashSaleEndTime), "秒杀开始时间 " + flashSaleStartTime + " 必须要早于秒杀结束时间 " + flashSaleEndTime);
+    }
+
+    ProductModel model = new ProductModel();
+
+    Long id = snowflakeService.getId("product").getId();
+    model.setId(id);
+
+    model.setName(name);
+    model.setMerchantId(merchantId);
+    model.setStock(stockAmount);
+    model.setFlashSale(flashSale);
+    model.setFlashSaleStartTime(flashSaleStartTime);
+    model.setFlashSaleEndTime(flashSaleEndTime);
+    model.setCreateTime(LocalDateTime.now());
+    this.productMapper.insert(model);
+    if (log.isDebugEnabled())
+        log.debug("成功插入商品数据到数据库 {}", model);
+
+    List<ListenableFuture<SendResult<String, String>>> futureList = new ArrayList<>();
+    // 秒杀商品需要初始化 redis 缓存
+    if (flashSale) {
+        int second = getSecondAfterWhichExpiredFlashSaleProductForRemoving();
+        FlashSaleProductCacheUpdateEventDTO eventDTO = new FlashSaleProductCacheUpdateEventDTO();
+        eventDTO.setProductModel(model);
+        eventDTO.setSecondAfterWhichExpiredFlashSaleProductForRemoving(second);
+        String JSON = this.objectMapper.writeValueAsString(eventDTO);
+        futureList.add(this.kafkaTemplate.send(Const.TopicSetupProductFlashSaleCache, JSON));
+        if (log.isDebugEnabled())
+            log.debug("秒杀商品成功发送设置商品缓存消息 {}", JSON);
+    }
+
+    // 向缓存中添加商品用于下单时随机抽取商品
+    String JSON = this.objectMapper.writeValueAsString(model);
+    futureList.add(kafkaTemplate.send(Const.TopicAddProductToCacheForPickupRandomlyWhenPurchasing, JSON));
+    if (log.isDebugEnabled())
+        log.debug("成功发送消息“向缓存中添加商品用于下单时随机抽取商品” {}", JSON);
+
+    // 异步更新 t_count
+    IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO(String.valueOf(model.getId()), "product");
+    JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
+    futureList.add(kafkaTemplate.send(Const.TopicIncreaseCountSlow, JSON));
+
+    if (!futureList.isEmpty()) {
+        int index = -1;
+        try {
+            for (int i = 0; i < futureList.size(); i++) {
+                index = i;
+                futureList.get(i).get();
+            }
+        } catch (Exception ex) {
+            log.error("发送Kafka消息失败，原因：{}，出错的 futureList 索引为 {}", ex.getMessage(), index, ex);
+            throw ex;
+        }
+    }
+
+    if (flashSale)
+        prometheusCustomMonitor.getCounterProductMetricsCreateFlashSaleSuccessfully().increment();
+    else
+        prometheusCustomMonitor.getCounterProductMetricsCreateOrdinarySuccessfully().increment();
+
+    return model.getId();
+}
+```
+
+- 上面代码中，在事务未结束时发送消息到 `Kafka`，在 `Kafka` 监听逻辑中尝试根据商品 `id` 在数据库中读取商品信息，但是却无法查找到相关商品信息，原因在于事务未提交所以无法根据商品 `id` 在数据库中读取商品信息。
+- 解决方案：借助 `CDC` 捕捉商品新增事件后再发送消息到 `Kafka` 作后续处理。
