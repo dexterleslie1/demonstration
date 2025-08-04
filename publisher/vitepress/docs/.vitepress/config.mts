@@ -62,6 +62,7 @@ export default defineConfig({
           { text: 'RocketMQ', link: '/rocketmq/README.md' },
           { text: 'Skywalking', link: '/skywalking/README.md' },
           { text: 'Debezium', link: '/debezium/README.md' },
+          { text: 'Kafka', link: '/kafka/README.md' },
         ]
       }, {
         text: 'Linux', items: [
