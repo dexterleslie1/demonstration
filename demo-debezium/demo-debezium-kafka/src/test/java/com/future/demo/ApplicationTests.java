@@ -2,6 +2,7 @@ package com.future.demo;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.future.demo.config.ConfigKafkaListener;
+import com.future.demo.mapper.CommonMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

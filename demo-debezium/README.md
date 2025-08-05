@@ -1461,3 +1461,24 @@ services:
 
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-debezium/demo-debezium-kafka)
 
+注意：
+
+- 应用 `application.properties` 中需要配置 `spring.kafka.consumer.auto-offset-reset` 为 `earliest`：
+
+  ```properties
+  # 全局设置为 earliest，否则不能订阅到 Kafka 对应 Debezium 的 READ 事件
+  spring.kafka.consumer.auto-offset-reset=earliest
+  ```
+
+  
+
+### 性能测试
+
+`todo`
+
+
+
+### 事件是否丢失测试
+
+`todo`
+

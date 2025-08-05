@@ -71,7 +71,7 @@ public class ConfigKafkaListener {
         String lastMessage = null;
         try {
             log.info("concurrent=" + this.concurrentCounter.incrementAndGet() + ",size=" + messages.size() + ",total=" + counter.addAndGet(messages.size()));
-            log.info("接收到消息列表 {}", messages);
+            /*log.info("接收到消息列表 {}", messages);*/
 
             List<JsonNode> jsonNodeList = new ArrayList<>();
             for (String message : messages) {
@@ -86,6 +86,8 @@ public class ConfigKafkaListener {
             if (callback != null) {
                 callback.accept(jsonNodeList);
             }
+
+            /*TimeUnit.MILLISECONDS.sleep(1000);*/
         } catch (Exception ex) {
             log.error("解析 json 时异常，原因 {} json {}", ex.getMessage(), lastMessage, ex);
             throw ex;

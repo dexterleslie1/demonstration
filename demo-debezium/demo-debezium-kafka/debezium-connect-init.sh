@@ -17,6 +17,8 @@ json_data='{
                "schema.history.internal.kafka.topic": "schemahistory.demo"
              }
            }'
+#"max.batch.size": 8190,
+#"poll.interval.ms": 100
 
 result=$(
     curl -f -o /dev/null -X POST -H "Accept:application/json" -H "Content-Type:application/json" \
@@ -45,6 +47,7 @@ do
             2>&1
     )
     exit_code=$?
+    # echo $result
 
     echo "$result" | grep -q "409"
     contains409=$?
