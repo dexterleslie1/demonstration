@@ -465,7 +465,7 @@ sudo systemctl restart xrdp
 
 
 
-## apt包管理
+## `apt` 包管理
 
 ```sh
 # 更新本地包索引和包列表文件
@@ -524,6 +524,29 @@ snap remove code
 ```
 
 
+
+### 意料之外的错误处理
+
+
+
+情况 `1`：
+
+```sh
+# 在执行下面命令删除 electerm 时报告如下错误
+$ sudo apt remove electerm
+Reading package lists... Done
+Building dependency tree       
+Reading state information... Done
+E: The package electerm needs to be reinstalled, but I can't find an archive for it.
+
+# 解决方案为强制删除
+$ sudo dpkg --remove --force-remove-reinstreq electerm
+dpkg: warning: overriding problem because --force enabled:
+dpkg: warning: package is in a very bad inconsistent state; you should
+ reinstall it before attempting a removal
+(Reading database ... 183839 files and directories currently installed.)
+Removing electerm (1.72.48-1) ...
+```
 
 
 
