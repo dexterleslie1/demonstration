@@ -114,6 +114,71 @@ RandomIdPickerService randomIdPickerService;
 
 
 
+### 性能测试
+
+复制 `Ansible` 配置到目标实例
+
+```sh
+ansible-playbook playbook-deployer-config.yml --inventory inventory.ini
+```
+
+启动服务
+
+```sh
+ansible-playbook playbook-service-start.yml --inventory inventory.ini
+```
+
+查看 `Prometheus` 监控 `http://192.168.1.198:3000/`
+
+使用 `api.http` 中的 `POST http://192.168.1.185/api/v1/id/picker/init?flag=order` 初始化 `flag=order`
+
+使用 `wrk` 协助生成测试数据
+
+```sh
+$ wrk -t8 -c16 -d36000000000s --latency --timeout 60 http://192.168.1.185/api/v1/id/picker/test/addIdList?flag=order
+Running 600000000m test @ http://192.168.1.185/api/v1/id/picker/test/addIdList?flag=order
+  8 threads and 16 connections
+^C  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   100.56ms   86.28ms   1.85s    92.98%
+    Req/Sec    24.32      7.90    50.00     83.79%
+  Latency Distribution
+     50%   80.33ms
+     75%   97.11ms
+     90%  127.96ms
+     99%  487.45ms
+  1277869 requests in 116.62m, 311.98MB read
+Requests/sec:    182.62
+Transfer/sec:     45.66KB
+```
+
+通过 `Prometheus` 的 `OpenResty` 监控应用是否会有性能的损失。
+
+测试数据：
+
+- 查看数据库 `t_order_id_list` 总记录数
+
+  ```sql
+  # 数据量大，sql 执行慢，需要耐心等待，事实上可以使用 sql：select max(id) from t_order_id_list; 更快地获取总记录数，因为 id 设置为自増。
+  select count(id) from t_order_id_list;
+  1309214726
+  ```
+
+- 从上面的 `wrk` 输出结果可以得知 `api/v1/id/picker/test/addIdList?flag=order` 平均 `qps` 为 `182.62`（每秒插入记录数为 `182*1024=186368`），测试持续时间为 `116.62` 分。
+
+- `Prometheus OpenResty` 监控如图：
+
+  ![image-20250805131816877](image-20250805131816877.png)
+
+测试结论：服务在 `13` 亿 `id` 数据量内批量插入性能平稳，批量插入性能 `15万+` 每秒达到性能要求。
+
+销毁服务
+
+```sh
+ansible-playbook playbook-service-destroy.yml --inventory inventory.ini
+```
+
+
+
 ## `future-dockerizing`
 
 >`GitHub` 地址 `https://github.com/dexterleslie1/future-dockerizing.git`
@@ -705,6 +770,76 @@ public class ApplicationService {
 ```java
 @Resource
 CountService countService;
+```
+
+
+
+### 性能测试
+
+复制 `Ansible` 配置到目标实例
+
+```sh
+ansible-playbook playbook-deployer-config.yml --inventory inventory.ini
+```
+
+启动服务
+
+```sh
+ansible-playbook playbook-service-start.yml --inventory inventory.ini
+```
+
+查看 `Prometheus` 监控 `http://192.168.1.198:3000/`
+
+使用 `api.http` 中的 `POST http://192.168.1.185/api/v1/count/init?flag=order` 初始化 `flag=order`
+
+使用 `wrk` 协助生成测试数据
+
+```sh
+$ wrk -t8 -c16 -d36000000000s --latency --timeout 60 http://192.168.1.185/api/v1/count/test/updateIncreaseCount?flag=order
+Running 600000000m test @ http://192.168.1.185/api/v1/count/test/updateIncreaseCount?flag=order
+  8 threads and 16 connections
+^C  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     1.76s     5.56s   30.04s    91.42%
+    Req/Sec    54.75     24.72   130.00     57.90%
+  Latency Distribution
+     50%   30.13ms
+     75%   78.84ms
+     90%    3.62s 
+     99%   27.34s 
+  1338462 requests in 59.91m, 316.58MB read
+  Non-2xx or 3xx responses: 285
+Requests/sec:    372.34
+Transfer/sec:     90.18KB
+```
+
+通过 `Prometheus` 的 `OpenResty` 监控应用是否会有性能的损失。
+
+测试数据：
+
+- 使用 `api.http` 中的 `GET http://192.168.1.185/api/v1/count/getCountByFlag?flag=order` 查询 `flag=order` 的总计数为 `1370311680`。
+
+- 从上面的 `wrk` 输出结果可以得知 `api/v1/count/test/updateIncreaseCount?flag=order` 平均 `qps` 为 `372.34`（每秒计数为 `372*1024=380928` 次），测试持续时间为 `59.91m` 分。
+
+- `Prometheus OpenResty` 监控如图：
+
+  ![image-20250805233046611](image-20250805233046611.png)
+
+- `Promethues` 数据库实例 `i/o` 使用率监控如图：
+
+  ![image-20250805233135385](image-20250805233135385.png)
+
+- `Prometheus` 数据库实例 `i/o` 读写速度监控如图：
+
+  ![image-20250805233233183](image-20250805233233183.png)
+
+  
+
+测试结论：服务在 `13` 亿次计数内总体性能平稳，平均每秒计数为 `380928次` 达到性能要求。但是存在计数器 `i/o` 利用率比较高和周期性出现间隙性能下降（`todo` 原因未知）缺陷。
+
+销毁服务
+
+```sh
+ansible-playbook playbook-service-destroy.yml --inventory inventory.ini
 ```
 
 
