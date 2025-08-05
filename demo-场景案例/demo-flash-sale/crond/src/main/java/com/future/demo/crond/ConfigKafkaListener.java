@@ -184,7 +184,7 @@ public class ConfigKafkaListener {
             if (!modelList.isEmpty()) {
                 List<ListenableFuture<SendResult<String, String>>> futureList = new ArrayList<>();
                 for (OrderModel model : modelList) {
-                    IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO(String.valueOf(model.getId()), "orderListByUserId");
+                    IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO(model.getId(), "orderListByUserId");
                     String JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
                     ListenableFuture<SendResult<String, String>> future = kafkaTemplate.send(Const.TopicIncreaseCountFast, JSON);
                     futureList.add(future);
@@ -250,7 +250,7 @@ public class ConfigKafkaListener {
             if (!modelList.isEmpty()) {
                 List<ListenableFuture<SendResult<String, String>>> futureList = new ArrayList<>();
                 for (OrderModel model : modelList) {
-                    IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO(String.valueOf(model.getId()), "orderListByMerchantId");
+                    IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO(model.getId(), "orderListByMerchantId");
                     String JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
                     ListenableFuture<SendResult<String, String>> future = kafkaTemplate.send(Const.TopicIncreaseCountSlow, JSON);
                     futureList.add(future);

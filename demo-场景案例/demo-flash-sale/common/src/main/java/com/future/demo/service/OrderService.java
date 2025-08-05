@@ -224,7 +224,7 @@ public class OrderService {
         futureList.add(kafkaTemplate.send(TopicCreateOrderCassandraIndexListByMerchantId, JSON));
 
         // 异步更新 t_count
-        IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO(String.valueOf(orderId), "order");
+        IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO(orderId, "order");
         JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
         futureList.add(kafkaTemplate.send(TopicIncreaseCountFast, JSON));
 
@@ -334,7 +334,7 @@ public class OrderService {
         futureList.add(kafkaTemplate.send(TopicOrderInCacheSyncToDb, JSON));
 
         // 异步更新 t_count
-        IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO(String.valueOf(orderId), "order");
+        IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO(orderId, "order");
         JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
         futureList.add(kafkaTemplate.send(TopicIncreaseCountFast, JSON));
 

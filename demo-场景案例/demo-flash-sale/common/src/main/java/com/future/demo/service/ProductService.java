@@ -164,7 +164,7 @@ public class ProductService {
             log.debug("成功发送消息“向缓存中添加商品用于下单时随机抽取商品” {}", JSON);
 
         // 异步更新 t_count
-        IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO(String.valueOf(model.getId()), "product");
+        IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO(model.getId(), "product");
         JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
         futureList.add(kafkaTemplate.send(Const.TopicIncreaseCountSlow, JSON));
 
