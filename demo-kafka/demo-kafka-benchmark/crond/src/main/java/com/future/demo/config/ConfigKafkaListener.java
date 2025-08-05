@@ -1,5 +1,6 @@
 package com.future.demo.config;
 
+import cn.hutool.core.util.RandomUtil;
 import com.future.demo.constant.Constant;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +9,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.kafka.annotation.KafkaListener;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -58,6 +60,26 @@ public class ConfigKafkaListener {
                     + ",total=" + counter2.addAndGet(messages.size()));
         } finally {
             this.concurrentCount2.decrementAndGet();
+        }
+    }
+
+    AtomicInteger testAlterPartitionsOnlineConcurrentCounter = new AtomicInteger();
+    AtomicInteger testAlterPartitionsOnlineCounter = new AtomicInteger();
+
+    @KafkaListener(topics = Constant.TopicTestAlterPartitionsOnline,
+            groupId = "group-topic-test-alter-partitions-online",
+            containerFactory = "defaultKafkaListenerContainerFactory")
+    public void receiveMessageFromTopicTestAlterPartitionsOnline(List<String> messages) throws Exception {
+        try {
+            log.info("concurrent=" + this.testAlterPartitionsOnlineConcurrentCounter.incrementAndGet()
+                    + ",size=" + messages.size()
+                    + ",total=" + testAlterPartitionsOnlineCounter.addAndGet(messages.size()));
+
+            // 模拟业务延迟，以能够更加清晰地观察线程并发数
+            int randomInt = RandomUtil.randomInt(1, 1000);
+            TimeUnit.MILLISECONDS.sleep(randomInt);
+        } finally {
+            this.testAlterPartitionsOnlineConcurrentCounter.decrementAndGet();
         }
     }
 }

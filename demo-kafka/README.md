@@ -2598,3 +2598,78 @@ kill -9 105091
 ```
 
 使用 `rest.http` 文件中的 `GET http://localhost:8080/api/v1/getConfigOptionAutoOffsetResetCounter` 获取计数器返回 `"data": 12000` 表示没有丢失消息。
+
+
+
+## 在线修改主题分区数
+
+>提示：
+>
+>- 在线修改主题的分区数，稍等几分钟后，客户端消费者会自动触发分区重新平衡机制，不需要重启应用。
+>
+>- 不支持减少主题的分区数，否则会报告如下错误
+>
+>  ```sh
+>  $ KAFKA_JMX_OPTS="" /usr/bin/kafka-topics --alter --bootstrap-server localhost:9092 --topic topic-test-alter-partitions-online --partitions 3
+>  Error while executing topic command : Topic currently has 8 partitions, which is higher than the requested 3.
+>  [2025-08-05 13:03:35,181] ERROR org.apache.kafka.common.errors.InvalidPartitionsException: Topic currently has 8 partitions, which is higher than the requested 3.
+>   (kafka.admin.TopicCommand$)
+>  ```
+>
+>使用本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-kafka/demo-kafka-benchmark) 协助测试。
+
+在开发环境中启动应用的相关容器
+
+启动 `ApplicationService` 和 `ApplicationCrond` 应用
+
+使用 `wrk` 协助生成测试数据
+
+```sh
+wrk -t4 -c32 -d30000000s --latency --timeout 60 http://localhost:8080/api/v1/sendToTopicTestAlterPartitionsOnline
+```
+
+查看 `ApplicationCrond` 应用日志，可以看出主题当前分区数为 `1` 所以 `concurrent` 并发为 `1`
+
+```
+2025-08-05 12:53:31.195  INFO 179502 --- [ntainer#2-0-C-1] c.f.demo.config.ConfigKafkaListener      : concurrent=1,size=1024,total=107941
+2025-08-05 12:53:31.203  INFO 179502 --- [ntainer#2-0-C-1] c.f.demo.config.ConfigKafkaListener      : concurrent=1,size=1024,total=108965
+2025-08-05 12:53:31.234  INFO 179502 --- [ntainer#2-0-C-1] c.f.demo.config.ConfigKafkaListener      : concurrent=1,size=1024,total=109989
+2025-08-05 12:53:31.302  INFO 179502 --- [ntainer#2-0-C-1] c.f.demo.config.ConfigKafkaListener      : concurrent=1,size=1024,total=111013
+2025-08-05 12:53:32.227  INFO 179502 --- [ntainer#2-0-C-1] c.f.demo.config.ConfigKafkaListener      : concurrent=1,size=1024,total=112037
+2025-08-05 12:53:32.989  INFO 179502 --- [ntainer#2-0-C-1] c.f.demo.config.ConfigKafkaListener      : concurrent=1,size=1024,total=113061
+2025-08-05 12:53:33.222  INFO 179502 --- [ntainer#2-0-C-1] c.f.demo.config.ConfigKafkaListener      : concurrent=1,size=1024,total=114085
+2025-08-05 12:53:34.021  INFO 179502 --- [ntainer#2-0-C-1] c.f.demo.config.ConfigKafkaListener      : concurrent=1,size=614,total=114699
+```
+
+进入 `Kafka` 服务所在的容器在线修改主题的分区数为 `8`
+
+```sh
+$ KAFKA_JMX_OPTS="" /usr/bin/kafka-topics --alter --bootstrap-server localhost:9092 --topic topic-test-alter-partitions-online --partitions 8
+
+$ KAFKA_JMX_OPTS="" /usr/bin/kafka-topics --describe --bootstrap-server localhost:9092 --topic topic-test-alter-partitions-online
+Topic: topic-test-alter-partitions-online       TopicId: td4Zf-iUT12cU19_wc_bUA PartitionCount: 8       ReplicationFactor: 1    Configs: cleanup.policy=delete,segment.bytes=536870912,retention.bytes=2147483648
+        Topic: topic-test-alter-partitions-online       Partition: 0    Leader: 1       Replicas: 1     Isr: 1
+        Topic: topic-test-alter-partitions-online       Partition: 1    Leader: 1       Replicas: 1     Isr: 1
+        Topic: topic-test-alter-partitions-online       Partition: 2    Leader: 1       Replicas: 1     Isr: 1
+        Topic: topic-test-alter-partitions-online       Partition: 3    Leader: 1       Replicas: 1     Isr: 1
+        Topic: topic-test-alter-partitions-online       Partition: 4    Leader: 1       Replicas: 1     Isr: 1
+        Topic: topic-test-alter-partitions-online       Partition: 5    Leader: 1       Replicas: 1     Isr: 1
+        Topic: topic-test-alter-partitions-online       Partition: 6    Leader: 1       Replicas: 1     Isr: 1
+        Topic: topic-test-alter-partitions-online       Partition: 7    Leader: 1       Replicas: 1     Isr: 1
+```
+
+稍等几分钟后客户端自动触发分区重新平衡机制后再使用上面的 `wrk` 命令协助生成测试数据
+
+此时查看 `ApplicationCrond` 应用日志发现并发数变化为 `8` 和预期的一致
+
+```
+2025-08-05 12:59:58.177  INFO 179502 --- [ntainer#2-0-C-1] c.f.demo.config.ConfigKafkaListener      : concurrent=8,size=1024,total=212756
+2025-08-05 12:59:58.303  INFO 179502 --- [ainer#2-104-C-1] c.f.demo.config.ConfigKafkaListener      : concurrent=8,size=807,total=213563
+2025-08-05 12:59:58.325  INFO 179502 --- [ainer#2-101-C-1] c.f.demo.config.ConfigKafkaListener      : concurrent=8,size=361,total=213924
+2025-08-05 12:59:58.407  INFO 179502 --- [ainer#2-102-C-1] c.f.demo.config.ConfigKafkaListener      : concurrent=8,size=1024,total=214948
+2025-08-05 12:59:58.439  INFO 179502 --- [ainer#2-101-C-1] c.f.demo.config.ConfigKafkaListener      : concurrent=7,size=1024,total=215972
+2025-08-05 12:59:58.441  INFO 179502 --- [ntainer#2-9-C-1] c.f.demo.config.ConfigKafkaListener      : concurrent=8,size=1024,total=216996
+2025-08-05 12:59:58.458  INFO 179502 --- [ainer#2-103-C-1] c.f.demo.config.ConfigKafkaListener      : concurrent=8,size=1024,total=218020
+2025-08-05 12:59:58.478  INFO 179502 --- [tainer#2-99-C-1] c.f.demo.config.ConfigKafkaListener      : concurrent=8,size=1024,total=219044
+```
+

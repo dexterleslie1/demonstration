@@ -52,6 +52,20 @@ public class ApiController {
     }
 
     /**
+     * 发生消息到 topic-test-alter-partitions-online 主题
+     *
+     * @return
+     * @throws ExecutionException
+     * @throws InterruptedException
+     */
+    @GetMapping("sendToTopicTestAlterPartitionsOnline")
+    public ObjectResponse<String> sendToTopicTestAlterPartitionsOnline() throws Exception {
+        String message = UUID.randomUUID().toString();
+        kafkaTemplate.send(Constant.TopicTestAlterPartitionsOnline, message).get();
+        return ResponseUtils.successObject("消息发送成功");
+    }
+
+    /**
      * 用于协助测试分区迁移是否丢失消息
      */
     @GetMapping("sendToTopic1PartitionReassignAssist")
