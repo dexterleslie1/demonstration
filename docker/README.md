@@ -302,6 +302,39 @@ docker system df -v
 
 
 
+### 实践
+
+>说明：在测试本站 <a href="/场景案例/README.html#阿里云测试" target="_blank">秒杀</a> 案例时，发现硬盘容量占用异常，下面解析排查过程。
+
+显式 `docker` 存储空间使用明细情况，通过明细仔细排查异常占用空间所在位置
+
+```sh
+docker system df -v
+```
+
+如果有很多 `none tag` 的镜像则使用下面命令删除
+
+```sh
+# 删除 none tag 镜像
+docker rmi $(docker images -f "dangling=true" -q)
+# 或者
+docker image prune
+```
+
+如果发现有 `Volume` 空间占用异常：
+
+- 记录下 `Volume` 对应的 `id`
+
+- 通过命令查看 `Volume` 对应的容器，`70958edce96f204784653008643132974246701e35d09281bc10c494c0474e5f` 为 `Volume` 的 `id`
+
+  ```sh
+  docker inspect -f '{{ .Name }} {{ .Mounts }}' $(docker ps -qa) | grep 70958edce96f204784653008643132974246701e35d09281bc10c494c0474e5f
+  ```
+
+- 接下来步骤就是分析容器内部为何会异常占用空间。
+
+
+
 ## 环境变量用法
 
 ### dockerfile 中声明环境变量
