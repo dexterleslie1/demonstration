@@ -63,6 +63,7 @@ export default defineConfig({
           { text: 'Skywalking', link: '/skywalking/README.md' },
           { text: 'Debezium', link: '/debezium/README.md' },
           { text: 'Kafka', link: '/kafka/README.md' },
+          { text: '场景案例', link: '/场景案例/README.md' },
         ]
       }, {
         text: 'Linux', items: [
