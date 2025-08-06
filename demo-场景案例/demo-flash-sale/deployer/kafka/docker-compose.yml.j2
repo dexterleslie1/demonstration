@@ -23,7 +23,7 @@ services:
       KAFKA_LOG_SEGMENT_BYTES: "536870912"  #（原默认 1GB）
     restart: unless-stopped
     volumes:
-      - data-demo-flash-sale-kafka:/var/lib/kafka
+      - data-demo-flash-sale-kafka:/var/lib/kafka/data
 {% if scaleout is not defined %}
   # 在 kafka 服务成功启动后自动配置 kafka 服务
   kafka-create-topic-order-in-cache-sync-to-db:

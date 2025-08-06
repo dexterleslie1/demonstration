@@ -2378,7 +2378,7 @@ services:
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
     restart: unless-stopped
     volumes:
-      - data-demo-flash-sale-kafka:/var/lib/kafka
+      - data-demo-flash-sale-kafka:/var/lib/kafka/data
       
 volumes:
   data-demo-flash-sale-kafka:
