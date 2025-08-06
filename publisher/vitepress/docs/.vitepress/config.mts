@@ -123,6 +123,7 @@ export default defineConfig({
           { text: '小孩成长计划', link: '/小孩/README.md' },
           { text: '工具集', link: '/toolset/README.md' },
           { text: 'Future', link: '/future/README.md' },
+          { text: 'MacOS', link: '/macos/README.md' },
         ]
       },
     ],
@@ -608,6 +609,16 @@ export default defineConfig({
           items: [
             { text: '基础', link: '/react/README.md' },
             { text: 'Redux', link: '/react/redux.md' },
+          ]
+        }
+      ],
+      '/macos/': [
+        {
+          text: 'MacOS',
+          items: [
+            { text: '基础', link: '/macos/README.md' },
+            { text: 'Cocoapods', link: '/macos/cocoapods.md' },
+            { text: 'HomeBrew', link: '/macos/homebrew.md' },
           ]
         }
       ],

@@ -1,6 +1,6 @@
-## 删除macOS隔离文件权限
+## 删除隔离文件权限
 
-> https://malcontentboffin.com/2019/12/macOS-Error-bin-bash-bad-interpreter-Operation-not-permitted.html
+> [参考链接](https://malcontentboffin.com/2019/12/macOS-Error-bin-bash-bad-interpreter-Operation-not-permitted.html)
 
 显示文件隔离属性
 
@@ -22,39 +22,37 @@ xattr -r -d com.apple.quarantine Kap.app/
 
 
 
-## macOS 远程桌面管理方案
+## 远程桌面管理方案
 
-NOTE：没有找到相关资料在 macOS 中安装 rdp 服务。没有尝试内置的远程管理功能(ARD)，因为 windows 没有 ARD 客户端软件。
+> 提示：没有找到相关资料在 `macOS` 中安装 `rdp` 服务。没有尝试内置的远程管理功能(`ARD`)，因为 `windows` 没有 `ARD` 客户端软件。
 
-启用内置的屏幕共享和文件共享功能，其中文件共享功能用于解决 realvnc viewer 无法复制粘贴内容时使用。
+启用内置的屏幕共享和文件共享功能，其中文件共享功能用于解决 `realvnc viewer` 无法复制粘贴内容时使用。
 
-下载最新版本的 realvnc viewer 连接到服务器。
-
-
-
-## `macOS`虚拟机安装
-
-注意：尝试使用`virtualbox`运行`macOS11`和`macOS12`未能够成功，提示“amd-v is not available”错误可能是因为使用`amd cpu`虚拟机化时需要特殊配置，没有做实验证明。
+下载最新版本的 `realvnc viewer` 连接到服务器。
 
 
 
-### `vmware workstation17`安装`macOS11`和`macOS12`
+## 安装 `macOS` 虚拟机
 
-注意：`macOS`虚拟机不能启用`CPU虚拟化IOMMU(IO内存管理单元)`特性，否则在启动过程中崩溃。
+> 提示：尝试使用 `virtualbox` 运行``macOS11``和 `macOS12` 未能够成功，提示 `“amd-v is not available”` 错误可能是因为使用 `amd cpu` 虚拟机化时需要特殊配置，没有做实验证明。
 
-下载`macOS11`和`macOS12`操作系统 iso，`https://archive.org/details/macos_iso`
 
-上传`macOS11`和`macOS12`操作系统`iso`到`esxi7`存储中
 
-从`https://github.com/DrDonk/unlocker`下载最新版本`unlocker427.zip`并执行其中的`windows/unlock.exe`，注意：执行`unlock.exe`时先关闭运行中的`vmware workstation`。
+### `vmware workstation17` 安装 `macOS11` 和 `macOS12`
 
-重启`windows`操作系统后创建虚拟机，注意：固件类型选择`UEFI`，否则无法从`iso`引导安装；操作系统类型选择苹果系统的相应版本。
+> 注意：`macOS` 虚拟机不能启用 `CPU虚拟化IOMMU(IO内存管理单元)` 特性，否则在启动过程中崩溃。
 
-针对`AMD cpu`需要编辑虚拟机对应的`xxx.vmx`文件并加入下面内容才能够启动`macOS`虚拟机，否则虚拟机一直停顿在苹果`logo`界面
+下载 `macOS11` 和 `macOS12` 操作系统 `iso`，`https://archive.org/details/macos_iso`
 
-> `AMD CPU`安装`macOS`需要修改`vmx`文件
-> https://www.nakivo.com/blog/run-mac-os-on-vmware-esxi/
-> https://stackoverflow.com/questions/67025805/vmware-macos-bigsur-in-win10
+上传 `macOS11` 和 `macOS12` 操作系统 `iso` 到 `esxi7` 存储中
+
+从 `https://github.com/DrDonk/unlocker` 下载最新版本 `unlocker427.zip` 并执行其中的 `windows/unlock.exe`，注意：执行 `unlock.exe` 时先关闭运行中的 `vmware workstation`。
+
+重启 `windows` 操作系统后创建虚拟机，注意：固件类型选择 `UEFI`，否则无法从 `iso` 引导安装；操作系统类型选择苹果系统的相应版本。
+
+针对 `AMD cpu` 需要编辑虚拟机对应的 `xxx.vmx` 文件并加入下面内容才能够启动 `macOS` 虚拟机，否则虚拟机一直停顿在苹果 `logo` 界面
+
+> `AMD CPU` 安装 `macOS` 需要修改 `vmx` 文件，参考链接 `https://www.nakivo.com/blog/run-mac-os-on-vmware-esxi/`、`https://stackoverflow.com/questions/67025805/vmware-macos-bigsur-in-win10`
 
 ```properties
 cpuid.0.eax = "0000:0000:0000:0000:0000:0000:0000:1011"
@@ -67,7 +65,7 @@ cpuid.1.ecx = "1000:0010:1001:1000:0010:0010:0000:0011"
 cpuid.1.edx = "0000:0111:1000:1011:1111:1011:1111:1111"
 ```
 
-`vmware workstation17`破解序列号
+`vmware workstation17` 破解序列号
 
 > [序列号参考链接](https://gist.github.com/PurpleVibe32/30a802c3c8ec902e1487024cdea26251)
 
@@ -79,59 +77,55 @@ MC60H-DWHD5-H80U9-6V85M-8280D
 
 
 
-### esxi7 update3 安装 macOS11 和 macOS12
+### `esxi7 update3` 安装 `macOS11` 和 `macOS12`
 
-参考
+> 参考链接 `https://vmscrub.com/installing-macos-12-monterey-on-vmware-esxi-7-update-3/`
 
-> https://vmscrub.com/installing-macos-12-monterey-on-vmware-esxi-7-update-3/
+下载 `macOS11` 和 `macOS12` 操作系统 `iso`，`https://archive.org/details/macos_iso`
 
-下载 macOS11 和 macOS12 操作系统 iso，https://archive.org/details/macos_iso
+上传 `macOS11` 和 `macOS12` 操作系统 `iso` 到 `esxi7` 存储中
 
-上传 macOS11 和 macOS12 操作系统 iso 到 esxi7 存储中
+从 `https://github.com/erickdimalanta/esxi-unlocker` 下载 `esxi-unlocker-master.zip`
 
-从 https://github.com/erickdimalanta/esxi-unlocker 下载 esxi-unlocker-master.zip
-
-上传 esxi-unlocker-master.zip 到 esxi7 存储后，ssh exsi7 主机解压 zip
+上传 `esxi-unlocker-master.zip` 到 `esxi7` 存储后，`ssh exsi7` 主机解压 `zip`
 
 ```sh
 unzip esxi-unlocker-master.zip
 ```
 
-设置 esxi-unlocker-master 权限
+设置 `esxi-unlocker-master` 权限
 
 ```sh
 chmod 775 -R esxi-unlocker-301/
 ```
 
-检查是否已经安装过 unlocker，如果没有安装过 unlocker 下面命令会输出 smcPresent = false
+检查是否已经安装过 `unlocker`，如果没有安装过 `unlocker` 下面命令会输出 `smcPresent = false`
 
 ```sh
 ./esxi-smctest.sh
 ```
 
-安装 unlocker
+安装 `unlocker`
 
 ```sh
 ./esxi-install.sh
 ```
 
-重启 esxi7 服务器
+重启 `esxi7` 服务器
 
 ```sh
 reboot
 ```
 
-重启成功后再次检查 unlocker 是否成功安装，如果成功安装下面命令会输出 smcPresent = true
+重启成功后再次检查 `unlocker` 是否成功安装，如果成功安装下面命令会输出 `smcPresent = true`
 
 ```sh
 ./esxi-smctest.sh
 ```
 
-针对 AMD cpu 需要编辑虚拟机对应的 xxx.vmx 文件并加入下面内容才能够启动 macOS 虚拟机，否则虚拟机一直停顿在苹果logo界面
+针对 `AMD cpu` 需要编辑虚拟机对应的 `xxx.vmx` 文件并加入下面内容才能够启动 `macOS` 虚拟机，否则虚拟机一直停顿在苹果 `logo` 界面
 
-> AMD CPU 安装 macOS 需要修改 vmx 文件
-> https://www.nakivo.com/blog/run-mac-os-on-vmware-esxi/
-> https://stackoverflow.com/questions/67025805/vmware-macos-bigsur-in-win10
+> `AMD CPU` 安装 `macOS` 需要修改 `vmx` 文件，参考链接 `https://www.nakivo.com/blog/run-mac-os-on-vmware-esxi/`、`https://stackoverflow.com/questions/67025805/vmware-macos-bigsur-in-win10`
 
 ```properties
 cpuid.0.eax = "0000:0000:0000:0000:0000:0000:0000:1011"
@@ -144,3 +138,90 @@ cpuid.1.ecx = "1000:0010:1001:1000:0010:0010:0000:0011"
 cpuid.1.edx = "0000:0111:1000:1011:1111:1011:1111:1111"
 ```
 
+
+
+## `macOS` 虚拟机和宿主机共享文件夹
+
+>`https://blog.csdn.net/qq_30386941/article/details/126457834`
+
+登录到宿主机
+
+导航到`虚拟机设置`>`选项`>`共享文件夹`功能，设置信息如下：
+
+- 文件夹共享选择`总是启用`
+- 文件夹添加宿主机要共享的文件夹
+
+重启 `macOS` 虚拟机
+
+登录到 `macOS` 虚拟机
+
+导航到 `访达` > `偏好设置` 功能，设置信息如下：
+
+- 已连接的服务器 `勾选` 状态
+
+此时桌面就会出现挂载的共享目录
+
+
+
+## `Xcode` 和 `macOS` 兼容阵列
+
+>`https://developer.apple.com/support/xcode/`
+
+| Xcode Version   | Minimum OS Required                                          |
+| --------------- | ------------------------------------------------------------ |
+| Xcode 16.2 beta | macOS Sonoma 14.5                                            |
+| Xcode 16.1      | macOS Sonoma 14.5                                            |
+| Xcode 16        | macOS Sonoma 14.5                                            |
+| Xcode 15.4      | macOS Sonoma 14                                              |
+| Xcode 15.3      | macOS Sonoma 14                                              |
+| Xcode 15.2      | macOS Ventura 13.5                                           |
+| Xcode 15.1**    | macOS Ventura 13.5                                           |
+| Xcode 15 beta 8 | macOS Ventura 13.4                                           |
+| Xcode 15.0.x    | macOS Ventura 13.5                                           |
+| Xcode 14.3.1    | macOS Ventura 13                                             |
+| Xcode 14.3*     | macOS Ventura 13                                             |
+| Xcode 14.2      | macOS Monterey 12.5                                          |
+| Xcode 14.1      | macOS Monterey 12.5                                          |
+| Xcode 14.0.x    | macOS Monterey 12.5                                          |
+| Xcode 13.4      | macOS Monterey 12                                            |
+| Xcode 13.3      | macOS Monterey 12                                            |
+| Xcode 13.2      | macOS Big Sur 11.3                                           |
+| Xcode 13.1      | macOS Big Sur 11.3                                           |
+| Xcode 13        | macOS Big Sur 11.3                                           |
+| Xcode 12.5.1    | macOS Big Sur 11                                             |
+| Xcode 12.5      | macOS Big Sur 11                                             |
+| Xcode 12.4      | macOS Catalina 10.15.4 (Intel-based Mac)、macOS Big Sur 11(Apple silicon Mac) |
+| Xcode 12.3      | macOS Catalina 10.15.4 (Intel-based Mac)、macOS Big Sur 11(Apple silicon Mac) |
+| Xcode 12.2      | macOS Catalina 10.15.4 (Intel-based Mac)、macOS Big Sur 11(Apple silicon Mac) |
+| Xcode 12.1      | macOS Catalina 10.15.4 (Intel-based Mac)、macOS Big Sur 11(Apple silicon Mac) |
+| Xcode 12        | macOS Catalina 10.15.4 (Intel-based Mac)                     |
+| Xcode 11.7      | macOS Catalina 10.15.2                                       |
+| Xcode 11.6      | macOS Catalina 10.15.2                                       |
+| Xcode 11.5      | macOS Catalina 10.15.2                                       |
+| Xcode 11.4.x    | macOS Catalina 10.15.2                                       |
+| Xcode 11.3.x    | macOS Mojave 10.14.4                                         |
+| Xcode 11.2.x    | macOS Mojave 10.14.4                                         |
+| Xcode 11.1      | macOS Mojave 10.14.4                                         |
+| Xcode 11        | macOS Mojave 10.14.4                                         |
+| Xcode 10.3      | macOS Mojave 10.14.3                                         |
+| Xcode 10.2.x    | macOS Mojave 10.14.3                                         |
+
+
+
+## 安装 `Xcode`
+
+访问 `https://developer.apple.com/downloads/` 使用开发者帐号登录网站
+
+`macOS 12.6.1` 下载对应的 `Xcode 14.2`（文件后缀是 `xib`）
+
+双击 `xib` 文件安装 `Xcode`（安装过程需要解压 `xib` 文件过程比较耗时），把解压后的 `Xcode` 目录托放至 `Applications` 分类中。
+
+
+
+## 安装 `sourcetree`
+
+> 提醒：下载最新的 `sourcetree macOS` 客户端会自动支持 `git-lfs`
+
+下载 `https://www.sourcetreeapp.com/`
+
+解压 `sourcetree` 后，拖动 `sourcetree` 到 `Applications` 分类中

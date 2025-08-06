@@ -70,6 +70,7 @@ source_dir_to_target_dir_map["../../demo-future"]="future"
 source_dir_to_target_dir_map["../../front-end/demo-reactjs"]="react"
 source_dir_to_target_dir_map["../../demo-kafka"]="kafka"
 source_dir_to_target_dir_map["../../demo-场景案例"]="场景案例"
+source_dir_to_target_dir_map["../../demo-macos"]="macos"
 
 for key in ${!source_dir_to_target_dir_map[@]}; do
     # 删除符号链接目录
