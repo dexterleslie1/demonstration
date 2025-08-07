@@ -79,6 +79,11 @@ Locals:
   BmPrivateIpOpenresty:
     Type: Macro
     Value: "10.0.1.40"
+  # 管理实例规格
+  BmManagementInstanceType:
+    Type: Macro
+    # 4c4g
+    Value: ecs.u1-c1m1.xlarge
   # 非数据库实例规格
   BmNoneDbInstanceType:
     Type: Macro
@@ -161,7 +166,7 @@ Resources:
       # 指定阿里云中显示的实例名称
       InstanceName: bm-management
       InstanceType:
-        Ref: BmNoneDbInstanceType
+        Ref: BmManagementInstanceType
       # 按量付费
       InstanceChargeType: PostPaid
       # ESSD云盘
@@ -258,7 +263,7 @@ Resources:
         Ref: BmNoneDbInstanceType
       InstanceChargeType: PostPaid
       SystemDiskCategory: cloud_essd
-      SystemDiskSize: 250
+      SystemDiskSize: 512
 
       AllocatePublicIP: true
       InternetChargeType: PayByTraffic

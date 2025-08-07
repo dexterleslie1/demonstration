@@ -33,6 +33,8 @@ public class ConfigKafkaListenerContainerFactory {
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         // 为Topic2单独设置max-poll-records
         props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 1024);
+        // 无已提交偏移量（如首次启动）时的消费起始位置
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         return new DefaultKafkaConsumerFactory<>(props);
     }
 
@@ -58,6 +60,8 @@ public class ConfigKafkaListenerContainerFactory {
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         // 为Topic2单独设置max-poll-records
         props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 256);
+        // 无已提交偏移量（如首次启动）时的消费起始位置
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         return new DefaultKafkaConsumerFactory<>(props);
     }
 
@@ -83,6 +87,8 @@ public class ConfigKafkaListenerContainerFactory {
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         // 为Topic2单独设置max-poll-records
         props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 256);
+        // 无已提交偏移量（如首次启动）时的消费起始位置
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         return new DefaultKafkaConsumerFactory<>(props);
     }
 
@@ -103,7 +109,7 @@ public class ConfigKafkaListenerContainerFactory {
     public DefaultErrorHandler retryErrorHandler() {
         // 配置重试策略：无限次重试，每次间隔5秒
         // 5000ms间隔，FixedBackOff.UNLIMITED_ATTEMPTS 表示无限次
-        FixedBackOff fixedBackOff = new FixedBackOff(5000L, /*FixedBackOff.UNLIMITED_ATTEMPTS*/ 180);
+        FixedBackOff fixedBackOff = new FixedBackOff(5000L, FixedBackOff.UNLIMITED_ATTEMPTS);
 
         // 使用RetryTopic的ErrorHandler（自动处理重试和DLQ）
         return new DefaultErrorHandler(
