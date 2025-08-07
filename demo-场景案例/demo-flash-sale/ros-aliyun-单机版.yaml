@@ -156,7 +156,7 @@ Resources:
         Ref: BmInstanceType
       InstanceChargeType: PostPaid
       SystemDiskCategory: cloud_essd
-      SystemDiskSize: 2048
+      SystemDiskSize: 1024
 
       AllocatePublicIP: true
       InternetChargeType: PayByTraffic

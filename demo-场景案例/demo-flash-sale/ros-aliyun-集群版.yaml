@@ -72,7 +72,7 @@ Locals:
       - "10.0.1.31"
       - "10.0.1.32"
       - "10.0.1.33"
-      - "10.0.1.34"
+#      - "10.0.1.34"
 #      - "10.0.1.35"
 #      - "10.0.1.36"
   # openresty 服务
@@ -82,15 +82,20 @@ Locals:
   # 非数据库实例规格
   BmNoneDbInstanceType:
     Type: Macro
+    # https://www.aliyun.com/daily-act/ecs/ecs/detail/u
     # 8c16g
-    Value: ecs.u1-c1m2.2xlarge
+    # Value: ecs.u1-c1m2.2xlarge
+    # 8c8g
+    Value: ecs.u1-c1m1.2xlarge
   # 数据库实例规格
   BmDbInstanceType:
     Type: Macro
     # # 8c32g
     # Value: ecs.u1-c1m4.2xlarge
     # 8c16g
-    Value: ecs.u1-c1m2.2xlarge
+    # Value: ecs.u1-c1m2.2xlarge
+    # 8c8g
+    Value: ecs.u1-c1m1.2xlarge
 
 Resources:
   BmVpc:
@@ -223,7 +228,7 @@ Resources:
         Ref: BmDbInstanceType
       InstanceChargeType: PostPaid
       SystemDiskCategory: cloud_essd
-      SystemDiskSize: 200
+      SystemDiskSize: 512
 
       AllocatePublicIP: true
       InternetChargeType: PayByTraffic
@@ -341,7 +346,7 @@ Resources:
   # api 服务，运行 service 服务
   BmInstanceApi:
     Type: ALIYUN::ECS::Instance
-    Count: 4
+    Count: 3
     Properties:
       HostName:
         Fn::Sub: "bm-app${ALIYUN::Index}"

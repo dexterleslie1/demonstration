@@ -122,32 +122,32 @@ public class ConfigKafkaListener {
         }
     }
 
-    /**
-     * 慢速计数器递增
-     *
-     * @param messages
-     * @throws Exception
-     */
-    @KafkaListener(topics = Const.TopicIncreaseCountSlow,
-            groupId = "group-" + Const.TopicIncreaseCountSlow,
-            concurrency = "8",
-            containerFactory = "defaultKafkaListenerContainerFactory")
-    public void receiveMessageIncreaseCountSlow(List<String> messages) throws Exception {
-        try {
-            List<IncreaseCountDTO> increaseCountDTOList = new ArrayList<>();
-            for (String JSON : messages) {
-                IncreaseCountDTO increaseCountDTO = objectMapper.readValue(JSON, IncreaseCountDTO.class);
-                increaseCountDTOList.add(increaseCountDTO);
-            }
-
-            // todo 在crond服务关闭重启后select count和计数器不一致
-            countService.updateIncreaseCount(increaseCountDTOList);
-            prometheusCustomMonitor.getCounterIncreaseCountStatsSuccessfully().increment(increaseCountDTOList.size());
-        } catch (Exception ex) {
-            log.error(ex.getMessage(), ex);
-            throw ex;
-        }
-    }
+//    /**
+//     * 慢速计数器递增
+//     *
+//     * @param messages
+//     * @throws Exception
+//     */
+//    @KafkaListener(topics = Const.TopicIncreaseCountSlow,
+//            groupId = "group-" + Const.TopicIncreaseCountSlow,
+//            concurrency = "8",
+//            containerFactory = "defaultKafkaListenerContainerFactory")
+//    public void receiveMessageIncreaseCountSlow(List<String> messages) throws Exception {
+//        try {
+//            List<IncreaseCountDTO> increaseCountDTOList = new ArrayList<>();
+//            for (String JSON : messages) {
+//                IncreaseCountDTO increaseCountDTO = objectMapper.readValue(JSON, IncreaseCountDTO.class);
+//                increaseCountDTOList.add(increaseCountDTO);
+//            }
+//
+//            // todo 在crond服务关闭重启后select count和计数器不一致
+//            countService.updateIncreaseCount(increaseCountDTOList);
+//            prometheusCustomMonitor.getCounterIncreaseCountStatsSuccessfully().increment(increaseCountDTOList.size());
+//        } catch (Exception ex) {
+//            log.error(ex.getMessage(), ex);
+//            throw ex;
+//        }
+//    }
 
     /**
      * 创建订单 cassandra 索引 listByUserId
@@ -222,7 +222,7 @@ public class ConfigKafkaListener {
      * @throws Exception
      */
     @KafkaListener(topics = Const.TopicCreateOrderCassandraIndexListByMerchantId,
-            concurrency = "4",
+            concurrency = "32",
             containerFactory = "topicCreateOrderCassandraIndexListByMerchantIdKafkaListenerContainerFactory")
     public void receiveMessageCreateOrderCassandraIndexListByMerchantId(List<String> messages) throws Exception {
         try {
@@ -252,7 +252,7 @@ public class ConfigKafkaListener {
                 for (OrderModel model : modelList) {
                     IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO(model.getId(), "orderListByMerchantId");
                     String JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
-                    ListenableFuture<SendResult<String, String>> future = kafkaTemplate.send(Const.TopicIncreaseCountSlow, JSON);
+                    ListenableFuture<SendResult<String, String>> future = kafkaTemplate.send(Const.TopicIncreaseCountFast, JSON);
                     futureList.add(future);
                 }
 

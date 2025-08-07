@@ -166,7 +166,7 @@ public class ProductService {
         // 异步更新 t_count
         IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO(model.getId(), "product");
         JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
-        futureList.add(kafkaTemplate.send(Const.TopicIncreaseCountSlow, JSON));
+        futureList.add(kafkaTemplate.send(Const.TopicIncreaseCountFast, JSON));
 
         if (!futureList.isEmpty()) {
             int index = -1;

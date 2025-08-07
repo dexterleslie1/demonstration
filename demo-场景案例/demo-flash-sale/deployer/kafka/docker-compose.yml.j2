@@ -65,7 +65,7 @@ services:
     environment:
       TZ: Asia/Shanghai
     # 自动创建 topic
-    entrypoint: /usr/bin/kafka-topics --create --bootstrap-server kafka:9092 --replication-factor 1 --partitions 4 --topic topic-create-order-cassandra-index-listByMerchantId
+    entrypoint: /usr/bin/kafka-topics --create --bootstrap-server kafka:9092 --replication-factor 1 --partitions 32 --topic topic-create-order-cassandra-index-listByMerchantId
   kafka-create-topic-setup-product-flashsale-cache:
     image: confluentinc/cp-kafka:7.3.0
     depends_on:

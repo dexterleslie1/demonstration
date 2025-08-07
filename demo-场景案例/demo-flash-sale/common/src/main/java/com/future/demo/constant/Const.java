@@ -10,10 +10,10 @@ public class Const {
      * 快速计数器 count 服务递增
      */
     public final static String TopicIncreaseCountFast = "topic-increase-count-fast";
-    /***
-     * 慢速计数器 count 服务递增
-     */
-    public final static String TopicIncreaseCountSlow = "topic-increase-count-slow";
+//    /***
+//     * 慢速计数器 count 服务递增
+//     */
+//    public final static String TopicIncreaseCountSlow = "topic-increase-count-slow";
     /**
      * 创建订单 cassandra 索引 listByUserId
      */

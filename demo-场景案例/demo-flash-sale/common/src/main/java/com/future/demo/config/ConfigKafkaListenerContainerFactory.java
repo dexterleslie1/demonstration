@@ -93,7 +93,7 @@ public class ConfigKafkaListenerContainerFactory {
         ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory);
         factory.setBatchListener(true);
-        factory.setConcurrency(8);
+        factory.setConcurrency(32);
         factory.setCommonErrorHandler(retryErrorHandler);
         return factory;
     }
