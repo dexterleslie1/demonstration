@@ -9,7 +9,7 @@
         <artifactId>spring-boot-starter-parent</artifactId>
         <!--<version>2.0.3.RELEASE</version>-->
         <!--<version>2.2.13.RELEASE</version>-->
-        <version>2.7.2</version>
+        <version>2.7.18</version>
     </parent>
 
     <groupId>com.future.demo</groupId>
@@ -30,6 +30,8 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <!-- 使用 micrometer 需要引入 actuator 以暴露指标到 /actuator/prometheus 接口 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
@@ -42,5 +44,28 @@
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-prometheus</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>com.github.dexterleslie1</groupId>
+            <artifactId>future-common</artifactId>
+            <version>1.2.3</version>
+        </dependency>
+
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-all</artifactId>
+            <version>5.8.35</version>
+        </dependency>
     </dependencies>
+
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+        <repository>
+            <id>aliyun</id>
+            <url>https://maven.aliyun.com/repository/public</url>
+        </repository>
+    </repositories>
 </project>

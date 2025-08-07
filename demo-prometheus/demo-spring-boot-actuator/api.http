@@ -6,3 +6,9 @@ GET http://localhost:8080/api/v1/testSetOrderMasterTotalCount
 
 ### 测试设置订单明细表总记录数
 GET http://localhost:8080/api/v1/testSetOrderDetailTotalCount
+
+### /api/v1/testAssistRequestLatency
+GET http://localhost:8080/api/v1/testAssistRequestLatency
+
+### /api/v1/consume5mbmemory
+GET http://localhost:8080/api/v1/consume5mbmemory

@@ -197,6 +197,36 @@ docker compose up -d
 - `Standard options` > `Unit` 选择 `Misc` > `Locale Format`
 - 点击 `Save` 保存 `Panel`。
 
+
+
+#### 创建用于显示自定义 `Histogram` 指标的 `Heatmap Panel`
+
+>提示：数据量少不适宜使用 `Histogram`，因为数据少时不能很好地显示热图颜色过渡效果。
+
+步骤如下：
+
+- 点击 `Dashboards` > `Browse`，显示 `Dashboards` 列表，点击 `New Dashboard` 新增 `Dashboard`
+- 点击 `Add a new panel` 新增自定指标显示 `panel`，配置信息如下：
+
+  - `Visualizations` 类型使用默认值 `Heatmap`
+  - `Panel options` > `Title` 填写 ` 请求延迟`
+  - 添加 `Query`，`PromQL` 为 `idelta(http_request_duration_seconds_bucket{method="get", url="/api/v1/test1"}[1m])`，`Legend` 选择 `Custom` 类型为 `{{le}}`，`Min step` 填写 `20s`（在选择最近时间段为 `5` 分钟时，指标显示的时间区间也不会小于 `20s`，这样会比较美观），`Format` 选择 `Heatmap`
+- `Y Axis` > `Unit` 选择 `Time / second (s)`
+- `Colors` 选择 `Opacity`，`Exponent` 调整到 `0.5`，`Steps` 调整到 `128`
+- `Cell display` > `cell gap` 调整为 `2`
+- `Legend` > `show legend` 切换为关闭状态
+- 点击 `Save` 保存 `Panel`。
+
+
+
+使用 `wrk` 命令协助生成测试数据
+
+```sh
+wrk -t1 -c1 -d150000s --latency --timeout 30 http://192.168.1.181:8080/api/v1/testAssistRequestLatency
+```
+
+
+
 #### 修改 `Dashboard` 名称
 
 步骤如下：

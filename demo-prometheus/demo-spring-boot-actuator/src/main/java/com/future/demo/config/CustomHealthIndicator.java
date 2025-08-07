@@ -1,4 +1,4 @@
-package com.future.demo;
+package com.future.demo.config;
 
 import org.springframework.boot.actuate.health.AbstractHealthIndicator;
 import org.springframework.boot.actuate.health.Health;

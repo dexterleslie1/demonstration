@@ -158,9 +158,9 @@ Prometheus `simpleclient` 是 Prometheus 官方提供的 Java 客户端库，它
 
 ## 使用 `Micrometer`
 
+>提示：`SpringBoot` 应用自定义指标的主流解决方案为 `Micrometer`。
+
 Micrometer 为最流行的可观察性系统提供了一个外观，让您可以对基于 JVM 的应用程序代码进行检测，而无需锁定供应商。类似于 SLF4J，但用于可观察性。它不是 prometheus 的客户端库，但是 Micrometer 默认被集成到 SpringBoot Actuator 中并且很方便地扩展自定义指标到 /actuator/metrics 端点中。
-
-
 
 ### 开发流程
 
@@ -292,81 +292,26 @@ scrape_configs:
 
 ### 实验
 
->详细用法请参考本站 [示例1](https://gitee.com/dexterleslie/demonstration/tree/main/demo-prometheus/demo-prometheus-micrometer) `+` [示例2](https://gitee.com/dexterleslie/demonstration/tree/main/demo-prometheus/demo-docker-compose-prometheus)
+>详细用法请参考本站 [示例1](https://gitee.com/dexterleslie/demonstration/tree/main/demo-prometheus/demo-spring-boot-actuator) `+` [示例2](https://gitee.com/dexterleslie/demonstration/tree/main/demo-prometheus/demo-docker-compose-prometheus)
 
 配置被监控的应用：
 
 - `POM` 配置：
 
   ```xml
-  <?xml version="1.0" encoding="UTF-8"?>
-  <project xmlns="http://maven.apache.org/POM/4.0.0"
-           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-           xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-      <modelVersion>4.0.0</modelVersion>
-  
-      <parent>
-          <groupId>org.springframework.boot</groupId>
-          <artifactId>spring-boot-starter-parent</artifactId>
-          <version>2.2.7.RELEASE</version>
-      </parent>
-  
-      <groupId>com.future.demo</groupId>
-      <artifactId>demo-prometheus-micrometer</artifactId>
-      <version>1.0.0</version>
-  
-      <dependencies>
-          <dependency>
-              <groupId>org.springframework.boot</groupId>
-              <artifactId>spring-boot-starter-web</artifactId>
-          </dependency>
-          <dependency>
-              <groupId>org.springframework.boot</groupId>
-              <artifactId>spring-boot-starter-actuator</artifactId>
-          </dependency>
-          <dependency>
-              <groupId>org.springframework.boot</groupId>
-              <artifactId>spring-boot-starter-test</artifactId>
-              <scope>test</scope>
-          </dependency>
-          <!-- 添加 Micrometer 依赖 -->
-          <dependency>
-              <groupId>io.micrometer</groupId>
-              <artifactId>micrometer-registry-prometheus</artifactId>
-          </dependency>
-          <dependency>
-              <groupId>org.projectlombok</groupId>
-              <artifactId>lombok</artifactId>
-          </dependency>
-  
-          <dependency>
-              <groupId>com.github.dexterleslie1</groupId>
-              <artifactId>future-common</artifactId>
-              <version>1.2.2</version>
-          </dependency>
-      </dependencies>
-  
-      <build>
-          <plugins>
-              <plugin>
-                  <groupId>org.springframework.boot</groupId>
-                  <artifactId>spring-boot-maven-plugin</artifactId>
-              </plugin>
-          </plugins>
-      </build>
-  
-      <repositories>
-          <repository>
-              <id>jitpack.io</id>
-              <url>https://jitpack.io</url>
-          </repository>
-          <repository>
-              <id>aliyun</id>
-              <url>https://maven.aliyun.com/repository/public</url>
-          </repository>
-      </repositories>
-  </project>
-  
+  <!-- 使用 micrometer 需要引入 actuator 以暴露指标到 /actuator/prometheus 接口 -->
+  <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-actuator</artifactId>
+  </dependency>
+  <!--
+      暴露/actuator/prometheus端点需要此依赖，否则会报告404错误
+      https://stackoverflow.com/questions/48700449/cannot-include-prometheus-metrics-in-spring-boot-2-version-2-0-0-m7
+  -->
+  <dependency>
+      <groupId>io.micrometer</groupId>
+      <artifactId>micrometer-registry-prometheus</artifactId>
+  </dependency>
   ```
 
 - `application.properties` 配置启用 `Prometheus` 端点：
@@ -528,7 +473,284 @@ wrk -t1 -c1 -d150000s --latency --timeout 30 http://192.168.1.181:8080/api/v1/te
 wrk -t1 -c1 -d150000s --latency --timeout 30 http://192.168.1.181:8080/api/v1/testSetOrderMasterTotalCount
 
 wrk -t1 -c1 -d150000s --latency --timeout 30 http://192.168.1.181:8080/api/v1/testSetOrderDetailTotalCount
+
+wrk -t1 -c1 -d150000s --latency --timeout 30 http://192.168.1.181:8080/api/v1/testAssistRequestLatency
 ```
+
+
+
+### 动态标签
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-prometheus/demo-spring-boot-actuator)
+
+#### 基本用法
+
+运行示例后，使用 `api.http` 中的 `GET http://localhost:8080/api/v1/testAssistRequestLatency` 生成测试数据。
+
+访问 `http://localhost:8081/actuator/prometheus` 并搜索 `http_request_duration` 查看数据
+
+```
+# HELP http_request_duration_seconds_max Request latency in seconds.
+# TYPE http_request_duration_seconds_max gauge
+http_request_duration_seconds_max{method="put",url="/api/v1/test2",} 33.513
+http_request_duration_seconds_max{method="put",url="/api/v1/test1",} 43.821
+http_request_duration_seconds_max{method="get",url="/api/v1/test1",} 3.084
+http_request_duration_seconds_max{method="get",url="/api/v1/test2",} 57.14
+# HELP http_request_duration_seconds Request latency in seconds.
+# TYPE http_request_duration_seconds histogram
+http_request_duration_seconds_bucket{method="put",url="/api/v1/test2",le="0.01",} 0.0
+http_request_duration_seconds_bucket{method="put",url="/api/v1/test2",le="0.1",} 0.0
+http_request_duration_seconds_bucket{method="put",url="/api/v1/test2",le="0.2",} 0.0
+http_request_duration_seconds_bucket{method="put",url="/api/v1/test2",le="0.3",} 0.0
+http_request_duration_seconds_bucket{method="put",url="/api/v1/test2",le="0.5",} 0.0
+http_request_duration_seconds_bucket{method="put",url="/api/v1/test2",le="1.0",} 0.0
+http_request_duration_seconds_bucket{method="put",url="/api/v1/test2",le="5.0",} 0.0
+http_request_duration_seconds_bucket{method="put",url="/api/v1/test2",le="10.0",} 0.0
+http_request_duration_seconds_bucket{method="put",url="/api/v1/test2",le="30.0",} 1.0
+http_request_duration_seconds_bucket{method="put",url="/api/v1/test2",le="+Inf",} 2.0
+http_request_duration_seconds_count{method="put",url="/api/v1/test2",} 2.0
+http_request_duration_seconds_sum{method="put",url="/api/v1/test2",} 55.282
+http_request_duration_seconds_bucket{method="put",url="/api/v1/test1",le="0.01",} 0.0
+http_request_duration_seconds_bucket{method="put",url="/api/v1/test1",le="0.1",} 0.0
+http_request_duration_seconds_bucket{method="put",url="/api/v1/test1",le="0.2",} 0.0
+http_request_duration_seconds_bucket{method="put",url="/api/v1/test1",le="0.3",} 0.0
+http_request_duration_seconds_bucket{method="put",url="/api/v1/test1",le="0.5",} 0.0
+http_request_duration_seconds_bucket{method="put",url="/api/v1/test1",le="1.0",} 0.0
+http_request_duration_seconds_bucket{method="put",url="/api/v1/test1",le="5.0",} 0.0
+http_request_duration_seconds_bucket{method="put",url="/api/v1/test1",le="10.0",} 1.0
+http_request_duration_seconds_bucket{method="put",url="/api/v1/test1",le="30.0",} 2.0
+http_request_duration_seconds_bucket{method="put",url="/api/v1/test1",le="+Inf",} 3.0
+http_request_duration_seconds_count{method="put",url="/api/v1/test1",} 3.0
+http_request_duration_seconds_sum{method="put",url="/api/v1/test1",} 66.331
+http_request_duration_seconds_bucket{method="get",url="/api/v1/test1",le="0.01",} 0.0
+http_request_duration_seconds_bucket{method="get",url="/api/v1/test1",le="0.1",} 0.0
+http_request_duration_seconds_bucket{method="get",url="/api/v1/test1",le="0.2",} 0.0
+http_request_duration_seconds_bucket{method="get",url="/api/v1/test1",le="0.3",} 0.0
+http_request_duration_seconds_bucket{method="get",url="/api/v1/test1",le="0.5",} 0.0
+http_request_duration_seconds_bucket{method="get",url="/api/v1/test1",le="1.0",} 0.0
+http_request_duration_seconds_bucket{method="get",url="/api/v1/test1",le="5.0",} 1.0
+http_request_duration_seconds_bucket{method="get",url="/api/v1/test1",le="10.0",} 1.0
+http_request_duration_seconds_bucket{method="get",url="/api/v1/test1",le="30.0",} 1.0
+http_request_duration_seconds_bucket{method="get",url="/api/v1/test1",le="+Inf",} 1.0
+http_request_duration_seconds_count{method="get",url="/api/v1/test1",} 1.0
+http_request_duration_seconds_sum{method="get",url="/api/v1/test1",} 3.084
+http_request_duration_seconds_bucket{method="get",url="/api/v1/test2",le="0.01",} 0.0
+http_request_duration_seconds_bucket{method="get",url="/api/v1/test2",le="0.1",} 0.0
+http_request_duration_seconds_bucket{method="get",url="/api/v1/test2",le="0.2",} 0.0
+http_request_duration_seconds_bucket{method="get",url="/api/v1/test2",le="0.3",} 0.0
+http_request_duration_seconds_bucket{method="get",url="/api/v1/test2",le="0.5",} 0.0
+http_request_duration_seconds_bucket{method="get",url="/api/v1/test2",le="1.0",} 0.0
+http_request_duration_seconds_bucket{method="get",url="/api/v1/test2",le="5.0",} 0.0
+http_request_duration_seconds_bucket{method="get",url="/api/v1/test2",le="10.0",} 0.0
+http_request_duration_seconds_bucket{method="get",url="/api/v1/test2",le="30.0",} 0.0
+http_request_duration_seconds_bucket{method="get",url="/api/v1/test2",le="+Inf",} 2.0
+http_request_duration_seconds_count{method="get",url="/api/v1/test2",} 2.0
+http_request_duration_seconds_sum{method="get",url="/api/v1/test2",} 91.431
+```
+
+动态标签代码如下：
+
+```java
+List<String> methodList = Arrays.asList("get", "put");
+List<String> urlList = Arrays.asList("/api/v1/test1", "/api/v1/test2");
+
+/**
+ * 协助测试请求延迟直方图
+ *
+ * @return
+ */
+@GetMapping("testAssistRequestLatency")
+public ObjectResponse<String> testAssistRequestLatency() {
+    String method = methodList.get(RandomUtil.randomInt(0, methodList.size()));
+    String url = urlList.get(RandomUtil.randomInt(0, urlList.size()));
+    int milliseconds = RandomUtil.randomInt(0, 60000);
+    // 模拟请求延迟直方图
+    Timer.builder("http_request_duration")
+            .description("Request latency in seconds.")
+            // 桶中的区间的分布如下 10-100（单位是毫秒）、100-200、...
+            .serviceLevelObjectives(
+                    Duration.ofMillis(10),
+                    Duration.ofMillis(100),
+                    Duration.ofMillis(200),
+                    Duration.ofMillis(300),
+                    Duration.ofMillis(500),
+                    Duration.ofMillis(1000),
+                    Duration.ofMillis(5000),
+                    Duration.ofMillis(10000),
+                    Duration.ofMillis(30000)
+            )
+            .tags("method", method, "url", url)
+            .register(meterRegistry).record(Duration.ofMillis(milliseconds));
+    return ResponseUtils.successObject("调用成功");
+}
+```
+
+
+
+#### 可以重复调用 `builder` 获取指标实例
+
+下面代码用于声明动态标签场景使用 `builder` 和相同的参数能够获取到之前已经创建的同一个实例（可以间接推导重复调用 `builder` 不会导致内存泄漏）：
+
+```java
+/**
+ * 测试动态标签场景使用 builder 和相同的参数是否会返回相同的实例
+ */
+@Test
+public void testDynamicTagsCheckIfBuilderReturnTheSameInstance() {
+    // region 测试 Timer
+
+    Timer timer1 = Timer.builder("http_request_duration")
+            .description("Request latency in seconds.")
+            // 桶中的区间的分布如下 10-100（单位是毫秒）、100-200、...
+            .serviceLevelObjectives(
+                    Duration.ofMillis(10),
+                    Duration.ofMillis(100),
+                    Duration.ofMillis(200),
+                    Duration.ofMillis(300),
+                    Duration.ofMillis(500),
+                    Duration.ofMillis(1000),
+                    Duration.ofMillis(5000),
+                    Duration.ofMillis(10000),
+                    Duration.ofMillis(30000)
+            )
+            .tags("k1", "v1", "k2", "v2")
+            .register(registry);
+
+    Timer timer2 = Timer.builder("http_request_duration")
+            .description("Request latency in seconds.")
+            // 桶中的区间的分布如下 10-100（单位是毫秒）、100-200、...
+            .serviceLevelObjectives(
+                    Duration.ofMillis(10),
+                    Duration.ofMillis(100),
+                    Duration.ofMillis(200),
+                    Duration.ofMillis(300),
+                    Duration.ofMillis(500),
+                    Duration.ofMillis(1000),
+                    Duration.ofMillis(5000),
+                    Duration.ofMillis(10000),
+                    Duration.ofMillis(30000)
+            )
+            .tags("k1", "v1", "k2", "v2")
+            .register(registry);
+    Assertions.assertEquals(timer1, timer2);
+
+    // 测试 tags 不一样时不是同一个实例
+    Timer timer3 = Timer.builder("http_request_duration")
+            .description("Request latency in seconds.")
+            // 桶中的区间的分布如下 10-100（单位是毫秒）、100-200、...
+            .serviceLevelObjectives(
+                    Duration.ofMillis(10),
+                    Duration.ofMillis(100),
+                    Duration.ofMillis(200),
+                    Duration.ofMillis(300),
+                    Duration.ofMillis(500),
+                    Duration.ofMillis(1000),
+                    Duration.ofMillis(5000),
+                    Duration.ofMillis(10000),
+                    Duration.ofMillis(30000)
+            )
+            .tags("k1", "v1", "k2", "v21")
+            .register(registry);
+    Assertions.assertNotEquals(timer1, timer3);
+
+    // 测试桶分布不一样时也是同一个实例
+    Timer timer4 = Timer.builder("http_request_duration")
+            .description("Request latency in seconds.")
+            // 桶中的区间的分布如下 10-100（单位是毫秒）、100-200、...
+            .serviceLevelObjectives(
+                    Duration.ofMillis(10),
+                    Duration.ofMillis(100),
+                    Duration.ofMillis(200),
+                    Duration.ofMillis(300),
+                    Duration.ofMillis(500),
+                    Duration.ofMillis(1000),
+                    /*Duration.ofMillis(5000),*/
+                    Duration.ofMillis(10000),
+                    Duration.ofMillis(30000)
+            )
+            .tags("k1", "v1", "k2", "v2")
+            .register(registry);
+    Assertions.assertEquals(timer1, timer4);
+
+    // endregion
+
+    // region 测试 Counter
+
+    Counter counter1 = Counter.builder("counter")
+            .description("desc1")
+            .tags("k1", "v1", "k2", "v2")
+            .register(registry);
+    Counter counter2 = Counter.builder("counter")
+            .description("desc1")
+            .tags("k1", "v1", "k2", "v2")
+            .register(registry);
+    Assertions.assertEquals(counter1, counter2);
+
+    // 测试描述不一样时也是同一个实例
+    Counter counter3 = Counter.builder("counter")
+            .description("desc11")
+            .tags("k1", "v1", "k2", "v2")
+            .register(registry);
+    Assertions.assertEquals(counter1, counter3);
+
+    // 测试名称不一样时不是同一个实例
+    Counter counter4 = Counter.builder("counter1")
+            .description("desc1")
+            .tags("k1", "v1", "k2", "v2")
+            .register(registry);
+    Assertions.assertNotEquals(counter1, counter4);
+
+    // 测试 tags 不一样时不是同一个实例
+    Counter counter5 = Counter.builder("counter")
+            .description("desc1")
+            .tags("k1", "v1", "k2", "v21")
+            .register(registry);
+    Assertions.assertNotEquals(counter1, counter5);
+
+    // endregion
+
+    // region 测试 Gauge
+
+    Gauge gauge1 = Gauge.builder("gauge", new Supplier<Number>() {
+        @Override
+        public Number get() {
+            return null;
+        }
+    }).tags("k1", "v1", "k2", "v2").register(registry);
+    Gauge gauge2 = Gauge.builder("gauge", new Supplier<Number>() {
+        @Override
+        public Number get() {
+            return null;
+        }
+    }).tags("k1", "v1", "k2", "v2").register(registry);
+    Assertions.assertEquals(gauge1, gauge2);
+
+    // 测试 tags 不一样时不是同一个实例
+    Gauge gauge3 = Gauge.builder("gauge", new Supplier<Number>() {
+        @Override
+        public Number get() {
+            return null;
+        }
+    }).tags("k1", "v1", "k2", "v21").register(registry);
+    Assertions.assertNotEquals(gauge1, gauge3);
+
+    // endregion
+}
+```
+
+
+
+#### 测试重复调用 `builder` 获取指标实例是否会内存泄漏
+
+设置应用 `-Xmx256m` 并启动，使用 `wrk` 协助测试：
+
+```sh
+wrk -t4 -c16 -d150000s --latency --timeout 60 http://localhost:8080/api/v1/testAssistRequestLatency
+```
+
+持续运行约 `1` 个小时应用没有报告内存溢出错误。
+
+或者参考本站 <a href="/java/arthas使用.html#memory使用" target="_blank">链接</a> 使用 `arthas` 的 `memory` 命令观察老年代内存没有持续增长表示没有内存溢出错误。
 
 
 

@@ -2547,6 +2547,8 @@ KAFKA_JMX_OPTS="" /usr/bin/kafka-topics --bootstrap-server localhost:9093 --desc
 
 ### 测试是否会丢失消费者运行前的消息
 
+>提示：按照下面修改应用配置后就不会丢失应用首次运行前的消息了。
+
 在开发环境中启动应用的相关容器
 
 启动 `ApplicationService` 应用，但不启动 `ApplicationCrond` 应用
@@ -2577,6 +2579,8 @@ public ConsumerFactory<String, String> defaultConsumerFactory() {
 
 
 ### 测试崩溃或者重启消息者是否会丢失消息
+
+>提示：不会丢失消息。
 
 在开发环境中启动应用的相关容器
 

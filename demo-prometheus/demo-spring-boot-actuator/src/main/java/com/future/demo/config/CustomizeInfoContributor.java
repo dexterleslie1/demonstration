@@ -1,4 +1,4 @@
-package com.future.demo;
+package com.future.demo.config;
 
 import org.springframework.boot.actuate.info.Info;
 import org.springframework.boot.actuate.info.InfoContributor;
