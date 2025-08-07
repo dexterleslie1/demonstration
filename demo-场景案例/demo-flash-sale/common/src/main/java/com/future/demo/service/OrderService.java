@@ -325,8 +325,8 @@ public class OrderService {
 
         List<ListenableFuture<SendResult<String, String>>> futureList = new ArrayList<>();
         // 秒杀成功后，把用户订单信息存储到 redis 中，cassandra 同步成功后会自动清除数据
-        key = CacheKeyPrefixOrderInCacheBeforeCassandraIndexCreate + userIdStr;
-        redisTemplate.opsForHash().put(key, String.valueOf(orderId), JSON);
+        /*key = CacheKeyPrefixOrderInCacheBeforeCassandraIndexCreate + userIdStr;
+        redisTemplate.opsForHash().put(key, String.valueOf(orderId), JSON);*/
         futureList.add(kafkaTemplate.send(Const.TopicCreateOrderCassandraIndexListByUserId, JSON));
         futureList.add(kafkaTemplate.send(Const.TopicCreateOrderCassandraIndexListByMerchantId, JSON));
 
