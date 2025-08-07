@@ -243,7 +243,7 @@ public class ApiController {
         if (merchantId == null || merchantId <= 0)
             merchantId = this.merchantService.getIdRandomly();
         if (stockAmount == null || stockAmount < 0)
-            stockAmount = 300;
+            stockAmount = 1024;
         Long productId = this.productService.add(name, merchantId, stockAmount, false, null, null);
         return ResponseUtils.successObject(String.valueOf(productId));
     }
@@ -267,7 +267,7 @@ public class ApiController {
         if (merchantId == null || merchantId <= 0)
             merchantId = this.merchantService.getIdRandomly();
         if (stockAmount == null || stockAmount < 0)
-            stockAmount = 300;
+            stockAmount = 1024;
 
         LocalDateTime flashSaleStartTime = null;
         if (!StringUtils.isBlank(flashSaleStartTimeStr)) {
