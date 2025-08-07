@@ -40,10 +40,14 @@ Locals:
   BmPrivateIpManagement:
     Type: Macro
     Value: "10.0.1.5"
-  # zookeeper、redis 等公共服务
+  # zookeeper 等公共服务
   BmPrivateIpCommonService:
     Type: Macro
     Value: "10.0.1.10"
+  # redis 服务
+  BmPrivateIpRedis:
+    Type: Macro
+    Value: "10.0.1.13"
   # 数据库服务
   BmPrivateIpCommonDb:
     Type: Macro
@@ -84,6 +88,10 @@ Locals:
     Type: Macro
     # 4c4g
     Value: ecs.u1-c1m1.xlarge
+  BmCommonInstanceType:
+    Type: Macro
+    # 4c8g
+    Value: ecs.u1-c1m2.xlarge
   # 非数据库实例规格
   BmNoneDbInstanceType:
     Type: Macro
@@ -92,6 +100,9 @@ Locals:
     # Value: ecs.u1-c1m2.2xlarge
     # 8c8g
     Value: ecs.u1-c1m1.2xlarge
+  BmKafkaInstanceType:
+    Type: Macro
+    Value: ecs.u1-c1m2.xlarge
   # 数据库实例规格
   BmDbInstanceType:
     Type: Macro
@@ -100,7 +111,13 @@ Locals:
     # 8c16g
     # Value: ecs.u1-c1m2.2xlarge
     # 8c8g
-    Value: ecs.u1-c1m1.2xlarge
+    # Value: ecs.u1-c1m1.2xlarge
+    # 2c8g
+    Value: ecs.u1-c1m4.large
+  BmRedisInstanceType:
+    Type: Macro
+    # 8c16g
+    Value: ecs.u1-c1m2.2xlarge
 
 Resources:
   BmVpc:
@@ -193,14 +210,14 @@ Resources:
       PrivateIpAddress:
         Ref: BmPrivateIpManagement
 
-  # zookeeper、redis 等公共服务
+  # zookeeper 等公共服务
   BmInstanceCommonService:
     Type: ALIYUN::ECS::Instance
     Properties:
       HostName: bm-common-service
       InstanceName: bm-common-service
       InstanceType:
-        Ref: BmNoneDbInstanceType
+        Ref: BmCommonInstanceType
       InstanceChargeType: PostPaid
       SystemDiskCategory: cloud_essd
       SystemDiskSize: 200
@@ -222,6 +239,36 @@ Resources:
         Ref: BmSshPassword
       PrivateIpAddress:
         Ref: BmPrivateIpCommonService
+
+  # redis 服务
+  BmInstanceRedis:
+    Type: ALIYUN::ECS::Instance
+    Properties:
+      HostName: bm-redis
+      InstanceName: bm-redis
+      InstanceType:
+        Ref: BmRedisInstanceType
+      InstanceChargeType: PostPaid
+      SystemDiskCategory: cloud_essd
+      SystemDiskSize: 100
+
+      AllocatePublicIP: true
+      InternetChargeType: PayByTraffic
+      InternetMaxBandwidthOut: 5
+
+      VpcId:
+        Ref: BmVpc
+      VSwitchId:
+        Ref: BmVSwitch
+      SecurityGroupId:
+        Ref: BmSecurityGroup
+
+      ImageId:
+        Ref: BmImageIdNode
+      Password:
+        Ref: BmSshPassword
+      PrivateIpAddress:
+        Ref: BmPrivateIpRedis
 
   # 数据库服务
   BmInstanceCommonDb:
@@ -260,7 +307,7 @@ Resources:
       HostName: bm-rocketmq
       InstanceName: bm-rocketmq
       InstanceType:
-        Ref: BmNoneDbInstanceType
+        Ref: BmKafkaInstanceType
       InstanceChargeType: PostPaid
       SystemDiskCategory: cloud_essd
       SystemDiskSize: 512
