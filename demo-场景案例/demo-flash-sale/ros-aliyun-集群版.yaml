@@ -116,8 +116,8 @@ Locals:
     Value: ecs.u1-c1m4.large
   BmRedisInstanceType:
     Type: Macro
-    # 8c16g
-    Value: ecs.u1-c1m2.2xlarge
+    # 4c16g
+    Value: ecs.u1-c1m4.xlarge
 
 Resources:
   BmVpc:
