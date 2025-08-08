@@ -67,7 +67,7 @@ public class ConfigKafkaListener {
      */
     @KafkaListener(topics = Const.TopicOrderInCacheSyncToDb,
             groupId = "group-" + Const.TopicOrderInCacheSyncToDb,
-            concurrency = "16",
+            concurrency = "32",
             containerFactory = "defaultKafkaListenerContainerFactory")
     public void receiveMessageOrderInCacheSyncToDB(List<String> messages) throws Exception {
         try {
@@ -91,6 +91,7 @@ public class ConfigKafkaListener {
 
             this.monitor.incrementOrderSyncCount(orderModelList.size());
         } catch (Exception ex) {
+            log.error(ex.getMessage(), ex);
             throw ex;
         }
     }
@@ -276,76 +277,81 @@ public class ConfigKafkaListener {
             concurrency = "1",
             containerFactory = "defaultKafkaListenerContainerFactory")
     public void receiveMessageSetupProductFlashSaleCache(List<String> messages) {
-        if (messages == null || messages.isEmpty()) {
-            if (log.isWarnEnabled())
-                log.warn("意料之外，为何 messages 为空的呢？");
-            return;
-        }
-
-        // region 设置秒杀商品缓存
-
-        List<FlashSaleProductCacheUpdateEventDTO> dtoList = messages.stream().map(o -> {
-            FlashSaleProductCacheUpdateEventDTO dto;
-            try {
-                dto = objectMapper.readValue(o, FlashSaleProductCacheUpdateEventDTO.class);
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
+        try {
+            if (messages == null || messages.isEmpty()) {
+                if (log.isWarnEnabled())
+                    log.warn("意料之外，为何 messages 为空的呢？");
+                return;
             }
-            return dto;
-        }).filter(o -> {
-            ProductModel model = o.getProductModel();
-            return model.isFlashSale();
-        }).collect(Collectors.toList());
-        if (log.isDebugEnabled())
-            log.debug("messages {} 成功转换为 dtoList {}", messages, dtoList);
 
-        // 设置秒杀商品的库存到缓存中
-        Map<String, String> productIdCacheKeyToStockAmountMap = dtoList.stream().collect(
-                Collectors.toMap(
-                        o -> String.format(ProductService.KeyFlashSaleProductStockAmountWithHashTag, o.getProductModel().getId()),
-                        o -> String.valueOf(o.getProductModel().getStock())));
-        redisTemplate.opsForValue().multiSet(productIdCacheKeyToStockAmountMap);
-        if (log.isDebugEnabled())
-            log.debug("成功批量设置秒杀商品的库存到缓存中 {}", productIdCacheKeyToStockAmountMap);
-        // 设置秒杀商品的开始时间到缓存中
-        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        Map<String, String> productIdCacheKeyToStartTimeMap = dtoList.stream().collect(
-                Collectors.toMap(
-                        o -> String.format(ProductService.KeyFlashSaleProductStartTime, o.getProductModel().getId()),
-                        o -> dateTimeFormatter.format(o.getProductModel().getFlashSaleStartTime())));
-        redisTemplate.opsForValue().multiSet(productIdCacheKeyToStartTimeMap);
-        if (log.isDebugEnabled())
-            log.debug("成功批量设置秒杀商品的开始时间到缓存中 {}", productIdCacheKeyToStartTimeMap);
-        // 设置秒杀商品的结束时间到缓存中
-        Map<String, String> productIdCacheKeyToEndTimeMap = dtoList.stream().collect(
-                Collectors.toMap(
-                        o -> String.format(ProductService.KeyFlashSaleProductEndTime, o.getProductModel().getId()),
-                        o -> dateTimeFormatter.format(o.getProductModel().getFlashSaleEndTime())));
-        redisTemplate.opsForValue().multiSet(productIdCacheKeyToEndTimeMap);
-        if (log.isDebugEnabled())
-            log.debug("成功批量设置秒杀商品的结束时间到缓存中 {}", productIdCacheKeyToEndTimeMap);
+            // region 设置秒杀商品缓存
 
-        // 设置秒杀商品过期时间缓存
-        redisTemplate.executePipelined(new SessionCallback<String>() {
-            @Override
-            public <K, V> String execute(RedisOperations<K, V> operations) throws DataAccessException {
-                RedisOperations<String, String> redisOperations = (RedisOperations<String, String>) operations;
-                for (FlashSaleProductCacheUpdateEventDTO dto : dtoList) {
-                    String productIdStr = String.valueOf(dto.getProductModel().getId());
-                    LocalDateTime flashSaleEndTime = dto.getProductModel().getFlashSaleEndTime();
-                    // 在秒杀结束30秒后自动删除
-                    int seconds = dto.getSecondAfterWhichExpiredFlashSaleProductForRemoving();
-                    LocalDateTime expirationTime = flashSaleEndTime.plusSeconds(seconds);
-                    long epochSecond = expirationTime.atZone(ZoneId.of("Asia/Shanghai")).toEpochSecond();
-                    redisOperations.opsForZSet().add(ProductService.KeyFlashSaleProductExpirationCache, productIdStr, epochSecond);
-                    if (log.isDebugEnabled())
-                        log.debug("成功设置秒杀商品过期时间缓存 {}", dto);
+            List<FlashSaleProductCacheUpdateEventDTO> dtoList = messages.stream().map(o -> {
+                FlashSaleProductCacheUpdateEventDTO dto;
+                try {
+                    dto = objectMapper.readValue(o, FlashSaleProductCacheUpdateEventDTO.class);
+                } catch (JsonProcessingException e) {
+                    throw new RuntimeException(e);
                 }
-                return null;
-            }
-        });
+                return dto;
+            }).filter(o -> {
+                ProductModel model = o.getProductModel();
+                return model.isFlashSale();
+            }).collect(Collectors.toList());
+            if (log.isDebugEnabled())
+                log.debug("messages {} 成功转换为 dtoList {}", messages, dtoList);
 
-        // endregion
+            // 设置秒杀商品的库存到缓存中
+            Map<String, String> productIdCacheKeyToStockAmountMap = dtoList.stream().collect(
+                    Collectors.toMap(
+                            o -> String.format(ProductService.KeyFlashSaleProductStockAmountWithHashTag, o.getProductModel().getId()),
+                            o -> String.valueOf(o.getProductModel().getStock())));
+            redisTemplate.opsForValue().multiSet(productIdCacheKeyToStockAmountMap);
+            if (log.isDebugEnabled())
+                log.debug("成功批量设置秒杀商品的库存到缓存中 {}", productIdCacheKeyToStockAmountMap);
+            // 设置秒杀商品的开始时间到缓存中
+            DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            Map<String, String> productIdCacheKeyToStartTimeMap = dtoList.stream().collect(
+                    Collectors.toMap(
+                            o -> String.format(ProductService.KeyFlashSaleProductStartTime, o.getProductModel().getId()),
+                            o -> dateTimeFormatter.format(o.getProductModel().getFlashSaleStartTime())));
+            redisTemplate.opsForValue().multiSet(productIdCacheKeyToStartTimeMap);
+            if (log.isDebugEnabled())
+                log.debug("成功批量设置秒杀商品的开始时间到缓存中 {}", productIdCacheKeyToStartTimeMap);
+            // 设置秒杀商品的结束时间到缓存中
+            Map<String, String> productIdCacheKeyToEndTimeMap = dtoList.stream().collect(
+                    Collectors.toMap(
+                            o -> String.format(ProductService.KeyFlashSaleProductEndTime, o.getProductModel().getId()),
+                            o -> dateTimeFormatter.format(o.getProductModel().getFlashSaleEndTime())));
+            redisTemplate.opsForValue().multiSet(productIdCacheKeyToEndTimeMap);
+            if (log.isDebugEnabled())
+                log.debug("成功批量设置秒杀商品的结束时间到缓存中 {}", productIdCacheKeyToEndTimeMap);
+
+            // 设置秒杀商品过期时间缓存
+            redisTemplate.executePipelined(new SessionCallback<String>() {
+                @Override
+                public <K, V> String execute(RedisOperations<K, V> operations) throws DataAccessException {
+                    RedisOperations<String, String> redisOperations = (RedisOperations<String, String>) operations;
+                    for (FlashSaleProductCacheUpdateEventDTO dto : dtoList) {
+                        String productIdStr = String.valueOf(dto.getProductModel().getId());
+                        LocalDateTime flashSaleEndTime = dto.getProductModel().getFlashSaleEndTime();
+                        // 在秒杀结束30秒后自动删除
+                        int seconds = dto.getSecondAfterWhichExpiredFlashSaleProductForRemoving();
+                        LocalDateTime expirationTime = flashSaleEndTime.plusSeconds(seconds);
+                        long epochSecond = expirationTime.atZone(ZoneId.of("Asia/Shanghai")).toEpochSecond();
+                        redisOperations.opsForZSet().add(ProductService.KeyFlashSaleProductExpirationCache, productIdStr, epochSecond);
+                        if (log.isDebugEnabled())
+                            log.debug("成功设置秒杀商品过期时间缓存 {}", dto);
+                    }
+                    return null;
+                }
+            });
+
+            // endregion
+        } catch (Exception ex) {
+            log.error(ex.getMessage(), ex);
+            throw ex;
+        }
     }
 
     /**
