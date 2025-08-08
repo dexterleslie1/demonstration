@@ -204,7 +204,11 @@ cqlsh -e "source '/scripts/data.cql'"
 
 ## 部署
 
-### Docker 部署单机
+>注意：本站秒杀 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-%E5%9C%BA%E6%99%AF%E6%A1%88%E4%BE%8B/demo-flash-sale) 在使用 `cassandra:3.11.4` 镜像压力测试过程中发生 `CMS` 垃圾回收器 `STW` 停顿时间过长导致应用写 `Cassandra` 慢问题。建议应用中使用 `cassandra:5.0.4` 镜像（使用 `G1` 垃圾回收器）。
+
+
+
+### `Docker Compose` 部署单机 `Cassandra3`
 
 >[官方参考文档](https://cassandra.apache.org/doc/latest/cassandra/installing/installing.html#install-with-docker)
 
@@ -251,11 +255,11 @@ source '/scripts/data.cql';
 
 
 
-### Docker 部署集群
+### `Docker Compose` 部署集群
 
 
 
-#### 单实例部署集群
+#### 单实例部署集群 `Cassandra3`
 
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-cassandra/demo-client-datastax)
 
@@ -306,7 +310,7 @@ services:
 
 
 
-#### 多实例部署集群
+#### 多实例部署集群 `Cassandra3`
 
 详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-cassandra/demo-order-management-app)
 
@@ -378,13 +382,19 @@ COPY cassandra.yaml /etc/cassandra/cassandra.yaml
 cassandra.yaml 配置文件制作步骤参考本站 <a href="/cassandra/README.html#服务配置" target="_blank">链接</a>，配置文件添加如下内容：
 
 ```yaml
+# 提示：在大数据量时，下面 timeout 配置不需要配置，因为采用异步独立计数器方案。
 # 添加超时设置，否则在select count(id) from xxx时候会报告超时错误。提醒：客户端 cqlsh 在连接时同样需要提供 timeout 参数，否则会报告客户端超时，cqlsh --request-timeout=300000
 read_request_timeout_in_ms: 300000
 range_request_timeout_in_ms: 300000
 
-# 修改下面设置为25，否则在批量插入时显示超出批量处理大小警告信息
+# 修改下面配置，否则在批量插入时显示超出批量处理大小警告信息
 # https://stackoverflow.com/questions/50385262/cassandra-batch-prepared-statement-size-warning
-batch_size_warn_threshold_in_kb: 25
+# cassandra3 配置
+batch_size_warn_threshold_in_kb: 64
+batch_size_fail_threshold_in_kb: 128
+# cassandra5 配置
+batch_size_warn_threshold: 64KiB
+batch_size_fail_threshold: 128KiB
 ```
 
 192.168.1.90 docker-compose.yaml 内容如下：
@@ -455,6 +465,135 @@ docker compose exec -it node1 bash
 
 # 查看集群状态
 nodetool status
+```
+
+
+
+#### 部署 `Cassandra5` 集群
+
+>提示：不配置 `MAX_HEAP_SIZE` 和 `HEAP_NEWSIZE` 默认 `Cassandra5` 默认会使用 `50%` 内存设置 `-Xmx` 参数（例如：内存为 `8g`，则 `-Xmx4g`）。
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-cassandra/demo-client-datastax-cassandra5)
+
+`.env`：
+
+```ini
+cassandra_broadcast_rpc_address=127.0.0.1
+
+```
+
+`docker-compose.yaml`：
+
+```yaml
+version: "3.1"
+
+services:
+    node0:
+      image: cassandra:5.0.4
+      environment:
+        - MAX_HEAP_SIZE=1G
+        # 是MAX_HEAP_SIZE的1/4
+        - HEAP_NEWSIZE=256M
+        - CASSANDRA_SEEDS=node0,node1
+        # 节点向客户端广播的地址是宿主机可访问的 IP
+        - CASSANDRA_BROADCAST_RPC_ADDRESS=${cassandra_broadcast_rpc_address}
+      volumes:
+        - ./init.cql:/scripts/data.cql:ro
+#      network_mode: host
+      ports:
+        - "9042:9042"   # CQL 客户端端口
+    node1:
+      image: cassandra:5.0.4
+      environment:
+        - MAX_HEAP_SIZE=1G
+        # 是MAX_HEAP_SIZE的1/4
+        - HEAP_NEWSIZE=256M
+        - CASSANDRA_SEEDS=node0,node1
+        # 节点向客户端广播的地址是宿主机可访问的 IP
+        - CASSANDRA_BROADCAST_RPC_ADDRESS=${cassandra_broadcast_rpc_address}
+      ports:
+        - "9043:9042"   # CQL 客户端端口
+
+```
+
+`init.cql`：
+
+```CQL
+CREATE KEYSPACE IF NOT EXISTS demo WITH REPLICATION ={'class' : 'SimpleStrategy','replication_factor' : '1'};
+
+USE demo;
+
+drop table if exists t_order;
+CREATE TABLE IF NOT EXISTS t_order
+(
+    id            decimal PRIMARY KEY,
+    user_id       bigint,
+    status        text,      -- 使用text代替ENUM，Cassandra不支持ENUM类型
+    pay_time      timestamp, -- 使用timestamp代替datetime
+    delivery_time timestamp,
+    received_time timestamp,
+    cancel_time   timestamp,
+    delete_status text,
+    create_time   timestamp
+);
+
+/* 用于协助分页查询 */
+drop table if exists t_order_list_by_userId;
+CREATE TABLE IF NOT EXISTS t_order_list_by_userId
+(
+    user_id       bigint,
+    status        text,
+    create_time   timestamp,
+    order_id      bigint,
+    primary key ((user_id,status),create_time,order_id)
+) with clustering order by (create_time desc,order_id desc);
+
+drop table if exists t_order_detail;
+CREATE TABLE IF NOT EXISTS t_order_detail
+(
+    id          bigint,
+    order_id    decimal,
+    user_id     bigint,
+    product_id  bigint,
+    merchant_id bigint,
+    amount      int,
+    PRIMARY KEY ((order_id), id) -- 复合主键，order_id为分区键，detail_id为聚类键
+) WITH CLUSTERING ORDER BY (id ASC);
+
+drop table if exists t_count;
+/* 用于协助并发update同一条数据 */
+create table if not exists t_count (
+    flag        text,
+    count       counter,
+    primary key (flag)
+);
+
+/* 初始化 count 的值，不能直接 set，否则报错 */
+update t_count set count=count+0 where flag='order';
+
+/* 用于协助测试 upsert */
+drop table if exists t_upsert_test1;
+create table if not exists t_upsert_test1 (
+    key1 int,
+    key2 text,
+    value text,
+    primary key ( key1 )
+);
+drop table if exists t_upsert_test2;
+create table if not exists t_upsert_test2 (
+  key1 int,
+  key2 text,
+  value text,
+  primary key ( (key1), key2 )
+);
+drop table if exists t_upsert_test3;
+create table if not exists t_upsert_test3 (
+  key1 int,
+  key2 text,
+  value text,
+  primary key ( key1, key2 )
+);
+
 ```
 
 
@@ -648,7 +787,96 @@ Netflix开源的Cassandra客户端，基于Thrift协议（较旧），适合遗�
 
 ### **DataStax Java Driver**
 
->详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-cassandra/demo-client-datastax)，提醒：本示例演示连接 `Cassandra3.11.4`，客户端默认已经配置集群拓扑自动更新机制不需要手动配置。
+>提示：`Cassandra5` 驱动程序用法和 `Cassandra3` 驱动程序用法有区别：
+>
+>- `POM` 配置
+>
+>  ```java
+>  <!-- cassandra5 驱动程序 -->
+>  <dependency>
+>      <groupId>com.datastax.oss</groupId>
+>      <artifactId>java-driver-core</artifactId>
+>      <version>4.17.0</version>
+>  </dependency>
+>  ```
+>
+>- `Java` 配置
+>
+>  ```java
+>  @Configuration
+>  public class ConfigCassandra {
+>      // 以下是连接 cassandra5 驱动程序使用
+>      @Bean(destroyMethod = "close")
+>      public CqlSession cqlSession() {
+>          return CqlSession.builder()
+>                  .addContactPoint(new InetSocketAddress("localhost", 9042))
+>                  .addContactPoint(new InetSocketAddress("localhost", 9043))
+>                  // 指定本地数据中心名称
+>                  .withLocalDatacenter("datacenter1")
+>                  .withKeyspace("demo")
+>                  .build();
+>      }
+>  }
+>  
+>  ```
+>
+>- `BatchStatement` 创建
+>
+>  ```java
+>  // 创建批量语句
+>  // cassandra3 驱动程序
+>  /*BatchStatement batch = new BatchStatement(BatchStatement.Type.LOGGED);*/
+>  // cassandra5 驱动程序
+>  BatchStatement batch = BatchStatement.newInstance(BatchType.LOGGED);
+>  ```
+>
+>- `ConsistencyLevel` 设置
+>
+>  ```java
+>  String cql = "INSERT INTO t_order_list_by_userId(user_id,create_time,status,order_id) " +
+>                  "VALUES (?, ?, ?, ?)";
+>  preparedStatementInsert = session.prepare(cql);
+>  // cassandra3 驱动程序
+>  /*preparedStatementInsert.setConsistencyLevel(ConsistencyLevel.LOCAL_QUORUM);*/
+>  
+>  // 添加多个订单到批量语句
+>  for (int i = 0; i < list.size(); i++) {
+>      OrderIndexListByUserIdModel model = list.get(i);
+>      BoundStatement bound = preparedStatementInsert.bind(
+>              model.getUserId(),
+>              model.getCreateTime().toInstant(ZoneOffset.ofHours(8)),
+>              model.getStatus(),
+>              model.getOrderId()
+>      );
+>  
+>      // cassandra5 驱动程序
+>      bound = bound.setConsistencyLevel(ConsistencyLevel.LOCAL_QUORUM);
+>  
+>      batch = batch.add(bound);
+>  }
+>  ```
+>
+>- 绑定参数时日期时间类型为 `Instant` 类型
+>
+>  ```java
+>  // 添加多个订单到批量语句
+>  for (int i = 0; i < list.size(); i++) {
+>      OrderIndexListByUserIdModel model = list.get(i);
+>      BoundStatement bound = preparedStatementInsert.bind(
+>              model.getUserId(),
+>              model.getCreateTime().toInstant(ZoneOffset.ofHours(8)),
+>              model.getStatus(),
+>              model.getOrderId()
+>      );
+>  
+>      // cassandra5 驱动程序
+>      bound = bound.setConsistencyLevel(ConsistencyLevel.LOCAL_QUORUM);
+>  
+>      batch = batch.add(bound);
+>  }
+>  ```
+>
+>详细用法请参考本站 [示例 `Cassandra3`](https://gitee.com/dexterleslie/demonstration/tree/main/demo-cassandra/demo-client-datastax) 或者 [示例 `Cassandra5`](https://gitee.com/dexterleslie/demonstration/tree/main/demo-cassandra/demo-client-datastax-cassandra5)，提醒：本示例演示连接 `Cassandra3.11.4`，客户端默认已经配置集群拓扑自动更新机制不需要手动配置。
 
 POM 配置：
 
