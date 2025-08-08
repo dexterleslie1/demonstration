@@ -18,6 +18,7 @@
         "OtfDRlZ",
         "WQX5KrE",
         "86EgMWM",
+        "59EnXWy",
         "tWElKx-"
       ],
       "bookmarkGroupIds": []
@@ -53,6 +54,30 @@
       "title": "bm-common-rocketmq",
       "color": "#e99695",
       "host": "10.0.1.12",
+      "username": "root",
+      "authType": "password",
+      "password": "Root@123",
+      "port": 22,
+      "runScripts": [
+        {}
+      ],
+      "encode": "utf-8",
+      "enableSsh": true,
+      "enableSftp": true,
+      "envLang": "en_US.UTF-8",
+      "term": "xterm-256color",
+      "displayRaw": false,
+      "cipher": [],
+      "serverHostKey": [],
+      "sshTunnels": [],
+      "connectionHoppings": [],
+      "proxy": ""
+    },
+    {
+      "id": "59EnXWy",
+      "title": "bm-redis",
+      "color": "#e99695",
+      "host": "10.0.1.13",
       "username": "root",
       "authType": "password",
       "password": "Root@123",
