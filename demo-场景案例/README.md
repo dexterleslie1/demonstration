@@ -155,13 +155,13 @@
    普通方式下单测试：
 
    ```sh
-   wrk -t8 -c2048 -d60s --latency --timeout 30 http://10.0.1.40/api/v1/order/create
+   wrk -t8 -c2048 -d600000000000s --latency --timeout 30 http://10.0.1.40/api/v1/order/create
    ```
 
    秒杀方式下单测试：
 
    ```sh
-   wrk -t8 -c2048 -d60s --latency --timeout 30 http://10.0.1.40/api/v1/order/createFlashSale
+   wrk -t8 -c2048 -d600000000000s --latency --timeout 30 http://10.0.1.40/api/v1/order/createFlashSale
    ```
 
 9. 销毁所有测试服务

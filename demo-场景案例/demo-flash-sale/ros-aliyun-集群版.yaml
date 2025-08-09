@@ -113,14 +113,14 @@ Locals:
     # Value: ecs.u1-c1m2.2xlarge
     # 8c8g
     # Value: ecs.u1-c1m1.2xlarge
-    # 2c8g
-    Value: ecs.u1-c1m4.large
+    # 4c8g
+    Value: ecs.u1-c1m2.xlarge
   BmRedisInstanceType:
     Type: Macro
     # 4c16g
     # Value: ecs.u1-c1m4.xlarge
-    # 2c8g
-    Value: ecs.u1-c1m4.large
+    # 4c8g
+    Value: ecs.u1-c1m2.xlarge
 
 Resources:
   BmVpc:
@@ -223,7 +223,7 @@ Resources:
         Ref: BmCommonInstanceType
       InstanceChargeType: PostPaid
       SystemDiskCategory: cloud_essd
-      SystemDiskSize: 200
+      SystemDiskSize: 400
 
       AllocatePublicIP: true
       InternetChargeType: PayByTraffic
@@ -283,7 +283,7 @@ Resources:
         Ref: BmDbInstanceType
       InstanceChargeType: PostPaid
       SystemDiskCategory: cloud_essd
-      SystemDiskSize: 512
+      SystemDiskSize: 1024
 
       AllocatePublicIP: true
       InternetChargeType: PayByTraffic
@@ -313,7 +313,7 @@ Resources:
         Ref: BmKafkaInstanceType
       InstanceChargeType: PostPaid
       SystemDiskCategory: cloud_essd
-      SystemDiskSize: 512
+      SystemDiskSize: 400
 
       AllocatePublicIP: true
       InternetChargeType: PayByTraffic
@@ -346,7 +346,7 @@ Resources:
         Ref: BmNoneDbInstanceType
       InstanceChargeType: PostPaid
       SystemDiskCategory: cloud_essd
-      SystemDiskSize: 150
+      SystemDiskSize: 300
 
       AllocatePublicIP: true
       InternetChargeType: PayByTraffic
