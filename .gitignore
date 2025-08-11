@@ -43,3 +43,14 @@ credentials
 *.so
 
 node_modules
+
+.DS_Store
+Pods
+Podfile.lock
+.idea
+*.iml
+*.class
+*.plist
+*.xcuserstate
+*.xcworkspacedata
+*.xcbkptlist
