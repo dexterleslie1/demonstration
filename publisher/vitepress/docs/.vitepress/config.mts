@@ -124,6 +124,7 @@ export default defineConfig({
           { text: '工具集', link: '/toolset/README.md' },
           { text: 'Future', link: '/future/README.md' },
           { text: 'MacOS', link: '/macos/README.md' },
+          { text: 'Typora', link: '/typora/README.md' },
         ]
       },
     ],
