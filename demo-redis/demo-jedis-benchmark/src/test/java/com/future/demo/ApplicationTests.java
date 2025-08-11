@@ -1,15 +1,20 @@
 package com.future.demo;
 
+import cn.hutool.core.util.RandomUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.util.StopWatch;
+import redis.clients.jedis.ConnectionPool;
+import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.exceptions.JedisDataException;
+import redis.clients.jedis.params.ScanParams;
+import redis.clients.jedis.resps.ScanResult;
 
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -162,6 +167,74 @@ public class ApplicationTests {
 
         stopWatch.stop();
         log.info("使用管道执行 {} 个 set 指令耗时 {} 毫秒", concurrentThreads * runLoop, stopWatch.getTotalTimeMillis());
+
+        // endregion
+    }
+
+    /**
+     * 测试 redis 集群中 keys 和 scan 方法
+     */
+    @Test
+    public void testKeysAndScanAgainstRedisCluster() {
+        jedisCluster.flushAll();
+
+        int total = RandomUtil.randomInt(1, 20481);
+
+        String keyPrefix = "testKeys#";
+        for (int i = 0; i < total; i++) {
+            String key = keyPrefix + i;
+            jedisCluster.set(key, key);
+        }
+
+        // region 测试 keys 方法
+
+        String pattern = keyPrefix + "*";
+        Set<String> matchedKeys = new TreeSet<>();
+        Map<String, ConnectionPool> clusterNodes = jedisCluster.getClusterNodes();
+        for (String key : clusterNodes.keySet()) {
+            Jedis jedis = null;
+            try {
+                jedis = new Jedis(clusterNodes.get(key).getResource());
+                matchedKeys.addAll(jedis.keys(pattern));
+            } finally {
+                if (jedis != null)
+                    jedis.close();
+            }
+        }
+        Assertions.assertEquals(total, matchedKeys.size());
+        for (int i = 0; i < total; i++) {
+            String key = keyPrefix + i;
+            Assertions.assertTrue(matchedKeys.contains(key));
+        }
+
+        // endregion
+
+        // region 测试 scan 方法
+
+        matchedKeys = new LinkedHashSet<>();
+        // 每次SCAN获取的数量
+        int scanBatchSize = 1000;
+        clusterNodes = jedisCluster.getClusterNodes();
+
+        for (Map.Entry<String, ConnectionPool> entry : clusterNodes.entrySet()) {
+            // 初始化游标
+            String cursor = ScanParams.SCAN_POINTER_START;
+            ScanParams scanParams = new ScanParams().match(pattern).count(scanBatchSize);
+
+            try (Jedis jedis = new Jedis(entry.getValue().getResource())) {
+                do {
+                    // 执行SCAN命令
+                    ScanResult<String> scanResult = jedis.scan(cursor, scanParams);
+                    matchedKeys.addAll(scanResult.getResult());
+                    cursor = scanResult.getCursor();
+                } while (!cursor.equals(ScanParams.SCAN_POINTER_START));
+            }
+        }
+        Assertions.assertEquals(total, matchedKeys.size());
+        for (int i = 0; i < total; i++) {
+            String key = keyPrefix + i;
+            Assertions.assertTrue(matchedKeys.contains(key));
+        }
 
         // endregion
     }
