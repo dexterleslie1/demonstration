@@ -4,7 +4,7 @@ RUN apt update
 RUN apt install make -y && apt install build-essential -y \
     && apt install libssl-dev -y && apt install libz-dev -y
 RUN apt install git -y
-RUN git clone https://github.com/giltene/wrk2
+RUN git clone https://gitee.com/dexterleslie/wrk2.git
 RUN cd wrk2 && make
 RUN cd wrk2 && cp wrk /usr/local/bin/wrk2 && chmod +x /usr/local/bin/wrk2
 RUN rm -rf wrk2
