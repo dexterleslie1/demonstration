@@ -762,6 +762,8 @@ Confluent 是**企业级事件流平台的领导者**，通过基于 Kafka 构�
 
 ## 配置项 - `KAFKA_ADVERTISED_LISTENERS`
 
+>提示：不能设置为 `127.0.0.1`，否则无法客户端和 `/usr/bin/kafka-topics --create --bootstrap-server kafka1:9092 --replication-factor 1 --partitions 256 --topic my-topic-1` 命令无法连接 `Kafka` 服务。应当设置为宿主机的 `ip` 地址。
+
 在 Apache Kafka 中，`KAFKA_ADVERTISED_LISTENERS` 是一个**关键的网络配置参数**，用于控制 Kafka Broker 向客户端（或其他 Broker）**公布的可连接地址**。它的核心作用是解决“Broker 实际监听地址”与“客户端可访问地址”不一致的问题，尤其在复杂网络环境（如容器化、NAT、多网卡）中至关重要。
 
 ### **核心背景：为什么需要 KAFKA_ADVERTISED_LISTENERS？**
