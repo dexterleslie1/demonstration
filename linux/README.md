@@ -497,6 +497,20 @@ sudo grep -q "^\* soft nofile" /etc/security/limits.conf && sudo sed -i '/^\* so
 sudo grep -q "^\* hard nofile" /etc/security/limits.conf && sudo sed -i '/^\* hard nofile/c \* hard nofile 65535' /etc/security/limits.conf || sudo sed -i '/^# End of file/i \* hard nofile 65535' /etc/security/limits.conf
 ```
 
+`Ubuntu` 需要如下修改，否则用户登录后上面的 `nofile` 配置不生效：
+
+- 配置 `systemd` 的 `nofile rdp` 登录才能够生效，编辑 `/etc/systemd/system.conf` 修改以下内容：
+
+  ```properties
+  DefaultLimitNOFILE=65535
+  ```
+
+- 为用户配置 `systemd` 的 `nofile rdp` 登录才能够生效，编辑 `/etc/systemd/user.conf` 修改以下内容：
+
+  ```properties
+  DefaultLimitNOFILE=65535
+  ```
+
 修改 file-max 配置：
 
 ```bash
