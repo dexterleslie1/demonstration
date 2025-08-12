@@ -25,15 +25,18 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
+import org.springframework.util.StopWatch;
 import org.springframework.util.concurrent.ListenableFuture;
 
 import javax.annotation.Resource;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 
@@ -55,11 +58,11 @@ public class ConfigKafkaListener {
     @Resource
     RandomIdPickerService randomIdPickerService;
     @Resource
-    PrometheusCustomMonitor prometheusCustomMonitor;
-    @Resource
     PickupProductRandomlyWhenPurchasingService pickupProductRandomlyWhenPurchasingService;
     @Resource
     CountService countService;
+
+    private final AtomicInteger concurrentCounterOrderInCacheSyncToDb = new AtomicInteger();
 
     /**
      * @param messages
@@ -70,7 +73,14 @@ public class ConfigKafkaListener {
             concurrency = "32",
             containerFactory = "defaultKafkaListenerContainerFactory")
     public void receiveMessageOrderInCacheSyncToDB(List<String> messages) throws Exception {
+        StopWatch stopWatch = null;
         try {
+            // 秒杀订单同步并发线程数计数器
+            int count = concurrentCounterOrderInCacheSyncToDb.incrementAndGet();
+            this.monitor.getDistributionSummaryOrderSyncThreadConcurrent().record(count);
+
+            this.monitor.getDistributionSummaryOrderSyncBatchSize().record(messages.size());
+
             List<OrderModel> orderModelList = new ArrayList<>();
             for (String JSON : messages) {
                 OrderModel orderModel = objectMapper.readValue(JSON, OrderModel.class);
@@ -85,16 +95,34 @@ public class ConfigKafkaListener {
                     break;
                 }
             }
-            if (needToSetMerchantId)
+
+            stopWatch = new StopWatch();
+            if (needToSetMerchantId) {
+                stopWatch.start();
                 orderService.fillupOrderMerchantId(orderModelList);
+                stopWatch.stop();
+                this.monitor.getTimerOrderSyncFillUpOrderMerchantId().record(Duration.ofMillis(stopWatch.getLastTaskTimeMillis()));
+            }
+
+            stopWatch.start();
             this.orderService.insertBatch(orderModelList);
+            stopWatch.stop();
+            this.monitor.getTimerOrderSyncBatchInsertOrder().record(Duration.ofMillis(stopWatch.getLastTaskTimeMillis()));
 
             this.monitor.incrementOrderSyncCount(orderModelList.size());
         } catch (Exception ex) {
             log.error(ex.getMessage(), ex);
             throw ex;
+        } finally {
+            concurrentCounterOrderInCacheSyncToDb.decrementAndGet();
+
+            if (stopWatch != null && stopWatch.isRunning()) {
+                stopWatch.stop();
+            }
         }
     }
+
+    private final AtomicInteger countServiceConcurrency = new AtomicInteger();
 
     /**
      * 快速计数器递增
@@ -107,7 +135,16 @@ public class ConfigKafkaListener {
             concurrency = "16",
             containerFactory = "defaultKafkaListenerContainerFactory")
     public void receiveMessageIncreaseCountFast(List<String> messages) throws Exception {
+        StopWatch stopWatch = null;
         try {
+            int count = countServiceConcurrency.incrementAndGet();
+            monitor.getDistributionSummaryCountServiceConcurrency().record(count);
+
+            monitor.getDistributionSummaryCountServiceBatchSize().record(messages.size());
+
+            stopWatch = new StopWatch();
+            stopWatch.start();
+
             List<IncreaseCountDTO> increaseCountDTOList = new ArrayList<>();
             for (String JSON : messages) {
                 IncreaseCountDTO increaseCountDTO = objectMapper.readValue(JSON, IncreaseCountDTO.class);
@@ -116,10 +153,19 @@ public class ConfigKafkaListener {
 
             // todo 在crond服务关闭重启后select count和计数器不一致
             countService.updateIncreaseCount(increaseCountDTOList);
-            prometheusCustomMonitor.getCounterIncreaseCountStatsSuccessfully().increment(increaseCountDTOList.size());
+            stopWatch.stop();
+            monitor.getTimerCountServiceIncreaseCountLatency().record(Duration.ofMillis(stopWatch.getTotalTimeMillis()));
+
+            monitor.getCounterIncreaseCountStatsSuccessfully().increment(increaseCountDTOList.size());
         } catch (Exception ex) {
             log.error(ex.getMessage(), ex);
             throw ex;
+        } finally {
+            countServiceConcurrency.decrementAndGet();
+
+            if (stopWatch != null && stopWatch.isRunning()) {
+                stopWatch.stop();
+            }
         }
     }
 
@@ -150,6 +196,8 @@ public class ConfigKafkaListener {
 //        }
 //    }
 
+    private final AtomicInteger createOrderCassandraIndexListByUserIdConcurrency = new AtomicInteger();
+
     /**
      * 创建订单 cassandra 索引 listByUserId
      *
@@ -160,7 +208,13 @@ public class ConfigKafkaListener {
             concurrency = "32",
             containerFactory = "topicCreateOrderCassandraIndexListByUserIdKafkaListenerContainerFactory")
     public void receiveMessageCreateOrderCassandraIndexListByUserId(List<String> messages) throws Exception {
+        StopWatch stopWatch = null;
         try {
+            int count = createOrderCassandraIndexListByUserIdConcurrency.incrementAndGet();
+            monitor.getDistributionSummaryCreateOrderCassandraIndexListByUserIdConcurrency().record(count);
+
+            monitor.getDistributionSummaryCreateOrderCassandraIndexListByUserIdBatchSize().record(messages.size());
+
             List<OrderModel> modelList = new ArrayList<>();
             for (String message : messages) {
                 OrderModel orderModel = this.objectMapper.readValue(message, OrderModel.class);
@@ -175,14 +229,26 @@ public class ConfigKafkaListener {
                     break;
                 }
             }
-            if (needToSetMerchantId)
+            stopWatch = new StopWatch();
+            if (needToSetMerchantId) {
+                stopWatch.start();
                 orderService.fillupOrderMerchantId(modelList);
+                stopWatch.stop();
+                monitor.getTimerCreateOrderCassandraIndexListByUserIdLatencyFillUpOrderMerchantId()
+                        .record(Duration.ofMillis(stopWatch.getLastTaskTimeMillis()));
+            }
 
+            stopWatch.start();
             // 建立 listByUserId Cassandra 索引
             cassandraMapper.insertBatchOrderIndexListByUserId(modelList);
+            stopWatch.stop();
+            monitor.getTimerCreateOrderCassandraIndexListByUserIdLatencyBatchInsertIndex()
+                    .record(Duration.ofMillis(stopWatch.getLastTaskTimeMillis()));
 
             // 异步更新 t_count
             if (!modelList.isEmpty()) {
+                stopWatch.start();
+
                 List<ListenableFuture<SendResult<String, String>>> futureList = new ArrayList<>();
                 for (OrderModel model : modelList) {
                     IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO(model.getId(), "orderListByUserId");
@@ -193,7 +259,13 @@ public class ConfigKafkaListener {
 
                 for (ListenableFuture<SendResult<String, String>> future : futureList)
                     future.get();
+
+                stopWatch.stop();
+                monitor.getTimerCreateOrderCassandraIndexListByUserIdLatencySendIncreaseCountMessage()
+                        .record(Duration.ofMillis(stopWatch.getLastTaskTimeMillis()));
             }
+
+            stopWatch.start();
 
             // Cassandra 成功建立后，从缓存中删除订单信息
             redisTemplate.executePipelined(new SessionCallback<String>() {
@@ -210,11 +282,24 @@ public class ConfigKafkaListener {
                     return null;
                 }
             });
+
+            stopWatch.stop();
+            monitor.getTimerCreateOrderCassandraIndexListByUserIdLatencyRemoveOrderCache()
+                    .record(Duration.ofMillis(stopWatch.getLastTaskTimeMillis()));
+
         } catch (Exception ex) {
             log.error(ex.getMessage(), ex);
             throw ex;
+        } finally {
+            createOrderCassandraIndexListByUserIdConcurrency.decrementAndGet();
+
+            if (stopWatch != null && stopWatch.isRunning()) {
+                stopWatch.stop();
+            }
         }
     }
+
+    private final AtomicInteger createOrderCassandraIndexListByMerchantIdConcurrency = new AtomicInteger();
 
     /**
      * 创建订单 cassandra 索引 listByMerchantId
@@ -226,7 +311,13 @@ public class ConfigKafkaListener {
             concurrency = "32",
             containerFactory = "topicCreateOrderCassandraIndexListByMerchantIdKafkaListenerContainerFactory")
     public void receiveMessageCreateOrderCassandraIndexListByMerchantId(List<String> messages) throws Exception {
+        StopWatch stopWatch = null;
         try {
+            int count = createOrderCassandraIndexListByMerchantIdConcurrency.incrementAndGet();
+            monitor.getDistributionSummaryCreateOrderCassandraIndexListByMerchantIdConcurrency().record(count);
+
+            monitor.getDistributionSummaryCreateOrderCassandraIndexListByMerchantIdBatchSize().record(messages.size());
+
             List<OrderModel> modelList = new ArrayList<>();
             for (String message : messages) {
                 OrderModel orderModel = this.objectMapper.readValue(message, OrderModel.class);
@@ -241,14 +332,26 @@ public class ConfigKafkaListener {
                     break;
                 }
             }
-            if (needToSetMerchantId)
+            stopWatch = new StopWatch();
+            if (needToSetMerchantId) {
+                stopWatch.start();
                 orderService.fillupOrderMerchantId(modelList);
+                stopWatch.stop();
+                monitor.getTimerCreateOrderCassandraIndexListByMerchantIdLatencyFillUpOrderMerchantId()
+                        .record(Duration.ofMillis(stopWatch.getLastTaskTimeMillis()));
+            }
 
+            stopWatch.start();
             // 建立 listByMerchantId Cassandra 索引
             cassandraMapper.insertBatchOrderIndexListByMerchantId(modelList);
+            stopWatch.stop();
+            monitor.getTimerCreateOrderCassandraIndexListByMerchantIdLatencyBatchInsertIndex()
+                    .record(Duration.ofMillis(stopWatch.getLastTaskTimeMillis()));
 
             // 异步更新 t_count
             if (!modelList.isEmpty()) {
+                stopWatch.start();
+
                 List<ListenableFuture<SendResult<String, String>>> futureList = new ArrayList<>();
                 for (OrderModel model : modelList) {
                     IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO(model.getId(), "orderListByMerchantId");
@@ -259,10 +362,20 @@ public class ConfigKafkaListener {
 
                 for (ListenableFuture<SendResult<String, String>> future : futureList)
                     future.get();
+
+                stopWatch.stop();
+                monitor.getTimerCreateOrderCassandraIndexListByMerchantIdLatencySendIncreaseCountMessage()
+                        .record(Duration.ofMillis(stopWatch.getLastTaskTimeMillis()));
             }
         } catch (Exception ex) {
             log.error(ex.getMessage(), ex);
             throw ex;
+        } finally {
+            createOrderCassandraIndexListByMerchantIdConcurrency.decrementAndGet();
+
+            if (stopWatch != null && stopWatch.isRunning()) {
+                stopWatch.stop();
+            }
         }
     }
 

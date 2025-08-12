@@ -36,6 +36,8 @@ Gauge（仪表盘）是一种度量指标类型，用于描述某个指标当前
 
 ## Histogram（直方图）
 
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-prometheus/demo-spring-boot-actuator) 中的 `Timer` 用法。
+
 Histogram（直方图）是一种度量类型，它用于对观察结果（通常是请求的持续时间或响应大小）进行采样，并在预定义的桶（bucket）中进行累积。这些桶定义了度量的不同范围，允许您高效地计算聚合数据（如平均值、中位数、分位数等），而无需原始数据。
 
 Histogram的主要特点如下：
