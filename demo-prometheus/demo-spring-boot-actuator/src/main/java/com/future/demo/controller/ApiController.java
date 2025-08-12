@@ -4,6 +4,7 @@ import cn.hutool.core.util.RandomUtil;
 import com.future.common.http.ObjectResponse;
 import com.future.common.http.ResponseUtils;
 import com.future.demo.config.PrometheusCustomMonitor;
+import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import org.springframework.http.ResponseEntity;
@@ -118,5 +119,23 @@ public class ApiController {
                 .tags("method", method, "url", url)
                 .register(meterRegistry).record(Duration.ofMillis(milliseconds));
         return ResponseUtils.successObject("调用成功");
+    }
+
+    /**
+     * 使用 DistributionSummary 生成 Histogram 指标
+     *
+     * @return
+     */
+    @GetMapping("testDistributionSummaryUsedAsHistogram")
+    public ObjectResponse<String> testDistributionSummaryUsedAsHistogram() {
+        // https://medium.com/@ruth.kurniawati/publishing-prometheus-histograms-and-summaries-using-micrometer-in-a-spring-boot-application-d9ae6ba46660
+        DistributionSummary distributionSummary = DistributionSummary.builder("testDistributionSummaryUsedAsHistogram")
+                .maximumExpectedValue(128.0)
+                // 使用 DistributionSummary 生成 Histogram 指标
+                .publishPercentileHistogram()
+                .register(meterRegistry);
+        int randomInt = RandomUtil.randomInt(0, 256);
+        distributionSummary.record(randomInt);
+        return ResponseUtils.successObject("成功调用");
     }
 }

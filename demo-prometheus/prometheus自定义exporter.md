@@ -158,7 +158,12 @@ Prometheus `simpleclient` 是 Prometheus 官方提供的 Java 客户端库，它
 
 ## 使用 `Micrometer`
 
->提示：`SpringBoot` 应用自定义指标的主流解决方案为 `Micrometer`。
+>提示：
+>
+>- `SpringBoot` 应用自定义指标的主流解决方案为 `Micrometer`。
+>- 参考链接：https://medium.com/@ruth.kurniawati/publishing-prometheus-histograms-and-summaries-using-micrometer-in-a-spring-boot-application-d9ae6ba46660 使用 `DistributionSummary` 实现 `Histogram` 和 `Summary` 指标。详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-prometheus/demo-spring-boot-actuator)。
+>
+>`todo`：为何 `DistributionSummary` 作为 `Histogram` 不能指定 `serviceLevelObjectives` 呢？只能指定 `maximumExpectedValue` 让其自动生成 `bucket`。
 
 Micrometer 为最流行的可观察性系统提供了一个外观，让您可以对基于 JVM 的应用程序代码进行检测，而无需锁定供应商。类似于 SLF4J，但用于可观察性。它不是 prometheus 的客户端库，但是 Micrometer 默认被集成到 SpringBoot Actuator 中并且很方便地扩展自定义指标到 /actuator/metrics 端点中。
 

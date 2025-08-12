@@ -36,7 +36,7 @@ Gauge（仪表盘）是一种度量指标类型，用于描述某个指标当前
 
 ## Histogram（直方图）
 
->详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-prometheus/demo-spring-boot-actuator) 中的 `Timer` 用法。
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-prometheus/demo-spring-boot-actuator) 中的 `Timer` 和 `DistributionSummary（DistributionSummary 调用其 publishPercentileHistogram 方法后即可作为 Histogram 使用）` 用法。
 
 Histogram（直方图）是一种度量类型，它用于对观察结果（通常是请求的持续时间或响应大小）进行采样，并在预定义的桶（bucket）中进行累积。这些桶定义了度量的不同范围，允许您高效地计算聚合数据（如平均值、中位数、分位数等），而无需原始数据。
 
@@ -77,6 +77,8 @@ http_request_duration_milliseconds_sum{method="get",path="/api/v1/data",} 746920
 - `http_request_duration_milliseconds_bucket{method="get",path="/api/v1/data",le="200.0",} 1.0`表示有`1`个样本小于`200`毫秒
 
 ## Summary（摘要）
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-prometheus/demo-spring-boot-actuator) 中的 `DistributionSummary（DistributionSummary 调用其 publishPercentiles 方法后即可作为 Summary 使用）` 用法。
 
 Summary是一种度量类型，用于表示一段时间内的样本数据的统计摘要。与Histogram不同，Summary在客户端进行样本数据的聚合计算，然后将聚合结果（如count、sum、avg、quantile等）发送到Prometheus服务器。
 
