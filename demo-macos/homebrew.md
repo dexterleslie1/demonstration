@@ -12,7 +12,7 @@
 which brew
 ```
 
-安装`brew`
+安装`brew`，提示：因为网络慢原因安装过程时间比较长，需要耐心等待。
 
 ```bash
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"

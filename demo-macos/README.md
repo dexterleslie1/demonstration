@@ -352,6 +352,22 @@ Xcode 新版本会内置对新 iOS 设备的支持。你的当前环境是 **mac
 
 
 
+## `Xcode Objective-C` 项目添加 `Frameworks`
+
+>参考链接：http://docs.onemobilesdk.aol.com/ios-ad-sdk/adding-frameworks-xcode.html
+
+从项目窗口左侧的项目导航器中选择项目文件。
+
+在项目设置编辑器中选择您想要添加框架的目标。
+
+选择 `Build Phases` 选项卡，然后单击 `Link Binary With Libraries` 旁边的小三角形以查看应用程序中的所有框架。
+
+要添加框架，请单击框架列表下方的 `+`。
+
+要选择多个框架，请按住命令键，同时使用鼠标单击所需的框架。
+
+
+
 ## `Swift` 
 
 >提示：使用 `Xcode` 创建空白 `Playground` 调试 `Swift` 语法，详细用法请参考本站 <a href="/macos/README.html#xcode-创建空白的-playground" target="_blank">链接</a>。
