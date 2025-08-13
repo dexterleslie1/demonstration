@@ -1042,8 +1042,7 @@ ansible demoservers -m shell -a "date"
 
 ## 异步模式
 
->
-> NOTE: 暂时没有需求使用，不研究。
+>NOTE: 暂时没有需求使用，不研究。
 > https://stackoverflow.com/questions/41194021/how-can-i-show-progress-for-a-long-running-ansible-task
 > https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_async.html
 
@@ -1242,3 +1241,125 @@ done
 ansible demoservers -m script -a "demo.sh"
 ```
 
+
+
+## 普通用户切换特权用户执行命令
+
+>说明：
+>
+>- 使用普通用户执行 `sudo` 命令任务会一直卡住，因为在执行 `sudo` 命令时候提示用户输入 `sudo` 密码。但是 `Ansible` 执行 `playbook` 时为非交互模式，用户无法看到此提示。
+>- 普通用户需要使用特权用户身份执行某些需要特权的命令。
+
+在任务中使用 `become: yes` 标记以表示该任务需要使用特权用户（默认使用 `root` 身份）执行
+
+```yaml
+- name: "配置测试节点的操作系统参数"
+  hosts: "{{ groups['all'] | difference(groups['management']) }}"
+  tasks:
+    - name: "修改nofile配置"
+      shell: |
+        set -e
+        sudo grep -q "^\* soft nofile" /etc/security/limits.conf && sudo sed -i '/^\* soft nofile/c \* soft nofile 65535' /etc/security/limits.conf || sudo sed -i '/^# End of file/i \* soft nofile 65535' /etc/security/limits.conf
+        sudo grep -q "^\* hard nofile" /etc/security/limits.conf && sudo sed -i '/^\* hard nofile/c \* hard nofile 65535' /etc/security/limits.conf || sudo sed -i '/^# End of file/i \* hard nofile 65535' /etc/security/limits.conf
+      become: yes
+```
+
+执行 `playbook` 时需要使用 `--ask-become-pass` 提供 `sudo` 密码
+
+```sh
+ansible-playbook playbook-os-test-node-config.yml --inventory inventory.ini --ask-become-pass
+```
+
+
+
+## `become: yes` 用法
+
+在 Ansible 中，`become: yes` 是一个核心参数，用于**启用特权提升（Privilege Escalation）**，允许任务以非当前连接用户的身份（通常是 `root` 或其他高权限用户）执行。它是 Ansible 替代传统 `sudo` 命令的统一机制，旨在更灵活、安全地管理系统权限。
+
+
+### **核心作用：切换执行身份**
+`become: yes` 的本质是告诉 Ansible：“当前任务需要以更高权限的用户身份执行”。启用后，Ansible 会通过目标主机支持的权限提升方式（如 `sudo`、`su` 等，由 `become_method` 指定，默认是 `sudo`），将任务执行权限切换到指定的用户（由 `become_user` 指定，默认是 `root`）。
+
+
+### **关键参数与配合关系**
+`become: yes` 通常需要与其他 `become` 系列参数配合使用，以明确权限提升的具体细节：
+
+| 参数                    | 说明                                                         |
+| ----------------------- | ------------------------------------------------------------ |
+| `become: yes`           | 启用特权提升（必选，否则权限提升不生效）。                   |
+| `become_user: user`     | 指定提升后的目标用户（默认是 `root`，可选其他用户如 `deploy`）。 |
+| `become_method: method` | 指定权限提升的方式（默认 `sudo`，可选 `su`、`pbrun`、`dzdo` 等）。 |
+| `become_pass: pass`     | 传递目标用户的密码（仅当目标用户需要密码验证时使用，**明文有风险**）。 |
+
+
+### **典型使用场景**
+#### 1. 以 `root` 身份执行特权操作
+当 Ansible 控制节点连接的目标主机用户（如 `ansible_user` 配置的普通用户）没有直接执行某些命令的权限时（例如安装软件、修改 `/etc` 目录下的配置文件），需要通过 `become: yes` 切换到 `root` 执行。
+
+**示例 Playbook**：
+```yaml
+- name: 以 root 身份安装 nginx
+  hosts: webservers
+  tasks:
+    - name: 安装 nginx
+      apt:
+        name: nginx
+        state: present
+      become: yes  # 启用权限提升，默认切换到 root
+```
+
+#### 2. 切换到非 `root` 的高权限用户
+如果需要以其他高权限用户（如 `deploy` 用户，拥有部分管理权限但非 `root`）执行任务，可以通过 `become_user` 指定。
+
+**示例 Playbook**：
+```yaml
+- name: 以 deploy 用户部署代码
+  hosts: app_servers
+  vars:
+    deploy_user: "deploy"  # 目标高权限用户
+  tasks:
+    - name: 复制代码到部署目录
+      copy:
+        src: ./app_code/
+        dest: /opt/app/
+      become: yes          # 启用权限提升
+      become_user: "{{ deploy_user }}"  # 切换到 deploy 用户
+```
+
+#### 3. 使用 `su` 替代 `sudo` 提升权限
+某些环境中可能禁用了 `sudo`，要求使用 `su` 切换用户（如传统的 Unix 系统）。此时可以通过 `become_method: su` 实现。
+
+**示例 Playbook**：
+```yaml
+- name: 使用 su 切换到 root 执行命令
+  hosts: legacy_servers
+  tasks:
+    - name: 查看 root 日志
+      command: cat /var/log/syslog
+      become: yes          # 启用权限提升
+      become_method: su    # 使用 su 替代 sudo
+      become_user: root
+      become_pass: "root_password"  # su 需要目标用户密码
+```
+
+
+### **与传统 `sudo` 的区别**
+在 Ansible 早期版本（2.3 之前），特权提升主要通过 `sudo: yes` 参数实现。但从 2.3 版本开始，Ansible 引入了统一的 `become` 系列参数（`become`、`become_user` 等），逐步替代了旧的 `sudo` 参数。  
+**核心改进**：  
+- `become` 支持更多权限提升方式（如 `su`、`pbrun` 等），而 `sudo` 仅支持 `sudo`。  
+- 配置更集中（通过 `ansible.cfg` 或 `become_*` 参数全局控制），灵活性更高。  
+
+
+### **注意事项**
+1. **目标主机需允许权限提升**：  
+   若使用 `sudo` 作为 `become_method`，目标主机需为目标用户配置 `sudo` 权限（通过 `/etc/sudoers`），否则即使 `become: yes` 也无法提升权限。例如，普通用户需要在 `sudoers` 中添加类似 `bob ALL=(ALL) NOPASSWD:ALL` 的规则（或需要输入密码）。
+
+2. **密码安全风险**：  
+   若通过 `become_pass` 传递密码，密码会以明文形式出现在 Playbook 或变量中（除非使用 Ansible Vault 加密）。生产环境中建议通过 `--ask-become-pass` 参数交互式输入密码，或配置 `sudoers` 免密码（需谨慎评估安全风险）。
+
+3. **最小权限原则**：  
+   尽量避免直接切换到 `root`，而是根据任务需求切换到最小必要权限的用户（如 `deploy`），降低误操作风险。
+
+
+### **总结**
+`become: yes` 是 Ansible 实现特权提升的“开关”，通过与 `become_user`、`become_method` 等参数配合，允许任务以指定用户身份执行。它是自动化运维中管理系统权限的核心工具，使用时需结合安全最佳实践（如加密密码、最小权限原则），平衡便利性与安全性。
