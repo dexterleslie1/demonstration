@@ -18,10 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -87,16 +84,16 @@ public class OrderService {
         OrderModel orderModel = new OrderModel();
 
         // biginteger 类型
-        Long orderId = this.snowflakeService.getId("order").getId();
+        /*Long orderId = this.snowflakeService.getId("order").getId();*/
         /*Long userIdStripOff = userId % 16;
         String orderIdBinaryStr = Long.toBinaryString(orderId) +
                 StringUtils.leftPad(Long.toBinaryString(userIdStripOff), 4, "0");
         BigInteger orderIdBigInt = new BigInteger(orderIdBinaryStr, 2);
         orderModel.setId(orderIdBigInt);*/
-        orderModel.setId(orderId);
+        /*orderModel.setId(orderId);*/
         // uuid string 类型
-        /*String orderId = UUID.randomUUID().toString();
-        orderModel.setId(orderId);*/
+        String orderId = UUID.randomUUID().toString();
+        orderModel.setId(orderId);
 
         orderModel.setUserId(userId);
         LocalDateTime createTime = OrderRandomlyUtil.getCreateTimeRandomly();
@@ -148,16 +145,17 @@ public class OrderService {
             OrderModel orderModel = new OrderModel();
 
             // biginteger 类型
-            Long orderId = this.snowflakeService.getId("order").getId();
+            /*Long orderId = this.snowflakeService.getId("order").getId();*/
             /*Long userIdStripOff = userId % 16;
             String orderIdBinaryStr = Long.toBinaryString(orderId) +
                     StringUtils.leftPad(Long.toBinaryString(userIdStripOff), 4, "0");
             BigInteger orderIdBigInt = new BigInteger(orderIdBinaryStr, 2);
             orderModel.setId(orderIdBigInt);*/
-            orderModel.setId(orderId);
+            /*orderModel.setId(orderId);*/
             // uuid string 类型
-            /*String orderId = UUID.randomUUID().toString();
-            orderModel.setId(orderId);*/
+            // String orderId = UUID.randomUUID().toString();
+            String orderId = String.valueOf(RandomUtil.randomLong(1, Long.MAX_VALUE));
+            orderModel.setId(orderId);
 
             orderModel.setUserId(userId);
             LocalDateTime createTime = OrderRandomlyUtil.getCreateTimeRandomly();
@@ -236,13 +234,13 @@ public class OrderService {
      * @return
      */
     // long 类型
-    public OrderDTO getById(Long orderId) {
-        // int 类型
-        /*public OrderDTO getById(Integer orderId) {*/
-        // biginteger 类型
-        /*public OrderDTO getById(BigInteger orderId) {*/
-        // uuid string 类型
-        /*public OrderDTO getById(String orderId) {*/
+    /*public OrderDTO getById(Long orderId) {*/
+    // int 类型
+    /*public OrderDTO getById(Integer orderId) {*/
+    // biginteger 类型
+    /*public OrderDTO getById(BigInteger orderId) {*/
+    // uuid string 类型
+    public OrderDTO getById(String orderId) {
         OrderModel orderModel = this.orderMapper.getById(orderId);
         if (orderModel == null) {
             return null;
@@ -336,39 +334,39 @@ public class OrderService {
         }
 
         // long 类型
-        List<Long> orderIdList = orderList.stream().map(OrderModel::getId).collect(Collectors.toList());
+        /*List<Long> orderIdList = orderList.stream().map(OrderModel::getId).collect(Collectors.toList());*/
         // int 类型
         /*List<Integer> orderIdList = orderList.stream().map(OrderModel::getId).collect(Collectors.toList());*/
         // biginteger 类型
         /*List<BigInteger> orderIdList = orderList.stream().map(OrderModel::getId).collect(Collectors.toList());*/
         // uuid string 类型
-        /*List<String> orderIdList = orderList.stream().map(OrderModel::getId).collect(Collectors.toList());*/
+        List<String> orderIdList = orderList.stream().map(OrderModel::getId).collect(Collectors.toList());
 
         List<OrderDTO> orderDTOList = null;
         if (!orderList.isEmpty()) {
             List<OrderDetailModel> orderDetailList = this.orderDetailMapper.list(orderIdList);
 
             // long 类型
-            Map<Long, List<OrderDetailModel>> orderDetailGroupByOrderId = orderDetailList.stream().collect(Collectors.groupingBy(OrderDetailModel::getOrderId));
+            /*Map<Long, List<OrderDetailModel>> orderDetailGroupByOrderId = orderDetailList.stream().collect(Collectors.groupingBy(OrderDetailModel::getOrderId));*/
             // int 类型
             /*Map<Integer, List<OrderDetailModel>> orderDetailGroupByOrderId = orderDetailList.stream().collect(Collectors.groupingBy(OrderDetailModel::getOrderId));*/
             // biginteger 类型
             /*Map<BigInteger, List<OrderDetailModel>> orderDetailGroupByOrderId = orderDetailList.stream().collect(Collectors.groupingBy(OrderDetailModel::getOrderId));*/
             // uuid string 类型
-            /*Map<String, List<OrderDetailModel>> orderDetailGroupByOrderId = orderDetailList.stream().collect(Collectors.groupingBy(OrderDetailModel::getOrderId));*/
+            Map<String, List<OrderDetailModel>> orderDetailGroupByOrderId = orderDetailList.stream().collect(Collectors.groupingBy(OrderDetailModel::getOrderId));
 
             orderDTOList = orderList.stream().map(o -> {
                 OrderDTO orderDTO = new OrderDTO();
                 BeanUtils.copyProperties(o, orderDTO);
 
                 // long 类型
-                Long orderId = o.getId();
+                /*Long orderId = o.getId();*/
                 // int 类型
                 /*Integer orderId = o.getId();*/
                 // biginteger 类型
                 /*BigInteger orderId = o.getId();*/
                 // uuid string 类型
-                /*String orderId = o.getId();*/
+                String orderId = o.getId();
 
                 if (orderDetailGroupByOrderId.containsKey(orderId)) {
                     List<OrderDetailModel> orderDetailListTemporary = orderDetailGroupByOrderId.get(orderId);

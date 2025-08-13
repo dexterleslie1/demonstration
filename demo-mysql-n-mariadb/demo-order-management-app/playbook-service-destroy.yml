@@ -24,3 +24,21 @@
         set -e
         cd ~/deployer-order-management-app-standalone-db/openresty
         docker compose down -v
+
+- name: "销毁prometheus公共服务"
+  hosts: common
+  tasks:
+    - name: "使用Docker Compose down销毁prometheus公共服务"
+      shell: |
+        set -e
+        cd ~/deployer-order-management-app-standalone-db/prometheus
+        docker compose down -v
+
+- name: "销毁node_exporter"
+  hosts: "{{ groups['all'] | difference(groups['management']) }}"
+  tasks:
+    - name: "使用Docker Compose down销毁node_exporter"
+      shell: |
+        set -e
+        cd ~/deployer-order-management-app-standalone-db/node-exporter
+        docker compose down -v

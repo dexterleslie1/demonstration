@@ -12,13 +12,13 @@ import java.util.List;
 @Data
 public class OrderDTO {
     // long 类型
-    private Long id;
+    /*private Long id;*/
     // int 类型
     /*private Integer id;*/
     // biginteger 类型
     /*private BigInteger id;*/
     // uuid string 类型
-    /*private String id;*/
+    private String id;
 
     private Long userId;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")

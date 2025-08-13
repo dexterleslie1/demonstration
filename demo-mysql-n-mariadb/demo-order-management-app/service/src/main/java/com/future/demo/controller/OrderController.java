@@ -58,13 +58,13 @@ public class OrderController {
     @GetMapping(value = "getById")
     public ObjectResponse<OrderDTO> getById() {
         // long 类型
-        Long orderId = this.idCacheAssistantService.getRandomly();
+        /*Long orderId = this.idCacheAssistantService.getRandomly();*/
         // int 类型
         /*Integer orderId = this.idCacheAssistantService.getRandomly();*/
         // biginteger 类型
         /*BigInteger orderId = this.idCacheAssistantService.getRandomly();*/
         // uuid string 类型
-        /*String orderId = this.idCacheAssistantService.getRandomly();*/
+        String orderId = this.idCacheAssistantService.getRandomly();
         OrderDTO orderDTO = this.orderService.getById(orderId);
         return ResponseUtils.successObject(orderDTO);
     }

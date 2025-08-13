@@ -2,10 +2,13 @@ version: "3.0"
 
 services:
   openresty:
-    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-openresty-base-dev
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/openresty-base:1.1.1
     environment:
       - TZ=Asia/Shanghai
     volumes:
       - ./nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf:ro
+      - ./prometheus_keys.lua:/usr/local/openresty/nginx/conf/prometheus_keys.lua:ro
+      - ./prometheus_resty_counter.lua:/usr/local/openresty/nginx/conf/prometheus_resty_counter.lua
+      - ./prometheus.lua:/usr/local/openresty/nginx/conf/prometheus.lua
     restart: unless-stopped
     network_mode: host
