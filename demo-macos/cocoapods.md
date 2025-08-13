@@ -189,6 +189,64 @@ pod install --verbose
 
 
 
+## `Xcode Swift` 项目添加 `Alamofire` 库
+
+使用 `Xcode` 新建名为 `demo2` 的  `Swift` 项目，在项目根目录中新建 `Podfile` 内容如下：
+
+```
+project 'demo2'
+platform:ios, '13.0'
+target 'demo2' do
+  pod 'Alamofire', '5.6'
+end
+# 添加测试依赖
+target 'demo2Tests' do
+  pod 'Alamofire', '5.6'
+end
+```
+
+安装依赖
+
+```sh
+pod install --verbose
+```
+
+运行本站辅助测试 `api` 项目：https://gitee.com/dexterleslie/demonstration/tree/main/front-end/axios/axios-api
+
+在  `demo2Tests` 文件中编写测试代码
+
+```swift
+// 导入 Alamofire
+import Alamofire
+
+func testExample() throws {
+    // This is an example of a functional test case.
+    // Use XCTAssert and related functions to verify your tests produce the correct results.
+    // Any test you write for XCTest can be annotated as throws and async.
+    // Mark your test throws to produce an unexpected failure when your test encounters an uncaught error.
+    // Mark your test async to allow awaiting for asynchronous code to complete. Check the results with assertions afterwards.
+
+    // 1. 创建一个 XCTestExpectation，描述期望的内容
+    let expectation = XCTestExpectation(description: "AFNetworking GET 请求完成")
+
+    AF.request("http://192.168.235.128:8080/api/v1/get?param1=p1").response { response in
+        debugPrint(response)
+
+        // 无论成功或失败，都标记期望完成（必须调用！）
+        expectation.fulfill()
+    }
+
+    // 4. 等待期望完成（最长等待 10 秒，超时会报错）
+    wait(for: [expectation], timeout: 10)
+}
+```
+
+禁用 `UI` 测试，只运行 `Unit` 测试：在 `Xcode` 中编辑 `Scheme` 取消勾选 `UI` 测试目标（打开功能 `Product` > `Scheme` > `Edit Scheme` > `Test`，取消选择 `demo2UITests` 测试目标）。
+
+运行测试成功表示 `Alamofire` 库成功导入。
+
+
+
 ## `pod install` 加速
 
 >`https://www.jianshu.com/p/3086df14ed08`
