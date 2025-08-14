@@ -933,3 +933,29 @@ assert([[dictionary objectForKey:@"k1"] isEqualToString:@"v1"]);
 assert([[dictionary objectForKey:@"k2"] isEqualToString:@"v2"]);
 ```
 
+
+
+## 日期时间
+
+>参考链接：https://www.jianshu.com/p/6bd6ae5a11f1
+
+```objective-c
+// 从字符串创建 NSDate 对象
+NSString *dateTimeStr = @"2012-02-11 15:03:11";
+NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+dateFormatter.dateFormat = @"yyyy-MM-dd HH:mm:ss";
+NSDate *dateTime = [dateFormatter dateFromString: dateTimeStr];
+
+// 时间差（两个时间之间秒数）
+dateTimeStr = @"2012-02-11 15:05:12";
+NSDate *endTime = [dateFormatter dateFromString: dateTimeStr];
+NSDate *createTime = dateTime;
+NSTimeInterval timeIntervalSeconds = [endTime timeIntervalSinceDate:createTime];
+assert(timeIntervalSeconds == 121);
+
+// 获取当前时间
+NSDate *currentTime = [NSDate date];
+dateTimeStr = [dateFormatter stringFromDate: currentTime];
+NSLog(@"currentTime=%@", dateTimeStr);
+```
+
