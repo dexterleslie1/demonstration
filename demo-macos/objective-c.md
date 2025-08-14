@@ -907,3 +907,29 @@ assert([userIds count] == 2);
 assert([[userIdToVersionDictionary allKeys] containsObject:@1001]);
 ```
 
+
+
+## `NSDictionary` 和 `json` 相互转换
+
+>[参考链接](https://www.jianshu.com/p/81a00071b0c3)
+
+```objective-c
+// NSDictionary 转换为 json
+NSDictionary *dictionary = @{
+    @"k1": @"v1",
+    @"k2": @"v2"
+};
+NSData *data = [NSJSONSerialization dataWithJSONObject:dictionary options:NSJSONWritingPrettyPrinted error:nil];
+NSString *json = json = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+
+// json 转换为 NSDictionary
+NSData *jsonData = [json dataUsingEncoding:NSUTF8StringEncoding];
+NSError *error;
+dictionary = [NSJSONSerialization JSONObjectWithData:jsonData
+                                             options:NSJSONReadingMutableContainers
+                                               error:&error];
+assert(error == nil);
+assert([[dictionary objectForKey:@"k1"] isEqualToString:@"v1"]);
+assert([[dictionary objectForKey:@"k2"] isEqualToString:@"v2"]);
+```
+
