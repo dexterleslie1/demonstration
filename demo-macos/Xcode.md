@@ -191,3 +191,17 @@ Xcode 新版本会内置对新 iOS 设备的支持。你的当前环境是 **mac
 打开功能 `Product` > `Scheme` > `Edit Scheme` > `Test`，取消选择 `demo2UITests` 测试目标，只勾选 `demo2Tests` 测试目标。
 
 此时运行测试只会运行 `Unit` 测试。
+
+
+
+## 在项目目录中快速打开 `Terminal`
+
+选中项目根目录，右键选中 `Show in Finder`
+
+在 `Finder` 中右键选中 `New Terminal at Folder`
+
+
+
+## 调整字体大小
+
+打开 `Xcode14.2` > `Settings` > `Themes`，编辑当前主题的 `Plain Text` 和 `Comments` 字体大小。
