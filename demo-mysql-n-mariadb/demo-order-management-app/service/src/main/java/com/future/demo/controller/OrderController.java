@@ -1,14 +1,15 @@
 package com.future.demo.controller;
 
+import com.future.common.exception.BusinessException;
 import com.future.common.http.ListResponse;
 import com.future.common.http.ObjectResponse;
 import com.future.common.http.ResponseUtils;
 import com.future.demo.dto.OrderDTO;
 import com.future.demo.entity.DeleteStatus;
 import com.future.demo.entity.Status;
-import com.future.demo.service.IdCacheAssistantService;
 import com.future.demo.service.OrderService;
 import com.future.demo.util.OrderRandomlyUtil;
+import com.future.random.id.picker.RandomIdPickerService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StopWatch;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,7 +32,7 @@ public class OrderController {
     @Resource
     OrderRandomlyUtil orderRandomlyUtil;
     @Resource
-    IdCacheAssistantService idCacheAssistantService;
+    RandomIdPickerService randomIdPickerService;
 
     /**
      * 创建订单
@@ -56,9 +57,10 @@ public class OrderController {
      * @return
      */
     @GetMapping(value = "getById")
-    public ObjectResponse<OrderDTO> getById() {
+    public ObjectResponse<OrderDTO> getById() throws BusinessException {
         // long 类型
-        Long orderId = this.idCacheAssistantService.getRandomly();
+        String orderIdStr = randomIdPickerService.getIdRandomly("order");
+        Long orderId = Long.parseLong(orderIdStr);
         // int 类型
         /*Integer orderId = this.idCacheAssistantService.getRandomly();*/
         // biginteger 类型
@@ -139,7 +141,7 @@ public class OrderController {
      * @return
      */
     @GetMapping(value = "initInsertBatch")
-    public ObjectResponse<String> initInsertBatch() {
+    public ObjectResponse<String> initInsertBatch() throws BusinessException {
         this.orderService.insertBatch();
         ObjectResponse<String> response = new ObjectResponse<>();
         response.setData("成功批量初始化订单");
@@ -155,17 +157,6 @@ public class OrderController {
     public ObjectResponse<String> initInsertBatchOrderIndexListByUserId() {
         this.orderService.insertBatchOrderIndexListByUserId();
         return ResponseUtils.successObject("成功批量初始化listByUserId索引");
-    }
-
-    /**
-     * 初始化id缓存辅助数据
-     *
-     * @return
-     */
-    @GetMapping(value = "init")
-    public ObjectResponse<String> init() {
-        this.idCacheAssistantService.initData();
-        return ResponseUtils.successObject("成功初始化");
     }
 
     /**
@@ -185,7 +176,11 @@ public class OrderController {
                     if (counter.getAndAdd(1000) >= totalCount) {
                         break;
                     }
-                    orderService.insertBatch();
+                    try {
+                        orderService.insertBatch();
+                    } catch (BusinessException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
             });
         }

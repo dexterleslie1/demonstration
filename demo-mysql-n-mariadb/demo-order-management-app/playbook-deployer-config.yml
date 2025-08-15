@@ -36,6 +36,11 @@
         path: ~/deployer-order-management-app-standalone-db/service/.env
         regexp: "^common_zookeeper_host="
         line: "common_zookeeper_host={{ groups['common'][0] }}"
+    - name: "配置api服务的random_id_picker_host"
+      lineinfile:
+        path: ~/deployer-order-management-app-standalone-db/service/.env
+        regexp: "^random_id_picker_host="
+        line: "random_id_picker_host={{ groups['common'][0] }}"
 
 - name: "配置Prometheus服务的deployer"
   hosts: common

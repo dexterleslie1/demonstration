@@ -7,6 +7,7 @@ import com.future.demo.dto.OrderDetailDTO;
 import com.future.demo.entity.*;
 import com.future.demo.mapper.*;
 import com.future.demo.util.OrderRandomlyUtil;
+import com.future.random.id.picker.RandomIdPickerService;
 import com.tencent.devops.leaf.service.SnowflakeService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -18,7 +19,10 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,6 +36,8 @@ public class OrderService {
     OrderRandomlyUtil orderRandomlyUtil;
     @Autowired
     SnowflakeService snowflakeService;
+    @Resource
+    RandomIdPickerService randomIdPickerService;
 
     @PostConstruct
     public void init() {
@@ -147,7 +153,7 @@ public class OrderService {
     /**
      * 批量插入订单
      */
-    public void insertBatch() {
+    public void insertBatch() throws BusinessException {
         List<OrderModel> orderModelList = new ArrayList<>();
         for (int i = 0; i < 1000; i++) {
             Long userId = this.orderRandomlyUtil.getUserIdRandomly();
@@ -213,6 +219,9 @@ public class OrderService {
         this.orderDetailMapper.insertBatch(orderDetailModelList);
 
         this.commonMapper.updateIncreaseCount("order", orderModelList.size());
+
+        List<String> orderIdStrList = orderModelList.stream().map(o -> String.valueOf(o.getId())).collect(Collectors.toList());
+        randomIdPickerService.addIdList("order", orderIdStrList);
     }
 
     /**

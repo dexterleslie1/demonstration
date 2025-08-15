@@ -73,18 +73,6 @@ create table if not exists t_product(
     stock       int not null
 ) engine=innodb character set utf8mb4 collate utf8mb4_general_ci;
 
-create table if not exists t_id_cache_assistant (
-    id          bigint not null auto_increment primary key,
-    /* long 类型 */
-    orderId     bigint not null
-    /* int 类型 */
-    /*orderId     int not null*/
-    /* biginteger 类型 */
-    /*orderId     decimal(20,0) not null*/
-    /* uuid string 类型 */
-    /*orderId     varchar(36) not null*/
-) engine=innodb character set utf8mb4 collate utf8mb4_general_ci;
-
 create table if not exists t_count(
     flag        varchar(32) not null primary key,
     `count`     bigint not null default 0
