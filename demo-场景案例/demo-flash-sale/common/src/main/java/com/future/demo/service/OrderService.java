@@ -17,7 +17,6 @@ import com.future.demo.exception.StockInsufficientException;
 import com.future.demo.mapper.OrderDetailMapper;
 import com.future.demo.mapper.OrderMapper;
 import com.future.demo.mapper.ProductMapper;
-import com.future.demo.util.OrderRandomlyUtil;
 import com.tencent.devops.leaf.service.SnowflakeService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
@@ -189,14 +188,21 @@ public class OrderService {
         orderModel.setId(orderId);
         orderModel.setUserId(userId);
 
-        if (createTime == null)
-            createTime = OrderRandomlyUtil.getCreateTimeRandomly();
+        if (createTime == null) {
+            // 注意：模拟实际不应该随机生成，否则有关于此字段的二级索引时插入性能很低
+            /*createTime = OrderRandomlyUtil.getCreateTimeRandomly();*/
+            createTime = LocalDateTime.now();
+        }
         orderModel.setCreateTime(createTime);
 
-        DeleteStatus deleteStatus = OrderRandomlyUtil.getDeleteStatusRandomly();
+        // 注意：模拟实际不应该随机生成，否则有关于此字段的二级索引时插入性能很低
+        /*DeleteStatus deleteStatus = OrderRandomlyUtil.getDeleteStatusRandomly();*/
+        DeleteStatus deleteStatus = DeleteStatus.Normal;
         orderModel.setDeleteStatus(deleteStatus);
 
-        Status status = OrderRandomlyUtil.getStatusRandomly();
+        // 注意：模拟实际不应该随机生成，否则有关于此字段的二级索引时插入性能很低
+        /*Status status = OrderRandomlyUtil.getStatusRandomly();*/
+        Status status = Status.Unpay;
         orderModel.setStatus(status);
 
         orderModel.setMerchantId(productModel.getMerchantId());
@@ -306,12 +312,19 @@ public class OrderService {
         Long orderId = this.snowflakeService.getId("order").getId();
         orderModel.setId(orderId);
         orderModel.setUserId(userId);
-        DeleteStatus deleteStatus = OrderRandomlyUtil.getDeleteStatusRandomly();
+        // 注意：模拟实际不应该随机生成，否则有关于此字段的二级索引时插入性能很低
+        /*DeleteStatus deleteStatus = OrderRandomlyUtil.getDeleteStatusRandomly();*/
+        DeleteStatus deleteStatus = DeleteStatus.Normal;
         orderModel.setDeleteStatus(deleteStatus);
-        Status status = OrderRandomlyUtil.getStatusRandomly();
+        // 注意：模拟实际不应该随机生成，否则有关于此字段的二级索引时插入性能很低
+        /*Status status = OrderRandomlyUtil.getStatusRandomly();*/
+        Status status = Status.Unpay;
         orderModel.setStatus(status);
-        if (createTime == null)
-            createTime = OrderRandomlyUtil.getCreateTimeRandomly();
+        if (createTime == null) {
+            // 注意：模拟实际不应该随机生成，否则有关于此字段的二级索引时插入性能很低
+            /*createTime = OrderRandomlyUtil.getCreateTimeRandomly();*/
+            createTime = LocalDateTime.now();
+        }
         orderModel.setCreateTime(createTime);
         OrderDetailModel orderDetailModel = new OrderDetailModel();
         Long orderDetailId = this.snowflakeService.getId("orderDetail").getId();

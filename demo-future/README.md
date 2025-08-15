@@ -130,7 +130,11 @@ ansible-playbook playbook-service-start.yml --inventory inventory.ini
 
 查看 `Prometheus` 监控 `http://192.168.1.198:3000/`
 
-使用 `api.http` 中的 `POST http://192.168.1.185/api/v1/id/picker/init?flag=order` 初始化 `flag=order`
+初始化 `flag=order`
+
+```sh
+curl -X POST http://192.168.1.185/api/v1/id/picker/init?flag=order
+```
 
 使用 `wrk` 协助生成测试数据
 
