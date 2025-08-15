@@ -8,13 +8,13 @@ import java.util.List;
 @Data
 public class OrderModel {
     // long 类型
-    /*private Long id;*/
+    private Long id;
     // int 类型
     /*private Integer id;*/
     // biginteger 类型
     /*private BigInteger id;*/
     // uuid string 类型
-    private String id;
+    /*private String id;*/
 
     private Long userId;
     private LocalDateTime createTime;

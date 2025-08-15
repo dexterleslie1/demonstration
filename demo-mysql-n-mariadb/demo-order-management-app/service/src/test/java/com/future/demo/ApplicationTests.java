@@ -119,11 +119,11 @@ public class ApplicationTests {
         orderModelList = this.orderMapper.selectAll();
 
         // long 类型
-        /*Long orderId = orderModelList.get(0).getId();*/
+        Long orderId = orderModelList.get(0).getId();
         // biginteger 类型
         /*BigInteger orderId = orderModelList.get(0).getId();*/
         // string 类型
-        String orderId = orderModelList.get(0).getId();
+        /*String orderId = orderModelList.get(0).getId();*/
 
         OrderDTO orderDTO = this.orderService.getById(orderId);
         Assertions.assertEquals(orderId, orderDTO.getId());

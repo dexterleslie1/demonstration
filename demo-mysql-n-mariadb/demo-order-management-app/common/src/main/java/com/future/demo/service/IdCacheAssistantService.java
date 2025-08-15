@@ -38,13 +38,13 @@ public class IdCacheAssistantService {
     private ExecutorService threadPool = null;
 
     // long 类型
-    /*private Long[] orderIdArrRandom = null;*/
+    private Long[] orderIdArrRandom = null;
     // int 类型
     /*private Integer[] orderIdArrRandom = null;*/
     // biginteger 类型
     /*private BigInteger[] orderIdArrRandom = null;*/
     // uuid string 类型
-    private String[] orderIdArrRandom = null;
+    /*private String[] orderIdArrRandom = null;*/
 
     @PostConstruct
     public void init() {
@@ -63,13 +63,13 @@ public class IdCacheAssistantService {
                     long idRandom = RandomUtil.randomLong(idMin, idMax);
 
                     // long 类型
-                    /*Long[] orderIdArrRandomResult = this.idCacheAssistantMapper.listOrderId(idRandom, pageSize);*/
+                    Long[] orderIdArrRandomResult = this.idCacheAssistantMapper.listOrderId(idRandom, pageSize);
                     // int 类型
                     /*Integer[] orderIdArrRandomResult = this.idCacheAssistantMapper.listOrderId(idRandom, pageSize);*/
                     // biginteger 类型
                     /*BigInteger[] orderIdArrRandomResult = this.idCacheAssistantMapper.listOrderId(idRandom, pageSize);*/
                     // uuid string 类型
-                    String[] orderIdArrRandomResult = this.idCacheAssistantMapper.listOrderId(idRandom, pageSize);
+                    /*String[] orderIdArrRandomResult = this.idCacheAssistantMapper.listOrderId(idRandom, pageSize);*/
 
                     if (orderIdArrRandomResult.length == pageSize) {
                         orderIdArrRandom = orderIdArrRandomResult;
@@ -111,13 +111,13 @@ public class IdCacheAssistantService {
      * @return
      */
     // long 类型
-    /*public Long getRandomly() {*/
+    public Long getRandomly() {
         // int 类型
         /*public Integer getRandomly() {*/
         // biginteger 类型
         /*public BigInteger getRandomly() {*/
         // uuid string 类型
-        public String getRandomly() {
+        /*public String getRandomly() {*/
         if (this.orderIdArrRandom == null || this.orderIdArrRandom.length == 0) {
             throw new IllegalStateException("id缓存辅助机制没有启动");
         }
@@ -133,25 +133,25 @@ public class IdCacheAssistantService {
         int pageSize = 10000 * 10;
 
         // long 类型
-        /*Long orderIdMin = this.orderMapper.getIdMin();*/
+        Long orderIdMin = this.orderMapper.getIdMin();
         // int 类型
         /*Integer orderIdMin = this.orderMapper.getIdMin();*/
         // biginteger 类型
         /*BigInteger orderIdMin = this.orderMapper.getIdMin();*/
         // uuid string 类型
-        String orderIdMin = this.orderMapper.getIdMin();
+        /*String orderIdMin = this.orderMapper.getIdMin();*/
 
         if (orderIdMin != null) {
             long counter = 0;
 
             // long 类型
-            /*Long lowerBoundary = this.orderMapper.getIdMin();*/
+            Long lowerBoundary = this.orderMapper.getIdMin();
             // int 类型
             /*Integer lowerBoundary = orderIdMin;*/
             // biginteger 类型
             /*BigInteger lowerBoundary = orderIdMin;*/
             // uuid string 类型
-            String lowerBoundary = orderIdMin;
+            /*String lowerBoundary = orderIdMin;*/
 
             // 先插入最小的id，否则会被丢失
             IdCacheAssistantEntity entity = new IdCacheAssistantEntity();
@@ -161,13 +161,13 @@ public class IdCacheAssistantService {
 
             while (true) {
                 // long 类型
-                /*Long[] ids = this.orderMapper.listRangeIds(lowerBoundary, pageSize);*/
+                Long[] ids = this.orderMapper.listRangeIds(lowerBoundary, pageSize);
                 // int 类型
                 /*Integer[] ids = this.orderMapper.listRangeIds(lowerBoundary, pageSize);*/
                 // biginteger 类型
                 /*BigInteger[] ids = this.orderMapper.listRangeIds(lowerBoundary, pageSize);*/
                 // uuid string 类型
-                String[] ids = this.orderMapper.listRangeIds(lowerBoundary, pageSize);
+                /*String[] ids = this.orderMapper.listRangeIds(lowerBoundary, pageSize);*/
 
                 if (ids != null && ids.length > 1) {
                     List<IdCacheAssistantEntity> entityList = Arrays.stream(ids).map(o -> {

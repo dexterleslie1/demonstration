@@ -90,19 +90,26 @@ public class OrderService {
                 StringUtils.leftPad(Long.toBinaryString(userIdStripOff), 4, "0");
         BigInteger orderIdBigInt = new BigInteger(orderIdBinaryStr, 2);
         orderModel.setId(orderIdBigInt);*/
-        /*orderModel.setId(orderId);*/
-        // uuid string 类型
-        String orderId = UUID.randomUUID().toString();
+        Long orderId = this.snowflakeService.getId("order").getId();
         orderModel.setId(orderId);
+        // uuid string 类型
+        /*String orderId = UUID.randomUUID().toString();
+        orderModel.setId(orderId);*/
 
         orderModel.setUserId(userId);
-        LocalDateTime createTime = OrderRandomlyUtil.getCreateTimeRandomly();
+        // 注意：模拟实际不应该随机生成，否则有关于此字段的二级索引时插入性能很低
+        /*LocalDateTime createTime = OrderRandomlyUtil.getCreateTimeRandomly();*/
+        LocalDateTime createTime = LocalDateTime.now();
         orderModel.setCreateTime(createTime);
 
-        DeleteStatus deleteStatus = OrderRandomlyUtil.getDeleteStatusRandomly();
+        // 注意：模拟实际不应该随机生成，否则有关于此字段的二级索引时插入性能很低
+        /*DeleteStatus deleteStatus = OrderRandomlyUtil.getDeleteStatusRandomly();*/
+        DeleteStatus deleteStatus = DeleteStatus.Normal;
         orderModel.setDeleteStatus(deleteStatus);
 
-        Status status = OrderRandomlyUtil.getStatusRandomly();
+        // 注意：模拟实际不应该随机生成，否则有关于此字段的二级索引时插入性能很低
+        /*Status status = OrderRandomlyUtil.getStatusRandomly();*/
+        Status status = Status.Unpay;
         orderModel.setStatus(status);
 
         int count = this.orderMapper.insert(orderModel);
@@ -137,6 +144,9 @@ public class OrderService {
         this.commonMapper.updateIncreaseCount("order", 1);
     }
 
+    /**
+     * 批量插入订单
+     */
     public void insertBatch() {
         List<OrderModel> orderModelList = new ArrayList<>();
         for (int i = 0; i < 1000; i++) {
@@ -151,20 +161,27 @@ public class OrderService {
                     StringUtils.leftPad(Long.toBinaryString(userIdStripOff), 4, "0");
             BigInteger orderIdBigInt = new BigInteger(orderIdBinaryStr, 2);
             orderModel.setId(orderIdBigInt);*/
-            /*orderModel.setId(orderId);*/
+            Long orderId = this.snowflakeService.getId("order").getId();
+            orderModel.setId(orderId);
             // uuid string 类型
             // String orderId = UUID.randomUUID().toString();
-            String orderId = String.valueOf(RandomUtil.randomLong(1, Long.MAX_VALUE));
-            orderModel.setId(orderId);
+            /*String orderId = String.valueOf(RandomUtil.randomLong(1, Long.MAX_VALUE));
+            orderModel.setId(orderId);*/
 
             orderModel.setUserId(userId);
-            LocalDateTime createTime = OrderRandomlyUtil.getCreateTimeRandomly();
+            // 注意：模拟实际不应该随机生成，否则有关于此字段的二级索引时插入性能很低
+            /*LocalDateTime createTime = OrderRandomlyUtil.getCreateTimeRandomly();*/
+            LocalDateTime createTime = LocalDateTime.now();
             orderModel.setCreateTime(createTime);
 
-            DeleteStatus deleteStatus = OrderRandomlyUtil.getDeleteStatusRandomly();
+            // 注意：模拟实际不应该随机生成，否则有关于此字段的二级索引时插入性能很低
+            /*DeleteStatus deleteStatus = OrderRandomlyUtil.getDeleteStatusRandomly();*/
+            DeleteStatus deleteStatus = DeleteStatus.Normal;
             orderModel.setDeleteStatus(deleteStatus);
 
-            Status status = OrderRandomlyUtil.getStatusRandomly();
+            // 注意：模拟实际不应该随机生成，否则有关于此字段的二级索引时插入性能很低
+            /*Status status = OrderRandomlyUtil.getStatusRandomly();*/
+            Status status = Status.Unpay;
             orderModel.setStatus(status);
             orderModelList.add(orderModel);
         }
@@ -234,13 +251,13 @@ public class OrderService {
      * @return
      */
     // long 类型
-    /*public OrderDTO getById(Long orderId) {*/
-    // int 类型
-    /*public OrderDTO getById(Integer orderId) {*/
-    // biginteger 类型
-    /*public OrderDTO getById(BigInteger orderId) {*/
-    // uuid string 类型
-    public OrderDTO getById(String orderId) {
+    public OrderDTO getById(Long orderId) {
+        // int 类型
+        /*public OrderDTO getById(Integer orderId) {*/
+        // biginteger 类型
+        /*public OrderDTO getById(BigInteger orderId) {*/
+        // uuid string 类型
+        /*public OrderDTO getById(String orderId) {*/
         OrderModel orderModel = this.orderMapper.getById(orderId);
         if (orderModel == null) {
             return null;
@@ -334,39 +351,39 @@ public class OrderService {
         }
 
         // long 类型
-        /*List<Long> orderIdList = orderList.stream().map(OrderModel::getId).collect(Collectors.toList());*/
+        List<Long> orderIdList = orderList.stream().map(OrderModel::getId).collect(Collectors.toList());
         // int 类型
         /*List<Integer> orderIdList = orderList.stream().map(OrderModel::getId).collect(Collectors.toList());*/
         // biginteger 类型
         /*List<BigInteger> orderIdList = orderList.stream().map(OrderModel::getId).collect(Collectors.toList());*/
         // uuid string 类型
-        List<String> orderIdList = orderList.stream().map(OrderModel::getId).collect(Collectors.toList());
+        /*List<String> orderIdList = orderList.stream().map(OrderModel::getId).collect(Collectors.toList());*/
 
         List<OrderDTO> orderDTOList = null;
         if (!orderList.isEmpty()) {
             List<OrderDetailModel> orderDetailList = this.orderDetailMapper.list(orderIdList);
 
             // long 类型
-            /*Map<Long, List<OrderDetailModel>> orderDetailGroupByOrderId = orderDetailList.stream().collect(Collectors.groupingBy(OrderDetailModel::getOrderId));*/
+            Map<Long, List<OrderDetailModel>> orderDetailGroupByOrderId = orderDetailList.stream().collect(Collectors.groupingBy(OrderDetailModel::getOrderId));
             // int 类型
             /*Map<Integer, List<OrderDetailModel>> orderDetailGroupByOrderId = orderDetailList.stream().collect(Collectors.groupingBy(OrderDetailModel::getOrderId));*/
             // biginteger 类型
             /*Map<BigInteger, List<OrderDetailModel>> orderDetailGroupByOrderId = orderDetailList.stream().collect(Collectors.groupingBy(OrderDetailModel::getOrderId));*/
             // uuid string 类型
-            Map<String, List<OrderDetailModel>> orderDetailGroupByOrderId = orderDetailList.stream().collect(Collectors.groupingBy(OrderDetailModel::getOrderId));
+            /*Map<String, List<OrderDetailModel>> orderDetailGroupByOrderId = orderDetailList.stream().collect(Collectors.groupingBy(OrderDetailModel::getOrderId));*/
 
             orderDTOList = orderList.stream().map(o -> {
                 OrderDTO orderDTO = new OrderDTO();
                 BeanUtils.copyProperties(o, orderDTO);
 
                 // long 类型
-                /*Long orderId = o.getId();*/
+                Long orderId = o.getId();
                 // int 类型
                 /*Integer orderId = o.getId();*/
                 // biginteger 类型
                 /*BigInteger orderId = o.getId();*/
                 // uuid string 类型
-                String orderId = o.getId();
+                /*String orderId = o.getId();*/
 
                 if (orderDetailGroupByOrderId.containsKey(orderId)) {
                     List<OrderDetailModel> orderDetailListTemporary = orderDetailGroupByOrderId.get(orderId);
