@@ -176,9 +176,9 @@ NSObject *obj = [[NSObject alloc] init];
 
 
 
-## 构造函数
+## 构造函数和析构函数
 
->说明：下面代码演示默认构造函数、继承关系构造函数、自定义构造函数和继承自定义构造函数。
+下面演示默认构造函数、继承关系构造函数、自定义构造函数和继承自定义构造函数：
 
 ```objective-c
 #import <XCTest/XCTest.h>
@@ -292,6 +292,279 @@ NSObject *obj = [[NSObject alloc] init];
 
 @end
 
+```
+
+
+
+下面演示构造函数和析构函数用法：
+
+- `FISPerson.h`
+
+  ```objective-c
+  #import <Foundation/Foundation.h>
+  
+  NS_ASSUME_NONNULL_BEGIN
+  
+  @interface FISPerson : NSObject
+  
+  @property NSString *name;
+  
+  - (FISPerson *) init;
+  - (FISPerson *) initWithName:(NSString *) name;
+  
+  + (FISPerson *) personWithName:(NSString *) name;
+  
+  @end
+  
+  NS_ASSUME_NONNULL_END
+  ```
+
+- `FISPerson.m`
+
+  ```objective-c
+  #import "FISPerson.h"
+  
+  @implementation FISPerson
+  
+  - (FISPerson *) init {
+      self = [self initWithName:@""];
+      return self;
+  }
+  
+  - (FISPerson *) initWithName:(NSString *)name {
+      self = [super init];
+      if(self) {
+          self.name = name;
+      }
+      return self;
+  }
+  
+  + (FISPerson *) personWithName:(NSString *) name {
+      FISPerson *person = [[FISPerson alloc] initWithName:name];
+      return person;
+  }
+  
+  @end
+  ```
+
+- `FISClass.h`
+
+  ```objective-c
+  #import <Foundation/Foundation.h>
+  #import "FISPerson.h"
+  
+  NS_ASSUME_NONNULL_BEGIN
+  
+  @interface FISClass : NSObject
+  
+  @property NSString *name;
+  @property NSNumber *roomNumber;
+  @property FISPerson *instructor;
+  @property NSArray *students;
+  
+  - (FISClass *) init;
+  - (FISClass *) initWithName:(NSString *) name
+                   roomNumber:(NSNumber *) roomNumber;
+  - (FISClass *) initWithName:(NSString *) name
+                   roomNumber:(NSNumber *) roomNumber
+                   instructor:(FISPerson *) instructor
+                     students:(NSArray *) students;
+  
+  - (void) dealloc;
+  
+  + (FISClass *) classWithName:(NSString *) name
+                    roomNumber:(NSNumber *) roomNumber
+                    instructor:(FISPerson *) instructor
+                      students:(NSArray *) students;
+  
+  @end
+  
+  NS_ASSUME_NONNULL_END
+  
+  ```
+
+- `FISClass.m`
+
+  ```objective-c
+  #import "FISClass.h"
+  
+  @implementation FISClass
+  
+  - (FISClass *) init {
+      self = [self initWithName:@"" roomNumber:0 instructor:[[FISPerson alloc] init] students:@[]];
+      return self;
+  }
+  
+  - (FISClass *) initWithName:(NSString *)name roomNumber:(NSNumber *)roomNumber {
+      self = [self initWithName:name roomNumber:roomNumber instructor:[[FISPerson alloc] init] students:@[]];
+      return self;
+  }
+  
+  - (FISClass *) initWithName:(NSString *) name
+                   roomNumber:(NSNumber *) roomNumber
+                   instructor:(FISPerson *) instructor
+                     students:(NSArray *) students {
+      self = [super init];
+      if(self) {
+          self.name = name;
+          self.roomNumber = roomNumber;
+          self.instructor = instructor;
+          self.students = students;
+      }
+      return self;
+  }
+  
+  - (void) dealloc {
+      self.name = nil;
+      self.roomNumber = nil;
+      self.instructor = nil;
+      self.students = nil;
+      NSLog(@"FISClass析构函数被调用");
+  }
+  
+  + (FISClass *) classWithName:(NSString *) name
+                    roomNumber:(NSNumber *) roomNumber
+                    instructor:(FISPerson *) instructor
+                      students:(NSArray *) students {
+      FISClass *class = [[FISClass alloc] initWithName:name roomNumber:roomNumber instructor:instructor students:students];
+      return class;
+  }
+  
+  @end
+  
+  ```
+
+- 引用 `FISPerson` 和 `FISClass` 并测试
+
+  ```objective-c
+  #import "FISPerson.h"
+  #import "FISClass.h"
+  
+  // 构造和析构函数测试
+  FISPerson *zachDrossman = [[FISPerson alloc] initWithName:@"Zach Drossman"];
+  FISPerson *markMurray = [[FISPerson alloc] initWithName:@"Mark Murray"];
+  FISPerson *anishKumar = [[FISPerson alloc] initWithName:@"Anish Kumar"];
+  FISClass *class = [[FISClass alloc] initWithName:@"004"
+                                        roomNumber:@4
+                                        instructor:zachDrossman
+                                          students:@[markMurray, anishKumar]];
+  NSLog(@"FISClass 004: %@", class);
+  
+  class = [FISClass classWithName:@"005" roomNumber:@5 instructor:zachDrossman students:@[anishKumar, markMurray]];
+  NSLog(@"FISClass 005: %@", class);
+  ```
+
+
+
+## 派生和重写
+
+`ClassA.h`
+
+```objective-c
+#import <Foundation/Foundation.h>
+
+NS_ASSUME_NONNULL_BEGIN
+
+@interface ClassA : NSObject
+
+@property NSString * name;
+
+- (ClassA *) initWithName:(NSString *) name;
+
+// 定义 toString 方法
+- (NSString *) toString;
+
+@end
+
+NS_ASSUME_NONNULL_END
+
+```
+
+`ClassA.m`
+
+```objective-c
+#import "ClassA.h"
+
+@implementation ClassA
+
+- (ClassA *) initWithName:(NSString *) name {
+    self = [super init];
+    if(self) {
+        self.name = name;
+    }
+    return self;
+}
+
+- (NSString *) toString {
+    NSString *result = [NSString stringWithFormat:@"name=%@", self.name];
+    return result;
+}
+
+@end
+
+```
+
+`ClassB.h`（`ClassB` 继承 `ClassA`）：
+
+```objective-c
+#import <Foundation/Foundation.h>
+#import "ClassA.h"
+
+NS_ASSUME_NONNULL_BEGIN
+
+// 继承 ClassA
+@interface ClassB : ClassA
+
+@property int age;
+
+- (ClassB *) initWithName:(NSString *) name withAge:(int) age;
+
+@end
+
+NS_ASSUME_NONNULL_END
+
+```
+
+`ClassB.m`（`ClassB` 重写 `toString` 方法）：
+
+```objective-c
+#import "ClassB.h"
+
+@implementation ClassB
+
+- (ClassB *) initWithName:(NSString *) name withAge:(int) age {
+    self = [super initWithName:name];
+    if(self) {
+        self.age = age;
+    }
+    return self;
+}
+
+// 重写 ClassA toString 实现
+- (NSString *) toString {
+    NSString *result = [super toString];
+    result = [NSString stringWithFormat:@"%@,age=%d", result, self.age];
+    return result;
+}
+
+@end
+
+```
+
+测试：
+
+```objective-c
+#import "ClassA.h"
+#import "ClassB.h"
+
+// 派生、重写
+ClassA *classA = [[ClassA alloc] initWithName:@"ClassA实例"];
+NSString *result = [classA toString];
+NSLog(@"ClassA to String: %@", result);
+
+ClassA *classB = [[ClassB alloc] initWithName:@"ClassB实例" withAge:10];
+result = [classB toString];
+NSLog(@"ClassB to String: %@", result);
 ```
 
 
@@ -957,5 +1230,82 @@ assert(timeIntervalSeconds == 121);
 NSDate *currentTime = [NSDate date];
 dateTimeStr = [dateFormatter stringFromDate: currentTime];
 NSLog(@"currentTime=%@", dateTimeStr);
+```
+
+
+
+## 全局静态常量
+
+在 `objective-c` 项目中使用 `New Group with Folder` 创建文件夹 `Constant`
+
+声明全局静态常量：在 `Constant` 文件夹中创建 `ConstantClass.h` 头文件：
+
+```objective-c
+#import <Foundation/Foundation.h>
+
+/**
+api网关
+*/
+static const NSString *GATEWAY_TYPE_API = @"GATEWAY_TYPE_API";
+/**
+图片api网关
+*/
+static const NSString *GATEWAY_TYPE_IMAGE_API = @"GATEWAY_TYPE_IMAGE_API";
+/**
+官网
+*/
+static const NSString *GATEWAY_TYPE_OFFICIAL = @"GATEWAY_TYPE_OFFICIAL";
+/**
+Websocket网关，用于消息推送
+*/
+static const NSString *GATEWAY_TYPE_SOCKET_PUSH = @"GATEWAY_TYPE_SOCKET_PUSH";
+
+NS_ASSUME_NONNULL_BEGIN
+
+@interface ConstantClass : NSObject
+
+@end
+
+NS_ASSUME_NONNULL_END
+```
+
+引用全局静态常量：
+
+```objective-c
+#import <XCTest/XCTest.h>
+// 引用 ConstantClass.h 头文件中声明的全局静态常量
+#import "ConstantClass.h"
+
+@interface demo_objective_c_mainTests : XCTestCase
+
+@end
+
+@implementation demo_objective_c_mainTests
+
+- (void)setUp {
+    // Put setup code here. This method is called before the invocation of each test method in the class.
+}
+
+- (void)tearDown {
+    // Put teardown code here. This method is called after the invocation of each test method in the class.
+}
+
+- (void)testExample {
+    // This is an example of a functional test case.
+    // Use XCTAssert and related functions to verify your tests produce the correct results.
+    
+    // 引用全局静态常量
+    assert([GATEWAY_TYPE_API isEqualToString: @"GATEWAY_TYPE_API"]);
+}
+
+- (void)testPerformanceExample {
+    // This is an example of a performance test case.
+    [self measureBlock:^{
+        // Put the code you want to measure the time of here.
+    }];
+}
+
+@end
+
 ```
 
