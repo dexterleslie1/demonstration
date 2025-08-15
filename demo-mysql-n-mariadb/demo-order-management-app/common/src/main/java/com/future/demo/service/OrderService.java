@@ -90,8 +90,8 @@ public class OrderService {
         OrderModel orderModel = new OrderModel();
 
         // biginteger 类型
-        /*Long orderId = this.snowflakeService.getId("order").getId();*/
-        /*Long userIdStripOff = userId % 16;
+        /*Long orderId = this.snowflakeService.getId("order").getId();
+        Long userIdStripOff = userId % 16;
         String orderIdBinaryStr = Long.toBinaryString(orderId) +
                 StringUtils.leftPad(Long.toBinaryString(userIdStripOff), 4, "0");
         BigInteger orderIdBigInt = new BigInteger(orderIdBinaryStr, 2);
@@ -99,8 +99,9 @@ public class OrderService {
         Long orderId = this.snowflakeService.getId("order").getId();
         orderModel.setId(orderId);
         // uuid string 类型
-        /*String orderId = UUID.randomUUID().toString();
-        orderModel.setId(orderId);*/
+        /*Long orderId = this.snowflakeService.getId("order").getId();
+        String orderIdStr = String.valueOf(orderId);
+        orderModel.setId(orderIdStr);*/
 
         orderModel.setUserId(userId);
         // 注意：模拟实际不应该随机生成，否则有关于此字段的二级索引时插入性能很低
@@ -161,8 +162,8 @@ public class OrderService {
             OrderModel orderModel = new OrderModel();
 
             // biginteger 类型
-            /*Long orderId = this.snowflakeService.getId("order").getId();*/
-            /*Long userIdStripOff = userId % 16;
+            /*Long orderId = this.snowflakeService.getId("order").getId();
+            Long userIdStripOff = userId % 16;
             String orderIdBinaryStr = Long.toBinaryString(orderId) +
                     StringUtils.leftPad(Long.toBinaryString(userIdStripOff), 4, "0");
             BigInteger orderIdBigInt = new BigInteger(orderIdBinaryStr, 2);
@@ -170,9 +171,10 @@ public class OrderService {
             Long orderId = this.snowflakeService.getId("order").getId();
             orderModel.setId(orderId);
             // uuid string 类型
-            // String orderId = UUID.randomUUID().toString();
-            /*String orderId = String.valueOf(RandomUtil.randomLong(1, Long.MAX_VALUE));
-            orderModel.setId(orderId);*/
+            /*Long orderId = this.snowflakeService.getId("order").getId();
+            String orderIdStr = String.valueOf(orderId);
+            // String orderId = String.valueOf(RandomUtil.randomLong(1, Long.MAX_VALUE));
+            orderModel.setId(orderIdStr);*/
 
             orderModel.setUserId(userId);
             // 注意：模拟实际不应该随机生成，否则有关于此字段的二级索引时插入性能很低

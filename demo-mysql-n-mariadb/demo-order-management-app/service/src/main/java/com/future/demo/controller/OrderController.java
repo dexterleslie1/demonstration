@@ -62,11 +62,13 @@ public class OrderController {
         String orderIdStr = randomIdPickerService.getIdRandomly("order");
         Long orderId = Long.parseLong(orderIdStr);
         // int 类型
-        /*Integer orderId = this.idCacheAssistantService.getRandomly();*/
+        /*String orderIdStr = randomIdPickerService.getIdRandomly("order");
+        Integer orderId = Integer.parseInt(orderIdStr);*/
         // biginteger 类型
-        /*BigInteger orderId = this.idCacheAssistantService.getRandomly();*/
+        /*String orderIdStr = randomIdPickerService.getIdRandomly("order");
+        BigInteger orderId = new BigDecimal(orderIdStr).toBigInteger();*/
         // uuid string 类型
-        /*String orderId = this.idCacheAssistantService.getRandomly();*/
+        /*String orderId = randomIdPickerService.getIdRandomly("order");*/
         OrderDTO orderDTO = this.orderService.getById(orderId);
         return ResponseUtils.successObject(orderDTO);
     }

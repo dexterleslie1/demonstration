@@ -120,6 +120,8 @@ public class ApplicationTests {
 
         // long 类型
         Long orderId = orderModelList.get(0).getId();
+        // int 类型
+        /*Integer orderId = orderModelList.get(0).getId();*/
         // biginteger 类型
         /*BigInteger orderId = orderModelList.get(0).getId();*/
         // string 类型
