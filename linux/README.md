@@ -671,3 +671,64 @@ swapoff -a
     state: absent
 ```
 
+
+
+## 基于 `ESXi` 服务器实例硬盘扩容
+
+关闭实例扩容实例硬盘
+
+查看详细分区信息
+
+```sh
+$ fdisk -l /dev/sda
+Disk /dev/sda: 100GB       # ESXi 扩容后的总容量
+Partition Table: msdos     # MBR 分区表
+Number  Start   End     Size   Type      File system  Mount Point
+1       1049kB  538MB   537MB  primary   vfat         /boot/efi
+2       539MB   50GB    49.5GB extended               # 扩展分区（容器）
+5       539MB   50GB    49.5GB logical   ext4         /data       # 待扩容的逻辑分区
+```
+
+扩展扩展分区
+
+```sh
+# 以管理员权限启动 parted（指定磁盘 /dev/sda）
+sudo parted /dev/sda
+
+# 查看当前分区信息（输入 p 确认）
+(parted) p
+
+# 调整扩展分区 2 的结束位置为磁盘末尾（100GB）
+# 或直接写 "100%" 占用剩余所有空间
+(parted) resizepart 2 100GB
+
+# 输入 yes 确认调整（部分版本需要）或者
+(parted) Yes
+
+# 手动输入硬盘最大容量
+
+# 退出 parted
+(parted) quit
+```
+
+扩展逻辑分区
+
+```sh
+sudo parted /dev/sda
+
+# 调整逻辑分区 5 的结束位置为扩展分区 2 的末尾（100GB）
+(parted) resizepart 5 100GB
+
+# 输入 yes 确认
+(parted) Yes
+
+# 退出 parted
+(parted) quit
+```
+
+扩展文件系统至分区最大容量
+
+```sh
+sudo resize2fs /dev/sda5
+```
+
