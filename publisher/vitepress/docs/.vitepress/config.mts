@@ -125,6 +125,7 @@ export default defineConfig({
           { text: 'Future', link: '/future/README.md' },
           { text: 'MacOS', link: '/macos/README.md' },
           { text: 'Typora', link: '/typora/README.md' },
+          { text: '数据结构和算法', link: '/数据结构和算法/README.md' },
         ]
       },
     ],
@@ -620,6 +621,15 @@ export default defineConfig({
             { text: '基础', link: '/macos/README.md' },
             { text: 'Cocoapods', link: '/macos/cocoapods.md' },
             { text: 'HomeBrew', link: '/macos/homebrew.md' },
+          ]
+        }
+      ],
+      '/数据结构和算法/': [
+        {
+          text: '数据结构和算法',
+          items: [
+            { text: '基础', link: '/数据结构和算法/README.md' },
+            { text: '布隆过滤器', link: '/数据结构和算法/布隆过滤器.md' },
           ]
         }
       ],
