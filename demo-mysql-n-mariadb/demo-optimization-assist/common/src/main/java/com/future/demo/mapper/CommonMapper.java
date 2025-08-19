@@ -70,4 +70,30 @@ public interface CommonMapper {
     @Select("select * from employees where age=#{age} and position=#{position}")
     List<Employee> selectLeftMostWithoutStartColumn(@RequestParam("age") Integer age,
                                                     @RequestParam("position") String position);
+
+    /**
+     * 测试覆盖索引性能 - 使用 * 时
+     *
+     * @param name
+     * @param age
+     * @param position
+     * @return
+     */
+    @Select("select * from employees where name=#{name} and age=#{age} and position=#{position}")
+    List<Employee> testCoveringIndexPerfWithAsterisk(@RequestParam("name") String name,
+                                                     @RequestParam("age") Integer age,
+                                                     @RequestParam("position") String position);
+
+    /**
+     * 测试覆盖索引性能 - 不使用 * 时
+     *
+     * @param name
+     * @param age
+     * @param position
+     * @return
+     */
+    @Select("select id,name,age,position from employees where name=#{name} and age=#{age} and position=#{position}")
+    List<Employee> testCoveringIndexPerfWithoutAsterisk(@RequestParam("name") String name,
+                                                        @RequestParam("age") Integer age,
+                                                        @RequestParam("position") String position);
 }

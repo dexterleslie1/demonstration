@@ -144,4 +144,42 @@ public class DemoController {
             throw new Exception("意料之外，employeeList为空");
         }
     }
+
+    /**
+     * 测试覆盖索引性能 - 使用 * 时
+     *
+     * @return
+     * @throws Exception
+     */
+    @GetMapping("testCoveringIndexPerfWithAsterisk")
+    public ObjectResponse<String> testCoveringIndexPerfWithAsterisk() throws Exception {
+        Assert.isTrue(employeeList != null && !employeeList.isEmpty(), "没有 Employee 数据，请先调用 /api/v1/insertEmployeeBatch 初始化数据");
+        int randomInt = RandomUtil.randomInt(0, this.employeeList.size());
+        Employee employee = this.employeeList.get(randomInt);
+        List<Employee> employeeList = commonMapper.testCoveringIndexPerfWithAsterisk(employee.getName(), employee.getAge(), employee.getPosition());
+        if (employeeList != null && !employeeList.isEmpty())
+            return ResponseUtils.successObject("成功调用");
+        else {
+            throw new Exception("意料之外，employeeList为空");
+        }
+    }
+
+    /**
+     * 测试覆盖索引性能 - 不使用 * 时
+     *
+     * @return
+     * @throws Exception
+     */
+    @GetMapping("testCoveringIndexPerfWithoutAsterisk")
+    public ObjectResponse<String> testCoveringIndexPerfWithoutAsterisk() throws Exception {
+        Assert.isTrue(employeeList != null && !employeeList.isEmpty(), "没有 Employee 数据，请先调用 /api/v1/insertEmployeeBatch 初始化数据");
+        int randomInt = RandomUtil.randomInt(0, this.employeeList.size());
+        Employee employee = this.employeeList.get(randomInt);
+        List<Employee> employeeList = commonMapper.testCoveringIndexPerfWithoutAsterisk(employee.getName(), employee.getAge(), employee.getPosition());
+        if (employeeList != null && !employeeList.isEmpty())
+            return ResponseUtils.successObject("成功调用");
+        else {
+            throw new Exception("意料之外，employeeList为空");
+        }
+    }
 }

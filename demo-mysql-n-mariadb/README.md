@@ -2226,89 +2226,11 @@ mysql> explain select * from tb_user force index(idx_tb_user_profession) where p
 
 
 
-## 索引 - 覆盖索引&回表查询
+## `SQL`优化 - 概念
 
-> 尽量使用覆盖索引（查询使用了索引，并且需要返回的列数据，在索引中已经全部找到不需要回表查询），减少 select.*。
+>参考资料：https://blog.51cto.com/u_11966318/5825208
 >
-> using index condition：查找使用了索引，但是需要回表查询数据。
->
-> using where; using index：查找使用了索引，但是需要的数据都在索引列中能够找到，所以不需要回表查询数据。
-
-```shell
-mysql> CREATE DATABASE IF NOT EXISTS testdb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-Query OK, 1 row affected (0.01 sec)
-
-mysql> use testdb;
-Database changed
-
-create table if not exists tb_user(
-  id bigint primary key auto_increment,
-  name varchar(64) not null,
-  phone varchar(32) not null,
-  email varchar(32) not null,
-  profession varchar(32) not null,
-  age int not null,
-  gender int default 1 not null,
-  status char(1) default 0 not null,
-  createTime datetime not null
-) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 collate=utf8mb4_general_ci;
-
-insert into tb_user values
-(1,'吕布','17799990000','lvbu666@163.com','软件工程',23,1,'6','2001-02-02 00:00:00'),
-(2,'曹操','17799990001','caocao666@qq.com','通讯工程',33,1,'0','2001-03-05 00:00:00'),
-(3,'赵云','17799990002','17799990@139.com','英语',34,1,'2','2002-03-02 00:00:00'),
-(4,'孙悟空','17799990003','17799990@sina.com','工程造价',54,1,'0','2001-07-02 00:00:00'),
-(5,'花木兰','17799990004','19980729@sina.com','软件工程',23,2,'1','2001-04-22 00:00:00'),
-(6,'大乔','17799990005','daqiao6666@sina.com','舞蹈',22,2,'0','2001-02-07 00:00:00'),
-(7,'露娜','17799990006','luna_love@sina.com','应用数学',24,2,'0','2001-02-08 00:00:00'),
-(8,'程咬金','17799990007','chengyaojin@163.com','化工',38,1,'5','2001-05-23 00:00:00'),
-(9,'项羽','17799990008','xiangyu666@qq.com','金属材料',43,1,'0','2001-09-18 00:00:00'),
-(10,'白起','17799990009','baiqi666@sina.com','机械工程及其自动化',27,1,'2','2001-08-16 00:00:00'),
-(11,'韩信','17799990010','hanxin520@163.com','无机非金属材料工程',27,1,'0','2001-06-12 00:00:00'),
-(12,'荆柯','17799990011','jingke123@163.com','会计',29,1,'0','2001-05-11 00:00:00'),
-(13,'兰陵王','17799990012','lanlinwang666@126.com','工程造价',44,1,'1','2001-04-09 00:00:00'),
-(14,'狂铁','17799990013','kuangtie@sina.com','应用数学',43,2,'2','2001-04-11 00:00:00'),
-(15,'貂蝉','17799990014','84958948374@qq.com','软件工程',40,2,'3','2001-02-12 00:00:00'),
-(16,'坦己','17799990015','2783238293@qq.com','软件工程',31,2,'0','2001-01-30 00:00:00'),
-(17,'月丹','17799990016','xiaomin2001@sina.com','工业经济',35,1,'0','2000-05-03 00:00:00'),
-(18,'赢政','17799990017','8839434342@qq.com','化工',38,1,'1','2001-08-08 00:00:00'),
-(19,'狄仁杰','17799990018','jujiamlm8166@163.com','国际贸易',30,2,'0','2007-03-12 00:00:00'),
-(20,'安琪拉','17799990019','jdodm1h@126.com','城市规划',51,2,'0','2001-08-15 00:00:00'),
-(21,'典韦','17799990020','ycaunanjian@163.com','城市规划',52,1,'2','2000-04-12 00:00:00'),
-(22,'廉颇','17799990021','lianpo321@126.com','土木工程',19,1,'3','2002-07-18 00:00:00'),
-(23,'后羿','17799990022','altycj2000@139.com','城市园林',20,1,'0','2002-03-10 00:00:00'),
-(24,'姜子牙','17799990023','37483844@qq.com','工程造价',29,1,'4','2003-05-26 00:00:00');
-
-mysql> create index idx_tb_user_profession_age_status on tb_user(profession,age,status);
-Query OK, 0 rows affected (0.03 sec)
-Records: 0  Duplicates: 0  Warnings: 0
-
-# Extra=Using index表示不需要回表查询
-mysql> explain select id,profession,age,status from tb_user where profession='软件工程' and age=31 and status='0';
-+----+-------------+---------+------------+------+--------------------------------------------------------------------------+-----------------------------------+---------+-------------------+------+----------+-------------+
-| id | select_type | table   | partitions | type | possible_keys                                                            | key                               | key_len | ref               | rows | filtered | Extra       |
-+----+-------------+---------+------------+------+--------------------------------------------------------------------------+-----------------------------------+---------+-------------------+------+----------+-------------+
-|  1 | SIMPLE      | tb_user | NULL       | ref  | idx_tb_user_profession_age_status,idx_tb_user_age,idx_tb_user_profession | idx_tb_user_profession_age_status | 138     | const,const,const |    1 |   100.00 | Using index |
-+----+-------------+---------+------------+------+--------------------------------------------------------------------------+-----------------------------------+---------+-------------------+------+----------+-------------+
-1 row in set, 1 warning (0.00 sec)
-
-# Extra=NULL表示需要回表查询
-mysql> explain select id,profession,age,status,name from tb_user where profession='软件工程' and age=31 and status='0';
-+----+-------------+---------+------------+------+--------------------------------------------------------------------------+-----------------------------------+---------+-------------------+------+----------+-------+
-| id | select_type | table   | partitions | type | possible_keys                                                            | key                               | key_len | ref               | rows | filtered | Extra |
-+----+-------------+---------+------------+------+--------------------------------------------------------------------------+-----------------------------------+---------+-------------------+------+----------+-------+
-|  1 | SIMPLE      | tb_user | NULL       | ref  | idx_tb_user_profession_age_status,idx_tb_user_age,idx_tb_user_profession | idx_tb_user_profession_age_status | 138     | const,const,const |    1 |   100.00 | NULL  |
-+----+-------------+---------+------------+------+--------------------------------------------------------------------------+-----------------------------------+---------+-------------------+------+----------+-------+
-1 row in set, 1 warning (0.01 sec)
-
-mysql> explain select * from tb_user where profession='软件工程' and age=31 and status='0';
-+----+-------------+---------+------------+------+--------------------------------------------------------------------------+-----------------------------------+---------+-------------------+------+----------+-------+
-| id | select_type | table   | partitions | type | possible_keys                                                            | key                               | key_len | ref               | rows | filtered | Extra |
-+----+-------------+---------+------------+------+--------------------------------------------------------------------------+-----------------------------------+---------+-------------------+------+----------+-------+
-|  1 | SIMPLE      | tb_user | NULL       | ref  | idx_tb_user_profession_age_status,idx_tb_user_age,idx_tb_user_profession | idx_tb_user_profession_age_status | 138     | const,const,const |    1 |   100.00 | NULL  |
-+----+-------------+---------+------------+------+--------------------------------------------------------------------------+-----------------------------------+---------+-------------------+------+----------+-------+
-1 row in set, 1 warning (0.00 sec)
-```
+>参考资料：https://m.php.cn/article/487049.html
 
 
 
@@ -3034,6 +2956,503 @@ Transfer/sec:      2.75KB
 ```
 
 总结：全值匹配情况性能最好，其次为中间列中断情况，没有开始列索引失效情况性能最差。
+
+
+
+## `SQL`优化 - 函数计算或者会导致索引失效
+
+>提示：因为函数需要在索引的每个`B+`树节点上运算，导致遍历全部`B+`树节点。
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-mysql-n-mariadb/demo-optimization-assist)
+
+使用上面的示例数据库脚本创建表
+
+使用 `left` 函数导致索引失效
+
+```sql
+$ explain select * from employees where left(name,1)='d' and age=55 and position='高级开发工程师';
+# id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
+1	SIMPLE	employees	ALL					1076231	Using where
+
+```
+
+
+
+## `SQL`优化 - 对索引列进行数学运算（如：`+、-、*、/`）
+
+>提示：因为函数需要在索引的每个`B+`树节点上运算，导致遍历全部`B+`树节点。
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-mysql-n-mariadb/demo-optimization-assist)
+
+使用上面的示例数据库脚本创建表
+
+```sql
+$ explain select * from employees where name='d40d82a9-18fa-4719-9867-1d98dea4bb87' and age+1=55 and position='高级开发工程师';
+# id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
+1	SIMPLE	employees	ref	idx_name_age_position	idx_name_age_position	146	const	1	Using index condition
+
+```
+
+- `key_len=146`（`name` 列 `36*4+2=146`），`ref=const` 表示只有 `name` 列部分索引生效，`age` 和 `position` 索引失效。
+
+
+
+## `SQL`优化 - 类型转换导致索引失效
+
+> 说明：如果字段类型是字符串，`where` 查询时一定用引号括起来，否则索引失效。
+
+```sql
+$ explain select * from employees where name=123 and age=55 and position='高级开发工程师';
+# id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
+1	SIMPLE	employees	ALL	idx_name_age_position				1076231	Using where
+
+```
+
+
+
+## `SQL`优化 - `like`以`%`开头
+
+```sql
+# % 为前缀索引失效
+$ explain select * from employees where name like '%d';
+# id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
+1	SIMPLE	employees	ALL					1076231	Using where
+
+# % 不为前缀索引不失效
+$ explain select * from employees where name like 'd%';
+# id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
+1	SIMPLE	employees	range	idx_name_age_position	idx_name_age_position	146		126752	Using index condition
+
+```
+
+
+
+## `SQL`优化 - 范围条件右边的列索引失效
+
+> 范围右边的列不能使用索引。比如 `<` 、`<=`、`>`、`>=`、`between`。
+>
+> 创建的联合索引时，务必把范围涉及到的字段写在最后。
+
+```sql
+# 所有查询条件使用索引
+$ explain select * from employees where name='d40d82a9-18fa-4719-9867-1d98dea4bb87' and age=55 and position='高级开发工程师';
+# id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
+1	SIMPLE	employees	ref	idx_name_age_position	idx_name_age_position	232	const,const,const	1	Using index condition
+
+
+# 因为 age>55 导致 position 没有使用索引查询，解决办法是创建以下索引
+# create index idx_name_age_position on employees(name,position,age);
+$ explain select * from employees where name='d40d82a9-18fa-4719-9867-1d98dea4bb87' and age>55 and position='高级开发工程师';
+# id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
+1	SIMPLE	employees	range	idx_name_age_position	idx_name_age_position	150		1	Using index condition
+
+```
+
+
+
+## `SQL`优化 - 覆盖索引&回表查询
+
+> 尽量使用覆盖索引（查询使用了索引，并且需要返回的列数据，在索引中已经全部找到不需要回表查询），减少 `select *`。
+
+### `explain`分析是否需要回表
+
+>提示：
+>
+>- `using index condition`：查找使用了索引，但是需要回表查询数据。
+>- `using where; using index`：查找使用了索引，但是需要的数据都在索引列中能够找到，所以不需要回表查询数据。
+
+```shell
+mysql> CREATE DATABASE IF NOT EXISTS testdb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+Query OK, 1 row affected (0.01 sec)
+
+mysql> use testdb;
+Database changed
+
+create table if not exists tb_user(
+  id bigint primary key auto_increment,
+  name varchar(64) not null,
+  phone varchar(32) not null,
+  email varchar(32) not null,
+  profession varchar(32) not null,
+  age int not null,
+  gender int default 1 not null,
+  status char(1) default 0 not null,
+  createTime datetime not null
+) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 collate=utf8mb4_general_ci;
+
+insert into tb_user values
+(1,'吕布','17799990000','lvbu666@163.com','软件工程',23,1,'6','2001-02-02 00:00:00'),
+(2,'曹操','17799990001','caocao666@qq.com','通讯工程',33,1,'0','2001-03-05 00:00:00'),
+(3,'赵云','17799990002','17799990@139.com','英语',34,1,'2','2002-03-02 00:00:00'),
+(4,'孙悟空','17799990003','17799990@sina.com','工程造价',54,1,'0','2001-07-02 00:00:00'),
+(5,'花木兰','17799990004','19980729@sina.com','软件工程',23,2,'1','2001-04-22 00:00:00'),
+(6,'大乔','17799990005','daqiao6666@sina.com','舞蹈',22,2,'0','2001-02-07 00:00:00'),
+(7,'露娜','17799990006','luna_love@sina.com','应用数学',24,2,'0','2001-02-08 00:00:00'),
+(8,'程咬金','17799990007','chengyaojin@163.com','化工',38,1,'5','2001-05-23 00:00:00'),
+(9,'项羽','17799990008','xiangyu666@qq.com','金属材料',43,1,'0','2001-09-18 00:00:00'),
+(10,'白起','17799990009','baiqi666@sina.com','机械工程及其自动化',27,1,'2','2001-08-16 00:00:00'),
+(11,'韩信','17799990010','hanxin520@163.com','无机非金属材料工程',27,1,'0','2001-06-12 00:00:00'),
+(12,'荆柯','17799990011','jingke123@163.com','会计',29,1,'0','2001-05-11 00:00:00'),
+(13,'兰陵王','17799990012','lanlinwang666@126.com','工程造价',44,1,'1','2001-04-09 00:00:00'),
+(14,'狂铁','17799990013','kuangtie@sina.com','应用数学',43,2,'2','2001-04-11 00:00:00'),
+(15,'貂蝉','17799990014','84958948374@qq.com','软件工程',40,2,'3','2001-02-12 00:00:00'),
+(16,'坦己','17799990015','2783238293@qq.com','软件工程',31,2,'0','2001-01-30 00:00:00'),
+(17,'月丹','17799990016','xiaomin2001@sina.com','工业经济',35,1,'0','2000-05-03 00:00:00'),
+(18,'赢政','17799990017','8839434342@qq.com','化工',38,1,'1','2001-08-08 00:00:00'),
+(19,'狄仁杰','17799990018','jujiamlm8166@163.com','国际贸易',30,2,'0','2007-03-12 00:00:00'),
+(20,'安琪拉','17799990019','jdodm1h@126.com','城市规划',51,2,'0','2001-08-15 00:00:00'),
+(21,'典韦','17799990020','ycaunanjian@163.com','城市规划',52,1,'2','2000-04-12 00:00:00'),
+(22,'廉颇','17799990021','lianpo321@126.com','土木工程',19,1,'3','2002-07-18 00:00:00'),
+(23,'后羿','17799990022','altycj2000@139.com','城市园林',20,1,'0','2002-03-10 00:00:00'),
+(24,'姜子牙','17799990023','37483844@qq.com','工程造价',29,1,'4','2003-05-26 00:00:00');
+
+mysql> create index idx_tb_user_profession_age_status on tb_user(profession,age,status);
+Query OK, 0 rows affected (0.03 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+# Extra=Using index表示不需要回表查询
+mysql> explain select id,profession,age,status from tb_user where profession='软件工程' and age=31 and status='0';
++----+-------------+---------+------------+------+--------------------------------------------------------------------------+-----------------------------------+---------+-------------------+------+----------+-------------+
+| id | select_type | table   | partitions | type | possible_keys                                                            | key                               | key_len | ref               | rows | filtered | Extra       |
++----+-------------+---------+------------+------+--------------------------------------------------------------------------+-----------------------------------+---------+-------------------+------+----------+-------------+
+|  1 | SIMPLE      | tb_user | NULL       | ref  | idx_tb_user_profession_age_status,idx_tb_user_age,idx_tb_user_profession | idx_tb_user_profession_age_status | 138     | const,const,const |    1 |   100.00 | Using index |
++----+-------------+---------+------------+------+--------------------------------------------------------------------------+-----------------------------------+---------+-------------------+------+----------+-------------+
+1 row in set, 1 warning (0.00 sec)
+
+# Extra=NULL表示需要回表查询
+mysql> explain select id,profession,age,status,name from tb_user where profession='软件工程' and age=31 and status='0';
++----+-------------+---------+------------+------+--------------------------------------------------------------------------+-----------------------------------+---------+-------------------+------+----------+-------+
+| id | select_type | table   | partitions | type | possible_keys                                                            | key                               | key_len | ref               | rows | filtered | Extra |
++----+-------------+---------+------------+------+--------------------------------------------------------------------------+-----------------------------------+---------+-------------------+------+----------+-------+
+|  1 | SIMPLE      | tb_user | NULL       | ref  | idx_tb_user_profession_age_status,idx_tb_user_age,idx_tb_user_profession | idx_tb_user_profession_age_status | 138     | const,const,const |    1 |   100.00 | NULL  |
++----+-------------+---------+------------+------+--------------------------------------------------------------------------+-----------------------------------+---------+-------------------+------+----------+-------+
+1 row in set, 1 warning (0.01 sec)
+
+mysql> explain select * from tb_user where profession='软件工程' and age=31 and status='0';
++----+-------------+---------+------------+------+--------------------------------------------------------------------------+-----------------------------------+---------+-------------------+------+----------+-------+
+| id | select_type | table   | partitions | type | possible_keys                                                            | key                               | key_len | ref               | rows | filtered | Extra |
++----+-------------+---------+------------+------+--------------------------------------------------------------------------+-----------------------------------+---------+-------------------+------+----------+-------+
+|  1 | SIMPLE      | tb_user | NULL       | ref  | idx_tb_user_profession_age_status,idx_tb_user_age,idx_tb_user_profession | idx_tb_user_profession_age_status | 138     | const,const,const |    1 |   100.00 | NULL  |
++----+-------------+---------+------------+------+--------------------------------------------------------------------------+-----------------------------------+---------+-------------------+------+----------+-------+
+1 row in set, 1 warning (0.00 sec)
+```
+
+
+
+### 性能测试
+
+使用本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-mysql-n-mariadb/demo-optimization-assist) 协助测试。
+
+使用 `ab` 工具初始化 `100` 万测试数据
+
+```sh
+ab -n 1000 -c 16 -k http://localhost:8080/api/v1/insertEmployeeBatch
+```
+
+不使用覆盖索引时 `select *`
+
+```sh
+$ wrk -t8 -c128 -d60s --latency --timeout 60 http://localhost:8080/api/v1/testCoveringIndexPerfWithAsterisk
+Running 1m test @ http://localhost:8080/api/v1/testCoveringIndexPerfWithAsterisk
+  8 threads and 128 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency    18.17ms   14.50ms 223.65ms   70.84%
+    Req/Sec     0.96k   225.26     2.76k    69.05%
+  Latency Distribution
+     50%   17.27ms
+     75%   24.33ms
+     90%   33.45ms
+     99%   69.39ms
+  458454 requests in 1.00m, 79.57MB read
+Requests/sec:   7629.32
+Transfer/sec:      1.32MB
+```
+
+使用覆盖索引时 `select id,name,age,position`
+
+```sh
+wrk -t8 -c128 -d60s --latency --timeout 60 http://localhost:8080/api/v1/testCoveringIndexPerfWithoutAsterisk
+Running 1m test @ http://localhost:8080/api/v1/testCoveringIndexPerfWithoutAsterisk
+  8 threads and 128 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency    15.41ms   12.97ms 227.78ms   73.75%
+    Req/Sec     1.15k   237.53     2.76k    69.83%
+  Latency Distribution
+     50%   14.60ms
+     75%   20.41ms
+     90%   27.97ms
+     99%   63.21ms
+  546365 requests in 1.00m, 94.83MB read
+Requests/sec:   9091.56
+Transfer/sec:      1.58MB
+
+```
+
+总结：使用覆盖索引查询效率高于不使用覆盖索引（需要回表）。
+
+
+
+## `SQL`优化 - 索引字段上使用`!=、<>、not in`时，可能会导致索引失效
+
+```
+mysql> explain select * from test_user where name!='黄芪';
++----+-------------+-----------+------------+------+---------------------+------+---------+------+------+----------+-------------+
+| id | select_type | table     | partitions | type | possible_keys       | key  | key_len | ref  | rows | filtered | Extra       |
++----+-------------+-----------+------------+------+---------------------+------+---------+------+------+----------+-------------+
+|  1 | SIMPLE      | test_user | NULL       | ALL  | idx_test_user_comb1 | NULL | NULL    | NULL |   12 |   100.00 | Using where |
++----+-------------+-----------+------------+------+---------------------+------+---------+------+------+----------+-------------+
+1 row in set, 1 warning (0.00 sec)
+
+mysql> explain select * from test_user where name<>'黄芪';
++----+-------------+-----------+------------+------+---------------------+------+---------+------+------+----------+-------------+
+| id | select_type | table     | partitions | type | possible_keys       | key  | key_len | ref  | rows | filtered | Extra       |
++----+-------------+-----------+------------+------+---------------------+------+---------+------+------+----------+-------------+
+|  1 | SIMPLE      | test_user | NULL       | ALL  | idx_test_user_comb1 | NULL | NULL    | NULL |   12 |   100.00 | Using where |
++----+-------------+-----------+------------+------+---------------------+------+---------+------+------+----------+-------------+
+1 row in set, 1 warning (0.01 sec)
+
+mysql> explain select * from test_user where name not in('黄芪');
++----+-------------+-----------+------------+------+---------------------+------+---------+------+------+----------+-------------+
+| id | select_type | table     | partitions | type | possible_keys       | key  | key_len | ref  | rows | filtered | Extra       |
++----+-------------+-----------+------------+------+---------------------+------+---------+------+------+----------+-------------+
+|  1 | SIMPLE      | test_user | NULL       | ALL  | idx_test_user_comb1 | NULL | NULL    | NULL |   12 |   100.00 | Using where |
++----+-------------+-----------+------------+------+---------------------+------+---------+------+------+----------+-------------+
+1 row in set, 1 warning (0.00 sec)
+```
+
+
+
+## `SQL`优化 - 在索引字段上使用`is null`、`is not null`可能导致索引失效
+
+### `is null` 测试
+
+>提示：如果 `is null` 记录很多。
+
+```
+drop table test1;
+
+create table test1(
+ id bigint primary key not null auto_increment,
+ name varchar(512) not null,
+ age int not null,
+ sex char(1),
+ createTime datetime not null
+) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 collate=utf8mb4_general_ci;
+
+create index idx_test1_comb1 on test1(sex);
+
+insert into test1(id,name,age,sex,createTime) values
+(NULL,'张三',56,'男',now()),
+(NULL,'李四',33,'男',now()),
+(NULL,'王五',23,'男',now()),
+(NULL,'老黄',65,'男',now()),
+(NULL,'积分',12,NULL,now()),
+(NULL,'123',11,'男',now()),
+(NULL,'就佛额ur',22,'男',now()),
+(NULL,'发咯入耳',56,'男',now()),
+(NULL,'经济而',77,'男',now()),
+(NULL,'第一热',22,'男',now()),
+(NULL,'黄芪',24,'男',now()),
+(NULL,'解决开发就',11,NULL,now());
+
+# is null数据少时使用了idx_test1_comb1索引
+mysql> explain select * from test1 where sex is null;
++----+-------------+-------+------------+------+-----------------+-----------------+---------+-------+------+----------+-----------------------+
+| id | select_type | table | partitions | type | possible_keys   | key             | key_len | ref   | rows | filtered | Extra                 |
++----+-------------+-------+------------+------+-----------------+-----------------+---------+-------+------+----------+-----------------------+
+|  1 | SIMPLE      | test1 | NULL       | ref  | idx_test1_comb1 | idx_test1_comb1 | 5       | const |    2 |   100.00 | Using index condition |
++----+-------------+-------+------------+------+-----------------+-----------------+---------+-------+------+----------+-----------------------+
+1 row in set, 1 warning (0.00 sec)
+
+drop table test1;
+
+create table test1(
+ id bigint primary key not null auto_increment,
+ name varchar(512) not null,
+ age int not null,
+ sex char(1),
+ createTime datetime not null
+) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 collate=utf8mb4_general_ci;
+
+create index idx_test1_comb1 on test1(sex);
+
+insert into test1(id,name,age,sex,createTime) values
+(NULL,'张三',56,NULL,now()),
+(NULL,'李四',33,NULL,now()),
+(NULL,'王五',23,NULL,now()),
+(NULL,'老黄',65,NULL,now()),
+(NULL,'积分',12,NULL,now()),
+(NULL,'123',11,NULL,now()),
+(NULL,'就佛额ur',22,NULL,now()),
+(NULL,'发咯入耳',56,NULL,now()),
+(NULL,'经济而',77,NULL,now()),
+(NULL,'第一热',22,'男',now()),
+(NULL,'黄芪',24,'男',now()),
+(NULL,'解决开发就',11,NULL,now());
+
+# is null数据多时使用全表扫描
+mysql> explain select * from test1 where sex is null;
++----+-------------+-------+------------+------+-----------------+------+---------+------+------+----------+-------------+
+| id | select_type | table | partitions | type | possible_keys   | key  | key_len | ref  | rows | filtered | Extra       |
++----+-------------+-------+------------+------+-----------------+------+---------+------+------+----------+-------------+
+|  1 | SIMPLE      | test1 | NULL       | ALL  | idx_test1_comb1 | NULL | NULL    | NULL |   12 |    83.33 | Using where |
++----+-------------+-------+------------+------+-----------------+------+---------+------+------+----------+-------------+
+1 row in set, 1 warning (0.00 sec)
+```
+
+### `is not null` 测试
+
+```
+drop table test1;
+
+create table test1(
+ id bigint primary key not null auto_increment,
+ name varchar(512) not null,
+ age int not null,
+ sex char(1),
+ createTime datetime not null
+) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 collate=utf8mb4_general_ci;
+
+create index idx_test1_comb1 on test1(sex);
+
+insert into test1(id,name,age,sex,createTime) values
+(NULL,'张三',56,NULL,now()),
+(NULL,'李四',33,NULL,now()),
+(NULL,'王五',23,NULL,now()),
+(NULL,'老黄',65,NULL,now()),
+(NULL,'积分',12,NULL,now()),
+(NULL,'123',11,NULL,now()),
+(NULL,'就佛额ur',22,NULL,now()),
+(NULL,'发咯入耳',56,NULL,now()),
+(NULL,'经济而',77,NULL,now()),
+(NULL,'第一热',22,'男',now()),
+(NULL,'黄芪',24,'男',now()),
+(NULL,'解决开发就',11,NULL,now());
+
+# is not null数据少时使用了索引
+mysql> explain select * from test1 where sex is not null;
++----+-------------+-------+------------+-------+-----------------+-----------------+---------+------+------+----------+-----------------------+
+| id | select_type | table | partitions | type  | possible_keys   | key             | key_len | ref  | rows | filtered | Extra                 |
++----+-------------+-------+------------+-------+-----------------+-----------------+---------+------+------+----------+-----------------------+
+|  1 | SIMPLE      | test1 | NULL       | range | idx_test1_comb1 | idx_test1_comb1 | 5       | NULL |    2 |   100.00 | Using index condition |
++----+-------------+-------+------------+-------+-----------------+-----------------+---------+------+------+----------+-----------------------+
+1 row in set, 1 warning (0.00 sec)
+
+drop table test1;
+
+create table test1(
+ id bigint primary key not null auto_increment,
+ name varchar(512) not null,
+ age int not null,
+ sex char(1),
+ createTime datetime not null
+) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 collate=utf8mb4_general_ci;
+
+create index idx_test1_comb1 on test1(sex);
+
+insert into test1(id,name,age,sex,createTime) values
+(NULL,'张三',56,'男',now()),
+(NULL,'李四',33,'男',now()),
+(NULL,'王五',23,'男',now()),
+(NULL,'老黄',65,'男',now()),
+(NULL,'积分',12,NULL,now()),
+(NULL,'123',11,'男',now()),
+(NULL,'就佛额ur',22,'男',now()),
+(NULL,'发咯入耳',56,'男',now()),
+(NULL,'经济而',77,'男',now()),
+(NULL,'第一热',22,'男',now()),
+(NULL,'黄芪',24,'男',now()),
+(NULL,'解决开发就',11,NULL,now());
+
+# is not null数据多时使用全表扫描
+mysql> explain select * from test1 where sex is not null;
++----+-------------+-------+------------+------+-----------------+------+---------+------+------+----------+-------------+
+| id | select_type | table | partitions | type | possible_keys   | key  | key_len | ref  | rows | filtered | Extra       |
++----+-------------+-------+------------+------+-----------------+------+---------+------+------+----------+-------------+
+|  1 | SIMPLE      | test1 | NULL       | ALL  | idx_test1_comb1 | NULL | NULL    | NULL |   12 |    83.33 | Using where |
++----+-------------+-------+------------+------+-----------------+------+---------+------+------+----------+-------------+
+1 row in set, 1 warning (0.00 sec)
+```
+
+
+
+## `SQL`优化 - `or`查询前后存在非索引的列时索引失效
+
+```
+CREATE DATABASE IF NOT EXISTS testdb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+use testdb;
+
+drop table test_user;
+
+create table test_user(
+ id bigint primary key not null auto_increment,
+ name varchar(512) not null,
+ age int not null,
+ sex char(1) not null,
+ score double not null,
+ createTime datetime not null
+) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 collate=utf8mb4_general_ci;
+
+create index idx_test_user_comb1 on test_user(name,age,sex);
+create index idx_test_user_score on test_user(score);
+
+insert into test_user(id,name,age,sex,score,createTime) values
+(NULL,'张三',56,'男',85.47,now()),
+(NULL,'李四',33,'男',25.47,now()),
+(NULL,'王五',23,'男',35.87,now()),
+(NULL,'老黄',65,'女',27.76,now()),
+(NULL,'积分',12,'男',86.34,now()),
+(NULL,'123',11,'女',24.56,now()),
+(NULL,'就佛额ur',22,'男',45.77,now()),
+(NULL,'发咯入耳',56,'女',36.45,now()),
+(NULL,'经济而',77,'男',76.87,now()),
+(NULL,'第一热',22,'女',34.76,now()),
+(NULL,'黄芪',24,'男',55.76,now()),
+(NULL,'解决开发就',11,'男',33.56,now());
+
+# or两个条件索引都生效，所以or查询索引没有失效
+mysql> explain select * from test_user where name='黄芪' or (name='王五' and age=23);
++----+-------------+-----------+------------+-------+---------------------+---------------------+---------+------+------+----------+-----------------------+
+| id | select_type | table     | partitions | type  | possible_keys       | key                 | key_len | ref  | rows | filtered | Extra                 |
++----+-------------+-----------+------------+-------+---------------------+---------------------+---------+------+------+----------+-----------------------+
+|  1 | SIMPLE      | test_user | NULL       | range | idx_test_user_comb1 | idx_test_user_comb1 | 2054    | NULL |    2 |   100.00 | Using index condition |
++----+-------------+-----------+------------+-------+---------------------+---------------------+---------+------+------+----------+-----------------------+
+1 row in set, 1 warning (0.00 sec)
+
+# 因为age=23没有索引所以导致or查询索引失效
+mysql> explain select * from test_user where name='黄芪' or (age=23);
++----+-------------+-----------+------------+------+---------------------+------+---------+------+------+----------+-------------+
+| id | select_type | table     | partitions | type | possible_keys       | key  | key_len | ref  | rows | filtered | Extra       |
++----+-------------+-----------+------------+------+---------------------+------+---------+------+------+----------+-------------+
+|  1 | SIMPLE      | test_user | NULL       | ALL  | idx_test_user_comb1 | NULL | NULL    | NULL |   12 |    19.00 | Using where |
++----+-------------+-----------+------------+------+---------------------+------+---------+------+------+----------+-------------+
+1 row in set, 1 warning (0.00 sec)
+```
+
+
+
+## `SQL`优化 - 引擎自动评估使用全表扫描比索引快导致不使用索引
+
+```
+# 大部分记录都大于等于10，所以查询自动优化不使用索引
+mysql> explain select * from test_user where score>=10;
++----+-------------+-----------+------------+------+---------------------+------+---------+------+------+----------+-------------+
+| id | select_type | table     | partitions | type | possible_keys       | key  | key_len | ref  | rows | filtered | Extra       |
++----+-------------+-----------+------------+------+---------------------+------+---------+------+------+----------+-------------+
+|  1 | SIMPLE      | test_user | NULL       | ALL  | idx_test_user_score | NULL | NULL    | NULL |   12 |   100.00 | Using where |
++----+-------------+-----------+------------+------+---------------------+------+---------+------+------+----------+-------------+
+1 row in set, 1 warning (0.00 sec)
+
+# 大于等于90的记录少查询使用索引
+mysql> explain select * from test_user where score>=90;
++----+-------------+-----------+------------+-------+---------------------+---------------------+---------+------+------+----------+-----------------------+
+| id | select_type | table     | partitions | type  | possible_keys       | key                 | key_len | ref  | rows | filtered | Extra                 |
++----+-------------+-----------+------------+-------+---------------------+---------------------+---------+------+------+----------+-----------------------+
+|  1 | SIMPLE      | test_user | NULL       | range | idx_test_user_score | idx_test_user_score | 8       | NULL |    1 |   100.00 | Using index condition |
++----+-------------+-----------+------------+-------+---------------------+---------------------+---------+------+------+----------+-----------------------+
+1 row in set, 1 warning (0.00 sec)
+```
 
 
 
