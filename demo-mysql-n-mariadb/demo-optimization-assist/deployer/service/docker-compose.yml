@@ -1,0 +1,15 @@
+version: "3.1"
+
+services:
+  service:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-order-management-app-service
+    environment:
+      - JAVA_OPTS=-Xmx4g
+      - TZ=Asia/Shanghai
+      - common_db_host=${common_db_host}
+      - common_db_port=${common_db_port}
+      - common_zookeeper_host=${common_zookeeper_host}
+      - random_id_picker_host=${random_id_picker_host}
+      - random_id_picker_port=${random_id_picker_port}
+    restart: unless-stopped
+    network_mode: host

@@ -800,59 +800,602 @@ No query specified
 
 > todo 未完成
 
-## 索引
 
-> 优点：提高数据检索效率，降低数据库的IO成本；通过索引列对数据进行排序，降低数据排序的成本，降低CPU的消耗。
->
-> 缺点：索引也要占用硬盘存储空间；索引大大提高了数据的检索速度，同时却也降低了表更新速度，对表insert、update、delete时效率降低。
 
-### 索引的数据结构
+## 索引 - 概念
 
-> B+Tree索引：最常见的索引类型，大部分引擎（InnoDB、MyISAM、Memory）都支持B+Tree索引。
->
-> Hash索引：底层数据结构是用Hash表实现，只有精确匹配索引列的查询才有效，不支持范围查询。
->
-> R-Tree空间索引：空间索引是MyISAM引擎的一个特殊索引类型，主要用于地理空间数据类型，通常使用较少。
->
-> Full-Text全文索引：是一种通过建立倒排索引，快速匹配文档的方式。类似与Lucene、Solr、Elasticsearch。
->
-> 
->
-> B+Tree索引InnoDB支持、MyISAM支持、Memory支持。
->
-> Hash索引InnoDB不支持、MyISAM不支持、Memory支持。
->
-> R-Tree空间索引InnoDB不支持、MyISAM支持、Memory不支持。
->
-> Full-Text全文索引InnoDB 5.6版本之后支持、MyISAM支持、Memory不支持。
->
-> 
->
-> MySQL默认使用B+Tree数据结构建立索引
+优点：提高数据检索效率，降低数据库的 `IO` 成本；通过索引列对数据进行排序，降低数据排序的成本，降低 `CPU` 的消耗。
 
-### B+Tree数据结构
+缺点：索引也要占用硬盘存储空间；索引大大提高了数据的检索速度，同时却也降低了表更新速度，对表 `insert`、`update`、`delete` 时效率降低。
 
-> todo 未完成
 
-### 索引的分类
 
-> 主键索引：针对于表中的主键建立索引，默认自动创建并且只能有一个。
->
-> 唯一索引：避免同一表中某数据列中的值重复，可以有多个。
->
-> 普通索引：快速定位特定列的数据，可以有多个。
->
-> 全文索引：全文索引是查找文本中的关键词，而不是比较索引中的值，可以有多个。
->
-> 
->
-> 在InnoDB存储引擎中，根据索引的存储形式，有可以分为一下两种：
->
-> 聚集索引Clustered Index：将数据存储和索引放到了一块，索引结构的叶子节点保存了行数据。必须有而且只有一个（如果存在主键，主键索引就是聚集索引；如果不存在主键，将使用第一个唯一索引作为聚集索引；如果表没有主键或者合适的唯一索引，则InnoDB会自动生成一个rowid作为隐藏的聚集索引）。
->
-> 二级索引Secondary Index：将数据与索引分开存储，索引结构的叶子节点关联的是对应的主键。可以存在多个。
+## 索引 - 二叉树、红黑树、`B`树、`B+`树
 
-### 创建、查看、删除索引
+>`todo` 做实验证明。
+
+MySQL选择**B+树**作为索引的核心数据结构，而非二叉树、红黑树或普通B树，是综合考虑了**磁盘存储特性**、**查询效率**（尤其是范围查询）、**空间利用率**和**索引维护成本**后的最优解。以下从各数据结构的特性与数据库索引需求的矛盾出发，详细解释这一选择的原因。
+
+
+### 一、二叉树/红黑树：树高过大，磁盘I/O效率低  
+二叉树（尤其是普通BST）和红黑树（自平衡BST）的核心问题是**树高随数据量增长显著**，导致磁盘I/O次数过多。  
+
+#### 1. 磁盘I/O的特性  
+数据库的索引通常存储在磁盘中（而非内存），而磁盘的访问是**块级I/O**（每次读取一个固定大小的磁盘块，如4KB、8KB）。索引的查询效率主要取决于**需要访问的磁盘块数量**（即树的高度）。  
+
+#### 2. 二叉树/红黑树的树高问题  
+- 对于 \(n\) 个节点的二叉树，普通BST的最坏树高为 \(O(n)\)（有序插入时退化为链表），红黑树的最坏树高为 \(O(2\log n)\)（弱平衡）。  
+- 即使 \(n=1000\) 万，红黑树的高度约为 \(2 \times \log_2(10^7) \approx 44\) 层。若每个磁盘块仅存储1个节点（即每个节点对应一次I/O），则需要44次I/O才能完成查询，效率极低。  
+
+
+### 二、B树：节点存储数据，空间利用率低且范围查询低效  
+B树（B-Tree）是一种多叉平衡树，通过增加每个节点的子节点数（即阶数 \(m\)）来降低树高，理论上能减少I/O次数。但它仍存在两个关键缺陷，使其不适用于数据库索引：  
+
+#### 1. 节点存储完整数据，空间浪费  
+B树的每个节点（包括非叶子节点）不仅存储**键（Key）**，还存储**完整的数据记录（如行指针、字段值）**。由于数据库的索引需要高频访问，而数据记录通常较大（尤其是包含大字段时），这会导致：  
+- 单个磁盘块中能存储的键数量减少（因数据占用空间），树高无法有效降低；  
+- 索引本身的空间利用率低（大量空间被数据占用，而非键和指针）。  
+
+#### 2. 范围查询效率低  
+B树的叶子节点和非叶子节点均存储键，但叶子节点之间**无链表连接**。范围查询（如 `SELECT * FROM table WHERE id BETWEEN 100 AND 200`）需要从根节点开始递归查找多个子树，无法通过顺序遍历快速获取连续区间数据，效率低于链表结构。  
+
+
+### 三、B+树：针对数据库场景的优化设计  
+B+树是B树的变种，通过以下关键改进，完美适配了数据库索引的需求：  
+
+
+#### 1. 非叶子节点仅存储键和子节点指针，提升空间利用率  
+B+树的**非叶子节点不存储数据记录**，仅存储键（Key）和子节点指针（指向子树）。这使得每个磁盘块中能存储的键数量大幅增加（因无需为数据预留空间），从而降低树的高度。  
+
+**示例**：假设磁盘块大小为16KB，每个键占8字节，子节点指针占8字节。若B树的非叶子节点存储键+数据（数据占100字节），则每个节点仅能存储 \(16KB / (8+100+8) \approx 140\) 个键；而B+树的非叶子节点仅存储键+指针（共16字节），可存储 \(16KB / 16 = 1024\) 个键。树高从B树的约3层降至B+树的约2层（\(10^7\) 数据量时，树高仅需 \(\log_{1024}(10^7) \approx 3\) 层，但实际因阶数更大，树高更低）。  
+
+
+#### 2. 叶子节点链表化，高效支持范围查询  
+B+树的**所有叶子节点通过双向链表连接**，形成有序序列。这使得：  
+- **范围查询**只需遍历叶子节点链表，无需回溯到上层节点，时间复杂度为 \(O(k + \log n)\)（\(k\) 为结果数量），效率极高；  
+- **全表扫描**可直接遍历叶子节点链表，无需递归访问所有子树。  
+
+
+#### 3. 更稳定的查询性能  
+B+树的插入、删除操作仅在叶子节点进行（非叶子节点仅作为索引），且通过严格的阶数约束（如每个节点至少填充 \(m/2\) 个键），保证了树的高度始终为 \(O(\log_m n)\)（\(m\) 为阶数），查询性能更稳定。  
+
+
+#### 4. 适配磁盘块大小，减少I/O次数  
+B+树的节点大小通常与磁盘块大小（如16KB、32KB）严格匹配，每次I/O可读取一个完整的节点，充分利用磁盘的块访问特性，进一步减少I/O次数。  
+
+
+### 四、MySQL为何最终选择B+树？  
+综合以上分析，B+树在以下方面完美契合数据库索引的需求：  
+
+| 特性             | 二叉树/红黑树       | B树                     | B+树                    |
+| ---------------- | ------------------- | ----------------------- | ----------------------- |
+| **树高**         | 高（\(O(\log n)\)） | 较低（\(O(\log_m n)\)） | 更低（\(O(\log_m n)\)） |
+| **范围查询效率** | 低（需递归遍历）    | 低（无叶子链表）        | 高（叶子链表顺序遍历）  |
+| **空间利用率**   | 低（指针占用空间）  | 低（非叶子节点存数据）  | 高（非叶子节点仅存键）  |
+| **磁盘I/O次数**  | 多（树高）          | 中等（树高较低）        | 最少（树高最低+块匹配） |
+
+
+### 总结  
+MySQL选择B+树作为索引的核心原因在于：  
+- **B+树的多叉结构降低了树高**，减少了磁盘I/O次数；  
+- **非叶子节点仅存键**，提升了节点空间利用率，进一步降低树高；  
+- **叶子节点链表化**，高效支持范围查询和全表扫描；  
+- **稳定的插入/删除性能**，避免了其他树结构的退化问题。  
+
+因此，B+树是数据库索引场景下综合性能最优的选择。
+
+
+
+## 索引 - 数据结构
+
+B+Tree索引：最常见的索引类型，大部分引擎（InnoDB、MyISAM、Memory）都支持B+Tree索引。
+
+Hash索引：底层数据结构是用Hash表实现，只有精确匹配索引列的查询才有效，不支持范围查询。
+
+R-Tree空间索引：空间索引是MyISAM引擎的一个特殊索引类型，主要用于地理空间数据类型，通常使用较少。
+
+Full-Text全文索引：是一种通过建立倒排索引，快速匹配文档的方式。类似与Lucene、Solr、Elasticsearch。
+
+B+Tree索引InnoDB支持、MyISAM支持、Memory支持。
+
+Hash索引InnoDB不支持、MyISAM不支持、Memory支持。
+
+R-Tree空间索引InnoDB不支持、MyISAM支持、Memory不支持。
+
+Full-Text全文索引InnoDB 5.6版本之后支持、MyISAM支持、Memory不支持。
+
+MySQL默认使用B+Tree数据结构建立索引
+
+
+
+## 索引 - `B+Tree` 数据结构
+
+> 了解概念请参考本站 <a href="/数据结构和算法/README.html#b-树-概念" target="_blank">链接</a>。
+>
+> 了解性能测试请参考本站 <a href="/数据结构和算法/README.html#b-树-性能测试" target="_blank">链接</a>
+
+
+
+## 索引 - 分类
+
+主键索引：针对于表中的主键建立索引，默认自动创建并且只能有一个。
+
+唯一索引：避免同一表中某数据列中的值重复，可以有多个。
+
+普通索引：快速定位特定列的数据，可以有多个。
+
+全文索引：全文索引是查找文本中的关键词，而不是比较索引中的值，可以有多个。
+
+外键索引：如果为某个外键字段定义了一个外键约束条件，MySQL就会定义一个内部索引来帮助自己以最有效率的方式去管理和使用外键约束条件。
+
+
+
+在InnoDB存储引擎中，根据索引的存储形式，有可以分为一下两种：
+
+- 聚集索引 `Clustered Index`：将数据存储和索引放到了一块，索引结构的叶子节点保存了行数据。必须有而且只有一个（如果存在主键，主键索引就是聚集索引；如果不存在主键，将使用第一个唯一索引作为聚集索引；如果表没有主键或者合适的唯一索引，则 `InnoDB` 会自动生成一个 `rowid` 作为隐藏的聚集索引）。
+- 二级索引 `Secondary Index`：将数据与索引分开存储，索引结构的叶子节点关联的是对应的主键。可以存在多个。
+
+
+
+## 索引 - 聚簇索引和非聚簇索引
+
+在MySQL中，**聚簇索引（Clustered Index）**和**非聚簇索引（Non-Clustered Index，又称二级索引）**是两种核心的索引类型，它们的核心区别在于**数据存储方式与索引结构的绑定关系**。以下从定义、存储结构、查询逻辑、优缺点等维度详细对比两者的差异。
+
+
+### 一、核心定义与存储结构
+#### 1. 聚簇索引（Clustered Index）  
+聚簇索引是一种**将数据行与索引键值物理绑定**的索引结构。其核心特点是：  
+- **数据即索引**：聚簇索引的叶子节点直接存储表中的**完整数据行**（而非指向数据的指针）。  
+- **物理顺序决定**：表中数据行的物理存储顺序与聚簇索引的键值顺序完全一致（类似字典按拼音排序，拼音索引与文字内容页绑定）。  
+
+**MySQL中的实现**：  
+- InnoDB引擎默认使用聚簇索引，且**一个表只能有一个聚簇索引**（因为数据行的物理顺序只能有一个）。  
+- 聚簇索引的键通常选择主键（Primary Key）；若未显式定义主键，InnoDB会选择**唯一的非空索引（Unique Key）**；若仍无，则隐式生成一个6字节的`ROWID`作为聚簇索引键。  
+
+
+#### 2. 非聚簇索引（Non-Clustered Index）  
+非聚簇索引是一种**独立于数据物理存储**的索引结构。其核心特点是：  
+- **数据与索引分离**：非聚簇索引的叶子节点存储的是**指向数据行的指针**（而非完整数据）。  
+- **逻辑顺序独立**：索引键值的顺序与数据行的物理存储顺序无关（类似字典的“笔画索引”，笔画顺序与文字内容页的物理顺序无关）。  
+
+**MySQL中的实现**：  
+- InnoDB和MyISAM引擎均支持非聚簇索引（InnoDB称为“二级索引”，MyISAM称为“普通索引”）。  
+- 一个表可以有多个非聚簇索引（通常建议不超过5个，避免过多影响写入性能）。  
+
+
+### 二、存储结构对比（以InnoDB为例）
+| 特性                 | 聚簇索引                             | 非聚簇索引（二级索引）               |
+| -------------------- | ------------------------------------ | ------------------------------------ |
+| **叶子节点内容**     | 完整数据行（包括所有列）             | 主键值（或ROWID）+ 索引键            |
+| **数据与索引的关系** | 数据行物理顺序与索引键顺序一致       | 数据行物理顺序与索引键顺序无关       |
+| **数量限制**         | 仅1个（主键/隐式ROWID/唯一非空索引） | 可多个（无数量限制，取决于业务需求） |
+
+
+### 三、查询逻辑差异
+#### 1. 聚簇索引查询  
+通过聚簇索引查找数据时，**只需遍历索引树一次**即可直接获取完整数据行。例如：  
+```sql
+-- 假设表t的聚簇索引是id（主键）
+SELECT * FROM t WHERE id = 123;
+```
+- **过程**：从根节点开始，通过B+树搜索找到id=123的叶子节点，叶子节点直接包含该行的所有列数据（无需额外I/O）。  
+
+
+#### 2. 非聚簇索引查询  
+通过非聚簇索引查找数据时，需经历**两次I/O**：  
+1. 第一次I/O：遍历非聚簇索引树，找到对应索引键的叶子节点，获取其存储的主键值（或ROWID）。  
+2. 第二次I/O：通过主键值（或ROWID）到聚簇索引中查找完整数据行（此过程称为“回表”）。  
+
+例如：  
+```sql
+-- 假设表t的聚簇索引是id，非聚簇索引是name
+SELECT * FROM t WHERE name = 'Alice';
+```
+- **过程**：  
+  1. 在非聚簇索引（name）的B+树中找到name='Alice'的叶子节点，获取对应的主键值id=X；  
+  2. 用id=X到聚簇索引中查找完整数据行（需第二次I/O）。  
+
+
+### 四、优缺点对比
+#### 1. 聚簇索引的优势与局限  
+**优势**：  
+- **查询效率极高**：数据与索引绑定，单次索引查询即可获取完整数据（无需回表）。  
+- **空间利用率高**：无需额外存储索引指针（数据即索引）。  
+
+**局限**：  
+- **写入性能受影响**：数据行的物理顺序由聚簇索引决定，插入/删除/更新可能导致数据页分裂或合并（如插入一条id=1000的记录，若前一个id=999的页已满，需新开页并移动部分数据）。  
+- **索引键选择受限**：仅能有一个聚簇索引，需谨慎选择（通常选主键，且主键应尽量短、有序，如自增ID）。  
+
+
+#### 2. 非聚簇索引的优势与局限  
+**优势**：  
+- **灵活加速查询**：可针对任意列（如name、email）创建索引，加速非主键列的查询。  
+- **不影响数据存储**：数据行的物理顺序由聚簇索引决定，非聚簇索引的增删改不影响数据存储结构。  
+
+**局限**：  
+- **回表开销**：需两次I/O（非聚簇索引查询+聚簇索引回表），若回表数据量过大（如范围查询），性能可能下降。  
+- **空间占用高**：每个非聚簇索引需独立存储索引键和主键值（或ROWID），索引越多，空间消耗越大。  
+
+
+### 五、典型场景建议
+| 场景                                     | 推荐索引类型             | 原因                                                         |
+| ---------------------------------------- | ------------------------ | ------------------------------------------------------------ |
+| 主键查询（如`WHERE id=123`）             | 聚簇索引                 | 直接获取数据，无需回表，性能最优。                           |
+| 非主键等值查询（如`WHERE name='Alice'`） | 非聚簇索引（二级索引）   | 需通过非聚簇索引快速定位主键，再回表获取数据。               |
+| 范围查询（如`WHERE id>100`）             | 聚簇索引                 | 数据按聚簇索引顺序存储，范围查询可通过遍历叶子节点链表高效完成。 |
+| 高频写入场景（如日志表）                 | 聚簇索引（主键选自增ID） | 自增主键的插入不会导致数据页分裂（顺序写入），减少维护开销。 |
+
+
+### 总结  
+聚簇索引与非聚簇索引的核心区别在于**数据与索引的绑定方式**：  
+- 聚簇索引“数据即索引”，适合高频主键查询和范围查询，但限制多且写入成本高；  
+- 非聚簇索引“索引独立于数据”，灵活支持多列查询，但需回表且空间开销大。  
+
+实际开发中，应优先为**高频查询的主键列**设计聚簇索引，为**高频查询的非主键列**设计非聚簇索引，并避免过度索引以平衡读写性能。
+
+
+
+## 索引 - 索引下推
+
+在MySQL中，**索引下推（Index Condition Pushdown，简称ICP）**是一种针对**非聚簇索引（二级索引）查询的优化技术**，其核心目的是**在索引扫描阶段提前过滤不符合条件的数据**，减少需要回表到聚簇索引的行数，从而降低I/O开销，提升查询效率。
+
+
+### 一、索引下推的背景：传统查询的问题  
+在没有索引下推的传统查询流程中，使用非聚簇索引（二级索引）查询时，需经历以下步骤：  
+1. **索引扫描**：通过非聚簇索引（如`(b, c)`）找到所有符合索引键条件的行（如`b=10`），得到一组行标识符（如主键值）。  
+2. **回表查询**：根据行标识符回表到聚簇索引，获取这些行的完整数据。  
+3. **内存过滤**：在内存中对回表后的完整数据进行过滤（如检查`c=20`）。  
+
+**问题**：若索引键仅包含部分过滤条件（如仅`b=10`），而另一部分条件（如`c=20`）无法通过索引直接判断，则需回表所有`b=10`的行，再在内存中过滤，导致大量无效回表（尤其是当`c=20`的行占比很小时）。  
+
+
+### 二、索引下推的核心原理  
+索引下推允许MySQL在**非聚簇索引扫描阶段**，直接应用**WHERE条件中与索引列相关的过滤规则**，提前排除不符合条件的行，仅将符合条件的行标识符回表。  
+
+**关键条件**：  
+- 过滤条件必须是**索引列的直接判断**（如`c=20`，且`c`是索引的一部分）；  
+- 过滤条件需满足“可下推性”（如不能是函数、子查询或跨列复杂表达式）。  
+
+
+### 三、索引下推的工作流程（对比传统流程）  
+以表`t`（主键`a`，非聚簇索引`(b, c)`）为例，查询`SELECT * FROM t WHERE b=10 AND c=20`：  
+
+
+#### 1. 传统流程（无索引下推）  
+- **步骤1**：通过非聚簇索引`(b, c)`找到所有`b=10`的行，得到主键列表`[a1, a2, ..., an]`（假设共`n`行）。  
+- **步骤2**：回表到聚簇索引，获取这`n`行的完整数据（包括`c`列）。  
+- **步骤3**：在内存中过滤出`c=20`的行（假设仅`k`行符合，`k << n`）。  
+
+**问题**：需回表`n`行，其中`n-k`行是无效的（`c≠20`），浪费I/O资源。  
+
+
+#### 2. 索引下推流程（有ICP优化）  
+- **步骤1**：通过非聚簇索引`(b, c)`扫描，先过滤`b=10`的行。  
+- **步骤2**：在索引扫描过程中，直接应用`c=20`的条件（因`c`是索引列），仅保留`b=10 AND c=20`的行，得到主键列表`[a_x1, a_x2, ..., a_xk]`（仅`k`行）。  
+- **步骤3**：回表到聚簇索引，仅获取这`k`行的完整数据（无需过滤）。  
+
+**优势**：仅回表`k`行（有效行），大幅减少I/O次数。  
+
+
+### 四、索引下推的适用条件  
+索引下推并非适用于所有场景，需满足以下条件：  
+
+
+#### 1. 过滤条件涉及索引列  
+过滤条件必须是**非聚簇索引中包含的列**（如索引`(b, c)`可支持`b=10`或`c=20`的条件，但无法支持`d=30`的条件，若`d`不在索引中）。  
+
+
+#### 2. 条件可被索引直接判断  
+过滤条件需是**简单的等式或范围判断**（如`c=20`、`c>100`），不能是：  
+- 函数或表达式（如`c+1=21`、`UPPER(c)='ABC'`）；  
+- 跨列条件（如`b + c=30`）；  
+- 子查询或聚合函数（如`c IN (SELECT ...)`）。  
+
+
+#### 3. 索引类型支持  
+索引下推适用于**非聚簇索引（二级索引）**，聚簇索引因数据与索引绑定，无需回表，因此不涉及ICP。  
+
+
+#### 4. MySQL版本要求  
+索引下推在**MySQL 5.6及以上版本**中默认启用（5.6之前需手动开启`optimizer_switch='index_condition_pushdown=on'`）。  
+
+
+### 五、索引下推的优化效果  
+索引下推的核心价值是**减少回表次数**，尤其在以下场景中效果显著：  
+
+
+#### 1. 非聚簇索引列包含多个过滤条件  
+当查询的WHERE条件包含多个索引列时（如`WHERE b=10 AND c=20`），索引下推可在索引扫描阶段过滤掉大部分无效行，仅回表少量有效行。  
+
+
+#### 2. 大表查询  
+对于数据量极大的表，非聚簇索引扫描返回的行标识符可能非常多（如百万级），但实际符合条件的行很少（如几十条）。索引下推可将回表次数从百万级降至几十条，大幅降低I/O负载。  
+
+
+#### 3. 范围查询中的过滤  
+即使查询包含范围条件（如`WHERE b>100 AND c=20`），只要`c=20`是索引列的一部分，索引下推仍可在扫描`b>100`的范围内，进一步过滤出`c=20`的行，减少回表量。  
+
+
+### 六、索引下推的局限性  
+尽管索引下推能显著提升查询性能，但其效果受限于以下因素：  
+
+
+#### 1. 索引设计是否合理  
+若索引未包含查询中的过滤列（如查询`WHERE b=10 AND c=20`，但索引仅为`(b)`），则无法触发索引下推。  
+
+
+#### 2. 过滤条件的复杂度  
+若过滤条件包含函数或复杂表达式（如`c%2=0`），索引下推无法生效，仍需回表后过滤。  
+
+
+#### 3. 数据分布的影响  
+若索引列的过滤条件区分度低（如`c=20`的行占比很高），索引下推的优化效果会减弱（但仍能减少部分回表）。  
+
+
+### 总结  
+索引下推（ICP）是MySQL针对非聚簇索引查询的重要优化技术，通过**在索引扫描阶段提前过滤无效数据**，减少回表次数，显著提升查询效率。其核心适用场景是：**查询条件包含非聚簇索引列，且过滤规则可通过索引直接判断**。  
+
+实际开发中，合理设计包含高频过滤列的非聚簇索引（如联合索引`(b, c)`），并确保查询条件符合索引下推的要求，能有效利用这一优化，降低数据库负载。
+
+
+
+## 索引 - 单列索引
+
+在MySQL中，**单列索引（Single-Column Index）**是最基础的索引类型，指在表的**单个列**上创建的索引结构。它通过为该列建立B+树（或其他结构）来加速基于该列的查询操作，是数据库优化中最常用的索引手段之一。
+
+
+### 一、单列索引的核心定义与结构  
+单列索引的核心是为表中的某一列（如`user_id`、`email`）单独建立索引，其本质是一个**B+树结构**（InnoDB和MyISAM均如此），用于快速定位该列值符合条件的行。  
+
+#### 1. 存储引擎差异  
+- **InnoDB**：单列索引属于**非聚簇索引（二级索引）**，其叶子节点存储的是**主键值**（而非完整数据行）。通过主键值需回表到聚簇索引获取完整数据（即“回表”操作）。  
+- **MyISAM**：单列索引是**非聚簇索引**，叶子节点直接存储**数据行的物理地址（ROWID）**，可直接通过ROWID定位数据（无需回表）。  
+
+
+### 二、单列索引的典型场景  
+单列索引适用于**高频查询中仅涉及单个列**的场景，常见场景包括：  
+
+#### 1. WHERE子句中的等值/范围查询  
+例如：  
+```sql
+-- 等值查询
+SELECT * FROM users WHERE email = 'alice@example.com';
+
+-- 范围查询
+SELECT * FROM orders WHERE amount > 1000;
+```
+若`email`或`amount`列有单列索引，可快速定位符合条件的行。  
+
+
+#### 2. JOIN操作的关联列  
+例如：  
+```sql
+-- 关联查询（orders表的user_id关联users表的id）
+SELECT * FROM orders 
+JOIN users ON orders.user_id = users.id 
+WHERE users.country = 'China';
+```
+若`orders.user_id`或`users.country`有单列索引，可加速关联条件的匹配。  
+
+
+#### 3. ORDER BY或GROUP BY的排序/分组列  
+例如：  
+```sql
+-- 按注册时间排序
+SELECT * FROM users ORDER BY register_time DESC;
+
+-- 按城市分组统计
+SELECT city, COUNT(*) FROM users GROUP BY city;
+```
+若`register_time`或`city`有单列索引，可避免全表扫描后的文件排序（Filesort）或临时分组。  
+
+
+### 三、单列索引的优缺点分析  
+
+
+#### **优点**  
+1. **实现简单**：仅需为单个列创建索引，语法和维护成本低（如`CREATE INDEX idx_email ON users(email);`）。  
+2. **单字段查询高效**：针对该列的等值、范围、排序等查询可快速定位数据（InnoDB需回表，MyISAM直接定位）。  
+3. **空间占用较小**：相比联合索引（多列索引），单列索引仅需存储一列的键值和指针，空间占用更低。  
+
+
+#### **缺点**  
+1. **多列查询效率有限**：若查询涉及多个列（如`WHERE name='Alice' AND age=25`），单列索引仅能利用其中一个列的索引（通常是最左匹配的列），其他列仍需全表扫描或回表过滤。  
+2. **选择性低的列效果差**：若列的区分度低（如性别列`gender`，仅`男`/`女`两个值），单列索引的过滤效果弱（索引扫描返回大量行，需回表验证），此时索引可能失效。  
+3. **写入性能受影响**：每次插入/更新/删除该列数据时，需同步更新索引（B+树的插入、分裂、合并操作），可能降低写入速度（尤其对高频写入的表）。  
+
+
+### 四、单列索引的创建与管理  
+
+
+#### 1. 创建单列索引  
+使用`CREATE INDEX`或`ALTER TABLE`语句：  
+```sql
+-- 方式1：CREATE INDEX
+CREATE INDEX idx_email ON users(email);
+
+-- 方式2：ALTER TABLE（推荐，语法更统一）
+ALTER TABLE users ADD INDEX idx_email (email);
+```
+
+
+#### 2. 查看单列索引  
+通过`SHOW INDEX`命令查看表的索引信息：  
+```sql
+SHOW INDEX FROM users;
+```
+输出结果中，`Key_name`为索引名（如`idx_email`），`Column_name`为索引列（如`email`），`Non_unique`表示是否唯一（0为唯一，1为非唯一）。  
+
+
+#### 3. 删除单列索引  
+使用`DROP INDEX`语句：  
+```sql
+DROP INDEX idx_email ON users;
+```
+
+
+### 五、单列索引 vs 联合索引  
+单列索引与联合索引（多列索引）的核心差异在于**覆盖的查询场景**：  
+
+| 特性         | 单列索引                             | 联合索引（如`(name, age)`）                   |
+| ------------ | ------------------------------------ | --------------------------------------------- |
+| **覆盖查询** | 仅支持单字段查询（如`name='Alice'`） | 支持多字段查询（如`name='Alice' AND age=25`） |
+| **最左匹配** | 不涉及                               | 支持（可匹配`(name)`、`(name, age)`）         |
+| **空间占用** | 较小（仅一列）                       | 较大（多列键值+指针）                         |
+| **适用场景** | 单字段高频查询                       | 多字段组合查询或范围查询                      |
+
+
+### 六、最佳实践建议  
+1. **优先为高频查询的单字段创建索引**：如WHERE、JOIN、ORDER BY/GROUP BY中频繁使用的列（如用户表的`email`、订单表的`order_no`）。  
+2. **避免为低选择性列创建索引**：如性别、状态（取值少）等，索引效果差且浪费空间。  
+3. **结合联合索引优化多字段查询**：若查询涉及多个列（如`WHERE name='Alice' AND age=25`），优先创建联合索引`(name, age)`，而非多个单列索引（因联合索引支持最左匹配，效率更高）。  
+4. **定期分析索引使用情况**：通过`EXPLAIN`命令查看查询执行计划，确认索引是否被有效利用（如`type`是否为`ref`或`range`，`key`是否显示目标索引）。  
+
+
+### 总结  
+单列索引是MySQL中最基础的索引类型，通过为单个列建立B+树结构，加速基于该列的查询操作。其核心优势是实现简单、单字段查询高效，但需注意在多字段查询或多条件场景中，联合索引通常更优。实际开发中，需结合业务查询模式，合理设计单列索引与联合索引，平衡读写性能。
+
+
+
+## 索引 - 联合索引
+
+在MySQL中，**联合索引（Composite Index，又称复合索引或多列索引）**是基于表的**多个列**创建的索引结构。它通过将这些列的值按顺序组合成一个键，形成B+树结构，从而加速涉及这些列的查询操作。联合索引是优化多条件查询、排序/分组操作的核心工具，也是数据库索引设计中最常用的进阶技巧之一。
+
+
+### 一、联合索引的核心定义与结构  
+联合索引的本质是将多个列的值拼接成一个**复合键**，并基于这个键构建B+树。其核心特点是：  
+- **多列组合键**：索引的键由多个列的值按定义顺序拼接而成（如索引`(col1, col2, col3)`的键是`col1值 + col2值 + col3值`）。  
+- **B+树存储**：与单列索引类似，联合索引的底层结构是B+树，但叶子节点存储的是复合键和对应的行指针（InnoDB中为**主键值**，MyISAM中为**行物理地址**）。  
+
+
+### 二、联合索引的工作原理：最左匹配原则  
+联合索引的核心优势依赖于**最左匹配原则（Leftmost Prefix Rule）**，即查询条件必须包含索引的**前缀列**才能有效利用索引。具体规则如下：  
+
+
+#### 1. 完全匹配前缀列  
+当查询条件包含索引的**所有列**（或前缀列的连续子集）时，索引可被完全利用。例如：  
+- 索引`(a, b, c)`可支持以下查询：  
+  - `WHERE a=1`（使用索引的第一列）；  
+  - `WHERE a=1 AND b=2`（使用索引的前两列）；  
+  - `WHERE a=1 AND b=2 AND c=3`（使用索引的全部三列）。  
+
+
+#### 2. 部分匹配前缀列（跳过中间列）  
+若查询条件**跳过了索引的前缀列**（如索引`(a, b, c)`，但查询条件为`WHERE a=1 AND c=3`），则索引仅能利用到`a`列（第一列），`c`列无法利用索引（除非触发索引下推等优化）。  
+
+
+#### 3. 范围查询的边界  
+若查询条件中包含**范围查询**（如`>`、`<`、`BETWEEN`），则范围查询列之后的列无法利用索引。例如：  
+- 索引`(a, b, c)`，查询`WHERE a=1 AND b>10 AND c=3`：  
+  - `a`和`b`列可用于索引扫描，但`c=3`无法利用索引（因`b`是范围查询列，其后的`c`列无法被索引有效过滤）。  
+
+
+### 三、联合索引的典型适用场景  
+联合索引通过组合多列信息，能显著优化以下场景的查询性能：  
+
+
+#### 1. 多条件等值查询  
+当查询条件包含多个列的等值匹配（如`WHERE user_id=123 AND status='active'`）时，联合索引可直接定位到符合条件的行，避免全表扫描。  
+
+**示例**：  
+表`t`有字段`user_id`（用户ID）、`status`（状态）、`create_time`（创建时间），创建联合索引`(user_id, status)`后：  
+```sql
+SELECT * FROM t WHERE user_id=123 AND status='active';
+```
+索引会先按`user_id=123`筛选，再在结果中按`status='active'`筛选，大幅减少需要回表的数据量。  
+
+
+#### 2. 排序与分组（ORDER BY/GROUP BY）  
+若查询的`ORDER BY`或`GROUP BY`列与联合索引的列顺序一致，MySQL可直接利用索引的有序性，避免额外的文件排序（Filesort）或临时分组操作。  
+
+**示例**：  
+创建联合索引`(user_id, create_time DESC)`后：  
+```sql
+-- 按user_id和create_time排序（与索引顺序一致）
+SELECT * FROM t WHERE user_id=123 ORDER BY create_time DESC;
+```
+索引本身已按`user_id`升序、`create_time`降序排列，查询时可直接遍历索引的叶子节点，无需额外排序。  
+
+
+#### 3. 覆盖索引（Covering Index）  
+若查询的列**全部包含在联合索引中**（包括索引列和主键），则MySQL无需回表到聚簇索引，直接通过联合索引即可获取完整数据（称为“覆盖索引”）。  
+
+**示例**：  
+表`t`的主键是`id`，创建联合索引`(user_id, status)`后：  
+```sql
+-- 查询列仅包含user_id、status（均在索引中）
+SELECT user_id, status FROM t WHERE user_id=123;
+```
+联合索引的叶子节点已存储`user_id`、`status`和主键`id`（InnoDB），因此无需回表，直接返回结果。  
+
+
+### 四、联合索引的设计原则与优化技巧  
+
+
+#### 1. 索引列顺序：高选择性列在前  
+联合索引的列顺序应遵循**高选择性（High Selectivity）列在前**的原则。选择性是指列中不同值的数量与总行数的比值（选择性越高，列的区分度越强）。  
+
+**示例**：  
+若列`user_id`的选择性（如100万行中`user_id`唯一）远高于`status`（如仅`active`/`inactive`两种值），则索引应设计为`(user_id, status)`，而非`(status, user_id)`。高选择性列在前可更快缩小扫描范围。  
+
+
+#### 2. 避免冗余索引  
+若已存在联合索引`(a, b)`，则无需单独创建`(a)`（因`(a, b)`已包含`a`的索引能力）。冗余索引会增加存储和维护成本（写入时需更新多个索引）。  
+
+
+#### 3. 合理控制索引长度  
+MySQL对索引键的总长度有限制（InnoDB默认3072字节，MyISAM默认1000字节）。若联合索引包含长字符串列（如`VARCHAR(255)`），需评估总长度是否超出限制，必要时使用前缀索引（如`INDEX (col(10))`，仅索引前10个字符）。  
+
+
+#### 4. 利用索引下推（ICP）优化  
+若联合索引包含更多列（如`(a, b, c)`），且查询条件包含这些列的过滤（如`WHERE a=1 AND b=2 AND c=3`），MySQL可通过索引下推在扫描阶段直接过滤`c=3`的条件，减少回表次数（详见前文“索引下推”部分）。  
+
+
+### 五、联合索引的创建与管理  
+
+
+#### 1. 创建联合索引  
+使用`CREATE INDEX`或`ALTER TABLE`语句：  
+```sql
+-- 方式1：CREATE INDEX
+CREATE INDEX idx_user_status ON t(user_id, status);
+
+-- 方式2：ALTER TABLE（推荐）
+ALTER TABLE t ADD INDEX idx_user_status (user_id, status);
+```
+
+
+#### 2. 查看联合索引  
+通过`SHOW INDEX`命令查看表的索引信息，重点关注`Key_name`（索引名）、`Column_name`（索引列顺序）、`Cardinality`（索引基数，反映选择性）：  
+```sql
+SHOW INDEX FROM t;
+```
+
+
+#### 3. 删除联合索引  
+使用`DROP INDEX`语句：  
+```sql
+DROP INDEX idx_user_status ON t;
+```
+
+
+### 六、联合索引 vs 单列索引  
+联合索引与单列索引的核心差异在于**覆盖的查询场景**和**索引效率**：  
+
+| 特性              | 单列索引                    | 联合索引（如`(a, b)`）              |
+| ----------------- | --------------------------- | ----------------------------------- |
+| **覆盖查询**      | 仅支持单字段查询（如`a=1`） | 支持多字段查询（如`a=1 AND b=2`）   |
+| **最左匹配**      | 不涉及                      | 支持（可匹配`(a)`、`(a, b)`）       |
+| **排序/分组优化** | 仅单字段排序                | 支持多字段排序（如`ORDER BY a, b`） |
+| **空间占用**      | 较小（仅一列）              | 较大（多列键值+指针）               |
+
+
+### 总结  
+联合索引是MySQL中优化多条件查询的核心工具，通过**多列组合键+B+树结构**，结合最左匹配原则，能有效加速等值查询、排序/分组及覆盖索引场景。其设计关键在于**合理选择索引列顺序**（高选择性列在前）、**避免冗余**，并利用索引下推等优化技术。实际开发中，需结合业务查询模式（如高频多条件查询、排序需求）设计联合索引，平衡读写性能。
+
+
+
+## 索引 - 创建、查看、删除
 
 **测试环境准备**
 
@@ -1366,179 +1909,9 @@ ERROR:
 No query specified
 ```
 
-### 索引使用规则最左前缀法制
 
-> 联合索引，要遵守最左前缀法则。最左前缀法则指的是查询从索引的最左列开始，并且不跳过索引中的列。如果跳跃某一列，索引将部分失效（后面的字段索引失效）。
 
-```shell
-mysql> CREATE DATABASE IF NOT EXISTS testdb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-Query OK, 1 row affected (0.01 sec)
-
-mysql> use testdb;
-Database changed
-
-create table if not exists tb_user(
-  id bigint primary key auto_increment,
-  name varchar(64) not null,
-  phone varchar(32) not null,
-  email varchar(32) not null,
-  profession varchar(32) not null,
-  age int not null,
-  gender int default 1 not null,
-  status char(1) default 0 not null,
-  createTime datetime not null
-) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 collate=utf8mb4_general_ci;
-
-insert into tb_user values
-(1,'吕布','17799990000','lvbu666@163.com','软件工程',23,1,'6','2001-02-02 00:00:00'),
-(2,'曹操','17799990001','caocao666@qq.com','通讯工程',33,1,'0','2001-03-05 00:00:00'),
-(3,'赵云','17799990002','17799990@139.com','英语',34,1,'2','2002-03-02 00:00:00'),
-(4,'孙悟空','17799990003','17799990@sina.com','工程造价',54,1,'0','2001-07-02 00:00:00'),
-(5,'花木兰','17799990004','19980729@sina.com','软件工程',23,2,'1','2001-04-22 00:00:00'),
-(6,'大乔','17799990005','daqiao6666@sina.com','舞蹈',22,2,'0','2001-02-07 00:00:00'),
-(7,'露娜','17799990006','luna_love@sina.com','应用数学',24,2,'0','2001-02-08 00:00:00'),
-(8,'程咬金','17799990007','chengyaojin@163.com','化工',38,1,'5','2001-05-23 00:00:00'),
-(9,'项羽','17799990008','xiangyu666@qq.com','金属材料',43,1,'0','2001-09-18 00:00:00'),
-(10,'白起','17799990009','baiqi666@sina.com','机械工程及其自动化',27,1,'2','2001-08-16 00:00:00'),
-(11,'韩信','17799990010','hanxin520@163.com','无机非金属材料工程',27,1,'0','2001-06-12 00:00:00'),
-(12,'荆柯','17799990011','jingke123@163.com','会计',29,1,'0','2001-05-11 00:00:00'),
-(13,'兰陵王','17799990012','lanlinwang666@126.com','工程造价',44,1,'1','2001-04-09 00:00:00'),
-(14,'狂铁','17799990013','kuangtie@sina.com','应用数学',43,2,'2','2001-04-11 00:00:00'),
-(15,'貂蝉','17799990014','84958948374@qq.com','软件工程',40,2,'3','2001-02-12 00:00:00'),
-(16,'坦己','17799990015','2783238293@qq.com','软件工程',31,2,'0','2001-01-30 00:00:00'),
-(17,'月丹','17799990016','xiaomin2001@sina.com','工业经济',35,1,'0','2000-05-03 00:00:00'),
-(18,'赢政','17799990017','8839434342@qq.com','化工',38,1,'1','2001-08-08 00:00:00'),
-(19,'狄仁杰','17799990018','jujiamlm8166@163.com','国际贸易',30,2,'0','2007-03-12 00:00:00'),
-(20,'安琪拉','17799990019','jdodm1h@126.com','城市规划',51,2,'0','2001-08-15 00:00:00'),
-(21,'典韦','17799990020','ycaunanjian@163.com','城市规划',52,1,'2','2000-04-12 00:00:00'),
-(22,'廉颇','17799990021','lianpo321@126.com','土木工程',19,1,'3','2002-07-18 00:00:00'),
-(23,'后羿','17799990022','altycj2000@139.com','城市园林',20,1,'0','2002-03-10 00:00:00'),
-(24,'姜子牙','17799990023','37483844@qq.com','工程造价',29,1,'4','2003-05-26 00:00:00');
-
-mysql> create index idx_tb_user_profession_age_status on tb_user(profession,age,status);
-Query OK, 0 rows affected (0.03 sec)
-Records: 0  Duplicates: 0  Warnings: 0
-
-# profession、age、status使用了索引，全部索引
-mysql> explain select * from tb_user where profession='软件工程' and age=31 and status='0'\G;
-*************************** 1. row ***************************
-           id: 1
-  select_type: SIMPLE
-        table: tb_user
-   partitions: NULL
-         type: ref
-possible_keys: idx_tb_user_profession_age_status
-          key: idx_tb_user_profession_age_status
-      key_len: 138
-          ref: const,const,const
-         rows: 1
-     filtered: 100.00
-        Extra: NULL
-1 row in set, 1 warning (0.00 sec)
-
-ERROR: 
-No query specified
-
-# profession、age使用了索引，部分索引
-mysql> explain select * from tb_user where profession='软件工程' and age=31\G;
-*************************** 1. row ***************************
-           id: 1
-  select_type: SIMPLE
-        table: tb_user
-   partitions: NULL
-         type: ref
-possible_keys: idx_tb_user_profession_age_status
-          key: idx_tb_user_profession_age_status
-      key_len: 134
-          ref: const,const
-         rows: 1
-     filtered: 100.00
-        Extra: NULL
-1 row in set, 1 warning (0.00 sec)
-
-ERROR: 
-No query specified
-
-# profession使用了索引，部分索引
-mysql> explain select * from tb_user where profession='软件工程'\G;
-*************************** 1. row ***************************
-           id: 1
-  select_type: SIMPLE
-        table: tb_user
-   partitions: NULL
-         type: ref
-possible_keys: idx_tb_user_profession_age_status
-          key: idx_tb_user_profession_age_status
-      key_len: 130
-          ref: const
-         rows: 4
-     filtered: 100.00
-        Extra: NULL
-1 row in set, 1 warning (0.00 sec)
-
-ERROR: 
-No query specified
-
-# 使用全表扫描，因为违背最左前缀法则没有索引可用
-mysql> explain select * from tb_user where age=31 and status='0'\G;
-*************************** 1. row ***************************
-           id: 1
-  select_type: SIMPLE
-        table: tb_user
-   partitions: NULL
-         type: ALL
-possible_keys: NULL
-          key: NULL
-      key_len: NULL
-          ref: NULL
-         rows: 24
-     filtered: 4.17
-        Extra: Using where
-1 row in set, 1 warning (0.00 sec)
-
-ERROR: 
-No query specified
-mysql> explain select * from tb_user where status='0'\G;
-*************************** 1. row ***************************
-           id: 1
-  select_type: SIMPLE
-        table: tb_user
-   partitions: NULL
-         type: ALL
-possible_keys: NULL
-          key: NULL
-      key_len: NULL
-          ref: NULL
-         rows: 24
-     filtered: 10.00
-        Extra: Using where
-1 row in set, 1 warning (0.00 sec)
-
-ERROR: 
-No query specified
-
-# 只有profession使用了索引，status并未使用索引，部分索引
-mysql> explain select * from tb_user where profession='软件工程' and status='0'\G;
-*************************** 1. row ***************************
-           id: 1
-  select_type: SIMPLE
-        table: tb_user
-   partitions: NULL
-         type: ref
-possible_keys: idx_tb_user_profession_age_status
-          key: idx_tb_user_profession_age_status
-      key_len: 130
-          ref: const
-         rows: 4
-     filtered: 10.00
-        Extra: Using index condition
-1 row in set, 1 warning (0.00 sec)
-
-ERROR: 
-No query specified
-```
-
-### 索引失效情况
+## 索引 - 失效情况
 
 ```shell
 mysql> CREATE DATABASE IF NOT EXISTS testdb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -1755,7 +2128,9 @@ mysql> explain select * from tb_user where profession is not null;
 1 row in set, 1 warning (0.00 sec)
 ```
 
-### SQL提示use、ignore、force索引
+
+
+## 索引 - `SQL` 提示 `use`、`ignore`、`force`
 
 ```shell
 mysql> CREATE DATABASE IF NOT EXISTS testdb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -1849,7 +2224,9 @@ mysql> explain select * from tb_user force index(idx_tb_user_profession) where p
 1 row in set, 1 warning (0.01 sec)
 ```
 
-### 覆盖索引&回表查询
+
+
+## 索引 - 覆盖索引&回表查询
 
 > 尽量使用覆盖索引（查询使用了索引，并且需要返回的列数据，在索引中已经全部找到不需要回表查询），减少 select.*。
 >
@@ -1933,35 +2310,36 @@ mysql> explain select * from tb_user where profession='软件工程' and age=31 
 1 row in set, 1 warning (0.00 sec)
 ```
 
-## SQL优化
 
-### 主键优化
 
-> 满足业务需求的情况下，尽量降低主键的长度。
->
-> 插入数据是尽量选择顺序插入，选择使用auto_increment自增主键。
->
-> 尽量不要使用UUID做主键或者其他自然逐渐，如身份证号。
->
-> 业务操作时，避免对主键的修改。
+## `SQL`优化 - 主键
 
-### order by优化
+>说明：通过本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-mysql-n-mariadb/demo-order-management-app) 可以测试非单调递增主键批量插入性能随着数据量增大下降严重。
 
-> using filesort: 通过表的索引或者全表扫描，读取满足条件的数据行，然后在排序缓冲区sort buffer中完成排序操作，所有不是通过索引直接返回排序结果的排序都叫filesort排序。
->
-> using index: 通过有序索引顺序扫描直接返回有序数据，这种情况即为using index，不需要而外排序，操作效率高。
->
-> 
->
-> 优化原则：
->
-> 根据排序字段建立合适的索引，多字段排序时，也遵循最左前缀法则。
->
-> 尽量使用覆盖索引。
->
-> 多个字段排序时，一个升序一个降序，此时需要注意联合索引在创建时的规则(asc/desc)。
->
-> 如果不可以避免出现filesort大数据量排序时，可适当增大排序缓冲区大小sort_buffer_size(默认256K)。
+满足业务需求的情况下，尽量降低主键的长度。
+
+插入数据是尽量选择顺序插入，选择使用 `auto_increment` 自增主键。
+
+尽量不要使用 `UUID` 做主键或者其他自然逐渐，如身份证号。
+
+业务操作时，避免对主键的修改。
+
+
+
+## `SQL`优化 - `order by`
+
+`using filesort`：通过表的索引或者全表扫描，读取满足条件的数据行，然后在排序缓冲区 `sort buffer` 中完成排序操作，所有不是通过索引直接返回排序结果的排序都叫 `filesort` 排序。
+
+`using index`：通过有序索引顺序扫描直接返回有序数据，这种情况即为 `using index`，不需要而外排序，操作效率高。
+
+
+
+优化原则：
+
+- 根据排序字段建立合适的索引，多字段排序时，也遵循最左前缀法则。
+- 尽量使用覆盖索引。
+- 多个字段排序时，一个升序一个降序，此时需要注意联合索引在创建时的规则（`asc/desc`）。
+- 如果不可以避免出现 `filesort` 大数据量排序时，可适当增大排序缓冲区大小 `sort_buffer_size（默认256K）`。
 
 ```shell
 mysql> CREATE DATABASE IF NOT EXISTS testdb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -2104,7 +2482,9 @@ mysql> explain select id,age,phone,name from tb_user order by age asc,phone desc
 1 row in set, 1 warning (0.00 sec)
 ```
 
-### group by优化
+
+
+## `SQL`优化 - `group by`
 
 > 分组操作时，索引的使用也需要满足最左前缀法则。
 
@@ -2190,7 +2570,9 @@ mysql> explain select profession,age,count(*) from tb_user where profession='软
 1 row in set, 1 warning (0.00 sec)
 ```
 
-### update优化（避免行锁升级为表锁）
+
+
+## `SQL`优化 - `update`（避免行锁升级为表锁）
 
 > InnoDB行锁是针对索引加锁（update时没有使用索引就升级为表锁）的，不是针对记录加锁的，并且该索引不能失效，否则会从行锁升级为表锁。
 
@@ -2231,6 +2613,427 @@ Query OK, 0 rows affected (0.00 sec)
 mysql> commit;
 Query OK, 0 rows affected (0.00 sec)
 ```
+
+
+
+## `SQL`优化 - 最左前缀法则
+
+联合索引，要遵守最左前缀法则。最左前缀法则指的是查询从索引的最左列开始，并且不跳过索引中的列。如果跳跃某一列，索引将部分失效（后面的字段索引失效）。
+
+
+
+### 为何不符合最左前缀法则时索引失效呢？
+
+MySQL的索引最左前缀法则是由**B+树索引的物理结构特性**决定的。要理解这个机制，需要深入分析B+树索引的工作方式。
+
+#### 🔍 B+树索引的工作原理（核心机制）
+
+##### 1. 复合索引的物理存储结构
+- **索引值排序**：复合索引 `(name, age, position)` 的存储方式：
+  ```mermaid
+  graph LR
+    A[索引节点] --> B[Alice,25,工程师]
+    A --> C[Alice,30,经理]
+    A --> D[Bob,28,开发]
+    A --> E[Bob,35,总监]
+    C --> F[Alice,30,经理]
+    D --> G[Bob,28,开发]
+  ```
+  - 先按 `name` 字母排序
+  - `name` 相同再按 `age` 排序
+  - `name` 和 `age` 都相同再按 `position` 排序
+
+##### 2. 索引查询的本质是**二分查找**
+B+树的查询路径：
+```mermaid
+flowchart TD
+    A[根节点] --> B{判断 name}
+    B --> |name < 'M'| C[左子树]
+    B --> |name > 'M'| D[右子树]
+    C --> E{判断 age}
+    D --> F{判断 age}
+    E --> |定位数据| G[叶子节点]
+```
+
+#### 🚫 为什么违反左前缀法则导致失效？
+
+##### 情况1：缺失最左列
+```sql
+SELECT * FROM employees WHERE age = 30 AND position = '经理';
+```
+- **问题**：索引树首先按 `name` 组织，没有 `name` 作为起点，系统：
+  1. 不知道从哪个 `name` 范围开始查找
+  2. 被迫扫描所有 `age=30 AND position='经理'` 的组合
+  3. 由于 `(age, position)` 在索引中**无序散列**，等同于全表扫描
+
+##### 情况2：跳过中间列
+```sql
+SELECT * FROM employees WHERE name = 'Alice' AND position = '经理';
+```
+- **部分有效**：
+  - ✅ 能用 `name='Alice'` 定位到所有Alice记录
+  - ❌ 但Alice记录中，`position` 是**乱序存储**的：
+    ```
+    Alice,25,工程师
+    Alice,30,经理    ← 需要此记录
+    Alice,28,开发
+    Alice,35,总监
+    ```
+  - 必须扫描所有Alice记录才能找到 `position='经理'`
+
+##### 情况3：范围查询阻断后续索引
+```sql
+SELECT * FROM employees 
+WHERE name = 'Alice' 
+  AND age > 25 
+  AND position = '经理';
+```
+- **失效分析**：
+  1. ✅ 使用 `name='Alice'` 定位
+  2. ✅ 使用 `age>25` 在Alice组内范围查找
+  3. ❌ `position` 无法使用索引： 
+     - 找到 `(Alice,26,开发)` 到 `(Alice,35,总监)` 的所有记录
+     - 这些记录中的 `position` **物理上无序**
+
+#### 💡 例外情况：索引覆盖扫描
+
+即使违反左前缀法则，当查询**只需要索引列**时仍可能使用索引：
+```sql
+EXPLAIN SELECT name, age FROM employees WHERE age = 30;
+```
+- **结果**：`type=index` (全索引扫描)
+- **原因**：引擎直接扫描整个索引树而跳过数据行，代价低于全表扫描
+
+#### 🛠️ 解决方案与最佳实践
+
+##### 1. 索引重组策略
+| 查询模式                 | 推荐索引                     |
+| ------------------------ | ---------------------------- |
+| `WHERE name AND age`     | `(name, age)`                |
+| `WHERE age AND position` | `(age, position)` + `(name)` |
+| `WHERE position`         | `(position)` 单列索引        |
+
+##### 2. 索引跳跃扫描（MySQL 8.0+）
+在8.0+版本中，优化器可能自动拆分查询：
+```sql
+SELECT * FROM employees WHERE position = '经理';
+```
+→ 隐式转换为：
+```sql
+SELECT * FROM employees WHERE name = 'Alice' AND position = '经理'
+UNION ALL
+SELECT * FROM employees WHERE name = 'Bob' AND position = '经理'
+...
+```
+（需满足：最左列重复值少 + 系统变量 `optimizer_switch='skip_scan=on'`）
+
+##### 3. 强制索引使用技巧
+```sql
+SELECT /*+ INDEX(tbl idx_age_position) */ * 
+FROM employees 
+WHERE position = '经理';
+```
+（谨慎使用，可能导致性能下降）
+
+#### ⚙️ 底层原理总结
+
+| 原理                 | 影响                 |
+| -------------------- | -------------------- |
+| B+树分层排序机制     | 必须从左向右使用     |
+| 索引键值的有序存储   | 断层列无法二分查找   |
+| 页式存储的最小单元   | 非连续列需全页扫描   |
+| 统计信息的优化器决策 | 成本计算拒绝无效索引 |
+
+**根本原因**：B+树的**有序分层结构**要求索引使用必须从**最左列开始逐层递进**，任意断层都会破坏二分查找的可行性，导致退化扫描。
+
+
+
+### `explain`分析索引使用情况案例`1`
+
+```sh
+mysql> CREATE DATABASE IF NOT EXISTS testdb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+Query OK, 1 row affected (0.01 sec)
+
+mysql> use testdb;
+Database changed
+
+create table if not exists tb_user(
+  id bigint primary key auto_increment,
+  name varchar(64) not null,
+  phone varchar(32) not null,
+  email varchar(32) not null,
+  profession varchar(32) not null,
+  age int not null,
+  gender int default 1 not null,
+  status char(1) default 0 not null,
+  createTime datetime not null
+) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 collate=utf8mb4_general_ci;
+
+insert into tb_user values
+(1,'吕布','17799990000','lvbu666@163.com','软件工程',23,1,'6','2001-02-02 00:00:00'),
+(2,'曹操','17799990001','caocao666@qq.com','通讯工程',33,1,'0','2001-03-05 00:00:00'),
+(3,'赵云','17799990002','17799990@139.com','英语',34,1,'2','2002-03-02 00:00:00'),
+(4,'孙悟空','17799990003','17799990@sina.com','工程造价',54,1,'0','2001-07-02 00:00:00'),
+(5,'花木兰','17799990004','19980729@sina.com','软件工程',23,2,'1','2001-04-22 00:00:00'),
+(6,'大乔','17799990005','daqiao6666@sina.com','舞蹈',22,2,'0','2001-02-07 00:00:00'),
+(7,'露娜','17799990006','luna_love@sina.com','应用数学',24,2,'0','2001-02-08 00:00:00'),
+(8,'程咬金','17799990007','chengyaojin@163.com','化工',38,1,'5','2001-05-23 00:00:00'),
+(9,'项羽','17799990008','xiangyu666@qq.com','金属材料',43,1,'0','2001-09-18 00:00:00'),
+(10,'白起','17799990009','baiqi666@sina.com','机械工程及其自动化',27,1,'2','2001-08-16 00:00:00'),
+(11,'韩信','17799990010','hanxin520@163.com','无机非金属材料工程',27,1,'0','2001-06-12 00:00:00'),
+(12,'荆柯','17799990011','jingke123@163.com','会计',29,1,'0','2001-05-11 00:00:00'),
+(13,'兰陵王','17799990012','lanlinwang666@126.com','工程造价',44,1,'1','2001-04-09 00:00:00'),
+(14,'狂铁','17799990013','kuangtie@sina.com','应用数学',43,2,'2','2001-04-11 00:00:00'),
+(15,'貂蝉','17799990014','84958948374@qq.com','软件工程',40,2,'3','2001-02-12 00:00:00'),
+(16,'坦己','17799990015','2783238293@qq.com','软件工程',31,2,'0','2001-01-30 00:00:00'),
+(17,'月丹','17799990016','xiaomin2001@sina.com','工业经济',35,1,'0','2000-05-03 00:00:00'),
+(18,'赢政','17799990017','8839434342@qq.com','化工',38,1,'1','2001-08-08 00:00:00'),
+(19,'狄仁杰','17799990018','jujiamlm8166@163.com','国际贸易',30,2,'0','2007-03-12 00:00:00'),
+(20,'安琪拉','17799990019','jdodm1h@126.com','城市规划',51,2,'0','2001-08-15 00:00:00'),
+(21,'典韦','17799990020','ycaunanjian@163.com','城市规划',52,1,'2','2000-04-12 00:00:00'),
+(22,'廉颇','17799990021','lianpo321@126.com','土木工程',19,1,'3','2002-07-18 00:00:00'),
+(23,'后羿','17799990022','altycj2000@139.com','城市园林',20,1,'0','2002-03-10 00:00:00'),
+(24,'姜子牙','17799990023','37483844@qq.com','工程造价',29,1,'4','2003-05-26 00:00:00');
+
+mysql> create index idx_tb_user_profession_age_status on tb_user(profession,age,status);
+Query OK, 0 rows affected (0.03 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+# profession、age、status使用了索引，全部索引
+mysql> explain select * from tb_user where profession='软件工程' and age=31 and status='0'\G;
+*************************** 1. row ***************************
+           id: 1
+  select_type: SIMPLE
+        table: tb_user
+   partitions: NULL
+         type: ref
+possible_keys: idx_tb_user_profession_age_status
+          key: idx_tb_user_profession_age_status
+      key_len: 138
+          ref: const,const,const
+         rows: 1
+     filtered: 100.00
+        Extra: NULL
+1 row in set, 1 warning (0.00 sec)
+
+ERROR: 
+No query specified
+
+# profession、age使用了索引，部分索引
+mysql> explain select * from tb_user where profession='软件工程' and age=31\G;
+*************************** 1. row ***************************
+           id: 1
+  select_type: SIMPLE
+        table: tb_user
+   partitions: NULL
+         type: ref
+possible_keys: idx_tb_user_profession_age_status
+          key: idx_tb_user_profession_age_status
+      key_len: 134
+          ref: const,const
+         rows: 1
+     filtered: 100.00
+        Extra: NULL
+1 row in set, 1 warning (0.00 sec)
+
+ERROR: 
+No query specified
+
+# profession使用了索引，部分索引
+mysql> explain select * from tb_user where profession='软件工程'\G;
+*************************** 1. row ***************************
+           id: 1
+  select_type: SIMPLE
+        table: tb_user
+   partitions: NULL
+         type: ref
+possible_keys: idx_tb_user_profession_age_status
+          key: idx_tb_user_profession_age_status
+      key_len: 130
+          ref: const
+         rows: 4
+     filtered: 100.00
+        Extra: NULL
+1 row in set, 1 warning (0.00 sec)
+
+ERROR: 
+No query specified
+
+# 使用全表扫描，因为违背最左前缀法则没有索引可用
+mysql> explain select * from tb_user where age=31 and status='0'\G;
+*************************** 1. row ***************************
+           id: 1
+  select_type: SIMPLE
+        table: tb_user
+   partitions: NULL
+         type: ALL
+possible_keys: NULL
+          key: NULL
+      key_len: NULL
+          ref: NULL
+         rows: 24
+     filtered: 4.17
+        Extra: Using where
+1 row in set, 1 warning (0.00 sec)
+
+ERROR: 
+No query specified
+mysql> explain select * from tb_user where status='0'\G;
+*************************** 1. row ***************************
+           id: 1
+  select_type: SIMPLE
+        table: tb_user
+   partitions: NULL
+         type: ALL
+possible_keys: NULL
+          key: NULL
+      key_len: NULL
+          ref: NULL
+         rows: 24
+     filtered: 10.00
+        Extra: Using where
+1 row in set, 1 warning (0.00 sec)
+
+ERROR: 
+No query specified
+
+# 只有profession使用了索引，status并未使用索引，部分索引
+mysql> explain select * from tb_user where profession='软件工程' and status='0'\G;
+*************************** 1. row ***************************
+           id: 1
+  select_type: SIMPLE
+        table: tb_user
+   partitions: NULL
+         type: ref
+possible_keys: idx_tb_user_profession_age_status
+          key: idx_tb_user_profession_age_status
+      key_len: 130
+          ref: const
+         rows: 4
+     filtered: 10.00
+        Extra: Using index condition
+1 row in set, 1 warning (0.00 sec)
+
+ERROR: 
+No query specified
+```
+
+
+
+### `explain`分析索引使用情况案例`2`
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-mysql-n-mariadb/demo-optimization-assist)
+
+使用上面的示例数据库脚本创建表
+
+全值匹配情况
+
+```sql
+$ explain select * from employees where name='d40d82a9-18fa-4719-9867-1d98dea4bb87' and age=55 and position='高级开发工程师';
+# id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
+1	SIMPLE	employees	ref	idx_name_age_position	idx_name_age_position	232	const,const,const	1	Using index condition
+
+```
+
+- `key_len = 232`（`232` 怎么计算得出可以参考本站 <a href="/mysql-n-mariadb/性能分析.html#explain-key-len" target="_blank">链接</a>）表示使用 `name（key_len=36*4+2=146）`、`age（key_len=4）`、`position（key_len=20*4+2）` 三个列索引，`ref = const,const,const`（`ref` 含义可以参考本站 <a href="/mysql-n-mariadb/性能分析.html#explain-ref" target="_blank">链接</a>）表示三个列都使用常量值与索引列比较。
+
+
+
+中间列中断情况
+
+```sql
+$ explain select * from employees where name='d40d82a9-18fa-4719-9867-1d98dea4bb87' and position='高级开发工程师';
+# id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
+1	SIMPLE	employees	ref	idx_name_age_position	idx_name_age_position	146	const	1	Using index condition
+
+```
+
+- `key_len = 146` 表示只使用  `name（key_len=36*4+2=146）` 一个列索引，`ref = const` 表示 `name` 列使用常量与索引列比较。
+
+
+
+没有开始列情况
+
+```sql
+$ explain select * from employees where age=55 and position='高级开发工程师';
+# id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
+1	SIMPLE	employees	ALL					1226478	Using where
+
+```
+
+- `type = all` 表示全表扫描不使用任何索引。
+
+
+
+### 性能测试
+
+使用本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-mysql-n-mariadb/demo-optimization-assist) 协助测试。
+
+使用 `ab` 工具初始化 `100` 万测试数据
+
+```sh
+ab -n 1000 -c 16 -k http://localhost:8080/api/v1/insertEmployeeBatch
+```
+
+测试全值匹配情况
+
+```sh
+$ wrk -t8 -c16 -d60s --latency --timeout 60 http://localhost:8080/api/v1/testLeftMostFully
+Running 1m test @ http://localhost:8080/api/v1/testLeftMostFully
+  8 threads and 16 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     2.02ms    1.35ms  35.73ms   91.85%
+    Req/Sec     1.06k   191.56     1.82k    70.29%
+  Latency Distribution
+     50%    1.72ms
+     75%    2.27ms
+     90%    3.08ms
+     99%    7.59ms
+  507152 requests in 1.00m, 88.03MB read
+Requests/sec:   8445.58
+Transfer/sec:      1.47MB
+```
+
+中间列中断情况
+
+```sh
+$ wrk -t8 -c16 -d60s --latency --timeout 60 http://localhost:8080/api/v1/testLeftMostWithoutMiddleColumn
+Running 1m test @ http://localhost:8080/api/v1/testLeftMostWithoutMiddleColumn
+  8 threads and 16 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     2.03ms    1.24ms  30.95ms   90.56%
+    Req/Sec     1.04k   186.12     1.76k    68.98%
+  Latency Distribution
+     50%    1.76ms
+     75%    2.32ms
+     90%    3.09ms
+     99%    6.90ms
+  497920 requests in 1.00m, 86.42MB read
+Requests/sec:   8291.16
+Transfer/sec:      1.44MB
+```
+
+没有开始列情况
+
+```sh
+$ wrk -t8 -c16 -d60s --latency --timeout 60 http://localhost:8080/api/v1/testLeftMostWithoutStartColumn
+Running 1m test @ http://localhost:8080/api/v1/testLeftMostWithoutStartColumn
+  8 threads and 16 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     1.02s   170.27ms   1.54s    71.15%
+    Req/Sec     2.63      2.86    10.00     87.51%
+  Latency Distribution
+     50%    1.03s 
+     75%    1.13s 
+     90%    1.22s 
+     99%    1.40s 
+  929 requests in 1.00m, 165.12KB read
+Requests/sec:     15.46
+Transfer/sec:      2.75KB
+
+```
+
+总结：全值匹配情况性能最好，其次为中间列中断情况，没有开始列索引失效情况性能最差。
 
 
 

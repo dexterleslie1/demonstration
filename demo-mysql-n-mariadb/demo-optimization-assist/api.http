@@ -1,0 +1,11 @@
+### 批量插入 Employee
+GET http://localhost:8080/api/v1/insertEmployeeBatch
+
+### 最左前缀法则 - 全值匹配
+GET http://localhost:8080/api/v1/testLeftMostFully
+
+### 最左前缀法则 - 没有中间列
+GET http://localhost:8080/api/v1/testLeftMostWithoutMiddleColumn
+
+### 最左前缀法则 - 没有开始列
+GET http://localhost:8080/api/v1/testLeftMostWithoutStartColumn
