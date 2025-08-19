@@ -250,9 +250,84 @@ sysprop user.country CN
 
 > 查看，修改VM诊断相关的参数 [参考链接](https://arthas.aliyun.com/doc/vmoption.html)
 
-## TODO logger
+
+
+## `logger`- 基本使用
 
 > 查看logger信息，更新logger level [参考链接](https://arthas.aliyun.com/doc/logger.html)
+
+查看所有 `logger` 信息
+
+```sh
+logger
+```
+
+
+
+查看指定名字的 `logger` 信息
+
+```sh
+logger -n namedLogger
+```
+
+
+
+更新 `logger level`
+
+```sh
+logger --name ROOT --level debug
+```
+
+
+
+默认情况下，`logger` 命令会在 `SystemClassloader` 下执行，如果应用是传统的`war`应用，或者 `spring boot fat jar` 启动的应用，那么需要指定 `classloader hashcode`。
+
+```sh
+# 获取 classloader 的 hashcode
+logger -n namedLogger
+
+logger --name namedLogger -c <classloader hashcode> --level error
+```
+
+
+
+## `logger`- 实验
+
+借助本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-java/demo-library/demo-logging-slf4j-parent/demo-spring-boot-logback) 做实验。
+
+编译应用镜像
+
+```sh
+./build.sh
+```
+
+运行应用
+
+```sh
+docker compose up -d
+```
+
+在容器中运行 `arthas`
+
+查看指定 `logger com.future.demo.controller.DemoController` 的 `classloader hash` 信息
+
+```sh
+logger -n com.future.demo.controller.DemoController
+```
+
+设置 `logger level` 为 `error` 级别
+
+```
+logger -n com.future.demo.controller.DemoController -c <classloader hash> --level error
+```
+
+再次访问接口查看控制台不会再输出日志
+
+```
+curl localhost:8080/api/v1/testPerfWithDebugLog
+```
+
+
 
 ## `heapdump`使用
 

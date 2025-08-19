@@ -164,10 +164,10 @@
         <appender-ref ref="consoleAppenderDefault"/>
     </logger>
 
-    <logger name="com.future.study.spring.boot.package1" level="debug" additivity="false">
+    <logger name="com.future.demo.spring.boot.package1" level="debug" additivity="false">
         <appender-ref ref="package1Appender"/>
     </logger>
-    <logger name="com.future.study.spring.boot.package2" level="debug" additivity="false">
+    <logger name="com.future.demo.spring.boot.package2" level="debug" additivity="false">
         <appender-ref ref="package2Appender"/>
     </logger>
     <logger name="com.future.demo.package1.TestAdditivity" level="debug" additivity="false">
