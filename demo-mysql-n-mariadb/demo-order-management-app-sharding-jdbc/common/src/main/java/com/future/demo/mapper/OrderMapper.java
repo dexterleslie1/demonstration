@@ -5,7 +5,6 @@ import com.future.demo.entity.OrderModel;
 import com.future.demo.entity.Status;
 import org.apache.ibatis.annotations.*;
 
-import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -28,7 +27,7 @@ public interface OrderMapper {
     @Select("SELECT * FROM t_order")
     List<OrderModel> selectAll();
 
-    List<OrderModel> listByUserId(@Param("userId") BigInteger userId,
+    List<OrderModel> listByUserId(@Param("userId") Long userId,
                                   @Param("status") Status status,
                                   @Param("deleteStatus") DeleteStatus deleteStatus,
                                   @Param("startTime") LocalDateTime startTime,
@@ -45,7 +44,8 @@ public interface OrderMapper {
                                       @Param("size") Long size);
 
     @Select("select * from t_order where id=#{orderId}")
-    OrderModel getById(@Param("orderId") BigInteger orderId);
+    /*OrderModel getById(@Param("orderId") BigInteger orderId);*/
+    OrderModel getById(@Param("orderId") Long orderId);
 
     @Select("<script>" +
             "   select * from t_order where id in(" +
@@ -54,11 +54,12 @@ public interface OrderMapper {
             "   </foreach>" +
             "   )" +
             "</script>")
-    List<OrderModel> listById(@Param("orderIdList") List<BigInteger> orderIdList);
+    /*List<OrderModel> listById(@Param("orderIdList") List<BigInteger> orderIdList);*/
+    List<OrderModel> listById(@Param("orderIdList") List<Long> orderIdList);
 
-    @Select("select min(id) from t_order")
-    BigInteger getIdMin();
+//    @Select("select min(id) from t_order")
+//    BigInteger getIdMin();
 
-    @Select("select id from t_order where id>#{lowerIdBoundary} order by id asc limit #{pageSize}")
-    BigInteger[] listRangeIds(@Param("lowerIdBoundary") BigInteger lowerIdBoundary, @Param("pageSize") Integer pageSize);
+//    @Select("select id from t_order where id>#{lowerIdBoundary} order by id asc limit #{pageSize}")
+//    BigInteger[] listRangeIds(@Param("lowerIdBoundary") BigInteger lowerIdBoundary, @Param("pageSize") Integer pageSize);
 }

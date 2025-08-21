@@ -7,7 +7,7 @@ services:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_general_ci
       - --skip-character-set-client-handshake
-      - --innodb-buffer-pool-size=12g
+      - --innodb-buffer-pool-size=${innodb_buffer_pool_size}
       - --server-id=${server_id}
     environment:
       - LANG=C.UTF-8

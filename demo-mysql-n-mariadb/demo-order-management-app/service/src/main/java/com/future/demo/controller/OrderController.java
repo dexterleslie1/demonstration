@@ -81,11 +81,11 @@ public class OrderController {
     @GetMapping(value = "listByUserIdAndWithoutStatus")
     public ListResponse<OrderDTO> listByUserIdAndWithoutStatus() {
         Long userId = this.orderRandomlyUtil.getUserIdRandomly();
-        LocalDateTime createTime = OrderRandomlyUtil.getCreateTimeRandomly();
-        LocalDateTime endTime = createTime.plusMonths(1);
+        LocalDateTime startTime = LocalDateTime.now().minusMonths(6);
+        LocalDateTime endTime = LocalDateTime.now();
         return ResponseUtils.successList(
                 this.orderService.listByUserIdAndWithoutStatus(
-                        userId, createTime, endTime));
+                        userId, startTime, endTime));
     }
 
     /**
@@ -96,12 +96,12 @@ public class OrderController {
     @GetMapping(value = "listByUserIdAndStatus")
     public ListResponse<OrderDTO> listByUserIdAndStatus() {
         Long userId = this.orderRandomlyUtil.getUserIdRandomly();
-        LocalDateTime createTime = OrderRandomlyUtil.getCreateTimeRandomly();
-        LocalDateTime endTime = createTime.plusMonths(1);
+        LocalDateTime startTime = LocalDateTime.now().minusMonths(6);
+        LocalDateTime endTime = LocalDateTime.now();
         Status status = OrderRandomlyUtil.getStatusRandomly();
         return ResponseUtils.successList(
                 this.orderService.listByUserIdAndStatus(
-                        userId, status, createTime, endTime));
+                        userId, status, startTime, endTime));
     }
 
     /**
@@ -112,12 +112,12 @@ public class OrderController {
     @GetMapping(value = "listByMerchantIdAndWithoutStatus")
     public ListResponse<OrderDTO> listByMerchantIdAndWithoutStatus() {
         Long merchantId = this.orderRandomlyUtil.getMerchantIdRandomly();
-        LocalDateTime createTime = OrderRandomlyUtil.getCreateTimeRandomly();
-        LocalDateTime endTime = createTime.plusMonths(1);
+        LocalDateTime startTime = LocalDateTime.now().minusMonths(6);
+        LocalDateTime endTime = LocalDateTime.now();
         DeleteStatus deleteStatus = OrderRandomlyUtil.getDeleteStatusRandomly();
         return ResponseUtils.successList(
                 this.orderService.listByMerchantIdAndWithoutStatus(
-                        merchantId, deleteStatus, createTime, endTime));
+                        merchantId, deleteStatus, startTime, endTime));
     }
 
     /**
@@ -128,13 +128,13 @@ public class OrderController {
     @GetMapping(value = "listByMerchantIdAndStatus")
     public ListResponse<OrderDTO> listByMerchantIdAndStatus() {
         Long merchantId = this.orderRandomlyUtil.getMerchantIdRandomly();
-        LocalDateTime createTime = OrderRandomlyUtil.getCreateTimeRandomly();
-        LocalDateTime endTime = createTime.plusMonths(1);
+        LocalDateTime startTime = LocalDateTime.now().minusMonths(6);
+        LocalDateTime endTime = LocalDateTime.now();
         DeleteStatus deleteStatus = OrderRandomlyUtil.getDeleteStatusRandomly();
         Status status = OrderRandomlyUtil.getStatusRandomly();
         return ResponseUtils.successList(
                 this.orderService.listByMerchantIdAndStatus(
-                        merchantId, status, deleteStatus, createTime, endTime));
+                        merchantId, status, deleteStatus, startTime, endTime));
     }
 
     /**

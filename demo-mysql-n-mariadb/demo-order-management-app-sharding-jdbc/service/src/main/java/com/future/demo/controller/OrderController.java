@@ -1,25 +1,26 @@
 package com.future.demo.controller;
 
 import cn.hutool.core.util.RandomUtil;
+import com.future.common.exception.BusinessException;
 import com.future.common.http.ListResponse;
 import com.future.common.http.ObjectResponse;
 import com.future.common.http.ResponseUtils;
+import com.future.count.CountService;
 import com.future.demo.dto.OrderDTO;
 import com.future.demo.entity.DeleteStatus;
 import com.future.demo.entity.Status;
-import com.future.demo.service.IdCacheAssistantService;
 import com.future.demo.service.OrderService;
 import com.future.demo.util.OrderRandomlyUtil;
+import com.future.random.id.picker.RandomIdPickerService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
-import java.math.BigInteger;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/order")
@@ -30,7 +31,9 @@ public class OrderController {
     @Resource
     OrderRandomlyUtil orderRandomlyUtil;
     @Resource
-    IdCacheAssistantService idCacheAssistantService;
+    RandomIdPickerService randomIdPickerService;
+    @Resource
+    CountService countService;
 
     /**
      * 创建订单
@@ -55,8 +58,10 @@ public class OrderController {
      * @return
      */
     @GetMapping(value = "getById")
-    public ObjectResponse<OrderDTO> getById() {
-        BigInteger orderId = this.idCacheAssistantService.getRandomly();
+    public ObjectResponse<OrderDTO> getById() throws BusinessException {
+        String orderIdStr = randomIdPickerService.getIdRandomly("order");
+        /*BigInteger orderId = new BigDecimal(orderIdStr).toBigInteger();*/
+        Long orderId = Long.parseLong(orderIdStr);
         OrderDTO orderDTO = this.orderService.getById(orderId);
         return ResponseUtils.successObject(orderDTO);
     }
@@ -67,13 +72,11 @@ public class OrderController {
      * @return
      */
     @GetMapping(value = "listById")
-    public ListResponse<OrderDTO> listById() {
+    public ListResponse<OrderDTO> listById() throws BusinessException {
         int idCount = RandomUtil.randomInt(1, 31);
-        List<BigInteger> orderIdList = new ArrayList<>();
-        for (int i = 0; i < idCount; i++) {
-            BigInteger orderId = this.idCacheAssistantService.getRandomly();
-            orderIdList.add(orderId);
-        }
+        List<String> orderIdStrList = randomIdPickerService.listIdRandomly("order", idCount);
+        /*List<BigInteger> orderIdList = orderIdStrList.stream().map(o -> new BigDecimal(o).toBigInteger()).collect(Collectors.toList());*/
+        List<Long> orderIdList = orderIdStrList.stream().map(Long::parseLong).collect(Collectors.toList());
         List<OrderDTO> orderDTOList = this.orderService.listById(orderIdList);
         return ResponseUtils.successList(orderDTOList);
     }
@@ -85,7 +88,7 @@ public class OrderController {
      */
     @GetMapping(value = "listByUserIdAndWithoutStatus")
     public ListResponse<OrderDTO> listByUserIdAndWithoutStatus() {
-        BigInteger userId = BigInteger.valueOf(this.orderRandomlyUtil.getUserIdRandomly());
+        Long userId = this.orderRandomlyUtil.getUserIdRandomly();
         LocalDateTime createTime = OrderRandomlyUtil.getCreateTimeRandomly();
         LocalDateTime endTime = createTime.plusMonths(1);
         return ResponseUtils.successList(
@@ -100,7 +103,7 @@ public class OrderController {
      */
     @GetMapping(value = "listByUserIdAndStatus")
     public ListResponse<OrderDTO> listByUserIdAndStatus() {
-        BigInteger userId = BigInteger.valueOf(this.orderRandomlyUtil.getUserIdRandomly());
+        Long userId = this.orderRandomlyUtil.getUserIdRandomly();
         LocalDateTime createTime = OrderRandomlyUtil.getCreateTimeRandomly();
         LocalDateTime endTime = createTime.plusMonths(1);
         Status status = OrderRandomlyUtil.getStatusRandomly();
@@ -148,7 +151,7 @@ public class OrderController {
      * @return
      */
     @GetMapping(value = "initInsertBatch")
-    public ObjectResponse<String> initInsertBatch() {
+    public ObjectResponse<String> initInsertBatch() throws BusinessException {
         this.orderService.insertBatch();
         ObjectResponse<String> response = new ObjectResponse<>();
         response.setData("成功批量初始化订单");
@@ -167,13 +170,14 @@ public class OrderController {
     }
 
     /**
-     * 初始化id缓存辅助数据
+     * 获取订单总数
      *
      * @return
+     * @throws BusinessException
      */
-    @GetMapping(value = "init")
-    public ObjectResponse<String> init() {
-        this.idCacheAssistantService.initData();
-        return ResponseUtils.successObject("成功初始化");
+    @GetMapping("getOrderCount")
+    public ObjectResponse<Long> getOrderCount() throws BusinessException {
+        long count = countService.getCountByFlag("order");
+        return ResponseUtils.successObject(count);
     }
 }

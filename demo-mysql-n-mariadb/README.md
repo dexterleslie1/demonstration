@@ -2232,6 +2232,8 @@ mysql> explain select * from tb_user force index(idx_tb_user_profession) where p
 >
 >参考资料：https://m.php.cn/article/487049.html
 
+`SQL`优化本质是针对索引`B+`树数据结构适当的调优。
+
 
 
 ## `SQL`优化 - 主键
@@ -3052,7 +3054,7 @@ $ explain select * from employees where name='d40d82a9-18fa-4719-9867-1d98dea4bb
 
 ## `SQL`优化 - 覆盖索引&回表查询
 
-> 尽量使用覆盖索引（查询使用了索引，并且需要返回的列数据，在索引中已经全部找到不需要回表查询），减少 `select *`。
+> 尽量使用覆盖索引（查询使用了索引，并且需要返回的列数据 `select id,name,age,position`，在索引中已经全部找到不需要回表查询），减少 `select *`。
 
 ### `explain`分析是否需要回表
 
@@ -3453,6 +3455,30 @@ mysql> explain select * from test_user where score>=90;
 +----+-------------+-----------+------------+-------+---------------------+---------------------+---------+------+------+----------+-----------------------+
 1 row in set, 1 warning (0.00 sec)
 ```
+
+
+
+## `SQL`优化 - `limit`分页
+
+> `todo` 做实验。
+
+
+
+## `SQL`优化 - 用`union all`代替`union`
+
+>`todo` 做实验。
+
+
+
+## `SQL`优化 - 小表驱动大表
+
+>`todo` 做实验。
+
+
+
+## `SQL`优化 - `join`的表不宜过多
+
+>`todo` 做实验。
 
 
 

@@ -3,7 +3,7 @@ create database if not exists demo character set utf8mb4 collate utf8mb4_general
 use demo;
 
 create table if not exists t_order(
-    id              decimal(30,0) not null primary key,
+    id              /*decimal(30,0)*/bigint not null,
     userId          bigint not null,
     `status`        ENUM('Unpay','Undelivery','Unreceive','Received','Canceled') NOT NULL COMMENT '订单状态：未支付、未发货、未收货、已签收、买家取消',
     payTime         datetime default null comment '付款时间',
@@ -11,15 +11,17 @@ create table if not exists t_order(
     receivedTime    datetime default null comment '签收时间',
     cancelTime      datetime default null comment '取消时间',
     deleteStatus    ENUM('Normal','Deleted') NOT NULL COMMENT '订单删除状态',
-    createTime      datetime not null
+    createTime      datetime not null,
+    primary key(id)
+    /* 分区表测试时使用下面主键 */
+    /*primary key(id,userId)*/
 ) engine=innodb character set utf8mb4 collate utf8mb4_general_ci;
 
-/*create index idx_order_userId_createTime_deleteStatus_status on t_order(userId,createTime,deleteStatus,status);
-create index idx_order_status_deleteStatus_createTime_id on t_order(status, deleteStatus, createTime, id);*/
+/*create index idx_order_userId_deleteStatus_status_createTime on t_order(userId,deleteStatus,status,createTime);*/
 
 create table if not exists t_order_detail (
     id          bigint not null primary key,
-    orderId     decimal(30,0) not null,
+    orderId     /*decimal(30,0)*/bigint not null,
     userId      bigint not null comment '协助简化和提高用户重复下单判断逻辑',
     productId   bigint not null,
     merchantId  bigint not null comment '商家ID',
@@ -43,7 +45,7 @@ begin not atomic
         -- 动态生成 SQL 语句
         SET @sql = CONCAT(
             'CREATE TABLE IF NOT EXISTS ', @table_name, ' (',
-            'id              DECIMAL(30,0) NOT NULL PRIMARY KEY,',
+            'id              /*DECIMAL(30,0)*/bigint NOT NULL PRIMARY KEY,',
             'userId          BIGINT NOT NULL,',
             '`status`        ENUM(''Unpay'',''Undelivery'',''Unreceive'',''Received'',''Canceled'') NOT NULL COMMENT ''订单状态：未支付、未发货、未收货、已签收、买家取消'',',
             'payTime         DATETIME DEFAULT NULL COMMENT ''付款时间'',',
@@ -59,11 +61,11 @@ begin not atomic
         EXECUTE stmt;
         DEALLOCATE PREPARE stmt;
 
-        /*set @index_name = concat('idx_order', var_counter, '_userId_createTime_deleteStatus_status');
-        set @sql = concat('create index ', @index_name, ' on ', @table_name, '(userId,createTime,deleteStatus,status);');
+        set @index_name = concat('idx_order', var_counter, '_userId_deleteStatus_status_createTime');
+        set @sql = concat('create index ', @index_name, ' on ', @table_name, '(userId,deleteStatus,status,createTime);');
         PREPARE stmt FROM @sql;
         EXECUTE stmt;
-        DEALLOCATE PREPARE stmt;*/
+        DEALLOCATE PREPARE stmt;
 
         /* create index idx_order1_status_deleteStatus_createTime_id on t_order1(status, deleteStatus, createTime, id); */
 
@@ -102,7 +104,7 @@ begin not atomic
         SET @sql = CONCAT(
             'CREATE TABLE IF NOT EXISTS ', @table_name, ' (',
             'id              bigint not null primary key,',
-            'orderId         decimal(30,0) not null,',
+            'orderId         /*decimal(30,0)*/bigint not null,',
             'userId          bigint not null comment ''协助简化和提高用户重复下单判断逻辑'',',
             'productId       bigint not null,',
             'merchantId      bigint not null comment ''商家ID'',',
@@ -136,9 +138,4 @@ create table if not exists t_product(
     `name`      varchar(255) not null,
     merchantId  bigint not null comment '商家ID',
     stock       int not null
-) engine=innodb character set utf8mb4 collate utf8mb4_general_ci;
-
-create table if not exists t_id_cache_assistant (
-    id          bigint not null auto_increment primary key,
-    orderId     decimal(30,0) not null
 ) engine=innodb character set utf8mb4 collate utf8mb4_general_ci;

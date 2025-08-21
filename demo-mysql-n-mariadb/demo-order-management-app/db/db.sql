@@ -23,8 +23,7 @@ create table if not exists t_order(
     createTime      datetime not null
 ) engine=innodb character set utf8mb4 collate utf8mb4_general_ci;
 
-/*create index idx_order_userId_createTime_deleteStatus_status on t_order(userId,createTime,deleteStatus,status);
-create index idx_order_status_deleteStatus_createTime_id on t_order(status, deleteStatus, createTime, id);*/
+/*create index idx_order_userId_deleteStatus_status_createTime on t_order(userId,deleteStatus,status,createTime);*/
 
 /* 根据用户ID查询订单列表索引表 */
 create table if not exists t_order_index_list_by_userid(

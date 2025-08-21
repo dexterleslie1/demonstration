@@ -15,7 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import javax.annotation.Resource;
-import java.math.BigInteger;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -122,7 +121,8 @@ public class ApplicationTests {
         // region 测试订单 getById
 
         orderModelList = this.orderMapper.selectAll();
-        BigInteger orderId = orderModelList.get(0).getId();
+        /*BigInteger orderId = orderModelList.get(0).getId();*/
+        Long orderId = orderModelList.get(0).getId();
         OrderDTO orderDTO = this.orderService.getById(orderId);
         Assertions.assertEquals(orderId, orderDTO.getId());
         Assertions.assertEquals(orderModelList.get(0).getUserId(), orderDTO.getUserId());

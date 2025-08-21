@@ -1,6 +1,5 @@
 ### 创建订单
 GET http://localhost:8080/api/v1/order/create
-Accept: application/json
 
 ### 根据订单 ID 查询订单信息
 GET http://localhost:8080/api/v1/order/getById
@@ -20,13 +19,13 @@ GET http://localhost:8080/api/v1/order/listByMerchantIdAndWithoutStatus
 ### 商家查询指定日期范围+指定状态的订单
 GET http://localhost:8080/api/v1/order/listByMerchantIdAndStatus
 
-### 批量初始化订单数据
-GET http://localhost:8080/api/v1/order/initInsertBatch
-Accept: application/json
-
 ### 批量初始化 listByUserId 索引
 GET http://localhost:8080/api/v1/order/initInsertBatchOrderIndexListByUserId
-Accept: application/json
 
-### 初始化id缓存辅助数据
-GET http://localhost:8080/api/v1/order/init
+### 批量初始化订单数据
+GET http://localhost:8080/api/v1/order/initInsertBatch
+#GET http://192.168.235.50/api/v1/order/initInsertBatch
+
+### 获取订单总数
+GET http://localhost:8080/api/v1/order/getOrderCount
+#GET http://192.168.235.50/api/v1/order/getOrderCount

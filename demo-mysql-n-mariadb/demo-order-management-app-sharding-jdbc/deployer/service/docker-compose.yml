@@ -5,6 +5,23 @@ services:
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-order-management-app-service
     environment:
       - JAVA_OPTS=-Xmx4g
+      - common_db_host=${common_db_host}
+      - common_db_port=${common_db_port}
+      - sharding_db_host1=${sharding_db_host1}
+      - sharding_db_port1=${sharding_db_port1}
+      - sharding_db_host2=${sharding_db_host2}
+      - sharding_db_port2=${sharding_db_port2}
+      - sharding_db_host3=${sharding_db_host3}
+      - sharding_db_port3=${sharding_db_port3}
+      - sharding_db_host4=${sharding_db_host4}
+      - sharding_db_port4=${sharding_db_port4}
+      - sharding_db_host5=${sharding_db_host5}
+      - sharding_db_port5=${sharding_db_port5}
+      - common_zookeeper_host=${common_zookeeper_host}
+      - random_id_picker_host=${random_id_picker_host}
+      - random_id_picker_port=${random_id_picker_port}
+      - future_count_host=${future_count_host}
+      - future_count_port=${future_count_port}
       - TZ=Asia/Shanghai
     restart: unless-stopped
     network_mode: host

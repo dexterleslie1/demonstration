@@ -1,0 +1,62 @@
+- name: "启动api服务"
+  hosts: api
+  tasks:
+    - name: "使用Docker Compose启动api服务"
+      shell: |
+        set -e
+        cd ~/deployer-order-management-app-sharding/service
+        docker compose pull && docker compose up -d
+
+- name: "启动db服务"
+  hosts: db
+  tasks:
+    - name: "使用Docker Compose启动db服务"
+      shell: |
+        set -e
+        cd ~/deployer-order-management-app-sharding/db
+        docker compose pull && docker compose up -d
+
+- name: "启动sharding-db服务"
+  hosts: sharding-db
+  tasks:
+    - name: "使用Docker Compose启动sharding-db服务"
+      shell: |
+        set -e
+        cd ~/deployer-order-management-app-sharding/db
+        docker compose pull && docker compose up -d
+
+- name: "启动公共服务"
+  hosts: common
+  tasks:
+    - name: "使用Docker Compose启动公共服务"
+      shell: |
+        set -e
+        cd ~/deployer-order-management-app-sharding/common
+        docker compose pull && docker compose up -d
+
+- name: "启动OpenResty服务"
+  hosts: openresty
+  tasks:
+    - name: "使用Docker Compose启动OpenResty服务"
+      shell: |
+        set -e
+        cd ~/deployer-order-management-app-sharding/openresty
+        docker compose pull && docker compose up -d
+
+- name: "启动prometheus公共服务"
+  hosts: common
+  tasks:
+    - name: "使用Docker Compose启动prometheus公共服务"
+      shell: |
+        set -e
+        cd ~/deployer-order-management-app-sharding/prometheus
+        docker compose pull && docker compose up -d
+
+- name: "启动node_exporter"
+  hosts: "{{ groups['all'] | difference(groups['management']) }}"
+  tasks:
+    - name: "使用Docker Compose启动node_exporter"
+      shell: |
+        set -e
+        cd ~/deployer-order-management-app-sharding/node-exporter
+        docker compose up -d

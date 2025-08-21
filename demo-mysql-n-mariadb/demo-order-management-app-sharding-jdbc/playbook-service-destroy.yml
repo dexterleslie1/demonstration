@@ -1,0 +1,62 @@
+- name: "销毁api服务"
+  hosts: api
+  tasks:
+    - name: "使用Docker Compose down销毁api服务"
+      shell: |
+        set -e
+        cd ~/deployer-order-management-app-sharding/service
+        docker compose down -v
+
+- name: "销毁db服务"
+  hosts: db
+  tasks:
+    - name: "使用Docker Compose down销毁db服务"
+      shell: |
+        set -e
+        cd ~/deployer-order-management-app-sharding/db
+        docker compose down -v
+
+- name: "销毁sharding-db服务"
+  hosts: sharding-db
+  tasks:
+    - name: "使用Docker Compose down销毁sharding-db服务"
+      shell: |
+        set -e
+        cd ~/deployer-order-management-app-sharding/db
+        docker compose down -v
+
+- name: "销毁公共服务"
+  hosts: common
+  tasks:
+    - name: "使用Docker Compose down销毁公共服务"
+      shell: |
+        set -e
+        cd ~/deployer-order-management-app-sharding/common
+        docker compose down -v
+
+- name: "销毁OpenResty服务"
+  hosts: openresty
+  tasks:
+    - name: "使用Docker Compose down销毁OpenResty服务"
+      shell: |
+        set -e
+        cd ~/deployer-order-management-app-sharding/openresty
+        docker compose down -v
+
+- name: "销毁prometheus公共服务"
+  hosts: common
+  tasks:
+    - name: "使用Docker Compose down销毁prometheus公共服务"
+      shell: |
+        set -e
+        cd ~/deployer-order-management-app-sharding/prometheus
+        docker compose down -v
+
+- name: "销毁node_exporter"
+  hosts: "{{ groups['all'] | difference(groups['management']) }}"
+  tasks:
+    - name: "使用Docker Compose down销毁node_exporter"
+      shell: |
+        set -e
+        cd ~/deployer-order-management-app-sharding/node-exporter
+        docker compose down -v
