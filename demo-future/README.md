@@ -731,11 +731,11 @@ services:
 `POM` 配置片段：
 
 ```xml
-<!-- 随机 id 选择器服务 -->
+<!-- 计数器服务 -->
 <dependency>
     <groupId>com.github.dexterleslie1</groupId>
     <artifactId>future-count-sdk</artifactId>
-    <version>1.0.2</version>
+    <version>1.1.1</version>
 </dependency>
 
 <repositories>
