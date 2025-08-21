@@ -17,7 +17,7 @@ create table if not exists t_order(
     /*primary key(id,userId)*/
 ) engine=innodb character set utf8mb4 collate utf8mb4_general_ci;
 
-/*create index idx_order_userId_deleteStatus_status_createTime on t_order(userId,deleteStatus,status,createTime);*/
+create index idx_order_test1 on t_order(userId,deleteStatus,status,createTime);
 
 create table if not exists t_order_detail (
     id          bigint not null primary key,

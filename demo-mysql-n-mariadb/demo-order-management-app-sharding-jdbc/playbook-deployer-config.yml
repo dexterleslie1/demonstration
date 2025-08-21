@@ -39,7 +39,7 @@
       lineinfile:
         path: ~/deployer-order-management-app-sharding/service/.env
         regexp: "^common_db_host="
-        line: "common_db_host={{ groups['common'][0] }}"
+        line: "common_db_host={{ groups['db'][0] }}"
 
     - name: "配置api服务的sharding_db_host1"
       lineinfile:
