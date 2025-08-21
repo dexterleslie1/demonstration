@@ -964,6 +964,32 @@ ansible-playbook playbook.yaml --inventory inventory.ini
 
 
 
+### `length`过滤器
+
+当`sharding-db`组主机数大于`5`时
+
+```yaml
+- name: 当sharding-db组主机数大于5时执行的任务
+  debug:
+    msg: "执行任务，因为sharding-db组有超过5台主机"
+  when: groups['sharding-db'] | length > 5
+```
+
+
+
+### `count`过滤器
+
+当`sharding-db`组主机数大于`5`时
+
+```yaml
+- name: 使用count的写法
+  debug:
+    msg: "执行任务"
+  when: groups['sharding-db'] | count > 5
+```
+
+
+
 ## `debug` 输出命令执行结果
 
 `playbook.yml` 内容如下：
