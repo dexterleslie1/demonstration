@@ -77,7 +77,7 @@ services:
 "proxies": {
     "http-proxy": "http://192.168.235.128:1080",
     "https-proxy": "http://192.168.235.128:1080",
-    "no-proxy": "127.0.0.0/8,192.168.1.1/24,192.168.235.1/24,registry.cn-hangzhou.aliyuncs.com"
+    "no-proxy": "127.0.0.0/8,192.168.1.1/24,192.168.235.1/24,*.aliyuncs.com"
 }
 ```
 
