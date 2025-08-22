@@ -456,7 +456,7 @@ NSObject *obj = [[NSObject alloc] init];
 
 
 
-## 派生和重写
+## 继承和重写
 
 `ClassA.h`
 
@@ -565,6 +565,560 @@ NSLog(@"ClassA to String: %@", result);
 ClassA *classB = [[ClassB alloc] initWithName:@"ClassB实例" withAge:10];
 result = [classB toString];
 NSLog(@"ClassB to String: %@", result);
+```
+
+
+
+## 类静态变量
+
+`StaticVariableClass1.h`
+
+```objective-c
+#import <Foundation/Foundation.h>
+
+NS_ASSUME_NONNULL_BEGIN
+
+/**
+ 演示使用静态变量
+ */
+@interface StaticVariableClass1 : NSObject
+
++ (NSNumber *) getStaticVariable;
+
+@end
+
+NS_ASSUME_NONNULL_END
+```
+
+`StaticVariableClass1.m`
+
+```objective-c
+#import "StaticVariableClass1.h"
+
+@implementation StaticVariableClass1
+
+static NSNumber *counter = 0;
+
++ (NSNumber *) getStaticVariable {
+    if(!counter) {
+        NSLog(@"静态counter变量不存在，已经初始化一个新的静态counter变量");
+    }
+    int counterTemporary = [counter intValue]+1;
+    counter = [NSNumber numberWithInt:counterTemporary];
+    return counter;
+}
+
+@end
+```
+
+测试
+
+```objective-c
+#import "StaticVariableClass1.h"
+
+// 静态变量演示
+NSNumber *counterTemporary = StaticVariableClass1.getStaticVariable;
+assert([counterTemporary intValue] == 1);
+counterTemporary = StaticVariableClass1.getStaticVariable;
+assert([counterTemporary intValue] == 2);
+```
+
+
+
+## 类静态方法
+
+`ClassStaticMethod.h`
+
+```objective-c
+#import <Foundation/Foundation.h>
+
+NS_ASSUME_NONNULL_BEGIN
+
+@interface ClassStaticMethod : NSObject
+
++ (void) staticMethod:(int) parameter1 parameter2:(long) parameter2;
+
+@end
+
+NS_ASSUME_NONNULL_END
+```
+
+`ClassStaticMethod.m`
+
+```objective-c
+#import "ClassStaticMethod.h"
+
+@implementation ClassStaticMethod
+
++ (void) staticMethod:(int) parameter1 parameter2:(long) parameter2 {
+    NSLog(@"parameter1=%d, parameter2=%d", parameter1, parameter1);
+}
+
+@end
+```
+
+测试
+
+```objective-c
+#import "ClassStaticMethod.h"
+
+[ClassStaticMethod staticMethod:1 parameter2:2];
+```
+
+
+
+## 类的`initialize`和`load`方法 - 概念
+
+好的，我们来详细讲解一下 Objective-C 中的 `+load` 和 `+initialize` 这两个特殊的类方法。它们是运行时机制的重要组成部分，但行为和用途有显著区别。
+
+### 总结概览
+
+| 特性             | `+load`                                                      | `+initialize`                                                |
+| :--------------- | :----------------------------------------------------------- | :----------------------------------------------------------- |
+| **调用时机**     | 非常早。在运行时将类/分类加载到内存时**立即调用**，在 `main` 函数之前。 | 相对较晚。在类**第一次**接收到消息（即方法调用）时调用。     |
+| **调用顺序**     | 1. 父类 -> 子类 <br> 2. 类 -> 分类                           | 父类 -> 子类 (如果父类未初始化)                              |
+| **调用次数**     | 每个类的 `+load` 方法**必定会且只会**调用一次。              | **可能**会被调用多次（如果子类没有实现，会调用父类的）。     |
+| **线程安全**     | 在**单线程**环境下调用，是线程安全的。                       | 在**第一次消息发送**时调用，可能处于多线程环境，需要自己保证线程安全。 |
+| **显式调用父类** | **不需要**，运行时会自动保证调用父类的 `+load`。             | **不需要**，运行时会自动保证先调用父类的 `+initialize`。     |
+| **方法实现**     | 即使子类没有实现 `+load`，也不会调用父类的。                 | 如果子类没有实现 `+initialize`，运行时**会调用父类**的实现。 |
+| **使用建议**     | 用于进行**方法交换（Method Swizzling）** 等非常早期的、必须的 setup。 | 用于进行类的**内部状态初始化**，如设置静态变量。             |
+
+---
+
+### 1. `+load` 方法
+
+#### 调用时机
+`+load` 方法是在 Objective-C 运行时加载一个类或分类时调用的。这个过程发生在 `main` 函数执行之前，所以非常早。这意味着你无法在 `+load` 方法中做任何假定当前 App 状态的事情（例如，UI 肯定还没初始化）。
+
+#### 关键特性
+*   **自动调用父类**：你不需要在子类的 `+load` 方法中写 `[super load]`。运行时会自动地、递归地确保所有父类的 `+load` 方法都先于子类被调用。
+*   **类和分类都调用**：如果一个类和它的分类都实现了 `+load`，那么**两个方法都会被调用**。类的 `+load` 先调用，分类的 `+load` 后调用。
+*   **手动调用无效**：你不能直接像 `[MyClass load]` 这样调用它，因为它是由运行时直接调用的，绕过了正常的消息发送机制。
+
+#### 典型用途
+最常见的用途是在分类中进行**方法交换（Method Swizzling）**。因为 `+load` 调用时机足够早，能保证在任何其他代码使用这个类的方法之前，就将原始实现和替换实现交换好。
+
+```objective-c
+// 在某个 UIViewController 的分类中
+#import "UIViewController+Custom.h"
+#import <objc/runtime.h>
+
+@implementation UIViewController (Custom)
+
++ (void)load {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        Class class = [self class];
+        
+        SEL originalSelector = @selector(viewDidLoad);
+        SEL swizzledSelector = @selector(custom_viewDidLoad);
+        
+        Method originalMethod = class_getInstanceMethod(class, originalSelector);
+        Method swizzledMethod = class_getInstanceMethod(class, swizzledSelector);
+        
+        // 进行方法交换
+        method_exchangeImplementations(originalMethod, swizzledMethod);
+    });
+}
+
+- (void)custom_viewDidLoad {
+    // 在调用原始实现之前做一些事情
+    NSLog(@"ViewDidLoad about to be called for: %@", self);
+    
+    // 由于方法已经交换，这里调用的是原始的 viewDidLoad
+    [self custom_viewDidLoad];
+    
+    // 在调用原始实现之后做一些事情
+}
+@end
+```
+
+---
+
+### 2. `+initialize` 方法
+
+#### 调用时机
+`+initialize` 方法是在一个类**第一次**接收到消息时被调用的。这个消息可以是任何消息：alloc、init、甚至是某个自定义方法。它比 `+load` 的调用时机晚得多，也更加“按需”。
+
+#### 关键特性
+*   **惰性调用**：如果一个类一直没被使用，它的 `+initialize` 方法就永远不会被调用。
+*   **自动调用父类**：运行时在调用子类的 `+initialize` 之前，会确保其父类已经初始化过了。你同样不需要写 `[super initialize]`。
+*   **可能的多次调用**：这是最容易出错的地方。如果子类没有实现 `+initialize` 方法，那么当子类第一次收到消息时，运行时**会调用父类的 `+initialize` 方法**（因为继承机制）。因此，你的实现应该像下面例子中那样使用 `dispatch_once` 来确保代码只执行一次。
+
+#### 典型用途
+用于初始化类的静态变量或执行一次性的设置。因为它是在类第一次使用时才调用，所以比 `+load` 更适合用来设置一些可能在运行时被更改的静态状态。
+
+```objective-c
+@implementation MyClass
+
+static NSMutableDictionary *myStaticDictionary = nil;
+
++ (void)initialize {
+    // 使用 dispatch_once 来防止父类的 initialize 由于子类未实现而被多次调用
+    if (self == [MyClass class]) { 
+        static dispatch_once_t onceToken;
+        dispatch_once(&onceToken, ^{
+            myStaticDictionary = [[NSMutableDictionary alloc] init];
+            NSLog(@"MyClass has been initialized for the first time!");
+            // 其他一次性设置...
+        });
+    }
+}
+
+// 或者更常见的写法，不检查类，直接使用 dispatch_once
++ (void)initialize {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        myStaticDictionary = [[NSMutableDictionary alloc] init];
+        NSLog(@"%@ initialized", NSStringFromClass(self));
+        // 注意：这样写，每个子类第一次使用时也会触发一次自己的初始化。
+    });
+}
+
+@end
+```
+
+### 重要提醒和最佳实践
+
+1.  **保持轻量**：无论是 `+load` 还是 `+initialize`，都应该保持方法的轻量，避免执行耗时操作，以免影响 App 的启动时间或首次使用某个类时的性能。
+2.  **避免依赖**：在 `+load` 中，不要假定其他类已经被加载了（除非你有明确的控制顺序），也不要创建复杂的初始化依赖关系。
+3.  **`dispatch_once` 是必须的**：在 `+initialize` 中，**总是**使用 `dispatch_once` 来包装你的初始化代码，这是防止由于子类未实现而导致父类初始化逻辑被多次执行的唯一安全方式。
+4.  **`+load` 中的线程安全**：虽然在 `+load` 中是单线程，但你交换的方法可能会在多线程环境下被调用，所以 Swizzling 本身也要考虑线程安全问题。
+
+总而言之，`+load` 是进行**全局、早期、必须的**设置（如方法交换），而 `+initialize` 是进行**类内部、惰性的、按需的**初始化。理解它们的区别对于编写正确和高效的 Objective-C 代码至关重要。
+
+
+
+## 类的`initialize`和`load`方法 - 实验
+
+`StaticClass1.h`
+
+```objective-c
+#import <Foundation/Foundation.h>
+
+NS_ASSUME_NONNULL_BEGIN
+
+@interface StaticClass1 : NSObject
+
+@end
+
+NS_ASSUME_NONNULL_END
+```
+
+`StaticClass1.m`
+
+```objective-c
+#import "StaticClass1.h"
+
+@implementation StaticClass1
+
++ (void) initialize {
+    NSLog(@"+++++++++:%s", __func__);
+}
+
++ (void) load {
+    NSLog(@"+++++++++:%s", __func__);
+}
+
+- (StaticClass1 *) init {
+    self = [super init];
+    if(!self) {
+        return nil;
+    }
+        
+    NSLog(@"+++++++++:%s %@", __func__, [self class]);
+    return self;
+}
+
+@end
+
+```
+
+`StaticClass2.h`
+
+```objective-c
+#import <Foundation/Foundation.h>
+
+NS_ASSUME_NONNULL_BEGIN
+
+/**
+ StaticClass2在程序中不被调用
+ 查看+initialize、+load调用情况
+ */
+@interface StaticClass2 : NSObject
+
+@end
+
+NS_ASSUME_NONNULL_END
+```
+
+`StaticClass2.m`
+
+```objective-c
+#import "StaticClass2.h"
+
+@implementation StaticClass2
+
++ (void) initialize {
+    NSLog(@"+++++++++:%s", __func__);
+}
+
++ (void) load {
+    NSLog(@"+++++++++:%s", __func__);
+}
+
+@end
+
+```
+
+`StaticClass1Sub1.h`
+
+```objective-c
+#import <Foundation/Foundation.h>
+#import "StaticClass1.h"
+
+NS_ASSUME_NONNULL_BEGIN
+
+@interface StaticClass1Sub1 : StaticClass1
+
+@end
+
+NS_ASSUME_NONNULL_END
+```
+
+`StaticClass1Sub1.m`
+
+```objective-c
+#import "StaticClass1Sub1.h"
+
+@implementation StaticClass1Sub1
+
+@end
+
+```
+
+测试
+
+```objective-c
+#import "StaticClass1.h"
+#import "StaticClass1Sub1.h"
+
+// 静态+initialize、+load方法演示
+StaticClass1 *staticClass1 = [[StaticClass1 alloc] init];
+StaticClass1Sub1 *staticClass1Sub1 = [[StaticClass1Sub1 alloc] init];
+```
+
+
+
+## `@property`和`@synthesize` - 概念
+
+好的，我们来深入浅出地讲解 Objective-C 中的 `@property` 和 `@synthesize`。它们是 Objective-C 中定义和管理类属性的核心机制。
+
+### 总结概览
+
+| 特性         | `@property`                                                  | `@synthesize`                                                |
+| :----------- | :----------------------------------------------------------- | :----------------------------------------------------------- |
+| **角色**     | **声明/接口**。在头文件（.h）中声明一个属性的名字和特性（如读写权限、内存管理语义等）。 | **实现/后端**。在实现文件（.m）中告诉编译器自动生成或指定一个具体的实例变量（ivar）和属性访问器方法（getter/setter）的实现。 |
+| **目的**     | 向外部世界公开一个属性，并定义其行为规则。                   | 省去手动编写重复的 getter 和 setter 方法的代码。             |
+| **现代版本** | 从 Xcode 4.4 (LLVM Compiler 4.0) 开始，`@synthesize` 在大多数情况下是**隐式**的、可省略的。 | 编译器会自动为你 `@synthesize propertyName = _propertyName;` |
+
+---
+
+### 1. `@property` - 属性的声明
+
+`@property` 是一个编译器指令，用于在类的接口（`@interface`）部分声明一个属性。它的本质是**自动声明了对应的 setter 和 getter 方法**。
+
+#### 基本语法
+```objective-c
+@property (<attributes>) <type> <propertyName>;
+```
+
+#### 属性特性（Attributes）
+属性特性分为三类：**原子性**、**读写权限**和**内存管理语义**。
+
+1.  **原子性 (Atomicity)**
+    *   `atomic`（默认）：保证 setter 和 getter 方法的原子性，是线程安全的（但并**不能保证整个对象是线程安全的**）。性能有轻微开销。
+    *   `nonatomic`：不保证原子性，性能更好。在单线程或明确管理线程安全的情况下，**绝大多数情况下都使用这个**。
+
+2.  **读写权限 (Readwrite/Readonly)**
+    *   `readwrite`（默认）：自动生成 getter 和 setter 方法。
+    *   `readonly`：只生成 getter 方法，不生成 setter。通常用于实现只读属性或在类扩展中重新声明为 `readwrite`。
+
+3.  **内存管理语义 (Memory Management)**
+    *   `strong` (默认用于对象类型)：强引用，拥有对象的所有权。只要强引用存在，对象就不会被释放。
+    *   `weak`：弱引用，不拥有对象所有权。当被引用的对象被销毁时，此属性会自动设置为 `nil`，防止野指针。非常适用于 delegate 和 IBOutlet 来避免循环引用。
+    *   `copy`：在 setter 中，对传入的对象调用 `copy` 方法生成一个副本，然后对副本进行强引用。常用于保护 `NSString`, `NSArray`, `NSDictionary` 等可变子类的封装性。
+    *   `assign`（默认用于基本数据类型如 `int`, `float`, `NSInteger`等）：简单的赋值操作，不进行任何内存管理。也用于弱引用但不自动置 nil 的情况（如 `delegate` 在 ARC 之前使用 `assign`，现在应使用 `weak`）。
+    *   `unsafe_unretained`：类似于 `weak`，但当对象被销毁时，指针**不会自动置为 nil**，是不安全的（可能产生野指针）。
+
+#### 示例：声明属性
+```objective-c
+// Person.h
+@interface Person : NSObject
+
+// 声明一个非原子的、强引用的 NSString 属性
+@property (nonatomic, strong) NSString *name;
+
+// 声明一个只读的、基本的 NSInteger 属性
+@property (nonatomic, readonly) NSInteger age;
+
+// 声明一个非原子的、copy 的 NSString 属性（防止外部可变字符串被修改后影响内部）
+@property (nonatomic, copy) NSString *identifier;
+
+// 声明一个弱引用的 delegate 属性（避免循环引用）
+@property (nonatomic, weak) id<PersonDelegate> delegate;
+
+@end
+```
+上面的声明等价于在 `.h` 中告诉外界，`Person` 类拥有 `- (NSString *)name;` 和 `- (void)setName:(NSString *)name;` 这两个方法。
+
+---
+
+### 2. `@synthesize` - 属性的实现
+
+`@synthesize` 也是一个编译器指令，用于在类的实现（`@implementation`）部分。它的作用是**告诉编译器自动生成属性所需的 getter 和 setter 方法的实现，以及一个背后存储值的实例变量（ivar）**。
+
+#### 基本语法
+```objective-c
+@synthesize <propertyName> = <instanceVariableName>;
+```
+*   `<propertyName>`：对应的属性名。
+*   `<instanceVariableName>`：编译器生成的实例变量的名字。如果省略 `= <instanceVariableName>`，则默认生成的实例变量名就是属性名（例如 `@synthesize name;` 会生成 `name` 变量）。
+
+#### 历史与现代用法
+
+1.  **早期版本 (显式合成)**
+    在 Xcode 4.4 之前，你必须手动使用 `@synthesize`，否则编译器只会声明方法而不会实现它们，导致链接错误。
+    ```objective-c
+    // Person.m (古老的方式)
+    @implementation Person
+    @synthesize name = _name; // 生成实例变量 _name 以及 getter/setter
+    @synthesize age;          // 生成实例变量 age 以及 getter/setter
+    @end
+    ```
+    这里，`_name` 是实例变量的名字，而 `self.name` 或 `[self name]` 是调用方法。
+
+2.  **现代版本 (自动合成 || Auto Synthesis)**
+    **从 Xcode 4.4 开始，编译器做了一个极大的改进：如果你没有显式地写 `@synthesize`，编译器会自动为你完成这一步。**
+    
+    默认的规则是：
+    ```objective-c
+    @synthesize propertyName = _propertyName;
+    ```
+    也就是说，编译器会：
+    *   自动生成一个以下划线（`_`）开头的实例变量（如 `_name`）。
+    *   自动生成 getter (`- (NSString *)name`) 和 setter (`- (void)setName:(NSString *)name`) 的标准实现。
+
+    因此，在现代 Objective-C 开发中，**.m 文件中的 `@synthesize` 在绝大多数情况下是可以省略的**。
+
+#### 什么时候还需要显式使用 `@synthesize`？
+虽然很少见，但仍有几种情况需要你手动使用 `@synthesize`：
+
+1.  **修改默认的实例变量名**：如果你不喜欢默认的 `_propertyName` 命名风格，可以改回旧的风格。
+    ```objective-c
+    @implementation Person
+    @synthesize name = ivar_name; // 现在实例变量叫 ivar_name，而不是 _name
+    @end
+    ```
+
+2.  **为 `readonly` 属性生成 setter**：在类扩展（Class Extension）中将一个公开的 `readonly` 属性重新声明为 `readwrite`，然后需要手动合成来生成 setter。
+    ```objective-c
+    // Person.h
+    @interface Person : NSObject
+    @property (nonatomic, readonly) NSInteger uniqueId;
+    @end
+    
+    // Person.m
+    @interface Person () // 类扩展
+    @property (nonatomic, readwrite) NSInteger uniqueId; // 重新声明为 readwrite
+    @end
+    
+    @implementation Person
+    @synthesize uniqueId = _uniqueId; // 显式合成以生成 setter 方法
+    - (void)generateId {
+        self.uniqueId = 123; // 现在在内部可以使用了
+    }
+    @end
+    ```
+
+3.  **重写 getter/setter 但仍需实例变量**：如果你自定义了 getter 或 setter 方法，编译器就不会自动生成实例变量。此时如果你还需要一个实例变量，就必须使用 `@synthesize` 来告诉编译器生成一个。
+    ```objective-c
+    @implementation Person
+    @synthesize name = _customName; // 自定义实例变量名
+    
+    - (NSString *)name {
+        // 自定义 getter 逻辑
+        return _customName ?: @"Unknown";
+    }
+    
+    - (void)setName:(NSString *)name {
+        // 自定义 setter 逻辑
+        _customName = [name copy];
+    }
+    @end
+    ```
+
+### 总结与最佳实践
+
+1.  **默认情况**：只需在 `.h` 文件中使用 `@property` 声明属性，在 `.m` 文件中**完全省略 `@synthesize`**。让编译器自动处理一切，这是最现代和简洁的做法。
+2.  **访问方式**：
+    *   **外部**：使用 `object.propertyName`（点语法）或 `[object propertyName]`（方法调用）。
+    *   **内部**：在实例方法中，直接使用 `_propertyName` 来访问背后的实例变量（通常更快，且避免了触发 KVO）。使用 `self.propertyName` 来调用访问器方法（会触发 KVO，并且执行自定义的 getter/setter 逻辑）。
+3.  **属性特性选择**：
+    *   对象类型几乎总是用 `nonatomic`。
+    *   `NSString`, `NSArray`, `NSDictionary` 等常用 `copy`。
+    *   `delegate` 和 `IBOutlet` 永远用 `weak`。
+    *   基本数据类型用 `assign`。
+
+理解了 `@property` 和 `@synthesize` 的关系，就掌握了 Objective-C 中封装和数据管理的核心。
+
+
+
+## `@property`和`@synthesize` - 实验
+
+`Person.h`
+
+```objective-c
+#import <Foundation/Foundation.h>
+
+/* 演示@property和@synthesize用法 */
+@interface Person : NSObject
+
+@property NSString * name;
+@property NSString * password;
+
+- (void) toString:(int) age;
+
+@end
+```
+
+`Person.m`
+
+```objective-c
+#import "Person.h"
+
+@implementation Person
+
+@synthesize name;
+@synthesize password;
+
+- (void) toString:(int) age {
+    NSLog(@"age=%d, name=%@, password=%@", age, name, password);
+}
+
+@end
+```
+
+测试
+
+```objective-c
+#import "Person.h"
+
+Person *person = [[Person alloc] init];
+person.name = @"姓名";
+person.password = @"123456789";
+NSLog(@"name=%@, password=%@", person.name, person.password);
+[person toString:12];
 ```
 
 
