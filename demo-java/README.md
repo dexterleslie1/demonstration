@@ -891,3 +891,16 @@ public class Main {
 }
 ```
 
+
+
+## `JMX` - 启用`SpringBoot`内嵌`Tomcat`的`MBean`
+
+>提示：如果不启用 `SpringBoot` 的 `MBean`，使用 `jconsole` 连接 `JMX` 后不会显式关于 `Tomcat` 的 `MBean`。
+
+`application.properties` 添加如下配置：
+
+```properties
+# 启用 Tomcat 的 MBean 注册
+server.tomcat.mbeanregistry.enabled=true
+```
+
