@@ -1351,11 +1351,52 @@ kafka-manager:
 
 
 
-## 管理
-
-### `Topic`
+## 命令
 
 借助本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-kafka/demo-kafka-benchmark) 做下面的测试。
+
+列出所有的消费者组
+
+```sh
+$ KAFKA_JMX_OPTS="" /usr/bin/kafka-consumer-groups --bootstrap-server localhost:9092 --list
+group-topic-test-alter-partitions-online
+group-topicBatchSend1
+group-topic1
+group-topic2
+```
+
+
+
+查看指定 `group` 的消费者信息
+
+```sh
+$ KAFKA_JMX_OPTS="" /usr/bin/kafka-consumer-groups --bootstrap-server localhost:9092 --describe --group group-topic1
+# 没有启动消费者时
+GROUP           TOPIC           PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID     HOST            CLIENT-ID
+group-topic1    my-topic-1      196        134             153             19              -               -               -
+group-topic1    my-topic-1      237        145             167             22              -               -               -
+group-topic1    my-topic-1      127        142             159             17              -               -               -
+group-topic1    my-topic-1      203        146             161             15              -               -               -
+group-topic1    my-topic-1      166        136             150             14              -               -               -
+
+# 启动消费者时
+GROUP           TOPIC           PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID                                                    HOST            CLIENT-ID
+group-topic1    my-topic-1      92         170             170             0               consumer-group-topic1-349-504dcafa-5e3d-4b7f-999f-238a2b350e81 /192.168.1.181  consumer-group-topic1-349
+group-topic1    my-topic-1      202        178             178             0               consumer-group-topic1-459-5d7aadd1-5823-4122-8219-8dbfcd69f1a4 /192.168.1.181  consumer-group-topic1-459
+group-topic1    my-topic-1      214        166             166             0               consumer-group-topic1-471-3316cfcb-2d31-436a-b1e2-bd61b52187f9 /192.168.1.181  consumer-group-topic1-471
+group-topic1    my-topic-1      25         167             167             0               consumer-group-topic1-282-7fbb49a3-0755-476d-9c5c-01cd2c603c5b /192.168.1.181  consumer-group-topic1-282
+group-topic1    my-topic-1      6          140             140             0               consumer-group-topic1-263-1e049b32-cd1d-453d-8b92-04dc3282821a /192.168.1.181  consumer-group-topic1-263
+group-topic1    my-topic-1      192        192             192             0               consumer-group-topic1-449-c68d92ef-ed34-43a3-8a96-4b2fa1e02548 /192.168.1.181  consumer-group-topic1-449
+group-topic1    my-topic-1      80         170             170             0               consumer-group-topic1-337-5f1a3ede-1168-496a-87c2-210b8423a3f7 /192.168.1.181  consumer-group-topic1-337
+```
+
+- `TOPIC & PARTITION`：主题和分区的编号。
+- `CURRENT-OFFSET`：消费者组在这个分区上最后一次提交的偏移量。即消费者当前消费到的位置。
+- `LOG-END-OFFSET`：这个分区中最后一条消息的偏移量（即生产的最新消息位置）。
+- `LAG`：滞后值。这是最关键的一列，计算公式为：`LAG = LOG-END-OFFSET - CURRENT-OFFSET`。`LAG = 0` 表示消费者已经消费了所有生产的消息，处于“追上”的状态。`LAG > 0`表示消费者落后于生产者，还有消息未消费。这是正常情况。`LAG 持续增长` 可能表示消费者消费速度跟不上生产速度，可能出现了性能问题。
+- `CONSUMER-ID, HOST, CLIENT-ID`：当前正在消费该分区的消费者实例信息。
+
+
 
 创建名为 `topic1`，分区数为`1`，副本数为`1`的 `topic`：
 
