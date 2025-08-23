@@ -667,6 +667,51 @@ NS_ASSUME_NONNULL_END
 
 
 
+## 类实例方法
+
+`InstanceMethod.h`
+
+```objective-c
+#ifndef InstanceMethod_h
+#define InstanceMethod_h
+
+@interface InstanceMethod : NSObject
+
+- (NSString *) sayHello:(NSString *) name;
+
+@end
+
+#endif /* InstanceMethod_h */
+```
+
+`InstanceMethod.m`
+
+```objective-c
+#import <Foundation/Foundation.h>
+#import "InstanceMethod.h"
+
+@implementation InstanceMethod
+
+- (NSString *) sayHello:(NSString *)name {
+    NSString *helloStr = [NSString stringWithFormat: @"Hello %@", name];
+    return helloStr;
+}
+
+@end
+```
+
+测试
+
+```objective-c
+#import "InstanceMethod.h"
+
+InstanceMethod *instanceMethod = [[InstanceMethod alloc] init];
+NSString *helloStr = [instanceMethod sayHello: @"Dexter"];
+assert([helloStr isEqualToString: @"Hello Dexter"]);
+```
+
+
+
 ## 类的`initialize`和`load`方法 - 概念
 
 好的，我们来详细讲解一下 Objective-C 中的 `+load` 和 `+initialize` 这两个特殊的类方法。它们是运行时机制的重要组成部分，但行为和用途有显著区别。
@@ -1861,5 +1906,237 @@ NS_ASSUME_NONNULL_END
 
 @end
 
+```
+
+
+
+## `NSString`
+
+
+
+### `char *`转换为`NSString *`
+
+```objective-c
+// char*转换为NSString
+// https://stackoverflow.com/questions/10797350/convert-char-to-nsstring
+char *ptr = "Dexter";
+NSString *str = [NSString stringWithUTF8String: ptr];
+assert([str isEqualToString: @"Dexter"]);
+```
+
+
+
+### `NSString *`转换为`char *`
+
+```objective-c
+// NSString *转换为char *
+// https://stackoverflow.com/questions/2996657/converting-an-nsstring-to-char
+NSString *uuid = [[NSUUID UUID] UUIDString];
+NSString *instanceId = [NSString stringWithFormat:@";+sip.instance=\"<urn:uuid:%@>\"", uuid];
+const char *charTemporary = [instanceId UTF8String];
+NSLog(@"char=%@", [NSString stringWithUTF8String: charTemporary]);
+```
+
+
+
+### `char`转`NSString`
+
+```objective-c
+// char转NSString
+// https://www.jianshu.com/p/a0f62ff8e0fe
+NSMutableArray<NSString *> *arrayAZ = [[NSMutableArray alloc] init];
+for(int i=65; i<=90; i++) {
+    char charTemporary = (char)i;
+    [arrayAZ addObject:[NSString stringWithFormat:@"%c", charTemporary]];
+}
+assert([arrayAZ[0] isEqualToString: @"A"]);
+assert([arrayAZ[25] isEqualToString: @"Z"]);
+```
+
+
+
+### `padding`
+
+```objective-c
+// https://stackoverflow.com/questions/5386351/objective-c-code-to-right-pad-a-nsstring
+NSString *someString = @"1234";
+NSString *padded = [someString stringByPaddingToLength:8 withString:@" " startingAtIndex:0];
+NSLog(@"[%@]", someString);
+NSLog(@"[%@]", padded);
+```
+
+
+
+### 字符串格式化
+
+```objective-c
+NSString *str = [NSString stringWithFormat:@"Hello %@", @"Dexter"];
+assert([str isEqualToString:@"Hello Dexter"]);
+```
+
+
+
+### 截取子字符串
+
+```objective-c
+// 截取子字符串
+NSString *sipAccountUri = @"sip:5@192.168.1.66:5060";
+NSRange range = [sipAccountUri rangeOfString:@"@"];
+NSString *registerUri = [sipAccountUri substringFromIndex:range.location+range.length];
+NSAssert([registerUri isEqualToString:@"192.168.1.66:5060"], @"意料之外错误");
+```
+
+
+
+## `NSObject`的`class`方法
+
+这是一个非常基础且核心的方法，理解它对于掌握 Objective-C 的运行时机制和对象模型至关重要。
+
+### 1. 方法定义与作用
+
+在 `NSObject` 协议和类中，`class` 方法的定义如下：
+
+```objectivec
+- (Class)class;
++ (Class)class;
+```
+
+**作用：返回接收者的类对象（Class Object）。**
+
+- **实例方法 `-class`**：当被一个**对象实例**调用时，它返回该对象所属的类。
+- **类方法 `+class`**：当被一个**类**调用时，它返回这个类本身。
+
+在绝大多数情况下，无论你是向实例还是向类发送 `class` 消息，你得到的结果是**相同**的。
+
+### 2. 核心概念：类对象（Class Object）
+
+在 Objective-C 中，**类本身也是一个对象**。这被称为“类对象”。类对象是运行时在内存中创建的一种特殊结构，它存储了类的所有元信息，例如：
+
+- 类的名称 (`NSStringFromClass([obj class])`)
+- 父类 (`[obj superclass]`)
+- 遵循的协议列表
+- 属性的信息
+- 最重要的：实例方法列表
+
+当你调用 `[someObject class]` 时，你获取到的就是这个描述 `someObject` 的“蓝图”或“模具”的对象。
+
+### 3. 代码示例
+
+```objectivec
+#import <Foundation/Foundation.h>
+
+// 定义一个简单的 Person 类
+@interface Person : NSObject
+@property (nonatomic, copy) NSString *name;
+- (void)sayHello;
+@end
+
+@implementation Person
+- (void)sayHello {
+    NSLog(@"Hello, my name is %@", self.name);
+}
+@end
+
+int main(int argc, const char * argv[]) {
+    @autoreleasepool {
+        // 1. 创建一个实例对象
+        Person *aPerson = [[Person alloc] init];
+        aPerson.name = @"Alice";
+        
+        // 2. 调用实例方法 -class
+        // 返回：aPerson 实例所属的类，即 Person 类对象
+        Class instanceClass = [aPerson class];
+        NSLog(@"Instance's class: %@", instanceClass); // 输出：Person
+        
+        // 3. 调用类方法 +class
+        // 返回：Person 类本身
+        Class classClass = [Person class];
+        NSLog(@"Class's class: %@", classClass); // 输出：Person
+        
+        // 4. 证明两者是相等的
+        if (instanceClass == classClass) {
+            NSLog(@"-class and +class return the SAME Class object.");
+        }
+        
+        // 5. 使用类对象
+        // 你可以用类对象来做很多事情，比如创建实例、判断类型等
+        
+        // a) 创建实例 (等同于 [[Person alloc] init])
+        Person *anotherPerson = [[instanceClass alloc] init];
+        anotherPerson.name = @"Bob";
+        [anotherPerson sayHello];
+        
+        // b) 判断一个对象是否是某个类或其子类的实例
+        if ([aPerson isKindOfClass:instanceClass]) {
+            NSLog(@"aPerson is a kind of Person");
+        }
+        
+        // c) 判断一个对象是否 precisely 是某个类的实例（不包括子类）
+        if ([aPerson isMemberOfClass:instanceClass]) {
+            NSLog(@"aPerson is a member of precisely the Person class");
+        }
+        
+        // d) 获取类名
+        NSLog(@"Class name: %s", class_getName(instanceClass)); // C 函数，输出：Person
+    }
+    return 0;
+}
+```
+
+### 4. 与 `superclass` 方法的关联
+
+`NSObject` 还有一个类似的方法 `superclass`。
+
+- `- (Class)superclass;`：返回接收者实例的**父类**的类对象。
+- `+ (Class)superclass;`：返回接收者类的**父类**的类对象。
+
+```objectivec
+// 接上面的例子
+Class superClassOfInstance = [aPerson superclass]; // 返回 NSObject 的类对象
+Class superClassOfClass = [Person superclass];     // 同样返回 NSObject 的类对象
+
+NSLog(@"Person's superclass: %@", superClassOfClass); // 输出：NSObject
+```
+
+### 5. 底层实现原理
+
+在 Objective-C 的运行时中，每个对象的结构体（`struct objc_object`）的第一个成员都是一个 `isa` 指针。这个指针指向对象所属的类对象（`struct objc_class`）。
+
+当你向一个实例对象发送 `-class` 消息时，运行时实际上就是直接返回这个 `isa` 指针所指向的地址。
+
+而类对象的 `isa` 指针则指向它的**元类（Meta Class）**，这是另一个话题了。
+
+**简单来说，`-class` 方法可以理解为：**
+```objectivec
+- (Class)class {
+    return self->isa;
+}
+```
+（注意：这是概念上的解释，现代运行时的实际实现会更复杂，但逻辑相同）。
+
+### 总结
+
+| 特性         | 描述                                                         |
+| :----------- | :----------------------------------------------------------- |
+| **方法签名** | `- (Class)class` 和 `+ (Class)class`                         |
+| **核心作用** | **返回接收者的类对象**。实例方法返回实例所属的类，类方法返回类自身。 |
+| **返回值**   | 一个 `Class` 类型的对象，代表 Objective-C 中的一个类。       |
+| **主要用途** | 1. **运行时 introspection**：检查对象的类型 (`isKindOfClass:`, `isMemberOfClass:`)。 <br> 2. **动态创建**：使用类对象来动态创建实例 (`[[aClass alloc] init]`)。 <br> 3. **获取信息**：通过运行时 API 查询类的属性、方法等信息。 |
+| **关键点**   | 类本身也是对象（类对象），`class` 方法就是获取这个对象的最佳方式。 |
+
+因此，`class` 方法是连接实例和其类型定义（类）的桥梁，是 Objective-C 动态特性的基石之一。
+
+
+
+## `isKindOfClass`
+
+>方法用于判断一个对象是否是某个特定类或其继承链中任意子类的实例。
+
+```objective-c
+NSString *str = @"D";
+assert([str isKindOfClass: [NSString class]]);
+
+NSNumber *number = @5;
+assert([number isKindOfClass: [NSNumber class]]);
 ```
 
