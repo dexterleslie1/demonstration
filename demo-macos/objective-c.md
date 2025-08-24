@@ -2179,6 +2179,424 @@ dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2.0 * NSEC_PER_SEC)), 
 
 
 
+## `GCD` - 概念
+
+好的，我们来彻底讲清楚 Objective-C 中的 **GCD**。
+
+### 一句话概括
+
+**GCD (Grand Central Dispatch)** 是苹果提供的一套用于管理**并发（同时执行多个任务）** 和**异步操作**的底层 API。它的核心思想是：**你只需要定义想执行的任务，并将它放到合适的队列中，GCD 会自动在底层线程池中为你调度和管理线程，无需你直接操作线程。**
+
+你可以把它想象成一个高度智能的**任务调度中心**。
+
+---
+
+### 为什么需要 GCD？
+
+在 GCD 出现之前，开发者需要使用 `NSThread` 或 `NSOperation`（及其子类 `NSInvocationOperation`、`NSBlockOperation`）来管理多线程。但这存在一些问题：
+1.  **直接操作线程复杂**：创建、销毁、同步线程非常繁琐，容易出错。
+2.  **难以利用多核**：手动管理线程很难充分利用设备的多核CPU性能。
+3.  **容易引发问题**：著名的“回调地狱”（Callback Hell）和资源竞争（Race Condition）问题。
+
+GCD 的出现完美地解决了这些问题，它提供了一种更简单、更安全、更高效的并发编程模式。
+
+---
+
+### GCD 的核心三要素
+
+理解 GCD 的关键在于掌握这三个概念：
+
+#### 1. 队列 (Queue)
+队列是一个**等待执行的任务列表**，它遵循**先进先出 (FIFO)** 的原则。队列是 GCD 的组织结构，它决定了任务的执行方式。
+*   **串行队列 (Serial Queue)**：同一时间**只执行一个**任务。只有前一个任务完成，后一个才会开始。任务按添加顺序执行。
+    *   **典型例子：主队列 (Main Queue)**。所有UI更新都必须在主队列上进行，它是一个全局可用的串行队列。
+    *   `dispatch_get_main_queue()`
+
+*   **并发队列 (Concurrent Queue)**：同一时间可以**执行多个**任务。任务按添加顺序开始，但完成顺序不确定，取决于每个任务的耗时。
+    *   **典型例子：全局队列 (Global Queue)**。系统提供的，用于执行一般后台任务。有不同优先级（QoS）。
+    *   `dispatch_get_global_queue()`
+
+#### 2. 任务 (Task)
+任务就是你**想要执行的代码块**。在 Objective-C 中，通常用一个 **Block** (`^{ ... }`) 来封装这段代码。
+
+#### 3. 派发方式 (Dispatch Function)
+这是将**任务**添加到**队列**的方法，决定了任务执行的时机。
+*   **`dispatch_async` (异步派发)**：
+    *   **不等待**：调用这个函数后，它会**立即返回**，不会阻塞当前线程。代码会继续执行下一行。
+    *   **最常用**：用于执行耗时的后台操作，如网络请求、文件读写等，防止阻塞主线程。
+
+*   **`dispatch_sync` (同步派发)**：
+    *   **等待**：调用这个函数后，它会**等待** block 里的任务执行完毕，然后才返回。这会**阻塞**当前线程。
+    *   **慎用**：通常用于在**当前队列**中同步执行任务，或者在不同队列间进行**同步**操作。在主线程上同步执行任务会导致**死锁**。
+
+---
+
+### 如何使用？代码示例
+
+#### 1. 异步执行后台任务，完成后更新UI（最经典场景）
+这是 GCD 最常用的模式。
+```objectivec
+// 1. 获取系统的全局并发队列（后台线程）
+dispatch_queue_t globalQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+
+// 2. 将耗时任务异步派发到全局队列
+dispatch_async(globalQueue, ^{
+    // 在这里执行耗时的操作（不会阻塞主线程）
+    // 例如：网络请求、图片解码、大数据处理...
+    NSData *imageData = [NSData dataWithContentsOfURL:[NSURL URLWithString:@"http://example.com/image.jpg"]];
+    UIImage *image = [UIImage imageWithData:imageData];
+
+    // 3. 任务完成后，回到主队列更新UI
+    dispatch_async(dispatch_get_main_queue(), ^{
+        // 所有UI操作必须在主队列进行
+        self.imageView.image = image;
+    });
+});
+
+// 这行代码会立即执行，不会等待上面的Block完成
+NSLog(@"Task dispatched, moving on...");
+```
+
+#### 2. 创建和管理自定义队列
+```objectivec
+// 创建一个串行队列，常用于需要顺序执行的任务（如文件读写）
+dispatch_queue_t mySerialQueue = dispatch_queue_create("com.myapp.serialQueue", DISPATCH_QUEUE_SERIAL);
+
+// 创建一个并发队列
+dispatch_queue_t myConcurrentQueue = dispatch_queue_create("com.myapp.concurrentQueue", DISPATCH_QUEUE_CONCURRENT);
+
+// 使用自定义队列
+dispatch_async(mySerialQueue, ^{
+    NSLog(@"Task 1 on serial queue");
+});
+dispatch_async(mySerialQueue, ^{
+    NSLog(@"Task 2 on serial queue"); // 这个任务会等Task 1完成后再开始
+});
+```
+
+---
+
+### GCD 的其他强大功能
+
+除了基本的派发，GCD 还提供了更精细的控制工具：
+
+*   **调度组 (Dispatch Group)**：`dispatch_group_t`
+    *   用来监听一组任务的完成情况。等所有任务都完成后，再执行一个最终的回调。
+    *   **适用场景**：需要等待多个网络请求全部完成后，再刷新UI。
+
+*   **信号量 (Dispatch Semaphore)**：`dispatch_semaphore_t`
+    *   用于控制同时访问某一资源的线程数量，是解决资源竞争问题的利器。
+
+*   **屏障 (Barrier)**：`dispatch_barrier_async`
+    *   在并发队列中，创建一个“栅栏点”，确保在它之前添加的任务都完成后，它才执行；并且在它执行时，队列不会执行任何其他任务。
+    *   **适用场景**：对线程不安全的数据结构（如字典、数组）进行“读写同步”。多个任务可以同时读，但写操作必须是唯一的。
+
+*   **延迟执行**：`dispatch_after`
+    *   用于在指定时间后将任务添加到队列，**不是**精确计时器。
+
+*   **单次执行**：`dispatch_once`
+    *   保证 block 中的代码在App生命周期内只执行一次。是创建**单例 (Singleton)** 的标准方法。
+    ```objectivec
+    + (instancetype)sharedManager {
+        static MyManager *shared = nil;
+        static dispatch_once_t onceToken;
+        dispatch_once(&onceToken, ^{
+            shared = [[self alloc] init];
+        });
+        return shared;
+    }
+    ```
+
+### 总结
+
+| 特性         | 描述                                                     | 关键字                 |
+| :----------- | :------------------------------------------------------- | :--------------------- |
+| **是什么**   | 苹果提供的并发编程API，智能的任务调度中心                | Grand Central Dispatch |
+| **核心思想** | “任务” + “队列”                                          | 避免直接操作线程       |
+| **主要优点** | 简单、高效、自动利用多核、线程安全                       | 提升性能，防止卡顿     |
+| **核心组件** | 队列（串行/并发）、任务（Block）、派发函数（async/sync） | `dispatch_async`       |
+| **典型用法** | 后台处理数据，主线程更新UI                               | 防止阻塞主线程         |
+
+GCD 是现代 iOS/macOS 开发的基石，几乎所有的异步操作（如网络库 Alamofire/AFNetworking）底层都依赖于它。掌握 GCD 是成为一名合格 iOS 开发者的必备技能。
+
+
+
+## `GCD` - 实验
+
+### 并发队列+同步调用
+
+```objective-c
+// 打印当前线程
+NSLog(@"当前线程 - %@",[NSThread currentThread]);
+NSLog(@"同步+并发 开始");
+
+// 创建并发队列
+dispatch_queue_t queue = dispatch_queue_create("com.future.demo.ios.gcd", DISPATCH_QUEUE_CONCURRENT);
+
+// 调用这个函数后，它会等待 block 里的任务执行完毕，然后才返回。这会阻塞当前线程
+dispatch_sync(queue, ^{
+    // 模拟耗时操作
+    [NSThread sleepForTimeInterval:3];
+    // 打印当前线程
+    NSLog(@"任务休眠3秒 - %@",[NSThread currentThread]);
+});
+
+dispatch_sync(queue, ^{
+    // 模拟耗时操作
+    [NSThread sleepForTimeInterval:2];
+    // 打印当前线程
+    NSLog(@"任务休眠2秒 - %@",[NSThread currentThread]);
+});
+
+dispatch_sync(queue, ^{
+    // 模拟耗时操作
+    [NSThread sleepForTimeInterval:1];
+    // 打印当前线程
+    NSLog(@"任务休眠1秒 - %@",[NSThread currentThread]);
+});
+
+NSLog(@"同步+并发 结束");
+```
+
+### 并发队列+异步调用
+
+```objective-c
+// 打印当前线程
+NSLog(@"当前线程 - %@",[NSThread currentThread]);
+NSLog(@"异步+并发 开始");
+
+dispatch_queue_t queue = dispatch_queue_create("com.future.demo.ios.gcd", DISPATCH_QUEUE_CONCURRENT);
+
+dispatch_async(queue, ^{
+    // 模拟耗时操作
+    [NSThread sleepForTimeInterval:3];
+    // 打印当前线程
+    NSLog(@"任务休眠3秒 - %@",[NSThread currentThread]);
+});
+
+dispatch_async(queue, ^{
+    // 模拟耗时操作
+    [NSThread sleepForTimeInterval:2];
+    // 打印当前线程
+    NSLog(@"任务休眠2秒 - %@",[NSThread currentThread]);
+});
+
+dispatch_async(queue, ^{
+    // 模拟耗时操作
+    [NSThread sleepForTimeInterval:1];
+    // 打印当前线程
+    NSLog(@"任务休眠1秒 - %@",[NSThread currentThread]);
+});
+
+NSLog(@"异步+并发 结束");
+
+[NSThread sleepForTimeInterval: 5];
+```
+
+### 串行队列+同步调用
+
+```objective-c
+// 打印当前线程
+NSLog(@"当前线程 - %@",[NSThread currentThread]);
+NSLog(@"同步+串行 开始");
+
+dispatch_queue_t queue = dispatch_queue_create("com.future.demo.ios.gcd", DISPATCH_QUEUE_SERIAL);
+
+dispatch_sync(queue, ^{
+    // 模拟耗时操作
+    [NSThread sleepForTimeInterval:3];
+    // 打印当前线程
+    NSLog(@"任务休眠3秒 - %@",[NSThread currentThread]);
+});
+dispatch_sync(queue, ^{
+    // 模拟耗时操作
+    [NSThread sleepForTimeInterval:2];
+    // 打印当前线程
+    NSLog(@"任务休眠2秒 - %@",[NSThread currentThread]);
+});
+dispatch_sync(queue, ^{
+    // 模拟耗时操作
+    [NSThread sleepForTimeInterval:1];
+    // 打印当前线程
+    NSLog(@"任务休眠1秒 - %@",[NSThread currentThread]);
+});
+
+NSLog(@"同步+串行 结束");
+```
+
+### 串行队列+异步调用
+
+```objective-c
+// 打印当前线程
+NSLog(@"当前线程 - %@",[NSThread currentThread]);
+NSLog(@"异步+串行 开始");
+
+dispatch_queue_t queue = dispatch_queue_create("net.bujige.testQueue", DISPATCH_QUEUE_SERIAL);
+
+dispatch_async(queue, ^{
+    // 模拟耗时操作
+    [NSThread sleepForTimeInterval:2];
+    // 打印当前线程
+    NSLog(@"任务休眠3秒 - %@",[NSThread currentThread]);
+});
+dispatch_async(queue, ^{
+    // 模拟耗时操作
+    [NSThread sleepForTimeInterval:2];
+    // 打印当前线程
+    NSLog(@"任务休眠2秒 - %@",[NSThread currentThread]);
+});
+dispatch_async(queue, ^{
+    // 模拟耗时操作
+    [NSThread sleepForTimeInterval:1];
+    // 打印当前线程
+    NSLog(@"任务休眠1秒 - %@",[NSThread currentThread]);
+});
+
+NSLog(@"异步+串行 结束");
+
+[NSThread sleepForTimeInterval: 5];
+```
+
+### 主线程队列+同步调用
+
+```objective-c
+[NSThread detachNewThreadWithBlock:^{
+    // 打印当前线程
+    NSLog(@"当前线程 - %@",[NSThread currentThread]);
+    NSLog(@"同步+主队列 开始");
+
+    dispatch_queue_t queue = dispatch_get_main_queue();
+
+    dispatch_sync(queue, ^{
+        // 模拟耗时操作
+        [NSThread sleepForTimeInterval:3];
+        // 打印当前线程
+        NSLog(@"任务休眠3秒 - %@",[NSThread currentThread]);
+    });
+
+    dispatch_sync(queue, ^{
+        // 模拟耗时操作
+        [NSThread sleepForTimeInterval:2];
+        // 打印当前线程
+        NSLog(@"任务休眠2秒 - %@",[NSThread currentThread]);
+    });
+
+    dispatch_sync(queue, ^{
+        // 模拟耗时操作
+        [NSThread sleepForTimeInterval:1];
+        // 打印当前线程
+        NSLog(@"任务休眠1秒 - %@",[NSThread currentThread]);
+    });
+
+    NSLog(@"同步+主队列 结束");
+}];
+```
+
+### 主线程队列+异步调用
+
+```objective-c
+// 打印当前线程
+NSLog(@"当前线程 - %@",[NSThread currentThread]);
+NSLog(@"异步+主队列 开始");
+
+dispatch_queue_t queue = dispatch_get_main_queue();
+
+dispatch_async(queue, ^{
+    // 模拟耗时操作
+    [NSThread sleepForTimeInterval:3];
+    // 打印当前线程
+    NSLog(@"任务休眠3秒 - %@",[NSThread currentThread]);
+});
+
+dispatch_async(queue, ^{
+    // 模拟耗时操作
+    [NSThread sleepForTimeInterval:2];
+    // 打印当前线程
+    NSLog(@"任务休眠2秒 - %@",[NSThread currentThread]);
+});
+
+dispatch_async(queue, ^{
+    // 模拟耗时操作
+    [NSThread sleepForTimeInterval:1];
+    // 打印当前线程
+    NSLog(@"任务休眠1秒 - %@",[NSThread currentThread]);
+});
+
+NSLog(@"异步+主队列 结束");
+
+[NSThread sleepForTimeInterval:8];
+```
+
+### 全局并发队列+同步调用
+
+```objective-c
+// 打印当前线程
+NSLog(@"当前线程 - %@",[NSThread currentThread]);
+NSLog(@"同步+全局并发 开始");
+
+dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+
+dispatch_sync(queue, ^{
+    // 模拟耗时操作
+    [NSThread sleepForTimeInterval:3];
+    // 打印当前线程
+    NSLog(@"任务休眠3秒 - %@",[NSThread currentThread]);
+});
+
+dispatch_sync(queue, ^{
+    // 模拟耗时操作
+    [NSThread sleepForTimeInterval:2];
+    // 打印当前线程
+    NSLog(@"任务休眠2秒 - %@",[NSThread currentThread]);
+});
+
+dispatch_sync(queue, ^{
+    // 模拟耗时操作
+    [NSThread sleepForTimeInterval:1];
+    // 打印当前线程
+    NSLog(@"任务休眠1秒 - %@",[NSThread currentThread]);
+});
+
+NSLog(@"同步+全局并发 结束");
+```
+
+### 全局并发队列+异步调用
+
+```objective-c
+// 打印当前线程
+NSLog(@"当前线程 - %@",[NSThread currentThread]);
+NSLog(@"异步+全局并发 开始");
+
+dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+
+dispatch_async(queue, ^{
+    // 模拟耗时操作
+    [NSThread sleepForTimeInterval:3];
+    // 打印当前线程
+    NSLog(@"任务休眠3秒 - %@",[NSThread currentThread]);
+});
+
+dispatch_async(queue, ^{
+    // 模拟耗时操作
+    [NSThread sleepForTimeInterval:2];
+    // 打印当前线程
+    NSLog(@"任务休眠2秒 - %@",[NSThread currentThread]);
+});
+
+dispatch_async(queue, ^{
+    // 模拟耗时操作
+    [NSThread sleepForTimeInterval:1];
+    // 打印当前线程
+    NSLog(@"任务休眠1秒 - %@",[NSThread currentThread]);
+});
+
+NSLog(@"异步+全局并发 结束");
+
+[NSThread sleepForTimeInterval:8];
+```
+
+
+
 ## `AFNetworking` - 导入
 
 在项目根目录中创建 `Podfile`
