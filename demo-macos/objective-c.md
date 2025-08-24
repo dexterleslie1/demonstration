@@ -2140,3 +2140,66 @@ NSNumber *number = @5;
 assert([number isKindOfClass: [NSNumber class]]);
 ```
 
+
+
+## 延迟执行回调方法 - `dispatch_after`
+
+```objective-c
+dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+    NSLog(@"使用dispatch_after延迟2秒打印日志");
+});
+```
+
+
+
+## 延迟执行回调方法 - `performSelector`
+
+```objective-c
+[self performSelector:@selector(methodDelay) withObject:nil afterDelay:2.0];
+
+- (void) methodDelay {
+    NSLog(@"使用NSObject performSelector延迟2秒打印日志");
+}
+
+// 取消之前的 performSelector
+[NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(methodDelay) object:nil];
+```
+
+
+
+## 延迟执行回调方法 - `NSTimer`
+
+```objective-c
+[NSTimer scheduledTimerWithTimeInterval:2.0 repeats:NO block:^(NSTimer *timer) {
+    NSLog(@"使用NSTimer.scheduledTimerWithTimeInterval延迟2秒打印日志");
+    [timer invalidate];
+    timer = nil;
+}];
+```
+
+
+
+## `AFNetworking` - 导入
+
+在项目根目录中创建 `Podfile`
+
+```
+project 'xxx'
+platform:ios, '7.0'
+
+target 'xxx' do
+    pod 'AFNetworking', '~>3.1.0'
+end
+
+target 'xxxTests' do
+    pod 'AFNetworking', '~>3.1.0'
+end
+
+```
+
+安装依赖
+
+```sh
+pod install --verbose
+```
+
