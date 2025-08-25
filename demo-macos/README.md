@@ -347,5 +347,69 @@ final class demo2Tests: XCTestCase {
 }
 ```
 
+`objective-c` 测试：
 
+```objective-c
+// __block 声明变量表示允许在 block 中修改外部变量
+__block NSString *str = nil;
+
+// 模拟异步回调
+dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+dispatch_async(queue, ^{
+    str = @"Hello";
+    [expectation fulfill];
+});
+
+// 等待异步回调结果
+[self waitForExpectations: @[expectation] timeout: 10];
+
+assert([@"Hello" isEqualToString: str]);
+```
+
+
+
+## `XCTest` - 断言
+
+```objective-c
+/* 测试布尔断言 */
+// 验证条件为真
+BOOL condition = true;
+XCTAssertTrue(condition, @"条件应该为真");
+
+// 验证条件为假
+condition = false;
+XCTAssertFalse(condition, @"条件应该为假");
+
+/* 测试空值断言 */
+// 验证对象不为 nil
+NSObject *object = [[NSObject alloc] init];
+XCTAssertNotNil(object, @"对象不应该为 nil");
+
+// 验证对象为 nil
+object = nil;
+XCTAssertNil(object, @"对象应该为 nil");
+
+/* 测试相等断言 */
+// 验证对象相等，比较内容
+NSObject *obj1 = [[NSObject alloc] init];
+NSObject *obj2 = obj1;
+XCTAssertEqualObjects(obj1, obj2, @"对象应该相等");
+
+// 验证基本类型相等或者比较对象的内存地址相等
+NSString *value1 = @"Dexter";
+NSString *value2 = @"Dexter";
+XCTAssertEqual(value1, value2, @"值应该相等");
+
+// 验证浮点数相等（带精度）
+XCTAssertEqualWithAccuracy(3.14159, M_PI, 0.001, @"PI 值应该在精度范围内");
+```
+
+
+
+## `LLDB`调试器
+
+```objective-c
+// 使用 po (print object) - 最常用，打印 NSString *myString 字符串
+po myString
+```
 
