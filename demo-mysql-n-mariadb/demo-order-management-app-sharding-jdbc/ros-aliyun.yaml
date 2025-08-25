@@ -44,6 +44,10 @@ Locals:
   BmPrivateIpCommonService:
     Type: Macro
     Value: "10.0.1.10"
+  # db 服务
+  BmPrivateIpDbService:
+    Type: Macro
+    Value: "10.0.1.11"
   # api 服务，运行 service 服务
   BmPrivateIpApi:
     Type: Macro
@@ -69,6 +73,12 @@ Locals:
     # https://www.aliyun.com/daily-act/ecs/ecs/detail/u
     # 8c16g
     # Value: ecs.u1-c1m2.2xlarge
+    # 4c8g
+    Value: ecs.u1-c1m2.xlarge
+  # 数据库实例规格
+  BmDbInstanceType:
+    Type: Macro
+    # https://www.aliyun.com/daily-act/ecs/ecs/detail/u
     # 8c8g
     Value: ecs.u1-c1m1.2xlarge
 
@@ -192,6 +202,36 @@ Resources:
         Ref: BmSshPassword
       PrivateIpAddress:
         Ref: BmPrivateIpCommonService
+
+  # db 服务
+  BmInstanceDbService:
+    Type: ALIYUN::ECS::Instance
+    Properties:
+      HostName: bm-db
+      InstanceName: bm-db
+      InstanceType:
+        Ref: BmDbInstanceType
+      InstanceChargeType: PostPaid
+      SystemDiskCategory: cloud_essd
+      SystemDiskSize: 512
+
+      AllocatePublicIP: true
+      InternetChargeType: PayByTraffic
+      InternetMaxBandwidthOut: 5
+
+      VpcId:
+        Ref: BmVpc
+      VSwitchId:
+        Ref: BmVSwitch
+      SecurityGroupId:
+        Ref: BmSecurityGroup
+
+      ImageId:
+        Ref: BmImageIdNode
+      Password:
+        Ref: BmSshPassword
+      PrivateIpAddress:
+        Ref: BmPrivateIpDbService
 
   # api 服务，运行 service 服务
   BmInstanceApi:
