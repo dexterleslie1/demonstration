@@ -22,6 +22,7 @@ services:
       - db_port=3306
     ports:
       - '50000:8080'
+    restart: unless-stopped
   future-random-id-picker-db:
     image: registry.cn-hangzhou.aliyuncs.com/future-public/random-id-picker-db:1.1.0
     command:
@@ -33,6 +34,7 @@ services:
       - LANG=C.UTF-8
       - TZ=Asia/Shanghai
       - MYSQL_ROOT_PASSWORD=123456
+    restart: unless-stopped
 
   # future count 服务
   future-count-api:
@@ -44,6 +46,7 @@ services:
       - db_port=3306
     ports:
       - '50001:8080'
+    restart: unless-stopped
   future-count-db:
     image: registry.cn-hangzhou.aliyuncs.com/future-public/future-count-db
     command:
@@ -55,3 +58,4 @@ services:
       - LANG=C.UTF-8
       - TZ=Asia/Shanghai
       - MYSQL_ROOT_PASSWORD=123456
+    restart: unless-stopped
