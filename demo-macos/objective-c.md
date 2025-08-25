@@ -2597,6 +2597,184 @@ NSLog(@"异步+全局并发 结束");
 
 
 
+## 允许在`Block`内部修改外部变量
+
+在 Objective-C 中，`__block` 是一个重要的存储类型修饰符，主要用于在 Block 内部修改外部变量的值。
+
+### 基本作用
+
+#### 1. **允许在 Block 内部修改外部变量**
+```objective-c
+- (void)testBlockModification {
+    // 没有 __block，无法修改
+    NSInteger count = 0;
+    
+    // 有 __block，可以修改
+    __block NSInteger modifiableCount = 0;
+    
+    void (^incrementBlock)(void) = ^{
+        // count = 1; // 编译错误：Variable is not assignable
+        modifiableCount = 1; // 正确：可以修改
+    };
+    
+    incrementBlock();
+    NSLog(@"modifiableCount: %ld", modifiableCount); // 输出: 1
+}
+```
+
+#### 2. **在异步回调中保存结果**
+```objective-c
+- (void)testAsyncCallbackWithResult {
+    XCTestExpectation *expectation = [self expectationWithDescription:@"异步操作"];
+    
+    // 使用 __block 在 Block 中保存结果
+    __block NSString *resultString = nil;
+    __block NSError *resultError = nil;
+    
+    [self.networkService fetchDataWithCompletion:^(NSString *result, NSError *error) {
+        // 可以修改外部变量
+        resultString = result;
+        resultError = error;
+        [expectation fulfill];
+    }];
+    
+    [self waitForExpectations:@[expectation] timeout:10.0];
+    
+    // 这里可以访问被修改后的值
+    XCTAssertNotNil(resultString);
+}
+```
+
+### 与普通变量的区别
+
+#### 没有 __block 的情况
+```objective-c
+- (void)testWithoutBlock {
+    NSString *message = @"Hello";
+    
+    void (^printBlock)(void) = ^{
+        // 可以读取，但不能修改
+        NSLog(@"%@", message); // 正确：可以读取
+        // message = @"World"; // 编译错误
+    };
+    
+    printBlock();
+}
+```
+
+#### 有 __block 的情况
+```objective-c
+- (void)testWithBlock {
+    __block NSString *message = @"Hello";
+    
+    void (^modifyBlock)(void) = ^{
+        message = @"World"; // 正确：可以修改
+        NSLog(@"%@", message); // 输出: World
+    };
+    
+    modifyBlock();
+    NSLog(@"After block: %@", message); // 输出: World
+}
+```
+
+### 在数组和字典中的使用
+
+```objective-c
+- (void)testWithCollections {
+    // 对于可变集合，不需要 __block 来修改内容
+    NSMutableArray *array = [NSMutableArray arrayWithArray:@[@"A", @"B"]];
+    
+    void (^addToArray)(void) = ^{
+        [array addObject:@"C"]; // 正确：可以修改数组内容
+        // array = [NSMutableArray new]; // 编译错误：不能重新赋值
+    };
+    
+    addToArray();
+    NSLog(@"Array: %@", array); // 输出: [A, B, C]
+    
+    // 如果需要重新赋值，就需要 __block
+    __block NSMutableArray *blockArray = [NSMutableArray arrayWithArray:@[@"A", @"B"]];
+    
+    void (^replaceArray)(void) = ^{
+        blockArray = [NSMutableArray arrayWithArray:@[@"X", @"Y"]]; // 正确：可以重新赋值
+    };
+    
+    replaceArray();
+    NSLog(@"Block Array: %@", blockArray); // 输出: [X, Y]
+}
+```
+
+### 在测试中的典型用法
+
+```objective-c
+- (void)testMultipleAsyncOperations {
+    XCTestExpectation *expectation1 = [self expectationWithDescription:@"操作1"];
+    XCTestExpectation *expectation2 = [self expectationWithDescription:@"操作2"];
+    
+    // 使用 __block 来收集多个异步操作的结果
+    __block NSArray *results = @[];
+    __block NSUInteger completedCount = 0;
+    
+    [self.service fetchUserData:^(NSArray *userData) {
+        results = [results arrayByAddingObjectsFromArray:userData];
+        completedCount++;
+        [expectation1 fulfill];
+    }];
+    
+    [self.service fetchProductData:^(NSArray *productData) {
+        results = [results arrayByAddingObjectsFromArray:productData];
+        completedCount++;
+        [expectation2 fulfill];
+    }];
+    
+    [self waitForExpectations:@[expectation1, expectation2] timeout:15.0];
+    
+    // 验证结果
+    XCTAssertEqual(completedCount, 2);
+    XCTAssertTrue(results.count > 0);
+}
+```
+
+### 注意事项
+
+1. **内存管理**：`__block` 变量在 ARC 下会被强引用，需要注意循环引用
+2. **性能**：`__block` 变量会有额外的内存开销
+3. **线程安全**：在多个 Block 中修改 `__block` 变量时需要注意线程安全
+
+### 避免循环引用
+
+```objective-c
+- (void)testWithoutRetainCycle {
+    __block typeof(self) weakSelf = self;
+    __block NSInteger counter = 0;
+    
+    [self.service asyncOperationWithCompletion:^{
+        // 使用 weakSelf 避免循环引用
+        [weakSelf doSomething];
+        counter++; // 修改 __block 变量
+    }];
+}
+```
+
+**总结**：`__block` 的主要作用就是允许在 Block 内部修改外部变量的值，在测试异步回调时特别有用，可以方便地保存和验证回调结果。
+
+
+
+## `NSError` - 自定义
+
+>参考链接：https://www.cnblogs.com/lucky-star-star/p/5742665.html
+
+```objective-c
+// 自定义 NSError
+NSString *domain = @"com.MyCompany.MyApplication.ErrorDomain";
+NSString *desc = NSLocalizedString(@"Unable to…", @"");
+NSDictionary *userInfo = @{ NSLocalizedDescriptionKey : desc };
+NSError *error = [NSError errorWithDomain:domain code:-101 userInfo:userInfo];
+NSLog(@"自定义 NSError=%@", error);
+```
+
+
+
 ## `AFNetworking` - 导入
 
 在项目根目录中创建 `Podfile`
@@ -2619,5 +2797,124 @@ end
 
 ```sh
 pod install --verbose
+```
+
+
+
+## `AFNetworking` - 测试
+
+运行本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-java/demo-library/demo-openfeign) 协助测试。
+
+测试：
+
+```objective-c
+NSString *host = @"192.168.235.128";
+int port = 8080;
+NSString *uriPrefix = [NSString stringWithFormat:@"http://%@:%d", host, port];
+
+AFHTTPSessionManager *manager = nil;
+XCTestExpectation *expectation = nil;
+
+__block NSNumber *errorCode = nil;
+__block NSString *errorMessage = nil;
+__block NSError *errorResult = nil;
+
+/* 测试失败的 get 请求，业务异常处理 */
+expectation = [[XCTestExpectation alloc] init];
+manager = [AFHTTPSessionManager manager];
+[manager GET: [NSString stringWithFormat:@"%@/api/v1/test1", uriPrefix] parameters: nil success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
+    // 业务异常处理
+    errorCode = [responseObject objectForKey: @"errorCode"];
+    if([errorCode intValue]>0) {
+        errorMessage = [responseObject objectForKey: @"errorMessage"];
+    }
+
+    [expectation fulfill];
+} failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
+    errorResult = error;
+    [expectation fulfill];
+}];
+
+[self waitForExpectations:@[expectation] timeout:10];
+
+XCTAssertNil(errorResult);
+XCTAssertEqual([errorCode intValue], 90000);
+XCTAssertEqualObjects(@"Missing required parameter \"name\"!", errorMessage);
+
+/* 测试成功的 get 请求 */
+errorCode = nil;
+errorMessage = nil;
+errorResult = nil;
+
+expectation = [[XCTestExpectation alloc] init];
+manager = [AFHTTPSessionManager manager];
+NSDictionary *params = @{
+    @"name": @"Dexter"
+};
+[manager GET: [NSString stringWithFormat:@"%@/api/v1/test1", uriPrefix] parameters: params success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
+    [expectation fulfill];
+} failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
+    errorResult = error;
+    [expectation fulfill];
+}];
+
+[self waitForExpectations:@[expectation] timeout:10];
+
+XCTAssertNil(errorResult);
+XCTAssertEqual([errorCode intValue], 0);
+XCTAssertNil(errorMessage);
+
+/* 测试 http 400 返回 */
+errorCode = nil;
+errorMessage = nil;
+errorResult = nil;
+
+expectation = [[XCTestExpectation alloc] init];
+manager = [AFHTTPSessionManager manager];
+[manager GET: [NSString stringWithFormat:@"%@/api/v1/testHttp400", uriPrefix] parameters: nil success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
+    [expectation fulfill];
+} failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
+    errorResult = error;
+
+    // 错误域
+    XCTAssertEqualObjects(@"com.alamofire.error.serialization.response", errorResult.domain);
+    // 错误码
+    XCTAssertEqual(-1011, errorResult.code);
+    // 描述
+    XCTAssertEqualObjects(@"Request failed: bad request (400)", errorResult.localizedDescription);
+    // 失败原因
+    XCTAssertNil(errorResult.localizedFailureReason);
+    // AFNetworking 特定的错误信息
+    NSHTTPURLResponse *response = errorResult.userInfo[AFNetworkingOperationFailingURLResponseErrorKey];
+    // HTTP 状态码
+    XCTAssertEqual(400, response.statusCode);
+    // URL
+    XCTAssertEqualObjects(@"http://192.168.235.128:8080/api/v1/testHttp400", response.URL.absoluteString);
+    // 头信息
+    XCTAssertEqual(4, response.allHeaderFields.count);
+    XCTAssertEqualObjects(@"application/json", response.allHeaderFields[@"Content-Type"]);
+    XCTAssertEqualObjects(@"close", response.allHeaderFields[@"Connection"]);
+
+    // 响应体
+    NSData *responseData = errorResult.userInfo[AFNetworkingOperationFailingURLResponseDataErrorKey];
+    NSString *json = json = [[NSString alloc] initWithData:responseData encoding:NSUTF8StringEncoding];
+    // json 转换为 NSDictionary
+    NSData *jsonData = [json dataUsingEncoding:NSUTF8StringEncoding];
+    NSError *jsonError;
+    NSDictionary *dictionary = [NSJSONSerialization JSONObjectWithData:jsonData
+                                                 options:NSJSONReadingMutableContainers
+                                                   error:&jsonError];
+    XCTAssertNil(jsonError);
+    XCTAssertEqual(90000, [dictionary[@"errorCode"] intValue]);
+    XCTAssertEqualObjects(@"测试业务异常", dictionary[@"errorMessage"]);
+
+    [expectation fulfill];
+}];
+
+[self waitForExpectations:@[expectation] timeout:10];
+
+XCTAssertEqualObjects(@"Request failed: bad request (400)", errorResult.localizedDescription);
+XCTAssertEqual([errorCode intValue], 0);
+XCTAssertNil(errorMessage);
 ```
 
