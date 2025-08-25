@@ -1,6 +1,8 @@
 package com.future.demo.openfeign;
 
+import com.future.common.constant.ErrorCodeConstant;
 import com.future.common.http.ObjectResponse;
+import com.future.common.http.ResponseUtils;
 import com.future.demo.openfeign.util.Const;
 import com.future.demo.openfeign.util.Util;
 import lombok.extern.slf4j.Slf4j;
@@ -243,5 +245,16 @@ public class ApiController {
 
         ResponseEntity responseEntity = builder.body(streamingResponseBody);
         return responseEntity;
+    }
+
+    /**
+     * 用于协助测试 http 400 返回
+     *
+     * @return
+     */
+    @GetMapping("testHttp400")
+    public ResponseEntity<ObjectResponse<String>> testHttp400() {
+        return ResponseEntity.badRequest()
+                .body(ResponseUtils.failObject(ErrorCodeConstant.ErrorCodeCommon, "测试业务异常"));
     }
 }
