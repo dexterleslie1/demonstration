@@ -1351,6 +1351,58 @@ kafka-manager:
 
 
 
+### `Prometheus Kafka Exporter`
+
+>注意：`Kafka Exporter kafka_consumergroup_current_offset` 指标只针对存在的、活跃的消费者组才会出现。如果你的 `Kafka` 集群中没有任何消费者组（没有正在运行的消费者应用程序），那么这个指标就不会在 `/metrics` 端点中生成。
+>
+>提示：监控 `Kafka lag`、每秒进入消息数、每分进入消息数、每分消费消息数、每个主题的分区数。
+
+配置 `Kafka Exporter`：
+
+```yaml
+  # Kafka Prometheus Exporter
+  kafka-exporter:
+    image: danielqsj/kafka-exporter # 使用官方镜像
+    ports:
+      - "9308:9308" # 将宿主机的9308端口映射到容器端口，用于Prometheus抓取和手动访问
+    command: # 最重要的部分：启动命令和参数
+      - --kafka.server=kafka1:9092 # 指向Kafka Broker地址
+      # 如果你的Kafka有多个Broker，可以添加多个--kafka.server参数
+      # - --kafka.server=kafka-broker-2:9092
+      # - --kafka.server=kafka-broker-3:9092
+      # 其他常用可选参数：
+      - --web.telemetry-path=/metrics # 指标暴露的路径，默认为/metrics，通常无需修改
+      - --log.level=info # 日志级别：debug, info, warn, error
+      # - --sasl.enabled # 如果Kafka需要SASL认证，请取消注释并配置以下参数
+      # - --sasl.username=your_username
+      # - --sasl.password=your_password
+      # - --sasl.mechanism=PLAIN
+      # - --tls.enabled # 如果Kafka需要SSL/TLS，请取消注释
+      # - --tls.ca-file=/path/to/ca.pem # 需要挂载证书文件
+      # - --tls.cert-file=/path/to/service.cert
+      # - --tls.key-file=/path/to/service.key
+    depends_on:
+      - kafka1
+```
+
+配置 `prometheus.yaml`
+
+```yaml
+# 搜刮配置
+scrape_configs:
+  - job_name: 'kafka-exporter'
+    scrape_interval: 15s
+    static_configs:
+    # Kafka Exporter 地址
+    - targets: ['192.168.1.181:9308']
+      labels:
+        instance: kafka-exporter
+```
+
+登录 `Grafana` http://localhost:3000 并导入 `dashboard 7589`。
+
+
+
 ## 命令
 
 借助本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-kafka/demo-kafka-benchmark) 做下面的测试。

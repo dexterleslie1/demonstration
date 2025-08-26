@@ -64,3 +64,11 @@ scrape_configs:
     - targets: ['192.168.235.128:8081']
       labels:
         instance: 'spring-boot actuator'
+
+  - job_name: 'kafka-exporter'
+    scrape_interval: 15s
+    static_configs:
+    # Kafka Exporter 地址
+    - targets: ['192.168.1.181:9308']
+      labels:
+        instance: kafka-exporter
