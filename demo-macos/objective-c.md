@@ -2918,3 +2918,223 @@ XCTAssertEqual([errorCode intValue], 0);
 XCTAssertNil(errorMessage);
 ```
 
+
+
+## `UIKit` - 概念
+
+当然！iOS UIKit 是构建 iOS 应用程序界面的**核心框架**和**工具包**。可以说，几乎所有你看到的、能与之交互的 iOS App 界面元素，都是由 UIKit 提供的。
+
+下面我从几个方面为你详细解释：
+
+### 1. 核心概念：它是什么？
+
+*   **一个框架 (Framework)**：UIKit 是苹果官方提供的一个代码库，里面包含了大量的类（Class）、结构体（Struct）、协议（Protocol）和函数。开发者通过调用这些现成的代码来构建用户界面，而无需从零开始画每一个像素。
+*   **“View” 的集合**：它的核心是各种“视图”（View）对象。`UIView` 是所有视图的基类，代表屏幕上的一个矩形区域，负责绘制内容和处理触摸事件。我们熟悉的各种控件都是 `UIView` 的子类。
+*   **MVC 模式中的 “V” 和 “C”**：在传统的设计模式中，UIKit 不仅提供了视图（View），如 `UILabel`、`UIButton`，也提供了视图控制器（`UIViewController`），用于管理一组视图的生命周期、处理用户交互和协调数据模型（Model）。
+
+### 2. 主要组成部分和功能
+
+UIKit 的功能非常丰富，主要包括：
+
+*   **视图和控件 (Views & Controls)**：构建界面的基本砖块。
+    *   `UILabel`： 显示文本。
+    *   `UIButton`： 可点击的按钮。
+    *   `UIImageView`： 显示图片。
+    *   `UITextField`： 单行文本输入框。
+    *   `UITableView`： 用来显示可滚动的列表或表格（例如信息、设置列表）。
+    *   `UICollectionView`： 用来显示更灵活的网格或自定义布局的视图（例如照片App）。
+    *   ...以及许多其他控件。
+
+*   **视图控制器 (View Controllers)**：管理整个界面或部分界面。
+    *   `UIViewController`： 最基本的视图控制器，管理一个视图层次结构。
+    *   `UINavigationController`： 管理导航栈，提供顶部导航栏和页面间的 push/pop 跳转（例如设置页面）。
+    *   `UITabBarController`： 管理底部标签栏，用于切换不同的功能模块（例如微信底部的微信、通讯录、发现、我）。
+    *   ...以及其他专用控制器。
+
+*   **动画和绘图 (Animation & Drawing)**：提供平滑的动画效果。
+    *   通过 `UIView.animate(...)` 等方法，可以轻松实现视图的移动、缩放、淡入淡出等动画。
+
+*   **处理用户交互 (User Interaction)**：响应触摸、手势等操作。
+    *   处理点击、拖拽、滑动等触摸事件。
+    *   提供预定义的手势识别器（`UIGestureRecognizer`），如点按（Tap）、捏合（Pinch）、旋转（Rotation）、滑动手势等。
+
+*   **文本和网页内容 (Text & Web Content)**：显示富文本和网页。
+    *   `UITextView`： 显示和编辑多行富文本。
+    *   `WKWebView`： (虽然来自WebKit框架，但常与UIKit协同) 用于在App内嵌入网页。
+
+### 3. 一个简单的例子
+
+假设我们要创建一个显示“Hello World!”标签和一个“点击我”按钮的界面。
+
+1.  我们会创建一个 `UIViewController`。
+2.  在它的视图上，添加一个 `UILabel` 对象（用于显示文本）和一个 `UIButton` 对象（用于交互）。
+3.  我们会设置 `UILabel` 的 `text` 属性为 `"Hello World!"`。
+4.  我们会为 `UIButton` 的“触摸UpInside”事件添加一个目标（Target）和动作（Action）。当用户点击并松开按钮时，会触发一个我们写的方法（例如，改变标签的文字）。
+
+这一切的创建、设置和交互，都是通过调用 UIKit 的 API 来完成的。
+
+### 4. UIKit 与 SwiftUI 的关系
+
+这是当前iOS开发中一个非常重要的概念：
+
+*   **UIKit (传统方式)**：
+    *   **诞生于2007年**，与第一部iPhone同年，历史悠久，非常成熟。
+    *   采用**命令式编程**范式。即你需要详细地“命令”代码：“创建那个标签！”、“把它放在这里！”、“当按钮被点击时，去做那件事！”。你需要一步步描述界面如何构建和更新。
+    *   拥有庞大的生态系统和海量的第三方库支持。
+
+*   **SwiftUI (现代方式)**：
+    *   **2019年**由苹果推出，是新一代的UI框架。
+    *   采用**声明式编程**范式。你只需要“声明”界面应该是什么样子（例如，“这里有一个文本，内容是Hello World；下面有一个按钮，标题是点击我”）。当数据变化时，框架会自动更新界面。代码更简洁、直观。
+    *   旨在统一苹果所有平台（iOS, iPadOS, macOS, watchOS, tvOS）的开发体验。
+
+**重要关系**：SwiftUI 并没有取代 UIKit，而是在其之上构建的一层抽象。在幕后，SwiftUI 仍然依赖 UIKit（在 macOS 上依赖 AppKit）来最终渲染界面。此外，两者可以非常完美地互相集成：
+*   **在 SwiftUI 中使用 UIKit**：通过 `UIViewRepresentable` 和 `UIViewControllerRepresentable` 协议，可以将 UIKit 的视图和控制器包装后嵌入到 SwiftUI 视图中。
+*   **在 UIKit 中使用 SwiftUI**：通过 `UIHostingController`，可以将一个 SwiftUI 视图作为 UIKit 视图控制器的一部分来显示。
+
+### 总结
+
+**UIKit 是 iOS App 界面开发的基石和标准工具包**。它提供了构建、管理和交互用户界面所需的一切组件。虽然新的 SwiftUI 框架更现代、更简单，但 UIKit 因其成熟、强大和可控性，仍然是许多大型项目和现有代码库的首选，并且与 SwiftUI 协同工作。要成为一名全面的 iOS 开发者，深入理解 UIKit 至关重要。
+
+### 导入`UIKit`
+
+```objective-c
+#import <UIKit/UIKit.h>
+```
+
+
+
+## `UIKit` - `UILabel`
+
+```objective-c
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view.
+    
+    UILabel *label=[[UILabel alloc] initWithFrame:CGRectMake(0, 0, 100, 50)];
+    label.text=@"Hello World!";
+    //居中UILablel
+    label.center=self.view.center;
+    //将UILabel添加到界面
+    [self.view addSubview:label];
+}
+```
+
+
+
+## `UIKit` - `UIWindow`
+
+好的，我们来深入地、形象地理解一下 `UIWindow` 在 UIKit 框架中到底是什么。
+
+### 核心定义
+
+**`UIWindow` 是一个特殊的 `UIView`（继承自 `UIView`），它是整个应用程序界面的**最底层容器**和**事件传递的中枢**。
+
+你可以把它想象成：
+
+1.  **一个画框的底板**：所有其他的视图（`UIView`）、视图控制器（`UIViewController`）的视图，都直接或间接地“贴”在这个底板上。
+2.  **公司的前台总机**：所有发生在这个应用程序里的用户交互事件（比如触摸、摇动、远程控制等），首先都会到达 `UIWindow`，然后由它作为起点，一步步地分发给最合适的视图去处理。
+
+---
+
+### 主要职责和特点
+
+#### 1. 作为视图层级的最根容器（The Root Container）
+
+*   `UIWindow` 是你应用程序用户界面的起点。它本身通常是无形的、透明的，只是一个坐标系容器。
+*   你通过设置它的 `rootViewController` 属性来填入应用程序的主要内容。
+    ```objectivec
+    self.window.rootViewController = myViewController;
+    ```
+*   所有其他视图，要么是 `rootViewController` 的视图，要么是它的子视图。它们共同构成了一个视图层级树（View Hierarchy），而这棵树的根就“种”在 `UIWindow` 里。
+
+#### 2. 作为事件传递的起点（The Event Dispatcher）
+
+*   当用户触摸屏幕时，iOS 系统会捕捉到这些触摸事件，并打包成一个 `UIEvent` 对象。
+*   系统首先会将这个事件传递给应用程序最前台的 `UIWindow`。
+*   `UIWindow` 内部持有一个“命中测试（Hit-Testing）”机制，它会从视图层级树的根节点（即它自己）开始，递归地询问各个子视图：“这个触摸点落在你身上了吗？”。最终找到最顶层、最合适处理该事件的视图（例如一个按钮 `UIButton`），并将事件传递给它。
+*   这就使得按钮的 `target-action`（如 `@selector(buttonClicked:)`）能够被触发。
+
+#### 3. 管理窗口级别和显示状态
+
+*   **窗口级别（Window Level）**：一个应用程序可以同时有多个 `UIWindow`。例如， status bar（状态栏）、键盘（`UITextField` 的输入键盘）其实都是系统创建的另一个 `UIWindow`。`UIWindowLevel` 属性决定了它们的上下叠加关系（Z轴顺序）。通常你的主窗口级别是 `UIWindowLevelNormal`，而状态栏和警告框（Alert）的级别更高，所以会盖在你的主窗口上面。
+*   **显示与隐藏**：通过 `hidden` 属性或 `makeKeyAndVisible` 方法来控制窗口是否可见。
+*   **成为Key Window**：一个应用虽有多个窗口，但只有一个能成为 `keyWindow`（关键窗口），它是当前接收键盘和非触摸类输入事件的窗口。`makeKeyAndVisible` 方法就同时完成了“显示”和“设为关键”两个操作。
+
+---
+
+### 生命周期与创建
+
+在传统的纯 UIKit App 中：
+
+1.  **创建**：通常在 `AppDelegate` 的 `application:didFinishLaunchingWithOptions:` 方法中，根据屏幕大小创建。
+    ```objectivec
+    self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+    ```
+    *   `[UIScreen mainScreen] bounds]` 获取了主屏幕的尺寸，确保窗口和屏幕一样大。
+
+2.  **配置**：为其设置一个根视图控制器（`rootViewController`），这是应用的第一个界面。
+
+3.  **显示**：调用 `makeKeyAndVisible` 使其可见并成为主窗口。
+
+4.  **销毁**：应用程序终止时，随进程一起被系统销毁。
+
+### 与现代开发（SwiftUI, SceneDelegate）的关联
+
+*   **SwiftUI**：在纯 SwiftUI 项目中，`UIWindow` 的概念被完全隐藏了。`WindowGroup` 等 SwiftUI 应用生命周期结构替开发者自动管理了窗口的创建和显示。
+*   **SceneDelegate**：为了支持 iPadOS 的多窗口等功能，Apple 引入了“场景（Scene）”的概念。现在，一个 `UIWindow` 是与一个 `UIScene` 关联的。创建和管理窗口的代码从 `AppDelegate` 移动到了 `SceneDelegate` 的 `scene:willConnectToSession:options:` 方法中，但其核心作用（容器、事件分发）完全没有改变。
+
+### 总结
+
+| 特性          | 描述                                                         |
+| :------------ | :----------------------------------------------------------- |
+| **本质**      | 一个特殊的 `UIView`，是所有视图的根容器。                    |
+| **核心作用1** | **容器**：承载整个应用的视图层级（View Hierarchy）。         |
+| **核心作用2** | **调度中心**：作为起点，接收和分发用户交互事件（触摸、摇动等）。 |
+| **关键方法**  | `makeKeyAndVisible` （显示并设为主窗口）                     |
+| **关键属性**  | `rootViewController` （设置内容）、`windowLevel` （管理层级） |
+
+所以，`UIWindow` 是 UIKit 应用骨架中不可或缺的基石，虽然不直接显示内容，但默默支撑着一切内容的显示和交互。
+
+### 示例 - 手动创建和管理
+
+`General` > `Deployment Info` > `Main Interface` 的 `Main.storyboard` 设置为空（新版本 `Xcode` 没有此设置则忽略）。
+
+删除 `Main.storyboard` 文件
+
+删除 `info.plist` 中 `Application scene manifest`（新版本 `Xcode` 删除 `Main storyboard file base name` ）
+
+删除 `SceneDelegate.h`、`SceneDelegate.m`
+
+删除 `AppDelegate.m` 中 `#pragma mark - UISceneSession lifecycle` 包含的函数
+
+`AppDelegate.h` 新增 `property @property (strong, nonatomic) UIWindow *window;`
+
+`AppDelegate.m didFinishLaunchingWithOptions` 函数新增以下代码：
+
+```objective-c
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+    // Override point for customization after application launch.
+    
+    // 初始化 UIWindow
+    self.window = [[UIWindow alloc]initWithFrame:[UIScreen mainScreen].bounds];
+    // 设置 UIWindow 背景颜色
+    self.window.backgroundColor = [UIColor grayColor];
+    
+    // 设置 UIWindow 的根视图控制器
+    UIViewController *viewController = [[UIViewController alloc] init];
+    self.window.rootViewController = viewController;
+    
+    // 将 UIWindow 设置成为应用程序的主窗口（Key Window）
+    // 将 UIWindow 显示在屏幕上
+    [self.window makeKeyAndVisible];
+    
+    return YES;
+}
+```
+
+
+
+### 示例 - 自动创建和管理
+
+新建 `objective-c App` 类型的项目，在 `SceneDelegate.m` 中通过 `self.window` 编程操作 `UIWindow` 或者通过 `Main.storyboard` 操作 `UIWindow`。
+
