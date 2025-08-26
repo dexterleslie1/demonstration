@@ -47,10 +47,23 @@ public class PickupProductRandomlyWhenPurchasingService {
         rSetFlashSaleProductId = redissonClient.getSet(Const.KeyRSetProductIdFlashSaleForPickupRandomlyWhenPurchasing);
 
         scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
-        scheduledExecutorService.scheduleAtFixedRate(() -> {
-            productIdListOrdinary = rSetOrdinaryProductId.readAll().stream().toList();
-            productIdListFlashSale = rSetFlashSaleProductId.readAll().stream().toList();
-        }, 0, 10, TimeUnit.SECONDS);
+        scheduledExecutorService.scheduleAtFixedRate(new R(), 0, 10, TimeUnit.SECONDS);
+    }
+
+    private class R implements Runnable {
+
+        @Override
+        public void run() {
+            // 随机最多获取 40960 个商品
+            productIdListOrdinary = rSetOrdinaryProductId.random(40960).stream().toList();
+            if (log.isDebugEnabled()) {
+                log.debug("rSetOrdinaryProductId.readAll().stream().toList() size {}", productIdListOrdinary.size());
+            }
+            productIdListFlashSale = rSetFlashSaleProductId.random(40960).stream().toList();
+            if (log.isDebugEnabled()) {
+                log.debug("rSetFlashSaleProductId.readAll().stream().toList() size {}", productIdListFlashSale.size());
+            }
+        }
     }
 
     @PreDestroy
@@ -122,7 +135,6 @@ public class PickupProductRandomlyWhenPurchasingService {
         RSet<Long> rSetFlashSaleProductId;
 
         /**
-         *
          * @param redissonClient
          */
         public CountService(@Autowired RedissonClient redissonClient) {
