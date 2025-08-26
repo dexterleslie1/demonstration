@@ -96,7 +96,7 @@ services:
 #  #      KAFKA_LOG_SEGMENT_BYTES: "262144"  #（原默认 1GB）
   # Kafka Prometheus Exporter
   kafka-exporter:
-    image: danielqsj/kafka-exporter # 使用官方镜像
+    image: danielqsj/kafka-exporter:v1.9.0 # 使用官方镜像
     ports:
       - "9308:9308" # 将宿主机的9308端口映射到容器端口，用于Prometheus抓取和手动访问
     command: # 最重要的部分：启动命令和参数

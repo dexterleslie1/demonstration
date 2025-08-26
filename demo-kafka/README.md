@@ -1360,29 +1360,30 @@ kafka-manager:
 配置 `Kafka Exporter`：
 
 ```yaml
-  # Kafka Prometheus Exporter
-  kafka-exporter:
-    image: danielqsj/kafka-exporter # 使用官方镜像
-    ports:
-      - "9308:9308" # 将宿主机的9308端口映射到容器端口，用于Prometheus抓取和手动访问
-    command: # 最重要的部分：启动命令和参数
-      - --kafka.server=kafka1:9092 # 指向Kafka Broker地址
-      # 如果你的Kafka有多个Broker，可以添加多个--kafka.server参数
-      # - --kafka.server=kafka-broker-2:9092
-      # - --kafka.server=kafka-broker-3:9092
-      # 其他常用可选参数：
-      - --web.telemetry-path=/metrics # 指标暴露的路径，默认为/metrics，通常无需修改
-      - --log.level=info # 日志级别：debug, info, warn, error
-      # - --sasl.enabled # 如果Kafka需要SASL认证，请取消注释并配置以下参数
-      # - --sasl.username=your_username
-      # - --sasl.password=your_password
-      # - --sasl.mechanism=PLAIN
-      # - --tls.enabled # 如果Kafka需要SSL/TLS，请取消注释
-      # - --tls.ca-file=/path/to/ca.pem # 需要挂载证书文件
-      # - --tls.cert-file=/path/to/service.cert
-      # - --tls.key-file=/path/to/service.key
-    depends_on:
-      - kafka1
+# Kafka Prometheus Exporter
+kafka-exporter:
+  # https://github.com/danielqsj/kafka_exporter
+  image: danielqsj/kafka-exporter:v1.9.0 # 使用官方镜像
+  ports:
+    - "9308:9308" # 将宿主机的9308端口映射到容器端口，用于Prometheus抓取和手动访问
+  command: # 最重要的部分：启动命令和参数
+    - --kafka.server=kafka1:9092 # 指向Kafka Broker地址
+    # 如果你的Kafka有多个Broker，可以添加多个--kafka.server参数
+    # - --kafka.server=kafka-broker-2:9092
+    # - --kafka.server=kafka-broker-3:9092
+    # 其他常用可选参数：
+    - --web.telemetry-path=/metrics # 指标暴露的路径，默认为/metrics，通常无需修改
+    - --log.level=info # 日志级别：debug, info, warn, error
+    # - --sasl.enabled # 如果Kafka需要SASL认证，请取消注释并配置以下参数
+    # - --sasl.username=your_username
+    # - --sasl.password=your_password
+    # - --sasl.mechanism=PLAIN
+    # - --tls.enabled # 如果Kafka需要SSL/TLS，请取消注释
+    # - --tls.ca-file=/path/to/ca.pem # 需要挂载证书文件
+    # - --tls.cert-file=/path/to/service.cert
+    # - --tls.key-file=/path/to/service.key
+  depends_on:
+    - kafka1
 ```
 
 配置 `prometheus.yaml`

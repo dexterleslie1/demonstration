@@ -33,6 +33,7 @@ services:
       - ./grafana-provisioning/12464.json:/var/lib/grafana/dashboards/12464.json:ro
       - ./grafana-provisioning/1860.json:/var/lib/grafana/dashboards/1860.json:ro
       - ./grafana-provisioning/900001.json:/var/lib/grafana/dashboards/900001.json:ro
+      - ./grafana-provisioning/7589.json:/var/lib/grafana/dashboards/7589.json:ro
       - data-demo-flash-sale-grafana:/var/lib/grafana
     env_file:
       - ./grafana-config.monitoring

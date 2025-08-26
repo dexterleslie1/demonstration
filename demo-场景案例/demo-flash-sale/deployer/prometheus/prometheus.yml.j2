@@ -96,3 +96,13 @@ scrape_configs:
          labels:
            instance: crond-service-{{ loop.index }}-{{ host }}:{{ hostvars[host].actuator_port }}
 {% endfor %}
+
+  # Kafka Exporter metrics端点配置
+  - job_name: 'Kafka Exporter'
+    scrape_interval: 15s
+    static_configs:
+{% for host in groups['rocketmq'] %}
+       - targets: ['{{ host }}:9308']
+         labels:
+           instance: kafka-exporter-{{ host }}
+{% endfor %}
