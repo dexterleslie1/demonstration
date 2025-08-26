@@ -855,6 +855,43 @@ public class SetTests {
 
 
 
+### 大数据集时的遍历方法
+
+```java
+String key = UUID.randomUUID().toString();
+RSet<Long> rSet = redissonClient.getSet(key);
+int total = 500000;
+List<Long> batchList = new ArrayList<>();
+for (int i = 0; i < total; i++) {
+    batchList.add((long) i);
+
+    if (batchList.size() >= 1000) {
+        rSet.addAll(batchList);
+        batchList = new ArrayList<>();
+    }
+}
+
+// 不应该使用 RSet.readAll() 方法读取大数据集，提示：在读取超大数据集时报告超时错误。
+StopWatch stopWatch = new StopWatch();
+stopWatch.start();
+Set<Long> set = new HashSet<>(rSet.readAll());
+stopWatch.stop();
+Assertions.assertEquals(total, set.size());
+log.info("使用 RSet.readAll() 方法读取 {} 个元素耗时 {} 毫秒", total, stopWatch.getLastTaskTimeMillis());
+
+// 应该使用 iterator 读取大数据集，提示：虽然遍历过程慢，但是遍历超大数据集时不会报告超时错误。
+set = new HashSet<>();
+stopWatch.start();
+for (Long element : rSet) {
+    set.add(element);
+}
+stopWatch.stop();
+Assertions.assertEquals(total, set.size());
+log.info("使用 RSet.iterator() 方法便利 {} 个元素耗时 {} 毫秒", total, stopWatch.getLastTaskTimeMillis());
+```
+
+
+
 ### 性能测试
 
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-redis/demo-spring-boot-redisson)

@@ -8,11 +8,10 @@ import org.redisson.api.RSet;
 import org.redisson.api.RedissonClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.util.StopWatch;
 
 import javax.annotation.Resource;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @SpringBootTest
 @Slf4j
@@ -71,5 +70,42 @@ public class SetTests {
         Assertions.assertTrue(randomLongs.toArray(new Long[]{})[1].equals(randomLong1) || randomLongs.toArray(new Long[]{})[1].equals(randomLong2));*/
 
         // endregion
+    }
+
+    /**
+     * 测试大数据集时
+     */
+    @Test
+    public void testLargeDataset() {
+        String key = UUID.randomUUID().toString();
+        RSet<Long> rSet = redissonClient.getSet(key);
+        int total = 500000;
+        List<Long> batchList = new ArrayList<>();
+        for (int i = 0; i < total; i++) {
+            batchList.add((long) i);
+
+            if (batchList.size() >= 1000) {
+                rSet.addAll(batchList);
+                batchList = new ArrayList<>();
+            }
+        }
+
+        // 不应该使用 RSet.readAll() 方法读取大数据集，提示：在读取超大数据集时报告超时错误。
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
+        Set<Long> set = new HashSet<>(rSet.readAll());
+        stopWatch.stop();
+        Assertions.assertEquals(total, set.size());
+        log.info("使用 RSet.readAll() 方法读取 {} 个元素耗时 {} 毫秒", total, stopWatch.getLastTaskTimeMillis());
+
+        // 应该使用 iterator 读取大数据集，提示：虽然遍历过程慢，但是遍历超大数据集时不会报告超时错误。
+        set = new HashSet<>();
+        stopWatch.start();
+        for (Long element : rSet) {
+            set.add(element);
+        }
+        stopWatch.stop();
+        Assertions.assertEquals(total, set.size());
+        log.info("使用 RSet.iterator() 方法便利 {} 个元素耗时 {} 毫秒", total, stopWatch.getLastTaskTimeMillis());
     }
 }
