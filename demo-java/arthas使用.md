@@ -186,6 +186,33 @@ thread -n 6 -i 5000
 
 
 
+显示 `id` 为 `90` 线程的运行堆栈
+
+```sh
+$ thread 90
+"rset-product-id-list-fixed-rate-random-picker-1" Id=90 WAITING on java.util.concurrent.CompletableFuture$Signaller@64616dd0
+    at java.base@17.0.2/jdk.internal.misc.Unsafe.park(Native Method)
+    -  waiting on java.util.concurrent.CompletableFuture$Signaller@64616dd0
+    at java.base@17.0.2/java.util.concurrent.locks.LockSupport.park(LockSupport.java:211)
+    at java.base@17.0.2/java.util.concurrent.CompletableFuture$Signaller.block(CompletableFuture.java:1864)
+    at java.base@17.0.2/java.util.concurrent.ForkJoinPool.unmanagedBlock(ForkJoinPool.java:3463)
+    at java.base@17.0.2/java.util.concurrent.ForkJoinPool.managedBlock(ForkJoinPool.java:3434)
+    at java.base@17.0.2/java.util.concurrent.CompletableFuture.waitingGet(CompletableFuture.java:1898)
+    at java.base@17.0.2/java.util.concurrent.CompletableFuture.get(CompletableFuture.java:2072)
+    at org.redisson.command.CommandAsyncService.get(CommandAsyncService.java:176)
+    at org.redisson.RedissonObject.get(RedissonObject.java:98)
+    at org.redisson.RedissonSet.random(RedissonSet.java:253)
+    at com.future.demo.service.PickupProductRandomlyWhenPurchasingService$R.run(PickupProductRandomlyWhenPurchasingService.java:60)
+    at java.base@17.0.2/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539)
+    at java.base@17.0.2/java.util.concurrent.FutureTask.runAndReset(FutureTask.java:305)
+    at java.base@17.0.2/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:305)
+    at java.base@17.0.2/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+    at java.base@17.0.2/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+    at java.base@17.0.2/java.lang.Thread.run(Thread.java:833)
+```
+
+
+
 ## `jvm`使用
 
 > 显示`jvm`启动参数、垃圾回收器信息、`GC`统计信息、内存使用情况、线程信息。
