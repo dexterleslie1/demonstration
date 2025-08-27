@@ -4,6 +4,18 @@
 
 > HEAD：是指向当前分支的最新提交的指针，可以在任意分支进行切换
 
+
+
+## git push
+
+推送所有标签
+
+```sh
+git push --tags
+```
+
+
+
 ## git reset
 
 > https://blog.csdn.net/zts_zts/article/details/115220786
