@@ -513,7 +513,47 @@ watch com.future.demo.ArthasService watchMethod "{params,target,returnObj,throwE
   trace com.future.demo.* * '#cost > 1000'
   ```
 
-  
+
+
+
+## `trace`命令 - 不跳过`jdk`方法
+
+>说明：如果调用链中包含 `lambda` 表达式并且为 `jdk` 内置类时会被忽略不显式在 `trace` 命令结果中。
+
+运行本站示例：https://gitee.com/dexterleslie/demonstration/tree/master/demo-java/demo-java-assistant
+
+不使用 `--skipJDKMethod` 参数
+
+```sh
+$ trace com.future.demo.ArthasController testLambdaExpression
+Press Q or Ctrl+C to abort.
+Affect(class count: 1 , method count: 1) cost in 40 ms, listenerId: 5
+`---ts=2025-08-27 13:45:59.971;thread_name=http-nio-8080-exec-3;id=29;is_daemon=true;priority=5;TCCL=org.springframework.boot.web.embedded.tomcat.TomcatEmbeddedWebappClassLoader@748e9b20
+    `---[1001.162917ms] com.future.demo.ArthasController:testLambdaExpression()
+        `---[0.00% 0.040867ms ] com.future.common.http.ResponseUtils:successObject() #104
+
+# 请求接口
+$ curl http://localhost:8080/api/v1/arthas/testLambdaExpression
+```
+
+- 结果中没有显式 `java.lang.Runnable:run()` 方法追踪信息。
+
+
+
+使用 `--skipJDKMethod false` 参数
+
+```sh
+$ trace --skipJDKMethod false com.future.demo.ArthasController testLambdaExpression
+Press Q or Ctrl+C to abort.
+Affect(class count: 1 , method count: 1) cost in 38 ms, listenerId: 6
+`---ts=2025-08-27 13:46:11.443;thread_name=http-nio-8080-exec-5;id=31;is_daemon=true;priority=5;TCCL=org.springframework.boot.web.embedded.tomcat.TomcatEmbeddedWebappClassLoader@748e9b20
+    `---[1001.265831ms] com.future.demo.ArthasController:testLambdaExpression()
+        +---[99.89% 1000.210914ms ] java.lang.Runnable:run() #103
+        `---[0.00% 0.034493ms ] com.future.common.http.ResponseUtils:successObject() #104
+        
+# 请求接口
+$ curl http://localhost:8080/api/v1/arthas/testLambdaExpression
+```
 
 
 
@@ -990,3 +1030,115 @@ Arthas的`profiler`命令是一个强大的工具，它在Java应用程序的性
 
 6. 在火焰图中能够直观地看到`com/future/demo/performance/ApiMemoryController.alloc`比较宽表示内存分配比较多
 
+
+
+## `monitor`内部类
+
+运行本站示例：https://gitee.com/dexterleslie/demonstration/tree/master/demo-java/demo-java-assistant
+
+获取内部类全限定名：
+
+- 先调用接口触发 `ClassLoader` 加载内部类，否则 `sc` 命令无法搜索到内部类
+
+  ```sh
+  curl http://localhost:8080/api/v1/arthas/testInnerClass
+  ```
+
+- 搜索内部类
+
+  ```sh
+  $ sc *ArthasController*
+  com.future.demo.ArthasController
+  com.future.demo.ArthasController$R
+  Affect(row-cnt:2) cost in 26 ms.
+  ```
+
+`monitor` 内部类 `R` 的 `run` 方法
+
+```sh
+$ monitor -c 5 com.future.demo.ArthasController$R run
+Press Q or Ctrl+C to abort.
+Affect(class count: 1 , method count: 1) cost in 84 ms, listenerId: 1
+ timestamp       class                  method                  total   succe  fail    avg-rt  fail-r 
+                                                                        ss             (ms)    ate    
+------------------------------------------------------------------------------------------------------
+ 2025-08-27 13:  com.future.demo.Artha  run                     1       1      0       1002.6  0.00%  
+ 14:34.279       sController$R                                                         4              
+
+ timestamp       class                  method                  total   succe  fail    avg-rt  fail-r 
+                                                                        ss             (ms)    ate    
+------------------------------------------------------------------------------------------------------
+ 2025-08-27 13:  com.future.demo.Artha  run                     2       2      0       1000.2  0.00%  
+ 14:37.892       sController$R                                                         1              
+
+ timestamp       class                  method                  total   succe  fail    avg-rt  fail-r 
+                                                                        ss             (ms)    ate    
+------------------------------------------------------------------------------------------------------
+ 2025-08-27 13:  com.future.demo.Artha  run                     0       0      0       0.00    0.00%  
+ 14:45.285       sController$R 
+
+# 请求3次接口
+$ curl http://localhost:8080/api/v1/arthas/testInnerClass
+$ curl http://localhost:8080/api/v1/arthas/testInnerClass
+$ curl http://localhost:8080/api/v1/arthas/testInnerClass
+```
+
+
+
+## `monitor`、`trace` `lambda`表达式
+
+运行本站示例：https://gitee.com/dexterleslie/demonstration/tree/master/demo-java/demo-java-assistant
+
+获取 `lambda` 表达式全限定名
+
+```sh
+$ sm com.future.demo.ArthasController *
+com.future.demo.ArthasController <init>()V
+com.future.demo.ArthasController trace()Lcom/future/common/http/ObjectResponse;
+com.future.demo.ArthasController monitorMethod(I)V
+com.future.demo.ArthasController monitorStart(II)Lcom/future/common/http/ObjectResponse;
+com.future.demo.ArthasController watch()Lcom/future/common/http/ObjectResponse;
+com.future.demo.ArthasController testInnerClass()Lcom/future/common/http/ObjectResponse;
+com.future.demo.ArthasController testLambdaExpression()Lcom/future/common/http/ObjectResponse;
+com.future.demo.ArthasController lambda$testLambdaExpression$0()V
+Affect(row-cnt:8) cost in 17 ms.
+```
+
+`monitor lambda` 表达式
+
+```sh
+$ monitor -c 5 com.future.demo.ArthasController lambda$testLambdaExpression$0
+Press Q or Ctrl+C to abort.
+Affect(class count: 1 , method count: 1) cost in 82 ms, listenerId: 1
+ timestamp       class                  method                  total   succe  fail    avg-rt  fail-r 
+                                                                        ss             (ms)    ate    
+------------------------------------------------------------------------------------------------------
+ 2025-08-27 13:  com.future.demo.Artha  lambda$testLambdaExpre  1       1      0       1001.8  0.00%  
+ 56:08.987       sController            ssion$0                                        3              
+
+ timestamp       class                  method                  total   succe  fail    avg-rt  fail-r 
+                                                                        ss             (ms)    ate    
+------------------------------------------------------------------------------------------------------
+ 2025-08-27 13:  com.future.demo.Artha  lambda$testLambdaExpre  0       0      0       0.00    0.00%  
+ 56:15.856       sController            ssion$0                                                       
+
+# 请求接口
+$ curl http://localhost:8080/api/v1/arthas/testLambdaExpression
+```
+
+`trace lambda` 表达式
+
+```sh
+$ trace --skipJDKMethod false com.future.demo.ArthasController testLambdaExpression
+Press Q or Ctrl+C to abort.
+Affect(class count: 1 , method count: 1) cost in 51 ms, listenerId: 3
+`---ts=2025-08-27 13:58:30.497;thread_name=http-nio-8080-exec-5;id=31;is_daemon=true;priority=5;TCCL=org.springframework.boot.web.embedded.tomcat.TomcatEmbeddedWebappClassLoader@66f659e6
+    `---[1002.770988ms] com.future.demo.ArthasController:testLambdaExpression()
+        +---[99.89% 1001.700537ms ] java.lang.Runnable:run() #103
+        `---[0.00% 0.033141ms ] com.future.common.http.ResponseUtils:successObject() #104
+        
+# 请求接口
+$ curl http://localhost:8080/api/v1/arthas/testLambdaExpression
+```
+
+- 关于 `--skipJDKMethod` 参数详细用法请参考本站 <a href="/java/arthas使用.html#trace命令-不跳过jdk方法" target="_blank">链接</a>
