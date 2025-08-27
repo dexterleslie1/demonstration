@@ -36,7 +36,7 @@ version: "3.1"
 services:
   # 随机 id 选择器服务
   future-random-id-picker-api:
-    image: registry.cn-hangzhou.aliyuncs.com/future-public/random-id-picker-service
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/random-id-picker-service:1.1.0
     environment:
       - JAVA_OPTS=-Xmx512m
       - TZ=Asia/Shanghai
@@ -45,7 +45,7 @@ services:
     ports:
       - '50000:8080'
   future-random-id-picker-db:
-    image: registry.cn-hangzhou.aliyuncs.com/future-public/random-id-picker-db
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/random-id-picker-db:1.1.0
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_general_ci
@@ -69,7 +69,7 @@ services:
 <dependency>
     <groupId>com.github.dexterleslie1</groupId>
     <artifactId>future-random-id-picker-sdk</artifactId>
-    <version>1.0.2</version>
+    <version>1.1.3</version>
 </dependency>
 
 <repositories>
