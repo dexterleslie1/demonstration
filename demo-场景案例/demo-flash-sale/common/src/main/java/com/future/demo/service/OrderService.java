@@ -346,11 +346,6 @@ public class OrderService {
         // 秒杀成功后，发出同步订单到数据库消息
         futureList.add(kafkaTemplate.send(TopicOrderInCacheSyncToDb, JSON));
 
-        // 异步更新 t_count
-        IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO(orderId, "order");
-        JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
-        futureList.add(kafkaTemplate.send(TopicIncreaseCountFast, JSON));
-
         if (!futureList.isEmpty()) {
             int index = -1;
             try {

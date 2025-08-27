@@ -39,6 +39,8 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import static com.future.demo.constant.Const.TopicIncreaseCountFast;
+
 
 @Configuration
 @Slf4j
@@ -108,6 +110,28 @@ public class ConfigKafkaListener {
             this.orderService.insertBatch(orderModelList);
             stopWatch.stop();
             this.monitor.getTimerOrderSyncBatchInsertOrder().record(Duration.ofMillis(stopWatch.getLastTaskTimeMillis()));
+
+            // 异步更新 t_count
+            if (orderModelList != null && !orderModelList.isEmpty()) {
+                List<ListenableFuture<SendResult<String, String>>> futureList = new ArrayList<>();
+                for (OrderModel orderModel : orderModelList) {
+                    Long orderId = orderModel.getId();
+                    IncreaseCountDTO increaseCountDTO = new IncreaseCountDTO(orderId, "order");
+                    String JSON = this.objectMapper.writeValueAsString(increaseCountDTO);
+                    futureList.add(kafkaTemplate.send(TopicIncreaseCountFast, JSON));
+                }
+
+                int index = -1;
+                try {
+                    for (int i = 0; i < futureList.size(); i++) {
+                        index = i;
+                        futureList.get(i).get();
+                    }
+                } catch (Exception ex) {
+                    log.error("发送Kafka消息失败，原因：{}，出错的 futureList 索引为 {}", ex.getMessage(), index, ex);
+                    throw ex;
+                }
+            }
 
             this.monitor.incrementOrderSyncCount(orderModelList.size());
         } catch (Exception ex) {
@@ -521,8 +545,9 @@ public class ConfigKafkaListener {
                 Map<String, List<Long>> flagToIdListMap = dtoList.stream().collect(
                         Collectors.groupingBy(RandomIdPickerAddIdEventDTO::getFlag,
                                 Collectors.mapping(RandomIdPickerAddIdEventDTO::getId, Collectors.toList())));
-                for (String flag : flagToIdListMap.keySet())
-                    randomIdPickerService.addIdList(flag, flagToIdListMap.get(flag));
+                for (String flag : flagToIdListMap.keySet()) {
+                    randomIdPickerService.addIdList(flag, flagToIdListMap.get(flag).stream().map(String::valueOf).toList());
+                }
             }
         } catch (Exception ex) {
             log.error(ex.getMessage(), ex);

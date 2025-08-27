@@ -30,7 +30,7 @@
         <dependency>
             <groupId>com.github.dexterleslie1</groupId>
             <artifactId>future-count-sdk</artifactId>
-            <version>1.1.0</version>
+            <version>1.1.1</version>
         </dependency>
 
         <!-- sentinel依赖配置 -->

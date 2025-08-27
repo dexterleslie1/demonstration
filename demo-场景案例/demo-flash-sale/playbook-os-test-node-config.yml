@@ -64,10 +64,10 @@
       shell: docker pull registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-skywalking-elasticsearch
     - name: "拉取镜像registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-wrk2"
       shell: docker pull registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-wrk2
-    - name: "拉取镜像registry.cn-hangzhou.aliyuncs.com/future-public/random-id-picker-service"
-      shell: docker pull registry.cn-hangzhou.aliyuncs.com/future-public/random-id-picker-service
-    - name: "拉取镜像registry.cn-hangzhou.aliyuncs.com/future-public/random-id-picker-db"
-      shell: docker pull registry.cn-hangzhou.aliyuncs.com/future-public/random-id-picker-db
+    - name: "拉取镜像registry.cn-hangzhou.aliyuncs.com/future-public/random-id-picker-service:1.1.0"
+      shell: docker pull registry.cn-hangzhou.aliyuncs.com/future-public/random-id-picker-service:1.1.0
+    - name: "拉取镜像registry.cn-hangzhou.aliyuncs.com/future-public/random-id-picker-db:1.1.0"
+      shell: docker pull registry.cn-hangzhou.aliyuncs.com/future-public/random-id-picker-db:1.1.0
     - name: "拉取镜像registry.cn-hangzhou.aliyuncs.com/future-public/future-count-service"
       shell: docker pull registry.cn-hangzhou.aliyuncs.com/future-public/future-count-service
     - name: "拉取镜像registry.cn-hangzhou.aliyuncs.com/future-public/future-count-db"

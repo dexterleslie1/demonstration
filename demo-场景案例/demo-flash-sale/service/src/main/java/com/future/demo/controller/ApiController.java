@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -202,7 +203,13 @@ public class ApiController {
      */
     @GetMapping("listProductByIds")
     public ListResponse<ProductDTO> listProductByIds() throws Exception {
-        List<Long> idList = randomIdPickerService.listIdRandomly("product", 20);
+        List<String> idStrList = randomIdPickerService.listIdRandomly("product", 20);
+        List<Long> idList;
+        if (idStrList != null && !idStrList.isEmpty()) {
+            idList = idStrList.stream().map(Long::parseLong).toList();
+        } else {
+            idList = new ArrayList<>();
+        }
         return ResponseUtils.successList(this.productService.listByIds(idList));
     }
 
@@ -218,7 +225,11 @@ public class ApiController {
             @RequestParam(value = "id", required = false) Long id
     ) throws BusinessException {
         if (id == null) {
-            List<Long> idList = randomIdPickerService.listIdRandomly("product", 1);
+            List<String> idStrList = randomIdPickerService.listIdRandomly("product", 1);
+            List<Long> idList = null;
+            if (idStrList != null && !idStrList.isEmpty()) {
+                idList = idStrList.stream().map(Long::parseLong).toList();
+            }
             if (idList != null && idList.size() == 1) {
                 id = idList.get(0);
             }
