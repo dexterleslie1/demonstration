@@ -4571,25 +4571,84 @@ Java 创建线程池主要有两种方式：
 
 ### `ScheduledExecutorService` 使用
 
+>提醒：
+>
+>- 同一个任务即使执行时间超过任务间隔时间也不会并发执行，只会并发执行不同的任务。
+>- 任务抛出 `RuntimeException` 后 `ScheduledExecutorService` 停止工作
+>
 >按照固定频率执行指定逻辑。
 >
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-java/demo-juc)
 
 ```java
-/**
- * 测试 ScheduledExecutorService 基本用法
- */
-@Test
-public void testScheduledExecutorService() throws InterruptedException {
-    ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
-    executorService.scheduleAtFixedRate(() -> {
-        log.info("当前时间：" + LocalDateTime.now());
-    }, 3, 1, TimeUnit.SECONDS);
+@RunWith(SpringRunner.class)
+@SpringBootTest(classes = Application.class)
+@Slf4j
+public class ExecutorServiceTests {
+    /**
+     * 测试 ScheduledExecutorService
+     */
+    @Test
+    public void testScheduledExecutorService() throws InterruptedException {
+        ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
+        executorService.scheduleAtFixedRate(() -> {
+            log.info("当前线程 {} 当前时间 {}", Thread.currentThread().getName(), LocalDateTime.now());
+        }, 3, 1, TimeUnit.SECONDS);
 
-    TimeUnit.SECONDS.sleep(5);
+        TimeUnit.SECONDS.sleep(5);
 
-    executorService.shutdown();
-    while (!executorService.awaitTermination(100, TimeUnit.MILLISECONDS)) ;
+        executorService.shutdown();
+        while (!executorService.awaitTermination(100, TimeUnit.MILLISECONDS)) ;
+
+        // 自定义线程名称
+        ThreadFactory threadFactory = new CustomizableThreadFactory("my-scheduled-task-");
+        executorService = Executors.newScheduledThreadPool(1, threadFactory);
+        executorService.scheduleAtFixedRate(() -> {
+            log.info("任务 {} 当前线程 {} 当前时间 {}", 0, Thread.currentThread().getName(), LocalDateTime.now());
+        }, 0, 1, TimeUnit.SECONDS);
+
+        TimeUnit.SECONDS.sleep(5);
+
+        executorService.shutdown();
+        while (!executorService.awaitTermination(100, TimeUnit.MILLISECONDS)) ;
+
+        // 同一个任务即使执行时间超过任务间隔时间也不会并发执行，只会并发执行不同的任务
+        threadFactory = new CustomizableThreadFactory("my-scheduled-task-");
+        executorService = Executors.newScheduledThreadPool(2, threadFactory);
+        for (int i = 0; i < 2; i++) {
+            int finalI = i;
+            executorService.scheduleAtFixedRate(() -> {
+                log.info("任务 {} 当前线程 {} 当前时间 {}", finalI, Thread.currentThread().getName(), LocalDateTime.now());
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    log.error(e.getMessage(), e);
+                }
+            }, 0, 1, TimeUnit.SECONDS);
+        }
+
+        TimeUnit.SECONDS.sleep(5);
+
+        executorService.shutdown();
+        while (!executorService.awaitTermination(100, TimeUnit.MILLISECONDS)) ;
+
+        // 任务抛出 RuntimeException 后 ScheduledExecutorService 停止工作
+        log.info("------------------------------ 任务抛出 RuntimeException 后 ScheduledExecutorService 停止工作 ------------------------------ ");
+        threadFactory = new CustomizableThreadFactory("my-scheduled-task-");
+        executorService = Executors.newScheduledThreadPool(1, threadFactory);
+        executorService.scheduleAtFixedRate(() -> {
+            log.info("任务 {} 当前线程 {} 当前时间 {}", 0, Thread.currentThread().getName(), LocalDateTime.now());
+            boolean b = true;
+            if (b) {
+                throw new RuntimeException("xxx");
+            }
+        }, 0, 1, TimeUnit.SECONDS);
+
+        TimeUnit.SECONDS.sleep(5);
+
+        executorService.shutdown();
+        while (!executorService.awaitTermination(100, TimeUnit.MILLISECONDS)) ;
+    }
 }
 ```
 

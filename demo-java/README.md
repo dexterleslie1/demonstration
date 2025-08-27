@@ -904,3 +904,164 @@ public class Main {
 server.tomcat.mbeanregistry.enabled=true
 ```
 
+
+
+## 内部类
+
+当然！在 Java 中，内部类（Inner Class）是一个非常重要且强大的特性。简单来说，**内部类就是定义在另一个类内部的类**。
+
+把它想象成一个“类中的类”，外面的类称为**外部类（Outer Class）**。
+
+---
+
+### 为什么要使用内部类？
+
+使用内部类主要有以下几个优点：
+1.  **逻辑分组**：如果一个类只对另一个类有用，那么将它们放在一起可以使封装性更好，代码更易于维护。
+2.  **增强封装性**：内部类可以访问外部类的私有成员（包括私有字段和方法），反之亦然，实现了更紧密的耦合。
+3.  **提高可读性和可维护性**：将相关的类组织在一起，使代码结构更清晰。
+4.  **实现多重继承的变通**：通过多个内部类各自继承一个类，外部类可以间接获得多种行为（虽然 Java 本身不支持多重继承）。
+
+---
+
+### 内部类的分类
+
+Java 中的内部主要分为以下四种类型：
+
+#### 1. 成员内部类（Member Inner Class）
+- **定义**：在一个类中直接定义的、非静态的类。
+- **特点**：
+    - 可以访问外部类的**所有成员**（包括 `private` 的）。
+    - **不能定义静态成员**（`static` 字段或方法），除非是静态常量（`static final`）。
+    - 必须先创建外部类的实例，才能创建成员内部类的实例。
+
+```java
+public class OuterClass {
+    private String outerField = "I'm from Outer!";
+
+    // 成员内部类
+    class InnerClass {
+        public void print() {
+            // 可以直接访问外部类的私有成员
+            System.out.println(outerField);
+        }
+    }
+
+    public static void main(String[] args) {
+        // 1. 首先创建外部类对象
+        OuterClass outer = new OuterClass();
+        // 2. 通过外部类对象创建内部类对象
+        OuterClass.InnerClass inner = outer.new InnerClass();
+        inner.print(); // 输出: I'm from Outer!
+    }
+}
+```
+
+#### 2. 静态内部类（Static Nested Class）
+- **定义**：使用 `static` 关键字修饰的、定义在类中的内部类。
+- **特点**：
+    - **不能直接访问**外部类的非静态成员（需要先创建外部类实例才能访问）。
+    - 可以定义静态成员。
+    - 创建它的实例**不需要**先创建外部类的实例。
+
+```java
+public class OuterClass {
+    private String outerField = "I'm from Outer!";
+    private static String staticOuterField = "I'm static from Outer!";
+
+    // 静态内部类
+    static class StaticNestedClass {
+        public void print() {
+            // System.out.println(outerField); // 错误！不能访问非静态成员
+            System.out.println(staticOuterField); // 可以访问静态成员
+        }
+    }
+
+    public static void main(String[] args) {
+        // 无需外部类实例，直接创建
+        OuterClass.StaticNestedClass staticInner = new OuterClass.StaticNestedClass();
+        staticInner.print(); // 输出: I'm static from Outer!
+    }
+}
+```
+
+#### 3. 局部内部类（Local Inner Class）
+- **定义**：定义在一个方法或作用域块内的类。
+- **特点**：
+    - 作用域仅限于定义它的方法或块中，外界不可见。
+    - 可以访问外部类的成员。
+    - 可以访问**所在方法的 `final` 或 effectively final 的局部变量**（Java 8+）。
+
+```java
+public class OuterClass {
+    private String outerField = "I'm from Outer!";
+
+    public void someMethod() {
+        final String localVar = "I'm local!";
+
+        // 局部内部类
+        class LocalClass {
+            public void print() {
+                System.out.println(outerField); // 访问外部类成员
+                System.out.println(localVar);   // 访问方法的局部变量（必须是final或effectively final）
+            }
+        }
+
+        LocalClass local = new LocalClass();
+        local.print();
+    }
+
+    public static void main(String[] args) {
+        OuterClass outer = new OuterClass();
+        outer.someMethod(); // 输出: I'm from Outer! \n I'm local!
+    }
+}
+```
+
+#### 4. 匿名内部类（Anonymous Inner Class）
+- **定义**：没有名字的局部内部类。它通常用于**一次性**实现一个接口或继承一个类，并同时创建实例。
+- **特点**：
+    - 代码非常简洁，无需显式定义类。
+    - 语法格式为：`new 父类构造器() { /* 类体 */ }` 或 `new 接口() { /* 类体 */ }`。
+    - 在 Java 8 引入 Lambda 表达式之前，它被广泛用于实现函数式接口（如 `Runnable`）。
+
+```java
+public class OuterClass {
+    public static void main(String[] args) {
+        // 传统方式：创建一个实现了Runnable接口的类的实例
+        // 使用匿名内部类方式
+        Runnable task = new Runnable() { 
+            @Override
+            public void run() {
+                System.out.println("匿名内部类在运行！");
+            }
+        };
+
+        new Thread(task).start();
+
+        // 更常见的写法是直接作为参数传递
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println("直接传递的匿名内部类！");
+            }
+        }).start();
+
+        // Java 8+ 后，通常用 Lambda 表达式简化（本质不同，但效果类似）
+        new Thread(() -> System.out.println("使用Lambda表达式！")).start();
+    }
+}
+```
+
+---
+
+### 总结与对比
+
+| 类型           | 位置                 | 可访问外部类成员     | 可包含静态成员 | 实例化方式                 | 常见用途                   |
+| :------------- | :------------------- | :------------------- | :------------- | :------------------------- | :------------------------- |
+| **成员内部类** | 类内部（非静态）     | **是**（所有）       | 否（常量除外） | `outer.new Inner()`        | 紧密关联的辅助功能         |
+| **静态内部类** | 类内部（静态）       | 否（只能访问静态的） | **是**         | `new Outer.StaticNested()` | 与外部类逻辑相关但无需实例 |
+| **局部内部类** | 方法或块内部         | **是**（所有）       | 否             | 在方法内部 `new`           | 方法内局部使用的辅助类     |
+| **匿名内部类** | 方法或块内部（无名） | **是**（所有）       | 否             | 随定义随 `new`             | 快速实现接口/类，事件监听  |
+
+希望这个详细的解释能帮助你彻底理解 Java 的内部类！
