@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RSet;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PreDestroy;
@@ -46,7 +47,7 @@ public class PickupProductRandomlyWhenPurchasingService {
         rSetOrdinaryProductId = redissonClient.getSet(Const.KeyRSetProductIdOrdinaryForPickupRandomlyWhenPurchasing);
         rSetFlashSaleProductId = redissonClient.getSet(Const.KeyRSetProductIdFlashSaleForPickupRandomlyWhenPurchasing);
 
-        scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+        scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(new CustomizableThreadFactory("rset-product-id-list-fixed-rate-random-picker-"));
         scheduledExecutorService.scheduleAtFixedRate(new R(), 0, 10, TimeUnit.SECONDS);
     }
 
@@ -54,14 +55,19 @@ public class PickupProductRandomlyWhenPurchasingService {
 
         @Override
         public void run() {
-            // 随机最多获取 40960 个商品
-            productIdListOrdinary = rSetOrdinaryProductId.random(40960).stream().toList();
-            if (log.isDebugEnabled()) {
-                log.debug("rSetOrdinaryProductId.readAll().stream().toList() size {}", productIdListOrdinary.size());
-            }
-            productIdListFlashSale = rSetFlashSaleProductId.random(40960).stream().toList();
-            if (log.isDebugEnabled()) {
-                log.debug("rSetFlashSaleProductId.readAll().stream().toList() size {}", productIdListFlashSale.size());
+            try {
+                // 随机最多获取 40960 个商品
+                productIdListOrdinary = rSetOrdinaryProductId.random(40960).stream().toList();
+                if (log.isDebugEnabled()) {
+                    log.debug("rSetOrdinaryProductId.readAll().stream().toList() size {}", productIdListOrdinary.size());
+                }
+                productIdListFlashSale = rSetFlashSaleProductId.random(40960).stream().toList();
+                if (log.isDebugEnabled()) {
+                    log.debug("rSetFlashSaleProductId.readAll().stream().toList() size {}", productIdListFlashSale.size());
+                }
+            } catch (Exception ex) {
+                // 不能抛出异常，否则 ScheduledExecutorService 停止工作
+                log.error(ex.getMessage(), ex);
             }
         }
     }
