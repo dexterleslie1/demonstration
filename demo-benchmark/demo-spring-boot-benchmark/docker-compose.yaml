@@ -1,7 +1,7 @@
 version: "3.0"
 
 services:
-  demo:
+  service:
     build:
       context: .
       dockerfile: Dockerfile
@@ -9,5 +9,4 @@ services:
       - JAVA_OPTS=-Xmx4g
       - TZ=Asia/Shanghai
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-spring-boot-benchmark
-    restart: unless-stopped
     network_mode: host
