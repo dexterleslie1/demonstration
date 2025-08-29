@@ -621,6 +621,9 @@ export default defineConfig({
             { text: '基础', link: '/macos/README.md' },
             { text: 'Cocoapods', link: '/macos/cocoapods.md' },
             { text: 'HomeBrew', link: '/macos/homebrew.md' },
+            { text: 'Objective-C', link: '/macos/objective-c.md' },
+            { text: 'Swift', link: '/macos/swift.md' },
+            { text: 'Xcode', link: '/macos/xcode.md' },
           ]
         }
       ],

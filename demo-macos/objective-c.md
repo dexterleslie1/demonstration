@@ -2920,6 +2920,210 @@ XCTAssertNil(errorMessage);
 
 
 
+## `IBOutlet`和`IBAction`
+
+>参考链接：https://www.cnblogs.com/20150507-smile/p/4867216.html
+
+`IBOutlet`、`IBAction` 主要是能够让 `Interface Builder` 读取代码中相关信息。
+
+定义 `IBOutlet` 类型变量目的是绑定代码中变量和 `nib` 界面中控件一一对应关系后，能够在代码中使用变量操作 `nib` 界面中控件。
+
+定义 `IBAction` 类型函数目的是能够让 `nib` 界面控件通过 `Connections Inspector` 连接 `nib` 界面控件调用对应的 `IBAction` 函数。
+
+关于 `IBOutlet` 和 `IBAction` 的详细用法可通过 `storyboard` 和 `xib` 用法加深理解 <a href="/macos/objective-c.html#storyboard、xib、nib-storyboard使用" target="_blank">`storyboard` 用法</a>、<a href="/macos/objective-c.html#storyboard、xib、nib-xib使用" target="_blank">`xib` 用法</a>
+
+
+
+## `storyboard`、`xib`、`nib` - 概念
+
+>参考链接：https://www.jianshu.com/p/8edf2a4ae383
+
+`xib`：是一个可视化文件，可通过拖拽文件进行界面创作和布局。`xib` 实际是个 `xml` 文件，`xib = XML nib`。
+
+`nib`：`xib` 编译之后就得到 `nib` 文件，`nib = NeXT Interface Builder`
+
+`storyboard`：大家可以理解为是升级版的 `xib`，可以同时管理多个 `xib` 文件并处理场景与场景之间的跳转。
+
+
+
+`storyboard` 和 `xib` 对比：
+
+- `storyboard` 的文件以 `.storyboard` 结尾，`xib` 文件以 `.xib` 结尾
+- `storyboard` 更注重于多个场景（页面）的层级关系及跳转，而 `xib` 更注重于单个页面的布局和复用性，这可以作为选择使用 `storyboard` 还是 `xib` 的参考。
+- `storyboard` 上只能使用 `VC`，不能单独使用 `UIview` ，`UIView` 只能基于 `VC` 上进行使用，而 `xib` 同时支持两者。这一点也印证了上面提到的两者的不同倾向。
+- `storyboard` 上没有 `file’s Owner` 的概念，默认通过 `VC` 的 `class` 的指定其拥有者。
+- `storyboard` 上可以通过 `segue` 实现无需代码的界面跳转，而 `xib` 由于管理的是单个界面，因此只能通过代码来实现界面的切换。
+
+
+
+## `storyboard`、`xib`、`nib` - `storyboard`使用
+
+
+
+### 编辑现有的`Main.storyboard`
+
+新建 `objective-c App` 项目后，默认会创建一个名为 `Main` 的 `storyboard`，此 `storyboard` 默认绑定 `ViewController` 类作为其 `Class`（打开 `storyboard`，选中 `storyboard` 左边导航栏中的 `View Controller Scene`，右边导航栏切换到 `Show the identity inspector Tab`，在此面板中 `Class` 查看 `storyboard` 绑定的 `UIViewController`）。
+
+向 `storyboard` 中添加控件：打开 `Main.storyboard`，点击工具栏中的 `+` 号弹出控件选择器，输入 `label` 搜索 `Label` 控件并拖拽到 `Main.storyboard` 中即可完成 `Label` 控件的添加。
+
+`storyboard` 中的控件绑定 `Referencing outlet` 到代码中：使用工具栏右上角 `Add Editor on Right` 功能打开一个代码编辑器分屏，在新的分屏中打开 `ViewController.h` 头文件，选中 `storyboard` 中的 `Label` 控件并按住 `ctrl` 键，使用鼠标拖拽 `Label` 控件到 `ViewController.h` 代码中，此时会弹出 `Referencing outlet` 编辑框，在 `Name` 中填写 `myLabel`，`Connection` 选择 `Outlet`（`ViewController.h` 中会自动生成 `@property (weak, nonatomic) IBOutlet UILabel *myLabel;` 的代码）。`Button` 控件则大同小异，添加点击事件回调时 `Connection` 选择 `Action`（`ViewController.h` 中会自动生成 `- (IBAction)onClicked:(id)sender;` 的代码）。最后在 `ViewController.m` 中实现按钮点击事件回调函数如下：
+
+```objective-c
+- (IBAction)onClicked:(id)sender {
+    // 设置 Label 控件 text
+    self.myLabel.text = @"Button Clicked";
+}
+```
+
+
+
+### 新建空白的`storyboard`
+
+>`todo` 新建空白的 `storyboard` 并动态加载。
+
+
+
+## `storyboard`、`xib`、`nib` - `xib`使用
+
+>参考链接：https://www.jianshu.com/p/1a78adb870fa
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-xib)
+
+创建 `objective-c App` 项目
+
+参考本站 <a href="/macos/objective-c.html#示例-手动创建和管理" target="_blank">链接</a> 取消项目使用 `Main.storyboard` 而使用 `UIWindow` 方式设置 `rootViewController`。
+
+使用 `File` > `New` > `File ...` > `User Interface` > `View` 功能创建名为 `XibViewController` 的 `xib` 文件。
+
+创建 `XibViewController`：
+
+- `XibViewController.h`
+
+  ```objective-c
+  #import <UIKit/UIKit.h>
+  
+  NS_ASSUME_NONNULL_BEGIN
+  
+  @interface XibViewController : UIViewController
+  
+  @end
+  
+  NS_ASSUME_NONNULL_END
+  ```
+
+- `XibViewController.m`
+
+  ```objective-c
+  #import "XibViewController.h"
+  
+  @interface XibViewController ()
+  
+  @end
+  
+  @implementation XibViewController
+  
+  - (void)viewDidLoad {
+      [super viewDidLoad];
+      // Do any additional setup after loading the view.
+      
+  }
+  
+  @end
+  
+  ```
+
+设置 `xib` 的 `File’s Owner class` 为对应的 `XibViewController` 类
+
+打开 `XibViewController.xib` 文件并添加 `Button`，参考以上的 `storyboard` 操作添加 `Button` 的 `Referencing outlet` 到 `XibViewController.h` 中（会自动生成 `@property (weak, nonatomic) IBOutlet UIButton *buttonClickme;` 代码）
+
+`XibViewController.xib` 中的 `View` 节点和 `File's Owner` 节点建立 `Referencing Outlet` 关系（否则运行时会报告 `View` 没有建立 `Referencing Outlet` 关系错误）：打开 `XibViewController.xib` 文件选中左边导航栏中的 `View` 节点，右边导航栏切换到 `Show the Connections inspector Tab`，拖拽 `Referencing outlets` > `New Referencing Outlet` 后的 `+` 号到左边导航栏中的 `File's Owner` 节点松手。
+
+编辑 `XibViewController.m` 给 `Button` 绑定点击事件：
+
+```objective-c
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view.
+    
+    [self.buttonClickme addTarget:self action:@selector(onClickedButtonClickme:) forControlEvents:UIControlEventTouchUpInside];
+}
+
+- (void) onClickedButtonClickme:(UIButton *) button {
+    NSLog(@"已经点击我了");
+}
+```
+
+`AppDelegate.h` 添加 `window` 属性：
+
+```objective-c
+#import <UIKit/UIKit.h>
+
+@interface AppDelegate : UIResponder <UIApplicationDelegate>
+
+@property (strong, nonatomic) UIWindow *window;
+
+@end
+```
+
+`AppDelegate.m` 动态加载 `xib`：
+
+```objective-c
+#import "XibViewController.h"
+
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+    // Override point for customization after application launch.
+    
+    self.window = [[UIWindow alloc]initWithFrame:[UIScreen mainScreen].bounds];
+    self.window.backgroundColor = [UIColor whiteColor];
+    UIViewController *viewController = [[XibViewController alloc] initWithNibName:@"XibViewController"
+                                                                           bundle:[NSBundle mainBundle]];
+    self.window.rootViewController = viewController;
+    [self.window makeKeyAndVisible];
+    
+    return YES;
+}
+```
+
+
+
+## `AppDelegate`
+
+>参考链接：https://www.binpress.com/objective-c-building-app-basic-ui-elements/
+
+`AppDelegate` 是 `iOS` 系统和 `app` 之间桥梁，当 `iOS` 初始化 `app` 完毕 `application:didFinishLaunchingWithOptions` 方法被调用。
+
+
+
+### `application:didFinishLaunchingWithOptions`
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-appdelegate)
+
+```objective-c
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+    // Override point for customization after application launch.
+    
+    NSLog(@"AppDelegate didFinishLaunchingWithOptions is invoked");
+    
+    return YES;
+}
+```
+
+
+
+### 使用静态方法获取`AppDelegate`
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-appdelegate)
+
+```objective-c
+- (IBAction)onClickedGetAppDelegate:(id)sender {
+    // 使用静态方法获取AppDelegate
+    AppDelegate *appDelegate = (AppDelegate*)[[UIApplication sharedApplication] delegate];
+    // [appDelegate.window.rootViewController dismissViewControllerAnimated:YES completion:nil];
+}
+```
+
+
+
 ## `UIKit` - 概念
 
 当然！iOS UIKit 是构建 iOS 应用程序界面的**核心框架**和**工具包**。可以说，几乎所有你看到的、能与之交互的 iOS App 界面元素，都是由 UIKit 提供的。
@@ -3099,6 +3303,8 @@ UIKit 的功能非常丰富，主要包括：
 
 `General` > `Deployment Info` > `Main Interface` 的 `Main.storyboard` 设置为空（新版本 `Xcode` 没有此设置则忽略）。
 
+`Xcode 14.2` 设置 `Build Settings` > `Info.plist Values` > `UIKit Main Storyboard File Base Name` 为空。
+
 删除 `Main.storyboard` 文件
 
 删除 `info.plist` 中 `Application scene manifest`（新版本 `Xcode` 删除 `Main storyboard file base name` ）
@@ -3107,7 +3313,7 @@ UIKit 的功能非常丰富，主要包括：
 
 删除 `AppDelegate.m` 中 `#pragma mark - UISceneSession lifecycle` 包含的函数
 
-`AppDelegate.h` 新增 `property @property (strong, nonatomic) UIWindow *window;`
+`AppDelegate.h` 新增 `@property (strong, nonatomic) UIWindow *window;`
 
 `AppDelegate.m didFinishLaunchingWithOptions` 函数新增以下代码：
 
