@@ -698,8 +698,7 @@ sudo parted /dev/sda
 # 查看当前分区信息（输入 p 确认）
 (parted) p
 
-# 调整扩展分区 2 的结束位置为磁盘末尾（100GB）
-# 或直接写 "100%" 占用剩余所有空间
+# 调整扩展分区 2 的结束位置为磁盘末尾（100GB），例如：硬盘容量为1024GB，则填写1024GB
 (parted) resizepart 2 100GB
 
 # 输入 yes 确认调整（部分版本需要）或者
@@ -716,7 +715,7 @@ sudo parted /dev/sda
 ```sh
 sudo parted /dev/sda
 
-# 调整逻辑分区 5 的结束位置为扩展分区 2 的末尾（100GB）
+# 调整逻辑分区 5 的结束位置为扩展分区 2 的末尾（100GB），例如：扩展分区为1024GB，则填写1024GB
 (parted) resizepart 5 100GB
 
 # 输入 yes 确认
