@@ -6,7 +6,9 @@
 //
 
 #import "AppDelegate.h"
-#import "XibViewController.h"
+#import "XibUsingMethodHybrid.h"
+#import "XibUsingMethodInterfaceBuilder.h"
+#import "XibUsingMethodProgrammatically.h"
 
 @interface AppDelegate ()
 
@@ -20,8 +22,17 @@
     
     self.window = [[UIWindow alloc]initWithFrame:[UIScreen mainScreen].bounds];
     self.window.backgroundColor = [UIColor whiteColor];
-    UIViewController *viewController = [[XibViewController alloc] initWithNibName:@"XibViewController"
-                                                                           bundle:[NSBundle mainBundle]];
+    
+//    UIViewController *viewController = [[XibUsingMethodHybrid alloc]
+//                                        initWithNibName:@"XibUsingMethodHybrid"
+//                                        bundle:[NSBundle mainBundle]];
+//    UIViewController *viewController = [[XibUsingMethodInterfaceBuilder alloc]
+//                                        initWithNibName: @"XibUsingMethodInterfaceBuilder"
+//                                        bundle:[NSBundle mainBundle]];
+    UIViewController *viewController = [[XibUsingMethodProgrammatically alloc]
+                                        initWithNibName:@"XibUsingMethodProgrammatically"
+                                        bundle:[NSBundle mainBundle]];
+    
     self.window.rootViewController = viewController;
     [self.window makeKeyAndVisible];
     

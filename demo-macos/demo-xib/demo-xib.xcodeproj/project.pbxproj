@@ -14,8 +14,12 @@
 		8763677A2E6122C400168B59 /* demo_xibTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 876367792E6122C400168B59 /* demo_xibTests.m */; };
 		876367842E6122C400168B59 /* demo_xibUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 876367832E6122C400168B59 /* demo_xibUITests.m */; };
 		876367862E6122C400168B59 /* demo_xibUITestsLaunchTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 876367852E6122C400168B59 /* demo_xibUITestsLaunchTests.m */; };
-		878789112E616C0200FA2FF7 /* XibViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 878789102E616C0200FA2FF7 /* XibViewController.m */; };
-		878789132E616C8F00FA2FF7 /* XibViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 878789122E616C8F00FA2FF7 /* XibViewController.xib */; };
+		8768BA062E623AC700D6AD34 /* XibUsingMethodHybrid.m in Sources */ = {isa = PBXBuildFile; fileRef = 8768BA042E623AC700D6AD34 /* XibUsingMethodHybrid.m */; };
+		8768BA072E623AC700D6AD34 /* XibUsingMethodHybrid.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8768BA052E623AC700D6AD34 /* XibUsingMethodHybrid.xib */; };
+		8768BA0B2E623E8400D6AD34 /* XibUsingMethodInterfaceBuilder.m in Sources */ = {isa = PBXBuildFile; fileRef = 8768BA092E623E8400D6AD34 /* XibUsingMethodInterfaceBuilder.m */; };
+		8768BA0C2E623E8400D6AD34 /* XibUsingMethodInterfaceBuilder.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8768BA0A2E623E8400D6AD34 /* XibUsingMethodInterfaceBuilder.xib */; };
+		8768BA102E62452600D6AD34 /* XibUsingMethodProgrammatically.m in Sources */ = {isa = PBXBuildFile; fileRef = 8768BA0E2E62452600D6AD34 /* XibUsingMethodProgrammatically.m */; };
+		8768BA112E62452600D6AD34 /* XibUsingMethodProgrammatically.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8768BA0F2E62452600D6AD34 /* XibUsingMethodProgrammatically.xib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -48,9 +52,15 @@
 		8763677F2E6122C400168B59 /* demo-xibUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "demo-xibUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		876367832E6122C400168B59 /* demo_xibUITests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = demo_xibUITests.m; sourceTree = "<group>"; };
 		876367852E6122C400168B59 /* demo_xibUITestsLaunchTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = demo_xibUITestsLaunchTests.m; sourceTree = "<group>"; };
-		8787890F2E616BDF00FA2FF7 /* XibViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XibViewController.h; sourceTree = "<group>"; };
-		878789102E616C0200FA2FF7 /* XibViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = XibViewController.m; sourceTree = "<group>"; };
-		878789122E616C8F00FA2FF7 /* XibViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = XibViewController.xib; sourceTree = "<group>"; };
+		8768BA032E623AC700D6AD34 /* XibUsingMethodHybrid.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XibUsingMethodHybrid.h; sourceTree = "<group>"; };
+		8768BA042E623AC700D6AD34 /* XibUsingMethodHybrid.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = XibUsingMethodHybrid.m; sourceTree = "<group>"; };
+		8768BA052E623AC700D6AD34 /* XibUsingMethodHybrid.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = XibUsingMethodHybrid.xib; sourceTree = "<group>"; };
+		8768BA082E623E8400D6AD34 /* XibUsingMethodInterfaceBuilder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XibUsingMethodInterfaceBuilder.h; sourceTree = "<group>"; };
+		8768BA092E623E8400D6AD34 /* XibUsingMethodInterfaceBuilder.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = XibUsingMethodInterfaceBuilder.m; sourceTree = "<group>"; };
+		8768BA0A2E623E8400D6AD34 /* XibUsingMethodInterfaceBuilder.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = XibUsingMethodInterfaceBuilder.xib; sourceTree = "<group>"; };
+		8768BA0D2E62452600D6AD34 /* XibUsingMethodProgrammatically.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XibUsingMethodProgrammatically.h; sourceTree = "<group>"; };
+		8768BA0E2E62452600D6AD34 /* XibUsingMethodProgrammatically.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = XibUsingMethodProgrammatically.m; sourceTree = "<group>"; };
+		8768BA0F2E62452600D6AD34 /* XibUsingMethodProgrammatically.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = XibUsingMethodProgrammatically.xib; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -103,13 +113,19 @@
 			children = (
 				8763675D2E6122C200168B59 /* AppDelegate.h */,
 				8763675E2E6122C200168B59 /* AppDelegate.m */,
+				8768BA032E623AC700D6AD34 /* XibUsingMethodHybrid.h */,
+				8768BA042E623AC700D6AD34 /* XibUsingMethodHybrid.m */,
+				8768BA052E623AC700D6AD34 /* XibUsingMethodHybrid.xib */,
 				876367692E6122C400168B59 /* Assets.xcassets */,
 				8763676B2E6122C400168B59 /* LaunchScreen.storyboard */,
 				8763676E2E6122C400168B59 /* Info.plist */,
 				8763676F2E6122C400168B59 /* main.m */,
-				8787890F2E616BDF00FA2FF7 /* XibViewController.h */,
-				878789102E616C0200FA2FF7 /* XibViewController.m */,
-				878789122E616C8F00FA2FF7 /* XibViewController.xib */,
+				8768BA082E623E8400D6AD34 /* XibUsingMethodInterfaceBuilder.h */,
+				8768BA092E623E8400D6AD34 /* XibUsingMethodInterfaceBuilder.m */,
+				8768BA0A2E623E8400D6AD34 /* XibUsingMethodInterfaceBuilder.xib */,
+				8768BA0D2E62452600D6AD34 /* XibUsingMethodProgrammatically.h */,
+				8768BA0E2E62452600D6AD34 /* XibUsingMethodProgrammatically.m */,
+				8768BA0F2E62452600D6AD34 /* XibUsingMethodProgrammatically.xib */,
 			);
 			path = "demo-xib";
 			sourceTree = "<group>";
@@ -234,8 +250,10 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8768BA072E623AC700D6AD34 /* XibUsingMethodHybrid.xib in Resources */,
+				8768BA0C2E623E8400D6AD34 /* XibUsingMethodInterfaceBuilder.xib in Resources */,
+				8768BA112E62452600D6AD34 /* XibUsingMethodProgrammatically.xib in Resources */,
 				8763676D2E6122C400168B59 /* LaunchScreen.storyboard in Resources */,
-				878789132E616C8F00FA2FF7 /* XibViewController.xib in Resources */,
 				8763676A2E6122C400168B59 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -261,9 +279,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8768BA102E62452600D6AD34 /* XibUsingMethodProgrammatically.m in Sources */,
 				8763675F2E6122C200168B59 /* AppDelegate.m in Sources */,
 				876367702E6122C400168B59 /* main.m in Sources */,
-				878789112E616C0200FA2FF7 /* XibViewController.m in Sources */,
+				8768BA0B2E623E8400D6AD34 /* XibUsingMethodInterfaceBuilder.m in Sources */,
+				8768BA062E623AC700D6AD34 /* XibUsingMethodHybrid.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
