@@ -2987,65 +2987,39 @@ XCTAssertNil(errorMessage);
 
 >参考链接：https://www.jianshu.com/p/1a78adb870fa
 >
->详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-xib)
+
+`xib` 使用方式有：
+
+- 通过编程方式添加并操作 `view` 中的控件。
+- 通过 `Interface Builder` 方式添加并操作 `view` 中的控件。
+- 通过 `Interface Builder+编程` 混合方式添加并操作 `view` 中的控件。
+
+
+
+### 通过`Interface Builder+编程`混合方式
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-xib) 中的 `XibUsingMethodHybrid`
 
 创建 `objective-c App` 项目
 
 参考本站 <a href="/macos/objective-c.html#示例-手动创建和管理" target="_blank">链接</a> 取消项目使用 `Main.storyboard` 而使用 `UIWindow` 方式设置 `rootViewController`。
 
-使用 `File` > `New` > `File ...` > `User Interface` > `View` 功能创建名为 `XibViewController` 的 `xib` 文件。
+使用 `File` > `New` > `File ...` > `User Interface` > `Cocoa Touch Class` 功能创建名为 `XibUsingMethodHybrid` 的 `xib` 组件（自动创建 `XibUsingMethodHybrid.h`、`XibUsingMethodHybrid.m`、`XibUsingMethodHybrid.xib` 文件），`Class` 填写 `XibUsingMethodHybrid`，`Subclass of` 选择 `UIViewController`，勾选 `Also create XIB file`。
 
-创建 `XibViewController`：
+打开 `XibUsingMethodHybrid.xib` 文件并添加 `Button`，参考以上的 `storyboard` 操作添加 `Button` 的 `Referencing outlet` 到 `XibUsingMethodHybrid.h` 中（会自动生成 `@property (weak, nonatomic) IBOutlet UIButton *buttonClickme;` 代码）
 
-- `XibViewController.h`
-
-  ```objective-c
-  #import <UIKit/UIKit.h>
-  
-  NS_ASSUME_NONNULL_BEGIN
-  
-  @interface XibViewController : UIViewController
-  
-  @end
-  
-  NS_ASSUME_NONNULL_END
-  ```
-
-- `XibViewController.m`
-
-  ```objective-c
-  #import "XibViewController.h"
-  
-  @interface XibViewController ()
-  
-  @end
-  
-  @implementation XibViewController
-  
-  - (void)viewDidLoad {
-      [super viewDidLoad];
-      // Do any additional setup after loading the view.
-      
-  }
-  
-  @end
-  
-  ```
-
-设置 `xib` 的 `File’s Owner class` 为对应的 `XibViewController` 类
-
-打开 `XibViewController.xib` 文件并添加 `Button`，参考以上的 `storyboard` 操作添加 `Button` 的 `Referencing outlet` 到 `XibViewController.h` 中（会自动生成 `@property (weak, nonatomic) IBOutlet UIButton *buttonClickme;` 代码）
-
-`XibViewController.xib` 中的 `View` 节点和 `File's Owner` 节点建立 `Referencing Outlet` 关系（否则运行时会报告 `View` 没有建立 `Referencing Outlet` 关系错误）：打开 `XibViewController.xib` 文件选中左边导航栏中的 `View` 节点，右边导航栏切换到 `Show the Connections inspector Tab`，拖拽 `Referencing outlets` > `New Referencing Outlet` 后的 `+` 号到左边导航栏中的 `File's Owner` 节点松手。
-
-编辑 `XibViewController.m` 给 `Button` 绑定点击事件：
+编辑 `XibUsingMethodHybrid.m` 给 `Button` 绑定点击事件：
 
 ```objective-c
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
     
-    [self.buttonClickme addTarget:self action:@selector(onClickedButtonClickme:) forControlEvents:UIControlEventTouchUpInside];
+    // 演示使用 Interface Builder+编程 混合方式 使用 xib
+    [self.buttonClickme
+     addTarget:self
+     action:@selector(onClickedButtonClickme:)
+     forControlEvents:UIControlEventTouchUpInside];
 }
 
 - (void) onClickedButtonClickme:(UIButton *) button {
@@ -3068,15 +3042,194 @@ XCTAssertNil(errorMessage);
 `AppDelegate.m` 动态加载 `xib`：
 
 ```objective-c
-#import "XibViewController.h"
+#import "XibUsingMethodHybrid.h"
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for customization after application launch.
     
     self.window = [[UIWindow alloc]initWithFrame:[UIScreen mainScreen].bounds];
     self.window.backgroundColor = [UIColor whiteColor];
-    UIViewController *viewController = [[XibViewController alloc] initWithNibName:@"XibViewController"
-                                                                           bundle:[NSBundle mainBundle]];
+    UIViewController *viewController = [[XibUsingMethodHybrid alloc]
+                                        initWithNibName:@"XibUsingMethodHybrid"
+                                        bundle:[NSBundle mainBundle]];
+    self.window.rootViewController = viewController;
+    [self.window makeKeyAndVisible];
+    
+    return YES;
+}
+```
+
+
+
+### 通过 `Interface Builder` 方式
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-xib) 中的 `XibUsingMethodInterfaceBuilder`
+
+创建 `objective-c App` 项目
+
+参考本站 <a href="/macos/objective-c.html#示例-手动创建和管理" target="_blank">链接</a> 取消项目使用 `Main.storyboard` 而使用 `UIWindow` 方式设置 `rootViewController`。
+
+使用 `File` > `New` > `File ...` > `User Interface` > `Cocoa Touch Class` 功能创建名为 `XibUsingMethodInterfaceBuilder` 的 `xib` 组件（自动创建 `XibUsingMethodInterfaceBuilder.h`、`XibUsingMethodInterfaceBuilder.m`、`XibUsingMethodInterfaceBuilder.xib` 文件），`Class` 填写 `XibUsingMethodInterfaceBuilder`，`Subclass of` 选择 `UIViewController`，勾选 `Also create XIB file`。
+
+打开 `XibUsingMethodInterfaceBuilder.xib` 文件并添加 `Button`，参考以上的 `storyboard` 操作添加 `Button` 的 `Action` 类型 `Referencing outlet` 到 `XibUsingMethodInterfaceBuilder.h` 中（会自动生成点击事件回调函数）
+
+编辑 `XibUsingMethodInterfaceBuilder.m` 中自动生成点击事件回调函数：
+
+```objective-c
+- (IBAction)onClickedClickMe:(id)sender {
+    NSLog(@"已经点击我了(XIB IB)");
+}
+```
+
+`AppDelegate.h` 添加 `window` 属性：
+
+```objective-c
+#import <UIKit/UIKit.h>
+
+@interface AppDelegate : UIResponder <UIApplicationDelegate>
+
+@property (strong, nonatomic) UIWindow *window;
+
+@end
+```
+
+`AppDelegate.m` 动态加载 `xib`：
+
+```objective-c
+#import "XibUsingMethodInterfaceBuilder.h"
+
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+    // Override point for customization after application launch.
+    
+    self.window = [[UIWindow alloc]initWithFrame:[UIScreen mainScreen].bounds];
+    self.window.backgroundColor = [UIColor whiteColor];
+    
+//    UIViewController *viewController = [[XibUsingMethodHybrid alloc]
+//                                        initWithNibName:@"XibUsingMethodHybrid"
+//                                        bundle:[NSBundle mainBundle]];
+    UIViewController *viewController = [[XibUsingMethodInterfaceBuilder alloc]
+                                        initWithNibName: @"XibUsingMethodInterfaceBuilder"
+                                        bundle:[NSBundle mainBundle]];
+    
+    self.window.rootViewController = viewController;
+    [self.window makeKeyAndVisible];
+    
+    return YES;
+}
+```
+
+
+
+### 通过编程方式
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-xib) 中的 `XibUsingMethodProgrammatically`
+
+创建 `objective-c App` 项目
+
+参考本站 <a href="/macos/objective-c.html#示例-手动创建和管理" target="_blank">链接</a> 取消项目使用 `Main.storyboard` 而使用 `UIWindow` 方式设置 `rootViewController`。
+
+使用 `File` > `New` > `File ...` > `User Interface` > `Cocoa Touch Class` 功能创建名为 `XibUsingMethodProgrammatically` 的 `xib` 组件（自动创建 `XibUsingMethodProgrammatically.h`、`XibUsingMethodProgrammatically.m`、`XibUsingMethodProgrammatically.xib` 文件），`Class` 填写 `XibUsingMethodProgrammatically`，`Subclass of` 选择 `UIViewController`，勾选 `Also create XIB file`。
+
+`XibUsingMethodProgrammatically.m` 文件添加如下代码以编程方式动态添加按钮：
+
+```objective-c
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    
+    UIButton *buttonClickme = [[UIButton alloc] init];
+    [buttonClickme setTitle: @"Click me(XIB programmatically)" forState: UIControlStateNormal];
+    // 设置颜色
+    [buttonClickme setTitleColor:[UIColor blueColor] forState:UIControlStateNormal];
+    [self.view addSubview: buttonClickme];
+    
+    [buttonClickme setTranslatesAutoresizingMaskIntoConstraints: NO];
+    
+    [self.view addConstraint: [NSLayoutConstraint
+                               constraintWithItem:buttonClickme
+                               attribute:NSLayoutAttributeCenterX
+                               relatedBy:NSLayoutRelationEqual
+                               toItem:self.view
+                               attribute:NSLayoutAttributeCenterX
+                               multiplier:1.0f
+                               constant:0]];
+    
+    [self.view addConstraint: [NSLayoutConstraint
+                               constraintWithItem:buttonClickme
+                               attribute:NSLayoutAttributeCenterY
+                               relatedBy:NSLayoutRelationEqual
+                               toItem:self.view
+                               attribute:NSLayoutAttributeCenterY
+                               multiplier:1.0f
+                               constant:0]];
+    
+    // 最小宽度约束（可选）
+    NSLayoutConstraint *minWidth = [NSLayoutConstraint
+                                   constraintWithItem:buttonClickme
+                                   attribute:NSLayoutAttributeWidth
+                                   relatedBy:NSLayoutRelationGreaterThanOrEqual
+                                   toItem:nil
+                                   attribute:NSLayoutAttributeNotAnAttribute
+                                   multiplier:1.0f
+                                   constant:100]; // 宽度至少 100 点
+    [self.view addConstraint:minWidth];
+
+    // 高度约束（根据字体自动计算）
+    NSLayoutConstraint *height = [NSLayoutConstraint
+                                  constraintWithItem:buttonClickme
+                                  attribute:NSLayoutAttributeHeight
+                                  relatedBy:NSLayoutRelationEqual
+                                  toItem:nil
+                                  attribute:NSLayoutAttributeNotAnAttribute
+                                  multiplier:1.0f
+                                  constant:44]; // 固定高度 44 点（系统按钮常用高度）
+    [self.view addConstraint:height];
+    
+    [buttonClickme
+     addTarget:self
+     action:@selector(onClickedClickme:)
+     forControlEvents:UIControlEventTouchUpInside];
+
+}
+
+- (void) onClickedClickme: (UIButton *) button {
+    NSLog(@"已经点击我了(XIB programmatically)");
+}
+```
+
+`AppDelegate.h` 添加 `window` 属性：
+
+```objective-c
+#import <UIKit/UIKit.h>
+
+@interface AppDelegate : UIResponder <UIApplicationDelegate>
+
+@property (strong, nonatomic) UIWindow *window;
+
+@end
+```
+
+`AppDelegate.m` 动态加载 `xib`：
+
+```objective-c
+#import "XibUsingMethodProgrammatically.h"
+
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+    // Override point for customization after application launch.
+    
+    self.window = [[UIWindow alloc]initWithFrame:[UIScreen mainScreen].bounds];
+    self.window.backgroundColor = [UIColor whiteColor];
+    
+//    UIViewController *viewController = [[XibUsingMethodHybrid alloc]
+//                                        initWithNibName:@"XibUsingMethodHybrid"
+//                                        bundle:[NSBundle mainBundle]];
+//    UIViewController *viewController = [[XibUsingMethodInterfaceBuilder alloc]
+//                                        initWithNibName: @"XibUsingMethodInterfaceBuilder"
+//                                        bundle:[NSBundle mainBundle]];
+    UIViewController *viewController = [[XibUsingMethodProgrammatically alloc]
+                                        initWithNibName:@"XibUsingMethodProgrammatically"
+                                        bundle:[NSBundle mainBundle]];
+    
     self.window.rootViewController = viewController;
     [self.window makeKeyAndVisible];
     
@@ -3343,4 +3496,662 @@ UIKit 的功能非常丰富，主要包括：
 ### 示例 - 自动创建和管理
 
 新建 `objective-c App` 类型的项目，在 `SceneDelegate.m` 中通过 `self.window` 编程操作 `UIWindow` 或者通过 `Main.storyboard` 操作 `UIWindow`。
+
+
+
+## 布局 - 有哪些布局呢？
+
+好的，iOS 提供了多种 UI 布局方式，从早期的手动定位到现代的声明式语法，开发者可以根据场景选择最合适的工具。
+
+以下是 iOS 中主要的 UI 布局系统，按出现的时间和发展顺序排列：
+
+---
+
+### 1. Manual Layout (手动布局 - `frame` & `bounds`)
+**最原始、最直接的方式。**
+*   **机制**：直接设置视图的 `frame` 属性（`CGRect`）来定义其在父视图坐标系中的**精确位置 (origin)** 和**精确大小 (size)**。
+*   **优点**：简单、直接、性能极高。
+*   **缺点**：
+    *   **难以适配**：无法应对不同屏幕尺寸、方向和动态内容变化，需要编写大量计算代码。
+    *   **难以维护**：布局逻辑分散，耦合度高。
+*   **适用场景**：性能要求极高的自定义绘图 (`drawRect:`)、简单的工具类或绝对固定的元素。
+
+```objectivec
+UIView *view = [[UIView alloc] initWithFrame:CGRectMake(20, 100, 280, 44)];
+view.backgroundColor = [UIColor redColor];
+[self.view addSubview:view];
+```
+
+---
+
+### 2. Autoresizing Masks (弹簧和支柱)
+**AutoLayout 出现前的自适应布局方案。**
+*   **机制**：通过视图的 `autoresizingMask` 属性定义**视图与其父视图边框**之间的关系。它是一种基于“弹簧” ( flexible springs ) 和“支柱” ( rigid struts ) 的模型。
+*   **优点**：简单，对于处理父视图大小变化（如设备旋转）非常方便。
+*   **缺点**：
+    *   **关系有限**：只能描述视图与**父视图**的关系，无法描述**兄弟视图**之间的复杂关系。
+    *   **不够强大**：无法处理大多数现代自适应布局需求。
+*   **适用场景**：简单的全屏或靠边布局，例如一个始终贴底的工具栏。
+
+```objectivec
+UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 320, 50)];
+view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleTopMargin;
+// 含义：宽度随父视图宽度变化，上边距固定（即贴在底部）
+```
+
+---
+
+### 3. AutoLayout (自动布局 - 约束系统)
+**当前最主要、最核心的布局系统，是响应式适配的基石。**
+*   **机制**：如前一个回答所述，它是一个**基于约束的规则系统**。你定义视图**属性之间**的线性关系（如 View A 的右边距离 = View B 的左边 - 20），布局引擎在运行时解算这些约束，为所有视图计算出 `frame`。
+*   **实现方式**：
+    *   **Interface Builder (Storyboard/XIB)**：可视化拖拽约束，是苹果推荐的主流方式。
+    *   **代码**：使用 `NSLayoutConstraint` 类或更现代的 `NSLayoutAnchor` API。
+*   **优点**：
+    *   **强大的表达能力**：可以描述任意视图间的任意复杂关系。
+    *   **完美适配**：轻松应对所有屏幕尺寸、方向、动态内容和多语言（文本长度变化）。
+*   **缺点**：
+    *   **学习曲线**：理解约束、优先级、冲突、内在内容尺寸等概念需要时间。
+    *   **性能开销**：比 Manual Layout 稍有开销，但对于绝大多数界面可忽略不计。
+*   **适用场景**：**几乎所有**需要适配多种屏幕或动态内容的用户界面。
+
+```objectivec
+// 使用 NSLayoutAnchor (推荐)
+[view.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor constant:20].active = YES;
+[view.topAnchor constraintEqualToAnchor:self.view.topAnchor constant:100].active = YES;
+[view.widthAnchor constraintEqualToConstant:200].active = YES;
+[view.heightAnchor constraintEqualToConstant:100].active = YES;
+```
+
+---
+
+### 4. Stack View (`UIStackView`)
+**基于 AutoLayout 的抽象层和布局容器，用于简化线性布局。**
+*   **机制**：`UIStackView` 是一个容器视图，它管理其**排列视图（arranged subviews）** 的布局。你只需定义轴（水平或垂直）、分布方式、间距等属性，`UIStackView` 会自动为其内部的子视图创建和管理所需的 AutoLayout 约束。
+*   **优点**：
+    *   **极大简化代码**：大幅减少了需要手动编写的约束数量。
+    *   **动态调整**：轻松添加、删除或隐藏排列视图，布局会自动平滑更新。
+*   **缺点**：
+    *   **灵活性受限**：对于非常规的非线性布局，仍需结合手动约束。
+    *   **依然是 AutoLayout**：它本质是 AutoLayout 的封装，其背后仍然是约束系统。
+*   **适用场景**：列表式的行或列布局，如按钮栏、标签组、表单、卡片列表等。
+
+```objectivec
+UIStackView *stackView = [[UIStackView alloc] init];
+stackView.axis = UILayoutConstraintAxisHorizontal; // 水平轴
+stackView.distribution = UIStackViewDistributionEqualSpacing; // 等间距分布
+stackView.alignment = UIStackViewAlignmentCenter; // 居中对齐
+stackView.spacing = 10;
+
+// 向 StackView 添加视图，布局会自动处理
+[stackView addArrangedSubview:button1];
+[stackView addArrangedSubview:button2];
+[stackView addArrangedSubview:button3];
+```
+
+---
+
+### 5. UIKit 的 UICollectionView
+**用于复杂网格和自定义流式布局的强大工具。**
+*   **机制**：`UICollectionView` 本身不是一个布局系统，但它通过其 `UICollectionViewLayout`（尤其是子类 `UICollectionViewFlowLayout`）来管理其单元格的布局。它提供了极高的灵活性，可以实现网格、瀑布流、环形布局等任何你能想到的布局。
+*   **优点**：**极其灵活和强大**，性能经过优化（单元格复用），是构建复杂布局的首选。
+*   **缺点**：配置相对复杂。
+*   **适用场景**：照片墙、商品网格、日历、任何非线性的自定义布局。
+
+---
+
+### 6. SwiftUI (仅支持 Swift，但必须提及)
+**面向未来的声明式 UI 框架。**
+*   **机制**：虽然你使用 Objective-C，但这是 iOS 生态的发展方向。它是一种**声明式**语法，你只需描述 UI **应该是什么样子**，而不是如何一步步创建它（命令式）。布局是其内置的核心功能，使用类似 `HStack`、`VStack`、`padding()` 等修饰符来构建。
+*   **优点**：代码极其简洁、直观，跨苹果平台（iOS, macOS, watchOS, tvOS）统一，实时预览。
+*   **缺点**：**仅支持 Swift**，最低支持 iOS 13。
+*   **适用场景**：新的、使用 Swift 开发的项目。
+
+```swift
+// SwiftUI 示例作为对比
+VStack {
+    Text("Hello, World!")
+        .padding()
+    HStack {
+        Button("OK") { }
+        Button("Cancel") { }
+    }
+}
+```
+
+### 总结与选择建议
+
+| 布局方式              | 核心思想                       | 适用场景                     | 当前地位               |
+| :-------------------- | :----------------------------- | :--------------------------- | :--------------------- |
+| **Manual Layout**     | 直接设置坐标和大小             | 极致性能需求，自定义绘制     | legacy，特定场景使用   |
+| **Autoresizing Mask** | 定义与父视图的简单关系         | 简单的全屏或靠边布局         | legacy，基本被淘汰     |
+| **AutoLayout**        | **基于约束的规则系统**         | **几乎所有需要自适应的界面** | **当前绝对主流和核心** |
+| **UIStackView**       | 基于 AutoLayout 的线性布局容器 | 简化行、列等线性布局         | AutoLayout 的最佳伴侣  |
+| **UICollectionView**  | 自定义布局和网格系统           | 复杂、非规则、可滚动的布局   | 复杂布局的利器         |
+| **SwiftUI**           | 声明式UI框架（Swift only）     | 新的Swift项目，跨平台        | **未来的方向**         |
+
+**给你的建议：**
+对于 Objective-C 项目，**AutoLayout** 是你必须掌握的核心技能。在实现线性布局时，优先考虑使用 **`UIStackView`** 来简化代码。对于非常复杂的集合类视图，则使用 **`UICollectionView`**。
+
+
+
+## 布局 - `AutoLayout`
+
+>提示：编写约束比较繁琐，应该使用 `Masonry` 协助。
+
+### 一句话概括
+
+**AutoLayout（自动布局）就是一个“智能管家”，你不需要告诉每个UI元素“你具体坐在哪个位置”（比如x: 20, y: 50），而是告诉它们“你和其他人应该保持什么样的关系”（比如“你离屏幕左边保持20点距离”、“你和旁边按钮的宽度要一样”），然后这个管家会自动根据这些关系和当前的房间大小（屏幕尺寸），计算出每个人的最佳位置和大小。**
+
+---
+
+### 一个生动的比喻：布置客厅
+
+想象一下你要布置一个客厅：
+
+*   **手动布局（老方法）**：你拿尺子量好，对沙发说：“你就给我紧紧贴在东墙，离南墙 exactly 2米的地方。” 如果有一天房子扩建了，或者你想把沙发换成更大的，你就得重新拿尺子来量，非常麻烦。
+
+*   **AutoLayout（新方法）**：你告诉沙发几条规则：
+    1.  “你的左边要紧贴墙壁，保持10厘米距离。”
+    2.  “你的右边要和茶几的左边保持50厘米距离。”
+    3.  “你的宽度要和电视柜的宽度一样。”
+
+这样，无论客厅变大、变小，或者茶几移动了位置，这个“智能管家”（AutoLayout系统）都会自动根据这些规则，调整沙发的位置和大小，让整个布局始终保持和谐。你定义了**关系**，而不是**绝对值**。
+
+---
+
+### 为什么需要 AutoLayout？
+
+因为 iPhone 和 iPad 的屏幕尺寸太多了！从最小的 iPhone SE 到最大的 iPad Pro，还有横屏、竖屏切换。如果你的App想要在所有设备上看起来都正常，用老方法（手动设置`frame`）几乎是不可能的，代码会变成一堆复杂的`if...else...`来判断屏幕尺寸。
+
+AutoLayout 就是为了解决这个问题而生的，它让你的界面能**自动适应**各种屏幕尺寸和方向。
+
+---
+
+### 核心：约束（Constraints）
+
+约束就是你说的那些“规则”。一条约束就是一个数学公式：
+
+`元素1.属性 = 系数 × 元素2.属性 + 常数`
+
+**举个例子：**
+`红色按钮.左边 = 1 × 父视图.左边 + 20`
+这条约束的意思是：**红色按钮的左边，要距离它爸爸（父视图）的左边 20 点**。
+
+**构成约束的几个关键部分：**
+*   **Item（元素）**：哪个视图？比如“红色按钮”。
+*   **Attribute（属性）**：视图的哪个部分？比如 `左边(Leading)`、`右边(Trailing)`、`顶部(Top)`、`底部(Bottom)`、`中心(CenterX/CenterY)`、`宽度(Width)`、`高度(Height)`。
+*   **Relation（关系）**：`=`（等于），`>=`（大于等于），`<=`（小于等于）。
+*   **Multiplier（系数）**：倍数关系，比如“我的宽度是你的宽度的一半”，系数就是0.5。
+*   **Constant（常数）**：固定的间距，比如20。
+
+### 最重要的准备工作
+
+当你用代码创建视图并想用 AutoLayout 时，**必须**加上下面这行代码，这是很多新手会忘记的关键一步：
+
+```objectivec
+UIView *myView = [[UIView alloc] init];
+myView.translatesAutoresizingMaskIntoConstraints = NO; // ！！！必须设置为NO！！！
+[self.view addSubview:myView];
+```
+这行代码的意思是：“这个视图的布局交给我全权用 AutoLayout 来处理，你别瞎插手。”
+
+---
+
+### 如何创建约束？（两种代码方式）
+
+#### 1. 老方法（啰嗦但基础）：
+使用 `NSLayoutConstraint` 的类方法，看起来很冗长，但有助于理解原理。
+
+```objectivec
+// 创建一个约束：myView的左边 = 父视图的左边 + 20
+NSLayoutConstraint *leftConstraint = [NSLayoutConstraint constraintWithItem:myView
+                                                                  attribute:NSLayoutAttributeLeading // 左边
+                                                                  relatedBy:NSLayoutRelationEqual // 关系是等于
+                                                                     toItem:self.view // 另一个元素是父视图
+                                                                  attribute:NSLayoutAttributeLeading // 父视图的左边
+                                                                 multiplier:1.0 // 系数是1
+                                                                   constant:20.0]; // 常数是20
+// 激活这个约束
+[self.view addConstraint:leftConstraint];
+```
+
+#### 2. 新方法（简洁且推荐）：
+使用 `NSLayoutAnchor`，语法非常清晰直观，是苹果现在推荐的方式。
+
+```objectivec
+// 创建同样的约束：myView的左边 = 父视图的左边 + 20
+[myView.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor constant:20].active = YES;
+
+// 通常我们会一次创建并激活多个约束
+[NSLayoutConstraint activateConstraints:@[
+    [myView.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor constant:20],
+    [myView.topAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.topAnchor constant:20],
+    [myView.widthAnchor constraintEqualToConstant:100],
+    [myView.heightAnchor constraintEqualToConstant:100]
+]];
+```
+
+### 总结
+
+| 特性           | 描述                                                        |
+| :------------- | :---------------------------------------------------------- |
+| **核心思想**   | **基于关系（约束）**，而非绝对坐标                          |
+| **解决的问题** | **多屏幕尺寸适配**、动态内容、横竖屏旋转                    |
+| **关键概念**   | **约束 (Constraints)**、关系 (Relations)、优先级 (Priority) |
+| **必备设置**   | `view.translatesAutoresizingMaskIntoConstraints = NO`       |
+| **推荐API**    | **`NSLayoutAnchor`**                                        |
+
+所以，**AutoLayout 就是一套让你通过定义视图间的相互关系，来构建自适应用户界面的系统**。它是现代iOS开发的基石，几乎所有的界面布局都会用到它。
+
+
+
+### 示例 - 居中显示`View`并且宽度和高度为指定值
+
+```objective-c
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    
+    UIView *view = [[UIView alloc] init];
+    [view setBackgroundColor:[UIColor redColor]];
+    // 添加 view 到 ViewController 中
+    [self.view addSubview:view];
+    
+    // 视图布局使用 AutoLayout 处理，不使用 Autoresizing Mask 处理
+    [view setTranslatesAutoresizingMaskIntoConstraints:NO];
+    
+    // view 的 x 轴中心点和 self.view 的 x 轴中心点对齐
+    NSLayoutConstraint *xConstraint = [NSLayoutConstraint
+                                       // 约束对象为 view
+                                       constraintWithItem:view
+                                       // 约束的属性为 x 轴中心点
+                                       attribute:NSLayoutAttributeCenterX
+                                       // 和约束值的关系为等于
+                                       relatedBy:NSLayoutRelationEqual
+                                       // 参考对象为 self.view
+                                       toItem:self.view
+                                       // 参考对象的属性为 x 轴中心
+                                       attribute:NSLayoutAttributeCenterX
+                                       // 约束的倍数关系为 1 倍
+                                       multiplier:1.0f
+                                       // 约束值为 0，约束值=multiplier*constant
+                                       constant:0];
+    
+    // view 的 y 轴中心点和 self.view 的 y 轴中心点对齐
+    NSLayoutConstraint *yConstraint = [NSLayoutConstraint
+                                       constraintWithItem:view
+                                       attribute:NSLayoutAttributeCenterY
+                                       relatedBy:NSLayoutRelationEqual
+                                       toItem:self.view
+                                       attribute:NSLayoutAttributeCenterY
+                                       multiplier:1.0f
+                                       constant:0];
+    
+    // 如果 view 的宽度原本小于 100，Auto Layout 会将其拉伸到至少 100。
+    // 如果 view 的宽度原本大于 100（如 150），则保持原尺寸（因为约束只要求 ≥100）。
+    // 这是一个绝对约束（不依赖其他视图的关系）。
+    NSLayoutConstraint *wConstraint = [NSLayoutConstraint
+                                       constraintWithItem:view
+                                       // 约束的属性为 width
+                                       attribute:NSLayoutAttributeWidth
+                                       // 和约束值的关系为大于或者等于
+                                       relatedBy:NSLayoutRelationGreaterThanOrEqual
+                                       // 不参照其他视图（独立约束）
+                                       toItem:nil
+                                       // 无对应属性（因 toItem 为 nil）
+                                       attribute:NSLayoutAttributeNotAnAttribute
+                                       multiplier:1.0f
+                                       constant:100.0f];
+    // 和上面 width 约束类似
+    NSLayoutConstraint *hConstraint = [NSLayoutConstraint
+                                       constraintWithItem:view
+                                       attribute:NSLayoutAttributeHeight
+                                       relatedBy:NSLayoutRelationGreaterThanOrEqual
+                                       toItem:nil
+                                       attribute:NSLayoutAttributeNotAnAttribute
+                                       multiplier:1.0f
+                                       constant:100.0f];
+    // 居中显示 view 对象
+    [self.view addConstraints:[NSArray arrayWithObjects:xConstraint, yConstraint, wConstraint, hConstraint, nil]];
+}
+```
+
+
+
+### 示例 - `left`、`right`、`bottom view`
+
+```objective-c
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    
+    // 上半部分的左边 view
+    UIView *leftView = [[UIView alloc] init];
+    [leftView setBackgroundColor:[UIColor greenColor]];
+    // 视图布局使用 AutoLayout 处理，不使用 Autoresizing Mask 处理
+    leftView.translatesAutoresizingMaskIntoConstraints = NO;
+    
+    // 上半部分的右边 view
+    UIView *rightView = [[UIView alloc] init];
+    [rightView setBackgroundColor:[UIColor purpleColor]];
+    rightView.translatesAutoresizingMaskIntoConstraints = NO;
+    
+    // 底部 view
+    UIView *bottomView = [[UIView alloc] init];
+    [bottomView setBackgroundColor:[UIColor orangeColor]];
+    bottomView.translatesAutoresizingMaskIntoConstraints = NO;
+    
+    // 添加子视图
+    [self.view addSubview:leftView];
+    [self.view addSubview:rightView];
+    [self.view addSubview:bottomView];
+    
+    // leftView的上 = self.view的上+20
+    [self.view addConstraint:[NSLayoutConstraint
+                              constraintWithItem:leftView
+                              attribute:NSLayoutAttributeTop
+                              relatedBy:NSLayoutRelationEqual
+                              toItem:self.view
+                              attribute:NSLayoutAttributeTop
+                              multiplier:1.0
+                              constant:20]];
+    
+    // leftView的左 = self.view的左+20
+    [self.view addConstraint:[NSLayoutConstraint
+                              constraintWithItem:leftView
+                              attribute:NSLayoutAttributeLeft
+                              relatedBy:NSLayoutRelationEqual
+                              toItem:self.view
+                              attribute:NSLayoutAttributeLeft
+                              multiplier:1.0
+                              constant:20]];
+    
+    // rightView的上 = leftView的上
+    [self.view addConstraint:[NSLayoutConstraint
+                              constraintWithItem:rightView
+                              attribute:NSLayoutAttributeTop
+                              relatedBy:NSLayoutRelationEqual
+                              toItem:leftView
+                              attribute:NSLayoutAttributeTop
+                              multiplier:1.0
+                              constant:0]];
+    
+    // rightView的左 = leftView的右+20
+    [self.view addConstraint:[NSLayoutConstraint
+                              constraintWithItem:rightView
+                              attribute:NSLayoutAttributeLeft
+                              relatedBy:NSLayoutRelationEqual
+                              toItem:leftView
+                              attribute:NSLayoutAttributeRight
+                              multiplier:1.0
+                              constant:20]];
+    
+    // rightView的右 = self.view的右-20
+    [self.view addConstraint:[NSLayoutConstraint
+                              constraintWithItem:rightView
+                              attribute:NSLayoutAttributeRight
+                              relatedBy:NSLayoutRelationEqual
+                              toItem:self.view
+                              attribute:NSLayoutAttributeRight
+                              multiplier:1.0
+                              constant:-20]];
+    
+    // leftView的宽 = rightView的宽
+    [self.view addConstraint:[NSLayoutConstraint
+                              constraintWithItem:leftView
+                              attribute:NSLayoutAttributeWidth
+                              relatedBy:NSLayoutRelationEqual
+                              toItem:rightView
+                              attribute:NSLayoutAttributeWidth
+                              multiplier:1.0
+                              constant:0]];
+    
+    // leftView的高 = rightView的高
+    [self.view addConstraint:[NSLayoutConstraint
+                              constraintWithItem:leftView
+                              attribute:NSLayoutAttributeHeight
+                              relatedBy:NSLayoutRelationEqual
+                              toItem:rightView
+                              attribute:NSLayoutAttributeHeight
+                              multiplier:1.0
+                              constant:0]];
+    
+    // bottomView的左 = self.view的左+20
+    [self.view addConstraint:[NSLayoutConstraint
+                              constraintWithItem:bottomView
+                              attribute:NSLayoutAttributeLeft
+                              relatedBy:NSLayoutRelationEqual
+                              toItem:self.view
+                              attribute:NSLayoutAttributeLeft
+                              multiplier:1.0
+                              constant:20]];
+    
+    // bottomView的右 = self.view的右-20
+    [self.view addConstraint:[NSLayoutConstraint
+                              constraintWithItem:bottomView
+                              attribute:NSLayoutAttributeRight
+                              relatedBy:NSLayoutRelationEqual
+                              toItem:self.view
+                              attribute:NSLayoutAttributeRight
+                              multiplier:1.0
+                              constant:-20]];
+    
+    // bottomView的上 = leftView的下+20
+    [self.view addConstraint:[NSLayoutConstraint
+                              constraintWithItem:bottomView
+                              attribute:NSLayoutAttributeTop
+                              relatedBy:NSLayoutRelationEqual
+                              toItem:leftView
+                              attribute:NSLayoutAttributeBottom
+                              multiplier:1.0
+                              constant:20]];
+    
+    // bottomView的高 = leftView的高
+    [self.view addConstraint:[NSLayoutConstraint
+                              constraintWithItem:bottomView
+                              attribute:NSLayoutAttributeHeight
+                              relatedBy:NSLayoutRelationEqual
+                              toItem:leftView
+                              attribute:NSLayoutAttributeHeight
+                              multiplier:1.0
+                              constant:0]];
+    
+    // bottomView的下 = self.view的下-20
+    [self.view addConstraint:[NSLayoutConstraint
+                              constraintWithItem:bottomView
+                              attribute:NSLayoutAttributeBottom
+                              relatedBy:NSLayoutRelationEqual
+                              toItem:self.view
+                              attribute:NSLayoutAttributeBottom
+                              multiplier:1.0
+                              constant:-20]];
+}
+```
+
+
+
+### 示例 - `Interface Builder`方式设置约束
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-layout)
+
+
+
+## 布局 - `Masonry`
+
+### Masonry 是什么？
+
+**Masonry 是一个轻量级的第三方代码库，它用更简洁、更可读的“链式语法”对官方的 AutoLayout 接口进行了封装。**
+
+你可以把它理解为 **AutoLayout 的“语法糖”** 或者 **“升级版工具箱”**。它没有创造新的布局规则，底层依然使用的是苹果的 `NSLayoutConstraint`，但它让你写 AutoLayout 代码的过程变得无比顺畅和优雅。
+
+---
+
+### 为什么需要 Masonry？（解决了什么问题）
+
+还记得用纯 Objective-C 写 AutoLayout 有多麻烦吗？
+
+**官方原生写法（繁琐版）：**
+```objectivec
+[NSLayoutConstraint constraintWithItem:view1
+                             attribute:NSLayoutAttributeLeft
+                             relatedBy:NSLayoutRelationEqual
+                                toItem:superview
+                             attribute:NSLayoutAttributeLeft
+                            multiplier:1.0
+                              constant:10].active = YES;
+```
+一段代码只创建**一个**约束！如果你想创建一个视图的四个边距，需要写四段这样的代码，非常冗长和难以阅读。
+
+**Masonry 写法（简洁版）：**
+```objectivec
+[view1 mas_makeConstraints:^(MASConstraintMaker *make) {
+    make.left.top.equalTo(superview).offset(10);
+    make.right.bottom.equalTo(superview).offset(-10);
+}];
+```
+一段代码，清晰明了地创建了**所有**约束。
+
+**Masonry 解决了原生 AutoLayout API 的三大痛点：**
+1.  **代码冗长**：原生 API 需要调用冗长的方法，参数繁多。
+2.  **可读性差**：一大段代码看起来不直观，难以快速理解布局意图。
+3.  **不易修改**：创建约束和更新约束的代码是分离的，操作起来比较麻烦。
+
+---
+
+### Masonry 的核心思想与语法
+
+Masonry 的核心是创建一个 **“约束制造器” (MASConstraintMaker)**，然后通过一种类似说话的方式（**链式语法**）来描述约束。
+
+**基本结构：**
+```objectivec
+[某个视图 mas_makeConstraints:^(MASConstraintMaker *make) {
+    // 在这里描述约束
+    make.属性.关系(参考对象).偏移量;
+}];
+```
+
+**常用属性和关系：**
+
+| 属性 (Attribute)   | 含义                     | Masonry 属性              |
+| :----------------- | :----------------------- | :------------------------ |
+| `left/right`       | 左/右边                  | `.left` / `.right`        |
+| `top/bottom`       | 上/下边                  | `.top` / `.bottom`        |
+| `leading/trailing` | 首/尾边（推荐，支持RTL） | `.leading` / `.trailing`  |
+| `width/height`     | 宽/高                    | `.width` / `.height`      |
+| `centerX/centerY`  | 中心点                   | `.centerX` / `.centerY`   |
+| `edges`            | 四条边（复合属性）       | `.edges`                  |
+| 关系 (Relation)    | 含义                     | Masonry 方法              |
+| :---               | :---                     | :---                      |
+| `=`                | 等于                     | `.equalTo()`              |
+| `>=`               | 大于等于                 | `.greaterThanOrEqualTo()` |
+| `<=`               | 小于等于                 | `.lessThanOrEqualTo()`    |
+
+---
+
+### 常用示例
+
+1.  **固定大小和位置**
+    ```objectivec
+    [view mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.width.equalTo(@100); // 宽度 = 100
+        make.height.equalTo(@200); // 高度 = 200
+        make.centerX.equalTo(self.view); // 中心X与父视图对齐
+        make.top.equalTo(self.view).offset(50); // 顶部距离父视图50
+    }];
+    ```
+
+2.  **相对于另一个视图（兄弟视图）**
+    ```objectivec
+    [view2 mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.left.equalTo(view1.mas_right).offset(20); // view2的左边 = view1的右边 + 20
+        make.top.equalTo(view1); // 顶部与view1对齐
+        make.width.equalTo(view1); // 宽度与view1相等
+        make.height.equalTo(view1).multipliedBy(0.5); // 高度是view1的一半
+    }];
+    ```
+
+3.  **使用复合属性（超简洁！）**
+    ```objectivec
+    [view mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.edges.equalTo(self.view).insets(UIEdgeInsetsMake(10, 10, 10, 10)); 
+        // 等价于：上下左右四条边都距离父视图10点
+    }];
+    ```
+
+4.  **更新约束**
+    Masonry 也提供了非常简单的方法来更新已有约束（例如在按钮点击后改变视图大小）。
+    ```objectivec
+    // 1. 在类中持有一个约束属性
+    @property (nonatomic, strong) MASConstraint *widthConstraint;
+    
+    // 2. 创建时赋值
+    [view mas_makeConstraints:^(MASConstraintMaker *make) {
+        self.widthConstraint = make.width.equalTo(@100);
+        ...
+    }];
+    
+    // 3. 在需要的地方更新它
+    self.widthConstraint.equalTo(@200); // 将宽度更新为200
+    // 通常需要配合布局更新
+    [UIView animateWithDuration:0.3 animations:^{
+        [self.view layoutIfNeeded]; // 告诉界面重新布局，可以产生动画效果
+    }];
+    ```
+
+---
+
+### Masonry 的优缺点
+
+| 优点                                         | 缺点                                                    |
+| :------------------------------------------- | :------------------------------------------------------ |
+| ✅ **代码极其简洁**，可读性非常高             | ❌ **是第三方库**，需要项目集成（通过CocoaPods等）       |
+| ✅ **大幅提高开发效率**，减少代码量           | ❌ 对于极其简单的布局，引入库可能显得“重”                |
+| ✅ **链式语法**符合直觉，像在写句子           | ❌ **仅适用于 Objective-C**（其Swift版本叫 **SnapKit**） |
+| ✅ 轻松实现**约束的更新和动画**               |                                                         |
+| ✅ 社区强大，资料丰富，是OC时代的**事实标准** |                                                         |
+
+### 总结
+
+**Masonry 是 AutoLayout 的终极包装器。** 它让你能够以一种高效、优雅且易于维护的方式在代码中使用 AutoLayout。
+
+*   **如果你在用 Objective-C 开发**，并且界面是用代码写的，那么 Masonry 几乎是**必备工具**。
+*   **如果你在学 Swift 和 SwiftUI**，那么 Masonry 是特定历史时期（Objective-C + 代码布局）的一个优秀解决方案，了解它有助于你阅读和维护遗留项目。
+
+它的核心价值在于：**让复杂的约束关系，用最少的代码清晰地表达出来。**
+
+
+
+### 示例
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-layout)
+>
+>参考链接：https://www.jianshu.com/p/1879e1697219、https://github.com/SnapKit/Masonry
+
+```objective-c
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view.
+    
+    UIView *view = [[UIView alloc] init];
+    [view setBackgroundColor:[UIColor redColor]];
+    [self.view addSubview:view];
+
+//    // 上、下、左、右边距20
+//    [view mas_makeConstraints:^(MASConstraintMaker *make) {
+//        make.top.equalTo(self.view).offset(20);
+//        make.bottom.equalTo(self.view).offset(-20);
+//        make.left.equalTo(self.view).offset(20);
+//        make.right.equalTo(self.view).offset(-20);
+//    }];
+    
+    // 高100、宽100、水平和垂直居中
+    [view mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.width.mas_equalTo(100);
+        make.height.mas_equalTo(100);
+        make.centerX.equalTo(self.view).offset(0);
+        make.centerY.equalTo(self.view).offset(0);
+    }];
+}
+```
 
