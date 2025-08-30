@@ -1,11 +1,20 @@
-- name: "启动api服务"
+- name: "启动api service服务"
   hosts: api
   tasks:
-    - name: "使用Docker Compose启动api服务"
+    - name: "使用Docker Compose启动api service服务"
       shell: |
         set -e
         cd ~/deployer-spring-boot-benchmark/service
         docker compose pull && docker compose up -d
+- name: "启动api service2服务"
+  hosts: api
+  tasks:
+    - name: "使用Docker Compose启动api service2服务"
+      shell: |
+        set -e
+        cd ~/deployer-spring-boot-benchmark/service2
+        docker compose pull && docker compose up -d
+      when: server_port2 is defined
 
 - name: "启动prometheus公共服务"
   hosts: common

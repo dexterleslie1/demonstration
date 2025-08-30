@@ -25,8 +25,37 @@
 - name: "配置api服务的deployer"
   hosts: api
   tasks:
-    - name: "配置api服务的java_opts"
+    - name: "配置api service服务的java_opts"
       lineinfile:
         path: ~/deployer-spring-boot-benchmark/service/.env
         regexp: "^java_opts="
         line: "java_opts={{ java_opts }}"
+    - name: "配置api service服务的server_port"
+      lineinfile:
+        path: ~/deployer-spring-boot-benchmark/service/.env
+        regexp: "^server_port="
+        line: "server_port={{ server_port }}"
+    - name: "配置api service服务的actuator_port"
+      lineinfile:
+        path: ~/deployer-spring-boot-benchmark/service/.env
+        regexp: "^actuator_port="
+        line: "actuator_port={{ actuator_port }}"
+
+    - name: "配置api service2服务的java_opts"
+      lineinfile:
+        path: ~/deployer-spring-boot-benchmark/service2/.env
+        regexp: "^java_opts="
+        line: "java_opts={{ java_opts }}"
+      when: server_port2 is defined
+    - name: "配置api service2服务的server_port"
+      lineinfile:
+        path: ~/deployer-spring-boot-benchmark/service2/.env
+        regexp: "^server_port="
+        line: "server_port={{ server_port2 }}"
+      when: server_port2 is defined
+    - name: "配置api service2服务的actuator_port"
+      lineinfile:
+        path: ~/deployer-spring-boot-benchmark/service2/.env
+        regexp: "^actuator_port="
+        line: "actuator_port={{ actuator_port2 }}"
+      when: server_port2 is defined

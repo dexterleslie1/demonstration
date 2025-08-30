@@ -84,7 +84,10 @@ http {
         keepalive_requests 100000; # 单个连接最大请求数
         # server 192.168.1.187:8080;
         {% for host in groups['api'] %}
-        server {{ host }}:8080;
+        server {{ host }}:{{ hostvars[host].server_port }};
+        {% if hostvars[host].server_port2 is defined %}
+        server {{ host }}:{{ hostvars[host].server_port2 }};
+        {% endif %}
         {% endfor %}
     }
 

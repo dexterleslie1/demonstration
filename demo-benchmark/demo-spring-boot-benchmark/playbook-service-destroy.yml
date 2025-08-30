@@ -6,6 +6,8 @@
         set -e
         cd ~/deployer-spring-boot-benchmark/service
         docker compose down -v
+        cd ~/deployer-spring-boot-benchmark/service2
+        docker compose down -v
 
 - name: "销毁prometheus公共服务"
   hosts: common
