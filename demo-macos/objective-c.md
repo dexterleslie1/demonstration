@@ -3499,6 +3499,106 @@ UIKit 的功能非常丰富，主要包括：
 
 
 
+## `UIKit` - `UIButton`
+
+`UIButton` 绑定事件方法：
+
+- 动态 `UIButton` 通过 `addTarget:action:forControlEvents` 绑定触发事件
+- 定义 `IBAction` 函数 `-(IBAction)buttonClick:(id) sender`，使用 `Connections Inspector` 连接 `xib UIButton` 到 `IBAction` 函数
+
+
+
+示例：
+
+```objective-c
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view, typically from a nib.
+    
+    // initWithFrame
+    CGRect rect = CGRectMake(0, 30, 200, 60);
+    UIButton *button1 = [[UIButton alloc] initWithFrame:rect];
+    [button1 setTitle:@"Button initWithFrame" forState:UIControlStateNormal];
+    [button1 setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+    [button1 setBackgroundColor:[UIColor redColor]];
+    [self.view addSubview:button1];
+    
+    button1.translatesAutoresizingMaskIntoConstraints=NO;
+    [self.view addConstraint: [NSLayoutConstraint
+                               constraintWithItem:button1
+                               attribute:NSLayoutAttributeCenterX
+                               relatedBy:NSLayoutRelationEqual
+                               toItem:self.view
+                               attribute:NSLayoutAttributeCenterX
+                               multiplier:1.0f
+                               constant:0]];
+    [self.view addConstraint: [NSLayoutConstraint
+                               constraintWithItem:button1
+                               attribute:NSLayoutAttributeTop
+                               relatedBy:NSLayoutRelationEqual
+                               toItem:self.view
+                               attribute:NSLayoutAttributeTop
+                               multiplier:1.0f
+                               constant:80]];
+    
+    UIButton *button2 = [UIButton buttonWithType:UIButtonTypeRoundedRect];
+    rect = CGRectMake(0, 100, 200, 60);
+    button2.frame = rect;
+    [button2 setTitle:@"Button withType" forState:UIControlStateNormal];
+    [button2 setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+    [button2 setBackgroundColor:[UIColor redColor]];
+    [self.view addSubview:button2];
+    
+    button2.translatesAutoresizingMaskIntoConstraints = NO;
+    [self.view addConstraint: [NSLayoutConstraint
+                               constraintWithItem:button2
+                               attribute:NSLayoutAttributeCenterX
+                               relatedBy:NSLayoutRelationEqual
+                               toItem:self.view
+                               attribute:NSLayoutAttributeCenterX
+                               multiplier:1.0f
+                               constant:0]];
+    [self.view addConstraint: [NSLayoutConstraint
+                               constraintWithItem:button2
+                               attribute:NSLayoutAttributeTop
+                               relatedBy:NSLayoutRelationEqual
+                               toItem:button1
+                               attribute:NSLayoutAttributeBottom
+                               multiplier:1.0f
+                               constant:10]];
+    
+    UIButton *button3 = [[UIButton alloc] initWithFrame:CGRectMake(0, 170, 200, 60)];
+    [button3 setTitle:@"Click me" forState:UIControlStateNormal];
+    [button3 setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+    [button3 addTarget:self action:@selector(buttonClick:) forControlEvents:UIControlEventTouchDown];
+    [self.view addSubview:button3];
+    
+    button3.translatesAutoresizingMaskIntoConstraints = NO;
+    [self.view addConstraint: [NSLayoutConstraint
+                               constraintWithItem:button3
+                               attribute:NSLayoutAttributeCenterX
+                               relatedBy:NSLayoutRelationEqual
+                               toItem:self.view
+                               attribute:NSLayoutAttributeCenterX
+                               multiplier:1.0f
+                               constant:0]];
+    [self.view addConstraint: [NSLayoutConstraint
+                               constraintWithItem:button3
+                               attribute:NSLayoutAttributeTop
+                               relatedBy:NSLayoutRelationEqual
+                               toItem:button2
+                               attribute:NSLayoutAttributeBottom
+                               multiplier:1.0f
+                               constant:10]];
+}
+
+- (void)buttonClick:(id) sender{
+    NSLog(@"Button click!!");
+}
+```
+
+
+
 ## 布局 - 有哪些布局呢？
 
 好的，iOS 提供了多种 UI 布局方式，从早期的手动定位到现代的声明式语法，开发者可以根据场景选择最合适的工具。
