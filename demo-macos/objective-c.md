@@ -3599,6 +3599,29 @@ UIKit 的功能非常丰富，主要包括：
 
 
 
+## `UIKit` - `UIViewController`
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-uiviewcontroller)
+
+显示 `UIViewController`：
+
+```objective-c
+SecondViewController *viewController = [[SecondViewController alloc] init];
+// 显示 ViewController
+[self presentViewController:viewController animated:YES completion:nil];
+```
+
+
+
+销毁 `UIViewController`：
+
+```objective-c
+// 销毁窗口
+[self dismissViewControllerAnimated:YES completion:nil];
+```
+
+
+
 ## 布局 - 有哪些布局呢？
 
 好的，iOS 提供了多种 UI 布局方式，从早期的手动定位到现代的声明式语法，开发者可以根据场景选择最合适的工具。
