@@ -3602,6 +3602,8 @@ UIKit 的功能非常丰富，主要包括：
 ## `UIKit` - `UIViewController`
 
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-uiviewcontroller)
+>
+>`UIViewController` 界面跳转和参数传递之 `presentViewController` 与 `dismissViewControllerAnimated`：https://stephen830.iteye.com/blog/2243853
 
 显示 `UIViewController`：
 
@@ -3619,6 +3621,12 @@ SecondViewController *viewController = [[SecondViewController alloc] init];
 // 销毁窗口
 [self dismissViewControllerAnimated:YES completion:nil];
 ```
+
+
+
+## `UIKit` - `UITabBarController`
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-uitabbarcontroller)
 
 
 
