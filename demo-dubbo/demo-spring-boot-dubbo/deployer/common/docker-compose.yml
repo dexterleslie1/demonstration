@@ -1,0 +1,23 @@
+version: "3.1"
+
+services:
+  zookeeper:
+    image: zookeeper:3.5.6
+    environment:
+      - TZ=Asia/Shanghai
+      - JVMFLAGS=-Xmx512m -Xms512m -server
+      # 禁用 zookeeper AdminServer
+      # https://hub.docker.com/_/zookeeper
+      - ZOO_ADMINSERVER_ENABLED=false
+    network_mode: host
+  dubbo-admin:
+    image: apache/dubbo-admin:0.6.0
+    environment:
+      - admin.registry.address=zookeeper://127.0.0.1:2181
+      - admin.config-center=zookeeper://127.0.0.1:2181
+      - admin.metadata-report.address=zookeeper://127.0.0.1:2181
+      - server.port=8080
+      - JAVA_OPTS=-Xmx512m
+    depends_on:
+      - zookeeper
+    network_mode: host

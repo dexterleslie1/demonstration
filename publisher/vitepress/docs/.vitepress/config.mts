@@ -64,6 +64,7 @@ export default defineConfig({
           { text: 'Debezium', link: '/debezium/README.md' },
           { text: 'Kafka', link: '/kafka/README.md' },
           { text: '场景案例', link: '/场景案例/README.md' },
+          { text: 'Dubbo', link: '/dubbo/README.md' },
         ]
       }, {
         text: 'Linux', items: [

@@ -1,0 +1,53 @@
+- name: "启动consumer服务"
+  hosts: consumer
+  tasks:
+    - name: "使用Docker Compose启动consumer服务"
+      shell: |
+        set -e
+        cd ~/deployer-demo-spring-boot-dubbo/consumer
+        docker compose pull && docker compose up -d
+
+- name: "启动provider服务"
+  hosts: provider
+  tasks:
+    - name: "使用Docker Compose启动provider服务"
+      shell: |
+        set -e
+        cd ~/deployer-demo-spring-boot-dubbo/provider
+        docker compose pull && docker compose up -d
+
+- name: "启动common服务"
+  hosts: common
+  tasks:
+    - name: "使用Docker Compose启动common服务"
+      shell: |
+        set -e
+        cd ~/deployer-demo-spring-boot-dubbo/common
+        docker compose pull && docker compose up -d
+
+- name: "启动prometheus公共服务"
+  hosts: common
+  tasks:
+    - name: "使用Docker Compose启动prometheus公共服务"
+      shell: |
+        set -e
+        cd ~/deployer-demo-spring-boot-dubbo/prometheus
+        docker compose pull && docker compose up -d
+
+- name: "启动OpenResty服务"
+  hosts: openresty
+  tasks:
+    - name: "使用Docker Compose启动OpenResty服务"
+      shell: |
+        set -e
+        cd ~/deployer-demo-spring-boot-dubbo/openresty
+        docker compose pull && docker compose up -d
+
+- name: "启动node_exporter"
+  hosts: "{{ groups['all'] | difference(groups['management']) }}"
+  tasks:
+    - name: "使用Docker Compose启动node_exporter"
+      shell: |
+        set -e
+        cd ~/deployer-demo-spring-boot-dubbo/node-exporter
+        docker compose up -d

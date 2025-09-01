@@ -72,6 +72,11 @@ public class ApiController {
      */
     @GetMapping("testOpenFeignPerfAssist")
     public ObjectResponse<String> testOpenFeignPerfAssist() {
-        return ResponseUtils.successObject(this.productFeign.testOpenFeignPerfAssist());
+        ObjectResponse<String> response = this.productFeign.testOpenFeignPerfAssist();
+        if (response.getErrorCode() > 0) {
+            return ResponseUtils.failObject(response.getErrorCode(), response.getErrorMessage());
+        } else {
+            return ResponseUtils.successObject(response.getData());
+        }
     }
 }

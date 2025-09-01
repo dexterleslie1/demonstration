@@ -1199,6 +1199,8 @@ ErrorDecoder errorDecoder() {
 
 #### 性能测试
 
+使用本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/spring-cloud/spring-cloud-feign-demo) 协助测试。
+
 编译镜像
 
 ```sh
@@ -1229,6 +1231,8 @@ curl http://192.168.235.50/api/v1/external/product/testOpenFeignPerfAssist
 $ wrk -t8 -c2048 -d30s --latency --timeout 60 http://192.168.235.50/api/v1/external/product/testOpenFeignPerfAssist
 
 ```
+
+查看 `Prometheus` 监控：http://192.168.235.53:3000/
 
 销毁应用
 
