@@ -23,4 +23,7 @@ public interface ProductFeign {
 
     @GetMapping("timeout")
     String timeout();
+
+    @GetMapping("testOpenFeignPerfAssist")
+    String testOpenFeignPerfAssist();
 }

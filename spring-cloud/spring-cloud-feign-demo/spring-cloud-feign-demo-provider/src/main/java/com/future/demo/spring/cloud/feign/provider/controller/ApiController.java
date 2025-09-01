@@ -1,7 +1,9 @@
 package com.future.demo.spring.cloud.feign.provider.controller;
 
+import cn.hutool.core.util.RandomUtil;
 import com.future.common.http.ObjectResponse;
 import com.future.demo.spring.cloud.feign.common.entity.Product;
+import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,12 +13,26 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/product")
 public class ApiController {
+
+    private int totalKey = 100000;
+    private List<String> keyList = new ArrayList<>();
+
+    @PostConstruct
+    public void init() {
+        // 生成10w个随机key放到内中
+        for (int i = 0; i < totalKey; i++) {
+            String key = UUID.randomUUID().toString();
+            keyList.add(key);
+        }
+    }
+
     @Value("${server.port}")
     private int port;
 
@@ -80,5 +96,20 @@ public class ApiController {
         response.setErrorCode(90000);
         response.setErrorMessage("调用 /api/v1/product/test401Error 失败");
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+    }
+
+    /**
+     * 用于协助 OpenFeign 性能测试
+     *
+     * @return
+     */
+    @GetMapping(value = "testOpenFeignPerfAssist")
+    public ObjectResponse<String> testOpenFeignPerfAssist() {
+        int randomInt = RandomUtil.randomInt(0, totalKey);
+        String uuid = this.keyList.get(randomInt);
+        String str = "UUID:" + uuid;
+        ObjectResponse<String> response = new ObjectResponse<>();
+        response.setData(str);
+        return response;
     }
 }

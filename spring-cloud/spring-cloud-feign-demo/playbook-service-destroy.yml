@@ -1,0 +1,53 @@
+- name: "销毁consumer服务"
+  hosts: consumer
+  tasks:
+    - name: "使用Docker Compose down销毁consumer服务"
+      shell: |
+        set -e
+        cd ~/deployer-spring-cloud-openfeign/consumer
+        docker compose down -v
+
+- name: "销毁provider服务"
+  hosts: provider
+  tasks:
+    - name: "使用Docker Compose down销毁provider服务"
+      shell: |
+        set -e
+        cd ~/deployer-spring-cloud-openfeign/provider
+        docker compose down -v
+
+- name: "销毁prometheus公共服务"
+  hosts: common
+  tasks:
+    - name: "使用Docker Compose down销毁prometheus公共服务"
+      shell: |
+        set -e
+        cd ~/deployer-spring-cloud-openfeign/prometheus
+        docker compose down -v
+
+- name: "销毁common服务"
+  hosts: common
+  tasks:
+    - name: "使用Docker Compose down销毁common服务"
+      shell: |
+        set -e
+        cd ~/deployer-spring-cloud-openfeign/common
+        docker compose down -v
+
+- name: "销毁OpenResty服务"
+  hosts: openresty
+  tasks:
+    - name: "使用Docker Compose down销毁OpenResty服务"
+      shell: |
+        set -e
+        cd ~/deployer-spring-cloud-openfeign/openresty
+        docker compose down -v
+
+- name: "销毁node_exporter"
+  hosts: "{{ groups['all'] | difference(groups['management']) }}"
+  tasks:
+    - name: "使用Docker Compose down销毁node_exporter"
+      shell: |
+        set -e
+        cd ~/deployer-spring-cloud-openfeign/node-exporter
+        docker compose down -v

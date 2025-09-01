@@ -1,0 +1,51 @@
+- name: "复制deployer"
+  hosts: "{{ groups['all'] | difference(groups['management']) }}"
+  tasks:
+    - name: "复制deployer目录到远程"
+      copy:
+        src: deployer/
+        dest: ~/deployer-spring-cloud-openfeign
+
+- name: "配置Prometheus服务的deployer"
+  hosts: common
+  tasks:
+    - name: "配置Prometheus服务的prometheus.yml"
+      template:
+        src: deployer/prometheus/prometheus.yml.j2
+        dest: ~/deployer-spring-cloud-openfeign/prometheus/prometheus.yml
+
+- name: "配置openresty服务的deployer"
+  hosts: openresty
+  tasks:
+    - name: "配置OpenResty服务的nginx.conf"
+      template:
+        src: deployer/openresty/nginx.conf.j2
+        dest: ~/deployer-spring-cloud-openfeign/openresty/nginx.conf
+
+- name: "配置consumer服务的deployer"
+  hosts: consumer
+  tasks:
+    - name: "配置consumer服务的java_opts"
+      lineinfile:
+        path: ~/deployer-spring-cloud-openfeign/consumer/.env
+        regexp: "^java_opts="
+        line: "java_opts={{ java_opts }}"
+    - name: "配置consumer服务的consul_host"
+      lineinfile:
+        path: ~/deployer-spring-cloud-openfeign/consumer/.env
+        regexp: "^consul_host="
+        line: "consul_host={{ groups['common'][0] }}"
+
+- name: "配置provider服务的deployer"
+  hosts: provider
+  tasks:
+    - name: "配置provider服务的java_opts"
+      lineinfile:
+        path: ~/deployer-spring-cloud-openfeign/provider/.env
+        regexp: "^java_opts="
+        line: "java_opts={{ java_opts }}"
+    - name: "配置provider服务的consul_host"
+      lineinfile:
+        path: ~/deployer-spring-cloud-openfeign/provider/.env
+        regexp: "^consul_host="
+        line: "consul_host={{ groups['common'][0] }}"

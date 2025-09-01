@@ -50,6 +50,7 @@
     </dependencies>
 
     <build>
+        <finalName>demo-spring-cloud-openfeign-provider</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>

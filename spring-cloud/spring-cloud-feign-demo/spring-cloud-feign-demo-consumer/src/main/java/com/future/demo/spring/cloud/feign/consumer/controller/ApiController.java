@@ -2,6 +2,7 @@ package com.future.demo.spring.cloud.feign.consumer.controller;
 
 import com.future.common.exception.BusinessException;
 import com.future.common.http.ObjectResponse;
+import com.future.common.http.ResponseUtils;
 import com.future.demo.spring.cloud.feign.common.entity.Product;
 import com.future.demo.spring.cloud.feign.common.feign.ProductFeign;
 import com.future.demo.spring.cloud.feign.common.feign.ProductFeignTestSameName;
@@ -62,5 +63,15 @@ public class ApiController {
     @GetMapping("test401Error")
     public ObjectResponse<String> test401Error() throws BusinessException {
         return this.productFeignWithConfig.test401Error();
+    }
+
+    /**
+     * 用于协助 OpenFeign 性能测试
+     *
+     * @return
+     */
+    @GetMapping("testOpenFeignPerfAssist")
+    public ObjectResponse<String> testOpenFeignPerfAssist() {
+        return ResponseUtils.successObject(this.productFeign.testOpenFeignPerfAssist());
     }
 }

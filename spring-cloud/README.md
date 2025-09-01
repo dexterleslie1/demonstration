@@ -1197,6 +1197,45 @@ ErrorDecoder errorDecoder() {
 
 
 
+#### 性能测试
+
+编译镜像
+
+```sh
+./build.sh && ./push.sh
+```
+
+复制应用部署文件
+
+```sh
+ansible-playbook playbook-deployer-config.yml --inventory inventory.ini
+```
+
+启动应用
+
+```sh
+ansible-playbook playbook-service-start.yml --inventory inventory.ini
+```
+
+测试应用是否正常运行
+
+```sh
+curl http://192.168.235.50/api/v1/external/product/testOpenFeignPerfAssist
+```
+
+测试
+
+```sh
+$ wrk -t8 -c2048 -d30s --latency --timeout 60 http://192.168.235.50/api/v1/external/product/testOpenFeignPerfAssist
+
+```
+
+销毁应用
+
+```sh
+ansible-playbook playbook-service-destroy.yml --inventory inventory.ini
+```
+
 
 
 ## 分布式事务

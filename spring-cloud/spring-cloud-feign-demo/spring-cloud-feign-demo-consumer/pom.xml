@@ -74,4 +74,14 @@
             <artifactId>feign-hc5</artifactId>
         </dependency>
     </dependencies>
+
+    <build>
+        <finalName>demo-spring-cloud-openfeign-consumer</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
 </project>
