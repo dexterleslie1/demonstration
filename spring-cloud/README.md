@@ -1201,6 +1201,8 @@ ErrorDecoder errorDecoder() {
 
 使用本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/spring-cloud/spring-cloud-feign-demo) 协助测试。
 
+测试环境：`Hypervisor:VMware ESXi, 7.0.3, 20328353`、`Model:PowerEdge R740xd`、`Processor Type:Intel(R) Xeon(R) Platinum 8269CY CPU @ 2.50GHz`、`Provider` 主机 `8C8G`、`Consumer` 主机 `8C8G`、其他主机资源充足。
+
 编译镜像
 
 ```sh
@@ -1222,17 +1224,29 @@ ansible-playbook playbook-service-start.yml --inventory inventory.ini
 测试应用是否正常运行
 
 ```sh
-curl http://192.168.235.50/api/v1/external/product/testOpenFeignPerfAssist
+curl http://192.168.1.185/api/v1/external/product/testOpenFeignPerfAssist
 ```
 
 测试
 
 ```sh
-$ wrk -t8 -c2048 -d30s --latency --timeout 60 http://192.168.235.50/api/v1/external/product/testOpenFeignPerfAssist
-
+$ wrk -t8 -c2048 -d30s --latency --timeout 60 http://192.168.1.185/api/v1/external/product/testOpenFeignPerfAssist
+Running 30s test @ http://192.168.1.185/api/v1/external/product/testOpenFeignPerfAssist
+  8 threads and 2048 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   397.97ms  262.42ms   7.54s    97.81%
+    Req/Sec   678.82    177.50     2.33k    77.23%
+  Latency Distribution
+     50%  373.79ms
+     75%  390.03ms
+     90%  408.31ms
+     99%    1.40s 
+  161957 requests in 30.09s, 42.78MB read
+Requests/sec:   5382.03
+Transfer/sec:      1.42MB
 ```
 
-查看 `Prometheus` 监控：http://192.168.235.53:3000/
+查看 `Prometheus` 监控：http://192.168.1.17:3000/
 
 销毁应用
 

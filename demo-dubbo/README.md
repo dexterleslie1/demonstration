@@ -386,6 +386,10 @@ public class UserController {
 - 在 Spring Cloud 项目中，可以结合两者：用 **OpenFeign 对外暴露 HTTP API**，用 **Dubbo 实现内部高性能服务调用**。  
 - 如果团队熟悉 Spring 生态且无需极端性能，OpenFeign 是更轻量的选择。
 
+### 性能对比
+
+同样的环境配置 <a href="/springcloud/README.html#性能测试" target="_blank">`OpenFeign`</a> 和 <a href="/dubbo/README.html#性能测试" target="_blank">`Dubbo`</a> 性能测试结果对比可以看出 `Dubbo` 性能远远高于 `OpenFeign` 性能。
+
 
 
 ## 与`SpringBoot`集成
@@ -582,6 +586,8 @@ curl http://localhost:8080/api/v1/external/product/testPerfAssist
 
 使用本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-dubbo/demo-spring-boot-dubbo) 协助测试
 
+测试环境：`Hypervisor:VMware ESXi, 7.0.3, 20328353`、`Model:PowerEdge R740xd`、`Processor Type:Intel(R) Xeon(R) Platinum 8269CY CPU @ 2.50GHz`、`Provider` 主机 `8C8G`、`Consumer` 主机 `8C8G`、其他主机资源充足。
+
 编译镜像
 
 ```sh
@@ -603,16 +609,29 @@ ansible-playbook playbook-service-start.yml --inventory inventory.ini
 测试目标是否正常运行
 
 ```sh
-curl http://192.168.235.50/api/v1/external/product/testPerfAssist
+curl http://192.168.1.185/api/v1/external/product/testPerfAssist
 ```
 
 测试
 
-```
-$ wrk -t8 -c2048 -d30s --latency --timeout 60 http://192.168.235.50/api/v1/external/product/testPerfAssist
+```sh
+$ wrk -t8 -c2048 -d30s --latency --timeout 60 http://192.168.1.185/api/v1/external/product/testPerfAssist
+Running 30s test @ http://192.168.1.185/api/v1/external/product/testPerfAssist
+  8 threads and 2048 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency    25.86ms    6.70ms   1.06s    93.49%
+    Req/Sec     9.97k     0.87k   13.79k    82.75%
+  Latency Distribution
+     50%   24.90ms
+     75%   26.63ms
+     90%   29.54ms
+     99%   44.59ms
+  2380567 requests in 30.09s, 628.87MB read
+Requests/sec:  79103.25
+Transfer/sec:     20.90MB
 ```
 
-查看 `Prometheus` 监控：http://192.168.235.53:3000/
+查看 `Prometheus` 监控：http://192.168.1.17:3000/
 
 销毁测试目标
 
