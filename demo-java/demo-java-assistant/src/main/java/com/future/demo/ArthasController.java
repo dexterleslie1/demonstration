@@ -9,9 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Random;
-import java.util.SimpleTimeZone;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @RestController
@@ -46,11 +44,22 @@ public class ArthasController {
     public ObjectResponse<String> watch() throws Exception {
         String uuid = UUID.randomUUID().toString();
         int intP = new Random().nextInt(3);
-        this.arthasService.watchMethod(uuid, intP);
+        MessageVO messageVO = MessageVO.builder()
+                .clientId(UUID.randomUUID().toString())
+                .pushType(MessageVO.PushType.WebsocketOnly)
+                .targetClientDeviceTypes(Arrays.asList(ClientDeviceType.AndroidOppo, ClientDeviceType.AndroidOppo))
+                .bizId(UUID.randomUUID().toString())
+                .androidHuaweiApnsProperties(MessageVO.AndroidHuaweiApnsProperties.builder()
+                        .tag(UUID.randomUUID().toString())
+                        .content("Hello world!")
+                        .extraData(new HashMap<String, String>() {{
+                            this.put("k1", "v1");
+                            this.put("k2", "v2");
+                        }}).build())
+                .build();
+        this.arthasService.watchMethod(uuid, intP, messageVO);
 
-        ObjectResponse<String> response = new ObjectResponse<>();
-        response.setData("调用成功");
-        return response;
+        return ResponseUtils.successObject("调用成功");
     }
 
     @GetMapping("trace")

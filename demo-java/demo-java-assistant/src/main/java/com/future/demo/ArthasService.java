@@ -19,7 +19,7 @@ public class ArthasService {
      * @param uuid
      * @return
      */
-    public Object[] watchMethod(String uuid, int intP) throws Exception {
+    public Object[] watchMethod(String uuid, int intP, MessageVO messageVO) throws Exception {
         watchCount++;
 
         if (intP == 2) {
@@ -27,7 +27,7 @@ public class ArthasService {
         }
 
         String randomUUID = UUID.randomUUID().toString();
-        return new Object[]{uuid, intP, randomUUID, new Date()};
+        return new Object[]{uuid, intP, randomUUID, new Date(), messageVO};
     }
 
     /**

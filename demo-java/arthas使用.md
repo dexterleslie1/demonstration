@@ -413,12 +413,157 @@ monitor -c 5 com.future.demo.ArthasController monitorMethod
 
 观察函数调用返回时的参数、this 对象和返回值
 
-```bash
-watch com.future.demo.ArthasService watchMethod "{params,target,returnObj}" -x 2
+```sh
+$ watch com.future.demo.ArthasService watchMethod "{params,target,returnObj}" -x 4
+Press Q or Ctrl+C to abort.
+Affect(class count: 1 , method count: 1) cost in 37 ms, listenerId: 2
+method=com.future.demo.ArthasService.watchMethod location=AtExit
+ts=2025-09-02 21:34:01.151; [cost=0.139124ms] result=@ArrayList[
+    @Object[][
+        @String[1ad577cc-f20c-45dc-b9a0-ccc230b47504],
+        @Integer[0],
+        @MessageVO[
+            clientId=@String[b016779f-c5ae-47fc-878b-00280cdd3ad5],
+            bizId=@String[8bc0a5ad-704d-427f-a3c0-47c5bd030ada],
+            apnsCommonProperties=null,
+            appleIOSApnsProperties=null,
+            androidHuaweiApnsProperties=@AndroidHuaweiApnsProperties[
+                tag=@String[48fd4aed-37a9-4b4d-99d6-e435cecf4a9f],
+                content=@String[Hello world!],
+                extraData=@[isEmpty=false;size=2],
+            ],
+            androidOppoApnsProperties=null,
+            androidVivoApnsProperties=null,
+            androidXiaomiApnsProperties=null,
+            websocketMessage=null,
+            pushType=@PushType[
+                Both=@PushType[Both],
+                WebsocketOnly=@PushType[WebsocketOnly],
+                ApnsOnly=@PushType[ApnsOnly],
+                WebsocketOnlyAndApnsOnly=@PushType[WebsocketOnlyAndApnsOnly],
+                $VALUES=@PushType[][isEmpty=false;size=4],
+            targetClientDeviceTypes=@ArrayList[
+                @ClientDeviceType[AndroidOppo],
+                @ClientDeviceType[AndroidOppo],
+            ],
+        ],
+    ],
+    @ArthasService[
+        log=@Logger[
+            serialVersionUID=@Long[5454405123156820674],
+            FQCN=@String[ch.qos.logback.classic.Logger],
+            name=@String[com.future.demo.ArthasService],
+            level=null,
+            effectiveLevelInt=@Integer[20000],
+            parent=@Logger[
+                serialVersionUID=@Long[5454405123156820674],
+                FQCN=@String[ch.qos.logback.classic.Logger],
+                name=@String[com.future.demo],
+                level=null,
+                effectiveLevelInt=@Integer[20000],
+                parent=@Logger[Logger[com.future]],
+                childrenList=@CopyOnWriteArrayList[isEmpty=false;size=4],
+                aai=null,
+                additive=@Boolean[true],
+                loggerContext=@LoggerContext[ch.qos.logback.classic.LoggerContext[default]],
+            ],
+            childrenList=null,
+            aai=null,
+            additive=@Boolean[true],
+            loggerContext=@LoggerContext[
+                DEFAULT_PACKAGING_DATA=@Boolean[false],
+                root=@Logger[Logger[ROOT]],
+                size=@Integer[358],
+                noAppenderWarning=@Integer[0],
+                loggerContextListenerList=@ArrayList[isEmpty=false;size=1],
+                loggerCache=@ConcurrentHashMap[isEmpty=false;size=358],
+                loggerContextRemoteView=@LoggerContextVO[LoggerContextVO{name='default', propertyMap={LOG_DATEFORMAT_PATTERN=yyyy-MM-dd HH:mm:ss.SSS, ROLLING_FILE_NAME_PATTERN=${LOG_FILE}.%d{yyyy-MM-dd}.%i.gz, LOG_LEVEL_PATTERN=%5p}, birthTime=1756819680279}],
+                turboFilterList=@TurboFilterList[isEmpty=true;size=0],
+                packagingDataEnabled=@Boolean[true],
+                maxCallerDataDepth=@Integer[8],
+                resetCount=@Integer[2],
+                frameworkPackages=@ArrayList[isEmpty=true;size=0],
+                birthTime=@Long[1756819680279],
+                name=@String[default],
+                sm=@BasicStatusManager[ch.qos.logback.core.BasicStatusManager@32b6410d],
+                propertyMap=@HashMap[isEmpty=false;size=3],
+                objectMap=@HashMap[isEmpty=false;size=5],
+                configurationLock=@LogbackLock[ch.qos.logback.core.spi.LogbackLock@77b4d93f],
+                scheduledExecutorService=null,
+                scheduledFutures=@ArrayList[isEmpty=true;size=0],
+                lifeCycleManager=@LifeCycleManager[ch.qos.logback.core.LifeCycleManager@3ee01876],
+                started=@Boolean[false],
+            ],
+        ],
+        RANDOM=@Random[
+        watchCount=@Long[8],
+    ],
+    @Object[][
+        @String[1ad577cc-f20c-45dc-b9a0-ccc230b47504],
+        @Integer[0],
+        @String[36fe3db2-e158-4d19-8870-44090d0e0c5f],
+        @Date[2025-09-02 21:34:01,150],
+        @MessageVO[
+            clientId=@String[b016779f-c5ae-47fc-878b-00280cdd3ad5],
+            bizId=@String[8bc0a5ad-704d-427f-a3c0-47c5bd030ada],
+            apnsCommonProperties=null,
+            appleIOSApnsProperties=null,
+            androidHuaweiApnsProperties=@AndroidHuaweiApnsProperties[
+                tag=@String[48fd4aed-37a9-4b4d-99d6-e435cecf4a9f],
+                content=@String[Hello world!],
+                extraData=@[isEmpty=false;size=2],
+            ],
+            androidOppoApnsProperties=null,
+            androidVivoApnsProperties=null,
+            androidXiaomiApnsProperties=null,
+            websocketMessage=null,
+            pushType=@PushType[
+                Both=@PushType[Both],
+                WebsocketOnly=@PushType[WebsocketOnly],
+                ApnsOnly=@PushType[ApnsOnly],
+                WebsocketOnlyAndApnsOnly=@PushType[WebsocketOnlyAndApnsOnly],
+                $VALUES=@PushType[][isEmpty=false;size=4],
+            targetClientDeviceTypes=@ArrayList[
+                @ClientDeviceType[AndroidOppo],
+                @ClientDeviceType[AndroidOppo],
+            ],
+        ],
+    ],
+]
+
+# 触发函数调用
+curl http://localhost:8080/api/v1/arthas/watch
 ```
 
 - `"{params,target,returnObj}"` 指定了你对方法监控时感兴趣的内容，这里表示你想查看方法的参数（`params`）和返回值（`returnObj`）。
 - `-x 2` 表示在输出结果时，对于参数和返回值的复杂对象，应该展开两层来显示其内部结构。这意味着如果参数或返回值是一个对象，其直接属性会被显示；如果这些属性本身也是对象，那么这些对象的直接属性也会被显示，但不会再深入展开。
+- 第一个 `@Object[]` 是输入参数，`@ArthasService` 是 `target`，第二个 `@Object[]` 是返回值。
+
+
+
+查看第三方依赖中的方法（`ResponseUtils.successObject` 是第三方依赖中的方法）
+
+```sh
+$ watch com.future.common.http.ResponseUtils successObject "{params,target,returnObj}" -x 2
+Press Q or Ctrl+C to abort.
+Affect(class count: 1 , method count: 1) cost in 91 ms, listenerId: 3
+method=com.future.common.http.ResponseUtils.successObject location=AtExit
+ts=2025-09-02 21:43:34.488; [cost=2.241415ms] result=@ArrayList[
+    @Object[][
+        @String[调用成功],
+    ],
+    null,
+    @ObjectResponse[
+        data=@String[调用成功],
+        OBJECT_MAPPER=@ObjectMapper[com.fasterxml.jackson.databind.ObjectMapper@68a218f1],
+        errorCode=@Integer[0],
+        errorMessage=null,
+    ],
+]
+
+# 触发函数调用
+curl http://localhost:8080/api/v1/arthas/watch
+```
 
 
 
