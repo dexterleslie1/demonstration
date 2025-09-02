@@ -1,0 +1,17 @@
+version: "3.1"
+
+services:
+  db:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-db
+    user: mysql
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+      - --innodb-buffer-pool-size=${innodb_buffer_pool_size}
+    environment:
+      - LANG=C.UTF-8
+      - TZ=Asia/Shanghai
+      - MYSQL_ROOT_PASSWORD=123456
+    restart: unless-stopped
+    network_mode: host

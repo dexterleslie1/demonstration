@@ -1,0 +1,44 @@
+- name: "启动api服务"
+  hosts: api
+  tasks:
+    - name: "使用Docker Compose启动api服务"
+      shell: |
+        set -e
+        cd ~/deployer-demo-transaction-isolation/service
+        docker compose pull && docker compose up -d
+
+- name: "启动db服务"
+  hosts: db
+  tasks:
+    - name: "使用Docker Compose启动db服务"
+      shell: |
+        set -e
+        cd ~/deployer-demo-transaction-isolation/db
+        docker compose pull && docker compose up -d
+
+- name: "启动OpenResty服务"
+  hosts: openresty
+  tasks:
+    - name: "使用Docker Compose启动OpenResty服务"
+      shell: |
+        set -e
+        cd ~/deployer-demo-transaction-isolation/openresty
+        docker compose pull && docker compose up -d
+
+- name: "启动prometheus公共服务"
+  hosts: common
+  tasks:
+    - name: "使用Docker Compose启动prometheus公共服务"
+      shell: |
+        set -e
+        cd ~/deployer-demo-transaction-isolation/prometheus
+        docker compose pull && docker compose up -d
+
+- name: "启动node_exporter"
+  hosts: "{{ groups['all'] | difference(groups['management']) }}"
+  tasks:
+    - name: "使用Docker Compose启动node_exporter"
+      shell: |
+        set -e
+        cd ~/deployer-demo-transaction-isolation/node-exporter
+        docker compose up -d

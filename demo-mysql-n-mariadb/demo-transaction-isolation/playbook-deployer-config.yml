@@ -1,0 +1,41 @@
+- name: "复制deployer"
+  hosts: "{{ groups['all'] | difference(groups['management']) }}"
+  tasks:
+    - name: "复制deployer目录到远程"
+      copy:
+        src: deployer/
+        dest: ~/deployer-demo-transaction-isolation
+
+- name: "配置db服务的deployer"
+  hosts: db
+  tasks:
+    - name: "配置db服务的innodb-buffer-pool-size"
+      lineinfile:
+        path: ~/deployer-demo-transaction-isolation/db/.env
+        regexp: "^innodb_buffer_pool_size="
+        line: "innodb_buffer_pool_size={{ innodb_buffer_pool_size }}"
+
+- name: "配置openresty服务的deployer"
+  hosts: openresty
+  tasks:
+    - name: "配置OpenResty服务的nginx.conf"
+      template:
+        src: deployer/openresty/nginx.conf.j2
+        dest: ~/deployer-demo-transaction-isolation/openresty/nginx.conf
+
+- name: "配置api服务的deployer"
+  hosts: api
+  tasks:
+    - name: "配置api服务的common_db_host"
+      lineinfile:
+        path: ~/deployer-demo-transaction-isolation/service/.env
+        regexp: "^common_db_host="
+        line: "common_db_host={{ groups['db'][0] }}"
+
+- name: "配置Prometheus服务的deployer"
+  hosts: common
+  tasks:
+    - name: "配置Prometheus服务的prometheus.yml"
+      template:
+        src: deployer/prometheus/prometheus.yml.j2
+        dest: ~/deployer-demo-transaction-isolation/prometheus/prometheus.yml
