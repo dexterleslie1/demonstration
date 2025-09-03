@@ -4286,3 +4286,161 @@ Masonry 的核心是创建一个 **“约束制造器” (MASConstraintMaker)**�
 }
 ```
 
+
+
+## 布局 - `UIStackView`
+
+UIStackView 是 iOS 9 引入的一个强大的布局容器，可以简化 Auto Layout 的使用，特别适合创建线性排列的视图布局。
+
+### 基本用法
+
+#### 创建 UIStackView
+
+```objective-c
+UIStackView *stackView = [[UIStackView alloc] init];
+stackView.translatesAutoresizingMaskIntoConstraints = NO;
+stackView.axis = UILayoutConstraintAxisVertical; // 垂直排列
+stackView.distribution = UIStackViewDistributionFill; // 分布方式
+stackView.alignment = UIStackViewAlignmentFill; // 对齐方式
+stackView.spacing = 10; // 子视图间距
+[self.view addSubview:stackView];
+```
+
+#### 添加约束
+
+```objective-c
+[NSLayoutConstraint activateConstraints:@[
+    [stackView.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor constant:20],
+    [stackView.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor constant:-20],
+    [stackView.topAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.topAnchor constant:20]
+]];
+```
+
+### 主要属性
+
+#### 排列方向 (axis)
+
+```objective-c
+stackView.axis = UILayoutConstraintAxisHorizontal; // 水平排列
+// 或
+stackView.axis = UILayoutConstraintAxisVertical;   // 垂直排列
+```
+
+#### 分布方式 (distribution)
+
+```objective-c
+stackView.distribution = UIStackViewDistributionFill;        // 填充
+stackView.distribution = UIStackViewDistributionFillEqually; // 等宽/等高填充
+stackView.distribution = UIStackViewDistributionFillProportionally; // 按比例填充
+stackView.distribution = UIStackViewDistributionEqualSpacing; // 等间距
+stackView.distribution = UIStackViewDistributionEqualCentering; // 等中心距
+```
+
+#### 对齐方式 (alignment)
+
+```objective-c
+stackView.alignment = UIStackViewAlignmentFill;      // 填充
+stackView.alignment = UIStackViewAlignmentLeading;   // 左对齐(水平)/顶部对齐(垂直)
+stackView.alignment = UIStackViewAlignmentTop;       // 顶部对齐(同Leading)
+stackView.alignment = UIStackViewAlignmentFirstBaseline; // 首行基线对齐
+stackView.alignment = UIStackViewAlignmentCenter;     // 居中对齐
+stackView.alignment = UIStackViewAlignmentTrailing;   // 右对齐(水平)/底部对齐(垂直)
+stackView.alignment = UIStackViewAlignmentBottom;     // 底部对齐(同Trailing)
+stackView.alignment = UIStackViewAlignmentLastBaseline; // 末行基线对齐
+```
+
+### 添加和移除子视图
+
+```objective-c
+// 添加子视图
+[stackView addArrangedSubview:view1];
+[stackView addArrangedSubview:view2];
+
+// 插入子视图
+[stackView insertArrangedSubview:view3 atIndex:1];
+
+// 移除子视图
+[stackView removeArrangedSubview:view2];
+[view2 removeFromSuperview]; // 需要手动从视图层级中移除
+```
+
+### 嵌套使用
+
+UIStackView 可以嵌套使用来创建更复杂的布局：
+
+```objective-c
+// 创建水平排列的stack view
+UIStackView *horizontalStack = [[UIStackView alloc] init];
+horizontalStack.axis = UILayoutConstraintAxisHorizontal;
+horizontalStack.distribution = UIStackViewDistributionFillEqually;
+horizontalStack.spacing = 10;
+
+// 添加两个垂直排列的stack view
+UIStackView *verticalStack1 = [[UIStackView alloc] init];
+verticalStack1.axis = UILayoutConstraintAxisVertical;
+[horizontalStack addArrangedSubview:verticalStack1];
+
+UIStackView *verticalStack2 = [[UIStackView alloc] init];
+verticalStack2.axis = UILayoutConstraintAxisVertical;
+[horizontalStack addArrangedSubview:verticalStack2];
+```
+
+### 动态调整
+
+UIStackView 会自动处理子视图的隐藏和显示：
+
+```objective-c
+view1.hidden = YES; // stack view会自动调整布局
+```
+
+### 实际示例
+
+```objective-c
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view.
+    
+    // 创建stack view
+    UIStackView *stackView = [[UIStackView alloc] init];
+    // 布局不使用 Autoresizing Mask 处理
+    stackView.translatesAutoresizingMaskIntoConstraints = NO;
+    // 布局垂直排列
+    stackView.axis = UILayoutConstraintAxisVertical;
+    // 布局分布方式填充
+    stackView.distribution = UIStackViewDistributionFill;
+    // 布局对齐方式填充
+    stackView.alignment = UIStackViewAlignmentFill;
+    stackView.spacing = 20;
+    [self.view addSubview:stackView];
+    
+    // 添加约束
+    [NSLayoutConstraint activateConstraints:@[
+        // stackView 左边=self.view 左边+20
+        [stackView.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor constant:20],
+        // stackView 右边=self.view 右边-20
+        [stackView.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor constant:-20],
+        // stackView 顶部=self.view 顶部+20
+        [stackView.topAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.topAnchor constant:20]
+    ]];
+    
+    // 添加子视图
+    UILabel *titleLabel = [[UILabel alloc] init];
+    titleLabel.text = @"标题";
+    titleLabel.font = [UIFont boldSystemFontOfSize:24];
+    [stackView addArrangedSubview:titleLabel];
+    
+    UITextField *textField = [[UITextField alloc] init];
+    textField.borderStyle = UITextBorderStyleRoundedRect;
+    textField.placeholder = @"输入内容";
+    [stackView addArrangedSubview:textField];
+    
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeSystem];
+    [button setTitle:@"提交" forState:UIControlStateNormal];
+    [stackView addArrangedSubview:button];
+    
+    // 设置 titleLabel 自定义间距为 40，不使用 stackView.spacing=20 统一设置的值
+    [stackView setCustomSpacing:40 afterView:titleLabel];
+}
+```
+
+UIStackView 极大地简化了复杂布局的实现，特别是在需要动态添加或移除视图的情况下。
