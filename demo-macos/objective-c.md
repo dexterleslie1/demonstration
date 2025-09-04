@@ -39,6 +39,79 @@ int main(int argc, const char * argv[]) {
 
 
 
+## `objective-c`项目中的`xcuserdata`目录
+
+在 iOS (Objective-C) 项目中，**`xcuserdata` 目录不应该提交到 Git 仓库**。以下是详细解释和最佳实践：
+
+---
+
+### **为什么不应该提交 `xcuserdata`？**
+1. **用户专属数据**  
+   `xcuserdata` 目录（位于 `YourProject.xcodeproj/xcuserdata/`）存储的是 **当前用户的个性化设置**，例如：
+   - Xcode 的窗口布局、断点、书签。
+   - 代码折叠状态、编辑器的临时缓存。
+   - 调试器偏好设置等。  
+   **这些内容与其他开发者无关**，提交会导致不必要的冲突。
+
+2. **频繁变动**  
+   该目录下的文件会随用户操作频繁变化，提交后会导致 Git 历史记录污染。
+
+3. **潜在冲突风险**  
+   如果多个开发者提交各自的 `xcuserdata`，可能会覆盖彼此的配置，甚至引发 Xcode 项目文件冲突。
+
+---
+
+### **正确做法：忽略 `xcuserdata`**
+#### 1. **将 `xcuserdata` 添加到 `.gitignore`**
+在项目的 **`.gitignore`** 文件中添加以下规则（如果使用全局 Git 配置也可忽略所有项目的 `xcuserdata`）：
+```gitignore
+# Xcode 用户数据
+**/xcuserdata/
+```
+或更精确的路径：
+```gitignore
+YourProject.xcodeproj/xcuserdata/
+```
+
+#### 2. **删除已提交的 `xcuserdata`**
+如果之前误提交了 `xcuserdata`，需要从 Git 中删除（但保留本地文件）：
+```bash
+git rm --cached -r YourProject.xcodeproj/xcuserdata/
+git commit -m "Remove xcuserdata from Git"
+```
+然后确保 `.gitignore` 已生效，避免再次误提交。
+
+---
+
+### **需要提交的 Xcode 相关文件**
+以下文件 **必须提交** 到 Git 仓库（与 `xcuserdata` 区分开）：
+- `YourProject.xcodeproj/project.pbxproj`（项目结构文件）
+- `YourProject.xcworkspace/contents.xcworkspacedata`（如果使用 CocoaPods）
+- `Podfile`、`Podfile.lock`（CocoaPods 依赖）
+- `*.xcconfig`（自定义编译配置）
+
+---
+
+### **特殊情况处理**
+如果团队需要共享某些 Xcode 配置（如代码样式模板），应通过以下方式：
+1. **共享 `WorkspaceSettings.xcsettings`**  
+   将 `YourProject.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings` 提交到 Git，而非用户专属数据。
+2. **使用团队统一的 Xcode 配置模板**  
+   通过文档约定或脚本自动配置，而非依赖 `xcuserdata`。
+
+---
+
+### **总结**
+| 文件/目录         | 是否提交到 Git | 原因                       |
+| ----------------- | -------------- | -------------------------- |
+| `xcuserdata/`     | ❌ 绝不         | 用户本地临时数据，无关协作 |
+| `project.pbxproj` | ✅ 必须         | 项目核心结构文件           |
+| `xcshareddata/`   | ⚠️ 选择性提交   | 仅共享团队统一的配置       |
+
+遵循此规则可保持 Git 仓库干净，避免团队协作中的配置冲突问题。
+
+
+
 ## 指针
 
 >[指针解引用](https://baike.baidu.com/item/%E8%A7%A3%E5%BC%95%E7%94%A8)
@@ -3637,6 +3710,160 @@ SecondViewController *viewController = [[SecondViewController alloc] init];
 ```objective-c
 // 销毁窗口
 [self dismissViewControllerAnimated:YES completion:nil];
+```
+
+
+
+## `UIKit` - `UINavigationController`
+
+`UINavigationController` 是 iOS 开发中用于管理视图控制器（`UIViewController`）层级导航的一个核心类，它提供了一种**基于栈的导航模型**，允许用户在多个界面之间按层级前进和返回。
+
+---
+
+### **核心功能**
+1. **导航栈管理**：
+   - 采用**后进先出（LIFO）**的栈结构管理视图控制器。
+   - 通过 `pushViewController:animated:` 压入新页面。
+   - 通过 `popViewControllerAnimated:` 弹出当前页面。
+
+2. **自动导航栏**：
+   - 顶部自带 `UINavigationBar`，显示标题、返回按钮等。
+   - 支持自定义导航栏外观（如颜色、标题属性）。
+
+3. **返回手势**：
+   - 在 iOS 7+ 中，默认支持从屏幕左边缘向右滑动返回上一页。
+
+---
+
+### **基本用法（Objective-C 示例）**
+```objc
+// 1. 创建根视图控制器
+UIViewController *rootVC = [[UIViewController alloc] init];
+rootVC.title = @"首页";
+
+// 2. 初始化 UINavigationController
+UINavigationController *navController = [[UINavigationController alloc] initWithRootViewController:rootVC];
+
+// 3. 推入新页面
+UIViewController *secondVC = [[UIViewController alloc] init];
+secondVC.title = @"第二页";
+[navController pushViewController:secondVC animated:YES];
+
+// 4. 返回上一页
+[navController popViewControllerAnimated:YES];
+```
+
+---
+
+### **关键属性/方法**
+| 属性/方法                          | 说明                           |
+| ---------------------------------- | ------------------------------ |
+| `viewControllers`                  | 导航栈中所有视图控制器的数组。 |
+| `topViewController`                | 栈顶的当前可见控制器。         |
+| `navigationBar`                    | 顶部导航栏对象，可自定义样式。 |
+| `pushViewController:animated:`     | 跳转到新页面。                 |
+| `popViewControllerAnimated:`       | 返回上一页。                   |
+| `popToRootViewControllerAnimated:` | 直接返回到根页面。             |
+
+---
+
+### **常见应用场景**
+1. **多层级页面跳转**（如设置页→账户页→修改密码）。
+2. **模态与导航结合**（通过 `presentViewController:` 弹出模态后再嵌入导航）。
+3. **自定义导航栏按钮**（通过 `UIBarButtonItem` 添加右侧按钮）。
+
+---
+
+### **注意事项**
+- **避免循环引用**：在 Block 或代理中使用 `self` 时需用 `__weak` 防止内存泄漏。
+- **性能优化**：频繁 `push/pop` 时注意控制器生命周期（如 `viewDidLoad` 的重复触发）。
+- **隐藏导航栏**：通过 `setNavigationBarHidden:animated:` 临时隐藏。
+
+如果需要更复杂的导航逻辑（如 Tab 结合导航），可结合 `UITabBarController` 使用。
+
+### 示例
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-uinavigationcontroller)
+
+`FirstViewController.m`
+
+```objective-c
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    
+    // UINavigationController 会使用此标题显示
+    self.title = @"First View Controller";
+    
+    // 添加 button
+    UIButton *button = [[UIButton alloc] init];
+    [button setTitle:@"Click me" forState:UIControlStateNormal];
+    [button setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+    [button addTarget:self action:@selector(onClickedButtonClickMe:) forControlEvents:UIControlEventTouchUpInside];
+    [self.view addSubview:button];
+    
+    // 使用 AutoLayout 布局
+    button.translatesAutoresizingMaskIntoConstraints = NO;
+    [button.leadingAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.leadingAnchor constant:0].active = YES;
+    [button.trailingAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.trailingAnchor constant:0].active = YES;
+    [button.topAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.topAnchor constant:0].active = YES;
+}
+
+- (void)onClickedButtonClickMe:(id) sender{
+    // 向 UINavigationController 添加视图
+    SecondViewController *viewController = [[SecondViewController alloc] init];
+    [self.navigationController pushViewController:viewController animated:YES];
+}
+
+```
+
+`SecondViewController.m`
+
+```objective-c
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    
+    // UINavigationController 会使用此标题显示
+    self.title = @"Second View Controller";
+    
+    UIBarButtonItem *buttonItemBack = [[UIBarButtonItem alloc]
+                                          initWithTitle:@"< Back"
+                                          style:UIBarButtonItemStylePlain
+                                          target:self
+                                          action:@selector(onClickedButtonItemBack:)];
+    // 设置 UIViewController 的左边按钮
+    self.navigationItem.leftBarButtonItem = buttonItemBack;
+}
+
+- (void)onClickedButtonItemBack:(id) sender{
+    // 返回上一个视图
+    [self.navigationController popViewControllerAnimated:YES];
+}
+```
+
+`AppDelegate.m`
+
+```objective-c
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+    // Override point for customization after application launch.
+    
+    // 初始化 UIWindow
+    self.window = [[UIWindow alloc]initWithFrame:[UIScreen mainScreen].bounds];
+    // 设置 UIWindow 背景颜色
+    self.window.backgroundColor = [UIColor grayColor];
+    
+    // 设置 UIWindow 的根视图为 UINavigationController
+    UIViewController *viewController = [[FirstViewController alloc] init];
+    UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController:viewController];
+    self.window.rootViewController = navigationController;
+    
+    // 将 UIWindow 设置成为应用程序的主窗口（Key Window）
+    // 将 UIWindow 显示在屏幕上
+    [self.window makeKeyAndVisible];
+    
+    return YES;
+}
 ```
 
 
