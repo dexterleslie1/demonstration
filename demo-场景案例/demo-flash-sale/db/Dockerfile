@@ -1,4 +1,4 @@
-FROM mariadb:11.4
+FROM mariadb:11.4.8
 #FROM mysql:8.0.18
 
 ADD db.sql /docker-entrypoint-initdb.d/db.sql
