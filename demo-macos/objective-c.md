@@ -3599,6 +3599,23 @@ UIKit 的功能非常丰富，主要包括：
 
 
 
+## `UIKit` - `UITextField`
+
+
+
+### 设置密码输入模式
+
+通过设置 `secureTextEntry` 使 `UITextField` 处于密码模式
+
+```objective-c
+UITextField *textField = [[UITextField alloc] initWithFrame:CGRectMake(20, 100, 280, 30)];
+textField.secureTextEntry = YES; // 设置为密码模式
+```
+
+在 `Interface Builder` 中选中 `UITextField` 组件，切换到 `Show the Attributes inspector Tab`，在 `Text Field` 找到 `Secure Text Entry` 并勾选即可。
+
+
+
 ## `UIKit` - `UIViewController`
 
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-uiviewcontroller)
@@ -4106,6 +4123,8 @@ NSLayoutConstraint *leftConstraint = [NSLayoutConstraint constraintWithItem:myVi
 
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-layout)
 
+通过单击 `xib` 文件打开 `Interface Builder`，选中需要添加约束的组件，在 `Interface Builder` 右下角点击![image-20250903221112840](image-20250903221112840.png)按钮（`Add New Constraints`)弹出添加约束的窗口，按照提示添加约束即可。
+
 
 
 ## 布局 - `Masonry`
@@ -4393,7 +4412,7 @@ UIStackView 会自动处理子视图的隐藏和显示：
 view1.hidden = YES; // stack view会自动调整布局
 ```
 
-### 实际示例
+### 示例 - 编程方式
 
 ```objective-c
 - (void)viewDidLoad {
@@ -4444,3 +4463,7 @@ view1.hidden = YES; // stack view会自动调整布局
 ```
 
 UIStackView 极大地简化了复杂布局的实现，特别是在需要动态添加或移除视图的情况下。
+
+### 示例 -`Interface Builder`方式
+
+点击 `xib` 文件打开 `Interface Builder`，点击 `Xcode` 工具栏中的 `+` 添加组件，在弹出组件选择框中输入 `stack`（有水平和垂直 `stack` 可供选择）搜索 `UIStackView` 布局组件，拖动 `stack` 组件到界面中进行布局即可。
