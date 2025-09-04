@@ -9,6 +9,7 @@
 #import "AppDelegate.h"
 #import "AutolayoutXibViewController.h"
 #import "MasonryViewController.h"
+#import "StackLayoutViewController.h"
 
 @interface AppDelegate ()
 
@@ -26,7 +27,8 @@
 //    UIViewController *viewController = [[AutolayoutXibViewController alloc]
 //                                        initWithNibName:@"AutolayoutXibViewController"
 //                                        bundle:[NSBundle mainBundle]];
-    UIViewController *viewController = [[MasonryViewController alloc] init];
+//    UIViewController *viewController = [[MasonryViewController alloc] init];
+    UIViewController *viewController = [[StackLayoutViewController alloc] init];
     
     self.window.rootViewController = viewController;
     [self.window makeKeyAndVisible];
