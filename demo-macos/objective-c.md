@@ -3874,6 +3874,169 @@ secondVC.title = @"第二页";
 
 
 
+## `UIKit` - `UITableView`
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-uitableview)
+
+
+
+## `UIKit` - `UITableViewController`
+
+`UITableViewController` 是 iOS 开发中专门用于管理 **列表界面（`UITableView`）** 的一个系统控制器，它是 `UIViewController` 的子类，默认集成了表格视图的核心功能，可以快速实现数据列表的展示和交互。以下是它的核心特性和使用详解：
+
+---
+
+### **一、本质与作用**
+1. **身份**：
+   - 属于 **控制器（Controller）**，继承自 `UIViewController`。
+   - 内部自带一个全屏的 `UITableView`，并自动绑定数据源（`dataSource`）和代理（`delegate`）。
+
+2. **设计目的**：
+   - 为纯列表型界面提供 **开箱即用** 的解决方案（如通讯录、设置页）。
+   - 减少重复代码（无需手动创建 `UITableView` 和设置协议）。
+
+---
+
+### **二、核心特性**
+#### 1. **自动集成 `UITableView`**
+   - 控制器初始化时，会自动创建并管理一个占满屏幕的 `UITableView`，通过 `self.tableView` 访问。
+   - 无需手动添加视图或设置约束。
+
+#### 2. **内置数据源与代理**
+   - 默认将 `dataSource` 和 `delegate` 指向控制器自身，只需实现对应方法即可：
+     ```objc
+     - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section;
+     - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath;
+     ```
+
+#### 3. **便捷功能**
+   - **下拉刷新**：直接使用 `self.refreshControl`（无需手动创建）。
+   - **编辑模式**：内置 `editButtonItem`，一键切换编辑状态。
+   - **布局适配**：自动处理 Safe Area 和导航栏/标签栏的遮挡。
+
+---
+
+### **三、基本用法（Objective-C 示例）**
+#### 1. 创建子类
+```objc
+#import <UIKit/UIKit.h>
+
+@interface MyTableViewController : UITableViewController
+@end
+```
+
+#### 2. 实现数据源方法
+```objc
+@implementation MyTableViewController
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+    return 10; // 返回行数
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"Cell" forIndexPath:indexPath];
+    cell.textLabel.text = [NSString stringWithFormat:@"Row %ld", (long)indexPath.row];
+    return cell;
+}
+
+@end
+```
+
+#### 3. 使用控制器
+```objc
+// 在 AppDelegate 或其他地方加载
+MyTableViewController *tableVC = [[MyTableViewController alloc] initWithStyle:UITableViewStylePlain];
+UINavigationController *nav = [[UINavigationController alloc] initWithRootViewController:tableVC];
+self.window.rootViewController = nav;
+```
+
+---
+
+### **四、与 `UITableView` 的关键区别**
+| **特性**        | `UITableViewController`        | `UITableView`                     |
+| --------------- | ------------------------------ | --------------------------------- |
+| **类型**        | 控制器（管理逻辑）             | 视图（仅负责显示）                |
+| **初始化**      | 自带全屏 `tableView`           | 需手动创建并添加到父视图          |
+| **数据源/代理** | 自动绑定到控制器               | 需手动设置                        |
+| **编辑模式**    | 内置 `editButtonItem`          | 需手动调用 `setEditing:animated:` |
+| **下拉刷新**    | 直接访问 `self.refreshControl` | 需手动创建并关联                  |
+
+---
+
+### **五、适用场景**
+1. **独立列表页面**  
+   - 如系统设置、消息列表、联系人等全屏列表。
+2. **快速原型开发**  
+   - 无需复杂布局时，直接继承即可实现功能。
+3. **标准交互需求**  
+   - 需要编辑、下拉刷新等系统默认行为。
+
+---
+
+### **六、注意事项**
+1. **灵活性限制**：
+   - `tableView` 默认占满全屏，若需与其他控件共存（如底部按钮），应改用 `UITableView` + `UIViewController`。
+2. **现代替代方案**：
+   - iOS 13+ 推荐考虑 `UICollectionView`（布局更灵活）或 SwiftUI 的 `List`。
+3. **性能优化**：
+   - 大量数据时仍需复用单元格（`dequeueReusableCellWithIdentifier:`）。
+
+---
+
+### **七、完整示例代码**
+```objc
+// 自定义 UITableViewController
+@interface CustomTableVC : UITableViewController
+@property (nonatomic, strong) NSArray *data;
+@end
+
+@implementation CustomTableVC
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    self.data = @[@"Apple", @"Banana", @"Orange"];
+    [self.tableView registerClass:[UITableViewCell class] forCellReuseIdentifier:@"Cell"];
+    
+    // 添加下拉刷新
+    self.refreshControl = [[UIRefreshControl alloc] init];
+    [self.refreshControl addTarget:self action:@selector(refreshData) forControlEvents:UIControlEventValueChanged];
+}
+
+- (void)refreshData {
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+        [self.refreshControl endRefreshing];
+        [self.tableView reloadData];
+    });
+}
+
+#pragma mark - UITableViewDataSource
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+    return self.data.count;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"Cell" forIndexPath:indexPath];
+    cell.textLabel.text = self.data[indexPath.row];
+    return cell;
+}
+
+@end
+```
+
+---
+
+### **总结**
+- `UITableViewController` 是苹果为列表型界面提供的 **高效封装**，适合快速开发标准列表。
+- 若需要更复杂的界面布局或自定义逻辑，可优先选择 `UIViewController + UITableView` 组合。
+
+### 示例
+
+>提示：在编写 `demo` 过程中，尝试设置 `Main.storyboard` 的 `Class` 绑定 `UITableViewController`，但是在运行时报告错误导致 `App` 崩溃，所以使用自定义 `UIWindow` 方式加载 `UITableViewController`。
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-uitableviewcontroller)
+
+
+
 ## 布局 - 有哪些布局呢？
 
 好的，iOS 提供了多种 UI 布局方式，从早期的手动定位到现代的声明式语法，开发者可以根据场景选择最合适的工具。
