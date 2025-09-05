@@ -14,11 +14,9 @@
 sudo apt install ./code_xxxxx.deb
 ```
 
+## `Typora`插件安装
 
-
-## typora/markdown插件安装
-
-> 在插件管理器搜索typora，选择安装下载量排第一的插件，这样就能够在vscode像typora那样编辑md文件
+> 在插件管理器搜索 `typora`（提供者为 `Database Client`），这样就能够在 `VSCode` 像 `Typora` 那样编辑 `md` 文件。
 
 ## 配置git
 
@@ -38,8 +36,6 @@ sudo apt install ./code_xxxxx.deb
 
 > 1、设置zoom为1，Code > Preferences > Settings > Zoom
 
-
-
 ## `remote-ssh`插件远程开发
 
 > 提示：
@@ -47,8 +43,6 @@ sudo apt install ./code_xxxxx.deb
 > - 因为 `ssh` 命令不支持连接时提供密码，所以 `remote-ssh` 插件不支持保存 `SSH` 密码，启动应用后会自动端口转发。
 > - 在连接远程过程中提示 "Could not establish connection to "": XHR failed" 错误，是因为 `vscode commit id` 对应的 `remote-ssh` 插件服务端程序不存在导致无法下载，所以此时应该升级 `vscode` 到最新版本。
 > - 远程开发的 `terminal` 也是远程的，远程打开 `git` 仓库就可以通过 `vscode git` 管理仓库了。
-
-
 
 ### 安装和使用
 
@@ -62,15 +56,9 @@ sudo apt install ./code_xxxxx.deb
 # 新窗口中提示输入SSH密码并输入密码后，选择克隆或者打开远程主机的目录就可以进行远程开发了。
 ```
 
-
-
 ### 删除主机
 
 切换到插件管理面板 `Remote Explorer`，点击 `REMOTE（TUNNEL/SSH）` > `SSH` > `设置按钮` ![image-20250904144848760](image-20250904144848760.png)，选择 `~/.ssh/config` 文件进行编辑即可。
-
-
-
-
 
 ## 设置打开文件很多时tabs多行显示
 
@@ -116,8 +104,6 @@ sudo apt install ./code_xxxxx.deb
 
 # 快速隐藏或者打开 Terminal 所在的Panel ctrl+`
 ```
-
-
 
 ## vscode makefile 报告 Makefile:2: *** missing separator.  Stop.
 
