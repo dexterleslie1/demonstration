@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="21507" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="21505"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" id="gTV-IL-0wX" customClass="MyCollectionViewCell">
+            <rect key="frame" x="0.0" y="0.0" width="287" height="248"/>
+            <autoresizingMask key="autoresizingMask"/>
+            <view key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center">
+                <rect key="frame" x="0.0" y="0.0" width="287" height="248"/>
+                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                <subviews>
+                    <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" distribution="equalSpacing" translatesAutoresizingMaskIntoConstraints="NO" id="2Wj-Nq-Y8O">
+                        <rect key="frame" x="0.0" y="0.0" width="287" height="248"/>
+                        <subviews>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" ambiguous="YES" image="icon_t2.png" translatesAutoresizingMaskIntoConstraints="NO" id="E9j-An-Hcy">
+                                <rect key="frame" x="0.0" y="0.0" width="287" height="213.66666666666666"/>
+                            </imageView>
+                            <button opaque="NO" contentMode="scaleToFill" ambiguous="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="go4-oX-PDa">
+                                <rect key="frame" x="0.0" y="213.66666666666666" width="287" height="34.333333333333343"/>
+                                <state key="normal" title="Button"/>
+                                <buttonConfiguration key="configuration" style="filled" title="Button"/>
+                            </button>
+                        </subviews>
+                    </stackView>
+                </subviews>
+            </view>
+            <viewLayoutGuide key="safeArea" id="SEy-5g-ep8"/>
+            <constraints>
+                <constraint firstItem="2Wj-Nq-Y8O" firstAttribute="leading" secondItem="gTV-IL-0wX" secondAttribute="leading" id="Ipx-qu-EzG"/>
+                <constraint firstItem="2Wj-Nq-Y8O" firstAttribute="top" secondItem="gTV-IL-0wX" secondAttribute="top" id="S3j-bV-2UI"/>
+                <constraint firstItem="2Wj-Nq-Y8O" firstAttribute="bottom" secondItem="gTV-IL-0wX" secondAttribute="bottom" id="bLT-O8-enY"/>
+                <constraint firstItem="2Wj-Nq-Y8O" firstAttribute="trailing" secondItem="gTV-IL-0wX" secondAttribute="trailing" id="x9D-5v-y1x"/>
+            </constraints>
+            <size key="customSize" width="287" height="248"/>
+            <connections>
+                <outlet property="button" destination="go4-oX-PDa" id="79u-gU-9xb"/>
+                <outlet property="imageView" destination="E9j-An-Hcy" id="8Cr-oT-qF8"/>
+            </connections>
+            <point key="canvasLocation" x="307.63358778625951" y="58.450704225352112"/>
+        </collectionViewCell>
+    </objects>
+    <resources>
+        <image name="icon_t2.png" width="512" height="512"/>
+    </resources>
+</document>
