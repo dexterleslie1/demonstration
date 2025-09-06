@@ -18,6 +18,9 @@
 		4BBD9447E22AE448B133DFB8 /* libPods-iOS-layout.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 838E329E82F9D0A23CC00C43 /* libPods-iOS-layout.a */; };
 		873C56BE2E690D4C00B5FBF9 /* StackLayoutViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 873C56BC2E690D4C00B5FBF9 /* StackLayoutViewController.m */; };
 		873C56BF2E690D4C00B5FBF9 /* StackLayoutViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 873C56BD2E690D4C00B5FBF9 /* StackLayoutViewController.xib */; };
+		8787AFE92E6C2AC400CCF629 /* StackLayoutRatioViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 8787AFE72E6C2AC400CCF629 /* StackLayoutRatioViewController.m */; };
+		8787AFEA2E6C2AC400CCF629 /* StackLayoutRatioViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8787AFE82E6C2AC400CCF629 /* StackLayoutRatioViewController.xib */; };
+		87900D542E6BDDD500989E5D /* icon_t2.png in Resources */ = {isa = PBXBuildFile; fileRef = 87900D532E6BDDD500989E5D /* icon_t2.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -61,6 +64,10 @@
 		873C56BB2E690D4C00B5FBF9 /* StackLayoutViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StackLayoutViewController.h; sourceTree = "<group>"; };
 		873C56BC2E690D4C00B5FBF9 /* StackLayoutViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = StackLayoutViewController.m; sourceTree = "<group>"; };
 		873C56BD2E690D4C00B5FBF9 /* StackLayoutViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = StackLayoutViewController.xib; sourceTree = "<group>"; };
+		8787AFE62E6C2AC400CCF629 /* StackLayoutRatioViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StackLayoutRatioViewController.h; sourceTree = "<group>"; };
+		8787AFE72E6C2AC400CCF629 /* StackLayoutRatioViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = StackLayoutRatioViewController.m; sourceTree = "<group>"; };
+		8787AFE82E6C2AC400CCF629 /* StackLayoutRatioViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = StackLayoutRatioViewController.xib; sourceTree = "<group>"; };
+		87900D532E6BDDD500989E5D /* icon_t2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = icon_t2.png; path = "../../../demo-uiimageview/demo-uiimageview/images/icon_t2.png"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -114,6 +121,7 @@
 		22E557D02572347F00998C86 /* iOS-layout */ = {
 			isa = PBXGroup;
 			children = (
+				87900D522E6BDDAA00989E5D /* images */,
 				22E557D12572347F00998C86 /* AppDelegate.h */,
 				22E557D22572347F00998C86 /* AppDelegate.m */,
 				22E557DD2572348300998C86 /* Assets.xcassets */,
@@ -127,6 +135,9 @@
 				873C56BB2E690D4C00B5FBF9 /* StackLayoutViewController.h */,
 				873C56BC2E690D4C00B5FBF9 /* StackLayoutViewController.m */,
 				873C56BD2E690D4C00B5FBF9 /* StackLayoutViewController.xib */,
+				8787AFE62E6C2AC400CCF629 /* StackLayoutRatioViewController.h */,
+				8787AFE72E6C2AC400CCF629 /* StackLayoutRatioViewController.m */,
+				8787AFE82E6C2AC400CCF629 /* StackLayoutRatioViewController.xib */,
 			);
 			path = "iOS-layout";
 			sourceTree = "<group>";
@@ -155,6 +166,14 @@
 				838E329E82F9D0A23CC00C43 /* libPods-iOS-layout.a */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		87900D522E6BDDAA00989E5D /* images */ = {
+			isa = PBXGroup;
+			children = (
+				87900D532E6BDDD500989E5D /* icon_t2.png */,
+			);
+			path = images;
 			sourceTree = "<group>";
 		};
 		CB8754A28018552DCFFC7D5E /* Pods */ = {
@@ -272,6 +291,8 @@
 			files = (
 				22E557DE2572348300998C86 /* Assets.xcassets in Resources */,
 				873C56BF2E690D4C00B5FBF9 /* StackLayoutViewController.xib in Resources */,
+				87900D542E6BDDD500989E5D /* icon_t2.png in Resources */,
+				8787AFEA2E6C2AC400CCF629 /* StackLayoutRatioViewController.xib in Resources */,
 				2264006F25727B5E00AC768B /* AutolayoutXibViewController.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -322,6 +343,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8787AFE92E6C2AC400CCF629 /* StackLayoutRatioViewController.m in Sources */,
 				2264007225728E1B00AC768B /* MasonryViewController.m in Sources */,
 				22E557D32572347F00998C86 /* AppDelegate.m in Sources */,
 				2264006E25727B5E00AC768B /* AutolayoutXibViewController.m in Sources */,
