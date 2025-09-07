@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="21507" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="21505"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="ActivityIndicatorViewBasicUsageViewController">
+            <connections>
+                <outlet property="activityIndicatorView" destination="PoP-wQ-TsP" id="6Yf-U3-hwv"/>
+                <outlet property="view" destination="i5M-Pr-FkT" id="sfx-zR-JGt"/>
+            </connections>
+        </placeholder>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view clearsContextBeforeDrawing="NO" contentMode="scaleToFill" id="i5M-Pr-FkT">
+            <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="10" translatesAutoresizingMaskIntoConstraints="NO" id="aAs-Gq-KUL">
+                    <rect key="frame" x="0.0" y="58.999999999999993" width="393" height="64.333333333333314"/>
+                    <subviews>
+                        <stackView opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="lO4-tf-Tjg">
+                            <rect key="frame" x="0.0" y="0.0" width="393" height="34.333333333333336"/>
+                            <subviews>
+                                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="BlJ-Rd-Vsf">
+                                    <rect key="frame" x="0.0" y="0.0" width="196.66666666666666" height="34.333333333333336"/>
+                                    <state key="normal" title="Button"/>
+                                    <buttonConfiguration key="configuration" style="filled" title="开始"/>
+                                    <connections>
+                                        <action selector="onClickedStart:" destination="-1" eventType="touchUpInside" id="I3p-5O-EBp"/>
+                                    </connections>
+                                </button>
+                                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="nTK-d5-UJy">
+                                    <rect key="frame" x="196.66666666666663" y="0.0" width="196.33333333333337" height="34.333333333333336"/>
+                                    <state key="normal" title="Button"/>
+                                    <buttonConfiguration key="configuration" style="filled" title="停止"/>
+                                    <connections>
+                                        <action selector="onClickedStop:" destination="-1" eventType="touchUpInside" id="8eP-i5-WQU"/>
+                                    </connections>
+                                </button>
+                            </subviews>
+                        </stackView>
+                        <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" translatesAutoresizingMaskIntoConstraints="NO" id="BGc-aB-R4M">
+                            <rect key="frame" x="0.0" y="44.333333333333329" width="393" height="20"/>
+                            <subviews>
+                                <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" style="medium" translatesAutoresizingMaskIntoConstraints="NO" id="PoP-wQ-TsP">
+                                    <rect key="frame" x="0.0" y="0.0" width="393" height="20"/>
+                                </activityIndicatorView>
+                            </subviews>
+                        </stackView>
+                    </subviews>
+                </stackView>
+            </subviews>
+            <viewLayoutGuide key="safeArea" id="Q5M-cg-NOt"/>
+            <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+            <constraints>
+                <constraint firstItem="aAs-Gq-KUL" firstAttribute="top" secondItem="Q5M-cg-NOt" secondAttribute="top" id="47b-fJ-O6c"/>
+                <constraint firstItem="aAs-Gq-KUL" firstAttribute="trailing" secondItem="Q5M-cg-NOt" secondAttribute="trailing" id="RU0-2U-XDZ"/>
+                <constraint firstItem="aAs-Gq-KUL" firstAttribute="leading" secondItem="Q5M-cg-NOt" secondAttribute="leading" id="b5O-mk-h7F"/>
+            </constraints>
+            <point key="canvasLocation" x="132" y="-11"/>
+        </view>
+    </objects>
+    <resources>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+    </resources>
+</document>
