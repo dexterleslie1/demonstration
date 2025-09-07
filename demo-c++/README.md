@@ -571,3 +571,20 @@ gcc -save-temps main.c -o hello
 `-M`：生成 `.c` 文件与头文件依赖关系以用于 `Makefile`，包括系统库的头文件
 
 `-MM`：生成 `.c` 文件与头文件依赖关系以用于 `Makefile`，不包括系统的头文件
+
+
+
+## `GCC`编译器工具集 - 静态库
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-c++/demo-static-library)
+
+示例中：
+
+- `demo-project-library` 用于生成静态库。
+- `demo-project-reference` 用于调用静态库测试。
+
+测试步骤如下：
+
+- 在模块 `demo-project-library` 运行 `build.sh` 生成静态库
+- 复制静态库头文件 `mylib.h` 和 `libmylib.a` 到模块 `demo-project-reference` 的 `include` 和 `lib` 目录中（第三方也是这样提供 `xxx.a` 和头文件 `xxx.h` 供调用方使用）。
+- 使用 `demo-project-reference` 调用 `mylib` 静态库，运行 `build.sh` 生成 `test` 可执行文件，`./test` 运行程序。
