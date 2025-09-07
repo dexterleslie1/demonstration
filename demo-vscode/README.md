@@ -16,6 +16,8 @@ sudo apt install ./code_xxxxx.deb
 
 ## `Typora`插件安装
 
+> 提示：在编辑大纲很长的 `md` 文件时 `Typora` 插件不方便，因为插件默认是展开大纲并且没有滚动条拖动按钮，导致使用鼠标滚轮不方便快速定位到指定的大纲位置。
+>
 > 在插件管理器搜索 `typora`（提供者为 `Database Client`），这样就能够在 `VSCode` 像 `Typora` 那样编辑 `md` 文件。
 
 ## 配置git
