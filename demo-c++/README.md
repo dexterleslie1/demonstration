@@ -588,3 +588,22 @@ gcc -save-temps main.c -o hello
 - 在模块 `demo-project-library` 运行 `build.sh` 生成静态库
 - 复制静态库头文件 `mylib.h` 和 `libmylib.a` 到模块 `demo-project-reference` 的 `include` 和 `lib` 目录中（第三方也是这样提供 `xxx.a` 和头文件 `xxx.h` 供调用方使用）。
 - 使用 `demo-project-reference` 调用 `mylib` 静态库，运行 `build.sh` 生成 `test` 可执行文件，`./test` 运行程序。
+
+
+
+## `GCC`编译器工具集 - 动态库
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-c++/demo-shared-library)
+>
+>提示：动态链接库编译时需要添加 `-fPIC`，为了编译出 `so` 库地址无关代码，编译可执行程序时 `gcc` 使用 `-l` 指定 `so` 库（去除 `lib` 前缀和 `.so` 后缀，例如：`libmylib.so` 为 `mylib`）`-L` 指定 `so` 库路径，发布 `so` 库到系统 `/lib/` 目录，否则在运行可执行文件时报告无法找到动态链接库错误。
+
+测试步骤如下：
+
+- `demo-library` 运行 `build.sh`
+- `demo-executable` 运行 `build.sh`
+- 运行 `./test`
+
+
+
+
+
