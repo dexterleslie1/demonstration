@@ -669,6 +669,157 @@ npm start
 
 
 
+### `React` 片段
+
+在 JSX（React 的语法扩展）中，`<></>` 是 **Fragment（片段）的短语法**，用于在不向 DOM 中添加额外父节点的情况下，包裹多个子元素。它的核心作用是解决 JSX 要求“单一根元素”的限制，同时保持 DOM 结构的简洁。
+
+
+#### 一、为什么需要 Fragment？
+JSX 有一个重要规则：**一个组件或表达式的返回值必须有且仅有一个根元素**。例如，以下代码会直接报错：
+```jsx
+// 错误：JSX 表达式必须有一个单一根元素
+return (
+  <h1>标题</h1>
+  <p>内容</p>
+);
+```
+此时，`Fragment` 就像一个“隐形容器”，可以包裹多个子元素，使 JSX 满足“单一根元素”的要求，同时**不会在最终渲染的 DOM 中生成任何实际节点**。
+
+
+#### 二、`<></>` 的两种形式
+React 支持两种 Fragment 写法：
+
+
+##### 1. 短语法（`<></>`）
+最简洁的写法，用空标签 `<></>` 包裹子元素：
+```jsx
+return (
+  <>  {/* 短语法 Fragment */}
+    <h1>标题</h1>
+    <p>内容</p>
+  </>
+);
+```
+**特点**：
+- 语法简洁，无需导入 `React`。
+- **不支持属性**（如 `key`、`className` 等），仅用于纯包裹场景。
+
+
+##### 2. 显式语法（`<React.Fragment>`）
+用完整的 `<React.Fragment>` 标签包裹子元素：
+```jsx
+import React from 'react';
+
+return (
+  <React.Fragment>  {/* 显式 Fragment */}
+    <h1>标题</h1>
+    <p>内容</p>
+  </React.Fragment>
+);
+```
+**特点**：
+- 支持添加属性（如 `key`、`className` 等），适用于需要为片段添加元信息的场景（例如列表渲染时的 `key`）。
+- 在 React 开发工具中会显示为 `<Fragment>` 标签（但 DOM 中仍无实际节点）。
+
+
+#### 三、Fragment 的渲染结果
+无论是短语法还是显式语法，Fragment **最终不会生成任何 DOM 节点**。例如：
+```jsx
+// JSX 代码
+return (
+  <React.Fragment>
+    <span>A</span>
+    <span>B</span>
+  </React.Fragment>
+);
+
+// 渲染后的 DOM 结构
+<span>A</span>
+<span>B</span>
+```
+而如果不用 Fragment，直接返回两个 `<span>` 会报错；如果用 `<div>` 包裹，则 DOM 中会多出一个 `<div>` 节点：
+```jsx
+// 用 div 包裹（会生成额外 DOM 节点）
+return (
+  <div>
+    <span>A</span>
+    <span>B</span>
+  </div>
+);
+
+// 渲染后的 DOM 结构
+<div>
+  <span>A</span>
+  <span>B</span>
+</div>
+```
+
+
+#### 四、使用场景
+Fragment 适用于以下场景：
+
+
+##### 1. 列表渲染（需 `key` 时）
+当需要渲染列表且每个列表项需要 `key` 时，Fragment 可以作为父容器并传递 `key`：
+```jsx
+const List = ({ items }) => (
+  <ul>
+    {items.map((item) => (
+      <React.Fragment key={item.id}>  {/* Fragment 作为父容器并传递 key */}
+        <li>{item.name}</li>
+        <li>{item.desc}</li>
+      </React.Fragment>
+    ))}
+  </ul>
+);
+```
+此时若用短语法 `<></>`，则无法传递 `key`，会导致 React 报错（列表项必须有唯一 `key`）。
+
+
+##### 2. 避免额外 DOM 节点
+当需要分组元素但不想影响布局时（例如样式受父容器限制），Fragment 可以保持 DOM 结构干净：
+```jsx
+return (
+  <div className="container">
+    {/* 用 Fragment 包裹，避免额外 div 影响样式 */}
+    <>
+      <h2>子标题</h2>
+      <p>子内容</p>
+    </>
+  </div>
+);
+```
+
+
+##### 3. 条件渲染多个元素
+在条件渲染中，若需要根据条件返回多个元素，Fragment 可以避免额外的父节点：
+```jsx
+return (
+  <div>
+    {isLoggedIn ? (
+      <>  {/* 条件满足时返回多个元素 */}
+        <button>退出登录</button>
+        <span>欢迎回来！</span>
+      </>
+    ) : (
+      <button>登录</button>
+    )}
+  </div>
+);
+```
+
+
+#### 五、注意事项
+- **短语法不支持属性**：`<></>` 不能添加 `key`、`className` 等属性，必须用 `<React.Fragment>` 替代。
+- **嵌套限制**：Fragment 可以嵌套使用，但通常没有必要（除非需要多层分组）。
+- **性能优化**：Fragment 不会生成 DOM 节点，因此在频繁更新的场景中（如列表渲染）比 `<div>` 更高效。
+
+
+#### 总结
+`<></>` 是 React 中 Fragment 的短语法，用于在不添加额外 DOM 节点的情况下包裹多个子元素，解决 JSX“单一根元素”的限制。它适用于列表渲染、条件渲染、避免额外布局节点等场景，是 React 开发中保持 DOM 结构简洁的重要工具。
+
+
+
 ## 组件
 
 ### 基于非脚手架函数式自定义组件
@@ -1603,6 +1754,8 @@ export default class MyComponent extends Component {
 
 ## 事件处理
 
+### 基本用法
+
 >详细用法请参考本站 [示例1](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-reactjs/%E9%9D%9E%E8%84%9A%E6%89%8B%E6%9E%B6/%E4%BA%8B%E4%BB%B6%E5%A4%84%E7%90%86)、[示例2](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-reactjs/react-handling-event)
 
 `index.html`：
@@ -1697,6 +1850,25 @@ function App() {
 
 export default App;
 
+```
+
+
+
+### 阻止事件默认行为
+
+>阻止 `a` 标签点击后默认跳转到指定 `url` 行为。
+
+```jsx
+{
+  currentPath !== '/' && currentPath !== '/productList' && (
+    <>&nbsp;&nbsp;<a href="#" onClick={(e)=>{
+      // 阻止 a 标签点击默认跳转行为
+      e.preventDefault()
+      // 返回上一页
+      history.goBack()
+    }}>返回</a></>
+  )
+}
 ```
 
 
@@ -1970,6 +2142,50 @@ export default class App extends React.Component {
 > 提示：配置 `setupProxy.js` 文件，不需要 `npm install http-proxy-middleware`，因为脚手架已经包含此组件。
 >
 > 详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-reactjs/react-config-http-proxy)
+
+新建 `src/setupProxy.js`
+
+```js
+const { createProxyMiddleware } = require("http-proxy-middleware")
+
+// https://create-react-app.dev/docs/proxying-api-requests-in-development/
+module.exports = function (app) {
+    app.use(
+        createProxyMiddleware("/api/v1", {
+            target: "https://httpbin.org",
+            // 需要修改请求头中的Host值为httpbin.org
+            changeOrigin: true,
+            pathRewrite: { "^/api/v1": "" },
+        }),
+        createProxyMiddleware("/api/v2", {
+            target: "https://httpbin.org",
+            changeOrigin: true,
+            pathRewrite: { "^/api/v2": "" },
+        })
+    )
+}
+
+```
+
+`axios` 请求
+
+```js
+import axios from 'axios'
+
+handleOnClick2 = () => {
+    axios.get("/api/v2/get")
+      .then(
+        response => {
+          console.log(response)
+        },
+        error => {
+          console.error(error)
+        }
+      )
+  }
+```
+
+`axios` 发出的请求被 `http proxy` 代理到 `https://httpbin.org`。
 
 
 
@@ -2717,6 +2933,175 @@ export default MyComponent;
   ```
 
   
+
+### 返回上一页
+
+在 React 中实现“返回上一页”的功能，主要依赖浏览器历史记录 API 或路由库（如 React Router）提供的导航方法。以下是具体实现方式和场景说明：
+
+
+#### 一、使用 React Router（推荐，SPA 场景）
+如果项目使用 **React Router** 管理路由（主流 SPA 方案），推荐通过路由库提供的导航方法实现返回上一页，确保与路由状态同步。
+
+
+##### 1. React Router v6 及以上（使用 `useNavigate` 钩子）
+React Router v6 推荐使用 `useNavigate` 钩子替代旧版的 `useHistory`，它提供了更灵活的导航控制。
+
+**步骤**：
+1. 导入 `useNavigate`；
+2. 在组件中调用 `navigate(-1)` 触发返回上一页。
+
+**代码示例**：
+```jsx
+import { useNavigate } from 'react-router-dom';
+
+function BackButton() {
+  // 获取导航函数（navigate）
+  const navigate = useNavigate();
+
+  // 返回上一页（等价于浏览器后退）
+  const handleBack = () => {
+    navigate(-1); // -1 表示后退一步，1 表示前进一步
+  };
+
+  return (
+    <button onClick={handleBack}>
+      返回上一页
+    </button>
+  );
+}
+
+export default BackButton;
+```
+
+
+##### 2. React Router v5 及以下（使用 `useHistory` 钩子或 `withRouter`）
+React Router v5 中使用 `useHistory` 钩子获取 `history` 对象，或通过 `withRouter` 高阶组件注入 `history`。
+
+**方式 1：`useHistory` 钩子（函数组件）**：
+```jsx
+import { useHistory } from 'react-router-dom';
+
+function BackButton() {
+  const history = useHistory();
+
+  const handleBack = () => {
+    history.goBack(); // 等价于 history.go(-1)
+  };
+
+  return (
+    <button onClick={handleBack}>
+      返回上一页
+    </button>
+  );
+}
+```
+
+**方式 2：`withRouter` 高阶组件（类组件）**：
+```jsx
+import { withRouter } from 'react-router-dom';
+
+class BackButton extends React.Component {
+  handleBack = () => {
+    this.props.history.goBack();
+  };
+
+  render() {
+    return (
+      <button onClick={this.handleBack}>
+        返回上一页
+      </button>
+    );
+  }
+}
+
+// 使用 withRouter 注入 history 对象
+export default withRouter(BackButton);
+```
+
+
+#### 二、不使用路由库（原生浏览器 API）
+如果项目未使用 React Router（如简单页面），可以直接调用浏览器原生的 `history` 对象实现返回。
+
+
+##### 1. `history.back()`
+直接调用 `window.history.back()`，等价于用户点击浏览器“后退”按钮。
+
+**代码示例**：
+```jsx
+function BackButton() {
+  const handleBack = () => {
+    window.history.back(); // 返回上一页
+  };
+
+  return (
+    <button onClick={handleBack}>
+      返回上一页
+    </button>
+  );
+}
+```
+
+
+##### 2. `history.go(-1)`
+`history.go(n)` 可以跳转到历史记录中相对于当前页面的第 `n` 步（`n=-1` 表示后退一步，`n=1` 表示前进一步）。
+
+**代码示例**：
+```jsx
+function BackButton() {
+  const handleBack = () => {
+    window.history.go(-1); // 等价于 history.back()
+  };
+
+  return (
+    <button onClick={handleBack}>
+      返回上一页
+    </button>
+  );
+}
+```
+
+
+#### 三、注意事项
+1. **SPA 路由同步**：  
+   在 React Router 管理的 SPA 中，优先使用路由库的 `navigate` 或 `history` 方法，因为它们会同步更新路由状态（如匹配的路由组件、参数等），避免页面状态与路由不一致。
+
+2. **历史记录为空的情况**：  
+   如果用户直接访问当前页面（历史记录仅有当前页），调用 `back()` 或 `go(-1)` 会跳转到浏览器历史的上一个记录（可能是其他网站）。如需避免这种情况，可以添加判断：
+   ```jsx
+   // React Router v6 中判断是否可后退
+   const navigate = useNavigate();
+   const canGoBack = window.history.length > 1; // 历史记录长度大于 1 时可后退
+   
+   const handleBack = () => {
+     canGoBack ? navigate(-1) : navigate('/'); // 不可后退时跳转到首页
+   };
+   ```
+
+3. **类组件与函数组件**：  
+   React Router v6 仅支持函数组件使用 `useNavigate`，类组件需通过包装组件或升级到函数组件实现。
+
+
+#### 总结
+- **推荐方案**：使用 React Router 的 `useNavigate`（v6）或 `useHistory`（v5），与路由状态深度集成。  
+- **简单场景**：直接使用 `window.history.back()` 或 `go(-1)`，适合未使用路由库的小型项目。  
+- **边界处理**：判断历史记录长度，避免无后退路径时跳转到外部页面。
+
+
+
+#### 示例
+
+```jsx
+{
+  currentPath !== '/' && currentPath !== '/productList' && (
+    <>&nbsp;&nbsp;<a href="#" onClick={(e)=>{
+      // 阻止 a 标签点击默认跳转行为
+      e.preventDefault()
+      // 返回上一页
+      history.goBack()
+    }}>返回</a></>
+  )
+}
+```
 
 
 
