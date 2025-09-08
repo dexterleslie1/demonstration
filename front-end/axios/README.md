@@ -1,8 +1,4 @@
-# Axios
-
-
-
-## Vue2 集成 axios
+## 集成`Vue2`
 
 >[参考链接](https://juejin.cn/post/7080965261448183845)
 >
@@ -120,6 +116,141 @@ handleClick() {
         alert(JSON.stringify(error))
     })
 }
+```
+
+
+
+## 集成`React`
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/axios/demo-react)
+
+安装 `axios` 依赖
+
+```sh
+npm install axios
+```
+
+开发环境配置代理：新建文件 `src/setupProxy.js`
+
+```js
+const { createProxyMiddleware } = require("http-proxy-middleware")
+
+// https://create-react-app.dev/docs/proxying-api-requests-in-development/
+module.exports = function (app) {
+    app.use(
+        createProxyMiddleware("/api", {
+            target: "http://localhost:8080",
+            // 需要修改请求头中的Host值为httpbin.org
+            changeOrigin: true,
+            //pathRewrite: { "^/api/v1": "" },
+        })
+    )
+}
+```
+
+配置 `axios` 实例：新疆文件 `src/api/axios.js`
+
+```js
+// src/api/axios.js
+import axios from 'axios';
+
+const instance = axios.create({
+  baseURL: '/',
+  timeout: 5000,
+  headers: {
+    'Content-Type': 'application/json',
+  }
+});
+
+// 请求拦截器
+instance.interceptors.request.use((config) => {
+    // 调试打印
+    // console.log(`请求前拦截config=${JSON.stringify(config)}`);
+
+    // 判断是否需要自动添加header1
+    if (config?.needHeader) {
+        if (!config.headers) {
+            config.headers = {}
+        }
+        config.headers.header1 = 'header1 value'
+    }
+
+    return config;
+}, (error) => {
+    // 暂时不清楚什么情况下request会回调此函数
+    console.log(error);
+});
+
+// 响应拦截器
+instance.interceptors.response.use((config) => {
+    // 调试打印
+    // console.log(`请求响应拦截config=${JSON.stringify(config)}`);
+
+    if (config.data.errorCode > 0) {
+        let errorCode = config.data.errorCode
+        let errorMessage = config.data.errorMessage
+
+        if (!errorCode || !errorMessage) {
+            errorCode = 5000
+            errorMessage = '服务器没有返回具体错误信息'
+        }
+
+        return Promise.reject({ errorCode, errorMessage })
+    }
+
+    // 忽略服务器返回config.data.errorCode、config.data.errorMessage直接返回data数据
+    if (config.headers['content-type'] && config.headers['content-type'].startsWith('application/json')) {
+        return config.data.data
+    } else {
+        return config.data
+    }
+}, (error) => {
+    // 调试打印
+    // console.log(`error ${JSON.stringify(error)}`)
+
+    // 非 http 200 时错误处理回调
+    if (error && !error.response) {
+        // 网络错误
+        return Promise.reject({ errorCode: 5000, errorMessage: error.message, httpStatus: -1 })
+    } else {
+        // 调试打印
+        // console.log(`error ${JSON.stringify(error)}`)
+
+        let response = error.response
+        let httpStatus = response.status
+        let errorCode = response?.data?.errorCode ? response.data.errorCode : 5000
+        let errorMessage = response?.data?.errorMessage ? response.data.errorMessage : error.message
+        return Promise.reject({ errorCode, errorMessage, httpStatus })
+    }
+});
+
+export default instance;
+```
+
+调用 `axios`
+
+```js
+import axios from './api/axios';
+
+function App() {
+  return (
+    <div className="App">
+      <button onClick={(e)=>{
+        axios.get("/api/v1/get", {
+          needHeader: true,
+          params: { param1: "Dexterleslie0" },
+          headers: { header1: "my-header1", header2: 'my-header2' }
+        }).then((data) => {
+          alert(JSON.stringify(data))
+        }).catch(function (error) {
+          alert(JSON.stringify(error))
+        })
+      }}>测试</button>
+    </div>
+  );
+}
+
+export default App;
 ```
 
 
