@@ -1950,6 +1950,11 @@ import './index.css';
     background-color: green;
     margin: 10px;
 }
+
+/* 用于协助测试嵌套样式引用 */
+.mystyle .nested-1 {
+    color: orange;
+}
 ```
 
 `XxxComponent/index.jsx` 内容如下：
@@ -1962,7 +1967,8 @@ export default class Component1 extends React.Component {
     render() {
         return (
             <div className={component1css.mystyle}>
-                Component1
+                {/* 用于协助测试嵌套样式引用 */}
+                <div className={component1css['nested-1']}>Component1</div>
             </div>
         )
     }
@@ -2048,6 +2054,8 @@ export default class ComponentScss extends React.Component {
 
 ### 独立样式文件
 
+>说明：全局作用域（可能造成样式冲突）。
+>
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-reactjs/react-css)
 
 `index.css`：
@@ -2677,7 +2685,7 @@ export default class Detail extends Component {
 
 ```
 
-编程式路由主要通过调用`this.props.history.push(`/home/message/detail/${id}/${content}`)`、`this.props.history.replace(`/home/message/detail/${id}/${content}`)`接口实现。
+编程式路由主要通过调用`this.props.history.push(``/home/message/detail/${id}/${content}``)`、`this.props.history.replace(``/home/message/detail/${id}/${content}``)`接口实现。
 
 
 
