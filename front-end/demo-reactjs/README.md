@@ -643,33 +643,195 @@ npm start
 
 
 
-## `jsx` 语法规则
+## `JSX`语法规则
 
-### 什么是 `JSX`
+### 什么是`JSX`
 
 >[参考维基百科](https://en.wikipedia.org/wiki/JSX_(JavaScript))
 
 `JSX`（`JavaScript XML`，正式名称为 `JavaScript Syntax eXtension`）是一种 `JavaScript` 扩展，允许使用类似 `XML` 的语法创建文档对象模型 (`DOM`) 树。 [1] `JSX` 最初由 `Facebook` 创建，用于与 `React` 一起使用，现已被多个 `Web` 框架采用。[2]: 5 [3]: 11  作为一种语法糖，`JSX` 通常被转换为嵌套的 `JavaScript` 函数调用，其结构与原始 `JSX` 类似。
 
-### 创建虚拟 `dom` 语法
+### 创建虚拟`DOM`语法
 
 > 详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-reactjs/%E9%9D%9E%E8%84%9A%E6%89%8B%E6%9E%B6/jsx%E8%AF%AD%E6%B3%95%E8%A7%84%E5%88%99/%E5%88%9B%E5%BB%BA%E8%99%9A%E6%8B%9Fdom%E8%AF%AD%E6%B3%95)
 
-### 插入 `js` 表达式
+`index.html`
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <!-- reactjs追加dom的容器 -->
+    <div id="test"></div>
+
+    <script type="text/javascript" src="../../js/react.development.js" ></script>
+    <script type="text/javascript" src="../../js/react-dom.development.js" ></script>
+    <script type="text/javascript" src="../../js/babel.min.js" ></script>
+
+    <!-- 因为使用jsx语法编写虚拟dom代码，所以这里type必须为text/babel -->
+    <script type="text/babel">
+        const vdom = (
+            <h1>Hello, React</h1>
+        )
+
+        // 渲染虚拟dom到页面容器中
+        ReactDOM.render(vdom, document.getElementById("test"))
+    </script>
+</body>
+</html>
+```
+
+
+
+### 插入`JS`表达式
 
 > 详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-reactjs/%E9%9D%9E%E8%84%9A%E6%89%8B%E6%9E%B6/jsx%E8%AF%AD%E6%B3%95%E8%A7%84%E5%88%99/%E6%8F%92%E5%85%A5js%E8%A1%A8%E8%BE%BE%E5%BC%8F)
 
-### 设置虚拟 `dom` 的 `class` 属性
+`index.html`
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <!-- reactjs追加dom的容器 -->
+    <div id="test"></div>
+
+    <script type="text/javascript" src="../../js/react.development.js" ></script>
+    <script type="text/javascript" src="../../js/react-dom.development.js" ></script>
+    <script type="text/javascript" src="../../js/babel.min.js" ></script>
+
+    <!-- 因为使用jsx语法编写虚拟dom代码，所以这里type必须为text/babel -->
+    <script type="text/babel">
+        const myId = "aBC123"
+        const myData = "Hello, React"
+
+        const items = ["Angular","ReactJS", "Vue"]
+
+        const vdom = (
+            <div>
+                <h1 id={myId.toLowerCase()}>{myData.toLowerCase()}</h1>
+                <hr/>
+                <div>
+                    <h1>{myData}</h1>
+                    <ul>
+                        {
+                            // 使用 {} 插入 JS 表达式
+                            items.map(function(item, index) {
+                                return <li key={index}>{item}</li>
+                            })
+                        }
+                    </ul>
+                </div>
+            </div>
+        )
+
+        // 渲染虚拟dom到页面容器中
+        ReactDOM.render(vdom, document.getElementById("test"))
+    </script>
+</body>
+</html>
+```
+
+
+
+### 设置虚拟`DOM`的`class`属性
 
 > 详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-reactjs/%E9%9D%9E%E8%84%9A%E6%89%8B%E6%9E%B6/jsx%E8%AF%AD%E6%B3%95%E8%A7%84%E5%88%99/%E8%AE%BE%E7%BD%AE%E8%99%9A%E6%8B%9Fdom%E7%9A%84class%E5%B1%9E%E6%80%A7)
 
-### 设置虚拟 `dom` 的 `style` 属性
+`index.html`
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style type="text/css">
+        .title {
+            background-color: orange;
+        }
+    </style>
+</head>
+<body>
+    <!-- reactjs追加dom的容器 -->
+    <div id="test"></div>
+
+    <script type="text/javascript" src="../../js/react.development.js" ></script>
+    <script type="text/javascript" src="../../js/react-dom.development.js" ></script>
+    <script type="text/javascript" src="../../js/babel.min.js" ></script>
+
+    <!-- 因为使用jsx语法编写虚拟dom代码，所以这里type必须为text/babel -->
+    <script type="text/babel">
+        const myId = "aBC123"
+        const myData = "Hello, React"
+
+        const vdom = (
+            /* 使用className设置class属性*/
+            <h1 className="title" id={myId.toLowerCase()}>{myData.toLowerCase()}</h1>
+        )
+
+        // 渲染虚拟dom到页面容器中
+        ReactDOM.render(vdom, document.getElementById("test"))
+    </script>
+</body>
+</html>
+```
+
+
+
+### 设置虚拟`DOM`的`style`属性
 
 > 详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-reactjs/%E9%9D%9E%E8%84%9A%E6%89%8B%E6%9E%B6/jsx%E8%AF%AD%E6%B3%95%E8%A7%84%E5%88%99/%E8%AE%BE%E7%BD%AE%E8%99%9A%E6%8B%9Fdom%E7%9A%84style%E5%B1%9E%E6%80%A7)
 
+`index.html`
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <!-- reactjs追加dom的容器 -->
+    <div id="test"></div>
+
+    <script type="text/javascript" src="../../js/react.development.js" ></script>
+    <script type="text/javascript" src="../../js/react-dom.development.js" ></script>
+    <script type="text/javascript" src="../../js/babel.min.js" ></script>
+
+    <!-- 因为使用jsx语法编写虚拟dom代码，所以这里type必须为text/babel -->
+    <script type="text/babel">
+        const myId = "aBC123"
+        const myData = "Hello, React"
+
+        const vdom = (
+            /* 设置 style 属性 */
+            <h1 style={{backgroundColor: "orange"}} id={myId.toLowerCase()}>{myData.toLowerCase()}</h1>
+        )
+
+        // 渲染虚拟dom到页面容器中
+        ReactDOM.render(vdom, document.getElementById("test"))
+    </script>
+</body>
+</html>
+```
 
 
-### `React` 片段
+
+### `React`片段
 
 在 JSX（React 的语法扩展）中，`<></>` 是 **Fragment（片段）的短语法**，用于在不向 DOM 中添加额外父节点的情况下，包裹多个子元素。它的核心作用是解决 JSX 要求“单一根元素”的限制，同时保持 DOM 结构的简洁。
 
