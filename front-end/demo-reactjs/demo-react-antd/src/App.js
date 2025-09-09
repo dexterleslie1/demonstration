@@ -1,8 +1,12 @@
 import logo from './logo.svg';
 import './App.css';
-import { Button, message, notification, Modal } from 'antd';
+import React, { useState } from 'react';
+import { Button, message, notification, Modal, Spin } from 'antd';
 
 function App() {
+
+  const [loading, setLoading] = useState(false);
+
   return (
     <div className="App" style={{ padding: 20 }}>
       <Button type="primary" onClick={(e) => {
@@ -16,9 +20,18 @@ function App() {
       }}>消息提示warning</Button>
       &nbsp;<Button type="primary" onClick={(e) => {
         // 2.5秒后自动关闭
+        // 没有遮罩层
         message.loading('加载中...', 2.5)
           .then(() => message.success('加载完成'));
-      }}>消息提示loading...</Button>
+      }}>消息提示 - 2.5秒后自动关闭loading...</Button>
+      &nbsp;<Button type="primary" onClick={(e) => {
+        const closeLoading = message.loading('加载中...', 0/* 表示不自动关闭 loading... */);
+
+        // 2 秒后自动关闭 loading...
+        window.setTimeout(() => {
+          closeLoading()
+        }, 2000)
+      }}>消息提示 - 主动关闭loading...</Button>
       <br /><br />
 
       <Button type="primary" onClick={(e) => {
@@ -70,6 +83,33 @@ function App() {
           },
         });
       }}>对话框confirm</Button>
+      <br /><br />
+
+      <Button type="primary" onClick={(e) => {
+        setLoading(true)
+
+        window.setTimeout(() => {
+          setLoading(false)
+        }, 2000)
+      }}>显示加载中对话框</Button>
+      {
+        loading && (<div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 9999,
+          }}
+        >
+          <Spin tip="加载中。。。"></Spin>
+        </div>)
+      }
     </div>
   );
 }

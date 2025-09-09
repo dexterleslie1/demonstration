@@ -2376,6 +2376,8 @@ npm install react-router-dom@5
 `index.js`需要使用`<BrowserRouter/>`标签包含`<App/>`标签
 
 ```jsx
+import { BrowserRouter } from 'react-router-dom'
+
 ReactDOM.render(
   <BrowserRouter>
     <App />
@@ -3414,21 +3416,30 @@ import { Button, message } from 'antd';
 
 function App() {
   return (
-    <div className="App" style={{padding:20}}>
-      <Button type="primary" onClick={(e)=>{
+    <div className="App" style={{ padding: 20 }}>
+      <Button type="primary" onClick={(e) => {
         message.success("成功")
       }}>消息提示success</Button>
-      &nbsp;<Button type="primary" onClick={(e)=>{
+      &nbsp;<Button type="primary" onClick={(e) => {
         message.error("错误")
       }}>消息提示error</Button>
-      &nbsp;<Button type="primary" onClick={(e)=>{
+      &nbsp;<Button type="primary" onClick={(e) => {
         message.warning("警告")
       }}>消息提示warning</Button>
-      &nbsp;<Button type="primary" onClick={(e)=>{
+      &nbsp;<Button type="primary" onClick={(e) => {
         // 2.5秒后自动关闭
+        // 没有遮罩层
         message.loading('加载中...', 2.5)
-        .then(() => message.success('加载完成'));
-      }}>消息提示loading...</Button>
+          .then(() => message.success('加载完成'));
+      }}>消息提示 - 2.5秒后自动关闭loading...</Button>
+      &nbsp;<Button type="primary" onClick={(e) => {
+        const closeLoading = message.loading('加载中...', 0/* 表示不自动关闭 loading... */);
+
+        // 2 秒后自动关闭 loading...
+        window.setTimeout(() => {
+          closeLoading()
+        }, 2000)
+      }}>消息提示 - 主动关闭loading...</Button>
     </div>
   );
 }
@@ -3520,6 +3531,57 @@ function App() {
           },
         });
       }}>对话框confirm</Button>
+    </div>
+  );
+}
+
+export default App;
+
+```
+
+## `antd`-`Spin`
+
+>说明：用于展示加载状态的组件，它可以提供优雅的加载提示效果。
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-reactjs/demo-react-antd)
+
+```jsx
+import logo from './logo.svg';
+import './App.css';
+import React, { useState } from 'react';
+import { Button, message, notification, Modal, Spin } from 'antd';
+
+function App() {
+
+  const [loading, setLoading] = useState(false);
+
+  return (
+    <div className="App" style={{ padding: 20 }}>
+      <Button type="primary" onClick={(e) => {
+        setLoading(true)
+
+        window.setTimeout(() => {
+          setLoading(false)
+        }, 2000)
+      }}>显示加载中对话框</Button>
+      {
+        loading && (<div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 9999,
+          }}
+        >
+          <Spin tip="加载中。。。"></Spin>
+        </div>)
+      }
     </div>
   );
 }
