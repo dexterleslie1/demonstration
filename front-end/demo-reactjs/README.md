@@ -3275,6 +3275,261 @@ function BackButton() {
 
 
 
+## `antd`- 概念
+
+好的，我们来详细解释一下 React Antd 是什么。
+
+### 核心定义
+
+**React Antd**（通常简称为 **Antd**）是一个基于 **React** 的**企业级 UI 设计语言和组件库**。它提供了大量高质量、可复用的预制组件，帮助开发者快速构建优雅、统一且交互丰富的用户界面。
+
+它的全称是 **Ant Design**，而 `antd` 则是其在 npm 上的包名。
+
+---
+
+### 详细解读
+
+你可以从以下几个层面来理解它：
+
+#### 1. 它是一个 **React 组件库**
+这是其最核心的身份。它并非一个独立的框架，而是专门为 React 应用程序服务的。它提供了一系列开箱即用的组件，例如：
+*   **基础组件**：Button（按钮）、Input（输入框）、Icon（图标）
+*   **布局组件**：Layout（布局）、Grid（栅格）、Space（间距）
+*   **数据展示组件**：Table（表格）、Card（卡片）、List（列表）
+*   **反馈组件**：Modal（对话框）、Notification（通知提醒框）、Spin（加载中）
+*   **导航组件**：Menu（菜单）、Dropdown（下拉菜单）、Steps（步骤条）
+*   **其他**：DatePicker（日期选择器）、Form（表单）、Upload（上传）等等。
+
+使用这些组件，你无需从零开始编写 HTML 和 CSS，只需像搭积木一样引入并配置它们即可。
+
+#### 2. 它是一套 **设计语言体系 (Design System)**
+Ant Design 不仅仅是一堆代码组件，它背后有一套完整的设计价值观和原则。这包括：
+*   **设计理念**：强调“自然”、“确定性”、“意义感”、“生长性”等。
+*   **设计模式**：定义了在常见业务场景（如表单、列表、数据展示）下的最佳交互和视觉实践。
+*   **视觉规范**：严格规定了色彩体系、字体、间距、阴影等视觉元素，确保最终产品的统一性和专业性。
+
+这意味着，即使是由不同开发者开发的不同页面，只要遵循 Ant Design 的规范，其最终的产品风格和用户体验也会保持高度一致。
+
+#### 3. 它是 **企业级** 的
+“企业级”这个词意味着：
+*   **高质量与稳定性**：组件经过大量阿里巴巴内部和外部企业的复杂业务场景考验，代码健壮，性能可靠。
+*   **功能丰富与完备**：组件功能非常全面，考虑了各种边界情况和业务需求。例如，Table 组件支持排序、筛选、分页、树形数据、编辑行、虚拟滚动等复杂功能。
+*   **国际化 (i18n)** 支持：内置多语言支持，可以轻松地将UI切换为英文、中文、阿拉伯文等多种语言。
+*   **可访问性 (a11y)**：关注无障碍访问，让残障人士也能使用你的产品。
+*   **主题定制**：虽然默认提供了一套精美的默认样式，但它也提供了强大的主题定制能力，你可以轻松地修改颜色、字体、边框等来匹配你公司的品牌风格。
+
+---
+
+### 主要特点
+
+1.  **开箱即用**：安装后即可使用，极大提升开发效率。
+2.  **类型友好**：使用 TypeScript 编写，提供了完整的类型定义，开发时智能提示极佳，代码更安全。
+3.  **详尽的文档**：官方文档（中文和英文）非常出色，包含每个组件的 API 说明、代码示例和设计指南。
+4.  **活跃的社区**：由阿里巴巴团队开发并维护，拥有庞大的用户社区，遇到问题容易找到解决方案。
+
+---
+
+### 一个简单的代码示例
+
+安装：
+```bash
+npm install antd
+```
+
+使用：
+```jsx
+// 1. 在 React 文件中引入需要的组件和样式
+import { Button, DatePicker } from 'antd';
+import 'antd/dist/reset.css'; // 引入样式
+
+// 2. 在组件中直接使用
+const MyApp = () => (
+  <div>
+    <Button type="primary">这是一个主要按钮</Button>
+    <DatePicker />
+  </div>
+);
+
+export default MyApp;
+```
+
+### 总结
+
+简单来说，**React Antd (Ant Design)** 是一个为 React 开发者准备的、功能强大且专业的 **“UI 组件工具箱”** 和 **“设计说明书”**。它旨在帮助团队和开发者快速构建高质量、风格统一的中后台企业级应用，是当前 React 生态中最流行、最受欢迎的 UI 库之一。
+
+如果你正在开发管理后台、数据中心、工具平台等类型的项目，Antd 是一个非常理想的选择。
+
+## `antd`- 集成
+
+>注意：需要使用 `react 16`，最新版本 `react`（版本为 `19`）和 `antd 5` 集成后调用 `message.success('成功')` 不能弹出消息提示。
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-reactjs/demo-react-antd)
+>
+>[官网](https://ant.design/)
+
+安装依赖
+
+```sh
+npm install antd
+```
+
+`src/index.js` 中配置 `react` 集成 `antd`
+
+```js
+// 引用 antd
+import 'antd/dist/reset.css';
+```
+
+引用 `antd` 中的 `Button` 组件，`src/App.js`
+
+```jsx
+import logo from './logo.svg';
+import './App.css';
+import { Button } from 'antd';
+
+function App() {
+  return (
+    <div className="App">
+      <Button type="primary" onClick={(e)=>{
+        alert("H")
+      }}>Antd 按钮</Button>
+    </div>
+  );
+}
+
+export default App;
+
+```
+
+## `antd`- 消息提示（`Message`）
+
+>说明：用于短暂的全局提示（自动消失），适合操作成功/失败反馈。
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-reactjs/demo-react-antd)
+
+```jsx
+import logo from './logo.svg';
+import './App.css';
+import { Button, message } from 'antd';
+
+function App() {
+  return (
+    <div className="App" style={{padding:20}}>
+      <Button type="primary" onClick={(e)=>{
+        message.success("成功")
+      }}>消息提示success</Button>
+      &nbsp;<Button type="primary" onClick={(e)=>{
+        message.error("错误")
+      }}>消息提示error</Button>
+      &nbsp;<Button type="primary" onClick={(e)=>{
+        message.warning("警告")
+      }}>消息提示warning</Button>
+      &nbsp;<Button type="primary" onClick={(e)=>{
+        // 2.5秒后自动关闭
+        message.loading('加载中...', 2.5)
+        .then(() => message.success('加载完成'));
+      }}>消息提示loading...</Button>
+    </div>
+  );
+}
+
+export default App;
+
+```
+
+## `antd`- 通知提醒（`Notification`）
+
+>说明：用于更复杂的通知（带标题、描述、图标等），通常出现在页面角落。
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-reactjs/demo-react-antd)
+
+```jsx
+import logo from './logo.svg';
+import './App.css';
+import { Button, notification } from 'antd';
+
+function App() {
+  return (
+    <div className="App" style={{ padding: 20 }}>
+      <Button type="primary" onClick={(e) => {
+        notification.open({
+          message: '通知标题',
+          description: '这是一条详细的通知描述...',
+          onClick: () => {
+            console.log('通知被点击了！');
+          },
+        });
+      }}>通知提醒open</Button>
+      &nbsp;<Button type="primary" onClick={(e) => {
+        notification.success({ message: '成功', description: '数据已保存' });
+      }}>通知提醒success</Button>
+      &nbsp;<Button type="primary" onClick={(e) => {
+        notification.error({ message: '错误', description: '请求失败' });
+      }}>通知提醒error</Button>
+      &nbsp;<Button type="primary" onClick={(e) => {
+        notification.info({ message: '信息', description: '新消息来了' });
+      }}>通知提醒info</Button>
+      &nbsp;<Button type="primary" onClick={(e) => {
+        notification.warning({ message: '警告', description: '磁盘空间不足' });
+      }}>通知提醒warning</Button>
+    </div>
+  );
+}
+
+export default App;
+
+```
+
+## `antd`- 对话框（`Modal`）
+
+>说明：用于需要用户交互的弹窗（确认框、表单等）。
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-reactjs/demo-react-antd)
+
+```jsx
+import logo from './logo.svg';
+import './App.css';
+import { Button, Modal } from 'antd';
+
+function App() {
+  return (
+    <div className="App" style={{ padding: 20 }}>
+      <Button type="primary" onClick={(e) => {
+        Modal.info({
+          title: '这是标题',
+          content: '这是内容...',
+          onOk() {
+            console.log('用户点击了确定');
+          },
+        });
+      }}>对话框info</Button>
+      &nbsp;<Button type="primary" onClick={(e) => {
+        Modal.success({ title: '成功', content: '操作已完成！' });
+      }}>对话框success</Button>
+      &nbsp;<Button type="primary" onClick={(e) => {
+        Modal.error({ title: '错误', content: '提交失败' });
+      }}>对话框error</Button>
+      &nbsp;<Button type="primary" onClick={(e) => {
+        Modal.confirm({
+          title: '确认删除？',
+          content: '确定要删除这条数据吗？',
+          okText: '删除',
+          cancelText: '取消',
+          onOk() {
+            console.log('执行删除操作');
+          },
+        });
+      }}>对话框confirm</Button>
+    </div>
+  );
+}
+
+export default App;
+
+```
+
+
+
 ## 综合案例 `demo-github-search`
 
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-reactjs/demo-github-search)
