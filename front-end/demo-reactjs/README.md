@@ -485,7 +485,14 @@ const [user, setUser] = useState(() => {
         // import { useState } from 'react'
         
         function MyCompoent() {
+            // 'Hello React!'：状态的初始值（可以是任意类型：字符串、数字、对象、数组等）。
+            // value：当前状态的值（等同于类组件中的 this.state.value）。
+            // setValue：更新状态的函数（等同于类组件中的 this.setState({ value: newValue })）。
             const [value, setValue] = React.useState('Hello React!')
+
+            // 在脚手架创建的项目中，直接使用 import 的 useState 函数定义状态变量
+            // const [value, setValue] = useState('Hello React!')
+
             return (
                 <div>
                     <div>{value}</div>
@@ -1106,7 +1113,44 @@ function ControlledInput() {
 ##### **适用场景**
 - 需要实时校验输入（如限制输入长度、格式）；  
 - 需要根据输入动态调整其他 UI（如自动补全、级联选择）；  
-- 需要表单提交前统一处理数据（避免直接操作 DOM）。  
+- 需要表单提交前统一处理数据（避免直接操作 DOM）。
+
+##### 示例
+
+>说明：`Html select` 组件双向数据绑定。
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-reactjs/demo-controlled-component-select)
+
+```jsx
+import React, { Component } from 'react'
+
+export default class MyComponent extends Component {
+
+    state = {
+        status: '',
+    }
+
+    render() {
+        return (
+            <div>
+                <select value={this.state.status/* 读取 state 中的值 */} onChange={(e) => {
+                    // 更新 state 中的值
+                    this.setState({ status: e.target.value })
+                }}>
+                    <option value="">全部</option>
+                    <option value="Unpay">未支付</option>
+                    <option value="Canceled">已取消</option>
+                </select>
+                <br />
+                <button onClick={(e) => { alert(this.state.status) }}>显示state中的status值</button>
+            </div>
+        )
+    }
+}
+
+```
+
+
 
 
 #### **非受控组件：DOM 状态驱动**
@@ -3342,7 +3386,6 @@ npm install antd
 ```jsx
 // 1. 在 React 文件中引入需要的组件和样式
 import { Button, DatePicker } from 'antd';
-import 'antd/dist/reset.css'; // 引入样式
 
 // 2. 在组件中直接使用
 const MyApp = () => (
@@ -3373,13 +3416,6 @@ export default MyApp;
 
 ```sh
 npm install antd
-```
-
-`src/index.js` 中配置 `react` 集成 `antd`
-
-```js
-// 引用 antd
-import 'antd/dist/reset.css';
 ```
 
 引用 `antd` 中的 `Button` 组件，`src/App.js`

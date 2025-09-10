@@ -21,7 +21,14 @@
         // import { useState } from 'react'
         
         function MyCompoent() {
+            // ​'Hello React!'​​：状态的初始值（可以是任意类型：字符串、数字、对象、数组等）。
+            // value：当前状态的值（等同于类组件中的 this.state.value）。
+            // ​​setValue​​：更新状态的函数（等同于类组件中的 this.setState({ value: newValue })）。
             const [value, setValue] = React.useState('Hello React!')
+
+            // 在脚手架创建的项目中，直接使用 import 的 useState 函数定义状态变量
+            // const [value, setValue] = useState('Hello React!')
+
             return (
                 <div>
                     <div>{value}</div>
