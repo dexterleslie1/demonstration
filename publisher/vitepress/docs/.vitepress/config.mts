@@ -568,16 +568,6 @@ export default defineConfig({
           ]
         }
       ],
-      '/android/': [
-        {
-          text: 'Android',
-          items: [
-            { text: '基础', link: '/android/README.md' },
-            { text: 'Android Studio', link: '/android/android-studio.md' },
-            { text: 'Gradle', link: '/android/gradle.md' },
-          ]
-        }
-      ],
       '/prometheus/': [
         {
           text: 'Prometheus',

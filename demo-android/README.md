@@ -1,4 +1,85 @@
-# `android`
+## `android studio` - 安装
+
+### `windows7、windows11、windows 2016`
+
+注意：用虚拟机安装`android studio`先登陆`vCenter`启用虚拟机虚拟化
+
+下载 `android-studio-ide-171.4408382-windows.exe` 或者最新版本的 `android studio` 双击安装
+
+选中`Android SDK`和`Intel HAXM`安装
+
+打开`android-studio`创建`BasicActivity`类型`helloworld`工程
+
+如果打开`helloworld`工程一直卡在`”Building ‘helloworld’ Gradle project info”`，那么点击`cancel`并且关闭`android studio`取消`gradle`下载
+打开目录`C:\Users\john\.gradle\wrapper\dists\gradle-4.1-all\bzyivzo6n839fup2jbap0tjew`复制`gradle-4.1-all.zip`到此目录下，再次打开`android studio`，这次会很快打开`helloworld`项目
+
+
+
+### `macOS`
+
+安装方式和`windows`方式没有区别，全部安装和配置都使用`android-studio`配置，无需打开命令行配置。
+
+
+
+### `Ubuntu`
+
+在`https://developer.android.com/studio/archive`下载`android-studio-2024.2.1.11-linux.tar.gz`
+
+切换到`root`用户
+
+```bash
+sudo -i
+```
+
+解压`android-studio-2024.2.1.11-linux.tar.gz`到`/usr/local`目录
+
+```bash
+cd /usr/local
+tar -xvzf android-studio-2024.2.1.11-linux.tar.gz
+```
+
+新建文件`/usr/share/applications/android-studio.desktop`内容如下：
+
+```properties
+[Desktop Entry]
+Encoding=UTF-8
+# https://askubuntu.com/questions/144968/set-variable-in-desktop-file
+Name=Android Studio
+Exec=sh /usr/local/android-studio/bin/studio.sh
+Icon=/usr/local/android-studio/bin/studio.svg
+Terminal=false
+Type=Application
+StartupNotify=true
+```
+
+通过`launch`应用程序功能输入`android studio`打开`android studio`
+
+在打开项目过程中，如果下载`gradle.zip`过慢，可以参考 [链接](/android/README.html#gradle-android-studio下载gradle慢) 解决此问题。
+
+
+
+## 运行谷歌的模拟器（`AVD`）慢
+
+>注意：个人电脑需要退出省电模式并接通电源，否则 `CPU` 功率太低导致 `AVD` 很慢。
+>
+>提示：
+>
+>- 使用服务器级的 `CPU` 运行 `AVD` 速度更加快。
+>- 使用 `Ubuntu20.4` 运行 `AVD` 速度更加快，可能是因为底层使用 `kvm` 虚拟化原因。
+
+运行谷歌的模拟器很慢，甚至在启动应用后经常会遇到 `ANR` 错误，这是因为运行了比较新版本的安卓操作系统，此时只需要切换到比较低版本的安卓系统（例如：`API 24 "Nougat"; Android 7.0 Google APIs`）并且把 `Emulated Performance` 中的 `Graphics Acceleration` 选中为 `Hardware` ，`AVD RAM（AVD运行内存）` 设置为 `4GB`，`VM Heap size（AVD中的每个应用运行内存）` 设置为 `256MB`。`Startup` 中的 `Default Boot` 设置为 `Cold`。
+
+
+
+## 问题列表
+
+
+
+### `android studio`引用远程仓库`jCenter`慢（`bintray`）
+
+>参考：https://blog.csdn.net/ygc87/article/details/82857611
+
+仓库替换为`maven{url 'http://maven.aliyun.com/nexus/content/groups/public/'}`
 
 
 
@@ -18,7 +99,7 @@
 
 
 
-### `ubuntu`配置`ndk`编译环境
+### `Ubuntu`配置`ndk`编译环境
 
 >https://www.jianshu.com/p/9ada3fd9c286
 
@@ -68,5 +149,54 @@ ndk-build --version
 
 ### 有哪些模拟器呢？
 
-MuMu模拟器：网易开发的模拟器，支持Windows和macOS，优化了游戏性能。通过 [链接](https://mumu.163.com/download/) 下载最新版模拟器，根据提示安装即可。
+`MuMu`模拟器：网易开发的模拟器，支持`Windows`和`macOS`，优化了游戏性能。通过 [链接](https://mumu.163.com/download/) 下载最新版模拟器，根据提示安装即可。
 
+
+
+## `gradle` - `android studio`下载`gradle`慢
+
+关闭`android studio`并到官网`https://gradle.org/releases`下载完整版的`gradle`
+
+复制下载的`gradle zip`文件到目录`/Users/macos/.gradle/wrapper/dists/gradle-3.3-all/55gk2rcmfc6p2dg9u9ohc3hw9`
+
+重新启动`android studio`
+
+
+
+## `gradle` - 和`gradle-plugin`对应版本
+
+> 官方说明：https://developer.android.com/studio/releases/gradle-plugin
+
+项目`build.gradle`
+
+```groovy
+buildscript {
+    repositories {
+        // Gradle 4.1 and higher include support for Google's Maven repo using
+        // the google() method. And you need to include this repo to download
+        // Android Gradle plugin 3.0.0 or higher.
+        google()
+        ...
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:3.4.2'
+    }
+}
+```
+
+`plugin`和`gradle`版本对照表：
+
+```
+Plugin version	Required Gradle version
+1.0.0 - 1.1.3		2.2.1 - 2.3
+1.2.0 - 1.3.1		2.2.1 - 2.9
+1.5.0				2.2.1 - 2.13
+2.0.0 - 2.1.2		2.10 - 2.13
+2.1.3 - 2.2.3		2.14.1+
+2.3.0+				3.3+
+3.0.0+				4.1+
+3.1.0+				4.4+
+3.2.0 - 3.2.1		4.6+
+3.3.0 - 3.3.2		4.10.1+
+3.4.0+				5.1.1+
+```
