@@ -1,0 +1,35 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.operation-panel {
+    margin-top: 10px;
+}
+
+.container .product-container {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    width: 60%;
+}
+
+.container .product-container .item {
+    width: 150px;
+    border-radius: 10px;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #7f7f7f;
+    padding: 10px;
+    transition: all 0.5s;
+}
+
+.container .product-container .item:hover {
+    border-color: #000;
+    background-color: #f1f1f1;
+    cursor: pointer;
+}
