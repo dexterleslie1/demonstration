@@ -71,15 +71,50 @@ StartupNotify=true
 
 
 
-## 问题列表
-
-
-
-### `android studio`引用远程仓库`jCenter`慢（`bintray`）
+## 项目下载远程仓库慢
 
 >参考：https://blog.csdn.net/ygc87/article/details/82857611
 
-仓库替换为`maven{url 'http://maven.aliyun.com/nexus/content/groups/public/'}`
+`settings.gradle repositories` 添加配置：
+
+```groovy
+maven{ url 'http://maven.aliyun.com/nexus/content/groups/public/' }
+```
+
+
+
+`settings.gradle.kts` 添加阿里云配置：
+
+```kotlin
+pluginManagement {
+    repositories {
+        // 添加阿里云 Maven 插件仓库
+        maven { url = uri("https://maven.aliyun.com/repository/gradle-plugin") }
+        google {
+            content {
+                includeGroupByRegex("com\\.android.*")
+                includeGroupByRegex("com\\.google.*")
+                includeGroupByRegex("androidx.*")
+            }
+        }
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        // 添加阿里云 Maven 仓库
+        maven { url = uri("https://maven.aliyun.com/nexus/content/groups/public/") }
+        google()
+        mavenCentral()
+    }
+}
+
+rootProject.name = "My Application"
+include(":app")
+ 
+```
 
 
 
@@ -155,11 +190,20 @@ ndk-build --version
 
 ## `gradle` - `android studio`下载`gradle`慢
 
-关闭`android studio`并到官网`https://gradle.org/releases`下载完整版的`gradle`
+~~关闭`android studio`并到官网`https://gradle.org/releases`下载完整版的`gradle`，例如：`gradle-8.9-all.zip`，不是 `gradle-8.9-bin.zip`~~
 
-复制下载的`gradle zip`文件到目录`/Users/macos/.gradle/wrapper/dists/gradle-3.3-all/55gk2rcmfc6p2dg9u9ohc3hw9`
+~~复制下载的`gradle zip`文件到目录`/Users/macos/.gradle/wrapper/dists/gradle-3.3-all/55gk2rcmfc6p2dg9u9ohc3hw9`~~
 
-重新启动`android studio`
+~~重新启动`android studio`~~
+
+`File` > `Settings` > `搜索proxy功能` 配置 `HTTP Proxy`，选中 `Manual proxy configuration`：
+
+- 选中 `HTTP`
+- `Host name` 填写 `192.168.235.128`
+- `Port number` 填写 `1080`
+- `No proxy for` 填写 `*.aliyun.com,*.aliyuncs.com,dl.google.com`
+
+重启 `Android Studio` 后下载 `gradle` 会自动使用代理。
 
 
 
