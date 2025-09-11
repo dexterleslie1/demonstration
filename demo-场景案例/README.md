@@ -200,12 +200,12 @@
   ansible-playbook playbook-service-start.yml --inventory inventory.ini
   ```
 
-登录 `Nacos http://192.168.1.198:8848/nacos` 修改秒杀业务限流阈值为 `100`。
+登录 `Nacos http://192.168.1.19:8848/nacos` 修改秒杀业务限流阈值为 `100`。
 
 使用 `wrk` 协助持续秒杀业务进行中：
 
 ```sh
-wrk -t8 -c2048 -d30000000s --latency --timeout 30 http://192.168.1.198/api/v1/order/createFlashSale
+wrk -t8 -c2048 -d30000000s --latency --timeout 30 http://192.168.1.19/api/v1/order/createFlashSale
 ```
 
 查看 `api`、`crond` 服务日志是否会报告异常：
@@ -270,7 +270,7 @@ docker compose logs -f --tail 10
 - 添加新节点前查看集群状态
 
   ```sh
-  $ redis-cli -h 192.168.1.198 -p 6380 cluster nodes
+  $ redis-cli -h 192.168.1.19 -p 6380 cluster nodes
   025da042a31ff9dda4f4cf196387ce9ad50a50d6 192.168.1.198:6389@16389 slave 1bace5b5fdb4d973af22018ab6e423f8000ff2fe 0 1753867312000 1 connected
   2565a9258683148a0d5993e4c71f459ddee7fcac 192.168.1.198:6388@16388 slave 8fb4186bc7b1cbe6c34c48e43d09945f8ccff52a 0 1753867309000 2 connected
   45154545fca31f1434d7cac4b7f7012767e56d5a 192.168.1.198:6387@16387 slave cb356f4d477c48613e872b8736a56fff3924fce3 0 1753867308598 4 connected
@@ -286,52 +286,52 @@ docker compose logs -f --tail 10
 - 添加新节点到集群中，注意：此时新节点无法接收和处理请求，因为新节点还没有分配插槽
 
   ```sh
-  # 添加 192.168.1.201:6380 新节点到现有集群，192.168.1.198:6380 为现有集群中任意一个节点
-  redis-cli --cluster add-node 192.168.1.201:6380 192.168.1.198:6380
-  redis-cli --cluster add-node 192.168.1.201:6381 192.168.1.198:6380
-  redis-cli --cluster add-node 192.168.1.201:6382 192.168.1.198:6380
-  redis-cli --cluster add-node 192.168.1.201:6383 192.168.1.198:6380
-  redis-cli --cluster add-node 192.168.1.201:6384 192.168.1.198:6380
-  redis-cli --cluster add-node 192.168.1.201:6385 192.168.1.198:6380
-  redis-cli --cluster add-node 192.168.1.201:6386 192.168.1.198:6380
-  redis-cli --cluster add-node 192.168.1.201:6387 192.168.1.198:6380
-  redis-cli --cluster add-node 192.168.1.201:6388 192.168.1.198:6380
-  redis-cli --cluster add-node 192.168.1.201:6389 192.168.1.198:6380
+  # 添加 192.168.1.16:6380 新节点到现有集群，192.168.1.19:6380 为现有集群中任意一个节点
+  redis-cli --cluster add-node 192.168.1.16:6380 192.168.1.19:6380
+  redis-cli --cluster add-node 192.168.1.16:6381 192.168.1.19:6380
+  redis-cli --cluster add-node 192.168.1.16:6382 192.168.1.19:6380
+  redis-cli --cluster add-node 192.168.1.16:6383 192.168.1.19:6380
+  redis-cli --cluster add-node 192.168.1.16:6384 192.168.1.19:6380
+  redis-cli --cluster add-node 192.168.1.16:6385 192.168.1.19:6380
+  redis-cli --cluster add-node 192.168.1.16:6386 192.168.1.19:6380
+  redis-cli --cluster add-node 192.168.1.16:6387 192.168.1.19:6380
+  redis-cli --cluster add-node 192.168.1.16:6388 192.168.1.19:6380
+  redis-cli --cluster add-node 192.168.1.16:6389 192.168.1.19:6380
   ```
 
 - 为指定的 `master` 节点配置 `slave` 节点，`2728a594a0498e98e4b83a537e19f9a0a3790f38` 为指定 `master` 节点的 `id`
 
   ```sh
-  redis-cli -h 192.168.1.198 -p 6380 cluster nodes
+  redis-cli -h 192.168.1.19 -p 6380 cluster nodes
   
-  redis-cli -h 192.168.1.201 -p 6380 cluster replicate 1bace5b5fdb4d973af22018ab6e423f8000ff2fe
-  redis-cli -h 192.168.1.201 -p 6381 cluster replicate 8fb4186bc7b1cbe6c34c48e43d09945f8ccff52a
-  redis-cli -h 192.168.1.201 -p 6382 cluster replicate 149a0927d896f7b1beac0426a505eb5c65172b98
-  redis-cli -h 192.168.1.201 -p 6383 cluster replicate cb356f4d477c48613e872b8736a56fff3924fce3
-  redis-cli -h 192.168.1.201 -p 6384 cluster replicate 8acdb15a81ef8d4385be40299deb97a18a34884d
+  redis-cli -h 192.168.1.16 -p 6380 cluster replicate 1bace5b5fdb4d973af22018ab6e423f8000ff2fe
+  redis-cli -h 192.168.1.16 -p 6381 cluster replicate 8fb4186bc7b1cbe6c34c48e43d09945f8ccff52a
+  redis-cli -h 192.168.1.16 -p 6382 cluster replicate 149a0927d896f7b1beac0426a505eb5c65172b98
+  redis-cli -h 192.168.1.16 -p 6383 cluster replicate cb356f4d477c48613e872b8736a56fff3924fce3
+  redis-cli -h 192.168.1.16 -p 6384 cluster replicate 8acdb15a81ef8d4385be40299deb97a18a34884d
   ```
 
 - 手动 `failover` 到新的节点实现主从切换
 
   ```sh
-  redis-cli -h 192.168.1.201 -p 6380 cluster failover
-  redis-cli -h 192.168.1.201 -p 6381 cluster failover
-  redis-cli -h 192.168.1.201 -p 6382 cluster failover
-  redis-cli -h 192.168.1.201 -p 6383 cluster failover
-  redis-cli -h 192.168.1.201 -p 6384 cluster failover
+  redis-cli -h 192.168.1.16 -p 6380 cluster failover
+  redis-cli -h 192.168.1.16 -p 6381 cluster failover
+  redis-cli -h 192.168.1.16 -p 6382 cluster failover
+  redis-cli -h 192.168.1.16 -p 6383 cluster failover
+  redis-cli -h 192.168.1.16 -p 6384 cluster failover
   ```
 
-- 再次查看集群状态，`192.168.1.201:6380` 变为 `master`，`192.168.1.198:6380` 变为 `slave` 节点
+- 再次查看集群状态，`192.168.1.16:6380` 变为 `master`，`192.168.1.19:6380` 变为 `slave` 节点
 
   ```sh
-  redis-cli -h 192.168.1.201 -p 6380 cluster nodes
+  redis-cli -h 192.168.1.16 -p 6380 cluster nodes
   ```
 
 
 
 `Cassandra` 节点加入集群：
 
-- 登录 `http://192.168.1.198:81/` 填写用户 `ID` 为 `1`，商家 `ID` 为 `2` 后创建商品并下单（大概 `10` 条单），记录用户订单信息在 `Cassandra` 迁移后进行数据比对。
+- 登录 `http://192.168.1.19:81/` 填写用户 `ID` 为 `1`，商家 `ID` 为 `2` 后创建普通商品并下单（大概 `10` 条单），记录用户订单信息在 `Cassandra` 迁移后进行数据比对。
 
 - 分别登录新节点所在的实例，手动添加节点到集群中，下面以第一个节点为例子演示：
 
@@ -341,9 +341,9 @@ docker compose logs -f --tail 10
   # 先删除所有新节点容器，避免蜂拥加入集群导致混乱
   docker compose down -v
   
-  # 编辑 .env 修改为下面内容，其中 192.168.1.198 为已经存在的 cassandra 集群节点
-  cassandra_seeds=192.168.1.198
-  # 重启 cassandra 节点
+  # 编辑 .env 修改为下面内容，其中 192.168.1.19 为已经存在的 cassandra 集群节点
+  cassandra_seeds=192.168.1.19
+  # 重启 cassandra 节点，等待一个节点成功加入集群再启动下一个节点
   docker compose up -d
   # 进入容器
   docker compose exec -it node0 bash
@@ -373,7 +373,7 @@ docker compose logs -f --tail 10
   KAFKA_JMX_OPTS="" /usr/bin/kafka-broker-api-versions --bootstrap-server localhost:9092
   ```
 
-  - 显示 `192.168.1.198:9092` 和 `192.168.1.191:9092` 表示正常。
+  - 显示 `192.168.1.19:9092` 和 `192.168.1.191:9092` 表示正常。
 
 - 在线迁移所有主题到分离 `kafka`
 
@@ -505,11 +505,11 @@ docker compose restart
   docker compose exec -it node1 bash
   
   # 获取 slave 节点信息
-  redis-cli -h 192.168.1.201 -p 6380 cluster nodes
+  redis-cli -h 192.168.1.16 -p 6380 cluster nodes
   
-  # 192.168.1.201:6390 是集群中任意一个节点
-  # 6b92155a7e8851b9842c4a3ec38ff9d2b230b33e 是通过 cluster nodes 获取的从 192.168.1.198:6380 节点 id
-  redis-cli --cluster del-node 192.168.1.201:6380 6b92155a7e8851b9842c4a3ec38ff9d2b230b33e
+  # 192.168.1.16:6390 是集群中任意一个节点
+  # 6b92155a7e8851b9842c4a3ec38ff9d2b230b33e 是通过 cluster nodes 获取的从 192.168.1.19:6380 节点 id
+  redis-cli --cluster del-node 192.168.1.19:6380 6b92155a7e8851b9842c4a3ec38ff9d2b230b33e
   
   docker compose down -v
   ```
@@ -524,7 +524,7 @@ docker compose restart
 - 删除 `OpenResty`
 
   ```sh
-  deployer-flash-sale/openresty
+  cd deployer-flash-sale/openresty
   docker compose down -v
   ```
 
@@ -549,6 +549,8 @@ docker compose restart
   ```sh
   ansible-playbook playbook-service-start.yml --inventory inventory.ini
   ```
+
+登录 `http://192.168.1.19:81/` 填写用户 `ID` 为 `1`，商家 `ID` 为 `2` 后对比查看是否丢失数据。
 
 
 
