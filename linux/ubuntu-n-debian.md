@@ -38,17 +38,28 @@
 
 > 支持`java`应用的开发。
 
-1. 参考 <a href="/dcli/README.html" target="_blank">链接</a> 配置 dcli 程序
+1. 参考 <a href="/dcli/README.html" target="_blank">链接</a> 配置 `dcli` 程序
 
-3. 启用`ssh`暴力破解保护、安装并配置`xrdp`服务、安装`tomcat`、安装`jdk`、安装`idea`、安装`maven`、安装`docker`、设置上海时区
+2. 注意：只配置桌面环境即可。
 
    ```bash
-   sudo dcli fail2ban install --install y && \
+   # 启用`ssh`暴力破解保护、安装并配置`xrdp`服务、安装`tomcat`、安装`jdk`、安装`idea`、安装`maven`、安装`docker`、设置上海时区
+   #sudo dcli fail2ban install --install y && \
+   #sudo -E dcli xrdp install --install y && \
+   #sudo dcli tomcat install --install y && \
+   #sudo dcli jdk install --install y --version 11 && \
+   #sudo dcli idea install --install y && \
+   #sudo dcli maven install --install y && \
+   #sudo dcli docker install --install y && \
+   #sudo dcli os timezone config --install y
+   
+   # 不需要 xrdp 支持
+   sudo dcli os dev config \
+   sudo dcli docker install --install y && \
+   sudo dcli os timezone config --install y
+   
+   # 需要 xrdp 支持
    sudo -E dcli xrdp install --install y && \
-   sudo dcli tomcat install --install y && \
-   sudo dcli jdk install --install y --version 11 && \
-   sudo dcli idea install --install y && \
-   sudo dcli maven install --install y && \
    sudo dcli docker install --install y && \
    sudo dcli os timezone config --install y
    ```
@@ -478,14 +489,17 @@ apt-cache search net-tools
 apt-get install net-tools
 
 # 搜索本机已安装包
-https://linuxize.com/post/how-to-list-installed-packages-on-debian/
+# https://linuxize.com/post/how-to-list-installed-packages-on-debian/
 apt list --installed | grep net-tools
 dpkg-query -l | grep openresty
 # 或者
 dpkg -S openresty
 
+# 显示本地已经安装并且远程支持安装的版本
+apt list -a libfreetype6
+
 # apt卸载并重新安装openresty
-删除openresty deb包
+# 删除openresty deb包
 apt remove --purge openresty
 
 # 删除openresty 相关deb依赖
