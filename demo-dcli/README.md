@@ -60,3 +60,17 @@ Go 语言版本的 dcli
 
 - 编译成功后二进制程序位于 dcli-go/dcli/dist/dcli_linux_amd64_v1/dcli-linux-x86_64 路径中。
 
+
+
+## 调试二进制程序
+
+步骤如下：
+
+- 编译 `dcli` 后，复制二进制程序到远程的调试实例中
+
+  ```sh
+  scp dist/dcli_linux_amd64_v1/dcli-linux-x86_64 root@192.168.235.10:/usr/bin/dcli
+  ```
+
+- 登录远程实例并调试二进制程序
+
