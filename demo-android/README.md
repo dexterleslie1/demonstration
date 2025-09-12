@@ -1,4 +1,4 @@
-## `android studio` - 安装
+## `Android Studio` - 安装
 
 ### `windows7、windows11、windows 2016`
 
@@ -58,6 +58,27 @@ StartupNotify=true
 
 
 
+## `Android Studio` - 查看内置的`JDK`版本
+
+通过 `Help` > `About` 功能查看 `Android Studio` 内置的 `JDK` 版本，如下：
+
+```
+Runtime version: 21.0.3+-12282718-b509.11 amd64
+VM: OpenJDK 64-Bit Server VM by JetBrains s.r.o.
+```
+
+- `OpenJDK` 版本为 `21.0.3`
+
+
+
+## 删除已经下载的系统镜像
+
+>说明：使用 `Android Studio` 删除已经下载的系统镜像以留出硬盘空间。
+
+打开 `Settings` 功能搜索 `sdk` 关键词定位到 `Android SDK` 功能，切换到 `SDK Platforms Tab`，勾选 `Hide Obsolete Packages` 和 `Show Package Details`，拖动滚动条取消勾选需要删除的系统镜像后点击 `Apply` 按钮即可删除。
+
+
+
 ## 运行谷歌的模拟器（`AVD`）慢
 
 >注意：个人电脑需要退出省电模式并接通电源，否则 `CPU` 功率太低导致 `AVD` 很慢。
@@ -66,8 +87,9 @@ StartupNotify=true
 >
 >- 使用服务器级的 `CPU` 运行 `AVD` 速度更加快。
 >- 使用 `Ubuntu20.4` 运行 `AVD` 速度更加快，可能是因为底层使用 `kvm` 虚拟化原因。
+>- 首次启动 `AVD` 会慢需要耐心等待。
 
-运行谷歌的模拟器很慢，甚至在启动应用后经常会遇到 `ANR` 错误，这是因为运行了比较新版本的安卓操作系统，此时只需要切换到比较低版本的安卓系统（例如：`API 24 "Nougat"; Android 7.0 Google APIs`）并且把 `Emulated Performance` 中的 `Graphics Acceleration` 选中为 `Hardware` ，`AVD RAM（AVD运行内存）` 设置为 `4GB`，`VM Heap size（AVD中的每个应用运行内存）` 设置为 `256MB`。`Startup` 中的 `Default Boot` 设置为 `Cold`。
+运行谷歌的模拟器很慢，甚至在启动应用后经常会遇到 `ANR` 错误，这是因为运行了比较新版本的安卓操作系统，此时只需要切换到比较低版本的安卓系统（例如：`x86 images Tab` 中的 `API 24 "Nougat"; Android 7.0 Google APIs x86`）并且把 `Emulated Performance` 中的 `Graphics Acceleration` 选中为 `Hardware` ，`AVD RAM（AVD运行内存）` 设置为 `4GB`，`VM Heap size（AVD中的每个应用运行内存）` 设置为 `256MB`。`Startup` 中的 `Default Boot` 设置为 `Cold`。
 
 
 
@@ -188,6 +210,12 @@ ndk-build --version
 
 
 
+## `gradle` - 查看项目中使用的版本
+
+打开项目根目录下的 `gradle/wrapper/gradle-wrapper.properties` 文件。找到 `distributionUrl` 这一行，`URL` 的路径中就包含了 `Gradle` 发行版版本。
+
+
+
 ## `gradle` - `android studio`下载`gradle`慢
 
 ~~关闭`android studio`并到官网`https://gradle.org/releases`下载完整版的`gradle`，例如：`gradle-8.9-all.zip`，不是 `gradle-8.9-bin.zip`~~
@@ -207,7 +235,7 @@ ndk-build --version
 
 
 
-## `gradle` - 和`gradle-plugin`对应版本
+## `gradle` - 和`gradle plugin(AGP)`对应版本
 
 > 官方说明：https://developer.android.com/studio/releases/gradle-plugin
 
@@ -223,12 +251,13 @@ buildscript {
         ...
     }
     dependencies {
+        // Gradle 插件
         classpath 'com.android.tools.build:gradle:3.4.2'
     }
 }
 ```
 
-`plugin`和`gradle`版本对照表：
+`Gradle plugin(AGP:Android Gradle Plugin)`和`Gradle`版本对照表：
 
 ```
 Plugin version	Required Gradle version
@@ -243,4 +272,115 @@ Plugin version	Required Gradle version
 3.2.0 - 3.2.1		4.6+
 3.3.0 - 3.3.2		4.10.1+
 3.4.0+				5.1.1+
+
+Plugin version	Minimum required Gradle version
+8.13			8.13
+8.12			8.13
+8.11			8.13
+8.10			8.11.1
+8.9				8.11.1
+8.8				8.10.2
+8.7				8.9
+8.6				8.7
+8.5				8.7
+8.4				8.6
+8.3				8.4
+8.2				8.2
+8.1				8.0
+8.0				8.0
 ```
+
+`Android Gradle Plugin`和`Android Studio`兼容性
+
+| Android Studio version             | Required AGP version |
+| ---------------------------------- | -------------------- |
+| Narwhal 3 Feature Drop \| 2025.1.3 | 4.0-8.13             |
+| Narwhal Feature Drop \| 2025.1.2   | 4.0-8.12             |
+| Narwhal \| 2025.1.1                | 3.2-8.11             |
+| Meerkat Feature Drop \| 2024.3.2   | 3.2-8.10             |
+| Meerkat \| 2024.3.1                | 3.2-8.9              |
+| Ladybug Feature Drop \| 2024.2.2   | 3.2-8.8              |
+| Ladybug \| 2024.2.1                | 3.2-8.7              |
+| Koala Feature Drop \| 2024.1.2     | 3.2-8.6              |
+| Koala \| 2024.1.1                  | 3.2-8.5              |
+| Jellyfish \| 2023.3.1              | 3.2-8.4              |
+| Iguana \| 2023.2.1                 | 3.2-8.3              |
+| Hedgehog \| 2023.1.1               | 3.2-8.2              |
+| Giraffe \| 2022.3.1                | 3.2-8.1              |
+| Flamingo \| 2022.2.1               | 3.2-8.0              |
+
+
+
+## 使用`Android Studio Ladybug|2024.2.1`运行旧版项目
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-older-project-gradle-upgrade)
+
+使用`Android Studio 2024.2.1`运行旧版项目需要升级`Gradle`和`AGP`版本，步骤如下：
+
+- 升级`Gradle`版本：编辑`gradle/wrapper/gradle-wrapper.properties`
+
+  ```properties
+  # 旧版本gradle
+  distributionUrl=https\://services.gradle.org/distributions/gradle-4.1-all.zip
+  
+  # 升级为新版本gradle
+  distributionUrl=https\://services.gradle.org/distributions/gradle-8.9-bin.zip
+  ```
+
+- 升级项目`build.gradle`中的`AGP`版本：编辑`build.gradle`
+
+  ```groovy
+  // 旧版本的AGP
+  buildscript {
+      dependencies {
+          classpath 'com.android.tools.build:gradle:3.0.0'
+      }
+  }
+  
+  // 升级为新版本的AGP
+  buildscript {
+      dependencies {
+          classpath 'com.android.tools.build:gradle:8.7.0'
+      }
+  }
+  ```
+
+- 调整模块`build.gradle`
+
+  ```groovy
+  android {
+      // 添加 namespace 配置，每个 Android 模块都有一个命名空间，它用作其生成的 R 和 BuildConfig 类的 Kotlin 或 Java 包名称。
+      // https://developer.android.com/build/configure-app-module#set-namespace
+      namespace "com.future.study.android.activity_lifecycle"
+      ...
+  }
+  
+  dependencies {
+      ...
+      // compile 修改为 implementation
+      // compile 'com.android.support:support-annotations:27.1.1'
+      implementation 'com.android.support:support-annotations:27.1.1'
+  }
+  
+  ```
+
+- 删除`AndroidMainfest.xml`中`package`配置
+
+  ```xml
+  <?xml version="1.0" encoding="utf-8"?>
+  <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+      <!-- 删除 package 配置，因为新版本的 gradle 在模块 build.gradle 中使用 namespace 配置替代 -->
+      <!--package="com.future.study.android.activity_lifecycle"-->
+      ...
+  </manifest>
+  ```
+
+做完以上步骤后即可正常运行项目。
+
+
+
+## `Android Studio 2024.2.1`编辑`Layout`文件崩溃
+
+>提示：所以显然这最终可能是 `glib` 的问题。`AS` 的最低要求是 `Ladybug` 至少需要 `2.31` 版本。但是，只要将 `Ubuntu` 升级到 `22` 版，并将 `glib` 升级到 `2.35` 版，`Ladybug` 就能正常工作了。升级后，我终于可以编辑布局了。
+>
+>参考链接：https://stackoverflow.com/questions/79127278/android-studio-crashes-when-opening-layout-xml-file
