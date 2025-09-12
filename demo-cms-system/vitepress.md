@@ -101,6 +101,26 @@ Ok to proceed? (y) y
 
 启动项目
 
+>注意：使用下面命令在启动文档`VitePress`项目时报告错误`Error: ENOSPC: System limit for number of file watchers reached, watch '/home/dexterleslie/workspace-git/demonstration/publisher/vitepress/docs'`，解决办法为修改文件监视器限制：
+>
+>- 编辑系统配置文件`/etc/sysctl.conf`添加如下配置
+>
+>  ```
+>  fs.inotify.max_user_watches=524288
+>  ```
+>
+>- 应用修改
+>
+>  ```sh
+>  sudo sysctl -p
+>  ```
+>
+>- 验证是否生效，应该输出 `524288`。
+>
+>  ```sh
+>  cat /proc/sys/fs/inotify/max_user_watches
+>  ```
+
 ```bash
 npm run docs:dev
 ```

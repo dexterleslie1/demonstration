@@ -54,7 +54,7 @@
    #sudo dcli os timezone config --install y
    
    # 不需要 xrdp 支持
-   sudo dcli os dev config \
+   sudo -E dcli os dev config \
    sudo dcli docker install --install y && \
    sudo dcli os timezone config --install y
    
@@ -582,24 +582,140 @@ sudo update-alternatives --install "/usr/bin/javac" "javac" "/usr/local/jdk-11.0
 
 
 
+## `gsetting` - 概念
+
+`gsettings` 是 Linux 系统中（尤其是基于 GNOME 桌面环境的发行版，如 Ubuntu）用于管理 **GSettings** 配置系统的命令行工具。它是 GLib/GIO 的一部分，用于读取、修改和监控应用程序和桌面环境的设置。
+
+---
+
+### 🔍 **GSettings 是什么？**
+- **GSettings** 是 GNOME 的配置存储系统，替代了旧的 `gconf` 系统。
+- 它使用 **DConf** 作为后端存储（实际数据保存在二进制数据库中，通常位于 `~/.config/dconf/user`）。
+- 管理范围包括：
+  - 桌面外观（主题、图标、字体）
+  - 系统行为（电源管理、键盘快捷键）
+  - 应用程序偏好（如文件管理器、终端设置）
+
+---
+
+### 🛠 **`gsettings` 常用命令**
+#### 1. 查看某个键的当前值
+```bash
+gsettings get <SCHEMA> <KEY>
+```
+- **示例**：查看 GNOME 桌面壁纸路径  
+  ```bash
+  gsettings get org.gnome.desktop.background picture-uri
+  ```
+  输出类似：  
+  `'file:///usr/share/backgrounds/ubuntu-default.jpg'`
+
+#### 2. 修改某个键的值
+```bash
+gsettings set <SCHEMA> <KEY> <VALUE>
+```
+- **示例**：更改壁纸为自定义图片  
+  ```bash
+  gsettings set org.gnome.desktop.background picture-uri 'file:///home/username/my-wallpaper.jpg'
+  ```
+
+#### 3. 列出所有可用的 Schema
+```bash
+gsettings list-schemas
+```
+
+#### 4. 列出某个 Schema 下的所有键
+```bash
+gsettings list-keys <SCHEMA>
+```
+- **示例**：查看桌面背景相关的所有配置项  
+  ```bash
+  gsettings list-keys org.gnome.desktop.background
+  ```
+
+#### 5. 重置某个键为默认值
+```bash
+gsettings reset <SCHEMA> <KEY>
+```
+
+#### 6. 监控某个键的变化（实时调试）
+```bash
+gsettings monitor <SCHEMA>
+```
+
+---
+
+### 📂 **GSettings 的配置文件位置**
+- 用户级配置存储在：  
+  `~/.config/dconf/user`（二进制文件，不可直接编辑）
+- 系统默认配置在：  
+  `/usr/share/glib-2.0/schemas/`（`.gschema.xml` 文件）
+
+---
+
+### 🔄 **手动编辑 GSettings（高级）**
+如果需要批量修改或备份配置，可以：
+1. **导出当前配置**：  
+   ```bash
+   dconf dump / > gsettings-backup.txt
+   ```
+2. **导入配置**：  
+   ```bash
+   dconf load / < gsettings-backup.txt
+   ```
+
+---
+
+### 🌰 **实用案例**
+#### 案例 1：禁用 Ubuntu 自动挂载外部设备
+```bash
+gsettings set org.gnome.desktop.media-handling automount false
+```
+
+#### 案例 2：更改 GNOME 终端字体大小
+```bash
+gsettings set org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:$(gsettings get org.gnome.Terminal.ProfilesList default | tr -d "'")/ font 'Monospace 12'
+```
+
+#### 案例 3：启用“点击最小化”窗口行为
+```bash
+gsettings set org.gnome.shell.extensions.dash-to-dock click-action 'minimize'
+```
+
+---
+
+### ⚠️ **注意事项**
+1. **权限问题**：普通用户只能修改自己的配置，系统级配置需要 `sudo`。
+2. **即时生效**：修改后通常无需重启，立即应用。
+3. **谨慎操作**：错误的设置可能导致桌面环境异常（可通过重启或重置恢复）。
+
+---
+
+### 📚 **扩展知识**
+- **`dconf`**：GSettings 的底层工具，直接操作二进制数据库。
+- **`dconf-editor`**：图形化工具（安装命令：`sudo apt install dconf-editor`）。
+
+通过 `gsettings`，你可以轻松实现 Ubuntu/GNOME 环境的深度定制，而无需依赖图形界面！
 
 
-## ubuntu使用gsetting实现自动配置
+
+## `gsetting` - 发现并设置`schema`和`key`
 
 ```shell
 ### 通过参考下面链接找到gsettings需要设置的key
 ### https://askubuntu.com/questions/971067/how-can-i-script-the-settings-made-by-gnome-tweak-tool
 
 # 先运行以下命令watch配置变化
-dconf watch /
+$ dconf watch /
+/org/gnome/desktop/interface/gtk-theme
+  'Yaru-dark'
 
 # 手动打开设置进行设置，随后dconf watch会有输出
 
 # 经过转换后例如下面gsettings命令
+sudo -E -u dexterleslie gsettings set org.gnome.desktop.interface gtk-theme 'Yaru-dark'
 sudo -E -u dexterleslie gsettings set org.gnome.desktop.interface enable-animations false
 ```
-
-
 
 
 
