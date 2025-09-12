@@ -128,6 +128,7 @@ export default defineConfig({
           { text: 'Typora', link: '/typora/README.md' },
           { text: '数据结构和算法', link: '/数据结构和算法/README.md' },
           { text: 'VSCode', link: '/vscode/README.md' },
+          { text: 'Firefox', link: '/firefox/README.md' },
         ]
       },
     ],

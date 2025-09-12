@@ -75,6 +75,7 @@ source_dir_to_target_dir_map["../../demo-typora"]="typora"
 source_dir_to_target_dir_map["../../demo-数据结构和算法"]="数据结构和算法"
 source_dir_to_target_dir_map["../../demo-dubbo"]="dubbo"
 source_dir_to_target_dir_map["../../demo-vscode"]="vscode"
+source_dir_to_target_dir_map["../../demo-firefox"]="firefox"
 
 for key in ${!source_dir_to_target_dir_map[@]}; do
     # 删除符号链接目录
