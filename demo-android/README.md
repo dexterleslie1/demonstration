@@ -97,10 +97,10 @@ VM: OpenJDK 64-Bit Server VM by JetBrains s.r.o.
 
 >参考：https://blog.csdn.net/ygc87/article/details/82857611
 
-`settings.gradle repositories` 添加配置：
+项目`build.gradle`中的`repositories`添加配置：
 
 ```groovy
-maven{ url 'http://maven.aliyun.com/nexus/content/groups/public/' }
+maven { url 'https://maven.aliyun.com/nexus/content/groups/public/' }
 ```
 
 
