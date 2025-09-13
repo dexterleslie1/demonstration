@@ -158,6 +158,8 @@ Oh My Zsh 的特点包括：
 
 ### 安装自定义`oh my zsh`
 
+>注意：在 `Ubuntu22.04.5` 安装 `oh my zsh` 后，`/etc/profile.d` 目录下的脚本不能自动加载。
+
 ```bash
 # ubuntu安装
 sudo apt install zsh -y && sudo apt install git -y && sh -c "$(curl -fsSL https://gitee.com/dexterleslie/oh-my-zsh/raw/master/install.sh)"
