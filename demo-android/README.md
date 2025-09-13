@@ -391,3 +391,61 @@ Plugin version	Minimum required Gradle version
 | Giraffe \| 2022.3.1                | 3.2-8.1              |
 | Flamingo \| 2022.2.1               | 3.2-8.0              |
 
+
+
+## `Activity` - 生命周期
+
+>注意：不能保证 `onDestroy` 方法一定被回调（`onDestroy` 方法在调用 `finish` 和用户按下 `back` 按钮时一定被回调）。
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-activity-lifecycle)
+>
+>参考链接：https://stackoverflow.com/questions/19608948/is-ondestroy-not-always-called?rq=1、https://blog.csdn.net/javazejian/article/details/51932554
+>
+
+生命周期如图所示：
+
+![image-20250913232611015](image-20250913232611015.png)
+
+`Activity` 状态如下：
+
+- `Active/Running`： Activity处于活动状态，此时Activity处于栈顶，是可见状态，可与用户进行交互。 
+- `Paused`： 当Activity失去焦点时，或被一个新的非全屏的Activity，或被一个透明的Activity放置在栈顶时，Activity就转化为Paused状态。但我们需要明白，此时Activity只是失去了与用户交互的能力，其所有的状态信息及其成员变量都还存在，只有在系统内存紧张的情况下，才有可能被系统回收掉。 
+- `Stopped`： 当一个Activity被另一个Activity完全覆盖时，被覆盖的Activity就会进入Stopped状态，此时它不再可见，但是跟Paused状态一样保持着其所有状态信息及其成员变量。 
+- `Killed`：当Activity被系统回收掉时，Activity就处于Killed状态。 
+
+Activity会在以上四种形态中相互切换，至于如何切换，这因用户的操作不同而异。了解了Activity的4种形态后，我们就来聊聊Activity的生命周期。
+
+`Activity` 生命周期回调方法：
+
+- `onCreate`：该方法是在Activity被创建时回调，它是生命周期第一个调用的方法，我们在创建Activity时一般都需要重写该方法，然后在该方法中做一些初始化的操作，如通过setContentView设置界面布局的资源，初始化所需要的组件信息等。
+- `onStart`：此方法被回调时表示Activity正在启动，此时Activity已处于可见状态，只是还没有在前台显示，因此无法与用户进行交互。可以简单理解为Activity已显示而我们无法看见摆了。
+- `onResume`：当此方法回调时，则说明Activity已在前台可见，可与用户交互了（处于前面所说的Active/Running形态），onResume方法与onStart的相同点是两者都表示Activity可见，只不过onStart回调时Activity还是后台无法与用户交互，而onResume则已显示在前台，可与用户交互。当然从流程图，我们也可以看出当Activity停止后（onPause方法和onStop方法被调用），重新回到前台时也会调用onResume方法，因此我们也可以在onResume方法中初始化一些资源，比如重新初始化在onPause或者onStop方法中释放的资源。
+- `onPause`：此方法被回调时则表示Activity正在停止（Paused形态），一般情况下onStop方法会紧接着被回调。但通过流程图我们还可以看到一种情况是onPause方法执行后直接执行了onResume方法，这属于比较极端的现象了，这可能是用户操作使当前Activity退居后台后又迅速地再回到到当前的Activity，此时onResume方法就会被回调。当然，在onPause方法中我们可以做一些数据存储或者动画停止或者资源回收的操作，但是不能太耗时，因为这可能会影响到新的Activity的显示——onPause方法执行完成后，新Activity的onResume方法才会被执行。 
+- `onStop`：一般在onPause方法执行完成直接执行，表示Activity即将停止或者完全被覆盖（Stopped形态），此时Activity不可见，仅在后台运行。同样地，在onStop方法可以做一些资源释放的操作（不能太耗时）。 
+- `onRestart`：表示Activity正在重新启动，当Activity由不可见变为可见状态时，该方法被回调。这种情况一般是用户打开了一个新的Activity时，当前的Activity就会被暂停（onPause和onStop被执行了），接着又回到当前Activity页面时，onRestart方法就会被回调。 
+- `onDestroy`：此时Activity正在被销毁，也是生命周期最后一个执行的方法，一般我们可以在此方法中做一些回收工作和最终的资源释放。 
+
+情景启动 `app`：`onCreate()` > `onStart()` > `onResume()`
+
+情景按 `home` 键后再回到 `app`：
+
+- 按 `home` 键：`onPause()` > `onStop()`
+- 回到 `app`：`onRestart()` > `onStart()` > `onResume()`
+
+情景新 `activity` 覆盖旧 `activity`：
+
+- 弹出第二个 `activity`：`onPause()` > `onStop()`
+- 按 `back` 按钮返回 `onRestart()` > `onStart()` > `onResume()`
+
+情景点击 `back` 按钮退出：`onPause()` > `onStop()` > `onDestroy()`
+
+情景横竖屏切换：
+
+- 先销毁 `onPause()` > `onStop()` > `onDestroy()`
+- 再创建 `onCreate()` > `onStart()` > `onResume()`
+
+情景锁屏、解锁屏：
+
+- 锁屏 `onPause()` > `onStop()`
+- 解锁屏 `onRestart()` > `onStart()` > `onResume()`
+
