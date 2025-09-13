@@ -21,7 +21,11 @@
 
 
 
-### `Ubuntu`
+### `Ubuntu22.04.5`
+
+>提示：`AS 2024.2.1` 在 `Ubuntu20.04.3` 系统编辑 `Layout` 文件崩溃，所以显然这最终可能是 `glib` 的问题。`AS` 的最低要求是 `Ladybug` 至少需要 `2.31` 版本。但是，只要将 `Ubuntu` 升级到 `22` 版，`Ladybug` 就能正常工作了。升级后，我终于可以编辑布局了。
+>
+>参考链接：https://stackoverflow.com/questions/79127278/android-studio-crashes-when-opening-layout-xml-file
 
 在`https://developer.android.com/studio/archive`下载`android-studio-2024.2.1.11-linux.tar.gz`
 
@@ -68,6 +72,103 @@ VM: OpenJDK 64-Bit Server VM by JetBrains s.r.o.
 ```
 
 - `OpenJDK` 版本为 `21.0.3`
+
+
+
+## `Android Studio` - 创建各种项目
+
+>`todo`
+
+
+
+## `Android Studio` - 运行旧版项目
+
+>说明：使用 `Android Studio Ladybug|2024.2.1` 运行旧版本项目需要升级 `Gradle` 和 `Android Gradle Plugin(AGP)`。
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-older-project-gradle-upgrade)
+
+使用`Android Studio 2024.2.1`运行旧版项目需要升级`Gradle`和`AGP`版本，步骤如下：
+
+- 升级`Gradle`版本：编辑`gradle/wrapper/gradle-wrapper.properties`
+
+  ```properties
+  # 旧版本gradle
+  distributionUrl=https\://services.gradle.org/distributions/gradle-4.1-all.zip
+  
+  # 升级为新版本gradle
+  distributionUrl=https\://services.gradle.org/distributions/gradle-8.9-bin.zip
+  ```
+
+- 升级项目`build.gradle`中的`AGP`版本：编辑`build.gradle`
+
+  ```groovy
+  // 旧版本的AGP
+  buildscript {
+      dependencies {
+          classpath 'com.android.tools.build:gradle:3.0.0'
+      }
+  }
+  
+  // 升级为新版本的AGP
+  buildscript {
+      dependencies {
+          classpath 'com.android.tools.build:gradle:8.7.0'
+      }
+  }
+  ```
+
+- 调整模块`build.gradle`
+
+  ```groovy
+  android {
+      // 添加 namespace 配置，每个 Android 模块都有一个命名空间，它用作其生成的 R 和 BuildConfig 类的 Kotlin 或 Java 包名称。
+      // https://developer.android.com/build/configure-app-module#set-namespace
+      namespace "com.future.study.android.activity_lifecycle"
+      ...
+  }
+  
+  dependencies {
+      ...
+      // compile 修改为 implementation
+      // compile 'com.android.support:support-annotations:27.1.1'
+      implementation 'com.android.support:support-annotations:27.1.1'
+  }
+  
+  ```
+
+- 删除`AndroidMainfest.xml`中`package`配置
+
+  ```xml
+  <?xml version="1.0" encoding="utf-8"?>
+  <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+      <!-- 删除 package 配置，因为新版本的 gradle 在模块 build.gradle 中使用 namespace 配置替代 -->
+      <!--package="com.future.study.android.activity_lifecycle"-->
+      ...
+  </manifest>
+  ```
+
+做完以上步骤后即可正常运行项目。
+
+
+
+## `Android Studio` - 下载`gradle`慢
+
+~~关闭`android studio`并到官网`https://gradle.org/releases`下载完整版的`gradle`，例如：`gradle-8.9-all.zip`，不是 `gradle-8.9-bin.zip`~~
+
+~~复制下载的`gradle zip`文件到目录`/Users/macos/.gradle/wrapper/dists/gradle-3.3-all/55gk2rcmfc6p2dg9u9ohc3hw9`~~
+
+~~重新启动`android studio`~~
+
+`File` > `Settings` > `搜索proxy功能` 配置 `HTTP Proxy`，选中 `Manual proxy configuration`：
+
+- 选中 `HTTP`
+- `Host name` 填写 `192.168.235.128`
+- `Port number` 填写 `1080`
+- `No proxy for` 填写 `*.aliyun.com,*.aliyuncs.com,dl.google.com`
+
+重启 `Android Studio` 后下载 `gradle` 会自动使用代理。
+
+
 
 
 
@@ -216,25 +317,6 @@ ndk-build --version
 
 
 
-## `gradle` - `android studio`下载`gradle`慢
-
-~~关闭`android studio`并到官网`https://gradle.org/releases`下载完整版的`gradle`，例如：`gradle-8.9-all.zip`，不是 `gradle-8.9-bin.zip`~~
-
-~~复制下载的`gradle zip`文件到目录`/Users/macos/.gradle/wrapper/dists/gradle-3.3-all/55gk2rcmfc6p2dg9u9ohc3hw9`~~
-
-~~重新启动`android studio`~~
-
-`File` > `Settings` > `搜索proxy功能` 配置 `HTTP Proxy`，选中 `Manual proxy configuration`：
-
-- 选中 `HTTP`
-- `Host name` 填写 `192.168.235.128`
-- `Port number` 填写 `1080`
-- `No proxy for` 填写 `*.aliyun.com,*.aliyuncs.com,dl.google.com`
-
-重启 `Android Studio` 后下载 `gradle` 会自动使用代理。
-
-
-
 ## `gradle` - 和`gradle plugin(AGP)`对应版本
 
 > 官方说明：https://developer.android.com/studio/releases/gradle-plugin
@@ -309,78 +391,3 @@ Plugin version	Minimum required Gradle version
 | Giraffe \| 2022.3.1                | 3.2-8.1              |
 | Flamingo \| 2022.2.1               | 3.2-8.0              |
 
-
-
-## 使用`Android Studio Ladybug|2024.2.1`运行旧版项目
-
->详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-older-project-gradle-upgrade)
-
-使用`Android Studio 2024.2.1`运行旧版项目需要升级`Gradle`和`AGP`版本，步骤如下：
-
-- 升级`Gradle`版本：编辑`gradle/wrapper/gradle-wrapper.properties`
-
-  ```properties
-  # 旧版本gradle
-  distributionUrl=https\://services.gradle.org/distributions/gradle-4.1-all.zip
-  
-  # 升级为新版本gradle
-  distributionUrl=https\://services.gradle.org/distributions/gradle-8.9-bin.zip
-  ```
-
-- 升级项目`build.gradle`中的`AGP`版本：编辑`build.gradle`
-
-  ```groovy
-  // 旧版本的AGP
-  buildscript {
-      dependencies {
-          classpath 'com.android.tools.build:gradle:3.0.0'
-      }
-  }
-  
-  // 升级为新版本的AGP
-  buildscript {
-      dependencies {
-          classpath 'com.android.tools.build:gradle:8.7.0'
-      }
-  }
-  ```
-
-- 调整模块`build.gradle`
-
-  ```groovy
-  android {
-      // 添加 namespace 配置，每个 Android 模块都有一个命名空间，它用作其生成的 R 和 BuildConfig 类的 Kotlin 或 Java 包名称。
-      // https://developer.android.com/build/configure-app-module#set-namespace
-      namespace "com.future.study.android.activity_lifecycle"
-      ...
-  }
-  
-  dependencies {
-      ...
-      // compile 修改为 implementation
-      // compile 'com.android.support:support-annotations:27.1.1'
-      implementation 'com.android.support:support-annotations:27.1.1'
-  }
-  
-  ```
-
-- 删除`AndroidMainfest.xml`中`package`配置
-
-  ```xml
-  <?xml version="1.0" encoding="utf-8"?>
-  <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-      <!-- 删除 package 配置，因为新版本的 gradle 在模块 build.gradle 中使用 namespace 配置替代 -->
-      <!--package="com.future.study.android.activity_lifecycle"-->
-      ...
-  </manifest>
-  ```
-
-做完以上步骤后即可正常运行项目。
-
-
-
-## `Android Studio 2024.2.1`编辑`Layout`文件崩溃
-
->提示：所以显然这最终可能是 `glib` 的问题。`AS` 的最低要求是 `Ladybug` 至少需要 `2.31` 版本。但是，只要将 `Ubuntu` 升级到 `22` 版，并将 `glib` 升级到 `2.35` 版，`Ladybug` 就能正常工作了。升级后，我终于可以编辑布局了。
->
->参考链接：https://stackoverflow.com/questions/79127278/android-studio-crashes-when-opening-layout-xml-file
