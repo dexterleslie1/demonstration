@@ -1358,3 +1358,218 @@ FrameLayout 本身属性很少，但其**子视图**可以使用一些非常重�
 
 ```
 
+
+
+## 布局 - `LinearLayout`
+
+### 核心概念
+
+**LinearLayout** 是一个将其所有子视图（View）沿**单个方向**（水平或垂直）依次排列的布局容器。
+
+您可以把它想象成一列士兵（垂直）或者一排桌子（水平），每个元素都紧挨着前一个元素排列。
+
+---
+
+### 主要特点和用途
+
+1.  **简单直观**：排列规则非常简单，易于理解和上手。
+2.  **顺序排列**：子视图按照在 XML 中定义的顺序依次显示。
+3.  **权重分配**：核心功能，可以按比例分配剩余空间，非常适合实现等分布局。
+4.  **常用场景**：适合创建简单的列表式布局（如设置项列表）、表单（如登录界面）、水平或垂直排列的按钮组等。
+
+---
+
+### 关键属性
+
+#### 1. 布局自身属性 (设置在 LinearLayout 标签上)
+
+*   `android:orientation` (**必须属性**)
+    *   `vertical`：子视图**垂直**排列（成一列）。
+    *   `horizontal`：子视图**水平**排列（成一行）。
+
+*   `android:gravity`
+    *   控制所有**子视图**在 LinearLayout **内部**的整体对齐方式。
+    *   **常用值**：`center`, `center_vertical`, `center_horizontal`, `left`, `right`, `top`, `bottom`，以及组合（如 `left|center_vertical`）。
+
+*   `android:layout_gravity` (设置在子视图上)
+    *   控制**该子视图自身**在 LinearLayout **内部**的对齐方式。
+    *   例如，在垂直的 LinearLayout 中，一个按钮设置 `android:layout_gravity="right"`，它会位于行的最右侧。
+
+*   `android:baselineAligned`
+    *   默认为 `true`。如果设置为 `false`，会阻止布局对齐其子视图的文本基线（baseline）。在需要精确控制包含 `TextView` 的视图对齐时可能用到。
+
+#### 2. 权重 (Weight) - 最强大的功能
+
+权重是 LinearLayout 的灵魂，通过 `android:layout_weight` 属性设置在**子视图**上。它用于**按比例分配父布局中的剩余空间**。
+
+**使用规则**：
+
+1.  通常需要将对应方向的尺寸（宽或高）设置为 `0dp`（`MATCH_CONSTRAINT`）。
+2.  系统会将所有子视图的 `layout_weight` 值相加，然后按每个视图的权重比例分配剩余空间。
+
+**示例**：实现三个水平等分的按钮。
+```xml
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal">
+
+    <Button
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="One" />
+
+    <Button
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="Two" />
+
+    <Button
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="Three" />
+
+</LinearLayout>
+```
+三个按钮的权重都是 1，总和为 3，因此每个按钮分得 `1/3` 的剩余空间，从而实现等分。
+
+**不等分示例**：`layout_weight="2"` 的视图将获得的空间是 `layout_weight="1"` 的视图的两倍。
+
+---
+
+### 实际应用场景与示例
+
+#### 场景 1：垂直排列的登录表单
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center_vertical"
+    android:padding="20dp">
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="用户名/邮箱"
+        android:inputType="textEmailAddress" />
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:hint="密码"
+        android:inputType="textPassword" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="登录" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="15dp"
+        android:text="忘记密码？"
+        android:textColor="@color/design_default_color_primary" />
+
+</LinearLayout>
+```
+
+#### 场景 2：底部水平等分的标签栏
+```xml
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="56dp"
+    android:orientation="horizontal"
+    android:background="@android:color/white">
+
+    <ImageView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:src="@drawable/ic_home"
+        android:scaleType="centerInside"
+        android:contentDescription="首页" />
+
+    <ImageView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:src="@drawable/ic_search"
+        android:scaleType="centerInside"
+        android:contentDescription="搜索" />
+
+    <ImageView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:src="@drawable/ic_add"
+        android:scaleType="centerInside"
+        android:contentDescription="添加" />
+
+    <ImageView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:src="@drawable/ic_notifications"
+        android:scaleType="centerInside"
+        android:contentDescription="通知" />
+
+    <ImageView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:src="@drawable/ic_profile"
+        android:scaleType="centerInside"
+        android:contentDescription="我" />
+
+</LinearLayout>
+```
+
+---
+
+### 与 ConstraintLayout 的对比
+
+| 特性         | LinearLayout                                               | ConstraintLayout                                     |
+| :----------- | :--------------------------------------------------------- | :--------------------------------------------------- |
+| **理念**     | **线性顺序**排列                                           | **相对约束**定位                                     |
+| **复杂度**   | **简单**，易于理解                                         | **强大**，学习曲线稍陡                               |
+| **嵌套**     | 容易产生**嵌套**（垂直LinearLayout内包含水平LinearLayout） | **极力避免嵌套**，视图层级扁平                       |
+| **性能**     | 简单布局性能好，复杂嵌套布局性能差                         | 复杂布局性能**更优**                                 |
+| **核心功能** | **权重（Weight）** 分配                                    | **约束（Constraint）、链（Chain）、屏障（Barrier）** |
+| **适用场景** | **简单的列表、表单、等分布局**                             | **几乎所有布局，特别是复杂和响应式界面**             |
+
+---
+
+### 最佳实践和注意事项
+
+1.  **避免过度嵌套**：这是使用 LinearLayout 最大的陷阱。深层嵌套会严重影响测量和绘制性能。如果布局超过 3-4 层嵌套，应考虑使用 `ConstraintLayout` 重构。
+2.  **权重性能**：使用 `layout_weight` 会有微小的性能开销，因为系统需要测量两次。但在简单布局中影响可忽略。
+3.  `match_parent` 与权重：有时为了特殊效果，也会在尺寸设为 `match_parent` 时使用权重，但这会改变计算方式，需要谨慎使用。
+4.  **明确方向**：始终记得设置 `android:orientation` 属性，否则可能出现非预期的布局结果。
+
+### 总结
+
+| 特性         | 说明                                                         |
+| :----------- | :----------------------------------------------------------- |
+| **核心行为** | 将其子视图按**水平**或**垂直**方向**顺序排列**。             |
+| **核心属性** | `android:orientation`, `android:layout_weight`               |
+| **优点**     | **简单直观**，**上手快**，**权重系统强大**。                 |
+| **缺点**     | 容易导致**视图嵌套过深**，影响性能。                         |
+| **适用场景** | **简单的线性排列布局**、**等分布局**、**表单**、**标签栏**。 |
+| **地位**     | **经典型布局**，适合简单场景，是 Android UI 的基础组成部分。 |
+
+**建议**：对于简单的、线性的布局，`LinearLayout` 依然是绝佳的选择，因为它写起来又快又清晰。但对于任何复杂的、需要适配多种屏幕的界面，都应优先考虑使用 `ConstraintLayout`。
+
+### 示例
+
+>说明：`LinearLayout` 和 `layout_weight` 的用法。
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-linearlayout)
