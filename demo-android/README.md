@@ -451,6 +451,172 @@ Activity会在以上四种形态中相互切换，至于如何切换，这因用
 
 
 
+## `Application` - 概念
+
+您可以这样理解：
+*   **Android应用程序**：指整个**房子**。
+*   **`android.app.Application``**：指房子的**地基和主框架**。每个房子都必须有地基，但它本身不是房子。
+
+---
+
+### 核心定义
+
+`android.app.Application` 是一个**基类**，用于维护应用程序的**全局状态**。它是你的Android应用启动时，系统创建的**第一个单例对象**，并且在整个应用进程存续期间都会一直存在。
+
+它是一个“应用程序级别”的上下文，而不是“某个界面”的上下文。
+
+### 它的主要角色和职责
+
+1.  **应用的入口点**：
+    虽然它没有`main()`方法（Android系统的zygote进程处理了真正的入口），但`Application`对象的创建标志着你的应用代码开始执行。它是你应用内所有组件的起点。
+
+2.  **全局状态容器**：
+    因为它是最早创建、最后销毁的对象，并且在整个应用中只有一个实例，所以它是存放**全局变量**和**需要全局访问的数据**的理想场所。
+    *   例如：你初始化了一个全局的网络请求客户端（如OkHttpClient）、图片加载库（如Glide）或者数据库帮助类，你可以把它们放在这里，这样应用中的所有Activity和Service都能访问到同一个实例。
+
+3.  **提供应用级别的上下文**：
+    它提供了一个`Context`（上下文），这个上下文与整个应用的生命周期绑定，而不是与某个Activity绑定。当你需要一个生命周期与应用一样长的`Context`时（例如在`Service`中或后台任务中），就应该使用`Application Context`，而不是`Activity Context`，这样可以避免内存泄漏。
+
+### 如何使用它？
+
+你通常不会直接使用`Application`类，而是创建一个它的**子类**。
+
+**步骤示例：**
+
+1.  **创建自定义Application类**：
+    在你的项目中创建一个类，继承自`android.app.Application`。
+
+    ```kotlin
+    // Kotlin 示例
+    class MyCustomApplication : Application() {
+    
+        // 声明一个全局变量
+        lateinit var globalHttpClient: OkHttpClient
+    
+        override fun onCreate() {
+            super.onCreate() // 务必先调用父类方法
+    
+            // 这是初始化全局资源的最佳地点
+            globalHttpClient = OkHttpClient.Builder()
+                .connectTimeout(20, TimeUnit.SECONDS)
+                .build()
+    
+            // 也可以在这里初始化第三方SDK，如Crash reporting, Analytics等
+            Firebase.initialize(this)
+            Timber.plant(Timber.DebugTree()) // 初始化日志库
+        }
+    }
+    ```
+
+2.  **在AndroidManifest.xml中注册**：
+    你必须告诉Android系统使用你这个自定义的Application类，而不是默认的。在`<application>`标签中指定它的`name`属性。
+
+    ```xml
+    <manifest ...>
+        <application
+            android:name=".MyCustomApplication" <!-- 这里指向你的自定义类 -->
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/app_name"
+            ... >
+            <activity ...>
+                ...
+            </activity>
+        </application>
+    </manifest>
+    ```
+
+3.  **在其他地方获取Application实例**：
+    你可以在Activity、Service或任何有Context的地方轻松获取到你的Application实例。
+
+    ```kotlin
+    // 在某个Activity中
+    class MainActivity : AppCompatActivity() {
+    
+        override fun onCreate(savedInstanceState: Bundle?) {
+            super.onCreate(savedInstanceState)
+    
+            // 获取Application实例
+            val myApp = application as MyCustomApplication
+    
+            // 使用Application中的全局对象
+            val client = myApp.globalHttpClient
+            // 现在可以用这个client进行网络请求了
+        }
+    }
+    ```
+
+### 与 Activity 的区别
+
+| 特性         | `android.app.Application`          | `android.app.Activity`                 |
+| :----------- | :--------------------------------- | :------------------------------------- |
+| **数量**     | **一个应用只有一个实例**           | **一个应用可以有多个实例**（多个界面） |
+| **生命周期** | 从应用启动到结束                   | 从界面创建到销毁（会频繁创建和销毁）   |
+| **用途**     | 维护**全局**、**持久**的状态和资源 | 管理**一个界面**的显示和用户交互       |
+| **上下文**   | 提供**应用级别**的Context          | 提供**界面级别**的Context              |
+
+### 总结
+
+**`android.app.Application`** 是Android应用的**基石**。它是一个单例类，代表的是**应用程序本身**，而不是应用程序中的某个界面。它的主要作用是：
+
+*   **作为应用的启动入口**
+*   **存放和管理全局资源与状态**
+*   **提供应用级别的上下文**
+
+正确使用`Application`类对于编写高效、可维护且没有内存泄漏的Android应用至关重要。
+
+
+
+## `Application` - 基本用法
+
+>参考链接：https://www.cnblogs.com/tiejiangweigaibianercunzai/p/4003357.html
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-application)
+
+创建自定义 `Application`：
+
+```java
+package com.future.demo;
+
+import android.app.Application;
+import android.util.Log;
+
+/**
+ *
+ */
+public class BaseApplication extends Application{
+    private final static String TAG = BaseApplication.class.getSimpleName();
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        Log.i(TAG, "调用onCreate()函数");
+    }
+}
+
+```
+
+`AndroidManifest.xml` 中配置自定义 `Application`
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme"
+        android:name=".BaseApplication">
+        ...
+    </application>
+
+</manifest>
+```
+
+
+
 ## `Application` - `ActivityLifecycleCallbacks`
 
 >`ActivityLifecycleCallbacks` 使用方法初探：https://blog.csdn.net/tongcpp/article/details/40344871
