@@ -1573,3 +1573,748 @@ FrameLayout 本身属性很少，但其**子视图**可以使用一些非常重�
 >说明：`LinearLayout` 和 `layout_weight` 的用法。
 >
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-linearlayout)
+
+
+
+## 布局 - `TabLayout`
+
+
+
+## 布局 - `gravity`和`layout_gravity`区别
+
+在 Android 布局中，`android:gravity` 和 `android:layout_gravity` 是两个容易混淆但作用完全不同的属性。它们的核心区别在于**作用对象**和**控制范围**的不同。以下是详细对比：
+
+---
+
+### 1. `android:gravity`  
+**作用对象**：**当前 View 自身的内容**（如 TextView 的文字、ImageView 的图片、LinearLayout 的子 View 等）。  
+**功能**：控制**内容**在**当前 View 内部**的对齐方式。  
+
+#### 适用场景举例：
+- 让 `TextView` 的文字居中显示。
+- 让 `ImageView` 的图片在控件内靠右显示。
+- 让 `LinearLayout` 的所有子 View 在布局内底部对齐。
+
+#### 常用值：
+| 值                                  | 说明                   |
+| ----------------------------------- | ---------------------- |
+| `left` / `start`                    | 内容靠左（起始边）对齐 |
+| `right` / `end`                     | 内容靠右（结束边）对齐 |
+| `top`                               | 内容顶部对齐           |
+| `bottom`                            | 内容底部对齐           |
+| `center`                            | 内容水平和垂直居中     |
+| `center_vertical`                   | 内容垂直居中           |
+| `center_horizontal`                 | 内容水平居中           |
+| 组合值（如 `left|center_vertical`） | 同时指定多个方向的对齐 |
+
+#### 示例代码：
+```xml
+<!-- TextView 文字居中 -->
+<TextView
+    android:layout_width="200dp"
+    android:layout_height="100dp"
+    android:gravity="center"  <!-- 文字在 TextView 内部居中 -->
+    android:text="Hello World" />
+
+<!-- LinearLayout 的子 View 在布局内底部对齐 -->
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="300dp"
+    android:gravity="bottom"  <!-- 所有子 View 在 LinearLayout 内部底部对齐 -->
+    android:orientation="vertical">
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Button 1" />
+</LinearLayout>
+```
+
+---
+
+### 2. `android:layout_gravity`  
+**作用对象**：**当前 View 自身**（作为子 View 时）。  
+**功能**：控制**当前 View** 在**父容器**中的对齐方式。  
+
+#### 适用场景举例：
+- 让 `Button` 在 `LinearLayout` 中靠右显示。
+- 让 `TextView` 在 `FrameLayout` 中居中显示。
+- 让 `ImageView` 在父布局底部显示。
+
+#### 注意事项：
+- 仅在父容器支持自由定位时有效（如 `LinearLayout`、`FrameLayout`），**在 `ConstraintLayout` 中无效**（应使用约束代替）。
+- 在 `LinearLayout` 中，方向会影响效果：
+  - 垂直方向的 `LinearLayout`：`layout_gravity` 只能控制**水平方向**的对齐（如 `left`/`right`/`center_horizontal`）。
+  - 水平方向的 `LinearLayout`：`layout_gravity` 只能控制**垂直方向**的对齐（如 `top`/`bottom`/`center_vertical`）。
+
+#### 示例代码：
+```xml
+<!-- Button 在 LinearLayout 中靠右显示 -->
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal">
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"  <!-- Button 自身在父布局中靠右 -->
+        android:text="Button" />
+</LinearLayout>
+
+<!-- TextView 在 FrameLayout 中居中 -->
+<FrameLayout
+    android:layout_width="300dp"
+    android:layout_height="300dp">
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"  <!-- TextView 自身在父布局中居中 -->
+        android:text="Centered Text" />
+</FrameLayout>
+```
+
+---
+
+### 对比总结表
+| 属性         | `android:gravity`                        | `android:layout_gravity`                             |
+| ------------ | ---------------------------------------- | ---------------------------------------------------- |
+| **作用对象** | 当前 View 的**内容**                     | 当前 View **自身**                                   |
+| **控制范围** | View **内部**                            | 父容器**内**的 View 位置                             |
+| **适用容器** | 所有 View（如 TextView、LinearLayout）   | 仅支持自由定位的容器（如 LinearLayout、FrameLayout） |
+| **典型用途** | 文字居中、图片对齐、子 View 在布局内对齐 | 控件在父布局中的位置调整                             |
+
+---
+
+### 常见问题解答
+
+#### Q1：为什么 `layout_gravity` 在 LinearLayout 中有时无效？
+- **原因**：`LinearLayout` 的方向限制了 `layout_gravity` 的有效方向。
+  - 垂直 `LinearLayout`：只能水平对齐（`left`/`right`/`center_horizontal`）。
+  - 水平 `LinearLayout`：只能垂直对齐（`top`/`bottom`/`center_vertical`）。
+- **解决方案**：改用 `ConstraintLayout` 或 `FrameLayout`。
+
+#### Q2：如何同时控制内容和 View 的位置？
+- 组合使用两个属性：
+  ```xml
+  <TextView
+      android:layout_width="200dp"
+      android:layout_height="100dp"
+      android:gravity="center"          <!-- 文字居中 -->
+      android:layout_gravity="end"      <!-- 控件自身在父布局中靠右 -->
+      android:text="Hello World" />
+  ```
+
+#### Q3：`ConstraintLayout` 中如何替代 `layout_gravity`？
+- 使用约束（Constraint）代替：
+  ```xml
+  <Button
+      app:layout_constraintEnd_toEndOf="parent"  <!-- 替代 layout_gravity="end" -->
+      app:layout_constraintTop_toTopOf="parent"
+      app:layout_constraintBottom_toBottomOf="parent" />
+  ```
+
+---
+
+### 记忆技巧
+- **gravity** = **"内容"** 的对齐（如文字、图片、子 View 在容器内）。
+- **layout_gravity** = **"自己"** 的对齐（作为子 View 时在父容器中的位置）。
+
+
+
+## 布局 - `LayoutInflater`
+
+>参考链接：https://www.cnblogs.com/sanjinxiong/articles/2125142.html
+
+### 核心定义
+
+**LayoutInflater**（布局填充器）是 Android 系统中一个用于**将 XML 布局文件动态解析并转换为实际的 View 对象**的工具类。它的本质是一个**将静态的 XML 布局“膨胀”（inflate）为内存中的 View 层级结构**的机制。
+
+您可以把它想象成一个“布局解析工厂”：
+- **输入**：XML 布局文件（如 `res/layout/activity_main.xml`）。
+- **输出**：对应的 `View` 或 `ViewGroup` 对象树。
+
+---
+
+### 为什么需要 LayoutInflater？
+
+1. **动态加载布局**：并非所有界面都直接在 `Activity.onCreate()` 中用 `setContentView()` 设置，有时需要**运行时动态加载**（如 RecyclerView 的 Item、Dialog 的自定义布局、Fragment 的布局）。
+2. **性能优化**：避免在不需要时加载复杂布局，按需动态加载。
+3. **复用性**：同一布局文件可被多次解析为不同的 View 实例。
+
+---
+
+### 核心使用场景
+
+#### 1. Activity 的 `setContentView()`
+当您调用 `setContentView(R.layout.activity_main)` 时，系统内部实际上是通过 `LayoutInflater` 将 XML 转换为 View 并附加到 Activity 的窗口上。
+
+#### 2. Fragment 的 `onCreateView()`
+```java
+@Override
+public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    // 将 fragment_layout.xml 解析为 View
+    return inflater.inflate(R.layout.fragment_layout, container, false);
+}
+```
+
+#### 3. RecyclerView 的 Adapter
+```java
+@Override
+public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    // 将 item_layout.xml 解析为 View
+    View view = LayoutInflater.from(parent.getContext())
+            .inflate(R.layout.item_layout, parent, false);
+    return new ViewHolder(view);
+}
+```
+
+#### 4. 自定义 Dialog 或 PopupWindow
+```java
+Dialog dialog = new Dialog(context);
+View dialogView = LayoutInflater.from(context)
+        .inflate(R.layout.dialog_custom, null);
+dialog.setContentView(dialogView);
+```
+
+#### 5. 动态添加 View 到现有布局
+```java
+ViewGroup parent = findViewById(R.id.container);
+View child = LayoutInflater.from(this)
+        .inflate(R.layout.child_view, parent, false);
+parent.addView(child);
+```
+
+---
+
+### 关键方法解析
+
+#### 1. 获取 LayoutInflater 实例
+有三种方式：
+```java
+// 方式1：从系统服务获取（最常用）
+LayoutInflater inflater = LayoutInflater.from(context);
+
+// 方式2：通过 Activity 的方法获取
+LayoutInflater inflater = getLayoutInflater(); // 仅在 Activity 中可用
+
+// 方式3：从 Context 获取
+LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+```
+
+#### 2. 核心 inflate() 方法
+```java
+public View inflate(@LayoutRes int resource, @Nullable ViewGroup root, boolean attachToRoot)
+```
+
+- **参数说明**：
+  - `resource`：XML 布局资源 ID（如 `R.layout.my_layout`）。
+  - `root`：可选父容器（用于正确生成布局参数 `LayoutParams`）。
+  - `attachToRoot`：是否将生成的 View 立即添加到 `root` 中。
+    - **`true`**：解析的 View 会自动添加到 `root`，并返回 `root`。
+    - **`false`**：仅解析 View，不自动添加（需手动 `addView()`）。
+
+- **返回值**：
+  - 如果 `attachToRoot=true`，返回 `root`。
+  - 如果 `attachToRoot=false`，返回解析后的 View 根对象。
+
+#### 3. 常用方法重载
+```java
+// 最简形式（无父容器，无 attachToRoot）
+inflater.inflate(R.layout.simple_layout, null);
+
+// 指定父容器但不自动附加
+inflater.inflate(R.layout.simple_layout, parent, false);
+
+// 指定父容器并自动附加（等同于 inflate + parent.addView()）
+inflater.inflate(R.layout.simple_layout, parent, true);
+```
+
+---
+
+### 工作原理（源码简析）
+
+1. **XML 解析**：
+   - 使用 `XmlPullParser` 解析 XML 文件。
+   - 根据标签名（如 `<TextView>`）通过反射创建对应的 View 实例。
+
+2. **属性处理**：
+   - 读取 XML 中的 `android:` 属性（如 `android:layout_width`）。
+   - 通过 `AttributeSet` 将属性值设置到 View 对象。
+
+3. **递归构建**：
+   - 深度优先遍历 XML 节点树，递归创建所有子 View。
+   - 维护父子关系，设置 `LayoutParams`。
+
+4. **性能优化**：
+   - 使用 `WeakHashMap` 缓存反射的构造函数（Android 2.3+）。
+
+---
+
+### 注意事项与最佳实践
+
+1. **正确处理父容器和 attachToRoot**：
+   - 如果后续需要手动 `addView()`，必须使用 `inflate(..., parent, false)`。
+   - 错误示例：
+     ```java
+     // 错误！会导致重复添加（可能引发 IllegalStateException）
+     View view = inflater.inflate(R.layout.child, parent, true);
+     parent.addView(view);
+     ```
+
+2. **避免传递 null 作为 root**：
+   - 如果 `root=null`，生成的 View 的 `LayoutParams` 会丢失（可能导致布局异常）。
+   - 正确做法：
+     ```java
+     // 推荐：即使不立即附加，也传递 parent 以保证 LayoutParams 正确
+     View view = inflater.inflate(R.layout.child, parent, false);
+     parent.addView(view);
+     ```
+
+3. **性能优化**：
+   - 避免在滚动列表（如 RecyclerView）中频繁解析复杂布局。
+   - 考虑使用 `ViewStub` 延迟加载不立即显示的布局。
+
+4. **自定义 View 的特殊处理**：
+   - 自定义 View 的构造函数需支持 `AttributeSet`：
+     ```java
+     public MyView(Context context, AttributeSet attrs) {
+         super(context, attrs);
+         // 解析自定义属性
+     }
+     ```
+
+---
+
+### 常见问题解答
+
+#### Q1：`inflate()` 的 `attachToRoot` 参数到底怎么用？
+- **`true`**：适合“一次性”场景（如 Fragment 的 `onCreateView()` 返回的 View 会自动附加到容器）。
+- **`false`**：适合需要手动控制添加时机的场景（如 RecyclerView 的 ItemView 由 Adapter 管理添加）。
+
+#### Q2：为什么有时布局参数（如 width/height）失效？
+- 通常是因为 `root` 参数传递了 `null`，导致无法生成正确的 `LayoutParams`。务必传递父容器引用。
+
+#### Q3：LayoutInflater 和 ViewBinding/DataBinding 的关系？
+- **ViewBinding/DataBinding** 是更高级的封装，底层仍依赖 `LayoutInflater`。
+- 它们通过生成绑定类来避免 `findViewById()`，但布局解析过程不变。
+
+---
+
+### 总结
+
+| 特性         | 说明                                                         |
+| ------------ | ------------------------------------------------------------ |
+| **本质**     | XML 布局 → View 对象的转换器                                 |
+| **核心方法** | `inflate(int resource, ViewGroup root, boolean attachToRoot)` |
+| **主要场景** | Activity/Fragment/Adapter/Dialog 的布局动态加载              |
+| **性能影响** | 反射创建 View 有一定开销，应避免频繁调用                     |
+| **关联技术** | `ViewStub`（延迟加载）、`Merge` 标签（优化层级）             |
+
+**一句话记忆**：  
+LayoutInflater 是 Android 的“布局解析引擎”，负责将 XML 文件“吹胀”成内存中的 View 树，是动态界面构建的基石。
+
+
+
+## `Android Support`库和`AndroidX`库区别
+
+**`android.support` 和 `androidx` 本质上是同一套库，只是 `androidx` 是新的、官方标准的命名和打包方式。**
+
+您可以把它理解为一次大规模的品牌重塑和技术升级：
+
+*   **`android.support`** (Android Support Library)：是 **旧的、已废弃 (deprecated)** 的命名空间。
+*   **`androidx`** (AndroidX)：是 **新的、官方当前强制要求** 的命名空间。
+
+它们是谷歌为了更好的管理、维护和标准化支持库而进行的一次**重大重构和重命名**。
+
+---
+
+### 对比表格
+
+| 特性         | `android.support` (旧)                                       | `androidx` (新)                                              |
+| :----------- | :----------------------------------------------------------- | :----------------------------------------------------------- |
+| **包名**     | `com.android.support:appcompat-v7`<br>`com.android.support:design` | `androidx.appcompat:appcompat`<br>`com.google.android.material:material` |
+| **命名空间** | 杂乱，**不统一** (如 `v4`, `v7`...)                          | **统一、简洁**，所有库都以 `androidx` 开头                   |
+| **版本管理** | 各个库版本号**独立**，难以同步                               | 所有库版本号**统一**，易于管理                               |
+| **发布频率** | 与 Android 平台版本绑定，更新慢                              | **独立于**操作系统发布，更新更快                             |
+| **现状**     | **已废弃**，不再维护                                         | **官方现行标准**，所有新项目**必须使用**                     |
+| **语义版本** | 不严格遵循                                                   | **严格遵循**                                                 |
+
+---
+
+### 为什么会有这个变化？(从 Support 到 AndroidX)
+
+旧的 `android.support` 库存在很多历史遗留问题，让开发者非常头疼：
+
+1.  **混乱的包结构和版本管理**：
+    *   旧库有 `support-v4`, `appcompat-v7`, `recyclerview-v7` 等。这里的 `v7` 原本代表最低支持 API 级别，但早已名不副实，造成极大混淆。
+    *   这些库的版本号彼此独立，依赖管理像一场噩梦。比如 `appcompat-v7` 是 `27.1.1`，而 `recyclerview-v7` 可能是 `27.0.2`，非常容易导致冲突。
+
+2.  **与操作系统强绑定**：
+    *   旧 Support Library 的发布节奏与 Android 系统版本绑定，无法快速迭代新功能或修复问题。
+
+**AndroidX 就是为了解决这些问题而生的**，它带来了：
+
+*   **统一的包名**：所有库都归到 `androidx` 命名空间下，结构清晰。
+    *   `androidx.appcompat`
+    *   `androidx.recyclerview`
+    *   `androidx.constraintlayout`
+*   **严格的语义化版本控制**：版本号 `Major.Minor.Patch` 的变更有了明确约定。
+*   **独立发布**：可以随时更新，不受系统版本限制，能更快地提供新功能和修复。
+
+### 如何迁移？
+
+如果您有一个使用旧 Support Library 的项目，强烈建议迁移到 AndroidX。
+
+#### 1. 必要设置
+在项目根目录的 `gradle.properties` 文件中，确保有以下两行：
+```properties
+android.useAndroidX=true
+android.enableJetifier=true
+```
+*   `android.useAndroidX=true`：表示项目在编译时使用 AndroidX 包。
+*   `android.enableJetifier=true`：这是一个非常强大的功能，表示 Gradle 会自动将项目依赖的**第三方库**中的旧 Support 包重写为对应的 AndroidX 包。
+
+#### 2. 一键迁移 (推荐)
+使用 Android Studio 提供的自动化工具：
+1.  菜单栏 -> **Refactor** -> **Migrate to AndroidX...**
+2.  Studio 会分析你的项目并提供一份迁移预览。
+3.  确认后，它会自动完成绝大部分的**包名**和**导入语句**的替换。
+
+**注意**：迁移后务必进行全面的测试，因为自动迁移可能无法覆盖所有情况（特别是那些通过反射或代码生成的类名）。
+
+---
+
+### 常见库的映射关系
+
+| 旧 Support Library (`com.android.support:`) | 新 AndroidX 库                                               |
+| :------------------------------------------ | :----------------------------------------------------------- |
+| `appcompat-v7`                              | `androidx.appcompat:appcompat`                               |
+| `design`                                    | `com.google.android.material:material`                       |
+| `recyclerview-v7`                           | `androidx.recyclerview:recyclerview`                         |
+| `cardview-v7`                               | `androidx.cardview:cardview`                                 |
+| `support-v4`                                | 被拆分 (如 `androidx.core:core`, `androidx.fragment:fragment`) |
+| `constraint-layout`                         | `androidx.constraintlayout:constraintlayout`                 |
+
+您可以在官方的 https://developer.android.com/jetpack/androidx/migrate/class-mappings 中查看完整的对应关系。
+
+### 总结与建议
+
+|              | 建议                                                         |
+| :----------- | :----------------------------------------------------------- |
+| **新项目**   | **必须、且只能使用 AndroidX**。这是 Android 开发的现行标准和起点。 |
+| **老项目**   | **强烈建议安排时间进行迁移**。旧 Support Library 已停止维护，不迁移未来会遇到越来越多的兼容性问题，也无法使用 Jetpack 的新特性。 |
+| **第三方库** | 现在绝大多数流行的第三方库都已支持 AndroidX。如果遇到尚未迁移的库，`Jetifier` 工具可以帮你自动转换其二进制依赖。 |
+
+**核心结论**：`androidx` 不是另一个新库，它就是 `android.support` 库的官方升级版和替代品。这是一个不可逆的趋势，所有新的开发工作都必须基于 AndroidX。
+
+
+
+## `Fragment` - 概念
+
+Fragment（片段）是 Android 中的一个重要组件，它可以理解为**Activity 中的模块化 UI 片段**，具有自己的生命周期和用户界面。
+
+### 核心概念
+
+Fragment 具有以下关键特性：
+
+1. **模块化设计**：允许将 Activity 界面分解为多个独立、可重用的部分
+2. **独立生命周期**：拥有与 Activity 类似但更复杂的生命周期
+3. **灵活组合**：可以在运行时动态添加、移除或替换
+4. **适配多屏幕**：特别适合平板和手机的不同屏幕尺寸适配
+
+### Fragment 与 Activity 的区别
+
+| 特性         | Fragment                   | Activity     |
+| ------------ | -------------------------- | ------------ |
+| **生命周期** | 依附于宿主 Activity        | 独立         |
+| **UI 组成**  | Activity 的一部分          | 完整的窗口   |
+| **启动方式** | 必须嵌入 Activity 中       | 可以独立启动 |
+| **复用性**   | 高，可在多个 Activity 重用 | 低           |
+| **后台运行** | 不能独立运行               | 可以独立运行 |
+
+### Fragment 生命周期
+
+Fragment 的生命周期比 Activity 更复杂，主要包含以下状态和回调方法：
+
+```
+onAttach() → onCreate() → onCreateView() → onActivityCreated() → onStart() → onResume() → onPause() → onStop() → onDestroyView() → onDestroy() → onDetach()
+```
+
+### 基本使用示例
+
+#### 1. 创建 Fragment
+
+```java
+public class MyFragment extends Fragment {
+    
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        // 加载布局文件
+        return inflater.inflate(R.layout.fragment_my, container, false);
+    }
+    
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        // 初始化视图组件
+        Button button = view.findViewById(R.id.my_button);
+        button.setOnClickListener(v -> {
+            // 处理点击事件
+        });
+    }
+}
+```
+
+#### 2. 在 Activity 中添加 Fragment
+
+##### XML 方式（静态添加）
+
+```xml
+<!-- activity_main.xml -->
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/fragment_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <fragment
+        android:name="com.example.MyFragment"
+        android:id="@+id/my_fragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+</FrameLayout>
+```
+
+##### Java 方式（动态添加）
+
+```java
+// 在 Activity 中
+FragmentManager fragmentManager = getSupportFragmentManager();
+FragmentTransaction transaction = fragmentManager.beginTransaction();
+
+// 添加 Fragment
+transaction.add(R.id.fragment_container, new MyFragment());
+
+// 或者替换现有 Fragment
+// transaction.replace(R.id.fragment_container, new MyFragment());
+
+// 添加到返回栈，以便按返回键能回到前一个 Fragment
+transaction.addToBackStack(null);
+
+transaction.commit();
+```
+
+### Fragment 通信
+
+#### 1. Fragment 与 Activity 通信
+
+```java
+// 在 Fragment 中
+public class MyFragment extends Fragment {
+    private OnFragmentInteractionListener mListener;
+
+    // 定义接口
+    public interface OnFragmentInteractionListener {
+        void onFragmentInteraction(Uri uri);
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        try {
+            mListener = (OnFragmentInteractionListener) context;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(context.toString()
+                    + " must implement OnFragmentInteractionListener");
+        }
+    }
+
+    private void sendDataToActivity() {
+        if (mListener != null) {
+            mListener.onFragmentInteraction(Uri.parse("content://..."));
+        }
+    }
+}
+
+// 在 Activity 中实现接口
+public class MainActivity extends AppCompatActivity 
+    implements MyFragment.OnFragmentInteractionListener {
+    
+    @Override
+    public void onFragmentInteraction(Uri uri) {
+        // 处理来自 Fragment 的数据
+    }
+}
+```
+
+#### 2. Fragment 之间通信
+
+推荐通过共享的 ViewModel 或通过宿主 Activity 作为中介：
+
+```java
+// 使用 ViewModel
+public class SharedViewModel extends ViewModel {
+    private final MutableLiveData<String> selected = new MutableLiveData<>();
+
+    public void select(String item) {
+        selected.setValue(item);
+    }
+
+    public LiveData<String> getSelected() {
+        return selected;
+    }
+}
+
+// 在 Fragment 中
+SharedViewModel model = ViewModelProviders.of(getActivity()).get(SharedViewModel.class);
+model.getSelected().observe(this, item -> {
+    // 更新 UI
+});
+```
+
+### Fragment 类型
+
+1. **UI Fragment**：带有用户界面的 Fragment
+2. **Headless Fragment**：没有用户界面，用于后台任务
+3. **DialogFragment**：显示对话框的专用 Fragment
+4. **PreferenceFragment**：用于显示设置界面
+
+### 最佳实践
+
+1. **避免在 Fragment 中直接引用其他 Fragment**
+2. **使用 ViewModel 和 LiveData 进行通信**
+3. **考虑使用 Navigation 组件管理 Fragment 导航**
+4. **正确处理配置变更（如屏幕旋转）**
+5. **合理使用 setRetainInstance(true) 保留 Fragment 实例**
+
+### 常见问题
+
+#### 1. Fragment 重叠问题
+
+**解决方案**：
+- 在 onCreate() 中检查 savedInstanceState 是否为 null
+- 使用 commitNow() 替代 commit() 立即执行事务
+
+#### 2. getActivity() 返回 null
+
+**原因**：Fragment 未附加到 Activity 或已分离
+
+**解决方案**：
+- 在 onAttach() 中保存 Activity 引用
+- 使用 isAdded() 检查 Fragment 是否已添加
+
+#### 3. Fragment 事务异步执行
+
+**解决方案**：
+- 了解 commit() 是异步的，commitNow() 是同步的
+- 使用 executePendingTransactions() 强制立即执行
+
+Fragment 是 Android 开发中非常重要的组件，合理使用可以大大提高应用的模块化程度和用户体验。
+
+
+
+## `Fragment` - 用法
+
+>`Fragment` 的生命周期：https://baijiahao.baidu.com/s?id=1616346831006531612&wfr=spider&for=pc
+
+### `xml`方式添加`Fragment`
+
+>参考链接：https://developer.android.com/training/basics/fragments/creating#java
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-fragment-xml)
+
+`res/layout/fragment1_layout.xml`：
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center">
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="fragment1"/>
+</LinearLayout>
+```
+
+`Fragment1.java`：
+
+```java
+/**
+ *
+ */
+public class Fragment1 extends Fragment {
+    @Nullable
+    @Override
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment1_layout, null);
+        return view;
+    }
+}
+
+```
+
+`res/layout/fragment2_layout.xml`：
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center">
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="fragment2"/>
+</LinearLayout>
+```
+
+`Fragment2.java`：
+
+```java
+/**
+ *
+ */
+public class Fragment2 extends Fragment {
+    @Nullable
+    @Override
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment2_layout, null);
+        return view;
+    }
+}
+
+```
+
+`res/layout/content_main.xml`：
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context="com.future.demo.MainActivity"
+    tools:showIn="@layout/activity_main"
+    android:orientation="horizontal">
+    <fragment
+        android:id="@+id/fragment1"
+        android:name="com.future.demo.Fragment1"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1"/>
+    <fragment
+        android:id="@+id/fragment2"
+        android:name="com.future.demo.Fragment2"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1"/>
+</LinearLayout>
+
+```
+
