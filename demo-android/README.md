@@ -2318,3 +2318,86 @@ public class Fragment2 extends Fragment {
 
 ```
 
+
+
+### 编程方式添加`Fragment`
+
+>参考链接：https://guides.codepath.com/android/creating-and-using-fragments
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-fragment-programatically)
+
+`res/layout/fragment1_layout.xml`：
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center">
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="fragment1"/>
+</LinearLayout>
+```
+
+`Fragment1.java`：
+
+```java
+/**
+ *
+ */
+public class Fragment1 extends Fragment {
+    @Nullable
+    @Override
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment1_layout, null);
+        return view;
+    }
+}
+```
+
+`res/layout/content_main.xml`：
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context="com.future.demo.MainActivity"
+    tools:showIn="@layout/activity_main">
+
+    <!-- 用于存放 Fragment 的容器 -->
+    <FrameLayout
+        android:id="@+id/framelayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"></FrameLayout>
+
+</android.support.constraint.ConstraintLayout>
+```
+
+`MainActivity.java`：
+
+```java
+public class MainActivity extends AppCompatActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        ...
+
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction transaction = fragmentManager.beginTransaction();
+        Fragment fragment1 = new Fragment1();
+        // transaction.add(R.id.framelayout, fragment1, Fragment1.class.getSimpleName());
+        // 使用 replace 函数替代容器中的 Fragment
+        transaction.replace(R.id.framelayout, fragment1, Fragment1.class.getSimpleName());
+        transaction.commit();
+    }
+	
+    ...
+}
+```
