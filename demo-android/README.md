@@ -628,3 +628,284 @@ ActivityLifecycleCallbacks是什么？Application通过此接口提供了一套�
 为什么用ActivityLifecycleCallbacks？以往若需监测Activity的生命周期事件代码，你可能是这样做的，重写每一个Acivity的onResume()，然后作统计和处理,ActivityLifecycleCallbacks接口回调可以简化这一繁琐过程，在一个类中作统一处理。
 
 通过使用本站 [示例]() 研究ActivityLifecycleCallbacks监听器能够监听所有activity start和stop事件，能够很好地实现监听应用是否前台进入后台运行和后台进入前台运行切换动作。
+
+
+
+## 布局 - 类型
+
+布局（Layout）是 Android 开发中构建用户界面（UI）的基础。它们是一种特殊的视图组（ViewGroup），负责定义其子视图（View）在屏幕上的排列方式。
+
+Android 提供了多种布局，每种都有其特定的用途和排列规则。以下是主要的核心布局：
+
+---
+
+### 1. LinearLayout（线性布局）
+**特点**：将其子视图以**单行**或**单列**的形式线性排列。这是最直观、最常用的布局之一。
+*   **核心属性**：`android:orientation`
+    *   `vertical`（垂直）：子视图从上到下排成一列。
+    *   `horizontal`（水平）：子视图从左到右排成一行。
+*   **常用权重属性**：`android:layout_weight`
+    *   用于按比例分配剩余空间，非常实用。
+*   **示例场景**：登录界面的用户名、密码输入框和登录按钮垂直排列；应用底部几个按钮水平排列。
+
+---
+
+### 2. RelativeLayout（相对布局）
+**特点**：子视图的位置是**相对于其他兄弟视图**或**父容器**（RelativeLayout本身）来确定的。非常灵活。
+*   **核心属性**：以 `layout_toLeftOf`, `layout_toRightOf`, `layout_below`, `layout_above`, `layout_alignParentTop`, `layout_centerInParent` 等为代表。
+*   **优点**：可以减少布局嵌套，但规则稍复杂。
+*   **示例场景**：将一个图标放在文本框的左边，将一个按钮放置在父容器的右下角。
+
+---
+
+### 3. ConstraintLayout（约束布局）
+**特点**：目前**最强大、最推荐**的布局。它通过为每个子视图添加**约束（Constraint）** 来确定其位置，类似于 RelativeLayout 的升级版，但功能强大得多。
+*   **核心概念**：视图的每条边（上下左右）必须与其他视图或父容器的边建立约束关系。
+*   **强大功能**：
+    *   **百分比定位**：可以轻松实现按屏幕百分比布局。
+    *   **屏障（Barrier）**：根据多个视图的动态大小来定位。
+    *   **引导线（Guideline）**：一条不可见的参考线，用于辅助对齐。
+    *   **链（Chain）**：控制一组视图在水平或垂直方向上的分布方式。
+*   **优点**：扁平化布局，极大地减少嵌套，性能好，能轻松应对各种复杂和响应式界面。
+*   **示例场景**：**几乎所有复杂界面**的首选，特别是需要适配不同屏幕尺寸的场景。
+
+---
+
+### 4. FrameLayout（帧布局）
+**特点**：最简单的布局，所有子视图都会**堆叠**在屏幕的**左上角**。后添加的子视图会盖在先添加的视图上面。
+*   **核心属性**：`android:layout_gravity`，用于控制子视图在父容器中的对齐方式（如居中、右下角）。
+*   **用途**：通常用于**占位**或**显示单个视图**。常见用法是作为碎片（Fragment）的容器，或者用于实现重叠效果（如Logo浮于图片之上）。
+*   **示例场景**：应用内的弹窗（Dialog）、一个单独的图片展示页。
+
+---
+
+### 5. TableLayout（表格布局）
+**特点**：将其子视图排列成**行和列**的形式。每一行是一个 `TableRow` 元素，每个 `TableRow` 中的子视图代表一个单元格。
+*   **核心属性**：`android:stretchColumns` 和 `android:shrinkColumns`，用于控制哪些列可以拉伸或收缩以填满空间。
+*   **用途**：适合需要规整的表格式数据展示，但现在更常使用 `RecyclerView` 来实现更灵活的列表/网格。
+*   **示例场景**：简单的数据表单、课程表。
+
+---
+
+### 6. GridLayout（网格布局）
+**特点**：将界面划分为**无限细的网格线**，子视图可以指定自己占据哪几行哪几列，从而更灵活地实现网格状布局。
+*   **与TableLayout区别**：比 TableLayout 更灵活，子视图可以跨行和跨列。
+*   **用途**：适合需要自定义网格排布的场景，例如计算器界面、井字棋游戏棋盘。
+*   **示例场景**：计算器应用的按钮布局。
+
+---
+
+### 总结与选择建议
+
+| 布局                       | 特点                         | 适用场景                                               | 推荐度           |
+| :------------------------- | :--------------------------- | :----------------------------------------------------- | :--------------- |
+| **ConstraintLayout**       | **功能最强，性能好，扁平化** | **几乎所有复杂界面**，响应式设计                       | ⭐⭐⭐⭐⭐ **(首选)** |
+| **LinearLayout**           | 简单线性排列                 | 简单的列表或单行布局                                   | ⭐⭐⭐⭐             |
+| **RelativeLayout**         | 相对定位                     | 简单重叠或相对位置布局（正逐渐被ConstraintLayout替代） | ⭐⭐               |
+| **FrameLayout**            | 视图堆叠                     | 碎片容器、弹窗、单个视图展示                           | ⭐⭐⭐⭐             |
+| **TableLayout/GridLayout** | 表格/网格                    | 规整的表格式布局（使用场景较少）                       | ⭐⭐               |
+
+**现代最佳实践**：
+对于新项目，**强烈建议将 `ConstraintLayout` 作为默认和主要的布局**。它不仅能实现其他所有布局的效果，还能通过减少视图层级来提升性能，并且能更好地适配各种屏幕尺寸。`LinearLayout` 和 `FrameLayout` 在简单场景中依然非常有用。
+
+
+
+## 布局 - `FrameLayout`
+
+### 核心概念
+
+**FrameLayout** 是一个“帧”布局，或者可以想象成一个“相框”。它的行为非常直接：
+
+**所有子视图（View）都会自动被放置在布局的左上角（0,0坐标点），后放入的子视图会覆盖在先前子视图的上面。**
+
+您可以把它想象成一叠扑克牌或一摞纸，每张纸都盖住了下面那张，你只能看到最上面的那一张。
+
+---
+
+### 主要特点和用途
+
+1.  **简单叠加（堆叠）**：这是它最核心的用途。用于将多个视图重叠在一起。
+2.  **单一视图容器**：经常用作一个“容器”或“占位符”，只包含一个子视图（例如，作为 `Fragment` 的容器）。
+3.  **轻量级**：由于布局逻辑非常简单，它的测量和绘制过程非常高效。
+
+---
+
+### 关键属性
+
+FrameLayout 本身属性很少，但其**子视图**可以使用一些非常重要的属性来控制自己在 FrameLayout 中的位置：
+
+*   `android:layout_gravity`
+    *   **这是最重要的属性**。它用于控制子视图在 FrameLayout **内部**的对齐方式，而不是像其他布局那样简单的外边距。
+    *   **常用值**：`center`, `center_vertical`, `center_horizontal`, `top`, `bottom`, `left`, `right`, `start`, `end`，以及这些值的组合（如 `bottom|end` 表示右下角）。
+    *   **示例**：将一个按钮放在 FrameLayout 的右下角：`android:layout_gravity="bottom|end"`
+
+*   `android:foreground`
+    *   **FrameLayout 自身的属性**。用于设置一个绘制在所有子视图**之上**的前景图。
+    *   可以是一张图片（`@drawable/...`），也可以是一个颜色（`@color/...`）。
+    *   常用于设置一个遮罩效果，比如在图片上加一个半透明的灰色层。
+
+*   `android:foregroundGravity`
+    *   控制 `android:foreground` 前景图的对齐方式。
+
+---
+
+### 实际应用场景
+
+1.  **Fragment 的容器**
+    这是最常见的用法。在 `Activity` 的布局中，你通常会用一个 FrameLayout 来作为放置 `Fragment` 的“坑”。
+    ```xml
+    <FrameLayout
+        android:id="@+id/fragment_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+    ```
+    然后在代码中，你将不同的 Fragment 事务填充到这个 ID 为 `fragment_container` 的 FrameLayout 中。
+
+2.  **图片上叠加文字或图标**
+    比如实现一个照片墙，在图片的右下角显示一个收藏图标。
+    ```xml
+    <FrameLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+    
+        <ImageView
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/my_image" />
+    
+        <ImageView
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_gravity="bottom|end" <!-- 关键！定位到右下角 -->
+            android:src="@drawable/ic_favorite" />
+    
+    </FrameLayout>
+    ```
+
+3.  **实现遮罩或浮层效果**
+    使用 `android:foreground` 属性可以轻松实现点击态或禁用态的遮罩效果。
+    ```xml
+    <FrameLayout
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:foreground="@drawable/selector_foreground"> <!-- 一个选择器，包含按下和默认状态 -->
+    
+        <ImageView ... />
+    
+    </FrameLayout>
+    ```
+
+4.  **自定义 ProgressBar 或加载框**
+    可以在界面中央覆盖一个半透明的层和一个旋转的进度条。
+    ```xml
+    <FrameLayout
+        android:id="@+id/loading_state"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"> <!-- 默认隐藏 -->
+    
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#80000000" /> <!-- 半透明黑色遮罩 -->
+    
+        <ProgressBar
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center" <!-- 关键！让进度条居中 -->
+            android:indeterminate="true" />
+    
+    </FrameLayout>
+    ```
+
+---
+
+### 代码示例
+
+下面是一个典型的 FrameLayout 示例，展示了图片叠加图标和文字的效果：
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <!-- 底层：背景图片 -->
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/landscape" />
+
+    <!-- 中层：半透明渐变，让文字更清晰 -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_gravity="bottom"
+        android:background="@drawable/gradient_background" />
+
+    <!-- 上层：文字 -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|start"
+        android:layout_margin="16dp"
+        android:text="美丽的风景"
+        android:textColor="@color/white"
+        android:textSize="18sp" />
+
+    <!-- 最上层：右上角图标 -->
+    <ImageView
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_gravity="top|end"
+        android:layout_margin="8dp"
+        android:src="@drawable/ic_bookmark" />
+
+</FrameLayout>
+```
+
+### 总结
+
+| 特性         | 说明                                                         |
+| :----------- | :----------------------------------------------------------- |
+| **核心行为** | **堆叠子视图**，后添加的覆盖先添加的，默认对齐左上角。       |
+| **核心属性** | 子视图使用 `android:layout_gravity` 来定位。                 |
+| **优点**     | **非常简单、高效**，是实现重叠效果的**最佳选择**。           |
+| **缺点**     | 无法实现复杂的、非重叠的布局。                               |
+| **主要用途** | **Fragment容器**、**图片文字叠加**、**浮层/遮罩**、**自定义弹窗**。 |
+
+虽然 `ConstraintLayout` 也能实现视图重叠，但对于简单的堆叠场景，`FrameLayout` 因其极致的简单和清晰语义，仍然是首选方案。
+
+### 示例
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-framelayout)
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context="com.future.demo.MainActivity"
+    tools:showIn="@layout/activity_main">
+    <ProgressBar
+        android:layout_gravity="center"
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+    <TextView
+        android:layout_gravity="center"
+        android:id="@+id/textView5"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="%20" />
+</FrameLayout>
+
+```
+
