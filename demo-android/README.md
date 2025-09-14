@@ -449,3 +449,16 @@ Activity会在以上四种形态中相互切换，至于如何切换，这因用
 - 锁屏 `onPause()` > `onStop()`
 - 解锁屏 `onRestart()` > `onStart()` > `onResume()`
 
+
+
+## `Application` - `ActivityLifecycleCallbacks`
+
+>`ActivityLifecycleCallbacks` 使用方法初探：https://blog.csdn.net/tongcpp/article/details/40344871
+>
+>应用前后台切换监听：http://blog.takwolf.com/2017/06/29/android-application-foreground-and-background-switch-listener/index.html
+
+ActivityLifecycleCallbacks是什么？Application通过此接口提供了一套回调方法，用于让开发者对Activity的生命周期事件进行集中处理。
+
+为什么用ActivityLifecycleCallbacks？以往若需监测Activity的生命周期事件代码，你可能是这样做的，重写每一个Acivity的onResume()，然后作统计和处理,ActivityLifecycleCallbacks接口回调可以简化这一繁琐过程，在一个类中作统一处理。
+
+通过使用本站 [示例]() 研究ActivityLifecycleCallbacks监听器能够监听所有activity start和stop事件，能够很好地实现监听应用是否前台进入后台运行和后台进入前台运行切换动作。
