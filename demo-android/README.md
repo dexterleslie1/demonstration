@@ -909,3 +909,249 @@ FrameLayout 本身属性很少，但其**子视图**可以使用一些非常重�
 
 ```
 
+
+
+## 布局 - `RelativeLayout`
+
+>参考链接：https://blog.csdn.net/qq_40895460/article/details/88644845
+
+### 核心概念
+
+**RelativeLayout** 是一个通过**相对定位**来排列其子视图的布局。每个子视图的位置都是相对于**兄弟视图（Sibling View）** 或**父容器（RelativeLayout 本身）** 来确定的。
+
+它的理念是：“将这个按钮放在那个文本框的下方”，或者“将这个图标对齐到父布局的右边”。
+
+---
+
+### 主要特点和用途
+
+1.  **减少嵌套**：通过相对定位，有时可以避免使用多个 `LinearLayout` 嵌套来实现的复杂布局，从而使视图层级更扁平。
+2.  **灵活性**：可以创建出线性布局难以实现的复杂界面。
+3.  **性能权衡**：由于需要测量所有视图的依赖关系，如果使用不当（如依赖关系复杂或循环依赖），测量过程可能会比 `LinearLayout` 更耗时。
+
+---
+
+### 关键属性（相对于父容器）
+
+这些属性是 `android:layout_alignParent` 开头，值为 `true` 或 `false`。
+
+*   `android:layout_alignParentTop="true"` - 与父布局顶部对齐
+*   `android:layout_alignParentBottom="true"` - 与父布局底部对齐
+*   `android:layout_alignParentLeft="true"` - 与父布局左边对齐
+*   `android:layout_alignParentRight="true"` - 与父布局右边对齐
+*   `android:layout_alignParentStart="true"` - 与父布局起始边对齐（支持RTL）
+*   `android:layout_alignParentEnd="true"` - 与父布局结束边对齐（支持RTL）
+*   `android:layout_centerInParent="true"` - 在父布局中居中
+*   `android:layout_centerHorizontal="true"` - 在父布局中水平居中
+*   `android:layout_centerVertical="true"` - 在父布局中垂直居中
+
+---
+
+### 关键属性（相对于兄弟视图）
+
+这些属性是 `android:layout_` 开头，值需要引用另一个视图的 ID (`@id/view_id`)。
+
+*   `android:layout_above="@id/view_id"` - 位于指定视图的上方
+*   `android:layout_below="@id/view_id"` - 位于指定视图的下方
+*   `android:layout_toLeftOf="@id/view_id"` - 位于指定视图的左边
+*   `android:layout_toRightOf="@id/view_id"` - 位于指定视图的右边
+*   `android:layout_toStartOf="@id/view_id"` - 位于指定视图的起始边
+*   `android:layout_toEndOf="@id/view_id"` - 位于指定视图的结束边
+*   `android:layout_alignTop="@id/view_id"` - 与指定视图的顶部对齐
+*   `android:layout_alignBottom="@id/view_id"` - 与指定视图的底部对齐
+*   `android:layout_alignLeft="@id/view_id"` - 与指定视图的左边对齐
+*   `android:layout_alignRight="@id/view_id"` - 与指定视图的右边对齐
+*   `android:layout_alignStart="@id/view_id"` - 与指定视图的起始边对齐
+*   `android:layout_alignEnd="@id/view_id"` - 与指定视图的结束边对齐
+*   `android:layout_alignBaseline="@id/view_id"` - 与指定视图的文本基线对齐（用于TextView）
+
+---
+
+### 实际应用场景与示例
+
+**场景**：创建一个简单的用户资料头部的布局，包含头像、姓名和简介。
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="16dp">
+
+    <!-- 头像 (放置在左边) -->
+    <ImageView
+        android:id="@+id/imageView_avatar"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:src="@drawable/avatar" />
+
+    <!-- 姓名 (放置在头像的右边，与头像顶部对齐) -->
+    <TextView
+        android:id="@+id/textView_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toEndOf="@id/imageView_avatar"
+        android:layout_alignTop="@id/imageView_avatar"
+        android:layout_marginStart="16dp"
+        android:text="张三"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <!-- 简介 (放置在姓名的下方，与头像的右边对齐) -->
+    <TextView
+        android:id="@+id/textView_bio"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toEndOf="@id/imageView_avatar"
+        android:layout_below="@id/textView_name"
+        android:layout_alignStart="@id/textView_name"
+        android:layout_marginTop="4dp"
+        android:text="这是一个简单的用户简介..."
+        android:textColor="#666"
+        android:textSize="14sp" />
+
+    <!-- 时间戳 (放置在父布局的右上角) -->
+    <TextView
+        android:id="@+id/textView_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentTop="true"
+        android:text="10:30 AM"
+        android:textColor="#999"
+        android:textSize="12sp" />
+
+</RelativeLayout>
+```
+
+**布局效果说明**：
+1.  `imageView_avatar`：对齐父布局的左上角。
+2.  `textView_name`：位于 `imageView_avatar` 的右边 (`toEndOf`)，并且顶部与 `imageView_avatar` 对齐 (`alignTop`)。
+3.  `textView_bio`：位于 `textView_name` 的下方 (`below`)，并且起始边与 `textView_name` 对齐 (`alignStart`)。
+4.  `textView_time`：对齐父布局的右上角。
+
+---
+
+### 与 ConstraintLayout 的对比
+
+| 特性       | RelativeLayout                         | ConstraintLayout                     |
+| :--------- | :------------------------------------- | :----------------------------------- |
+| **理念**   | 相对定位（上下左右）                   | 约束（Constraint），更强大灵活       |
+| **性能**   | 测量次数较多，性能一般                 | 测量算法更优，性能更好               |
+| **功能**   | 基本相对定位                           | 支持比例、屏障、链、引导线等高级功能 |
+| **嵌套**   | 可减少嵌套，但依赖关系复杂时难管理     | **极致的扁平化**，能有效减少嵌套     |
+| **推荐度** | ** legacy **，**不推荐在新项目中使用** | **现代首选**，Google 强力推荐        |
+
+---
+
+### 最佳实践和注意事项
+
+1.  **避免循环依赖**：视图A依赖于视图B，视图B又依赖于视图A，这会导致布局错误或性能问题。
+2.  **引用已定义的ID**：在引用兄弟视图时 (`@id/...`)，必须确保该视图已经在布局文件中**先被定义**了。否则会出现 `No resource found` 错误。通常需要被引用的视图（如锚点视图）放在前面。
+3.  **优先使用 ConstraintLayout**：对于新项目，**强烈建议使用 `ConstraintLayout` 来代替 `RelativeLayout`**。`ConstraintLayout` 几乎能做到 `RelativeLayout` 能做的一切，并且做得更好、更高效。`RelativeLayout` 目前主要用于维护旧的代码库。
+4.  **语义清晰**：虽然可以减少嵌套，但过于复杂的相对关系可能会使布局文件难以阅读和维护。
+
+### 总结
+
+| 特性         | 说明                                                         |
+| :----------- | :----------------------------------------------------------- |
+| **核心行为** | 通过**相对定位**（相对于父容器或兄弟视图）来排列子视图。     |
+| **优点**     | **灵活性高**，可以在一定程度上**减少布局嵌套**。             |
+| **缺点**     | **性能一般**，依赖关系**复杂时难以管理**，**已过时**。       |
+| **历史地位** | 在 `ConstraintLayout` 出现之前，它是实现复杂布局的重要工具。 |
+| **当前建议** | ** legacy **，在新项目中应优先使用 **`ConstraintLayout`**。  |
+
+虽然现在不推荐新建项目时使用，但理解 `RelativeLayout` 对于阅读和维护遗留代码仍然非常重要。它的“相对”思想也被 `ConstraintLayout` 所继承和发展。
+
+### 示例
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-relativelayout)
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+    <RelativeLayout
+        android:layout_height="0dp"
+        android:layout_width="match_parent"
+        android:layout_weight="1">
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="button"
+            android:layout_centerInParent="true"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="右上角"
+            android:layout_alignParentRight="true"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="右下角"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentBottom="true"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="左下角"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentBottom="true"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="左上角"
+            android:layout_alignParentLeft="true"/>
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_height="0dp"
+        android:layout_width="match_parent"
+        android:layout_weight="1">
+        <Button
+            android:id="@+id/center_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="中间"
+            android:layout_centerInParent="true"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="中间左边"
+            android:layout_centerVertical="true"
+            android:layout_toLeftOf="@id/center_button"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="中间顶部"
+            android:layout_centerHorizontal="true"
+            android:layout_above="@id/center_button"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_toRightOf="@id/center_button"
+            android:text="中间右边" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="中间底部"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@id/center_button"/>
+
+    </RelativeLayout>
+</LinearLayout>
+```
+
