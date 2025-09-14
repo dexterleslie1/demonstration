@@ -1155,3 +1155,206 @@ FrameLayout 本身属性很少，但其**子视图**可以使用一些非常重�
 </LinearLayout>
 ```
 
+
+
+## 布局 - `ConstraintLayout`
+
+### 核心概念
+
+**ConstraintLayout** 是一个允许您以灵活且高效的方式创建复杂布局的视图组。它的核心思想是**约束（Constraint）**：通过为视图的每条边（左、上、右、下）与另一个视图的边或父布局的边之间建立“约束”关系，来确定视图的位置。
+
+您可以把它想象成用橡皮筋连接视图的各个边。橡皮筋的强度和长度决定了视图最终的位置。
+
+---
+
+### 为什么推荐使用 ConstraintLayout？
+
+1.  **扁平化视图层级**：大幅减少布局嵌套，替代多种 `LinearLayout` 和 `RelativeLayout` 的组合，从而提升性能。
+2.  **强大的布局能力**：支持比例定位、屏障、链、引导线等高级功能，能轻松实现各种复杂和响应式设计。
+3.  **出色的可视化工具**：Android Studio 的布局编辑器（Design View）对 ConstraintLayout 提供了极佳的支持，可以直观地拖拽和创建约束，大大提高了开发效率。
+4.  **Google 官方推荐**：自 2016 年推出以来，一直是 Google 主推的布局方案。
+
+---
+
+### 核心属性和功能
+
+#### 1. 基本约束 (Fundamental Constraints)
+这是最基本且必须的属性。每个视图通常需要至少两个方向（水平和垂直）的约束才能确定位置。
+
+*   `app:layout_constraintLeft_toLeftOf="parent"` - 视图的左边约束到父布局的左边
+*   `app:layout_constraintTop_toTopOf="parent"` - 视图的顶部约束到父布局的顶部
+*   `app:layout_constraintRight_toRightOf="@id/button"` - 视图的右边约束到 ID 为 button 的视图的右边
+*   `app:layout_constraintBottom_toBottomOf="parent"` - 视图的底部约束到父布局的底部
+*   `app:layout_constraintStart_toStartOf="parent"` - (支持 RTL)
+*   `app:layout_constraintEnd_toEndOf="parent"` - (支持 RTL)
+
+**记忆规律**：`layout_constraint[MySide]_to[TargetSide]Of="[target]"`
+
+#### 2. 边距 (Margins)
+和其他布局一样使用标准边距属性：`android:layout_margin`, `android:layout_marginStart`, `android:layout_marginTop` 等。
+
+#### 3. 居中定位
+将一个视图的左右两边同时约束到父容器的左右两边，它就会在水平居中；上下同理。
+```xml
+<Button
+    ...
+    app:layout_constraintLeft_toLeftOf="parent"
+    app:layout_constraintRight_toRightOf="parent" />
+```
+
+#### 4. 偏差 (Bias)
+当视图的两侧都有约束（如既约束左边又约束右边），可以使用偏差来在可用空间内调整位置。
+*   `app:layout_constraintHorizontal_bias="0.3"` - 水平偏差 30%（0.0 是最左，1.0 是最右，默认 0.5）
+*   `app:layout_constraintVertical_bias="0.8"` - 垂直偏差 80%
+
+#### 5. 尺寸约束 (Dimension Constraints)
+*   `android:layout_width/height`：可设置为具体值、`wrap_content` 或 **`0dp` (即 `MATCH_CONSTRAINT`)**。
+    *   **`0dp` (MATCH_CONSTRAINT)**：是 ConstraintLayout 的精髓之一。表示视图会扩展大小以满足其设置的**所有约束**。它会在约束允许的范围内尽可能大地填充空间。
+
+#### 6. 比例尺寸 (Ratio)
+可以强制视图的宽高比。需要至少一个维度设置为 `0dp`。
+*   `app:layout_constraintDimensionRatio="H,16:9"` - 高:宽 = 16:9
+*   `app:layout_constraintDimensionRatio="W,1:1"` - 宽:高 = 1:1 (正方形)
+*   也可以直接写 `app:layout_constraintDimensionRatio="16:9"`，系统会根据约束自动判断。
+
+---
+
+### 高级功能 (Tools for Complex Layouts)
+
+#### 1. 链 (Chains)
+**链**是一种在单个轴（水平或垂直）上控制一组视图分布的方式。链的头部视图（链中第一个被引用的视图）需要设置 `app:layout_constraintHorizontal_chainStyle` 或 `app:layout_constraintVertical_chainStyle`。
+
+*   **spread** (默认)：视图均匀分布，包括首尾的外边距。
+*   **spread_inside**：视图均匀分布，但首尾视图与父布局之间没有外边距。
+*   **packed**：视图打包在一起居中。可以结合 `bias` 调整整体位置。
+
+#### 2. 屏障 (Barrier)
+**屏障**是一个不可见的辅助线，它会根据所引用的视图集合中最大（或最小）的一边来动态定位自己。非常适合处理不确定尺寸的内容。
+
+*   `app:barrierDirection="end"` - 屏障的方向（end, top, start, bottom等）
+*   `app:constraint_referenced_ids="view1, view2, view3"` - 屏障所引用的视图ID
+
+#### 3. 引导线 (Guideline)
+**引导线**是一条不可见的垂直或水平参考线，用于辅助对齐。可以按绝对距离或百分比定位。
+*   `android:orientation="vertical"` - 垂直引导线
+*   `app:layout_constraintGuide_begin="50dp"` - 距离父布局起始位置 50dp
+*   `app:layout_constraintGuide_percent="0.3"` - 位于父布局的 30% 位置
+
+---
+
+### 实际代码示例
+
+**场景**：创建一个典型的用户信息卡片。
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto" <!-- 必须添加此命名空间 -->
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="16dp">
+
+    <!-- 头像 (左上角) -->
+    <ImageView
+        android:id="@+id/imageView_avatar"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:src="@drawable/avatar" />
+
+    <!-- 姓名 (头像右边，顶部与头像对齐) -->
+    <TextView
+        android:id="@+id/textView_name"
+        android:layout_width="0dp" <!-- MATCH_CONSTRAINT，宽度由约束决定 -->
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="@id/imageView_avatar"
+        app:layout_constraintStart_toEndOf="@id/imageView_avatar"
+        app:layout_constraintEnd_toStartOf="@id/textView_time" <!-- 约束到时间视图，避免重叠 -->
+        android:layout_marginStart="16dp"
+        android:text="张三"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <!-- 时间 (右上角) -->
+    <TextView
+        android:id="@+id/textView_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:text="10:30 AM"
+        android:textColor="#999"
+        android:textSize="12sp" />
+
+    <!-- 简介 (姓名下方，与姓名左边对齐，宽度与父布局右边对齐) -->
+    <TextView
+        android:id="@+id/textView_bio"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/textView_name"
+        app:layout_constraintStart_toStartOf="@id/textView_name"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="4dp"
+        android:text="这是一个非常长的用户简介，它可能会换行，但宽度会被约束得很好..."
+        android:textColor="#666"
+        android:textSize="14sp" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+```
+
+### 在 Android Studio 中的可视化操作
+
+1.  在 `Design` 视图中，可以直接从视图的圆圈拖拽到目标（父布局或其他视图）来创建约束。
+2.  清除约束：点击视图后使用工具栏的“清除约束”按钮。
+3.  快速推断约束：根据当前视图位置自动创建约束（可能不完美，需手动调整）。
+
+### 总结
+
+| 特性         | 说明                                                         |
+| :----------- | :----------------------------------------------------------- |
+| **核心理念** | **通过约束（橡皮筋）关系**来确定视图位置。                   |
+| **核心属性** | `layout_constraint[MySide]_to[TargetSide]Of`                 |
+| **核心尺寸** | **`0dp` (MATCH_CONSTRAINT)**，根据约束扩展。                 |
+| **优势**     | **扁平化层级**、**性能优异**、**功能强大**、**工具支持好**。 |
+| **定位**     | 使用 `bias` 进行百分比定位。                                 |
+| **高级工具** | **链(Chains)**、**屏障(Barrier)**、**引导线(Guideline)**。   |
+| **推荐度**   | ⭐⭐⭐⭐⭐ **所有新项目的默认和首选布局**。                       |
+
+**强烈建议**花时间熟练掌握 ConstraintLayout，它是现代 Android UI 开发的必备技能，能极大地提升你的开发效率和应用的性能。
+
+### 示例
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-constraintlayout)
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+    <Button
+        android:id="@+id/button6"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="64dp"
+        android:layout_marginTop="48dp"
+        android:text="Button"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/button8"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="52dp"
+        android:text="Button"
+        app:layout_constraintStart_toStartOf="@+id/button6"
+        app:layout_constraintTop_toBottomOf="@+id/button6" />
+</androidx.constraintlayout.widget.ConstraintLayout>
+
+```
+
