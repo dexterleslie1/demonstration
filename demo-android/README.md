@@ -1578,6 +1578,310 @@ FrameLayout 本身属性很少，但其**子视图**可以使用一些非常重�
 
 ## 布局 - `TabLayout`
 
+注意：`android.support.design.widget.TabLayout` 是旧版支持库中的组件，Google 已推荐迁移到 `com.google.android.material.tabs.TabLayout` (AndroidX)。不过，如果您仍需使用旧版支持库实现，以下是完整指南。
+
+### 基础实现步骤
+
+#### 1. 添加依赖
+
+在 app 的 build.gradle 文件中添加设计支持库依赖：
+
+```gradle
+dependencies {
+    implementation 'com.android.support:design:28.0.0' // 使用最新支持库版本
+}
+```
+
+#### 2. 布局文件 (activity_main.xml)
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <!-- 旧版支持库的TabLayout -->
+    <android.support.design.widget.TabLayout
+        android:id="@+id/tabLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:tabMode="fixed" <!-- fixed或scrollable -->
+        app:tabGravity="fill" <!-- fill或center -->
+        app:tabIndicatorColor="@color/colorPrimary"
+        app:tabSelectedTextColor="@color/colorPrimary"
+        app:tabTextColor="@color/gray" />
+
+    <!-- 旧版ViewPager -->
+    <android.support.v4.view.ViewPager
+        android:id="@+id/viewPager"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+</LinearLayout>
+```
+
+#### 3. 创建 Fragment
+
+创建三个简单的 Fragment 用于 Tab 内容展示：
+
+**HomeFragment.java**
+
+```java
+public class HomeFragment extends Fragment {
+    
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_home, container, false);
+        TextView textView = view.findViewById(R.id.text_home);
+        textView.setText("首页内容");
+        return view;
+    }
+}
+```
+
+**DiscoverFragment.java**
+```java
+public class DiscoverFragment extends Fragment {
+    
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_discover, container, false);
+        TextView textView = view.findViewById(R.id.text_discover);
+        textView.setText("发现内容");
+        return view;
+    }
+}
+```
+
+**ProfileFragment.java**
+```java
+public class ProfileFragment extends Fragment {
+    
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_profile, container, false);
+        TextView textView = view.findViewById(R.id.text_profile);
+        textView.setText("个人中心");
+        return view;
+    }
+}
+```
+
+#### 4. 创建 ViewPager 适配器
+
+**ViewPagerAdapter.java**
+```java
+public class ViewPagerAdapter extends FragmentPagerAdapter {
+    private final List<Fragment> fragmentList = new ArrayList<>();
+    private final List<String> fragmentTitleList = new ArrayList<>();
+
+    public ViewPagerAdapter(FragmentManager fm) {
+        super(fm);
+    }
+
+    @Override
+    public Fragment getItem(int position) {
+        return fragmentList.get(position);
+    }
+
+    @Override
+    public int getCount() {
+        return fragmentList.size();
+    }
+
+    @Nullable
+    @Override
+    public CharSequence getPageTitle(int position) {
+        return fragmentTitleList.get(position);
+    }
+
+    public void addFragment(Fragment fragment, String title) {
+        fragmentList.add(fragment);
+        fragmentTitleList.add(title);
+    }
+}
+```
+
+#### 5. 在 Activity 中设置 TabLayout 和 ViewPager
+
+**MainActivity.java**
+```java
+public class MainActivity extends AppCompatActivity {
+    
+    private TabLayout tabLayout;
+    private ViewPager viewPager;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        // 初始化视图
+        tabLayout = findViewById(R.id.tabLayout);
+        viewPager = findViewById(R.id.viewPager);
+        
+        // 设置适配器
+        setupViewPager(viewPager);
+        
+        // 绑定TabLayout和ViewPager
+        tabLayout.setupWithViewPager(viewPager);
+        
+        // 设置Tab图标
+        setupTabIcons();
+        
+        // 添加标签切换监听
+        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                // 标签被选中时触发
+                Toast.makeText(MainActivity.this, 
+                    "选中: " + tab.getText(), Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+                // 标签从选中状态变为未选中
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+                // 已选中的标签再次被点击
+            }
+        });
+    }
+
+    private void setupViewPager(ViewPager viewPager) {
+        ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
+        adapter.addFragment(new HomeFragment(), "首页");
+        adapter.addFragment(new DiscoverFragment(), "发现");
+        adapter.addFragment(new ProfileFragment(), "我的");
+        viewPager.setAdapter(adapter);
+    }
+
+    private void setupTabIcons() {
+        tabLayout.getTabAt(0).setIcon(R.drawable.ic_home);
+        tabLayout.getTabAt(1).setIcon(R.drawable.ic_discover);
+        tabLayout.getTabAt(2).setIcon(R.drawable.ic_profile);
+    }
+}
+```
+
+### 自定义 Tab 视图
+
+#### 1. 创建自定义布局文件 (custom_tab.xml)
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="8dp">
+
+    <ImageView
+        android:id="@+id/tabIcon"
+        android:layout_width="24dp"
+        android:layout_height="24dp" />
+
+    <TextView
+        android:id="@+id/tabText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="12sp"
+        android:layout_marginTop="4dp" />
+
+</LinearLayout>
+```
+
+#### 2. 修改 Activity 代码
+
+```java
+private void setupTabIcons() {
+    for (int i = 0; i < tabLayout.getTabCount(); i++) {
+        TabLayout.Tab tab = tabLayout.getTabAt(i);
+        if (tab != null) {
+            View customView = LayoutInflater.from(this).inflate(R.layout.custom_tab, null);
+            ImageView icon = customView.findViewById(R.id.tabIcon);
+            TextView text = customView.findViewById(R.id.tabText);
+            
+            switch (i) {
+                case 0:
+                    icon.setImageResource(R.drawable.ic_home);
+                    text.setText("首页");
+                    break;
+                case 1:
+                    icon.setImageResource(R.drawable.ic_discover);
+                    text.setText("发现");
+                    break;
+                case 2:
+                    icon.setImageResource(R.drawable.ic_profile);
+                    text.setText("我的");
+                    break;
+            }
+            
+            tab.setCustomView(customView);
+        }
+    }
+}
+```
+
+### 迁移到 AndroidX 的建议
+
+虽然上述代码使用旧版支持库可以正常工作，但 Google 已停止对支持库的更新，强烈建议迁移到 AndroidX：
+
+1. 在 `gradle.properties` 中添加：
+   ```properties
+   android.useAndroidX=true
+   android.enableJetifier=true
+   ```
+
+2. 将依赖替换为：
+   ```gradle
+   implementation 'com.google.android.material:material:1.6.0'
+   ```
+
+3. 将布局中的 `android.support.design.widget.TabLayout` 替换为 `com.google.android.material.tabs.TabLayout`
+
+4. 将 `android.support.v4.view.ViewPager` 替换为 `androidx.viewpager2.widget.ViewPager2`
+
+### 常见问题解决
+
+#### 1. TabLayout 不显示标签
+
+**检查**：
+- 是否正确调用了 `setupWithViewPager()`
+- 适配器是否实现了 `getPageTitle()` 方法
+- 是否在 `ViewPager` 设置适配器后才绑定 `TabLayout`
+
+#### 2. 标签点击无反应
+
+**解决方案**：
+- 确保 `ViewPager` 的适配器已正确设置
+- 检查 `ViewPager` 的 `android:layout_weight` 是否正确
+- 确认没有其他视图遮挡了 `TabLayout`
+
+#### 3. 自定义 Tab 视图不生效
+
+**检查**：
+- 自定义布局的尺寸是否正确
+- 是否在 `setupWithViewPager()` 之后才设置自定义视图
+- 自定义视图中各控件 ID 是否正确引用
+
+### 总结
+
+虽然 `android.support.design.widget.TabLayout` 仍然可用，但为了获得更好的支持和更多功能，建议尽快迁移到 AndroidX 的 Material 组件库。迁移过程相对简单，且能带来更好的性能和更多的自定义选项。
+
+### 示例
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-tablayout)
+
 
 
 ## 布局 - `gravity`和`layout_gravity`区别
