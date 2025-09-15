@@ -2401,3 +2401,160 @@ public class MainActivity extends AppCompatActivity {
     ...
 }
 ```
+
+
+
+### 显示或隐藏
+
+>参考链接：https://blog.csdn.net/l_201607/article/details/82288978
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-fragment-showorhide)
+
+`Fragment1.java`：
+
+```java
+/**
+ *
+ */
+public class Fragment1 extends Fragment {
+    @Nullable
+    @Override
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment1_layout, null);
+        return view;
+    }
+}
+```
+
+`res/layout/fragment1_layout.xml`：
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center">
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="fragment1"/>
+</LinearLayout>
+```
+
+`Fragment2.java`：
+
+```java
+/**
+ *
+ */
+public class Fragment2 extends Fragment {
+    @Nullable
+    @Override
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment2_layout, null);
+        return view;
+    }
+}
+```
+
+`res/layout/fragment2_layout.xml`：
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center">
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="fragment2"/>
+</LinearLayout>
+```
+
+`res/layout/content_main.xml`：
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context="com.future.demo.MainActivity"
+    tools:showIn="@layout/activity_main"
+    android:orientation="vertical">
+    <FrameLayout
+        android:id="@+id/frameLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"></FrameLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center">
+        <Button
+            android:id="@+id/buttonShowFragment1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="显示fragment1"/>
+        <Button
+            android:id="@+id/buttonShowFragment2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="显示fragment2"/>
+    </LinearLayout>
+</LinearLayout>
+```
+
+`MainActivity.java`：
+
+```java
+public class MainActivity extends AppCompatActivity {
+    private Fragment1 fragment1 = new Fragment1();
+    private Fragment2 fragment2 = new Fragment2();
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        ...
+
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction transaction = fragmentManager.beginTransaction();
+        transaction.add(R.id.frameLayout, fragment1, Fragment1.class.getSimpleName());
+        transaction.add(R.id.frameLayout, fragment2, Fragment1.class.getSimpleName());
+        transaction.commit();
+
+        Button button = findViewById(R.id.buttonShowFragment1);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                toggleFragmentVisibility(fragment1);
+            }
+        });
+        button = findViewById(R.id.buttonShowFragment2);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                toggleFragmentVisibility(fragment2);
+            }
+        });
+    }
+
+    private void toggleFragmentVisibility(Fragment fragment) {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction transaction = fragmentManager.beginTransaction();
+
+        transaction.hide(fragment1);
+        transaction.hide(fragment2);
+
+        transaction.show(fragment);
+
+        transaction.commit();
+    }
+    
+    ...
+}
+```
