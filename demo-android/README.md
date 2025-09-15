@@ -2125,6 +2125,398 @@ private void setupTabIcons() {
 
 
 
+## 布局 - `GridLayout`
+
+GridLayout 是 Android 4.0 (Ice Cream Sandwich) 引入的一个强大的网格布局管理器，它允许开发者创建复杂的网格布局而无需嵌套多个布局容器。
+
+### GridLayout 基本特性
+
+1. **网格系统**：将子视图排列在行和列组成的网格中
+2. **灵活的空间分配**：支持权重分配空间
+3. **无嵌套布局**：减少视图层级，提高性能
+4. **对齐控制**：支持行列对齐方式设置
+5. **跨行跨列**：子视图可以跨越多个行或列
+
+### 基本用法
+
+#### 1. XML 布局中声明 GridLayout
+
+```xml
+<GridLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/gridLayout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:columnCount="4"  <!-- 设置总列数 -->
+    android:rowCount="3"     <!-- 设置总行数 -->
+    android:alignmentMode="alignMargins"
+    android:columnOrderPreserved="false"
+    android:useDefaultMargins="true">
+    
+    <!-- 子视图将在这里添加 -->
+</GridLayout>
+```
+
+#### 2. 常用属性
+
+| 属性                           | 说明                                |
+| ------------------------------ | ----------------------------------- |
+| `android:columnCount`          | 最大列数                            |
+| `android:rowCount`             | 最大行数                            |
+| `android:orientation`          | 排列方向 (horizontal/vertical)      |
+| `android:alignmentMode`        | 对齐模式 (alignBounds/alignMargins) |
+| `android:columnOrderPreserved` | 是否保持列顺序                      |
+| `android:useDefaultMargins`    | 是否使用默认边距                    |
+
+### 子视图布局参数
+
+每个子视图可以使用以下参数控制其在网格中的位置和大小：
+
+```xml
+<Button
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="按钮1"
+    
+    <!-- GridLayout 特有属性 -->
+    android:layout_row="0"          <!-- 从第0行开始 -->
+    android:layout_column="0"       <!-- 从第0列开始 -->
+    android:layout_rowSpan="2"      <!-- 跨2行 -->
+    android:layout_columnSpan="3"   <!-- 跨3列 -->
+    android:layout_gravity="fill" /> <!-- 填充可用空间 -->
+```
+
+### Java 代码动态创建 GridLayout
+
+```java
+public class MainActivity extends AppCompatActivity {
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        
+        // 创建GridLayout
+        GridLayout gridLayout = new GridLayout(this);
+        gridLayout.setColumnCount(3);
+        gridLayout.setRowCount(3);
+        gridLayout.setUseDefaultMargins(true);
+        
+        // 创建9个按钮添加到网格
+        for (int i = 0; i < 9; i++) {
+            Button button = new Button(this);
+            button.setText("按钮 " + (i + 1));
+            
+            // 设置布局参数
+            GridLayout.LayoutParams params = new GridLayout.LayoutParams();
+            params.rowSpec = GridLayout.spec(i / 3);  // 行位置
+            params.columnSpec = GridLayout.spec(i % 3); // 列位置
+            params.width = 0;  // 0表示使用权重
+            params.height = GridLayout.LayoutParams.WRAP_CONTENT;
+            params.setGravity(Gravity.FILL);
+            params.columnSpec = GridLayout.spec(i % 3, 1f); // 权重为1
+            
+            button.setLayoutParams(params);
+            gridLayout.addView(button);
+        }
+        
+        setContentView(gridLayout);
+    }
+}
+```
+
+### 权重分配示例
+
+使用权重实现等宽列：
+
+```java
+GridLayout gridLayout = new GridLayout(this);
+gridLayout.setColumnCount(3);
+gridLayout.setUseDefaultMargins(true);
+
+// 添加3个等宽按钮
+for (int i = 0; i < 3; i++) {
+    Button button = new Button(this);
+    button.setText("按钮 " + (i + 1));
+    
+    GridLayout.Spec rowSpec = GridLayout.spec(0); // 都在第0行
+    GridLayout.Spec columnSpec = GridLayout.spec(i, 1f); // 权重为1
+    
+    GridLayout.LayoutParams params = new GridLayout.LayoutParams(rowSpec, columnSpec);
+    params.width = 0; // 宽度由权重决定
+    params.height = GridLayout.LayoutParams.WRAP_CONTENT;
+    params.setGravity(Gravity.FILL);
+    
+    button.setLayoutParams(params);
+    gridLayout.addView(button);
+}
+```
+
+### 复杂布局示例
+
+创建一个计算器界面：
+
+```java
+public class CalculatorActivity extends AppCompatActivity {
+    private String[] buttons = {
+            "7", "8", "9", "/",
+            "4", "5", "6", "*",
+            "1", "2", "3", "-",
+            "C", "0", "=", "+"
+    };
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        
+        GridLayout gridLayout = new GridLayout(this);
+        gridLayout.setColumnCount(4);
+        gridLayout.setUseDefaultMargins(true);
+        
+        // 添加显示屏
+        TextView display = new TextView(this);
+        display.setText("0");
+        display.setTextSize(24);
+        display.setGravity(Gravity.END);
+        display.setPadding(8, 8, 8, 8);
+        
+        GridLayout.LayoutParams displayParams = new GridLayout.LayoutParams();
+        displayParams.columnSpec = GridLayout.spec(0, 4); // 跨4列
+        displayParams.width = GridLayout.LayoutParams.MATCH_PARENT;
+        displayParams.height = GridLayout.LayoutParams.WRAP_CONTENT;
+        display.setLayoutParams(displayParams);
+        gridLayout.addView(display);
+        
+        // 添加按钮
+        for (int i = 0; i < buttons.length; i++) {
+            Button button = new Button(this);
+            button.setText(buttons[i]);
+            button.setTextSize(18);
+            
+            GridLayout.LayoutParams params = new GridLayout.LayoutParams();
+            params.rowSpec = GridLayout.spec(i / 4 + 1); // 从第1行开始
+            params.columnSpec = GridLayout.spec(i % 4);
+            params.width = 0; // 使用权重
+            params.height = GridLayout.LayoutParams.WRAP_CONTENT;
+            params.setGravity(Gravity.FILL);
+            params.columnSpec = GridLayout.spec(i % 4, 1f); // 权重为1
+            
+            button.setLayoutParams(params);
+            gridLayout.addView(button);
+            
+            // 添加点击事件
+            button.setOnClickListener(v -> {
+                String currentText = display.getText().toString();
+                String buttonText = ((Button)v).getText().toString();
+                
+                if (buttonText.equals("C")) {
+                    display.setText("0");
+                } else if (buttonText.equals("=")) {
+                    // 计算结果逻辑
+                    try {
+                        double result = eval(currentText);
+                        display.setText(String.valueOf(result));
+                    } catch (Exception e) {
+                        display.setText("错误");
+                    }
+                } else {
+                    if (currentText.equals("0")) {
+                        display.setText(buttonText);
+                    } else {
+                        display.setText(currentText + buttonText);
+                    }
+                }
+            });
+        }
+        
+        setContentView(gridLayout);
+    }
+    
+    // 简单的表达式计算函数
+    private double eval(String expression) {
+        return new Object() {
+            int pos = -1, ch;
+            
+            void nextChar() {
+                ch = (++pos < expression.length()) ? expression.charAt(pos) : -1;
+            }
+            
+            boolean eat(int charToEat) {
+                while (ch == ' ') nextChar();
+                if (ch == charToEat) {
+                    nextChar();
+                    return true;
+                }
+                return false;
+            }
+            
+            double parse() {
+                nextChar();
+                double x = parseExpression();
+                if (pos < expression.length()) throw new RuntimeException("意外字符: " + (char)ch);
+                return x;
+            }
+            
+            double parseExpression() {
+                double x = parseTerm();
+                for (;;) {
+                    if      (eat('+')) x += parseTerm();
+                    else if (eat('-')) x -= parseTerm();
+                    else return x;
+                }
+            }
+            
+            double parseTerm() {
+                double x = parseFactor();
+                for (;;) {
+                    if      (eat('*')) x *= parseFactor();
+                    else if (eat('/')) x /= parseFactor();
+                    else return x;
+                }
+            }
+            
+            double parseFactor() {
+                if (eat('+')) return parseFactor();
+                if (eat('-')) return -parseFactor();
+                
+                double x;
+                int startPos = this.pos;
+                if (eat('(')) {
+                    x = parseExpression();
+                    eat(')');
+                } else if ((ch >= '0' && ch <= '9') || ch == '.') {
+                    while ((ch >= '0' && ch <= '9') || ch == '.') nextChar();
+                    x = Double.parseDouble(expression.substring(startPos, this.pos));
+                } else {
+                    throw new RuntimeException("意外字符: " + (char)ch);
+                }
+                
+                return x;
+            }
+        }.parse();
+    }
+}
+```
+
+### GridLayout 与 GridView 的区别
+
+| 特性           | GridLayout   | GridView     |
+| -------------- | ------------ | ------------ |
+| **用途**       | 布局管理器   | 适配器视图   |
+| **数据绑定**   | 静态布局     | 动态数据绑定 |
+| **子视图数量** | 固定         | 可变         |
+| **滚动**       | 不支持       | 支持         |
+| **性能**       | 适合少量视图 | 适合大量数据 |
+| **灵活性**     | 精确控制位置 | 自动排列     |
+
+GridLayout 适合创建静态的、结构明确的网格界面，而 GridView/RecyclerView 更适合显示动态数据列表。
+
+### 示例
+
+>说明：使用 `GridLayout` 模仿美团 `App` 推荐页的功能导航功能。
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-gridlayout)
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:columnCount="4"
+    android:rowCount="2"
+    android:useDefaultMargins="true"
+    tools:context=".MainActivity">
+
+    <!-- layout_columnWeight用于指定某个子视图在 GridLayout中所占列的权重，从而实现按比例分配剩余空间。-->
+    <!-- layout_marginTop、layout_marginBottom用于指定子元素的top、bottom margin -->
+    <Button
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="1"
+        android:gravity="center_horizontal"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        android:text="功能1"/>
+    <Button
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="1"
+        android:gravity="center_horizontal"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        android:text="功能2" />
+    <Button
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="1"
+        android:gravity="center_horizontal"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        android:text="功能3" />
+    <Button
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="1"
+        android:gravity="center_horizontal"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        android:text="功能4" />
+    <Button
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="1"
+        android:gravity="center_horizontal"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        android:text="功能5" />
+
+    <Button
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="1"
+        android:gravity="center_horizontal"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        android:text="功能6" />
+    <Button
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="1"
+        android:gravity="center_horizontal"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        android:text="功能7" />
+    <Button
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="1"
+        android:gravity="center_horizontal"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        android:text="功能8" />
+    <Button
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="1"
+        android:gravity="center_horizontal"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        android:text="功能9" />
+    <Button
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="1"
+        android:gravity="center_horizontal"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        android:text="功能10" />
+
+</GridLayout>
+```
+
+
+
 ## 布局 - `gravity`和`layout_gravity`区别
 
 在 Android 布局中，`android:gravity` 和 `android:layout_gravity` 是两个容易混淆但作用完全不同的属性。它们的核心区别在于**作用对象**和**控制范围**的不同。以下是详细对比：
@@ -3677,3 +4069,289 @@ ListView 是 Android 开发中的基础组件，理解其工作原理对于构�
 ### 示例
 
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-listview)
+
+
+
+## `UI`组件 - `RecyclerView`
+
+RecyclerView 是 Android 5.0 (Lollipop) 引入的一个更先进、更灵活的列表/网格视图组件，用于替代传统的 ListView 和 GridView。它提供了更高的性能和更多的自定义选项。
+
+### 核心特点
+
+1. **视图回收机制**：自动回收不可见的视图以供重用
+2. **布局管理器**：支持线性、网格、瀑布流等多种布局
+3. **动画支持**：内置项目动画效果
+4. **高效更新**：支持局部更新而非全局刷新
+5. **强制使用 ViewHolder**：提高滚动性能
+
+### 基本使用步骤
+
+#### 1. 添加依赖 (build.gradle)
+
+```gradle
+implementation 'androidx.recyclerview:recyclerview:1.2.1'
+```
+
+#### 2. XML 布局中添加 RecyclerView
+
+```xml
+<androidx.recyclerview.widget.RecyclerView
+    android:id="@+id/recyclerView"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="8dp" />
+```
+
+#### 3. 创建 Item 布局 (item_example.xml)
+
+```xml
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/textViewTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/textViewDescription"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="14sp" />
+</LinearLayout>
+```
+
+#### 4. 创建数据模型类
+
+```java
+public class ExampleItem {
+    private String title;
+    private String description;
+
+    public ExampleItem(String title, String description) {
+        this.title = title;
+        this.description = description;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+}
+```
+
+#### 5. 创建 Adapter 和 ViewHolder
+
+```java
+public class ExampleAdapter extends RecyclerView.Adapter<ExampleAdapter.ExampleViewHolder> {
+    private List<ExampleItem> exampleList;
+
+    public static class ExampleViewHolder extends RecyclerView.ViewHolder {
+        public TextView textViewTitle;
+        public TextView textViewDescription;
+
+        public ExampleViewHolder(View itemView) {
+            super(itemView);
+            textViewTitle = itemView.findViewById(R.id.textViewTitle);
+            textViewDescription = itemView.findViewById(R.id.textViewDescription);
+        }
+    }
+
+    public ExampleAdapter(List<ExampleItem> exampleList) {
+        this.exampleList = exampleList;
+    }
+
+    @Override
+    public ExampleViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        View v = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.item_example, parent, false);
+        return new ExampleViewHolder(v);
+    }
+
+    @Override
+    public void onBindViewHolder(ExampleViewHolder holder, int position) {
+        ExampleItem currentItem = exampleList.get(position);
+        holder.textViewTitle.setText(currentItem.getTitle());
+        holder.textViewDescription.setText(currentItem.getDescription());
+    }
+
+    @Override
+    public int getItemCount() {
+        return exampleList.size();
+    }
+}
+```
+
+#### 6. 在 Activity/Fragment 中设置 RecyclerView
+
+```java
+public class MainActivity extends AppCompatActivity {
+    private RecyclerView recyclerView;
+    private ExampleAdapter adapter;
+    private List<ExampleItem> exampleList;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        createExampleList();
+        setupRecyclerView();
+    }
+
+    private void createExampleList() {
+        exampleList = new ArrayList<>();
+        exampleList.add(new ExampleItem("标题1", "描述1"));
+        exampleList.add(new ExampleItem("标题2", "描述2"));
+        exampleList.add(new ExampleItem("标题3", "描述3"));
+        // 添加更多数据...
+    }
+
+    private void setupRecyclerView() {
+        recyclerView = findViewById(R.id.recyclerView);
+        recyclerView.setHasFixedSize(true); // 优化性能，当item大小固定时使用
+        
+        // 设置布局管理器
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        
+        // 创建并设置适配器
+        adapter = new ExampleAdapter(exampleList);
+        recyclerView.setAdapter(adapter);
+        
+        // 添加分割线 (需要自定义ItemDecoration或使用第三方库)
+        recyclerView.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL));
+    }
+}
+```
+
+### 布局管理器 (LayoutManager)
+
+RecyclerView 通过不同的布局管理器实现不同布局：
+
+#### 1. 线性布局 (垂直/水平)
+
+```java
+// 垂直列表（默认）
+recyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+// 水平列表
+recyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+```
+
+#### 2. 网格布局
+
+```java
+// 2列的网格布局
+recyclerView.setLayoutManager(new GridLayoutManager(this, 2));
+
+// 水平滚动的网格布局
+recyclerView.setLayoutManager(new GridLayoutManager(this, 2, GridLayoutManager.HORIZONTAL, false));
+```
+
+#### 3. 瀑布流布局
+
+```java
+// 2列的瀑布流布局
+recyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
+```
+
+### 点击事件处理
+
+在 Adapter 中添加点击事件：
+
+```java
+public class ExampleAdapter extends RecyclerView.Adapter<ExampleAdapter.ExampleViewHolder> {
+    // ... 之前的代码 ...
+    
+    private OnItemClickListener listener;
+
+    public interface OnItemClickListener {
+        void onItemClick(int position);
+    }
+
+    public void setOnItemClickListener(OnItemClickListener listener) {
+        this.listener = listener;
+    }
+
+    @Override
+    public ExampleViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        View v = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.item_example, parent, false);
+        return new ExampleViewHolder(v);
+    }
+
+    @Override
+    public void onBindViewHolder(ExampleViewHolder holder, int position) {
+        ExampleItem currentItem = exampleList.get(position);
+        holder.textViewTitle.setText(currentItem.getTitle());
+        holder.textViewDescription.setText(currentItem.getDescription());
+        
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (listener != null && position != RecyclerView.NO_POSITION) {
+                    listener.onItemClick(position);
+                }
+            }
+        });
+    }
+    
+    // ... 其他代码 ...
+}
+```
+
+在 Activity 中使用：
+
+```java
+adapter.setOnItemClickListener(new ExampleAdapter.OnItemClickListener() {
+    @Override
+    public void onItemClick(int position) {
+        ExampleItem clickedItem = exampleList.get(position);
+        Toast.makeText(MainActivity.this, 
+                "点击了: " + clickedItem.getTitle(), 
+                Toast.LENGTH_SHORT).show();
+    }
+});
+```
+
+### 数据更新
+
+RecyclerView 提供了更高效的数据更新方式：
+
+```java
+// 添加新项
+exampleList.add(new ExampleItem("新标题", "新描述"));
+adapter.notifyItemInserted(exampleList.size() - 1);
+
+// 删除项
+int position = 2; // 要删除的位置
+exampleList.remove(position);
+adapter.notifyItemRemoved(position);
+
+// 更新项
+int position = 1; // 要更新的位置
+exampleList.set(position, new ExampleItem("更新标题", "更新描述"));
+adapter.notifyItemChanged(position);
+
+// 批量更新
+exampleList.clear();
+exampleList.addAll(newList); // 新数据集
+adapter.notifyDataSetChanged(); // 尽量避免使用，性能较差
+```
+
+### 与 ListView/GridView 的主要区别
+
+1. **强制使用 ViewHolder 模式**：提高滚动性能
+2. **灵活的布局管理**：通过 LayoutManager 实现不同布局
+3. **动画支持**：内置添加/删除/移动动画
+4. **更高效的更新机制**：支持局部更新
+5. **更复杂的实现**：需要更多代码但提供更大灵活性
+
+RecyclerView 是现代 Android 开发中显示列表数据的首选组件，虽然实现比 ListView/GridView 稍复杂，但提供了更好的性能和更多的自定义选项。
