@@ -3419,3 +3419,134 @@ public class MainActivity extends AppCompatActivity {
     ...
 }
 ```
+
+
+
+## `UI`组件 - `GridView`
+
+GridView 是 Android 中一个常用的布局组件，它以网格形式展示数据项，适合显示图片、图标或其他需要网格排列的内容。
+
+### 基本特性
+
+- **网格布局**：以行和列的形式排列子视图
+- **可滚动**：当内容超出屏幕时支持滚动
+- **适配器驱动**：使用 Adapter 提供数据
+- **自定义性强**：可以自定义行列数、间距、单元格样式等
+
+### 基本用法
+
+#### 1. XML 布局中声明 GridView
+
+```xml
+<GridView
+    android:id="@+id/gridView"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:numColumns="3"  <!-- 设置列数 -->
+    android:verticalSpacing="10dp"
+    android:horizontalSpacing="10dp"
+    android:stretchMode="columnWidth" />
+```
+
+#### 2. 在 Activity/Fragment 中设置适配器
+
+```java
+GridView gridView = findViewById(R.id.gridView);
+ArrayAdapter<String> adapter = new ArrayAdapter<>(this, 
+        android.R.layout.simple_list_item_1, 
+        dataArray);
+gridView.setAdapter(adapter);
+```
+
+### 常用属性
+
+| 属性                        | 说明                                        |
+| --------------------------- | ------------------------------------------- |
+| `android:numColumns`        | 设置列数，可设置为"auto_fit"自动适应        |
+| `android:verticalSpacing`   | 行间距                                      |
+| `android:horizontalSpacing` | 列间距                                      |
+| `android:stretchMode`       | 拉伸模式，可选columnWidth/spacingWidth/none |
+| `android:columnWidth`       | 指定列宽                                    |
+| `android:gravity`           | 内容对齐方式                                |
+
+### 自定义 GridView
+
+通常需要自定义 Adapter 和 Item 布局：
+
+1. 创建自定义 Item 布局 (grid_item.xml)
+```xml
+<ImageView
+    android:id="@+id/grid_item_image"
+    android:layout_width="100dp"
+    android:layout_height="100dp" />
+```
+
+2. 创建自定义 Adapter
+```java
+public class ImageAdapter extends BaseAdapter {
+    private Context context;
+    private List<Integer> imageIds;
+    
+    public ImageAdapter(Context c, List<Integer> ids) {
+        context = c;
+        imageIds = ids;
+    }
+    
+    public int getCount() {
+        return imageIds.size();
+    }
+    
+    public Object getItem(int position) {
+        return null;
+    }
+    
+    public long getItemId(int position) {
+        return 0;
+    }
+    
+    public View getView(int position, View convertView, ViewGroup parent) {
+        ImageView imageView;
+        if (convertView == null) {
+            imageView = new ImageView(context);
+            imageView.setLayoutParams(new GridView.LayoutParams(200, 200));
+            imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        } else {
+            imageView = (ImageView) convertView;
+        }
+        
+        imageView.setImageResource(imageIds.get(position));
+        return imageView;
+    }
+}
+```
+
+3. 设置自定义 Adapter
+```java
+GridView gridView = findViewById(R.id.gridView);
+gridView.setAdapter(new ImageAdapter(this, imageIdList));
+```
+
+### 事件处理
+
+```java
+gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+    public void onItemClick(AdapterView<?> parent, View v, 
+            int position, long id) {
+        Toast.makeText(MainActivity.this, "点击了第" + position + "项", 
+                Toast.LENGTH_SHORT).show();
+    }
+});
+```
+
+### 性能优化技巧
+
+1. 使用 ViewHolder 模式减少 findViewById 调用
+2. 合理设置图片大小，避免内存溢出
+3. 对于大量数据考虑分页加载
+4. 使用 convertView 复用已有视图
+
+GridView 适合展示大量需要网格排列的数据，但在复杂场景下可以考虑使用 RecyclerView 替代，后者提供更灵活的布局管理和更好的性能。
+
+### 示例
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-gridview)
