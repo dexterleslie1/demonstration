@@ -393,64 +393,6 @@ Plugin version	Minimum required Gradle version
 
 
 
-## `Activity` - 生命周期
-
->注意：不能保证 `onDestroy` 方法一定被回调（`onDestroy` 方法在调用 `finish` 和用户按下 `back` 按钮时一定被回调）。
->
->详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-activity-lifecycle)
->
->参考链接：https://stackoverflow.com/questions/19608948/is-ondestroy-not-always-called?rq=1、https://blog.csdn.net/javazejian/article/details/51932554
->
-
-生命周期如图所示：
-
-![image-20250913232611015](image-20250913232611015.png)
-
-`Activity` 状态如下：
-
-- `Active/Running`： Activity处于活动状态，此时Activity处于栈顶，是可见状态，可与用户进行交互。 
-- `Paused`： 当Activity失去焦点时，或被一个新的非全屏的Activity，或被一个透明的Activity放置在栈顶时，Activity就转化为Paused状态。但我们需要明白，此时Activity只是失去了与用户交互的能力，其所有的状态信息及其成员变量都还存在，只有在系统内存紧张的情况下，才有可能被系统回收掉。 
-- `Stopped`： 当一个Activity被另一个Activity完全覆盖时，被覆盖的Activity就会进入Stopped状态，此时它不再可见，但是跟Paused状态一样保持着其所有状态信息及其成员变量。 
-- `Killed`：当Activity被系统回收掉时，Activity就处于Killed状态。 
-
-Activity会在以上四种形态中相互切换，至于如何切换，这因用户的操作不同而异。了解了Activity的4种形态后，我们就来聊聊Activity的生命周期。
-
-`Activity` 生命周期回调方法：
-
-- `onCreate`：该方法是在Activity被创建时回调，它是生命周期第一个调用的方法，我们在创建Activity时一般都需要重写该方法，然后在该方法中做一些初始化的操作，如通过setContentView设置界面布局的资源，初始化所需要的组件信息等。
-- `onStart`：此方法被回调时表示Activity正在启动，此时Activity已处于可见状态，只是还没有在前台显示，因此无法与用户进行交互。可以简单理解为Activity已显示而我们无法看见摆了。
-- `onResume`：当此方法回调时，则说明Activity已在前台可见，可与用户交互了（处于前面所说的Active/Running形态），onResume方法与onStart的相同点是两者都表示Activity可见，只不过onStart回调时Activity还是后台无法与用户交互，而onResume则已显示在前台，可与用户交互。当然从流程图，我们也可以看出当Activity停止后（onPause方法和onStop方法被调用），重新回到前台时也会调用onResume方法，因此我们也可以在onResume方法中初始化一些资源，比如重新初始化在onPause或者onStop方法中释放的资源。
-- `onPause`：此方法被回调时则表示Activity正在停止（Paused形态），一般情况下onStop方法会紧接着被回调。但通过流程图我们还可以看到一种情况是onPause方法执行后直接执行了onResume方法，这属于比较极端的现象了，这可能是用户操作使当前Activity退居后台后又迅速地再回到到当前的Activity，此时onResume方法就会被回调。当然，在onPause方法中我们可以做一些数据存储或者动画停止或者资源回收的操作，但是不能太耗时，因为这可能会影响到新的Activity的显示——onPause方法执行完成后，新Activity的onResume方法才会被执行。 
-- `onStop`：一般在onPause方法执行完成直接执行，表示Activity即将停止或者完全被覆盖（Stopped形态），此时Activity不可见，仅在后台运行。同样地，在onStop方法可以做一些资源释放的操作（不能太耗时）。 
-- `onRestart`：表示Activity正在重新启动，当Activity由不可见变为可见状态时，该方法被回调。这种情况一般是用户打开了一个新的Activity时，当前的Activity就会被暂停（onPause和onStop被执行了），接着又回到当前Activity页面时，onRestart方法就会被回调。 
-- `onDestroy`：此时Activity正在被销毁，也是生命周期最后一个执行的方法，一般我们可以在此方法中做一些回收工作和最终的资源释放。 
-
-情景启动 `app`：`onCreate()` > `onStart()` > `onResume()`
-
-情景按 `home` 键后再回到 `app`：
-
-- 按 `home` 键：`onPause()` > `onStop()`
-- 回到 `app`：`onRestart()` > `onStart()` > `onResume()`
-
-情景新 `activity` 覆盖旧 `activity`：
-
-- 弹出第二个 `activity`：`onPause()` > `onStop()`
-- 按 `back` 按钮返回 `onRestart()` > `onStart()` > `onResume()`
-
-情景点击 `back` 按钮退出：`onPause()` > `onStop()` > `onDestroy()`
-
-情景横竖屏切换：
-
-- 先销毁 `onPause()` > `onStop()` > `onDestroy()`
-- 再创建 `onCreate()` > `onStart()` > `onResume()`
-
-情景锁屏、解锁屏：
-
-- 锁屏 `onPause()` > `onStop()`
-- 解锁屏 `onRestart()` > `onStart()` > `onResume()`
-
-
-
 ## `Application` - 概念
 
 您可以这样理解：
@@ -628,6 +570,305 @@ ActivityLifecycleCallbacks是什么？Application通过此接口提供了一套�
 为什么用ActivityLifecycleCallbacks？以往若需监测Activity的生命周期事件代码，你可能是这样做的，重写每一个Acivity的onResume()，然后作统计和处理,ActivityLifecycleCallbacks接口回调可以简化这一繁琐过程，在一个类中作统一处理。
 
 通过使用本站 [示例]() 研究ActivityLifecycleCallbacks监听器能够监听所有activity start和stop事件，能够很好地实现监听应用是否前台进入后台运行和后台进入前台运行切换动作。
+
+
+
+## `Activity` - 概念
+
+### 一、核心概念：一句话概括
+
+**Activity（活动）是 Android 应用中一个单独的、可交互的屏幕界面。**
+
+你可以把它想象成 Web 开发中的一个**网页**，或者桌面应用中的一个**窗口**。一个应用通常由多个 Activity 组成，它们相互协作，但又彼此独立。
+
+---
+
+### 二、为什么需要 Activity？
+
+Android 系统通过 Activity 来管理应用的用户界面和用户体验：
+
+1.  **模块化**：每个界面（如登录页、主页、详情页）都是一个独立的 Activity，便于开发和维护。
+2.  **生命周期管理**：系统通过一套明确的“生命周期”回调方法来管理 Activity 的创建、显示、隐藏、销毁等过程。这让开发者能知道界面处于什么状态，从而正确地保存数据、释放资源。
+3.  **导航与组合**：不同的 Activity 可以相互启动和传递数据，共同构成一个完整的应用流程。
+
+---
+
+### 三、Activity 的生命周期（最重要的概念）
+
+这是理解 Activity 如何工作的核心。生命周期是一系列回调方法的集合，系统会在 Activity 的不同状态间切换时调用它们。
+
+下图直观地展示了整个生命周期（非常重要）：
+
+!https://developer.android.com/static/images/activity_lifecycle.png
+
+#### 主要生命周期方法：
+
+1.  **onCreate()**：**必须实现**的方法。Activity 第一次创建时调用。在这里进行所有基本的初始化操作，如设置布局 (`setContentView`)、绑定控件、初始化数据。
+    *   **状态**：已创建，但还不可见。
+
+2.  **onStart()**：Activity 即将对用户**可见**时调用（但可能还无法交互）。
+
+3.  **onResume()**：Activity 开始与用户**交互**（获得焦点）时调用。这是应用最活跃的时候。
+
+4.  **onPause()**：当 Activity**失去焦点**但还部分可见时调用（例如，屏幕上弹出了一个对话框）。这里要执行一些轻量级的操作，如保存需要持久化的数据、释放系统资源（如摄像头）。
+
+5.  **onStop()**：Activity**完全不可见**时调用。可以执行更耗资源的清理工作。
+
+6.  **onRestart()**：在 Activity 被 `onStop()` 后，**重新**被用户打开时调用（不同于第一次创建）。
+
+7.  **onDestroy()**：Activity 被**销毁**之前调用。这是生命周期中的最后一个回调，用于进行最终的资源清理。
+
+---
+
+### 四、一个简单的 Activity 示例
+
+以下是一个最简单的 Activity 代码：
+
+```kotlin
+// MainActivity.kt
+class MainActivity : AppCompatActivity() { // 继承自支持库中的Activity基类
+
+    // 1. 重写onCreate方法
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState) // 必须调用父类方法
+        // 2. 设置Activity要显示的布局文件（UI）
+        setContentView(R.layout.activity_main) 
+
+        // 3. 找到布局中的按钮并设置点击事件
+        val myButton: Button = findViewById(R.id.my_button)
+        myButton.setOnClickListener {
+            // 点击按钮后，跳转到另一个Activity（DetailsActivity）
+            val intent = Intent(this, DetailsActivity::class.java)
+            startActivity(intent)
+        }
+    }
+
+    // 通常还会根据需要重写其他生命周期方法，如onPause
+    override fun onPause() {
+        super.onPause()
+        // 保存用户进度等操作
+    }
+}
+```
+
+对应的布局文件 `res/layout/activity_main.xml` 定义了界面上的元素。
+
+---
+
+### 五、Activity 之间的导航（Intent）
+
+你很少会只使用一个 Activity。启动另一个 Activity 需要使用 **Intent**（意图）。
+
+*   **显式 Intent**：明确指定要启动的 Activity 类名。
+    ```kotlin
+    // 从MainActivity跳转到DetailsActivity
+    val intent = Intent(this, DetailsActivity::class.java)
+    startActivity(intent)
+    ```
+
+*   **隐式 Intent**：声明一个要执行的操作（如查看网页、分享图片），由系统决定哪个应用的哪个 Activity 来处理。
+    ```kotlin
+    // 打开一个网页
+    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com"))
+    startActivity(intent)
+    ```
+
+---
+
+### 六、总结与类比
+
+| 概念         | Android       | Web 开发                               | 解释                           |
+| :----------- | :------------ | :------------------------------------- | :----------------------------- |
+| **单个界面** | **Activity**  | **一个网页**                           | 用户与之交互的一个屏幕         |
+| **界面布局** | XML 布局文件  | HTML/CSS 文件                          | 定义界面的样子                 |
+| **界面逻辑** | Activity 类   | JavaScript                             | 控制界面的行为                 |
+| **界面跳转** | **Intent**    | **超链接 (`<a>`) / `window.location`** | 从一个界面导航到另一个         |
+| **应用入口** | Main Activity | Index.html (首页)                      | 用户打开应用时看到的第一个界面 |
+
+### 进阶概念（了解即可）
+
+*   **Fragment**：现在更推荐使用 **Fragment（碎片）** 来构建灵活的界面，尤其是在平板和大屏设备上。一个 Activity 可以包含多个 Fragment，就像一个“容器”。
+*   **ViewModel** 和 **LiveData**：与 Activity 配合使用，用于以生命周期感知的方式管理界面相关的数据，即使在配置变更（如屏幕旋转）时也能保留数据，避免 Activity 重建导致数据丢失。
+*   **启动模式**：通过 `AndroidManifest.xml` 配置，可以控制 Activity 的启动行为（如是否创建新实例、是否重用已有实例）。
+
+希望这个解释能帮助你彻底理解 Android Activity！它是你构建任何 Android 应用的基石。
+
+
+
+## `Activity` - 生命周期
+
+>注意：不能保证 `onDestroy` 方法一定被回调（`onDestroy` 方法在调用 `finish` 和用户按下 `back` 按钮时一定被回调）。
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-activity-lifecycle)
+>
+>参考链接：https://stackoverflow.com/questions/19608948/is-ondestroy-not-always-called?rq=1、https://blog.csdn.net/javazejian/article/details/51932554
+
+生命周期如图所示：
+
+![image-20250913232611015](image-20250913232611015.png)
+
+`Activity` 状态如下：
+
+- `Active/Running`： Activity处于活动状态，此时Activity处于栈顶，是可见状态，可与用户进行交互。 
+- `Paused`： 当Activity失去焦点时，或被一个新的非全屏的Activity，或被一个透明的Activity放置在栈顶时，Activity就转化为Paused状态。但我们需要明白，此时Activity只是失去了与用户交互的能力，其所有的状态信息及其成员变量都还存在，只有在系统内存紧张的情况下，才有可能被系统回收掉。 
+- `Stopped`： 当一个Activity被另一个Activity完全覆盖时，被覆盖的Activity就会进入Stopped状态，此时它不再可见，但是跟Paused状态一样保持着其所有状态信息及其成员变量。 
+- `Killed`：当Activity被系统回收掉时，Activity就处于Killed状态。 
+
+Activity会在以上四种形态中相互切换，至于如何切换，这因用户的操作不同而异。了解了Activity的4种形态后，我们就来聊聊Activity的生命周期。
+
+`Activity` 生命周期回调方法：
+
+- `onCreate`：该方法是在Activity被创建时回调，它是生命周期第一个调用的方法，我们在创建Activity时一般都需要重写该方法，然后在该方法中做一些初始化的操作，如通过setContentView设置界面布局的资源，初始化所需要的组件信息等。
+- `onStart`：此方法被回调时表示Activity正在启动，此时Activity已处于可见状态，只是还没有在前台显示，因此无法与用户进行交互。可以简单理解为Activity已显示而我们无法看见摆了。
+- `onResume`：当此方法回调时，则说明Activity已在前台可见，可与用户交互了（处于前面所说的Active/Running形态），onResume方法与onStart的相同点是两者都表示Activity可见，只不过onStart回调时Activity还是后台无法与用户交互，而onResume则已显示在前台，可与用户交互。当然从流程图，我们也可以看出当Activity停止后（onPause方法和onStop方法被调用），重新回到前台时也会调用onResume方法，因此我们也可以在onResume方法中初始化一些资源，比如重新初始化在onPause或者onStop方法中释放的资源。
+- `onPause`：此方法被回调时则表示Activity正在停止（Paused形态），一般情况下onStop方法会紧接着被回调。但通过流程图我们还可以看到一种情况是onPause方法执行后直接执行了onResume方法，这属于比较极端的现象了，这可能是用户操作使当前Activity退居后台后又迅速地再回到到当前的Activity，此时onResume方法就会被回调。当然，在onPause方法中我们可以做一些数据存储或者动画停止或者资源回收的操作，但是不能太耗时，因为这可能会影响到新的Activity的显示——onPause方法执行完成后，新Activity的onResume方法才会被执行。 
+- `onStop`：一般在onPause方法执行完成直接执行，表示Activity即将停止或者完全被覆盖（Stopped形态），此时Activity不可见，仅在后台运行。同样地，在onStop方法可以做一些资源释放的操作（不能太耗时）。 
+- `onRestart`：表示Activity正在重新启动，当Activity由不可见变为可见状态时，该方法被回调。这种情况一般是用户打开了一个新的Activity时，当前的Activity就会被暂停（onPause和onStop被执行了），接着又回到当前Activity页面时，onRestart方法就会被回调。 
+- `onDestroy`：此时Activity正在被销毁，也是生命周期最后一个执行的方法，一般我们可以在此方法中做一些回收工作和最终的资源释放。 
+
+情景启动 `app`：`onCreate()` > `onStart()` > `onResume()`
+
+情景按 `home` 键后再回到 `app`：
+
+- 按 `home` 键：`onPause()` > `onStop()`
+- 回到 `app`：`onRestart()` > `onStart()` > `onResume()`
+
+情景新 `activity` 覆盖旧 `activity`：
+
+- 弹出第二个 `activity`：`onPause()` > `onStop()`
+- 按 `back` 按钮返回 `onRestart()` > `onStart()` > `onResume()`
+
+情景点击 `back` 按钮退出：`onPause()` > `onStop()` > `onDestroy()`
+
+情景横竖屏切换：
+
+- 先销毁 `onPause()` > `onStop()` > `onDestroy()`
+- 再创建 `onCreate()` > `onStart()` > `onResume()`
+
+情景锁屏、解锁屏：
+
+- 锁屏 `onPause()` > `onStop()`
+- 解锁屏 `onRestart()` > `onStart()` > `onResume()`
+
+
+
+## `Activity` - 用法
+
+### 跳转到`Activity`并传递数据
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-activity-lifecycle)
+
+`MainActivity` 传递数据给 `SecondActivity`：
+
+```java
+Button button1 = findViewById(R.id.button1);
+button1.setOnClickListener(new View.OnClickListener() {
+    @Override
+    public void onClick(View view) {
+        // 跳转到 SecondActivity 并传递数据
+        Intent intent = new Intent(MainActivity.this, SecondActivity.class);
+        intent.putExtra("message", "Hello from MainActivity!");
+        startActivity(intent);
+    }
+});
+```
+
+`SecondActivity` 读取传递的数据：
+
+```java
+/**
+ *
+ */
+public class SecondActivity extends AppCompatActivity {
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.second_activity);
+
+        // 获取从 MainActivity 传递过来的数据
+        TextView myTextView = findViewById(R.id.myText);
+        Intent intent = getIntent();
+        if (intent != null && intent.hasExtra("message")) {
+            String message = intent.getStringExtra("message");
+            myTextView.setText(message);
+        }
+    }
+}
+```
+
+
+
+### 跳转到`Activity`并期待返回结果
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-activity-lifecycle)
+
+`MainActivity` 跳转到 `ThirdActivity` 并期待返回结果
+
+```java
+private static final int REQUEST_CODE_THIRD_ACTIVITY = 1;
+
+// 跳转到 ThirdActivity 并期待返回结果
+        Button toThirdActivityBtn = findViewById(R.id.button2);
+        toThirdActivityBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, ThirdActivity.class);
+                startActivityForResult(intent, REQUEST_CODE_THIRD_ACTIVITY);
+            }
+        });
+```
+
+`ThirdActivity` 设置返回结果
+
+```java
+public class ThirdActivity extends AppCompatActivity {
+
+    private EditText inputEditText;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.third_activity);
+
+        inputEditText = findViewById(R.id.input_edit_text);
+        Button returnBtn = findViewById(R.id.return_btn);
+
+        returnBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // 获取用户输入
+                String input = inputEditText.getText().toString();
+
+                // 创建返回的 Intent 并设置结果
+                Intent resultIntent = new Intent();
+                resultIntent.putExtra("result", input);
+                setResult(RESULT_OK, resultIntent);
+
+                // 结束当前 Activity
+                finish();
+            }
+        });
+    }
+
+}
+```
+
+`MainActivity` 处理从 `ThirdActivity` 返回的结果
+
+```java
+// 处理从 ThirdActivity 返回的结果
+@Override
+protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    super.onActivityResult(requestCode, resultCode, data);
+
+    if (requestCode == REQUEST_CODE_THIRD_ACTIVITY) {
+        if (resultCode == RESULT_OK) {
+            String result = data.getStringExtra("result");
+            resultTextView.setText("Received from ThirdActivity: " + result);
+        }
+    }
+}
+```
 
 
 

@@ -11,10 +11,14 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
+import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
+    private static final int REQUEST_CODE_THIRD_ACTIVITY = 1;
     // 打印日志时的 tag
     private final static String TAG = MainActivity.class.getSimpleName();
+
+    private TextView resultTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,6 +26,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        resultTextView = findViewById(R.id.result_text_view);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -36,12 +42,38 @@ public class MainActivity extends AppCompatActivity {
         button1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                // 跳转到 SecondActivity 并传递数据
                 Intent intent = new Intent(MainActivity.this, SecondActivity.class);
+                intent.putExtra("message", "Hello from MainActivity!");
                 startActivity(intent);
             }
         });
 
+
+        // 跳转到 ThirdActivity 并期待返回结果
+        Button toThirdActivityBtn = findViewById(R.id.button2);
+        toThirdActivityBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, ThirdActivity.class);
+                startActivityForResult(intent, REQUEST_CODE_THIRD_ACTIVITY);
+            }
+        });
+
         Log.i(TAG, "Activity lifecycle onCreate() is invoked");
+    }
+
+    // 处理从 ThirdActivity 返回的结果
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == REQUEST_CODE_THIRD_ACTIVITY) {
+            if (resultCode == RESULT_OK) {
+                String result = data.getStringExtra("result");
+                resultTextView.setText("Received from ThirdActivity: " + result);
+            }
+        }
     }
 
     @Override
