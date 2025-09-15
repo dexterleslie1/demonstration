@@ -3550,3 +3550,130 @@ GridView 适合展示大量需要网格排列的数据，但在复杂场景下�
 ### 示例
 
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-gridview)
+
+
+
+## `UI`组件 - `ListView`
+
+ListView 是 Android 中用于显示可滚动列表项的重要 UI 组件。以下是关于 ListView 的详细介绍：
+
+### 基本概念
+
+ListView 是一个视图组，用于显示可滚动的垂直列表，其中的列表项来自与 ListView 关联的适配器(Adapter)。
+
+### 主要特点
+
+1. **可滚动列表**：自动处理垂直滚动
+2. **高效复用**：只创建和显示当前可见的列表项，节省内存
+3. **适配器模式**：通过 Adapter 提供数据和创建视图
+4. **交互支持**：内置点击、长按等事件处理
+
+### 基本用法
+
+#### XML 布局中声明 ListView
+
+```xml
+<ListView
+    android:id="@+id/listView"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" />
+```
+
+#### Java/Kotlin 代码中使用
+
+```java
+ListView listView = findViewById(R.id.listView);
+
+// 创建适配器
+ArrayAdapter<String> adapter = new ArrayAdapter<>(
+    this, 
+    android.R.layout.simple_list_item_1, 
+    dataArray
+);
+
+// 设置适配器
+listView.setAdapter(adapter);
+
+// 设置点击事件
+listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        // 处理点击事件
+    }
+});
+```
+
+### 适配器类型
+
+1. **ArrayAdapter**：适用于简单的文本列表
+2. **SimpleAdapter**：适用于包含多个字段的列表项
+3. **BaseAdapter**：自定义适配器的基础类，灵活性最高
+4. **CursorAdapter**：用于数据库查询结果的显示
+
+### 自定义 ListView
+
+```java
+public class CustomAdapter extends BaseAdapter {
+    private Context context;
+    private List<Item> items;
+    
+    public CustomAdapter(Context context, List<Item> items) {
+        this.context = context;
+        this.items = items;
+    }
+    
+    @Override
+    public int getCount() {
+        return items.size();
+    }
+    
+    @Override
+    public Object getItem(int position) {
+        return items.get(position);
+    }
+    
+    @Override
+    public long getItemId(int position) {
+        return position;
+    }
+    
+    @Override
+    public View getView(int position, View convertView, ViewGroup parent) {
+        // 视图复用
+        if (convertView == null) {
+            convertView = LayoutInflater.from(context)
+                .inflate(R.layout.list_item_layout, parent, false);
+        }
+        
+        // 绑定数据
+        Item item = items.get(position);
+        TextView title = convertView.findViewById(R.id.title);
+        title.setText(item.getTitle());
+        
+        return convertView;
+    }
+}
+```
+
+### 优化技巧
+
+1. **视图复用**：利用 convertView 避免重复 inflate
+2. **ViewHolder 模式**：减少 findViewById 调用次数
+3. **分页加载**：大数据集时实现分批加载
+4. **异步加载**：耗时操作放在后台线程
+
+### 替代方案
+
+虽然 ListView 仍然可用，但在现代 Android 开发中，RecyclerView 是更推荐的列表组件，因为它提供了更大的灵活性和更好的性能。
+
+### 常见问题
+
+1. **空列表处理**：使用 setEmptyView() 方法
+2. **性能问题**：确保正确实现视图复用
+3. **复杂布局**：考虑使用 RecyclerView 替代
+
+ListView 是 Android 开发中的基础组件，理解其工作原理对于构建高效的应用界面非常重要。
+
+### 示例
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-listview)
