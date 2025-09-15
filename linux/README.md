@@ -542,6 +542,38 @@ sysctl -p
 
 
 
+###  `inotify`监视限制
+
+临时设置（重启后会失效）
+
+```sh
+sudo sysctl fs.inotify.max_user_watches=524288
+```
+
+
+
+永久设置：
+
+- 在文件 `/etc/sysctl.conf` 末尾添加以下行：
+
+  ```ini
+  fs.inotify.max_user_watches=524288
+  ```
+
+- 应用更改
+
+  ```sh
+  sudo sysctl -p
+  ```
+
+- 检查当前值
+
+  ```sh
+  cat /proc/sys/fs/inotify/max_user_watches
+  ```
+
+  
+
 ## `SSH` 服务
 
 
