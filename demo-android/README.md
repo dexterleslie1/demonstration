@@ -2558,3 +2558,319 @@ public class MainActivity extends AppCompatActivity {
     ...
 }
 ```
+
+
+
+## `ViewPager`
+
+`android.support.v4.view.ViewPager` 是 Android 支持库（Support Library）中的一个组件，用于实现左右滑动的页面切换效果。以下是详细说明：
+
+### 核心概念
+1. **作用**：
+   - 提供类似现代应用常见的页面滑动布局（如应用引导页、图片浏览器、Tab切换等）。
+   - 允许用户通过左右滑动手势在不同页面间切换。
+
+2. **特点**：
+   - 需要配合 **PagerAdapter** 使用（如 `FragmentPagerAdapter` 或 `FragmentStatePagerAdapter`）。
+   - 默认不显示页面切换动画，但可通过 `PageTransformer` 自定义动画效果。
+   - 支持动态添加/移除页面（需调用 `notifyDataSetChanged()`）。
+
+### 基本用法示例
+```java
+// 在Activity中使用
+ViewPager viewPager = findViewById(R.id.view_pager);
+FragmentPagerAdapter adapter = new MyPagerAdapter(getSupportFragmentManager());
+viewPager.setAdapter(adapter);
+
+// 简单Adapter示例
+class MyPagerAdapter extends FragmentPagerAdapter {
+    public MyPagerAdapter(FragmentManager fm) {
+        super(fm);
+    }
+
+    @Override
+    public Fragment getItem(int position) {
+        return MyFragment.newInstance(position);
+    }
+
+    @Override
+    public int getCount() {
+        return 3; // 页面数量
+    }
+}
+```
+
+### 注意事项
+1. **迁移到AndroidX**：
+   - 新项目应使用AndroidX中的替代类：`androidx.viewpager.widget.ViewPager`
+   - 旧项目迁移需替换依赖：
+     ```gradle
+     implementation 'androidx.viewpager:viewpager:1.0.0'
+     ```
+
+2. **与ViewPager2的区别**：
+   - **ViewPager2**（推荐）基于RecyclerView重构，支持：
+     - 垂直滑动
+     - RTL布局
+     - 更高效的页面更新
+     - 内置差异动画（DiffUtil）
+
+3. **常见问题**：
+   - 页面预加载：默认会预加载相邻页面，可通过 `setOffscreenPageLimit()` 调整
+   - Fragment状态保存：使用 `FragmentStatePagerAdapter` 可优化内存占用
+
+### 进阶功能
+```java
+// 添加页面切换动画
+viewPager.setPageTransformer(true, new ZoomOutPageTransformer());
+
+// 监听页面变化
+viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+    @Override
+    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {}
+    
+    @Override
+    public void onPageSelected(int position) {
+        // 页面选中时触发
+    }
+});
+```
+
+建议新项目优先考虑使用 **ViewPager2**，但理解 `ViewPager` 仍有助维护旧代码。
+
+### 示例
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-viewpager)
+
+定义三个 `Fragment`：
+
+- `MyBaseFragment`：
+
+  `MyBaseFragment.java`：
+
+  ```java
+  /**
+   *
+   */
+  public abstract class MyBaseFragment extends Fragment {
+      /**
+       *
+       * @return
+       */
+      protected abstract String getTitle();
+  }
+  
+  ```
+
+- `FragmentPaying`
+
+  `FragmentPaying.java`
+
+  ```java
+  /**
+   *
+   */
+  public class FragmentPaying extends MyBaseFragment {
+      @Override
+      protected String getTitle() {
+          return "支付中账单";
+      }
+  
+      @Nullable
+      @Override
+      public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+          View view = inflater.inflate(R.layout.layout_paying, null);
+          return view;
+      }
+  }
+  ```
+
+  `res/layout/layout_paying.xml`
+
+  ```xml
+  <?xml version="1.0" encoding="utf-8"?>
+  <LinearLayout
+      xmlns:android="http://schemas.android.com/apk/res/android"
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:orientation="vertical"
+      android:gravity="center">
+      <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="支付中账单"/>
+  </LinearLayout>
+  ```
+
+- `FragmentPaymentRecord`
+
+  `FragmentPaymentRecord.java`
+
+  ```java
+  /**
+   *
+   */
+  public class FragmentPaymentRecord extends MyBaseFragment {
+      @Override
+      protected String getTitle() {
+          return "历史账单";
+      }
+  
+      @Nullable
+      @Override
+      public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+          View view = inflater.inflate(R.layout.layout_payment_record, null);
+          return view;
+      }
+  }
+  ```
+
+  `res/layout/layout_payment_record.xml`
+
+  ```xml
+  <?xml version="1.0" encoding="utf-8"?>
+  <LinearLayout
+      xmlns:android="http://schemas.android.com/apk/res/android"
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:orientation="vertical"
+      android:gravity="center">
+      <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="历史账单"/>
+  </LinearLayout>
+  ```
+
+- `FragmentUnpay`
+
+  `FragmentUnpay.java`
+
+  ```java
+  /**
+   *
+   */
+  public class FragmentUnpay extends MyBaseFragment {
+      @Override
+      protected String getTitle() {
+          return "未支付账单";
+      }
+  
+      @Nullable
+      @Override
+      public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+          View view = inflater.inflate(R.layout.layout_unpay, null);
+          return view;
+      }
+  }
+  ```
+
+  `res/layout/layout_unpay.xml`
+
+  ```xml
+  <?xml version="1.0" encoding="utf-8"?>
+  <LinearLayout
+      xmlns:android="http://schemas.android.com/apk/res/android"
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:orientation="vertical"
+      android:gravity="center">
+      <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="未支付账单"/>
+  </LinearLayout>
+  ```
+
+定义 `MyFragmentPageAdapter`
+
+```java
+/**
+ *
+ */
+public class MyFragmentPagerAdapter extends FragmentPagerAdapter {
+    private List<MyBaseFragment> fragments = null;
+
+    /**
+     *
+     * @param fragmentManager
+     */
+    public MyFragmentPagerAdapter(FragmentManager fragmentManager) {
+        super(fragmentManager);
+    }
+
+    @Override
+    public CharSequence getPageTitle(int position) {
+        return fragments.get(position).getTitle();
+    }
+
+    @Override
+    public Fragment getItem(int position) {
+        return fragments.get(position);
+    }
+
+    @Override
+    public int getCount() {
+        return fragments.size();
+    }
+
+    /**
+     *
+     * @param fragments
+     */
+    public void setFragments(List<MyBaseFragment> fragments) {
+        this.fragments = fragments;
+    }
+}
+```
+
+`content_main.xml`
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context="com.future.demo.MainActivity"
+    tools:showIn="@layout/activity_main"
+    android:orientation="vertical">
+    <android.support.v4.view.ViewPager
+        android:id="@+id/viewPager"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+    </android.support.v4.view.ViewPager>
+</LinearLayout>
+```
+
+`MainActivity`
+
+```java
+public class MainActivity extends AppCompatActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        ...
+
+        // 初始化 ViewPager
+        final List<MyBaseFragment> fragments = new ArrayList<>();
+        MyBaseFragment fragment = new FragmentUnpay();
+        fragments.add(fragment);
+        fragment = new FragmentPaying();
+        fragments.add(fragment);
+        fragment = new FragmentPaymentRecord();
+        fragments.add(fragment);
+
+        MyFragmentPagerAdapter fragmentPagerAdapter = new MyFragmentPagerAdapter(getSupportFragmentManager());
+        fragmentPagerAdapter.setFragments(fragments);
+
+        ViewPager viewPager = findViewById(R.id.viewPager);
+        viewPager.setAdapter(fragmentPagerAdapter);
+    }
+
+    ...
+}
+```
