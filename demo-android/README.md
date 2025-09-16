@@ -3627,7 +3627,7 @@ public class MyViewPager extends ViewPager {
 
 ### 示例
 
->说明：部分演示模仿美团 `App` 推荐页的功能导航功能。
+>说明：演示模仿美团 `App` 推荐页的功能导航功能，编程式切换 `ViewPager` 中的 `Fragment`。
 >
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-viewpager)
 
@@ -3868,14 +3868,39 @@ public class MyFragmentPagerAdapter extends FragmentPagerAdapter {
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context="com.future.demo.MainActivity"
     tools:showIn="@layout/activity_main">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/button1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="切换到Unpay" />
+
+        <Button
+            android:id="@+id/button2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="切换到Paying" />
+
+        <Button
+            android:id="@+id/button3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="切换到Payment Record" />
+    </LinearLayout>
+
     <com.future.demo.MyViewPager
         android:id="@+id/viewPager"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-    </com.future.demo.MyViewPager>
+        android:layout_height="wrap_content"></com.future.demo.MyViewPager>
 </LinearLayout>
 
 ```
@@ -3883,6 +3908,7 @@ public class MyFragmentPagerAdapter extends FragmentPagerAdapter {
 `MainActivity`
 
 ```java
+
 public class MainActivity extends AppCompatActivity {
 
     @Override
@@ -3903,10 +3929,25 @@ public class MainActivity extends AppCompatActivity {
 
         ViewPager viewPager = findViewById(R.id.viewPager);
         viewPager.setAdapter(fragmentPagerAdapter);
+
+        // 编程式切换 ViewPager
+        Button button1 = findViewById(R.id.button1);
+        Button button2 = findViewById(R.id.button2);
+        Button button3 = findViewById(R.id.button3);
+        button1.setOnClickListener((view) -> {
+            viewPager.setCurrentItem(0, true/* 平滑切换 */);
+        });
+        button2.setOnClickListener((view) -> {
+            viewPager.setCurrentItem(1, true/* 平滑切换 */);
+        });
+        button3.setOnClickListener((view) -> {
+            viewPager.setCurrentItem(2, true/* 平滑切换 */);
+        });
     }
 
     ...
 }
+
 ```
 
 

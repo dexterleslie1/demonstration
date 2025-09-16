@@ -7,6 +7,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Button;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +35,20 @@ public class MainActivity extends AppCompatActivity {
 
         ViewPager viewPager = findViewById(R.id.viewPager);
         viewPager.setAdapter(fragmentPagerAdapter);
+
+        // 编程式切换 ViewPager
+        Button button1 = findViewById(R.id.button1);
+        Button button2 = findViewById(R.id.button2);
+        Button button3 = findViewById(R.id.button3);
+        button1.setOnClickListener((view) -> {
+            viewPager.setCurrentItem(0, true/* 平滑切换 */);
+        });
+        button2.setOnClickListener((view) -> {
+            viewPager.setCurrentItem(1, true/* 平滑切换 */);
+        });
+        button3.setOnClickListener((view) -> {
+            viewPager.setCurrentItem(2, true/* 平滑切换 */);
+        });
     }
 
     @Override
