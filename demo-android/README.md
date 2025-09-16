@@ -4452,3 +4452,238 @@ adapter.notifyDataSetChanged(); // 尽量避免使用，性能较差
 5. **更复杂的实现**：需要更多代码但提供更大灵活性
 
 RecyclerView 是现代 Android 开发中显示列表数据的首选组件，虽然实现比 ListView/GridView 稍复杂，但提供了更好的性能和更多的自定义选项。
+
+
+
+## `UI`组件 - `HorizontalScrollView`
+
+在 Android 开发中（基于 Java 语言），**`HorizontalScrollView`** 是一个专门用于实现**水平方向滚动**的布局容器，继承自 `FrameLayout`。它允许用户通过手指滑动来查看超出屏幕宽度的内容，适用于横向排列的图片、菜单、选项卡等场景。
+
+---
+
+### **核心特性**
+1. **单一直接子视图**：只能包含一个直接子控件（如 `LinearLayout`），再在子布局中横向排列多个子项。
+2. **手势支持**：自动处理水平滑动事件，无需手动实现触摸逻辑。
+3. **滚动条**：默认显示水平滚动条（可通过属性隐藏）。
+
+---
+
+### **基础用法示例（Java 代码）**
+
+#### **1. XML 布局定义**
+```xml
+<HorizontalScrollView
+    android:id="@+id/horizontalScrollView"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:scrollbars="none" <!-- 隐藏滚动条 -->
+    android:fillViewport="true"> <!-- 填充父容器 -->
+
+    <!-- 必须只有一个直接子视图（通常用LinearLayout） -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <!-- 横向排列的子项 -->
+        <Button
+            android:layout_width="120dp"
+            android:layout_height="80dp"
+            android:text="Item 1" />
+        <Button
+            android:layout_width="120dp"
+            android:layout_height="80dp"
+            android:text="Item 2" />
+        <!-- 更多子项... -->
+    </LinearLayout>
+</HorizontalScrollView>
+```
+
+#### **2. Java 代码中动态添加子项**
+```java
+HorizontalScrollView scrollView = findViewById(R.id.horizontalScrollView);
+LinearLayout container = (LinearLayout) scrollView.getChildAt(0); // 获取子布局
+
+// 动态添加按钮
+for (int i = 3; i <= 5; i++) {
+    Button button = new Button(this);
+    button.setText("Item " + i);
+    button.setLayoutParams(new LinearLayout.LayoutParams(
+        120, // 宽度
+        LinearLayout.LayoutParams.WRAP_CONTENT
+    ));
+    container.addView(button);
+}
+```
+
+---
+
+### **常见问题与技巧**
+#### **1. 禁止垂直滚动**
+`HorizontalScrollView` 默认不允许垂直滚动，若嵌套了垂直滚动控件（如 `ListView`），需自定义或改用 `RecyclerView`。
+
+#### **2. 监听滚动事件**
+```java
+scrollView.getViewTreeObserver().addOnScrollChangedListener(() -> {
+    int scrollX = scrollView.getScrollX(); // 获取水平滚动位置
+    Log.d("Scroll", "Current position: " + scrollX);
+});
+```
+
+#### **3. 以编程方式滚动**
+```java
+// 平滑滚动到指定位置
+scrollView.smoothScrollTo(500, 0); // x=500px, y=0
+
+// 立即跳转
+scrollView.scrollTo(300, 0);
+```
+
+---
+
+### **与 `RecyclerView` 的对比**
+| **特性**     | `HorizontalScrollView` | `RecyclerView` (水平布局)         |
+| ------------ | ---------------------- | --------------------------------- |
+| **适用场景** | 简单横向布局，子项较少 | 复杂列表，需动态加载/复用视图     |
+| **性能**     | 子项多时可能卡顿       | 高效，支持视图复用                |
+| **灵活性**   | 较低（需手动管理子项） | 高（适配器模式，支持动画/分隔线） |
+
+---
+
+### **典型应用场景**
+1. **横向图片展示**：相册、商品海报滑动浏览。
+2. **导航菜单**：顶部选项卡（如新闻分类）。
+3. **工具条**：颜色选择器、字体样式选择。
+
+如果需要实现更复杂的交互（如分页吸附、无限滚动），建议结合 `RecyclerView` 和 `LinearLayoutManager.HORIZONTAL`。
+
+### 示例
+
+>说明：使用 `HorizontalScrollView` 模仿京东 `App` 首页的水平滚动条功能导航功能。
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-horizontalscrollview)
+
+`content_main.xml`：
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <!-- android:scrollbars="none" 隐藏滚动条 -->
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+        <!-- HorizontalScrollView 必须只有一个直接子视图（通常用LinearLayout） -->
+        <!-- android:orientation="horizontal" 横向排列的子项 -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="15dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginRight="15dp"
+                android:layout_marginBottom="5dp"
+                android:text="功能1" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="15dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginRight="15dp"
+                android:layout_marginBottom="5dp"
+                android:text="功能1" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="15dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginRight="15dp"
+                android:layout_marginBottom="5dp"
+                android:text="功能1" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="15dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginRight="15dp"
+                android:layout_marginBottom="5dp"
+                android:text="功能1" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="15dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginRight="15dp"
+                android:layout_marginBottom="5dp"
+                android:text="功能1" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="15dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginRight="15dp"
+                android:layout_marginBottom="5dp"
+                android:text="功能1" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="15dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginRight="15dp"
+                android:layout_marginBottom="5dp"
+                android:text="功能1" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="15dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginRight="15dp"
+                android:layout_marginBottom="5dp"
+                android:text="功能1" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="15dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginRight="15dp"
+                android:layout_marginBottom="5dp"
+                android:text="功能1" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="15dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginRight="15dp"
+                android:layout_marginBottom="5dp"
+                android:text="功能1" />
+        </LinearLayout>
+    </HorizontalScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+```
+
+
+
