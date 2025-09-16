@@ -1,4 +1,4 @@
-LearningMode;
+# LearningMode;
 SecRulesEnabled;
 DeniedUrl "/request_denied";
 
@@ -14,3 +14,5 @@ BasicRule wl:16;
 BasicRule wl:1001 "mz:$URL:/api/v1/client/register|$BODY_VAR:additionalinformation";
 BasicRule wl:1001 "mz:$URL:/api/v1/client/register|$ARGS_VAR:additionalinformation";
 BasicRule wl:1015 "mz:$URL:/api/v1/message/ack|$BODY_VAR:ids";
+# 演示正则表达式匹配
+BasicRule wl:1100 "mz:$URL_X:^/api/v1/|$BODY_VAR:srv_url";

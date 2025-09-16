@@ -2,7 +2,10 @@ version: "3.0"
 
 services:
   openresty:
-    image: demo-openresty:1.1.1
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    image: demo-openresty-dev
     environment:
       - TZ=Asia/Shanghai
     ports:
