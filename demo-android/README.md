@@ -3498,7 +3498,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-## `ViewPager`
+## `UI`组件 - `ViewPager`
 
 `android.support.v4.view.ViewPager` 是 Android 支持库（Support Library）中的一个组件，用于实现左右滑动的页面切换效果。以下是详细说明：
 
@@ -3575,8 +3575,60 @@ viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
 
 建议新项目优先考虑使用 **ViewPager2**，但理解 `ViewPager` 仍有助维护旧代码。
 
+### `wrap_content`失效
+
+>参考链接：https://stackoverflow.com/questions/8394681/android-i-am-unable-to-have-viewpager-wrap-content
+
+覆盖 `ViewPager` 的 `protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec)` 方法：
+
+```java
+package com.future.demo;
+
+import android.content.Context;
+import android.support.v4.view.ViewPager;
+import android.util.AttributeSet;
+import android.view.View;
+
+public class MyViewPager extends ViewPager {
+    public MyViewPager(Context context) {
+        super(context);
+    }
+
+    public MyViewPager(Context context, AttributeSet attrs) {
+        super(context, attrs);
+    }
+
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+
+        int height = 0;
+        int childWidthSpec = MeasureSpec.makeMeasureSpec(
+                Math.max(0, MeasureSpec.getSize(widthMeasureSpec) -
+                        getPaddingLeft() - getPaddingRight()),
+                MeasureSpec.getMode(widthMeasureSpec)
+        );
+        for (int i = 0; i < getChildCount(); i++) {
+            View child = getChildAt(i);
+            child.measure(childWidthSpec, MeasureSpec.UNSPECIFIED);
+            int h = child.getMeasuredHeight();
+            if (h > height) height = h;
+        }
+
+        if (height != 0) {
+            heightMeasureSpec = MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY);
+        }
+
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+    }
+}
+
+```
+
 ### 示例
 
+>说明：部分演示模仿美团 `App` 推荐页的功能导航功能。
+>
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-viewpager)
 
 定义三个 `Fragment`：
@@ -3626,17 +3678,40 @@ viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
 
   ```xml
   <?xml version="1.0" encoding="utf-8"?>
-  <LinearLayout
+  <GridLayout
       xmlns:android="http://schemas.android.com/apk/res/android"
       android:layout_width="match_parent"
       android:layout_height="match_parent"
-      android:orientation="vertical"
+      android:rowCount="2"
+      android:columnCount="4"
       android:gravity="center">
-      <TextView
+  
+      <Button
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"
-          android:text="支付中账单"/>
-  </LinearLayout>
+          android:layout_columnWeight="1"
+          android:text="功能11"/>
+      <Button
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_columnWeight="1"
+          android:text="功能12"/>
+      <Button
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_columnWeight="1"
+          android:text="功能13"/>
+      <Button
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_columnWeight="1"
+          android:text="功能14"/>
+      <Button
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_columnWeight="1"
+          android:text="功能15"/>
+  </GridLayout>
   ```
 
 - `FragmentPaymentRecord`
@@ -3706,17 +3781,40 @@ viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
 
   ```xml
   <?xml version="1.0" encoding="utf-8"?>
-  <LinearLayout
+  <GridLayout
       xmlns:android="http://schemas.android.com/apk/res/android"
       android:layout_width="match_parent"
       android:layout_height="match_parent"
-      android:orientation="vertical"
+      android:rowCount="2"
+      android:columnCount="4"
       android:gravity="center">
-      <TextView
+  
+      <Button
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"
-          android:text="未支付账单"/>
-  </LinearLayout>
+          android:layout_columnWeight="1"
+          android:text="功能21"/>
+      <Button
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_columnWeight="1"
+          android:text="功能22"/>
+      <Button
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_columnWeight="1"
+          android:text="功能23"/>
+      <Button
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_columnWeight="1"
+          android:text="功能24"/>
+      <Button
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_columnWeight="1"
+          android:text="功能25"/>
+  </GridLayout>
   ```
 
 定义 `MyFragmentPageAdapter`
@@ -3772,15 +3870,14 @@ public class MyFragmentPagerAdapter extends FragmentPagerAdapter {
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context="com.future.demo.MainActivity"
-    tools:showIn="@layout/activity_main"
-    android:orientation="vertical">
-    <android.support.v4.view.ViewPager
+    tools:showIn="@layout/activity_main">
+    <com.future.demo.MyViewPager
         android:id="@+id/viewPager"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1">
-    </android.support.v4.view.ViewPager>
+        android:layout_height="wrap_content">
+    </com.future.demo.MyViewPager>
 </LinearLayout>
+
 ```
 
 `MainActivity`
