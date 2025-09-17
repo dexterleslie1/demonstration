@@ -5325,6 +5325,211 @@ public class MainActivity extends AppCompatActivity {
 
 
 
+## `UI`组件 - `DialogFragment`
+
+>`DialogFragment` 使用：https://www.jianshu.com/p/d1852b04a0aa
+>
+>提示：`AlertDialog` 和 `DialogFragment` 区别，横竖屏幕时 `AlertDialog` 会消失，`DialogFragment` 不会消失，`DialogFragment` 能够像 `Fragment` 一样管理其生命周期，`AlertDialog` 不能管理其生命周期。
+
+### **Android DialogFragment 是什么？**
+
+**`DialogFragment`** 是 Android 提供的一个**基于 Fragment 的对话框组件**，用于显示模态对话框（Modal Dialog）。它是对传统 `AlertDialog` 和 `Dialog` 的增强和封装，具有更灵活的生命周期管理，并且能更好地适应屏幕旋转、多窗口模式等场景。
+
+---
+
+### **🔹 为什么需要 DialogFragment？**
+传统的 `AlertDialog` 或 `Dialog` 存在以下问题：
+1. **生命周期管理困难**：
+   - 如果 Activity 被销毁重建（如屏幕旋转），`Dialog` 可能会因 `Context` 失效而崩溃。
+   - `DialogFragment` 能自动处理 `Activity` 重建，避免 `WindowManager$BadTokenException`。
+2. **无法复用**：
+   - `DialogFragment` 可以像普通 `Fragment` 一样被复用，而 `AlertDialog` 需要每次都重新创建。
+3. **更好的兼容性**：
+   - 在平板、折叠屏等大屏设备上，`DialogFragment` 可以自适应显示为嵌入式视图或浮动对话框。
+4. **更符合现代架构**：
+   - 结合 `ViewModel` 和 `LiveData`，可以更好地管理对话框的 UI 状态和数据。
+
+---
+
+### **🔹 DialogFragment 的基本用法**
+#### **1. 继承 `DialogFragment` 并创建对话框**
+```java
+public class MyDialogFragment extends DialogFragment {
+    @Override
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
+        // 使用 AlertDialog.Builder 构建对话框
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setTitle("提示")
+               .setMessage("这是一个 DialogFragment 示例")
+               .setPositiveButton("确定", (dialog, which) -> {
+                   Toast.makeText(getActivity(), "点击了确定", Toast.LENGTH_SHORT).show();
+               })
+               .setNegativeButton("取消", (dialog, which) -> {
+                   dismiss(); // 关闭对话框
+               });
+        return builder.create();
+    }
+}
+```
+
+#### **2. 显示 DialogFragment**
+```java
+// 在 Activity 或 Fragment 中调用：
+MyDialogFragment dialog = new MyDialogFragment();
+dialog.show(getSupportFragmentManager(), "MyDialog");
+```
+- `getSupportFragmentManager()`：用于管理 `DialogFragment` 的显示。
+- `"MyDialog"`：是一个 Tag，用于后续查找 Fragment（可选）。
+
+---
+
+### **🔹 DialogFragment 的高级用法**
+#### **1. 自定义布局的 DialogFragment**
+如果对话框需要复杂的 UI（如输入框、列表等），可以自定义布局：
+
+##### **(1) 创建布局文件 `dialog_custom.xml`**
+```xml
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="请输入用户名" />
+
+    <EditText
+        android:id="@+id/et_username"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="用户名" />
+
+    <Button
+        android:id="@+id/btn_submit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="提交" />
+</LinearLayout>
+```
+
+**(2) 在 DialogFragment 中加载自定义布局**
+
+```java
+public class CustomDialogFragment extends DialogFragment {
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.dialog_custom, container, false);
+        
+        EditText etUsername = view.findViewById(R.id.et_username);
+        Button btnSubmit = view.findViewById(R.id.btn_submit);
+        
+        btnSubmit.setOnClickListener(v -> {
+            String username = etUsername.getText().toString();
+            Toast.makeText(getActivity(), "用户名: " + username, Toast.LENGTH_SHORT).show();
+            dismiss(); // 关闭对话框
+        });
+        
+        return view;
+    }
+}
+```
+
+**(3) 显示自定义 DialogFragment**
+
+```java
+CustomDialogFragment dialog = new CustomDialogFragment();
+dialog.show(getSupportFragmentManager(), "CustomDialog");
+```
+
+---
+
+#### **2. 从 DialogFragment 返回数据（使用接口回调）**
+
+如果需要在对话框关闭后返回数据给 Activity/Fragment，可以使用 **接口回调**：
+
+##### **(1) 定义回调接口**
+```java
+public interface OnDialogResultListener {
+    void onResult(String data);
+}
+```
+
+##### **(2) 在 DialogFragment 中调用回调**
+```java
+public class ResultDialogFragment extends DialogFragment {
+    private OnDialogResultListener listener;
+
+    // 设置回调监听器
+    public void setOnDialogResultListener(OnDialogResultListener listener) {
+        this.listener = listener;
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.dialog_custom, container, false);
+        Button btnSubmit = view.findViewById(R.id.btn_submit);
+        
+        btnSubmit.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onResult("返回的数据"); // 回调数据
+            }
+            dismiss();
+        });
+        
+        return view;
+    }
+}
+```
+
+##### **(3) 在 Activity/Fragment 中接收数据**
+```java
+ResultDialogFragment dialog = new ResultDialogFragment();
+dialog.setOnDialogResultListener(new OnDialogResultListener() {
+    @Override
+    public void onResult(String data) {
+        Toast.makeText(MainActivity.this, "收到数据: " + data, Toast.LENGTH_SHORT).show();
+    }
+});
+dialog.show(getSupportFragmentManager(), "ResultDialog");
+```
+
+---
+
+### **🔹 DialogFragment vs AlertDialog**
+| 特性             | DialogFragment             | AlertDialog          |
+| ---------------- | -------------------------- | -------------------- |
+| **生命周期管理** | ✅ 自动处理 `Activity` 重建 | ❌ 需手动处理，易崩溃 |
+| **复用性**       | ✅ 可复用                   | ❌ 每次需重建         |
+| **自定义布局**   | ✅ 支持复杂 UI              | ✅ 支持但较麻烦       |
+| **数据回调**     | ✅ 支持接口回调             | ❌ 需额外处理         |
+| **大屏适配**     | ✅ 可自适应为嵌入式或对话框 | ❌ 仅支持对话框       |
+| **官方推荐**     | ✅ 推荐使用                 | ❌ 已逐渐淘汰         |
+
+---
+
+### **🔹 总结**
+1. **`DialogFragment` 是增强版的对话框**，比 `AlertDialog` 更稳定、灵活。
+2. **基本用法**：
+   - 继承 `DialogFragment`，在 `onCreateDialog()` 中返回 `AlertDialog`。
+   - 调用 `show()` 方法显示对话框。
+3. **高级用法**：
+   - 自定义布局（`onCreateView`）。
+   - 使用接口回调返回数据。
+4. **适用场景**：
+   - 需要稳定、可复用的对话框。
+   - 需要处理屏幕旋转或大屏适配。
+   - 需要结合 `ViewModel` 管理数据。
+
+**推荐**：在新的 Android 项目中，优先使用 `DialogFragment` 替代传统的 `AlertDialog` 和 `ProgressDialog`。🚀
+
+### 示例
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-dialogfragment)
+
+
+
 ## 网络 - 主流的库
 
 当然！Android 开发中主流的网络库选择非常清晰，目前已经形成了以 **OkHttp 为基石**、**Retrofit 为核心**、并辅以其他现代化方案的格局。
