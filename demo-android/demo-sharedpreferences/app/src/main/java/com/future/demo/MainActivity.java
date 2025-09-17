@@ -17,6 +17,8 @@ import android.widget.Button;
 public class MainActivity extends AppCompatActivity {
     private final static String TAG = MainActivity.class.getSimpleName();
 
+    private SharedPreferencesSupport sharedPreferencesSupport;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -33,14 +35,15 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        SharedPreferencesManager.getInstance().init(getApplicationContext());
+        // 创建 SharedPreferencesSupport 实例
+        sharedPreferencesSupport = new SharedPreferencesSupport(this);
         final String sharedPreferencesName = "data1";
 
         Button button = findViewById(R.id.buttonSave);
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                SharedPreferencesManager.getInstance().write(sharedPreferencesName, "k1", "v1");
+                sharedPreferencesSupport.write(sharedPreferencesName, "k1", "v1");
             }
         });
 
@@ -48,17 +51,10 @@ public class MainActivity extends AppCompatActivity {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String value = SharedPreferencesManager.getInstance().read(sharedPreferencesName, "k1");
+                String value = sharedPreferencesSupport.read(sharedPreferencesName, "k1");
                 Log.i(TAG, "SharedPreferences存储k1值为：" + value);
             }
         });
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-
-        SharedPreferencesManager.getInstance().destroy();
     }
 
     @Override

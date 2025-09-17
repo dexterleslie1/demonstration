@@ -6,39 +6,14 @@ import android.content.SharedPreferences;
 /**
  *
  */
-public class SharedPreferencesManager {
-    private final static SharedPreferencesManager INSTANCE = new SharedPreferencesManager();
-
+public class SharedPreferencesSupport {
     private Context context;
 
     /**
      *
      */
-    private SharedPreferencesManager() {
-
-    }
-
-    /**
-     *
-     * @return
-     */
-    public static SharedPreferencesManager getInstance() {
-        return INSTANCE;
-    }
-
-    /**
-     *
-     * @param context
-     */
-    public void init(Context context) {
+    public SharedPreferencesSupport(Context context) {
         this.context = context;
-    }
-
-    /**
-     *
-     */
-    public void destroy() {
-        this.context = null;
     }
 
     /**

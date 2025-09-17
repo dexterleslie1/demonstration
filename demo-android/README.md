@@ -559,6 +559,99 @@ public class BaseApplication extends Application{
 
 
 
+## `Application` - 没有回调`onTerminate()`
+
+在 Android 中，`Application` 类的 `onTerminate()` 方法 **在真机上不会被调用**，这是 Android 系统设计的一部分，而不是代码问题。以下是详细解释和替代方案：
+
+---
+
+### **为什么 `onTerminate()` 不回调？**
+1. **系统行为差异**  
+   - `onTerminate()` 仅在 **Android 模拟器（Emulator）** 上会触发，用于调试目的。  
+   - **真机上**，Android 系统会直接终止应用进程（可能因内存不足、用户强制停止等），而不会回调任何方法。
+
+2. **设计原则**  
+   Android 强调应用应随时准备被系统销毁，因此不允许依赖“退出回调”来保存关键数据（需实时持久化）。
+
+---
+
+### **替代方案：如何监听应用终止？**
+#### 1. **监听所有 Activity 退出（应用进入后台）**
+通过 `ActivityLifecycleCallbacks` 统计 Activity 数量，当所有 Activity 销毁时，表示应用退到后台（但进程可能仍存活）：
+```java
+public class MyApp extends Application {
+    private int activityCount = 0;
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        registerActivityLifecycleCallbacks(new ActivityLifecycleCallbacks() {
+            @Override
+            public void onActivityStarted(Activity activity) {
+                activityCount++;
+            }
+
+            @Override
+            public void onActivityStopped(Activity activity) {
+                activityCount--;
+                if (activityCount == 0) {
+                    Log.d("TAG", "所有 Activity 已销毁，应用进入后台");
+                    // 可在此保存临时数据
+                }
+            }
+            // 其他生命周期方法省略...
+        });
+    }
+}
+```
+
+#### 2. **监听最后一个 Activity 的 `onDestroy()`**
+在基类 `Activity` 中判断是否最后一个 Activity 被销毁：
+```java
+public class BaseActivity extends Activity {
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (isTaskRoot()) { // 判断是否是任务栈根 Activity
+            Log.d("TAG", "用户可能已退出应用");
+            // 执行清理逻辑（但进程可能仍存活）
+        }
+    }
+}
+```
+
+#### 3. **结合 `Service` 判断进程存活**
+通过前台服务监听应用状态（需用户授权，适合后台任务场景）。
+
+---
+
+### **关键注意事项**
+1. **不要依赖“退出回调”保存数据**  
+   - 重要数据应在用户操作时立即保存（如 `SharedPreferences`、数据库）。  
+   - 例如：在 `EditText` 的 `TextWatcher` 中实时保存输入内容。
+
+2. **进程终止无法捕获**  
+   - 系统可能在任意时刻终止进程（如内存不足），无法通过代码监听。
+
+3. **用户强制停止**  
+   - 用户通过“设置”强制停止应用时，系统会直接杀死进程，不触发任何回调。
+
+---
+
+### **最佳实践**
+- **实时持久化**：数据变化时立即保存，不要等待“退出”事件。  
+- **使用 `ViewModel` + `onSaveInstanceState`**：临时数据通过 Android 生命周期组件管理。  
+- **日志和埋点**：通过 `Activity` 生命周期统计应用使用时长，而非依赖“退出”事件。
+
+---
+
+### **总结**
+- `onTerminate()` **仅在模拟器有效**，真机开发中需忽略此方法。  
+- 替代方案是监听 Activity 生命周期或结合业务逻辑判断“退出”场景。  
+- 核心原则：**Android 应用需设计为“随时可能被销毁”**，而非依赖明确的退出信号。
+
+
+
 ## `Application` - `ActivityLifecycleCallbacks`
 
 >`ActivityLifecycleCallbacks` 使用方法初探：https://blog.csdn.net/tongcpp/article/details/40344871
@@ -569,7 +662,7 @@ ActivityLifecycleCallbacks是什么？Application通过此接口提供了一套�
 
 为什么用ActivityLifecycleCallbacks？以往若需监测Activity的生命周期事件代码，你可能是这样做的，重写每一个Acivity的onResume()，然后作统计和处理,ActivityLifecycleCallbacks接口回调可以简化这一繁琐过程，在一个类中作统一处理。
 
-通过使用本站 [示例]() 研究ActivityLifecycleCallbacks监听器能够监听所有activity start和stop事件，能够很好地实现监听应用是否前台进入后台运行和后台进入前台运行切换动作。
+通过使用本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-application-activitylifecyclecallbacks) 研究ActivityLifecycleCallbacks监听器能够监听所有activity start和stop事件，能够很好地实现监听应用是否前台进入后台运行和后台进入前台运行切换动作。
 
 
 
@@ -6185,3 +6278,94 @@ dataStore.edit { preferences ->
 ### 示例
 
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-sharedpreferences)
+
+封装 `SharedPreferencesSupport`
+
+```java
+package com.future.demo;
+
+import android.content.Context;
+import android.content.SharedPreferences;
+
+/**
+ *
+ */
+public class SharedPreferencesSupport {
+    private Context context;
+
+    /**
+     *
+     */
+    public SharedPreferencesSupport(Context context) {
+        this.context = context;
+    }
+
+    /**
+     *
+     * @param sharedPreferencesName
+     * @param storeKey
+     * @param storeValue
+     */
+    public void write(String sharedPreferencesName, String storeKey, String storeValue) {
+        SharedPreferences sharedPreferences =
+                this.context.getSharedPreferences(sharedPreferencesName, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(storeKey, storeValue);
+        editor.apply();
+    }
+
+    /**
+     *
+     * @param sharedPreferencesName
+     * @param storeKey
+     * @return
+     */
+    public String read(String sharedPreferencesName, String storeKey) {
+        SharedPreferences sharedPreferences =
+                this.context.getSharedPreferences(sharedPreferencesName, Context.MODE_PRIVATE);
+        String storeValue = sharedPreferences.getString(storeKey, null);
+        return storeValue;
+    }
+}
+
+```
+
+在 `Activity protected void onCreate(Bundle savedInstanceState)` 方法中初始化 `SharedPreferencesSupport`
+
+```java
+private SharedPreferencesSupport sharedPreferencesSupport;
+
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    ...
+
+    // 创建 SharedPreferencesSupport 实例
+    sharedPreferencesSupport = new SharedPreferencesSupport(this);
+    
+    ...
+}
+```
+
+保存和读取 `SharedPreferences`
+
+```java
+final String sharedPreferencesName = "data1";
+
+Button button = findViewById(R.id.buttonSave);
+button.setOnClickListener(new View.OnClickListener() {
+    @Override
+    public void onClick(View v) {
+        sharedPreferencesSupport.write(sharedPreferencesName, "k1", "v1");
+    }
+});
+
+button = findViewById(R.id.buttonGet);
+button.setOnClickListener(new View.OnClickListener() {
+    @Override
+    public void onClick(View v) {
+        String value = sharedPreferencesSupport.read(sharedPreferencesName, "k1");
+        Log.i(TAG, "SharedPreferences存储k1值为：" + value);
+    }
+});
+```
