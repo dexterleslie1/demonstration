@@ -49,7 +49,7 @@ tar -xvzf android-studio-2024.2.1.11-linux.tar.gz
 Encoding=UTF-8
 # https://askubuntu.com/questions/144968/set-variable-in-desktop-file
 Name=Android Studio
-Exec=sh /usr/local/android-studio/bin/studio.sh
+Exec=/usr/local/android-studio/bin/studio
 Icon=/usr/local/android-studio/bin/studio.svg
 Terminal=false
 Type=Application
@@ -123,7 +123,7 @@ VM: OpenJDK 64-Bit Server VM by JetBrains s.r.o.
   android {
       // 添加 namespace 配置，每个 Android 模块都有一个命名空间，它用作其生成的 R 和 BuildConfig 类的 Kotlin 或 Java 包名称。
       // https://developer.android.com/build/configure-app-module#set-namespace
-      namespace "com.future.study.android.activity_lifecycle"
+      namespace "com.future.demo"
       ...
   }
   
@@ -4878,6 +4878,222 @@ protected void onCreate(Bundle savedInstanceState) {
     });
 }
 ```
+
+
+
+## `UI`组件 - `AlertDialog`
+
+### Android AlertDialog 是什么？
+
+**AlertDialog** 是 Android 系统提供的一个**对话框控件**。它会在当前应用界面的最上层弹出一个小型窗口，用于向用户传达重要信息、提示用户做出决定或请求用户输入。
+
+**它的核心特点是：**
+
+1.  **模态（Modal）**：与 Toast 和 Snackbar 不同，AlertDialog 是阻塞式的。一旦弹出，它会获得焦点，用户**必须对其进行操作（点击按钮或取消）** 后才能返回并继续使用应用。
+2.  **功能丰富**：可以包含标题、消息内容、一个到多个按钮，甚至可以嵌入自定义的复杂布局（如输入框、单选列表等）。
+3.  **用途广泛**：常用于确认重要操作、选择项、显示警告或错误信息。
+
+---
+
+### AlertDialog 的基本组成
+
+一个标准的 AlertDialog 通常包含以下几个部分：
+*   **标题 (Title)**： 可选的，概括对话框的主题（如“警告”、“提示”）。
+*   **消息内容 (Message)**： 向用户说明具体情况或需要做出的选择。
+*   **按钮 (Buttons)**： 通常包含 1 到 3 个按钮，如“确定”、“取消”、“忽略”等，让用户进行选择。
+
+
+
+---
+
+### 如何使用 AlertDialog（Java）
+
+创建和显示一个 AlertDialog 主要使用 **`AlertDialog.Builder`** 这个辅助类。以下是几种最常见的用法。
+
+#### 1. 基础用法：简单提示（一个按钮）
+
+```java
+// 1. 创建一个 AlertDialog.Builder 实例，需要传入一个 Context（通常是当前 Activity）
+AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+
+// 2. 使用 Builder 的方法链式设置对话框属性
+builder.setTitle("温馨提示")        // 设置标题
+       .setMessage("这是一个简单的提示对话框！") // 设置消息内容
+       .setPositiveButton("知道了", new DialogInterface.OnClickListener() {
+           // 3. 设置正面按钮（通常是确定、是的、同意等操作）
+           @Override
+           public void onClick(DialogInterface dialog, int which) {
+               // 用户点击“知道了”按钮后执行的操作
+               Toast.makeText(MainActivity.this, "提示已阅读", Toast.LENGTH_SHORT).show();
+           }
+       });
+
+// 4. 使用 Builder 创建出 AlertDialog 对象
+AlertDialog dialog = builder.create();
+
+// 5. 显示对话框
+dialog.show();
+```
+
+#### 2. 标准用法：确认对话框（两个按钮）
+
+这是最常见的场景，比如在删除操作前请求用户确认。
+
+```java
+AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+builder.setTitle("确认删除")
+       .setMessage("您确定要删除这个项目吗？此操作不可撤销。")
+       .setPositiveButton("删除", new DialogInterface.OnClickListener() {
+           @Override
+           public void onClick(DialogInterface dialog, int which) {
+               // 用户确认删除，执行删除操作
+               deleteItem();
+           }
+       })
+       .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+           @Override
+           public void onClick(DialogInterface dialog, int which) {
+               // 用户取消操作，什么都不做或者给个提示
+               Toast.makeText(MainActivity.this, "操作已取消", Toast.LENGTH_SHORT).show();
+               dialog.dismiss(); // 关闭对话框（其实点击按钮默认就会关闭）
+           }
+       })
+       .show(); // 可以链式调用直接创建并显示
+```
+
+#### 3. 三个按钮的对话框
+
+```java
+AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+builder.setTitle("选择操作")
+       .setMessage("您想如何处理这个文件？")
+       .setPositiveButton("保存", /* 监听器 */)
+       .setNegativeButton("不保存", /* 监听器 */)
+       .setNeutralButton("取消", new DialogInterface.OnClickListener() {
+           // 中性按钮，通常用于取消或忽略等中立操作
+           @Override
+           public void onClick(DialogInterface dialog, int which) {
+               // 取消操作
+           }
+       })
+       .show();
+```
+
+---
+
+### 更高级的用法
+
+#### 4. 带列表的对话框
+
+```java
+// 列表项数组
+final CharSequence[] items = {"选项一", "选项二", "选项三"};
+
+AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+builder.setTitle("请选择一个选项")
+       .setItems(items, new DialogInterface.OnClickListener() {
+           // 点击列表中的任一选项都会触发此回调
+           @Override
+           public void onClick(DialogInterface dialog, int which) {
+               // `which` 参数是被点击项的索引位置 (0, 1, 2...)
+               String selectedText = items[which].toString();
+               Toast.makeText(MainActivity.this, "你选择了: " + selectedText, Toast.LENGTH_SHORT).show();
+           }
+       })
+       .show();
+```
+
+#### 5. 带单选列表的对话框
+
+```java
+final int preSelectedIndex = 0; // 默认选中的项
+final CharSequence[] items = {"低", "中", "高"};
+
+AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+builder.setTitle("选择优先级")
+       .setSingleChoiceItems(items, preSelectedIndex, new DialogInterface.OnClickListener() {
+           @Override
+           public void onClick(DialogInterface dialog, int which) {
+               // 用户点击某个单选选项时会立即触发
+               // 通常在这里可以先保存选择，但不关闭对话框
+           }
+       })
+       .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+           @Override
+           public void onClick(DialogInterface dialog, int which) {
+               // 点击“确定”后，再执行最终操作
+               // 注意：这里需要额外的逻辑来获取最终选中的项（例如使用类成员变量存储）
+           }
+       })
+       .setNegativeButton("取消", null)
+       .show();
+```
+
+#### 6. 自定义布局的对话框
+
+这是最强大的功能，你可以将任何布局设置到对话框中。
+
+**步骤 1：创建自定义布局文件 `dialog_custom.xml`**
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="20dp"
+    android:orientation="vertical">
+
+    <EditText
+        android:id="@+id/et_input"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="请输入内容"/>
+
+</LinearLayout>
+```
+
+**步骤 2：在Java代码中加载并使用自定义布局**
+```java
+// 1. 使用 LayoutInflater 加载自定义布局
+View dialogView = getLayoutInflater().inflate(R.layout.dialog_custom, null);
+
+// 2. 从自定义布局中获取视图（如EditText）
+final EditText inputEditText = dialogView.findViewById(R.id.et_input);
+
+AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+builder.setTitle("自定义对话框")
+       .setView(dialogView) // 关键：将自定义视图设置给对话框
+       .setPositiveButton("提交", new DialogInterface.OnClickListener() {
+           @Override
+           public void onClick(DialogInterface dialog, int which) {
+               String userInput = inputEditText.getText().toString();
+               Toast.makeText(MainActivity.this, "输入: " + userInput, Toast.LENGTH_SHORT).show();
+           }
+       })
+       .setNegativeButton("取消", null)
+       .show();
+```
+
+---
+
+### 重要提示
+
+*   **`Context` 选择**：创建 `AlertDialog.Builder` 时，最好传入 `Activity` 的 Context（如 `MainActivity.this`），而不是 `Application` 的 Context。传入 `Application` Context 在某些系统版本上可能会导致样式错乱或崩溃。
+*   **内存泄漏**：不要在对话框的按钮监听器或自定义视图中持有对 Activity 的强引用，这可能导致 Activity 无法被回收。如果需要在后台线程中操作UI，请确保在 `onDestroy()` 中取消任务和关闭对话框。
+*   **现代替代品**：对于简单的选择，可以考虑使用 **BottomSheetDialog**，它从屏幕底部滑出，符合现代 Material Design 的设计趋势，体验更佳。
+
+### 总结
+
+**AlertDialog** 是一个功能强大、用途广泛的交互组件，是 Android 开发者必须掌握的基础知识。它主要用于：
+*   **确认重要操作**（如删除、退出）。
+*   **让用户做出选择**（从多个选项中选择一个）。
+*   **显示需要立即注意的信息或错误**。
+*   **收集简单的用户输入**。
+
+掌握 `AlertDialog.Builder` 的链式调用方法是灵活使用它的关键。
+
+### 示例
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-alertdialog)
 
 
 
