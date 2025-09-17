@@ -6073,3 +6073,115 @@ public void test() throws IOException, InterruptedException {
     // endregion
 }
 ```
+
+
+
+## 存储 - `SharedPreferences`
+
+>参考链接：https://www.cnblogs.com/fanglongxiang/p/11390013.html
+
+**SharedPreferences** 是 Android 提供的一种轻量级数据存储方式，用于保存简单的键值对（Key-Value）数据，适合存储应用配置、用户偏好设置等小规模数据（如用户名、开关状态、字体大小等）。  
+
+---
+
+### **核心特点**
+1. **存储形式**：以 XML 文件形式保存在设备上（路径：`/data/data/<包名>/shared_prefs/`）。
+2. **数据类型**：支持基本类型（`String`、`int`、`float`、`long`、`boolean`）。
+3. **作用范围**：
+   - **应用私有**：默认仅当前应用可访问。
+   - **跨进程限制**：不支持多进程共享（需使用 `MODE_MULTI_PROCESS`，但已废弃）。
+4. **性能**：读写速度快，但不适合存储大量数据或复杂结构。
+
+---
+
+### **基本用法**
+#### 1. **获取 SharedPreferences 对象**
+```java
+// 方式1：指定文件名（推荐）
+SharedPreferences sp = getSharedPreferences("my_prefs", Context.MODE_PRIVATE);
+
+// 方式2：使用默认文件（包名作为文件名）
+SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
+```
+
+#### 2. **写入数据**
+通过 `Editor` 修改数据，最后调用 `apply()`（异步）或 `commit()`（同步，返回成功状态）保存：
+```java
+SharedPreferences.Editor editor = sp.edit();
+editor.putString("username", "Alice");
+editor.putInt("age", 25);
+editor.putBoolean("isDarkMode", true);
+editor.apply(); // 无返回值，异步写入（推荐）
+// 或 editor.commit(); // 同步写入，返回boolean表示成功与否
+```
+
+#### 3. **读取数据**
+直接通过键读取，需提供默认值（键不存在时返回）：
+```java
+String name = sp.getString("username", "default_name");
+int age = sp.getInt("age", 0);
+boolean isDarkMode = sp.getBoolean("isDarkMode", false);
+```
+
+#### 4. **删除数据**
+```java
+editor.remove("age"); // 删除单个键
+editor.clear();      // 清空所有数据
+editor.apply();
+```
+
+---
+
+### **高级用法**
+#### 1. **监听数据变化**
+通过 `OnSharedPreferenceChangeListener` 实时监听特定键的变更：
+```java
+sp.registerOnSharedPreferenceChangeListener((sharedPreferences, key) -> {
+    if (key.equals("username")) {
+        Log.d("TAG", "用户名更新为: " + sharedPreferences.getString(key, ""));
+    }
+});
+```
+
+#### 2. **多文件管理**
+为不同模块创建独立的 SharedPreferences 文件：
+```java
+SharedPreferences settingsPref = getSharedPreferences("settings", Context.MODE_PRIVATE);
+SharedPreferences userPref = getSharedPreferences("user_data", Context.MODE_PRIVATE);
+```
+
+#### 3. **Jetpack DataStore 替代方案**
+SharedPreferences 的现代替代品（支持协程、Flow，更安全）：
+```kotlin
+// 使用 Preferences DataStore（推荐）
+val dataStore: DataStore<Preferences> = context.createDataStore(name = "settings")
+dataStore.edit { preferences ->
+    preferences[stringPreferencesKey("username")] = "Alice"
+}
+```
+
+---
+
+### **注意事项**
+1. **不要存敏感信息**：SharedPreferences 文件未加密，避免保存密码等敏感数据（可用 `EncryptedSharedPreferences`）。
+2. **避免主线程阻塞**：`commit()` 是同步操作，可能阻塞 UI 线程，优先用 `apply()`。
+3. **文件大小限制**：适合存储小型数据，大量数据建议用数据库。
+
+---
+
+### **SharedPreferences 文件示例**
+生成的 XML 文件（`my_prefs.xml`）内容类似：
+```xml
+<?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<map>
+    <string name="username">Alice</string>
+    <int name="age" value="25" />
+    <boolean name="isDarkMode" value="true" />
+</map>
+```
+
+总结：SharedPreferences 是 Android 中最简单的本地存储方案，适合快速保存用户设置或标志位，但对复杂数据需选择数据库或其他存储方式。
+
+### 示例
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-sharedpreferences)
