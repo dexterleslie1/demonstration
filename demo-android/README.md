@@ -5097,6 +5097,234 @@ builder.setTitle("自定义对话框")
 
 
 
+## `UI`组件 - `ProgressDialog`
+
+这是一个非常重要但**现在已被官方标记为废弃（Deprecated）** 的组件，了解它的历史和现代替代方案至关重要。
+
+### Android ProgressDialog 是什么？
+
+**ProgressDialog** 是 Android 系统提供的一个**模态对话框**，用于在执行耗时操作（如网络请求、文件读写、复杂计算）时向用户显示**任务正在进行中**的视觉反馈。它通常会包含一个旋转的进度动画（环形或条形）和一段描述性的文本。
+
+**它的核心特点是：**
+
+1.  **模态（Modal）**：和 AlertDialog 一样，它会阻塞用户交互。在它显示时，用户无法与应用程序的其他部分进行交互，必须等待操作完成或手动取消。
+2.  **视觉反馈**：通过旋转的圆圈或进度条，明确告知用户需要等待，避免了应用“卡死”的错觉。
+3.  **可配置性**：可以设置为**不确定进度**（无限的旋转动画，不知道何时完成）或**确定进度**（有具体进度的水平进度条）。
+
+---
+
+### 为什么 ProgressDialog 被废弃了？
+
+从 API level 26 (Android 8.0) 开始，`ProgressDialog` 类被官方标记为 **`@Deprecated`**。
+
+**主要原因如下：**
+
+1.  **糟糕的用户体验 (UX)**：强制中断用户操作，剥夺了用户的控制感。用户只能被动等待，无法进行其他操作，这在现代应用设计中被认为是不友好的。
+2.  **容易导致 ANR (Application Not Responding)**：如果开发者不小心在 UI 线程（主线程）中执行耗时操作，同时又显示了 ProgressDialog，对话框会因为主线程被阻塞而无法更新甚至无法关闭，导致应用无响应。
+3.  **架构问题**：ProgressDialog 的生命周期管理很麻烦。如果屏幕旋转或Activity被销毁重建，很容易导致 `WindowLeaked`（窗口泄漏）或 `Context` 引用错误，引发崩溃。
+4.  **与现代设计语言不符**：Material Design 更推荐使用内嵌在界面中的非阻塞式进度指示器，例如 **ProgressBar** 和 **SwipeRefreshLayout**。
+
+**官方建议**：使用其他进度指示器组件，如 `ProgressBar`（嵌入布局中）或 `SwipeRefreshLayout`（用于下拉刷新），它们能提供更好的用户体验。
+
+---
+
+### 如何使用 ProgressDialog（已废弃，仅作了解）
+
+尽管已被废弃，但在维护老代码时你可能会遇到它。
+
+#### 1. 显示一个不确定进度的对话框（无限旋转）
+
+```java
+// 1. 创建并配置 ProgressDialog
+ProgressDialog progressDialog = new ProgressDialog(MainActivity.this);
+progressDialog.setMessage("加载中，请稍候...");
+progressDialog.setTitle("提示");
+progressDialog.setCancelable(false); // 设置是否可以通过点击对话框外部或返回键取消
+
+// 2. 显示对话框
+progressDialog.show();
+
+// ... 在后台线程执行耗时操作
+new Thread(new Runnable() {
+    @Override
+    public void run() {
+        // 模拟耗时工作（例如网络请求）
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // 操作完成后，回到主线程关闭对话框
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (progressDialog != null && progressDialog.isShowing()) {
+                    progressDialog.dismiss(); // 关闭对话框
+                }
+                // 更新UI，显示操作结果
+            }
+        });
+    }
+}).start();
+```
+
+#### 2. 显示一个确定进度的对话框（水平进度条）
+
+```java
+// 1. 创建并配置为确定进度样式
+final ProgressDialog progressDialog = new ProgressDialog(MainActivity.this);
+progressDialog.setIcon(R.drawable.ic_launcher); // 设置图标（可选）
+progressDialog.setTitle("文件下载");
+progressDialog.setMessage("正在下载...");
+progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL); // 关键：设置为水平进度条样式
+progressDialog.setMax(100); // 设置进度最大值
+progressDialog.setCancelable(false);
+progressDialog.show();
+
+// 2. 模拟一个耗时的、有进度的任务（必须在后台线程！）
+new Thread(new Runnable() {
+    @Override
+    public void run() {
+        int currentProgress = 0;
+        while (currentProgress < 100) {
+            try {
+                Thread.sleep(200); // 模拟工作耗时
+                currentProgress += 5;
+
+                // 更新进度条（必须在主线程）
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        progressDialog.setProgress(currentProgress);
+                    }
+                });
+
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        // 完成后关闭
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                progressDialog.dismiss();
+                Toast.makeText(MainActivity.this, "下载完成！", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+}).start();
+```
+
+---
+
+### 现代替代方案（必须掌握）
+
+现在，你应该使用以下组件来替代 ProgressDialog。
+
+#### 1. 在布局中嵌入 ProgressBar（最常用）
+
+在你的页面布局（XML）中添加一个 `ProgressBar`，默认是不确定的环形样式。
+
+**布局文件 (`activity_main.xml`)：**
+```xml
+<LinearLayout ...>
+    <!-- 你的其他UI组件 -->
+    <Button
+        android:id="@+id/btn_load"
+        ... />
+
+    <!-- 进度条，初始状态为不可见 -->
+    <ProgressBar
+        android:id="@+id/progress_bar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center" <!-- 居中显示 -->
+        android:visibility="gone" /> <!-- 初始不可见 -->
+
+    <TextView
+        android:id="@+id/tv_result"
+        ... />
+</LinearLayout>
+```
+
+**Java 代码 (`MainActivity.java`)：**
+```java
+public class MainActivity extends AppCompatActivity {
+
+    private ProgressBar progressBar;
+    private TextView resultTextView;
+    private Button loadButton;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        progressBar = findViewById(R.id.progress_bar);
+        resultTextView = findViewById(R.id.tv_result);
+        loadButton = findViewById(R.id.btn_load);
+
+        loadButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // 点击后显示进度条，禁用按钮防止重复点击
+                progressBar.setVisibility(View.VISIBLE);
+                loadButton.setEnabled(false);
+                resultTextView.setText("");
+
+                // 执行耗时操作
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        // 模拟工作
+                        try {
+                            Thread.sleep(3000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                // 完成后隐藏进度条，更新UI
+                                progressBar.setVisibility(View.GONE);
+                                loadButton.setEnabled(true);
+                                resultTextView.setText("数据加载成功！");
+                            }
+                        });
+                    }
+                }).start();
+            }
+        });
+    }
+}
+```
+**优点**：非模态，用户仍然可以与界面上其他未被禁用的部分交互，体验更好。
+
+#### 2. 使用 SwipeRefreshLayout（用于下拉刷新场景）
+
+这是一个专门为“下拉刷新”设计的高级容器，内部集成了进度指示器。
+
+### 总结
+
+| 特性         | ProgressDialog (已废弃)        | 现代方案 (ProgressBar / SwipeRefreshLayout) |
+| :----------- | :----------------------------- | :------------------------------------------ |
+| **交互模式** | 模态，阻塞用户                 | **非模态**，不阻塞用户                      |
+| **用户体验** | 差，强制等待                   | **好**，允许用户进行其他操作                |
+| **生命周期** | 难以管理，易导致内存泄漏和崩溃 | **易于管理**，作为View的一部分              |
+| **官方态度** | **不推荐使用 (Deprecated)**    | **推荐使用**                                |
+| **适用场景** | 无                             | 页面内加载、下拉刷新                        |
+
+**核心结论**：**不要再在新的项目中使用 `ProgressDialog`**。对于需要显示进度的场景，优先选择在布局中嵌入 `ProgressBar` 或使用 `SwipeRefreshLayout`，它们能提供更优雅、更现代的用户体验。
+
+### 示例
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-progressdialog)
+
+
+
 ## 网络 - 主流的库
 
 当然！Android 开发中主流的网络库选择非常清晰，目前已经形成了以 **OkHttp 为基石**、**Retrofit 为核心**、并辅以其他现代化方案的格局。
