@@ -4728,3 +4728,546 @@ scrollView.scrollTo(300, 0);
 
 
 
+## 网络 - 主流的库
+
+当然！Android 开发中主流的网络库选择非常清晰，目前已经形成了以 **OkHttp 为基石**、**Retrofit 为核心**、并辅以其他现代化方案的格局。
+
+下面我将为你详细解析这些主流的网络库。
+
+### 1. OkHttp (基石与核心)
+
+**定位**： 一个高效的 HTTP/HTTP2 客户端，是 Android 网络通信的**实际标准**和底层基础。
+
+*   **特点**：
+    *   **性能优异**： 支持 HTTP/2，允许对同一主机的所有请求共享一个套接字连接。
+    *   **连接池**： 减少请求延迟（如果HTTP/2不可用）。
+    *   **透明的GZIP压缩**： 自动压缩请求体和解压响应体，节省带宽。
+    *   **响应缓存**： 避免重复的网络请求。
+    *   **强大的拦截器**： 这是OkHttp最核心的功能之一，可以用于添加统一请求头、日志记录、修改请求/响应、身份认证、模拟数据等，非常灵活。
+    *   **自动重定向**和**请求重试**。
+
+*   **使用场景**：
+    *   任何需要直接进行HTTP请求的场景。
+    *   作为其他高级网络库（如Retrofit）的底层依赖。
+    *   需要高度自定义网络行为（通过拦截器）时。
+
+### 2. Retrofit (当前绝对主流)
+
+**定位**： 一个类型安全（Type-safe）的 **RESTful API 客户端库**，它本质上是对 OkHttp 的极致封装。
+
+*   **特点**：
+    *   **声明式API**： 通过 Java/Kotlin 接口和注解（如 `@GET`, `@POST`, `@Path`, `@Query`）来描述HTTP请求，代码非常简洁直观。
+    *   **类型安全**： 在编译时就会检查错误，避免了手动拼接URL和参数的错误。
+    *   **强大的数据转换器**： 通过集成 `Converter`（如 Gson, Moshi, Jackson），可以自动将 JSON 响应体转换为 Java/Kotlin 对象，也将对象自动序列化为请求体。常用的是 **GsonConverterFactory**。
+    *   **支持多种适配器**： 默认返回 `Call<T>`，但可以通过适配器（如 **RxJava** 的 `CallAdapter`）支持 **RxJava**、**Kotlin 协程** 和 `LiveData`，完美融入现代异步编程范式。
+    *   **底层基于OkHttp**： 享有OkHttp的所有优点。
+
+*   **使用场景**：
+    *   **绝大多数**与 RESTful API 交互的应用程序。
+    *   追求代码简洁、可维护性和开发效率的项目。
+    *   与 RxJava 或 Kotlin 协程结合使用的项目。
+
+**组合使用：Retrofit + OkHttp + Kotlin 协程 / RxJava + Gson/Moshi** 是目前 Android 开发中最常见、最强大的网络请求方案。
+
+---
+
+### 3. Volley (曾经的官方推荐，现已逐渐淡出)
+
+**定位**： Google 早年推出的网络库，适合数据量不大但通信频繁的场景。
+
+*   **特点**：
+    *   **轻量级**： 适合简单的网络请求。
+    *   **自动调度网络请求**： 内置了请求队列管理。
+    *   **内置图片加载**和缓存功能（但图片加载功能通常被更专业的库如 Glide/Picasso 取代）。
+    *   **缺点**： 对复杂请求（如文件上传/下载）的支持不如 OkHttp 灵活和强大，性能也不及 OkHttp。
+
+*   **使用场景**：
+    *   老项目维护。
+    *   对库大小非常敏感且需求极其简单的应用。
+
+---
+
+### 4. Kotlin 协程 + `kotlinx.coroutines` (现代化异步方案)
+
+**定位**： 虽然不是一个网络库，但它是**处理异步请求的首选方式**，需要与 Retrofit 或 OkHttp 结合使用。
+
+*   **特点**：
+    *   **以同步的方式写异步代码**： 避免了回调地狱（Callback Hell），代码逻辑清晰直观。
+    *   **生命周期感知**： 与 Android Jetpack 的 `Lifecycle` 组件结合（如 `viewModelScope`, `lifecycleScope`），可以自动取消请求，避免内存泄漏。
+    *   **异常处理**： 使用 `try-catch` 或 `CoroutineExceptionHandler` 处理异常，更加简单。
+
+*   **使用场景**：
+    *   **所有新的 Kotlin 项目**都应该使用协程来处理网络请求的异步回调。
+    *   替换掉 `Callback`, `RxJava` 等异步方案。
+
+---
+
+### 5. Ktor Client (跨平台新选择)
+
+**定位**： 由 JetBrains 开发的异步网络客户端，是 **Kotlin 多平台（Multiplatform）** 项目中的明星。
+
+*   **特点**：
+    *   **完全基于 Kotlin 和协程**： 从设计之初就为 Kotlin 协程量身定制。
+    *   **跨平台**： 可以在 Android、iOS、JVM、JavaScript、Native 等多个平台上使用，是 KMM（Kotlin Multiplatform Mobile）项目的首选网络库。
+    *   **轻量级且模块化**： 可以按需添加功能（如 JSON 序列化、日志记录等）。
+    *   **功能强大**： 支持 HTTP/2、WebSockets、拦截器等。
+
+*   **使用场景**：
+    *   Kotlin 多平台（KMM）项目。
+    *   希望在整个技术栈中统一使用 Kotlin 风格的新项目。
+
+---
+
+### 总结与选择建议
+
+| 库名称                | 定位                           | 特点                              | 推荐场景                         |
+| :-------------------- | :----------------------------- | :-------------------------------- | :------------------------------- |
+| **OkHttp**            | **HTTP 客户端基石**            | 高性能、拦截器、连接池            | 底层HTTP操作，或其他库的依赖     |
+| **Retrofit**          | **类型安全的 REST API 客户端** | 声明式、类型安全、支持协程/RxJava | **绝大多数新项目**，访问REST API |
+| **Volley**            | 轻量级网络库                   | 请求队列管理、轻量                | 老项目维护，简单请求场景         |
+| **Kotlin Coroutines** | **异步处理方案**               | 消除回调地狱、生命周期感知        | **所有新项目**，处理异步操作     |
+| **Ktor Client**       | **跨平台网络客户端**           | 纯Kotlin、跨平台、模块化          | Kotlin 多平台（KMM）项目         |
+
+**给新项目的黄金组合建议**：
+
+**对于纯 Android 项目**：
+**Retrofit + OkHttp + Kotlin Coroutines + Moshi/Gson**
+
+**对于 Kotlin 多平台（KMM）项目**：
+**Ktor Client + Kotlin Serialization**
+
+
+
+## 网络 - `Retrofit`
+
+在 Android 中使用 **Retrofit**（基于 Java 语言）主要分为以下几个步骤：
+
+---
+
+### **1. 添加依赖**
+
+在 `build.gradle` (**Module: app**) 中添加 **Retrofit** 和 **Gson** 依赖：
+```gradle
+dependencies {
+    // Retrofit
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.9.0' // Gson 转换器
+    
+    // 可选：日志拦截器（用于调试）
+    implementation 'com.squareup.okhttp3:logging-interceptor:4.9.3'
+}
+```
+
+---
+
+### **2. 定义 API 接口**
+创建一个 Java 接口，使用 **Retrofit 注解** 定义 API 请求方法。
+
+**示例**（假设访问 `https://jsonplaceholder.typicode.com/posts`）：
+```java
+import retrofit2.Call;
+import retrofit2.http.GET;
+import retrofit2.http.Path;
+import retrofit2.http.Query;
+
+public interface ApiService {
+    // 获取所有帖子（GET 请求）
+    @GET("posts")
+    Call<List<Post>> getPosts();
+
+    // 获取单个帖子（带路径参数）
+    @GET("posts/{id}")
+    Call<Post> getPostById(@Path("id") int postId);
+
+    // 带查询参数的请求（如：/posts?userId=1）
+    @GET("posts")
+    Call<List<Post>> getPostsByUserId(@Query("userId") int userId);
+}
+```
+
+**`Post` 数据模型类**（用于 JSON 解析）：
+```java
+public class Post {
+    private int id;
+    private int userId;
+    private String title;
+    private String body;
+
+    // Getter & Setter
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
+
+    public int getUserId() { return userId; }
+    public void setUserId(int userId) { this.userId = userId; }
+
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
+
+    public String getBody() { return body; }
+    public void setBody(String body) { this.body = body; }
+}
+```
+
+---
+
+### **3. 创建 Retrofit 实例**
+在代码中初始化 **Retrofit**，并设置 **Base URL** 和 **Gson 转换器**。
+
+```java
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+
+public class RetrofitClient {
+    private static final String BASE_URL = "https://jsonplaceholder.typicode.com/";
+    private static Retrofit retrofit = null;
+
+    public static ApiService getApiService() {
+        if (retrofit == null) {
+            retrofit = new Retrofit.Builder()
+                    .baseUrl(BASE_URL)
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build();
+        }
+        return retrofit.create(ApiService.class);
+    }
+}
+```
+
+---
+
+### **4. 发起网络请求**
+在 Activity/Fragment 中调用 API，并使用 `enqueue()` 进行异步请求。
+
+```java
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
+public class MainActivity extends AppCompatActivity {
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        // 获取 ApiService 实例
+        ApiService apiService = RetrofitClient.getApiService();
+
+        // 示例1：获取所有帖子
+        Call<List<Post>> call = apiService.getPosts();
+        call.enqueue(new Callback<List<Post>>() {
+            @Override
+            public void onResponse(Call<List<Post>> call, Response<List<Post>> response) {
+                if (response.isSuccessful()) {
+                    List<Post> posts = response.body();
+                    // 处理数据（如更新 RecyclerView）
+                    Log.d("Retrofit", "获取到 " + posts.size() + " 条帖子");
+                } else {
+                    Log.e("Retrofit", "请求失败: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<Post>> call, Throwable t) {
+                Log.e("Retrofit", "网络错误: " + t.getMessage());
+            }
+        });
+
+        // 示例2：获取单个帖子（ID=1）
+        Call<Post> callSinglePost = apiService.getPostById(1);
+        callSinglePost.enqueue(new Callback<Post>() {
+            @Override
+            public void onResponse(Call<Post> call, Response<Post> response) {
+                if (response.isSuccessful()) {
+                    Post post = response.body();
+                    Log.d("Retrofit", "帖子标题: " + post.getTitle());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Post> call, Throwable t) {
+                Log.e("Retrofit", "错误: " + t.getMessage());
+            }
+        });
+    }
+}
+```
+
+---
+
+### **5. 添加日志拦截器（可选）**
+如果需要查看请求和响应的日志，可以添加 **OkHttp Logging Interceptor**：
+```java
+import okhttp3.OkHttpClient;
+import okhttp3.logging.HttpLoggingInterceptor;
+
+public class RetrofitClient {
+    private static final String BASE_URL = "https://jsonplaceholder.typicode.com/";
+    private static Retrofit retrofit = null;
+
+    public static ApiService getApiService() {
+        if (retrofit == null) {
+            // 创建日志拦截器
+            HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
+            loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY); // 打印完整日志
+
+            // 创建 OkHttpClient 并添加拦截器
+            OkHttpClient client = new OkHttpClient.Builder()
+                    .addInterceptor(loggingInterceptor)
+                    .build();
+
+            retrofit = new Retrofit.Builder()
+                    .baseUrl(BASE_URL)
+                    .client(client) // 设置自定义的 OkHttpClient
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build();
+        }
+        return retrofit.create(ApiService.class);
+    }
+}
+```
+
+---
+
+### **6. 处理 POST 请求**
+如果需要发送 **POST 请求**，可以在 `ApiService` 中添加：
+```java
+import retrofit2.http.Body;
+import retrofit2.http.POST;
+
+public interface ApiService {
+    // 发送 POST 请求（提交 JSON 数据）
+    @POST("posts")
+    Call<Post> createPost(@Body Post post);
+}
+```
+
+**调用方式**：
+```java
+Post newPost = new Post();
+newPost.setUserId(1);
+newPost.setTitle("测试标题");
+newPost.setBody("测试内容");
+
+Call<Post> call = apiService.createPost(newPost);
+call.enqueue(new Callback<Post>() {
+    @Override
+    public void onResponse(Call<Post> call, Response<Post> response) {
+        if (response.isSuccessful()) {
+            Post createdPost = response.body();
+            Log.d("Retrofit", "创建成功，ID: " + createdPost.getId());
+        }
+    }
+
+    @Override
+    public void onFailure(Call<Post> call, Throwable t) {
+        Log.e("Retrofit", "创建失败: " + t.getMessage());
+    }
+});
+```
+
+---
+
+### **总结**
+1. **添加依赖**（Retrofit + Gson Converter）。
+2. **定义 API 接口**（使用 `@GET`、`@POST`、`@Path`、`@Query` 等注解）。
+3. **创建 Retrofit 实例**（设置 `baseUrl` 和 `GsonConverterFactory`）。
+4. **发起网络请求**（使用 `enqueue` 进行异步调用）。
+5. **可选**：添加日志拦截器、处理 POST 请求。
+
+这样，你就可以在 **Java** 项目中轻松使用 **Retrofit** 进行网络请求了！🚀
+
+### 示例
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-retrofit)
+
+模块的 `build.gradle` 配置依赖
+
+```groovy
+dependencies {
+    ...
+    
+    // 引用retrofit
+    implementation 'com.squareup.retrofit2:retrofit:2.6.2'
+    implementation 'com.squareup.retrofit2:converter-gson:2.6.2'
+}
+```
+
+定义接口
+
+```java
+public interface ApiService {
+    @GET("/http/library/api/getWithHeaderAndQueryParamter")
+    Call<ResponseBody> getWithHeaderAndQueryParamter(
+            @Header("customHeader") String customHeader,
+            @Query("username") String username);
+
+    @GET("/http/library/api/getWithObjectResponse")
+    Call<ObjectResponse<String>> getWithObjectResponse();
+
+    @POST("/http/library/api/postWithHttp404")
+    Call<ObjectResponse<String>> postWithHttp404(
+            @Query("name") String name
+    );
+
+    @POST("/http/library/api/postAndReturnWithBusinessException")
+    Call<ObjectResponse<String>> postAndReturnWithBusinessException(
+            @Query("name") String name
+    );
+}
+```
+
+创建接口实例
+
+```java
+Gson gson = new Gson();
+
+// 创建ApiService实例
+Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl("http://" + Host + ":" + Port)
+        .client(new OkHttpClient.Builder().addInterceptor(new Interceptor() {
+            @Override
+            public Response intercept(Chain chain) throws IOException {
+                Request request = chain.request();
+                Response response = chain.proceed(request);
+
+                String responseBodyStr = response.body().string();
+                if (!response.isSuccessful()) {
+                    // 统一处理非 HTTP 200 响应
+                    String errorMessage = "HTTP 错误状态码：" + response.code() + "，错误信息：" + responseBodyStr;
+                    throw new BusinessException(ErrorCodeConstant.ErrorCodeCommon, errorMessage);
+                } else {
+                    // 统一处理 HTTP 200 响应但业务异常
+                    BaseResponse baseResponse = gson.fromJson(responseBodyStr, BaseResponse.class);
+                    int errorCode = baseResponse.getErrorCode();
+                    String errorMessage = baseResponse.getErrorMessage();
+                    if (errorCode > 0) {
+                        throw new BusinessException(errorCode, errorMessage);
+                    }
+                }
+
+                // 因为之前已经读取 response 内容需要重新构造一个新的
+                MediaType contentType = response.body().contentType();
+                ResponseBody newResponseBody = ResponseBody.create(contentType, responseBodyStr);
+                return response.newBuilder()
+                        .body(newResponseBody)
+                        .build();
+            }
+        }).build())
+        .addConverterFactory(GsonConverterFactory.create())
+        .build();
+apiService = retrofit.create(ApiService.class);
+```
+
+测试
+
+```java
+@Test
+public void test() throws IOException, InterruptedException {
+    //  region 测试非 HTTP 200：抛出 BusinessException
+
+    // 同步
+    try {
+        Call<ObjectResponse<String>> call = apiService.postWithHttp404(null);
+        call.execute().body();
+        Assert.fail();
+    } catch (Exception e) {
+        Assert.assertTrue(e instanceof BusinessException);
+        Assert.assertEquals(((BusinessException) e).getErrorCode(), ErrorCodeConstant.ErrorCodeCommon);
+        Assert.assertTrue(((BusinessException) e).getErrorMessage().contains("404"));
+    }
+
+    // 异步回调
+    CountDownLatch countDownLatch = new CountDownLatch(1);
+    Call<ObjectResponse<String>> call = apiService.postWithHttp404(null);
+    CountDownLatch finalCountDownLatch1 = countDownLatch;
+    call.enqueue(new Callback<ObjectResponse<String>>() {
+        @Override
+        public void onResponse(Call<ObjectResponse<String>> call, retrofit2.Response<ObjectResponse<String>> response) {
+        }
+
+        @Override
+        public void onFailure(Call<ObjectResponse<String>> call, Throwable t) {
+            if (t instanceof BusinessException) {
+                BusinessException ex = (BusinessException) t;
+                int errorCode = ex.getErrorCode();
+                String errorMessage = ex.getErrorMessage();
+                if (errorCode == ErrorCodeConstant.ErrorCodeCommon && errorMessage.contains("404")) {
+                    finalCountDownLatch1.countDown();
+                }
+            }
+        }
+    });
+    countDownLatch.await(1, TimeUnit.SECONDS);
+
+    // endregion
+
+    // region 测试 HTTP 200 并且没有业务异常情况
+
+    // 同步
+    call = apiService.getWithObjectResponse();
+    ObjectResponse<String> response = call.execute().body();
+    Assert.assertEquals("调用成功", response.getData());
+    Assert.assertEquals(0, response.getErrorCode());
+    Assert.assertNull(response.getErrorMessage());
+
+    // 异步回调
+    countDownLatch = new CountDownLatch(1);
+    call = apiService.getWithObjectResponse();
+    CountDownLatch finalCountDownLatch = countDownLatch;
+    call.enqueue(new Callback<ObjectResponse<String>>() {
+        @Override
+        public void onResponse(Call<ObjectResponse<String>> call, retrofit2.Response<ObjectResponse<String>> response) {
+            ObjectResponse<String> body = response.body();
+            if (body.getData().equals("成功调用") && body.getErrorCode() == 0 && body.getErrorMessage() == null) {
+                finalCountDownLatch.countDown();
+            }
+        }
+
+        @Override
+        public void onFailure(Call<ObjectResponse<String>> call, Throwable t) {
+
+        }
+    });
+    countDownLatch.await(1, TimeUnit.SECONDS);
+
+    // endregion
+
+    // region 测试 HTTP 200 但业务异常情况：抛出 BusinessException
+
+    // 同步
+    try {
+        call = apiService.postAndReturnWithBusinessException(null);
+        call.execute().body();
+        Assert.fail();
+    } catch (BusinessException ex) {
+        Assert.assertEquals(ErrorCodeConstant.ErrorCodeCommon, ex.getErrorCode());
+        Assert.assertEquals("测试预期异常是否出现", ex.getErrorMessage());
+    }
+
+    // 异步回调
+    countDownLatch = new CountDownLatch(1);
+    call = apiService.postAndReturnWithBusinessException(null);
+    CountDownLatch finalCountDownLatch2 = countDownLatch;
+    call.enqueue(new Callback<ObjectResponse<String>>() {
+        @Override
+        public void onResponse(Call<ObjectResponse<String>> call, retrofit2.Response<ObjectResponse<String>> response) {
+
+        }
+
+        @Override
+        public void onFailure(Call<ObjectResponse<String>> call, Throwable t) {
+            if (t instanceof BusinessException) {
+                BusinessException ex = (BusinessException) t;
+                int errorCode = ex.getErrorCode();
+                String errorMessage = ex.getErrorMessage();
+                if (errorCode == ErrorCodeConstant.ErrorCodeCommon && errorMessage.equals("测试预期异常是否出现")) {
+                    finalCountDownLatch2.countDown();
+                }
+            }
+        }
+    });
+    countDownLatch.await(1, TimeUnit.SECONDS);
+
+    // endregion
+}
+```
