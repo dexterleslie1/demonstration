@@ -4728,6 +4728,159 @@ scrollView.scrollTo(300, 0);
 
 
 
+## `UI`组件 - `Toast`
+
+### Android Toast 是什么？
+
+**Toast** 是 Android 系统提供的一个**小型消息提示控件**。它会在屏幕底部（默认位置）弹出一个简单的、半透明的黑色小浮层，向用户显示一段短暂的即时信息。
+
+**它的核心特点是：**
+
+1.  **非阻塞式（Non-Intrusive）**：Toast 的出现不会获得用户的焦点，用户无需与之交互（点击或取消），它可以自动消失。用户在看提示的同时，仍然可以操作应用。
+2.  **短暂（Transient）**：它只会在屏幕上显示一段很短的时间（通常为2秒或3.5秒，可设置），然后自动消失。
+3.  **简单（Simple）**：主要用于显示简单的文本信息，也可以包含一个图标（但现在较少使用）。
+4.  **全局性**：你可以在任何地方（Activity、Service、BroadcastReceiver等）创建和显示Toast，它并不依赖于Activity的UI布局。
+
+---
+
+### Toast 的基本用法（Java）
+
+#### 1. 显示一段短时间的文本（约2秒）
+
+这是最常见的使用方式。
+
+```java
+Toast.makeText(MainActivity.this, "这是一条提示信息", Toast.LENGTH_SHORT).show();
+```
+
+#### 2. 显示一段长时间的文本（约3.5秒）
+
+```java
+Toast.makeText(MainActivity.this, "这是一个较长的操作提示", Toast.LENGTH_LONG).show();
+```
+
+#### 3. 代码参数解释
+
+*   `makeText(Context context, CharSequence text, int duration)`
+    *   **`context`**： 上下文，通常是当前的 `Activity.this` 或 `getApplicationContext()`。
+    *   **`text`**： 要显示给用户的文本信息。
+    *   **`duration`**： 显示时长。只有两个预定义常量：
+        *   `Toast.LENGTH_SHORT`： 短时间
+        *   `Toast.LENGTH_LONG`： 长时间
+*   `.show()`： **必须调用这个方法**，Toast 才会真正显示出来。`makeText()` 只是创建了一个Toast对象。
+
+---
+
+### 自定义Toast的位置
+
+你可以改变Toast在屏幕上的默认显示位置。
+
+```java
+Toast toast = Toast.makeText(this, "自定义位置的Toast", Toast.LENGTH_LONG);
+// 设置位置：距屏幕顶部100像素，水平方向居中
+toast.setGravity(Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, 100);
+toast.show();
+```
+
+*   `setGravity(int gravity, int xOffset, int yOffset)`
+    *   `gravity`： 基准定位点（如`Gravity.TOP`, `Gravity.CENTER`）。
+    *   `xOffset`： X方向偏移量。
+    *   `yOffset`： Y方向偏移量。
+
+---
+
+### 带图标的Toast（已过时，了解即可）
+
+在早期版本中，可以设置Toast的视图来添加图片，但这种方式**现已过时（Deprecated）**。现代Material Design设计规范不推荐这种用法，保持Toast的简洁性。如果需要更丰富的提示，应考虑使用 **Snackbar**。
+
+```java
+// 注意：此方法已过时，仅作了解
+Toast toast = Toast.makeText(this, "文字和图片", Toast.LENGTH_SHORT);
+View view = toast.getView();
+ImageView icon = new ImageView(this);
+icon.setImageResource(R.drawable.ic_my_icon);
+// ... 复杂布局设置（已过时）
+toast.show();
+```
+
+---
+
+### 现代替代方案：Snackbar
+
+虽然Toast仍然有用，但在很多场景下，**Snackbar** 是更好的选择，因为它提供了Material Design风格的体验，并且**可以附带一个操作按钮**。
+
+**Snackbar 与 Toast 的主要区别：**
+
+| 特性       | Toast            | Snackbar (来自 Material Design 库)                 |
+| :--------- | :--------------- | :------------------------------------------------- |
+| **位置**   | 屏幕底部（默认） | 屏幕底部（默认）                                   |
+| **交互性** | **无**，仅提示   | **有**，可包含一个可点击的操作按钮                 |
+| **行为**   | 自动消失         | 可手动滑动关闭，或点击按钮交互                     |
+| **归属**   | 系统控件         | 需要依赖 `com.google.android.material:material` 库 |
+
+**Snackbar 示例：**
+
+```java
+// 首先确保在 build.gradle 中添加了 Material Design 依赖
+// implementation 'com.google.android.material:material:1.11.0'
+
+Snackbar.make(findViewById(android.R.id.content), // 一个View
+              "项目已删除", // 提示文字
+              Snackbar.LENGTH_LONG) // 时长
+        .setAction("撤销", new View.OnClickListener() { // 添加一个操作按钮
+            @Override
+            public void onClick(View v) {
+                // 点击“撤销”按钮后执行的操作
+                undoDelete();
+            }
+        })
+        .show();
+```
+
+### 总结
+
+*   **Toast** 是一个**简单、非阻塞、短暂**的全局消息提示工具。
+*   使用 `Toast.makeText(context, text, duration).show();` 来显示。
+*   核心作用是**告知用户操作结果或应用状态**（如“保存成功”、“网络连接失败”）。
+*   对于需要用户交互（如撤销操作）的场景，优先考虑使用功能更强大的 **Snackbar**。
+
+### 示例
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-toast)
+
+```java
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    EdgeToEdge.enable(this);
+    setContentView(R.layout.activity_main);
+    ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+        Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+        v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+        return insets;
+    });
+
+    Button buttonShortToast = findViewById(R.id.buttonShortToast);
+    Button buttonLongToast = findViewById(R.id.buttonLongToast);
+    buttonShortToast.setOnClickListener(new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            // 弹出短时间 Toast
+            Toast.makeText(getApplication(), "短Toast", Toast.LENGTH_SHORT).show();
+        }
+    });
+    buttonLongToast.setOnClickListener(new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            // 弹出长时间 Toast
+            Toast.makeText(getApplication(), "长Toast", Toast.LENGTH_LONG).show();
+        }
+    });
+}
+```
+
+
+
 ## 网络 - 主流的库
 
 当然！Android 开发中主流的网络库选择非常清晰，目前已经形成了以 **OkHttp 为基石**、**Retrofit 为核心**、并辅以其他现代化方案的格局。
