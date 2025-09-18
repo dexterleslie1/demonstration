@@ -2,6 +2,7 @@ package com.future.demo;
 
 import android.app.ProgressDialog;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
@@ -10,6 +11,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+
+import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -26,6 +29,7 @@ public class MainActivity extends AppCompatActivity {
 
         Button button1 = findViewById(R.id.button1);
         Button button2 = findViewById(R.id.button2);
+        Button button3 = findViewById(R.id.button3);
         button1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -68,6 +72,33 @@ public class MainActivity extends AppCompatActivity {
                         //加载完毕自动关闭dialog
                         progressDialog.cancel();
                     }
+                }).start();
+            }
+        });
+        button3.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // 圆圈加载进度的 dialog
+                ProgressDialog progressDialog = new ProgressDialog(MainActivity.this);
+                progressDialog.setIcon(R.mipmap.ic_launcher);
+                progressDialog.setTitle("加载dialog");
+                progressDialog.setMessage("加载中...");
+                // 是否形成一个加载动画 true 表示不明确加载进度形成转圈动画 false 表示明确加载进度
+                progressDialog.setIndeterminate(true);
+                // 点击返回键或者 dialog 四周是否关闭 dialog true 表示可以关闭 false 表示不可关闭
+                progressDialog.setCancelable(false);
+                progressDialog.show();
+
+                new Thread(()->{
+                    try {
+                        TimeUnit.SECONDS.sleep(3);
+                    } catch (InterruptedException e) {
+                        Log.e(MainActivity.class.getSimpleName(), e.getMessage(), e);
+                        throw new RuntimeException(e);
+                    }
+
+                    // 主动关闭 ProgressDialog
+                    progressDialog.dismiss();
                 }).start();
             }
         });

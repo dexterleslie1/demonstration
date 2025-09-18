@@ -5416,6 +5416,82 @@ public class MainActivity extends AppCompatActivity {
 
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-progressdialog)
 
+#### 旋转
+
+```java
+// 圆圈加载进度的 dialog
+ProgressDialog progressDialog = new ProgressDialog(MainActivity.this);
+progressDialog.setIcon(R.mipmap.ic_launcher);
+progressDialog.setTitle("加载dialog");
+progressDialog.setMessage("加载中...");
+// 是否形成一个加载动画 true 表示不明确加载进度形成转圈动画 false 表示明确加载进度
+progressDialog.setIndeterminate(true);
+// 点击返回键或者 dialog 四周是否关闭 dialog true 表示可以关闭 false 表示不可关闭
+progressDialog.setCancelable(true);
+progressDialog.show();
+```
+
+
+
+#### 进度条
+
+```java
+// 带有进度的 dialog
+final int MAX_VALUE = 100;
+ProgressDialog progressDialog = new ProgressDialog(MainActivity.this);
+progressDialog.setProgress(0);
+progressDialog.setTitle("带有加载进度dialog");
+progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+progressDialog.setMax(MAX_VALUE);
+progressDialog.show();
+new Thread(new Runnable() {
+    @Override
+    public void run() {
+        int progress = 0;
+        while (progress < MAX_VALUE) {
+            try {
+                Thread.sleep(100);
+                progress++;
+                progressDialog.setProgress(progress);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        //加载完毕自动关闭dialog
+        progressDialog.cancel();
+    }
+}).start();
+```
+
+
+
+#### 主动关闭
+
+```java
+// 圆圈加载进度的 dialog
+ProgressDialog progressDialog = new ProgressDialog(MainActivity.this);
+progressDialog.setIcon(R.mipmap.ic_launcher);
+progressDialog.setTitle("加载dialog");
+progressDialog.setMessage("加载中...");
+// 是否形成一个加载动画 true 表示不明确加载进度形成转圈动画 false 表示明确加载进度
+progressDialog.setIndeterminate(true);
+// 点击返回键或者 dialog 四周是否关闭 dialog true 表示可以关闭 false 表示不可关闭
+progressDialog.setCancelable(false);
+progressDialog.show();
+
+new Thread(()->{
+    try {
+        TimeUnit.SECONDS.sleep(3);
+    } catch (InterruptedException e) {
+        Log.e(MainActivity.class.getSimpleName(), e.getMessage(), e);
+        throw new RuntimeException(e);
+    }
+
+    // 主动关闭 ProgressDialog
+    progressDialog.dismiss();
+}).start();
+```
+
 
 
 ## `UI`组件 - `DialogFragment`
