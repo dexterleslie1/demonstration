@@ -5699,6 +5699,41 @@ dialog.show(getSupportFragmentManager(), "ResultDialog");
 
 
 
+## `UI`组件 - 边框
+
+>提示：使用 `drawable` 资源画边界。
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-view-border)
+
+`view_border.xml`
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <!-- 设置边框颜色 -->
+    <stroke
+        android:width="1dp"
+        android:color="#808080" />
+
+    <!-- 设置背景色 -->
+    <!--<solid android:color="#FFFFFF" />-->
+
+    <!-- 设置圆角（可选） -->
+    <corners android:radius="10dp" />
+
+    <!-- 设置内边距（可选） -->
+    <!--<padding
+        android:left="5dp"
+        android:top="5dp"
+        android:right="5dp"
+        android:bottom="5dp" />-->
+</shape>
+```
+
+
+
 ## 网络 - 主流的库
 
 当然！Android 开发中主流的网络库选择非常清晰，目前已经形成了以 **OkHttp 为基石**、**Retrofit 为核心**、并辅以其他现代化方案的格局。
