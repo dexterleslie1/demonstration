@@ -1,5 +1,7 @@
 package com.future.demo;
 
+import android.util.Log;
+
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.google.gson.Gson;
@@ -29,6 +31,9 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 @RunWith(AndroidJUnit4.class)
 public class ApiServiceTest {
+
+    private final static String TAG = ApiServiceTest.class.getSimpleName();
+
     private final static String Host = "192.168.235.128";
     private final static int Port = 8080;
 
@@ -46,31 +51,38 @@ public class ApiServiceTest {
                 .client(new OkHttpClient.Builder().addInterceptor(new Interceptor() {
                     @Override
                     public Response intercept(Chain chain) throws IOException {
-                        Request request = chain.request();
-                        Response response = chain.proceed(request);
+                        try {
+                            Request request = chain.request();
+                            Response response = chain.proceed(request);
 
-                        String responseBodyStr = response.body().string();
-                        if (!response.isSuccessful()) {
-                            // 统一处理非 HTTP 200 响应
-                            String errorMessage = "HTTP 错误状态码：" + response.code() + "，错误信息：" + responseBodyStr;
-                            throw new BusinessException(ErrorCodeConstant.ErrorCodeCommon, errorMessage);
-                        } else {
-                            // 统一处理 HTTP 200 响应但业务异常
-                            JsonObject jsonObject = gson.fromJson(responseBodyStr, JsonObject.class);
-                            int errorCode = jsonObject.get("errorCode").getAsInt();
-                            String errorMessage =
-                                    jsonObject.get("errorMessage").isJsonNull() ? null : jsonObject.get("errorMessage").getAsString();
-                            if (errorCode > 0) {
-                                throw new BusinessException(errorCode, errorMessage);
+                            String responseBodyStr = response.body().string();
+                            if (!response.isSuccessful()) {
+                                // 统一处理非 HTTP 200 响应
+                                String errorMessage = "HTTP 错误状态码：" + response.code() + "，错误信息：" + responseBodyStr;
+                                throw new BusinessException(ErrorCodeConstant.ErrorCodeCommon, errorMessage);
+                            } else {
+                                // 统一处理 HTTP 200 响应但业务异常
+                                JsonObject jsonObject = gson.fromJson(responseBodyStr, JsonObject.class);
+                                int errorCode = jsonObject.get("errorCode").getAsInt();
+                                String errorMessage =
+                                        jsonObject.get("errorMessage").isJsonNull() ? null : jsonObject.get("errorMessage").getAsString();
+                                if (errorCode > 0) {
+                                    throw new BusinessException(errorCode, errorMessage);
+                                }
                             }
-                        }
 
-                        // 因为之前已经读取 response 内容需要重新构造一个新的
-                        MediaType contentType = response.body().contentType();
-                        ResponseBody newResponseBody = ResponseBody.create(contentType, responseBodyStr);
-                        return response.newBuilder()
-                                .body(newResponseBody)
-                                .build();
+                            // 因为之前已经读取 response 内容需要重新构造一个新的
+                            MediaType contentType = response.body().contentType();
+                            ResponseBody newResponseBody = ResponseBody.create(contentType, responseBodyStr);
+                            return response.newBuilder()
+                                    .body(newResponseBody)
+                                    .build();
+                        } catch (Throwable t) {
+                            if (!(t instanceof BusinessException)) {
+                                Log.e(TAG, t.getMessage(), t);
+                            }
+                            throw t;
+                        }
                     }
                 }).build())
                 .addConverterFactory(GsonConverterFactory.create())

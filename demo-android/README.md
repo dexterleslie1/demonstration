@@ -2504,7 +2504,7 @@ GridLayout 适合创建静态的、结构明确的网格界面，而 GridView/Re
 
 ### 示例
 
->说明：使用 `GridLayout` 模仿美团 `App` 推荐页的功能导航功能。
+>说明：使用 `GridLayout` 模仿美团 `App` 推荐页的功能导航功能，模仿商品列表功能。
 >
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-gridlayout)
 
@@ -6067,6 +6067,67 @@ dependencies {
 }
 ```
 
+`BusinessException`
+
+```java
+package com.future.demo;
+
+import java.io.IOException;
+
+public class BusinessException extends IOException {
+    private int errorCode;
+    private String errorMessage;
+    private Object data;
+
+    public BusinessException(String errorMessage) {
+        this(ErrorCodeConstant.ErrorCodeCommon, errorMessage);
+    }
+
+    public BusinessException(int errorCode, String errorMessage) {
+        super(errorMessage);
+        this.errorCode = 0;
+        this.errorMessage = null;
+        this.data = null;
+        this.errorCode = errorCode;
+        this.errorMessage = errorMessage;
+    }
+
+    public int getErrorCode() {
+        return this.errorCode;
+    }
+
+    public String getErrorMessage() {
+        return this.errorMessage;
+    }
+
+    public Object getData() {
+        return this.data;
+    }
+
+    public void setData(Object data) {
+        this.data = data;
+    }
+}
+```
+
+`ErrorCodeConstant`
+
+```java
+package com.future.demo;
+
+
+/**
+ * 错误代码常量
+ * 为了解决多个系统之间需要统一错误代码问题
+ */
+public class ErrorCodeConstant {
+    /**
+     * 不需要返回特别错误代码的情况，使用这个公共错误代码
+     */
+    public final static int ErrorCodeCommon = 90000;
+}
+```
+
 定义接口
 
 ```java
@@ -6117,31 +6178,38 @@ Retrofit retrofit = new Retrofit.Builder()
         .client(new OkHttpClient.Builder().addInterceptor(new Interceptor() {
             @Override
             public Response intercept(Chain chain) throws IOException {
-                Request request = chain.request();
-                Response response = chain.proceed(request);
+                try {
+                    Request request = chain.request();
+                    Response response = chain.proceed(request);
 
-                String responseBodyStr = response.body().string();
-                if (!response.isSuccessful()) {
-                    // 统一处理非 HTTP 200 响应
-                    String errorMessage = "HTTP 错误状态码：" + response.code() + "，错误信息：" + responseBodyStr;
-                    throw new BusinessException(ErrorCodeConstant.ErrorCodeCommon, errorMessage);
-                } else {
-                    // 统一处理 HTTP 200 响应但业务异常
-                    JsonObject jsonObject = gson.fromJson(responseBodyStr, JsonObject.class);
-                    int errorCode = jsonObject.get("errorCode").getAsInt();
-                    String errorMessage =
-                            jsonObject.get("errorMessage").isJsonNull() ? null : jsonObject.get("errorMessage").getAsString();
-                    if (errorCode > 0) {
-                        throw new BusinessException(errorCode, errorMessage);
+                    String responseBodyStr = response.body().string();
+                    if (!response.isSuccessful()) {
+                        // 统一处理非 HTTP 200 响应
+                        String errorMessage = "HTTP 错误状态码：" + response.code() + "，错误信息：" + responseBodyStr;
+                        throw new BusinessException(ErrorCodeConstant.ErrorCodeCommon, errorMessage);
+                    } else {
+                        // 统一处理 HTTP 200 响应但业务异常
+                        JsonObject jsonObject = gson.fromJson(responseBodyStr, JsonObject.class);
+                        int errorCode = jsonObject.get("errorCode").getAsInt();
+                        String errorMessage =
+                                jsonObject.get("errorMessage").isJsonNull() ? null : jsonObject.get("errorMessage").getAsString();
+                        if (errorCode > 0) {
+                            throw new BusinessException(errorCode, errorMessage);
+                        }
                     }
-                }
 
-                // 因为之前已经读取 response 内容需要重新构造一个新的
-                MediaType contentType = response.body().contentType();
-                ResponseBody newResponseBody = ResponseBody.create(contentType, responseBodyStr);
-                return response.newBuilder()
-                        .body(newResponseBody)
-                        .build();
+                    // 因为之前已经读取 response 内容需要重新构造一个新的
+                    MediaType contentType = response.body().contentType();
+                    ResponseBody newResponseBody = ResponseBody.create(contentType, responseBodyStr);
+                    return response.newBuilder()
+                            .body(newResponseBody)
+                            .build();
+                } catch (Throwable t) {
+                    if (!(t instanceof BusinessException)) {
+                        Log.e(TAG, t.getMessage(), t);
+                    }
+                    throw t;
+                }
             }
         }).build())
         .addConverterFactory(GsonConverterFactory.create())

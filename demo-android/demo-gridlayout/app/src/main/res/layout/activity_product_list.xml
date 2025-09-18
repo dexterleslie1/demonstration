@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:fillViewport="true">
+
+    <GridLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:columnCount="2"
+        android:useDefaultMargins="true">
+        <!-- 商品列表 -->
+        <fragment
+            android:id="@+id/fragment1"
+            android:name="com.future.demo.FragmentProductListItem"
+            android:layout_width="0dp"
+            android:layout_height="400dp"
+            android:layout_columnWeight="1"></fragment>
+
+        <fragment
+            android:id="@+id/fragment2"
+            android:name="com.future.demo.FragmentProductListItem"
+            android:layout_width="0dp"
+            android:layout_height="400dp"
+            android:layout_columnWeight="1"></fragment>
+
+        <fragment
+            android:id="@+id/fragment3"
+            android:name="com.future.demo.FragmentProductListItem"
+            android:layout_width="0dp"
+            android:layout_height="400dp"
+            android:layout_columnWeight="1"></fragment>
+
+        <fragment
+            android:id="@+id/fragment4"
+            android:name="com.future.demo.FragmentProductListItem"
+            android:layout_width="0dp"
+            android:layout_height="400dp"
+            android:layout_columnWeight="1"></fragment>
+
+        <fragment
+            android:id="@+id/fragment5"
+            android:name="com.future.demo.FragmentProductListItem"
+            android:layout_width="0dp"
+            android:layout_height="400dp"
+            android:layout_columnWeight="1"></fragment>
+
+        <fragment
+            android:id="@+id/fragment6"
+            android:name="com.future.demo.FragmentProductListItem"
+            android:layout_width="0dp"
+            android:layout_height="400dp"
+            android:layout_columnWeight="1"></fragment>
+    </GridLayout>
+
+
+</ScrollView>
