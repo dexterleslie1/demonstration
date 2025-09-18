@@ -6445,3 +6445,455 @@ button.setOnClickListener(new View.OnClickListener() {
     }
 });
 ```
+
+
+
+## 库 - `Gson` - 概念
+
+**Gson** 是 Google 提供的用于在 **Java 对象** 和 **JSON 数据** 之间相互转换的 Java 库，广泛用于 Android 开发中处理网络请求、本地存储等场景的 JSON 解析和序列化。
+
+---
+
+### **核心功能**
+1. **序列化（Serialization）**  
+   将 Java 对象（如 `User`、`List`）转换为 JSON 字符串。
+   ```java
+   Gson gson = new Gson();
+   User user = new User("Alice", 25);
+   String json = gson.toJson(user); // 输出: {"name":"Alice","age":25}
+   ```
+
+2. **反序列化（Deserialization）**  
+   将 JSON 字符串解析为 Java 对象。
+   ```java
+   String json = "{\"name\":\"Bob\",\"age\":30}";
+   User user = gson.fromJson(json, User.class); // 自动映射到User对象
+   ```
+
+---
+
+### **主要特点**
+- **简单易用**：通过少量代码完成复杂转换。
+- **支持泛型**：可直接解析 `List<T>`、`Map<K,V>` 等泛型结构。
+- **自定义控制**：通过注解或自定义适配器（`TypeAdapter`）控制转换逻辑。
+- **性能优化**：相比原生 `JSONObject`/`JSONArray`，处理大数据时更高效。
+
+---
+
+### **基础用法示例**
+#### 1. **解析简单 JSON**
+```java
+// JSON -> 对象
+String json = "{\"name\":\"Alice\",\"age\":25}";
+User user = gson.fromJson(json, User.class);
+
+// 对象 -> JSON
+String jsonOutput = gson.toJson(user);
+```
+
+#### 2. **解析 JSON 数组**
+```java
+String jsonArray = "[{\"name\":\"Alice\"}, {\"name\":\"Bob\"}]";
+List<User> users = gson.fromJson(jsonArray, new TypeToken<List<User>>() {}.getType());
+```
+
+#### 3. **处理复杂嵌套 JSON**
+```java
+class Order {
+    String id;
+    List<Product> products;
+}
+String json = "{\"id\":\"123\",\"products\":[{\"name\":\"Phone\"}]}";
+Order order = gson.fromJson(json, Order.class);
+```
+
+---
+
+### **高级功能**
+#### 1. **注解控制字段映射**
+```java
+class User {
+    @SerializedName("user_name") // JSON字段名与Java字段不一致时指定
+    private String name;
+    @Exclude // 排除该字段（不参与序列化）
+    private transient int tempValue; // transient关键字也可排除字段
+}
+```
+
+#### 2. **自定义 TypeAdapter**
+处理特殊数据类型（如日期格式）：
+```java
+Gson gson = new GsonBuilder()
+    .registerTypeAdapter(Date.class, new DateTypeAdapter()) // 自定义适配器
+    .create();
+```
+
+#### 3. **格式化输出**
+```java
+Gson gson = new GsonBuilder()
+    .setPrettyPrinting() // 美化JSON输出（带缩进）
+    .create();
+String json = gson.toJson(user);
+```
+
+---
+
+### **与其他 JSON 库对比**
+| 特性            | Gson       | Jackson    | Moshi             |
+| --------------- | ---------- | ---------- | ----------------- |
+| **易用性**      | ⭐⭐⭐⭐⭐      | ⭐⭐⭐⭐       | ⭐⭐⭐⭐⭐             |
+| **性能**        | ⭐⭐⭐⭐       | ⭐⭐⭐⭐⭐      | ⭐⭐⭐⭐              |
+| **Kotlin 支持** | 需额外配置 | 需额外配置 | ⭐⭐⭐⭐⭐（原生支持） |
+| **注解灵活性**  | ⭐⭐⭐⭐       | ⭐⭐⭐⭐⭐      | ⭐⭐⭐⭐              |
+
+---
+
+### **常见问题解决方案**
+1. **字段名不一致**  
+   使用 `@SerializedName` 注解指定 JSON 字段名。
+2. **解析失败**  
+   确保 JSON 结构和 Java 类匹配，或捕获 `JsonSyntaxException` 处理异常。
+   ```java
+   try {
+       User user = gson.fromJson(json, User.class);
+   } catch (JsonSyntaxException e) {
+       e.printStackTrace();
+   }
+   ```
+3. **排除字段**  
+   使用 `@Exclude` 或 `transient` 关键字。
+
+---
+
+### **依赖引入**
+在 `build.gradle` 中添加：
+```gradle
+dependencies {
+    implementation 'com.google.code.gson:gson:2.10.1' // 检查最新版本
+}
+```
+
+---
+
+### **总结**
+- **Gson 是 Android 开发中最常用的 JSON 解析库之一**，适合快速实现对象与 JSON 的互转。
+- **优先使用注解**（如 `@SerializedName`）简化字段映射。
+- **复杂场景**（如自定义日期格式）可通过 `TypeAdapter` 灵活处理。
+
+
+
+## 库 - `Gson` - 线程安全
+
+在 Android 或 Java 应用中，**`Gson gson = new Gson()` 的实例可以安全地全局共享**，但需要根据具体场景选择是否推荐这样做。以下是详细分析：
+
+---
+
+### **1. Gson 的线程安全性**
+- **Gson 实例是线程安全的**：官方文档明确指出，`Gson` 的核心方法（如 `toJson()` 和 `fromJson()`）内部没有共享可变状态，因此多个线程可以同时调用同一个 `Gson` 实例而无需同步。
+- **配置不可变**：一旦通过 `GsonBuilder` 创建 `Gson` 实例，其配置（如日期格式、自定义适配器）无法被修改，进一步保证了线程安全。
+
+---
+
+### **2. 全局共享的推荐做法**
+#### **方案 1：单例模式（推荐）**
+通过静态单例全局共享一个 `Gson` 实例：
+```java
+public class GsonUtils {
+    private static final Gson gson = new GsonBuilder()
+        .setDateFormat("yyyy-MM-dd HH:mm:ss")
+        .create();
+
+    public static Gson getGson() {
+        return gson;
+    }
+}
+
+// 使用示例
+String json = GsonUtils.getGson().toJson(user);
+```
+
+#### **方案 2：依赖注入（如 Dagger/Hilt）**
+在模块中提供单例 `Gson` 实例：
+```java
+@Module
+@InstallIn(SingletonComponent.class)
+public class AppModule {
+    @Provides
+    @Singleton
+    public Gson provideGson() {
+        return new GsonBuilder().create();
+    }
+}
+```
+
+---
+
+### **3. 需要自定义配置时**
+如果不同模块需要不同的 `Gson` 配置（如日期格式、自定义适配器），可以创建多个全局实例：
+```java
+public class GsonConfig {
+    // 默认配置
+    public static final Gson DEFAULT = new GsonBuilder().create();
+    
+    // 带日期格式的配置
+    public static final Gson DATE_AWARE = new GsonBuilder()
+        .setDateFormat("yyyy-MM-dd")
+        .create();
+}
+```
+
+---
+
+### **4. 何时不建议全局共享？**
+- **需要动态配置**：如果某些场景需要临时修改 `Gson` 的行为（如忽略某个字段），建议局部创建新实例。
+- **内存敏感场景**：虽然 `Gson` 实例本身轻量，但在极端内存受限的设备中，无限制创建实例可能导致问题（但罕见）。
+
+---
+
+### **5. 性能对比**
+| 方式           | 内存开销 | 初始化开销 | 适用场景               |
+| -------------- | -------- | ---------- | ---------------------- |
+| 全局单例       | 低       | 一次       | 绝大多数情况（推荐）   |
+| 每次创建新实例 | 高       | 多次       | 需要动态配置的特殊场景 |
+
+---
+
+### **6. 验证代码**
+测试全局 `Gson` 实例的线程安全性：
+```java
+Gson gson = GsonUtils.getGson(); // 全局实例
+
+// 多线程并发测试
+ExecutorService executor = Executors.newFixedThreadPool(10);
+for (int i = 0; i < 100; i++) {
+    executor.submit(() -> {
+        String json = gson.toJson(new User("Alice", 25)); // 线程安全
+    });
+}
+```
+
+---
+
+### **总结**
+- **可以且推荐全局共享一个 `Gson` 实例**：线程安全、减少重复创建开销。
+- **通过单例或依赖注入管理**：避免代码中散落 `new Gson()`。
+- **特殊配置需求**：可创建多个全局实例（如 `GsonConfig.DEFAULT` 和 `GsonConfig.DATE_AWARE`）。
+
+
+
+## 库 - `Gson` - `JsonElement`
+
+在 Android 开发中，**Gson** 的 `JsonElement` 是一个核心类，用于表示 JSON 数据结构的任意节点（对象、数组、基本类型等）。它提供了一种灵活的方式来动态解析和操作 JSON 数据，而无需预先定义 Java 类。
+
+---
+
+### **1. `JsonElement` 的层级结构**
+`JsonElement` 是 Gson 中所有 JSON 元素的基类，具体子类包括：
+- **`JsonObject`**：对应 JSON 对象（键值对，如 `{"name":"Alice"}`）。
+- **`JsonArray`**：对应 JSON 数组（如 `[1, 2, 3]`）。
+- **`JsonPrimitive`**：对应 JSON 基本类型（字符串、数字、布尔值、null）。
+- **`JsonNull`**：表示 JSON 的 `null` 值。
+
+---
+
+### **2. 基础用法示例**
+#### **2.1 将 JSON 字符串解析为 `JsonElement`**
+```java
+String json = "{\"name\":\"Alice\",\"age\":25,\"skills\":[\"Java\",\"Android\"]}";
+JsonElement jsonElement = JsonParser.parseString(json); // 解析为JsonElement
+```
+
+#### **2.2 判断 `JsonElement` 的实际类型**
+```java
+if (jsonElement.isJsonObject()) {
+    JsonObject jsonObject = jsonElement.getAsJsonObject();
+} else if (jsonElement.isJsonArray()) {
+    JsonArray jsonArray = jsonElement.getAsJsonArray();
+} else if (jsonElement.isJsonPrimitive()) {
+    JsonPrimitive primitive = jsonElement.getAsJsonPrimitive();
+}
+```
+
+---
+
+### **3. 操作 `JsonObject` 和 `JsonArray`**
+#### **3.1 访问 JSON 对象字段**
+```java
+JsonObject jsonObject = jsonElement.getAsJsonObject();
+String name = jsonObject.get("name").getAsString(); // "Alice"
+int age = jsonObject.get("age").getAsInt();         // 25
+```
+
+#### **3.2 遍历 JSON 数组**
+```java
+JsonArray skills = jsonObject.getAsJsonArray("skills");
+for (JsonElement skill : skills) {
+    Log.d("TAG", "Skill: " + skill.getAsString());
+}
+// 输出: Skill: Java, Skill: Android
+```
+
+#### **3.3 修改 JSON 数据**
+```java
+jsonObject.addProperty("city", "New York"); // 添加新字段
+jsonObject.remove("age");                   // 删除字段
+skills.add(new JsonPrimitive("Kotlin"));    // 向数组添加元素
+```
+
+---
+
+### **4. 动态构建 JSON**
+#### **4.1 手动构建 `JsonObject`**
+```java
+JsonObject user = new JsonObject();
+user.addProperty("name", "Bob");
+user.addProperty("isStudent", true);
+
+JsonArray hobbies = new JsonArray();
+hobbies.add("Reading");
+hobbies.add("Gaming");
+user.add("hobbies", hobbies);
+
+String jsonOutput = new Gson().toJson(user); // 转为JSON字符串
+```
+
+#### **4.2 构建嵌套结构**
+```java
+JsonObject order = new JsonObject();
+order.addProperty("id", "123");
+
+JsonObject product = new JsonObject();
+product.addProperty("name", "Phone");
+product.addProperty("price", 599.99);
+
+order.add("product", product); // 嵌套JsonObject
+```
+
+---
+
+### **5. 高级用法**
+#### **5.1 处理可能缺失的字段**
+```java
+JsonElement emailElement = jsonObject.get("email"); // 可能为null
+String email = emailElement != null && !emailElement.isJsonNull() 
+    ? emailElement.getAsString() : "default@email.com";
+```
+
+#### **5.2 自定义 `TypeAdapter` 处理复杂类型**
+```java
+Gson gson = new GsonBuilder()
+    .registerTypeAdapter(JsonElement.class, new JsonElementTypeAdapter())
+    .create();
+```
+
+---
+
+### **6. 常见问题解决**
+#### **6.1 类型转换异常**
+- **错误示例**：尝试将非数字字段 `getAsInt()`。
+- **解决方案**：先检查类型：
+  ```java
+  if (jsonElement.getAsJsonPrimitive().isNumber()) {
+      int value = jsonElement.getAsInt();
+  }
+  ```
+
+#### **6.2 处理空值**
+```java
+JsonElement nullableElement = jsonObject.get("optionalField");
+String value = (nullableElement == null || nullableElement.isJsonNull()) 
+    ? null : nullableElement.getAsString();
+```
+
+---
+
+### **7. 性能优化建议**
+- **避免频繁解析**：若需多次访问同一 JSON 数据，先解析为 `JsonElement` 缓存。
+- **使用 `JsonReader` 处理大文件**：流式解析减少内存占用。
+
+---
+
+### **总结**
+- **`JsonElement` 是 Gson 动态解析 JSON 的核心类**，适合处理结构不确定或需要灵活操作的 JSON 数据。
+- **优先使用 `JsonObject`/`JsonArray`** 替代直接操作字符串，更安全高效。
+- **结合 `TypeAdapter`** 可实现复杂自定义逻辑。
+
+### 示例
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-gson)
+
+```java
+package com.future.demo;
+
+import android.content.Context;
+
+import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import static org.junit.Assert.*;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
+/**
+ * Instrumented test, which will execute on an Android device.
+ *
+ * @see <a href="http://d.android.com/tools/testing">Testing documentation</a>
+ */
+@RunWith(AndroidJUnit4.class)
+public class ExampleInstrumentedTest {
+    @Test
+    public void useAppContext() {
+        // Context of the app under test.
+        Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        assertEquals("com.future.demo", appContext.getPackageName());
+
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty("errorCode", 90000);
+        jsonObject.addProperty("errorMessage", "错误信息");
+        jsonObject.add("data", JsonNull.INSTANCE);
+
+        // region JsonObject 转换为字符串
+
+        // 不保留字段为 null
+        Gson gson = new Gson();
+        String json = gson.toJson(jsonObject);
+        Assert.assertEquals("{\"errorCode\":90000,\"errorMessage\":\"错误信息\"}", json);
+
+        gson = new GsonBuilder()
+                // 保留字段为 null
+                .serializeNulls()
+                .create();
+        json = gson.toJson(jsonObject);
+        Assert.assertEquals("{\"errorCode\":90000,\"errorMessage\":\"错误信息\",\"data\":null}", json);
+
+        // endregion
+
+        // region 字符串转换为 JsonElement
+
+        // 使用 JsonParser 转换
+        JsonElement jsonElement = JsonParser.parseString(json);
+        Assert.assertTrue(jsonElement instanceof JsonObject);
+        Assert.assertEquals(JsonNull.INSTANCE, ((JsonObject) jsonElement).get("data").getAsJsonNull());
+        Assert.assertEquals(90000, ((JsonObject) jsonElement).get("errorCode").getAsInt());
+        Assert.assertEquals("错误信息", ((JsonObject) jsonElement).get("errorMessage").getAsString());
+
+        // 使用 Gson.fromJson 方法转换
+        jsonElement = gson.fromJson(json, JsonElement.class);
+        Assert.assertTrue(jsonElement instanceof JsonObject);
+        Assert.assertEquals(JsonNull.INSTANCE, ((JsonObject) jsonElement).get("data").getAsJsonNull());
+        Assert.assertEquals(90000, ((JsonObject) jsonElement).get("errorCode").getAsInt());
+        Assert.assertEquals("错误信息", ((JsonObject) jsonElement).get("errorMessage").getAsString());
+
+        // endregion
+    }
+}
+```
