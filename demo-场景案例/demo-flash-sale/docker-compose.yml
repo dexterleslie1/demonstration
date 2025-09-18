@@ -234,19 +234,19 @@ services:
     ports:
       - "9042:9042"
 
-  # skywalking 配置
-  skywalking-elasticsearch:
-    build:
-      context: ./
-      dockerfile: Dockerfile-elasticsearch
-    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-skywalking-elasticsearch
-    environment:
-      - ES_JAVA_OPTS=-Xms512m -Xmx512m
-      - discovery.type=single-node
-      # http.cors表示允许elasticsearch-head连接并管理
-      - http.cors.enabled=true
-      - http.cors.allow-origin=*
-      - TZ=Asia/Shanghai
+#  # skywalking 配置
+#  skywalking-elasticsearch:
+#    build:
+#      context: ./
+#      dockerfile: Dockerfile-elasticsearch
+#    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-skywalking-elasticsearch
+#    environment:
+#      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+#      - discovery.type=single-node
+#      # http.cors表示允许elasticsearch-head连接并管理
+#      - http.cors.enabled=true
+#      - http.cors.allow-origin=*
+#      - TZ=Asia/Shanghai
 
   wrk2:
     build:
