@@ -4589,6 +4589,155 @@ RecyclerView 是现代 Android 开发中显示列表数据的首选组件，虽�
 
 
 
+## `UI`组件 - `ScrollView`
+
+>提示：用法简单不编写示例。
+
+ScrollView 是 Android 中用于实现垂直滚动效果的布局容器，它允许用户通过滑动屏幕来查看超出屏幕范围的内容。
+
+### 基本特性
+
+1. **单一子视图**：ScrollView 只能包含一个直接子视图（通常是一个布局容器）
+2. **垂直滚动**：默认只支持垂直方向滚动
+3. **不支持水平滚动**：如需水平滚动，应使用 HorizontalScrollView
+4. **不适用于列表数据**：对于长列表数据，应使用 RecyclerView
+
+### 基本用法
+
+```xml
+<ScrollView
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- 这里放置需要滚动的内容 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="长文本内容..." />
+            
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="400dp"
+            android:src="@drawable/large_image" />
+            
+        <!-- 更多内容... -->
+    </LinearLayout>
+</ScrollView>
+```
+
+### 关键属性
+
+| 属性                     | 说明                                                      |
+| ------------------------ | --------------------------------------------------------- |
+| `android:fillViewport`   | 设置为 `true` 时，ScrollView 会尝试填充整个可视区域       |
+| `android:scrollbars`     | 设置滚动条显示方式（`vertical`、`horizontal`、`none`）    |
+| `android:overScrollMode` | 控制过度滚动效果（`always`、`never`、`ifContentScrolls`） |
+
+### 高级用法
+
+#### 1. 嵌套滚动（NestedScrollView）
+
+```xml
+<androidx.core.widget.NestedScrollView
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <!-- 支持嵌套滚动的复杂布局 -->
+</androidx.core.widget.NestedScrollView>
+```
+
+#### 2. 与 HorizontalScrollView 结合实现双向滚动
+
+```xml
+<ScrollView
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <HorizontalScrollView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <!-- 宽内容 -->
+        </LinearLayout>
+    </HorizontalScrollView>
+</ScrollView>
+```
+
+#### 3. 以编程方式控制滚动
+
+```java
+ScrollView scrollView = findViewById(R.id.scrollView);
+
+// 滚动到底部
+scrollView.post(() -> scrollView.fullScroll(View.FOCUS_DOWN));
+
+// 滚动到顶部
+scrollView.post(() -> scrollView.fullScroll(View.FOCUS_UP));
+
+// 平滑滚动到指定位置
+scrollView.post(() -> scrollView.smoothScrollTo(0, 500));
+```
+
+### 与 RecyclerView 的区别
+
+| 特性     | ScrollView           | RecyclerView                       |
+| -------- | -------------------- | ---------------------------------- |
+| 适用场景 | 静态内容、少量子视图 | 动态列表数据、大量子视图           |
+| 性能     | 一次性加载所有子视图 | 视图回收，内存高效                 |
+| 布局类型 | 只能垂直滚动         | 支持多种布局（线性、网格、瀑布流） |
+| 动画支持 | 有限                 | 内置项目动画支持                   |
+| 更新机制 | 需要手动刷新         | 自动差分更新                       |
+
+### 常见问题解决方案
+
+1. **ScrollView 内容不滚动**：
+   - 确保子视图的高度设置为 `wrap_content`
+   - 检查是否设置了 `android:fillViewport="true"`
+
+2. **嵌套滚动冲突**：
+   - 使用 NestedScrollView 替代 ScrollView
+   - 在子视图中设置 `android:nestedScrollingEnabled="true"`
+
+3. **键盘遮挡输入框**：
+   ```xml
+   <activity
+       android:name=".YourActivity"
+       android:windowSoftInputMode="adjustResize">
+   </activity>
+   ```
+
+4. **滚动监听**：
+   ```java
+   scrollView.getViewTreeObserver().addOnScrollChangedListener(() -> {
+       int scrollY = scrollView.getScrollY();
+       // 处理滚动事件
+   });
+   ```
+
+### 最佳实践
+
+1. 对于表单等静态内容，使用 ScrollView/NestedScrollView
+2. 对于列表数据，始终使用 RecyclerView
+3. 避免在 ScrollView 中嵌套 RecyclerView/ListView
+4. 复杂布局考虑使用 ConstraintLayout 减少嵌套层级
+5. 长文本考虑使用 TextView 的 `android:scrollbars="vertical"` 和 `android:movementMethod="scrollingMovementMethod"`
+
+ScrollView 是 Android 开发中处理内容溢出的基础组件，合理使用可以提升用户体验，但需要注意其性能限制和适用场景。
+
+
+
 ## `UI`组件 - `HorizontalScrollView`
 
 在 Android 开发中（基于 Java 语言），**`HorizontalScrollView`** 是一个专门用于实现**水平方向滚动**的布局容器，继承自 `FrameLayout`。它允许用户通过手指滑动来查看超出屏幕宽度的内容，适用于横向排列的图片、菜单、选项卡等场景。
@@ -5699,7 +5848,7 @@ dialog.show(getSupportFragmentManager(), "ResultDialog");
 
 
 
-## `UI`组件 - 边框
+## `UI` - 边框
 
 >提示：使用 `drawable` 资源画边界。
 >
@@ -5730,6 +5879,243 @@ dialog.show(getSupportFragmentManager(), "ResultDialog");
         android:right="5dp"
         android:bottom="5dp" />-->
 </shape>
+```
+
+
+
+## `UI` - `dp`转换为`px`
+
+`400dp` 转换为 `px`
+
+```java
+float density = getResources().getDisplayMetrics().density;
+// 400dp 转 px
+layoutParams.height = (int) (400 * density);
+```
+
+
+
+## `UI` - `LayoutParams`
+
+LayoutParams 是 Android 中用于定义视图在父容器中的布局规则和参数的类，它是视图与布局容器之间的"契约"，决定了视图在父容器中的尺寸和位置。
+
+### 基本概念
+
+1. **作用**：控制子视图在父容器中的布局行为
+2. **继承关系**：`ViewGroup.LayoutParams` ← 各种布局的特定Params（如`LinearLayout.LayoutParams`）
+3. **使用场景**：当需要在代码中动态设置视图的布局属性时使用
+
+### 主要类型
+
+#### 1. ViewGroup.LayoutParams (基础参数)
+
+```java
+ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(
+    ViewGroup.LayoutParams.WRAP_CONTENT,  // 宽度
+    ViewGroup.LayoutParams.MATCH_PARENT   // 高度
+);
+```
+
+#### 2. 常用布局的特定Params
+
+##### LinearLayout.LayoutParams
+
+```java
+LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+    ViewGroup.LayoutParams.MATCH_PARENT,
+    ViewGroup.LayoutParams.WRAP_CONTENT
+);
+params.weight = 1.0f;  // 权重
+params.gravity = Gravity.CENTER;  // 对齐方式
+```
+
+##### RelativeLayout.LayoutParams
+
+```java
+RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(
+    ViewGroup.LayoutParams.WRAP_CONTENT,
+    ViewGroup.LayoutParams.WRAP_CONTENT
+);
+params.addRule(RelativeLayout.CENTER_IN_PARENT);  // 居中
+params.addRule(RelativeLayout.BELOW, R.id.viewAbove);  // 在某个视图下方
+```
+
+##### FrameLayout.LayoutParams
+
+```java
+FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+    300,  // 宽度（像素）
+    400   // 高度（像素）
+);
+params.gravity = Gravity.TOP | Gravity.START;  // 左上对齐
+```
+
+##### GridLayout.LayoutParams
+
+```java
+GridLayout.LayoutParams params = new GridLayout.LayoutParams();
+params.columnSpec = GridLayout.spec(0, 2);  // 从第0列开始，占2列
+params.rowSpec = GridLayout.spec(0, 3);     // 从第0行开始，占3行
+```
+
+##### ConstraintLayout.LayoutParams
+
+```java
+ConstraintLayout.LayoutParams params = new ConstraintLayout.LayoutParams(
+    ConstraintLayout.LayoutParams.MATCH_CONSTRAINT,
+    ConstraintLayout.LayoutParams.WRAP_CONTENT
+);
+params.topToTop = ConstraintLayout.LayoutParams.PARENT_ID;
+params.startToStart = ConstraintLayout.LayoutParams.PARENT_ID;
+```
+
+### 核心属性
+
+| 属性/方法                    | 说明                                                 |
+| ---------------------------- | ---------------------------------------------------- |
+| `width`/`height`             | 视图的宽度和高度（MATCH_PARENT/WRAP_CONTENT/具体值） |
+| `gravity`                    | 视图在父容器中的对齐方式（如CENTER、START等）        |
+| `margin`相关                 | 设置视图的外边距（leftMargin, topMargin等）          |
+| `weight` (LinearLayout)      | 权重分配剩余空间                                     |
+| `addRule()` (RelativeLayout) | 添加相对布局规则                                     |
+
+### 使用方法
+
+#### 1. 创建并应用LayoutParams
+
+```java
+// 创建LayoutParams
+LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+    ViewGroup.LayoutParams.MATCH_PARENT,
+    ViewGroup.LayoutParams.WRAP_CONTENT
+);
+
+// 设置额外属性
+params.weight = 1.0f;
+params.gravity = Gravity.CENTER;
+params.setMargins(16, 8, 16, 8);  // 左,上,右,下（单位px）
+
+// 应用到视图
+View view = findViewById(R.id.my_view);
+view.setLayoutParams(params);
+```
+
+#### 2. 修改已有LayoutParams
+
+```java
+View view = findViewById(R.id.my_view);
+ViewGroup.LayoutParams params = view.getLayoutParams();
+
+if (params instanceof LinearLayout.LayoutParams) {
+    LinearLayout.LayoutParams linearParams = (LinearLayout.LayoutParams) params;
+    linearParams.weight = 2.0f;
+    view.setLayoutParams(linearParams);
+}
+```
+
+#### 3. 动态添加视图时使用
+
+```java
+LinearLayout container = findViewById(R.id.container);
+Button newButton = new Button(this);
+
+LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+    ViewGroup.LayoutParams.MATCH_PARENT,
+    ViewGroup.LayoutParams.WRAP_CONTENT
+);
+params.setMargins(0, 16, 0, 0);  // 上边距16dp（需转换为px）
+
+newButton.setLayoutParams(params);
+container.addView(newButton);
+```
+
+### 单位转换技巧
+
+在代码中设置具体数值时，通常需要将dp转换为px：
+
+```java
+// dp转px工具方法
+public int dpToPx(int dp) {
+    return (int) (dp * getResources().getDisplayMetrics().density + 0.5f);
+}
+
+// 使用示例
+params.width = dpToPx(100);  // 100dp
+params.setMargins(dpToPx(16), dpToPx(8), dpToPx(16), dpToPx(8));
+```
+
+### 注意事项
+
+1. **类型匹配**：必须使用与父容器匹配的LayoutParams类型
+2. **性能考虑**：频繁修改LayoutParams会导致重新布局，影响性能
+3. **单位区别**：代码中设置的具体数值默认是px，需自行处理dp转换
+4. **视图树要求**：必须在视图被添加到父容器后才能获取/修改LayoutParams
+5. **XML对应**：代码中的LayoutParams对应XML中的布局属性（如android:layout_width）
+
+### 最佳实践
+
+1. 对于简单布局，优先使用XML定义布局属性
+2. 动态修改布局时，尽量批量修改多个属性后再调用一次setLayoutParams()
+3. 使用正确的LayoutParams子类（与父容器类型匹配）
+4. 对于复杂动态布局，考虑使用ConstraintLayout和ConstraintSet
+5. 封装dp转换工具类，避免重复代码
+
+LayoutParams是Android布局系统的核心概念之一，理解它的工作原理能帮助你更灵活地控制视图的布局行为。
+
+### 示例
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-layoutparams)
+
+```java
+package com.future.demo;
+
+import android.os.Bundle;
+import android.widget.TextView;
+
+import androidx.activity.EdgeToEdge;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+
+public class MainActivity extends AppCompatActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        EdgeToEdge.enable(this);
+        setContentView(R.layout.activity_main);
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
+
+        // 动态添加 TextView 并设置 LayoutParams
+        /*<TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Hello World!"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />*/
+        TextView textView = new TextView(this);
+        textView.setText("你好，世界！");
+        ConstraintLayout.LayoutParams layoutParams = new ConstraintLayout.LayoutParams(
+                ConstraintLayout.LayoutParams.WRAP_CONTENT,
+                ConstraintLayout.LayoutParams.WRAP_CONTENT
+        );
+        layoutParams.topToTop = ConstraintLayout.LayoutParams.PARENT_ID;
+        layoutParams.bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID;
+        layoutParams.startToStart = ConstraintLayout.LayoutParams.PARENT_ID;
+        layoutParams.endToEnd = ConstraintLayout.LayoutParams.PARENT_ID;
+        textView.setLayoutParams(layoutParams);
+        ConstraintLayout constraintLayout = findViewById(R.id.main);
+        constraintLayout.addView(textView);
+    }
+}
 ```
 
 
