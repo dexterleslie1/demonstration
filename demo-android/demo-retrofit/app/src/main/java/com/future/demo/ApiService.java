@@ -1,6 +1,8 @@
 package com.future.demo;
 
 
+import com.google.gson.JsonObject;
+
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.GET;
@@ -15,15 +17,15 @@ public interface ApiService {
             @Query("username") String username);
 
     @GET("/http/library/api/getWithObjectResponse")
-    Call<ObjectResponse<String>> getWithObjectResponse();
+    Call<JsonObject> getWithObjectResponse();
 
     @POST("/http/library/api/postWithHttp404")
-    Call<ObjectResponse<String>> postWithHttp404(
+    Call<JsonObject> postWithHttp404(
             @Query("name") String name
     );
 
     @POST("/http/library/api/postAndReturnWithBusinessException")
-    Call<ObjectResponse<String>> postAndReturnWithBusinessException(
+    Call<JsonObject> postAndReturnWithBusinessException(
             @Query("name") String name
     );
 }

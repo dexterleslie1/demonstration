@@ -6049,7 +6049,11 @@ call.enqueue(new Callback<Post>() {
 
 ### 示例
 
+>提示：统一使用 `Gson JsonObject` 作为接口的返回值以模仿 `JavaScript` 的 `Axios` 库避免大量的领域 `VO` 定义。
+>
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-retrofit)
+
+启动本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-restful-api) 协助测试。
 
 模块的 `build.gradle` 配置依赖
 
@@ -6066,6 +6070,18 @@ dependencies {
 定义接口
 
 ```java
+package com.future.demo;
+
+
+import com.google.gson.JsonObject;
+
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.http.GET;
+import retrofit2.http.Header;
+import retrofit2.http.POST;
+import retrofit2.http.Query;
+
 public interface ApiService {
     @GET("/http/library/api/getWithHeaderAndQueryParamter")
     Call<ResponseBody> getWithHeaderAndQueryParamter(
@@ -6073,24 +6089,27 @@ public interface ApiService {
             @Query("username") String username);
 
     @GET("/http/library/api/getWithObjectResponse")
-    Call<ObjectResponse<String>> getWithObjectResponse();
+    Call<JsonObject> getWithObjectResponse();
 
     @POST("/http/library/api/postWithHttp404")
-    Call<ObjectResponse<String>> postWithHttp404(
+    Call<JsonObject> postWithHttp404(
             @Query("name") String name
     );
 
     @POST("/http/library/api/postAndReturnWithBusinessException")
-    Call<ObjectResponse<String>> postAndReturnWithBusinessException(
+    Call<JsonObject> postAndReturnWithBusinessException(
             @Query("name") String name
     );
 }
+
 ```
 
 创建接口实例
 
 ```java
-Gson gson = new Gson();
+Gson gson = new GsonBuilder()
+        .serializeNulls()
+        .create();
 
 // 创建ApiService实例
 Retrofit retrofit = new Retrofit.Builder()
@@ -6108,9 +6127,10 @@ Retrofit retrofit = new Retrofit.Builder()
                     throw new BusinessException(ErrorCodeConstant.ErrorCodeCommon, errorMessage);
                 } else {
                     // 统一处理 HTTP 200 响应但业务异常
-                    BaseResponse baseResponse = gson.fromJson(responseBodyStr, BaseResponse.class);
-                    int errorCode = baseResponse.getErrorCode();
-                    String errorMessage = baseResponse.getErrorMessage();
+                    JsonObject jsonObject = gson.fromJson(responseBodyStr, JsonObject.class);
+                    int errorCode = jsonObject.get("errorCode").getAsInt();
+                    String errorMessage =
+                            jsonObject.get("errorMessage").isJsonNull() ? null : jsonObject.get("errorMessage").getAsString();
                     if (errorCode > 0) {
                         throw new BusinessException(errorCode, errorMessage);
                     }
@@ -6138,7 +6158,7 @@ public void test() throws IOException, InterruptedException {
 
     // 同步
     try {
-        Call<ObjectResponse<String>> call = apiService.postWithHttp404(null);
+        Call<JsonObject> call = apiService.postWithHttp404(null);
         call.execute().body();
         Assert.fail();
     } catch (Exception e) {
@@ -6149,15 +6169,15 @@ public void test() throws IOException, InterruptedException {
 
     // 异步回调
     CountDownLatch countDownLatch = new CountDownLatch(1);
-    Call<ObjectResponse<String>> call = apiService.postWithHttp404(null);
+    Call<JsonObject> call = apiService.postWithHttp404(null);
     CountDownLatch finalCountDownLatch1 = countDownLatch;
-    call.enqueue(new Callback<ObjectResponse<String>>() {
+    call.enqueue(new Callback<JsonObject>() {
         @Override
-        public void onResponse(Call<ObjectResponse<String>> call, retrofit2.Response<ObjectResponse<String>> response) {
+        public void onResponse(Call<JsonObject> call, retrofit2.Response<JsonObject> response) {
         }
 
         @Override
-        public void onFailure(Call<ObjectResponse<String>> call, Throwable t) {
+        public void onFailure(Call<JsonObject> call, Throwable t) {
             if (t instanceof BusinessException) {
                 BusinessException ex = (BusinessException) t;
                 int errorCode = ex.getErrorCode();
@@ -6176,26 +6196,30 @@ public void test() throws IOException, InterruptedException {
 
     // 同步
     call = apiService.getWithObjectResponse();
-    ObjectResponse<String> response = call.execute().body();
-    Assert.assertEquals("调用成功", response.getData());
-    Assert.assertEquals(0, response.getErrorCode());
-    Assert.assertNull(response.getErrorMessage());
+    JsonObject response = call.execute().body();
+    Assert.assertEquals("调用成功", response.get("data").getAsString());
+    Assert.assertEquals(0, response.get("errorCode").getAsInt());
+    Assert.assertEquals(JsonNull.INSTANCE, response.get("errorMessage"));
 
     // 异步回调
     countDownLatch = new CountDownLatch(1);
     call = apiService.getWithObjectResponse();
     CountDownLatch finalCountDownLatch = countDownLatch;
-    call.enqueue(new Callback<ObjectResponse<String>>() {
+    call.enqueue(new Callback<JsonObject>() {
         @Override
-        public void onResponse(Call<ObjectResponse<String>> call, retrofit2.Response<ObjectResponse<String>> response) {
-            ObjectResponse<String> body = response.body();
-            if (body.getData().equals("成功调用") && body.getErrorCode() == 0 && body.getErrorMessage() == null) {
+        public void onResponse(Call<JsonObject> call, retrofit2.Response<JsonObject> response) {
+            JsonObject body = response.body();
+            String data = body.get("data").getAsString();
+            int errorCode = body.get("errorCode").getAsInt();
+            String errorMessage =
+                    body.get("errorMessage").isJsonNull() ? null : body.get("errorMessage").getAsString();
+            if (data.equals("成功调用") && errorCode == 0 && errorMessage == null) {
                 finalCountDownLatch.countDown();
             }
         }
 
         @Override
-        public void onFailure(Call<ObjectResponse<String>> call, Throwable t) {
+        public void onFailure(Call<JsonObject> call, Throwable t) {
 
         }
     });
@@ -6219,14 +6243,14 @@ public void test() throws IOException, InterruptedException {
     countDownLatch = new CountDownLatch(1);
     call = apiService.postAndReturnWithBusinessException(null);
     CountDownLatch finalCountDownLatch2 = countDownLatch;
-    call.enqueue(new Callback<ObjectResponse<String>>() {
+    call.enqueue(new Callback<JsonObject>() {
         @Override
-        public void onResponse(Call<ObjectResponse<String>> call, retrofit2.Response<ObjectResponse<String>> response) {
+        public void onResponse(Call<JsonObject> call, retrofit2.Response<JsonObject> response) {
 
         }
 
         @Override
-        public void onFailure(Call<ObjectResponse<String>> call, Throwable t) {
+        public void onFailure(Call<JsonObject> call, Throwable t) {
             if (t instanceof BusinessException) {
                 BusinessException ex = (BusinessException) t;
                 int errorCode = ex.getErrorCode();
