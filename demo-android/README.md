@@ -6165,174 +6165,280 @@ public interface ApiService {
 
 ```
 
-创建接口实例
+`RetrofitClient` 创建接口实例
 
 ```java
-Gson gson = new GsonBuilder()
-        .serializeNulls()
-        .create();
+package com.future.demo;
 
-// 创建ApiService实例
-Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl("http://" + Host + ":" + Port)
-        .client(new OkHttpClient.Builder().addInterceptor(new Interceptor() {
-            @Override
-            public Response intercept(Chain chain) throws IOException {
-                try {
-                    Request request = chain.request();
-                    Response response = chain.proceed(request);
+import android.util.Log;
 
-                    String responseBodyStr = response.body().string();
-                    if (!response.isSuccessful()) {
-                        // 统一处理非 HTTP 200 响应
-                        String errorMessage = "HTTP 错误状态码：" + response.code() + "，错误信息：" + responseBodyStr;
-                        throw new BusinessException(ErrorCodeConstant.ErrorCodeCommon, errorMessage);
-                    } else {
-                        // 统一处理 HTTP 200 响应但业务异常
-                        JsonObject jsonObject = gson.fromJson(responseBodyStr, JsonObject.class);
-                        int errorCode = jsonObject.get("errorCode").getAsInt();
-                        String errorMessage =
-                                jsonObject.get("errorMessage").isJsonNull() ? null : jsonObject.get("errorMessage").getAsString();
-                        if (errorCode > 0) {
-                            throw new BusinessException(errorCode, errorMessage);
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+
+import java.io.IOException;
+
+import okhttp3.Interceptor;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+
+/**
+ * 用于协助初始化所有 retrofit 接口并提供全局调用
+ */
+public class RetrofitClient {
+
+    private final static String TAG = RetrofitClient.class.getSimpleName();
+
+    private final static ApiService apiService;
+
+    static {
+        // 初始化 ApiService 实例
+        Gson gson = new GsonBuilder()
+                .serializeNulls()
+                .create();
+
+        // 创建ApiService实例
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("http://192.168.235.128:8080")
+                .client(new OkHttpClient.Builder().addInterceptor(new Interceptor() {
+                    @Override
+                    public Response intercept(Chain chain) throws IOException {
+                        try {
+                            Request request = chain.request();
+                            Response response = chain.proceed(request);
+
+                            String responseBodyStr = response.body().string();
+                            if (!response.isSuccessful()) {
+                                // 统一处理非 HTTP 200 响应
+                                String errorMessage = "HTTP 错误状态码：" + response.code() + "，错误信息：" + responseBodyStr;
+                                throw new BusinessException(ErrorCodeConstant.ErrorCodeCommon, errorMessage);
+                            } else {
+                                // 统一处理 HTTP 200 响应但业务异常
+                                JsonObject jsonObject = gson.fromJson(responseBodyStr, JsonObject.class);
+                                int errorCode = jsonObject.get("errorCode").getAsInt();
+                                String errorMessage =
+                                        jsonObject.get("errorMessage").isJsonNull() ? null : jsonObject.get("errorMessage").getAsString();
+                                if (errorCode > 0) {
+                                    throw new BusinessException(errorCode, errorMessage);
+                                }
+                            }
+
+                            // 因为之前已经读取 response 内容需要重新构造一个新的
+                            MediaType contentType = response.body().contentType();
+                            ResponseBody newResponseBody = ResponseBody.create(contentType, responseBodyStr);
+                            return response.newBuilder()
+                                    .body(newResponseBody)
+                                    .build();
+                        } catch (Throwable t) {
+                            if (!(t instanceof BusinessException)) {
+                                Log.e(TAG, t.getMessage(), t);
+                            }
+                            throw t;
                         }
                     }
+                }).build())
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        apiService = retrofit.create(ApiService.class);
+    }
 
-                    // 因为之前已经读取 response 内容需要重新构造一个新的
-                    MediaType contentType = response.body().contentType();
-                    ResponseBody newResponseBody = ResponseBody.create(contentType, responseBodyStr);
-                    return response.newBuilder()
-                            .body(newResponseBody)
-                            .build();
-                } catch (Throwable t) {
-                    if (!(t instanceof BusinessException)) {
-                        Log.e(TAG, t.getMessage(), t);
-                    }
-                    throw t;
-                }
-            }
-        }).build())
-        .addConverterFactory(GsonConverterFactory.create())
-        .build();
-apiService = retrofit.create(ApiService.class);
+    public static ApiService getApiService() {
+        return apiService;
+    }
+
+}
+
 ```
 
 测试
 
 ```java
-@Test
-public void test() throws IOException, InterruptedException {
-    //  region 测试非 HTTP 200：抛出 BusinessException
+package com.future.demo;
 
-    // 同步
-    try {
-        Call<JsonObject> call = apiService.postWithHttp404(null);
-        call.execute().body();
-        Assert.fail();
-    } catch (Exception e) {
-        Assert.assertTrue(e instanceof BusinessException);
-        Assert.assertEquals(((BusinessException) e).getErrorCode(), ErrorCodeConstant.ErrorCodeCommon);
-        Assert.assertTrue(((BusinessException) e).getErrorMessage().contains("404"));
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+
+import com.google.gson.JsonNull;
+import com.google.gson.JsonObject;
+
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+
+@RunWith(AndroidJUnit4.class)
+public class ApiServiceTest {
+
+    @Before
+    public void setup() {
+//        // 参考以下链接使用Interceptor添加http header
+//        // https://stackoverflow.com/questions/32963394/how-to-use-interceptor-to-add-headers-in-retrofit-2-0
+//        retrofit = new Retrofit.Builder()
+//                .baseUrl("http://" + Host + ":" + Port)
+//                // OkHttpClient添加http header
+//                .client(new OkHttpClient.Builder().addInterceptor(new Interceptor() {
+//                    @Override
+//                    public Response intercept(Chain chain) throws IOException {
+//                        Request request = chain.request()
+//                                .newBuilder()
+//                                .addHeader("customHeader", "customHeaderValue2")
+//                                .build();
+//                        Response response = chain.proceed(request);
+//
+//                        String responseBodyStr = response.body().string();
+//                        if (!response.isSuccessful()) {
+//                            // 统一处理非 HTTP 200 响应
+//                            String errorMessage = "HTTP 错误状态码：" + response.code() + "，错误信息：" + responseBodyStr;
+//                            throw new BusinessException(ErrorCodeConstant.ErrorCodeCommon, errorMessage);
+//                        } else {
+//                            // 统一处理 HTTP 200 响应但业务异常
+//                            BaseResponse baseResponse = gson.fromJson(responseBodyStr, BaseResponse.class);
+//                            int errorCode = baseResponse.getErrorCode();
+//                            String errorMessage = baseResponse.getErrorMessage();
+//                            if (errorCode > 0) {
+//                                throw new BusinessException(errorCode, errorMessage);
+//                            }
+//                        }
+//
+//                        // 因为之前已经读取 response 内容需要重新构造一个新的
+//                        MediaType contentType = response.body().contentType();
+//                        ResponseBody newResponseBody = ResponseBody.create(contentType, responseBodyStr);
+//                        return response.newBuilder()
+//                                .body(newResponseBody)
+//                                .build();
+//                    }
+//                }).build())
+//                .addConverterFactory(GsonConverterFactory.create())
+//                .build();
+//        apiService2 = retrofit.create(ApiService2.class);
     }
 
-    // 异步回调
-    CountDownLatch countDownLatch = new CountDownLatch(1);
-    Call<JsonObject> call = apiService.postWithHttp404(null);
-    CountDownLatch finalCountDownLatch1 = countDownLatch;
-    call.enqueue(new Callback<JsonObject>() {
-        @Override
-        public void onResponse(Call<JsonObject> call, retrofit2.Response<JsonObject> response) {
+    @Test
+    public void test() throws IOException, InterruptedException {
+        //  region 测试非 HTTP 200：抛出 BusinessException
+
+        // 同步
+        try {
+            Call<JsonObject> call = RetrofitClient.getApiService().postWithHttp404(null);
+            call.execute().body();
+            Assert.fail();
+        } catch (Exception e) {
+            Assert.assertTrue(e instanceof BusinessException);
+            Assert.assertEquals(((BusinessException) e).getErrorCode(), ErrorCodeConstant.ErrorCodeCommon);
+            Assert.assertTrue(((BusinessException) e).getErrorMessage().contains("404"));
         }
 
-        @Override
-        public void onFailure(Call<JsonObject> call, Throwable t) {
-            if (t instanceof BusinessException) {
-                BusinessException ex = (BusinessException) t;
-                int errorCode = ex.getErrorCode();
-                String errorMessage = ex.getErrorMessage();
-                if (errorCode == ErrorCodeConstant.ErrorCodeCommon && errorMessage.contains("404")) {
-                    finalCountDownLatch1.countDown();
+        // 异步回调
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        Call<JsonObject> call = RetrofitClient.getApiService().postWithHttp404(null);
+        CountDownLatch finalCountDownLatch1 = countDownLatch;
+        call.enqueue(new Callback<JsonObject>() {
+            @Override
+            public void onResponse(Call<JsonObject> call, retrofit2.Response<JsonObject> response) {
+            }
+
+            @Override
+            public void onFailure(Call<JsonObject> call, Throwable t) {
+                if (t instanceof BusinessException) {
+                    BusinessException ex = (BusinessException) t;
+                    int errorCode = ex.getErrorCode();
+                    String errorMessage = ex.getErrorMessage();
+                    if (errorCode == ErrorCodeConstant.ErrorCodeCommon && errorMessage.contains("404")) {
+                        finalCountDownLatch1.countDown();
+                    }
                 }
             }
-        }
-    });
-    countDownLatch.await(1, TimeUnit.SECONDS);
+        });
+        countDownLatch.await(1, TimeUnit.SECONDS);
 
-    // endregion
+        // endregion
 
-    // region 测试 HTTP 200 并且没有业务异常情况
+        // region 测试 HTTP 200 并且没有业务异常情况
 
-    // 同步
-    call = apiService.getWithObjectResponse();
-    JsonObject response = call.execute().body();
-    Assert.assertEquals("调用成功", response.get("data").getAsString());
-    Assert.assertEquals(0, response.get("errorCode").getAsInt());
-    Assert.assertEquals(JsonNull.INSTANCE, response.get("errorMessage"));
+        // 同步
+        call = RetrofitClient.getApiService().getWithObjectResponse();
+        JsonObject response = call.execute().body();
+        Assert.assertEquals("调用成功", response.get("data").getAsString());
+        Assert.assertEquals(0, response.get("errorCode").getAsInt());
+        Assert.assertEquals(JsonNull.INSTANCE, response.get("errorMessage"));
 
-    // 异步回调
-    countDownLatch = new CountDownLatch(1);
-    call = apiService.getWithObjectResponse();
-    CountDownLatch finalCountDownLatch = countDownLatch;
-    call.enqueue(new Callback<JsonObject>() {
-        @Override
-        public void onResponse(Call<JsonObject> call, retrofit2.Response<JsonObject> response) {
-            JsonObject body = response.body();
-            String data = body.get("data").getAsString();
-            int errorCode = body.get("errorCode").getAsInt();
-            String errorMessage =
-                    body.get("errorMessage").isJsonNull() ? null : body.get("errorMessage").getAsString();
-            if (data.equals("成功调用") && errorCode == 0 && errorMessage == null) {
-                finalCountDownLatch.countDown();
+        // 异步回调
+        countDownLatch = new CountDownLatch(1);
+        call = RetrofitClient.getApiService().getWithObjectResponse();
+        CountDownLatch finalCountDownLatch = countDownLatch;
+        call.enqueue(new Callback<JsonObject>() {
+            @Override
+            public void onResponse(Call<JsonObject> call, retrofit2.Response<JsonObject> response) {
+                JsonObject body = response.body();
+                String data = body.get("data").getAsString();
+                int errorCode = body.get("errorCode").getAsInt();
+                String errorMessage =
+                        body.get("errorMessage").isJsonNull() ? null : body.get("errorMessage").getAsString();
+                if (data.equals("成功调用") && errorCode == 0 && errorMessage == null) {
+                    finalCountDownLatch.countDown();
+                }
             }
+
+            @Override
+            public void onFailure(Call<JsonObject> call, Throwable t) {
+
+            }
+        });
+        countDownLatch.await(1, TimeUnit.SECONDS);
+
+        // endregion
+
+        // region 测试 HTTP 200 但业务异常情况：抛出 BusinessException
+
+        // 同步
+        try {
+            call = RetrofitClient.getApiService().postAndReturnWithBusinessException(null);
+            call.execute().body();
+            Assert.fail();
+        } catch (BusinessException ex) {
+            Assert.assertEquals(ErrorCodeConstant.ErrorCodeCommon, ex.getErrorCode());
+            Assert.assertEquals("测试预期异常是否出现", ex.getErrorMessage());
         }
 
-        @Override
-        public void onFailure(Call<JsonObject> call, Throwable t) {
+        // 异步回调
+        countDownLatch = new CountDownLatch(1);
+        call = RetrofitClient.getApiService().postAndReturnWithBusinessException(null);
+        CountDownLatch finalCountDownLatch2 = countDownLatch;
+        call.enqueue(new Callback<JsonObject>() {
+            @Override
+            public void onResponse(Call<JsonObject> call, retrofit2.Response<JsonObject> response) {
 
-        }
-    });
-    countDownLatch.await(1, TimeUnit.SECONDS);
+            }
 
-    // endregion
+            @Override
+            public void onFailure(Call<JsonObject> call, Throwable t) {
+                if (t instanceof BusinessException) {
+                    BusinessException ex = (BusinessException) t;
+                    int errorCode = ex.getErrorCode();
+                    String errorMessage = ex.getErrorMessage();
+                    if (errorCode == ErrorCodeConstant.ErrorCodeCommon && errorMessage.equals("测试预期异常是否出现")) {
+                        finalCountDownLatch2.countDown();
+                    }
+                }
+            }
+        });
+        countDownLatch.await(1, TimeUnit.SECONDS);
 
-    // region 测试 HTTP 200 但业务异常情况：抛出 BusinessException
-
-    // 同步
-    try {
-        call = apiService.postAndReturnWithBusinessException(null);
-        call.execute().body();
-        Assert.fail();
-    } catch (BusinessException ex) {
-        Assert.assertEquals(ErrorCodeConstant.ErrorCodeCommon, ex.getErrorCode());
-        Assert.assertEquals("测试预期异常是否出现", ex.getErrorMessage());
+        // endregion
     }
-
-    // 异步回调
-    countDownLatch = new CountDownLatch(1);
-    call = apiService.postAndReturnWithBusinessException(null);
-    CountDownLatch finalCountDownLatch2 = countDownLatch;
-    call.enqueue(new Callback<JsonObject>() {
-        @Override
-        public void onResponse(Call<JsonObject> call, retrofit2.Response<JsonObject> response) {
-
-        }
-
-        @Override
-        public void onFailure(Call<JsonObject> call, Throwable t) {
-            if (t instanceof BusinessException) {
-                BusinessException ex = (BusinessException) t;
-                int errorCode = ex.getErrorCode();
-                String errorMessage = ex.getErrorMessage();
-                if (errorCode == ErrorCodeConstant.ErrorCodeCommon && errorMessage.equals("测试预期异常是否出现")) {
-                    finalCountDownLatch2.countDown();
-                }
-            }
-        }
-    });
-    countDownLatch.await(1, TimeUnit.SECONDS);
-
-    // endregion
 }
+
 ```
 
 
