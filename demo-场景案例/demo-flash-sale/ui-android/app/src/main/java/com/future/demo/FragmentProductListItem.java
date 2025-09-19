@@ -1,5 +1,6 @@
 package com.future.demo;
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -13,6 +14,7 @@ import androidx.fragment.app.Fragment;
 
 public class FragmentProductListItem extends Fragment {
 
+    long id;
     String name;
     int stockAmount;
     boolean flashSale;
@@ -21,12 +23,14 @@ public class FragmentProductListItem extends Fragment {
     GridLayout.LayoutParams layoutParams;
 
     public FragmentProductListItem(
+            long id,
             String name,
             int stockAmount,
             boolean flashSale,
             int toFlashSaleStartTimeRemainingSeconds,
             int toFlashSaleEndTimeRemainingSeconds,
             GridLayout.LayoutParams layoutParams) {
+        this.id = id;
         this.name = name;
         this.stockAmount = stockAmount;
         this.flashSale = flashSale;
@@ -64,6 +68,16 @@ public class FragmentProductListItem extends Fragment {
         }
 
         view.setLayoutParams(layoutParams);
+
+        // 点击 fragment 跳转到购买商品 activity
+        view.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getActivity(), ActivityProductPurchase.class);
+                intent.putExtra("productId", id);
+                startActivity(intent);
+            }
+        });
 
         return view;
     }

@@ -76,12 +76,13 @@ public class FragmentProductList extends MyBaseFragment {
                     float density = getResources().getDisplayMetrics().density;
                     // 400dp 转 px
                     layoutParams.height = (int) (400 * density);
+                    long id = data.get(i).getAsJsonObject().get("id").getAsLong();
                     String name = data.get(i).getAsJsonObject().get("name").getAsString();
                     int stockAmount = data.get(i).getAsJsonObject().get("stock").getAsInt();
                     boolean flashSale = data.get(i).getAsJsonObject().get("flashSale").getAsBoolean();
                     int toFlashSaleStartTimeRemainingSeconds = data.get(i).getAsJsonObject().get("toFlashSaleStartTimeRemainingSeconds").getAsInt();
                     int toFlashSaleEndTimeRemainingSeconds = data.get(i).getAsJsonObject().get("toFlashSaleEndTimeRemainingSeconds").getAsInt();
-                    FragmentProductListItem productListItem = new FragmentProductListItem(name, stockAmount, flashSale, toFlashSaleStartTimeRemainingSeconds, toFlashSaleEndTimeRemainingSeconds, layoutParams);
+                    FragmentProductListItem productListItem = new FragmentProductListItem(id, name, stockAmount, flashSale, toFlashSaleStartTimeRemainingSeconds, toFlashSaleEndTimeRemainingSeconds, layoutParams);
                     transaction.add(R.id.productListContainer, productListItem, FragmentProductListItem.class.getSimpleName());
                 }
                 transaction.commit();
