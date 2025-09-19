@@ -1692,6 +1692,124 @@ FrameLayout 本身属性很少，但其**子视图**可以使用一些非常重�
 
 ```
 
+模拟商品购买页面
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/buttonProductPurchase"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <!-- 模拟图片框 -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/linearLayoutProductPurchaseL"
+            android:layout_margin="10dp"
+            android:background="@drawable/view_border"/>
+
+        <!-- 商品信息显示区域 -->
+        <LinearLayout
+            android:id="@+id/linearLayoutProductPurchaseL"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="商品名称："></TextView>
+
+                <TextView
+                    android:id="@+id/textViewProductPurchaseName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="QaaPiQ3y6nSChQA8mZ2D"></TextView>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="库存："></TextView>
+
+                <TextView
+                    android:id="@+id/textViewProductPurchaseStockAmount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="1024"></TextView>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/linearLayoutProductPurchaseStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:id="@+id/textViewProductPurchaseStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="秒杀已结束"
+                    android:textColor="#FF0000">
+                    <!--
+                    <div v-if="item.flashSale">
+                            <div v-if="item.toFlashSaleStartTimeRemainingSeconds > 0" style="color:orange">
+                                距离秒杀开始时间还有 {{ item.toFlashSaleStartTimeRemainingSeconds }} 秒
+                            </div>
+
+                            <div v-if="item.toFlashSaleStartTimeRemainingSeconds <= 0 && item.toFlashSaleEndTimeRemainingSeconds > 0"
+                                style="color:yellowgreen">
+                                距离秒杀结束还有 {{ item.toFlashSaleEndTimeRemainingSeconds }} 秒
+                            </div>
+
+                            <div v-if="item.toFlashSaleStartTimeRemainingSeconds <= 0 && item.toFlashSaleEndTimeRemainingSeconds <= 0"
+                                style="color:red">
+                                秒杀已结束
+                            </div>
+                        </div>
+                    -->
+                </TextView>
+            </LinearLayout>
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+    
+    <Button
+        android:id="@+id/buttonProductPurchase"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="购买"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+```
+
 
 
 ## 布局 - `LinearLayout`

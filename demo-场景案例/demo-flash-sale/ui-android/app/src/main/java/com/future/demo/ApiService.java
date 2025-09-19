@@ -35,4 +35,22 @@ public interface ApiService {
     Call<JsonObject> createOrderFlashSale(@Query("userId") long userId,
                                           @Query("productId") long productId,
                                           @Query("randomCreateTime") boolean randomCreateTime);
+
+    @GET("/api/v1/order/listByUserIdAndWithoutStatus")
+    Call<JsonObject> listByUserIdAndWithoutStatus(@Query("userId") long userId,
+                                                  @Query("latestMonth") boolean latestMonth);
+
+    @GET("/api/v1/order/listByUserIdAndStatus")
+    Call<JsonObject> listByUserIdAndStatus(@Query("userId") long userId,
+                                           @Query("latestMonth") boolean latestMonth,
+                                           @Query("status") String status);
+
+    @GET("/api/v1/order/listByMerchantIdAndWithoutStatus")
+    Call<JsonObject> listByMerchantIdAndWithoutStatus(@Query("merchantId") long merchantId,
+                                                      @Query("latestMonth") boolean latestMonth);
+
+    @GET("/api/v1/order/listByMerchantIdAndStatus")
+    Call<JsonObject> listByMerchantIdAndStatus(@Query("merchantId") long merchantId,
+                                               @Query("latestMonth") boolean latestMonth,
+                                               @Query("status") String status);
 }
