@@ -1,5 +1,6 @@
 package com.future.demo;
 
+import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.util.Log;
@@ -20,6 +21,8 @@ public class FragmentHome extends MyBaseFragment {
 
     private static final String TAG = FragmentHome.class.getSimpleName();
 
+    private SharedPreferencesSupport sharedPreferencesSupport;
+
     private LinearLayout navItemContainer;
     private ViewPager viewPager;
 
@@ -27,6 +30,16 @@ public class FragmentHome extends MyBaseFragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home, null);
+
+        sharedPreferencesSupport = new SharedPreferencesSupport(getActivity());
+
+        // 显示 userId、merchantId
+        TextView textViewUserId = view.findViewById(R.id.textViewUserId);
+        TextView textViewMerchantId = view.findViewById(R.id.textViewMerchantId);
+        String userId = sharedPreferencesSupport.read(MainActivity.SharedPreferencesName, "userId");
+        String merchantId = sharedPreferencesSupport.read(MainActivity.SharedPreferencesName, "merchantId");
+        textViewUserId.setText(userId);
+        textViewMerchantId.setText(merchantId);
 
         navItemContainer = view.findViewById(R.id.navItemContainer);
         viewPager = view.findViewById(R.id.viewPagerHome);
@@ -68,6 +81,12 @@ public class FragmentHome extends MyBaseFragment {
                 if (indexOfNavItem == 0) {
                     // 首页
 
+                    // 跳转到 LoginActivity
+                    Intent intent = new Intent(getActivity(), LoginActivity.class);
+                    startActivity(intent);
+
+                    // 销毁当前 Activity
+                    getActivity().finish();
                 } else if (indexOfNavItem == 1) {
                     // 商品列表
                     viewPager.setCurrentItem(0, true);
