@@ -5848,6 +5848,301 @@ dialog.show(getSupportFragmentManager(), "ResultDialog");
 
 
 
+## `UI`组件 - `Spinner`
+
+### Android Spinner 是什么？
+
+**Android Spinner** 是一个内置于 Android SDK 中的视图控件（Widget），它提供了一个**下拉选择菜单**。用户点击它时，会弹出一个列表供用户选择其中一项。从功能和外观上看，它非常类似于 Web 开发中的 HTML `<select>` 元素。
+
+它的核心作用是：**在有限的屏幕空间内，让用户从一组预定义的选项中选择一个值。**
+
+---
+
+### 核心特点与外观
+
+1.  **默认状态**：在非展开状态下，它通常显示为一个带有一个下拉箭头（▼）的文本框或框体，里面显示着当前选中的项。
+2.  **展开状态**：当用户点击它时，会向下（或作为对话框）弹出一个列表，展示所有可选项。
+3.  **选择模式**：有两种模式，通过 `android:spinnerMode` 设置：
+    *   `dropdown`（默认）：下拉列表锚定在 Spinner 控件下方。
+    *   `dialog`：以居中对话框的形式弹出选项列表。
+
+
+
+---
+
+### 工作原理：Adapter
+
+Spinner 本身不直接持有数据。它的工作严重依赖于一个叫 **Adapter** 的组件。你可以把 Adapter 理解为一个**桥梁**或**数据源**。
+
+*   **数据源**：数据可以来自各种地方，如一个简单的字符串数组 (`String[]`)、一个对象列表 (`List<CustomObject>`) 或数据库查询。
+*   **Adapter 的作用**：它从数据源获取数据，并根据要求为每个数据项**创建对应的视图（View）**，然后将这些视图提供给 Spinner 去显示。
+*   **常用 Adapter**：
+    *   `ArrayAdapter`：用于最简单的文本列表。
+    *   `CursorAdapter`：用于从数据库查询的结果（Cursor）。
+    *   `BaseAdapter`：用于完全自定义复杂的列表项（例如包含图片和文字的项）。
+
+---
+
+### 基本用法示例
+
+以下是一个使用 Spinner 的典型流程：
+
+**1. 在布局 XML 文件中定义 Spinner**
+```xml
+<Spinner
+    android:id="@+id/my_spinner"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_margin="16dp" />
+```
+
+**2. 在 Java/Kotlin 代码中配置**
+```java
+// 1. 找到控件
+Spinner spinner = findViewById(R.id.my_spinner);
+
+// 2. 准备数据（这里用一个简单的字符串数组）
+String[] colors = {"Red", "Green", "Blue", "Yellow"};
+
+// 3. 创建Adapter并绑定数据
+// 参数：上下文(Context), 安卓内置的简单列表项布局, 数据数组
+ArrayAdapter<String> adapter = new ArrayAdapter<>(
+    this,
+    android.R.layout.simple_spinner_item,
+    colors
+);
+
+// 4. 设置下拉列表的样式
+adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
+// 5. 将Adapter设置给Spinner
+spinner.setAdapter(adapter);
+
+// 6. 设置选择监听器
+spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        // 当用户选中某一项时触发
+        String selectedItem = parent.getItemAtPosition(position).toString();
+        Toast.makeText(MainActivity.this, "Selected: " + selectedItem, Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> parent) {
+        // 当选择被清除时触发（通常很少用到）
+    }
+});
+```
+
+---
+
+### 常见应用场景
+
+Spinner 非常适合用于需要用户选择但选项又不是特别多的场景，例如：
+
+*   **设置页面**：选择语言、主题、字体大小等。
+*   **表单填写**：选择性别、国家/地区、职业、支付状态（如你之前提到的“未支付/Unpay”）。
+*   **筛选和排序**：在商品列表页面，选择“按价格排序”、“按销量排序”等。
+*   **工具类应用**：选择单位换算的类型（如长度、重量、温度）。
+
+### 总结
+
+| 特性         | 描述                                                         |
+| :----------- | :----------------------------------------------------------- |
+| **本质**     | 一个下拉选择框控件，类似 HTML `<select>`。                   |
+| **核心**     | 依赖 **Adapter** 来提供数据和视图。                          |
+| **优点**     | 节省空间，提供清晰的选项，用户体验统一。                     |
+| **缺点**     | 选项过多时（如上百个）体验不佳，不适合用于展示大量数据（这种情况应考虑使用 `ListView`/`RecyclerView` 或搜索框）。 |
+| **关键方法** | `setAdapter()`, `setOnItemSelectedListener()`。              |
+
+简单来说，**当你想让用户从几个到几十个预定义选项中选择一个时，Spinner 就是你需要的工具。**
+
+### 示例
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-spinner)
+
+`activity_main.xml`
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="20dp"
+    android:id="@+id/main"
+    android:orientation="vertical">
+
+    <Spinner
+        android:id="@+id/spinner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+    <Button
+        android:id="@+id/button1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:text="显示选中item"/>
+</LinearLayout>
+```
+
+定义 `Spinner Item` 的 `Layout`（`res/layout/spinner_item.xml`）
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal">
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_marginLeft="10dp"
+        app:srcCompat="@mipmap/ic_launcher"/>
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_marginLeft="10dp"
+        android:text="TextView" />
+
+    <TextView
+        android:id="@+id/textView4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_marginLeft="10dp"
+        android:text="TextView" />
+
+</LinearLayout>
+```
+
+`MainActivity` 中初始化和使用 `Spinner`
+
+```java
+package com.future.demo;
+
+import android.os.Bundle;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.Spinner;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.activity.EdgeToEdge;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+public class MainActivity extends AppCompatActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        EdgeToEdge.enable(this);
+        setContentView(R.layout.activity_main);
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
+
+        Spinner spinner = findViewById(R.id.spinner);
+        List<SpinnerItem> spinnerItemList = Arrays.asList(
+                new SpinnerItem("全部", ""),
+                new SpinnerItem("未支付", "Unpay"),
+                new SpinnerItem("未发货", "Undelivery")
+        );
+        // 定义 Spinner 的 Adapter
+        BaseAdapter adapter = new BaseAdapter() {
+            @Override
+            public int getCount() {
+                return spinnerItemList.size();
+            }
+
+            @Override
+            public Object getItem(int i) {
+                // Spinner.getSelectedItem() 的返回值
+                return spinnerItemList.get(i);
+            }
+
+            @Override
+            public long getItemId(int i) {
+                return 0;
+            }
+
+            @Override
+            public View getView(int i, View convertView, ViewGroup viewGroup) {
+                LayoutInflater _LayoutInflater = LayoutInflater.from(MainActivity.this);
+                convertView = _LayoutInflater.inflate(R.layout.spinner_item, null);
+                if (convertView != null) {
+                    ImageView imageView = convertView.findViewById(R.id.imageView);
+                    imageView.setImageResource(R.mipmap.ic_launcher);
+                    TextView _TextView1 = convertView.findViewById(R.id.textView3);
+                    TextView _TextView2 = convertView.findViewById(R.id.textView4);
+                    String text = spinnerItemList.get(i).getText();
+                    String value = spinnerItemList.get(i).getValue();
+                    _TextView1.setText(text);
+                    _TextView2.setText(value);
+                }
+                return convertView;
+            }
+        };
+        spinner.setAdapter(adapter);
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                String text = spinnerItemList.get(i).getText();
+                String value = spinnerItemList.get(i).getValue();
+                String message = "选中 text=" + text + ",value=" + value;
+                Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
+
+        Button button1 = findViewById(R.id.button1);
+        button1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // 查看 Spinner 选中的 item
+                SpinnerItem spinnerItem = (SpinnerItem) spinner.getSelectedItem();
+                String text = spinnerItem.getText();
+                String value = spinnerItem.getValue();
+                String message = "选中 text=" + text + ",value=" + value;
+                Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+}
+```
+
+
+
 ## `UI` - 边框
 
 >提示：使用 `drawable` 资源画边界。
