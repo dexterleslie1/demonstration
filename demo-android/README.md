@@ -2,7 +2,11 @@
 
 如下：
 
-- 边修改 `Layout xml` 边使用 `Interface Builder` 查看效果，这样开发效率会提高。
+- 边修改 `Layout xml` 边使用 `Layout Editor` 查看效果，这样开发效率会提高。
+- 登录界面使用 `LoginActivity` 跳转到 `MainActivity`。
+- 手机 `App MainActivity` 使用 `TabLayout+ViewPager` 导航。
+- 手机 `App` 某个 `Tab` 有很多子功能时可以模仿美团 `App` 横向滚动的子功能导航+ `ViewPager` 实现子功能切换，详细用法可以参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-%E5%9C%BA%E6%99%AF%E6%A1%88%E4%BE%8B/demo-flash-sale/ui-android) 。
+- 分配布局剩余空间推荐使用 `ConstraintLayout`。
 
 
 
@@ -6715,6 +6719,133 @@ findViewById<Button>(R.id.showButton).setOnClickListener {
 - 如果某些布局可能不会立即显示，使用 `ViewStub` 优化性能。
 
 希望这些方法能帮到你！🚀
+
+
+
+## `UI` - 科学地命名`Layout`中的`id`
+
+在 Android 开发中，**科学命名 `id`** 能显著提升代码可读性、可维护性，并减少团队协作中的冲突。以下是经过验证的命名规范和实践建议：
+
+---
+
+### **一、核心命名原则**
+1. **唯一性**  
+   - 全局唯一（跨所有 XML 文件）。
+   - 禁止复用 `android:id="@+id/btn_confirm"` 在不同布局中。
+
+2. **语义化**  
+   - 明确表达视图的 **功能** 或 **内容**，而非类型（如 `btn_submit` 优于 `button1`）。
+
+3. **一致性**  
+   - 团队统一命名风格（如全小写 + 下划线）。
+
+---
+
+### **二、命名规范模板**
+#### **1. 基础格式**
+```xml
+<视图类型前缀>_<功能/内容描述>[_<附加修饰>]
+```
+- **示例**：
+  ```xml
+  <!-- 按钮 -->
+  <Button android:id="@+id/btn_login_submit" />
+  
+  <!-- 文本框 -->
+  <TextView android:id="@+id/tv_user_name" />
+  
+  <!-- 图片 -->
+  <ImageView android:id="@+id/iv_product_thumbnail" />
+  
+  <!-- 输入框 -->
+  <EditText android:id="@+id/et_search_keyword" />
+  ```
+
+#### **2. 常用视图前缀**
+| 视图类型       | 前缀  | 示例               |
+| -------------- | ----- | ------------------ |
+| `Button`       | `btn` | `btn_retry`        |
+| `TextView`     | `tv`  | `tv_error_message` |
+| `EditText`     | `et`  | `et_email`         |
+| `ImageView`    | `iv`  | `iv_profile_photo` |
+| `RecyclerView` | `rv`  | `rv_product_list`  |
+| `CheckBox`     | `cb`  | `cb_agree_terms`   |
+| `ProgressBar`  | `pb`  | `pb_loading`       |
+
+---
+
+### **三、复杂场景命名策略**
+#### **1. 模块/页面前缀（防冲突）**
+```xml
+<!-- 用户模块 -->
+<TextView android:id="@+id/user_tv_name" />
+
+<!-- 商品详情页 -->
+<Button android:id="@+id/product_btn_buy" />
+```
+
+#### **2. 列表项（RecyclerView/ListView）**
+```xml
+<!-- item_user.xml -->
+<TextView android:id="@+id/item_user_tv_name" />
+<ImageView android:id="@+id/item_user_iv_avatar" />
+```
+
+#### **3. Fragment/View 嵌套**
+```xml
+<!-- fragment_home.xml -->
+<Button android:id="@+id/fragment_home_btn_refresh" />
+
+<!-- 包含的子布局 -->
+<include 
+    android:id="@+id/fragment_home_header"
+    layout="@layout/header" />
+```
+
+---
+
+### **四、自动生成 ID 的工具**
+#### **1. ViewBinding 自动生成**
+- 使用 **ViewBinding** 时，系统会自动将 `@+id/btn_submit` 转换为 `Binding.btnSubmit`，无需手动管理。
+
+#### **2. 插件辅助**
+- **Android Studio 插件**（如 `Android ID Renamer`）可批量重命名 `id`。
+- **Lint 检查**：配置自定义 Lint 规则检测重复或不合规的 `id`。
+
+---
+
+### **五、反模式（避免！）**
+```xml
+<!-- ❌ 无意义命名 -->
+<Button android:id="@+id/button1" />
+
+<!-- ❌ 类型与功能混淆 -->
+<TextView android:id="@+id/email_button" />
+
+<!-- ❌ 重复使用 -->
+<!-- activity_a.xml -->
+<Button android:id="@+id/btn_confirm" />
+<!-- activity_b.xml -->
+<Button android:id="@+id/btn_confirm" /> <!-- 编译错误！ -->
+```
+
+---
+
+### **六、团队协作最佳实践**
+1. **文档化**：在团队 Wiki 中记录命名规范。
+2. **Code Review**：检查 `id` 命名是否符合约定。
+3. **模板化**：创建 XML 布局模板（如 `template_product_item.xml`）。
+
+---
+
+### **总结**
+| 场景              | 命名示例                     | 优点           |
+| ----------------- | ---------------------------- | -------------- |
+| 普通按钮          | `btn_submit`                 | 清晰表达功能   |
+| 列表项中的图片    | `item_product_iv_cover`      | 避免跨模块冲突 |
+| Fragment 中的控件 | `fragment_settings_btn_save` | 明确作用域     |
+
+科学命名 `id` 能大幅降低维护成本，尤其在大型项目中。从第一个 XML 文件开始严格执行规范！ 🚀
 
 
 
