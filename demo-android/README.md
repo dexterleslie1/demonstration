@@ -1,3 +1,11 @@
+## 总结
+
+如下：
+
+- 边修改 `Layout xml` 边使用 `Interface Builder` 查看效果，这样开发效率会提高。
+
+
+
 ## `Android Studio` - 安装
 
 ### `windows7、windows11、windows 2016`
