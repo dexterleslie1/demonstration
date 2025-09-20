@@ -1,3 +1,19 @@
+## 总结
+
+如下：
+
+- 在 `App.js` 首页定义 `App` 的主体布局，详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-%E5%9C%BA%E6%99%AF%E6%A1%88%E4%BE%8B/demo-flash-sale/ui-react)。
+
+
+
+## 类似`Android Studio Layout Editor`功能
+
+使用浏览器 + 开发服务器热重载方法可以实现类似 `Android Studio Layout Editor` 功能，一边修改代码一边预览 `UI` 效果。
+
+使用 `Win` + 左右方向键把 `VSCode` 和浏览器分别左右分屏，再独自拖动 `VSCode` 调整窗口尺寸到适宜的大小即可实现一边修改代码一边预览的效果。
+
+
+
 ## 钩子
 
 
@@ -515,7 +531,7 @@ const [user, setUser] = useState(() => {
 
 
 
-## `vscode` 安装 `react` 插件
+## `VSCode`安装`React`插件
 
 名称：`ES7 React/Redux/GraphQL/React-Native snippets`，作者：`dsznajder`
 
