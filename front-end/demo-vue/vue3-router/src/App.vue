@@ -1,12 +1,33 @@
 <template>
   <div id="nav">
+    <!-- 声明式导航 -->
     <router-link to="/">首页</router-link> |
     <router-link to="/help">帮助</router-link> |
-    <router-link to="/about">关于我们</router-link>
+    <router-link to="/about">关于我们</router-link> |
+    <button @click="(e)=>{this.$router.go(-1)}">返回</button> |
+    <button @click="routeProgramatically">编程式路由</button>
   </div>
   <hr>
+  <!-- router-view 是 Vue Router 的核心组件，用于根据当前路由动态渲染匹配的组件。它是实现单页面应用（SPA）“页面切换”的关键载体。 -->
   <router-view/>
 </template>
+
+<script>
+export default {
+  methods: {
+    routeProgramatically: function() {
+      // 编程式路由
+      // this.$router.push("/help")
+      this.$router.push({
+        path: "/help/helpArticle",
+        query: {
+          article: 'login'
+        }
+      })
+    }
+  }
+}
+</script>
 
 <style>
 #app {

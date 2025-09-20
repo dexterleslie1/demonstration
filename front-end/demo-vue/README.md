@@ -1,4 +1,60 @@
-# Vue
+## 总结
+
+如下：
+
+- 在 `App.vue` 首页定义 `App` 的主体布局。
+
+
+
+## 类似`Android Studio Layout Editor`功能
+
+使用浏览器 + 开发服务器热重载方法可以实现类似 `Android Studio Layout Editor` 功能，一边修改代码一边预览 `UI` 效果。
+
+使用 `Win` + 左右方向键把 `VSCode` 和浏览器分别左右分屏，再独自拖动 `VSCode` 调整窗口尺寸到适宜的大小即可实现一边修改代码一边预览的效果。
+
+
+
+## 使用`window.alert()`弹窗
+
+错误用法：
+
+```vue
+<button @click="(e)=>{window.alert('H')}">返回</button>
+
+<!--
+直接在箭头函数中调用 window.alert() 方法是不允许的，会导致下面错误
+runtime-core.esm-bundler.js:455 Uncaught TypeError: Cannot read properties of undefined (reading 'alert')
+    at Object.onClick._cache.<computed>._cache.<computed> (VM947 App.vue:37:62)
+    at callWithErrorHandling (runtime-core.esm-bundler.js:386:19)
+    at callWithAsyncErrorHandling (runtime-core.esm-bundler.js:393:17)
+    at HTMLButtonElement.invoker (runtime-dom.esm-bundler.js:1046:89)
+Object.onClick._cache.<computed>._cache.<computed> @ VM947 App.vue:37
+callWithErrorHandling @ runtime-core.esm-bundler.js:386
+callWithAsyncErrorHandling @ runtime-core.esm-bundler.js:393
+invoker @ runtime-dom.esm-bundler.js:1046
+App.vue:20 re-render
+-->
+```
+
+
+
+正确用法：
+
+```vue
+<button @click="showAlert">返回</button>
+
+<script>
+export default {
+  name: "Help",
+  methods: {
+    showAlert() {
+      // 默认调用 window 全局对象的函数
+      alert("H")
+    }
+  }
+}
+</script>
+```
 
 
 
@@ -2986,6 +3042,7 @@ const routes = [
 #### **场景 2：动态路由参数变化但组件未更新**
 若同一组件被多次访问（如从 `/user/123` 跳转到 `/user/456`），由于 Vue 组件复用，`created` 等生命周期不会重新执行。可通过以下方式解决：
 - **监听 `$route` 变化**：在组件中监听 `$route.params` 或 `$route.query` 的变化。
+  
   ```javascript
   export default {
     watch: {
@@ -3002,6 +3059,7 @@ const routes = [
   };
   ```
 - **禁用组件复用**：在 `<router-view>` 中添加 `:key` 属性，强制重新渲染组件。
+  
   ```html
   <router-view :key="$route.fullPath" />
   ```
@@ -3028,129 +3086,300 @@ Vue2 页面跳转的核心是 **Vue Router**，主要方式包括：
 
 
 
-### 实验 - 编程式路由
+### `Vue2`路由集成
 
->注意：在使用带 `query` 参数路由跳转时，需要指定路由配置中的 `name` 属性，而不是指定 `path` 属性，否则在跳转后不会渲染组件。
+安装路由依赖
+
+```sh
+npm install vue-router@3
+```
+
+创建路由组件配置 `/src/router/index.js`
+
+```javascript
+import Vue from 'vue';
+import VueRouter from 'vue-router';
+
+// 引入目标页面组件
+import Home from '@/components/Home.vue';
+import About from '@/components/About.vue';
+
+Vue.use(VueRouter);
+
+// 定义路由规则
+const routes = [
+    {
+        path: '/',          // 根路径
+        name: 'Home',       // 路由名称（可选，用于编程式导航）
+        component: Home     // 对应组件
+    },
+    {
+        path: '/about',
+        name: 'About',
+        component: About
+    }
+];
+
+// 创建路由实例
+const router = new VueRouter({
+    mode: 'history',      // 路由模式（hash 或 history，推荐 history）
+    base: process.env.BASE_URL, // 基础路径（可选）
+    routes              // 注册路由规则
+});
+
+export default router; // 导出路由实例
+```
+
+注册路由组件到 `Vue` 中
+
+```vue
+import Vue from 'vue'
+import App from './App.vue'
+import router from './router'; // 引入路由实例
+
+Vue.config.productionTip = false
+
+new Vue({
+  router, // 挂载路由
+  render: function (h) { return h(App) },
+}).$mount('#app')
+
+```
+
+`/src/App.vue` 配置 `router-view` 组件以动态渲染当前路由组件
+
+```vue
+<template>
+  <div id="app">
+    <RouterLink to="/">首页</RouterLink> |
+    <RouterLink to="/about">关于</RouterLink>
+    <!-- router-view 是 Vue Router 的核心组件，用于根据当前路由动态渲染匹配的组件。它是实现单页面应用（SPA）“页面切换”的关键载体。 -->
+    <router-view></router-view>
+  </div>
+</template>
+
+<script>
+import { RouterLink, RouterView } from 'vue-router';
+import HelloWorld from './components/HelloWorld.vue'
+
+export default {
+  name: 'App',
+  components: {
+    HelloWorld
+  }
+}
+</script>
+
+<style>
+#app {
+  font-family: Avenir, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-align: center;
+  color: #2c3e50;
+  margin-top: 60px;
+}
+</style>
+
+```
+
+
+
+### `Vue3`路由集成
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-vue/vue3-router)
+
+安装路由依赖
+
+```sh
+npm install vue-router@4
+```
+
+创建路由组件配置 `/src/router/index.js`
+
+```javascript
+import { createRouter, createWebHistory } from 'vue-router'
+import Home from '../views/Home.vue'
+import Help from "@/views/Help";
+import ComponentHelp from "@/views/ComponentHelp";
+
+const routes = [
+  {
+    path: '/',
+    name: 'Home',
+    component: Home
+  },
+  {
+    path: '/help',
+    name: 'Help',
+    component: Help,
+    children: [
+      {
+        // 点击帮助菜单后默认跳转路由
+        path: '',
+        name: 'defaultHelp',
+        // 以下两种写法等价
+        // redirect: '/help/helpArticle?article=download',
+        redirect: {name: 'helpArticle', query: {article: 'download'}}
+      },
+      {
+        path: 'helpArticle',
+        name: 'helpArticle',
+        component: ComponentHelp
+      }
+    ]
+  },
+  {
+    path: '/about',
+    name: 'About',
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: function () {
+      return import(/* webpackChunkName: "about" */ '../views/About.vue')
+    }
+  }
+]
+
+const router = createRouter({
+  history: createWebHistory(process.env.BASE_URL),
+  routes
+})
+
+// 导航守卫，每次导航都触发
+router.beforeEach((to, from, next)=>{
+  let fullPath = to.fullPath;
+  console.log(`fullPath=${fullPath}`)
+  next()
+})
+
+export default router
+
+```
+
+注册路由组件到 `Vue` 中
+
+```vue
+import { createApp } from 'vue'
+import App from './App.vue'
+import router from './router'
+
+createApp(App).use(router).mount('#app')
+```
+
+`/src/App.vue` 配置 `router-view` 组件以动态渲染当前路由组件
+
+```vue
+<template>
+  <div id="nav">
+    <!-- 声明式导航 -->
+    <router-link to="/">首页</router-link> |
+    <router-link to="/help">帮助</router-link> |
+    <router-link to="/about">关于我们</router-link> |
+    <button @click="(e)=>{this.$router.go(-1)}">返回</button> |
+    <button @click="routeProgramatically">编程式路由</button>
+  </div>
+  <hr>
+  <!-- router-view 是 Vue Router 的核心组件，用于根据当前路由动态渲染匹配的组件。它是实现单页面应用（SPA）“页面切换”的关键载体。 -->
+  <router-view/>
+</template>
+
+<script>
+export default {
+  methods: {
+    routeProgramatically: function() {
+      // 编程式路由
+      // this.$router.push("/help")
+      this.$router.push({
+        path: "/help/helpArticle",
+        query: {
+          article: 'login'
+        }
+      })
+    }
+  }
+}
+</script>
+
+<style>
+#app {
+  font-family: Avenir, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-align: center;
+  color: #2c3e50;
+}
+
+#nav {
+  padding: 30px;
+}
+
+#nav a {
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+/* 
+不是精确匹配样式，例如：/help和当前route.fullPath=/help/helpArticle?article=download不是精确匹配
+但是此时会激活这个样式
+*/
+#nav a.router-link-active {
+  color: #42b983;
+}
+</style>
+
+```
+
+
+
+### 编程式路由
+
+>~~注意：在 `Vue2`（`Vue3` 中没有此问题）中使用带 `query` 参数路由跳转时，需要指定路由配置中的 `name` 属性，而不是指定 `path` 属性，否则在跳转后不会渲染组件。~~
 >
 >```javascript
 >// 错误跳转方式
 >this.$router.push({
->    path: "/productInfo",
->    query: { id: product.id }
+>path: "/productInfo",
+>query: { id: product.id }
 >})
 >
 >// 正确跳转方式
 >this.$router.push({
->    name: "ProductInfo",
->    query: { id: product.id }
+>name: "ProductInfo",
+>query: { id: product.id }
 >})
 >```
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-vue/vue3-router)
 
-集成路由组件：
+```vue
+<template>
+  <div id="nav">
+    <button @click="routeProgramatically">编程式路由</button>
+  </div>
+  <hr>
+  <!-- router-view 是 Vue Router 的核心组件，用于根据当前路由动态渲染匹配的组件。它是实现单页面应用（SPA）“页面切换”的关键载体。 -->
+  <router-view/>
+</template>
 
-- 安装路由依赖
-
-  ```sh
-  npm install vue-router@3
-  ```
-
-- 创建路由组件配置 `/src/router/index.js`
-
-  ```javascript
-  import Vue from 'vue';
-  import VueRouter from 'vue-router';
-  
-  // 引入目标页面组件
-  import SessionInfo from '@/components/SessionInfo.vue';
-  import ProductList from '@/components/ProductList.vue';
-  
-  Vue.use(VueRouter);
-  
-  // 定义路由规则
-  const routes = [
-      {
-          path: '/',          // 根路径
-          name: 'SessionInfo',       // 路由名称（可选，用于编程式导航）
-          component: SessionInfo     // 对应组件
-      },
-      {
-          path: '/productList',
-          name: 'ProductList',
-          component: ProductList
-      }
-  ];
-  
-  // 创建路由实例
-  const router = new VueRouter({
-      mode: 'history',      // 路由模式（hash 或 history，推荐 history）
-      base: process.env.BASE_URL, // 基础路径（可选）
-      routes              // 注册路由规则
-  });
-  
-  export default router; // 导出路由实例
-  ```
-
-  - 上面配置表示访问 `http://localhost:8080` 时访问组件 `SessionInfo`，访问 `http://localhost:8080/productList` 时访问组件 `ProductList`。
-
-- 注册路由组件到 `Vue` 中
-
-  ```vue
-  import Vue from 'vue'
-  import App from './App.vue'
-  import router from './router'; // 引入路由实例
-  
-  Vue.config.productionTip = false
-  
-  new Vue({
-    router, // 挂载路由
-    render: function (h) { return h(App) },
-  }).$mount('#app')
-  ```
-
-- `/src/App.vue` 配置 `router-view` 组件以动态渲染当前路由组件
-
-  ```vue
-  <template>
-    <div id="app">
-      <!-- router-view 是 Vue Router 的核心组件，用于根据当前路由动态渲染匹配的组件。它是实现单页面应用（SPA）“页面切换”的关键载体。 -->
-      <router-view></router-view>
-    </div>
-  </template>
-  
-  <script>
-  export default {
-    name: 'App',
-    components: {
+<script>
+export default {
+  methods: {
+    routeProgramatically: function() {
+      // 编程式路由
+      // this.$router.push("/help")
+      this.$router.push({
+        path: "/help/helpArticle",
+        query: {
+          article: 'login'
+        }
+      })
     }
   }
-  </script>
-  
-  <style>
-  html,
-  body {
-    margin: 0;
-    padding: 0;
-  }
-  
-  #app {
-    font-family: Avenir, Helvetica, Arial, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-  </style>
-  
-  ```
+}
+</script>
 
-- 点击按钮后动态跳转到 `/productList` 路由
-
-  ```javascript
-  handleClickOk() {
-      if (this.userId)
-          localStorage.setItem("userId", this.userId)
-  
-      this.$router.push('/productList');
-  }
-  ```
+```
 
 
 
@@ -3158,8 +3387,186 @@ Vue2 页面跳转的核心是 **Vue Router**，主要方式包括：
 ### 前进或后退
 
 >`this.$router.go(n)`：前进或后退指定步数（`n` 为整数，`n=1` 前进一页，`n=-1` 后退一页）。
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-vue/vue3-router)
 
 `this.$router.go(-1)` 和 `this.$router.back()` 等价。  
+
+
+
+### 嵌套路由
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-vue/vue3-router)
+
+`App.vue` 中的父级路由 `/help`
+
+```vue
+<template>
+  <div id="nav">
+    <!-- 声明式导航 -->
+    <router-link to="/">首页</router-link> |
+    <router-link to="/help">帮助</router-link> |
+    <router-link to="/about">关于我们</router-link>
+  </div>
+  <hr>
+  <!-- router-view 是 Vue Router 的核心组件，用于根据当前路由动态渲染匹配的组件。它是实现单页面应用（SPA）“页面切换”的关键载体。 -->
+  <router-view/>
+</template>
+
+```
+
+`Help.vue` 中嵌套路由 `/help/**`
+
+```vue
+<template>
+  <div>
+    <div class="navigator">
+      <ul>
+        <li>
+            <!-- 
+                嵌套路由，路由前缀需要和父级路由匹配，
+                例如：嵌套路由 /help/helpArticle?article=download 和父级路由 /help 匹配
+            -->
+            <router-link 
+              to="/help/helpArticle?article=download"
+              v-bind:class="isActive('/help/helpArticle?article=download')">
+              下载帮助
+            </router-link>
+        </li>
+        <li>
+            <router-link 
+              to="/help/helpArticle?article=login"
+              v-bind:class="isActive('/help/helpArticle?article=login')">
+              登录帮助
+            </router-link>
+        </li>
+      </ul>
+    </div>
+    <div class="content">
+      <!--
+        若同一组件被多次访问（如从 `/user/123` 跳转到 `/user/456`），由于 Vue 组件复用，`created` 等生命周期不会重新执行。
+        在组件中监听 `$route.params` 或 `$route.query` 的变化。
+        或者 在 `<router-view>` 中添加 `:key` 属性，强制重新渲染组件。例如：<router-view :key="$route.fullPath" />
+      -->
+      <router-view :key="$route.fullPath"></router-view>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  name: "Help",
+  methods: {
+    // 计算当前激活的route
+    isActive: function(path) {
+      let fullPath = this.$route.fullPath
+      return {active: path==fullPath}
+    }
+  }
+}
+</script>
+```
+
+`ComponentHelp.vue` 对应嵌套路由的组件
+
+```vue
+<template>
+  <div>
+    帮助说明组件
+    article query参数：{{article}}
+  </div>
+</template>
+
+<script>
+export default {
+  name: "ComponentHelp",
+  data() {
+    return {
+      article: ''
+    }
+  },
+  created() {
+    // 注意：第一次加载页面获取article参数
+    this.article = this.$route.query.article
+  },
+  watch:{
+    // 注意：需要监听路由变化才能够获取article参数
+    // 若同一组件被多次访问（如从 `/user/123` 跳转到 `/user/456`），由于 Vue 组件复用，`created` 等生命周期不会重新执行。
+    // 在组件中监听 `$route.params` 或 `$route.query` 的变化。
+    // 或者 在 `<router-view>` 中添加 `:key` 属性，强制重新渲染组件。例如：<router-view :key="$route.fullPath" />
+    // $route(to, from){
+    //   this.article = this.$route.query.article
+    // }
+  }
+}
+</script>
+
+<style scoped>
+
+</style>
+```
+
+`src/router/index.js` 中配置嵌套路由的关系
+
+```js
+import { createRouter, createWebHistory } from 'vue-router'
+import Home from '../views/Home.vue'
+import Help from "@/views/Help";
+import ComponentHelp from "@/views/ComponentHelp";
+
+const routes = [
+  {
+    path: '/',
+    name: 'Home',
+    component: Home
+  },
+  {
+    path: '/help',
+    name: 'Help',
+    component: Help,
+    children: [
+      {
+        // 点击帮助菜单后默认跳转路由
+        path: '',
+        name: 'defaultHelp',
+        // 以下两种写法等价
+        // redirect: '/help/helpArticle?article=download',
+        redirect: {name: 'helpArticle', query: {article: 'download'}}
+      },
+      {
+        path: 'helpArticle',
+        name: 'helpArticle',
+        component: ComponentHelp
+      }
+    ]
+  },
+  {
+    path: '/about',
+    name: 'About',
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: function () {
+      return import(/* webpackChunkName: "about" */ '../views/About.vue')
+    }
+  }
+]
+
+const router = createRouter({
+  history: createWebHistory(process.env.BASE_URL),
+  routes
+})
+
+// 导航守卫，每次导航都触发
+router.beforeEach((to, from, next)=>{
+  let fullPath = to.fullPath;
+  console.log(`fullPath=${fullPath}`)
+  next()
+})
+
+export default router
+
+```
 
 
 
