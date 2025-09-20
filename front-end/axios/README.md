@@ -1,4 +1,4 @@
-## 集成`Vue2`
+## `Vue2`集成
 
 >[参考链接](https://juejin.cn/post/7080965261448183845)
 >
@@ -120,7 +120,7 @@ handleClick() {
 
 
 
-## 集成`React`
+## `React`集成
 
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/axios/demo-react)
 

@@ -206,7 +206,6 @@ export default defineConfig({
           items: [
             { text: '基础', link: '/vue/README.md' },
             { text: '脚手架创建项目', link: '/vue/脚手架创建项目.md' },
-            { text: '指令', link: '/vue/指令.md' },
             { text: '集成 Element-UI', link: '/vue/集成element-ui.md' },
           ]
         }
