@@ -6,7 +6,8 @@
 - 登录界面使用 `LoginActivity` 跳转到 `MainActivity`。
 - 手机 `App MainActivity` 使用 `TabLayout+ViewPager` 导航。
 - 手机 `App` 某个 `Tab` 有很多子功能时可以模仿美团 `App` 横向滚动的子功能导航+ `ViewPager` 实现子功能切换，详细用法可以参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-%E5%9C%BA%E6%99%AF%E6%A1%88%E4%BE%8B/demo-flash-sale/ui-android) 。
-- 分配布局剩余空间推荐使用 `ConstraintLayout`。
+- 分配布局剩余空间推荐使用 `ConstraintLayout`，普通布局排版一般使用`LinearLayout`。
+- 通常使用 `LinearLayout` 开发表单。
 
 
 

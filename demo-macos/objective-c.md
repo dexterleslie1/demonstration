@@ -1,8 +1,36 @@
+## 总结
+
+如下：
+
+- `storyboard` 和 `xib` 文件不能像 `Android Layout xml` 那样直接编辑代码（`XML` 结构复杂，手动编辑很容易导致文件损坏，`Xcode` 无法再识别），只能通过 `Interface Builder` 所见即所得方式比编辑 `storyboard` 和 `xib`。
+- 通常使用 `UIStackView` 和嵌套 `UIStackView` 开发表单（相当于 `Android LinearLayout`）。
+- 通常使用 `AutoLayout` 开发分配剩余空间的布局或者复杂的布局（相当于 `Android Constraint Layout`）。
+
+
+
+## `todo`列表
+
+如下：
+
+- `Objective-C` 项目怎么修改代码后 `hot reload` 呢？
+
+
+
 ## 新建 `objective-c` 项目用于调试
 
 使用 `Xcode` 新建名为 `demo2` 的  `objective-c App` 项目
 
 禁用项目运行 `UI` 测试，只运行 `Unit` 测试：打开功能 `Product` > `Scheme` > `Edit Scheme` > `Test`，取消选择 `demo2UITests` 测试目标，只勾选 `demo2Tests` 测试目标。此时运行测试只会运行 `Unit` 测试。
+
+
+
+## 创建`App`
+
+使用 `File` > `New` > `Project` > `iOS` > `App` 功能创建 `App`，`Interface` 选择 `Storyboard`，`Language` 选择 `Objective-C`。
+
+通过使用 `Interface Builder` 编辑 `Main.storyboard` 设计 `App` 主界面。
+
+
 
 ## `main` 主函数
 
@@ -3018,15 +3046,535 @@ XCTAssertNil(errorMessage);
 - `storyboard` 上没有 `file’s Owner` 的概念，默认通过 `VC` 的 `class` 的指定其拥有者。
 - `storyboard` 上可以通过 `segue` 实现无需代码的界面跳转，而 `xib` 由于管理的是单个界面，因此只能通过代码来实现界面的切换。
 
-## `storyboard`、`xib`、`nib` - `storyboard`使用
+
+
+## `storyboard`、`xib`、`nib` - `storyboard` - `scene`、`segue`概念
+
+### 一、Scene（场景） - 界面构建的基本单元
+
+#### 什么是 Scene？
+**Scene** 是 Storyboard 中的一个完整屏幕界面，它包含：
+
+- **一个视图控制器**（UIViewController 或其子类）
+- **该控制器的完整视图层次结构**（所有子视图）
+- **与其他 Scene 的连接关系**
+
+#### Scene 的视觉表示
+
+在 Xcode 的 Storyboard 中，每个 Scene 显示为一个独立的矩形区域：
+
+```
+┌─────────────────────────────────┐
+│           Scene                 │
+│                                 │
+│  ┌─────────────────────────┐   │
+│  │   View Controller       │   │
+│  │                         │   │
+│  │  ┌─────────────────┐    │   │
+│  │  │   Root View     │    │   │
+│  │  │                 │    │   │
+│  │  │  ┌───────────┐  │    │   │
+│  │  │  │  Button   │  │    │   │
+│  │  │  └───────────┘  │    │   │
+│  │  │                 │    │   │
+│  │  └─────────────────┘    │   │
+│  │                         │   │
+│  └─────────────────────────┘   │
+│                                 │
+└─────────────────────────────────┘
+```
+
+#### Scene 的实际作用
+```swift
+// 一个 Scene 对应代码中的一个视图控制器类
+class LoginViewController: UIViewController {
+    // 这里管理 Scene 中的所有逻辑
+    @IBOutlet weak var usernameTextField: UITextField!
+    @IBOutlet weak var passwordTextField: UITextField!
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        // Scene 加载完成后的设置
+    }
+}
+```
+
+### 二、Segue（转场） - 场景之间的桥梁
+
+#### 什么是 Segue？
+**Segue** 定义了不同 Scene 之间的转换关系和导航方式：
+
+- **连接两个 Scene** 的视觉箭头
+- **定义转场动画** 和行为
+- **传递数据**  between scenes
+
+#### Segue 的主要类型
+
+1. **Show (Push) Segue**
+   
+   ```swift
+   // 用于导航栈，将新 Scene 推入栈中
+   navigationController?.pushViewController(destination, animated: true)
+   ```
+   
+2. **Present Modally Segue**
+   
+   ```swift
+   // 模态呈现，覆盖当前 Scene
+   present(destination, animated: true, completion: nil)
+   ```
+   
+3. **Unwind Segue**
+   
+   ```swift
+   // 返回到之前的 Scene
+   @IBAction func unwindToPrevious(segue: UIStoryboardSegue) {
+       // 处理返回逻辑
+   }
+   ```
+
+#### Segue 的工作流程
+```swift
+// 1. 触发 Segue（用户点击按钮）
+@IBAction func loginButtonTapped(_ sender: UIButton) {
+    performSegue(withIdentifier: "showHome", sender: self)
+}
+
+// 2. 准备转场数据
+override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+    if segue.identifier == "showHome" {
+        let homeVC = segue.destination as! HomeViewController
+        homeVC.user = currentUser
+    }
+}
+
+// 3. 执行转场动画（系统自动处理）
+```
+
+### 三、Scene 和 Segue 的协同工作
+
+#### 实际应用示例
+假设我们有一个登录应用：
+
+1. **Scene 1**: LoginViewController
+2. **Scene 2**: HomeViewController  
+3. **Segue**: 从登录按钮连接到主页的 "Show" Segue
+
+```swift
+// 在 Storyboard 中：
+// - 创建两个 Scene
+// - 从登录按钮拖拽到 HomeViewController，选择 "Show"
+// - 设置 Segue Identifier 为 "showHome"
+
+// 在代码中：
+class LoginViewController: UIViewController {
+    @IBAction func loginSuccessful() {
+        // 触发 Segue
+        performSegue(withIdentifier: "showHome", sender: self)
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "showHome" {
+            let homeVC = segue.destination as! HomeViewController
+            homeVC.welcomeMessage = "欢迎回来！"
+        }
+    }
+}
+```
+
+### 四、在 Xcode 中的实际操作
+
+#### 创建 Scene
+1. 打开 Storyboard 文件
+2. 从 Object Library 拖拽 View Controller
+3. 设置 Custom Class 和 Storyboard ID
+
+#### 创建 Segue
+1. 按住 Control 键
+2. 从按钮/视图拖拽到目标 Scene
+3. 选择 Segue 类型
+4. 设置 Identifier（重要！）
+
+#### 设置 Segue 属性
+在 Attributes Inspector 中可设置：
+- **Identifier**: 代码中引用的名称
+- **Kind**: Segue 类型（Show、Present Modally 等）
+- **Presentation**: 呈现样式
+- **Animation**: 转场动画
+
+### 五、最佳实践
+
+#### 命名规范
+```swift
+// Segue Identifier 使用动词开头
+let segueShowProfile = "showProfile"
+let seguePresentSettings = "presentSettings" 
+let segueUnwindToLogin = "unwindToLogin"
+
+// Storyboard ID 使用类名
+let homeVCID = "HomeViewController"
+let profileVCID = "ProfileViewController"
+```
+
+#### 内存管理
+```swift
+// 在目标 Scene 中正确处理数据
+class HomeViewController: UIViewController {
+    var user: User? // 使用可选类型，避免循环引用
+    
+    deinit {
+        // 清理资源
+        print("HomeViewController 被释放")
+    }
+}
+```
+
+#### 错误处理
+```swift
+override func shouldPerformSegue(withIdentifier identifier: String, sender: Any?) -> Bool {
+    if identifier == "showHome" {
+        // 检查是否允许转场
+        return UserManager.isLoggedIn
+    }
+    return true
+}
+```
+
+### 六、总结
+
+**Scene** 和 **Segue** 是 iOS 开发中界面导航的核心概念：
+
+- **Scene** = 一个完整的屏幕界面
+- **Segue** = 界面之间的转场连接
+
+**优势：**
+- 可视化界面流程
+- 减少样板代码
+- 提高开发效率
+- 便于维护和理解应用结构
+
+**适用场景：**
+- 简单的界面导航流程
+- 原型开发
+- 中小型应用
+- 需要快速可视化界面的项目
+
+通过合理使用 Scene 和 Segue，可以构建出结构清晰、易于维护的 iOS 应用界面架构。
+
+
+
+## `storyboard`、`xib`、`nib` - `storyboard` - `segue`之`Show`、`Show Detail`、`Present Modally`、`Present As Popover`
+
+### 一、四种 Segue 类型对比总览
+
+| Segue 类型             | 适用场景         | 显示方式           | 典型用途            | 对应的代码实现                                  |
+| ---------------------- | ---------------- | ------------------ | ------------------- | ----------------------------------------------- |
+| **Show**               | 导航栈推进       | Push 新界面        | 普通导航流程        | `pushViewController`                            |
+| **Show Detail**        | 分割视图详情替换 | 替换详情界面       | iPad 分屏应用       | `splitViewController?.showDetailViewController` |
+| **Present Modally**    | 模态呈现         | 覆盖当前界面       | 临时任务/对话框     | `presentViewController`                         |
+| **Present As Popover** | 浮动小窗         | 箭头指向的浮动窗口 | 上下文菜单/工具提示 | `modalPresentationStyle = .popover`             |
+
+### 二、Show Segue（推进式导航）
+
+#### 核心特点
+```swift
+// 相当于代码：
+navigationController?.pushViewController(destinationVC, animated: true)
+```
+
+#### 使用场景
+- 在 **UINavigationController** 导航栈中前进
+- 标准层级导航（如：列表 → 详情）
+
+#### 实际案例
+```swift
+// Storyboard 中：
+// 从按钮拖拽到目标VC，选择 "Show"
+
+// 代码等效：
+func showDetail() {
+    let detailVC = storyboard?.instantiateViewController(withIdentifier: "DetailVC")
+    navigationController?.pushViewController(detailVC!, animated: true)
+}
+```
+
+#### 注意事项
+- 必须嵌入在 **UINavigationController** 中
+- 自动生成返回按钮
+- 新VC会压入导航栈
+
+### 三、Show Detail Segue（详情替换）
+
+#### 核心特点
+```swift
+// 相当于代码：
+splitViewController?.showDetailViewController(destinationVC, sender: self)
+```
+
+#### 使用场景
+- 专为 **UISplitViewController** 设计
+- iPad 分屏应用的右侧详情区更新
+- iPhone 上行为会退化为 Push（如果有导航控制器）
+
+#### 实际案例
+```swift
+// Master-Detail 模板中的典型用法：
+// 点击主列表项时，替换右侧详情视图
+
+// 代码等效：
+if let split = splitViewController {
+    let controllers = split.viewControllers
+    let navController = controllers[controllers.count-1] as! UINavigationController
+    navController.viewControllers = [detailVC]
+}
+```
+
+#### 注意事项
+- 只在 Split View 中才有特殊行为
+- 在 iPhone 单屏模式下会退化为 Push
+- 不会保留导航历史
+
+### 四、Present Modally（模态呈现）
+
+#### 核心特点
+```swift
+// 相当于代码：
+present(destinationVC, animated: true, completion: nil)
+```
+
+#### 使用场景
+- 临时中断当前流程（如登录框）
+- 需要用户立即响应的操作
+- 全屏内容展示
+
+#### 配置选项
+在 Attributes Inspector 中可以设置：
+- **Presentation Style**：
+  - Full Screen（默认）
+  - Page Sheet
+  - Form Sheet
+  - Current Context
+- **Transition Style**：
+  - Cover Vertical（默认）
+  - Flip Horizontal
+  - Cross Dissolve
+
+#### 实际案例
+```swift
+// Storyboard 中：
+// 从按钮拖拽到目标VC，选择 "Present Modally"
+
+// 代码等效：
+let loginVC = storyboard?.instantiateViewController(withIdentifier: "LoginVC")
+loginVC?.modalPresentationStyle = .fullScreen
+present(loginVC!, animated: true)
+```
+
+#### 注意事项
+- 会阻断主操作流程
+- 需要手动处理 dismiss
+- 在 iPad 上建议使用 Popover 替代全屏模态
+
+### 五、Present As Popover（浮动窗口）
+
+#### 核心特点
+```swift
+// 相当于代码：
+destinationVC.modalPresentationStyle = .popover
+destinationVC.popoverPresentationController?.sourceView = sender as? UIView
+present(destinationVC, animated: true)
+```
+
+#### 使用场景
+- iPad 上的上下文菜单
+- 工具提示
+- 临时选项面板
+
+#### 配置要点
+在 Attributes Inspector 中设置：
+- **Anchor**：箭头指向的控件
+- **Direction**：弹出方向（Any/Left/Right/Up/Down）
+- **Passthrough**：背景是否可交互
+
+#### 实际案例
+```swift
+// Storyboard 中：
+// 从按钮拖拽到目标VC，选择 "Present As Popover"
+
+// 代码等效：
+@IBAction func showPopover(_ sender: UIButton) {
+    let popVC = storyboard?.instantiateViewController(withIdentifier: "PopoverVC")
+    popVC?.modalPresentationStyle = .popover
+    popVC?.popoverPresentationController?.sourceView = sender
+    popVC?.popoverPresentationController?.sourceRect = sender.bounds
+    present(popVC!, animated: true)
+}
+```
+
+#### 注意事项
+- **在 iPhone 上会退化为全屏模态**（除非使用 adaptive presentations）
+- 需要设置 sourceView 或 barButtonItem
+- 点击外部区域会自动 dismiss
+
+### 六、选择 Segue 类型的决策流程
+
+```mermaid
+graph TD
+    A[需要新界面?] --> B{是否临时中断}
+    B -->|是| C{是否iPad}
+    C -->|是| D[Present As Popover]
+    C -->|否| E[Present Modally]
+    B -->|否| F{是否SplitView详情}
+    F -->|是| G[Show Detail]
+    F -->|否| H[Show]
+```
+
+### 七、高级技巧与常见问题
+
+#### 1. Show 与 Push 的区别
+- **Show** 是自适应 segue：
+  - 在 NavigationController 中表现为 Push
+  - 在普通 VC 中表现为 Present
+- **Push** 是明确指定导航栈操作
+
+#### 2. iPad 多任务适配
+```swift
+// 检查当前设备环境
+override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+    if segue.identifier == "showDetail" {
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            // iPad 特定处理
+        } else {
+            // iPhone 处理
+        }
+    }
+}
+```
+
+#### 3. 模态转场自定义
+```swift
+// 自定义动画
+class CustomSegue: UIStoryboardSegue {
+    override func perform() {
+        let src = source
+        let dst = destination
+        
+        src.view.addSubview(dst.view)
+        dst.view.transform = CGAffineTransform(scaleX: 0.1, y: 0.1)
+        
+        UIView.animate(withDuration: 0.5, animations: {
+            dst.view.transform = .identity
+        }) { _ in
+            src.present(dst, animated: false)
+        }
+    }
+}
+```
+
+#### 4. 常见错误解决
+**问题：Show 不工作**
+
+- 检查是否嵌入了 NavigationController
+- 验证目标 VC 是否正确设置
+
+**问题：Popover 在 iPhone 全屏**
+- 这是预期行为，考虑使用 adaptive presentation：
+  ```swift
+  if let popover = vc.popoverPresentationController {
+      popover.delegate = self // 实现 adaptivePresentationStyle
+  }
+  ```
+
+**问题：模态界面无法 dismiss**
+- 确保调用了正确的 dismiss 方法：
+  ```swift
+  // 在呈现的 VC 中：
+  dismiss(animated: true)
+  
+  // 或者在呈现者中：
+  presentedViewController?.dismiss(animated: true)
+  ```
+
+通过理解这些 Segue 类型的区别和适用场景，你可以更精准地设计 iOS 应用的导航流程。
+
+
+
+## `storyboard`、`xib`、`nib` - `storyboard` - `scene`、`segue`使用
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-storyboard)
+
+步骤如下：
+
+1. 删除 `storyboard` 中默认的 `Scene（View Controller Scene）`
+
+2. 在 `storyboard` 中创建三个 `Scene`，`First Controller Scene`、`Second Controller Scene`、`Third Controller Scene`
+
+   - 选中 `Scene` 中的 `View Controller` 并分别重命名为 `First Controller`、`Second Controller`、`Third Controller`，重命名后 `Scene` 会自动重命名为 `First Controller Scene`、`Second Controller Scene`、`Third Controller Scene`。
+
+3. 在 `First Controller Scene` 中创建两个显示类型的 `Segue`，第一个 `Identifier` 为 `show-second`、第二个 `Identifier` 为 `show-third`
+
+   - 在 `Interface Builder` 中选中 `First Controller` 上面的 `View Controller` 按钮 ![image-20250922173153331](image-20250922173153331.png)，按住 `ctrl` 键拖拽到 `Interface Builder` 中的 `Second Controller` 中，此时弹出 `Manual Segue` 框并选择 `Show` 和设置 `Identifier` 为 `show-second`，`Kind` 为 `Present Modally`，`Presentation` 为 `Full Screen`，`Transition` 为 `Same As Destination`。
+   - 第二个 `Segue` 的创建和上面相同。
+
+4. 在 `First Controller Scene` 中创建两个按钮分别用于调用 `Segue show-second` 和 `show-third`
+
+   ```objc
+   // 显示 second view controller
+   - (IBAction)onClickedShowSecond:(id)sender {
+       // 调用 segue 显示 second view controller
+       [self performSegueWithIdentifier:@"show-second" sender:nil];
+   }
+   
+   // 显示 third view controller
+   - (IBAction)onClickedShowThird:(id)sender {
+       //  调用 segue 显示 third view controller
+       [self performSegueWithIdentifier:@"show-third" sender:nil];
+   }
+   ```
+
+   
+
+5. 在 `First Controller Scene` 对应的 `View Controller .m` 实现代码文件中添加 `myUnwindSegue` 回调函数，当在 `Interface Builder` 中选中 `Scene` > `Exit` > `Show the Connection inspector` 功能时 `Interface Builder` 会自动加载此函数到 `Show the Connection inspector` 列表中以提供绑定。
+
+   ```objc
+   // Unwind Segue 时回调函数
+   - (IBAction) myUnwindSegue:(UIStoryboardSegue *)unwindSegue {
+       // unwindSegue.identifier 是 unwind segue 的 identifier
+       // unwindSegue.sourceViewController 是返回前 View Controller 的实例以判断 unwind segue 从哪里返回
+       NSLog(@"unwindIdentifier=%@,sourceViewController=%@", unwindSegue.identifier, [unwindSegue.sourceViewController class]);
+   }
+   ```
+
+   
+
+6. 分别为 `Second Controller Scene` 和 `Third Controller Scene` 添加 `unwind Segue`，`Identifier` 为 `unwind`
+
+   - 选中 `Second Controller Scene` 并切换到 `Show the Connection inspector Tab`，拖拽 `myUnwindSegue` 到当前 `Scene Interface Builder` 中的 `Exit` 中，此时在弹出框中选择 `Manual` 并设置 `Unwind Segue Identifier` 为 `unwind`。
+   - `Third Controller Scene` 类同操作。
+
+7. 分别在 `Second Controller Scene` 和 `Third Controller Scene` 返回按钮中调用 `Unwind Segue`
+
+   ```objc
+   - (IBAction)onClickedBack:(id)sender {
+       // 调用 unwind segue 以销毁当前 View Controller
+       [self performSegueWithIdentifier:@"unwind" sender:self];
+   }
+   
+   ```
+
+
+
+## `storyboard`、`xib`、`nib` - `storyboard` - 使用
 
 ### 编辑现有的 `Main.storyboard`
 
-新建 `objective-c App` 项目后，默认会创建一个名为 `Main` 的 `storyboard`，此 `storyboard` 默认绑定 `ViewController` 类作为其 `Class`（打开 `storyboard`，选中 `storyboard` 左边导航栏中的 `View Controller Scene`，右边导航栏切换到 `Show the identity inspector Tab`，在此面板中 `Class` 查看 `storyboard` 绑定的 `UIViewController`）。
+新建 `objective-c App` 项目后，默认会创建一个名为 `Main` 的 `storyboard`，此 `storyboard View Controller Scene` 默认绑定 `ViewController` 类作为其 `Class`（打开 `storyboard`，选中 `storyboard` 左边导航栏中的 `View Controller Scene`，右边导航栏切换到 `Show the identity inspector Tab`，在此面板中 `Class` 查看 `storyboard` 绑定的 `UIViewController`）。
 
-向 `storyboard` 中添加控件：打开 `Main.storyboard`，点击工具栏中的 `+` 号弹出控件选择器，输入 `label` 搜索 `Label` 控件并拖拽到 `Main.storyboard` 中即可完成 `Label` 控件的添加。
+向 `storyboard View Controller Scene` 添加控件：打开 `Main.storyboard`，点击工具栏中的 `+` 号弹出控件选择器，输入 `label` 搜索 `Label` 控件并拖拽到 `Main.storyboard` 中即可完成 `Label` 控件的添加。
 
-`storyboard` 中的控件绑定 `Referencing outlet` 到代码中：使用工具栏右上角 `Add Editor on Right` 功能打开一个代码编辑器分屏，在新的分屏中打开 `ViewController.h` 头文件，选中 `storyboard` 中的 `Label` 控件并按住 `ctrl` 键，使用鼠标拖拽 `Label` 控件到 `ViewController.h` 代码中，此时会弹出 `Referencing outlet` 编辑框，在 `Name` 中填写 `myLabel`，`Connection` 选择 `Outlet`（`ViewController.h` 中会自动生成 `@property (weak, nonatomic) IBOutlet UILabel *myLabel;` 的代码）。`Button` 控件则大同小异，添加点击事件回调时 `Connection` 选择 `Action`（`ViewController.h` 中会自动生成 `- (IBAction)onClicked:(id)sender;` 的代码）。最后在 `ViewController.m` 中实现按钮点击事件回调函数如下：
+`storyboard View Controller Scene` 中的控件绑定 `Referencing outlet` 到代码中：使用工具栏右上角 `Add Editor on Right` 功能打开一个代码编辑器分屏，在新的分屏中打开 `ViewController.h` 头文件，选中 `storyboard` 中的 `Label` 控件并按住 `ctrl` 键，使用鼠标拖拽 `Label` 控件到 `ViewController.h` 代码中，此时会弹出 `Referencing outlet` 编辑框，在 `Name` 中填写 `myLabel`，`Connection` 选择 `Outlet`（`ViewController.h` 中会自动生成 `@property (weak, nonatomic) IBOutlet UILabel *myLabel;` 的代码）。`Button` 控件则大同小异，添加点击事件回调时 `Connection` 选择 `Action`（`ViewController.h` 中会自动生成 `- (IBAction)onClicked:(id)sender;` 的代码）。最后在 `ViewController.m` 中实现按钮点击事件回调函数如下：
+
+>参考链接：https://jingyan.baidu.com/article/a681b0de5a64dc3b184346da.html
 
 ```objective-c
 - (IBAction)onClicked:(id)sender {
@@ -4506,7 +5054,7 @@ VStack {
 
 ## 布局 - `AutoLayout`
 
-> 提示：编写约束比较繁琐，应该使用 `Masonry` 协助。
+> 提示：使用 `Interface Builder` 设置和编辑 `Constraint` 比较方便，或者使用 `NSLayoutAnchor` 新方法设置 `Constraint`。
 
 ### 一句话概括
 
@@ -4845,6 +5393,8 @@ NSLayoutConstraint *leftConstraint = [NSLayoutConstraint constraintWithItem:myVi
 通过单击 `xib` 文件打开 `Interface Builder`，选中需要添加约束的组件，在 `Interface Builder` 右下角点击![image-20250903221112840](image-20250903221112840.png)按钮（`Add New Constraints`)弹出添加约束的窗口，按照提示添加约束即可。
 
 ## 布局 - `Masonry`
+
+>提示：项目中不怎么使用此库，使用 `Interface Builder` 设置和编辑 `Constraint` 比较方便，或者使用 `NSLayoutAnchor` 新方法设置 `Constraint`。
 
 ### Masonry 是什么？
 
@@ -5190,27 +5740,6 @@ UIStackView 极大地简化了复杂布局的实现，特别是在需要动态�
 
 
 
-### 示例 - 按比例填充
-
->说明：`UIStackView+UIStackViewDistributionFillProportionally` 按照设定的比例填充 `UIStackView` 布局。
->
->详细用法请参考本站 [示例1](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/iOS-layout) 或者 [示例2](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-uicollectionviewcontroller)
-
-```objc
-- (void)viewDidLoad {
-    [super viewDidLoad];
-    // Do any additional setup after loading the view from its nib.
-    
-    // 图片和按钮的高比例为 3:1
-    self.button.translatesAutoresizingMaskIntoConstraints = NO;
-    [NSLayoutConstraint activateConstraints:@[
-        [self.imageView.heightAnchor constraintEqualToAnchor:self.button.heightAnchor multiplier:3],
-    ]];
-}
-```
-
-
-
 ## `bundle`路径 - `bundlePath`和`resourcePath`区别
 
 > 参考链接：https://stackoverflow.com/questions/1949992/working-with-paths-from-nsbundle-mainbundle-resourcepath
@@ -5268,3 +5797,123 @@ UIImage *image = [UIImage imageWithContentsOfFile:imagePath];
 ```
 
 总结：在大多数 iOS App 中，`bundlePath` 和 `resourcePath` 返回的路径相同，但概念上 `bundlePath` 范围更广。推荐使用 `pathForResource:ofType:` 等方法来避免路径拼接错误。
+
+
+
+## 登录界面跳转到主界面
+
+在iOS应用中实现登录成功后跳转到主界面，通常有以下几种方法：
+
+### 方法一：使用NavigationController
+
+```objective-c
+// LoginViewController.m
+
+- (void)loginSuccess {
+    // 登录成功后的处理
+    
+    // 获取Main.storyboard
+    UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
+    
+    // 实例化主界面ViewController
+    UIViewController *mainVC = [storyboard instantiateViewControllerWithIdentifier:@"MainViewController"];
+    
+    // 获取NavigationController并设置主界面为根视图
+    UINavigationController *navController = self.navigationController;
+    [navController setViewControllers:@[mainVC] animated:YES];
+}
+```
+
+### 方法二：使用Window的rootViewController切换
+
+```objective-c
+// LoginViewController.m
+
+- (void)loginSuccess {
+    // 登录成功后的处理
+    
+    // 获取Main.storyboard
+    UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
+    
+    // 实例化主界面ViewController
+    UIViewController *mainVC = [storyboard instantiateViewControllerWithIdentifier:@"MainViewController"];
+    
+    // 切换window的根视图控制器
+    UIWindow *window = [[[UIApplication sharedApplication] delegate] window];
+    [UIView transitionWithView:window
+                      duration:0.3
+                       options:UIViewAnimationOptionTransitionCrossDissolve
+                    animations:^{
+                        window.rootViewController = mainVC;
+                    }
+                    completion:nil];
+}
+```
+
+### 方法三：使用Modal方式呈现（不推荐用于主界面切换）
+
+```objective-c
+// LoginViewController.m
+
+- (void)loginSuccess {
+    // 登录成功后的处理
+    
+    // 获取Main.storyboard
+    UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
+    
+    // 实例化主界面ViewController
+    UIViewController *mainVC = [storyboard instantiateViewControllerWithIdentifier:@"MainViewController"];
+    
+    // 模态呈现主界面
+    [self presentViewController:mainVC animated:YES completion:nil];
+}
+```
+
+### 完整示例（包含登录逻辑）
+
+```objective-c
+// LoginViewController.m
+
+- (IBAction)loginButtonTapped:(id)sender {
+    NSString *username = self.usernameTextField.text;
+    NSString *password = self.passwordTextField.text;
+    
+    // 简单的登录验证
+    if ([username isEqualToString:@"admin"] && [password isEqualToString:@"123456"]) {
+        [self loginSuccess];
+    } else {
+        // 登录失败处理
+        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"登录失败"
+                                                                       message:@"用户名或密码错误"
+                                                                preferredStyle:UIAlertControllerStyleAlert];
+        [alert addAction:[UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleDefault handler:nil]];
+        [self presentViewController:alert animated:YES completion:nil];
+    }
+}
+
+- (void)loginSuccess {
+    // 保存登录状态
+    [[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"isLoggedIn"];
+    [[NSUserDefaults standardUserDefaults] synchronize];
+    
+    // 切换到主界面
+    UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
+    UIViewController *mainVC = [storyboard instantiateViewControllerWithIdentifier:@"MainViewController"];
+    
+    // 方法1: 使用NavigationController
+    [self.navigationController setViewControllers:@[mainVC] animated:YES];
+    
+    // 或者方法2: 切换window的根视图控制器
+    // UIWindow *window = [[[UIApplication sharedApplication] delegate] window];
+    // window.rootViewController = mainVC;
+}
+```
+
+### 注意事项
+
+1. 确保在Storyboard中为主界面ViewController设置了正确的Storyboard ID（如"MainViewController"）
+2. 对于更复杂的应用，可以考虑使用TabBarController作为主界面
+3. 实际项目中，登录验证应该通过安全的网络请求完成，而不是简单的本地验证
+4. 考虑添加加载指示器，因为网络请求可能需要时间
+
+以上代码提供了几种常见的登录成功后跳转主界面的实现方式，你可以根据项目需求选择最适合的方法。
