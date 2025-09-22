@@ -82,4 +82,29 @@ public class ConfigKafkaListener {
             this.testAlterPartitionsOnlineConcurrentCounter.decrementAndGet();
         }
     }
+
+    // 用于协助测试事务
+    @KafkaListener(topics = Constant.TestAssistTransactionTopic1,
+            groupId = Constant.TestAssistTransactionTopic1,
+            concurrency = "128",
+            containerFactory = "defaultKafkaListenerContainerFactory")
+    public void receiveMessageFromTestAssistTransactionTopic1(List<String> messages) {
+        redisTemplate.opsForValue().increment(Constant.TestAssistTransactionKeyCounterTopic1, messages.size());
+    }
+
+    @KafkaListener(topics = Constant.TestAssistTransactionTopic2,
+            groupId = Constant.TestAssistTransactionTopic2,
+            concurrency = "128",
+            containerFactory = "defaultKafkaListenerContainerFactory")
+    public void receiveMessageFromTestAssistTransactionTopic2(List<String> messages) {
+        redisTemplate.opsForValue().increment(Constant.TestAssistTransactionKeyCounterTopic2, messages.size());
+    }
+
+    @KafkaListener(topics = Constant.TestAssistTransactionTopic3,
+            groupId = Constant.TestAssistTransactionTopic3,
+            concurrency = "128",
+            containerFactory = "defaultKafkaListenerContainerFactory")
+    public void receiveMessageFromTestAssistTransactionTopic3(List<String> messages) {
+        redisTemplate.opsForValue().increment(Constant.TestAssistTransactionKeyCounterTopic3, messages.size());
+    }
 }

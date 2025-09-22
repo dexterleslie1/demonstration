@@ -2329,6 +2329,78 @@ crond-service-1  | 2025-07-19 10:12:04.504  INFO 7 --- [ntainer#1-1-C-1] c.f.dem
 
 
 
+### 各个生产者配置独立
+
+>说明：配置支持事务和不支持事务的生产者。
+
+```java
+package com.future.demo.config;
+
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.serialization.StringSerializer;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.kafka.core.DefaultKafkaProducerFactory;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.core.ProducerFactory;
+
+import java.util.HashMap;
+import java.util.Map;
+
+@Configuration
+public class ConfigKafkaProducer {
+
+    @Value("${spring.kafka.bootstrap-servers}")
+    private String boostrapServers;
+
+    // 有事务
+    @Bean
+    public ProducerFactory<String, String> producerFactoryWithTransaction() {
+        Map<String, Object> configProps = new HashMap<>();
+        configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, boostrapServers);
+        configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        // 发送消息启用事务
+        configProps.put(ProducerConfig.TRANSACTIONAL_ID_CONFIG, "tx-");
+        return new DefaultKafkaProducerFactory<>(configProps);
+    }
+
+    // 有事务
+    @Bean
+    public KafkaTemplate<String, String> kafkaTemplateWithTransaction() {
+        return new KafkaTemplate<>(producerFactoryWithTransaction());
+    }
+
+    // 非事务
+    @Bean
+    public ProducerFactory<String, String> producerFactoryWithoutTransaction() {
+        Map<String, Object> configProps = new HashMap<>();
+        configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, boostrapServers);
+        configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        return new DefaultKafkaProducerFactory<>(configProps);
+    }
+
+    // 非事务
+    @Bean
+    public KafkaTemplate<String, String> kafkaTemplateWithoutTransaction() {
+        return new KafkaTemplate<>(producerFactoryWithoutTransaction());
+    }
+}
+```
+
+分别引用支持事务和不支持事务的生产者
+
+```java
+@Resource
+private KafkaTemplate<String, String> kafkaTemplateWithoutTransaction;
+@Resource
+private KafkaTemplate<String, String> kafkaTemplateWithTransaction;
+```
+
+
+
 ### 高效率发送消息
 
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-kafka/demo-kafka-benchmark)
@@ -2772,4 +2844,526 @@ Topic: topic-test-alter-partitions-online       TopicId: td4Zf-iUT12cU19_wc_bUA 
 2025-08-05 12:59:58.458  INFO 179502 --- [ainer#2-103-C-1] c.f.demo.config.ConfigKafkaListener      : concurrent=8,size=1024,total=218020
 2025-08-05 12:59:58.478  INFO 179502 --- [tainer#2-99-C-1] c.f.demo.config.ConfigKafkaListener      : concurrent=8,size=1024,total=219044
 ```
+
+
+
+## 事务 - 概念
+
+### 事务基本概念
+
+Kafka 事务提供了跨多个分区和主题的原子性操作保证，确保生产消息和消费消息的操作要么全部成功，要么全部失败。
+
+### 核心架构组件
+
+#### 1. 事务协调器（Transaction Coordinator）
+- 每个 Broker 都运行一个事务协调器实例
+- 负责管理事务的整个生命周期
+- 维护事务状态信息
+
+#### 2. 事务日志（Transaction Log）
+- 内部主题 `__transaction_state`（默认50分区）
+- 存储所有事务的元数据和状态信息
+- 提供事务的持久化保证
+
+#### 3. 事务标识符（TransactionalId）
+- 唯一标识生产者实例
+- 用于故障恢复时识别生产者
+- 格式要求：字符串，集群内唯一
+
+### 事务协议流程
+
+#### 1. 事务初始化
+```java
+// 生产者查找事务协调器
+FindCoordinatorRequest → 返回TransactionCoordinator地址
+
+// 注册TransactionalId
+InitProducerIdRequest → 返回ProducerId和Epoch
+```
+
+#### 2. 事务开始
+- 生产者向协调器发送 `AddPartitionsToTxnRequest`
+- 协调器记录事务涉及的分区信息
+- 开始记录事务相关的消息
+
+#### 3. 消息发送阶段
+- 生产者发送消息到各个分区
+- 每条消息都包含事务元数据：
+  - Producer ID
+  - Producer Epoch  
+  - Sequence Number
+  - Transactional ID（间接）
+
+#### 4. 事务提交/中止
+```java
+// 提交流程
+1. 生产者发送 EndTxnRequest(commit=true)
+2. 协调器将事务状态改为 "Prepare Commit"
+3. 协调器向所有参与分区写入事务提交标记
+4. 协调器将事务状态改为 "Complete Commit"
+5. 协调器响应生产者提交完成
+
+// 中止流程
+1. 生产者发送 EndTxnRequest(commit=false)  
+2. 协调器将事务状态改为 "Prepare Abort"
+3. 协调器向所有参与分区写入事务中止标记
+4. 协调器将事务状态改为 "Complete Abort"
+5. 协调器响应生产者中止完成
+```
+
+### 关键配置参数
+
+#### 生产者必需配置
+```properties
+# 启用幂等性（事务的前提）
+enable.idempotence=true
+
+# 确认机制
+acks=all
+
+# 飞行请求数（必须为1）
+max.in.flight.requests.per.connection=1
+
+# 事务标识符
+transactional.id=your-transactional-id
+
+# 事务超时时间（毫秒）
+transaction.timeout.ms=60000
+```
+
+#### 消费者隔离级别配置
+```properties
+# 读取已提交的消息（默认）
+isolation.level=read_committed
+
+# 读取所有消息（包括未提交的）
+isolation.level=read_uncommitted
+```
+
+### 事务消息格式
+
+#### 事务控制消息
+- **COMMIT**：标识事务提交
+- **ABORT**：标识事务中止  
+- **控制消息**：写入每个参与分区的日志中
+
+#### 消息批次结构
+```
+Batch Header:
+  - Producer ID: 12345
+  - Producer Epoch: 1
+  - First Sequence: 0
+  - Last Sequence: 2
+  - Transactional: true
+
+Messages:
+  - Message 1: Sequence=0
+  - Message 2: Sequence=1  
+  - Control Message: COMMIT/ABORT
+```
+
+### 故障恢复机制
+
+#### 生产者故障恢复
+```java
+// 故障恢复流程
+1. 新生产者实例使用相同的TransactionalId启动
+2. 向协调器发送InitProducerIdRequest
+3. 协调器检查未完成的事务：
+   - 如果有进行中的事务，递增Epoch
+   - 恢复或中止之前的事务
+4. 返回新的ProducerId和Epoch
+```
+
+#### 协调器故障恢复
+- 协调器状态存储在 `__transaction_state` 主题中
+- 新的协调器实例从事务日志恢复状态
+- 继续处理未完成的事务
+
+### 事务隔离级别
+
+#### read_committed（读已提交）
+- 只返回已成功提交的消息
+- 过滤掉：
+  - 未提交的事务消息
+  - 中止的事务消息
+  - 控制消息（COMMIT/ABORT）
+
+#### read_uncommitted（读未提交）
+- 返回所有消息（包括未提交的）
+- 性能更好，但可能读到脏数据
+
+### 事务语义保证
+
+#### 原子性保证
+- **全部成功**：事务中所有消息都成功写入
+- **全部失败**：事务中任何失败导致所有消息回滚
+- **跨分区原子性**：多个分区的写入操作原子性
+
+#### 持久性保证
+- 已提交的事务消息不会丢失
+- 遵循Kafka的持久化保证机制
+
+#### 顺序性保证
+- 单个分区内消息顺序保持不变
+- 事务不影响消息的先后顺序
+
+### 性能考虑
+
+#### 性能影响因素
+1. **额外网络往返**：协调器通信开销
+2. **日志写入**：控制消息的额外写入
+3. **消费者过滤**：read_committed 需要过滤未提交消息
+
+#### 优化建议
+```properties
+# 调整批量大小
+batch.size=16384
+
+# 调整 linger 时间  
+linger.ms=5
+
+# 适当增加事务超时
+transaction.timeout.ms=120000
+```
+
+### 使用限制和约束
+
+#### 支持的操作
+- ✅ 跨多个主题的消息生产
+- ✅ 跨多个分区的消息生产  
+- ✅ 消费-处理-生产模式（仅Kafka流式处理）
+
+#### 不支持的场景
+- ❌ 跨多个Kafka集群的事务
+- ❌ 与外部系统（如数据库）的分布式事务
+- ❌ 部分事务回滚（只能全部回滚）
+
+### 监控和管理
+
+#### 关键监控指标
+```bash
+# 事务相关指标
+kafka-transaction:commit-rate
+kafka-transaction:abort-rate  
+kafka-transaction:timeout-rate
+kafka-transaction:avg-commit-latency
+
+# 协调器指标
+transaction-coordinator:active-transactions
+transaction-coordinator:load-factor
+```
+
+#### 管理命令
+```bash
+# 查看事务状态
+kafka-transactions.sh --bootstrap-server localhost:9092 --list
+
+# 终止事务
+kafka-transactions.sh --bootstrap-server localhost:9092 --abort --transactional-id tx-1
+```
+
+### 典型应用场景
+
+#### 场景1：跨分区原子写入
+```java
+// 保证两个分区的写入原子性
+producer.beginTransaction();
+producer.send(record1); // 分区1
+producer.send(record2); // 分区2  
+producer.commitTransaction();
+```
+
+#### 场景2：精确一次处理
+```java
+// 消费-处理-生产模式（Kafka Streams）
+KStream<String, String> stream = builder.stream("input-topic");
+stream.mapValues(value -> process(value))
+      .to("output-topic");
+```
+
+### 故障处理策略
+
+#### 事务超时处理
+- 协调器自动中止超时事务
+- 生产者需要处理 `TransactionTimeoutException`
+
+#### 网络分区处理
+- 协调器使用心跳检测生产者存活状态
+- 长时间无心跳会中止事务
+
+#### 重复事务ID处理
+- 协调器使用Epoch机制防止僵尸生产者
+- 新实例会获取更高的Epoch值
+
+Kafka事务提供了强大的消息一致性保障，但需要仔细考虑性能影响和使用场景，在需要严格的消息原子性保证时是非常有价值的功能。
+
+
+
+## 事务 - 原子性测试
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-kafka/demo-kafka-benchmark)
+
+`Kafka` 服务器事务配置：
+
+```yaml
+  kafka1:
+    image: confluentinc/cp-kafka:7.3.0
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      # 映射 JMX 端口到主机
+      # - "9997:9997"
+    environment:
+      TZ: Asia/Shanghai
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://${kafka_advertised_listeners}:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      # 设置 Kafka 的 JVM 堆内存
+      KAFKA_HEAP_OPTS: "-Xms1g -Xmx1g"
+      # 配置 JMX 端口和认证，配置了 jmx 端口才能够被外部工具监控
+      # KAFKA_JMX_OPTS: "-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.local.only=false -Dcom.sun.management.jmxremote.port=9997 -Dcom.sun.management.jmxremote.rmi.port=9997"
+      # 禁用自动创建 Topic，否则 Spring Boot 会自动创建 partitions=0 的 topic
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      # ------------------- 事务配置 -------------------
+      # 需要下面配置，否则 Kafka 报告下面错误
+      # Error processing create topic request CreatableTopic(name='__transaction_state', numPartitions=50, replicationFactor=3, assignments=[], configs=[CreateableTopicConfig(name='compression.type', value='uncompressed'), CreateableTopicConfig(name='cleanup.policy', value='compact'), CreateableTopicConfig(name='min.insync.replicas', value='2'), CreateableTopicConfig(name='segment.bytes', value='104857600'), CreateableTopicConfig(name='unclean.leader.election.enable', value='false')]) (kafka.server.ZkAdminManager)
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      # ------------------- 日志清理配置 -------------------
+      # 清理策略：启用 delete（按时间/大小删除）
+      KAFKA_LOG_CLEANUP_POLICY: "delete"
+      # 单个分区最大日志大小：2G（根据磁盘容量调整，如 5GB、20GB）
+      KAFKA_LOG_RETENTION_BYTES: "2147483648"  # 设为 -1 表示不限制大小（仅用时间策略）
+      # 日志段大小：512MB（更小的段可提升清理精度，但增加文件数）
+      KAFKA_LOG_SEGMENT_BYTES: "536870912"  #（原默认 1GB）
+#      # 单个分区最大日志大小：1MB（根据磁盘容量调整，如 5GB、20GB）
+#      KAFKA_LOG_RETENTION_BYTES: "1048576"  # 设为 -1 表示不限制大小（仅用时间策略）
+#      # 日志段大小：256KB（更小的段可提升清理精度，但增加文件数）
+#      KAFKA_LOG_SEGMENT_BYTES: "262144"  #（原默认 1GB）
+```
+
+客户端生产者配置开启事务
+
+```java
+package com.future.demo.config;
+
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.serialization.StringSerializer;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.kafka.core.DefaultKafkaProducerFactory;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.core.ProducerFactory;
+
+import java.util.HashMap;
+import java.util.Map;
+
+@Configuration
+public class ConfigKafkaProducer {
+
+    @Value("${spring.kafka.bootstrap-servers}")
+    private String boostrapServers;
+
+    // 有事务
+    @Bean
+    public ProducerFactory<String, String> producerFactoryWithTransaction() {
+        Map<String, Object> configProps = new HashMap<>();
+        configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, boostrapServers);
+        configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        // 发送消息启用事务
+        configProps.put(ProducerConfig.TRANSACTIONAL_ID_CONFIG, "tx-");
+        return new DefaultKafkaProducerFactory<>(configProps);
+    }
+
+    // 有事务
+    @Bean
+    public KafkaTemplate<String, String> kafkaTemplateWithTransaction() {
+        return new KafkaTemplate<>(producerFactoryWithTransaction());
+    }
+}
+```
+
+消费者配置只消费已提交的消息，否则消息可能在事务回滚完成前会被消费导致事务失效的假象
+
+```java
+@Bean("defaultConsumerFactory")
+public ConsumerFactory<String, String> defaultConsumerFactory() {
+    Map<String, Object> props = new HashMap<>();
+    // 从application.properties中获取Bootstrap Server（兼容原有配置）
+    props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+    /*props.put(ConsumerConfig.GROUP_ID_CONFIG, "group-topic1"); // 建议为不同主题设置不同Group ID（可选）*/
+    props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+    props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+    // 为Topic2单独设置max-poll-records
+    props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 1024);
+    // 无已提交偏移量（如首次启动）时的消费起始位置
+    props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+    // 只消费已提交的消息，否则消息可能在事务回滚完成前会被消费导致事务失效的假象
+    props.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed");
+    return new DefaultKafkaConsumerFactory<>(props);
+}
+
+@Bean("defaultKafkaListenerContainerFactory")
+public ConcurrentKafkaListenerContainerFactory<String, String> defaultKafkaListenerContainerFactory(
+        @Qualifier("defaultConsumerFactory") ConsumerFactory<String, String> consumerFactory,
+        @Autowired DefaultErrorHandler retryErrorHandler) {
+    ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
+    factory.setConsumerFactory(consumerFactory);
+    factory.setBatchListener(true);
+    factory.setConcurrency(256);
+    factory.setCommonErrorHandler(retryErrorHandler);
+    return factory;
+}
+```
+
+测试
+
+```java
+/**
+ * 测试事务
+ * 提示：需要启动 crond 配合测试
+ */
+@Test
+public void testTransaction() throws InterruptedException {
+    redisTemplate.delete(Arrays.asList(
+            Constant.TestAssistTransactionKeyCounterTopic1,
+            Constant.TestAssistTransactionKeyCounterTopic2,
+            Constant.TestAssistTransactionKeyCounterTopic3));
+
+    try {
+        String uuidStr = UUID.randomUUID().toString();
+        String finalUuidStr = uuidStr;
+        kafkaTemplate.executeInTransaction(t -> {
+            List<ListenableFuture> futureListInternal = new ArrayList<>();
+            try {
+                futureListInternal.add(t.send(Constant.TestAssistTransactionTopic1, finalUuidStr));
+
+                // 模拟 topic2、topic3 消息发送失败情况
+                boolean b = true;
+                if (b) {
+                    throw new BusinessException("测试异常");
+                }
+
+                futureListInternal.add(t.send(Constant.TestAssistTransactionTopic2, finalUuidStr));
+                futureListInternal.add(t.send(Constant.TestAssistTransactionTopic3, finalUuidStr));
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            } finally {
+                if (!futureListInternal.isEmpty()) {
+                    int index = -1;
+                    try {
+                        for (int i = 0; i < futureListInternal.size(); i++) {
+                            index = i;
+                            futureListInternal.get(i).get();
+                        }
+                    } catch (Exception ex) {
+                        log.error("发送Kafka消息失败，原因：{}，出错的 futureList 索引为 {}", ex.getMessage(), index, ex);
+                        throw new RuntimeException(ex);
+                    }
+                }
+            }
+            return null;
+        });
+        Assertions.fail();
+    } catch (Exception ex) {
+        Assertions.assertTrue(ex.getCause() instanceof BusinessException);
+        BusinessException businessException = (BusinessException) ex.getCause();
+        Assertions.assertEquals("测试异常", businessException.getErrorMessage());
+    }
+
+    TimeUnit.SECONDS.sleep(5);
+    String counter1 = redisTemplate.opsForValue().get(Constant.TestAssistTransactionKeyCounterTopic1);
+    String counter2 = redisTemplate.opsForValue().get(Constant.TestAssistTransactionKeyCounterTopic2);
+    String counter3 = redisTemplate.opsForValue().get(Constant.TestAssistTransactionKeyCounterTopic3);
+    Assertions.assertNull(counter1);
+    Assertions.assertNull(counter2);
+    Assertions.assertNull(counter3);
+}
+```
+
+
+
+## 事务 - 性能测试
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-kafka/demo-kafka-benchmark)
+
+编译镜像
+
+```sh
+./build.sh && ./push.sh
+```
+
+复制部署配置
+
+```sh
+ansible-playbook playbook-deployer-config.yml --inventory inventory.ini
+```
+
+部署测试目标
+
+```sh
+ansible-playbook playbook-service-start.yml --inventory inventory.ini
+```
+
+测试目标是否正常
+
+```sh
+# 非事务
+curl http://192.168.1.185/api/v1/testAssistTransactionSendMessageWithoutTransaction
+
+# 事务
+curl http://192.168.1.185/api/v1/testAssistTransactionSendMessageWithTransaction
+```
+
+非事务性能测试：
+
+```sh
+$ wrk -t8 -c2048 -d30s --latency --timeout 60 http://192.168.1.185/api/v1/testAssistTransactionSendMessageWithoutTransaction
+Running 30s test @ http://192.168.1.185/api/v1/testAssistTransactionSendMessageWithoutTransaction
+  8 threads and 2048 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency    37.13ms   15.31ms 142.96ms   73.17%
+    Req/Sec     6.99k   792.88     9.49k    76.35%
+  Latency Distribution
+     50%   34.19ms
+     75%   44.39ms
+     90%   57.59ms
+     99%   86.78ms
+  1666699 requests in 30.09s, 394.19MB read
+Requests/sec:  55382.92
+Transfer/sec:     13.10MB
+```
+
+事务性能测试：
+
+```sh
+$ wrk -t8 -c2048 -d30s --latency --timeout 60 http://192.168.1.185/api/v1/testAssistTransactionSendMessageWithTransaction
+Running 30s test @ http://192.168.1.185/api/v1/testAssistTransactionSendMessageWithTransaction
+  8 threads and 2048 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     3.41s   706.04ms  11.81s    90.93%
+    Req/Sec   106.18    107.86   680.00     89.39%
+  Latency Distribution
+     50%    3.60s 
+     75%    3.70s 
+     90%    3.79s 
+     99%    3.92s 
+  16923 requests in 30.10s, 4.00MB read
+  Non-2xx or 3xx responses: 8
+Requests/sec:    562.23
+Transfer/sec:    136.18KB
+```
+
+销毁测试目标
+
+```sh
+ansible-playbook playbook-service-destroy.yml --inventory inventory.ini
+```
+
+结论：事务并发性能很差，在业务开发中尽量避免使用事务。可以通过写入一条主控消息，通过读扩散的方式间接实现，例如：秒杀下单场景，通过写入一条主控消息，通过消费扩散方式达到数据库、`Cassandra ListByUserId`、`Cassandra ListByMerchantId` 计数器最终一致的效果。
 

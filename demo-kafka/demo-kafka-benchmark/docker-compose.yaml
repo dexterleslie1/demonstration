@@ -52,6 +52,11 @@ services:
       # KAFKA_JMX_OPTS: "-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.local.only=false -Dcom.sun.management.jmxremote.port=9997 -Dcom.sun.management.jmxremote.rmi.port=9997"
       # 禁用自动创建 Topic，否则 Spring Boot 会自动创建 partitions=0 的 topic
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      # ------------------- 事务配置 -------------------
+      # 需要下面配置，否则 Kafka 报告下面错误
+      # Error processing create topic request CreatableTopic(name='__transaction_state', numPartitions=50, replicationFactor=3, assignments=[], configs=[CreateableTopicConfig(name='compression.type', value='uncompressed'), CreateableTopicConfig(name='cleanup.policy', value='compact'), CreateableTopicConfig(name='min.insync.replicas', value='2'), CreateableTopicConfig(name='segment.bytes', value='104857600'), CreateableTopicConfig(name='unclean.leader.election.enable', value='false')]) (kafka.server.ZkAdminManager)
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       # ------------------- 日志清理配置 -------------------
       # 清理策略：启用 delete（按时间/大小删除）
       KAFKA_LOG_CLEANUP_POLICY: "delete"
@@ -83,6 +88,11 @@ services:
 #      # KAFKA_JMX_OPTS: "-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.local.only=false -Dcom.sun.management.jmxremote.port=9997 -Dcom.sun.management.jmxremote.rmi.port=9997"
 #      # 禁用自动创建 Topic，否则 Spring Boot 会自动创建 partitions=0 的 topic
 #      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+#      # ------------------- 事务配置 -------------------
+#      # 需要下面配置，否则 Kafka 报告下面错误
+#      # Error processing create topic request CreatableTopic(name='__transaction_state', numPartitions=50, replicationFactor=3, assignments=[], configs=[CreateableTopicConfig(name='compression.type', value='uncompressed'), CreateableTopicConfig(name='cleanup.policy', value='compact'), CreateableTopicConfig(name='min.insync.replicas', value='2'), CreateableTopicConfig(name='segment.bytes', value='104857600'), CreateableTopicConfig(name='unclean.leader.election.enable', value='false')]) (kafka.server.ZkAdminManager)
+#      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+#      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
 #      # ------------------- 日志清理配置 -------------------
 #      # 清理策略：启用 delete（按时间/大小删除）
 #      KAFKA_LOG_CLEANUP_POLICY: "delete"
@@ -150,6 +160,28 @@ services:
     environment:
       TZ: Asia/Shanghai
     entrypoint: /usr/bin/kafka-topics --create --bootstrap-server kafka1:9092 --replication-factor 1 --partitions 1 --topic topic-test-alter-partitions-online
+  kafka-create-topic-test-assist-transaction-topic-1:
+    image: confluentinc/cp-kafka:7.3.0
+    depends_on:
+      - kafka1
+    environment:
+      TZ: Asia/Shanghai
+    entrypoint: /usr/bin/kafka-topics --create --bootstrap-server kafka1:9092 --replication-factor 1 --partitions 256 --topic test-assist-transaction-topic-1
+  kafka-create-topic-test-assist-transaction-topic-2:
+    image: confluentinc/cp-kafka:7.3.0
+    depends_on:
+      - kafka1
+    environment:
+      TZ: Asia/Shanghai
+    entrypoint: /usr/bin/kafka-topics --create --bootstrap-server kafka1:9092 --replication-factor 1 --partitions 256 --topic test-assist-transaction-topic-2
+  kafka-create-topic-test-assist-transaction-topic-3:
+    image: confluentinc/cp-kafka:7.3.0
+    depends_on:
+      - kafka1
+    environment:
+      TZ: Asia/Shanghai
+    entrypoint: /usr/bin/kafka-topics --create --bootstrap-server kafka1:9092 --replication-factor 1 --partitions 256 --topic test-assist-transaction-topic-3
+
   kafka-manager:
     image: sheepkiller/kafka-manager:latest
     ports:

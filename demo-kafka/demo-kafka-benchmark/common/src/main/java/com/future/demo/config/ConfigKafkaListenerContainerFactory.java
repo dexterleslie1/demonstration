@@ -35,6 +35,8 @@ public class ConfigKafkaListenerContainerFactory {
         props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 1024);
         // 无已提交偏移量（如首次启动）时的消费起始位置
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        // 只消费已提交的消息，否则消息可能在事务回滚完成前会被消费导致事务失效的假象
+        props.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed");
         return new DefaultKafkaConsumerFactory<>(props);
     }
 

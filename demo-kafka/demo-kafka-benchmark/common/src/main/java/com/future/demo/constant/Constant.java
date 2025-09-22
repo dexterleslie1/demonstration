@@ -19,4 +19,14 @@ public class Constant {
     public final static String TopicTestAlterPartitionsOnline = "topic-test-alter-partitions-online";
 
     public final static String KeyConfigOptionAutoOffsetResetCounter = "auto-offset-reset-counter";
+
+    /**
+     * 用于协助测试事务
+     */
+    public final static String TestAssistTransactionTopic1 = "test-assist-transaction-topic-1";
+    public final static String TestAssistTransactionTopic2 = "test-assist-transaction-topic-2";
+    public final static String TestAssistTransactionTopic3 = "test-assist-transaction-topic-3";
+    public final static String TestAssistTransactionKeyCounterTopic1 = "test-assist-transaction-counter-topic-1";
+    public final static String TestAssistTransactionKeyCounterTopic2 = "test-assist-transaction-counter-topic-2";
+    public final static String TestAssistTransactionKeyCounterTopic3 = "test-assist-transaction-counter-topic-3";
 }

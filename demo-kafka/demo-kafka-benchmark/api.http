@@ -12,3 +12,15 @@ GET http://localhost:8080/api/v1/resetConfigOptionAutoOffsetResetCounter
 
 ### 查询 redis 中 Kafka autoOffsetReset 配置项计数器
 GET http://localhost:8080/api/v1/getConfigOptionAutoOffsetResetCounter
+
+### /api/v1/testAssistTransactionSendMessageWithoutTransaction
+GET http://localhost:8080/api/v1/testAssistTransactionSendMessageWithoutTransaction
+
+### /api/v1/testAssistTransactionSendMessageWithTransaction
+GET http://localhost:8080/api/v1/testAssistTransactionSendMessageWithTransaction
+
+#### /api/v1/testAssistTransactionGetCounter
+#GET http://localhost:8080/api/v1/testAssistTransactionGetCounter
+#
+#### /api/v1/testAssistTransactionResetCounter
+#GET http://localhost:8080/api/v1/testAssistTransactionResetCounter
