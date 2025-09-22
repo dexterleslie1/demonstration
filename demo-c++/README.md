@@ -605,5 +605,15 @@ gcc -save-temps main.c -o hello
 
 
 
+## `CLion` - 安装
+
+>使用 `dcli clion install` 命令安装。
+
+## `CLion` - 调试`cmake`项目
+
+
+
+
+
 
 
