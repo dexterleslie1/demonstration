@@ -5,6 +5,7 @@
 - `storyboard` 和 `xib` 文件不能像 `Android Layout xml` 那样直接编辑代码（`XML` 结构复杂，手动编辑很容易导致文件损坏，`Xcode` 无法再识别），只能通过 `Interface Builder` 所见即所得方式比编辑 `storyboard` 和 `xib`。
 - 通常使用 `UIStackView` 和嵌套 `UIStackView` 开发表单（相当于 `Android LinearLayout`）。
 - 通常使用 `AutoLayout` 开发分配剩余空间的布局或者复杂的布局（相当于 `Android Constraint Layout`）。
+- 登录界面切换到主界面使用 `UIWindow rootViewController` 实现，详细用法请参考本站 [链接](/macos/objective-c.html#登录界面跳转到主界面)
 
 
 
@@ -4039,23 +4040,25 @@ UIKit 的功能非常丰富，主要包括：
 
 所以，`UIWindow` 是 UIKit 应用骨架中不可或缺的基石，虽然不直接显示内容，但默默支撑着一切内容的显示和交互。
 
-### 示例 - 手动创建和管理
+### ~~示例 - 手动创建和管理~~
 
-`General` > `Deployment Info` > `Main Interface` 的 `Main.storyboard` 设置为空（新版本 `Xcode` 没有此设置则忽略）。
+>提示：不需要自己维护 `UIWindow` 实例，通过相关 `api` 获取 `UIWindow` 实例。
 
-`Xcode 14.2` 设置 `Build Settings` > `Info.plist Values` > `UIKit Main Storyboard File Base Name` 为空。
+~~`General` > `Deployment Info` > `Main Interface` 的 `Main.storyboard` 设置为空（新版本 `Xcode` 没有此设置则忽略）。~~
 
-删除 `Main.storyboard` 文件
+~~`Xcode 14.2` 设置 `Build Settings` > `Info.plist Values` > `UIKit Main Storyboard File Base Name` 为空。~~
 
-删除 `info.plist` 中 `Application scene manifest`（新版本 `Xcode` 删除 `Main storyboard file base name` ）
+~~删除 `Main.storyboard` 文件~~
 
-删除 `SceneDelegate.h`、`SceneDelegate.m`
+~~删除 `info.plist` 中 `Application scene manifest`（新版本 `Xcode` 删除 `Main storyboard file base name` ）~~
 
-删除 `AppDelegate.m` 中 `#pragma mark - UISceneSession lifecycle` 包含的函数
+~~删除 `SceneDelegate.h`、`SceneDelegate.m`~~
 
-`AppDelegate.h` 新增 `@property (strong, nonatomic) UIWindow *window;`
+~~删除 `AppDelegate.m` 中 `#pragma mark - UISceneSession lifecycle` 包含的函数~~
 
-`AppDelegate.m didFinishLaunchingWithOptions` 函数新增以下代码：
+~~`AppDelegate.h` 新增 `@property (strong, nonatomic) UIWindow *window;`~~
+
+~~`AppDelegate.m didFinishLaunchingWithOptions` 函数新增以下代码：~~
 
 ```objective-c
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
@@ -4080,7 +4083,35 @@ UIKit 的功能非常丰富，主要包括：
 
 ### 示例 - 自动创建和管理
 
-新建 `objective-c App` 类型的项目，在 `SceneDelegate.m` 中通过 `self.window` 编程操作 `UIWindow` 或者通过 `Main.storyboard` 操作 `UIWindow`。
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-uiwindow)
+
+获取 `UIWindow` 实例方法如下：
+
+- 在 `SceneDelegate.m` 中通过 `self.window` 获取。
+
+- 在 `ViewController.m - (void)viewDidAppear:(BOOL)animated` 中获取
+
+  ```objc
+  - (void)viewDidLoad {
+      [super viewDidLoad];
+      // Do any additional setup after loading the view.
+      
+      // 在 viewDidLoad 不能获取 UIWindow 实例
+      UIWindow *window = self.view.window;
+      NSLog(@"viewDidLoad UIWindow=%@", window);
+  }
+  
+  - (void)viewDidAppear:(BOOL)animated {
+      [super viewDidAppear:animated];
+      
+      UIWindow *window = self.view.window;
+      NSLog(@"viewDidAppear UIWindow=%@", window);
+  }
+  ```
+
+  
+
+
 
 ## `UIKit` - `UIButton`
 
@@ -5917,3 +5948,119 @@ UIImage *image = [UIImage imageWithContentsOfFile:imagePath];
 4. 考虑添加加载指示器，因为网络请求可能需要时间
 
 以上代码提供了几种常见的登录成功后跳转主界面的实现方式，你可以根据项目需求选择最适合的方法。
+
+### 示例
+
+>说明：使用 `UIWindow rootViewController` 实现切换逻辑。
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-logintomain)
+
+
+
+## 存储 - `UserDefaults`
+
+NSUserDefaults 是 iOS/macOS 开发中用于存储轻量级用户偏好和配置数据的系统类，它本质上是一个键值存储系统。
+
+### 基本概念
+
+1. **持久化存储**：数据会保存在设备上，即使应用退出或设备重启也会保留
+2. **键值对结构**：采用 key-value 的存储方式
+3. **沙盒机制**：每个应用只能访问自己的 NSUserDefaults 数据
+4. **线程安全**：从 iOS 8 开始是线程安全的
+
+### 数据类型支持
+
+NSUserDefaults 支持存储以下数据类型：
+
+```objective-c
+- NSString/NSMutableString
+- NSNumber
+- NSDate
+- NSArray/NSMutableArray
+- NSDictionary/NSMutableDictionary
+- NSData/NSMutableData
+- BOOL
+- NSInteger
+- float/double
+- URL (NSURL)
+```
+
+### 基本使用方法
+
+#### 1. 获取标准实例
+
+```objective-c
+NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+```
+
+#### 2. 存储数据
+
+```objective-c
+// 存储字符串
+[defaults setObject:@"value" forKey:@"stringKey"];
+
+// 存储数字
+[defaults setInteger:42 forKey:@"integerKey"];
+[defaults setFloat:3.14f forKey:@"floatKey"];
+[defaults setDouble:3.1415926 forKey:@"doubleKey"];
+[defaults setBool:YES forKey:@"boolKey"];
+
+// 存储数组/字典
+[defaults setObject:@[@"a", @"b", @"c"] forKey:@"arrayKey"];
+[defaults setObject:@{@"key": @"value"} forKey:@"dictKey"];
+
+// 立即同步（iOS 12+ 通常不需要显式调用）
+[defaults synchronize];
+```
+
+#### 3. 读取数据
+
+```objective-c
+// 读取字符串
+NSString *stringValue = [defaults stringForKey:@"stringKey"];
+
+// 读取数字
+NSInteger intValue = [defaults integerForKey:@"integerKey"];
+float floatValue = [defaults floatForKey:@"floatKey"];
+double doubleValue = [defaults doubleForKey:@"doubleKey"];
+BOOL boolValue = [defaults boolForKey:@"boolKey"];
+
+// 读取数组/字典
+NSArray *array = [defaults arrayForKey:@"arrayKey"];
+NSDictionary *dict = [defaults dictionaryForKey:@"dictKey"];
+```
+
+#### 4. 删除数据
+
+```objective-c
+[defaults removeObjectForKey:@"keyToRemove"];
+```
+
+### 使用场景
+
+1. 存储用户偏好设置（如主题、字体大小等）
+2. 保存简单的应用配置
+3. 记录用户的使用习惯
+4. 存储临时的应用状态
+
+### 注意事项
+
+1. **不适合存储大量数据**：NSUserDefaults 不是数据库，大量数据会影响性能
+2. **数据安全性**：存储的数据未加密，不适合存储敏感信息
+3. **数据类型匹配**：读取时要使用与存储时对应的方法
+4. **默认值处理**：当 key 不存在时，返回 nil/0/NO 等默认值
+
+### 注册默认值
+
+可以在应用启动时注册默认值：
+
+```objective-c
+NSDictionary *defaultValues = @{
+    @"firstLaunch": @YES,
+    @"themeColor": @"light",
+    @"fontSize": @14
+};
+[defaults registerDefaults:defaultValues];
+```
+
+这样当这些 key 不存在时，会返回你设置的默认值而不是 nil/0。
