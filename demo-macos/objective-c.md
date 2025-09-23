@@ -4937,6 +4937,392 @@ spinner.translatesAutoresizingMaskIntoConstraints = NO;
 
 
 
+## `UI` - 子视图控制器 - 概念
+
+子视图控制器是 iOS 开发中重要的架构模式，它允许你将复杂的 UI 分解为多个独立的、可重用的组件。以下是 Objective-C 中实现子视图控制器的完整指南。
+
+### 基本概念
+
+子视图控制器允许一个视图控制器包含并管理其他视图控制器，形成父子关系。这种模式比简单添加子视图更强大，因为每个子控制器都有自己的生命周期和业务逻辑。
+
+### 添加子视图控制器的步骤
+
+#### 1. 创建子视图控制器
+
+```objc
+// 创建子控制器实例
+ChildViewController *childVC = [[ChildViewController alloc] init];
+```
+
+#### 2. 添加到父控制器
+
+```objc
+// 添加到父控制器
+[self addChildViewController:childVC];
+
+// 添加子控制器的视图
+[self.view addSubview:childVC.view];
+
+// 通知子控制器已完成添加
+[childVC didMoveToParentViewController:self];
+```
+
+#### 3. 设置子控制器视图的frame
+
+```objc
+// 设置子视图的位置和大小
+childVC.view.frame = CGRectMake(0, 0, self.view.frame.size.width, 200);
+```
+
+### 移除子视图控制器
+
+```objc
+// 通知子控制器将要被移除
+[childVC willMoveToParentViewController:nil];
+
+// 从父视图中移除
+[childVC.view removeFromSuperview];
+
+// 从父控制器中移除
+[childVC removeFromParentViewController];
+```
+
+### 完整示例
+
+#### ParentViewController.h
+
+```objc
+#import <UIKit/UIKit.h>
+
+@interface ParentViewController : UIViewController
+@end
+```
+
+#### ParentViewController.m
+
+```objc
+#import "ParentViewController.h"
+#import "ChildViewController.h"
+
+@implementation ParentViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    
+    // 创建子控制器
+    ChildViewController *childVC = [[ChildViewController alloc] init];
+    
+    // 添加到父控制器
+    [self addChildViewController:childVC];
+    
+    // 添加子视图
+    [self.view addSubview:childVC.view];
+    
+    // 设置frame
+    childVC.view.frame = CGRectMake(0, 100, self.view.frame.size.width, 200);
+    
+    // 完成添加
+    [childVC didMoveToParentViewController:self];
+}
+
+@end
+```
+
+### 生命周期方法
+
+子视图控制器会响应标准的视图控制器生命周期方法：
+
+```objc
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    // 子控制器的viewWillAppear也会被调用
+}
+
+- (void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
+    // 子控制器的viewDidAppear也会被调用
+}
+```
+
+### 容器视图控制器
+
+对于更复杂的布局，可以实现自定义容器视图控制器：
+
+```objc
+@interface ContainerViewController : UIViewController
+
+@property (strong, nonatomic) UIViewController *currentChildVC;
+
+- (void)transitionToViewController:(UIViewController *)newVC;
+
+@end
+
+@implementation ContainerViewController
+
+- (void)transitionToViewController:(UIViewController *)newVC {
+    // 移除当前子控制器
+    [self.currentChildVC willMoveToParentViewController:nil];
+    [self.currentChildVC.view removeFromSuperview];
+    [self.currentChildVC removeFromParentViewController];
+    
+    // 添加新的子控制器
+    [self addChildViewController:newVC];
+    newVC.view.frame = self.view.bounds;
+    [self.view addSubview:newVC.view];
+    [newVC didMoveToParentViewController:self];
+    
+    self.currentChildVC = newVC;
+}
+
+@end
+```
+
+### 注意事项
+
+1. 始终按照正确的顺序调用方法：addChildViewController -> addSubview -> didMoveToParentViewController
+2. 移除时顺序相反：willMoveToParentViewController:nil -> removeFromSuperview -> removeFromParentViewController
+3. 子控制器的生命周期事件会自动传播
+4. 旋转和外观事件会自动转发给子控制器
+
+### 实际应用场景
+
+1. 标签页控制器 (类似UITabBarController)
+2. 分页控制器 (类似UIPageViewController)
+3. 侧边菜单
+4. 复杂页面中的独立功能模块
+
+通过合理使用子视图控制器，可以使代码更加模块化、可维护性更高，并充分利用iOS提供的视图控制器生命周期管理。
+
+
+
+## `UI` - 子视图控制器 - `ContainerView`
+
+在 Objective-C 的 iOS 开发中，`ContainerView` 是一种特殊的视图容器，用于实现**界面模块化**和**子控制器管理**。它是 UIKit 框架中 `UIContainerView`（通常通过 Interface Builder 添加）或手动实现的容器视图的统称，核心功能是**嵌入和管理其他视图控制器（UIViewController）**。
+
+---
+
+### **关键概念解析**
+1. **用途**：
+   - 将一个视图控制器的内容嵌入到另一个视图控制器中（父子控制器关系）。
+   - 实现复杂的界面组合，例如：
+     - Tab 切换页面
+     - 侧边菜单（Slide-out Menu）
+     - 分步向导（Wizard Steps）
+
+2. **实现方式**：
+   - **通过 Storyboard**：直接拖拽 `ContainerView` 控件到父视图控制器中，Xcode 会自动生成一个嵌入的 Segue 和子控制器。
+   - **手动代码实现**：使用 `addChildViewController:` 和 `didMoveToParentViewController:` 方法管理子控制器。
+
+---
+
+### **代码示例（Objective-C）**
+#### 1. 手动添加子控制器到容器视图
+```objc
+// 父视图控制器中
+UIViewController *childVC = [[UIViewController alloc] init];
+[self addChildViewController:childVC]; // 添加子控制器
+childVC.view.frame = self.containerView.bounds; // 设置子控制器视图大小
+[self.containerView addSubview:childVC.view]; // 将子控制器的视图添加到容器
+[childVC didMoveToParentViewController:self]; // 完成添加
+```
+
+#### 2. 移除子控制器
+```objc
+[childVC willMoveToParentViewController:nil]; // 通知即将移除
+[childVC.view removeFromSuperview];
+[childVC removeFromParentViewController]; // 解除父子关系
+```
+
+---
+
+### **注意事项**
+1. **内存管理**：
+   - 子控制器的生命周期由父控制器管理，需确保在适当时机（如 `viewDidDisappear:`）移除不必要的子控制器。
+2. **自动布局**：
+   - 子控制器的视图需正确设置约束（或 `frame`），避免布局错乱。
+3. **通信**：
+   - 父子控制器间应通过**委托模式（Delegate）**或**通知（Notification）**通信，避免直接耦合。
+
+---
+
+### **与普通 UIView 的区别**
+| **特性** | **ContainerView**                      | **普通 UIView**          |
+| -------- | -------------------------------------- | ------------------------ |
+| 管理内容 | 嵌入其他视图控制器（UIViewController） | 直接添加子视图（UIView） |
+| 生命周期 | 关联子控制器的生命周期                 | 仅依赖父视图的层级结构   |
+| 典型用途 | 模块化复杂界面                         | 静态布局或简单动态内容   |
+
+---
+
+### **常见应用场景**
+- **Tab 页签**：每个 Tab 对应一个子控制器。
+- **导航抽屉**：侧滑菜单嵌入主内容区域。
+- **动态加载**：根据条件切换不同的子控制器（如登录/未登录状态）。
+
+通过合理使用 `ContainerView`，可以大幅提升代码的可维护性和界面灵活性。
+
+
+
+## `UI` - 子视图控制器 - `Interface Builder`添加`UITabBarController`子控制器
+
+在 Interface Builder (Storyboard/XIB) 中添加 UITabBarController 作为子视图控制器需要特殊的配置。以下是详细步骤：
+
+### 方法1：使用 Container View（推荐且最直接）
+
+#### 步骤说明
+
+1. **打开你的 Storyboard**
+2. **从对象库拖拽一个 Container View** 到你的 UIViewController 中
+3. **自动创建嵌入关系**：Container View 会自动创建一个嵌入的 segue
+4. **连接 UITabBarController**：将嵌入的 segue 连接到 UITabBarController
+
+#### 具体操作
+
+```objective-c
+// 在你的 UIViewController 中，Interface Builder 会自动处理以下关系：
+// 1. Container View 创建了一个嵌入的 segue
+// 2. 这个 segue 连接到 UITabBarController
+// 3. 系统自动建立父子控制器关系
+```
+
+**Storyboard 中的结构：**
+```
+UIViewController
+├── Container View (指向 UITabBarController)
+└── 其他视图元素...
+```
+
+### 方法2：手动代码配置（更灵活）
+
+如果你需要在 Interface Builder 中设计界面，但通过代码控制添加时机：
+
+#### 1. 在 Storyboard 中设置
+
+- 拖拽一个 **UIView** 作为容器
+- 设置 **Outlet** 连接：
+
+```objective-c
+// YourViewController.h
+@interface YourViewController : UIViewController
+@property (weak, nonatomic) IBOutlet UIView *tabBarContainerView;
+@end
+```
+
+#### 2. 在代码中添加 UITabBarController
+
+```objective-c
+// YourViewController.m
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    
+    // 从 Storyboard 实例化 UITabBarController
+    UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
+    UITabBarController *tabBarController = [storyboard instantiateViewControllerWithIdentifier:@"YourTabBarController"];
+    
+    // 添加为子控制器
+    [self addChildViewController:tabBarController];
+    [self.tabBarContainerView addSubview:tabBarController.view];
+    tabBarController.view.frame = self.tabBarContainerView.bounds;
+    [tabBarController didMoveToParentViewController:self];
+}
+```
+
+### 方法3：使用 Storyboard Reference（iOS 9+）
+
+#### 1. 创建独立的 TabBarController Storyboard
+
+创建一个新的 `TabBar.storyboard`，设计你的 UITabBarController
+
+#### 2. 在主 Storyboard 中使用 Storyboard Reference
+
+- 拖拽 **Storyboard Reference** 到你的 UIViewController
+- 配置 Reference：
+  - Storyboard: TabBar
+  - Referenced ID: 你的 UITabBarController 的 Storyboard ID
+
+#### 3. 通过 Container View 连接
+
+```objective-c
+// 在 prepareForSegue 中处理
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    if ([segue.identifier isEqualToString:@"embedTabBarSegue"]) {
+        UITabBarController *tabBarController = (UITabBarController *)segue.destinationViewController;
+        // 可以在这里配置 tabBarController
+    }
+}
+```
+
+### 完整示例：Container View 方式
+
+#### 1. Storyboard 设置
+
+1. 打开 Main.storyboard
+2. 选择你的 UIViewController
+3. 从对象库拖拽 **Container View** 到控制器视图
+4. 调整 Container View 的大小和位置
+5. 从 Container View 的嵌入 segue 拖拽到新的 UITabBarController
+6. 设置 UITabBarController 的子视图控制器
+
+#### 2. 代码配置（可选）
+
+```objective-c
+// YourViewController.m
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    if ([segue.identifier isEqualToString:@"embedTabBar"]) {
+        UITabBarController *tabBarController = segue.destinationViewController;
+        
+        // 自定义 TabBar 外观
+        tabBarController.tabBar.barTintColor = [UIColor whiteColor];
+        tabBarController.tabBar.tintColor = [UIColor blueColor];
+        
+        // 获取对子控制器的引用（可选）
+        for (UIViewController *vc in tabBarController.viewControllers) {
+            if ([vc isKindOfClass:[UINavigationController class]]) {
+                UINavigationController *nav = (UINavigationController *)vc;
+                // 配置导航控制器
+            }
+        }
+    }
+}
+```
+
+### 注意事项
+
+1. **自动布局**：确保 Container View 有正确的约束
+2. **生命周期**：嵌入的控制器会自动接收生命周期事件
+3. **内存管理**：不需要手动管理，系统会自动处理
+4. **转场动画**：嵌入的 segue 没有动画效果
+5. **标识符设置**：为嵌入 segue 设置有意义的标识符
+
+### 验证父子关系
+
+```objective-c
+- (void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
+    
+    // 检查子控制器
+    NSLog(@"子控制器: %@", self.childViewControllers);
+    
+    // 检查嵌入的 TabBarController
+    for (UIViewController *child in self.childViewControllers) {
+        if ([child isKindOfClass:[UITabBarController class]]) {
+            UITabBarController *tabBar = (UITabBarController *)child;
+            NSLog(@"找到 TabBarController: %@", tabBar);
+        }
+    }
+}
+```
+
+使用 Container View 是最简单且符合 Apple 设计模式的方法，推荐在大多数情况下使用。
+
+### 示例
+
+>说明：`UIViewController` 中添加 `UITabBarController` 子控制器。
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-subviewcontroller)
+
+
+
 ## 布局 - 有哪些布局呢？
 
 好的，iOS 提供了多种 UI 布局方式，从早期的手动定位到现代的声明式语法，开发者可以根据场景选择最合适的工具。
