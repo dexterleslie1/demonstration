@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8787C8572E82DD0B00478C80 /* MyStoryboard.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 8787C8562E82DD0B00478C80 /* MyStoryboard.storyboard */; };
+		8787C85A2E82DD3200478C80 /* MyStoryboardViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 8787C8592E82DD3200478C80 /* MyStoryboardViewController.m */; };
 		878C4F062E80396E00F38584 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 878C4F052E80396E00F38584 /* AppDelegate.m */; };
 		878C4F092E80396E00F38584 /* SceneDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 878C4F082E80396E00F38584 /* SceneDelegate.m */; };
 		878C4F0C2E80396E00F38584 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 878C4F0B2E80396E00F38584 /* ViewController.m */; };
@@ -39,6 +41,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		8787C8562E82DD0B00478C80 /* MyStoryboard.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = MyStoryboard.storyboard; sourceTree = "<group>"; };
+		8787C8582E82DD3200478C80 /* MyStoryboardViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MyStoryboardViewController.h; sourceTree = "<group>"; };
+		8787C8592E82DD3200478C80 /* MyStoryboardViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MyStoryboardViewController.m; sourceTree = "<group>"; };
 		878C4F012E80396E00F38584 /* demo-storyboard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "demo-storyboard.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		878C4F042E80396E00F38584 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		878C4F052E80396E00F38584 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -125,6 +130,9 @@
 				879843E52E816E0F00F32F3D /* SecondViewController.m */,
 				879843E72E816E1E00F32F3D /* ThirdViewController.h */,
 				879843E82E816E1E00F32F3D /* ThirdViewController.m */,
+				8787C8562E82DD0B00478C80 /* MyStoryboard.storyboard */,
+				8787C8582E82DD3200478C80 /* MyStoryboardViewController.h */,
+				8787C8592E82DD3200478C80 /* MyStoryboardViewController.m */,
 			);
 			path = "demo-storyboard";
 			sourceTree = "<group>";
@@ -250,6 +258,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				878C4F142E80397100F38584 /* LaunchScreen.storyboard in Resources */,
+				8787C8572E82DD0B00478C80 /* MyStoryboard.storyboard in Resources */,
 				878C4F112E80397100F38584 /* Assets.xcassets in Resources */,
 				878C4F0F2E80396E00F38584 /* Main.storyboard in Resources */,
 			);
@@ -276,6 +285,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8787C85A2E82DD3200478C80 /* MyStoryboardViewController.m in Sources */,
 				879843E62E816E0F00F32F3D /* SecondViewController.m in Sources */,
 				878C4F0C2E80396E00F38584 /* ViewController.m in Sources */,
 				879843E92E816E1E00F32F3D /* ThirdViewController.m in Sources */,

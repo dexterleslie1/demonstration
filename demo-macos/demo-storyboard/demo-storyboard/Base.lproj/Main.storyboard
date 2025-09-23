@@ -37,13 +37,23 @@
                                     </button>
                                 </subviews>
                             </stackView>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="xXi-uk-S94">
+                                <rect key="frame" x="107.33333333333333" y="103.33333333333333" width="178.33333333333337" height="34.333333333333329"/>
+                                <state key="normal" title="Button"/>
+                                <buttonConfiguration key="configuration" style="filled" title="动态加载Storyboard"/>
+                                <connections>
+                                    <action selector="onClickedStoryboardDynamically:" destination="HCl-Ep-yhX" eventType="touchUpInside" id="Qll-CC-KSs"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="LaE-c5-NWK"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
                             <constraint firstItem="rSh-tJ-Min" firstAttribute="leading" secondItem="LaE-c5-NWK" secondAttribute="leading" constant="10" id="3du-0p-Rng"/>
+                            <constraint firstItem="xXi-uk-S94" firstAttribute="top" secondItem="rSh-tJ-Min" secondAttribute="bottom" constant="10" id="EZj-MT-Re0"/>
                             <constraint firstItem="rSh-tJ-Min" firstAttribute="top" secondItem="LaE-c5-NWK" secondAttribute="top" id="Vhk-Oq-b2Q"/>
                             <constraint firstItem="rSh-tJ-Min" firstAttribute="trailing" secondItem="LaE-c5-NWK" secondAttribute="trailing" constant="-10" id="WSe-2b-6MC"/>
+                            <constraint firstItem="xXi-uk-S94" firstAttribute="centerX" secondItem="LaE-c5-NWK" secondAttribute="centerX" id="fMk-aV-QLJ"/>
                         </constraints>
                     </view>
                     <connections>

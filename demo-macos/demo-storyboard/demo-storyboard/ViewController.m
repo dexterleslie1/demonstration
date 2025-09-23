@@ -37,5 +37,13 @@
     [self performSegueWithIdentifier:@"show-third" sender:nil];
 }
 
+- (IBAction)onClickedStoryboardDynamically:(id)sender {
+    // 获取 main bundle 中的 storyboard
+    UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"MyStoryboard" bundle:nil];
+    // 获取初始视图控制器（箭头指向的控制器）
+    UIViewController *initialVC = [storyboard instantiateInitialViewController];
+    // 显示控制器（以模态方式）
+    [self presentViewController:initialVC animated:YES completion:nil];
+}
 
 @end
