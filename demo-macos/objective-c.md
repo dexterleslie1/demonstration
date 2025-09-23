@@ -3585,9 +3585,26 @@ class CustomSegue: UIStoryboardSegue {
 }
 ```
 
-### 新建空白的 `storyboard`
+### 动态加载`Storyboard`
 
-> `todo` 新建空白的 `storyboard` 并动态加载。
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-storyboard)
+
+创建 `Storyboard` 及其视图控制器，在 `Storyboard` 的 `Show the Attributes inspector` 属性面板中勾选 `Is Initial View Controller`。
+
+在代码中动态加载 `Storyboard`：
+
+```objc
+- (IBAction)onClickedStoryboardDynamically:(id)sender {
+    // 获取 main bundle 中的 storyboard
+    UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"MyStoryboard" bundle:nil];
+    // 获取初始视图控制器（箭头指向的控制器）
+    UIViewController *initialVC = [storyboard instantiateInitialViewController];
+    // 显示控制器（以模态方式）
+    [self presentViewController:initialVC animated:YES completion:nil];
+}
+```
+
+
 
 ## `storyboard`、`xib`、`nib` - `xib`使用
 
@@ -4116,19 +4133,23 @@ UIKit 的功能非常丰富，主要包括：
 
 ## `UIKit` - `UIButton`
 
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-uibutton)
+
 `UIButton` 绑定事件方法：
 
 - 动态 `UIButton` 通过 `addTarget:action:forControlEvents` 绑定触发事件
 - 定义 `IBAction` 函数 `-(IBAction)buttonClick:(id) sender`，使用 `Connections Inspector` 连接 `xib UIButton` 到 `IBAction` 函数
 
-示例：
+
+
+### 通过 `addTarget:action:forControlEvents` 绑定点击事件
 
 ```objective-c
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
   
-    // initWithFrame
+    // UIButton initWithFrame
     CGRect rect = CGRectMake(0, 30, 200, 60);
     UIButton *button1 = [[UIButton alloc] initWithFrame:rect];
     [button1 setTitle:@"Button initWithFrame" forState:UIControlStateNormal];
@@ -4154,6 +4175,7 @@ UIKit 的功能非常丰富，主要包括：
                                multiplier:1.0f
                                constant:80]];
   
+    // UIButton buttonWithType
     UIButton *button2 = [UIButton buttonWithType:UIButtonTypeRoundedRect];
     rect = CGRectMake(0, 100, 200, 60);
     button2.frame = rect;
@@ -4180,6 +4202,7 @@ UIKit 的功能非常丰富，主要包括：
                                multiplier:1.0f
                                constant:10]];
   
+    // UIButton 约束布局
     UIButton *button3 = [[UIButton alloc] initWithFrame:CGRectMake(0, 170, 200, 60)];
     [button3 setTitle:@"Click me" forState:UIControlStateNormal];
     [button3 setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
@@ -4203,12 +4226,30 @@ UIKit 的功能非常丰富，主要包括：
                                attribute:NSLayoutAttributeBottom
                                multiplier:1.0f
                                constant:10]];
+    
+    // 在代码中触发按钮点击事件
+    [button3 sendActionsForControlEvents:UIControlEventTouchDown];
 }
 
 - (void)buttonClick:(id) sender{
     NSLog(@"Button click!!");
 }
 ```
+
+
+
+### 在代码中触发按钮点击事件
+
+```objc
+- (void)viewDidLoad {
+    ...
+    
+    // 在代码中触发按钮点击事件
+    [button3 sendActionsForControlEvents:UIControlEventTouchDown];
+}
+```
+
+
 
 ## `UIKit` - `UITextField`
 
