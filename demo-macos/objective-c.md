@@ -6,6 +6,7 @@
 - 通常使用 `UIStackView` 和嵌套 `UIStackView` 开发表单（相当于 `Android LinearLayout`）。
 - 通常使用 `AutoLayout` 开发分配剩余空间的布局或者复杂的布局（相当于 `Android Constraint Layout`）。
 - 登录界面切换到主界面使用 `UIWindow rootViewController` 实现，详细用法请参考本站 [链接](/macos/objective-c.html#登录界面跳转到主界面)
+- 简单布局可以使用 `storyboard` 或者 `xib` 的 `Interface Builder` 操作。复杂的布局需要使用 `storyboard` 或者 `xib` + 代码调整实现，其中 `storyboard` 或者 `xib` 用于框架布局设计，代码用于布局细节调整，例如参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-uiscrollview)。
 
 
 
@@ -4450,6 +4451,8 @@ secondVC.title = @"第二页";
 
 ## `UIKit` - `UITabBarController`
 
+> 提示：在代码中动态添加 `Tab`。
+>
 > 详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-uitabbarcontroller)
 
 ## `UIKit` - `UITableView`
@@ -4627,6 +4630,8 @@ self.window.rootViewController = nav;
 > 详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-uitableviewcontroller)
 
 ## `UIKit` - `UICollectionViewController`
+
+>提示：在代码中动态创建并添加 `UICollectionViewCell`。
 
 `UICollectionViewController` 是 iOS 开发中用于管理 **集合视图（`UICollectionView`）** 的专用控制器，继承自 `UIViewController`。它专门用于展示 **网格布局、瀑布流、横向滑动** 等复杂排列的视图集合，比 `UITableView` 更灵活，是构建现代 iOS 界面（如照片库、商品列表、卡片式布局）的核心组件。
 
@@ -4934,6 +4939,187 @@ spinner.translatesAutoresizingMaskIntoConstraints = NO;
     [self.activityIndicatorView startAnimating];
 }
 ```
+
+
+
+## `UIKit` - `UIScrollView`
+
+UIScrollView 是 iOS 中用于显示可滚动内容的视图类，它可以显示超出屏幕范围的内容，并允许用户通过滑动来查看这些内容。
+
+### 基本用法
+
+#### 创建 UIScrollView
+
+```objective-c
+UIScrollView *scrollView = [[UIScrollView alloc] initWithFrame:self.view.bounds];
+scrollView.contentSize = CGSizeMake(self.view.bounds.size.width, 2000); // 设置内容大小
+[self.view addSubview:scrollView];
+```
+
+#### 常用属性
+
+```objective-c
+// 内容大小 - 决定滚动范围
+scrollView.contentSize = CGSizeMake(width, height);
+
+// 是否显示滚动指示器
+scrollView.showsHorizontalScrollIndicator = YES;
+scrollView.showsVerticalScrollIndicator = YES;
+
+// 是否启用分页
+scrollView.pagingEnabled = YES;
+
+// 是否启用反弹效果
+scrollView.bounces = YES;
+
+// 设置初始偏移量
+scrollView.contentOffset = CGPointMake(x, y);
+
+// 设置内边距
+scrollView.contentInset = UIEdgeInsetsMake(top, left, bottom, right);
+```
+
+### 代理方法
+
+UIScrollViewDelegate 提供了许多有用的回调方法：
+
+```objective-c
+// 设置代理
+scrollView.delegate = self;
+
+// 实现代理方法
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView {
+    // 滚动时调用
+}
+
+- (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView {
+    // 开始拖动时调用
+}
+
+- (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate {
+    // 结束拖动时调用
+}
+
+- (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
+    // 减速停止时调用
+}
+
+- (void)scrollViewWillBeginZooming:(UIScrollView *)scrollView withView:(UIView *)view {
+    // 开始缩放时调用
+}
+
+- (void)scrollViewDidEndZooming:(UIScrollView *)scrollView withView:(UIView *)view atScale:(CGFloat)scale {
+    // 缩放结束时调用
+}
+```
+
+### 缩放功能
+
+```objective-c
+// 启用缩放
+scrollView.minimumZoomScale = 0.5; // 最小缩放比例
+scrollView.maximumZoomScale = 2.0; // 最大缩放比例
+
+// 必须实现以下代理方法指定要缩放的视图
+- (UIView *)viewForZoomingInScrollView:(UIScrollView *)scrollView {
+    return self.imageView; // 返回要缩放的视图
+}
+```
+
+### 实际示例
+
+#### 创建水平滚动的图片浏览器
+
+```objective-c
+// 创建滚动视图
+UIScrollView *scrollView = [[UIScrollView alloc] initWithFrame:self.view.bounds];
+scrollView.pagingEnabled = YES;
+scrollView.showsHorizontalScrollIndicator = NO;
+    
+// 添加图片视图
+CGFloat imageWidth = self.view.bounds.size.width;
+CGFloat imageHeight = self.view.bounds.size.height;
+    
+for (int i = 0; i < 5; i++) {
+    UIImageView *imageView = [[UIImageView alloc] initWithFrame:CGRectMake(i * imageWidth, 0, imageWidth, imageHeight)];
+    imageView.image = [UIImage imageNamed:[NSString stringWithFormat:@"image%d", i+1]];
+    [scrollView addSubview:imageView];
+}
+    
+// 设置内容大小
+scrollView.contentSize = CGSizeMake(5 * imageWidth, imageHeight);
+[self.view addSubview:scrollView];
+```
+
+#### 嵌套 UITableView 和 UIScrollView
+
+```objective-c
+// 主滚动视图
+UIScrollView *mainScrollView = [[UIScrollView alloc] initWithFrame:self.view.bounds];
+mainScrollView.contentSize = CGSizeMake(self.view.bounds.size.width, 2000);
+    
+// 添加顶部视图
+UIView *headerView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, 300)];
+headerView.backgroundColor = [UIColor redColor];
+[mainScrollView addSubview:headerView];
+    
+// 添加表格视图
+UITableView *tableView = [[UITableView alloc] initWithFrame:CGRectMake(0, 300, self.view.bounds.size.width, 1700) style:UITableViewStylePlain];
+tableView.dataSource = self;
+tableView.delegate = self;
+tableView.scrollEnabled = NO; // 禁用表格自身的滚动
+[mainScrollView addSubview:tableView];
+    
+[self.view addSubview:mainScrollView];
+```
+
+### 常见问题解决
+
+#### 1. 滚动视图无法滚动
+
+- 检查 contentSize 是否大于 scrollView 的 bounds
+- 确保 userInteractionEnabled 为 YES
+- 检查是否有其他视图覆盖了 scrollView 或拦截了触摸事件
+
+#### 2. 键盘弹出时调整内容
+
+```objective-c
+// 注册键盘通知
+[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillShow:) name:UIKeyboardWillShowNotification object:nil];
+[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillHide:) name:UIKeyboardWillHideNotification object:nil];
+
+// 键盘显示时调整内容
+- (void)keyboardWillShow:(NSNotification *)notification {
+    CGRect keyboardFrame = [notification.userInfo[UIKeyboardFrameEndUserInfoKey] CGRectValue];
+    self.scrollView.contentInset = UIEdgeInsetsMake(0, 0, keyboardFrame.size.height, 0);
+}
+
+// 键盘隐藏时恢复
+- (void)keyboardWillHide:(NSNotification *)notification {
+    self.scrollView.contentInset = UIEdgeInsetsZero;
+}
+```
+
+#### 3. 自动滚动到特定位置
+
+```objective-c
+// 滚动到顶部
+[scrollView setContentOffset:CGPointZero animated:YES];
+
+// 滚动到底部
+CGPoint bottomOffset = CGPointMake(0, scrollView.contentSize.height - scrollView.bounds.size.height);
+[scrollView setContentOffset:bottomOffset animated:YES];
+```
+
+UIScrollView 是 iOS 开发中非常强大的组件，掌握它的使用可以创建各种复杂的滚动界面。
+
+### 示例
+
+>提示：主要使用代码配置 `UIScrollView` 和子视图。
+>
+>说明：使用 `UIScrollView` 实现超出屏幕的内容支持横向滚动。
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-uiscrollview)
 
 
 
