@@ -62,7 +62,7 @@
 		8782246D2E8417C400771BC5 /* demo-mbprogresshubUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "demo-mbprogresshubUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		878224712E8417C400771BC5 /* demo_mbprogresshubUITests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = demo_mbprogresshubUITests.m; sourceTree = "<group>"; };
 		878224732E8417C400771BC5 /* demo_mbprogresshubUITestsLaunchTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = demo_mbprogresshubUITestsLaunchTests.m; sourceTree = "<group>"; };
-		878224802E84183600771BC5 /* Podfile */ = {isa = PBXFileReference; lastKnownFileType = text; path = Podfile; sourceTree = "<group>"; };
+		878224802E84183600771BC5 /* Podfile */ = {isa = PBXFileReference; lastKnownFileType = text; path = Podfile; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
 		AA70DC331CBB7C4A1D871E66 /* Pods-demo-mbprogresshub.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-demo-mbprogresshub.debug.xcconfig"; path = "Target Support Files/Pods-demo-mbprogresshub/Pods-demo-mbprogresshub.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -159,7 +159,6 @@
 				2233F171CB9CDEADD84891BB /* Pods-demo-mbprogresshubTests.debug.xcconfig */,
 				29F7DE8545E063AC5B4AB9EA /* Pods-demo-mbprogresshubTests.release.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
