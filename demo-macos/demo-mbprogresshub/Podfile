@@ -1,0 +1,12 @@
+project 'demo-mbprogresshub'
+platform:ios, '7.0'
+
+target 'demo-mbprogresshub' do
+    pod 'MBProgressHUD', '~> 1.0.0'
+end
+
+target 'demo-mbprogresshubTests' do
+    pod 'MBProgressHUD', '~> 1.0.0'
+end
+
+

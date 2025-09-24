@@ -27,6 +27,9 @@
     
     UIWindow *window = self.view.window;
     NSLog(@"viewDidAppear UIWindow=%@", window);
+    
+    window = [UIApplication sharedApplication].keyWindow;
+    NSLog(@"Global UIWindow=%@", window);
 }
 
 @end
