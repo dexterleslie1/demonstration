@@ -5533,6 +5533,184 @@ UIPageViewController 非常适合实现教程、图片浏览器、电子书等�
 
 
 
+## `UIKit` - `UIAlertController` - 概念
+
+### **一、核心定义：iOS 的“万能弹窗工具箱”**
+**UIAlertController** 是苹果官方提供的弹窗控件，用来在屏幕上弹出以下两种形式的提示：
+1. **Alert（警告框）**：居中显示，用于重要通知或需要用户确认的操作（比如删除文件）。
+2. **ActionSheet（操作菜单）**：从底部弹出，提供多个选项供用户选择（比如选择照片来源）。
+
+---
+
+### **二、为什么需要它？（对比老版本）**
+在 iOS 8 之前，开发者用的是 `UIAlertView` 和 `UIActionSheet`，但它们有致命缺陷：
+- **代码分散**：按钮逻辑通过 delegate 回调，难以维护。
+- **功能单一**：无法添加输入框或自定义视图。
+
+**UIAlertController 的改进**：
+✅ **统一 API**：用同一个类处理 Alert 和 ActionSheet  
+✅ **闭包回调**：按钮逻辑直接写在代码块中，更清晰  
+✅ **支持输入框**：轻松实现登录框等功能  
+✅ **现代化设计**：自动适配深色模式、动态字体  
+
+---
+
+### **三、核心使用步骤（Objective-C）**
+#### **1. 创建弹窗**
+```objectivec
+// Alert 样式（居中）
+UIAlertController *alert = [UIAlertController 
+    alertControllerWithTitle:@"提示" 
+    message:@"确定要删除吗？" 
+    preferredStyle:UIAlertControllerStyleAlert]; // 关键参数：Alert 还是 ActionSheet
+
+// ActionSheet 样式（底部弹出）
+UIAlertController *sheet = [UIAlertController 
+    alertControllerWithTitle:@"选择操作" 
+    message:nil 
+    preferredStyle:UIAlertControllerStyleActionSheet]; // 改为 ActionSheet 样式
+```
+
+#### **2. 添加按钮**
+```objectivec
+// 添加“确定”按钮（默认样式）
+UIAlertAction *okAction = [UIAlertAction 
+    actionWithTitle:@"确定" 
+    style:UIAlertActionStyleDefault 
+    handler:^(UIAlertAction *action) {
+        NSLog(@"用户点击了确定");
+    }];
+[alert addAction:okAction];
+
+// 添加“取消”按钮（取消样式，自动加粗显示）
+UIAlertAction *cancelAction = [UIAlertAction 
+    actionWithTitle:@"取消" 
+    style:UIAlertActionStyleCancel 
+    handler:nil]; // 无操作可以传 nil
+[alert addAction:cancelAction];
+
+// 添加“删除”按钮（红色警示样式）
+UIAlertAction *deleteAction = [UIAlertAction 
+    actionWithTitle:@"删除" 
+    style:UIAlertActionStyleDestructive 
+    handler:nil];
+[alert addAction:deleteAction];
+```
+
+#### **3. 显示弹窗**
+```objectivec
+// 必须在 ViewController 中调用
+[self presentViewController:alert animated:YES completion:nil];
+```
+
+---
+
+### **四、高级功能示例**
+#### **1. 带输入框的 Alert（如登录框）**
+```objectivec
+UIAlertController *alert = [UIAlertController 
+    alertControllerWithTitle:@"登录" 
+    message:@"请输入账号密码" 
+    preferredStyle:UIAlertControllerStyleAlert];
+
+// 添加账号输入框
+[alert addTextFieldWithConfigurationHandler:^(UITextField *textField) {
+    textField.placeholder = @"账号";
+    textField.keyboardType = UIKeyboardTypeEmailAddress;
+}];
+
+// 添加密码输入框
+[alert addTextFieldWithConfigurationHandler:^(UITextField *textField) {
+    textField.placeholder = @"密码";
+    textField.secureTextEntry = YES;
+}];
+
+// 登录按钮
+UIAlertAction *loginAction = [UIAlertAction 
+    actionWithTitle:@"登录" 
+    style:UIAlertActionStyleDefault 
+    handler:^(UIAlertAction *action) {
+        NSString *username = alert.textFields[0].text;
+        NSString *password = alert.textFields[1].text;
+        NSLog(@"账号：%@，密码：%@", username, password);
+    }];
+[alert addAction:loginAction];
+
+[self presentViewController:alert animated:YES completion:nil];
+```
+
+#### **2. ActionSheet 在 iPad 上的特殊处理**
+```objectivec
+if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+    // iPad 必须指定弹出位置（否则会崩溃）
+    sheet.popoverPresentationController.sourceView = self.view;
+    sheet.popoverPresentationController.sourceRect = CGRectMake(
+        self.view.bounds.size.width/2, 
+        self.view.bounds.size.height, 
+        0, 0
+    );
+}
+```
+
+---
+
+### **五、UIAlertController 的设计特点**
+1. **不可直接创建视图**：  
+   不能像 UIView 那样用 `initWithFrame:`，必须通过工厂方法创建。
+2. **按钮顺序自动排列**：  
+   iOS 会根据按钮的 `style`（Cancel/Destructive/Default）自动调整显示顺序。
+3. **一次只能显示一个**：  
+   如果同时弹出多个 AlertController，系统会按队列顺序显示。
+
+---
+
+### **六、常见问题**
+#### **Q：为什么我的 Alert 不显示？**
+- 检查是否在主线程调用（网络回调等需切回主线程）：
+  ```objectivec
+  dispatch_async(dispatch_get_main_queue(), ^{
+      [self presentViewController:alert animated:YES completion:nil];
+  });
+  ```
+- 确保 `presentViewController:` 的调用对象是当前显示的 ViewController。
+
+#### **Q：如何修改文字颜色或字体？**
+- 苹果官方不允许直接修改，如需深度定制，需用第三方库（如 https://github.com/jdg/MBProgressHUD）。
+
+---
+
+### **总结**
+**UIAlertController 是什么？**  
+它是 iOS 开发中**显示弹窗和操作菜单的官方标准方案**，取代了老旧的 `UIAlertView` 和 `UIActionSheet`。通过它，你可以：
+- 显示带按钮的提示框 ✅  
+- 弹出底部选择菜单 ✅  
+- 添加输入框实现登录功能 ✅  
+- 自动适配 iOS 设计风格 ✅  
+
+掌握它，你就掌握了 iOS 弹窗交互的核心！ 🚀
+
+### 示例
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-uialertcontroller)
+
+```objc
+- (IBAction)onClicked1:(id)sender {
+    UIAlertController *alert = [UIAlertController
+        alertControllerWithTitle:@"提示"
+        message:@"确定要删除吗？"
+        preferredStyle:UIAlertControllerStyleAlert];
+    [alert addAction:[UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:^(UIAlertAction *action) {
+        NSLog(@"点击取消");
+    }]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+        NSLog(@"点击确定");
+    }]];
+    [self presentViewController:alert animated:YES completion:nil];
+}
+```
+
+
+
 ## `UI` - 子视图控制器 - 概念
 
 子视图控制器是 iOS 开发中重要的架构模式，它允许你将复杂的 UI 分解为多个独立的、可重用的组件。以下是 Objective-C 中实现子视图控制器的完整指南。
@@ -6088,6 +6266,23 @@ __block float progress = 0.0f;
 ### 示例
 
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-mbprogresshub)
+
+`Podfie`：
+
+```
+project 'demo-mbprogresshub'
+platform:ios, '7.0'
+
+target 'demo-mbprogresshub' do
+    pod 'MBProgressHUD', '~> 1.0.0'
+end
+
+target 'demo-mbprogresshubTests' do
+    pod 'MBProgressHUD', '~> 1.0.0'
+end
+```
+
+测试
 
 ```objc
 // 简单的加载提示
