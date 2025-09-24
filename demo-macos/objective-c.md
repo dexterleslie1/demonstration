@@ -5164,6 +5164,372 @@ UIScrollView 是 iOS 开发中非常强大的组件，掌握它的使用可以�
 
 
 
+## `UIKit` - `UIPageViewController` - 概念
+
+UIPageViewController 是 iOS 中的一个容器视图控制器，用于管理多个内容视图控制器之间的导航，实现类似书籍翻页的效果。
+
+### 基本概念
+
+UIPageViewController 提供了一种在多个视图控制器之间导航的方式，支持以下特性：
+- 水平或垂直翻页
+- 单页或双页显示（类似书籍）
+- 自定义过渡动画
+
+### 核心用法
+
+#### 1. 初始化
+
+```objc
+UIPageViewController *pageViewController = [[UIPageViewController alloc] 
+    initWithTransitionStyle:UIPageViewControllerTransitionStylePageCurl 
+    navigationOrientation:UIPageViewControllerNavigationOrientationHorizontal 
+    options:nil];
+```
+
+#### 2. 设置数据源
+
+```objc
+pageViewController.dataSource = self;
+```
+
+需要实现 `UIPageViewControllerDataSource` 协议：
+
+```objc
+- (UIViewController *)pageViewController:(UIPageViewController *)pageViewController 
+    viewControllerBeforeViewController:(UIViewController *)viewController {
+    // 返回前一个视图控制器
+}
+
+- (UIViewController *)pageViewController:(UIPageViewController *)pageViewController 
+    viewControllerAfterViewController:(UIViewController *)viewController {
+    // 返回后一个视图控制器
+}
+```
+
+#### 3. 设置初始页面
+
+```objc
+[pageViewController setViewControllers:@[initialViewController] 
+    direction:UIPageViewControllerNavigationDirectionForward 
+    animated:NO 
+    completion:nil];
+```
+
+#### 4. 添加到视图层级
+
+```objc
+[self addChildViewController:pageViewController];
+[self.view addSubview:pageViewController.view];
+[pageViewController didMoveToParentViewController:self];
+```
+
+### 完整示例
+
+```objc
+// 自定义数据源实现
+@interface MyPageViewControllerDataSource : NSObject <UIPageViewControllerDataSource>
+@property (strong, nonatomic) NSArray *pageContent;
+@end
+
+@implementation MyPageViewControllerDataSource
+
+- (UIViewController *)pageViewController:(UIPageViewController *)pageViewController 
+    viewControllerBeforeViewController:(UIViewController *)viewController {
+    
+    NSUInteger index = [self.pageContent indexOfObject:viewController];
+    if (index == 0 || index == NSNotFound) {
+        return nil;
+    }
+    return self.pageContent[--index];
+}
+
+- (UIViewController *)pageViewController:(UIPageViewController *)pageViewController 
+    viewControllerAfterViewController:(UIViewController *)viewController {
+    
+    NSUInteger index = [self.pageContent indexOfObject:viewController];
+    if (index == NSNotFound || index == self.pageContent.count - 1) {
+        return nil;
+    }
+    return self.pageContent[++index];
+}
+
+@end
+
+// 使用示例
+- (void)setupPageViewController {
+    // 创建内容视图控制器数组
+    NSMutableArray *contentViewControllers = [NSMutableArray array];
+    for (int i = 0; i < 5; i++) {
+        UIViewController *vc = [[UIViewController alloc] init];
+        // 配置vc...
+        [contentViewControllers addObject:vc];
+    }
+    
+    // 创建数据源
+    MyPageViewControllerDataSource *dataSource = [[MyPageViewControllerDataSource alloc] init];
+    dataSource.pageContent = contentViewControllers;
+    
+    // 创建并配置pageViewController
+    UIPageViewController *pageVC = [[UIPageViewController alloc] 
+        initWithTransitionStyle:UIPageViewControllerTransitionStyleScroll 
+        navigationOrientation:UIPageViewControllerNavigationOrientationHorizontal 
+        options:nil];
+    pageVC.dataSource = dataSource;
+    
+    // 设置初始视图控制器
+    [pageVC setViewControllers:@[contentViewControllers.firstObject] 
+        direction:UIPageViewControllerNavigationDirectionForward 
+        animated:NO 
+        completion:nil];
+    
+    // 添加到视图层级
+    [self addChildViewController:pageVC];
+    [self.view addSubview:pageVC.view];
+    [pageVC didMoveToParentViewController:self];
+}
+```
+
+### 注意事项
+
+1. 内存管理：UIPageViewController 会缓存相邻的视图控制器
+2. 旋转支持：需要正确处理设备旋转
+3. 手势冲突：注意与其他手势的冲突处理
+4. 性能：大量页面时需考虑内存优化
+
+UIPageViewController 非常适合实现教程、图片浏览器、电子书等需要翻页效果的界面。
+
+
+
+## `UIKit` - `UIPageViewController` - `UIPageViewControllerDataSource`
+
+`UIPageViewControllerDataSource` 是 `UIPageViewController` 的 **数据源协议**，它的核心作用是 **告诉 `UIPageViewController` 如何获取前后页面的视图控制器（`UIViewController`）**，从而实现页面的滑动切换逻辑。  
+
+---
+
+### **1. `UIPageViewControllerDataSource` 的核心作用**
+| 方法                                             | 作用                                                 | 是否必须实现             |
+| ------------------------------------------------ | ---------------------------------------------------- | ------------------------ |
+| `viewControllerBeforeViewController:`            | 返回当前页面的**前一个页面**的视图控制器             | ✅ 是（如果支持向前滑动） |
+| `viewControllerAfterViewController:`             | 返回当前页面的**后一个页面**的视图控制器             | ✅ 是（如果支持向后滑动） |
+| `presentationCountForPageViewController:` (可选) | 返回总页数（用于显示页面指示器，如 `UIPageControl`） | ❌ 否                     |
+| `presentationIndexForPageViewController:` (可选) | 返回当前页面的索引（用于页面指示器）                 | ❌ 否                     |
+
+---
+
+### **2. 为什么需要 `UIPageViewControllerDataSource`？**
+
+`UIPageViewController` **本身不管理页面内容**，它只负责：
+- 处理用户滑动手势
+- 执行页面切换动画
+- 管理当前显示的视图控制器  
+
+而 **具体显示哪些页面**（如 `Page1`、`Page2`、`Page3`）由 **`DataSource` 决定**。  
+如果没有正确实现 `DataSource`，`UIPageViewController` 会：
+- **无法滑动切换页面**（如果未实现 `viewControllerBefore/After`）
+- **页面跳转异常**（如你的问题中点击按钮后页面回退）
+- **无法显示页面指示器**（如 `UIPageControl`）
+
+---
+
+### **3. 示例代码（标准实现）**
+```objc
+@interface ViewController () <UIPageViewControllerDataSource>
+@property (nonatomic, strong) NSArray<UIViewController *> *pages; // 所有页面
+@property (nonatomic, strong) UIPageViewController *pageVC;
+@end
+
+@implementation ViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    
+    // 1. 初始化页面
+    self.pages = @[
+        [[UIViewController alloc] init], // Page 1
+        [[UIViewController alloc] init], // Page 2
+        [[UIViewController alloc] init]  // Page 3
+    ];
+    
+    // 2. 配置 UIPageViewController
+    self.pageVC = [[UIPageViewController alloc] initWithTransitionStyle:UIPageViewControllerTransitionStyleScroll 
+                                                   navigationOrientation:UIPageViewControllerNavigationOrientationHorizontal 
+                                                               options:nil];
+    self.pageVC.dataSource = self; // 必须设置数据源！
+    
+    // 3. 设置初始页面
+    [self.pageVC setViewControllers:@[self.pages[0]] 
+                          direction:UIPageViewControllerNavigationDirectionForward 
+                           animated:NO 
+                         completion:nil];
+    
+    // 4. 添加到界面
+    [self addChildViewController:self.pageVC];
+    [self.view addSubview:self.pageVC.view];
+    self.pageVC.view.frame = self.view.bounds;
+    [self.pageVC didMoveToParentViewController:self];
+}
+
+#pragma mark - UIPageViewControllerDataSource
+
+// 返回前一个页面
+- (UIViewController *)pageViewController:(UIPageViewController *)pageViewController 
+        viewControllerBeforeViewController:(UIViewController *)viewController {
+    NSUInteger index = [self.pages indexOfObject:viewController];
+    if (index == 0 || index == NSNotFound) {
+        return nil; // 已经是第一页，无法向前滑动
+    }
+    return self.pages[index - 1];
+}
+
+// 返回后一个页面
+- (UIViewController *)pageViewController:(UIPageViewController *)pageViewController 
+         viewControllerAfterViewController:(UIViewController *)viewController {
+    NSUInteger index = [self.pages indexOfObject:viewController];
+    if (index == NSNotFound || index == self.pages.count - 1) {
+        return nil; // 已经是最后一页，无法向后滑动
+    }
+    return self.pages[index + 1];
+}
+
+@end
+```
+
+---
+
+### **4. 常见问题**
+#### **Q1: 不实现 `DataSource` 会怎样？**
+- 用户**无法通过滑动手势切换页面**。
+- 调用 `setViewControllers:animated:` 可能**无法正确跳转**（如你的问题中页面回退）。
+
+#### **Q2: 如何动态更新页面内容？**
+直接修改 `self.pages` 数组，并调用：
+```objc
+[self.pageVC setViewControllers:@[newPage] direction:UIPageViewControllerNavigationDirectionForward animated:YES completion:nil];
+```
+
+#### **Q3: 如何显示页面指示器（UIPageControl）？**
+实现可选方法：
+```objc
+- (NSInteger)presentationCountForPageViewController:(UIPageViewController *)pageViewController {
+    return self.pages.count; // 总页数
+}
+
+- (NSInteger)presentationIndexForPageViewController:(UIPageViewController *)pageViewController {
+    return [self.pages indexOfObject:pageViewController.viewControllers.firstObject]; // 当前页索引
+}
+```
+
+---
+
+### **5. 总结**
+| 关键点                  | 说明                                                         |
+| ----------------------- | ------------------------------------------------------------ |
+| **`DataSource` 的作用** | 提供前后页面的视图控制器，实现滑动切换逻辑                   |
+| **必须实现的方法**      | `viewControllerBeforeViewController:` 和 `viewControllerAfterViewController:` |
+| **不实现的后果**        | 页面无法滑动，跳转异常                                       |
+| **页面指示器**          | 通过 `presentationCountForPageViewController:` 和 `presentationIndexForPageViewController:` 实现 |
+
+如果你的 `UIPageViewController` 出现 **页面无法滑动** 或 **跳转后回退**，首先检查 `DataSource` 是否正确实现！
+
+
+
+## `UIKit` - `UIPageViewController` - 示例
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-uipageviewcontroller)
+
+### 编程设置当前显示的`ViewController`
+
+>说明：使用 `PageViewController` 的 `setViewControllers` 函数设置不同的 `ViewController` 之间切换。
+
+```objc
+- (IBAction)onClickedPrev:(id)sender {
+    int index = [self indexOfCurrentViewController];
+    index = MAX(0, index-1);
+    // 编程设置当前显示的 UIViewController
+    [self.pageViewController setViewControllers:@[self.pageList[index]]
+                                      direction:UIPageViewControllerNavigationDirectionReverse
+                                       animated:YES
+                                     completion:nil];
+}
+
+- (IBAction)onClickedNext:(id)sender {
+    int index = [self indexOfCurrentViewController];
+    index = MIN(self.pageList.count-1, index+1);
+    // 编程设置当前显示的 UIViewController
+    [self.pageViewController setViewControllers:@[self.pageList[index]]
+                                      direction:UIPageViewControllerNavigationDirectionForward
+                                       animated:YES
+                                     completion:nil];
+}
+```
+
+
+
+### 手势滑动切换
+
+>说明：实现 `UIPageViewControllerDataSource` 协议以告诉 `PageViewController` 怎么滑动切换 `ViewController`。如果不需要手势滑动切换可以不实现此协议。
+
+`ViewController.h`：
+
+```objc
+#import <UIKit/UIKit.h>
+
+@interface ViewController : UIViewController<UIPageViewControllerDataSource>
+
+
+@end
+```
+
+`ViewController.m`：
+
+```objc
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view.
+    
+    self.pageList = [NSMutableArray array];
+    FirstViewController *firstViewController = [[FirstViewController alloc] init];
+    SecondViewController *secondViewController = [[SecondViewController alloc] init];
+    ThirdViewController *thirdViewController = [[ThirdViewController alloc] init];
+    [self.pageList addObject:firstViewController];
+    [self.pageList addObject:secondViewController];
+    [self.pageList addObject:thirdViewController];
+    
+    // 设置初始化视图
+    [self.pageViewController setViewControllers:@[self.pageList[0]]
+                                      direction:UIPageViewControllerNavigationDirectionForward
+                                       animated:NO
+                                     completion:nil];
+}
+
+// 获取 UIPageViewController 当前显示的 UIViewController 索引
+- (int) indexOfCurrentViewController {
+    return [self.pageList indexOfObject:self.pageViewController.viewControllers.firstObject];
+}
+
+- (UIViewController *)pageViewController:(UIPageViewController *)pageViewController
+    viewControllerBeforeViewController:(UIViewController *)viewController {
+    // 返回前一个视图控制器
+    NSUInteger index = [self.pageList indexOfObject:viewController];
+    if (index == 0 || index == NSNotFound) {
+        return nil;
+    }
+    return self.pageList[--index];
+}
+
+- (UIViewController *)pageViewController:(UIPageViewController *)pageViewController
+    viewControllerAfterViewController:(UIViewController *)viewController {
+    // 返回后一个视图控制器
+    NSUInteger index = [self.pageList indexOfObject:viewController];
+    if (index == NSNotFound || index == self.pageList.count - 1) {
+        return nil;
+    }
+    return self.pageList[++index];
+}
+```
+
+
+
 ## `UI` - 子视图控制器 - 概念
 
 子视图控制器是 iOS 开发中重要的架构模式，它允许你将复杂的 UI 分解为多个独立的、可重用的组件。以下是 Objective-C 中实现子视图控制器的完整指南。
