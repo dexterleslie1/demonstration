@@ -2877,146 +2877,7 @@ NSError *error = [NSError errorWithDomain:domain code:-101 userInfo:userInfo];
 NSLog(@"自定义 NSError=%@", error);
 ```
 
-## `AFNetworking` - 导入
 
-在项目根目录中创建 `Podfile`
-
-```
-project 'xxx'
-platform:ios, '7.0'
-
-target 'xxx' do
-    pod 'AFNetworking', '~>3.1.0'
-end
-
-target 'xxxTests' do
-    pod 'AFNetworking', '~>3.1.0'
-end
-
-```
-
-安装依赖
-
-```sh
-pod install --verbose
-```
-
-## `AFNetworking` - 测试
-
-运行本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-java/demo-library/demo-openfeign) 协助测试。
-
-测试：
-
-```objective-c
-NSString *host = @"192.168.235.128";
-int port = 8080;
-NSString *uriPrefix = [NSString stringWithFormat:@"http://%@:%d", host, port];
-
-AFHTTPSessionManager *manager = nil;
-XCTestExpectation *expectation = nil;
-
-__block NSNumber *errorCode = nil;
-__block NSString *errorMessage = nil;
-__block NSError *errorResult = nil;
-
-/* 测试失败的 get 请求，业务异常处理 */
-expectation = [[XCTestExpectation alloc] init];
-manager = [AFHTTPSessionManager manager];
-[manager GET: [NSString stringWithFormat:@"%@/api/v1/test1", uriPrefix] parameters: nil success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
-    // 业务异常处理
-    errorCode = [responseObject objectForKey: @"errorCode"];
-    if([errorCode intValue]>0) {
-        errorMessage = [responseObject objectForKey: @"errorMessage"];
-    }
-
-    [expectation fulfill];
-} failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
-    errorResult = error;
-    [expectation fulfill];
-}];
-
-[self waitForExpectations:@[expectation] timeout:10];
-
-XCTAssertNil(errorResult);
-XCTAssertEqual([errorCode intValue], 90000);
-XCTAssertEqualObjects(@"Missing required parameter \"name\"!", errorMessage);
-
-/* 测试成功的 get 请求 */
-errorCode = nil;
-errorMessage = nil;
-errorResult = nil;
-
-expectation = [[XCTestExpectation alloc] init];
-manager = [AFHTTPSessionManager manager];
-NSDictionary *params = @{
-    @"name": @"Dexter"
-};
-[manager GET: [NSString stringWithFormat:@"%@/api/v1/test1", uriPrefix] parameters: params success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
-    [expectation fulfill];
-} failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
-    errorResult = error;
-    [expectation fulfill];
-}];
-
-[self waitForExpectations:@[expectation] timeout:10];
-
-XCTAssertNil(errorResult);
-XCTAssertEqual([errorCode intValue], 0);
-XCTAssertNil(errorMessage);
-
-/* 测试 http 400 返回 */
-errorCode = nil;
-errorMessage = nil;
-errorResult = nil;
-
-expectation = [[XCTestExpectation alloc] init];
-manager = [AFHTTPSessionManager manager];
-[manager GET: [NSString stringWithFormat:@"%@/api/v1/testHttp400", uriPrefix] parameters: nil success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
-    [expectation fulfill];
-} failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
-    errorResult = error;
-
-    // 错误域
-    XCTAssertEqualObjects(@"com.alamofire.error.serialization.response", errorResult.domain);
-    // 错误码
-    XCTAssertEqual(-1011, errorResult.code);
-    // 描述
-    XCTAssertEqualObjects(@"Request failed: bad request (400)", errorResult.localizedDescription);
-    // 失败原因
-    XCTAssertNil(errorResult.localizedFailureReason);
-    // AFNetworking 特定的错误信息
-    NSHTTPURLResponse *response = errorResult.userInfo[AFNetworkingOperationFailingURLResponseErrorKey];
-    // HTTP 状态码
-    XCTAssertEqual(400, response.statusCode);
-    // URL
-    XCTAssertEqualObjects(@"http://192.168.235.128:8080/api/v1/testHttp400", response.URL.absoluteString);
-    // 头信息
-    XCTAssertEqual(4, response.allHeaderFields.count);
-    XCTAssertEqualObjects(@"application/json", response.allHeaderFields[@"Content-Type"]);
-    XCTAssertEqualObjects(@"close", response.allHeaderFields[@"Connection"]);
-
-    // 响应体
-    NSData *responseData = errorResult.userInfo[AFNetworkingOperationFailingURLResponseDataErrorKey];
-    NSString *json = json = [[NSString alloc] initWithData:responseData encoding:NSUTF8StringEncoding];
-    // json 转换为 NSDictionary
-    NSData *jsonData = [json dataUsingEncoding:NSUTF8StringEncoding];
-    NSError *jsonError;
-    NSDictionary *dictionary = [NSJSONSerialization JSONObjectWithData:jsonData
-                                                 options:NSJSONReadingMutableContainers
-                                                   error:&jsonError];
-    XCTAssertNil(jsonError);
-    XCTAssertEqual(90000, [dictionary[@"errorCode"] intValue]);
-    XCTAssertEqualObjects(@"测试业务异常", dictionary[@"errorMessage"]);
-
-    [expectation fulfill];
-}];
-
-[self waitForExpectations:@[expectation] timeout:10];
-
-XCTAssertEqualObjects(@"Request failed: bad request (400)", errorResult.localizedDescription);
-XCTAssertEqual([errorCode intValue], 0);
-XCTAssertNil(errorMessage);
-```
 
 ## `IBOutlet`和 `IBAction`
 
@@ -7200,3 +7061,291 @@ NSDictionary *defaultValues = @{
 ```
 
 这样当这些 key 不存在时，会返回你设置的默认值而不是 nil/0。
+
+
+
+## 网络 - `AFNetworking` - 概念
+
+您可以把它理解为 **iOS 和 macOS 开发中一个功能极其强大的“网络工具箱”**。
+
+它的官方定义是一个“为 iOS, macOS, watchOS 和 tvOS 打造的令人愉快的网络库”。而“令人愉快”恰恰是它的核心——它让原本繁琐复杂的网络编程变得简单、高效、可靠。
+
+---
+
+### 一、核心比喻：从“手动造车”到“开上跑车”
+
+想象一下你需要从北京运送货物到上海：
+
+*   **使用苹果自带的 `NSURLSession`**：就像是你自己从零开始**制造一辆卡车**。你需要自己组装发动机、车轮、车架，然后自己规划路线、自己驾驶、自己处理途中的任何故障。功能强大且灵活，但非常耗时和容易出错。
+*   **使用 `AFNetworking`**：就像是直接**租用了一辆现代化的豪华集装箱卡车**，并且配了专业的司机和物流团队。你只需要告诉团队“把这箱货（请求）送到上海这个地址（URL）”，他们就会高效、安全地完成所有工作，并把签收单（数据）整洁地交还给你。
+
+**AFNetworking 就是那个为你处理所有底层脏活累活的“专业物流团队”。**
+
+---
+
+### 二、AFNetworking 主要为你解决了哪些痛点？
+
+在没有它之前，开发者需要写大量模板代码：
+
+1.  **繁琐的配置**：需要手动配置请求头、超时时间、缓存策略等。
+2.  **复杂的异步处理**：网络请求是异步的，需要编写复杂的回调（Block 或 delegate）来处理结果和错误。
+3.  **手动数据解析**：收到服务器返回的原始二进制数据（Data）后，需要手动将其解析成 JSON 或 Property List 等可用格式。
+4.  **困难的文件操作**：实现文件上传和下载（尤其是支持断点续传）非常麻烦。
+5.  **安全性问题**：实现 HTTPS 证书锁定（SSL Pinning）等安全策略难度较大。
+
+AFNetworking 将所有这些功能进行了封装，提供简洁的 API，让你用几行代码就能完成上述所有复杂工作。
+
+---
+
+### 三、AFNetworking 的核心组成模块
+
+它是一个模块化的库，你可以按需引入。其主要组件包括：
+
+*   **`AFHTTPSessionManager`**：**这是最常用、最核心的类**。它负责发起所有的 HTTP/HTTPS 请求（GET, POST, PUT, DELETE 等），并自动将响应数据解析为 JSON、XML 或 Property List 对象。
+
+*   **`UIImageView+AFNetworking`**：一个著名的分类（Category），**为 `UIImageView` 提供了异步下载和缓存网络图片的功能**。你通常只需要一行代码就能让图片视图加载网络图片并自动处理缓存。
+    ```objectivec
+    // 一行代码加载网络图片，并自动缓存
+    [self.avatarImageView setImageWithURL:[NSURL URLWithString:@"https://example.com/avatar.jpg"]];
+    ```
+
+*   **`AFNetworkReachabilityManager`**：用于**监听设备的网络状态变化**（2G/3G/4G/5G、Wi-Fi、无网络），你可以在应用断网或切换到蜂窝网络时给用户相应的提示。
+
+*   **`AFSecurityPolicy`**：用于**配置网络层的安全策略**，其中最重要的是 SSL Pinning（证书锁定），它可以有效防止中间人攻击，确保应用与服务器通信的绝对安全。
+
+*   **`AFURLSessionManager`**：是 `AFHTTPSessionManager` 的父类，提供了更底层、更灵活的任务创建和管理方式。
+
+---
+
+### 四、一个简单的代码示例对比
+
+**目标：从 API 获取一个 JSON 格式的用户信息列表。**
+
+*   **使用原生 `NSURLSession` 的代码量：**
+    ```objectivec
+    NSURL *url = [NSURL URLWithString:@"https://api.example.com/users"];
+    NSURLSessionDataTask *task = [[NSURLSession sharedSession] dataTaskWithURL:url completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+        if (error) {
+        NSLog(@"Error: %@", error);
+        return;
+        }
+        
+        NSError *jsonError;
+        NSArray *userList = [NSJSONSerialization JSONObjectWithData:data options:0 error:&jsonError];
+        if (jsonError) {
+        NSLog(@"JSON Error: %@", jsonError);
+        return;
+        }
+        
+        NSLog(@"User list: %@", userList);
+        // 最后还要回到主线程更新UI
+        dispatch_async(dispatch_get_main_queue(), ^{
+        [self.tableView reloadData];
+        });
+    }];
+    [task resume];
+    ```
+
+*   **使用 `AFNetworking` 的代码量：**
+    ```objectivec
+    #import <AFNetworking/AFNetworking.h>
+    
+    AFHTTPSessionManager *manager = [AFHTTPSessionManager manager];
+    [manager GET:@"https://api.example.com/users" parameters:nil headers:nil progress:nil success:^(NSURLSessionDataTask * _Nonnull task, NSArray *responseObject) {
+        // responseObject 已经是解析好的数组了！
+        NSLog(@"User list: %@", responseObject);
+        [self.tableView reloadData]; // 默认就在主线程回调，无需手动切换
+    } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
+        NSLog(@"Error: %@", error);
+    }];
+    ```
+
+**对比可见**，AFNetworking 的代码更简洁、意图更清晰，并且自动帮你处理了错误、数据解析和线程切换。
+
+---
+
+### 总结
+
+**AFNetworking 是什么？**
+
+它是一个为 Objective-C 和 Swift（混编）项目设计的、**功能全面、稳定高效、开发者体验极佳的网络库**。它封装了苹果底层网络 API 的复杂性，提供了更高级、更易用的接口，极大地提升了开发效率和应用的网络稳定性与安全性。
+
+在 iOS 开发领域，尤其是 Objective-C 项目中，它长期以来都是**事实上的标准网络库**，是绝大多数资深 iOS 开发者工具链中不可或缺的一部分。
+
+
+
+## 网络 - `AFNetworking` - 用法
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-aftnetworking)
+
+在项目根目录中创建 `Podfile`
+
+```
+project 'xxx'
+platform:ios, '7.0'
+
+target 'xxx' do
+    pod 'AFNetworking', '~>3.1.0'
+end
+
+target 'xxxTests' do
+    pod 'AFNetworking', '~>3.1.0'
+end
+
+```
+
+安装依赖
+
+```sh
+pod install --verbose
+```
+
+成功安装依赖后使用 `xxx.xcworkspace` 文件打开项目。
+
+运行本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-java/demo-library/demo-openfeign) 协助测试。
+
+测试：
+
+```objc
+#import <XCTest/XCTest.h>
+#import <AFNetworking/AFNetworking.h>
+
+@interface demo_afnetworkingTests : XCTestCase
+
+@end
+
+@implementation demo_afnetworkingTests
+
+- (void)setUp {
+    // Put setup code here. This method is called before the invocation of each test method in the class.
+}
+
+- (void)tearDown {
+    // Put teardown code here. This method is called after the invocation of each test method in the class.
+}
+
+- (void)testExample {
+    // This is an example of a functional test case.
+    // Use XCTAssert and related functions to verify your tests produce the correct results.
+    
+    NSString *host = @"192.168.235.128";
+    int port = 8080;
+    NSString *uriPrefix = [NSString stringWithFormat:@"http://%@:%d", host, port];
+
+    AFHTTPSessionManager *manager = nil;
+    XCTestExpectation *expectation = nil;
+
+    __block NSNumber *errorCode = nil;
+    __block NSString *errorMessage = nil;
+    __block NSError *errorResult = nil;
+
+    /* 测试失败的 get 请求，业务异常处理 */
+    expectation = [[XCTestExpectation alloc] init];
+    manager = [AFHTTPSessionManager manager];
+    [manager GET: [NSString stringWithFormat:@"%@/api/v1/test1", uriPrefix] parameters: nil success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
+        // 业务异常处理
+        errorCode = [responseObject objectForKey: @"errorCode"];
+        if([errorCode intValue]>0) {
+            errorMessage = [responseObject objectForKey: @"errorMessage"];
+        }
+
+        [expectation fulfill];
+    } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
+        errorResult = error;
+        [expectation fulfill];
+    }];
+
+    [self waitForExpectations:@[expectation] timeout:10];
+
+    XCTAssertNil(errorResult);
+    XCTAssertEqual([errorCode intValue], 90000);
+    XCTAssertEqualObjects(@"Missing required parameter \"name\"!", errorMessage);
+
+    /* 测试成功的 get 请求 */
+    errorCode = nil;
+    errorMessage = nil;
+    errorResult = nil;
+
+    expectation = [[XCTestExpectation alloc] init];
+    manager = [AFHTTPSessionManager manager];
+    NSDictionary *params = @{
+        @"name": @"Dexter"
+    };
+    [manager GET: [NSString stringWithFormat:@"%@/api/v1/test1", uriPrefix] parameters: params success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
+        [expectation fulfill];
+    } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
+        errorResult = error;
+        [expectation fulfill];
+    }];
+
+    [self waitForExpectations:@[expectation] timeout:10];
+
+    XCTAssertNil(errorResult);
+    XCTAssertEqual([errorCode intValue], 0);
+    XCTAssertNil(errorMessage);
+
+    /* 测试 http 400 返回 */
+    errorCode = nil;
+    errorMessage = nil;
+    errorResult = nil;
+
+    expectation = [[XCTestExpectation alloc] init];
+    manager = [AFHTTPSessionManager manager];
+    [manager GET: [NSString stringWithFormat:@"%@/api/v1/testHttp400", uriPrefix] parameters: nil success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
+        [expectation fulfill];
+    } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
+        errorResult = error;
+
+        // 错误域
+        XCTAssertEqualObjects(@"com.alamofire.error.serialization.response", errorResult.domain);
+        // 错误码
+        XCTAssertEqual(-1011, errorResult.code);
+        // 描述
+        XCTAssertEqualObjects(@"Request failed: bad request (400)", errorResult.localizedDescription);
+        // 失败原因
+        XCTAssertNil(errorResult.localizedFailureReason);
+        // AFNetworking 特定的错误信息
+        NSHTTPURLResponse *response = errorResult.userInfo[AFNetworkingOperationFailingURLResponseErrorKey];
+        // HTTP 状态码
+        XCTAssertEqual(400, response.statusCode);
+        // URL
+        XCTAssertEqualObjects(@"http://192.168.235.128:8080/api/v1/testHttp400", response.URL.absoluteString);
+        // 头信息
+        XCTAssertEqual(4, response.allHeaderFields.count);
+        XCTAssertEqualObjects(@"application/json", response.allHeaderFields[@"Content-Type"]);
+        XCTAssertEqualObjects(@"close", response.allHeaderFields[@"Connection"]);
+
+        // 响应体
+        NSData *responseData = errorResult.userInfo[AFNetworkingOperationFailingURLResponseDataErrorKey];
+        NSString *json = json = [[NSString alloc] initWithData:responseData encoding:NSUTF8StringEncoding];
+        // json 转换为 NSDictionary
+        NSData *jsonData = [json dataUsingEncoding:NSUTF8StringEncoding];
+        NSError *jsonError;
+        NSDictionary *dictionary = [NSJSONSerialization JSONObjectWithData:jsonData
+                                                     options:NSJSONReadingMutableContainers
+                                                       error:&jsonError];
+        XCTAssertNil(jsonError);
+        XCTAssertEqual(90000, [dictionary[@"errorCode"] intValue]);
+        XCTAssertEqualObjects(@"测试业务异常", dictionary[@"errorMessage"]);
+
+        [expectation fulfill];
+    }];
+
+    [self waitForExpectations:@[expectation] timeout:10];
+
+    XCTAssertEqualObjects(@"Request failed: bad request (400)", errorResult.localizedDescription);
+    XCTAssertEqual([errorCode intValue], 0);
+    XCTAssertNil(errorMessage);
+}
+
+- (void)testPerformanceExample {
+    // This is an example of a performance test case.
+    [self measureBlock:^{
+        // Put the code you want to measure the time of here.
+    }];
+}
+
+@end
+
+```
+
