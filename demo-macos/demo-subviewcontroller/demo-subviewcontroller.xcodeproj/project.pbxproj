@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		878223E82E83D43500771BC5 /* XibProgramaticallySubViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 878223E62E83D43500771BC5 /* XibProgramaticallySubViewController.m */; };
+		878223E92E83D43500771BC5 /* XibProgramaticallySubViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 878223E72E83D43500771BC5 /* XibProgramaticallySubViewController.xib */; };
 		879E9B152E82329100281959 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 879E9B142E82329100281959 /* AppDelegate.m */; };
 		879E9B182E82329100281959 /* SceneDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 879E9B172E82329100281959 /* SceneDelegate.m */; };
 		879E9B1B2E82329200281959 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 879E9B1A2E82329200281959 /* ViewController.m */; };
@@ -18,6 +20,7 @@
 		879E9B3A2E82329700281959 /* demo_subviewcontrollerUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 879E9B392E82329700281959 /* demo_subviewcontrollerUITests.m */; };
 		879E9B3C2E82329700281959 /* demo_subviewcontrollerUITestsLaunchTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 879E9B3B2E82329700281959 /* demo_subviewcontrollerUITestsLaunchTests.m */; };
 		879E9B4A2E8233D400281959 /* MyTabBarController.m in Sources */ = {isa = PBXBuildFile; fileRef = 879E9B492E8233D400281959 /* MyTabBarController.m */; };
+		87D6C6A02E839C7D006F25FD /* MyStoryboard.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 87D6C69F2E839C7D006F25FD /* MyStoryboard.storyboard */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -38,6 +41,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		878223E52E83D43500771BC5 /* XibProgramaticallySubViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XibProgramaticallySubViewController.h; sourceTree = "<group>"; };
+		878223E62E83D43500771BC5 /* XibProgramaticallySubViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = XibProgramaticallySubViewController.m; sourceTree = "<group>"; };
+		878223E72E83D43500771BC5 /* XibProgramaticallySubViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = XibProgramaticallySubViewController.xib; sourceTree = "<group>"; };
 		879E9B102E82329100281959 /* demo-subviewcontroller.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "demo-subviewcontroller.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		879E9B132E82329100281959 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		879E9B142E82329100281959 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -57,6 +63,7 @@
 		879E9B3B2E82329700281959 /* demo_subviewcontrollerUITestsLaunchTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = demo_subviewcontrollerUITestsLaunchTests.m; sourceTree = "<group>"; };
 		879E9B482E8233D400281959 /* MyTabBarController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MyTabBarController.h; sourceTree = "<group>"; };
 		879E9B492E8233D400281959 /* MyTabBarController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MyTabBarController.m; sourceTree = "<group>"; };
+		87D6C69F2E839C7D006F25FD /* MyStoryboard.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = MyStoryboard.storyboard; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -120,6 +127,10 @@
 				879E9B252E82329600281959 /* main.m */,
 				879E9B482E8233D400281959 /* MyTabBarController.h */,
 				879E9B492E8233D400281959 /* MyTabBarController.m */,
+				87D6C69F2E839C7D006F25FD /* MyStoryboard.storyboard */,
+				878223E52E83D43500771BC5 /* XibProgramaticallySubViewController.h */,
+				878223E62E83D43500771BC5 /* XibProgramaticallySubViewController.m */,
+				878223E72E83D43500771BC5 /* XibProgramaticallySubViewController.xib */,
 			);
 			path = "demo-subviewcontroller";
 			sourceTree = "<group>";
@@ -244,7 +255,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				878223E92E83D43500771BC5 /* XibProgramaticallySubViewController.xib in Resources */,
 				879E9B232E82329600281959 /* LaunchScreen.storyboard in Resources */,
+				87D6C6A02E839C7D006F25FD /* MyStoryboard.storyboard in Resources */,
 				879E9B202E82329600281959 /* Assets.xcassets in Resources */,
 				879E9B1E2E82329200281959 /* Main.storyboard in Resources */,
 			);
@@ -274,6 +287,7 @@
 				879E9B1B2E82329200281959 /* ViewController.m in Sources */,
 				879E9B152E82329100281959 /* AppDelegate.m in Sources */,
 				879E9B262E82329600281959 /* main.m in Sources */,
+				878223E82E83D43500771BC5 /* XibProgramaticallySubViewController.m in Sources */,
 				879E9B4A2E8233D400281959 /* MyTabBarController.m in Sources */,
 				879E9B182E82329100281959 /* SceneDelegate.m in Sources */,
 			);
