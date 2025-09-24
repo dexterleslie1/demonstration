@@ -3669,9 +3669,7 @@ class CustomSegue: UIStoryboardSegue {
   
     self.window = [[UIWindow alloc]initWithFrame:[UIScreen mainScreen].bounds];
     self.window.backgroundColor = [UIColor whiteColor];
-    UIViewController *viewController = [[XibUsingMethodHybrid alloc]
-                                        initWithNibName:@"XibUsingMethodHybrid"
-                                        bundle:[NSBundle mainBundle]];
+    UIViewController *viewController = [[XibUsingMethodHybrid alloc] init];
     self.window.rootViewController = viewController;
     [self.window makeKeyAndVisible];
   
@@ -3722,12 +3720,8 @@ class CustomSegue: UIStoryboardSegue {
     self.window = [[UIWindow alloc]initWithFrame:[UIScreen mainScreen].bounds];
     self.window.backgroundColor = [UIColor whiteColor];
   
-//    UIViewController *viewController = [[XibUsingMethodHybrid alloc]
-//                                        initWithNibName:@"XibUsingMethodHybrid"
-//                                        bundle:[NSBundle mainBundle]];
-    UIViewController *viewController = [[XibUsingMethodInterfaceBuilder alloc]
-                                        initWithNibName: @"XibUsingMethodInterfaceBuilder"
-                                        bundle:[NSBundle mainBundle]];
+    // UIViewController *viewController = [[XibUsingMethodHybrid alloc] init];
+    UIViewController *viewController = [[XibUsingMethodInterfaceBuilder alloc] init];
   
     self.window.rootViewController = viewController;
     [self.window makeKeyAndVisible];
@@ -3836,15 +3830,9 @@ class CustomSegue: UIStoryboardSegue {
     self.window = [[UIWindow alloc]initWithFrame:[UIScreen mainScreen].bounds];
     self.window.backgroundColor = [UIColor whiteColor];
   
-//    UIViewController *viewController = [[XibUsingMethodHybrid alloc]
-//                                        initWithNibName:@"XibUsingMethodHybrid"
-//                                        bundle:[NSBundle mainBundle]];
-//    UIViewController *viewController = [[XibUsingMethodInterfaceBuilder alloc]
-//                                        initWithNibName: @"XibUsingMethodInterfaceBuilder"
-//                                        bundle:[NSBundle mainBundle]];
-    UIViewController *viewController = [[XibUsingMethodProgrammatically alloc]
-                                        initWithNibName:@"XibUsingMethodProgrammatically"
-                                        bundle:[NSBundle mainBundle]];
+    // UIViewController *viewController = [[XibUsingMethodHybrid alloc] init];
+    // UIViewController *viewController = [[XibUsingMethodInterfaceBuilder alloc] init];
+    UIViewController *viewController = [[XibUsingMethodProgrammatically alloc] init];
   
     self.window.rootViewController = viewController;
     [self.window makeKeyAndVisible];
@@ -3852,6 +3840,55 @@ class CustomSegue: UIStoryboardSegue {
     return YES;
 }
 ```
+
+
+
+## `storyboard`、`xib`、`nib` - `storyboard/xib`重写`initWithCoder`以自定义组件
+
+>说明：在 `storyboard/xib` 中绑定 `Custom Class` 后无法在组件的构造函数中提供指定参数，此时需要重写 `initWithCoder` 构造函数以提供指定参数给组件。
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-uipageviewcontroller)
+
+`MyPageViewController.m`：
+
+```objc
+#import "MyPageViewController.h"
+
+@interface MyPageViewController ()
+
+@end
+
+@implementation MyPageViewController
+
+- (instancetype)initWithCoder:(NSCoder *)coder {
+    self = [super initWithTransitionStyle:UIPageViewControllerTransitionStyleScroll
+                    navigationOrientation:UIPageViewControllerNavigationOrientationHorizontal
+                    options:nil];
+    if(self) {
+    }
+    
+    return self;
+}
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view.
+}
+
+/*
+#pragma mark - Navigation
+
+// In a storyboard-based application, you will often want to do a little preparation before navigation
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    // Get the new view controller using [segue destinationViewController].
+    // Pass the selected object to the new view controller.
+}
+*/
+
+@end
+```
+
+
 
 ## `AppDelegate`
 
@@ -4332,7 +4369,7 @@ SecondViewController *viewController = [[SecondViewController alloc] init];
 [self dismissViewControllerAnimated:YES completion:nil];
 ```
 
-## `UIKit` - `UINavigationController`
+## `UIKit` - `UINavigationController` - 概念
 
 `UINavigationController` 是 iOS 开发中用于管理视图控制器（`UIViewController`）层级导航的一个核心类，它提供了一种**基于栈的导航模型**，允许用户在多个界面之间按层级前进和返回。
 
@@ -4489,6 +4526,104 @@ secondVC.title = @"第二页";
     return YES;
 }
 ```
+
+
+
+## `UIKit` - `UINavigationController` - `UIWindow rootViewController`修改为`UINavigationController`
+
+### `iOS 13`之前
+
+>说明：在 `- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions` 方法中设置 `window` 的 `rootViewController` 为 `NavigationController`。
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-uinavigationcontroller)
+
+`window rootViewController` 修改为 `NavigationController`
+
+```objc
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+    // Override point for customization after application launch.
+    
+    // 初始化 UIWindow
+    self.window = [[UIWindow alloc]initWithFrame:[UIScreen mainScreen].bounds];
+    // 设置 UIWindow 背景颜色
+    self.window.backgroundColor = [UIColor grayColor];
+    
+    // 设置 UIWindow 的根视图为 UINavigationController
+    UIViewController *viewController = [[FirstViewController alloc] init];
+    UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController:viewController];
+    self.window.rootViewController = navigationController;
+    
+    // 将 UIWindow 设置成为应用程序的主窗口（Key Window）
+    // 将 UIWindow 显示在屏幕上
+    [self.window makeKeyAndVisible];
+    
+    return YES;
+}
+```
+
+跳转
+
+```objc
+- (void)onClickedButtonClickMe:(id) sender{
+    // 向 UINavigationController 添加视图
+    SecondViewController *viewController = [[SecondViewController alloc] init];
+    [self.navigationController pushViewController:viewController animated:YES];
+}
+```
+
+
+
+### `iOS 13`之后方法一
+
+>说明：在 `SceneDelegate.m` 方法 `- (void)scene:(UIScene *)scene willConnectToSession:(UISceneSession *)session options:(UISceneConnectionOptions *)connectionOptions` 中添加如下代码替换 `window rootViewController` 为 `NavigationController`。
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-uinavigationcontroller-substitute-windowrootcontroller)
+
+`window rootViewController` 替换为 `NavigationController`
+
+```objc
+- (void)scene:(UIScene *)scene willConnectToSession:(UISceneSession *)session options:(UISceneConnectionOptions *)connectionOptions {
+    // Use this method to optionally configure and attach the UIWindow `window` to the provided UIWindowScene `scene`.
+    // If using a storyboard, the `window` property will automatically be initialized and attached to the scene.
+    // This delegate does not imply the connecting scene or session are new (see `application:configurationForConnectingSceneSession` instead).
+    
+    // 替换 window rootViewController 为 NavigationController
+    UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
+    UIViewController *viewController = [storyboard instantiateInitialViewController];
+    UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController:viewController];
+    self.window.rootViewController = navigationController;
+}
+```
+
+跳转
+
+```objc
+- (IBAction)onClickedSwitchToMyView:(id)sender {
+    UIViewController *viewController = [[MyViewController alloc] init];
+    [self.navigationController pushViewController:viewController animated:YES];
+}
+```
+
+
+
+### `iOS 13`之后方法二
+
+>说明：在 `Interface Builder` 中添加 `Embed In View Controller Navigation Controller` 实现替换 `window rootViewController` 为 `NavigationController`。
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-uinavigationcontroller-substitute-windowrootcontroller)
+
+打开 `Main.storyboard` 的 `Interface Builder` 并选中 `View Controller Scene`，在 `Interface Builder` 右下角点击 `Embed In` ![image-20250924143044992](image-20250924143044992.png)并选中 `Navigation Controller`，`Interface Builder` 会自动添加 `Navigation Conroller Scene` 和 `Segue` 跳转到 `View Controller Scene`，并且设置 `Navigation Controller Scene` 为 `Storyboard` 的 `Entry Point`。
+
+跳转
+
+```objc
+- (IBAction)onClickedSwitchToMyView:(id)sender {
+    UIViewController *viewController = [[MyViewController alloc] init];
+    [self.navigationController pushViewController:viewController animated:YES];
+}
+```
+
+
 
 ## `UIKit` - `UITabBarController`
 
@@ -5756,7 +5891,26 @@ childVC.view.frame = self.containerView.bounds; // 设置子控制器视图大�
 
 
 
-## `UI` - 子视图控制器 - `Interface Builder`添加`UITabBarController`子控制器
+## `UI` - 子视图控制器 - 获取`ContainerView`中`UIPageViewController`实例
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-uipageviewcontroller)
+
+需要先设置 `Storyboard` 中 `Embed Segue` 的 `Identifier` 为 `EmbedPageViewControllerSegue`
+
+```objc
+// 通过 Segue 获取 ContainerView 中的 UIPageViewController 实例
+// 需要先设置 Storyboard 中 Embed Segue 的 Identifier 为 EmbedPageViewControllerSegue
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    if ([segue.identifier isEqualToString:@"EmbedPageViewControllerSegue"]) {
+        self.pageViewController = (UIPageViewController *)segue.destinationViewController;
+        self.pageViewController.dataSource = self;
+    }
+}
+```
+
+
+
+## `UI` - 子视图控制器 - 添加`UITabBarController`子控制器
 
 在 Interface Builder (Storyboard/XIB) 中添加 UITabBarController 作为子视图控制器需要特殊的配置。以下是详细步骤：
 
@@ -5910,7 +6064,10 @@ UIViewController
 
 ### 示例
 
->说明：`UIViewController` 中添加 `UITabBarController` 子控制器。
+>说明：
+>
+>- 在 `storyboard Interface Builder` 中通过 `Container View` 添加 `UITabBarController` 子控制器。
+>- `Xib` 中通过编程的方式添加 `UITabBarController` 子控制器（因为 `Xib` 中没有 `Container View` 组件，所以在 `Xib` 中需要使用编程方式添加子控制器）。
 >
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-subviewcontroller)
 
