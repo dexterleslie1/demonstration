@@ -1,0 +1,11 @@
+project 'demo-afnetworking'
+platform:ios, '7.0'
+
+target 'demo-afnetworking' do
+    pod 'AFNetworking', '~>3.1.0'
+end
+
+target 'demo-afnetworkingTests' do
+    pod 'AFNetworking', '~>3.1.0'
+end
+

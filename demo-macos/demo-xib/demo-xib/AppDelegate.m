@@ -23,15 +23,9 @@
     self.window = [[UIWindow alloc]initWithFrame:[UIScreen mainScreen].bounds];
     self.window.backgroundColor = [UIColor whiteColor];
     
-//    UIViewController *viewController = [[XibUsingMethodHybrid alloc]
-//                                        initWithNibName:@"XibUsingMethodHybrid"
-//                                        bundle:[NSBundle mainBundle]];
-//    UIViewController *viewController = [[XibUsingMethodInterfaceBuilder alloc]
-//                                        initWithNibName: @"XibUsingMethodInterfaceBuilder"
-//                                        bundle:[NSBundle mainBundle]];
-    UIViewController *viewController = [[XibUsingMethodProgrammatically alloc]
-                                        initWithNibName:@"XibUsingMethodProgrammatically"
-                                        bundle:[NSBundle mainBundle]];
+    // UIViewController *viewController = [[XibUsingMethodHybrid alloc] init];
+    // UIViewController *viewController = [[XibUsingMethodInterfaceBuilder alloc] init];
+    UIViewController *viewController = [[XibUsingMethodProgrammatically alloc] init];
     
     self.window.rootViewController = viewController;
     [self.window makeKeyAndVisible];
