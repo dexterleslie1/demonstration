@@ -4007,6 +4007,8 @@ UIKit 的功能非常丰富，主要包括：
 
 - 在 `ViewController.m - (void)viewDidAppear:(BOOL)animated` 中获取
 
+  >提示：`self.view.window` 当前控制器的窗口，适合局部 `UI` 更新（如页面内弹窗）。
+  
   ```objc
   - (void)viewDidLoad {
       [super viewDidLoad];
@@ -4024,10 +4026,15 @@ UIKit 的功能非常丰富，主要包括：
       NSLog(@"viewDidAppear UIWindow=%@", window);
   }
   ```
+  
+- `[UIApplication sharedApplication].keyWindow` 全局窗口，适合 `App` 级 `UI` 操作（如全局弹窗）。
+
+  ```objc
+  UIWindow *window = [UIApplication sharedApplication].keyWindow;
+  NSLog(@"Global UIWindow=%@", window);
+  ```
 
   
-
-
 
 ## `UIKit` - `UIButton`
 
@@ -5931,6 +5938,192 @@ UIViewController
 >- `Xib` 中通过编程的方式添加 `UITabBarController` 子控制器（因为 `Xib` 中没有 `Container View` 组件，所以在 `Xib` 中需要使用编程方式添加子控制器）。
 >
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-subviewcontroller)
+
+
+
+## `UI`库 - `MBProgressHUD`
+
+### 一、核心定义：一个强大的“加载提示”工具箱
+
+**MBProgressHUD** 是 iOS 开发中一个**极其流行、功能全面的第三方提示框库**。它的名字来源于：
+
+- **MB**：作者 Matej Bukovinski 的缩写
+- **Progress**：进度
+- **HUD**：**Heads-Up Display**（平视显示器），这个概念源于战斗机飞行员无需低头就能在挡风玻璃上看到关键信息。在 iOS 中，它指的就是那种**悬浮在界面之上、半透明的提示框**。
+
+您可以把它理解为 iOS 系统自带的 `UIActivityIndicatorView`（菊花加载器）的**超级增强版**。
+
+---
+
+### 二、MBProgressHUD 能做什么？
+
+它能够显示多种类型的提示信息，远不止“加载中”这么简单：
+
+1.  **经典的加载指示器（Indeterminate）**
+    - 显示菊花旋转动画，表示“正在处理，请稍候”。
+    - 可以自定义文字提示（如：“加载中...”）。
+
+    
+    *图：经典的菊花加载样式*
+
+2.  **进度条指示器（Determinate）**
+    - 显示一个环形或水平进度条，用于展示明确的进度（如：文件下载进度 65%）。
+
+    
+    *图：环形进度条样式*
+
+3.  **纯文本提示**
+    - 只显示一段文字信息，几秒后自动消失。常用于 toast 提示（如：“操作成功”）。
+
+    
+    *图：纯文本提示样式*
+
+4.  **图标+文字提示**
+    - 显示一个对勾✅或叉号❌图标，并配上文字，用于表示成功或失败。
+
+    
+    *图：成功提示样式*
+
+---
+
+### 三、为什么它如此受欢迎？（对比系统自带方案）
+
+| 特性         | 系统自带 `UIActivityIndicatorView` | **MBProgressHUD**                            |
+| :----------- | :--------------------------------- | :------------------------------------------- |
+| **功能**     | 单一，只能显示菊花                 | **全面**：菊花、进度条、纯文本、图标等       |
+| **样式**     | 固定，难以自定义                   | **高度可定制**：颜色、背景、位置、动画等     |
+| **易用性**   | 需要手动布局、管理显示/隐藏        | **API 极其简单**，一行代码显示，一行代码隐藏 |
+| **用户体验** | 较简陋                             | **体验统一且优雅**，符合 iOS 设计规范        |
+
+---
+
+### 四、基本使用示例（Objective-C）
+
+使用 MBProgressHUD 非常简单，通常只需要几行代码。
+
+#### 1. 显示一个简单的加载提示
+```objectivec
+// 导入头文件
+#import "MBProgressHUD.h"
+
+// 在某个视图控制器中显示
+- (void)someMethod {
+    // 获取当前视图控制器的 view 或 keyWindow
+    UIView *view = self.view; // 或者 [UIApplication sharedApplication].keyWindow
+    
+    // 显示 HUD
+    [MBProgressHUD showHUDAddedTo:view animated:YES];
+    
+    // 在后台执行耗时操作（例如网络请求）
+    dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+        // 模拟耗时操作
+        sleep(3);
+        
+        // 回到主线程隐藏 HUD
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [MBProgressHUD hideHUDForView:view animated:YES];
+        });
+    });
+}
+```
+
+#### 2. 显示一个带文字的加载提示
+```objectivec
+MBProgressHUD *hud = [MBProgressHUD showHUDAddedTo:self.view animated:YES];
+hud.label.text = @"加载中..."; // 设置提示文字
+```
+
+#### 3. 显示一个操作成功的提示（完成后自动消失）
+```objectivec
+MBProgressHUD *hud = [MBProgressHUD showHUDAddedTo:self.view animated:YES];
+hud.mode = MBProgressHUDModeCustomView; // 设置为自定义模式
+hud.customView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"success"]]; // 设置成功图标
+hud.label.text = @"操作成功！";
+// 指定显示模式：完成后自动隐藏
+[hud hideAnimated:YES afterDelay:2.0]; // 2秒后自动消失
+```
+
+#### 4. 显示一个进度条（如下载进度）
+```objectivec
+MBProgressHUD *hud = [MBProgressHUD showHUDAddedTo:self.view animated:YES];
+hud.mode = MBProgressHUDModeAnnularDeterminate; // 环形进度条
+hud.label.text = @"下载中...";
+
+// 模拟进度更新
+__block float progress = 0.0f;
+[NSThread detachNewThreadSelector:@selector(myProgressTask) toTarget:self withObject:nil];
+
+// 更新进度的方法
+- (void)myProgressTask {
+    while (progress < 1.0f) {
+        progress += 0.01f;
+        // 回到主线程更新 UI
+        dispatch_async(dispatch_get_main_queue(), ^{
+            hud.progress = progress;
+        });
+        usleep(50000); // 休眠 0.05 秒
+    }
+}
+```
+
+---
+
+### 五、在项目中的典型应用场景
+
+1.  **网络请求时**：在发起 AFNetworking 请求前显示，请求完成后隐藏。
+2.  **文件上传/下载**：使用进度条模式显示实时进度。
+3.  **耗时计算或处理**：如图片处理、数据同步等。
+4.  **用户操作反馈**：如“登录成功”、“保存失败”等 toast 提示。
+
+---
+
+### 总结
+
+**MBProgressHUD 是什么？**
+
+它是一个 **iOS 开发中功能强大、使用简单、样式美观的第三方提示框组件库**。它封装了各种常见的提示需求（加载、进度、成功/失败提示），提供了极其友好的 API，让开发者可以用最少的代码实现最佳的用户提示体验。
+
+由于其稳定性和易用性，它几乎是 **Objective-C 时代每个 iOS 项目的标配组件之一**，即使在 Swift 项目中也依然被广泛使用。如果你需要在应用中添加优雅的加载和提示效果，MBProgressHUD 是一个非常可靠的选择。
+
+### 示例
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-mbprogresshub)
+
+```objc
+// 简单的加载提示
+- (IBAction)onClicked:(id)sender {
+    UIWindow *window = [UIApplication sharedApplication].keyWindow;
+    // 显示 HUD
+    [MBProgressHUD showHUDAddedTo:window animated:YES];
+    
+    // 在后台执行耗时操作（例如网络请求）
+    dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+        // 模拟耗时操作
+        sleep(3);
+        
+        // 回到主线程隐藏 HUD
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [MBProgressHUD hideHUDForView:window animated:YES];
+        });
+    });
+}
+
+// 带文字的加载提示
+- (IBAction)onClicked2:(id)sender {
+    UIWindow *window = [UIApplication sharedApplication].keyWindow;
+    MBProgressHUD *hud = [MBProgressHUD showHUDAddedTo:window animated:YES];
+    hud.label.text = @"加载中..."; // 设置提示文字
+    dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+        // 模拟耗时操作
+        sleep(3);
+        
+        // 回到主线程隐藏 HUD
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [hud hideAnimated:YES];
+        });
+    });
+}
+```
 
 
 
