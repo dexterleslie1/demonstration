@@ -38,7 +38,8 @@
     
     UIWindow *window = self.view.window;
     MainViewController *mainViewController = [[MainViewController alloc] init];
-    window.rootViewController = mainViewController;
+    UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController:mainViewController];
+    window.rootViewController = navigationController;
 }
 
 @end

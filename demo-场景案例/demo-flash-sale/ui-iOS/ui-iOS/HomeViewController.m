@@ -7,6 +7,11 @@
 
 #import "HomeViewController.h"
 #import "ViewController.h"
+#import "HomePageViewController.h"
+#import "ProductListViewController.h"
+#import "ListByUserIdViewController.h"
+#import "ListByMerchantIdViewController.h"
+#import "CreateProductViewController.h"
 
 @interface HomeViewController ()
 @property (weak, nonatomic) IBOutlet UILabel *textFieldUserId;
@@ -16,6 +21,9 @@
 @property NSMutableArray *navItemList;
 // NavItem 的原始字体
 @property UIFont *originFont;
+
+@property (strong, nonatomic) NSMutableArray<UIViewController *> *pageList;
+@property (strong, nonatomic) HomePageViewController *pageViewController;
 
 @end
 
@@ -33,6 +41,10 @@
     self.textFieldMerchantId.text = merchantIdStr;
     
     [self setupScrollView];
+    [self setupPageViewController];
+    
+    // 默认选中商品列表
+     [((UIButton*)self.navItemList[1]) sendActionsForControlEvents: UIControlEventTouchDown];
 }
 
 - (void) setupScrollView {
@@ -79,14 +91,11 @@
         // 最后一个文本字段与 scrollView 高度对齐以确定 contentSize 的高度
         [previouNavItem.heightAnchor constraintEqualToAnchor:self.scrollView.heightAnchor].active = YES;
     }
-    
-    // 默认选中商品列表
-     [((UIButton*)self.navItemList[1]) sendActionsForControlEvents: UIControlEventTouchDown];
 }
 
 // navItem 点击
 - (void)onClickedNavItem:(id) sender{
-    [self setNavItemState:self.navItemList :sender];
+    [self setNavItemState:self.navItemList withClicked:sender];
     
     if(self.navItemList[0] == sender) {
         // 首页
@@ -97,11 +106,38 @@
         // 获取初始视图控制器（箭头指向的控制器）
         UIViewController *viewController = [storyboard instantiateInitialViewController];
         window.rootViewController = viewController;
+    } else if(self.navItemList[1] == sender) {
+        // 商品列表
+        
+        [self.pageViewController setViewControllers:@[self.pageList[0]]
+                                          direction:UIPageViewControllerNavigationDirectionReverse
+                                           animated:YES
+                                         completion:nil];
+    } else if(self.navItemList[2] == sender) {
+        // 用户订单
+        
+        int index = [self.pageList indexOfObject:self.pageViewController.viewControllers.firstObject];
+        [self.pageViewController setViewControllers:@[self.pageList[1]]
+                                          direction:index<1?UIPageViewControllerNavigationDirectionForward:UIPageViewControllerNavigationDirectionReverse
+                                           animated:YES
+                                         completion:nil];
+    } else if(self.navItemList[3] == sender) {
+        // 商家订单
+        
+        [self.pageViewController setViewControllers:@[self.pageList[2]]
+                                          direction:UIPageViewControllerNavigationDirectionForward
+                                           animated:YES
+                                         completion:nil];
+    } else if(self.navItemList[4] == sender) {
+        // 新增商品
+        
+        CreateProductViewController *viewController = [[CreateProductViewController alloc] init];
+        [self.navigationController pushViewController:viewController animated:YES];
     }
 }
 
 // 设置 navItem 状态
-- (void) setNavItemState: (NSArray *)navItemList :(UIButton *)navItemOnClicked {
+- (void) setNavItemState: (NSArray *)navItemList withClicked:(UIButton *)navItemOnClicked {
     for(int i=0;i<navItemList.count;i++) {
         UIButton *navItem = (UIButton *)navItemList[i];
         if(navItem == navItemOnClicked) {
@@ -112,6 +148,27 @@
             navItem.titleLabel.font = self.originFont;
         }
     }
+}
+
+- (void) setupPageViewController {
+    // 初始化页面列表
+    self.pageList = [NSMutableArray array];
+    [self.pageList addObject:[[ProductListViewController alloc] init]];
+    [self.pageList addObject:[[ListByUserIdViewController alloc] init]];
+    [self.pageList addObject:[[ListByMerchantIdViewController alloc] init]];
+    
+    // 添加 PageViewController
+    self.pageViewController = [[HomePageViewController alloc] initWithTransitionStyle:UIPageViewControllerTransitionStyleScroll
+                                                                navigationOrientation:UIPageViewControllerNavigationOrientationHorizontal
+                                                                options:nil];
+    [self addChildViewController:self.pageViewController];
+    [self.view addSubview:self.pageViewController.view];
+    self.pageViewController.view.translatesAutoresizingMaskIntoConstraints = NO;
+    [self.pageViewController.view.topAnchor constraintEqualToAnchor:self.scrollView.bottomAnchor].active = YES;
+    [self.pageViewController.view.leadingAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.leadingAnchor].active = YES;
+    [self.pageViewController.view.trailingAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.trailingAnchor].active = YES;
+    [self.pageViewController.view.bottomAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.bottomAnchor].active = YES;
+    [self.pageViewController didMoveToParentViewController:self];
 }
 
 /*

@@ -1,18 +1,19 @@
 //
-//  TestUICollectionViewController.m
-//  demo-uicollectionviewcontroller
+//  ProductListCollectionViewController.m
+//  ui-iOS
 //
-//  Created by dexterleslie on 2025/9/5.
+//  Created by dexterleslie on 2025/9/25.
 //
 
-#import "TestUICollectionViewController.h"
-#import "MyCollectionViewCell.h"
+#import "ProductListCollectionViewController.h"
+#import "ProductListItemCollectionViewCell.h"
+#import "ProductPurchaseViewController.h"
 
-@interface TestUICollectionViewController ()
+@interface ProductListCollectionViewController ()
 
 @end
 
-@implementation TestUICollectionViewController
+@implementation ProductListCollectionViewController
 
 static NSString * const reuseIdentifier = @"Cell";
 
@@ -22,20 +23,18 @@ static NSString * const reuseIdentifier = @"Cell";
     // Uncomment the following line to preserve selection between presentations
     // self.clearsSelectionOnViewWillAppear = NO;
     
-    // Register cell classes
-    // [self.collectionView registerClass:[UICollectionViewCell class] forCellWithReuseIdentifier:reuseIdentifier];
-    
     // 注册 XIB 文件
-    UINib *cellNib = [UINib nibWithNibName:@"MyCollectionViewCell" bundle:nil];
+    UINib *cellNib = [UINib nibWithNibName:@"ProductListItemCollectionViewCell" bundle:nil];
     [self.collectionView registerNib:cellNib forCellWithReuseIdentifier:reuseIdentifier];
     
     // Do any additional setup after loading the view.
 }
 
-// 重写 itemList 属性的 setter 方法
-- (void)setItemList:(NSArray<NSString *> *)itemList {
-    _itemList = itemList;
-    // 数据变化时自动刷新
+// 重写属性 productList 的 setter 方法
+- (void) setProductList:(NSArray<NSDictionary *> *)productList {
+    _productList = productList;
+    
+    // 通知视图更新
     [self.collectionView reloadData];
 }
 
@@ -52,23 +51,18 @@ static NSString * const reuseIdentifier = @"Cell";
 #pragma mark <UICollectionViewDataSource>
 
 //- (NSInteger)numberOfSectionsInCollectionView:(UICollectionView *)collectionView {
-//    return 1;
+//#warning Incomplete implementation, return the number of sections
+//    return 0;
 //}
 
+
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section {
-    // 返回实际数据数量
-    return self.itemList.count;
+    return _productList.count;
 }
 
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
-    // 复用单元格（Identifier 需与 Storyboard 或注册的类一致）
-    MyCollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:reuseIdentifier forIndexPath:indexPath];
-    
-    // cell.backgroundColor = [UIColor orangeColor];
-    
-    NSString *title = self.itemList[indexPath.item];
-    [cell configureWithData:title];
-    
+    ProductListItemCollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:reuseIdentifier forIndexPath:indexPath];
+    [cell configureWithData:self.productList[indexPath.item]];
     return cell;
 }
 
@@ -103,12 +97,12 @@ static NSString * const reuseIdentifier = @"Cell";
 }
 */
 
-// 点击 Cell 事件
 - (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
-    NSString *title = self.itemList[indexPath.item];
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"提示" message:title preferredStyle:UIAlertControllerStyleAlert];
-    [alert addAction:[UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleDefault handler:nil]];
-    [self presentViewController:alert animated:YES completion:nil];
+    NSDictionary *data = self.productList[indexPath.item];
+    NSString *productId = [data objectForKey:@"id"];
+    ProductPurchaseViewController *viewController = [[ProductPurchaseViewController alloc] init];
+    viewController.productId = productId;
+    [self.navigationController pushViewController:viewController animated:YES];
 }
 
 @end

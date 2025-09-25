@@ -10,7 +10,7 @@
     <objects>
         <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="HomeViewController">
             <connections>
-                <outlet property="scrollView" destination="tGD-wz-Byg" id="cVb-Yi-KhR"/>
+                <outlet property="scrollView" destination="tGD-wz-Byg" id="mwy-TW-PsA"/>
                 <outlet property="textFieldMerchantId" destination="74x-92-PGF" id="ZU9-Ed-HXr"/>
                 <outlet property="textFieldUserId" destination="ID9-eX-ZvV" id="Nmh-Su-3c4"/>
                 <outlet property="view" destination="i5M-Pr-FkT" id="sfx-zR-JGt"/>

@@ -7,12 +7,29 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0C37570CAD6841AD988973FE /* libPods-ui-iOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0FDFED25F59BC949EF861B60 /* libPods-ui-iOS.a */; };
+		8778F3BE2E85448F00AF4A9B /* CreateProductViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 8778F3BC2E85448F00AF4A9B /* CreateProductViewController.m */; };
+		8778F3BF2E85448F00AF4A9B /* CreateProductViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8778F3BD2E85448F00AF4A9B /* CreateProductViewController.xib */; };
+		878223EC2E83E68100771BC5 /* HomePageViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 878223EB2E83E68100771BC5 /* HomePageViewController.m */; };
+		878223F02E83E88000771BC5 /* ProductListViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 878223EE2E83E88000771BC5 /* ProductListViewController.m */; };
+		878223F12E83E88000771BC5 /* ProductListViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 878223EF2E83E88000771BC5 /* ProductListViewController.xib */; };
+		878223F52E83E8C300771BC5 /* ListByUserIdViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 878223F32E83E8C300771BC5 /* ListByUserIdViewController.m */; };
+		878223F62E83E8C300771BC5 /* ListByUserIdViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 878223F42E83E8C300771BC5 /* ListByUserIdViewController.xib */; };
+		878223FA2E83E8FC00771BC5 /* ListByMerchantIdViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 878223F82E83E8FC00771BC5 /* ListByMerchantIdViewController.m */; };
+		878223FB2E83E8FC00771BC5 /* ListByMerchantIdViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 878223F92E83E8FC00771BC5 /* ListByMerchantIdViewController.xib */; };
+		878224832E842D0900771BC5 /* Podfile in Resources */ = {isa = PBXBuildFile; fileRef = 878224822E842D0900771BC5 /* Podfile */; };
 		8783AF1D2E818CC200425C7F /* MainViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 8783AF1B2E818CC200425C7F /* MainViewController.m */; };
 		8783AF1E2E818CC200425C7F /* MainViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8783AF1C2E818CC200425C7F /* MainViewController.xib */; };
+		878D6E772E85955200EE4D62 /* ProductPurchaseViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 878D6E752E85955200EE4D62 /* ProductPurchaseViewController.m */; };
+		878D6E782E85955200EE4D62 /* ProductPurchaseViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 878D6E762E85955200EE4D62 /* ProductPurchaseViewController.xib */; };
 		879E9B4E2E8244AA00281959 /* MeViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 879E9B4C2E8244AA00281959 /* MeViewController.m */; };
 		879E9B4F2E8244AA00281959 /* MeViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 879E9B4D2E8244AA00281959 /* MeViewController.xib */; };
 		879E9B532E8245FF00281959 /* HomeViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 879E9B512E8245FF00281959 /* HomeViewController.m */; };
 		879E9B542E8245FF00281959 /* HomeViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 879E9B522E8245FF00281959 /* HomeViewController.xib */; };
+		87AD593E2E84FA190093AF2D /* ProductListItemCollectionViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 87AD593C2E84FA190093AF2D /* ProductListItemCollectionViewCell.m */; };
+		87AD593F2E84FA190093AF2D /* ProductListItemCollectionViewCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 87AD593D2E84FA190093AF2D /* ProductListItemCollectionViewCell.xib */; };
+		87AD59432E84FF360093AF2D /* ProductListCollectionViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 87AD59412E84FF360093AF2D /* ProductListCollectionViewController.m */; };
+		87AD59442E84FF360093AF2D /* ProductListCollectionViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 87AD59422E84FF360093AF2D /* ProductListCollectionViewController.xib */; };
 		87C6F0912E7FA71A0021A74E /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 87C6F0902E7FA71A0021A74E /* AppDelegate.m */; };
 		87C6F0942E7FA71A0021A74E /* SceneDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 87C6F0932E7FA71A0021A74E /* SceneDelegate.m */; };
 		87C6F0972E7FA71A0021A74E /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 87C6F0962E7FA71A0021A74E /* ViewController.m */; };
@@ -23,6 +40,7 @@
 		87C6F0AC2E7FA71D0021A74E /* ui_iOSTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 87C6F0AB2E7FA71D0021A74E /* ui_iOSTests.m */; };
 		87C6F0B62E7FA71D0021A74E /* ui_iOSUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 87C6F0B52E7FA71D0021A74E /* ui_iOSUITests.m */; };
 		87C6F0B82E7FA71D0021A74E /* ui_iOSUITestsLaunchTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 87C6F0B72E7FA71D0021A74E /* ui_iOSUITestsLaunchTests.m */; };
+		F12D98CFE5DD2ADDB69A199B /* libPods-ui-iOSTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4AB830410A7F8709613D63F6 /* libPods-ui-iOSTests.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -43,15 +61,45 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		0FDFED25F59BC949EF861B60 /* libPods-ui-iOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-ui-iOS.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		14FB87DD451F6A968FCF7278 /* Pods-ui-iOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ui-iOS.debug.xcconfig"; path = "Target Support Files/Pods-ui-iOS/Pods-ui-iOS.debug.xcconfig"; sourceTree = "<group>"; };
+		38622E240AE7D2AC9EB1617C /* Pods-ui-iOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ui-iOS.release.xcconfig"; path = "Target Support Files/Pods-ui-iOS/Pods-ui-iOS.release.xcconfig"; sourceTree = "<group>"; };
+		3C01C0BBABBD3FC244DD37DB /* Pods-ui-iOSTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ui-iOSTests.release.xcconfig"; path = "Target Support Files/Pods-ui-iOSTests/Pods-ui-iOSTests.release.xcconfig"; sourceTree = "<group>"; };
+		4AB830410A7F8709613D63F6 /* libPods-ui-iOSTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-ui-iOSTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		8778F3BB2E85448F00AF4A9B /* CreateProductViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CreateProductViewController.h; sourceTree = "<group>"; };
+		8778F3BC2E85448F00AF4A9B /* CreateProductViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CreateProductViewController.m; sourceTree = "<group>"; };
+		8778F3BD2E85448F00AF4A9B /* CreateProductViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = CreateProductViewController.xib; sourceTree = "<group>"; };
+		878223EA2E83E68100771BC5 /* HomePageViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HomePageViewController.h; sourceTree = "<group>"; };
+		878223EB2E83E68100771BC5 /* HomePageViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = HomePageViewController.m; sourceTree = "<group>"; };
+		878223ED2E83E88000771BC5 /* ProductListViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ProductListViewController.h; sourceTree = "<group>"; };
+		878223EE2E83E88000771BC5 /* ProductListViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ProductListViewController.m; sourceTree = "<group>"; };
+		878223EF2E83E88000771BC5 /* ProductListViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ProductListViewController.xib; sourceTree = "<group>"; };
+		878223F22E83E8C300771BC5 /* ListByUserIdViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ListByUserIdViewController.h; sourceTree = "<group>"; };
+		878223F32E83E8C300771BC5 /* ListByUserIdViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ListByUserIdViewController.m; sourceTree = "<group>"; };
+		878223F42E83E8C300771BC5 /* ListByUserIdViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ListByUserIdViewController.xib; sourceTree = "<group>"; };
+		878223F72E83E8FC00771BC5 /* ListByMerchantIdViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ListByMerchantIdViewController.h; sourceTree = "<group>"; };
+		878223F82E83E8FC00771BC5 /* ListByMerchantIdViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ListByMerchantIdViewController.m; sourceTree = "<group>"; };
+		878223F92E83E8FC00771BC5 /* ListByMerchantIdViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ListByMerchantIdViewController.xib; sourceTree = "<group>"; };
+		878224822E842D0900771BC5 /* Podfile */ = {isa = PBXFileReference; lastKnownFileType = text; path = Podfile; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
+		878224842E842F3200771BC5 /* Config.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Config.h; sourceTree = "<group>"; };
 		8783AF1A2E818CC200425C7F /* MainViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MainViewController.h; sourceTree = "<group>"; };
 		8783AF1B2E818CC200425C7F /* MainViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MainViewController.m; sourceTree = "<group>"; };
 		8783AF1C2E818CC200425C7F /* MainViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = MainViewController.xib; sourceTree = "<group>"; };
+		878D6E742E85955200EE4D62 /* ProductPurchaseViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ProductPurchaseViewController.h; sourceTree = "<group>"; };
+		878D6E752E85955200EE4D62 /* ProductPurchaseViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ProductPurchaseViewController.m; sourceTree = "<group>"; };
+		878D6E762E85955200EE4D62 /* ProductPurchaseViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ProductPurchaseViewController.xib; sourceTree = "<group>"; };
 		879E9B4B2E8244AA00281959 /* MeViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MeViewController.h; sourceTree = "<group>"; };
 		879E9B4C2E8244AA00281959 /* MeViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MeViewController.m; sourceTree = "<group>"; };
 		879E9B4D2E8244AA00281959 /* MeViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = MeViewController.xib; sourceTree = "<group>"; };
 		879E9B502E8245FF00281959 /* HomeViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HomeViewController.h; sourceTree = "<group>"; };
 		879E9B512E8245FF00281959 /* HomeViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = HomeViewController.m; sourceTree = "<group>"; };
 		879E9B522E8245FF00281959 /* HomeViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = HomeViewController.xib; sourceTree = "<group>"; };
+		87AD593B2E84FA190093AF2D /* ProductListItemCollectionViewCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ProductListItemCollectionViewCell.h; sourceTree = "<group>"; };
+		87AD593C2E84FA190093AF2D /* ProductListItemCollectionViewCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ProductListItemCollectionViewCell.m; sourceTree = "<group>"; };
+		87AD593D2E84FA190093AF2D /* ProductListItemCollectionViewCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ProductListItemCollectionViewCell.xib; sourceTree = "<group>"; };
+		87AD59402E84FF360093AF2D /* ProductListCollectionViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ProductListCollectionViewController.h; sourceTree = "<group>"; };
+		87AD59412E84FF360093AF2D /* ProductListCollectionViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ProductListCollectionViewController.m; sourceTree = "<group>"; };
+		87AD59422E84FF360093AF2D /* ProductListCollectionViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ProductListCollectionViewController.xib; sourceTree = "<group>"; };
 		87C6F08C2E7FA71A0021A74E /* ui-iOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "ui-iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		87C6F08F2E7FA71A0021A74E /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		87C6F0902E7FA71A0021A74E /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -69,6 +117,7 @@
 		87C6F0B12E7FA71D0021A74E /* ui-iOSUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "ui-iOSUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		87C6F0B52E7FA71D0021A74E /* ui_iOSUITests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ui_iOSUITests.m; sourceTree = "<group>"; };
 		87C6F0B72E7FA71D0021A74E /* ui_iOSUITestsLaunchTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ui_iOSUITestsLaunchTests.m; sourceTree = "<group>"; };
+		99E7F2C506FCC49FCFE25CB3 /* Pods-ui-iOSTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ui-iOSTests.debug.xcconfig"; path = "Target Support Files/Pods-ui-iOSTests/Pods-ui-iOSTests.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -76,6 +125,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0C37570CAD6841AD988973FE /* libPods-ui-iOS.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -83,6 +133,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F12D98CFE5DD2ADDB69A199B /* libPods-ui-iOSTests.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -96,13 +147,25 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		00522B5D2D2594CDF0A66295 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				0FDFED25F59BC949EF861B60 /* libPods-ui-iOS.a */,
+				4AB830410A7F8709613D63F6 /* libPods-ui-iOSTests.a */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		87C6F0832E7FA71A0021A74E = {
 			isa = PBXGroup;
 			children = (
+				878224822E842D0900771BC5 /* Podfile */,
 				87C6F08E2E7FA71A0021A74E /* ui-iOS */,
 				87C6F0AA2E7FA71D0021A74E /* ui-iOSTests */,
 				87C6F0B42E7FA71D0021A74E /* ui-iOSUITests */,
 				87C6F08D2E7FA71A0021A74E /* Products */,
+				FF67318E4A72355F6A7E3F58 /* Pods */,
+				00522B5D2D2594CDF0A66295 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -139,6 +202,30 @@
 				879E9B502E8245FF00281959 /* HomeViewController.h */,
 				879E9B512E8245FF00281959 /* HomeViewController.m */,
 				879E9B522E8245FF00281959 /* HomeViewController.xib */,
+				878223EA2E83E68100771BC5 /* HomePageViewController.h */,
+				878223EB2E83E68100771BC5 /* HomePageViewController.m */,
+				878223ED2E83E88000771BC5 /* ProductListViewController.h */,
+				878223EE2E83E88000771BC5 /* ProductListViewController.m */,
+				878223EF2E83E88000771BC5 /* ProductListViewController.xib */,
+				878223F22E83E8C300771BC5 /* ListByUserIdViewController.h */,
+				878223F32E83E8C300771BC5 /* ListByUserIdViewController.m */,
+				878223F42E83E8C300771BC5 /* ListByUserIdViewController.xib */,
+				878223F72E83E8FC00771BC5 /* ListByMerchantIdViewController.h */,
+				878223F82E83E8FC00771BC5 /* ListByMerchantIdViewController.m */,
+				878223F92E83E8FC00771BC5 /* ListByMerchantIdViewController.xib */,
+				878224842E842F3200771BC5 /* Config.h */,
+				87AD593B2E84FA190093AF2D /* ProductListItemCollectionViewCell.h */,
+				87AD593C2E84FA190093AF2D /* ProductListItemCollectionViewCell.m */,
+				87AD593D2E84FA190093AF2D /* ProductListItemCollectionViewCell.xib */,
+				87AD59402E84FF360093AF2D /* ProductListCollectionViewController.h */,
+				87AD59412E84FF360093AF2D /* ProductListCollectionViewController.m */,
+				87AD59422E84FF360093AF2D /* ProductListCollectionViewController.xib */,
+				8778F3BB2E85448F00AF4A9B /* CreateProductViewController.h */,
+				8778F3BC2E85448F00AF4A9B /* CreateProductViewController.m */,
+				8778F3BD2E85448F00AF4A9B /* CreateProductViewController.xib */,
+				878D6E742E85955200EE4D62 /* ProductPurchaseViewController.h */,
+				878D6E752E85955200EE4D62 /* ProductPurchaseViewController.m */,
+				878D6E762E85955200EE4D62 /* ProductPurchaseViewController.xib */,
 			);
 			path = "ui-iOS";
 			sourceTree = "<group>";
@@ -160,6 +247,17 @@
 			path = "ui-iOSUITests";
 			sourceTree = "<group>";
 		};
+		FF67318E4A72355F6A7E3F58 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				14FB87DD451F6A968FCF7278 /* Pods-ui-iOS.debug.xcconfig */,
+				38622E240AE7D2AC9EB1617C /* Pods-ui-iOS.release.xcconfig */,
+				99E7F2C506FCC49FCFE25CB3 /* Pods-ui-iOSTests.debug.xcconfig */,
+				3C01C0BBABBD3FC244DD37DB /* Pods-ui-iOSTests.release.xcconfig */,
+			);
+			path = Pods;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -167,6 +265,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 87C6F0BB2E7FA71D0021A74E /* Build configuration list for PBXNativeTarget "ui-iOS" */;
 			buildPhases = (
+				8A707212EA2174FA959C641E /* [CP] Check Pods Manifest.lock */,
 				87C6F0882E7FA71A0021A74E /* Sources */,
 				87C6F0892E7FA71A0021A74E /* Frameworks */,
 				87C6F08A2E7FA71A0021A74E /* Resources */,
@@ -184,6 +283,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 87C6F0BE2E7FA71D0021A74E /* Build configuration list for PBXNativeTarget "ui-iOSTests" */;
 			buildPhases = (
+				5B517B6878FBB238314E514C /* [CP] Check Pods Manifest.lock */,
 				87C6F0A32E7FA71D0021A74E /* Sources */,
 				87C6F0A42E7FA71D0021A74E /* Frameworks */,
 				87C6F0A52E7FA71D0021A74E /* Resources */,
@@ -263,11 +363,19 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				87AD59442E84FF360093AF2D /* ProductListCollectionViewController.xib in Resources */,
+				878224832E842D0900771BC5 /* Podfile in Resources */,
 				87C6F09F2E7FA71D0021A74E /* LaunchScreen.storyboard in Resources */,
+				878223F62E83E8C300771BC5 /* ListByUserIdViewController.xib in Resources */,
+				87AD593F2E84FA190093AF2D /* ProductListItemCollectionViewCell.xib in Resources */,
 				87C6F09C2E7FA71D0021A74E /* Assets.xcassets in Resources */,
 				879E9B4F2E8244AA00281959 /* MeViewController.xib in Resources */,
+				878D6E782E85955200EE4D62 /* ProductPurchaseViewController.xib in Resources */,
+				878223FB2E83E8FC00771BC5 /* ListByMerchantIdViewController.xib in Resources */,
+				878223F12E83E88000771BC5 /* ProductListViewController.xib in Resources */,
 				87C6F09A2E7FA71A0021A74E /* Main.storyboard in Resources */,
 				8783AF1E2E818CC200425C7F /* MainViewController.xib in Resources */,
+				8778F3BF2E85448F00AF4A9B /* CreateProductViewController.xib in Resources */,
 				879E9B542E8245FF00281959 /* HomeViewController.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -288,16 +396,71 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		5B517B6878FBB238314E514C /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-ui-iOSTests-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		8A707212EA2174FA959C641E /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-ui-iOS-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		87C6F0882E7FA71A0021A74E /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				878223EC2E83E68100771BC5 /* HomePageViewController.m in Sources */,
+				87AD59432E84FF360093AF2D /* ProductListCollectionViewController.m in Sources */,
+				87AD593E2E84FA190093AF2D /* ProductListItemCollectionViewCell.m in Sources */,
+				878223F52E83E8C300771BC5 /* ListByUserIdViewController.m in Sources */,
+				878223FA2E83E8FC00771BC5 /* ListByMerchantIdViewController.m in Sources */,
 				879E9B4E2E8244AA00281959 /* MeViewController.m in Sources */,
 				87C6F0972E7FA71A0021A74E /* ViewController.m in Sources */,
 				87C6F0912E7FA71A0021A74E /* AppDelegate.m in Sources */,
+				8778F3BE2E85448F00AF4A9B /* CreateProductViewController.m in Sources */,
 				87C6F0A22E7FA71D0021A74E /* main.m in Sources */,
 				8783AF1D2E818CC200425C7F /* MainViewController.m in Sources */,
+				878223F02E83E88000771BC5 /* ProductListViewController.m in Sources */,
+				878D6E772E85955200EE4D62 /* ProductPurchaseViewController.m in Sources */,
 				879E9B532E8245FF00281959 /* HomeViewController.m in Sources */,
 				87C6F0942E7FA71A0021A74E /* SceneDelegate.m in Sources */,
 			);
@@ -467,6 +630,7 @@
 		};
 		87C6F0BC2E7FA71D0021A74E /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 14FB87DD451F6A968FCF7278 /* Pods-ui-iOS.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -493,6 +657,7 @@
 		};
 		87C6F0BD2E7FA71D0021A74E /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 38622E240AE7D2AC9EB1617C /* Pods-ui-iOS.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -519,6 +684,7 @@
 		};
 		87C6F0BF2E7FA71D0021A74E /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 99E7F2C506FCC49FCFE25CB3 /* Pods-ui-iOSTests.debug.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
@@ -536,6 +702,7 @@
 		};
 		87C6F0C02E7FA71D0021A74E /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 3C01C0BBABBD3FC244DD37DB /* Pods-ui-iOSTests.release.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
