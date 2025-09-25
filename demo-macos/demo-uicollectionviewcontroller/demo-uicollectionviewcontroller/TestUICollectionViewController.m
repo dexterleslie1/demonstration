@@ -32,6 +32,13 @@ static NSString * const reuseIdentifier = @"Cell";
     // Do any additional setup after loading the view.
 }
 
+// 重写 itemList 属性的 setter 方法
+- (void)setItemList:(NSArray<NSString *> *)itemList {
+    _itemList = itemList;
+    // 数据变化时自动刷新
+    [self.collectionView reloadData];
+}
+
 /*
 #pragma mark - Navigation
 
@@ -49,13 +56,19 @@ static NSString * const reuseIdentifier = @"Cell";
 //}
 
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section {
-    return 20; // 返回单元格数量
+    // 返回实际数据数量
+    return self.itemList.count;
 }
 
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
     // 复用单元格（Identifier 需与 Storyboard 或注册的类一致）
-    UICollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:reuseIdentifier forIndexPath:indexPath];
+    MyCollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:reuseIdentifier forIndexPath:indexPath];
+    
     // cell.backgroundColor = [UIColor orangeColor];
+    
+    NSString *title = self.itemList[indexPath.item];
+    [cell configureWithData:title];
+    
     return cell;
 }
 

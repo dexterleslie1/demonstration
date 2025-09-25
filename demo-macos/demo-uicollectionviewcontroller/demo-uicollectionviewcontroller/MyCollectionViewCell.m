@@ -20,4 +20,8 @@
     ]];
 }
 
+- (void)configureWithData:(id)title {
+    [self.button setTitle:title forState:UIControlStateNormal];
+}
+
 @end

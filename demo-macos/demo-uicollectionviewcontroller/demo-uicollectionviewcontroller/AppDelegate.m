@@ -10,6 +10,8 @@
 
 @interface AppDelegate ()
 
+@property (strong, nonatomic) TestUICollectionViewController *collectionViewController;
+
 @end
 
 @implementation AppDelegate
@@ -21,7 +23,7 @@
     // 初始化 UIWindow
     self.window = [[UIWindow alloc]initWithFrame:[UIScreen mainScreen].bounds];
     // 设置 UIWindow 背景颜色
-    self.window.backgroundColor = [UIColor grayColor];
+    self.window.backgroundColor = [UIColor whiteColor];
     
     // 设置 UIWindow 的根视图控制器
     // 创建流式布局（网格）
@@ -43,13 +45,52 @@
 
     // 初始化控制器
     TestUICollectionViewController *collectionVC = [[TestUICollectionViewController alloc] initWithCollectionViewLayout:layout];
-    self.window.rootViewController = collectionVC;
+    self.collectionViewController = collectionVC;
+    NSMutableArray<NSString *> *itemList = [NSMutableArray array];
+    for(int i=0;i<20;i++) {
+        [itemList addObject:[NSString stringWithFormat:@"%d", i]];
+    }
+    collectionVC.itemList = itemList;
+    
+    // 修改数据源按钮
+    UIViewController *viewController = [[UIViewController alloc] init];
+    UIButton *buttonRefresh = [UIButton buttonWithType:UIButtonTypeSystem];
+    [buttonRefresh setTitle:@"动态设置CollectionViewController数据源" forState:UIControlStateNormal];
+    [buttonRefresh addTarget:self action:@selector(onClicked:) forControlEvents:UIControlEventTouchDown];
+    [viewController.view addSubview:buttonRefresh];
+    buttonRefresh.translatesAutoresizingMaskIntoConstraints = NO;
+    [NSLayoutConstraint activateConstraints:@[
+        [buttonRefresh.centerXAnchor constraintEqualToAnchor:viewController.view.safeAreaLayoutGuide.centerXAnchor],
+        [buttonRefresh.topAnchor constraintEqualToAnchor:viewController.view.safeAreaLayoutGuide.topAnchor]
+    ]];
+    
+    [viewController addChildViewController:collectionVC];
+    [viewController.view addSubview:collectionVC.view];
+    collectionVC.view.translatesAutoresizingMaskIntoConstraints = NO;
+    [NSLayoutConstraint activateConstraints:@[
+        [collectionVC.view.leadingAnchor constraintEqualToAnchor:viewController.view.safeAreaLayoutGuide.leadingAnchor],
+        [collectionVC.view.trailingAnchor constraintEqualToAnchor:viewController.view.safeAreaLayoutGuide.trailingAnchor],
+        [collectionVC.view.bottomAnchor constraintEqualToAnchor:viewController.view.safeAreaLayoutGuide.bottomAnchor],
+        [collectionVC.view.topAnchor constraintEqualToAnchor:buttonRefresh.bottomAnchor constant:10]
+    ]];
+    [collectionVC didMoveToParentViewController:viewController];
+    
+    self.window.rootViewController = viewController;
     
     // 将 UIWindow 设置成为应用程序的主窗口（Key Window）
     // 将 UIWindow 显示在屏幕上
     [self.window makeKeyAndVisible];
     
     return YES;
+}
+
+// 动态修改 CollectionViewController 数据源
+- (void)onClicked:(id) sender {
+    NSMutableArray<NSString *> *itemList = [NSMutableArray array];
+    for(int i=0;i<5;i++) {
+        [itemList addObject:[NSString stringWithFormat:@"%d", i]];
+    }
+    self.collectionViewController.itemList = itemList;
 }
 
 @end
