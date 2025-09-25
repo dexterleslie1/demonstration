@@ -17,9 +17,9 @@
 		8734164C2E6A67D700B45E71 /* demo_uicollectionviewcontrollerUITestsLaunchTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 8734164B2E6A67D700B45E71 /* demo_uicollectionviewcontrollerUITestsLaunchTests.m */; };
 		8734165B2E6A682800B45E71 /* TestUICollectionViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 873416592E6A682800B45E71 /* TestUICollectionViewController.m */; };
 		8734165C2E6A682800B45E71 /* TestUICollectionViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8734165A2E6A682800B45E71 /* TestUICollectionViewController.xib */; };
-		87900D472E6BD48B00989E5D /* icon_t2.png in Resources */ = {isa = PBXBuildFile; fileRef = 87900D462E6BD48B00989E5D /* icon_t2.png */; };
 		87A5D9832E6B3358000D0099 /* MyCollectionViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 87A5D9812E6B3358000D0099 /* MyCollectionViewCell.m */; };
 		87A5D9842E6B3358000D0099 /* MyCollectionViewCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 87A5D9822E6B3358000D0099 /* MyCollectionViewCell.xib */; };
+		87AD593A2E84E5B50093AF2D /* icon_t2.png in Resources */ = {isa = PBXBuildFile; fileRef = 87AD59392E84E5B50093AF2D /* icon_t2.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -56,10 +56,10 @@
 		873416582E6A682800B45E71 /* TestUICollectionViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TestUICollectionViewController.h; sourceTree = "<group>"; };
 		873416592E6A682800B45E71 /* TestUICollectionViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TestUICollectionViewController.m; sourceTree = "<group>"; };
 		8734165A2E6A682800B45E71 /* TestUICollectionViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = TestUICollectionViewController.xib; sourceTree = "<group>"; };
-		87900D462E6BD48B00989E5D /* icon_t2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = icon_t2.png; path = "../../../demo-uiimageview/demo-uiimageview/images/icon_t2.png"; sourceTree = "<group>"; };
 		87A5D9802E6B3358000D0099 /* MyCollectionViewCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MyCollectionViewCell.h; sourceTree = "<group>"; };
 		87A5D9812E6B3358000D0099 /* MyCollectionViewCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MyCollectionViewCell.m; sourceTree = "<group>"; };
 		87A5D9822E6B3358000D0099 /* MyCollectionViewCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = MyCollectionViewCell.xib; sourceTree = "<group>"; };
+		87AD59392E84E5B50093AF2D /* icon_t2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = icon_t2.png; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -148,7 +148,7 @@
 		87900D452E6BD42100989E5D /* images */ = {
 			isa = PBXGroup;
 			children = (
-				87900D462E6BD48B00989E5D /* icon_t2.png */,
+				87AD59392E84E5B50093AF2D /* icon_t2.png */,
 			);
 			path = images;
 			sourceTree = "<group>";
@@ -260,7 +260,7 @@
 				8734165C2E6A682800B45E71 /* TestUICollectionViewController.xib in Resources */,
 				873416332E6A67D600B45E71 /* LaunchScreen.storyboard in Resources */,
 				873416302E6A67D600B45E71 /* Assets.xcassets in Resources */,
-				87900D472E6BD48B00989E5D /* icon_t2.png in Resources */,
+				87AD593A2E84E5B50093AF2D /* icon_t2.png in Resources */,
 				8734162E2E6A67D400B45E71 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
