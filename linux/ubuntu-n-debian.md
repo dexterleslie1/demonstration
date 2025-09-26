@@ -54,7 +54,7 @@
    #sudo dcli os timezone config --install y
    
    # 不需要 xrdp 支持
-   sudo -E dcli os dev config \
+   sudo -E dcli os dev config && \
    sudo dcli docker install --install y && \
    sudo dcli os timezone config --install y
    
