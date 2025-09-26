@@ -125,14 +125,16 @@
         // 商家订单
         
         [self.pageViewController setViewControllers:@[self.pageList[2]]
-                                          direction:UIPageViewControllerNavigationDirectionForward
+                                          direction:index<2?UIPageViewControllerNavigationDirectionForward:UIPageViewControllerNavigationDirectionReverse
                                            animated:YES
                                          completion:nil];
     } else if(self.navItemList[4] == sender) {
         // 新增商品
         
-        CreateProductViewController *viewController = [[CreateProductViewController alloc] init];
-        [self.navigationController pushViewController:viewController animated:YES];
+        [self.pageViewController setViewControllers:@[self.pageList[3]]
+                                          direction:UIPageViewControllerNavigationDirectionForward
+                                           animated:YES
+                                         completion:nil];
     }
 }
 
@@ -156,6 +158,7 @@
     [self.pageList addObject:[[ProductListViewController alloc] init]];
     [self.pageList addObject:[[ListByUserIdViewController alloc] init]];
     [self.pageList addObject:[[ListByMerchantIdViewController alloc] init]];
+    [self.pageList addObject:[[CreateProductViewController alloc] init]];
     
     // 添加 PageViewController
     self.pageViewController = [[HomePageViewController alloc] initWithTransitionStyle:UIPageViewControllerTransitionStyleScroll

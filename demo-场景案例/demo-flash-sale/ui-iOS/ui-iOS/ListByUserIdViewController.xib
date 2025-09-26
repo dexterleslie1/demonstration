@@ -10,6 +10,8 @@
     <objects>
         <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="ListByUserIdViewController">
             <connections>
+                <outlet property="pickerView" destination="yBy-l0-j5U" id="TUA-nd-Pup"/>
+                <outlet property="tableView" destination="8aj-vW-tXx" id="5KB-YH-nW8"/>
                 <outlet property="view" destination="i5M-Pr-FkT" id="sfx-zR-JGt"/>
             </connections>
         </placeholder>
@@ -18,18 +20,43 @@
             <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <subviews>
-                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="用户订单" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="iSS-7A-Kpz">
-                    <rect key="frame" x="162" y="59" width="69.333333333333314" height="21"/>
-                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                    <nil key="textColor"/>
-                    <nil key="highlightedColor"/>
-                </label>
+                <stackView opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="zMt-b5-40S">
+                    <rect key="frame" x="10" y="59" width="373" height="216"/>
+                    <subviews>
+                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" horizontalCompressionResistancePriority="751" verticalCompressionResistancePriority="751" text="状态：" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="2Up-0y-wKZ">
+                            <rect key="frame" x="0.0" y="0.0" width="52" height="216"/>
+                            <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                            <nil key="textColor"/>
+                            <nil key="highlightedColor"/>
+                        </label>
+                        <pickerView contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="yBy-l0-j5U">
+                            <rect key="frame" x="52" y="0.0" width="262" height="216"/>
+                        </pickerView>
+                        <button opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" horizontalCompressionResistancePriority="751" verticalCompressionResistancePriority="751" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="aD4-XF-wzD">
+                            <rect key="frame" x="314.33333333333331" y="0.0" width="58.666666666666686" height="216"/>
+                            <state key="normal" title="Button"/>
+                            <buttonConfiguration key="configuration" style="filled" title="查询"/>
+                            <connections>
+                                <action selector="onClickedQuery:" destination="-1" eventType="touchUpInside" id="SR8-QL-jMa"/>
+                            </connections>
+                        </button>
+                    </subviews>
+                </stackView>
+                <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="8aj-vW-tXx">
+                    <rect key="frame" x="0.0" y="275" width="393" height="543"/>
+                    <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                </tableView>
             </subviews>
             <viewLayoutGuide key="safeArea" id="Q5M-cg-NOt"/>
             <color key="backgroundColor" systemColor="systemBackgroundColor"/>
             <constraints>
-                <constraint firstItem="iSS-7A-Kpz" firstAttribute="centerX" secondItem="Q5M-cg-NOt" secondAttribute="centerX" id="J3a-nU-t3T"/>
-                <constraint firstItem="iSS-7A-Kpz" firstAttribute="top" secondItem="Q5M-cg-NOt" secondAttribute="top" id="Pjj-pF-iwO"/>
+                <constraint firstItem="zMt-b5-40S" firstAttribute="top" secondItem="Q5M-cg-NOt" secondAttribute="top" id="1B9-XO-GP9"/>
+                <constraint firstItem="zMt-b5-40S" firstAttribute="leading" secondItem="Q5M-cg-NOt" secondAttribute="leading" constant="10" id="6vF-FD-dco"/>
+                <constraint firstItem="zMt-b5-40S" firstAttribute="trailing" secondItem="Q5M-cg-NOt" secondAttribute="trailing" constant="-10" id="6wp-JT-LVW"/>
+                <constraint firstItem="8aj-vW-tXx" firstAttribute="bottom" secondItem="Q5M-cg-NOt" secondAttribute="bottom" id="9Pv-cU-jl7"/>
+                <constraint firstItem="8aj-vW-tXx" firstAttribute="top" secondItem="zMt-b5-40S" secondAttribute="bottom" id="CE6-AN-KTi"/>
+                <constraint firstItem="8aj-vW-tXx" firstAttribute="trailing" secondItem="Q5M-cg-NOt" secondAttribute="trailing" id="EUe-LV-6fe"/>
+                <constraint firstItem="8aj-vW-tXx" firstAttribute="leading" secondItem="Q5M-cg-NOt" secondAttribute="leading" id="zes-q3-fMR"/>
             </constraints>
             <point key="canvasLocation" x="4" y="-11"/>
         </view>

@@ -11,6 +11,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface ListByUserIdViewController : UIViewController
 
+@property NSMutableArray<NSDictionary *> *pickerViewData;
+@property NSMutableArray<NSDictionary *> *tableViewData;
+
 @end
 
 NS_ASSUME_NONNULL_END
