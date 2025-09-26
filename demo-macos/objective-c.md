@@ -6104,6 +6104,175 @@ if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
 
 
 
+## `UIKit` - `UIPickerView`
+
+UIPickerView 是 iOS 中常用的选择器控件，用于让用户从一组值中选择一个或多个选项。下面介绍如何在 Objective-C 中使用 UIPickerView。
+
+### 基本用法
+
+#### 1. 创建 UIPickerView
+
+```objectivec
+UIPickerView *pickerView = [[UIPickerView alloc] initWithFrame:CGRectMake(0, 200, self.view.frame.size.width, 200)];
+pickerView.delegate = self;
+pickerView.dataSource = self;
+[self.view addSubview:pickerView];
+```
+
+#### 2. 实现协议方法
+
+UIPickerView 需要实现 `UIPickerViewDelegate` 和 `UIPickerViewDataSource` 两个协议：
+
+```objectivec
+@interface YourViewController () <UIPickerViewDelegate, UIPickerViewDataSource>
+// 你的属性和方法
+@end
+```
+
+##### 必需的数据源方法
+
+```objectivec
+// 返回选择器中的列数
+- (NSInteger)numberOfComponentsInPickerView:(UIPickerView *)pickerView {
+    return 1; // 例如1列
+}
+
+// 返回每列中的行数
+- (NSInteger)pickerView:(UIPickerView *)pickerView numberOfRowsInComponent:(NSInteger)component {
+    return self.dataArray.count; // 数据源数组中的元素数量
+}
+```
+
+##### 常用的代理方法
+
+```objectivec
+// 返回每行的标题
+- (NSString *)pickerView:(UIPickerView *)pickerView titleForRow:(NSInteger)row forComponent:(NSInteger)component {
+    return self.dataArray[row];
+}
+
+// 选中某行时调用
+- (void)pickerView:(UIPickerView *)pickerView didSelectRow:(NSInteger)row inComponent:(NSInteger)component {
+    NSLog(@"Selected: %@", self.dataArray[row]);
+}
+```
+
+### 高级用法
+
+#### 自定义行视图
+
+```objectivec
+- (UIView *)pickerView:(UIPickerView *)pickerView viewForRow:(NSInteger)row forComponent:(NSInteger)component reusingView:(UIView *)view {
+    UILabel *label = (UILabel *)view;
+    if (!label) {
+        label = [[UILabel alloc] init];
+        label.textAlignment = NSTextAlignmentCenter;
+        label.font = [UIFont systemFontOfSize:20];
+    }
+    label.text = self.dataArray[row];
+    return label;
+}
+
+// 设置行高
+- (CGFloat)pickerView:(UIPickerView *)pickerView rowHeightForComponent:(NSInteger)component {
+    return 40.0;
+}
+```
+
+#### 多列选择器
+
+```objectivec
+// 假设有两列数据
+- (NSInteger)numberOfComponentsInPickerView:(UIPickerView *)pickerView {
+    return 2;
+}
+
+- (NSInteger)pickerView:(UIPickerView *)pickerView numberOfRowsInComponent:(NSInteger)component {
+    if (component == 0) {
+        return self.firstColumnData.count;
+    } else {
+        return self.secondColumnData.count;
+    }
+}
+
+- (NSString *)pickerView:(UIPickerView *)pickerView titleForRow:(NSInteger)row forComponent:(NSInteger)component {
+    if (component == 0) {
+        return self.firstColumnData[row];
+    } else {
+        return self.secondColumnData[row];
+    }
+}
+```
+
+#### 以编程方式控制选择器
+
+```objectivec
+// 选择特定行
+[pickerView selectRow:2 inComponent:0 animated:YES];
+
+// 获取当前选中的行
+NSInteger selectedRow = [pickerView selectedRowInComponent:0];
+```
+
+### 完整示例
+
+```objectivec
+@interface ViewController () <UIPickerViewDelegate, UIPickerViewDataSource>
+@property (nonatomic, strong) UIPickerView *pickerView;
+@property (nonatomic, strong) NSArray *dataArray;
+@end
+
+@implementation ViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    
+    self.dataArray = @[@"选项1", @"选项2", @"选项3", @"选项4", @"选项5"];
+    
+    self.pickerView = [[UIPickerView alloc] initWithFrame:CGRectMake(0, 200, self.view.frame.size.width, 200)];
+    self.pickerView.delegate = self;
+    self.pickerView.dataSource = self;
+    [self.view addSubview:self.pickerView];
+}
+
+#pragma mark - UIPickerViewDataSource
+
+- (NSInteger)numberOfComponentsInPickerView:(UIPickerView *)pickerView {
+    return 1;
+}
+
+- (NSInteger)pickerView:(UIPickerView *)pickerView numberOfRowsInComponent:(NSInteger)component {
+    return self.dataArray.count;
+}
+
+#pragma mark - UIPickerViewDelegate
+
+- (NSString *)pickerView:(UIPickerView *)pickerView titleForRow:(NSInteger)row forComponent:(NSInteger)component {
+    return self.dataArray[row];
+}
+
+- (void)pickerView:(UIPickerView *)pickerView didSelectRow:(NSInteger)row inComponent:(NSInteger)component {
+    NSLog(@"用户选择了: %@", self.dataArray[row]);
+}
+
+@end
+```
+
+### 注意事项
+
+1. 确保设置了 delegate 和 dataSource
+2. 多列选择器时注意 component 参数的判断
+3. 自定义视图时注意重用机制
+4. 数据变化时需要调用 `[pickerView reloadAllComponents]` 刷新
+
+UIPickerView 是一个灵活的控件，可以根据需求进行各种自定义，包括外观、交互行为等。
+
+### 示例
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-uipickerview)
+
+
+
 ## `UI` - 子视图控制器 - 概念
 
 子视图控制器是 iOS 开发中重要的架构模式，它允许你将复杂的 UI 分解为多个独立的、可重用的组件。以下是 Objective-C 中实现子视图控制器的完整指南。
