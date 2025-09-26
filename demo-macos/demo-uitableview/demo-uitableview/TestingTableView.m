@@ -7,6 +7,7 @@
 //
 
 #import "TestingTableView.h"
+#import "TestingTableViewCell.h"
 
 @implementation TestingTableView
 
@@ -24,6 +25,10 @@
         self.data = [[NSMutableArray alloc] init];
         self.dataSource = self;
         self.delegate = self;
+        
+        // 注册 TableViewCell
+        UINib *nib = [UINib nibWithNibName:@"TestingTableViewCell" bundle:nil];
+        [self registerNib:nib forCellReuseIdentifier:@"myCell"];
     }
     return self;
 }
@@ -33,13 +38,14 @@
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
-    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"testCell1"];
+    TestingTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"myCell" forIndexPath:indexPath];
     if(!cell){
-        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:@"testCell1"];
+        cell = [[TestingTableViewCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:@"myCell"];
     }
     
-    NSNumber *number = self.data[indexPath.row];
-    cell.textLabel.text = [NSString stringWithFormat:@"Row %@", number];
+    // 修改 TableViewCell 视图
+    NSNumber *data = self.data[indexPath.row];
+    [cell configureWithData:[NSString stringWithFormat:@"Row %@", data]];
     return cell;
 }
 

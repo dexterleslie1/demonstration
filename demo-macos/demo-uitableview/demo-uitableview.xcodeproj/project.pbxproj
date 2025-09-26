@@ -18,6 +18,8 @@
 		8734157A2E69E61F00B45E71 /* demo_uitableviewUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 873415792E69E61F00B45E71 /* demo_uitableviewUITests.m */; };
 		8734157C2E69E61F00B45E71 /* demo_uitableviewUITestsLaunchTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 8734157B2E69E61F00B45E71 /* demo_uitableviewUITestsLaunchTests.m */; };
 		8734158A2E69E66B00B45E71 /* TestingTableView.m in Sources */ = {isa = PBXBuildFile; fileRef = 873415882E69E66900B45E71 /* TestingTableView.m */; };
+		878D6E7C2E85A23600EE4D62 /* TestingTableViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 878D6E7A2E85A23600EE4D62 /* TestingTableViewCell.m */; };
+		878D6E7D2E85A23600EE4D62 /* TestingTableViewCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 878D6E7B2E85A23600EE4D62 /* TestingTableViewCell.xib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -57,6 +59,9 @@
 		8734157B2E69E61F00B45E71 /* demo_uitableviewUITestsLaunchTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = demo_uitableviewUITestsLaunchTests.m; sourceTree = "<group>"; };
 		873415882E69E66900B45E71 /* TestingTableView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestingTableView.m; sourceTree = "<group>"; };
 		873415892E69E66B00B45E71 /* TestingTableView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TestingTableView.h; sourceTree = "<group>"; };
+		878D6E792E85A23600EE4D62 /* TestingTableViewCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TestingTableViewCell.h; sourceTree = "<group>"; };
+		878D6E7A2E85A23600EE4D62 /* TestingTableViewCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TestingTableViewCell.m; sourceTree = "<group>"; };
+		878D6E7B2E85A23600EE4D62 /* TestingTableViewCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = TestingTableViewCell.xib; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -120,6 +125,9 @@
 				873415612E69E61F00B45E71 /* LaunchScreen.storyboard */,
 				873415642E69E61F00B45E71 /* Info.plist */,
 				873415652E69E61F00B45E71 /* main.m */,
+				878D6E792E85A23600EE4D62 /* TestingTableViewCell.h */,
+				878D6E7A2E85A23600EE4D62 /* TestingTableViewCell.m */,
+				878D6E7B2E85A23600EE4D62 /* TestingTableViewCell.xib */,
 			);
 			path = "demo-uitableview";
 			sourceTree = "<group>";
@@ -246,6 +254,7 @@
 			files = (
 				873415632E69E61F00B45E71 /* LaunchScreen.storyboard in Resources */,
 				873415602E69E61F00B45E71 /* Assets.xcassets in Resources */,
+				878D6E7D2E85A23600EE4D62 /* TestingTableViewCell.xib in Resources */,
 				8734155E2E69E61C00B45E71 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -275,6 +284,7 @@
 				873415552E69E61C00B45E71 /* AppDelegate.m in Sources */,
 				873415662E69E61F00B45E71 /* main.m in Sources */,
 				8734158A2E69E66B00B45E71 /* TestingTableView.m in Sources */,
+				878D6E7C2E85A23600EE4D62 /* TestingTableViewCell.m in Sources */,
 				873415582E69E61C00B45E71 /* SceneDelegate.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

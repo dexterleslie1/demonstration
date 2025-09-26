@@ -9,6 +9,9 @@
 #import "TestingTableView.h"
 
 @interface ViewController ()
+@property (weak, nonatomic) IBOutlet UIButton *button;
+
+@property (strong, nonatomic) TestingTableView *tableView;
 
 @end
 
@@ -18,17 +21,29 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view.
     
-    TestingTableView *tableView = [[TestingTableView alloc] init];
+    self.tableView = [[TestingTableView alloc] init];
     for(int i=1; i<=100; i++){
-        [tableView.data addObject:[NSNumber numberWithInt:i]];
+        // 向 TableView 数据源添加数据
+        [self.tableView.data addObject:[NSNumber numberWithInt:i]];
     }
-    [self.view addSubview:tableView];
-    
-    tableView.translatesAutoresizingMaskIntoConstraints = NO;
-    [tableView.centerXAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.centerXAnchor constant:0].active = YES;
-    [tableView.centerYAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.centerYAnchor constant:0].active = YES;
-    [tableView.widthAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.widthAnchor constant:0].active = YES;
-    [tableView.heightAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.heightAnchor constant:0].active = YES;
+    [self.view addSubview:self.tableView];
+    self.tableView.translatesAutoresizingMaskIntoConstraints = NO;
+    [NSLayoutConstraint activateConstraints:@[
+        [self.tableView.topAnchor constraintEqualToAnchor:self.button.bottomAnchor],
+        [self.tableView.leadingAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.leadingAnchor],
+        [self.tableView.trailingAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.trailingAnchor],
+        [self.tableView.bottomAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.bottomAnchor]
+    ]];
+}
+
+- (IBAction)onClicked:(id)sender {
+    // 向 TableView 数据源添加数据
+    [self.tableView.data removeAllObjects];
+    for(int i=1; i<=5; i++){
+        [self.tableView.data addObject:[NSNumber numberWithInt:i]];
+    }
+    // 数据源更新后通知 TableView 视图更新
+    [self.tableView reloadData];
 }
 
 
