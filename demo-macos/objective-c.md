@@ -1251,8 +1251,9 @@ StaticClass1Sub1 *staticClass1Sub1 = [[StaticClass1Sub1 alloc] init];
 
 @implementation Person
 
-@synthesize name;
-@synthesize password;
+// 从 Xcode 4.4 开始，编译器做了一个极大的改进：如果你没有显式地写 `@synthesize`，编译器会自动为你完成这一步。
+// @synthesize name;
+// @synthesize password;
 
 - (void) toString:(int) age {
     NSLog(@"age=%d, name=%@, password=%@", age, name, password);
@@ -4499,9 +4500,170 @@ secondVC.title = @"第二页";
 >
 > 详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-uitabbarcontroller)
 
+
+
 ## `UIKit` - `UITableView`
 
 > 详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-uitableview)
+
+定义 `TableViewCell`：使用 `xib` 设置 `Cell` 布局和 `UI` 组件
+
+- `TestingTableViewCell.h`：
+
+  ```objc
+  #import <UIKit/UIKit.h>
+  
+  NS_ASSUME_NONNULL_BEGIN
+  
+  @interface TestingTableViewCell : UITableViewCell
+  @property (weak, nonatomic) IBOutlet UILabel *labelOrderId;
+  
+  // 外部调用用于配置 Cell
+  - (void) configureWithData:(NSString *) data;
+  
+  @end
+  
+  NS_ASSUME_NONNULL_END
+  ```
+
+- `TestingTableViewCell.m`：
+
+  ```objc
+  #import "TestingTableViewCell.h"
+  
+  @implementation TestingTableViewCell
+  
+  - (void)awakeFromNib {
+      [super awakeFromNib];
+      // Initialization code
+  }
+  
+  - (void)setSelected:(BOOL)selected animated:(BOOL)animated {
+      [super setSelected:selected animated:animated];
+  
+      // Configure the view for the selected state
+  }
+  
+  - (void)configureWithData:(NSString *)data {
+      [self.labelOrderId setText:data];
+  }
+  
+  @end
+  ```
+
+定义 `TableView`：使用上面定义的 `TableViewCell` 创建 `Cell`
+
+- `TestingTableView.h`：
+
+  ```objc
+  #import <UIKit/UIKit.h>
+  
+  @interface TestingTableView : UITableView <UITableViewDelegate, UITableViewDataSource>
+  
+  // TableView 的数据源
+  @property (nonatomic, strong) NSMutableArray<NSNumber *> *data;
+  
+  @end
+  ```
+
+- `TestingTableView.m`：
+
+  ```objc
+  #import "TestingTableView.h"
+  #import "TestingTableViewCell.h"
+  
+  @implementation TestingTableView
+  
+  /*
+  // Only override drawRect: if you perform custom drawing.
+  // An empty implementation adversely affects performance during animation.
+  - (void)drawRect:(CGRect)rect {
+      // Drawing code
+  }
+  */
+  
+  - (instancetype)init{
+      self = [super init];
+      if(self){
+          self.data = [[NSMutableArray alloc] init];
+          self.dataSource = self;
+          self.delegate = self;
+          
+          // 注册 TableViewCell
+          UINib *nib = [UINib nibWithNibName:@"TestingTableViewCell" bundle:nil];
+          [self registerNib:nib forCellReuseIdentifier:@"myCell"];
+      }
+      return self;
+  }
+  
+  - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
+      return self.data.count;
+  }
+  
+  - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
+      TestingTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"myCell" forIndexPath:indexPath];
+      if(!cell){
+          cell = [[TestingTableViewCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:@"myCell"];
+      }
+      
+      // 修改 TableViewCell 视图
+      NSNumber *data = self.data[indexPath.row];
+      [cell configureWithData:[NSString stringWithFormat:@"Row %@", data]];
+      return cell;
+  }
+  
+  @end
+  ```
+
+`ViewController.m` 中调用并创建 `TableView`：
+
+```objc
+#import "ViewController.h"
+#import "TestingTableView.h"
+
+@interface ViewController ()
+@property (weak, nonatomic) IBOutlet UIButton *button;
+
+@property (strong, nonatomic) TestingTableView *tableView;
+
+@end
+
+@implementation ViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view.
+    
+    self.tableView = [[TestingTableView alloc] init];
+    for(int i=1; i<=100; i++){
+        // 向 TableView 数据源添加数据
+        [self.tableView.data addObject:[NSNumber numberWithInt:i]];
+    }
+    [self.view addSubview:self.tableView];
+    self.tableView.translatesAutoresizingMaskIntoConstraints = NO;
+    [NSLayoutConstraint activateConstraints:@[
+        [self.tableView.topAnchor constraintEqualToAnchor:self.button.bottomAnchor],
+        [self.tableView.leadingAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.leadingAnchor],
+        [self.tableView.trailingAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.trailingAnchor],
+        [self.tableView.bottomAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.bottomAnchor]
+    ]];
+}
+
+- (IBAction)onClicked:(id)sender {
+    // 向 TableView 数据源添加数据
+    [self.tableView.data removeAllObjects];
+    for(int i=1; i<=5; i++){
+        [self.tableView.data addObject:[NSNumber numberWithInt:i]];
+    }
+    // 数据源更新后通知 TableView 视图更新
+    [self.tableView reloadData];
+}
+
+
+@end
+```
+
+
 
 ## `UIKit` - `UITableViewController`
 
@@ -4673,7 +4835,7 @@ self.window.rootViewController = nav;
 >
 > 详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-uitableviewcontroller)
 
-## `UIKit` - `UICollectionViewController`
+## `UIKit` - `UICollectionViewController` - 概念
 
 >提示：在代码中动态创建并添加 `UICollectionViewCell`。
 
@@ -4804,9 +4966,240 @@ MyCollectionViewController *vc = [[MyCollectionViewController alloc] initWithCol
 - 通过 **自定义布局** 和 **灵活的单元格**，可以实现几乎任何视觉设计需求。
 - 若项目已迁移至 SwiftUI，优先考虑 `LazyVGrid`/`LazyHGrid`，否则 `UICollectionView` 仍是 Objective-C 的最强选择。
 
-### 示例
+
+
+## `UIKit` - `UICollectionViewController` - 用法
 
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-uicollectionviewcontroller)
+
+### 初始化
+
+定义 `CollectionViewCell` 和 `CollectionViewController`
+
+注册 `CollectionViewCell` 到 `CollectionViewController` 中：
+
+```objc
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    
+    // 注册 XIB 文件
+    UINib *cellNib = [UINib nibWithNibName:@"MyCollectionViewCell" bundle:nil];
+    [self.collectionView registerNib:cellNib forCellWithReuseIdentifier:reuseIdentifier];
+}
+```
+
+`CollectionViewController` 调用 `CollectionViewCell` 创建 `Cell`：
+
+```objc
+#pragma mark <UICollectionViewDataSource>
+
+//- (NSInteger)numberOfSectionsInCollectionView:(UICollectionView *)collectionView {
+//    return 1;
+//}
+
+- (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section {
+    // 返回实际数据数量
+    return self.itemList.count;
+}
+
+- (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
+    // 复用单元格（Identifier 需与 Storyboard 或注册的类一致）
+    MyCollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:reuseIdentifier forIndexPath:indexPath];
+    
+    NSString *title = self.itemList[indexPath.item];
+    [cell configureWithData:title];
+    
+    return cell;
+}
+
+#pragma mark <UICollectionViewDelegate>
+```
+
+创建 `CollectionViewController` 实例：
+
+```objc
+// 创建流式布局（网格）
+UICollectionViewFlowLayout *layout = [[UICollectionViewFlowLayout alloc] init];
+// Item 的宽和高自动计算尺寸
+// layout.estimatedItemSize = UICollectionViewFlowLayoutAutomaticSize;
+// 行间距
+layout.minimumLineSpacing = 10;
+// 列间距
+layout.minimumInteritemSpacing = 10;
+// 控制整个 section 的边距（上、左、下、右），左/右间距为 10
+layout.sectionInset = UIEdgeInsetsMake(0, 10, 0, 10);
+
+// 强制两列布局
+CGFloat totalWidth = [UIScreen mainScreen].bounds.size.width;
+CGFloat spacing = layout.sectionInset.left + layout.sectionInset.right + layout.minimumInteritemSpacing;
+// 固定高度 150
+layout.itemSize = CGSizeMake((totalWidth - spacing) / 2, 150);
+
+// 初始化控制器
+TestUICollectionViewController *collectionVC = [[TestUICollectionViewController alloc] initWithCollectionViewLayout:layout];
+self.collectionViewController = collectionVC;
+NSMutableArray<NSString *> *itemList = [NSMutableArray array];
+for(int i=0;i<20;i++) {
+    [itemList addObject:[NSString stringWithFormat:@"%d", i]];
+}
+collectionVC.itemList = itemList;
+self.window.rootViewController = collectionVC;
+```
+
+
+
+### 动态修改数据源
+
+`CollectionViewController.h` 中定义数据源属性 `itemList`：
+
+```objc
+#import <UIKit/UIKit.h>
+
+NS_ASSUME_NONNULL_BEGIN
+
+@interface TestUICollectionViewController : UICollectionViewController
+
+// CollectionViewController 数据源属性
+@property (nonatomic, strong) NSArray<NSString *> *itemList;
+
+@end
+
+NS_ASSUME_NONNULL_END
+```
+
+重写 `itemList` 的 `setter` 方法，在修改 `itemList` 时通知 `CollectionViewController` 更新视图：
+
+```objc
+// 重写 itemList 属性的 setter 方法
+- (void)setItemList:(NSArray<NSString *> *)itemList {
+    _itemList = itemList;
+    // 数据变化时自动刷新
+    [self.collectionView reloadData];
+}
+
+```
+
+`CollectionViewController` 根据数据源 `itemList` 动态创建 `Cell`
+
+```objc
+#pragma mark <UICollectionViewDataSource>
+
+//- (NSInteger)numberOfSectionsInCollectionView:(UICollectionView *)collectionView {
+//    return 1;
+//}
+
+- (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section {
+    // 返回实际数据数量
+    return self.itemList.count;
+}
+
+- (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
+    // 复用单元格（Identifier 需与 Storyboard 或注册的类一致）
+    MyCollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:reuseIdentifier forIndexPath:indexPath];
+    
+    // cell.backgroundColor = [UIColor orangeColor];
+    
+    NSString *title = self.itemList[indexPath.item];
+    [cell configureWithData:title];
+    
+    return cell;
+}
+
+#pragma mark <UICollectionViewDelegate>
+```
+
+动态修改 `itemList`：
+
+```objc
+// 动态修改 CollectionViewController 数据源
+- (void)onClicked:(id) sender {
+    NSMutableArray<NSString *> *itemList = [NSMutableArray array];
+    for(int i=0;i<5;i++) {
+        [itemList addObject:[NSString stringWithFormat:@"%d", i]];
+    }
+    self.collectionViewController.itemList = itemList;
+}
+```
+
+
+
+### 传递业务数据修改`Cell`
+
+`CollectionViewCell.h` 为 `Cell` 中的 `UI` 控件建立 `Outlet` 和外部调用配置方法：
+
+```objc
+#import <UIKit/UIKit.h>
+
+NS_ASSUME_NONNULL_BEGIN
+
+@interface MyCollectionViewCell : UICollectionViewCell
+@property (weak, nonatomic) IBOutlet UIImageView *imageView;
+@property (weak, nonatomic) IBOutlet UIButton *button;
+
+// 创建 Cell 时外部调用设置 Cell
+- (void) configureWithData:(NSString *)title;
+
+@end
+
+NS_ASSUME_NONNULL_END
+```
+
+`CollectionViewCell.m` 实现 `- (void) configureWithData` 方法：
+
+```objc
+#import "MyCollectionViewCell.h"
+
+@implementation MyCollectionViewCell
+    
+...
+
+- (void)configureWithData:(id)title {
+    [self.button setTitle:title forState:UIControlStateNormal];
+}
+
+@end
+```
+
+`CollectionViewController` 创建 `Cell` 时调用 `configureWithData` 方法配置 `Cell`：
+
+```objc
+#pragma mark <UICollectionViewDataSource>
+
+...
+
+- (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
+    // 复用单元格（Identifier 需与 Storyboard 或注册的类一致）
+    MyCollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:reuseIdentifier forIndexPath:indexPath];
+    
+    NSString *title = self.itemList[indexPath.item];
+    [cell configureWithData:title];
+    
+    return cell;
+}
+
+#pragma mark <UICollectionViewDelegate>
+```
+
+
+
+### `Cell`点击事件
+
+`CollectionViewController` 实现 `UICollectionViewDelegate` 中的 `- (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath` 方法：
+
+```objc
+#pragma mark <UICollectionViewDelegate>
+
+// 点击 Cell 事件
+- (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
+    NSString *title = self.itemList[indexPath.item];
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"提示" message:title preferredStyle:UIAlertControllerStyleAlert];
+    [alert addAction:[UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleDefault handler:nil]];
+    [self presentViewController:alert animated:YES completion:nil];
+}
+
+@end
+
+```
 
 
 
@@ -6119,6 +6512,278 @@ UIViewController
 
 
 
+## `UI` - 设置组件边框
+
+在 iOS 开发中，为组件（如 `UIView`、`UIImageView`、`UIButton` 等）设置边框主要通过操作 `CALayer` 属性实现。以下是基于 **Objective-C** 的完整指南：
+
+---
+
+### 一、基础边框设置
+#### 1. 设置边框宽度、颜色和圆角
+```objectivec
+#import <QuartzCore/QuartzCore.h> // 确保导入 CALayer 头文件
+
+// 获取组件的 layer 属性
+view.layer.borderWidth = 2.0;                     // 边框宽度（单位：点）
+view.layer.borderColor = [UIColor redColor].CGColor; // 边框颜色（需转换为 CGColor）
+view.layer.cornerRadius = 8.0;                   // 圆角半径（实现圆角边框的关键）
+view.layer.masksToBounds = YES;                  // 必须设置为 YES，否则子视图会溢出圆角区域
+```
+
+#### 2. 代码封装（复用方便）
+```objectivec
+// UIView+Border.h
+@interface UIView (Border)
+- (void)addBorderWithColor:(UIColor *)color width:(CGFloat)width radius:(CGFloat)radius;
+@end
+
+// UIView+Border.m
+@implementation UIView (Border)
+- (void)addBorderWithColor:(UIColor *)color width:(CGFloat)width radius:(CGFloat)radius {
+    self.layer.borderColor = color.CGColor;
+    self.layer.borderWidth = width;
+    self.layer.cornerRadius = radius;
+    self.layer.masksToBounds = YES;
+}
+@end
+
+// 使用示例
+[myImageView addBorderWithColor:[UIColor blueColor] width:1.0 radius:10.0];
+```
+
+---
+
+### 二、高级边框效果
+#### 1. 虚线边框
+```objectivec
+// 创建虚线边框
+CAShapeLayer *dashedBorder = [CAShapeLayer layer];
+dashedBorder.strokeColor = [UIColor orangeColor].CGColor;
+dashedBorder.fillColor = nil;
+dashedBorder.lineDashPattern = @[@4, @2]; // 虚线模式：4点实线，2点空白
+dashedBorder.path = [UIBezierPath bezierPathWithRoundedRect:view.bounds cornerRadius:8].CGPath;
+dashedBorder.frame = view.bounds;
+[view.layer addSublayer:dashedBorder];
+```
+
+#### 2. 渐变颜色边框
+```objectivec
+// 创建渐变层
+CAGradientLayer *gradientLayer = [CAGradientLayer layer];
+gradientLayer.frame = CGRectInset(view.bounds, -2, -2); // 向外扩展2点
+gradientLayer.colors = @[(id)[UIColor redColor].CGColor, (id)[UIColor blueColor].CGColor];
+gradientLayer.startPoint = CGPointMake(0, 0.5);
+gradientLayer.endPoint = CGPointMake(1, 0.5);
+
+// 创建形状遮罩
+CAShapeLayer *shapeLayer = [CAShapeLayer layer];
+shapeLayer.path = [UIBezierPath bezierPathWithRoundedRect:view.bounds cornerRadius:8].CGPath;
+shapeLayer.lineWidth = 4;
+shapeLayer.fillColor = nil;
+shapeLayer.strokeColor = [UIColor blackColor].CGColor;
+gradientLayer.mask = shapeLayer;
+
+[view.layer addSublayer:gradientLayer];
+```
+
+---
+
+### 三、针对特定组件的边框设置
+#### 1. UIButton 边框
+```objectivec
+UIButton *button = [UIButton buttonWithType:UIButtonTypeSystem];
+[button setTitle:@"Click Me" forState:UIControlStateNormal];
+button.layer.borderColor = [UIColor purpleColor].CGColor;
+button.layer.borderWidth = 1.0;
+button.layer.cornerRadius = 5.0;
+button.layer.masksToBounds = YES;
+
+// 高亮状态下的边框变化
+[button addTarget:self action:@selector(buttonHighlight:) forControlEvents:UIControlEventTouchDown];
+[button addTarget:self action:@selector(buttonNormal:) forControlEvents:UIControlEventTouchUpInside];
+
+- (void)buttonHighlight:(UIButton *)btn {
+    btn.layer.borderColor = [UIColor yellowColor].CGColor;
+}
+
+- (void)buttonNormal:(UIButton *)btn {
+    btn.layer.borderColor = [UIColor purpleColor].CGColor;
+}
+```
+
+#### 2. UIImageView 圆形头像边框
+```objectivec
+avatarImageView.layer.cornerRadius = avatarImageView.bounds.size.width / 2; // 圆形
+avatarImageView.layer.borderWidth = 2.0;
+avatarImageView.layer.borderColor = [UIColor whiteColor].CGColor;
+avatarImageView.layer.masksToBounds = YES;
+
+// 添加阴影（需额外图层）
+avatarImageView.layer.shadowColor = [UIColor blackColor].CGColor;
+avatarImageView.layer.shadowOffset = CGSizeMake(0, 2);
+avatarImageView.layer.shadowOpacity = 0.3;
+avatarImageView.layer.shadowRadius = 3;
+```
+
+---
+
+### 四、Interface Builder 可视化设置
+#### 1. 通过 User Defined Runtime Attributes
+在 Storyboard/XIB 中选中组件，添加以下运行时属性：
+
+| Key Path              | Type      | Value    |
+| --------------------- | --------- | -------- |
+| `layer.borderWidth`   | `Number`  | `1`      |
+| `layer.borderColor`   | `Color`   | 选择颜色 |
+| `layer.cornerRadius`  | `Number`  | `8`      |
+| `layer.masksToBounds` | `Boolean` | `YES`    |
+
+!https://miro.medium.com/max/1400/1*5X8cbJZ27Z0Q7qD4DkgG2A.png
+
+#### 2. 创建 IBDesignable 自定义视图（推荐）
+```objectivec
+// BorderView.h
+IB_DESIGNABLE
+@interface BorderView : UIView
+@property (nonatomic) IBInspectable CGFloat borderWidth;
+@property (nonatomic) IBInspectable UIColor *borderColor;
+@property (nonatomic) IBInspectable CGFloat cornerRadius;
+@end
+
+// BorderView.m
+@implementation BorderView
+- (void)setBorderWidth:(CGFloat)borderWidth {
+    _borderWidth = borderWidth;
+    self.layer.borderWidth = borderWidth;
+}
+// 其他属性的 setter 方法类似...
+@end
+```
+然后在 Interface Builder 中将视图类改为 `BorderView`，直接在属性检查器中设置：
+
+!https://i.stack.imgur.com/7YK9F.png
+
+---
+
+### 五、注意事项
+1. **性能优化**：
+   - 避免在滚动视图（如 `UITableView`）中频繁修改 `cornerRadius`
+   - 对于复杂边框（如渐变），考虑使用预渲染的图片
+
+2. **阴影与圆角冲突**：
+   ```objectivec
+   // 如果同时需要圆角和阴影，需使用容器视图
+   UIView *container = [[UIView alloc] initWithFrame:view.frame];
+   container.layer.shadowColor = [UIColor blackColor].CGColor;
+   container.layer.shadowRadius = 5;
+   view.layer.cornerRadius = 8;
+   view.layer.masksToBounds = YES;
+   [container addSubview:view];
+   ```
+
+3. **自动布局适配**：
+   ```objectivec
+   // 在 layoutSubviews 中更新圆角（适应大小变化）
+   - (void)layoutSubviews {
+       [super layoutSubviews];
+       self.avatarImageView.layer.cornerRadius = CGRectGetWidth(self.avatarImageView.bounds) / 2;
+   }
+   ```
+
+---
+
+### 六、完整示例代码
+```objectivec
+// 创建带边框的视图
+UIView *borderedView = [[UIView alloc] initWithFrame:CGRectMake(50, 50, 200, 100)];
+borderedView.backgroundColor = [UIColor lightGrayColor];
+
+// 基础边框
+borderedView.layer.borderWidth = 3.0;
+borderedView.layer.borderColor = [UIColor systemBlueColor].CGColor;
+borderedView.layer.cornerRadius = 10.0;
+borderedView.layer.masksToBounds = YES;
+
+// 添加阴影容器
+UIView *shadowContainer = [[UIView alloc] initWithFrame:borderedView.frame];
+shadowContainer.layer.shadowColor = [UIColor blackColor].CGColor;
+shadowContainer.layer.shadowOffset = CGSizeMake(0, 3);
+shadowContainer.layer.shadowOpacity = 0.3;
+shadowContainer.layer.shadowRadius = 5;
+[shadowContainer addSubview:borderedView];
+
+[self.view addSubview:shadowContainer];
+```
+
+---
+
+### 总结表格
+| 需求           | 实现方式                 | 关键代码                                      |
+| -------------- | ------------------------ | --------------------------------------------- |
+| **基础边框**   | 直接设置 `CALayer`       | `view.layer.borderWidth = 2`                  |
+| **圆角边框**   | 结合 `cornerRadius`      | `view.layer.cornerRadius = 8`                 |
+| **虚线边框**   | 使用 `CAShapeLayer`      | `lineDashPattern = @[@4, @2]`                 |
+| **渐变边框**   | `CAGradientLayer` + 遮罩 | `gradientLayer.mask = shapeLayer`             |
+| **IB 可视化**  | `IBInspectable` 属性     | `@property IBInspectable CGFloat borderWidth` |
+| **高性能实现** | 预渲染图片或离屏渲染     | `UIGraphicsImageRenderer`                     |
+
+选择合适的方法，根据场景平衡视觉效果与性能！ 🎨
+
+### 示例
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-border)
+
+```objc
+#import "ViewController.h"
+
+@interface ViewController ()
+@property (weak, nonatomic) IBOutlet UIView *myView;
+
+@end
+
+@implementation ViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view.
+    
+    // 设置边框为黑色
+    self.myView.layer.borderColor = [UIColor blackColor].CGColor;
+    // 设置边框宽度为 1
+    self.myView.layer.borderWidth = 1;
+    // 设置边框圆角
+    self.myView.layer.cornerRadius = 10;
+}
+
+
+@end
+
+```
+
+
+
+## `UI` - `UIColor` - 转换`Hex Code`为`UIColor`
+
+>参考链接：https://stackoverflow.com/questions/1560081/how-can-i-create-a-uicolor-from-a-hex-string
+
+定义宏
+
+```objc
+#define UIColorFromRGB(rgbValue) \
+[UIColor colorWithRed:((float)((rgbValue & 0xFF0000) >> 16))/255.0 \
+                green:((float)((rgbValue & 0x00FF00) >>  8))/255.0 \
+                 blue:((float)((rgbValue & 0x0000FF) >>  0))/255.0 \
+                alpha:1.0]
+```
+
+转换 `#FFA500`
+
+```objc
+UIColor *color = UIColorFromRGB(0xFFA500)
+```
+
+
+
 ## `UI`库 - `MBProgressHUD`
 
 ### 一、核心定义：一个强大的“加载提示”工具箱
@@ -7041,7 +7706,7 @@ stackView.distribution = UIStackViewDistributionEqualSpacing; // 等间距
 stackView.distribution = UIStackViewDistributionEqualCentering; // 等中心距
 ```
 
-#### 对齐方式 (alignment，侧轴)
+#### 子元素对齐方式 (alignment，侧轴)
 
 ```objective-c
 stackView.alignment = UIStackViewAlignmentFill;      // 填充
@@ -7153,6 +7818,121 @@ UIStackView 极大地简化了复杂布局的实现，特别是在需要动态�
 ### 示例 -`Interface Builder`方式
 
 点击 `xib` 文件打开 `Interface Builder`，点击 `Xcode` 工具栏中的 `+` 添加组件，在弹出组件选择框中输入 `stack`（有水平和垂直 `stack` 可供选择）搜索 `UIStackView` 布局组件，拖动 `stack` 组件到界面中进行布局即可。
+
+
+
+## 布局 - `UIStackView` - `Content Hugging Priority`和`Content Compression Resistance Priority`
+
+在 iOS Auto Layout 系统中，**Content Hugging Priority（内容吸附优先级）** 和 **Content Compression Resistance Priority（内容抗压缩优先级）** 是两个关键布局属性，它们决定了视图在约束冲突时如何调整自身大小。
+
+---
+
+### 🧩 **Content Hugging Priority（内容吸附优先级）**
+**作用**：控制视图**抗拒被拉伸**的程度  
+**比喻**：像橡皮筋的"回缩力"——优先级越高，视图越倾向于"紧贴"自身内容大小，不愿被拉伸  
+
+#### 📌 使用场景：
+```swift
+let label = UILabel()
+label.text = "Hello"
+label.setContentHuggingPriority(.defaultHigh, for: .horizontal)
+```
+- **优先级越高** → 视图越不容易被拉伸（保持紧凑）
+- **优先级越低** → 视图越容易被拉伸（填充剩余空间）
+
+#### 🌰 示例：
+两个并排的 Label（A: "短"、B: "长文本"）：
+- 如果 A 的横向 Hugging Priority **高于** B → A 保持紧凑，B 拉伸填充
+- 如果 A 的 Hugging Priority **低于** B → A 被拉伸，B 保持原宽
+
+---
+
+### 🧩 **Content Compression Resistance Priority（内容抗压缩优先级）**
+**作用**：控制视图**抗拒被压缩**的程度  
+**比喻**：像弹簧的"抗压力"——优先级越高，视图越抵抗被压缩裁剪  
+
+#### 📌 使用场景：
+```swift
+label.setContentCompressionResistancePriority(.required, for: .vertical)
+```
+- **优先级越高** → 视图内容越不容易被裁剪（保持完整显示）
+- **优先级越低** → 视图内容可能被压缩裁剪
+
+#### 🌰 示例：
+一个固定宽度的容器内有长文本 Label：
+- 如果 Label 的抗压缩优先级 **高** → 文本可能换行或容器被撑大
+- 如果优先级 **低** → 文本可能被截断（显示"..."）
+
+---
+
+### 🔍 **两者对比**
+| 属性                               | 作用方向 | 高优先级效果   | 低优先级效果 | 典型应用                |
+| ---------------------------------- | -------- | -------------- | ------------ | ----------------------- |
+| **Content Hugging**                | 抗拒拉伸 | 保持紧凑不拉伸 | 允许拉伸填充 | 防止按钮/标签被过度拉宽 |
+| **Content Compression Resistance** | 抗拒压缩 | 防止内容裁剪   | 允许压缩裁剪 | 保证重要文本完整显示    |
+
+---
+
+### 🛠️ **实际应用技巧**
+#### 1. **StackView 中的布局控制**
+```swift
+// 让左边的 Label 抵抗拉伸，右边的 Label 填充剩余空间
+leftLabel.setContentHuggingPriority(.defaultHigh, for: .horizontal)
+rightLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
+```
+
+#### 2. **解决文本截断问题**
+```swift
+// 确保重要 Label 不被压缩
+importantLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
+```
+
+#### 3. **动态调整优先级**
+```swift
+// 根据条件改变优先级
+button.setContentHuggingPriority(isCompact ? .defaultHigh : .defaultLow, for: .vertical)
+```
+
+#### 4. **Interface Builder 设置**
+在 XIB/Storyboard 中：
+1. 选中视图 → 点击 **Size Inspector**
+2. 调整 **Horizontal/Vertical** 的优先级值（1-1000）
+
+---
+
+### 💡 **记忆口诀**
+> "**Hugging 防胖**（抗拒变宽），**Resistance 防瘦**（抗拒变窄）"
+
+---
+
+### 🌟 **最佳实践**
+1. **默认优先级**：
+   - Hugging: `250` (`.defaultLow`)  
+   - Resistance: `750` (`.defaultHigh`)
+
+2. **关键规则**：
+   ```swift
+   // 保证按钮文字不被压缩
+   button.setContentCompressionResistancePriority(.required, for: .horizontal)
+   
+   // 让辅助视图可拉伸
+   detailLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
+   ```
+
+3. **调试技巧**：
+   当布局出现意外时，检查：
+   - 哪个视图的 Hugging/Resistance 优先级更高
+   - 是否存在约束冲突（Xcode 会显示黄色/红色警告）
+
+理解这两个优先级机制，能帮你精准控制 iOS 界面在各种尺寸下的表现！
+
+### 示例
+
+>说明：在 `StackView` 布局中一个元素因为布局空间不足挤压或者拉伸另外一个元素导致元素消失或者变形，通过设置被挤压或者拉伸的元素 `Content Hugging Priority` 和 `Content Compression Resistance Priority` 以防止元素被挤压或者拉伸。
+>
+>[示例`1`](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-uicollectionviewcontroller)：示例中 `MyCollectionViewCell` 中的 `Button` 和 `ImageView` 在 `VStackView` 布局中，`ImageView` 因为原图尺寸很打挤压 `Button` 导致 `Button` 不可见，通过设置 `Button` 的 `Content Hugging Priority` 和 `Content Compression Resistance Priority` 高于 `ImageView` 以防止 `Button` 被挤压。
+>
+>[示例`2`](https://gitee.com/dexterleslie/demonstration/tree/main/demo-macos/demo-uitableview)：示例中 `Stack View Container` 中三个子 `StackView` 的各自两个 `Label`，第一个 `Label` 会被拉伸以填满 `HStackView` 的剩余布局空间，通过设置第一个 `Label` 的 `Content Hugging Priority` 和 `Content Compression Resistance Priority` 高于第二个 `Label` 以保持第一个 `Label` 不会被拉伸。
 
 
 
