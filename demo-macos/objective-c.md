@@ -8686,3 +8686,86 @@ pod install --verbose
 
 ```
 
+
+
+## `#pragma mark`作用
+
+在 iOS Objective-C 开发中，`#pragma mark` 是一个编译器指令，用于在 Xcode 的代码导航器中组织和标记代码。当与协议名称结合使用时（如 `<UICollectionViewDataSource>`），它主要有以下作用：
+
+---
+
+### **1. 代码组织与导航**
+```objectivec
+#pragma mark - <UICollectionViewDataSource>
+```
+- 在 Xcode 的 **方法跳转栏**（文件顶部的小导航栏）中创建一个分组标题
+- 将协议相关的方法集中归类，方便快速定位
+- 协议名用尖括号 `< >` 包裹是约定俗成的写法（非强制）
+
+!https://miro.medium.com/max/1400/1*S9ZBrXQDyWZkR0QlZ5WzPQ.png
+
+---
+
+### **2. 明确协议方法归属**
+清晰表明以下方法是实现 `UICollectionViewDataSource` 协议所必需的：
+```objectivec
+#pragma mark - <UICollectionViewDataSource>
+
+- (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section {
+    return self.dataArray.count;
+}
+
+- (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
+    // 返回配置好的 cell
+}
+```
+
+---
+
+### **3. 与其它代码区域分隔**
+通常配合以下标记使用，形成清晰的代码结构：
+```objectivec
+#pragma mark - Lifecycle
+- (void)viewDidLoad { ... }
+
+#pragma mark - <UICollectionViewDataSource>
+- (NSInteger)collectionView:... { ... }
+
+#pragma mark - <UICollectionViewDelegate>
+- (void)collectionView:didSelectItemAtIndexPath: { ... }
+
+#pragma mark - Custom Methods
+- (void)setupCollectionView { ... }
+```
+
+---
+
+### **4. 快速跳转的实用技巧**
+在 Xcode 中：
+- 按 **Ctrl + 6** 打开方法列表
+- 输入 `UICollectionView` 可快速过滤到协议相关方法
+- 支持点击分组标题快速折叠/展开代码块
+
+---
+
+### **5. 其他常见变体**
+```objectivec
+// 纯注释型（无分组线）
+#pragma mark UICollectionViewDataSource
+
+// 带分隔线（更醒目）
+#pragma mark - UICollectionViewDataSource
+
+// 带协议符号（推荐）
+#pragma mark - <UICollectionViewDataSource>
+```
+
+---
+
+### **为什么推荐使用？**
+1. 提升代码可读性，尤其是多人协作项目
+2. 快速区分不同协议/功能模块的实现
+3. 符合 Apple 官方代码风格（常见于系统框架头文件）
+4. 对编译结果无任何影响（纯粹的开发者辅助工具）
+
+建议对每个实现的协议都添加对应的 `#pragma mark` 标记。
