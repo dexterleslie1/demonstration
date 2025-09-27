@@ -1,3 +1,11 @@
+## 帐号信息
+
+网站：https://login.qt.io/login
+
+帐号：`gmail`，密码：`Kl`
+
+
+
 ## 概念
 
 您可以把它想象成一个 **超级强大的“应用程序开发工具包”** 或 **“积木工具箱”**。它的核心目标是让软件开发人员能够用同一套代码，轻松地开发出能运行在不同操作系统（如 Windows、macOS、Linux、Android、iOS）上的应用程序。
@@ -807,3 +815,378 @@ Qt 的跨平台原理基于：
 5. **资源系统** - 统一管理平台相关资源
 
 这种设计让开发者能够**专注于业务逻辑**，而不用操心底层平台差异，真正实现了"write once, run anywhere"的承诺。
+
+
+
+## `QtCreator` - 创建项目
+
+打开 `QtCreator`，点击 `File` > `New File or Project`，在弹出框中选择 `Application` > `Qt Widgets Application`，点击 `Choose` 按钮。
+
+在 `Project Location wizard` 中填写如下信息：
+
+- 项目名称 `Name` 填写为 `demo-qt1`
+- 项目创建的根路径 `Create in` 选择 `/home/xxx/Documents`
+- 勾选 `Use as default project location`
+
+点击 `Next` 按钮，在 `Define Build System wizard` 中 `Build System` 选择 `CMake`，点击 `Next` 按钮。
+
+在 `Class information wizard` 中填写信息如下：
+
+- `Base class` 选择 `QWidget`（没有菜单栏的窗口应用）
+- 取消勾选 `Generate form`（不生成 `ui` 布局文件）
+- 其他默认值
+
+点击 `Next` 按钮，`Translation File wizard` 中 `Language` 选中 `<none>`，点击 `Next` 按钮。
+
+在 `Kit Selection wizard` 中 `Select all kits` 和 `Desktop` 都勾选，点击 `Next` 按钮。
+
+在 `Project Management wizard` 中 `Add as a subproject to project` 选中 `<none>`，`Add to version control` 选中 `<none>`，点击 `Finish` 按钮。
+
+
+
+## `QtCreator` - `QtCreator`和`Qt`版本对应吗？
+
+>提示：不完全严格对应，但有较强的兼容性关系。两者可以**混合搭配**使用，但某些组合有最佳实践。
+
+**不完全严格对应，但有较强的兼容性关系。** 让我详细解释一下：
+
+### 🔄 **版本关系概述**
+
+#### **松耦合设计**
+- **Qt Creator** 是独立的 IDE
+- **Qt 库** 是 GUI 框架
+- 两者可以**混合搭配**使用，但某些组合有最佳实践
+
+#### **实际兼容情况**
+| 组合类型                   | 兼容性 | 说明               |
+| -------------------------- | ------ | ------------------ |
+| **新版 Creator + 旧版 Qt** | ✅ 优秀 | 向下兼容性好       |
+| **旧版 Creator + 新版 Qt** | ⚠️ 有限 | 可能缺少新特性支持 |
+| **同代版本**               | ✅ 最佳 | 官方测试组合       |
+
+---
+
+### 📊 **具体兼容性矩阵**
+
+#### **Qt Creator 对 Qt 版本的支持**
+| Qt Creator 版本      | Qt 4.x   | Qt 5.9-5.15 | Qt 6.0-6.2 | Qt 6.3+  |
+| -------------------- | -------- | ----------- | ---------- | -------- |
+| **Creator 3.x-4.10** | ✅ 完整   | ✅ 完整      | ❌ 不支持   | ❌ 不支持 |
+| **Creator 4.11-8.0** | ⚠️ 有限   | ✅ 完整      | ✅ 实验性   | ❌ 不支持 |
+| **Creator 9.0+**     | ❌ 不支持 | ✅ 完整      | ✅ 完整     | ✅ 完整   |
+| **Creator 12.0+**    | ❌ 不支持 | ⚠️ 有限      | ✅ 完整     | ✅ 完整   |
+
+---
+
+### 🎯 **推荐组合策略**
+
+#### **1. 生产环境（稳定性优先）**
+```bash
+# LTS 组合：最稳定
+Qt Creator 8.0 + Qt 5.15.2 LTS
+# 或
+Qt Creator 11.0 + Qt 6.2.4 LTS
+```
+
+#### **2. 新项目开发（功能优先）**
+```bash
+# 现代组合：享受最新特性
+Qt Creator 12.0 + Qt 6.5+ 
+```
+
+#### **3. 旧项目维护**
+```bash
+# 匹配原开发环境
+Qt Creator 4.x + Qt 5.9-5.12
+```
+
+---
+
+### 🔍 **实际兼容性检查**
+
+#### **验证组合是否工作**
+在 Qt Creator 中检查：
+1. **工具 → 选项 → Kits**：查看自动检测的工具包
+2. **如果显示黄色警告**：可能需要手动配置
+3. **绿色对勾**：表示组合可用
+
+#### **常见不兼容现象**
+- ❌ QML 语法高亮失效
+- ❌ 代码补全不工作  
+- ❌ 调试器连接失败
+- ❌ 新语法特性报错
+
+---
+
+### 🛠️ **Ubuntu 20.04 实战建议**
+
+#### **系统仓库版本（稳定）**
+```bash
+sudo apt install qtcreator qt5-default
+# 得到：Creator 4.11 + Qt 5.12.8
+```
+
+#### **官方安装器组合**
+```bash
+# 下载 Qt 在线安装器，选择：
+Qt 5.15.2 + Qt Creator 8.0    # 经典稳定
+Qt 6.2.4 + Qt Creator 9.0    # 平衡选择
+Qt 6.5.0 + Qt Creator 12.0   # 最新特性
+```
+
+---
+
+### 📝 **版本选择决策指南**
+
+#### **根据需求选择**
+| 使用场景         | 推荐组合             | 理由               |
+| ---------------- | -------------------- | ------------------ |
+| **企业项目**     | Creator 11 + Qt 5.15 | 长期支持，稳定可靠 |
+| **个人学习**     | Creator 12 + Qt 6.5  | 体验最新技术       |
+| **Ubuntu 20.04** | 系统默认版本         | 免配置，开箱即用   |
+| **跨平台开发**   | Creator 12 + Qt 6.2+ | 更好的新平台支持   |
+
+#### **检查命令**
+```bash
+# 查看当前组合
+qtcreator --version
+qmake --version
+
+# 预期输出示例：
+# Qt Creator 4.11.0
+# Qt version 5.12.8
+```
+
+---
+
+### ✅ **总结**
+- **不需要严格版本匹配**，Qt Creator 设计为向前兼容
+- **推荐使用 LTS（长期支持）版本组合**，稳定性最好
+- **对于 Ubuntu 20.04**，系统自带的 Qt 5.12.8 + Creator 4.11 是完全可用的组合
+- **如果遇到问题**，通常可以通过安装更新版本的 Qt Creator 解决
+
+
+
+## `QtCreator` - `QtCreator`和`Qt`版本对照表
+
+以下是 Qt Creator 与 Qt 版本的对照关系表，帮助你选择合适的版本组合：
+
+### 📊 **Qt Creator 与 Qt 版本对照表**
+
+| Qt Creator 版本         | 发布年份  | 推荐的 Qt 版本 | 主要特性                 |
+| ----------------------- | --------- | -------------- | ------------------------ |
+| **Qt Creator 12+**      | 2023-2024 | Qt 6.4+        | 全面支持 Qt 6，C++20     |
+| **Qt Creator 11**       | 2022-2023 | Qt 6.2-6.5     | 改进的 LSP 支持          |
+| **Qt Creator 10**       | 2022      | Qt 6.2-6.4     | 初始 Qt 6.2 完整支持     |
+| **Qt Creator 9**        | 2021-2022 | Qt 6.0-6.3     | 首个官方支持 Qt 6 的版本 |
+| **Qt Creator 8**        | 2021      | Qt 5.15-6.2    | 实验性 Qt 6 支持         |
+| **Qt Creator 7**        | 2020-2021 | Qt 5.12-5.15   | 稳定的 Qt 5 支持         |
+| **Qt Creator 6**        | 2020      | Qt 5.9-5.15    | 性能改进                 |
+| **Qt Creator 5**        | 2019-2020 | Qt 5.9-5.14    | C++17 支持改进           |
+| **Qt Creator 4.6-4.15** | 2016-2019 | Qt 5.6-5.12    | 长期支持版本             |
+
+---
+
+### 🎯 **Ubuntu 20.04.3 推荐版本组合**
+
+#### **方案1：系统仓库版本（最稳定）**
+```bash
+# Ubuntu 20.04 官方仓库版本
+sudo apt update
+sudo apt install qtcreator       # 约 Qt Creator 4.11
+sudo apt install qt5-default     # Qt 5.12.8 LTS
+```
+
+#### **方案2：在线安装器（推荐）**
+从 https://www.qt.io/download 下载在线安装器，选择：
+- **Qt 5.15.2** + **Qt Creator 4.14-8.0**
+- 或 **Qt 6.2.4** + **Qt Creator 7.0+**
+
+---
+
+### 🔍 **版本兼容性详情**
+
+#### **Qt Creator 4.x 系列（Ubuntu 20.04 默认）**
+| Qt Creator | Qt 5 支持 | Qt 6 支持 | C++标准 |
+| ---------- | --------- | --------- | ------- |
+| 4.15       | ✓ 5.15    | 实验性    | C++17   |
+| 4.14       | ✓ 5.12-15 | 有限      | C++17   |
+| 4.11       | ✓ 5.9-15  | ✗         | C++14   |
+
+#### **Qt 5 各版本特性**
+| Qt 版本      | 类型     | 支持截止 | 主要特性   |
+| ------------ | -------- | -------- | ---------- |
+| **5.15 LTS** | 长期支持 | 2023-05  | 最后商业版 |
+| **5.12 LTS** | 长期支持 | 2021-05  | 稳定可靠   |
+| **5.9 LTS**  | 长期支持 | 2020-05  | 旧系统兼容 |
+
+---
+
+### 🛠️ **检查当前版本**
+
+#### **查看已安装版本**
+```bash
+# 查看 Qt Creator 版本
+qtcreator --version
+
+# 查看 Qt 版本
+qmake --version
+
+# 查看所有已安装的 Qt 版本
+ls /usr/lib/x86_64-linux-gnu/qt5/
+```
+
+#### **Ubuntu 20.04 默认版本**
+```bash
+# 通常预装版本
+Qt Creator: 4.11.0 或 4.14.0
+Qt 5: 5.12.8 (系统默认)
+```
+
+---
+
+### 📥 **安装最新版本的方法**
+
+#### **方法1：使用官方安装器（推荐）**
+```bash
+# 下载安装器
+wget https://download.qt.io/official_releases/online_installers/qt-unified-linux-x64-online.run
+chmod +x qt-unified-linux-x64-online.run
+./qt-unified-linux-x64-online.run
+```
+
+#### **方法2：使用PPA（第三方）**
+```bash
+# 添加PPA（谨慎使用）
+sudo add-apt-repository ppa:beineri/opt-qt-5.15.2-focal
+sudo apt update
+sudo apt install qtcreator qt5.15.2
+```
+
+---
+
+### ✅ **版本选择建议**
+
+#### **新手/生产环境**
+- **Qt 5.15.2** + **Qt Creator 4.14-8.0**
+- 理由：稳定性最好，文档丰富，社区支持强
+
+#### **学习/新项目**
+- **Qt 6.2+** + **Qt Creator 9.0+**
+- 理由：现代特性，长期支持，未来导向
+
+#### **Ubuntu 20.04 兼容性**
+```bash
+# 验证兼容性
+ldd --version | head -1  # 检查glibc版本（应≥2.31）
+gcc --version | head -1  # 检查GCC版本（应≥9.3）
+```
+
+
+
+## `UI`组件 - `QWidget`
+
+`QWidget` 是 Qt 框架中最基础的**图形用户界面 (GUI)** 组件类，它是所有 Qt 可视化控件的基类。简单来说：
+
+---
+
+### 🔍 **核心概念**
+1. **父类**：继承自 `QObject`（Qt 对象基类）和 `QPaintDevice`（可绘制对象）
+2. **作用**：提供屏幕上的一个可视化矩形区域，能接收用户输入（鼠标/键盘）和绘制界面
+3. **特点**：
+   - 所有窗口（`QMainWindow`）、对话框（`QDialog`）和控件（按钮、文本框等）都直接或间接继承自 `QWidget`
+   - 既可作为独立窗口，也可作为其他控件的子部件（通过父子层级管理布局）
+
+---
+
+### 🛠️ **关键功能**
+| 功能类别     | 示例方法/特性                         |
+| ------------ | ------------------------------------- |
+| **显示控制** | `show()`, `hide()`, `setVisible()`    |
+| **几何属性** | `resize()`, `move()`, `setGeometry()` |
+| **外观样式** | `setStyleSheet()`, `palette()`        |
+| **事件处理** | `mousePressEvent()`, `paintEvent()`   |
+| **父子关系** | `setParent()`, `children()`           |
+
+---
+
+### 🌳 **QWidget 继承体系示例**
+```plaintext
+QObject
+└── QWidget
+    ├── QMainWindow（主窗口）
+    ├── QDialog（对话框）
+    ├── QFrame（带边框的控件）
+    │   └── QLabel（文本/图片标签）
+    ├── QAbstractButton（按钮基类）
+    │   ├── QPushButton（普通按钮）
+    │   └── QCheckBox（复选框）
+    └── ...（其他所有可视化控件）
+```
+
+---
+
+### 📝 **基础使用示例**
+#### 1. 创建一个空白窗口
+```cpp
+#include <QApplication>
+#include <QWidget>
+
+int main(int argc, char *argv[]) {
+    QApplication app(argc, argv);
+    
+    QWidget window;
+    window.resize(400, 300);          // 设置大小
+    window.setWindowTitle("Hello Qt"); // 设置标题
+    window.show();                     // 显示窗口
+    
+    return app.exec();
+}
+```
+
+#### 2. 创建带子控件的界面
+```cpp
+#include <QPushButton>
+
+QWidget window;
+QPushButton *button = new QPushButton("Click me", &window); // 指定父对象
+button->move(50, 50); // 相对父窗口的位置
+```
+
+---
+
+### 🎨 **QWidget 与 QML 的区别**
+| 特性         | QWidget            | QML                           |
+| ------------ | ------------------ | ----------------------------- |
+| **编程范式** | 面向对象（C++）    | 声明式（类似JSON+JavaScript） |
+| **渲染引擎** | 传统CPU绘制        | 硬件加速（Scene Graph）       |
+| **适用场景** | 复杂业务桌面应用   | 动态UI/移动端/嵌入式界面      |
+| **样式控制** | 代码/样式表（QSS） | 属性绑定/动画                 |
+
+---
+
+### 💡 **何时选择 QWidget？**
+- 需要开发传统的**桌面应用程序**
+- 对性能要求高且需要精细控制（如CAD、科学计算软件）
+- 项目主要使用 C++ 且需要深度定制控件
+- 跨平台需求但不需要炫酷动画效果
+
+---
+
+### 🚀 **进阶方向**
+1. **自定义控件**：重写 `paintEvent()` 实现特殊绘制
+   ```cpp
+   class CircleWidget : public QWidget {
+   protected:
+       void paintEvent(QPaintEvent*) override {
+           QPainter painter(this);
+           painter.drawEllipse(rect());
+       }
+   };
+   ```
+2. **事件处理**：覆写 `keyPressEvent()`、`mouseMoveEvent()` 等
+3. **样式定制**：使用 Qt Style Sheets（类似CSS）
+   ```cpp
+   widget->setStyleSheet("background: #FF0000; border-radius: 10px;");
+   ```
+
