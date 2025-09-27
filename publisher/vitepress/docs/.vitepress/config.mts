@@ -100,6 +100,7 @@ export default defineConfig({
         text: '编程语言', items: [
           { text: 'Go', link: '/golang/README.md' },
           { text: 'Python', link: '/python/README.md' },
+          { text: 'C/C++', link: '/c-plus/README.md' },
         ]
       }, {
         text: '云提供商', items: [
@@ -625,6 +626,15 @@ export default defineConfig({
           items: [
             { text: '基础', link: '/数据结构和算法/README.md' },
             { text: '布隆过滤器', link: '/数据结构和算法/布隆过滤器.md' },
+          ]
+        }
+      ],
+      '/c-plus/': [
+        {
+          text: 'C/C++',
+          items: [
+            { text: '基础', link: '/c-plus/README.md' },
+            { text: 'GDB', link: '/c-plus/gdb.md' },
           ]
         }
       ],
