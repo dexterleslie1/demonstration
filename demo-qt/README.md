@@ -249,14 +249,50 @@ Qt 的历史是一部从**解决特定问题**的工具，到被**大型社区�
 
 
 
+## 安装 - `Qt Online Installer`说明
+
+>提示：因为 `Qt Online Installer` 在线拉取 `Qt Creator`、`Qt`、`Qt Design Tool` 等 `Qt` 组件的版本信息，所以到当前时间 `2025-09-27` 任何版本的 `Qt Online Installer` 都不支持 `Qt5` 的安装，只支持 `Qt6` 和最新版本的 `Qt Creator` 安装。如果要安装 `Qt5` 需要使用离线安装方式下载 `Qt5` 安装包（安装包包含 `Qt Creator` 安装）。
+
+
+
 ## 安装 - `Ubuntu`
 
->参考链接：https://askubuntu.com/questions/1320562/how-do-i-download-qt5-default-for-ubuntu-20-04-lts
+>提示：
+>
+>- 使用 `Ubuntu20.04.3` 安装 `Qt5.14.2`。
+>- `Qt` 安装程序 `qt-opensource-linux-x64-5.14.2.run` 已经包含 `Qt Creator`，不需要再单独下载 `Qt Creator`。
 
-安装 `Qt5`
+`Ubuntu` 先安装 `Qt` 编译 `C++` 代码时的相关依赖
 
 ```sh
-sudo apt install -y qtcreator qtbase5-dev qt5-qmake cmake
+sudo apt update
+# 安装 g++、make 命令，否则报告 Qt Creator 中的 Kit 报告没有配置 C++ Compiler 警告导致项目不能使用 Kit
+sudo apt install build-essential -y
+# 安装 libgl，否则 Qt Creator 编译时报告 cannot find -lGL 错误导致编译失败
+sudo apt install libgl1-mesa-dev -y
+```
+
+在链接：https://download.qt.io/archive/qt/5.14/5.14.2/ 中下载 `qt-opensource-linux-x64-5.14.2.run`
+
+安装 `Qt` 及其相关组件
+
+```sh
+sudo ./qt-opensource-linux-x64-5.14.2.run
+```
+
+- 在选择组件界面中全选所有组件。
+
+创建文件 `/usr/share/applications/qtcreator.desktop` 内容如下：
+
+```ini
+[Desktop Entry]
+Encoding=UTF-8
+Type=Application
+Name=Qt Creator
+Exec=/opt/Qt5.14.2/Tools/QtCreator/bin/qtcreator
+Icon=qtcreator
+Terminal=false
+StartupNotify=true
 ```
 
 
