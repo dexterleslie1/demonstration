@@ -2,3 +2,4 @@ build
 build*
 /test
 a.out
+CMakeLists.txt.user

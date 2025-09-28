@@ -535,6 +535,132 @@ CMakeLists.txt  --(CMake 生成)-->  .vcxproj 文件 --(MSBuild 解析/执行)--
 
 
 
+## 构建工具 - `make`、`Ninja`和`msbuild`的关系
+
+在 C++ 项目中，`make`、`Ninja` 和 `msbuild` 都是**构建工具**（Build Tools），但它们的设计目标、适用场景和底层机制有显著差异。以下是它们的核心关系解析：
+
+---
+
+### **1. 本质关系**
+- **共同点**：三者均为**构建系统生成器**的执行引擎，负责根据规则（如 `Makefile` 或 `.sln`）调用编译器、链接器等工具完成代码编译。
+- **核心差异**：
+  | 工具      | 主要平台     | 设计目标                    | 典型输入文件      | 速度 | 复杂度 |
+  | --------- | ------------ | --------------------------- | ----------------- | ---- | ------ |
+  | `make`    | Unix-like    | 通用、灵活性高              | `Makefile`        | 中等 | 高     |
+  | `Ninja`   | 跨平台       | **极简、极致速度**          | `build.ninja`     | 最快 | 低     |
+  | `msbuild` | Windows (VS) | 深度集成 .NET/Visual Studio | `.vcxproj`/`.sln` | 中等 | 高     |
+
+---
+
+### **2. 工作流程中的角色**
+#### **(1) 生成构建规则**
+- **CMake** 等工具根据 `CMakeLists.txt` 生成对应的构建文件：
+  - 生成 `Makefile` → 由 `make` 执行
+  - 生成 `build.ninja` → 由 `ninja` 执行
+  - 生成 `.sln`/`.vcxproj` → 由 `msbuild` 执行
+
+#### **(2) 执行构建**
+```mermaid
+graph LR
+  CMakeLists.txt -->|CMake生成| Makefile
+  CMakeLists.txt -->|CMake生成| build.ninja
+  CMakeLists.txt -->|CMake生成| MyProject.sln
+  Makefile --> make
+  build.ninja --> ninja
+  MyProject.sln --> msbuild
+```
+
+---
+
+### **3. 关键特性对比**
+#### **(1) `make`（经典工具）**
+- **优势**：
+  - 高度灵活，支持复杂条件逻辑和 Shell 脚本。
+  - 所有 Unix-like 系统原生支持。
+- **劣势**：
+  - 构建速度较慢（递归式处理依赖）。
+  - 语法复杂（需手动编写依赖关系）。
+
+#### **(2) `Ninja`（现代替代品）**
+- **优势**：
+  - **速度最快**：依赖关系扁平化，并行化效率极高。
+  - 极简设计：输入文件（`build.ninja`）为机器生成，人类一般不直接修改。
+- **劣势**：
+  - 功能单一：不适合直接手写构建规则，需依赖 CMake/Meson 等工具生成。
+  - 调试难度：错误信息较抽象。
+
+#### **(3) `msbuild`（微软生态）**
+- **优势**：
+  - 深度集成 Visual Studio，支持 `.sln` 解决方案管理多项目。
+  - 原生支持 .NET 和 C++ 混合项目。
+- **劣势**：
+  - 仅限 Windows 平台。
+  - 配置文件（`.vcxproj`）冗长复杂。
+
+---
+
+### **4. 实际项目中的选择**
+#### **场景 1：跨平台 C++ 项目**
+- **推荐组合**：`CMake + Ninja`
+  ```bash
+  cmake -S . -B build -G Ninja  # 生成 Ninja 构建文件
+  cmake --build build           # 调用 ninja
+  ```
+  - **原因**：Ninja 的构建速度显著快于 `make`。
+
+#### **场景 2：Windows 专属项目**
+- **推荐组合**：`CMake + msbuild`
+  ```bash
+  cmake -S . -B build -G "Visual Studio 17 2022"  # 生成 .sln
+  cmake --build build                              # 调用 msbuild
+  ```
+  - **原因**：无缝对接 Visual Studio 调试和部署。
+
+#### **场景 3：传统 Unix 项目**
+- **推荐组合**：`CMake + make`
+  ```bash
+  cmake -S . -B build -G "Unix Makefiles"  # 生成 Makefile
+  cmake --build build                      # 调用 make
+  ```
+  - **原因**：兼容老旧系统或需要手动调整 `Makefile`。
+
+---
+
+### **5. 性能对比示例**
+假设编译一个大型项目（如 LLVM）：
+| 构建工具  | 首次构建时间 | 增量构建时间 | 并行效率（-j8） |
+| --------- | ------------ | ------------ | --------------- |
+| `make`    | 25 min       | 1.2 min      | 70% CPU 利用率  |
+| `Ninja`   | 22 min       | 0.8 min      | 95% CPU 利用率  |
+| `msbuild` | 28 min       | 1.5 min      | 60% CPU 利用率  |
+
+> 注：Ninja 在增量构建和并行化上优势明显。
+
+---
+
+### **6. 如何切换生成器？**
+通过 CMake 的 `-G` 参数指定：
+```bash
+# 生成 Ninja 构建文件
+cmake -S . -B build -G Ninja
+
+# 生成 Visual Studio 解决方案
+cmake -S . -B build -G "Visual Studio 17 2022"
+
+# 生成 Makefile
+cmake -S . -B build -G "Unix Makefiles"
+```
+
+---
+
+### **总结**
+- **`make`**：传统、灵活但慢，适合 Unix 传统项目。
+- **`Ninja`**：极简、极快，适合现代跨平台项目。
+- **`msbuild`**：Windows 生态专用，深度集成 VS。
+- **统一入口**：`cmake --build` 可屏蔽底层工具差异，实现跨平台构建。
+
+
+
 ## 构建工具 - `autotools` - 概念
 
 工具集合：
@@ -735,9 +861,21 @@ sudo apt install cmake
 ```shell
 # 所有编译的中间文件存放在build目录中以避免被git版本管理
 mkdir build && cd build
+
+# 生成构建系统配置文件 Makefile
 cmake ..
+
+# 编译源代码
 make
+# 或者
+# CMake 提供的跨平台构建命令，用于编译当前目录下已配置好的项目。它的核心作用是替代原生构建工具的直接调用（如 make或 ninja）
+cmake --build .
+
+# 将编译好的项目文件（如可执行程序、库、头文件等）安装到系统指定目录（如 /usr/local或自定义路径）
 sudo make install
+# 或者
+# CMake 3.15 及以上版本引入的跨平台安装命令，用于将编译好的项目文件（如可执行程序、库、头文件等）安装到系统指定目录（如 /usr/local或自定义路径）。它替代了传统的 make install，提供更统一且与生成器无关的安装方式。
+sudo cmake --install .
 ```
 
 ## 构建工具 - `cmake` - 构建可执行文件
@@ -747,10 +885,24 @@ sudo make install
 ```shell
 # 所有编译的中间文件存放在build目录中以避免被git版本管理
 mkdir build && cd build
+
+# 生成构建系统配置文件 Makefile
 cmake ..
+
+# 编译源代码
 make
+# 或者
+# CMake 提供的跨平台构建命令，用于编译当前目录下已配置好的项目。它的核心作用是替代原生构建工具的直接调用（如 make或 ninja）
+cmake --build .
+
 # 安装helloworld程序到/usr/local/bin目录
+# 将编译好的项目文件（如可执行程序、库、头文件等）安装到系统指定目录（如 /usr/local或自定义路径）
 sudo make install
+# 或者
+# CMake 3.15 及以上版本引入的跨平台安装命令，用于将编译好的项目文件（如可执行程序、库、头文件等）安装到系统指定目录（如 /usr/local或自定义路径）。它替代了传统的 make install，提供更统一且与生成器无关的安装方式。
+sudo cmake --install .
+
+# 运行 helloworld 程序
 helloworld
 ```
 
@@ -943,6 +1095,209 @@ Group {
     *   如果你在一个**特定的、需要高度定制化构建流程**的环境中，并且团队对 Qbs 有研究，那么它可能是一个值得考虑的技术选项。
 
 简单来说，Qbs 是一个“技术上的成功者，但商业/社区上的失败者”。了解它有助于你理解构建工具的发展历程，但为新项目做技术选型时，**CMake 是毫无疑问的首选**。
+
+
+
+## 构建工具 - `autotools`、`cmake`、`qmake`和`Qbs`的关系
+
+`autotools`、`cmake`、`qmake` 和 `Qbs` 都是**构建系统工具**，但它们在设计理念、适用场景和技术栈上有显著差异。以下是它们的详细关系解析：
+
+---
+
+### **1. 总体关系概览**
+| 工具          | 主要生态              | 设计年代 | 核心特点                       | 当前状态     |
+| ------------- | --------------------- | -------- | ------------------------------ | ------------ |
+| **Autotools** | GNU/Linux 传统项目    | 1990s    | 基于 Shell + M4 宏，自动化配置 | 传统项目维护 |
+| **CMake**     | 跨平台 C/C++ 现代项目 | 2000s    | 元构建系统，生成多种构建文件   | **行业标准** |
+| **qmake**     | Qt4/Qt5 项目          | 2000s    | Qt 专属，简单易用              | 逐步淘汰     |
+| **Qbs**       | Qt 现代构建           | 2010s    | 声明式构建，集成度高           | 新兴替代品   |
+
+---
+
+### **2. 详细对比分析**
+
+#### **(1) Autotools (GNU Build System)**
+- **核心文件**：`configure.ac`、`Makefile.am`
+- **工作流程**：
+  ```bash
+  ./autogen.sh    # 生成 configure 脚本
+  ./configure     # 检测系统环境，生成 Makefile
+  make            # 编译
+  make install    # 安装
+  ```
+- **优势**：
+  - Unix/Linux 生态深度集成
+  - 成熟的自动检测机制
+- **劣势**：
+  - 语法复杂（Shell + M4 宏）
+  - Windows 支持差
+  - 构建速度慢
+
+#### **(2) CMake (Cross Platform Make)**
+- **核心文件**：`CMakeLists.txt`
+- **工作流程**：
+  ```bash
+  cmake -B build  # 生成构建系统
+  cmake --build build  # 编译
+  ```
+- **优势**：
+  - 真正的跨平台支持
+  - 丰富的模块和包管理
+  - 支持多种生成器（Make、Ninja、VS、Xcode）
+- **劣势**：
+  - 学习曲线较陡
+  - 语法相对冗长
+
+#### **(3) qmake (Qt Make)**
+- **核心文件**：`*.pro`
+- **示例**：
+  ```pro
+  QT += core gui
+  TARGET = myapp
+  SOURCES += main.cpp
+  ```
+- **优势**：
+  - Qt 项目集成度高
+  - 语法简单直观
+  - 自动处理 MOC/UIC/RCC
+- **劣势**：
+  - 仅限于 Qt 生态
+  - 功能相对有限
+  - Qt6 中已被弃用
+
+#### **(4) Qbs (Qt Build Suite)**
+- **核心文件**：`*.qbs`
+- **示例**：
+  ```javascript
+  import qbs
+  
+  CppApplication {
+      name: "myapp"
+      files: ["main.cpp"]
+      Depends { name: "Qt.core" }
+  }
+  ```
+- **优势**：
+  - 声明式语法（类似 QML）
+  - 构建速度快
+  - 深度集成 Qt 工具链
+- **劣势**：
+  - 生态系统相对较小
+  - 社区采用度不高
+
+---
+
+### **3. 技术栈关系图**
+
+```mermaid
+graph TB
+    A[构建系统生态] --> B[传统派]
+    A --> C[现代派]
+    A --> D[Qt专属]
+    
+    B --> B1[Autotools]
+    B1 --> B11[GNU项目]
+    B1 --> B12[Linux库]
+    
+    C --> C1[CMake]
+    C1 --> C11[跨平台项目]
+    C1 --> C12[工业标准]
+    
+    D --> D1[qmake]
+    D --> D2[Qbs]
+    
+    D1 --> D11[Qt4/Qt5]
+    D2 --> D21[Qt6现代项目]
+    
+    C1 -->|替代| D1
+    D2 -->|现代替代| D1
+```
+
+---
+
+### **4. 适用场景对比**
+
+#### **选择 Autotools 当：**
+- 维护传统的 GNU/Linux 开源项目
+- 需要广泛的 Unix 平台兼容性
+- 项目依赖复杂的系统检测
+
+#### **选择 CMake 当：**
+- 项目需要真正的跨平台支持
+- 与第三方库有复杂依赖关系
+- 追求构建性能和现代化工具链
+
+#### **选择 qmake 当：**
+- 维护现有的 Qt4/Qt5 项目
+- 需要快速原型开发
+- 项目相对简单，无需复杂构建逻辑
+
+#### **选择 Qbs 当：**
+- 开发新的 Qt6 项目
+- 追求极致的构建速度
+- 喜欢声明式、现代化的配置语法
+
+---
+
+### **5. 迁移趋势**
+
+#### **Qt 官方推荐路径：**
+```
+qmake (Qt4/5) → CMake (Qt6)  [主推]
+            ↘ → Qbs         [替代方案]
+```
+
+#### **实际项目迁移示例：**
+```bash
+# 从 qmake 迁移到 CMake
+# 旧的 .pro 文件：
+QT += core gui
+TARGET = myapp
+SOURCES += main.cpp
+
+# 新的 CMakeLists.txt：
+cmake_minimum_required(VERSION 3.16)
+project(myapp VERSION 1.0.0 LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
+
+qt_standard_project_setup()
+
+qt_add_executable(myapp main.cpp)
+target_link_libraries(myapp Qt6::Core Qt6::Gui Qt6::Widgets)
+```
+
+---
+
+### **6. 性能对比**
+
+| 维度         | Autotools | CMake           | qmake  | Qbs  |
+| ------------ | --------- | --------------- | ------ | ---- |
+| **构建速度** | 慢        | 快（支持Ninja） | 中等   | 很快 |
+| **配置速度** | 很慢      | 快              | 快     | 很快 |
+| **跨平台**   | 差        | 优秀            | 良好   | 良好 |
+| **学习成本** | 高        | 中高            | 低     | 中   |
+| **社区支持** | 传统项目  | 行业标准        | Qt传统 | 新兴 |
+
+---
+
+### **7. 总结建议**
+
+1. **新项目首选 CMake**：无论是 Qt 还是非 Qt 项目，CMake 已成为事实标准。
+2. **Qt 项目现代化**：新 Qt6 项目推荐 CMake，Qbs 作为备选。
+3. **传统维护**：现有 Autotools/qmake 项目若无特殊需求，不建议重写。
+4. **性能敏感**：大型项目可考虑 CMake + Ninja 或 Qbs 组合。
+
+**最终选择矩阵：**
+| 项目类型              | 推荐工具  | 备选方案         |
+| --------------------- | --------- | ---------------- |
+| **新 C++ 跨平台项目** | CMake     | Meson            |
+| **新 Qt 项目**        | CMake     | Qbs              |
+| **维护传统 Qt 项目**  | qmake     | 逐步迁移到 CMake |
+| **GNU/Linux 系统库**  | Autotools | 考虑迁移到 CMake |
 
 
 
@@ -1522,14 +1877,28 @@ CMake 项目支持断点调试的原理是：
 
 
 
-## `C++`语法基础 - `#include <>`和`#include ""`区别
+## `C/C++`开发调试环境配置
+
+>提示：在 `Ubuntu20.04.3` 中使用 `Qt Creator` 分别创建 `Plain C Application` 和 `Plain C++ Application` 用于调试学习 `C/C++` 语法基础。
+
+`Qt/Qt Creator` 安装请参考本站 [链接](/qt/README.html#安装-ubuntu)
+
+`Qt Creator` 创建 `C` 语言项目请参考本站 [链接](/qt/README.html#qtcreator-创建plain-c-application)
+
+`Qt Creator` 创建 `C++` 语言项目请参考本站 [链接](/qt/README.html#qtcreator-创建plain-c-application-1)
+
+
+
+## `C++`语法 - `#include <>`和`#include ""`区别
 
 在 C++ 中，`#include <>` 和 `#include ""` 是两种不同的包含头文件的方式，它们的区别主要体现在 **编译器搜索头文件的路径顺序** 上。以下是详细的对比：
 
 ---
 
 ### **1. `#include <header.h>`（尖括号形式）**
+
 #### **搜索路径顺序**
+
 1. **标准库路径**  
    - 编译器内置的标准库路径（如 `/usr/include`、`/usr/local/include` 等）。
    - 环境变量（如 `CPATH`、`C_INCLUDE_PATH`、`CPLUS_INCLUDE_PATH`）指定的路径。
@@ -1538,10 +1907,12 @@ CMake 项目支持断点调试的原理是：
    - 操作系统提供的系统头文件路径。
 
 #### **适用场景**
+
 - **标准库头文件**（如 `<iostream>`、`<vector>`、`<string>`）。
 - **第三方库的头文件**（如 `<boost/asio.hpp>`、`<opencv2/core.hpp>`）。
 
 #### **示例**
+
 ```cpp
 #include <iostream>      // 标准库
 #include <boost/asio.hpp> // 第三方库
@@ -1550,7 +1921,9 @@ CMake 项目支持断点调试的原理是：
 ---
 
 ### **2. `#include "header.h"`（双引号形式）**
+
 #### **搜索路径顺序**
+
 1. **当前源文件所在目录**  
    - 优先在包含该 `#include` 语句的源文件所在目录查找。
 2. **项目自定义路径**  
@@ -1559,10 +1932,12 @@ CMake 项目支持断点调试的原理是：
    - 退回到和 `#include <>` 相同的搜索路径。
 
 #### **适用场景**
+
 - **项目自定义头文件**（如 `"utils.h"`、`"config.h"`）。
 - **相对路径包含**（如 `"../include/header.h"`）。
 
 #### **示例**
+
 ```cpp
 #include "utils.h"        // 项目自定义头文件
 #include "../include/config.h" // 相对路径
@@ -1571,6 +1946,7 @@ CMake 项目支持断点调试的原理是：
 ---
 
 ### **3. 关键区别总结**
+
 | **特性**             | `#include <>`              | `#include ""`                |
 | -------------------- | -------------------------- | ---------------------------- |
 | **搜索优先级**       | 先搜索标准库和系统路径     | 先搜索当前目录和自定义路径   |
@@ -1581,28 +1957,36 @@ CMake 项目支持断点调试的原理是：
 ---
 
 ### **4. 实际开发中的建议**
+
 1. **标准库和第三方库** → **用 `<>`**  
+
    ```cpp
    #include <vector>
    #include <opencv2/core.hpp>
    ```
 
 2. **项目自定义头文件** → **用 `""`**  
+
    ```cpp
    #include "my_class.h"
    #include "utils/math_utils.h"
    ```
 
 3. **避免混用**  
+
    - 不要用 `#include "iostream"` 包含标准库，虽然可能能编译，但不符合约定。
    - 不要用 `#include <my_header.h>` 包含项目文件，可能导致找不到文件。
 
 4. **路径问题**  
+
    - 如果头文件不在当前目录，建议用 `-I` 指定搜索路径：
+
      ```bash
      g++ -I./include main.cpp
      ```
+
    - 或者在 CMake 中设置：
+
      ```cmake
      include_directories(include)  # 添加头文件搜索路径
      ```
@@ -1610,15 +1994,20 @@ CMake 项目支持断点调试的原理是：
 ---
 
 ### **5. 特殊情况**
+
 #### **(1) 两种方式混用时的影响**
+
 ```cpp
 #include <vector>     // 标准库
 #include "vector"     // 可能会找到非标准库的同名文件，导致错误！
 ```
+
 **结论**：不要用 `""` 包含标准库，避免意外覆盖。
 
 #### **(2) 编译器扩展**
+
 某些编译器（如 MSVC）允许通过选项调整搜索行为，例如：
+
 - `/I`（MSVC 的 `-I` 等效）
 - `/X` 禁止搜索标准路径
 
@@ -1627,7 +2016,9 @@ CMake 项目支持断点调试的原理是：
 ---
 
 ### **6. CMake 项目中的最佳实践**
+
 在 CMake 项目中，推荐使用 `target_include_directories` 明确指定头文件路径：
+
 ```cmake
 add_executable(my_app main.cpp)
 
@@ -1637,11 +2028,13 @@ target_link_libraries(my_app PRIVATE Boost::boost)
 # 项目自定义头文件路径
 target_include_directories(my_app PRIVATE include)
 ```
+
 这样无论是 `<>` 还是 `""`，编译器都能正确找到头文件。
 
 ---
 
 ### **总结**
+
 - **`#include <>`** → **标准库、第三方库**（搜索系统路径优先）。
 - **`#include ""`** → **项目自定义头文件**（搜索本地路径优先）。
 - **不要混用**，遵循约定以避免潜在问题。
@@ -1649,15 +2042,225 @@ target_include_directories(my_app PRIVATE include)
 
 
 
-## `C/C++`开发调试环境配置
+## `C++`语法 - `#pragma once`作用
 
->提示：在 `Ubuntu20.04.3` 中使用 `Qt Creator` 分别创建 `Plain C Application` 和 `Plain C++ Application` 用于调试学习 `C/C++` 语法基础。
+在 C++ 中，`#pragma once` 是一个**非标准但广泛支持的预处理器指令**，用于防止头文件被重复包含（即避免重复定义和编译错误）。它的作用与传统的**头文件守卫（Header Guards）**类似，但更加简洁高效。
 
-`Qt/Qt Creator` 安装请参考本站 [链接](/qt/README.html#安装-ubuntu)
+---
 
-`Qt Creator` 创建 `C` 语言项目请参考本站 [链接](/qt/README.html#qtcreator-创建plain-c-application)
+### **1. 核心作用**
+**防止头文件被多次包含**  
+当多个源文件（`.cpp`）包含同一个头文件（`.h`）时，`#pragma once` 确保该头文件在**单个编译单元中仅被展开一次**，避免因重复定义导致的编译错误。
 
-`Qt Creator` 创建 `C++` 语言项目请参考本站 [链接](/qt/README.html#qtcreator-创建plain-c-application-1)
+---
+
+### **2. 典型用法**
+直接在头文件开头添加：
+```cpp
+// myheader.h
+#pragma once
+
+// 头文件内容...
+class MyClass {
+    // ...
+};
+```
+
+---
+
+### **3. 与传统头文件守卫的对比**
+| **特性**           | `#pragma once`                 | **头文件守卫（Header Guards）**         |
+| ------------------ | ------------------------------ | --------------------------------------- |
+| **语法**           | 一行指令                       | 需手动编写 `#ifndef`/`#define`/`#endif` |
+| **可读性**         | 简洁                           | 冗余                                    |
+| **标准化**         | 非标准（但主流编译器均支持）   | C/C++ 标准                              |
+| **避免文件名冲突** | 依赖文件系统路径（可能有问题） | 依赖宏名唯一性（需手动保证）            |
+| **编译性能**       | 更快（编译器直接标记文件）     | 较慢（需多次解析宏）                    |
+
+**传统头文件守卫示例**：
+```cpp
+// myheader.h
+#ifndef MYHEADER_H  // 必须确保宏名唯一
+#define MYHEADER_H
+
+// 头文件内容...
+class MyClass {
+    // ...
+};
+
+#endif // MYHEADER_H
+```
+
+---
+
+### **4. 为什么推荐使用 `#pragma once`？**
+1. **简洁性**：减少样板代码，降低出错概率。
+2. **性能**：编译器直接通过文件物理路径去重，比宏守卫更快。
+3. **广泛支持**：所有主流编译器（GCC、Clang、MSVC、ICC）均支持。
+
+---
+
+### **5. 注意事项**
+1. **非标准特性**：  
+   虽然几乎所有现代编译器都支持，但严格遵循标准的项目可能要求使用传统的头文件守卫。
+   
+2. **符号链接问题**：  
+   如果头文件通过不同路径引入（如符号链接），`#pragma once` 可能失效（因编译器依赖文件系统路径判重）。
+
+3. **组合使用**：  
+   某些项目会同时使用两者以兼容所有场景（但通常没必要）：
+   ```cpp
+   #pragma once
+   #ifndef MYHEADER_H
+   #define MYHEADER_H
+   // ...
+   #endif
+   ```
+
+---
+
+### **6. 编译器支持情况**
+| **编译器**        | **支持版本** |
+| ----------------- | ------------ |
+| GCC               | 3.4 及以上   |
+| Clang             | 所有版本     |
+| MSVC (Visual C++) | 所有版本     |
+| Intel C++         | 所有版本     |
+
+---
+
+### **7. 何时必须用头文件守卫？**
+- 需要兼容极老旧的编译器（如 C89 环境）。
+- 头文件可能通过不同路径被包含（如符号链接场景）。
+
+---
+
+### **总结**
+- **`#pragma once`** = “请确保这个头文件只被包含一次”。
+- **优先使用场景**：现代 C++ 项目、Qt 开发、跨平台项目（GCC/Clang/MSVC）。
+- **例外情况**：需要严格兼容 C 标准或特殊路径包含时，使用传统头文件守卫。
+
+
+
+## `C++`语法 - 类
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-c++/demo-c-plus-class)
+
+`Point.h`：
+
+```c++
+#pragma once
+
+class Point {
+private:
+        int x;
+        int y;
+public:
+        void setX(int x);
+        void setY(int y);
+        int getX();
+        int getY();
+};
+
+```
+
+`Point.cpp`：
+
+```c++
+#include "Point.h"
+
+void Point::setX(int x) {
+        this->x = x;
+}
+
+void Point::setY(int y) {
+        this->y = y;
+}
+
+int Point::getX() {
+        return this->x;
+}
+
+int Point::getY() {
+        return this->y;
+}
+
+```
+
+`Circle.h`：
+
+```c++
+#pragma once
+
+#include "Point.h"
+#include <iostream>
+
+using namespace std;
+
+class Circle {
+private:
+    int r;
+    Point center;
+
+public:
+    void setR(int r);
+    void setCenter(Point center);
+    int getR();
+    Point getCenter();
+
+    void print();
+};
+
+```
+
+`Circle.cpp`：
+
+```c++
+#include "Circle.h"
+
+void Circle::setR(int r) {
+        this->r = r;
+}
+
+void Circle::setCenter(Point center) {
+        this->center = center;
+}
+
+int Circle::getR() {
+        return this->r;
+}
+
+Point Circle::getCenter() {
+        return this->center;
+}
+
+void Circle::print() {
+        cout << "Circle x=" << this->center.getX() << ",y=" << this->center.getY() << ",r=" << this->r << endl;
+}
+
+```
+
+`main.cpp`：
+
+```c++
+#include <iostream>
+#include "Circle.h"
+
+// https://blog.csdn.net/weixin_45407700/article/details/114269876
+int main() {
+    Point point;
+    point.setX(100);
+    point.setY(101);
+
+    Circle circle;
+    circle.setR(200);
+    circle.setCenter(point);
+    circle.print();
+
+    return 0;
+}
+
+```
 
 
 
