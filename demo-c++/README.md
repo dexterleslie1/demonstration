@@ -2992,3 +2992,160 @@ int main() {
 
 ```
 
+
+
+## `C++`语法 - 命名空间
+
+### **C++ 命名空间（Namespace）是什么？**
+**命名空间（Namespace）** 是 C++ 中用来 **组织代码、防止命名冲突** 的一种机制。它类似于 **文件夹**，可以把不同的代码归类到不同的“空间”里，避免同名变量、函数或类发生冲突。
+
+---
+
+### **1. 为什么需要命名空间？**
+假设有两个库都定义了 `print()` 函数：
+```cpp
+// 库A
+void print() { std::cout << "Library A\n"; }
+
+// 库B
+void print() { std::cout << "Library B\n"; }
+```
+如果你同时使用这两个库：
+```cpp
+print();  // 编译器不知道调用哪个 print()，会报错！
+```
+**解决方案：用命名空间隔离它们！**
+```cpp
+namespace LibA { void print() { std::cout << "Library A\n"; } }
+namespace LibB { void print() { std::cout << "Library B\n"; } }
+
+int main() {
+    LibA::print();  // 明确调用 LibA 的 print
+    LibB::print();  // 明确调用 LibB 的 print
+    return 0;
+}
+```
+这样就不会冲突了！🚀
+
+---
+
+### **2. 命名空间的基本用法**
+#### **(1) 定义命名空间**
+```cpp
+namespace MySpace {
+    int x = 10;
+    void foo() { std::cout << "Hello from MySpace!\n"; }
+}
+```
+#### **(2) 访问命名空间内的成员**
+使用 `命名空间::成员` 的方式访问：
+```cpp
+int main() {
+    std::cout << MySpace::x << "\n";  // 输出 10
+    MySpace::foo();                   // 调用 MySpace 的 foo()
+    return 0;
+}
+```
+
+---
+
+### **3. `std` 命名空间**
+C++ 标准库的所有内容（如 `cout`、`string`、`vector`）都放在 `std` 命名空间中：
+```cpp
+#include <iostream>
+#include <string>
+
+int main() {
+    std::string name = "Alice";  // std::string
+    std::cout << "Hello, " << name << "!\n";  // std::cout
+    return 0;
+}
+```
+**为什么要有 `std`？**  
+避免标准库的名字（如 `string`、`cout`）和用户自定义的名字冲突。
+
+---
+
+### **4. `using namespace` 指令**
+如果你不想每次都写 `std::` 或 `MySpace::`，可以用 `using namespace`：
+```cpp
+#include <iostream>
+using namespace std;  // 告诉编译器：“默认在 std 里找名字”
+
+int main() {
+    string name = "Bob";  // 不用写 std::string
+    cout << "Hello, " << name << "!\n";  // 不用写 std::cout
+    return 0;
+}
+```
+**⚠ 注意：**  
+`using namespace std;` 在小型程序中方便，但在大型项目中 **不推荐**，因为可能引发命名冲突。
+
+---
+
+### **5. 嵌套命名空间**
+命名空间可以嵌套：
+```cpp
+namespace Outer {
+    int x = 1;
+    namespace Inner {
+        int y = 2;
+    }
+}
+
+int main() {
+    std::cout << Outer::x << "\n";           // 1
+    std::cout << Outer::Inner::y << "\n";   // 2
+    return 0;
+}
+```
+
+---
+
+### **6. 匿名命名空间**
+匿名命名空间（未命名的命名空间）的作用类似于 `static`，限制作用域在当前文件：
+```cpp
+namespace {  // 匿名命名空间
+    int localVar = 42;  // 只能在当前 .cpp 文件使用
+}
+
+int main() {
+    std::cout << localVar << "\n";  // 可以直接访问
+    return 0;
+}
+```
+
+---
+
+### **7. 命名空间别名**
+如果命名空间名字太长，可以起别名：
+```cpp
+namespace VeryLongNamespaceName {
+    void foo() { std::cout << "Hi!\n"; }
+}
+
+int main() {
+    namespace Short = VeryLongNamespaceName;  // 别名
+    Short::foo();  // 等同于 VeryLongNamespaceName::foo()
+    return 0;
+}
+```
+
+---
+
+### **总结**
+| 概念                  | 作用                   | 示例                              |
+| --------------------- | ---------------------- | --------------------------------- |
+| **命名空间**          | 防止命名冲突，组织代码 | `namespace MySpace { ... }`       |
+| **`std`**             | C++ 标准库的命名空间   | `std::cout`, `std::string`        |
+| **`using namespace`** | 简化命名空间访问       | `using namespace std;`            |
+| **嵌套命名空间**      | 多层命名空间           | `Outer::Inner::foo()`             |
+| **匿名命名空间**      | 限制作用域到当前文件   | `namespace { ... }`               |
+| **命名空间别名**      | 缩短长命名空间名       | `namespace Short = VeryLongName;` |
+
+🚀 **最佳实践：**
+- **尽量少用 `using namespace std;`**（避免污染全局命名空间）。
+- **头文件必须包含所有依赖**（如 `<string>`），不要依赖其他文件已经包含。
+- **合理使用命名空间**，避免全局变量冲突。
+
+现在你应该明白为什么 `std::string` 需要 `<string>` 头文件了吧！😃
