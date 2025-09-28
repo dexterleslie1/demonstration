@@ -1357,3 +1357,221 @@ Widget::~Widget()
 
 ```
 
+
+
+## `UI`组件 - 信号和槽机制 - 概念
+
+Qt5 的 **信号和槽（Signals & Slots）** 是 Qt 框架的核心机制，用于实现对象之间的通信。它是一种 **松耦合、类型安全** 的事件处理方式，比传统的回调函数更灵活、更安全。
+
+---
+
+### **1. 基本概念**
+#### **（1）信号（Signal）**
+- **定义**：信号是类中声明的特殊成员函数，用于 **发出事件通知**（如按钮点击、数据变化）。
+- **特点**：
+  - 信号只需声明，**无需实现**（由 Qt 的 `moc` 元对象编译器自动生成）。
+  - 信号可以带参数，用于传递数据。
+  - 信号通过 `emit` 关键字触发。
+
+**示例：**
+```cpp
+class MyClass : public QObject {
+    Q_OBJECT  // 必须包含 Q_OBJECT 宏以支持信号和槽
+signals:
+    void mySignal(int value);  // 声明信号
+};
+```
+
+#### **（2）槽（Slot）**
+- **定义**：槽是普通的成员函数，用于 **响应信号**（类似事件处理函数）。
+- **特点**：
+  - 槽可以是 `public slots`、`protected slots` 或 `private slots`。
+  - 槽可以有返回值（但通常不推荐，因为信号和槽是异步的）。
+  - 槽可以像普通函数一样调用。
+
+**示例：**
+```cpp
+class MyClass : public QObject {
+    Q_OBJECT
+public slots:
+    void mySlot(int value) {  // 定义槽
+        qDebug() << "Received value:" << value;
+    }
+};
+```
+
+---
+
+### **2. 连接信号和槽**
+使用 `QObject::connect()` 建立信号和槽的关联：
+```cpp
+connect(发送者, &发送者类::信号, 接收者, &接收者类::槽);
+```
+
+#### **示例：按钮点击触发槽函数**
+```cpp
+#include <QApplication>
+#include <QPushButton>
+
+int main(int argc, char *argv[]) {
+    QApplication app(argc, argv);
+
+    QPushButton button("点击我");
+    QObject::connect(&button, &QPushButton::clicked,  {
+        qDebug() << "按钮被点击了！";
+    });
+
+    button.show();
+    return app.exec();
+}
+```
+
+#### **参数传递**
+信号和槽的参数必须兼容（类型一致或可隐式转换）：
+```cpp
+// 信号带参数
+class Sender : public QObject {
+    Q_OBJECT
+signals:
+    void dataSent(const QString &message);
+};
+
+// 槽接收参数
+class Receiver : public QObject {
+    Q_OBJECT
+public slots:
+    void handleData(const QString &message) {
+        qDebug() << "收到数据：" << message;
+    }
+};
+
+// 连接
+Sender sender;
+Receiver receiver;
+QObject::connect(&sender, &Sender::dataSent, &receiver, &Receiver::handleData);
+
+// 触发信号
+emit sender.dataSent("Hello Qt!");
+```
+
+---
+
+### **3. 信号和槽的多种连接方式**
+#### **（1）Qt5 推荐方式（类型安全，编译时检查）**
+```cpp
+connect(sender, &Sender::signal, receiver, &Receiver::slot);
+```
+
+#### **（2）Qt4 旧语法（不推荐，容易出错）**
+```cpp
+connect(sender, SIGNAL(signal(int)), receiver, SLOT(slot(int)));
+```
+- **缺点**：字符串形式，运行时才能发现错误。
+
+#### **（3）Lambda 表达式（匿名槽函数）**
+```cpp
+connect(&button, &QPushButton::clicked,  {
+    qDebug() << "Lambda 槽函数";
+});
+```
+
+#### **（4）信号连接信号**
+```cpp
+connect(&button1, &QPushButton::clicked, &button2, &QPushButton::click);
+```
+- 当 `button1` 被点击时，`button2` 也会触发 `clicked` 信号。
+
+---
+
+### **4. 断开连接**
+使用 `disconnect` 断开信号和槽：
+```cpp
+disconnect(sender, &Sender::signal, receiver, &Receiver::slot);
+```
+- 如果不指定参数，会断开所有关联：
+  ```cpp
+  disconnect(sender, nullptr, receiver, nullptr);
+  ```
+
+---
+
+### **5. 信号和槽的底层机制**
+1. **元对象系统（Meta-Object System）**：
+   - Qt 使用 `moc`（元对象编译器）解析 `Q_OBJECT` 宏，生成额外的代码支持信号和槽。
+   - 信号和槽的名称、参数等信息存储在元对象中。
+
+2. **线程安全**：
+   - 默认情况下，槽函数在 **发送者所在线程** 执行。
+   - 如果跨线程通信，需使用 `Qt::QueuedConnection`（异步）或 `Qt::BlockingQueuedConnection`（同步）。
+
+---
+
+### **6. 常见问题**
+#### **（1）信号和槽没有触发？**
+- 检查是否漏写 `Q_OBJECT`。
+- 检查 `connect` 是否成功（返回值是否为 `true`）。
+- 确保接收者对象未被销毁。
+
+#### **（2）如何传递自定义类型？**
+- 使用 `qRegisterMetaType` 注册自定义类型：
+  ```cpp
+  qRegisterMetaType<MyClass>("MyClass");
+  ```
+
+#### **（3）信号和槽的性能**
+- 比回调函数稍慢，但灵活性更高。
+- 高频信号（如实时数据）建议使用直接函数调用或事件（`QEvent`）。
+
+---
+
+### **7. 总结**
+| **特性**       | **说明**                                                 |
+| -------------- | -------------------------------------------------------- |
+| **松耦合**     | 发送者和接收者无需知道对方的存在。                       |
+| **类型安全**   | Qt5 的语法在编译时检查参数类型。                         |
+| **支持多线程** | 可通过连接类型（`Qt::AutoConnection`）自动适应线程环境。 |
+| **灵活连接**   | 支持信号-槽、信号-信号、Lambda 表达式等多种方式。        |
+
+信号和槽是 Qt 的核心特性，熟练掌握后可以高效实现各种交互逻辑！ 🚀
+
+
+
+## `UI`组件 - 信号和槽机制 - 用法
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-qt/demo-signal-and-slot)
+
+### 系统自带的信号和槽
+
+>说明：点击按钮会关闭窗口。
+
+```c++
+#include "widget.h"
+#include <QPushButton>
+
+Widget::Widget(QWidget *parent)
+    : QWidget(parent)
+{
+    this->resize(600, 400);
+
+    // 添加关闭窗口按钮
+    QPushButton *button = new QPushButton("关闭窗口", this);
+    // 连接信号和槽
+    // sender 信号的发送者
+    // 按钮的 clicked()信号，当用户点击按钮时触发。
+    // 槽函数的接收者（通常是当前类的实例，这里是窗口对象）。
+    // 窗口的 close()槽函数，调用时会关闭窗口。
+    connect(button, &QPushButton::clicked, this, &QWidget::close);
+}
+
+Widget::~Widget()
+{
+}
+
+
+```
+
+
+
+### 自定义信号和槽
+
+>`todo`
