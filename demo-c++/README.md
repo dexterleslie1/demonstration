@@ -1877,6 +1877,237 @@ CMake 项目支持断点调试的原理是：
 
 
 
+## `C/C++`标准库 - 概念
+
+C 和 C++ 标准库是这两种编程语言官方提供的**核心功能集合**，相当于语言的"标准装备包"。
+
+### 通俗理解
+
+想象你要组装电脑：
+- **C/C++ 语言本身** = 电脑主板和CPU（基础能力）
+- **标准库** = 预装的操作系统、驱动程序、常用软件（开箱即用的功能）
+
+### C 标准库
+
+**定位**：轻量级的基础工具包
+```c
+// 包含基础功能：
+#include <stdio.h>   // 输入输出（打印、读文件）
+#include <string.h>  // 字符串处理
+#include <math.h>    // 数学计算
+#include <stdlib.h>  // 内存管理
+
+// 使用示例
+printf("Hello World\n");          // 打印
+char text[20];
+strcpy(text, "hello");           // 字符串复制
+int x = abs(-5);                 // 绝对值
+int* p = malloc(sizeof(int));    // 分配内存
+```
+
+### C++ 标准库
+
+**定位**：更强大、更安全的现代化工具包
+```cpp
+// 包含丰富功能：
+#include <iostream>    // 智能输入输出
+#include <vector>      // 动态数组
+#include <string>      // 字符串类
+#include <memory>      // 智能指针
+
+// 使用示例
+std::cout << "Hello World" << std::endl;  // 更安全的输出
+std::vector<int> numbers = {1, 2, 3};     // 动态数组
+std::string text = "hello";               // 安全的字符串类
+auto ptr = std::make_unique<int>(42);     // 自动内存管理
+```
+
+### 核心区别
+
+| 方面         | C 标准库             | C++ 标准库               |
+| ------------ | -------------------- | ------------------------ |
+| **设计理念** | 简单、直接、接近硬件 | 安全、便捷、面向对象     |
+| **字符串**   | 字符数组（容易出错） | string类（自动管理内存） |
+| **内存管理** | 手动malloc/free      | 智能指针（自动释放）     |
+| **数据结构** | 需要自己实现         | 提供vector、map等容器    |
+
+### 为什么需要标准库？
+
+**没有标准库的编程**：
+```c
+// 要自己实现所有基础功能！
+void my_printf(const char* text) { /* 很复杂 */ }
+int my_strlen(const char* str) { /* 需要循环 */ }
+```
+
+**有标准库的编程**：
+```c
+printf("直接使用！");  // 别人已经帮你写好了
+strlen("hello");      // 经过充分测试，高效可靠
+```
+
+### 实际类比
+
+- **C 标准库** ≈ 基础工具箱（锤子、螺丝刀）
+- **C++ 标准库** ≈ 现代化工具间（电动工具、智能设备）
+
+两者都让你不必从零开始造轮子，能专注于解决实际问题。选择哪个取决于项目需求：嵌入式系统可能选C，大型应用可能选C++。
+
+
+
+## `C/C++`标准库 - 两者区别
+
+C 和 C++ 标准库是两种相关但不同的库系统。让我为你详细介绍一下：
+
+### C 标准库
+
+#### 主要头文件和功能
+
+**输入/输出**
+
+```c
+#include <stdio.h>
+// 文件操作：fopen, fclose, fread, fwrite
+// 格式化I/O：printf, scanf, sprintf
+// 字符I/O：getchar, putchar
+```
+
+**字符串处理**
+```c
+#include <string.h>
+// 字符串操作：strcpy, strcat, strlen, strcmp
+// 内存操作：memcpy, memset, memcmp
+```
+
+**内存管理**
+```c
+#include <stdlib.h>
+// 动态内存：malloc, calloc, realloc, free
+// 类型转换：atoi, atof, strtol
+```
+
+**数学函数**
+```c
+#include <math.h>
+// 数学运算：sin, cos, sqrt, pow, log
+```
+
+### C++ 标准库
+
+#### 主要组成部分
+
+**STL（标准模板库）**
+
+```cpp
+#include <vector>
+#include <list>
+#include <map>
+#include <algorithm>
+#include <functional>
+
+// 容器
+std::vector<int> vec = {1, 2, 3};
+std::map<std::string, int> scores;
+
+// 算法
+std::sort(vec.begin(), vec.end());
+auto it = std::find(vec.begin(), vec.end(), 2);
+```
+
+**智能指针**
+```cpp
+#include <memory>
+std::unique_ptr<int> ptr = std::make_unique<int>(42);
+std::shared_ptr<std::string> str = std::make_shared<std::string>("Hello");
+```
+
+**I/O 流**
+```cpp
+#include <iostream>
+#include <fstream>
+#include <sstream>
+
+std::cout << "Hello" << std::endl;
+std::ifstream file("data.txt");
+std::stringstream ss;
+```
+
+### 主要区别
+
+| 特性       | C 标准库           | C++ 标准库            |
+| ---------- | ------------------ | --------------------- |
+| 编程范式   | 过程式             | 面向对象 + 泛型       |
+| 内存管理   | 手动 (malloc/free) | 自动 (RAII, 智能指针) |
+| 字符串处理 | 字符数组           | string 类             |
+| 类型安全   | 较弱               | 较强                  |
+| 异常处理   | 不支持             | 支持                  |
+
+### 兼容性
+
+C++ 包含了大部分 C 标准库功能，但头文件命名不同：
+
+```cpp
+// C 风格（在 C++ 中）
+#include <cstdio>    // 而不是 <stdio.h>
+#include <cstring>   // 而不是 <string.h>
+#include <cmath>     // 而不是 <math.h>
+
+// 使用时
+std::printf("Hello\n");  // 推荐使用命名空间
+```
+
+### 现代 C++ 特性
+
+**C++11 及以后新增**
+
+```cpp
+// 移动语义
+std::vector<int> create_vector() {
+    return {1, 2, 3};  // 移动而非复制
+}
+
+// Lambda 表达式
+std::for_each(vec.begin(), vec.end(), int x {
+    std::cout << x << " ";
+});
+
+// 自动类型推导
+auto result = std::find(vec.begin(), vec.end(), 42);
+```
+
+### 使用建议
+
+1. **新项目**：优先使用 C++ 标准库，更安全、易用
+2. **性能关键**：根据场景选择，C 库在某些情况下可能更快
+3. **兼容性**：需要与 C 代码交互时使用 C 标准库
+4. **现代 C++**：充分利用 RAII、智能指针等特性
+
+两者都是强大的工具库，选择取决于项目需求、性能要求和团队熟悉程度。
+
+
+
+## `C++`标准库 - 字符串
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-c++/demo-c-plus-stdlib-string)
+
+```c++
+#include <iostream>
+
+// 必须包含 <string> 才能使用 std::string
+#include <string>
+
+int main()
+{
+    // 定义字符串
+    std::string str1 = "你好，世界！";
+    std::cout << str1 << std::endl;
+    return 0;
+}
+
+```
+
+
+
 ## `C/C++`开发调试环境配置
 
 >提示：在 `Ubuntu20.04.3` 中使用 `Qt Creator` 分别创建 `Plain C Application` 和 `Plain C++ Application` 用于调试学习 `C/C++` 语法基础。
@@ -2261,6 +2492,12 @@ int main() {
 }
 
 ```
+
+
+
+## `C++`语法 - 类继承
+
+
 
 
 
