@@ -1270,3 +1270,90 @@ Widget::~Widget()
 {
 }
 ```
+
+
+
+## `UI`组件 - `QPushButton`
+
+Qt5 中的 **QPushButton** 是 Qt 框架提供的一个基础 UI 控件，用于创建可点击的按钮。它是 `QWidget` 的子类，属于 Qt Widgets 模块，常用于桌面应用程序的交互界面。
+
+### 核心功能：
+1. **点击交互**  
+   用户点击按钮时触发信号（如 `clicked()`），开发者可关联槽函数实现操作（如打开窗口、提交数据等）。
+
+2. **文本和图标**  
+   支持设置显示文本（`setText("保存")`）和图标（`setIcon(QIcon("path"))`），并可调整布局（文本在图标左侧/右侧）。
+
+3. **状态控制**  
+   - 启用/禁用：`setEnabled(true/false)`  
+   - 选中状态：`setCheckable(true)` 使按钮可切换选中/未选中状态。
+
+4. **样式自定义**  
+   可通过 Qt 样式表（QSS）修改外观，例如：
+   ```cpp
+   button->setStyleSheet("QPushButton { background-color: red; color: white; }");
+   ```
+
+### 简单示例代码：
+```cpp
+#include <QApplication>
+#include <QPushButton>
+
+int main(int argc, char *argv[]) {
+    QApplication app(argc, argv);
+
+    QPushButton button("点击我"); // 创建带文本的按钮
+    button.resize(100, 30);      // 设置大小
+
+    // 连接点击信号到槽函数
+    QObject::connect(&button, &QPushButton::clicked,  {
+        qDebug() << "按钮被点击了!";
+    });
+
+    button.show(); // 显示按钮
+    return app.exec();
+}
+```
+
+### 常用信号：
+- `clicked()`：按钮被点击时触发（左键释放且光标在按钮内）。
+- `pressed()`/`released()`：按下或释放鼠标时触发。
+- `toggled(bool checked)`：当按钮为可选中（`setCheckable(true)`）时，状态变化触发。
+
+### 应用场景：
+- 表单提交、对话框确认/取消、触发功能操作（如播放、暂停）等。
+
+如果需要更复杂的交互（如自定义形状按钮），可以继承 `QPushButton` 并重绘其外观或事件处理逻辑。
+
+### 示例
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-qt/demo-qpushbutton)
+
+```c++
+#include "widget.h"
+#include <QPushButton>
+
+Widget::Widget(QWidget *parent)
+    : QWidget(parent)
+{
+    // 创建 QPushButton 方法一
+    // 新增 QPushButton
+    QPushButton *button = new QPushButton;
+    // 设置按钮的父对象为窗口
+    button->setParent(this);
+    // 设置按钮显示的文本
+    button->setText("第一个按钮");
+    // 设置按钮的位置
+    button->move(100, 100);
+
+    // 创建 QPushButton 方法二
+    new QPushButton("第二个按钮", this);
+}
+
+Widget::~Widget()
+{
+}
+
+
+```
+
