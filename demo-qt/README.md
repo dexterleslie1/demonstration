@@ -854,7 +854,9 @@ Qt 的跨平台原理基于：
 
 
 
-## `QtCreator` - 创建项目
+## `QtCreator` - 创建`Qt Widgets Application`
+
+>提示：Qt Widgets Application 是一个使用 Qt Widgets 模块来构建图形用户界面的应用程序。
 
 打开 `QtCreator`，点击 `File` > `New File or Project`，在弹出框中选择 `Application` > `Qt Widgets Application`，点击 `Choose` 按钮。
 
@@ -877,6 +879,32 @@ Qt 的跨平台原理基于：
 在 `Kit Selection wizard` 中 `Select all kits` 和 `Desktop` 都勾选，点击 `Next` 按钮。
 
 在 `Project Management wizard` 中 `Add as a subproject to project` 选中 `<none>`，`Add to version control` 选中 `<none>`，点击 `Finish` 按钮。
+
+
+
+## `QtCreator` - 创建`Plain C Application`
+
+>提示：
+>
+>- Qt Creator 创建的 “Plain C Application” 是一个纯粹的、不包含任何 Qt 库或框架的 C 语言项目。
+>- 可用于辅助学习调试 `C` 语言语法基础。
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-qt/demo-c-application)
+
+点击 `File` > `New File or Project`，在弹出框中选择 `Non-Qt Project` > `Plain C Application`，其他步骤根据向导提示操作即可。
+
+
+
+## `QtCreator` - 创建`Plain C++ Application`
+
+>提示：
+>
+>- Qt Creator 创建的 “Plain C++ Application” 也是一个纯粹的、不包含任何 Qt 库或框架的 C++ 项目。
+>- 可用于辅助学习调试 `C++` 语言语法基础。
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-qt/demo-c-plus-application)
+
+点击 `File` > `New File or Project`，在弹出框中选择 `Non-Qt Project` > `Plain C++ Application`，其他步骤根据向导提示操作即可。
 
 
 

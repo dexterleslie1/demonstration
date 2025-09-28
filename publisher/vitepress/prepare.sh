@@ -77,6 +77,7 @@ source_dir_to_target_dir_map["../../demo-dubbo"]="dubbo"
 source_dir_to_target_dir_map["../../demo-vscode"]="vscode"
 source_dir_to_target_dir_map["../../demo-firefox"]="firefox"
 source_dir_to_target_dir_map["../../demo-c++"]="c-plus"
+source_dir_to_target_dir_map["../../demo-qt"]="qt"
 
 for key in ${!source_dir_to_target_dir_map[@]}; do
     # 删除符号链接目录

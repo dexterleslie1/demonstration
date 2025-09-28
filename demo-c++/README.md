@@ -1647,3 +1647,14 @@ target_include_directories(my_app PRIVATE include)
 - **不要混用**，遵循约定以避免潜在问题。
 - 在构建系统（如 CMake）中正确配置头文件搜索路径。
 
+
+
+## `C/C++`开发调试环境配置
+
+>提示：在 `Ubuntu20.04.3` 中使用 `Qt Creator` 分别创建 `Plain C Application` 和 `Plain C++ Application` 用于调试学习 `C/C++` 语法基础。
+
+`Qt/Qt Creator` 安装请参考本站 [链接](/qt/README.html#安装-ubuntu)
+
+`Qt Creator` 创建 `C` 语言项目请参考本站 [链接](/qt/README.html#qtcreator-创建plain-c-application)
+
+`Qt Creator` 创建 `C++` 语言项目请参考本站 [链接](/qt/README.html#qtcreator-创建plain-c-application-1)

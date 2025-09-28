@@ -39,6 +39,7 @@ export default defineConfig({
           { text: 'uni-app', link: '/uni-app/README.md' },
           { text: 'SVG', link: '/svg/README.md' },
           { text: 'React', link: '/react/README.md' },
+          { text: 'Qt', link: '/qt/README.md' },
         ]
       }, {
         text: '后端', items: [
