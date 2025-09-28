@@ -6,8 +6,12 @@ CONFIG -= qt
 SOURCES += \
         Circle.cpp \
         Point.cpp \
-        main.cpp
+        main.cpp \
+        person.cpp \
+        student.cpp
 
 HEADERS += \
     Circle.h \
-    Point.h
+    Point.h \
+    person.h \
+    student.h

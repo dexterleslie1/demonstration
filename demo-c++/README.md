@@ -2497,7 +2497,114 @@ int main() {
 
 ## `C++`语法 - 类继承
 
+>说明：`Student` 类继承 `Person` 类。
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-c++/demo-c-plus-class)
 
+`person.h`：
+
+```c++
+#pragma once
+
+// 必须包含 <string> 才能使用 std::string
+#include <string>
+
+class Person {
+private:
+    std::string name;
+    int age;
+
+public:
+    Person(std::string name, int age);
+    ~Person();
+
+    // 人类打招呼
+    void sayHi();
+};
+
+```
+
+`person.cpp`：
+
+```c++
+#include "person.h"
+#include <iostream>
+
+Person::Person(std::string name, int age) {
+    this->name = name;
+    this->age = age;
+}
+
+Person::~Person() {
+
+}
+
+void Person::sayHi() {
+    std::cout << "Person say hi to " << this->name << "(age=" << this->age << ")" << std::endl;
+}
+
+```
+
+`student.h`：
+
+```c++
+#ifndef STUDENT_H
+#define STUDENT_H
+
+#include "person.h"
+
+// Student 继承 Person 类
+class Student : public Person
+{
+private:
+    int grade;
+public:
+    Student(std::string name, int age, int grade);
+    ~Student();
+};
+
+#endif // STUDENT_H
+
+```
+
+`student.cpp`：
+
+```c++
+#include "student.h"
+
+// Student 构造函数调用基类 Person(name, age) 构造函数
+Student::Student(std::string name, int age, int grade)
+    :Person(name, age)
+{
+    this->grade = grade;
+    // 调用基类人类打招呼方法
+    this->sayHi();
+}
+
+Student::~Student() {
+
+}
+
+```
+
+`main.cpp`：
+
+```c++
+#include <iostream>
+#include "student.h"
+
+// https://blog.csdn.net/weixin_45407700/article/details/114269876
+int main() {
+    // 测试类继承
+    std::string name = "Dexter";
+    int age = 11;
+    int grade = 30;
+    Student student = Student(name, age, grade);
+
+    return 0;
+}
+
+```
 
 
 
