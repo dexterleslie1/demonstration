@@ -1658,3 +1658,390 @@ target_include_directories(my_app PRIVATE include)
 `Qt Creator` 创建 `C` 语言项目请参考本站 [链接](/qt/README.html#qtcreator-创建plain-c-application)
 
 `Qt Creator` 创建 `C++` 语言项目请参考本站 [链接](/qt/README.html#qtcreator-创建plain-c-application-1)
+
+
+
+## `C++`语法 - 构造和析构函数 - 概念
+
+在 C++ 中，**构造函数（Constructor）**和**析构函数（Destructor）**是类的特殊成员函数，分别负责对象的**初始化**和**清理**。它们是面向对象编程中管理对象生命周期的核心机制。
+
+---
+
+### 一、构造函数（Constructor）
+
+#### 1. 基本定义
+- **作用**：在创建对象时自动调用，用于初始化对象的成员变量。
+- **命名**：与类名**完全相同**，无返回类型（连 `void` 都不需要）。
+- **调用时机**：对象被实例化时（如 `MyClass obj;` 或 `new MyClass`）。
+
+#### 2. 示例代码
+```cpp
+class MyClass {
+public:
+    int value;
+    // 默认构造函数（无参数）
+    MyClass() {
+        value = 0;
+        std::cout << "Default constructor called." << std::endl;
+    }
+    // 带参数的构造函数
+    MyClass(int v) {
+        value = v;
+        std::cout << "Parameterized constructor called." << std::endl;
+    }
+};
+
+int main() {
+    MyClass obj1;          // 调用默认构造函数
+    MyClass obj2(42);      // 调用带参数的构造函数
+    return 0;
+}
+```
+
+#### 3. 构造函数类型
+| 类型               | 说明                                                         |
+| ------------------ | ------------------------------------------------------------ |
+| **默认构造函数**   | 无参数（或所有参数有默认值）。若未显式定义，编译器会生成一个空实现。 |
+| **参数化构造函数** | 接受参数，用于定制化初始化。                                 |
+| **拷贝构造函数**   | 形式为 `MyClass(const MyClass& other)`，用于通过已有对象初始化新对象。 |
+| **移动构造函数**   | 形式为 `MyClass(MyClass&& other)`（C++11引入），用于资源高效转移。 |
+
+---
+
+### 二、析构函数（Destructor）
+
+#### 1. 基本定义
+- **作用**：在对象销毁时自动调用，用于释放资源（如内存、文件句柄等）。
+- **命名**：类名前加 `~`（如 `~MyClass()`），无返回类型和参数。
+- **调用时机**：
+  - 对象离开作用域时（如局部变量在函数结束时）。
+  - 对动态分配的对象调用 `delete` 时。
+
+#### 2. 示例代码
+```cpp
+class MyClass {
+public:
+    int* data;
+    // 构造函数
+    MyClass(int size) {
+        data = new int[size];  // 动态分配内存
+        std::cout << "Constructor allocated memory." << std::endl;
+    }
+    // 析构函数
+    ~MyClass() {
+        delete[] data;         // 释放内存
+        std::cout << "Destructor freed memory." << std::endl;
+    }
+};
+
+int main() {
+    MyClass obj(10);  // 构造函数调用
+    return 0;         // main结束，obj析构函数自动调用
+}
+```
+
+#### 3. 关键特性
+- **必须显式定义**：若类中有动态资源（如指针、文件句柄），必须手动实现析构函数。
+- **不可重载**：每个类只能有一个析构函数。
+- **虚析构函数**：若类可能被继承，基类析构函数应声明为 `virtual`，确保派生类对象能正确释放资源。
+
+---
+
+### 三、构造函数与析构函数的调用顺序
+
+#### 1. 单个对象的生命周期
+```cpp
+class Example {
+public:
+    Example() { std::cout << "Constructor" << std::endl; }
+    ~Example() { std::cout << "Destructor" << std::endl; }
+};
+
+int main() {
+    Example obj;  // 输出: Constructor
+    return 0;     // 输出: Destructor（main结束时调用）
+}
+```
+
+#### 2. 继承中的调用顺序
+- **构造函数**：基类 → 派生类（先构造父类，再构造子类）。
+- **析构函数**：派生类 → 基类（先析构子类，再析构父类）。
+
+```cpp
+class Base {
+public:
+    Base() { std::cout << "Base constructor" << std::endl; }
+    ~Base() { std::cout << "Base destructor" << std::endl; }
+};
+
+class Derived : public Base {
+public:
+    Derived() { std::cout << "Derived constructor" << std::endl; }
+    ~Derived() { std::cout << "Derived destructor" << std::endl; }
+};
+
+int main() {
+    Derived obj;
+    return 0;
+}
+```
+**输出顺序**：
+```
+Base constructor
+Derived constructor
+Derived destructor
+Base destructor
+```
+
+---
+
+### 四、常见问题与注意事项
+
+1. **隐式生成的函数**：
+   - 若未定义构造函数/析构函数，编译器会生成默认版本（但可能不符合需求，尤其是涉及资源管理时）。
+
+2. **RAII原则**：
+   - **资源获取即初始化**（Resource Acquisition Is Initialization），通过构造函数获取资源，析构函数释放资源，避免内存泄漏。
+
+3. **异常安全**：
+   - 若构造函数抛出异常，析构函数**不会被调用**，需谨慎处理未完成的初始化。
+
+4. **= default 和 = delete**（C++11）：
+   ```cpp
+   class MyClass {
+   public:
+       MyClass() = default;    // 显式要求编译器生成默认构造函数
+       ~MyClass() = default;   // 显式生成默认析构函数
+       MyClass(const MyClass&) = delete; // 禁止拷贝构造
+   };
+   ```
+
+---
+
+### 总结表
+| 特性         | 构造函数（Constructor） | 析构函数（Destructor） |
+| ------------ | ----------------------- | ---------------------- |
+| **目的**     | 初始化对象              | 清理对象资源           |
+| **命名**     | `ClassName()`           | `~ClassName()`         |
+| **调用时机** | 对象创建时              | 对象销毁时             |
+| **返回值**   | 无                      | 无                     |
+| **重载**     | 可重载（不同参数）      | 不可重载               |
+| **虚函数**   | 可为虚函数（但不常见）  | 基类通常需声明为虚函数 |
+
+掌握构造函数和析构函数是编写安全、高效 C++ 类的关键！
+
+
+
+## `C++`语法 - 构造和析构函数 - 用法
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-c++/demo-c-plus-constructor-and-destructor)
+
+```c++
+#include <iostream>
+
+using namespace std;
+
+// 演示构造函数和析构函数的用法
+
+// 注意：如果没有定义构造函数和析构函数，
+// 编译器会生成默认无参构造、默认析构函数、默认拷贝函数（对属性进行拷贝）三个函数
+class Person {
+private:
+    int age;
+
+public:
+    Person() {
+        cout << "无参构造函数被调用" << endl;
+    }
+
+    Person(int age) {
+        cout << "有参构造函数被调用" << endl;
+        this->age = age;
+    }
+
+    Person(const Person &person) {
+        cout << "拷贝构造函数被调用" << endl;
+        this->age = person.age;
+    }
+
+    // 析构函数
+    ~Person() {
+        cout << "析构函数被调用" << endl;
+    }
+};
+
+void test_local_variable_construct_and_destruct() {
+    cout << "-------------- 测试局部变量调用无参构造函数和析构函数 --------------" << endl;
+    // 测试局部变量被回收
+    // 调用无参数构造函数
+    // 调用析构函数
+    Person person;
+}
+
+// 测试构造函数调用方式
+// 1、显式法 2、隐式法
+void test_invoke_constructor_method() {
+    cout << "-------------- 测试构造函数调用方式 --------------" << endl;
+
+    /* 显式法调用构造函数 */
+    // 调用无参构造函数
+    Person person1;
+    // 调用有参构造函数
+    Person person2 = Person(10);
+    // 调用拷贝构造函数
+    Person person3 = Person(person2);
+
+    /* 隐式法调用构造函数 */
+    // 调用有参构造函数
+    Person person21 = 10;
+    // 调用拷贝构造函数
+    Person person22 = person1;
+}
+
+void function_test1(Person person) {
+
+}
+
+Person function_test2() {
+    Person person;
+    return person;
+}
+
+void test_copy_constructor_invoked_situation() {
+    cout << "-------------- 测试拷贝构造函数被调用的场景 --------------" << endl;
+    // 1、使用一个已经初始化的对象创建一个新的对象
+    Person person1 = Person(10);
+    Person person2 = Person(person1);
+
+    // 2、以值传递的方式传递参数
+    Person person;
+    function_test1(person);
+
+    // 3、值方式返回局部对象
+    //Person person3 = function_test2();
+}
+
+class Person1Test {
+private:
+    int age;
+public:
+    Person1Test(int age) {
+        this->age = age;
+    }
+
+    int getAge() {
+        return age;
+    }
+};
+
+// 测试编译器默认构造函数生成规则
+void test_compiler_default_constructor_generate_rule() {
+    cout << "-------------- 测试编译器默认构造函数生成规则 --------------" << endl;
+    // 1、如果提供有参构造函数，编译器不生成无参构造函数，但依旧生成默认拷贝构造函数
+    // 编译时错误提示“没有合适的默认构造函数可用”
+    // Person1Test person1;
+
+    // 依旧生成默认拷贝构造函数
+    Person1Test person1(18);
+    Person1Test person2(person1);
+    cout << "age=" << person2.getAge() << endl;
+
+    // 2、如果提供拷贝构造函数，编译器不生成无参和有参构造函数
+    // 编译时错误提示“没有合适的默认构造函数可用”
+    // Person1Test person3;
+}
+
+class Person2Test {
+private:
+    int *height;
+public:
+    Person2Test(int height) {
+        this->height = new int(height);
+        cout << "有参构造函数被调用" << endl;
+    }
+
+    ~Person2Test() {
+        if(this->height != NULL) {
+            delete this->height;
+            this->height = NULL;
+            cout << "析构函数被调用" << endl;
+        }
+    }
+};
+
+class Person3Test {
+private:
+    int *height;
+public:
+    Person3Test(int height) {
+        this->height = new int(height);
+        cout << "有参构造函数被调用" << endl;
+    }
+
+    Person3Test(const Person3Test &person) {
+        this->height = new int(*person.height);
+        cout << "拷贝函数被调用" << endl;
+    }
+
+    ~Person3Test() {
+        if(this->height != NULL) {
+            delete this->height;
+            this->height = NULL;
+            cout << "析构函数被调用" << endl;
+        }
+    }
+};
+
+void test_shallow_and_deep_clone_constructor() {
+    cout << "-------------- 测试浅拷贝和深拷贝构造函数 --------------" << endl;
+    // 编译器默认的拷贝构造函数是浅拷贝
+    // 会导致堆内存重复释放问题
+    //Person2Test person1 = Person2Test(160);
+    //Person2Test person2 = Person2Test(person1);
+
+    // 自定义拷贝构造函数解决浅拷贝导致堆内存重复释放问题
+    Person3Test person21 = Person3Test(160);
+    Person3Test person22 = Person3Test(person21);
+}
+
+class Person5Test{
+public:
+    int a;
+    int b;
+
+    Person5Test():a(10), b(20) {
+    }
+
+    Person5Test(int a, int b):a(a), b(b) {
+
+    }
+};
+
+void test_initialization_list() {
+    cout << "-------------- 测试属性初始化列表 --------------" << endl;
+    Person5Test person1;
+    cout << "a=" << person1.a << ",b=" << person1.b << endl;
+
+    Person5Test person2(11, 22);
+    cout << "a=" << person2.a << ",b=" << person2.b << endl;
+}
+
+int main() {
+    // 测试局部变量调用无参构造函数和析构函数
+    test_local_variable_construct_and_destruct();
+    // 测试构造函数调用方式
+    test_invoke_constructor_method();
+    // 测试拷贝构造函数被调用的场景
+    test_copy_constructor_invoked_situation();
+    // 测试编译器默认构造函数生成规则
+    test_compiler_default_constructor_generate_rule();
+    // 测试浅拷贝和深拷贝构造函数
+    test_shallow_and_deep_clone_constructor();
+    // 测试属性初始化列表
+    test_initialization_list();
+
+    return 0;
+}
+
+```
+
