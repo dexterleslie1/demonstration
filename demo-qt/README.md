@@ -864,7 +864,7 @@ Qt 的跨平台原理基于：
 - 项目创建的根路径 `Create in` 选择 `/home/xxx/Documents`
 - 勾选 `Use as default project location`
 
-点击 `Next` 按钮，在 `Define Build System wizard` 中 `Build System` 选择 `CMake`，点击 `Next` 按钮。
+点击 `Next` 按钮，在 `Define Build System wizard` 中 `Build System` 选择 `qmake`，点击 `Next` 按钮。
 
 在 `Class information wizard` 中填写信息如下：
 
@@ -1120,7 +1120,7 @@ gcc --version | head -1  # 检查GCC版本（应≥9.3）
 
 
 
-## `UI`组件 - `QWidget`
+## `UI`组件 - `QWidget` - 概念
 
 `QWidget` 是 Qt 框架中最基础的**图形用户界面 (GUI)** 组件类，它是所有 Qt 可视化控件的基类。简单来说：
 
@@ -1226,3 +1226,27 @@ button->move(50, 50); // 相对父窗口的位置
    widget->setStyleSheet("background: #FF0000; border-radius: 10px;");
    ```
 
+
+
+## `UI`组件 - `QWidget` - 用法
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-qt/demo-qwidget)
+
+### 调用 `QWidget Api`
+
+```c++
+#include "widget.h"
+
+Widget::Widget(QWidget *parent)
+    : QWidget(parent)
+{
+    // 修改窗口的标题
+    this->setWindowTitle("测试QWidget");
+    // 设置初始窗口大小
+    this->resize(600, 400);
+}
+
+Widget::~Widget()
+{
+}
+```
