@@ -1894,6 +1894,258 @@ Widget::~Widget()
 
 
 
+## `UI`组件 - `QMessageBox`
+
+**Qt5 中的 `QMessageBox`** 是一个 **预定义的对话框类**，用于快速生成标准弹窗，向用户显示信息、警告、错误或获取简单选择输入。它是 Qt 对操作系统原生消息框的封装，同时提供了跨平台一致的 API 和外观。
+
+---
+
+### **1. 核心功能**
+| **功能**     | **描述**                         |
+| ------------ | -------------------------------- |
+| **信息提示** | 显示普通通知（如操作完成）       |
+| **警告提示** | 提醒潜在问题（如未保存的更改）   |
+| **错误报告** | 显示错误消息（如文件打开失败）   |
+| **用户选择** | 提供 Yes/No/Ok/Cancel 等按钮选项 |
+| **简单交互** | 支持输入框（需自定义）           |
+
+---
+
+### **2. 基本用法示例**
+
+#### **2.1 显示信息提示**
+```cpp
+#include <QMessageBox>
+
+// 最简单的信息提示
+QMessageBox::information(
+    this,                   // 父窗口（可选）
+    "操作成功",             // 标题
+    "文件已保存！"          // 正文
+);
+```
+
+#### **2.2 确认对话框**
+```cpp
+QMessageBox::StandardButton reply = QMessageBox::question(
+    this,
+    "确认删除",
+    "确定要删除此文件吗？",
+    QMessageBox::Yes | QMessageBox::No
+);
+
+if (reply == QMessageBox::Yes) {
+    // 用户点击了“是”
+} else {
+    // 用户点击了“否”
+}
+```
+
+#### **2.3 错误提示**
+```cpp
+QMessageBox::critical(
+    this,
+    "错误",
+    "无法打开文件！",
+    QMessageBox::Ok
+);
+```
+
+---
+
+### **3. 按钮类型**
+`QMessageBox` 支持以下标准按钮（通过位组合使用）：
+
+| **按钮类型**          | **说明** |
+| --------------------- | -------- |
+| `QMessageBox::Ok`     | 确定按钮 |
+| `QMessageBox::Cancel` | 取消按钮 |
+| `QMessageBox::Yes`    | 是按钮   |
+| `QMessageBox::No`     | 否按钮   |
+| `QMessageBox::Abort`  | 终止按钮 |
+| `QMessageBox::Retry`  | 重试按钮 |
+| `QMessageBox::Ignore` | 忽略按钮 |
+
+**组合示例**：
+```cpp
+QMessageBox::question(
+    this,
+    "保存确认",
+    "文档已修改，是否保存？",
+    QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel
+);
+```
+
+---
+
+### **4. 高级功能**
+
+#### **4.1 自定义按钮文本**
+```cpp
+QMessageBox msgBox;
+msgBox.setText("是否继续？");
+msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+msgBox.setButtonText(QMessageBox::Yes, "继续");
+msgBox.setButtonText(QMessageBox::No, "退出");
+msgBox.exec();
+```
+
+#### **4.2 添加自定义图标**
+```cpp
+QMessageBox msgBox;
+msgBox.setIconPixmap(QPixmap(":/icons/warning.png"));  // 加载自定义图标
+msgBox.setText("磁盘空间不足！");
+msgBox.exec();
+```
+
+#### **4.3 捕获按钮点击**
+```cpp
+QMessageBox msgBox;
+QPushButton *detailsBtn = msgBox.addButton("查看详情", QMessageBox::ActionRole);
+msgBox.addButton(QMessageBox::Ok);
+
+msgBox.exec();
+
+if (msgBox.clickedButton() == detailsBtn) {
+    // 处理自定义按钮点击
+}
+```
+
+---
+
+### **5. 与系统原生弹窗的关系**
+Qt 会根据运行平台自动适配原生样式：
+- **Windows** → 使用 Win32 API 消息框
+- **macOS** → 使用 NSAlert
+- **Linux** → 使用 GTK/KDE 原生对话框
+
+**强制使用 Qt 风格**：
+```cpp
+QMessageBox msgBox;
+msgBox.setWindowFlags(msgBox.windowFlags() | Qt::FramelessWindowHint);  // 无边框
+msgBox.setStyleSheet("QMessageBox { background-color: #f0f0f0; }");   // 自定义样式
+msgBox.exec();
+```
+
+---
+
+### **6. 返回值处理**
+`exec()` 方法返回用户点击的按钮：
+
+```cpp
+QMessageBox::StandardButton result = QMessageBox::question(...);
+
+switch (result) {
+    case QMessageBox::Yes: /* 处理是 */ break;
+    case QMessageBox::No:  /* 处理否 */ break;
+    default: break;
+}
+```
+
+---
+
+### **7. 实际应用场景**
+
+#### **7.1 文件保存确认**
+```cpp
+void MainWindow::closeEvent(QCloseEvent *event) {
+    QMessageBox::StandardButton reply = QMessageBox::question(
+        this,
+        "退出",
+        "是否保存未完成的更改？",
+        QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel
+    );
+
+    if (reply == QMessageBox::Cancel) {
+        event->ignore();  // 取消关闭
+    } else if (reply == QMessageBox::Save) {
+        saveFile();       // 保存后关闭
+        event->accept();
+    } else {
+        event->accept();  // 不保存直接关闭
+    }
+}
+```
+
+#### **7.2 网络错误处理**
+```cpp
+void handleNetworkError(QNetworkReply::NetworkError error) {
+    QMessageBox::critical(
+        nullptr,
+        "网络错误",
+        "错误代码: " + QString::number(error),
+        QMessageBox::Retry | QMessageBox::Abort
+    );
+}
+```
+
+---
+
+### **8. 对比其他弹窗方案**
+
+| **方案**         | **优点**             | **缺点**             |
+| ---------------- | -------------------- | -------------------- |
+| **QMessageBox**  | 开箱即用，跨平台一致 | 自定义能力有限       |
+| **QDialog**      | 完全自定义界面       | 需要手动实现按钮逻辑 |
+| **系统原生 API** | 完美契合操作系统风格 | 跨平台需重复编码     |
+
+---
+
+### **9. 总结**
+- **`QMessageBox`** 是 Qt 中最快捷的消息弹窗工具
+- 支持 **信息/警告/错误/提问** 四种标准类型
+- 提供 **Yes/No/Ok/Cancel** 等标准按钮
+- 可通过 **子类化** 或 **信号槽** 扩展功能
+- 适合快速实现符合平台规范的交互弹窗
+
+对于需要复杂自定义的场景（如输入表单），建议使用 `QDialog` 自行设计。
+
+### 示例
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-qt/demo-qmessagebox)
+
+```c++
+#include "widget.h"
+#include "ui_widget.h"
+#include <QMessageBox>
+#include <QDebug>
+
+Widget::Widget(QWidget *parent)
+    : QWidget(parent)
+    , ui(new Ui::Widget)
+{
+    ui->setupUi(this);
+
+    // 点击信息提示按钮
+    connect(ui->pushButtonInformation, &QPushButton::clicked, this, [this](){
+        QMessageBox::information(this, "操作成功", "文件已保存！");
+    });
+    // 点击错误提示按钮
+    connect(ui->pushButtonCritical, &QPushButton::clicked, this, [this](){
+       QMessageBox::critical(this,"错误","无法打开文件！");
+    });
+    // 点击确认对话框按钮
+    connect(ui->pushButtonQuestion, &QPushButton::clicked, this, [this](){
+        QMessageBox::StandardButton reply =
+                QMessageBox::question(this, "确认删除", "确定要删除此文件吗？", QMessageBox::Yes | QMessageBox::No);
+        if (reply == QMessageBox::Yes) {
+            qDebug() << "用户点击了“是”";
+        } else {
+            qDebug() << "用户点击了“否”";
+        }
+    });
+}
+
+Widget::~Widget()
+{
+    delete ui;
+}
+
+
+```
+
+
+
 ## `UI`组件 - 信号和槽机制 - 概念
 
 Qt5 的 **信号和槽（Signals & Slots）** 是 Qt 框架的核心机制，用于实现对象之间的通信。它是一种 **松耦合、类型安全** 的事件处理方式，比传统的回调函数更灵活、更安全。
