@@ -2552,3 +2552,320 @@ layout->setContentsMargins(0, 0, 0, 0);  // 清零测试
 ### 示例
 
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-qt/demo-qhboxlayout)
+
+
+
+## 布局 - `QFormLayout`
+
+**QFormLayout** 是 Qt5 中专门为 **表单界面** 设计的布局管理器，它能够自动排列 **标签-字段对**，非常适合创建设置对话框、数据录入界面、配置面板等需要标签和输入控件配对的界面。
+
+---
+
+### **1. QFormLayout 的核心特性**
+
+#### **自动对齐能力**
+QFormLayout 的最大特点是 **智能对齐**：
+```
+姓名:    [_______________]
+邮箱:    [_______________]
+电话号码: [_______________]
+```
+- **标签右对齐**：所有标签自动右对齐，形成整齐的列
+- **字段左对齐**：所有输入字段左对齐
+- **自动调整**：根据最长的标签自动调整标签栏宽度
+
+#### **专业的外观**
+生成的表单具有专业应用程序的外观，类似于：
+- 系统设置对话框
+- 用户注册表单
+- 软件配置界面
+
+---
+
+### **2. 基本结构和工作原理**
+
+#### **两列布局**
+QFormLayout 本质上是一个 **两列网格**：
+```
+|    标签列    |    字段列    |
+|-------------|-------------|
+|   "姓名:"   | [QLineEdit] |
+|   "邮箱:"   | [QLineEdit] |
+|   "年龄:"   | [QSpinBox] |
+```
+
+#### **行概念**
+每个 **标签+字段** 组合占据一行，可以包含：
+- 一个标签 + 一个字段控件
+- 一个标签 + 多个字段的组合布局
+- 只有字段（跨两列）
+- 只有标签（跨两列）
+
+---
+
+### **3. 创建 QFormLayout**
+
+#### **代码方式创建**
+```cpp
+#include <QApplication>
+#include <QWidget>
+#include <QFormLayout>
+#include <QLabel>
+#include <QLineEdit>
+#include <QComboBox>
+
+int main(int argc, char *argv[]) {
+    QApplication app(argc, argv);
+    
+    QWidget window;
+    QFormLayout *formLayout = new QFormLayout(&window);
+    
+    // 添加表单行
+    QLineEdit *nameEdit = new QLineEdit;
+    formLayout->addRow("姓名:", nameEdit);  // 自动创建标签
+    
+    QLineEdit *emailEdit = new QLineEdit;
+    QLabel *emailLabel = new QLabel("邮箱:");
+    formLayout->addRow(emailLabel, emailEdit);  // 使用现有标签
+    
+    QComboBox *genderCombo = new QComboBox;
+    genderCombo->addItems({"男", "女", "其他"});
+    formLayout->addRow("性别:", genderCombo);
+    
+    window.show();
+    return app.exec();
+}
+```
+
+#### **在 Qt Designer 中创建**
+1. 拖拽控件到窗体
+2. 选择控件 → 右键 → **Lay Out** → **Lay Out in Form Layout**
+3. 或直接拖拽 **Form Layout** 从控件面板
+
+---
+
+### **4. 添加行的多种方式**
+
+#### **方式1：自动创建标签**
+```cpp
+formLayout->addRow("用户名:", new QLineEdit);
+formLayout->addRow("密码:", new QLineEdit);
+```
+Qt 自动创建 QLabel 并设置文本。
+
+#### **方式2：使用现有标签控件**
+```cpp
+QLabel *nameLabel = new QLabel("姓名:");
+nameLabel->setToolTip("请输入您的全名");
+QLineEdit *nameEdit = new QLineEdit;
+formLayout->addRow(nameLabel, nameEdit);
+```
+
+#### **方式3：复杂控件布局**
+```cpp
+// 一个标签对应多个控件
+QHBoxLayout *phoneLayout = new QHBoxLayout;
+phoneLayout->addWidget(new QLineEdit);  // 区号
+phoneLayout->addWidget(new QLineEdit);  // 号码
+
+formLayout->addRow("电话:", phoneLayout);
+```
+
+#### **方式4：跨两列的内容**
+```cpp
+// 只有字段，没有标签（跨两列）
+formLayout->addRow(new QCheckBox("我同意用户协议"));
+
+// 只有标签，没有字段（跨两列）
+formLayout->addRow(new QLabel("<b>个人基本信息</b>"));
+```
+
+---
+
+### **5. 常用属性和配置**
+
+#### **标签对齐方式**
+```cpp
+formLayout->setLabelAlignment(Qt::AlignRight);  // 右对齐（默认）
+// formLayout->setLabelAlignment(Qt::AlignLeft);   // 左对齐
+// formLayout->setLabelAlignment(Qt::AlignCenter);  // 居中对齐
+```
+
+#### **字段增长策略**
+```cpp
+formLayout->setFieldGrowthPolicy(QFormLayout::FieldsStayAtSizeHint);
+// 字段保持初始大小
+
+formLayout->setFieldGrowthPolicy(QFormLayout::ExpandingFieldsGrow);
+// 字段可以扩展
+
+formLayout->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
+// 所有非固定字段都可以扩展
+```
+
+#### **行换行策略**
+```cpp
+formLayout->setRowWrapPolicy(QFormLayout::DontWrapRows);     // 不换行
+formLayout->setRowWrapPolicy(QFormLayout::WrapLongRows);     // 长行换行
+formLayout->setRowWrapPolicy(QFormLayout::WrapAllRows);       // 所有行换行
+```
+
+#### **间距设置**
+```cpp
+formLayout->setSpacing(10);              // 行间距
+formLayout->setHorizontalSpacing(15);    // 标签与字段间距
+formLayout->setVerticalSpacing(8);      // 垂直行间距
+formLayout->setContentsMargins(20, 20, 20, 20);  // 边距
+```
+
+---
+
+### **6. 实际应用示例**
+
+#### **用户注册表单**
+```cpp
+QFormLayout *formLayout = new QFormLayout;
+
+// 基本信息组
+formLayout->addRow(new QLabel("<b>基本信息</b>"));
+formLayout->addRow("用户名:", new QLineEdit);
+formLayout->addRow("密码:", new QLineEdit);
+formLayout->addRow("确认密码:", new QLineEdit);
+
+// 个人信息组
+formLayout->addRow(new QLabel("<b>个人信息</b>"));
+formLayout->addRow("姓名:", new QLineEdit);
+
+QComboBox *genderCombo = new QComboBox;
+genderCombo->addItems({"男", "女", "其他"});
+formLayout->addRow("性别:", genderCombo);
+formLayout->addRow("生日:", new QDateEdit);
+
+// 联系方式组
+formLayout->addRow(new QLabel("<b>联系方式</b>"));
+
+QHBoxLayout *phoneLayout = new QHBoxLayout;
+phoneLayout->addWidget(new QLineEdit);  // 区号
+phoneLayout->addWidget(new QLineEdit);  // 号码
+formLayout->addRow("电话:", phoneLayout);
+
+formLayout->addRow("邮箱:", new QLineEdit);
+formLayout->addRow("地址:", new QLineEdit);
+
+// 选项
+formLayout->addRow(new QCheckBox("订阅邮件通知"));
+formLayout->addRow(new QCheckBox("同意用户协议"));
+```
+
+---
+
+### **7. 高级用法**
+
+#### **获取和遍历行**
+```cpp
+// 获取行数
+int rowCount = formLayout->rowCount();
+
+// 遍历所有行
+for (int i = 0; i < rowCount; ++i) {
+    QLayoutItem *labelItem = formLayout->itemAt(i, QFormLayout::LabelRole);
+    QLayoutItem *fieldItem = formLayout->itemAt(i, QFormLayout::FieldRole);
+    
+    if (labelItem && labelItem->widget()) {
+        qDebug() << "标签:" << qobject_cast<QLabel*>(labelItem->widget())->text();
+    }
+}
+```
+
+#### **动态添加/删除行**
+```cpp
+// 添加行
+QLineEdit *dynamicEdit = new QLineEdit;
+int newRow = formLayout->addRow("动态字段:", dynamicEdit);
+
+// 删除行
+formLayout->removeRow(dynamicEdit);
+delete dynamicEdit;
+```
+
+#### **设置伙伴关系（快捷键支持）**
+```cpp
+QLabel *nameLabel = new QLabel("&姓名:");  // Alt+N 快捷键
+QLineEdit *nameEdit = new QLineEdit;
+nameLabel->setBuddy(nameEdit);            // 设置伙伴关系
+formLayout->addRow(nameLabel, nameEdit);
+```
+
+---
+
+### **8. 与其他布局对比**
+
+| **特性**   | **QFormLayout** | **QGridLayout**  | **QVBoxLayout** |
+| ---------- | --------------- | ---------------- | --------------- |
+| **用途**   | 标签-字段表单   | 通用网格         | 垂直排列        |
+| **对齐**   | 自动标签对齐    | 手动设置         | 简单排列        |
+| **易用性** | 表单场景最简单  | 灵活但复杂       | 简单垂直排列    |
+| **专业性** | 表单专业外观    | 通用但需手动调整 | 基础排列        |
+
+---
+
+### **9. 样式定制**
+
+#### **使用样式表**
+```cpp
+formLayout->parentWidget()->setStyleSheet("
+    QLabel {
+        color: #333;
+        font-weight: bold;
+        padding: 4px;
+    }
+    QLineEdit, QComboBox {
+        padding: 6px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        background-color: white;
+    }
+    QLineEdit:focus, QComboBox:focus {
+        border-color: #0078d4;
+    }
+");
+```
+
+---
+
+### **10. 最佳实践**
+
+#### **适用场景**
+✅ **设置对话框** - 系统/软件设置
+✅ **数据录入** - 数据库管理界面
+✅ **用户注册/登录** - 账户相关表单
+✅ **配置面板** - 软件配置界面
+
+#### **不适用场景**
+❌ **不规则布局** - 需要复杂网格时用 QGridLayout
+❌ **工具界面** - 工具栏用 QHBoxLayout
+❌ **列表显示** - 用 QVBoxLayout 或 QListWidget
+
+#### **设计技巧**
+- 使用分组标签（粗体）分隔不同部分
+- 相关字段放在接近的位置
+- 设置合理的 Tab 键顺序
+- 为重要字段添加验证和提示
+
+---
+
+### **总结**
+
+**QFormLayout** 是 Qt 中专为表单设计的高效布局管理器：
+
+🎯 **自动对齐** - 智能对齐标签和字段
+🎯 **专业外观** - 生成标准的表单界面
+🎯 **易于使用** - 简单的 API，快速开发
+🎯 **灵活扩展** - 支持复杂控件组合
+🎯 **响应式** - 自动适应不同尺寸和内容
+
+对于任何需要标签-字段配对的界面，QFormLayout 都是最佳选择！📝
+
+### 示例
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-qt/demo-qformlayout)
