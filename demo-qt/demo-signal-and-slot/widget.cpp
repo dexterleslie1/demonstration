@@ -1,5 +1,6 @@
 #include "widget.h"
 #include <QPushButton>
+#include <QtDebug>
 
 Widget::Widget(QWidget *parent)
     : QWidget(parent)
@@ -14,6 +15,11 @@ Widget::Widget(QWidget *parent)
     // ​​槽函数的接收者​​（通常是当前类的实例，这里是窗口对象）。
     // 窗口的 close()槽函数，调用时会关闭窗口。
     connect(button, &QPushButton::clicked, this, &QWidget::close);
+
+    // 槽使用lambda表达式
+    connect(button, &QPushButton::clicked, this, [](){
+        qDebug() << "点击按钮";
+    });
 }
 
 Widget::~Widget()

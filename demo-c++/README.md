@@ -3149,3 +3149,255 @@ int main() {
 - **合理使用命名空间**，避免全局变量冲突。
 
 现在你应该明白为什么 `std::string` 需要 `<string>` 头文件了吧！😃
+
+
+
+## `C++`语法 - `Lambda`表达式
+
+**C++ Lambda 表达式** 是一种 **匿名函数对象**（闭包），它允许在代码中内联定义函数而无需单独命名。Lambda 是 C++11 引入的核心特性，极大简化了函数对象的创建和使用。
+
+---
+
+### **1. 基本语法**
+
+#### **最简形式**
+```cpp
+[] { 
+    std::cout << "Hello Lambda!"; 
+}();  // 直接调用
+```
+
+#### **完整语法**
+```cpp
+[capture-list] (parameters) mutable -> return-type { 
+    // 函数体
+}
+```
+
+| **部分**         | **说明**                                   |
+| ---------------- | ------------------------------------------ |
+| `[capture-list]` | 捕获外部变量（见下文详解）                 |
+| `(parameters)`   | 参数列表（可省略，类似无参函数）           |
+| `mutable`        | 允许修改按值捕获的变量（默认不可修改）     |
+| `-> return-type` | 显式指定返回类型（可省略，编译器自动推导） |
+| `{ body }`       | 函数实现                                   |
+
+---
+
+### **2. 捕获列表（Capture List）**
+
+#### **捕获方式**
+| **语法**  | **效果**                                         |
+| --------- | ------------------------------------------------ |
+| `[]`      | 不捕获任何外部变量                               |
+| `[x]`     | 按值捕获变量 `x`（副本）                         |
+| `[&x]`    | 按引用捕获变量 `x`（修改会影响原变量）           |
+| `[=]`     | 按值捕获所有外部变量（不推荐，可能引发性能问题） |
+| `[&]`     | 按引用捕获所有外部变量（慎用，可能引发悬空引用） |
+| `[this]`  | 捕获当前类的 `this` 指针（用于类成员函数内）     |
+| `[x, &y]` | 混合捕获：`x` 按值，`y` 按引用                   |
+
+#### **示例**
+```cpp
+int a = 1, b = 2;
+
+auto lambda1 = [a, &b] { 
+    std::cout << a << ", " << b;  // a是副本，b是引用
+};
+lambda1();  // 输出: 1, 2
+b = 3;
+lambda1();  // 输出: 1, 3 (b的修改影响lambda)
+```
+
+---
+
+### **3. 参数与返回值**
+
+#### **带参数的 Lambda**
+```cpp
+auto sum = int x, int y { 
+    return x + y; 
+};
+std::cout << sum(3, 4);  // 输出: 7
+```
+
+#### **显式指定返回类型**
+```cpp
+auto divide = double a, double b -> double {
+    if (b == 0) return 0;  // 必须显式声明返回类型
+    return a / b;
+};
+```
+
+#### **无参 Lambda**
+```cpp
+auto greet = [] { 
+    return "Hello World"; 
+};
+std::cout << greet();  // 输出: Hello World
+```
+
+---
+
+### **4. `mutable` 关键字**
+
+默认情况下，按值捕获的变量在 Lambda 内是 **只读** 的。使用 `mutable` 允许修改副本（不影响原变量）：
+
+```cpp
+int x = 10;
+auto lambda =  mutable {
+    x += 5;  // 允许修改副本
+    std::cout << x;  // 输出: 15
+};
+lambda();
+std::cout << x;  // 输出: 10（原变量未改变）
+```
+
+---
+
+### **5. Lambda 的本质**
+
+Lambda 表达式会被编译器转换为一个 **匿名类**（闭包类型），其核心实现类似于：
+
+```cpp
+// 编译器生成的伪代码
+class __AnonymousLambda {
+public:
+    void operator()(int x) const { 
+        std::cout << x; 
+    }
+};
+
+__AnonymousLambda lambda;
+lambda(42);  // 调用 operator()
+```
+
+---
+
+### **6. 实际应用场景**
+
+#### **1. STL 算法**
+```cpp
+std::vector<int> nums = {1, 2, 3, 4};
+
+// 使用 Lambda 作为谓词
+auto evenCount = std::count_if(nums.begin(), nums.end(), int x {
+    return x % 2 == 0;
+});
+std::cout << evenCount;  // 输出: 2
+```
+
+#### **2. 事件回调**
+```cpp
+// Qt 信号槽连接
+QObject::connect(button, &QPushButton::clicked,  {
+    qDebug() << "Button clicked by" << userName;
+});
+```
+
+#### **3. 延迟执行**
+```cpp
+auto delayedCall = int delay {
+    std::this_thread::sleep_for(std::chrono::seconds(delay));
+    std::cout << "Done!";
+};
+
+std::thread t(delayedCall, 2);  // 2秒后输出
+t.detach();
+```
+
+#### **4. 自定义排序**
+```cpp
+std::sort(nums.begin(), nums.end(), int a, int b {
+    return a > b;  // 降序排序
+});
+```
+
+---
+
+### **7. 捕获列表的注意事项**
+
+#### **悬空引用问题**
+```cpp
+std::function<void()> createLambda() {
+    int x = 10;
+    return [&x] { std::cout << x; };  // x 是局部变量的引用！
+}
+
+auto lambda = createLambda();
+lambda();  // 未定义行为！x 已被销毁
+```
+
+**解决**：避免返回捕获局部变量引用的 Lambda。
+
+#### **性能优化**
+- 优先按值捕获基本类型（`int`, `double` 等）
+- 对大型对象（如 `std::string`）考虑按引用捕获（需确保生命周期）
+
+---
+
+### **8. C++14/17/20 增强**
+
+#### **C++14：泛型 Lambda**
+```cpp
+auto print = const auto &value {  // auto 参数
+    std::cout << value;
+};
+print(42);       // int
+print("Hello");   // const char*
+```
+
+#### **C++17：`constexpr` Lambda**
+```cpp
+constexpr auto square = int x { return x * x; };
+static_assert(square(5) == 25);  // 编译期计算
+```
+
+#### **C++20：模板参数**
+```cpp
+auto lambda = []<typename T>(T x) { 
+    return x.size(); 
+};
+lambda(std::string("Hello"));  // 输出: 5
+```
+
+---
+
+### **9. 与函数指针的比较**
+
+| **特性**         | **Lambda**                               | **函数指针**     |
+| ---------------- | ---------------------------------------- | ---------------- |
+| **捕获外部变量** | ✅ 支持                                   | ❌ 不支持         |
+| **内联定义**     | ✅ 代码更紧凑                             | ❌ 需单独定义     |
+| **性能**         | ⚠️ 可能生成更多代码（编译器优化后无差别） | ✅ 直接函数调用   |
+| **类型安全**     | ✅ 强类型                                 | ⚠️ 需手动匹配签名 |
+
+---
+
+### **10. 总结**
+
+#### **核心优势**
+- **就地定义**：无需单独声明函数
+- **捕获上下文**：灵活访问外部变量
+- **类型安全**：自动推导参数和返回类型
+- **STL 友好**：完美适配算法谓词
+
+#### **何时使用**
+✅ **短小逻辑**：代替一次性函数对象  
+✅ **需要捕获状态**：访问局部变量  
+✅ **回调函数**：事件处理、异步操作  
+✅ **泛型编程**：结合 `auto` 参数  
+
+#### **示例代码**
+```cpp
+// 综合示例：捕获、参数、返回值
+std::vector<int> data = {1, 2, 3, 4};
+
+int threshold = 2;
+auto filtered = std::count_if(data.begin(), data.end(), 
+    int x { return x > threshold; });
+
+std::cout << filtered;  // 输出大于2的元素数量
+```
+
+掌握 Lambda 表达式能显著提升 C++ 代码的 **简洁性** 和 **表现力**！🚀

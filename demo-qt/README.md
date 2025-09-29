@@ -1819,6 +1819,44 @@ Widget::~Widget()
 
 
 
+### 槽使用`Lambda`表达式
+
+>`Lambda` 表达式详细用法请参考本站 [链接](/c-plus/README.html#c-语法-lambda表达式)
+
+```c++
+#include "widget.h"
+#include <QPushButton>
+#include <QtDebug>
+
+Widget::Widget(QWidget *parent)
+    : QWidget(parent)
+{
+    this->resize(600, 400);
+
+    // 添加关闭窗口按钮
+    QPushButton *button = new QPushButton("关闭窗口", this);
+    // 连接信号和槽
+    // sender 信号的发送者
+    // 按钮的 clicked()信号，当用户点击按钮时触发。
+    // ​​槽函数的接收者​​（通常是当前类的实例，这里是窗口对象）。
+    // 窗口的 close()槽函数，调用时会关闭窗口。
+    connect(button, &QPushButton::clicked, this, &QWidget::close);
+
+    // 槽使用lambda表达式
+    connect(button, &QPushButton::clicked, this, [](){
+        qDebug() << "点击按钮";
+    });
+}
+
+Widget::~Widget()
+{
+}
+
+
+```
+
+
+
 ## 布局 - 类型
 
 Qt5 提供了多种布局管理器（Layout Managers），用于自动排列和调整子控件的位置和大小。使用布局可以确保界面在不同平台和窗口尺寸下都能正确显示。
@@ -2869,3 +2907,692 @@ formLayout->parentWidget()->setStyleSheet("
 ### 示例
 
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-qt/demo-qformlayout)
+
+
+
+## 存储 - `QSettings`
+
+**QSettings** 是 Qt5 中用于 **持久化存储应用程序配置和设置** 的类，它提供了简单易用的 API 来保存和读取键值对数据，类似于 iOS 的 `NSUserDefaults` 或 Windows 的注册表。
+
+---
+
+### **1. QSettings 的核心功能**
+
+#### **主要用途**
+- 保存用户偏好设置（如窗口大小、主题、语言等）
+- 存储应用程序状态（如最近打开的文件、登录状态等）
+- 管理应用程序配置项
+
+#### **基本特点**
+- **跨平台**：自动适配不同操作系统的存储机制
+- **简单易用**：类似 QMap 的 API 设计
+- **类型安全**：基于 QVariant，支持多种数据类型
+- **自动持久化**：数据自动保存到持久化存储
+
+---
+
+### **2. QSettings 的基本用法**
+
+#### **创建 QSettings 对象**
+```cpp
+#include <QSettings>
+
+// 方式1：指定组织名和应用名（推荐）
+QSettings settings("MyCompany", "MyApp");
+
+// 方式2：使用默认构造函数（使用 QCoreApplication 的信息）
+QSettings settings;  // 需要先设置 QCoreApplication 的属性
+```
+
+#### **读写数据**
+```cpp
+// 写入配置
+settings.setValue("username", "Alice");
+settings.setValue("volume", 75);
+settings.setValue("notifications", true);
+
+// 立即写入磁盘（可选，通常会自动保存）
+settings.sync();
+
+// 读取配置（提供默认值）
+QString username = settings.value("username", "guest").toString();
+int volume = settings.value("volume", 50).toInt();
+bool notifications = settings.value("notifications", true).toBool();
+```
+
+---
+
+### **3. 数据类型支持**
+
+QSettings 通过 QVariant 支持丰富的数据类型：
+
+#### **基本数据类型**
+```cpp
+settings.setValue("string", "Hello World");
+settings.setValue("integer", 42);
+settings.setValue("double", 3.14159);
+settings.setValue("bool", true);
+
+// 读取时指定类型和默认值
+QString str = settings.value("string").toString();
+int num = settings.value("integer").toInt();
+double pi = settings.value("double", 0.0).toDouble();
+bool flag = settings.value("bool", false).toBool();
+```
+
+#### **Qt 数据类型**
+```cpp
+// 颜色
+settings.setValue("bgColor", QColor(Qt::blue));
+
+// 字体
+settings.setValue("textFont", QFont("Arial", 12));
+
+// 大小和位置
+settings.setValue("windowSize", QSize(800, 600));
+settings.setValue("windowPos", QPoint(100, 50));
+
+// 读取
+QColor color = settings.value("bgColor", QColor(Qt::white)).value<QColor>();
+QSize size = settings.value("windowSize", QSize(400, 300)).toSize();
+```
+
+#### **容器类型**
+```cpp
+// 字符串列表
+QStringList recentFiles = {"file1.txt", "file2.doc"};
+settings.setValue("recentFiles", recentFiles);
+
+// 字符串映射
+QVariantMap config;
+config["server"] = "127.0.0.1";
+config["port"] = 8080;
+settings.setValue("connection", config);
+```
+
+---
+
+### **4. 分组管理**
+
+#### **使用分组组织配置**
+```cpp
+QSettings settings;
+
+// 进入分组
+settings.beginGroup("Window");
+settings.setValue("width", 800);
+settings.setValue("height", 600);
+settings.setValue("maximized", false);
+settings.endGroup();  // 结束分组
+
+settings.beginGroup("User");
+settings.setValue("name", "Alice");
+settings.setValue("language", "zh_CN");
+settings.endGroup();
+```
+
+#### **嵌套分组**
+```cpp
+settings.beginGroup("App");
+settings.beginGroup("Window");
+settings.setValue("geometry", QRect(100, 100, 800, 600));
+settings.endGroup();  // 结束 Window 分组
+settings.endGroup();   // 结束 App 分组
+
+// 对应的键：App/Window/geometry
+```
+
+#### **读取分组数据**
+```cpp
+settings.beginGroup("Window");
+int width = settings.value("width", 1024).toInt();
+int height = settings.value("height", 768).toInt();
+settings.endGroup();
+```
+
+---
+
+### **5. 平台特定的存储位置**
+
+QSettings 自动选择适合当前平台的存储后端：
+
+#### **不同平台的存储位置**
+| **平台**       | **存储格式** | **默认路径示例**                                  |
+| -------------- | ------------ | ------------------------------------------------- |
+| **Windows**    | 注册表       | `HKEY_CURRENT_USER\Software\MyCompany\MyApp`      |
+| **macOS**      | 属性列表     | `~/Library/Preferences/com.MyCompany.MyApp.plist` |
+| **Linux/Unix** | 文本文件     | `~/.config/MyCompany/MyApp.conf`                  |
+
+#### **指定存储格式**
+```cpp
+// 强制使用 INI 文件格式（跨平台一致）
+QSettings settings("settings.ini", QSettings::IniFormat);
+
+// 使用原生格式（默认）
+QSettings settings("MyCompany", "MyApp");  // QSettings::NativeFormat
+
+// 使用特定格式
+QSettings settings("config.ini", QSettings::IniFormat);
+QSettings settings("config.json", QSettings::JsonFormat);  // Qt 5.10+
+```
+
+---
+
+### **6. 高级功能**
+
+#### **检查键是否存在**
+```cpp
+if (settings.contains("username")) {
+    // 键存在
+    QString username = settings.value("username").toString();
+} else {
+    // 键不存在，使用默认值
+    QString username = "guest";
+}
+```
+
+#### **删除键**
+```cpp
+// 删除单个键
+settings.remove("username");
+
+// 删除整个分组
+settings.remove("Window");  // 删除 Window/ 下的所有键
+```
+
+#### **获取所有键**
+```cpp
+QStringList allKeys = settings.allKeys();
+foreach (const QString &key, allKeys) {
+    qDebug() << key << ":" << settings.value(key);
+}
+```
+
+#### **监听设置变化**
+```cpp
+// 监视文件变化（仅文件格式）
+QFileSystemWatcher watcher;
+watcher.addPath(settings.fileName());
+QObject::connect(&watcher, &QFileSystemWatcher::fileChanged,  {
+    settings.sync();  // 重新加载设置
+    qDebug() << "Settings file changed, reloaded!";
+});
+```
+
+---
+
+### **7. 实际应用示例**
+
+#### **保存和恢复窗口状态**
+```cpp
+// MainWindow 构造函数中恢复设置
+MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
+    // 读取窗口设置
+    QSettings settings;
+    settings.beginGroup("MainWindow");
+    
+    // 恢复大小和位置
+    resize(settings.value("size", QSize(800, 600)).toSize());
+    move(settings.value("pos", QPoint(200, 200)).toPoint());
+    
+    // 恢复最大化状态
+    if (settings.value("maximized", false).toBool()) {
+        showMaximized();
+    }
+    
+    settings.endGroup();
+}
+
+// 关闭事件中保存设置
+void MainWindow::closeEvent(QCloseEvent *event) {
+    QSettings settings;
+    settings.beginGroup("MainWindow");
+    
+    settings.setValue("size", size());
+    settings.setValue("pos", pos());
+    settings.setValue("maximized", isMaximized());
+    
+    settings.endGroup();
+    QMainWindow::closeEvent(event);
+}
+```
+
+#### **应用程序配置管理**
+```cpp
+class AppConfig {
+public:
+    static QString getLanguage() {
+        QSettings settings;
+        return settings.value("Language", "en_US").toString();
+    }
+    
+    static void setLanguage(const QString &language) {
+        QSettings settings;
+        settings.setValue("Language", language);
+    }
+    
+    static bool getDarkMode() {
+        QSettings settings;
+        return settings.value("Theme/DarkMode", false).toBool();
+    }
+    
+    static QStringList getRecentFiles() {
+        QSettings settings;
+        return settings.value("RecentFiles").toStringList();
+    }
+    
+    static void addRecentFile(const QString &filePath) {
+        QSettings settings;
+        QStringList files = getRecentFiles();
+        files.removeAll(filePath);  // 去重
+        files.prepend(filePath);    // 添加到开头
+        
+        // 限制最近文件数量
+        if (files.size() > 10) {
+            files = files.mid(0, 10);
+        }
+        
+        settings.setValue("RecentFiles", files);
+    }
+};
+```
+
+---
+
+### **8. 最佳实践**
+
+#### **命名规范**
+```cpp
+// 使用驼峰命名或下划线分隔
+settings.setValue("autoSaveInterval", 300);
+settings.setValue("recent_file_count", 5);
+```
+
+#### **错误处理**
+```cpp
+QSettings settings;
+if (settings.status() != QSettings::NoError) {
+    qWarning() << "Failed to access settings:" << settings.status();
+}
+```
+
+#### **性能优化**
+```cpp
+// 批量操作时禁用自动同步
+settings.setValue("temp1", "value1");
+settings.setValue("temp2", "value2");
+settings.sync();  // 手动同步一次
+```
+
+---
+
+### **9. 与 iOS NSUserDefaults 对比**
+
+| **特性**     | **QSettings**        | **NSUserDefaults**     |
+| ------------ | -------------------- | ---------------------- |
+| **API 风格** | `setValue()/value()` | `set()/objectForKey()` |
+| **数据类型** | QVariant（丰富类型） | 基础类型 + NSObject    |
+| **存储位置** | 自动选择平台最佳方案 | 属性列表文件           |
+| **线程安全** | 需要外部同步         | 线程安全               |
+| **即时保存** | 需要手动 sync()      | 自动定期保存           |
+
+---
+
+### **总结**
+
+**QSettings** 是 Qt 中用于应用程序配置管理的核心类：
+
+✅ **简单易用** - 类似 Map 的 API 设计  
+✅ **跨平台** - 自动适配不同操作系统  
+✅ **类型安全** - 基于 QVariant 的类型系统  
+✅ **灵活分组** - 支持层次化配置管理  
+✅ **自动持久化** - 数据自动保存到磁盘  
+
+无论是保存简单的用户偏好还是复杂的应用状态，QSettings 都是 Qt 应用开发中的首选方案！🎯
+
+
+
+## `QDebug`
+
+**QDebug** 是 Qt5 中用于 **调试输出** 的类，它提供了方便、类型安全的方式来输出调试信息，类似于 C++ 的 `std::cout` 或 C 的 `printf()`，但专门为 Qt 类型优化，并且支持丰富的格式化功能。
+
+---
+
+### **1. 基本用法**
+
+#### **最简单的调试输出**
+```cpp
+#include <QDebug>
+
+int main() {
+    qDebug() << "Hello Qt Debug!";
+    return 0;
+}
+```
+
+**输出**：
+
+```
+Hello Qt Debug!
+```
+
+#### **输出变量值**
+```cpp
+QString name = "Alice";
+int age = 25;
+double score = 95.5;
+
+qDebug() << "Name:" << name << "Age:" << age << "Score:" << score;
+```
+
+**输出**：
+```
+Name: "Alice" Age: 25 Score: 95.5
+```
+
+---
+
+### **2. QDebug 的核心特性**
+
+#### **自动类型识别**
+QDebug 自动识别 Qt 和标准 C++ 类型，并格式化输出：
+
+```cpp
+QString str = "Hello";
+QList<int> list = {1, 2, 3};
+QMap<QString, int> map = {{"a", 1}, {"b", 2}};
+
+qDebug() << "String:" << str;          // 自动添加引号
+qDebug() << "List:" << list;          // 格式化容器
+qDebug() << "Map:" << map;            // 格式化映射
+```
+
+**输出**：
+```
+String: "Hello"
+List: (1, 2,  ) 
+Map: QMap(("a", 1)("b", 2))
+```
+
+#### **支持所有 Qt 类型**
+```cpp
+// 各种 Qt 类型的调试输出
+qDebug() << QPoint(10, 20);          // QPoint(10,20)
+qDebug() << QRect(0, 0, 100, 50);    // QRect(0,0 100x50)
+qDebug() << QColor(Qt::red);         // QColor(ARGB 1,1,0,0)
+qDebug() << QDateTime::currentDateTime(); // 当前时间
+```
+
+---
+
+### **3. 高级用法**
+
+#### **格式化输出**
+```cpp
+// 类似 printf 的格式化
+qDebug("Name: %s, Age: %d", qPrintable(name), age);
+
+// 流式格式化
+qDebug().nospace() << "NoSpace-" << "Format";
+qDebug().space() << "With" << "Spaces";
+
+// 控制数字格式
+qDebug() << QString("Hex: 0x%1").arg(255, 0, 16);  // 十六进制
+```
+
+#### **条件调试**
+```cpp
+bool debugMode = true;
+
+// 条件编译
+#ifdef QT_DEBUG
+    qDebug() << "Debug build - verbose output";
+#endif
+
+// 运行时条件
+if (debugMode) {
+    qDebug() << "Debug information";
+}
+```
+
+---
+
+### **4. 自定义类型的调试输出**
+
+#### **方法一：重载 operator<<**
+```cpp
+class Person {
+public:
+    QString name;
+    int age;
+    
+    Person(const QString &name, int age) : name(name), age(age) {}
+};
+
+// 重载操作符以支持 qDebug()
+QDebug operator<<(QDebug debug, const Person &person) {
+    debug.nospace() << "Person(" << person.name << ", " << person.age << ")";
+    return debug;
+}
+
+// 使用
+Person alice("Alice", 25);
+qDebug() << alice;  // 输出: Person(Alice, 25)
+```
+
+#### **方法二：使用 QDebug 的流操作**
+```cpp
+class Product {
+public:
+    QString name;
+    double price;
+    
+    void debugOutput() const {
+        qDebug() << "Product:" << name << "Price: $" << price;
+    }
+};
+
+// 使用
+Product product{"Laptop", 999.99};
+product.debugOutput();
+```
+
+---
+
+### **5. 调试级别和控制**
+
+#### **不同的调试级别**
+```cpp
+qDebug() << "Debug message";      // 调试信息
+qInfo() << "Info message";       // 一般信息
+qWarning() << "Warning message"; // 警告信息
+qCritical() << "Error message";  // 错误信息
+```
+
+**输出示例**：
+```
+Debug: Debug message
+Info: Info message  
+Warning: Warning message
+Critical: Error message
+```
+
+#### **控制调试输出**
+```cpp
+// 禁用所有调试输出
+qSetMessagePattern("%{message}");  // 简化输出格式
+
+// 条件启用/禁用
+bool enableDebug = true;
+if (!enableDebug) {
+    // 重定向到空设备（禁用输出）
+    qInstallMessageHandler(QtMsgType, const QMessageLogContext &, const QString &{});
+}
+```
+
+---
+
+### **6. 实际应用场景**
+
+#### **调试函数执行流程**
+```cpp
+void processData(const QList<int> &data) {
+    qDebug() << "processData() called with" << data.size() << "items";
+    
+    for (int i = 0; i < data.size(); ++i) {
+        qDebug() << "Processing item" << i << ":" << data.at(i);
+        
+        if (data.at(i) < 0) {
+            qWarning() << "Invalid data at index" << i;
+        }
+    }
+    
+    qDebug() << "processData() completed";
+}
+```
+
+#### **性能调试**
+```cpp
+#include <QElapsedTimer>
+
+void expensiveOperation() {
+    QElapsedTimer timer;
+    timer.start();
+    
+    // 执行耗时操作
+    for (int i = 0; i < 1000000; ++i) {
+        // 一些计算
+    }
+    
+    qDebug() << "Operation took" << timer.elapsed() << "milliseconds";
+}
+```
+
+#### **信号槽调试**
+```cpp
+// 连接信号槽时添加调试
+QObject::connect(button, &QPushButton::clicked,  {
+    qDebug() << "Button clicked at" << QDateTime::currentDateTime().toString();
+});
+
+// 或者使用 lambda 包装
+#define DEBUG_CONNECT(sender, signal, receiver, slot) \
+    QObject::connect(sender, signal,  { \
+        qDebug() << #signal << "emitted"; \
+        receiver->slot(); \
+    })
+```
+
+---
+
+### **7. 文件输出和日志系统**
+
+#### **输出到文件**
+```cpp
+void setupDebugOutput() {
+    // 安装自定义消息处理器
+    qInstallMessageHandler(myMessageHandler);
+}
+
+void myMessageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg) {
+    QFile file("debug.log");
+    if (file.open(QIODevice::Append)) {
+        QTextStream stream(&file);
+        stream << QDateTime::currentDateTime().toString() << ": " << msg << "\n";
+    }
+}
+```
+
+#### **分类调试**
+```cpp
+// 为不同模块创建调试宏
+#define DEBUG_NETWORK qDebug() << "[NETWORK]"
+#define DEBUG_DATABASE qDebug() << "[DATABASE]"
+#define DEBUG_UI qDebug() << "[UI]"
+
+// 使用
+DEBUG_NETWORK << "Connection established to" << serverUrl;
+DEBUG_DATABASE << "Query executed:" << sqlQuery;
+```
+
+---
+
+### **8. 与 std::cout 的对比**
+
+| **特性**        | **QDebug**           | **std::cout**  |
+| --------------- | -------------------- | -------------- |
+| **Qt 类型支持** | ✅ 自动格式化 Qt 类型 | ❌ 需要手动转换 |
+| **线程安全**    | ✅ 输出自动同步       | ❌ 可能交错     |
+| **性能**        | ✅ 优化过的输出       | ⚠️ 相对较慢     |
+| **格式化**      | ✅ 丰富的格式化选项   | ⚠️ 基础格式化   |
+| **平台支持**    | ✅ 跨平台一致         | ✅ 跨平台       |
+
+---
+
+### **9. 最佳实践**
+
+#### **生产环境处理**
+```cpp
+// 使用条件编译区分调试和发布版本
+void MyClass::debugInfo() {
+#ifndef QT_NO_DEBUG
+    qDebug() << "Debug info:" << internalState;
+#endif
+}
+
+// 或使用运行时标志
+if (LogManager::isDebugEnabled()) {
+    qDebug() << "Verbose debug information";
+}
+```
+
+#### **结构化日志**
+```cpp
+// 创建结构化的调试输出
+qDebug().nospace() 
+    << "[" << QDateTime::currentDateTime().toString("hh:mm:ss.zzz") << "]"
+    << "[" << QThread::currentThread() << "]"
+    << " " << message;
+```
+
+---
+
+### **10. 常见问题解决**
+
+#### **问题：调试输出不显示**
+**解决**：
+```cpp
+// 检查项目配置
+// 在 .pro 文件中确保有：
+CONFIG += console  # Windows 下显示控制台
+
+// 或检查消息处理器
+qDebug() << "Test";  // 确保没有被重定向
+```
+
+#### **问题：性能影响**
+**解决**：
+```cpp
+// 使用宏在发布版本中移除调试代码
+#ifdef QT_DEBUG
+    #define MY_DEBUG qDebug()
+#else
+    #define MY_DEBUG QNoDebug()
+#endif
+
+MY_DEBUG << "This will be removed in release builds";
+```
+
+---
+
+### **总结**
+
+**QDebug** 是 Qt 开发中不可或缺的调试工具：
+
+🎯 **简单易用** - 流式语法，直观方便  
+🎯 **类型智能** - 自动识别和格式化 Qt 类型  
+🎯 **功能丰富** - 支持格式化、条件输出、文件日志  
+🎯 **性能优化** - 高效的调试输出机制  
+🎯 **线程安全** - 多线程环境下安全使用  
+
+掌握 QDebug 能显著提高 Qt 应用程序的开发和调试效率！🐛
