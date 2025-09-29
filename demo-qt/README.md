@@ -3596,3 +3596,11 @@ MY_DEBUG << "This will be removed in release builds";
 🎯 **线程安全** - 多线程环境下安全使用  
 
 掌握 QDebug 能显著提高 Qt 应用程序的开发和调试效率！🐛
+
+
+
+## 窗口跳转
+
+>说明：`Widget` 窗口跳转到 `AnotherWidget` 窗口，`Widget` 窗口持有 `AnotherWidget` 窗口实例。`Widget` 窗口跳转到 `AnotherWidget` 窗口时先隐藏 `Widget` 窗口再显示 `AnotherWidget` 窗口。`AnotherWidget` 窗口返回 `Widget` 窗口时 `AnotherWidget` 发出 `void back()` 信号，`Widget` 窗口接收  信号并定义匿名槽处理信号先隐藏 `AnotherWidget` 窗口再显示 `Widget` 窗口。
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-qt/demo-widget)

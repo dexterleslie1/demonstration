@@ -2,6 +2,11 @@
 #define WIDGET_H
 
 #include <QWidget>
+#include "another_widget.h"
+
+QT_BEGIN_NAMESPACE
+namespace Ui { class Widget; }
+QT_END_NAMESPACE
 
 class Widget : public QWidget
 {
@@ -10,5 +15,10 @@ class Widget : public QWidget
 public:
     Widget(QWidget *parent = nullptr);
     ~Widget();
+
+private:
+    Ui::Widget *ui;
+    // 跳转的窗口
+    AnotherWidget *anotherWidget;
 };
 #endif // WIDGET_H
