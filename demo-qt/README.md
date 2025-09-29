@@ -1600,6 +1600,300 @@ Widget::~Widget()
 
 
 
+## `UI`组件 - `QStackedWidget`
+
+**Qt5 中的 `QStackedWidget`** 是一个 **堆叠式布局容器**，它允许在同一区域显示多个子控件（页面），但 **每次只显示其中一个**，类似于浏览器中的多标签页（一次只看到一个页面）。它通过堆叠的方式管理子控件，并通过索引或指针切换当前显示的页面。
+
+---
+
+### **1. 核心功能**
+| **功能**       | **说明**                                                |
+| -------------- | ------------------------------------------------------- |
+| **多页面管理** | 可添加多个子控件（如 `QWidget`、`QLabel`、`QFrame` 等） |
+| **单页显示**   | 同一时间只显示一个页面，其他页面隐藏                    |
+| **动态切换**   | 通过索引或指针切换页面，支持动画效果（需手动实现）      |
+| **内存高效**   | 隐藏的页面不会被渲染，但仍保留在内存中                  |
+| **无布局冲突** | 子控件的大小和位置由 `QStackedWidget` 自动管理          |
+
+---
+
+### **2. 基本用法**
+
+#### **2.1 创建并添加页面**
+```cpp
+#include <QStackedWidget>
+#include <QLabel>
+
+// 创建堆叠窗口
+QStackedWidget *stackedWidget = new QStackedWidget(this);
+
+// 添加页面（索引从0开始）
+QLabel *page1 = new QLabel("这是页面1", this);
+QLabel *page2 = new QLabel("这是页面2", this);
+QLabel *page3 = new QLabel("这是页面3", this);
+
+stackedWidget->addWidget(page1);  // 索引0
+stackedWidget->addWidget(page2);  // 索引1
+stackedWidget->addWidget(page3);  // 索引2
+```
+
+#### **2.2 切换页面**
+```cpp
+// 通过索引切换
+stackedWidget->setCurrentIndex(1);  // 显示page2
+
+// 通过指针切换
+stackedWidget->setCurrentWidget(page3);  // 显示page3
+```
+
+#### **2.3 获取当前页面**
+```cpp
+// 获取当前页面的索引
+int currentIndex = stackedWidget->currentIndex();
+
+// 获取当前页面的指针
+QWidget *currentPage = stackedWidget->currentWidget();
+```
+
+---
+
+### **3. 实际应用场景**
+
+#### **3.1 多步骤向导界面**
+```cpp
+// 示例：安装向导
+QStackedWidget *wizard = new QStackedWidget;
+wizard->addWidget(new WelcomePage);     // 第1步
+wizard->addWidget(new LicensePage);     // 第2步
+wizard->addWidget(new InstallationPage);// 第3步
+wizard->addWidget(new FinishPage);      // 第4步
+
+// "下一步"按钮逻辑
+connect(nextButton, &QPushButton::clicked,  {
+    wizard->setCurrentIndex(wizard->currentIndex() + 1);
+});
+```
+
+#### **3.2 选项卡式界面**
+```cpp
+// 模拟选项卡效果（结合QButtonGroup）
+QStackedWidget *stack = new QStackedWidget;
+QButtonGroup *tabButtons = new QButtonGroup(this);
+
+// 添加页面和对应按钮
+for (int i = 0; i < 3; ++i) {
+    QWidget *page = createPage(i);
+    QPushButton *tabBtn = new QPushButton(QString("Tab %1").arg(i+1));
+    
+    stack->addWidget(page);
+    tabButtons->addButton(tabBtn, i);  // 按钮ID对应页面索引
+}
+
+// 点击按钮切换页面
+connect(tabButtons, &QButtonGroup::buttonClicked, stack, &QStackedWidget::setCurrentIndex);
+```
+
+#### **3.3 动态加载页面**
+```cpp
+// 动态添加和移除页面
+QPushButton *addPageBtn = new QPushButton("添加页面");
+connect(addPageBtn, &QPushButton::clicked,  {
+    QLabel *newPage = new QLabel(QString("动态页面 %1").arg(stackedWidget->count()));
+    stackedWidget->addWidget(newPage);
+    stackedWidget->setCurrentWidget(newPage);
+});
+```
+
+---
+
+### **4. 高级功能**
+
+#### **4.1 页面切换动画**
+`QStackedWidget` 默认无动画，但可通过重写或组合其他类实现：
+
+```cpp
+// 示例：使用QPropertyAnimation实现滑动效果
+void slidePage(QStackedWidget *stack, int newIndex) {
+    if (stack->currentIndex() == newIndex) return;
+
+    QWidget *currentPage = stack->currentWidget();
+    QWidget *nextPage = stack->widget(newIndex);
+
+    // 设置新页面位置（从右侧进入）
+    nextPage->setGeometry(stack->width(), 0, stack->width(), stack->height());
+    nextPage->show();
+
+    // 动画移动
+    QPropertyAnimation *animCurrent = new QPropertyAnimation(currentPage, "pos");
+    animCurrent->setDuration(300);
+    animCurrent->setStartValue(currentPage->pos());
+    animCurrent->setEndValue(QPoint(-stack->width(), 0));
+
+    QPropertyAnimation *animNext = new QPropertyAnimation(nextPage, "pos");
+    animNext->setDuration(300);
+    animNext->setStartValue(nextPage->pos());
+    animNext->setEndValue(QPoint(0, 0));
+
+    // 动画结束后更新索引
+    connect(animNext, &QPropertyAnimation::finished,  {
+        stack->setCurrentIndex(newIndex);
+    });
+
+    animCurrent->start();
+    animNext->start();
+}
+```
+
+#### **4.2 懒加载页面**
+仅在首次访问时初始化页面，节省内存：
+
+```cpp
+// 添加占位符页面
+stackedWidget->addWidget(new QWidget);  // 索引0（实际内容未加载）
+
+// 按需加载
+connect(stackedWidget, &QStackedWidget::currentChanged, int index {
+    if (index == 0 && stackedWidget->widget(0)->objectName().isEmpty()) {
+        QWidget *realPage = createHeavyPage();  // 耗时初始化
+        stackedWidget->removeWidget(stackedWidget->widget(0));
+        stackedWidget->insertWidget(0, realPage);
+    }
+});
+```
+
+---
+
+### **5. 与类似控件的对比**
+
+| **控件**           | **特点**                           | **适用场景**             |
+| ------------------ | ---------------------------------- | ------------------------ |
+| **QStackedWidget** | 简单堆叠，无布局管理，手动切换页面 | 向导、选项卡、状态切换   |
+| **QTabWidget**     | 自带标签栏，自动管理页面切换       | 传统选项卡界面           |
+| **QToolBox**       | 垂直折叠面板，适合分类内容         | 设置对话框、分类展示     |
+| **QGraphicsView**  | 支持复杂动画和自定义布局           | 高动态性界面（如幻灯片） |
+
+---
+
+### **6. 在 Qt Designer 中使用**
+1. **拖拽 `QStackedWidget`** 到窗体
+2. **右键点击** → "Add Page" 添加子页面
+3. **切换页面**：
+   - 在属性编辑器中设置 `currentIndex`
+   - 通过代码 `ui->stackedWidget->setCurrentIndex()`
+
+---
+
+### **7. 注意事项**
+1. **内存管理**：所有页面始终存在于内存中，适合页面数量较少的场景。
+2. **性能优化**：对复杂页面使用懒加载（按需初始化）。
+3. **动态布局**：页面大小随 `QStackedWidget` 自动调整。
+4. **信号通知**：监听 `currentChanged(int)` 信号响应页面切换。
+
+---
+
+### **8. 完整代码示例**
+```cpp
+#include <QApplication>
+#include <QStackedWidget>
+#include <QPushButton>
+#include <QVBoxLayout>
+#include <QLabel>
+
+int main(int argc, char *argv[]) {
+    QApplication a(argc, argv);
+    
+    QWidget window;
+    QVBoxLayout *layout = new QVBoxLayout(&window);
+    
+    // 创建堆叠窗口和页面
+    QStackedWidget *stack = new QStackedWidget;
+    QLabel *page1 = new QLabel("页面1 - 欢迎");
+    QLabel *page2 = new QLabel("页面2 - 设置");
+    QLabel *page3 = new QLabel("页面3 - 完成");
+    
+    stack->addWidget(page1);
+    stack->addWidget(page2);
+    stack->addWidget(page3);
+    
+    // 添加切换按钮
+    QPushButton *btn1 = new QPushButton("显示页面1");
+    QPushButton *btn2 = new QPushButton("显示页面2");
+    QPushButton *btn3 = new QPushButton("显示页面3");
+    
+    // 连接信号槽
+    QObject::connect(btn1, &QPushButton::clicked,  { stack->setCurrentIndex(0); });
+    QObject::connect(btn2, &QPushButton::clicked,  { stack->setCurrentIndex(1); });
+    QObject::connect(btn3, &QPushButton::clicked,  { stack->setCurrentIndex(2); });
+    
+    // 布局
+    layout->addWidget(stack);
+    layout->addWidget(btn1);
+    layout->addWidget(btn2);
+    layout->addWidget(btn3);
+    
+    window.show();
+    return a.exec();
+}
+```
+
+---
+
+### **总结**
+**QStackedWidget** 是 Qt 中实现多页面切换的核心组件，适用于：
+- ✅ 向导式多步骤界面
+- ✅ 选项卡式布局（需配合按钮）
+- ✅ 状态切换（如登录/注册表单）
+- ✅ 动态加载内容的场景
+
+通过合理设计，可以构建出既美观又高效的复杂界面！ 🚀
+
+### 示例
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-qt/demo-qstackedwidget)
+
+```c++
+#include "widget.h"
+#include "ui_widget.h"
+
+Widget::Widget(QWidget *parent)
+    : QWidget(parent)
+    , ui(new Ui::Widget)
+{
+    ui->setupUi(this);
+
+    // 初始化 StackedWidget 的 Page
+    this->page1 = new Page1(ui->stackedWidget);
+    this->page2 = new Page2(ui->stackedWidget);
+    this->page3 = new Page3(ui->stackedWidget);
+    ui->stackedWidget->addWidget(page1);
+    ui->stackedWidget->addWidget(page2);
+    ui->stackedWidget->addWidget(page3);
+    // 设置默认显示 Page
+    ui->stackedWidget->setCurrentWidget(this->page1);
+
+    // 点击 Page 按钮
+    connect(ui->pushButton, &QPushButton::clicked, this, [this](){
+        // 切换到 page1
+       ui->stackedWidget->setCurrentWidget(this->page1);
+    });
+    connect(ui->pushButton_2, &QPushButton::clicked, this, [this](){
+       ui->stackedWidget->setCurrentWidget(this->page2);
+    });
+    connect(ui->pushButton_3, &QPushButton::clicked, this, [this](){
+       ui->stackedWidget->setCurrentWidget(this->page3);
+    });
+}
+
+Widget::~Widget()
+{
+    delete ui;
+}
+
+
+```
+
+
+
 ## `UI`组件 - 信号和槽机制 - 概念
 
 Qt5 的 **信号和槽（Signals & Slots）** 是 Qt 框架的核心机制，用于实现对象之间的通信。它是一种 **松耦合、类型安全** 的事件处理方式，比传统的回调函数更灵活、更安全。
