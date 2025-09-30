@@ -38,12 +38,25 @@ void TestMyTest::test_case1()
     QString json = jsonDocument.toJson();
     QVERIFY2(json.toUtf8() == "{\n    \"age\": 11,\n    \"name\": \"Dexter\"\n}\n", json.toUtf8());
 
-
     // JSON 字符串创建 QJsonDocument
     jsonDocument = QJsonDocument::fromJson(json.toUtf8());
     jsonObject = jsonDocument.object();
     QVERIFY2("Dexter" == jsonObject["name"].toString().toUtf8(), jsonObject["name"].toString().toUtf8());
     QVERIFY2(11 == jsonObject["age"].toInt(), QString("%1").arg(jsonObject["age"].toInt()).toUtf8());
+
+    // QByteArray 转换为 QJsonDocument 没有错误情况
+    QByteArray jsonData = json.toUtf8();
+    QJsonParseError jsonParseError;
+    jsonDocument = QJsonDocument::fromJson(jsonData, &jsonParseError);
+    QVERIFY(jsonParseError.error == QJsonParseError::NoError);
+    jsonObject = jsonDocument.object();
+    QVERIFY2("Dexter" == jsonObject["name"].toString().toUtf8(), jsonObject["name"].toString().toUtf8());
+    QVERIFY2(11 == jsonObject["age"].toInt(), QString("%1").arg(jsonObject["age"].toInt()).toUtf8());
+
+    // QByteArray 转换为 QJsonDocument 有错误情况
+    jsonData = QString("%1xx").arg(json).toUtf8();
+    jsonDocument = QJsonDocument::fromJson(jsonData, &jsonParseError);
+    QVERIFY2("garbage at the end of the document" == jsonParseError.errorString(), jsonParseError.errorString().toUtf8());
 }
 
 QTEST_APPLESS_MAIN(TestMyTest)

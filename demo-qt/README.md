@@ -4421,6 +4421,204 @@ QTEST_APPLESS_MAIN(TestCalculator)
 
 
 
+## `QTest` - 自定义`QtExpectation`等待异步操作
+
+>说明：在测试中，测试主线程需要等待异步测试子线程结束才退出主线程。
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-qt/demo-qnetworkaccessmanager)
+
+在 `pro` 文件中手动添加 `core` 模块和 `c++11`，否则测试编译错误
+
+```
+QT += core testlib network
+CONFIG += c++11
+```
+
+`qtexpectation.h`：
+
+```c++
+#ifndef QTEXPECTATION_H
+#define QTEXPECTATION_H
+
+#include <QObject>
+#include <QEventLoop>
+#include <QTimer>
+
+class QtExpectation : public QObject {
+    Q_OBJECT
+
+public:
+    explicit QtExpectation(int timeout = 3000, QObject *parent = nullptr)
+        : QObject(parent), m_timeout(timeout), m_fulfilled(false) {}
+
+    void fulfill() {
+        m_fulfilled = true;
+        emit fulfilled();
+    }
+
+    bool wait() {
+        QEventLoop loop;
+        QTimer::singleShot(m_timeout, &loop, &QEventLoop::quit);
+        connect(this, &QtExpectation::fulfilled, &loop, &QEventLoop::quit);
+        loop.exec();
+        return m_fulfilled;
+    }
+
+    bool isFulfilled() const { return m_fulfilled; }
+
+signals:
+    void fulfilled();
+
+private:
+    int m_timeout;
+    bool m_fulfilled;
+};
+
+#endif // QTEXPECTATION_H
+
+```
+
+`QtExpectation` 使用
+
+```c++
+#include <QtTest>
+#include <QCoreApplication>
+#include <QtNetwork/QNetworkAccessManager>
+#include <QtNetwork/QNetworkReply>
+
+#include "qtexpectation.h"
+
+// add necessary includes here
+
+class TestMyTest : public QObject
+{
+    Q_OBJECT
+
+public:
+    TestMyTest();
+    ~TestMyTest();
+
+private slots:
+    void test_case1();
+
+};
+
+TestMyTest::TestMyTest()
+{
+
+}
+
+TestMyTest::~TestMyTest()
+{
+
+}
+
+void TestMyTest::test_case1()
+{
+    QString host = "192.168.235.128";
+    int port = 8080;
+
+    // 测试 HTTP 200 响应
+    QtExpectation *exp = new QtExpectation(2000);
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    QUrl url = QUrl(QString("http://%1:%2/api/v1/xxx").arg(host).arg(port));
+    QNetworkRequest request = QNetworkRequest(url);
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json; charset=utf-8");
+    QNetworkReply *reply = manager->get(request);
+    int errorCode = 0;
+    QString errorMessage;
+    QJsonValue data;
+    QString nonHttp20xResponse;
+    connect(reply, &QNetworkReply::finished, this, [reply, exp, &errorCode, &errorMessage, &data, &nonHttp20xResponse]() {
+        if (reply->error() == QNetworkReply::NoError) {
+            // 解析 json 为 QJsonDocument
+            QJsonParseError jsonParseError;
+            QJsonDocument jsonDocument = QJsonDocument::fromJson(reply->readAll(), &jsonParseError);
+            QJsonObject jsonObject = jsonDocument.object();
+            errorCode = jsonObject["errorCode"].toInt();
+            errorMessage = jsonObject["errorMessage"].toString();
+            data = jsonObject["data"];
+        } else {
+            // 输出错误信息（包括 HTTP 状态码）
+            QVariant statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
+            QString errorStr = reply->errorString();
+            QString responseStr = QString::fromUtf8(reply->readAll());
+            QString url = reply->url().toString();
+            nonHttp20xResponse = QString("HTTP 请求错误，状态码：%1，原因：%2，服务器响应：%3，url：%4")
+                                         .arg(statusCode.toInt())
+                                         .arg(errorStr)
+                                         .arg(responseStr)
+                                         .arg(url);
+        }
+        // 手动释放 reply
+        reply->deleteLater();
+
+        exp->fulfill();
+    });
+
+    QVERIFY(exp->wait());
+
+    QVERIFY2(errorCode == 90000, QString("errorCode=%1").arg(errorCode).toUtf8());
+    QVERIFY2(errorMessage == "资源 /api/v1/xxx 不存在！", QString("errorMessage=%1").arg(errorMessage).toUtf8());
+    QVERIFY(data.isNull());
+
+    exp = new QtExpectation(2000);
+    url = QUrl(QString("http://%1:%2/api/v1/testHttp400").arg(host).arg(port));
+    request = QNetworkRequest(url);
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json; charset=utf-8");
+    reply = manager->get(request);
+    errorCode = 0;
+    errorMessage = QString();
+    data = QJsonValue();
+    nonHttp20xResponse = QString();
+    connect(reply, &QNetworkReply::finished, this, [reply, exp, &errorCode, &errorMessage, &data, &nonHttp20xResponse]() {
+        if (reply->error() == QNetworkReply::NoError) {
+            // 解析 json 为 QJsonDocument
+            QJsonParseError jsonParseError;
+            QJsonDocument jsonDocument = QJsonDocument::fromJson(reply->readAll(), &jsonParseError);
+            QJsonObject jsonObject = jsonDocument.object();
+            errorCode = jsonObject["errorCode"].toInt();
+            errorMessage = jsonObject["errorMessage"].toString();
+            data = jsonObject["data"];
+        } else {
+            // 输出错误信息（包括 HTTP 状态码）
+            QVariant statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
+            QString errorStr = reply->errorString();
+            QString responseStr = QString::fromUtf8(reply->readAll());
+            QString url = reply->url().toString();
+            nonHttp20xResponse = QString("HTTP 请求错误，状态码：%1，原因：%2，服务器响应：%3，url：%4")
+                                         .arg(statusCode.toInt())
+                                         .arg(errorStr)
+                                         .arg(responseStr)
+                                         .arg(url);
+        }
+        // 手动释放 reply
+        reply->deleteLater();
+
+        exp->fulfill();
+    });
+
+    QVERIFY(exp->wait());
+
+    QVERIFY2(errorCode == 0, QString("errorCode=%1").arg(errorCode).toUtf8());
+    QVERIFY2(errorMessage == "", QString("errorMessage=%1").arg(errorMessage).toUtf8());
+    QVERIFY(data.isNull());
+    QVERIFY2(nonHttp20xResponse == "HTTP 请求错误，状态码：400，原因：Error transferring http://192.168.235.128:8080/api/v1/testHttp400 - server replied: ，服务器响应：{\"errorCode\":90000,\"errorMessage\":\"测试业务异常\",\"data\":null}，url：http://192.168.235.128:8080/api/v1/testHttp400", nonHttp20xResponse.toUtf8());
+
+    delete exp;
+    manager->deleteLater();
+    delete manager;
+}
+
+// 使用 QTEST_GUILESS_MAIN 替代 QTEST_APPLESS_MAIN，否则 QtExpectation 使用时报告错误
+QTEST_GUILESS_MAIN(TestMyTest)
+
+#include "tst_testmytest.moc"
+
+```
+
+
+
 ## `QJsonDocument`
 
 `QJsonDocument` 是 Qt5 中处理 JSON 数据的核心类，它提供了对 JSON 文档的封装和操作功能。
@@ -4541,9 +4739,40 @@ outFile.close();
 
 ### 示例
 
+>说明：`QJsonDocument` 转换为 `JSON` 字符串，`JSON` 字符串转换为 `QJsonDocument`，`QByteArray` 转换为 `QJsonDocument`。
+>
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-qt/demo-qjsondocument)
 
 ```c++
+#include <QtTest>
+#include <QJsonDocument>
+#include <QDebug>
+
+// add necessary includes here
+
+class TestMyTest : public QObject
+{
+    Q_OBJECT
+
+public:
+    TestMyTest();
+    ~TestMyTest();
+
+private slots:
+    void test_case1();
+
+};
+
+TestMyTest::TestMyTest()
+{
+
+}
+
+TestMyTest::~TestMyTest()
+{
+
+}
+
 void TestMyTest::test_case1()
 {
     // QJsonObject 转换为 JSON 字符串
@@ -4555,12 +4784,690 @@ void TestMyTest::test_case1()
     QString json = jsonDocument.toJson();
     QVERIFY2(json.toUtf8() == "{\n    \"age\": 11,\n    \"name\": \"Dexter\"\n}\n", json.toUtf8());
 
-
     // JSON 字符串创建 QJsonDocument
     jsonDocument = QJsonDocument::fromJson(json.toUtf8());
     jsonObject = jsonDocument.object();
     QVERIFY2("Dexter" == jsonObject["name"].toString().toUtf8(), jsonObject["name"].toString().toUtf8());
     QVERIFY2(11 == jsonObject["age"].toInt(), QString("%1").arg(jsonObject["age"].toInt()).toUtf8());
+
+    // QByteArray 转换为 QJsonDocument 没有错误情况
+    QByteArray jsonData = json.toUtf8();
+    QJsonParseError jsonParseError;
+    jsonDocument = QJsonDocument::fromJson(jsonData, &jsonParseError);
+    QVERIFY(jsonParseError.error == QJsonParseError::NoError);
+    jsonObject = jsonDocument.object();
+    QVERIFY2("Dexter" == jsonObject["name"].toString().toUtf8(), jsonObject["name"].toString().toUtf8());
+    QVERIFY2(11 == jsonObject["age"].toInt(), QString("%1").arg(jsonObject["age"].toInt()).toUtf8());
+
+    // QByteArray 转换为 QJsonDocument 有错误情况
+    jsonData = QString("%1xx").arg(json).toUtf8();
+    jsonDocument = QJsonDocument::fromJson(jsonData, &jsonParseError);
+    QVERIFY2("garbage at the end of the document" == jsonParseError.errorString(), jsonParseError.errorString().toUtf8());
 }
+
+QTEST_APPLESS_MAIN(TestMyTest)
+
+#include "tst_testmytest.moc"
+
+```
+
+
+
+## 字符串`QString`
+
+`QString` 是 Qt 框架中用于处理 Unicode 字符串的类，它提供了丰富的字符串操作功能，比标准 C++ 的 `std::string` 更加强大和易用。
+
+### 1. 创建 QString
+
+#### 基本创建方式
+```cpp
+QString str1;               // 空字符串
+QString str2("Hello");      // 从 C 风格字符串创建
+QString str3 = "World";     // 赋值方式创建
+QString str4(10, 'A');      // 创建包含10个'A'的字符串
+QString str5(str2);         // 通过拷贝构造函数创建
+```
+
+#### 从其他类型转换
+```cpp
+// 从数字转换
+QString numStr = QString::number(123);     // "123"
+QString dblStr = QString::number(3.14);   // "3.14"
+
+// 从其他编码转换
+QString fromLatin1 = QString::fromLatin1("text");
+QString fromUtf8 = QString::fromUtf8("text");
+QString fromLocal8Bit = QString::fromLocal8Bit("text");
+```
+
+### 2. 字符串操作
+
+#### 拼接字符串
+```cpp
+QString s1 = "Hello";
+QString s2 = "World";
+QString s3 = s1 + " " + s2;  // "Hello World"
+
+// 使用 append()
+s1.append(" Qt");            // "Hello Qt"
+
+// 使用 arg() 格式化
+QString formatted = QString("%1 %2!").arg("Hello").arg("Qt");  // "Hello Qt!"
+```
+
+#### 访问字符
+```cpp
+QString str = "Qt";
+QChar ch1 = str.at(0);       // 'Q'
+QChar ch2 = str[1];         // 't'
+```
+
+#### 字符串比较
+```cpp
+QString a = "apple";
+QString b = "banana";
+
+bool eq = (a == b);         // false
+bool lt = (a < b);          // true (按字典序比较)
+int cmp = a.compare(b);     // 返回负数(a<b), 0(a==b), 正数(a>b)
+```
+
+### 3. 字符串查询
+
+#### 查找子串
+```cpp
+QString str = "Hello Qt world";
+
+int pos1 = str.indexOf("Qt");       // 6
+int pos2 = str.indexOf("qt", 0, Qt::CaseInsensitive); // 6 (不区分大小写)
+bool contains = str.contains("Qt"); // true
+```
+
+#### 检查开头和结尾
+```cpp
+bool starts = str.startsWith("Hello");  // true
+bool ends = str.endsWith("world");      // true
+```
+
+### 4. 字符串修改
+
+#### 插入和删除
+```cpp
+QString str = "Hello world";
+str.insert(5, " Qt");       // "Hello Qt world"
+str.remove(6, 3);          // "Hello world"
+```
+
+#### 替换子串
+```cpp
+QString str = "I like apples";
+str.replace("apples", "bananas");  // "I like bananas"
+```
+
+#### 大小写转换
+```cpp
+QString str = "Hello Qt";
+QString upper = str.toUpper();     // "HELLO QT"
+QString lower = str.toLower();     // "hello qt"
+```
+
+### 5. 字符串分割和组合
+
+#### 分割字符串
+```cpp
+QString str = "one,two,three";
+QStringList parts = str.split(",");  // ["one", "two", "three"]
+```
+
+#### 组合字符串列表
+```cpp
+QStringList list;
+list << "one" << "two" << "three";
+QString joined = list.join("-");    // "one-two-three"
+```
+
+### 6. 转换到其他类型
+
+#### 转换为数字
+```cpp
+QString numStr = "123";
+int i = numStr.toInt();            // 123
+double d = numStr.toDouble();      // 123.0
+```
+
+#### 转换为 C 风格字符串
+```cpp
+QString str = "Qt";
+QByteArray utf8 = str.toUtf8();    // UTF-8 编码的字节数组
+const char *cstr = utf8.constData();
+
+// 直接获取
+const char *cstr2 = str.toLocal8Bit().constData();
+```
+
+### 7. 格式化字符串
+
+#### 使用 arg() 格式化
+```cpp
+int x = 10;
+QString s = QString("Value: %1").arg(x);  // "Value: 10"
+
+// 多个参数
+QString msg = QString("%1 is %2 years old").arg("Alice").arg(25);
+// "Alice is 25 years old"
+
+// 控制格式
+QString pi = QString("π ≈ %1").arg(3.14159, 0, 'f', 3);  // "π ≈ 3.142"
+```
+
+### 8. 其他实用功能
+
+#### 去除空白字符
+```cpp
+QString str = "  Hello Qt  \n";
+QString trimmed = str.trimmed();   // "Hello Qt"
+QString simplified = str.simplified();  // "Hello Qt" (去除所有空白)
+```
+
+#### 填充和对齐
+```cpp
+QString str = "123";
+QString padded = str.leftJustified(6, '-');  // "123---"
+QString rightPad = str.rightJustified(6, '-'); // "---123"
+```
+
+#### 字符串长度
+```cpp
+QString str = "Hello";
+int len = str.length();    // 5
+int size = str.size();     // 5 (与 length() 相同)
+bool empty = str.isEmpty(); // false
+```
+
+### 9. 正则表达式
+
+#### 使用正则表达式
+```cpp
+QString str = "Qt 5.15.2";
+QRegExp rx("(\\d+)\\.(\\d+)\\.(\\d+)");
+if (str.indexOf(rx) != -1) {
+    QString major = rx.cap(1);  // "5"
+    QString minor = rx.cap(2);  // "15"
+    QString patch = rx.cap(3); // "2"
+}
+```
+
+### 10. 性能考虑
+
+#### 避免频繁的内存分配
+```cpp
+// 不好 - 多次内存分配
+QString result;
+for (int i = 0; i < 100; ++i) {
+    result += QString::number(i);
+}
+
+// 更好 - 预分配空间
+QString result;
+result.reserve(100 * 3);  // 假设每个数字平均3个字符
+for (int i = 0; i < 100; ++i) {
+    result += QString::number(i);
+}
+```
+
+`QString` 是 Qt 中最重要的类之一，它提供了比标准 C++ 字符串更丰富的功能，特别是在 Unicode 支持和国际化方面。
+
+
+
+## `QByteArray`
+
+`QByteArray` 是 Qt5 中的一个核心类，用于处理原始字节序列（即 `char*` 数据）。它类似于 C++ 的 `std::string`，但提供了更多 Qt 特有的功能，例如隐式共享（copy-on-write）、内存管理优化以及与 Qt 其他类的集成。
+
+---
+
+### **主要特性**
+1. **存储原始数据**  
+   - 可以存储任意二进制数据（包括 `\0` 字节），而不仅限于字符串。
+   - 常用于处理网络协议、文件 I/O、加密数据等场景。
+
+2. **隐式共享（Copy-on-Write）**  
+   - 多个 `QByteArray` 可以共享同一份数据，直到被修改时才进行深拷贝，减少内存占用。
+
+3. **自动内存管理**  
+   - 无需手动释放内存，析构时自动清理数据。
+
+4. **与 `char*` 兼容**  
+   - 提供 `constData()`、`data()` 等方法直接访问底层 `char*` 指针。
+   - 支持从 `const char*` 构造或赋值。
+
+5. **编码转换**  
+   - 可以方便地与 `QString` 相互转换（需指定编码，如 UTF-8、Latin-1）。
+
+---
+
+### **常见用途**
+1. **处理二进制数据**  
+   
+   ```cpp
+   QByteArray buffer;
+   buffer.resize(1024); // 分配 1KB 空间
+   ```
+   
+2. **与 `QString` 转换**  
+   ```cpp
+   QString str = "Hello, Qt";
+   QByteArray utf8Data = str.toUtf8(); // QString → UTF-8 QByteArray
+   QString fromUtf8 = QString::fromUtf8(utf8Data); // 还原为 QString
+   ```
+
+3. **文件读写**  
+   ```cpp
+   QFile file("data.bin");
+   if (file.open(QIODevice::ReadOnly)) {
+       QByteArray data = file.readAll(); // 读取全部内容
+   }
+   ```
+
+4. **网络通信**  
+   
+   ```cpp
+   QTcpSocket socket;
+   socket.write(QByteArray("PING")); // 发送原始字节
+   ```
+
+---
+
+### **常用方法**
+| 方法                                | 说明               |
+| ----------------------------------- | ------------------ |
+| `append(const QByteArray &)`        | 追加数据           |
+| `insert(int pos, const char *data)` | 插入数据           |
+| `remove(int pos, int len)`          | 删除部分数据       |
+| `indexOf(const QByteArray &)`       | 查找子序列         |
+| `toHex()`                           | 转为十六进制字符串 |
+| `fromBase64()`                      | 解码 Base64 数据   |
+| `split(char sep)`                   | 按分隔符拆分       |
+
+---
+
+### **示例代码**
+```cpp
+QByteArray data;
+data.append("Hello");       // 追加字符串
+data.append('\0');          // 追加空字符
+data.append("Qt", 2);       // 追加部分字符串
+
+qDebug() << data.size();    // 输出长度：8
+qDebug() << data.toHex();   // 输出十六进制格式
+```
+
+---
+
+### **注意事项**
+- 直接修改 `data()` 返回的指针时需谨慎（可能破坏隐式共享）。
+- 对性能敏感的场景（如频繁拼接），建议使用 `QByteArray::reserve()` 预分配空间。
+
+如果需要处理文本（尤其是 Unicode），通常优先使用 `QString`；若需操作原始字节或兼容 C 接口，则选择 `QByteArray`。
+
+
+
+## 网络 - `QNetworkAccessManager`
+
+**Qt5 中的 `QNetworkAccessManager`** 是 Qt 网络模块的核心类，用于管理 **HTTP/HTTPS 请求** 和 **网络资源访问**。它充当了一个高级的网络操作接口，封装了底层的协议细节，提供了异步、信号槽驱动的网络通信能力。
+
+---
+
+### **1. 核心功能**
+| **功能**         | **说明**                                   |
+| ---------------- | ------------------------------------------ |
+| **协议支持**     | HTTP/HTTPS、FTP（部分功能）                |
+| **请求方法**     | GET、POST、PUT、DELETE、HEAD 等            |
+| **异步操作**     | 通过信号槽机制返回结果，不阻塞主线程       |
+| **请求管理**     | 自动处理重定向、Cookie、代理等             |
+| **数据缓存**     | 支持磁盘缓存（需配合 `QNetworkDiskCache`） |
+| **SSL/TLS 安全** | 支持 HTTPS 加密通信                        |
+
+---
+
+### **2. 基本工作原理**
+```mermaid
+graph LR
+    A[应用程序] --> B[QNetworkAccessManager]
+    B --> C[发送QNetworkRequest]
+    B --> D[接收QNetworkReply]
+    D --> E[处理响应数据]
+```
+
+- **请求流程**：
+  1. 创建 `QNetworkRequest` 设置 URL 和头部
+  2. 调用 `get()`/`post()`/`put()` 等方法发送请求
+  3. 返回 `QNetworkReply` 对象处理响应
+  4. 通过信号槽获取结果
+
+---
+
+### **3. 关键特性详解**
+
+#### **3.1 异步非阻塞**
+所有网络操作均为异步，通过信号通知结果：
+```cpp
+QNetworkReply *reply = manager->get(request);
+connect(reply, &QNetworkReply::finished,  {
+    if (reply->error() == QNetworkReply::NoError) {
+        qDebug() << reply->readAll();
+    }
+    reply->deleteLater();  // 必须手动释放
+});
+```
+
+#### **3.2 请求/响应模型**
+| **类**            | **作用**                                       |
+| ----------------- | ---------------------------------------------- |
+| `QNetworkRequest` | 封装请求信息（URL、头部、优先级等）            |
+| `QNetworkReply`   | 处理响应数据（包含响应头、响应体、错误状态等） |
+
+#### **3.3 自动重定向**
+默认自动处理 HTTP 重定向（可通过属性关闭）：
+```cpp
+request.setAttribute(QNetworkRequest::FollowRedirectsAttribute, false);
+```
+
+#### **3.4 代理支持**
+```cpp
+QNetworkProxy proxy;
+proxy.setType(QNetworkProxy::HttpProxy);
+proxy.setHostName("proxy.example.com");
+proxy.setPort(8080);
+manager->setProxy(proxy);
+```
+
+---
+
+### **4. 实际应用示例**
+
+#### **4.1 发送 GET 请求**
+```cpp
+QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+QUrl url("https://api.example.com/data");
+QNetworkRequest request(url);
+
+QNetworkReply *reply = manager->get(request);
+connect(reply, &QNetworkReply::finished,  {
+    qDebug() << reply->readAll();
+    reply->deleteLater();
+});
+```
+
+#### **4.2 发送 POST 请求（JSON 数据）**
+```cpp
+QNetworkRequest request(url);
+request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+
+QJsonObject json;
+json["name"] = "Alice";
+json["age"] = 25;
+
+QNetworkReply *reply = manager->post(request, QJsonDocument(json).toJson());
+```
+
+#### **4.3 文件下载**
+```cpp
+QNetworkReply *reply = manager->get(request);
+connect(reply, &QNetworkReply::readyRead,  {
+    QFile file("download.zip");
+    if (file.open(QIODevice::Append)) {
+        file.write(reply->readAll());
+    }
+});
+```
+
+---
+
+### **5. 生命周期与内存管理**
+- **`QNetworkAccessManager`** 通常作为长期存在的对象（如主窗口的成员）
+- **`QNetworkReply`** 需在响应完成后调用 `deleteLater()` 释放：
+  ```cpp
+  connect(reply, &QNetworkReply::finished, reply, &QNetworkReply::deleteLater);
+  ```
+- 避免在槽函数外直接操作已销毁的 `reply` 对象
+
+---
+
+### **6. 高级功能扩展**
+
+#### **6.1 自定义缓存**
+```cpp
+QNetworkDiskCache *cache = new QNetworkDiskCache(this);
+cache->setCacheDirectory("path/to/cache");
+manager->setCache(cache);
+```
+
+#### **6.2 超时设置（Qt 5.15+）**
+```cpp
+request.setTransferTimeout(5000);  // 5秒超时
+```
+
+#### **6.3 处理 HTTPS 证书**
+```cpp
+QSslConfiguration sslConfig = request.sslConfiguration();
+sslConfig.setPeerVerifyMode(QSslSocket::VerifyNone);  // 禁用证书验证（测试用）
+request.setSslConfiguration(sslConfig);
+```
+
+---
+
+### **7. 信号列表**
+| **信号**                             | **触发时机**           |
+| ------------------------------------ | ---------------------- |
+| `finished()`                         | 请求完成（成功或失败） |
+| `downloadProgress(qint64, qint64)`   | 下载进度更新           |
+| `uploadProgress(qint64, qint64)`     | 上传进度更新           |
+| `sslErrors(const QList<QSslError>&)` | SSL 证书错误           |
+
+---
+
+### **8. 性能优化建议**
+1. **复用 `QNetworkAccessManager`**：避免频繁创建销毁
+2. **合理使用缓存**：减少重复请求
+3. **批量请求**：合并多个小请求
+4. **压缩数据**：使用 `Accept-Encoding: gzip`
+
+---
+
+### **9. 与同类技术对比**
+| **特性**       | `QNetworkAccessManager`    | `QNetworkReply` | C++ 原生库（如 cURL） |
+| -------------- | -------------------------- | --------------- | --------------------- |
+| **异步支持**   | ✅ 信号槽机制               | ✅ 信号槽机制    | ❌ 需手动实现          |
+| **跨平台**     | ✅ 全平台统一 API           | ✅ 全平台统一    | ⚠️ 需适配不同系统      |
+| **HTTP/HTTPS** | ✅ 完整支持                 | ✅ 完整支持      | ✅ 支持                |
+| **内存管理**   | 需手动释放 `QNetworkReply` | 需手动释放      | 需手动释放            |
+| **开发效率**   | ⭐⭐⭐⭐⭐（集成度高）          | ⭐⭐⭐⭐            | ⭐⭐（需更多底层代码）  |
+
+---
+
+### **10. 典型问题解决**
+#### **问题：请求超时无响应**
+**解决**：
+```cpp
+// 设置超时（Qt 5.15+）
+request.setTransferTimeout(30000);  // 30秒
+
+// 或手动超时检测
+QTimer::singleShot(30000,  {
+    if (reply && reply->isRunning()) {
+        reply->abort();
+        qDebug() << "Request timed out";
+    }
+});
+```
+
+#### **问题：HTTPS 证书验证失败**
+**解决（测试环境）**：
+```cpp
+QSslConfiguration sslConfig = QSslConfiguration::defaultConfiguration();
+sslConfig.setPeerVerifyMode(QSslSocket::VerifyNone);
+request.setSslConfiguration(sslConfig);
+```
+
+---
+
+### **总结**
+**`QNetworkAccessManager`** 是 Qt 网络编程的核心枢纽：
+- ✅ **简化网络操作**：封装底层协议细节  
+- ✅ **线程安全**：自动处理跨线程通信  
+- ✅ **高效异步**：基于信号槽的事件驱动模型  
+- ✅ **可扩展性**：支持缓存、代理、SSL 等高级功能  
+
+无论是简单的 API 调用还是复杂的文件传输，它都能提供可靠、高效的解决方案！ 🚀
+
+### 示例
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-qt/demo-qnetworkaccessmanager)
+
+在 `pro` 文件中手动添加 `QtNetwork` 模块，否则测试编译错误
+
+```
+QT += testlib network
+```
+
+测试
+
+```c++
+#include <QtTest>
+#include <QCoreApplication>
+#include <QtNetwork/QNetworkAccessManager>
+#include <QtNetwork/QNetworkReply>
+
+#include "qtexpectation.h"
+
+// add necessary includes here
+
+class TestMyTest : public QObject
+{
+    Q_OBJECT
+
+public:
+    TestMyTest();
+    ~TestMyTest();
+
+private slots:
+    void test_case1();
+
+};
+
+TestMyTest::TestMyTest()
+{
+
+}
+
+TestMyTest::~TestMyTest()
+{
+
+}
+
+void TestMyTest::test_case1()
+{
+    QString host = "192.168.235.128";
+    int port = 8080;
+
+    // 所有请求共享 QNetworkAccessManager 实例
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+
+    // 测试 HTTP 200 响应
+    QtExpectation *exp = new QtExpectation(2000);
+    QUrl url = QUrl(QString("http://%1:%2/api/v1/xxx").arg(host).arg(port));
+    QNetworkRequest request = QNetworkRequest(url);
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json; charset=utf-8");
+    QNetworkReply *reply = manager->get(request);
+    int errorCode = 0;
+    QString errorMessage;
+    QJsonValue data;
+    QString nonHttp20xResponse;
+    connect(reply, &QNetworkReply::finished, this, [reply, exp, &errorCode, &errorMessage, &data, &nonHttp20xResponse]() {
+        if (reply->error() == QNetworkReply::NoError) {
+            // 解析 json 为 QJsonDocument
+            QJsonParseError jsonParseError;
+            QJsonDocument jsonDocument = QJsonDocument::fromJson(reply->readAll(), &jsonParseError);
+            QJsonObject jsonObject = jsonDocument.object();
+            errorCode = jsonObject["errorCode"].toInt();
+            errorMessage = jsonObject["errorMessage"].toString();
+            data = jsonObject["data"];
+        } else {
+            // 输出错误信息（包括 HTTP 状态码）
+            QVariant statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
+            QString errorStr = reply->errorString();
+            QString responseStr = QString::fromUtf8(reply->readAll());
+            QString url = reply->url().toString();
+            nonHttp20xResponse = QString("HTTP 请求错误，状态码：%1，原因：%2，服务器响应：%3，url：%4")
+                                         .arg(statusCode.toInt())
+                                         .arg(errorStr)
+                                         .arg(responseStr)
+                                         .arg(url);
+        }
+        // 手动释放 reply
+        reply->deleteLater();
+
+        exp->fulfill();
+    });
+
+    QVERIFY(exp->wait());
+
+    QVERIFY2(errorCode == 90000, QString("errorCode=%1").arg(errorCode).toUtf8());
+    QVERIFY2(errorMessage == "资源 /api/v1/xxx 不存在！", QString("errorMessage=%1").arg(errorMessage).toUtf8());
+    QVERIFY(data.isNull());
+
+    exp = new QtExpectation(2000);
+    url = QUrl(QString("http://%1:%2/api/v1/testHttp400").arg(host).arg(port));
+    request = QNetworkRequest(url);
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json; charset=utf-8");
+    reply = manager->get(request);
+    errorCode = 0;
+    errorMessage = QString();
+    data = QJsonValue();
+    nonHttp20xResponse = QString();
+    connect(reply, &QNetworkReply::finished, this, [reply, exp, &errorCode, &errorMessage, &data, &nonHttp20xResponse]() {
+        if (reply->error() == QNetworkReply::NoError) {
+            // 解析 json 为 QJsonDocument
+            QJsonParseError jsonParseError;
+            QJsonDocument jsonDocument = QJsonDocument::fromJson(reply->readAll(), &jsonParseError);
+            QJsonObject jsonObject = jsonDocument.object();
+            errorCode = jsonObject["errorCode"].toInt();
+            errorMessage = jsonObject["errorMessage"].toString();
+            data = jsonObject["data"];
+        } else {
+            // 输出错误信息（包括 HTTP 状态码）
+            QVariant statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
+            QString errorStr = reply->errorString();
+            QString responseStr = QString::fromUtf8(reply->readAll());
+            QString url = reply->url().toString();
+            nonHttp20xResponse = QString("HTTP 请求错误，状态码：%1，原因：%2，服务器响应：%3，url：%4")
+                                         .arg(statusCode.toInt())
+                                         .arg(errorStr)
+                                         .arg(responseStr)
+                                         .arg(url);
+        }
+        // 手动释放 reply
+        reply->deleteLater();
+
+        exp->fulfill();
+    });
+
+    QVERIFY(exp->wait());
+
+    QVERIFY2(errorCode == 0, QString("errorCode=%1").arg(errorCode).toUtf8());
+    QVERIFY2(errorMessage == "", QString("errorMessage=%1").arg(errorMessage).toUtf8());
+    QVERIFY(data.isNull());
+    QVERIFY2(nonHttp20xResponse == "HTTP 请求错误，状态码：400，原因：Error transferring http://192.168.235.128:8080/api/v1/testHttp400 - server replied: ，服务器响应：{\"errorCode\":90000,\"errorMessage\":\"测试业务异常\",\"data\":null}，url：http://192.168.235.128:8080/api/v1/testHttp400", nonHttp20xResponse.toUtf8());
+
+    delete exp;
+    manager->deleteLater();
+    delete manager;
+}
+
+// 使用 QTEST_GUILESS_MAIN 替代 QTEST_APPLESS_MAIN，否则 QtExpectation 使用时报告错误
+QTEST_GUILESS_MAIN(TestMyTest)
+
+#include "tst_testmytest.moc"
+
 ```
 

@@ -1,5 +1,6 @@
 package com.future.demo.openfeign;
 
+import com.future.common.exception.EnableFutureExceptionHandler;
 import com.future.common.exception.ExceptionController;
 import com.future.demo.openfeign.util.Const;
 import com.future.demo.openfeign.util.Util;
@@ -11,7 +12,7 @@ import org.springframework.context.annotation.Import;
 import java.io.File;
 
 @SpringBootApplication
-@Import(value = {ExceptionController.class})
+@EnableFutureExceptionHandler
 @Slf4j
 public class Application {
     public static void main(String[] args) {
