@@ -4538,3 +4538,29 @@ outFile.close();
 4. 对于大型 JSON 数据，考虑使用流式处理而非一次性加载
 
 `QJsonDocument` 提供了 Qt 中处理 JSON 数据的高层接口，与 `QJsonObject`、`QJsonArray` 和 `QJsonValue` 一起构成了 Qt 的 JSON 处理体系。
+
+### 示例
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-qt/demo-qjsondocument)
+
+```c++
+void TestMyTest::test_case1()
+{
+    // QJsonObject 转换为 JSON 字符串
+    QJsonObject jsonObject;
+    jsonObject["name"] = "Dexter";
+    jsonObject["age"] = 11;
+    // 转换为 JSON 字符串
+    QJsonDocument jsonDocument = QJsonDocument(jsonObject);
+    QString json = jsonDocument.toJson();
+    QVERIFY2(json.toUtf8() == "{\n    \"age\": 11,\n    \"name\": \"Dexter\"\n}\n", json.toUtf8());
+
+
+    // JSON 字符串创建 QJsonDocument
+    jsonDocument = QJsonDocument::fromJson(json.toUtf8());
+    jsonObject = jsonDocument.object();
+    QVERIFY2("Dexter" == jsonObject["name"].toString().toUtf8(), jsonObject["name"].toString().toUtf8());
+    QVERIFY2(11 == jsonObject["age"].toInt(), QString("%1").arg(jsonObject["age"].toInt()).toUtf8());
+}
+```
+
