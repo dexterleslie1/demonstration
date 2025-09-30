@@ -909,6 +909,28 @@ Qt 的跨平台原理基于：
 
 
 
+## `QtCreator` - 创建`Auto Test Project`
+
+>提示：Auto Test Project 是 Qt Creator 提供的一种专门用于自动化测试的项目模板，它简化了 Qt 测试项目的创建和管理过程。
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-qt/demo-qtest)
+
+点击 `File` > `New File or Project`，在弹出框中选择 `Other Project` > `Auto Test Project`，在 `Project and Test Information` 向导界面中的 `Test case name` 填写 `TestMyTest`，其他默认值即可。
+
+修改 `void TestMyTest::test_case1()` 测试用例如下：
+
+```c++
+void TestMyTest::test_case1()
+{
+    int expected = 1;
+    QVERIFY2(1 == expected, "非预期测试");
+}
+```
+
+点击 `Run` 按钮运行测试即可。
+
+
+
 ## `QtCreator` - `QtCreator`和`Qt`版本对应吗？
 
 >提示：不完全严格对应，但有较强的兼容性关系。两者可以**混合搭配**使用，但某些组合有最佳实践。
@@ -4150,3 +4172,369 @@ MY_DEBUG << "This will be removed in release builds";
 >说明：`Widget` 窗口跳转到 `AnotherWidget` 窗口，`Widget` 窗口持有 `AnotherWidget` 窗口实例。`Widget` 窗口跳转到 `AnotherWidget` 窗口时先隐藏 `Widget` 窗口再显示 `AnotherWidget` 窗口。`AnotherWidget` 窗口返回 `Widget` 窗口时 `AnotherWidget` 发出 `void back()` 信号，`Widget` 窗口接收  信号并定义匿名槽处理信号先隐藏 `AnotherWidget` 窗口再显示 `Widget` 窗口。
 >
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-qt/demo-widget)
+
+
+
+## `QTest` - 概念
+
+`QTest` 是 Qt5 内置的轻量级单元测试框架，专门为 Qt 应用程序的测试而设计。它是 Qt Test 模块的核心组成部分，提供了一套完整的工具和宏来编写和运行单元测试。
+
+### QTest 的核心功能
+
+1. **单元测试支持**：测试单个函数或类的行为
+2. **数据驱动测试**：使用多组输入数据测试同一功能
+3. **GUI 测试**：模拟用户界面交互（鼠标/键盘事件）
+4. **性能测试**：测量代码执行时间和资源消耗
+5. **信号/槽测试**：验证信号发射和槽函数调用
+
+### QTest 的主要组成部分
+
+#### 1. 测试宏系统
+
+```cpp
+QVERIFY(condition)          // 基本断言
+QVERIFY2(condition, msg)    // 带错误信息的断言
+QCOMPARE(actual, expected)  // 比较实际值和期望值
+QTEST(actual, testData)     // 数据驱动测试比较
+QBENCHMARK                 // 性能测试标记
+```
+
+#### 2. 事件模拟功能
+
+```cpp
+QTest::mouseClick(widget, button)      // 模拟鼠标点击
+QTest::mouseDClick(widget, button)      // 模拟鼠标双击
+QTest::keyClick(widget, key)            // 模拟键盘按键
+QTest::keyPress(widget, key)            // 模拟按键按下
+QTest::keyRelease(widget, key)          // 模拟按键释放
+```
+
+#### 3. 数据驱动测试支持
+
+```cpp
+QTest::addColumn<Type>("name")  // 定义数据列
+QTest::newRow("name") << data   // 添加测试数据行
+QFETCH(Type, name)             // 获取测试数据
+```
+
+### QTest 的基本使用流程
+
+#### 1. 创建测试类
+
+```cpp
+#include <QtTest>
+
+class TestMyClass : public QObject
+{
+    Q_OBJECT
+public:
+    TestMyClass() {}
+    ~TestMyClass() {}
+
+private slots:
+    void testCase1();
+    void testCase2_data();
+    void testCase2();
+};
+```
+
+#### 2. 实现测试用例
+
+##### 简单测试用例
+
+```cpp
+void TestMyClass::testCase1()
+{
+    QString str = "Hello";
+    QVERIFY(!str.isEmpty());
+    QCOMPARE(str.length(), 5);
+}
+```
+
+##### 数据驱动测试
+
+```cpp
+void TestMyClass::testCase2_data()
+{
+    QTest::addColumn<QString>("input");
+    QTest::addColumn<QString>("result");
+    
+    QTest::newRow("lower") << "hello" << "HELLO";
+    QTest::newRow("upper") << "HELLO" << "HELLO";
+    QTest::newRow("mixed") << "Hello" << "HELLO";
+}
+
+void TestMyClass::testCase2()
+{
+    QFETCH(QString, input);
+    QFETCH(QString, result);
+    
+    QCOMPARE(input.toUpper(), result);
+}
+```
+
+#### 3. 添加测试主函数
+
+```cpp
+QTEST_APPLESS_MAIN(TestMyClass)
+#include "test_myclass.moc"  // 注意必须包含 moc 文件
+```
+
+### QTest 的特殊功能
+
+#### 1. GUI 组件测试
+
+```cpp
+void TestMyWidget::testButtonClick()
+{
+    QPushButton button("Click me");
+    QSignalSpy spy(&button, &QPushButton::clicked);
+    
+    // 模拟鼠标点击
+    QTest::mouseClick(&button, Qt::LeftButton);
+    
+    QCOMPARE(spy.count(), 1);  // 验证点击信号被发射
+}
+```
+
+#### 2. 性能测试
+
+```cpp
+void TestPerformance::benchmarkString()
+{
+    QString str = "This is a test string";
+    QBENCHMARK {
+        str.toUpper();
+    }
+}
+```
+
+#### 3. 信号测试
+
+```cpp
+void TestSignals::testValueChanged()
+{
+    MyObject obj;
+    QSignalSpy spy(&obj, &MyObject::valueChanged);
+    
+    obj.setValue(10);
+    
+    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.takeFirst().at(0).toInt(), 10);
+}
+```
+
+### QTest 的命令行参数
+
+运行测试时可用的参数：
+
+| 参数         | 说明                 |
+| ------------ | -------------------- |
+| `-o file`    | 输出结果到文件       |
+| `-xml`       | 生成 XML 格式输出    |
+| `-lightxml`  | 生成轻量级 XML 输出  |
+| `-functions` | 列出所有测试函数     |
+| `-datatags`  | 列出所有数据标签     |
+| `-silent`    | 静默模式，只输出错误 |
+| `-v1`        | 详细模式1            |
+| `-v2`        | 详细模式2            |
+| `-vs`        | 显示每个信号发射     |
+
+### QTest 的优势
+
+1. **与 Qt 深度集成**：完美支持 Qt 的信号槽机制和 GUI 组件
+2. **简单易用**：测试代码结构清晰，学习曲线平缓
+3. **轻量高效**：执行速度快，适合持续集成环境
+4. **跨平台**：支持所有 Qt 支持的平台
+5. **无需额外依赖**：作为 Qt 核心模块的一部分提供
+
+### QTest 的局限性
+
+1. 主要用于单元测试，不适合复杂的集成测试
+2. 测试报告功能相对简单
+3. 缺少一些高级测试功能（如 mock 对象）
+
+### 实际项目中的应用示例
+
+测试一个简单的计算器类：
+
+```cpp
+// calculator.h
+class Calculator {
+public:
+    int add(int a, int b) { return a + b; }
+    int multiply(int a, int b) { return a * b; }
+};
+
+// test_calculator.cpp
+#include <QtTest>
+#include "calculator.h"
+
+class TestCalculator : public QObject {
+    Q_OBJECT
+private slots:
+    void testAdd_data();
+    void testAdd();
+    void testMultiply();
+};
+
+void TestCalculator::testAdd_data()
+{
+    QTest::addColumn<int>("a");
+    QTest::addColumn<int>("b");
+    QTest::addColumn<int>("result");
+    
+    QTest::newRow("positive") << 2 << 3 << 5;
+    QTest::newRow("negative") << -2 << -3 << -5;
+    QTest::newRow("mixed") << -2 << 5 << 3;
+}
+
+void TestCalculator::testAdd()
+{
+    Calculator calc;
+    QFETCH(int, a);
+    QFETCH(int, b);
+    QFETCH(int, result);
+    
+    QCOMPARE(calc.add(a, b), result);
+}
+
+void TestCalculator::testMultiply()
+{
+    Calculator calc;
+    QBENCHMARK {
+        calc.multiply(123, 456);
+    }
+}
+
+QTEST_APPLESS_MAIN(TestCalculator)
+#include "test_calculator.moc"
+```
+
+通过 QTest 框架，开发者可以轻松为 Qt 应用程序编写全面的单元测试，确保代码质量和可靠性。
+
+### 示例
+
+>提示：使用 `Qt Creator` 窗口 `Auto Test Project`。
+>
+>详细用法请参考本站 [链接](/qt/README.html#qtcreator-创建auto-test-project)
+
+
+
+## `QJsonDocument`
+
+`QJsonDocument` 是 Qt5 中处理 JSON 数据的核心类，它提供了对 JSON 文档的封装和操作功能。
+
+### 基本概念
+
+`QJsonDocument` 是一个封装了完整 JSON 文档的类，它可以：
+- 表示内存中的 JSON 数据结构
+- 提供 JSON 数据的解析和序列化功能
+- 在 JSON 二进制格式和文本格式之间转换
+
+### 主要功能
+
+#### 1. JSON 数据表示
+
+`QJsonDocument` 可以表示两种 JSON 数据结构：
+- **JSON 对象**（对应 `QJsonObject`）
+- **JSON 数组**（对应 `QJsonArray`）
+
+#### 2. 数据转换
+
+提供多种格式转换方法：
+- 从 JSON 文本创建 `QJsonDocument` (`fromJson()`)
+- 将 `QJsonDocument` 转换为 JSON 文本 (`toJson()`)
+- 从二进制数据创建 (`fromBinaryData()`)
+- 转换为二进制数据 (`toBinaryData()`)
+
+#### 3. 数据访问
+
+提供对内部数据的访问：
+- `object()` - 获取 JSON 对象
+- `array()` - 获取 JSON 数组
+- `isObject()` / `isArray()` - 检查文档类型
+
+### 使用示例
+
+#### 创建 QJsonDocument
+
+```cpp
+// 从 JSON 字符串创建
+QString jsonString = "{\"name\":\"Alice\",\"age\":25}";
+QJsonDocument doc = QJsonDocument::fromJson(jsonString.toUtf8());
+
+// 从 QJsonObject 创建
+QJsonObject obj;
+obj["name"] = "Bob";
+obj["age"] = 30;
+QJsonDocument doc(obj);
+
+// 从 QJsonArray 创建
+QJsonArray arr;
+arr.append("item1");
+arr.append("item2");
+QJsonDocument doc(arr);
+```
+
+#### 使用 QJsonDocument
+
+```cpp
+// 检查文档类型
+if (doc.isObject()) {
+    QJsonObject obj = doc.object();
+    QString name = obj["name"].toString();
+    int age = obj["age"].toInt();
+    qDebug() << name << age;
+}
+
+// 转换为 JSON 字符串
+QString jsonText = doc.toJson();
+// 带缩进的格式化输出
+QString formattedJson = doc.toJson(QJsonDocument::Indented);
+```
+
+#### 文件读写
+
+```cpp
+// 从文件读取
+QFile file("data.json");
+file.open(QIODevice::ReadOnly);
+QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
+file.close();
+
+// 写入文件
+QFile outFile("output.json");
+outFile.open(QIODevice::WriteOnly);
+outFile.write(doc.toJson());
+outFile.close();
+```
+
+### 重要方法
+
+| 方法               | 说明                              |
+| ------------------ | --------------------------------- |
+| `fromJson()`       | 从 JSON 文本创建 QJsonDocument    |
+| `toJson()`         | 将 QJsonDocument 转换为 JSON 文本 |
+| `fromBinaryData()` | 从二进制数据创建 QJsonDocument    |
+| `toBinaryData()`   | 将 QJsonDocument 转换为二进制数据 |
+| `object()`         | 获取包含的 JSON 对象              |
+| `array()`          | 获取包含的 JSON 数组              |
+| `isNull()`         | 检查文档是否为空                  |
+| `isEmpty()`        | 检查文档是否为空或包含空对象/数组 |
+
+### 使用场景
+
+1. **配置文件处理**：读写 JSON 格式的配置文件
+2. **网络通信**：处理 REST API 的请求和响应
+3. **数据存储**：将结构化数据保存为 JSON 格式
+4. **数据交换**：在不同模块或系统间传递结构化数据
+
+### 注意事项
+
+1. 使用前确保包含头文件：`#include <QJsonDocument>`
+2. 项目文件中需要添加：`QT += core`
+3. 解析时建议检查 `isNull()` 或使用 `QJsonParseError` 处理错误
+4. 对于大型 JSON 数据，考虑使用流式处理而非一次性加载
+
+`QJsonDocument` 提供了 Qt 中处理 JSON 数据的高层接口，与 `QJsonObject`、`QJsonArray` 和 `QJsonValue` 一起构成了 Qt 的 JSON 处理体系。
