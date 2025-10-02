@@ -2425,6 +2425,184 @@ Widget::~Widget()
 
 
 
+## `UI`组件 - `QProgressDialog`
+
+`QProgressDialog` 是 Qt 提供的一个标准对话框类，专门用于向用户展示耗时操作的进度情况。它结合了进度条、文本提示和取消按钮，是 Qt 中最常用的加载提示组件之一。以下是它的核心特性和详细用法：
+
+---
+
+### **1. 基本特性**
+| 特性             | 说明                                                        |
+| ---------------- | ----------------------------------------------------------- |
+| **自动智能显示** | 根据操作耗时决定是否弹出（默认延迟2秒，避免短暂操作时闪烁） |
+| **进度显示模式** | 支持确定进度（精确百分比）和不确定进度（持续动画）两种模式  |
+| **用户中断**     | 内置取消按钮，允许用户终止操作                              |
+| **自适应布局**   | 自动调整文本、进度条和按钮的排列                            |
+| **模态控制**     | 可设置为模态（阻塞其他窗口）或非模态                        |
+
+---
+
+### **2. 基础用法示例**
+#### **确定进度模式（有明确进度）**
+```cpp
+// 创建对话框
+QProgressDialog progress("正在处理数据...", "取消", 0, 100, this);
+progress.setWindowTitle("请稍候");
+progress.setWindowModality(Qt::WindowModal); // 模态对话框
+
+// 模拟耗时操作
+for (int i = 0; i <= 100; ++i) {
+    progress.setValue(i);  // 更新进度
+    QThread::msleep(30);   // 模拟耗时
+    
+    // 检测用户取消
+    if (progress.wasCanceled()) {
+        qDebug() << "用户取消了操作";
+        break;
+    }
+}
+```
+
+#### **不确定进度模式（未知耗时）**
+```cpp
+QProgressDialog progress("正在连接服务器...", "取消", 0, 0, this);
+progress.setWindowTitle("请等待");
+progress.setCancelButton(nullptr); // 隐藏取消按钮
+progress.show();
+
+// 异步操作完成时关闭
+QTimer::singleShot(3000, &progress, &QProgressDialog::close);
+```
+
+---
+
+### **3. 关键方法详解**
+| 方法                           | 作用                                           |
+| ------------------------------ | ---------------------------------------------- |
+| `setValue(int)`                | 设置当前进度值（范围在min~max之间）            |
+| `setLabelText(const QString&)` | 动态更新提示文本（如："已完成50%"）            |
+| `setCancelButtonText()`        | 自定义取消按钮文字                             |
+| `setMinimumDuration(int ms)`   | 设置延迟显示时间（默认2000ms，避免短操作闪烁） |
+| `setAutoClose(bool)`           | 操作完成后是否自动关闭（默认true）             |
+| `setAutoReset(bool)`           | 完成后是否自动重置进度（默认true）             |
+
+---
+
+### **4. 高级功能实现**
+#### **结合异步任务（推荐方式）**
+```cpp
+void MainWindow::startLongOperation()
+{
+    QProgressDialog progress("处理中...", "取消", 0, 100, this);
+    
+    // 使用QtConcurrent运行后台任务
+    QFutureWatcher<void> watcher;
+    QObject::connect(&watcher, &QFutureWatcher<void>::progressValueChanged,
+                     &progress, &QProgressDialog::setValue);
+    QObject::connect(&watcher, &QFutureWatcher<void>::finished,
+                     &progress, &QProgressDialog::reset);
+    QObject::connect(&progress, &QProgressDialog::canceled,
+                     &watcher, &QFutureWatcher<void>::cancel);
+    
+    watcher.setFuture(QtConcurrent::run({
+        for (int i = 0; i <= 100; ++i) {
+            if (watcher.isCanceled()) break;
+            QThread::msleep(50);
+            watcher.setProgressValue(i);
+        }
+    }));
+    
+    progress.exec(); // 模态显示
+}
+```
+
+#### **自定义样式**
+```cpp
+// 修改进度条样式
+progress.setStyleSheet(
+    "QProgressBar {"
+    "   border: 2px solid grey;"
+    "   border-radius: 5px;"
+    "   text-align: center;"
+    "}"
+    "QProgressBar::chunk {"
+    "   background-color: #05B8CC;"
+    "   width: 10px;"
+    "}"
+);
+```
+
+---
+
+### **5. 注意事项**
+1. **线程安全**：必须在主线程（GUI线程）操作`QProgressDialog`
+2. **性能影响**：避免高频调用`setValue()`（>100次/秒），可适当降低更新频率
+3. **模态陷阱**：模态对话框会阻塞事件循环，确保在循环中调用`QApplication::processEvents()`
+4. **替代方案**：极长时间操作（>1分钟）建议改用分阶段进度+任务描述
+
+---
+
+### **6. 典型应用场景**
+- 文件批量处理
+- 网络请求等待
+- 数据导入/导出
+- 复杂计算过程
+
+如果需要实现更复杂的加载动画（如GIF效果），建议结合`QLabel`+`QMovie`创建自定义对话框。您有具体的应用场景需要代码示例吗？
+
+### 示例
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-qt/demo-qprogressdialog)
+
+```c++
+#include "widget.h"
+#include "ui_widget.h"
+#include <QProgressDialog>
+#include <QTimer>
+
+Widget::Widget(QWidget *parent)
+    : QWidget(parent)
+    , ui(new Ui::Widget)
+{
+    ui->setupUi(this);
+
+    connect(ui->pushButton, &QPushButton::clicked, this, [this]() {
+        // 显示等待对话框
+        QProgressDialog *progress = new QProgressDialog(this);
+        progress->setLabelText("正在连接服务器...");
+        progress->setCancelButton(nullptr);
+        // 禁用窗口关闭按钮
+        progress->setWindowFlags(
+                    // 保留对话框特性
+                    Qt::Dialog |
+                    // 禁用默认窗口按钮
+                    Qt::CustomizeWindowHint);
+        progress->setWindowModality(Qt::WindowModal);
+        // 不确定进度模式
+        progress->setRange(0, 0);
+        // 立即显示
+        progress->setMinimumDuration(0);
+        progress->show();
+
+        // 异步操作完成时关闭
+        QTimer::singleShot(3000, progress, [progress](){
+            progress->close();
+            // 安全删除
+            progress->deleteLater();
+        });
+    });
+}
+
+Widget::~Widget()
+{
+    delete ui;
+}
+
+
+```
+
+
+
 ## 布局 - 类型
 
 Qt5 提供了多种布局管理器（Layout Managers），用于自动排列和调整子控件的位置和大小。使用布局可以确保界面在不同平台和窗口尺寸下都能正确显示。
@@ -5324,6 +5502,8 @@ request.setSslConfiguration(sslConfig);
 
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-qt/demo-qnetworkaccessmanager)
 
+运行本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-java/demo-library/demo-openfeign) 协助测试。
+
 在 `pro` 文件中手动添加 `QtNetwork` 模块，否则测试编译错误
 
 ```
@@ -5382,23 +5562,29 @@ void TestMyTest::test_case1()
     int errorCode = 0;
     QString errorMessage;
     QJsonValue data;
-    QString nonHttp20xResponse;
-    connect(reply, &QNetworkReply::finished, this, [reply, exp, &errorCode, &errorMessage, &data, &nonHttp20xResponse]() {
+    connect(reply, &QNetworkReply::finished, this, [reply, exp, &errorCode, &errorMessage, &data]() {
         if (reply->error() == QNetworkReply::NoError) {
             // 解析 json 为 QJsonDocument
             QJsonParseError jsonParseError;
-            QJsonDocument jsonDocument = QJsonDocument::fromJson(reply->readAll(), &jsonParseError);
-            QJsonObject jsonObject = jsonDocument.object();
-            errorCode = jsonObject["errorCode"].toInt();
-            errorMessage = jsonObject["errorMessage"].toString();
-            data = jsonObject["data"];
+            QByteArray byteArray = reply->readAll();
+            QJsonDocument jsonDocument = QJsonDocument::fromJson(byteArray, &jsonParseError);
+            if(jsonParseError.error == QJsonParseError::NoError) {
+                QJsonObject jsonObject = jsonDocument.object();
+                errorCode = jsonObject["errorCode"].toInt();
+                errorMessage = jsonObject["errorMessage"].toString();
+                data = jsonObject["data"];
+            } else {
+                errorMessage = QString("解析服务器响应 json 时错误，原因：%1，响应：%2")
+                        .arg(jsonParseError.errorString())
+                        .arg(QString::fromUtf8(byteArray));
+            }
         } else {
             // 输出错误信息（包括 HTTP 状态码）
             QVariant statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
             QString errorStr = reply->errorString();
             QString responseStr = QString::fromUtf8(reply->readAll());
             QString url = reply->url().toString();
-            nonHttp20xResponse = QString("HTTP 请求错误，状态码：%1，原因：%2，服务器响应：%3，url：%4")
+            errorMessage = QString("HTTP 请求错误，状态码：%1，原因：%2，服务器响应：%3，url：%4")
                                          .arg(statusCode.toInt())
                                          .arg(errorStr)
                                          .arg(responseStr)
@@ -5416,31 +5602,39 @@ void TestMyTest::test_case1()
     QVERIFY2(errorMessage == "资源 /api/v1/xxx 不存在！", QString("errorMessage=%1").arg(errorMessage).toUtf8());
     QVERIFY(data.isNull());
 
+    // 测试解析服务器 json 响应错误
     exp = new QtExpectation(2000);
-    url = QUrl(QString("http://%1:%2/api/v1/testHttp400").arg(host).arg(port));
+    url = QUrl(QString("http://%1:%2/api/v1/xxx").arg(host).arg(port));
     request = QNetworkRequest(url);
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json; charset=utf-8");
     reply = manager->get(request);
     errorCode = 0;
     errorMessage = QString();
     data = QJsonValue();
-    nonHttp20xResponse = QString();
-    connect(reply, &QNetworkReply::finished, this, [reply, exp, &errorCode, &errorMessage, &data, &nonHttp20xResponse]() {
+    connect(reply, &QNetworkReply::finished, this, [reply, exp, &errorCode, &errorMessage, &data]() {
         if (reply->error() == QNetworkReply::NoError) {
             // 解析 json 为 QJsonDocument
             QJsonParseError jsonParseError;
-            QJsonDocument jsonDocument = QJsonDocument::fromJson(reply->readAll(), &jsonParseError);
-            QJsonObject jsonObject = jsonDocument.object();
-            errorCode = jsonObject["errorCode"].toInt();
-            errorMessage = jsonObject["errorMessage"].toString();
-            data = jsonObject["data"];
+            QByteArray byteArray = reply->readAll();
+            byteArray = byteArray.append(QString("xxx"));
+            QJsonDocument jsonDocument = QJsonDocument::fromJson(byteArray, &jsonParseError);
+            if(jsonParseError.error == QJsonParseError::NoError) {
+                QJsonObject jsonObject = jsonDocument.object();
+                errorCode = jsonObject["errorCode"].toInt();
+                errorMessage = jsonObject["errorMessage"].toString();
+                data = jsonObject["data"];
+            } else {
+                errorMessage = QString("解析服务器响应 json 时错误，原因：%1，响应：%2")
+                        .arg(jsonParseError.errorString())
+                        .arg(QString::fromUtf8(byteArray));
+            }
         } else {
             // 输出错误信息（包括 HTTP 状态码）
             QVariant statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
             QString errorStr = reply->errorString();
             QString responseStr = QString::fromUtf8(reply->readAll());
             QString url = reply->url().toString();
-            nonHttp20xResponse = QString("HTTP 请求错误，状态码：%1，原因：%2，服务器响应：%3，url：%4")
+            errorMessage = QString("HTTP 请求错误，状态码：%1，原因：%2，服务器响应：%3，url：%4")
                                          .arg(statusCode.toInt())
                                          .arg(errorStr)
                                          .arg(responseStr)
@@ -5455,9 +5649,57 @@ void TestMyTest::test_case1()
     QVERIFY(exp->wait());
 
     QVERIFY2(errorCode == 0, QString("errorCode=%1").arg(errorCode).toUtf8());
-    QVERIFY2(errorMessage == "", QString("errorMessage=%1").arg(errorMessage).toUtf8());
+    QVERIFY2(errorMessage == "解析服务器响应 json 时错误，原因：garbage at the end of the document，响应：{\"errorCode\":90000,\"errorMessage\":\"资源 /api/v1/xxx 不存在！\",\"data\":null}xxx", QString("errorMessage=%1").arg(errorMessage).toUtf8());
     QVERIFY(data.isNull());
-    QVERIFY2(nonHttp20xResponse == "HTTP 请求错误，状态码：400，原因：Error transferring http://192.168.235.128:8080/api/v1/testHttp400 - server replied: ，服务器响应：{\"errorCode\":90000,\"errorMessage\":\"测试业务异常\",\"data\":null}，url：http://192.168.235.128:8080/api/v1/testHttp400", nonHttp20xResponse.toUtf8());
+
+    // 测试非 HTTP 200 响应
+    exp = new QtExpectation(2000);
+    url = QUrl(QString("http://%1:%2/api/v1/testHttp400").arg(host).arg(port));
+    request = QNetworkRequest(url);
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json; charset=utf-8");
+    reply = manager->get(request);
+    errorCode = 0;
+    errorMessage = QString();
+    data = QJsonValue();
+    connect(reply, &QNetworkReply::finished, this, [reply, exp, &errorCode, &errorMessage, &data]() {
+        if (reply->error() == QNetworkReply::NoError) {
+            // 解析 json 为 QJsonDocument
+            QJsonParseError jsonParseError;
+            QByteArray byteArray = reply->readAll();
+            QJsonDocument jsonDocument = QJsonDocument::fromJson(byteArray, &jsonParseError);
+            if(jsonParseError.error == QJsonParseError::NoError) {
+                QJsonObject jsonObject = jsonDocument.object();
+                errorCode = jsonObject["errorCode"].toInt();
+                errorMessage = jsonObject["errorMessage"].toString();
+                data = jsonObject["data"];
+            } else {
+                errorMessage = QString("解析服务器响应 json 时错误，原因：%1，响应：%2")
+                        .arg(jsonParseError.errorString())
+                        .arg(QString::fromUtf8(byteArray));
+            }
+        } else {
+            // 输出错误信息（包括 HTTP 状态码）
+            QVariant statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
+            QString errorStr = reply->errorString();
+            QString responseStr = QString::fromUtf8(reply->readAll());
+            QString url = reply->url().toString();
+            errorMessage = QString("HTTP 请求错误，状态码：%1，原因：%2，服务器响应：%3，url：%4")
+                                         .arg(statusCode.toInt())
+                                         .arg(errorStr)
+                                         .arg(responseStr)
+                                         .arg(url);
+        }
+        // 手动释放 reply
+        reply->deleteLater();
+
+        exp->fulfill();
+    });
+
+    QVERIFY(exp->wait());
+
+    QVERIFY2(errorCode == 0, QString("errorCode=%1").arg(errorCode).toUtf8());
+    QVERIFY(data.isNull());
+    QVERIFY2(errorMessage == "HTTP 请求错误，状态码：400，原因：Error transferring http://192.168.235.128:8080/api/v1/testHttp400 - server replied: ，服务器响应：{\"errorCode\":90000,\"errorMessage\":\"测试业务异常\",\"data\":null}，url：http://192.168.235.128:8080/api/v1/testHttp400", errorMessage.toUtf8());
 
     delete exp;
     manager->deleteLater();
