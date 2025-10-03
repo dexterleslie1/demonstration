@@ -31,11 +31,17 @@ Widget::Widget(QWidget *parent)
         this->hide();
         this->mainWidget->show();
     });
+
+    // 接收 backToInfo 信号
+    connect(this->mainWidget, &MainWidget::backToInfo, this, [this](){
+        this->mainWidget->hide();
+        this->show();
+    });
 }
 
 Widget::~Widget()
 {
-    delete ui;
     delete this->mainWidget;
+    delete ui;
 }
 

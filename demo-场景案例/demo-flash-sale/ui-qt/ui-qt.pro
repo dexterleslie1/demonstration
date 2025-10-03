@@ -1,4 +1,4 @@
-QT       += core gui
+QT       += core gui network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -18,14 +18,32 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
     main.cpp \
     main_widget.cpp \
+    pagecreateproduct.cpp \
+    pagelistbymerchantid.cpp \
+    pagelistbyuserid.cpp \
+    pageproductlist.cpp \
+    productinfowidget.cpp \
+    productpurchasewidget.cpp \
     widget.cpp
 
 HEADERS += \
     main_widget.h \
+    pagecreateproduct.h \
+    pagelistbymerchantid.h \
+    pagelistbyuserid.h \
+    pageproductlist.h \
+    productinfowidget.h \
+    productpurchasewidget.h \
     widget.h
 
 FORMS += \
     main_widget.ui \
+    pagecreateproduct.ui \
+    pagelistbymerchantid.ui \
+    pagelistbyuserid.ui \
+    pageproductlist.ui \
+    productinfowidget.ui \
+    productpurchasewidget.ui \
     widget.ui
 
 # Default rules for deployment.
