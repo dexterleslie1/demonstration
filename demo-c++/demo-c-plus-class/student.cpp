@@ -1,4 +1,5 @@
 #include "student.h"
+#include <iostream>
 
 // Student 构造函数调用基类 Person(name, age) 构造函数
 Student::Student(std::string name, int age, int grade)
@@ -11,4 +12,12 @@ Student::Student(std::string name, int age, int grade)
 
 Student::~Student() {
 
+}
+
+// 重写基类方法
+void Student::sayHi() {
+    // 调用基类方法
+    Person::sayHi();
+
+    std::cout << "Student say hi grade=" << this->grade << std::endl;
 }

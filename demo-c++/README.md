@@ -2497,7 +2497,7 @@ int main() {
 
 ## `C++`语法 - 类继承
 
->说明：`Student` 类继承 `Person` 类。
+>说明：`Student` 类继承 `Person` 类，`Student` 重写 `Person` 基类 `void sayHi()` 方法。
 >
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-c++/demo-c-plus-class)
 
@@ -2561,6 +2561,9 @@ private:
 public:
     Student(std::string name, int age, int grade);
     ~Student();
+
+    // 声明 sayHi 方法准备重写
+    void sayHi();
 };
 
 #endif // STUDENT_H
@@ -2571,6 +2574,7 @@ public:
 
 ```c++
 #include "student.h"
+#include <iostream>
 
 // Student 构造函数调用基类 Person(name, age) 构造函数
 Student::Student(std::string name, int age, int grade)
@@ -2583,6 +2587,14 @@ Student::Student(std::string name, int age, int grade)
 
 Student::~Student() {
 
+}
+
+// 重写基类方法
+void Student::sayHi() {
+    // 调用基类方法
+    Person::sayHi();
+
+    std::cout << "Student say hi grade=" << this->grade << std::endl;
 }
 
 ```

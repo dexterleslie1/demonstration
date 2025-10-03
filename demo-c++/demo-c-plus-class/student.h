@@ -11,6 +11,9 @@ private:
 public:
     Student(std::string name, int age, int grade);
     ~Student();
+
+    // 声明 sayHi 方法准备重写
+    void sayHi();
 };
 
 #endif // STUDENT_H
