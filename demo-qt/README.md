@@ -2168,6 +2168,411 @@ Widget::~Widget()
 
 
 
+## `UI`组件 - `QComboBox`
+
+QComboBox 是 Qt 框架中一个核心的 GUI 控件，它提供了一个下拉选择框，允许用户从预定义的选项列表中选择一个值。它是 Qt 中最常用的输入控件之一，功能类似于 HTML 中的 `<select>` 元素。
+
+### 核心特性
+
+#### 1. 基本功能
+- **下拉列表**：点击时显示选项列表
+- **单选**：用户只能选择一个选项
+- **文本显示**：显示当前选中的选项文本
+- **数据关联**：每个选项可以关联自定义数据
+
+#### 2. 主要用途
+- 提供预定义选项供用户选择
+- 替代复杂的单选按钮组
+- 作为表单中的选择控件
+- 实现分类导航菜单
+
+### 基本用法
+
+#### 创建和添加选项
+
+```cpp
+#include <QComboBox>
+
+// 创建组合框
+QComboBox *comboBox = new QComboBox(parentWidget);
+
+// 添加简单选项
+comboBox->addItem("Option 1");
+comboBox->addItem("Option 2");
+comboBox->addItem("Option 3");
+
+// 添加带图标的选项
+comboBox->addItem(QIcon(":/images/icon.png"), "Icon Option");
+
+// 添加带用户数据的选项
+comboBox->addItem("Data Option", QVariant(42));
+```
+
+#### 获取当前选择
+
+```cpp
+// 获取当前选择的文本
+QString selectedText = comboBox->currentText();
+
+// 获取当前选择的索引
+int selectedIndex = comboBox->currentIndex();
+
+// 获取关联的用户数据
+QVariant userData = comboBox->currentData();
+int value = userData.toInt(); // 转换为具体类型
+```
+
+#### 响应选择变化
+
+```cpp
+// 连接索引变化信号
+connect(comboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
+        int index {
+    qDebug() << "Selected index changed to:" << index;
+});
+
+// 连接文本变化信号
+connect(comboBox, &QComboBox::currentTextChanged,
+        const QString &text {
+    qDebug() << "Selected text changed to:" << text;
+});
+```
+
+### 高级功能
+
+#### 1. 可编辑组合框
+
+```cpp
+// 允许用户输入自定义值
+comboBox->setEditable(true);
+
+// 设置占位文本
+comboBox->setPlaceholderText("Select or type...");
+
+// 限制输入内容
+comboBox->setValidator(new QIntValidator(0, 100, comboBox));
+
+// 自动完成功能
+QCompleter *completer = new QCompleter(comboBox);
+comboBox->setCompleter(completer);
+```
+
+#### 2. 自定义视图
+
+```cpp
+// 使用自定义模型
+QStandardItemModel *model = new QStandardItemModel(comboBox);
+model->appendRow(new QStandardItem(QIcon(":/red.png"), "Red"));
+model->appendRow(new QStandardItem(QIcon(":/green.png"), "Green"));
+model->appendRow(new QStandardItem(QIcon(":/blue.png"), "Blue"));
+comboBox->setModel(model);
+
+// 自定义视图样式
+QListView *view = new QListView();
+view->setStyleSheet("QListView::item { height: 40px; }");
+comboBox->setView(view);
+```
+
+#### 3. 分组选项
+
+```cpp
+QStandardItemModel *model = new QStandardItemModel(comboBox);
+
+// 创建分组
+QStandardItem *colorsGroup = new QStandardItem("Colors");
+colorsGroup->setFlags(Qt::NoItemFlags); // 不可选择
+model->appendRow(colorsGroup);
+
+// 添加颜色选项
+colorsGroup->appendRow(new QStandardItem("Red"));
+colorsGroup->appendRow(new QStandardItem("Green"));
+colorsGroup->appendRow(new QStandardItem("Blue"));
+
+// 创建另一个分组
+QStandardItem *sizesGroup = new QStandardItem("Sizes");
+sizesGroup->setFlags(Qt::NoItemFlags);
+model->appendRow(sizesGroup);
+
+// 添加尺寸选项
+sizesGroup->appendRow(new QStandardItem("Small"));
+sizesGroup->appendRow(new QStandardItem("Medium"));
+sizesGroup->appendRow(new QStandardItem("Large"));
+
+comboBox->setModel(model);
+```
+
+### 样式定制
+
+#### 使用样式表
+
+```cpp
+comboBox->setStyleSheet(
+    "QComboBox {"
+    "   border: 1px solid #ccc;"
+    "   border-radius: 3px;"
+    "   padding: 5px;"
+    "   min-width: 120px;"
+    "   background-color: white;"
+    "}"
+    "QComboBox:hover {"
+    "   border-color: #66afe9;"
+    "}"
+    "QComboBox::drop-down {"
+    "   subcontrol-origin: padding;"
+    "   subcontrol-position: top right;"
+    "   width: 20px;"
+    "   border-left: 1px solid #ccc;"
+    "}"
+    "QComboBox::down-arrow {"
+    "   image: url(:/icons/down-arrow.png);"
+    "   width: 12px;"
+    "   height: 12px;"
+    "}"
+    "QComboBox QAbstractItemView {"
+    "   border: 1px solid #ccc;"
+    "   selection-background-color: #e0e0e0;"
+    "   outline: none;"
+    "}"
+);
+```
+
+#### 自定义委托
+
+```cpp
+class ColorItemDelegate : public QStyledItemDelegate {
+public:
+    void paint(QPainter *painter, const QStyleOptionViewItem &option,
+               const QModelIndex &index) const override {
+        if (option.state & QStyle::State_Selected) {
+            painter->fillRect(option.rect, option.palette.highlight());
+        }
+        
+        QColor color = index.data(Qt::UserRole).value<QColor>();
+        painter->setBrush(color);
+        painter->setPen(Qt::NoPen);
+        painter->drawRect(option.rect.adjusted(5, 5, -5, -5));
+        
+        QStyledItemDelegate::paint(painter, option, index);
+    }
+    
+    QSize sizeHint(const QStyleOptionViewItem &option,
+                   const QModelIndex &index) const override {
+        return QSize(100, 30);
+    }
+};
+
+// 使用自定义委托
+comboBox->setItemDelegate(new ColorItemDelegate());
+```
+
+### 最佳实践
+
+#### 1. 数据绑定
+
+```cpp
+// 绑定到数据结构
+struct Product {
+    int id;
+    QString name;
+    double price;
+};
+
+QList<Product> products = {
+    {1, "Product A", 19.99},
+    {2, "Product B", 29.99},
+    {3, "Product C", 39.99}
+};
+
+for (const Product &product : products) {
+    comboBox->addItem(product.name, QVariant::fromValue(product));
+}
+
+// 获取选中的产品
+Product selectedProduct = comboBox->currentData().value<Product>();
+```
+
+#### 2. 动态更新
+
+```cpp
+// 动态添加选项
+comboBox->addItem("New Option");
+
+// 动态移除选项
+comboBox->removeItem(2); // 按索引移除
+
+// 清除所有选项
+comboBox->clear();
+
+// 更新现有选项
+comboBox->setItemText(0, "Updated Option");
+comboBox->setItemData(0, QVariant(100), Qt::UserRole);
+```
+
+#### 3. 性能优化
+
+```cpp
+// 对于大量选项，使用模型
+QStandardItemModel *model = new QStandardItemModel(comboBox);
+for (int i = 0; i < 1000; ++i) {
+    QStandardItem *item = new QStandardItem(QString("Item %1").arg(i));
+    item->setData(i, Qt::UserRole);
+    model->appendRow(item);
+}
+comboBox->setModel(model);
+
+// 使用代理提高性能
+comboBox->setItemDelegate(new QStyledItemDelegate());
+```
+
+### 常见问题解决方案
+
+#### 问题1：选项文本显示不全
+
+**解决方案**：
+
+```cpp
+// 设置最小宽度
+comboBox->setMinimumWidth(200);
+
+// 设置尺寸策略
+comboBox->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+
+// 使用自定义视图
+QListView *view = new QListView();
+view->setMinimumWidth(300);
+comboBox->setView(view);
+```
+
+#### 问题2：禁用某些选项
+
+```cpp
+// 使用模型时
+QStandardItem *item = new QStandardItem("Disabled Option");
+item->setFlags(item->flags() & ~Qt::ItemIsEnabled);
+model->appendRow(item);
+```
+
+#### 问题3：多列显示
+
+```cpp
+QTableView *view = new QTableView();
+view->setModel(model);
+view->setSelectionBehavior(QAbstractItemView::SelectRows);
+view->setSelectionMode(QAbstractItemView::SingleSelection);
+view->horizontalHeader()->setVisible(false);
+view->verticalHeader()->setVisible(false);
+view->setShowGrid(false);
+
+// 设置列宽
+view->setColumnWidth(0, 100);
+view->setColumnWidth(1, 150);
+
+comboBox->setView(view);
+```
+
+### 实际应用示例：国家选择器
+
+```cpp
+class CountryComboBox : public QComboBox {
+    Q_OBJECT
+public:
+    explicit CountryComboBox(QWidget *parent = nullptr) : QComboBox(parent) {
+        loadCountries();
+        connect(this, QOverload<int>::of(&QComboBox::currentIndexChanged),
+                this, &CountryComboBox::onCountryChanged);
+    }
+    
+    QString countryCode() const {
+        return currentData().toString();
+    }
+    
+    QString countryName() const {
+        return currentText();
+    }
+
+signals:
+    void countryChanged(const QString &code, const QString &name);
+
+private:
+    void loadCountries() {
+        // 从文件或资源加载国家数据
+        QMap<QString, QString> countries = {
+            {"US", "United States"},
+            {"GB", "United Kingdom"},
+            {"DE", "Germany"},
+            {"FR", "France"},
+            {"JP", "Japan"},
+            {"CN", "China"}
+        };
+        
+        // 添加选项
+        for (auto it = countries.begin(); it != countries.end(); ++it) {
+            addItem(it.value(), it.key());
+        }
+        
+        // 按国家名称排序
+        model()->sort(0);
+    }
+    
+private slots:
+    void onCountryChanged(int index) {
+        Q_UNUSED(index)
+        emit countryChanged(countryCode(), countryName());
+    }
+};
+```
+
+### 总结
+
+QComboBox 是 Qt 中功能强大且灵活的下拉选择控件，具有以下特点：
+1. **基本功能**：提供简单的下拉选择
+2. **高级特性**：支持可编辑、自定义视图、分组选项等
+3. **数据绑定**：可关联任意用户数据
+4. **样式定制**：通过样式表和委托高度可定制
+5. **信号机制**：提供丰富的信号用于响应选择变化
+
+在 Qt 应用程序中，QComboBox 是处理预定义选项选择的理想控件，适用于各种场景，从简单的表单选择到复杂的导航菜单。通过合理使用其高级功能，可以创建出既美观又实用的用户界面。
+
+### 示例
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-qt/demo-qcombobox)
+
+```c++
+#include "widget.h"
+#include "ui_widget.h"
+
+#include <QDebug>
+
+Widget::Widget(QWidget *parent)
+    : QWidget(parent)
+    , ui(new Ui::Widget)
+{
+    ui->setupUi(this);
+
+    // 初始化 QComboBox
+    ui->comboBox->addItem("全部", QVariant(""));
+    ui->comboBox->addItem("未支付", QVariant("Unpay"));
+    ui->comboBox->addItem("未发货", QVariant("Undelivery"));
+
+    // 点击查询按钮
+    connect(ui->pushButton, &QPushButton::clicked, this, [this](){
+        // 获取当前用户数据
+        QVariant variant = ui->comboBox->currentData();
+        QString status = variant.toString();
+        qDebug() << "data=" << status;
+    });
+}
+
+Widget::~Widget()
+{
+    delete ui;
+}
+
+
+```
+
+
+
 ## `UI`组件 - 信号和槽机制 - 概念
 
 Qt5 的 **信号和槽（Signals & Slots）** 是 Qt 框架的核心机制，用于实现对象之间的通信。它是一种 **松耦合、类型安全** 的事件处理方式，比传统的回调函数更灵活、更安全。
