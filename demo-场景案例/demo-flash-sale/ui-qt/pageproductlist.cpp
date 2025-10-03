@@ -9,6 +9,8 @@
 #include <QMessageBox>
 #include <QThread>
 
+#include "productinfowidget.h"
+
 PageProductList::PageProductList(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::PageProductList)
@@ -66,7 +68,26 @@ void PageProductList::reloadProductList() {
                 if(errorCode > 0) {
                     QMessageBox::critical(this, "错误", errorMessage);
                 } else {
+                    // 删除 gridLayout 所有子元素
+                    int count = this->ui->gridLayout->count();
+                    for(int i=0;i<count;i++) {
+                        QLayoutItem *item = this->ui->gridLayout->itemAt(i);
+                        QWidget *widget = item->widget();
+                        widget->deleteLater();
+                    }
 
+                    for(int i=0;i<data.size();i++) {
+                        QJsonObject productObject = data[i].toObject();
+                        long id = productObject["id"].toVariant().LongLong;
+                        QString name = productObject["name"].toString();
+                        int stockAmount = productObject["stock"].toInt();
+                        bool flashSale = productObject["flashSale"].toBool();
+                        int toFlashSaleStartTimeRemainingSeconds = productObject["toFlashSaleStartTimeRemainingSeconds"].toInt();
+                        int toFlashSaleEndTimeRemainingSeconds = productObject["toFlashSaleEndTimeRemainingSeconds"].toInt();
+                        ProductInfoWidget *widget = new ProductInfoWidget(this);
+                        widget->configureWithData(id, name, stockAmount, flashSale, toFlashSaleStartTimeRemainingSeconds, toFlashSaleEndTimeRemainingSeconds);
+                        this->ui->gridLayout->addWidget(widget, (i-i%2)/2, i%2);
+                    }
                 }
             } else {
                 QString errorMessage = QString("解析服务器响应 json 时错误，原因：%1，响应：%2")
