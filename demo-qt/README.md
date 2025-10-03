@@ -3914,6 +3914,147 @@ formLayout->parentWidget()->setStyleSheet("
 
 
 
+## 布局 - `QGridLayout`
+
+在 Qt5 中，`QGridLayout` 是用于 **网格化布局** 的核心类，它允许将控件（Widgets）按照 **行和列组成的矩阵** 排列，类似于电子表格的结构。以下是它的核心特性和用法详解：
+
+---
+
+### **1. 核心特性**
+| 特性          | 说明                                                         |
+| ------------- | ------------------------------------------------------------ |
+| **网格结构**  | 控件放置在由行（row）和列（column）组成的网格中（索引从0开始） |
+| **动态扩展**  | 行列自动适应内容，支持通过拉伸因子（Stretch）控制比例        |
+| **跨行/跨列** | 控件可以跨越多个行列（类似合并单元格）                       |
+| **对齐控制**  | 每个控件可单独设置对齐方式（如左对齐、居中等）               |
+| **间距控制**  | 支持设置行间距、列间距和内容边距                             |
+
+---
+
+### **2. 基础用法示例**
+#### **创建一个3x3的按钮网格**
+```cpp
+QGridLayout *gridLayout = new QGridLayout(this);
+
+// 添加按钮到网格（行, 列）
+for (int row = 0; row < 3; ++row) {
+    for (int col = 0; col < 3; ++col) {
+        QPushButton *btn = new QPushButton(QString("Btn %1-%2").arg(row).arg(col));
+        gridLayout->addWidget(btn, row, col);
+    }
+}
+```
+
+#### **跨列和拉伸控制**
+```cpp
+// 第0行：标签（第0列） + 输入框（跨第1-2列）
+gridLayout->addWidget(new QLabel("用户名:"), 0, 0);
+gridLayout->addWidget(new QLineEdit, 0, 1, 1, 2); // (行, 列, 跨行数, 跨列数)
+
+// 设置列拉伸比例（第1列:第2列 = 2:1）
+gridLayout->setColumnStretch(1, 2);
+gridLayout->setColumnStretch(2, 1);
+```
+
+---
+
+### **3. 关键方法**
+| 方法                                                    | 作用                             |
+| ------------------------------------------------------- | -------------------------------- |
+| `addWidget(widget, row, col, rowSpan, colSpan)`         | 添加控件到指定位置（可选跨行列） |
+| `setRowStretch(row, factor)`                            | 设置行的拉伸因子（比例）         |
+| `setColumnStretch(col, factor)`                         | 设置列的拉伸因子                 |
+| `setSpacing(int)`                                       | 统一设置行列间距                 |
+| `setHorizontalSpacing(int)` / `setVerticalSpacing(int)` | 分别设置水平/垂直间距            |
+
+---
+
+### **4. 高级功能**
+#### **对齐控制**
+```cpp
+// 将按钮右对齐
+gridLayout->addWidget(button, 0, 0, 1, 1, Qt::AlignRight);
+```
+
+#### **动态调整布局**
+```cpp
+// 移除某位置的控件
+QLayoutItem *item = gridLayout->itemAtPosition(1, 1);
+if (item) gridLayout->removeItem(item);
+
+// 插入空行
+gridLayout->insertRow(2); // 在第2行插入空行
+```
+
+#### **表单布局优化**
+```cpp
+// 自动添加标签和输入框对
+void addFormRow(QGridLayout *grid, int &row, const QString &label, QWidget *field) {
+    grid->addWidget(new QLabel(label), row, 0);
+    grid->addWidget(field, row, 1);
+    row++;
+}
+
+// 使用示例
+int currentRow = 0;
+addFormRow(gridLayout, currentRow, "姓名:", new QLineEdit);
+addFormRow(gridLayout, currentRow, "年龄:", new QSpinBox);
+```
+
+---
+
+### **5. 与其他布局对比**
+| 布局类型        | 适用场景                     | 优缺点                           |
+| --------------- | ---------------------------- | -------------------------------- |
+| **QGridLayout** | 复杂表单、仪表盘、网格状界面 | ✔️ 灵活控制行列<br>❌ 配置稍复杂   |
+| **QVBoxLayout** | 垂直排列（如设置列表）       | ✔️ 简单易用<br>❌ 无法多列布局     |
+| **QHBoxLayout** | 水平排列（如工具栏）         | ✔️ 适合单行控件<br>❌ 无法多行布局 |
+| **QFormLayout** | 标签-输入框对（登录表单）    | ✔️ 自动对齐标签<br>❌ 定制性较低   |
+
+---
+
+### **6. 实战建议**
+1. **优先使用拉伸因子**（`setColumnStretch`）而非固定像素值，使布局自适应窗口大小。
+2. **跨行列布局**时注意索引从0开始：
+   ```cpp
+   // 正确：第1行第1列，跨2行1列
+   gridLayout->addWidget(widget, 0, 0, 2, 1);
+   ```
+3. **调试工具**：使用Qt Designer实时预览布局，或通过代码打印布局信息：
+   ```cpp
+   qDebug() << "Rows:" << gridLayout->rowCount() 
+            << "Cols:" << gridLayout->columnCount();
+   ```
+
+---
+
+### **7. 常见问题解决**
+#### **问题：控件重叠或错位**
+- **原因**：未正确设置跨行/跨列或拉伸因子
+- **修复**：
+  ```cpp
+  // 确保跨列操作正确
+  gridLayout->addWidget(textEdit, 0, 0, 3, 1); // 占3行1列
+  ```
+
+#### **问题：边框不显示**
+- **解决**：检查父容器的边距和样式表：
+  ```cpp
+  gridLayout->setContentsMargins(10, 10, 10, 10); // 设置边距
+  ```
+
+---
+
+通过 `QGridLayout`，您可以轻松实现复杂的界面布局需求。如需进一步解决具体问题（如动态调整、性能优化等），可以提供更多细节！
+
+### 示例
+
+>说明：使用 `QGridLayout` 显示商品信息。
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-qt/demo-qgridlayout)
+
+
+
 ## 存储 - `QSettings`
 
 **QSettings** 是 Qt5 中用于 **持久化存储应用程序配置和设置** 的类，它提供了简单易用的 API 来保存和读取键值对数据，类似于 iOS 的 `NSUserDefaults` 或 Windows 的注册表。
