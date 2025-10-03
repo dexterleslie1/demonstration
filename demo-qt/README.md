@@ -2861,6 +2861,276 @@ container->setAttribute(Qt::WA_StaticContents);
 
 
 
+## `UI`组件 - 样式
+
+在 Qt 中设置样式主要通过 **Qt 样式表 (QSS)** 实现，这是一种类似 CSS 的语法，用于自定义控件的外观。以下是完整的样式设置指南：
+
+### 一、基本样式设置方法
+
+#### 1. 全局应用样式
+```cpp
+// 在 main.cpp 中设置全局样式
+#include <QApplication>
+#include <QFile>
+
+int main(int argc, char *argv[]) {
+    QApplication a(argc, argv);
+    
+    // 从文件加载样式表
+    QFile styleFile(":/styles/style.qss");
+    styleFile.open(QFile::ReadOnly);
+    QString styleSheet = QLatin1String(styleFile.readAll());
+    a.setStyleSheet(styleSheet);
+    
+    // 或者直接设置样式字符串
+    // a.setStyleSheet("QPushButton { background-color: blue; }");
+    
+    return a.exec();
+}
+```
+
+#### 2. 局部应用样式
+```cpp
+// 为单个控件设置样式
+QPushButton *button = new QPushButton("Click me");
+button->setStyleSheet("background-color: red; color: white;");
+
+// 为容器设置样式（影响所有子控件）
+QWidget *container = new QWidget;
+container->setStyleSheet("QPushButton { border: 2px solid green; }");
+```
+
+### 二、样式表语法基础
+
+#### 1. 基本选择器
+```css
+/* 类型选择器 */
+QPushButton {
+    background-color: #3498db;
+    color: white;
+    border-radius: 5px;
+}
+
+/* 类选择器 */
+.QPushButton {
+    padding: 5px 10px;
+}
+
+/* ID 选择器 */
+#specialButton {
+    font-weight: bold;
+}
+
+/* 后代选择器 */
+QDialog QLabel {
+    font-size: 14px;
+}
+```
+
+#### 2. 伪状态
+```css
+/* 鼠标悬停 */
+QPushButton:hover {
+    background-color: #2980b9;
+}
+
+/* 按下状态 */
+QPushButton:pressed {
+    background-color: #1c6ea4;
+}
+
+/* 禁用状态 */
+QPushButton:disabled {
+    background-color: #95a5a6;
+}
+
+/* 选中状态（如复选框） */
+QCheckBox:checked {
+    color: green;
+}
+```
+
+#### 3. 子控件样式
+```css
+/* QComboBox 的下拉箭头 */
+QComboBox::drop-down {
+    width: 20px;
+    border-left: 1px solid gray;
+}
+
+/* QSpinBox 的上下箭头 */
+QSpinBox::up-button, QSpinBox::down-button {
+    width: 20px;
+}
+```
+
+### 三、常用样式属性
+
+#### 1. 背景与边框
+```css
+QWidget {
+    background-color: #f0f0f0; /* 背景色 */
+    border: 1px solid #ccc;    /* 边框 */
+    border-radius: 4px;        /* 圆角 */
+}
+
+/* 渐变背景 */
+QPushButton {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                stop:0 #6a11cb, stop:1 #2575fc);
+}
+```
+
+#### 2. 文本样式
+```css
+QLabel {
+    color: #333;            /* 文本颜色 */
+    font-family: Arial;     /* 字体 */
+    font-size: 12pt;        /* 字号 */
+    font-weight: bold;      /* 字重 */
+}
+```
+
+#### 3. 布局与间距
+```css
+QWidget {
+    padding: 5px;           /* 内边距 */
+    margin: 10px;           /* 外边距 */
+    spacing: 5px;           /* 子控件间距 */
+}
+```
+
+### 四、高级样式技巧
+
+#### 1. 自定义属性
+```cpp
+// 在代码中设置自定义属性
+button->setProperty("priority", "high");
+```
+
+```css
+/* 在样式表中使用自定义属性 */
+QPushButton[priority="high"] {
+    background-color: #e74c3c;
+}
+```
+
+#### 2. 动态样式切换
+```cpp
+// 根据状态改变样式
+void updateButtonStyle(bool isActive) {
+    QString style = isActive 
+        ? "background-color: green;" 
+        : "background-color: gray;";
+    button->setStyleSheet(style);
+}
+```
+
+#### 3. 使用资源文件
+```css
+/* 在样式表中引用资源 */
+QPushButton#iconButton {
+    background-image: url(:/images/button_bg.png);
+    border-image: url(:/images/border.png) 3 3 3 3 stretch stretch;
+}
+```
+
+### 五、完整样式表示例
+
+```css
+/* style.qss */
+QMainWindow {
+    background-color: #f5f5f5;
+}
+
+QPushButton {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    min-width: 80px;
+}
+
+QPushButton:hover {
+    background-color: #2980b9;
+}
+
+QPushButton:pressed {
+    background-color: #1c6ea4;
+}
+
+QPushButton:disabled {
+    background-color: #bdc3c7;
+}
+
+QLineEdit, QTextEdit {
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    padding: 5px;
+}
+
+QLineEdit:focus, QTextEdit:focus {
+    border: 1px solid #3498db;
+}
+
+QTabWidget::pane {
+    border: 1px solid #ccc;
+    background: white;
+}
+
+QTabBar::tab {
+    background: #e0e0e0;
+    border: 1px solid #ccc;
+    padding: 8px 12px;
+}
+
+QTabBar::tab:selected {
+    background: white;
+    border-bottom-color: white;
+}
+
+QProgressBar {
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    text-align: center;
+}
+
+QProgressBar::chunk {
+    background-color: #2ecc71;
+}
+```
+
+### 六、调试样式表的技巧
+
+1. **使用 Qt Designer**：实时预览样式效果
+2. **添加临时边框**：快速识别控件边界
+   ```css
+   * {
+       border: 1px solid red !important;
+   }
+   ```
+3. **使用选择器优先级**：通过更具体的选择器覆盖样式
+4. **检查继承关系**：使用 `qDebug() << widget->styleSheet();` 查看最终样式
+
+### 七、注意事项
+
+1. **性能考虑**：复杂的样式表可能影响性能，特别是在移动设备上
+2. **平台差异**：某些样式在不同平台可能有不同表现
+3. **样式继承**：子控件会继承父容器的样式
+4. **优先使用类名**：避免直接使用控件类型选择器，使用 `.QPushButton` 代替 `QPushButton`
+5. **资源管理**：使用 Qt 资源系统管理图片等资源
+
+通过合理使用 Qt 样式表，您可以创建出高度定制化、美观的用户界面，同时保持代码的清晰和可维护性。
+
+### 示例
+
+>注意：自定义 `QWidget` 控件时，在根 `QWidget` 中定义样式不会生效（详细情况请参考示例中的 `WidgetBorderWithoutGroupBox`），解决此问题需要在自定义 `QWidget` 中添加 `GroupBox` 协助（详细用法请参考示例中的 `WidgetBorderWithGroupBox`）。
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-qt/demo-stylesheet)
+
+
+
 ## 布局 - 类型
 
 Qt5 提供了多种布局管理器（Layout Managers），用于自动排列和调整子控件的位置和大小。使用布局可以确保界面在不同平台和窗口尺寸下都能正确显示。
