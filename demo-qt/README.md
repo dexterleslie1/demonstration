@@ -3591,6 +3591,10 @@ layout->setContentsMargins(0, 0, 0, 0);  // 清零测试
 
 掌握 QHBoxLayout 能够高效创建专业、自适应的水平界面布局！ 🚀
 
+### `layoutStretch`作用
+
+`QHBoxLayout` 中的 `layoutStretch`（更准确地说，是通过 `setStretch()` 方法设置的 拉伸因子）用于控制当布局的父窗口大小发生变化时，其内部的子部件如何分配或占用额外的可用空间。例如：`1,0,0` 表示第一个子元素占据所有剩余布局空间。
+
 ### 示例
 
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-qt/demo-qhboxlayout)
@@ -4049,7 +4053,7 @@ addFormRow(gridLayout, currentRow, "年龄:", new QSpinBox);
 
 ### 示例
 
->说明：使用 `QGridLayout` 显示商品信息。
+>说明：使用 `QGridLayout` 显示商品信息，`QGridLayout` 删除所有 `item`。
 >
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-qt/demo-qgridlayout)
 

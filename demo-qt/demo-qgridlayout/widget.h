@@ -14,6 +14,7 @@ class Widget : public QWidget
 public:
     Widget(QWidget *parent = nullptr);
     ~Widget();
+    void reloadProductList();
 
 private:
     Ui::Widget *ui;

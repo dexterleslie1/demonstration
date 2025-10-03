@@ -32,7 +32,7 @@
         </spacer>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButton">
+        <widget class="QPushButton" name="pushButtonRefresh">
          <property name="text">
           <string>刷新</string>
          </property>
