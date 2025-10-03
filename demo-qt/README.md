@@ -3008,6 +3008,379 @@ Widget::~Widget()
 
 
 
+## `UI`组件 - `QListWidget`
+
+QListWidget 是 Qt 框架中的一个重要控件，它提供了一个基于项目的列表视图，用于显示和管理一组项目（items）。它是模型/视图架构的一部分，但提供了一个更简单的接口，特别适合不需要复杂模型的情况。
+
+### 核心概念
+
+#### 1. 基本特性
+- **项目列表**：显示一组可滚动的项目
+- **选择模式**：支持单选、多选等不同选择模式
+- **项目操作**：支持添加、删除、编辑项目
+- **事件处理**：支持点击、双击、拖放等交互
+
+#### 2. 与 QListView 的区别
+- **QListWidget**：更简单易用，内置项目存储
+- **QListView**：更灵活，需要外部模型支持
+
+### 基本用法
+
+#### 创建和添加项目
+
+```cpp
+#include <QListWidget>
+
+// 创建列表控件
+QListWidget *listWidget = new QListWidget(this);
+
+// 添加简单文本项目
+listWidget->addItem("Item 1");
+listWidget->addItem("Item 2");
+listWidget->addItem("Item 3");
+
+// 添加带图标的项目
+QListWidgetItem *item = new QListWidgetItem(QIcon(":/icon.png"), "Icon Item");
+listWidget->addItem(item);
+
+// 添加自定义数据项目
+QListWidgetItem *dataItem = new QListWidgetItem("Data Item");
+dataItem->setData(Qt::UserRole, QVariant(42)); // 设置自定义数据
+listWidget->addItem(dataItem);
+```
+
+#### 获取选择项目
+
+```cpp
+// 获取当前选中项目（单选）
+QListWidgetItem *selectedItem = listWidget->currentItem();
+if (selectedItem) {
+    qDebug() << "Selected:" << selectedItem->text();
+}
+
+// 获取所有选中项目（多选）
+QList<QListWidgetItem *> selectedItems = listWidget->selectedItems();
+for (QListWidgetItem *item : selectedItems) {
+    qDebug() << "Selected item:" << item->text();
+}
+```
+
+#### 响应事件
+
+```cpp
+// 项目点击事件
+connect(listWidget, &QListWidget::itemClicked, 
+        QListWidgetItem *item {
+    qDebug() << "Item clicked:" << item->text();
+});
+
+// 项目双击事件
+connect(listWidget, &QListWidget::itemDoubleClicked, 
+        QListWidgetItem *item {
+    qDebug() << "Item double-clicked:" << item->text();
+});
+
+// 选择变化事件
+connect(listWidget, &QListWidget::itemSelectionChanged, 
+         {
+    qDebug() << "Selection changed, selected items:" 
+             << listWidget->selectedItems().size();
+});
+```
+
+### 高级功能
+
+#### 1. 自定义项目视图
+
+```cpp
+// 设置视图模式
+listWidget->setViewMode(QListView::IconMode); // 图标模式
+listWidget->setGridSize(QSize(80, 80)); // 设置网格大小
+listWidget->setIconSize(QSize(64, 64)); // 设置图标大小
+
+// 设置流动方向
+listWidget->setFlow(QListView::LeftToRight); // 从左到右流动
+listWidget->setWrapping(true); // 启用自动换行
+```
+
+#### 2. 拖放支持
+
+```cpp
+// 启用拖放
+listWidget->setDragEnabled(true); // 允许拖出
+listWidget->setAcceptDrops(true); // 允许放入
+listWidget->setDropIndicatorShown(true); // 显示放置指示器
+listWidget->setDragDropMode(QAbstractItemView::InternalMove); // 内部移动
+
+// 自定义拖放行为
+listWidget->setDragDropMode(QAbstractItemView::DragDrop);
+listWidget->setDefaultDropAction(Qt::MoveAction);
+```
+
+#### 3. 排序和搜索
+
+```cpp
+// 启用排序
+listWidget->setSortingEnabled(true);
+listWidget->sortItems(Qt::AscendingOrder); // 升序排序
+
+// 添加搜索框
+QLineEdit *searchBox = new QLineEdit(this);
+connect(searchBox, &QLineEdit::textChanged, const QString &text {
+    for (int i = 0; i < listWidget->count(); ++i) {
+        QListWidgetItem *item = listWidget->item(i);
+        bool hidden = !item->text().contains(text, Qt::CaseInsensitive);
+        item->setHidden(hidden);
+    }
+});
+```
+
+#### 4. 自定义项目渲染
+
+```cpp
+// 使用自定义委托
+class CustomItemDelegate : public QStyledItemDelegate {
+public:
+    void paint(QPainter *painter, const QStyleOptionViewItem &option,
+               const QModelIndex &index) const override {
+        // 自定义绘制逻辑
+        if (option.state & QStyle::State_Selected) {
+            painter->fillRect(option.rect, QColor("#e0e0ff"));
+        }
+        
+        QStyledItemDelegate::paint(painter, option, index);
+    }
+    
+    QSize sizeHint(const QStyleOptionViewItem &option,
+                   const QModelIndex &index) const override {
+        return QSize(100, 40); // 自定义项目大小
+    }
+};
+
+// 应用委托
+listWidget->setItemDelegate(new CustomItemDelegate());
+```
+
+### 实际应用示例
+
+#### 文件浏览器
+
+```cpp
+QListWidget *fileList = new QListWidget(this);
+
+// 设置视图模式
+fileList->setViewMode(QListView::IconMode);
+fileList->setIconSize(QSize(64, 64));
+fileList->setGridSize(QSize(100, 80));
+
+// 添加文件项目
+QDir dir("/path/to/directory");
+for (const QFileInfo &fileInfo : dir.entryInfoList(QDir::Files)) {
+    QListWidgetItem *item = new QListWidgetItem(
+        QIcon(":/file-icon.png"), 
+        fileInfo.fileName()
+    );
+    item->setData(Qt::UserRole, fileInfo.absoluteFilePath());
+    fileList->addItem(item);
+}
+
+// 双击打开文件
+connect(fileList, &QListWidget::itemDoubleClicked, QListWidgetItem *item {
+    QString filePath = item->data(Qt::UserRole).toString();
+    QDesktopServices::openUrl(QUrl::fromLocalFile(filePath));
+});
+```
+
+#### 任务管理器
+
+```cpp
+QListWidget *taskList = new QListWidget(this);
+
+// 添加任务
+taskList->addItem("完成季度报告");
+taskList->addItem("准备会议材料");
+taskList->addItem("回复客户邮件");
+
+// 设置复选框
+for (int i = 0; i < taskList->count(); ++i) {
+    QListWidgetItem *item = taskList->item(i);
+    item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+    item->setCheckState(Qt::Unchecked);
+}
+
+// 任务完成事件
+connect(taskList, &QListWidget::itemChanged, QListWidgetItem *item {
+    if (item->checkState() == Qt::Checked) {
+        qDebug() << "任务完成:" << item->text();
+        // 添加删除线效果
+        QFont font = item->font();
+        font.setStrikeOut(true);
+        item->setFont(font);
+    }
+});
+```
+
+### 最佳实践
+
+#### 1. 性能优化
+
+```cpp
+// 批量添加项目时禁用更新
+listWidget->setUpdatesEnabled(false);
+for (int i = 0; i < 1000; ++i) {
+    listWidget->addItem(QString("Item %1").arg(i));
+}
+listWidget->setUpdatesEnabled(true); // 重新启用更新
+
+// 使用模型/视图架构处理大数据集
+QStandardItemModel *model = new QStandardItemModel(this);
+for (int i = 0; i < 10000; ++i) {
+    QStandardItem *item = new QStandardItem(QString("Item %1").arg(i));
+    model->appendRow(item);
+}
+
+QListView *listView = new QListView(this);
+listView->setModel(model); // 使用QListView处理大数据
+```
+
+#### 2. 样式定制
+
+```cpp
+// 使用样式表定制外观
+listWidget->setStyleSheet(
+    "QListWidget {"
+    "   background-color: #f0f0f0;"
+    "   border: 1px solid #ccc;"
+    "   border-radius: 5px;"
+    "}"
+    "QListWidget::item {"
+    "   padding: 5px;"
+    "   border-bottom: 1px solid #ddd;"
+    "}"
+    "QListWidget::item:selected {"
+    "   background-color: #d0e0ff;"
+    "   color: #000;"
+    "}"
+    "QListWidget::item:hover {"
+    "   background-color: #e0f0ff;"
+    "}"
+);
+```
+
+#### 3. 键盘导航
+
+```cpp
+// 启用键盘导航
+listWidget->setFocusPolicy(Qt::StrongFocus);
+
+// 添加键盘快捷键
+QShortcut *deleteShortcut = new QShortcut(QKeySequence::Delete, listWidget);
+connect(deleteShortcut, &QShortcut::activated,  {
+    for (QListWidgetItem *item : listWidget->selectedItems()) {
+        delete listWidget->takeItem(listWidget->row(item));
+    }
+});
+```
+
+### 常见问题解决方案
+
+#### 问题1：项目显示不全
+
+**解决方案**：
+```cpp
+// 设置项目大小提示
+listWidget->setUniformItemSizes(true);
+listWidget->setSizeAdjustPolicy(QListWidget::AdjustToContents);
+
+// 或者使用委托
+class AutoSizeDelegate : public QStyledItemDelegate {
+public:
+    QSize sizeHint(const QStyleOptionViewItem &option,
+                   const QModelIndex &index) const override {
+        QSize size = QStyledItemDelegate::sizeHint(option, index);
+        size.setHeight(qMax(size.height(), 40)); // 最小高度40px
+        return size;
+    }
+};
+listWidget->setItemDelegate(new AutoSizeDelegate());
+```
+
+#### 问题2：自定义项目高度
+
+```cpp
+// 使用委托控制项目高度
+class FixedHeightDelegate : public QStyledItemDelegate {
+public:
+    QSize sizeHint(const QStyleOptionViewItem &option,
+                   const QModelIndex &index) const override {
+        QSize size = QStyledItemDelegate::sizeHint(option, index);
+        size.setHeight(60); // 固定高度60px
+        return size;
+    }
+};
+listWidget->setItemDelegate(new FixedHeightDelegate());
+```
+
+#### 问题3：多列显示
+
+```cpp
+// 设置视图模式为图标模式
+listWidget->setViewMode(QListView::IconMode);
+
+// 设置流动方向和网格大小
+listWidget->setFlow(QListView::LeftToRight);
+listWidget->setGridSize(QSize(100, 80));
+listWidget->setWrapping(true); // 启用自动换行
+```
+
+### 总结
+
+QListWidget 是 Qt 中一个功能强大且易于使用的列表控件，具有以下特点：
+1. **简单易用**：提供直观的API添加、删除和管理项目
+2. **灵活显示**：支持列表、图标等多种视图模式
+3. **交互丰富**：支持选择、拖放、编辑等交互操作
+4. **高度可定制**：可通过样式表和委托自定义外观和行为
+5. **信号丰富**：提供多种信号响应用户交互
+
+在以下场景中特别适用：
+- 文件浏览器
+- 任务管理器
+- 设置选项列表
+- 联系人列表
+- 消息历史记录
+
+对于需要处理大量数据或复杂数据模型的场景，建议使用 QListView 配合自定义模型（如 QStandardItemModel）以获得更好的性能和灵活性。
+
+### 示例
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-qt/demo-qlistwidget)
+
+```c++
+#include "widget.h"
+#include "ui_widget.h"
+
+Widget::Widget(QWidget *parent)
+    : QWidget(parent)
+    , ui(new Ui::Widget)
+{
+    ui->setupUi(this);
+
+    // 初始化 QListWidget
+    for(int i=0;i<30;i++) {
+        ui->listWidget->addItem(QString("%1").arg(i));
+    }
+}
+
+Widget::~Widget()
+{
+    delete ui;
+}
+
+
+```
+
+
+
 ## `UI`组件 - `ListView`和`ListWidget`区别
 
 在 Qt5 中，`QListView` 和 `QListWidget` 都是用于显示列表数据的控件，但它们的架构和使用场景有显著区别。以下是它们的核心对比：
