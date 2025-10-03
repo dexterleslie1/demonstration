@@ -29,6 +29,12 @@ private:
     bool flashSale;
     int toFlashSaleStartTimeRemainingSeconds;
     int toFlashSaleEndTimeRemainingSeconds;
+
+signals:
+    void clicked(long productId);
+
+protected:
+    void mousePressEvent(QMouseEvent *event) override;
 };
 
 #endif // PRODUCTINFOWIDGET_H

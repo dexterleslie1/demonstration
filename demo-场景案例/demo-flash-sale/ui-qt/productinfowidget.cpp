@@ -1,11 +1,27 @@
 #include "productinfowidget.h"
 #include "ui_productinfowidget.h"
 
+#include <QMouseEvent>
+#include <QDebug>
+
+#include "productpurchasewidget.h"
+
 ProductInfoWidget::ProductInfoWidget(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::ProductInfoWidget)
 {
     ui->setupUi(this);
+
+    // 点击事件
+    connect(this, &ProductInfoWidget::clicked, this, [this](long productId) {
+        ProductPurchaseWidget *productPurchaseWidget = new ProductPurchaseWidget();
+        productPurchaseWidget->setWindowModality(Qt::ApplicationModal);
+        productPurchaseWidget->configureWithData(productId);
+        productPurchaseWidget->show();
+        connect(productPurchaseWidget, &QWidget::destroyed, this, [productPurchaseWidget](){
+            productPurchaseWidget->deleteLater();
+        });
+    });
 }
 
 ProductInfoWidget::~ProductInfoWidget()
@@ -42,4 +58,17 @@ void ProductInfoWidget::configureWithData(long id,
             this->ui->labelStatus->setStyleSheet("color: #FF0000");
         }
     }
+}
+
+void ProductInfoWidget::mousePressEvent(QMouseEvent *event) {
+    // 检查是否是左键点击
+    if(event->button() == Qt::LeftButton) {
+        // 发出点击信号
+        emit clicked(this->id);
+        // 标记事件已处理
+        event->accept();
+        return;
+    }
+
+    QWidget::mousePressEvent(event);
 }

@@ -78,7 +78,7 @@ void PageProductList::reloadProductList() {
 
                     for(int i=0;i<data.size();i++) {
                         QJsonObject productObject = data[i].toObject();
-                        long id = productObject["id"].toVariant().LongLong;
+                        long id = productObject["id"].toVariant().toLongLong();
                         QString name = productObject["name"].toString();
                         int stockAmount = productObject["stock"].toInt();
                         bool flashSale = productObject["flashSale"].toBool();
