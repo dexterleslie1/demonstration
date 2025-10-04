@@ -3353,6 +3353,8 @@ QListWidget 是 Qt 中一个功能强大且易于使用的列表控件，具有�
 
 ### 示例
 
+>说明：`QListWidget` 添加 `item`，`QListWidget` 删除所有 `item`。
+>
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-qt/demo-qlistwidget)
 
 ```c++
@@ -3365,15 +3367,25 @@ Widget::Widget(QWidget *parent)
 {
     ui->setupUi(this);
 
-    // 初始化 QListWidget
-    for(int i=0;i<30;i++) {
-        ui->listWidget->addItem(QString("%1").arg(i));
-    }
+    // 点击刷新按钮
+    connect(ui->pushButton, &QPushButton::clicked, this, [this]() {
+        this->reload();
+    });
 }
 
 Widget::~Widget()
 {
     delete ui;
+}
+
+void Widget::reload() {
+    // 删除所有 item
+    ui->listWidget->clear();
+
+    // 初始化 QListWidget
+    for(int i=0;i<30;i++) {
+        ui->listWidget->addItem(QString("%1").arg(i));
+    }
 }
 
 
