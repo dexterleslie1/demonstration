@@ -2,6 +2,8 @@
 #define PAGELISTBYMERCHANTID_H
 
 #include <QWidget>
+#include <QSettings>
+#include <QtNetwork/QNetworkAccessManager>
 
 namespace Ui {
 class PageListByMerchantId;
@@ -17,6 +19,8 @@ public:
 
 private:
     Ui::PageListByMerchantId *ui;
+    QSettings qSettings;
+    QNetworkAccessManager *networkAccessManager;
 };
 
 #endif // PAGELISTBYMERCHANTID_H

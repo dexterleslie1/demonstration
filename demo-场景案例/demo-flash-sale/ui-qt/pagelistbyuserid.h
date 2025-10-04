@@ -2,6 +2,8 @@
 #define PAGELISTBYUSERID_H
 
 #include <QWidget>
+#include <QSettings>
+#include <QtNetwork/QNetworkAccessManager>
 
 namespace Ui {
 class PageListByUserId;
@@ -17,6 +19,8 @@ public:
 
 private:
     Ui::PageListByUserId *ui;
+    QSettings qSettings;
+    QNetworkAccessManager *networkAccessManager;
 };
 
 #endif // PAGELISTBYUSERID_H
