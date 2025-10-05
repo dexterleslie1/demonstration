@@ -1,9 +1,9 @@
 package com.future.demo;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.yyd.common.exception.BusinessException;
-import com.yyd.common.http.response.ObjectResponse;
-import com.yyd.common.json.JSONUtil;
+import com.future.common.exception.BusinessException;
+import com.future.common.http.ObjectResponse;
+import com.future.common.json.JSONUtil;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.client.ClientHttpRequest;

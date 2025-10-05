@@ -2,8 +2,8 @@ package com.future.demo;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.yyd.common.http.ResponseUtils;
-import com.yyd.common.http.response.ObjectResponse;
+import com.future.common.http.ObjectResponse;
+import com.future.common.http.ResponseUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
