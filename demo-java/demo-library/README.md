@@ -868,6 +868,45 @@ try {
 
 
 
+引用 `future-common` 中的 `FeignUtil`
+
+- `POM` 配置
+
+  ```xml
+  <dependency>
+      <groupId>com.github.dexterleslie1</groupId>
+      <artifactId>future-common</artifactId>
+      <version>1.2.3</version>
+  </dependency>
+  
+  <repositories>
+      <repository>
+          <id>aliyun-maven</id>
+          <url>https://maven.aliyun.com/repository/public</url>
+      </repository>
+      <repository>
+          <id>jitpack.io</id>
+          <url>https://jitpack.io</url>
+      </repository>
+  </repositories>
+  ```
+
+- `FeignUtil.throwBizExceptionIfResponseFailed();` 使用
+
+  ```java
+  List<MyPostVO> myPostVOList = new ArrayList<>();
+  try {
+      ObjectResponse<String> response1 = api.testPost(myPostVOList);
+      FeignUtil.throwBizExceptionIfResponseFailed(response1);
+      Assert.fail("预期异常没有抛出");
+  } catch (BusinessException ex) {
+      Assert.assertTrue(ex.getErrorCode() > 0);
+      Assert.assertEquals("没有指定myPostVOList", ex.getErrorMessage());
+  }
+  ```
+
+  
+
 ## `HTTP`库 - `RestTemplate`
 
 `RestTemplate` 是 Spring Framework 提供的**同步 HTTP 客户端工具**，用于简化与 RESTful Web 服务的交互。它是 Spring Web 模块的核心组件之一，特别适合在传统 Spring MVC 应用中调用外部 API。
