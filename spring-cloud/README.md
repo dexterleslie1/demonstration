@@ -697,7 +697,7 @@ public class LoadBalancerConfig {
 
 
 
-#### 定义
+#### 概念
 
 OpenFeign是一个声明式的Web服务客户端，它使得编写Web服务客户端变得更加容易。以下是对OpenFeign的详细介绍：
 
@@ -747,7 +747,9 @@ OpenFeign是一个功能强大且易于使用的Web服务客户端，它简化�
 
 #### 运行示例
 
-详细用法请参考示例`https://gitee.com/dexterleslie/demonstration/tree/master/spring-cloud/spring-cloud-feign-demo`
+>详细用法请参考本站 [示例1](https://gitee.com/dexterleslie/demonstration/tree/main/demo-spring-boot/demo-spring-boot-openfeign-client)
+>
+>详细用法请参考本站 [示例2](https://gitee.com/dexterleslie/demonstration/tree/master/spring-cloud/spring-cloud-feign-demo)
 
 启动 Consul
 
@@ -1042,7 +1044,7 @@ curl -X POST http://localhost:8080/api/v1/external/product/add
 
 
 
-#### 响应错误处理 ErrorDecoder
+#### 错误处理
 
 OpenFeign是一个声明式的Web服务客户端，它使得写HTTP客户端变得更简单，主要用于微服务架构中，以简化服务间的调用。ErrorDecoder是OpenFeign中的一个重要接口，它在处理HTTP响应中的错误时发挥着关键作用。以下是对OpenFeign ErrorDecoder的详细解释：
 
@@ -1139,57 +1141,98 @@ public class FeignConfig {
 
 
 
-自定义 ErrorDecoder
+**自定义错误处理：**
 
-```java
-/**
- * openfeign自定义错误处理
- * 问题：在调用feign过程中，需要经常编写代码判断errorCode是否不等于0，是则编写代码抛出业务异常，否则继续执行当前业务代码
- * 解决：使用openfeign自定义错误处理后，调用feign不再需要编写代码判断errorCode
- */
-public class CustomizeErrorDecoder extends ErrorDecoder.Default {
+>详细用法请参考本站 [示例1](https://gitee.com/dexterleslie/demonstration/tree/main/demo-spring-boot/demo-spring-boot-openfeign-client)
+>
+>详细用法请参考本站 [示例2](https://gitee.com/dexterleslie/demonstration/tree/master/spring-cloud/spring-cloud-feign-demo)
 
-    @Override
-    public Exception decode(String methodKey, Response response) {
-        if (response.status() == HttpStatus.BAD_REQUEST.value() ||
-                response.status() == HttpStatus.FORBIDDEN.value() ||
-                response.status() == HttpStatus.UNAUTHORIZED.value()) {
-            String JSON = response.body().toString();
-            try {
-                JsonNode node = JSONUtil.ObjectMapperInstance.readTree(JSON);
-                return new BusinessException(node.get("errorCode").asInt(), node.get("errorMessage").asText());
-            } catch (IOException ex) {
-                // 当发生http 400错误时，返回数据不为json格式，则继续使用系统默认处理错误
-                response = response.toBuilder()
-                        .status(response.status())
-                        .reason(response.reason())
-                        .request(response.request())
-                        .headers(response.headers())
-                        .body(JSON, Util.UTF_8)
-                        .build();
-                return super.decode(methodKey, response);
-            }
-        }
-        return super.decode(methodKey, response);
-    }
-}
-```
+- 非 `HTTP 200` 错误处理
 
-注入自定义 ErrorDecoder
+  参考本站 [链接](/future/README.html#引用) 引用 `future-common` 依赖
 
-```java
-// 自定义 OpenFeign 错误解码器
-@Bean
-ErrorDecoder errorDecoder() {
-    return new CustomizeErrorDecoder();
-}
-```
+  `Feign` 配置引用 `future-common` 依赖中的 `CustomizeErrorDecoder`
 
+  ```java
+  @Configuration
+  @EnableFeignClients(
+          clients = {
+                  ApiFeign.class
+          }
+  )
+  public class FeignConfiguration {
+          /**
+           * openfeign支持自动检查并抛出业务异常不需要编写代码判断errorCode是否不等于0
+           *
+           * @return
+           */
+          @Bean
+          ErrorDecoder errorDecoder() {
+                  return new CustomizeErrorDecoder();
+          }
+  }
+  ```
 
+- `HTTP 200` 时业务异常错误处理
+
+  ```java
+  @Test
+  public void testHttp200() throws BusinessException {
+      ObjectResponse<String> response = this.testSupportApiFeign.testHttp200();
+      Assertions.assertEquals(ErrorCodeConstant.ErrorCodeCommon, response.getErrorCode());
+      Assertions.assertEquals("测试异常", response.getErrorMessage());
+      Assertions.assertNull(response.getData());
+      try {
+          FeignUtil.throwBizExceptionIfResponseFailed(response);
+          Assertions.fail();
+      } catch (BusinessException ex) {
+          Assertions.assertEquals(ErrorCodeConstant.ErrorCodeCommon, ex.getErrorCode());
+          Assertions.assertEquals("测试异常", ex.getErrorMessage());
+          Assertions.assertNull(ex.getData());
+      }
+  }
+  ```
+
+  - 调用 `FeignUtil.throwBizExceptionIfResponseFailed(response);` 判断 `HTTP 200` 响应是否有业务异常。
+
+  
 
 #### 自定义 fallback
 
 > todo
+
+
+
+#### 注意提醒
+
+>提示：定义 `Feign` 方法时需要 `throws BusinessException`，否则在抛出 `BusinessException` 时会导致抛出未定义抛出异常错误。
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-spring-boot/demo-spring-boot-openfeign-client)
+
+```java
+package com.future.demo;
+
+import com.future.common.exception.BusinessException;
+import com.future.common.http.ObjectResponse;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.GetMapping;
+
+@FeignClient(
+        contextId = "testSupportApiFeign",
+        value = "app-test-service",
+        path = "/api/v1")
+public interface TestSupportApiFeign {
+
+    @GetMapping("test401Error")
+    ObjectResponse<String> test401Error() throws BusinessException;
+
+    @GetMapping("testHttp200")
+    ObjectResponse<String> testHttp200() throws BusinessException;
+}
+
+```
+
+- 如上面的 `test401Error()` 和 `testHttp200()` 方法需要定义 `throws BusinessException`
 
 
 

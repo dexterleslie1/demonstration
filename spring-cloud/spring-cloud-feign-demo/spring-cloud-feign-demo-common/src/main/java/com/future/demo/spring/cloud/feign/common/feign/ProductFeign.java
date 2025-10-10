@@ -26,4 +26,20 @@ public interface ProductFeign {
 
     @GetMapping("testOpenFeignPerfAssist")
     ObjectResponse<String> testOpenFeignPerfAssist();
+
+    /**
+     * 协助测试非 http 200 响应
+     *
+     * @return
+     */
+    @GetMapping("testAssistantFeignErrorNonHttp200")
+    ObjectResponse<String> testAssistantFeignErrorNonHttp200() throws BusinessException;
+
+    /**
+     * 协助测试 http 200 响应业务异常
+     *
+     * @return
+     */
+    @GetMapping("testAssistantFeignErrorHttp200WithBusinessException")
+    ObjectResponse<String> testAssistantFeignErrorHttp200WithBusinessException() throws BusinessException;
 }

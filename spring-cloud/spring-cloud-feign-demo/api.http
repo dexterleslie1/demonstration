@@ -1,6 +1,15 @@
 ### /api/v1/external/product
 GET http://localhost:8080/api/v1/external/product/1
 
+### /api/v1/external/test401Error
+GET http://localhost:8080/api/v1/external/product/test401Error
+
 ### /api/v1/external/product/testOpenFeignPerfAssist
 GET http://localhost:8080/api/v1/external/product/testOpenFeignPerfAssist
 #GET http://192.168.235.50/api/v1/external/product/testOpenFeignPerfAssist
+
+### /api/v1/external/product/testAssistantFeignErrorNonHttp200
+GET http://localhost:8080/api/v1/external/product/testAssistantFeignErrorNonHttp200
+
+### /api/v1/external/product/testAssistantFeignErrorHttp200WithBusinessException
+GET http://localhost:8080/api/v1/external/product/testAssistantFeignErrorHttp200WithBusinessException

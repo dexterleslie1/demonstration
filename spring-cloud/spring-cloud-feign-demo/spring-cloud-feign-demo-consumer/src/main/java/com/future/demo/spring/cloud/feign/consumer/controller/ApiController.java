@@ -1,6 +1,7 @@
 package com.future.demo.spring.cloud.feign.consumer.controller;
 
 import com.future.common.exception.BusinessException;
+import com.future.common.feign.FeignUtil;
 import com.future.common.http.ObjectResponse;
 import com.future.common.http.ResponseUtils;
 import com.future.demo.spring.cloud.feign.common.entity.Product;
@@ -8,9 +9,10 @@ import com.future.demo.spring.cloud.feign.common.feign.ProductFeign;
 import com.future.demo.spring.cloud.feign.common.feign.ProductFeignTestSameName;
 import com.future.demo.spring.cloud.feign.common.feign.ProductFeignWithConfig;
 import com.future.demo.spring.cloud.feign.common.feign.ProductFeignWithSpecifyUrl;
-import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+
+import javax.annotation.Resource;
 
 
 @Slf4j
@@ -78,5 +80,29 @@ public class ApiController {
         } else {
             return ResponseUtils.successObject(response.getData());
         }
+    }
+
+    /**
+     * 协助测试非 http 200 响应
+     *
+     * @return
+     */
+    @GetMapping("testAssistantFeignErrorNonHttp200")
+    public ObjectResponse<String> testAssistantFeignErrorNonHttp200() throws BusinessException {
+        ObjectResponse<String> response = this.productFeign.testAssistantFeignErrorNonHttp200();
+        FeignUtil.throwBizExceptionIfResponseFailed(response);
+        return response;
+    }
+
+    /**
+     * 协助测试 http 200 响应业务异常
+     *
+     * @return
+     */
+    @GetMapping("testAssistantFeignErrorHttp200WithBusinessException")
+    public ObjectResponse<String> testAssistantFeignErrorHttp200WithBusinessException() throws Throwable {
+        ObjectResponse<String> response = this.productFeign.testAssistantFeignErrorHttp200WithBusinessException();
+        FeignUtil.throwBizExceptionIfResponseFailed(response);
+        return response;
     }
 }

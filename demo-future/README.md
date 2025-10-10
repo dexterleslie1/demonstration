@@ -864,7 +864,7 @@ ansible-playbook playbook-service-destroy.yml --inventory inventory.ini
 <dependency>
     <groupId>com.github.dexterleslie1</groupId>
     <artifactId>future-common</artifactId>
-    <version>1.2.3</version>
+    <version>1.2.6</version>
 </dependency>
 <dependency>
     <groupId>org.springframework.security</groupId>
@@ -884,6 +884,17 @@ ansible-playbook playbook-service-destroy.yml --inventory inventory.ini
     <groupId>javax.validation</groupId>
     <artifactId>validation-api</artifactId>
 </dependency>
+
+<repositories>
+    <repository>
+        <id>aliyun-maven</id>
+        <url>https://maven.aliyun.com/repository/public/</url>
+    </repository>
+    <repository>
+        <id>jitpack.io</id>
+        <url>https://jitpack.io</url>
+    </repository>
+</repositories>
 ```
 
 

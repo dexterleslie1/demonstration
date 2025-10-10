@@ -16,11 +16,10 @@
     <packaging>jar</packaging>
 
     <dependencies>
-        <!-- 从jitpack中引用自定义工具依赖构件 -->
         <dependency>
             <groupId>com.github.dexterleslie1</groupId>
             <artifactId>future-common</artifactId>
-            <version>1.0.1</version>
+            <version>1.2.3</version>
         </dependency>
 
         <dependency>

@@ -1,6 +1,8 @@
 package com.future.demo;
 
+import com.future.common.constant.ErrorCodeConstant;
 import com.future.common.http.ObjectResponse;
+import com.future.common.http.ResponseUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,5 +22,10 @@ public class ApiController {
         response.setErrorCode(90000);
         response.setErrorMessage("调用 /api/v1/test401Error 失败");
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+    }
+
+    @GetMapping("testHttp200")
+    public ObjectResponse<String> testHttp200() {
+        return ResponseUtils.failObject(ErrorCodeConstant.ErrorCodeCommon, "测试异常");
     }
 }

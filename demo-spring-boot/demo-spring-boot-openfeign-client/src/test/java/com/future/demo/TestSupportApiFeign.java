@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 public interface TestSupportApiFeign {
 
     @GetMapping("test401Error")
-    public ObjectResponse<String> test401Error() throws BusinessException;
+    ObjectResponse<String> test401Error() throws BusinessException;
 
+    @GetMapping("testHttp200")
+    ObjectResponse<String> testHttp200() throws BusinessException;
 }

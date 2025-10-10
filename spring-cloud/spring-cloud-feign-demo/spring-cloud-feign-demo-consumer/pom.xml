@@ -15,10 +15,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.github.dexterleslie1</groupId>
-            <artifactId>future-common</artifactId>
-        </dependency>
-        <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
             <version>4.0.1</version>
@@ -65,14 +61,14 @@
         </dependency>
 
         <!-- 替换底层使用 HttpClient5 通讯依赖 -->
-        <dependency>
+        <!--<dependency>
             <groupId>org.apache.httpcomponents.client5</groupId>
             <artifactId>httpclient5</artifactId>
         </dependency>
         <dependency>
             <groupId>io.github.openfeign</groupId>
             <artifactId>feign-hc5</artifactId>
-        </dependency>
+        </dependency>-->
     </dependencies>
 
     <build>

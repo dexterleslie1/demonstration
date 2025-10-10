@@ -1,10 +1,10 @@
 package com.future.demo.spring.cloud.feign.provider.controller;
 
 import cn.hutool.core.util.RandomUtil;
+import com.future.common.constant.ErrorCodeConstant;
 import com.future.common.http.ObjectResponse;
+import com.future.common.http.ResponseUtils;
 import com.future.demo.spring.cloud.feign.common.entity.Product;
-import jakarta.annotation.PostConstruct;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -13,7 +13,11 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import java.util.*;
+import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -111,5 +115,26 @@ public class ApiController {
         ObjectResponse<String> response = new ObjectResponse<>();
         response.setData(str);
         return response;
+    }
+
+    /**
+     * 协助测试非 http 200 响应
+     *
+     * @return
+     */
+    @GetMapping("testAssistantFeignErrorNonHttp200")
+    public ResponseEntity<ObjectResponse<String>> testAssistantFeignErrorNonHttp200() {
+        ObjectResponse<String> response = ResponseUtils.failObject(ErrorCodeConstant.ErrorCodeCommon, "协助测试非 http 200 响应");
+        return ResponseEntity.badRequest().body(response);
+    }
+
+    /**
+     * 协助测试 http 200 响应业务异常
+     *
+     * @return
+     */
+    @GetMapping("testAssistantFeignErrorHttp200WithBusinessException")
+    public ObjectResponse<String> testAssistantFeignErrorHttp200WithBusinessException() {
+        return ResponseUtils.failObject(ErrorCodeConstant.ErrorCodeCommon, "协助测试 http 200 响应业务异常");
     }
 }

@@ -14,11 +14,7 @@
     <packaging>jar</packaging>
 
     <dependencies>
-        <dependency>
-            <groupId>com.github.dexterleslie1</groupId>
-            <artifactId>future-common</artifactId>
-        </dependency>
-        <dependency>
+        <!--<dependency>
             <groupId>io.github.openfeign</groupId>
             <artifactId>feign-core</artifactId>
         </dependency>
@@ -26,7 +22,7 @@
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
             <version>4.0.1</version>
-        </dependency>
+        </dependency>-->
 
         <dependency>
             <groupId>com.future.demo</groupId>
