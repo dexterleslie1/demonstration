@@ -4,6 +4,7 @@
 
 - `QWidget` 控件可以通过 `Qt Designer` 直接设置顶层布局。
 - 在布局过程中，空白处使用 `Horizontal` 或者 `Vertical` 的 `Spacer` 填充以达到使用空白组件占据布局空间防止其他组件被拉伸。
+- 通过参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-%E5%9C%BA%E6%99%AF%E6%A1%88%E4%BE%8B/demo-flash-sale/ui-qt) 学习 `Qt` 综合应用相关技术。
 
 
 

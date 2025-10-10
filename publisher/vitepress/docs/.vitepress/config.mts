@@ -171,6 +171,7 @@ export default defineConfig({
             { text: 'SpringCloud的基础', link: '/springcloud/README.md' },
             { text: 'Assistant示例', link: '/springcloud/assistant示例.md' },
             { text: '分布式ID', link: '/springcloud/分布式ID.md' },
+            { text: '分布式事务', link: '/springcloud/分布式事务.md' },
           ]
         }
       ],
