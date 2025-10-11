@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS `undo_log`
     `log_created`   DATETIME(6)  NOT NULL COMMENT 'create datetime',
     `log_modified`  DATETIME(6)  NOT NULL COMMENT 'modify datetime',
     UNIQUE KEY `ux_undo_log` (`xid`, `branch_id`)
-    ) ENGINE = InnoDB AUTO_INCREMENT = 1 DEFAULT CHARSET = utf8mb4 COMMENT ='AT transaction mode undo table';
+) ENGINE = InnoDB AUTO_INCREMENT = 1 DEFAULT CHARSET = utf8mb4 COMMENT ='AT transaction mode undo table';
 ALTER TABLE `undo_log` ADD INDEX `ix_log_created` (`log_created`);
 
 create table if not exists `t_order`(

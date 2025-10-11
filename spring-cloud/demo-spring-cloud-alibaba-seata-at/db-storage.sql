@@ -25,4 +25,6 @@ create table if not exists `t_storage`
     `residue`       int(11)    default null comment '剩余库存'
 ) engine = innodb auto_increment = 1 default charset = utf8mb4;
 
+create unique index idx_storage_product_id on t_storage(product_id);
+
 insert into `t_storage`(`product_id`, `total`, `used`, `residue`) values (1, 100, 0, 100);

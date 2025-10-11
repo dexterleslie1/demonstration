@@ -6,8 +6,6 @@ import io.seata.rm.tcc.api.BusinessActionContextParameter;
 import io.seata.rm.tcc.api.LocalTCC;
 import io.seata.rm.tcc.api.TwoPhaseBusinessAction;
 
-import java.math.BigDecimal;
-
 @LocalTCC
 public interface StorageTccService {
     /**
@@ -34,4 +32,6 @@ public interface StorageTccService {
      * @return
      */
     boolean cancel(BusinessActionContext context);
+
+    void preparePerfTestDatum();
 }

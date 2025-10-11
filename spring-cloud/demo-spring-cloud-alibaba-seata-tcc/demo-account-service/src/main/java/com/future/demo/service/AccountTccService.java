@@ -13,11 +13,13 @@ public interface AccountTccService {
     /**
      * @param userId
      * @param amount
+     * @param throwExceptionWhenDeductBalance 扣减余额时是否抛出异常以模拟余额扣减失败
      * @throws BusinessException
      */
     @TwoPhaseBusinessAction(name = "deduct", commitMethod = "confirm", rollbackMethod = "cancel")
     void deduct(@BusinessActionContextParameter(paramName = "userId") Long userId,
-                @BusinessActionContextParameter(paramName = "amount") BigDecimal amount) throws BusinessException;
+                @BusinessActionContextParameter(paramName = "amount") BigDecimal amount,
+                boolean throwExceptionWhenDeductBalance) throws BusinessException;
 
     /**
      * 提交
@@ -34,4 +36,6 @@ public interface AccountTccService {
      * @return
      */
     boolean cancel(BusinessActionContext context);
+
+    void preparePerfTestDatum();
 }

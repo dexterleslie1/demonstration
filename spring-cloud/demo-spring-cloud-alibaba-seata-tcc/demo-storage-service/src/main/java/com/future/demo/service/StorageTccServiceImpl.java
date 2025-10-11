@@ -1,10 +1,12 @@
 package com.future.demo.service;
 
 import com.future.common.exception.BusinessException;
+import com.future.demo.entity.Storage;
 import com.future.demo.entity.StorageFreeze;
 import com.future.demo.entity.TccTransactionState;
 import com.future.demo.mapper.StorageFreezeMapper;
 import com.future.demo.mapper.StorageMapper;
+import com.future.demo.util.Util;
 import io.seata.core.context.RootContext;
 import io.seata.rm.tcc.api.BusinessActionContext;
 import io.seata.rm.tcc.api.BusinessActionContextParameter;
@@ -93,5 +95,24 @@ public class StorageTccServiceImpl implements StorageTccService {
         storageFreeze.setState(TccTransactionState.Cancel);
         int affectRow = storageFreezeMapper.update(storageFreeze);
         return affectRow == 1;
+    }
+
+
+    /**
+     * 准备性能测试数据
+     *
+     * @return
+     */
+    public void preparePerfTestDatum() {
+        for (int i = 0; i < Util.PerfTestDatumProductIdTotalCount; i++) {
+            long productId = Util.PerfTestDatumProductIdStart + i;
+            Storage storage = new Storage();
+            storage.setProductId(productId);
+            storage.setTotal(Util.PerfTestDatumProductStockAmount);
+            storage.setUsed(0);
+            storage.setResidue(storage.getTotal());
+            storageMapper.deleteByProductId(productId);
+            storageMapper.insert(storage);
+        }
     }
 }

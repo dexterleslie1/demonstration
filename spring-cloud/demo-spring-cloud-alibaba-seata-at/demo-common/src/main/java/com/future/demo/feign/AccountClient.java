@@ -13,8 +13,12 @@ import java.math.BigDecimal;
 public interface AccountClient {
     @PutMapping("/account/deduct")
     ObjectResponse<String> deduct(@RequestParam(value = "accountId") Long accountId,
-                                  @RequestParam(value = "amount") BigDecimal amount) throws BusinessException;
+                                  @RequestParam(value = "amount") BigDecimal amount,
+                                  @RequestParam(value = "throwExceptionWhenDeductBalance") boolean throwExceptionWhenDeductBalance) throws BusinessException;
 
     @GetMapping("/account/reset")
     ObjectResponse<String> reset() throws BusinessException;
+
+    @GetMapping("/account/preparePerfTestDatum")
+    ObjectResponse<String> preparePerfTestDatum() throws BusinessException;
 }

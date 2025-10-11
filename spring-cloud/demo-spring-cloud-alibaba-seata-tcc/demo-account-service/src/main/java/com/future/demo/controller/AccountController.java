@@ -23,8 +23,9 @@ public class AccountController {
 
     @PutMapping("/account/deduct")
     ObjectResponse<String> deduct(@RequestParam(value = "accountId") Long accountId,
-                                  @RequestParam(value = "amount") BigDecimal amount) throws BusinessException {
-        accountTccService.deduct(accountId, amount);
+                                  @RequestParam(value = "amount") BigDecimal amount,
+                                  @RequestParam(value = "throwExceptionWhenDeductBalance", defaultValue = "false") boolean throwExceptionWhenDeductBalance) throws BusinessException {
+        accountTccService.deduct(accountId, amount, throwExceptionWhenDeductBalance);
         return ResponseUtils.successObject("扣款成功");
     }
 
@@ -37,5 +38,17 @@ public class AccountController {
     ObjectResponse<String> reset() {
         accountMapper.reset();
         return ResponseUtils.successObject("重置成功");
+    }
+
+
+    /**
+     * 准备性能测试数据
+     *
+     * @return
+     */
+    @GetMapping("/account/preparePerfTestDatum")
+    ObjectResponse<String> preparePerfTestDatum() {
+        accountTccService.preparePerfTestDatum();
+        return ResponseUtils.successObject("准备成功");
     }
 }

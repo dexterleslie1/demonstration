@@ -37,4 +37,15 @@ public class StorageController {
         storageMapper.reset();
         return ResponseUtils.successObject("重置成功");
     }
+
+    /**
+     * 准备性能测试数据
+     *
+     * @return
+     */
+    @GetMapping("/storage/preparePerfTestDatum")
+    ObjectResponse<String> preparePerfTestDatum() {
+        storageService.preparePerfTestDatum();
+        return ResponseUtils.successObject("准备成功");
+    }
 }

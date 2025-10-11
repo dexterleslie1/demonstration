@@ -26,10 +26,11 @@ public class OrderService {
 
     /**
      * @param order
+     * @param throwExceptionWhenDeductBalance 扣减余额时是否抛出异常以模拟余额扣减失败
      * @throws BusinessException
      */
     @GlobalTransactional(name = "order-create", rollbackFor = Exception.class)
-    public Long createOrder(Order order) throws BusinessException {
+    public Long createOrder(Order order, boolean throwExceptionWhenDeductBalance) throws BusinessException {
         // 获取 Seata 当前全局事务 xid
         String xid = RootContext.getXID();
         try {
@@ -53,7 +54,7 @@ public class OrderService {
                 }
 
                 // 扣减账户余额
-                response = this.accountClient.deduct(order.getUserId(), order.getMoney());
+                response = this.accountClient.deduct(order.getUserId(), order.getMoney(), throwExceptionWhenDeductBalance);
                 FeignUtil.throwBizExceptionIfResponseFailed(response);
                 if (log.isDebugEnabled()) {
                     log.debug("账户余额扣减成功，订单信息：{}", order);
@@ -71,5 +72,17 @@ public class OrderService {
                 log.debug("订单创建结束，XID：{}", xid);
             }
         }
+    }
+
+
+    /**
+     * 准备性能测试数据
+     *
+     * @return
+     */
+    public void preparePerfTestDatum() throws BusinessException {
+        accountClient.preparePerfTestDatum();
+        storageClient.preparePerfTestDatum();
+        orderMapper.reset();
     }
 }

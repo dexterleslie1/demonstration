@@ -10,6 +10,8 @@ create table if not exists `t_account`(
     `residue`       decimal(10,0) default '0' comment '剩余可用额度'
 ) engine = innodb auto_increment = 1 default charset = utf8mb4;
 
+create unique index idx_account_user_id on t_account(user_id);
+
 insert into `t_account`(`user_id`, `total`, `used`, `residue`) values (1, 1000, 0, 1000);
 
 /* TCC 事务冻结金额 */
@@ -19,3 +21,5 @@ create table if not exists `t_account_freeze`(
     `freeze_money`  int(11) default 0 comment '冻结金额',
     `state`         ENUM('Try', 'Confirm', 'Cancel') not null comment '事务状态'
 ) engine = innodb default charset = utf8mb4;
+
+create index idx_account_freeze_user_id on t_account_freeze(user_id);

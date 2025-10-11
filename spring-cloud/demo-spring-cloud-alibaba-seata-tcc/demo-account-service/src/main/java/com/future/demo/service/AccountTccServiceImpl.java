@@ -1,10 +1,12 @@
 package com.future.demo.service;
 
 import com.future.common.exception.BusinessException;
+import com.future.demo.entity.Account;
 import com.future.demo.entity.AccountFreeze;
 import com.future.demo.entity.TccTransactionState;
 import com.future.demo.mapper.AccountFreezeMapper;
 import com.future.demo.mapper.AccountMapper;
+import com.future.demo.util.Util;
 import io.seata.core.context.RootContext;
 import io.seata.rm.tcc.api.BusinessActionContext;
 import io.seata.rm.tcc.api.BusinessActionContextParameter;
@@ -27,7 +29,8 @@ public class AccountTccServiceImpl implements AccountTccService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deduct(@BusinessActionContextParameter(paramName = "userId") Long userId,
-                       @BusinessActionContextParameter(paramName = "amount") BigDecimal amount) throws BusinessException {
+                       @BusinessActionContextParameter(paramName = "amount") BigDecimal amount,
+                       boolean throwExceptionWhenDeductBalance) throws BusinessException {
         // 冻结金额和事务状态记录
         String xid = RootContext.getXID();
 
@@ -51,6 +54,10 @@ public class AccountTccServiceImpl implements AccountTccService {
                 String errorMessage = String.format("用户 %d 余额不足导致扣款失败！", userId);
                 throw new BusinessException(errorMessage);
             }
+        }
+
+        if (throwExceptionWhenDeductBalance) {
+            throw new BusinessException("预期扣减余额失败！");
         }
     }
 
@@ -95,5 +102,23 @@ public class AccountTccServiceImpl implements AccountTccService {
         accountFreeze.setState(TccTransactionState.Cancel);
         int affectRow = accountFreezeMapper.update(accountFreeze);
         return affectRow == 1;
+    }
+
+    /**
+     * 准备性能测试数据
+     *
+     * @return
+     */
+    public void preparePerfTestDatum() {
+        for (int i = 0; i < Util.PerfTestDatumUserIdTotalCount; i++) {
+            long userId = Util.PerfTestDatumUserIdStart + i;
+            Account account = new Account();
+            account.setUserId(userId);
+            account.setTotal(BigDecimal.valueOf(Util.PerfTestDatumUserBalance));
+            account.setUsed(BigDecimal.valueOf(0));
+            account.setResidue(account.getTotal());
+            accountMapper.deleteByUserId(userId);
+            accountMapper.insert(account);
+        }
     }
 }

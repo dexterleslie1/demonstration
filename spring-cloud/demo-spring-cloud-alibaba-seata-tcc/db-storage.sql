@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS `undo_log`
     `log_created`   DATETIME(6)  NOT NULL COMMENT 'create datetime',
     `log_modified`  DATETIME(6)  NOT NULL COMMENT 'modify datetime',
     UNIQUE KEY `ux_undo_log` (`xid`, `branch_id`)
-    ) ENGINE = InnoDB AUTO_INCREMENT = 1 DEFAULT CHARSET = utf8mb4 COMMENT ='AT transaction mode undo table';
+) ENGINE = InnoDB AUTO_INCREMENT = 1 DEFAULT CHARSET = utf8mb4 COMMENT ='AT transaction mode undo table';
 ALTER TABLE `undo_log` ADD INDEX `ix_log_created` (`log_created`);
 
 create table if not exists `t_storage`
@@ -25,6 +25,8 @@ create table if not exists `t_storage`
     `residue`       int(11)    default null comment '剩余库存'
 ) engine = innodb auto_increment = 1 default charset = utf8mb4;
 
+create unique index idx_storage_product_id on t_storage(product_id);
+
 insert into `t_storage`(`product_id`, `total`, `used`, `residue`) values (1, 100, 0, 100);
 
 /* TCC 事务冻结库存 */
@@ -33,4 +35,6 @@ create table if not exists `t_storage_freeze`(
     `product_id`            bigint(11) not null,
     `freeze_stock`   int(11) default 0 comment '冻结库存',
     `state`                 ENUM('Try', 'Confirm', 'Cancel') not null comment '事务状态'
-    ) engine = innodb default charset = utf8mb4;
+) engine = innodb default charset = utf8mb4;
+
+create index idx_storage_freeze_product_id on t_storage_freeze(product_id);

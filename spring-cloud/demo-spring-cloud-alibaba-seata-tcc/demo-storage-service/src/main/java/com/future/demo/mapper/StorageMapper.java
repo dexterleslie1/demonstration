@@ -1,10 +1,7 @@
 package com.future.demo.mapper;
 
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Update;
-
-import java.math.BigDecimal;
+import com.future.demo.entity.Storage;
+import org.apache.ibatis.annotations.*;
 
 @Mapper
 public interface StorageMapper {
@@ -27,4 +24,11 @@ public interface StorageMapper {
      */
     @Update("update `t_storage` set `total`=100,`used`=0,`residue`=100 where product_id=1")
     void reset();
+
+
+    @Delete("delete from t_storage where product_id=#{productId}")
+    int deleteByProductId(@Param("productId") Long productId);
+
+    @Insert("insert into t_storage(product_id,total,used,residue) values(#{productId},#{total},#{used},#{residue})")
+    int insert(Storage storage);
 }
