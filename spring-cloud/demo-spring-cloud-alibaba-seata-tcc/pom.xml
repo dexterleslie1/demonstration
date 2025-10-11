@@ -50,7 +50,7 @@
             <dependency>
                 <groupId>com.github.dexterleslie1</groupId>
                 <artifactId>future-common</artifactId>
-                <version>1.2.6</version>
+                <version>1.2.7</version>
             </dependency>
 
             <dependency>
