@@ -1,0 +1,87 @@
+version: "3.1"
+
+services:
+  nacos-server:
+    image: nacos/nacos-server:v2.2.3
+    environment:
+      - TZ=Asia/Shanghai
+      - MODE=standalone
+#    ports:
+#      - '8848:8848'
+#      - '9848:9848'
+    restart: unless-stopped
+    network_mode: host
+
+  db-seata:
+    image: mysql:8.0.18
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+    volumes:
+      - ./db-seata.sql:/docker-entrypoint-initdb.d/db.sql
+      - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf
+    environment:
+      - LANG=C.UTF-8
+      - TZ=Asia/Shanghai
+      - MYSQL_ROOT_PASSWORD=123456
+    ports:
+      - '3306:3306'
+  db-order:
+    image: mysql:8.0.18
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+    volumes:
+      - ./db-order.sql:/docker-entrypoint-initdb.d/db.sql
+      - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf
+    environment:
+      - LANG=C.UTF-8
+      - TZ=Asia/Shanghai
+      - MYSQL_ROOT_PASSWORD=123456
+    ports:
+      - '3307:3306'
+  db-storage:
+    image: mysql:8.0.18
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+    volumes:
+      - ./db-storage.sql:/docker-entrypoint-initdb.d/db.sql
+      - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf
+    environment:
+      - LANG=C.UTF-8
+      - TZ=Asia/Shanghai
+      - MYSQL_ROOT_PASSWORD=123456
+    ports:
+      - '3308:3306'
+  db-account:
+    image: mysql:8.0.18
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+    volumes:
+      - ./db-account.sql:/docker-entrypoint-initdb.d/db.sql
+      - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf
+    environment:
+      - LANG=C.UTF-8
+      - TZ=Asia/Shanghai
+      - MYSQL_ROOT_PASSWORD=123456
+    ports:
+      - '3309:3306'
+
+  seata-server:
+    image: seataio/seata-server:2.0.0
+#    ports:
+#      - "7091:7091"
+#      - "8091:8091"
+    network_mode: host
+    volumes:
+      - ./application-seata.yml:/seata-server/resources/application.yml
+    restart: unless-stopped
+    depends_on:
+      - db-seata
+      - nacos-server

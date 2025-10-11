@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.future.demo.mapper.StorageMapper">
+    <update id="deduct">
+        update t_storage
+        set used    = used + #{amount},
+            residue = residue - #{amount}
+        where product_id = #{productId}
+    </update>
+</mapper>
