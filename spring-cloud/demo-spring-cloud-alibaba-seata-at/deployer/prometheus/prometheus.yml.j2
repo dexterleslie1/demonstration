@@ -1,0 +1,63 @@
+# 全局配置
+global:
+  scrape_interval:     15s # 将搜刮间隔设置为每15秒一次。默认是每1分钟一次。
+  evaluation_interval: 15s # 每15秒评估一次规则。默认是每1分钟一次。
+
+
+# 这是一个关于告警的配置部分
+alerting:
+  # 指定了Alertmanager的配置列表
+  alertmanagers:
+  # 表示使用静态配置的方式来指定Alertmanager实例的地址。静态配置意味着这些地址是硬编码在配置文件中的，不会动态改变
+  - static_configs:
+    # 指定了Alertmanager实例的地址和端口。这里，alertmanager是Alertmanager服务的主机名（或IP地址），
+    # 而9093是Alertmanager服务监听的端口。这意味着Prometheus将向alertmanager:9093发送告警信息
+    - targets: ['alertmanager:9093']
+
+# 报警(触发器)配置
+rule_files:
+  - "alert-rule.yml"
+
+# 搜刮配置
+scrape_configs:
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["prometheus:9090"]
+  # node_exporter配置
+  - job_name: 'node-exporter'
+    scrape_interval: 15s
+    static_configs:
+{% for host in groups['common'] %}
+      - targets: ['{{ host }}:9100']
+        labels:
+          instance: common-{{ loop.index }}-{{ host }}
+{% endfor %}
+{% for host in groups['service-account'] %}
+      - targets: ['{{ host }}:9100']
+        labels:
+          instance: service-account-{{ loop.index }}-{{ host }}
+{% endfor %}
+{% for host in groups['service-storage'] %}
+      - targets: ['{{ host }}:9100']
+        labels:
+          instance: service-storage-{{ loop.index }}-{{ host }}
+{% endfor %}
+{% for host in groups['service-order'] %}
+      - targets: ['{{ host }}:9100']
+        labels:
+          instance: service-order-{{ loop.index }}-{{ host }}
+{% endfor %}
+{% for host in groups['openresty'] %}
+      - targets: ['{{ host }}:9100']
+        labels:
+          instance: openresty-{{ loop.index }}-{{ host }}
+{% endfor %}
+
+  # openresty metrics端点配置
+  - job_name: 'openresty'
+    static_configs:
+{% for host in groups['openresty'] %}
+       - targets: ['{{ host }}:9145']
+         labels:
+           instance: openresty-{{ loop.index }}-{{ host }}
+{% endfor %}

@@ -78,10 +78,20 @@
     </dependencies>
 
     <build>
+        <finalName>service-account</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>2.7.18</version>
+                <!-- SpringBoot 项目指向的 parent 不是 spring-boot-starter-parent 时，需要显式指定插件执行的目标 repackage -->
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

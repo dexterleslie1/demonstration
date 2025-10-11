@@ -1,0 +1,36 @@
+version: "3.1"
+
+services:
+  nacos-server:
+    image: nacos/nacos-server:v2.2.3
+    environment:
+      - TZ=Asia/Shanghai
+      - MODE=standalone
+    restart: unless-stopped
+    network_mode: host
+
+  db-seata:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-seata-db-seata
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+    environment:
+      - LANG=C.UTF-8
+      - TZ=Asia/Shanghai
+      - MYSQL_ROOT_PASSWORD=123456
+    restart: unless-stopped
+    ports:
+      - '3306:3306'
+
+  seata-server:
+    image: seataio/seata-server:2.0.0
+    volumes:
+      - ./application-seata.yml:/seata-server/resources/application.yml
+    environment:
+      - SEATA_IP=${seata_ip}
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      - db-seata
+      - nacos-server

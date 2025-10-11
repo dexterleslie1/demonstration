@@ -1,0 +1,62 @@
+- name: "销毁service account服务"
+  hosts: service-account
+  tasks:
+    - name: "使用Docker Compose down销毁service account服务"
+      shell: |
+        set -e
+        cd ~/deployer-demo-seata-xa/service-account
+        docker compose down -v
+
+- name: "销毁service storage服务"
+  hosts: service-storage
+  tasks:
+    - name: "使用Docker Compose down销毁service storage服务"
+      shell: |
+        set -e
+        cd ~/deployer-demo-seata-xa/service-storage
+        docker compose down -v
+
+- name: "销毁service order服务"
+  hosts: service-order
+  tasks:
+    - name: "使用Docker Compose down销毁service order服务"
+      shell: |
+        set -e
+        cd ~/deployer-demo-seata-xa/service-order
+        docker compose down -v
+
+- name: "销毁公共服务"
+  hosts: common
+  tasks:
+    - name: "使用Docker Compose down销毁公共服务"
+      shell: |
+        set -e
+        cd ~/deployer-demo-seata-xa/common
+        docker compose down -v
+
+- name: "销毁prometheus公共服务"
+  hosts: common
+  tasks:
+    - name: "使用Docker Compose down销毁prometheus公共服务"
+      shell: |
+        set -e
+        cd ~/deployer-demo-seata-xa/prometheus
+        docker compose down -v
+
+- name: "销毁OpenResty服务"
+  hosts: openresty
+  tasks:
+    - name: "使用Docker Compose down销毁OpenResty服务"
+      shell: |
+        set -e
+        cd ~/deployer-demo-seata-xa/openresty
+        docker compose down -v
+
+- name: "销毁node_exporter"
+  hosts: "{{ groups['all'] }}"
+  tasks:
+    - name: "使用Docker Compose down销毁node_exporter"
+      shell: |
+        set -e
+        cd ~/deployer-demo-seata-xa/node-exporter
+        docker compose down -v

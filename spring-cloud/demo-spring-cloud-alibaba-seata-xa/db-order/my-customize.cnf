@@ -1,0 +1,25 @@
+[mysqld]
+port=3307
+max_connections=1024
+slow_query_log=1
+long_query_time=1
+slow_query_log_file=slow-query.log
+innodb_flush_log_at_trx_commit=0
+innodb_file_per_table=1
+innodb_buffer_pool_size=512m
+
+# 设置错误信息输出到error.log文件中
+# 例如：通过启用innodb_print_all_deadlocks输出的死锁日志
+log_error = error.log
+# `show engine innodb status\G`命令的`TRANSACTIONS`栏目中会打印当前等待状态的锁对应的表中详细的持有锁信息
+innodb_status_output_locks=ON
+
+# 启用binlog
+log_bin
+# 推荐使用 ROW 格式，但你也可以选择 STATEMENT 或 MIXED
+binlog_format = MIXED
+# 设置 binlog 文件在自动删除前的保留天数
+expire_logs_days = 7
+# 设置单个 binlog 文件的最大大小
+max_binlog_size = 512M
+server-id = 10001

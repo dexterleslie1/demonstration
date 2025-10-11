@@ -1,0 +1,62 @@
+- name: "启动service account服务"
+  hosts: service-account
+  tasks:
+    - name: "使用Docker Compose启动service account服务"
+      shell: |
+        set -e
+        cd ~/deployer-demo-seata-xa/service-account
+        docker compose pull && docker compose up -d
+
+- name: "启动service storage服务"
+  hosts: service-storage
+  tasks:
+    - name: "使用Docker Compose启动service storage服务"
+      shell: |
+        set -e
+        cd ~/deployer-demo-seata-xa/service-storage
+        docker compose pull && docker compose up -d
+
+- name: "启动service order服务"
+  hosts: service-order
+  tasks:
+    - name: "使用Docker Compose启动service order服务"
+      shell: |
+        set -e
+        cd ~/deployer-demo-seata-xa/service-order
+        docker compose pull && docker compose up -d
+
+- name: "启动公共服务"
+  hosts: common
+  tasks:
+    - name: "使用Docker Compose启动公共服务"
+      shell: |
+        set -e
+        cd ~/deployer-demo-seata-xa/common
+        docker compose pull && docker compose up -d
+
+- name: "启动prometheus公共服务"
+  hosts: common
+  tasks:
+    - name: "使用Docker Compose启动prometheus公共服务"
+      shell: |
+        set -e
+        cd ~/deployer-demo-seata-xa/prometheus
+        docker compose pull && docker compose up -d
+
+- name: "启动OpenResty服务"
+  hosts: openresty
+  tasks:
+    - name: "使用Docker Compose启动OpenResty服务"
+      shell: |
+        set -e
+        cd ~/deployer-demo-seata-xa/openresty
+        docker compose pull && docker compose up -d
+
+- name: "启动node_exporter"
+  hosts: "{{ groups['all'] }}"
+  tasks:
+    - name: "使用Docker Compose启动node_exporter"
+      shell: |
+        set -e
+        cd ~/deployer-demo-seata-xa/node-exporter
+        docker compose up -d

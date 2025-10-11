@@ -1,0 +1,23 @@
+version: "3.1"
+
+services:
+  service-storage:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-seata-service-storage
+    environment:
+      - JAVA_OPTS=${java_opts}
+      - TZ=Asia/Shanghai
+      - nacos_server_address=${nacos_server_address}
+    restart: unless-stopped
+    network_mode: host
+  db-storage:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-seata-db-storage
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+    environment:
+      - LANG=C.UTF-8
+      - TZ=Asia/Shanghai
+      - MYSQL_ROOT_PASSWORD=123456
+    restart: unless-stopped
+    network_mode: host

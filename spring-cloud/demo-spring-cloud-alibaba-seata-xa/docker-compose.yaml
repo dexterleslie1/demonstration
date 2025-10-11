@@ -1,6 +1,37 @@
 version: "3.1"
 
 services:
+  service-account:
+    build:
+      context: demo-account-service
+      dockerfile: Dockerfile
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-seata-service-account
+    environment:
+      - JAVA_OPTS=-Xmx512m
+      - TZ=Asia/Shanghai
+    restart: unless-stopped
+    network_mode: host
+  service-order:
+    build:
+      context: demo-order-service
+      dockerfile: Dockerfile
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-seata-service-order
+    environment:
+      - JAVA_OPTS=-Xmx512m
+      - TZ=Asia/Shanghai
+    restart: unless-stopped
+    network_mode: host
+  service-storage:
+    build:
+      context: demo-storage-service
+      dockerfile: Dockerfile
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-seata-service-storage
+    environment:
+      - JAVA_OPTS=-Xmx512m
+      - TZ=Asia/Shanghai
+    restart: unless-stopped
+    network_mode: host
+
   nacos-server:
     image: nacos/nacos-server:v2.2.3
     environment:
@@ -11,77 +42,89 @@ services:
 #      - '9848:9848'
     restart: unless-stopped
     network_mode: host
-
-  db-seata:
-    image: mysql:8.0.18
-    command:
-      - --character-set-server=utf8mb4
-      - --collation-server=utf8mb4_general_ci
-      - --skip-character-set-client-handshake
-    volumes:
-      - ./db-seata.sql:/docker-entrypoint-initdb.d/db.sql
-      - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf
-    environment:
-      - LANG=C.UTF-8
-      - TZ=Asia/Shanghai
-      - MYSQL_ROOT_PASSWORD=123456
-    ports:
-      - '3306:3306'
-  db-order:
-    image: mysql:8.0.18
-    command:
-      - --character-set-server=utf8mb4
-      - --collation-server=utf8mb4_general_ci
-      - --skip-character-set-client-handshake
-    volumes:
-      - ./db-order.sql:/docker-entrypoint-initdb.d/db.sql
-      - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf
-    environment:
-      - LANG=C.UTF-8
-      - TZ=Asia/Shanghai
-      - MYSQL_ROOT_PASSWORD=123456
-    ports:
-      - '3307:3306'
-  db-storage:
-    image: mysql:8.0.18
-    command:
-      - --character-set-server=utf8mb4
-      - --collation-server=utf8mb4_general_ci
-      - --skip-character-set-client-handshake
-    volumes:
-      - ./db-storage.sql:/docker-entrypoint-initdb.d/db.sql
-      - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf
-    environment:
-      - LANG=C.UTF-8
-      - TZ=Asia/Shanghai
-      - MYSQL_ROOT_PASSWORD=123456
-    ports:
-      - '3308:3306'
-  db-account:
-    image: mysql:8.0.18
-    command:
-      - --character-set-server=utf8mb4
-      - --collation-server=utf8mb4_general_ci
-      - --skip-character-set-client-handshake
-    volumes:
-      - ./db-account.sql:/docker-entrypoint-initdb.d/db.sql
-      - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf
-    environment:
-      - LANG=C.UTF-8
-      - TZ=Asia/Shanghai
-      - MYSQL_ROOT_PASSWORD=123456
-    ports:
-      - '3309:3306'
-
   seata-server:
     image: seataio/seata-server:2.0.0
-#    ports:
-#      - "7091:7091"
-#      - "8091:8091"
+    #    ports:
+    #      - "7091:7091"
+    #      - "8091:8091"
     network_mode: host
     volumes:
-      - ./application-seata.yml:/seata-server/resources/application.yml
+      - ./deployer/common/application-seata.yml:/seata-server/resources/application.yml
     restart: unless-stopped
     depends_on:
       - db-seata
       - nacos-server
+  db-seata:
+    build:
+      context: db-seata
+      dockerfile: Dockerfile
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-seata-db-seata
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+    volumes:
+      - ./db-seata/db-seata.sql:/docker-entrypoint-initdb.d/db.sql
+      - ./db-seata/my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf
+    environment:
+      - LANG=C.UTF-8
+      - TZ=Asia/Shanghai
+      - MYSQL_ROOT_PASSWORD=123456
+    restart: unless-stopped
+    ports:
+      - '3306:3306'
+
+  db-order:
+    build:
+      context: db-order
+      dockerfile: Dockerfile
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-seata-db-order
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+    volumes:
+      - ./db-order/db-order.sql:/docker-entrypoint-initdb.d/db.sql
+      - ./db-order/my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf
+    environment:
+      - LANG=C.UTF-8
+      - TZ=Asia/Shanghai
+      - MYSQL_ROOT_PASSWORD=123456
+    restart: unless-stopped
+    network_mode: host
+  db-storage:
+    build:
+      context: db-storage
+      dockerfile: Dockerfile
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-seata-db-storage
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+    volumes:
+      - ./db-storage/db-storage.sql:/docker-entrypoint-initdb.d/db.sql
+      - ./db-storage/my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf
+    environment:
+      - LANG=C.UTF-8
+      - TZ=Asia/Shanghai
+      - MYSQL_ROOT_PASSWORD=123456
+    restart: unless-stopped
+    network_mode: host
+  db-account:
+    build:
+      context: db-account
+      dockerfile: Dockerfile
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-seata-db-account
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+    volumes:
+      - ./db-account/db-account.sql:/docker-entrypoint-initdb.d/db.sql
+      - ./db-account/my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf
+    environment:
+      - LANG=C.UTF-8
+      - TZ=Asia/Shanghai
+      - MYSQL_ROOT_PASSWORD=123456
+    restart: unless-stopped
+    network_mode: host
