@@ -7,6 +7,8 @@ import com.future.demo.util.Util;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
+
 @Service
 public class StorageService {
 
@@ -20,7 +22,8 @@ public class StorageService {
      *
      * @return
      */
-    public void preparePerfTestDatum() {
+    @PostConstruct
+    public void init() {
         for (int i = 0; i < Util.PerfTestDatumProductIdTotalCount; i++) {
             long productId = Util.PerfTestDatumProductIdStart + i;
             Storage storage = new Storage();

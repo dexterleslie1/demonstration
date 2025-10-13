@@ -18,7 +18,4 @@ public interface AccountClient {
 
     @GetMapping("/account/reset")
     ObjectResponse<String> reset() throws BusinessException;
-
-    @GetMapping("/account/preparePerfTestDatum")
-    ObjectResponse<String> preparePerfTestDatum() throws BusinessException;
 }

@@ -7,6 +7,7 @@ import com.future.demo.util.Util;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 
 @Service
@@ -22,7 +23,8 @@ public class AccountService {
      *
      * @return
      */
-    public void preparePerfTestDatum() {
+    @PostConstruct
+    public void init() {
         for (int i = 0; i < Util.PerfTestDatumUserIdTotalCount; i++) {
             long userId = Util.PerfTestDatumUserIdStart + i;
             Account account = new Account();

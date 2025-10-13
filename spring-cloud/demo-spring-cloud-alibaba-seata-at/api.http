@@ -1,8 +1,5 @@
 ### /order/create
 POST http://192.168.1.185/order/create?userId=1&productId=1&count=2&amount=20
 
-### /order/preparePerfTestDatum
-GET http://192.168.1.185/order/preparePerfTestDatum
-
 ### /order/createPerfTest
 GET http://192.168.1.185/order/createPerfTest

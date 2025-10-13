@@ -68,17 +68,6 @@ public class OrderController {
     }
 
     /**
-     * 准备性能测试数据
-     *
-     * @return
-     */
-    @GetMapping("/order/preparePerfTestDatum")
-    ObjectResponse<String> preparePerfTestDatum() throws BusinessException {
-        orderService.preparePerfTestDatum();
-        return ResponseUtils.successObject("准备成功");
-    }
-
-    /**
      * @return
      * @throws BusinessException
      */

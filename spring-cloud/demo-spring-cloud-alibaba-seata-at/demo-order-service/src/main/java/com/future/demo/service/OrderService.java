@@ -73,15 +73,4 @@ public class OrderService {
             }
         }
     }
-
-    /**
-     * 准备性能测试数据
-     *
-     * @return
-     */
-    public void preparePerfTestDatum() throws BusinessException {
-        accountClient.preparePerfTestDatum();
-        storageClient.preparePerfTestDatum();
-        orderMapper.reset();
-    }
 }

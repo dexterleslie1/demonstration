@@ -6,6 +6,7 @@ import com.future.demo.entity.Storage;
 import com.future.demo.mapper.StorageMapper;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
 @Service
@@ -26,7 +27,8 @@ public class StorageService {
      *
      * @return
      */
-    public void preparePerfTestDatum() {
+    @PostConstruct
+    public void init() {
         for (int i = 0; i < Util.PerfTestDatumProductIdTotalCount; i++) {
             long productId = Util.PerfTestDatumProductIdStart + i;
             Storage storage = new Storage();

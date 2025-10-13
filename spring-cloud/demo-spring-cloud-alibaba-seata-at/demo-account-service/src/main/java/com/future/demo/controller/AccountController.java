@@ -39,15 +39,4 @@ public class AccountController {
         accountMapper.reset();
         return ResponseUtils.successObject("重置成功");
     }
-
-    /**
-     * 准备性能测试数据
-     *
-     * @return
-     */
-    @GetMapping("/account/preparePerfTestDatum")
-    ObjectResponse<String> preparePerfTestDatum() {
-        accountService.preparePerfTestDatum();
-        return ResponseUtils.successObject("准备成功");
-    }
 }

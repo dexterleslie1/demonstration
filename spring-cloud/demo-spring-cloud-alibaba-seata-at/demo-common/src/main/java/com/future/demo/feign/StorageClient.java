@@ -15,7 +15,4 @@ public interface StorageClient {
 
     @GetMapping("/storage/reset")
     ObjectResponse<String> reset() throws BusinessException;
-
-    @GetMapping("/storage/preparePerfTestDatum")
-    ObjectResponse<String> preparePerfTestDatum() throws BusinessException;
 }

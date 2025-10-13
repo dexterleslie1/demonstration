@@ -34,15 +34,4 @@ public class OrderService {
     public Long createOrder(Order order, boolean throwExceptionWhenDeductBalance) throws BusinessException {
         return orderTccAction.createOrder(order, throwExceptionWhenDeductBalance);
     }
-
-    /**
-     * 准备性能测试数据
-     *
-     * @return
-     */
-    public void preparePerfTestDatum() throws BusinessException {
-        accountClient.preparePerfTestDatum();
-        storageClient.preparePerfTestDatum();
-        orderMapper.reset();
-    }
 }
