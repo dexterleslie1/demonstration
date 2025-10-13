@@ -23,7 +23,7 @@ public class OrderService {
     @Resource
     AccountClient accountClient;
     @Autowired
-    OrderTccService orderTccService;
+    OrderTccAction orderTccAction;
 
     /**
      * @param order
@@ -32,7 +32,7 @@ public class OrderService {
      */
     @GlobalTransactional(name = "order-create", rollbackFor = Exception.class)
     public Long createOrder(Order order, boolean throwExceptionWhenDeductBalance) throws BusinessException {
-        return orderTccService.createOrder(order, throwExceptionWhenDeductBalance);
+        return orderTccAction.createOrder(order, throwExceptionWhenDeductBalance);
     }
 
     /**

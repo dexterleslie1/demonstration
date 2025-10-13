@@ -142,6 +142,10 @@ public class ApplicationTests {
             threadPool.shutdown();
             while (!threadPool.awaitTermination(100, TimeUnit.MILLISECONDS)) ;
 
+            // 并发操作同一个资源 tcc fence 防护（避免幂等、空回滚、悬挂）机制会报告死锁错误
+            // 在这里等待 5 秒 tcc cancel 重试完毕
+            TimeUnit.SECONDS.sleep(5);
+
             // 预期有 20 笔订单
             List<Order> orderList = this.orderMapper.selectAll();
             Assertions.assertEquals(20, orderList.size());

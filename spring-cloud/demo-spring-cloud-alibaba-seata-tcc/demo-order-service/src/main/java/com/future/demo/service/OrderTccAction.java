@@ -1,25 +1,27 @@
 package com.future.demo.service;
 
 import com.future.common.exception.BusinessException;
+import com.future.demo.entity.Order;
 import io.seata.rm.tcc.api.BusinessActionContext;
 import io.seata.rm.tcc.api.BusinessActionContextParameter;
 import io.seata.rm.tcc.api.LocalTCC;
 import io.seata.rm.tcc.api.TwoPhaseBusinessAction;
 
-import java.math.BigDecimal;
-
 @LocalTCC
-public interface AccountTccService {
+public interface OrderTccAction {
     /**
-     * @param userId
-     * @param amount
+     * @param order
      * @param throwExceptionWhenDeductBalance 扣减余额时是否抛出异常以模拟余额扣减失败
      * @throws BusinessException
      */
-    @TwoPhaseBusinessAction(name = "deduct", commitMethod = "confirm", rollbackMethod = "cancel")
-    void deduct(@BusinessActionContextParameter(paramName = "userId") Long userId,
-                @BusinessActionContextParameter(paramName = "amount") BigDecimal amount,
-                boolean throwExceptionWhenDeductBalance) throws BusinessException;
+    @TwoPhaseBusinessAction(
+            name = "createOrder",
+            commitMethod = "confirm",
+            rollbackMethod = "cancel",
+            // 启用tcc防护（避免幂等、空回滚、悬挂）
+            useTCCFence = true)
+    Long createOrder(@BusinessActionContextParameter(paramName = "order") Order order,
+                     boolean throwExceptionWhenDeductBalance) throws BusinessException;
 
     /**
      * 提交
@@ -36,6 +38,4 @@ public interface AccountTccService {
      * @return
      */
     boolean cancel(BusinessActionContext context);
-
-    void preparePerfTestDatum();
 }

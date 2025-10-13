@@ -10,6 +10,7 @@ import com.future.demo.mapper.OrderMapper;
 import io.seata.core.context.RootContext;
 import io.seata.rm.tcc.api.BusinessActionContext;
 import io.seata.rm.tcc.api.BusinessActionContextParameter;
+import io.seata.rm.tcc.api.BusinessActionContextUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,7 +19,7 @@ import javax.annotation.Resource;
 
 @Service
 @Slf4j
-public class OrderTccServiceImpl implements OrderTccService {
+public class OrderTccActionImpl implements OrderTccAction {
 
     @Resource
     OrderMapper orderMapper;
@@ -28,6 +29,8 @@ public class OrderTccServiceImpl implements OrderTccService {
     AccountClient accountClient;
 
     @Override
+    // Try 方法需保证自身的本地事务实现，如通过 @Transactional 注解修饰。
+    // 因为当前分支事务的 Try 操作出现异常，则回滚全局事务，触发其他分支（不包括当前 Try 操作异常的分支）事务的 Cancel 方法；
     @Transactional(rollbackFor = Exception.class)
     public Long createOrder(@BusinessActionContextParameter(paramName = "order") Order order,
                             boolean throwExceptionWhenDeductBalance) throws BusinessException {
@@ -38,8 +41,10 @@ public class OrderTccServiceImpl implements OrderTccService {
                 log.debug("创建订单，XID：{}", xid);
             }
 
-            order.setStatus(1);
+            order.setStatus(0);
             int count = this.orderMapper.insert(order);
+            // 插入订单后，将生成的 orderId 存入上下文，在 confirm 或者 cancel 中能够引用
+            BusinessActionContextUtil.addContext("orderId", order.getId());
             if (count > 0) {
                 order = this.orderMapper.findById(order.getId());
                 if (log.isDebugEnabled()) {
@@ -76,11 +81,23 @@ public class OrderTccServiceImpl implements OrderTccService {
 
     @Override
     public boolean confirm(BusinessActionContext context) {
+        Long orderId = context.getActionContext("orderId", Long.class);
+        if (orderId != null) {
+            // 更新 order 状态为 status=2
+            Order order = orderMapper.findById(orderId);
+            order.setStatus(2);
+            orderMapper.update(order);
+        }
         return true;
     }
 
     @Override
     public boolean cancel(BusinessActionContext context) {
+        Long orderId = context.getActionContext("orderId", Long.class);
+        if (orderId != null) {
+            // 删除之前的 order
+            orderMapper.deleteById(orderId);
+        }
         return true;
     }
 }

@@ -28,6 +28,12 @@
         <dependency>
             <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-seata</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>io.seata</groupId>
+                    <artifactId>seata-spring-boot-starter</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <!-- 注意：seata-spring-boot-starter 版本需要和 Seata 服务器版本对应，否则不能自动回滚事务 -->
         <dependency>

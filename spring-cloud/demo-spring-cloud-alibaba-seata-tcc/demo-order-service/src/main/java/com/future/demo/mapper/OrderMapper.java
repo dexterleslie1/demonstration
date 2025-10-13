@@ -22,4 +22,7 @@ public interface OrderMapper {
      */
     @Delete("delete from `t_order`")
     void reset();
+
+    @Delete("delete from t_order where id=#{id}")
+    int deleteById(@Param("id") Long id);
 }
