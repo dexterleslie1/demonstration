@@ -1,0 +1,5 @@
+### /order/create
+POST http://localhost:8080/order/create?userId=1&productId=1&count=2&amount=20
+
+### /order/createPerfTest
+GET http://localhost:8080/order/createPerfTest

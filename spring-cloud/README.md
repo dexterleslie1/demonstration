@@ -639,10 +639,10 @@ pom 引入 LoadBalancer 依赖
 
 ```xml
 <!-- SpringCloud LoadBalancer 依赖 -->
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-loadbalancer</artifactId>
-        </dependency>
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-loadbalancer</artifactId>
+</dependency>
 ```
 
 RestTemplate 使用 @LoadBalanced 注解
