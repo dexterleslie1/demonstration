@@ -15,6 +15,10 @@ public class Const {
 //     */
 //    public final static String TopicIncreaseCountSlow = "topic-increase-count-slow";
     /**
+     * 秒杀方式下单成功，订阅此消息生成 TopicOrderInCacheSyncToDb、TopicCreateOrderCassandraIndexListByUserId、TopicCreateOrderCassandraIndexListByMerchantId 3条消息以保证数据最终一致
+     */
+    public final static String TopicCreateFlashSaleOrderSuccessfully = "topic-create-flash-sale-order-successfully";
+    /**
      * 创建订单 cassandra 索引 listByUserId
      */
     public final static String TopicCreateOrderCassandraIndexListByUserId = "topic-create-order-cassandra-index-listByUserId";

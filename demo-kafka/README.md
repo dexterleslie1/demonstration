@@ -3365,5 +3365,5 @@ Transfer/sec:    136.18KB
 ansible-playbook playbook-service-destroy.yml --inventory inventory.ini
 ```
 
-结论：事务并发性能很差，在业务开发中尽量避免使用事务。可以通过写入一条主控消息，通过读扩散的方式间接实现，例如：秒杀下单场景，通过写入一条主控消息，通过消费扩散方式达到数据库、`Cassandra ListByUserId`、`Cassandra ListByMerchantId` 计数器最终一致的效果。
+结论：事务并发性能很差，在业务开发中尽量避免使用事务。可以通过写入一条主控消息，再订阅此主控消息生成多条业务消息，例如：秒杀下单场景，通过写入一条主控消息，再订阅此主控消息生成数据库、`Cassandra ListByUserId`、`Cassandra ListByMerchantId` 消息达到计数器最终一致的效果。
 

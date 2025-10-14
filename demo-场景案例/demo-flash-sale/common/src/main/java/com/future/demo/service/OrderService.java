@@ -8,7 +8,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.future.common.exception.BusinessException;
 import com.future.count.IncreaseCountDTO;
 import com.future.demo.config.PrometheusCustomMonitor;
-import com.future.demo.constant.Const;
 import com.future.demo.dto.OrderDTO;
 import com.future.demo.dto.OrderDetailDTO;
 import com.future.demo.entity.*;
@@ -340,11 +339,12 @@ public class OrderService {
         // 秒杀成功后，把用户订单信息存储到 redis 中，cassandra 同步成功后会自动清除数据
         /*key = CacheKeyPrefixOrderInCacheBeforeCassandraIndexCreate + userIdStr;
         redisTemplate.opsForHash().put(key, String.valueOf(orderId), JSON);*/
-        futureList.add(kafkaTemplate.send(Const.TopicCreateOrderCassandraIndexListByUserId, JSON));
-        futureList.add(kafkaTemplate.send(Const.TopicCreateOrderCassandraIndexListByMerchantId, JSON));
 
+        /*futureList.add(kafkaTemplate.send(Const.TopicCreateOrderCassandraIndexListByUserId, JSON));
+        futureList.add(kafkaTemplate.send(Const.TopicCreateOrderCassandraIndexListByMerchantId, JSON));
         // 秒杀成功后，发出同步订单到数据库消息
-        futureList.add(kafkaTemplate.send(TopicOrderInCacheSyncToDb, JSON));
+        futureList.add(kafkaTemplate.send(TopicOrderInCacheSyncToDb, JSON));*/
+        futureList.add(kafkaTemplate.send(TopicCreateFlashSaleOrderSuccessfully, JSON));
 
         if (!futureList.isEmpty()) {
             int index = -1;

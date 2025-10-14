@@ -220,6 +220,43 @@ public class ConfigKafkaListener {
 //        }
 //    }
 
+    /**
+     * 秒杀方式下单成功，订阅此消息生成 TopicOrderInCacheSyncToDb、TopicCreateOrderCassandraIndexListByUserId、TopicCreateOrderCassandraIndexListByMerchantId 3条消息以保证数据最终一致
+     *
+     * @param messages
+     * @throws Exception
+     */
+    @KafkaListener(topics = Const.TopicCreateFlashSaleOrderSuccessfully,
+            groupId = "group-" + Const.TopicCreateFlashSaleOrderSuccessfully,
+            concurrency = "32",
+            containerFactory = "defaultKafkaListenerContainerFactory")
+    public void receiveMessageCreateFlashSaleOrderSuccessfully(List<String> messages) throws Exception {
+        try {
+            List<ListenableFuture<SendResult<String, String>>> futureList = new ArrayList<>();
+            for (String JSON : messages) {
+                futureList.add(kafkaTemplate.send(Const.TopicCreateOrderCassandraIndexListByUserId, JSON));
+                futureList.add(kafkaTemplate.send(Const.TopicCreateOrderCassandraIndexListByMerchantId, JSON));
+                futureList.add(kafkaTemplate.send(Const.TopicOrderInCacheSyncToDb, JSON));
+            }
+
+            if (!futureList.isEmpty()) {
+                int index = -1;
+                try {
+                    for (int i = 0; i < futureList.size(); i++) {
+                        index = i;
+                        futureList.get(i).get();
+                    }
+                } catch (Exception ex) {
+                    log.error("发送Kafka消息失败，原因：{}，出错的 futureList 索引为 {}", ex.getMessage(), index, ex);
+                    throw ex;
+                }
+            }
+        } catch (Exception ex) {
+            log.error(ex.getMessage(), ex);
+            throw ex;
+        }
+    }
+
     private final AtomicInteger createOrderCassandraIndexListByUserIdConcurrency = new AtomicInteger();
 
     /**
