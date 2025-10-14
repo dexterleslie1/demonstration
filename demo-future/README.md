@@ -850,6 +850,8 @@ ansible-playbook playbook-service-destroy.yml --inventory inventory.ini
 
 ## `future-common`
 
+>注意：`future-common` 不能用于 `SpringBoot3` 中。
+>
 >`future` 公共依赖库，包含工作中常用的工具类。
 >
 >`GitHub` 地址 `https://github.com/dexterleslie1/future-common.git`。
