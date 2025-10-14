@@ -1,0 +1,15 @@
+- name: "复制deployer"
+  hosts: "{{ groups['all'] | difference(groups['management']) }}"
+  tasks:
+    - name: "复制deployer目录到远程"
+      copy:
+        src: deployer/
+        dest: ~/deployer-openresty-benchmark
+
+- name: "配置Prometheus服务的deployer"
+  hosts: common
+  tasks:
+    - name: "配置Prometheus服务的prometheus.yml"
+      template:
+        src: deployer/prometheus/prometheus.yml.j2
+        dest: ~/deployer-openresty-benchmark/prometheus/prometheus.yml
