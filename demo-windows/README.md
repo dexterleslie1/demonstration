@@ -1,5 +1,3 @@
-# `windows`操作系统相关
-
 ## 禁用自动更新功能
 
 ### `window10`禁用自动更新功能
@@ -234,3 +232,17 @@ MinGW 的核心作用就像一个 **“桥梁”** 和 **“工具提供商”**
     *   轻松完成**跨平台项目的编译**。
 
 因此，只要你需要在 Windows 上使用 GCC 编译器来生成真正的本地 Windows 程序，MinGW（特别是其现代版本 MinGW-w64）就是你不可或缺的工具。
+
+
+
+## `Microsoft Windows Desktop Runtime - 8.0.15(x64)`
+
+`Windows Desktop` 运行时，`.Net Windows Desktop` 运行时用于在你的计算机上运行 `Windows` 窗体和 `WPF` 应用程序。`.Net` 是开源、跨平台的，且由 `Microsoft` 提供支持。
+
+
+
+## 开发环境配置
+
+### 安装`GitExtensions`
+
+安装 `GitExtensions-x64-5.2.1.18061-0d74cfdc3.msi`、`Git-2.49.0-64-bit.exe`、`windowsdesktop-runtime-8.0.15-win-x64.exe`。
