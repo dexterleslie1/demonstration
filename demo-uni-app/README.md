@@ -1,8 +1,4 @@
-# uni-app
-
-
-
-## 移动端Android、iOS、各种小程序的跨平台应用开发主流解决方案有哪些呢？
+## 移动端`Android`、`iOS`、各种小程序的跨平台应用开发主流解决方案有哪些呢？
 
 移动端Android、iOS及各种小程序的跨平台应用开发主流解决方案主要包括以下几种：
 
@@ -27,7 +23,7 @@
 
 
 
-## `Android` 打包和运行原理
+## `Android`打包和运行原理
 
 uni-app 在 Android 平台的打包和运行原理主要涉及代码封装、WebView 容器加载以及原生功能调用，具体如下：
 
@@ -45,7 +41,7 @@ uni-app 在 Android 平台的打包和运行原理主要涉及代码封装、Web
 
 
 
-## `iOS` 打包和运行原理
+## `iOS`打包和运行原理
 
 uni-app 在 iOS 平台的打包和运行原理涉及代码转换、原生容器适配、证书签名及资源整合，以下是具体说明：
 
@@ -130,20 +126,240 @@ uni-app 小程序打包和运行原理如下：
 
 
 
+## `App`基座
+
+理解了“uni-app基座”才能真正理解uni-app是如何实现跨端的。
+
+简单来说，**uni-app基座（简称App基座）可以理解为一个原生应用程序的“容器”或“引擎”**。你的uni-app代码（Vue组件、JS等）最终需要被这个“基座”加载和解析，才能变成一个真正的、能在手机上运行的App。
+
+---
+
+### 一个生动的比喻
+
+把开发一个App想象成造一辆车：
+*   **你的uni-app代码（Vue/JS/CSS）：** 相当于这辆车的**设计图、外壳、内饰和电路规则**。它定义了App长什么样（外壳内饰），有什么功能（电路规则）。
+*   **uni-app基座：** 相当于这辆车的**底盘、发动机和变速箱**。它决定了车能不能跑起来、如何驱动、以及基本的行驶能力。
+
+没有基座，你的代码就只是一张设计图，无法真正运行。基座为你的代码提供了最基础的运行环境。
+
+---
+
+### 基座的具体构成
+
+这个“基座”本质上是一个**原生应用程序**，它内部集成了两个最关键的东西：
+
+1.  **JS引擎（如JavaScriptCore或V8）：** 负责解释和执行你用JavaScript/Vue.js编写的所有业务逻辑。
+2.  **渲染引擎：** 不是一个完整的WebView，而是一个**优化过的、精简版的渲染器**。它负责将你的Vue组件标签（如 `<view>`, `<text>`）翻译成原生的UI组件（iOS的UIView，Android的android.view）。这正是uni-app性能优于纯WebView方案（如PhoneGap/Cordova）的关键。
+
+**所以，当你写一个 `<view>` 标签时，在App端，它最终不会渲染成浏览器中的HTML Div，而是直接渲染成手机操作系统原生的一个视图控件。**
+
+---
+
+### 基座的三种形态
+
+基座主要分为三种形态，对应不同的开发阶段：
+
+#### 1. 开发阶段的【自定义调试基座】
+*   当你用HBuilderX真机运行时，你的代码会被编译并注入到一个特殊的“自定义调试基座”中。
+*   这个调试基座包含了所有官方SDK的功能（如地图、支付、推送等），方便你在开发时进行调试。
+*   它通常比标准基座大，因为它包含了调试信息和所有原生模块。
+
+#### 2. 发布时的【正式基座】
+*   当你开发完成，使用HBuilderX进行**云打包或本地打包**时，你的代码会和一个“正式基座”合并，生成最终的安装包（.apk或.ipa）。
+*   这个正式基座是精简过的，移除了调试信息，体积更小，性能更优。
+
+#### 3. 原生插件开发的【SDK基座】
+*   如果你需要开发自定义的原生插件，你需要下载App离线打包SDK。这个SDK本质上就是一个不包含业务代码的“空白基座”，你可以在Android Studio或Xcode中引用它，并用自己的原生工程来打包。
+
+---
+
+### 为什么需要基座？它的核心作用总结
+
+1.  **提供跨端能力：** 基座是连接JavaScript框架和原生平台的桥梁。它通过一套统一的JS API，让你可以用同一套代码调用不同平台（iOS、Android）的原生功能。
+2.  **保证原生体验和性能：** 如上所述，它的渲染引擎直接将Vue节点映射为原生组件，而不是在WebView里渲染，从而获得了接近原生App的流畅体验。
+3.  **集成原生功能：** 基座内部已经预先集成了大量常用的原生模块，如地图、支付、推送、传感器等。你只需要通过JS API简单调用即可，无需自己从头编写原生代码。
+
+### 总结
+
+**uni-app基座是一个由DCloud提供的、用原生语言（Java/OC/C++）编写的运行时环境，它负责解析、渲染和执行你的uni-app项目代码，并将其转换成真正的原生应用程序。** 它是uni-app实现“一套代码，多端发布”这一宏伟目标的工程技术基石。
+
+
+
 ## `HBuilderX`
 
 ### 安装
+
+>提示：在 `Windows11` 中安装 `HBuilderX`。
 
 通过 [链接](https://www.dcloud.io/hbuilderx.html) 下载最新版本 `HBuilderX`，解压后即可运行。
 
 
 
-## 创建并运行第一个 `App`
+## 创建并运行第一个`App`
 
 步骤如下：
 
 1. 在 `HBuilderX` 中点击 `文件` > `新建` > `项目`，左侧导航栏中选中 `uni-app`，选择 `默认模板` 类型项目，填写项目名称为 `test1`，点击 `创建` 按钮。
-2. 参考本站 <a href="/android/README.html#有哪些模拟器呢" target="_blank">链接</a> 安装并运行 `mumu` 安卓模拟器。
+2. 参考本站 [链接](/android/README.html#有哪些模拟器呢) 安装并运行 `mumu` 安卓模拟器。
 3. 在 `HBuilderX` 中点击 `运行` > `运行到手机或模拟器` > `Android模拟器端口设置` 功能并修改端口为 `7555`。
-4. 打开 `App.vue` 文件（作为运行 `App` 的入口），点击 `运行` > `运行到手机或模拟器` > `运行到Android App基座`，稍等一会儿后弹出窗口会自动检查到并显示本地的`mumu`安卓模拟器，点击 `运行` 即可自动安装并运行 `uni-app` 到安卓模拟器中。
+4. 打开 `App.vue` 文件（作为运行 `App` 的入口），点击 `运行` > `运行到手机或模拟器` > `运行到Android App基座`，稍等一会儿后弹出窗口会自动检查到并显示本地的`mumu`安卓模拟器，点击 `运行` 即可自动安装并运行 `uni-app` 到安卓模拟器中（第一次运行 `HBuilderX` 需要下载相关插件，所以耐心等待）。
+
+
+
+## `UI`组件 - `view`
+
+在 uni-app 中，**`<view>` 是最基础的容器组件**，它相当于 Web 开发中的 `<div>`，但具有更强大的跨平台特性。以下是它的核心特点和工作原理：
+
+---
+
+### 一、`<view>` 的本质：跨平台的 UI 基石
+1. **跨平台抽象层**  
+   - 你写的同一个 `<view>` 标签，在不同平台会被编译为不同的原生组件：
+     - **Web 平台**：渲染为 HTML 的 `<div>` 标签
+     - **iOS 平台**：渲染为 `UIView`（原生视图）
+     - **Android 平台**：渲染为 `android.view.View`
+     - **小程序平台**：编译为对应的小程序标签（如微信小程序的 `<view>`）
+
+2. **设计目的**  
+   uni-app 通过 `<view>` 统一了各平台的视图容器差异，让你无需关心底层实现差异。
+
+---
+
+### 二、与 Web 开发 `<div>` 的关键区别
+| 特性         | uni-app `<view>`                     | HTML `<div>`                   |
+| ------------ | ------------------------------------ | ------------------------------ |
+| **渲染方式** | 可能编译为原生组件（App 端）         | 始终是浏览器 DOM 元素          |
+| **性能**     | App 端无 DOM 层级，渲染更快          | 受浏览器 DOM 渲染机制限制      |
+| **CSS 支持** | 支持大部分样式，但某些属性有平台差异 | 支持所有 CSS 属性              |
+| **事件系统** | 使用 `@tap` 等跨平台事件             | 使用 `onclick` 等原生 DOM 事件 |
+
+---
+
+### 三、`<view>` 的核心能力
+1. **布局容器**  
+   支持所有 Flex 布局模型，示例：
+   ```html
+   <view style="display: flex; justify-content: center;">
+     <text>居中内容</text>
+   </view>
+   ```
+
+2. **触摸交互**  
+   支持跨平台手势事件：
+   ```html
+   <view @tap="handleTap" @longpress="handleLongPress">
+     点击/长按我
+   </view>
+   ```
+
+3. **滚动容器**  
+   可配合 `scroll-view` 实现复杂滚动（但注意 App 端滚动性能优于 WebView）
+
+4. **平台特性扩展**  
+   通过条件编译实现平台差异化：
+   ```html
+   <!-- #ifdef APP-PLATFORM -->
+   <view class="app-special-style"></view>
+   <!-- #endif -->
+   ```
+
+---
+
+### 四、App 端的特殊优化
+当运行在 App 平台时：
+1. **原生渲染优势**  
+   - 没有 WebView 的 DOM 层级限制
+   - 内存占用更低（实测比 WebView 减少 30%-50%）
+   - 滚动流畅度接近原生（60 FPS）
+
+2. **样式限制注意**  
+   - 不支持 `position: fixed`
+   - `z-index` 在不同平台表现可能不同
+   - 推荐使用 Flex 布局代替浮动布局
+
+---
+
+### 五、开发建议
+1. **性能优化**  
+   - 避免超过 10 层嵌套（App 端仍有视图树复杂度限制）
+   - 大数据列表使用 `v-for` 时务必加 `:key`
+
+2. **兼容性技巧**  
+   ```css
+   /* 解决 iOS 平台点击高亮问题 */
+   view {
+     -webkit-tap-highlight-color: transparent;
+   }
+   ```
+
+3. **调试方法**  
+   在 HBuilderX 中使用「调试基座」时，可通过 `uni.getSystemInfo()` 查看当前渲染引擎类型。
+
+---
+
+### 总结
+uni-app 的 `<view>` 是一个：
+- **跨平台**的 UI 容器
+- **高性能**的渲染基础
+- **统一**的开发体验接口
+
+它既保留了 Web 开发的灵活性，又通过原生渲染获得了 App 端的性能优势，是 uni-app 跨平台体系的核心组件之一。
+
+### 示例
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-uni-app/demo-view)
+
+`index.vue`
+
+```vue
+<template>
+	<view class="container">
+		<view>A</view>
+		<view>B</view>
+		<view>C</view>
+	</view>
+</template>
+
+<script>
+	export default {
+		data() {
+			return {
+			}
+		},
+		onLoad() {
+
+		},
+		methods: {
+
+		}
+	}
+</script>
+
+<style>
+	.container {
+		display: flex;
+		flex-direction: row;
+		justify-content: space-around;
+	}
+	
+	.container view {
+		width: 100px;
+		line-height: 100px;
+		text-align: center;
+	}
+	
+	.container view:nth-child(1) {
+		background-color: red;
+	}
+	
+	.container view:nth-child(2){
+		background-color: green;
+	}
+	
+	.container view:nth-child(3) {
+		background-color: greenyellow;
+	}
+</style>
+
+```
 
