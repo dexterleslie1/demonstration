@@ -1,14 +1,10 @@
-# HTTP
-
-
-
-## GET、POST、PUT、DELETE 方法
+## `GET`、`POST`、`PUT`、`DELETE`方法
 
 运行示例`https://gitee.com/dexterleslie/demonstration/tree/master/demo-http/spring-boot-http`协助测试
 
 
 
-### GET
+### `GET`
 
 > 获取服务器上的资源
 >
@@ -30,7 +26,7 @@ curl -X GET -d '{"param1":"v1"}' -H "Content-Type: application/json" http://loca
 
 
 
-### POST
+### `POST`
 
 > 在服务器上创建资源
 
@@ -62,7 +58,7 @@ curl -X POST -d '{"param1":"v1"}' -H "Content-Type: application/json" http://loc
 
 
 
-### PUT
+### `PUT`
 
 > 更新服务器上的资源
 >
@@ -90,7 +86,7 @@ curl -X PUT -d '{"param1":"v1"}' -H "Content-Type: application/json" http://loca
 
 
 
-### DELETE
+### `DELETE`
 
 > 删除服务器上的资源
 >
@@ -112,11 +108,9 @@ curl -X DELETE -d '{"param1":"v1"}' -H "Content-Type: application/json" http://l
 
 
 
-## HTTP 缓存
+## `HTTP`缓存
 
-> `https://blog.csdn.net/CRMEB/article/details/122835505`
-
-详细用法请参考`https://gitee.com/dexterleslie/demonstration/tree/master/demo-http/demo-http-cache`
+> 参考链接：https://blog.csdn.net/CRMEB/article/details/122835505
 
 
 
@@ -167,11 +161,23 @@ curl -X DELETE -d '{"param1":"v1"}' -H "Content-Type: application/json" http://l
 
 
 
-## HTTP 头
+### 示例
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/master/demo-http/demo-http-cache)
+
+测试 `expires` 缓存：使用谷歌浏览器访问 http://localhost/1.html 查看 `test-expires.js`，打开谷歌浏览器 `debugger` > `networks` 查看 `test-expires.js` 的 `size` 列显示 “(from memory cache)” 表示 `test-expires.js` 从内存中读取。
+
+查看 `test-no-store.js`每次都请求服务器获取。
+
+查看 `test-no-cache.js` 使用 `ETag` 和服务器协商是否需要更新缓存。
 
 
 
-### X-Frame-Options
+## `HTTP`头
+
+
+
+### `X-Frame-Options`
 
 详细用法请参考示例`https://gitee.com/dexterleslie/demonstration/tree/master/demo-computer-information-security/demo-csrf`
 
@@ -238,11 +244,11 @@ X-Frame-Options有两个（或曾经有三个，但已有一个被废弃）可�
 
 
 
-## 在指定目录快速启动 HTTP 服务
+## 在指定目录快速启动`HTTP`服务
 
 
 
-### Five Server
+### `Five Server`
 
 在 VSCode 插件中安装 Five Server（名称：Live Server (Five Server)，作者：Yannick，名句：A better Live Server with instant updates, highlights and some PHP support.）
 
@@ -252,7 +258,7 @@ X-Frame-Options有两个（或曾经有三个，但已有一个被废弃）可�
 
 
 
-### Python
+### `Python`
 
 打开控制台并切换到指定目录，在指定目录中运行下面命令
 
