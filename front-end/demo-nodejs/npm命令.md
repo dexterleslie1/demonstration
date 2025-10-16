@@ -1,7 +1,3 @@
-# `npm`命令
-
-
-
 ## `npm create`
 
 `create`命令是`init`命令的别名，`npm init`等同于`npm create`。
@@ -200,6 +196,24 @@ npm start
 
 
 
+## `npm view`
+
+>查看程序在 `npm` 仓库中支持的所有版本。
+
+```sh
+$ npm view react-native-cli versions
+[
+  '0.0.0',  '0.0.1', '0.1.2',
+  '0.1.3',  '0.1.4', '0.1.5',
+  '0.1.7',  '0.1.8', '0.1.9',
+  '0.1.10', '0.2.0', '1.0.0',
+  '1.2.0',  '1.3.0', '2.0.0',
+  '2.0.1'
+]
+```
+
+
+
 ## `npm install`
 
 - 调试`npm install`
@@ -217,6 +231,16 @@ npm start
   ```bash
   sudo npm install -g create-nuxt-app@2.15.0 --registry=https://registry.npmmirror.com
   ```
+
+
+
+## `npm uninstall`
+
+卸载 `react-native-cli`
+
+```sh
+npm uninstall -g react-native-cli
+```
 
 
 
