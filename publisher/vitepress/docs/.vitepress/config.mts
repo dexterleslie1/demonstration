@@ -445,8 +445,6 @@ export default defineConfig({
           text: 'IDEA',
           items: [
             { text: '基础', link: '/idea/README.md' },
-            { text: '全家桶破解', link: '/idea/intellij全家桶破解.md' },
-            { text: 'AI 插件', link: '/idea/AI插件.md' },
             { text: '创建并管理项目', link: '/idea/创建并管理项目.md' },
             { text: '多重光标同时编辑', link: '/idea/多重光标同时编辑.md' },
             { text: '快捷键', link: '/idea/快捷键.md' },

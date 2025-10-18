@@ -1,8 +1,8 @@
 ## `homebrew`使用
 
-> `homebrew`官网`https://brew.sh/`
+> `homebrew`官网：https://brew.sh/
 >
-> `homebrew`介绍和使用`https://www.jianshu.com/p/de6f1d2d37bf`
+> `homebrew`介绍和使用：https://www.jianshu.com/p/de6f1d2d37bf
 
 `homebrew`是一款`Mac OS`平台下的软件包管理工具，拥有安装、卸载、更新、查看、搜索等很多实用的功能。简单的一条指令，就可以实现包管理，而不用你关心各种依赖和文件路径的情况，十分方便快捷。
 
@@ -82,7 +82,7 @@ brew install node@16
 
 ### `brew install`慢或者无法解析国外域名解决办法
 
-> `https://blog.csdn.net/meng825/article/details/103929805`
+> 参考链接：https://blog.csdn.net/meng825/article/details/103929805
 
 通过环境变量设置`brew install`安装过程中使用的`socks5`代理服务
 
@@ -100,7 +100,7 @@ unset ALL_PROXY
 
 ### `updating homebrew`卡住解决方案（后来使用配置`github proxy`方式解决）
 
-> `https://developer.aliyun.com/article/634494`
+> 参考链接：https://developer.aliyun.com/article/634494
 
 替换`homebrew-core.git`
 
@@ -114,7 +114,7 @@ brew update
 
 ### 解决`brew`报错：`Another active Homebrew update process is already in progress`
 
-> `https://blog.csdn.net/MASILEJFOAISEGJIAE/article/details/85253919`
+> 参考链接：https://blog.csdn.net/MASILEJFOAISEGJIAE/article/details/85253919
 
 删除`brew`相关`lock`
 

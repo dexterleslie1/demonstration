@@ -1,7 +1,3 @@
-# Ubuntu/Debian
-
-
-
 ## 启用`SSH`服务
 
 >[`ubuntu`开启`SSH`服务，并允许`ROOT`权限远程登录](https://blog.csdn.net/jinghongluexia/article/details/90031842)

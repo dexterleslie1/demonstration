@@ -241,8 +241,22 @@ MinGW 的核心作用就像一个 **“桥梁”** 和 **“工具提供商”**
 
 
 
-## 开发环境配置
+## `Java`开发环境配置
+
+>在 `Windows11` 配置开发环境。
+
+### 安装`IDEA`
+
+参考本站 [链接](/idea/README.html#windows11) 安装
+
+
 
 ### 安装`GitExtensions`
 
 安装 `GitExtensions-x64-5.2.1.18061-0d74cfdc3.msi`、`Git-2.49.0-64-bit.exe`、`windowsdesktop-runtime-8.0.15-win-x64.exe`。
+
+
+
+### 安装`Typora`
+
+参考本站 [链接](/typora/README.html#安装-windows11) 安装

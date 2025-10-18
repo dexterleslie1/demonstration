@@ -1,7 +1,3 @@
-# IDEA
-
-
-
 ## 远程开发
 
 > 下载 idea2021 之后的版本才有这个特性。
@@ -21,7 +17,7 @@
 
 
 
-## 设置 multiple rows 显示 tabs
+## 设置`multiple rows`显示`tabs`
 
 打开 Settings 搜索 “tabs row”，然后勾选 “multiple rows”。
 
@@ -29,7 +25,7 @@
 
 
 
-## Scratches 目录
+## `Scratches`目录
 
 IntelliJ IDEA 的 Scratches 目录是一个专门用于存储临时代码片段的区域。这个目录对于开发者来说非常有用，因为它允许开发者在不干扰当前项目文件的情况下，快速测试或记录一些临时的逻辑或代码。以下是对 IDEA Scratches 目录的详细解释：
 
@@ -70,7 +66,7 @@ IntelliJ IDEA 的 Scratches 目录是一个专门用于存储临时代码片段�
 
 
 
-## HTTP Client
+## `HTTP Client`
 
 ### 介绍
 
@@ -223,3 +219,413 @@ public class IncreaseCountDTO {
 }
 ```
 
+
+
+## `AI`插件 - 概述
+
+作出以下尝试，但没有成功：
+
+- `JetBrains`的`AI Assistant`需要登录，放弃。
+- `Bito`的`ChatGPT GPT-4o - Bito AI Code Assistant`需要登录，放弃。
+- `GitHub`的`github-copilot-intellij`使用`30`天后需要收费，放弃。
+- `Tabnine`的`AI Chat & Autocomplete for JavaScript, Python & more`需要登录，放弃。
+
+
+
+## `AI`插件 - `Baidu Comate`
+
+>说明：推荐使用阿里的通义灵码。
+
+使用百度`Baidu Comate`作为`AI`插件（使用百度帐号登录`Baidu Comate`即可使用`Comate`智能代码补全功能）。
+
+
+
+## `AI`插件 - 通义灵码
+
+>说明：目前开发工作中使用的`AI`插件。
+
+打开插件管理设置窗口，输入`Lingma`（提供商为`Alibaba Cloud`）后安装并重启`IDEA`，使用支付宝`App`扫码登录插件即可使用。
+
+
+
+## `IDEA`、`CLion`、`GoLand`、`PyCharm`、`DataGrid`等破解
+
+> [idea系列2023破解教程](https://www.bilibili.com/read/cv26088967/)
+
+### `Ubuntu`
+
+1. 从官方下载`2023.2.5 Ultimate`版本的`idea`、`clion`、`goland`等
+
+   >`IDEA`下载链接：https://www.jetbrains.com/idea/download/other.html
+
+2. 解压`idea`并`start trail`，注意：不能使用`root`运行`idea.sh`，否则会报告`x-windows`相关错误
+
+3. 下载微云中`idea/jihuo-tool-my.zip`，注意：`jihuo-tool-origin.zip`是别人编译的工具，`jihuo-tool-my.zip`中的`ja-netfilter`是自己从源代码编译的，所有`ja-netfilter`相关源码在自己`github`中可以找到
+
+4. 下载后解压到任意目录
+
+   ```bash
+   unzip jihuo-tool-my.zip
+   ```
+
+5. 执行`jihuo-tool/scripts/install.sh`，注意：在`ubuntu`中不需要使用`sudo`执行`install.sh`脚本。
+
+   ```bash
+   sh install.sh
+   ```
+
+6. 重新启动`idea`
+
+7. 运行`idea`后点击`Manage license`后填入下面对应的`activation code`点击激活后，过期时间会变为2025年(经过测试这个过期时间是假的，破解后能够永久激活)
+
+   > 参考 [链接](https://docs.qq.com/doc/DZWFmak1WcVBhdENu)
+
+8. 各个`IntelliJ`产品的破解码如下：
+
+   ```
+   # IDEA
+   XIZQAN09CR-eyJsaWNlbnNlSWQiOiJYSVpRQU4wOUNSIiwibGljZW5zZWVOYW1lIjoia2lkZHkgaW5zZWFtcyIsImFzc2lnbmVlTmFtZSI6IiIsImFzc2lnbmVlRW1haWwiOiIiLCJsaWNlbnNlUmVzdHJpY3Rpb24iOiIiLCJjaGVja0NvbmN1cnJlbnRVc2UiOmZhbHNlLCJwcm9kdWN0cyI6W3siY29kZSI6IlBEQiIsImZhbGxiYWNrRGF0ZSI6IjIwMjUtMDgtMDEiLCJwYWlkVXBUbyI6IjIwMjUtMDgtMDEiLCJleHRlbmRlZCI6dHJ1ZX0seyJjb2RlIjoiUFNJIiwiZmFsbGJhY2tEYXRlIjoiMjAyNS0wOC0wMSIsInBhaWRVcFRvIjoiMjAyNS0wOC0wMSIsImV4dGVuZGVkIjp0cnVlfSx7ImNvZGUiOiJQUEMiLCJmYWxsYmFja0RhdGUiOiIyMDI1LTA4LTAxIiwicGFpZFVwVG8iOiIyMDI1LTA4LTAxIiwiZXh0ZW5kZWQiOnRydWV9LHsiY29kZSI6IlBDV01QIiwiZmFsbGJhY2tEYXRlIjoiMjAyNS0wOC0wMSIsInBhaWRVcFRvIjoiMjAyNS0wOC0wMSIsImV4dGVuZGVkIjp0cnVlfSx7ImNvZGUiOiJQUkIiLCJmYWxsYmFja0RhdGUiOiIyMDI1LTA4LTAxIiwicGFpZFVwVG8iOiIyMDI1LTA4LTAxIiwiZXh0ZW5kZWQiOnRydWV9LHsiY29kZSI6IlBQUyIsImZhbGxiYWNrRGF0ZSI6IjIwMjUtMDgtMDEiLCJwYWlkVXBUbyI6IjIwMjUtMDgtMDEiLCJleHRlbmRlZCI6dHJ1ZX0seyJjb2RlIjoiSUkiLCJmYWxsYmFja0RhdGUiOiIyMDI1LTA4LTAxIiwicGFpZFVwVG8iOiIyMDI1LTA4LTAxIiwiZXh0ZW5kZWQiOmZhbHNlfSx7ImNvZGUiOiJQR08iLCJmYWxsYmFja0RhdGUiOiIyMDI1LTA4LTAxIiwicGFpZFVwVG8iOiIyMDI1LTA4LTAxIiwiZXh0ZW5kZWQiOnRydWV9LHsiY29kZSI6IlBTVyIsImZhbGxiYWNrRGF0ZSI6IjIwMjUtMDgtMDEiLCJwYWlkVXBUbyI6IjIwMjUtMDgtMDEiLCJleHRlbmRlZCI6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
+   
+   # pycharm
+   WDV7B5UM4J-eyJsaWNlbnNlSWQiOiJXRFY3QjVVTTRKIiwibGljZW5zZWVOYW1lIjoia2lkZHkgaW5zZWFtcyIsImFzc2lnbmVlTmFtZSI6IiIsImFzc2lnbmVlRW1haWwiOiIiLCJsaWNlbnNlUmVzdHJpY3Rpb24iOiIiLCJjaGVja0NvbmN1cnJlbnRVc2UiOmZhbHNlLCJwcm9kdWN0cyI6W3siY29kZSI6IlBTSSIsImZhbGxiYWNrRGF0ZSI6IjIwMjUtMDgtMDEiLCJwYWlkVXBUbyI6IjIwMjUtMDgtMDEiLCJleHRlbmRlZCI6dHJ1ZX0seyJjb2RlIjoiUFBDIiwiZmFsbGJhY2tEYXRlIjoiMjAyNS0wOC0wMSIsInBhaWRVcFRvIjoiMjAyNS0wOC0wMSIsImV4dGVuZGVkIjp0cnVlfSx7ImNvZGUiOiJQQ1dNUCIsImZhbGxiYWNrRGF0ZSI6IjIwMjUtMDgtMDEiLCJwYWlkVXBUbyI6IjIwMjUtMDgtMDEiLCJleHRlbmRlZCI6dHJ1ZX0seyJjb2RlIjoiUEMiLCJmYWxsYmFja0RhdGUiOiIyMDI1LTA4LTAxIiwicGFpZFVwVG8iOiIyMDI1LTA4LTAxIiwiZXh0ZW5kZWQiOmZhbHNlfSx7ImNvZGUiOiJQV1MiLCJmYWxsYmFja0RhdGUiOiIyMDI1LTA4LTAxIiwicGFpZFVwVG8iOiIyMDI1LTA4LTAxIiwiZXh0ZW5kZWQiOnRydWV9XSwibWV0YWRhdGEiOiIwMTIwMjIwODAxUFNBTjAwMDAwNSIsImhhc2giOiJUUklBTDoyNjMyMTUzOTMiLCJncmFjZVBlcmlvZERheXMiOjcsImF1dG9Qcm9sb25nYXRlZCI6ZmFsc2UsImlzQXV0b1Byb2xvbmdhdGVkIjpmYWxzZX0=-S44u4zyBrYbltQAZezyCkBYsVU9HRftkKneJSWd2SsZMxgJiA1JfkhEl2yc4zrXBBqCCn2PKpaw8noyremrYtur0Iz93xp1geS6VSI4t5w5jgHR1CEUcL9Ia4BIl3CIMkxR3WXPrSGAt9jVitTmmCGGO9swTN4Hxey4iNNsEhkp8LDG949kRhN1ly00RH+p+rUP+FdVxwZ7e06rIV1c/8MGoJi4Z+7oyi+WnfIP+QIwxoNa60dzshI9Ep9d0p6bIR6eBKbNkfooWmp87mpOyN5QPupwF4q1KgS+LbFTeY/zZK6yP7tj+T2rbE3WI8MhnIviArGLs9DjZm20MwZTWvg==-MIIETDCCAjSgAwIBAgIBDTANBgkqhkiG9w0BAQsFADAYMRYwFAYDVQQDDA1KZXRQcm9maWxlIENBMB4XDTIwMTAxOTA5MDU1M1oXDTIyMTAyMTA5MDU1M1owHzEdMBsGA1UEAwwUcHJvZDJ5LWZyb20tMjAyMDEwMTkwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCUlaUFc1wf+CfY9wzFWEL2euKQ5nswqb57V8QZG7d7RoR6rwYUIXseTOAFq210oMEe++LCjzKDuqwDfsyhgDNTgZBPAaC4vUU2oy+XR+Fq8nBixWIsH668HeOnRK6RRhsr0rJzRB95aZ3EAPzBuQ2qPaNGm17pAX0Rd6MPRgjp75IWwI9eA6aMEdPQEVN7uyOtM5zSsjoj79Lbu1fjShOnQZuJcsV8tqnayeFkNzv2LTOlofU/Tbx502Ro073gGjoeRzNvrynAP03pL486P3KCAyiNPhDs2z8/COMrxRlZW5mfzo0xsK0dQGNH3UoG/9RVwHG4eS8LFpMTR9oetHZBAgMBAAGjgZkwgZYwCQYDVR0TBAIwADAdBgNVHQ4EFgQUJNoRIpb1hUHAk0foMSNM9MCEAv8wSAYDVR0jBEEwP4AUo562SGdCEjZBvW3gubSgUouX8bOhHKQaMBgxFjAUBgNVBAMMDUpldFByb2ZpbGUgQ0GCCQDSbLGDsoN54TATBgNVHSUEDDAKBggrBgEFBQcDATALBgNVHQ8EBAMCBaAwDQYJKoZIhvcNAQELBQADggIBABqRoNGxAQct9dQUFK8xqhiZaYPd30TlmCmSAaGJ0eBpvkVeqA2jGYhAQRqFiAlFC63JKvWvRZO1iRuWCEfUMkdqQ9VQPXziE/BlsOIgrL6RlJfuFcEZ8TK3syIfIGQZNCxYhLLUuet2HE6LJYPQ5c0jH4kDooRpcVZ4rBxNwddpctUO2te9UU5/FjhioZQsPvd92qOTsV+8Cyl2fvNhNKD1Uu9ff5AkVIQn4JU23ozdB/R5oUlebwaTE6WZNBs+TA/qPj+5/we9NH71WRB0hqUoLI2AKKyiPw++FtN4Su1vsdDlrAzDj9ILjpjJKA1ImuVcG329/WTYIKysZ1CWK3zATg9BeCUPAV1pQy8ToXOq+RSYen6winZ2OO93eyHv2Iw5kbn1dqfBw1BuTE29V2FJKicJSu8iEOpfoafwJISXmz1wnnWL3V/0NxTulfWsXugOoLfv0ZIBP1xH9kmf22jjQ2JiHhQZP7ZDsreRrOeIQ/c4yR8IQvMLfC0WKQqrHu5ZzXTH4NO3CwGWSlTY74kE91zXB5mwWAx1jig+UXYc2w4RkVhy0//lOmVya/PEepuuTTI4+UJwC7qbVlh5zfhj8oTNUXgN0AOc+Q0/WFPl1aw5VV/VrO8FCoB15lFVlpKaQ1Yh+DVU8ke+rt9Th0BCHXe0uZOEmH0nOnH/0onD
+   
+   # datagrid
+   FJVUHLU3X1-eyJsaWNlbnNlSWQiOiJGSlZVSExVM1gxIiwibGljZW5zZWVOYW1lIjoia2lkZHkgaW5zZWFtcyIsImFzc2lnbmVlTmFtZSI6IiIsImFzc2lnbmVlRW1haWwiOiIiLCJsaWNlbnNlUmVzdHJpY3Rpb24iOiIiLCJjaGVja0NvbmN1cnJlbnRVc2UiOmZhbHNlLCJwcm9kdWN0cyI6W3siY29kZSI6IlBEQiIsImZhbGxiYWNrRGF0ZSI6IjIwMjUtMDgtMDEiLCJwYWlkVXBUbyI6IjIwMjUtMDgtMDEiLCJleHRlbmRlZCI6dHJ1ZX0seyJjb2RlIjoiREIiLCJmYWxsYmFja0RhdGUiOiIyMDI1LTA4LTAxIiwicGFpZFVwVG8iOiIyMDI1LTA4LTAxIiwiZXh0ZW5kZWQiOmZhbHNlfSx7ImNvZGUiOiJQU0kiLCJmYWxsYmFja0RhdGUiOiIyMDI1LTA4LTAxIiwicGFpZFVwVG8iOiIyMDI1LTA4LTAxIiwiZXh0ZW5kZWQiOnRydWV9LHsiY29kZSI6IlBXUyIsImZhbGxiYWNrRGF0ZSI6IjIwMjUtMDgtMDEiLCJwYWlkVXBUbyI6IjIwMjUtMDgtMDEiLCJleHRlbmRlZCI6dHJ1ZX1dLCJtZXRhZGF0YSI6IjAxMjAyMjA4MDFQU0FOMDAwMDA1IiwiaGFzaCI6IlRSSUFMOi0yNDc1NjQ2MTIiLCJncmFjZVBlcmlvZERheXMiOjcsImF1dG9Qcm9sb25nYXRlZCI6ZmFsc2UsImlzQXV0b1Byb2xvbmdhdGVkIjpmYWxzZX0=-IWA8NqxA1nOvfTGTVFX4PNAWRswj0hTsqntqWZcqcYFz/zIobEAYmHm0Lks82E0mPcNCzt0LPW6BfUZCI8f4r5E1nsonNS40bDv44qAcjBmQaLf5XxZLyoKRzl7YacDuqql+NY3tInFBX8Q4PQu56aVsS6DOZmeoO4fC66Qtwg2z+A+kvVpSlB3+1Fqww7SHZMuQbLlEOVSHqO2tf4bJVTIMH/OSMph5CpY4uJ8iv7yeBX+WQpcOy4tv1AZNEY9tIKI8nRVbnVnZaAf5R2ng1AduGCVSOaU1/ElLPReBvXTG6gZHtjKDHlAy2kq6JIH/CCeG/3ZkDLB0GzB29aSgHA==-MIIETDCCAjSgAwIBAgIBDTANBgkqhkiG9w0BAQsFADAYMRYwFAYDVQQDDA1KZXRQcm9maWxlIENBMB4XDTIwMTAxOTA5MDU1M1oXDTIyMTAyMTA5MDU1M1owHzEdMBsGA1UEAwwUcHJvZDJ5LWZyb20tMjAyMDEwMTkwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCUlaUFc1wf+CfY9wzFWEL2euKQ5nswqb57V8QZG7d7RoR6rwYUIXseTOAFq210oMEe++LCjzKDuqwDfsyhgDNTgZBPAaC4vUU2oy+XR+Fq8nBixWIsH668HeOnRK6RRhsr0rJzRB95aZ3EAPzBuQ2qPaNGm17pAX0Rd6MPRgjp75IWwI9eA6aMEdPQEVN7uyOtM5zSsjoj79Lbu1fjShOnQZuJcsV8tqnayeFkNzv2LTOlofU/Tbx502Ro073gGjoeRzNvrynAP03pL486P3KCAyiNPhDs2z8/COMrxRlZW5mfzo0xsK0dQGNH3UoG/9RVwHG4eS8LFpMTR9oetHZBAgMBAAGjgZkwgZYwCQYDVR0TBAIwADAdBgNVHQ4EFgQUJNoRIpb1hUHAk0foMSNM9MCEAv8wSAYDVR0jBEEwP4AUo562SGdCEjZBvW3gubSgUouX8bOhHKQaMBgxFjAUBgNVBAMMDUpldFByb2ZpbGUgQ0GCCQDSbLGDsoN54TATBgNVHSUEDDAKBggrBgEFBQcDATALBgNVHQ8EBAMCBaAwDQYJKoZIhvcNAQELBQADggIBABqRoNGxAQct9dQUFK8xqhiZaYPd30TlmCmSAaGJ0eBpvkVeqA2jGYhAQRqFiAlFC63JKvWvRZO1iRuWCEfUMkdqQ9VQPXziE/BlsOIgrL6RlJfuFcEZ8TK3syIfIGQZNCxYhLLUuet2HE6LJYPQ5c0jH4kDooRpcVZ4rBxNwddpctUO2te9UU5/FjhioZQsPvd92qOTsV+8Cyl2fvNhNKD1Uu9ff5AkVIQn4JU23ozdB/R5oUlebwaTE6WZNBs+TA/qPj+5/we9NH71WRB0hqUoLI2AKKyiPw++FtN4Su1vsdDlrAzDj9ILjpjJKA1ImuVcG329/WTYIKysZ1CWK3zATg9BeCUPAV1pQy8ToXOq+RSYen6winZ2OO93eyHv2Iw5kbn1dqfBw1BuTE29V2FJKicJSu8iEOpfoafwJISXmz1wnnWL3V/0NxTulfWsXugOoLfv0ZIBP1xH9kmf22jjQ2JiHhQZP7ZDsreRrOeIQ/c4yR8IQvMLfC0WKQqrHu5ZzXTH4NO3CwGWSlTY74kE91zXB5mwWAx1jig+UXYc2w4RkVhy0//lOmVya/PEepuuTTI4+UJwC7qbVlh5zfhj8oTNUXgN0AOc+Q0/WFPl1aw5VV/VrO8FCoB15lFVlpKaQ1Yh+DVU8ke+rt9Th0BCHXe0uZOEmH0nOnH/0onD
+   
+   # goland
+   PSUYBOSE34-eyJsaWNlbnNlSWQiOiJQU1VZQk9TRTM0IiwibGljZW5zZWVOYW1lIjoia2lkZHkgaW5zZWFtcyIsImFzc2lnbmVlTmFtZSI6IiIsImFzc2lnbmVlRW1haWwiOiIiLCJsaWNlbnNlUmVzdHJpY3Rpb24iOiIiLCJjaGVja0NvbmN1cnJlbnRVc2UiOmZhbHNlLCJwcm9kdWN0cyI6W3siY29kZSI6IlBTSSIsImZhbGxiYWNrRGF0ZSI6IjIwMjUtMDgtMDEiLCJwYWlkVXBUbyI6IjIwMjUtMDgtMDEiLCJleHRlbmRlZCI6dHJ1ZX0seyJjb2RlIjoiUENXTVAiLCJmYWxsYmFja0RhdGUiOiIyMDI1LTA4LTAxIiwicGFpZFVwVG8iOiIyMDI1LTA4LTAxIiwiZXh0ZW5kZWQiOnRydWV9LHsiY29kZSI6IkdPIiwiZmFsbGJhY2tEYXRlIjoiMjAyNS0wOC0wMSIsInBhaWRVcFRvIjoiMjAyNS0wOC0wMSIsImV4dGVuZGVkIjpmYWxzZX0seyJjb2RlIjoiUEdPIiwiZmFsbGJhY2tEYXRlIjoiMjAyNS0wOC0wMSIsInBhaWRVcFRvIjoiMjAyNS0wOC0wMSIsImV4dGVuZGVkIjp0cnVlfSx7ImNvZGUiOiJQV1MiLCJmYWxsYmFja0RhdGUiOiIyMDI1LTA4LTAxIiwicGFpZFVwVG8iOiIyMDI1LTA4LTAxIiwiZXh0ZW5kZWQiOnRydWV9XSwibWV0YWRhdGEiOiIwMTIwMjIwODAxUFNBTjAwMDAwNSIsImhhc2giOiJUUklBTDotNTIzMzE4Njc5IiwiZ3JhY2VQZXJpb2REYXlzIjo3LCJhdXRvUHJvbG9uZ2F0ZWQiOmZhbHNlLCJpc0F1dG9Qcm9sb25nYXRlZCI6ZmFsc2V9-JWZKP0AJWKSXcl1Ep6poGhauD7GlLMbPVMompa2zVsDzjP2L82BvMo0RZTPYcGiLnP7YL7kHUNFrn2wJiNlXVwp9AnXUvVTspDqhf5MwZ/W0Aug0HpJB0BVSPM7KRL41wyN2DHGyvRJ/w4/s057IQEZWUUy2HUUM1E48WqezS7HlKQBVrrD+IFjHE2Xv4xaPt/KBFXTn+MwWBiYcKsIdDurNKjHdRwo/Gl0umRc8/CFMYK6nrgoWA13PAgHMZioQPc4DK2aVCbCDECpTGoMIsKl2jZJei+wPfOf9Ud9i0/95YEyoK8/XnkUBzsm19quFegTEVp3HhT/EMheCuvMmeQ==-MIIETDCCAjSgAwIBAgIBDTANBgkqhkiG9w0BAQsFADAYMRYwFAYDVQQDDA1KZXRQcm9maWxlIENBMB4XDTIwMTAxOTA5MDU1M1oXDTIyMTAyMTA5MDU1M1owHzEdMBsGA1UEAwwUcHJvZDJ5LWZyb20tMjAyMDEwMTkwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCUlaUFc1wf+CfY9wzFWEL2euKQ5nswqb57V8QZG7d7RoR6rwYUIXseTOAFq210oMEe++LCjzKDuqwDfsyhgDNTgZBPAaC4vUU2oy+XR+Fq8nBixWIsH668HeOnRK6RRhsr0rJzRB95aZ3EAPzBuQ2qPaNGm17pAX0Rd6MPRgjp75IWwI9eA6aMEdPQEVN7uyOtM5zSsjoj79Lbu1fjShOnQZuJcsV8tqnayeFkNzv2LTOlofU/Tbx502Ro073gGjoeRzNvrynAP03pL486P3KCAyiNPhDs2z8/COMrxRlZW5mfzo0xsK0dQGNH3UoG/9RVwHG4eS8LFpMTR9oetHZBAgMBAAGjgZkwgZYwCQYDVR0TBAIwADAdBgNVHQ4EFgQUJNoRIpb1hUHAk0foMSNM9MCEAv8wSAYDVR0jBEEwP4AUo562SGdCEjZBvW3gubSgUouX8bOhHKQaMBgxFjAUBgNVBAMMDUpldFByb2ZpbGUgQ0GCCQDSbLGDsoN54TATBgNVHSUEDDAKBggrBgEFBQcDATALBgNVHQ8EBAMCBaAwDQYJKoZIhvcNAQELBQADggIBABqRoNGxAQct9dQUFK8xqhiZaYPd30TlmCmSAaGJ0eBpvkVeqA2jGYhAQRqFiAlFC63JKvWvRZO1iRuWCEfUMkdqQ9VQPXziE/BlsOIgrL6RlJfuFcEZ8TK3syIfIGQZNCxYhLLUuet2HE6LJYPQ5c0jH4kDooRpcVZ4rBxNwddpctUO2te9UU5/FjhioZQsPvd92qOTsV+8Cyl2fvNhNKD1Uu9ff5AkVIQn4JU23ozdB/R5oUlebwaTE6WZNBs+TA/qPj+5/we9NH71WRB0hqUoLI2AKKyiPw++FtN4Su1vsdDlrAzDj9ILjpjJKA1ImuVcG329/WTYIKysZ1CWK3zATg9BeCUPAV1pQy8ToXOq+RSYen6winZ2OO93eyHv2Iw5kbn1dqfBw1BuTE29V2FJKicJSu8iEOpfoafwJISXmz1wnnWL3V/0NxTulfWsXugOoLfv0ZIBP1xH9kmf22jjQ2JiHhQZP7ZDsreRrOeIQ/c4yR8IQvMLfC0WKQqrHu5ZzXTH4NO3CwGWSlTY74kE91zXB5mwWAx1jig+UXYc2w4RkVhy0//lOmVya/PEepuuTTI4+UJwC7qbVlh5zfhj8oTNUXgN0AOc+Q0/WFPl1aw5VV/VrO8FCoB15lFVlpKaQ1Yh+DVU8ke+rt9Th0BCHXe0uZOEmH0nOnH/0onD
+   
+   # clion
+   CFUC0974F2-eyJsaWNlbnNlSWQiOiJDRlVDMDk3NEYyIiwibGljZW5zZWVOYW1lIjoia2lkZHkgaW5zZWFtcyIsImFzc2lnbmVlTmFtZSI6IiIsImFzc2lnbmVlRW1haWwiOiIiLCJsaWNlbnNlUmVzdHJpY3Rpb24iOiIiLCJjaGVja0NvbmN1cnJlbnRVc2UiOmZhbHNlLCJwcm9kdWN0cyI6W3siY29kZSI6IlBTSSIsImZhbGxiYWNrRGF0ZSI6IjIwMjUtMDgtMDEiLCJwYWlkVXBUbyI6IjIwMjUtMDgtMDEiLCJleHRlbmRlZCI6dHJ1ZX0seyJjb2RlIjoiUENXTVAiLCJmYWxsYmFja0RhdGUiOiIyMDI1LTA4LTAxIiwicGFpZFVwVG8iOiIyMDI1LTA4LTAxIiwiZXh0ZW5kZWQiOnRydWV9LHsiY29kZSI6IkNMIiwiZmFsbGJhY2tEYXRlIjoiMjAyNS0wOC0wMSIsInBhaWRVcFRvIjoiMjAyNS0wOC0wMSIsImV4dGVuZGVkIjpmYWxzZX0seyJjb2RlIjoiUFNXIiwiZmFsbGJhY2tEYXRlIjoiMjAyNS0wOC0wMSIsInBhaWRVcFRvIjoiMjAyNS0wOC0wMSIsImV4dGVuZGVkIjp0cnVlfSx7ImNvZGUiOiJQV1MiLCJmYWxsYmFja0RhdGUiOiIyMDI1LTA4LTAxIiwicGFpZFVwVG8iOiIyMDI1LTA4LTAxIiwiZXh0ZW5kZWQiOnRydWV9XSwibWV0YWRhdGEiOiIwMTIwMjIwODAxUFNBTjAwMDAwNSIsImhhc2giOiJUUklBTDotMjA0MTkyNDM5OCIsImdyYWNlUGVyaW9kRGF5cyI6NywiYXV0b1Byb2xvbmdhdGVkIjpmYWxzZSwiaXNBdXRvUHJvbG9uZ2F0ZWQiOmZhbHNlfQ==-f1foDndTa2abGqyTmiIMxYSRjoC16NxuD7QhoiOm0bzrHbqIuAXw7zsWC3U9RjqgWi/bj/8fjDpjywAFktScyATpClNXMzoR/nPJaY+J0iU+0ivubS9VERrIYL8O6WOT8PvNoqcdJ+MIK6jKY519y3VcUAd0N47ZKkpmzAOd9moR+j5ma3U8yuJno0oNtsAES7Lp3tzdMlhD7yn105jafY65bRPD8ezoc1c0GkFfsZ/1P3XPxoWeiS70wCSG32xNmcWygCROs3mnlDoamIv+K76G+jLlrR9csS/+vxWYaThfLKIvpwCDUX7xzdnXx8raXkr7c78ZshsNUQZuOgE8ww==-MIIETDCCAjSgAwIBAgIBDTANBgkqhkiG9w0BAQsFADAYMRYwFAYDVQQDDA1KZXRQcm9maWxlIENBMB4XDTIwMTAxOTA5MDU1M1oXDTIyMTAyMTA5MDU1M1owHzEdMBsGA1UEAwwUcHJvZDJ5LWZyb20tMjAyMDEwMTkwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCUlaUFc1wf+CfY9wzFWEL2euKQ5nswqb57V8QZG7d7RoR6rwYUIXseTOAFq210oMEe++LCjzKDuqwDfsyhgDNTgZBPAaC4vUU2oy+XR+Fq8nBixWIsH668HeOnRK6RRhsr0rJzRB95aZ3EAPzBuQ2qPaNGm17pAX0Rd6MPRgjp75IWwI9eA6aMEdPQEVN7uyOtM5zSsjoj79Lbu1fjShOnQZuJcsV8tqnayeFkNzv2LTOlofU/Tbx502Ro073gGjoeRzNvrynAP03pL486P3KCAyiNPhDs2z8/COMrxRlZW5mfzo0xsK0dQGNH3UoG/9RVwHG4eS8LFpMTR9oetHZBAgMBAAGjgZkwgZYwCQYDVR0TBAIwADAdBgNVHQ4EFgQUJNoRIpb1hUHAk0foMSNM9MCEAv8wSAYDVR0jBEEwP4AUo562SGdCEjZBvW3gubSgUouX8bOhHKQaMBgxFjAUBgNVBAMMDUpldFByb2ZpbGUgQ0GCCQDSbLGDsoN54TATBgNVHSUEDDAKBggrBgEFBQcDATALBgNVHQ8EBAMCBaAwDQYJKoZIhvcNAQELBQADggIBABqRoNGxAQct9dQUFK8xqhiZaYPd30TlmCmSAaGJ0eBpvkVeqA2jGYhAQRqFiAlFC63JKvWvRZO1iRuWCEfUMkdqQ9VQPXziE/BlsOIgrL6RlJfuFcEZ8TK3syIfIGQZNCxYhLLUuet2HE6LJYPQ5c0jH4kDooRpcVZ4rBxNwddpctUO2te9UU5/FjhioZQsPvd92qOTsV+8Cyl2fvNhNKD1Uu9ff5AkVIQn4JU23ozdB/R5oUlebwaTE6WZNBs+TA/qPj+5/we9NH71WRB0hqUoLI2AKKyiPw++FtN4Su1vsdDlrAzDj9ILjpjJKA1ImuVcG329/WTYIKysZ1CWK3zATg9BeCUPAV1pQy8ToXOq+RSYen6winZ2OO93eyHv2Iw5kbn1dqfBw1BuTE29V2FJKicJSu8iEOpfoafwJISXmz1wnnWL3V/0NxTulfWsXugOoLfv0ZIBP1xH9kmf22jjQ2JiHhQZP7ZDsreRrOeIQ/c4yR8IQvMLfC0WKQqrHu5ZzXTH4NO3CwGWSlTY74kE91zXB5mwWAx1jig+UXYc2w4RkVhy0//lOmVya/PEepuuTTI4+UJwC7qbVlh5zfhj8oTNUXgN0AOc+Q0/WFPl1aw5VV/VrO8FCoB15lFVlpKaQ1Yh+DVU8ke+rt9Th0BCHXe0uZOEmH0nOnH/0onD
+   ```
+
+
+
+
+### `Windows11`
+
+1. 从官方下载`2023.2.5 Ultimate（ideaIU-2023.2.5.exe）`版本的`IDEA`、`CLion`、`GoLand`等
+
+   >`IDEA`下载链接：https://www.jetbrains.com/idea/download/other.html
+
+2. 根据提示安装`idea`并`start trail`
+
+3. 下载微云中`idea/jihuo-tool-my.zip`，注意：`jihuo-tool-origin.zip`是别人编译的工具，`jihuo-tool-my.zip`中的`ja-netfilter`是自己从源代码编译的，所有`ja-netfilter`相关源码在自己`github`中可以找到
+
+4. 下载`jihuo-tool-my.zip`后解压到任意目录
+
+5. 双击运行`jihuo-tool/scripts/install-current-user.vbs`
+
+6. 重新启动`idea`
+
+7. 运行`idea`后点击`Manage license`后填入下面对应的`activation code`点击激活后，过期时间会变为2025年(经过测试这个过期时间是假的，破解后能够永久激活)
+
+   > 参考 [链接](https://docs.qq.com/doc/DZWFmak1WcVBhdENu)
+
+8. 手动创建`~/.m2/settings.xml`：用于`Maven`依赖加速下载
+
+   ```xml
+   <?xml version="1.0" encoding="UTF-8"?>
+   
+   <!--
+   Licensed to the Apache Software Foundation (ASF) under one
+   or more contributor license agreements.  See the NOTICE file
+   distributed with this work for additional information
+   regarding copyright ownership.  The ASF licenses this file
+   to you under the Apache License, Version 2.0 (the
+   "License"); you may not use this file except in compliance
+   with the License.  You may obtain a copy of the License at
+   
+       http://www.apache.org/licenses/LICENSE-2.0
+   
+   Unless required by applicable law or agreed to in writing,
+   software distributed under the License is distributed on an
+   "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+   KIND, either express or implied.  See the License for the
+   specific language governing permissions and limitations
+   under the License.
+   -->
+   
+   <!--
+    | This is the configuration file for Maven. It can be specified at two levels:
+    |
+    |  1. User Level. This settings.xml file provides configuration for a single user,
+    |                 and is normally provided in ${user.home}/.m2/settings.xml.
+    |
+    |                 NOTE: This location can be overridden with the CLI option:
+    |
+    |                 -s /path/to/user/settings.xml
+    |
+    |  2. Global Level. This settings.xml file provides configuration for all Maven
+    |                 users on a machine (assuming they're all using the same Maven
+    |                 installation). It's normally provided in
+    |                 ${maven.home}/conf/settings.xml.
+    |
+    |                 NOTE: This location can be overridden with the CLI option:
+    |
+    |                 -gs /path/to/global/settings.xml
+    |
+    | The sections in this sample file are intended to give you a running start at
+    | getting the most out of your Maven installation. Where appropriate, the default
+    | values (values used when the setting is not specified) are provided.
+    |
+    |-->
+   <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 http://maven.apache.org/xsd/settings-1.0.0.xsd">
+       <!-- localRepository
+        | The path to the local repository maven will use to store artifacts.
+        |
+        | Default: ${user.home}/.m2/repository
+       <localRepository>/path/to/local/repo</localRepository>
+       -->
+   
+       <!-- interactiveMode
+        | This will determine whether maven prompts you when it needs input. If set to false,
+        | maven will use a sensible default value, perhaps based on some other setting, for
+        | the parameter in question.
+        |
+        | Default: true
+       <interactiveMode>true</interactiveMode>
+       -->
+   
+       <!-- offline
+        | Determines whether maven should attempt to connect to the network when executing a build.
+        | This will have an effect on artifact downloads, artifact deployment, and others.
+        |
+        | Default: false
+       <offline>false</offline>
+       -->
+   
+       <!-- pluginGroups
+        | This is a list of additional group identifiers that will be searched when resolving plugins by their prefix, i.e.
+        | when invoking a command line like "mvn prefix:goal". Maven will automatically add the group identifiers
+        | "org.apache.maven.plugins" and "org.codehaus.mojo" if these are not already contained in the list.
+        |-->
+       <pluginGroups>
+           <!-- pluginGroup
+            | Specifies a further group identifier to use for plugin lookup.
+           <pluginGroup>com.your.plugins</pluginGroup>
+           -->
+       </pluginGroups>
+   
+       <!-- proxies
+        | This is a list of proxies which can be used on this machine to connect to the network.
+        | Unless otherwise specified (by system property or command-line switch), the first proxy
+        | specification in this list marked as active will be used.
+        |-->
+       <proxies>
+           <!-- proxy
+            | Specification for one proxy, to be used in connecting to the network.
+            |
+           <proxy>
+             <id>optional</id>
+             <active>true</active>
+             <protocol>http</protocol>
+             <username>proxyuser</username>
+             <password>proxypass</password>
+             <host>proxy.host.net</host>
+             <port>80</port>
+             <nonProxyHosts>local.net|some.host.com</nonProxyHosts>
+           </proxy>
+           -->
+       </proxies>
+   
+       <!-- servers
+        | This is a list of authentication profiles, keyed by the server-id used within the system.
+        | Authentication profiles can be used whenever maven must make a connection to a remote server.
+        |-->
+       <servers>
+           <!-- server
+            | Specifies the authentication information to use when connecting to a particular server, identified by
+            | a unique name within the system (referred to by the 'id' attribute below).
+            |
+            | NOTE: You should either specify username/password OR privateKey/passphrase, since these pairings are
+            |       used together.
+            |
+           <server>
+             <id>deploymentRepo</id>
+             <username>repouser</username>
+             <password>repopwd</password>
+           </server>
+           -->
+   
+           <!-- Another sample, using keys to authenticate.
+           <server>
+             <id>siteServer</id>
+             <privateKey>/path/to/private/key</privateKey>
+             <passphrase>optional; leave empty if not used.</passphrase>
+           </server>
+           -->
+       </servers>
+   
+       <!-- mirrors
+        | This is a list of mirrors to be used in downloading artifacts from remote repositories.
+        |
+        | It works like this: a POM may declare a repository to use in resolving certain artifacts.
+        | However, this repository may have problems with heavy traffic at times, so people have mirrored
+        | it to several places.
+        |
+        | That repository definition will have a unique id, so we can create a mirror reference for that
+        | repository, to be used as an alternate download site. The mirror site will be the preferred
+        | server for that repository.
+        |-->
+       <mirrors>
+           <!-- mirror
+            | Specifies a repository mirror site to use instead of a given repository. The repository that
+            | this mirror serves has an ID that matches the mirrorOf element of this mirror. IDs are used
+            | for inheritance and direct lookup purposes, and must be unique across the set of mirrors.
+            |
+           <mirror>
+             <id>mirrorId</id>
+             <mirrorOf>repositoryId</mirrorOf>
+             <name>Human Readable Name for this Mirror.</name>
+             <url>http://my.repository.com/repo/path</url>
+           </mirror>
+            -->
+           <!--
+          <mirror>
+            <id>central</id>
+            <mirrorOf>*</mirrorOf>
+            <name>Human Readable Name for this Mirror.</name>
+            <url>http://127.0.0.1:8081/nexus/content/repositories/central/</url>
+          </mirror>
+          <mirror>
+            <id>dex</id>
+            <mirrorOf>*</mirrorOf>
+            <name>Human Readable Name for this Mirror.</name>
+            <url>http://127.0.0.1:8081/nexus/content/repositories/dex/</url>
+          </mirror>
+          -->
+           <mirror>
+               <id>alimaven</id>
+               <name>aliyun maven</name>
+               <url>https://maven.aliyun.com/nexus/content/groups/public/</url>
+               <mirrorOf>central</mirrorOf>
+           </mirror>
+   
+           <!-- 不阻止http -->
+           <mirror>
+               <id>maven-default-http-blocker</id>
+               <mirrorOf>external:dont-match-anything-mate:*</mirrorOf>
+               <name>Pseudo repository to mirror external repositories initially using HTTP.</name>
+               <url>http://0.0.0.0/</url>
+               <blocked>false</blocked>
+           </mirror>
+       </mirrors>
+   
+       <!-- profiles
+        | This is a list of profiles which can be activated in a variety of ways, and which can modify
+        | the build process. Profiles provided in the settings.xml are intended to provide local machine-
+        | specific paths and repository locations which allow the build to work in the local environment.
+        |
+        | For example, if you have an integration testing plugin - like cactus - that needs to know where
+        | your Tomcat instance is installed, you can provide a variable here such that the variable is
+        | dereferenced during the build process to configure the cactus plugin.
+        |
+        | As noted above, profiles can be activated in a variety of ways. One way - the activeProfiles
+        | section of this document (settings.xml) - will be discussed later. Another way essentially
+        | relies on the detection of a system property, either matching a particular value for the property,
+        | or merely testing its existence. Profiles can also be activated by JDK version prefix, where a
+        | value of '1.4' might activate a profile when the build is executed on a JDK version of '1.4.2_07'.
+        | Finally, the list of active profiles can be specified directly from the command line.
+        |
+        | NOTE: For profiles defined in the settings.xml, you are restricted to specifying only artifact
+        |       repositories, plugin repositories, and free-form properties to be used as configuration
+        |       variables for plugins in the POM.
+        |
+        |-->
+       <profiles>
+           <!-- profile
+            | Specifies a set of introductions to the build process, to be activated using one or more of the
+            | mechanisms described above. For inheritance purposes, and to activate profiles via <activatedProfiles/>
+            | or the command line, profiles have to have an ID that is unique.
+            |
+            | An encouraged best practice for profile identification is to use a consistent naming convention
+            | for profiles, such as 'env-dev', 'env-test', 'env-production', 'user-jdcasey', 'user-brett', etc.
+            | This will make it more intuitive to understand what the set of introduced profiles is attempting
+            | to accomplish, particularly when you only have a list of profile id's for debug.
+            |
+            | This profile example uses the JDK version to trigger activation, and provides a JDK-specific repo.
+           <profile>
+             <id>jdk-1.4</id>
+   
+             <activation>
+               <jdk>1.4</jdk>
+             </activation>
+   
+             <repositories>
+               <repository>
+                 <id>jdk14</id>
+                 <name>Repository for JDK 1.4 builds</name>
+                 <url>http://www.myhost.com/maven/jdk14</url>
+                 <layout>default</layout>
+                 <snapshotPolicy>always</snapshotPolicy>
+               </repository>
+             </repositories>
+           </profile>
+           -->
+   
+           <!--
+            | Here is another profile, activated by the system property 'target-env' with a value of 'dev',
+            | which provides a specific path to the Tomcat instance. To use this, your plugin configuration
+            | might hypothetically look like:
+            |
+            | ...
+            | <plugin>
+            |   <groupId>org.myco.myplugins</groupId>
+            |   <artifactId>myplugin</artifactId>
+            |
+            |   <configuration>
+            |     <tomcatLocation>${tomcatPath}</tomcatLocation>
+            |   </configuration>
+            | </plugin>
+            | ...
+            |
+            | NOTE: If you just wanted to inject this configuration whenever someone set 'target-env' to
+            |       anything, you could just leave off the <value/> inside the activation-property.
+            |
+           <profile>
+             <id>env-dev</id>
+   
+             <activation>
+               <property>
+                 <name>target-env</name>
+                 <value>dev</value>
+               </property>
+             </activation>
+   
+             <properties>
+               <tomcatPath>/path/to/tomcat/instance</tomcatPath>
+             </properties>
+           </profile>
+   
+           <profile>
+             <id>nexus</id>
+             <repositories>
+               <repository>
+                 <id>dex</id>
+                 <name>Repository for dex</name>
+                 <url>http://dex</url>
+                 <releases><enabled>true</enabled></releases>
+                 <snapshots><enabled>true</enabled></snapshots>
+               </repository>
+             </repositories>
+           </profile>
+           -->
+   
+       </profiles>
+   
+       <!-- activeProfiles
+        | List of profiles that are active for all builds.
+        |
+       <activeProfiles>
+         <activeProfile>alwaysActiveProfile</activeProfile>
+         <activeProfile>anotherAlwaysActiveProfile</activeProfile>
+       </activeProfiles>
+       -->
+   </settings>
+   
+   ```
+
+   

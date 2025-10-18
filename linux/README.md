@@ -1,5 +1,3 @@
-# Linux
-
 ## shell相关
 
 ### bash shell设置自动补全
@@ -147,9 +145,9 @@ userdel -r user1
 
 
 
-### Ubuntu 和 CentOS8 配置环境变量
+### `Ubuntu`和`CentOS8`配置环境变量
 
-在 /etc/profile.d/ 目录设置 xxxx.sh
+在 `/etc/profile.d/` 目录设置 `xxxx.sh`
 
 ```bash
 [root@localhost ~]# cd /etc/profile.d/
@@ -160,7 +158,7 @@ export PATH=$PATH:/usr/local/go/bin
 
 
 
-### Ubuntu /etc/profile.d/xxx.sh 为何 SSH 远程连接时不会被加载呢？
+### `Ubuntu /etc/profile.d/xxx.sh`为何`SSH`远程连接时不会被加载呢？
 
 在 Ubuntu 系统中，`/etc/profile` 和 `/etc/profile.d/` 目录下的脚本主要用于配置系统级的环境变量和启动时的初始化设置。这些文件通常在用户登录时由 shell 读取和执行。然而，对于 SSH 远程连接，具体的行为可能会因所使用的 shell 类型（如 Bash、Zsh 等）以及 SSH 配置的不同而有所差异。
 
