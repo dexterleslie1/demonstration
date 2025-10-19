@@ -269,6 +269,8 @@ MinGW 的核心作用就像一个 **“桥梁”** 和 **“工具提供商”**
 
 ### 安装`Gost`服务
 
+参考本站 [链接](/gost/README.html#windows11) 安装
+
 
 
 ## 命令 - `netstat`
