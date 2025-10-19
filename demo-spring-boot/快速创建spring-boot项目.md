@@ -1,5 +1,3 @@
-# 快速创建`spring-boot`项目
-
 ## 复制预先配置好的`spring-boot`模板项目
 
 > 模板项目包括以下预配置：
@@ -19,7 +17,7 @@
    cp -r demonstration/demo-spring-boot/demo-spring-boot-scaffold .
    ```
 
-## 使用`IntelliJ IDEA`快速创建基于`maven`的`spring-boot`项目
+## 使用`IntelliJ IDEA`快速创建基于`Maven`的`Spring-Boot`项目
 
 1. 打开`IntelliJ IDEA`，点击`“Create New Project”`。
 2. 在左侧面板中选择`“Spring Initializr”`。

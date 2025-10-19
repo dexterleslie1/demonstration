@@ -1,10 +1,8 @@
-# 安装`Docker`
-
 ## `centOS8`上安装`Docker`
 
 
 
-### 使用 dcli 安装
+### 使用`dcli`安装
 
 <a href="/dcli/README.html#安装" target="_blank">安装并配置 dcli</a>
 
@@ -86,9 +84,9 @@ sudo dcli docker install
 
 
 
-## windows 上安装 docker
+## `windows`上安装`docker`
 
-### windows11 上安装 docker
+### `windows11`上安装`docker`
 
 windows11 版本 23H2（OS 内部版本 22631.2861，ISO 镜像：Win11_23H2_Chinese_Simplified_x64v2.iso）专业工作站版，Docker Desktop 4.35.1
 
@@ -130,7 +128,7 @@ journalctl -f -u docker
 
 
 
-## 迁移 Docker 数据目录
+## 迁移`Docker`数据目录
 
 复制数据目录
 

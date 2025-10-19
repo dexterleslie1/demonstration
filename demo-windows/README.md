@@ -249,14 +249,33 @@ MinGW 的核心作用就像一个 **“桥梁”** 和 **“工具提供商”**
 
 参考本站 [链接](/idea/README.html#windows11) 安装
 
-
-
 ### 安装`GitExtensions`
 
 安装 `GitExtensions-x64-5.2.1.18061-0d74cfdc3.msi`、`Git-2.49.0-64-bit.exe`、`windowsdesktop-runtime-8.0.15-win-x64.exe`。
 
-
-
 ### 安装`Typora`
 
 参考本站 [链接](/typora/README.html#安装-windows11) 安装
+
+### 安装`Cygwin`
+
+> 说明：使用`find`、`grep`等工具查找文件或者文件内容。
+
+参考本站 [链接](/windows/README.html#cygwin-安装) 安装
+
+### 安装`Docker`
+
+参考本站 [链接](/docker/docker的安装.html#windows11-上安装-docker) 安装
+
+### 安装`Gost`服务
+
+
+
+## 命令 - `netstat`
+
+查看特定端口是否监听状态（如 1080）
+
+```cmd
+netstat -ano | findstr :1080
+```
+
