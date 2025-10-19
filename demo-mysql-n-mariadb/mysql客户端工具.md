@@ -40,19 +40,19 @@ sudo apt install ./mysql-workbench-community_8.0.29-1ubuntu20.04_amd64.deb
 
 
 
-## `intellij mysql`客户端
+## `IntelliJ MySQL`客户端
 
 `intellij mysql`客户端支持`DELIMITER $$`语法。
 
 
 
-## Navicat for MySQL
+## `Navicat for MySQL`
 
 Upper case keywords 功能会把所有的 SQL 都 Upper case
 
 
 
-## HeidiSQL
+## `HeidiSQL`
 
 - 支持关键词自动 uppercase 功能
 
@@ -74,19 +74,19 @@ sudo snap install heidisql-wine
 
 
 
-## DBeaver
+## `DBeaver`
 
 - 无法连接 MariaDB，因为 MariaDB jdbc 驱动在线下载失败
 
 
 
-## SQLyog
+## `SQLyog`
 
 使用此工具作为首选的 MySQL GUI 客户端工具，因为其支持精准的 keyword upper case 功能。
 
 
 
-### ubuntu 安装
+### `Ubuntu`安装
 
 >`https://forum.winehq.org/viewtopic.php?t=33543`
 
@@ -113,3 +113,9 @@ LANG=zh_CN.UTF-8 wine SQLyog-13.3.0-0.x64Community.exe
 ```bash
 LANG=zh_CN.UTF-8 wine ~/.wine/drive_c/Program\ Files/SQLyog\ Community/SQLyogCommunity.exe
 ```
+
+
+
+### `Window11`安装
+
+访问 https://github.com/webyog/sqlyog-community/wiki/Downloads 下载最新版本`SQLyog`并根据提示安装。

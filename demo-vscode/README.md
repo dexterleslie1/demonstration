@@ -1,4 +1,6 @@
-## ubuntu20 安装 visual code
+## 安装
+
+### `Ubuntu20`
 
 > 不能使用 snap 安装visual code，因为 snap visual code 是阉割版，不能切换中文输入法。
 >
@@ -13,6 +15,14 @@
 # 从deb安装包安装visual code
 sudo apt install ./code_xxxxx.deb
 ```
+
+
+
+### `Windows11`
+
+访问 https://code.visualstudio.com 下载最新版本`VSCode`，根据提示安装即可。
+
+
 
 ## `Typora`插件安装
 

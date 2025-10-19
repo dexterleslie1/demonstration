@@ -33,7 +33,7 @@ node -v
 
 ### `Windows`
 
-到 `nodejs` 官网 `https://nodejs.org/en/download` 下载 `msi` 安装包，双击 `msi` 安装包根据提示安装
+到 `nodejs` 官网 https://nodejs.org/en/download 下载 `msi` 安装包，双击 `msi` 安装包根据提示安装
 
 查看 `node` 版本
 

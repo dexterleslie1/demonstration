@@ -1,8 +1,18 @@
-# Java
+## 安装
+
+### `Windows11`
+
+访问 [Java Downloads | Oracle](https://www.oracle.com/java/technologies/downloads/#java8-windows) 下载 `jdk-8u461-windows-x64.exe`（下载过程中需要登陆`Oracle`账号）并根据提示安装
+
+设置当前用户的环境变量`JAVA_HOME`
+
+```
+JAVA_HOME=C:\Program Files\Java\jdk-1.8
+```
 
 
 
-## 对象的 hashcode 和 equals
+## 对象的`hashcode`和`equals`
 
 ### 介绍
 
@@ -553,7 +563,7 @@ public class PhantomReferenceExample {
 
 
 
-## JDK API
+## `JDK API`
 
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/master/demo-java/demo-jdk-api)
 

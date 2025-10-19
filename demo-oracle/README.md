@@ -4,5 +4,5 @@
 
 ## 帐号信息
 
-gmail@||(UPX),.12
+gmail@||(upX),1shift
 

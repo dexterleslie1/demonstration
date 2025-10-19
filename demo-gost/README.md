@@ -66,6 +66,13 @@ gost.exe -L :1080 -F https://secretuser:YourNever8urX3!dRt03@23.91.96.217:30001
   sc delete GostService
   ```
 
+在用户环境变量中配置`HTTP_PROXY`和`HTTPS_PROXY`（`Docker`代理、`npm install`需要用到）
+
+```
+HTTP_PROXY=http://localhost:1080
+HTTPS_PROXY=http://localhost:1080
+```
+
 
 
 ## 命令用法

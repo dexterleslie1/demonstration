@@ -271,6 +271,24 @@ MinGW 的核心作用就像一个 **“桥梁”** 和 **“工具提供商”**
 
 参考本站 [链接](/gost/README.html#windows11) 安装
 
+### 安装`NodeJS`
+
+>说明：用于运行`VitePress`。
+
+参考本站 [链接](/nodejs/README.html#windows) 安装
+
+### 安装`VSCode`
+
+参考本站 [链接](/vscode/README.html#windows11) 安装
+
+### 安装`MySQL`客户端`SQLyog`
+
+参考本站 [链接](/mysql-n-mariadb/mysql客户端工具.html#window11安装) 安装
+
+### 安装`JDK1.8`
+
+参考本站 [链接](/java/README.html#windows11) 安装
+
 
 
 ## 命令 - `netstat`
