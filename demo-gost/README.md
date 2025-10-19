@@ -1,10 +1,14 @@
-# `gost`用法
+## 概念
 
-> todo 研究外网能够直接连接的代理
+> `todo`研究外网能够直接连接的代理
 >
 > [参考链接](https://gost.run)
 
-## `gost`安装
+
+
+## 安装
+
+### `Ubuntu`
 
 使用`dcli`程序安装`gost`客户端或者服务端
 
@@ -22,7 +26,49 @@
 
 
 
-## `gost`命令用法
+### `Windows11`
+
+访问 https://github.com/go-gost/gost/releases?page=2 下载 `gost_3.0.0_windows_amd64.zip`（下载成功后`Windows`安全中心会报告木马威胁并自动隔离文件，此时在`Windows`安全中心设置恢复隔离文件）。
+
+解压`gost_3.0.0_windows_amd64.zip`后`Windows`安全中心会报告`gost.exe`木马威胁并自动隔离文件，此时在`Windows`安全中心设置恢复隔离文件。
+
+测试`gost.exe`是否正常执行
+
+```cmd
+gost.exe -L :1080 -F https://secretuser:YourNever8urX3!dRt03@23.91.96.217:30001
+```
+
+- 第一次执行上面命令`Windows`安全中心会报告`gost.exe`的安全威胁，此时在`Windows`安全中心选择`允许`即可。
+
+创建`Windows`服务：
+
+- 创建服务（需要管理员权限）
+
+  ```cmd
+  sc create GostService binPath= "C:\gost_3.0.0_windows_amd64\gost.exe -L :1080 -F https://secretuser:xxx@x.x.x.x:30001" start= auto
+  ```
+
+- 启动服务
+
+  ```cmd
+  sc start GostService
+  ```
+
+- 停止服务
+
+  ```cmd
+  sc stop GostService
+  ```
+
+- 删除服务
+
+  ```cmd
+  sc delete GostService
+  ```
+
+
+
+## 命令用法
 
 在端口 8080 启动 http 代理
 
