@@ -117,6 +117,7 @@ export default defineConfig({
           { text: 'Dcli', link: '/dcli/README.md' },
           { text: '科学上网', link: '/科学上网/README.md' },
           { text: 'frp 内网穿透', link: '/frp/README.md' },
+          { text: 'Gost', link: '/gost/README.md' },
           { text: 'Word 转换为 PDF', link: '/word-to-pdf/README.md' },
           { text: 'IDEA', link: '/idea/README.md' },
           { text: 'HTTP 相关', link: '/http/README.md' },
