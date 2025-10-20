@@ -461,7 +461,7 @@ public class TurnstileService {
 
 
 
-## `Happy-Captcha`
+## `Happy Captcha`
 
 >提示：因为验证码服务器端信息默认保存到`session`上下文中，如果需求需要把验证码信息保存到`redis`中默认是不支持的，所以暂时不使用此方案生成验证码。
 >
@@ -1446,6 +1446,211 @@ public class ApiController {
 
         try (OutputStream out = response.getOutputStream()) {
             captcha.out(out);
+        }
+    }
+}
+```
+
+
+
+## `Hutool Captcha`
+
+>说明：支持随机字符和算术运算验证码生成。
+
+Hutool Captcha 是 **Hutool工具包** 中一个用于**生成和验证验证码**的Java组件。它的设计目标是让开发者在Java应用中能够极其简便地集成验证码功能。
+
+简单来说，你可以用它来快速创建类似下面这样的图片验证码：
+
+（想象这里有一张图片，上面显示着扭曲的、带有干扰线的字母数字组合，例如 "4Ak8"）
+
+------
+
+### 核心特性
+
+1. **开箱即用**：只需几行代码即可生成验证码图片，无需复杂配置。
+2. **高度可定制**： **尺寸**：可以自定义验证码图片的宽度和高度。 **干扰元素**：可以控制干扰线（直线、曲线）的数量、粗细和透明度。 **背景干扰**：可以添加噪点、扭曲效果、剪切效果等，增加机器识别的难度。 **字体**：可以自定义验证码字符的字体、大小和颜色。 **字符集**：可以自定义验证码由哪些字符组成（例如，只使用数字、只使用字母，或混合）。 **长度**：可以自定义验证码的字符数量。
+3. **多种类型支持**： **线段干扰验证码**：最常用的类型，带有随机颜色的干扰直线。 **圆圈干扰验证码**：用干扰圆圈代替直线。 **扭曲验证码**：对字符进行扭曲变形，安全性更高。 **GIF动态验证码**：生成动态的GIF验证码，更难被机器识别。 **中文验证码（拼图验证码）**：生成中文验证码或更复杂的交互式验证码（如拼图）通常需要结合其他组件或自行扩展。
+
+------
+
+### 基本使用示例
+
+以下是一个最简单的使用示例，展示如何生成一个验证码并将其写入文件。
+
+1. **添加依赖**
+
+   首先，在你的项目（如Maven）的 `pom.xml`中添加Hutool依赖。
+
+   ```
+   <dependency>
+       <groupId>cn.hutool</groupId>
+       <artifactId>hutool-all</artifactId>
+       <version>5.8.16</version> <!-- 请使用最新版本 -->
+   </dependency>
+   ```
+
+2. **Java代码**
+
+   ```
+   import cn.hutool.captcha.CaptchaUtil;
+   import cn.hutool.captcha.LineCaptcha;
+   
+   public class CaptchaDemo {
+       public static void main(String[] args) {
+           // 1. 创建一个线段干扰的验证码
+           // 参数：宽度， 高度， 验证码字符数， 干扰线数量
+           LineCaptcha lineCaptcha = CaptchaUtil.createLineCaptcha(200, 100, 4, 20);
+   
+           // 2. 获取验证码的文本内容（例如 "4Ak8"），这个需要保存起来用于后续验证
+           String code = lineCaptcha.getCode();
+           System.out.println("生成的验证码是：" + code);
+   
+           // 3. 将验证码图片写入文件（实际应用中可能是输出到HTTP响应流）
+           lineCaptcha.write("d:/captcha.png");
+       }
+   }
+   ```
+
+------
+
+### 在Web项目中的典型应用流程
+
+1. **生成验证码**：
+
+   - 在请求 `/captcha`这样的接口时，使用Hutool Captcha生成图片和对应的正确代码。
+   - 将图片通过 `HttpServletResponse.getOutputStream()`输出到前端浏览器。
+   - **关键步骤**：将正确的验证码代码（`lineCaptcha.getCode()`）存入Session或Redis等缓存中（通常与当前用户的Session ID关联）。
+
+   ```
+   @GetMapping("/captcha")
+   public void getCaptcha(HttpServletRequest request, HttpServletResponse response) throws IOException {
+       LineCaptcha captcha = CaptchaUtil.createLineCaptcha(200, 100, 4, 20);
+       // 将验证码文本存入Session，key自定，例如 "CAPTCHA_CODE"
+       request.getSession().setAttribute("CAPTCHA_CODE", captcha.getCode());
+       // 设置响应头，告诉浏览器这是图片
+       response.setContentType("image/png");
+       response.setHeader("Pragma", "No-cache");
+       // 将图片写入响应流
+       captcha.write(response.getOutputStream());
+   }
+   ```
+
+2. **用户提交验证**：
+
+   - 用户在表单中输入看到的验证码并提交。
+   - 后端从Session中取出之前保存的正确代码。
+   - 将用户输入的代码与正确代码进行比较（通常忽略大小写和空格）。
+
+   ```
+   @PostMapping("/login")
+   public String login(@RequestParam String username,
+                       @RequestParam String password,
+                       @RequestParam String userInputCaptcha,
+                       HttpServletRequest request) {
+       // 1. 从Session中获取正确的验证码
+       String savedCaptcha = (String) request.getSession().getAttribute("CAPTCHA_CODE");
+       // 2. 比较验证码（忽略大小写和空格）
+       if (savedCaptcha == null || !savedCaptcha.replaceAll("\\s", "").equalsIgnoreCase(userInputCaptcha.replaceAll("\\s", ""))) {
+           return "验证码错误！";
+       }
+       // 3. 验证通过后，立即清除Session中的验证码，防止重复使用
+       request.getSession().removeAttribute("CAPTCHA_CODE");
+       // 4. 继续处理登录逻辑...
+       return "登录成功！";
+   }
+   ```
+
+### 总结
+
+**Hutool Captcha** 是一个功能强大且易于使用的Java验证码生成库，它极大地简化了在Java Web应用或桌面应用中集成验证码功能的工作。通过其丰富的自定义选项，你可以轻松生成满足不同安全级别需求的验证码。
+
+### 示例
+
+>提醒：生成算术运算验证码时没有接口能够直接获取算术运算结果，需要调用下面代码校验验证码：
+>
+>```java
+>// 校验结果
+>if (generator.verify(code, "xxx")) {
+>    log.debug("验证成功");
+>}
+>```
+>
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/captcha/demo-hutool-captcha)
+
+```java
+package com.future.demo;
+
+import cn.hutool.captcha.CaptchaUtil;
+import cn.hutool.captcha.LineCaptcha;
+import cn.hutool.captcha.generator.MathGenerator;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.OutputStream;
+
+@RestController
+@RequestMapping(value = "/api/v1/captcha")
+@Slf4j
+public class ApiController {
+    /**
+     * 生成普通字符验证码
+     */
+    @GetMapping("/getImageCode")
+    public void getImageCode(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("image/png");
+        response.setHeader("Pragma", "No-cache");
+        response.setHeader("Cache-Control", "no-cache");
+        response.setDateHeader("Expires", 0);
+
+        // 生成普通验证码
+        LineCaptcha captcha = CaptchaUtil.createLineCaptcha(200, 100, 4, 20);
+
+        // 获取验证码字符
+        String code = captcha.getCode();
+        if (log.isDebugEnabled())
+            // 输出示例：字符验证码：tjE4
+            log.debug("字符验证码：{}", code);
+
+        request.getSession().setAttribute("captcha", code);
+
+        try (OutputStream out = response.getOutputStream()) {
+            captcha.write(out);
+        }
+    }
+
+    /**
+     * 生成算术运算验证码
+     */
+    @GetMapping("/getImageMath")
+    public void getImageMath(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("image/png");
+        response.setHeader("Pragma", "No-cache");
+        response.setHeader("Cache-Control", "no-cache");
+        response.setDateHeader("Expires", 0);
+
+        // 生成普通验证码
+        LineCaptcha captcha = CaptchaUtil.createLineCaptcha(200, 100, 4, 20);
+        // 设置算术生成器
+        MathGenerator generator = new MathGenerator(1);
+        captcha.setGenerator(generator);
+        // 生成图片
+        captcha.createCode();
+
+        // 获取验证码算术运算式子
+        String code = captcha.getCode();
+        if (log.isDebugEnabled())
+            // 输出示例：算术运算式子：5-5=
+            log.debug("算术运算式子：{}", code);
+
+        request.getSession().setAttribute("captcha", code);
+
+        try (OutputStream out = response.getOutputStream()) {
+            captcha.write(out);
         }
     }
 }
