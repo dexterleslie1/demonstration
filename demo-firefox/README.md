@@ -1,3 +1,11 @@
+## 安装
+
+### `Windows11`
+
+访问 https://www.firefox.com/ 下载最新版本 `Firefox`并根据提示安装即可（安装过程是在线下载并安装需要耐心等待）。
+
+
+
 ## `Ubuntu`升级浏览器
 
 升级本地包索引和包列表
@@ -26,8 +34,8 @@ sudo apt install firefox
 
 打开 `General` > `Network Settings` > `Settings`，选择 `Manual proxy configuration`：
 
-- `SOCKS Host` 填写 `127.0.0.1``
-- ``Port` 填写 `1080`
+- `SOCKS Host` 填写 `127.0.0.1`
+- `Port` 填写 `1080`
 - `No proxy for` 填写 `192.168.0.0/16,127.0.0.0/8,::1,www.example.com`
 - 勾选 `Proxy DNS when using SOCKS v5`
 

@@ -69,6 +69,13 @@ services:
 
 ## 方案3：配置`docker daemon`代理
 
+>提醒`Docker Desktop`代理不使用`json`配置，使用`Settings` > `Resources` > `Proxies`功能配置：
+>
+>- 打开`Manual proxy configuration`选项
+>- `HTTP`配置`http://127.0.0.1:1080`
+>- `HTTPS`配置`http://127.0.0.1:1080`
+>- `Bypass proxy settings`配置`127.0.0.0/8,192.168.1.1/24,192.168.235.1/24,*.aliyuncs.com`
+>
 >[代理配置](https://blog.csdn.net/a_917/article/details/140685790)
 
 在`/etc/docker/daemon.json`配置文件中加入如下内容：

@@ -93,6 +93,10 @@ windows11 版本 23H2（OS 内部版本 22631.2861，ISO 镜像：Win11_23H2_Chi
 - windows11 启用 hyper-v 特性后重启系统
 - 安装 Docker Desktop 后即可使用
 
+启用`host networking`：导航到`Settings` > `Resources` > `Network`功能，勾选`Enable host networking`选项后点击`Apply & restart`按钮即可。
+
+>说明：否则不能使用`network_mode: host`模式。
+
 
 
 
