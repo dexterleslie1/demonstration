@@ -1075,3 +1075,95 @@ public class OuterClass {
 | **匿名内部类** | 方法或块内部（无名） | **是**（所有）       | 否             | 随定义随 `new`             | 快速实现接口/类，事件监听  |
 
 希望这个详细的解释能帮助你彻底理解 Java 的内部类！
+
+
+
+## `JavaFX`
+
+当然！这是一个关于 JavaFX 的全面介绍。
+
+### 核心定义
+
+**JavaFX** 是一个开源的、基于 Java 的客户端应用程序平台，用于创建丰富的桌面、移动和嵌入式设备上的图形用户界面（GUI）。你可以把它看作是 Java 生态系统中用于构建现代、美观的桌面应用的**下一代 GUI 工具包**，用于取代之前比较陈旧的 Swing 和 AWT。
+
+------
+
+### 主要特点和优势
+
+与它的前辈（如 Swing）相比，JavaFX 提供了许多强大的优势：
+
+1. **现代化的外观和丰富的视觉效果**： **硬件加速**：利用 GPU 进行渲染，使得界面非常流畅，即使有复杂的动画和特效。 **CSS 样式**：可以使用熟悉的 CSS 来美化界面，将应用程序的逻辑（Java代码）和表现样式（CSS）完全分离，让设计师和开发者可以更好地协作。 **内置动画 API**：提供了强大的类库，可以轻松创建平滑的过渡、变换和动画效果。
+2. **FXML 与场景构建器**： **FXML**：一种基于 XML 的标记语言，用于以声明式的方式设计用户界面，而不是完全用 Java 代码来“画”界面。这使得界面布局更清晰、更易于维护。 **Scene Builder**：一个可视化的拖放式设计工具，可以直观地设计 FXML 界面，然后直接与 Java IDE（如 IntelliJ IDEA, NetBeans）集成。
+3. **强大的图形和媒体支持**： **2D/3D 图形**：支持绘制复杂的 2D 形状，并内置了 3D 图形功能。 **音频和视频**：内置支持播放多种格式的媒体文件（如 MP3, WAV, FLV, MP4）。
+4. **绑定 API**： 提供了一个强大的“绑定”机制，可以自动同步 UI 控件和底层数据模型的状态。当数据改变时，UI 会自动更新，无需手动编写大量的更新代码，这大大简化了开发。
+5. **跨平台**： 继承了 Java “一次编写，到处运行” 的特性。编译后的 JavaFX 应用程序可以在 Windows, macOS, Linux 等多个操作系统上运行。
+
+------
+
+### 架构核心：场景图
+
+理解 JavaFX 架构的关键是理解其**场景图** 模型。它类似于一棵树状结构：
+
+- **舞台（Stage）**：应用程序的最顶层容器，对应一个桌面窗口。
+- **场景（Scene）**：填充舞台的内容区域，一个 Stage 包含一个 Scene。
+- **节点（Node）**：场景图中的所有元素都是节点，例如按钮（Button）、文本框（TextField）、布局面板（Pane, VBox, HBox）等。节点可以嵌套，形成父子关系。
+
+这种层次结构使得管理和渲染 UI 元素非常高效。
+
+------
+
+### JavaFX 与 Swing/AWT 的关系
+
+- **AWT**：Java 最早的 GUI 工具包，依赖本地操作系统组件，外观和行为因平台而异。
+- **Swing**：在 AWT 之上构建，提供了一套“轻量级”的纯 Java 实现的组件，外观可插拔，更加灵活。曾是多年来的主流。
+- **JavaFX**：旨在取代 Swing，作为构建现代、富客户端应用的**官方首选方案**。它不依赖于本地组件，而是自己进行渲染，因此能实现更一致、更炫酷的视觉效果。
+
+**重要历史节点**：在 Java 8 之前，JavaFX 是独立于 JDK 的。从 **Java 8 到 Java 10**，JavaFX 被捆绑在 JDK 中。从 **Java 11** 开始，Oracle 将 JavaFX 从 JDK 中剥离出来，成为一个独立的开源项目（名为 **OpenJFX**）。现在，开发者需要单独下载 JavaFX SDK 或通过 Maven/Gradle 依赖来使用它。
+
+------
+
+### 一个简单的 “Hello World” 示例
+
+```
+import javafx.application.Application;
+import javafx.scene.Scene;
+import javafx.scene.control.Label;
+import javafx.scene.layout.StackPane;
+import javafx.stage.Stage;
+
+public class HelloWorld extends Application {
+
+    @Override
+    public void start(Stage primaryStage) {
+        // 1. 创建一个控件（节点）
+        Label label = new Label("Hello, JavaFX!");
+
+        // 2. 创建一个布局面板，并添加控件
+        StackPane root = new StackPane();
+        root.getChildren().add(label);
+
+        // 3. 创建一个场景，并设置其大小和根布局
+        Scene scene = new Scene(root, 300, 200);
+
+        // 4. 设置舞台的标题和场景，并显示窗口
+        primaryStage.setTitle("My First JavaFX App");
+        primaryStage.setScene(scene);
+        primaryStage.show();
+    }
+
+    public static void main(String[] args) {
+        launch(args); // 启动应用程序
+    }
+}
+```
+
+### 总结
+
+| 特性         | 描述                                                         |
+| ------------ | ------------------------------------------------------------ |
+| **定位**     | 构建现代、丰富、跨平台桌面客户端应用程序的官方 Java GUI 框架。 |
+| **核心优势** | 硬件加速、CSS 样式、FXML、强大的动画和媒体支持、数据绑定。   |
+| **当前状态** | 自 JDK 11 起作为独立项目 **OpenJFX** 发展，非常活跃。        |
+| **适用场景** | 需要复杂图形、动画、媒体播放或现代化 UI 的企业级桌面应用、工具软件、Kiosk 系统、数据可视化仪表盘等。 |
+
+简单来说，**如果你今天想用 Java 来开发一个看起来很棒、体验流畅的桌面应用程序，JavaFX 是你的不二之选。**

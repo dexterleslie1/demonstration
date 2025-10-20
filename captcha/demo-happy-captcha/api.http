@@ -1,0 +1,8 @@
+### /api/v1/captcha/default
+GET http://localhost:8080/api/v1/captcha/default
+
+### /api/v1/captcha/arithmetic
+GET http://localhost:8080/api/v1/captcha/arithmetic
+
+### /api/v1/captcha/arithmeticzh
+GET http://localhost:8080/api/v1/captcha/arithmeticzh

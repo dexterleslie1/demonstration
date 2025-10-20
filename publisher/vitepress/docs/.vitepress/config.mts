@@ -141,6 +141,7 @@ export default defineConfig({
         {
           text: 'SpringBoot',
           items: [
+            { text: '基础', link: '/springboot/README.md' },
             { text: '快速创建SpringBoot项目', link: '/springboot/快速创建spring-boot项目.md' },
             { text: 'SpringBoot项目的测试', link: '/springboot/spring-boot项目的测试.md' },
             { text: 'Spring Security', link: '/springboot/spring-security.md' },

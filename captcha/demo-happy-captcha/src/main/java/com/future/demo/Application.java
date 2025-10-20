@@ -1,4 +1,4 @@
-package com.future.demo.captcha;
+package com.future.demo;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

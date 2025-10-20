@@ -1,7 +1,3 @@
-# `iBatis`、`MyBatis`、`MyBatis-plus`介绍
-
-
-
 ## 什么是`iBatis`、`MyBatis`、`MyBatis-plus`？
 
 - `iBatis`是Clinton Begin在2001年发起的一个开源项目，后发展成为`MyBatis`的前身。

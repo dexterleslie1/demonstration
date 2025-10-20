@@ -246,6 +246,8 @@ public class IncreaseCountDTO {
 
 打开插件管理设置窗口，输入`Lingma`（提供商为`Alibaba Cloud`）后安装并重启`IDEA`，使用支付宝`App`扫码登录插件即可使用。
 
+因为插件快捷键和`IDEA`快捷键冲突：打开`File` > `Settings` > `Keymap`功能，定位到`Lingma`插件并删除其中的`Ctrl + Shift + I`、`Ctrl + 向上箭头`快捷键。
+
 
 
 ## `IDEA`、`CLion`、`GoLand`、`PyCharm`、`DataGrid`等破解
@@ -630,8 +632,9 @@ public class IncreaseCountDTO {
 
 
 
-
 ## 高效开发
+
+>提示：`IDEA`的快捷键容易与某些软件或者`IDEA`中第三方软件绑定的快捷键发生冲突，此时需要手动调整软件或者插件中绑定快捷键以取消冲突。
 
 ### 光标快速移动到单词
 
@@ -677,9 +680,19 @@ public class IncreaseCountDTO {
 
 `Ctrl + E`。
 
-### 上一个或者下一个光标位置快速切换
+### 上一个或者下一个文件历史快速切换
+
+>提示：导航历史（基于文件访问顺序）。
 
 `Alt + ←`或者`Alt + →`。
+
+### 上一个或者下一个光标位置历史快速切换
+
+>提示：`Ctrl + Alt + ←` 或者`Ctrl + Alt + →`没有作用可能是快捷键冲突，此时需要移除冲突的快捷键即可。打开`File` > `Settings` > `keymap`功能，搜索`back`关键字，定位到`Back`快捷键绑定显示`Ctrl + Alt + 向左箭头`和`Button 4 Click`（说明快捷键绑定冲突），此时删除`Button 4 Click`重启`IDEA`后快捷键`Ctrl + Alt + 向左箭头`即可正常使用。
+>
+>提示：光标位置历史（基于光标移动）。
+
+`Ctrl + Alt + ←`或者`Ctrl + Alt + →`。
 
 ### 打开文件结构
 

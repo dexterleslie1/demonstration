@@ -153,7 +153,7 @@
 
 ## `Rest API`公共响应
 
->提示：没有找到第三方库，索引需要自定义。
+>提示：没有找到第三方库，所以需要自定义。
 >
 >说明：谷歌搜索关键字`common reponse`、`Response Result Encapsulation`。
 
@@ -386,3 +386,8 @@ public class AjaxResult extends HashMap<String, Object>
 }
 ```
 
+
+
+## 验证码
+
+详细用法请参考本站 [链接](/captcha/README.html)
