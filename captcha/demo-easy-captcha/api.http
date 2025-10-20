@@ -1,0 +1,12 @@
+### /api/v1/captcha/getImageCode
+GET http://localhost:8080/api/v1/captcha/getImageCode
+
+### /api/v1/captcha/getImageMath
+GET http://localhost:8080/api/v1/captcha/getImageMath
+
+### /api/v1/captcha/getImageCustomize
+GET http://localhost:8080/api/v1/captcha/getImageCustomize
+
+### /api/v1/captcha/getImageChinese
+GET http://localhost:8080/api/v1/captcha/getImageChinese
+

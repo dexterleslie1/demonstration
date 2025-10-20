@@ -464,6 +464,8 @@ public class TurnstileService {
 ## `Happy-Captcha`
 
 >提示：因为验证码服务器端信息默认保存到`session`上下文中，如果需求需要把验证码信息保存到`redis`中默认是不支持的，所以暂时不使用此方案生成验证码。
+>
+>说明：支持随机字符和算术运算验证码生成。
 
 ### `POM`依赖配置
 
@@ -537,6 +539,8 @@ public class ApiController {
 
 
 ## `Kaptcha`
+
+>说明：支持随机字符和算术运算验证码生成。
 
 **Kaptcha** 是一个基于 Java 的、简单易用的**验证码生成库**。它的名字来源于 “K” (Keystone) 和 “Captcha” (验证码) 的组合。
 
@@ -890,3 +894,559 @@ public class ApiController {
 }
 ```
 
+
+
+## `EasyCaptcha`
+
+>说明：支持随机字符、算术运算和中文验证码生成。
+
+**EasyCaptcha** 是一个基于 Java 的、功能丰富的**验证码生成库**。它提供了多种风格的验证码，并且以其简单易用、高度可定制和功能全面而受到欢迎。
+
+------
+
+### **一、EasyCaptcha 核心特点**
+
+| 特性               | 说明                                   |
+| ------------------ | -------------------------------------- |
+| **多种验证码类型** | 支持算术、中文、GIF动画、PNG等多种格式 |
+| **简单易用**       | 几行代码即可生成验证码                 |
+| **高度可定制**     | 可自定义字体、大小、颜色、干扰线等     |
+| **Servlet 支持**   | 原生支持 Web 环境                      |
+| **轻量级**         | 无过多依赖，体积小巧                   |
+
+------
+
+### **二、支持的验证码类型**
+
+EasyCaptcha 支持以下主要类型的验证码：
+
+#### **1. 算术验证码（Arithmetic）**
+
+```
+// 生成数学算式验证码： "1+2=?"
+// 用户需要计算结果 "3"
+```
+
+#### **2. 中文验证码（Chinese）**
+
+```
+// 生成中文验证码： "中文验证"
+```
+
+#### **3. GIF 动画验证码**
+
+```
+// 生成动态GIF验证码，更难被机器识别
+```
+
+#### **4. 普通字符验证码（Spec）**
+
+```
+// 传统的英文数字混合验证码
+```
+
+------
+
+### **三、快速开始**
+
+#### **1. 添加依赖**
+
+```
+<dependency>
+    <groupId>com.github.whvcse</groupId>
+    <artifactId>easy-captcha</artifactId>
+    <version>1.6.2</version>
+</dependency>
+```
+
+#### **2. 基础使用示例**
+
+```
+@RestController
+public class CaptchaController {
+    
+    /**
+     * 生成算术验证码
+     */
+    @GetMapping("/captcha/arithmetic")
+    public void arithmeticCaptcha(HttpServletRequest request, HttpServletResponse response) {
+        // 设置响应类型
+        response.setContentType("image/gif");
+        response.setHeader("Pragma", "No-cache");
+        response.setHeader("Cache-Control", "no-cache");
+        response.setDateHeader("Expires", 0);
+        
+        // 生成算术验证码
+        ArithmeticCaptcha captcha = new ArithmeticCaptcha(130, 48);
+        captcha.setLen(2); // 几位数运算，默认是两位
+        
+        // 获取验证码的结果（计算结果）
+        String result = captcha.text();
+        System.out.println("算术验证码结果: " + result);
+        
+        // 存储到Session
+        request.getSession().setAttribute("captcha", result);
+        
+        // 输出图片流
+        try {
+            captcha.out(response.getOutputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * 生成普通字符验证码
+     */
+    @GetMapping("/captcha/chars")
+    public void charsCaptcha(HttpServletRequest request, HttpServletResponse response) {
+        response.setContentType("image/png");
+        response.setHeader("Pragma", "No-cache");
+        response.setHeader("Cache-Control", "no-cache");
+        response.setDateHeader("Expires", 0);
+        
+        // 生成普通验证码
+        SpecCaptcha captcha = new SpecCaptcha(130, 48, 5);
+        
+        // 获取验证码字符
+        String code = captcha.text();
+        System.out.println("字符验证码: " + code);
+        
+        request.getSession().setAttribute("captcha", code);
+        
+        try {
+            captcha.out(response.getOutputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+------
+
+### **四、高级定制示例**
+
+#### **1. 完全自定义验证码**
+
+```
+@GetMapping("/captcha/custom")
+public void customCaptcha(HttpServletRequest request, HttpServletResponse response) {
+    response.setContentType("image/png");
+    response.setHeader("Pragma", "No-cache");
+    response.setHeader("Cache-Control", "no-cache");
+    response.setDateHeader("Expires", 0);
+    
+    // 创建GIF验证码
+    GifCaptcha captcha = new GifCaptcha(130, 48, 4);
+    
+    // 自定义设置
+    captcha.setCharType(CharType.NUM_AND_UPPER); // 字符类型：数字+大写字母
+    // captcha.setCharType(CharType.ONLY_NUM);    // 纯数字
+    // captcha.setCharType(CharType.ONLY_CHAR);   // 纯字母
+    // captcha.setCharType(CharType.ONLY_UPPER);  // 纯大写字母
+    // captcha.setCharType(CharType.ONLY_LOWER);  // 纯小写字母
+    
+    // 获取验证码
+    String code = captcha.text();
+    request.getSession().setAttribute("captcha", code);
+    
+    try {
+        captcha.out(response.getOutputStream());
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+}
+```
+
+#### **2. 中文验证码**
+
+```
+@GetMapping("/captcha/chinese")
+public void chineseCaptcha(HttpServletRequest request, HttpServletResponse response) {
+    response.setContentType("image/png");
+    response.setHeader("Pragma", "No-cache");
+    response.setHeader("Cache-Control", "no-cache");
+    response.setDateHeader("Expires", 0);
+    
+    ChineseCaptcha captcha = new ChineseCaptcha(130, 48);
+    captcha.setLen(3); // 中文字符数量
+    
+    String chineseText = captcha.text();
+    System.out.println("中文验证码: " + chineseText);
+    
+    request.getSession().setAttribute("captcha", chineseText);
+    
+    try {
+        captcha.out(response.getOutputStream());
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+}
+```
+
+------
+
+### **五、验证码验证**
+
+#### **1. 验证工具类**
+
+```
+@Service
+public class CaptchaService {
+    
+    /**
+     * 验证验证码
+     */
+    public boolean verifyCaptcha(HttpServletRequest request, String userInput) {
+        // 从Session获取正确的验证码
+        String sessionCode = (String) request.getSession().getAttribute("captcha");
+        
+        if (StringUtils.isEmpty(sessionCode)) {
+            return false; // 验证码已过期
+        }
+        
+        // 验证成功后清除Session
+        boolean isValid = sessionCode.equalsIgnoreCase(userInput);
+        if (isValid) {
+            request.getSession().removeAttribute("captcha");
+        }
+        
+        return isValid;
+    }
+    
+    /**
+     * 验证算术验证码（需要特殊处理）
+     */
+    public boolean verifyArithmeticCaptcha(HttpServletRequest request, String userInput) {
+        String sessionCode = (String) request.getSession().getAttribute("captcha");
+        
+        if (StringUtils.isEmpty(sessionCode)) {
+            return false;
+        }
+        
+        try {
+            // 算术验证码需要比较计算结果
+            int expected = Integer.parseInt(sessionCode);
+            int actual = Integer.parseInt(userInput);
+            
+            boolean isValid = expected == actual;
+            if (isValid) {
+                request.getSession().removeAttribute("captcha");
+            }
+            
+            return isValid;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+}
+```
+
+#### **2. 在Controller中使用验证**
+
+```
+@RestController
+@RequestMapping("/api/auth")
+public class AuthController {
+    
+    @Autowired
+    private CaptchaService captchaService;
+    
+    @PostMapping("/login")
+    public ResponseEntity<Result<String>> login(@RequestBody LoginRequest loginRequest, 
+                                               HttpServletRequest request) {
+        // 1. 验证验证码
+        boolean isCaptchaValid = captchaService.verifyCaptcha(request, loginRequest.getCaptchaCode());
+        
+        if (!isCaptchaValid) {
+            return ResponseEntity.ok(Result.error("验证码错误"));
+        }
+        
+        // 2. 验证用户名密码
+        // ... 业务逻辑
+        
+        return ResponseEntity.ok(Result.success("登录成功"));
+    }
+    
+    @Data
+    public static class LoginRequest {
+        private String username;
+        private String password;
+        private String captchaCode;
+    }
+}
+```
+
+------
+
+### **六、前端集成示例**
+
+#### **HTML 页面**
+
+```
+<!DOCTYPE html>
+<html>
+<head>
+    <title>EasyCaptcha 演示</title>
+</head>
+<body>
+    <form id="loginForm">
+        <div>
+            <label>用户名:</label>
+            <input type="text" name="username" required>
+        </div>
+        <div>
+            <label>密码:</label>
+            <input type="password" name="password" required>
+        </div>
+        <div>
+            <label>验证码:</label>
+            <input type="text" name="captchaCode" required>
+            <img id="captchaImage" src="/captcha/chars" onclick="refreshCaptcha()" 
+                 style="cursor: pointer;" title="点击刷新">
+        </div>
+        <button type="submit">登录</button>
+    </form>
+
+    <script>
+        function refreshCaptcha() {
+            const captchaImg = document.getElementById('captchaImage');
+            captchaImg.src = '/captcha/chars?t=' + new Date().getTime();
+        }
+        
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData);
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('登录成功！');
+                } else {
+                    alert(result.message);
+                    refreshCaptcha();
+                }
+            } catch (error) {
+                alert('网络错误，请重试');
+                refreshCaptcha();
+            }
+        });
+    </script>
+</body>
+</html>
+```
+
+------
+
+### **七、与其他库的对比**
+
+| 特性           | EasyCaptcha        | Kaptcha        | Happy-Captcha    |
+| -------------- | ------------------ | -------------- | ---------------- |
+| **验证码类型** | ⭐⭐⭐⭐⭐ (多种类型)   | ⭐⭐⭐ (基础类型) | ⭐⭐⭐⭐ (中等)      |
+| **使用难度**   | ⭐⭐⭐⭐ (简单)        | ⭐⭐⭐ (中等)     | ⭐⭐⭐⭐⭐ (非常简单) |
+| **定制性**     | ⭐⭐⭐⭐⭐ (高度可定制) | ⭐⭐⭐⭐ (可定制)  | ⭐⭐⭐ (基础定制)   |
+| **文档完善度** | ⭐⭐⭐⭐ (良好)        | ⭐⭐⭐ (一般)     | ⭐⭐⭐⭐ (良好)      |
+
+------
+
+### **八、生产环境建议**
+
+#### **1. 安全性增强**
+
+```
+// 添加干扰线、噪点等
+SpecCaptcha captcha = new SpecCaptcha(130, 48, 5);
+captcha.setCharType(CharType.NUM_AND_UPPER);
+
+// 可自定义字体、颜色等（增加识别难度）
+```
+
+#### **2. 性能优化**
+
+```
+// 使用缓存存储验证码（替代Session）
+@Autowired
+private RedisTemplate<String, String> redisTemplate;
+
+public void generateCaptcha(HttpServletRequest request, HttpServletResponse response) {
+    SpecCaptcha captcha = new SpecCaptcha(130, 48, 5);
+    String code = captcha.text();
+    
+    // 存储到Redis，设置过期时间
+    String captchaKey = "captcha:" + request.getSession().getId();
+    redisTemplate.opsForValue().set(captchaKey, code, 5, TimeUnit.MINUTES);
+    
+    captcha.out(response.getOutputStream());
+}
+```
+
+------
+
+### **总结**
+
+**EasyCaptcha** 是一个功能丰富、易于使用的 Java 验证码库，特别适合需要多种验证码风格的场景。它的主要优势包括：
+
+✅ **支持多种验证码类型**（算术、中文、GIF等）
+
+✅ **高度可定制化**
+
+✅ **简单易用的API**
+
+✅ **良好的文档和社区支持**
+
+如果您需要生成样式多样的验证码，EasyCaptcha 是一个非常好的选择！
+
+### 示例
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/captcha/demo-easy-captcha)
+
+```java
+package com.future.demo;
+
+import com.wf.captcha.ArithmeticCaptcha;
+import com.wf.captcha.ChineseCaptcha;
+import com.wf.captcha.GifCaptcha;
+import com.wf.captcha.SpecCaptcha;
+import com.wf.captcha.base.Captcha;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.OutputStream;
+
+@RestController
+@RequestMapping(value = "/api/v1/captcha")
+@Slf4j
+public class ApiController {
+    /**
+     * 生成普通字符验证码
+     */
+    @GetMapping("/getImageCode")
+    public void getImageCode(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("image/png");
+        response.setHeader("Pragma", "No-cache");
+        response.setHeader("Cache-Control", "no-cache");
+        response.setDateHeader("Expires", 0);
+
+        // 生成普通验证码
+        SpecCaptcha captcha = new SpecCaptcha(130, 48, 5);
+
+        // 获取验证码字符
+        String code = captcha.text();
+        if (log.isDebugEnabled())
+            // 输出示例：字符验证码：tEtaR
+            log.debug("字符验证码：{}", code);
+
+        request.getSession().setAttribute("captcha", code);
+
+        try (OutputStream out = response.getOutputStream()) {
+            captcha.out(out);
+        }
+    }
+
+    /**
+     * 生成算术验证码
+     */
+    @GetMapping("/getImageMath")
+    public void getImageMath(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        // 设置响应类型
+        response.setContentType("image/gif");
+        response.setHeader("Pragma", "No-cache");
+        response.setHeader("Cache-Control", "no-cache");
+        response.setDateHeader("Expires", 0);
+
+        // 生成算术验证码
+        ArithmeticCaptcha captcha = new ArithmeticCaptcha(130, 48);
+        captcha.setLen(2); // 几位数运算，默认是两位
+
+        // 获取验证码的结果（计算结果）
+        String result = captcha.text();
+        if (log.isDebugEnabled())
+            // 输出示例：算术验证码结果：3
+            log.debug("算术验证码结果：{}", result);
+
+        // 存储到Session
+        request.getSession().setAttribute("captcha", result);
+
+        // 输出图片流
+        try (OutputStream out = response.getOutputStream()) {
+            captcha.out(out);
+        }
+    }
+
+    /**
+     * 自定义验证码
+     *
+     * @param request
+     * @param response
+     */
+    @GetMapping("/getImageCustomize")
+    public void getImageCustomize(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("image/png");
+        response.setHeader("Pragma", "No-cache");
+        response.setHeader("Cache-Control", "no-cache");
+        response.setDateHeader("Expires", 0);
+
+        // 创建GIF验证码
+        GifCaptcha captcha = new GifCaptcha(130, 48, 4);
+
+        // 自定义设置
+        captcha.setCharType(Captcha.TYPE_NUM_AND_UPPER); // 字符类型：数字+大写字母
+        // captcha.setCharType(CharType.ONLY_NUM);    // 纯数字
+        // captcha.setCharType(CharType.ONLY_CHAR);   // 纯字母
+        // captcha.setCharType(CharType.ONLY_UPPER);  // 纯大写字母
+        // captcha.setCharType(CharType.ONLY_LOWER);  // 纯小写字母
+
+        // 获取验证码
+        String code = captcha.text();
+        request.getSession().setAttribute("captcha", code);
+
+        try (OutputStream out = response.getOutputStream()) {
+            captcha.out(out);
+        }
+    }
+
+    /**
+     * 中文验证码
+     *
+     * @param request
+     * @param response
+     * @throws IOException
+     */
+    @GetMapping("/getImageChinese")
+    public void getImageChinese(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("image/png");
+        response.setHeader("Pragma", "No-cache");
+        response.setHeader("Cache-Control", "no-cache");
+        response.setDateHeader("Expires", 0);
+
+        ChineseCaptcha captcha = new ChineseCaptcha(130, 48);
+        captcha.setLen(3); // 中文字符数量
+
+        String chineseText = captcha.text();
+        if (log.isDebugEnabled())
+            // 输出示例：中文验证码：片极术
+            log.debug("中文验证码：{}", chineseText);
+
+        request.getSession().setAttribute("captcha", chineseText);
+
+        try (OutputStream out = response.getOutputStream()) {
+            captcha.out(out);
+        }
+    }
+}
+```
