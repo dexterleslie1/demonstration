@@ -461,7 +461,7 @@ public class TurnstileService {
 
 
 
-## `happy-captcha`
+## `Happy-Captcha`
 
 >提示：因为验证码服务器端信息默认保存到`session`上下文中，如果需求需要把验证码信息保存到`redis`中默认是不支持的，所以暂时不使用此方案生成验证码。
 
@@ -533,3 +533,360 @@ public class ApiController {
     }
 }
 ```
+
+
+
+## `Kaptcha`
+
+**Kaptcha** 是一个基于 Java 的、简单易用的**验证码生成库**。它的名字来源于 “K” (Keystone) 和 “Captcha” (验证码) 的组合。
+
+------
+
+### **一、核心概念：什么是验证码？**
+
+在介绍 Kaptcha 之前，首先要理解验证码的作用。验证码是一种区分用户是计算机还是人的公共全自动程序，主要用于：
+
+1. **防止恶意注册**：阻止机器人自动批量注册账号。
+2. **防止暴力破解**：在登录、提交表单等场景，增加攻击者自动化尝试的难度。
+3. **防止恶意刷票/刷帖**：确保某个操作是由真人发起的。
+
+**典型验证码示例：**
+
+```
+请识别图中的文字： [图片：  A7Xk]
+```
+
+------
+
+### **二、Kaptcha 是什么？**
+
+Kaptcha 就是专门用来生成这种图片验证码的工具。它被设计得非常易于集成到基于 Servlet 的 Java Web 应用中，尤其是与 Spring MVC 等框架结合使用。
+
+**它的核心工作流程如下图所示：**
+
+```mermaid
+flowchart TD
+    A[用户访问需要验证码的页面] --> B[浏览器请求<br>GET /kaptcha]
+    B --> C[Kaptcha Servlet<br>生成随机文本和对应图片]
+    C --> D[将文本存入<br>HttpSession]
+    C --> E[将图片响应<br>返回给浏览器]
+    E --> F[用户提交表单<br>包含输入的验证码]
+    F --> G[服务器端从Session取出<br>正确的验证码文本进行比较]
+    G --> H{比较是否一致?}
+    H -- 是 --> I[验证成功，继续业务流程]
+    H -- 否 --> J[验证失败，返回错误信息]
+```
+
+------
+
+### **三、主要特点**
+
+1. **高度可配置**：可以轻松配置验证码图片的各种属性。 **文本内容**：长度、字符集（是否包含易混淆字符如 0/O, 1/l/I）。 **图片外观**：宽度、高度、字体、字体大小、颜色、背景。 **干扰效果**：可以添加噪点、干扰线等，防止OCR（光学字符识别）软件轻易识别。
+2. **易于使用**：通常只需配置一个 Servlet，并在页面中用 `<img>`标签指向该 Servlet 即可。
+3. **基于 Session**：生成的验证码字符串默认保存在服务器的 Session 中，便于后续验证。
+
+------
+
+### **四、基本使用示例（与 Spring Boot 集成）**
+
+#### **1. 添加依赖**
+
+```xml
+<!-- 在 pom.xml 中添加 -->
+<dependency>
+    <groupId>com.github.penggle</groupId>
+    <artifactId>kaptcha</artifactId>
+    <version>2.3.2</version>
+</dependency>
+```
+
+#### **2. 配置 Kaptcha 生产者（配置类）**
+
+```java
+@Configuration
+public class KaptchaConfig {
+
+    @Bean
+    public DefaultKaptcha getDefaultKaptcha() {
+        DefaultKaptcha defaultKaptcha = new DefaultKaptcha();
+        Properties properties = new Properties();
+        // 图片宽度、高度
+        properties.setProperty("kaptcha.image.width", "150");
+        properties.setProperty("kaptcha.image.height", "50");
+        // 文本内容配置
+        properties.setProperty("kaptcha.textproducer.char.string", "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"); // 字符集
+        properties.setProperty("kaptcha.textproducer.char.length", "4"); // 长度
+        // 字体、颜色、边框等
+        properties.setProperty("kaptcha.textproducer.font.color", "blue");
+        properties.setProperty("kaptcha.obscurificator.impl", "com.google.code.kaptcha.impl.ShadowGimpy"); // 阴影效果
+        properties.setProperty("kaptcha.noise.impl", "com.google.code.kaptcha.impl.NoNoise"); // 无噪点
+
+        Config config = new Config(properties);
+        defaultKaptcha.setConfig(config);
+        return defaultKaptcha;
+    }
+}
+```
+
+#### **3. 创建控制器（Controller）**
+
+```java
+@RestController
+public class KaptchaController {
+
+    @Autowired
+    private DefaultKaptcha defaultKaptcha;
+
+    // 1. 获取验证码图片
+    @GetMapping("/kaptcha")
+    public void getKaptcha(HttpServletRequest request, HttpServletResponse response) throws Exception {
+        // 禁止缓存，确保每次都是新图片
+        response.setDateHeader("Expires", 0);
+        response.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+        response.setHeader("Pragma", "no-cache");
+        response.setContentType("image/jpeg");
+
+        // 生成验证码文本
+        String capText = defaultKaptcha.createText();
+        // 将验证码文本存入 Session， key 通常固定为 KAPTCHA_SESSION_KEY
+        request.getSession().setAttribute(Constants.KAPTCHA_SESSION_KEY, capText);
+
+        // 根据文本生成图片并写入响应流
+        BufferedImage bi = defaultKaptcha.createImage(capText);
+        ServletOutputStream out = response.getOutputStream();
+        ImageIO.write(bi, "jpg", out);
+        try {
+            out.flush();
+        } finally {
+            out.close();
+        }
+    }
+
+    // 2. 验证用户输入的验证码
+    @PostMapping("/login")
+    public String login(@RequestParam String username,
+                       @RequestParam String password,
+                       @RequestParam String verifyCode,
+                       HttpServletRequest request) {
+
+        // 从 Session 中获取正确的验证码
+        String sessionCode = (String) request.getSession().getAttribute(Constants.KAPTCHA_SESSION_KEY);
+        // 立即清除 Session 中的验证码（一次性使用）
+        request.getSession().removeAttribute(Constants.KAPTCHA_SESSION_KEY);
+
+        // 比较用户输入和 Session 中的是否一致（忽略大小写）
+        if (sessionCode == null || !sessionCode.equalsIgnoreCase(verifyCode)) {
+            return "验证码错误！";
+        }
+
+        // ... 这里继续处理用户名和密码的验证逻辑 ...
+        return "登录成功！";
+    }
+}
+```
+
+#### **4. 前端页面调用**
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>登录</title>
+</head>
+<body>
+    <form action="/login" method="post">
+        用户名: <input type="text" name="username"><br>
+        密码: <input type="password" name="password"><br>
+        验证码: <input type="text" name="verifyCode">
+        <!-- 图片的 src 指向生成验证码的接口 -->
+        <img src="/kaptcha" onclick="this.src='/kaptcha?d='+new Date()*1" title="点击刷新验证码"><br>
+        <input type="submit" value="登录">
+    </form>
+</body>
+</html>
+```
+
+*注意：`onclick`事件是为了实现点击图片刷新验证码的功能。*
+
+------
+
+### **五、Kaptcha 的现状与替代方案**
+
+虽然 Kaptcha 非常经典和易用，但近年来，由于以下原因，许多新项目开始选择其他方案：
+
+1. **用户体验**：传统的图片验证码对用户不友好，识别困难。
+2. **安全性**：简单的图片验证码可能被先进的 OCR 技术或机器学习模型破解。
+3. **移动端适配**：在手机端输入图片验证码体验很差。
+
+**现代更流行的验证方案包括：**
+
+- **行为验证**：如极验、腾讯云验证码等，通过分析用户鼠标轨迹、行为特征来判断是否为真人，用户体验更好。
+- **短信/邮箱验证码**：直接发送一次性代码到用户手机或邮箱。
+- **无感验证**：在后台通过风险分析引擎判断请求风险，对正常用户无感知。
+
+### **总结**
+
+**Kaptcha 是一个功能专一、配置灵活、易于集成的经典 Java 验证码生成库。** 它非常适合用于传统的 PC 端 Web 项目，作为防止自动化脚本攻击的第一道基础防线。对于学习理解验证码原理和快速实现基础安全功能来说，它依然是一个非常好的选择。但在追求更优用户体验和更高安全性的现代应用中，可以考虑更先进的验证方案。
+
+### 示例
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/captcha/demo-happy-captcha)
+
+自定义验证码算术文本生成器
+
+```java
+package com.future.demo;
+
+import com.google.code.kaptcha.text.impl.DefaultTextCreator;
+
+import java.util.Random;
+
+/**
+ * 验证码文本生成器
+ *
+ * @author ruoyi
+ */
+public class KaptchaTextCreator extends DefaultTextCreator
+{
+    private static final String[] CNUMBERS = "0,1,2,3,4,5,6,7,8,9,10".split(",");
+
+    @Override
+    public String getText()
+    {
+        Integer result = 0;
+        Random random = new Random();
+        int x = random.nextInt(10);
+        int y = random.nextInt(10);
+        StringBuilder suChinese = new StringBuilder();
+        int randomoperands = random.nextInt(3);
+        if (randomoperands == 0)
+        {
+            result = x * y;
+            suChinese.append(CNUMBERS[x]);
+            suChinese.append("*");
+            suChinese.append(CNUMBERS[y]);
+        }
+        else if (randomoperands == 1)
+        {
+            if ((x != 0) && y % x == 0)
+            {
+                result = y / x;
+                suChinese.append(CNUMBERS[y]);
+                suChinese.append("/");
+                suChinese.append(CNUMBERS[x]);
+            }
+            else
+            {
+                result = x + y;
+                suChinese.append(CNUMBERS[x]);
+                suChinese.append("+");
+                suChinese.append(CNUMBERS[y]);
+            }
+        }
+        else
+        {
+            if (x >= y)
+            {
+                result = x - y;
+                suChinese.append(CNUMBERS[x]);
+                suChinese.append("-");
+                suChinese.append(CNUMBERS[y]);
+            }
+            else
+            {
+                result = y - x;
+                suChinese.append(CNUMBERS[y]);
+                suChinese.append("-");
+                suChinese.append(CNUMBERS[x]);
+            }
+        }
+        suChinese.append("=?@" + result);
+        return suChinese.toString();
+    }
+}
+```
+
+请求生成验证码
+
+```java
+package com.future.demo;
+
+import com.google.code.kaptcha.Constants;
+import com.google.code.kaptcha.impl.DefaultKaptcha;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import javax.annotation.Resource;
+import javax.imageio.ImageIO;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.awt.image.BufferedImage;
+
+@RestController
+@RequestMapping(value = "/api/v1/captcha")
+@Slf4j
+public class ApiController {
+
+    @Resource(name = "defaultKaptchaCode")
+    DefaultKaptcha defaultKaptchaCode;
+    @Resource(name = "defaultKaptchaMath")
+    DefaultKaptcha defaultKaptchaMath;
+
+    // 1. 获取验证码图片
+    @GetMapping("/getImageCode")
+    public void getImageCode(HttpServletRequest request, HttpServletResponse response) throws Exception {
+        // 禁止缓存，确保每次都是新图片
+        response.setDateHeader("Expires", 0);
+        response.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+        response.setHeader("Pragma", "no-cache");
+        response.setContentType("image/jpeg");
+
+        // 生成验证码文本
+        String capText = defaultKaptchaCode.createText();
+        if (log.isDebugEnabled()) {
+            // 输出示例：capText=1V60
+            log.debug("capText={}", capText);
+        }
+        // 将验证码文本存入 Session， key 通常固定为 KAPTCHA_SESSION_KEY
+        request.getSession().setAttribute(Constants.KAPTCHA_SESSION_KEY, capText);
+
+        // 根据文本生成图片并写入响应流
+        BufferedImage bi = defaultKaptchaCode.createImage(capText);
+        try (ServletOutputStream out = response.getOutputStream()) {
+            ImageIO.write(bi, "jpg", out);
+            out.flush();
+        }
+    }
+
+    @GetMapping("/getImageMath")
+    public void getImageCodeMath(HttpServletRequest request, HttpServletResponse response) throws Exception {
+        response.setDateHeader("Expires", 0);
+        response.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+        response.setHeader("Pragma", "no-cache");
+        response.setContentType("image/jpeg");
+
+        String capTextOriginal = defaultKaptchaMath.createText();
+        if (log.isDebugEnabled()) {
+            // 输出示例：capText=1*6=?@6，其中 @6 是答案
+            log.debug("capText={}", capTextOriginal);
+        }
+
+        // 获取算术运算的等式
+        String capText = capTextOriginal.substring(0, capTextOriginal.lastIndexOf("@"));
+        // 获取算术运算的答案
+        String code = capTextOriginal.substring(capText.lastIndexOf("@") + 1);
+
+        request.getSession().setAttribute(Constants.KAPTCHA_SESSION_KEY, code);
+
+        BufferedImage bi = defaultKaptchaMath.createImage(capText);
+        try (ServletOutputStream out = response.getOutputStream()) {
+            ImageIO.write(bi, "jpg", out);
+            out.flush();
+        }
+    }
+}
+```
+
