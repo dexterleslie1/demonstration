@@ -90,7 +90,16 @@ VM: OpenJDK 64-Bit Server VM by JetBrains s.r.o.
 
 ## `Android Studio` - 创建各种项目
 
->`todo`
+
+
+### `Phone and Tablet Empty Views Activity`
+
+>说明：
+>
+>- 在`Android Studio 2024.2.1`中创建此类型项目协助实验测试用途，支持选择`Java`语言作为开发语言，`Phone and Tablet Empty Activity`项目不支持选择开发语言默认使用`Kotlin`作为开发语言。
+>- 运行项目后显示`Hello World!`。
+
+创建项目后需要手动修改`gradle/libs.versions.toml`中的`activity = "1.9.3"`，否则会报告`activity`和`agp`版本不兼容问题导致项目无法运行。
 
 
 
@@ -973,6 +982,52 @@ protected void onActivityResult(int requestCode, int resultCode, Intent data) {
             resultTextView.setText("Received from ThirdActivity: " + result);
         }
     }
+}
+```
+
+
+
+### 支持返回操作
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-activity-lifecycle)
+
+参考示例中的`SecondActivity`。
+
+启用`ActionBar`并显示返回按钮
+
+```java
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    setContentView(R.layout.second_activity);
+
+    // 启用 ActionBar 并显示返回按钮，需要继承 AppCompatActivity 才有 ActionBar
+    if (getSupportActionBar() != null) {
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+    }
+
+    // 获取从 MainActivity 传递过来的数据
+    TextView myTextView = findViewById(R.id.myText);
+    Intent intent = getIntent();
+    if (intent != null && intent.hasExtra("message")) {
+        String message = intent.getStringExtra("message");
+        myTextView.setText(message);
+    }
+}
+```
+
+处理返回按钮点击事件
+
+```java
+// 处理返回按钮点击事件
+@Override
+public boolean onOptionsItemSelected(MenuItem item) {
+    if (item.getItemId() == android.R.id.home) {
+        // 或者 finish()
+        onBackPressed();
+        return true;
+    }
+    return super.onOptionsItemSelected(item);
 }
 ```
 
@@ -8246,3 +8301,87 @@ public class ExampleInstrumentedTest {
     }
 }
 ```
+
+
+
+## `Hybrid App` - 概念
+
+**Android Hybrid App（混合应用）** 就像是把一个迷你的网站（Web App）装进了一个原生的 Android App 的“外壳”里。
+
+---
+
+### 一、核心概念：一个形象的比喻
+
+你可以把 Hybrid App 想象成一家餐厅：
+
+*   **原生 App（Native App）**：就像一家餐厅，从厨房、厨师到餐具、装修，全都是自己建造和拥有的。**性能极佳，体验完美**。
+*   **网页 App（Web App）**：就像点外卖。你通过浏览器（如美团/饿了么）访问餐厅的页面，食物送到你家。**不需要安装，但功能和体验受限于浏览器**。
+*   **混合 App（Hybrid App）**：就像一家餐厅，但它的核心菜品（菜单）实际上是一份可以随时更新的外卖。餐厅提供了一个标准的“餐盘”和“餐桌”（原生外壳），但“食物”的内容是从外部厨房（Web服务器）送过来的。**它结合了两者的特点**。
+
+---
+
+### 二、技术原理
+
+一个典型的 Hybrid App 包含两个主要部分：
+
+1.  **原生外壳（Native Shell）**：
+    *   这是一个真正的、用 Java/Kotlin 编写的 Android 应用。
+    *   它的主要功能不是显示复杂的UI，而是**内嵌一个全屏的浏览器组件（称为 WebView）**。
+    *   这个 WebView 没有地址栏、工具栏，看起来就像应用的一部分。
+
+2.  **Web 核心（Web Core）**：
+    *   应用的主要内容（UI界面、业务逻辑）是用标准的 Web 技术（HTML, CSS, JavaScript）开发的。
+    *   这些 Web 资源可以放在远程服务器上（通过网络加载），也可以打包在 App 本地（为了更快的启动速度）。
+
+**工作流程**：用户打开 Hybrid App -> 启动原生外壳 -> 外壳加载 WebView -> WebView 渲染 HTML/CSS/JavaScript 页面 -> 用户看到一个看起来像原生 App 的界面。
+
+---
+
+### 三、主要优缺点
+
+#### 优点（为什么选择它？）
+
+1.  **跨平台开发，一套代码多端运行**：这是最大的优势。开发者用同一套 Web 代码（HTML, CSS, JS），只需稍作调整，就可以同时部署到 Android 和 iOS 平台，极大降低了开发成本和时间。
+2.  **热更新，绕过应用商店审核**：当需要更新应用内容或修复 Bug 时，只需更新服务器上的 Web 资源，用户重启 App 即可生效，无需通过 Google Play 商店漫长且严格的审核流程。
+3.  **技术栈统一，易于上手**：对于前端开发者来说，无需学习 Java/Kotlin 或 Swift/Objective-C，就可以快速开发移动应用。
+4.  **易于维护**：只需维护一套主要的代码库。
+
+#### 缺点（面临的挑战）
+
+1.  **性能和体验较差**：这是最核心的缺点。由于需要经过 WebView 渲染，Hybrid App 的运行速度、动画流畅度、响应速度通常不如纯原生应用，尤其是在处理复杂交互或图形时。
+2.  **功能访问受限**：虽然通过桥梁（如 Cordova/ Capacitor 的插件）可以调用部分原生设备功能（如摄像头、GPS），但在访问最新、最底层的硬件功能时，可能不如原生应用直接和及时。
+3.  **“感觉”不原生**：应用的视觉效果和交互体验可能无法 100% 达到操作系统原生的标准，用户有时能感觉到它像一个“网页”。
+
+---
+
+### 四、常见的技术框架
+
+为了更方便地开发 Hybrid App，诞生了许多优秀的框架：
+
+*   **Apache Cordova / Adobe PhoneGap**：早期的先驱，提供了 JavaScript 调用原生功能的插件体系。
+*   **Ionic**：基于 Angular 框架，提供了大量模仿原生风格的 UI 组件，体验很好。
+*   **Capacitor**：由 Ionic 团队打造的现代化替代品，旨在取代 Cordova，更专注于 Web 标准和现代 API。
+*   **React Native / Flutter**：**注意：它们通常被归类为“跨平台原生框架”，而非 Hybrid App。** 它们不是使用 WebView，而是使用原生组件进行渲染，因此性能和体验远超传统的 Hybrid 方案，更接近真正的原生应用。
+
+---
+
+### 五、典型应用场景
+
+Hybrid App 非常适合以下类型的应用：
+
+*   **内容展示型应用**：新闻、博客、企业官网、电商产品展示页。这些应用以信息呈现为主，交互不复杂。
+*   **内部工具应用**：公司内部的 CRM、ERP 等，对性能和UI要求不高，但需要快速迭代。
+*   **对性能要求不高的 MVP（最小可行产品）**：为了快速验证市场想法，先采用 Hybrid 方式低成本开发上线。
+
+### 总结
+
+| 特性             | 原生应用（Native）     | 混合应用（Hybrid）       | 网页应用（Web App）        |
+| :--------------- | :--------------------- | :----------------------- | :------------------------- |
+| **开发技术**     | Java, Kotlin (Android) | HTML, CSS, JS + 原生外壳 | HTML, CSS, JS              |
+| **性能**         | **最优**               | 中等                     | 依赖网络和浏览器           |
+| **跨平台**       | 需分别开发             | **一套代码，多端运行**   | **一次开发，处处运行**     |
+| **应用商店**     | 可上架                 | 可上架                   | 不可上架（通过浏览器访问） |
+| **更新**         | 需通过应用商店审核     | **热更新**（核心内容）   | 实时更新                   |
+| **设备功能访问** | **完全访问**           | 通过插件有限访问         | 有限访问（Web API）        |
+
+希望这个解释能帮助你全面理解 Android Hybrid App！
