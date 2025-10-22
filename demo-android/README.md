@@ -9288,7 +9288,7 @@ public class Util {
         webSettings.setUseWideViewPort(true);
         webSettings.setLoadWithOverviewMode(true);
         // 禁用缓存，每次加载页面时都会从网络或服务器重新请求资源，而不会使用本地缓存
-        webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE);
+        // webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE);
         // 设置 WebView 组件支持加载 JavaScript
         webSettings.setJavaScriptEnabled(true);
         // 允许网页使用 localStorage（持久化存储）和 sessionStorage（会话级存储）
@@ -9344,6 +9344,18 @@ public class Util {
   })
   
   ```
+
+
+
+### `WebView`调试
+
+运行本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-webview) 后点击`从本地或者远程加载资源`。
+
+打开`Chrome`浏览器，在地址栏输入`chrome://inspect`，如下图所示
+
+![image-20251022224757372](image-20251022224757372.png)
+
+点击`inspect fallback`链接即可打开`Dev Tools`进行调试了。
 
 
 
