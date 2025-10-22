@@ -993,6 +993,30 @@ protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
 参考示例中的`SecondActivity`。
 
+`AndroidManifest.xml`中`<application>`标签`theme`属性启用`ActionBar`
+
+```xml
+android:theme="@style/AppTheme"
+```
+
+`res/values/styles.xml`
+
+```xml
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
+</resources>
+```
+
+提示：如果应用的`theme`为`<style name="Base.Theme.Demowebview" parent="Theme.Material3.DayNight.NoActionBar">`是没有`ActionBar`，修改为`<style name="Base.Theme.Demowebview" parent="Theme.Material3.DayNight">`即可。
+
 启用`ActionBar`并显示返回按钮
 
 ```java
@@ -8384,4 +8408,1053 @@ Hybrid App 非常适合以下类型的应用：
 | **更新**         | 需通过应用商店审核     | **热更新**（核心内容）   | 实时更新                   |
 | **设备功能访问** | **完全访问**           | 通过插件有限访问         | 有限访问（Web API）        |
 
-希望这个解释能帮助你全面理解 Android Hybrid App！
+
+
+## `Hybrid App` - `WebView`
+
+Android WebView 是一个**内嵌浏览器组件**，它允许开发者在 Android 应用中直接显示网页内容，无需跳转到外部浏览器。以下是关于 WebView 的详细解析：
+
+---
+
+### **一、WebView 的核心功能**
+1. **网页渲染**  
+   可加载并显示网页（HTML/CSS/JavaScript），如同迷你浏览器。
+2. **混合开发支持**  
+   实现原生应用（Java/Kotlin）与 Web 技术（HTML5）的混合开发。
+3. **本地交互**  
+   支持 JavaScript 与 Android 原生代码双向通信。
+
+---
+
+### **二、基础用法示例**
+#### 1. **添加 WebView 到布局**
+```xml
+<!-- activity_main.xml -->
+<WebView
+    android:id="@+id/webview"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" />
+```
+
+#### 2. **基础配置（Activity 中）**
+```java
+WebView webView = findViewById(R.id.webview);
+
+// 启用基础功能（JavaScript/缩放等）
+WebSettings settings = webView.getSettings();
+settings.setJavaScriptEnabled(true);  // 启用JS
+settings.setDomStorageEnabled(true);  // 支持HTML5本地存储
+
+// 加载网页
+webView.loadUrl("https://www.example.com");
+
+// 处理页面导航（防止用系统浏览器打开链接）
+webView.setWebViewClient(new WebViewClient() {
+    @Override
+    public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+        view.loadUrl(request.getUrl().toString());
+        return true; // 拦截链接由WebView处理
+    }
+});
+```
+
+---
+
+### **三、进阶能力**
+#### 1. **JavaScript 调用 Java 方法**
+```java
+// 定义供JS调用的Java接口
+class JsInterface {
+    @JavascriptInterface
+    public void showToast(String message) {
+        Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show();
+    }
+}
+
+// 绑定接口
+webView.addJavascriptInterface(new JsInterface(), "AndroidBridge");
+
+// JS中调用：AndroidBridge.showToast("Hello from Web!");
+```
+
+#### 2. **处理页面加载事件**
+```java
+webView.setWebViewClient(new WebViewClient() {
+    @Override
+    public void onPageStarted(WebView view, String url, Bitmap favicon) {
+        // 显示加载进度条
+    }
+
+    @Override
+    public void onPageFinished(WebView view, String url) {
+        // 隐藏进度条
+    }
+
+    @Override
+    public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
+        // 显示错误页面
+    }
+});
+```
+
+#### 3. **文件上传/下载处理**
+```java
+// 启用文件访问
+webView.getSettings().setAllowFileAccess(true);
+
+// 处理下载
+webView.setDownloadListener((url, userAgent, contentDisposition, mimetype, contentLength) -> {
+    // 调用系统下载器或自定义逻辑
+});
+```
+
+---
+
+### **四、安全注意事项**
+1. **禁用敏感权限**  
+   ```java
+   settings.setAllowFileAccess(false); // 禁止访问本地文件（除非必要）
+   settings.setAllowContentAccess(false);
+   ```
+
+2. **限制 JavaScript 接口**  
+   - 使用 `@JavascriptInterface` 明确暴露的方法
+   - 避免在接口中传递敏感数据
+
+3. **HTTPS 校验**  
+   ```java
+   webView.setWebViewClient(new WebViewClient() {
+       @Override
+       public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
+           // 生产环境应严格校验证书
+           if (BuildConfig.DEBUG) {
+               handler.proceed(); // 开发环境忽略错误（仅调试用）
+           }
+       }
+   });
+   ```
+
+---
+
+### **五、性能优化技巧**
+1. **启用硬件加速**  
+   ```xml
+   <application android:hardwareAccelerated="true">
+   ```
+
+2. **缓存策略**  
+   ```java
+   settings.setCacheMode(WebSettings.LOAD_DEFAULT); // 智能缓存
+   settings.setAppCacheEnabled(true);
+   settings.setAppCachePath(getCacheDir().getPath());
+   ```
+
+3. **延迟加载图片**  
+   ```java
+   if (Build.VERSION.SDK_INT >= 19) {
+       settings.setLoadsImagesAutomatically(true); // 先加载文本后加载图片
+   }
+   ```
+
+---
+
+### **六、WebView 与 Chrome 的区别**
+| **特性**     | **WebView**                          | **Chrome 浏览器**    |
+| ------------ | ------------------------------------ | -------------------- |
+| **运行环境** | 内嵌在应用中                         | 独立应用             |
+| **内核版本** | 随系统更新（可独立更新 via WebView） | 通过 Play Store 更新 |
+| **UI 控制**  | 完全自定义界面                       | 固定浏览器界面       |
+| **进程隔离** | 默认与应用同进程（可配置独立进程）   | 独立进程             |
+| **适用场景** | 需要深度集成的网页内容               | 通用网页浏览         |
+
+---
+
+### **七、常见问题解决**
+#### **Q1：网页显示空白？**
+- 检查网络权限：
+  ```xml
+  <uses-permission android:name="android.permission.INTERNET" />
+  ```
+- 确保未拦截 `shouldOverrideUrlLoading`
+
+#### **Q2：如何清除缓存？**
+```java
+webView.clearCache(true);
+webView.clearHistory();
+CookieManager.getInstance().removeAllCookies(null);
+```
+
+#### **Q3：如何处理后退键导航？**
+```java
+@Override
+public void onBackPressed() {
+    if (webView.canGoBack()) {
+        webView.goBack(); // 返回上一页
+    } else {
+        super.onBackPressed(); // 退出Activity
+    }
+}
+```
+
+---
+
+### **八、现代替代方案**
+1. **Chrome Custom Tabs**  
+   提供浏览器体验但保留应用界面控制权。
+   ```java
+   CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
+   builder.build().launchUrl(this, Uri.parse("https://example.com"));
+   ```
+
+2. **Jetpack Compose WebView**  
+   在 Compose 项目中使用：
+   ```kotlin
+   AndroidView(factory = { context ->
+       WebView(context).apply { loadUrl("https://example.com") }
+   })
+   ```
+
+---
+
+通过合理使用 WebView，开发者可以高效构建混合应用，但需特别注意安全性和性能优化！
+
+
+
+## `Hybrid App` - `WebView WebSettings`
+
+Android WebView 的 **WebSettings** 是一个核心配置类，用于控制 WebView 的各种行为和功能。它相当于 WebView 的“控制面板”，允许开发者精细调整网页加载、渲染、缓存、安全等关键参数。以下是详细解析：
+
+---
+
+### **一、WebSettings 基础用法**
+获取 WebSettings 对象：
+```java
+WebView webView = findViewById(R.id.webview);
+WebSettings webSettings = webView.getSettings(); // 获取设置对象
+```
+
+---
+
+### **二、核心配置项分类**
+
+#### **1. 网页内容与渲染控制**
+| 方法                               | 作用                                               | 示例值/建议  |
+| ---------------------------------- | -------------------------------------------------- | ------------ |
+| `setJavaScriptEnabled(boolean)`    | 启用/禁用 JavaScript 执行能力（混合开发必备）      | `true`       |
+| `setDomStorageEnabled(boolean)`    | 启用 HTML5 本地存储（LocalStorage）                | `true`       |
+| `setDatabaseEnabled(boolean)`      | 启用 HTML5 数据库 API                              | `true`       |
+| `setLoadWithOverviewMode(boolean)` | 是否缩放至屏幕宽度（适配移动端）                   | `true`       |
+| `setUseWideViewPort(boolean)`      | 启用宽视口模式（配合 `loadWithOverviewMode` 使用） | `true`       |
+| `setTextZoom(int)`                 | 文本缩放百分比（解决网页字体大小问题）             | `100` (默认) |
+
+#### **2. 缓存与性能优化**
+| 方法                                | 作用                                                         |
+| ----------------------------------- | ------------------------------------------------------------ |
+| `setCacheMode(int)`                 | 缓存模式：<br>`LOAD_DEFAULT`（默认）<br>`LOAD_NO_CACHE`<br>`LOAD_CACHE_ONLY` |
+| `setAppCacheEnabled(boolean)`       | 启用应用缓存（需同时设置缓存路径）                           |
+| `setAppCachePath(String)`           | 指定应用缓存路径（通常用 `getCacheDir()`）                   |
+| `setRenderPriority(RenderPriority)` | 渲染优先级（已废弃，现代系统自动管理）                       |
+
+#### **3. 安全与权限控制**
+| 方法                                           | 风险提示                                                     |
+| ---------------------------------------------- | ------------------------------------------------------------ |
+| `setAllowFileAccess(boolean)`                  | 禁止时 (`false`) 可防止通过 `file://` 访问本地文件           |
+| `setAllowContentAccess(boolean)`               | 控制是否允许访问 ContentProvider 数据（默认 `true`）         |
+| `setAllowFileAccessFromFileURLs(boolean)`      | **高危**！禁止 (`false`) 防止 JS 通过 `file://` URL 访问其他文件 |
+| `setAllowUniversalAccessFromFileURLs(boolean)` | **高危**！必须禁止 (`false`) 防止跨域攻击                    |
+
+#### **4. 网络与加载行为**
+| 方法                                   | 作用                                                         |
+| -------------------------------------- | ------------------------------------------------------------ |
+| `setBlockNetworkImage(boolean)`        | 是否阻塞网络图片加载（用于省流量模式）                       |
+| `setLoadsImagesAutomatically(boolean)` | 是否自动加载图片（可延迟加载提升性能）                       |
+| `setMixedContentMode(int)`             | 处理 HTTPS 页面中的 HTTP 内容：<br>`MIXED_CONTENT_ALWAYS_ALLOW`（不推荐）<br>`MIXED_CONTENT_NEVER_ALLOW`（安全） |
+
+---
+
+### **三、实际配置示例**
+```java
+// 基础网页配置
+webSettings.setJavaScriptEnabled(true); // 启用JS
+webSettings.setDomStorageEnabled(true); // 启用LocalStorage
+webSettings.setDatabaseEnabled(true);   // 启用数据库
+webSettings.setDatabasePath(getCacheDir().getPath()); // 设置数据库路径
+
+// 视口适配
+webSettings.setUseWideViewPort(true); 
+webSettings.setLoadWithOverviewMode(true);
+
+// 缓存策略（智能缓存）
+webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
+webSettings.setAppCacheEnabled(true);
+webSettings.setAppCachePath(getCacheDir().getPath());
+
+// 安全限制（必须设置！）
+webSettings.setAllowFileAccess(false);
+webSettings.setAllowContentAccess(false);
+if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+    webSettings.setAllowFileAccessFromFileURLs(false);
+    webSettings.setAllowUniversalAccessFromFileURLs(false);
+}
+
+// 网络优化
+webSettings.setBlockNetworkImage(false); 
+webSettings.setLoadsImagesAutomatically(true);
+webSettings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
+```
+
+---
+
+### **四、重要注意事项**
+1. **JavaScript 安全性**  
+   - 通过 `@JavascriptInterface` 明确暴露给 JS 的方法才可调用
+   - 避免在接口中传递敏感数据
+
+2. **缓存清理**  
+   ```java
+   // 清除缓存
+   webView.clearCache(true);
+   // 清除历史记录
+   webView.clearHistory();
+   // 清除Cookie
+   CookieManager.getInstance().removeAllCookies(null);
+   ```
+
+3. **Android 版本差异**  
+   - **API ≥ 21 (Android 5.0+)**：WebView 独立更新（通过 Google Play）
+   - **API < 21**：WebView 依赖系统版本，功能受限
+
+4. **替代方案考虑**  
+   - 对安全性要求高的场景可使用 **Chrome Custom Tabs**
+   - 需要更现代 API 支持时可尝试 **AndroidX WebKit** 库
+
+---
+
+### **五、WebView 常见问题解决**
+#### **Q1：网页布局错乱？**
+```java
+// 添加视口适配配置
+webSettings.setUseWideViewPort(true);
+webSettings.setLoadWithOverviewMode(true);
+```
+
+#### **Q2：JS 调用不生效？**
+- 检查是否添加 `@JavascriptInterface` 注解
+- 确认方法为 `public` 且已正确绑定：
+  ```java
+  webView.addJavascriptInterface(new MyJsInterface(), "AndroidBridge");
+  ```
+
+#### **Q3：HTTPS 页面加载失败？**
+```java
+// 严格模式（推荐）
+webSettings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
+
+// 或临时解决方案（仅调试用）
+webView.setWebViewClient(new WebViewClient() {
+    @Override
+    public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
+        handler.proceed(); // 生产环境必须移除！
+    }
+});
+```
+
+---
+
+通过合理配置 WebSettings，可以显著提升 WebView 的性能、安全性和用户体验。建议根据实际需求选择配置项，并始终优先考虑安全性。
+
+
+
+## `Hybrid App` - `WebView WebViewClient`
+
+Android 的 **WebViewClient** 是一个核心辅助类，用于监听和控制 WebView 的网页加载行为（如页面开始/结束加载、错误处理、URL 拦截等）。它相当于 WebView 的“导航管家”，让开发者能够自定义网页加载流程和交互逻辑。以下是深度解析：
+
+---
+
+### **一、WebViewClient 的核心作用**
+| **功能**             | **典型场景**                                                 |
+| -------------------- | ------------------------------------------------------------ |
+| **URL 加载拦截**     | 拦截特定链接（如电话/邮件/应用内页面），阻止默认用浏览器打开 |
+| **页面生命周期监听** | 在页面开始加载/完成加载时显示/隐藏进度条                     |
+| **错误处理**         | 自定义404页面或网络错误提示                                  |
+| **HTTPS 安全控制**   | 处理SSL证书错误（需谨慎）                                    |
+| **资源加载优化**     | 选择性阻止图片/脚本加载以节省流量                            |
+
+---
+
+### **二、基础用法示例**
+#### 1. **设置 WebViewClient**
+```java
+WebView webView = findViewById(R.id.webview);
+webView.setWebViewClient(new MyWebViewClient()); // 绑定自定义Client
+
+// 自定义WebViewClient
+class MyWebViewClient extends WebViewClient {
+    @Override
+    public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+        // 拦截URL处理（关键方法！）
+        String url = request.getUrl().toString();
+        if (url.startsWith("tel:")) {
+            startActivity(new Intent(Intent.ACTION_DIAL, Uri.parse(url)));
+            return true; // 拦截此URL
+        }
+        view.loadUrl(url); // 默认由WebView加载
+        return false;
+    }
+
+    @Override
+    public void onPageStarted(WebView view, String url, Bitmap favicon) {
+        // 显示加载进度条
+        progressBar.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    public void onPageFinished(WebView view, String url) {
+        // 隐藏进度条
+        progressBar.setVisibility(View.GONE);
+    }
+}
+```
+
+#### 2. **关键方法说明**
+| **方法**                     | **调用时机**                                                 |
+| ---------------------------- | ------------------------------------------------------------ |
+| `shouldOverrideUrlLoading()` | 当新URL即将加载时调用（返回`true`表示拦截，`false`允许WebView自行处理） |
+| `onPageStarted()`            | 网页开始加载时触发                                           |
+| `onPageFinished()`           | 网页加载完成时触发（注意：可能仍有异步资源在加载）           |
+| `onReceivedError()`          | 加载遇到错误时触发（HTTP错误/网络断开）                      |
+| `onReceivedHttpError()`      | HTTP错误（状态码≥400）时触发（API ≥ 23）                     |
+| `onReceivedSslError()`       | SSL证书验证失败时触发（需谨慎处理安全风险）                  |
+
+---
+
+### **三、高级功能实现**
+#### 1. **自定义错误页面**
+```java
+@Override
+public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
+    // 加载本地错误页
+    String errorHtml = "<html><body><h1>加载失败</h1><p>" + description + "</p></body></html>";
+    webView.loadDataWithBaseURL(null, errorHtml, "text/html", "UTF-8", null);
+}
+```
+
+#### 2. **HTTPS 证书处理**
+```java
+@Override
+public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
+    if (BuildConfig.DEBUG) {
+        handler.proceed(); // 开发环境忽略证书错误（仅调试！）
+    } else {
+        // 生产环境建议提示用户或终止加载
+        AlertDialog.Builder builder = new AlertDialog.Builder(view.getContext());
+        builder.setMessage("SSL证书验证失败，可能存在安全风险！");
+        builder.setPositiveButton("继续", (dialog, which) -> handler.proceed());
+        builder.setNegativeButton("取消", (dialog, which) -> handler.cancel());
+        builder.show();
+    }
+}
+```
+
+#### 3. **资源拦截（API ≥ 21）**
+```java
+@Override
+public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+    // 拦截特定资源（如广告图片）
+    if (request.getUrl().toString().contains("ad.jpg")) {
+        return new WebResourceResponse("image/png", null, null); // 返回空响应
+    }
+    return super.shouldInterceptRequest(view, request);
+}
+```
+
+---
+
+### **四、WebViewClient vs WebChromeClient**
+| **对比维度**     | **WebViewClient**                 | **WebChromeClient**                    |
+| ---------------- | --------------------------------- | -------------------------------------- |
+| **主要职责**     | 控制网页加载行为（导航/错误处理） | 处理JS对话框/进度条/标题等浏览器UI相关 |
+| **常用场景**     | URL拦截、页面生命周期监听         | 显示JS弹窗、获取网页标题/图标          |
+| **关键方法**     | `shouldOverrideUrlLoading()`      | `onJsAlert()`/`onProgressChanged()`    |
+| **是否需要共存** | 是（通常两者一起使用）            | 是                                     |
+
+**典型组合用法**：
+```java
+webView.setWebViewClient(new MyWebViewClient());
+webView.setWebChromeClient(new WebChromeClient() {
+    @Override
+    public void onProgressChanged(WebView view, int newProgress) {
+        // 更新进度条（WebChromeClient负责）
+        progressBar.setProgress(newProgress);
+    }
+});
+```
+
+---
+
+### **五、注意事项**
+1. **线程安全**  
+   WebViewClient 的回调方法运行在 **UI线程**，避免执行耗时操作。
+
+2. **内存泄漏**  
+   WebViewClient 不要持有 Activity 的强引用：
+   ```java
+   // 错误示例（会导致内存泄漏）：
+   class LeakyClient extends WebViewClient {
+       private Activity activity; // 危险！
+   }
+   ```
+
+3. **API 版本差异**  
+   - `shouldOverrideUrlLoading(WebView, String)`（旧版）  
+   - `shouldOverrideUrlLoading(WebView, WebResourceRequest)`（API ≥ 24）
+
+4. **性能优化**  
+   在 `onPageFinished()` 中注入CSS/JS可能造成闪烁，建议在 `onPageStarted()` 中提前执行。
+
+---
+
+### **六、完整实战案例**
+```java
+public class SafeWebViewClient extends WebViewClient {
+    private WeakReference<Activity> activityRef;
+
+    public SafeWebViewClient(Activity activity) {
+        this.activityRef = new WeakReference<>(activity);
+    }
+
+    // 拦截URL（兼容新旧API）
+    @Override
+    public boolean shouldOverrideUrlLoading(WebView view, String url) {
+        return handleUrl(view, url);
+    }
+
+    @TargetApi(Build.VERSION_CODES.N)
+    @Override
+    public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+        return handleUrl(view, request.getUrl().toString());
+    }
+
+    private boolean handleUrl(WebView view, String url) {
+        Activity activity = activityRef.get();
+        if (activity == null) return false;
+
+        // 拦截电话链接
+        if (url.startsWith("tel:")) {
+            activity.startActivity(new Intent(Intent.ACTION_DIAL, Uri.parse(url)));
+            return true;
+        }
+
+        // 拦截应用内页面（如"myapp://settings"）
+        if (url.startsWith("myapp://")) {
+            activity.startActivity(new Intent(activity, SettingsActivity.class));
+            return true;
+        }
+
+        // 其他情况由WebView处理
+        view.loadUrl(url);
+        return false;
+    }
+
+    @Override
+    public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
+        // 生产环境严格模式
+        if (BuildConfig.DEBUG) {
+            handler.proceed();
+        } else {
+            handler.cancel();
+        }
+    }
+}
+```
+
+---
+
+通过合理使用 WebViewClient，您可以实现：
+- **无缝混合导航**（原生与H5页面跳转）
+- **安全风险控制**（恶意URL/证书拦截）
+- **精细化加载体验**（自定义错误页/进度反馈）
+- **性能优化**（资源过滤/延迟加载）
+
+
+
+## `Hybrid App` - `WebView WebChromeClient`
+
+Android 的 **WebChromeClient** 是 WebView 的辅助类，专门处理与**浏览器 UI 相关**的交互（如进度条、弹窗、权限请求等）。它相当于 WebView 的“界面管家”，负责所有需要用户可见反馈的操作。以下是深度解析：
+
+---
+
+### **一、WebChromeClient 的核心职责**
+| **功能分类**        | **具体能力**                                         |
+| ------------------- | ---------------------------------------------------- |
+| **进度反馈**        | 获取页面加载进度（更新进度条）                       |
+| **JavaScript 交互** | 处理 JS 弹窗（alert/confirm/prompt）、控制台日志     |
+| **网页信息获取**    | 获取网页标题（title）、图标（favicon）、视频全屏事件 |
+| **权限请求**        | 处理地理位置、摄像头、麦克风等权限请求               |
+| **文件选择**        | 处理 `<input type="file">` 文件上传                  |
+
+---
+
+### **二、基础用法示例**
+#### 1. **设置 WebChromeClient**
+```java
+WebView webView = findViewById(R.id.webview);
+webView.setWebChromeClient(new MyWebChromeClient()); // 绑定自定义Client
+
+// 自定义WebChromeClient
+class MyWebChromeClient extends WebChromeClient {
+    @Override
+    public void onProgressChanged(WebView view, int newProgress) {
+        // 更新进度条（0-100）
+        progressBar.setProgress(newProgress);
+        if (newProgress == 100) progressBar.setVisibility(View.GONE);
+    }
+
+    @Override
+    public void onReceivedTitle(WebView view, String title) {
+        // 动态更新Activity标题栏
+        getActivity().setTitle(title);
+    }
+}
+```
+
+---
+
+### **三、关键功能实现**
+
+#### **1. 处理 JavaScript 弹窗**
+```java
+@Override
+public boolean onJsAlert(WebView view, String url, String message, JsResult result) {
+    // 自定义Alert对话框
+    new AlertDialog.Builder(view.getContext())
+            .setTitle("提示")
+            .setMessage(message)
+            .setPositiveButton("确定", (dialog, which) -> result.confirm())
+            .setCancelable(false)
+            .show();
+    return true; // 表示已处理
+}
+
+@Override
+public boolean onJsConfirm(WebView view, String url, String message, JsResult result) {
+    // 自定义Confirm对话框
+    new AlertDialog.Builder(view.getContext())
+            .setTitle("请确认")
+            .setMessage(message)
+            .setPositiveButton("确定", (dialog, which) -> result.confirm())
+            .setNegativeButton("取消", (dialog, which) -> result.cancel())
+            .show();
+    return true;
+}
+```
+
+#### **2. 文件上传（Android 5.0+）**
+```java
+private ValueCallback<Uri[]> mUploadCallback;
+
+@Override
+public boolean onShowFileChooser(WebView webView, 
+                               ValueCallback<Uri[]> filePathCallback,
+                               FileChooserParams fileChooserParams) {
+    mUploadCallback = filePathCallback;
+    // 启动文件选择Intent
+    Intent intent = fileChooserParams.createIntent();
+    startActivityForResult(intent, FILE_CHOOSER_CODE);
+    return true;
+}
+
+@Override
+protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    if (requestCode == FILE_CHOOSER_CODE) {
+        if (mUploadCallback != null) {
+            Uri[] result = (data == null || resultCode != RESULT_OK) ? null :
+                WebChromeClient.FileChooserParams.parseResult(resultCode, data);
+            mUploadCallback.onReceiveValue(result);
+            mUploadCallback = null;
+        }
+    }
+}
+```
+
+#### **3. 全屏视频播放**
+```java
+private View mCustomView;
+private WebChromeClient.CustomViewCallback mCustomViewCallback;
+
+@Override
+public void onShowCustomView(View view, CustomViewCallback callback) {
+    if (mCustomView != null) {
+        callback.onCustomViewHidden();
+        return;
+    }
+    // 隐藏其他视图，显示全屏容器
+    mCustomView = view;
+    mCustomViewCallback = callback;
+    fullscreenContainer.addView(view);
+    setFullscreen(true); // 隐藏状态栏等
+}
+
+@Override
+public void onHideCustomView() {
+    if (mCustomView == null) return;
+    setFullscreen(false);
+    fullscreenContainer.removeView(mCustomView);
+    mCustomViewCallback.onCustomViewHidden();
+    mCustomView = null;
+}
+```
+
+---
+
+### **四、WebChromeClient 与 WebViewClient 的分工**
+| **对比维度**      | **WebChromeClient**                      | **WebViewClient**              |
+| ----------------- | ---------------------------------------- | ------------------------------ |
+| **核心职责**      | 处理用户可见的UI交互                     | 控制网页加载行为（导航/错误）  |
+| **进度条**        | ✅ `onProgressChanged()`                  | ❌ 不处理                       |
+| **JS弹窗**        | ✅ `onJsAlert()`/`onJsConfirm()`          | ❌ 不处理                       |
+| **网页标题/图标** | ✅ `onReceivedTitle()`/`onReceivedIcon()` | ❌ 不处理                       |
+| **URL加载拦截**   | ❌ 不处理                                 | ✅ `shouldOverrideUrlLoading()` |
+| **错误处理**      | ❌ 不处理                                 | ✅ `onReceivedError()`          |
+
+---
+
+### **五、完整配置示例**
+```java
+webView.setWebChromeClient(new WebChromeClient() {
+    // 进度条更新
+    @Override
+    public void onProgressChanged(WebView view, int newProgress) {
+        progressBar.setProgress(newProgress);
+        if (newProgress == 100) {
+            progressBar.setVisibility(View.GONE);
+        } else {
+            progressBar.setVisibility(View.VISIBLE);
+        }
+    }
+
+    // 处理JS的alert弹窗
+    @Override
+    public boolean onJsAlert(WebView view, String url, String message, JsResult result) {
+        new AlertDialog.Builder(view.getContext())
+            .setTitle("提示")
+            .setMessage(message)
+            .setPositiveButton("确定", (dialog, which) -> result.confirm())
+            .show();
+        return true;
+    }
+
+    // 视频全屏处理
+    @Override
+    public void onShowCustomView(View view, CustomViewCallback callback) {
+        // 实现全屏逻辑
+    }
+
+    // 文件上传（Android 5.0+）
+    @Override
+    public boolean onShowFileChooser(WebView webView, 
+                                   ValueCallback<Uri[]> filePathCallback,
+                                   FileChooserParams fileChooserParams) {
+        // 启动文件选择器
+        return true;
+    }
+});
+```
+
+---
+
+### **六、注意事项**
+1. **内存泄漏风险**  
+   避免在 WebChromeClient 中直接持有 Activity 引用：
+   ```java
+   // 错误示例
+   class LeakyClient extends WebChromeClient {
+       private Activity activity; // 会导致内存泄漏！
+   }
+   ```
+
+2. **权限申请**  
+   处理摄像头/麦克风权限时，需先动态申请权限：
+   ```java
+   @Override
+   public void onPermissionRequest(PermissionRequest request) {
+       if (checkSelfPermission(Manifest.permission.CAMERA) == PERMISSION_GRANTED) {
+           request.grant(request.getResources());
+       } else {
+           ActivityCompat.requestPermissions(activity, 
+               new String[]{Manifest.permission.CAMERA}, 
+               CAMERA_REQUEST_CODE);
+       }
+   }
+   ```
+
+3. **API 兼容性**  
+   - 文件上传 `onShowFileChooser()` 仅支持 API 21+
+   - 旧版本需使用 `openFileChooser()`（已废弃）
+
+---
+
+通过合理使用 WebChromeClient，您可以实现：
+- **更流畅的进度反馈**（自定义进度条样式）
+- **统一的弹窗体验**（让JS弹窗风格与原生一致）
+- **高级媒体支持**（全屏视频/文件上传）
+- **安全的权限控制**（地理位置/摄像头等）
+
+
+
+## `Hybrid App` - 开发
+
+### `App`调用`WebView`
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-webview)
+
+`AndroidManifest.xml`配置：
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    
+    <!-- 开启网络访问权限 -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- 开启网络状态权限 -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- 开启WIFI权限 -->
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+
+    <application
+        android:allowClearUserData="true"
+    
+    ...
+```
+
+- `<uses-permission ...>`：开启网络访问权限、开启网络状态权限、开启`WIFI`权限。
+- `android:allowClearUserData="true"`：允许`http`通讯。
+
+`layout`布局中配置`WebView`控件：
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ActivityLoadResourceLocallyAndRemotely">
+
+    <WebView
+        android:id="@+id/webView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+    </WebView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+```
+
+`Activity`的`onCreate`方法中初始化`WebView`：
+
+```java
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+    ...
+
+    WebView webView = findViewById(R.id.webView);
+    Util.setupWebView(webView, "file:///android_asset/index.html");
+}
+```
+
+```java
+package com.future.demo;
+
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+
+public class Util {
+    /**
+     * 初始化 WebView
+     *
+     * @param webView
+     */
+    public static void setupWebView(WebView webView,
+                                    String url) {
+        // WebView 设置
+        WebSettings webSettings = webView.getSettings();
+        // 设置开启 Chrome 调试
+        WebView.setWebContentsDebuggingEnabled(true);
+        // 设置屏幕自适应
+        webSettings.setUseWideViewPort(true);
+        webSettings.setLoadWithOverviewMode(true);
+        // 禁用缓存，每次加载页面时都会从网络或服务器重新请求资源，而不会使用本地缓存
+        webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE);
+        // 设置 WebView 组件支持加载 JavaScript
+        webSettings.setJavaScriptEnabled(true);
+        // 允许网页使用 localStorage（持久化存储）和 sessionStorage（会话级存储）
+        webSettings.setDomStorageEnabled(true);
+
+        // 设置不使用默认浏览器，而直接使用 WebView 组件加载页面
+        webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                view.loadUrl(url);
+                return true;
+            }
+        });
+
+        // 加载本地或者远程资源
+        // 例如：加载本地 assets 目录中的 index.html 文件，file:///android_asset/index.html
+        // 例如：加载远程资源，http://x.x.x.x:5500/index.html
+        webView.loadUrl(url);
+    }
+}
+```
+
+在`src/main`中创建`assets`目录并在目录中分别创建`index.html`和`index.js`：
+
+- `index.html`
+
+  ```html
+  <!doctype html>
+  <html lang="en">
+  <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>Document</title>
+      <!-- 添加 jQuery 1.9.1 -->
+      <!-- 注意：不知道什么原因下面的 jQuery 不能加载 -->
+      <!--<script src="https://cdn.bootcdn.net/ajax/libs/jquery/1.9.1/jquery.min.js"></script>-->
+      <script type="text/javascript" src="https://upcdn.b0.upaiyun.com/libs/jquery/jquery-1.9.1.min.js"></script>
+      <!-- 加载本地 assets 目录中 index.js 文件 -->
+      <script src="index.js"></script>
+  </head>
+  <body>
+  <div id="displayDiv"></div>
+  </body>
+  </html>
+  ```
+
+- `index.js`
+
+  ```js
+  // jQuery 等待 document 准备就绪
+  $(function() {
+      $("#displayDiv").html("从本地或者远程加载 html 和 js 资源")
+  })
+  
+  ```
+
+
+
+### `JS`调用`Android`接口
+
+>详细用法请参考本站 [示例1](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-webview)、[示例2](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-webview-http-server-assist)
+
+先启动`http`服务器以协助调试示例：使用`VSCode`打开本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-webview-http-server-assist) 并使用`Five Server`运行暴露服务：http://x.x.x.x:5500/index.html。
+
+启动`Android App`调试示例即可。
+
+在`Android App`中定义并暴露接口给`JS`
+
+```java
+package com.future.demo;
+
+import android.webkit.JavascriptInterface;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+/**
+ * 用于协助测试 JS 调用 Android 的接口
+ */
+public class JsInterface {
+
+    private AppCompatActivity activity;
+
+    public JsInterface(AppCompatActivity activity) {
+        this.activity = activity;
+    }
+
+    @JavascriptInterface
+    public String makeToast(String message) {
+        Toast.makeText(this.activity, message, Toast.LENGTH_SHORT).show();
+        return "成功弹窗";
+    }
+}
+
+```
+
+```java
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+    ...
+
+    WebView webView = findViewById(R.id.webView);
+    // 建立JavaScript调用Java接口的桥梁
+    webView.addJavascriptInterface(new JsInterface(this), "AndroidBridge");
+    Util.setupWebView(webView, "http://" + Util.RemoteHost + ":" + Util.RemotePort + "/index.html");
+}
+```
+
+在`JS`中调用`Android`接口
+
+```js
+// JS 调用 Android 接口按钮点击事件
+$("#buttonJsCallAndroidApi").click(function() {
+    if(window.AndroidBridge) {
+        var result = window.AndroidBridge.makeToast("JS调用Android接口触发的Toast弹窗")
+        console.log("调用 window.AndroidBridge.makeToast() 返回值：" + result)
+    }
+})
+```
+
+
+
+### `URL`加载拦截
+
+>详细用法请参考本站 [示例1](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-webview)、[示例2](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-webview-http-server-assist)
+
+先启动`http`服务器以协助调试示例：使用`VSCode`打开本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-android/demo-webview-http-server-assist) 并使用`Five Server`运行暴露服务：http://x.x.x.x:5500/index.html。
+
+启动`Android App`调试示例即可。
+
+在`JS`中触发`WebView`加载`URL`
+
+```js
+// URL 加载拦截
+$("#buttonOverrideUrlLoading").click(function() {
+    // 使用 document.location 触发 URL 加载
+    document.location = "wx://myUrl?p1=v1&p2=v2"
+})
+```
+
+`WebView`拦截`URL`加载
+
+```java
+// 设置不使用默认浏览器，而直接使用 WebView 组件加载页面
+webView.setWebViewClient(new WebViewClient() {
+    @Override
+    public boolean shouldOverrideUrlLoading(WebView view, String url) {
+        // URL 加载拦截
+        Uri uri = Uri.parse(url);
+        if (uri.getScheme().equals("wx") && uri.getAuthority().equals("myUrl")) {
+            String message = "URL 加载拦截：" + uri.getScheme() + "://" + uri.getAuthority();
+            // 拼接 url 参数
+            String query = "";
+            for (String name : uri.getQueryParameterNames()) {
+                query += "&" + name + "=" + uri.getQueryParameter(name);
+            }
+            query = query.substring(1);
+            message += "?" + query;
+            Toast.makeText(webView.getContext(), message, Toast.LENGTH_LONG).show();
+
+            // 表示已经处理了该 URL
+            return true;
+        }
+
+        view.loadUrl(url);
+        return true;
+    }
+});
+```

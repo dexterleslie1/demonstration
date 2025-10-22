@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Document</title>
+    <!-- 添加 jQuery 1.9.1 -->
+    <!-- 注意：不知道什么原因下面的 jQuery 不能加载 -->
+    <!--<script src="https://cdn.bootcdn.net/ajax/libs/jquery/1.9.1/jquery.min.js"></script>-->
+    <script type="text/javascript" src="https://upcdn.b0.upaiyun.com/libs/jquery/jquery-1.9.1.min.js"></script>
+    <!-- 加载本地 assets 目录中 index.js 文件 -->
+    <script src="index.js"></script>
+    <style>
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .container > div {
+            margin: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div id="displayDiv" style="background-color: yellowgreen;"></div>
+        <div>
+            <button id="buttonJsCallAndroidApi">JS调用Android接口</button>
+        </div>
+        <div>
+            <button id="buttonOverrideUrlLoading">URL加载拦截</button>
+        </div>
+    </div>
+</body>
+
+</html>
