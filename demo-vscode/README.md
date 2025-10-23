@@ -30,7 +30,7 @@ sudo apt install ./code_xxxxx.deb
 >
 > 在插件管理器搜索 `typora`（提供者为 `Database Client`），这样就能够在 `VSCode` 像 `Typora` 那样编辑 `md` 文件。
 
-## 配置git
+## 配置`git`
 
 > - 使用vscode自带的git管理工具
 > - 安装git graph插件用于查看提交日志
@@ -44,7 +44,7 @@ sudo apt install ./code_xxxxx.deb
 >   设置git自动保存密码 git config --global credential.helper store
 >   查看git自动保存密码是否设置成功 git config --global credential.helper
 
-## vscode设置
+## 设置
 
 > 1、设置zoom为1，Code > Preferences > Settings > Zoom
 
@@ -72,13 +72,13 @@ sudo apt install ./code_xxxxx.deb
 
 切换到插件管理面板 `Remote Explorer`，点击 `REMOTE（TUNNEL/SSH）` > `SSH` > `设置按钮` ![image-20250904144848760](image-20250904144848760.png)，选择 `~/.ssh/config` 文件进行编辑即可。
 
-## 设置打开文件很多时tabs多行显示
+## 设置打开文件很多时`tabs`多行显示
 
 > https://stackoverflow.com/questions/42462777/multirow-tabs-for-vscode
 >
 > 打开 File > Preferences > Settings > Workbench > Editor Management 后搜索 wrap tabs 打上钩则可。
 
-## 使用launch.json设置 run/debug 加载的golang入口文件
+## 使用`launch.json`设置`run/debug`加载的`golang`入口文件
 
 ```json
 # unittest时配置如下

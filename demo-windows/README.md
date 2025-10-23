@@ -255,6 +255,12 @@ MinGW 的核心作用就像一个 **“桥梁”** 和 **“工具提供商”**
 
 参考本站 [链接](/firefox/README.html#windows11) 安装
 
+### 安装谷歌浏览器
+
+>说明：用于开发调试或者清除`Cookie`测试场景使用。
+
+参考本站 [链接](/chrome/README.html#windows11安装google-chrome浏览器) 安装。
+
 ### 安装`GitExtensions`
 
 安装 `GitExtensions-x64-5.2.1.18061-0d74cfdc3.msi`、`Git-2.49.0-64-bit.exe`、`windowsdesktop-runtime-8.0.15-win-x64.exe`。

@@ -132,6 +132,7 @@ export default defineConfig({
           { text: '数据结构和算法', link: '/数据结构和算法/README.md' },
           { text: 'VSCode', link: '/vscode/README.md' },
           { text: 'Firefox', link: '/firefox/README.md' },
+          { text: '谷歌浏览器（Chrome）', link: '/chrome/README.md' },
         ]
       },
     ],
