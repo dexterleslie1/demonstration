@@ -1891,6 +1891,254 @@ public class ApiController {
 
 
 
+### 客户端接入 - `Android`接入`V3`架构
+
+>详细用法请参考本站[示例](https://gitee.com/dexterleslie/demonstration/tree/main/captcha/demo-aliyun-captcha/android)
+>
+>参考链接：https://help.aliyun.com/zh/captcha/captcha2-0/user-guide/android-access-v3-architecture
+
+随着混合模式移动应用（Hybrid App）开发技术的日益成熟，您可以通过在App业务中启用WebView组件的方式，直接接入移动端HTML5业务类型的阿里云验证码2.0，实现App业务中的人机对抗。
+
+提示：新创建验证场景接入方式为`Webview+H5`（支持APP/微信小程序接入）并且策略状态为测试验证通过（因为阿里云验证码会拦截`Android`模拟器，导致无法通过验证）。
+
+`layout`中添加`WebView`控件：
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <WebView
+        android:id="@+id/webView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+    </WebView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+```
+
+`Activity`的`onCreate`方法初始化`WebView`：
+
+```java
+package com.future.demo;
+
+import android.os.Bundle;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+
+import androidx.activity.EdgeToEdge;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+
+public class MainActivity extends AppCompatActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        EdgeToEdge.enable(this);
+        setContentView(R.layout.activity_main);
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
+
+        WebView webView = findViewById(R.id.webView);
+        // WebView 设置
+        WebSettings webSettings = webView.getSettings();
+        // 设置开启 Chrome 调试
+        WebView.setWebContentsDebuggingEnabled(true);
+        // 设置屏幕自适应
+        webSettings.setUseWideViewPort(true);
+        webSettings.setLoadWithOverviewMode(true);
+        // 禁用缓存，每次加载页面时都会从网络或服务器重新请求资源，而不会使用本地缓存
+        webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE);
+        // 设置 WebView 组件支持加载 JavaScript
+        webSettings.setJavaScriptEnabled(true);
+        // 允许网页使用 localStorage（持久化存储）和 sessionStorage（会话级存储）
+        webSettings.setDomStorageEnabled(true);
+
+        // 设置不使用默认浏览器，而直接使用 WebView 组件加载页面
+        webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                view.loadUrl(url);
+                return true;
+            }
+        });
+
+        // 建立JavaScript调用Java接口的桥梁
+        webView.addJavascriptInterface(new JsInterface(this), "AndroidBridge");
+        // 加载本地或者远程资源
+        // 例如：加载本地 assets 目录中的 index.html 文件，file:///android_asset/index.html
+        // 例如：加载远程资源，http://x.x.x.x:5500/index.html
+        webView.loadUrl("file:///android_asset/index.html");
+    }
+}
+```
+
+`src/main/assets`目录中创建`index.html`用于`WebView`本地加载：
+
+```html
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="data-spm" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!--1.在引入阿里云验证码JS脚本的位置之前，或者在html的head标签最前的位置添加一个script脚本，里面保存一个含有region和prefix参数的全局变量AliyunCaptchaConfig即可-->
+    <script>
+        window.AliyunCaptchaConfig = {
+            // 必填，验证码示例所属地区，支持中国内地（cn）、新加坡（sgp）
+            region: "cn",
+            // 必填，身份标。开通阿里云验证码2.0后，您可以在控制台概览页面的实例基本信息卡片区域，获取身份标
+            prefix: "xxx",
+        };
+    </script>
+    <!--2.集成主JS-->
+    <script type="text/javascript" src="https://o.alicdn.com/captcha-frontend/aliyunCaptcha/AliyunCaptcha.js"></script>
+    <style>
+        html,
+        body {
+            height: 100vh;
+        }
+
+        .container {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container>* {
+            margin: 2px;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <!--预留的验证码元素，用于配置初始化函数中的element参数-->
+    <div id="captcha-element"></div>
+    <!--弹出式下，用于触发验证码弹窗的元素-->
+    <button id="button" class="btn">登录</button>
+    <div>
+        <!-- 用于显示验证码验签参数 -->
+        <input type="text" placeholder="验证码验签参数" id="captchaVerifyParam" readonly/>
+        <span style="color: red;font-size: 12px;">验证通过后会自动回显验证码验签参数，不需要手动输入</span>
+    </div>
+</div>
+<!--3.新建一个<script>标签，用于调用验证码初始化函数initAliyunCaptcha-->
+<script type="text/javascript">
+    var captcha;
+    // 弹出式，除region和prefix以外的参数
+    window.initAliyunCaptcha({
+        // 场景ID。根据步骤二新建验证场景后，您可以在验证码场景列表，获取该场景的场景ID
+        SceneId: "xxx",
+        // 验证码模式，popup表示弹出式，embed表示嵌入式。无需修改
+        mode: "embed",
+        // 页面上预留的渲染验证码的元素，与原代码中预留的页面元素保持一致。
+        element: "#captcha-element",
+        // 触发验证码弹窗或无痕验证的元素
+        button: "#button",
+        // 验证码验证通过回调函数
+        success: function (captchaVerifyParam) {
+            // 入参为验签captchaVerifyParam
+            // 1.向后端发起业务请求进行验证码验签captchaVerifyParam校验
+            // 2.根据校验结果来进行业务处理
+            // 3.如业务需要重新进行验证码验证，调用验证码初始化方法initAliyunCaptcha重新初始化验证码
+            // console.log(captchaVerifyParam)
+            document.getElementById("captchaVerifyParam").value = captchaVerifyParam
+
+            // 入参为验签captchaVerifyParam
+            // 将验签参数返回自定义Java接口
+            window.AndroidBridge && window.AndroidBridge.getCaptchaVerifyParam(captchaVerifyParam);
+        },
+        // 验证码验证不通过回调函数
+        fail: function (result) {
+            // 入参为不通过信息
+            // 正常验证有效期内不需要做任何操作，验证码自动刷新，重新进行验证
+            console.error(result);
+        },
+        // 绑定验证码实例回调函数，该回调会在验证码初始化成功后调用
+        getInstance: function (instance) {
+            captcha = instance;
+        },
+        // 滑块验证和一点即过的验证形态触发框体样式，支持自定义宽度和高度，单位为px。
+        slideStyle: {
+            width: 360,
+            height: 40,
+        },
+        // ...其他参数，参考initAliyunCaptcha参数说明
+    });
+</script>
+</body>
+
+</html>
+```
+
+关键代码是`JS`调用`Android`接口回传`captchaVerifyParam`
+
+```js
+// 验证码验证通过回调函数
+success: function (captchaVerifyParam) {
+    // 入参为验签captchaVerifyParam
+    // 1.向后端发起业务请求进行验证码验签captchaVerifyParam校验
+    // 2.根据校验结果来进行业务处理
+    // 3.如业务需要重新进行验证码验证，调用验证码初始化方法initAliyunCaptcha重新初始化验证码
+    // console.log(captchaVerifyParam)
+    document.getElementById("captchaVerifyParam").value = captchaVerifyParam
+
+    // 入参为验签captchaVerifyParam
+    // 将验签参数返回自定义Java接口
+    window.AndroidBridge && window.AndroidBridge.getCaptchaVerifyParam(captchaVerifyParam);
+},
+```
+
+```java
+// 建立JavaScript调用Java接口的桥梁
+webView.addJavascriptInterface(new JsInterface(this), "AndroidBridge");
+```
+
+```java
+package com.future.demo;
+
+import android.webkit.JavascriptInterface;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+/**
+ * 用于协助测试 JS 调用 Android 的接口
+ */
+public class JsInterface {
+
+    private AppCompatActivity activity;
+
+    public JsInterface(AppCompatActivity activity) {
+        this.activity = activity;
+    }
+
+    @JavascriptInterface
+    public void getCaptchaVerifyParam(String captchaVerifyParam) {
+        Toast.makeText(this.activity, captchaVerifyParam, Toast.LENGTH_SHORT).show();
+    }
+}
+```
+
+
+
 ### 服务端接入
 
 >详细用法请参考本站[示例](https://gitee.com/dexterleslie/demonstration/tree/main/captcha/demo-aliyun-captcha/backend)
