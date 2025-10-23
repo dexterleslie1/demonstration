@@ -133,6 +133,7 @@ export default defineConfig({
           { text: 'VSCode', link: '/vscode/README.md' },
           { text: 'Firefox', link: '/firefox/README.md' },
           { text: '谷歌浏览器（Chrome）', link: '/chrome/README.md' },
+          { text: '验证码', link: '/captcha/README.md' },
         ]
       },
     ],

@@ -1,3 +1,14 @@
+## `todo`列表
+
+- 单体应用获取验证码和校验时序图。
+- 完整的示例作演示用途。
+- 行为验证码原理研究。
+- 尝试使用`JavaScript`实现`H5`验证码客户端以协助跨平台。
+- 研究 https://gitee.com/belief-team/captcha `AJ-Captcha`。
+- 尝试集成 https://www.vaptcha.com/ 以查看其和阿里云、腾讯云验证码的差距。
+
+
+
 ## 概念
 
 在SpringBoot应用中，验证码（CAPTCHA）是一种用于区分人类用户和机器程序的安全机制。以下是关于SpringBoot验证码的详细说明：
@@ -461,7 +472,7 @@ public class TurnstileService {
 
 
 
-## `Happy Captcha`
+## `Happy-Captcha`
 
 >提示：因为验证码服务器端信息默认保存到`session`上下文中，如果需求需要把验证码信息保存到`redis`中默认是不支持的，所以暂时不使用此方案生成验证码。
 >
@@ -1571,7 +1582,7 @@ Hutool Captcha 是 **Hutool工具包** 中一个用于**生成和验证验证码
 >```java
 >// 校验结果
 >if (generator.verify(code, "xxx")) {
->    log.debug("验证成功");
+>    	log.debug("验证成功");
 >}
 >```
 >
@@ -1655,3 +1666,323 @@ public class ApiController {
     }
 }
 ```
+
+
+
+## `AJ-Captcha`
+
+>`Gitee`地址：https://gitee.com/belief-team/captcha
+
+**AJ-Captcha** 是一个**开源、可自部署的验证码项目**，你可以免费获取其源代码，部署在自己的服务器上。
+
+------
+
+### AJ-Captcha 详细介绍
+
+**AJ-Captcha** 是一款基于Java语言开发的、功能强大的开源验证码项目，在Gitee（码云）和GitHub上都非常受欢迎。它的目标是让开发者能够快速、简单地集成各种样式的验证码。
+
+#### 核心特点
+
+1. **开源免费**： 这是它最大的优势。你可以免费使用、修改和分发它，对于预算有限或个人开发者来说非常友好。
+2. **多种验证模式**： 它支持多种流行的验证码类型，包括： **滑动拼图**： 最常用的模式。 **文字点选**： 点击图中指定的文字。 **旋转图片**： 旋转图片使其方向正确。 传统图形验证码（数字字母计算等）。
+3. **易于二次开发**： 由于是开源项目，你可以完全获取源代码，并根据自己的业务需求进行深度定制，比如修改验证码的UI样式、调整安全策略等。
+4. **独立部署**： 你需要将AJ-Captcha的后端服务部署在自己的Java应用环境（如Spring Boot）中，前端通过API与你的后端交互。这意味着你对数据和服务的安全性有完全的控制权。
+
+#### 主要技术栈
+
+- **后端**： Java、Spring Boot、Redis（用于缓存验证行为数据）
+- **前端**： 不依赖任何库，基于原生JS、Canvas实现，可以轻松与Vue、React等现代前端框架集成。
+
+------
+
+### AJ-Captcha vs. 阿里云验证码：如何选择？
+
+为了更直观地对比，我制作了下面这个表格：
+
+| 特性维度     | AJ-Captcha（开源）                                           | 阿里云验证码（商业SaaS）                                     |
+| ------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| **成本**     | **免费**（仅需服务器成本）                                   | **按验证次数付费**（有免费额度，超出后收费）                 |
+| **部署模式** | **独立部署**，需要自有服务器和运维能力                       | **SaaS服务**，无需部署，开箱即用                             |
+| **可控性**   | **高**，可完全掌控代码、数据和安全策略                       | **相对较低**，依赖阿里云的服务和规则                         |
+| **定制性**   | **极高**，可深度定制任何功能                                 | **有限**，主要通过控制台进行策略配置，UI定制有限             |
+| **安全能力** | **依赖自身研发能力**，需要自行维护和升级对抗策略             | **专业强大**，依托阿里大数据和AI，实时对抗黑产，自动升级     |
+| **运维压力** | **有**，需要自行保障服务的稳定性和高可用性                   | **无**，由阿里云专业团队保障，高可用、高并发                 |
+| **适合场景** | **预算有限的项目、内部系统、对数据私密性要求极高、需要深度定制的场景** | **商业项目、高并发ToC业务、缺乏安全研发资源、希望快速上线的场景** |
+
+------
+
+### 总结与建议
+
+- **选择 AJ-Captcha 的情况**： 你是个人开发者、初创公司，预算非常有限。 你的项目是内部系统，对数据隐私和主权要求极高，所有数据必须留在内网。 你有特定的UI或交互需求，需要进行深度定制。 你拥有Java运维能力，愿意承担相应的维护成本。
+- **选择 阿里云验证码 的情况**： 你运营的是面向公众的商业应用，对安全性的要求非常高。 你希望“开箱即用”，快速集成，不想在验证码的运维和对抗上投入研发精力。 你的业务可能会面临突发流量（如营销活动），需要服务具备高弹性。 你愿意支付一定的费用来换取专业、省心、强大的安全防护。
+
+简单来说，这是一个 **“时间/技术/运维 换 金钱”** 还是 **“金钱 换 时间/专业/稳定”** 的选择。两者都是非常优秀的解决方案，具体取决于你的项目需求、团队能力和预算。
+
+
+
+## 阿里云验证码
+
+>什么是验证码`2.0`：https://help.aliyun.com/zh/captcha/captcha2-0/product-overview/what-is-alibaba-cloud-captcha-2
+
+### 接入指引 - 方法概论
+
+>参考链接：https://help.aliyun.com/zh/captcha/captcha2-0/user-guide/quick-start
+
+接入阿里云验证码只需要4步：
+
+1. 开通[包年包月](https://help.aliyun.com/zh/captcha/captcha2-0/billing#6dda9e58e9lty)或[按量付费](https://help.aliyun.com/zh/captcha/captcha2-0/billing#e26b67d005na3)验证码2.0并获取身份标。
+2. 新建一个验证场景，获取场景ID。
+3. 将业务客户端和服务端接入验证码，并进行测试验证。
+4. 发布上线。
+
+![image](CAEQWhiBgICn7aDkuhkiIDVmYzE2YTk0NzM4MDQxNWFiMmE4ZjFjNjRmM2Y0MWVm4056823_20231027163740.013.svg)
+
+
+
+### 接入指引 - `V3`验证架构时序图
+
+#### 滑块验证、拼图验证、一点即过和图像复原
+
+![image](CAEQWhiBgMCMrabqvBkiIDExZTViZjQ3ZTI2OTQxMDhiZDgwYjU1NzA5NzNjODEy4393477_20240419094407.130.svg)
+
+时序图说明：
+
+1. 用户在业务客户端初始化验证码时，业务客户端将向验证码服务器请求获取验证码的JS资源（例如图片或题目等）。
+2. 验证码服务端动态返回相关JS资源，业务客户端进行资源加载并渲染验证码。
+3. 用户在业务客户端成功完成验证码交互（例如滑块、拼图或图像复原）后，JS自动发送答案验证请求，验证码服务端验证答案是否正确和是否为机器请求。
+4. 验证码服务端如果验证通过后，调用**success**回调函数返回**CaptchaVerifyParam**，如果验证不通过，将自动刷新验证码，重新进行验证。
+5. 业务客户端携带业务参数和**CaptchaVerifyParam**发送请求到业务服务端进行参数校验**。**
+6. 业务服务端调用验证码服务端接口**VerifyIntelligentCaptcha**进行**CaptchaVerifyParam**参数的校验。
+7. 验证码服务端验证参数是否正确和是否为机器请求，返回验证结果。
+8. 业务服务端根据验证结果进行业务处理后，向客户端网页返回验证结果和业务处理结果。
+
+
+
+#### 无痕验证
+
+![image](CAEQWhiBgIDu_KnqvBkiIDlmYzYyMjYwYmU0ZjQ5ODY4YzI1ZGYzZWNjMDhmNDU34393477_20240419094407.130.svg)
+
+时序图说明：
+
+1. 用户在业务客户端初始化验证码时，业务客户端将向验证码服务器请求获取验证码的JS资源（例如图片或题目等）。
+2. 验证码服务端动态返回相关JS资源。
+3. 用户在业务客户端首次单击触发按钮发起验证，阿里云服务端会验证是否为安全用户。
+4. 阿里云服务端将验证结果返回到业务客户端：
+   - 如果用户无风险，则首次验证通过，调用**success**回调函数返回**CaptchaVerifyParam**并进行后续业务验签。
+   - 如果用户存在风险，则首次验证可疑，将进行二次验证
+     1. 业务客户端进行JS资源加载并渲染验证码，用户在业务客户端成功完成验证码交互（例如滑块、拼图或图像复原）后，JS自动发送答案验证请求，验证码服务端验证答案是否正确和是否为机器请求。
+     2. 如果二次验证通过，将调用**success**回调函数返回**CaptchaVerifyParam**并进行后续业务验签；如果二次验证不通过，业务客户端将自动刷新验证码，重新进行验证。
+5. 业务客户端携带业务参数和**CaptchaVerifyParam**发送请求到业务服务端进行参数校验**。**
+6. 业务服务端调用验证码服务端接口**VerifyIntelligentCaptcha**进行**CaptchaVerifyParam**参数的校验。
+7. 验证码服务端验证参数是否正确和是否为机器请求，返回验证结果。
+8. 业务服务端根据验证结果进行业务处理后，向客户端网页返回验证结果和业务处理结果。
+
+
+
+### 客户端接入 - `Web`和`H5`客户端`V3`架构接入
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/captcha/demo-aliyun-captcha/html)
+>
+>参考链接：https://help.aliyun.com/zh/captcha/captcha2-0/user-guide/new-architecture-for-web-and-h5-client-access
+
+`index.html`：
+
+```html
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="data-spm" />
+    <!--1.在引入阿里云验证码JS脚本的位置之前，或者在html的head标签最前的位置添加一个script脚本，里面保存一个含有region和prefix参数的全局变量AliyunCaptchaConfig即可-->
+    <script>
+        window.AliyunCaptchaConfig = {
+            // 必填，验证码示例所属地区，支持中国内地（cn）、新加坡（sgp）
+            region: "cn",
+            // 必填，身份标。开通阿里云验证码2.0后，您可以在控制台概览页面的实例基本信息卡片区域，获取身份标
+            prefix: "xxx",
+        };
+    </script>
+    <!--2.集成主JS-->
+    <script type="text/javascript" src="https://o.alicdn.com/captcha-frontend/aliyunCaptcha/AliyunCaptcha.js"></script>
+    <style>
+        html,
+        body {
+            height: 100vh;
+        }
+
+        .container {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container>* {
+            margin: 2px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div>
+            <!-- 用于显示验证码验签参数 -->
+            <input type="text" placeholder="验证码验签参数" id="captchaVerifyParam" value="eyJjZXJ0aWZ5SWQiOiI3NWNqeUNPbWduIiwic2NlbmVJZCI6IjE2d3J2ZTU3IiwiaXNTaWduIjp0cnVlLCJzZWN1cml0eVRva2VuIjoiNm9PbzdlNzJuQTYxdVZMaVpWS2lMWFEvaUVKVCt4b3FnbUpVSll5YlVpdzZEN0FiWjNDMHRlaFh0dzZqQUs0aFIzSXVNbnNuakNsQVNDeUk3YTNDeXpKbExsODlEdUJLcFpDamcxQ3FVeEJtY1g0TUpvUEFQME05YmJwRGU5QXEifQ==" readonly/>
+            <span style="color: red;font-size: 12px;">验证通过后会自动回显验证码验签参数，不需要手动输入</span>
+        </div>
+        <!--预留的验证码元素，用于配置初始化函数中的element参数-->
+        <div id="captcha-element"></div>
+        <!--弹出式下，用于触发验证码弹窗的元素-->
+        <button id="button" class="btn">登录</button>
+        <button id="buttonCaptchaVerifyParam" onclick="onClickCaptchaVerifyParam()">验签</button>
+    </div>
+    <!--3.新建一个<script>标签，用于调用验证码初始化函数initAliyunCaptcha-->
+    <script type="text/javascript">
+        var captcha;
+        // 弹出式，除region和prefix以外的参数
+        window.initAliyunCaptcha({
+            // 场景ID。根据步骤二新建验证场景后，您可以在验证码场景列表，获取该场景的场景ID
+            SceneId: "xxx",
+            // 验证码模式，popup表示弹出式，embed表示嵌入式。无需修改
+            mode: "popup",
+            // 页面上预留的渲染验证码的元素，与原代码中预留的页面元素保持一致。
+            element: "#captcha-element",
+            // 触发验证码弹窗或无痕验证的元素
+            button: "#button",
+            // 验证码验证通过回调函数
+            success: function (captchaVerifyParam) {
+                // 入参为验签captchaVerifyParam
+                // 1.向后端发起业务请求进行验证码验签captchaVerifyParam校验
+                // 2.根据校验结果来进行业务处理
+                // 3.如业务需要重新进行验证码验证，调用验证码初始化方法initAliyunCaptcha重新初始化验证码
+                // console.log(captchaVerifyParam)
+                document.getElementById("captchaVerifyParam").value = captchaVerifyParam
+            },
+            // 验证码验证不通过回调函数
+            fail: function (result) {
+                // 入参为不通过信息
+                // 正常验证有效期内不需要做任何操作，验证码自动刷新，重新进行验证
+                console.error(result);
+            },
+            // 绑定验证码实例回调函数，该回调会在验证码初始化成功后调用
+            getInstance: function (instance) {
+                captcha = instance;
+            },
+            // 滑块验证和一点即过的验证形态触发框体样式，支持自定义宽度和高度，单位为px。
+            slideStyle: {
+                width: 360,
+                height: 40,
+            },
+            // ...其他参数，参考initAliyunCaptcha参数说明
+        });
+    </script>
+</body>
+<script type="text/javascript">
+    function onClickCaptchaVerifyParam() {
+        // 调用后端服务校验验证码验签参数是否正确
+    }
+</script>
+</html>
+```
+
+登录阿里云验证码产品获取`身份标`和`场景ID`并填写到上面的相应位置，刷新页面测试验证码是否正常。
+
+
+
+### 服务端接入
+
+>详细用法请参考本站[示例](https://gitee.com/dexterleslie/demonstration/tree/main/captcha/demo-aliyun-captcha/backend)
+>
+>参考链接：https://help.aliyun.com/zh/captcha/captcha2-0/user-guide/server-access
+
+调用验证码`SDK`前提：您需要创建访问凭据，验证码2.0服务端支持使用AccessKey、STS Token等多种方式调用，具体请参见[初始化凭据客户端](https://help.aliyun.com/zh/sdk/developer-reference/v2-manage-access-credentials?spm=a2c4g.11186623.0.0.6c76722b9OdM4u#cdcf9cf854rzt)。
+
+>注意：禁止直接使用主账号AccessKey，因为主账号AccessKey一旦泄露将威胁您所有云资源的安全。请使用子账号（RAM用户）AccessKey，有效降低AccessKey泄露的风险。使用阿里云验证码，您需要为子账号授予阿里云验证码权限（**AliyunYundunAFSFullAccess**）。
+
+参考 https://next.api.alibabacloud.com/api-tools/sdk/captcha?version=2023-03-05&language=java-tea&tab=primer-doc 引用和使用验证码依赖
+
+`POM`配置如下：
+
+```xml
+<!-- 阿里云验证码依赖 -->
+<dependency>
+    <groupId>com.aliyun</groupId>
+    <artifactId>captcha20230305</artifactId>
+    <version>1.1.3</version>
+</dependency>
+```
+
+调用验证码`SDK`：
+
+```java
+package com.future.demo;
+
+import com.aliyun.captcha20230305.models.VerifyIntelligentCaptchaResponse;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping(value = "/api/v1")
+public class ApiController {
+
+    /**
+     * 后端服务调用阿里云接口校验验证码验签参数是否合法
+     *
+     * @param sceneId
+     * @param captchaVerifyParam
+     * @throws Exception
+     */
+
+    @GetMapping("captchaVerifyParam")
+    public ResponseEntity<VerifyIntelligentCaptchaResponse> captchaVerifyParam(@RequestParam("sceneId") String sceneId,
+                                                                               @RequestParam("captchaVerifyParam") String captchaVerifyParam) throws Exception {
+        com.aliyun.captcha20230305.Client client = createClient();
+        com.aliyun.captcha20230305.models.VerifyIntelligentCaptchaRequest verifyIntelligentCaptchaRequest =
+                new com.aliyun.captcha20230305.models.VerifyIntelligentCaptchaRequest()
+                        .setCaptchaVerifyParam(captchaVerifyParam)
+                        .setSceneId(sceneId);
+        // Copy the code to run, please print the return value of the API by yourself.
+        return ResponseEntity.ok(client.verifyIntelligentCaptchaWithOptions(verifyIntelligentCaptchaRequest, new com.aliyun.teautil.models.RuntimeOptions()));
+    }
+
+    /**
+     * <b>description</b> :
+     * <p>Initialize the Client with the credentials</p>
+     *
+     * @return Client
+     * @throws Exception
+     */
+    public static com.aliyun.captcha20230305.Client createClient() throws Exception {
+        // It is recommended to use the default credential. For more credentials, please refer to: https://www.alibabacloud.com/help/en/alibaba-cloud-sdk-262060/latest/credentials-settings-2.
+        com.aliyun.credentials.Client credential = new com.aliyun.credentials.Client();
+        com.aliyun.teaopenapi.models.Config config = new com.aliyun.teaopenapi.models.Config()
+                .setCredential(credential);
+        // See https://api.alibabacloud.com/product/captcha.
+        config.endpoint = "captcha.cn-shanghai.aliyuncs.com";
+        return new com.aliyun.captcha20230305.Client(config);
+    }
+}
+```
+
+示例的测试步骤：
+
+- 使用`Web`和`H5`客户端[示例](https://gitee.com/dexterleslie/demonstration/tree/main/captcha/demo-aliyun-captcha/html)获取验证码验签参数。
+
+- 使用验证码验签参数请求服务端接口以请求阿里云校验验签参数的合法性
+
+  ```sh
+  curl -X GET http://localhost:8080/api/v1/captchaVerifyParam?sceneId=&captchaVerifyParam=xxx
+  ```
+
+
+
+## 谷歌`reCaptcha`
+
+
+
+## `Cloudflare Turnstile`

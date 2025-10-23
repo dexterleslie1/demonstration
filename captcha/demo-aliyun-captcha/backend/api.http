@@ -1,0 +1,2 @@
+### /api/v1/captchaVerifyParam
+GET http://localhost:8080/api/v1/captchaVerifyParam?sceneId=&captchaVerifyParam=
