@@ -1,16 +1,22 @@
 package com.future.demo;
 
+import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.Refresh;
 import co.elastic.clients.elasticsearch._types.Result;
-import co.elastic.clients.elasticsearch.core.BulkRequest;
-import co.elastic.clients.elasticsearch.core.BulkResponse;
-import co.elastic.clients.elasticsearch.core.IndexRequest;
-import co.elastic.clients.elasticsearch.core.IndexResponse;
+import co.elastic.clients.elasticsearch._types.SortOrder;
+import co.elastic.clients.elasticsearch._types.mapping.BooleanProperty;
+import co.elastic.clients.elasticsearch._types.mapping.Property;
+import co.elastic.clients.elasticsearch._types.mapping.PropertyVariant;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
+import co.elastic.clients.elasticsearch.core.*;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
+import co.elastic.clients.elasticsearch.core.get.GetResult;
 import co.elastic.clients.elasticsearch.indices.CreateIndexRequest;
 import co.elastic.clients.elasticsearch.indices.CreateIndexResponse;
 import co.elastic.clients.elasticsearch.indices.DeleteIndexRequest;
 import co.elastic.clients.elasticsearch.indices.DeleteIndexResponse;
+import co.elastic.clients.json.JsonData;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -21,10 +27,8 @@ import org.junit.Test;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 
 public class ApplicationTests extends AbstractTestSupport {
@@ -51,24 +55,58 @@ public class ApplicationTests extends AbstractTestSupport {
             add(new HashMap<String, Object>() {{
                 put("id", "1");
                 put("content", "a");
+                put("userId", 1L);
+                put("productId", 1L);
                 DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
                 put("createTime", dateTimeFormatter.format(LocalDateTime.now()));
             }});
             add(new HashMap<String, Object>() {{
                 put("id", "2");
-                put("content", "a");
+                put("content", "a1");
+                put("userId", 1L);
+                put("productId", 2L);
                 DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
                 put("createTime", dateTimeFormatter.format(LocalDateTime.now()));
             }});
             add(new HashMap<String, Object>() {{
                 put("id", "3");
-                put("content", "a1");
+                put("content", "a2");
+                put("userId", 2L);
+                put("productId", 1L);
                 DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
                 put("createTime", dateTimeFormatter.format(LocalDateTime.now()));
             }});
             add(new HashMap<String, Object>() {{
                 put("id", "4");
-                put("content", "a2");
+                put("content", "a3");
+                put("userId", 2L);
+                put("productId", 3L);
+                DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                put("createTime", dateTimeFormatter.format(LocalDateTime.now()));
+            }});
+
+            // 协助中文搜索测试准备数据
+            add(new HashMap<String, Object>() {{
+                put("id", "5");
+                put("content", "中华人民共和国");
+                put("userId", 11L);
+                put("productId", 22L);
+                DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                put("createTime", dateTimeFormatter.format(LocalDateTime.now()));
+            }});
+            add(new HashMap<String, Object>() {{
+                put("id", "6");
+                put("content", "基本配置和使用");
+                put("userId", 11L);
+                put("productId", 22L);
+                DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                put("createTime", dateTimeFormatter.format(LocalDateTime.now()));
+            }});
+            add(new HashMap<String, Object>() {{
+                put("id", "7");
+                put("content", "`elasticsearch 8.x` 以上官方推荐使用人民这个客户端操作 `elasticsearch`");
+                put("userId", 11L);
+                put("productId", 22L);
                 DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
                 put("createTime", dateTimeFormatter.format(LocalDateTime.now()));
             }});
@@ -79,7 +117,14 @@ public class ApplicationTests extends AbstractTestSupport {
                         .properties("id", p -> p.long_(l -> l.store(false)))
                         .properties("content", p -> p.text(t -> t
                                 .store(false)
-                                .analyzer("ik_max_word")))
+                                .analyzer("ik_max_word")
+                                // content 字段添加子字段支持拼音搜索
+                                .fields("pinyin", ft -> ft.text(t1 ->
+                                        t1.analyzer("pinyin")
+                                                .store(false)))
+                        ))
+                        .properties("userId", p -> p.long_(l -> l.store(false)))
+                        .properties("productId", p -> p.long_(l -> l.store(false)))
                         // 用于测试 LocalDateTime 类型
                         .properties("createTime", p -> p.date(t -> t.store(false).format("yyyy-MM-dd HH:mm:ss")))
                 ).build();
@@ -102,6 +147,207 @@ public class ApplicationTests extends AbstractTestSupport {
                 Assert.fail(e.getMessage());
             }
         });
+
+        // region 根据 id 查询
+
+        String docId = "1"; // 要查询的文档 ID
+        GetRequest getRequest = GetRequest.of(g -> g
+                .index(index)       // 指定索引名
+                .id(docId)          // 指定文档 ID
+        );
+        GetResponse<Map> getResponse = client.get(getRequest, Map.class); // 指定返回类型为 Map
+        // 验证查询结果
+        Assert.assertTrue(getResponse.found());  // 确认文档存在
+        Assert.assertEquals("1", getResponse.source().get("id")); // 验证文档内容
+        Assert.assertEquals("a", getResponse.source().get("content"));
+
+        // 批量查询多个文档
+        MgetRequest multiGetRequest = MgetRequest.of(m -> m
+                .index(index)
+                .ids("1", "2", String.valueOf(Long.MAX_VALUE))  // 指定多个文档 ID
+        );
+        MgetResponse<Map> multiGetResponse = client.mget(multiGetRequest, Map.class);
+        Assert.assertEquals(3, multiGetResponse.docs().size());
+        // 获取文档不会失败即使文档 id 不存在
+        Assert.assertFalse(multiGetResponse.docs().get(0).isFailure());
+        Assert.assertFalse(multiGetResponse.docs().get(1).isFailure());
+        Assert.assertFalse(multiGetResponse.docs().get(2).isFailure());
+        GetResult getResult = (GetResult) multiGetResponse.docs().get(0)._get();
+        Assert.assertEquals("1", getResult.id());
+        Map mapSource = (Map) getResult.source();
+        Assert.assertEquals("a", mapSource.get("content"));
+        getResult = (GetResult) multiGetResponse.docs().get(1)._get();
+        Assert.assertEquals("2", getResult.id());
+        mapSource = (Map) getResult.source();
+        Assert.assertEquals("a1", mapSource.get("content"));
+        getResult = (GetResult) multiGetResponse.docs().get(2)._get();
+        Assert.assertEquals("9223372036854775807", getResult.id());
+        mapSource = (Map) getResult.source();
+        // 文档 id 不存在 mapSource=null
+        Assert.assertNull(mapSource);
+
+        // endregion
+
+        // region term 查询
+
+        // 查询 userId=1 的所有文档
+        SearchRequest searchRequest = SearchRequest.of(s -> s
+                .index(index)
+                .query(q -> q
+                        .term(t -> t
+                                .field("userId")
+                                .value(1L)  // 注意类型匹配（Long）
+                        )
+                )
+        );
+        SearchResponse<Map> response = client.search(searchRequest, Map.class);
+        Assert.assertEquals(2, response.hits().hits().size());
+        Assert.assertEquals("1", response.hits().hits().get(0).id());
+        Assert.assertEquals("2", response.hits().hits().get(1).id());
+
+        // 查询 productId=1 的所有文档
+        searchRequest = SearchRequest.of(s -> s
+                .index(index)
+                .query(q -> q
+                        .term(t -> t
+                                .field("productId")
+                                .value(1L)
+                        )
+                )
+        );
+        response = client.search(searchRequest, Map.class);
+        Assert.assertEquals(2, response.hits().hits().size());
+        Assert.assertEquals("1", response.hits().hits().get(0).id());
+        Assert.assertEquals("3", response.hits().hits().get(1).id());
+
+        // 查询 productId=1 的所有文档 order by id 降序
+        searchRequest = SearchRequest.of(s -> s
+                .index(index)
+                .query(q -> q
+                        .term(t -> t
+                                .field("productId")
+                                .value(1L)
+                        )
+                )
+                .sort(so -> so
+                        .field(f -> f
+                                .field("id")  // 使用 id 作为排序字段
+                                .order(SortOrder.Desc)  // 降序排序
+                        )
+                )
+        );
+        response = client.search(searchRequest, Map.class);
+        Assert.assertEquals(2, response.hits().hits().size());
+        Assert.assertEquals("3", response.hits().hits().get(0).id());
+        Assert.assertEquals("1", response.hits().hits().get(1).id());
+
+        // 查询 userId=1 AND productId=1 的文档
+        SearchRequest boolRequest = SearchRequest.of(s -> s
+                .index(index)
+                .query(q -> q
+                        .bool(b -> b
+                                .must(
+                                        // 条件1：userId=1
+                                        q1 -> q1.term(t -> t.field("userId").value(1L))
+                                ).must(
+                                        // 条件2：productId=1
+                                        q2 -> q2.term(t -> t.field("productId").value(1L))
+                                )
+                        )
+                )
+        );
+        SearchResponse<Map> boolResponse = client.search(boolRequest, Map.class);
+        Assert.assertEquals(1, boolResponse.hits().hits().size());
+        Assert.assertEquals("1", boolResponse.hits().hits().get(0).id());
+
+        // 查询 userId=1 AND productId=1 的文档另一种写法
+        // 1. 构建查询条件
+        Query boolQuery = QueryBuilders.bool()
+                .filter(QueryBuilders.term().field("userId").value(1L).build()._toQuery())
+                .filter(QueryBuilders.term().field("productId").value(1L).build()._toQuery())
+                .build()._toQuery();
+        // 2. 构建排序和分页
+        searchRequest = SearchRequest.of(s -> s
+                .index(index)
+                .query(boolQuery)
+                .sort(so -> so.field(f -> f.field("id").order(SortOrder.Desc)))
+                .size(10000)
+        );
+        // 3. 执行查询
+        response = client.search(searchRequest, Map.class);
+        Assert.assertEquals(1, response.hits().hits().size());
+        Assert.assertEquals("1", response.hits().hits().get(0).id());
+
+        // endregion
+
+        // region range 查询
+
+        // 查询 id 大于等于 3 和小于等于 4 的文档
+        searchRequest = SearchRequest.of(s -> s
+                .index(index)
+                .query(q -> q
+                        .range(t -> t
+                                .field("id")
+                                .gte(JsonData.of(3L))
+                                .lte(JsonData.of(4L))
+                        )
+                )
+        );
+        response = client.search(searchRequest, Map.class);
+        Assert.assertEquals(2, response.hits().hits().size());
+        Assert.assertEquals("3", response.hits().hits().get(0).id());
+        Assert.assertEquals("4", response.hits().hits().get(1).id());
+
+        // endregion
+
+        // region 测试中文搜索
+
+        // 根据 "人民" 中文关键字查询
+        searchRequest = SearchRequest.of(s -> s
+                .index(index)
+                .query(q -> q
+                        .match(t -> t
+                                .field("content")
+                                .query("人民")
+                        )
+                )
+        );
+        response = client.search(searchRequest, Map.class);
+        Assert.assertEquals(2, response.hits().hits().size());
+        Assert.assertEquals("5", response.hits().hits().get(0).id());
+        Assert.assertEquals("7", response.hits().hits().get(1).id());
+
+        // 根据 "人民" 中文拼音关键字查询
+        searchRequest = SearchRequest.of(s -> s
+                .index(index)
+                .query(q -> q
+                        .match(t -> t
+                                .field("content.pinyin")
+                                .query("renmin")
+                        )
+                )
+        );
+        response = client.search(searchRequest, Map.class);
+        Assert.assertEquals(2, response.hits().hits().size());
+        Assert.assertEquals("5", response.hits().hits().get(0).id());
+        Assert.assertEquals("7", response.hits().hits().get(1).id());
+
+        // 根据 "人民" 中文拼音首字母关键字查询
+        /*searchRequest = SearchRequest.of(s -> s
+                .index(index)
+                .query(q -> q
+                        .match(t -> t
+                                .field("content.pinyin")
+                                .query("rm")
+                        )
+                )
+        );
+        response = client.search(searchRequest, Map.class);
+        Assert.assertEquals(2, response.hits().hits().size());
+        Assert.assertEquals("5", response.hits().hits().get(0).id());
+        Assert.assertEquals("7", response.hits().hits().get(1).id());*/
+
+        // endregion
     }
 
     /**
