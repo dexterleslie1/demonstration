@@ -22,14 +22,15 @@ public class ApiController {
     RestTemplate restTemplate;
 
     /**
-     *
      * @param name
      * @return
      */
     @RequestMapping(value = "/api/v1/external/sayHello", method = RequestMethod.GET)
-    public String sayHello(@RequestParam(value = "name", defaultValue = "") String name) {
-        Map<String,String> params=new HashMap<>();
+    public String sayHello(@RequestParam(value = "name", defaultValue = "") String name,
+                           @RequestParam(value = "timeoutInMillis", defaultValue = "0") int timeoutInMillis) {
+        Map<String, String> params = new HashMap<>();
         params.put("name", name);
-        return restTemplate.postForObject("http://spring-cloud-helloworld/api/v1/sayHello",params, String.class);
+        params.put("timeoutInMillis", String.valueOf(timeoutInMillis));
+        return restTemplate.postForObject("http://spring-cloud-helloworld/api/v1/sayHello?name={name}&timeoutInMillis={timeoutInMillis}", null, String.class, params);
     }
 }

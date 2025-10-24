@@ -2,7 +2,7 @@ version: "3.0"
 
 services:
   demo-consul-server:
-    image: consul
+    image: consul:1.15.4
     command: agent -server -ui -node=server-1 -bootstrap-expect=1 -client=0.0.0.0
     ports:
       - "8500:8500"

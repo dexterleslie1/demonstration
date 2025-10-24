@@ -224,7 +224,7 @@ SpringCloud作为一个开源项目，一直在不断地更新和优化。随着
 
 
 
-### CAP 定理
+### `CAP`定理
 
 >`https://cloud.tencent.com/developer/article/2429547`
 
@@ -268,7 +268,7 @@ SpringCloud作为一个开源项目，一直在不断地更新和优化。随着
 
 
 
-### Eureka、Zookeeper、Consul、Nacos 分别是 AP 还是 CP 呢？
+### `Eureka`、`Zookeeper`、`Consul`、`Nacos`分别是`AP`还是`CP`呢？
 
 Eureka、Zookeeper、Consul、Nacos都是分布式系统中的服务注册与发现组件，它们在CAP（一致性Consistency、可用性Availability、分区容错性Partition Tolerance）理论中的表现各不相同。以下是这四个组件的CAP特性概述：
 
@@ -299,9 +299,9 @@ Nacos
 
 
 
-### Eureka
+### `Eureka`
 
-注意：停止更新，将会抛弃
+> 提示：停止更新，将会抛弃。
 
 
 
@@ -432,35 +432,35 @@ eureka.instance.lease-expiration-duration-in-seconds=30
 
 
 
-### Zookeeper
+### `Zookeeper`
 
-注意：用得少，所以不做实验
+> 提示：用得少，所以不做实验。
 
 
 
-### Consul
+### `Consul`
 
-详细用法请参考示例`https://gitee.com/dexterleslie/demonstration/tree/master/spring-cloud/spring-cloud-consul-parent`
+详细用法请参考[示例](https://gitee.com/dexterleslie/demonstration/tree/master/spring-cloud/spring-cloud-consul-parent)
 
-启动 Consul 服务
+启动`Consul`服务
 
 ```bash
 docker-compose up -d
 ```
 
-访问`http://localhost:8500/`，检查 Consul 服务器是否正常
+访问 http://localhost:8500/，检查`Consul`服务器是否正常
 
 启动所有应用
 
-访问`http://localhost:8081/api/v1/a/sayHello?name=Dexter`以测试应用服务是否正常
+访问 http://localhost:8081/api/v1/a/sayHello?name=Dexter 以测试应用服务是否正常
 
 
 
-### Nacos
+### `Nacos`
 
-注意：阿里巴巴主流注册中心
-
-详细用法请参考文档 <a href="/spring-cloud/#nacos-3" target="_blank">链接</a>
+> 提示：阿里巴巴主流注册中心。
+>
+> 详细用法请参考文档 <a href="/spring-cloud/#nacos-3" target="_blank">链接</a>
 
 
 
@@ -468,11 +468,11 @@ docker-compose up -d
 
 
 
-### Ribbon
+### `Ribbon`
 
 > 注意：停止更新，许多遗留项目还在使用，所以需要学习。
 >
-> Ribbon 实现客户端的负载均衡`http://www.cnblogs.com/chry/p/7263281.html`
+> `Ribbon`实现客户端的负载均衡：http://www.cnblogs.com/chry/p/7263281.html
 
 进程内负载均衡（负载均衡 + RestTemplate ）。
 
@@ -480,23 +480,23 @@ docker-compose up -d
 
 #### 运行示例
 
-详细用法请参考示例`https://gitee.com/dexterleslie/demonstration/tree/master/spring-cloud/spring-cloud-ribbon-parent`
+详细用法请参考[示例](https://gitee.com/dexterleslie/demonstration/tree/master/spring-cloud/spring-cloud-ribbon-parent)
 
-启动 Consul
+启动`Consul`
 
 ```bash
 docker compose up -d
 ```
 
-启动 ApplicationRibbon、ApplicationHelloworld（修改端口后启动两个 ApplicationHelloworld 应用）
+启动`ApplicationRibbon`、`ApplicationHelloworld`（修改端口后启动两个`ApplicationHelloworld`应用）
 
-访问`http://localhost:8081/api/v1/external/sayHello?name=Dexter`测试 Ribbon + RestTemplate 负载均衡。
+访问 http://localhost:8081/api/v1/external/sayHello?name=Dexter 测试`Ribbon+RestTemplate`负载均衡。
 
 
 
 #### 基本配置
 
-pom 引入 Ribbon 依赖
+`POM`引入`Ribbon`依赖
 
 ```xml
 <!-- SpringCloud Ribbon 客户端依赖 -->
@@ -506,7 +506,7 @@ pom 引入 Ribbon 依赖
 </dependency>
 ```
 
-RestTemplate 使用 @LoadBalanced 注解
+`RestTemplate`使用`@LoadBalanced`注解
 
 ```java
 /**
@@ -522,9 +522,9 @@ RestTemplate restTemplate() {
 
 
 
-#### 使用 IRule 替换负载均衡算法
+#### 使用`IRule`替换负载均衡算法
 
-> 默认负载均衡算法是 RoundRobinRule
+> 默认负载均衡算法是`RoundRobinRule`
 
 ```java
 // 注意：自动IRule一定需要放置到与Application启动类所在的包和子包外，例如：com.future.demo.myrule
@@ -564,7 +564,119 @@ public class ApplicationRibbon {
 
 
 
-### LoadBalancer
+#### 切换底层`HTTP`通讯为`Apache HttpClient`
+
+`POM`配置
+
+```xml
+<!-- SpringCloud Ribbon 客户端依赖 -->
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-netflix-ribbon</artifactId>
+</dependency>
+<!-- RestTemplate 默认使用 Java 标准库的 HttpURLConnection 作为底层 HTTP 通信实现 -->
+<!-- 把底层 HTTP 通讯实现切换为 Apache HttpClient 需要先引入 org.apache.httpcomponents:httpclient -->
+<dependency>
+    <groupId>org.apache.httpcomponents</groupId>
+    <artifactId>httpclient</artifactId>
+</dependency>
+```
+
+`RestTemplate`创建方式修改如下：
+
+```java
+/**
+ * 无论是否何种Ribbon负载均衡算法都需要配置下面的RestTemplate
+ *
+ * @return
+ */
+@Bean
+@LoadBalanced
+RestTemplate restTemplate() {
+    // RestTemplate 默认使用 Java 标准库的 HttpURLConnection 作为底层 HTTP 通信实现
+    // 通过下面的配置把 HTTP 通讯实现切换为 Apache HttpClient
+
+    // 创建HttpClient连接池配置
+    PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
+    // 设置最大连接数
+    connectionManager.setMaxTotal(65535);
+    // 设置每个路由默认最大连接数
+    connectionManager.setDefaultMaxPerRoute(65535);
+    // 创建HttpClient
+    CloseableHttpClient httpClient = HttpClientBuilder.create()
+            .setConnectionManager(connectionManager)
+            .build();
+    // 使用HttpClient创建请求工厂
+    HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory();
+    factory.setHttpClient(httpClient);
+    // 连接超时5秒
+    factory.setConnectTimeout(5000);
+    // 读取超时10秒
+    factory.setReadTimeout(10000);
+    // 从连接池获取连接的超时时间
+    factory.setConnectionRequestTimeout(10000);
+
+    return new RestTemplate(factory);
+
+    // 下面创建 RestTemplate 方式默认使用 Java 标准库的 HttpURLConnection 作为底层 HTTP 通信实现
+    // 超时默认配置为无限制
+    // return new RestTemplate();
+}
+```
+
+
+
+#### 超时设置
+
+```java
+/**
+ * 无论是否何种Ribbon负载均衡算法都需要配置下面的RestTemplate
+ *
+ * @return
+ */
+@Bean
+@LoadBalanced
+RestTemplate restTemplate() {
+    // RestTemplate 默认使用 Java 标准库的 HttpURLConnection 作为底层 HTTP 通信实现
+    // 通过下面的配置把 HTTP 通讯实现切换为 Apache HttpClient
+
+    // 创建HttpClient连接池配置
+    PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
+    // 设置最大连接数
+    connectionManager.setMaxTotal(65535);
+    // 设置每个路由默认最大连接数
+    connectionManager.setDefaultMaxPerRoute(65535);
+    // 创建HttpClient
+    CloseableHttpClient httpClient = HttpClientBuilder.create()
+            .setConnectionManager(connectionManager)
+            .build();
+    // 使用HttpClient创建请求工厂
+    HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory();
+    factory.setHttpClient(httpClient);
+    // 连接超时5秒
+    factory.setConnectTimeout(5000);
+    // 读取超时10秒
+    factory.setReadTimeout(10000);
+    // 从连接池获取连接的超时时间
+    factory.setConnectionRequestTimeout(10000);
+
+    return new RestTemplate(factory);
+
+    // 下面创建 RestTemplate 方式默认使用 Java 标准库的 HttpURLConnection 作为底层 HTTP 通信实现
+    // 超时默认配置为无限制
+    // return new RestTemplate();
+}
+```
+
+请求接口会报告超时错误
+
+```sh
+curl http://localhost:8081/api/v1/external/sayHello\?name\=Dexter\&timeoutInMillis\=60000
+```
+
+
+
+### `LoadBalancer`
 
 
 
@@ -691,7 +803,7 @@ public class LoadBalancerConfig {
 
 
 
-### OpenFeign
+### `OpenFeign`
 
 >`https://www.jianshu.com/p/c0cb63e7640c`
 
@@ -1336,7 +1448,7 @@ SpringCloud CircuitBreaker可以与Spring Cloud的其他组件进行集成，如
 
 
 
-### Hystrix
+### `Hystrix`
 
 >注意：feign 客户端调用服务时达到 ribbon.ReadTimeout 超时，即使 execution.isolation.thread.timeoutInMilliseconds 未达到超时时间也会 fallback
 >

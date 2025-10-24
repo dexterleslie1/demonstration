@@ -38,6 +38,12 @@
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-netflix-ribbon</artifactId>
         </dependency>
+        <!-- RestTemplate 默认使用 Java 标准库的 HttpURLConnection 作为底层 HTTP 通信实现 -->
+        <!-- 把底层 HTTP 通讯实现切换为 Apache HttpClient 需要先引入 org.apache.httpcomponents:httpclient -->
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
