@@ -1,7 +1,3 @@
-# ElasticSearch
-
-
-
 ## ES、Lucene、Solr 区别
 
 - es：基于lucene搜索引擎
@@ -16,7 +12,7 @@
 
 
 
-## 运行 `elasticsearch`
+## 运行
 
 
 
@@ -72,13 +68,13 @@ docker compose down -v
 
 
 
-## 中文 IK 和拼音插件
+## 中文`IK`和拼音插件
 
-插件下载地址：`https://release.infinilabs.com`
+插件下载地址：https://release.infinilabs.com
 
 
 
-## 中文 IK 分词器动态词汇扩展
+## 中文`IK`分词器动态词汇扩展
 
 >详细用法请参考本站 [示例1](https://gitee.com/dexterleslie/demonstration/tree/main/elasticsearch/elasticsearch7) 和 [示例2](https://gitee.com/dexterleslie/demonstration/tree/main/elasticsearch/demo-ik-analyzer-extend)
 >
@@ -687,19 +683,19 @@ public static class MyBean {
 
 ## 数据类型
 
-### keyword
+### `keyword`
 
 `keyword` 类型用于存储需要完全匹配的字符串，例如：枚举值（如订单状态：`Unpay`、`Undelivery` 等），ID、代码、标签等，分类字段（如产品类别、用户角色）。与 `text` 类型不同，`keyword` 类型不会启用分析器，不会对值进行分词或处理。
 
 
 
-### text
+### `text`
 
 `text` 是 Elasticsearch 中用于存储和分析文本数据的核心字段类型，专为全文搜索设计。支持对文本内容进行分词、索引和模糊匹配，例如：搜索文章、博客、产品描述等长文本内容。实现关键词搜索、自动补全、拼写纠正等功能。通过分析器（Analyzer）将文本拆分为词项（Terms），便于索引和查询。
 
 
 
-### date
+### `date`
 
 `date` 类型用于存储日期和时间信息，例如订单的付款时间、创建时间等。Elasticsearch 的 `date` 类型支持日期范围查询、日期聚合、日期直方图等操作。
 
@@ -727,11 +723,289 @@ date 类型支持多种日期格式，例如：
 
 
 
-## Rest API
+## 子字段
 
-### count
+Elasticsearch 8 中的**子字段（Sub-fields）**是字段映射（mapping）中的一个重要概念，它允许你为同一个字段值定义多种不同的索引方式，从而支持不同的搜索和分析需求。以下是关于子字段的详细说明：
 
->统计索引文档总数。
+---
+
+### **一、子字段的核心概念**
+子字段是**父字段的附属字段**，它们：
+1. **共享相同的原始值**（来自同一个字段内容）
+2. **拥有独立的索引配置**（不同的分词器、数据类型等）
+3. **用于不同的搜索场景**（精确匹配、全文搜索、聚合等）
+
+#### **典型应用场景**：
+- 一个文本字段同时需要**分词搜索**和**精确匹配**
+- 一个数字字段需要**不同精度**的存储
+- 支持**多语言处理**（如中英文混合字段）
+
+---
+
+### **二、子字段的常见类型**
+#### 1. **多分词策略子字段**
+```json
+{
+  "mappings": {
+    "properties": {
+      "title": {
+        "type": "text",
+        "analyzer": "ik_max_word",  // 主字段用中文分词
+        "fields": {
+          "english": {
+            "type": "text",
+            "analyzer": "english"    // 子字段用英文分词
+          },
+          "keyword": {
+            "type": "keyword"       // 子字段用于精确匹配
+          }
+        }
+      }
+    }
+  }
+}
+```
+- 搜索时通过 `title.english` 或 `title.keyword` 指定子字段
+
+#### 2. **多数据类型子字段**
+```json
+{
+  "mappings": {
+    "properties": {
+      "price": {
+        "type": "float",           // 主字段存储原始值
+        "fields": {
+          "approx": {
+            "type": "integer"      // 子字段存储近似整数值
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+#### 3. **多语言支持子字段**
+```json
+{
+  "mappings": {
+    "properties": {
+      "content": {
+        "type": "text",
+        "fields": {
+          "cn": { "type": "text", "analyzer": "ik_smart" },
+          "en": { "type": "text", "analyzer": "english" }
+        }
+      }
+    }
+  }
+}
+```
+
+---
+
+### **三、子字段的搜索与聚合**
+#### 1. **查询时指定子字段**
+```json
+GET /products/_search
+{
+  "query": {
+    "match": {
+      "title.keyword": "华为手机"  // 精确匹配
+    }
+  }
+}
+```
+
+#### 2. **多子字段组合查询**
+```json
+GET /articles/_search
+{
+  "query": {
+    "multi_match": {
+      "query": "人工智能",
+      "fields": ["content", "content.cn^2"]  // 中文子字段权重更高
+    }
+  }
+}
+```
+
+#### 3. **子字段聚合**
+```json
+GET /products/_search
+{
+  "aggs": {
+    "price_groups": {
+      "histogram": {
+        "field": "price.approx",  // 使用子字段近似值
+        "interval": 1000
+      }
+    }
+  }
+}
+```
+
+---
+
+### **四、Elasticsearch 8 中子字段的新特性**
+1. **更严格的动态映射控制**  
+   8.x 版本默认禁用动态映射，子字段需要明确定义：
+   ```json
+   {
+     "mappings": {
+       "dynamic": "strict",  // 禁止自动创建字段
+       "properties": {...}
+     }
+   }
+   ```
+
+2. **对 `keyword` 子字段的优化**  
+   自动生成的 `keyword` 子字段（如 `field.keyword`）在 8.x 中默认禁用，需显式声明：
+   ```json
+   {
+     "mappings": {
+       "properties": {
+         "name": {
+           "type": "text",
+           "fields": {
+             "raw": { "type": "keyword" }  // 必须手动定义
+           }
+         }
+       }
+     }
+   }
+   ```
+
+3. **支持 `flattened` 类型的子字段**  
+   用于索引嵌套 JSON 对象：
+   ```json
+   {
+     "mappings": {
+       "properties": {
+         "metadata": {
+           "type": "flattened",
+           "fields": {
+             "exact": { "type": "keyword" }
+           }
+         }
+       }
+     }
+   }
+   ```
+
+---
+
+### **五、子字段 vs 多字段（Multi-fields）**
+在 Elasticsearch 7.x 之前称为 "multi-fields"，8.x 后统一称为子字段（sub-fields），但核心概念相同。
+
+---
+
+### **六、实际案例：电商商品映射**
+```json
+PUT /products
+{
+  "mappings": {
+    "properties": {
+      "name": {
+        "type": "text",
+        "analyzer": "ik_max_word",
+        "fields": {
+          "pinyin": {
+            "type": "text",
+            "analyzer": "pinyin_analyzer"
+          },
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      },
+      "price": {
+        "type": "scaled_float",
+        "scaling_factor": 100,
+        "fields": {
+          "usd": {
+            "type": "float"
+          }
+        }
+      }
+    }
+  }
+}
+```
+- `name` 字段：支持中文分词、拼音搜索和精确匹配
+- `price` 字段：存储精确值（如 19.99 → 保存为 1999）和原始浮点数
+
+---
+
+### **七、验证子字段映射**
+```bash
+GET /products/_mapping/field/name*
+```
+返回结果示例：
+```json
+{
+  "products": {
+    "mappings": {
+      "name": {
+        "full_name": "name",
+        "mapping": {
+          "analyzer": "ik_max_word",
+          "fields": {
+            "pinyin": { "type": "text", "analyzer": "pinyin_analyzer" },
+            "keyword": { "type": "keyword", "ignore_above": 256 }
+          },
+          "type": "text"
+        }
+      }
+    }
+  }
+}
+```
+
+---
+
+### **总结**
+| 特性           | 说明                                                |
+| -------------- | --------------------------------------------------- |
+| **共享原始值** | 所有子字段从同一字段获取数据                        |
+| **独立配置**   | 每个子字段可设置不同的数据类型/分词器               |
+| **搜索灵活性** | 通过 `field.subfield` 语法指定搜索方式              |
+| **存储开销**   | 会增加索引大小（但远小于冗余存储多个字段）          |
+| **ES8 变化**   | 需显式定义子字段，默认不再自动生成 `keyword` 子字段 |
+
+子字段是 Elasticsearch 实现**一源多用**的核心机制，合理使用能显著提升搜索效率和灵活性。
+
+### 示例
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/elasticsearch/elasticsearch8-java-client)
+
+```java
+CreateIndexRequest createIndexRequest = new CreateIndexRequest.Builder().index(index)
+        .mappings(m -> m
+                .properties("id", p -> p.long_(l -> l.store(false)))
+                .properties("content", p -> p.text(t -> t
+                        .store(false)
+                        .analyzer("ik_max_word")
+                        // content 字段添加子字段支持拼音搜索
+                        .fields("pinyin", ft -> ft.text(t1 ->
+                                t1.analyzer("pinyin")
+                                        .store(false)))
+                ))
+                .properties("userId", p -> p.long_(l -> l.store(false)))
+                .properties("productId", p -> p.long_(l -> l.store(false)))
+                // 用于测试 LocalDateTime 类型
+                .properties("createTime", p -> p.date(t -> t.store(false).format("yyyy-MM-dd HH:mm:ss")))
+        ).build();
+CreateIndexResponse createIndexResponse = client.indices().create(createIndexRequest);
+Assert.assertEquals(Boolean.TRUE, createIndexResponse.acknowledged());
+```
+
+
+
+## `Rest API`
+
+### 统计索引中文档总数
 
 ```json
 GET /t_order/_count

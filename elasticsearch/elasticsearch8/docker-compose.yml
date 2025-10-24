@@ -9,9 +9,6 @@ services:
     environment:
       - ES_JAVA_OPTS=-Xms512m -Xmx512m
       - discovery.type=single-node
-      # http.cors表示允许elasticsearch-head连接并管理
-      - http.cors.enabled=true
-      - http.cors.allow-origin=*
       - TZ=Asia/Shanghai
       # 禁用ssl通讯，否则需要配置证书才能够连接9200端口
       # https://www.elastic.co/guide/en/elastic-stack-get-started/current/get-started-stack-docker.html#run-docker-secure

@@ -2,6 +2,7 @@ package com.future.demo;
 
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.elasticsearch.action.DocWriteResponse;
+import org.elasticsearch.action.admin.indices.analyze.AnalyzeAction;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchResponse;
@@ -55,28 +56,28 @@ public class IkPluginTests {
         // 准备索引数据
         // 创建索引
         // https://www.elastic.co/guide/en/elasticsearch/client/java-api/6.8/java-admin-indices.html
-//        PUT my-index-000001
-//        {
-//            "settings": {
-//            "analysis": {
-//                "analyzer": {
-//                    "my_stop_analyzer": {
-//                        "type": "stop",
-//                                "stopwords": ["the", "over"]
-//                    }
-//                }
-//            }
-//        }
-//        }
+        /*PUT my-index-000001
+        {
+            "settings": {
+            "analysis": {
+                "analyzer": {
+                    "my_stop_analyzer": {
+                        "type": "stop",
+                                "stopwords": ["the", "over"]
+                    }
+                }
+            }
+        }
+        }*/
         XContentBuilder xContentBuilderSettings = XContentFactory.jsonBuilder()
                 .startObject()
                     .startObject("analysis")
-                        .startObject("normalizer")
+                        /*.startObject("normalizer")
                             .startObject("keyword_lowercase")
                                 .field("type", "custom")
                                 .field("filter", "lowercase")
                             .endObject()
-                        .endObject()
+                        .endObject()*/
                         .startObject("analyzer")
                             .startObject("ik_smart_pinyin")
                                 .field("type", "custom")
@@ -122,12 +123,6 @@ public class IkPluginTests {
                             .field("store", false)
                             .field("index", true)
                             .field("analyzer", "ik_max_word_pinyin")
-                            .startObject("fields")
-                                .startObject("standard")
-                                    .field("type", "text")
-                                    .field("analyzer", "standard")
-                                .endObject()
-                            .endObject()
                         .endObject()
                         .startObject("contentWithoutPinyin")
                             .field("type", "text")
@@ -145,12 +140,12 @@ public class IkPluginTests {
         // 创建文档
         // https://www.elastic.co/guide/en/elasticsearch/client/java-api/6.8/java-docs-index.html
         // NOTE: 在版本6.8.0 content内容为“我是黎明前的黑暗”时，批量创建索引api会报错，解决办法升级到7.8.0
-        idToObjectArratMapper.put(1L, new Object[] {"are you right there? The moment."});
-        idToObjectArratMapper.put(2L, new Object[] {"杨日琳right，同a事"});
-        idToObjectArratMapper.put(3L, new Object[] {"北京冬奥会 | 燃！这个冬天，看中华人民共和国的00后在干什么"});
-        idToObjectArratMapper.put(4L, new Object[] {"精讲讲义-第6部分第35章"});
-        idToObjectArratMapper.put(5L, new Object[] {"春节假期全国揽收投递快递精品包裹7.49亿件"});
-        idToObjectArratMapper.put(6L, new Object[] {"1122"});
+        idToObjectArratMapper.put(1L, new Object[]{"are you right there? The moment."});
+        idToObjectArratMapper.put(2L, new Object[]{"杨日琳right，同a事"});
+        idToObjectArratMapper.put(3L, new Object[]{"北京冬奥会 | 燃！这个冬天，看中华人民共和国的00后在干什么"});
+        idToObjectArratMapper.put(4L, new Object[]{"精讲讲义-第6部分第35章"});
+        idToObjectArratMapper.put(5L, new Object[]{"春节假期全国揽收投递快递精品包裹7.49亿件"});
+        idToObjectArratMapper.put(6L, new Object[]{"1122"});
         Set<Long> keySet = idToObjectArratMapper.keySet();
         keySet.forEach(idTemporary -> {
             try {
@@ -177,7 +172,7 @@ public class IkPluginTests {
     @After
     public void teardown() {
         // https://www.elastic.co/guide/en/elasticsearch/client/java-api/6.8/transport-client.html
-        if(client != null) {
+        if (client != null) {
             client.close();
         }
     }
@@ -325,10 +320,132 @@ public class IkPluginTests {
     // 下面analyze用于协助测试
     @Test
     public void test1() {
-//        AnalyzeAction.Response analyzeResponse = client.admin().indices().prepareAnalyze(IndexDemo, "are you right there?").setField("content").get();
-//        System.out.println(analyzeResponse.toString());
-//        AnalyzeAction.Response analyzeResponse = client.admin().indices().prepareAnalyze(IndexDemo, "中华人民共和国").setField("content").get();
-//        System.out.println(analyzeResponse.toString());
+        AnalyzeAction.Response analyzeResponse = client.admin().indices().prepareAnalyze(IndexDemo, "are you right there?").setField("content").get();
+        /*System.out.println(analyzeResponse.toString());*/
+        Assert.assertEquals(6, analyzeResponse.getTokens().size());
+        Assert.assertEquals("you", analyzeResponse.getTokens().get(0).getTerm());
+        Assert.assertEquals("ENGLISH", analyzeResponse.getTokens().get(0).getType());
+        Assert.assertEquals("ri", analyzeResponse.getTokens().get(1).getTerm());
+        Assert.assertEquals("ENGLISH", analyzeResponse.getTokens().get(1).getType());
+        Assert.assertEquals("g", analyzeResponse.getTokens().get(2).getTerm());
+        Assert.assertEquals("ENGLISH", analyzeResponse.getTokens().get(2).getType());
+        Assert.assertEquals("h", analyzeResponse.getTokens().get(3).getTerm());
+        Assert.assertEquals("ENGLISH", analyzeResponse.getTokens().get(3).getType());
+        Assert.assertEquals("t", analyzeResponse.getTokens().get(4).getTerm());
+        Assert.assertEquals("ENGLISH", analyzeResponse.getTokens().get(4).getType());
+        Assert.assertEquals("right", analyzeResponse.getTokens().get(5).getTerm());
+        Assert.assertEquals("ENGLISH", analyzeResponse.getTokens().get(5).getType());
+        analyzeResponse = client.admin().indices().prepareAnalyze(IndexDemo, "中华人民共和国").setField("content").get();
+        /*System.out.println(analyzeResponse.toString());*/
+        Assert.assertEquals(54, analyzeResponse.getTokens().size());
+        Assert.assertEquals("zhong", analyzeResponse.getTokens().get(0).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(0).getType());
+        Assert.assertEquals("hua", analyzeResponse.getTokens().get(1).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(1).getType());
+        Assert.assertEquals("ren", analyzeResponse.getTokens().get(2).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(2).getType());
+        Assert.assertEquals("min", analyzeResponse.getTokens().get(3).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(3).getType());
+        Assert.assertEquals("gong", analyzeResponse.getTokens().get(4).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(4).getType());
+        Assert.assertEquals("he", analyzeResponse.getTokens().get(5).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(5).getType());
+        Assert.assertEquals("guo", analyzeResponse.getTokens().get(6).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(6).getType());
+        Assert.assertEquals("中华人民共和国", analyzeResponse.getTokens().get(7).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(7).getType());
+        Assert.assertEquals("zhonghuarenmingongheguo", analyzeResponse.getTokens().get(8).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(8).getType());
+        Assert.assertEquals("zhrmghg", analyzeResponse.getTokens().get(9).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(9).getType());
+        Assert.assertEquals("zhong", analyzeResponse.getTokens().get(10).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(10).getType());
+        Assert.assertEquals("hua", analyzeResponse.getTokens().get(11).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(11).getType());
+        Assert.assertEquals("ren", analyzeResponse.getTokens().get(12).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(12).getType());
+        Assert.assertEquals("min", analyzeResponse.getTokens().get(13).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(13).getType());
+        Assert.assertEquals("中华人民", analyzeResponse.getTokens().get(14).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(14).getType());
+        Assert.assertEquals("zhonghuarenmin", analyzeResponse.getTokens().get(15).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(15).getType());
+        Assert.assertEquals("zhrm", analyzeResponse.getTokens().get(16).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(16).getType());
+        Assert.assertEquals("zhong", analyzeResponse.getTokens().get(17).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(17).getType());
+        Assert.assertEquals("hua", analyzeResponse.getTokens().get(18).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(18).getType());
+        Assert.assertEquals("中华", analyzeResponse.getTokens().get(19).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(19).getType());
+        Assert.assertEquals("zhonghua", analyzeResponse.getTokens().get(20).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(20).getType());
+        Assert.assertEquals("zh", analyzeResponse.getTokens().get(21).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(21).getType());
+        Assert.assertEquals("hua", analyzeResponse.getTokens().get(22).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(22).getType());
+        Assert.assertEquals("ren", analyzeResponse.getTokens().get(23).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(23).getType());
+        Assert.assertEquals("华人", analyzeResponse.getTokens().get(24).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(24).getType());
+        Assert.assertEquals("huaren", analyzeResponse.getTokens().get(25).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(25).getType());
+        Assert.assertEquals("hr", analyzeResponse.getTokens().get(26).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(26).getType());
+        Assert.assertEquals("ren", analyzeResponse.getTokens().get(27).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(27).getType());
+        Assert.assertEquals("min", analyzeResponse.getTokens().get(28).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(28).getType());
+        Assert.assertEquals("gong", analyzeResponse.getTokens().get(29).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(29).getType());
+        Assert.assertEquals("he", analyzeResponse.getTokens().get(30).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(30).getType());
+        Assert.assertEquals("guo", analyzeResponse.getTokens().get(31).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(31).getType());
+        Assert.assertEquals("人民共和国", analyzeResponse.getTokens().get(32).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(32).getType());
+        Assert.assertEquals("renmingongheguo", analyzeResponse.getTokens().get(33).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(33).getType());
+        Assert.assertEquals("rmghg", analyzeResponse.getTokens().get(34).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(34).getType());
+        Assert.assertEquals("ren", analyzeResponse.getTokens().get(35).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(35).getType());
+        Assert.assertEquals("min", analyzeResponse.getTokens().get(36).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(36).getType());
+        Assert.assertEquals("人民", analyzeResponse.getTokens().get(37).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(37).getType());
+        Assert.assertEquals("renmin", analyzeResponse.getTokens().get(38).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(38).getType());
+        Assert.assertEquals("rm", analyzeResponse.getTokens().get(39).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(39).getType());
+        Assert.assertEquals("gong", analyzeResponse.getTokens().get(40).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(40).getType());
+        Assert.assertEquals("he", analyzeResponse.getTokens().get(41).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(41).getType());
+        Assert.assertEquals("guo", analyzeResponse.getTokens().get(42).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(42).getType());
+        Assert.assertEquals("共和国", analyzeResponse.getTokens().get(43).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(43).getType());
+        Assert.assertEquals("gongheguo", analyzeResponse.getTokens().get(44).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(44).getType());
+        Assert.assertEquals("ghg", analyzeResponse.getTokens().get(45).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(45).getType());
+        Assert.assertEquals("gong", analyzeResponse.getTokens().get(46).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(46).getType());
+        Assert.assertEquals("he", analyzeResponse.getTokens().get(47).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(47).getType());
+        Assert.assertEquals("共和", analyzeResponse.getTokens().get(48).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(48).getType());
+        Assert.assertEquals("gonghe", analyzeResponse.getTokens().get(49).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(49).getType());
+        Assert.assertEquals("gh", analyzeResponse.getTokens().get(50).getTerm());
+        Assert.assertEquals("CN_WORD", analyzeResponse.getTokens().get(50).getType());
+        Assert.assertEquals("guo", analyzeResponse.getTokens().get(51).getTerm());
+        Assert.assertEquals("CN_CHAR", analyzeResponse.getTokens().get(51).getType());
+        Assert.assertEquals("国", analyzeResponse.getTokens().get(52).getTerm());
+        Assert.assertEquals("CN_CHAR", analyzeResponse.getTokens().get(52).getType());
+        Assert.assertEquals("g", analyzeResponse.getTokens().get(53).getTerm());
+        Assert.assertEquals("CN_CHAR", analyzeResponse.getTokens().get(53).getType());
 //        AnalyzeAction.Response analyzeResponse = client.admin().indices().prepareAnalyze(IndexDemo, "杨日琳are，同a事").setField("content").get();
 //        System.out.println(analyzeResponse.toString());
 //        AnalyzeAction.Response analyzeResponse = client.admin().indices().prepareAnalyze(IndexDemo, "日琳").setField("content").get();

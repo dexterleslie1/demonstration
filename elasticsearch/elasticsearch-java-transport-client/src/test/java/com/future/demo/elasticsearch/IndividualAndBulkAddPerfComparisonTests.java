@@ -1,5 +1,6 @@
 package com.future.demo.elasticsearch;
 
+import cn.hutool.core.util.RandomUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.future.common.json.JSONUtil;
 import lombok.Data;
@@ -157,7 +158,6 @@ public class IndividualAndBulkAddPerfComparisonTests {
         }
     }
 
-    private final static Random R = new Random(System.currentTimeMillis());
     private final static int MaximumMessageId = 10000000;
     private final static String content = "nTA132Xw5OlUzEMbwqEHtGPx2ktroW2ZFVUAM6i9bSMnbWuGZTCwYS7mZ3vVFbvdUpQo7sXN3LKsQEYNDL3lgzfO3W5ubIjf9uWMNz97hoT7600x5HTyRHDxT0mQalVvVDMZXaAFItzDAlwWnRW9XG2fGvjQOsVIkv3gWOsdc3sFC4H6bcFTFk3pptD13IqMxafNBSfS2D6Dkb4wj1ApSEVxOyO8Fp1zHhOzzZrSM31MYF3EWVfeGxQhptBRQKVKkU8jpzV07oH5rOk0pGQJQ6nBWXk0FNJjO1PFtcuS1Mmqft4iF2w3H1Jx1HgekowZE3iKSTuULs571bdeIvgxq1zkba5ulCxAdevGXK1WpA8BeVKuHnSyelZ2kGpcWLTfmvLdtWkV0dCNlVTkZnjZrP7SCZBYvlV9dYELRnDRRd9AVyaQUcQ9TwdHb6QoOaRPOub8UTjVBSqzGPq5gqaahOMijdoQz4VmSe1Ft8K0nimZeCff6Fni8VDwqB4xZp1tiHqlFK02QTJnm0SKUm32Tb8YssVOrBrGznBYPkRI1ptvDhcDpfq0MRTA4wFHV0mQoNlDwP8EHxORswtUXyozymXRTOZO4ra3BTJspXDT8WrtEI8SIgGmE1FpEkRztZsc9N4kAGTPJmjXFzIFhL1xm9tXd9Xu5UUGSBNVknRTbUZnIXohi0MUATuCduusFMzlaDz2TWxm660fc0jW3R7kWtPgJFEL78fu9NpQrPmVbInkcBoEDYR3LH8pWkZY6d430JSZkF42QHUqDbtVAwk6VwvFQIwWyGoMI0HBPaJ4p14vj1f0t0cBrX0P95IBfQxbkN4RjdUtHVqNREPMuLgS46VJJxoZzDlPhPw61YR8RczkrA9yBK0Ml2yTwivIpb4gzhoQH6zBwMWAwHsGovFFMAa8uPK81cXbmluCaGKvwnEBzQviuzcPPH7g9w7fzED1Q2luf8JTtak86MVUjhF96wYnXg4qp3gB9lroT4oF";
     private final static String indexChatMessage = "chat_message";
@@ -170,7 +170,7 @@ public class IndividualAndBulkAddPerfComparisonTests {
     public void testIndividualAdd() throws InterruptedException, JsonProcessingException {
         int messageId = 0;
         while (messageId <= 0) {
-            messageId = R.nextInt(MaximumMessageId);
+            messageId = RandomUtil.randomInt(1, MaximumMessageId);
         }
 
         // 删除之前的messageId对应的索引
@@ -201,7 +201,7 @@ public class IndividualAndBulkAddPerfComparisonTests {
     public void testBulkAdd() throws JsonProcessingException {
         int messageId = 0;
         while (messageId <= 0) {
-            messageId = R.nextInt(MaximumMessageId);
+            messageId = RandomUtil.randomInt(1, MaximumMessageId);
         }
 
         // 删除之前的messageId对应的索引

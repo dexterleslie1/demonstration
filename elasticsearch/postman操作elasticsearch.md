@@ -1,7 +1,3 @@
-# `postman`操作`elasticsearch`
-
-
-
 ## 创建索引
 
 ```json
