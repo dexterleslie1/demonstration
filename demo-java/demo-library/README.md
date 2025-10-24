@@ -1064,6 +1064,69 @@ RestTemplate restTemplate = new RestTemplateBuilder()
 
 
 
+### 示例 - 提交`Query`参数
+
+```java
+/**
+ * 测试提交 query 参数
+ */
+@Test
+public void testPostWithQueryParameters() {
+    String name = "Dexter1";
+    // 方法1
+    MultiValueMap<String, String> multiValueParams = new LinkedMultiValueMap<>();
+    multiValueParams.add("name", name);
+    HttpEntity<MultiValueMap<String, String>> httpEntity = new HttpEntity<>(multiValueParams, null);
+    ResponseEntity<String> responseEntity =
+            this.restTemplate.exchange(this.getBasePath() + "/api/v1/postWithQueryParams",
+                    HttpMethod.POST, httpEntity, String.class);
+    Assertions.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    String response = responseEntity.getBody();
+    String message = "你提交的参数 name=" + name;
+    Assertions.assertEquals(message, response);
+
+    // 方法2
+    String url = UriComponentsBuilder.fromUriString(this.getBasePath() + "/api/v1/postWithQueryParams")
+            .queryParam("name", name)
+            .build()
+            .toUriString();
+    responseEntity =
+            this.restTemplate.exchange(url,
+                    HttpMethod.POST, null, String.class);
+    Assertions.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    response = responseEntity.getBody();
+    message = "你提交的参数 name=" + name;
+    Assertions.assertEquals(message, response);
+
+    // 方法3
+    Map<String, String> params = new HashMap<>();
+    params.put("name", name);
+    responseEntity =
+            this.restTemplate.exchange(this.getBasePath() + "/api/v1/postWithQueryParams?name={name}",
+                    HttpMethod.POST, null, String.class, params);
+    Assertions.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    response = responseEntity.getBody();
+    message = "你提交的参数 name=" + name;
+    Assertions.assertEquals(message, response);
+}
+```
+
+```java
+/**
+ * 用于协助测试提交 query 参数
+ *
+ * @param name
+ * @return
+ */
+@PostMapping("postWithQueryParams")
+ResponseEntity<String> postWithQueryParams(@RequestParam(value = "name") String name) {
+    String message = "你提交的参数 name=" + name;
+    return ResponseEntity.ok(message);
+}
+```
+
+
+
 ## `HTTP`库 - `RestTemplate`和`TestRestTemplate`区别
 
 `RestTemplate` 和 `TestRestTemplate` 都是 Spring 框架提供的 HTTP 客户端工具，但它们在设计目的和使用场景上有显著区别：

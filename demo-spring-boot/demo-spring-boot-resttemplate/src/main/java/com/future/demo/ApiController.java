@@ -18,7 +18,6 @@ import java.util.Map;
 @RequestMapping(value = "/api/v1")
 public class ApiController {
     /**
-     *
      * @param parameters
      * @return
      * @throws JsonProcessingException
@@ -33,6 +32,7 @@ public class ApiController {
 
     /**
      * 不需要提交任何参数
+     *
      * @return
      */
     @PostMapping(value = "postWithoutParameters")
@@ -42,6 +42,7 @@ public class ApiController {
 
     /**
      * 提交headers参数接口
+     *
      * @param name
      * @param token
      * @return
@@ -50,13 +51,25 @@ public class ApiController {
     ResponseEntity<String> postWithHeaders(
             @RequestParam(value = "name") String name,
             @RequestHeader(value = "token") String token) {
-        if(StringUtils.isEmpty(name)) {
+        if (StringUtils.isEmpty(name)) {
             throw new IllegalArgumentException("name must provide!");
         }
-        if(StringUtils.isEmpty(token)) {
+        if (StringUtils.isEmpty(token)) {
             throw new IllegalArgumentException("token must provide!");
         }
         String message = "你提交的参数 name=" + name + ",token=" + token;
+        return ResponseEntity.ok(message);
+    }
+
+    /**
+     * 用于协助测试提交 query 参数
+     *
+     * @param name
+     * @return
+     */
+    @PostMapping("postWithQueryParams")
+    ResponseEntity<String> postWithQueryParams(@RequestParam(value = "name") String name) {
+        String message = "你提交的参数 name=" + name;
         return ResponseEntity.ok(message);
     }
 
