@@ -805,7 +805,7 @@ public class LoadBalancerConfig {
 
 ### `OpenFeign`
 
->`https://www.jianshu.com/p/c0cb63e7640c`
+>参考链接：https://www.jianshu.com/p/c0cb63e7640c
 
 
 
@@ -859,25 +859,25 @@ OpenFeign是一个功能强大且易于使用的Web服务客户端，它简化�
 
 #### 运行示例
 
->详细用法请参考本站 [示例1](https://gitee.com/dexterleslie/demonstration/tree/main/demo-spring-boot/demo-spring-boot-openfeign-client)
+>详细用法请参考本站[示例1](https://gitee.com/dexterleslie/demonstration/tree/main/demo-spring-boot/demo-spring-boot-openfeign-client)
 >
->详细用法请参考本站 [示例2](https://gitee.com/dexterleslie/demonstration/tree/master/spring-cloud/spring-cloud-feign-demo)
+>详细用法请参考本站[示例2](https://gitee.com/dexterleslie/demonstration/tree/master/spring-cloud/spring-cloud-feign-demo)
 
-启动 Consul
+启动`Consul`
 
 ```bash
 docker compose up -d
 ```
 
-启动 ApplicationEureka、ApplicationConsumer、ApplicationProvider（修改端口后启动两个应用）
+启动`ApplicationConsumer`、`ApplicationProvider`（修改端口后启动两个应用）
 
-访问`http://localhost:8080/api/v1/external/product/1`测试应用是否正常
+访问 http://localhost:8080/api/v1/external/product/1 测试应用是否正常
 
 
 
 #### 基本配置
 
-pom 引用 SpringCloud OpenFeign 依赖
+`POM`引用`SpringCloud OpenFeign`依赖
 
 ```xml
 <!-- SpringCloud OpenFeign 依赖 -->
@@ -894,7 +894,7 @@ pom 引用 SpringCloud OpenFeign 依赖
 </dependency>
 ```
 
-创建 OpenFeign 客户端
+创建`OpenFeign`客户端
 
 ```java
 @FeignClient(
@@ -917,7 +917,7 @@ public interface ProductFeign {
 }
 ```
 
-Application 中启用 OpenFeign 客户端的支持
+`Application`中启用`OpenFeign`客户端的支持
 
 ```java
 @SpringBootApplication
@@ -935,7 +935,7 @@ public class ApplicationConsumer {
 }
 ```
 
-注入并调用 OpenFeign 客户端
+注入并调用`OpenFeign`客户端
 
 ```java
 @Resource
@@ -1409,7 +1409,7 @@ ansible-playbook playbook-service-destroy.yml --inventory inventory.ini
 
 ## 服务熔断、降级、限流
 
-### SpringCloud CircuitBreaker
+### `CircuitBreaker`
 
 SpringCloud CircuitBreaker是Spring Cloud提供的一个用于处理分布式系统中服务调用的容错机制。以下是对SpringCloud CircuitBreaker的详细介绍：
 
@@ -1450,15 +1450,379 @@ SpringCloud CircuitBreaker可以与Spring Cloud的其他组件进行集成，如
 
 ### `Hystrix`
 
->注意：feign 客户端调用服务时达到 ribbon.ReadTimeout 超时，即使 execution.isolation.thread.timeoutInMilliseconds 未达到超时时间也会 fallback
+>注意：`feign`客户端调用服务时达到`ribbon.ReadTimeout`超时，即使`execution.isolation.thread.timeoutInMilliseconds`未达到超时时间也会 `fallback`。
 >
->配置方式分为 2 种：服务提供者配置服务降级、服务调用者 feign 配置服务降级
+>配置方式分为 2 种：服务提供者配置服务降级、服务调用者`feign`配置服务降级。
 
-注意：进入维护模式，使用 Resilience4J 替代。
+注意：进入维护模式，使用`Resilience4J`替代。
+
+未整理
+
+```
+turbine hystrix集群监控
+https://www.jianshu.com/p/590bad4c8947
+使用 turbine hystrix集群监控
+访问 trubine 服务http://localhost:8083/hystrix后，填入http://localhost:8083/turbine.stream，点击monitor按钮
+
+springcloud feign fallback，通过feign、HystrixCommand、FallbackProvider
+https://www.cnblogs.com/cearnach/p/9341593.html
+
+springcloud zuul FallbackProvider基本使用，能够根据serviceId调用不同的fallback，不能实现针对route调用不同的fallback
+fallback的FallbackProvider使用方法只作用于springcloud zuull，不能作用于fallback的feign、HystrixCommand使用方法
+https://juejin.cn/post/6844903862470443015
+https://thepracticaldeveloper.com/hystrix-fallback-with-zuul-and-spring-boot/
+
+springcloud hystrix配置
+https://blog.csdn.net/hry2015/article/details/78554846
+
+HystrixCommand配置
+https://github.com/Netflix/Hystrix/wiki/Configuration#intro
+
+springcloud zuul hystrix超时使用FallbackProvider统一处理
+feign hystrix超时使用@ControllerAdvice、@ExceptionHandler统一处理
+
+hystrix资源隔离原理图
+https://www.cnblogs.com/-beyond/p/12856421.html
+
+RestTemplate hystrix整合
+https://blog.51cto.com/13538361/2426289
+
+feignclient FallbackFactory使用
+https://blog.csdn.net/qq_24504315/article/details/79120904
+
+设置 feignclient 各个方法hystrix超时
+http://www.saily.top/2020/04/19/springcloud/hystrix05/
+
+The Hystrix timeout of ***ms for the command *** is set lower than the combination of the Ribbon
+https://blog.csdn.net/it_beecoder/article/details/106028256
+
+TODO: 写demo演示关闭ribbon、feign、resttemplate retry机制
+```
 
 
 
-### Resilience4J
+#### `Ribbon`超时配置
+
+借助本站[示例](https://gitee.com/dexterleslie/demonstration/tree/main/spring-cloud/spring-cloud-hystrix)协助测试
+
+使用浏览器访问 http://localhost:8080/api/v1/user/timeout?milliseconds=30000，在`10`秒时报错表示`Ribbon`配置生效。
+
+`Zuul`网关中配置`Ribbon`超时：
+
+```properties
+# ribbon超时
+# 连接超时10秒
+ribbon.ConnectTimeout=10000
+# 读取超时10秒
+ribbon.ReadTimeout=10000
+ribbon.MaxAutoRetries=0
+ribbon.MaxAutoRetriesNextServer=0
+# 针对特定服务配置Ribbon超时
+#ribbon.spring-cloud-user.ReadTimeout=15000
+#ribbon.spring-cloud-user.ConnectTimeout=5000
+#ribbon.spring-cloud-user.MaxAutoRetries=0
+#ribbon.spring-cloud-user.MaxAutoRetriesNextServer=0
+```
+
+
+
+#### 开启`Feign`客户端的`Hystrix`功能
+
+>说明：开启`Feign`客户端的`Hystrix`功能，如果不开启`Feign`没有熔断保护并且不会出发`Feign`客户端中的`Fallback`回调
+
+借助本站[示例](https://gitee.com/dexterleslie/demonstration/tree/main/spring-cloud/spring-cloud-hystrix)协助测试
+
+在`Zuul`中添加如下配置：
+
+```properties
+# 开启 Feign 客户端的 Hystrix 功能，如果不开启 Feign 没有熔断保护并且不会出发 Feign 客户端中的 Fallback 回调
+feign.hystrix.enabled=true
+```
+
+使用下面命令测试此配置
+
+```sh
+curl http://localhost:8080/api/v1/user/timeoutWithFeignFallback?milliseconds=30000
+```
+
+
+
+#### 隔离策略
+
+好的，Hystrix 的**隔离策略**是其最核心的设计之一，目的是实现**故障隔离**，防止单个依赖服务的故障耗尽整个系统的资源（如线程），导致雪崩效应。
+
+Hystrix 提供了两种隔离策略：**线程池隔离** 和 **信号量隔离**。
+
+---
+
+##### 两种隔离策略对比总览
+
+| 特性               | THREAD（线程池隔离）         | SEMAPHORE（信号量隔离）      |
+| :----------------- | :--------------------------- | :--------------------------- |
+| **隔离级别**       | **线程级别**，完全物理隔离   | **信号量级别**，共享调用线程 |
+| **超时控制**       | **支持**，可中断任务         | **不支持**，依赖底层调用超时 |
+| **异步支持**       | **天然支持**                 | 不支持                       |
+| **资源开销**       | 较大（线程创建、上下文切换） | 极小（仅计数器）             |
+| **网络请求**       | **推荐**，绝大多数场景适用   | 不适用                       |
+| **高性能内部调用** | 不适用，开销过大             | **推荐**                     |
+
+---
+
+##### 1. THREAD（线程池隔离） - **默认且推荐用于外部调用**
+
+**工作原理**
+
+Hystrix 不会在调用线程（如 Tomcat 的工作线程）中直接执行命令，而是将其派发到一个独立的、预先定义好的线程池中执行。这样，即使下游服务响应缓慢或阻塞，也只会占满 Hystrix 的线程池，而不会影响调用线程池（从而不会影响其他服务的调用）。
+
+**配置**
+
+```yaml
+hystrix:
+  command:
+    default:
+      execution:
+        isolation:
+          strategy: THREAD  # 默认就是THREAD，通常不用显式配置
+          thread:
+            timeoutInMilliseconds: 1000  # 超时时间，可中断
+    myServiceCommand: # 针对特定命令的配置
+      execution:
+        isolation:
+          strategy: THREAD
+```
+
+```java
+@HystrixCommand(
+    commandKey = "myServiceCommand",
+    groupKey = "MyServiceGroup",
+    // 指定使用THREAD隔离
+    commandProperties = {
+        @HystrixProperty(name = "execution.isolation.strategy", value = "THREAD"),
+        @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000")
+    },
+    // 配置专属线程池
+    threadPoolProperties = {
+        @HystrixProperty(name = "coreSize", value = "10"),
+        @HystrixProperty(name = "maxQueueSize", value = "5")
+    }
+)
+public String callExternalService() {
+    // 这个调用会在 "MyServiceGroup" 线程池中的某个线程执行
+    return restTemplate.getForObject("http://remote-service/api", String.class);
+}
+```
+
+**优点**
+
+- **完全隔离**：一个依赖的延迟或故障只会耗尽自己的线程池，不会影响其他依赖。
+- **超时控制**：由于是独立线程，Hystrix 可以监控执行时间并主动中断超时的请求。
+- **异步支持**：天然支持异步编程模型。
+
+**缺点**
+
+- **性能开销**：线程的创建、调度、上下文切换有一定开销。这是为稳定性付出的必要代价。
+
+**适用场景**
+
+- **所有外部服务调用**：如 HTTP API、RPC 调用、数据库查询等。这是**最常用**的策略。
+
+---
+
+##### 2. SEMAPHORE（信号量隔离）
+
+**工作原理**
+
+Hystrix 在**调用线程**中直接执行命令，不使用线程池。它通过一个计数器（信号量）来限制**并发执行**的命令数量。当信号量用完时，后续请求会被立即拒绝，执行降级逻辑，而不会排队等待。
+
+**配置**
+
+```yaml
+hystrix:
+  command:
+    fastLocalCommand:
+      execution:
+        isolation:
+          strategy: SEMAPHORE  # 指定信号量隔离
+        timeout:
+          enabled: false  # 信号量隔离下通常禁用超时控制
+      circuitBreaker:
+        enabled: true  # 熔断器依然可以工作
+    fallback:
+      isolation:
+        semaphore:
+          maxConcurrentRequests: 100  # 降级方法的信号量限制
+```
+
+```java
+@HystrixCommand(
+    commandKey = "fastLocalCommand",
+    commandProperties = {
+        // 指定信号量隔离
+        @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE"),
+        // 设置最大并发请求数
+        @HystrixProperty(name = "execution.isolation.semaphore.maxConcurrentRequests", value = "20"),
+        // 通常禁用超时，因为无法中断调用线程
+        @HystrixProperty(name = "execution.timeout.enabled", value = "false")
+    }
+)
+public String veryFastLocalOperation() {
+    // 这个调用会在调用线程（如Tomcat线程）中直接执行
+    // 信号量只控制能同时进入这个方法的并发数
+    return someInMemoryCache.get(data);
+}
+```
+
+**优点**
+
+- **性能极高**：无线程切换开销，适用于高频、快速的内部调用。
+- **简单高效**：对于纯内存操作，信号量控制并发就足够了。
+
+**缺点**
+
+- **无法超时中断**：如果命令在执行线程中阻塞，Hystrix 无法中断它，只能等待其自然返回或容器超时。
+- **隔离性较弱**：某个慢请求会一直占用一个调用线程（如 Tomcat 线程），如果大量依赖都使用信号量且同时阻塞，仍可能耗尽容器线程。
+
+**适用场景**
+
+- **超高并发**的**纯内存计算**、**快速本地缓存**查询。
+- **非网络调用**的、信任度高的内部方法。
+
+---
+
+##### 总结与实践建议
+
+1.  **默认选择 THREAD 隔离**：对于微服务架构中绝大部分场景（如 Feign 调用、RestTemplate 调用），都应使用 `THREAD` 隔离。这是保证系统稳定性的基石。
+2.  **谨慎使用 SEMAPHORE 隔离**：仅在对性能有极致要求，且被调用的方法是快速、可靠的本地操作时使用。通常用于 Hystrix 命令内部的某个关键算法或缓存查询。
+3.  **降级方法默认使用 SEMAPHORE**：Hystrix 对降级方法的调用默认使用信号量隔离（通过 `fallback.isolation.semaphore.maxConcurrentRequests` 配置），这是为了防止降级逻辑本身消耗过多资源，导致雪崩。你需要确保降级逻辑是快速且轻量的。
+
+简单来说：**对外部的不信任调用用 THREAD，对内部的信任调用用 SEMAPHORE**。
+
+
+
+#### 隔离策略 - 信号量配置
+
+>详细用法请参考本站[示例](https://gitee.com/dexterleslie/demonstration/tree/main/spring-cloud/spring-cloud-hystrix)。
+
+```properties
+# 信号量模式配置
+hystrix.command.default.execution.isolation.strategy=SEMAPHORE
+hystrix.command.default.execution.isolation.semaphore.maxConcurrentRequests=65535
+hystrix.command.default.fallback.isolation.semaphore.maxConcurrentRequests=65535
+hystrix.command.spring-cloud-user.execution.isolation.semaphore.maxConcurrentRequests=65535
+hystrix.command.spring-cloud-user.fallback.isolation.semaphore.maxConcurrentRequests=65535
+```
+
+
+
+#### 隔离策略 - 线程配置
+
+>详细用法请参考本站[示例](https://gitee.com/dexterleslie/demonstration/tree/main/spring-cloud/spring-cloud-hystrix)。
+
+```properties
+# 线程隔离模式配置
+hystrix.command.default.execution.isolation.strategy=THREAD
+# 启用 Hystrix 命令执行的超时控制功能
+# 决定 hystrix.command.default.execution.isolation.thread.timeoutInMilliseconds=6000 配置是否生效
+hystrix.command.default.execution.timeout.enabled=true
+hystrix.command.default.execution.isolation.thread.timeoutInMilliseconds=6000
+hystrix.command.default.circuitBreaker.enabled=false
+hystrix.command.default.circuitBreaker.errorThresholdPercentage=50
+hystrix.command.default.circuitBreaker.requestVolumeThreshold=20
+hystrix.threadpool.default.coreSize=512
+hystrix.threadpool.default.maximumSize=512
+hystrix.threadpool.default.maxQueueSize=1024000
+hystrix.threadpool.default.queueSizeRejectionThreshold=102400
+hystrix.threadpool.default.allowMaximumSizeToDivergeFromCoreSize=true
+hystrix.command.ApiUser#timeout(Integer).execution.isolation.thread.timeoutInMilliseconds=6000
+# zuul route hystrix隔离ThreadPool默认THREAD
+zuul.ribbonIsolationStrategy=THREAD
+# zuul route hystrix隔离ThreadPool各个微服务独立
+# http://www.itmuch.com/spring-cloud/edgware-new-zuul-hystrix-thread-pool/
+zuul.threadPool.useSeparateThreadPools=true
+```
+
+
+
+#### 服务提供者服务降级
+
+借助本站[示例](https://gitee.com/dexterleslie/demonstration/tree/main/spring-cloud/spring-cloud-hystrix)协助测试
+
+正常访问
+
+```sh
+curl http://localhost:8081/api/v1/user/test1
+```
+
+服务降级访问
+
+>说明：因为`sleep`时间持续`3000`毫秒大于`execution.isolation.thread.timeoutInMilliseconds`配置的`2000`毫秒导致触发服务降级。虽然因为超时服务降级，但是陆续进来的请求依旧被服务器处理，并且将会导致更多的服务调用失败。
+
+```sh
+$ curl http://localhost:8081/api/v1/user/test1\?milliseconds\=3000
+{"errorCode":5000,"errorMessage":null,"data":"调用ProviderSideFallbackController1#test接口失败"}
+```
+
+
+
+#### 服务提供者服务降级 - 统一`Fallback`
+
+借助本站[示例](https://gitee.com/dexterleslie/demonstration/tree/main/spring-cloud/spring-cloud-hystrix)协助测试
+
+正常访问
+
+```sh
+curl http://localhost:8081/api/v1/user/test2
+```
+
+服务降级访问
+
+```sh
+$ curl http://localhost:8081/api/v1/user/test2?milliseconds=3000
+{"errorCode":5000,"errorMessage":null,"data":"调用ProviderSideFallbackController2#test接口失败"}
+```
+
+
+
+#### 服务调用者`Feign`服务降级
+
+借助本站[示例](https://gitee.com/dexterleslie/demonstration/tree/main/spring-cloud/spring-cloud-hystrix)协助测试
+
+正常访问
+
+```sh
+curl http://localhost:8080/api/v1/user/timeoutWithFeignFallback
+```
+
+触发`Feign Fallback`访问
+
+>说明：在`application.properties`里面配置`Feign ApiUser.timeout`超时时间为`10000`，所以会触发`Feign Fallback`。
+
+```sh
+curl http://localhost:8080/api/v1/user/timeoutWithFeignFallback?milliseconds=10100
+{"errorCode":600,"errorMessage":"User服务不可用，稍候...（来自ApiUser）","data":null}
+```
+
+
+
+#### 服务熔断
+
+借助本站[示例](https://gitee.com/dexterleslie/demonstration/tree/main/spring-cloud/spring-cloud-hystrix)协助测试
+
+使用命令刷新`5`次后触发熔断
+
+```sh
+curl http://localhost:8081/api/v1/user/testCircuitBreaker1
+```
+
+马上使用命令访问接口错误返回说明熔断已经被打开，大概经过`30`秒后服务恢复正常
+
+```sh
+curl http://localhost:8081/api/v1/user/testCircuitBreaker1?id=22
+```
+
+
+
+### `Resilience4J`
 
 详细用法请参考示例`https://gitee.com/dexterleslie/demonstration/tree/master/spring-cloud/demo-spring-cloud-resilience4j`
 
@@ -1889,7 +2253,7 @@ pom 引入舱壁隔离依赖
 
 
 
-### Sentinel
+### `Sentinel`
 
 详细用法请参考文档 <a href="/spring-cloud/#sentinel-2" target="_blank">链接</a>
 

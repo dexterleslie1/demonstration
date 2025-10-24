@@ -5,7 +5,10 @@ import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixProperty;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.concurrent.TimeUnit;
 
@@ -18,11 +21,12 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class ProviderSideFallbackController1 {
     @HystrixCommand(fallbackMethod = "testFallback", commandProperties = {
+            // 配置服务提供者线程隔离超时时间
             @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "2000")
     })
     @GetMapping("test1")
     ResponseEntity<ObjectResponse<String>> test(@RequestParam(value = "milliseconds", defaultValue = "0") int milliseconds) {
-        log.debug("开始调用ProviderSideFallbackController1#test接口");
+        // log.debug("开始调用ProviderSideFallbackController1#test接口");
         if(milliseconds>0) {
             try {
                 TimeUnit.MILLISECONDS.sleep(milliseconds);
