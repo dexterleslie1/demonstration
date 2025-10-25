@@ -13,7 +13,9 @@ export default {
         login() {
             this.$store.dispatch('moduleA/login', {param1:'param1', param2:'param2'})
             .then(function(data) {
-
+                alert("登录成功")
+            }).catch(function(error) {
+                alert(error)
             })
         }
     }

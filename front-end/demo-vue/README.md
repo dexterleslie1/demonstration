@@ -4815,6 +4815,8 @@ Vuex 是 Vue 2 生态中管理复杂状态的**标准解决方案**，它通过�
 
 ## `vuex` - 示例
 
+>说明：最佳实践为`Mutations`中不编写业务逻辑，`Actions`可以编写复杂的业务逻辑。
+
 ### 集成
 
 >[front-end/demo-vue/vue2-vuex · dexterleslie/demonstration - 码云 - 开源中国](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-vue/vue2-vuex)
@@ -4941,6 +4943,38 @@ export default {
             this.$store.dispatch('moduleA/login', {param1:'param1', param2:'param2'})
             .then(function(data) {
 
+            })
+        }
+    }
+}
+</script>
+```
+
+
+
+### 调用`Actions`
+
+>[front-end/demo-vue/vue2-vuex · dexterleslie/demonstration - 码云 - 开源中国](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-vue/vue2-vuex)
+
+```vue
+<template>
+    <div>
+        <div>演示vuex actions用法</div>
+        {{$store.state.moduleA.loginStatus}}
+        <button v-on:click="login">开始模拟</button>
+        <hr/>
+    </div>
+</template>
+
+<script>
+export default {
+    methods: {
+        login() {
+            this.$store.dispatch('moduleA/login', {param1:'param1', param2:'param2'})
+            .then(function(data) {
+                alert("登录成功")
+            }).catch(function(error) {
+                alert(error)
             })
         }
     }
