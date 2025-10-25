@@ -112,3 +112,13 @@ handleClickOk() {
 >
 >[组件 | Element](https://element.eleme.cn/#/zh-CN/component/form)
 
+
+
+## 布局`Layout`
+
+>说明：通过基础的 24 分栏，迅速简便地创建布局。
+>
+>详细用法请参考本站[示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-element-ui/element-ui-layout)
+>
+>[组件 | Element](https://element.eleme.cn/#/zh-CN/component/layout)
+
