@@ -1,6 +1,7 @@
 package com.future.demo.test;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.future.demo.Application;
 import com.future.demo.TestService;
 import com.future.demo.UserModel;
@@ -46,6 +47,8 @@ public class MockMvcTests {
     TestService testService;
     @Resource
     private MockMvc mockMvc;
+    @Resource
+    ObjectMapper objectMapper;
 
     @Test
     public void test() throws Exception {
@@ -104,6 +107,19 @@ public class MockMvcTests {
         // https://stackoverflow.com/questions/47763332/how-to-extract-value-from-json-response-when-using-spring-mockmvc
         String email = JsonPath.read(response.andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8), "$.data.email");
         Assert.assertEquals("dexterleslie@gmail.com", email);
+
+        // 测试 post 请求提交 body 参数
+        String name = "Dexter";
+        userModel = new UserModel();
+        userModel.setName(name);
+        String JSON = objectMapper.writeValueAsString(userModel);
+        response = mockMvc.perform(post("/api/v1/postWithBody")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + UUID.randomUUID().toString())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(JSON));
+        response.andExpect(status().isOk())
+                .andExpect(jsonPath("$.data", is("用户名称：" + name)));
+        ;
     }
 
 }

@@ -60,4 +60,17 @@ public class ApiController {
         response.setData(userModel);
         return response;
     }
+
+    /**
+     * 测试使用 @RequestBody
+     *
+     * @param userModel
+     * @return
+     */
+    @PostMapping("postWithBody")
+    ObjectResponse<String> postWithBody(@RequestBody UserModel userModel) {
+        ObjectResponse<String> response = new ObjectResponse<>();
+        response.setData("用户名称：" + userModel.getName());
+        return response;
+    }
 }

@@ -1,6 +1,6 @@
-# `spring-boot`项目的测试
+## 概念
 
->`https://docs.spring.io/spring-framework/docs/4.2.x/spring-framework-reference/html/integration-testing.html`
+>参考链接：https://docs.spring.io/spring-framework/docs/4.2.x/spring-framework-reference/html/integration-testing.html
 
 
 
@@ -259,7 +259,7 @@ Assert.assertEquals("v1", objectResponse.getData().get("k1"));
 
 ### `mockmvc`测试
 
-> 案例的详细请参考`https://gitee.com/dexterleslie/demonstration/blob/master/demo-spring-boot/demo-spring-boot-test/src/test/java/com/future/demo/test/MockMvcTests.java`
+> 案例的详细请参考：https://gitee.com/dexterleslie/demonstration/blob/master/demo-spring-boot/demo-spring-boot-test/src/test/java/com/future/demo/test/MockMvcTests.java
 
 注意：mockmvc 不使用正在运行的 Servlet 容器。
 
