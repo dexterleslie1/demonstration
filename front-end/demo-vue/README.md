@@ -2441,7 +2441,7 @@ export default {
 
 ### 具名插槽（命名插槽）
 
-当子组件需要多个独立的内容区域时（例如卡片的头部、主体、底部），可以使用具名插槽。通过为 <slot> 指定 name 属性，父组件可以明确地将内容分发到指定的插槽位置。
+当子组件需要多个独立的内容区域时（例如卡片的头部、主体、底部），可以使用具名插槽。通过为 `<slot>` 指定 name 属性，父组件可以明确地将内容分发到指定的插槽位置。
 
 `NamedSlotComponent.vue`：
 
@@ -2508,6 +2508,201 @@ export default {
 </style>
 
 ```
+
+
+
+### 作用域插槽
+
+#### 一、核心思想：子组件向父组件传递数据
+
+简单来说，**作用域插槽是一种允许子组件在它的插槽内向父组件传递数据的技术**。
+
+这颠覆了普通插槽的数据流方向：
+*   **普通插槽/默认插槽**：父组件决定插槽内的**内容和结构**，数据来自父组件。
+*   **作用域插槽**：父组件决定插槽内的**结构和样式**，但插槽内需要**显示的数据内容来自子组件**。
+
+**一个精辟的比喻：**
+
+*   **普通插槽**：就像你去餐厅吃饭，餐厅（子组件）给你一个空盘子（插槽），你（父组件）自己决定往盘子里放什么菜（内容）。菜是你自带的。
+*   **作用域插槽**：就像餐厅（子组件）给你一个空盘子（插槽），但同时把厨房里的各种食材（数据）端出来给你选。你（父组件）可以自由决定用这些食材**炒什么菜、怎么摆盘**（如何渲染），但食材本身是餐厅提供的。
+
+---
+
+#### 二、工作原理和语法
+
+作用域插槽的实现分为**子组件侧**和**父组件侧**两步。
+
+##### 1. 子组件侧：在 `<slot>` 上绑定属性
+
+在子组件中，你在 `<slot>` 标签上使用 `v-bind` 来传递你想要暴露给父组件的数据。这些绑定属性被称为 **插槽 Prop**。
+
+```html
+<!-- 子组件 ChildComponent.vue -->
+<template>
+  <div class="child">
+    <h3>我是子组件</h3>
+    <!-- 在slot上绑定数据，item和index是我们要传递给父组件的数据 -->
+    <slot v-bind:item="childData" v-bind:index="currentIndex">
+      <!-- 这是默认内容，如果父组件没有提供模板，则会显示 -->
+      默认显示: {{ childData.name }}
+    </slot>
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'ChildComponent',
+  data() {
+    return {
+      childData: {
+        name: '这是子组件的数据',
+        id: 123
+      },
+      currentIndex: 1
+    }
+  }
+}
+</script>
+```
+
+##### 2. 父组件侧：使用 `<template>` 和 `slot-scope` 接收
+
+在父组件中，你需要使用一个 `<template>` 标签，并通过 `slot-scope` 属性来接收从子组件传递过来的所有数据。`slot-scope` 的值是一个临时的变量名，它包含了所有子组件传递的插槽 Prop。
+
+**Vue 2.6.0+ 以前的主流写法（您很可能会遇到）**：
+
+```html
+<!-- 父组件 ParentComponent.vue -->
+<template>
+  <div class="parent">
+    <child-component>
+      <!-- 使用template和slot-scope -->
+      <template slot-scope="scope">
+        <!-- 现在，我们可以使用子组件传过来的数据了！ -->
+        <p>我从子组件接收到的数据是：</p>
+        <p>item.name: {{ scope.item.name }}</p>
+        <p>item.id: {{ scope.item.id }}</p>
+        <p>index: {{ scope.index }}</p>
+        <!-- 你可以自由地在这里设计样式和结构 -->
+        <button>操作 {{ scope.item.name }}</button>
+      </template>
+    </child-component>
+  </div>
+</template>
+```
+
+**Vue 2.6.0+ 的推荐新语法（使用 `v-slot`）**：
+
+在 Vue 2.6.0 之后，引入了 `v-slot` 指令来统一插槽语法，这是当前推荐的方式。
+
+```html
+<!-- 父组件 ParentComponent.vue -->
+<template>
+  <div class="parent">
+    <child-component>
+      <!-- 使用 v-slot:default="scope" -->
+      <template v-slot:default="scope">
+        <p>item.name: {{ scope.item.name }}</p>
+        <p>index: {{ scope.index }}</p>
+      </template>
+    </child-component>
+
+    <!-- 或者使用解构赋值，更简洁 -->
+    <child-component>
+      <template v-slot:default="{ item, index }">
+        <p>{{ index }}. {{ item.name }}</p>
+      </template>
+    </child-component>
+  </div>
+</template>
+```
+
+---
+
+#### 三、最经典的例子：自定义列表渲染
+
+作用域插槽最常见的用途是创建一个可复用的列表组件，父组件可以完全控制每一项的渲染方式。
+
+**1. 子组件：`MyList.vue`（负责遍历数据，提供每一项数据）**
+
+```html
+<template>
+  <ul>
+    <li v-for="(item, index) in items" :key="item.id">
+      <!-- 将每一项 `item` 和其 `index` 通过插槽暴露给父组件 -->
+      <slot :itemData="item" :itemIndex="index"></slot>
+    </li>
+  </ul>
+</template>
+
+<script>
+export default {
+  name: 'MyList',
+  props: {
+    items: {
+      type: Array,
+      required: true
+    }
+  }
+}
+</script>
+```
+
+**2. 父组件：使用 `MyList`（负责决定每一项长什么样）**
+
+```html
+<template>
+  <div>
+    <!-- 第一种渲染方式：简单文本 -->
+    <my-list :items="userList">
+      <template v-slot:default="{ itemData, itemIndex }">
+        <span>{{ itemIndex + 1 }}. {{ itemData.name }} - {{ itemData.age }}岁</span>
+      </template>
+    </my-list>
+
+    <!-- 第二种渲染方式：带按钮的卡片 -->
+    <my-list :items="userList">
+      <template v-slot:default="{ itemData }">
+        <div class="card">
+          <h4>{{ itemData.name }}</h4>
+          <p>年龄：{{ itemData.age }}</p>
+          <button @click="viewDetail(itemData)">查看详情</button>
+        </div>
+      </template>
+    </my-list>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      userList: [
+        { id: 1, name: '张三', age: 20 },
+        { id: 2, name: '李四', age: 22 }
+      ]
+    }
+  },
+  methods: {
+    viewDetail(user) {
+      console.log('查看用户详情:', user)
+    }
+  }
+}
+</script>
+```
+
+#### 四、总结
+
+| 特性         | 普通插槽                 | 作用域插槽                                                   |
+| :----------- | :----------------------- | :----------------------------------------------------------- |
+| **数据流向** | 父组件 → 子组件          | 子组件 → 父组件                                              |
+| **控制权**   | 父组件控制**内容和结构** | 父组件控制**渲染方式**，子组件提供**数据内容**               |
+| **核心价值** | 内容分发                 | **可复用性**和**灵活性**，允许父组件自定义子组件内部数据的渲染逻辑 |
+
+**一句话理解作用域插槽**：它相当于子组件对父组件说：“我这里有数据，但我不知道你想怎么显示它。我把数据给你，你自己来写显示的模板吧。”
+
+这就是为什么它在 `el-table` 的自定义列模板、`v-for` 列表的自定义渲染等场景中如此强大的原因。
 
 
 
@@ -4403,6 +4598,355 @@ export default {
 - `<template>` 是 `Vue` 提供的虚拟包裹标签，它不会被渲染到最终 `DOM` 中，仅作为 `v-for` 的逻辑容器。
 - 必须为 `<template>` 添加 `:key`（或 `key`），否则 `Vue` 会报警告（`Vue2` 要求所有 `v-for` 必须有唯一 `key`）。
 - 循环内的多个元素会被直接渲染到父容器中，形成“扁平化”结构。
+
+
+
+## `vuex` - 概念
+
+`Vuex` 是 Vue.js 官方提供的 **状态管理库**，专门为 Vue 应用设计，用于集中式存储和管理应用中所有组件的共享状态。它的核心思想是通过一个全局的“单例存储”来解决组件间状态共享和通信的难题。
+
+---
+
+### **一、为什么需要 Vuex？**
+#### **1. 组件通信的痛点**
+- 当组件层级较深时，父子组件通过 `props/$emit` 逐层传递数据会变得繁琐
+- 非父子组件需要通过事件总线（Event Bus）或全局变量传递数据，难以维护
+- 多个组件依赖同一状态时，容易产生数据不一致问题
+
+#### **2. Vuex 的解决方案**
+- **单一数据源**：所有共享状态集中存储在 `store` 中
+- **响应式机制**：状态变更自动更新依赖组件
+- **严格的流程控制**：通过 `actions → mutations → state` 确保状态变更可追踪
+
+---
+
+### **二、核心概念**
+#### **1. State（状态）**
+- 存储应用级的共享数据（类似组件的 `data`）
+- **特点**：响应式，避免直接修改
+```javascript
+state: {
+  count: 0,
+  user: null
+}
+```
+
+#### **2. Getters（派生状态）**
+- 从 state 派生的计算属性（类似组件的 `computed`）
+- **用途**：封装复杂的状态逻辑
+```javascript
+getters: {
+  doubleCount: state => state.count * 2
+}
+```
+
+#### **3. Mutations（同步变更）**
+- 唯一允许直接修改 `state` 的方法（类似事件）
+- **规则**：必须是同步函数
+```javascript
+mutations: {
+  increment(state, payload) {
+    state.count += payload.amount
+  }
+}
+// 调用：store.commit('increment', { amount: 10 })
+```
+
+#### **4. Actions（异步操作）**
+- 处理异步逻辑，提交 `mutation` 来修改状态
+- **典型场景**：API 请求
+```javascript
+actions: {
+  async fetchUser({ commit }, userId) {
+    const user = await api.getUser(userId)
+    commit('SET_USER', user)
+  }
+}
+// 调用：store.dispatch('fetchUser', 123)
+```
+
+#### **5. Modules（模块化）**
+- 将 store 分割成模块，每个模块拥有自己的 state/getters/mutations/actions
+- **解决**：大型应用的状态树过于庞大
+```javascript
+const moduleA = {
+  state: () => ({ ... }),
+  mutations: { ... }
+}
+
+const store = new Vuex.Store({
+  modules: {
+    a: moduleA
+  }
+})
+```
+
+---
+
+### **三、工作流程**
+```mermaid
+graph LR
+  A[组件] -->|dispatch| B[Action]
+  B -->|commit| C[Mutation]
+  C -->|mutate| D[State]
+  D -->|响应式更新| A
+```
+
+1. 组件通过 `dispatch` 触发 `action`
+2. `action` 执行异步操作后，通过 `commit` 提交 `mutation`
+3. `mutation` 同步修改 `state`
+4. 状态变更自动反映在依赖的组件中
+
+---
+
+### **四、基础使用示例**
+#### **1. 安装**
+```bash
+npm install vuex@3  # Vue 2 对应 Vuex 3
+```
+
+#### **2. 创建 Store**
+```javascript
+// store/index.js
+import Vue from 'vue'
+import Vuex from 'vuex'
+
+Vue.use(Vuex)
+
+export default new Vuex.Store({
+  state: {
+    count: 0
+  },
+  mutations: {
+    increment(state) {
+      state.count++
+    }
+  },
+  actions: {
+    incrementAsync({ commit }) {
+      setTimeout(() => {
+        commit('increment')
+      }, 1000)
+    }
+  },
+  getters: {
+    formattedCount: state => `Count: ${state.count}`
+  }
+})
+```
+
+#### **3. 在组件中使用**
+```javascript
+// 读取状态
+computed: {
+  count() {
+    return this.$store.state.count
+  },
+  formattedCount() {
+    return this.$store.getters.formattedCount
+  }
+}
+
+// 修改状态
+methods: {
+  increment() {
+    this.$store.commit('increment')
+  },
+  incrementAsync() {
+    this.$store.dispatch('incrementAsync')
+  }
+}
+```
+
+---
+
+### **五、与 Vue 3 的区别**
+| 特性           | Vuex (Vue 2) | Pinia (Vue 3 推荐) |
+| -------------- | ------------ | ------------------ |
+| **API 风格**   | 选项式       | 组合式             |
+| **TypeScript** | 支持一般     | 一流支持           |
+| **模块系统**   | 需要嵌套模块 | 扁平化模块         |
+| **体积**       | 较大         | 更轻量             |
+
+---
+
+### **六、最佳实践**
+1. **遵循规范**：
+   - 用 `actions` 处理异步，用 `mutations` 处理同步
+   - 使用常量命名 mutation 类型（如 `SET_USER`）
+   
+2. **模块化组织**：
+   ```javascript
+   // store/modules/user.js
+   export default {
+     namespaced: true,
+     state: () => ({ ... }),
+     mutations: { ... }
+   }
+   ```
+
+3. **配合辅助函数**：
+   ```javascript
+   import { mapState, mapActions } from 'vuex'
+   
+   computed: {
+     ...mapState(['count']),
+     ...mapGetters(['formattedCount'])
+   },
+   methods: {
+     ...mapActions(['incrementAsync'])
+   }
+   ```
+
+---
+
+### **七、适用场景**
+- **中大型单页应用（SPA）**
+- **多组件共享复杂状态**
+- **需要跟踪状态变更历史（如时间旅行调试）**
+- **需要统一管理服务端数据和本地状态**
+
+---
+
+### **总结**
+Vuex 是 Vue 2 生态中管理复杂状态的**标准解决方案**，它通过集中式存储、严格的修改规则和响应式机制，解决了组件间状态共享的混乱问题。虽然 Vue 3 推荐使用 Pinia，但在维护 Vue 2 项目时，Vuex 仍是不可或缺的工具。
+
+
+
+## `vuex` - 示例
+
+### 集成
+
+>[front-end/demo-vue/vue2-vuex · dexterleslie/demonstration - 码云 - 开源中国](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-vue/vue2-vuex)
+
+`Vue2`需要安装`vuex3`依赖（`Vue3`需要安装`vuex4`依赖）
+
+```sh
+npm install vuex@3
+```
+
+创建`store/module-a.js`
+
+```js
+export default {
+    namespaced: true,
+    state: {
+        count: 0,
+        loginStatus: ''
+    },
+    getters: {
+        countPower(state) {
+            return function(powerCount) {
+                let returnValue = 1
+                for(let i=0; i<powerCount; i++) {
+                    returnValue = returnValue * state.count
+                }
+                return returnValue
+            }
+        }
+    },
+    mutations: {
+        add(state) {
+            state.count++
+        },
+        sub(state) {
+            state.count--
+        },
+
+        addWithSingleParameter(state, step) {
+            state.count = state.count + step
+        },
+        subWithSingleParameter(state, step) {
+            state.count = state.count - step
+        },
+
+        addWithMultipleParameter(state, payload) {
+            state.count = state.count + payload.step1 + payload.step2
+        },
+        subWithMultipleParameter(state, payload) {
+            state.count = state.count - payload.step1 - payload.step2
+        }
+    },
+    actions: {
+        login(context, payload) {
+            context.state.loginStatus = '正在登录中'
+            return new Promise(function(resolve, reject) {
+                setTimeout(function() {
+                    context.state.loginStatus = `登录参数${JSON.stringify(payload)}`
+                    resolve()
+                }, 2000)
+            })
+        }
+    }
+}
+```
+
+创建`store/index.js`
+
+```js
+import Vue from 'vue'
+import Vuex from 'vuex'
+
+import ModuleA from './module-a'
+
+Vue.use(Vuex)
+
+export default new Vuex.Store({
+  state: {
+  },
+  mutations: {
+  },
+  actions: {
+  },
+  modules: {
+    'moduleA': ModuleA
+  }
+})
+
+```
+
+`main.js`中注入`store`对象
+
+```js
+import Vue from 'vue'
+import App from './App.vue'
+import router from './router'
+import store from './store'
+
+Vue.config.productionTip = false
+
+new Vue({
+  router,
+  store,
+  render: function (h) { return h(App) }
+}).$mount('#app')
+```
+
+在页面中调用`vuex`
+
+```vue
+<template>
+    <div>
+        <div>演示vuex actions用法</div>
+        {{$store.state.moduleA.loginStatus}}
+        <button v-on:click="login">开始模拟</button>
+        <hr/>
+    </div>
+</template>
+
+<script>
+export default {
+    methods: {
+        login() {
+            this.$store.dispatch('moduleA/login', {param1:'param1', param2:'param2'})
+            .then(function(data) {
+
+            })
+        }
+    }
+}
+</script>
+```
 
 
 
