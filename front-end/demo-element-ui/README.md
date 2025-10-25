@@ -1,14 +1,10 @@
-# Element-UI
-
-
-
-## Vue2 集成 Element-UI
+## `Vue2`集成`Element-UI`
 
 >请参考本站 <a href="/vue/集成element-ui.html" target="_blank">链接</a>
 
 
 
-## 消息提示 Message
+## 消息提示`Message`
 
 >[Element-UI 官方参考消息提示 Message](https://element.eleme.cn/#/zh-CN/component/message)
 >
@@ -107,4 +103,12 @@ handleClickOk() {
     });
 }
 ```
+
+
+
+## 表单
+
+>详细用法请参考本站[示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-element-ui/element-ui-form)
+>
+>[组件 | Element](https://element.eleme.cn/#/zh-CN/component/form)
 
