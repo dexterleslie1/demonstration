@@ -3283,6 +3283,8 @@ Vue2 页面跳转的核心是 **Vue Router**，主要方式包括：
 
 ### `Vue2`路由集成
 
+>[front-end/demo-vue/vue2-router · dexterleslie/demonstration - 码云 - 开源中国](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-vue/vue2-router)
+
 安装路由依赖
 
 ```sh
@@ -4978,6 +4980,243 @@ export default {
             })
         }
     }
+}
+</script>
+```
+
+
+
+## 监听数据/路由变化`watch`
+
+在 Vue 2 中，`watch` 是用于**监听数据变化**的核心功能，它允许你在数据变化时执行自定义逻辑。以下是全面解析：
+
+---
+
+### **一、基础概念**
+`watch` 是 Vue 实例的一个选项，用于观察和响应 Vue 实例中数据的变化。当被监听的数据发生变化时，指定的回调函数会被触发。
+
+```javascript
+new Vue({
+  data: {
+    message: 'Hello'
+  },
+  watch: {
+    message(newVal, oldVal) {
+      console.log(`消息从 ${oldVal} 变为 ${newVal}`)
+    }
+  }
+})
+```
+
+---
+
+### **二、核心用法**
+
+#### **1. 监听简单数据**
+```javascript
+watch: {
+  // 监听 data 中的 message 属性
+  message(newVal, oldVal) {
+    // 变化时执行的操作
+  }
+}
+```
+
+#### **2. 监听对象属性**
+```javascript
+watch: {
+  'user.name'(newVal) {
+    // 监听嵌套属性
+  }
+}
+```
+
+#### **3. 深度监听（对象/数组）**
+```javascript
+watch: {
+  user: {
+    handler(newVal) {
+      // 当 user 的任何嵌套属性变化时触发
+    },
+    deep: true  // 关键：开启深度监听
+  }
+}
+```
+
+#### **4. 立即触发（初始值）**
+```javascript
+watch: {
+  value: {
+    handler(newVal) {
+      // 立即执行一次，然后监听变化
+    },
+    immediate: true
+  }
+}
+```
+
+---
+
+### **三、高级用法**
+
+#### **1. 监听路由变化**
+```javascript
+watch: {
+  '$route'(to, from) {
+    // 路由变化时执行
+  }
+}
+```
+
+#### **2. 多个数据源监听**
+```javascript
+watch: {
+  // 同时监听多个数据，使用数组
+  newValues, oldValues {
+    const [newA, newB] = newValues
+    const [oldA, oldB] = oldValues
+  }
+}
+```
+
+#### **3. 异步操作**
+```javascript
+watch: {
+  searchQuery(newVal) {
+    // 防抖处理
+    clearTimeout(this.debounceTimer)
+    this.debounceTimer = setTimeout(() => {
+      this.fetchResults(newVal)
+    }, 500)
+  }
+}
+```
+
+---
+
+### **四、与 computed 的区别**
+
+| 特性         | `watch`                       | `computed`                     |
+| ------------ | ----------------------------- | ------------------------------ |
+| **用途**     | 响应数据变化执行异步/复杂操作 | 基于依赖数据的派生值计算       |
+| **缓存**     | 无缓存                        | 自动缓存（依赖不变不重新计算） |
+| **返回值**   | 不需要返回值                  | 必须返回计算结果               |
+| **异步支持** | 支持                          | 不支持                         |
+| **开销**     | 较大（需要主动监听）          | 较小（自动依赖追踪）           |
+
+**选择建议**：
+- 需要**异步操作**或**副作用**时用 `watch`
+- 需要**派生数据**时用 `computed`
+
+---
+
+### **五、组件内动态监听**
+```javascript
+// 在组件中动态添加监听
+this.$watch(
+  'tempValue',  // 监听的数据
+  (newVal) => { /* 回调 */ },
+  { immediate: true, deep: false } // 配置
+)
+```
+
+---
+
+### **六、最佳实践**
+
+#### **1. 避免过度使用**
+- 优先考虑 `computed`，仅在需要副作用时用 `watch`
+- 深层监听 (`deep: true`) 性能开销较大，谨慎使用
+
+#### **2. 清理副作用**
+```javascript
+watch: {
+  data() {
+    const timer = setInterval(/*...*/)
+    // 组件销毁时清理
+    return () => clearInterval(timer)
+  }
+}
+```
+
+#### **3. 性能优化**
+```javascript
+watch: {
+  largeData: {
+    handler() { /*...*/ },
+    deep: true,
+    // 限制触发频率
+    throttle: 500  // 需配合 lodash.throttle
+  }
+}
+```
+
+---
+
+### **七、常见问题**
+
+#### **Q：watch 不触发？**
+- 检查监听的属性名是否拼写正确
+- 确认数据确实是响应式的（在 `data` 中声明）
+- 对象/数组变化时是否开启了 `deep: true`
+
+#### **Q：如何监听数组变化？**
+- 需要 `deep: true` 或使用数组变更方法（如 `push`/`splice`）
+- Vue 2 对数组索引变化监听有限制
+
+---
+
+### **八、Vue 3 的变化**
+在 Vue 3 中：
+- 保留了 `watch` 的基本功能
+- 引入了 `watchEffect` 自动追踪依赖
+- Composition API 提供了更灵活的监听方式
+
+---
+
+### **总结**
+Vue 2 的 `watch` 是响应式系统的关键部分，适用于：
+- 数据变化时需要执行异步操作
+- 监听路由/第三方插件状态
+- 执行复杂逻辑或副作用
+
+正确使用 `watch` 可以极大增强应用的交互性和实时性，但需注意性能影响。
+
+
+
+### 示例
+
+#### 监听路由变化
+
+>[front-end/demo-vue/vue-watch · dexterleslie/demonstration - 码云 - 开源中国](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-vue/vue-watch)
+
+```vue
+<template>
+  <div id="app">
+    <div id="nav">
+      <router-link to="/">演示watch用法</router-link> |
+      <router-link to="/about">About</router-link>
+    </div>
+    <router-view />
+  </div>
+</template>
+
+
+<script>
+export default {
+  name: 'App',
+  components: {
+  },
+  watch: {
+    // 监听路由变化
+    "$route": {
+      handler(to, from) {
+        console.log(`路由变化为：${this.$route.fullPath}，to：${(to || {}).fullPath}，from：${(from || {}).fullPath}`)
+      },
+      // 组件创建时（立即执行）
+      immediate: true
+    }
+  }
 }
 </script>
 ```

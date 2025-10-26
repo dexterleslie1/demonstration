@@ -4,9 +4,28 @@
       <router-link to="/">演示watch用法</router-link> |
       <router-link to="/about">About</router-link>
     </div>
-    <router-view/>
+    <router-view />
   </div>
 </template>
+
+
+<script>
+export default {
+  name: 'App',
+  components: {
+  },
+  watch: {
+    // 监听路由变化
+    "$route": {
+      handler(to, from) {
+        console.log(`路由变化为：${this.$route.fullPath}，to：${(to || {}).fullPath}，from：${(from || {}).fullPath}`)
+      },
+      // 组件创建时（立即执行）
+      immediate: true
+    }
+  }
+}
+</script>
 
 <style>
 #app {
