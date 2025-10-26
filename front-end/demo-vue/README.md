@@ -5223,6 +5223,391 @@ export default {
 
 
 
+## 触发自定义事件并传递数据`$emit`
+
+`this.$emit` 是 Vue 2 中**子组件向父组件通信**的核心方法，用于触发自定义事件并传递数据。
+
+---
+
+### 一、基础概念
+
+#### **作用**
+- 子组件通过 `$emit` 触发事件
+- 父组件通过 `v-on` 监听事件
+- 实现**子组件 → 父组件**的数据传递
+
+#### **基本语法**
+```javascript
+// 子组件中触发事件
+this.$emit('事件名称', 数据)
+
+// 父组件中监听事件
+<child-component @事件名称="处理函数">
+```
+
+---
+
+### 二、基础用法示例
+
+#### **1. 子组件：触发事件**
+```vue
+<!-- ChildComponent.vue -->
+<template>
+  <button @click="sendMessage">发送消息给父组件</button>
+</template>
+
+<script>
+export default {
+  methods: {
+    sendMessage() {
+      // 触发自定义事件，传递数据
+      this.$emit('message-received', {
+        text: 'Hello from child!',
+        timestamp: new Date()
+      })
+    }
+  }
+}
+</script>
+```
+
+#### **2. 父组件：监听事件**
+```vue
+<!-- ParentComponent.vue -->
+<template>
+  <div>
+    <child-component @message-received="handleMessage" />
+    <p>收到消息: {{ receivedMessage }}</p>
+  </div>
+</template>
+
+<script>
+import ChildComponent from './ChildComponent.vue'
+
+export default {
+  components: { ChildComponent },
+  data() {
+    return {
+      receivedMessage: ''
+    }
+  },
+  methods: {
+    handleMessage(payload) {
+      // 接收子组件传递的数据
+      this.receivedMessage = payload.text
+      console.log('收到子组件消息:', payload)
+    }
+  }
+}
+</script>
+```
+
+---
+
+### 三、实际应用场景
+
+#### **场景1：表单提交**
+```vue
+<!-- SubmitForm.vue (子组件) -->
+<template>
+  <form @submit.prevent="submitForm">
+    <input v-model="formData.username">
+    <button type="submit">提交</button>
+  </form>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      formData: {
+        username: ''
+      }
+    }
+  },
+  methods: {
+    submitForm() {
+      // 触发提交事件，传递表单数据
+      this.$emit('form-submit', this.formData)
+    }
+  }
+}
+</script>
+
+<!-- 父组件使用 -->
+<template>
+  <submit-form @form-submit="handleSubmit" />
+</template>
+
+<script>
+export default {
+  methods: {
+    handleSubmit(formData) {
+      // 处理表单提交
+      console.log('表单数据:', formData)
+    }
+  }
+}
+</script>
+```
+
+#### **场景2：模态框控制**
+```vue
+<!-- Modal.vue (子组件) -->
+<template>
+  <div class="modal" v-show="visible">
+    <div class="modal-content">
+      <slot></slot>
+      <button @click="close">关闭</button>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  props: ['visible'],
+  methods: {
+    close() {
+      // 触发关闭事件
+      this.$emit('close-modal')
+    }
+  }
+}
+</script>
+
+<!-- 父组件使用 -->
+<template>
+  <button @click="showModal = true">打开模态框</button>
+  <modal :visible="showModal" @close-modal="showModal = false">
+    <h2>模态框内容</h2>
+  </modal>
+</template>
+```
+
+#### **场景3：列表项操作**
+```vue
+<!-- TodoItem.vue (子组件) -->
+<template>
+  <li>
+    <span>{{ todo.text }}</span>
+    <button @click="deleteTodo">删除</button>
+    <button @click="editTodo">编辑</button>
+  </li>
+</template>
+
+<script>
+export default {
+  props: ['todo', 'index'],
+  methods: {
+    deleteTodo() {
+      this.$emit('delete-todo', this.index)
+    },
+    editTodo() {
+      this.$emit('edit-todo', {
+        index: this.index,
+        todo: this.todo
+      })
+    }
+  }
+}
+</script>
+
+<!-- 父组件使用 -->
+<template>
+  <ul>
+    <todo-item 
+      v-for="(todo, index) in todos" 
+      :key="todo.id"
+      :todo="todo"
+      :index="index"
+      @delete-todo="handleDelete"
+      @edit-todo="handleEdit"
+    />
+  </ul>
+</template>
+
+<script>
+export default {
+  methods: {
+    handleDelete(index) {
+      this.todos.splice(index, 1)
+    },
+    handleEdit(payload) {
+      // 处理编辑逻辑
+      console.log('编辑项目:', payload)
+    }
+  }
+}
+</script>
+```
+
+---
+
+### 四、高级用法
+
+#### **1. 使用 kebab-case 事件名**
+```javascript
+// 推荐：使用连字符命名
+this.$emit('user-selected', userData)
+
+// 父组件监听
+<child-component @user-selected="handleUserSelected">
+```
+
+#### **2. 验证事件数据（Vue 2.4+）**
+```javascript
+export default {
+  emits: {
+    // 简单验证
+    'message-received': null,
+    
+    // 带验证函数
+    'form-submit': (payload) => {
+      return payload && typeof payload.username === 'string'
+    }
+  },
+  methods: {
+    submitForm() {
+      if (this.isValid) {
+        this.$emit('form-submit', this.formData)
+      }
+    }
+  }
+}
+```
+
+#### **3. 同步更新 .sync 修饰符**
+```vue
+<!-- 子组件 -->
+<script>
+export default {
+  methods: {
+    updateTitle() {
+      this.$emit('update:title', '新标题')
+    }
+  }
+}
+</script>
+
+<!-- 父组件 -->
+<template>
+  <child-component :title.sync="pageTitle" />
+</template>
+```
+
+#### **4. 使用 v-model 自定义**
+```javascript
+// 子组件
+export default {
+  model: {
+    prop: 'value',
+    event: 'change'
+  },
+  methods: {
+    handleInput(e) {
+      this.$emit('change', e.target.value)
+    }
+  }
+}
+
+// 父组件
+<custom-input v-model="inputValue" />
+```
+
+---
+
+### 五、与 props 的对比
+
+| 特性         | `props`             | `$emit`                 |
+| ------------ | ------------------- | ----------------------- |
+| **数据流向** | 父组件 → 子组件     | 子组件 → 父组件         |
+| **使用场景** | 传递初始数据、配置  | 通知状态变化、用户交互  |
+| **语法**     | `:prop-name="data"` | `@event-name="handler"` |
+
+**组合使用示例：**
+```vue
+<!-- 双向通信 -->
+<child-component 
+  :user="currentUser" 
+  @user-updated="handleUserUpdate" 
+/>
+```
+
+---
+
+### 六、常见问题解决
+
+#### **问题1：事件未触发**
+```javascript
+// 错误：在 created 中直接使用，DOM 未挂载
+created() {
+  this.$emit('init') // 可能父组件还未监听
+}
+
+// 正确：在 mounted 或用户交互后触发
+mounted() {
+  this.$nextTick(() => {
+    this.$emit('component-mounted')
+  })
+}
+```
+
+#### **问题2：事件命名冲突**
+```javascript
+// 避免使用原生事件名
+this.$emit('click')     // 不推荐（与原生 click 冲突）
+this.$emit('item-click') // 推荐
+```
+
+#### **问题3：多个参数传递**
+```javascript
+// 传递多个参数（不推荐）
+this.$emit('data-updated', arg1, arg2, arg3)
+
+// 推荐：使用对象包装
+this.$emit('data-updated', {
+  param1: arg1,
+  param2: arg2,
+  param3: arg3
+})
+```
+
+---
+
+### 七、最佳实践
+
+1. **事件命名**：使用 kebab-case（`user-selected`）
+2. **数据验证**：使用 `emits` 选项进行验证
+3. **单一职责**：每个事件只负责一个明确的动作
+4. **文档化**：为自定义事件添加注释说明
+
+```javascript
+export default {
+  emits: {
+    // 用户选择事件
+    'user-selected': (user) => user && user.id,
+    
+    // 表单提交事件  
+    'form-submit': (data) => data && data.isValid
+  }
+}
+```
+
+---
+
+#### 总结
+
+`this.$emit` 是 Vue 2 组件通信的**核心机制**，主要用于：
+
+- ✅ **子组件向父组件传递数据**
+- ✅ **处理用户交互事件**  
+- ✅ **实现组件间的解耦通信**
+- ✅ **构建可复用的组件库**
+
+掌握 `$emit` 的使用是 Vue 开发的基础技能，对于构建交互式应用至关重要。
+
+
+
 ## 打包和发布应用
 
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-vue/vue2-using-element-ui)
