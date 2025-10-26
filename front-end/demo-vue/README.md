@@ -5744,6 +5744,515 @@ export default {
 
 
 
+## `component`标签
+
+`<component>` 标签是 Vue2 中的一个**内置组件**，用于动态地渲染不同的组件。它通过 `is` 属性来决定具体渲染哪个组件。
+
+### 基本语法
+
+```vue
+<component :is="currentComponent"></component>
+```
+
+### 1. 基本用法
+
+#### 动态切换组件
+```vue
+<template>
+  <div>
+    <button @click="currentView = 'Home'">首页</button>
+    <button @click="currentView = 'About'">关于</button>
+    <button @click="currentView = 'Contact'">联系</button>
+    
+    <!-- 动态组件 -->
+    <component :is="currentView"></component>
+  </div>
+</template>
+
+<script>
+import Home from './components/Home.vue'
+import About from './components/About.vue'
+import Contact from './components/Contact.vue'
+
+export default {
+  components: {
+    Home,
+    About,
+    Contact
+  },
+  data() {
+    return {
+      currentView: 'Home'
+    }
+  }
+}
+</script>
+```
+
+### 2. 配合 `<keep-alive>` 使用
+
+#### 保持组件状态
+```vue
+<template>
+  <div>
+    <button @click="currentTab = 'Tab1'">标签1</button>
+    <button @click="currentTab = 'Tab2'">标签2</button>
+    
+    <!-- 使用 keep-alive 缓存组件状态 -->
+    <keep-alive>
+      <component :is="currentTab"></component>
+    </keep-alive>
+  </div>
+</template>
+
+<script>
+import Tab1 from './components/Tab1.vue'
+import Tab2 from './components/Tab2.vue'
+
+export default {
+  components: {
+    Tab1,
+    Tab2
+  },
+  data() {
+    return {
+      currentTab: 'Tab1'
+    }
+  }
+}
+</script>
+```
+
+#### 条件缓存
+```vue
+<template>
+  <div>
+    <!-- 只缓存特定组件 -->
+    <keep-alive :include="['Tab1', 'Tab2']" :exclude="['Tab3']" :max="5">
+      <component :is="currentComponent"></component>
+    </keep-alive>
+  </div>
+</template>
+```
+
+### 3. 传递 Props 和事件
+
+#### 传递数据和方法
+```vue
+<template>
+  <div>
+    <button @click="currentComponent = 'UserProfile'">用户资料</button>
+    <button @click="currentComponent = 'UserSettings'">用户设置</button>
+    
+    <!-- 动态传递 props 和监听事件 -->
+    <component 
+      :is="currentComponent"
+      :user="currentUser"
+      :config="appConfig"
+      @save="handleSave"
+      @update="handleUpdate"
+    />
+  </div>
+</template>
+
+<script>
+import UserProfile from './components/UserProfile.vue'
+import UserSettings from './components/UserSettings.vue'
+
+export default {
+  components: {
+    UserProfile,
+    UserSettings
+  },
+  data() {
+    return {
+      currentComponent: 'UserProfile',
+      currentUser: {
+        name: '张三',
+        age: 25
+      },
+      appConfig: {
+        theme: 'dark',
+        language: 'zh-CN'
+      }
+    }
+  },
+  methods: {
+    handleSave(data) {
+      console.log('保存数据:', data)
+    },
+    handleUpdate(data) {
+      console.log('更新数据:', data)
+    }
+  }
+}
+</script>
+```
+
+### 4. 实际应用场景
+
+#### 场景1：标签页切换
+```vue
+<template>
+  <div class="tab-container">
+    <div class="tab-buttons">
+      <button 
+        v-for="tab in tabs" 
+        :key="tab.name"
+        :class="{ active: currentTab === tab.name }"
+        @click="currentTab = tab.name"
+      >
+        {{ tab.label }}
+      </button>
+    </div>
+    
+    <div class="tab-content">
+      <component :is="currentTab" :key="currentTab"></component>
+    </div>
+  </div>
+</template>
+
+<script>
+import InfoTab from './tabs/InfoTab.vue'
+import SettingsTab from './tabs/SettingsTab.vue'
+import HistoryTab from './tabs/HistoryTab.vue'
+
+export default {
+  components: {
+    InfoTab,
+    SettingsTab,
+    HistoryTab
+  },
+  data() {
+    return {
+      currentTab: 'InfoTab',
+      tabs: [
+        { name: 'InfoTab', label: '基本信息' },
+        { name: 'SettingsTab', label: '设置' },
+        { name: 'HistoryTab', label: '历史记录' }
+      ]
+    }
+  }
+}
+</script>
+
+<style>
+.tab-buttons button.active {
+  background-color: #409EFF;
+  color: white;
+}
+</style>
+```
+
+#### 场景2：表单步骤向导
+```vue
+<template>
+  <div class="wizard">
+    <div class="steps">
+      <span 
+        v-for="(step, index) in steps" 
+        :key="index"
+        :class="{ active: currentStep === index, completed: currentStep > index }"
+        @click="goToStep(index)"
+      >
+        {{ step.title }}
+      </span>
+    </div>
+    
+    <div class="step-content">
+      <component 
+        :is="steps[currentStep].component"
+        :form-data="formData"
+        @next="nextStep"
+        @prev="prevStep"
+        @submit="submitForm"
+      />
+    </div>
+    
+    <div class="wizard-actions">
+      <button v-if="currentStep > 0" @click="prevStep">上一步</button>
+      <button v-if="currentStep < steps.length - 1" @click="nextStep">下一步</button>
+      <button v-if="currentStep === steps.length - 1" @click="submitForm">提交</button>
+    </div>
+  </div>
+</template>
+
+<script>
+import Step1 from './steps/Step1.vue'
+import Step2 from './steps/Step2.vue'
+import Step3 from './steps/Step3.vue'
+
+export default {
+  components: {
+    Step1, Step2, Step3
+  },
+  data() {
+    return {
+      currentStep: 0,
+      formData: {},
+      steps: [
+        { title: '基本信息', component: 'Step1' },
+        { title: '详细信息', component: 'Step2' },
+        { title: '确认提交', component: 'Step3' }
+      ]
+    }
+  },
+  methods: {
+    nextStep() {
+      if (this.currentStep < this.steps.length - 1) {
+        this.currentStep++
+      }
+    },
+    prevStep() {
+      if (this.currentStep > 0) {
+        this.currentStep--
+      }
+    },
+    submitForm() {
+      console.log('提交表单:', this.formData)
+    },
+    goToStep(index) {
+      this.currentStep = index
+    }
+  }
+}
+</script>
+```
+
+#### 场景3：条件渲染不同组件
+```vue
+<template>
+  <div>
+    <select v-model="componentType">
+      <option value="TableComponent">表格视图</option>
+      <option value="CardComponent">卡片视图</option>
+      <option value="ListComponent">列表视图</option>
+    </select>
+    
+    <!-- 根据类型渲染不同组件 -->
+    <component 
+      :is="componentType" 
+      :data="items"
+      :key="componentType"
+    />
+  </div>
+</template>
+
+<script>
+import TableComponent from './components/TableComponent.vue'
+import CardComponent from './components/CardComponent.vue'
+import ListComponent from './components/ListComponent.vue'
+
+export default {
+  components: {
+    TableComponent,
+    CardComponent,
+    ListComponent
+  },
+  data() {
+    return {
+      componentType: 'TableComponent',
+      items: [
+        { id: 1, name: '项目1', status: 'active' },
+        { id: 2, name: '项目2', status: 'inactive' }
+        // ... 更多数据
+      ]
+    }
+  }
+}
+</script>
+```
+
+### 5. 高级用法
+
+#### 动态导入（异步组件）
+```vue
+<template>
+  <div>
+    <button @click="loadComponent('ComponentA')">加载组件A</button>
+    <button @click="loadComponent('ComponentB')">加载组件B</button>
+    
+    <component :is="currentComponent" v-if="currentComponent" />
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      currentComponent: null
+    }
+  },
+  methods: {
+    async loadComponent(componentName) {
+      try {
+        // 动态导入组件
+        const component = await import(`./components/${componentName}.vue`)
+        this.currentComponent = component.default
+      } catch (error) {
+        console.error('加载组件失败:', error)
+      }
+    }
+  }
+}
+</script>
+```
+
+#### 工厂函数模式
+```vue
+<template>
+  <div>
+    <component :is="getComponent(type)" :data="itemData" />
+  </div>
+</template>
+
+<script>
+import TextComponent from './components/TextComponent.vue'
+import ImageComponent from './components/ImageComponent.vue'
+import VideoComponent from './components/VideoComponent.vue'
+
+export default {
+  components: {
+    TextComponent,
+    ImageComponent,
+    VideoComponent
+  },
+  props: {
+    type: String,
+    itemData: Object
+  },
+  methods: {
+    getComponent(type) {
+      const componentMap = {
+        text: 'TextComponent',
+        image: 'ImageComponent',
+        video: 'VideoComponent'
+      }
+      return componentMap[type] || 'TextComponent'
+    }
+  }
+}
+</script>
+```
+
+### 总结
+
+`<component>` 标签的主要特性：
+
+| 特性           | 说明                                 |
+| -------------- | ------------------------------------ |
+| **动态渲染**   | 通过 `:is` 属性动态决定渲染哪个组件  |
+| **状态保持**   | 配合 `<keep-alive>` 可以缓存组件状态 |
+| **Props 传递** | 可以像普通组件一样传递 props         |
+| **事件监听**   | 可以监听子组件发出的事件             |
+| **条件渲染**   | 适合需要根据条件切换不同组件的场景   |
+
+**使用场景：**
+- ✅ 标签页切换
+- ✅ 步骤向导
+- ✅ 多视图切换
+- ✅ 条件渲染不同UI组件
+- ✅ 插件系统或可扩展架构
+
+`<component>` 标签让 Vue 组件系统更加灵活和强大！
+
+
+
+## `keep-alive`标签
+
+`keep-alive` 是 Vue.js 2.x 中的一个内置抽象组件，用于缓存不活动的组件实例，而不是销毁它们。
+
+### 主要作用
+
+1. **组件缓存**：当组件被切换时，默认会被销毁，而使用 `keep-alive` 可以保留这些组件实例，避免重复渲染
+2. **状态保持**：保留组件的状态（如数据、DOM 状态等）
+3. **性能优化**：减少不必要的组件销毁和重建，提高性能
+
+### 基本用法
+
+```html
+<keep-alive>
+  <component :is="currentComponent"></component>
+</keep-alive>
+```
+
+### 常用属性
+
+- `include`：字符串或正则表达式，只有名称匹配的组件会被缓存
+- `exclude`：字符串或正则表达式，任何名称匹配的组件都不会被缓存
+- `max`：数字，最多可以缓存多少组件实例
+
+```html
+<keep-alive include="componentA,componentB" exclude="componentC" max="10">
+  <router-view></router-view>
+</keep-alive>
+```
+
+### 生命周期钩子
+
+被 `keep-alive` 缓存的组件会额外拥有两个生命周期钩子：
+
+1. `activated`：当组件被激活时调用（从缓存中重新进入）
+2. `deactivated`：当组件被停用时调用（离开但被缓存）
+
+### 注意事项
+
+- 只适用于有状态的组件（有响应式数据或 DOM 状态）
+- 不会缓存函数式组件
+- 使用 `max` 时，当缓存数量超过限制，最久没有被访问的实例会被销毁
+
+`keep-alive` 在需要保持组件状态或优化性能的场景中非常有用，特别是对于复杂的组件或需要保持滚动位置的列表等场景。
+
+### 示例
+
+>[front-end/demo-vue/vue2-keep-alive · dexterleslie/demonstration - 码云 - 开源中国](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-vue/vue2-keep-alive)
+
+```vue
+<template>
+  <div id="app">
+    <!-- <img alt="Vue logo" src="./assets/logo.png">
+    <HelloWorld msg="Welcome to Your Vue.js App"/> -->
+    <RouterLink to="/">组件1</RouterLink> |
+    <RouterLink to="/component2">组件2</RouterLink> |
+    <RouterLink to="/component3">组件3</RouterLink>
+    <keep-alive :include="keepAliveComponents">
+      <router-view></router-view>
+    </keep-alive>
+  </div>
+</template>
+
+<script>
+import HelloWorld from './components/HelloWorld.vue'
+
+export default {
+  name: 'App',
+  components: {
+    HelloWorld
+  },
+  data() {
+    return {
+      // keep-alive标签只缓存Component1和Component3组件
+      keepAliveComponents: ["Component1", "Component3",]
+    }
+  }
+}
+</script>
+
+<style>
+#app {
+  font-family: Avenir, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-align: center;
+  color: #2c3e50;
+  margin-top: 60px;
+}
+</style>
+
+```
+
+
+
 ## 打包和发布应用
 
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-vue/vue2-using-element-ui)
