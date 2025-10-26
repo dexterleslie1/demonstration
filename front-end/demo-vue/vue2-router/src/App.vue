@@ -11,6 +11,7 @@
 <script>
 import { RouterLink, RouterView } from 'vue-router';
 import HelloWorld from './components/HelloWorld.vue'
+import router from './router';
 
 export default {
   name: 'App',
@@ -18,7 +19,7 @@ export default {
     HelloWorld
   },
   methods: {
-    routeProgramatically: function() {
+    routeProgramatically: function () {
       // this.$router.push({
       //   path: "/about",
       //   query: { id: 1 }
@@ -28,6 +29,15 @@ export default {
         query: { id: 1 }
       })
     }
+  },
+  mounted() {
+    // 动态添加/about路由以模拟加载菜单场景
+    router.addRoutes([
+      {
+        path: '/about',
+        name: 'About',
+        component: () => import(`@/components/About`)
+      }]);
   }
 }
 </script>

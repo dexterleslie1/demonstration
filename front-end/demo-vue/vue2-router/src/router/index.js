@@ -24,11 +24,12 @@ const routes = [
             }
         ]
     },
-    {
-        path: '/about',
-        name: 'About',
-        component: About
-    }
+    // 下面路由动态添加
+    // {
+    //     path: '/about',
+    //     name: 'About',
+    //     component: About
+    // }
 ];
 
 // 创建路由实例
