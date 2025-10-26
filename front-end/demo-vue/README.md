@@ -4986,6 +4986,66 @@ export default {
 
 
 
+### 调用`Getters`
+
+>说明：Getters 类似于组件中的计算属性（computed），用于从 store 的 state 中派生出一些状态（派生状态）。
+>
+>[front-end/demo-vue/vue2-vuex · dexterleslie/demonstration - 码云 - 开源中国](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-vue/vue2-vuex)
+
+定义`Getters`
+
+```js
+export default {
+    namespaced: true,
+    state: {
+        count: 0,
+    },
+    getters: {
+        countPower(state) {
+            return function (powerCount) {
+                let returnValue = 1
+                for (let i = 0; i < powerCount; i++) {
+                    returnValue = returnValue * state.count
+                }
+                return returnValue
+            }
+        }
+    },
+    
+    ...
+}
+```
+
+调用`Getters`
+
+```vue
+<template>
+  <div>
+    <div>演示带参数getters用法</div>
+    <button v-on:click="$store.commit('moduleA/add')">+</button>
+    <button v-on:click="$store.commit('moduleA/sub')">-</button>
+    <div>Count：{{$store.state.moduleA.count}} 3次乘积结果：{{$store.getters['moduleA/countPower'](3)}}</div>
+    <hr/>
+  </div>
+</template>
+
+<script>
+export default {
+    
+}
+</script>
+```
+
+
+
+### `mapState`、`mapGetters`、`mapActions`、`mapMutations`用法
+
+>说明：mapState、mapGetters、mapActions、mapMutations都是辅助函数，用于简化在 Vue 组件中访问 Vuex store 的代码编写。
+>
+>[front-end/demo-vue/vue2-vuex · dexterleslie/demonstration - 码云 - 开源中国](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-vue/vue2-vuex)
+
+
+
 ## 监听数据/路由变化`watch`
 
 在 Vue 2 中，`watch` 是用于**监听数据变化**的核心功能，它允许你在数据变化时执行自定义逻辑。以下是全面解析：
