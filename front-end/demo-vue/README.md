@@ -4109,7 +4109,7 @@ v-bind 是 data 数据对页面标签中属性的绑定，被称为单向绑定�
 
 >[官方参考文档](https://cn.vuejs.org/guide/essentials/class-and-style#binding-inline-styles)
 >
->详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/master/front-end/demo-vue/vue2-class-and-style-binding)
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/master/front-end/demo-vue/vue2-v-bind)
 
 #### 绑定 HTML class
 
@@ -4455,6 +4455,28 @@ data() {
       applyMyFontBold: true,
     }
   },
+```
+
+
+
+### 一次绑定多个属性
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/master/front-end/demo-vue/vue2-v-bind)
+
+```vue
+<input v-bind="inputAttrs">
+
+data() {
+    return {
+      inputAttrs: {
+        type: 'text',
+        placeholder: '请输入内容',
+        disabled: false,
+        class: 'form-input',
+        style: { color: 'red', fontSize: '14px' }
+      },
+    }
+},
 ```
 
 

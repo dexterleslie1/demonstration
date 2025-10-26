@@ -73,6 +73,12 @@
       <div :style="this.applyMyFontBold ? 'font-weight:bold;' : ''">内容</div>
     </div>
 
+    <hr />
+    <div>一次绑定多个属性</div>
+    <div>
+      <input v-bind="inputAttrs">
+    </div>
+
   </div>
 </template>
 
@@ -89,6 +95,13 @@ export default {
       fontWeight: 'bold',
       styleObject: { 'font-weight': 'bold' },
       styleObject2: { 'color': 'red' },
+      inputAttrs: {
+        type: 'text',
+        placeholder: '请输入内容',
+        disabled: false,
+        class: 'form-input',
+        style: { color: 'red', fontSize: '14px' }
+      },
     }
   },
   computed: {
