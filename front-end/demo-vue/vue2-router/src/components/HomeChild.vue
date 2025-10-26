@@ -1,7 +1,6 @@
 <template>
     <div>
-        <h4>首页主页面</h4>
-        <router-view :key="$route.fullPath"></router-view>
+        首页子页面
     </div>
 </template>
 

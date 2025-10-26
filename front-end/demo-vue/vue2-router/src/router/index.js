@@ -4,6 +4,7 @@ import VueRouter from 'vue-router';
 // 引入目标页面组件
 import Home from '@/components/Home.vue';
 import About from '@/components/About.vue';
+import HomeChild from '@/components/HomeChild.vue';
 
 Vue.use(VueRouter);
 
@@ -12,7 +13,16 @@ const routes = [
     {
         path: '/',          // 根路径
         name: 'Home',       // 路由名称（可选，用于编程式导航）
-        component: Home     // 对应组件
+        component: Home,     // 对应组件
+        // 访问http://localhost会自动重定向到http://localhost/index，并且Home页面包裹HomeChild页面内容
+        redirect: 'index',
+        children: [
+            {
+                path: 'index',
+                name: 'index',
+                component: HomeChild
+            }
+        ]
     },
     {
         path: '/about',
