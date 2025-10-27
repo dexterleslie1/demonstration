@@ -6253,6 +6253,28 @@ export default {
 
 
 
+## 调试
+
+>说明：使用浏览器内置的开发者工具Devtools断电调试Vue代码。
+
+打开开发者工具，切换到`调试器`>`源代码`标签页，在Webpack树节点中找到源代码并设置断点即可对代码断点调试了。
+
+
+
+## Vue Devtools
+
+>提示：Vue Devtools无法查看通过router.addRoutes()动态添加的路由。
+>
+>说明：Vue Devtools主要功能有：1、组件树和状态检查。2、事件监控。3、Vuex状态查看。4、Router路由信息查看。
+
+### FireFox安装
+
+打开`扩展和主题` > `扩展`功能，在搜索框中输入`vue devtools`并搜索，如果调试Vue2则安装Vue.js Devtools v6 (legacy)，如果调试Vue3则安装Vue.js devtools。
+
+成功安装Vue Devtools后重启浏览器并打开Vue Devtools调试即可。
+
+
+
 ## 打包和发布应用
 
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-vue/vue2-using-element-ui)
