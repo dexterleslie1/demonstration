@@ -3821,6 +3821,45 @@ export default {
 
 
 
+### 404页面
+
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-vue/vue2-router)
+
+```js
+import Vue from 'vue';
+import VueRouter from 'vue-router';
+
+// 引入目标页面组件
+import Home from '@/components/Home.vue';
+import HomeChild from '@/components/HomeChild.vue';
+import Component404 from '@/components/Component404.vue';
+import Layout from '@/components/Layout.vue';
+import About from '@/components/About.vue';
+
+Vue.use(VueRouter);
+
+// 定义路由规则
+const routes = [
+    // 404页面
+    {
+        path: "*",
+        name: "404",
+        component: Component404,
+    }
+];
+
+// 创建路由实例
+const router = new VueRouter({
+    mode: 'history',      // 路由模式（hash 或 history，推荐 history）
+    base: process.env.BASE_URL, // 基础路径（可选）
+    routes              // 注册路由规则
+});
+
+export default router; // 导出路由实例
+```
+
+
+
 ## 指令 - `v-if`
 
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/master/front-end/demo-vue/vue2-vif-and-vshow)

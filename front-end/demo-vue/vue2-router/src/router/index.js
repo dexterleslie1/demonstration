@@ -3,8 +3,10 @@ import VueRouter from 'vue-router';
 
 // 引入目标页面组件
 import Home from '@/components/Home.vue';
-import About from '@/components/About.vue';
 import HomeChild from '@/components/HomeChild.vue';
+import Component404 from '@/components/Component404.vue';
+import Layout from '@/components/Layout.vue';
+import About from '@/components/About.vue';
 
 Vue.use(VueRouter);
 
@@ -12,24 +14,44 @@ Vue.use(VueRouter);
 const routes = [
     {
         path: '/',          // 根路径
-        name: 'Home',       // 路由名称（可选，用于编程式导航）
-        component: Home,     // 对应组件
+        name: 'Layout',       // 路由名称（可选，用于编程式导航）
+        component: Layout,     // 对应组件
         // 访问http://localhost会自动重定向到http://localhost/index，并且Home页面包裹HomeChild页面内容
         redirect: 'index',
         children: [
             {
                 path: 'index',
-                name: 'index',
-                component: HomeChild
+                name: 'Home',
+                component: Home,
+                children: [
+                    {
+                        path: "",
+                        name: "HomeChild",
+                        component: HomeChild
+                    }
+                ]
             }
         ]
     },
     // 下面路由动态添加
     // {
     //     path: '/about',
-    //     name: 'About',
-    //     component: About
-    // }
+    //     name: 'LayoutAbout',
+    //     component: Layout,
+    //     children: [
+    //         {
+    //             path: "",
+    //             name: "About",
+    //             component: About
+    //         }
+    //     ]
+    // },
+    // 404页面
+    {
+        path: "*",
+        name: "404",
+        component: Component404,
+    }
 ];
 
 // 创建路由实例
