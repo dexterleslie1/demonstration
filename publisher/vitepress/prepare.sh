@@ -82,6 +82,7 @@ source_dir_to_target_dir_map["../../demo-gost"]="gost"
 source_dir_to_target_dir_map["../../captcha"]="captcha"
 source_dir_to_target_dir_map["../../demo-chrome"]="chrome"
 source_dir_to_target_dir_map["../../captcha"]="captcha"
+source_dir_to_target_dir_map["../../demo-ffmpeg"]="ffmpeg"
 
 for key in ${!source_dir_to_target_dir_map[@]}; do
     # 删除符号链接目录
