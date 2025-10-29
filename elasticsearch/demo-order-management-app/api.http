@@ -13,9 +13,8 @@ GET http://localhost:8080/api/v1/order/listByMerchantIdAndWithoutStatus
 ### 商家查询指定日期范围+指定状态的订单
 GET http://localhost:8080/api/v1/order/listByMerchantIdAndStatus
 
+### 根据中文关键词搜索订单
+GET http://localhost:8080/api/v1/order/listByKeyword?keyword=媒体
+
 ### 批量初始化订单数据
 GET http://localhost:8080/api/v1/order/initInsertBatch
-Accept: application/json
-
-### 初始化id缓存辅助数据
-GET http://localhost:8080/api/v1/order/init

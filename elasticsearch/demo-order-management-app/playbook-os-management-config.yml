@@ -1,0 +1,69 @@
+- name: "配置管理主机"
+  hosts: management
+  tasks:
+    - name: "创建用户组dexterleslie"
+      group:
+        name: dexterleslie
+        state: present
+    - name: "创建普通用户dexterleslie，用于rdp登录并运行electerm"
+      user:
+        name: dexterleslie
+        shell: /bin/bash
+        group: dexterleslie
+        state: present
+        password: "{{ 'Root@123' | password_hash('sha512') }}"
+    - name: "将dexterleslie添加到sudoers"
+      lineinfile:
+        # sudoers文件路径
+        path: /etc/sudoers
+        line: "dexterleslie ALL=(ALL) ALL"  # 允许用户执行所有sudo命令
+        # 可选：允许无密码sudo（根据需求调整）
+        # line: "dexterleslie ALL=(ALL) NOPASSWD:ALL"
+        # 用visudo验证语法，避免错误
+        validate: 'visudo -cf %s'
+        # 确保该行存在
+        state: present
+
+    - name: "安装xrdp"
+      shell: |
+        set -e
+        sudo rm -f /usr/bin/dcli && sudo curl https://fut001.oss-cn-hangzhou.aliyuncs.com/dcli/dcli-linux-x86_64 --output /usr/bin/dcli && sudo chmod +x /usr/bin/dcli
+        sudo -E dcli xrdp install --install y
+
+    - name: "安装electerm"
+      shell: |
+        set -e
+        curl --silent https://fut001.oss-cn-hangzhou.aliyuncs.com/electerm/electerm-1.72.48-linux-amd64.deb --output /tmp/electerm-1.72.48-linux-amd64.deb
+        dpkg -i /tmp/electerm-1.72.48-linux-amd64.deb
+    - name: "安装mysql-workbench"
+      shell: |
+        set -e
+        curl --silent https://fut001.oss-cn-hangzhou.aliyuncs.com/mysql-workbench/mysql-workbench-community_8.0.29-1ubuntu20.04_amd64.deb --output /tmp/mysql-workbench-community_8.0.29-1ubuntu20.04_amd64.deb
+        sudo apt install /tmp/mysql-workbench-community_8.0.29-1ubuntu20.04_amd64.deb -y || sudo apt --fix-broken install -y
+        sudo apt install /tmp/mysql-workbench-community_8.0.29-1ubuntu20.04_amd64.deb -y
+    - name: "安装wrk"
+      shell: |
+        set -e
+        sudo apt install make
+        sudo apt install build-essential
+        sudo rm -rf ~/wrk
+        git clone https://gitee.com/dexterleslie/wrk.git
+        cd wrk && make
+        sudo cp wrk /usr/local/bin/wrk && sudo chmod +x /usr/local/bin/wrk
+        sudo rm -rf ~/wrk
+    - name: "修改nofile配置"
+      shell: |
+        set -e
+        sudo grep -q "^\* soft nofile" /etc/security/limits.conf && sudo sed -i '/^\* soft nofile/c \* soft nofile 65535' /etc/security/limits.conf || sudo sed -i '/^# End of file/i \* soft nofile 65535' /etc/security/limits.conf
+        sudo grep -q "^\* hard nofile" /etc/security/limits.conf && sudo sed -i '/^\* hard nofile/c \* hard nofile 65535' /etc/security/limits.conf || sudo sed -i '/^# End of file/i \* hard nofile 65535' /etc/security/limits.conf
+    - name: "修改file-max配置"
+      shell: |
+        set -e
+        sudo grep -q "^fs.file-max=" /etc/sysctl.conf && sudo sed -i '/^fs.file-max=/c fs.file-max=10000000' /etc/sysctl.conf || sudo sed -i '$a\fs.file-max=10000000' /etc/sysctl.conf
+    - name: "修改fs.aio-max-nr配置"
+      shell: |
+        set -e
+        sudo grep -q "^fs.aio-max-nr" /etc/sysctl.conf && sudo sed -i '/^fs.aio-max-nr/c fs.aio-max-nr=1224634' /etc/sysctl.conf || sudo sed -i '$a\fs.aio-max-nr=1224634' /etc/sysctl.conf
+    - name: "提醒"
+      debug:
+        msg: "系统、软件安装和配置完毕，请重启操作系统，rdp登录时请使用普通用户dexterleslie登录，为了正确运行electerm。"

@@ -6,9 +6,209 @@
 
 
 
-## 什么是 tokenizer、analyzer、filter ?
+## 什么是analyzer、tokenizer、filter？
 
-> [什么是 tokenizer、analyzer、filter ?](https://cloud.tencent.com/developer/article/1706529)
+在 Elasticsearch 中，**Analyzer（分析器）**、**Tokenizer（分词器）** 和 **Filter（过滤器）** 是文本处理的核心组件，它们共同作用将原始文本转换为可搜索的倒排索引。以下是它们的详细解释和协作关系：
+
+---
+
+### **一、核心组件关系图**
+```mermaid
+graph LR
+    A[Analyzer] --> B[Tokenizer]
+    A --> C[Filter]
+    C --> D[Lowercase Filter]
+    C --> E[Stopword Filter]
+    C --> F[Synonym Filter]
+```
+
+---
+
+### **二、组件功能详解**
+
+#### **1. Analyzer（分析器）**
+- **作用**：定义完整的文本处理流程，包含 **1个Tokenizer + 0或多个Filter**。
+- **执行阶段**：
+  - **索引时（Indexing）**：处理文档内容，生成倒排索引
+  - **搜索时（Searching）**：处理查询词条（除非指定单独的`search_analyzer`）
+
+**示例**：标准分析器（`standard` analyzer）的组成：
+```json
+{
+  "analyzer": {
+    "standard": {
+      "type": "standard",
+      "tokenizer": "standard",
+      "filter": ["lowercase", "stop"]
+    }
+  }
+}
+```
+
+#### **2. Tokenizer（分词器）**
+- **作用**：将文本拆分为词元（Token），**每个分析器必须有且仅有一个分词器**。
+- **常见类型**：
+  | 分词器类型    | 描述             | 示例输入 → 输出                                  |
+  | ------------- | ---------------- | ------------------------------------------------ |
+  | `standard`    | 按单词边界分词   | `"Hello-World"` → `["Hello", "World"]`           |
+  | `whitespace`  | 按空格切分       | `"Hello World"` → `["Hello", "World"]`           |
+  | `keyword`     | 不分词，整体输出 | `"Hello World"` → `["Hello World"]`              |
+  | `pattern`     | 正则分词         | `"a1b2c3"` 按数字切分 → `["a", "b", "c"]`        |
+  | `ik_max_word` | 中文细粒度分词   | `" Elasticsearch"` → `["Elasticsearch", "搜索"]` |
+
+#### **3. Filter（过滤器）**
+- **作用**：对 **Tokenizer 输出的词元** 进行二次处理（修改、删除、新增）。
+- **常见类型**：
+  | 过滤器类型  | 描述       | 示例输入 → 输出                       |
+  | ----------- | ---------- | ------------------------------------- |
+  | `lowercase` | 转小写     | `"HELLO"` → `"hello"`                 |
+  | `stop`      | 移除停用词 | `["a", "the", "quick"]` → `["quick"]` |
+  | `stemmer`   | 词干提取   | `"running"` → `"run"`                 |
+  | `synonym`   | 同义词扩展 | `"quick"` → `["fast", "speedy"]`      |
+  | `ngram`     | 生成N-gram | `"hello"` → `["h", "he", "hel", ...]` |
+
+---
+
+### **三、完整处理流程示例**
+**输入文本**：  
+`"The Quick Brown Fox Jumps!"`
+
+**分析器配置**：
+```json
+{
+  "analyzer": {
+    "my_custom_analyzer": {
+      "type": "custom",
+      "tokenizer": "standard",
+      "filter": ["lowercase", "stop", "stemmer"]
+    }
+  }
+}
+```
+
+**处理步骤**：
+1. **Tokenizer** (`standard`):  
+   `["The", "Quick", "Brown", "Fox", "Jumps"]`
+2. **Filter 1** (`lowercase`):  
+   `["the", "quick", "brown", "fox", "jumps"]`
+3. **Filter 2** (`stop` 移除停用词):  
+   `["quick", "brown", "fox", "jumps"]`
+4. **Filter 3** (`stemmer` 词干提取):  
+   `["quick", "brown", "fox", "jump"]`
+
+**最终索引词项**：  
+`["quick", "brown", "fox", "jump"]`
+
+---
+
+### **四、自定义分析器实战**
+
+#### **1. 定义自定义分析器**
+```json
+PUT /my_index
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "my_analyzer": {
+          "type": "custom",
+          "tokenizer": "ik_max_word",          // 中文分词器
+          "filter": [
+            "lowercase",
+            "my_stopwords",                   // 自定义停用词
+            "synonym"                         // 同义词
+          ]
+        }
+      },
+      "filter": {
+        "my_stopwords": {
+          "type": "stop",
+          "stopwords": ["的", "是", "了"]     // 中文停用词
+        },
+        "synonym": {
+          "type": "synonym",
+          "synonyms": ["搜索 => 检索", "ES => Elasticsearch"]
+        }
+      }
+    }
+  }
+}
+```
+
+#### **2. 测试分析器效果**
+```json
+GET /my_index/_analyze
+{
+  "analyzer": "my_analyzer",
+  "text": "Elasticsearch的搜索性能非常强大"
+}
+```
+
+**输出结果**：
+```json
+{
+  "tokens": [
+    { "token": "elasticsearch", "position": 0 },
+    { "token": "检索", "position": 2 },      // "搜索"被替换为同义词
+    { "token": "性能", "position": 3 },
+    { "token": "非常", "position": 4 },
+    { "token": "强大", "position": 5 }
+  ]
+}
+```
+
+---
+
+### **五、常见内置分析器对比**
+| 分析器名称   | 分词器     | 过滤器          | 典型场景           |
+| ------------ | ---------- | --------------- | ------------------ |
+| `standard`   | standard   | lowercase, stop | 英文文本（默认）   |
+| `simple`     | lowercase  | -               | 简单无符号文本     |
+| `whitespace` | whitespace | -               | 按空格严格切分     |
+| `keyword`    | keyword    | -               | 不分词（如ID字段） |
+| `pattern`    | pattern    | lowercase       | 正则匹配分词       |
+| `ik_smart`   | ik_smart   | -               | 中文粗粒度分词     |
+
+---
+
+### **六、关键注意事项**
+1. **索引 vs 搜索分析器**：
+   ```json
+   PUT /my_index/_mapping
+   {
+     "properties": {
+       "content": {
+         "type": "text",
+         "analyzer": "ik_max_word",     // 索引时使用
+         "search_analyzer": "ik_smart"  // 搜索时使用
+       }
+     }
+   }
+   ```
+
+2. **多字段多分析器**：
+   ```json
+   "content": {
+     "type": "text",
+     "fields": {
+       "raw":   { "type": "keyword" },          // 不分词
+       "english": { "type": "text", "analyzer": "english" },  // 英文分析
+       "pinyin": { "type": "text", "analyzer": "pinyin" }    // 拼音搜索
+     }
+   }
+   ```
+
+3. **分词器性能影响**：
+   - **复杂分词器**（如`ik_max_word`）会显著增加索引时间
+   - **N-gram过滤器**会导致索引膨胀
+
+---
+
+### **七、总结**
+- **Analyzer** = **1个Tokenizer + N个Filter**  
+- **Tokenizer** 决定如何切分文本（核心步骤）  
+- **Filter** 决定如何加工词元（精细化控制）  
+- **最佳实践**：根据语言特性选择合适的分词器（英文用`standard`，中文用`ik`），再通过过滤器组合实现高级需求（如拼音搜索、同义词等）。
 
 
 
@@ -678,6 +878,56 @@ public static class MyBean {
 详细的`jmh`代码请参考`https://gitee.com/dexterleslie/demonstration/blob/master/elasticsearch/elasticsearch7/elasticsearch-java-transport-client/src/test/java/com/future/demo/elasticsearch/IndividualAndBulkAddPerfComparisonTests.java`
 
 实验结论：批量插入性能高于单条插入性能。
+
+
+
+### 中文和拼音搜索
+
+>说明：单机的ElasticSearch在性能测试过程中CPU很容易被占满，注释订单排序代码`.sort(so -> so.field(f -> f.field("id").order(SortOrder.Desc)))`之后情况有所环境，但是QPS也只有150/s。
+
+使用本站[示例](https://gitee.com/dexterleslie/demonstration/tree/main/elasticsearch/demo-order-management-app)辅助测试。
+
+编译并推送镜像
+
+```sh
+./build.sh && ./push.sh
+```
+
+复制部署配置
+
+```sh
+ansible-playbook playbook-deployer-config.yml --inventory inventory.ini
+```
+
+部署测试目标
+
+```sh
+ansible-playbook playbook-service-start.yml --inventory inventory.ini
+```
+
+验证测试目标服务是否正常
+
+```sh
+curl http://192.168.1.185/api/v1/order/initInsertBatch
+```
+
+准备测试数据
+
+```sh
+wrk -t8 -c32 -d300000000000s --latency --timeout 60 http://192.168.1.185/api/v1/order/initInsertBatch
+```
+
+执行性能测试
+
+```sh
+wrk -t8 -c2048 -d300000000000s --latency --timeout 60 http://192.168.1.185/api/v1/order/listByKeyword
+```
+
+销毁测试目标
+
+```sh
+ansible-playbook playbook-service-destroy.yml --inventory inventory.ini
+```
 
 
 

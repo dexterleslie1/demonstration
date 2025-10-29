@@ -4,7 +4,10 @@ services:
   service:
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-order-management-app-service
     environment:
-      - JAVA_OPTS=-Xmx4g
+      - JAVA_OPTS=-Xmx2g
+      - zookeeper_address=${zookeeper_address}
+      - elasticsearch_host=${elasticsearch_host}
+      - random_id_picker_host=${random_id_picker_host}
       - TZ=Asia/Shanghai
     restart: unless-stopped
     network_mode: host

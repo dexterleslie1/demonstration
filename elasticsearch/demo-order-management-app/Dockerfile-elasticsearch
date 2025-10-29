@@ -1,0 +1,9 @@
+FROM elasticsearch:8.1.2
+
+# 在线安装ik分词器
+# https://www.cnblogs.com/szwdun/p/10664348.html
+RUN echo y | /usr/share/elasticsearch/bin/elasticsearch-plugin install https://fut001.oss-cn-hangzhou.aliyuncs.com/elasticsearch/elasticsearch-analysis-ik-8.1.2.zip
+
+# 安装拼音插件
+# https://github.com/medcl/elasticsearch-analysis-pinyin
+RUN echo y | /usr/share/elasticsearch/bin/elasticsearch-plugin install https://fut001.oss-cn-hangzhou.aliyuncs.com/elasticsearch/elasticsearch-analysis-pinyin-8.1.2.zip

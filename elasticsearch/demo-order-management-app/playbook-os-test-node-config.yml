@@ -1,0 +1,81 @@
+- name: "配置测试节点的操作系统参数"
+  hosts: test-node
+  tasks:
+    - name: "修改nofile配置"
+      shell: |
+        set -e
+        sudo grep -q "^\* soft nofile" /etc/security/limits.conf && sudo sed -i '/^\* soft nofile/c \* soft nofile 65535' /etc/security/limits.conf || sudo sed -i '/^# End of file/i \* soft nofile 65535' /etc/security/limits.conf
+        sudo grep -q "^\* hard nofile" /etc/security/limits.conf && sudo sed -i '/^\* hard nofile/c \* hard nofile 65535' /etc/security/limits.conf || sudo sed -i '/^# End of file/i \* hard nofile 65535' /etc/security/limits.conf
+    - name: "修改file-max配置"
+      shell: |
+        set -e
+        sudo grep -q "^fs.file-max=" /etc/sysctl.conf && sudo sed -i '/^fs.file-max=/c fs.file-max=10000000' /etc/sysctl.conf || sudo sed -i '$a\fs.file-max=10000000' /etc/sysctl.conf
+    - name: "修改fs.aio-max-nr配置"
+      shell: |
+        set -e
+        sudo grep -q "^fs.aio-max-nr" /etc/sysctl.conf && sudo sed -i '/^fs.aio-max-nr/c fs.aio-max-nr=1224634' /etc/sysctl.conf || sudo sed -i '$a\fs.aio-max-nr=1224634' /etc/sysctl.conf
+    - name: "永久关闭swap"
+      lineinfile:
+        path: /etc/fstab
+        regexp: ".+swap.+"
+        state: absent
+
+    - name: "拉取镜像redis:6.2.6-bullseye"
+      shell: docker pull redis:6.2.6-bullseye
+    - name: "拉取镜像danielqsj/kafka-exporter:v1.9.0"
+      shell: docker pull danielqsj/kafka-exporter:v1.9.0
+    - name: "拉取镜像confluentinc/cp-zookeeper:7.3.0"
+      shell: docker pull confluentinc/cp-zookeeper:7.3.0
+    - name: "拉取镜像confluentinc/cp-kafka:7.3.0"
+      shell: docker pull confluentinc/cp-kafka:7.3.0
+    - name: "拉取镜像zookeeper:3.8.4"
+      shell: docker pull zookeeper:3.8.4
+    - name: "拉取镜像prom/node-exporter:v1.5.0"
+      shell: docker pull prom/node-exporter:v1.5.0
+    - name: "拉取镜像prom/prometheus:v2.37.6"
+      shell: docker pull prom/prometheus:v2.37.6
+    - name: "拉取镜像grafana/grafana:9.4.3"
+      shell: docker pull grafana/grafana:9.4.3
+    - name: "拉取镜像prom/alertmanager:v0.25.0"
+      shell: docker pull prom/alertmanager:v0.25.0
+    - name: "拉取镜像apache/rocketmq:4.9.6"
+      shell: docker pull apache/rocketmq:4.9.6
+    - name: "拉取镜像apacherocketmq/rocketmq-dashboard:latest"
+      shell: docker pull apacherocketmq/rocketmq-dashboard:latest
+    - name: "拉取镜像apache/skywalking-oap-server:8.7.0-es7"
+      shell: docker pull apache/skywalking-oap-server:8.7.0-es7
+    - name: "拉取镜像apache/skywalking-ui:8.7.0"
+      shell: docker pull apache/skywalking-ui:8.7.0
+    - name: "拉取镜像registry.cn-hangzhou.aliyuncs.com/future-public/future-sentinel-dashboard:1.8.0"
+      shell: docker pull registry.cn-hangzhou.aliyuncs.com/future-public/future-sentinel-dashboard:1.8.0
+    - name: "拉取镜像nacos/nacos-server:v2.2.0"
+      shell: docker pull nacos/nacos-server:v2.2.0
+    - name: "拉取镜像registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-cassandra"
+      shell: docker pull registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-cassandra
+    - name: "拉取镜像registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-service"
+      shell: docker pull registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-service
+    - name: "拉取镜像registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-crond"
+      shell: docker pull registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-crond
+    - name: "拉取镜像registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-db"
+      shell: docker pull registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-db
+    - name: "拉取镜像registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-redis"
+      shell: docker pull registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-redis
+    - name: "拉取镜像registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-skywalking-elasticsearch"
+      shell: docker pull registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-skywalking-elasticsearch
+    - name: "拉取镜像registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-wrk2"
+      shell: docker pull registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-wrk2
+    - name: "拉取镜像registry.cn-hangzhou.aliyuncs.com/future-public/random-id-picker-service:1.1.0"
+      shell: docker pull registry.cn-hangzhou.aliyuncs.com/future-public/random-id-picker-service:1.1.0
+    - name: "拉取镜像registry.cn-hangzhou.aliyuncs.com/future-public/random-id-picker-db:1.1.0"
+      shell: docker pull registry.cn-hangzhou.aliyuncs.com/future-public/random-id-picker-db:1.1.0
+    - name: "拉取镜像registry.cn-hangzhou.aliyuncs.com/future-public/future-count-service"
+      shell: docker pull registry.cn-hangzhou.aliyuncs.com/future-public/future-count-service
+    - name: "拉取镜像registry.cn-hangzhou.aliyuncs.com/future-public/future-count-db"
+      shell: docker pull registry.cn-hangzhou.aliyuncs.com/future-public/future-count-db
+    - name: "拉取镜像registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-ui-vue"
+      shell: docker pull registry.cn-hangzhou.aliyuncs.com/future-public/demo-flash-sale-ui-vue
+    - name: "拉取镜像registry.cn-hangzhou.aliyuncs.com/future-public/openresty-base:1.1.1"
+      shell: docker pull registry.cn-hangzhou.aliyuncs.com/future-public/openresty-base:1.1.1
+
+    - name: "修改配置后重启系统"
+      reboot:

@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile
     image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-order-management-app-service
     environment:
-      - JAVA_OPTS=-Xmx1g
+      - JAVA_OPTS=-Xmx512m
       - TZ=Asia/Shanghai
     depends_on:
       - elasticsearch
@@ -15,13 +15,13 @@ services:
     network_mode: host
 
   elasticsearch:
-    image: elasticsearch:8.1.2
+    build:
+      context: ./
+      dockerfile: Dockerfile-elasticsearch
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-order-management-app-elasticsearch
     environment:
       - ES_JAVA_OPTS=-Xms512m -Xmx512m
       - discovery.type=single-node
-      # http.cors表示允许elasticsearch-head连接并管理
-      - http.cors.enabled=true
-      - http.cors.allow-origin=*
       - TZ=Asia/Shanghai
       # 禁用ssl通讯，否则需要配置证书才能够连接9200端口
       # https://www.elastic.co/guide/en/elastic-stack-get-started/current/get-started-stack-docker.html#run-docker-secure
@@ -29,7 +29,7 @@ services:
       - xpack.security.http.ssl.enabled=false
       - xpack.security.transport.ssl.enabled=false
     volumes:
-      - ./elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - ./deployer/elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
     network_mode: host
   kibana:
     image: kibana:8.1.2
@@ -48,3 +48,25 @@ services:
       # https://hub.docker.com/_/zookeeper
       - ZOO_ADMINSERVER_ENABLED=false
     network_mode: host
+
+  # 随机 id 选择器服务
+  future-random-id-picker-api:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/random-id-picker-service:1.1.0
+    environment:
+      - JAVA_OPTS=-Xmx512m
+      - TZ=Asia/Shanghai
+      - db_host=future-random-id-picker-db
+      - db_port=3306
+    ports:
+      - '50000:8080'
+  future-random-id-picker-db:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/random-id-picker-db:1.1.0
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+      - --innodb-buffer-pool-size=256m
+    environment:
+      - LANG=C.UTF-8
+      - TZ=Asia/Shanghai
+      - MYSQL_ROOT_PASSWORD=123456

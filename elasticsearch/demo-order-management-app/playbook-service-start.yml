@@ -1,0 +1,53 @@
+- name: "启动api服务"
+  hosts: api
+  tasks:
+    - name: "使用Docker Compose启动api服务"
+      shell: |
+        set -e
+        cd ~/deployer-order-management-app-elasticsearch/service
+        docker compose pull && docker compose up -d
+
+- name: "启动zookeeper等公共服务"
+  hosts: common
+  tasks:
+    - name: "使用Docker Compose启动zookeeper等公共服务"
+      shell: |
+        set -e
+        cd ~/deployer-order-management-app-elasticsearch/common
+        docker compose pull && docker compose up -d
+
+- name: "启动prometheus公共服务"
+  hosts: common
+  tasks:
+    - name: "使用Docker Compose启动prometheus公共服务"
+      shell: |
+        set -e
+        cd ~/deployer-order-management-app-elasticsearch/prometheus
+        docker compose pull && docker compose up -d
+
+- name: "启动OpenResty服务"
+  hosts: openresty
+  tasks:
+    - name: "使用Docker Compose启动OpenResty服务"
+      shell: |
+        set -e
+        cd ~/deployer-order-management-app-elasticsearch/openresty
+        docker compose pull && docker compose up -d
+
+- name: "启动node_exporter"
+  hosts: "{{ groups['all'] | difference(groups['management']) }}"
+  tasks:
+    - name: "使用Docker Compose启动node_exporter"
+      shell: |
+        set -e
+        cd ~/deployer-order-management-app-elasticsearch/node-exporter
+        docker compose up -d
+
+- name: "启动 elasticsearch 服务"
+  hosts: elasticsearch
+  tasks:
+    - name: "使用 Docker Compose 启动 elasticsearch 服务"
+      shell: |
+        set -e
+        cd ~/deployer-order-management-app-elasticsearch/elasticsearch
+        docker compose pull && docker compose up -d

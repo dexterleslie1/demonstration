@@ -1,0 +1,51 @@
+- name: "复制deployer"
+  hosts: "{{ groups['all'] | difference(groups['management']) }}"
+  tasks:
+    - name: "复制deployer目录到远程"
+      copy:
+        src: deployer/
+        dest: ~/deployer-order-management-app-elasticsearch
+
+- name: "配置Prometheus服务的deployer"
+  hosts: common
+  tasks:
+    - name: "配置Prometheus服务的prometheus.yml"
+      template:
+        src: deployer/prometheus/prometheus.yml.j2
+        dest: ~/deployer-order-management-app-elasticsearch/prometheus/prometheus.yml
+
+- name: "配置openresty服务的deployer"
+  hosts: openresty
+  tasks:
+    - name: "配置OpenResty服务的nginx.conf"
+      template:
+        src: deployer/openresty/nginx.conf.j2
+        dest: ~/deployer-order-management-app-elasticsearch/openresty/nginx.conf
+
+- name: "配置api服务的deployer"
+  hosts: api
+  tasks:
+    - name: "配置api服务的zookeeper_address"
+      lineinfile:
+        path: ~/deployer-order-management-app-elasticsearch/service/.env
+        regexp: "^zookeeper_address="
+        line: "zookeeper_address={{ groups['common'][0] }}"
+    - name: "配置api服务的elasticsearch_host"
+      lineinfile:
+        path: ~/deployer-order-management-app-elasticsearch/service/.env
+        regexp: "^elasticsearch_host="
+        line: "elasticsearch_host={{ groups['elasticsearch'][0] }}"
+    - name: "配置api服务的random_id_picker_host"
+      lineinfile:
+        path: ~/deployer-order-management-app-elasticsearch/service/.env
+        regexp: "^random_id_picker_host="
+        line: "random_id_picker_host={{ groups['common'][0] }}"
+
+- name: "配置 Elasticsearch 服务的 deployer"
+  hosts: elasticsearch
+  tasks:
+    - name: "配置 Elasticsearch 服务的 es_jvm_xmx"
+      lineinfile:
+        path: ~/deployer-order-management-app-elasticsearch/elasticsearch/.env
+        regexp: "^es_jvm_xmx="
+        line: "es_jvm_xmx={{ es_jvm_xmx }}"

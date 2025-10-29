@@ -4,16 +4,14 @@ import cn.hutool.core.util.RandomUtil;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.ElasticsearchException;
 import co.elastic.clients.elasticsearch._types.FieldValue;
-import co.elastic.clients.elasticsearch._types.Refresh;
 import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
-import co.elastic.clients.elasticsearch.core.BulkRequest;
-import co.elastic.clients.elasticsearch.core.BulkResponse;
-import co.elastic.clients.elasticsearch.core.SearchRequest;
-import co.elastic.clients.elasticsearch.core.SearchResponse;
+import co.elastic.clients.elasticsearch.core.*;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
 import co.elastic.clients.elasticsearch.core.search.Hit;
+import co.elastic.clients.elasticsearch.indices.AnalyzeRequest;
+import co.elastic.clients.elasticsearch.indices.AnalyzeResponse;
 import co.elastic.clients.elasticsearch.indices.CreateIndexRequest;
 import co.elastic.clients.elasticsearch.indices.CreateIndexResponse;
 import co.elastic.clients.json.JsonData;
@@ -24,18 +22,23 @@ import com.future.demo.entity.DeleteStatus;
 import com.future.demo.entity.OrderDetailModel;
 import com.future.demo.entity.OrderModel;
 import com.future.demo.entity.Status;
-import com.future.demo.util.OrderRandomlyUtil;
+import com.future.random.id.picker.RandomIdPickerService;
 import com.tencent.devops.leaf.service.SnowflakeService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
+import org.springframework.util.StreamUtils;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -45,25 +48,48 @@ import java.util.stream.Collectors;
 @Slf4j
 public class OrderService {
 
-    @Value("${productStock:100000000}")
-    Integer productStock;
-
-    @Resource
-    OrderRandomlyUtil orderRandomlyUtil;
     @Autowired
     SnowflakeService snowflakeService;
     @Resource
     ElasticsearchClient client;
+    @Resource
+    RandomIdPickerService randomIdPickerService;
+    @Resource
+    UserService userService;
+    @Resource
+    MerchantService merchantService;
+    @Resource
+    ProductService productService;
+
+    // 中文文章
+    private String articles;
+    // 中文文章总字符数
+    private int articlesLength;
+    // 所有中文分词
+    private List<String> articlesTokenList = new ArrayList<>();
 
     @PostConstruct
     public void init() throws IOException {
+        // 加载中文文章
+        ClassPathResource resource = new ClassPathResource("articles.txt");
+        try (InputStream inputStream = resource.getInputStream()) {
+            this.articles = StreamUtils.copyToString(inputStream, StandardCharsets.UTF_8);
+            this.articlesLength = this.articles.length();
+        }
+
         // region 创建 t_order 和 t_order_detail 表
 
         String index = "t_order";
         CreateIndexRequest createIndexRequest = new CreateIndexRequest.Builder().index(index)
+                .settings(s -> s.numberOfShards("8").numberOfReplicas("1")
+                        .withJson(new ByteArrayInputStream(
+                                ("{\"index.analyze.max_token_count\":30000}")
+                                        .getBytes(StandardCharsets.UTF_8)
+                        )))
                 .mappings(m -> m
                         .properties("id", p -> p.long_(l -> l.store(false)))
                         .properties("userId", p -> p.long_(t -> t.store(false)))
+                        .properties("merchantId", p -> p.long_(t -> t.store(false)))
                         .properties("status", p -> p.keyword(t -> t.store(true)))
                         .properties("payTime", p -> p.date(t -> t.store(false).format("yyyy-MM-dd HH:mm:ss||epoch_millis")))
                         .properties("deliveryTime", p -> p.date(t -> t.store(false).format("yyyy-MM-dd HH:mm:ss||epoch_millis")))
@@ -71,6 +97,13 @@ public class OrderService {
                         .properties("cancelTime", p -> p.date(t -> t.store(false).format("yyyy-MM-dd HH:mm:ss||epoch_millis")))
                         .properties("deleteStatus", p -> p.keyword(t -> t.store(false)))
                         .properties("createTime", p -> p.date(t -> t.store(false).format("yyyy-MM-dd HH:mm:ss||epoch_millis")))
+                        .properties("content",
+                                p -> p.text(t -> t.store(false).index(true).analyzer("ik_max_word")
+                                        // content 字段添加子字段支持拼音搜索
+                                        .fields("pinyin", ft -> ft.text(t1 ->
+                                                t1.analyzer("pinyin")
+                                                        .store(false)))
+                                ))
                 ).build();
         try {
             CreateIndexResponse createIndexResponse = client.indices().create(createIndexRequest);
@@ -83,12 +116,12 @@ public class OrderService {
 
         index = "t_order_detail";
         createIndexRequest = new CreateIndexRequest.Builder().index(index)
+                .settings(s -> s.numberOfShards("8").numberOfReplicas("1"))
                 .mappings(m -> m
                         .properties("id", p -> p.long_(l -> l.store(false)))
                         .properties("orderId", p -> p.long_(t -> t.store(false)))
                         .properties("userId", p -> p.long_(t -> t.store(true)))
                         .properties("productId", p -> p.long_(t -> t.store(false)))
-                        .properties("merchantId", p -> p.long_(t -> t.store(false)))
                         .properties("amount", p -> p.integer(t -> t.store(false)))
                 ).build();
         try {
@@ -101,12 +134,40 @@ public class OrderService {
         }
 
         // endregion
+
+        // 缓存所有中文分词
+        AnalyzeRequest analyzeRequest = AnalyzeRequest.of(a -> a.index("t_order").field("content").text(this.articles));
+        AnalyzeResponse analyzeResponse = client.indices().analyze(analyzeRequest);
+        analyzeResponse.tokens().forEach(t -> {
+            // 缓存中文分词
+            this.articlesTokenList.add(t.token());
+        });
+        analyzeRequest = AnalyzeRequest.of(a -> a.index("t_order").field("content.pinyin").text(this.articles));
+        analyzeResponse = client.indices().analyze(analyzeRequest);
+        analyzeResponse.tokens().forEach(t -> {
+            // 缓存中文分词
+            this.articlesTokenList.add(t.token());
+        });
     }
 
-    public void insertBatch() throws IOException {
+    /**
+     * 批量插入订单到 ES 中
+     *
+     * @throws IOException
+     */
+    public void insertBatch(Long userId,
+                            Long productId,
+                            Long merchantId,
+                            String[] randomArticleSliceArray,
+                            int batchSize) throws IOException {
+        if (batchSize <= 0) {
+            batchSize = 1000;
+        }
         List<OrderModel> orderModelList = new ArrayList<>();
-        for (int i = 0; i < 1000; i++) {
-            Long userId = this.orderRandomlyUtil.getUserIdRandomly();
+        for (int i = 0; i < batchSize; i++) {
+            if (userId == null) {
+                userId = userService.getIdRandomly();
+            }
             // 创建订单
             OrderModel orderModel = new OrderModel();
 
@@ -115,27 +176,55 @@ public class OrderService {
             orderModel.setId(orderId);
 
             orderModel.setUserId(userId);
-            LocalDateTime createTime = OrderRandomlyUtil.getCreateTimeRandomly();
+
+            Long merchantIdTemp;
+            if (merchantId == null) {
+                merchantIdTemp = merchantService.getIdRandomly();
+            } else {
+                merchantIdTemp = merchantId;
+            }
+            orderModel.setMerchantId(merchantIdTemp);
+
+            // 注意：模拟实际不应该随机生成，否则有关于此字段的二级索引时插入性能很低
+            // LocalDateTime createTime = OrderRandomlyUtil.getCreateTimeRandomly();
+            LocalDateTime createTime = LocalDateTime.now();
             orderModel.setCreateTime(createTime);
 
-            DeleteStatus deleteStatus = OrderRandomlyUtil.getDeleteStatusRandomly();
+            // 注意：模拟实际不应该随机生成，否则有关于此字段的二级索引时插入性能很低
+            /*DeleteStatus deleteStatus = OrderRandomlyUtil.getDeleteStatusRandomly();*/
+            DeleteStatus deleteStatus = DeleteStatus.Normal;
             orderModel.setDeleteStatus(deleteStatus);
 
-            Status status = OrderRandomlyUtil.getStatusRandomly();
+            // 注意：模拟实际不应该随机生成，否则有关于此字段的二级索引时插入性能很低
+            /*Status status = OrderRandomlyUtil.getStatusRandomly();*/
+            Status status = Status.Unpay;
             orderModel.setStatus(status);
+
+            String articleSlice;
+            if (randomArticleSliceArray == null || randomArticleSliceArray.length == 0) {
+                // 随机抽取中文文章片段
+                articleSlice = randomArticleSlice(0);
+            } else {
+                articleSlice = randomArticleSliceArray[i];
+            }
+            orderModel.setContent(articleSlice);
+
             orderModelList.add(orderModel);
         }
         this.bulkInsertionOrder("t_order", orderModelList);
 
         List<Long> productIdList = orderModelList.stream().map(o -> {
-            Long productId = this.orderRandomlyUtil.getProductIdRandomly();
-            return productId;
+            if (productId == null) {
+                return productService.getIdRandomly();
+            } else {
+                return productId;
+            }
         }).distinct().collect(Collectors.toList());
+        Long finalUserId = userId;
         List<OrderDetailModel> orderDetailModelList = orderModelList.stream().map(o -> {
-            Long productId = productIdList.get(RandomUtil.randomInt(0, productIdList.size()));
+            Long productIdTemp = productIdList.get(RandomUtil.randomInt(0, productIdList.size()));
 
             Integer amount = 1;
-            Long userId = o.getUserId();
 
             OrderDetailModel orderDetailModel = new OrderDetailModel();
 
@@ -143,15 +232,43 @@ public class OrderService {
             orderDetailModel.setId(orderDetailId);
 
             orderDetailModel.setOrderId(o.getId());
-            orderDetailModel.setUserId(userId);
-            orderDetailModel.setProductId(productId);
-            orderDetailModel.setMerchantId(RandomUtil.randomLong(0, Long.MAX_VALUE));
+            orderDetailModel.setUserId(finalUserId);
+            orderDetailModel.setProductId(productIdTemp);
             orderDetailModel.setAmount(amount);
             return orderDetailModel;
         }).collect(Collectors.toList());
         this.bulkInsertionOrderDetail("t_order_detail", orderDetailModelList);
+
+        // 插入 id 列表到随机 id 选择器服务中
+        randomIdPickerService.addIdList("order", orderModelList.stream().map(o -> String.valueOf(o.getId())).collect(Collectors.toList()));
     }
 
+    /**
+     * 从中文文章中随机抽取文章片段
+     *
+     * @return
+     */
+    public String randomArticleSlice(int maxLength) {
+        if (maxLength <= 0) {
+            maxLength = 50;
+        }
+
+        int length = RandomUtil.randomInt(1, maxLength + 1);
+        int startIndex = RandomUtil.randomInt(0, this.articlesLength);
+        int endIndex = startIndex + length;
+        if (endIndex > this.articlesLength - 1) {
+            endIndex = this.articlesLength - 1;
+        }
+        return this.articles.substring(startIndex, endIndex);
+    }
+
+    /**
+     * 批量插入订单主表到 ES 中
+     *
+     * @param index
+     * @param datumList
+     * @throws IOException
+     */
     private void bulkInsertionOrder(String index, List<OrderModel> datumList) throws IOException {
         List<BulkOperation> operations = new ArrayList<>();
 
@@ -167,17 +284,25 @@ public class OrderService {
 
         BulkRequest request = BulkRequest.of(b -> b
                 .operations(operations)
-                .refresh(Refresh.False) // 设置刷新策略为 IMMEDIATE
         );
 
         // 执行批量请求
         BulkResponse response = client.bulk(request);
 
         if (response.errors()) {
-            throw new BusinessException("批量插入中有错误发生: " + response.items().get(0).error().reason());
+            BusinessException exception = new BusinessException("批量插入中有错误发生: " + response.items().get(0).error().reason());
+            log.error(exception.getMessage(), exception);
+            throw exception;
         }
     }
 
+    /**
+     * 批量插入订单明细表到 ES 中
+     *
+     * @param index
+     * @param datumList
+     * @throws IOException
+     */
     private void bulkInsertionOrderDetail(String index, List<OrderDetailModel> datumList) throws IOException {
         List<BulkOperation> operations = new ArrayList<>();
 
@@ -193,14 +318,15 @@ public class OrderService {
 
         BulkRequest request = BulkRequest.of(b -> b
                 .operations(operations)
-                .refresh(Refresh.False) // 设置刷新策略为 IMMEDIATE
         );
 
         // 执行批量请求
         BulkResponse response = client.bulk(request);
 
         if (response.errors()) {
-            throw new BusinessException("批量插入中有错误发生: " + response.items().get(0).error().reason());
+            BusinessException exception = new BusinessException("批量插入中有错误发生: " + response.items().get(0).error().reason());
+            log.error(exception.getMessage(), exception);
+            throw exception;
         }
     }
 
@@ -212,7 +338,12 @@ public class OrderService {
      */
     // long 类型
     public OrderDTO getById(Long orderId) throws IOException {
-        OrderModel orderModel = null;//this.orderMapper.getById(orderId);
+        GetRequest getRequest = GetRequest.of(g -> g
+                .index("t_order")       // 指定索引名
+                .id(String.valueOf(orderId))          // 指定文档 ID
+        );
+        GetResponse<OrderModel> getResponse = client.get(getRequest, OrderModel.class); // 指定返回类型为 Map
+        OrderModel orderModel = getResponse.source();
         if (orderModel == null) {
             return null;
         }
@@ -233,7 +364,32 @@ public class OrderService {
             Long userId,
             LocalDateTime startTime,
             LocalDateTime endTime) throws IOException {
-        List<OrderModel> orderModelList = null;//this.orderMapper.listByUserId(userId, null, DeleteStatus.Normal, startTime, endTime, 0L, 20L);
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        SearchRequest searchRequest = SearchRequest.of(s -> s
+                .index("t_order")
+                .query(q -> q
+                        .bool(b -> b
+                                .must(
+                                        q1 -> q1.term(t -> t.field("userId").value(userId))
+                                ).must(
+                                        q1 -> q1.term(t -> t.field("deleteStatus").value(DeleteStatus.Normal.name()))
+                                ).must(
+                                        q1 -> q1.range(t -> t.field("createTime").gte(JsonData.of(dateTimeFormatter.format(startTime))))
+                                ).must(
+                                        q1 -> q1.range(t -> t.field("createTime").lte(JsonData.of(dateTimeFormatter.format(endTime))))
+                                )
+                        )
+                )
+                .sort(so -> so
+                        .field(f -> f
+                                .field("id")
+                                .order(SortOrder.Desc)
+                        )
+                )
+                .size(10000)
+        );
+        SearchResponse<OrderModel> searchResponse = client.search(searchRequest, OrderModel.class);
+        List<OrderModel> orderModelList = searchResponse.hits().hits().stream().map(Hit::source).collect(Collectors.toList());
         return this.convertOrderEntityToOrderDTO(orderModelList);
     }
 
@@ -273,8 +429,7 @@ public class OrderService {
                 .index("t_order")
                 .query(boolQuery)
                 .sort(so -> so.field(f -> f.field("id").order(SortOrder.Desc)))
-                .from(0)
-                .size(20)
+                .size(10000)
         );
 
         // 3. 执行查询
@@ -292,18 +447,46 @@ public class OrderService {
      * 商家查询指定日期范围+所有状态的订单
      *
      * @param merchantId
-     * @param deleteStatus
      * @param startTime
      * @param endTime
      * @return
      */
     public List<OrderDTO> listByMerchantIdAndWithoutStatus(
             Long merchantId,
-            DeleteStatus deleteStatus,
             LocalDateTime startTime,
             LocalDateTime endTime) throws IOException {
-        List<OrderModel> orderModelList = null;//this.orderMapper.listByMerchantId(merchantId, null, deleteStatus, startTime, endTime, 0L, 20L);
-        return convertOrderEntityToOrderDTO(orderModelList);
+        // 1. 构建查询条件
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        Query boolQuery = QueryBuilders.bool()
+                .filter(QueryBuilders.term().field("merchantId").value(merchantId).build()._toQuery())
+                .filter(QueryBuilders.terms().field("deleteStatus")
+                        .terms(t -> t.value(Arrays.stream(DeleteStatus.values()).map(o -> FieldValue.of(o.name())).collect(Collectors.toList())))
+                        .build()._toQuery())
+                .filter(QueryBuilders.range()
+                        .field("createTime")
+                        .gte(JsonData.of(dateTimeFormatter.format(startTime)))
+                        .lte(JsonData.of(dateTimeFormatter.format(endTime)))
+                        .build()._toQuery()
+                )
+                .build()._toQuery();
+
+        // 2. 构建排序和分页
+        SearchRequest searchRequest = SearchRequest.of(s -> s
+                .index("t_order")
+                .query(boolQuery)
+                .sort(so -> so.field(f -> f.field("id").order(SortOrder.Desc)))
+                .size(10000)
+        );
+
+        // 3. 执行查询
+        SearchResponse<OrderModel> response = client.search(searchRequest, OrderModel.class);
+
+        // 4. 解析结果
+        List<OrderModel> orderModelList = response.hits().hits().stream()
+                .map(Hit::source)
+                .collect(Collectors.toList());
+
+        return this.convertOrderEntityToOrderDTO(orderModelList);
     }
 
     /**
@@ -311,7 +494,6 @@ public class OrderService {
      *
      * @param merchantId
      * @param status
-     * @param deleteStatus
      * @param startTime
      * @param endTime
      * @return
@@ -319,11 +501,41 @@ public class OrderService {
     public List<OrderDTO> listByMerchantIdAndStatus(
             Long merchantId,
             Status status,
-            DeleteStatus deleteStatus,
             LocalDateTime startTime,
             LocalDateTime endTime) throws IOException {
-        List<OrderModel> orderModelList = null;//this.orderMapper.listByMerchantId(merchantId, status, deleteStatus, startTime, endTime, 0L, 20L);
-        return convertOrderEntityToOrderDTO(orderModelList);
+        // 1. 构建查询条件
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        Query boolQuery = QueryBuilders.bool()
+                .filter(QueryBuilders.term().field("merchantId").value(merchantId).build()._toQuery())
+                .filter(QueryBuilders.term().field("status").value(status.name()).build()._toQuery())
+                .filter(QueryBuilders.terms().field("deleteStatus")
+                        .terms(t -> t.value(Arrays.stream(DeleteStatus.values()).map(o -> FieldValue.of(o.name())).collect(Collectors.toList())))
+                        .build()._toQuery())
+                .filter(QueryBuilders.range()
+                        .field("createTime")
+                        .gte(JsonData.of(dateTimeFormatter.format(startTime)))
+                        .lte(JsonData.of(dateTimeFormatter.format(endTime)))
+                        .build()._toQuery()
+                )
+                .build()._toQuery();
+
+        // 2. 构建排序和分页
+        SearchRequest searchRequest = SearchRequest.of(s -> s
+                .index("t_order")
+                .query(boolQuery)
+                .sort(so -> so.field(f -> f.field("id").order(SortOrder.Desc)))
+                .size(10000)
+        );
+
+        // 3. 执行查询
+        SearchResponse<OrderModel> response = client.search(searchRequest, OrderModel.class);
+
+        // 4. 解析结果
+        List<OrderModel> orderModelList = response.hits().hits().stream()
+                .map(Hit::source)
+                .collect(Collectors.toList());
+
+        return this.convertOrderEntityToOrderDTO(orderModelList);
     }
 
     /**
@@ -391,5 +603,37 @@ public class OrderService {
         return response.hits().hits().stream()
                 .map(Hit::source)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * 根据中文关键词和拼音搜索订单
+     *
+     * @return
+     */
+    public List<OrderDTO> listByKeyword(String keyword) throws IOException {
+        if (!StringUtils.hasText(keyword)) {
+            keyword = this.articlesTokenList.get(RandomUtil.randomInt(0, this.articlesTokenList.size()));
+        }
+        String finalKeyword = keyword;
+        SearchRequest searchRequest = SearchRequest.of(s -> s
+                .index("t_order")
+                .query(q -> q
+                        .bool(b -> b
+                                .should(
+                                        q1 -> q1.match(t -> t.field("content").query(finalKeyword))
+                                ).should(
+                                        q2 -> q2.match(t -> t.field("content.pinyin").query(finalKeyword))
+                                )
+                        )
+                )
+                //.sort(so -> so.field(f -> f.field("id").order(SortOrder.Desc)))
+                .size(25)
+        );
+        SearchResponse<OrderModel> response = client.search(searchRequest, OrderModel.class);
+        List<OrderModel> orderModelList = response.hits().hits().stream()
+                .map(Hit::source)
+                .collect(Collectors.toList());
+
+        return this.convertOrderEntityToOrderDTO(orderModelList);
     }
 }

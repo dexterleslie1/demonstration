@@ -4,13 +4,16 @@ import com.future.common.http.ListResponse;
 import com.future.common.http.ObjectResponse;
 import com.future.common.http.ResponseUtils;
 import com.future.demo.dto.OrderDTO;
-import com.future.demo.entity.DeleteStatus;
 import com.future.demo.entity.Status;
+import com.future.demo.service.MerchantService;
 import com.future.demo.service.OrderService;
+import com.future.demo.service.UserService;
 import com.future.demo.util.OrderRandomlyUtil;
+import com.future.random.id.picker.RandomIdPickerService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
@@ -24,9 +27,11 @@ public class OrderController {
     @Resource
     OrderService orderService;
     @Resource
-    OrderRandomlyUtil orderRandomlyUtil;
-//    @Resource
-//    IdCacheAssistantService idCacheAssistantService;
+    RandomIdPickerService randomIdPickerService;
+    @Resource
+    UserService userService;
+    @Resource
+    MerchantService merchantService;
 
     /**
      * 根据订单 ID 查询订单信息
@@ -35,9 +40,8 @@ public class OrderController {
      */
     @GetMapping(value = "getById")
     public ObjectResponse<OrderDTO> getById() throws IOException {
-        Long orderId = null;//this.idCacheAssistantService.getRandomly();
-        OrderDTO orderDTO = this.orderService.getById(orderId);
-        return ResponseUtils.successObject(orderDTO);
+        Long orderId = Long.parseLong(randomIdPickerService.getIdRandomly("order"));
+        return ResponseUtils.successObject(this.orderService.getById(orderId));
     }
 
     /**
@@ -47,12 +51,11 @@ public class OrderController {
      */
     @GetMapping(value = "listByUserIdAndWithoutStatus")
     public ListResponse<OrderDTO> listByUserIdAndWithoutStatus() throws IOException {
-        Long userId = this.orderRandomlyUtil.getUserIdRandomly();
-        LocalDateTime createTime = OrderRandomlyUtil.getCreateTimeRandomly();
-        LocalDateTime endTime = createTime.plusMonths(1);
-        return ResponseUtils.successList(
-                this.orderService.listByUserIdAndWithoutStatus(
-                        userId, createTime, endTime));
+        Long userId = userService.getIdRandomly();
+        LocalDateTime endTime = LocalDateTime.now();
+        LocalDateTime createTime = endTime.minusMonths(1);
+        return ResponseUtils.successList(this.orderService.listByUserIdAndWithoutStatus(
+                userId, createTime, endTime));
     }
 
     /**
@@ -62,13 +65,12 @@ public class OrderController {
      */
     @GetMapping(value = "listByUserIdAndStatus")
     public ListResponse<OrderDTO> listByUserIdAndStatus() throws IOException {
-        Long userId = this.orderRandomlyUtil.getUserIdRandomly();
-        LocalDateTime createTime = OrderRandomlyUtil.getCreateTimeRandomly();
-        LocalDateTime endTime = createTime.plusMonths(1);
+        Long userId = userService.getIdRandomly();
+        LocalDateTime endTime = LocalDateTime.now();
+        LocalDateTime createTime = endTime.minusMonths(1);
         Status status = OrderRandomlyUtil.getStatusRandomly();
-        return ResponseUtils.successList(
-                this.orderService.listByUserIdAndStatus(
-                        userId, status, createTime, endTime));
+        return ResponseUtils.successList(this.orderService.listByUserIdAndStatus(
+                userId, status, createTime, endTime));
     }
 
     /**
@@ -78,13 +80,11 @@ public class OrderController {
      */
     @GetMapping(value = "listByMerchantIdAndWithoutStatus")
     public ListResponse<OrderDTO> listByMerchantIdAndWithoutStatus() throws IOException {
-        Long merchantId = this.orderRandomlyUtil.getMerchantIdRandomly();
-        LocalDateTime createTime = OrderRandomlyUtil.getCreateTimeRandomly();
-        LocalDateTime endTime = createTime.plusMonths(1);
-        DeleteStatus deleteStatus = OrderRandomlyUtil.getDeleteStatusRandomly();
-        return ResponseUtils.successList(
-                this.orderService.listByMerchantIdAndWithoutStatus(
-                        merchantId, deleteStatus, createTime, endTime));
+        Long merchantId = merchantService.getIdRandomly();
+        LocalDateTime endTime = LocalDateTime.now();
+        LocalDateTime createTime = endTime.minusMonths(1);
+        return ResponseUtils.successList(this.orderService.listByMerchantIdAndWithoutStatus(
+                merchantId, createTime, endTime));
     }
 
     /**
@@ -94,14 +94,22 @@ public class OrderController {
      */
     @GetMapping(value = "listByMerchantIdAndStatus")
     public ListResponse<OrderDTO> listByMerchantIdAndStatus() throws IOException {
-        Long merchantId = this.orderRandomlyUtil.getMerchantIdRandomly();
-        LocalDateTime createTime = OrderRandomlyUtil.getCreateTimeRandomly();
-        LocalDateTime endTime = createTime.plusMonths(1);
-        DeleteStatus deleteStatus = OrderRandomlyUtil.getDeleteStatusRandomly();
+        Long merchantId = merchantService.getIdRandomly();
+        LocalDateTime endTime = LocalDateTime.now();
+        LocalDateTime createTime = endTime.minusMonths(1);
         Status status = OrderRandomlyUtil.getStatusRandomly();
-        return ResponseUtils.successList(
-                this.orderService.listByMerchantIdAndStatus(
-                        merchantId, status, deleteStatus, createTime, endTime));
+        return ResponseUtils.successList(this.orderService.listByMerchantIdAndStatus(
+                merchantId, status, createTime, endTime));
+    }
+
+    /**
+     * 根据中文关键词搜索订单
+     *
+     * @return
+     */
+    @GetMapping(value = "listByKeyword")
+    public ListResponse<OrderDTO> listByKeyword(@RequestParam(value = "keyword", defaultValue = "") String keyword) throws IOException {
+        return ResponseUtils.successList(this.orderService.listByKeyword(keyword));
     }
 
     /**
@@ -111,20 +119,7 @@ public class OrderController {
      */
     @GetMapping(value = "initInsertBatch")
     public ObjectResponse<String> initInsertBatch() throws IOException {
-        this.orderService.insertBatch();
-        ObjectResponse<String> response = new ObjectResponse<>();
-        response.setData("成功批量初始化订单");
-        return response;
-    }
-
-    /**
-     * 初始化id缓存辅助数据
-     *
-     * @return
-     */
-    @GetMapping(value = "init")
-    public ObjectResponse<String> init() {
-//        this.idCacheAssistantService.initData();
-        return ResponseUtils.successObject("成功初始化");
+        this.orderService.insertBatch(null, null, null, null, 0);
+        return ResponseUtils.successObject("成功批量初始化订单");
     }
 }

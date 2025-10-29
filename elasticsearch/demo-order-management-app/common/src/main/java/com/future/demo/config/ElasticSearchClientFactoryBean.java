@@ -11,11 +11,17 @@ import org.elasticsearch.client.RestClient;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
 @Component
 public class ElasticSearchClientFactoryBean implements FactoryBean<ElasticsearchClient>, InitializingBean, DisposableBean {
+
+    @Value("${elasticsearch.host:localhost}")
+    String host;
+    @Value("${elasticsearch.port:9200}")
+    int port;
 
     protected ElasticsearchClient client = null;
     private RestClient restClient;
@@ -60,8 +66,7 @@ public class ElasticSearchClientFactoryBean implements FactoryBean<Elasticsearch
 
         // 1. 创建RestClient（底层HTTP客户端）
         restClient = RestClient.builder(
-//                new HttpHost("localhost", 9200, "http") // 单节点配置
-                new HttpHost("192.168.1.190", 9200, "http") // 单节点配置
+                new HttpHost(host, port, "http") // 单节点配置
                 // 多节点示例：new HttpHost("host2", 9200, "http"), ...
         ).build();
 
