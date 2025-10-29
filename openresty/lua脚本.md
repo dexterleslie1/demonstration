@@ -1,9 +1,3 @@
-# `lua`脚本相关
-
-> 注意：下面所有演示需要先参考 <a href="/openresty/编译docker基础镜像.html" target="_blank">链接</a> 编译`openresty`基础镜像
-
-
-
 ## 引用第三方`lua`库
 
 >详细示例请参考`https://gitee.com/dexterleslie/demonstration/tree/master/openresty/lua-scripting/demo-lua-package-path-and-require`
@@ -47,6 +41,62 @@ docker compose up -d
 ```
 
 访问`http://localhost`，显示`Hello world!`
+
+
+
+## 打印日志
+
+>详细用法请参考本站[示例](https://gitee.com/dexterleslie/demonstration/tree/master/openresty/lua-scripting/demo-getting-started)
+
+```lua
+-- 不同日志级别
+ngx.log(ngx.ERR,     "错误日志: 用户ID缺失")           -- 错误级别
+ngx.log(ngx.WARN,    "警告日志: 参数验证失败")         -- 警告级别
+ngx.log(ngx.INFO,   "信息日志: 请求开始处理")          -- 信息级别
+ngx.log(ngx.DEBUG,  "调试日志: 参数=" .. ngx.var.args) -- 调试级别
+```
+
+
+
+## 获取Query请求参数
+
+>详细用法请参考本站[示例](https://gitee.com/dexterleslie/demonstration/tree/master/openresty/lua-scripting/demo-getting-started)
+
+```lua
+server {
+    listen       80;
+    server_name  localhost;
+
+    location / {
+        content_by_lua_block {
+            ngx.header.content_type = "text/plain;charset=utf-8";
+            -- 获取query请求参数
+            local p1 = ngx.var.arg_p1 or ""
+            ngx.say("Hello world!p1=" .. p1);
+        }
+    }
+}
+```
+
+
+
+获取Header参数
+
+>详细用法请参考本站[示例](https://gitee.com/dexterleslie/demonstration/tree/master/openresty/lua-scripting/demo-getting-started)
+
+```lua
+content_by_lua_block {
+    -- 获取请求头参数
+    local headerP1 = ngx.var.http_HeaderP1 or ""
+    ngx.say("Hello world!p1=" .. p1 .. ",headerP1=" .. headerP1);
+}
+```
+
+辅助测试命令
+
+```sh
+curl -H "HeaderP1: hv1" http://localhost\?p1\=v1
+```
 
 
 
@@ -296,11 +346,3 @@ location / {
     }
 }
 ```
-
-
-
-## todo `lua api`
-
->nginx for lua api 之获取请求中的参数 `http://www.shixinke.com/openresty/openresty-get-request-arguments`
->
->nginx lua api `https://github.com/openresty/lua-nginx-module`

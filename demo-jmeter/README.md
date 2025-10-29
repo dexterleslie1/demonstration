@@ -125,14 +125,46 @@ if(errorCode&gt;0) {
 
    
 
-## 单机测试
+## 单机性能测试
 
->注意：使用`dcli`安装`jmeter master`模式。
+>提示：使用`dcli`安装`jmeter master`模式。
 
-使用`/home/xxx/xxx.jmx`文件启动`jmeter`测试
+启动[OpenResty](https://gitee.com/dexterleslie/demonstration/tree/main/demo-benchmark/demo-openresty-benchmark)辅助测试
+
+```sh
+# 复制部署配置
+ansible-playbook playbook-deployer-config.yml --inventory inventory.ini
+
+# 启动测试目标
+ansible-playbook playbook-service-start.yml --inventory inventory.ini
+
+# 销毁测试目标
+ansible-playbook playbook-service-destroy.yml --inventory inventory.ini
+```
+
+启动`JMeter`测试，通过本站链接获取[perf-assistant.jmx](https://gitee.com/dexterleslie/demonstration/blob/main/demo-jmeter/perf-assistant.jmx)
+
+>硬件配置：
+>
+>- 虚拟平台：Hypervisor:VMware ESXi, 7.0.3, 20328353、Model:PowerEdge R740xd、Processor Type:Intel(R) Xeon(R) Platinum 8269CY CPU @ 2.50GHz
+>- 主机配置：16C8G
+>- JMeter内存配置：4G
 
 ```bash
-jmeter -n -t /home/xxx/xxx.jmx
+$ jmeter -n -t perf-assistant.jmx
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+Creating summariser <summary>
+Created the tree successfully using perf-assistant.jmx
+Starting standalone test @ October 29, 2025 5:46:17 PM CST (1761731177153)
+Waiting for possible Shutdown/StopTestNow/HeapDump/ThreadDump message on port 4445
+summary + 956448 in 00:00:12 = 76792.3/s Avg:     0 Min:     0 Max:    64 Err:     0 (0.00%) Active: 256 Started: 256 Finished: 0
+summary + 2750246 in 00:00:30 = 91674.9/s Avg:     0 Min:     0 Max:    91 Err:     0 (0.00%) Active: 256 Started: 256 Finished: 0
+summary = 3706694 in 00:00:42 = 87308.8/s Avg:     0 Min:     0 Max:    91 Err:     0 (0.00%)
+summary + 2777830 in 00:00:30 = 92594.3/s Avg:     0 Min:     0 Max:    73 Err:     0 (0.00%) Active: 256 Started: 256 Finished: 0
+summary = 6484524 in 00:01:12 = 89497.3/s Avg:     0 Min:     0 Max:    91 Err:     0 (0.00%)
 ```
 
 
@@ -441,5 +473,70 @@ summary + 4529011 in 00:00:30 = 150967.0/s Avg:     1 Min:     0 Max:   981 Err:
 summary = 10599990 in 00:01:12 = 147511.0/s Avg:     1 Min:     0 Max:  1138 Err:     0 (0.00%)
 summary + 4459892 in 00:00:30 = 148663.1/s Avg:     1 Min:     0 Max:  2136 Err:     0 (0.00%) Active: 256 Started: 256 Finished: 0
 summary = 15059882 in 00:01:42 = 147850.3/s Avg:     1 Min:     0 Max:  2136 Err:     0 (0.00%)
+```
+
+
+
+## 脚本编程
+
+>说明：使用jsr223 Groovy脚本编程，因为性能高。
+
+### 打印日志
+
+>详细用法请参考本站[示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-jmeter/demo-jsr223-groovy-scripting.jmx)
+
+```groovy
+// 打印日志
+log.info("测试日志")
+```
+
+### JSR223 PostProcessor获取接口响应json
+
+>详细用法请参考本站[示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-jmeter/perf-assistant.jmx)
+
+```groovy
+// 1. 获取响应
+String responseJSON = prev.getResponseDataAsString()
+log.info(responseJSON)
+```
+
+### JSR223 Groovy解析json字符串
+
+>详细用法请参考本站[示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-jmeter/perf-assistant.jmx)
+
+```groovy
+// 解析json字符串
+def jsonObject = new JsonSlurper().parseText(responseJSON)
+def errorCode = jsonObject.errorCode
+if(errorCode>0) {
+	def errorMessage = jsonObject.errorMessage
+	log.info("登录失败，原因：" + errorMessage)
+}
+```
+
+### 根据响应errorCode标记样本失败
+
+>详细用法请参考本站[示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-jmeter/perf-assistant.jmx)
+
+```groovy
+import groovy.json.JsonSlurper
+
+// 1. 获取响应
+String responseJSON = prev.getResponseDataAsString()
+//log.info(responseJSON)
+
+// 解析json字符串
+def jsonObject = new JsonSlurper().parseText(responseJSON)
+def errorCode = jsonObject.errorCode
+if(errorCode>0) {
+	def errorMessage = jsonObject.errorMessage
+	log.info("登录失败，原因：" + errorMessage)
+
+	// 告诉JMeter这个样本失败
+	// 标记样本为失败
+    prev.setSuccessful(false)
+    // 设置失败消息
+    prev.setResponseMessage("登录失败，原因：" + errorMessage)
+}
 ```
 
