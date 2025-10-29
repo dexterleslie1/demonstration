@@ -508,7 +508,7 @@ log.info(responseJSON)
 // 解析json字符串
 def jsonObject = new JsonSlurper().parseText(responseJSON)
 def errorCode = jsonObject.errorCode
-if(errorCode>0) {
+if(errorCode==null || errorCode>0) {
 	def errorMessage = jsonObject.errorMessage
 	log.info("登录失败，原因：" + errorMessage)
 }
@@ -528,7 +528,7 @@ String responseJSON = prev.getResponseDataAsString()
 // 解析json字符串
 def jsonObject = new JsonSlurper().parseText(responseJSON)
 def errorCode = jsonObject.errorCode
-if(errorCode>0) {
+if(errorCode==null || errorCode>0) {
 	def errorMessage = jsonObject.errorMessage
 	log.info("登录失败，原因：" + errorMessage)
 
@@ -562,3 +562,263 @@ vars.put("ACCESS_TOKEN", accessToken)
 在HTTP Header Manager中引用线程变量
 
 ![image-20251029175939393](image-20251029175939393.png)
+
+
+
+## Random Controller和Random Order Controller的区别
+
+**Random Controller** 和 **Random Order Controller** 在 JMeter 中有本质的区别，让我详细解释：
+
+---
+
+### **一、核心区别对比表**
+
+| 特性         | Random Controller（随机控制器） | Random Order Controller（随机顺序控制器） |
+| ------------ | ------------------------------- | ----------------------------------------- |
+| **执行方式** | 每次迭代**只执行一个**子元素    | 每次迭代**执行全部**子元素                |
+| **执行顺序** | 随机选择**一个**执行            | 随机**排序**后按序执行全部                |
+| **执行数量** | 1/N（N个子元素）                | N/N（全部子元素）                         |
+| **适用场景** | 模拟用户**选择不同路径**        | 模拟操作**顺序随机但完整**                |
+
+---
+
+### **二、详细工作原理**
+
+#### **1. Random Controller（随机控制器）**
+```xml
+<RandomController>
+  <hashTree>
+    <HTTPSamplerProxy testname="API 1"/>
+    <HTTPSamplerProxy testname="API 2"/>
+    <HTTPSamplerProxy testname="API 3"/>
+  </hashTree>
+</RandomController>
+```
+
+**执行结果示例**：
+- **迭代1**：执行 `API 2`（随机选择）
+- **迭代2**：执行 `API 1`（随机选择）
+- **迭代3**：执行 `API 3`（随机选择）
+- **迭代4**：执行 `API 2`（随机选择）
+
+**特点**：每次只执行**一个**请求，类似于"单选按钮"。
+
+---
+
+#### **2. Random Order Controller（随机顺序控制器）**
+```xml
+<RandomOrderController>
+  <hashTree>
+    <HTTPSamplerProxy testname="API 1"/>
+    <HTTPSamplerProxy testname="API 2"/>
+    <HTTPSamplerProxy testname="API 3"/>
+  </hashTree>
+</RandomOrderController>
+```
+
+**执行结果示例**：
+- **迭代1**：执行 `API 2` → `API 3` → `API 1`（随机排序）
+- **迭代2**：执行 `API 1` → `API 2` → `API 3`（随机排序）
+- **迭代3**：执行 `API 3` → `API 1` → `API 2`（随机排序）
+
+**特点**：每次执行**全部**请求，但顺序随机，类似于"洗牌"。
+
+---
+
+### **三、实际场景对比**
+
+#### **场景1：用户行为模拟**
+##### **Random Controller - 模拟用户选择**
+```xml
+<!-- 用户每次只做一件事 -->
+<RandomController testname="用户随机行为">
+  <hashTree>
+    <HTTPSamplerProxy testname="浏览商品"/>
+    <HTTPSamplerProxy testname="查看订单"/>
+    <HTTPSamplerProxy testname="搜索内容"/>
+    <HTTPSamplerProxy testname="个人中心"/>
+  </hashTree>
+</RandomController>
+```
+**结果**：用户可能浏览商品、查看订单、搜索内容，但**每次只做一件事**。
+
+##### **Random Order Controller - 模拟完整流程**
+```xml
+<!-- 用户完成所有操作，但顺序随机 -->
+<RandomOrderController testname="完整流程随机顺序">
+  <hashTree>
+    <HTTPSamplerProxy testname="登录"/>
+    <HTTPSamplerProxy testname="浏览"/>
+    <HTTPSamplerProxy testname="下单"/>
+    <HTTPSamplerProxy testname="支付"/>
+  </hashTree>
+</RandomOrderController>
+```
+**结果**：用户完成登录、浏览、下单、支付**所有步骤**，但顺序可能不同。
+
+---
+
+#### **场景2：API 测试**
+##### **Random Controller - 压力测试不同接口**
+```xml
+<!-- 测试不同接口的并发性能 -->
+<RandomController testname="随机API压力测试">
+  <hashTree>
+    <HTTPSamplerProxy testname="用户查询接口"/>
+    <HTTPSamplerProxy testname="订单查询接口"/>
+    <HTTPSamplerProxy testname="商品查询接口"/>
+  </hashTree>
+</RandomController>
+```
+
+##### **Random Order Controller - 测试接口组合**
+```xml
+<!-- 测试接口组合的并发性能 -->
+<RandomOrderController testname="接口组合测试">
+  <hashTree>
+    <HTTPSamplerProxy testname="创建用户"/>
+    <HTTPSamplerProxy testname="创建订单"/>
+    <HTTPSamplerProxy testname="更新库存"/>
+  </hashTree>
+</RandomOrderController>
+```
+
+---
+
+### **四、配置参数详解**
+
+#### **共同参数**
+```xml
+<boolProp name="InterleaveAcrossThreads">false</boolProp>
+```
+- **false**（默认）：每个线程独立随机
+- **true**：所有线程共享随机序列
+
+#### **特殊配置示例**
+```xml
+<!-- Random Controller 特殊配置 -->
+<RandomController>
+  <boolProp name="InterleaveAcrossThreads">true</boolProp>
+</RandomController>
+
+<!-- Random Order Controller 特殊配置 -->
+<RandomOrderController>
+  <boolProp name="InterleaveAcrossThreads">false</boolProp>
+</RandomOrderController>
+```
+
+---
+
+### **五、性能影响对比**
+
+#### **执行时间计算**
+
+假设每个请求耗时1秒：
+
+| 控制器类型              | 子元素数量 | 单次迭代时间 | 10次迭代总时间 |
+| ----------------------- | ---------- | ------------ | -------------- |
+| Random Controller       | 3          | 1秒          | 10秒           |
+| Random Order Controller | 3          | 3秒          | 30秒           |
+
+**结论**：Random Order Controller 的执行时间会随子元素数量线性增长。
+
+---
+
+### **六、混合使用案例**
+
+#### **复杂用户行为模拟**
+```xml
+<TestPlan>
+  <ThreadGroup>
+    <hashTree>
+      <!-- 第一层：随机选择主要行为 -->
+      <RandomController testname="主要行为选择">
+        <hashTree>
+          <!-- 选项1：购物流程 -->
+          <RandomOrderController testname="购物流程">
+            <hashTree>
+              <HTTPSamplerProxy testname="浏览商品"/>
+              <HTTPSamplerProxy testname="加入购物车"/>
+              <HTTPSamplerProxy testname="结算订单"/>
+            </hashTree>
+          </RandomOrderController>
+          
+          <!-- 选项2：信息查询 -->
+          <RandomOrderController testname="信息查询">
+            <hashTree>
+              <HTTPSamplerProxy testname="查询订单"/>
+              <HTTPSamplerProxy testname="查看物流"/>
+              <HTTPSamplerProxy testname="联系客服"/>
+            </hashTree>
+          </RandomOrderController>
+        </hashTree>
+      </RandomController>
+    </hashTree>
+  </ThreadGroup>
+</TestPlan>
+```
+
+**执行逻辑**：
+1. 随机选择"购物流程"或"信息查询"
+2. 执行选定流程中的所有步骤（顺序随机）
+
+---
+
+### **七、选择指南**
+
+#### **选择 Random Controller 当：**
+✅ 模拟用户**选择不同路径**  
+✅ 测试**单个接口**的性能  
+✅ 需要**减少测试时间**  
+✅ 模拟**互斥操作**（登录/注册不能同时进行）
+
+#### **选择 Random Order Controller 当：**
+✅ 模拟**完整业务流程**  
+✅ 测试**接口组合**的性能  
+✅ 验证**数据依赖性**（如：创建→查询→更新）  
+✅ 模拟**真实用户操作序列**
+
+---
+
+### **八、调试技巧**
+
+#### **查看执行日志**
+```groovy
+// 在子元素中添加调试信息
+log.info("执行: " + prev.getSampleLabel())
+vars.put("LAST_ACTION", prev.getSampleLabel())
+```
+
+#### **统计执行分布**
+```groovy
+// 统计 Random Controller 的选择分布
+def action = prev.getSampleLabel()
+def counter = vars.getObject("COUNTER_" + action) ?: 0
+vars.putObject("COUNTER_" + action, counter + 1)
+
+// 定期输出统计
+if (vars.get("ITERATION").toInteger() % 100 == 0) {
+    log.info("=== 执行分布统计 ===")
+    ["API 1", "API 2", "API 3"].each { api ->
+        def count = vars.getObject("COUNTER_" + api) ?: 0
+        log.info("${api}: ${count} 次")
+    }
+}
+```
+
+---
+
+### **总结**
+
+| 方面       | Random Controller        | Random Order Controller |
+| ---------- | ------------------------ | ----------------------- |
+| **本质**   | 随机**选择**             | 随机**排序**            |
+| **执行量** | 1/N                      | N/N                     |
+| **性能**   | 快                       | 慢（随元素数量增加）    |
+| **真实度** | 低（用户不会只做一件事） | 高（完整业务流程）      |
+
+**简单记忆**：
+- **Random Controller** = 随机**选一个**执行
+- **Random Order Controller** = 随机**排顺序**执行全部
+
+根据您的测试目标选择合适的控制器，也可以组合使用以达到更真实的模拟效果。
