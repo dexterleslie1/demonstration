@@ -540,3 +540,25 @@ if(errorCode>0) {
 }
 ```
 
+### 线程变量（当前线程内共享）
+
+>详细用法请参考本站[示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-jmeter/perf-assistant.jmx)
+
+保存Token到线程变量中
+
+```groovy
+import groovy.json.JsonSlurper
+
+// 1. 获取响应
+String responseJSON = prev.getResponseDataAsString()
+
+...
+
+def accessToken = jsonObject.data
+// 保存到线程变量（当前线程内共享）
+vars.put("ACCESS_TOKEN", accessToken)
+```
+
+在HTTP Header Manager中引用线程变量
+
+![image-20251029175939393](image-20251029175939393.png)
