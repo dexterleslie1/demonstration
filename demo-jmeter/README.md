@@ -343,3 +343,103 @@ jmeter -n -t /home/xxx/xxx.jmx -R 192.168.1.1,192.168.1.2
 在开发插件过程中，需要调整`jmeter`日志级别为`DEBUG`以打印插件调试信息，[参考链接](https://www.blazemeter.com/blog/jmeter-logging)
 
 通过`jmeter`菜单修改日志级别，`Options`>`Log Level`>`DEBUG`
+
+
+
+## beanshell和jsr223
+
+### 性能测试
+
+>结论：jsr223 Groovy性能最高，然后是beanshell > jsr223 Javascript > jsr223 Java。
+
+使用本站[示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-jmeter/beanshell-and-jsr223)协助测试。
+
+硬件配置：
+
+- 虚拟平台：Hypervisor:VMware ESXi, 7.0.3, 20328353、Model:PowerEdge R740xd、Processor Type:Intel(R) Xeon(R) Platinum 8269CY CPU @ 2.50GHz
+- 主机配置：8C8G
+
+beanshell测试结果：
+
+```sh
+$ jmeter -n -t beanshell.jmx
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+Creating summariser <summary>
+Created the tree successfully using beanshell.jmx
+Starting standalone test @ October 29, 2025 3:54:15 PM CST (1761724455526)
+Waiting for possible Shutdown/StopTestNow/HeapDump/ThreadDump message on port 4445
+summary + 735555 in 00:00:14 = 51894.7/s Avg:     2 Min:     0 Max:  1178 Err:     0 (0.00%) Active: 219 Started: 219 Finished: 0
+summary + 2146627 in 00:00:30 = 71554.2/s Avg:     3 Min:     0 Max:  2045 Err:     0 (0.00%) Active: 256 Started: 256 Finished: 0
+summary = 2882182 in 00:00:44 = 65246.1/s Avg:     3 Min:     0 Max:  2045 Err:     0 (0.00%)
+summary + 2127924 in 00:00:30 = 70930.8/s Avg:     3 Min:     0 Max:  1372 Err:     0 (0.00%) Active: 256 Started: 256 Finished: 0
+summary = 5010106 in 00:01:14 = 67545.3/s Avg:     3 Min:     0 Max:  2045 Err:     0 (0.00%)
+summary + 2104715 in 00:00:30 = 70157.2/s Avg:     3 Min:     0 Max:  1996 Err:     0 (0.00%) Active: 256 Started: 256 Finished: 0
+summary = 7114821 in 00:01:44 = 68297.5/s Avg:     3 Min:     0 Max:  2045 Err:     0 (0.00%)
+```
+
+jsr223 Java语言测试结果：
+
+```sh
+$ jmeter -n -t jsr223-java.jmx
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+Creating summariser <summary>
+Created the tree successfully using jsr223-java.jmx
+Starting standalone test @ October 29, 2025 3:57:07 PM CST (1761724627474)
+Waiting for possible Shutdown/StopTestNow/HeapDump/ThreadDump message on port 4445
+summary +   1857 in 00:00:22 =   83.8/s Avg:  2144 Min:     4 Max:  6659 Err:     0 (0.00%) Active: 256 Started: 256 Finished: 0
+summary +   2580 in 00:00:30 =   86.0/s Avg:  2978 Min:     4 Max:  6585 Err:     0 (0.00%) Active: 256 Started: 256 Finished: 0
+summary =   4437 in 00:00:52 =   85.1/s Avg:  2629 Min:     4 Max:  6659 Err:     0 (0.00%)
+summary +   2738 in 00:00:30 =   91.2/s Avg:  2820 Min:     4 Max:  6726 Err:     0 (0.00%) Active: 256 Started: 256 Finished: 0
+summary =   7175 in 00:01:22 =   87.3/s Avg:  2702 Min:     4 Max:  6726 Err:     0 (0.00%)
+summary +   2744 in 00:00:30 =   91.5/s Avg:  2799 Min:     4 Max:  6392 Err:     0 (0.00%) Active: 256 Started: 256 Finished: 0
+summary =   9919 in 00:01:52 =   88.4/s Avg:  2728 Min:     4 Max:  6726 Err:     0 (0.00%)
+```
+
+jsr223 JavaScript语言测试结果：
+
+```sh
+$ jmeter -n -t jsr223-javascript.jmx
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+Creating summariser <summary>
+Created the tree successfully using jsr223-javascript.jmx
+Starting standalone test @ October 29, 2025 4:00:17 PM CST (1761724817433)
+Waiting for possible Shutdown/StopTestNow/HeapDump/ThreadDump message on port 4445
+summary +  32323 in 00:00:12 = 2658.8/s Avg:    54 Min:     0 Max:  1295 Err:     0 (0.00%) Active: 256 Started: 256 Finished: 0
+summary +  92123 in 00:00:30 = 3070.8/s Avg:    83 Min:     0 Max:  1088 Err:     0 (0.00%) Active: 256 Started: 256 Finished: 0
+summary = 124446 in 00:00:42 = 2952.0/s Avg:    76 Min:     0 Max:  1295 Err:     0 (0.00%)
+summary +  64862 in 00:00:30 = 2161.9/s Avg:   117 Min:     0 Max:  1260 Err:     0 (0.00%) Active: 256 Started: 256 Finished: 0
+summary = 189308 in 00:01:12 = 2623.5/s Avg:    90 Min:     0 Max:  1295 Err:     0 (0.00%)
+summary +  66342 in 00:00:30 = 2211.5/s Avg:   116 Min:     0 Max:  1421 Err:     0 (0.00%) Active: 256 Started: 256 Finished: 0
+summary = 255650 in 00:01:42 = 2502.5/s Avg:    97 Min:     0 Max:  1421 Err:     0 (0.00%)
+```
+
+jsr223 Groovy语言测试结果：
+
+```sh
+$ jmeter -n -t jsr223-groovy.jmx
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+Creating summariser <summary>
+Created the tree successfully using jsr223-groovy.jmx
+Starting standalone test @ October 29, 2025 4:04:47 PM CST (1761725087739)
+Waiting for possible Shutdown/StopTestNow/HeapDump/ThreadDump message on port 4445
+summary + 1488739 in 00:00:12 = 125536.6/s Avg:     1 Min:     0 Max:   916 Err:     0 (0.00%) Active: 256 Started: 256 Finished: 0
+summary + 4582240 in 00:00:30 = 152741.3/s Avg:     1 Min:     0 Max:  1138 Err:     0 (0.00%) Active: 256 Started: 256 Finished: 0
+summary = 6070979 in 00:00:42 = 145034.0/s Avg:     1 Min:     0 Max:  1138 Err:     0 (0.00%)
+summary + 4529011 in 00:00:30 = 150967.0/s Avg:     1 Min:     0 Max:   981 Err:     0 (0.00%) Active: 256 Started: 256 Finished: 0
+summary = 10599990 in 00:01:12 = 147511.0/s Avg:     1 Min:     0 Max:  1138 Err:     0 (0.00%)
+summary + 4459892 in 00:00:30 = 148663.1/s Avg:     1 Min:     0 Max:  2136 Err:     0 (0.00%) Active: 256 Started: 256 Finished: 0
+summary = 15059882 in 00:01:42 = 147850.3/s Avg:     1 Min:     0 Max:  2136 Err:     0 (0.00%)
+```
+
