@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration PUBLIC
+        "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+        "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+
+<generatorConfiguration>
+    <!-- 数据库驱动 -->
+    <classPathEntry location="mysql-connector-java-8.0.33.jar"/>
+
+    <context id="mysql" targetRuntime="MyBatis3">
+        <!-- 覆盖之前已经存在的XXXMapper.xml -->
+        <!-- https://blog.csdn.net/wo18237095579/article/details/118104346 -->
+        <!-- https://stackoverflow.com/questions/43245041/how-could-let-mybatis-generator-overwriting-the-already-generated-mapper-xml -->
+        <plugin type="org.mybatis.generator.plugins.UnmergeableXmlMappersPlugin" />
+
+        <!-- 禁止生成关于MyBatis Generator注释 -->
+        <commentGenerator>
+            <property name="suppressAllComments" value="true"/>
+        </commentGenerator>
+
+        <!-- 数据库连接 -->
+        <jdbcConnection
+                driverClass="com.mysql.cj.jdbc.Driver"
+                connectionURL="jdbc:mysql://localhost:3306/demo"
+                userId="root"
+                password="123456">
+        </jdbcConnection>
+
+        <!-- Java 类型解析 -->
+        <javaTypeResolver>
+            <property name="forceBigDecimals" value="false"/>
+        </javaTypeResolver>
+
+        <!-- 实体类生成配置 -->
+        <javaModelGenerator targetPackage="com.future.demo.entity"
+                            targetProject="src/main/java">
+            <!-- 控制是否在 SETTER 方法中自动去除字符串字段的首尾空格 -->
+            <property name="trimStrings" value="true"/>
+        </javaModelGenerator>
+
+        <!-- SQL Map XML 生成 -->
+        <sqlMapGenerator targetPackage="mapper"
+                         targetProject="src/main/resources">
+        </sqlMapGenerator>
+
+        <!-- Mapper 接口生成 -->
+        <javaClientGenerator type="XMLMAPPER"
+                             targetPackage="com.future.demo.mapper"
+                             targetProject="src/main/java"/>
+
+        <!-- 表配置 -->
+        <table tableName="my_order" domainObjectName="Order">
+            <generatedKey column="id" sqlStatement="MySql" identity="true"/>
+            <!-- create_time默认类型为java.util.Date，手动指定为LocalDateTime -->
+            <columnOverride column="create_time" javaType="java.time.LocalDateTime"/>
+        </table>
+    </context>
+</generatorConfiguration>

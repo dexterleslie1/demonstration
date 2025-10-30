@@ -12,25 +12,133 @@
 
 
 
-### 从数据库生成 mapper、mapper配置、bean
+### ~~从数据库生成 mapper、mapper配置、bean~~
 
-详细用法请使用 student 数据表协助生成操作。
+>使用MyBatis Generator生成。
 
-在 IDEA 中新增数据库数据源
+~~详细用法请使用 student 数据表协助生成操作。~~
 
-展开新增后的数据源选中需要生成 mapper 的数据表，点击右键弹出上下文菜单后点击 MybatisX-Generator 功能，配置信息如下：
+~~在 IDEA 中新增数据库数据源~~
 
-- module path 选择相应的目标模块
-- base package 为 com.future.demo
-- relative package 为 bean
+~~展开新增后的数据源选中需要生成 mapper 的数据表，点击右键弹出上下文菜单后点击 MybatisX-Generator 功能，配置信息如下：~~
 
-点击 Next 按钮，配置信息如下：
+- ~~module path 选择相应的目标模块~~
+- ~~base package 为 com.future.demo~~
+- ~~relative package 为 bean~~
 
-- annotation 选择 None
-- options 勾选 Comment、Lombok、Model
-- template 选择 default-all（表示生成 mapper 接口、mapper 配置文件、bean）
+~~点击 Next 按钮，配置信息如下：~~
 
-点击 Finish 按钮等待 mapper、mapper 配置文件、bean 生成完毕。
+- ~~annotation 选择 None~~
+- ~~options 勾选 Comment、Lombok、Model~~
+- ~~template 选择 default-all（表示生成 mapper 接口、mapper 配置文件、bean）~~
+
+~~点击 Finish 按钮等待 mapper、mapper 配置文件、bean 生成完毕。~~
+
+
+
+## MyBatis Generator
+
+>说明：使用MyBatis Generator生成Entity、Mapper、Mapper XML。
+>
+>详细用法请参考本站[示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-spring-boot/demo-mybatis-generator)
+
+POM配置MyBatis Generator插件
+
+```xml
+<build>
+    <plugins>
+        <!-- mybatis generator Maven插件 -->
+        <plugin>
+            <groupId>org.mybatis.generator</groupId>
+            <artifactId>mybatis-generator-maven-plugin</artifactId>
+            <version>1.4.2</version>
+            <configuration>
+                <configurationFile>src/main/resources/generatorConfig.xml</configurationFile>
+                <overwrite>true</overwrite>
+            </configuration>
+            <dependencies>
+                <dependency>
+                    <groupId>mysql</groupId>
+                    <artifactId>mysql-connector-java</artifactId>
+                    <version>8.0.33</version>
+                </dependency>
+            </dependencies>
+        </plugin>
+
+    </plugins>
+</build>
+```
+
+MyBatis Generator配置src/main/java/resources/generatorConfig.xml：
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration PUBLIC
+        "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+        "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+
+<generatorConfiguration>
+    <!-- 数据库驱动 -->
+    <classPathEntry location="mysql-connector-java-8.0.33.jar"/>
+
+    <context id="mysql" targetRuntime="MyBatis3">
+        <!-- 覆盖之前已经存在的XXXMapper.xml -->
+        <!-- https://blog.csdn.net/wo18237095579/article/details/118104346 -->
+        <!-- https://stackoverflow.com/questions/43245041/how-could-let-mybatis-generator-overwriting-the-already-generated-mapper-xml -->
+        <plugin type="org.mybatis.generator.plugins.UnmergeableXmlMappersPlugin" />
+
+        <!-- 禁止生成关于MyBatis Generator注释 -->
+        <commentGenerator>
+            <property name="suppressAllComments" value="true"/>
+        </commentGenerator>
+
+        <!-- 数据库连接 -->
+        <jdbcConnection
+                driverClass="com.mysql.cj.jdbc.Driver"
+                connectionURL="jdbc:mysql://localhost:3306/demo"
+                userId="root"
+                password="123456">
+        </jdbcConnection>
+
+        <!-- Java 类型解析 -->
+        <javaTypeResolver>
+            <property name="forceBigDecimals" value="false"/>
+        </javaTypeResolver>
+
+        <!-- 实体类生成配置 -->
+        <javaModelGenerator targetPackage="com.future.demo.entity"
+                            targetProject="src/main/java">
+            <!-- 控制是否在 SETTER 方法中自动去除字符串字段的首尾空格 -->
+            <property name="trimStrings" value="true"/>
+        </javaModelGenerator>
+
+        <!-- SQL Map XML 生成 -->
+        <sqlMapGenerator targetPackage="mapper"
+                         targetProject="src/main/resources">
+        </sqlMapGenerator>
+
+        <!-- Mapper 接口生成 -->
+        <javaClientGenerator type="XMLMAPPER"
+                             targetPackage="com.future.demo.mapper"
+                             targetProject="src/main/java"/>
+
+        <!-- 表配置 -->
+        <table tableName="my_order" domainObjectName="Order">
+            <generatedKey column="id" sqlStatement="MySql" identity="true"/>
+            <!-- create_time默认类型为java.util.Date，手动指定为LocalDateTime -->
+            <columnOverride column="create_time" javaType="java.time.LocalDateTime"/>
+        </table>
+    </context>
+</generatorConfiguration>
+```
+
+数据库预先创建my_order表
+
+执行命令生成Entity、Mapper、Mapper XML
+
+```sh
+ mvn mybatis-generator:generate
+```
 
 
 
