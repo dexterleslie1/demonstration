@@ -507,7 +507,7 @@ void insert(Employee employee);
 
 
 
-### 动态 SQL
+### 动态SQL
 
 知识点：
 
@@ -516,6 +516,188 @@ void insert(Employee employee);
 - 动态更新数据 if、set 标签用法，参考 EmployeeMapper 中的 updateDynamicSet 方法
 - in 查询、批量插入、批量更新 foreach 标签用法，参考 EmployeeMapper 中的 findByIds、insertBatch、updateBatch 方法
 - 使用 sql 标签定义 sql 片段，使用 include 标签引用 sql 片段，参考 EmployeeMapper 中的 getById 方法
+
+### 动态SQL - `<set>`标签
+
+>作用：
+>
+>- 自动去除末尾逗号。
+>- 如果所有条件都不满足，自动去除整个 SET 子句。
+>- 自动添加 SET 关键字。
+
+示例：
+
+```xml
+<update id="updateByPrimaryKeySelective" parameterType="com.future.demo.entity.Order">
+    update my_order
+    <set>
+      <if test="address != null">
+        address = #{address,jdbcType=VARCHAR},
+      </if>
+      <if test="amount != null">
+        amount = #{amount,jdbcType=DECIMAL},
+      </if>
+      <if test="customerId != null">
+        customer_id = #{customerId,jdbcType=BIGINT},
+      </if>
+      <if test="createTime != null">
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+```
+
+### 动态SQL - SQL片段
+
+>说明：SQL片段支持列复用。
+
+```xml
+<sql id="Base_Column_List">
+  id, address, amount, customer_id, create_time
+</sql>
+<select id="selectByExample" parameterType="com.future.demo.entity.OrderExample" resultMap="BaseResultMap">
+  select
+  <include refid="Base_Column_List" />
+  from my_order
+  <if test="_parameter != null">
+    <include refid="Example_Where_Clause" />
+  </if>
+  <if test="orderByClause != null">
+    order by ${orderByClause}
+  </if>
+</select>
+```
+
+### 动态SQL - `<trim>`标签
+
+>说明：MyBatis`<trim>`标签是一个动态 SQL 修剪工具，用于智能地处理 SQL 语句的前缀、后缀和多余的分隔符。它比`<if>`更强大，可以解决复杂的动态 SQL 拼接问题。
+
+示例替代`<set>`标签：
+
+```xml
+<!-- 传统的<set>写法 -->
+<update id="updateUser">
+    UPDATE user 
+    <set>
+        <if test="name != null">name = #{name},</if>
+        <if test="email != null">email = #{email},</if>
+    </set>
+    WHERE id = #{id}
+</update>
+
+<!-- 等效的<trim>写法 -->
+<update id="updateUser">
+    UPDATE user 
+    <trim prefix="SET" suffixOverrides=",">
+        <if test="name != null">name = #{name},</if>
+        <if test="email != null">email = #{email},</if>
+    </trim>
+    WHERE id = #{id}
+</update>
+```
+
+示例替代`<where>`标签：
+
+```xml
+<!-- 传统的<where>写法 -->
+<select id="findUsers">
+    SELECT * FROM user
+    <where>
+        <if test="name != null">AND name = #{name}</if>
+        <if test="email != null">AND email = #{email}</if>
+    </where>
+</select>
+
+<!-- 等效的<trim>写法 -->
+<select id="findUsers">
+    SELECT * FROM user
+    <trim prefix="WHERE" prefixOverrides="AND|OR">
+        <if test="name != null">AND name = #{name}</if>
+        <if test="email != null">AND email = #{email}</if>
+    </trim>
+</select>
+```
+
+示例智能 INSERT 语句：
+
+```xml
+<insert id="insertUserSelective">
+    INSERT INTO user
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+        <if test="name != null">name,</if>
+        <if test="email != null">email,</if>
+        <if test="age != null">age,</if>
+        <if test="createTime != null">create_time,</if>
+    </trim>
+    VALUES
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+        <if test="name != null">#{name},</if>
+        <if test="email != null">#{email},</if>
+        <if test="age != null">#{age},</if>
+        <if test="createTime != null">#{createTime},</if>
+    </trim>
+</insert>
+```
+
+### 特殊内置参数_parameter
+
+>_parameter表示：
+>
+>- 如果方法只有一个参数：就是该参数本身
+>- 如果方法有多个参数：是所有参数的包装对象（通常是 param1, param2...）
+>- 如果方法没有参数：为 null
+
+示例：
+
+```xml
+<select id="selectByExample" parameterType="com.future.demo.entity.OrderExample" resultMap="BaseResultMap">
+    select
+    <if test="distinct">
+      distinct
+    </if>
+    <include refid="Base_Column_List" />
+    from my_order
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+    <if test="orderByClause != null">
+      order by ${orderByClause}
+    </if>
+  </select>
+```
+
+检查是否传入了 OrderExample参数：
+
+- 如果传入了 OrderExample对象：添加 WHERE 条件
+- 如果没有传入参数（为null）：不添加 WHERE 条件，查询所有数据
+
+
+
+### resultMap
+
+>说明：ResultMap是一个结果集映射配置，用于定义如何将数据库查询结果映射到 Java 对象。它解决了数据库列名与 Java 对象属性名之间的映射关系问题。
+
+示例：
+
+```xml
+<!-- 定义resultMap -->
+<resultMap id="BaseResultMap" type="com.future.demo.entity.Order">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="address" jdbcType="VARCHAR" property="address" />
+    <result column="amount" jdbcType="DECIMAL" property="amount" />
+    <result column="customer_id" jdbcType="BIGINT" property="customerId" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+  </resultMap>
+
+<!-- 指定resultMap -->
+<select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from my_order
+    where id = #{id,jdbcType=BIGINT}
+  </select>
+```
 
 
 
