@@ -1,7 +1,3 @@
-# RabbitMQ
-
-
-
 ## 部署
 
 ### 基于 Docker
