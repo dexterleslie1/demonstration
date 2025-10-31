@@ -135,6 +135,7 @@ export default defineConfig({
           { text: '谷歌浏览器（Chrome）', link: '/chrome/README.md' },
           { text: '验证码', link: '/captcha/README.md' },
           { text: 'ffmpeg', link: '/ffmpeg/README.md' },
+          { text: 'KVM', link: '/kvm/README.md' },
         ]
       },
     ],
