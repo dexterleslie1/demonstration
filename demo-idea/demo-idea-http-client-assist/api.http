@@ -1,0 +1,2 @@
+### 协助测试Http Client中文乱码问题
+POST http://localhost:8080/api/v1/test1
