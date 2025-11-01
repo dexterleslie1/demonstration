@@ -7,47 +7,64 @@ import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONUtil;
+import com.future.common.http.ObjectResponse;
+import com.future.common.http.ResponseUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.junit.Assert;
-import org.junit.Test;
+import org.hamcrest.CoreMatchers;
 
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+
+import javax.annotation.Resource;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 
-public class Tests {
+@SpringBootTest(classes = Application.class)
+@AutoConfigureMockMvc
+public class ApplicationTests {
+
+    @Resource
+    MockMvc mockMvc;
+
     @Test
     public void testHttpUtil() {
         // 测试get
-        String content = HttpUtil.get("http://httpbin.org/get", StandardCharsets.UTF_8);
-        Assert.assertTrue(content.contains("X-Amzn-Trace-Id"));
+        String content = HttpUtil.get("http://httpbin.org/get" , StandardCharsets.UTF_8);
+        Assertions.assertTrue(content.contains("X-Amzn-Trace-Id"));
 
         // 测试post
-        content = HttpUtil.post("http://httpbin.org/post", "name=张三&age=30");
-        Assert.assertTrue(content.contains("form"));
+        content = HttpUtil.post("http://httpbin.org/post" , "name=张三&age=30");
+        Assertions.assertTrue(content.contains("form"));
 
         // 测试post提交JSON数据
         String json = JSONUtil.toJsonStr(new HashMap() {{
-            this.put("name", "张三");
-            this.put("age", 30);
+            this.put("name" , "张三");
+            this.put("age" , 30);
         }});
         HttpResponse response = HttpRequest.post("http://httpbin.org/post")
-                .header("Content-Type", "application/json")
+                .header("Content-Type" , "application/json")
                 .body(json)
                 .execute();
         content = response.body();
-        Assert.assertTrue(content.contains("json"));
+        Assertions.assertTrue(content.contains("json"));
 
         // 自定义请求
         response = HttpRequest.get("http://httpbin.org/get")
                 .form(new HashMap() {{
-                    put("key", "value");
+                    put("key" , "value");
                 }})
-                .header("Authorization", "Bearer your_token_here") // 添加请求头
+                .header("Authorization" , "Bearer your_token_here") // 添加请求头
                 .timeout(5000) // 设置超时时间
                 .execute(); // 发送请求
         content = response.body();
-        Assert.assertTrue(content.contains("args"));
+        Assertions.assertTrue(content.contains("args"));
     }
 
     // 在分布式环境中，唯一ID生成应用十分广泛，生成方法也多种多样，Hutool针对一些常用生成策略做了简单封装。
@@ -61,11 +78,11 @@ public class Tests {
         long id2 = snowflake.nextId();
         long id3 = IdUtil.getSnowflakeNextId();
 
-        Assert.assertEquals(snowflake.getDataCenterId(id), snowflake.getDataCenterId(id2));
-        Assert.assertEquals(snowflake.getWorkerId(id), snowflake.getWorkerId(id2));
+        Assertions.assertEquals(snowflake.getDataCenterId(id), snowflake.getDataCenterId(id2));
+        Assertions.assertEquals(snowflake.getWorkerId(id), snowflake.getWorkerId(id2));
 
-        Assert.assertEquals(snowflake.getDataCenterId(id), snowflake.getDataCenterId(id3));
-        Assert.assertEquals(snowflake.getWorkerId(id), snowflake.getWorkerId(id3));
+        Assertions.assertEquals(snowflake.getDataCenterId(id), snowflake.getDataCenterId(id3));
+        Assertions.assertEquals(snowflake.getWorkerId(id), snowflake.getWorkerId(id3));
 
         // 注意：下面代码不要删除，用于测试"在并发很低时，生成的分布式ID总是偶数的"
         /*Map<Integer, Integer> map = new HashMap<>();
@@ -130,5 +147,29 @@ public class Tests {
         System.out.println(bigInteger.intValue() + "（订单ID计算得到的分片索引）");
         // 通过用户ID计算分片索引
         System.out.println((originalUserId % 16 % 5 + 1) + "（用户ID计算得到的分片索引）");
+    }
+
+    /**
+     * 测试ServletUtil
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testServletUtil() throws Exception {
+        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/test1"));
+        resultActions.andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.errorCode" , CoreMatchers.is(90001)))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.errorMessage" , CoreMatchers.is("测试失败")));
+    }
+
+    /**
+     * 测试JSONUtil
+     */
+    @Test
+    public void testJSONUtil() {
+        // 把对象转换成JSON字符串
+        ObjectResponse<String> objectResponse = ResponseUtils.successObject("测试成功");
+        String json = ResponseUtils.toJson(objectResponse);
+        Assertions.assertEquals("{\"errorCode\":0,\"errorMessage\":null,\"data\":\"测试成功\"}" , json);
     }
 }
