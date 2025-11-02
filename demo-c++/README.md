@@ -3553,6 +3553,19 @@ Cflags: -I${includedir}/mylib
 
 `pkg-config` 是 Linux 开发中一个非常实用的工具，能极大简化编译和链接过程。
 
+### macOS13.0.1安装
+
+```sh
+# 设置brew代理
+export ALL_PROXY=socks5h://192.168.235.128:1080
+
+# 安装pkg-config
+brew install pkg-config
+
+# 检查是否成功安装
+pkg-config --version
+```
+
 
 
 ## 环境变量`PKG_CONFIG_PATH`和`LD_LIBRARY_PATH`区别
