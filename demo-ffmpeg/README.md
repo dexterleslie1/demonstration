@@ -74,7 +74,50 @@ ffmpeg -i input.mkv -s 1280x720 output.mp4
 
 
 
-## 安装 - `macOS13.0.1`
+## 为何多个版本并存
+
+不同场景对编解码器需求不同
+
+```
+# 场景1：传统嵌入式设备（资源受限）
+推荐版本: FFmpeg 2.8/3.4
+原因: 内存占用小，API稳定，硬件要求低
+
+# 场景2：现代云转码服务  
+推荐版本: FFmpeg 5.x/6.x
+原因: 需要最新编解码器，性能优化好
+
+# 场景3：桌面应用集成
+推荐版本: FFmpeg 4.4
+原因: 平衡功能和稳定性，文档完善
+
+安防监控行业：
+- 需要: H.264, H.265, MJPEG
+- 不需要: AV1, VP9
+- 锁定版本: FFmpeg 3.4（稳定够用）
+
+视频网站转码：
+- 需要: AV1, VP9, HEVC 最新优化  
+- 锁定版本: FFmpeg 6.x（追求性能）
+
+传统电视广播：
+- 需要: MPEG-2, MPEG-TS 稳定支持
+- 锁定版本: FFmpeg 2.8（久经考验）
+```
+
+当前并存的典型版本
+
+| 版本           | 主要用户群             | 存在原因              |
+| -------------- | ---------------------- | --------------------- |
+| **FFmpeg 2.8** | 老嵌入式设备、传统安防 | 极致稳定，资源占用小  |
+| **FFmpeg 3.4** | 企业级系统、LTS发行版  | API稳定，经过长期测试 |
+| **FFmpeg 4.4** | ⭐主流应用、新项目      | 功能完善，生态支持好  |
+| **FFmpeg 5.x** | 需要新特性的项目       | 性能优化，新编解码器  |
+| **FFmpeg 6.x** | 技术前沿项目           | 实验性功能，最新技术  |
+
+
+
+## 安装 - macOS13.0.1使用brew
 
 >提示：在安装过程中提示如下错误，所以放弃在此版本平台安装ffmpeg。
 >
@@ -116,5 +159,50 @@ export ALL_PROXY=socks5h://192.168.235.128:1080
 
 ```sh
 brew install ffmpeg
+```
+
+## 安装 - macOS13.0.1从源代码
+
+访问 https://ffmpeg.org/download.html#releases 下载ffmpeg-4.2.11.tar.gz
+
+安装pkg-config
+
+```sh
+# 设置brew代理
+export ALL_PROXY=socks5h://192.168.235.128:1080
+
+# 安装pkg-config
+brew install pkg-config
+
+# 检查是否成功安装
+pkg-config --version
+```
+
+导出/usr/local/ffmpeg/bin到PATH环境变量中
+
+```sh
+sudo vim ~/.zshrc
+
+# 在文件末尾添加
+export PATH=/usr/local/ffmpeg/bin:$PATH
+```
+
+重新打开shell会自动加载最新环境变量
+
+解压ffmpeg源代码并切换到源代码目录中
+
+```sh
+# 配置编译环境
+# 提醒：需要使用--disable-x86asm参数，否则会报告nasm/yasm not found or too old. Use --disable-x86asm for a crippled build.错误
+./configure --prefix=/usr/local/ffmpeg --enable-debug=3 --disable-x86asm
+
+# 编译
+make -j 8
+
+# 安装
+sudo make install
+
+# 检查ffmpeg是否成功安装
+ffmpeg -version
 ```
 

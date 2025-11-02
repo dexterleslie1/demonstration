@@ -413,3 +413,15 @@ XCTAssertEqualWithAccuracy(3.14159, M_PI, 0.001, @"PI 值应该在精度范围�
 po myString
 ```
 
+## 配置自动export环境变量
+
+因为macOS 13 默认使用的是 zsh，所以配置~/.zshrc文件自动export环境变量。
+
+```sh
+sudo vim ~/.zshrc
+
+# 在文件末尾添加
+export PATH=/usr/local/ffmpeg/bin:$PATH
+```
+
+重新打开shell会自动加载最新环境变量
