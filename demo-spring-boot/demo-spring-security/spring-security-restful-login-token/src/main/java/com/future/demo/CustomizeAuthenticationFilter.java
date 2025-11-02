@@ -16,14 +16,14 @@ import java.io.IOException;
 // 验证用户是否登录拦截器
 @Component
 public class CustomizeAuthenticationFilter extends OncePerRequestFilter {
+
     @Autowired
     TokenStore tokenStore;
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-        String path = request.getServletPath();
-        // 不拦截登录接口
-        return "/api/v1/auth/login".equalsIgnoreCase(path);
+        // 拦截所有请求
+        return false;
     }
 
     @Override
