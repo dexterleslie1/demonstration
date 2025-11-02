@@ -300,11 +300,15 @@ response.andExpect(status().isOk())
 完整的测试用例`MockMvcTests`如下：
 
 ```java
+package com.future.demo.test;
+
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.future.demo.Application;
 import com.future.demo.TestService;
 import com.future.demo.UserModel;
 import com.future.demo.mapper.UserMapper;
+import com.jayway.jsonpath.JsonPath;
 import org.hamcrest.CoreMatchers;
 import org.junit.Assert;
 import org.junit.Test;
@@ -322,6 +326,7 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import javax.annotation.Resource;
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -336,7 +341,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(classes = {Application.class})
 // 启用mockmvc测试
 @AutoConfigureMockMvc
-public class ControllerTests {
+public class MockMvcTests {
 
     @Resource
     UserMapper userMapper;
@@ -344,6 +349,8 @@ public class ControllerTests {
     TestService testService;
     @Resource
     private MockMvc mockMvc;
+    @Resource
+    ObjectMapper objectMapper;
 
     @Test
     public void test() throws Exception {
@@ -383,7 +390,7 @@ public class ControllerTests {
                 .queryParam("a", "1")
                 .queryParam("b", "2")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED));
-        response.andExpect(status().isForbidden());
+        response.andExpect(status().isUnauthorized());
 
         // 场景: 测试集成mybatis-plus测试，查看是否正确加载mybatis-plus
         this.userMapper.delete(Wrappers.query());
@@ -394,6 +401,27 @@ public class ControllerTests {
         UserModel userModel = this.userMapper.selectList(Wrappers.query()).get(0);
         Assert.assertEquals("中文测试", userModel.getName());
         Assert.assertEquals("dexterleslie@gmail.com", userModel.getEmail());
+
+        // MockMvc 读取 JSON 字符串内容
+        response = mockMvc.perform(get("/api/v1/getUser")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + UUID.randomUUID().toString()))
+                .andExpect(status().isOk());
+        // https://stackoverflow.com/questions/47763332/how-to-extract-value-from-json-response-when-using-spring-mockmvc
+        String email = JsonPath.read(response.andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8), "$.data.email");
+        Assert.assertEquals("dexterleslie@gmail.com", email);
+
+        // 测试 post 请求提交 body 参数
+        String name = "Dexter";
+        userModel = new UserModel();
+        userModel.setName(name);
+        String JSON = objectMapper.writeValueAsString(userModel);
+        response = mockMvc.perform(post("/api/v1/postWithBody")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + UUID.randomUUID().toString())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(JSON));
+        response.andExpect(status().isOk())
+                .andExpect(jsonPath("$.data", is("用户名称：" + name)));
+        ;
     }
 
 }

@@ -5,10 +5,12 @@ import cn.hutool.json.JSONUtil;
 import com.future.common.http.ObjectResponse;
 import com.future.common.http.ResponseUtils;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 @RestController
@@ -27,5 +29,17 @@ public class ApiController {
         String json = JSONUtil.toJsonStr(objectResponse);
         response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
         ServletUtil.write(response, json, MediaType.APPLICATION_JSON_UTF8_VALUE);
+    }
+
+    /**
+     * 测试ServletUtil获取客户端IP
+     *
+     * @param request
+     * @return
+     */
+    @GetMapping("testServletUtilGetClientIp")
+    public ObjectResponse<String> testServletUtilGetClientIp(HttpServletRequest request) {
+        String clientIp = ServletUtil.getClientIP(request);
+        return ResponseUtils.successObject("客户端IP：" + clientIp);
     }
 }

@@ -6,6 +6,7 @@ import cn.hutool.core.util.RandomUtil;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
 import cn.hutool.http.HttpUtil;
+import cn.hutool.json.JSONConfig;
 import cn.hutool.json.JSONUtil;
 import com.future.common.http.ObjectResponse;
 import com.future.common.http.ResponseUtils;
@@ -156,10 +157,16 @@ public class ApplicationTests {
      */
     @Test
     public void testServletUtil() throws Exception {
+        // 测试ServletUtil写响应
         ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/test1"));
         resultActions.andExpect(MockMvcResultMatchers.status().isBadRequest())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.errorCode" , CoreMatchers.is(90001)))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.errorMessage" , CoreMatchers.is("测试失败")));
+
+        // 测试ServletUtil获取客户端ip地址
+        resultActions = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/testServletUtilGetClientIp"));
+        resultActions.andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.data" , CoreMatchers.is("客户端IP：127.0.0.1")));
     }
 
     /**
@@ -169,7 +176,12 @@ public class ApplicationTests {
     public void testJSONUtil() {
         // 把对象转换成JSON字符串
         ObjectResponse<String> objectResponse = ResponseUtils.successObject("测试成功");
-        String json = ResponseUtils.toJson(objectResponse);
-        Assertions.assertEquals("{\"errorCode\":0,\"errorMessage\":null,\"data\":\"测试成功\"}" , json);
+        String json = JSONUtil.toJsonStr(objectResponse);
+        Assertions.assertEquals("{\"data\":\"测试成功\",\"errorCode\":0}" , json);
+
+        // 不忽略null值
+        objectResponse = ResponseUtils.successObject("测试成功");
+        json = JSONUtil.toJsonStr(objectResponse, JSONConfig.create().setIgnoreNullValue(false));
+        Assertions.assertEquals("{\"data\":\"测试成功\",\"errorCode\":0,\"errorMessage\":null}" , json);
     }
 }
