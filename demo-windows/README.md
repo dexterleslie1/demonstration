@@ -43,7 +43,11 @@
 
 ## 启用`hyper-v`特性
 
-windows11 启用`hyper-v`特性，`https://www.bdrsuite.com/blog/how-to-enable-hyper-v-in-windows-11-and-windows-server-2022/`
+>windows11 启用`hyper-v`特性：https://www.bdrsuite.com/blog/how-to-enable-hyper-v-in-windows-11-and-windows-server-2022/
+
+启用CPU硬件虚拟化支持。
+
+打开功能`控制面板`>`程序和功能`>`启用或关闭Windows功能`，勾选Hyper-V功能点击确认按钮进行安装，安装完毕后重启系统。
 
 
 
