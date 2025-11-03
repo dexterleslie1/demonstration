@@ -117,7 +117,7 @@ ffmpeg -i input.mkv -s 1280x720 output.mp4
 
 
 
-## 安装 - macOS13.0.1使用brew
+## 安装 - 在macOS13.0.1中使用brew
 
 >提示：在安装过程中提示如下错误，所以放弃在此版本平台安装ffmpeg。
 >
@@ -161,7 +161,7 @@ export ALL_PROXY=socks5h://192.168.235.128:1080
 brew install ffmpeg
 ```
 
-## 安装 - macOS13.0.1从源代码
+## 安装 - 在macOS13.0.1中从源代码
 
 访问 https://ffmpeg.org/download.html#releases 下载ffmpeg-4.2.11.tar.gz
 
@@ -201,6 +201,48 @@ make -j 8
 
 # 安装
 sudo make install
+
+# 检查ffmpeg是否成功安装
+ffmpeg -version
+```
+
+## 安装 - 在Windows11中的Cygwin
+
+>提示：在Cygwin中编译的ffmpeg.exe会依赖于cygwin.dll运行。
+
+参考本站[链接](/windows/README.html#cygwin-安装)安装Cygwin。
+
+安装ffmpeg编译依赖环境
+
+```sh
+# setup-x86_64.exe是Cygwin的安装程序
+./setup-x86_64.exe -q -P gcc-core -P gcc-g++ -P make -P gdb -P binutils -P yasm -P nasm -P pkg-config -P automake -P autoconf -P libtool -P diffutils -P patch
+```
+
+访问 https://ffmpeg.org/download.html#releases 下载ffmpeg-4.2.11.tar.gz
+
+导出/usr/local/ffmpeg/bin到PATH环境变量中
+
+```sh
+sudo vim ~/.bashrc
+
+# 在文件末尾添加
+export PATH=/usr/local/ffmpeg/bin:$PATH
+```
+
+重新打开Cygwin终端会自动加载最新环境变量
+
+解压ffmpeg源代码并切换到源代码目录中
+
+```sh
+# 配置编译环境
+./configure --prefix=/usr/local/ffmpeg --enable-debug=3
+
+# 编译
+make -j 8
+
+# 安装
+make install
 
 # 检查ffmpeg是否成功安装
 ffmpeg -version

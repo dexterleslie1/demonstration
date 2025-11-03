@@ -19,7 +19,7 @@ sudo snap install typora
 
 ## 安装 - `Windows11`
 
->提示：目前正在使用 `typora-setup-x64-1.10.8.exe` 测试过期后是否会强制输入序列号。
+>提示：安装typora-setup-x64-1.10.8.exe使用到过期后，每次启动都会弹出输入序列号提示框，此时不需要理会此提示框可以继续使用Typora。
 
 访问官方网站 https://typora.io/releases/all 下载`Typora`安装程序。
 
