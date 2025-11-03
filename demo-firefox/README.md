@@ -39,5 +39,11 @@ sudo apt install firefox
 - `No proxy for` 填写 `192.168.0.0/16,127.0.0.0/8,::1,www.example.com`
 - 勾选 `Proxy DNS when using SOCKS v5`
 
+## 清除缓存
+
+导航到Settings > Privacy & Security功能，找到Cookies and Site Data部分后点击后面的Clear Data按钮即可清除缓存。
+
+
+
 
 
