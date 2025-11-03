@@ -339,11 +339,9 @@ OAuth 2.0的安全性主要通过以下几个关键机制来保证：
 
 
 
-### OAuth2.0 解决什么问题？
+### 解决什么问题？
 
->`https://www.ruanyifeng.com/blog/2019/04/oauth_design.html`
-
-
+>参考链接：https://www.ruanyifeng.com/blog/2019/04/oauth_design.html
 
 #### 快递员问题
 
@@ -393,7 +391,7 @@ OAuth 2.0的安全性主要通过以下几个关键机制来保证：
 
 ### 授权方式
 
->`https://www.ruanyifeng.com/blog/2019/04/oauth-grant-types.html`
+>参考链接：https://www.ruanyifeng.com/blog/2019/04/oauth-grant-types.html
 
 注意，不管哪一种授权方式，第三方应用申请令牌之前，都必须先到系统备案，说明自己的身份，然后会拿到两个身份识别码：客户端 ID（client ID）和客户端密钥（client secret）。这是为了防止令牌被滥用，没有备案过的第三方应用，是不会拿到令牌的。
 
@@ -566,11 +564,9 @@ B 网站验证通过以后，就会颁发新的令牌。
 
 ### 第三方应用和 GitHub 登录集成
 
->`https://www.ruanyifeng.com/blog/2019/04/github-oauth.html`
-
-注意：下面的实验已经使用 postman 测试通过。
-
-
+>详细用法请参考本站[示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-spring-boot/demo-spring-security/demo-oauth2-github)
+>
+>参考链接：https://www.ruanyifeng.com/blog/2019/04/github-oauth.html
 
 #### 原理
 
@@ -597,7 +593,7 @@ B 网站验证通过以后，就会颁发新的令牌。
 
 ![img](https://cdn.beekka.com/blogimg/asset/201904/bg2019042102.jpg)
 
-应用的名称随便填，主页 URL 填写`https://www.baidu.com`，跳转网址填写 `https://www.baidu.com`。
+应用的名称随便填，主页 URL 填写`http://localhost:8080`，跳转网址填写 `http://localhost:8080/login/oauth2/code/github`（注意：截至2025年11月3日上面跳转网址必须填写http://localhost:8080/login/oauth2/code/github，否则会报告登记跳转地址和声明的挑战地址不匹配错误，导致无法回调）。
 
 提交表单以后，GitHub 应该会返回客户端 ID（client ID）和客户端密钥（client secret），这就是应用的身份识别码。
 
@@ -610,12 +606,10 @@ B 网站验证通过以后，就会颁发新的令牌。
 跳转的 URL 如下。
 
 ```
-https://github.com/login/oauth/authorize?
-  client_id=7e015d8ce32370079895&
-  redirect_uri=https://www.baidu.com
+https://github.com/login/oauth/authorize?client_id=7e015d8ce32370079895&redirect_uri=http://localhost:8080/login/oauth2/code/github
 ```
 
-这个 URL 指向 GitHub 的 OAuth 授权网址，带有两个参数：`client_id`告诉 GitHub 谁在请求，`redirect_uri`是稍后跳转回来的网址。
+这个 URL 指向 GitHub 的 OAuth 授权网址（如果用户已经登录GitHub，则跳转到GitHub的授权页面，否则会跳转到GitHub的用户登录页面），带有两个参数：`client_id`告诉 GitHub 谁在请求，`redirect_uri`是稍后跳转回来的网址。
 
 用户点击到了 GitHub，GitHub 会要求用户登录，确保是本人在操作。
 
@@ -628,8 +622,7 @@ https://github.com/login/oauth/authorize?
 用户同意授权， GitHub 就会跳转到`redirect_uri`指定的跳转网址，并且带上授权码，跳转回来的 URL 就是下面的样子。
 
 ```
-https://www.baidu.com?
-  code=859310e7cecc9196f4af
+http://localhost:8080/login/oauth2/code/github?code=04e29b407c796dd8785f
 ```
 
 后端收到这个请求以后，就拿到了授权码（`code`参数）。
@@ -2076,13 +2069,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 ## Spring Security OAuth2.0
 
-详细用法请参考示例：
-
-- `https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-security/spring-security-oauth2-without-jwt`
+> 详细用法请参考本站[示例](https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-security/spring-security-oauth2-without-jwt)
 
 
 
-### token 超时设置
+### Token超时设置
 
 分别设置每个客户端超时
 

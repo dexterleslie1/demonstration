@@ -158,7 +158,7 @@ POM配置Thymeleaf依赖和HMR支持
 </dependency>
 ```
 
-开发环境参考本站[链接]()以启用HMR
+开发环境参考本站[链接](/springboot/spring-boot-thymeleaf.html#热模块替换hmr)以启用HMR
 
 创建Controller跳转页面
 
@@ -205,6 +205,29 @@ public class DemoController {
 
 ```
 
+resources/templates目录下创建index.html页面
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style type="text/css">
+        .backgroundColorYellowGreen {
+            background-color: yellowgreen;
+        }
+    </style>
+</head>
+<body>
+Hello World!
+</body>
+</html>
+```
+
+
+
 ## 热模块替换HMR
 
 > 详细用法请参考本站[示例](https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-boot-thymeleaf)
@@ -232,5 +255,72 @@ spring.thymeleaf.cache=false
 
 - 步骤4、选择ctrl+option(Alt)+shift+/ > Registry后，启用compiler.automake.allow.when.app.running
 
+## 语法或表达式
 
+### 字面量替换分隔符
 
+> 说明：字面量替换分隔符。管道符号 |之间的所有内容都会被当作一个字符串来处理，你可以在其中直接插入变量。
+
+Controller定义
+
+```java
+@Controller
+public class DemoController {
+
+    @Value("${oauth2.client_id}")
+    String clientId;
+    @Value("${oauth2.redirect_uri}")
+    String redirectUri;
+
+    @GetMapping(value = "/")
+    public String index(Model model) {
+        model.addAttribute("client_id", clientId);
+        model.addAttribute("redirect_uri", redirectUri);
+        return "index";
+    }
+}
+```
+
+index.html字面量使用
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style type="text/css">
+        .backgroundColorYellowGreen {
+            background-color: yellowgreen;
+        }
+    </style>
+</head>
+<body>
+<a th:href="|https://github.com/login/oauth/authorize?client_id=${client_id}&redirect_uri=${redirect_uri}|">GitHub登录</a>
+</body>
+</html>
+```
+
+### th:if
+
+如果有errorDescription则显示，否则不显示。
+
+```java
+String errorDescription = ex.getMessage();
+model.addAttribute("errorDescription", errorDescription);
+```
+
+```html
+<div th:if="${errorDescription!=null}" th:text="${errorDescription}" style="color:red;"></div>
+```
+
+### 只显示变量值，不生成HTML标签
+
+只显示username变量值，不生成HTML标签
+
+```html
+<body>
+    Hello <th:block th:text="${username}"></th:block>
+</body>
+```

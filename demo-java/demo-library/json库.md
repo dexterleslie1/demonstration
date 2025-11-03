@@ -426,7 +426,188 @@ public void testObjectNode() throws IOException {
 }
 ```
 
+### JsonNode和ObjectNode的区别
 
+`ObjectNode` 和 `JsonNode` 的区别在于它们的 **可变性** 和 **功能定位**。
+
+简单来说：
+- **`JsonNode`** 是只读的视图，用于**查看和遍历** JSON 数据。
+- **`ObjectNode`** 是可写的实现，用于**构建和修改** JSON 数据。
+
+---
+
+#### 核心区别对比表
+
+| 特性         | JsonNode                                 | ObjectNode                                                   |
+| :----------- | :--------------------------------------- | :----------------------------------------------------------- |
+| **核心目的** | **读取、查询、遍历** JSON 数据           | **构建、修改、编辑** JSON 数据                               |
+| **可变性**   | **不可变（只读）**                       | **可变（可写）**                                             |
+| **继承关系** | 是 **父类/接口**                         | 是 **`JsonNode` 的子类**                                     |
+| **创建方式** | 通常由 `ObjectMapper.readTree()` 返回    | `JsonNodeFactory.instance.objectNode()` 或 `ObjectMapper.createObjectNode()` |
+| **修改方法** | 没有 `put()`, `set()`, `remove()` 等方法 | 有完整的 `put()`, `set()`, `remove()`, `with()` 等方法       |
+
+---
+
+#### 详细解释与代码示例
+
+##### 1. JsonNode（只读视图）
+
+`JsonNode` 是一个抽象类，它代表了 JSON 树模型中的一个节点。它的主要设计目标是提供一种统一的方式来**访问和检查** JSON 数据，而不关心数据是如何构建的。
+
+**主要特点：**
+- **只读**：你不能通过 `JsonNode` 修改底层的 JSON 结构。
+- **通用接口**：从 `ObjectMapper.readTree()` 返回的具体节点类型（`ObjectNode`, `ArrayNode`, `TextNode` 等）都可以被向上转型为 `JsonNode` 来统一处理。
+
+**常用方法（查询类）：**
+- `get(String fieldName)`：获取子节点
+- `path(String fieldName)`：安全获取子节点（不存在返回 `MissingNode`）
+- `has(String fieldName)`：检查字段是否存在
+- `asText()`, `asInt()`, `asBoolean()`：获取值
+- `isObject()`, `isArray()`, `isTextual()`：判断节点类型
+
+```java
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+String json = "{\"name\":\"Alice\",\"age\":25,\"hobbies\":[\"reading\",\"coding\"]}";
+ObjectMapper mapper = new ObjectMapper();
+
+// 解析JSON，返回的是具体的节点类型，但通常用JsonNode接口接收
+JsonNode rootNode = mapper.readTree(json);
+
+// 1. 读取数据 - 完全可以
+String name = rootNode.get("name").asText(); // "Alice"
+int age = rootNode.get("age").asInt(); // 25
+
+// 2. 尝试修改 - 编译错误！JsonNode没有修改方法
+// rootNode.put("newField", "value"); // 错误！方法不存在
+// rootNode.remove("name"); // 错误！方法不存在
+```
+
+##### 2. ObjectNode（可写实现）
+
+`ObjectNode` 是 `JsonNode` 的具体子类，专门用于表示 JSON **对象**（即键值对集合）。它提供了完整的方法来修改 JSON 结构。
+
+**主要特点：**
+- **可写**：可以添加、修改、删除字段。
+- **具体实现**：你需要明确使用 `ObjectNode` 类型来调用修改方法。
+
+**常用方法（修改类）：**
+- `put(String fieldName, Xxx value)`：添加/更新字段（基本类型）
+- `putPOJO(String fieldName, Object value)`：添加复杂对象
+- `set(String fieldName, JsonNode value)`：添加JsonNode
+- `setAll(ObjectNode other)`：合并另一个ObjectNode
+- `remove(String fieldName)`：删除字段
+
+```java
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+ObjectMapper mapper = new ObjectMapper();
+
+// 创建空的JSON对象
+ObjectNode objectNode = mapper.createObjectNode();
+
+// 1. 构建/修改数据 - 核心功能
+objectNode.put("name", "Bob");
+objectNode.put("age", 30);
+objectNode.put("active", true);
+
+// 添加嵌套对象
+ObjectNode addressNode = mapper.createObjectNode();
+addressNode.put("city", "Beijing");
+objectNode.set("address", addressNode);
+
+// 2. 读取数据 - 也可以（因为继承自JsonNode）
+String name = objectNode.get("name").asText(); // 完全合法
+
+// 3. 删除数据
+objectNode.remove("active");
+
+System.out.println(objectNode.toString());
+// 输出: {"name":"Bob","age":30,"address":{"city":"Beijing"}}
+```
+
+---
+
+#### 关键关系：多态的使用
+
+这是理解它们之间关系的关键点：
+
+```java
+ObjectMapper mapper = new ObjectMapper();
+String json = "{\"key\":\"value\"}";
+
+// 解析时，实际返回的是ObjectNode，但我们通常用JsonNode接收
+JsonNode readOnlyView = mapper.readTree(json); // 实际是ObjectNode，但向上转型了
+
+// 这很安全，因为我们只想读取
+String value = readOnlyView.get("key").asText();
+
+// 但如果需要修改，就必须向下转型
+if (readOnlyView instanceof ObjectNode) {
+    ObjectNode writableNode = (ObjectNode) readOnlyView; // 向下转型
+    writableNode.put("newKey", "newValue"); // 现在可以修改了
+}
+```
+
+#### 实际应用场景
+
+##### 场景1：只读取JSON数据（使用JsonNode）
+```java
+public void processUserData(String json) throws Exception {
+    ObjectMapper mapper = new ObjectMapper();
+    JsonNode root = mapper.readTree(json);
+    
+    // 只需要读取，不需要修改
+    if (root.has("email")) {
+        String email = root.get("email").asText();
+        sendNotification(email);
+    }
+}
+```
+
+##### 场景2：动态构建JSON（使用ObjectNode）
+```java
+public ObjectNode buildResponse(boolean success, String message, Object data) {
+    ObjectMapper mapper = new ObjectMapper();
+    ObjectNode response = mapper.createObjectNode();
+    
+    response.put("success", success);
+    response.put("message", message);
+    response.putPOJO("data", data); // 添加复杂对象
+    response.put("timestamp", System.currentTimeMillis());
+    
+    return response;
+}
+```
+
+##### 场景3：修改现有的JSON
+```java
+public String updateUserStatus(String userJson, String newStatus) throws Exception {
+    ObjectMapper mapper = new ObjectMapper();
+    
+    // 需要修改，所以明确用ObjectNode接收
+    ObjectNode userNode = (ObjectNode) mapper.readTree(userJson);
+    
+    userNode.put("status", newStatus);
+    userNode.put("lastUpdated", Instant.now().toString());
+    userNode.remove("oldField"); // 删除旧字段
+    
+    return mapper.writeValueAsString(userNode);
+}
+```
+
+#### 总结
+
+| 选择依据                       | 使用                                             |
+| :----------------------------- | :----------------------------------------------- |
+| **只需要读取、查询、遍历JSON** | **`JsonNode`**（更通用、更安全）                 |
+| **需要创建、修改、构建JSON**   | **`ObjectNode`**（必须使用这个具体类型）         |
+| **从JSON字符串解析**           | 开始用 `JsonNode`，需要修改时转型为 `ObjectNode` |
+| **从头创建JSON对象**           | 直接创建 `ObjectNode`                            |
+
+**简单记忆：** 把 `JsonNode` 当作 `Map<String, Object>` 的只读视图，把 `ObjectNode` 当作可读写的 `HashMap<String, Object>`。
 
 ### 测试 `json array` 字符串转换为 `java List`
 
