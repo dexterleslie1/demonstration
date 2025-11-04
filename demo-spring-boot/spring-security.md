@@ -560,127 +560,222 @@ https://b.com/oauth/token?
 
 B 网站验证通过以后，就会颁发新的令牌。
 
+## OAuth2.0为何有四种授权模式呢？
 
+简单直接的回答是：**因为存在不同的应用类型和不同的信任级别，没有一种授权方式能适用于所有场景。**
 
-### 第三方应用和 GitHub 登录集成
+OAuth 2.0 的四种授权模式（也称为授权类型 - Grant Type）是为了让不同类型的客户端（应用）在各种安全环境下都能安全地获取访问令牌而设计的。我们可以从两个核心维度来理解为什么需要四种模式：
 
->详细用法请参考本站[示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-spring-boot/demo-spring-security/demo-oauth2-github)
->
->参考链接：https://www.ruanyifeng.com/blog/2019/04/github-oauth.html
+1.  **客户端的类型**：是公开应用（如手机APP、单页Web应用）还是机密应用（有后端的传统Web应用）？
+2.  **资源所有者的参与方式**：用户（资源所有者）能否在前端与授权服务器交互？应用是否被高度信任？
 
-#### 原理
+下面我们来详细拆解这四种模式，看看它们各自解决了什么问题。
 
-所谓第三方登录，实质就是 OAuth 授权。用户想要登录 A 网站，A 网站让用户提供第三方网站的数据，证明自己的身份。获取第三方网站的身份数据，就需要 OAuth 授权。
+---
 
-举例来说，A 网站允许 GitHub 登录，背后就是下面的流程。
+### 四种授权模式详解
 
-1. A 网站让用户跳转到 GitHub。
-2. GitHub 要求用户登录，然后询问"A 网站要求获得 xx 权限，你是否同意？"
-3. 用户同意，GitHub 就会重定向回 A 网站，同时发回一个授权码。
-4. A 网站使用授权码，向 GitHub 请求令牌。
-5. GitHub 返回令牌.
-6. A 网站使用令牌，向 GitHub 请求用户数据。
+#### 1. 授权码模式
 
-下面就是这个流程的代码实现。
+这是**最常用、最安全**的模式，也是 OAuth 2.0 的核心。
 
-#### 应用登记
+*   **适用场景**：**有后端服务器的机密客户端**，比如传统的 Web 应用。
+*   **工作流程**：
+    1.  用户访问客户端应用，客户端将用户重定向到授权服务器。
+    2.  用户在授权服务器上登录并授权。
+    3.  授权服务器将用户重定向回客户端，并附带一个**授权码**。
+    4.  客户端应用的后端用这个**授权码**和自己的**客户端密钥**向授权服务器请求**访问令牌**。
+*   **为什么需要它？**
+    *   **核心安全点**：访问令牌永远不会通过前端浏览器传递。它只存在于“后端服务器 ↔ 授权服务器”和“后端服务器 ↔ 资源服务器”的安全通道中。这有效防止了令牌被浏览器历史记录、网络嗅探等途径泄露。
+    *   因为机密客户端能保护好自己的`client_secret`，所以可以用它来交换令牌。
 
-一个应用要求 OAuth 授权，必须先到对方网站登记，让对方知道是谁在请求。
+#### 2. 隐藏式 / 隐式模式
 
-所以，你要先去 GitHub 登记一下。当然，我已经登记过了，你使用我的登记信息也可以，但为了完整走一遍流程，还是建议大家自己登记。这是免费的。
+这个模式是授权码模式的简化版，但**安全性较低**，现在已被 PKCE 增强的授权码模式所取代，不推荐使用。
 
-访问这个[网址](https://github.com/settings/applications/new)，填写登记表。
+*   **适用场景**：**纯前端应用的公开客户端**，这些应用没有后端服务器来安全地存储密钥，比如单页面应用。
+*   **工作流程**：
+    1.  用户访问客户端应用，客户端将用户重定向到授权服务器。
+    2.  用户在授权服务器上登录并授权。
+    3.  授权服务器将用户重定向回客户端，并在 URL 的片段中直接附带**访问令牌**。
+*   **为什么需要它（历史上）？**
+    *   在 PKCE 出现之前，这是为没有后端的应用提供的唯一选择。因为这类应用无法安全保管`client_secret`，所以跳过了授权码步骤，直接返回令牌。
+    *   **重大安全缺陷**：令牌会暴露在浏览器的地址栏和历史记录中，容易泄露。
 
-![img](https://cdn.beekka.com/blogimg/asset/201904/bg2019042102.jpg)
+#### 3. 密码模式 / 资源所有者密码凭证模式
 
-应用的名称随便填，主页 URL 填写`http://localhost:8080`，跳转网址填写 `http://localhost:8080/login/oauth2/code/github`（注意：截至2025年11月3日上面跳转网址必须填写http://localhost:8080/login/oauth2/code/github，否则会报告登记跳转地址和声明的挑战地址不匹配错误，导致无法回调）。
+这种模式要求用户高度信任应用。
 
-提交表单以后，GitHub 应该会返回客户端 ID（client ID）和客户端密钥（client secret），这就是应用的身份识别码。
+*   **适用场景**：**高度受信任的客户端**。例如，同一个公司内部的第一方应用（如自家的移动端 App）。
+*   **工作流程**：
+    1.  用户直接在客户端的界面上输入自己的**用户名和密码**。
+    2.  客户端应用用这些凭证直接向授权服务器请求访问令牌。
+*   **为什么需要它？**
+    *   **用户体验简单**：只需要一次交互。
+    *   **何时使用**：仅适用于你完全信任的应用（比如你自己公司开发的应用）。**绝对不要**在第三方应用中使用此模式，因为你需要将密码直接交给它们，这违反了 OAuth 的初衷（不分享密码）。
 
-#### 浏览器跳转 GitHub 登录和授权界面
+#### 4. 客户端凭证模式
 
-示例的首页很简单，就是一个链接，让用户跳转到 GitHub。
+这种模式最特殊，它不涉及用户授权。
 
-![img](https://cdn.beekka.com/blogimg/asset/201904/bg2019042103.jpg)
+*   **适用场景**：**客户端访问自己拥有的资源，或者与授权服务器约定的、与具体用户无关的公共资源**。也就是机器对机器的通信。
+*   **工作流程**：
+    1.  客户端使用自己的`client_id`和`client_secret`向授权服务器认证。
+    2.  授权服务器验证通过后，直接返回一个访问令牌。
+*   **为什么需要它？**
+    *   用于后端与后端之间的 API 调用。例如，一个定时任务需要清理数据库，或者一个应用需要读取公共的、非用户相关的数据。
 
-跳转的 URL 如下。
+---
 
+### 总结与类比
+
+为了让您更好地理解，我们可以做一个简单的类比：
+
+想象一下，OAuth 2.0 就像进入一个高级俱乐部的不同方式。
+
+| 授权模式           | 类比                                                         | 解释                            |
+| :----------------- | :----------------------------------------------------------- | :------------------------------ |
+| **授权码模式**     | **标准流程**：门卫检查你的会员资格（重定向到授权页），给你一张一次性纸条（授权码），你拿着纸条去前台兑换正式手环（访问令牌）。 | 最安全，令牌不经过浏览器。      |
+| **隐藏式**         | **简化流程**：门卫直接给你手环（访问令牌），但所有人都能看到。 | 不安全，令牌暴露在浏览器中。    |
+| **密码模式**       | **VIP通道**：你直接把家门钥匙（用户名和密码）交给俱乐部经理，他帮你办好一切。 | 极度信任，违背OAuth初衷，慎用。 |
+| **客户端凭证模式** | **员工通道**：清洁公司用自己的工牌（client_id/secret）直接进入，不需要以客人身份。 | 机器对机器，不涉及用户。        |
+
+### 现代最佳实践
+
+*   **对于Web应用和有后端的原生应用**：**始终使用授权码模式**。
+*   **对于单页面应用和移动应用**：**使用带有 PKCE 扩展的授权码模式**。PKCE 通过创建一个动态的、一次性的挑战码，弥补了公开客户端无法保护密钥的缺陷，使其既安全又方便。这也是现在淘汰隐式模式的原因。
+
+所以，回到你的问题：OAuth 2.0 有四种模式，本质上是为了在**安全、用户体验和适用性**之间取得平衡，为千变万化的软件环境提供了一套灵活而全面的安全框架。
+
+## Spring Security OAuth2.0概念
+
+简单来说，**Spring Security OAuth2.0 是 Spring 生态系统中的一个项目，它为我们提供了在 Spring 应用中快速实现 OAuth 2.0 标准的能力。**
+
+我们可以从两个核心角色来理解它：
+
+1.  **作为 OAuth 2.0 授权服务器**
+2.  **作为 OAuth 2.0 资源服务器**
+
+---
+
+### 1. Spring Security OAuth2.0 是什么？
+
+在 OAuth 2.0 协议中，主要有四个角色：
+*   **资源所有者**：用户
+*   **客户端**：第三方应用（如微信小程序、GitHub第三方应用）
+*   **授权服务器**：负责认证用户并颁发令牌（如点击“使用微信登录”后跳转到的那个页面）
+*   **资源服务器**：存放用户受保护资源的API服务器（如提供用户头像、昵称的微信API）
+
+**Spring Security OAuth2.0 项目主要提供了帮助我们构建“授权服务器”和“资源服务器”的库和框架。**
+
+### 2. 它的核心组成部分
+
+#### a. 授权服务器
+
+这是整个OAuth2.0流程的核心。使用Spring Security OAuth2.0，你可以轻松地搭建一个自己的授权服务器，就像微信开放平台、GitHub、Google的登录授权系统一样。
+
+**它的主要职责包括：**
+*   **暴露授权端点**：如 `/oauth/authorize`（用于授权码模式）
+*   **暴露令牌端点**：如 `/oauth/token`（用于发放和刷新令牌）
+*   **管理客户端注册信息**：存储 `client_id`, `client_secret`, 授权范围等。
+*   **管理令牌的生成、存储和验证**。
+
+**示例配置（传统方式，便于理解）：**
+```java
+@Configuration
+@EnableAuthorizationServer
+public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdapter {
+    @Override
+    public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
+        clients.inMemory()
+                .withClient("my-client") // client_id
+                .secret(passwordEncoder.encode("my-secret")) // client_secret
+                .authorizedGrantTypes("authorization_code", "refresh_token") // 支持的授权模式
+                .scopes("read", "write") // 授权范围
+                .redirectUris("http://example.com/callback");
+    }
+}
 ```
-https://github.com/login/oauth/authorize?client_id=7e015d8ce32370079895&redirect_uri=http://localhost:8080/login/oauth2/code/github
+通过简单的注解（`@EnableAuthorizationServer`）和配置，你就拥有了一个功能完整的OAuth2.0授权服务器。
+
+#### b. 资源服务器
+
+资源服务器是保护你API的组件。它负责验证访问令牌，并允许或拒绝请求。
+
+**它的主要职责包括：**
+*   **拦截对受保护API的请求**。
+*   **验证请求头中的访问令牌**。
+*   **根据令牌的权限（scope）判断是否允许访问**。
+
+**示例配置：**
+```java
+@Configuration
+@EnableResourceServer // 声明这是一个资源服务器
+public class ResourceServerConfig extends ResourceServerConfigurerAdapter {
+    @Override
+    public void configure(HttpSecurity http) throws Exception {
+        http
+            .authorizeRequests()
+                .antMatchers("/api/public/**").permitAll() // 公开接口
+                .antMatchers("/api/private/**").authenticated(); // 需要有效令牌才能访问
+    }
+}
 ```
 
-这个 URL 指向 GitHub 的 OAuth 授权网址（如果用户已经登录GitHub，则跳转到GitHub的授权页面，否则会跳转到GitHub的用户登录页面），带有两个参数：`client_id`告诉 GitHub 谁在请求，`redirect_uri`是稍后跳转回来的网址。
+---
 
-用户点击到了 GitHub，GitHub 会要求用户登录，确保是本人在操作。
+### 3. 历史演变与现状：非常重要！
 
-#### 获取授权码
+Spring Security OAuth2.0 项目经历了一些重要的演变，了解这一点可以避免 confusion：
 
-登录后，GitHub 询问用户，该应用正在请求数据，你是否同意授权。
+1.  **旧时代（Spring Boot 2.x 早期）：**
+    *   有一个独立的项目叫 `spring-security-oauth`。
+    *   使用这个项目，通过 `@EnableAuthorizationServer` 和 `@EnableResourceServer` 来搭建OAuth2服务非常流行。
 
-![img](https://cdn.beekka.com/blogimg/asset/201904/bg2019042104.png)
+2.  **新时代（Spring Boot 2.3+ 推荐）：**
+    *   **Spring官方已经宣布废弃旧的 `spring-security-oauth` 项目。**
+    *   OAuth2.0 的核心功能已经**整合到主要的 Spring Security 5.x 版本中**。
+    *   **新的推荐方式是直接使用 Spring Security 5 提供的 OAuth2 支持**，而不是依赖旧的独立项目。
 
-用户同意授权， GitHub 就会跳转到`redirect_uri`指定的跳转网址，并且带上授权码，跳转回来的 URL 就是下面的样子。
+**为什么迁移？**
+*   **更好的集成**：与 Spring Security 核心框架无缝结合。
+*   **符合最新标准**：对 OAuth 2.0 和 OpenID Connect 有更好的支持。
+*   **更简洁的配置**：特别是对**客户端**的配置变得非常简单。
 
+---
+
+### 4. 一个完整的例子：客户端使用授权码模式登录
+
+假设你使用新的 Spring Security 5 方式，配置一个客户端应用非常简单：
+
+```yaml
+# application.yml
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          github: # 使用 GitHub 作为授权服务器
+            client-id: your-github-client-id
+            client-secret: your-github-client-secret
+            scope: user:email
 ```
-http://localhost:8080/login/oauth2/code/github?code=04e29b407c796dd8785f
-```
+仅仅通过配置，你的应用就获得了：
+*   一个 `/login` 页面，可以选择用 GitHub 登录。
+*   自动处理与 GitHub 授权服务器的重定向和令牌交换。
+*   登录成功后，会自动创建会话，你可以在控制器中通过 `@AuthenticationPrincipal` 注解获取当前用户信息。
 
-后端收到这个请求以后，就拿到了授权码（`code`参数）。
+---
 
-#### 获取令牌
+### 总结
 
-后端使用这个授权码，向 GitHub 请求令牌。
+*   **Spring Security OAuth2.0 是什么？**
+    *   它是一个**工具集**，帮助你在 Spring 应用中实现 OAuth 2.0 协议。
+    *   它的两大核心功能是构建 **授权服务器** 和 **资源服务器**。
 
-```javascript
-const tokenResponse = await axios({
-  method: 'post',
-  url: 'https://github.com/login/oauth/access_token?' +
-    `client_id=${clientID}&` +
-    `client_secret=${clientSecret}&` +
-    `code=${requestToken}`,
-  headers: {
-    accept: 'application/json'
-  }
-});
-```
-
-上面代码中，GitHub 的令牌接口`https://github.com/login/oauth/access_token`需要提供三个参数。
-
-- `client_id`：客户端的 ID
-- `client_secret`：客户端的密钥
-- `code`：授权码
-
-作为回应，GitHub 会返回一段 JSON 数据，里面包含了令牌`accessToken`。
-
-```javascript
-const accessToken = tokenResponse.data.access_token;
-```
-
-#### 调用 API 获取用户数据
-
-有了令牌以后，就可以向 API 请求数据了。
-
-```javascript
-const result = await axios({
-  method: 'get',
-  url: `https://api.github.com/user`,
-  headers: {
-    accept: 'application/json',
-    Authorization: `token ${accessToken}`
-  }
-});
-```
-
-上面代码中，GitHub API 的地址是`https://api.github.com/user`，请求的时候必须在 HTTP 头信息里面带上令牌`Authorization: token 361507da`。
-
-然后，就可以拿到用户数据，得到用户的身份。
-
-```javascript
-const name = result.data.name;
-ctx.response.redirect(`/welcome.html?name=${name}`);
-```
-
-
+*   **现状如何？**
+    *   旧的、独立的 `spring-security-oauth` 项目已被废弃。
+    *   **新的最佳实践是直接使用 Spring Security 5 框架内建的 OAuth2 支持**，它更现代、更强大、配置更简单。
 
 ## OIDC(OpenID Connect)概念
 
@@ -1927,112 +2022,529 @@ curl -H "Origin: abc.com" -H "Access-Control-Request-Method: GET" -H "Access-Con
 
 
 
-## 示例同时支持密码、短信验证码登录
+## 示例统一认证授权
 
->示例使用`spring-security`做登录统一网关，包括：获取登录验证码、手机号码+短信验证码登录、手机号码、用户名、邮箱+密码登录
+>说明：示例使用`spring-security`做登录统一网关，包括：获取登录验证码、手机号码+短信验证码登录、手机号码、用户名、邮箱+密码登录
 >
->SpringBoot 集成 Spring Security（8）——短信验证码登录`https://blog.csdn.net/yuanlaijike/article/details/86164160`
+>[SpringBoot 集成 Spring Security（8）——短信验证码登录](https://blog.csdn.net/yuanlaijike/article/details/86164160)
+>
+>详细用法请参考本站[示例](https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-security/spring-security-unify-gateway)
 
-示例详细用法请参考`https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-security/spring-security-unify-gateway`
+### 请求统一拦截
 
-示例通过自定义`CustomizePasswordAuthenticationFilter`、`CustomizePasswordAuthenticationToken`、`CustomizePasswordAuthenticationProvider`、`CustomizePasswordUserDetailsService`实现密码登录，各个组件功能如下：
+>说明：统一拦截用户所有请求，判断请求中携带的Token是否合法并放行，否则拒绝。
 
-- `CustomizePasswordAuthenticationFilter`
+```java
+package com.future.demo.unify.common;
 
-  - 拦截密码登录`url /api/v1/password/login`
-  - 获取登录请求中的帐号和密码
-  - 使用帐号密码构造`CustomizePasswordAuthenticationToken`实例
-  - 使用`token`实例调用`AuthenticationManager`中的`authenticate`方法
+import com.future.common.http.RequestUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
 
-- `CustomizePasswordAuthenticationToken`
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
-  - 用于传递密码登录请求提交的帐号和密码
+/**
+ * 用户请求token拦截处理
+ */
+@Component
+public class CustomizeTokenAuthenticationFilter extends OncePerRequestFilter {
 
-- `CustomizePasswordAuthenticationProvider`
+    @Autowired
+    TokenStore tokenStore;
 
-  - 校验密码登录提供的验证码
-  - 调用`CustomizePasswordUserDetailsService`获取密码登录的用户信息
-  - 校验登录请求提交的帐号密码是否和数据源中的帐号密码匹配
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        // 拦截所有请求
+        return false;
+    }
 
-- `CustomizePasswordUserDetailsService`
+    @Override
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
+        String token = RequestUtils.ObtainBearerToken(request);
+        if (!StringUtils.isBlank(token)) {
+            CustomizeUser user = tokenStore.get(token);
+            if (user != null) {
+                CustomizeAuthentication authentication = new CustomizeAuthentication(user);
+                authentication.setAuthenticated(true);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
+        }
+        filterChain.doFilter(request, response);
+    }
+}
+```
 
-  - 根据手机号码、`email`、用户名从数据源中获取用户登录密码和权限信息
+```java
+@Override
+protected void configure(HttpSecurity http) throws Exception {
+    http
+            ...
 
-- 通过`ConfigWebSecurity`中如下代码配置密码相关组件到`spring security`中
+            // token验证filter
+            .and().addFilterBefore(customizeTokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+        	
+        	...
+}
+```
 
-  ```java
-  // 允许用户名、手机号码、邮箱+密码登录url
-  .and().authorizeRequests().antMatchers("/api/v1/password/login").permitAll()
-      // 添加密码登录AuthenticationProvider
-      .and().authenticationProvider(customizePasswordAuthenticationProvider)
-      // 密码登录AuthenticationFilter
-      .addFilterBefore(customizePasswordAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-  ```
+### 登录请求统一拦截
 
-  
+>说明：系统密码、短信、邮箱登录请求统一拦截，根据type请求参数判断是哪种类型的登录请求并获取其中的登录参数构造不同类型的AbstractAuthenticationToken以进一步校验。例如：密码登录构造UnifyPasswordAuthenticationToken、短信登录构造UnifySmsCaptchaAuthenticationToken、邮箱登录构造UnifyEmailAuthenticationToken。
 
-通过自定义`SmsCaptchaAuthenticationFilter`、`SmsCaptchaAuthenticationToken`、`SmsCaptchaAuthenticationProvider`、`SmsCaptchaUserDetailsService`实现短信验证码登录，各个组件功能如下：
+```java
+package com.future.demo.unify.common;
 
-- `SmsCaptchaAuthenticationFilter`
+import com.future.demo.unify.email.UnifyEmailAuthenticationToken;
+import com.future.demo.unify.password.UnifyPasswordAuthenticationToken;
+import com.future.demo.unify.sms.UnifySmsCaptchaAuthenticationToken;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.springframework.security.authentication.AuthenticationServiceException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
-  - 拦截短信验证码登录`url /api/v1/sms/login`
-  - 获取登录请求中的手机号码和短信验证码
-  - 使用手机号码和短信验证码构造`SmsCaptchaAuthenticationToken`实例
-  - 使用`token`实例调用`AuthenticationManager`中的`authenticate`方法
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
-- `SmsCaptchaAuthenticationToken`
+public class UnifyAuthenticationFilter extends AbstractAuthenticationProcessingFilter {
 
-  - 用于传递短信登录请求提交的手机号码和短信验证码
+    public UnifyAuthenticationFilter() {
+        // 拦截登录请求filter
+        super(new AntPathRequestMatcher("/api/v1/auth/login" , "POST"));
+    }
 
-- `SmsCaptchaAuthenticationProvider`
+    @Override
+    public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException, IOException, ServletException {
+        if (!request.getMethod().equals("POST")) {
+            throw new AuthenticationServiceException(
+                    "Authentication method not supported: " + request.getMethod());
+        }
 
-  - 调用`SmsCaptchaUserDetailsService`获取缓存中的短信验证码和用户权限信息
-  - 校验登录请求提交的短信验证码是否和缓存中的短信验证码匹配
+        String type = request.getParameter("type");
+        if (type == null) {
+            type = StringUtils.EMPTY;
+        }
+        AbstractAuthenticationToken authRequest = null;
+        if (type.equals("password")) {
+            // 密码+验证码
+            String principal = request.getParameter("principal");
+            String credentials = request.getParameter("credentials");
+            // 连续登录失败第5次后需要提供验签验证码参数
+            String captchaVerifyParam = request.getParameter("captchaVerifyParam");
+            authRequest = new UnifyPasswordAuthenticationToken(principal, credentials, captchaVerifyParam);
+        } else if (type.equals("sms")) {
+            // 短信
+            String principal = request.getParameter("principal");
+            String captchaVerifyParam = request.getParameter("captchaVerifyParam");
+            authRequest = new UnifySmsCaptchaAuthenticationToken(principal, captchaVerifyParam);
+        } else if (type.equals("email")) {
+            // 邮箱
+            String email = request.getParameter("email");
+            String captchaVerifyParam = request.getParameter("captchaVerifyParam");
+            authRequest = new UnifyEmailAuthenticationToken(email, captchaVerifyParam);
+        } else if (type.equals("站内扫码")) {
+            // 站内扫码
+        } else if (type.equals("微信扫码")) {
+            // 微信扫码
+        } else if (type.equals("认证器App")) {
+            // 认证器App
+//            String username = request.getParameter("username");
+//            String captchaVerifyParam = request.getParameter("captchaVerifyParam");
+//            authenticationToken = new CustomizePasswordAuthenticationToken(username, captchaVerifyParam);
+        } else {
+            throw new AuthenticationServiceException("不支持的登录方式");
+        }
 
-- `SmsCaptchaUserDetailsService`
+        return this.getAuthenticationManager().authenticate(authRequest);
+    }
+}
+```
 
-  - 根据手机号码从缓存中获取短信验证码和权限信息
+```java
+@Override
+protected void configure(HttpSecurity http) throws Exception {
+    http
+            ...
+        
+        	// 登录请求拦截器
+            .addFilterBefore(unifyAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+			
+        	...
+}
+```
 
-- 通过`ConfigWebSecurity`中如下代码配置密码相关组件到`spring security`中
+### 密码登录
 
-  ```java
-  // 配置手机号码+短信验证码登录
-  .and().authorizeRequests().antMatchers("/api/v1/sms/login").permitAll()
-      // 添加短信登录AuthenticationProvider
-      .and().authenticationProvider(smsCaptchaAuthenticationProvider)
-      // 密码登录AuthenticationFilter
-      .addFilterBefore(smsCaptchaAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-  ```
+>说明：密码登录自定义UnifyPasswordAuthenticationProvider+UnifyPasswordUserDetailsService以自定义密码登录的验证逻辑。
 
-  
+代码详情请参考示例中的UnifyPasswordAuthenticationProvider和UnifyPasswordUserDetailsService。
 
-密码和短信登录使用的公共组件如下：
+```java
+@Override
+protected void configure(HttpSecurity http) throws Exception {
+    http
+            
+            // 登录url
+            .and().authorizeRequests().antMatchers("/api/v1/auth/login").permitAll()
+            // 注册密码登录认证提供者
+            .and().authenticationProvider(unifyPasswordAuthenticationProvider) 
+}
+```
 
-- `CustomizeAccessDeniedHandler`
-  - 权限不足时的处理逻辑
-- `CustomizeAuthentication`
-  - `spring security`上下文中表示用户已登录的`authentication`对象
-- `CustomizeAuthenticationEntryPoint`
-  - 用户未登录时处理逻辑
-- `CustomizeAuthenticationFailureHandler`
-  - 密码登录失败时客户端响应处理逻辑
-  - 短信验证码登录失败时客户端响应处理逻辑
-- `CustomizeAuthenticationSuccessHandler`
-  - 密码登录成功后客户端响应处理逻辑
-  - 短信验证码登录成功后客户端响应处理逻辑
-- `CustomizeLogoutSuccessHandler`
-  - 用户退出成功后客户端响应逻辑
-- `CustomizeTokenAuthenticationFilter`
-  - 用户请求时`token`拦截，判断用户`token`是否合法
-  - 如果`token`合法，创建`CustomizeAuthentication`实例注入到`spring security`上下文中表示用户已经登录
-- `CustomizeUser`
-  - 用户信息对象，存储用户权限信息
-- `ConfigWebSecurity`
-  - `spring security`的配置
+### 短信登录
+
+>说明：短信登录自定义UnifySmsCaptchaAuthenticationProvider+UnifySmsCaptchaUserDetailsService以自定义密码登录的验证逻辑。
+
+代码详情请参考示例中的UnifySmsCaptchaAuthenticationProvider和UnifySmsCaptchaUserDetailsService。
+
+```java
+@Override
+protected void configure(HttpSecurity http) throws Exception {
+    http
+            
+            // 登录url
+            .and().authorizeRequests().antMatchers("/api/v1/auth/login").permitAll()
+            // 注册短信登录认证提供者
+            .authenticationProvider(unifySmsCaptchaAuthenticationProvider)
+}
+```
+
+### 邮箱登录
+
+>说明：短信登录自定义UnifyEmailAuthenticationProvider+UnifyEmailUserDetailsService以自定义密码登录的验证逻辑。
+
+代码详情请参考示例中的UnifyEmailAuthenticationProvider和UnifyEmailUserDetailsService。
+
+```java
+@Override
+protected void configure(HttpSecurity http) throws Exception {
+    http
+            
+            // 登录url
+            .and().authorizeRequests().antMatchers("/api/v1/auth/login").permitAll()
+            // 注册邮箱登录认证提供者
+            .authenticationProvider(unifyEmailAuthenticationProvider)
+}
+```
+
+### 权限不足统一处理
+
+```java
+package com.future.demo.unify.common;
+
+import cn.hutool.extra.servlet.ServletUtil;
+import cn.hutool.json.JSONConfig;
+import cn.hutool.json.JSONUtil;
+import com.future.common.constant.ErrorCodeConstant;
+import com.future.common.http.ObjectResponse;
+import com.future.common.http.ResponseUtils;
+import org.springframework.http.MediaType;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.stereotype.Component;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+/**
+ * 权限不足时处理
+ */
+@Component
+public class CustomizeAccessDeniedHandler implements AccessDeniedHandler {
+    @Override
+    public void handle(HttpServletRequest request,
+                       HttpServletResponse response,
+                       AccessDeniedException accessDeniedException) {
+        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+        ObjectResponse<String> objectResponse = ResponseUtils.failObject(ErrorCodeConstant.ErrorCodeCommon, "权限不足");
+        String json = JSONUtil.toJsonStr(objectResponse, JSONConfig.create().setIgnoreNullValue(false));
+        ServletUtil.write(response, json, MediaType.APPLICATION_JSON_UTF8_VALUE);
+    }
+}
+```
+
+```java
+@Override
+protected void configure(HttpSecurity http) throws Exception {
+    http
+            // 未登录异常处理
+            .exceptionHandling()
+            .accessDeniedHandler(customizeAccessDeniedHandler)
+}
+```
+
+### 未登录统一处理
+
+```java
+package com.future.demo.unify.common;
+
+import cn.hutool.extra.servlet.ServletUtil;
+import cn.hutool.json.JSONConfig;
+import cn.hutool.json.JSONUtil;
+import com.future.common.constant.ErrorCodeConstant;
+import com.future.common.http.ObjectResponse;
+import com.future.common.http.ResponseUtils;
+import org.springframework.http.MediaType;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.stereotype.Component;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+/**
+ * 未登录时处理
+ */
+@Component
+public class CustomizeAuthenticationEntryPoint implements AuthenticationEntryPoint {
+    @Override
+    public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        ObjectResponse<String> objectResponse = ResponseUtils.failObject(ErrorCodeConstant.ErrorCodeLoginRequired, "未登录");
+        String json = JSONUtil.toJsonStr(objectResponse, JSONConfig.create().setIgnoreNullValue(false));
+        ServletUtil.write(response, json, MediaType.APPLICATION_JSON_UTF8_VALUE);
+    }
+}
+```
+
+```java
+@Override
+protected void configure(HttpSecurity http) throws Exception {
+    http
+            // 未登录异常处理
+            .exceptionHandling()
+            .authenticationEntryPoint(customizeAuthenticationEntryPoint)
+}
+```
+
+### 登录成功统一处理
+
+```java
+package com.future.demo.unify.common;
+
+import cn.hutool.extra.servlet.ServletUtil;
+import cn.hutool.json.JSONConfig;
+import cn.hutool.json.JSONObject;
+import com.future.common.http.HttpUtil;
+import com.future.common.http.ObjectResponse;
+import com.future.common.http.ResponseUtils;
+import com.future.demo.unify.password.UnifyPasswordAuthenticationToken;
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheManager;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.stereotype.Component;
+
+import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.UUID;
+
+/**
+ * 登录成功后处理
+ */
+@Component
+public class CustomizeAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
+    @Autowired
+    CacheManager cacheManager;
+    Cache cacheLoginFailureCount;
+
+    @PostConstruct
+    public void init1() {
+        this.cacheLoginFailureCount = this.cacheManager.getCache("cacheLoginFailureCount");
+    }
+
+    @Autowired
+    TokenStore tokenStore;
+
+    @Override
+    public void onAuthenticationSuccess(HttpServletRequest request,
+                                        HttpServletResponse response,
+                                        Authentication authentication) {
+        // 密码登录
+        if (authentication instanceof UnifyPasswordAuthenticationToken) {
+            String ip = HttpUtil.getIpAddress(request);
+            this.cacheLoginFailureCount.remove(ip);
+        }
+
+        CustomizeUser user = (CustomizeUser) authentication.getPrincipal();
+
+        String token = UUID.randomUUID().toString();
+        this.tokenStore.store(token, user);
+
+        JSONObject userJsonObject = new JSONObject();
+        userJsonObject.put("username", authentication.getName());
+        userJsonObject.put("token", token);
+        response.setStatus(HttpServletResponse.SC_OK);
+        ObjectResponse<JSONObject> objectResponse = ResponseUtils.successObject(userJsonObject);
+        String json = cn.hutool.json.JSONUtil.toJsonStr(objectResponse, JSONConfig.create().setIgnoreNullValue(false));
+        ServletUtil.write(response, json, MediaType.APPLICATION_JSON_UTF8_VALUE);
+    }
+}
+```
+
+```java
+@Override
+protected void configure(HttpSecurity http) throws Exception {
+    UnifyAuthenticationFilter unifyAuthenticationFilter = new UnifyAuthenticationFilter();
+    unifyAuthenticationFilter.setAuthenticationSuccessHandler(customizeAuthenticationSuccessHandler);
+}
+```
+
+### 登录失败统一处理
+
+```java
+package com.future.demo.unify.common;
+
+import cn.hutool.extra.servlet.ServletUtil;
+import cn.hutool.json.JSONUtil;
+import com.future.common.constant.ErrorCodeConstant;
+import com.future.common.http.HttpUtil;
+import com.future.common.http.ObjectResponse;
+import com.future.common.http.ResponseUtils;
+import lombok.extern.slf4j.Slf4j;
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Element;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
+import org.springframework.stereotype.Component;
+
+import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+@Component
+@Slf4j
+public class CustomizeAuthenticationFailureHandler implements AuthenticationFailureHandler {
+    @Autowired
+    CacheManager cacheManager;
+    Cache cacheLoginFailureCount;
+
+    @PostConstruct
+    public void init1() {
+        this.cacheLoginFailureCount = this.cacheManager.getCache("cacheLoginFailureCount");
+    }
+
+    @Override
+    public void onAuthenticationFailure(HttpServletRequest request,
+                                        HttpServletResponse response,
+                                        AuthenticationException exception) {
+        int errorCode = ErrorCodeConstant.ErrorCodeCommon;
+        // 密码登录
+        String uri = request.getRequestURI();
+        if ("/api/v1/password/login".equalsIgnoreCase(uri)) {
+            String ip = HttpUtil.getIpAddress(request);
+            Element element = this.cacheLoginFailureCount.get(ip);
+            if (element == null) {
+                element = new Element(ip, 1);
+            } else {
+                element = new Element(ip, (Integer) element.getObjectValue() + 1);
+            }
+            this.cacheLoginFailureCount.put(element);
+            int failureCount = (Integer) element.getObjectValue();
+            if (failureCount >= 5) {
+                log.debug("模拟返回自定义错误，提示客户端尝试登录次数超过服务器限制，需要客户端主动获取并提供登录验证码");
+                errorCode = 50001;
+            }
+        }
+
+        log.info("登陆失败");
+        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+        ObjectResponse<String> objectResponse = ResponseUtils.failObject(errorCode, exception.getMessage());
+        String json = JSONUtil.toJsonStr(objectResponse);
+        ServletUtil.write(response, json, MediaType.APPLICATION_JSON_UTF8_VALUE);
+    }
+}
+```
+
+```java
+@Override
+protected void configure(HttpSecurity http) throws Exception {
+    UnifyAuthenticationFilter unifyAuthenticationFilter = new UnifyAuthenticationFilter();
+    unifyAuthenticationFilter.setAuthenticationFailureHandler(customizeAuthenticationFailureHandler);
+}
+```
+
+### 退出统一处理
+
+```java
+package com.future.demo.unify.common;
+
+import cn.hutool.extra.servlet.ServletUtil;
+import cn.hutool.json.JSONConfig;
+import cn.hutool.json.JSONUtil;
+import com.future.common.http.ObjectResponse;
+import com.future.common.http.RequestUtils;
+import com.future.common.http.ResponseUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
+import org.springframework.stereotype.Component;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+/**
+ * 退出成功后处理
+ */
+@Component
+public class CustomizeLogoutSuccessHandler implements LogoutSuccessHandler {
+    @Autowired
+    TokenStore tokenStore;
+
+    @Override
+    public void onLogoutSuccess(HttpServletRequest request,
+                                HttpServletResponse response,
+                                Authentication authentication) {
+        String token = RequestUtils.ObtainBearerToken(request);
+        if (!StringUtils.isBlank(token)) {
+            this.tokenStore.remove(token);
+        }
+
+        response.setStatus(HttpServletResponse.SC_OK);
+        ObjectResponse<String> objectResponse = ResponseUtils.successObject("成功退出");
+        String json = JSONUtil.toJsonStr(objectResponse, JSONConfig.create().setIgnoreNullValue(false));
+        ServletUtil.write(response, json, MediaType.APPLICATION_JSON_UTF8_VALUE);
+    }
+}
+```
+
+```java
+@Override
+protected void configure(HttpSecurity http) throws Exception {
+    http
+            // 登出配置
+            .and().logout()
+            .logoutUrl("/api/v1/auth/logout")
+            .invalidateHttpSession(true)
+            .deleteCookies("JSESSIONID")
+            .logoutSuccessHandler(customizeLogoutSuccessHandler)
+}
+```
 
 
 
-## HTTP Basic 验证
+## HTTP Basic验证
 
 详细用法请参考示例`https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-boot-http-basic`
 
@@ -2065,13 +2577,127 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 }
 ```
 
+## SpringBoot集成GitHub OAuth2.0
 
+>详细用法请参考本站[示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-spring-boot/demo-spring-security/demo-oauth2-github)
+>
+>参考链接：https://www.ruanyifeng.com/blog/2019/04/github-oauth.html
+
+### 原理
+
+所谓第三方登录，实质就是 OAuth 授权。用户想要登录 A 网站，A 网站让用户提供第三方网站的数据，证明自己的身份。获取第三方网站的身份数据，就需要 OAuth 授权。
+
+举例来说，A 网站允许 GitHub 登录，背后就是下面的流程。
+
+1. A 网站让用户跳转到 GitHub。
+2. GitHub 要求用户登录，然后询问"A 网站要求获得 xx 权限，你是否同意？"
+3. 用户同意，GitHub 就会重定向回 A 网站，同时发回一个授权码。
+4. A 网站使用授权码，向 GitHub 请求令牌。
+5. GitHub 返回令牌.
+6. A 网站使用令牌，向 GitHub 请求用户数据。
+
+下面就是这个流程的代码实现。
+
+### 应用登记
+
+一个应用要求 OAuth 授权，必须先到对方网站登记，让对方知道是谁在请求。
+
+所以，你要先去 GitHub 登记一下。当然，我已经登记过了，你使用我的登记信息也可以，但为了完整走一遍流程，还是建议大家自己登记。这是免费的。
+
+访问这个[网址](https://github.com/settings/applications/new)，填写登记表。
+
+![img](https://cdn.beekka.com/blogimg/asset/201904/bg2019042102.jpg)
+
+应用的名称随便填，主页 URL 填写`http://localhost:8080`，跳转网址填写 `http://localhost:8080/login/oauth2/code/github`（注意：截至2025年11月3日上面跳转网址必须填写http://localhost:8080/login/oauth2/code/github，否则会报告登记跳转地址和声明的挑战地址不匹配错误，导致无法回调）。
+
+提交表单以后，GitHub 应该会返回客户端 ID（client ID）和客户端密钥（client secret），这就是应用的身份识别码。
+
+### 浏览器跳转 GitHub 登录和授权界面
+
+示例的首页很简单，就是一个链接，让用户跳转到 GitHub。
+
+![img](https://cdn.beekka.com/blogimg/asset/201904/bg2019042103.jpg)
+
+跳转的 URL 如下。
+
+```
+https://github.com/login/oauth/authorize?client_id=7e015d8ce32370079895&redirect_uri=http://localhost:8080/login/oauth2/code/github
+```
+
+这个 URL 指向 GitHub 的 OAuth 授权网址（如果用户已经登录GitHub，则跳转到GitHub的授权页面，否则会跳转到GitHub的用户登录页面），带有两个参数：`client_id`告诉 GitHub 谁在请求，`redirect_uri`是稍后跳转回来的网址。
+
+用户点击到了 GitHub，GitHub 会要求用户登录，确保是本人在操作。
+
+### 获取授权码
+
+登录后，GitHub 询问用户，该应用正在请求数据，你是否同意授权。
+
+![img](https://cdn.beekka.com/blogimg/asset/201904/bg2019042104.png)
+
+用户同意授权， GitHub 就会跳转到`redirect_uri`指定的跳转网址，并且带上授权码，跳转回来的 URL 就是下面的样子。
+
+```
+http://localhost:8080/login/oauth2/code/github?code=04e29b407c796dd8785f
+```
+
+后端收到这个请求以后，就拿到了授权码（`code`参数）。
+
+### 获取令牌
+
+后端使用这个授权码，向 GitHub 请求令牌。
+
+```javascript
+const tokenResponse = await axios({
+  method: 'post',
+  url: 'https://github.com/login/oauth/access_token?' +
+    `client_id=${clientID}&` +
+    `client_secret=${clientSecret}&` +
+    `code=${requestToken}`,
+  headers: {
+    accept: 'application/json'
+  }
+});
+```
+
+上面代码中，GitHub 的令牌接口`https://github.com/login/oauth/access_token`需要提供三个参数。
+
+- `client_id`：客户端的 ID
+- `client_secret`：客户端的密钥
+- `code`：授权码
+
+作为回应，GitHub 会返回一段 JSON 数据，里面包含了令牌`accessToken`。
+
+```javascript
+const accessToken = tokenResponse.data.access_token;
+```
+
+### 调用 API 获取用户数据
+
+有了令牌以后，就可以向 API 请求数据了。
+
+```javascript
+const result = await axios({
+  method: 'get',
+  url: `https://api.github.com/user`,
+  headers: {
+    accept: 'application/json',
+    Authorization: `token ${accessToken}`
+  }
+});
+```
+
+上面代码中，GitHub API 的地址是`https://api.github.com/user`，请求的时候必须在 HTTP 头信息里面带上令牌`Authorization: token 361507da`。
+
+然后，就可以拿到用户数据，得到用户的身份。
+
+```javascript
+const name = result.data.name;
+ctx.response.redirect(`/welcome.html?name=${name}`);
+```
 
 ## Spring Security OAuth2.0
 
 > 详细用法请参考本站[示例](https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-security/spring-security-oauth2-without-jwt)
-
-
 
 ### Token超时设置
 

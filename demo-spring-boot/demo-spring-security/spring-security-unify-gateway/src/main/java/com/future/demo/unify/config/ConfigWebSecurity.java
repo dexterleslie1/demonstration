@@ -109,9 +109,13 @@ public class ConfigWebSecurity extends WebSecurityConfigurerAdapter {
 
                 // 登录url
                 .and().authorizeRequests().antMatchers("/api/v1/auth/login").permitAll()
+                // 注册密码登录认证提供者
                 .and().authenticationProvider(unifyPasswordAuthenticationProvider)
+                // 注册短信登录认证提供者
                 .authenticationProvider(unifySmsCaptchaAuthenticationProvider)
+                // 注册邮箱登录认证提供者
                 .authenticationProvider(unifyEmailAuthenticationProvider)
+                // 登录请求拦截器
                 .addFilterBefore(unifyAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
 
                 .authorizeRequests().anyRequest().authenticated();

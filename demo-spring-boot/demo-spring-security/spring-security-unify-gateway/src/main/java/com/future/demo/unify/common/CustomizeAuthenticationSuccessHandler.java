@@ -1,13 +1,16 @@
 package com.future.demo.unify.common;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import cn.hutool.extra.servlet.ServletUtil;
+import cn.hutool.json.JSONConfig;
+import cn.hutool.json.JSONObject;
 import com.future.common.http.HttpUtil;
+import com.future.common.http.ObjectResponse;
 import com.future.common.http.ResponseUtils;
-import com.future.common.json.JSONUtil;
 import com.future.demo.unify.password.UnifyPasswordAuthenticationToken;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -39,19 +42,22 @@ public class CustomizeAuthenticationSuccessHandler implements AuthenticationSucc
                                         HttpServletResponse response,
                                         Authentication authentication) {
         // 密码登录
-        if(authentication instanceof UnifyPasswordAuthenticationToken) {
+        if (authentication instanceof UnifyPasswordAuthenticationToken) {
             String ip = HttpUtil.getIpAddress(request);
             this.cacheLoginFailureCount.remove(ip);
         }
 
-        CustomizeUser user = (CustomizeUser)authentication.getPrincipal();
+        CustomizeUser user = (CustomizeUser) authentication.getPrincipal();
 
         String token = UUID.randomUUID().toString();
         this.tokenStore.store(token, user);
 
-        ObjectNode userObjectNode = JSONUtil.ObjectMapperInstance.createObjectNode();
-        userObjectNode.put("username", authentication.getName());
-        userObjectNode.put("token", token);
-        ResponseUtils.writeSuccessResponse(response, userObjectNode);
+        JSONObject userJsonObject = new JSONObject();
+        userJsonObject.put("username", authentication.getName());
+        userJsonObject.put("token", token);
+        response.setStatus(HttpServletResponse.SC_OK);
+        ObjectResponse<JSONObject> objectResponse = ResponseUtils.successObject(userJsonObject);
+        String json = cn.hutool.json.JSONUtil.toJsonStr(objectResponse, JSONConfig.create().setIgnoreNullValue(false));
+        ServletUtil.write(response, json, MediaType.APPLICATION_JSON_UTF8_VALUE);
     }
 }
