@@ -7,15 +7,28 @@
 </head>
 <body>
 <div style="width:60%;margin-left:auto;margin-right:auto;margin-top:10px;">
-    <form class="form-horizontal" role="form" action="/login" method="POST">
+    <!-- 错误信息显示区域 -->
+    <div th:if="${param.error}" class="alert alert-danger">
+        <strong>登录失败!</strong>
+        <span th:text="${session.SPRING_SECURITY_LAST_EXCEPTION?.message} ?: '用户名或密码错误'">
+            用户名或密码错误
+        </span>
+    </div>
+
+    <!-- 登出成功信息 -->
+    <div th:if="${param.logout}" class="alert alert-success">
+        您已成功登出系统。
+    </div>
+
+    <form class="form-horizontal" role="form" action="/myLogin" method="POST">
         <div class="form-group">
             <div class="col-sm-12">
                 <input
                         type="text"
                         class="form-control"
-                        name="username"
+                        name="usernameDemo"
                         placeholder="账号"
-                        value="user1">
+                        value="admin">
             </div>
         </div>
         <div class="form-group">
@@ -23,15 +36,15 @@
                 <input
                         type="password"
                         class="form-control"
-                        name="password"
+                        name="passwordDemo"
                         placeholder="密码"
-                        value="1234567">
+                        value="123456">
             </div>
         </div>
         <div class="form-group">
             <div class="col-sm-offset-10 col-sm-12">
                 <button type="submit" class="btn btn-default">登录</button>
-                <button type="reset" class="btn btn-default">取消</button>
+                <!--<button type="reset" class="btn btn-default">取消</button>-->
             </div>
         </div>
     </form>

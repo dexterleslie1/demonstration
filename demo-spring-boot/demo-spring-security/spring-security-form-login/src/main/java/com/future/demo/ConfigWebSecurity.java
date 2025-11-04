@@ -17,12 +17,13 @@ import javax.annotation.Resource;
 import java.util.Collections;
 
 @Configuration
-public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
+public class ConfigWebSecurity extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
                 // 禁用 CSRF 保护
                 .csrf().disable()
+
                 // 用于对 URL 进行访问权限控制
                 .authorizeRequests()
                 // /css/*.css资源允许匿名访问
@@ -31,11 +32,26 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/login").permitAll()
                 // 用于指定对于任何未明确指定权限要求的请求（即前面未通过 .antMatchers() 等方法明确匹配的请求），都需要用户进行身份验证（即用户必须登录）。
                 .anyRequest().authenticated()
+
                 .and()
                 // 指定form登录界面 URL
-                .formLogin().loginPage("/login")
+                .formLogin()
+                // 自定义登录表单username、password参数名称
+                .usernameParameter("usernameDemo")
+                .passwordParameter("passwordDemo")
+                // 自定义登录页面
+                .loginPage("/login")
+                // 自定义登录url，此值要和login.html登录表单action一致
+                .loginProcessingUrl("/myLogin")
                 // 指定form登录成功后跳转的 URL
                 .defaultSuccessUrl("/welcome")
+                // 自定义登录成功处理器
+                /*.successHandler(new AuthenticationSuccessHandler() {
+                    @Override
+                    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
+                        response.sendRedirect("https://www.baidu.com");
+                    }
+                })*/
                 // 会话管理配置
                 .and()
                 // 指定会话创建策略，这里是 IF_REQUIRED 表示只有在需要时才创建会话
@@ -64,7 +80,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
         @Override
         public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-            String password = this.passwordEncoder.encode("1234567");
+            if (!"admin".equals(username)) {
+                throw new UsernameNotFoundException("用户" + username + "不存在");
+            }
+
+            String password = this.passwordEncoder.encode("123456");
             return new User(username, password, Collections.emptyList());
         }
     }

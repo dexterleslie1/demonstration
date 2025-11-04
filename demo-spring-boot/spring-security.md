@@ -2008,11 +2008,11 @@ curl -H "Origin: abc.com" -H "Access-Control-Request-Method: GET" -H "Access-Con
 
 ## 示例自定义登录界面
 
-> 登录才能访问受保护界面`https://spring.io/guides/gs/securing-web/`
+> 详细用法请参考本站[示例](https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-security/spring-security-form-login)
+>
+> 登录才能访问受保护界面：https://spring.io/guides/gs/securing-web/
 
-示例详细配置请参考`https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-security/spring-security-form-login`、`https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-security/spring-security-customize-login`
-
-启动例子后，访问`http://localhost:18080`按照提示操作即可了解自定义登录界面特性。
+启动例子后，访问 http://localhost:8080 按照提示操作即可了解自定义登录界面特性。
 
 
 

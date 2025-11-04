@@ -7,7 +7,12 @@ import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONConfig;
+import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.future.common.http.ObjectResponse;
 import com.future.common.http.ResponseUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -15,6 +20,7 @@ import org.hamcrest.CoreMatchers;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
@@ -33,24 +39,26 @@ public class ApplicationTests {
 
     @Resource
     MockMvc mockMvc;
+    @Autowired
+    ObjectMapper objectMapper;
 
     @Test
     public void testHttpUtil() {
         // 测试get
-        String content = HttpUtil.get("http://httpbin.org/get" , StandardCharsets.UTF_8);
+        String content = HttpUtil.get("http://httpbin.org/get", StandardCharsets.UTF_8);
         Assertions.assertTrue(content.contains("X-Amzn-Trace-Id"));
 
         // 测试post
-        content = HttpUtil.post("http://httpbin.org/post" , "name=张三&age=30");
+        content = HttpUtil.post("http://httpbin.org/post", "name=张三&age=30");
         Assertions.assertTrue(content.contains("form"));
 
         // 测试post提交JSON数据
         String json = JSONUtil.toJsonStr(new HashMap() {{
-            this.put("name" , "张三");
-            this.put("age" , 30);
+            this.put("name", "张三");
+            this.put("age", 30);
         }});
         HttpResponse response = HttpRequest.post("http://httpbin.org/post")
-                .header("Content-Type" , "application/json")
+                .header("Content-Type", "application/json")
                 .body(json)
                 .execute();
         content = response.body();
@@ -59,9 +67,9 @@ public class ApplicationTests {
         // 自定义请求
         response = HttpRequest.get("http://httpbin.org/get")
                 .form(new HashMap() {{
-                    put("key" , "value");
+                    put("key", "value");
                 }})
-                .header("Authorization" , "Bearer your_token_here") // 添加请求头
+                .header("Authorization", "Bearer your_token_here") // 添加请求头
                 .timeout(5000) // 设置超时时间
                 .execute(); // 发送请求
         content = response.body();
@@ -160,13 +168,13 @@ public class ApplicationTests {
         // 测试ServletUtil写响应
         ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/test1"));
         resultActions.andExpect(MockMvcResultMatchers.status().isBadRequest())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.errorCode" , CoreMatchers.is(90001)))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.errorMessage" , CoreMatchers.is("测试失败")));
+                .andExpect(MockMvcResultMatchers.jsonPath("$.errorCode", CoreMatchers.is(90001)))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.errorMessage", CoreMatchers.is("测试失败")));
 
         // 测试ServletUtil获取客户端ip地址
         resultActions = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/testServletUtilGetClientIp"));
         resultActions.andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.data" , CoreMatchers.is("客户端IP：127.0.0.1")));
+                .andExpect(MockMvcResultMatchers.jsonPath("$.data", CoreMatchers.is("客户端IP：127.0.0.1")));
     }
 
     /**
@@ -177,11 +185,22 @@ public class ApplicationTests {
         // 把对象转换成JSON字符串
         ObjectResponse<String> objectResponse = ResponseUtils.successObject("测试成功");
         String json = JSONUtil.toJsonStr(objectResponse);
-        Assertions.assertEquals("{\"data\":\"测试成功\",\"errorCode\":0}" , json);
+        Assertions.assertEquals("{\"data\":\"测试成功\",\"errorCode\":0}", json);
 
         // 不忽略null值
         objectResponse = ResponseUtils.successObject("测试成功");
         json = JSONUtil.toJsonStr(objectResponse, JSONConfig.create().setIgnoreNullValue(false));
-        Assertions.assertEquals("{\"data\":\"测试成功\",\"errorCode\":0,\"errorMessage\":null}" , json);
+        Assertions.assertEquals("{\"data\":\"测试成功\",\"errorCode\":0,\"errorMessage\":null}", json);
+
+        // JSONUtil.toJsonStr不能和jackson ObjectNode混合使用，否则json字符串转换后不正常
+        /*ObjectNode objectNode = objectMapper.createObjectNode();
+        objectNode.put("name", "张三");
+        objectNode.put("age", 18);*/
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("name", "张三");
+        jsonObject.put("age", 18);
+        ObjectResponse<JSONObject> objectNodeResponse = ResponseUtils.successObject(jsonObject);
+        json = JSONUtil.toJsonStr(objectNodeResponse, JSONConfig.create().setIgnoreNullValue(false));
+        Assertions.assertEquals("{\"data\":{\"name\":\"张三\",\"age\":18},\"errorCode\":0,\"errorMessage\":null}", json);
     }
 }
