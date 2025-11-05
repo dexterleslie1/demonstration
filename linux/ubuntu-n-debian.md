@@ -922,7 +922,7 @@ apt install fonts-noto-cjk fonts-noto-cjk-extra fonts-noto-color-emoji fonts-not
 
 
 
-## Ubuntu 配置应用支持在应用中心搜索并打开
+## Ubuntu配置应用支持在应用中心搜索并打开
 
 下面演示配置 Cursor IDE 支持在应用中心打开
 
@@ -948,3 +948,9 @@ StartupNotify=true
 ```
 
 在应用中心输入 `cursor` 搜索并打开应用
+
+
+
+## 取消自动锁定屏幕
+
+打开Settings > Privacy > Screen Lock功能，Blank Screen Delay选择Never，Automatic Screen Lock关闭，Automatic Screen Lock Delay选择Screen Turns Off，Lock Screen on Suspend关闭，Show Notifications on Lock Screen关闭。
