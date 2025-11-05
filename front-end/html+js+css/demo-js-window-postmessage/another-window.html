@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script type="text/javascript">
+        function handleOnClick() {
+            // 向父窗口发送消息
+            window.opener.postMessage({
+                code: '123456'
+            }, 'http://127.0.0.1:5501');
+
+            // 可以稍等一下再关闭，确保消息已发送
+            setTimeout(() => {
+                window.close();
+            }, 500);
+        }
+    </script>
+</head>
+
+<body>
+    <button onclick="handleOnClick()">向父窗口发送消息并关闭当前窗口</button>
+</body>
+
+</html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script type="text/javascript">
+        function handleOnClickOpenWindow() {
+            window.open("another-window.html", "GitHub登录", "width=500,height=500");
+        }
+
+        // 监听 message 事件
+        window.addEventListener('message', function (event) {
+            // 重要！安全检查：验证消息来源是否可信
+            if (event.origin !== 'http://127.0.0.1:5501') {
+                // 如果来源不是我们期望的父页面，直接忽略此消息
+                return;
+            }
+
+            // 现在可以安全地处理消息了
+            // event.data 包含发送过来的数据
+            console.log('收到消息:', event.data);
+
+            //if (event.data.action === 'play') {
+            //    // 执行播放 videoId 为 event.data.videoId 的视频
+            //    myPlayer.play(event.data.videoId);
+            //}
+
+            // 可选：向来源窗口回复消息
+            // event.source 就是发送方的窗口引用
+            // event.origin 是发送方的源
+            // event.source.postMessage({ status: 'playing' }, event.origin);
+        });
+    </script>
+</head>
+
+<body>
+    <button onclick="handleOnClickOpenWindow()">打开另外一个窗口</button>
+</body>
+
+</html>

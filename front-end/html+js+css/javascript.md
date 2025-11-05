@@ -1,7 +1,3 @@
-# JavaScript
-
-
-
 ## 模板字符串
 
 JavaScript 的**模板字符串**（Template Literals）是 ES6（ECMAScript 2015）引入的一种新特性，用于更方便地创建和操作字符串。它通过反引号（```）包裹字符串，并提供了一些强大的功能，比如字符串插值、多行字符串和嵌套表达式。
@@ -1371,3 +1367,214 @@ async function processArrayParallel(array) {
 - **`await`**：仅在 `async` 函数内使用，等待 `Promise` 解决并返回结果（或抛出错误）。  
 
 三者的核心价值是：**用同步风格的代码处理异步操作**，提升可读性和可维护性。实际开发中，`async/await` 结合 `Promise.all()` 是处理复杂异步流程的首选方案。
+
+## window.postMessage
+
+### 一、核心概念：它是什么？
+
+`window.postMessage` 是一个安全的、跨源的**窗口间通信方法**。它允许来自不同源（协议、域名、端口）的两个窗口或框架（iframe）之间进行数据传递。
+
+你可以把它想象成两个在不同国家（不同源）的人，他们之间有一道厚厚的防弹玻璃（浏览器的同源策略），无法直接对话。`postMessage` 就像是为他们提供了一个经过严格安检的、安全的传话筒。一个人对着传话筒说话（发送消息），另一个人可以在另一边接收。
+
+### 二、为什么需要它？—— 解决“同源策略”的限制
+
+**同源策略** 是浏览器一个至关重要的安全机制。它规定：来自不同源（协议、域名、端口任一不同）的脚本，在没有明确授权的情况下，无法读写对方的资源。
+
+*   **好处**：防止恶意网站通过 iframe 窃取你银行网站（在另一个标签页）的数据。
+*   **坏处**：正当的、你希望进行的跨源通信也被阻止了。例如：
+    *   你的主页面 (`https://parent.com`) 中嵌入了一个第三方小部件（如地图、视频播放器，位于 `https://widget.com`）。
+    *   你希望主页面控制小部件的行为，或者小部件需要向主页面汇报状态。
+    *   没有 `postMessage`，这种通信是无法直接实现的。
+
+`postMessage` 就是为了在保证安全的前提下，打破这个限制而设计的。
+
+---
+
+### 三、如何使用它？
+
+通信涉及两方：**发送方** 和 **接收方**。
+
+#### 步骤 1：发送方发送消息
+
+发送方需要获取到**接收方窗口的引用**（例如，一个 iframe 的 `contentWindow`，或者通过 `window.open` 打开的窗口的引用）。
+
+然后调用 `postMessage` 方法。
+
+**语法：**
+```javascript
+otherWindow.postMessage(message, targetOrigin, [transfer]);
+```
+
+*   `otherWindow`: **接收方窗口的引用**。
+*   `message`: 要发送的数据。可以是字符串、数字、对象、数组等（会被结构化克隆算法处理）。
+*   `targetOrigin`: **最重要的安全参数**。指定哪些窗口能接收消息。
+    *   你可以指定一个具体的源，如 `"https://example.com"`。只有这个源的窗口才能收到消息。
+    *   如果你不确定或想发给任何源，可以用通配符 `"*"`。**但这非常危险，不推荐在生产环境中使用**，因为恶意网站也可能拦截到消息。
+    *   为了安全，**务必始终指定精确的 `targetOrigin`**，而不是 `"*"`。
+
+**示例：**
+假设父页面 (`https://parent.com`) 要向它内部的一个 iframe (`https://widget.com`) 发送消息。
+
+**父页面 (发送方) 代码：**
+```html
+<iframe src="https://widget.com/player.html" id="myIframe"></iframe>
+
+<script>
+  const iframe = document.getElementById('myIframe');
+
+  // 等待 iframe 加载完成
+  iframe.onload = function() {
+    // 获取 iframe 的窗口引用
+    const targetWindow = iframe.contentWindow;
+
+    // 发送消息
+    targetWindow.postMessage({
+      action: 'play',
+      videoId: 'abc123'
+    }, 'https://widget.com'); // 目标Origin，必须匹配 iframe 的源
+  };
+</script>
+```
+
+#### 步骤 2：接收方监听消息
+
+接收方需要设置一个事件监听器来监听 `message` 事件。
+
+**示例：**
+iframe 内部的页面 (`https://widget.com/player.html`) 需要监听消息。
+
+**子页面 (接收方) 代码：**
+```javascript
+// 监听 message 事件
+window.addEventListener('message', function(event) {
+  // 重要！安全检查：验证消息来源是否可信
+  if (event.origin !== 'https://parent.com') {
+    // 如果来源不是我们期望的父页面，直接忽略此消息
+    return;
+  }
+
+  // 现在可以安全地处理消息了
+  // event.data 包含发送过来的数据
+  console.log('收到消息:', event.data);
+
+  if (event.data.action === 'play') {
+    // 执行播放 videoId 为 event.data.videoId 的视频
+    myPlayer.play(event.data.videoId);
+  }
+
+  // 可选：向来源窗口回复消息
+  // event.source 就是发送方的窗口引用
+  // event.origin 是发送方的源
+  event.source.postMessage({ status: 'playing' }, event.origin);
+});
+```
+
+### 四、消息事件 (event) 对象的属性
+
+在接收方的 `message` 事件监听器中，事件对象 `event` 包含几个关键属性：
+
+*   `event.data`: 从发送方传过来的数据。
+*   `event.origin`: 发送消息的窗口的**源**（协议+域名+端口）。**这是进行安全检查最重要的依据！**
+*   `event.source`: 发送消息的**窗口对象的引用**。你可以用它来回发消息。
+
+### 五、安全最佳实践
+
+使用 `postMessage` 时必须牢记安全，否则会引入严重漏洞。
+
+1.  **在接收方，始终验证 `event.origin`**：这是最重要的步骤。只处理来自你信任的、预期的源的消息。永远不要处理来自未知源的消息。
+2.  **在发送方，始终指定精确的 `targetOrigin`**：不要使用 `"*"`。这确保了你的消息只会发送到你意图中的目标窗口，即使被恶意第三方截获了窗口引用，消息也不会发到它那里。
+3.  **谨慎处理接收到的数据**：像处理其他用户输入一样，对 `event.data` 进行验证和清理，因为它可能来自不可信的来源（如果你验证 `origin` 不严格）。
+
+### 总结
+
+| 方面         | 描述                                                         |
+| :----------- | :----------------------------------------------------------- |
+| **是什么**   | 一个允许不同源的浏览器窗口/标签页/iframe之间安全通信的API。  |
+| **为什么**   | 为了在浏览器的同源策略下，实现安全的跨源通信。               |
+| **如何用**   | 发送方用 `otherWindow.postMessage(...)`，接收方用 `window.addEventListener('message', ...)`。 |
+| **关键点**   | 发送方指定 `targetOrigin`，接收方验证 `event.origin`。       |
+| **核心思想** | **“不信任原则”**：接收方绝不能默认信任收到的消息，必须验证其来源。 |
+
+### 示例
+
+>详细用法请参考本站[示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/html+js+css/demo-js-window-postmessage)
+
+父窗口
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script type="text/javascript">
+        function handleOnClickOpenWindow() {
+            window.open("another-window.html", "GitHub登录", "width=500,height=500");
+        }
+
+        // 监听 message 事件
+        window.addEventListener('message', function (event) {
+            // 重要！安全检查：验证消息来源是否可信
+            if (event.origin !== 'http://127.0.0.1:5501') {
+                // 如果来源不是我们期望的父页面，直接忽略此消息
+                return;
+            }
+
+            // 现在可以安全地处理消息了
+            // event.data 包含发送过来的数据
+            console.log('收到消息:', event.data);
+
+            //if (event.data.action === 'play') {
+            //    // 执行播放 videoId 为 event.data.videoId 的视频
+            //    myPlayer.play(event.data.videoId);
+            //}
+
+            // 可选：向来源窗口回复消息
+            // event.source 就是发送方的窗口引用
+            // event.origin 是发送方的源
+            // event.source.postMessage({ status: 'playing' }, event.origin);
+        });
+    </script>
+</head>
+
+<body>
+    <button onclick="handleOnClickOpenWindow()">打开另外一个窗口</button>
+</body>
+
+</html>
+```
+
+子窗口
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script type="text/javascript">
+        function handleOnClick() {
+            // 向父窗口发送消息
+            window.opener.postMessage({
+                code: '123456'
+            }, 'http://127.0.0.1:5501');
+
+            // 可以稍等一下再关闭，确保消息已发送
+            setTimeout(() => {
+                window.close();
+            }, 500);
+        }
+    </script>
+</head>
+
+<body>
+    <button onclick="handleOnClick()">向父窗口发送消息并关闭当前窗口</button>
+</body>
+
+</html>
+```
+
