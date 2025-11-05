@@ -31,6 +31,8 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/v1")
 @Validated
+// 支持fetch测试时跨域请求
+@CrossOrigin(origins = "*")
 public class ApiController {
     final static String TemporaryDirectoryPath = System.getProperty("java.io.tmpdir");
     @Value("${spring.application.name}")

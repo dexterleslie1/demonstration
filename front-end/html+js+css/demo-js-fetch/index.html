@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script type="text/javascript">
+        // Get请求
+        function handleOnClickGet() {
+            fetch('http://127.0.0.1:8080//api/v1/get?param1=p1', {
+                method: 'GET',
+                headers: {
+                    'header1': 'h1',
+                },
+            }).then(res => res.json())
+                .then(res => alert(JSON.stringify(res)))
+        }
+    </script>
+</head>
+
+<body>
+    <button onclick="handleOnClickGet()">Get请求</button>
+</body>
+
+</html>

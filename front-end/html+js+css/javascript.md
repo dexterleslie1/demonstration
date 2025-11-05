@@ -1578,3 +1578,96 @@ window.addEventListener('message', function(event) {
 </html>
 ```
 
+## fetch函数
+
+`fetch()` 是现代浏览器提供的一个 **JavaScript API**，用于发起网络请求（如获取数据、提交表单等）。它是 XMLHttpRequest 的现代化替代方案，基于 Promise 设计，使用起来更加简洁灵活。
+
+### 基本语法
+
+```javascript
+fetch(url, options)
+  .then(response => {
+    // 处理响应
+  })
+  .catch(error => {
+    // 处理错误
+  });
+```
+
+### 简单示例
+
+#### GET 请求
+```javascript
+// 获取数据
+fetch('https://api.example.com/data')
+  .then(response => response.json()) // 解析JSON数据
+  .then(data => console.log(data))
+  .catch(error => console.error('Error:', error));
+```
+
+#### POST 请求
+```javascript
+// 提交数据
+fetch('https://api.example.com/users', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    name: 'John',
+    email: 'john@example.com'
+  })
+})
+.then(response => response.json())
+.then(data => console.log('Success:', data));
+```
+
+### 主要特点
+
+1. **基于 Promise** - 支持链式调用，避免回调地狱
+2. **默认不携带 cookie** - 需要手动配置 `credentials: 'include'`
+3. **不会因为 HTTP 错误状态（如 404、500）reject** - 只会在网络故障时 reject
+4. **更简洁的 API** - 比 XMLHttpRequest 更易用
+
+### 兼容性
+
+- 现代浏览器普遍支持
+- 旧版浏览器可能需要 polyfill（如 `whatwg-fetch`）
+
+`fetch` 已经成为前端开发中发起网络请求的标准方式，是每个 Web 开发者都应该掌握的重要工具。
+
+### 示例
+
+>详细用法请参考本站[示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/html+js+css/demo-js-fetch)
+
+运行本站[示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/axios/axios-api)作为后端Api协助测试。
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script type="text/javascript">
+        // Get请求
+        function handleOnClickGet() {
+            fetch('http://127.0.0.1:8080//api/v1/get?param1=p1', {
+                method: 'GET',
+                headers: {
+                    'header1': 'h1',
+                },
+            }).then(res => res.json())
+                .then(res => alert(JSON.stringify(res)))
+        }
+    </script>
+</head>
+
+<body>
+    <button onclick="handleOnClickGet()">Get请求</button>
+</body>
+
+</html>
+```
+
