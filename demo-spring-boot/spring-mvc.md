@@ -1,10 +1,6 @@
-# `mvc`
-
-详细用法请参考`https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-boot-mvc`
-
-
-
 ## `mvc`是什么？
+
+>详细用法请参考本站[示例](https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-boot-mvc)
 
 Spring MVC是一个基于Java的开源Web应用程序框架，它是Spring框架的一个重要组成部分，提供了一种模型-视图-控制器（MVC）架构模式来构建灵活、可扩展的Web应用程序。以下是对Spring MVC的详细解释：
 
@@ -1314,8 +1310,8 @@ java 配置
 public CorsFilter corsFilter() {
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     CorsConfiguration config = new CorsConfiguration();
-    // 允许跨域携带cookie
-    config.setAllowCredentials(true);
+    // 不允许跨域携带cookie
+    config.setAllowCredentials(false);
     // 只允许 abc.com 跨域访问
     config.setAllowedOrigins(Collections.singletonList("abc.com"));
     config.setAllowedHeaders(Arrays.asList("Origin", "Content-Type", "Accept"));

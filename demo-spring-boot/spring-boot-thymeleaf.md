@@ -324,3 +324,21 @@ model.addAttribute("errorDescription", errorDescription);
     Hello <th:block th:text="${username}"></th:block>
 </body>
 ```
+
+### th:data自定义属性
+
+>说明：Thymeleaf 的 data属性是 HTML5 自定义数据属性在 Thymeleaf 模板中的实现方式。HTML5 允许开发者自定义以 data-开头的属性来存储私有数据，Thymeleaf 的 data 属性用于 在 HTML 元素上动态存储后端数据，供前端 JavaScript 使用。
+
+```html
+<div>th:data-*</div>
+<button th:data-value1="${value1}" onclick="handleOnClick(this)">查看th:data-value1的值</button>
+<hr/>
+```
+
+```javascript
+<script type="text/javascript">
+    function handleOnClick(element) {
+        alert(element.getAttribute('data-value1'));
+    }
+</script>
+```

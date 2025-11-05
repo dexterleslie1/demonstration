@@ -50,5 +50,14 @@
 <div th:style="1!=1?'display: block;':'display: none;'">9999</div>
 <hr/>
 
+<div>th:data-*</div>
+<button th:data-value1="${value1}" onclick="handleOnClick(this)">查看th:data-value1的值</button>
+<hr/>
+
 </body>
+<script type="text/javascript">
+    function handleOnClick(element) {
+        alert(element.getAttribute('data-value1'));
+    }
+</script>
 </html>
