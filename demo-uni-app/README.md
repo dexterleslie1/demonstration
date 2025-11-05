@@ -206,6 +206,17 @@ uni-app 小程序打包和运行原理如下：
 
 
 
+## uni-app项目依赖安装
+
+>说明：uni-app 不会自动安装 package.json 中的依赖，需要我们手动安装。
+
+```sh
+# 在项目的根目录中执行下面命令即可
+npm instlal --registry=https://registry.npmmirror.com
+```
+
+
+
 ## `UI`组件 - `view`
 
 在 uni-app 中，**`<view>` 是最基础的容器组件**，它相当于 Web 开发中的 `<div>`，但具有更强大的跨平台特性。以下是它的核心特点和工作原理：
