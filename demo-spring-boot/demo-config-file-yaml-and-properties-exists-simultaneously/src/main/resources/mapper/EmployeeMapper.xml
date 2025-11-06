@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!-- namespace对应mapper接口的全类名，表示此xml配置文件和mapper类绑定 -->
+<mapper namespace="com.future.demo.mapper.EmployeeMapper">
+    <!-- 启用MyBatis二级缓存 -->
+    <!--<cache/>-->
+
+    <!--  useGeneratedKeys="true" keyProperty="id"表示将数据库主键自动生成到实体类中 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into employee(emp_name, age, emp_salary)
+        values (#{empName}, #{age}, #{empSalary})
+    </insert>
+    <insert id="insertBatch" useGeneratedKeys="true" keyProperty="id">
+        insert into employee(emp_name, age, emp_salary)
+        values
+        <foreach item="e" collection="employees" separator=",">
+            (#{e.empName}, #{e.age}, #{e.empSalary})
+        </foreach>
+    </insert>
+
+    <insert id="insertBatch2">
+        <foreach item="e" collection="employees" separator=";">
+        insert into employee(emp_name, age, emp_salary) values (#{e.empName}, #{e.age}, #{e.empSalary})
+        </foreach>
+    </insert>
+
+    <update id="update">
+        update employee
+        set emp_name   = #{empName},
+            age        = #{age},
+            emp_salary = #{empSalary}
+        where id = #{id}
+    </update>
+
+    <delete id="delete">
+        delete
+        from employee
+        where id = #{id}
+    </delete>
+    <delete id="deleteAll">
+        delete
+        from employee
+    </delete>
+
+    <!-- 定义sql片段，id为sql片段的唯一标识 -->
+    <sql id="myColumns">
+        id
+        , emp_name as empName, age, emp_salary as empSalary
+    </sql>
+    <!-- id对应mapper接口中的方法名，resultType返回值类型 -->
+    <select id="getById" resultType="com.future.demo.bean.Employee">
+        select
+        <!-- 引用sql片段 -->
+        <include refid="myColumns"/>
+        from employee
+        where id = #{id}
+    </select>
+
+    <select id="listAll" resultType="com.future.demo.bean.Employee">
+        select *
+        from employee
+        order by id asc
+    </select>
+
+    <select id="findByNameAndSalary" resultType="com.future.demo.bean.Employee">
+        select * from employee
+        <where>
+            <if test="name != null">
+                emp_name = #{name}
+            </if>
+            <if test="salary != null">
+                and emp_salary = #{salary}
+            </if>
+        </where>
+    </select>
+    <select id="findByNameAndSalaryAndId" resultType="com.future.demo.bean.Employee">
+        select * from employee
+        <where>
+            <choose>
+                <when test="name != null">
+                    emp_name = #{name}
+                </when>
+                <when test="salary != null">
+                    and emp_salary = #{salary}
+                </when>
+                <otherwise>
+                    and id = #{id}
+                </otherwise>
+            </choose>
+        </where>
+    </select>
+    <select id="findByIds" resultType="com.future.demo.bean.Employee">
+        select * from employee
+        <foreach collection="ids" item="id" open="where id in (" close=")" separator=",">
+            #{id}
+        </foreach>
+    </select>
+
+    <update id="updateDynamicSet">
+        update employee
+        <set>
+            <if test="empName != null">
+                emp_name = #{empName},
+            </if>
+            <if test="age != null">
+                age = #{age},
+            </if>
+            <if test="empSalary != null">
+                emp_salary = #{empSalary}
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+    <update id="updateBatch">
+        <foreach collection="employees" item="e" separator=";">
+            update employee
+            <set>
+                <if test="e.empName != null">
+                    emp_name = #{e.empName},
+                </if>
+                <if test="e.age != null">
+                    age = #{e.age},
+                </if>
+                <if test="e.empSalary != null">
+                    emp_salary = #{e.empSalary}
+                </if>
+            </set>
+            where id = #{e.id}
+        </foreach>
+    </update>
+
+    <update id="truncate">
+        truncate table employee
+    </update>
+
+    <select id="count" resultType="int">
+        select count(id) from employee
+    </select>
+</mapper>

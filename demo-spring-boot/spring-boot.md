@@ -1064,3 +1064,6 @@ POM 添加如下配置：
 
 注意：编辑源代码后需要按 ctrl+s 才会触发 DevTools 热加载。
 
+## SpringBoot应用支持yaml和properties配置同时存在
+
+>详细用法请参考本站[示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-spring-boot/demo-config-file-yaml-and-properties-exists-simultaneously)
