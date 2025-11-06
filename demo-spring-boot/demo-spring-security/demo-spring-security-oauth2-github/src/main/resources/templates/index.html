@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet"/>
+    <style type="text/css">
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- 错误信息显示区域 -->
+    <div th:if="${param.error}" class="alert alert-danger">
+        <strong>登录失败!</strong>
+        <span th:text="${param.error}">
+        </span>
+    </div>
+
+    <!-- 登出成功信息 -->
+    <div th:if="${param.logout}" class="alert alert-success">
+        您已成功登出系统。
+    </div>
+
+    <a href="/oauth2/authorization/github">Github登录</a>
+</div>
+</body>
+</html>

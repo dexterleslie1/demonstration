@@ -24,8 +24,11 @@ public class ConfigWebSecurity extends WebSecurityConfigurerAdapter {
                 // 禁用 CSRF 保护
                 .csrf().disable()
 
+                // 完全禁用服务器端的会话管理，使应用成为无状态（Stateless）
+                /*.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)*/
+
                 // 用于对 URL 进行访问权限控制
-                .authorizeRequests()
+                /*.and()*/.authorizeRequests()
                 // /css/*.css资源允许匿名访问
                 .antMatchers("/css/*.css").permitAll()
                 // /login资源允许匿名访问
@@ -51,11 +54,7 @@ public class ConfigWebSecurity extends WebSecurityConfigurerAdapter {
                     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
                         response.sendRedirect("https://www.baidu.com");
                     }
-                })*/
-                // 会话管理配置
-                .and()
-                // 指定会话创建策略，这里是 IF_REQUIRED 表示只有在需要时才创建会话
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED);
+                })*/;
     }
 
     @Bean

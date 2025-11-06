@@ -1,22 +1,27 @@
 package com.future.demo;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.AuthorityUtils;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
-/**
- * @author Dexterleslie.Chan
- */
 @Controller
 @Slf4j
 public class DemoController {
@@ -36,19 +41,79 @@ public class DemoController {
         return "index";
     }
 
+    /**
+     * Github成功授权后回调的url
+     *
+     * @return
+     */
+    @GetMapping("/github-callback")
+    public String githubCallback() {
+        return "github-callback";
+    }
+
+    /**
+     * 用户登录成功后，会跳转到welcome页面
+     *
+     * @param authentication
+     * @param model
+     * @return
+     */
+    @GetMapping("/welcome")
+    public String welcome(Authentication authentication, Model model) {
+        model.addAttribute("username", authentication.getName());
+        return "welcome";
+    }
+
+    @Autowired
+    ObjectMapper objectMapper;
+
+    /**
+     * 使用OAuth2.0授权码获取Github令牌和用户信息并集成本系统登录流程
+     *
+     * @param code
+     * @return
+     */
+    @PostMapping("loginWithAuthorizationCode")
+    public ResponseEntity<ObjectNode> loginWithAuthorizationCode(@RequestParam("code") String code) {
+        try {
+            JsonNode userInfo = getGithubUserInfo(code);
+
+            // 基于会话登录流程集成，也可以修改为不基于会话登录流程使用无状态令牌登录流程
+            UsernamePasswordAuthenticationToken authentication =
+                    new UsernamePasswordAuthenticationToken(
+                            userInfo.get("login").asText(),
+                            null,
+                            AuthorityUtils.createAuthorityList("ROLE_USER")
+                    );
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            ObjectNode response = objectMapper.createObjectNode();
+            response.put("errorCode", 0);
+            response.put("errorMessage", "");
+            response.put("data", "登录成功");
+            return ResponseEntity.ok(response);
+        } catch (Exception ex) {
+            ObjectNode response = objectMapper.createObjectNode();
+            response.put("errorCode", 90000);
+            response.put("errorMessage", "登录失败，原因：" + ex.getMessage());
+            response.put("data", "");
+            return ResponseEntity.ok(response);
+        }
+    }
+
     RestTemplate restTemplate = new RestTemplate();
 
     /**
-     * Github颁发授权码后回调的地址
+     * 使用授权码获取Github用户信息
      *
-     * @param code 授权码
+     * @param authorizationCode
      * @return
+     * @throws Exception
      */
-    @GetMapping("/login/oauth2/code/github")
-    public String githubLoginCallback(@RequestParam("code") String code, Model model) {
+    JsonNode getGithubUserInfo(String authorizationCode) throws Exception {
         // 使用授权码，向 GitHub 请求令牌
         String url = String.format("https://github.com/login/oauth/access_token?client_id=%s&client_secret=%s&code=%s",
-                clientId, clientSecret, code);
+                clientId, clientSecret, authorizationCode);
         MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
         headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
         HttpEntity<MultiValueMap<String, String>> httpEntity = new HttpEntity<>(new LinkedMultiValueMap<>(), headers);
@@ -59,10 +124,8 @@ public class DemoController {
         // 样例：{"error":"bad_verification_code","error_description":"The code passed is incorrect or expired.","error_uri":"https://docs.github.com/apps/managing-oauth-apps/troubleshooting-oauth-app-access-token-request-errors/#bad-verification-code"}
         if (StringUtils.hasText(error)) {
             log.error("请求令牌失败，原因：{}", jsonNodeResponse);
-            setOAuth2Config(model);
             String errorDescription = jsonNodeResponse.get("error_description").asText();
-            model.addAttribute("errorDescription", errorDescription);
-            return "index";
+            throw new Exception(errorDescription);
         }
 
         // 获取令牌成功
@@ -80,8 +143,7 @@ public class DemoController {
             // 获取用户信息成功
             // {"login":"dexterleslie1","id":26960597,"node_id":"MDQ6VXNlcjI2OTYwNTk3","avatar_url":"https://avatars.githubusercontent.com/u/26960597?v=4","gravatar_id":"","url":"https://api.github.com/users/dexterleslie1","html_url":"https://github.com/dexterleslie1","followers_url":"https://api.github.com/users/dexterleslie1/followers","following_url":"https://api.github.com/users/dexterleslie1/following{/other_user}","gists_url":"https://api.github.com/users/dexterleslie1/gists{/gist_id}","starred_url":"https://api.github.com/users/dexterleslie1/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/dexterleslie1/subscriptions","organizations_url":"https://api.github.com/users/dexterleslie1/orgs","repos_url":"https://api.github.com/users/dexterleslie1/repos","events_url":"https://api.github.com/users/dexterleslie1/events{/privacy}","received_events_url":"https://api.github.com/users/dexterleslie1/received_events","type":"User","user_view_type":"private","site_admin":false,"name":"Dexterleslie.Chan","company":null,"blog":"","location":null,"email":"dexterleslie@gmail.com","hireable":null,"bio":null,"twitter_username":null,"notification_email":"dexterleslie@gmail.com","public_repos":18,"public_gists":0,"followers":0,"following":0,"created_at":"2017-04-06T09:32:43Z","updated_at":"2025-09-02T16:15:24Z","private_gists":0,"total_private_repos":24,"owned_private_repos":24,"disk_usage":155609,"collaborators":0,"two_factor_authentication":true,"plan":{"name":"pro","space":976562499,"collaborators":0,"private_repos":9999}}
             jsonNodeResponse = responseEntity.getBody();
-            model.addAttribute("username", jsonNodeResponse.get("login").asText());
-            return "welcome";
+            return jsonNodeResponse;
         } catch (HttpClientErrorException ex) {
             // 获取用户信息失败
             /*
@@ -93,11 +155,8 @@ public class DemoController {
                 }]
             */
             log.error("获取用户信息失败，原因：{}", ex.getMessage());
-            setOAuth2Config(model);
             String errorDescription = ex.getMessage();
-            model.addAttribute("errorDescription", errorDescription);
-            return "index";
-
+            throw new Exception(errorDescription);
         }
     }
 

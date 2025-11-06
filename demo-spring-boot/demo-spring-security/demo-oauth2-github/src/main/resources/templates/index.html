@@ -5,13 +5,51 @@
     <meta charset="UTF-8">
     <title>Title</title>
     <style type="text/css">
-        .backgroundColorYellowGreen {
-            background-color: yellowgreen;
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
     </style>
+    <script type="text/javascript">
+        function handleOnClick(element) {
+            var url = element.getAttribute('data-url');
+            window.open(url, "GitHub登录", "width=500,height=500");
+        }
+
+        // 监听 message 事件
+        window.addEventListener('message', function (event) {
+            // 重要！安全检查：验证消息来源是否可信
+            if (event.origin !== 'http://localhost:8080') {
+                // 如果来源不是我们期望的父页面，直接忽略此消息
+                return;
+            }
+
+            // 发送授权码到后端获取令牌和用户信息并颁发本系统登录令牌
+            let code = event.data.code
+            fetch(`/loginWithAuthorizationCode?code=${code}`, {
+                method: 'POST'
+            }).then(res => res.json())
+                .then(res => {
+                    if (res.errorCode === 0) {
+                        // 登录成功
+                        window.location.href = '/welcome'
+                    } else {
+                        // 登录失败
+                        alert(res.errorMessage)
+                    }
+                })
+        });
+    </script>
 </head>
 <body>
-<div th:if="${errorDescription!=null}" th:text="${errorDescription}" style="color:red;"></div>
-<a th:href="|https://github.com/login/oauth/authorize?client_id=${client_id}&redirect_uri=${redirect_uri}&scope=${scope}|">GitHub登录</a>
+<div class="container">
+    <div th:if="${errorDescription!=null}" th:text="${errorDescription}" style="color:red;"></div>
+    <a th:href="|https://github.com/login/oauth/authorize?client_id=${client_id}&redirect_uri=${redirect_uri}&scope=${scope}|">GitHub登录页面跳转</a>
+    <a href="javascript:void(0)"
+       th:data-url="|https://github.com/login/oauth/authorize?client_id=${client_id}&amp;redirect_uri=${redirect_uri}&amp;scope=${scope}|"
+       onclick="handleOnClick(this)">GitHub登录弹出窗口</a>
+</div>
 </body>
 </html>

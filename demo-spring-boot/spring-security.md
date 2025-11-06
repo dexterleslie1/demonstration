@@ -772,10 +772,78 @@ spring:
 *   **Spring Security OAuth2.0 是什么？**
     *   它是一个**工具集**，帮助你在 Spring 应用中实现 OAuth 2.0 协议。
     *   它的两大核心功能是构建 **授权服务器** 和 **资源服务器**。
-
 *   **现状如何？**
     *   旧的、独立的 `spring-security-oauth` 项目已被废弃。
     *   **新的最佳实践是直接使用 Spring Security 5 框架内建的 OAuth2 支持**，它更现代、更强大、配置更简单。
+
+## OAuth2.0授权码模式为何需要先返回授权码再使用授权码获取Access Token呢？不能直接返回Access Token吗？
+
+OAuth 2.0 授权码模式之所以设计成“先返回授权码，再用授权码换令牌”的两步流程，是出于**安全性和适用性**的深层考虑。
+
+直接返回 Access Token（尤其是在前端通道）会引入严重的安全风险。下面我们通过对比来详细解释。
+
+---
+
+### 场景对比：直接返回 Token vs. 授权码模式
+
+假设我们有一个简化版的 OAuth 流程（**隐式模式，不推荐用于服务器端应用**）：
+1.  用户被重定向到授权服务器。
+2.  用户登录并授权。
+3.  授权服务器通过重定向，**直接将 Access Token 作为 URL 片段**返回给客户端（通常是浏览器中的单页应用）。
+
+现在，我们来看为什么对大多数应用（特别是传统 Web 应用）来说，授权码模式更安全。
+
+### 为什么授权码模式更安全：核心原因
+
+#### 1. 避免 Access Token 通过前端通道暴露（最关键的原因）
+
+*   **直接返回 Token 的问题**：在重定向过程中，Token 会出现在浏览器的地址栏中。这带来了两大风险：
+    *   **被浏览器历史记录、Referer 头、网络日志等截获**：Token 可能会被无意中记录或泄露。
+    *   **容易被恶意软件窃取**：如果用户设备上存在恶意软件，它可以扫描浏览器历史或监听网络流量来窃取 Token。
+
+*   **授权码模式的优势**：
+    *   **授权码本身是无用的**：授权码只是一个临时的、一次性的凭证。它唯一的作用就是用来兑换 Access Token。即使攻击者截获了授权码，他也无法直接访问用户资源。
+    *   **Token 通过安全的后端通道传输**：用授权码兑换 Access Token 的步骤，是**客户端应用的后端服务器**与**授权服务器的后端**之间通过一个直接的、服务器到服务器（Back-channel）的 HTTPS 请求完成的。这个通道不经过用户的浏览器，因此 Token 不会暴露在前端。这极大地降低了 Token 被泄露的风险。
+
+#### 2. 支持客户端认证，防止授权码被冒用
+
+在授权码模式的第二步（用授权码换 Token）时，客户端应用需要向授权服务器进行认证。
+
+*   **如何认证**：客户端需要出示自己的**客户端 ID** 和**客户端密钥**。
+*   **安全价值**：
+    1.  **确保是合法的客户端**：授权服务器会验证客户端身份，确保来兑换 Token 的是真正的、已注册的应用程序，而不是一个恶意网站。
+    2.  **绑定授权码与客户端**：即使攻击者通过某种方式（例如，攻破了重定向 URL）窃取到了授权码，他也无法使用这个授权码来兑换 Token，因为他没有合法客户端的**客户端密钥**。这个密钥必须严格保密，只存在于客户端应用的后端。
+
+**对比**：如果直接返回 Token，就没有这个客户端认证的环节，任何截获了 Token 的人都可以直接使用它。
+
+#### 3. 提供了一个安全的“上下文切换”点
+
+OAuth 流程涉及多个参与者：用户浏览器（User-Agent）、客户端应用、授权服务器。授权码在这个流程中充当了一个安全的“信物”。
+
+*   **前端完成用户交互**：第一步在前端（浏览器）完成，包括用户登录和授权。这个环境复杂且不可控。
+*   **后端完成凭证交换**：第二步在后端完成，这是一个受客户端控制的、相对安全的环境。
+*   授权码就像一张“兑换券”：你可以在人来人往的前台（浏览器）拿到这张券，然后凭券到安全的后台（服务器间通信）兑换真正的贵重物品（Access Token）。即使券被人看了、记了，只要后台验证严格，他们也换不走东西。
+
+---
+
+### 总结：授权码模式的安全优势表
+
+| 特性               | 直接返回 Token（如隐式模式）                                 | 授权码模式                                                   |
+| :----------------- | :----------------------------------------------------------- | :----------------------------------------------------------- |
+| **Token 暴露位置** | 浏览器地址栏、历史记录、Referer                              | **仅存在于后端到后端的 HTTPS 通信中**                        |
+| **客户端认证**     | 无或较弱                                                     | **有（使用客户端密钥），防止授权码被冒用**                   |
+| **Token 泄露风险** | **高**                                                       | **低**                                                       |
+| **适用场景**       | 仅限于没有后端的纯前端应用（如单页应用），且 Token 权限范围很小、有效期很短。**已被现代标准（如PKCE）取代** | **所有有后端服务的 Web 应用、移动应用、原生应用（推荐方式）** |
+
+### 现代演进：PKCE 扩展
+
+你可能会问：“那没有后端的移动应用或单页应用怎么办？它们无法保密客户端密钥。”
+
+这个问题很好！OAuth 2.0 通过 **PKCE** 扩展解决了这个问题。PKCE 允许公共客户端（如移动App）也使用授权码模式，而无需使用客户端密钥。它通过一个动态创建的、经过哈希的“代码验证码”来保证授权码兑换请求的安全性，从而防止授权码被截获后冒用。
+
+**结论：**
+
+**授权码模式通过增加一个中间步骤（使用授权码），成功地将不安全的浏览器前端环境与敏感的 Access Token 分离开来，并通过客户端后端服务器进行认证，从而实现了更高的安全性。** 这正是其设计的精妙之处，也使其成为 OAuth 2.0 中最安全、最常用的流程。
 
 ## OIDC(OpenID Connect)概念
 
@@ -1981,8 +2049,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .and().cors().configurationSource(corsConfigurationSource -> {
                     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
                     CorsConfiguration config = new CorsConfiguration();
-                    // 允许跨域携带cookie
-                    config.setAllowCredentials(true);
+                    // 不允许跨域携带cookie
+                    config.setAllowCredentials(false);
                     // 只允许 abc.com 跨域访问
                     config.setAllowedOrigins(Collections.singletonList("abc.com"));
                     config.setAllowedHeaders(Arrays.asList("Origin", "Content-Type", "Accept"));
@@ -2608,7 +2676,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 ![img](https://cdn.beekka.com/blogimg/asset/201904/bg2019042102.jpg)
 
-应用的名称随便填，主页 URL 填写`http://localhost:8080`，跳转网址填写 `http://localhost:8080/login/oauth2/code/github`（注意：截至2025年11月3日上面跳转网址必须填写http://localhost:8080/login/oauth2/code/github，否则会报告登记跳转地址和声明的挑战地址不匹配错误，导致无法回调）。
+应用的名称随便填，主页 URL 填写`http://localhost:8080`，跳转网址填写 `http://localhost:8080/oauth/redirect`。
 
 提交表单以后，GitHub 应该会返回客户端 ID（client ID）和客户端密钥（client secret），这就是应用的身份识别码。
 
@@ -2621,7 +2689,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 跳转的 URL 如下。
 
 ```
-https://github.com/login/oauth/authorize?client_id=7e015d8ce32370079895&redirect_uri=http://localhost:8080/login/oauth2/code/github
+https://github.com/login/oauth/authorize?client_id=7e015d8ce32370079895&redirect_uri=http://localhost:8080/oauth/redirect
 ```
 
 这个 URL 指向 GitHub 的 OAuth 授权网址（如果用户已经登录GitHub，则跳转到GitHub的授权页面，否则会跳转到GitHub的用户登录页面），带有两个参数：`client_id`告诉 GitHub 谁在请求，`redirect_uri`是稍后跳转回来的网址。
@@ -2637,7 +2705,7 @@ https://github.com/login/oauth/authorize?client_id=7e015d8ce32370079895&redirect
 用户同意授权， GitHub 就会跳转到`redirect_uri`指定的跳转网址，并且带上授权码，跳转回来的 URL 就是下面的样子。
 
 ```
-http://localhost:8080/login/oauth2/code/github?code=04e29b407c796dd8785f
+http://localhost:8080/oauth/redirect?code=04e29b407c796dd8785f
 ```
 
 后端收到这个请求以后，就拿到了授权码（`code`参数）。
@@ -2695,11 +2763,25 @@ const name = result.data.name;
 ctx.response.redirect(`/welcome.html?name=${name}`);
 ```
 
+### 上面流程实现示例
+
+>说明：示例实现了页面间跳转方式集成Github登录和弹出窗口方式集成Github登录。
+>
+>详细用法请参考本站[示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-spring-boot/demo-spring-security/demo-oauth2-github)
+
+### 基于spring-boot-starter-oauth2-client集成
+
+>说明：SpringBoot集成Github登录有两种方式：1、自定义集成逻辑，2、基于spring-boot-starter-oauth2-client集成。
+>
+>详细用法请参考本站[示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-spring-boot/demo-spring-security/demo-spring-security-oauth2-github)
+
 ## Spring Security OAuth2.0
 
 > 详细用法请参考本站[示例](https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-security/spring-security-oauth2-without-jwt)
 
 ### Token超时设置
+
+>todo：测试Token超时处理。
 
 分别设置每个客户端超时
 
@@ -2735,6 +2817,10 @@ AuthorizationServerTokenServices tokenServices() {
     return defaultTokenServices;
 }
 ```
+
+### 自定义登录
+
+### 自定义授权界面
 
 
 

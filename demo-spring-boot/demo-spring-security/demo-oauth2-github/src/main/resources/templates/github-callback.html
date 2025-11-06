@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head><title>授权中...</title></head>
+<body>
+<script>
+    // 这个页面一加载，就会被GitHub重定向，URL中会带有授权码code参数
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+
+    if (code) {
+        // 如果是弹出窗口集成Github登录
+        if(window.opener) {
+            // 将授权码发回给主窗口
+            window.opener.postMessage(
+                {code},
+                'http://localhost:8080' // 目标origin，必须是你的主应用域名
+            );
+            // 可以稍等一下再关闭，确保消息已发送
+            setTimeout(() => window.close(), 500);
+        } else {
+            // 如果是页面跳转集成Github登录
+            fetch(`/loginWithAuthorizationCode?code=${code}`, {
+                method: 'POST'
+            }).then(res => res.json())
+                .then(res => {
+                    if (res.errorCode === 0) {
+                        // 登录成功
+                        window.location.href = '/welcome'
+                    } else {
+                        // 登录失败
+                        alert(res.errorMessage)
+                    }
+                })
+        }
+    } else {
+        alert("请提供授权码！")
+    }
+</script>
+</body>
+</html>

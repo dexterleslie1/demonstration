@@ -1,13 +1,10 @@
 package com.future.demo;
 
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import java.security.Principal;
 
@@ -27,8 +24,8 @@ public class DemoController {
     }
 
     @RequestMapping(value = "/welcome")
-    public String welcome(Model model, Principal principal) {
-        model.addAttribute("username", principal.getName());
+    public String welcome(Model model, Authentication authentication) {
+        model.addAttribute("username", authentication.getName());
         return "welcome";
     }
 }
