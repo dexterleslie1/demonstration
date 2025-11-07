@@ -19,6 +19,12 @@
             <artifactId>future-common</artifactId>
             <version>1.1.5</version>
         </dependency>
+
+        <!-- SpringCloud OAuth2依赖 -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-oauth2</artifactId>
+        </dependency>
     </dependencies>
 
     <repositories>

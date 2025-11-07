@@ -560,6 +560,98 @@ https://b.com/oauth/token?
 
 B 网站验证通过以后，就会颁发新的令牌。
 
+## OAuth2.0 Scope概念
+
+### 一句话概括
+
+**OAuth 2.0 Scope（作用域）是一个权限声明，它定义了第三方应用（客户端）被授权可以访问用户资源的“范围”和“权限级别”。**
+
+你可以把它想象成一把**限定权限的钥匙**。
+
+---
+
+### 一个生动的比喻：代客泊车
+
+为了更好地理解，我们用一个经典的“代客泊车”的比喻：
+
+1.  **你（资源所有者）**： 车主，拥有汽车和车里所有东西的完全控制权。
+2.  **代客泊车服务（客户端）**： 一个第三方应用，想帮你把车停好。
+3.  **你（同时也是授权服务器）**： 你决定给代客泊车员哪些权限。
+4.  **汽车API（资源服务器）**： 你的汽车，它提供了一些“接口”，比如开门、启动、开后备箱。
+
+现在，你会给代客泊车员一把**万能钥匙**（你的全部权限）吗？当然不会！这太危险了。
+
+相反，你会给他一把**限定功能的钥匙**。这把钥匙的“Scope”可能就是：
+
+*   `drive:car` （驾驶汽车）
+*   `park:lot` （停入车位）
+
+这把钥匙**没有**以下权限：
+*   `open:glovebox` （打开手套箱）
+*   `access:trunk` （打开后备箱）
+
+这里的 `drive:car` 和 `park:lot` 就是 **Scope**。它们精确地定义了代客泊车服务可以做什么，不能做什么。
+
+---
+
+### OAuth 2.0 流程中的 Scope
+
+在标准的 OAuth 2.0 授权流程中，Scope 出现在关键步骤：
+
+1.  **授权请求**： 当第三方应用将你重定向到授权服务器（如 Google、微信的登录页面）时，它会在请求中携带它想要的权限列表（Scope）。
+    *   例如：`scope=read_user_info%20post_weibo`
+        （解码后：`scope=read_user_info post_weibo`，意思是申请“读取用户信息”和“发微博”的权限）
+
+2.  **用户同意**： 授权服务器会向你展示一个同意屏幕，清晰地列出这个应用想要获取的权限。
+    *   “应用 A 想要获取你的基本资料（昵称、头像）”
+    *   “应用 A 想要以你的身份发布微博”
+    *   **你作为用户，可以清楚地知道并决定是否同意这些范围。**
+
+3.  **颁发访问令牌**： 当你同意后，授权服务器会颁发一个访问令牌给第三方应用。这个令牌内部就“烙印”了被授权的 Scope。
+
+4.  **访问资源**： 当第三方应用拿着这个令牌去资源服务器（如微博的 API 服务器）请求你的数据时，资源服务器会检查令牌中的 Scope。
+    *   如果应用请求 `GET /v1.0/user/profile` （读取资料），而令牌有 `read_user_info` 权限，则请求成功。
+    *   如果应用尝试 `POST /v1.0/statuses/update` （发微博），但令牌**没有** `post_weibo` 权限，资源服务器会立即拒绝请求，返回 `403 Forbidden` 错误。
+
+---
+
+### 为什么 Scope 如此重要？
+
+1.  **最小权限原则**： 这是信息安全的核心原则。应用只能获取它完成功能所**必需**的最小权限，而不是你的所有数据。如果一个应用只想展示你的头像，它就不应该申请删除你账户的权限。
+2.  **用户透明和控制**： Scope 让用户清楚地知道授权后会发生什么，增强了用户的信任感和控制权。
+3.  **安全性**： 即使访问令牌泄露，由于 Scope 的限制，攻击者能造成的损害也是有限的。
+
+---
+
+### 常见的 Scope 示例
+
+不同的 API 提供商有自己定义的 Scope。
+
+*   **Google API**:
+    *   `https://www.googleapis.com/auth/userinfo.profile` （获取基本资料）
+    *   `https://www.googleapis.com/auth/gmail.readonly` （只读访问 Gmail）
+    *   `https://www.googleapis.com/auth/calendar` （完全访问日历）
+
+*   **GitHub API**:
+    *   `user:email` （读取用户邮箱地址）
+    *   `repo` （完全控制私有和公有仓库）
+    *   `admin:public_key` （管理 SSH 密钥）
+
+*   **微信开放平台**:
+    *   `snsapi_userinfo` （获取用户个人信息）
+    *   `snsapi_base` （静默授权，仅获取 OpenID）
+
+### 总结
+
+| 核心概念       | 解释                                                         |
+| :------------- | :----------------------------------------------------------- |
+| **是什么**     | 一个权限字符串，定义访问权限的**范围**。                     |
+| **做什么**     | 限制第三方应用只能访问被授权的特定资源，而不能为所欲为。     |
+| **为什么重要** | 遵循**最小权限原则**，保护用户数据安全，增加用户透明度和控制力。 |
+| **在哪里用**   | 在 OAuth 2.0 的授权请求和访问令牌中。                        |
+
+简单来说，**OAuth 2.0 Scope 就是确保你把车库钥匙交给代客泊车员时，他只能把车停好，而不能翻你的手套箱或开走你的车去兜风。**
+
 ## OAuth2.0为何有四种授权模式呢？
 
 简单直接的回答是：**因为存在不同的应用类型和不同的信任级别，没有一种授权方式能适用于所有场景。**
@@ -2775,9 +2867,453 @@ ctx.response.redirect(`/welcome.html?name=${name}`);
 >
 >详细用法请参考本站[示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-spring-boot/demo-spring-security/demo-spring-security-oauth2-github)
 
+POM添加依赖
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-oauth2-client</artifactId>
+</dependency>
+```
+
+配置应用application.properties
+
+```properties
+spring.security.oauth2.client.registration.github.clientId=xxx
+spring.security.oauth2.client.registration.github.clientSecret=xxx
+spring.security.oauth2.client.registration.github.redirect-uri=http://localhost:8080/login/oauth2/code/github
+spring.security.oauth2.client.registration.github.scope=user:email,read:user
+```
+
+访问 http://localhost:8080 测试示例。
+
 ## Spring Security OAuth2.0
 
-> 详细用法请参考本站[示例](https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-security/spring-security-oauth2-without-jwt)
+### 非JWT授权服务器配置
+
+>spring-oauth2授权服务和资源服务配置：https://buddhiprabhath.medium.com/spring-boot-oauth-2-0-separating-authorization-service-and-resource-service-1641ebced1f0
+>
+>详细用法请参考本站[示例](https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-security/spring-security-oauth2-without-jwt)
+
+#### 依赖配置
+
+父项目需要配置SpringCloud的依赖。
+
+POM添加SpringCloud OAuth2依赖
+
+```xml
+<!-- SpringCloud OAuth2依赖 -->
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-oauth2</artifactId>
+</dependency>
+```
+
+#### Spring Security和用户信息配置
+
+```java
+package com.future.demo.security.uaa.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+import javax.annotation.Resource;
+
+@Configuration
+public class ConfigSecurity extends WebSecurityConfigurerAdapter {
+
+    // 所有用户密码
+    private final static String UserSecret = "123456";
+
+    @Bean
+    public UserDetailsService users() {
+        return new MyUserDetailsService();
+    }
+
+    public static class MyUserDetailsService implements UserDetailsService {
+        @Resource
+        private PasswordEncoder passwordEncoder;
+
+        @Override
+        public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+            if ("user1".equals(username)) {
+                return User.builder()
+                        .username("user1")
+                        .password(passwordEncoder.encode(UserSecret))
+                        .authorities("sys:admin")
+                        .build();
+            } else if ("user2".equals(username)) {
+                return User.builder()
+                        .username("user2")
+                        .password(passwordEncoder.encode(UserSecret))
+                        .authorities("sys:nothing")
+                        .build();
+            }
+            return null;
+        }
+    }
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        // 禁用csrf
+        /*http.csrf().disable()
+                // 开启form登录
+                .formLogin()
+                // 所有请求都需要登录验证
+                .and().authorizeRequests().anyRequest().authenticated();*/
+
+        http
+                // 禁用csrf
+                .csrf().disable()
+
+                // 用于对 URL 进行访问权限控制
+                .authorizeRequests()
+                // /css/*.css资源允许匿名访问
+                .antMatchers("/css/*.css").permitAll()
+                // /login资源允许匿名访问
+                .antMatchers("/login").permitAll()
+                // 用于指定对于任何未明确指定权限要求的请求（即前面未通过 .antMatchers() 等方法明确匹配的请求），都需要用户进行身份验证（即用户必须登录）。
+                .anyRequest().authenticated()
+
+                // 开启form登录
+                .and().formLogin()// 自定义登录表单username、password参数名称
+                .usernameParameter("usernameDemo")
+                .passwordParameter("passwordDemo")
+                // 自定义登录页面
+                .loginPage("/login")
+                // 自定义登录url，此值要和login.html登录表单action一致
+                .loginProcessingUrl("/myLogin");
+    }
+
+    // 密码模式，用户提供账号密码不需要登录直接校验通过并获取token
+    @Override
+    @Bean
+    public AuthenticationManager authenticationManagerBean() throws Exception {
+        return super.authenticationManagerBean();
+    }
+
+    @Bean
+    PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+}
+
+```
+
+#### 启用授权服务器
+
+```java
+@Configuration
+// 启用授权服务器
+@EnableAuthorizationServer
+public class ConfigAuthorizationServer extends AuthorizationServerConfigurerAdapter {
+```
+
+#### 客户端详情服务配置
+
+```java
+// 配置客户端详情服务(ClientDetailsService),ClientDetailsService负责查找ClientDetails
+// 支持InMemoryClientDetailsService和JdbcClientDetailsService客户端详情服务
+@Override
+public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
+    clients.inMemory()
+            .withClient("client1")
+            .secret(passwordEncoder.encode(ClientSecret))
+            // 客户端允许访问的资源id，多个资源用逗号隔开，默认为空，即所有资源都可以访问
+            /*.resourceIds("resource1")*/
+            // authorization_code 授权码模式，，跳转到登录页面需要用户登录后并授权后才能够获取token
+            // implicit 静默授权模式，跳转到登录页面需要用户登录后并授权才能够获取token
+            // refresh_token配置了在请求令牌时才会颁发刷新令牌，否则只颁发访问令牌
+            .authorizedGrantTypes("authorization_code", "implicit", "refresh_token")
+            // 允许的授权范围
+            .scopes("all", "api", "read", "write")
+            // false表示用户登录成功后跳转到授权确认页面等待用户确认授权
+            .autoApprove(false)
+            // 同意或者拒绝授权的302重定向地址
+            .redirectUris("http://www.baidu.com")
+            // 设置各个客户端的 access_token 和 refresh_token 有效期，单位秒
+            /*.accessTokenValiditySeconds(3600)
+            .refreshTokenValiditySeconds(3600)*/
+
+            .and()
+            .withClient("client2")
+            .secret(passwordEncoder.encode(ClientSecret))
+            .resourceIds("order-service")
+            // password 密码模式，用户提供账号密码后不需要登录授权直接获取token
+            .authorizedGrantTypes("password", "refresh_token")
+            .scopes("write")
+
+            .and().withClient("client3")
+            .secret(passwordEncoder.encode(ClientSecret))
+            /*.resourceIds("resource1")*/
+            // client_credentails 客户端模式，不需要提供用户账号密码信息即可获取token
+            .authorizedGrantTypes("client_credentials")
+            .scopes("all")
+
+            // order-service客户端
+            .and().withClient("order-service-resource")
+            .secret(passwordEncoder.encode(ClientSecret))
+            .authorizedGrantTypes("client_credentials")
+            .scopes("all");
+}
+```
+
+#### 令牌访问端点配置
+
+```java
+// 配置令牌访问端点
+@Override
+public void configure(AuthorizationServerEndpointsConfigurer endpoints) {
+    endpoints
+            // 把 TokenStore 注入到 Spring OAuth2 中，否则 token 不会保存在 Redis 中
+            .tokenStore(tokenStore)
+            // 密码模式，用于校验账号密码并颁发token
+            .authenticationManager(authenticationManager)
+            // 授权码模式，用于授权码相关配置
+            // 支持InMemoryAuthorizationCodeServices、JdbcAuthorizationCodeServices、RandomValueAuthorizationCodeServices
+            .authorizationCodeServices(authorizationCodeServices)
+            // 把 Spring Security 的 UserDetailsService 注入到 Spring OAuth2 中
+            // 没有此配置，在 refresh_token 时候 TokenEndpoint 会报错 Handling error: IllegalStateException, UserDetailsService is required.
+            .userDetailsService(userDetailsService)
+            // 令牌管理服务
+            .tokenServices(tokenServices())
+            // 自定义授权确认页面路径
+            .pathMapping("/oauth/confirm_access", "/custom/confirm");
+}
+
+// 配置令牌管理服务
+@Bean
+AuthorizationServerTokenServices tokenServices() {
+    DefaultTokenServices defaultTokenServices = new DefaultTokenServices();
+    // 令牌存储的地方
+    // 需要注入 TokenStore，否则在启动时报告 tokenStore must be set 错误
+    defaultTokenServices.setTokenStore(tokenStore);
+    // 是否生成刷新令牌并支持 access_token 刷新
+    defaultTokenServices.setSupportRefreshToken(true);
+    // 设置Access Token有效期为7200秒，也就是两个小时
+    defaultTokenServices.setAccessTokenValiditySeconds(7200);
+    //defaultTokenServices.setAccessTokenValiditySeconds(2);
+    // 设置Refresh Token有效期为3天
+    defaultTokenServices.setRefreshTokenValiditySeconds(259200);
+    //defaultTokenServices.setRefreshTokenValiditySeconds(10);
+    // 设置客户端详情服务
+    defaultTokenServices.setClientDetailsService(clientDetailsService);
+    return defaultTokenServices;
+}
+
+/**
+ * 存储在内存中的授权码
+ *
+ * @return
+ */
+@Bean
+AuthorizationCodeServices authorizationCodeServices() {
+    return new InMemoryAuthorizationCodeServices();
+}
+```
+
+#### 授权服务器端点安全约束配置
+
+```java
+// 配置授权服务器端点安全约束
+@Override
+public void configure(AuthorizationServerSecurityConfigurer security) {
+    security
+            // 访问 /oauth/check_token 端点允许所有客户端
+            .checkTokenAccess("permitAll()");
+}
+```
+
+### 非JWT资源服务器配置
+
+>spring-oauth2授权服务和资源服务配置：https://buddhiprabhath.medium.com/spring-boot-oauth-2-0-separating-authorization-service-and-resource-service-1641ebced1f0
+>
+>详细用法请参考本站[示例](https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-security/spring-security-oauth2-without-jwt)
+
+#### 依赖配置
+
+父项目需要配置SpringCloud的依赖。
+
+POM添加SpringCloud OAuth2依赖
+
+```xml
+<!-- SpringCloud OAuth2依赖 -->
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-oauth2</artifactId>
+</dependency>
+```
+
+#### Spring Security配置
+
+```java
+package com.future.demo.security.order.config;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+
+@Configuration
+// 启用spring-security权限注解
+@EnableGlobalMethodSecurity(prePostEnabled = true)
+public class ConfigSecurity extends WebSecurityConfigurerAdapter {
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http
+                // 禁用csrf
+                .csrf().disable()
+                // 所有请求都需要登录验证
+                .authorizeRequests().anyRequest().authenticated();
+    }
+}
+```
+
+#### 启用资源服务器
+
+```java
+@Configuration
+// order-service作为资源服务器
+@EnableResourceServer
+public class ConfigResourceServer extends ResourceServerConfigurerAdapter {
+```
+
+#### 安全配置
+
+```java
+@Override
+public void configure(HttpSecurity http) throws Exception {
+    http
+            // 禁用csrf
+            .csrf().disable()
+            // 服务器不会创建或维护会话（HttpSession）
+            .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+
+            // OAuth2客户端要有write权限范围
+            .and().authorizeRequests()
+            .antMatchers("/**").access("#oauth2.hasScope('write')");
+}
+```
+
+#### 验证令牌服务配置
+
+```java
+@Override
+public void configure(ResourceServerSecurityConfigurer resources) {
+    resources
+            // 资源ID，和客户端配置的资源ID一致
+            .resourceId("order-service")
+            // 验证令牌服务
+            .tokenServices(tokenService())
+            // 服务器不会创建或维护会话（HttpSession）
+            .stateless(true);
+}
+
+// 支持DefaultTokenServices，当授权服务和资源服务在同一个服务中时使用此DefaultTokenServices
+// 支持RemoteTokenServices，当授权服务和资源服务不在同一个服务中时使用此RemoteTokenServices
+@Bean
+public ResourceServerTokenServices tokenService() {
+    RemoteTokenServices tokenServices = new RemoteTokenServices();
+    // order-service请求uaa服务客户端信息
+    tokenServices.setClientId("order-service-resource");
+    tokenServices.setClientSecret("123");
+    // uaa服务check_token端点
+    tokenServices.setCheckTokenEndpointUrl("http://localhost:9999/oauth/check_token");
+    return tokenServices;
+}
+```
+
+### 授权服务测试
+
+使用本站[示例](https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-security/spring-security-oauth2-without-jwt)协助测试。
+
+#### 授权码模式
+
+访问 http://localhost:9999/oauth/authorize?response_type=code&client_id=client1 跳转到登录页面
+
+登录帐号：user1，登录密码：123456 后会跳转到授权确认页面，点击授权按钮后会跳转到 http://www.baidu.com/?code=xxx
+
+使用授权码换取访问令牌
+
+```sh
+# 使用上面的授权码替换命令中的授权码
+# Authorization: Basic Y2xpZW50MToxMjM=是客户端id和客户端密钥的base64编码，使用命令echo -n "client1:123" | base64获取
+curl -X POST -H "Authorization: Basic Y2xpZW50MToxMjM=" -H "Accept: application/json" http://localhost:9999/oauth/token?grant_type=authorization_code&code=xxx
+```
+
+使用访问令牌访问资源服务器即可获取数据。
+
+#### 静默模式
+
+访问 http://localhost:9999/oauth/authorize?response_type=token&client_id=client1 跳转到登录页面
+
+登录帐号：user1，登录密码：123456 后会跳转到授权确认页面，点击授权按钮后会跳转到 http://www.baidu.com/#access_token=xxx&token_type=bearer&expires_in=2&scope=all%20read%20api%20write
+
+使用上面的访问令牌访问资源服务器即可获取数据。
+
+#### 密码模式
+
+获取访问令牌
+
+```sh
+# Authorization: Basic Y2xpZW50MjoxMjM=是客户端id和客户端密钥的base64编码，使用命令echo -n "client2:123" | base64获取
+curl -X POST -H "Authorization: Basic Y2xpZW50MjoxMjM=" -H "Accept: application/json" http://localhost:9999/oauth/token?grant_type=password&username=user1&password=123456
+```
+
+使用返回的访问令牌访问资源服务器即可获取数据。
+
+#### 客户端模式
+
+获取访问令牌
+
+```sh
+# Authorization: Basic Y2xpZW50MzoxMjM=是客户端id和客户端密钥的base64编码，使用命令echo -n "client3:123" | base64获取
+curl -X POST -H "Authorization: Basic Y2xpZW50MzoxMjM=" -H "Accept: application/json" http://localhost:9999/oauth/token?grant_type=client_credentials
+```
+
+#### /oauth/check_token端点
+
+>说明：用于校验访问令牌是否合法（不能用于校验刷新令牌）。
+
+```sh
+# 获取访问令牌
+$ curl -X POST -H "Authorization: Basic Y2xpZW50MjoxMjM=" -H "Accept: application/json" http://localhost:9999/oauth/token?grant_type=password&username=user1&password=123456
+
+# aud是资源ID，scope是客户端权限范围，user_name是用户名称，authorities是用户权限，client_id是客户端ID
+$ curl -X POST http://localhost:9999/oauth/check_token?token=xxx
+{"aud":["order-service"],"user_name":"user1","scope":["write"],"active":true,"exp":1762490631,"authorities":["sys:admin"],"client_id":"client2"}
+```
+
+### 资源服务测试
+
+使用本站[示例](https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-security/spring-security-oauth2-without-jwt)协助测试。
+
+获取访问令牌
+
+```sh
+curl -X POST -H "Authorization: Basic Y2xpZW50MjoxMjM=" -H "Accept: application/json" http://localhost:9999/oauth/token?grant_type=password&username=user1&password=123456
+```
+
+使用访问令牌访问资源服务器
+
+```sh
+# 用户user1有权限访问/order资源
+$ curl -X GET -H "Authorization: Bearer xxx" http://localhost:8081/order
+{"errorCode":0,"errorMessage":null,"data":"user1下单成功"}
+
+# 用户user1没有权限访问/order1资源
+$ curl -X GET -H "Authorization: Bearer xxx" http://localhost:8081/order1
+{"error":"access_denied","error_description":"Access is denied"}
+```
 
 ### Token超时设置
 
