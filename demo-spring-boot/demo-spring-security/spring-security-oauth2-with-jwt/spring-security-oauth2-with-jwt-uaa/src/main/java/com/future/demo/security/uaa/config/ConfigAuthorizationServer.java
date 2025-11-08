@@ -1,8 +1,6 @@
 package com.future.demo.security.uaa.config;
 
 import com.future.demo.security.uaa.exception.OAuth2ExceptionWithCustomizeJson;
-import com.future.demo.security.uaa.service.ClientDetailsServiceImpl;
-import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,141 +8,189 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.common.DefaultOAuth2AccessToken;
 import org.springframework.security.oauth2.common.exceptions.OAuth2Exception;
 import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerEndpointsConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerSecurityConfigurer;
-import org.springframework.security.oauth2.provider.error.WebResponseExceptionTranslator;
-import org.springframework.security.oauth2.provider.token.TokenStore;
+import org.springframework.security.oauth2.provider.ClientDetailsService;
+import org.springframework.security.oauth2.provider.code.AuthorizationCodeServices;
+import org.springframework.security.oauth2.provider.code.InMemoryAuthorizationCodeServices;
+import org.springframework.security.oauth2.provider.token.*;
+import org.springframework.security.oauth2.provider.token.store.InMemoryTokenStore;
 import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
-import org.springframework.security.oauth2.provider.token.store.JwtTokenStore;
 
-import java.security.*;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.X509EncodedKeySpec;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 @Configuration
+// 启用授权服务器
 @EnableAuthorizationServer
 public class ConfigAuthorizationServer extends AuthorizationServerConfigurerAdapter {
+
     @Autowired
     PasswordEncoder passwordEncoder;
     @Autowired
     AuthenticationManager authenticationManager;
     @Autowired
-    ClientDetailsServiceImpl clientDetailsService;
+    UserDetailsService userDetailsService;
+    @Autowired
+    TokenStore tokenStore;
+    @Autowired
+    ClientDetailsService clientDetailsService;
+    @Autowired
+    JwtAccessTokenConverter jwtAccessTokenConverter;
 
-    // 使用JwtAccessTokenConverter转换器转jwt token
-    @Bean
-    TokenStore tokenStore() throws InvalidKeySpecException, NoSuchAlgorithmException {
-        return new JwtTokenStore(jwtAccessTokenConverter());
-    }
-
-    @Bean
-    JwtAccessTokenConverter jwtAccessTokenConverter() throws NoSuchAlgorithmException, InvalidKeySpecException {
-        JwtAccessTokenConverter jwtAccessTokenConverter = new JwtAccessTokenConverter();
-        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-        byte []publicKeyBytes = Base64.decode("MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDPsWeWhr9oydNQYesOrVKLD+Hf\n" +
-                "scpOKiakvjX/Oh7V1v1LojTDpK3G8yt7kOHfD7rn3Tdjid46RQ6avHXmPJniqtg9\n" +
-                "pqnAMmXqB+9HUcrqxh0k7cL6roD07xuEVNZfQ/MjTfMAJKejR99De3mrG+bCfrxe\n" +
-                "kwzIBgOppRSuanjK2wIDAQAB");
-        byte []privateKeyBytes = Base64.decode("MIICdwIBADANBgkqhkiG9w0BAQEFAASCAmEwggJdAgEAAoGBAM+xZ5aGv2jJ01Bh\n" +
-                "6w6tUosP4d+xyk4qJqS+Nf86HtXW/UuiNMOkrcbzK3uQ4d8PuufdN2OJ3jpFDpq8\n" +
-                "deY8meKq2D2mqcAyZeoH70dRyurGHSTtwvqugPTvG4RU1l9D8yNN8wAkp6NH30N7\n" +
-                "easb5sJ+vF6TDMgGA6mlFK5qeMrbAgMBAAECgYAqg27n0gdGROHbd1+tLm9SBds/\n" +
-                "dd4qZ9hnKoRVDSmYrhxFKhvQ3Fmx+r6w2XRSu56PramT13nExbP6mo8rpMX+0DJp\n" +
-                "RUVAqfSdEedRXVAwSO92dirBWoBSuYLNNDJ7f1upq3NSSLqcgfo7dVH4Lgl0yZWe\n" +
-                "dkqonAFebGha8YK6uQJBAPoBgkPgD2m/yvW4fhBMvzd6kkLt12fRUJC5CZ+x91eq\n" +
-                "9YJjpQWpPVkOrAlD5ybZzlwweDL0Pkf/9KZ9oKc7Uy0CQQDUrC/Ra/mBbOjiYmLO\n" +
-                "PUaw5OERXKzcSOnQuH4MEmDTvO3JyRF/WK0Ge5stBotWZoh8fx0DFRrgMVh72xjy\n" +
-                "qvsnAkEAssEfbf6nppn+uWC3qlnlovpd18MNcGqmK0RSkD+ENcfEEP3EQV73wVSP\n" +
-                "R3Soswuq1BnH587hNUPanqxWkRwG5QJASFbZXQ6xK8jz3i1BFo3ZQcpYlCNF2Rgk\n" +
-                "EA7xMQH/VYZqC70M6pgrIo1g1wvm0VjHDDHgmG/RWHjwdBCuh7yI+QJBAOLk5wqs\n" +
-                "4I/N5RGaOwCJmZBRp+DM8NOye50avbSNxfmg9NU+3svVcfseN/XSu8Kwl7rRoIxA\n" +
-                "JqLurr5RMLwwvPo=");
-        PublicKey publicKey = keyFactory.generatePublic(new X509EncodedKeySpec(publicKeyBytes));
-        PrivateKey privateKey = keyFactory.generatePrivate(new PKCS8EncodedKeySpec(privateKeyBytes));
-        KeyPair keyPair = new KeyPair(publicKey, privateKey);
-        jwtAccessTokenConverter.setKeyPair(keyPair);
-        return jwtAccessTokenConverter;
-    }
+    // 所有客户端密码
+    private final static String ClientSecret = "123456";
 
     // 配置客户端详情服务(ClientDetailsService),ClientDetailsService负责查找ClientDetails
+    // 支持InMemoryClientDetailsService和JdbcClientDetailsService客户端详情服务
     @Override
     public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
         // 集成数据库配置客户端详情
-        clients.withClientDetails(clientDetailsService);
-//        // 客户端详情内存配置
-//        clients.inMemory()
-//                .withClient("client1")
-//                .secret(passwordEncoder.encode(ClientSecret))
-////                .resourceIds("resource1")
-//                // authorization_code 授权码模式，，跳转到登录页面需要用户登录后并授权后才能够获取token
-//                // implicit 静默授权模式，跳转到登录页面需要用户登录后并授权才能够获取token
-//                .authorizedGrantTypes("authorization_code", "implicit")
-//                .scopes("all")
-//                .redirectUris("http://www.baidu.com")
-//
-//                .and()
-//                .withClient("client2")
-//                .secret(passwordEncoder.encode(ClientSecret))
-////                .resourceIds("resouce1")
-//                // password 密码模式，用户提供账号密码后不需要登录授权直接获取token
-//                .authorizedGrantTypes("password")
-//                .scopes("write")
-//
-//                .and().withClient("client3")
-//                .secret(passwordEncoder.encode(ClientSecret))
-////                .resourceIds("resource1")
-//                // client_credentails 客户端模式，不需要提供用户账号密码信息即可获取token
-//                .authorizedGrantTypes("client_credentials")
-//                .scopes("all")
-//
-//                // order-service客户端
-//                .and().withClient("order-service-resource")
-//                .secret(passwordEncoder.encode(ClientSecret))
-//                .authorizedGrantTypes("client_credentials")
-//                .scopes("all");
+        //clients.withClientDetails(clientDetailsService);
+        clients.inMemory()
+                .withClient("client1")
+                .secret(passwordEncoder.encode(ClientSecret))
+                // 客户端允许访问的资源id，多个资源用逗号隔开，默认为空，即所有资源都可以访问
+                /*.resourceIds("resource1")*/
+                // authorization_code 授权码模式，，跳转到登录页面需要用户登录后并授权后才能够获取token
+                // implicit 静默授权模式，跳转到登录页面需要用户登录后并授权才能够获取token
+                // refresh_token配置了在请求令牌时才会颁发刷新令牌，否则只颁发访问令牌
+                .authorizedGrantTypes("authorization_code", "implicit", "refresh_token")
+                // 允许的授权范围
+                .scopes("all", "api", "read", "write")
+                // false表示用户登录成功后跳转到授权确认页面等待用户确认授权
+                .autoApprove(false)
+                // 同意或者拒绝授权的302重定向地址
+                .redirectUris("http://www.baidu.com")
+                // 设置各个客户端的 access_token 和 refresh_token 有效期，单位秒
+                /*.accessTokenValiditySeconds(3600)
+                .refreshTokenValiditySeconds(3600)*/
+
+                .and()
+                .withClient("client2")
+                .secret(passwordEncoder.encode(ClientSecret))
+                .resourceIds("order-service")
+                // password 密码模式，用户提供账号密码后不需要登录授权直接获取token
+                .authorizedGrantTypes("password", "refresh_token")
+                .scopes("write")
+
+                .and().withClient("client3")
+                .secret(passwordEncoder.encode(ClientSecret))
+                /*.resourceIds("resource1")*/
+                // client_credentails 客户端模式，不需要提供用户账号密码信息即可获取token
+                .authorizedGrantTypes("client_credentials")
+                .scopes("all")
+
+                // order-service客户端
+                .and().withClient("order-service-resource")
+                .secret(passwordEncoder.encode(ClientSecret))
+                .authorizedGrantTypes("client_credentials")
+                .scopes("all");
     }
 
     // 配置令牌访问端点
     @Override
-    public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
+    public void configure(AuthorizationServerEndpointsConfigurer endpoints) {
         endpoints
-                .tokenStore(tokenStore())
-                // 密码模式，用户提供账号密码不需要登录直接校验通过并获取token
+                // 授权服务器当前登录用户的登录信息保存的地方
+                .tokenStore(new InMemoryTokenStore())
+                // 密码模式，用于校验账号密码并颁发token
                 .authenticationManager(authenticationManager)
-                .accessTokenConverter(jwtAccessTokenConverter())
-                // 自定义oauth2认证失败响应
+                // 授权码模式，用于授权码相关配置
+                // 支持InMemoryAuthorizationCodeServices、JdbcAuthorizationCodeServices、RandomValueAuthorizationCodeServices
+                .authorizationCodeServices(authorizationCodeServices())
+                // 把 Spring Security 的 UserDetailsService 注入到 Spring OAuth2 中
+                // 没有此配置，在 refresh_token 时候 TokenEndpoint 会报错 Handling error: IllegalStateException, UserDetailsService is required.
+                .userDetailsService(userDetailsService)
+                // 令牌管理服务
+                .tokenServices(tokenServices())
+                // 获取访问令牌时，如果出现异常，则返回自定义的json格式数据
+                // 访问http://localhost:9999/oauth/authorize?response_type=code&client_id=client1时客户端ID非法时返回自定义的json格式数据
                 .exceptionTranslator((Exception e) -> {
                     // http不缓存
                     HttpHeaders headers = new HttpHeaders();
                     headers.add(HttpHeaders.CACHE_CONTROL, "no-store");
                     headers.add(HttpHeaders.PRAGMA, "no-cache");
 
-                    HttpStatus status = HttpStatus.BAD_REQUEST;
-
-                    OAuth2Exception exception = new OAuth2ExceptionWithCustomizeJson("oauth2登录失败！");
-                    return ResponseEntity.status(status).headers(headers).body(exception);
+                    OAuth2Exception exception = new OAuth2ExceptionWithCustomizeJson("获取访问令牌失败，原因：" + e.getMessage());
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).headers(headers).body(exception);
                 });
     }
 
-    // 配置授权服务器端点安全
+    // 配置令牌管理服务
+    @Bean
+    AuthorizationServerTokenServices tokenServices() {
+        DefaultTokenServices defaultTokenServices = new DefaultTokenServices();
+        // 颁发的访问令牌存储的地方
+        // 需要注入 TokenStore，否则在启动时报告 tokenStore must be set 错误
+        defaultTokenServices.setTokenStore(tokenStore);
+
+        // 注意：必须要设置JWT令牌增强以告诉授权服务器自己怎么解析访问令牌，否则在用户登录后跳转到授权页面无法正常显式授权信息
+        TokenEnhancerChain tokenEnhancerChain = new TokenEnhancerChain();
+        tokenEnhancerChain.setTokenEnhancers(Arrays.asList(jwtAccessTokenConverter, additionalInformationTokenEnhancer()));
+        defaultTokenServices.setTokenEnhancer(tokenEnhancerChain);
+
+        // 是否生成刷新令牌并支持 access_token 刷新
+        defaultTokenServices.setSupportRefreshToken(true);
+        // 设置Access Token有效期为7200秒，也就是两个小时
+        defaultTokenServices.setAccessTokenValiditySeconds(7200);
+        //defaultTokenServices.setAccessTokenValiditySeconds(2);
+        // 设置Refresh Token有效期为3天
+        defaultTokenServices.setRefreshTokenValiditySeconds(259200);
+        //defaultTokenServices.setRefreshTokenValiditySeconds(10);
+        // 设置客户端详情服务
+        defaultTokenServices.setClientDetailsService(clientDetailsService);
+        return defaultTokenServices;
+    }
+
+    /**
+     * token 额外自定义信息 此例获取用户信息
+     */
+    public TokenEnhancer additionalInformationTokenEnhancer() {
+        return (accessToken, authentication) -> {
+            Map<String, Object> information = new HashMap<>();
+            Authentication userAuthentication = authentication.getUserAuthentication();
+            if (userAuthentication instanceof UsernamePasswordAuthenticationToken) {
+                UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) userAuthentication;
+                Object principal = token.getPrincipal();
+                if (principal instanceof UserDetails) {
+                    UserDetails userDetails = (UserDetails) token.getPrincipal();
+                    information.put("myUserId", userDetails.getUsername());
+                    information.put("myAuthorities", userDetails.getAuthorities());
+                    ((DefaultOAuth2AccessToken) accessToken).setAdditionalInformation(information);
+                }
+            }
+            return accessToken;
+        };
+    }
+
+    /**
+     * 存储在内存中的授权码
+     *
+     * @return
+     */
+    @Bean
+    AuthorizationCodeServices authorizationCodeServices() {
+        return new InMemoryAuthorizationCodeServices();
+    }
+
+    // 配置授权服务器端点安全约束
     @Override
-    public void configure(AuthorizationServerSecurityConfigurer security) throws Exception {
+    public void configure(AuthorizationServerSecurityConfigurer security) {
         security
                 // 对应/oauth/token_key端点
                 .tokenKeyAccess("permitAll()");
-//                // 访问/oauth/check_token端点允许所有客户端
-//                .checkTokenAccess("permitAll()");
     }
 
-    @Bean
-    PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
 }

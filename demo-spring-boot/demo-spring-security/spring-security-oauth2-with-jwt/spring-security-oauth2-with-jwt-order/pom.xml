@@ -13,4 +13,18 @@
     <artifactId>spring-security-oauth2-with-jwt-order</artifactId>
     <packaging>jar</packaging>
 
+    <dependencies>
+        <!-- SpringCloud OAuth2依赖 -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-oauth2</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.dexterleslie1</groupId>
+            <artifactId>future-common</artifactId>
+            <version>1.2.7</version>
+        </dependency>
+    </dependencies>
+
 </project>

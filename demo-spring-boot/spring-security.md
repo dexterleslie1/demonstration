@@ -3074,8 +3074,8 @@ public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
 @Override
 public void configure(AuthorizationServerEndpointsConfigurer endpoints) {
     endpoints
-            // 把 TokenStore 注入到 Spring OAuth2 中，否则 token 不会保存在 Redis 中
-            .tokenStore(tokenStore)
+            // 授权服务器当前登录用户的登录信息保存的地方
+            .tokenStore(new InMemoryTokenStore())
             // 密码模式，用于校验账号密码并颁发token
             .authenticationManager(authenticationManager)
             // 授权码模式，用于授权码相关配置
@@ -3087,14 +3087,25 @@ public void configure(AuthorizationServerEndpointsConfigurer endpoints) {
             // 令牌管理服务
             .tokenServices(tokenServices())
             // 自定义授权确认页面路径
-            .pathMapping("/oauth/confirm_access", "/custom/confirm");
+            .pathMapping("/oauth/confirm_access", "/custom/confirm")
+            // 获取访问令牌时，如果出现异常，则返回自定义的json格式数据
+            // 访问http://localhost:9999/oauth/authorize?response_type=code&client_id=client1时客户端ID非法时返回自定义的json格式数据
+            .exceptionTranslator((Exception e) -> {
+                // http不缓存
+                HttpHeaders headers = new HttpHeaders();
+                headers.add(HttpHeaders.CACHE_CONTROL, "no-store");
+                headers.add(HttpHeaders.PRAGMA, "no-cache");
+
+                OAuth2Exception exception = new OAuth2ExceptionWithCustomizeJson("获取访问令牌失败，原因：" + e.getMessage());
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).headers(headers).body(exception);
+            });
 }
 
 // 配置令牌管理服务
 @Bean
 AuthorizationServerTokenServices tokenServices() {
     DefaultTokenServices defaultTokenServices = new DefaultTokenServices();
-    // 令牌存储的地方
+    // 颁发的访问令牌存储的地方
     // 需要注入 TokenStore，否则在启动时报告 tokenStore must be set 错误
     defaultTokenServices.setTokenStore(tokenStore);
     // 是否生成刷新令牌并支持 access_token 刷新
@@ -3118,6 +3129,29 @@ AuthorizationServerTokenServices tokenServices() {
 @Bean
 AuthorizationCodeServices authorizationCodeServices() {
     return new InMemoryAuthorizationCodeServices();
+}
+```
+
+#### TokenStore配置
+
+```java
+package com.future.demo.security.uaa.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.oauth2.provider.token.TokenStore;
+import org.springframework.security.oauth2.provider.token.store.InMemoryTokenStore;
+
+@Configuration
+public class ConfigTokenStore {
+
+    // 配置令牌存在的地方
+    // 支持InMemoryTokenStore、JdbcTokenStore、RedisTokenStore、JwtTokenStore、JwkTokenStore方式
+    @Bean
+    TokenStore tokenStore() {
+        return new InMemoryTokenStore();
+    }
+
 }
 ```
 
@@ -3232,6 +3266,441 @@ public ResourceServerTokenServices tokenService() {
 }
 ```
 
+### JWT授权服务器配置
+
+>详细用法请参考本站[示例](https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-security/spring-security-oauth2-with-jwt)
+
+#### 依赖配置
+
+父项目需要配置SpringCloud的依赖。
+
+POM添加SpringCloud OAuth2依赖
+
+```xml
+<!-- SpringCloud OAuth2依赖 -->
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-oauth2</artifactId>
+</dependency>
+```
+
+#### Spring Security和用户信息配置
+
+```java
+package com.future.demo.security.uaa.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+import javax.annotation.Resource;
+
+@Configuration
+@EnableWebSecurity
+public class ConfigSecurity extends WebSecurityConfigurerAdapter {
+
+    // 所有用户密码
+    private final static String UserSecret = "123456";
+
+    @Bean
+    public UserDetailsService users() {
+        return new MyUserDetailsService();
+    }
+
+    public static class MyUserDetailsService implements UserDetailsService {
+        @Resource
+        private PasswordEncoder passwordEncoder;
+
+        @Override
+        public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+            if ("user1".equals(username)) {
+                return User.builder()
+                        .username("user1")
+                        .password(passwordEncoder.encode(UserSecret))
+                        .authorities("sys:admin")
+                        .build();
+            } else if ("user2".equals(username)) {
+                return User.builder()
+                        .username("user2")
+                        .password(passwordEncoder.encode(UserSecret))
+                        .authorities("sys:nothing")
+                        .build();
+            }
+            return null;
+        }
+    }
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http
+                .cors()
+                // 禁用csrf
+                .and().csrf().disable()
+                // 开启form登录
+                .formLogin()
+                // 所有请求都需要登录验证
+                .and().authorizeRequests()
+                .anyRequest().authenticated();
+    }
+
+    // 密码模式，用户提供账号密码不需要登录直接校验通过并获取token
+    @Override
+    @Bean
+    public AuthenticationManager authenticationManagerBean() throws Exception {
+        return super.authenticationManagerBean();
+    }
+
+    @Bean
+    PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+}
+
+```
+
+#### 启用授权服务器
+
+```java
+@Configuration
+// 启用授权服务器
+@EnableAuthorizationServer
+public class ConfigAuthorizationServer extends AuthorizationServerConfigurerAdapter {
+```
+
+#### 客户端详情服务配置
+
+```java
+// 所有客户端密码
+private final static String ClientSecret = "123456";
+
+// 配置客户端详情服务(ClientDetailsService),ClientDetailsService负责查找ClientDetails
+// 支持InMemoryClientDetailsService和JdbcClientDetailsService客户端详情服务
+@Override
+public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
+    // 集成数据库配置客户端详情
+    //clients.withClientDetails(clientDetailsService);
+    clients.inMemory()
+            .withClient("client1")
+            .secret(passwordEncoder.encode(ClientSecret))
+            // 客户端允许访问的资源id，多个资源用逗号隔开，默认为空，即所有资源都可以访问
+            /*.resourceIds("resource1")*/
+            // authorization_code 授权码模式，，跳转到登录页面需要用户登录后并授权后才能够获取token
+            // implicit 静默授权模式，跳转到登录页面需要用户登录后并授权才能够获取token
+            // refresh_token配置了在请求令牌时才会颁发刷新令牌，否则只颁发访问令牌
+            .authorizedGrantTypes("authorization_code", "implicit", "refresh_token")
+            // 允许的授权范围
+            .scopes("all", "api", "read", "write")
+            // false表示用户登录成功后跳转到授权确认页面等待用户确认授权
+            .autoApprove(false)
+            // 同意或者拒绝授权的302重定向地址
+            .redirectUris("http://www.baidu.com")
+            // 设置各个客户端的 access_token 和 refresh_token 有效期，单位秒
+            /*.accessTokenValiditySeconds(3600)
+            .refreshTokenValiditySeconds(3600)*/
+
+            .and()
+            .withClient("client2")
+            .secret(passwordEncoder.encode(ClientSecret))
+            .resourceIds("order-service")
+            // password 密码模式，用户提供账号密码后不需要登录授权直接获取token
+            .authorizedGrantTypes("password", "refresh_token")
+            .scopes("write")
+
+            .and().withClient("client3")
+            .secret(passwordEncoder.encode(ClientSecret))
+            /*.resourceIds("resource1")*/
+            // client_credentails 客户端模式，不需要提供用户账号密码信息即可获取token
+            .authorizedGrantTypes("client_credentials")
+            .scopes("all")
+
+            // order-service客户端
+            .and().withClient("order-service-resource")
+            .secret(passwordEncoder.encode(ClientSecret))
+            .authorizedGrantTypes("client_credentials")
+            .scopes("all");
+}
+```
+
+#### 令牌访问端点配置
+
+```java
+// 配置令牌访问端点
+@Override
+public void configure(AuthorizationServerEndpointsConfigurer endpoints) {
+    endpoints
+            // 授权服务器当前登录用户的登录信息保存的地方
+            .tokenStore(new InMemoryTokenStore())
+            // 密码模式，用于校验账号密码并颁发token
+            .authenticationManager(authenticationManager)
+            // 授权码模式，用于授权码相关配置
+            // 支持InMemoryAuthorizationCodeServices、JdbcAuthorizationCodeServices、RandomValueAuthorizationCodeServices
+            .authorizationCodeServices(authorizationCodeServices())
+            // 把 Spring Security 的 UserDetailsService 注入到 Spring OAuth2 中
+            // 没有此配置，在 refresh_token 时候 TokenEndpoint 会报错 Handling error: IllegalStateException, UserDetailsService is required.
+            .userDetailsService(userDetailsService)
+            // 令牌管理服务
+            .tokenServices(tokenServices())
+            // 获取访问令牌时，如果出现异常，则返回自定义的json格式数据
+            // 访问http://localhost:9999/oauth/authorize?response_type=code&client_id=client1时客户端ID非法时返回自定义的json格式数据
+            .exceptionTranslator((Exception e) -> {
+                // http不缓存
+                HttpHeaders headers = new HttpHeaders();
+                headers.add(HttpHeaders.CACHE_CONTROL, "no-store");
+                headers.add(HttpHeaders.PRAGMA, "no-cache");
+
+                OAuth2Exception exception = new OAuth2ExceptionWithCustomizeJson("获取访问令牌失败，原因：" + e.getMessage());
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).headers(headers).body(exception);
+            });
+}
+
+// 配置令牌管理服务
+@Bean
+AuthorizationServerTokenServices tokenServices() {
+    DefaultTokenServices defaultTokenServices = new DefaultTokenServices();
+    // 颁发的访问令牌存储的地方
+    // 需要注入 TokenStore，否则在启动时报告 tokenStore must be set 错误
+    defaultTokenServices.setTokenStore(tokenStore);
+
+    // 注意：必须要设置JWT令牌增强以告诉授权服务器自己怎么解析访问令牌，否则在用户登录后跳转到授权页面无法正常显式授权信息
+    TokenEnhancerChain tokenEnhancerChain = new TokenEnhancerChain();
+    tokenEnhancerChain.setTokenEnhancers(Arrays.asList(jwtAccessTokenConverter, additionalInformationTokenEnhancer()));
+    defaultTokenServices.setTokenEnhancer(tokenEnhancerChain);
+
+    // 是否生成刷新令牌并支持 access_token 刷新
+    defaultTokenServices.setSupportRefreshToken(true);
+    // 设置Access Token有效期为7200秒，也就是两个小时
+    defaultTokenServices.setAccessTokenValiditySeconds(7200);
+    //defaultTokenServices.setAccessTokenValiditySeconds(2);
+    // 设置Refresh Token有效期为3天
+    defaultTokenServices.setRefreshTokenValiditySeconds(259200);
+    //defaultTokenServices.setRefreshTokenValiditySeconds(10);
+    // 设置客户端详情服务
+    defaultTokenServices.setClientDetailsService(clientDetailsService);
+    return defaultTokenServices;
+}
+
+/**
+ * token 额外自定义信息 此例获取用户信息
+ */
+public TokenEnhancer additionalInformationTokenEnhancer() {
+    return (accessToken, authentication) -> {
+        Map<String, Object> information = new HashMap<>();
+        Authentication userAuthentication = authentication.getUserAuthentication();
+        if (userAuthentication instanceof UsernamePasswordAuthenticationToken) {
+            UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) userAuthentication;
+            Object principal = token.getPrincipal();
+            if (principal instanceof UserDetails) {
+                UserDetails userDetails = (UserDetails) token.getPrincipal();
+                information.put("myUserId", userDetails.getUsername());
+                information.put("myAuthorities", userDetails.getAuthorities());
+                ((DefaultOAuth2AccessToken) accessToken).setAdditionalInformation(information);
+            }
+        }
+        return accessToken;
+    };
+}
+
+/**
+ * 存储在内存中的授权码
+ *
+ * @return
+ */
+@Bean
+AuthorizationCodeServices authorizationCodeServices() {
+    return new InMemoryAuthorizationCodeServices();
+}
+```
+
+#### TokenStore配置
+
+>提醒：JWT分为对称加密和非对称加密两种模式。
+
+```java
+package com.future.demo.security.uaa.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.oauth2.provider.token.TokenStore;
+import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
+import org.springframework.security.oauth2.provider.token.store.JwtTokenStore;
+
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+
+@Configuration
+public class ConfigTokenStore {
+
+    // 使用JwtAccessTokenConverter转换器转jwt token
+    @Bean
+    TokenStore tokenStore() throws InvalidKeySpecException, NoSuchAlgorithmException {
+        return new JwtTokenStore(jwtAccessTokenConverter());
+    }
+
+    // 访问令牌JWT转换器
+    @Bean
+    JwtAccessTokenConverter jwtAccessTokenConverter() throws NoSuchAlgorithmException, InvalidKeySpecException {
+        JwtAccessTokenConverter jwtAccessTokenConverter = new JwtAccessTokenConverter();
+
+//        // JWT非对称加密模式制定私钥和公钥
+//        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+//        byte[] publicKeyBytes = Base64.decode("MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDPsWeWhr9oydNQYesOrVKLD+Hf\n" +
+//                "scpOKiakvjX/Oh7V1v1LojTDpK3G8yt7kOHfD7rn3Tdjid46RQ6avHXmPJniqtg9\n" +
+//                "pqnAMmXqB+9HUcrqxh0k7cL6roD07xuEVNZfQ/MjTfMAJKejR99De3mrG+bCfrxe\n" +
+//                "kwzIBgOppRSuanjK2wIDAQAB");
+//        byte[] privateKeyBytes = Base64.decode("MIICdwIBADANBgkqhkiG9w0BAQEFAASCAmEwggJdAgEAAoGBAM+xZ5aGv2jJ01Bh\n" +
+//                "6w6tUosP4d+xyk4qJqS+Nf86HtXW/UuiNMOkrcbzK3uQ4d8PuufdN2OJ3jpFDpq8\n" +
+//                "deY8meKq2D2mqcAyZeoH70dRyurGHSTtwvqugPTvG4RU1l9D8yNN8wAkp6NH30N7\n" +
+//                "easb5sJ+vF6TDMgGA6mlFK5qeMrbAgMBAAECgYAqg27n0gdGROHbd1+tLm9SBds/\n" +
+//                "dd4qZ9hnKoRVDSmYrhxFKhvQ3Fmx+r6w2XRSu56PramT13nExbP6mo8rpMX+0DJp\n" +
+//                "RUVAqfSdEedRXVAwSO92dirBWoBSuYLNNDJ7f1upq3NSSLqcgfo7dVH4Lgl0yZWe\n" +
+//                "dkqonAFebGha8YK6uQJBAPoBgkPgD2m/yvW4fhBMvzd6kkLt12fRUJC5CZ+x91eq\n" +
+//                "9YJjpQWpPVkOrAlD5ybZzlwweDL0Pkf/9KZ9oKc7Uy0CQQDUrC/Ra/mBbOjiYmLO\n" +
+//                "PUaw5OERXKzcSOnQuH4MEmDTvO3JyRF/WK0Ge5stBotWZoh8fx0DFRrgMVh72xjy\n" +
+//                "qvsnAkEAssEfbf6nppn+uWC3qlnlovpd18MNcGqmK0RSkD+ENcfEEP3EQV73wVSP\n" +
+//                "R3Soswuq1BnH587hNUPanqxWkRwG5QJASFbZXQ6xK8jz3i1BFo3ZQcpYlCNF2Rgk\n" +
+//                "EA7xMQH/VYZqC70M6pgrIo1g1wvm0VjHDDHgmG/RWHjwdBCuh7yI+QJBAOLk5wqs\n" +
+//                "4I/N5RGaOwCJmZBRp+DM8NOye50avbSNxfmg9NU+3svVcfseN/XSu8Kwl7rRoIxA\n" +
+//                "JqLurr5RMLwwvPo=");
+//        PublicKey publicKey = keyFactory.generatePublic(new X509EncodedKeySpec(publicKeyBytes));
+//        PrivateKey privateKey = keyFactory.generatePrivate(new PKCS8EncodedKeySpec(privateKeyBytes));
+//        KeyPair keyPair = new KeyPair(publicKey, privateKey);
+//        jwtAccessTokenConverter.setKeyPair(keyPair);
+
+        // JWT对称加密模式指定密钥
+        jwtAccessTokenConverter.setSigningKey("123456");
+
+        return jwtAccessTokenConverter;
+    }
+
+}
+```
+
+#### 授权服务器端点安全约束配置
+
+```java
+// 配置授权服务器端点安全约束
+@Override
+public void configure(AuthorizationServerSecurityConfigurer security) {
+    security
+            // 对应/oauth/token_key端点
+            .tokenKeyAccess("permitAll()");
+}
+```
+
+### JWT资源服务器配置
+
+>详细用法请参考本站[示例](https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-security/spring-security-oauth2-with-jwt)
+
+#### 依赖配置
+
+父项目需要配置SpringCloud的依赖。
+
+POM添加SpringCloud OAuth2依赖
+
+```xml
+<!-- SpringCloud OAuth2依赖 -->
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-oauth2</artifactId>
+</dependency>
+```
+
+#### Spring Security配置
+
+```java
+package com.future.demo.security.order.config;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+
+@Configuration
+// 启用spring-security权限注解
+@EnableGlobalMethodSecurity(prePostEnabled = true)
+public class ConfigSecurity extends WebSecurityConfigurerAdapter {
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http
+                // 禁用csrf
+                .csrf().disable()
+                // 所有请求都需要登录验证
+                .authorizeRequests().anyRequest().authenticated();
+    }
+}
+
+```
+
+#### 启用资源服务器
+
+```java
+@Configuration
+// order-service作为资源服务器
+@EnableResourceServer
+public class ConfigResourceServer extends ResourceServerConfigurerAdapter {
+```
+
+#### 安全配置
+
+```java
+package com.future.demo.security.order.config;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
+import org.springframework.security.oauth2.config.annotation.web.configuration.ResourceServerConfigurerAdapter;
+import org.springframework.security.oauth2.config.annotation.web.configurers.ResourceServerSecurityConfigurer;
+
+@Configuration
+// order-service作为资源服务器
+@EnableResourceServer
+public class ConfigResourceServer extends ResourceServerConfigurerAdapter {
+    @Override
+    public void configure(ResourceServerSecurityConfigurer resources) {
+        resources
+                // 资源ID，和客户端配置的资源ID一致
+                .resourceId("order-service")
+                // 服务器不会创建或维护会话（HttpSession）
+                .stateless(true);
+    }
+
+    @Override
+    public void configure(HttpSecurity http) throws Exception {
+        http
+                // 禁用csrf
+                .csrf().disable()
+                // 服务器不会创建或维护会话（HttpSession）
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+
+                // OAuth2客户端要有write权限范围
+                .and().authorizeRequests()
+                .antMatchers("/**").access("#oauth2.hasScope('write')");
+    }
+}
+
+```
+
+#### 验证令牌服务配置
+
+>提醒：JWT分为对称加密和非对称加密两种模式。
+
+```properties
+# JWT非对称加密模式时指定授权服务器的uri地址用于获取公钥
+#security.oauth2.resource.jwt.key-uri=http://localhost:9999/oauth/token_key
+# JWT对称加密模式时指定密钥
+security.oauth2.resource.jwt.key-value=123456
+```
+
 ### 授权服务测试
 
 使用本站[示例](https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-security/spring-security-oauth2-without-jwt)协助测试。
@@ -3292,6 +3761,19 @@ $ curl -X POST -H "Authorization: Basic Y2xpZW50MjoxMjM=" -H "Accept: applicatio
 $ curl -X POST http://localhost:9999/oauth/check_token?token=xxx
 {"aud":["order-service"],"user_name":"user1","scope":["write"],"active":true,"exp":1762490631,"authorities":["sys:admin"],"client_id":"client2"}
 ```
+
+#### /oauth/token_key端点
+
+>说明：使用JWT公钥和私钥时，资源服务器自动调用授权服务器获取公钥的接口。
+
+使用本站[示例](https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-security/spring-security-oauth2-with-jwt)协助测试。
+
+```sh
+curl -X GET http://localhost:9999/oauth/token_key
+{"alg":"SHA256withRSA","value":"-----BEGIN PUBLIC KEY-----\nxxx\n-----END PUBLIC KEY-----"}
+```
+
+
 
 ### 资源服务测试
 

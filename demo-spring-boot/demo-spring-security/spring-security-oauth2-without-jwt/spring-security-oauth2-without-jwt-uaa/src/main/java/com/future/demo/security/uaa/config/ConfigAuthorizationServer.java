@@ -3,9 +3,13 @@ package com.future.demo.security.uaa.config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.common.exceptions.OAuth2Exception;
 import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
@@ -17,6 +21,7 @@ import org.springframework.security.oauth2.provider.code.InMemoryAuthorizationCo
 import org.springframework.security.oauth2.provider.token.AuthorizationServerTokenServices;
 import org.springframework.security.oauth2.provider.token.DefaultTokenServices;
 import org.springframework.security.oauth2.provider.token.TokenStore;
+import org.springframework.security.oauth2.provider.token.store.InMemoryTokenStore;
 
 @Configuration
 // 启用授权服务器
@@ -24,7 +29,7 @@ import org.springframework.security.oauth2.provider.token.TokenStore;
 public class ConfigAuthorizationServer extends AuthorizationServerConfigurerAdapter {
 
     // 所有客户端密码
-    private final static String ClientSecret = "123";
+    private final static String ClientSecret = "123456";
 
     @Autowired
     PasswordEncoder passwordEncoder;
@@ -88,8 +93,8 @@ public class ConfigAuthorizationServer extends AuthorizationServerConfigurerAdap
     @Override
     public void configure(AuthorizationServerEndpointsConfigurer endpoints) {
         endpoints
-                // 把 TokenStore 注入到 Spring OAuth2 中，否则 token 不会保存在 Redis 中
-                .tokenStore(tokenStore)
+                // 授权服务器当前登录用户的登录信息保存的地方
+                .tokenStore(new InMemoryTokenStore())
                 // 密码模式，用于校验账号密码并颁发token
                 .authenticationManager(authenticationManager)
                 // 授权码模式，用于授权码相关配置
@@ -101,14 +106,25 @@ public class ConfigAuthorizationServer extends AuthorizationServerConfigurerAdap
                 // 令牌管理服务
                 .tokenServices(tokenServices())
                 // 自定义授权确认页面路径
-                .pathMapping("/oauth/confirm_access", "/custom/confirm");
+                .pathMapping("/oauth/confirm_access", "/custom/confirm")
+                // 获取访问令牌时，如果出现异常，则返回自定义的json格式数据
+                // 访问http://localhost:9999/oauth/authorize?response_type=code&client_id=client1时客户端ID非法时返回自定义的json格式数据
+                .exceptionTranslator((Exception e) -> {
+                    // http不缓存
+                    HttpHeaders headers = new HttpHeaders();
+                    headers.add(HttpHeaders.CACHE_CONTROL, "no-store");
+                    headers.add(HttpHeaders.PRAGMA, "no-cache");
+
+                    OAuth2Exception exception = new OAuth2ExceptionWithCustomizeJson("获取访问令牌失败，原因：" + e.getMessage());
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).headers(headers).body(exception);
+                });
     }
 
     // 配置令牌管理服务
     @Bean
     AuthorizationServerTokenServices tokenServices() {
         DefaultTokenServices defaultTokenServices = new DefaultTokenServices();
-        // 令牌存储的地方
+        // 颁发的访问令牌存储的地方
         // 需要注入 TokenStore，否则在启动时报告 tokenStore must be set 错误
         defaultTokenServices.setTokenStore(tokenStore);
         // 是否生成刷新令牌并支持 access_token 刷新
