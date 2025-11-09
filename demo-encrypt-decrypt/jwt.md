@@ -1,4 +1,4 @@
-# `jwt`用法
+## 概念
 
 > [JWT 原理1](https://www.jianshu.com/p/8c89683546ee)
 >
@@ -24,7 +24,7 @@ openSSL生成公钥
 openssl rsa -in private.pem -outform PEM -pubout -out public.pem
 ```
 
-openSSL转换公钥PEM到PKCS8格式，注意：这个钥匙作为privateKey
+openSSL转换私钥PEM到PKCS8格式，注意：这个钥匙作为privateKey
 
 > [参考链接](https://stackoverflow.com/questions/8290435/convert-pem-traditional-private-key-to-pkcs8-private-key)
 
@@ -36,7 +36,7 @@ openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt -in private.pem -out priv
 
 ## `HMAC256`算法
 
-> 签名和验签使用同一个密码。
+> 说明：对称加密，签名和验签使用同一个密码。
 >
 > 示例详细用法请参考 [链接](https://github.com/dexterleslie1/demonstration/blob/master/demo-encrypt-decrypt/src/test/java/com/future/demo/JWTTests.java#L86)
 
@@ -93,7 +93,7 @@ public void testSignWithHMAC256AndVerify() {
 
 ## `RSA512`算法
 
-> 签名使用私钥，验签使用公钥。
+> 说明：非对称加密，签名使用私钥，验签使用公钥。
 >
 > 示例详细用法请参考 [链接](https://github.com/dexterleslie1/demonstration/blob/master/demo-encrypt-decrypt/src/test/java/com/future/demo/JWTTests.java#L29)
 
@@ -199,3 +199,7 @@ public void testExpiration() throws InterruptedException {
     }
 }
 ```
+
+## 解码JWT Token
+
+访问 https://www.jwt.io/，粘贴JWT Token即可解码Token中的header和payload。

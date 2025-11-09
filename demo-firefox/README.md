@@ -45,5 +45,11 @@ sudo apt install firefox
 
 
 
+## debugger中Authorization很长不显示
+
+>说明：在Firefox 136.0 debugger中，当Authorization很长时不会显示。
+
+
+
 
 
