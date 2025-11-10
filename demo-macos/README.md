@@ -1,3 +1,11 @@
+## 信息
+
+开发者网址：https://developer.apple.com/
+
+国内帐号：dexterleslie@gmail.com@Kl
+
+美国帐号：327073942@qq.com@Nm...12Shift
+
 ## 删除隔离文件权限
 
 > [参考链接](https://malcontentboffin.com/2019/12/macOS-Error-bin-bash-bad-interpreter-Operation-not-permitted.html)
@@ -425,3 +433,9 @@ export PATH=/usr/local/ffmpeg/bin:$PATH
 ```
 
 重新打开shell会自动加载最新环境变量
+
+
+
+## 安装远程桌面客户端
+
+打开苹果商店搜索Windows App（以前称为Microsoft Remote Desktop），点击安装即可。
