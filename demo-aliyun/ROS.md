@@ -1,5 +1,3 @@
-# 资源编排服务`ROS`
-
 ## 介绍
 
 资源编排服务ROS（Resource Orchestration Service）是阿里云提供的一项简化云计算资源管理和采用基础设施即代码（IaC）设计理念的自动化部署服务。开发者和管理员可以编写模板，在模板中定义所需的阿里云资源（例如：ECS实例、RDS数据库实例）、资源间的依赖关系等。ROS的编排引擎将根据模板自动完成所有资源的创建和配置，实现自动化部署及运维。ROS提供了Terraform托管服务，允许用户直接在ROS控制台上使用 [Terraform模板](https://help.aliyun.com/zh/ros/user-guide/overview-2) 进行资源的自动化部署和管理。
@@ -12,7 +10,9 @@
 
 资源编排服务本身不收费。
 
+## 调试方法
 
+编写ROS YAML并复制粘贴到新建的或者现有的资源栈后执行查看结果。
 
 ## 语法
 
@@ -146,7 +146,14 @@ Parameters:
     AssociationPropertyMetadata:
       RegionId: ${TemporaryRegionId}
       SupportedImageOwnerAlias:
+        # 阿里云提供的公共镜像。
+        - system
+        # 您创建的自定义镜像。
         - self
+        # 其他阿里云用户共享给您的镜像。
+        - others
+        # 镜像市场提供的镜像。您查询到的云市场镜像可以直接使用，无需提前订阅。您需要自行留意云市场镜像的收费详情。
+        - marketplace
       Architecture: x86_64
 ```
 
