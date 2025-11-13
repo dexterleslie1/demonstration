@@ -1,7 +1,3 @@
-# `vmware workstation`
-
-
-
 ## 什么是`虚拟化Intel VT-x/EPT或AMD-V/RVI`？
 
 虚拟化Intel VT-x/EPT和AMD-V/RVI是现代计算中的关键虚拟化技术，它们分别由Intel和AMD两大处理器制造商提供。以下是关于这两种虚拟化技术的详细介绍：

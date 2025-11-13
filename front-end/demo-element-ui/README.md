@@ -388,3 +388,12 @@ export default {
 >
 >[组件 | Element](https://element.eleme.cn/#/zh-CN/component/menu)
 
+
+
+## Cascader级联选择器
+
+>说明：当一个数据集合有清晰的层级结构时，可通过级联选择器逐级查看并选择。
+>
+>官方参考链接：https://element.eleme.cn/#/zh-CN/component/cascader
+>
+>详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-element-ui/element-ui-cascader
