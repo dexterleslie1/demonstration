@@ -147,17 +147,18 @@ services:
       - volume-demo-emqx-data:/opt/emqx/data
       # 持久化日志，方便排查问题
       - volume-demo-emqx-log:/opt/emqx/log
-    ports:
-      # MQTT TCP 端口
-      - "1883:1883"
-      # MQTT TCP/WebSocket 端口
-      - "8083:8083"
-      # MQTT TCP/WebSocket SSL 端口
-      - "8084:8084"
-      # MQTT SSL 端口
-      - "8883:8883"
-      # EMQX 仪表板端口
-      - "18083:18083"
+    # ports:
+    #   # MQTT TCP 端口
+    #   - "1883:1883"
+    #   # MQTT TCP/WebSocket 端口
+    #   - "8083:8083"
+    #   # MQTT TCP/WebSocket SSL 端口
+    #   - "8084:8084"
+    #   # MQTT SSL 端口
+    #   - "8883:8883"
+    #   # EMQX 仪表板端口
+    #   - "18083:18083"
+    network_mode: host
 
 volumes:
   volume-demo-emqx-data:
@@ -171,3 +172,124 @@ docker compose up -d
 ```
 
 访问控制台 http://localhost:18083，帐号：admin，密码：public。
+
+## 主流开源可视化的MQTT客户端工具
+
+>提示：学习过程使用MQTTX作为客户端工具。
+
+以下是主流的开源可视化 MQTT 客户端工具列表：
+
+| 工具名称          | 核心技术          | 主要特点                                                    | 最适合的场景                                   |
+| :---------------- | :---------------- | :---------------------------------------------------------- | :--------------------------------------------- |
+| **MQTTX**         | Electron (跨平台) | **现代化，功能全面，用户体验极佳**。EMQ官方出品，活跃开发。 | **通用首选**，日常开发、测试、调试。           |
+| **MQTT Explorer** | Electron (跨平台) | **以主题结构树为核心**，像文件管理器一样浏览MQTT主题。      | **探索未知的MQTT服务器**，快速理解其主题架构。 |
+| **MQTT.fx**       | Java (跨平台)     | **经典、老牌**，功能稳定。但目前已停止新功能开发。          | 维护旧项目，或需要经典稳定工具的场景。         |
+| **HiveMQ CLI**    | Java (JAR) / Go   | **强大的命令行工具**，Web UI版本功能丰富，社区版免费。      | **企业级测试与监控**，自动化脚本集成。         |
+| **Eclipse Paho**  | 多种语言          | 提供的是**客户端库**，但其网页版Demo是很好的简单测试工具。  | 开发者集成MQTT功能到自己的应用中。             |
+
+---
+
+### 详细介绍与对比
+
+#### 1. MQTTX (推荐首选)
+- **官网/下载**：https://mqttx.app/
+- **简介**：目前最活跃、用户体验最好的开源 MQTT 5.0 客户端工具。由 EMQ 公司维护，是之前的 MQTTX 的升级版。
+- **核心优势**：
+    - **界面美观直观**：现代化的聊天软件式布局，上手零门槛。
+    - **功能强大**：完整支持 MQTT 5.0/3.1.1，SSL/TLS，WebSocket，脚本测试，色彩主题等。
+    - **跨平台**：完美的 Windows、macOS、Linux 支持。
+    - **生态完整**：除了桌面版，还有命令行版 `mqttx-cli` 和正在开发的移动版。
+- **缺点**：对于只想快速浏览整个主题结构的场景，不如 MQTT Explorer 直观。
+
+#### 2. MQTT Explorer
+- **官网/下载**：https://github.com/thomasnordquist/MQTT-Explorer
+- **简介**：这款工具的设计理念非常独特，它更像一个“MQTT 主题资源管理器”。
+- **核心优势**：
+    - **主题树状视图**：自动将收到的主题（如 `sensor/room1/temp`， `sensor/room1/humidity`）组织成树形结构，一目了然。
+    - **自动发现**：连接到一个陌生的 MQTT 服务器（如公共 Broker）时，可以快速“探索”出所有正在发布数据的主题和其最新值。
+    - **消息历史**：可以查看某个主题最后接收到的消息内容。
+- **最适合的场景**：当你需要接入一个第三方的 MQTT 服务或者调试一个复杂的、主题繁多的系统时，MQTT Explorer 能帮你快速理清结构。**它是 MQTTX 的完美补充**。
+
+#### 3. MQTT.fx
+- **官网/下载**：https://softblade.de/en/download-2/
+- **简介**：曾经是最著名、使用最广泛的 MQTT 客户端，非常经典。
+- **核心优势**：
+    - **历史悠久，极其稳定**：经过无数项目的检验。
+    - **功能专业**：支持负载编解码器、图表显示等高级功能。
+- **缺点**：
+    - **已停止功能更新**：官方在 2019 年后未发布重大更新，对 MQTT 5.0 的支持有限。
+    - **Java 依赖**：需要 Java 运行环境。
+    - **UI 略显陈旧**。
+- **建议**：除非你维护的旧项目一直在用它，否则新用户建议直接选择 MQTTX。
+
+#### 4. HiveMQ Web Client (社区版)
+- **在线体验**：https://www.hivemq.com/demos/websocket-client/
+- **简介**：HiveMQ 提供的基于 WebSocket 的在线 MQTT 客户端。它本身不是一个需要下载的软件，但非常实用。
+- **核心优势**：
+    - **无需安装**：打开浏览器即可使用。
+    - **纯 WebSocket 连接**：非常适合测试支持 MQTT over WebSocket 的服务器。
+    - **简单直观**：界面非常简洁，用于快速验证连接和收发消息。
+- **最适合的场景**：快速演示、临时测试，或者在你无法安装软件的电脑上使用。
+
+#### 5. Eclipse Paho WebSocket Client
+- **在线体验**：Eclipse Paho 项目也提供了一个简单的网页客户端，功能与 HiveMQ 的类似，适合快速测试。
+
+### 如何选择？决策流程图
+
+1.  **你是新手，或者需要一个功能全面、现代化的日常开发/测试工具？**
+    *   **直接选择 MQTTX**。这是目前综合体验最好的选择，能满足 95% 的需求。
+
+2.  **你需要连接到一个陌生的 MQTT 服务器，想快速了解它的主题结构和数据流？**
+    *   **首选 MQTT Explorer**。它的主题树功能无可替代。
+    *   *补充：你也可以用 MQTTX 订阅通配符主题 `#` 来达到类似效果，但展示方式不如 MQTT Explorer 直观。*
+
+3.  **你只是想快速验证一下 MQTT 服务器能否连通，不想安装任何软件？**
+    *   使用 **HiveMQ Web Client** 或 **Eclipse Paho WebSocket Client** 这类在线工具。
+
+4.  **你需要将 MQTT 测试集成到命令行脚本或 CI/CD 流程中？**
+    *   使用 **MQTTX CLI** (`mqttx-cli`) 版本。
+
+**总结建议**：
+对于大多数开发者和物联网从业者，我推荐 **将 MQTTX 作为主力工具，同时将 MQTT Explorer 作为辅助工具**。两者结合使用，几乎可以应对所有可视化调试场景。
+
+## 运行MQTTX - 桌面应用方式
+
+访问 https://mqttx.app/ 下载对应系统的安装程序安装后运行即可。
+
+## 运行MQTTX - 容器方式
+
+docker-compose.yaml：
+
+```yaml
+version: '3.8'
+
+services:
+  # MQTTX web客户端
+  mqttx:
+    image: emqx/mqttx-web:v1.12.1
+    # ports:
+    #   - "80:80"
+    network_mode: host
+```
+
+启动服务
+
+```sh
+docker compose up -d
+```
+
+访问 http://localhost MQTTX桌面图形。
+
+## 配置MQTTX连接EMQX代理
+
+在MQTTX应用中点击新增链接按钮，连接信息如下：
+
+- Name随便填写
+- Host为ws://+localhost
+- Port为默认值8083
+- Client ID为默认自动生成值
+- Path为默认值/mqtt
+
+点击连接按钮后即可连接EMQX代理。
+
+登录EMQX http://localhost:18083，帐号：admin，密码：public查看Cluster Overview，此时能够看见一个新的连接。

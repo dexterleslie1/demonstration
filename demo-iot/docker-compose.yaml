@@ -16,17 +16,25 @@ services:
       - volume-demo-emqx-data:/opt/emqx/data
       # 持久化日志，方便排查问题
       - volume-demo-emqx-log:/opt/emqx/log
-    ports:
-      # MQTT TCP 端口
-      - "1883:1883"
-      # MQTT TCP/WebSocket 端口
-      - "8083:8083"
-      # MQTT TCP/WebSocket SSL 端口
-      - "8084:8084"
-      # MQTT SSL 端口
-      - "8883:8883"
-      # EMQX 仪表板端口
-      - "18083:18083"
+    # ports:
+    #   # MQTT TCP 端口
+    #   - "1883:1883"
+    #   # MQTT TCP/WebSocket 端口
+    #   - "8083:8083"
+    #   # MQTT TCP/WebSocket SSL 端口
+    #   - "8084:8084"
+    #   # MQTT SSL 端口
+    #   - "8883:8883"
+    #   # EMQX 仪表板端口
+    #   - "18083:18083"
+    network_mode: host
+
+  # MQTTX web客户端
+  mqttx:
+    image: emqx/mqttx-web:v1.12.1
+    # ports:
+    #   - "80:80"
+    network_mode: host
 
 volumes:
   volume-demo-emqx-data:
