@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  # EMQX单机版
+  emqx:
+    # 建议使用一个具体的稳定版本，而不是 latest
+    image: emqx/emqx:5.6.1
+    healthcheck:
+      test: ["CMD", "/opt/emqx/bin/emqx", "ctl", "status"] # 健康检查
+      interval: 5s
+      timeout: 25s
+      retries: 5
+    # 添加以下 volumes 配置
+    volumes:
+      # 持久化 MQTT 消息、规则引擎数据等
+      - volume-demo-emqx-data:/opt/emqx/data
+      # 持久化日志，方便排查问题
+      - volume-demo-emqx-log:/opt/emqx/log
+    ports:
+      # MQTT TCP 端口
+      - "1883:1883"
+      # MQTT TCP/WebSocket 端口
+      - "8083:8083"
+      # MQTT TCP/WebSocket SSL 端口
+      - "8084:8084"
+      # MQTT SSL 端口
+      - "8883:8883"
+      # EMQX 仪表板端口
+      - "18083:18083"
+
+volumes:
+  volume-demo-emqx-data:
+  volume-demo-emqx-log:

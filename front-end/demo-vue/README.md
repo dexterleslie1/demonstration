@@ -1667,7 +1667,7 @@ module.exports = defineConfig({
   };
   ```
 
-- **组合式 API**：
+- **组合式 API（Vue 3 早期方式）**：
 
   ```javascript
   import { ref, watch } from 'vue';
@@ -1679,6 +1679,25 @@ module.exports = defineConfig({
       return { count, increment };
     }
   };
+  ```
+  
+- **组合式 API（现代方式）**：
+
+  ```vue
+  <template>
+    <button @click="increment">Count is: {{ count }}</button>
+  </template>
+  
+  <script setup>
+  import { ref } from 'vue'
+  
+  // 直接声明变量和函数，它们会自动在模板中可用！
+  const count = ref(0)
+  
+  const increment = () => {
+    count.value++
+  }
+  </script>
   ```
 
 ### 总结

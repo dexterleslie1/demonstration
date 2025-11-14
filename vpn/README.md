@@ -899,15 +899,15 @@ zerotier-cli listpeers
 
 5. 再次查看网络为OK状态：打开`托盘图标`>`b6079f73c6ec26a7 <网络名称>`>`Status: OK`功能。
 
-6. 设置客户端流量走私有服务器：打开终端并执行下面命令
+6. 设置客户端流量走私有服务器：打开终端（使用管理员身份打开终端）并执行下面命令
 
    ```sh
    # 私有服务器的节点ID需要咨询网络管理员是哪一个，不能随便指定，目前测试使用：32c336b0cf
-   $ sudo zerotier-cli orbit 32c336b0cf 32c336b0cf
+   $ zerotier-cli orbit 32c336b0cf 32c336b0cf
    200 orbit OK
    
    # 使用命令显示200 listpeers 32c336b0cf x.x.x.x/55000;4180;4150 28 1.16.0 MOON表示私有服务器节点设置成功
-   $ sudo zerotier-cli listpeers
+   $ zerotier-cli listpeers
    200 listpeers <ztaddr> <path> <latency> <version> <role>
    ...
    200 listpeers 32c336b0cf x.x.x.x/55000;4180;4150 28 1.16.0 MOON
