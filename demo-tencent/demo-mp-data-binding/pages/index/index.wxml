@@ -1,0 +1,4 @@
+<!--index.wxml-->
+<navigation-bar title="Weixin" back="{{false}}" color="black" background="#FFF"></navigation-bar>
+<!-- 数据绑定使用 Mustache 语法（双大括号）将变量包起来 -->
+<view> {{ message }} </view>

@@ -548,7 +548,27 @@ Page({
 
 所以，**WXML 是构建微信小程序界面最基础、最重要的部分**，它通过与 WXSS、JS 的配合，共同完成了整个小程序的用户界面开发。
 
+## 小程序 - wxml语法 - 数据绑定
 
+>说明：WXML 中的动态数据均来自对应 Page 的 data。
+>
+>[WXML 语法参考 / 数据绑定](https://developers.weixin.qq.com/miniprogram/dev/reference/wxml/data.html)
+>
+>详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-tencent/demo-mp-data-binding
+
+```html
+<!-- 数据绑定使用 Mustache 语法（双大括号）将变量包起来 -->
+<view> {{ message }} </view>
+```
+
+```javascript
+// index.js
+Page({
+  data: {
+    message: 'Hello MINA!'
+  }
+})
+```
 
 ## 小程序 - `wxss`
 
