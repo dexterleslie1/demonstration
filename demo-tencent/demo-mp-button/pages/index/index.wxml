@@ -1,0 +1,4 @@
+<!--index.wxml-->
+<navigation-bar title="Weixin" back="{{false}}" color="black" background="#FFF"></navigation-bar>
+<!-- 在组件中绑定一个事件处理函数。 -->
+<button type="primary" bind:tap="handleClick1">Primary按钮</button>
