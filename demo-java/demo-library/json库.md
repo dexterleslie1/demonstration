@@ -426,6 +426,29 @@ public void testObjectNode() throws IOException {
 }
 ```
 
+### 转换JsonNode为ObjectNode
+
+>How to convert JsonNode to ObjectNode：https://stackoverflow.com/questions/32713109/how-to-convert-jsonnode-to-objectnode
+>
+>详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-java/demo-library/demo-json-lib
+
+```java
+/**
+ * 转换JsonNode为ObjectNode
+ *
+ * @throws IOException
+ */
+@Test
+public void jsonNodeToObjectNode() throws IOException {
+    String json = "{\"userId\":12345,\"loginname\":\"dexter\",\"createTime\":1577874822420,\"enable\":true}";
+    ObjectMapper OMInstance = new ObjectMapper();
+    JsonNode jsonNode = OMInstance.readTree(json);
+    ObjectNode objectNode = (ObjectNode) jsonNode;
+    log.info(jsonNode.toString());
+    log.info(objectNode.toString());
+}
+```
+
 ### JsonNode和ObjectNode的区别
 
 `ObjectNode` 和 `JsonNode` 的区别在于它们的 **可变性** 和 **功能定位**。
@@ -612,6 +635,8 @@ public String updateUserStatus(String userJson, String newStatus) throws Excepti
 ### 测试 `json array` 字符串转换为 `java List`
 
 >使用 `ObjectMapper#readValue(json, new TypeReference<List<BeanClass>>() {})` 函数。
+>
+>Convert JSON Array to a Java Array or List with Jackson：https://stackabuse.com/converting-json-array-to-a-java-array-or-list
 
 ```java
 /**
@@ -735,3 +760,5 @@ public void bean2json() throws IOException {
     Assert.assertEquals(createTime, beanClass.getCreateTime());
 }
 ```
+
+### 自定义序列化逻辑

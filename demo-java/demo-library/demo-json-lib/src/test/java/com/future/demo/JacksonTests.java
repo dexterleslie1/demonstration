@@ -152,6 +152,11 @@ public class JacksonTests {
         log.info(json);
     }
 
+    /**
+     * 转换JsonNode为ObjectNode
+     *
+     * @throws IOException
+     */
     @Test
     public void jsonNodeToObjectNode() throws IOException {
         String json = "{\"userId\":12345,\"loginname\":\"dexter\",\"createTime\":1577874822420,\"enable\":true}";
