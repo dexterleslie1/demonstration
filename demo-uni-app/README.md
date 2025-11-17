@@ -216,7 +216,7 @@ uni-app 小程序打包和运行原理如下：
 
 ```sh
 # 在项目的根目录中执行下面命令即可
-npm instlal --registry=https://registry.npmmirror.com
+npm install --registry=https://registry.npmmirror.com
 ```
 
 
