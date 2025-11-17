@@ -238,4 +238,16 @@ public class JacksonTests {
         JSON = objectMapper.writeValueAsString(beanClass2);
         Assert.assertEquals("{\"userId\":0,\"loginname\":null,\"createTime\":null,\"status\":{\"name\":\"Paying\",\"description\":\"支付中\"}}", JSON);
     }
+
+    /**
+     * 自定义序列化逻辑
+     *
+     * @throws JsonProcessingException
+     */
+    @Test
+    public void testCustomizeJsonSerializer() throws JsonProcessingException {
+        Exception exception = new OAuth2ExceptionWithCustomizeJson("获取访问令牌失败");
+        String json = new ObjectMapper().writeValueAsString(exception);
+        Assert.assertEquals("{\"errorCode\":600,\"errorMessage\":\"获取访问令牌失败\"}", json);
+    }
 }

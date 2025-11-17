@@ -762,3 +762,58 @@ public void bean2json() throws IOException {
 ```
 
 ### 自定义序列化逻辑
+
+>详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-java/demo-library/demo-json-lib
+
+```java
+package com.future.demo;
+
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+
+import java.io.IOException;
+
+public class OAuth2ExceptionJsonSerializer extends StdSerializer<OAuth2ExceptionWithCustomizeJson> {
+    protected OAuth2ExceptionJsonSerializer() {
+        super(OAuth2ExceptionWithCustomizeJson.class);
+    }
+
+    @Override
+    public void serialize(OAuth2ExceptionWithCustomizeJson value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+        gen.writeStartObject();
+        gen.writeNumberField("errorCode", 600);
+        gen.writeStringField("errorMessage", value.getMessage());
+        gen.writeEndObject();
+    }
+}
+```
+
+```java
+package com.future.demo;
+
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+@JsonSerialize(using = OAuth2ExceptionJsonSerializer.class)
+public class OAuth2ExceptionWithCustomizeJson extends Exception {
+    public OAuth2ExceptionWithCustomizeJson(String msg) {
+        super(msg);
+    }
+}
+```
+
+测试：
+
+```java
+/**
+ * 自定义序列化逻辑
+ *
+ * @throws JsonProcessingException
+ */
+@Test
+public void testCustomizeJsonSerializer() throws JsonProcessingException {
+    Exception exception = new OAuth2ExceptionWithCustomizeJson("获取访问令牌失败");
+    String json = new ObjectMapper().writeValueAsString(exception);
+    Assert.assertEquals("{\"errorCode\":600,\"errorMessage\":\"获取访问令牌失败\"}", json);
+}
+```
