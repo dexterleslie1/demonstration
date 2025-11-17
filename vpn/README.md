@@ -675,6 +675,148 @@ graph TD
 
 网址：https://my.zerotier.com/（旧版本控制台，新版本控制台不能添加自定义静态路由），使用Github帐号登录。
 
+## ZeroTier入门
+
+>说明：两台异地的Windows11组网使用ZeroTier分配的内网ip地址相互通讯。
+
+### ZeroTier控制台创建网络
+
+登录旧版本ZeroTier控制台 https://my.zerotier.com/，创建一个网络。
+
+### 第一台Windows11配置
+
+下载并安装客户端：访问 https://www.zerotier.com/download/ 下载MSI Installer(x86/x64)，双击Installer根据提示安装即可。
+
+加入网络：运行ZeroTier客户端后，点击`托盘图标`>`Join New Network...`功能，在弹出框中填写网络ID。 
+
+查看网络状态并授权：打开`托盘图标`>`xxx <网络名称>`>`Status: ACCESS_DENIED`功能，说明客户端需要网络管理员授权客户端接入网络（咨询网络管理员授权）。
+
+再次查看网络为OK状态：打开`托盘图标`>`xxx <网络名称>`>`Status: OK`功能。
+
+### 第二台Windows11配置
+
+配置过程和上面的Windows11一样。
+
+### 测试网络连通
+
+在ZeroTier控制台中查看Windows11自动分配的内网ip地址，在其中一台Windows11尝试ping另外一台Windows11，如果能够ping同说明网络连通。
+
+## ZeroTier+OpenWrt异地组网
+
+>说明：异地的计算机通过ZeroTier网络能够访问公司中任何一台内网的计算机。
+
+登录旧版本ZeroTier控制台 https://my.zerotier.com/，创建一个网络。
+
+配置公司OpenWrt+ZeroTier主机：
+
+1. OpenWrt使用iStoreOS，下载地址 https://fw0.koolcenter.com/iStoreOS/x86_64_efi/istoreos-21.02.1-2022050620-x86-64-generic-squashfs-combined-efi.img.gz
+
+2. 下载 StarWind Converter用于转换iStoreOS镜像为ESXi VMDK镜像，下载地址：https://www.starwindsoftware.com/starwind-v2v-converter#download，填写用户信息后会发送一封邮件包括下载地址。
+
+3. 按照提示安装StarWind Converter并在转换镜像时选择镜像输出格式为VMDK。
+
+4. 在ESXi服务器创建2C2G的OpenWrt虚拟机，上传StarWind Converter转换后的文件istoreos-21.02.1-2022050620-x86-64-generic-squashfs-combined-efi.vmdk和istoreos-21.02.1-2022050620-x86-64-generic-squashfs-combined-efi-flat.vmdk到虚拟机目录中，删除虚拟机现有的硬盘并从刚刚上传的VMDK文件创建新的硬盘，启动OpenWrt虚拟机后就会自动进入系统了。
+
+5. 修改OpenWrt ip地址：
+
+   ```sh
+   # 编辑/etc/config/network修改ip地址为192.168.1.38
+   config interface 'lan'
+           option device 'br-lan'
+           option proto 'static'
+           option ipaddr '192.168.1.38'
+           option netmask '255.255.255.0'
+           option ip6assign '60'
+           option gateway '192.168.1.1'
+           list dns '192.168.1.1'
+           list dns '114.114.114.114'
+   ```
+
+6. 重启OpenWrt后，访问 http://192.168.1.38 登录OpenWrt控制台，帐号：root，密码：password。
+
+7. 配置OpenWrt默认网关和DNS：
+
+   打开`网络`>`接口`>`LAN br-lan`>`编辑`功能，在`常规设置`>`IPv4网关`填写192.168.1.1，在`高级设置`>`使用自定义的DNS服务器`填写192.168.1.1和114.114.114.114两个DNS服务器。点击`保存`>`保存并应用`按钮后即可生效。
+
+   测试配置是否生效：打开`服务`>`终端`，输入帐号：root，密码：password
+
+   ```sh
+   # 能够ping通表示上面的配置正确
+   ping www.baidu.com
+   ```
+
+8. 安装并配置ZeroTier插件：
+
+   打开`iStore`>`全部软件`功能，输入`zerotier`搜索并点击安装即可。
+
+   打开`VPN`>`ZeroTier`配置ZeroTier插件：
+
+   - 勾选`已启用`。
+   - 勾选`自动允许客户端 NAT`。
+   - 添加加入网络，信息如下：
+     - 勾选`已启用`。
+     - ZeroTier网络ID填写之前创建的网络ID。
+     - 勾选`允许私有网络路由`。
+
+   点击`保存并应用`按钮。
+
+   登录ZeroTier控制台授权ZeroTier插件接入ZeroTier私有网络。
+
+9. 手动添加ZeroTier私有网络的网络接口：
+
+   打开`网络`>`接口`功能，点击`添加新接口`按钮，接口信息如下：
+
+   - 名称填写`ZEROTIER`。
+   - 协议选择`静态地址`。
+   - 设备选择zt开头的网开`ztxxx`。
+   - IPv4地址填写ZeroTier分配的私有网络ip地址192.168.196.187。
+   - IPv4子网掩码填写ZeroTier分配的私有网络子网掩码。
+   - IPv4网关为本地局域网网关地址192.168.1.1。
+   - `防火墙设置`>`创建/分配防火墙区域`选择`lan`。
+
+   点击`保存`>`保存并应用`按钮。
+
+10. 配置OpenWrt防火墙：
+
+    打开`网络`>`防火墙`功能，设置信息如下：
+
+    - `常规设置`>`转发`选择`接受`。
+
+    - `自定义规则`添加如下防火墙规则：
+
+      ```sh
+      # ztxxx修改为ZeroTier网卡名称
+      iptables -I FORWARD -i ztxxx -j ACCEPT
+      iptables -I FORWARD -o ztxxx -j ACCEPT  
+      iptables -t nat -I POSTROUTING -o ztxxx -j MASQUERADE
+      ```
+
+    重启OpenWrt路由器。
+
+配置远程客户端：
+
+- 下载并安装客户端：访问 https://www.zerotier.com/download/ 下载MSI Installer(x86/x64)，双击Installer根据提示安装即可。
+
+- 加入网络：运行ZeroTier客户端后，点击`托盘图标`>`Join New Network...`功能，在弹出框中填写网络ID。 
+
+- 查看网络状态并授权：打开`托盘图标`>`xxx <网络名称>`>`Status: ACCESS_DENIED`功能，说明客户端需要网络管理员授权客户端接入网络。
+
+- 再次查看网络为OK状态：打开`托盘图标`>`xxx <网络名称>`>`Status: OK`功能。
+
+- 测试内网连通性：ping公司网关（如果ping不同可能需要等待几分钟等待网络信息同步完成后再ping）
+
+  ```sh
+  $ ping 192.168.1.1                             
+  PING 192.168.1.1 (192.168.1.1): 56 data bytes
+  64 bytes from 192.168.1.1: icmp_seq=0 ttl=63 time=8.691 ms
+  64 bytes from 192.168.1.1: icmp_seq=1 ttl=63 time=9.299 ms
+  64 bytes from 192.168.1.1: icmp_seq=2 ttl=63 time=7.422 ms
+  64 bytes from 192.168.1.1: icmp_seq=3 ttl=63 time=10.673 ms
+  64 bytes from 192.168.1.1: icmp_seq=4 ttl=63 time=8.617 ms
+  64 bytes from 192.168.1.1: icmp_seq=5 ttl=63 time=7.087 ms
+  64 bytes from 192.168.1.1: icmp_seq=6 ttl=63 time=8.515 ms
+  ```
+
 ## ZeroTier Planet和Moon服务器概念
 
 简单来说，**Planet（行星）和 Moon（月球）是为了解决同一个问题而生的两种不同层级的服务器：在无法直接点对点（P2P）连接时，为你的设备提供可靠的中转（Relay）服务。**
