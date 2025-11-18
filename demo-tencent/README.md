@@ -729,6 +729,39 @@ WXSS 文件总是和 WXML 文件**同名配对**出现。
 
 **一句话概括：WXSS 就是让微信小程序界面变得漂亮好看的样式语言，它在 CSS 的基础上，最重要的贡献是提供了 `rpx` 这个强大的响应式单位，极大地简化了移动端的屏幕适配工作。**
 
+## 小程序 - 框架接口 - Page介绍
+
+>说明：注册小程序中的一个页面。接受一个 `Object` 类型参数，其指定页面的初始数据、生命周期回调、事件处理函数等。
+>
+>[框架接口 / 页面 / Page](https://developers.weixin.qq.com/miniprogram/dev/reference/api/Page.html)
+
+## 小程序 - 框架接口 - Page setData
+
+>说明：`setData` 函数用于将数据从逻辑层发送到视图层（异步），同时改变对应的 `this.data` 的值（同步）。
+>
+>[框架接口 / 页面 / Page](https://developers.weixin.qq.com/miniprogram/dev/reference/api/Page.html#Page-prototype-setData-Object-data-Function-callback)
+>
+>详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-tencent/demo-mp-data-binding
+
+```html
+<view> {{ message }} </view>
+<button type="primary" bind:tap="handleClick">setData修改数据</button>
+```
+
+```javascript
+// index.js
+Page({
+  data: {
+    message: 'Hello MINA!'
+  },
+  handleClick() {
+    this.setData({
+      message: "Hello World!"
+    })
+  }
+})
+```
+
 ## 小程序 - 事件介绍
 
 >[小程序框架 / 视图层 / 事件系统 / 介绍](https://developers.weixin.qq.com/miniprogram/dev/framework/view/wxml/event.html)
@@ -951,3 +984,48 @@ Page({
 <button type="primary" bind:tap="handleClick1">Primary按钮</button>
 ```
 
+## 小程序 - 开放接口 - 用户信息
+
+### wx.getUserProfile
+
+>说明：获取用户信息。页面产生点击事件（例如 `button` 上 `bindtap` 的回调中）后才可调用，每次请求都会弹出授权窗口，用户同意后返回 `userInfo`。该接口用于替换 `wx.getUserInfo`，详见 [用户信息接口调整说明](https://developers.weixin.qq.com/community/develop/doc/000cacfa20ce88df04cb468bc52801?highLine=login)。
+>
+>[开放接口 / 用户信息 / wx.getUserProfile](https://developers.weixin.qq.com/miniprogram/dev/api/open-api/user-info/wx.getUserProfile.html)
+>
+>详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-tencent/demo-mp-getuserprofile
+
+```html
+<button type="primary" bind:tap="handleGetUserProfile">获取用户信息</button>
+<view>昵称：{{myNickname}}</view>
+<view>头像：
+  <image src="{{myAvatarUrl}}" />
+</view>
+```
+
+```javascript
+// index.js
+Page({
+  data: {
+    myNickname: "",
+    myAvatarUrl: "",
+  },
+  handleGetUserProfile() {
+    wx.getUserProfile({
+      desc: '显示昵称',
+      success: res => {
+        // console.log(res);
+        this.setData({
+          myNickname: res.userInfo.nickName,
+          myAvatarUrl: res.userInfo.avatarUrl,
+        })
+      }
+    })
+  }
+})
+```
+
+### wx.getUserInfo
+
+>说明：获取用户信息。
+>
+>[开放接口 / 用户信息 / wx.getUserInfo](https://developers.weixin.qq.com/miniprogram/dev/api/open-api/user-info/wx.getUserInfo.html)

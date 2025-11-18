@@ -1,0 +1,7 @@
+<!--index.wxml-->
+<navigation-bar title="Weixin" back="{{false}}" color="black" background="#FFF"></navigation-bar>
+<button type="primary" bind:tap="handleGetUserProfile">获取用户信息</button>
+<view>昵称：{{myNickname}}</view>
+<view>头像：
+  <image src="{{myAvatarUrl}}" />
+</view>
