@@ -1059,6 +1059,37 @@ Page({
 })
 ```
 
+## 小程序 - UI组件 - wx.showModal
+
+>说明：显示模态对话框
+>
+>[界面 / 交互 / wx.showModal](https://developers.weixin.qq.com/miniprogram/dev/api/ui/interaction/wx.showModal.html)
+>
+>详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-tencent/demo-mp-modal
+
+```html
+<button type="primary" bind:tap="handleClick">wx.showModal</button>
+```
+
+```javascript
+// index.js
+Page({
+  handleClick() {
+    wx.showModal({
+      title: '提示',
+      content: '这是一个模态弹窗',
+      success(res) {
+        if (res.confirm) {
+          console.log('用户点击确定')
+        } else if (res.cancel) {
+          console.log('用户点击取消')
+        }
+      }
+    })
+  }
+})
+```
+
 ## 小程序 - 开放接口 - 用户信息
 
 ### wx.getUserProfile
