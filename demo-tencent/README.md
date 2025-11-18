@@ -1031,6 +1031,34 @@ Page({
 
 ```
 
+## 小程序 - UI组件 - wx.showLoading
+
+>说明：显示 loading 提示框。需主动调用 wx.hideLoading 才能关闭提示框
+>
+>[界面 / 交互 / wx.showLoading](https://developers.weixin.qq.com/miniprogram/dev/api/ui/interaction/wx.showLoading.html)
+>
+>详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-tencent/demo-mp-loading
+
+```html
+<button type="primary" bind:tap="handleClickShowLoading">显示loading</button>
+```
+
+```javascript
+// index.js
+Page({
+  handleClickShowLoading() {
+    wx.showLoading({
+      title: '稍等。。。',
+      mask: true,
+    })
+
+    setTimeout(() => {
+      wx.hideLoading()
+    }, 3000)
+  }
+})
+```
+
 ## 小程序 - 开放接口 - 用户信息
 
 ### wx.getUserProfile
