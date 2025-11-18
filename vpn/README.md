@@ -1201,6 +1201,8 @@ PING 192.168.1.1 (192.168.1.1): 56 data bytes
 ## TailScale入门
 
 >说明：演示远程的Windows11和公司的Windows11内网通信。
+>
+>官方参考链接：https://tailscale.com/kb/1017/install
 
 访问 https://tailscale.com/ 使用GitHub登录。
 
@@ -1217,6 +1219,54 @@ ping 100.72.48.8
 点击`Success,it works`按钮跳转到TailScale控制台。
 
 禁用key过期：点击对应主机后的`Disable key expiry`功能即可禁用。
+
+## TailScale异地组网
+
+参考上面的“TailScale入门配置“先配置两台Windows11通过TailScale网络能够相互ping通对方。
+
+参考 https://tailscale.com/kb/1406/quick-guide-subnets 在公司的Ubuntu上配置子网路由为公司网络192.168.1.0/24，步骤如下：
+
+1. 公司Ubuntu异地组网主机安装TailScale
+
+   安装TailScale客户端
+
+   ```sh
+   curl -fsSL https://tailscale.com/install.sh | sh
+   ```
+
+   启动TailScale客户端
+
+   ```sh
+   sudo tailscale up
+   ```
+
+   复制链接 https://login.tailscale.com/a/xxx 授权TailScale客户端接入TailScale网络。
+
+2. 启用IP转发
+
+   ```sh
+   echo 'net.ipv4.ip_forward = 1' | sudo tee -a /etc/sysctl.d/99-tailscale.conf
+   echo 'net.ipv6.conf.all.forwarding = 1' | sudo tee -a /etc/sysctl.d/99-tailscale.conf
+   sudo sysctl -p /etc/sysctl.d/99-tailscale.conf
+   ```
+
+3. 为公司Ubuntu主机发布子网路由。将以下示例中的子网替换为您网络中的子网。
+
+   ```sh
+   sudo tailscale set --advertise-routes=192.168.1.0/24
+   ```
+
+4. 转到管理控制台的[Machines](https://login.tailscale.com/admin/machines)页面，并在列表中找到该设备。它应该会显示**Subnets**徽章。
+
+5. 选择`...`图标菜单，然后选择**Edit route settings**。
+
+6. 选中与要通告的子网路由对应的 IP 地址范围框，然后选择**Save**。
+
+在家中的Windows11测试公司子网的连通性
+
+```cmd
+ping 192.168.1.1 -t
+```
 
 
 
