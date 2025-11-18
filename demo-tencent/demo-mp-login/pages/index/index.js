@@ -5,7 +5,7 @@ Page({
       success: (res) => {
         let code = res.code
         wx.request({
-          url: 'http://localhost:8080/api/v1/jscode2session',
+          url: 'http://localhost:8080/api/v1/loginWithWXCode',
           data: {
             code: code,
           },
