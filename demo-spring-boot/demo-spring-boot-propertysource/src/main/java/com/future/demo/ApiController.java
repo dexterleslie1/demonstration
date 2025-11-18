@@ -1,7 +1,7 @@
-package com.future.demo.spring.boot.test;
+package com.future.demo;
 
-import com.yyd.common.http.ResponseUtils;
-import com.yyd.common.http.response.ObjectResponse;
+import com.future.common.http.ObjectResponse;
+import com.future.common.http.ResponseUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,6 +16,6 @@ public class ApiController {
 
     @GetMapping("test1")
     ObjectResponse<String> test1() {
-       return ResponseUtils.successObject("common.property1=" + commonProperty1);
+        return ResponseUtils.successObject("common.property1=" + commonProperty1);
     }
 }

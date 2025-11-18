@@ -1,7 +1,3 @@
-# `spring`容器
-
-
-
 ## 什么是`IOC/DI`？
 
 在Spring框架中，IOC（Inversion of Control，控制反转）和DI（Dependency Injection，依赖注入）是两个紧密相关且至关重要的概念。以下是对这两个概念的详细解释：
@@ -1381,6 +1377,10 @@ Assertions.assertEquals("myBean8", beanName);
 
 
 #### `@Value`属性注入和`SpEL`表达式、`@PropertySource`用法
+
+>详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-spring-boot/demo-spring-boot-propertysource
+>
+>详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-spring-boot/demo-spring-boot-ioc-di
 
 ```java
 // @Value、@PropertySource用法

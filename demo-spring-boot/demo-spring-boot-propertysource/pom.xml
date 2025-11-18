@@ -10,17 +10,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.future.demo</groupId>
-    <artifactId>spring-boot-propertysource</artifactId>
+    <artifactId>demo-spring-boot-propertysource</artifactId>
     <version>1.0.0</version>
 
     <dependencies>
-        <!-- yyd-common -->
-        <dependency>
-            <groupId>com.yyd.sdk</groupId>
-            <artifactId>yyd-common</artifactId>
-            <version>3.8.79</version>
-        </dependency>
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -33,21 +26,24 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.8</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.dexterleslie1</groupId>
+            <artifactId>future-common</artifactId>
+            <version>1.2.7</version>
         </dependency>
     </dependencies>
 
     <!-- 引用yyd nexus仓库 -->
     <repositories>
         <repository>
-            <id>yyd-nexus</id>
-            <url>http://maven.118899.net/repository/maven-releases/</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
+            <id>aliyun</id>
+            <url>https://maven.aliyun.com/repository/public</url>
+        </repository>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
         </repository>
     </repositories>
 </project>
