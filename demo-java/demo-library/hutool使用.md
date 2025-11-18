@@ -489,11 +489,40 @@ public void testJSONUtil() {
     // 把对象转换成JSON字符串
     ObjectResponse<String> objectResponse = ResponseUtils.successObject("测试成功");
     String json = JSONUtil.toJsonStr(objectResponse);
-    Assertions.assertEquals("{\"data\":\"测试成功\",\"errorCode\":0}" , json);
+    Assertions.assertEquals("{\"data\":\"测试成功\",\"errorCode\":0}", json);
 
     // 不忽略null值
     objectResponse = ResponseUtils.successObject("测试成功");
     json = JSONUtil.toJsonStr(objectResponse, JSONConfig.create().setIgnoreNullValue(false));
-    Assertions.assertEquals("{\"data\":\"测试成功\",\"errorCode\":0,\"errorMessage\":null}" , json);
+    Assertions.assertEquals("{\"data\":\"测试成功\",\"errorCode\":0,\"errorMessage\":null}", json);
+
+    // JSONUtil.toJsonStr不能和jackson ObjectNode混合使用，否则json字符串转换后不正常
+    /*ObjectNode objectNode = objectMapper.createObjectNode();
+    objectNode.put("name", "张三");
+    objectNode.put("age", 18);*/
+    JSONObject jsonObject = new JSONObject();
+    jsonObject.put("name", "张三");
+    jsonObject.put("age", 18);
+    ObjectResponse<JSONObject> objectNodeResponse = ResponseUtils.successObject(jsonObject);
+    json = JSONUtil.toJsonStr(objectNodeResponse, JSONConfig.create().setIgnoreNullValue(false));
+    Assertions.assertEquals("{\"data\":{\"name\":\"张三\",\"age\":18},\"errorCode\":0,\"errorMessage\":null}", json);
+
+    // region 将 JSON 字符串转换为 Java 对象
+
+    String name = "张三";
+    int age = 25;
+    String jsonStr = "{\"name\":\"" + name + "\",\"age\":" + age + "}";
+    
+    // 转换为 Map
+    Map map = JSONUtil.toBean(jsonStr, Map.class);
+    Assertions.assertEquals(name, map.get("name"));
+    Assertions.assertEquals(age, map.get("age"));
+
+    // 转换为自定义 JavaBean
+    User user = JSONUtil.toBean(jsonStr, User.class);
+    Assertions.assertEquals(name, user.getName());
+    Assertions.assertEquals(age, user.getAge());
+
+    // endregion
 }
 ```
