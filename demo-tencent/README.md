@@ -984,6 +984,53 @@ Page({
 <button type="primary" bind:tap="handleClick1">Primary按钮</button>
 ```
 
+## 小程序 - UI组件 - wx.showToast
+
+>说明：显示消息提示框
+>
+>[界面 / 交互 / wx.showToast](https://developers.weixin.qq.com/miniprogram/dev/api/ui/interaction/wx.showToast.html)
+>
+>详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-tencent/demo-mp-toast
+
+```html
+<button type="primary" bind:tap="handleClickShowToastSuccess">wx.showToast success</button>
+<button type="primary" bind:tap="handleClickShowToastError">wx.showToast error</button>
+<button type="primary" bind:tap="handleClickShowToastLoading">wx.showToast loading</button>
+<button type="primary" bind:tap="handleClickShowToastLoadingDuration5000ms">wx.showToast loading duration 5000ms</button>
+```
+
+```javascript
+// index.js
+Page({
+  handleClickShowToastSuccess() {
+    wx.showToast({
+      title: '标题',
+      icon: 'success'
+    })
+  },
+  handleClickShowToastError() {
+    wx.showToast({
+      title: '标题',
+      icon: 'error'
+    })
+  },
+  handleClickShowToastLoading() {
+    wx.showToast({
+      title: '标题',
+      icon: 'loading'
+    })
+  },
+  handleClickShowToastLoadingDuration5000ms() {
+    wx.showToast({
+      title: '标题',
+      icon: 'loading',
+      duration: 5000
+    })
+  }
+})
+
+```
+
 ## 小程序 - 开放接口 - 用户信息
 
 ### wx.getUserProfile

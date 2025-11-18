@@ -1,0 +1,6 @@
+<!--index.wxml-->
+<navigation-bar title="Weixin" back="{{false}}" color="black" background="#FFF"></navigation-bar>
+<button type="primary" bind:tap="handleClickShowToastSuccess">wx.showToast success</button>
+<button type="primary" bind:tap="handleClickShowToastError">wx.showToast error</button>
+<button type="primary" bind:tap="handleClickShowToastLoading">wx.showToast loading</button>
+<button type="primary" bind:tap="handleClickShowToastLoadingDuration5000ms">wx.showToast loading duration 5000ms</button>
