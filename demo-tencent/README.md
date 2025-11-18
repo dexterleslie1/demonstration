@@ -1135,6 +1135,7 @@ Page({
 >说明：获取用户信息。
 >
 >[开放接口 / 用户信息 / wx.getUserInfo](https://developers.weixin.qq.com/miniprogram/dev/api/open-api/user-info/wx.getUserInfo.html)
+
 ## 小程序 - API网络 - wx.request
 
 >说明：发起 HTTPS 网络请求。
@@ -1189,3 +1190,119 @@ Page({
 })
 ```
 
+## 小程序 - 小程序登录
+
+>说明：小程序可以通过微信官方提供的登录能力方便地获取微信提供的用户身份标识，快速建立小程序内的用户体系。
+>
+>[开放能力 / 用户信息 / 小程序登录](https://developers.weixin.qq.com/miniprogram/dev/framework/open-ability/login.html)
+
+登录流程时序
+
+![](api-login.2fcc9f35.jpg)
+
+**说明**
+
+1. 调用 [wx.login()](https://developers.weixin.qq.com/miniprogram/dev/api/open-api/login/wx.login.html) 获取 **临时登录凭证code** ，并回传到开发者服务器。
+2. 调用 [auth.code2Session](https://developers.weixin.qq.com/miniprogram/dev/OpenApiDoc/user-login/code2Session.html) 接口，换取 **用户唯一标识 OpenID** 、 用户在微信开放平台账号下的**唯一标识UnionID**（若当前小程序已绑定到微信开放平台账号） 和 **会话密钥 session_key**。
+
+之后开发者服务器可以根据用户标识来生成自定义登录态，用于后续业务逻辑中前后端交互时识别用户身份。
+
+**注意事项**
+
+1. 会话密钥 `session_key` 是对用户数据进行 [加密签名](https://developers.weixin.qq.com/miniprogram/dev/framework/open-ability/signature.html) 的密钥。为了应用自身的数据安全，开发者服务器**不应该把会话密钥下发到小程序，也不应该对外提供这个密钥**。
+2. 临时登录凭证 code 只能使用一次
+
+
+
+**实现步骤如下：**
+
+1. 前端创建登录按钮
+
+   ```html
+   <button type="primary" bind:tap="handleClick">登录</button>
+   ```
+
+2. 前端获取授权码并调用后端集成微信登录接口
+
+   ```sh
+   // index.js
+   Page({
+     handleClick() {
+       wx.login({
+         success: (res) => {
+           let code = res.code
+           wx.request({
+             url: 'http://localhost:8080/api/v1/loginWithWXCode',
+             data: {
+               code: code,
+             },
+             method: 'GET',
+             success: (res) => {
+               wx.showModal({
+                 title: '提示',
+                 content: `登录成功，服务器响应：${JSON.stringify(res.data)}`,
+                 showCancel: false,
+               })
+             },
+             fail: (error) => {
+               wx.showModal({
+                 title: '提示',
+                 content: `登录失败，原因：${error}`,
+                 showCancel: false,
+               })
+             }
+           })
+         },
+       })
+     }
+   })
+   ```
+
+3. 后端集成微信登录接口调用微信服务器以授权码获取用户openid
+
+   ```java
+   package com.future.demo;
+   
+   import cn.hutool.http.HttpUtil;
+   import cn.hutool.json.JSONObject;
+   import cn.hutool.json.JSONUtil;
+   import org.springframework.beans.factory.annotation.Value;
+   import org.springframework.context.annotation.PropertySource;
+   import org.springframework.http.ResponseEntity;
+   import org.springframework.web.bind.annotation.GetMapping;
+   import org.springframework.web.bind.annotation.RequestMapping;
+   import org.springframework.web.bind.annotation.RequestParam;
+   import org.springframework.web.bind.annotation.RestController;
+   
+   @RestController
+   @RequestMapping("/api/v1")
+   @PropertySource("file:${user.home}/wx.properties")
+   public class ApiController {
+   
+       @Value("${wx.appId}")
+       private String appId;
+       @Value("${wx.appSecret}")
+       private String appSecret;
+   
+       /**
+        * 授权码获取openid和session_key
+        *
+        * @param code
+        * @return
+        */
+       @GetMapping("loginWithWXCode")
+       public ResponseEntity<JSONObject> loginWithWXCode(@RequestParam(value = "code", defaultValue = "") String code) {
+           String url = "https://api.weixin.qq.com/sns/jscode2session?appid=" + appId + "&secret=" + appSecret + "&grant_type=authorization_code" + "&js_code=" + code;
+           String json = HttpUtil.get(url);
+           JSONObject jsonObject = JSONUtil.toBean(json, JSONObject.class);
+           int errCode = jsonObject.containsKey("errcode") ? jsonObject.getInt("errcode") : 0;
+           if (errCode == 0) {
+               // 请求微信服务器没有错误，则执行自定义后续登录逻辑
+           }
+           return ResponseEntity.ok(jsonObject);
+       }
+   }
+   
+   ```
+
+   
