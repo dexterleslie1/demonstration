@@ -1135,3 +1135,57 @@ Page({
 >说明：获取用户信息。
 >
 >[开放接口 / 用户信息 / wx.getUserInfo](https://developers.weixin.qq.com/miniprogram/dev/api/open-api/user-info/wx.getUserInfo.html)
+## 小程序 - API网络 - wx.request
+
+>说明：发起 HTTPS 网络请求。
+>
+>[网络 / 发起请求 / wx.request](https://developers.weixin.qq.com/miniprogram/dev/api/network/request/wx.request.html)
+>
+>详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-tencent/demo-mp-network-request
+
+启动本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/front-end/axios/axios-api 作为API协助测试。
+
+注意：默认情况下wx.request发出网络请求会报告下面错误，此时点击在微信开发者工具中勾选`详情`>`不校验合法域名、web-view（业务域名）、TLS版本以及HTTPS证书`即可取消下面报错。
+
+```
+http://127.0.0.1:8080 不在以下 request 合法域名列表中，请参考文档：https://developers.weixin.qq.com/miniprogram/dev/framework/ability/network.html
+(env: Windows,mp,1.06.2504060; lib: 3.11.2)
+(index)
+0
+0	"https://tcb-api.tencentcloudapi.com"
+Array(1)
+
+index.js? [sm]:17 {errMsg: "request:fail url not in domain list", errno: undefined}(env: Windows,mp,1.06.2504060; lib: 3.11.2)
+```
+
+```html
+<button type="primary" bind:tap="handleClickGet">Get请求</button>
+```
+
+```javascript
+// index.js
+Page({
+  handleClickGet() {
+    wx.request({
+      url: 'http://127.0.0.1:8080/api/v1/get',
+      data: {
+        param1: 'p1',
+      },
+      header: {
+        header1: 'h1'
+      },
+      method: 'GET',
+      success: (res) => {
+        console.log(res)
+      },
+      fail: (error) => {
+        console.error(error)
+      },
+      complete: () => {
+
+      }
+    })
+  }
+})
+```
+
