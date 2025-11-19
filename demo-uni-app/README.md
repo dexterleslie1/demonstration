@@ -21,7 +21,102 @@
    - **特点**：这些框架允许开发者使用一套代码基于小程序框架构建应用，并在不同的平台上运行。它们提供了相应的开发工具和框架，开发者可以使用统一的开发语言（如JavaScript）和技术栈进行开发。
    - **适用场景**：适合需要开发小程序并希望在不同平台上运行的应用。
 
+## uni-app和uni-app x区别
 
+**uni-app x 是 uni-app 的升级版、强化版，是一个技术代际的飞跃**。
+
+它们之间的关系可以类比为：
+
+- **uni-app** 类似于 **JavaScript**
+- **uni-app x** 类似于 **TypeScript**（在语法和性能上更激进）
+
+下面我们从几个核心维度进行详细对比。
+
+------
+
+### 核心区别一览表
+
+| 特性维度     | uni-app (传统uni-app)             | uni-app x (新一代)                               | 说明                                                         |
+| ------------ | --------------------------------- | ------------------------------------------------ | ------------------------------------------------------------ |
+| **开发语言** | **JavaScript/TypeScript**         | **UTS**                                          | 最根本的区别。JS是动态语言，UTS是静态类型语言。              |
+| **渲染引擎** | **Webview渲染** 和 **小程序逻辑** | **原生渲染**                                     | uni-app x 抛弃了Webview，性能体验与原生App无异。             |
+| **性能体验** | 接近小程序，有Webview性能天花板   | **极致性能**，与原生App（如Java、Swift开发）一致 | uni-app x 的渲染和逻辑执行效率都远高于Webview。              |
+| **平台支持** | **全端**（App、H5、各家小程序）   | **目前主要支持 App**，后续逐步支持小程序         | uni-app 生态更成熟，uni-app x 是未来方向，先从App突破。      |
+| **语法风格** | 类Vue 2/3 选项式或组合式API       | **类Vue 3 组合式API**，**强类型**                | uni-app x 强制使用TypeScript风格的强类型，开发更严谨。       |
+| **DOM/BOM**  | **支持**                          | **不支持**                                       | uni-app x 没有浏览器环境，不能使用`document`、`window`等对象。 |
+| **发行版**   | 稳定版，已大规模应用              | **Alpha/Beta测试版**，不断迭代中                 | uni-app 可用于正式生产，uni-app x 建议尝新和未来项目准备。   |
+
+------
+
+### 详细解析
+
+#### 1. 开发语言：JavaScript/TS vs UTS
+
+- **uni-app**：使用标准的JavaScript或TypeScript进行开发。开发者非常熟悉，生态庞大，但JS是动态脚本语言，在性能和类型安全上存在固有短板。
+- **uni-app x**：使用 **UTS** 语言。UTS 是一种静态类型语言，它的语法类似 TypeScript，但最终会被编译成不同平台上的原生语言。 在 Android 上，UTS 编译为 **Kotlin**。 在 iOS 上，UTS 编译为 **Swift**。 这意味着你的代码不再是运行在一个解释器里，而是直接变成了原生代码，从而获得了极高的运行效率。
+
+**示例代码对比：**
+
+```
+// uni-app (JavaScript)
+export default {
+  data() {
+    return {
+      message: 'Hello World',
+      count: 0
+    }
+  },
+  methods: {
+    addCount() {
+      this.count++
+      console.log(this.message + this.count)
+    }
+  }
+}
+// uni-app x (UTS - 类Vue 3组合式API)
+<script setup lang="uts">
+import { ref } from 'vue'
+
+const message = ref<string>('Hello World') // 必须声明类型 string
+const count = ref<number>(0) // 必须声明类型 number
+
+const addCount = () => {
+  count.value++ // 注意需要使用 .value 访问ref的值
+  console.log(message.value + count.value.toString())
+}
+</script>
+```
+
+从代码可以看出，uni-app x 强制类型声明，这减少了运行时错误，提高了代码质量。
+
+#### 2. 渲染引擎：Webview vs 原生渲染
+
+- **uni-app**：在App端，默认使用**Webview渲染**。即界面是由系统浏览器内核渲染的，类似于一个内置的Chrome浏览器。这带来了跨平台一致性，但性能有上限，体验与原生界面有可感知的差异（尤其是在动画复杂度高的场景）。
+- **uni-app x**：在App端，使用**原生渲染**。编译器会将Vue模板直接编译为原生的UI组件（如Android的TextView、iOS的UILabel）。因此，其渲染性能、动画流畅度和用户体验与用Kotlin或Swift直接开发的应用完全一致。
+
+#### 3. 生态与平台支持
+
+- **uni-app**：非常成熟，支持发布到iOS、Android、Web（H5）、以及微信、支付宝、百度等所有主流小程序平台。拥有庞大的插件市场。
+- **uni-app x**：**当前阶段主要专注于App**。它的目标是未来支持所有平台，但目前小程序和Web的支持还在规划或开发中。它的插件生态也在逐步建设中。
+
+### 如何选择？
+
+| 场景                           | 推荐技术                   | 理由                                                 |
+| ------------------------------ | -------------------------- | ---------------------------------------------------- |
+| **需要发布到H5或小程序**       | **uni-app**                | uni-app x 目前尚不支持，uni-app 是唯一且成熟的选择。 |
+| **开发追求极致性能的App**      | **uni-app x**              | 原生渲染和原生语言编译带来的性能优势是决定性的。     |
+| **已有uni-app项目维护**        | **继续使用 uni-app**       | 稳定第一，无需迁移。                                 |
+| **新项目，主要目标是App**      | **强烈建议评估 uni-app x** | 这是技术趋势，能获得更好的性能和长期支持。           |
+| **团队熟悉JS/TS，快速上手**    | **uni-app**                | 学习成本更低，生态更完善。                           |
+| **团队追求代码质量和类型安全** | **uni-app x**              | 强类型和现代Vue 3语法有助于构建大型、可维护的应用。  |
+
+### 总结
+
+**uni-app** 是一个优秀的**跨端框架**，平衡了开发效率和性能，尤其在小程序和H5领域是事实标准。
+
+**uni-app x** 是DCloud公司的一次重大技术革新，它不仅仅是一个框架升级，更是一次**架构革命**。它旨在解决uni-app在App端性能天花板的问题，让开发者使用一套代码就能开发出与原生应用性能无异的应用程序。
+
+可以理解为：**uni-app x 是 uni-app 在 App 端的终极形态和未来方向。** 但目前由于平台支持度的差异，两者会根据项目需求并存很长一段时间。
 
 ## `Android`打包和运行原理
 
@@ -223,6 +318,9 @@ npm install --registry=https://registry.npmmirror.com
 
 ## `UI`组件 - `view`
 
+>说明：view组件是 uni-app x 最基本的视图容器，它的作用类似于HTML中的div标签。
+>
+>[view | uni-app x](https://doc.dcloud.net.cn/uni-app-x/component/view.html)
 在 uni-app 中，**`<view>` 是最基础的容器组件**，它相当于 Web 开发中的 `<div>`，但具有更强大的跨平台特性。以下是它的核心特点和工作原理：
 
 ---
@@ -376,5 +474,37 @@ uni-app 的 `<view>` 是一个：
 	}
 </style>
 
+```
+
+## UI组件 - button
+
+>[button | uni-app官网](https://uniapp.dcloud.net.cn/component/button.html)
+>
+>详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-uni-app/demo-button
+
+```vue
+<template>
+	<view class="content">
+		<button type="default" @click="handleClick()">点击</button>
+	</view>
+</template>
+
+<script>
+	export default {
+		data() {
+			return {
+				title: 'Hello'
+			}
+		},
+		onLoad() {
+
+		},
+		methods: {
+			handleClick() {
+				console.log('Hello World!')
+			}
+		}
+	}
+</script>
 ```
 
