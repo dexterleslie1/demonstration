@@ -665,3 +665,45 @@ uni-app 的 `<view>` 是一个：
 </script>
 ```
 
+## API - 第三方服务登录 - getUserProfile
+
+>说明：获取用户信息。每次请求都会弹出授权窗口，用户同意后返回 userInfo。
+>
+>[uni.login(OBJECT) | uni-app官网](https://uniapp.dcloud.net.cn/api/plugins/login.html#getuserprofile)
+>
+>详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-uni-app/demo-getuserprofile
+
+```vue
+<template>
+	<view class="content">
+		<button type="default" @click="handleClick()">获取用户信息</button>
+	</view>
+</template>
+
+<script>
+	export default {
+		data() {
+			return {
+				title: 'Hello'
+			}
+		},
+		onLoad() {
+
+		},
+		methods: {
+			handleClick() {
+				uni.getUserProfile({
+					desc: '获取用户信息',
+					success: (res) => {
+						console.log(res)
+					},
+					fail: (err) => {
+						console.error(err)
+					}
+				})
+			}
+		}
+	}
+</script>
+```
+
