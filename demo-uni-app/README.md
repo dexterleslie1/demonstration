@@ -595,3 +595,73 @@ uni-app 的 `<view>` 是一个：
 </script>
 ```
 
+## API - 轻提示toast
+
+>说明：显示消息提示框
+>
+>[uni.showToast(options) | uni-app x | uni-app x](https://doc.dcloud.net.cn/uni-app-x/api/toast.html)
+>
+>详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-uni-app/demo-toast
+
+```vue
+<template>
+	<view class="content">
+		<button type="default" @click="handleClickSuccess()">uni.showToast success</button>
+		<button type="default" @click="handleClickError()">uni.showToast error</button>
+		<button type="default" @click="handleClickFail()">uni.showToast fail</button>
+		<button type="default" @click="handleClickException()">uni.showToast exception</button>
+		<button type="default" @click="handleClickLoading()">uni.showToast loading</button>
+	</view>
+</template>
+
+<script>
+	export default {
+		data() {
+			return {
+				title: 'Hello'
+			}
+		},
+		onLoad() {
+
+		},
+		methods: {
+			handleClickSuccess() {
+				uni.showToast({
+					title: '提示',
+					icon: 'success',
+					mask: true,
+				})
+			},
+			handleClickError() {
+				uni.showToast({
+					title: '提示',
+					icon: 'error',
+					mask: true,
+				})
+			},
+			handleClickFail() {
+				uni.showToast({
+					title: '提示',
+					icon: 'fail',
+					mask: true,
+				})
+			},
+			handleClickException() {
+				uni.showToast({
+					title: '提示',
+					icon: 'exception',
+					mask: true,
+				})
+			},
+			handleClickLoading() {
+				uni.showToast({
+					title: '提示',
+					icon: 'loading',
+					mask: true,
+				})
+			},
+		}
+	}
+</script>
+```
+
