@@ -554,3 +554,44 @@ uni-app 的 `<view>` 是一个：
 </script>
 ```
 
+## API - 加载框loading
+
+>说明：显示 loading 提示框, 需主动调用 uni.hideLoading 才能关闭提示框。它是一个悬浮弹出的、非组件内嵌的加载中提示。
+>
+>[uni.showLoading(options) | uni-app x](https://doc.dcloud.net.cn/uni-app-x/api/loading.html)
+>
+>详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-uni-app/demo-loading
+
+```vue
+<template>
+	<view class="content">
+		<button type="default" @click="handleClick">uni.showLoading</button>
+	</view>
+</template>
+
+<script>
+	export default {
+		data() {
+			return {
+				title: 'Hello'
+			}
+		},
+		onLoad() {
+
+		},
+		methods: {
+			handleClick() {
+				uni.showLoading({
+					title: '加载中...',
+					mask: true
+				})
+				
+				setTimeout(()=>{
+					uni.hideLoading()
+				}, 3000)
+			}
+		}
+	}
+</script>
+```
+
