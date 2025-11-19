@@ -321,6 +321,7 @@ npm install --registry=https://registry.npmmirror.com
 >说明：view组件是 uni-app x 最基本的视图容器，它的作用类似于HTML中的div标签。
 >
 >[view | uni-app x](https://doc.dcloud.net.cn/uni-app-x/component/view.html)
+
 在 uni-app 中，**`<view>` 是最基础的容器组件**，它相当于 Web 开发中的 `<div>`，但具有更强大的跨平台特性。以下是它的核心特点和工作原理：
 
 ---
@@ -502,6 +503,51 @@ uni-app 的 `<view>` 是一个：
 		methods: {
 			handleClick() {
 				console.log('Hello World!')
+			}
+		}
+	}
+</script>
+```
+
+## API - 模态弹窗modal
+
+>说明：显示模态弹窗，可以只有一个确定按钮，也可以同时有确定和取消按钮。类似于一个API整合了 html 中：alert、confirm。
+>
+>[uni.showModal(options) | uni-app x](https://doc.dcloud.net.cn/uni-app-x/api/modal.html)
+>
+>详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-uni-app/demo-modal
+
+```vue
+<template>
+	<view class="content">
+		<button type="default" @click="handleClick()">un.showModal</button>
+		<button type="default" @click="handleClickWithoutCancel()">un.showModal没有cancel按钮</button>
+	</view>
+</template>
+
+<script>
+	export default {
+		data() {
+			return {
+				title: 'Hello'
+			}
+		},
+		onLoad() {
+
+		},
+		methods: {
+			handleClick() {
+				uni.showModal({
+					title: '提示',
+					content: '提示内容',
+				})
+			},
+			handleClickWithoutCancel() {
+				uni.showModal({
+					title: '提示',
+					content: '提示内容',
+					showCancel: false,
+				})
 			}
 		}
 	}
