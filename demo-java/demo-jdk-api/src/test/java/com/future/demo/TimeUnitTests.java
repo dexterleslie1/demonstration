@@ -1,10 +1,9 @@
-package com.future.demo.util;
+package com.future.demo;
 
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.junit.Test;
 
 import java.util.Date;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public class TimeUnitTests {

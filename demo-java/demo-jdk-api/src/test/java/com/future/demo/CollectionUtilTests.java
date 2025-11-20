@@ -1,4 +1,4 @@
-package com.future.demo.util;
+package com.future.demo;
 
 import org.junit.Test;
 
@@ -6,6 +6,7 @@ import java.util.*;
 
 public class CollectionUtilTests {
     /**
+     * How to compare objects by multiple fields
      * https://stackoverflow.com/questions/369512/how-to-compare-objects-by-multiple-fields
      */
     @Test

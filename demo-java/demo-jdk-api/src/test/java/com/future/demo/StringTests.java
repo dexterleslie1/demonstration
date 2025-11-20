@@ -1,9 +1,8 @@
-package com.future.demo.util;
+package com.future.demo;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 
 public class StringTests {

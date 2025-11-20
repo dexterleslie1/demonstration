@@ -3,6 +3,7 @@ package com.future.demo;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.io.UnsupportedEncodingException;
 import java.nio.*;
 
 /**
@@ -187,5 +188,20 @@ public class ByteBufferTests {
         originBytes[43]=(byte)0;
         bufferValue=buffer.get(43);
         Assert.assertEquals(originBytes[43],bufferValue);
+    }
+
+    /**
+     * Java: Converting String to and from ByteBuffer and associated problems
+     * https://stackoverflow.com/questions/1252468/java-converting-string-to-and-from-bytebuffer-and-associated-problems
+     *
+     * Java ByteBuffer to String
+     * https://stackoverflow.com/questions/17354891/java-bytebuffer-to-string
+     */
+    @Test
+    public void testStringAndByteBuffer() throws UnsupportedEncodingException {
+        String message = "你好";
+        ByteBuffer byteBuffer = ByteBuffer.wrap(message.getBytes("utf-8"));
+        String message2 = new String(byteBuffer.array(), "utf-8");
+        Assert.assertEquals(message, message2);
     }
 }

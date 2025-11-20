@@ -1,4 +1,4 @@
-package com.future.demo.util;
+package com.future.demo;
 
 import java.io.IOException;
 import java.io.InputStream;

@@ -1,4 +1,4 @@
-package com.future.demo.util;
+package com.future.demo;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.Assert;
@@ -11,14 +11,16 @@ import java.util.Random;
 
 public class Md5UtilTests {
     /**
+     * 获取文件md5
      * https://www.geeksforgeeks.org/how-to-generate-md5-checksum-for-files-in-java/
      * https://stackoverflow.com/questions/304268/getting-a-files-md5-checksum-in-java
+     *
      * @throws IOException
      * @throws NoSuchAlgorithmException
      */
     @Test
     public void test() throws IOException, NoSuchAlgorithmException {
-        byte []bytes = new byte[1024*1024*512];
+        byte[] bytes = new byte[1024 * 1024 * 512];
         Random random = new Random();
         random.nextBytes(bytes);
 

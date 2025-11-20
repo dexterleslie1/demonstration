@@ -1,4 +1,4 @@
-package com.future.demo.util;
+package com.future.demo;
 
 import org.junit.Assert;
 import org.junit.Test;
