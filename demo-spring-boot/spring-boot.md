@@ -1067,3 +1067,202 @@ POM 添加如下配置：
 ## SpringBoot应用支持yaml和properties配置同时存在
 
 >详细用法请参考本站[示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-spring-boot/demo-config-file-yaml-and-properties-exists-simultaneously)
+
+## @EnableAsync和@Async注解
+
+这是一个非常实用且强大的注解，用于开启 Spring 的**异步方法执行**功能。
+
+### 核心定义：一句话说清 @EnableAsync
+
+**`@EnableAsync` 是一个开关注解，用于在 Spring Boot 应用中启用异步执行能力。它允许你通过一个简单的 `@Async` 注解，就能让一个方法在独立的线程池中异步执行，而非阻塞调用者的线程。**
+
+它的核心价值是**提升应用的吞吐量和响应性**，特别适合处理耗时操作（如IO密集型任务）。
+
+---
+
+### 一个生动的比喻：餐厅的点餐和做饭流程
+
+假设一个餐厅没有异步处理：
+
+*   **同步模式（默认）**：服务员（调用者线程）接到顾客点单（请求）后，**必须站在厨房门口等厨师做完菜**，然后再把菜端给顾客。在此期间，这个服务员不能为其他顾客服务。效率极低。
+
+现在，使用 `@EnableAsync` 和 `@Async` 进行改造：
+
+*   **异步模式**：
+    1.  **`@EnableAsync`**：餐厅经理宣布启用**“传菜铃系统”**（开启异步支持）。
+    2.  **`@Async`**：服务员（调用者线程）接到点单后，将订单（方法调用）放到订单架（任务队列）上，然后**立即返回**去接待下一位顾客（立即返回，不阻塞）。
+    3.  **后台厨师（线程池中的线程）** 会从订单架上取走订单，在后台厨房（独立线程）里开始做饭（执行耗时方法）。
+    4.  饭菜做好后，厨师会按下传菜铃（通过回调 `Future` 或发送事件），由另一个传菜员（回调线程）端给顾客。
+
+这样，服务员（主线程）的效率被最大化，可以持续接待新顾客，整个餐厅的吞吐量大大提升。
+
+---
+
+### 如何使用？
+
+使用非常简单，只需两步：
+
+#### 第一步：在配置类上添加 `@EnableAsync`
+
+你需要在一个配置类（通常是带有 `@Configuration` 注解的类，或者就是主应用类 `Application.java`）上添加此注解，以开启异步功能。
+
+```java
+@SpringBootApplication
+@EnableAsync // 启用异步支持
+public class Application {
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+    }
+}
+```
+
+#### 第二步：在方法上添加 `@Async`
+
+在你希望异步执行的方法上添加 `@Async` 注解。
+
+```java
+@Service
+public class EmailService {
+
+    // 这个send方法将会被异步执行
+    @Async
+    public void sendEmail(String to, String subject, String content) {
+        // 模拟耗时的邮件发送过程
+        try {
+            Thread.sleep(5000); // 休眠5秒，模拟耗时
+            System.out.println("邮件发送成功给: " + to + "，线程: " + Thread.currentThread().getName());
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+#### 第三步：在控制器中调用
+
+```java
+@RestController
+public class MyController {
+
+    @Autowired
+    private EmailService emailService;
+
+    @GetMapping("/send")
+    public String sendMail() {
+        // 这个方法会立即返回，而不会等待邮件发送完成
+        emailService.sendEmail("user@example.com", "主题", "内容");
+        System.out.println("请求已处理，邮件发送任务已提交。线程: " + Thread.currentThread().getName());
+        return "邮件正在后台发送中...";
+    }
+}
+```
+
+**运行结果可能如下：**
+```
+请求已处理，邮件发送任务已提交。线程: http-nio-8080-exec-1
+邮件发送成功给: user@example.com，线程: task-1
+```
+你可以看到，处理HTTP请求的线程（`http-nio-8080-exec-1`）和实际发送邮件的线程（`task-1`）是**不同的**。控制器方法几乎瞬间返回，用户体验极佳。
+
+---
+
+### 高级用法与重要特性
+
+#### 1. 获取异步方法的返回值
+
+如果异步方法有返回值，可以使用 `Future` 或更现代的 `CompletableFuture` 来接收。
+
+```java
+@Async
+public CompletableFuture<String> doHeavyTask() {
+    // 模拟耗时任务
+    Thread.sleep(3000);
+    return CompletableFuture.completedFuture("任务完成");
+}
+
+// 在调用处
+CompletableFuture<String> future = myService.doHeavyTask();
+// 可以继续做其他事情...
+String result = future.get(); // 如果需要结果，在这里阻塞等待（应谨慎使用）
+```
+
+#### 2. 自定义线程池（强烈推荐）
+
+默认情况下，Spring 使用一个简单的 `SimpleAsyncTaskExecutor`（非池化，每次创建新线程），这在生产环境是不合适的。**你应该总是自定义一个线程池。**
+
+```java
+@Configuration
+@EnableAsync
+public class AsyncConfig {
+
+    @Bean("myTaskExecutor") // 给线程池定义一个名字
+    public TaskExecutor taskExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        // 核心线程数：即使空闲也会保留的线程数
+        executor.setCorePoolSize(5);
+        // 最大线程数：线程池能容纳的最大线程数
+        executor.setMaxPoolSize(10);
+        // 队列容量：用于存放等待执行的任务的队列大小
+        executor.setQueueCapacity(100);
+        // 线程名前缀
+        executor.setThreadNamePrefix("async-");
+        // 初始化
+        executor.initialize();
+        return executor;
+    }
+}
+```
+
+然后，在 `@Async` 注解中指定使用这个线程池：
+
+```java
+@Async("myTaskExecutor") // 指定使用自定义的线程池Bean
+public void asyncMethodWithConfiguredExecutor() {
+    // ...
+}
+```
+
+#### 3. 处理异常
+
+在异步方法中，异常不会直接抛给调用者。你有几种处理方式：
+
+*   **返回 `Future`**：在调用 `future.get()` 时，异常会被包装成 `ExecutionException` 抛出。
+*   **在方法内部使用 `try-catch`**。
+*   **实现 `AsyncConfigurer` 接口**，提供一个全局的 `AsyncUncaughtExceptionHandler`。
+
+```java
+@Configuration
+@EnableAsync
+public class AsyncConfig implements AsyncConfigurer {
+
+    @Override
+    public AsyncUncaughtExceptionHandler getAsyncUncaughtExceptionHandler() {
+        return (ex, method, params) -> {
+            // 在这里处理未捕获的异常，比如记录日志、发送告警等
+            System.err.println("异步方法 '" + method.getName() + "' 发生异常: " + ex.getMessage());
+        };
+    }
+}
+```
+
+### 使用场景与注意事项
+
+**典型使用场景：**
+*   发送邮件、短信通知。
+*   记录日志到数据库或文件。
+*   调用外部耗时API。
+*   图片、视频处理等计算密集型或IO密集型任务。
+
+**重要注意事项：**
+1.  **自调用失效**：在同一个类中，一个方法调用另一个被 `@Async` 注解的方法，异步会失效。这是因为异步代理是基于Spring AOP实现的。
+2.  **必须是 `public` 方法**：`@Async` 注解只能应用于 `public` 方法。
+3.  **返回类型限制**：异步方法可以返回 `void`、`Future` 或 `CompletableFuture`。
+4.  **谨慎使用 `future.get()`**：在主线程中调用 `get()` 会使其阻塞，失去了异步的意义。应尽量使用回调函数。
+
+### 总结
+
+**`@EnableAsync` 是 Spring Boot 中启用异步执行的“总开关”。结合 `@Async` 注解，它可以极其方便地将耗时任务丢到后台线程池中执行，从而释放主线程（如HTTP请求线程），显著提升应用的并发处理能力和用户体验。** 在生产环境中，务必记得配置一个合适的自定义线程池。
+
+### 示例
+
+>详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-spring-boot/demo-spring-boot-async-annotation
