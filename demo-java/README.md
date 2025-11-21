@@ -1167,3 +1167,10 @@ public class HelloWorld extends Application {
 | **适用场景** | 需要复杂图形、动画、媒体播放或现代化 UI 的企业级桌面应用、工具软件、Kiosk 系统、数据可视化仪表盘等。 |
 
 简单来说，**如果你今天想用 Java 来开发一个看起来很棒、体验流畅的桌面应用程序，JavaFX 是你的不二之选。**
+
+## socket编程
+
+>说明：演示socket客户端连接socket服务器并每5秒客户端和服务器分别向对端自动发送数据。
+>
+>详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-java/demo-socket
+

@@ -1,3 +1,0 @@
-此demo辅助学习计算机网络知识
-
-TODO：未研究socket tls通讯知识

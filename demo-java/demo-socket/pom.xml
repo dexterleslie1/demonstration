@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.future.demo</groupId>
-	<artifactId>socket-network-principle</artifactId>
+	<artifactId>demo-socket</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	
 	<dependencies>
@@ -31,7 +31,7 @@
 							<finalName>${project.build.finalName}</finalName>
 							<transformers>
 								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-									<mainClass>com.future.demo.tcp.TcpSocketServer</mainClass>
+									<mainClass>com.future.demo.TcpSocketServer</mainClass>
 								</transformer>
 								<transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
 							</transformers>
