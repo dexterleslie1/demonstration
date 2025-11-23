@@ -25,7 +25,7 @@
 示例`https`的核心配置如下：
 
 ```nginx
-listen       82 ssl;
+listen       443 ssl;
 server_name  localhost;
 
 ssl_certificate cert.crt;

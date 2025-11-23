@@ -1,8 +1,7 @@
 version: "3.0"
 
 services:
-  demo-openresty-https:
-    container_name: demo-openresty-https
+  openresty-https:
     image: openresty/openresty
     volumes:
      - ./nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf
@@ -10,6 +9,7 @@ services:
      - ./key.pem:/usr/local/openresty/nginx/conf/key.pem
     environment:
       - TZ=Asia/Shanghai
-    ports:
-      - 80:80
-      - 82:82
+    # ports:
+    #   - 80:80
+    #   - 82:82
+    network_mode: host

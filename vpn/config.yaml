@@ -1,0 +1,73 @@
+# tailscale默认固定网段，不能修改
+prefixes:
+  v4: 100.64.0.0/10
+  v6: fd7a:115c:a1e0::/48
+
+dns:
+  magic_dns: true
+  base_domain: example.com
+  nameservers:
+    global:
+      - 114.114.114.114
+      - 8.8.8.8
+
+noise:
+  private_key_path: /etc/headscale/noise_private.key
+
+# 客户端连接地址，必须能被客户端访问（公网 IP 或域名）
+server_url: http://192.168.1.181:8080
+listen_addr: 0.0.0.0:8080
+# Prometheus 监控端口，建议只监听本地
+#metrics_listen_addr: 127.0.0.1:9090
+# 数据库配置
+database:
+  type: sqlite3
+  sqlite:
+    path: /var/lib/headscale/db.sqlite
+
+derp:
+  server:
+    # If enabled, runs the embedded DERP server and merges it into the rest of the DERP config
+    # The Headscale server_url defined above MUST be using https, DERP requires TLS to be in place
+    enabled: false
+
+    # Region ID to use for the embedded DERP server.
+    # The local DERP prevails if the region ID collides with other region ID coming from
+    # the regular DERP config.
+    region_id: 999
+
+    # Region code and name are displayed in the Tailscale UI to identify a DERP region
+    region_code: "headscale"
+    region_name: "Headscale Embedded DERP"
+
+    # Listens over UDP at the configured address for STUN connections - to help with NAT traversal.
+    # When the embedded DERP server is enabled stun_listen_addr MUST be defined.
+    #
+    # For more details on how this works, check this great article: https://tailscale.com/blog/how-tailscale-works/
+    stun_listen_addr: "0.0.0.0:3478"
+
+    # Private key used to encrypt the traffic between headscale DERP and
+    # Tailscale clients. A missing key will be automatically generated.
+    private_key_path: /var/lib/headscale/derp_server_private.key
+
+    # This flag can be used, so the DERP map entry for the embedded DERP server is not written automatically,
+    # it enables the creation of your very own DERP map entry using a locally available file with the parameter DERP.paths
+    # If you enable the DERP server and set this to false, it is required to add the DERP server to the DERP map using DERP.paths
+    automatically_add_embedded_derp_region: true
+
+    # For better connection stability (especially when using an Exit-Node and DNS is not working),
+    # it is possible to optionally add the public IPv4 and IPv6 address to the Derp-Map using:
+    ipv4: x.x.x.x
+    #ipv6: 2001:db8::1
+
+  # List of externally available DERP maps encoded in JSON
+  urls:
+    - https://controlplane.tailscale.com/derpmap/default
+
+  # If enabled, a worker will be set up to periodically
+  # refresh the given sources and update the derpmap
+  # will be set up.
+  auto_update_enabled: true
+
+  # How often should we check for DERP updates?
+  update_frequency: 24h

@@ -1222,6 +1222,14 @@ ping 100.72.48.8
 
 ## TailScale异地组网
 
+>说明：组网方案为TailScale官方控制台+自建DERP服务器。
+>
+>DERP服务器搭建过程参考链接：https://www.cnblogs.com/ivwv/p/18499012
+>
+>网络调试参考链接：https://headscale.net/stable/ref/debug/
+>
+>DERP服务器：https://headscale.net/stable/ref/derp/
+
 参考上面的“TailScale入门配置“先配置两台Windows11通过TailScale网络能够相互ping通对方。
 
 参考 https://tailscale.com/kb/1406/quick-guide-subnets 在公司的Ubuntu上配置子网路由为公司网络192.168.1.0/24，步骤如下：
@@ -1266,6 +1274,182 @@ ping 100.72.48.8
 
 ```cmd
 ping 192.168.1.1 -t
+```
+
+自建DERP服务器：
+
+1. 访问 https://go.dev/dl/go1.23.2.linux-amd64.tar.gz 下载go安装包
+
+2. 解压go安装包
+
+   ```sh
+   rm -rf /usr/local/go && tar -C /usr/local -xzf go1.23.2.linux-amd64.tar.gz
+   ```
+
+3. 创建/etc/profile.d/go.sh文件内容如下：
+
+   ```sh
+   #!/bin/bash
+   
+   export GOPROXY=https://goproxy.cn
+   export GO111MODULE=on
+   export PATH=$PATH:/usr/local/go/bin
+   ```
+
+4. 加载/etc/profile.d/go.sh配置查看go版本
+
+   ```sh
+   source /etc/profile.d/go.sh
+   go version
+   ```
+
+5. 拉取derper源代码
+
+   ```sh
+   # v1.90.1版本
+   go install tailscale.com/cmd/derper@75b0c6f
+   ```
+
+6. 修改derper源代码以支持https自签名证书
+
+   ```sh
+   # 进入到编译好的文件夹(不要直接复制命令，按实际情况填写,配合 Tab 按键补全路径)
+   cd /root/go/pkg/mod/tailscale.com@@v1.90.1/cmd/derper/
+   
+   # 编辑 cert.go 文件
+   vim cert.go
+   
+   # 找到以下内容并将部分代码注释
+   // 原始代码
+   func (m *manualCertManager) getCertificate(hi *tls.ClientHelloInfo) (*tls.Certificate, error) {
+       if hi.ServerName != m.hostname {
+           return nil, fmt.Errorf("cert mismatch with hostname: %q", hi.ServerName)
+       }
+       
+   // 改为
+   func (m *manualCertManager) getCertificate(hi *tls.ClientHelloInfo) (*tls.Certificate, error) {
+       // if hi.ServerName != m.hostname {
+       //     return nil, fmt.Errorf("cert mismatch with hostname: %q", hi.ServerName)
+       // }
+   ```
+
+7. 编译并输出到 /etc/derp/
+
+   ```sh
+   go build -o /etc/derp/derper
+   ```
+
+8. 查看是否存在 derper 文件
+
+   ```sh
+   ls /etc/derp
+   ```
+
+9. 自签证书(derp.myself.com可随意编写，命令中四处需要一致)
+
+   ```sh
+   cd /etc/derp
+   
+   openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes -keyout /etc/derp/derp.myself.com.key -out /etc/derp/derp.myself.com.crt -subj "/CN=derp.myself.com" -addext "subjectAltName=DNS:derp.myself.com"
+   ```
+
+10. 防火墙开放33445(tcp)、3478(udp)端口
+
+11. 设置开机自启，创建/etc/systemd/system/derp.service内容如下：
+
+    ```ini
+    [Unit]
+    Description=TS Derper
+    After=network.target
+    Wants=network.target
+    
+    [Service]
+    User=root
+    Restart=always
+    ExecStart=/etc/derp/derper -hostname derp.myself.com -a :33445 -stun -stun-port 3478 -http-port 33446 -certmode manual -certdir /etc/derp
+    RestartPreventExitStatus=1
+    
+    [Install]
+    WantedBy=multi-user.target
+    
+    ```
+
+12. 设置开机自启
+
+    ```sh
+    systemctl enable derp && systemctl start derp
+    ```
+
+13. 验证 DERP 服务，浏览器打开：https://ip:33445 页面正常显示 DERP 即可
+
+14. 修改 Tailscale 配置文件
+
+    打开 Tailscale 控制台 https://login.tailscale.com/admin/acls/file，添加以下内容：
+
+    - IPv4 修改为自己服务器的 IP
+    - RegionCode 自定义即可
+    - RegionName 自定义即可
+
+    ```json
+    "derpMap": {
+    		"OmitDefaultRegions": true,
+    		"Regions": {
+    			"901": {
+    				"RegionID":   901,
+    				"RegionCode": "myderp",
+    				"RegionName": "My Derper",
+    				"Nodes": [
+    					{
+    						"Name":             "901",
+    						"RegionID":         901,
+    						"IPv4":             "x.x.x.x",
+    						"DERPPort":         33445,
+    						"STUNPort":         3478,
+    						"InsecureForTests": true,
+    					},
+    				],
+    			},
+    		},
+    	},
+    ```
+
+15. 检查可用性
+
+    在任意链接 Tailscale 的电脑上终端输入
+
+    ```sh
+    $ tailscale netcheck
+    2025/11/23 13:09:56 portmap: monitor: gateway and self IP changed: gw=192.168.3.1 self=192.168.3.2
+    
+    Report:
+            * Time: 2025-11-23T05:09:56.8883279Z
+            * UDP: true
+            * IPv4: yes, x.x.x.x:1211
+            * IPv6: no, but OS has support
+            * MappingVariesByDestIP:
+            * PortMapping:
+            * Nearest DERP: My Derper
+            * DERP latency:
+                    - myderp: 36.9ms  (My Derper)
+                    
+    $ tailscale status
+    100.88.180.26  mywindows11           dexterleslie1@  windows  -
+    100.79.178.86  ubuntu-subnet-office  dexterleslie1@  linux    active; relay "myderp", tx 34637196 rx 712989676
+    100.72.248.83  windows11home-vm      dexterleslie1@  windows  offline, last seen 1h ago
+    
+    # Health check:
+    #     - Tailscale can't reach the configured DNS servers. Internet connectivity may be affected.
+    #     - Tailscale could not establish an encrypted connection with '""': likely intercepted connection; certificate is self-signed by O=Internet Widgits Pty Ltd,ST=Some-State,C=AU
+    ```
+
+## TailScale安装 - macOS
+
+访问 https://tailscale.com/download/mac 下载TailScale客户端并根据提示安装（授予安装过程提示的权限）。
+
+加入TailScale网络：打开Terminal执行下面命令
+
+```sh
+/Applications/Tailscale.app/Contents/MacOS/Tailscale login --auth-key tskey-auth-xxx --accept-routes
 ```
 
 ## TailScale命令 - netcheck
@@ -1664,3 +1848,273 @@ $ tailscale ping windows11office
 pong from windows11office (100.72.48.8) via 192.168.1.41:41641 in 3ms
 ```
 
+## TailScale命令 - status
+
+`tailscale status` 命令用于**查看当前 Tailscale 网络的状态信息**，它提供了一个清晰的概览，告诉你哪些设备在线、它们是如何连接的，以及你的设备在虚拟网络中的情况。
+
+---
+
+### 命令的主要作用
+
+简单来说，这个命令回答以下几个核心问题：
+1.  **我的 Tailscale 网络里现在有哪些设备？**
+2.  **这些设备是在线（Online）还是离线（Offline）？**
+3.  **它们各自的 IP 地址是什么？**
+4.  **我是如何连接到它们的？（是直接点对点连接，还是通过中继服务器？）**
+
+---
+
+### 输出结果详解
+
+运行 `tailscale status` 会得到类似下面的输出：
+
+```bash
+$ tailscale status
+100.101.102.103   your-laptop            user@example.com   linux   active
+100.98.76.54      office-desktop         user@example.com   windows active; relay "nyc"
+100.105.105.105   aws-server             user@example.com   linux   active; direct 192.168.1.1:41641
+```
+
+每一行代表一台设备，通常包含以下几列信息：
+
+1.  **Tailscale IP 地址**：设备在 Tailscale 虚拟网络中的唯一 IP 地址（以 `100.x.x.x` 开头）。这是你在设备间通信时使用的地址。
+2.  **主机名**：设备的名称。
+3.  **用户账户**：该设备所属的 Tailscale 账户。
+4.  **操作系统**：设备运行的操作系统，如 `linux`、`windows`、`darwin`（macOS）、`ios`、`android` 等。
+5.  **状态和连接信息**：这是最关键的部分，可能有以下几种情况：
+    *   **`active`**：设备在线，但没有显示具体的连接方式（可能是在同一局域网内或连接非常简单）。
+    *   **`active; direct`**：**最佳状态**。表示你的设备与目标设备之间建立了**直接的点对点（P2P）连接**。这通常延迟最低、速度最快。后面的 IP 和端口是 NAT 穿透后使用的地址。
+    *   **`active; relay "nyc"`**：表示直接连接失败，双方通过 Tailscale 的**中继服务器（DERP）** 进行通信。这通常发生在复杂的网络环境（如对称型 NAT、严格防火墙）下。延迟会稍高，速度可能不如直接连接。
+    *   **`offline`**：设备离线（未运行 Tailscale 或网络不通）。
+
+---
+
+### 常用选项
+
+*   `tailscale status --json`：以 JSON 格式输出结果，便于其他脚本或程序解析。
+*   `tailscale status --active`：只显示在线的设备。
+*   `tailscale status --self`：只显示当前设备的状态信息。
+*   `tailscale status --peers`：显示对等设备（其他设备）的详细信息。
+
+---
+
+### 使用场景举例
+
+1.  **快速诊断连接问题**：如果你无法连接到另一台设备，首先运行 `tailscale status`。如果看到目标设备的状态是 `offline`，说明对方没开机或 Tailscale 未运行。如果状态是 `relay`，说明网络环境导致无法直连，但至少可以通信。
+2.  **查看设备的 Tailscale IP**：当你想用 SSH 连接某台设备或配置服务时，需要知道它的 Tailscale IP。
+3.  **确认网络拓扑**：了解所有设备是否都正常上线，以及它们之间的连接是否是最优的直接连接。
+
+### 总结
+
+`tailscale status` 是管理 Tailscale 网络时最基础、最常用的命令之一，相当于你的 **Tailscale 网络“仪表盘”**，可以让你一目了然地掌握整个私有网络的实时状态。
+
+## TailScale命令 - set
+
+修改TailScale的主机名称
+
+```sh
+tailscale set --hostname=windows11home
+```
+
+创建子网
+
+>参考链接：https://headscale.net/stable/ref/routes/#configure-a-node-as-subnet-router
+
+```sh
+# 在公司的tailscale主机中执行下面命令创建子网
+sudo tailscale set --advertise-routes=192.168.1.0/24
+```
+
+## TailScale命令 - logout
+
+退出当前登录用户
+
+```sh
+tailscale logout
+```
+
+## TailScale命令 - debug
+
+调试名为headscale的derp服务器网络
+
+```sh
+tailscale debug derp headscale
+```
+
+## TailScale命令 - login
+
+自动授权并登录TailScale客户端：
+
+1. 登录TailScale控制台 https://login.tailscale.com/admin/settings/keys 点击`Generate auth key...`按钮创建授权key
+
+2. TailScale客户端自动登录
+
+   ```sh
+   tailscale login --auth-key tskey-auth-xxx --accept-routes
+   ```
+
+## HeadScale概念
+
+它是一个开源、自托管的 **Tailscale 控制服务器**。
+
+要完全理解 HeadScale，我们得先快速了解一下 **Tailscale** 是什么。
+
+---
+
+### 第一步：理解 Tailscale
+
+**Tailscale 是一个基于 WireGuard 的零信任网络解决方案。**
+
+*   **核心功能**：它能让你将分布在世界各地的设备（公司服务器、家庭电脑、云上虚拟机、甚至你的笔记本电脑和手机）安全、便捷地组建成一个**私有的虚拟局域网（VPN）**。
+*   **工作原理**：它使用了一个名为 **WireGuard** 的、非常先进且高效的 VPN 协议作为底层隧道技术。
+*   **便捷性**：Tailscale 最大的卖点是其易用性。你只需要在每个设备上安装 Tailscale 客户端，然后用你的 Google、Microsoft 等单点登录（SSO）账户登录，这些设备就能自动发现对方并建立安全的点对点（P2P）连接。你几乎不需要配置复杂的防火墙规则或网络设置。
+*   **商业模式**：Tailscale 公司提供了一个免费的增值模式。免费版适用于个人或小团队。但其核心基础设施（尤其是协调设备发现的控制服务器）是由 Tailscale 公司托管和控制的。
+
+---
+
+### 第二步：HeadScale 的角色
+
+**HeadScale 的出现，解决了 Tailscale 的一个“痛点”：对官方控制服务器的依赖。**
+
+*   **自托管控制平面**：HeadScale 实现了 Tailscale 控制服务器的功能。这意味着你可以**在自己的服务器上**运行 HeadScale，完全掌控你的虚拟网络，不依赖任何第三方服务。
+*   **开源**：它是 100% 开源的，你可以审查代码、自行修改和部署。
+*   **兼容性**：HeadScale 实现了 Tailscale 的协议，因此它可以与官方的 Tailscale 客户端完美配合工作。
+
+**简单比喻：**
+
+*   **Tailscale 网络** 就像一个私人俱乐部，设备是会员。
+*   **Tailscale 官方的控制服务器** 就像是俱乐部**总部管理的会员登记处**。所有会员都需要到总部登记，才能彼此认识并联系。
+*   **HeadScale** 则允许你**自己开一个私人俱乐部，并自己担任登记处的管理员**。你的设备都到你这个自建的登记处来注册和协调。
+
+---
+
+### 三、为什么人们需要 HeadScale？主要优势
+
+1.  **数据自主与控制**：所有设备的认证、策略和协调信息都保存在你自己的服务器上，满足了数据隐私和合规性要求极高的场景（如企业内网、敏感数据环境）。
+2.  **完全免费，无限制**：Tailscale 免费版有设备数量限制。而使用 HeadScale，你可以管理任意数量的设备，没有硬性限制，成本仅为托管它的一台小服务器的费用。
+3.  **绕过封锁**：在某些网络环境下，连接 Tailscale 的官方服务器可能不稳定或被阻断。自建 HeadScale 服务器可以灵活选择网络环境和出口，提高稳定性。
+4.  **高度可定制**：你可以深度定制网络策略、访问规则，并与你现有的认证系统（如 LDAP/AD）集成。
+
+---
+
+### 四、典型使用场景
+
+*   **家庭实验室（Homelab）**：这是 HeadScale 最流行的应用场景。通过它，可以安全地从外部网络访问家里的 NAS、软路由、Proxmox 管理界面等所有设备，就像坐在家里一样。
+*   **中小企业组网**：将公司总部、分公司和员工家庭办公室的设备和服务器组成一个安全内网，替代传统的、配置复杂的 VPN。
+*   **混合云连接**：安全地连接公有云（如 AWS、Azure）上的虚拟机和你本地数据中心的服务器。
+*   **开发与测试**：为开发团队提供一个隔离的、安全的网络环境，用于微服务通信和测试。
+
+---
+
+### 五、HeadScale 与 Proxmox 的关系
+
+这两个技术非常契合，常常一起使用：
+
+1.  **在 Proxmox 虚拟机/容器中运行 HeadScale**：你可以在 Proxmox 上创建一个轻量的 Linux 虚拟机或 LXC 容器，专门用来安装和运行 HeadScale 服务。这样它就成为了你整个虚拟化环境的核心网络协调器。
+2.  **安全访问 Proxmox 管理界面**：你可以将运行 Proxmox 的物理服务器和你的办公电脑都加入 HeadScale 网络。这样，你就可以在**世界任何地方**，通过安全的 Tailscale 虚拟 IP 地址，访问 Proxmox 的 Web 管理界面（默认端口 8006），而无需将管理端口暴露在公网上。
+3.  **连接不同 Proxmox 节点**：如果你有一个 Proxmox 集群，节点可能分布在不同的物理位置。通过为每个节点安装 Tailscale 客户端并加入同一个 HeadScale 网络，可以简化它们之间的通信，特别适合构建跨数据中心的集群。
+
+### 总结
+
+**HeadScale 是一个能让你自己掌控全局的“网络大脑”。** 它剥离了 Tailscale 服务中“控制面板”的部分并将其开源，让你能搭建一个完全属于自己、不受限制、安全高效的虚拟专用网络。
+
+### 搭建
+
+>说明：HeadScale成功搭建，但是因为HeadScale没有支持https导致内置的DERP服务不能成功地为异地主机提供能数据运输服务。
+>
+>参考 https://sevnday.blog.csdn.net/article/details/154946506、https://cloud.tencent.com/developer/article/2457464 安装HeadScale
+>
+>HeadScale详细搭建过程请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/vpn
+
+HeadScale创建用户
+
+```sh
+headscale user create myuser
+```
+
+TailScale客户端指定HeadScale
+
+>参考链接：https://tailscale.com/kb/1507/custom-control-server?tab=windows
+
+```sh
+sudo tailscale login --login-server=http://x.x.x.x:8080
+```
+
+HeadScale主机确认子网创建请求
+
+>参考链接：https://headscale.net/stable/ref/routes/#configure-a-node-as-subnet-router
+
+```sh
+headscale nodes approve-routes --identifier 2 --routes 192.168.1.0/24
+```
+
+## DERP概念
+
+### 一句话概括
+
+**Tailscale DERP 是一个由 Tailscale 官方和社区提供的、全球分布的中继服务器网络。当两个设备无法直接建立点对点连接时，它就充当一个“智能中转站”或“中继服务器”，帮助它们可靠地传输数据。**
+
+---
+
+### 详细解释
+
+为了更好地理解，我们把它拆解开来：
+
+#### 1. 核心目标：建立点对点连接
+
+Tailscale 的核心魔力是让两个设备（比如你的笔记本电脑和公司的服务器）尽可能直接连接，也就是所谓的 **NAT 穿透**。这种直接连接延迟最低、速度最快。
+
+#### 2. 问题：当直接连接失败时
+
+但在某些网络环境下（例如在严格的企业防火墙、机场/酒店公共Wi-Fi、或者复杂的多层NAT后），NAT 穿透会失败。两个设备“看”不到对方，无法直接“握手”。
+
+**这时候就需要一个双方都能访问的“中间人”来帮忙传话。**
+
+#### 3. 解决方案：DERP 登场
+
+DERP 就是这个“中间人”。它的全称是 **D** ERP **E** ndpoint **R** elay **P** rotocol。
+
+*   **中继：** DERP 服务器的核心工作就是中继流量。设备A把数据包发给 DERP 服务器，DERP 服务器再转发给设备B，反之亦然。
+*   **协议：** 它使用标准的 HTTP/2 协议进行通信，这有一个巨大的好处：HTTP/2 流量（通常走 443 端口）在绝大多数网络环境中都是被允许的，因为它看起来就像普通的 HTTPS 网页流量。这极大地提高了连接成功率。
+*   **全球分布：** Tailscale 在世界各地（北美、欧洲、亚洲等）部署了许多 DERP 服务器。你的 Tailscale 客户端会自动选择延迟最低的服务器进行连接。
+
+
+*上图简化地展示了数据如何通过 DERP 服务器中继。实际上，两个设备会连接到同一个 DERP 服务器进行通信。*
+
+#### 4. DERP 是“保底方案”
+
+非常重要的一点是：**DERP 是 Tailscale 连接建立的最后手段。**
+
+Tailscale 的连接建立过程非常智能，遵循一个“优先级”：
+1.  **最高优先级：直接点对点连接** - 尝试各种 NAT 穿透技术（如 UDP hole punching）。
+2.  **中等优先级：通过公共 IP 的节点中继** - 如果你有一个有公网IP的设备（如家庭服务器），其他设备可以通过它中继。
+3.  **保底方案：使用 DERP 服务器** - 只有当以上所有方法都失败时，才会 fallback（回退）到使用 DERP。
+
+这意味着，在大多数情况下，你的连接是直接的、高效的。只有在网络条件最苛刻时，才会使用 DERP，虽然延迟和速度会受一些影响，但保证了连接的成功和稳定。
+
+#### 5. DERP 的其他重要特性
+
+*   **加密：** 尽管流量经过 DERP 服务器，但它仍然是完全加密的。DERP 服务器只是一个“信使”，它无法解密你设备之间传输的实际数据内容（因为它没有你的私钥）。这得益于 Tailscale 使用的 WireGuard 协议。
+*   **自定义 DERP 服务器：** 对于企业用户或对性能有极高要求的用户，可以搭建自己的私有 DERP 服务器，并配置 Tailscale 优先使用。这在需要低延迟中继的场景（例如在同一国家内）非常有用。
+
+### 一个生动的比喻
+
+想象一下有两个特工（**设备A**和**设备B**）在敌后工作，他们想秘密接头：
+
+1.  **理想情况（NAT穿透）：** 他们发现了一个双方都能到达的、隐蔽的小巷子（直接P2P连接），于是直接在那里交换情报，最快最安全。
+2.  **困难情况（需要DERP）：** 但他们发现，由于严密的封锁，他们根本无法到达同一个地点。于是，他们决定使用一个**中立国的公共邮局（DERP服务器）**。
+    *   特工A把加密的情报（加密流量）寄到邮局。
+    *   特工B也连接到这个邮局。
+    *   邮局的工作只是把特工A的信件转交给特工B，反之亦然。
+    *   邮局的工作人员（DERP服务器）看不到信的内容（数据加密），他们只负责传递。
+    *   虽然比直接接头慢一点，但情报传递的通道是100%可靠的。
+
+### 总结
+
+| 特性         | 描述                                                         |
+| :----------- | :----------------------------------------------------------- |
+| **是什么**   | 一个全球中继服务器网络，是 Tailscale 的连接保底机制。        |
+| **何时使用** | 当两个设备无法建立直接点对点连接时。                         |
+| **工作原理** | 通过 HTTP/2 协议中继加密的流量，伪装成普通HTTPS流量以绕过防火墙。 |
+| **优点**     | **可靠性极高**，几乎能在任何网络环境下建立连接。             |
+| **缺点**     | 相比直接P2P连接，延迟稍高，速度可能稍慢（但对于大多数应用足够好）。 |

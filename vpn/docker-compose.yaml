@@ -1,0 +1,19 @@
+version: "3.9"
+
+services:
+  headscale:
+    image: headscale/headscale:v0.26.1
+    command: serve
+    volumes:
+      # 配置参考 https://github.com/juanfont/headscale/blob/v0.26.1/config-example.yaml
+      - ./config.yaml:/etc/headscale/config.yaml:ro
+      - headscale-config:/etc/headscale
+      - headscale-data:/var/lib/headscale
+    # ports:
+    #   - "8080:8080"
+    #   #- "9090:9090"
+    network_mode: host
+
+volumes:
+  headscale-config:
+  headscale-data:
