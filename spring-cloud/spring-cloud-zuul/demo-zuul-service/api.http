@@ -1,0 +1,8 @@
+### HelloWorld /api/v1/a/b/sayHello
+GET http://localhost:8081/api/v1/a/b/sayHello
+
+### Zuul /sayHello
+GET http://localhost:8080/api/v1/helloWithoutFilter/sayHello
+
+### Zuul /api/v1/hello/sayHello
+GET http://localhost:8080/api/v1/hello/sayHello

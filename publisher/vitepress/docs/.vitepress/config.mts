@@ -178,6 +178,7 @@ export default defineConfig({
             { text: 'Assistant示例', link: '/springcloud/assistant示例.md' },
             { text: '分布式ID', link: '/springcloud/分布式ID.md' },
             { text: '分布式事务', link: '/springcloud/分布式事务.md' },
+            { text: '服务网关', link: '/springcloud/服务网关.md' },
           ]
         }
       ],

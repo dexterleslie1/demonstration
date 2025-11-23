@@ -1,4 +1,4 @@
-package com.future.demo.spring.cloud.zuul;
+package com.future.demo;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

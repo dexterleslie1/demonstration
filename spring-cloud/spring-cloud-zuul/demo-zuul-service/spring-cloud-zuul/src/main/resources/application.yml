@@ -2,7 +2,7 @@ spring:
   application:
     name: spring-cloud-zuul
 server:
-  port: 18080
+  port: 8080
 
 zuul:
   routes:
@@ -19,6 +19,11 @@ zuul:
       path: /api/v1/hello/**
       service-id: helloworld
       strip-prefix: false
+    helloworld-without-filter:
+      path: /api/v1/helloWithoutFilter/**
+      service-id: helloworld
+      # 自动截断请求路径前缀/api/v1/helloWithoutFilter
+      strip-prefix: true
 
 eureka:
   client:

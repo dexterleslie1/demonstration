@@ -11,4 +11,15 @@ public class ApiController {
     public String sayHello() {
         return "Hello Zuul!";
     }
+
+    /**
+     * 测试不带过滤器的接口
+     *
+     * @return
+     */
+    @GetMapping(value = "/sayHello", produces = MediaType.TEXT_PLAIN_VALUE)
+    public String sayHelloWithoutFilter() {
+        return "Hello Zuul without filter!";
+    }
+
 }

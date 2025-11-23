@@ -1,4 +1,4 @@
-package com.future.demo.spring.cloud.zuul;
+package com.future.demo;
 
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.context.RequestContext;
