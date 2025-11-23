@@ -488,11 +488,18 @@ cat /proc/sys/fs/file-max
 
 #### 设置
 
-修改 nofile 配置：
+CentOS 修改 nofile 配置：
 
 ```bash
 sudo grep -q "^\* soft nofile" /etc/security/limits.conf && sudo sed -i '/^\* soft nofile/c \* soft nofile 65535' /etc/security/limits.conf || sudo sed -i '/^# End of file/i \* soft nofile 65535' /etc/security/limits.conf
 sudo grep -q "^\* hard nofile" /etc/security/limits.conf && sudo sed -i '/^\* hard nofile/c \* hard nofile 65535' /etc/security/limits.conf || sudo sed -i '/^# End of file/i \* hard nofile 65535' /etc/security/limits.conf
+```
+
+Ubuntu修改nofile配置（因为Ubuntu不识别`*`通配符）：
+
+```sh
+sudo grep -q "^${USER} soft nofile" /etc/security/limits.conf && sudo sed -i "/^${USER} soft nofile/c ${USER} soft nofile 65535" /etc/security/limits.conf || sudo sed -i "/^# End of file/i ${USER} soft nofile 65535" /etc/security/limits.conf
+sudo grep -q "^${USER} hard nofile" /etc/security/limits.conf && sudo sed -i "/^${USER} hard nofile/c ${USER} hard nofile 65535" /etc/security/limits.conf || sudo sed -i "/^# End of file/i ${USER} hard nofile 65535" /etc/security/limits.conf
 ```
 
 `Ubuntu` 需要如下修改，否则用户登录后上面的 `nofile` 配置不生效：
