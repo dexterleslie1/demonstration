@@ -1452,6 +1452,12 @@ ping 192.168.1.1 -t
 /Applications/Tailscale.app/Contents/MacOS/Tailscale login --auth-key tskey-auth-xxx --accept-routes
 ```
 
+测试公司内网的连通性
+
+```sh
+ping 192.168.1.1
+```
+
 ## TailScale命令 - netcheck
 
 `tailscale netcheck` 是一个非常有用的诊断命令，它的主要作用是**全面检测当前设备与 Tailscale 网络环境的连接状况**。

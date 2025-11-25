@@ -28,4 +28,4 @@ zuul:
 eureka:
   client:
     serviceUrl:
-      defaultZone: http://192.168.1.181:9999/eureka/
+      defaultZone: http://${eureka_host:localhost}:9999/eureka/

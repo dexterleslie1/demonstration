@@ -1,0 +1,10 @@
+version: "3.1"
+
+services:
+  eureka:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-zuul-eureka
+    environment:
+      - JAVA_OPTS=-Xmx1g
+      - TZ=Asia/Shanghai
+    network_mode: host
+    restart: unless-stopped

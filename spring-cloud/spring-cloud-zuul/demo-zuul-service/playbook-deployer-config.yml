@@ -1,0 +1,51 @@
+- name: "复制deployer"
+  hosts: "{{ groups['all'] }}"
+  tasks:
+    - name: "复制deployer目录到远程"
+      copy:
+        src: deployer/
+        dest: ~/deployer-zuul
+
+- name: "配置Prometheus服务的deployer"
+  hosts: common
+  tasks:
+    - name: "配置Prometheus服务的prometheus.yml"
+      template:
+        src: deployer/prometheus/prometheus.yml.j2
+        dest: ~/deployer-zuul/prometheus/prometheus.yml
+
+- name: "配置openresty服务的deployer"
+  hosts: openresty
+  tasks:
+    - name: "配置OpenResty服务的nginx.conf"
+      template:
+        src: deployer/openresty/nginx.conf.j2
+        dest: ~/deployer-zuul/openresty/nginx.conf
+
+- name: "配置helloworld服务的deployer"
+  hosts: helloworld
+  tasks:
+    - name: "配置helloworld服务的java_opts"
+      lineinfile:
+        path: ~/deployer-zuul/helloworld/.env
+        regexp: "^java_opts="
+        line: "java_opts={{ java_opts }}"
+    - name: "配置helloworld服务的eureka_host"
+      lineinfile:
+        path: ~/deployer-zuul/helloworld/.env
+        regexp: "^eureka_host="
+        line: "eureka_host={{ groups['common'][0] }}"
+
+- name: "配置zuul服务的deployer"
+  hosts: zuul
+  tasks:
+    - name: "配置zuul服务的java_opts"
+      lineinfile:
+        path: ~/deployer-zuul/zuul/.env
+        regexp: "^java_opts="
+        line: "java_opts={{ java_opts }}"
+    - name: "配置zuul服务的eureka_host"
+      lineinfile:
+        path: ~/deployer-zuul/zuul/.env
+        regexp: "^eureka_host="
+        line: "eureka_host={{ groups['common'][0] }}"

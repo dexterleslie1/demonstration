@@ -1,0 +1,53 @@
+- name: "销毁zuul服务"
+  hosts: zuul
+  tasks:
+    - name: "使用Docker Compose down销毁zuul服务"
+      shell: |
+        set -e
+        cd ~/deployer-zuul/zuul
+        docker compose down -v
+
+- name: "销毁helloworld服务"
+  hosts: helloworld
+  tasks:
+    - name: "使用Docker Compose down销毁helloworld服务"
+      shell: |
+        set -e
+        cd ~/deployer-zuul/helloworld
+        docker compose down -v
+
+- name: "销毁eureka等公共服务"
+  hosts: common
+  tasks:
+    - name: "使用Docker Compose down销毁eureka等公共服务"
+      shell: |
+        set -e
+        cd ~/deployer-zuul/common
+        docker compose down -v
+
+- name: "销毁prometheus公共服务"
+  hosts: common
+  tasks:
+    - name: "使用Docker Compose down销毁prometheus公共服务"
+      shell: |
+        set -e
+        cd ~/deployer-zuul/prometheus
+        docker compose down -v
+
+- name: "销毁OpenResty服务"
+  hosts: openresty
+  tasks:
+    - name: "使用Docker Compose down销毁OpenResty服务"
+      shell: |
+        set -e
+        cd ~/deployer-zuul/openresty
+        docker compose down -v
+
+- name: "销毁node_exporter"
+  hosts: "{{ groups['all'] }}"
+  tasks:
+    - name: "使用Docker Compose down销毁node_exporter"
+      shell: |
+        set -e
+        cd ~/deployer-zuul/node-exporter
+        docker compose down -v
