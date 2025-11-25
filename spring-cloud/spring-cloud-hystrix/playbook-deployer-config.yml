@@ -1,0 +1,60 @@
+- name: "复制deployer"
+  hosts: "{{ groups['all'] }}"
+  tasks:
+    - name: "复制deployer目录到远程"
+      copy:
+        src: deployer/
+        dest: ~/deployer-hystrix
+
+- name: "配置Prometheus服务的deployer"
+  hosts: common
+  tasks:
+    - name: "配置Prometheus服务的prometheus.yml"
+      template:
+        src: deployer/prometheus/prometheus.yml.j2
+        dest: ~/deployer-hystrix/prometheus/prometheus.yml
+
+- name: "配置openresty服务的deployer"
+  hosts: openresty
+  tasks:
+    - name: "配置OpenResty服务的nginx.conf"
+      template:
+        src: deployer/openresty/nginx.conf.j2
+        dest: ~/deployer-hystrix/openresty/nginx.conf
+
+- name: "配置common服务的deployer"
+  hosts: common
+  tasks:
+    - name: "配置common服务的eureka_host"
+      lineinfile:
+        path: ~/deployer-hystrix/common/.env
+        regexp: "^eureka_host="
+        line: "eureka_host={{ groups['common'][0] }}"
+
+- name: "配置user服务的deployer"
+  hosts: user
+  tasks:
+    - name: "配置user服务的java_opts"
+      lineinfile:
+        path: ~/deployer-hystrix/user/.env
+        regexp: "^java_opts="
+        line: "java_opts={{ java_opts }}"
+    - name: "配置user服务的eureka_host"
+      lineinfile:
+        path: ~/deployer-hystrix/user/.env
+        regexp: "^eureka_host="
+        line: "eureka_host={{ groups['common'][0] }}"
+
+- name: "配置zuul服务的deployer"
+  hosts: zuul
+  tasks:
+    - name: "配置zuul服务的java_opts"
+      lineinfile:
+        path: ~/deployer-hystrix/zuul/.env
+        regexp: "^java_opts="
+        line: "java_opts={{ java_opts }}"
+    - name: "配置zuul服务的eureka_host"
+      lineinfile:
+        path: ~/deployer-hystrix/zuul/.env
+        regexp: "^eureka_host="
+        line: "eureka_host={{ groups['common'][0] }}"

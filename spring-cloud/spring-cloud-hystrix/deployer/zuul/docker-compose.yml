@@ -1,0 +1,11 @@
+version: "3.1"
+
+services:
+  zuul:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-hystrix-zuul
+    environment:
+      - JAVA_OPTS=${java_opts}
+      - TZ=Asia/Shanghai
+      - eureka_host=${eureka_host}
+    restart: unless-stopped
+    network_mode: host

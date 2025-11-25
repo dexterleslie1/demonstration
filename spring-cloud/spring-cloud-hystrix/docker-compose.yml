@@ -1,0 +1,42 @@
+version: "3.1"
+
+services:
+  eureka:
+    build:
+      context: ./spring-cloud-eureka
+      dockerfile: Dockerfile
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-hystrix-eureka
+    environment:
+      - JAVA_OPTS=-Xmx512m
+      - TZ=Asia/Shanghai
+    network_mode: host
+  turbine:
+    build:
+      context: ./spring-cloud-turbine
+      dockerfile: Dockerfile
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-hystrix-turbine
+    environment:
+      - JAVA_OPTS=-Xmx512m
+      - TZ=Asia/Shanghai
+      - eureka_host=${eureka_host}
+    network_mode: host
+  zuul:
+    build:
+      context: ./spring-cloud-zuul
+      dockerfile: Dockerfile
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-hystrix-zuul
+    environment:
+      - JAVA_OPTS=-Xmx512m
+      - TZ=Asia/Shanghai
+      - eureka_host=${eureka_host}
+    network_mode: host
+  user:
+    build:
+      context: ./spring-cloud-user
+      dockerfile: Dockerfile
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-hystrix-user
+    environment:
+      - JAVA_OPTS=-Xmx512m
+      - TZ=Asia/Shanghai
+      - eureka_host=${eureka_host}
+    network_mode: host

@@ -1,0 +1,53 @@
+- name: "启动zuul服务"
+  hosts: zuul
+  tasks:
+    - name: "使用Docker Compose启动zuul服务"
+      shell: |
+        set -e
+        cd ~/deployer-hystrix/zuul
+        docker compose pull && docker compose up -d
+
+- name: "启动user服务"
+  hosts: user
+  tasks:
+    - name: "使用Docker Compose启动user服务"
+      shell: |
+        set -e
+        cd ~/deployer-hystrix/user
+        docker compose pull && docker compose up -d
+
+- name: "启动eureka等公共服务"
+  hosts: common
+  tasks:
+    - name: "使用Docker Compose启动eureka等公共服务"
+      shell: |
+        set -e
+        cd ~/deployer-hystrix/common
+        docker compose pull && docker compose up -d
+
+- name: "启动prometheus公共服务"
+  hosts: common
+  tasks:
+    - name: "使用Docker Compose启动prometheus公共服务"
+      shell: |
+        set -e
+        cd ~/deployer-hystrix/prometheus
+        docker compose pull && docker compose up -d
+
+- name: "启动OpenResty服务"
+  hosts: openresty
+  tasks:
+    - name: "使用Docker Compose启动OpenResty服务"
+      shell: |
+        set -e
+        cd ~/deployer-hystrix/openresty
+        docker compose pull && docker compose up -d
+
+- name: "启动node_exporter"
+  hosts: "{{ groups['all'] }}"
+  tasks:
+    - name: "使用Docker Compose启动node_exporter"
+      shell: |
+        set -e
+        cd ~/deployer-hystrix/node-exporter
+        docker compose up -d

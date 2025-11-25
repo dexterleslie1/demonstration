@@ -1,0 +1,53 @@
+- name: "销毁zuul服务"
+  hosts: zuul
+  tasks:
+    - name: "使用Docker Compose down销毁zuul服务"
+      shell: |
+        set -e
+        cd ~/deployer-hystrix/zuul
+        docker compose down -v
+
+- name: "销毁user服务"
+  hosts: user
+  tasks:
+    - name: "使用Docker Compose down销毁user服务"
+      shell: |
+        set -e
+        cd ~/deployer-hystrix/user
+        docker compose down -v
+
+- name: "销毁eureka等公共服务"
+  hosts: common
+  tasks:
+    - name: "使用Docker Compose down销毁eureka等公共服务"
+      shell: |
+        set -e
+        cd ~/deployer-hystrix/common
+        docker compose down -v
+
+- name: "销毁prometheus公共服务"
+  hosts: common
+  tasks:
+    - name: "使用Docker Compose down销毁prometheus公共服务"
+      shell: |
+        set -e
+        cd ~/deployer-hystrix/prometheus
+        docker compose down -v
+
+- name: "销毁OpenResty服务"
+  hosts: openresty
+  tasks:
+    - name: "使用Docker Compose down销毁OpenResty服务"
+      shell: |
+        set -e
+        cd ~/deployer-hystrix/openresty
+        docker compose down -v
+
+- name: "销毁node_exporter"
+  hosts: "{{ groups['all'] }}"
+  tasks:
+    - name: "使用Docker Compose down销毁node_exporter"
+      shell: |
+        set -e
+        cd ~/deployer-hystrix/node-exporter
+        docker compose down -v

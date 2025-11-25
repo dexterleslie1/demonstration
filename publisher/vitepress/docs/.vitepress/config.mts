@@ -179,6 +179,8 @@ export default defineConfig({
             { text: '分布式ID', link: '/springcloud/分布式ID.md' },
             { text: '分布式事务', link: '/springcloud/分布式事务.md' },
             { text: '服务网关', link: '/springcloud/服务网关.md' },
+            { text: '服务熔断、降级、限流', link: '/springcloud/服务熔断、降级、限流.md' },
+            { text: '服务调用和负载均衡', link: '/springcloud/服务调用和负载均衡.md' },
           ]
         }
       ],
