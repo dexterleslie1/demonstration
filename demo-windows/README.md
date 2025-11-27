@@ -458,3 +458,13 @@ MSYS2 的核心价值在于它**完美地封装和集成了 MinGW-w64**。
 netstat -ano | findstr :1080
 ```
 
+
+
+## 命令 - ping
+
+ping命令带时间
+
+```sh
+ping qq.com -t | foreach{"{0} - {1}" -f (Get-Date),$_}
+```
+

@@ -1,7 +1,3 @@
-# 运行`assistant`示例
-
-
-
 ## 运行`assisant swarm`示例
 
 下载示例`https://gitee.com/dexterleslie/demonstration/tree/master/spring-cloud/demo-spring-cloud-assistant-swarm`

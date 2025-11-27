@@ -734,3 +734,14 @@ public class ApiController {
 ### 打开文件结构
 
 `Ctrl + F12`（如果不可用使用`Alt + 7`）
+
+## IDEA运行应用报告Command line is too long错误
+
+错误信息如下：
+
+```
+Error running HcpFileApplication. Command line is too long. 
+Shorten the command line via JAR manifest or via a classpath file and rerun.
+```
+
+点击`Edit Configuration...`>`Modify options`>`Shorten command line`功能，选择`JAR manifest`选项即可。

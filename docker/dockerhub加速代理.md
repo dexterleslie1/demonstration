@@ -1,7 +1,3 @@
-# 搭建`dockerhub`加速代理
-
-
-
 ## 方案1：使用`harbor cache`特性代理
 
 参考 [链接](/harbor/#设置和运行) 搭建`harbor`服务

@@ -1,24 +1,59 @@
 version: "3.0"
 
 services:
+  #-------------------------------- 使用Derby作为持久化存储 --------------------------------
   # https://blog.csdn.net/qq_27615455/article/details/125168548
 
   # Docker 运行 nacos2.x 需要暴露 9848 和 9849 端口
   # https://github.com/alibaba/nacos/issues/6154
-  demo-spring-cloud-nacos-server:
+  nacos-server:
     image: nacos/nacos-server:v2.2.0
     environment:
       - TZ=Asia/Shanghai
       - MODE=standalone
       #- PREFER_HOST_MODE=hostname
     # 持久化配置
+    # Nacos 默认使用的是其内置的 Derby 数据库作为持久化存储。
     # volumes:
     #  - data-demo-spring-boot-nacos:/home/nacos
-    ports:
-      - '8848:8848'
-      - '9848:9848'
-      #- '9849:9849'
+#    ports:
+#      - '8848:8848'
+#      - '9848:9848'
+#      #- '9849:9849'
+    network_mode: host
 
 # 持久化配置
 # volumes:
 #  data-demo-spring-boot-nacos:
+
+#  #-------------------------------- 配置MySQL作为持久化存储 --------------------------------
+#  nacos-server-db:
+#    image: mariadb:11.4.8
+#    command:
+#      - --character-set-server=utf8mb4
+#      - --collation-server=utf8mb4_general_ci
+#      - --skip-character-set-client-handshake
+#    environment:
+#      - LANG=C.UTF-8
+#      - TZ=Asia/Shanghai
+#      - MYSQL_ROOT_PASSWORD=123456
+#    volumes:
+#      - ./db-nacos.sql:/docker-entrypoint-initdb.d/db-nacos.sql:ro
+#    network_mode: host
+#  nacos-server:
+#    image: nacos/nacos-server:v2.2.0
+#    environment:
+#      - TZ=Asia/Shanghai
+#      - MODE=standalone
+#      - SPRING_DATASOURCE_PLATFORM=mysql
+#      - MYSQL_SERVICE_HOST=localhost
+#      - MYSQL_SERVICE_DB_NAME=demo
+#      - MYSQL_SERVICE_PORT=3306
+#      - MYSQL_SERVICE_USER=root
+#      - MYSQL_SERVICE_PASSWORD=123456
+#      # 参考官方说明 https://hub.docker.com/r/nacos/nacos-server
+#      # 指定 jvm 内存为 256m
+#      - JVM_XMS=256m
+#      - JVM_XMX=256m
+#      - JVM_XMN=128m
+#    network_mode: host

@@ -91,11 +91,11 @@ sudo dcli docker install
 windows11 版本 23H2（OS 内部版本 22631.2861，ISO 镜像：Win11_23H2_Chinese_Simplified_x64v2.iso）专业工作站版，Docker Desktop 4.35.1
 
 - windows11 启用 hyper-v 特性后重启系统，参考本站[链接](/windows/README.html#启用hyper-v特性)
-- 安装 Docker Desktop 后即可使用（安装时取消勾选`Use WSL 2 instead of Hyper-V(recommended)`），访问 https://docs.docker.com/desktop/setup/install/windows-install/ 下载最新版本的 Docker Desktop。
+- 安装 Docker Desktop 后即可使用（安装时取消勾选`Use WSL 2 instead of Hyper-V(recommended)`），访问 https://docs.docker.com/desktop/setup/install/windows-install/ 下载4.35.1版本的 Docker Desktop。
 
 启用`host networking`：导航到`Settings` > `Resources` > `Network`功能，勾选`Enable host networking`选项后点击`Apply & restart`按钮即可。
 
->说明：否则不能使用`network_mode: host`模式。
+>说明：否则不能使用`network_mode: host`模式。4.35.1版本Docker Desktop才支持此特性（不能下载最新的Docker Desktop，否则IntelliJ IDEA 2023.2.5不能连接本地Docker）
 
 测试Docker服务是否正常运行
 
