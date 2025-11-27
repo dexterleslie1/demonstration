@@ -1,5 +1,3 @@
-# 运行`mysql`和`mariadb`
-
 ## 使用容器运行单机版`mysql`
 
 >注意：运行 `mysql:5.7` 需要配置 `user: mysql`，否则会报告 `chown: changing ownership of ‘./sys/devices/virtual/net/lo/phys_port_id’: Read-only file system` 错误：
@@ -215,5 +213,55 @@ docker compose up -d
 
 ```bash
 docker compose down -v
+```
+
+## MySQL/MariaDB首次启动自动创建数据库
+
+>说明：给容器镜像声明环境变量MYSQL_DATABASE后，首次启动会自动创建数据库。SQL脚本中不再需要create database和use命令。
+>
+>详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/master/demo-mysql-n-mariadb/mariadb-server/standalone
+
+SQL脚本：
+
+```sql
+-- 不再需要下面的create database和use脚本
+-- CREATE DATABASE IF NOT EXISTS demo_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- USE demo_db;
+
+CREATE TABLE IF NOT EXISTS `auth`(
+    id                  BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    account             VARCHAR(64) NOT NULL UNIQUE COMMENT '账号',
+    `password`          VARCHAR(64) NOT NULL COMMENT '密码',
+    create_time         DATETIME NOT NULL COMMENT '创建时间'
+) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+```
+
+在容器中声明MYSQL_DATABASE环境变量
+
+```yaml
+version: "3.0"
+
+services:
+  db:
+    image: mariadb:10.4.19
+    command:
+     - --character-set-server=utf8mb4
+     - --collation-server=utf8mb4_general_ci
+     - --skip-character-set-client-handshake
+     # 设置innodb-buffer-pool-size
+     # https://stackoverflow.com/questions/64825998/how-to-change-the-default-config-for-mysql-when-using-docker-image
+     - --innodb-buffer-pool-size=1g
+    volumes:
+      - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf:ro
+    environment:
+      # 解决mysql cli中文乱码问题
+      # https://blog.csdn.net/qq_44766883/article/details/128065916
+      - LANG=C.UTF-8
+      - TZ=Asia/Shanghai
+      # 在容器首次启动时自动创建一个名为 demo_db的数据库。
+      - MYSQL_DATABASE=demo_db
+      - MYSQL_ROOT_PASSWORD=123456
+    ports:
+      - 3306:3306
 ```
 

@@ -28,6 +28,8 @@ services:
       # https://blog.csdn.net/qq_44766883/article/details/128065916
       - LANG=C.UTF-8
       - TZ=Asia/Shanghai
+      # 在容器首次启动时自动创建一个名为 demo_db的数据库。
+      #- MYSQL_DATABASE=demo_db
       - MYSQL_ROOT_PASSWORD=${dbPassword}
     ports:
       - 3306:3306
