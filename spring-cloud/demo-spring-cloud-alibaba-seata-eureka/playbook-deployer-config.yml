@@ -30,30 +30,3 @@
       template:
         src: deployer/openresty/nginx.conf.j2
         dest: ~/deployer-demo-seata-at/openresty/nginx.conf
-
-- name: "配置service account服务的deployer"
-  hosts: service-account
-  tasks:
-    - name: "配置service account服务的nacos_server_address"
-      lineinfile:
-        path: ~/deployer-demo-seata-at/service-account/.env
-        regexp: "^nacos_server_address="
-        line: "nacos_server_address={{ groups['common'][0] }}:8848"
-
-- name: "配置service storage服务的deployer"
-  hosts: service-storage
-  tasks:
-    - name: "配置service storage服务的nacos_server_address"
-      lineinfile:
-        path: ~/deployer-demo-seata-at/service-storage/.env
-        regexp: "^nacos_server_address="
-        line: "nacos_server_address={{ groups['common'][0] }}:8848"
-
-- name: "配置service order服务的deployer"
-  hosts: service-order
-  tasks:
-    - name: "配置service order服务的nacos_server_address"
-      lineinfile:
-        path: ~/deployer-demo-seata-at/service-order/.env
-        regexp: "^nacos_server_address="
-        line: "nacos_server_address={{ groups['common'][0] }}:8848"

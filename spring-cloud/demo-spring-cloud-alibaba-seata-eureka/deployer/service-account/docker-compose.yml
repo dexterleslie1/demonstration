@@ -6,7 +6,6 @@ services:
     environment:
       - JAVA_OPTS=${java_opts}
       - TZ=Asia/Shanghai
-      - nacos_server_address=${nacos_server_address}
     restart: unless-stopped
     network_mode: host
   db-account:
