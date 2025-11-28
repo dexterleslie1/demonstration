@@ -61,3 +61,24 @@ location / {
 这段配置的核心逻辑是：  
 **优先返回请求 URI 对应的具体文件 → 若不存在则尝试目录默认页 → 若仍不存在则强制返回根目录的 `index.html`**。  
 常见于前端单页应用（如 Vue/React 构建的 SPA），确保所有前端路由最终都指向 `index.html`，由前端路由接管后续逻辑。
+
+## uri前缀截断
+
+>详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/openresty/backend-api
+
+location配置：
+
+```
+location /my-api {
+    proxy_set_header Host $host:$server_port;
+    proxy_set_header x-forwarded-for $proxy_add_x_forwarded_for;
+    proxy_http_version 1.1;
+    proxy_set_header Connection '';
+    # 匹配/my-api路径的请求发送给backend上游服务
+    # proxy_pass http://backend/中最后/表示忽略掉/my-api，将剩余部分作为后端服务请求的URL
+    # proxy_pass http://backend中最后没有/表示将/my-api作为后端服务请求的URL
+    proxy_pass http://backend/;
+}
+```
+
+请求接口 http://localhost/my-api/api/v1/testUriPrefixStrip 时/my-api会被openresty截断，转发给后端的api为/api/v1/testUriPrefixStrip

@@ -1,0 +1,11 @@
+version: "3.0"
+
+services:
+  openresty:
+    image: openresty/openresty
+    environment:
+      - LANG=C.UTF-8
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf
+    network_mode: host

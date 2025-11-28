@@ -1,0 +1,2 @@
+### 测试uri前缀截断
+GET http://localhost/my-api/api/v1/testUriPrefixStrip
