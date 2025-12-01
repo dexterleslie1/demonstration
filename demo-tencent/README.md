@@ -1216,6 +1216,8 @@ Page({
 
 **实现步骤如下：**
 
+>详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-tencent/demo-mp-login
+
 1. 前端创建登录按钮
 
    ```html

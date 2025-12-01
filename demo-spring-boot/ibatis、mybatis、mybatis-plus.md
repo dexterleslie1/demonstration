@@ -8,6 +8,8 @@
 
 ## `IDEA`的`MyBatisX`插件使用
 
+>说明：MyBatisX插件支持点击mapper的接口快速跳转到xml中定义的SQL位置。
+
 安装`MybatisX`插件后，通过光标放置到`mapper`类中再使用`alt+enter`组合键激活`MyBatisX`插件上下文菜单。
 
 

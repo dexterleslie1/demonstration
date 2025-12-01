@@ -187,8 +187,8 @@ git pull http://root:token-string-here123456@localhost/root/demo-devops.git
 
 ```
 # 全局方式配置http.proxy
-git config --global http.proxy 'socks5h://192.168.3.29:10080'
-git config --global https.proxy 'socks5h://192.168.3.29:10080'
+git config --global http.proxy socks5h://192.168.3.29:10080
+git config --global https.proxy socks5h://192.168.3.29:10080
 git config --global --unset http.proxy
 git config --global --unset https.proxy
 
