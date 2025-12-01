@@ -1,4 +1,4 @@
-package com.future.demo.lombok;
+package com.future.demo;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

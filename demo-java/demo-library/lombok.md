@@ -1,7 +1,3 @@
-# Lombok
-
-
-
 ## maven 项目中引用 Lombok 依赖
 
 ```xml
@@ -198,3 +194,9 @@ public void test() throws IOException {
     // endregion
 }
 ```
+
+## 注解@Slf4j报告`找不到符号变量log`错误
+
+>说明：报错原因是因为没有IDEA没有启用编译时使用Lombok插件处理注解开关。
+
+打开`Settings`>`Build, Execution, Deployment`>`Compiler`>`Annotation Processors`功能，所有profile的`Enable annotation processing`都需要启用。

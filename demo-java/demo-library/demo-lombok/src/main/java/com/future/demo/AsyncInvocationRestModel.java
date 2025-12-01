@@ -1,6 +1,5 @@
-package com.future.demo.lombok;
+package com.future.demo;
 
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;

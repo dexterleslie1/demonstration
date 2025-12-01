@@ -1,4 +1,4 @@
-package com.future.demo.lombok;
+package com.future.demo;
 
 /**
  *
