@@ -7,9 +7,9 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.2.7.RELEASE</version>
+        <version>2.7.18</version>
     </parent>
-	
+
     <groupId>com.future.demo</groupId>
     <artifactId>redistemplate-set</artifactId>
     <version>1.0.0</version>

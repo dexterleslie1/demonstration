@@ -132,3 +132,274 @@ Default locale: zh_CN, platform encoding: GBK
 OS name: "windows 11", version: "10.0", arch: "amd64", family: "windows"
 ```
 
+## 资源过滤
+
+### 什么是Maven资源过滤？
+
+**Maven资源过滤**是一种在构建过程中动态替换资源文件中占位符的机制。它允许你在配置文件中使用变量，然后在编译打包时将这些变量替换为实际的值。
+
+### 工作原理
+
+#### 1. 基本流程
+
+```
+源代码文件 (带占位符) 
+    → Maven资源过滤 
+    → 编译后的文件 (占位符被替换)
+```
+
+#### 2. 配置示例
+
+在 `pom.xml`中启用资源过滤：
+
+```
+<build>
+    <resources>
+        <resource>
+            <!-- 资源文件目录 -->
+            <directory>src/main/resources</directory>
+            <!-- 启用过滤 -->
+            <filtering>true</filtering>
+            <!-- 可选：包含特定文件 -->
+            <includes>
+                <include>**/*.yml</include>
+                <include>**/*.properties</include>
+            </includes>
+        </resource>
+    </resources>
+</build>
+```
+
+### 占位符语法
+
+#### 1. 默认语法
+
+- **Maven属性**：`${property.name}`
+- **资源过滤属性**：`@property.name@`（可自定义分隔符）
+
+#### 2. 自定义分隔符
+
+```
+<properties>
+    <resource.delimiter>@</resource.delimiter>
+</properties>
+```
+
+### 实际应用示例
+
+#### 1. 多环境配置
+
+**pom.xml**：
+
+```
+<profiles>
+    <profile>
+        <id>dev</id>
+        <properties>
+            <db.url>jdbc:mysql://localhost:3306/dev</db.url>
+            <profiles.active>dev</profiles.active>
+        </properties>
+    </profile>
+    <profile>
+        <id>prod</id>
+        <properties>
+            <db.url>jdbc:mysql://prod-server:3306/prod</db.url>
+            <profiles.active>prod</profiles.active>
+        </properties>
+    </profile>
+</profiles>
+
+<properties>
+    <app.version>1.0.0</app.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+</properties>
+```
+
+**application.yml**（过滤前）：
+
+```
+app:
+  name: ruoyi-gateway
+  version: @app.version@
+spring:
+  profiles:
+    active: @profiles.active@
+database:
+  url: @db.url@
+```
+
+**编译后的 application.yml**（开发环境）：
+
+```
+app:
+  name: ruoyi-gateway
+  version: 1.0.0
+spring:
+  profiles:
+    active: dev
+database:
+  url: jdbc:mysql://localhost:3306/dev
+```
+
+### 可用的变量来源
+
+#### 1. Maven内置属性
+
+- `@project.version@`- 项目版本
+- `@project.artifactId@`- 项目ID
+- `@project.name@`- 项目名称
+
+#### 2. POM文件中定义的属性
+
+```
+<properties>
+    <java.version>11</java.version>
+    <my.custom.property>value</my.custom.property>
+</properties>
+```
+
+#### 3. Profile中定义的属性
+
+```
+<profile>
+    <id>dev</id>
+    <properties>
+        <environment.name>development</environment.name>
+    </properties>
+</profile>
+```
+
+#### 4. 系统属性
+
+- `@user.home@`- 用户home目录
+- `@java.version@`- Java版本
+
+#### 5. 环境变量
+
+- `@env.PATH@`- 系统PATH环境变量
+
+### 高级用法
+
+#### 1. 条件过滤
+
+```
+<resource>
+    <directory>src/main/resources</directory>
+    <filtering>true</filtering>
+    <includes>
+        <include>**/application-${profiles.active}.yml</include>
+    </includes>
+</resource>
+```
+
+#### 2. 多目录资源过滤
+
+```
+<resources>
+    <resource>
+        <directory>src/main/resources/config</directory>
+        <filtering>true</filtering>
+    </resource>
+    <resource>
+        <directory>src/main/resources/static</directory>
+        <filtering>false</filtering>  <!-- 静态资源不过滤 -->
+    </resource>
+</resources>
+```
+
+### 优势与用途
+
+#### 优势：
+
+1. **环境隔离** - 不同环境使用不同配置
+2. **配置外部化** - 敏感信息不进入代码仓库
+3. **构建时确定** - 在打包时确定最终配置
+4. **一致性** - 确保所有环境使用相同的构建产物
+
+#### 典型用途：
+
+- 多环境配置管理
+- 版本信息注入
+- 数据库连接配置
+- API密钥和敏感信息管理
+- 路径配置动态化
+
+### 总结
+
+Maven资源过滤是Java项目中实现**配置外部化**和**多环境支持**的重要技术，通过构建时变量替换，实现了"一次构建，多处部署"的现代化部署理念。
+
+### 示例
+
+>详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-maven/demo-resource-filtering
+
+启用Maven资源过滤特性
+
+```xml
+<build>
+    <!-- 启用Maven资源过滤特性 -->
+    <resources>
+        <resource>
+            <!-- 资源文件目录 -->
+            <directory>src/main/resources</directory>
+            <!-- 启用过滤 -->
+            <filtering>true</filtering>
+            <!-- 可选：包含特定文件 -->
+            <includes>
+                <include>**/*.yml</include>
+                <include>**/*.properties</include>
+            </includes>
+        </resource>
+    </resources>
+</build>
+```
+
+定义开发环境和生产环境的profile
+
+```xml
+<profiles>
+    <!-- 开发环境 -->
+    <profile>
+        <id>dev</id>
+        <properties>
+            <profiles.active>dev</profiles.active>
+            <my.p1>p1-dev</my.p1>
+        </properties>
+    </profile>
+    <!-- 生产环境 -->
+    <profile>
+        <id>prod</id>
+        <properties>
+            <profiles.active>prod</profiles.active>
+            <my.p1>p1-prod</my.p1>
+        </properties>
+        <activation>
+            <!-- mvnw package命令没有使用-P dev指定profile时默认启用的profile -->
+            <activeByDefault>true</activeByDefault>
+        </activation>
+    </profile>
+</profiles>
+```
+
+application.properties使用资源过滤占位符
+
+```properties
+spring.application.name=demo-resource-filtering
+# 使用 @placeholder@：当你需要明确区分这是构建时注入的值，并且避免与文件本身的语法冲突时。
+# 例如，Spring Boot 的 application.properties本身就使用 ${}进行属性占位符解析。
+# 如果你在 Maven 过滤时也使用 ${}，会造成冲突。这时，使用 @@是更安全、更清晰的选择。
+spring.profiles.active=@profiles.active@
+my.p1=@my.p1@
+
+```
+
+编译应用以触发资源过滤
+
+```sh
+# 使用默认profile dev编译
+./mvnw package
+
+# 指定使用profile prod编译
+./mvnw package -P prod
+```
+
+查看编译输出的target\classes\application.properties配置是否符合预期
