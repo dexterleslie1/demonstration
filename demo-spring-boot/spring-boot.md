@@ -590,7 +590,151 @@ public class ApplicationTests {
 
 ```
 
+## 自动配置 - spring.factories（旧方式）和AutoConfiguration.imports（新方式）区别
 
+这两种自动配置方式**在功能上没有本质区别**，但它们是 **Spring Boot 不同版本的推荐写法**。让我详细对比一下：
+
+### 版本演进对比
+
+| 特性              | `spring.factories`(旧方式)  | `AutoConfiguration.imports`(新方式)                          |
+| ----------------- | --------------------------- | ------------------------------------------------------------ |
+| **引入版本**      | Spring Boot 1.0+            | Spring Boot 2.7+ (作为新标准)                                |
+| **文件路径**      | `META-INF/spring.factories` | `META-INF/org.springframework.boot.autoconfigure.AutoConfiguration.imports` |
+| **语法格式**      | Properties 格式，需要转义符 | 简单的每行一个类名                                           |
+| **Spring Boot 3** | 仍支持，但不推荐            | **推荐的首选方式**                                           |
+| **可读性**        | 较差，需要转义              | 更好，更简洁                                                 |
+
+### 具体语法对比
+
+#### 1. `spring.factories`(传统方式)
+
+>详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-spring-boot/demo-spring-boot-starter
+
+/src/main/resources/META-INF/spring.factories：
+
+```
+# 需要转义符和等号
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  com.future.demo.config.DemoPluginAutoConfiguration,\
+  com.example.AnotherConfig
+```
+
+#### 2. `AutoConfiguration.imports`(新方式)
+
+/src/main/resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports：
+
+```
+# 每行一个类名，更简洁
+com.future.demo.config.RedisConfig
+com.future.demo.config.RedisService
+```
+
+RedisConfig.java：
+
+```java
+@Configuration
+@EnableCaching
+@AutoConfigureBefore(RedisAutoConfiguration.class)
+public class RedisConfig extends CachingConfigurerSupport
+{
+    @Bean
+    @SuppressWarnings(value = { "unchecked", "rawtypes" })
+    public RedisTemplate<Object, Object> redisTemplate(RedisConnectionFactory connectionFactory)
+    {
+        RedisTemplate<Object, Object> template = new RedisTemplate<>();
+        template.setConnectionFactory(connectionFactory);
+
+        FastJson2JsonRedisSerializer serializer = new FastJson2JsonRedisSerializer(Object.class);
+
+        // 使用StringRedisSerializer来序列化和反序列化redis的key值
+        template.setKeySerializer(new StringRedisSerializer());
+        template.setValueSerializer(serializer);
+
+        // Hash的key也采用StringRedisSerializer的序列化方式
+        template.setHashKeySerializer(new StringRedisSerializer());
+        template.setHashValueSerializer(serializer);
+
+        template.afterPropertiesSet();
+        return template;
+    }
+}
+
+```
+
+RedisService.java：
+
+```java
+@Component
+public class RedisService
+{
+    @Autowired
+    public RedisTemplate redisTemplate;
+
+    /**
+     * 缓存基本的对象，Integer、String、实体类等
+     *
+     * @param key 缓存的键值
+     * @param value 缓存的值
+     */
+    public <T> void setCacheObject(final String key, final T value)
+    {
+        redisTemplate.opsForValue().set(key, value);
+    }
+    
+    ...
+
+}
+
+```
+
+### 兼容性和迁移
+
+#### Spring Boot 的兼容策略：
+
+- **Spring Boot 2.7+**：同时支持两种方式，但推荐使用新方式
+- **Spring Boot 3.0**：优先使用新方式，旧方式作为后备
+- **如果两者都存在**：Spring Boot 会**合并**两个文件中的配置类
+
+#### 你的项目现状：
+
+```
+// spring.factories 中配置的类
+com.future.demo.config.DemoPluginAutoConfiguration
+
+// AutoConfiguration.imports 中配置的类  
+com.hcp.common.redis.configure.RedisConfig
+com.hcp.common.redis.service.RedisService
+
+// 最终效果：三个类都会被自动配置
+```
+
+### 最佳实践建议
+
+#### 1. **统一使用新方式**
+
+```
+// 建议：将 spring.factories 中的配置迁移到 imports 文件
+// /META-INF/org.springframework.boot.autoconfigure.AutoConfiguration.imports
+com.future.demo.config.DemoPluginAutoConfiguration
+com.hcp.common.redis.configure.RedisConfig
+com.hcp.common.redis.service.RedisService
+```
+
+#### 2. **删除重复配置**
+
+```
+// 可以删除旧的 spring.factories 文件，避免混淆
+// 或者清空其内容，只保留新文件
+```
+
+### 本质总结
+
+- **功能相同**：都是告诉 Spring Boot "这些类需要自动配置"
+- **语法差异**：新方式更简洁易读
+- **版本演进**：`AutoConfiguration.imports`是现代化的替代方案
+- **无冲突**：两者可以共存，配置类会被合并加载
+
+**推荐**：在新项目中统一使用 `AutoConfiguration.imports`方式，保持代码的现代性和可维护性。
 
 ## 生命周期
 
