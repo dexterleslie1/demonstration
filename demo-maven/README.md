@@ -1,7 +1,3 @@
-# maven
-
-
-
 ## 运行原理
 
 Maven的运行原理主要基于其项目对象模型（Project Object Model，POM）、依赖管理系统、构建生命周期以及插件机制等核心组件和概念。以下是Maven运行原理的详细解释：
@@ -110,3 +106,29 @@ Maven插件是一组可以执行特定任务的工具，每个插件包含一个
   ...
 </settings>
 ```
+
+## 安装 - Ubuntu
+
+>说明：使用dcli安装Maven。
+
+## 安装 - Windows11
+
+访问 https://archive.apache.org/dist/maven/maven-3/3.5.4/binaries/ 下载apache-maven-3.5.4-bin.zip。
+
+解压apache-maven-3.5.4-bin.zip到任意目录。
+
+配置Path环境变量添加Maven bin路径：Path=C:\apache-maven-3.5.4\bin。
+
+添加环境变量MAVEN_OPTS配置Maven -Xmx参数：MAVEN_OPTS=-Xmx1024m。
+
+验证Maven是否安装成功：
+
+```
+$ mvn -version
+Apache Maven 3.5.4 (1edded0938998edf8bf061f1ceb3cfdeccf443fe; 2018-06-18T02:33:14+08:00)
+Maven home: C:\apache-maven-3.5.4\bin\..
+Java version: 17.0.12, vendor: Oracle Corporation, runtime: C:\Program Files\Java\jdk-17
+Default locale: zh_CN, platform encoding: GBK
+OS name: "windows 11", version: "10.0", arch: "amd64", family: "windows"
+```
+
