@@ -1279,3 +1279,657 @@ public class RadixTests {
 }
 ```
 
+## 注解 - 概念
+
+### 一、核心概念：注解是什么？
+
+简单来说，**注解是一种形式化的元数据，它可以被添加到 Java 代码中**。
+
+让我们拆解这个定义：
+
+- **元数据**：意思是“关于数据的数据”。注解本身不是程序逻辑的一部分，而是为代码提供额外的信息或说明。
+- **形式化**：注解有特定的语法和规则，不同于普通的注释（`//`或 `/* ... */`）。
+- **添加到代码中**：注解可以用于修饰类、方法、变量、参数、包等。
+
+你可以把注解想象成一个“标签”。你给一段代码（比如一个方法）贴上一个标签，这个标签本身不执行任何操作，但它可以告诉编译器、开发工具或者运行时环境一些重要的信息。
+
+**注解 vs. 普通注释**
+
+| 特性                   | 注解（Annotation）                  | 普通注释（Comment）             |
+| ---------------------- | ----------------------------------- | ------------------------------- |
+| **作用对象**           | 编译器、开发工具、运行时环境（JVM） | 仅限阅读代码的开发者            |
+| **格式**               | 以 `@`符号开头，如 `@Override`      | `//`, `/* ... */`, `/** ... */` |
+| **是否编译到类文件中** | 是（可以通过反射读取）              | 否                              |
+| **是否有功能影响**     | 是（可以被处理，从而影响程序行为）  | 否                              |
+
+------
+
+### 二、注解的主要用途
+
+注解主要有三个层面的用途：
+
+1. **给编译器提供信息**：编译器可以根据注解来检查代码，发现错误或抑制警告。 **例子**：`@Override`：告诉编译器这个方法是重写父类的方法，如果方法签名与父类不匹配，编译器会报错。 **例子**：`@SuppressWarnings`：告诉编译器忽略特定的警告，如 `@SuppressWarnings("unchecked")`。
+2. **编译时处理**：在编译阶段，一些工具（如注解处理器）可以扫描代码中的注解，并自动生成额外的代码、配置文件等。这是许多流行框架（如 Lombok, MapStruct）的核心原理。
+3. **运行时处理**：在程序运行期间，可以通过 Java 的反射（Reflection）机制读取类、方法上的注解，并根据注解的信息来动态改变程序的行为。这是大多数现代 Java 框架（如 Spring, JUnit, Hibernate）的基石。
+
+------
+
+### 三、内置的常用注解
+
+Java 自带了一些核心注解：
+
+- **`@Override`**：表示一个方法声明旨在重写超类中的方法声明。
+- **`@Deprecated`**：表示已过时，不推荐使用的代码元素。编译器会产生警告。
+- **`@SuppressWarnings`**：指示编译器忽略特定的警告。
+- **`@FunctionalInterface`**（Java 8 引入）：表示一个接口是函数式接口（只有一个抽象方法）。
+
+------
+
+### 四、如何自定义注解？
+
+你可以创建自己的注解来满足特定需求。这通常用于框架开发。
+
+**1. 定义注解**
+
+使用 `@interface`关键字来定义。
+
+```
+// 定义一个简单的注解
+public @interface MyCustomAnnotation {
+}
+```
+
+**2. 为注解添加元注解**
+
+元注解是用于修饰其他注解的注解，它们定义了自定义注解的行为。
+
+| 元注解            | 作用                                                         |
+| ----------------- | ------------------------------------------------------------ |
+| **`@Target`**     | 指定注解可以应用在哪些地方（如类、方法、字段等）。例如：`ElementType.METHOD`, `ElementType.TYPE`。 |
+| **`@Retention`**  | 指定注解的生命周期。`RetentionPolicy.SOURCE`（仅源码），`RetentionPolicy.CLASS`（编译到class文件），**`RetentionPolicy.RUNTIME`（运行时可用，可通过反射读取）**。 |
+| **`@Documented`** | 表示该注解应被 javadoc 工具记录。                            |
+| **`@Inherited`**  | 表示子类可以继承父类上的注解。                               |
+
+**示例：定义一个更复杂的注解**
+
+```
+import java.lang.annotation.*;
+
+@Target(ElementType.METHOD) // 这个注解只能用在方法上
+@Retention(RetentionPolicy.RUNTIME) // 这个注解在运行时存在，可以通过反射读取
+public @interface MyCustomAnnotation {
+    String value() default "default value"; // 定义一个属性，默认值为 "default value"
+    int priority() default 0; // 定义另一个属性
+}
+```
+
+**3. 使用自定义注解**
+
+```
+public class MyClass {
+    @MyCustomAnnotation(value = "这是一个重要方法", priority = 1)
+    public void myMethod() {
+        // 方法实现
+    }
+}
+```
+
+**4. 在运行时通过反射处理注解**
+
+这是让注解“活”起来的关键一步。
+
+```
+import java.lang.reflect.Method;
+
+public class AnnotationTest {
+    public static void main(String[] args) throws Exception {
+        // 1. 获取类的Class对象
+        Class<MyClass> clazz = MyClass.class;
+
+        // 2. 获取指定方法
+        Method method = clazz.getMethod("myMethod");
+
+        // 3. 判断方法上是否存在指定的注解
+        if (method.isAnnotationPresent(MyCustomAnnotation.class)) {
+            // 4. 获取注解实例
+            MyCustomAnnotation annotation = method.getAnnotation(MyCustomAnnotation.class);
+
+            // 5. 从注解实例中获取属性值
+            String value = annotation.value();
+            int priority = annotation.priority();
+
+            // 6. 根据注解信息执行逻辑
+            System.out.println("Value: " + value);
+            System.out.println("Priority: " + priority);
+
+            if (priority > 0) {
+                System.out.println("这是一个高优先级方法，需要特殊处理！");
+            }
+        }
+    }
+}
+```
+
+运行上述 `AnnotationTest`类，输出结果将是：
+
+```
+Value: 这是一个重要方法
+Priority: 1
+这是一个高优先级方法，需要特殊处理！
+```
+
+------
+
+### 五、总结
+
+| 特性         | 描述                                                         |
+| ------------ | ------------------------------------------------------------ |
+| **本质**     | 附加在代码上的元数据（标签）。                               |
+| **目的**     | 为编译器、开发工具或运行时环境提供指示。                     |
+| **核心机制** | **反射**是实现运行时注解功能的核心。                         |
+| **应用场景** | 代码检查、依赖注入（如 Spring 的 `@Autowired`）、单元测试（JUnit）、ORM 映射（Hibernate）、自动生成代码等。 |
+
+总而言之，注解是 Java 中一种强大的元编程工具，它将配置信息和代码本身紧密地结合在一起，极大地提高了开发效率和代码的声明性，是现代 Java 生态系统的支柱之一。
+
+## 注解 - @Target
+
+### 核心作用
+
+`@Target`注解的**核心作用是指定自定义注解可以应用在 Java 程序的哪些元素上**。换句话说，它定义了注解的使用目标，限制了注解的使用范围，防止注解被错误地用在不当的地方。
+
+------
+
+### 基本语法
+
+`@Target`接收一个 `ElementType[]`作为参数值，即可以指定一个或多个目标类型。
+
+```
+@Target({ElementType.TYPE, ElementType.METHOD}) // 可以同时指定多个目标
+public @interface MyCustomAnnotation {
+    // 注解的定义
+}
+```
+
+------
+
+### `ElementType`的枚举值
+
+`ElementType`是一个枚举类，包含了所有可以指定的目标类型。以下是常用的值：
+
+| `ElementType`值       | 含义                           | 示例                                       |
+| --------------------- | ------------------------------ | ------------------------------------------ |
+| **`TYPE`**            | 类、接口（包括注解类型）、枚举 | `class`, `interface`, `enum`               |
+| **`FIELD`**           | 字段（包括枚举常量）           | 类的成员变量                               |
+| **`METHOD`**          | 方法                           | 类的方法                                   |
+| **`PARAMETER`**       | 方法的形参                     | `myMethod(@MyAnnotation String param)`     |
+| **`CONSTRUCTOR`**     | 构造函数                       | 类的构造方法                               |
+| **`LOCAL_VARIABLE`**  | 局部变量                       | 方法内部定义的变量                         |
+| **`ANNOTATION_TYPE`** | 注解类型                       | 用于定义元注解（注解的注解）               |
+| **`PACKAGE`**         | 包                             | 包信息（通常在 `package-info.java`中使用） |
+| **`TYPE_PARAMETER`**  | 类型参数（Java 8+）            | 泛型参数：`class MyClass<T>`               |
+| **`TYPE_USE`**        | 类型使用（Java 8+）            | 几乎任何使用类型的地方，功能非常强大       |
+
+------
+
+### 代码示例
+
+#### 示例1：定义一个只能用在方法上的注解
+
+这个注解用于标记需要进行性能测试的方法。
+
+```
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+// 指定该注解只能用于方法
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME) // 注解在运行时可用
+public @interface PerformanceTest {
+    // 可以添加一些属性，比如超时时间（毫秒）
+    long timeout() default 1000L;
+}
+```
+
+**使用该注解：**
+
+```
+public class Calculator {
+
+    @PerformanceTest(timeout = 500) // 正确：用在方法上
+    public void calculate() {
+        // ... 复杂的计算
+    }
+
+    // @PerformanceTest // 错误！如果写在这里，编译会报错，因为@PerformanceTest不能用于字段
+    // private String name;
+}
+```
+
+#### 示例2：定义一个可以用在类和方法上的注解
+
+这个注解用于标记一个功能模块，包括模块本身（类）和模块的核心方法。
+
+```
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Target;
+
+@Target({ElementType.TYPE, ElementType.METHOD}) // 可以同时用于类和方法
+public @interface FeatureModule {
+    String moduleName();
+    String version() default "1.0";
+}
+```
+
+**使用该注解：**
+
+```
+@FeatureModule(moduleName = "用户管理", version = "2.0") // 正确：用在类上
+public class UserService {
+
+    @FeatureModule(moduleName = "用户登录") // 正确：用在方法上
+    public void login() {
+        // ... 登录逻辑
+    }
+}
+```
+
+------
+
+### 如果不使用 `@Target`会怎样？
+
+如果一个自定义注解没有使用 `@Target`进行修饰，那么该注解可以用于**除了类型参数（`TYPE_PARAMETER`）之外**的任何元素上。
+
+**但是，强烈建议始终使用 `@Target`**，原因如下：
+
+1. **明确意图**：让阅读代码的人立刻明白这个注解的用途。
+2. **编译时检查**：编译器会帮你检查注解是否被用错了地方，提前发现错误，避免运行时出现意外行为。
+3. **提高代码质量**：限制注解的使用范围是良好API设计的一部分。
+
+------
+
+### 总结
+
+| 特性         | 描述                                                         |
+| ------------ | ------------------------------------------------------------ |
+| **目的**     | 限制自定义注解可以标注的程序元素（如类、方法、字段等）。     |
+| **参数**     | 一个或多个 `ElementType`枚举值。                             |
+| **重要性**   | 提供编译时安全检查，明确注解的用途，是定义注解时的**最佳实践**。 |
+| **默认行为** | 如果省略 `@Target`，注解可以用于几乎任何地方（除 `TYPE_PARAMETER`外），但这不推荐。 |
+
+简单来说，**`@Target`就是注解的“使用说明书”，它告诉编译器和开发者这个注解应该贴在哪儿。**
+
+## 注解 - @Retention
+
+### 核心作用
+
+`@Retention`注解的**核心作用是定义自定义注解的生命周期**，即指定注解信息在哪个级别可用：仅在源代码中、在编译后的类文件中，还是在运行时通过反射可读取。
+
+------
+
+### 基本语法
+
+`@Retention`接收一个 `RetentionPolicy`枚举值作为参数。
+
+```
+@Retention(RetentionPolicy.RUNTIME) // 最常见的使用方式
+public @interface MyCustomAnnotation {
+    // 注解的定义
+}
+```
+
+------
+
+### `RetentionPolicy`的枚举值
+
+`RetentionPolicy`有三个枚举值，代表了三种不同的保留策略：
+
+| `RetentionPolicy`值 | 生命周期       | 说明                                                         | 常见用途                                                     |
+| ------------------- | -------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| **`SOURCE`**        | **源码级别**   | 注解只在源代码中保留，**编译器编译后就会丢弃**。编译后的 `.class`文件中不包含该注解信息。 | 1. **编译期检查**：如 `@Override`、`@SuppressWarnings`，编译器利用它们进行检查或抑制警告，检查完后就没用了。 2. **代码生成工具**：如 Lombok，在编译时根据注解生成代码，生成完后注解的使命就结束了。 |
+| **`CLASS`**         | **类文件级别** | 注解会被编译器保留在编译后的 `.class`文件中，但**不会被加载到 JVM 内存中**。因此在**运行时不可通过反射获取**。这是**默认策略**。 | 1. **字节码处理工具**：在程序运行时之外的工具（如 ASM、CGLib 等）可以读取 `.class`文件中的注解信息进行一些后处理。 2. 实际开发中直接使用较少。 |
+| **`RUNTIME`**       | **运行时级别** | 注解会被编译器保留在 `.class`文件中，并且在程序**运行时会被 JVM 保留，可以通过反射机制读取**。 | 1. **运行时框架**：这是最常用的策略。如 Spring 框架中的 `@Controller`、`@Autowired`，JUnit 中的 `@Test`，JPA 中的 `@Entity`等。框架在运行时通过反射读取这些注解来配置行为、依赖注入、执行测试等。 |
+
+------
+
+### 代码示例与对比
+
+#### 示例1：`SOURCE`级别（如 `@Override`）
+
+`@Override`注解本身就是 `@Retention(RetentionPolicy.SOURCE)`的典型例子。
+
+```
+// 模拟 @Override 的定义（实际定义更复杂）
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.SOURCE) // 源码级别保留
+public @interface MyOverride {
+}
+
+public class Father {
+    public void sayHello() {
+        System.out.println("Hello from Father");
+    }
+}
+
+public class Son extends Father {
+    @MyOverride // 作用：提示编译器检查此方法是否真的重写了父类方法
+    public void sayHello() {
+        System.out.println("Hello from Son");
+    }
+}
+```
+
+- **作用**：编译器看到 `@MyOverride`会检查 `Son`类是否真的重写了 `Father`的方法。如果 `Father`没有 `sayHello`方法，编译器会报错。
+- **生命周期**：检查完成后，这个注解信息就不会被写入 `.class`文件。你在运行时通过反射是获取不到 `@MyOverride`注解的。
+
+#### 示例2：`RUNTIME`级别（Spring/ JUnit 风格）
+
+这是自定义注解最常见的用法。
+
+```
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+
+// 定义一个运行时注解，模拟JUnit的@Test
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME) // 关键：运行时保留
+public @interface MyTest {
+    // 可以添加属性，比如是否启用测试
+    boolean enabled() default true;
+}
+```
+
+**使用注解并利用反射在运行时读取：**
+
+```
+public class TestCase {
+
+    @MyTest(enabled = true)
+    public void testUserLogin() {
+        System.out.println("执行用户登录测试...");
+        // 测试逻辑
+    }
+
+    @MyTest(enabled = false) // 这个测试被禁用了
+    public void testUserLogout() {
+        System.out.println("执行用户登出测试...");
+    }
+
+    public void commonMethod() { // 这个不是测试方法
+        System.out.println("这是一个普通方法");
+    }
+}
+```
+
+**编写一个简单的“测试运行器”来读取运行时注解：**
+
+```
+import java.lang.reflect.Method;
+
+public class SimpleTestRunner {
+    public static void main(String[] args) throws Exception {
+        Class<TestCase> testClass = TestCase.class;
+        Object testInstance = testClass.getDeclaredConstructor().newInstance();
+
+        // 获取测试类的所有方法
+        Method[] methods = testClass.getDeclaredMethods();
+
+        for (Method method : methods) {
+            // 检查方法上是否有 @MyTest 注解
+            if (method.isAnnotationPresent(MyTest.class)) {
+                MyTest myTest = method.getAnnotation(MyTest.class);
+                // 读取注解的属性值
+                if (myTest.enabled()) {
+                    System.out.println("运行测试: " + method.getName());
+                    method.invoke(testInstance); // 执行测试方法
+                } else {
+                    System.out.println("跳过禁用的测试: " + method.getName());
+                }
+            }
+        }
+    }
+}
+```
+
+**输出结果：**
+
+```
+运行测试: testUserLogin
+执行用户登录测试...
+跳过禁用的测试: testUserLogout
+```
+
+从这个例子可以清晰地看到，**正是因为 `@MyTest`的保留策略是 `RUNTIME`，我们的 `SimpleTestRunner`才能在程序运行的时候，通过反射（`method.getAnnotation`）发现哪些方法被标记了，并根据注解的属性值决定是否执行测试。**
+
+------
+
+### 总结与对比
+
+| 特性                   | `SOURCE`             | `CLASS`（默认）              | `RUNTIME`                           |
+| ---------------------- | -------------------- | ---------------------------- | ----------------------------------- |
+| **生命周期**           | 源码 -> 编译前       | 源码 -> 编译 -> `.class`文件 | 源码 -> 编译 -> `.class`文件 -> JVM |
+| **是否在.class文件中** | 否                   | 是                           | 是                                  |
+| **是否在JVM中**        | 否                   | 否                           | 是                                  |
+| **反射是否可用**       | 否                   | 否                           | **是**                              |
+| **主要用途**           | 编译器检查、代码生成 | 字节码处理工具               | **运行时框架（Spring, JUnit等）**   |
+
+**简单来说：**
+
+- **`@Retention(RetentionPolicy.SOURCE)`**：给**编译器**看的，用完就扔。
+- **`@Retention(RetentionPolicy.CLASS)`**：给**编译后处理工具**看的，大部分Java程序员不直接使用。
+- **`@Retention(RetentionPolicy.RUNTIME)`**：给**JVM和你的程序在运行时**看的，这是实现框架和复杂功能的关键。
+
+在开发中，如果你希望注解在运行时起作用，**必须**将其声明为 `@Retention(RetentionPolicy.RUNTIME)`。
+
+## 注解 - @Documented
+
+### 核心作用
+
+`@Documented`注解的**核心作用是标记一个注解，使其注解信息能够被包含在生成的 JavaDoc 文档中**。它是一个元注解，本身不包含任何属性。
+
+------
+
+### 问题背景：默认行为
+
+默认情况下，**自定义注解的信息不会出现在 JavaDoc 文档中**。
+
+让我们看一个例子：
+
+#### 1. 定义一个没有 `@Documented`的注解
+
+```
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+// 注意：这里没有使用 @Documented
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface UndocumentedAnnotation {
+    String author() default "unknown";
+    String version() default "1.0";
+}
+```
+
+#### 2. 在一个类上使用这个注解
+
+```
+/**
+ * 这是一个用户服务类，用于处理用户相关的业务逻辑。
+ */
+@UndocumentedAnnotation(author = "Alice", version = "2.0")
+public class UserService {
+    
+    /**
+     * 用户登录方法
+     */
+    public void login() {
+        // 登录逻辑
+    }
+}
+```
+
+#### 3. 生成 JavaDoc 后的效果
+
+当你使用 `javadoc`命令为 `UserService`类生成文档时，在生成的 HTML 页面中，你**不会看到** `@UndocumentedAnnotation`的任何信息。文档只会显示类的描述和方法，就像这个注解不存在一样。
+
+------
+
+### 解决方案：使用 `@Documented`
+
+#### 1. 定义一个使用 `@Documented`的注解
+
+```
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+// 关键：添加了 @Documented 元注解
+@Documented
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface DocumentedAnnotation {
+    String author() default "unknown";
+    String version() default "1.0";
+    String description() default "";
+}
+```
+
+#### 2. 在另一个类上使用这个注解
+
+```
+/**
+ * 这是一个订单服务类，用于处理订单相关的业务逻辑。
+ */
+@DocumentedAnnotation(
+    author = "Bob",
+    version = "1.5",
+    description = "这是订单模块的核心服务类"
+)
+public class OrderService {
+    
+    /**
+     * 创建订单方法
+     */
+    public void createOrder() {
+        // 创建订单逻辑
+    }
+}
+```
+
+#### 3. 生成 JavaDoc 后的效果
+
+现在，当你为 `OrderService`类生成 JavaDoc 文档时，在类的详细说明部分，**你会看到** `@DocumentedAnnotation`的信息显示在文档中：
+
+```
+类 OrderService
+java.lang.Object
+  └── OrderService
+
+@DocumentedAnnotation(author="Bob", version="1.5", description="这是订单模块的核心服务类")
+public class OrderService
+extends Object
+
+这是一个订单服务类，用于处理订单相关的业务逻辑。
+```
+
+------
+
+### 完整示例对比
+
+让我们创建一个更完整的示例来展示区别：
+
+#### 代码实现
+
+```
+import java.lang.annotation.*;
+
+// 不使用 @Documented
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+@interface InvisibleInDoc {
+    String value();
+}
+
+// 使用 @Documented
+@Documented
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+@interface VisibleInDoc {
+    String value();
+}
+
+/**
+ * 这个类展示了不使用 @Documented 的注解效果。
+ */
+@InvisibleInDoc("这个注解信息不会出现在JavaDoc中")
+class ClassA {
+    // 类A的实现
+}
+
+/**
+ * 这个类展示了使用 @Documented 的注解效果。
+ */
+@VisibleInDoc("这个注解信息会出现在JavaDoc中")
+class ClassB {
+    // 类B的实现
+}
+```
+
+#### 生成 JavaDoc 的步骤和结果
+
+1. 
+
+   **生成文档**：
+
+   ```
+   javadoc -d doc Example.java
+   ```
+
+2. **查看结果**： 打开 `doc/ClassA.html`：你看不到 `@InvisibleInDoc`注解的任何痕迹 打开 `doc/ClassB.html`：你会清楚地看到 `@VisibleInDoc("这个注解信息会出现在JavaDoc中")`
+
+------
+
+### 与其他元注解的关系
+
+`@Documented`通常与其他元注解一起使用：
+
+```
+@Documented // 包含在JavaDoc中
+@Target(ElementType.METHOD) // 只能用于方法
+@Retention(RetentionPolicy.RUNTIME) // 运行时可用
+public @interface ApiOperation {
+    String value();
+    String notes() default "";
+    boolean deprecated() default false;
+}
+```
+
+这种组合在创建API文档工具（如Swagger）的注解时非常常见。
+
+------
+
+### 重要注意事项
+
+1. **只影响 JavaDoc**：`@Documented`只影响 JavaDoc 工具生成的文档，**不影响注解的运行时行为**。
+2. **需要合适的 `@Retention`**：为了让注解信息能出现在 JavaDoc 中，注解至少需要保留到 `CLASS`级别（因为 `javadoc`工具是读取 `.class`文件生成文档的）。通常与 `RUNTIME`一起使用。
+3. **不影响代码功能**：无论是否使用 `@Documented`，注解在代码中的功能是完全一样的。
+4. **系统注解的例子**：JDK 中的 `@Deprecated`注解就使用了 `@Documented`，所以当你在代码中使用 `@Deprecated`标记一个方法时，该方法在 JavaDoc 中也会显示为已弃用。
+
+------
+
+### 总结
+
+| 方面         | 说明                                                |
+| ------------ | --------------------------------------------------- |
+| **主要作用** | 让自定义注解的信息出现在 JavaDoc 文档中             |
+| **默认行为** | 不加 `@Documented`时，注解信息不会出现在 JavaDoc 中 |
+| **使用场景** | 当你希望注解作为API契约的一部分被文档化时           |
+| **影响范围** | 只影响文档生成，不影响注解的运行时功能              |
+| **常见组合** | 与 `@Target`、`@Retention`等元注解一起使用          |
+
+**简单来说：`@Documented`就是一个开关，决定你的注解是否要在项目的技术文档中"露个脸"。** 对于需要生成详细API文档的库或框架（如Spring、Swagger等），这个注解非常重要。

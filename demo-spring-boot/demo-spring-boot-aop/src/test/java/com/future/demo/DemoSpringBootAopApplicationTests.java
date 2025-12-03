@@ -1,9 +1,14 @@
 package com.future.demo;
 
+import jakarta.annotation.Resource;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @SpringBootTest
 class DemoSpringBootAopApplicationTests {
@@ -16,6 +21,9 @@ class DemoSpringBootAopApplicationTests {
     SharedStore sharedStore;
     @Autowired
     AroundAspect aroundAspect;
+
+    @Resource
+    MyAnnotationService myAnnotationService;
 
     @Test
     void contextLoads() {
@@ -63,6 +71,17 @@ class DemoSpringBootAopApplicationTests {
             myAspect.reset();
             aroundAspect.reset();
         }
+
+        // 测试切面执行顺序
+        myAspect.reset();
+        myCalculator.add(1, 2);
+        Assertions.assertArrayEquals(new String[]{"aspect1", "aspect2"}, sharedStore.sharedList.toArray());
+
+        // 测试自定义注解aop
+        List<String> list = myAnnotationService.method1(new ArrayList<>() {{
+            add("x1");
+        }});
+        Assertions.assertArrayEquals(Arrays.asList("x1", "属性1", "属性2").toArray(), list.toArray());
     }
 
 }
