@@ -2,7 +2,51 @@
 
 >请参考本站 <a href="/vue/集成element-ui.html" target="_blank">链接</a>
 
+## 按钮Button
 
+>详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-element-ui/element-ui-button
+>
+>[组件 | Element](https://element.eleme.cn/#/zh-CN/component/button)
+
+### 朴素按钮
+
+```vue
+<div>朴素按钮</div>
+<div>
+  <el-button plain>朴素按钮</el-button>
+  <el-button type="primary" plain>主要按钮</el-button>
+  <el-button type="success" plain>成功按钮</el-button>
+  <el-button type="info" plain>信息按钮</el-button>
+  <el-button type="warning" plain>警告按钮</el-button>
+  <el-button type="danger" plain>危险按钮</el-button>
+</div>
+<hr />
+```
+
+### 文字按钮
+
+说明：没有边框和背景色的按钮。
+
+```vue
+<div>文字按钮</div>
+<div><el-button type="text" size="mini">文字按钮</el-button></div>
+<hr/>
+```
+
+### 图标按钮
+
+说明：带图标的按钮可增强辨识度（有文字）或节省空间（无文字）。设置`icon`属性即可，icon 的列表可以参考 Element 的 icon 组件，也可以设置在文字右边的 icon ，只要使用`i`标签即可，可以使用自定义图标。
+
+```vue
+<div>图标按钮</div>
+<div>
+  <el-button type="primary" icon="el-icon-edit"></el-button>
+  <el-button type="primary" icon="el-icon-share"></el-button>
+  <el-button type="primary" icon="el-icon-delete"></el-button>
+  <el-button type="primary" icon="el-icon-search">搜索</el-button>
+  <el-button type="primary">上传<i class="el-icon-upload el-icon--right"></i></el-button>
+</div>
+```
 
 ## 消息提示`Message`
 
@@ -48,28 +92,6 @@ export default {
   }
 }
 </script>
-```
-
-
-
-## 加载中提示
-
->[参考官方文档](https://element.eleme.cn/#/zh-CN/component/loading)
->
->详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-element-ui/element-ui-loading)
-
-```javascript
-handleClickLoading() {
-    const loading = this.$loading({
-        lock: true,
-        text: '加载中...',
-        spinner: 'el-icon-loading',
-        background: 'rgba(0, 0, 0, 0.7)'
-    });
-    setTimeout(() => {
-        loading.close()
-    }, 2000);
-}
 ```
 
 
@@ -308,6 +330,53 @@ export default {
 </script>
 
 <style scoped></style>
+```
+
+## 加载Loading
+
+>详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-element-ui/element-ui-loading
+>
+>[组件 | Element](https://element.eleme.cn/#/zh-CN/component/loading)
+
+### 区域加载
+
+说明：在表格等容器中加载数据时显示。Element 提供了两种调用 Loading 的方法：指令和服务。对于自定义指令`v-loading`，只需要绑定`Boolean`即可。默认状况下，Loading 遮罩会插入到绑定元素的子节点，通过添加`body`修饰符，可以使遮罩插入至 DOM 中的 body 上。
+
+```vue
+<div>在表格等容器中加载数据时显示。</div>
+<div>
+  <el-table v-loading="loading" :data="tableData">
+    <el-table-column prop="date" label="日期" width="180"></el-table-column>
+    <el-table-column prop="name" label="姓名" width="180"></el-table-column>
+    <el-table-column prop="address" label="地址"></el-table-column>
+  </el-table>
+  <el-button size="mini" type="primary" @click="handleClickTableLoading()">点击加载</el-button>
+</div>
+
+handleClickTableLoading() {
+  this.loading = true
+  setTimeout(() => {
+    this.loading = false
+  }, 2000)
+},
+```
+
+### 整页加载
+
+说明：页面数据加载时显示。当使用指令方式时，全屏遮罩需要添加`fullscreen`修饰符（遮罩会插入至 body 上），此时若需要锁定屏幕的滚动，可以使用`lock`修饰符；当使用服务方式时，遮罩默认即为全屏，无需额外设置。
+
+```javascript
+handleClickLoading() {
+    const loading = this.$loading({
+        lock: true,
+        text: '加载中...',
+        spinner: 'el-icon-loading',
+        background: 'rgba(0, 0, 0, 0.7)'
+    });
+    setTimeout(() => {
+        loading.close()
+    }, 2000);
+}
 ```
 
 ## 布局`Layout`
