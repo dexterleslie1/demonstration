@@ -114,7 +114,128 @@ handleClickOk() {
 >
 >[组件 | Element](https://element.eleme.cn/#/zh-CN/component/form)
 
+## 表格Table
 
+>说明：示例演示基础表格、树形数据表格的用法。
+>
+>详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-element-ui/element-ui-table
+>
+>[组件 | Element](https://element.eleme.cn/#/zh-CN/component/table)
+
+### 基础表格
+
+说明：当`el-table`元素中注入`data`对象数组后，在`el-table-column`中用`prop`属性来对应对象中的键名即可填入数据，用`label`属性来定义表格的列名。可以使用`width`属性来定义列宽。
+
+TableBasic.vue：
+
+```vue
+<template>
+    <!-- 演示基础表格的用法 -->
+    <el-table :data="tableData">
+        <el-table-column prop="date" label="日期" width="180">
+
+        </el-table-column>
+        <el-table-column prop="name" label="姓名" width="180">
+
+        </el-table-column>
+        <el-table-column prop="address" label="地址">
+
+        </el-table-column>
+    </el-table>
+</template>
+
+<script>
+export default {
+    data() {
+        return {
+            tableData: [{
+                date: '2016-05-02',
+                name: '王小虎',
+                address: '上海市普陀区金沙江路 1518 弄'
+            }, {
+                date: '2016-05-04',
+                name: '王小虎',
+                address: '上海市普陀区金沙江路 1517 弄'
+            }, {
+                date: '2016-05-01',
+                name: '王小虎',
+                address: '上海市普陀区金沙江路 1519 弄'
+            }, {
+                date: '2016-05-03',
+                name: '王小虎',
+                address: '上海市普陀区金沙江路 1516 弄'
+            }]
+        }
+    }
+}
+</script>
+
+<style scoped></style>
+```
+
+### 树形数据表格
+
+说明：支持树类型的数据的显示。当 row 中包含 `children` 字段时，被视为树形数据。渲染树形数据时，必须要指定 `row-key`。支持子节点数据异步加载。设置 Table 的 `lazy` 属性为 true 与加载函数 `load` 。通过指定 row 中的 `hasChildren` 字段来指定哪些行是包含子节点。`children` 与 `hasChildren` 都可以通过 `tree-props` 配置。
+
+TableTreeDatum.vue：
+
+```vue
+<template>
+    <el-table :data="tableData" row-key="id" default-expand-all
+        :tree-props="{ children: 'children', hasChildren: 'hasChildren' }">
+        <el-table-column prop="date" label="日期" sortable width="180">
+
+        </el-table-column>
+        <el-table-column prop="name" label="姓名" sortable width="180">
+
+        </el-table-column>
+        <el-table-column prop="address" label="地址"></el-table-column>
+    </el-table>
+</template>
+
+<script>
+export default {
+    data() {
+        return {
+            tableData: [{
+                id: 1,
+                date: '2016-05-02',
+                name: '王小虎',
+                address: '上海市普陀区金沙江路 1518 弄'
+            }, {
+                id: 2,
+                date: '2016-05-04',
+                name: '王小虎',
+                address: '上海市普陀区金沙江路 1517 弄'
+            }, {
+                id: 3,
+                date: '2016-05-01',
+                name: '王小虎',
+                address: '上海市普陀区金沙江路 1519 弄',
+                children: [{
+                    id: 31,
+                    date: '2016-05-01',
+                    name: '王小虎',
+                    address: '上海市普陀区金沙江路 1519 弄'
+                }, {
+                    id: 32,
+                    date: '2016-05-01',
+                    name: '王小虎',
+                    address: '上海市普陀区金沙江路 1519 弄'
+                }]
+            }, {
+                id: 4,
+                date: '2016-05-03',
+                name: '王小虎',
+                address: '上海市普陀区金沙江路 1516 弄'
+            }],
+        }
+    }
+}
+</script>
+
+<style scoped></style>
+```
 
 ## 布局`Layout`
 
