@@ -3,18 +3,21 @@
     <img alt="Vue logo" src="./assets/logo.png">
     <HelloWorld msg="Welcome to Your Vue.js App"/>
   </div> -->
-  <FormClassic />
+  <!-- <FormClassic /> -->
+  <FormInline />
 </template>
 
 <script>
 import HelloWorld from './components/HelloWorld.vue'
 import FormClassic from './components/FormClassic.vue';
+import FormInline from './components/FormInline.vue';
 
 export default {
   name: 'App',
   components: {
     HelloWorld,
-    FormClassic
+    FormClassic,
+    FormInline
   }
 }
 </script>

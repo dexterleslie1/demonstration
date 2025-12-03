@@ -106,8 +106,10 @@ handleClickOk() {
 
 
 
-## 表单
+## 表单Form
 
+>说明：示例演示典型表单（包括各种表单项，比如输入框、选择器、开关、单选框、多选框等。）、行内表单用法（当垂直方向空间受限且表单较简单时，可以在一行内放置表单。）。
+>
 >详细用法请参考本站[示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-element-ui/element-ui-form)
 >
 >[组件 | Element](https://element.eleme.cn/#/zh-CN/component/form)
