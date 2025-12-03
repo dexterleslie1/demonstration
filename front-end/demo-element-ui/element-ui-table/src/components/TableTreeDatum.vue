@@ -1,4 +1,5 @@
 <template>
+    <!-- 演示树形数据表格 -->
     <el-table :data="tableData" row-key="id" default-expand-all
         :tree-props="{ children: 'children', hasChildren: 'hasChildren' }">
         <el-table-column prop="date" label="日期" sortable width="180">

@@ -3,21 +3,24 @@
     <img alt="Vue logo" src="./assets/logo.png">
     <HelloWorld msg="Welcome to Your Vue.js App"/>
   </div> -->
-  <TableTreeDatum />
+  <!-- <TableTreeDatum /> -->
   <!-- <TableBasic /> -->
+  <TableCustomizeColumnSlot />
 </template>
 
 <script>
 import HelloWorld from './components/HelloWorld.vue'
 import TableTreeDatum from './components/TableTreeDatum.vue';
 import TableBasic from './components/TableBasic.vue';
+import TableCustomizeColumnSlot from './components/TableCustomizeColumnSlot.vue';
 
 export default {
   name: 'App',
   components: {
     HelloWorld,
     TableTreeDatum,
-    TableBasic
+    TableBasic,
+    TableCustomizeColumnSlot
   }
 }
 </script>
