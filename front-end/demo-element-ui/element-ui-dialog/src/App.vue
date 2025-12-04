@@ -1,12 +1,24 @@
 <template>
-  <div id="app">
+  <!-- <div id="app">
     <div id="nav">
       <router-link to="/">演示el-dialog再次封装实现封闭业务逻辑组件</router-link> |
       <router-link to="/about">About</router-link>
     </div>
     <router-view/>
-  </div>
+  </div> -->
+  <DialogTableOrForm />
 </template>
+
+<script>
+import DialogTableOrForm from './components/DialogTableOrForm.vue';
+
+export default {
+  name: 'App',
+  components: {
+    DialogTableOrForm
+  }
+}
+</script>
 
 <style>
 #app {

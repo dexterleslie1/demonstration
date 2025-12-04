@@ -2,7 +2,7 @@
     <div>
         <el-button type="text" @click="dialogVisible = true">点击打开 Dialog</el-button>
 
-        <!-- NOTE: 下面传递props.visible一定要使用:visible.sync写法，否则子组件不能使用this.$emit('update:visible', false)方法修改父组件data中visible值 -->
+        <!-- 注意：下面传递props.visible一定要使用:visible.sync写法，否则子组件不能使用this.$emit('update:visible', false)方法修改父组件data中visible值 -->
         <my-el-dialog-biz
             :visible.sync="dialogVisible" 
             @cancelCallback="handleCancelCallback"
