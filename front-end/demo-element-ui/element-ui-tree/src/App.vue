@@ -2,8 +2,9 @@
   <div id="app">
     <!-- <img alt="Vue logo" src="./assets/logo.png">
     <HelloWorld msg="Welcome to Your Vue.js App"/> -->
+    <!-- :expand-on-click-node="false"表示点击节点不折叠或展开 -->
     <el-tree :data="treeData" :props="{ children: 'children', label: 'label' }" @node-click="handleClickNode"
-      default-expand-all></el-tree>
+      :default-expand-all="true" :expand-on-click-node="false"></el-tree>
   </div>
 </template>
 
