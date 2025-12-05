@@ -157,7 +157,15 @@ pwd
 cygstart .
 ```
 
+### 安装软件
 
+>说明：安装tree命令。
+
+```sh
+./setup-x86_64.exe -q -P tree
+```
+
+setup-x86_64.exe是Cygwin的安装程序。-P tree表示指定要安装的软件包名称为tree，-q表示静默安装，不显示GUI界面。
 
 ## `MinGW` - 概念
 

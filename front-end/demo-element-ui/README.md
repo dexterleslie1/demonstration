@@ -629,15 +629,196 @@ export default {
 <style scoped></style>
 ```
 
-## 布局`Layout`
+## 布局Layout
 
->说明：通过基础的 24 分栏，迅速简便地创建布局。
->
->详细用法请参考本站[示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-element-ui/element-ui-layout)
+>详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-element-ui/element-ui-layout
 >
 >[组件 | Element](https://element.eleme.cn/#/zh-CN/component/layout)
 
+说明：通过基础的 24 分栏，迅速简便地创建布局。
 
+### 基础布局
+
+说明：使用单一分栏创建基础的栅格布局。通过 row 和 col 组件，并通过 col 组件的 `span` 属性我们就可以自由地组合布局。
+
+LayoutBasic.vue：
+
+```vue
+<template>
+    <div>
+        <el-row>
+            <el-col :span="24">
+                <div class="grid-content bg-purple-dark"></div>
+            </el-col>
+        </el-row>
+        <el-row>
+            <el-col :span="12">
+                <div class="grid-content bg-purple"></div>
+            </el-col>
+            <el-col :span="12">
+                <div class="grid-content bg-purple-light"></div>
+            </el-col>
+        </el-row>
+        <el-row>
+            <el-col :span="8">
+                <div class="grid-content bg-purple"></div>
+            </el-col>
+            <el-col :span="8">
+                <div class="grid-content bg-purple-light"></div>
+            </el-col>
+            <el-col :span="8">
+                <div class="grid-content bg-purple"></div>
+            </el-col>
+        </el-row>
+        <el-row>
+            <el-col :span="6">
+                <div class="grid-content bg-purple"></div>
+            </el-col>
+            <el-col :span="6">
+                <div class="grid-content bg-purple-light"></div>
+            </el-col>
+            <el-col :span="6">
+                <div class="grid-content bg-purple"></div>
+            </el-col>
+            <el-col :span="6">
+                <div class="grid-content bg-purple-light"></div>
+            </el-col>
+        </el-row>
+        <el-row>
+            <el-col :span="4">
+                <div class="grid-content bg-purple"></div>
+            </el-col>
+            <el-col :span="4">
+                <div class="grid-content bg-purple-light"></div>
+            </el-col>
+            <el-col :span="4">
+                <div class="grid-content bg-purple"></div>
+            </el-col>
+            <el-col :span="4">
+                <div class="grid-content bg-purple-light"></div>
+            </el-col>
+            <el-col :span="4">
+                <div class="grid-content bg-purple"></div>
+            </el-col>
+            <el-col :span="4">
+                <div class="grid-content bg-purple-light"></div>
+            </el-col>
+        </el-row>
+    </div>
+</template>
+
+<script>
+export default {
+
+}
+</script>
+
+<style scoped>
+.el-row {
+    margin-bottom: 20px;
+
+    &:last-child {
+        margin-bottom: 0;
+    }
+}
+
+.el-col {
+    border-radius: 4px;
+}
+
+.bg-purple-dark {
+    background: #99a9bf;
+}
+
+.bg-purple {
+    background: #d3dce6;
+}
+
+.bg-purple-light {
+    background: #e5e9f2;
+}
+
+.grid-content {
+    border-radius: 4px;
+    min-height: 36px;
+}
+
+.row-bg {
+    padding: 10px 0;
+    background-color: #f9fafc;
+}
+</style>
+```
+
+### 分栏间隔
+
+说明：分栏之间存在间隔。Row 组件 提供 `gutter` 属性来指定每一栏之间的间隔，默认间隔为 0。
+
+LayoutGutter.vue：
+
+```vue
+<template>
+    <!-- 分栏间隔 -->
+    <div>
+        <el-row :gutter="20">
+            <el-col :span="6">
+                <div class="grid-content bg-purple"></div>
+            </el-col>
+            <el-col :span="6">
+                <div class="grid-content bg-purple"></div>
+            </el-col>
+            <el-col :span="6">
+                <div class="grid-content bg-purple"></div>
+            </el-col>
+            <el-col :span="6">
+                <div class="grid-content bg-purple"></div>
+            </el-col>
+        </el-row>
+    </div>
+</template>
+
+<script>
+export default {
+
+}
+</script>
+
+<style scoped>
+.el-row {
+    margin-bottom: 20px;
+
+    &:last-child {
+        margin-bottom: 0;
+    }
+}
+
+.el-col {
+    border-radius: 4px;
+}
+
+.bg-purple-dark {
+    background: #99a9bf;
+}
+
+.bg-purple {
+    background: #d3dce6;
+}
+
+.bg-purple-light {
+    background: #e5e9f2;
+}
+
+.grid-content {
+    border-radius: 4px;
+    min-height: 36px;
+}
+
+.row-bg {
+    padding: 10px 0;
+    background-color: #f9fafc;
+}
+</style>
+```
 
 ## 滚动条`el-scrollbar`
 

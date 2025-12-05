@@ -1423,7 +1423,7 @@ EmployeeMapper2 employeeMapper2;
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.2.7.RELEASE</version>
+        <version>2.7.18</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     
@@ -1433,7 +1433,6 @@ EmployeeMapper2 employeeMapper2;
         <java.version>1.8</java.version>
         <mybatis-plus.version>3.4.2</mybatis-plus.version>
         <lombok.version>1.18.20</lombok.version>
-        <junit.version>4.13.2</junit.version>
         <mysql.connector.version>8.0.23</mysql.connector.version>
     </properties>
 
@@ -1453,6 +1452,7 @@ EmployeeMapper2 employeeMapper2;
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>${lombok.version}</version>
+            <scope>provided</scope>
         </dependency>
         <!-- 引用mybatis-plus依赖 -->
         <dependency>
@@ -1473,6 +1473,15 @@ EmployeeMapper2 employeeMapper2;
             <version>${mysql.connector.version}</version>
         </dependency>
     </dependencies>
+    
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
 </project>
 
 ```
@@ -1507,7 +1516,7 @@ logging.level.com.future.demo=debug
 
 ```java
 @SpringBootApplication
-@MapperScan("com.future.demo.mybatis.plus.mapper")
+@MapperScan("com.future.**.mapper")
 public class Application {
 
     public static void main(String[] args) {

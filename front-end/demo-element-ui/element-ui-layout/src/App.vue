@@ -3,18 +3,21 @@
     <img alt="Vue logo" src="./assets/logo.png">
     <HelloWorld msg="Welcome to Your Vue.js App"/>
   </div> -->
-  <LayoutBasic />
+  <!-- <LayoutBasic /> -->
+  <LayoutGutter />
 </template>
 
 <script>
 import HelloWorld from './components/HelloWorld.vue'
 import LayoutBasic from './components/LayoutBasic.vue';
+import LayoutGutter from './components/LayoutGutter.vue';
 
 export default {
   name: 'App',
   components: {
     HelloWorld,
-    LayoutBasic
+    LayoutBasic,
+    LayoutGutter,
   }
 }
 </script>

@@ -135,6 +135,7 @@ server_id=10001
 编译`docker`镜像的`Dockerfile`
 
 ```dockerfile
+# FROM mariadb:11.4.8
 FROM mariadb:10.4.19
 
 RUN apt-get update
@@ -153,11 +154,6 @@ COPY my-customize.cnf /etc/mysql/conf.d/my-customize.cnf
 ```yaml
 version: "3.0"
 
-# 创建网络
-networks:
-  net:
-    name: demo-mariadb-standalone-net
-
 services:
   # docker 运行 centos/mariadb
   # https://hub.docker.com/r/centos/mariadb
@@ -170,7 +166,6 @@ services:
   demo-mariadb-standalone-server:
     build:
       context: ./
-    container_name: demo-mariadb-standalone-server
     image: demo-mariadb-standalone-server
     command:
      - --character-set-server=utf8mb4
@@ -178,28 +173,28 @@ services:
      - --skip-character-set-client-handshake
      # 设置innodb-buffer-pool-size
      # https://stackoverflow.com/questions/64825998/how-to-change-the-default-config-for-mysql-when-using-docker-image
-     - --innodb-buffer-pool-size=1g
+     - --innodb-buffer-pool-size=128m
     #volumes:
     #  - ~/data-demo-mariadb-standalone-server:/var/lib/mysql
+    #  - ./db.sql:/docker-entrypoint-initdb.d/db.sql:ro
     environment:
       - LANG=C.UTF-8
       - TZ=Asia/Shanghai
       - MYSQL_ROOT_PASSWORD=${dbPassword}
-    ports:
-      - 50000:3306
-    networks:
-      - net
+      # 自动创建demo数据库
+      - MYSQL_DATABASE=demo
+    #ports:
+    #  - 50000:3306
+    network_mode: host
 
   demo-mariadb-standalone-server-update:
-    container_name: demo-mariadb-standalone-server-update
     image: demo-mariadb-standalone-server
     environment:
       - TZ=Asia/Shanghai
     command: sh -c "dockerize -wait tcp://demo-mariadb-standalone-server:3306 -timeout 120s -wait-retry-interval 5s
-      && mysql -uroot -p${dbPassword} -P3306 -hdemo-mariadb-standalone-server demo_db < /docker-entrypoint-initdb.d/db.sql
+      && mysql -uroot -p${dbPassword} -P3306 -hlocalhost demo_db < /docker-entrypoint-initdb.d/db.sql
       && echo \"成功执行数据库脚本\""
-    networks:
-      - net
+    network_mode: host
 
 ```
 

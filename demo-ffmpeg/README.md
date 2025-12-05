@@ -216,6 +216,8 @@ ffmpeg -version
 
 ```sh
 # setup-x86_64.exe是Cygwin的安装程序
+# -q表示静默安装，不显示 GUI 界面
+# -P表示指定要安装的软件包名称
 ./setup-x86_64.exe -q -P gcc-core -P gcc-g++ -P make -P gdb -P binutils -P yasm -P nasm -P pkg-config -P automake -P autoconf -P libtool -P diffutils -P patch
 ```
 
