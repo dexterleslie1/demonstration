@@ -478,6 +478,79 @@ export default {
 <style scoped></style>
 ```
 
+## 树形控件Tree
+
+>[组件 | Element](https://element.eleme.cn/#/zh-CN/component/tree)
+>
+>详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-element-ui/element-ui-tree
+
+### 基础用法
+
+说明：基础的树形结构展示。
+
+```vue
+<template>
+  <div id="app">
+    <!-- <img alt="Vue logo" src="./assets/logo.png">
+    <HelloWorld msg="Welcome to Your Vue.js App"/> -->
+    <el-tree :data="treeData" :props="{ children: 'children', label: 'label' }" @node-click="handleClickNode"
+      default-expand-all></el-tree>
+  </div>
+</template>
+
+<script>
+import HelloWorld from './components/HelloWorld.vue'
+
+export default {
+  name: 'App',
+  components: {
+    HelloWorld
+  },
+  data() {
+    return {
+      treeData: [
+        {
+          label: '1',
+          orderNum: 1,
+          children: [{
+            label: '1-1',
+            children: [{
+              label: '1-1-1',
+              orderNum: 1,
+            }, {
+              label: '1-1-2',
+              orderNum: 2,
+            }]
+          }]
+        }, {
+          label: '2',
+          orderNum: 2,
+          children: [
+            {
+              label: '2-1',
+              orderNum: 1,
+            },
+            {
+              label: '2-2',
+              orderNum: 2,
+            }
+          ]
+        }
+      ]
+    }
+  },
+  methods: {
+    handleClickNode(data) {
+      console.log(`label=${data.label},orderNum=${data.orderNum}`)
+    }
+  }
+}
+</script>
+
+<style></style>
+
+```
+
 ## 布局`Layout`
 
 >说明：通过基础的 24 分栏，迅速简便地创建布局。
