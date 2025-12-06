@@ -1,3 +1,341 @@
+## HTTP1.0、HTTP1.1、HTTP2、HTTP3协议
+
+>HTTP协议维基百科参考：https://en.wikipedia.org/wiki/HTTP
+
+HTTP协议是Web通信的基础，经历了多个版本的演进，每个版本都有重要的改进。
+
+### HTTP/1.0
+
+HTTP/1.0是第一个被广泛使用的版本，采用**短连接**方式，即每个请求都需要建立新的TCP连接，请求完成后立即关闭。这种方式导致性能低下，因为每次请求都需要经历TCP三次握手和慢启动过程。此外，HTTP/1.0不支持Host头字段，一个服务器只能绑定一个域名。
+
+### HTTP/1.1
+
+HTTP/1.1是当前最广泛使用的版本，主要改进包括：
+- **持久连接**：默认保持TCP连接，允许多个请求复用同一个连接
+- **管道化**：允许客户端在收到响应前发送多个请求，但存在队头阻塞问题
+- **Host头字段**：支持虚拟主机，一个IP可以绑定多个域名
+- **分块传输编码**：支持流式传输
+- **缓存控制**：引入Cache-Control、ETag等缓存机制
+
+### HTTP/2
+
+HTTP/2是二进制协议，主要特性包括：
+- **多路复用**：在同一个连接上并行处理多个请求，彻底解决队头阻塞
+- **头部压缩**：使用HPACK算法压缩请求头，减少重复传输
+- **服务器推送**：服务器可以主动推送资源到客户端
+- **流优先级**：允许设置请求的优先级
+- **二进制分帧**：将消息分解为更小的帧，提高传输效率
+
+### HTTP/3
+
+HTTP/3基于QUIC协议，运行在UDP之上，主要改进：
+- **0-RTT连接**：首次连接即可发送数据，减少握手延迟
+- **改进的多路复用**：基于UDP，彻底解决TCP队头阻塞
+- **连接迁移**：网络切换时连接不中断
+- **前向纠错**：提高弱网环境下的传输可靠性
+- **内置加密**：默认使用TLS 1.3加密
+
+### 总结对比
+
+| 特性     | HTTP/1.0 | HTTP/1.1 | HTTP/2   | HTTP/3   |
+| -------- | -------- | -------- | -------- | -------- |
+| 连接方式 | 短连接   | 持久连接 | 多路复用 | 基于QUIC |
+| 队头阻塞 | 有       | 有       | 无       | 无       |
+| 头部压缩 | 无       | 无       | HPACK    | QPACK    |
+| 传输层   | TCP      | TCP      | TCP      | UDP      |
+| 加密     | 可选     | 可选     | 可选     | 默认加密 |
+| 连接建立 | 3-RTT    | 3-RTT    | 3-RTT    | 0-RTT    |
+
+HTTP协议的演进主要围绕**性能优化**和**安全性提升**两个方向，从HTTP/1.0到HTTP/3，延迟不断降低，传输效率持续提升，安全性也得到显著增强。
+
+## SpringBoot2.x支持HTTP1.0吗？
+
+Spring Boot 2.x 支持 HTTP/1.0。不过，在实际应用中，HTTP/1.1 是默认且更常用的选择。
+
+下面这个表格清晰地展示了 Spring Boot 2.x 中 HTTP 版本的支持情况：
+
+| HTTP 版本    | Spring Boot 2.x 是否支持 | 默认情况 | 关键特性/说明                                                |
+| :----------- | :----------------------- | :------- | :----------------------------------------------------------- |
+| **HTTP/1.0** | **支持**                 | 否       | 默认为短连接，每个请求/响应后断开TCP连接。                   |
+| **HTTP/1.1** | **支持**                 | **是**   | 默认为长连接（Keep-Alive），一个TCP连接可传输多个HTTP请求。可通过 `server.http-version=1.1` 显式配置。 |
+| **HTTP/2**   | **支持**                 | 否       | 需要基于HTTPS并显式开启。支持多路复用、头部压缩等特性，能显著提升性能。配置项为 `server.http2.enabled=true`。 |
+
+### 💡 注意事项与选择建议
+
+了解支持情况后，在实际使用中还有几点需要注意：
+
+- **配置方式**：虽然可以通过配置文件（如 `application.yml`）设置 `server.http-version` 属性来指定HTTP版本，但通常无需特意调整。Spring Boot 的默认设置（HTTP/1.1）已经能很好地满足绝大多数场景。
+
+- **版本选择**：除非你有非常特殊的兼容性需求，否则**强烈建议使用默认的 HTTP/1.1**。它通过连接复用避免了 HTTP/1.0 频繁建立和断开 TCP 连接的开销，性能更好。对于追求更高性能的现代应用，可以考虑升级到 **HTTP/2**，它在高延迟和高并发场景下能带来显著的性能提升，但需要配置HTTPS。
+
+- **与HTTP/2的关系**：Spring Boot 2.x 对 HTTP/2 的支持是其一个重要特性，但这并不影响其对 HTTP/1.0 和 1.1 的兼容。应用程序可以同时配置支持 HTTPS（HTTP/1.1）并重定向到 HTTP/2。
+
+## curl判断服务器是否支持HTTP1.0
+
+要判断服务器是否支持 HTTP/1.0，使用 curl 可以通过几种方法来实现。下面为你介绍具体的操作命令、结果解读以及一些需要注意的细节。
+
+### 🔍 **直接测试与协议指定**
+
+最直接的方法是使用 curl 的 `--http1.0` 选项来强制指定使用 HTTP/1.0 协议发起请求，并结合详细输出模式来观察协商过程。
+
+*   **基本测试命令**：
+    ```bash
+    curl --http1.0 -v http://example.com
+    ```
+    或者使用等价的短选项 `-0`：
+    ```bash
+    curl -0 -v http://example.com
+    ```
+    这里的 `-v`（或 `--verbose`）参数至关重要，它会输出详细的连接和协议交互信息，这是我们判断的依据。
+
+*   **如何解读结果**：执行上述命令后，请重点关注以 `*` 开头的行。
+    *   **成功连接迹象**：如果你看到类似 `HTTP/1.0 200 OK` 或 `HTTP/1.0 301 Moved Permanently` 的响应状态行，这明确表示服务器接受并正确处理了你的 HTTP/1.0 请求。
+    *   **连接过程信息**：在详细输出中，你可能会看到 `Connected to example.com port 80` 这样的信息，这表明TCP连接已建立。同时，留意后续的协议版本标识。
+
+### 🔄 **对比测试与协议降级**
+
+为了更准确地确认服务器的兼容性，可以进行对比测试。
+
+*   **与HTTP/1.1对比**：你可以先使用默认的HTTP/1.1协议测试一下，确保服务器本身是可访问的。
+    ```bash
+    curl --http1.1 -I http://example.com
+    ```
+*   **理解协议降级**：有些服务器（尤其是现代服务器）可能配置为仅支持更高效、更安全的 HTTP/1.1 或 HTTP/2。如果服务器不支持 HTTP/1.0，curl 可能会报错，或者服务器在握手过程中拒绝连接。此时，观察 `-v` 输出的错误信息就非常关键。curl 的智能之处在于，它内置了协议协商机制，当高版本协议（如HTTP/2）不可用时，有时会自动降级尝试低版本协议，但通过明确指定 `--http1.0`，我们是在强制进行测试。
+
+### ⚠️ **注意事项**
+
+1.  **HTTPS请求**：如果测试的是 HTTPS 站点（`https://...`），上述方法同样适用。不过，SSL/TLS 握手可能会先于 HTTP 协议通信进行。在详细输出中，你会先看到SSL/TLS协商信息，然后是HTTP协议部分。
+2.  **服务器配置差异**：服务器的支持情况完全取决于其具体配置。即使同一个域名，不同的服务器或路径配置也可能不同。
+3.  **结合状态码判断**：除了看协议版本，HTTP响应状态码本身也能说明问题。例如，`200` 状态码表示成功，`404` 表示资源未找到（但请求本身被服务器处理了），这些都意味着连接和协议使用是成功的。而如果出现 `505 HTTP Version Not Supported` 这样的状态码，则清晰地表明服务器不支持你请求的HTTP版本。
+
+### 💎 **总结**
+
+简单来说，判断服务器是否支持 HTTP/1.0，最直接有效的方法就是：
+```bash
+curl --http1.0 -v http://your-server.com
+```
+然后**仔细查看命令输出的、以星号`*`开头的详细连接信息**，寻找明确的 `HTTP/1.0` 响应状态行或相关的错误提示。
+
+## 使用Java Socket实现HTTP客户端
+
+>说明：支持连接的重复使用。
+>
+>详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-http/demo-http-client-socket
+>
+>HTTP/1.0 RFC：https://www.rfc-editor.org/rfc/rfc1945
+>
+>HTTP/1.1 RFC：https://www.rfc-editor.org/rfc/rfc9112
+
+HttpClient.java：
+
+```java
+package com.future.demo;
+
+import java.io.*;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
+
+public class HttpClient {
+    private String host;
+    private int port;
+
+    private Socket socket;
+
+    public HttpClient(String host, int port) {
+        this.host = host;
+        this.port = port;
+    }
+
+    public synchronized void connect() throws IOException {
+        if (socket != null) {
+            throw new IllegalStateException("已连接");
+        }
+
+        InetSocketAddress address = new InetSocketAddress(host, port);
+        socket = new Socket();
+        socket.connect(address);
+    }
+
+    public synchronized void close() throws IOException {
+        if (socket != null) {
+            socket.close();
+            socket = null;
+        }
+    }
+
+    public Response get(String url) throws IOException {
+        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8));
+        String requestLine = "GET " + url + " HTTP/1.1\r\n";
+        writer.write(requestLine);
+        System.out.print("> " + requestLine);
+        // 添加Host头否则服务器响应400错误
+        requestLine = "Host: " + host + ":" + port + "\r\n";
+        writer.write(requestLine);
+        System.out.print("> " + requestLine);
+        // 请求完毕后关闭连接
+        // writer.write("Connection: close\r\n");
+        // 空行终止请求头
+        requestLine = "\r\n";
+        writer.write(requestLine);
+        System.out.print("> " + requestLine);
+        // 发送数据到服务器
+        writer.flush();
+
+        InputStream rawInputStream = socket.getInputStream();
+        Response response = new Response();
+        // 响应头Content-Length的值以根据长度读取内容
+        int contentLength = -1;
+        ByteArrayOutputStream linerBuffer = new ByteArrayOutputStream();
+        while (true) {
+            int dataByte = rawInputStream.read();
+
+            // 服务器端关闭连接
+            if (dataByte == -1) {
+                break;
+            }
+
+            if (dataByte == '\r') {
+                dataByte = rawInputStream.read();
+                if (dataByte == '\n') {
+                    if (linerBuffer.size() == 0) {
+                        // 空行表示余下的响应内容为body
+                        System.out.println("< ");
+                        break;
+                    } else {
+                        // 一行响应
+                        String line = linerBuffer.toString(StandardCharsets.UTF_8);
+                        linerBuffer = new ByteArrayOutputStream();
+
+                        System.out.println("< " + line);
+
+                        if (line.startsWith("HTTP/")) {
+                            String[] httpVersionAndStatusCode = line.split(" ");
+                            String httpVersion = httpVersionAndStatusCode[0];
+                            int statusCode = Integer.parseInt(httpVersionAndStatusCode[1]);
+                            response.setHttpVersion(httpVersion);
+                            response.setStatusCode(statusCode);
+                        } else if (line.contains(":")) {
+                            if (line.toLowerCase().startsWith("content-length:")) {
+                                contentLength = Integer.parseInt(line.substring("Content-Length:".length()).trim());
+                            }
+
+                            String[] keyAndValue = line.split(":");
+                            String key = keyAndValue[0];
+                            String value = keyAndValue[1];
+                            response.setHeader(key, value);
+                        }
+                    }
+                }
+            } else {
+                linerBuffer.write(dataByte);
+            }
+        }
+
+        String body = null;
+        if (contentLength > 0) {
+            // 有明确的Content-Length，精确读取指定长度的字符
+            byte[] bodyBytes = new byte[contentLength];
+            rawInputStream.read(bodyBytes, 0, contentLength);
+            body = new String(bodyBytes, StandardCharsets.UTF_8);
+        }
+        response.setBody(body);
+        System.out.println("< " + body);
+
+        return response;
+    }
+
+    public static class Response {
+        private String httpVersion;
+        private int statusCode;
+        private Map<String, String> headers = new HashMap<>();
+        private String body;
+
+        public Response() {
+
+        }
+
+        public void setBody(String body) {
+            this.body = body;
+        }
+
+        public String getBody() {
+            return body;
+        }
+
+        public void setHeader(String key, String value) {
+            headers.put(key, value);
+        }
+
+        public String getHeader(String key) {
+            return headers.get(key);
+        }
+
+        public void setHttpVersion(String httpVersion) {
+            this.httpVersion = httpVersion;
+        }
+
+        public String getHttpVersion() {
+            return httpVersion;
+        }
+
+        public void setStatusCode(int statusCode) {
+            this.statusCode = statusCode;
+        }
+
+        public int getStatusCode() {
+            return statusCode;
+        }
+
+        @Override
+        public String toString() {
+            return "Response{" +
+                    "httpVersion='" + httpVersion + '\'' +
+                    ", statusCode=" + statusCode +
+                    ", headers=" + headers +
+                    ", body='" + body + '\'' +
+                    '}';
+        }
+    }
+}
+
+```
+
+调用HttpClient：
+
+```java
+package com.future.demo;
+
+import java.io.IOException;
+
+public class Main {
+    public static void main(String[] args) throws IOException {
+        String host = "localhost";
+        int port = 8080;
+        HttpClient httpClient = null;
+        try {
+            httpClient = new HttpClient(host, port);
+            httpClient.connect();
+
+            HttpClient.Response response = httpClient.get("/api/v1/testGetSubmitParamByUrl1?param1=v1");
+            System.out.println("响应：" + response);
+            System.out.println();
+
+            response = httpClient.get("/api/v1/testGetSubmitParamByUrl2?param1=v1-2");
+            System.out.println("响应：" + response);
+            System.out.println();
+        } finally {
+            if (httpClient != null) {
+                httpClient.close();
+            }
+        }
+    }
+}
+
+```
+
 ## `GET`、`POST`、`PUT`、`DELETE`方法
 
 运行示例`https://gitee.com/dexterleslie/demonstration/tree/master/demo-http/spring-boot-http`协助测试

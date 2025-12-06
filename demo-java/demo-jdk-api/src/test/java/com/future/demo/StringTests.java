@@ -3,6 +3,7 @@ package com.future.demo;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 public class StringTests {
@@ -25,15 +26,15 @@ public class StringTests {
         Assert.assertEquals(10, length);
     }
 
-    private int getMixedLength (String value) {
+    private int getMixedLength(String value) {
         int valueLength = 0;
         String chinese = "[\u0391-\uFFE5]";
         /* Get the length of the field value. If it contains Chinese characters, the length of each Chinese character is 2, otherwise it is 1 */
-        for (int i = 0; i <value.length (); i ++) {
+        for (int i = 0; i < value.length(); i++) {
             /* Get a character */
-            String temp = value.substring (i, i + 1);
+            String temp = value.substring(i, i + 1);
             /* Determine whether it is a Chinese character */
-            if (temp.matches (chinese)) {
+            if (temp.matches(chinese)) {
                 /* Chinese character length is 2 */
                 valueLength += 2;
             } else {

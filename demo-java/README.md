@@ -1168,7 +1168,7 @@ public class HelloWorld extends Application {
 
 简单来说，**如果你今天想用 Java 来开发一个看起来很棒、体验流畅的桌面应用程序，JavaFX 是你的不二之选。**
 
-## socket编程
+## Socket编程
 
 >说明：演示socket客户端连接socket服务器并每5秒客户端和服务器分别向对端自动发送数据。
 >
