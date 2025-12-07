@@ -332,6 +332,66 @@ export default {
 <style scoped></style>
 ```
 
+### 多选
+
+说明：选择多行数据时使用 Checkbox。实现多选非常简单: 手动添加一个`el-table-column`，设`type`属性为`selection`即可；默认情况下若内容过多会折行显示，若需要单行显示可以使用`show-overflow-tooltip`属性，它接受一个`Boolean`，为`true`时多余的内容会在 hover 时以 tooltip 的形式显示出来。
+
+```vue
+<template>
+    <!-- 演示多选的用法 -->
+    <el-table :data="tableData" @selection-change="handleSelectionChange">
+        <el-table-column type="selection" width="55">
+
+        </el-table-column>
+        <el-table-column prop="date" label="日期" width="180">
+
+        </el-table-column>
+        <el-table-column prop="name" label="姓名" width="180">
+
+        </el-table-column>
+        <el-table-column prop="address" label="地址">
+
+        </el-table-column>
+    </el-table>
+</template>
+
+<script>
+export default {
+    data() {
+        return {
+            tableData: [{
+                date: '2016-05-02',
+                name: '王小虎',
+                address: '上海市普陀区金沙江路 1518 弄'
+            }, {
+                date: '2016-05-04',
+                name: '王小虎',
+                address: '上海市普陀区金沙江路 1517 弄'
+            }, {
+                date: '2016-05-01',
+                name: '王小虎',
+                address: '上海市普陀区金沙江路 1519 弄'
+            }, {
+                date: '2016-05-03',
+                name: '王小虎',
+                address: '上海市普陀区金沙江路 1516 弄'
+            }],
+            multipleSelection: null,
+        }
+    },
+    methods: {
+        // 多选响应事件
+        handleSelectionChange(val) {
+            this.multipleSelection = val;
+            alert(JSON.stringify(this.multipleSelection))
+        }
+    }
+}
+</script>
+
+<style scoped></style>
+```
+
 ## 加载Loading
 
 >详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-element-ui/element-ui-loading

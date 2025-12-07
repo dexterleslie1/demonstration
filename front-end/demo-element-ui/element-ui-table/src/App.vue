@@ -5,7 +5,8 @@
   </div> -->
   <!-- <TableTreeDatum /> -->
   <!-- <TableBasic /> -->
-  <TableCustomizeColumnSlot />
+  <!-- <TableCustomizeColumnSlot /> -->
+  <TableCheckbox />
 </template>
 
 <script>
@@ -13,6 +14,7 @@ import HelloWorld from './components/HelloWorld.vue'
 import TableTreeDatum from './components/TableTreeDatum.vue';
 import TableBasic from './components/TableBasic.vue';
 import TableCustomizeColumnSlot from './components/TableCustomizeColumnSlot.vue';
+import TableCheckbox from './components/TableCheckbox.vue';
 
 export default {
   name: 'App',
@@ -20,7 +22,8 @@ export default {
     HelloWorld,
     TableTreeDatum,
     TableBasic,
-    TableCustomizeColumnSlot
+    TableCustomizeColumnSlot,
+    TableCheckbox
   }
 }
 </script>
