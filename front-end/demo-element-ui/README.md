@@ -490,61 +490,63 @@ export default {
 
 ```vue
 <template>
-  <div id="app">
-    <!-- <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/> -->
-    <!-- :expand-on-click-node="false"表示点击节点不折叠或展开 -->
-    <el-tree :data="treeData" :props="{ children: 'children', label: 'label' }" @node-click="handleClickNode"
-      :default-expand-all="true" :expand-on-click-node="false"></el-tree>
-  </div>
+    <!-- 树形控件的基本用法 -->
+    <div>
+        <!-- :expand-on-click-node="false"表示点击节点不折叠或展开 -->
+        <el-tree :data="treeData" :props="{ children: 'children', label: 'label' }" @node-click="handleClickNode"
+            :default-expand-all="true" :expand-on-click-node="false" node-key="id"></el-tree>
+    </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
 
 export default {
-  name: 'App',
-  components: {
-    HelloWorld
-  },
-  data() {
-    return {
-      treeData: [
-        {
-          label: '1',
-          orderNum: 1,
-          children: [{
-            label: '1-1',
-            children: [{
-              label: '1-1-1',
-              orderNum: 1,
-            }, {
-              label: '1-1-2',
-              orderNum: 2,
-            }]
-          }]
-        }, {
-          label: '2',
-          orderNum: 2,
-          children: [
-            {
-              label: '2-1',
-              orderNum: 1,
-            },
-            {
-              label: '2-2',
-              orderNum: 2,
-            }
-          ]
+    name: 'TreeBasic',
+    data() {
+        return {
+            treeData: [
+                {
+                    id: 1,
+                    label: '1',
+                    orderNum: 1,
+                    children: [{
+                        id: 11,
+                        label: '1-1',
+                        children: [{
+                            id: 111,
+                            label: '1-1-1',
+                            orderNum: 1,
+                        }, {
+                            id: 112,
+                            label: '1-1-2',
+                            orderNum: 2,
+                        }]
+                    }]
+                }, {
+                    id: 2,
+                    label: '2',
+                    orderNum: 2,
+                    children: [
+                        {
+                            id: 21,
+                            label: '2-1',
+                            orderNum: 1,
+                        },
+                        {
+                            id: 22,
+                            label: '2-2',
+                            orderNum: 2,
+                        }
+                    ]
+                }
+            ]
         }
-      ]
+    },
+    methods: {
+        handleClickNode(data) {
+            console.log(`label=${data.label},orderNum=${data.orderNum}`)
+        }
     }
-  },
-  methods: {
-    handleClickNode(data) {
-      console.log(`label=${data.label},orderNum=${data.orderNum}`)
-    }
-  }
 }
 </script>
 
@@ -818,6 +820,160 @@ export default {
     background-color: #f9fafc;
 }
 </style>
+```
+
+## 日期选择器DatePicker
+
+>详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-element-ui/element-ui-datepicker
+>
+>[组件 | Element](https://element.eleme.cn/#/zh-CN/component/date-picker)
+
+### 选择日期
+
+说明：以「日」为基本单位，基础的日期选择控件。基本单位由`type`属性指定。快捷选项需配置`picker-options`对象中的`shortcuts`，禁用日期通过 `disabledDate` 设置，传入函数。
+
+```vue
+<template>
+  <div id="app">
+    <!-- <img alt="Vue logo" src="./assets/logo.png">
+    <HelloWorld msg="Welcome to Your Vue.js App"/> -->
+    <div>选择日期 - 默认</div>
+    <div>
+      <el-date-picker type="date" placeholder="选择日期" v-model="value1">
+      </el-date-picker>
+    </div>
+    <hr />
+
+    <div>选择日期 - 带快捷选项</div>
+    <div>
+      <el-date-picker type="date" v-model="value2" placeholder="选择日期" :picker-options="pickerOptions">
+      </el-date-picker>
+    </div>
+    <hr />
+  </div>
+</template>
+
+<script>
+import HelloWorld from './components/HelloWorld.vue'
+
+export default {
+  name: 'App',
+  components: {
+    HelloWorld
+  },
+  data() {
+    return {
+      value1: '',
+      value2: '',
+      pickerOptions: {
+        disableDate(time) {
+          return time.getTime() > Date.now()
+        },
+        shortcuts: [{
+          text: '今天',
+          onClick(picker) {
+            picker.$emit('pick', new Date())
+          }
+        }, {
+          text: '昨天',
+          onClick(picker) {
+            const date = new Date();
+            date.setTime(date.getTime() - 3600 * 1000 * 24);
+            picker.$emit('pick', date);
+          }
+        }, {
+          text: '一周前',
+          onClick(picker) {
+            const date = new Date();
+            date.setTime(date.getTime() - 3600 * 1000 * 24 * 7);
+            picker.$emit('pick', date);
+          }
+        }]
+      },
+    }
+  }
+}
+</script>
+
+<style>
+#app {}
+</style>
+
+```
+
+### 选择日期范围
+
+>说明：可在一个选择器中便捷地选择一个时间范围。在选择日期范围时，默认情况下左右面板会联动。如果希望两个面板各自独立切换当前月份，可以使用`unlink-panels`属性解除联动。
+
+```vue
+<template>
+  <div id="app">
+    <div>选择日期范围 - 默认</div>
+    <div>
+      <el-date-picker v-model="value3" type="daterange" range-separator="至" start-placeholder="开始日期"
+        end-placeholder="结束日期"></el-date-picker>
+    </div>
+    <hr />
+
+    <div>选择日期范围 - 带快捷选项</div>
+    <div>
+      <el-date-picker v-model="value4" type="daterange" unlink-panels range-separator="至" start-placeholder="开始日期"
+        end-placeholder="结束日期" :picker-options="pickerOptions2">
+
+      </el-date-picker>
+    </div>
+    <hr />
+  </div>
+</template>
+
+<script>
+import HelloWorld from './components/HelloWorld.vue'
+
+export default {
+  name: 'App',
+  components: {
+    HelloWorld
+  },
+  data() {
+    return {
+      value3: '',
+      value4: '',
+      pickerOptions2: {
+        shortcuts: [{
+          text: '最近一周',
+          onClick(picker) {
+            const end = new Date();
+            const start = new Date();
+            start.setTime(start.getTime() - 3600 * 1000 * 24 * 7);
+            picker.$emit('pick', [start, end]);
+          }
+        }, {
+          text: '最近一个月',
+          onClick(picker) {
+            const end = new Date();
+            const start = new Date();
+            start.setTime(start.getTime() - 3600 * 1000 * 24 * 30);
+            picker.$emit('pick', [start, end]);
+          }
+        }, {
+          text: '最近三个月',
+          onClick(picker) {
+            const end = new Date();
+            const start = new Date();
+            start.setTime(start.getTime() - 3600 * 1000 * 24 * 90);
+            picker.$emit('pick', [start, end]);
+          }
+        }]
+      },
+    }
+  }
+}
+</script>
+
+<style>
+#app {}
+</style>
+
 ```
 
 ## 滚动条`el-scrollbar`
