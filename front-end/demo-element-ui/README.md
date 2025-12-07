@@ -1114,6 +1114,158 @@ export default {
 
 ```
 
+## 分页Pagination
+
+>详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-element-ui/element-ui-pagination
+>
+>[组件 | Element](https://element.eleme.cn/#/zh-CN/component/pagination)
+
+### 基础用法
+
+说明：设置`layout`，表示需要显示的内容，用逗号分隔，布局元素会依次显示。`prev`表示上一页，`next`为下一页，`pager`表示页码列表，除此以外还提供了`jumper`和`total`，`sizes`和特殊的布局符号`->`，`->`后的元素会靠右显示，`jumper`表示跳页元素，`total`表示总条目数，`sizes`用于设置每页显示的页码数量。
+
+```vue
+<template>
+  <div id="app">
+    <div>页数较少时的效果</div>
+    <div>
+      <el-pagination layout="prev,pager,next" :total="50"></el-pagination>
+    </div>
+    <hr />
+
+    <div>大于 7 页时的效果</div>
+    <div>
+      <el-pagination layout="prev,pager,next" :total="1000"></el-pagination>
+    </div>
+    <hr />
+  </div>
+</template>
+
+<script>
+import HelloWorld from './components/HelloWorld.vue'
+
+export default {
+  name: 'App',
+  components: {
+    HelloWorld
+  }
+}
+</script>
+
+<style>
+#app {
+
+}
+</style>
+
+```
+
+### 带有背景色的分页
+
+说明：设置`background`属性可以为分页按钮添加背景色。
+
+```vue
+<template>
+  <div id="app">
+    <div>带有背景色的分页</div>
+    <div>
+      <el-pagination layout="prev,pager,next" :total="1000" background></el-pagination>
+    </div>
+    <hr />
+  </div>
+</template>
+
+<script>
+import HelloWorld from './components/HelloWorld.vue'
+
+export default {
+  name: 'App',
+  components: {
+    HelloWorld
+  },
+}
+</script>
+
+<style>
+#app {}
+</style>
+
+```
+
+
+
+### 附加功能
+
+说明：根据场景需要，可以添加其他功能模块。此例是一个完整的用例，使用了`size-change`和`current-change`事件来处理页码大小和当前页变动时候触发的事件。`page-sizes`接受一个整型数组，数组元素为展示的选择每页显示个数的选项，`[100, 200, 300, 400]`表示四个选项，每页显示 100 个，200 个，300 个或者 400 个。
+
+```vue
+<template>
+  <div id="app">
+    <div>附加功能 - 显示总数</div>
+    <div>
+      <el-pagination layout="total,prev,pager,next" :total="1000" :page-size="100" :current-page="currentPage1"
+        @current-change="handleCurrentChange" @size-change="handleSizeChange"></el-pagination>
+    </div>
+    <hr />
+
+    <div>附加功能 - 调整每页显示条数</div>
+    <div>
+      <el-pagination layout="sizes,prev,pager,next" :total="1000" :page-size="100" :current-page="currentPage2"
+        :page-sizes="[1, 2, 3, 4, 5]" @current-change="handleCurrentChange"
+        @size-change="handleSizeChange"></el-pagination>
+    </div>
+    <hr />
+
+    <div>附加功能 - 直接前往</div>
+    <div>
+      <el-pagination layout="prev,pager,next,jumper" :total="1000" :page-size="100" :current-page="currentPage3"
+        @current-change="handleCurrentChange" @size-change="handleSizeChange"></el-pagination>
+    </div>
+    <hr />
+
+    <div>附加功能 - 完整功能</div>
+    <div>
+      <el-pagination layout="total,sizes,prev,pager,next,jumper" :total="1000" :page-size="100"
+        :current-page="currentPage4" :page-sizes="[1, 2, 3, 4, 5]" @current-change="handleCurrentChange"
+        @size-change="handleSizeChange"></el-pagination>
+    </div>
+    <hr />
+  </div>
+</template>
+
+<script>
+import HelloWorld from './components/HelloWorld.vue'
+
+export default {
+  name: 'App',
+  components: {
+    HelloWorld
+  },
+  data() {
+    return {
+      currentPage1: 1,
+      currentPage2: 1,
+      currentPage3: 1,
+      currentPage4: 1,
+    }
+  },
+  methods: {
+    handleSizeChange(val) {
+      console.log(`每页 ${val} 条`);
+    },
+    handleCurrentChange(val) {
+      console.log(`当前页: ${val}`);
+    }
+  }
+}
+</script>
+
+<style>
+#app {}
+</style>
+
+```
+
 ## 滚动条`el-scrollbar`
 
 `el-scrollbar` 是 Element UI 中的一个**自定义滚动条组件**，它用来替代浏览器默认的滚动条，提供更加美观和统一的视觉风格。
