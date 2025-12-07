@@ -96,37 +96,115 @@ export default {
 
 
 
-## 确认弹框
+## 弹框MessageBox
 
 >[参考官方文档](https://element.eleme.cn/#/zh-CN/component/message-box)
 >
->详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-element-ui/demo-messagebox)
+>详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-element-ui/element-ui-messagebox)
+
+### 确认消息
+
+说明：提示用户确认其已经触发的动作，并询问是否进行此操作时会用到此对话框。调用`$confirm`方法即可打开消息提示，它模拟了系统的 `confirm`。Message Box 组件也拥有极高的定制性，我们可以传入`options`作为第三个参数，它是一个字面量对象。`type`字段表明消息类型，可以为`success`，`error`，`info`和`warning`，无效的设置将会被忽略。注意，第二个参数`title`必须定义为`String`类型，如果是`Object`，会被理解为`options`。在这里我们用了 Promise 来处理后续响应。
 
 ```javascript
-handleClickOk() {
-    this.$confirm('确定删除吗？', '提示', {
+<template>
+  <div id="app">
+    <div>确认消息</div>
+    <el-button type="primary" @click="handleClickOk">点击我</el-button>
+    <hr />
+  </div>
+</template>
+
+<script>
+// import HelloWorld from './components/HelloWorld.vue'
+
+export default {
+  name: 'App',
+  components: {
+    // HelloWorld
+  },
+  methods: {
+    handleClickOk() {
+      this.$confirm('确定删除吗？', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
-    }).then(() => {
+      }).then(() => {
         this.$message(
-            {
-                message: '点击确定',
-                type: 'success'
-            }
+          {
+            message: '点击确定',
+            type: 'success'
+          }
         )
-    }).catch(() => {
+      }).catch(() => {
         this.$message(
-            {
-                message: '点击取消',
-                type: 'info'
-            }
+          {
+            message: '点击取消',
+            type: 'info'
+          }
         )
-    });
+      });
+    },
+  }
 }
+</script>
+
+<style>
+#app {
+
+}
+</style>
+
 ```
 
+### 提交内容Prompt
 
+说明：当用户进行操作时会被触发，中断用户操作，提示用户进行输入的对话框。调用`$prompt`方法即可打开消息提示，它模拟了系统的 `prompt`。可以用`inputPattern`字段自己规定匹配模式，或者用`inputValidator`规定校验函数，可以返回`Boolean`或`String`，返回`false`或字符串时均表示校验未通过，同时返回的字符串相当于定义了`inputErrorMessage`字段。此外，可以用`inputPlaceholder`字段来定义输入框的占位符。
+
+```vue
+<template>
+  <div id="app">
+    <div>提交内容</div>
+    <el-button type="primary" @click="handleClickPrompt">点击</el-button>
+    <hr />
+  </div>
+</template>
+
+<script>
+// import HelloWorld from './components/HelloWorld.vue'
+
+export default {
+  name: 'App',
+  components: {
+    // HelloWorld
+  },
+  methods: {
+    // 提交内容
+    handleClickPrompt() {
+      this.$prompt('请输入邮箱', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+      }).then(({ value }) => {
+        this.$message({
+          type: 'success',
+          message: '你的邮箱是: ' + value
+        });
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '取消输入'
+        });
+      })
+    }
+  }
+}
+</script>
+
+<style>
+#app {}
+</style>
+
+```
 
 ## 表单Form
 

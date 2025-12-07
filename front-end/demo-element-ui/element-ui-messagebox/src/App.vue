@@ -1,8 +1,12 @@
 <template>
   <div id="app">
-    <!-- <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/> -->
-    <el-button :plain="true" @click="handleClickOk">点击我</el-button>
+    <div>确认消息</div>
+    <el-button type="primary" @click="handleClickOk">点击我</el-button>
+    <hr />
+
+    <div>提交内容</div>
+    <el-button type="primary" @click="handleClickPrompt">点击</el-button>
+    <hr />
   </div>
 </template>
 
@@ -36,17 +40,27 @@ export default {
         )
       });
     },
+    // 提交内容
+    handleClickPrompt() {
+      this.$prompt('请输入邮箱', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+      }).then(({ value }) => {
+        this.$message({
+          type: 'success',
+          message: '你的邮箱是: ' + value
+        });
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '取消输入'
+        });
+      })
+    }
   }
 }
 </script>
 
 <style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
+#app {}
 </style>
