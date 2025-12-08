@@ -4,9 +4,12 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.future.demo.R;
 import com.future.demo.entity.User;
 import com.future.demo.service.UserService;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @RestController
@@ -26,9 +29,18 @@ public class UserController {
      */
     @GetMapping("list")
     public R list(@RequestParam(value = "deptId", defaultValue = "0") Long deptId,
+                  @RequestParam(value = "userName", defaultValue = "") String userName,
+                  @RequestParam(value = "createTimeStart", defaultValue = "") String createTimeStart,
+                  @RequestParam(value = "createTimeEnd", defaultValue = "") String createTimeEnd,
                   @RequestParam(value = "pageNum", defaultValue = "0") Integer pageNum,
                   @RequestParam(value = "pageSize", defaultValue = "0") Integer pageSize) {
-        IPage<User> page = userService.list(deptId, pageNum, pageSize);
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        IPage<User> page = userService.list(deptId
+                , userName
+                , StringUtils.hasText(createTimeStart) ? LocalDate.parse(createTimeStart, dateTimeFormatter) : null
+                , StringUtils.hasText(createTimeEnd) ? LocalDate.parse(createTimeEnd, dateTimeFormatter) : null
+                , pageNum
+                , pageSize);
         return R.success(page.getRecords(),
                 (int) page.getPages(),
                 (int) page.getTotal(),

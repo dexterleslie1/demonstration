@@ -1055,8 +1055,9 @@ export default {
 
     <div>选择日期范围 - 带快捷选项</div>
     <div>
+      <!-- value-format：绑定值的格式。不指定则绑定值为 Date 对象 -->
       <el-date-picker v-model="value4" type="daterange" unlink-panels range-separator="至" start-placeholder="开始日期"
-        end-placeholder="结束日期" :picker-options="pickerOptions2">
+        end-placeholder="结束日期" :picker-options="pickerOptions2" value-format="yyyy-MM-dd HH:mm:ss">
 
       </el-date-picker>
     </div>
@@ -1103,6 +1104,11 @@ export default {
           }
         }]
       },
+    }
+  },
+  watch: {
+    value4(val) {
+      console.log(val)
     }
   }
 }

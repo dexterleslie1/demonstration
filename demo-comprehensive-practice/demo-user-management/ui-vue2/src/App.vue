@@ -1,12 +1,12 @@
 <template>
   <div id="app">
-    <!-- <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/> -->
     <el-row :gutter="20">
       <el-col :span="4">
         <!-- 左侧部门导航 -->
         <el-input v-model="deptName" placeholder="请输入部门名称" size="mini"></el-input>
-        <el-tree :data="deptTree" default-expand-all @node-click="handleNodeClick" :expand-on-click-node="false"
+        <!-- :expand-on-click-node="false"表示点击树中的节点不折叠和展开 -->
+        <!-- :highlight-current="true"表示选中的树节点高亮显示 -->
+        <el-tree :data="deptTree" default-expand-all @node-click="handleNodeClickDeptTree" :expand-on-click-node="false"
           :props="{ label: 'name', children: 'children' }" node-key="id" v-loading="deptTreeLoading"
           :filter-node-method="filterNode" ref="deptTree" :highlight-current="true">
         </el-tree>
@@ -19,8 +19,11 @@
             <el-input v-model="userName" placeholder="请输入用户名称" size="mini"></el-input>
           </el-form-item>
           <el-form-item label="创建时间">
+            <!-- type="daterange"表示日期范围选择 -->
+            <!-- unlink-panels表示左右日期选择面板不联动 -->
+            <!-- value-format="yyyy-MM-dd"表示日期值的格式为yyyy-MM-dd -->
             <el-date-picker size="mini" v-model="createTimeRange" type="daterange" unlink-panels range-separator="-"
-              start-placeholder="开始日期" end-placeholder="结束日期"></el-date-picker>
+              start-placeholder="开始日期" end-placeholder="结束日期" value-format="yyyy-MM-dd"></el-date-picker>
           </el-form-item>
           <el-form-item>
             <el-button type="primary" size="mini" @click="handleClickSearch">搜索</el-button>
@@ -43,6 +46,7 @@
         <!-- 用户列表区域 -->
         <el-row>
           <el-col :span="24">
+            <!-- @selection-change="handleSelectionChange"表示选中用户记录的响应事件 -->
             <el-table :data="userData" v-loading="userListLoading" size="small"
               @selection-change="handleSelectionChange">
               <el-table-column type="selection" width="55" align="center"></el-table-column>
@@ -61,6 +65,10 @@
                 </template>
               </el-table-column>
             </el-table>
+            <!-- :current-page.sync="paginationCurrentPage"表示el-pagination组件支持修改paginationCurrentPage变量 -->
+            <!-- :page-sizes="[2, 3, 4, 5]"表示每页显示的记录数选项 -->
+            <!-- :page-size.sync="paginationPageSize"表示每页显示的记录数 -->
+            <!-- :total="paginationTotal"表示总记录数 -->
             <el-pagination layout="total,sizes,prev,pager,next,jumper" :total="paginationTotal"
               :page-size.sync="paginationPageSize" :page-sizes="[2, 3, 4, 5]" :current-page.sync="paginationCurrentPage"
               style="position:absolute;right:0">
@@ -122,13 +130,14 @@ export default {
   },
   data() {
     return {
-      // 根据部门名称过滤
+      // 左边部门导航树根据部门名称过滤
       deptName: '',
       // 根据用户名称搜索
       userName: '',
+      // 创建时间搜索
+      createTimeRange: '',
       // 当前部门树形控件选中的部门id
       deptId: null,
-      createTimeRange: '',
       // 部门导航数据加载中指示
       deptTreeLoading: false,
       deptTree: null,
@@ -238,15 +247,22 @@ export default {
       if (!value) return true;
       return data.name.indexOf(value) !== -1;
     },
-    handleNodeClick(data) {
+    // 点击部门导航树中的节点
+    handleNodeClickDeptTree(data) {
       this.deptId = data.id
       this.loadUserList()
     },
     loadUserList() {
       var deptId = this.deptId
+      var createTimeStart = null;
+      var createTimeEnd = null;
+      if (this.createTimeRange && this.createTimeRange.length > 0) {
+        createTimeStart = this.createTimeRange[0]
+        createTimeEnd = this.createTimeRange[1]
+      }
       this.userListLoading = true
       this.$axios.get("/api/v1/user/list", {
-        params: { deptId, pageNum: this.paginationCurrentPage, pageSize: this.paginationPageSize },
+        params: { deptId, userName: this.userName, createTimeStart, createTimeEnd, pageNum: this.paginationCurrentPage, pageSize: this.paginationPageSize },
       }).then((data) => {
         this.userData = data.data
         this.paginationTotal = data.totalRecords

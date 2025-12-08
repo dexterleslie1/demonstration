@@ -8,8 +8,10 @@ import com.future.demo.mapper.UserMapper;
 import com.future.demo.service.UserService;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -19,7 +21,12 @@ public class UserServiceImpl implements UserService {
     UserMapper userMapper;
 
     @Override
-    public IPage<User> list(Long deptId, Integer pageNum, Integer pageSize) {
+    public IPage<User> list(Long deptId,
+                            String userName,
+                            LocalDate createTimeStart,
+                            LocalDate createTimeEnd,
+                            Integer pageNum,
+                            Integer pageSize) {
         if (pageNum == null || pageNum <= 0) {
             pageNum = 1;
         }
@@ -32,6 +39,12 @@ public class UserServiceImpl implements UserService {
                 .selectAll(User.class)
                 .selectAssociation(Dept.class, User::getDept)
                 .leftJoin(Dept.class, Dept::getId, User::getDeptId);
+        if (StringUtils.hasText(userName)) {
+            mpjLambdaWrapper.like(User::getUserName, userName);
+        }
+        if (createTimeStart != null && createTimeEnd != null) {
+            mpjLambdaWrapper.between(User::getCreateTime, createTimeStart, createTimeEnd);
+        }
         if (deptId != null && deptId > 0) {
             mpjLambdaWrapper.eq(User::getDeptId, deptId);
         }

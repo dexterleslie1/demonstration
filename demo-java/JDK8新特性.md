@@ -1,7 +1,3 @@
-# JDK8 新特性
-
-
-
 ## OpenJDK 和 Oracle JDK
 
 OpenJDK和Oracle JDK都是Java开发套件（JDK），用于开发和运行Java应用程序。以下是两者的详细对比：

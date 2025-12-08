@@ -3,6 +3,7 @@ package com.future.demo.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.future.demo.entity.User;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface UserService {
@@ -10,9 +11,19 @@ public interface UserService {
      * 查询用户列表
      *
      * @param deptId
+     * @param userName
+     * @param createTimeStart
+     * @param createTimeEnd
+     * @param pageNum
+     * @param pageSize
      * @return
      */
-    IPage<User> list(Long deptId, Integer pageNum, Integer pageSize);
+    IPage<User> list(Long deptId,
+                     String userName,
+                     LocalDate createTimeStart,
+                     LocalDate createTimeEnd,
+                     Integer pageNum,
+                     Integer pageSize);
 
     /**
      * 根据用户id删除用户
