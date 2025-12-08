@@ -4537,7 +4537,114 @@ data() {
 },
 ```
 
+### sync修饰符
 
+`sync`修饰符是 Vue 2 中实现**双向数据绑定**的语法糖，主要用于简化父子组件之间的数据同步。
+
+#### 基本作用
+
+让子组件能够修改父组件传递的 prop 值，同时保持数据流的单向性。
+
+#### 传统实现方式（没有 sync）
+
+父组件通过 prop 传递数据，子组件通过 `$emit`事件修改：
+
+```
+<!-- 父组件 -->
+<template>
+  <Child :value="parentValue" @update:value="parentValue = $event" />
+</template>
+
+<!-- 子组件 -->
+<template>
+  <input :value="value" @input="$emit('update:value', $event.target.value)" />
+</template>
+<script>
+export default {
+  props: ['value']
+}
+</script>
+```
+
+#### 使用 sync 修饰符
+
+**简洁实现同样的功能**：
+
+```
+<!-- 父组件 -->
+<template>
+  <Child :value.sync="parentValue" />
+  <!-- 等价于 -->
+  <Child :value="parentValue" @update:value="parentValue = $event" />
+</template>
+
+<!-- 子组件 -->
+<template>
+  <input :value="value" @input="$emit('update:value', $event.target.value)" />
+</template>
+<script>
+export default {
+  props: ['value']
+}
+</script>
+```
+
+#### 多个属性同步
+
+可以同时同步多个属性：
+
+```
+<!-- 父组件 -->
+<Child 
+  :name.sync="userName"
+  :age.sync="userAge"
+  :email.sync="userEmail"
+/>
+
+<!-- 子组件 -->
+<input :value="name" @input="$emit('update:name', $event.target.value)" />
+<input :value="age" @input="$emit('update:age', $event.target.value)" />
+```
+
+#### Vue 3 的变化
+
+在 Vue 3 中，`sync`修饰符被移除，其功能被整合到 `v-model`中：
+
+```
+<!-- Vue 3 -->
+<Child v-model:title="pageTitle" />
+<!-- 等价于 -->
+<Child :title="pageTitle" @update:title="pageTitle = $event" />
+```
+
+#### 注意事项
+
+1. **明确性**：通过 `update:propName`事件明确表示要修改哪个属性
+2. **单向数据流**：依然遵循单向数据流原则，只是提供了一种更简洁的写法
+3. **替代方案**：对于表单元素，通常使用 `v-model`；对于自定义组件，`sync`可以同步多个值
+
+#### 使用场景
+
+- 需要子组件修改父组件传递的多个 prop 时
+- 创建可复用的表单组件
+- 实现组件的"双向绑定"功能
+
+总之，`.sync`是 Vue 2 中一个实用的语法糖，让父子组件间的双向数据绑定更加简洁直观。
+
+#### 示例
+
+>详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-element-ui/element-ui-pagination
+
+```vue
+<div>附加功能 - 完整功能</div>
+<div>
+  <!-- 注意：下面:current-page没有.sync修饰符currentPage4变量不会el-pagination子组件修改 -->
+  <el-pagination layout="total,sizes,prev,pager,next,jumper" :total="1000" :page-size="100"
+    :current-page.sync="currentPage4" :page-sizes="[1, 2, 3, 4, 5]" @current-change="handleCurrentChange"
+    @size-change="handleSizeChange"></el-pagination>
+</div>
+<hr />
+```
 
 ## 指令 - `v-for`
 

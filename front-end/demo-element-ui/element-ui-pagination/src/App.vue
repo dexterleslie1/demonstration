@@ -20,14 +20,14 @@
 
     <div>附加功能 - 显示总数</div>
     <div>
-      <el-pagination layout="total,prev,pager,next" :total="1000" :page-size="100" :current-page="currentPage1"
+      <el-pagination layout="total,prev,pager,next" :total="1000" :page-size="100" :current-page.sync="currentPage1"
         @current-change="handleCurrentChange" @size-change="handleSizeChange"></el-pagination>
     </div>
     <hr />
 
     <div>附加功能 - 调整每页显示条数</div>
     <div>
-      <el-pagination layout="sizes,prev,pager,next" :total="1000" :page-size="100" :current-page="currentPage2"
+      <el-pagination layout="sizes,prev,pager,next" :total="1000" :page-size="100" :current-page.sync="currentPage2"
         :page-sizes="[1, 2, 3, 4, 5]" @current-change="handleCurrentChange"
         @size-change="handleSizeChange"></el-pagination>
     </div>
@@ -35,15 +35,16 @@
 
     <div>附加功能 - 直接前往</div>
     <div>
-      <el-pagination layout="prev,pager,next,jumper" :total="1000" :page-size="100" :current-page="currentPage3"
+      <el-pagination layout="prev,pager,next,jumper" :total="1000" :page-size="100" :current-page.sync="currentPage3"
         @current-change="handleCurrentChange" @size-change="handleSizeChange"></el-pagination>
     </div>
     <hr />
 
     <div>附加功能 - 完整功能</div>
     <div>
+      <!-- 注意：下面:current-page没有.sync修饰符currentPage4变量不会el-pagination子组件修改 -->
       <el-pagination layout="total,sizes,prev,pager,next,jumper" :total="1000" :page-size="100"
-        :current-page="currentPage4" :page-sizes="[1, 2, 3, 4, 5]" @current-change="handleCurrentChange"
+        :current-page.sync="currentPage4" :page-sizes="[1, 2, 3, 4, 5]" @current-change="handleCurrentChange"
         @size-change="handleSizeChange"></el-pagination>
     </div>
     <hr />
@@ -71,7 +72,7 @@ export default {
       console.log(`每页 ${val} 条`);
     },
     handleCurrentChange(val) {
-      console.log(`当前页: ${val}`);
+      console.log(`当前页: ${val}，currentPage4=${this.currentPage4}`);
     }
   }
 }
