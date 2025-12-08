@@ -1,0 +1,19 @@
+version: "3.0"
+
+services:
+  db:
+    image: mariadb:11.4.8
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+      - --innodb-buffer-pool-size=128m
+    volumes:
+      - ./db.sql:/docker-entrypoint-initdb.d/db.sql:ro
+    environment:
+      - LANG=C.UTF-8
+      - TZ=Asia/Shanghai
+      - MYSQL_ROOT_PASSWORD=123456
+      # 自动创建demo数据库
+      - MYSQL_DATABASE=demo
+    network_mode: host
