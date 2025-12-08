@@ -13,5 +13,6 @@ services:
       - --skip-character-set-client-handshake
     volumes:
       - ./db/db.sql:/docker-entrypoint-initdb.d/db.sql:ro
-    ports:
-      - '50000:3306'
+#    ports:
+#      - '50000:3306'
+    network_mode: host

@@ -31,6 +31,19 @@ create table if not exists t_developer(
     createTime datetime not null
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 collate=utf8mb4_general_ci;
 
+-- 用于协助测试一对一查询
+create table if not exists t_developer_info(
+    developerId bigint primary key,
+    age int
+) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 collate=utf8mb4_general_ci;
+
+-- 用于协助测试一对多查询
+create table if not exists t_developer_lang(
+    id bigint primary key auto_increment,
+    developerId bigint,
+    lang varchar(64)
+) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 collate=utf8mb4_general_ci;
+
 create table if not exists t_ipset(
     id bigint primary key auto_increment,
     `name` varchar(512) not null,
