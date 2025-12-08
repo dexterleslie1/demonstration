@@ -1756,7 +1756,156 @@ Assert.assertEquals(18, mapList.get(0).get("age"));
   Assert.assertEquals(ipsetId11, mapObject.get("ipsetId"));
   ```
 
+
+#### 分页查询
+
+>详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/blob/master/demo-mybatis/demo-spring-boot-mybatis-plus
+
+提醒：需要配置分页插件，否则分页查询不生效。
+
+- 配置Maven依赖
+
+  ```xml
+  <!-- 用于mybatis-plus join查询插件 -->
+  <dependency>
+      <groupId>com.github.yulichang</groupId>
+      <artifactId>mybatis-plus-join</artifactId>
+      <version>1.4.13</version>
+  </dependency>
+  ```
+
+- 配置分页插件
+
+  ```java
+  package com.future.demo.mybatis.plus.config;
   
+  import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
+  import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
+  import org.springframework.context.annotation.Bean;
+  import org.springframework.context.annotation.Configuration;
+  
+  @Configuration
+  public class Config {
+      /**
+       * mybatis-plus分页插件
+       * 注意：要使用mybatis-plus分页功能必须配置MybatisPlusInterceptor，否则无法使用mybatis-plus分页功能
+       */
+      @Bean
+      public MybatisPlusInterceptor mybatisPlusInterceptor(){
+          MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
+          interceptor.addInnerInterceptor(new PaginationInnerInterceptor());
+          return interceptor;
+      }
+  }
+  
+  ```
 
+演示Service和Mapper的分页查询：
 
+```java
+// 测试分页查询
+@Test
+public void testPage() {
+    // 新增数据
+    int startId = 500000;
+    int randomTotalCount = new Random().nextInt(1000);
+    if (randomTotalCount <= 0) {
+        randomTotalCount = 121;
+    }
 
+    for (int i = 0; i < randomTotalCount; i++) {
+        long id = startId + i;
+        this.userService.removeById(id);
+    }
+
+    int prevTotalCount = (int) this.userService.count();
+
+    if (randomTotalCount < 50) {
+        randomTotalCount = 50;
+    }
+
+    for (int i = 0; i < randomTotalCount; i++) {
+        long id = startId + i;
+
+        User user = new User();
+        user.setId(id);
+        user.setAge(30 + i);
+        user.setName("Dexterleslie" + i);
+        user.setEmail("dexterleslie@gmail.com" + i);
+        userService.save(user);
+    }
+
+    int currentTotalCount = (int) this.userService.count();
+    Assert.assertEquals(prevTotalCount + randomTotalCount, currentTotalCount);
+
+    int currentPage = 1;
+    int size = 50;
+    Page<User> page = new Page<>(currentPage, size);
+    OrderItem orderItem = new OrderItem();
+    orderItem.setColumn("id");
+    orderItem.setAsc(false);
+    page.orders().add(orderItem);
+    this.userService.page(page);
+    List<User> userList = page.getRecords();
+    // 当前页码
+    Assert.assertEquals(1, page.getCurrent());
+    // 每页显示数量
+    Assert.assertEquals(size, page.getSize());
+    // 总页数
+    int expectedPages;
+    if (currentTotalCount % size != 0) {
+        expectedPages = (currentTotalCount + size) / size;
+    } else {
+        expectedPages = currentTotalCount / size;
+    }
+    Assert.assertEquals(expectedPages, page.getPages());
+    // 总记录数
+    Assert.assertEquals(currentTotalCount, page.getTotal());
+    Assert.assertEquals(size, userList.size());
+
+    // 使用mapper分页
+    page = new Page<>(currentPage, size);
+    orderItem = new OrderItem();
+    orderItem.setColumn("id");
+    orderItem.setAsc(false);
+    page.orders().add(orderItem);
+    // 表示不需要select count(*) from ...
+    // page.setSearchCount(false);
+    page = this.userMapper.selectPage(page, null);
+
+    // 使用自定义count
+    QueryWrapper<User> queryWrapper = Wrappers.query();
+    queryWrapper.select("id");
+
+    currentTotalCount = this.userMapper.selectCount(queryWrapper).intValue();
+    userList = page.getRecords();
+    // 当前页码
+    Assert.assertEquals(1, page.getCurrent());
+    // 每页显示数量
+    Assert.assertEquals(size, page.getSize());
+    // 总页数
+    if (randomTotalCount % size != 0) {
+        expectedPages = (randomTotalCount + size) / size;
+    } else {
+        expectedPages = randomTotalCount / size;
+    }
+    int actualPages;
+    if (currentTotalCount % size != 0) {
+        actualPages = (currentTotalCount + size) / size;
+    } else {
+        actualPages = currentTotalCount / size;
+    }
+    Assert.assertEquals(expectedPages, actualPages);
+    // 总记录数
+    Assert.assertEquals(randomTotalCount, currentTotalCount);
+    Assert.assertEquals(size, userList.size());
+    // mapper查询返回的page的总记录数和页码数
+    Assert.assertEquals(currentTotalCount, page.getTotal());
+    Assert.assertEquals(expectedPages, page.getPages());
+
+    for (int i = 0; i < randomTotalCount; i++) {
+        long id = startId + i;
+        userService.removeById(id);
+    }
+}
+```

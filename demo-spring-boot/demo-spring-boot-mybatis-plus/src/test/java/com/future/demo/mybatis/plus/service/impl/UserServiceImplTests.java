@@ -117,7 +117,7 @@ public class UserServiceImplTests {
         orderItem.setAsc(false);
         page.orders().add(orderItem);
         // 表示不需要select count(*) from ...
-        page.setSearchCount(false);
+        // page.setSearchCount(false);
         page = this.userMapper.selectPage(page, null);
 
         // 使用自定义count
@@ -146,6 +146,9 @@ public class UserServiceImplTests {
         // 总记录数
         Assert.assertEquals(randomTotalCount, currentTotalCount);
         Assert.assertEquals(size, userList.size());
+        // mapper查询返回的page的总记录数和页码数
+        Assert.assertEquals(currentTotalCount, page.getTotal());
+        Assert.assertEquals(expectedPages, page.getPages());
 
         for (int i = 0; i < randomTotalCount; i++) {
             long id = startId + i;

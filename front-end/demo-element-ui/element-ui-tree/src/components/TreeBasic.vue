@@ -3,7 +3,7 @@
     <div>
         <!-- :expand-on-click-node="false"表示点击节点不折叠或展开 -->
         <el-tree :data="treeData" :props="{ children: 'children', label: 'label' }" @node-click="handleClickNode"
-            :default-expand-all="true" :expand-on-click-node="false" node-key="id"></el-tree>
+            :default-expand-all="true" :expand-on-click-node="false" node-key="id" :highlight-current="true"></el-tree>
     </div>
 </template>
 

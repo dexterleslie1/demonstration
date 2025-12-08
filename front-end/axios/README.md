@@ -59,7 +59,7 @@ axios.interceptors.response.use((config) => {
 
     // 忽略服务器返回config.data.errorCode、config.data.errorMessage直接返回data数据
     if (config.headers['content-type'] && config.headers['content-type'].startsWith('application/json')) {
-        return config.data.data
+        return config.data
     } else {
         return config.data
     }
@@ -222,7 +222,7 @@ instance.interceptors.response.use((config) => {
 
     // 忽略服务器返回config.data.errorCode、config.data.errorMessage直接返回data数据
     if (config.headers['content-type'] && config.headers['content-type'].startsWith('application/json')) {
-        return config.data.data
+        return config.data
     } else {
         return config.data
     }
@@ -401,7 +401,7 @@ axios.interceptors.response.use((config) => {
 
     // 忽略服务器返回config.data.errorCode、config.data.errorMessage直接返回data数据
     if (config.headers['content-type'] && config.headers['content-type'].startsWith('application/json')) {
-        return config.data.data
+        return config.data
     } else {
         return config.data
     }
@@ -478,7 +478,7 @@ api1.interceptors.response.use((config) => {
 
     // 忽略服务器返回config.data.errorCode、config.data.errorMessage直接返回data数据
     if (config.headers['content-type'] && config.headers['content-type'].startsWith('application/json')) {
-        return config.data.data
+        return config.data
     } else {
         return config.data
     }
@@ -726,7 +726,9 @@ axios.interceptors.response.use((config) => {
 
     // 忽略服务器返回config.data.errorCode、config.data.errorMessage直接返回data数据
     if (config.headers['content-type'] && config.headers['content-type'].startsWith('application/json')) {
-        return config.data.data
+        // 在分页查询时，因为需要获取pageNum、pageSize、totalPages、totalRecords等数据
+        // 所以不能使用config.data.data只返回业务数据，需要使用config.data返回数据（包含errorCode、errorMessage、page数据）
+        return config.data
     } else {
         return config.data
     }
@@ -774,7 +776,7 @@ axiosInstance.interceptors.response.use((config) => {
 
     // 忽略服务器返回config.data.errorCode、config.data.errorMessage直接返回data数据
     if (config.headers['content-type'] && config.headers['content-type'].startsWith('application/json')) {
-        return config.data.data
+        return config.data
     } else {
         return config.data
     }

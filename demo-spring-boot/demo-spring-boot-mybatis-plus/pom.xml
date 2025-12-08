@@ -26,7 +26,7 @@
         <dependency>
             <groupId>com.github.dexterleslie1</groupId>
             <artifactId>future-common</artifactId>
-            <version>1.0.3</version>
+            <version>1.2.7</version>
         </dependency>
 
         <dependency>
@@ -93,6 +93,10 @@
 
     <!-- jitpack公共仓库，用于引用自定义构件 -->
     <repositories>
+        <repository>
+            <id>aliyun</id>
+            <url>https://maven.aliyun.com/repository/public</url>
+        </repository>
         <repository>
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
