@@ -39,8 +39,10 @@
       <!-- 注意：需要设置label-width="100px"，否则上级部门选择器显示变形 -->
       <el-form :model="deptForm" label-width="100px">
         <el-form-item v-if="deptTreeSelectorVisible" label="上级部门">
-          <el-tree :data="deptTree" :props="{ label: 'name', children: 'children' }" @node-click="handleNodeClick"
-            :default-expand-all="true" :expand-on-click-node="false"></el-tree>
+          <!-- <el-tree :data="deptTree" :props="{ label: 'name', children: 'children' }" @node-click="handleNodeClick"
+            :default-expand-all="true" :expand-on-click-node="false"></el-tree> -->
+          <treeselect v-model="deptForm.parentId" :multiple="false" :options="deptTree" placeholder="请选择上级部门"
+            :default-expand-level="20" :normalizer="normalizer" />
         </el-form-item>
         <el-form-item label="部门名称">
           <el-input v-model="deptForm.name" />
@@ -58,12 +60,13 @@
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import Treeselect from '@riophae/vue-treeselect'
+import '@riophae/vue-treeselect/dist/vue-treeselect.css'
 
 export default {
   name: 'App',
   components: {
-    HelloWorld
+    Treeselect
   },
   data() {
     return {
@@ -159,7 +162,10 @@ export default {
         }
       }
 
-      deptParent.children = deptListChildren
+      if (deptListChildren.length > 0) {
+        deptParent.children = deptListChildren
+      }
+
       return deptParent
     },
     // 点击删除部门按钮
@@ -228,10 +234,18 @@ export default {
       this.dialogFormVisible = true
       this.deptTreeSelectorVisible = false
     },
-    // 新增部门时，在弹出框中点击部门选择器的节点
-    handleNodeClick(data) {
-      this.deptForm.parentId = data.id
-    }
+    // // 新增部门时，在弹出框中点击部门选择器的节点
+    // handleNodeClick(data) {
+    //   this.deptForm.parentId = data.id
+    // }
+    // 把部门deptTree数据结构转换为vue-treeselect所需要的数据结构
+    normalizer(node) {
+      return {
+        id: node.id,
+        label: node.name,
+        children: node.children,
+      }
+    },
   }
 }
 </script>

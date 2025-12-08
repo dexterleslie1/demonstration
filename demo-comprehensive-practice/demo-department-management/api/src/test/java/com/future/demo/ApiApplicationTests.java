@@ -14,7 +14,7 @@ class ApiApplicationTests {
 
 	@Test
 	void contextLoads() {
-		deptService.list();
+		deptService.list(null);
 	}
 
 }
