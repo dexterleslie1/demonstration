@@ -1,5 +1,3 @@
-# `mysql`客户端工具
-
 ## `mysql workbench`
 
 ### `ubuntu`安装`mysql workbench`工具
