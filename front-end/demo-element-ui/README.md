@@ -1272,7 +1272,7 @@ export default {
 
 ```
 
-## 滚动条`el-scrollbar`
+## 滚动条Scrollbar
 
 `el-scrollbar` 是 Element UI 中的一个**自定义滚动条组件**，它用来替代浏览器默认的滚动条，提供更加美观和统一的视觉风格。
 

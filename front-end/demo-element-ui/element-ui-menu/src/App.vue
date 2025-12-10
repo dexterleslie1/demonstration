@@ -1,8 +1,8 @@
 <template>
   <div id="app">
-    <!-- <MenuHorizontal /> -->
+    <MenuHorizontal />
     <!-- <MenuVertical /> -->
-    <MenuCollapseAndExpand />
+    <!-- <MenuCollapseAndExpand /> -->
   </div>
 </template>
 
