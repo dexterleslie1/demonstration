@@ -60,6 +60,14 @@
 
 - 免费模式不支持解析图片。
 
+## CodeBuddy
+
+官网地址：https://www.codebuddy.ai/，使用Github集成登录。
+
+总结：
+
+- 免费模式支持解析图片。
+
 
 
 ## 腾讯元宝
