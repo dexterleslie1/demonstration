@@ -1,3 +1,9 @@
+## 总结
+
+如下：
+
+- Windows11首选使用Navicat Premium作为MySQL客户端工具。
+
 ## `mysql workbench`
 
 ### `ubuntu`安装`mysql workbench`工具
@@ -44,11 +50,42 @@ sudo apt install ./mysql-workbench-community_8.0.29-1ubuntu20.04_amd64.deb
 
 
 
-## `Navicat for MySQL`
+## Navicat Premium
 
-Upper case keywords 功能会把所有的 SQL 都 Upper case
+>下载地址：https://www.navicat.com.cn/download/navicat-premium
 
+说明：
 
+- Upper case keywords 功能会把所有的 SQL 都 Upper case
+
+破解：
+
+>说明：目前使用Navicat Premium17，等试用过期后再尝试破解。
+>
+>Navicat Premium17破解参考链接：https://www.shujuyr.com/9735.html
+
+1. 下载Navicat Premium17：https://www.navicat.com.cn/download/navicat-premium
+
+## Navicat Premium数据传输
+
+说明：使用Navicat Premium数据传输功能把UAT数据库复制到本地数据库中。
+
+### 情况1
+
+说明：如果数据传输过程中，没有表结构创建SQL脚本错误，则顺利使用此功能复制UAT数据库到本地数据库中。
+
+### 情况2
+
+说明：如果数据传输过程中，有表结构创建SQL脚本语法错误，则不能单纯使用此功能复制UAT数据库到本地数据库中。需要先创建表结构，再使用数据传输功能复制数据。
+
+步骤如下：
+
+1. 在本地数据库中创建表结构：
+   - 选中数据库点击右键，在弹出菜单中选择`转储SQL文件`>`仅结构`功能导出创建表SQL脚本。
+   - 手动修复表创建失败的SQL语句后在本地数据库中执行此SQL创建相关的表结构。
+2. 复制UAT数据库中表数据到本地数据库中
+   - 点击`工具`>`数据传输`功能，在弹出框中点击`选项`按钮，在`选项`窗口中取消`创建表`。
+   - 根据提示开始复制UAT数据到本地数据库中。
 
 ## `HeidiSQL`
 
