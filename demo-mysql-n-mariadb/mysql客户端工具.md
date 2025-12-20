@@ -82,6 +82,10 @@ sudo snap install heidisql-wine
 
 使用此工具作为首选的 MySQL GUI 客户端工具，因为其支持精准的 keyword upper case 功能。
 
+提示：
+
+- 编写SQL时没有智能提示。
+
 
 
 ### `Ubuntu`安装
