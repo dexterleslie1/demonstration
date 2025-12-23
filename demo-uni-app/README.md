@@ -707,3 +707,76 @@ uni-app 的 `<view>` 是一个：
 </script>
 ```
 
+## uView概念
+
+>官方介绍：https://uviewui.com/components/intro.html
+
+uView是uni-app生态专用的UI框架，uni-app 是一个使用 Vue.js 开发所有前端应用的框架，开发者编写一套代码， 可发布到iOS、Android、H5、以及各种小程序(微信/支付宝/百度/头条/QQ/钉钉)等多个平台(引言自uni-app网)。但目前除微信小程序，其它小程序平台的兼容可能存在一些问题，后续会针对这方面持续优化。
+
+## uni-app集成uView
+
+>提示：创建uni-app项目时选择Vue版本为2。
+>
+>详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-uni-app/demo-uview-getting-started
+
+安装uView依赖
+
+```sh
+npm install uview-ui@2.0.37
+```
+
+main.js中注册uView到Vue中
+
+```javascript
+// 注册uView组件到Vue中
+import uView from 'uview-ui'
+Vue.use(uView)
+```
+
+pages.json配置uView的easycom
+
+```json
+{
+	"easycom": {
+		"autoscan": true,
+		"custom": {
+			"^u-(.*)": "uview-ui/components/u-$1/u-$1.vue"
+		}
+	},
+    ...
+}
+```
+
+uni.scss配置uView UI主题变量
+
+```scss
+/* uView UI 主题变量 */
+@import 'uview-ui/theme.scss';
+```
+
+index.vue中调用uView组件
+
+```vue
+<template>
+	<u-calendar :show="show" :mode="mode" @confirm="confirm" @close="()=>{show = false}"></u-calendar>
+</template>
+
+<script>
+	export default {
+		data() {
+			return {
+				show: true,
+				mode: 'range'
+			}
+		},
+		methods: {
+			confirm(e) {
+				console.log(e);
+				this.show = false
+			}
+		}
+	}
+</script>
+
+```
+
