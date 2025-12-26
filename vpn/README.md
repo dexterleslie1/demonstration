@@ -2124,3 +2124,54 @@ Tailscale 的连接建立过程非常智能，遵循一个“优先级”：
 | **工作原理** | 通过 HTTP/2 协议中继加密的流量，伪装成普通HTTPS流量以绕过防火墙。 |
 | **优点**     | **可靠性极高**，几乎能在任何网络环境下建立连接。             |
 | **缺点**     | 相比直接P2P连接，延迟稍高，速度可能稍慢（但对于大多数应用足够好）。 |
+
+## TailScale网络权限控制
+
+>说明：使用grants https://tailscale.com/kb/1324/grants 控制网络权限。
+>
+>autogroups参考：https://tailscale.com/kb/1337/policy-syntax#autogroups
+>
+>tests断言参考：https://tailscale.com/kb/1337/policy-syntax#tests
+
+控制所有用户只能访问子网192.168.1.182，不能访问其他主机。
+
+```json
+// Example/default ACLs for unrestricted connections.
+{
+	// Define grants that govern access for users, groups, autogroups, tags,
+	// Tailscale IP addresses, and subnet ranges.
+	"grants": [
+		// Allow all connections.
+		// Comment this section out if you want to define specific restrictions.
+		// 允许访问所有主机
+		// {
+		// 	"src": ["*"],
+		// 	"dst": ["*"],
+		// 	"ip":  ["*"],
+		// },
+
+         // 允许访问192.168.1.182
+		{
+			"src": ["*"],
+			"dst": ["192.168.1.182"],
+			"ip":  ["*"],
+		}
+	],
+
+	// 测试部分允许您编写关于访问控制策略（授权和 ACL）的断言，这些断言会在每次 TailNet 策略文件更改时作为检查运行。
+	// 如果断言失败，Tailscale 将拒绝更新后的 TailNet 策略文件并返回错误。错误消息会指出失败的测试。
+	// 测试可确保您不会意外撤销重要权限或暴露关键系统。
+	// 断言只能访问192.168.1.182，不能访问192.168.1.51，否则配置不生效
+	"tests": [
+		{
+			"src": "group:autogroup:member",
+			// 能够访问192.168.1.182:22
+			"accept": ["192.168.1.182:22"],
+			// 不能访问192.168.1.51:22
+			"deny": ["192.168.1.51:22"],
+		},
+	],
+}
+
+```
+
