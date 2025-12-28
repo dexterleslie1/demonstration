@@ -1,0 +1,25 @@
+{
+  "name": "demo-vue2-style-lang",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build"
+  },
+  "dependencies": {
+    "vue": "^2.6.14"
+  },
+  "devDependencies": {
+    "@vue/cli-service": "~5.0.0",
+    "less": "^4.5.1",
+    "less-loader": "^12.3.0",
+    "sass": "^1.97.1",
+    "sass-loader": "^16.0.6",
+    "vue-template-compiler": "^2.6.14"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ]
+}
