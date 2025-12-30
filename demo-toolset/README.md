@@ -52,3 +52,6 @@ cd /usr/local && ./Snipaste-2.10.2-x86_64.AppImage
 
 点击`Add`按钮保存开机自启动。
 
+## 颜色拾取器
+
+网站：https://imagecolorpicker.com/，把图片上传到网站中并使用颜色拾取功能吸取颜色。
