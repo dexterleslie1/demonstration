@@ -231,8 +231,14 @@ $ npm view react-native-cli versions
   ```bash
   sudo npm install -g create-nuxt-app@2.15.0 --registry=https://registry.npmmirror.com
   ```
+  
+- npm install 时提供环境变量
 
-
+  ```sh
+  npm install --registry=https://registry.npmmirror.com --PUPPETEER_SKIP_DOWNLOAD=true
+  
+  # --PUPPETEER_SKIP_DOWNLOAD=true是一个环境变量标志，用于告诉 puppeteer包在安装时跳过自动下载 Chromium 浏览器。
+  ```
 
 ## `npm uninstall`
 
