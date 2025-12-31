@@ -1,4 +1,6 @@
-## `chromium`安装`SwitchyOmega`插件
+## ~~`chromium`安装`SwitchyOmega`插件~~
+
+>提示：2025年12月31日不能安装此插件，安装时报告错误说“清单不受支持”，可能是新版的Chrome浏览器不支持旧版本的插件。
 
 - 下载`SwitchyOmega`插件，`https://github.com/FelisCatus/SwitchyOmega/releases`
 
@@ -10,7 +12,15 @@
 
 - 配置完成`SwitchyOmega`后点击“应用选项”保存设置才能够生效
 
+## 通过第三方网站下载Chrome插件
 
+访问 https://crxdl.com 搜索插件名称，点击下载zip压缩包，解压后zip压缩包后，拖拽crx文件到chrome://extensions/界面中（开启开发者模式）即可安装。
+
+## Save All Resources插件
+
+安装：访问 https://crxdl.com 下载Save All Resources插件（ID为abpdnfjocnmdomablahdcfnoggeeiedb），解压zip后推拽crx文件到chrome://extensions/界面中（开启开发者模式）即可安装。
+
+使用：访问 https://www.daziya.com/，打开开发者工具切换到ResourcesSaver页签点击“Save All Resources”按钮就会自动打包下载网站为zip压缩包。
 
 ## `Ubuntu`安装`google chrome`浏览器
 
