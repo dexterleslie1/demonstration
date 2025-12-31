@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activiti 7 Demo</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .api-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #fafafa;
+        }
+        .api-section h3 {
+            margin-top: 0;
+            color: #34495e;
+        }
+        .api-example {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        .btn {
+            background: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #2980b9;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Activiti 7 工作流引擎演示</h1>
+        
+        <div class="info">
+            <h3>📋 项目概述</h3>
+            <p>这是一个基于 Spring Boot 2.7.18 和 Activiti 7 的工作流引擎演示项目。</p>
+            <p><strong>技术栈：</strong>Spring Boot 2.7.18, Activiti 7, MySQL 8.0.25, Spring Security, JPA</p>
+            <p><strong>时区：</strong>Asia/Shanghai | <strong>字符集：</strong>UTF-8</p>
+        </div>
+
+        <div class="api-section">
+            <h3>🔧 API 接口测试</h3>
+            <p>项目提供了以下 REST API 接口：</p>
+            
+            <h4>1. 健康检查</h4>
+            <div class="api-example">
+GET /activiti-demo/api/activiti/health
+            </div>
+            <button class="btn" onclick="testHealth()">测试健康检查</button>
+            
+            <h4>2. 启动流程实例</h4>
+            <div class="api-example">
+POST /activiti-demo/api/activiti/start?processKey=approvalProcess
+Body: {"approved": true, "requestAmount": 1000}
+            </div>
+            <button class="btn" onclick="testStartProcess()">启动审批流程</button>
+            
+            <h4>3. 获取任务列表</h4>
+            <div class="api-example">
+GET /activiti-demo/api/activiti/tasks?assignee=manager
+            </div>
+            <button class="btn" onclick="testGetTasks()">获取任务</button>
+            
+            <h4>4. 完成任务</h4>
+            <div class="api-example">
+POST /activiti-demo/api/activiti/complete?taskId={taskId}
+Body: {"approved": true}
+            </div>
+            <button class="btn" onclick="testCompleteTask()">完成任务</button>
+            
+            <h4>5. 获取运行中的流程实例</h4>
+            <div class="api-example">
+GET /activiti-demo/api/activiti/process-instances
+            </div>
+            <button class="btn" onclick="testGetProcessInstances()">获取流程实例</button>
+        </div>
+
+        <div class="api-section">
+            <h3>📊 运行状态</h3>
+            <div id="status">
+                <p>点击上方的按钮测试各项功能...</p>
+            </div>
+        </div>
+
+        <div class="api-section">
+            <h3>🔗 相关链接</h3>
+            <ul>
+                <li><a href="http://localhost:8080/activiti-demo/api/activiti/health" target="_blank">健康检查接口</a></li>
+                <li><a href="http://localhost:8080/activiti-demo" target="_blank">应用根路径</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const baseUrl = 'http://localhost:8080/activiti-demo/api/activiti';
+
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `<div class="${type}">${message}</div>`;
+        }
+
+        async function testHealth() {
+            try {
+                const response = await fetch(`${baseUrl}/health`);
+                const data = await response.json();
+                showStatus(`✅ 健康检查成功: ${JSON.stringify(data, null, 2)}`, 'success');
+            } catch (error) {
+                showStatus(`❌ 健康检查失败: ${error.message}`, 'error');
+            }
+        }
+
+        async function testStartProcess() {
+            try {
+                const response = await fetch(`${baseUrl}/start?processKey=approvalProcess`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        approved: true,
+                        requestAmount: 1000
+                    })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showStatus(`✅ 流程启动成功: ${JSON.stringify(data, null, 2)}`, 'success');
+                } else {
+                    showStatus(`❌ 流程启动失败: ${JSON.stringify(data, null, 2)}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`❌ 请求失败: ${error.message}`, 'error');
+            }
+        }
+
+        async function testGetTasks() {
+            try {
+                const response = await fetch(`${baseUrl}/tasks?assignee=manager`);
+                const data = await response.json();
+                if (response.ok) {
+                    showStatus(`✅ 获取任务成功 (共${data.total}个): ${JSON.stringify(data, null, 2)}`, 'success');
+                } else {
+                    showStatus(`❌ 获取任务失败: ${JSON.stringify(data, null, 2)}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`❌ 请求失败: ${error.message}`, 'error');
+            }
+        }
+
+        async function testCompleteTask() {
+            try {
+                // 首先获取任务
+                const tasksResponse = await fetch(`${baseUrl}/tasks?assignee=manager`);
+                const tasksData = await tasksResponse.json();
+                
+                if (tasksData.tasks && tasksData.tasks.length > 0) {
+                    const taskId = tasksData.tasks[0].id;
+                    const response = await fetch(`${baseUrl}/complete?taskId=${taskId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            approved: true
+                        })
+                    });
+                    const data = await response.json();
+                    if (response.ok) {
+                        showStatus(`✅ 任务完成成功: ${JSON.stringify(data, null, 2)}`, 'success');
+                    } else {
+                        showStatus(`❌ 任务完成失败: ${JSON.stringify(data, null, 2)}`, 'error');
+                    }
+                } else {
+                    showStatus('❌ 没有可完成的任务，请先启动流程', 'error');
+                }
+            } catch (error) {
+                showStatus(`❌ 请求失败: ${error.message}`, 'error');
+            }
+        }
+
+        async function testGetProcessInstances() {
+            try {
+                const response = await fetch(`${baseUrl}/process-instances`);
+                const data = await response.json();
+                if (response.ok) {
+                    showStatus(`✅ 获取流程实例成功 (共${data.total}个): ${JSON.stringify(data, null, 2)}`, 'success');
+                } else {
+                    showStatus(`❌ 获取流程实例失败: ${JSON.stringify(data, null, 2)}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`❌ 请求失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 页面加载时测试健康状态
+        window.onload = function() {
+            testHealth();
+        };
+    </script>
+</body>
+</html>

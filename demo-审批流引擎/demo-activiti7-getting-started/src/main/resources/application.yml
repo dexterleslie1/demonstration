@@ -1,0 +1,81 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /activiti-demo
+
+spring:
+  application:
+    name: activiti-demo
+  
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/activiti?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+    username: activiti
+    password: activiti123
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 15
+      auto-commit: true
+      idle-timeout: 30000
+      pool-name: HikariCP
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        
+  activiti:
+    # 数据库架构更新策略：可选值 false(生产环境推荐), true(开发环境), create-drop(测试环境), drop-create(开发测试重置)
+    # false: 启动时检查数据库版本，不匹配则抛异常 - 确保数据库结构稳定
+    # true: 启动时检查并更新数据库表，不存在则自动创建 - 便于调试测试
+    # create-drop: 启动时创建表，关闭时删除表 - 测试环境使用
+    # drop-create: 先删除现有表，再重新创建表 - 开发测试重置数据库
+    database-schema-update: true
+    # 是否检查流程定义：控制是否在启动时自动检查并部署processes目录下的BPMN文件
+    # true: 启动时自动检查processes目录下的流程定义文件并部署，如果目录为空会报错
+    # false: 启动时不自动检查和部署流程定义文件，需要通过API手动部署 - 推荐设置，避免启动错误
+    check-process-definitions: false
+    # 历史记录级别：full表示完整记录所有流程活动历史
+    history-level: full
+    # 部署模式：控制流程定义文件的部署策略和冲突处理方式
+    # default: 默认模式，部署时如果流程定义已存在可能会失败 - 适合首次部署
+    # single-resource: 每个资源文件单独部署，适合需要独立管理多个流程的场景
+    # never-fail: 部署失败时不抛出异常，关闭SpringBoot自动部署流程 - 生产环境推荐
+    deployment-mode: default
+    # 是否激活异步执行器：控制是否在启动时启用后台线程池处理异步任务
+    # true: 激活异步执行器，启动后台线程池扫描执行定时任务、异步任务、消息事件等
+    # false: 不激活异步执行器，使用同步模式，所有任务立即执行 - 当前设置，适合简单流程
+    # 注意：如果需要使用定时事件(Timer Events)、异步任务(async="true")等功能，必须设置为true
+    async-executor-activate: false
+    # servlet配置
+    servlet:
+      # 异步配置
+      async:
+        # 异步任务超时时间：1800000毫秒（30分钟）
+        timeout: 1800000
+        
+logging:
+  level:
+    org.activiti: DEBUG
+    org.springframework.security: DEBUG
+    com.example.activiti: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{50} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{50} - %msg%n"
+  file:
+    name: logs/activiti-demo.log
+    
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always

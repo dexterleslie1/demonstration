@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:activiti="http://activiti.org/bpmn"
+             xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+             xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC"
+             xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI"
+             typeLanguage="http://www.w3.org/2001/XMLSchema"
+             expressionLanguage="http://www.w3.org/1999/XPath"
+             targetNamespace="http://www.activiti.org/demo">
+  
+  <process id="simpleApproval" name="简单审批流程" isExecutable="true">
+    <documentation>一个简单的审批流程，包含一个审批节点</documentation>
+    
+    <!-- 开始事件 -->
+    <startEvent id="startEvent" name="开始"/>
+    
+    <!-- 连线：开始->审批 -->
+    <sequenceFlow id="flow1" sourceRef="startEvent" targetRef="approvalTask"/>
+    
+    <!-- 用户任务：审批节点 -->
+    <userTask id="approvalTask" name="审批" activiti:assignee="${assignee}">
+      <documentation>审批人进行审批</documentation>
+    </userTask>
+    
+    <!-- 连线：审批->结束 -->
+    <sequenceFlow id="flow2" sourceRef="approvalTask" targetRef="endEvent"/>
+    
+    <!-- 结束事件 -->
+    <endEvent id="endEvent" name="结束"/>
+    
+  </process>
+  
+  <!-- BPMN图形信息 -->
+  <bpmndi:BPMNDiagram id="BPMNDiagram_simpleApproval">
+    <bpmndi:BPMNPlane id="BPMNPlane_simpleApproval" bpmnElement="simpleApproval">
+      
+      <!-- 开始事件图形 -->
+      <bpmndi:BPMNShape id="shape_startEvent" bpmnElement="startEvent">
+        <omgdc:Bounds height="35.0" width="35.0" x="100.0" y="150.0"/>
+      </bpmndi:BPMNShape>
+      
+      <!-- 审批任务图形 -->
+      <bpmndi:BPMNShape id="shape_approvalTask" bpmnElement="approvalTask">
+        <omgdc:Bounds height="80.0" width="100.0" x="250.0" y="127.0"/>
+      </bpmndi:BPMNShape>
+      
+      <!-- 结束事件图形 -->
+      <bpmndi:BPMNShape id="shape_endEvent" bpmnElement="endEvent">
+        <omgdc:Bounds height="35.0" width="35.0" x="450.0" y="150.0"/>
+      </bpmndi:BPMNShape>
+      
+      <!-- 连线1图形 -->
+      <bpmndi:BPMNEdge id="edge_flow1" bpmnElement="flow1">
+        <omgdi:waypoint x="135.0" y="167.5"/>
+        <omgdi:waypoint x="250.0" y="167.0"/>
+      </bpmndi:BPMNEdge>
+      
+      <!-- 连线2图形 -->
+      <bpmndi:BPMNEdge id="edge_flow2" bpmnElement="flow2">
+        <omgdi:waypoint x="350.0" y="167.0"/>
+        <omgdi:waypoint x="450.0" y="167.5"/>
+      </bpmndi:BPMNEdge>
+      
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  
+</definitions>

@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:activiti="http://activiti.org/bpmn"
+             xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+             xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC"
+             xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI"
+             typeLanguage="http://www.w3.org/2001/XMLSchema"
+             expressionLanguage="http://www.w3.org/1999/XPath"
+             targetNamespace="http://www.activiti.org/test">
+  
+  <process id="approvalProcess" name="Approval Process" isExecutable="true">
+    <documentation>Simple approval process for demonstration</documentation>
+    
+    <startEvent id="startevent" name="Start" activiti:formKey="startApproval"/>
+    
+    <sequenceFlow id="flow1" sourceRef="startevent" targetRef="userTask1"/>
+    
+    <userTask id="userTask1" name="Manager Review" activiti:assignee="manager">
+      <documentation>Manager reviews the request</documentation>
+    </userTask>
+    
+    <exclusiveGateway id="exclusivegateway1" name="Decision Gateway"/>
+    
+    <sequenceFlow id="flow2" sourceRef="userTask1" targetRef="exclusivegateway1"/>
+    
+    <sequenceFlow id="flow3" name="Approved" sourceRef="exclusivegateway1" targetRef="userTask2">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${approved == true}]]></conditionExpression>
+    </sequenceFlow>
+    
+    <sequenceFlow id="flow4" name="Rejected" sourceRef="exclusivegateway1" targetRef="endevent1">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${approved == false}]]></conditionExpression>
+    </sequenceFlow>
+    
+    <userTask id="userTask2" name="Final Approval" activiti:assignee="admin">
+      <documentation>Final approval by administrator</documentation>
+    </userTask>
+    
+    <sequenceFlow id="flow5" sourceRef="userTask2" targetRef="endevent1"/>
+    
+    <endEvent id="endevent1" name="End"/>
+    
+  </process>
+  
+  <bpmndi:BPMNDiagram id="BPMNDiagram_approvalProcess">
+    <bpmndi:BPMNPlane id="BPMNPlane_approvalProcess" bpmnElement="approvalProcess">
+      <bpmndi:BPMNShape id="_startEvent" bpmnElement="startevent">
+        <omgdc:Bounds height="35.0" width="35.0" x="130.0" y="160.0"/>
+      </bpmndi:BPMNShape>
+      
+      <bpmndi:BPMNShape id="_userTask1" bpmnElement="userTask1">
+        <omgdc:Bounds height="55.0" width="105.0" x="230.0" y="150.0"/>
+      </bpmndi:BPMNShape>
+      
+      <bpmndi:BPMNShape id="_exclusiveGateway1" bpmnElement="exclusivegateway1" isMarkerVisible="true">
+        <omgdc:Bounds height="35.0" width="35.0" x="400.0" y="160.0"/>
+      </bpmndi:BPMNShape>
+      
+      <bpmndi:BPMNShape id="_userTask2" bpmnElement="userTask2">
+        <omgdc:Bounds height="55.0" width="105.0" x="500.0" y="150.0"/>
+      </bpmndi:BPMNShape>
+      
+      <bpmndi:BPMNShape id="_endEvent" bpmnElement="endevent1">
+        <omgdc:Bounds height="35.0" width="35.0" x="670.0" y="160.0"/>
+      </bpmndi:BPMNShape>
+      
+      <bpmndi:BPMNEdge id="_flow1" bpmnElement="flow1" sourceElement="_startEvent" targetElement="_userTask1">
+        <omgdi:waypoint xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" xsi:type="omgdc:Point" x="165.0" y="177.0"/>
+        <omgdi:waypoint xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" xsi:type="omgdc:Point" x="230.0" y="177.0"/>
+      </bpmndi:BPMNEdge>
+      
+      <bpmndi:BPMNEdge id="_flow2" bpmnElement="flow2" sourceElement="_userTask1" targetElement="_exclusiveGateway1">
+        <omgdi:waypoint xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" xsi:type="omgdc:Point" x="335.0" y="177.0"/>
+        <omgdi:waypoint xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" xsi:type="omgdc:Point" x="400.0" y="177.0"/>
+      </bpmndi:BPMNEdge>
+      
+      <bpmndi:BPMNEdge id="_flow3" bpmnElement="flow3" sourceElement="_exclusiveGateway1" targetElement="_userTask2">
+        <omgdi:waypoint xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" xsi:type="omgdc:Point" x="435.0" y="177.0"/>
+        <omgdi:waypoint xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" xsi:type="omgdc:Point" x="500.0" y="177.0"/>
+      </bpmndi:BPMNEdge>
+      
+      <bpmndi:BPMNEdge id="_flow4" bpmnElement="flow4" sourceElement="_exclusiveGateway1" targetElement="_endEvent">
+        <omgdi:waypoint xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" xsi:type="omgdc:Point" x="435.0" y="160.0"/>
+        <omgdi:waypoint xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" xsi:type="omgdc:Point" x="435.0" y="120.0"/>
+        <omgdi:waypoint xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" xsi:type="omgdc:Point" x="670.0" y="120.0"/>
+        <omgdi:waypoint xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" xsi:type="omgdc:Point" x="670.0" y="160.0"/>
+      </bpmndi:BPMNEdge>
+      
+      <bpmndi:BPMNEdge id="_flow5" bpmnElement="flow5" sourceElement="_userTask2" targetElement="_endEvent">
+        <omgdi:waypoint xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" xsi:type="omgdc:Point" x="605.0" y="177.0"/>
+        <omgdi:waypoint xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" xsi:type="omgdc:Point" x="670.0" y="177.0"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  
+</definitions>
