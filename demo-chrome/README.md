@@ -32,6 +32,12 @@
 
 
 
+## Chrome版本144 beta版本下载
+
+访问 https://www.google.com/chrome/beta/ 下载最新的Chrome beta版本。
+
+
+
 ## 借助`chrome`判断网站内容是否为`javascript`动态生成
 
 原理：通过启用和禁用`javascript`运行判断网站内容是否为动态生成的。
