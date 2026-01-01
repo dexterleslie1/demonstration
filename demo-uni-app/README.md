@@ -219,7 +219,23 @@ uni-app 小程序打包和运行原理如下：
 3. API 调用
    - 平台 API 抽象层统一封装各平台原生 API，提供一致的调用方式。在编译到微信小程序时，uni-app 的 `uni.*` API 会被替换为微信小程序对应的 `wx.*` API 调用，开发者可以通过这些 API 调用微信小程序的各种功能。
 
+## uniapp+App调试方法
 
+如下：
+
+- 把uniapp运行到浏览器Chrome中，这样可以直接使用Chrome开发者工具查看日志、样式、HTML、网络等。
+- 参考 https://uniapp.dcloud.net.cn/tutorial/debug/debug-app.html 使用HBuilderX内置的调试器查看日志、Elements、JS断点调试等。
+- 使用Chrome开发者工具Remote Debugging功能调试Android手机中的网页 https://blog.jiatool.com/posts/chrome_remote_debug/。
+
+## uniapp+App调试方法实战
+
+借助本站示例 https://gitee.com/dexterleslie/demonstration/tree/main/demo-uni-app/demo-style-scss 辅助实验。
+
+结论如下：
+
+- 把uniapp运行到浏览器Chrome中：能够完整地调试日志、样式、查看元素、监控网络、支持JS断点调试。
+- 使用HBuilderX内置的调试器：能够查看日志、不能查看元素（因为只支持nvue元素）、支持JS断点调试、不支持监控网络。
+- 使用Chrome开发者工具Remote Debugging：只支持元素和样式调试，不支持日志、网络调试。
 
 ## `App`基座
 
@@ -976,4 +992,3 @@ export default {
 }
 </style>
 ```
-
