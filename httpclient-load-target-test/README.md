@@ -1,1 +1,0 @@
-# httpclient4模拟产生HTTP负载
