@@ -992,3 +992,173 @@ export default {
 }
 </style>
 ```
+
+## 拍照
+
+>详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-uni-app/demo-take-photo
+>
+>从本地相册选择图片或使用相机拍照：https://uniapp.dcloud.net.cn/api/media/image.html#chooseimage
+
+调用uni.chooseImage接口拍照
+
+```js
+// 拍照方法
+takePhoto() {
+    uni.chooseImage({
+        count: 1, // 最多选择1张图片
+        sizeType: ['original', 'compressed'], // 可以指定是原图还是压缩图，默认二者都有
+        sourceType: ['camera'], // 使用相机
+        success: (res) => {
+            // 获取图片路径
+            this.photoPath = res.tempFilePaths[0];
+            console.log('图片路径:', this.photoPath);
+        },
+        fail: (err) => {
+            console.error('选择图片失败:', err);
+            uni.showToast({
+                title: '选择图片失败',
+                icon: 'none'
+            });
+        }
+    });
+},
+```
+
+拍照成功后回显到image控件中
+
+```html
+<image class="photo" :src="photoPath" mode="aspectFit"></image>
+```
+
+保存图片到相册中
+
+```js
+// 保存到相册方法
+saveToAlbum() {
+    if (!this.photoPath) {
+        uni.showToast({
+            title: '请先拍照',
+            icon: 'none'
+        });
+        return;
+    }
+
+    // 检查平台兼容性问题
+    // H5平台不支持saveImageToPhotosAlbum，需要使用其他方法
+    // #ifdef H5
+    uni.showModal({
+        title: '提示',
+        content: '在H5环境中，图片已经保存在临时路径中，您可以右键保存图片。',
+        showCancel: false
+    });
+    return;
+    // #endif
+
+    // 非H5平台，使用标准保存方法
+    // #ifndef H5
+    uni.saveImageToPhotosAlbum({
+        filePath: this.photoPath,
+        success: () => {
+            uni.showToast({
+                title: '保存成功',
+                icon: 'success'
+            });
+        },
+        fail: (err) => {
+            console.error('保存到相册失败:', err);
+
+            // 如果是权限问题，尝试请求权限
+            if (err.errMsg && err.errMsg.includes('auth deny')) {
+                uni.showModal({
+                    title: '权限请求',
+                    content: '需要访问相册权限以保存图片',
+                    success: (res) => {
+                        if (res.confirm) {
+                            // 请求相册权限
+                            uni.openSetting({
+                                success: (settingRes) => {
+                                    // 重新尝试保存
+                                    if (settingRes.authSetting['scope.writePhotosAlbum']) {
+                                        this.saveToAlbum(); // 递归调用，重新尝试保存
+                                    }
+                                }
+                            });
+                        }
+                    }
+                });
+            } else {
+                uni.showToast({
+                    title: '保存失败',
+                    icon: 'none'
+                });
+            }
+        }
+    });
+    // #endif
+},
+```
+
+## 图片预览
+
+>详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-uni-app/demo-图片预览
+>
+>预览图片：https://uniapp.dcloud.net.cn/api/media/image.html#unipreviewimageobject
+
+从相册选取图片
+
+```js
+// 从相册选择图片
+chooseImage() {
+    uni.chooseImage({
+        count: 9, // 最多选择9张图片
+        sizeType: ['original', 'compressed'], // 可以指定是原图还是压缩图，默认二者都有
+        sourceType: ['album'], // 使用相册
+        success: (res) => {
+            // 获取图片路径
+            this.imagePaths = res.tempFilePaths;
+            console.log('图片路径:', this.imagePaths);
+        },
+        fail: (err) => {
+            console.error('选择图片失败:', err);
+            uni.showToast({
+                title: '选择图片失败',
+                icon: 'none'
+            });
+        }
+    });
+},
+```
+
+调用uni.previewImage图片预览
+
+```js
+// 预览图片
+previewImage(index = 0) {
+    if (this.imagePaths.length === 0) {
+        uni.showToast({
+            title: '请先选择图片',
+            icon: 'none'
+        });
+        return;
+    }
+
+    // 使用 uni.previewImage API 预览图片
+    uni.previewImage({
+        current: this.imagePaths[index], // 当前显示图片的链接
+        urls: this.imagePaths, // 需要预览的图片链接列表
+        indicator: 'number', // 图片指示器样式，可取值："default" | "number" | "none"
+        loop: true, // 是否可循环预览
+        success: () => {
+            console.log('预览图片成功');
+        },
+        fail: (err) => {
+            console.error('预览图片失败:', err);
+            uni.showToast({
+                title: '预览图片失败',
+                icon: 'none'
+            });
+        }
+    });
+}
+```
+
