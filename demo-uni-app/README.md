@@ -1162,3 +1162,154 @@ previewImage(index = 0) {
 }
 ```
 
+## 图片上传、下载、使用URL预览
+
+>详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-uni-app/demo-图片上传和下载
+>
+>上传和下载：https://uniapp.dcloud.net.cn/api/request/network-file.html
+
+上传图片
+
+```js
+// 上传图片到服务器
+uploadImage() {
+    if (!this.selectedImage) {
+        this.message = '请先选择图片'
+        return
+    }
+
+    this.uploading = true
+    this.message = '开始上传...'
+
+    // 构建上传参数
+    const uploadConfig = {
+        url: this.apiBaseUrl + '/postWithFileUpload',
+        filePath: this.selectedImage,
+        name: 'files',
+        formData: {},
+        success: (res) => {
+            try {
+                const response = JSON.parse(res.data)
+                if (response.errorCode == 0 && response.data && response.data.length > 0) {
+                    // 将上传的文件名添加到列表中
+                    this.uploadedFiles.push(...response.data)
+                    this.message = '上传成功！文件已保存到服务器'
+                    this.selectedImage = '' // 清空选中的图片
+                } else {
+                    this.message = '上传失败: ' + (response.errorMessage || '服务器返回数据格式错误')
+                }
+            } catch (e) {
+                this.message = '上传失败: 解析服务器响应失败'
+                console.error('解析响应失败:', e)
+            }
+        },
+        fail: (err) => {
+            console.error('上传失败:', JSON.stringify(err))
+
+            // #ifdef APP-PLUS
+            // APP端错误处理
+            if (err.errMsg && err.errMsg.includes('uploadFile:fail')) {
+                this.message = 'APP上传失败：网络连接问题\n解决方案：\n1. 确保服务器运行在 http://localhost:8080\n2. 检查manifest.json中的域名白名单配置\n3. 确保APP有网络权限'
+            } else {
+                this.message = 'APP上传失败: ' + (err.errMsg || '未知错误')
+            }
+            // #endif
+
+            // #ifdef H5
+            // H5端错误处理
+            this.message = 'H5上传失败: ' + (err.errMsg || '网络错误')
+            // #endif
+        },
+        complete: () => {
+            this.uploading = false
+        }
+    }
+
+    // #ifdef APP-PLUS
+    // APP端添加超时和头部配置
+    uploadConfig.timeout = 10000
+    // #endif
+
+    uni.uploadFile(uploadConfig)
+},
+```
+
+下载图片
+
+```js
+// 下载图片
+downloadImage(filename) {
+    if (!filename) {
+        this.message = '文件名不能为空'
+        return
+    }
+
+    this.message = '开始下载...'
+
+    const downloadConfig = {
+        url: this.apiBaseUrl + '/' + filename,
+        success: (res) => {
+            if (res.statusCode === 200) {
+                // 下载成功，可以保存到相册或显示
+                this.message = '下载成功'
+                // 可以选择保存到相册
+                uni.saveImageToPhotosAlbum({
+                    filePath: res.tempFilePath,
+                    success: () => {
+                        this.message = '下载并保存到相册成功'
+                    },
+                    fail: (saveErr) => {
+                        console.error('保存到相册失败:', saveErr)
+                        this.message = '下载成功，但保存到相册失败'
+                    }
+                })
+            } else {
+                this.message = '下载失败: HTTP ' + res.statusCode
+            }
+        },
+        fail: (err) => {
+            console.error('下载失败:', err)
+
+            // #ifdef APP-PLUS
+            // APP端错误处理
+            if (err.errMsg && err.errMsg.includes('downloadFile:fail')) {
+                this.message = 'APP下载失败：网络连接问题\n解决方案：\n1. 确保服务器运行在 http://localhost:8080\n2. 检查manifest.json中的域名白名单配置\n3. 确保APP有网络权限'
+            } else {
+                this.message = 'APP下载失败: ' + (err.errMsg || '未知错误')
+            }
+            // #endif
+
+            // #ifdef H5
+            // H5端错误处理
+            this.message = 'H5下载失败: ' + (err.errMsg || '网络错误')
+            // #endif
+        }
+    }
+
+    // #ifdef APP-PLUS
+    // APP端添加超时配置
+    downloadConfig.timeout = 10000
+    // #endif
+
+    uni.downloadFile(downloadConfig)
+},
+```
+
+URL预览图片
+
+```js
+// 预览已上传的图片
+previewUploadedImage(filename) {
+    if (!filename) return
+
+    // 生成预览URL
+    const previewUrl = this.apiBaseUrl + '/' + filename
+    console.log('预览已上传图片路径:', previewUrl)
+
+    uni.previewImage({
+        current: previewUrl,
+        urls: [previewUrl]
+    })
+}
+```
+
