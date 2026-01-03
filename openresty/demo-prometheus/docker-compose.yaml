@@ -7,6 +7,8 @@ services:
     image: demo-openresty-dev
     environment:
       - TZ=Asia/Shanghai
+    volumes:
+      - ./nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf:ro
     ports:
       - '80:80'
       - '9145:9145'
