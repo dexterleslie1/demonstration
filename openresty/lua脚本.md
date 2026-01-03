@@ -80,7 +80,7 @@ server {
 
 
 
-获取Header参数
+## 获取Header参数
 
 >详细用法请参考本站[示例](https://gitee.com/dexterleslie/demonstration/tree/master/openresty/lua-scripting/demo-getting-started)
 
@@ -98,7 +98,80 @@ content_by_lua_block {
 curl -H "HeaderP1: hv1" http://localhost\?p1\=v1
 ```
 
+## 打印nginx中自定义变量
 
+>说明：使用ngx.var.xxx获取nginx上下文中自定义变量。
+
+详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/blob/main/openresty/nginx-getting-started.conf
+
+```nginx
+server {
+    # 定义全局变量
+    set $my_global_variable "Hello world from Global!!!";
+
+    listen       80;
+    server_name  localhost;
+
+    location / {
+        # 定义局部变量
+        set $my_local_variable "Hello world from Local!!!";
+
+        #root   /usr/local/openresty/nginx/html;
+        #index  index.html index.htm;
+        content_by_lua_block {
+            -- nginx for lua api之获取请求中的参数
+            -- http://www.shixinke.com/openresty/openresty-get-request-arguments
+            local args = ngx.req.get_uri_args();
+            local p1 = args.p1;
+            if not p1 then
+                p1 = "";
+            end
+
+            ngx.header.content_type = "text/plain;charset=utf-8";
+            ngx.say("Hello Dexterleslie. 参数p1=" .. p1 .. "，全局变量$my_global_variable：" .. ngx.var.my_global_variable .. "，局部变量$my_local_variable：" .. ngx.var.my_local_variable);
+        }
+    }
+}
+```
+
+## lua脚本修改nginx中变量
+
+详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/blob/main/openresty/nginx-getting-started.conf
+
+```nginx
+server {
+    # 定义全局变量
+    set $my_global_variable "Hello world from Global!!!";
+
+    listen       80;
+    server_name  localhost;
+
+    location / {
+        # 定义局部变量
+        set $my_local_variable "Hello world from Local!!!";
+
+        #root   /usr/local/openresty/nginx/html;
+        #index  index.html index.htm;
+        content_by_lua_block {
+            -- nginx for lua api之获取请求中的参数
+            -- http://www.shixinke.com/openresty/openresty-get-request-arguments
+            local args = ngx.req.get_uri_args();
+            local p1 = args.p1;
+            if not p1 then
+                p1 = "";
+            end
+
+            -- 修改nginx变量
+            ngx.var.my_local_variable = 'Hello world~~~!!!';
+
+            ngx.header.content_type = "text/plain;charset=utf-8";
+            ngx.say("Hello Dexterleslie. 参数p1=" .. p1 .. "，全局变量$my_global_variable：" .. ngx.var.my_global_variable .. "，局部变量$my_local_variable：" .. ngx.var.my_local_variable);
+        }
+    }
+}
+```
+
+`ngx.var.my_local_variable = 'Hello world~~~!!!';`lua脚本修改nginx变量
 
 ## `lua`生成`uuid`
 
@@ -346,3 +419,31 @@ location / {
     }
 }
 ```
+
+## 触发limit_conn时打印自定义错误
+
+>说明：limit_conn内置的错误日志打印没有包括x-forward-for和nginx自定义客户端地址变量，需要使用lua脚本在触发limit_conn时打印自定义错误。
+
+详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/blob/main/openresty/security-and-performance/config-limit-conn/nginx.conf
+
+```nginx
+location / {
+    log_by_lua_block {
+        local status = tonumber(ngx.status) or 0
+        local limit_status = ngx.var.limit_conn_status
+
+        -- 如果状态是 503 且 limit_conn_status 是 REJECTED
+        if status == 503 and limit_status == "REJECTED" then
+            local log_message = string.format(
+                'limiting connections, '..
+                'var_client_ip: %s, '..
+                'x-forwarded-for: %s, ',
+                ngx.var.varClientIp,
+                ngx.var.http_x_forwarded_for or "-"
+            )
+            ngx.log(ngx.ERR, log_message)
+        end
+    }
+}
+```
+

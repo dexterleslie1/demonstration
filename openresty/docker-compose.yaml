@@ -1,0 +1,11 @@
+version: "3.0"
+
+services:
+  demo-openresty:
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-openresty-base-dev
+    volumes:
+     - ./nginx-getting-started.conf:/usr/local/openresty/nginx/conf/nginx.conf
+    environment:
+      - TZ=Asia/Shanghai
+    network_mode: host
+    

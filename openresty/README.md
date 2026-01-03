@@ -1,4 +1,4 @@
-## `nginx.conf` 配置
+## nginx.conf配置
 
 
 
@@ -82,3 +82,38 @@ location /my-api {
 ```
 
 请求接口 http://localhost/my-api/api/v1/testUriPrefixStrip 时/my-api会被openresty截断，转发给后端的api为/api/v1/testUriPrefixStrip
+
+## nginx定义全局和局部变量
+
+详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/blob/main/openresty/nginx-getting-started.conf
+
+```nginx
+server {
+    # 定义全局变量
+    set $my_global_variable "Hello world from Global!!!";
+
+    listen       80;
+    server_name  localhost;
+
+    location / {
+        # 定义局部变量
+        set $my_local_variable "Hello world from Local!!!";
+
+        #root   /usr/local/openresty/nginx/html;
+        #index  index.html index.htm;
+        content_by_lua_block {
+            -- nginx for lua api之获取请求中的参数
+            -- http://www.shixinke.com/openresty/openresty-get-request-arguments
+            local args = ngx.req.get_uri_args();
+            local p1 = args.p1;
+            if not p1 then
+                p1 = "";
+            end
+
+            ngx.header.content_type = "text/plain;charset=utf-8";
+            ngx.say("Hello Dexterleslie. 参数p1=" .. p1 .. "，全局变量$my_global_variable：" .. ngx.var.my_global_variable .. "，局部变量$my_local_variable：" .. ngx.var.my_local_variable);
+        }
+    }
+}
+```
+
