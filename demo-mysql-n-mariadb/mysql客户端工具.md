@@ -64,7 +64,11 @@ sudo apt install ./mysql-workbench-community_8.0.29-1ubuntu20.04_amd64.deb
 >
 >Navicat Premium17破解参考链接：https://www.shujuyr.com/9735.html
 
-1. 下载Navicat Premium17：https://www.navicat.com.cn/download/navicat-premium
+1. 到腾讯微云中下载NavicatPremium17Crack.zip。
+2. 手动运行”无限试用Navicat.bat“。
+3. 使用navicat170_premium_cs_x64.exe安装Navicat Premium。
+4. 复制winmm.dll到C:\Program Files\PremiumSoft\Navicat Premium 17中。
+5. 直接运行Navicat Premium即可。
 
 ## Navicat Premium数据传输
 
