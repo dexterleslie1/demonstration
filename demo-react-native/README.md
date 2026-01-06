@@ -181,18 +181,186 @@ React Native 的运行原理可以精炼为：
 
 理解这个原理，有助于你写出性能更好的 RN 应用，并能更深入地理解其优势和局限性。
 
+## Metro概念
 
+### 一句话概括
+
+**Metro** 是 React Native 的官方 JavaScript 打包器。它的核心作用是**将你的所有 JavaScript 代码、资源（如图片、字体）以及依赖项转换、打包成一个或多个 bundle 文件**，以便在移动设备上运行。
+
+你可以把它理解为 React Native 世界的 **Webpack**（用于 Web 开发），但它是专门为 React Native 的需求而设计和优化的。
+
+------
+
+### 为什么需要 Metro？
+
+在传统的 Web 开发中，浏览器可以直接下载并解析单个 `.js`文件。但在 React Native 中：
+
+1. 
+
+   **没有 DOM/BOM**：React Native 运行在一个完全不同的环境中（JavaScriptCore on iOS, Hermes/JavaScriptCore on Android），不能直接执行标准的浏览器 JavaScript。
+
+2. 
+
+   **代码包必须预先构建**：所有的 JS 逻辑都必须被预先“编译”和“打包”好，然后随 App 一起分发到用户的设备上。
+
+3. 
+
+   **需要特定格式**：打包后的代码需要符合 React Native 运行时的要求。
+
+4. 
+
+   **开发效率**：在开发模式下，需要支持热重载、快速增量更新等特性，以提升开发体验。
+
+Metro 就是为了解决这些问题而生的。
+
+------
+
+### Metro 的核心功能和工作流程
+
+Metro 的工作流程可以简化为以下几个关键步骤：
+
+#### 1. 入口点解析
+
+Metro 从一个指定的入口文件（通常是 `index.js`或 `App.js`）开始，分析你的代码结构。
+
+#### 2. 依赖图构建
+
+它会递归地分析所有 `import`/`require`语句，**构建一个完整的依赖关系图**。这个图包含了你的应用所需的所有模块。
+
+#### 3. 转换
+
+这是 Metro 的核心魔法之一。它对每一个模块进行转换：
+
+- 
+
+  **Babel 转换**：使用 Babel 将现代 JavaScript（如 ES6+、JSX）语法转换为 React Native 运行时能够理解的普通 JavaScript。例如，将 `<View>`转换为 `reactNative.createElement(View, ...)`。
+
+- 
+
+  **处理平台特定代码**：通过 **Platform API** 或文件扩展名（如 `.ios.js`, `.android.js`），Metro 可以为不同平台打包不同的代码，实现原生差异化。
+
+- 
+
+  **处理资源**：将图片等资源引用转换为模块，在运行时提供相应的 URI。
+
+#### 4. 打包
+
+将所有转换后的模块“捆绑”在一起，形成一个或几个大的 JavaScript 文件（Bundle）。在开发模式下，它通常生成一个内存中的 Bundle；在生产模式下，它会输出一个物理文件（如 `index.bundle`）。
+
+#### 5. 启动开发服务器
+
+Metro 会启动一个本地开发服务器，负责向 React Native 应用（通过 Metro Runtime）提供这个 Bundle 文件，并处理后续的 HMR（热模块替换）请求。
+
+------
+
+### Metro 的关键特性
+
+- 
+
+  **极速增量构建**：Metro 的设计初衷就是快。它通过缓存机制，只重新构建发生变化的部分，使得在开发过程中修改代码后，几乎能立即看到效果。
+
+- 
+
+  **可插拔的转换器**：默认使用 Babel，但你也可以集成其他转换器（如 TypeScript、Flow）。
+
+- 
+
+  **HMR**：支持热重载，让你在不丢失应用状态的情况下刷新代码变更，极大提升开发效率。
+
+- 
+
+  **内联资源**：可以将小图片等资源直接转换为 Base64 字符串并内联到 JS Bundle 中，减少网络请求。
+
+- 
+
+  **与 React Native DevTools 深度集成**：为调试工具提供了必要的支持。
+
+------
+
+### 日常开发中与 Metro 的交互
+
+作为 React Native 开发者，你会经常通过以下命令与 Metro 打交道：
+
+- 
+
+  **启动开发服务器**：
+
+  ```
+  npx react-native start
+  # 或者
+  npx react-native start --reset-cache # 当遇到奇怪的缓存问题时，可以重置缓存
+  ```
+
+  这个命令就是启动 Metro Bundler。
+
+- 
+
+  **运行应用在模拟器/真机**：
+
+  ```
+  npx react-native run-android
+  npx react-native run-ios
+  ```
+
+  这些命令在背后会先启动 Metro（如果尚未启动），然后编译并安装原生代码，最后从 Metro 服务器获取 JS Bundle 来运行应用。
+
+- 
+
+  **生产环境打包**：
+
+  当你准备发布应用时，会使用如下命令生成离线 Bundle：
+
+  ```
+  # 示例命令，具体参数请参考文档
+  npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res/
+  ```
+
+  这个过程同样由 Metro 完成，但它会生成一个优化过的、用于生产环境的 Bundle。
+
+------
+
+### 常见问题与解决
+
+- 
+
+  **Metro 端口被占用**：错误信息通常为 `Port 8081 already in use`。这通常是因为之前的 Metro 进程没有正确关闭。可以通过 `npx react-native start --port=8088`换一个端口，或者找到并结束占用端口的进程。
+
+- 
+
+  **缓存问题**：有时候代码改了但没生效，可以尝试：
+
+  ```
+  # 方法1：在命令行中重置缓存并重启
+  npx react-native start --reset-cache
+  
+  # 方法2：在应用中摇动手机 -> Dev Settings -> 选择 “Dev Settings” -> “Reset Content and Settings”
+  # 或者直接删除应用重新安装。
+  ```
+
+### 总结
+
+| 方面           | 描述                                                         |
+| -------------- | ------------------------------------------------------------ |
+| **角色**       | React Native 的 JavaScript 打包器和开发服务器。              |
+| **类比**       | 类似于 Webpack、Vite，但是为 RN 定制。                       |
+| **核心任务**   | 转换（JSX, ESNext）、打包、服务 Bundle。                     |
+| **关键优势**   | 速度快（增量构建）、支持 HMR、与 RN 生态无缝集成。           |
+| **开发者接触** | 通过 `react-native start`和 `run-android/run-ios`命令间接使用。 |
+
+简单来说，**只要你在使用 React Native，你就在使用 Metro**。它是连接你的 JavaScript 源代码和最终在手机上运行的程序之间的关键桥梁。
 
 ## 开发环境配置
 
->提示：在 `Ubuntu22.04.5` 上配置开发环境。
+>提示：在 Ubuntu22.04.5或者在Windows11上配置开发环境。
 >
->`todo` 未成功运行 `demo`。
 
-安装 `Node v20.19.5`
+安装 `Node v22.21.1`
 
 ```sh
+# Ubuntu
 sudo dcli nodejs install
+
+# Window11到nodejs官网下载msi安装
 ```
 
 搭建 `Android Studio` 开发环境参考本站 [链接](/android/README.html#ubuntu22-04-5)
@@ -208,12 +376,26 @@ npx @react-native-community/cli init demorn1 --version 0.72.0
 导出 `ANDROID_HOME` 环境变量
 
 ```sh
+# Ubuntu
 export ANDROID_HOME=/home/dexterleslie/Android/Sdk
+
+# Windows11配置如下
+ANDROID_HOME=C:\Users\dexterleslie\AppData\Local\Android\Sdk
 ```
+
+安装JDK17
 
 使用 `Android` 模拟器运行项目
 
+>提示：
+>
+>- 如果执行命令过程中失败，则重复执行多次。
+>- 命令下载完毕react native依赖后，禁用android studio中配置的网络代理，否则运行RN应用会报错Unable to load script...。
+
 ```sh
 npx react-native run-android
+
+# 上面命令运行成功后，之后启动应用可以使用下面命令而不会弹出命令行窗口
+npx react-native start
 ```
 
