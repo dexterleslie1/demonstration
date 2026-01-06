@@ -17,7 +17,7 @@
 
 注意：用虚拟机安装`android studio`先登陆`vCenter`启用虚拟机虚拟化
 
-下载 `android-studio-ide-171.4408382-windows.exe` 或者最新版本的 `android studio` 双击安装
+https://developer.android.com/studio/archive 下载 `android-studio-ide-171.4408382-windows.exe` 或者最新版本的 `android studio` 双击安装
 
 选中`Android SDK`和`Intel HAXM`安装
 
