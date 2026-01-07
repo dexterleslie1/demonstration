@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grunt 演示项目</title>
+    <!-- processhtml插件通过识别HTML文件中的 build注释标记 来工作，将这些注释之间的内容替换为 <link rel="stylesheet" href="css/style.min.css"> -->
+    <!-- build:css css/style.min.css -->
+    <link rel="stylesheet" href="css/style.css">
+    <!-- /build -->
+</head>
+<body>
+    <header class="header">
+        <h1>Grunt 开发流程演示</h1>
+        <p>展示如何使用 Grunt 处理 LESS、JS 和 HTML 文件</p>
+    </header>
+    
+    <main class="content">
+        <h2>功能说明</h2>
+        <ul>
+            <li><strong>LESS 处理</strong>：将 LESS 文件编译为 CSS 并进行压缩</li>
+            <li><strong>JS 处理</strong>：合并多个 JavaScript 文件并进行压缩</li>
+            <li><strong>HTML 处理</strong>：压缩 HTML 文件以减小文件大小</li>
+            <li><strong>自动监控</strong>：监控文件变化并自动重新编译</li>
+        </ul>
+        
+        <h2>演示按钮</h2>
+        <a href="#" class="button">点击测试 JavaScript 功能</a>
+        
+        <h2>当前时间</h2>
+        <p id="current-date"></p>
+    </main>
+    
+    <!-- processhtml插件通过识别HTML文件中的 build注释标记 来工作，将这些注释之间的内容替换为 <script src="js/app.min.js"></script> -->
+    <!-- build:js js/app.min.js -->
+    <script src="js/app.js"></script>
+    <!-- /build -->
+    <script>
+        // 使用工具函数显示当前日期
+        document.getElementById('current-date').textContent = '当前日期：' + utils.formatDate(new Date());
+    </script>
+</body>
+</html>
