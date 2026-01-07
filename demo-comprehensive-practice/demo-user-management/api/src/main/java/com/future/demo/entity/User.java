@@ -23,6 +23,7 @@ public class User {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;
     private String password;
+    private String address;
 
     @TableField(exist = false)
     private Dept dept;

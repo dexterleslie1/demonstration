@@ -54,6 +54,7 @@
               <el-table-column prop="nickName" label="昵称" align="center"></el-table-column>
               <el-table-column prop="dept.name" label="所属部门" align="center"></el-table-column>
               <el-table-column prop="createTime" label="创建时间" align="center"></el-table-column>
+              <el-table-column prop="address" label="地址" align="center"></el-table-column>
               <el-table-column label="操作" align="center">
                 <template slot-scope="scopeVar">
                   <el-button type="text" size="mini" @click="handleClickUserEditNav(scopeVar.row)"
@@ -109,6 +110,13 @@
             </el-form-item>
           </el-col>
         </el-row>
+        <el-row>
+          <el-col :span="24">
+            <el-form-item label="用户地址">
+              <el-input size="mini" v-model="dialogForm.address" placeholder="请输入用户地址"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
       </el-form>
 
       <template #footer>
@@ -160,6 +168,7 @@ export default {
         nickName: null,
         password: null,
         deptId: null,
+        address: null,
       },
       // 新增或者修改用户dialog form是否显示
       dialogFormVisible: false,
@@ -181,6 +190,7 @@ export default {
       this.dialogForm.nickName = null
       this.dialogForm.password = null
       this.dialogForm.deptId = null
+      this.dialogForm.address = null
     },
     // 点击搜索按钮
     handleClickSearch() {
@@ -332,6 +342,7 @@ export default {
       this.dialogForm.userName = user.userName
       this.dialogForm.nickName = user.nickName
       this.dialogForm.deptId = user.deptId
+      this.dialogForm.address = user.address
     },
     // 点击修改用户快捷按钮
     handleClickQuickUserEditNav() {
@@ -370,10 +381,11 @@ export default {
     // 点击新增用户快捷按钮
     handleClickQuickUserAddNav() {
       this.dialogFormInEditState = false
-      this.dialogFormVisible = true
+      this.dialogFormTitle = '新增用户'
       // 重置dialog form
       this.resetDialogForm()
       this.dialogForm.deptId = this.deptId
+      this.dialogFormVisible = true
     }
   },
   watch: {

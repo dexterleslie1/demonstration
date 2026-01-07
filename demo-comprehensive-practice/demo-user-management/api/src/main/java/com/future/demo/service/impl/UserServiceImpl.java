@@ -73,6 +73,7 @@ public class UserServiceImpl implements UserService {
         /*userOrigin.setUserName(user.getUserName());*/
         userOrigin.setNickName(user.getNickName());
         userOrigin.setDeptId(user.getDeptId());
+        userOrigin.setAddress(user.getAddress());
         userMapper.updateById(userOrigin);
     }
 

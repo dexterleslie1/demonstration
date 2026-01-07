@@ -52,7 +52,8 @@ CREATE TABLE IF NOT EXISTS `user`(
     user_name VARCHAR(30) NOT NULL COMMENT '用户账号',
     nick_name VARCHAR(30) NOT NULL COMMENT '用户昵称',
     `password` VARCHAR(64) NULL COMMENT '用户登录密码',
-    create_time DATETIME NOT NULL DEFAULT CURRENT_TIME() COMMENT '创建时间'
+    create_time DATETIME NOT NULL DEFAULT CURRENT_TIME() COMMENT '创建时间',
+    address VARCHAR(255) NULL COMMENT '用户地址'
 ) ENGINE = INNODB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '用户表';
 
 INSERT INTO `user` (dept_id, user_name, nick_name, create_time) VALUES

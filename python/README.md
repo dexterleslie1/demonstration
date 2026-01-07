@@ -260,3 +260,217 @@ TypeError: deprecated() got an unexpected keyword argument 'name'
 rm -rf /usr/local/lib/python3.8/dist-packages/OpenSSL
 ```
 
+## uv概念
+
+`uv`是由 Astral 团队（开发了 Ruff 代码检查器的团队）开发的**高性能 Python 工具链**，目标是用 Rust 重写并整合传统 Python 开发中的分散工具（如 `pip`、`virtualenv`、`pipx`、`poetry`的部分功能），解决 Python 生态中“速度慢、工具碎片化”的痛点。
+
+### 一、`uv`的核心定位
+
+`uv`不是单一工具，而是一个**一体化的 Python 开发工具链**，覆盖从“依赖管理”到“虚拟环境”再到“包运行”的全流程，核心特点是：
+
+- 
+
+  **极致速度**：Rust 编写，依赖解析、下载、安装速度比 `pip`快 10-100 倍；
+
+- 
+
+  **功能整合**：替代 `pip`（包安装）、`virtualenv`（虚拟环境）、`pipx`（临时包运行）、`poetry`（部分项目管理）等多个工具；
+
+- 
+
+  **兼容性**：完全兼容 `pip`的 `requirements.txt`和 `pyproject.toml`，迁移成本低；
+
+- 
+
+  **跨平台**：支持 macOS、Linux、Windows。
+
+### 二、`uv`的核心命令
+
+`uv`的命令设计简洁，核心围绕“虚拟环境、依赖管理、包运行”三大场景：
+
+| 命令       | 作用                                                         |
+| ---------- | ------------------------------------------------------------ |
+| `uv venv`  | 创建/管理虚拟环境（替代 `virtualenv`/`python -m venv`）      |
+| `uv pip`   | 安装/卸载/列出 Python 包（替代 `pip`，速度更快）             |
+| `uv run`   | 在虚拟环境中运行命令（替代 `source venv/bin/activate && command`） |
+| `uvx`      | 临时运行 Python 包（无需安装，替代 `pipx`）                  |
+| `uv lock`  | 生成/更新 `uv.lock`锁文件（固定依赖版本，替代 `poetry lock`） |
+| `uv tree`  | 查看依赖树（替代 `pip tree`）                                |
+| `uv cache` | 管理缓存（清理/查看下载的包缓存）                            |
+
+### 三、关键命令详解与示例
+
+#### 1. `uv venv`：创建虚拟环境
+
+虚拟环境是 Python 开发的基础（隔离不同项目的依赖）。`uv venv`比传统的 `python -m venv`更快：
+
+```
+# 创建名为 .venv 的虚拟环境（默认在当前目录）
+uv venv
+
+# 指定 Python 版本（需系统已安装对应版本）
+uv venv --python 3.11
+
+# 自定义虚拟环境目录
+uv venv ./my-venv
+```
+
+激活虚拟环境：
+
+- 
+
+  macOS/Linux：`source .venv/bin/activate`
+
+- 
+
+  Windows：`.venv\Scripts\activate`
+
+#### 2. `uv pip`：高速安装依赖
+
+`uv pip`完全兼容 `pip`的语法，但速度极快（依赖 Rust 实现的并行下载和解析）：
+
+```
+# 安装单个包（如 requests）
+uv pip install requests
+
+# 从 requirements.txt 安装
+uv pip install -r requirements.txt
+
+# 安装开发依赖（可结合 pyproject.toml）
+uv pip install -e .[dev]  # 安装项目本身及 dev 分组依赖
+
+# 卸载包
+uv pip uninstall requests
+
+# 列出已安装包
+uv pip list
+```
+
+#### 3. `uv run`：在虚拟环境中运行命令
+
+无需手动激活虚拟环境，直接用 `uv run`调用环境中的命令（自动识别项目根目录的虚拟环境）：
+
+```
+# 运行虚拟环境中的 Python 脚本
+uv run python main.py
+
+# 运行虚拟环境中的工具（如 pytest 测试）
+uv run pytest tests/
+
+# 指定其他虚拟环境目录
+uv run --venv ./my-venv python main.py
+```
+
+#### 4. `uvx`：临时运行 Python 包（重点）
+
+前面已经介绍过，`uvx`用于**临时下载并运行 Python 工具，无需永久安装**（类似 `pipx`，但更快）：
+
+```
+# 临时用 httpie 发请求
+uvx httpie GET https://api.github.com
+
+# 临时用 black 格式化代码
+uvx black .
+
+# 指定版本运行
+uvx poetry@1.8.2 init
+```
+
+#### 5. `uv lock`：锁定依赖版本
+
+生成 `uv.lock`文件（类似 `poetry.lock`或 `Pipfile.lock`），确保团队成员/部署环境的依赖版本完全一致：
+
+```
+# 生成/更新锁文件（基于 pyproject.toml）
+uv lock
+
+# 根据锁文件安装依赖（确保精确复现）
+uv pip install -r uv.lock
+```
+
+### 四、`uv`的优势：为什么用它？
+
+对比传统 Python 工具链，`uv`解决了三个核心痛点：
+
+1. 
+
+   **速度慢**：`pip`的依赖解析是 Python 写的，面对复杂依赖树时很慢；`uv`用 Rust 重写，并行处理，速度提升一个量级。
+
+2. 
+
+   **工具碎片化**：以前需要 `pip`装包、`virtualenv`建环境、`pipx`跑临时工具，现在 `uv`一个工具全搞定。
+
+3. 
+
+   **依赖冲突**：`uv`的依赖解析算法更高效，能更好处理复杂依赖树的冲突问题。
+
+### 五、适用场景
+
+- 
+
+  **新项目**：直接用 `uv`搭建高效的工作流，避免后期迁移成本；
+
+- 
+
+  **老项目迁移**：兼容 `pip`和 `pyproject.toml`，只需替换 `pip`命令为 `uv pip`即可逐步切换；
+
+- 
+
+  **CI/CD 流水线**：`uv`的高速特性能大幅缩短流水线的依赖安装时间；
+
+- 
+
+  **追求效率的开发者**：讨厌等待 `pip`慢慢下载安装的人，`uv`的速度会让你“回不去”。
+
+### 六、安装 `uv`
+
+`uv`支持多平台安装，最简单的方式：
+
+- 
+
+  **macOS/Linux**：Homebrew
+
+  ```
+  brew install uv
+  ```
+
+- 
+
+  **Windows**：Scoop
+
+  ```
+  scoop install uv
+  ```
+
+- 
+
+  **通用脚本**（Linux/macOS/WSL）：
+
+  ```
+  curl -LsSf https://astral.sh/uv/install.sh | sh
+  ```
+
+- 
+
+  **Windows PowerShell**：
+
+  ```
+  irm https://astral.sh/uv/install.ps1 | iex
+  ```
+
+### 总结
+
+`uv`是**下一代 Python 工具链**，用 Rust 重构了传统 Python 开发中的分散工具，以“极致速度”和“一体化”为核心优势，正在成为 Python 开发者的新选择。如果你的项目受够了 `pip`的慢速度或工具的碎片化，`uv`值得一试！
+
+## Windows11安装uv
+
+uv官方网站：https://astral.sh/
+
+下载最新版本的uv https://github.com/astral-sh/uv/releases，解压uv压缩包到C盘根目录中，配置环境变量Path添加指向uv的路径C:\uv-x86_64-pc-windows-msvc
+
+打开powershell测试uv命令是否配置正常：
+
+```powershell
+uv --version
+uvx --version
+```

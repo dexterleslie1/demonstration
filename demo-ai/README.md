@@ -1118,3 +1118,29 @@ AI agent已渗透到生活和产业的方方面面：
   **协作Agent**：多agent与人类或其他agent无缝配合（比如人类说“帮我准备下周的产品发布会”，会议策划agent、设计agent、物料agent协同完成场地、PPT、礼品等任务）。
 
 简单来说，AI agent就是“能自己‘看’‘想’‘做’的智能体”——它不仅是“会算题的工具”，更是能在复杂世界中主动解决问题的“数字伙伴”。
+
+## MCP - excel-mcp-server
+
+说明：一种模型上下文协议（MCP）服务器，让您无需安装 Microsoft Excel 即可操作 Excel 文件。使用您的 AI 代理创建、读取和修改 Excel 工作簿。
+
+官方网站：https://github.com/haris-musa/excel-mcp-server
+
+配置MCP服务：
+
+1. 参考本站[链接](/python/README.html#windows11安装uv)安装配置uv和uvx。
+
+2. 配置MCP
+
+   ```json
+   {
+      "mcpServers": {
+         "excel": {
+            "command": "uvx",
+            "args": ["excel-mcp-server", "stdio"]
+         }
+      }
+   }
+   ```
+
+3. 测试MCP，提示词输入：“使用excel mcp创建一个随机用户列表表格并命名为user“，MCP会在当前工作目录创建user.xlsx表格。
+

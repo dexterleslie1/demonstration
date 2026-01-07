@@ -136,6 +136,7 @@ export default defineConfig({
           { text: '验证码', link: '/captcha/README.md' },
           { text: 'ffmpeg', link: '/ffmpeg/README.md' },
           { text: 'KVM', link: '/kvm/README.md' },
+          { text: 'AI', link: '/ai/README.md' },
         ]
       },
     ],
