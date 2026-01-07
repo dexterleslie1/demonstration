@@ -476,3 +476,29 @@ ping命令带时间
 ping qq.com -t | foreach{"{0} - {1}" -f (Get-Date),$_}
 ```
 
+## powershell错误“在此系统上禁止运行脚本”
+
+错误信息：
+
+```
+powershell运行grunt --version命令报错grunt : 无法加载文件 C:\Users\dexterleslie\AppData\Roaming\npm\grunt.ps1，因为在此系统上禁止运
+行脚本。有关详细信息，请参阅 https:/go.microsoft.com/fwlink/?LinkID=135170 中的 about_Execution
+_Policies。
+所在位置 行:1 字符: 1
++ grunt --version
++ ~~~~~
+    + CategoryInfo          : SecurityError: (:) []，PSSecurityException
+    + FullyQualifiedErrorId : UnauthorizedAccess
+```
+
+修改当前用户的执行策略
+
+>RemoteSigned策略说明 ：
+>
+>- 本地创建的脚本可以无限制运行
+>- 从网络下载的脚本需要有数字签名才能运行
+
+```powershell
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+```
+
