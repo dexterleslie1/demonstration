@@ -258,32 +258,38 @@ public class ApiController {
 }
 ```
 
-## `AI`插件 - 概述
+## ~~`AI`插件 - 概述~~
 
-作出以下尝试，但没有成功：
+>提示：使用AI编程工具了。
 
-- `JetBrains`的`AI Assistant`需要登录，放弃。
-- `Bito`的`ChatGPT GPT-4o - Bito AI Code Assistant`需要登录，放弃。
-- `GitHub`的`github-copilot-intellij`使用`30`天后需要收费，放弃。
-- `Tabnine`的`AI Chat & Autocomplete for JavaScript, Python & more`需要登录，放弃。
+作出~~以下尝试，但没有成功：~~
 
-
-
-## `AI`插件 - `Baidu Comate`
-
->说明：推荐使用阿里的通义灵码。
-
-使用百度`Baidu Comate`作为`AI`插件（使用百度帐号登录`Baidu Comate`即可使用`Comate`智能代码补全功能）。
+- ~~`JetBrains`的`AI Assistant`需要登录，放弃。~~
+- ~~`Bito`的`ChatGPT GPT-4o - Bito AI Code Assistant`需要登录，放弃。~~
+- ~~`GitHub`的`github-copilot-intellij`使用`30`天后需要收费，放弃。~~
+- ~~`Tabnine`的`AI Chat & Autocomplete for JavaScript, Python & more`需要登录，放弃~~。
 
 
 
-## `AI`插件 - 通义灵码
+## ~~`AI`插件 - `Baidu Comate`~~
 
->说明：目前开发工作中使用的`AI`插件。
+>提示：使用AI编程工具了。
+>
+>~~说明：推荐使用阿里的通义灵码。~~
 
-打开插件管理设置窗口，输入`Lingma`（提供商为`Alibaba Cloud`）后安装并重启`IDEA`，使用支付宝`App`扫码登录插件即可使用。
+~~使用百度`Baidu Comate`作为`AI`插件（使用百度帐号登录`Baidu Comate`即可使用`Comate`智能代码补全功能）。~~
 
-因为插件快捷键和`IDEA`快捷键冲突：打开`File` > `Settings` > `Keymap`功能，定位到`Lingma`插件并删除其中的`Ctrl + Shift + I`、`Ctrl + 向上箭头`快捷键。
+
+
+## ~~`AI`插件 - 通义灵码~~
+
+>提示：使用AI编程工具了。
+>
+>~~说明：目前开发工作中使用的`AI`插件。~~
+
+~~打开插件管理设置窗口，输入`Lingma`（提供商为`Alibaba Cloud`）后安装并重启`IDEA`，使用支付宝`App`扫码登录插件即可使用。~~
+
+~~因为插件快捷键和`IDEA`快捷键冲突：打开`File` > `Settings` > `Keymap`功能，定位到`Lingma`插件并删除其中的`Ctrl + Shift + I`、`Ctrl + 向上箭头`快捷键。~~
 
 
 
@@ -340,8 +346,9 @@ public class ApiController {
 
 
 
-
 ### `Windows11`
+
+>注意：PyCharm2023.2.5需要使用Python3.7.0作为interpreter，否则（使用比Python3.7.0更新版本）在调试Python代码时会报告isAlive属性找不到错误，在较新的Python版本中，`threading.Thread`类的 `isAlive()`方法已经被弃用，并被 `is_alive()`方法取代。
 
 1. 从官方下载`2023.2.5 Ultimate（ideaIU-2023.2.5.exe）`版本的`IDEA`、`CLion`、`GoLand`等
 
