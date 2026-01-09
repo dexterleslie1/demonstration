@@ -4,6 +4,8 @@ services:
   demo-zookeeper:
 #    image: zookeeper:3.4.9
     image: zookeeper:3.8.4
+    volumes:
+      - ./zoo.cfg:/conf/zoo.cfg
     environment:
       - TZ=Asia/Shanghai
       - JVMFLAGS=-Xmx512m -Xms512m -server

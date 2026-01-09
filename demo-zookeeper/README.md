@@ -1,7 +1,3 @@
-# Zookeeper
-
-
-
 ## 使用 docker 运行
 
 >zookeeper jvm 内存设置，使用环境变量设置 JVMFLAGS=-Xmx512m -Xms512m -server，参考 `https://www.cnblogs.com/zqllove/p/13724195.html`
@@ -160,3 +156,66 @@ zkServer.sh version
 镜像 `confluentinc/cp-zookeeper:7.3.0` 中查看
 
 >提示：不同通过命令行查看，通过官方兼容表 `https://docs.confluent.io/platform/current/installation/versions-interoperability.html#zk` 查看为 `3.8.3`。
+
+## 自定义zoo.cfg配置
+
+>详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-zookeeper/demo-curator-framework
+
+zoo.cfg
+
+```
+# The number of milliseconds of each tick
+tickTime=2000
+# The number of ticks that the initial
+# synchronization phase can take
+initLimit=10
+# The number of ticks that can pass between
+# sending a request and getting an acknowledgement
+syncLimit=5
+# the directory where the snapshot is stored.
+# do not use /tmp for storage, /tmp here is just
+# example sakes.
+dataDir=/data
+dataLogDir=/datalog
+# the port at which the clients will connect
+clientPort=2181
+# the maximum number of client connections.
+# increase this if you need to handle more clients
+#maxClientCnxns=60
+#
+# Be sure to read the maintenance section of the
+# administrator guide before turning on autopurge.
+#
+# https://zookeeper.apache.org/doc/current/zookeeperAdmin.html#sc_maintenance
+#
+# The number of snapshots to retain in dataDir
+#autopurge.snapRetainCount=3
+# Purge task interval in hours
+# Set to "0" to disable auto purge feature
+#autopurge.purgeInterval=1
+
+## Metrics Providers
+#
+# https://prometheus.io Metrics Exporter
+#metricsProvider.className=org.apache.zookeeper.metrics.prometheus.PrometheusMetricsProvider
+#metricsProvider.httpHost=0.0.0.0
+#metricsProvider.httpPort=7000
+#metricsProvider.exportJvmInfo=true
+
+
+```
+
+docker-compose.yaml
+
+```yaml
+version: "3.0"
+
+services:
+  demo-zookeeper:
+#    image: zookeeper:3.4.9
+    image: zookeeper:3.8.4
+    volumes:
+      - ./zoo.cfg:/conf/zoo.cfg
+  	...
+```
+

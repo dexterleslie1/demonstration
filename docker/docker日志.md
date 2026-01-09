@@ -20,8 +20,8 @@ docker inspect --format='' yyd-ecommerce-logstash | grep LogPath
 logging:
   driver: json-file
   options:
-    max-size: "5k"
-    max-file: "100"
+    max-size: "20m"
+    max-file: "5"
 ```
 
 - `driver`：`json-file`表示使用`json-file`驱动记录容器日志，容器日志输出位置在`/var/lib/docker/containers/[container id]/[container id]-json.log`
