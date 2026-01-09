@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html ng-app="treeControlDemo">
+<head>
+    <meta charset="UTF-8">
+    <title>Angular Tree Control 演示</title>
+    <!-- Include AngularJS -->
+    <script src="node_modules/angular/angular.js"></script>
+    <!-- Include angular-tree-control -->
+    <script src="node_modules/angular-tree-control/angular-tree-control.js"></script>
+    <!-- Include context-menu module which is required by angular-tree-control -->
+    <script src="node_modules/angular-tree-control/context-menu.js"></script>
+    <!-- Include CSS for tree control -->
+    <link rel="stylesheet" href="node_modules/angular-tree-control/css/tree-control.css">
+    <link rel="stylesheet" href="node_modules/angular-tree-control/css/tree-control-attribute.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .tree-container {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 400px;
+        }
+        .selected-info {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body ng-controller="TreeController">
+    <h1>Angular Tree Control 演示</h1>
+    
+    <div class="tree-container">
+        <h3>作为DOM元素的树控件</h3>
+        <treecontrol class="tree-classic"
+           tree-model="dataForTheTree"
+           options="treeOptions"
+           on-selection="showSelected(node)"
+           selected-node="selectedNode">
+           {{node.name}} ({{node.type}})
+        </treecontrol>
+    </div>
+    
+    <div class="tree-container">
+        <h3>作为属性的树控件</h3>
+        <div treecontrol class="tree-classic"
+           tree-model="dataForTheTree"
+           options="treeOptions"
+           on-selection="showSelected(node)"
+           selected-node="selectedNode">
+           {{node.name}} ({{node.type}})
+        </div>
+    </div>
+    
+    <div class="tree-container">
+        <h3>自定义样式的树控件</h3>
+        <treecontrol class="tree-light"
+           tree-model="dataForTheTree"
+           options="customTreeOptions"
+           on-selection="showSelected(node)"
+           selected-node="selectedNode">
+           <strong>{{node.name}}</strong> - {{node.description}}
+        </treecontrol>
+    </div>
+    
+    <div class="selected-info">
+        <h3>选中节点信息</h3>
+        <div ng-if="selectedNode">
+            <p><strong>名称:</strong> {{selectedNode.name}}</p>
+            <p><strong>类型:</strong> {{selectedNode.type}}</p>
+            <p><strong>描述:</strong> {{selectedNode.description || '无'}}</p>
+            <p><strong>路径:</strong> {{getSelectedPath(selectedNode)}}</p>
+        </div>
+        <div ng-if="!selectedNode">
+            <p>未选择节点</p>
+        </div>
+    </div>
+    
+    <script src="app.js"></script>
+</body>
+</html>

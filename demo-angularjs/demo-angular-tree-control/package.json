@@ -1,0 +1,9 @@
+{
+  "name": "angular-tree-control-demo",
+  "version": "1.0.0",
+  "description": "Demo for angular-tree-control usage with AngularJS 1.x",
+  "dependencies": {
+    "angular": "^1.8.2",
+    "angular-tree-control": "^0.2.29"
+  }
+}
