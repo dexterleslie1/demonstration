@@ -2271,7 +2271,9 @@ H5 端完全运行在浏览器中，受到浏览器同源策略和沙盒环境�
 
 >参考链接：https://uniapp.dcloud.net.cn/tutorial/native-js.html
 >
->具体用法请参考本站示例：详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-uni-app/demo-nativejs
+>具体用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-uni-app/demo-nativejs
+>
+>Native.js示例汇总：https://ask.dcloud.net.cn/article/114
 
 ### 一句话概括
 
@@ -2476,3 +2478,104 @@ plus.ios.invoke(alert, 'show');
 | **优点**   | 能力强大，扩展性好                                |
 | **缺点**   | 学习成本高、兼容性差、破坏跨端、调试难            |
 | **定位**   | **高级、备用方案**，应优先使用内置 API 和插件市场 |
+
+## 使用native.js获取公共下载和公共文档目录路径
+
+>具体用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-uni-app/demo-nativejs-获取公共下载和文档目录路径
+
+```javascript
+getDownloadPath() {
+    if (uni.getSystemInfoSync().platform !== 'android') {
+        uni.showToast({
+            title: '此功能仅支持Android平台',
+            icon: 'none'
+        });
+        return;
+    }
+
+    try {
+        // 使用native.js获取Android公共下载目录
+        const Context = plus.android.importClass('android.content.Context');
+        const Environment = plus.android.importClass('android.os.Environment');
+        const Build = plus.android.importClass('android.os.Build');
+        const activity = plus.android.runtimeMainActivity();
+
+        const DIRECTORY_DOWNLOADS = 'Download';
+
+        let downloadDir;
+        // 检查Android版本，Android Q(API 29)及以上版本需要使用新的API
+        if (Build.VERSION.SDK_INT >= 29) {
+            // Android Q及以上版本获取应用私有下载目录
+            downloadDir = activity.getExternalFilesDir(DIRECTORY_DOWNLOADS);
+        } else {
+            // Android Q以下版本获取公共下载目录
+            downloadDir = Environment.getExternalStoragePublicDirectory(DIRECTORY_DOWNLOADS);
+        }
+
+        if (downloadDir) {
+            // 使用native.js的方式获取路径，兼容不同的Android版本
+            this.downloadPath = plus.android.invoke(downloadDir, 'getAbsolutePath');
+            uni.showToast({
+                title: '获取成功',
+                icon: 'success'
+            });
+        } else {
+            throw new Error('无法获取下载目录');
+        }
+    } catch (e) {
+        uni.showToast({
+            title: '获取失败：' + e.message,
+            icon: 'none'
+        });
+        console.error('获取下载目录失败：', e);
+    }
+},
+
+getDocumentPath() {
+    if (uni.getSystemInfoSync().platform !== 'android') {
+        uni.showToast({
+            title: '此功能仅支持Android平台',
+            icon: 'none'
+        });
+        return;
+    }
+
+    try {
+        // 使用native.js获取Android公共文档目录
+        const Context = plus.android.importClass('android.content.Context');
+        const Environment = plus.android.importClass('android.os.Environment');
+        const Build = plus.android.importClass('android.os.Build');
+        const activity = plus.android.runtimeMainActivity();
+
+        const DIRECTORY_DOCUMENTS = 'Document';
+
+        let documentDir;
+        // 检查Android版本，Android Q(API 29)及以上版本需要使用新的API
+        if (Build.VERSION.SDK_INT >= 29) {
+            // Android Q及以上版本获取应用私有文档目录
+            documentDir = activity.getExternalFilesDir(DIRECTORY_DOCUMENTS);
+        } else {
+            // Android Q以下版本获取公共文档目录
+            documentDir = Environment.getExternalStoragePublicDirectory(DIRECTORY_DOCUMENTS);
+        }
+
+        if (documentDir) {
+            // 使用native.js的方式获取路径，兼容不同的Android版本
+            this.documentPath = plus.android.invoke(documentDir, 'getAbsolutePath');
+            uni.showToast({
+                title: '获取成功',
+                icon: 'success'
+            });
+        } else {
+            throw new Error('无法获取文档目录');
+        }
+    } catch (e) {
+        uni.showToast({
+            title: '获取失败：' + e.message,
+            icon: 'none'
+        });
+        console.error('获取文档目录失败：', e);
+    }
+}
+```
+
