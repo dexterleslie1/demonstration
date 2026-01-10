@@ -1,5 +1,7 @@
 ## 概念
 
+>参考链接：https://uniapp.dcloud.net.cn/tutorial/use-html5plus.html
+
 `HTML5 Plus`（简称 **HTML5+** 或 **5+ App**）是一个**技术规范和一个运行环境**，而不是一个简单的 JavaScript 库。
 
 我们可以把它理解为一个 **“增强版的浏览器内核”**，专门为移动 App 设计，让普通的 Web 技术（HTML、CSS、JavaScript）能够拥有媲美原生 App 的能力。
