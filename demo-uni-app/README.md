@@ -1168,6 +1168,8 @@ previewImage(index = 0) {
 >
 >上传和下载：https://uniapp.dcloud.net.cn/api/request/network-file.html
 
+运行 https://gitee.com/dexterleslie/demonstration/tree/main/front-end/axios/axios-api 作为api服务。
+
 上传图片
 
 ```js
@@ -1590,6 +1592,8 @@ import XeUpload from '@/uni_modules/xe-upload/components/xe-upload/xe-upload.vue
 ## 选择文件上传和下载
 
 >详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-uni-app/demo-选择文件上传和下载
+
+运行 https://gitee.com/dexterleslie/demonstration/tree/main/front-end/axios/axios-api 作为api服务。
 
 ```vue
 <template>
@@ -2092,3 +2096,11 @@ import XeUpload from '@/uni_modules/xe-upload/components/xe-upload/xe-upload.vue
 导入插件到项目中：点击“下载插件并导入HBuilderX”根据提示导入插件到项目中。
 
 运行插件示例：点击“使用HBuilderX导入示例项目”根据提示导入示例项目到HBuilderX。
+
+## 文件api
+
+>官方参考链接：https://uniapp.dcloud.net.cn/api/file/file.html
+>
+>详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-uni-app/demo-文件api
+>
+>提示：这些api主要是从应用的本地文件系统中，查询并返回由 uni.saveFile或 uni.downloadFile等接口成功保存到本地的所有文件的清单。没有遇到需要使用此api的场景。
