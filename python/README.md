@@ -506,3 +506,193 @@ wb_read.close()
 
 ```
 
+## xlwings
+
+`xlwings`是一个 **Python 与 Excel 之间的桥梁库**，它允许你用 Python 代码直接控制 Excel 应用程序（比如打开文件、读写数据、执行公式、操作图表等），同时也支持将 Excel 作为前端界面，通过 Python 实现复杂的后端计算或数据处理。
+
+### 一、核心功能：Python 如何“操控”Excel？
+
+`xlwings`的核心能力是通过 **COM 接口**（Windows）或 **AppleScript 接口**（macOS）与本地安装的 Excel 应用程序通信，从而实现以下操作：
+
+| 功能分类             | 具体说明                                                     |
+| -------------------- | ------------------------------------------------------------ |
+| **文件与工作表操作** | 打开/关闭 Excel 文件、创建工作表、重命名/删除工作表等。      |
+| **数据读写**         | 读取/写入单元格数据（支持单个单元格、区域、整行/整列）、批量处理数据。 |
+| **公式与计算**       | 写入公式到单元格、触发 Excel 重新计算所有公式（确保结果最新）。 |
+| **图表与格式**       | 创建图表（柱状图、折线图等）、设置单元格格式（字体、颜色、边框等）。 |
+| **高级交互**         | 显示/隐藏 Excel 窗口、弹出消息框、通过 Excel 按钮触发 Python 函数（实现“Excel 前端 + Python 后端”的交互模式）。 |
+
+### 二、为什么用 `xlwings`？（优势）
+
+相比其他 Python 操作 Excel 的库（如 `openpyxl`、`pandas`），`xlwings`的独特优势在于：
+
+#### 1. **直接调用 Excel 引擎，计算结果100%可靠**
+
+`openpyxl`等库只能解析 Excel 文件的“静态结构”（如公式文本、单元格格式），但**无法执行公式计算**（比如 `=VLOOKUP(...)`、`=IFERROR(...)`等复杂函数）。
+
+而 `xlwings`通过与本地 Excel 应用程序通信，能直接触发 Excel 的内置计算引擎，确保所有公式（包括复杂函数、数组公式、外部链接等）都能被正确计算，结果与手动打开 Excel 操作完全一致。
+
+#### 2. **支持“Excel 前端 + Python 后端”的交互模式**
+
+这是 `xlwings`最具特色的功能之一：你可以将 Excel 作为“用户界面”（比如让用户在 Excel 表格中输入参数、点击按钮），然后通过 Python 代码实现复杂的后端逻辑（比如数据清洗、模型计算、生成报告等），最后将结果回写到 Excel 中展示给用户。
+
+这种模式非常适合非技术用户（如业务人员）使用——他们无需学习 Python，只需在熟悉的 Excel 界面中操作，就能享受 Python 强大的计算能力。
+
+#### 3. **跨平台支持（Windows/macOS）**
+
+`xlwings`同时支持 Windows 和 macOS 系统：
+
+- 
+
+  在 Windows 上，通过 COM 接口与 Excel 通信；
+
+- 
+
+  在 macOS 上，通过 AppleScript 接口与 Excel 通信。
+
+这意味着你可以在不同操作系统的环境中使用相同的 Python 代码操作 Excel，无需大幅修改。
+
+#### 4. **与 `pandas`无缝集成**
+
+`pandas`是 Python 数据分析的核心库，而 `xlwings`可以直接将 `pandas`的 DataFrame 与 Excel 工作表进行双向转换：
+
+- 
+
+  用 `xlwings`将 Excel 数据读入 `pandas`DataFrame 进行分析；
+
+- 
+
+  用 `xlwings`将 `pandas`处理后的 DataFrame 直接写入 Excel 工作表，甚至保留原有的格式（如列宽、单元格颜色等）。
+
+### 三、适用场景
+
+`xlwings`特别适合以下场景：
+
+- 
+
+  **需要可靠公式计算的场景**：比如处理包含 `VLOOKUP`、`INDEX+MATCH`、`SUMIFS`等复杂函数的 Excel 文件，需要确保计算结果与 Excel 手动操作一致。
+
+- 
+
+  **Excel 作为前端界面的场景**：比如为非技术用户开发一个“Excel 操作面板”，用户只需在 Excel 中输入参数、点击按钮，就能触发 Python 代码完成复杂的数据处理或报表生成。
+
+- 
+
+  **需要与 Excel 深度交互的场景**：比如批量创建带格式的 Excel 报表、动态生成 Excel 图表、通过 Excel 按钮触发 Python 脚本等。
+
+### 四、简单示例：用 `xlwings`操作 Excel
+
+以下是一个简单的示例，演示如何用 `xlwings`打开 Excel 文件、写入数据、触发公式计算并保存：
+
+```
+import xlwings as xw
+
+# 1. 启动 Excel 应用程序（visible=True 表示显示 Excel 窗口，方便调试）
+app = xw.App(visible=True, add_book=False)  # add_book=False 不自动创建新工作簿
+
+# 2. 打开一个已有的 Excel 文件（如果没有则创建）
+try:
+    wb = app.books.open("example.xlsx")  # 打开文件
+except FileNotFoundError:
+    wb = app.books.add()  # 创建新工作簿
+    wb.save("example.xlsx")  # 保存文件
+
+# 3. 选择第一个工作表（Sheet1）
+sheet = wb.sheets[0]  # 或 wb.sheets["Sheet1"]
+
+# 4. 写入数据到单元格
+sheet.range("A1").value = "姓名"
+sheet.range("B1").value = "年龄"
+sheet.range("A2").value = "张三"
+sheet.range("B2").value = 25
+sheet.range("A3").value = "李四"
+sheet.range("B3").value = 30
+
+# 5. 写入公式到单元格（比如计算平均年龄）
+sheet.range("A4").value = "平均年龄"
+sheet.range("B4").value = "=AVERAGE(B2:B3)"  # 写入公式
+
+# 6. 触发 Excel 重新计算所有公式（确保结果最新）
+wb.app.calculate()  # 或 wb.api.Application.CalculateFull()
+
+# 7. 读取公式计算结果（此时 B4 单元格的值应该是 27.5）
+average_age = sheet.range("B4").value
+print(f"平均年龄计算结果：{average_age}")
+
+# 8. 保存文件并关闭
+wb.save()
+wb.close()
+
+# 9. 退出 Excel 应用程序
+app.quit()
+```
+
+运行上述代码后，会生成一个名为 `example.xlsx`的 Excel 文件，其中：
+
+- 
+
+  A1:B3 是手动写入的数据；
+
+- 
+
+  B4 单元格包含公式 `=AVERAGE(B2:B3)`，并且已经计算出结果（27.5）。
+
+### 五、总结
+
+`xlwings`是一个功能强大的 Python 库，它通过连接本地 Excel 应用程序，实现了 Python 与 Excel 之间的深度交互。无论是需要可靠的公式计算、将 Excel 作为前端界面，还是与 `pandas`结合进行数据分析，`xlwings`都能提供高效的解决方案。
+
+如果你经常需要用 Python 处理 Excel 文件，尤其是涉及复杂公式或需要与 Excel 深度交互的场景，`xlwings`绝对值得一试！
+
+### 六、示例
+
+具体用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/blob/main/python/test-xlwings.py
+
+```python
+import xlwings as xw
+
+# 1. 启动 Excel 应用程序（visible=True 表示显示 Excel 窗口，方便调试）
+app = xw.App(visible=True, add_book=False)  # add_book=False 不自动创建新工作簿
+
+# 2. 打开一个已有的 Excel 文件（如果没有则创建）
+try:
+    wb = app.books.open("example.xlsx")  # 打开文件
+except FileNotFoundError:
+    wb = app.books.add()  # 创建新工作簿
+    wb.save("example.xlsx")  # 保存文件
+
+# 3. 选择第一个工作表（Sheet1）
+sheet = wb.sheets[0]  # 或 wb.sheets["Sheet1"]
+
+# 4. 写入数据到单元格
+sheet.range("A1").value = "姓名"
+sheet.range("B1").value = "年龄"
+sheet.range("A2").value = "张三"
+sheet.range("B2").value = 25
+sheet.range("A3").value = "李四"
+sheet.range("B3").value = 30
+
+# 5. 写入公式到单元格（比如计算平均年龄）
+sheet.range("A4").value = "平均年龄"
+sheet.range("B4").value = "=AVERAGE(B2:B3)"  # 写入公式
+
+# 6. 触发 Excel 重新计算所有公式（确保结果最新）
+wb.app.calculate()  # 或 wb.api.Application.CalculateFull()
+
+# 7. 读取公式计算结果（此时 B4 单元格的值应该是 27.5）
+average_age = sheet.range("B4").value
+print(f"平均年龄计算结果：{average_age}")
+
+# 8. 保存文件并关闭
+wb.save()
+wb.close()
+
+# 9. 退出 Excel 应用程序
+app.quit()
+```
+
+使用命令运行示例
+
+```sh
+python test-xlwings.py
+```
+

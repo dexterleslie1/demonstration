@@ -19,3 +19,11 @@ wb_save.close()
 
 # 关闭读取的工作簿
 wb_read.close()
+
+# 注意：下面的代码显示为：第一行第三列的值是: None，这是因为新创建的表格没有打开过，公式没有执行并保存，所以获取到公式的结果为None
+# 解决方案：1、手动打开一次Excel触发公式执行并保存。2、使用xlwings自动打开Excel触发公式执行并保存。
+wb_read = openpyxl.load_workbook(excel_file_output, data_only=True)
+ws_read = wb_read.active
+cell_value = ws_read.cell(row=1, column=3).value
+print(f"第一行第三列的值是: {cell_value}")
+wb_read.close()
