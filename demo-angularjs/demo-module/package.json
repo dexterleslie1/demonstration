@@ -1,0 +1,29 @@
+{
+  "name": "angularjs-module-demo",
+  "version": "1.0.0",
+  "description": "AngularJS模块最佳实践演示",
+  "main": "index.js",
+  "scripts": {
+    "start": "http-server -p 3000",
+    "build": "webpack --mode production"
+  },
+  "keywords": [
+    "angularjs",
+    "module",
+    "best-practices",
+    "最佳实践"
+  ],
+  "author": "演示用户",
+  "license": "MIT",
+  "dependencies": {
+    "angular": "^1.8.2"
+  },
+  "devDependencies": {
+    "@babel/preset-env": "^7.28.5",
+    "babel-loader": "^9.1.0",
+    "html-webpack-plugin": "^5.5.0",
+    "http-server": "^14.1.1",
+    "webpack": "^5.75.0",
+    "webpack-cli": "^4.10.0"
+  }
+}

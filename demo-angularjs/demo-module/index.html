@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html ng-app="demoModule">
+<head>
+    <title>AngularJS模块最佳实践演示</title>
+    <script src="node_modules/angular/angular.min.js"></script>
+    <script src="src/app.js"></script>
+    <script src="src/components/demo-component.js"></script>
+    <script src="src/services/demo-service.js"></script>
+    <script src="src/directives/demo-directive.js"></script>
+    <script src="src/controllers/demo-controller.js"></script>
+</head>
+<body>
+    <div ng-controller="DemoController as vm">
+        <h1>AngularJS模块最佳实践演示</h1>
+        <p>{{vm.message}}</p>
+        <div>vm.configName:{{vm.configName}}</div>
+        
+        <div demo-directive></div>
+        
+        <h2>演示组件:</h2>
+        <demo-component name="AngularJS"></demo-component>
+    </div>
+</body>
+</html>

@@ -1,0 +1,19 @@
+<div class="demo-component">
+    <h3>{{vm.greeting}}</h3>
+    <p>这是一个使用AngularJS 1.5+ 组件语法的演示组件。</p>
+    
+    <div class="items-section">
+        <h4>项目列表:</h4>
+        <ul>
+            <li ng-repeat="item in vm.items track by item.id">
+                {{item.text}}
+                <button ng-click="vm.removeItem($index)">移除</button>
+            </li>
+        </ul>
+        
+        <div class="add-item">
+            <input type="text" ng-model="newItemText" placeholder="输入新项目...">
+            <button ng-click="vm.addItem(newItemText); newItemText=''">添加项目</button>
+        </div>
+    </div>
+</div>
