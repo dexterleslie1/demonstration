@@ -870,3 +870,9 @@ tkinter 是 Python 生态中一个**简单、轻量、易上手**的 GUI 开发�
 >说明：使用表格显示数据，支持数据过滤和点击表头数据降序或者升序排序功能。
 >
 >具体用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/blob/main/python/test-tkinter-table.py
+
+## 集成SQLite
+
+>说明：演示Python集成SQLite保存数据。
+>
+>具体用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/blob/main/python/test-sqlite.py
