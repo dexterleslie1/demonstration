@@ -696,3 +696,177 @@ app.quit()
 python test-xlwings.py
 ```
 
+## tkinter概念
+
+`tkinter`是 Python 内置的一个**图形用户界面（GUI）开发库**，用来快速创建窗口、按钮、文本框等可视化界面。
+
+------
+
+### 一、tkinter 是什么？
+
+- 
+
+  **所属语言**：Python 标准库的一部分，无需额外安装（大多数情况下）。
+
+- 
+
+  **作用**：让你用 Python 编写带界面的程序，比如小工具、配置面板、简单管理系统等。
+
+- 
+
+  **底层实现**：基于 Tcl/Tk GUI 工具包，tkinter 只是 Python 对 Tk 的封装接口。
+
+------
+
+### 二、tkinter 的主要特点
+
+1. 
+
+   **简单易学**
+
+   - 
+
+     语法直观，适合初学者入门 GUI 编程。
+
+   - 
+
+     不需要复杂的配置，只要 `import tkinter`就能开始写界面。
+
+2. 
+
+   **跨平台**
+
+   - 
+
+     支持 Windows、macOS、Linux 等主流操作系统。
+
+   - 
+
+     同一套代码在不同平台上通常都能正常运行（个别系统主题细节可能略有差异）。
+
+3. 
+
+   **功能实用**
+
+   - 
+
+     提供了常用的 GUI 组件：
+
+     - 
+
+       窗口：`Tk()`
+
+     - 
+
+       标签：`Label`
+
+     - 
+
+       按钮：`Button`
+
+     - 
+
+       输入框：`Entry`
+
+     - 
+
+       多行文本框：`Text`
+
+     - 
+
+       菜单：`Menu`
+
+     - 
+
+       对话框：`messagebox`、`filedialog`等
+
+   - 
+
+     支持事件驱动编程（点击按钮、输入文字、关闭窗口等都会触发事件）。
+
+   - 
+
+     可以通过布局管理器（`pack`、`grid`、`place`）控制组件的位置和大小。
+
+4. 
+
+   **轻量级**
+
+   - 
+
+     作为 Python 标准库的一部分，不需要额外下载大型依赖。
+
+   - 
+
+     适合开发小型到中型的桌面应用程序。
+
+------
+
+### 三、一个简单的 tkinter 示例
+
+下面是一个最基础的 tkinter 程序，创建一个窗口并在上面显示一个按钮：
+
+```
+import tkinter as tk
+from tkinter import messagebox
+
+# 创建主窗口
+root = tk.Tk()
+root.title("我的第一个 tkinter 程序")  # 设置窗口标题
+root.geometry("300x200")  # 设置窗口大小（宽x高）
+
+# 定义按钮点击事件的处理函数
+def on_button_click():
+    messagebox.showinfo("提示", "你点击了按钮！")
+
+# 创建按钮并添加到窗口
+button = tk.Button(
+    root,
+    text="点击我",
+    command=on_button_click  # 绑定点击事件处理函数
+)
+button.pack(pady=50)  # 使用 pack 布局，设置上下边距为 50
+
+# 进入主事件循环，等待用户操作
+root.mainloop()
+```
+
+运行这段代码，会弹出一个窗口，里面有一个“点击我”的按钮，点击后会弹出提示框。
+
+------
+
+### 四、tkinter 的应用场景
+
+- 
+
+  **小型桌面工具**：如文件批量重命名工具、简易计算器、文本编辑器、图片查看器等。
+
+- 
+
+  **教学演示程序**：用于展示算法流程、数据结构操作、物理实验模拟等。
+
+- 
+
+  **数据采集与配置界面**：为命令行程序添加图形配置界面，方便用户输入参数、选择选项。
+
+- 
+
+  **原型验证**：在项目初期快速搭建界面原型，验证交互逻辑和功能可行性。
+
+------
+
+### 五、总结
+
+tkinter 是 Python 生态中一个**简单、轻量、易上手**的 GUI 开发工具。它非常适合初学者学习 GUI 编程的基本概念，也可以用于快速开发实用的小型桌面应用程序。虽然它在界面美观度和高级功能上不如一些专业的 GUI 框架（如 PyQt、wxPython 等），但对于很多日常开发需求来说，tkinter 已经足够好用。
+
+## 基于tkinter浮动工具栏窗口
+
+>说明：浮动工具栏窗口置顶。
+>
+>具体用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/blob/main/python/test-tkinter-toplevel.py
+
+## 基于tkinter表格显示数据
+
+>说明：使用表格显示数据，支持数据过滤和点击表头数据降序或者升序排序功能。
+>
+>具体用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/blob/main/python/test-tkinter-table.py
