@@ -22,7 +22,8 @@
    tree-model="dataForTheTree"
    options="treeOptions"
    on-selection="showSelected(node)"
-   selected-node="selectedNode">
+   selected-node="selectedNode"
+   expanded-nodes="expandedNodes">
    {{node.name}} ({{node.type}})
 </treecontrol>
 ```
@@ -34,12 +35,65 @@
    tree-model="dataForTheTree"
    options="treeOptions"
    on-selection="showSelected(node)"
-   selected-node="selectedNode">
+   selected-node="selectedNode"
+   expanded-nodes="expandedNodes">
    {{node.name}} ({{node.type}})
 </div>
 ```
 
 ### 3. 自定义样式的树控件
+
+```javascript
+$scope.customTreeOptions = {
+    nodeChildren: "children",
+    dirSelectable: true,
+    allowDeselect: true,
+    injectClasses: {
+        ul: "my-ul-class",
+        li: "my-li-class",
+        liSelected: "my-li-selected-class",
+        iExpanded: "my-i-expanded-class",
+        iCollapsed: "my-i-collapsed-class",
+        iLeaf: "my-i-leaf-class",
+        label: "my-label-class",
+        labelSelected: "my-label-selected-class"
+    }
+};
+```
+
+### 4. 展开/折叠所有节点功能
+
+演示提供了两个按钮用于快速操作所有节点：
+
+```html
+<button ng-click="expandAllNodes()">展开所有</button>
+<button ng-click="collapseAllNodes()">折叠所有</button>
+```
+
+这些按钮调用控制器中的函数来管理树的展开状态：
+
+```javascript
+// 展开所有节点的函数
+$scope.expandAllNodes = function() {
+    $scope.expandedNodes = [];
+    function expandNode(node) {
+        if (node.children && node.children.length > 0) {
+            $scope.expandedNodes.push(node);
+            for (var i = 0; i < node.children.length; i++) {
+                expandNode(node.children[i]);
+            }
+        }
+    }
+    for (var i = 0; i < $scope.dataForTheTree.length; i++) {
+        expandNode($scope.dataForTheTree[i]);
+    }
+};
+
+// 折叠所有节点的函数
+$scope.collapseAllNodes = function() {
+    $scope.expandedNodes = [];
+};
+```
 
 ```javascript
 $scope.customTreeOptions = {
@@ -67,6 +121,14 @@ $scope.customTreeOptions = {
 - `dirSelectable`: 是否允许选择有子节点的目录节点（默认值：true）
 - `allowDeselect`: 是否允许取消选择节点（默认值：true）
 - `injectClasses`: 为树的不同元素注入自定义CSS类
+
+## 树控件属性
+
+- `tree-model`: 树的数据模型
+- `options`: 树的配置选项
+- `on-selection`: 节点选择事件回调
+- `selected-node`: 当前选中的节点
+- `expanded-nodes`: 存储所有展开节点的数组
 
 ## 示例数据结构
 

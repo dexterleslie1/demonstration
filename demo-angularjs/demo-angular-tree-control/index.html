@@ -35,13 +35,19 @@
 <body ng-controller="TreeController">
     <h1>Angular Tree Control 演示</h1>
     
+    <div style="margin: 10px 0;">
+        <button ng-click="expandAllNodes()" style="margin-right: 10px;">展开所有</button>
+        <button ng-click="collapseAllNodes()">折叠所有</button>
+    </div>
+    
     <div class="tree-container">
         <h3>作为DOM元素的树控件</h3>
         <treecontrol class="tree-classic"
            tree-model="dataForTheTree"
            options="treeOptions"
            on-selection="showSelected(node)"
-           selected-node="selectedNode">
+           selected-node="selectedNode"
+           expanded-nodes="expandedNodes">
            {{node.name}} ({{node.type}})
         </treecontrol>
     </div>
@@ -52,7 +58,8 @@
            tree-model="dataForTheTree"
            options="treeOptions"
            on-selection="showSelected(node)"
-           selected-node="selectedNode">
+           selected-node="selectedNode"
+           expanded-nodes="expandedNodes">
            {{node.name}} ({{node.type}})
         </div>
     </div>
@@ -63,7 +70,8 @@
            tree-model="dataForTheTree"
            options="customTreeOptions"
            on-selection="showSelected(node)"
-           selected-node="selectedNode">
+           selected-node="selectedNode"
+           expanded-nodes="expandedNodes">
            <strong>{{node.name}}</strong> - {{node.description}}
         </treecontrol>
     </div>

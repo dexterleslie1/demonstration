@@ -127,6 +127,27 @@ angular.module('treeControlDemo', ['treeControl'])
         return path.join(' > ');
     };
     
+    // 展开所有节点的函数
+    $scope.expandAllNodes = function() {
+        $scope.expandedNodes = [];
+        function expandNode(node) {
+            if (node.children && node.children.length > 0) {
+                $scope.expandedNodes.push(node);
+                for (var i = 0; i < node.children.length; i++) {
+                    expandNode(node.children[i]);
+                }
+            }
+        }
+        for (var i = 0; i < $scope.dataForTheTree.length; i++) {
+            expandNode($scope.dataForTheTree[i]);
+        }
+    };
+    
+    // 折叠所有节点的函数
+    $scope.collapseAllNodes = function() {
+        $scope.expandedNodes = [];
+    };
+    
     // 查找父节点的辅助函数
     function findParent(tree, node) {
         for (var i = 0; i < tree.length; i++) {
