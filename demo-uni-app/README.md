@@ -802,6 +802,633 @@ index.vue中调用uView组件
 >
 >详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-uni-app/demo-uview-calendar
 
+## 路由概念
+
+### 一、路由系统概述
+
+Uniapp的路由系统是**基于页面栈**的，与原生小程序的导航方式相似，而不是Vue Router的SPA模式。
+
+#### 基本特性
+
+- 
+
+  每个页面都是独立的Vue实例
+
+- 
+
+  支持页面间的**跳转、传参、返回**
+
+- 
+
+  页面路径需要在 `pages.json`中配置
+
+- 
+
+  分为**应用级路由API**和**页面级路由API**
+
+### 二、路由配置文件
+
+#### `pages.json`结构
+
+```
+{
+  "pages": [
+    {
+      "path": "pages/index/index",
+      "style": {
+        "navigationBarTitleText": "首页"
+      }
+    },
+    {
+      "path": "pages/detail/detail",
+      "style": {
+        "navigationBarTitleText": "详情页"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "UniApp",
+    "navigationBarBackgroundColor": "#F8F8F8"
+  },
+  "tabBar": {
+    "color": "#7A7E83",
+    "selectedColor": "#3cc51f",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/user/user",
+        "text": "我的"
+      }
+    ]
+  }
+}
+```
+
+### 三、核心路由API
+
+#### 1. **uni.navigateTo** - 保留当前页面跳转
+
+```
+// 基本跳转
+uni.navigateTo({
+  url: '/pages/detail/detail'
+})
+
+// 带参数跳转
+uni.navigateTo({
+  url: '/pages/detail/detail?id=1&name=uniapp'
+})
+
+// 对象参数（会自动编码为query）
+uni.navigateTo({
+  url: '/pages/detail/detail',
+  success: (res) => {
+    console.log('跳转成功', res)
+  },
+  fail: (err) => {
+    console.log('跳转失败', err)
+  }
+})
+```
+
+#### 2. **uni.redirectTo** - 关闭当前页面跳转
+
+```
+uni.redirectTo({
+  url: '/pages/login/login'
+})
+
+// 与 navigateTo 的区别：
+// navigateTo: A → B (A在栈中保留)
+// redirectTo: A → B (A从栈中移除)
+```
+
+#### 3. **uni.reLaunch** - 关闭所有页面跳转
+
+```
+uni.reLaunch({
+  url: '/pages/index/index'
+})
+
+// 应用场景：登录后跳转首页，清空所有历史页面
+```
+
+#### 4. **uni.switchTab** - 切换Tab页面
+
+```
+uni.switchTab({
+  url: '/pages/user/user'
+})
+
+// 注意事项：
+// 1. 只能跳转到在tabBar配置的页面
+// 2. 不能带参数
+// 3. 会清空页面栈
+```
+
+#### 5. **uni.navigateBack** - 返回上一页
+
+```
+// 返回上一页
+uni.navigateBack()
+
+// 返回指定页数
+uni.navigateBack({
+  delta: 2  // 返回2层
+})
+
+// 返回首页
+uni.navigateBack({
+  delta: getCurrentPages().length - 1
+})
+```
+
+### 四、页面传参与接收
+
+#### 1. **URL传参**
+
+```
+// 发送参数
+uni.navigateTo({
+  url: '/pages/detail/detail?id=123&title=测试标题'
+})
+
+// 接收参数（在 detail.vue 中）
+export default {
+  onLoad(options) {
+    // options 包含所有参数
+    console.log(options.id)      // "123"
+    console.log(options.title)   // "测试标题"
+  }
+}
+```
+
+#### 2. **复杂对象传参**
+
+```
+// 发送复杂数据
+const product = {
+  id: 1,
+  name: '商品名称',
+  price: 99.9
+}
+
+// 方法1：JSON序列化
+uni.navigateTo({
+  url: `/pages/detail/detail?data=${encodeURIComponent(JSON.stringify(product))}`
+})
+
+// 方法2：通过全局数据（适合大数据量）
+uni.$globalData = product
+uni.navigateTo({
+  url: '/pages/detail/detail'
+})
+
+// 接收端
+onLoad(options) {
+  // 方法1接收
+  if (options.data) {
+    const product = JSON.parse(decodeURIComponent(options.data))
+  }
+  
+  // 方法2接收
+  const product = uni.$globalData
+}
+```
+
+#### 3. **EventBus传参**（推荐用于组件间通信）
+
+```
+// 创建eventBus
+Vue.prototype.$eventBus = new Vue()
+
+// 发送页面
+this.$eventBus.$emit('updateData', { data: 'test' })
+uni.navigateTo({
+  url: '/pages/detail/detail'
+})
+
+// 接收页面
+onLoad() {
+  this.$eventBus.$on('updateData', (data) => {
+    console.log(data)
+  })
+}
+
+onUnload() {
+  this.$eventBus.$off('updateData')
+}
+```
+
+### 五、页面生命周期与路由钩子
+
+#### 页面生命周期
+
+```
+export default {
+  // 页面加载
+  onLoad(options) {
+    console.log('页面加载，参数:', options)
+  },
+  
+  // 页面显示
+  onShow() {
+    console.log('页面显示')
+  },
+  
+  // 页面初次渲染完成
+  onReady() {
+    console.log('页面就绪')
+  },
+  
+  // 页面隐藏
+  onHide() {
+    console.log('页面隐藏')
+  },
+  
+  // 页面卸载
+  onUnload() {
+    console.log('页面卸载')
+  },
+  
+  // 下拉刷新
+  onPullDownRefresh() {
+    console.log('下拉刷新')
+    setTimeout(() => {
+      uni.stopPullDownRefresh()
+    }, 1000)
+  },
+  
+  // 触底加载
+  onReachBottom() {
+    console.log('触底加载')
+  },
+  
+  // 页面滚动
+  onPageScroll(e) {
+    console.log('页面滚动', e.scrollTop)
+  }
+}
+```
+
+### 六、路由相关方法
+
+#### 1. **获取当前页面栈**
+
+```
+// 获取页面栈实例
+const pages = getCurrentPages()
+
+// 获取当前页面实例
+const currentPage = pages[pages.length - 1]
+
+// 获取当前页面路由
+const route = currentPage.route
+console.log('当前路由:', route)  // "pages/detail/detail"
+
+// 获取当前页面参数
+const options = currentPage.options
+console.log('页面参数:', options)
+```
+
+#### 2. **获取页面路径和参数工具函数**
+
+```
+// utils/router.js
+export default {
+  // 获取当前页面实例
+  getCurrentPage() {
+    const pages = getCurrentPages()
+    return pages[pages.length - 1]
+  },
+  
+  // 获取当前页面参数
+  getCurrentPageOptions() {
+    const page = this.getCurrentPage()
+    return page.options || {}
+  },
+  
+  // 跳转前检查登录状态
+  navigateToWithAuth(options) {
+    const token = uni.getStorageSync('token')
+    if (!token) {
+      uni.navigateTo({
+        url: '/pages/login/login'
+      })
+      return false
+    }
+    uni.navigateTo(options)
+    return true
+  },
+  
+  // 返回并刷新上一页
+  navigateBackAndRefresh() {
+    const pages = getCurrentPages()
+    const prevPage = pages[pages.length - 2]
+    if (prevPage && prevPage.$vm) {
+      // 调用上一页的刷新方法
+      prevPage.$vm.refreshData && prevPage.$vm.refreshData()
+    }
+    uni.navigateBack()
+  }
+}
+```
+
+### 七、路由守卫与权限控制
+
+#### 1. **全局路由拦截**
+
+```
+// main.js
+// 保存原始方法
+const originalNavigateTo = uni.navigateTo
+const originalRedirectTo = uni.redirectTo
+const originalReLaunch = uni.reLaunch
+const originalSwitchTab = uni.switchTab
+
+// 需要登录的页面路径
+const needLoginPages = [
+  '/pages/user/user',
+  '/pages/order/order'
+]
+
+// 重写 navigateTo
+uni.navigateTo = function(options) {
+  if (needLoginPages.includes(options.url.split('?')[0])) {
+    if (!checkLogin()) {
+      uni.navigateTo({
+        url: '/pages/login/login'
+      })
+      return
+    }
+  }
+  originalNavigateTo.call(this, options)
+}
+
+// 检查登录状态
+function checkLogin() {
+  return !!uni.getStorageSync('token')
+}
+```
+
+#### 2. **页面内守卫**
+
+```
+// mixins/auth.js
+export default {
+  data() {
+    return {
+      requireAuth: false
+    }
+  },
+  
+  onLoad(options) {
+    if (this.requireAuth && !this.checkAuth()) {
+      this.redirectToLogin()
+      return
+    }
+  },
+  
+  methods: {
+    checkAuth() {
+      return !!uni.getStorageSync('token')
+    },
+    
+    redirectToLogin() {
+      uni.redirectTo({
+        url: '/pages/login/login?redirect=' + encodeURIComponent(this.$page.route)
+      })
+    }
+  }
+}
+```
+
+### 八、路由传参最佳实践
+
+#### 1. **使用统一参数处理器**
+
+```
+// utils/params.js
+export default {
+  // 生成跳转URL
+  generateUrl(path, params = {}) {
+    if (!params || Object.keys(params).length === 0) {
+      return path
+    }
+    
+    const query = Object.keys(params)
+      .map(key => {
+        if (typeof params[key] === 'object') {
+          return `${key}=${encodeURIComponent(JSON.stringify(params[key]))}`
+        }
+        return `${key}=${encodeURIComponent(params[key])}`
+      })
+      .join('&')
+    
+    return `${path}${path.includes('?') ? '&' : '?'}${query}`
+  },
+  
+  // 解析参数
+  parseParams(options) {
+    const result = {}
+    Object.keys(options).forEach(key => {
+      const value = options[key]
+      try {
+        result[key] = JSON.parse(decodeURIComponent(value))
+      } catch (e) {
+        result[key] = value
+      }
+    })
+    return result
+  }
+}
+```
+
+#### 2. **页面跳转封装**
+
+```
+// utils/navigate.js
+import params from './params.js'
+
+export default {
+  // 带参跳转
+  to(path, data = {}) {
+    const url = params.generateUrl(path, data)
+    uni.navigateTo({ url })
+  },
+  
+  // 替换跳转
+  replace(path, data = {}) {
+    const url = params.generateUrl(path, data)
+    uni.redirectTo({ url })
+  },
+  
+  // 返回并传递数据
+  back(data = {}, delta = 1) {
+    const pages = getCurrentPages()
+    const prevPage = pages[pages.length - 1 - delta]
+    
+    if (prevPage && prevPage.$vm && prevPage.$vm.onNavigateBack) {
+      prevPage.$vm.onNavigateBack(data)
+    }
+    
+    uni.navigateBack({ delta })
+  }
+}
+```
+
+### 九、常见问题与解决方案
+
+#### 1. **URL长度限制**
+
+```
+// 问题：URL有长度限制（不同平台不同）
+// 解决：使用全局数据或本地存储
+
+// 发送大数据
+sendLargeData(data) {
+  const key = 'temp_data_' + Date.now()
+  uni.setStorageSync(key, data)
+  uni.navigateTo({
+    url: `/pages/detail/detail?dataKey=${key}`
+  })
+}
+
+// 接收大数据
+onLoad(options) {
+  if (options.dataKey) {
+    const data = uni.getStorageSync(options.dataKey)
+    uni.removeStorageSync(options.dataKey)
+  }
+}
+```
+
+#### 2. **页面刷新问题**
+
+```
+// 在需要刷新的页面添加刷新方法
+export default {
+  data() {
+    return {
+      needRefresh: false
+    }
+  },
+  
+  onShow() {
+    if (this.needRefresh) {
+      this.loadData()
+      this.needRefresh = false
+    }
+  },
+  
+  methods: {
+    // 供其他页面调用
+    refreshData() {
+      this.needRefresh = true
+    }
+  }
+}
+```
+
+#### 3. **页面栈管理**
+
+```
+// 获取页面栈信息
+getPageStackInfo() {
+  const pages = getCurrentPages()
+  return {
+    length: pages.length,
+    routes: pages.map(page => page.route),
+    canGoBack: pages.length > 1
+  }
+}
+
+// 返回首页
+goHome() {
+  const pages = getCurrentPages()
+  if (pages.length > 1) {
+    uni.navigateBack({
+      delta: pages.length - 1
+    })
+  }
+}
+```
+
+### 十、TypeScript支持
+
+```
+// types/router.d.ts
+declare namespace UniApp {
+  interface NavigateToOptions {
+    url: string
+    events?: Record<string, Function>
+    success?: (res: GeneralCallbackResult) => void
+    fail?: (err: any) => void
+    complete?: () => void
+  }
+  
+  interface NavigateBackOptions {
+    delta?: number
+    success?: (res: GeneralCallbackResult) => void
+    fail?: (err: any) => void
+    complete?: () => void
+  }
+}
+
+// 页面参数类型定义
+interface DetailPageParams {
+  id: string | number
+  title?: string
+  data?: any
+}
+
+// 在页面中使用
+export default {
+  onLoad(options: DetailPageParams) {
+    // 现在options有类型提示
+    console.log(options.id)
+  }
+}
+```
+
+### 总结要点
+
+1. 
+
+   **路由配置在 `pages.json`** 中，必须先配置后使用
+
+2. 
+
+   **五种跳转方式**各有用途，根据场景选择
+
+3. 
+
+   **参数传递**优先使用URL query，大数据用全局存储
+
+4. 
+
+   **页面栈最大10层**，注意控制层级
+
+5. 
+
+   **Tab页面**使用 `switchTab`跳转，不能带参数
+
+6. 
+
+   **合理使用生命周期**处理页面状态
+
+7. 
+
+   **实现路由守卫**进行权限控制
+
+8. 
+
+   **封装工具函数**提高开发效率和代码可维护性
+
 ## 路由 - 获取query参数
 
 >说明：使用options获取query参数。
