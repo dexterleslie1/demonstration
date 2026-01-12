@@ -348,3 +348,20 @@ git config --global core.autocrlf false
 ```
 
 在 Windows 11 上把文件中的 CRLF 转换为 LF，可以通过 notepad++ 的 `编辑` > `文档格式转换` > `转换为 Unix (LF)` 功能转换。
+
+## Windows11启用Git长路径支持
+
+说明：Windows11处理超长目录或者文件名时会报告不能创建文件错误。
+
+查看Git长路径支持是否已启用：
+
+```cmd
+git config --global --get core.longpaths
+```
+
+启用Git的长路径支持：
+
+```cmd
+git config --global core.longpaths true
+```
+
