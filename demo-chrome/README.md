@@ -1,6 +1,9 @@
 ## ~~`chromium`安装`SwitchyOmega`插件~~
 
->提示：2025年12月31日不能安装此插件，安装时报告错误说“清单不受支持”，可能是新版的Chrome浏览器不支持旧版本的插件。
+>提示：
+>
+>- 2025年12月31日不能安装此插件，安装时报告错误说“清单不受支持”，可能是新版的Chrome浏览器不支持旧版本的插件。
+>- 安装SmartProxy插件。
 
 - 下载`SwitchyOmega`插件，`https://github.com/FelisCatus/SwitchyOmega/releases`
 
@@ -11,6 +14,14 @@
   参考以上链接方案二：把`crx`修改为扩展名`zip`，拖动`zip`到`chrome`地址栏`chrome://extensions/`中直接安装。如果拖动`zip`不能自动安装插件则在解压插件`zip`包，然后在插件管理界面打开开发者模式后点击`Load Unpacked`按钮选择解压后的插件目录。
 
 - 配置完成`SwitchyOmega`后点击“应用选项”保存设置才能够生效
+
+## 安装SmartProxy插件代理
+
+访问 https://github.com/salarcode/SmartProxy/releases 下载插件
+
+解压插件，使用谷歌浏览器访问chrome://extensions/，打开开发者模式，点击`加载未打包的扩展程序`按钮选择插件所在的目录就会自动安装插件
+
+打开插件的设置页面，填写代理服务器的相关信息，代理协议填写`SOCKS5`并勾选`使用SOCKS5时代理DNS`。
 
 ## 通过第三方网站下载Chrome插件
 

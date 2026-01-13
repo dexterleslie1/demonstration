@@ -333,6 +333,12 @@ docker image prune
 
 - 接下来步骤就是分析容器内部为何会异常占用空间。
 
+通过下面命令回收删除不再使用的匿名卷
+
+```bash
+docker volume prune
+```
+
 
 
 ## 环境变量用法

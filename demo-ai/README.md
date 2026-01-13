@@ -246,6 +246,10 @@ Cursor AI中的**Rules**是“给AI定的规矩”——通过明确规则，让
 
 官网地址：https://lingma.aliyun.com/download，使用支付宝APP扫码登录。
 
+## 谷歌Antigravity
+
+提示：在OAuth登录成功后，浏览器重定向回Antigravity没有反应，猜测是因为Windows11操作系统不能和谷歌通讯所以无法登录Antigravity。
+
 ## 腾讯元宝
 
 腾讯元宝 `AI` 聊天窗口虽然支持上传图片，但是不能根据图片使用 `html+css+svg` 生成一模一样的效果，效果差得太远了。

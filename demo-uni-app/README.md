@@ -3106,7 +3106,7 @@ plus.ios.invoke(alert, 'show');
 | **缺点**   | 学习成本高、兼容性差、破坏跨端、调试难            |
 | **定位**   | **高级、备用方案**，应优先使用内置 API 和插件市场 |
 
-## 使用native.js获取公共下载和公共文档目录路径
+## 使用native.js在android获取公共下载和公共文档目录路径
 
 >具体用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-uni-app/demo-nativejs-获取公共下载和文档目录路径
 
