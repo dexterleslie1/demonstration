@@ -242,7 +242,9 @@ Cursor AI中的**Rules**是“给AI定的规矩”——通过明确规则，让
 
 - 免费模式支持解析图片。
 
+## 通义灵码IDE
 
+官网地址：https://lingma.aliyun.com/download，使用支付宝APP扫码登录。
 
 ## 腾讯元宝
 
