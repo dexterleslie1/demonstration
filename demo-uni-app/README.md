@@ -1942,6 +1942,12 @@ previewUploadedImage(filename) {
 }
 ```
 
+## 视频录制、上传、下载、播放
+
+具体用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-uni-app/demo-视频录制上传下载播放
+
+使用BlueStacks蓝叠模拟器测试此示例。
+
 ## 选择文件
 
 >说明：调用uni.chooseFile在安卓基座运行提示方法没有实现错误。在安卓基座调用plus.io.chooseFile能够弹出文件选择框，但是选中文件后没有回到success函数。最终方案使用xe-upload插件实现选择文件https://ext.dcloud.net.cn/plugin?id=14423。
