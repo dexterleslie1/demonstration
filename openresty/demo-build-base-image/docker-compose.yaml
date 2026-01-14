@@ -10,5 +10,6 @@ services:
     volumes:
       - ./sample.conf:/usr/local/openresty/nginx/conf/nginx.conf
       - ./sample.rules:/usr/local/openresty/nginx/conf/naxsi.rules
+      - ./ssl:/usr/local/openresty/nginx/conf/ssl
     network_mode: host
     

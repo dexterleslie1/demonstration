@@ -117,3 +117,32 @@ server {
 }
 ```
 
+## OpenResty支持HTTP/2
+
+编译OpenResty时启用HTTP/2
+
+```sh
+cd /tmp/openresty-$varOpenrestyVersion && ./configure --add-module=/tmp/naxsi-$varNaxsiVersion/naxsi_src --with-http_stub_status_module --with-http_v2_module
+```
+
+编译和调试OpenResty是否启用HTTP/2的本站辅助示例：https://gitee.com/dexterleslie/demonstration/tree/main/openresty/demo-build-base-image
+
+示例运行步骤：
+
+1. 生成证书
+
+   ```sh
+   ./generate-ssl.sh
+   ```
+
+2. 运行服务
+
+   ```sh
+   docker compose up -d
+   ```
+
+3. 使用谷歌浏览器访问 https://localhost 调试是否使用HTTP/2通讯，打开开发者工具右键点击表头（如 Name、Status、Type 等），勾选 **Protocol**，显示“协议”列。查看任意资源的 **Protocol** 列，如果显示 `h2`，则表示该资源是通过 **HTTP/2** 加载的。
+
+   - http/1.1：表示 HTTP/1.1
+   - h2：表示 HTTP/2
+   - h3：表示 HTTP/3（基于 QUIC）
