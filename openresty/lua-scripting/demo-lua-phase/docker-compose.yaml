@@ -4,7 +4,9 @@ services:
   openresty:
     build:
       context: ./
-    image: demo-lua-phase-dev
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-openresty-base-dev
+    volumes:
+      - ./nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf:ro
     environment:
       - TZ=Aisa/Shanghai
     ports:

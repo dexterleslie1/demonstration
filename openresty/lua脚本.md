@@ -201,9 +201,19 @@ docker compose up -d
 
 ![xxx](https://public-images-fut.oss-cn-hangzhou.aliyuncs.com/openresty-lua-phases.png)
 
+OpenResty请求处理流程：
+
+1. 请求阶段（如 access_by_lua_block）
+2. 内容生成阶段（如 content_by_lua_block）
+3. 响应头过滤阶段 （如 header_filter_by_lua_block）
+4. 响应体过滤阶段（如 body_filter_by_lua_block）
+5. 日志记录阶段（如 log_by_lua_block）
+
 ### `init_by_lua`
 
 > 参考链接`https://openresty-reference.readthedocs.io/en/latest/Directives/#init_by_lua`
+>
+> 具体用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/blob/main/openresty/lua-scripting/demo-lua-phase/nginx.conf
 
 `init_by_lua` 是 OpenResty（一个基于 Nginx 与 LuaJIT 的 Web 平台）中的一个指令，它允许用户在 Nginx 启动时执行 Lua 脚本代码。这个特性非常有用，因为它允许开发者在 Nginx 服务器启动时执行一些初始化操作，比如加载配置文件、初始化数据库连接池、预加载模块等。
 
@@ -417,6 +427,24 @@ location / {
         ngx.header.content_type = "text/json;charset=utf-8";
         ngx.say(cjson.encode({dog = ngx.shared.dogs:get('Tom'), cat = 8}))
     }
+}
+```
+
+### header_filter_by_lua_block
+
+>具体用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/blob/main/openresty/lua-scripting/demo-lua-phase/nginx.conf
+
+```nginx
+# header_filter_by_lua_block 在响应头过滤阶段执行，用于修改响应头。它在响应头生成后、发送给客户端之前执行。
+# 主要功能：1、修改响应头：添加、修改或删除响应头；2、访问响应状态码：可读取 ngx.status；3、无法访问响应体：此时响应体尚未生成或已生成但无法访问
+# 常见使用场景：1、添加安全头（如 X-Frame-Options、X-Content-Type-Options）；2、添加自定义响应头（如 X-Request-ID、X-Response-Time）；3、根据条件动态设置响应头
+# 注意事项：1、在 http 配置块中配置时，会对所有请求生效；2、在 server 或 location 配置块中配置时，只对匹配的请求生效；3、可以读取 ngx.status，但无法修改响应体内容；4、即使 Lua 代码出错，该阶段仍会执行（错误会被记录到错误日志）
+header_filter_by_lua_block {
+    -- 添加自定义响应头
+    ngx.header["X-Custom-Header"] = "Hello from header_filter_by_lua_block"
+
+    -- 记录日志
+    ngx.log(ngx.NOTICE, "header_filter_by_lua_block: 响应状态码 = ", ngx.status)
 }
 ```
 
