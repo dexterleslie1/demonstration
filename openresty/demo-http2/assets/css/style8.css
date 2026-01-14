@@ -1,0 +1,6 @@
+/* Style 8 */
+.images-container {
+    display: flex;
+    flex-wrap: wrap;
+}
+

@@ -146,3 +146,27 @@ cd /tmp/openresty-$varOpenrestyVersion && ./configure --add-module=/tmp/naxsi-$v
    - http/1.1：表示 HTTP/1.1
    - h2：表示 HTTP/2
    - h3：表示 HTTP/3（基于 QUIC）
+
+## HTTP/1.1和HTTP/2性能对比
+
+使用本站示例辅助测试：https://gitee.com/dexterleslie/demonstration/tree/main/openresty/demo-http2
+
+测试步骤：
+
+1. 生成证书
+
+   ```sh
+   ./generate-cert.sh
+   ```
+
+2. 运行应用
+
+   ```sh
+   docker compose up -d
+   ```
+
+3. 分别访问HTTP/1.1和HTTP/2性能对比
+
+   在测试前打开Chrome开发者工具，把网络切换到3G并且勾选`Disable cache`。
+
+   分别访问 http://localhost:8080/ 和 https://localhost:8443/ 对比测试结果。HTTP/1.1的DOMContentLoaded为10258.00 ms，HTTP/2的DOMContentLoaded为4685.00 ms。表明在并发加载多个资源的情况下HTTP/2比HTTP/1.1快。

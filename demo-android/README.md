@@ -329,7 +329,17 @@ ndk-build --version
 
 ### 有哪些模拟器呢？
 
-`MuMu`模拟器：网易开发的模拟器，支持`Windows`和`macOS`，优化了游戏性能。通过 [链接](https://mumu.163.com/download/) 下载最新版模拟器，根据提示安装即可。
+`MuMu`模拟器：
+
+- 网易开发的模拟器，支持`Windows`和`macOS`，优化了游戏性能。通过 [链接](https://mumu.163.com/download/) 下载最新版模拟器，根据提示安装即可。
+- 用这款模拟器测试uniapp手机录制视频功能，结果不能录制视频。
+- adb调试端口为7555。
+
+BlueStacks蓝叠模拟器：
+
+- 访问 https://www.bluestacks.cn/ 下载
+- 用这款模拟器测试uniapp手机录制视频功能正常。
+- adb调试端口为5555。（打开设置勾选Android调试ADB）![image-20260113233508070](image-20260113233508070.png)
 
 
 

@@ -1,0 +1,37 @@
+version: "3.0"
+
+networks:
+  net:
+    name: demo-http2-benchmark-net
+
+services:
+  http1-server:
+    container_name: http1-server
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-openresty-base-dev
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./nginx-http1.conf:/usr/local/openresty/nginx/conf/nginx.conf
+      - ./index.html:/usr/local/openresty/nginx/html/index.html
+      - ./assets:/usr/local/openresty/nginx/html/assets
+    networks:
+      - net
+
+  http2-server:
+    container_name: http2-server
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-openresty-base-dev
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - "8443:8443"
+    volumes:
+      - ./nginx-http2.conf:/usr/local/openresty/nginx/conf/nginx.conf
+      - ./index.html:/usr/local/openresty/nginx/html/index.html
+      - ./assets:/usr/local/openresty/nginx/html/assets
+      - ./cert.crt:/usr/local/openresty/nginx/conf/cert.crt
+      - ./key.pem:/usr/local/openresty/nginx/conf/key.pem
+    networks:
+      - net
+

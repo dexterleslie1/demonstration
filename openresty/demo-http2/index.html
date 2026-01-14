@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTTP/1.1 vs HTTP/2 性能对比测试</title>
+    <link rel="stylesheet" href="/assets/css/style1.css">
+    <link rel="stylesheet" href="/assets/css/style2.css">
+    <link rel="stylesheet" href="/assets/css/style3.css">
+    <link rel="stylesheet" href="/assets/css/style4.css">
+    <link rel="stylesheet" href="/assets/css/style5.css">
+    <link rel="stylesheet" href="/assets/css/style6.css">
+    <link rel="stylesheet" href="/assets/css/style7.css">
+    <link rel="stylesheet" href="/assets/css/style8.css">
+    <link rel="stylesheet" href="/assets/css/style9.css">
+    <link rel="stylesheet" href="/assets/css/style10.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        .protocol-info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-family: monospace;
+        }
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .metric-card {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #2196F3;
+        }
+        .metric-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+        }
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2196F3;
+            margin-top: 5px;
+        }
+        .images-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .image-item {
+            border: 1px solid #ddd;
+            padding: 5px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .image-item img {
+            max-width: 100%;
+            height: auto;
+        }
+        .loading-status {
+            margin: 10px 0;
+            padding: 10px;
+            background: #fff3cd;
+            border-radius: 4px;
+        }
+        .complete {
+            background: #d4edda;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .comparison-table th,
+        .comparison-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        .comparison-table th {
+            background: #4CAF50;
+            color: white;
+        }
+        .comparison-table tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌐 HTTP/1.1 vs HTTP/2 性能对比测试</h1>
+        
+        <div class="protocol-info" id="protocolInfo">
+            <strong>当前协议:</strong> <span id="protocol">检测中...</span><br>
+            <strong>页面URL:</strong> <span id="currentUrl"></span>
+        </div>
+        
+        <div class="loading-status" id="loadingStatus">
+            正在加载资源...
+        </div>
+        
+        <div class="metrics">
+            <div class="metric-card">
+                <div class="metric-label">DOMContentLoaded</div>
+                <div class="metric-value" id="domTime">-</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">页面完全加载</div>
+                <div class="metric-value" id="loadTime">-</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">资源总数</div>
+                <div class="metric-value" id="resourceCount">-</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">总传输大小</div>
+                <div class="metric-value" id="totalSize">-</div>
+            </div>
+        </div>
+        
+        <h2>测试图片资源</h2>
+        <div class="images-container" id="imagesContainer">
+            <!-- 图片将通过JavaScript动态加载 -->
+        </div>
+        
+        <h2>性能对比说明</h2>
+        <table class="comparison-table">
+            <thead>
+                <tr>
+                    <th>指标</th>
+                    <th>HTTP/1.1</th>
+                    <th>HTTP/2</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>连接复用</td>
+                    <td>受限（通常6个并发连接）</td>
+                    <td>单连接多路复用</td>
+                </tr>
+                <tr>
+                    <td>头部压缩</td>
+                    <td>无</td>
+                    <td>HPACK压缩</td>
+                </tr>
+                <tr>
+                    <td>服务器推送</td>
+                    <td>不支持</td>
+                    <td>支持</td>
+                </tr>
+                <tr>
+                    <td>资源加载</td>
+                    <td>需要多个TCP连接</td>
+                    <td>单TCP连接并行</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div style="margin-top: 30px;">
+            <button onclick="location.reload()">🔄 重新加载测试</button>
+            <button onclick="window.open(window.location.href, '_blank')">🆕 新窗口测试</button>
+        </div>
+    </div>
+    
+    <script src="/assets/js/script1.js"></script>
+    <script src="/assets/js/script2.js"></script>
+    <script src="/assets/js/script3.js"></script>
+    <script src="/assets/js/script4.js"></script>
+    <script src="/assets/js/script5.js"></script>
+    <script src="/assets/js/script6.js"></script>
+    <script src="/assets/js/script7.js"></script>
+    <script src="/assets/js/script8.js"></script>
+    <script src="/assets/js/script9.js"></script>
+    <script src="/assets/js/script10.js"></script>
+    
+    <script>
+        // 性能监控脚本
+        (function() {
+            const protocol = window.location.protocol === 'https:' ? 'HTTP/2' : 'HTTP/1.1';
+            document.getElementById('protocol').textContent = protocol;
+            document.getElementById('currentUrl').textContent = window.location.href;
+            
+            // 获取导航开始时间（这是页面开始加载的基准时间）
+            const navigationStart = performance.timing ? performance.timing.navigationStart : performance.now();
+            const startTime = performance.now();
+            
+            // 动态加载图片资源（模拟真实网页场景）
+            const imageCount = 15;
+            const imagesContainer = document.getElementById('imagesContainer');
+            
+            for (let i = 1; i <= imageCount; i++) {
+                const imgDiv = document.createElement('div');
+                imgDiv.className = 'image-item';
+                const img = document.createElement('img');
+                img.src = `/assets/images/img${i}.jpg`;
+                img.alt = `Image ${i}`;
+                img.loading = 'lazy'; // 延迟加载
+                imgDiv.appendChild(img);
+                imagesContainer.appendChild(imgDiv);
+            }
+            
+            // 监听资源加载
+            let loadedResources = 0;
+            const totalResources = document.querySelectorAll('link[rel="stylesheet"], script[src], img').length;
+            
+            function updateResourceCount() {
+                loadedResources++;
+                document.getElementById('resourceCount').textContent = `${loadedResources}/${totalResources}`;
+            }
+            
+            // 计算DOMContentLoaded时间（使用performance.timing API，与Chrome DevTools一致）
+            function getDOMContentLoadedTime() {
+                if (performance.timing && performance.timing.domContentLoadedEventEnd) {
+                    return performance.timing.domContentLoadedEventEnd - performance.timing.navigationStart;
+                }
+                // 如果performance.timing不可用，尝试使用PerformanceNavigationTiming API
+                if (performance.getEntriesByType) {
+                    const navEntries = performance.getEntriesByType('navigation');
+                    if (navEntries.length > 0 && navEntries[0].domContentLoadedEventEnd) {
+                        return navEntries[0].domContentLoadedEventEnd;
+                    }
+                }
+                return 0;
+            }
+            
+            // 更新DOMContentLoaded时间显示
+            function updateDOMContentLoadedTime() {
+                const domTime = getDOMContentLoadedTime();
+                if (domTime > 0) {
+                    document.getElementById('domTime').textContent = domTime.toFixed(2) + ' ms';
+                }
+            }
+            
+            // 检查DOMContentLoaded是否已经触发
+            if (document.readyState === 'loading') {
+                // DOM还在加载中，添加事件监听器
+                document.addEventListener('DOMContentLoaded', updateDOMContentLoadedTime);
+            } else {
+                // DOM已经加载完成，直接计算时间
+                updateDOMContentLoadedTime();
+            }
+            
+            // 监听所有资源加载完成
+            window.addEventListener('load', function() {
+                // 确保DOMContentLoaded时间已更新
+                updateDOMContentLoadedTime();
+                
+                // 计算Load时间
+                let loadTime = 0;
+                if (performance.timing && performance.timing.loadEventEnd) {
+                    loadTime = performance.timing.loadEventEnd - performance.timing.navigationStart;
+                } else {
+                    loadTime = performance.now() - startTime;
+                }
+                
+                document.getElementById('loadTime').textContent = loadTime.toFixed(2) + ' ms';
+                document.getElementById('loadingStatus').textContent = '✅ 所有资源加载完成！';
+                document.getElementById('loadingStatus').classList.add('complete');
+                
+                // 计算总传输大小
+                const entries = performance.getEntriesByType('resource');
+                const totalSize = entries.reduce((sum, entry) => sum + (entry.transferSize || 0), 0);
+                document.getElementById('totalSize').textContent = (totalSize / 1024).toFixed(2) + ' KB';
+                
+                // 显示详细的资源加载信息
+                const finalDomTime = getDOMContentLoadedTime();
+                console.group('📊 性能分析');
+                console.log('协议版本:', protocol);
+                console.log('DOMContentLoaded:', finalDomTime > 0 ? finalDomTime.toFixed(2) + ' ms' : 'N/A');
+                console.log('页面完全加载:', loadTime.toFixed(2), 'ms');
+                console.log('资源总数:', totalResources);
+                console.log('总传输大小:', (totalSize / 1024).toFixed(2), 'KB');
+                
+                // 分析资源加载时间线
+                entries.forEach((entry, index) => {
+                    console.log(`${index + 1}. ${entry.name.substring(entry.name.lastIndexOf('/') + 1)}: ${entry.duration.toFixed(2)}ms`);
+                });
+                
+                // 检查HTTP/2多路复用
+                if (protocol === 'HTTP/2') {
+                    const connections = new Set();
+                    entries.forEach(entry => {
+                        // 在HTTP/2中，所有资源应该使用同一个连接
+                        connections.add(entry.name.split('/')[2]); // 提取域名
+                    });
+                    console.log('使用的连接数:', connections.size, '(HTTP/2应该只有1个)');
+                } else {
+                    console.log('HTTP/1.1 通常使用多个连接（浏览器限制通常为6个）');
+                }
+                
+                console.groupEnd();
+            });
+            
+            // 使用Performance Observer监听资源加载
+            if ('PerformanceObserver' in window) {
+                const observer = new PerformanceObserver((list) => {
+                    for (const entry of list.getEntries()) {
+                        if (entry.entryType === 'resource') {
+                            updateResourceCount();
+                        }
+                    }
+                });
+                observer.observe({ entryTypes: ['resource'] });
+            }
+        })();
+    </script>
+</body>
+</html>
+
