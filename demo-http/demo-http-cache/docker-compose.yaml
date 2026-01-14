@@ -7,15 +7,15 @@ networks:
 
 services:
  demo-http-cache-openresty:
-  container_name: demo-http-cache-openresty
-  image: docker.118899.net:10001/yyd-public/demo-http-cache-openresty
+  image: openresty/openresty:bullseye-fat
   environment:
    - LANG=C.UTF-8
    - TZ=Asia/Shanghai
   volumes:
-   - ./sources.list:/etc/apt/sources.list
    - ./nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf
-   - ./1.html:/usr/local/openresty/nginx/html/1.html
+   - ./index.html:/usr/local/openresty/nginx/html/index.html
+   - ./1.png:/usr/local/openresty/nginx/html/1.png
+   - ./styles.css:/usr/local/openresty/nginx/html/styles.css
    - ./test-expires.js:/usr/local/openresty/nginx/html/test-expires.js
    - ./test-no-store.js:/usr/local/openresty/nginx/html/test-no-store.js
    - ./test-no-cache.js:/usr/local/openresty/nginx/html/test-no-cache.js
