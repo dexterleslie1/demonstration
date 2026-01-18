@@ -648,6 +648,17 @@ export default defineConfig({
           ]
         }
       ],
+      '/uni-app/': [
+        {
+          text: 'uni-app',
+          items: [
+            { text: '基础', link: '/uni-app/README.md' },
+            { text: '组件库', link: '/uni-app/组件库.md' },
+            { text: 'Html5 Plus', link: '/uni-app/html5plus.md' },
+            { text: '打包发布', link: '/uni-app/打包发布.md' },
+          ]
+        }
+      ],
     },
 
     socialLinks: [

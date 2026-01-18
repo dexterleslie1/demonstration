@@ -597,9 +597,63 @@ APK 签名是一个**加密过程**，开发者使用自己的**私钥**对 APK 
 | **核心价值**   | 1. **应用更新的唯一凭证**。 2. **应用身份的唯一标识**。 3. **系统安全的重要防线**。 |
 | **管理铁律**   | **必须安全备份，防止丢失！** 推荐使用 **Google Play 应用签名** 来降低风险。 |
 
-## Generate Signed Bundle or APK时创建key
+## 创建APK签名密钥
 
-在创建`key`时候会提示错误信息“JKS 密钥库使用专用格式。建议使用..."，此时可以不用理会此报错信息继续创建`apk`。
+>提示：在创建`key`时候会提示错误信息“JKS 密钥库使用专用格式。建议使用..."，此时可以不用理会此报错信息继续创建`apk`。
+
+步骤如下：
+
+1. 点击Build>Generate Signed App Bundle or APK...功能
+2. 在Generate Signed App Bundle or APK弹出框中选择APK，点击Next按钮
+3. 在对话框中点击Create new...按钮
+4. 在New Key Store对话框中填写签名密钥的信息如下：
+   - Key store path：选择密钥的保存路径和密钥名称。     
+   - 第一个Password：填写Key Store密码。
+   - Alias：填写key0。
+   - 第二个Password：填写密钥密码。
+   - Validity (years)：默认值25年。
+   - Certificate First and Last Name：dexterleslie。
+   - Certificate Organization Unit：demo。
+   - Certificate Organization：demo。
+   - Certificate City or Locality：demo。
+   - Certificate State or Province：demo。
+   - Certificate Country Code (XX)：CN。
+
+## 查看APK签名密钥的信息
+
+```cmd
+# 查看APK签名密钥信息命令
+keytool -list -v -keystore my.jks
+输入密钥库口令:
+
+密钥库类型: PKCS12
+密钥库提供方: SUN
+
+您的密钥库包含 1 个条目
+
+别名: key0
+创建日期: 2026年1月18日
+条目类型: PrivateKeyEntry
+证书链长度: 1
+证书[1]:
+所有者: C=CN, ST=demo, L=demo, O=demo, OU=demo, CN=dexterleslie
+发布者: C=CN, ST=demo, L=demo, O=demo, OU=demo, CN=dexterleslie
+序列号: 1
+生效时间: Sun Jan 18 10:04:23 CST 2026, 失效时间: Thu Jan 12 10:04:23 CST 2051
+证书指纹:
+         SHA1: DD:CC:CD:A2:35:70:27:A4:B9:B9:2B:89:3A:E5:35:1F:18:21:87:A7
+         SHA256: 59:AC:B1:3D:D2:E6:8C:2A:65:C8:B6:92:9D:59:90:F6:9B:D3:60:BC:21:B2:11:A0:83:5E:AC:AA:1B:57:31:BB
+签名算法名称: SHA256withRSA
+主体公共密钥算法: 2048 位 RSA 密钥
+版本: 1
+
+
+*******************************************
+*******************************************
+
+
+
+```
 
 ## 模拟器
 
