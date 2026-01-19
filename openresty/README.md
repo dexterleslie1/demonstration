@@ -351,3 +351,66 @@ location / {
 ### **总结**
 
 Nginx `location`的优先级核心是：**精确匹配 > 优先前缀匹配 > 正则匹配（顺序优先）> 普通前缀匹配（最长优先）**。掌握这一规则能帮助你高效设计路由逻辑，避免因匹配顺序导致的意外行为。
+
+## 启用gzip
+
+### 示例
+
+https://gitee.com/dexterleslie/demonstration/tree/main/openresty/demo-gzip
+
+### 功能说明
+
+- 演示 OpenResty 的 gzip 压缩配置
+- 对比启用和禁用 gzip 的响应大小差异
+- 展示常用的 gzip 配置参数
+
+### 快速开始
+
+#### 1. 启动服务
+
+```bash
+docker-compose up -d
+```
+
+#### 2. 访问演示页面
+
+打开浏览器访问：http://localhost:8080
+
+#### 3. 验证压缩效果
+
+1. 打开浏览器开发者工具（F12）
+2. 切换到"网络"（Network）标签
+3. 刷新页面或点击测试链接
+4. 查看响应头中的 `Content-Encoding: gzip`
+5. 对比 `/large-content.html` 和 `/no-gzip/large-content.html` 的响应大小
+
+#### 4. 使用 curl 测试
+
+```bash
+# 测试启用 gzip 的响应
+curl -H "Accept-Encoding: gzip" -I http://localhost:8080/large-content.html
+
+# 测试禁用 gzip 的响应
+curl -H "Accept-Encoding: gzip" -I http://localhost:8080/no-gzip/large-content.html
+
+# 查看压缩后的内容大小
+curl -H "Accept-Encoding: gzip" --compressed http://localhost:8080/large-content.html | wc -c
+```
+
+### 配置文件说明
+
+#### nginx.conf
+
+主要配置项：
+
+- `gzip on;` - 启用 gzip 压缩
+- `gzip_comp_level 6;` - 压缩级别（1-9）
+- `gzip_types` - 指定需要压缩的 MIME 类型
+- `gzip_min_length 1000;` - 最小压缩长度
+- `gzip_vary on;` - 添加 Vary 响应头
+
+### 停止服务
+
+```bash
+docker-compose down
+```

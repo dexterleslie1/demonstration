@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大文件内容 - Gzip 压缩测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .header {
+            background: #4CAF50;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .content {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            background: white;
+            border-left: 4px solid #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>大文件内容 - Gzip 压缩测试</h1>
+        <p>此文件包含大量文本内容，用于演示 gzip 压缩效果</p>
+    </div>
+    
+    <div class="content">
+        <!-- 重复内容以增加文件大小 -->
+        <div class="section">
+            <h2>关于 Gzip 压缩</h2>
+            <p>Gzip 是一种文件压缩格式，也是 HTTP 协议中常用的内容编码方式。OpenResty（基于 Nginx）支持 gzip 压缩，可以显著减少传输的数据量，提高网站加载速度。</p>
+            <p>当客户端（浏览器）发送请求时，会在请求头中包含 <code>Accept-Encoding: gzip</code>，表示支持 gzip 压缩。服务器检测到此头后，会对响应内容进行压缩，并在响应头中添加 <code>Content-Encoding: gzip</code>。</p>
+        </div>
+        
+        <div class="section">
+            <h2>Gzip 配置参数说明</h2>
+            <ul>
+                <li><strong>gzip on;</strong> - 启用 gzip 压缩</li>
+                <li><strong>gzip_comp_level;</strong> - 压缩级别（1-9），级别越高压缩率越高但 CPU 消耗也越大</li>
+                <li><strong>gzip_types;</strong> - 指定需要压缩的 MIME 类型</li>
+                <li><strong>gzip_min_length;</strong> - 只压缩大于指定字节数的响应</li>
+                <li><strong>gzip_vary on;</strong> - 添加 Vary: Accept-Encoding 响应头</li>
+            </ul>
+        </div>
+        
+        <!-- 重复内容块以增加文件大小 -->
+        <div class="section">
+            <h2>性能优化建议</h2>
+            <p>在生产环境中使用 gzip 压缩时，建议：</p>
+            <ol>
+                <li>对文本类型文件启用压缩（HTML、CSS、JavaScript、JSON、XML 等）</li>
+                <li>不要对已经压缩的文件再次压缩（如图片、视频等二进制文件）</li>
+                <li>设置合适的压缩级别（通常 6 是性能和压缩率的平衡点）</li>
+                <li>设置最小压缩长度，避免对小文件进行压缩（通常设置为 1000 字节）</li>
+            </ol>
+        </div>
+        
+        <!-- 更多重复内容 -->
+        <div class="section">
+            <h2>压缩效果对比</h2>
+            <p>通常情况下，文本文件的压缩率可以达到 70-90%。例如：</p>
+            <ul>
+                <li>HTML 文件：压缩率约 70-80%</li>
+                <li>CSS 文件：压缩率约 70-85%</li>
+                <li>JavaScript 文件：压缩率约 70-90%</li>
+                <li>JSON 数据：压缩率约 60-80%</li>
+            </ul>
+            <p>这意味着一个 100KB 的 HTML 文件，压缩后可能只有 20-30KB，大大减少了网络传输时间。</p>
+        </div>
+        
+        <!-- 继续添加内容以增加文件大小 -->
+        <div class="section">
+            <h2>OpenResty Gzip 配置示例</h2>
+            <pre style="background: #f4f4f4; padding: 15px; border-radius: 4px; overflow-x: auto;">
+gzip on;
+gzip_vary on;
+gzip_proxied any;
+gzip_comp_level 6;
+gzip_types
+    text/plain
+    text/css
+    text/xml
+    text/javascript
+    application/json
+    application/javascript
+    application/xml+rss
+    application/atom+xml
+    image/svg+xml;
+gzip_min_length 1000;
+gzip_disable "msie6";
+            </pre>
+        </div>
+        
+        <!-- 更多重复段落以增加文件大小 -->
+        <div class="section">
+            <h2>注意事项</h2>
+            <p>虽然 gzip 压缩可以显著减少传输数据量，但需要注意：</p>
+            <ol>
+                <li>压缩会消耗 CPU 资源，对于高并发场景需要权衡</li>
+                <li>某些旧版浏览器（如 IE6）对 gzip 支持有问题，可以使用 gzip_disable 禁用</li>
+                <li>动态内容每次都需要压缩，静态内容可以考虑预压缩</li>
+                <li>CDN 通常会自动处理 gzip 压缩，需要确认 CDN 配置</li>
+            </ol>
+        </div>
+        
+        <!-- 继续添加内容 -->
+        <div class="section">
+            <h2>验证压缩是否生效</h2>
+            <p>可以通过以下方式验证 gzip 压缩是否生效：</p>
+            <ol>
+                <li>使用浏览器开发者工具查看响应头中的 <code>Content-Encoding: gzip</code></li>
+                <li>使用 curl 命令：<code>curl -H "Accept-Encoding: gzip" -I http://localhost:8080/</code></li>
+                <li>对比压缩前后的文件大小</li>
+                <li>查看响应头中的 <code>Content-Length</code> 字段</li>
+            </ol>
+        </div>
+        
+        <!-- 更多内容以增加文件大小 -->
+        <div class="section">
+            <h2>最佳实践</h2>
+            <p>在生产环境中，建议：</p>
+            <ul>
+                <li>对静态文件使用预压缩（如使用 gzip_static 模块）</li>
+                <li>监控压缩率和 CPU 使用情况</li>
+                <li>根据实际场景调整压缩级别</li>
+                <li>确保缓存配置正确，避免重复压缩</li>
+            </ul>
+        </div>
+        
+        <!-- 重复段落以增加文件大小 -->
+        <div class="section">
+            <h2>关于 Gzip 压缩</h2>
+            <p>Gzip 是一种文件压缩格式，也是 HTTP 协议中常用的内容编码方式。OpenResty（基于 Nginx）支持 gzip 压缩，可以显著减少传输的数据量，提高网站加载速度。</p>
+            <p>当客户端（浏览器）发送请求时，会在请求头中包含 <code>Accept-Encoding: gzip</code>，表示支持 gzip 压缩。服务器检测到此头后，会对响应内容进行压缩，并在响应头中添加 <code>Content-Encoding: gzip</code>。</p>
+        </div>
+        
+        <div class="section">
+            <h2>性能优化建议</h2>
+            <p>在生产环境中使用 gzip 压缩时，建议：</p>
+            <ol>
+                <li>对文本类型文件启用压缩（HTML、CSS、JavaScript、JSON、XML 等）</li>
+                <li>不要对已经压缩的文件再次压缩（如图片、视频等二进制文件）</li>
+                <li>设置合适的压缩级别（通常 6 是性能和压缩率的平衡点）</li>
+                <li>设置最小压缩长度，避免对小文件进行压缩（通常设置为 1000 字节）</li>
+            </ol>
+        </div>
+        
+        <div class="section">
+            <h2>压缩效果对比</h2>
+            <p>通常情况下，文本文件的压缩率可以达到 70-90%。例如：</p>
+            <ul>
+                <li>HTML 文件：压缩率约 70-80%</li>
+                <li>CSS 文件：压缩率约 70-85%</li>
+                <li>JavaScript 文件：压缩率约 70-90%</li>
+                <li>JSON 数据：压缩率约 60-80%</li>
+            </ul>
+            <p>这意味着一个 100KB 的 HTML 文件，压缩后可能只有 20-30KB，大大减少了网络传输时间。</p>
+        </div>
+        
+        <div class="section">
+            <h2>注意事项</h2>
+            <p>虽然 gzip 压缩可以显著减少传输数据量，但需要注意：</p>
+            <ol>
+                <li>压缩会消耗 CPU 资源，对于高并发场景需要权衡</li>
+                <li>某些旧版浏览器（如 IE6）对 gzip 支持有问题，可以使用 gzip_disable 禁用</li>
+                <li>动态内容每次都需要压缩，静态内容可以考虑预压缩</li>
+                <li>CDN 通常会自动处理 gzip 压缩，需要确认 CDN 配置</li>
+            </ol>
+        </div>
+        
+        <div class="section">
+            <h2>验证压缩是否生效</h2>
+            <p>可以通过以下方式验证 gzip 压缩是否生效：</p>
+            <ol>
+                <li>使用浏览器开发者工具查看响应头中的 <code>Content-Encoding: gzip</code></li>
+                <li>使用 curl 命令：<code>curl -H "Accept-Encoding: gzip" -I http://localhost:8080/</code></li>
+                <li>对比压缩前后的文件大小</li>
+                <li>查看响应头中的 <code>Content-Length</code> 字段</li>
+            </ol>
+        </div>
+        
+        <div class="section">
+            <h2>最佳实践</h2>
+            <p>在生产环境中，建议：</p>
+            <ul>
+                <li>对静态文件使用预压缩（如使用 gzip_static 模块）</li>
+                <li>监控压缩率和 CPU 使用情况</li>
+                <li>根据实际场景调整压缩级别</li>
+                <li>确保缓存配置正确，避免重复压缩</li>
+            </ul>
+        </div>
+        
+        <!-- 继续添加更多内容以增加文件大小 -->
+        <div class="section">
+            <h2>Gzip 压缩原理</h2>
+            <p>Gzip 使用 DEFLATE 算法进行压缩，这是一种基于 LZ77 和 Huffman 编码的压缩算法。对于文本文件，由于存在大量重复的字符和模式，压缩效果特别好。</p>
+            <p>压缩过程：</p>
+            <ol>
+                <li>服务器读取响应内容</li>
+                <li>使用 gzip 算法压缩内容</li>
+                <li>在响应头中添加 Content-Encoding: gzip</li>
+                <li>发送压缩后的内容给客户端</li>
+                <li>客户端自动解压并显示内容</li>
+            </ol>
+        </div>
+        
+        <div class="section">
+            <h2>压缩级别选择</h2>
+            <p>gzip_comp_level 参数控制压缩级别：</p>
+            <ul>
+                <li>级别 1-3：压缩速度快，但压缩率较低</li>
+                <li>级别 4-6：平衡压缩速度和压缩率（推荐）</li>
+                <li>级别 7-9：压缩率高，但压缩速度慢，CPU 消耗大</li>
+            </ul>
+            <p>对于大多数场景，级别 6 是最佳选择，既能获得良好的压缩率，又不会过度消耗 CPU 资源。</p>
+        </div>
+        
+        <div class="section">
+            <h2>MIME 类型配置</h2>
+            <p>gzip_types 指令指定哪些 MIME 类型需要压缩。通常包括：</p>
+            <ul>
+                <li>文本类型：text/plain, text/html, text/css, text/javascript</li>
+                <li>应用类型：application/json, application/javascript, application/xml</li>
+                <li>SVG 图片：image/svg+xml（SVG 是文本格式，可以压缩）</li>
+            </ul>
+            <p>注意：不要对已经压缩的文件类型再次压缩，如 image/jpeg, image/png, video/* 等。</p>
+        </div>
+        
+        <div class="section">
+            <h2>最小压缩长度</h2>
+            <p>gzip_min_length 参数设置最小压缩长度，小于此大小的文件不会被压缩。原因：</p>
+            <ul>
+                <li>小文件压缩后可能反而变大（压缩头信息占用空间）</li>
+                <li>压缩小文件消耗的 CPU 资源可能超过节省的带宽</li>
+                <li>通常设置为 1000 字节（1KB）</li>
+            </ul>
+        </div>
+        
+        <div class="section">
+            <h2>Vary 响应头</h2>
+            <p>gzip_vary on 会添加 Vary: Accept-Encoding 响应头，这对于缓存很重要：</p>
+            <ul>
+                <li>告诉缓存服务器，响应内容取决于 Accept-Encoding 请求头</li>
+                <li>确保不支持 gzip 的客户端不会收到压缩内容</li>
+                <li>避免缓存问题，建议始终启用</li>
+            </ul>
+        </div>
+        
+        <div class="section">
+            <h2>代理场景配置</h2>
+            <p>gzip_proxied 控制对代理请求的压缩行为：</p>
+            <ul>
+                <li>off：不压缩代理请求</li>
+                <li>any：压缩所有代理请求</li>
+                <li>expired：压缩过期缓存</li>
+                <li>no-cache：压缩 no-cache 请求</li>
+                <li>no-store：压缩 no-store 请求</li>
+                <li>private：压缩 private 请求</li>
+                <li>no_last_modified：压缩没有 Last-Modified 头的请求</li>
+                <li>no_etag：压缩没有 ETag 头的请求</li>
+                <li>auth：压缩需要认证的请求</li>
+            </ul>
+            <p>通常设置为 any 以压缩所有代理请求。</p>
+        </div>
+        
+        <div class="section">
+            <h2>浏览器兼容性</h2>
+            <p>现代浏览器都支持 gzip 压缩：</p>
+            <ul>
+                <li>Chrome：完全支持</li>
+                <li>Firefox：完全支持</li>
+                <li>Safari：完全支持</li>
+                <li>Edge：完全支持</li>
+                <li>IE6：支持有问题，建议禁用</li>
+            </ul>
+            <p>使用 gzip_disable "msie6" 可以禁用对 IE6 的压缩。</p>
+        </div>
+        
+        <div class="section">
+            <h2>性能监控</h2>
+            <p>在生产环境中监控 gzip 压缩效果：</p>
+            <ul>
+                <li>监控压缩率（压缩后大小 / 原始大小）</li>
+                <li>监控 CPU 使用率</li>
+                <li>监控响应时间</li>
+                <li>对比启用和禁用 gzip 的性能差异</li>
+            </ul>
+            <p>如果 CPU 使用率过高，可以降低压缩级别或减少压缩的文件类型。</p>
+        </div>
+        
+        <div class="section">
+            <h2>总结</h2>
+            <p>Gzip 压缩是提高网站性能的重要手段，OpenResty 提供了灵活的配置选项。合理配置 gzip 可以：</p>
+            <ul>
+                <li>减少带宽使用</li>
+                <li>提高页面加载速度</li>
+                <li>改善用户体验</li>
+                <li>降低服务器成本</li>
+            </ul>
+            <p>建议在生产环境中始终启用 gzip 压缩，并根据实际情况调整配置参数。</p>
+        </div>
+    </div>
+</body>
+</html>
+

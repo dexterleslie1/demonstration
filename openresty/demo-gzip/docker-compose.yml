@@ -1,0 +1,21 @@
+version: "3.0"
+
+services:
+  openresty-gzip:
+    container_name: openresty-gzip
+    image: openresty/openresty
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf
+      - ./index.html:/usr/local/openresty/nginx/html/index.html
+      - ./large-content.html:/usr/local/openresty/nginx/html/large-content.html
+    networks:
+      - net
+
+networks:
+  net:
+    name: demo-gzip-net
+
