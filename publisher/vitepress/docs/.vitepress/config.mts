@@ -659,6 +659,15 @@ export default defineConfig({
           ]
         }
       ],
+      '/android/': [
+        {
+          text: '安卓',
+          items: [
+            { text: '基础', link: '/android/README.md' },
+            { text: '模拟器', link: '/android/模拟器.md' },
+          ]
+        }
+      ],
     },
 
     socialLinks: [
