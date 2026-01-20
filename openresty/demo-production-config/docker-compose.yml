@@ -6,8 +6,7 @@ networks:
 
 services:
   demo-openresty-config-production:
-    container_name: demo-openresty-config-production
-    image: docker.118899.net:10001/yyd-public/yyd-openresty:1.1.1
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-openresty-base-dev
     environment:
       - TZ=Asia/Shanghai
     ports:

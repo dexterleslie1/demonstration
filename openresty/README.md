@@ -352,6 +352,42 @@ location / {
 
 Nginx `location`的优先级核心是：**精确匹配 > 优先前缀匹配 > 正则匹配（顺序优先）> 普通前缀匹配（最长优先）**。掌握这一规则能帮助你高效设计路由逻辑，避免因匹配顺序导致的意外行为。
 
+## 启用HTTP/2.0
+
+编译时启用HTTP/2.0模块--with-http_v2_module
+
+>具体用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/openresty/demo-build-base-image
+>
+>提示：官方Docker镜像openresty/openresty默认支持HTTP/2.0。
+
+```sh
+cd /tmp/openresty-$varOpenrestyVersion && ./configure --add-module=/tmp/naxsi-$varNaxsiVersion/naxsi_src --with-http_stub_status_module --with-http_v2_module
+```
+
+配置启用HTTP/2.0，使用配置`listen 8443 ssl http2;`
+
+>提示：HTTP/2.0需要配合HTTPS使用。
+
+```nginx
+server {
+    listen 8443 ssl http2;
+    server_name localhost;
+
+    ssl_certificate /usr/local/openresty/nginx/conf/cert.crt;
+    ssl_certificate_key /usr/local/openresty/nginx/conf/key.pem;
+
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+
+    root /usr/local/openresty/nginx/html;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
+```
+
 ## 启用gzip
 
 ### 示例
@@ -414,3 +450,209 @@ curl -H "Accept-Encoding: gzip" --compressed http://localhost:8080/large-content
 ```bash
 docker-compose down
 ```
+
+## gzip、gzip_proxied和gzip_types同时配置
+
+当Nginx反向代理SpringBoot应用时，**仅配置`gzip on;`** 和 **仅配置`gzip_proxied any;`** 有本质区别，核心差异在于**是否真正触发对后端响应的Gzip压缩**。以下是具体分析：
+
+### **前提：Nginx的Gzip压缩需同时满足多个条件**
+
+Nginx对响应内容进行Gzip压缩，需同时满足以下条件（缺一不可）：
+
+1. **`gzip on;`**：全局或局部启用Gzip功能（默认关闭）；
+2. **`gzip_proxied`**：定义对代理响应（后端返回的内容）的压缩策略（如`any`表示所有代理响应）；
+3. **`gzip_types`**：指定需要压缩的MIME类型（如`text/html`、`application/json`等，默认仅压缩`text/html`）；
+4. **后端响应未被压缩**（即响应头无`Content-Encoding: gzip`）。
+
+### **情况1：仅配置`gzip on;`（无其他Gzip相关配置）**
+
+若仅在Nginx中配置`gzip on;`，但未配置`gzip_proxied`、`gzip_types`等关键参数，会导致：
+
+- **`gzip_proxied`默认值为`off`**：Nginx不会对任意代理响应（后端SpringBoot返回的内容）尝试压缩；
+- **`gzip_types`默认仅压缩`text/html`**：即使后端返回`text/html`，若`gzip_proxied off`，仍不会压缩；
+- **结果**：Nginx对后端SpringBoot的响应**不会进行Gzip压缩**，仅当客户端直接请求静态文件（如本地`.html`）时可能压缩（但反向代理场景下不涉及）。
+
+### **情况2：仅配置`gzip_proxied any;`（未配置`gzip on;`）**
+
+若仅配置`gzip_proxied any;`，但未配置`gzip on;`，会导致：
+
+- **`gzip on;`默认关闭**：Gzip功能未启用，即使`gzip_proxied any`定义了代理响应的压缩策略，Nginx也不会实际执行压缩；
+- **结果**：Nginx对后端SpringBoot的响应**完全不会进行Gzip压缩**（因Gzip功能未激活）。
+
+### **关键结论：两者均无法有效压缩后端响应**
+
+- **仅`gzip on;`**：缺少`gzip_proxied`的有效策略（默认`off`）和`gzip_types`的类型指定，无法触发代理响应的压缩；
+- **仅`gzip_proxied any;`**：缺少`gzip on;`的基础开关，Gzip功能未启用，压缩逻辑不生效。
+
+### **正确的配置：需同时启用`gzip on;`和`gzip_proxied`**
+
+要让Nginx对反向代理的SpringBoot响应进行Gzip压缩，需**同时配置以下参数**（缺一不可）：
+
+```
+server {
+    listen 80;
+    server_name example.com;
+
+    # 1. 启用Gzip功能（必须）
+    gzip on;
+
+    # 2. 定义代理响应的压缩策略（any表示所有代理响应）
+    gzip_proxied any;
+
+    # 3. 指定需要压缩的MIME类型（根据业务补充，如JSON、JS等）
+    gzip_types 
+        text/plain 
+        text/css 
+        application/json 
+        application/javascript 
+        text/xml 
+        application/xml 
+        application/xml+rss 
+        text/javascript;
+
+    # 4. 可选：最小压缩长度（避免小文件浪费资源）
+    gzip_min_length 1k;
+
+    location / {
+        proxy_pass http://springboot_app;  # 反向代理到SpringBoot应用
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+```
+
+### **总结**
+
+- **仅`gzip on;`**：Gzip功能启用，但代理响应的压缩策略（`gzip_proxied`）默认关闭，且未指定压缩类型，无法压缩后端响应；
+- **仅`gzip_proxied any;`**：压缩策略已定义，但Gzip功能未启用（`gzip on;`缺失），压缩逻辑不生效；
+- **必须同时配置**：`gzip on;`（启用功能）+ `gzip_proxied any;`（代理策略）+ `gzip_types`（压缩类型），才能让Nginx对SpringBoot的响应进行有效Gzip压缩。
+
+## 代理配置Proxy
+
+>具体用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/openresty/demo-proxy-cache
+>
+>提示：代理缓存和代理缓冲区配置。
+
+示例调试步骤：
+
+1. 运行示例
+
+   ```sh
+   docker compose up -d
+   ```
+
+2. 访问示例首页http://localhost/
+
+3. 查看backend日志以判断代理缓存是否生效
+
+   ```sh
+   docker compose logs -f backend|grep -E "maxage|private"
+   ```
+
+## proxy_cache_valid、s-maxage、maxage关系
+
+首先，我们明确这三个概念分别属于哪个层面：
+
+1. **`proxy_cache_valid`**： **Nginx 配置指令**。它定义了 Nginx **自身**的代理缓存（在磁盘或内存中）的有效期。这是 Nginx 作为客户端（对后端服务器）和服务器（对客户端）时，管理其缓存副本的规则。
+2. **`max-age`**： **HTTP 响应头字段**。它是 Cache-Control 头的一部分，用于告知**所有中间缓存（包括浏览器和Nginx等代理）** 和源服务器，资源被认定为新鲜的时间长度（从请求时间开始计算）。
+3. **`s-maxage`**： **HTTP 响应头字段**。它也是 Cache-Control 头的一部分，**专门用于覆盖 `max-age`对共享缓存（Shared Cache，如 Nginx、CDN、代理服务器）的行为**。`s-maxage`会被私有缓存（如浏览器）忽略。
+
+------
+
+### 核心关系与工作流程
+
+这三者的关系可以概括为：**Nginx 会优先尊重源服务器通过 HTTP 头（特别是 `s-maxage`）下发的指令，但如果这些指令不存在或不适用，Nginx 则会回退到使用自身的 `proxy_cache_valid`配置。**
+
+下图清晰地展示了 Nginx 在处理缓存时的决策流程：
+
+```mermaid
+flowchart TD
+    A[客户端请求到达 Nginx] --> B{Nginx 检查缓存}
+    B -- 缓存存在且有效 --> C[直接返回缓存内容]
+    B -- 缓存不存在或失效 --> D[向后端服务器请求]
+
+    subgraph E [Nginx 决定如何缓存响应]
+        direction TB
+        F{后端响应<br>包含 Cache-Control?}
+        F -- 是 --> G{包含 s-maxage<br>或 max-age?}
+        F -- 否 --> L[使用 proxy_cache_valid]
+        
+        G -- 是 --> H[取 s-maxage > max-age<br>的值作为缓存时间]
+        G -- 否 --> I{包含 Expires 头?}
+        
+        H --> J[按此时间缓存]
+        I -- 是 --> K[按 Expires 时间缓存]
+        I -- 否 --> L
+    end
+
+    D --> E
+    E --> M[将响应存入缓存<br>并返回给客户端]
+```
+
+下面我们来详细解读这个流程图中的关键判断点。
+
+#### 场景一：源服务器提供了明确的缓存指令（理想情况）
+
+当后端服务器返回的响应中包含 `Cache-Control`头时，Nginx 会遵循以下优先级：
+
+1. **首选 `s-maxage`**：
+   - 如果响应头中有 `Cache-Control: s-maxage=3600`，那么 Nginx **共享缓存** 会将这个资源缓存 **3600 秒**，完全忽略 `max-age`的值。
+   - `s-maxage`告诉 Nginx：“我专门告诉你，你可以把这个缓存存 1 小时”。
+2. **次选 `max-age`**：
+   - 如果没有 `s-maxage`，但存在 `Cache-Control: max-age=1800`，那么 Nginx 会将资源缓存 **1800 秒**。
+   - `max-age`告诉所有缓存（包括 Nginx 和浏览器）：“这个资源在 30 分钟内是新鲜的”。
+3. **最后考虑 `Expires`**：
+   - 如果连 `max-age`都没有，但存在 `Expires`头（一个具体的 GMT 时间点），Nginx 会根据当前时间和 `Expires`时间的差值来计算缓存有效期。
+   - 在现代 Web 开发中，`Expires`已较少单独使用，通常与 `max-age`一同出现（`max-age`的优先级更高）。
+
+**结论：只要源服务器正确设置了 `Cache-Control`，`proxy_cache_valid`在此场景下就不起作用。** 这体现了“源站控制”的原则，让业务逻辑来决定缓存策略。
+
+#### 场景二：源服务器未提供任何缓存指令（常见兜底情况）
+
+当后端服务器没有返回任何 `Cache-Control`、`Expires`等缓存头时，Nginx 就不知道该如何缓存这个响应了。这时，你在 Nginx 配置中设置的 `proxy_cache_valid`就充当了 **“保底”或“默认”规则**。
+
+例如：
+
+```
+http {
+    proxy_cache_path /tmp/cache levels=1:2 keys_zone=my_cache:10m inactive=60m;
+
+    server {
+        location /api/ {
+            proxy_cache my_cache;
+            # 兜底规则：对于没有缓存头的响应，默认缓存10分钟
+            proxy_cache_valid 200 302 10m;
+            # 也可以为不同状态码设置不同时间
+            proxy_cache_valid 404 1m;
+            # 或者直接为所有状态码设置一个默认值
+            # proxy_cache_valid any 5m;
+
+            proxy_pass http://backend_server;
+        }
+    }
+}
+```
+
+在这个例子中，即使后端 API 返回 `Cache-Control: no-cache`，Nginx 也不会缓存（因为 `no-cache`是强指令）。但如果后端什么都没说，Nginx 就会按照 `10m`来缓存成功的响应。
+
+------
+
+### 总结与最佳实践
+
+| 特性         | `proxy_cache_valid`(Nginx指令)                               | `s-maxage`(HTTP头)                                   | `max-age`(HTTP头)                                |
+| ------------ | ------------------------------------------------------------ | ---------------------------------------------------- | ------------------------------------------------ |
+| **作用域**   | Nginx 代理服务器自身                                         | **共享缓存** (如 Nginx, CDN)                         | **所有缓存** (浏览器, Nginx, CDN)                |
+| **优先级**   | **最低** (当 HTTP 头存在时使用头信息)                        | **最高** (对共享缓存而言)                            | **中等** (无 `s-maxage`时生效)                   |
+| **控制方**   | 运维/开发人员 (通过修改 Nginx 配置)                          | 后端应用程序/开发人员 (通过代码设置 HTTP 头)         | 后端应用程序/开发人员 (通过代码设置 HTTP 头)     |
+| **主要用途** | 1. **兜底策略**，处理没有缓存头的响应。 2. 强制缓存某些**不应该**被缓存但你想缓存的内容（需配合 `proxy_ignore_headers`）。 3. 为特定状态码（如 404, 500）设置缓存。 | **精确控制**共享缓存的行为，而不影响用户浏览器缓存。 | **通用缓存控制**，同时影响浏览器和所有中间缓存。 |
+
+**最佳实践建议：**
+
+1. **首选使用 HTTP 头控制**：应由后端服务根据业务逻辑生成正确的 `Cache-Control`头（包括 `s-maxage`和 `max-age`）。这是最标准、最灵活的方式。
+   - 例如：`Cache-Control: public, s-maxage=600, max-age=60`。这意味着 CDN/Nginx 可以缓存 10 分钟，而浏览器只缓存 1 分钟。
+2. **谨慎使用 `proxy_cache_valid`**：将其主要用于：
+   - **兜底**：为没有缓存头的静态资源或第三方 API 响应设置一个合理的默认缓存时间。
+   - **特殊场景**：缓存一些后端出错页面（如 502），避免大量请求穿透到后端压垮系统（`proxy_cache_valid 502 503 504 1m;`）。
+3. **理解 `proxy_ignore_headers`**：如果你希望 Nginx **完全忽略**后端的 `Cache-Control`头，而只使用 `proxy_cache_valid`，你可以使用 `proxy_ignore_headers Cache-Control Expires;`指令。但这通常很危险，除非你非常清楚自己在做什么。
+
+简单来说，可以把 `proxy_cache_valid`看作是 Nginx 的“**默认行为**”，而将 `s-maxage/max-age`看作是源服务器发来的“**临时指令**”。临时指令的优先级永远高于默认行为。

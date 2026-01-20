@@ -7,7 +7,8 @@ networks:
 services:
   http1-server:
     container_name: http1-server
-    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-openresty-base-dev
+    # image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-openresty-base-dev
+    image: openresty/openresty
     environment:
       - TZ=Asia/Shanghai
     ports:
