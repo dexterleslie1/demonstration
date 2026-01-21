@@ -75,3 +75,7 @@ cd /usr/local && ./Snipaste-2.10.2-x86_64.AppImage
 ~~网站：https://imagecolorpicker.com/，把图片上传到网站中并使用颜色拾取功能吸取颜色。~~
 
 使用微信自带的颜色拾取器，使用快捷键Alt+a调出并使用Ctrl+C复制当前拾取的颜色值。
+
+## 文本文件对比
+
+使用VSCode比较两个文本文件内容，打开VSCode，选择两个文件后右键点击Compare Selected即可比较文件。
