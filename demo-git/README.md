@@ -314,7 +314,9 @@ GitExtensions 是一个功能全面、易于使用的 Git 图形用户界面工�
 
 双击 GitExtensions 即可运行。
 
+### GitHub Desktop
 
+>说明：GitHub免费使用的GUI客户端，下载地址https://desktop.github.com/download/，没有深入使用，用法应该和GitExtension差不多。Windows11下载exe即可安装。
 
 ## 多平台换行符问题（LF or CRLF）
 
