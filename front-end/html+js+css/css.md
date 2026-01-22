@@ -299,7 +299,10 @@ align-items 和 align-content 的区别：
 - flex-wrap=nowrap（默认值）时，子元素不自动换行，并且子元素会自动压缩宽度以达到所有子元素的宽度之和不超过父级元素的宽度。
 - flex-wrap=wrap 时，子元素自动换行并且子元素的宽度不会变化。
 
-详细用法请参考示例 `https://gitee.com/dexterleslie/demonstration/blob/master/front-end/html+js+css/demo-css-flex/flex-wrap.html`
+详细用法请参考示例：
+
+- https://gitee.com/dexterleslie/demonstration/blob/master/front-end/html+js+css/demo-css-flex/flex-wrap.html
+- https://gitee.com/dexterleslie/demonstration/blob/master/front-end/html+js+css/demo-css-flex/flex-direction.html
 
 
 
@@ -1657,7 +1660,178 @@ a::after { content: " →"; } /* 元素后追加箭头 */
 </html>
 ```
 
+## position - sticky
 
+>具体用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/front-end/html+js+css/demo-css-position/demo-sticky.html
+
+### 一句话概括
+
+`position: sticky`是一种混合定位方式，元素在**跨越特定阈值前为相对定位，之后为固定定位**。它可以被认为是 `relative`和 `fixed`的完美结合体。
+
+最常见的应用场景就是**粘性导航栏**和**表头**。
+
+------
+
+### 工作原理
+
+想象一个网页，你向下滚动页面。一个设置了 `sticky`的元素会：
+
+1. **初始状态**：表现得像 `position: relative`，跟随文档流正常排列。
+2. **触发条件**：当它的**滚动容器**（或其视口）滚动到某个预设的阈值（如 `top: 0`）时。
+3. **粘滞状态**：它会“粘”在那个位置，表现得像 `position: fixed`，不再随页面滚动而移动。
+4. **结束状态**：如果继续滚动，导致其祖先容器离开了视口，它会恢复为相对定位，跟随一起滚出屏幕。
+
+**关键点**：`sticky`元素的定位是相对于它**最近的、可滚动的祖先元素**（Scroll Container），如果没有，则相对于视口（Viewport）。
+
+------
+
+### 语法与示例
+
+#### 基本语法
+
+```
+selector {
+  position: sticky;
+  top: 0; /* 或其他值，如 bottom: 10px; left: 0; */
+}
+```
+
+**必须声明的属性**：`top`, `right`, `bottom`, `left`中**至少指定一个**，浏览器才知道在什么条件下触发粘滞效果。如果不指定，粘性定位不会生效。
+
+#### 经典示例：粘性导航栏
+
+HTML 结构：
+
+```
+<nav class="sticky-nav">我是粘性导航栏</nav>
+<main>
+  <!-- 很多内容，让页面可以滚动 -->
+  <p>...</p>
+  <p>...</p>
+  ...
+</main>
+```
+
+CSS 样式：
+
+```
+.sticky-nav {
+  position: sticky;
+  top: 0; /* 当导航栏的顶部碰到视口顶部时，开始固定 */
+  background: white;
+  padding: 1rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  z-index: 100; /* 防止被其他内容覆盖 */
+}
+
+/* 为了让效果明显，给 main 一些高度 */
+main {
+  height: 2000px;
+}
+```
+
+**效果**：页面滚动时，导航栏会在到达视口顶部后“粘”在那里，始终可见。
+
+#### 另一个示例：表格表头
+
+这对于长表格非常有用。
+
+HTML 结构：
+
+```
+<table>
+  <thead class="sticky-header">
+    <tr>
+      <th>姓名</th>
+      <th>年龄</th>
+      <th>城市</th>
+    </tr>
+  </thead>
+  <tbody>
+    <!-- 大量表格行 -->
+  </tbody>
+</table>
+```
+
+CSS 样式：
+
+```
+.sticky-header {
+  position: sticky;
+  top: 0; /* 表头在滚动到表格顶部时固定 */
+  background: #f1f1f1;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* 给表格一个有限的容器来演示滚动 */
+.table-container {
+  height: 300px;
+  overflow-y: auto; /* 关键：让表格容器可滚动 */
+}
+```
+
+**效果**：在固定高度的表格容器内滚动时，表头会始终固定在容器的顶部。
+
+------
+
+### 重要注意事项与常见问题
+
+#### 1. 父容器的约束（最常见的问题）
+
+`sticky`元素**不能脱离其父容器**。如果父容器的高度不足以让其滚动到设定的阈值，粘滞效果永远不会触发。
+
+**错误示例**：
+
+```
+<div style="height: 50px; overflow: hidden;"> <!-- 父容器太小 -->
+  <div style="position: sticky; top: 0;">我粘不住！</div>
+</div>
+```
+
+因为父容器高度只有 50px，里面的内容永远不会“滚过” `top: 0`这条线，所以 `sticky`无效。
+
+#### 2. `overflow`属性的影响
+
+如果 `sticky`元素的**任何祖先容器**（不仅仅是直接父级）设置了 `overflow: hidden`, `overflow: auto`, `overflow: scroll`等非默认值，那么该祖先容器就会成为新的滚动上下文，粘性定位会相对于这个容器进行计算。如果这个容器本身没有滚动条，那么 `sticky`效果也会失效。
+
+#### 3. 浏览器兼容性
+
+现代浏览器（Chrome, Firefox, Safari, Edge）都已经很好地支持了 `sticky`。但对于需要兼容旧版浏览器（如 IE）的项目，需要谨慎使用或使用 JavaScript Polyfill。
+
+#### 4. `z-index`的使用
+
+由于 `sticky`元素在粘滞时会覆盖在其他内容之上，通常需要设置一个较高的 `z-index`来确保它能正确显示在最前面，不被其他元素遮挡。
+
+#### 5. 不能与 `display: none`共用
+
+`sticky`元素必须是渲染树的一部分，即它的 `display`不能是 `none`。
+
+------
+
+### `sticky`vs `fixed`
+
+这是一个常见的困惑点，它们的区别至关重要：
+
+| 特性           | `position: sticky`             | `position: fixed`        |
+| -------------- | ------------------------------ | ------------------------ |
+| **定位基准**   | 最近的**可滚动祖先**（或视口） | **视口 (Viewport)**      |
+| **脱离文档流** | **否**，始终占据原有空间       | **是**，不占据空间       |
+| **影响范围**   | 只在滚动容器内有效             | 相对于整个浏览器窗口     |
+| **灵活性**     | 高，有明确的开始和结束点       | 低，一旦固定就一直在那里 |
+
+**简单说**：`fixed`是“死死地”钉在屏幕上，而 `sticky`是“在需要时”才钉住，并且只在一个范围内有效。
+
+### 总结
+
+- **`position: sticky`** 用于在滚动到特定位置时，将元素“粘”在屏幕的某个位置。
+- **核心**：必须指定 `top`, `bottom`, `left`, `right`中的一个作为触发阈值。
+- **关键限制**：其表现受限于父容器和祖先容器的尺寸及 `overflow`属性。
+- **最佳场景**：粘性导航、表头、侧边栏目录等。
+- **记住**：它是一个在特定区域内，相对于滚动容器“有限制的固定定位”。
 
 ## `float`
 
