@@ -1,7 +1,3 @@
-# `Skywalking`
-
-
-
 ## `Skywalking trace` 会记录所有请求吗？
 
 SkyWalking 的追踪（Trace）**不会默认记录所有请求**，其记录行为主要由**采样策略**、**配置规则**和**插件支持**共同决定。以下是详细分析：
@@ -197,6 +193,8 @@ ELK作为专业日志系统，在以下场景中**无法被SkyWalking替代**：
 
 ## `SpringBoot` 应用集成
 
+>提醒：在SpringBoot应用中集成Skywalking agent后，内存使用多出了700-800MB（这是去掉agent前后对比的结果，没有实质做实验测试）。
+>
 >详细用法请参考本站 [示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-skywalking/demo-with-zuul)
 
 ### 运行 `OAP` 服务

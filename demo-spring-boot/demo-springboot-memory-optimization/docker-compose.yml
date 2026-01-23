@@ -1,0 +1,10 @@
+version: "3.0"
+
+services:
+  demo-springboot-performance:
+    image: demo-springboot-performance-dev
+    environment:
+      - JAVA_OPTS=-Xms2048m -Xmx2048m
+      - TZ=Asia/Shanghai
+    restart: always
+    network_mode: host

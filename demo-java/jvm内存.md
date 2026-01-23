@@ -1,7 +1,3 @@
-# `jvm`内存
-
-
-
 ## 内存结构
 
 **程序计数器（Program Counter Register）**：
@@ -192,8 +188,6 @@ NMT通过跟踪本地方法调用和分析内存分配与回收的详细过程�
 
 综上所述，Native Memory Tracking是Java HotSpot虚拟机中一个非常有用的功能，它可以帮助开发人员更好地理解和优化Java应用程序的内存使用情况。通过合理使用NMT，可以更加高效地诊断和解决与本地内存相关的问题。
 
-
-
 ### `Native Memory Tracking`输出
 
 ```bash
@@ -288,7 +282,252 @@ Native Memory Tracking (NMT) 是 Java 虚拟机（JVM）中用于跟踪和报告
 
 这个报告显示了 JVM 使用的各种本地内存区域的预留和已提交情况。通过分析这些数据，可以了解 JVM 内存使用的主要区域和潜在的内存管理问题。例如，如果某个区域的预留内存远大于已提交内存，可能表示该区域有潜在的内存扩展需求。相反，如果已提交内存接近预留内存，则可能需要考虑优化或增加预留内存以避免内存不足的问题。
 
+## NMT中committed是什么？
 
+**committed 是 JVM 向操作系统实际申请并已占用的物理内存**。
+
+### 数据样例
+
+```
+Native Memory Tracking:
+
+(Omitting categories weighting less than 1MB)
+
+Total: reserved=1813MB, committed=180MB
+-                 Java Heap (reserved=512MB, committed=50MB)
+                            (mmap: reserved=512MB, committed=50MB) 
+ 
+-                     Class (reserved=1025MB, committed=6MB)
+                            (classes #8911)
+                            (  instance classes #8290, array classes #621)
+                            (malloc=1MB #18346) 
+                            (mmap: reserved=1024MB, committed=5MB) 
+                            (  Metadata:   )
+                            (    reserved=64MB, committed=29MB)
+                            (    used=29MB)
+                            (    waste=0MB =0.62%)
+                            (  Class space:)
+                            (    reserved=1024MB, committed=5MB)
+                            (    used=5MB)
+                            (    waste=0MB =4.12%)
+```
+
+让我详细解释这两个关键概念：
+
+### 核心概念对比
+
+| 术语          | 含义          | 实际意义                               | 比喻                                 |
+| ------------- | ------------- | -------------------------------------- | ------------------------------------ |
+| **reserved**  | 保留/预留内存 | JVM 向操作系统"预定"的地址空间范围     | 在餐厅预订了一张桌子（但人还没来）   |
+| **committed** | 已提交内存    | JVM 实际向操作系统申请并占用的物理内存 | 客人已经坐下并开始点菜（占用了桌子） |
+
+### 在您的输出中的具体分析
+
+#### 1. Java Heap
+
+```
+Java Heap (reserved=512MB, committed=50MB)
+```
+
+- **reserved=512MB**：JVM 为堆保留了 512MB 的地址空间
+- **committed=50MB**：当前实际只使用了 50MB 物理内存
+- **含义**：虽然最大堆是 512MB，但当前应用只占用了 50MB 物理内存
+
+#### 2. Class (元数据)
+
+```
+Class (reserved=1025MB, committed=6MB)
+```
+
+- **reserved=1025MB**：为类元数据预留了 1GB 地址空间
+- **committed=6MB**：当前实际只用了 6MB
+- 细分为：
+  - **Metadata**: committed=29MB (已用 29MB)
+  - **Class space**: committed=5MB (已用 5MB)
+
+### 为什么需要区分 reserved 和 committed？
+
+#### 1. **内存过度承诺（Overcommit）**
+
+操作系统允许进程保留比物理内存更多的地址空间：
+
+```
+# 即使系统只有 8GB 物理内存
+# JVM 可以：
+reserved=10GB  # 保留 10GB 地址空间
+committed=4GB  # 但只实际使用 4GB 物理内存
+```
+
+#### 2. **延迟分配策略**
+
+```
+// 启动时
+reserved=2GB   // 保留2GB地址空间
+committed=256MB // 只分配256MB物理内存
+
+// 随着应用运行
+if (需要更多内存) {
+    committed++  // 按需增加物理内存分配
+}
+```
+
+### 实际操作系统的视角
+
+#### Linux 示例：
+
+```
+# 查看进程内存映射
+pmap -x <PID>
+
+# 输出示例：
+Address           Kbytes     RSS   Dirty Mode  Mapping
+00000000c0000000 524288       512      0 rw---   [ anon ]  # reserved=512MB, RSS=0.5MB
+# RSS (Resident Set Size) ≈ committed
+```
+
+#### 内存分配过程：
+
+```
+JVM: 我需要512MB堆内存
+  ↓
+操作系统: 好的，0x00000000-0x20000000这段地址给你留着
+  ↓
+JVM: 现在我要用50MB
+  ↓
+操作系统: 分配50MB物理内存给你
+  ↓
+JVM: committed=50MB, reserved=512MB
+```
+
+### 在 Spring Boot 应用中的实际意义
+
+#### 场景1：启动阶段
+
+```
+# 应用刚启动时
+Java Heap: reserved=512MB, committed=50MB
+Class:     reserved=1024MB, committed=10MB
+
+# 运行一段时间后
+Java Heap: reserved=512MB, committed=300MB  # 堆使用增加
+Class:     reserved=1024MB, committed=80MB   # 加载了更多类
+```
+
+#### 场景2：内存压力测试
+
+```
+// 模拟内存压力
+List<byte[]> data = new ArrayList<>();
+for (int i = 0; i < 1000; i++) {
+    data.add(new byte[1024 * 1024]);  // 每次分配1MB
+}
+```
+
+内存变化：
+
+```
+开始: committed=100MB
+分配100MB后: committed=200MB
+分配200MB后: committed=300MB
+...
+达到reserved限制: 触发GC或OOM
+```
+
+### committed 与 RSS 的关系
+
+#### 系统级别监控
+
+```
+# top 命令查看
+top -p <PID>
+
+# 输出中的关键列：
+PID   USER   PR  NI  VIRT   RES   SHR  S  %CPU  %MEM
+1234  app    20   0  2.3g  180m   20m  S   2.3   2.2
+
+# 对应关系：
+VIRT (Virtual Memory) ≈ reserved
+RES  (Resident Memory) ≈ committed
+```
+
+在您的 NMT 输出中：
+
+```
+NMT Total: committed=180MB
+top RES: ~180MB  # 应该大致匹配
+```
+
+### 实际诊断案例
+
+#### 问题：committed 持续增长
+
+```
+# 监控内存增长
+while true; do
+    jcmd <PID> VM.native_memory summary | grep committed
+    sleep 5
+done
+
+# 输出可能显示：
+第一次: committed=180MB
+5秒后: committed=185MB
+10秒后: committed=190MB  # 持续增长，可能有泄漏
+```
+
+#### 不同内存区域的特点
+
+| 内存区域       | reserved 行为          | committed 行为     |
+| -------------- | ---------------------- | ------------------ |
+| **Java Heap**  | 固定（由-Xmx决定）     | 动态增长，可达-Xms |
+| **Class**      | 通常较大（预留空间）   | 随加载类数量增加   |
+| **Thread**     | 每个线程预留固定栈大小 | 线程创建时立即提交 |
+| **Code Cache** | 固定大小               | 随JIT编译增加      |
+
+### 优化建议
+
+#### 1. 合理设置 committed 初始值
+
+```
+# 避免committed从很小开始增长
+-Xms512m -Xmx2g  # 初始堆=512MB，减少初始commit延迟
+-XX:MetaspaceSize=128m  # 元空间初始大小
+```
+
+#### 2. 监控 committed 与 reserved 比例
+
+```
+# 健康状态：committed 稳定，不接近 reserved
+Java Heap: reserved=2GB, committed=1.2GB  # 良好，有缓冲
+Java Heap: reserved=2GB, committed=1.9GB  # 危险，接近上限
+```
+
+#### 3. 容器环境特别注意
+
+```
+# Docker 容器内存限制
+docker run -m 2g ...  # 容器限制2GB
+
+# 在容器中：
+# reserved 总和不应超过容器限制
+# committed 是实际占用，影响容器内存使用
+```
+
+### 总结
+
+**committed 的重要性**：
+
+1. **实际资源消耗**：committed 才是实际占用物理内存的量
+2. **成本依据**：云环境按实际使用内存计费
+3. **OOM 触发**：当 committed 接近系统可用内存时触发 OOM
+4. **性能指标**：频繁的 committed 增长可能导致性能波动
+
+在您的输出中：
+
+- **总 committed=180MB**：应用实际占用 180MB 物理内存
+- **总 reserved=1813MB**：JVM 预定了 1.8GB 的地址空间
+- **结论**：应用当前内存使用健康，有充足的预留空间
+
+要监控应用真实内存占用，主要关注 **committed** 值的变化趋势。
 
 ## 查看内存使用情况
 
@@ -312,7 +551,297 @@ Native Memory Tracking (NMT) 是 Java 虚拟机（JVM）中用于跟踪和报告
 
   `/usr/local/jdk1.8.0_271/bin/jps -mlv|grep demo.jar | awk '{print $1}'`用于获取进程`id`
 
-  
+
+## NMT查看SpringBoot应用内存
+
+NMT 可以看到 Spring Boot 应用的**部分**内存使用情况，主要是 JVM 内部的内存分配，而不是 Spring Boot 框架层面的详细内存使用。
+
+### NMT 能看到的内容（与 Spring Boot 相关）
+
+#### 1. **类加载相关内存**
+
+```
+-                     Class (reserved=1066021KB, committed=14197KB)
+                            (classes #479)  ← Spring Boot 加载的类数量
+```
+
+Spring Boot 自动配置会加载大量类，NMT 可以看到：
+
+- 加载的类总数
+- 元空间（Metaspace）使用量
+- 类元数据内存增长
+
+#### 2. **线程相关内存**
+
+```
+-                    Thread (reserved=15431KB, committed=15431KB)
+                            (thread #16)   ← Spring Boot 创建的线程
+```
+
+Spring Boot 会创建：
+
+- Tomcat/Netty 工作线程池
+- 异步任务线程池
+- 定时任务线程
+- Actuator 端点线程
+
+#### 3. **直接内存（Direct Buffer）**
+
+```
+-                   Internal (reserved=686KB, committed=686KB)
+```
+
+Spring Boot 中可能使用直接内存的场景：
+
+- Netty（WebFlux）
+- 文件上传下载
+- Redis Lettuce 连接
+- 数据库连接池
+
+#### 4. **JIT 编译代码缓存**
+
+```
+-                      Code (reserved=102400KB, committed=20480KB)
+```
+
+Spring Boot 启动时大量代码被 JIT 编译
+
+### NMT **看不到**的 Spring Boot 内容
+
+#### 1. **Spring Bean 实例内存**
+
+- Bean 实例存储在 **Java 堆**中
+- NMT 只显示堆总量，不显示具体对象
+- 需要配合 **堆转储** 或 **VisualVM/MAT**
+
+#### 2. **Spring 缓存内存**
+
+```
+@Cacheable  // 缓存数据在堆中
+```
+
+#### 3. **应用级内存泄漏**
+
+- 静态 Map 缓存
+- 会话数据
+- 内存数据库（如 H2 内存模式）
+
+#### 4. **第三方库特定内存**
+
+- Redis 连接池内部结构
+- 数据库连接池额外内存
+- 消息队列客户端缓冲区
+
+### 实战示例：监控 Spring Boot 应用
+
+#### 启动 Spring Boot 应用
+
+```
+# 启用 NMT
+java -XX:NativeMemoryTracking=summary \
+     -Xmx512m -Xms512m \
+     -jar spring-boot-app.jar
+```
+
+#### 获取 NMT 报告
+
+```
+# 找到进程 ID
+jps | grep spring-boot-app
+
+# 获取内存报告
+jcmd <PID> VM.native_memory summary
+```
+
+#### 典型 Spring Boot 应用 NMT 输出
+
+```
+Native Memory Tracking:
+
+Total: reserved=1500MB, committed=800MB
+
+# 1. 堆内存（Spring Bean 在这里，但看不到细节）
+- Java Heap (reserved=512MB, committed=512MB)
+
+# 2. 类加载（Spring Boot 加载大量类）
+- Class (reserved=300MB, committed=80MB)
+        (classes #15000)  ← Spring Boot 自动配置加载的类
+
+# 3. 线程（Tomcat 线程池 + 异步线程）
+- Thread (reserved=50MB, committed=50MB)
+        (thread #50)      ← Tomcat默认200线程，这里显示已分配的
+
+# 4. 代码缓存（JIT编译Spring框架代码）
+- Code (reserved=60MB, committed=20MB)
+
+# 5. GC数据结构
+- GC (reserved=100MB, committed=30MB)
+
+# 6. 符号表
+- Symbol (reserved=20MB, committed=10MB)
+
+# 7. 其他内部使用
+- Internal (reserved=10MB, committed=5MB)
+```
+
+### Spring Boot 特定内存问题的 NMT 诊断
+
+#### 场景 1：元空间泄漏（常见于热部署）
+
+```
+# 1. 启动应用
+java -XX:NativeMemoryTracking=summary \
+     -XX:MaxMetaspaceSize=256m \
+     -jar app.jar
+
+# 2. 建立基线
+jcmd <PID> VM.native_memory baseline
+
+# 3. 多次请求/重启
+# 4. 查看差异
+jcmd <PID> VM.native_memory summary.diff
+```
+
+如果看到 Class 内存持续增长：
+
+```
+- Class (reserved=+50MB, committed=+20MB)
+        (classes #+1000)  ← 类加载器泄漏！
+```
+
+#### 场景 2：线程泄漏（Tomcat 线程未回收）
+
+```
+# 查看线程增长
+jcmd <PID> VM.native_memory summary | grep -A5 "Thread"
+```
+
+输出可能显示线程数异常增长：
+
+```
+- Thread (reserved=+20MB, committed=+20MB)
+        (thread #+200)  ← 线程泄漏！
+```
+
+#### 场景 3：直接内存泄漏（WebFlux + Netty）
+
+```
+# 启动 WebFlux 应用
+java -XX:NativeMemoryTracking=summary \
+     -Dio.netty.maxDirectMemory=0 \  # 不限制直接内存
+     -jar webflux-app.jar
+```
+
+查看 Internal 部分增长：
+
+```
+- Internal (reserved=+500MB, committed=+500MB)
+```
+
+### 更完整的 Spring Boot 内存监控方案
+
+#### 1. **NMT + Spring Boot Actuator**
+
+```
+# application.yml
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  endpoint:
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+```
+
+#### 2. **使用 /actuator/metrics 端点**
+
+```
+# 获取JVM内存详情
+curl http://localhost:8080/actuator/metrics/jvm.memory.used
+
+# 获取堆内存
+curl http://localhost:8080/actuator/metrics/jvm.memory.used?tag=area:heap
+
+# 获取非堆内存
+curl http://localhost:8080/actuator/metrics/jvm.memory.used?tag=area:nonheap
+```
+
+#### 3. **组合监控方案**
+
+```
+# 1. NMT 监控JVM内部
+jcmd <PID> VM.native_memory summary
+
+# 2. Actuator 监控应用级
+curl http://localhost:8080/actuator/metrics
+
+# 3. jcmd 监控堆
+jcmd <PID> GC.heap_info
+
+# 4. VisualVM/Java Mission Control
+# 图形化查看堆内对象
+```
+
+#### 4. **生产环境推荐配置**
+
+```
+# 启动参数
+java -XX:NativeMemoryTracking=summary \
+     -XX:MaxMetaspaceSize=256m \
+     -Xmx2g -Xms2g \
+     -XX:+HeapDumpOnOutOfMemoryError \
+     -XX:HeapDumpPath=/tmp/heapdump.hprof \
+     -Dspring.profiles.active=prod \
+     -javaagent:/path/to/jolokia-agent.jar=port=8778 \
+     -jar app.jar
+```
+
+### 实际排查案例
+
+#### 问题：Spring Boot 应用内存持续增长
+
+```
+# 步骤1：NMT查看整体情况
+jcmd 12345 VM.native_memory summary
+
+# 输出显示：
+# - Java Heap: 稳定
+# - Class: 持续增长  ← 疑似类加载器泄漏
+# - Thread: 稳定
+
+# 步骤2：确认类加载器泄漏
+jcmd 12345 GC.class_histogram | head -20
+
+# 步骤3：结合Heap Dump分析
+jmap -dump:live,format=b,file=/tmp/dump.hprof 12345
+# 使用MAT/Eclipse Memory Analyzer分析
+```
+
+### 总结对比
+
+| 监控方式      | 可监控内容      | 适用场景                         |
+| ------------- | --------------- | -------------------------------- |
+| **NMT**       | JVM内部内存分配 | 诊断元空间泄漏、线程栈、直接内存 |
+| **Actuator**  | 应用级指标      | 监控业务内存、Spring Bean数量    |
+| **JConsole**  | 实时堆监控      | 实时查看堆内存使用               |
+| **Heap Dump** | 堆内对象详情    | 分析内存泄漏具体对象             |
+| **jstat**     | GC统计          | 监控GC行为                       |
+
+**最佳实践**：
+
+1. 使用 **NMT** 诊断 JVM 内部内存问题
+2. 使用 **Actuator** 监控应用级指标
+3. 使用 **VisualVM/JMC** 进行实时分析
+4. 使用 **Heap Dump** 进行深度分析
+
+对于 Spring Boot 应用，**NMT 最适合诊断框架底层的 JVM 内存问题**，而应用级的内存问题需要结合堆分析工具。
 
 ## `GC`相关
 
