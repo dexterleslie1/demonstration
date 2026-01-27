@@ -37,6 +37,9 @@ services:
     environment:
       - TZ=Asia/Shanghai
       - MODE=standalone
+      - JVM_XMX=256m
+      - JVM_XMS=256m
+      - JVM_XMN=128m
     #    ports:
     #      - '8848:8848'
     #      - '9848:9848'
@@ -48,6 +51,12 @@ services:
     #      - "7091:7091"
     #      - "8091:8091"
     network_mode: host
+    environment:
+      - JVM_XMX=512m
+      - JVM_XMS=512m
+      # 设置-XX:MaxDirectMemorySize=128m
+      - JVM_MaxDirectMemorySize=128m
+      - TZ=Asia/Shanghai
     volumes:
       - ./deployer/common/application-seata.yml:/seata-server/resources/application.yml
     restart: unless-stopped
