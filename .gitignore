@@ -53,3 +53,5 @@ Podfile.lock
 *.xcuserstate
 *.xcworkspacedata
 *.xcbkptlist
+
+dist
