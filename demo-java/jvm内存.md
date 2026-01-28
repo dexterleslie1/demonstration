@@ -149,7 +149,7 @@
 
 
 
-## `Native Memory Tracking(NMT)`
+## Native Memory Tracking(NMT)
 
 Native Memory Tracking（NMT）是Java HotSpot虚拟机（JVM）提供的一种功能，用于追踪和分析Java应用程序在本地内存中的内存分配和使用情况。以下是关于Native Memory Tracking的详细介绍：
 
@@ -528,28 +528,6 @@ docker run -m 2g ...  # 容器限制2GB
 - **结论**：应用当前内存使用健康，有充足的预留空间
 
 要监控应用真实内存占用，主要关注 **committed** 值的变化趋势。
-
-## 查看内存使用情况
-
-通过`Native Memory Tracking`功能查看`jvm`内存使用。
-
-- 通过项目 [链接](https://gitee.com/dexterleslie/demonstration/tree/master/demo-java/demo-java-assistant) 辅助测试
-
-- 启动辅助测试项目
-
-  ```bash
-  java -Xmx128m -Xss512k -XX:NativeMemoryTracking=detail -jar target/demo.jar memalloc
-  ```
-
-  `-XX:NativeMemoryTracking=detail`启用`Native Memory Tracking`功能
-
-- 使用`jcmd+NMT`查看内存使用情况
-
-  ```bash
-  ./jcmd `/usr/local/jdk1.8.0_271/bin/jps -mlv|grep demo.jar | awk '{print $1}'` VM.native_memory scale=MB
-  ```
-
-  `/usr/local/jdk1.8.0_271/bin/jps -mlv|grep demo.jar | awk '{print $1}'`用于获取进程`id`
 
 
 ## NMT查看SpringBoot应用内存
@@ -1458,16 +1436,17 @@ java -jar -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/data -Xmx512m -Xms51
 
 
 
+## OOM分析
 
-### `OOM`分析
+>[Java性能监控与故障处理分析工具（Heap memory和Native memory）](https://juejin.cn/post/7128333688030363656)
 
-#### 获取`heapdump`文件
+### 获取`heapdump`文件
 
 - 使用`jmap`获取`heapdump`文件
 - 使用`arthas`获取`heapdump`文件
 - 使用`-XX:+HeapDumpOnOutOfMemoryError`和`-XX:HeapDumpPath=/data`在应用`OOM`时`heapdump`
 
-#### 分析`heapdump`文件
+### 分析`heapdump`文件
 
 - 使用`jprofiler`分析`heapdump`文件
 
@@ -1485,22 +1464,6 @@ java -jar -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/data -Xmx512m -Xms51
 - 使用`jvisualvm`分析`heapdump`文件
 
   `jvisualvm`没有`jprofiler`的`Merged incoming references`的方便功能，需要通过抽样分析内存对象追溯导致内存泄漏的位置。
-
-
-
-## `OOM`分析
-
-> [Java性能监控与故障处理分析工具（Heap memory和Native memory）](https://juejin.cn/post/7128333688030363656)
-
-### `dump`堆文件
-
-1. 通过`java`命令行参数设置`OOM`错误时自动`dump`堆文件
-2. 使用`arthas dump`堆文件
-3. 使用`jmap`命令`dump`堆文件
-
-### 使用`jprofiler`分析堆文件
-
-通过`jprofiler`的`heap walker`的`Biggest objects`视图推断出内存泄漏的代码位置
 
 
 
@@ -1607,4 +1570,488 @@ JVM堆内存设置
    - 使用`-XX:NewSize和-XX:MaxNewSize`设置过小的新生代区会导致较多的新生代`GC`，进而导致老年代区占用迅速膨胀，最后导致频繁`Full GC`影响并发性能
    - 线程设置数量和内存设置成正比，否则会导致较多的新生代`GC`，进而导致老年代区占用迅速膨胀，最后导致频繁`Full GC`影响并发性能
    - 如果不是内存泄漏问题，一般通过`-Xmx`、`-Xms`把内存调大能够解决频繁`GC`引起的稳定性和性能问题
+
+## 查看内存
+
+### 通过NMT查看
+
+通过`Native Memory Tracking`功能查看`jvm`内存使用。
+
+- 通过项目 [链接](https://gitee.com/dexterleslie/demonstration/tree/master/demo-java/demo-java-assistant) 辅助测试
+
+- 启动辅助测试项目
+
+  ```bash
+  java -Xmx128m -Xss512k -XX:NativeMemoryTracking=detail -jar target/demo.jar memalloc
+  ```
+
+  `-XX:NativeMemoryTracking=detail`启用`Native Memory Tracking`功能
+
+- 使用`jcmd+NMT`查看内存使用情况
+
+  ```bash
+  # summary模式
+  ./jcmd `/usr/local/jdk1.8.0_271/bin/jps -mlv|grep demo.jar | awk '{print $1}'` VM.native_memory scale=MB
+  
+  # detail模式
+  ./jcmd `/usr/local/jdk1.8.0_271/bin/jps -mlv|grep demo.jar | awk '{print $1}'` VM.native_memory detail scale=MB
+  ```
+
+  `/usr/local/jdk1.8.0_271/bin/jps -mlv|grep demo.jar | awk '{print $1}'`用于获取进程`id`
+
+### 通过Actuator查看
+
+通过 Spring Boot Actuator 的 `/actuator/metrics` 端点可以查看 JVM 内存使用情况。
+
+#### 辅助测试项目
+
+使用项目 [demo-spring-boot-actuator](https://gitee.com/dexterleslie/demonstration/tree/master/demo-spring-boot/demo-spring-boot-actuator-parent/demo-spring-boot-actuator) 进行测试。
+
+#### 启动测试项目
+
+```bash
+# 编译项目
+cd /home/dexterleslie/workspace-git/demonstration/demo-spring-boot/demo-spring-boot-actuator-parent/demo-spring-boot-actuator
+mvn package
+
+# 启动项目（根据 application.properties 配置，Actuator 端口为 8081，基础路径为 /mydemo）
+java -jar target/demo-spring-boot-actuator-1.0.0.jar
+```
+
+#### 查看所有可用的 metrics
+
+```bash
+# 查看所有可用的指标列表
+curl http://localhost:8081/mydemo/metrics
+```
+
+#### 查看 JVM 内存使用情况（使用 Prometheus 端点）
+
+使用 `/prometheus` 端点查看内存信息，格式更简洁，无需处理 URL 编码问题。
+
+```bash
+# 查看所有 JVM 内存相关指标（推荐方式）
+curl http://localhost:8081/mydemo/prometheus | grep jvm_memory
+
+# 查看堆内存使用情况
+curl http://localhost:8081/mydemo/prometheus | grep 'jvm_memory_used_bytes.*area="heap"'
+
+# 查看非堆内存使用情况
+curl http://localhost:8081/mydemo/prometheus | grep 'jvm_memory_used_bytes.*area="nonheap"'
+
+# 查看堆内存提交量（committed）
+curl http://localhost:8081/mydemo/prometheus | grep 'jvm_memory_committed_bytes.*area="heap"'
+
+# 查看堆内存最大值（max）
+curl http://localhost:8081/mydemo/prometheus | grep 'jvm_memory_max_bytes.*area="heap"'
+
+# 查看 Eden 区内存使用情况
+curl http://localhost:8081/mydemo/prometheus | grep 'jvm_memory_used_bytes.*id="G1 Eden Space"'
+
+# 查看 Survivor Space 内存使用情况
+curl http://localhost:8081/mydemo/prometheus | grep 'jvm_memory_used_bytes.*id="G1 Survivor Space"'
+
+# 查看老年代内存使用情况
+curl http://localhost:8081/mydemo/prometheus | grep 'jvm_memory_used_bytes.*id="G1 Old Gen"'
+
+# 查看元空间（Metaspace）内存使用情况
+curl http://localhost:8081/mydemo/prometheus | grep 'jvm_memory_used_bytes.*id="Metaspace"'
+
+# 查看所有内存区域的使用情况（更详细的过滤）
+curl http://localhost:8081/mydemo/prometheus | grep 'jvm_memory_used_bytes{'
+```
+
+**提示**：Prometheus 格式的指标名称使用下划线（`_`）而不是点（`.`），标签值使用双引号包裹，无需 URL 编码。可以通过 `grep` 命令过滤特定的内存区域。
+
+#### 使用 JSON 格式查看（备选方式）
+
+如果需要 JSON 格式，可以使用 `/metrics` 端点：
+
+```bash
+# 查看 JVM 内存使用总量
+curl http://localhost:8081/mydemo/metrics/jvm.memory.used
+
+# 查看堆内存使用情况
+curl http://localhost:8081/mydemo/metrics/jvm.memory.used?tag=area:heap
+
+# 查看非堆内存使用情况
+curl http://localhost:8081/mydemo/metrics/jvm.memory.used?tag=area:nonheap
+```
+
+**注意**：使用 `/metrics` 端点时，对于包含空格的标签值需要 URL 编码（空格编码为 `%20`）。
+
+#### Prometheus 格式示例输出
+
+```prometheus
+# HELP jvm_memory_used_bytes The amount of used memory
+# TYPE jvm_memory_used_bytes gauge
+jvm_memory_used_bytes{area="heap",id="G1 Eden Space"} 1.23456789e+08
+jvm_memory_used_bytes{area="heap",id="G1 Survivor Space"} 1.2345678e+07
+jvm_memory_used_bytes{area="heap",id="G1 Old Gen"} 5.67890123e+08
+jvm_memory_used_bytes{area="nonheap",id="Metaspace"} 3.45678901e+07
+jvm_memory_used_bytes{area="nonheap",id="Code Cache"} 1.2345678e+07
+jvm_memory_committed_bytes{area="heap",id="G1 Eden Space"} 2.147483648e+09
+jvm_memory_max_bytes{area="heap",id="G1 Eden Space"} 2.147483648e+09
+```
+
+**说明**：
+- 指标值以字节（bytes）为单位，使用科学计数法表示
+- 标签使用 `key="value"` 格式，多个标签用逗号分隔
+- 可以通过 `grep` 命令过滤特定的内存区域或指标类型
+
+#### 注意事项
+
+1. **端口和路径配置**：根据项目的 `application.properties` 配置，Actuator 的端口和基础路径可能不同，需要相应调整 curl 命令中的 URL。
+   - 示例项目中 Actuator 端口为 `8081`，基础路径为 `/mydemo`
+
+2. **端点暴露**：确保 `management.endpoints.web.exposure.include` 配置包含了 `prometheus` 端点（示例项目中配置为 `*`，表示暴露所有端点）。
+   - 同时需要确保 `management.metrics.export.prometheus.enabled=true`
+
+3. **Prometheus 格式优势**：
+   - 无需处理 URL 编码问题（标签值中的空格直接使用双引号包裹）
+   - 格式简洁，易于解析和过滤
+   - 更适合监控系统集成（如 Prometheus、Grafana）
+   - 指标名称使用下划线（`_`）而不是点（`.`）
+
+4. **单位说明**：内存相关的指标单位是字节（bytes），使用科学计数法表示。
+   
+   转换示例（将字节转换为 MB）：
+   ```bash
+   # 方式1：使用 awk 从 Prometheus 格式中提取并转换
+   curl -s http://localhost:8081/mydemo/prometheus | grep 'jvm_memory_used_bytes.*area="heap"' | awk '{print $2/1024/1024 " MB"}'
+   
+   # 方式2：使用 jq 从 JSON 格式中提取并转换
+   curl -s http://localhost:8081/mydemo/metrics/jvm.memory.used?tag=area:heap | jq '.measurements[0].value / 1024 / 1024'
+   ```
+
+5. **垃圾回收器差异**：不同的垃圾回收器（如 Parallel GC、G1 GC、CMS）会产生不同的内存区域名称：
+   
+   - Parallel GC: `PS Eden Space`、`PS Survivor Space`、`PS Old Gen`
+   - G1 GC: `G1 Eden Space`、`G1 Survivor Space`、`G1 Old Gen`
+   - 建议先查看所有可用指标确认实际的内存区域名称：
+     ```bash
+     curl http://localhost:8081/mydemo/prometheus | grep jvm_memory_used_bytes
+     ```
+
+### 使用 jmap 查看
+
+>提示：
+>
+>- JDK17使用下面jmap -heap命令报错，在JDK8使用是可以的。
+>- 使用下面命令查看镜像elasticsearch:7.14.1 JVM内存报错。
+
+`jmap` 是 JDK 自带的命令行工具，用于打印堆内存和对象统计信息。
+
+#### 查看堆内存使用情况
+
+```bash
+# 获取进程 ID
+jps -l
+
+# 打印堆内存使用情况（包括堆配置、各区域使用情况）
+jmap -heap <pid>
+
+# 打印堆中对象的统计信息（按类统计对象数量和占用内存）
+jmap -histo <pid>
+
+# 打印堆中存活对象的统计信息（会触发 GC，STW）
+jmap -histo:live <pid>
+
+# 打印堆中对象统计信息，只显示前 20 行
+jmap -histo <pid> | head -20
+```
+
+#### 示例输出
+
+```bash
+# jmap -heap 输出示例
+Attaching to process ID 12345, please wait...
+Debugger attached successfully.
+Server compiler detected.
+JVM version is 25.271-b09
+
+using thread-local object allocation.
+Parallel GC with 4 thread(s)
+
+Heap Configuration:
+   MinHeapFreeRatio         = 40
+   MaxHeapFreeRatio         = 70
+   MaxHeapSize              = 2147483648 (2048.0MB)
+   NewSize                  = 715653120 (682.5MB)
+   MaxNewSize               = 715653120 (682.5MB)
+   OldSize                  = 1431830528 (1365.5MB)
+   NewRatio                 = 2
+   SurvivorRatio            = 8
+   MetaspaceSize            = 21807104 (20.796875MB)
+   CompressedClassSpaceSize = 1073741824 (1024.0MB)
+   MaxMetaspaceSize         = 17592186044415 MB
+   G1HeapRegionSize         = 0 (0.0MB)
+
+Heap Usage:
+PS Young Generation
+Eden Space:
+   capacity = 536870912 (512.0MB)
+   used     = 123456789 (117.7MB)
+   free     = 413413123 (394.3MB)
+   23.0% used
+From Space:
+   capacity = 89128960 (85.0MB)
+   used     = 0 (0.0MB)
+   free     = 89128960 (85.0MB)
+   0.0% used
+To Space:
+   capacity = 89128960 (85.0MB)
+   used     = 0 (0.0MB)
+   free     = 89128960 (85.0MB)
+   0.0% used
+PS Old Generation
+   capacity = 1431830528 (1365.5MB)
+   used     = 567890123 (541.6MB)
+   free     = 863940405 (824.0MB)
+   39.7% used
+
+# jmap -histo 输出示例
+ num     #instances         #bytes  class name
+----------------------------------------------
+   1:       1234567      123456789012  [B
+   2:        234567       23456789012  java.lang.String
+   3:        123456       12345678901  java.util.HashMap$Node
+   ...
+```
+
+**注意事项**：
+- `jmap -heap` 在某些 JDK 版本中可能不可用（如 JDK 9+），建议使用 `jcmd` 替代
+- `jmap -histo:live` 会触发 Full GC，在生产环境谨慎使用
+
+### 使用 jstat 查看
+
+>提示：能够使用jstat命令查看镜像elasticsearch:7.14.1 JVM内存。
+
+`jstat` 是 JDK 自带的命令行工具，用于监控 JVM 内存和 GC 统计信息。
+
+#### 查看内存使用情况
+
+```bash
+# 获取进程 ID
+jps -l
+
+# 查看 GC 和内存使用情况（以 KB 为单位）
+jstat -gc <pid>
+
+# 每 5 秒输出一次，持续监控
+jstat -gc <pid> 5000
+
+# 查看内存使用百分比
+jstat -gcutil <pid>
+
+# 每 2 秒输出一次内存使用百分比，共输出 10 次
+jstat -gcutil <pid> 2000 10
+```
+
+#### 输出字段说明
+
+**`jstat -gc` 输出字段**：
+- **S0C/S1C**：Survivor 0/1 区容量（KB）
+- **S0U/S1U**：Survivor 0/1 区已使用（KB）
+- **EC**：Eden 区容量（KB）
+- **EU**：Eden 区已使用（KB）
+- **OC**：老年代容量（KB）
+- **OU**：老年代已使用（KB）
+- **MC**：元空间容量（KB）
+- **MU**：元空间已使用（KB）
+- **CCSC**：压缩类空间容量（KB）
+- **CCSU**：压缩类空间已使用（KB）
+- **YGC**：年轻代 GC 次数
+- **YGCT**：年轻代 GC 总耗时（秒）
+- **FGC**：Full GC 次数
+- **FGCT**：Full GC 总耗时（秒）
+- **GCT**：GC 总耗时（秒）
+
+**`jstat -gcutil` 输出字段**：
+- **S0/S1**：Survivor 0/1 区使用百分比
+- **E**：Eden 区使用百分比
+- **O**：老年代使用百分比
+- **M**：元空间使用百分比
+- **CCS**：压缩类空间使用百分比
+
+#### 示例输出
+
+```bash
+# jstat -gc 输出示例
+ S0C    S1C    S0U    S1U      EC       EU        OC         OU       MC     MU    CCSC   CCSU   YGC     YGCT    FGC    FGCT     GCT
+87040.0 87040.0  0.0   87040.0 699392.0 123456.0  1433600.0  567890.0  4864.0 3757.9 512.0  423.4      3    0.123     0    0.000    0.123
+
+# jstat -gcutil 输出示例
+  S0     S1     E      O      M     CCS    YGC     YGCT    FGC    FGCT     GCT
+  0.00  100.00  17.65  39.65  77.25  82.62      3    0.123     0    0.000    0.123
+```
+
+### 使用 jcmd 查看
+
+>提示：使用下面命令查看镜像elasticsearch:7.14.1内存报错。
+
+`jcmd` 是 JDK 1.7+ 引入的多功能命令行工具，可以查看 JVM 内存信息。
+
+#### 查看堆内存信息
+
+```bash
+# 获取进程 ID
+jps -l
+
+# 查看堆内存信息
+jcmd <pid> GC.heap_info
+
+# 查看堆内存使用情况（更详细）
+jcmd <pid> VM.memory
+
+# 查看类加载统计（包括类数量和占用内存）
+jcmd <pid> GC.class_histogram
+
+# 查看类加载统计（只显示前 20 行）
+jcmd <pid> GC.class_histogram | head -20
+```
+
+#### 示例输出
+
+```bash
+# jcmd GC.heap_info 输出示例
+PSYoungGen      total 870912K, used 123456K [0x000000076ab00000, 0x00000007c0000000, 0x00000007c0000000)
+  eden space 699392K, 17% used [0x000000076ab00000,0x0000000772340000,0x0000000795800000)
+  from space 87040K, 0% used [0x0000000795800000,0x0000000795800000,0x000000079ae00000)
+  to   space 87040K, 0% used [0x000000079ae00000,0x000000079ae00000,0x00000007c0000000)
+ParOldGen       total 1433600K, used 567890K [0x00000006c0000000, 0x0000000715580000, 0x000000076ab00000)
+  object space 1433600K, 39% used [0x00000006c0000000,0x00000006e2b4a800,0x0000000715580000)
+Metaspace       used 37579K, capacity 48640K, committed 49152K, reserved 1083392K
+  class space    used 4234K, capacity 5120K, committed 5120K, reserved 1048576K
+
+# jcmd VM.memory 输出示例
+Native Memory Tracking:
+
+Total: reserved=1813MB, committed=180MB
+-                 Java Heap (reserved=512MB, committed=50MB)
+                            (mmap: reserved=512MB, committed=50MB)
+-                     Class (reserved=1025MB, committed=6MB)
+                            (classes #8911)
+                            (malloc=1MB #18346)
+                            (mmap: reserved=1024MB, committed=5MB)
+...
+```
+
+**注意**：`jcmd VM.memory` 需要启用 NMT（`-XX:NativeMemoryTracking=summary` 或 `detail`）
+
+### 使用 arthas 查看
+
+>提示：使用arthas查看镜像elasticsearch:7.14.1内存时不能attach到JVM进程。
+
+Arthas 是阿里巴巴开源的 Java 诊断工具，提供了丰富的内存查看命令。
+
+#### 安装和启动
+
+```bash
+# 下载 arthas
+curl -O https://arthas.aliyun.com/arthas-boot.jar
+
+# 启动 arthas（会自动检测 Java 进程）
+java -jar arthas-boot.jar
+
+# 或者指定进程 ID
+java -jar arthas-boot.jar <pid>
+```
+
+#### 查看内存使用情况
+
+```bash
+# 查看内存使用情况
+memory
+
+# 查看 JVM 信息（包括内存配置）
+jvm
+
+# 查看实时监控面板（包括内存、线程、GC 等信息）
+dashboard
+
+# 查看堆内存中对象统计
+heapdump /tmp/heapdump.hprof
+```
+
+#### 示例输出
+
+```bash
+# memory 命令输出示例
+Memory                           used      total      max        usage
+heap                             123.4M    512.0M     2.0G       6.0%
+nonheap                          45.6M     128.0M    256.0M      17.8%
+direct                           12.3M     12.3M     -           -
+```
+
+### 使用图形化工具查看
+
+#### VisualVM
+
+VisualVM 是 JDK 自带的图形化监控工具（JDK 8 及之前版本自带，JDK 9+ 需要单独下载）。
+
+```bash
+# 启动 VisualVM（JDK 8 及之前版本）
+jvisualvm
+
+# 或者直接运行（如果已添加到 PATH）
+visualvm
+```
+
+**使用方式**：
+
+1. 启动 VisualVM
+2. 在左侧进程列表中选择要监控的 Java 进程
+3. 切换到 "Monitor" 标签页查看内存使用情况
+4. 可以查看堆内存、非堆内存的实时图表
+5. 可以查看内存采样、线程、GC 等信息
+
+#### JConsole
+
+JConsole 是 JDK 自带的图形化监控工具。
+
+```bash
+# 启动 JConsole
+jconsole
+
+# 或者指定进程 ID
+jconsole <pid>
+```
+
+**使用方式**：
+1. 启动 JConsole
+2. 选择本地进程或输入远程进程地址
+3. 切换到 "Memory" 标签页查看内存使用情况
+4. 可以查看堆内存、非堆内存的实时图表
+5. 可以按内存区域（Eden、Survivor、Old Gen）查看
+
+#### Java Mission Control (JMC)
+
+JMC 是 Oracle 提供的专业 Java 性能监控工具（需要 JDK 商业许可或使用 OpenJDK 的构建版本）。
+
+```bash
+# 启动 JMC
+jmc
+```
+
+**使用方式**：
+1. 启动 JMC
+2. 创建或打开 JVM 连接
+3. 查看 "Memory" 视图，可以查看详细的内存使用情况
+4. 支持内存泄漏检测、GC 分析等高级功能
+
+### 方法对比总结
+
+| 方法 | 优点 | 缺点 | 适用场景 |
+|------|------|------|----------|
+| **NMT** | 详细追踪本地内存分配 | 需要启动参数，有性能开销 | 诊断元空间泄漏、线程栈、直接内存 |
+| **Actuator** | 无需额外工具，HTTP 接口 | 需要 Spring Boot 应用 | Spring Boot 应用监控 |
+| **jmap** | 快速查看堆内存和对象统计 | 某些命令会 STW，JDK 9+ 部分功能受限 | 快速诊断堆内存问题 |
+| **jstat** | 轻量级，实时监控 GC 和内存 | 只能查看统计信息，不能查看对象详情 | 持续监控内存和 GC |
+| **jcmd** | 功能强大，JDK 官方推荐 | 需要 JDK 1.7+ | 综合诊断和监控 |
+| **arthas** | 功能丰富，支持在线诊断 | 需要安装工具 | 生产环境在线诊断 |
+| **VisualVM/JConsole** | 图形化界面，直观 | 需要图形界面或远程连接 | 开发环境或测试环境 |
+| **JMC** | 专业性能分析工具 | 需要商业许可（部分版本） | 深度性能分析 |
+
+
 

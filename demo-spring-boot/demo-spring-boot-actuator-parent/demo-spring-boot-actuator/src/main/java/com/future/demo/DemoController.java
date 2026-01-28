@@ -13,6 +13,7 @@ public class DemoController {
     // 用于协助测试自定义指标开发
     @GetMapping("/")
     public String index() {
+        log.debug("Hello world!");
         log.info("Hello World!");
 
         // 自定义指标测试

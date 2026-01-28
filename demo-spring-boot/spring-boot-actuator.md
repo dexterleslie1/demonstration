@@ -1,7 +1,3 @@
-# `actuator`使用
-
-
-
 ## 什么是`actuator`？
 
 Spring Boot Actuator是一个用于监控和管理Spring Boot应用的框架。以下是对Spring Boot Actuator的详细介绍：
@@ -209,6 +205,156 @@ curl http://localhost:8080/actuator/health
 
 
 
+### /actuator/loggers
+
+`/actuator/loggers` 端点是 Spring Boot Actuator 提供的一个用于查看和管理应用程序日志级别的端点。通过访问这个端点，你可以查看当前应用程序中所有 Logger 的日志级别，并且可以通过发送 POST 请求动态修改某个 Logger 的日志级别，而无需重启应用程序。
+
+**功能**
+
+`/actuator/loggers` 端点提供了以下功能：
+
+1. **查看所有 Logger**：通过 GET 请求访问该端点，可以查看应用程序中所有 Logger 的名称和当前日志级别。
+2. **查看特定 Logger**：通过 GET 请求访问 `/actuator/loggers/{logger-name}`，可以查看特定 Logger 的详细信息。
+3. **动态修改日志级别**：通过 POST 请求向 `/actuator/loggers/{logger-name}` 发送配置，可以动态修改指定 Logger 的日志级别，修改会立即生效，无需重启应用程序。
+
+**支持的日志级别**
+
+Spring Boot Actuator 支持以下日志级别：
+
+- `TRACE`：最详细的日志级别，通常用于调试。
+- `DEBUG`：调试信息，用于开发环境。
+- `INFO`：一般信息，用于记录应用程序的正常运行状态。
+- `WARN`：警告信息，表示可能存在潜在问题。
+- `ERROR`：错误信息，表示发生了错误但应用程序仍可继续运行。
+- `FATAL`：致命错误，表示发生了严重错误。
+- `OFF`：关闭日志记录。
+
+**配置**
+
+要使用 `/actuator/loggers` 端点，需要在配置文件中进行以下设置：
+
+1. **暴露端点**：确保在 `application.properties` 或 `application.yml` 中暴露 `loggers` 端点：
+
+```properties
+# application.properties
+management.endpoints.web.exposure.include=loggers
+# 或者暴露所有端点
+management.endpoints.web.exposure.include=*
+```
+
+```yaml
+# application.yml
+management:
+  endpoints:
+    web:
+      exposure:
+        include: loggers
+        # 或者暴露所有端点
+        # include: "*"
+```
+
+2. **配置基础路径**（可选）：如果配置了自定义的基础路径，端点 URL 会相应变化：
+
+```properties
+management.endpoints.web.base-path=/mydemo
+```
+
+**安全性**
+
+由于 `/actuator/loggers` 端点允许动态修改日志级别，这可能会影响应用程序的日志输出，甚至可能暴露敏感信息。因此，在生产环境中应谨慎使用，并采取以下安全措施：
+
+1. **访问控制**：使用 Spring Security 限制对该端点的访问，确保只有授权用户才能修改日志级别。
+2. **限制暴露**：在生产环境中，考虑不暴露该端点，或者仅允许在特定条件下（如经过认证）访问。
+3. **审计日志**：记录对日志级别的修改操作，以便追踪和审计。
+
+**使用场景**
+
+`/actuator/loggers` 端点在以下场景中非常有用：
+
+- **生产环境调试**：当生产环境出现问题时，可以临时提高某个 Logger 的日志级别（如从 INFO 提升到 DEBUG），以便获取更详细的日志信息，而无需重启应用程序。
+- **动态日志管理**：根据应用程序的运行状态，动态调整不同组件的日志级别，以便更好地监控和诊断问题。
+- **性能优化**：在性能敏感的场景中，可以临时降低某些 Logger 的日志级别，以减少日志输出的开销。
+
+**示例**
+
+1. **查看所有 Logger**：
+
+```bash
+curl http://localhost:8081/mydemo/loggers
+```
+
+响应示例：
+
+```json
+{
+  "levels": ["OFF", "FATAL", "ERROR", "WARN", "INFO", "DEBUG", "TRACE"],
+  "loggers": {
+    "ROOT": {
+      "configuredLevel": "INFO",
+      "effectiveLevel": "INFO"
+    },
+    "com.future.demo": {
+      "configuredLevel": "DEBUG",
+      "effectiveLevel": "DEBUG"
+    },
+    "org.springframework": {
+      "configuredLevel": null,
+      "effectiveLevel": "INFO"
+    }
+  }
+}
+```
+
+2. **查看特定 Logger**：
+
+```bash
+curl http://localhost:8081/mydemo/loggers/com.future.demo
+```
+
+响应示例：
+
+```json
+{
+  "configuredLevel": "DEBUG",
+  "effectiveLevel": "DEBUG"
+}
+```
+
+3. **动态修改日志级别**：
+
+将 `com.future.demo` 包的日志级别修改为 `TRACE`：
+
+```bash
+curl -i -X POST http://localhost:8081/mydemo/loggers/com.future.demo \
+  -H "Content-Type: application/json" \
+  -d '{"configuredLevel": "TRACE"}'
+```
+
+将 `ROOT` Logger 的日志级别修改为 `WARN`：
+
+```bash
+curl -i -X POST http://localhost:8081/mydemo/loggers/ROOT \
+  -H "Content-Type: application/json" \
+  -d '{"configuredLevel": "WARN"}'
+```
+
+恢复为默认级别（继承父 Logger 的级别）：
+
+```bash
+curl -i -X POST http://localhost:8081/mydemo/loggers/com.future.demo \
+  -H "Content-Type: application/json" \
+  -d '{"configuredLevel": null}'
+```
+
+**注意事项**
+
+- 修改日志级别后，新的日志级别会立即生效，但不会影响已经输出的日志。
+- 如果修改了 `ROOT` Logger 的日志级别，会影响所有没有明确配置日志级别的 Logger。
+- 在生产环境中修改日志级别时，应注意日志输出的性能影响，特别是将日志级别设置为 `TRACE` 或 `DEBUG` 时，可能会产生大量的日志输出。
+- 修改的日志级别在应用程序重启后会丢失，如果需要永久修改，应在配置文件中进行设置。
+
+
+
 ### /actuator/shutdown
 
 配置优雅地关闭服务，application.properties 配置如下：
@@ -234,6 +380,229 @@ curl -i http://localhost:8080/test1
 ```
 
 以上测试可以看到第一个 shell 的请求正常处理，第三个 shell 被拒绝连接。
+
+
+
+### /actuator/metrics
+
+`/actuator/metrics` 端点是 Spring Boot Actuator 提供的一个用于查看应用程序各项指标和性能数据的端点。通过访问这个端点，你可以查看 JVM 内存使用情况、GC 活动、线程信息、HTTP 请求指标等各种运行时指标，帮助监控和诊断应用程序的性能问题。
+
+**功能**
+
+`/actuator/metrics` 端点提供了以下功能：
+
+1. **查看所有可用指标**：通过 GET 请求访问该端点，可以查看应用程序中所有可用的指标名称列表。
+2. **查看特定指标**：通过 GET 请求访问 `/actuator/metrics/{metric-name}`，可以查看特定指标的详细信息，包括当前值、标签等。
+3. **查看带标签的指标**：可以查询带有特定标签的指标值，例如查询特定 URI 的 HTTP 请求指标。
+
+**常用指标类型**
+
+Spring Boot Actuator 提供了多种类型的指标，主要包括：
+
+- **JVM 指标**：
+  - `jvm.memory.used`：JVM 内存使用量
+  - `jvm.memory.max`：JVM 最大内存
+  - `jvm.memory.committed`：JVM 已提交内存
+  - `jvm.gc.pause`：GC 暂停时间
+  - `jvm.threads.live`：当前活动线程数
+  - `jvm.threads.daemon`：守护线程数
+  - `jvm.classes.loaded`：已加载的类数量
+
+- **HTTP 指标**：
+  - `http.server.requests`：HTTP 服务器请求指标（包括请求数、响应时间等）
+  - `http.server.requests.active`：当前活跃的 HTTP 请求数
+
+- **系统指标**：
+  - `system.cpu.usage`：系统 CPU 使用率
+  - `process.cpu.usage`：进程 CPU 使用率
+  - `disk.free`：磁盘可用空间
+  - `disk.total`：磁盘总空间
+
+- **应用指标**：
+  - `application.ready.time`：应用就绪时间
+  - `application.started.time`：应用启动时间
+
+**配置**
+
+要使用 `/actuator/metrics` 端点，需要在配置文件中进行以下设置：
+
+1. **暴露端点**：确保在 `application.properties` 或 `application.yml` 中暴露 `metrics` 端点：
+
+```properties
+# application.properties
+management.endpoints.web.exposure.include=metrics
+# 或者暴露所有端点
+management.endpoints.web.exposure.include=*
+```
+
+```yaml
+# application.yml
+management:
+  endpoints:
+    web:
+      exposure:
+        include: metrics
+        # 或者暴露所有端点
+        # include: "*"
+```
+
+2. **配置基础路径**（可选）：如果配置了自定义的基础路径，端点 URL 会相应变化：
+
+```properties
+management.endpoints.web.base-path=/mydemo
+```
+
+**安全性**
+
+`/actuator/metrics` 端点可能包含应用程序的性能和运行时信息，虽然通常不包含敏感数据，但在生产环境中仍应注意：
+
+1. **访问控制**：考虑使用 Spring Security 限制对该端点的访问，特别是在生产环境中。
+2. **限制暴露**：如果不需要暴露所有指标，可以通过配置只暴露必要的指标。
+3. **监控频率**：注意监控工具对端点的访问频率，避免对应用程序造成性能影响。
+
+**使用场景**
+
+`/actuator/metrics` 端点在以下场景中非常有用：
+
+- **性能监控**：实时监控应用程序的 CPU、内存、线程等关键性能指标。
+- **问题诊断**：当应用程序出现性能问题时，通过查看指标数据来定位问题原因。
+- **容量规划**：通过长期收集指标数据，分析应用程序的资源使用趋势，为容量规划提供依据。
+- **告警配置**：结合监控系统（如 Prometheus、Grafana），设置基于指标的告警规则。
+
+**示例**
+
+1. **查看所有可用指标**：
+
+```bash
+curl http://localhost:8081/mydemo/metrics
+```
+
+响应示例：
+
+```json
+{
+  "names": [
+    "jvm.memory.used",
+    "jvm.memory.max",
+    "jvm.threads.live",
+    "http.server.requests",
+    "system.cpu.usage",
+    "process.cpu.usage"
+  ]
+}
+```
+
+2. **查看特定指标**：
+
+查看 JVM 内存使用情况：
+
+```bash
+curl http://localhost:8081/mydemo/metrics/jvm.memory.used
+```
+
+响应示例：
+
+```json
+{
+  "name": "jvm.memory.used",
+  "description": "The amount of used memory",
+  "baseUnit": "bytes",
+  "measurements": [
+    {
+      "statistic": "VALUE",
+      "value": 123456789
+    }
+  ],
+  "availableTags": [
+    {
+      "tag": "area",
+      "values": ["heap", "nonheap"]
+    },
+    {
+      "tag": "id",
+      "values": ["G1 Old Gen", "G1 Survivor Space", "G1 Eden Space"]
+    }
+  ]
+}
+```
+
+查看 HTTP 请求指标：
+
+```bash
+curl http://localhost:8081/mydemo/metrics/http.server.requests
+```
+
+响应示例：
+
+```json
+{
+  "name": "http.server.requests",
+  "description": null,
+  "baseUnit": "seconds",
+  "measurements": [
+    {
+      "statistic": "COUNT",
+      "value": 100
+    },
+    {
+      "statistic": "TOTAL_TIME",
+      "value": 5.234
+    },
+    {
+      "statistic": "MAX",
+      "value": 0.123
+    }
+  ],
+  "availableTags": [
+    {
+      "tag": "uri",
+      "values": ["/api/users", "/api/orders", "/"]
+    },
+    {
+      "tag": "method",
+      "values": ["GET", "POST"]
+    },
+    {
+      "tag": "status",
+      "values": ["200", "404", "500"]
+    }
+  ]
+}
+```
+
+3. **查看带标签的指标**：
+
+查看特定 URI 的 HTTP 请求指标：
+
+```bash
+curl "http://localhost:8081/mydemo/metrics/http.server.requests?tag=uri:/api/users"
+```
+
+查看特定状态码的 HTTP 请求指标：
+
+```bash
+curl "http://localhost:8081/mydemo/metrics/http.server.requests?tag=status:200"
+```
+
+查看多个标签组合的指标：
+
+```bash
+curl "http://localhost:8081/mydemo/metrics/http.server.requests?tag=uri:/api/users&tag=method:GET&tag=status:200"
+```
+
+查看 JVM 堆内存使用情况：
+
+```bash
+curl "http://localhost:8081/mydemo/metrics/jvm.memory.used?tag=area:heap"
+```
+
+**注意事项**
+
+- 指标数据是实时收集的，每次访问端点都会返回最新的指标值。
+- 某些指标（如计数器）会持续累加，而某些指标（如当前值）会反映当前状态。
+- 指标数据可以通过 Micrometer 与外部监控系统（如 Prometheus、InfluxDB）集成。
+- 在生产环境中，建议使用专门的监控工具定期抓取指标数据，而不是频繁手动访问端点。
+- 自定义指标可以通过 Micrometer 的 API 添加到应用程序中，这些自定义指标也会出现在 `/actuator/metrics` 端点中。
 
 
 
