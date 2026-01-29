@@ -123,7 +123,10 @@ if(errorCode&gt;0) {
    ./stoptest.sh
    ```
 
-   
+
+### Windows11安装
+
+在https://archive.apache.org/dist/jmeter/binaries/下载apache-jmeter-5.6.2.zip，解压后运行bin/jmeter.bat脚本即可启动jmeter。
 
 ## 单机性能测试
 
@@ -514,9 +517,22 @@ if(errorCode==null || errorCode>0) {
 }
 ```
 
+### JSR223 Groovy md5编码
+
+```groovy
+import java.security.MessageDigest
+
+def originalPassword = vars.get("PASSWORD")
+def md5Password = MessageDigest.getInstance("MD5").digest(originalPassword.bytes).encodeHex().toString()
+vars.put("md5Password", md5Password)
+//log.info("md5Password: " + md5Password)
+```
+
 ### 根据响应errorCode标记样本失败
 
 >详细用法请参考本站[示例](https://gitee.com/dexterleslie/demonstration/tree/main/demo-jmeter/perf-assistant.jmx)
+>
+>提示：在JSR223 PostProcessor中编写下面Groovy脚本。
 
 ```groovy
 import groovy.json.JsonSlurper
@@ -822,3 +838,252 @@ if (vars.get("ITERATION").toInteger() % 100 == 0) {
 - **Random Order Controller** = 随机**排顺序**执行全部
 
 根据您的测试目标选择合适的控制器，也可以组合使用以达到更真实的模拟效果。
+
+## 断言
+
+JMeter断言是**验证测试结果是否符合预期的重要组件**，它的主要作用是检查服务器响应数据是否满足特定的条件，从而判断请求是否真正成功。
+
+### JMeter断言的核心作用
+
+#### 1. **验证响应正确性**
+
+- 确认服务器返回了期望的数据
+- 检查业务逻辑是否正确执行
+- 验证API接口返回的状态和数据格式
+
+#### 2. **自动化测试验证**
+
+- 替代人工检查响应内容
+- 实现测试的自动化和持续集成
+- 提供客观的测试结果判断
+
+#### 3. **错误检测和定位**
+
+- 快速发现功能缺陷
+- 定位具体失败的请求和原因
+- 提高测试效率
+
+### 常用断言类型及应用场景
+
+#### 1. **响应断言（Response Assertion）**
+
+最常用的断言类型，检查响应文本、代码、消息等
+
+**配置示例：**
+
+```
+应用范围：主样本/子样本
+要测试的响应字段：响应文本、响应代码、响应头
+模式匹配规则：包含、匹配、相等、字符串
+测试模式：预期的文本或正则表达式
+```
+
+**典型应用：**
+
+- 检查HTTP状态码：`200`
+- 验证响应包含特定关键词：`"success":true`
+- 确认错误消息不存在：`"error"`
+
+#### 2. **JSON断言（JSON Assertion）**
+
+专门用于验证JSON格式的响应数据
+
+**配置示例：**
+
+```
+JSON路径表达式：$.status
+预期值：success
+Additionally assert value：勾选
+Match as regular expression：根据需要使用正则
+```
+
+**典型应用：**
+
+```
+{
+  "code": 200,
+  "message": "操作成功",
+  "data": {...}
+}
+```
+
+- 验证code字段值为200
+- 检查message字段包含"成功"
+- 验证data对象不为空
+
+#### 3. **持续时间断言（Duration Assertion）**
+
+验证响应时间是否在可接受范围内
+
+**配置示例：**
+
+```
+持续时间（毫秒）：5000
+```
+
+表示响应必须在5秒内完成，否则断言失败
+
+#### 4. **大小断言（Size Assertion）**
+
+验证响应数据的大小
+
+**配置示例：**
+
+```
+大小（字节）：1024
+比较类型：等于、大于、小于等
+```
+
+- 检查响应体不超过限制大小
+- 验证文件下载完整性
+
+#### 5. **XML断言（XML Assertion）**
+
+验证XML格式响应的有效性
+
+**典型应用：**
+
+- 检查XML格式是否正确
+- 验证必需的元素存在
+
+#### 6. **BeanShell断言（BeanShell Assertion）**
+
+使用脚本语言进行复杂逻辑的断言
+
+**Groovy脚本示例：**
+
+```
+import groovy.json.JsonSlurper
+
+// 解析JSON响应
+def response = prev.getResponseDataAsString()
+def json = new JsonSlurper().parseText(response)
+
+// 复杂验证逻辑
+if (json.code != 200) {
+    Failure = true
+    FailureMessage = "Expected code 200 but got: " + json.code
+} else if (!json.data.users || json.data.users.size() == 0) {
+    Failure = true  
+    FailureMessage = "Users list is empty"
+}
+
+// 或者直接使用断言
+assert json.code == 200 : "Code should be 200"
+assert json.message.contains("成功") : "Should contain success message"
+```
+
+### 断言配置最佳实践
+
+#### 1. **分层断言策略**
+
+```
+<!-- 基础断言：所有请求都应配置 -->
+<ResponseAssertion>
+    <test_field>response_code</test_field>
+    <test_type>2</test_type> <!-- 等于 -->
+    <test_pattern>200</test_pattern>
+</ResponseAssertion>
+
+<!-- 业务断言：根据具体接口配置 -->
+<JSONAssertion>
+    <jsonPathExpr>$.success</jsonPathExpr>
+    <expectedValue>true</expectedValue>
+</JSONAssertion>
+
+<!-- 性能断言：关键接口配置 -->
+<DurationAssertion>
+    <maxDuration>3000</maxDuration>
+</DurationAssertion>
+```
+
+#### 2. **断言作用域设置**
+
+- **Main Sample Only**：只验证主请求
+- **Sub Samples Only**：只验证子请求（如重定向）
+- **Main and Sub Samples**：验证所有请求
+
+#### 3. **模式匹配技巧**
+
+```
+包含：适用于部分匹配，如检查成功标志
+匹配：支持正则表达式，适合复杂模式
+相等：精确匹配，适用于固定返回值
+字符串：简单文本匹配
+```
+
+### 实际应用场景示例
+
+#### 场景1：登录接口验证
+
+```
+// 响应断言配置：
+响应代码：200
+响应文本包含："登录成功"
+
+// JSON断言配置：
+JSON Path: $.token
+预期值：非空（使用正则表达式：.+）
+```
+
+#### 场景2：查询用户信息接口
+
+```
+// JSON断言配置：
+JSON Path: $.user.status  
+预期值：active
+
+JSON Path: $.user.age
+比较：大于 18
+```
+
+#### 场景3：文件上传接口
+
+```
+// 大小断言：验证文件大小合理
+响应大小：大于 100字节
+
+// 持续时间断言：上传应在10秒内完成
+最大时长：10000毫秒
+```
+
+### 断言结果查看
+
+#### 1. **查看结果树中的断言结果**
+
+- 绿色：断言通过
+- 红色：断言失败，显示详细错误信息
+
+#### 2. **聚合报告中的断言统计**
+
+- 显示断言失败的数量和比例
+- 帮助评估系统稳定性
+
+#### 3. **断言监听器**
+
+专门的断言结果收集器，提供更详细的断言分析
+
+### 常见问题解决
+
+#### 1. **断言误报**
+
+- 检查响应数据的动态内容（如时间戳、随机数）
+- 使用正则表达式忽略动态部分
+- 考虑使用包含而非精确匹配
+
+#### 2. **性能影响**
+
+- 避免在大量请求上使用复杂的BeanShell断言
+- 优先使用内置断言类型
+- 合理使用断言作用域
+
+#### 3. **编码问题**
+
+- 确保断言文本的编码与响应一致
+- 处理中文等特殊字符的匹配
+
+**总结：** JMeter断言是确保测试质量的关键工具，合理配置断言可以大大提高测试的准确性和效率。建议根据业务需求选择合适的断言类型，并建立分层的断言验证策略。
+
+### 示例
+
+具体用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-jmeter/demo-断言.jmx
