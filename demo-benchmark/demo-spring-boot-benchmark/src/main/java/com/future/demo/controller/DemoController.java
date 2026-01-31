@@ -1,6 +1,6 @@
 package com.future.demo.controller;
 
-import com.future.common.http.ObjectResponse;
+import com.future.demo.ObjectResponse;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;

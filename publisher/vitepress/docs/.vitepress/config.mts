@@ -346,6 +346,7 @@ export default defineConfig({
           text: '基准测试',
           items: [
             { text: '基础', link: '/benchmark/README.md' },
+            { text: 'Gatling', link: '/benchmark/gatling.md' },
             { text: 'CPU 测试', link: '/benchmark/CPU测试.md' },
             { text: 'IO 测试', link: '/benchmark/IO测试.md' },
             { text: '内存测试', link: '/benchmark/内存测试.md' },

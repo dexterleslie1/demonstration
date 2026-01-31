@@ -48,11 +48,11 @@
             <scope>test</scope>
         </dependency>
 
-        <dependency>
+        <!--<dependency>
             <groupId>com.github.dexterleslie1</groupId>
             <artifactId>future-common</artifactId>
             <version>1.1.5</version>
-        </dependency>
+        </dependency>-->
 
         <!-- spring数据校验依赖 -->
         <dependency>
