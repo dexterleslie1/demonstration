@@ -1087,3 +1087,785 @@ JSON Path: $.user.age
 ### 示例
 
 具体用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-jmeter/demo-断言.jmx
+
+## ctx上下文对象
+
+`ctx`是JMeter中的**上下文对象**（Context），它是JMeter提供的一个核心Java对象，用于在测试执行过程中访问和操作JMeter的内部状态和运行时信息。
+
+### ctx对象的基本概念
+
+#### 定义
+
+`ctx`是 `org.apache.jmeter.threads.JMeterContext`类的实例，通过它可以直接访问JMeter引擎的各种运行时信息和控制方法。
+
+#### 访问方式
+
+在JMeter的各种脚本组件中都可以直接使用 `ctx`变量：
+
+- **JSR223 Sampler/PreProcessor/PostProcessor**
+- **BeanShell Sampler/PreProcessor/PostProcessor**
+- **JSR223 Assertion**
+- **JSR223 Listener**
+
+### ctx对象的主要属性和方法
+
+#### 1. **线程相关属性**
+
+```
+// 获取当前线程组
+def threadGroup = ctx.getThreadGroup()
+
+// 获取当前线程
+def thread = ctx.getCurrentThread()
+
+// 获取线程编号
+def threadNumber = ctx.getThreadNum()
+
+// 获取线程名称
+def threadName = ctx.getThread().getName()
+
+// 检查是否为第一个线程
+def isFirstThread = ctx.isFirstInThreadGroup()
+```
+
+#### 2. **采样器相关方法**
+
+```
+// 获取前一个采样器的结果
+def prev = ctx.getPreviousResult()
+if (prev) {
+    def responseCode = prev.getResponseCode()
+    def responseData = prev.getResponseDataAsString()
+    def isSuccessful = prev.isSuccessful()
+    def startTime = prev.getStartTime()
+    def endTime = prev.getEndTime()
+    def latency = prev.getLatency()
+}
+
+// 获取当前采样器
+def currentSampler = ctx.getCurrentSampler()
+
+// 获取采样器标签
+def samplerLabel = ctx.getSamplerLabel()
+```
+
+#### 3. **测试控制方法**
+
+```
+// 停止整个测试（立即停止）
+ctx.stopTestNow()
+
+// 停止测试（等待当前迭代完成）
+ctx.stopTest()
+
+// 停止当前线程
+ctx.stopThread(0)  // 0表示立即停止
+ctx.stopThread(1)  // 1表示停止并清理资源
+
+// 暂停当前线程
+ctx.suspendThread()
+
+// 恢复当前线程
+ctx.resumeThread()
+```
+
+#### 4. **变量和属性访问**
+
+```
+// 访问JMeter变量（等同于vars）
+def myVar = ctx.getVariables().get("myVariable")
+ctx.getVariables().put("newVariable", "value")
+
+// 访问JMeter属性（等同于props）
+def propertyValue = ctx.getProperties().getProperty("some.property")
+ctx.getProperties().setProperty("some.property", "newValue")
+
+// 注意：通常更推荐使用vars和props对象
+```
+
+#### 5. **引擎和测试计划信息**
+
+```
+// 获取JMeter引擎
+def engine = ctx.getEngine()
+
+// 获取测试计划
+def testPlan = ctx.getEngine().getTestPlan()
+
+// 获取运行计划
+def runningPlan = ctx.getEngine().getRunningPlan()
+```
+
+### 实际使用场景示例
+
+#### 场景1：在断言中获取详细错误信息
+
+```
+import org.apache.jmeter.samplers.SampleResult
+
+// 获取前一个采样结果
+def sampleResult = ctx.getPreviousResult()
+
+if (!sampleResult.isSuccessful()) {
+    // 获取响应数据
+    def responseData = sampleResult.getResponseDataAsString()
+    def responseCode = sampleResult.getResponseCode()
+    def responseMessage = sampleResult.getResponseMessage()
+    
+    // 记录详细错误信息
+    log.error("请求失败 - 标签: " + sampleResult.getSampleLabel())
+    log.error("响应代码: " + responseCode)
+    log.error("响应消息: " + responseMessage)
+    log.error("响应数据: " + responseData.substring(0, Math.min(responseData.length(), 500)))
+    
+    // 可以根据条件决定是否停止测试
+    if (responseCode == "500") {
+        ctx.stopTestNow()
+    }
+}
+```
+
+#### 场景2：基于线程状态的条件逻辑
+
+```
+// 只在第一个线程执行某些操作
+if (ctx.isFirstInThreadGroup()) {
+    log.info("这是线程组中的第一个线程: " + ctx.getThreadNum())
+    
+    // 初始化操作
+    ctx.getVariables().put("startTime", System.currentTimeMillis().toString())
+}
+
+// 获取线程执行次数
+def iteration = ctx.getThread().getIteration()
+log.info("线程 " + ctx.getThreadNum() + " 第 " + iteration + " 次迭代")
+
+// 在特定迭代执行特殊逻辑
+if (iteration == 5) {
+    log.info("第5次迭代，执行特殊验证")
+}
+```
+
+#### 场景3：动态调整测试行为
+
+```
+// 根据响应时间动态调整后续请求
+def prevResult = ctx.getPreviousResult()
+def responseTime = prevResult.getTime()
+
+if (responseTime > 5000) {
+    log.warn("响应时间过长: " + responseTime + "ms")
+    
+    // 设置标志让后续请求使用更简单的参数
+    ctx.getVariables().put("useSimpleMode", "true")
+    
+    // 或者降低后续请求的负载
+    if (ctx.getThreadNum() == 0) { // 只在第一个线程调整
+        ctx.getEngine().setProperty("ramp_up_time", "30") // 延长 ramp-up
+    }
+}
+```
+
+#### 场景4：测试执行监控
+
+```
+// 在测试开始时记录
+if (ctx.getThreadNum() == 0 && ctx.getCurrentSampler() == null) {
+    log.info("测试开始执行")
+    ctx.getVariables().put("testStartTime", System.currentTimeMillis().toString())
+}
+
+// 在采样器中监控进度
+def totalThreads = ctx.getThreadGroup().getNumberOfThreads()
+def activeThreads = ctx.getThreadGroup().getNumberOfActiveThreads()
+def progress = (totalThreads - activeThreads) / totalThreads * 100
+
+log.info("测试进度: " + progress + "%, 活跃线程: " + activeThreads)
+```
+
+### ctx与其他对象的区别
+
+#### ctx vs vars
+
+```
+// ctx方式
+def value1 = ctx.getVariables().get("variableName")
+
+// vars方式（推荐）
+def value2 = vars.get("variableName")
+
+// vars是更简洁的写法，内部调用的是ctx.getVariables()
+```
+
+#### ctx vs props
+
+```
+// ctx方式
+def prop1 = ctx.getProperties().getProperty("property.name")
+
+// props方式（推荐）
+def prop2 = props.getProperty("property.name")
+
+// props是更简洁的写法，内部调用的是ctx.getProperties()
+```
+
+#### ctx vs prev
+
+```
+// ctx方式获取前一个结果
+def result1 = ctx.getPreviousResult()
+
+// prev变量方式（推荐）
+def result2 = prev
+
+// prev是专门为后处理器设计的便捷变量
+```
+
+### 重要注意事项
+
+#### 1. **性能考虑**
+
+- `ctx`提供了底层访问，频繁调用可能影响性能
+- 在循环中避免重复调用相同的方法
+
+#### 2. **线程安全**
+
+- `ctx`对象是线程安全的，每个线程有自己的上下文
+- 但跨线程访问需要小心处理
+
+#### 3. **脚本语言兼容性**
+
+- **Groovy**：完全支持所有ctx方法，性能最佳
+- **BeanShell**：支持大部分方法，但性能较差
+- **JavaScript**：支持有限，不推荐
+
+#### 4. **调试技巧**
+
+```
+// 打印所有可用的ctx方法（调试用）
+ctx.metaClass.methods.each { method ->
+    println "Method: " + method.name
+}
+
+// 检查对象类型
+println "ctx class: " + ctx.getClass().name
+```
+
+### 实用工具函数封装
+
+```
+// 封装常用的ctx操作
+class JMeterContextUtil {
+    
+    static void stopOnCondition(boolean condition, String reason = "") {
+        if (condition) {
+            if (reason) log.error("停止测试: " + reason)
+            ctx.stopTestNow()
+        }
+    }
+    
+    static void logSampleInfo() {
+        def prev = ctx.getPreviousResult()
+        if (prev) {
+            log.info("Sample: ${prev.getSampleLabel()}, Time: ${prev.getTime()}ms, Success: ${prev.isSuccessful()}")
+        }
+    }
+    
+    static boolean isFirstThread() {
+        return ctx.isFirstInThreadGroup()
+    }
+}
+
+// 使用示例
+JMeterContextUtil.stopOnCondition(!prev.isSuccessful(), "断言失败")
+JMeterContextUtil.logSampleInfo()
+```
+
+**总结：** `ctx`是JMeter脚本编程中最强大的工具之一，它提供了对JMeter引擎的完整访问能力。虽然功能强大，但在日常使用中，优先考虑使用更高层次的抽象（如 `vars`、`props`、`prev`）会让代码更清晰易读。`ctx`主要用于需要深度控制JMeter行为的复杂场景中。
+
+## prev内置变量
+
+`prev`是JMeter中的一个**内置变量**，专门用于在**后处理器**（PostProcessor）中访问**前一个采样器的结果**。它是JMeter脚本编程中的重要概念，极大地简化了测试结果的处理逻辑。
+
+### prev对象的基本概念
+
+#### 定义
+
+`prev`是 `org.apache.jmeter.samplers.SampleResult`类的实例，代表最近一次执行的采样器（Sampler）的结果数据。
+
+#### 访问范围
+
+**只能在以下组件中使用：**
+
+- **JSR223 PostProcessor**
+- **BeanShell PostProcessor**
+- **JSR223 Assertion**
+- **BeanShell Assertion**
+
+**不能在以下组件中使用：**
+
+- 前置处理器（PreProcessor）
+- 普通采样器（Sampler）
+- 监听器（Listener）
+- 其他非后处理组件
+
+### prev对象的主要属性和方法
+
+#### 1. **基本响应信息**
+
+```
+// 响应代码（如：200, 404, 500）
+def responseCode = prev.getResponseCode()
+
+// 响应消息（如：OK, Not Found）
+def responseMessage = prev.getResponseMessage()
+
+// 是否请求成功
+def isSuccess = prev.isSuccessful()
+
+// 采样器标签/名称
+def sampleLabel = prev.getSampleLabel()
+
+// 线程名称
+def threadName = prev.getThreadName()
+```
+
+#### 2. **时间和性能指标**
+
+```
+// 开始时间（毫秒）
+def startTime = prev.getStartTime()
+
+// 结束时间（毫秒）  
+def endTime = prev.getEndTime()
+
+// 总耗时（毫秒）
+def time = prev.getTime()
+
+// 延迟时间（毫秒）- 从请求发出到收到响应的时间
+def latency = prev.getLatency()
+
+// 连接时间（毫秒）
+def connectTime = prev.getConnectTime()
+
+// 字节大小
+def bodySize = prev.getBodySize()
+def headersSize = prev.getHeadersSize()
+def bytesAsLong = prev.getBytesAsLong()
+```
+
+#### 3. **响应数据访问**
+
+```
+// 响应数据（字节数组）
+def responseDataBytes = prev.getResponseData()
+
+// 响应数据（字符串）
+def responseDataString = prev.getResponseDataAsString()
+
+// 响应头
+def responseHeaders = prev.getResponseHeaders()
+
+// 请求头
+def requestHeaders = prev.getRequestHeaders()
+
+// URL
+def url = prev.getUrlAsString()
+
+// HTTP方法
+def method = prev.getHTTPMethod()
+```
+
+#### 4. **子结果处理**
+
+```
+// 获取子采样器结果（如重定向）
+def subResults = prev.getSubResults()
+
+// 获取采样器数据
+def samplerData = prev.getSamplerData()
+
+// 获取断言结果
+def assertionResults = prev.getAssertionResults()
+```
+
+#### 5. **线程控制：setStopThread**
+
+`prev.setStopThread(boolean stop)` 用于**控制当前线程是否停止执行**。调用后，JMeter 会在当前采样器及其后处理器执行完毕后，**不再执行该线程内后续的采样器**，常用于遇到非预期响应时提前结束该线程的测试。
+
+| 参数 | 说明 |
+|------|------|
+| `stop` | `true`：停止当前线程，不再执行后续采样器；`false`：不停止（默认行为） |
+
+**典型用法：** 在后处理器或断言中根据响应码、响应体内容等判断为“非预期”时，先 `prev.setSuccessful(false)` 并设置 `prev.setResponseMessage(...)`，再调用 `prev.setStopThread(true)`，可避免该线程继续发无效请求。
+
+```groovy
+// 示例：非预期响应时停止当前线程
+def responseCode = prev.getResponseCode()
+if (responseCode != "200") {
+    prev.setSuccessful(false)
+    prev.setResponseMessage("非预期响应: 状态码=" + responseCode)
+    prev.setStopThread(true)  // 当前线程后续采样器不再执行
+    return
+}
+def response = prev.getResponseDataAsString()
+if (!response.contains("slideshow")) {
+    prev.setSuccessful(false)
+    prev.setResponseMessage("非预期响应: JSON中缺少slideshow字段")
+    prev.setStopThread(true)
+    return
+}
+```
+
+**注意：** 仅影响**当前线程**，其他线程照常运行；停止的是“该线程后续的采样器”，当前采样器及当前后处理器/断言仍会执行完。
+
+### 实际使用场景示例
+
+#### 场景1：在PostProcessor中处理结果
+
+```
+// JSR223 PostProcessor 示例
+log.info("=== 处理采样器结果 ===")
+log.info("采样器: " + prev.getSampleLabel())
+log.info("响应码: " + prev.getResponseCode())
+log.info("耗时: " + prev.getTime() + "ms")
+log.info("响应数据长度: " + prev.getResponseDataAsString().length())
+
+// 根据响应内容进行逻辑处理
+def response = prev.getResponseDataAsString()
+if (response.contains("error")) {
+    log.warn("响应中包含错误信息")
+    prev.setSuccessful(false) // 手动标记失败
+}
+
+// 提取数据保存到变量
+if (prev.getResponseCode() == "200") {
+    def jsonResponse = new groovy.json.JsonSlurper().parseText(response)
+    vars.put("userId", jsonResponse.data.id.toString())
+    vars.put("userName", jsonResponse.data.name)
+}
+```
+
+#### 场景2：在Assertion中进行复杂验证
+
+```
+// JSR223 Assertion 示例
+import groovy.json.JsonSlurper
+
+try {
+    // 获取响应数据
+    def response = prev.getResponseDataAsString()
+    def responseCode = prev.getResponseCode()
+    
+    // 首先检查HTTP状态码
+    if (responseCode != "200") {
+        AssertionResult.setFailure(true)
+        AssertionResult.setFailureMessage("期望状态码200，实际得到: " + responseCode)
+        return
+    }
+    
+    // 解析JSON响应
+    def json = new JsonSlurper().parseText(response)
+    
+    // 复杂业务逻辑验证
+    if (!json.success) {
+        AssertionResult.setFailure(true)
+        AssertionResult.setFailureMessage("业务失败: " + json.message)
+    } else if (json.data.items.size() == 0) {
+        AssertionResult.setFailure(true) 
+        AssertionResult.setFailureMessage("数据列表为空")
+    } else if (prev.getTime() > 5000) {
+        AssertionResult.setFailure(true)
+        AssertionResult.setFailureMessage("响应时间超时: " + prev.getTime() + "ms")
+    }
+    
+} catch (Exception e) {
+    AssertionResult.setFailure(true)
+    AssertionResult.setFailureMessage("解析响应时发生异常: " + e.getMessage())
+}
+```
+
+#### 场景3：性能监控和数据提取
+
+```
+// 性能阈值检查
+def responseTime = prev.getTime()
+def responseCode = prev.getResponseCode()
+
+// 设置性能断言
+if (responseTime > 3000) {
+    log.warn("慢响应检测 - 采样器: " + prev.getSampleLabel() + ", 耗时: " + responseTime + "ms")
+    
+    // 可以在这里设置自定义指标
+    if (responseTime > 5000) {
+        // 标记为失败或记录特殊指标
+        prev.setSuccessful(false)
+    }
+}
+
+// 提取关键性能指标到变量
+vars.put("current_response_time", responseTime.toString())
+vars.put("current_response_size", prev.getBytesAsLong().toString())
+
+// 响应时间趋势分析（需要在多个请求间保持状态）
+def prevTime = vars.get("previous_response_time")
+if (prevTime) {
+    def timeDiff = responseTime - prevTime.toInteger()
+    log.info("响应时间变化: " + timeDiff + "ms")
+}
+vars.put("previous_response_time", responseTime.toString())
+```
+
+#### 场景4：响应数据解析和验证
+
+```
+// XML响应处理
+if (prev.getContentType()?.contains("xml")) {
+    def xmlResponse = prev.getResponseDataAsString()
+    
+    // 检查必需元素
+    if (!xmlResponse.contains("<status>success</status>")) {
+        AssertionResult.setFailure(true)
+        AssertionResult.setFailureMessage("XML响应缺少成功状态标识")
+    }
+    
+    // 提取XML数据
+    def userIdPattern = /<user_id>(\d+)<\/user_id>/
+    def matcher = xmlResponse =~ userIdPattern
+    if (matcher.find()) {
+        vars.put("extracted_user_id", matcher[0][1])
+    }
+}
+
+// JSON响应处理
+else if (prev.getContentType()?.contains("json")) {
+    try {
+        def json = new groovy.json.JsonSlurper().parseText(prev.getResponseDataAsString())
+        
+        // 数据完整性检查
+        if (json.containsKey("required_field") && json.required_field) {
+            vars.put("validation_passed", "true")
+        } else {
+            AssertionResult.setFailure(true)
+            AssertionResult.setFailureMessage("缺少必需字段 required_field")
+        }
+        
+    } catch (Exception e) {
+        AssertionResult.setFailure(true)
+        AssertionResult.setFailureMessage("JSON解析失败: " + e.getMessage())
+    }
+}
+```
+
+### prev与ctx的区别对比
+
+#### 访问方式对比
+
+```
+// 使用prev（推荐在后处理器中）
+def responseCode1 = prev.getResponseCode()
+def responseData1 = prev.getResponseDataAsString()
+
+// 使用ctx（也可以，但更繁琐）
+def responseCode2 = ctx.getPreviousResult().getResponseCode()
+def responseData2 = ctx.getPreviousResult().getResponseDataAsString()
+
+// 使用prev更简洁直观
+```
+
+#### 使用范围对比
+
+| 特性     | prev               | ctx                    |
+| -------- | ------------------ | ---------------------- |
+| 使用组件 | 仅后处理器、断言   | 几乎所有脚本组件       |
+| 数据类型 | SampleResult       | JMeterContext          |
+| 主要功能 | 访问前一个采样结果 | 访问JMeter运行时上下文 |
+| 性能     | 直接引用，高效     | 需要方法调用，稍慢     |
+
+### 高级用法示例
+
+#### 1. **动态修改采样结果**
+
+```
+// 在某些情况下修改原始结果
+if (prev.getResponseCode() == "200" && prev.getResponseDataAsString().contains("maintenance")) {
+    // 将成功的响应改为失败
+    prev.setSuccessful(false)
+    prev.setResponseCode("503") // Service Unavailable
+    prev.setResponseMessage("Service in maintenance mode")
+}
+
+// 添加自定义数据到采样结果
+prev.setDataType("custom_data_type")
+prev.setEncodingAndType("UTF-8")
+```
+
+#### 2. **批量结果处理**
+
+```
+// 处理重定向链
+def subResults = prev.getSubResults()
+if (subResults && subResults.length > 0) {
+    log.info("检测到 " + subResults.length + " 个重定向")
+    
+    for (int i = 0; i < subResults.length; i++) {
+        def subResult = subResults[i]
+        log.info("重定向 " + (i+1) + ": " + subResult.getUrlAsString() + " -> " + subResult.getResponseCode())
+    }
+}
+```
+
+#### 3. **条件性结果过滤**
+
+```
+// 根据特定条件过滤或修改结果
+def shouldFilter = false
+
+// 检查响应内容
+def response = prev.getResponseDataAsString()
+if (response.contains("deprecated")) {
+    log.warn("跳过已弃用的接口响应")
+    shouldFilter = true
+}
+
+// 检查性能指标
+if (prev.getTime() > 10000) {
+    log.warn("异常慢响应: " + prev.getTime() + "ms")
+    shouldFilter = true
+}
+
+// 标记需要过滤的结果
+if (shouldFilter) {
+    prev.setIgnoreSubControllers(true) // 忽略子控制器
+    // 或者完全移除这个结果的影响
+}
+```
+
+### 调试技巧
+
+#### 1. **打印完整结果信息**
+
+```
+// 调试脚本 - 打印所有可用信息
+log.info("=== PREV DEBUG INFO ===")
+log.info("Sample Label: " + prev.getSampleLabel())
+log.info("Response Code: " + prev.getResponseCode())
+log.info("Response Message: " + prev.getResponseMessage())
+log.info("Success: " + prev.isSuccessful())
+log.info("Time: " + prev.getTime())
+log.info("Latency: " + prev.getLatency())
+log.info("Body Size: " + prev.getBodySize())
+log.info("URL: " + prev.getUrlAsString())
+log.info("Method: " + prev.getHTTPMethod())
+log.info("Content Type: " + prev.getContentType())
+
+// 响应头（前200字符）
+def headers = prev.getResponseHeaders()
+log.info("Response Headers: " + (headers ? headers.substring(0, Math.min(headers.length(), 200)) : "null"))
+
+// 响应数据（前500字符）
+def response = prev.getResponseDataAsString()
+log.info("Response Data: " + (response ? response.substring(0, Math.min(response.length(), 500)) : "null"))
+```
+
+#### 2. **安全检查模板**
+
+```
+// 安全的prev使用模板
+if (prev != null) {
+    try {
+        // 在这里安全地使用prev的所有方法
+        def code = prev.getResponseCode()
+        def data = prev.getResponseDataAsString()
+        // ... 其他操作
+    } catch (Exception e) {
+        log.error("处理prev对象时发生异常: " + e.getMessage())
+    }
+} else {
+    log.error("prev对象为null")
+}
+```
+
+### 最佳实践建议
+
+1. **始终检查null**：在使用prev前确保它不是null
+2. **异常处理**：包装可能失败的操作为try-catch块
+3. **性能考虑**：避免在prev上做过于复杂的计算
+4. **日志记录**：合理使用log输出调试信息
+5. **变量管理**：及时清理不再需要的临时变量
+
+**总结：** `prev`是JMeter后处理器中的核心变量，它提供了对最近一次采样结果的完整访问能力。相比使用 `ctx.getPreviousResult()`，`prev`更加简洁高效，是在后处理器中处理测试结果的**首选方式**。掌握 `prev`的使用是编写高质量JMeter测试脚本的关键技能。
+
+## Content-Type: application/x-www-form-urlencoded; charset=UTF-8提交
+
+具体用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/blob/main/demo-jmeter/demo-x-www-form-urlencoded提交.jmx
+
+## Once Only Controller是什么呢？
+
+>具体用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/blob/main/demo-jmeter/demo-onceonlycontroller.jmx
+
+在Apache JMeter中，**Once Only Controller（仅一次控制器）** 是一种**逻辑控制器（Logic Controller）**，其核心作用是：**确保它包含的子元素（如Sampler、其他控制器等）在整个测试计划执行期间仅运行一次**，无论外部的循环结构（如线程组的循环次数、循环控制器的迭代次数）如何设置。
+
+### 一、核心特性
+
+1. **单次执行**：
+
+   当线程组或外部循环触发多次迭代时，Once Only Controller内的内容**仅在第一次迭代时执行**，后续迭代会直接跳过它。
+
+   例如：若线程组设置为“循环5次”，则Once Only Controller内的Sampler只会运行1次，而非5次。
+
+2. **作用于当前线程**：
+
+   JMeter的测试以“线程”为单位执行，每个线程独立维护自己的执行状态。因此，Once Only Controller的“仅一次”是针对**单个线程**而言的——不同线程会各自执行一次其中的内容（若线程组有多个线程）。
+
+### 二、典型使用场景
+
+Once Only Controller通常用于**初始化操作**（仅需执行一次的场景），避免重复执行浪费资源或导致错误：
+
+#### 1. 初始化变量/数据
+
+例如：通过JDBC Sampler从数据库加载测试所需的初始化数据（如用户Token、配置参数），只需在每个线程启动时执行一次，无需每次迭代都查询数据库。
+
+#### 2. 登录操作（单点登录）
+
+若测试场景中需要用户先登录再执行后续请求，且登录状态（如Cookie、Session）在会话期间有效，可将登录请求放在Once Only Controller中——确保每个线程仅登录一次，后续迭代直接使用已登录的状态。
+
+#### 3. 创建测试前置资源
+
+例如：通过HTTP请求创建一个临时测试订单、上传一个测试文件等，只需在每个线程开始时创建一次，后续迭代直接使用该资源的ID。
+
+### 三、与其他控制器的区别
+
+| 控制器类型                 | 作用                               | 与Once Only Controller的区别                                 |
+| -------------------------- | ---------------------------------- | ------------------------------------------------------------ |
+| **Loop Controller**        | 控制子元素重复执行指定次数         | Loop Controller是“强制循环N次”，而Once Only是“仅循环1次后停止” |
+| **Thread Group（线程组）** | 控制线程数量和整体循环次数         | 线程组的循环是“全局重复执行所有子元素”，而Once Only可局部限制某部分仅执行一次 |
+| **Transaction Controller** | 将多个请求视为一个事务统计性能指标 | Transaction Controller不涉及执行次数控制，仅用于结果统计     |
+
+### 四、使用示例
+
+假设测试场景：线程组有2个线程，循环3次；需先登录（仅一次），再执行3次查询用户信息。
+
+**结构配置**：
+
+```
+线程组（线程数=2，循环次数=3）
+├─ Once Only Controller          // 仅执行1次
+│  └─ HTTP请求（登录接口）        // 每个线程仅登录1次
+└─ Loop Controller（循环次数=3）  // 循环执行3次查询
+   └─ HTTP请求（查询用户信息）    // 每个线程执行3次查询
+```
+
+**执行结果**：
+
+- 每个线程的登录请求仅执行1次（共2次登录，对应2个线程）；
+- 每个线程的查询请求执行3次（共6次查询）；
+- 总请求数 = 2（登录） + 2×3（查询）= 8次。
+
+### 五、注意事项
+
+1. **线程独立性**：若线程组有多个线程，每个线程会各自执行一次Once Only Controller内的内容（即“仅一次”是 per-thread，而非 per-test）。
+2. **与Cookie/Session的配合**：若使用Once Only Controller处理登录，需确保JMeter的Cookie管理器（HTTP Cookie Manager）启用“自动管理Cookies”，否则登录后的Session无法传递到后续请求。
+3. **避免滥用**：不要将需要每次迭代更新的操作（如动态生成参数）放入Once Only Controller，否则可能导致后续请求使用过期数据。
+
+总之，Once Only Controller是JMeter中用于**局部单次初始化**的关键控制器，合理使用可优化测试性能并避免不必要的重复操作。
