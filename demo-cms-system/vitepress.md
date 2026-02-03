@@ -446,3 +446,62 @@ export default defineConfig({
 示例结果：
 
 ![screenshot of the search modal](search.png)
+
+
+
+## 图片点击查看插件
+
+>[官方文档参考](https://davidingplus.github.io/vitepress-image-viewer/)
+
+`@davidingplus/vitepress-image-viewer` 是一个为 VitePress 提供图片查看功能的插件，支持点击图片后打开查看器，可以进行放大、缩小、拖拽、全屏等操作。
+
+### 安装
+
+在项目根目录下执行：
+
+```bash
+npm install -D @davidingplus/vitepress-image-viewer --registry=https://registry.npmmirror.com
+```
+
+### 配置
+
+创建或编辑 `.vitepress/theme/index.ts` 文件：
+
+```typescript
+import type { Theme } from 'vitepress'
+import DefaultTheme from 'vitepress/theme'
+import ImageViewerP from '@davidingplus/vitepress-image-viewer'
+import '@davidingplus/vitepress-image-viewer/style.css'
+
+export default {
+  extends: DefaultTheme,
+  enhanceApp(ctx) {
+    ImageViewerP(ctx.app)
+  }
+} satisfies Theme
+```
+
+### 功能特性
+
+- **点击查看**：点击页面中的任意图片即可打开查看器
+- **放大缩小**：支持鼠标滚轮或按钮进行图片缩放
+- **拖拽移动**：可以拖拽图片在查看器中移动位置
+- **全屏查看**：支持全屏模式查看图片
+- **下载功能**：提供下载按钮保存图片
+- **自动适配**：自动适配 Markdown 中的 `![alt](url)` 和 HTML `<img>` 标签
+
+### 使用说明
+
+配置完成后，无需修改 Markdown 内容，所有图片都会自动支持点击查看功能。在文档中使用标准的 Markdown 图片语法即可：
+
+```markdown
+![图片描述](image.png)
+```
+
+或者使用 HTML 标签：
+
+```html
+<img src="image.png" alt="图片描述" />
+```
+
+插件会自动为这些图片添加点击查看功能。
