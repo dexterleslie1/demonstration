@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: demo
+      TZ: Asia/Shanghai
+    ports:
+      - "5432:5432"
+    # volumes:
+    #   - postgres_data:/var/lib/postgresql/data
+    command:
+      - "postgres"
+      - "-c"
+      # 共享缓冲区（PostgreSQL 主要内存区域）
+      - "shared_buffers=256MB"
+      - "-c"
+      # 有效缓存大小（操作系统缓存估计值）
+      - "effective_cache_size=768MB"
+      - "-c"
+      # 每个操作的工作内存（用于排序、哈希等）
+      - "work_mem=16MB"
+      - "-c"
+      # 维护操作的内存（VACUUM、CREATE INDEX 等）
+      - "maintenance_work_mem=128MB"
+      - "-c"
+      # 最大连接数（影响总内存使用）
+      - "max_connections=256"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+# volumes:
+#   postgres_data:
