@@ -1001,7 +1001,159 @@ wrk -t8 -c2048 -d300000000000s --latency --timeout 60 http://192.168.1.185/api/v
 ansible-playbook playbook-service-destroy.yml --inventory inventory.ini
 ```
 
+### wildcard、prefix、term查询
 
+#### ES7
+
+>ES -Xms1g -Xmx1g。
+
+使用本站示例协助测试：https://gitee.com/dexterleslie/demonstration/tree/main/elasticsearch/demo-benchmark-es7
+
+启动ES7服务：https://gitee.com/dexterleslie/demonstration/tree/main/elasticsearch/elasticsearch7
+
+```sh
+docker compose up -d
+```
+
+初始化150w数据（每个公司15w左右数据）
+
+```sh
+ab -n 1500 -c 32 -k http://localhost:8080/api/v1/goods/generate
+```
+
+wildcard测试
+
+```sh
+$ wrk -t8 -c32 -d30s --latency --timeout 60 http://localhost:8080/api/v1/goods/queryByCompanyIdAndNameWildcard
+Running 30s test @ http://localhost:8080/api/v1/goods/queryByCompanyIdAndNameWildcard
+  8 threads and 32 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   344.78ms   43.74ms 485.92ms   68.25%
+    Req/Sec    12.62      6.06    30.00     58.43%
+  Latency Distribution
+     50%  343.11ms
+     75%  375.50ms
+     90%  401.93ms
+     99%  444.40ms
+  2772 requests in 30.03s, 367.88KB read
+Requests/sec:     92.32
+Transfer/sec:     12.25KB
+
+```
+
+prefix查询
+
+```sh
+$ wrk -t8 -c32 -d30s --latency --timeout 60 http://localhost:8080/api/v1/goods/queryByCompanyIdAndNamePrefix
+Running 30s test @ http://localhost:8080/api/v1/goods/queryByCompanyIdAndNamePrefix
+  8 threads and 32 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency    11.42ms    2.80ms  57.84ms   81.44%
+    Req/Sec   352.62     29.79   440.00     69.71%
+  Latency Distribution
+     50%   10.79ms
+     75%   12.30ms
+     90%   14.72ms
+     99%   21.43ms
+  84416 requests in 30.07s, 10.96MB read
+Requests/sec:   2807.78
+Transfer/sec:    373.21KB
+```
+
+term查询
+
+```sh
+$ wrk -t8 -c32 -d30s --latency --timeout 60 http://localhost:8080/api/v1/goods/queryByCompanyIdAndNameTerm
+Running 30s test @ http://localhost:8080/api/v1/goods/queryByCompanyIdAndNameTerm
+  8 threads and 32 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency    10.63ms    2.64ms  42.21ms   82.48%
+    Req/Sec   378.89     31.66   620.00     71.08%
+  Latency Distribution
+     50%   10.03ms
+     75%   11.43ms
+     90%   13.58ms
+     99%   20.49ms
+  90696 requests in 30.08s, 11.75MB read
+Requests/sec:   3015.62
+Transfer/sec:    400.21KB
+```
+
+#### ES8
+
+>ES -Xms1g -Xmx1g。
+
+使用本站示例协助测试：https://gitee.com/dexterleslie/demonstration/tree/main/elasticsearch/demo-benchmark-es8
+
+启动ES8服务：https://gitee.com/dexterleslie/demonstration/tree/main/elasticsearch/elasticsearch8
+
+```sh
+docker compose up -d
+```
+
+初始化150w数据（每个公司15w左右数据）
+
+```sh
+ab -n 1500 -c 32 -k http://localhost:8080/api/v1/goods/generate
+```
+
+wildcard测试
+
+```sh
+$ wrk -t8 -c32 -d30s --latency --timeout 60 http://localhost:8080/api/v1/goods/queryByCompanyIdAndNameWildcard
+Running 30s test @ http://localhost:8080/api/v1/goods/queryByCompanyIdAndNameWildcard
+  8 threads and 32 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   197.48ms   24.98ms 302.83ms   68.21%
+    Req/Sec    20.34      7.99    40.00     44.25%
+  Latency Distribution
+     50%  196.24ms
+     75%  213.42ms
+     90%  229.82ms
+     99%  262.19ms
+  4850 requests in 30.03s, 642.32KB read
+Requests/sec:    161.49
+Transfer/sec:     21.39KB
+
+```
+
+prefix查询
+
+```sh
+$ wrk -t8 -c32 -d30s --latency --timeout 60 http://localhost:8080/api/v1/goods/queryByCompanyIdAndNamePrefix
+Running 30s test @ http://localhost:8080/api/v1/goods/queryByCompanyIdAndNamePrefix
+  8 threads and 32 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     9.01ms    3.31ms 104.56ms   90.09%
+    Req/Sec   452.67     62.92   640.00     72.83%
+  Latency Distribution
+     50%    8.30ms
+     75%    9.72ms
+     90%   11.78ms
+     99%   21.39ms
+  108358 requests in 30.07s, 14.05MB read
+Requests/sec:   3603.92
+Transfer/sec:    478.63KB
+```
+
+term查询
+
+```sh
+$ wrk -t8 -c32 -d30s --latency --timeout 60 http://localhost:8080/api/v1/goods/queryByCompanyIdAndNameTerm
+Running 30s test @ http://localhost:8080/api/v1/goods/queryByCompanyIdAndNameTerm
+  8 threads and 32 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     8.08ms    2.26ms  44.32ms   84.32%
+    Req/Sec   500.59     47.39   650.00     65.33%
+  Latency Distribution
+     50%    7.63ms
+     75%    8.77ms
+     90%   10.27ms
+     99%   17.69ms
+  119776 requests in 30.05s, 15.52MB read
+Requests/sec:   3985.30
+Transfer/sec:    528.68KB
+```
 
 ## 数据类型
 

@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile-elasticsearch
     image: demo-elasticsearch8-dev
     environment:
-      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
       - discovery.type=single-node
       - TZ=Asia/Shanghai
       # 禁用ssl通讯，否则需要配置证书才能够连接9200端口
@@ -16,6 +16,7 @@ services:
       - xpack.security.http.ssl.enabled=false
       - xpack.security.transport.ssl.enabled=false
     volumes:
+      - data-demo-elasticsearch8:/usr/share/elasticsearch/data
       - ./elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
     ports:
       - 9200:9200
@@ -28,3 +29,6 @@ services:
       - 5601:5601
     depends_on:
       - demo-elasticsearch8
+
+volumes:
+  data-demo-elasticsearch8:
