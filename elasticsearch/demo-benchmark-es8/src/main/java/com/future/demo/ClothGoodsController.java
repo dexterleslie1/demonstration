@@ -1,6 +1,7 @@
 package com.future.demo;
 
 import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
+import co.elastic.clients.elasticsearch._types.query_dsl.WildcardQuery;
 import jakarta.annotation.Resource;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -72,7 +73,9 @@ public class ClothGoodsController {
         clothGoods.setNumber(number);
 
         // 产品名称：产品000000001、产品000000002格式
-        clothGoods.setName(String.format("%s%s", "产品", suffix));
+        String name = String.format("%s%s", "产品", suffix);
+        clothGoods.setName(name);
+        clothGoods.setNameWildcard(name);
 
         return clothGoods;
     }
@@ -155,6 +158,38 @@ public class ClothGoodsController {
         SearchHits<ClothGoods> searchHits = elasticsearchOperations.search(searchQuery, ClothGoods.class);
 
         // 转换为列表返回
+        return searchHits.stream()
+                .map(org.springframework.data.elasticsearch.core.SearchHit::getContent)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 性能测试接口：根据companyId和nameWildcard（wildcard类型字段）通配符查询前100条产品数据（根据goodsId降序排序）
+     * 使用 nameWildcard 字段（ES wildcard 类型），对比 queryByCompanyIdAndNameWildcard 可测试 wildcard 类型与 keyword 类型的查询性能差异
+     *
+     * @return 产品列表
+     */
+    @GetMapping("goods/queryByCompanyIdAndNameWildcardField")
+    public List<ClothGoods> queryByCompanyIdAndNameWildcardField() {
+        Long companyId = (long) (1 + random.nextInt(11));
+        int randomNum = random.nextInt(Math.max(1, (int) idCounter.get()));
+        String namePattern = "*" + String.format("%09d", randomNum) + "*";
+
+        co.elastic.clients.elasticsearch._types.query_dsl.Query wildcardQuery =
+                co.elastic.clients.elasticsearch._types.query_dsl.Query.of(q -> q.wildcard(
+                        WildcardQuery.of(w -> w.field("nameWildcard").value(namePattern))));
+        co.elastic.clients.elasticsearch._types.query_dsl.Query boolQuery = QueryBuilders.bool()
+                .must(QueryBuilders.term().field("companyId").value(companyId).build()._toQuery())
+                .must(wildcardQuery)
+                .build()._toQuery();
+
+        Query searchQuery = NativeQuery.builder()
+                .withQuery(boolQuery)
+                .withPageable(PageRequest.of(0, 100))
+                .withSort(Sort.by(Sort.Direction.DESC, "goodsId"))
+                .build();
+
+        SearchHits<ClothGoods> searchHits = elasticsearchOperations.search(searchQuery, ClothGoods.class);
         return searchHits.stream()
                 .map(org.springframework.data.elasticsearch.core.SearchHit::getContent)
                 .collect(Collectors.toList());

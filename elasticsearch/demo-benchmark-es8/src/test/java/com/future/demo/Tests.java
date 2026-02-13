@@ -49,6 +49,7 @@ public class Tests {
         clothGoods1.setCompanyId(100L);
         clothGoods1.setType("cp");
         clothGoods1.setName("纯棉T恤");
+        clothGoods1.setNameWildcard("纯棉T恤");
         clothGoods1.setNumber("CP001");
         IndexQuery indexQuery = new IndexQueryBuilder().withObject(clothGoods1).build();
         String resultStr = this.elasticsearchOperations.index(indexQuery, IndexCoordinates.of("cloth_goods"));
@@ -73,6 +74,7 @@ public class Tests {
         clothGoods2.setCompanyId(100L);
         clothGoods2.setType("cp");
         clothGoods2.setName("纯棉衬衫");
+        clothGoods2.setNameWildcard("纯棉衬衫");
         clothGoods2.setNumber("CP002");
         indexQueryList.add(new IndexQueryBuilder().withObject(clothGoods2).build());
 
@@ -82,6 +84,7 @@ public class Tests {
         clothGoods3.setCompanyId(200L);
         clothGoods3.setType("pb");
         clothGoods3.setName("坯布A");
+        clothGoods3.setNameWildcard("坯布A");
         clothGoods3.setNumber("PB001");
         indexQueryList.add(new IndexQueryBuilder().withObject(clothGoods3).build());
 
@@ -91,6 +94,7 @@ public class Tests {
         clothGoods4.setCompanyId(200L);
         clothGoods4.setType("cp");
         clothGoods4.setName("纯棉短裤");
+        clothGoods4.setNameWildcard("纯棉短裤");
         clothGoods4.setNumber("CP003");
         indexQueryList.add(new IndexQueryBuilder().withObject(clothGoods4).build());
 
@@ -206,6 +210,13 @@ public class Tests {
         Assertions.assertEquals(3, clothGoodsList.size());
         Assertions.assertTrue(clothGoodsList.stream().allMatch(item -> item.getName().contains("棉")));
 
+        /*------------------------------- 根据nameWildcard字段（wildcard类型）通配符查询 */
+        searchQuery = NativeQuery.builder().withQuery(QueryBuilders.wildcard().field("nameWildcard").value("*棉*").build()._toQuery()).build();
+        searchHits = this.elasticsearchOperations.search(searchQuery, ClothGoods.class);
+        clothGoodsList = searchHits.stream().map(org.springframework.data.elasticsearch.core.SearchHit::getContent).collect(Collectors.toList());
+        Assertions.assertEquals(3, clothGoodsList.size());
+        Assertions.assertTrue(clothGoodsList.stream().allMatch(item -> item.getNameWildcard().contains("棉")));
+
         /*------------------------------- 根据number字段查询 */
         // 精确查询number='CP001'
         searchQuery = NativeQuery.builder().withQuery(QueryBuilders.term().field("number").value("CP001").build()._toQuery()).build();
@@ -313,6 +324,7 @@ public class Tests {
         clothGoods1Update.setCompanyId(100L);
         clothGoods1Update.setType("cp");
         clothGoods1Update.setName("纯棉T恤升级版");
+        clothGoods1Update.setNameWildcard("纯棉T恤升级版");
         clothGoods1Update.setNumber("CP001");
         indexQuery = new IndexQueryBuilder().withObject(clothGoods1Update).build();
         resultStr = this.elasticsearchOperations.index(indexQuery, IndexCoordinates.of("cloth_goods"));

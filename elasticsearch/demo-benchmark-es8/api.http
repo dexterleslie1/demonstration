@@ -9,6 +9,9 @@ GET http://localhost:8080/api/v1/goods/queryByCompanyIdAndType
 ###
 GET http://localhost:8080/api/v1/goods/queryByCompanyIdAndNameWildcard
 
+### 使用 nameWildcard（wildcard 类型）字段做通配符查询，用于性能对比
+GET http://localhost:8080/api/v1/goods/queryByCompanyIdAndNameWildcardField
+
 ###
 GET http://localhost:8080/api/v1/goods/queryByCompanyIdAndNamePrefix
 

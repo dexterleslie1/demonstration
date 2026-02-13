@@ -29,6 +29,10 @@ public class ClothGoods {
     @Field(type = FieldType.Keyword)
     private String name;
 
+    // 产品名称（wildcard类型，用于通配符查询性能测试）
+    @Field(type = FieldType.Wildcard)
+    private String nameWildcard;
+
     // 编号非空不超50位
     @Field(type = FieldType.Keyword)
     private String number;

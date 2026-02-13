@@ -1082,6 +1082,8 @@ Transfer/sec:    400.21KB
 #### ES8
 
 >ES -Xms1g -Xmx1g。
+>
+>提示：测试1500万数据时，根据name的wildcard查询很慢，此时通过设置name字段类型为wildcard并使用WildcardQuery解决，具体用法请参考协助测试示例中的queryByCompanyIdAndNameWildcardField接口。
 
 使用本站示例协助测试：https://gitee.com/dexterleslie/demonstration/tree/main/elasticsearch/demo-benchmark-es8
 
