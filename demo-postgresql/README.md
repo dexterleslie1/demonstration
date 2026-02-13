@@ -142,3 +142,79 @@ PostgreSQL的版本迭代始终围绕**性能、扩展性、易用性**三大方
 ## SpringBoot集成
 
 具体用法参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-postgresql/demo-spring-boot
+
+## Like查询性能
+
+>说明：通过pg_trgm类型索引提升Like "%xxx%"查询性能。
+
+使用本站示例协助测试：https://gitee.com/dexterleslie/demonstration/tree/main/demo-postgresql/demo-benchmark-pg16
+
+启动PG服务：https://gitee.com/dexterleslie/demonstration/tree/main/demo-postgresql
+
+```sh
+docker compose up -d
+```
+
+准备1500万测试数据
+
+```sh
+ab -n 15000 -c 32 -k http://localhost:8080/api/v1/goods/generate
+```
+
+like "%xxx%"查询
+
+```sh
+$ wrk -t8 -c32 -d30s --latency --timeout 60 http://localhost:8080/api/v1/goods/queryByCompanyIdAndNameWildcard
+Running 30s test @ http://localhost:8080/api/v1/goods/queryByCompanyIdAndNameWildcard
+  8 threads and 32 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   100.68ms   28.59ms 395.76ms   86.37%
+    Req/Sec    39.86      7.90    70.00     57.51%
+  Latency Distribution
+     50%   95.39ms
+     75%  109.55ms
+     90%  125.74ms
+     99%  202.43ms
+  9570 requests in 30.05s, 1.25MB read
+Requests/sec:    318.45
+Transfer/sec:     42.55KB
+```
+
+like "xxx%"查询
+
+```sh
+$ wrk -t8 -c32 -d30s --latency --timeout 60 http://localhost:8080/api/v1/goods/queryByCompanyIdAndNamePrefix
+Running 30s test @ http://localhost:8080/api/v1/goods/queryByCompanyIdAndNamePrefix
+  8 threads and 32 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     1.31s   196.33ms   2.46s    84.31%
+    Req/Sec     4.60      4.02    20.00     76.79%
+  Latency Distribution
+     50%    1.30s 
+     75%    1.39s 
+     90%    1.52s 
+     99%    1.66s 
+  720 requests in 30.05s, 94.90KB read
+Requests/sec:     23.96
+Transfer/sec:      3.16KB
+```
+
+="xxx"查询
+
+```sh
+$ wrk -t8 -c32 -d30s --latency --timeout 60 http://localhost:8080/api/v1/goods/queryByCompanyIdAndNameTerm
+Running 30s test @ http://localhost:8080/api/v1/goods/queryByCompanyIdAndNameTerm
+  8 threads and 32 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     2.90ms    2.38ms  53.73ms   88.48%
+    Req/Sec     1.54k   197.85     2.31k    69.75%
+  Latency Distribution
+     50%    2.33ms
+     75%    3.68ms
+     90%    5.50ms
+     99%   11.69ms
+  367711 requests in 30.01s, 48.03MB read
+Requests/sec:  12252.13
+Transfer/sec:      1.60MB
+```
+

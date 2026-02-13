@@ -1,0 +1,25 @@
+GET http://localhost:8080/api/v1/goods/generate
+
+### 查询当前counter
+GET http://localhost:8080/api/v1/goods/counter
+
+###
+GET http://localhost:8080/api/v1/goods/queryByCompanyIdAndType
+
+###
+GET http://localhost:8080/api/v1/goods/queryByCompanyIdAndNameWildcard
+
+###
+GET http://localhost:8080/api/v1/goods/queryByCompanyIdAndNamePrefix
+
+###
+GET http://localhost:8080/api/v1/goods/queryByCompanyIdAndNameTerm
+
+###
+GET http://localhost:8080/api/v1/goods/queryByCompanyIdAndNumberWildcard
+
+###
+GET http://localhost:8080/api/v1/goods/queryByCompanyIdAndNumberPrefix
+
+###
+GET http://localhost:8080/api/v1/goods/queryByCompanyIdAndNumberTerm

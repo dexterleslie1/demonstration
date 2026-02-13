@@ -4,6 +4,8 @@ services:
   postgres:
     image: postgres:16
     restart: unless-stopped
+    # 容器共享内存需 >= shared_buffers，否则高并发时报 "could not resize shared memory segment: No space left on device"
+    shm_size: 2g
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 123456
@@ -11,19 +13,19 @@ services:
       TZ: Asia/Shanghai
     ports:
       - "5432:5432"
-    # volumes:
-    #   - postgres_data:/var/lib/postgresql/data
+    volumes:
+      - data-demo-postgresql:/var/lib/postgresql/data
     command:
       - "postgres"
       - "-c"
       # 共享缓冲区（PostgreSQL 主要内存区域）
-      - "shared_buffers=256MB"
+      - "shared_buffers=1GB"
       - "-c"
       # 有效缓存大小（操作系统缓存估计值）
-      - "effective_cache_size=768MB"
+      - "effective_cache_size=1GB"
       - "-c"
       # 每个操作的工作内存（用于排序、哈希等）
-      - "work_mem=16MB"
+      - "work_mem=32MB"
       - "-c"
       # 维护操作的内存（VACUUM、CREATE INDEX 等）
       - "maintenance_work_mem=128MB"
@@ -36,5 +38,5 @@ services:
       timeout: 5s
       retries: 5
 
-# volumes:
-#   postgres_data:
+volumes:
+  data-demo-postgresql:
