@@ -1,5 +1,6 @@
 {
   "devDependencies": {
+    "@davidingplus/vitepress-image-viewer": "^1.1.5",
     "vitepress": "^1.6.3"
   },
   "scripts": {
