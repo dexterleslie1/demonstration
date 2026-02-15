@@ -1,0 +1,19 @@
+version: "3.0"
+
+# 用于本地测试：启动 MariaDB
+# 启动：docker compose up -d
+# 运行应用：mvn spring-boot:run
+services:
+  db:
+    image: mariadb:10.6
+    environment:
+      - LANG=C.UTF-8
+      - TZ=Asia/Shanghai
+      - MYSQL_ROOT_PASSWORD=123456
+      - MYSQL_DATABASE=demo
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+    ports:
+      - "3306:3306"
