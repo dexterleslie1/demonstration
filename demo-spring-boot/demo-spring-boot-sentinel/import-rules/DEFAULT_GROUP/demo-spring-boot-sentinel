@@ -1,0 +1,12 @@
+[{
+    "resource": "myTest1",
+    "limitApp": "default",
+    "count": 100.0,
+    "timeWindow": 30,
+    "grade": 0,
+    "minRequestAmount": 1,
+    "slowRatioThreshold": 0.5,
+    "statIntervalMs": 1000,
+    "gmtCreate": null,
+    "gmtModified": null
+}]

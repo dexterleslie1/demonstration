@@ -3441,7 +3441,67 @@ wrk -t1 -c1 -d300000000s --latency --timeout 60 http://localhost:8080/api/v1/sen
 
 **注意**：实际使用中需确保 Sentinel 客户端已正确加载 Nacos 中的规则（通过 `NacosConfigUtil` 配置数据源），否则规则不会生效。
 
+#### 手动导出和导入规则
 
+>说明：使用谷歌浏览器查看规则的json格式以导出规则，再使用Nacos控制台导入功能手动导入ZIP预置配置后Sentinel即可读取预置配置。
+
+使用本站示例协助测试：https://gitee.com/dexterleslie/demonstration/tree/main/demo-spring-boot/demo-spring-boot-sentinel
+
+使用谷歌浏览器登录http://localhost:8858（帐号和密码都是sentinel）
+
+手动创建规则后打开谷歌浏览器网络调试器并查看规则返回的json格式，例如：降级规则>慢调用比例规则json格式为：
+
+```json
+{
+    "resource": "myTest1",
+    "limitApp": "default",
+    "count": 100.0,
+    "timeWindow": 30,
+    "grade": 0,
+    "minRequestAmount": 1,
+    "slowRatioThreshold": 0.5,
+    "statIntervalMs": 1000,
+    "gmtCreate": null,
+    "gmtModified": null
+}
+```
+
+在项目中创建目录import-rules/DEFAULT_GROUP/，在目录中创建文件demo-spring-boot-sentinel内容如下：
+
+```json
+[{
+    "resource": "myTest1",
+    "limitApp": "default",
+    "count": 100.0,
+    "timeWindow": 30,
+    "grade": 0,
+    "minRequestAmount": 1,
+    "slowRatioThreshold": 0.5,
+    "statIntervalMs": 1000,
+    "gmtCreate": null,
+    "gmtModified": null
+}]
+```
+
+切换到目录import-rules执行命令：
+
+```sh
+zip -r import-rules.zip DEFAULT_GROUP
+```
+
+登录Nacos控制台http://localhost:8848（帐号和密码都是nacos）使用导入功能导入import-rules.zip
+
+不会触发sentinel规则（因为接口响应为10毫秒没有超过规则配置的100毫秒）：
+
+```sh
+wrk -t8 -c8 -d3000000000s --latency --timeout 30 http://localhost:8080/api/v1/sentinel/test1\?timeoutInMilliseconds\=10
+```
+
+触发sentinel规则（因为接口相应为110毫秒超过规则配置的100毫秒）：
+
+```sh
+wrk -t8 -c8 -d3000000000s --latency --timeout 30 http://localhost:8080/api/v1/sentinel/test1\?timeoutInMilliseconds\=110
+```
 
 #### 注意说明
 

@@ -8,9 +8,11 @@ import com.future.common.http.ObjectResponse;
 import com.future.common.http.ResponseUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/api/v1/sentinel")
@@ -21,7 +23,11 @@ public class ApiController {
             blockHandler = "blockHandler",
             fallback = "fallbackhandler"/*,
             exceptionsToIgnore = BusinessException.class*/)
-    public ObjectResponse<String> test1() throws BusinessException {
+    public ObjectResponse<String> test1(@RequestParam(value = "timeoutInMilliseconds", defaultValue = "0") int timeoutInMilliseconds) throws BusinessException, InterruptedException {
+        if (timeoutInMilliseconds > 0) {
+            TimeUnit.MILLISECONDS.sleep(timeoutInMilliseconds);
+        }
+
         boolean b = true;
         if (b) {
             throw new BusinessException("xxx");
