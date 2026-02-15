@@ -1,0 +1,5 @@
+{
+  "app": "demo",
+  "env": "dev",
+  "features": ["config", "discovery"]
+}

@@ -2032,6 +2032,52 @@ services:
 
 ```
 
+#### 手动导入ZIP预置配置
+
+>说明：使用本站示例协助导入测试：https://gitee.com/dexterleslie/demonstration/tree/main/demo-spring-boot/demo-spring-boot-nacos
+
+##### ZIP 结构要求
+
+- 第一层为 **Group 名称** 的目录（如 `DEFAULT_GROUP`）
+- 该目录下为配置文件，**文件名即 dataId**（含扩展名）
+
+本示例目录结构：
+
+```
+nacos-import-example/
+  DEFAULT_GROUP/
+    demo.txt         → dataId: demo.txt,  group: DEFAULT_GROUP
+    demo.json
+    demo.xml
+    demo.yaml
+    demo.html
+    demo.properties
+```
+
+##### 打包与导入步骤
+
+1. **打 ZIP 包**（在 `nacos-import-example` 目录下执行，确保 ZIP 内是 `DEFAULT_GROUP/` 而不是多一层目录）：
+
+   ```bash
+   cd nacos-import-example
+   zip -r nacos-import-demo.zip DEFAULT_GROUP
+   ```
+
+2. **启动 Nacos**（若未启动）：
+
+   ```bash
+   docker compose up -d
+   ```
+
+3. **控制台导入**：
+
+   - 打开 http://localhost:8848/nacos（默认账号/密码：nacos/nacos）
+   - 进入 **配置管理** → **配置列表**
+   - 选择目标命名空间后，点击 **导入配置**
+   - 选择 `nacos-import-demo.zip` 上传
+
+导入后可在配置列表中看到 `demo.txt`、`demo.json`、`demo.xml`、`demo.yaml`、`demo.html`、`demo.properties` 等配置。
+
 ### `Sentinel`
 
 >SpringCloud Alibaba 配置 Sentinel 官方文档`https://spring-cloud-alibaba-group.github.io/github-pages/hoxton/zh-cn/index.html`

@@ -1,0 +1,2 @@
+Hello Nacos.
+Plain text config sample.
