@@ -1477,7 +1477,13 @@ CreateIndexResponse createIndexResponse = client.indices().create(createIndexReq
 Assert.assertEquals(Boolean.TRUE, createIndexResponse.acknowledged());
 ```
 
+## wildcard类型字段查询错误率测试
 
+>说明：10万左右的数据目前没有发现有错误率。
+
+使用本站示例测试：https://gitee.com/dexterleslie/demonstration/tree/main/elasticsearch/demo-benchmark-es8
+
+测试com.future.demo.Tests#testNameWildcardQueryAccuracy
 
 ## `Rest API`
 

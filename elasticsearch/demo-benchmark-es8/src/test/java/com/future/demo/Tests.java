@@ -3,6 +3,7 @@ package com.future.demo;
 import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
 import co.elastic.clients.elasticsearch._types.query_dsl.RangeQueryBuilders;
 import jakarta.annotation.Resource;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -17,8 +18,7 @@ import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.Query;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 // todo CriteriaQuery
@@ -375,6 +375,86 @@ public class Tests {
         searchHits = this.elasticsearchOperations.search(searchQuery, ClothGoods.class);
         clothGoodsList = searchHits.stream().map(org.springframework.data.elasticsearch.core.SearchHit::getContent).collect(Collectors.toList());
         Assertions.assertEquals(0, clothGoodsList.size());
+    }
+
+    /**
+     * 测试 nameWildcard 字段 *xxx* 通配符查询是否返回错误数据，并统计错误率。
+     * 随机生成约 10 万条数据，随机选择查询子串 *xxx*，校验命中文档的 nameWildcard 是否均包含 xxx。
+     */
+    @Test
+    public void testNameWildcardQueryAccuracy() {
+        int totalDocs = 100_000;
+        int batchSize = 5_000;
+        Random rnd = new Random(System.currentTimeMillis());
+
+        Map<String, Integer> tokenToCountMapper = new HashMap<>();
+        // 随机选择本次查询使用的子串（从若干候选里选一个）
+        List<String> tokenList = new ArrayList<>();
+        for (int i = 0; i < 100; i++) {
+            String rndToken = RandomStringUtils.randomAlphanumeric(20);
+            tokenList.add(rndToken);
+        }
+        tokenList.addAll(Arrays.asList("棉", "布", "纯", "纱", "陈", "三", "大", "小", "返", "包", "数", "随", "测", "使", "选", "一", "若", "子串"
+                , "字段", "中", "文", "回", "含", "据", "机", "试", "用", "择", "个", "统", "计", "通", "配", "符", "四", "五", "六", "其", "吧",
+                "把", "八", "爸", "的", "得", "地", "德"));
+        String[] tokens = tokenList.toArray(new String[]{});
+
+        Query deleteQuery = NativeQuery.builder().withQuery(QueryBuilders.matchAll().build()._toQuery()).build();
+        this.elasticsearchOperations.delete(DeleteQuery.builder(deleteQuery).build(), ClothGoods.class);
+        this.elasticsearchOperations.indexOps(ClothGoods.class).refresh();
+
+        for (int offset = 0; offset < totalDocs; offset += batchSize) {
+            List<IndexQuery> batch = new ArrayList<>();
+            for (int i = 0; i < batchSize && offset + i < totalDocs; i++) {
+                int id = offset + i + 1;
+                ClothGoods g = new ClothGoods();
+                g.setId(String.valueOf(id));
+                g.setGoodsId((long) id);
+                g.setCompanyId(100L);
+                g.setType("cp");
+                g.setNumber("N" + id);
+                g.setName("name" + id);
+                String rndToken = tokens[rnd.nextInt(tokens.length)];
+                String rndPrefix = RandomStringUtils.randomAlphanumeric(1, 16);
+                String rndSuffix = RandomStringUtils.randomAlphanumeric(1, 16);
+                g.setNameWildcard(rndPrefix + rndToken + rndSuffix + id);
+                if (!tokenToCountMapper.containsKey(rndToken)) {
+                    tokenToCountMapper.put(rndToken, 0);
+                }
+                tokenToCountMapper.put(rndToken, tokenToCountMapper.get(rndToken) + 1);
+                batch.add(new IndexQueryBuilder().withObject(g).build());
+            }
+            this.elasticsearchOperations.bulkIndex(batch, ClothGoods.class);
+        }
+        this.elasticsearchOperations.indexOps(ClothGoods.class).refresh();
+
+
+        // 单次 search 的 size 不能超过 ES 默认 max_result_window(10000)，用分页拉全量
+        int searchPageSize = 10_000;
+        for (int i = 0; i < 100; i++) {
+            String token = tokens[rnd.nextInt(tokens.length)];
+            String pattern = "*" + token + "*";
+            List<ClothGoods> returned = new ArrayList<>();
+            int pageIndex = 0;
+            while (true) {
+                Query searchQuery = NativeQuery.builder()
+                        .withQuery(QueryBuilders.wildcard().field("nameWildcard").value(pattern).build()._toQuery())
+                        .withPageable(PageRequest.of(pageIndex, searchPageSize))
+                        .build();
+                SearchHits<ClothGoods> searchHits = this.elasticsearchOperations.search(searchQuery, ClothGoods.class);
+                List<ClothGoods> page = searchHits.stream().map(org.springframework.data.elasticsearch.core.SearchHit::getContent).collect(Collectors.toList());
+                returned.addAll(page);
+                if (page.size() < searchPageSize) {
+                    break;
+                }
+                pageIndex++;
+            }
+
+            int actualTotal = returned.size();
+            int expectedTotal = tokenToCountMapper.get(token);
+
+            Assertions.assertEquals(expectedTotal, actualTotal, "nameWildcard *" + token + "* 查询返回" + actualTotal + "和期望" + expectedTotal + "不对应");
+        }
     }
 
 }
