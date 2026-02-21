@@ -37,7 +37,7 @@ public class WebDriverCreationAndDestroyTests {
 
     @Test
     public void test() throws InterruptedException {
-        driver.get("http://localhost:8080");
+        driver.get("http://192.168.1.182:8080");
         TimeUnit.SECONDS.sleep(5);
     }
 }

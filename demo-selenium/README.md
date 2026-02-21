@@ -1,7 +1,3 @@
-# selenium
-
-
-
 ## 工作原理
 
 Selenium是一个用于Web应用程序自动化测试的工具，其原理涉及多个组件和步骤。以下是Selenium工作原理的详细解释：
@@ -55,7 +51,81 @@ Selenium还支持无头模式（headless），这种模式下，浏览器不会�
 
 selenium、driver、browser兼容性，firefox兼容性`https://firefox-source-docs.mozilla.org/testing/geckodriver/Support.html`
 
+## hub和非hub模式是什么呢？
 
+Selenium Hub 模式和非 Hub 模式是 Selenium Grid 架构中的两种部署方式，主要区别在于**测试脚本执行节点的管理方式**。
+
+------
+
+### 1. **非 Hub 模式（Standalone 模式）**
+
+- **定义**：直接在本地机器上启动浏览器驱动（如 ChromeDriver、GeckoDriver），测试脚本与浏览器驱动一对一通信。
+
+- **架构**：
+
+  ```mermaid
+  graph LR
+    A[测试脚本] --> B[浏览器驱动]
+    B --> C[本地浏览器]
+  ```
+
+- **特点**：
+
+  - **简单**：无需额外配置，适合本地调试和快速执行。
+  - **单机**：只能使用本机的浏览器，无法跨平台或并行执行。
+
+- **适用场景**：个人开发调试、小规模测试、不需要并行的场景。
+
+------
+
+### 2. **Hub 模式（Grid 模式）**
+
+- **定义**：基于 Selenium Grid 架构，由 **Hub（中心节点）** 统一接收测试请求，并分发到 **Node（执行节点）** 执行。
+
+- **架构**：
+
+  ```mermaid
+  graph LR
+    A[测试脚本] --> H[Hub中心]
+    H --> N1[Node 1]
+    H --> N2[Node 2]
+    N1 --> B1[浏览器]
+    N2 --> B2[浏览器]
+  ```
+
+- **特点**：
+
+  - **集中管理**：Hub 负责分配任务，支持负载均衡。
+  - **跨平台**：Node 可注册到 Hub，支持不同操作系统和浏览器版本。
+  - **并行执行**：多个测试用例可同时分发到不同 Node 执行。
+
+- **适用场景**：持续集成（CI）、大规模测试、需要兼容性测试（多浏览器/多系统）。
+
+------
+
+### 3. **核心区别对比**
+
+| 特性           | 非 Hub 模式      | Hub 模式           |
+| -------------- | ---------------- | ------------------ |
+| **架构复杂度** | 低（单机）       | 高（分布式）       |
+| **并行能力**   | 不支持（单线程） | 支持（多节点并行） |
+| **跨平台**     | 仅限本地环境     | 支持多种 OS/浏览器 |
+| **维护成本**   | 低               | 需维护 Hub 和 Node |
+| **典型用途**   | 开发调试         | CI/CD、回归测试    |
+
+------
+
+### 4. **如何选择？**
+
+- **选非 Hub 模式**：
+  - 只需在本地快速验证功能。
+  - 团队规模小，无需复杂环境。
+- **选 Hub 模式**：
+  - 需要同时测试多种浏览器（如 Chrome、Firefox、Safari）。
+  - 测试用例多，需要缩短执行时间。
+  - 集成到 Jenkins/GitLab CI 等流水线中。
+
+**注意**：Selenium 4 已默认支持 Standalone 模式（内置 Hub 和 Node），但生产环境仍建议使用独立 Grid 部署。
 
 ## ubuntu 配置 selenium
 
@@ -132,6 +202,44 @@ java -jar selenium-server-standalone-3.141.59.jar -role node -hub http://192.168
 ```
 
 
+
+## 边测试边录制视频（Docker）
+
+在基于 Docker 运行 Selenium 时，可同时启动视频录制服务，将测试过程中的浏览器画面保存为视频，便于回放与排查问题。
+
+**重要**：官方 video 容器通过 **事件总线（ZeroMQ）** 接收“会话创建/关闭”事件才会开始/结束录制；**Standalone 容器不暴露事件总线**，因此仅用 `docker-compose.yml`（Standalone）时无法录制。需使用 **Hub + Node + Video** 的 compose 才能正常出片。
+
+### 启用方式
+
+1. **使用带录制的 compose**  
+   在 `demo-selenium` 目录下使用 `docker-compose-hub.yml`（内含 Hub、Firefox Node、Video 三个服务）：
+
+   ```bash
+   docker compose -f docker-compose-hub.yml up -d
+   ```
+   视频会写入当前目录下的 `videos` 文件夹。
+
+2. **运行测试**  
+   测试仍连接 `http://localhost:4444/wd/hub`（连到 Hub），无需改 URL 录制会自动进行。
+
+3. **测试端正常关闭**  
+   
+   会话结束时请使用 `driver.quit()` 正常关闭，以便录制服务生成并落盘视频文件。
+   
+4. **查看录制结果**  
+   视频文件会出现在当前目录下的 `videos` 目录。文件名由录制服务自动生成（如带 session 信息），可在该目录下按时间或文件名查找对应测试会话的录像。
+
+### 与默认 compose 的区别
+
+- `docker-compose.yml`：仅 Standalone Firefox，**不支持**视频录制（无事件总线）。
+- `docker-compose-hub.yml`：Hub + Firefox Node + Video，**支持**边测试边录制；测试仍访问 4444 端口。
+
+### 注意
+
+- 录制依赖 [selenium/video](https://github.com/SeleniumHQ/docker-selenium) 镜像，通过 FFmpeg 捕获浏览器容器画面。
+- 确保 `./videos` 目录存在或 Docker 能创建该目录，否则挂载可能报错。
+
+---
 
 ## 基于 docker 配置 selenium
 

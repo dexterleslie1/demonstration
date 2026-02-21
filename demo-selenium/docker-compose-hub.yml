@@ -1,9 +1,14 @@
+# 使用 Hub + Node 架构（video 容器需通过事件总线接收会话事件，standalone 不暴露事件总线，故无法录制）
+# 视频输出到 ./videos
 version: "3.0"
 
 services:
   # chrome节点
   demo-chrome:
     image: selenium/node-chrome:latest
+    # 增加共享内存
+    # 否则测试时客户端报错：org.openqa.selenium.WebDriverException: tab crashed
+    shm_size: 512mb
     depends_on:
       - demo-hub
     environment:
@@ -20,6 +25,9 @@ services:
   # chrome-v96.0 节点
   demo-chrome-960:
     image: selenium/node-chrome:96.0
+    # 增加共享内存
+    # 否则测试时客户端报错：org.openqa.selenium.WebDriverException: tab crashed
+    shm_size: 512mb
     depends_on:
       - demo-hub
     environment:
@@ -33,6 +41,7 @@ services:
   # firefox节点
   demo-firefox:
     image: selenium/node-firefox:latest
+    # image: selenium/node-firefox:4.40.0-20260202
     depends_on:
       - demo-hub
     environment:
@@ -46,11 +55,26 @@ services:
   # selenium grid hub
   demo-hub:
     image: selenium/hub:latest
+    # image: selenium/hub:4.40.0-20260202
     ports:
       - "4442:4442"
       - "4443:4443"
       # 查看 selenium hub状态 http://127.0.0.1:4444/
       - "4444:4444"
+
+  demo-video:
+    image: selenium/video:ffmpeg-8.0-20260202
+    volumes:
+      - ./videos:/videos
+    depends_on:
+      - demo-firefox
+    environment:
+      - SE_EVENT_BUS_HOST=demo-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+      - DISPLAY_CONTAINER_NAME=demo-firefox
+      - SE_NODE_GRID_URL=http://demo-hub:4444
+      - SE_VIDEO_FILE_NAME=auto
 
   demo-openresty:
     image: openresty/openresty:1.19.9.1-14-buster-fat

@@ -42,7 +42,7 @@ public class IframeTests {
     // 测试切换 iframe 并查找元素
     @Test
     public void testSwitchToIframeAndFindElements() throws InterruptedException {
-        driver.get("http://localhost:8080/iframe-testing-support");
+        driver.get("http://192.168.1.182:8080/iframe-testing-support");
 
         // 切换到 iframe 上下文
         WebElement iframe1 = driver.findElement(By.id("iframe1"));
@@ -53,5 +53,51 @@ public class IframeTests {
         elementList.get(0).click();
 
         TimeUnit.SECONDS.sleep(5);
+    }
+
+    // 测试在两个 iframe 之间切换
+    @Test
+    public void testSwitchBetweenTwoIframes() throws InterruptedException {
+        driver.get("http://192.168.1.182:8080/iframe-testing-support");
+
+        // 获取第一个 iframe
+        WebElement iframe1 = driver.findElement(By.id("iframe1"));
+        
+        // 切换到第一个 iframe
+        driver.switchTo().frame(iframe1);
+        
+        // 在第一个 iframe 中查找元素并执行操作
+        List<WebElement> elementList1 = driver.findElements(By.cssSelector("[class=\"ntes-nav-index-title ntes-nav-entry-wide c-fl\"]"));
+        if (!elementList1.isEmpty()) {
+            elementList1.get(0).click();
+        }
+        
+        TimeUnit.SECONDS.sleep(2);
+
+        // 切换回主页面（default content）
+        driver.switchTo().defaultContent();
+
+        // 切换到第二个 iframe
+        WebElement iframe2 = driver.findElement(By.id("iframe2"));
+        driver.switchTo().frame(iframe2);
+        
+        // 在第二个 iframe 中查找元素并执行操作
+        List<WebElement> elementList2 = driver.findElements(By.cssSelector("[class=\"ntes-nav-index-title ntes-nav-entry-wide c-fl\"]"));
+        if (!elementList2.isEmpty()) {
+            elementList2.get(0).click();
+        }
+        
+        TimeUnit.SECONDS.sleep(2);
+
+        // 再次切换回主页面
+        driver.switchTo().defaultContent();
+
+        // 再次切换到第一个 iframe，演示来回切换
+        driver.switchTo().frame(iframe1);
+        
+        TimeUnit.SECONDS.sleep(2);
+        
+        // 最后切换回主页面
+        driver.switchTo().defaultContent();
     }
 }
