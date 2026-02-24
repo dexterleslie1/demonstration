@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>按钮 evaluate 演示</title>
+    <style>
+        .demo-section { margin-bottom: 24px; }
+        .covered-wrapper { position: relative; display: inline-block; }
+        .covered-wrapper .overlay {
+            position: absolute; left: 0; top: 0; right: 0; bottom: 0;
+            background: rgba(255,0,0,0.3);
+            pointer-events: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-section">
+        <p>被遮罩挡住的按钮：只有 evaluate("el => el.click()") 能触发按钮的 click 事件；button.click() 会点到遮罩或报错。</p>
+        <div class="covered-wrapper">
+            <button id="covered-btn" type="button">被遮罩挡住的按钮</button>
+            <div class="overlay" id="overlay" title="遮罩层">遮罩（会拦截真实点击）</div>
+        </div>
+        <span id="covered-result"></span>
+    </div>
+
+    <script>
+        document.getElementById('covered-btn').addEventListener('click', function() {
+            document.getElementById('covered-result').textContent = '按钮的 click 被触发';
+        });
+        document.getElementById('overlay').addEventListener('click', function() {
+            document.getElementById('covered-result').textContent = '点到了遮罩层';
+        });
+    </script>
+</body>
+</html>

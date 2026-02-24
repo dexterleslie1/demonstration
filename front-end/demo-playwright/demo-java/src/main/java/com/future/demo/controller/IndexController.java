@@ -14,4 +14,9 @@ public class IndexController {
     public String iframeTestingSupport() {
         return "iframe-testing-support";
     }
+
+    @GetMapping("button-evaluate-demo")
+    public String buttonEvaluateDemo() {
+        return "button-evaluate-demo";
+    }
 }
