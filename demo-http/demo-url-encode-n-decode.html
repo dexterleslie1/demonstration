@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>URL 编码/解码工具</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    h1 { font-size: 1.25rem; margin-bottom: 1rem; }
+    textarea {
+      width: 100%;
+      min-height: 200px;
+      padding: 0.5rem;
+      font-family: inherit;
+      resize: vertical;
+    }
+    .row { margin-bottom: 1rem; }
+    .row label { display: block; margin-bottom: 0.25rem; font-weight: 500; }
+    button {
+      padding: 0.2rem 1rem;
+      margin-right: 0.5rem;
+      margin-bottom: 0.5rem;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>URL 编码 / 解码</h1>
+
+  <div class="row">
+    <label for="input">输入内容：</label>
+    <textarea id="input" placeholder="输入需要编码或解码的文本"></textarea>
+  </div>
+
+  <div class="row">
+    <button type="button" id="btnEncode">编码</button>
+    <button type="button" id="btnDecode">解码</button>
+  </div>
+
+  <div class="row">
+    <label for="output">结果：</label>
+    <textarea id="output" readonly placeholder="编码或解码后的结果将显示在这里"></textarea>
+  </div>
+
+  <script>
+    (function () {
+      var input = document.getElementById('input');
+      var output = document.getElementById('output');
+      var btnEncode = document.getElementById('btnEncode');
+      var btnDecode = document.getElementById('btnDecode');
+
+      btnEncode.addEventListener('click', function () {
+        var text = input.value.trim();
+        try {
+          var url = /^https?:\/\//i.test(text)
+            ? new URL(text)
+            : new URL('http://dummy/?' + text.replace(/^\?/, ''));
+          var encodedSearch = new URLSearchParams(url.searchParams).toString();
+          output.value = /^https?:\/\//i.test(text)
+            ? url.origin + url.pathname + (encodedSearch ? '?' + encodedSearch : '')
+            : (encodedSearch || '');
+        } catch (e) {
+          output.value = '编码错误: ' + e.message;
+        }
+      });
+
+      btnDecode.addEventListener('click', function () {
+        var text = input.value;
+        try {
+          output.value = decodeURIComponent(text);
+        } catch (e) {
+          output.value = '解码错误: ' + e.message;
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
