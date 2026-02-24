@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>vConsole 演示</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header class="header">
+        <h1 class="title">vConsole 演示</h1>
+        <p class="subtitle">用按钮触发日志、网络请求、存储与错误，便于在手机/ WebView 中观察 vConsole 面板。</p>
+      </header>
+
+      <section class="card">
+        <h2 class="cardTitle">开关</h2>
+        <p class="muted">
+          vConsole 默认<strong>不启用</strong>。你可以用 URL 参数 <code>?vconsole=1</code> 或点击下面按钮启用。
+        </p>
+        <div class="row">
+          <button id="toggleVConsole" class="btn btnPrimary" type="button">启用 vConsole</button>
+          <span id="vconsoleStatus" class="badge">状态：未启用</span>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2 class="cardTitle">Console</h2>
+        <div class="grid">
+          <button class="btn" type="button" data-action="log">console.log</button>
+          <button class="btn" type="button" data-action="info">console.info</button>
+          <button class="btn" type="button" data-action="warn">console.warn</button>
+          <button class="btn" type="button" data-action="error">console.error</button>
+          <button class="btn" type="button" data-action="table">console.table</button>
+          <button class="btn" type="button" data-action="time">console.time/timeEnd</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2 class="cardTitle">Network</h2>
+        <p class="muted">建议用本地 HTTP 服务打开本页再点按钮（见同目录说明文档）。</p>
+        <div class="grid">
+          <button class="btn" type="button" data-action="fetch">fetch 请求</button>
+          <button class="btn" type="button" data-action="xhr">XHR 请求</button>
+          <button class="btn" type="button" data-action="fail">失败请求</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2 class="cardTitle">Storage / Cookie</h2>
+        <div class="grid">
+          <button class="btn" type="button" data-action="setStorage">写入 Storage</button>
+          <button class="btn" type="button" data-action="readStorage">读取 Storage</button>
+          <button class="btn" type="button" data-action="setCookie">写入 Cookie</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2 class="cardTitle">Error</h2>
+        <div class="grid">
+          <button class="btn btnDanger" type="button" data-action="throwSync">同步抛错</button>
+          <button class="btn btnDanger" type="button" data-action="throwAsync">异步抛错</button>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <p class="muted">
+          提示：在手机上访问时，vConsole 会出现一个浮动入口按钮；点击可展开面板（Console/Network/Storage 等）。
+        </p>
+      </footer>
+    </main>
+
+    <!-- vConsole (CDN). 只在启用时才会实例化 -->
+    <script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
