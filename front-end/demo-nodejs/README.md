@@ -1026,3 +1026,30 @@ const { HelloMessage } = require('my-package')
 console.log(HelloMessage)
 ```
 
+## OpenCC库
+
+>具体用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-nodejs/demo-lib-opencc
+
+OpenCC（Open Chinese Convert）是一个开源的中文简繁体转换库，主要用于在不同中文书写系统之间进行转换，比如从简体中文转换为繁体中文，或者从繁体中文转换为简体中文。它支持多种转换模式，包括：
+
+- 简体 → 繁体（台湾标准）
+- 简体 → 繁体（香港标准）
+- 繁体 → 简体
+- 繁体（台湾）↔ 繁体（香港）
+
+OpenCC 的特点包括：
+
+1. **开源免费**：采用 Apache License 2.0 协议，任何人都可以自由使用和修改。
+2. **跨平台**：支持 Windows、macOS、Linux 等多种操作系统。
+3. **多种语言绑定**：除了 C++ 原生库外，还提供了 Python、Java、Node.js、Go 等语言的接口。
+4. **规则可定制**：转换规则基于配置文件，用户可以自定义或修改转换规则。
+5. **准确性高**：使用了大量人工校对的数据，确保转换结果符合语言习惯。
+
+OpenCC 常用于：
+
+- 网站或应用程序的多语言支持
+- 文档处理工具
+- 电子书阅读器
+- 搜索引擎索引优化
+
+如果你需要在项目中使用 OpenCC，可以通过包管理器安装（如 pip install opencc-python-reimplemented），也可以从 GitHub 下载源码编译。

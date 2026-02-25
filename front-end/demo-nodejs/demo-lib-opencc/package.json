@@ -1,0 +1,15 @@
+{
+  "name": "demo-lib-opencc",
+  "version": "1.0.0",
+  "description": "OpenCC 简繁转换示例",
+  "main": "index.js",
+  "scripts": {
+    "demo": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "opencc-js": "^1.0.5"
+  }
+}
