@@ -1,0 +1,15 @@
+{
+  "name": "demo-express",
+  "version": "1.0.0",
+  "description": "Express 用法示例",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "demo": "node index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.21.0"
+  }
+}
