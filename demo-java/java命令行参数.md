@@ -75,6 +75,7 @@ java -Xms512m -Xmx1024m -jar your-application.jar
 
 - 启动测试中添加`-Xss10m`参数
 - 通过测试 [链接](https://gitee.com/dexterleslie/demonstration/blob/master/demo-java/demo-java-assistant/src/test/java/com/future/demo/XssMaximumRecursionDepthTests.java) 找出`-Xss10m`支持的最大递归深度
+- 通过测试 [链接](https://gitee.com/dexterleslie/demonstration/blob/master/demo-java/demo-java-assistant/src/test/java/com/future/demo/StackVsHeapDemoTests.java) 了解什么变量存在栈空间（栈帧）中，什么变量存在堆空间中。 
 
 
 

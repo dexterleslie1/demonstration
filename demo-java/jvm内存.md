@@ -1750,6 +1750,8 @@ jps -l
 
 # 打印堆内存使用情况（包括堆配置、各区域使用情况）
 jmap -heap <pid>
+# jdk17+使用下面命令
+jhsdb jmap --heap --pid 7
 
 # 打印堆中对象的统计信息（按类统计对象数量和占用内存）
 jmap -histo <pid>
