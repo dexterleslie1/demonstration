@@ -1,4 +1,7 @@
-## maven 项目中引用 Lombok 依赖
+## 引用 Lombok 依赖
+
+>注意：JDK17需要引用Lombok1.18.30+，否则在运行mvn package报错：[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.8.0:compile (default-compile) on project demo-lombok: Fatal error compiling: java.lang.ExceptionInIn
+>itializerError: Unable to make field private com.sun.tools.javac.processing.JavacProcessingEnvironment$DiscoveredProcessors com.sun.tools.javac.processing.JavacProcessingEnvironment.discoveredProcs accessible: module jdk.compiler does not "opens com.sun.tools.javac.processing" to unnamed module @4b0b64cc -> [Help 1]。
 
 ```xml
 <dependency>
