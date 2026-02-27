@@ -2,23 +2,23 @@ version: "3.0"
 
 services:
   demo-elk-elasticsearch:
-    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-elk-elasticsearch
+    build:
+      context: .
+      dockerfile: Dockerfile-elasticsearch
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-elk-elasticsearch-es9
     environment:
       - ES_JAVA_OPTS=-Xms512m -Xmx512m
       - discovery.type=single-node
-      # http.cors表示允许elasticsearch-head连接并管理
-      - http.cors.enabled=true
-      - http.cors.allow-origin=*
       - TZ=Asia/Shanghai
+      - xpack.security.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      - xpack.security.transport.ssl.enabled=false
     ports:
       - 9200:9200
-      # Java transport client需要连接这个端口去操作elasticsearch
       - 9300:9300
-    #volumes:
-    #  - ~/data-demo-elk-elasticsearch:/usr/share/elasticsearch/data
 
   demo-elk-kibana:
-    image: kibana:7.8.0
+    image: docker.elastic.co/kibana/kibana:9.0.0
     environment:
       ELASTICSEARCH_HOSTS: http://demo-elk-elasticsearch:9200
     ports:
@@ -27,10 +27,13 @@ services:
       - demo-elk-elasticsearch
 
   demo-elk-logstash:
-    image: logstash:7.8.0
+    build:
+      context: .
+      dockerfile: Dockerfile-logstash
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-elk-logstash-es9
     environment:
       - xpack.monitoring.elasticsearch.hosts=[ "http://demo-elk-elasticsearch:9200" ]
-      - LS_JAVA_OPTS=-Xmx512m -Xms512m
+      - LS_JAVA_OPTS=-Xmx256m -Xms256m
     volumes:
       - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
     ports:
@@ -38,10 +41,12 @@ services:
 
   # 定时删除过期索引
   demo-elk-curator:
-    image: untergeek/curator:5.7.6
+    build:
+      context: .
+      dockerfile: Dockerfile-curator
+    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-elk-curator-es9
     volumes:
       - ./curator.yml:/.curator/curator.yml
       - ./action.yml:/.curator/action.yml
     entrypoint: /bin/sh
     command: -c "while true; do /curator/curator --config /.curator/curator.yml /.curator/action.yml; sleep 10; done;"
-

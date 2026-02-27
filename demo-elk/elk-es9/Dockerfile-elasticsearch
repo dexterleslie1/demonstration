@@ -1,0 +1,7 @@
+FROM docker.elastic.co/elasticsearch/elasticsearch:9.0.0
+
+# 在线安装ik分词器（当 infinilabs 发布 9.x 后取消注释并填写正确的 zip URL）
+RUN /usr/share/elasticsearch/bin/elasticsearch-plugin install --batch https://release.infinilabs.com/analysis-ik/stable/elasticsearch-analysis-ik-9.0.0.zip
+
+# 安装拼音插件（当 infinilabs 发布 9.x 后取消注释并填写正确的 zip URL）
+RUN /usr/share/elasticsearch/bin/elasticsearch-plugin install --batch https://release.infinilabs.com/analysis-pinyin/stable/elasticsearch-analysis-pinyin-9.0.0.zip

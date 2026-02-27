@@ -1,0 +1,6 @@
+FROM untergeek/curator:5.7.6
+
+ADD curator.yml /.curator/curator.yml
+ADD action.yml /.curator/action.yml
+
+ENTRYPOINT [ "/bin/sh", "-c", "while true; do /curator/curator --config /.curator/curator.yml /.curator/action.yml && echo \"成功执行curator命令\"; sleep 10; done;" ]
