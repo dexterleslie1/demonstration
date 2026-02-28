@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration debug="false">
+
+    <!-- 注入配置文件中的配置到logback上下文中 -->
+    <property resource="application.properties"/>
+    <springProfile name="!prod">
+        <property resource="application-dev.properties"/>
+    </springProfile>
+    <springProfile name="prod">
+        <property resource="application-prod.properties"/>
+    </springProfile>
+
+    <!--为了防止进程退出时，内存中的数据丢失，请加上此选项-->
+    <shutdownHook class="ch.qos.logback.core.hook.DelayingShutdownHook"/>
+
+    <!-- 详细用法参考：https://github.com/aliyun/aliyun-log-logback-appender/blob/master/README_CN.md -->
+    <appender name="aliyun" class="com.aliyun.openservices.log.logback.LoghubAppender">
+        <!-- 日志服务的 HTTP 地址，必选参数 -->
+        <endpoint>cn-hangzhou.log.aliyuncs.com</endpoint>
+        <accessKeyId></accessKeyId>
+        <accessKeySecret></accessKeySecret>
+
+        <!-- sls 项目配置 -->
+        <project>mytest1</project>
+        <logStore>teststore1</logStore>
+        <!--必选项 (end)-->
+
+        <!-- 可选项 -->
+        <!--<topic>your topic</topic>
+        <source>your source</source>-->
+
+        <!-- 可选项 详见 '参数说明'-->
+        <totalSizeInBytes>104857600</totalSizeInBytes>
+        <maxBlockMs>0</maxBlockMs>
+        <ioThreadCount>8</ioThreadCount>
+        <batchSizeThresholdInBytes>524288</batchSizeThresholdInBytes>
+        <batchCountThreshold>4096</batchCountThreshold>
+        <lingerMs>2000</lingerMs>
+        <retries>10</retries>
+        <baseRetryBackoffMs>100</baseRetryBackoffMs>
+        <maxRetryBackoffMs>50000</maxRetryBackoffMs>
+
+        <!-- 可选项 通过配置 encoder 的 pattern 自定义 log 的格式 -->
+        <encoder charset="UTF-8" class="net.logstash.logback.encoder.LogstashEncoder">
+            <customFields>{"module": "demo-sls","log_type": "business"}</customFields>
+        </encoder>
+
+        <!-- 可选项 MDC 字段捕获配置（appender 可以从日志打印的 MDC 上下文中捕获字段，并将其添加到日志字段中）-->
+        <!--<mdcFields>traceId,spanId</mdcFields>-->
+
+        <!-- 可选项 设置 time 字段呈现的格式 -->
+        <timeFormat>yyyy-MM-dd'T'HH:mmZ</timeFormat>
+        <!-- 可选项 设置 time 字段呈现的时区 -->
+        <timeZone>UTC</timeZone>
+        <!-- 可选项 设置是否要添加 Location 字段（日志打印位置），默认为 true -->
+        <includeLocation>true</includeLocation>
+        <!-- 可选项 当 encoder 不为空时，是否要包含 message 字段，默认为 true -->
+        <includeMessage>true</includeMessage>
+        <!-- 可选项 可注入自定义的 credentialsProvider，允许用户自行实现 AK 获取逻辑 -->
+        <!-- 参见 "自定义凭证提供者 CredentialsProvider" 一节介绍 -->
+        <!--<credentialsProviderBuilder class="com.aliyun.openservices.log.logback.example.ExampleCredentialsProviderBuilder">
+            <accessKeyId>${accessKeyId}</accessKeyId>
+            <accessKeySecret>${accessKeySecret}</accessKeySecret>
+        </credentialsProviderBuilder>-->
+        <!-- 可选项，exception 堆栈最大记录长度，超出此长度会被截断，默认值为 500 -->
+        <maxThrowable>500</maxThrowable>
+        <!-- 可选项 设置上传到 sls 的日志时间精度，支持秒 s 与毫秒 ms，默认为秒 -->
+        <timePrecision>s</timePrecision>
+    </appender>
+
+    <root level="info">
+        <appender-ref ref="aliyun"/>
+    </root>
+    <logger name="com.future.demo.elk" level="debug" additivity="false">
+        <appender-ref ref="aliyun"/>
+    </logger>
+</configuration>
