@@ -1,0 +1,6 @@
+{
+  "index_patterns": ["busine*"],
+  "settings": {
+    "index.lifecycle.name": "log-delete"
+  }
+}

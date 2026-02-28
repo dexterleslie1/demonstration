@@ -42,15 +42,29 @@ services:
     ports:
       - 5044:5044
 
-  # 定时删除过期索引
-  demo-elk-curator:
-    build:
-      context: .
-      dockerfile: Dockerfile-curator
-    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-elk-curator
+  # ILM 初始化：ES 启动后执行一次，注册策略与索引模板（30 天后自动删除过期索引）
+  demo-elk-ilm-init:
+    image: curlimages/curl:8.5.0
     volumes:
-      - ./curator.yml:/.curator/curator.yml
-      - ./action.yml:/.curator/action.yml
-    entrypoint: /bin/sh
-    command: -c "while true; do /curator/curator --config /.curator/curator.yml /.curator/action.yml; sleep 10; done;"
+      - ./ilm:/ilm:ro
+    environment:
+      - ES_URL=http://demo-elk-elasticsearch:9200
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - "sh /ilm/init-ilm.sh"
+    depends_on:
+      - demo-elk-elasticsearch
+    restart: "no"
+
+  # # 定时删除过期索引
+  # demo-elk-curator:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile-curator
+  #   image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-elk-curator
+  #   volumes:
+  #     - ./curator.yml:/.curator/curator.yml
+  #     - ./action.yml:/.curator/action.yml
+  #   entrypoint: /bin/sh
+  #   command: -c "while true; do /curator/curator --config /.curator/curator.yml /.curator/action.yml; sleep 10; done;"
 

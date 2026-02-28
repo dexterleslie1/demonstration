@@ -538,3 +538,60 @@ GET /_nodes/stats/jvm?human=true
 
 ```
 
+## ILM 定期删除 30 天前的过期索引
+
+>具体用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-elk/elk-es7
+
+Elasticsearch 7 自带 **Index Lifecycle Management (ILM)**，可替代 Curator 实现按“索引年龄”自动删除。
+
+### 原理
+
+- **ILM 策略** `log-30d-delete`：仅包含 delete 阶段，`min_age: 30d` 后执行删除。
+- **索引模板** `log-type-lifecycle`：匹配形如 `log_type-yyyy-MM-dd` 的索引（如 `ecommerce-2025-01-28`），为新索引自动挂上上述策略。
+- 年龄按**索引创建时间**计算，与 logstash 的按日建索引一致，约等于“保留最近 30 天”。
+
+### 使用步骤
+
+#### 1. 执行一次初始化（创建策略 + 模板）
+
+ES 启动后执行：
+
+```bash
+# 若 ES 在本地
+export ES_URL=http://localhost:9200
+./ilm/init-ilm.sh
+
+# 若 ES 在 docker-compose 中
+docker compose exec demo-elk-elasticsearch curl -s -X PUT "http://localhost:9200/_ilm/policy/log-30d-delete" -H "Content-Type: application/json" -d @/path/to/ilm/ilm-policy-30d-delete.json
+docker compose exec demo-elk-elasticsearch curl -s -X PUT "http://localhost:9200/_template/log-type-lifecycle" -H "Content-Type: application/json" -d @/path/to/ilm/index-template-log-type-lifecycle.json
+```
+
+或在宿主机（ES 端口已映射）：
+
+```bash
+cd elk-es7
+ES_URL=http://localhost:9200 ./ilm/init-ilm.sh
+```
+
+#### 2. 已有索引补挂策略（可选）
+
+在创建模板之前已经存在的、符合命名规则的索引不会自动带上策略，需手动挂一次（每个索引只需一次）：
+
+```bash
+# 单个索引示例
+curl -X PUT "http://localhost:9200/ecommerce-2025-01-01/_settings" \
+  -H "Content-Type: application/json" \
+  -d '{"index.lifecycle.name":"log-30d-delete"}'
+
+# 或对多个索引用 _all / 通配（按需替换索引名）
+curl -X PUT "http://localhost:9200/ecommerce-*/_settings" \
+  -H "Content-Type: application/json" \
+  -d '{"index.lifecycle.name":"log-30d-delete"}'
+```
+
+之后新创建的、匹配模板的索引会自动带策略，无需再配。
+
+### 索引匹配规则
+
+- 模板 `index_patterns` 为 `["*-*-*-*"]`，匹配如 `ecommerce-2025-01-28`（log_type + 日期）的索引。
+- 若 logstash 的 `log_type` 固定为某几种，也可把模板改成更精确的 pattern，例如 `["ecommerce-*","unknown-*"]`，只需在 `index-template-log-type-lifecycle.json` 里改 `index_patterns`。

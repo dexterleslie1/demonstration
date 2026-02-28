@@ -138,25 +138,25 @@ spec:
   selector:
     app: demo-logstash
 
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: demo-curator
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: demo-curator
-  template:
-    metadata:
-      labels:
-        app: demo-curator
-    spec:
-      containers:
-        - name: demo-curator
-          image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-elk-curator
-          imagePullPolicy: Always
-          env:
-            - name: "TZ"
-              value: "Asia/Shanghai"
+# ---
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: demo-curator
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: demo-curator
+#   template:
+#     metadata:
+#       labels:
+#         app: demo-curator
+#     spec:
+#       containers:
+#         - name: demo-curator
+#           image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-elk-curator
+#           imagePullPolicy: Always
+#           env:
+#             - name: "TZ"
+#               value: "Asia/Shanghai"

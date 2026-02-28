@@ -2756,3 +2756,18 @@ GET /t_order_detail/_count
 }
 ```
 
+### 调整ILM执行频率
+
+>说明：默认配置ILM每10分钟自动执行一次。
+
+调整ILM执行频率为5秒
+
+```
+PUT _cluster/settings
+{
+  "persistent": {
+    "indices.lifecycle.poll_interval": "5s"
+  }
+}
+```
+
