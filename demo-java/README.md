@@ -1933,3 +1933,10 @@ public @interface ApiOperation {
 | **常见组合** | 与 `@Target`、`@Retention`等元注解一起使用          |
 
 **简单来说：`@Documented`就是一个开关，决定你的注解是否要在项目的技术文档中"露个脸"。** 对于需要生成详细API文档的库或框架（如Spring、Swagger等），这个注解非常重要。
+
+## 生产环境的jvm参数
+
+```
+-Xmx1g -Xms1g -Xss256k
+```
+

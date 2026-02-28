@@ -1,44 +1,118 @@
 ## 内存结构
 
-**程序计数器（Program Counter Register）**：
+>参考链接：https://www.baeldung.com/native-memory-tracking-in-jvm
 
-- 一块较小的内存空间，作为当前线程所执行的字节码的行号指示器。
-- 字节码解释器工作时通过改变这个计数器的值来选取下一条需要执行的字节码指令。
+### 1. Java Heap（Java 堆）
 
-**Java虚拟机栈（Java Virtual Machine Stacks）**：
+- **来源**：`-Xms`/ `-Xmx`控制。
+- **NMT 中表现**：单独一项 `Java Heap`。
+- **特点**：
+  - 这是唯一在 NMT 中**明确属于“堆”**的部分。
+  - 由 GC 管理，是传统意义上“堆内存”的全部。
 
-- 线程私有，生命周期与线程相同。
-- 描述Java方法执行的内存模型，每个方法在执行时都会创建一个栈帧（Stack Frame），用于存储局部变量表、操作数栈、动态链接、方法出口等信息。
+### 2. Class（类元数据）
 
-**本地方法栈（Native Method Stack）**：
+- **来源**：加载的类信息，存在 **元空间（Metaspace）** 中。
+- **NMT 中表现**：`Class`项，包括：
+  - 类本身元数据
+  - 方法信息
+  - 字段信息
+  - 运行时常量池等
+- **特点**：
+  - 在 JDK8+ 使用本地内存，而不是堆。
+  - 受 `-XX:MaxMetaspaceSize`限制，但**不计入 `-Xmx`**。
+  - 是 NMT 中“非堆”里最典型的一块。
 
-- 与虚拟机栈类似，但为虚拟机使用到的Native方法服务。
-- 虚拟机规范中对本地方法栈中方法使用的语言、使用方式与数据结构没有强制规定，因此具体的虚拟机可以自由实现。
+### 3. Thread（线程相关内存）
 
-**Java堆（Java Heap）**：
+- **来源**：每个 Java 线程的：
+  - 线程栈（Java 虚拟机栈 + 可能还有本地方法栈）
+  - 线程控制块等
+- **NMT 中表现**：`Thread`项，显示线程数量和每线程栈大小的累加值。
+- **特点**：
+  - 栈大小由 `-Xss`控制。
+  - 线程越多，`Thread`项占用越大。
+  - 属于线程私有，也是本地内存的一部分。
 
-- Java虚拟机所管理的内存中最大的一块，被所有线程共享。
-- 唯一目的是存放对象实例，几乎所有的对象实例都在这里分配内存。
-- 垃圾收集器管理的主要区域，分为新生代（Young Generation）和老年代（Old Generation），其中新生代又分为Eden Space、Survivor Space1和Survivor Space2三部分。
+### 4. Code（JIT 编译代码缓存）
 
-**方法区（Method Area）**：
+- **来源**：JIT 编译器生成的本地机器码存放在 **Code Cache** 中。
+- **NMT 中表现**：`Code`项。
+- **特点**：
+  - 用来缓存热点方法的编译结果，提高性能。
+  - 受 `-XX:ReservedCodeCacheSize`限制。
+  - 不属于 Java 堆，也不属于 Metaspace，是一块专门的本地内存。
 
-- 线程共享的内存区域，用于存储已被虚拟机加载的类信息、常量、静态变量、即时编译器编译后的代码等数据。
-- 有一个别名叫做Non-Heap（非堆），与Java堆区分开来。
-- 在JDK8及之后的版本中，方法区被元空间（Metaspace）所取代。
+### 5. GC（垃圾收集器本地内存）
 
-**运行时常量池（Runtime Constant Pool）**：
+- **来源**：GC 算法本身运行时需要的结构：
+  - GC 线程栈
+  - 标记栈、卡表、记忆集（Remembered Set）、标记位图等
+- **NMT 中表现**：`GC`项。
+- **特点**：
+  - 这部分就是常说的“GC 本地内存”。
+  - 不由 `-Xmx`控制，而是由 JVM 内部按需向 OS 申请。
+  - 不同 GC（如 G1、ZGC、Shenandoah）占用的 GC 本地内存差异很大。
 
-- 方法区的一部分，用于存放编译期生成的各种字面量和符号引用。
-- 具备动态性，运行期间也可能将新的常量放入池中。
+### 6. Compiler（JIT 编译器本身）
 
-**直接内存（Direct Memory）**：
+- **来源**：JIT 编译器工作时的临时数据结构。
+- **NMT 中表现**：`Compiler`项。
+- **特点**：
+  - 编译器线程栈、优化过程中的中间表示等。
+  - 一般在启动阶段或大量编译时比较明显。
 
-- 不是虚拟机运行时数据区的一部分，也不是Java虚拟机规范中定义的内存区域。
-- 但被频繁使用，并可能导致OutOfMemoryError异常出现。
-- 主要通过ByteBuffer类来使用，使用完直接内存后，需要通过调用DirectByteBuffer对象的clean()方法来释放直接内存空间。
+### 7. Internal（JVM 内部其他开销）
 
+- **来源**：各种 JVM 内部数据结构：
+  - Symbol Table、String Table
+  - JNI 全局引用表
+  - 各类句柄、缓存等
+- **NMT 中表现**：`Internal`项。
+- **特点**：
+  - 通常是“杂项”，单块不大，但种类多。
 
+### 8. Symbol / Arena / …（细节项）
+
+- **来源**：字符串符号、内存池（Arena）等细碎分配。
+- **NMT 中表现**：在 `detail`模式下可以看到更多细分。
+- **特点**：帮助排查一些难以解释的本地内存增长。
+
+------
+
+### NMT 视角下的“堆 vs 非堆 vs 本地内存”对照
+
+| 类别         | 包含内容（NMT 项目）                                    | 说明                                                      |
+| ------------ | ------------------------------------------------------- | --------------------------------------------------------- |
+| Java 堆      | `Java Heap`                                             | 唯一真正意义的“堆”，GC 管理，受 `-Xmx`限制                |
+| 非堆（狭义） | `Class`、`Code`、`Internal`、`Symbol`等                 | 仍在 JVM 运行时数据区范畴，但不属于 Java 堆               |
+| 本地内存     | `Thread`、`GC`、`Compiler`、`Internal`、直接内存等      | 向 OS 申请的 Native Memory，不在 JVM 规范“运行时数据区”里 |
+| 直接内存     | 不在 NMT 默认视图中，需要配合 `-XX:MaxDirectMemorySize` | NIO 用的 DirectByteBuffer，释放依赖 Cleaner，GC 间接参与  |
+
+------
+
+### 为什么要从 NMT 角度看 JVM 内存
+
+1. **能看到“看不见”的内存**：
+
+   很多时候 OOM 报错不是堆不够，而是 Metaspace、线程栈、Code Cache、GC 本地内存撑爆了本地内存。
+
+2. **帮助精准调优**：
+
+   - 线程太多 → `Thread`项暴涨 → 考虑减少线程或减小 `-Xss`。
+   - 类加载过多 → `Class`项大 → 检查是否有类加载泄漏，调整 Metaspace 上限。
+   - JIT 编译多 → `Code`项大 → 考虑调大 Code Cache 或优化编译策略。
+
+3. **理解 JVM 全貌**：
+
+   NMT 让“堆、非堆、本地内存”从抽象概念变成**可观测的数值**，对排查生产环境内存问题非常有用。
+
+------
+
+**一句话记：**
+
+- **NMT 里 `Java Heap`是堆；`Class/Code/Internal`是非堆；`Thread/GC/Compiler`等是本地内存。**
+- 从 NMT 看 JVM 内存，就是看 JVM 向 OS 一共要了多少内存，都花在哪些地方。
 
 ## `metaspace`和`permgen`
 
@@ -821,6 +895,129 @@ jmap -dump:live,format=b,file=/tmp/dump.hprof 12345
 
 对于 Spring Boot 应用，**NMT 最适合诊断框架底层的 JVM 内存问题**，而应用级的内存问题需要结合堆分析工具。
 
+## 查看内存
+
+借助本站示例辅助测试：https://gitee.com/dexterleslie/demonstration/tree/master/demo-java/demo-java-assistant
+
+编译示例
+
+```sh
+mvn package
+```
+
+### 查看堆内存
+
+运行测试
+
+```sh
+java -Xmx1g -XX:NativeMemoryTracking=summary -jar target/demo.jar memalloc
+```
+
+查看内存
+
+```bash
+$ ./jcmd `/usr/local/jdk1.8.0_271/bin/jps -mlv|grep demo.jar | awk '{print $1}'` VM.native_memory scale=MB
+Native Memory Tracking:
+
+(Omitting categories weighting less than 1MB)
+
+Total: reserved=2622MB, committed=1029MB
+-                 Java Heap (reserved=1024MB, committed=877MB)
+                            (mmap: reserved=1024MB, committed=877MB) 
+ 
+...
+
+```
+
+可以看到使用877MB堆内存。
+
+### 查看线程栈内存
+
+运行测试
+
+```sh
+java -Xss32m -XX:NativeMemoryTracking=summary -jar target/demo.jar xss
+```
+
+查看内存
+
+```bash
+$ ./jcmd `/usr/local/jdk1.8.0_271/bin/jps -mlv|grep demo.jar | awk '{print $1}'` VM.native_memory scale=MB
+Native Memory Tracking:
+
+(Omitting categories weighting less than 1MB)
+
+Total: reserved=15634MB, committed=1296MB
+
+...
+ 
+-                    Thread (reserved=8523MB, committed=853MB)
+                            (thread #275)
+                            (stack: reserved=8522MB, committed=852MB)
+
+ ...
+```
+
+可以看到线程栈使用853MB内存。
+
+### 查看GC本地内存
+
+JVM 内置了多种垃圾回收算法，每种算法都适用于不同的使用场景。所有这些垃圾回收算法都有一个共同的特点：它们都需要使用堆外数据结构来执行任务。这些内部数据结构会占用更多的本地内存。
+
+运行测试
+
+```sh
+java -Xmx1g -XX:NativeMemoryTracking=summary -jar target/demo.jar memalloc
+```
+
+查看内存
+
+```sh
+$ ./jcmd `/usr/local/jdk1.8.0_271/bin/jps -mlv|grep demo.jar | awk '{print $1}'` VM.native_memory summary scale=MB
+Native Memory Tracking:
+
+(Omitting categories weighting less than 1MB)
+
+Total: reserved=2623MB, committed=804MB
+
+...
+ 
+-                        GC (reserved=89MB, committed=75MB)
+                            (malloc=18MB #3403) 
+                            (mmap: reserved=70MB, committed=57MB) 
+ 
+...
+```
+
+可以看到GC使用75MB本地内存。
+
+### 查看直接内存
+
+>提示：jmap、jstat、jcmd命令不能查看直接内存，使用arthas工具查看直接内存。
+
+```sh
+# 下载 arthas
+$ curl -O https://arthas.aliyun.com/arthas-boot.jar
+
+# 启动 arthas（会自动检测 Java 进程）
+$ java -jar arthas-boot.jar
+
+# 或者指定进程 ID
+$ java -jar arthas-boot.jar <pid>
+
+# 查看内存使用情况
+$ memory
+Memory                                                                         used                      total                     max                        usage
+
+...
+
+direct                                                                         48M                       48M                       -                          100.00%
+
+...
+```
+
+可以看到使用直接内存为48MB。
+
 ## `GC`相关
 
 ### 什么是垃圾？
@@ -1434,7 +1631,70 @@ java -jar -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/data -Xmx512m -Xms51
 1. 使用`arthas`的`memory`、`jvm`、`dashboard`命令查看内存和`GC`情况
 1. 参考上面`GC`相关命令配置`java`启动命令打印应用`GC`信息
 
+## 使用jstat命令查看堆内存和GC情况
 
+>提示：能够使用jstat命令查看镜像elasticsearch:7.14.1 JVM内存。
+
+`jstat` 是 JDK 自带的命令行工具，用于监控 JVM 堆内存和 GC 统计信息。
+
+查看堆内存使用情况
+
+```bash
+# 获取进程 ID
+jps -l
+
+# 查看 GC 和内存使用情况（以 KB 为单位）
+jstat -gc <pid>
+
+# 每 5 秒输出一次，持续监控
+jstat -gc <pid> 5000
+
+# 查看内存使用百分比
+jstat -gcutil <pid>
+
+# 每 2 秒输出一次内存使用百分比，共输出 10 次
+jstat -gcutil <pid> 2000 10
+```
+
+输出字段说明
+
+**`jstat -gc` 输出字段**：
+
+- **S0C/S1C**：Survivor 0/1 区容量（KB）
+- **S0U/S1U**：Survivor 0/1 区已使用（KB）
+- **EC**：Eden 区容量（KB）
+- **EU**：Eden 区已使用（KB）
+- **OC**：老年代容量（KB）
+- **OU**：老年代已使用（KB）
+- **MC**：元空间容量（KB）
+- **MU**：元空间已使用（KB）
+- **CCSC**：压缩类空间容量（KB）
+- **CCSU**：压缩类空间已使用（KB）
+- **YGC**：年轻代 GC 次数
+- **YGCT**：年轻代 GC 总耗时（秒）
+- **FGC**：Full GC 次数
+- **FGCT**：Full GC 总耗时（秒）
+- **GCT**：GC 总耗时（秒）
+
+**`jstat -gcutil` 输出字段**：
+
+- **S0/S1**：Survivor 0/1 区使用百分比
+- **E**：Eden 区使用百分比
+- **O**：老年代使用百分比
+- **M**：元空间使用百分比
+- **CCS**：压缩类空间使用百分比
+
+示例输出
+
+```
+# jstat -gc 输出示例
+ S0C    S1C    S0U    S1U      EC       EU        OC         OU       MC     MU    CCSC   CCSU   YGC     YGCT    FGC    FGCT     GCT
+87040.0 87040.0  0.0   87040.0 699392.0 123456.0  1433600.0  567890.0  4864.0 3757.9 512.0  423.4      3    0.123     0    0.000    0.123
+
+# jstat -gcutil 输出示例
+  S0     S1     E      O      M     CCS    YGC     YGCT    FGC    FGCT     GCT
+  0.00  100.00  17.65  39.65  77.25  82.62      3    0.123     0    0.000    0.123
+```
 
 ## OOM分析
 
@@ -1571,23 +1831,25 @@ JVM堆内存设置
    - 线程设置数量和内存设置成正比，否则会导致较多的新生代`GC`，进而导致老年代区占用迅速膨胀，最后导致频繁`Full GC`影响并发性能
    - 如果不是内存泄漏问题，一般通过`-Xmx`、`-Xms`把内存调大能够解决频繁`GC`引起的稳定性和性能问题
 
-## 查看内存
+## ~~查看内存~~
 
-### 通过NMT查看
+### ~~通过NMT查看~~
 
-通过`Native Memory Tracking`功能查看`jvm`内存使用。
+>提示：参考上面章节“使用NMT查看内存”。
 
-- 通过项目 [链接](https://gitee.com/dexterleslie/demonstration/tree/master/demo-java/demo-java-assistant) 辅助测试
+~~通过`Native Memory Tracking`功能查看`jvm`内存使用。~~
 
-- 启动辅助测试项目
+- ~~通过项目 [链接](https://gitee.com/dexterleslie/demonstration/tree/master/demo-java/demo-java-assistant) 辅助测试~~
+
+- ~~启动辅助测试项目~~
 
   ```bash
   java -Xmx128m -Xss512k -XX:NativeMemoryTracking=detail -jar target/demo.jar memalloc
   ```
 
-  `-XX:NativeMemoryTracking=detail`启用`Native Memory Tracking`功能
+  ~~`-XX:NativeMemoryTracking=detail`启用`Native Memory Tracking`功能~~
 
-- 使用`jcmd+NMT`查看内存使用情况
+- ~~使用`jcmd+NMT`查看内存使用情况~~
 
   ```bash
   # summary模式
@@ -1597,9 +1859,9 @@ JVM堆内存设置
   ./jcmd `/usr/local/jdk1.8.0_271/bin/jps -mlv|grep demo.jar | awk '{print $1}'` VM.native_memory detail scale=MB
   ```
 
-  `/usr/local/jdk1.8.0_271/bin/jps -mlv|grep demo.jar | awk '{print $1}'`用于获取进程`id`
+  ~~`/usr/local/jdk1.8.0_271/bin/jps -mlv|grep demo.jar | awk '{print $1}'`用于获取进程`id`~~
 
-### 通过Actuator查看
+### ~~通过Actuator查看~~
 
 通过 Spring Boot Actuator 的 `/actuator/metrics` 端点可以查看 JVM 内存使用情况。
 
@@ -1733,7 +1995,7 @@ jvm_memory_max_bytes{area="heap",id="G1 Eden Space"} 2.147483648e+09
      curl http://localhost:8081/mydemo/prometheus | grep jvm_memory_used_bytes
      ```
 
-### 使用 jmap 查看
+### ~~使用 jmap 查看~~
 
 >提示：
 >
@@ -1825,70 +2087,7 @@ PS Old Generation
 - `jmap -heap` 在某些 JDK 版本中可能不可用（如 JDK 9+），建议使用 `jcmd` 替代
 - `jmap -histo:live` 会触发 Full GC，在生产环境谨慎使用
 
-### 使用 jstat 查看
-
->提示：能够使用jstat命令查看镜像elasticsearch:7.14.1 JVM内存。
-
-`jstat` 是 JDK 自带的命令行工具，用于监控 JVM 内存和 GC 统计信息。
-
-#### 查看内存使用情况
-
-```bash
-# 获取进程 ID
-jps -l
-
-# 查看 GC 和内存使用情况（以 KB 为单位）
-jstat -gc <pid>
-
-# 每 5 秒输出一次，持续监控
-jstat -gc <pid> 5000
-
-# 查看内存使用百分比
-jstat -gcutil <pid>
-
-# 每 2 秒输出一次内存使用百分比，共输出 10 次
-jstat -gcutil <pid> 2000 10
-```
-
-#### 输出字段说明
-
-**`jstat -gc` 输出字段**：
-- **S0C/S1C**：Survivor 0/1 区容量（KB）
-- **S0U/S1U**：Survivor 0/1 区已使用（KB）
-- **EC**：Eden 区容量（KB）
-- **EU**：Eden 区已使用（KB）
-- **OC**：老年代容量（KB）
-- **OU**：老年代已使用（KB）
-- **MC**：元空间容量（KB）
-- **MU**：元空间已使用（KB）
-- **CCSC**：压缩类空间容量（KB）
-- **CCSU**：压缩类空间已使用（KB）
-- **YGC**：年轻代 GC 次数
-- **YGCT**：年轻代 GC 总耗时（秒）
-- **FGC**：Full GC 次数
-- **FGCT**：Full GC 总耗时（秒）
-- **GCT**：GC 总耗时（秒）
-
-**`jstat -gcutil` 输出字段**：
-- **S0/S1**：Survivor 0/1 区使用百分比
-- **E**：Eden 区使用百分比
-- **O**：老年代使用百分比
-- **M**：元空间使用百分比
-- **CCS**：压缩类空间使用百分比
-
-#### 示例输出
-
-```bash
-# jstat -gc 输出示例
- S0C    S1C    S0U    S1U      EC       EU        OC         OU       MC     MU    CCSC   CCSU   YGC     YGCT    FGC    FGCT     GCT
-87040.0 87040.0  0.0   87040.0 699392.0 123456.0  1433600.0  567890.0  4864.0 3757.9 512.0  423.4      3    0.123     0    0.000    0.123
-
-# jstat -gcutil 输出示例
-  S0     S1     E      O      M     CCS    YGC     YGCT    FGC    FGCT     GCT
-  0.00  100.00  17.65  39.65  77.25  82.62      3    0.123     0    0.000    0.123
-```
-
-### 使用 jcmd 查看
+### ~~使用 jcmd 查看~~
 
 >提示：使用下面命令查看镜像elasticsearch:7.14.1内存报错。
 
@@ -1941,7 +2140,7 @@ Total: reserved=1813MB, committed=180MB
 
 **注意**：`jcmd VM.memory` 需要启用 NMT（`-XX:NativeMemoryTracking=summary` 或 `detail`）
 
-### 使用 arthas 查看
+### ~~使用 arthas 查看~~
 
 >提示：使用arthas查看镜像elasticsearch:7.14.1内存时不能attach到JVM进程。
 
@@ -1986,7 +2185,7 @@ nonheap                          45.6M     128.0M    256.0M      17.8%
 direct                           12.3M     12.3M     -           -
 ```
 
-### 使用图形化工具查看
+### ~~使用图形化工具查看~~
 
 #### VisualVM
 
@@ -2042,7 +2241,7 @@ jmc
 3. 查看 "Memory" 视图，可以查看详细的内存使用情况
 4. 支持内存泄漏检测、GC 分析等高级功能
 
-### 方法对比总结
+### ~~方法对比总结~~
 
 | 方法 | 优点 | 缺点 | 适用场景 |
 |------|------|------|----------|

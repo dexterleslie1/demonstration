@@ -1289,5 +1289,3 @@ curl http://localhost:3000/user/1
 # POST 提交 JSON
 curl -X POST http://localhost:3000/echo -H "Content-Type: application/json" -d "{\"key\":\"value\"}"
 ```
-
-如果你刚接触 Node.js Web 开发，Express 绝对是**最佳起点**！
