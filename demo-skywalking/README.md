@@ -550,7 +550,9 @@ wrk -t8 -c64 -d150000s --latency --timeout 30 http://localhost:8080/api/v1/test1
 
 
 
-### 配置 `SpringBoot` 应用日志采集
+### ~~配置 `SpringBoot` 应用日志采集~~
+
+>提示：使用ELK系统替代此功能。
 
 - `POM` 添加下面依赖：
 
@@ -614,7 +616,9 @@ wrk -t8 -c64 -d150000s --latency --timeout 30 http://localhost:8080/api/v1/test1
 
 
 
-### 查看应用日志
+### ~~查看应用日志~~
+
+>提示：使用ELK系统替代此功能。
 
 访问 `Skywalking` 控制台 `http://localhost:8088/`，切换到 `Log` 功能以查看应用日志。如图：
 

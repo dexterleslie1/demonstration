@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile-elasticsearch
     image: demo-elasticsearch-dev
     environment:
-      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
       - discovery.type=single-node
       # http.cors表示允许elasticsearch-head连接并管理
       - http.cors.enabled=true
@@ -25,6 +25,8 @@ services:
     image: kibana:7.8.0
     environment:
       - ELASTICSEARCH_HOSTS=http://demo-elasticsearch:9200
+      # 限制 Node.js（Kibana 基于 Node）的 V8 堆大小为 356MB
+      - NODE_OPTIONS=--max-old-space-size=356
     ports:
       - 5601:5601
     depends_on:

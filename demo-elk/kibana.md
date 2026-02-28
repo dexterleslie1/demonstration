@@ -1,7 +1,3 @@
-# kibana
-
-
-
 ## KQL
 
 Kibana中的KQL（Kibana Query Language）是一种使用自由文本搜索或基于字段的搜索来过滤Elasticsearch数据的简单语法。以下是对Kibana KQL的详细介绍：

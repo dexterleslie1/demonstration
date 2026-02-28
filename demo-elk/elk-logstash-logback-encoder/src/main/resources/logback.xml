@@ -27,17 +27,17 @@
     <!-- application.properties配置spring.elk.logstash.tcp.url后才启用LogstashAppender -->
     <if condition='!property("spring.elk.logstash.tcp.url").equals("")'>
         <then>
-            <appender name="logstash" class="net.logstash.logback.appender.LogstashAccessTcpSocketAppender">
+            <!--<appender name="logstash" class="net.logstash.logback.appender.LogstashAccessTcpSocketAppender">
                 <destination>${spring.elk.logstash.tcp.url}</destination>
 
-                <!--
+                &lt;!&ndash;
                     不需要使用复杂的LoggingEventCompositeJsonEncoder配置，使用LogstashEncoder并添加自定义field
                     https://blog.csdn.net/u013845177/article/details/113658483
-                -->
+                &ndash;&gt;
                 <encoder charset="UTF-8" class="net.logstash.logback.encoder.LogstashEncoder">
                     <customFields>{"module": "elk-demo","log_type": "business"}</customFields>
                 </encoder>
-                <!--<encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+                &lt;!&ndash;<encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
                     <providers>
                         <timestamp>
                             <pattern>yyyy-MM-dd HH:mm:ss.SSS</pattern>
@@ -61,7 +61,14 @@
                         <message/>
                         <stackTrace/>
                     </providers>
-                </encoder>-->
+                </encoder>&ndash;&gt;
+            </appender>-->
+            <appender name="logstash" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+                <destination>${spring.elk.logstash.tcp.url}</destination>
+                <encoder charset="UTF-8" class="net.logstash.logback.encoder.LogstashEncoder">
+                    <!-- todo:logstash-logback-encoder不会自动生成traceId，需要解决skywalking、sleuth等集成后自动生成 -->
+                    <customFields>{"module": "elk-demo","log_type": "business"}</customFields>
+                </encoder>
             </appender>
         </then>
     </if>

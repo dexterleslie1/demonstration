@@ -9,6 +9,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
@@ -16,10 +17,13 @@ import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.Query;
 
+import org.springframework.data.elasticsearch.core.document.Document;
+
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 // todo CriteriaQuery
@@ -351,6 +355,33 @@ public class Tests {
         searchHits = this.elasticsearchOperations.search(searchQuery, ClothGoods.class);
         clothGoodsList = searchHits.stream().map(org.springframework.data.elasticsearch.core.SearchHit::getContent).collect(Collectors.toList());
         Assertions.assertEquals(0, clothGoodsList.size());
+    }
+
+    /**
+     * 测试创建 60 个以 cloth_goods 为前缀、字段与 ClothGoods 实体一致的索引（cloth_goods_1 ~ cloth_goods_60）
+     * 提示：这个测试用于协助创建大量索引后观察ES服务堆内存使用情况。
+     */
+    @Test
+    public void testCreate60ClothGoodsIndices() {
+        IndexOperations entityIndexOps = this.elasticsearchOperations.indexOps(ClothGoods.class);
+        Map<String, Object> settings = entityIndexOps.createSettings();
+        Document mapping = entityIndexOps.createMapping();
+
+        int total = 800;
+
+        for (int i = 1; i <= total; i++) {
+            String indexName = "cloth_goods_" + i;
+            IndexOperations indexOps = this.elasticsearchOperations.indexOps(IndexCoordinates.of(indexName));
+            if (!indexOps.exists()) {
+                indexOps.create(settings, mapping);
+            }
+        }
+
+        for (int i = 1; i <= total; i++) {
+            String indexName = "cloth_goods_" + i;
+            IndexOperations indexOps = this.elasticsearchOperations.indexOps(IndexCoordinates.of(indexName));
+            Assertions.assertTrue(indexOps.exists(), "索引 " + indexName + " 应存在");
+        }
     }
 
 }
