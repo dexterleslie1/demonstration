@@ -1,0 +1,54 @@
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9096
+  log_level: info
+  grpc_server_max_concurrent_streams: 1000
+
+common:
+  instance_addr: 127.0.0.1
+  path_prefix: /loki
+  replication_factor: 1
+  storage:
+    filesystem:
+      chunks_directory: /loki/chunks
+      rules_directory: /loki/rules
+  ring:
+    kvstore:
+      store: inmemory
+
+# 内存约束：Loki 无“总内存上限”配置，需通过以下限制 + 容器 memory limit 配合
+# 单次查询加载大量 chunk 会拉高内存，此处严格限制单次查询量
+limits_config:
+  # 提高摄入速率/突发，避免应用推送日志时返回 429（原 1MB/s 过严）
+  ingestion_rate_mb: 6
+  ingestion_burst_size_mb: 10
+  max_streams_per_user: 50
+  max_global_streams_per_user: 50
+  # 单次查询最多返回条数，避免大量日志时查询占满内存
+  max_entries_limit_per_query: 2000
+  max_query_series: 50
+  max_query_parallelism: 2
+  query_timeout: 30s
+  max_query_length: 72h
+
+query_range:
+  results_cache:
+    cache:
+      embedded_cache:
+        enabled: true
+        max_size_mb: 16
+
+schema_config:
+  configs:
+    - from: 2020-10-24
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+ruler:
+  alertmanager_url: http://localhost:9093

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration debug="false">
+
+    <!-- 注入配置文件中的配置到logback上下文中 -->
+    <property resource="application.properties"/>
+    <springProfile name="!prod">
+        <property resource="application-dev.properties"/>
+    </springProfile>
+    <springProfile name="prod">
+        <property resource="application-prod.properties"/>
+    </springProfile>
+
+    <!-- Loki4j 1.3.x 使用 format.label.pattern，2.x 使用 labels -->
+    <appender name="LOKI" class="com.github.loki4j.logback.Loki4jAppender">
+        <http>
+            <url>${spring.loki.url}</url>
+        </http>
+        <format>
+            <label>
+                <pattern>app=demo-spring-boot,level=%level</pattern>
+            </label>
+        </format>
+    </appender>
+
+    <root level="info">
+        <appender-ref ref="LOKI"/>
+    </root>
+    <logger name="com.future.demo" level="debug" additivity="false">
+        <appender-ref ref="LOKI"/>
+    </logger>
+</configuration>
