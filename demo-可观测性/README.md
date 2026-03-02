@@ -207,53 +207,197 @@ wrk -t8 -c32 -d300000s --latency --timeout 60 http://localhost:8080/api/v1/test1
 
 >注意：暂时不能使用Loki方案替代ELK。
 
-- 在大量日志时，使用`{app="demo-spring-boot", level="ERROR"}`查询时Loki容器内存使用飙升到600多MB并且查询超时。
+在大量日志时，使用`{app="demo-spring-boot", level="ERROR"}`查询时Loki容器内存使用飙升到600多MB并且查询超时。
 
-- wrk运行时SpringBoot报告下面错误
+wrk运行时SpringBoot报告下面错误
 
-  ```
-  entry with timestamp 2026-03-01 14:42:46.119119015 +0000 UTC ignored, reason: 'Per stream rate limit exceeded (limit: 3MB/sec) while attempting to ingest for stream '{app="demo-spring-boot", level="ERROR"}' totaling 8238B, consider splitting a stream via additional labels or contact your Loki administrator to see if the limit can be increased',
-  entry with timestamp 2026-03-01 14:42:46.119119021 +0000 UTC ignored, reason: 'Per stream rate limit exceeded (limit: 3MB/sec) while attempting to ingest for stream '{app="demo-spring-boot", level="ERROR"}' totaling 8237B, consider splitting a stream via additional labels or contact your Loki administrator to see if the limit can be increased',
-  entry with timestamp 2026-03-01 14:42:46.119119022 +0000 UTC ignored, reason: 'Per stream rate limit exceeded (limit: 3MB/sec) while attempting to ingest for stream '{app="demo-spring-boot", level="ERROR"}' totaling 8237B, consider splitting a stream via additional labels or contact your Loki administrator to see if the limit can be increased',
-  entry with timestamp 2026-03-01 14:42:46.119119023 +0000 UTC ignored, reason: 'Per stream rate limit exceeded (limit: 3MB/sec) while attempting to ingest for stream '{app="demo-spring-boot", level="ERROR"}' totaling 8237B, consider splitting a stream via additional labels or contact your Loki administrator to see if the limit can be increased',
-  user 'fake', total ignored: 263 out of 501 for stream: {app="demo-spring-boot", level="ERROR"}
-  
-  22:43:30,741 |-ERROR in com.github.loki4j.client.pipeline.DefaultPipeline@6a2afd4d - Loki responded with non-success status 429 on batch #54ada85907d4d (4,232,753 bytes). Error: Ingestion rate limit exceeded for user fake (limit: 6291456 bytes/sec) while attempting to ingest '1000' lines totaling '4124763' bytes, reduce log volume or contact your Loki administrator to see if the limit can be increased
-  
-  22:43:30,804 |-ERROR in com.github.loki4j.client.pipeline.DefaultPipeline@6a2afd4d - Loki responded with non-success status 429 on batch #54ada8cb83518 (4,273,927 bytes). Error: Ingestion rate limit exceeded for user fake (limit: 6291456 bytes/sec) while attempting to ingest '995' lines totaling '4165257' bytes, reduce log volume or contact your Loki administrator to see if the limit can be increased
-  
-  22:43:30,889 |-ERROR in com.github.loki4j.client.pipeline.DefaultPipeline@6a2afd4d - Loki responded with non-success status 429 on batch #54ada91151abe (4,266,015 bytes). Error: Ingestion rate limit exceeded for user fake (limit: 6291456 bytes/sec) while attempting to ingest '1000' lines totaling '4157373' bytes, reduce log volume or contact your Loki administrator to see if the limit can be increased
-  
-  22:43:30,957 |-ERROR in com.github.loki4j.client.pipeline.DefaultPipeline@6a2afd4d - Loki responded with non-success status 429 on batch #54ada951145ec (4,266,046 bytes). Error: Ingestion rate limit exceeded for user fake (limit: 6291456 bytes/sec) while attempting to ingest '1000' lines totaling '4157404' bytes, reduce log volume or contact your Loki administrator to see if the limit can be increased
-  
-  22:43:31,019 |-ERROR in com.github.loki4j.client.pipeline.DefaultPipeline@6a2afd4d - Loki responded with non-success status 429 on batch #54ada995213d1 (4,232,822 bytes). Error: Ingestion rate limit exceeded for user fake (limit: 6291456 bytes/sec) while attempting to ingest '1000' lines totaling '4124832' bytes, reduce log volume or contact your Loki administrator to see if the limit can be increased
-  
-  22:43:31,099 |-ERROR in com.github.loki4j.client.pipeline.DefaultPipeline@6a2afd4d - Loki responded with non-success status 429 on batch #54ada9ce6ecaa (4,274,204 bytes). Error: Ingestion rate limit exceeded for user fake (limit: 6291456 bytes/sec) while attempting to ingest '998' lines totaling '4165453' bytes, reduce log volume or contact your Loki administrator to see if the limit can be increased
-  
-  22:43:31,164 |-ERROR in com.github.loki4j.client.pipeline.DefaultPipeline@6a2afd4d - Loki responded with non-success status 429 on batch #54adaa0da0ef5 (4,266,104 bytes). Error: Ingestion rate limit exceeded for user fake (limit: 6291456 bytes/sec) while attempting to ingest '1000' lines totaling '4157462' bytes, reduce log volume or contact your Loki administrator to see if the limit can be increased
-  
-  22:43:31,240 |-ERROR in com.github.loki4j.client.pipeline.DefaultPipeline@6a2afd4d - Loki responded with non-success status 429 on batch #54adaa32822a3 (4,249,425 bytes). Error: Ingestion rate limit exceeded for user fake (limit: 6291456 bytes/sec) while attempting to ingest '1000' lines totaling '4141109' bytes, reduce log volume or contact your Loki administrator to see if the limit can be increased
-  
-  22:43:31,333 |-ERROR in com.github.loki4j.client.pipeline.DefaultPipeline@6a2afd4d - Loki responded with non-success status 429 on batch #54adaa6da8c7e (4,273,862 bytes). Error: entry with timestamp 2026-03-01 14:42:46.516516021 +0000 UTC ignored, reason: 'Per stream rate limit exceeded (limit: 3MB/sec) while attempting to ingest for stream '{app="demo-spring-boot", level="ERROR"}' totaling 8237B, consider splitting a stream via additional labels or contact your Loki administrator to see if the limit can be increased',
-  entry with timestamp 2026-03-01 14:42:46.507507011 +0000 UTC ignored, reason: 'Per stream rate limit exceeded (limit: 3MB/sec) while attempting to ingest for stream '{app="demo-spring-boot", level="ERROR"}' totaling 8237B, consider splitting a stream via additional labels or contact your Loki administrator to see if the limit can be increased',
-  entry with timestamp 2026-03-01 14:42:46.517517 +0000 UTC ignored, reason: 'Per stream rate limit exceeded (limit: 3MB/sec) while attempting to ingest for stream '{app="demo-spring-boot", level="ERROR"}' totaling 8238B, consider splitting a stream via additional labels or contact your Loki administrator to see if the limit can be increased',
-  entry with timestamp 2026-03-01 14:42:46.517517001 +0000 UTC ignored, reason: 'Per stream rate limit exceeded (limit: 3MB/sec) while attempting to ingest for stream '{app="demo-spring-boot", level="ERROR"}' totaling 8238B, consider splitting a stream via additional labels or contact your Loki administrator to see if the limit can be increased',
-  entry with timestamp 2026-03-01 14:42:46.515515016 +0000 UTC ignored, reason: 'Per stream rate limit exceeded (limit: 3MB/sec) while attempting to ingest for stream '{app="demo-spring-boot", level="ERROR"}' totaling 8238B, consider splitting a stream via additional labels or contact your Loki administrator to see if the limit can be increased',
-  entry with timestamp 2026-03-01 14:42:46.517517005 +0000 UTC ignored, reason: 'Per stream rate limit exceeded (limit: 3MB/sec) while attempting to ingest for stream '{app="demo-spring-boot", level="ERROR"}' totaling 8238B, consider splitting a stream via additional labels or contact your Loki administrator to see if the limit can be increased',
-  entry with timestamp 2026-03-01 14:42:46.516516004 +0000 UTC ignored, reason: 'Per stream rate limit exceeded (limit: 3MB/sec) while attempting to ingest for stream '{app="demo-spring-boot", level="ERROR"}' totaling 8237B, consider splitting a stream via additional labels or contact your Loki administrator to see if the limit can be increased',
-  entry with timestamp 2026-03-01 14:42:46.517517009 +0000 UTC ignored, reason: 'Per stream rate limit exceeded (limit: 3MB/sec) while attempting to ingest for stream '{app="demo-spring-boot", level="ERROR"}' totaling 8238B, consider splitting a stream via additional labels or contact your Loki administrator to see if the limit can be increased',
-  entry with timestamp 2026-03-01 14:42:46.517517008 +0000 UTC ignored, reason: 'Per stream rate limit exceeded (limit: 3MB/sec) while attempting to ingest for stream '{app="demo-spring-boot", level="ERROR"}' totaling 8237B, consider splitting a stream via additional labels or contact your Loki administrator to see if the limit can be increased',
-  entry with timestamp 2026-03-01 14:42:46.517517007 +0000 UTC ignored, reason: 'Per stream rate limit exceeded (limit: 3MB/sec) while attempting to ingest for stream '{app="demo-spring-boot", level="ERROR"}' totaling 8238B, consider splitting a stream via additional labels or contact your Loki administrator to see if the limit can be increased',
-  user 'fake', total ignored: 252 out of 501 for stream: {app="demo-spring-boot", level="ERROR"}
-  
-  22:43:31,406 |-ERROR in com.github.loki4j.client.pipeline.DefaultPipeline@6a2afd4d - Loki responded with non-success status 429 on batch #54adaaadb4b24 (4,273,839 bytes). Error: Ingestion rate limit exceeded for user fake (limit: 6291456 bytes/sec) while attempting to ingest '995' lines totaling '4165169' bytes, reduce log volume or contact your Loki administrator to see if the limit can be increased
-  
-  22:43:31,472 |-ERROR in com.github.loki4j.client.pipeline.DefaultPipeline@6a2afd4d - Loki responded with non-success status 429 on batch #54adab0db3c9c (4,241,140 bytes). Error: Ingestion rate limit exceeded for user fake (limit: 6291456 bytes/sec) while attempting to ingest '1000' lines totaling '4132987' bytes, reduce log volume or contact your Loki administrator to see if the limit can be increased
-  
-  22:43:31,536 |-ERROR in com.github.loki4j.client.pipeline.DefaultPipeline@6a2afd4d - Loki responded with non-success status 429 on batch #54adab38fda5a (4,274,448 bytes). Error: Ingestion rate limit exceeded for user fake (limit: 6291456 bytes/sec) while attempting to ingest '1000' lines totaling '4165643' bytes, reduce log volume or contact your Loki administrator to see if the limit can be increased
-  
-  22:43:31,604 |-ERROR in com.github.loki4j.client.pipeline.DefaultPipeline@6a2afd4d - Loki responded with non-success status 429 on batch #54adab74286a2 (4,274,164 bytes). Error: Ingestion rate limit exceeded for user fake (limit: 6291456 bytes/sec) while attempting to ingest '998' lines totaling '4165413' bytes, reduce log volume or contact your Loki administrator to see if the limit can be increased
-  
-  ```
+```
+entry with timestamp 2026-03-01 14:42:46.119119015 +0000 UTC ignored, reason: 'Per stream rate limit exceeded (limit: 3MB/sec) while attempting to ingest for stream '{app="demo-spring-boot", level="ERROR"}' totaling 8238B, consider splitting a stream via additional labels or contact your Loki administrator to see if the limit can be increased',
+entry with timestamp 2026-03-01 14:42:46.119119021 +0000 UTC ignored, reason: 'Per stream rate limit exceeded (limit: 3MB/sec) while attempting to ingest for stream '{app="demo-spring-boot", level="ERROR"}' totaling 8237B, consider splitting a stream via additional labels or contact your Loki administrator to see if the limit can be increased',
+entry with timestamp 2026-03-01 14:42:46.119119022 +0000 UTC ignored, reason: 'Per stream rate limit exceeded (limit: 3MB/sec) while attempting to ingest for stream '{app="demo-spring-boot", level="ERROR"}' totaling 8237B, consider splitting a stream via additional labels or contact your Loki administrator to see if the limit can be increased',
+entry with timestamp 2026-03-01 14:42:46.119119023 +0000 UTC ignored, reason: 'Per stream rate limit exceeded (limit: 3MB/sec) while attempting to ingest for stream '{app="demo-spring-boot", level="ERROR"}' totaling 8237B, consider splitting a stream via additional labels or contact your Loki administrator to see if the limit can be increased',
+user 'fake', total ignored: 263 out of 501 for stream: {app="demo-spring-boot", level="ERROR"}
 
-  
+22:43:30,741 |-ERROR in com.github.loki4j.client.pipeline.DefaultPipeline@6a2afd4d - Loki responded with non-success status 429 on batch #54ada85907d4d (4,232,753 bytes). Error: Ingestion rate limit exceeded for user fake (limit: 6291456 bytes/sec) while attempting to ingest '1000' lines totaling '4124763' bytes, reduce log volume or contact your Loki administrator to see if the limit can be increased
+
+22:43:30,804 |-ERROR in com.github.loki4j.client.pipeline.DefaultPipeline@6a2afd4d - Loki responded with non-success status 429 on batch #54ada8cb83518 (4,273,927 bytes). Error: Ingestion rate limit exceeded for user fake (limit: 6291456 bytes/sec) while attempting to ingest '995' lines totaling '4165257' bytes, reduce log volume or contact your Loki administrator to see if the limit can be increased
+
+22:43:30,889 |-ERROR in com.github.loki4j.client.pipeline.DefaultPipeline@6a2afd4d - Loki responded with non-success status 429 on batch #54ada91151abe (4,266,015 bytes). Error: Ingestion rate limit exceeded for user fake (limit: 6291456 bytes/sec) while attempting to ingest '1000' lines totaling '4157373' bytes, reduce log volume or contact your Loki administrator to see if the limit can be increased
+
+22:43:30,957 |-ERROR in com.github.loki4j.client.pipeline.DefaultPipeline@6a2afd4d - Loki responded with non-success status 429 on batch #54ada951145ec (4,266,046 bytes). Error: Ingestion rate limit exceeded for user fake (limit: 6291456 bytes/sec) while attempting to ingest '1000' lines totaling '4157404' bytes, reduce log volume or contact your Loki administrator to see if the limit can be increased
+
+22:43:31,019 |-ERROR in com.github.loki4j.client.pipeline.DefaultPipeline@6a2afd4d - Loki responded with non-success status 429 on batch #54ada995213d1 (4,232,822 bytes). Error: Ingestion rate limit exceeded for user fake (limit: 6291456 bytes/sec) while attempting to ingest '1000' lines totaling '4124832' bytes, reduce log volume or contact your Loki administrator to see if the limit can be increased
+
+22:43:31,099 |-ERROR in com.github.loki4j.client.pipeline.DefaultPipeline@6a2afd4d - Loki responded with non-success status 429 on batch #54ada9ce6ecaa (4,274,204 bytes). Error: Ingestion rate limit exceeded for user fake (limit: 6291456 bytes/sec) while attempting to ingest '998' lines totaling '4165453' bytes, reduce log volume or contact your Loki administrator to see if the limit can be increased
+
+22:43:31,164 |-ERROR in com.github.loki4j.client.pipeline.DefaultPipeline@6a2afd4d - Loki responded with non-success status 429 on batch #54adaa0da0ef5 (4,266,104 bytes). Error: Ingestion rate limit exceeded for user fake (limit: 6291456 bytes/sec) while attempting to ingest '1000' lines totaling '4157462' bytes, reduce log volume or contact your Loki administrator to see if the limit can be increased
+
+22:43:31,240 |-ERROR in com.github.loki4j.client.pipeline.DefaultPipeline@6a2afd4d - Loki responded with non-success status 429 on batch #54adaa32822a3 (4,249,425 bytes). Error: Ingestion rate limit exceeded for user fake (limit: 6291456 bytes/sec) while attempting to ingest '1000' lines totaling '4141109' bytes, reduce log volume or contact your Loki administrator to see if the limit can be increased
+
+22:43:31,333 |-ERROR in com.github.loki4j.client.pipeline.DefaultPipeline@6a2afd4d - Loki responded with non-success status 429 on batch #54adaa6da8c7e (4,273,862 bytes). Error: entry with timestamp 2026-03-01 14:42:46.516516021 +0000 UTC ignored, reason: 'Per stream rate limit exceeded (limit: 3MB/sec) while attempting to ingest for stream '{app="demo-spring-boot", level="ERROR"}' totaling 8237B, consider splitting a stream via additional labels or contact your Loki administrator to see if the limit can be increased',
+entry with timestamp 2026-03-01 14:42:46.507507011 +0000 UTC ignored, reason: 'Per stream rate limit exceeded (limit: 3MB/sec) while attempting to ingest for stream '{app="demo-spring-boot", level="ERROR"}' totaling 8237B, consider splitting a stream via additional labels or contact your Loki administrator to see if the limit can be increased',
+entry with timestamp 2026-03-01 14:42:46.517517 +0000 UTC ignored, reason: 'Per stream rate limit exceeded (limit: 3MB/sec) while attempting to ingest for stream '{app="demo-spring-boot", level="ERROR"}' totaling 8238B, consider splitting a stream via additional labels or contact your Loki administrator to see if the limit can be increased',
+entry with timestamp 2026-03-01 14:42:46.517517001 +0000 UTC ignored, reason: 'Per stream rate limit exceeded (limit: 3MB/sec) while attempting to ingest for stream '{app="demo-spring-boot", level="ERROR"}' totaling 8238B, consider splitting a stream via additional labels or contact your Loki administrator to see if the limit can be increased',
+entry with timestamp 2026-03-01 14:42:46.515515016 +0000 UTC ignored, reason: 'Per stream rate limit exceeded (limit: 3MB/sec) while attempting to ingest for stream '{app="demo-spring-boot", level="ERROR"}' totaling 8238B, consider splitting a stream via additional labels or contact your Loki administrator to see if the limit can be increased',
+entry with timestamp 2026-03-01 14:42:46.517517005 +0000 UTC ignored, reason: 'Per stream rate limit exceeded (limit: 3MB/sec) while attempting to ingest for stream '{app="demo-spring-boot", level="ERROR"}' totaling 8238B, consider splitting a stream via additional labels or contact your Loki administrator to see if the limit can be increased',
+entry with timestamp 2026-03-01 14:42:46.516516004 +0000 UTC ignored, reason: 'Per stream rate limit exceeded (limit: 3MB/sec) while attempting to ingest for stream '{app="demo-spring-boot", level="ERROR"}' totaling 8237B, consider splitting a stream via additional labels or contact your Loki administrator to see if the limit can be increased',
+entry with timestamp 2026-03-01 14:42:46.517517009 +0000 UTC ignored, reason: 'Per stream rate limit exceeded (limit: 3MB/sec) while attempting to ingest for stream '{app="demo-spring-boot", level="ERROR"}' totaling 8238B, consider splitting a stream via additional labels or contact your Loki administrator to see if the limit can be increased',
+entry with timestamp 2026-03-01 14:42:46.517517008 +0000 UTC ignored, reason: 'Per stream rate limit exceeded (limit: 3MB/sec) while attempting to ingest for stream '{app="demo-spring-boot", level="ERROR"}' totaling 8237B, consider splitting a stream via additional labels or contact your Loki administrator to see if the limit can be increased',
+entry with timestamp 2026-03-01 14:42:46.517517007 +0000 UTC ignored, reason: 'Per stream rate limit exceeded (limit: 3MB/sec) while attempting to ingest for stream '{app="demo-spring-boot", level="ERROR"}' totaling 8238B, consider splitting a stream via additional labels or contact your Loki administrator to see if the limit can be increased',
+user 'fake', total ignored: 252 out of 501 for stream: {app="demo-spring-boot", level="ERROR"}
+
+22:43:31,406 |-ERROR in com.github.loki4j.client.pipeline.DefaultPipeline@6a2afd4d - Loki responded with non-success status 429 on batch #54adaaadb4b24 (4,273,839 bytes). Error: Ingestion rate limit exceeded for user fake (limit: 6291456 bytes/sec) while attempting to ingest '995' lines totaling '4165169' bytes, reduce log volume or contact your Loki administrator to see if the limit can be increased
+
+22:43:31,472 |-ERROR in com.github.loki4j.client.pipeline.DefaultPipeline@6a2afd4d - Loki responded with non-success status 429 on batch #54adab0db3c9c (4,241,140 bytes). Error: Ingestion rate limit exceeded for user fake (limit: 6291456 bytes/sec) while attempting to ingest '1000' lines totaling '4132987' bytes, reduce log volume or contact your Loki administrator to see if the limit can be increased
+
+22:43:31,536 |-ERROR in com.github.loki4j.client.pipeline.DefaultPipeline@6a2afd4d - Loki responded with non-success status 429 on batch #54adab38fda5a (4,274,448 bytes). Error: Ingestion rate limit exceeded for user fake (limit: 6291456 bytes/sec) while attempting to ingest '1000' lines totaling '4165643' bytes, reduce log volume or contact your Loki administrator to see if the limit can be increased
+
+22:43:31,604 |-ERROR in com.github.loki4j.client.pipeline.DefaultPipeline@6a2afd4d - Loki responded with non-success status 429 on batch #54adab74286a2 (4,274,164 bytes). Error: Ingestion rate limit exceeded for user fake (limit: 6291456 bytes/sec) while attempting to ingest '998' lines totaling '4165413' bytes, reduce log volume or contact your Loki administrator to see if the limit can be increased
+
+```
+
+## SigNoz是什么呢？
+
+SigNoz 是一个**开源的应用性能监控（APM）和可观测性平台**，主要用来帮助开发者和运维团队实时观察、排查分布式系统的运行状态。
+
+它解决的问题是：在微服务、云原生架构下，系统调用链复杂、组件多，一旦出错或变慢，很难快速定位原因。SigNoz 把链路追踪、指标监控、日志集中查看等功能整合在一起，形成统一的可观测性解决方案。
+
+---
+
+### 一、核心功能
+
+1. **分布式链路追踪（Tracing）**
+   - 收集服务之间的调用链数据（比如一次 HTTP 请求经过了哪些服务、每个环节耗时多少）。
+   - 支持 OpenTelemetry 标准，方便和各种语言/框架集成。
+   - 可看到调用链中哪一步最慢、哪一步出错了。
+
+2. **指标监控（Metrics）**
+   - 采集 CPU、内存、QPS、错误率、P99 延迟等常见指标。
+   - 提供可视化的仪表盘，用于看整体系统健康状态、做容量规划。
+
+3. **日志管理（Logs）**
+   - 集中收集各服务的日志，并支持按 trace_id 将日志和调用链关联。
+   - 方便从“一条慢请求”一路查到对应的具体日志内容。
+
+4. **告警与可视化**
+   - 支持设置阈值告警（如错误率突增、响应时间过高）。
+   - 提供 Web UI，用于查看拓扑图、调用链详情、指标趋势等。
+
+---
+
+### 二、技术特点
+
+- **完全开源**：代码托管在 GitHub，采用 Apache 2.0 协议，可自由部署和二次开发。
+- **OpenTelemetry 原生**：推荐使用 OpenTelemetry SDK 上报数据，兼容性好、厂商锁定风险低。
+- **高性能存储**：底层默认使用 ClickHouse 存储时序数据与链路数据，查询速度快、适合大规模场景。
+- **部署灵活**：支持 Docker Compose、Kubernetes 等方式一键部署，既能在本地测试，也能在生产环境大规模运行。
+
+---
+
+### 三、典型使用场景
+
+- **微服务架构排障**：某个接口偶尔超时，通过 Trace 找到具体是哪个服务、哪个数据库调用导致的。
+- **性能优化**：查看各个接口的 P95/P99 延迟，找出瓶颈服务做针对性优化。
+- **全链路监控**：从前端页面 → API 网关 → 后端服务 → 数据库，整条链路都可追踪、可度量。
+
+## Docker Compose运行SigNoz
+
+>参考官方：https://signoz.io/docs/install/docker/#install-signoz-using-docker-compose
+
+具体用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-%E5%8F%AF%E8%A7%82%E6%B5%8B%E6%80%A7/demo-signoz
+
+## OpenTelemetry是什么呢？
+
+OpenTelemetry 是一个**开源的可观测性框架**，用来统一采集、处理和导出应用程序的**指标（Metrics）、日志（Logs）和链路追踪（Traces）**数据，帮助开发者和运维人员监控、诊断和优化系统。
+
+---
+
+### 一、它解决什么问题？
+
+在微服务、云原生环境中，一个请求往往会跨多个服务、容器和机器。传统方式存在几个痛点：
+
+- **工具碎片化**：  
+  指标用 Prometheus，日志用 ELK，链路用 Jaeger / Zipkin，各自独立，数据难以关联。
+- **接入成本高**：  
+  每个系统都要单独埋点、集成 SDK、配置采集。
+- **厂商锁定**：  
+  某些 APM 产品只支持自家协议，迁移困难。
+
+OpenTelemetry 的目标就是：**统一标准、一次埋点、对接多种后端**，降低可观测性的接入和维护成本。
+
+---
+
+### 二、核心概念
+
+1. **可观测性三大支柱**
+   - **Traces（链路追踪）**：记录请求从入口到各个服务的调用路径和耗时，用于分析性能瓶颈和故障传播链。
+   - **Metrics（指标）**：统计响应时间、错误率、QPS、CPU/内存使用率等数值型数据，用于告警和趋势分析。
+   - **Logs（日志）**：记录离散的事件信息，便于排查具体错误原因。
+
+2. **核心组件**
+   - **API**：定义如何埋点（创建 Span、记录 Metric、写 Log）。
+   - **SDK**：语言实现，负责收集、缓存、批量发送数据。
+   - **Collector（采集器）**：独立进程，接收、处理、转发数据到各种后端（如 Prometheus、Jaeger、Elasticsearch、云厂商 APM 等）。
+   - **Exporters**：把数据转换成特定后端支持的格式并发送。
+
+3. **数据模型**
+   - **Trace / Span**：一次调用链由多个 Span 组成，带有 TraceId、SpanId、父子关系、标签（Attributes）、事件（Events）等。
+   - **Metric Instruments**：如 Counter、Gauge、Histogram，用于记录不同类型的指标。
+   - **LogRecord**：带时间戳、严重级别、属性等字段的结构化日志。
+
+---
+
+### 三、工作流程（简化版）
+
+1. 开发者在代码中使用 OpenTelemetry API 做埋点（如 `tracer.start_span("my_op")`）。
+2. 各语言的 SDK 将产生的 Trace/Metric/Log 数据收集到本地。
+3. 数据被发送到 **OpenTelemetry Collector**（或直接由 SDK 导出）。
+4. Collector 对数据进行过滤、采样、聚合、富化等处理。
+5. 处理后的数据被推送到各种后端系统：
+   - Traces → Jaeger / Zipkin / 云 APM
+   - Metrics → Prometheus / VictoriaMetrics
+   - Logs → Elasticsearch / Loki 等
+
+这样，业务方只需要关注**埋点代码**，而不用关心数据最终存到哪里。
+
+---
+
+### 四、主要特点
+
+- **多语言支持**：官方或社区已支持 Java、Go、Python、Node.js、.NET、C++ 等主流语言。
+- **厂商中立**：不绑定具体监控平台，可以灵活切换后端。
+- **生态丰富**：与 Kubernetes、Istio、Envoy 等服务网格、云原生组件有良好集成。
+- **统一标准**：为 Traces、Metrics、Logs 提供一致的上下文传递和元数据规范，方便跨信号关联分析。
+
+---
+
+### 五、简单示例（伪代码）
+
+```python
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import ConsoleSpanExporter, SimpleSpanProcessor
+
+# 初始化
+trace.set_tracer_provider(TracerProvider())
+tracer = trace.get_tracer(__name__)
+
+# 添加控制台导出（仅演示）
+span_processor = SimpleSpanProcessor(ConsoleSpanExporter())
+trace.get_tracer_provider().add_span_processor(span_processor)
+
+# 业务代码埋点
+with tracer.start_as_current_span("process_order"):
+    # 业务逻辑
+    do_something()
+```
+
+运行后，你会在控制台看到一条结构化的 Span 信息，包含开始结束时间、名称、属性等。
+
+---
+
+### 六、适合什么场景？
+
+- 微服务体系，需要**全链路追踪**和**统一监控**。
+- 云原生环境（K8s、Service Mesh），希望**减少埋点成本**、**解耦监控后端**。
+- 需要同时满足**性能分析、告警、故障排查**等多种可观测性需求。
