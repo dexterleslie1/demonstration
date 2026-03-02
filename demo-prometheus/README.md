@@ -82,3 +82,88 @@ services:
       - '9090:9090'
 ```
 
+## Prometheus Remote Write是什么呢？
+
+Prometheus 的 **Remote Write** 是一种把本地采集到的监控数据**远程写入到外部存储/系统**的机制，用来突破 Prometheus 自身本地存储的限制，实现长期存储、集中查询和跨集群统一分析。
+
+---
+
+### 一、它解决什么问题
+
+- **本地存储有限**：Prometheus 默认只存最近一段时间（如 15 天）的数据，历史数据会不断被覆盖。
+- **单实例能力有限**：不能跨地域/跨集群统一查询，也不利于做大规模分析。
+- **需要更丰富的生态**：比如用 ClickHouse、Thanos、Cortex、Grafana Mimir 等做长期存储、高可用、多租户。
+
+Remote Write 就是官方提供的**“把数据推走”的标准接口**。
+
+---
+
+### 二、基本工作原理
+
+1. **采集数据**  
+   Prometheus 按配置的 `scrape_interval` 从目标（如 Spring Boot 应用、Node Exporter）拉取指标。
+
+2. **本地短暂存储**  
+   数据先写入本地 TSDB（时间序列数据库），用于短期查询和告警。
+
+3. **批量异步推送**  
+   - Prometheus 内部有一个队列，把一段时间内的一批样本（samples）打包；
+   - 通过 HTTP POST 请求，按 **Remote Write 协议** 推送到你配置的远程地址（如 Thanos Receiver、Cortex、Mimir、SigNoz 的 OpenTelemetry Collector 等）。
+
+4. **远程系统存储/分析**  
+   远程系统接收后，做长期存储、压缩、索引，然后供统一查询和可视化。
+
+---
+
+### 三、配置长什么样
+
+在 `prometheus.yml` 中加一段：
+
+```yaml
+remote_write:
+  - url: "http://thanos-receiver:19291/api/v1/receive"
+    # 可选：控制队列行为
+    queue_config:
+      max_samples_per_send: 1000
+      capacity: 10000
+      max_shards: 10
+    # 可选：鉴权
+    basic_auth:
+      username: user
+      password: pass
+```
+
+关键点：
+
+- `url`：远程写入端点，必须是支持 Prometheus Remote Write 协议的组件。
+- `queue_config`：调节推送性能和内存占用（批次大小、队列长度、并发数）。
+- 支持多个 `remote_write` 条目，同时写到多个后端。
+
+---
+
+### 四、典型使用场景
+
+1. **长期存储**  
+   - 配合 **Thanos**、**Cortex**、**Mimir**，把 Prometheus 数据写到对象存储（S3、MinIO），保留数月甚至数年。
+
+2. **集中监控多个集群**  
+   - 多个 Kubernetes 集群各自跑 Prometheus，通过 Remote Write 把数据汇总到一个中心存储，便于全局视图。
+
+3. **接入第三方可观测性平台**  
+   - 比如 SigNoz、Datadog（通过适配网关）、各种自研时序数据库，只要它们实现了 Remote Write 接口。
+
+---
+
+### 五、和 Remote Read 的区别
+
+- **Remote Write**：Prometheus → 远程存储（推送）
+- **Remote Read**：Prometheus ← 远程存储（按需拉取历史数据）
+
+两者可以配合使用：近期数据本地查得快，远期数据从远程存储读回来。
+
+---
+
+举个例子：  
+- 本地 Prometheus 采集 Spring Boot 指标；  
+- 通过 Remote Write 推送到 SigNoz / Thanos / Cortex；  
+- 再用 Grafana 统一查询。
