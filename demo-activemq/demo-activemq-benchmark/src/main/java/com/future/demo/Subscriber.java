@@ -1,4 +1,4 @@
-package com.future.study.activemq.basic.usage;
+package com.future.demo;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 

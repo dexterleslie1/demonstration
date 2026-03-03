@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  activemq:
+    image: apache/activemq-classic:5.18.3  # 官方镜像（可根据需求选择版本）
+    restart: unless-stopped       # 容器意外退出时自动重启
+    ports:
+      - "8161:8161"               # Web 控制台端口（默认 8161）
+      - "61616:61616"             # JMS 客户端端口（默认 61616）
+      - "1883:1883"               # MQTT 协议端口（可选）
+      - "61613:61613"             # STOMP 协议端口（可选）
+      - "61614:61614"             # WebSocket 端口（可选）
+#    volumes:
+#      - activemq_data:/opt/activemq/data  # 消息存储持久化
+#      - activemq_conf:/opt/activemq/conf  # 自定义配置文件挂载
+    environment:
+#      - ACTIVEMQ_ADMIN_USER=admin   # 管理员用户名（默认 admin）
+#      - ACTIVEMQ_ADMIN_PASSWORD=admin123  # 管理员密码（默认 admin）
+      - ACTIVEMQ_ENABLED_PROTOCOLS=openwire,amqp,stomp,mqtt,ws  # 启用协议
+      - ACTIVEMQ_MIN_MEMORY=512m    # 最小内存（默认 1G）
+      - ACTIVEMQ_MAX_MEMORY=1g      # 最大内存（默认 1G）
+#    networks:
+#      - activemq_net              # 加入自定义网络（可选）
+
+#volumes:
+#  activemq_data:                  # 命名卷（自动创建，数据持久化）
+#  activemq_conf:                  # 命名卷（存储自定义配置文件）
+
+#networks:
+#  activemq_net:                   # 自定义网络（可选，用于多服务通信）
+#    driver: bridge
