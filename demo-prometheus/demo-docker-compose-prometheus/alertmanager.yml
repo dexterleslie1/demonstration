@@ -25,18 +25,32 @@ route:
   group_interval: 10s
   # 这个设置定义了Alertmanager在发送了告警通知后，如果告警状态仍然未解决（即告警仍然是激活状态），则再次发送相同告警通知的时间间隔。在这个例子中，
   # 如果告警在首次通知后10分钟内仍然未解决，那么将再次发送告警通知。这有助于确保用户持续关注那些长时间未解决的告警。
-  repeat_interval: 10m
+  repeat_interval: 1m
   # 这个设置指定了当告警满足上述条件时，应该发送给哪个接收器（receiver）。在这个例子中，告警将通过电子邮件（email）发送。
   # 你需要在Alertmanager的配置中定义一个名为 email 的接收器，该接收器应包含发送电子邮件所需的所有配置信息，如SMTP服务器地址、发件人邮箱等。
-  receiver: email
+  # receiver: email
+  # routes:
+  #   # 钉钉告警：先发往钉钉
+  #   - receiver: dingtalk
+  #     continue: true
+  #   # 再发往邮箱
+  #   - receiver: email
+  receiver: dingtalk
 
 receivers:
-- name: 'email'
-  # 收邮件的邮箱
-  email_configs:
-  - to: 'xxx@qq.com'
-    html: '{{ template "email.to.html" . }}' # 设定邮箱的内容模板
-    headers: { Subject: "促销活动" }
+# - name: 'email'
+#   # 收邮件的邮箱
+#   email_configs:
+#   - to: 'xxx@qq.com'
+#     html: '{{ template "email.to.html" . }}' # 设定邮箱的内容模板
+#     headers: { Subject: "促销活动" }
+
+# 钉钉告警接收器：通过 prometheus-webhook-dingtalk 转发到钉钉机器人
+- name: 'dingtalk'
+  webhook_configs:
+  - url: 'http://prometheus-webhook-dingtalk:8060/dingtalk/default/send'
+    # 告警恢复时是否同样发送通知。true 表示当告警从 firing 变为 resolved 时，会再发一条“已恢复”的通知到钉钉，便于确认问题已解决；设为 false 则仅发送触发告警，不发送恢复通知。
+    send_resolved: false
 
 inhibit_rules:
  - source_match:

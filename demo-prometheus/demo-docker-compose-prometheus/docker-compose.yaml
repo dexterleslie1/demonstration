@@ -47,6 +47,21 @@ services:
       - '--storage.path=/alertmanager'
     ports:
       - '9093:9093'
+    depends_on:
+      - prometheus-webhook-dingtalk
+
+  # 钉钉告警中转：接收 Alertmanager webhook 并转发到钉钉机器人
+  prometheus-webhook-dingtalk:
+    image: timonwong/prometheus-webhook-dingtalk:v2.1.0
+    restart: always
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./dingtalk-webhook.yml:/etc/prometheus-webhook-dingtalk/config.yml:ro
+    command:
+      - '--config.file=/etc/prometheus-webhook-dingtalk/config.yml'
+      - '--web.listen-address=:8060'
+    ports:
+      - '8060:8060'
 
   # cadvisor:
   #   image: google/cadvisor:latest

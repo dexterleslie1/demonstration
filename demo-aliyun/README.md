@@ -61,3 +61,7 @@
 ### 默认凭据链
 
 >[通过配置Credentials实现OpenAPI安全调用（JAVA SDK）_阿里云SDK(Alibaba Cloud SDK)-阿里云帮助中心](https://help.aliyun.com/zh/sdk/developer-reference/v2-manage-access-credentials#b031e67396a5e)
+
+## 钉钉（DingTalk）
+
+登录信息：手机号码+支付宝授权。

@@ -1,0 +1,16 @@
+# prometheus-webhook-dingtalk 配置文件
+# 钉钉机器人 Webhook 地址请在钉钉群 -> 群设置 -> 智能群助手 -> 添加机器人 -> 自定义 中获取
+# 安全设置可选用：自定义关键词（建议包含「告警」）、加签（需填写下方 secret）
+timeout: 5s
+
+targets:
+  default:
+    # 替换为你的钉钉机器人 Webhook 地址，格式：https://oapi.dingtalk.com/robot/send?access_token=YOUR_ACCESS_TOKEN
+    url: https://oapi.dingtalk.com/robot/send?access_token=YOUR_ACCESS_TOKEN
+    # 若机器人开启了加签，在此填写 SEC开头的 secret，未开启则留空或删除此行
+    secret: SECxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    # 可选：@所有人 或 指定手机号
+    # mention:
+    #   all: true
+    # mention:
+    #   mobiles: ['13800138000']
