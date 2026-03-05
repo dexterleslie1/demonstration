@@ -1,13 +1,11 @@
 package com.future.demo;
 
-import com.microsoft.playwright.*;
-import org.junit.Assert;
-import org.junit.jupiter.api.AfterEach;
+import com.microsoft.playwright.Locator;
+import com.microsoft.playwright.TimeoutError;
+import org.junit.Before;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.web.server.LocalServerPort;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 
@@ -21,28 +19,12 @@ import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertTha
  *       不经过坐标和遮挡判断，不滚动、不派发鼠标序列。被遮罩挡住时仍能触发该按钮的 click 事件。</li>
  * </ul>
  */
-@SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class EvaluateClickTests {
-
-    @LocalServerPort
-    private int port;
-
-    private Playwright playwright;
-    private Browser browser;
-    private Page page;
+class EvaluateClickTests extends PlaywrightTestWithVideoSupport {
 
     @BeforeEach
-    void before() {
-        playwright = Playwright.create();
-        browser = playwright.chromium().launch(new BrowserType.LaunchOptions().setHeadless(false));
-        page = browser.newContext().newPage();
+    void setPageTimeouts() {
         page.setDefaultNavigationTimeout(5000);
         page.setDefaultTimeout(5000);
-    }
-
-    @AfterEach
-    void after() {
-        if (playwright != null) playwright.close();
     }
 
     @Test

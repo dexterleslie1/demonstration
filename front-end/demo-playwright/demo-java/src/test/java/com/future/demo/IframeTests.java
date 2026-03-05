@@ -1,34 +1,17 @@
 package com.future.demo;
 
-import com.microsoft.playwright.*;
-import org.junit.jupiter.api.AfterEach;
+import com.microsoft.playwright.FrameLocator;
+import com.microsoft.playwright.Locator;
+import org.junit.Before;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.web.server.LocalServerPort;
 
 // 等价于 Selenium IframeTests：iframe 测试（切换 iframe 并查找/点击元素）
-@SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class IframeTests {
-
-    @LocalServerPort
-    private int port;
-
-    private Playwright playwright;
-    private Browser browser;
-    private Page page;
+class IframeTests extends PlaywrightTestWithVideoSupport {
 
     @BeforeEach
-    void before() {
-        playwright = Playwright.create();
-        browser = playwright.chromium().launch(new BrowserType.LaunchOptions().setHeadless(false));
-        page = browser.newContext().newPage();
+    void setPageTimeout() {
         page.setDefaultNavigationTimeout(30000);
-    }
-
-    @AfterEach
-    void after() {
-        if (playwright != null) playwright.close();
     }
 
     @Test
