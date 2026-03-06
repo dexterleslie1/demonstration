@@ -1,6 +1,6 @@
-# `jprofiler`用法
-
 ## 安装
+
+>提示：不使用破解版JProfiler，如果过期则使用新的虚拟机重新安装并试用10天。
 
 ### `windows`安装`jprofiler`
 
