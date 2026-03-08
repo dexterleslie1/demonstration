@@ -3036,3 +3036,6 @@ getDocumentPath() {
 }
 ```
 
+## 集成阿里云日志服务SLS WebTracking上报业务日志
+
+具体用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-uni-app/demo-aliyun-sls

@@ -1,0 +1,5 @@
+{
+  "name": "demo-aliyun-sls",
+  "version": "1.0.0",
+  "description": "uni-app 集成阿里云 SLS 日志服务示例（HTTP 接口直连）"
+}
