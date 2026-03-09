@@ -1,0 +1,60 @@
+<template>
+	<view class="bg" @touchstart="drawStart" @touchmove="drawMove" @touchend="drawEnd" >
+		<!-- <text @click="onClick" class="name">HF调试器</text> -->
+		<text @click="onClick"  class="name">HF调试器</text>
+	</view>
+</template>
+
+<script>
+	export default {
+		data() {
+			return {
+				type:0
+			}
+		},
+		methods: {
+			onClick(){
+				uni.$emit("HFshow")
+				
+			},
+			drawStart(event){
+				this.startX = event.touches[0].clientX;
+			},
+			drawMove(event){
+				/* const subNVue = uni.getSubNVueById('concat');
+				subNVue.setStyle({
+					"position": "fixed", 
+					"right":event.touches[0].clientX,
+					"bottom":event.touches[0].clientY,
+					"width": "100%",  
+					"height": "100%",  
+					"background": "transparent"
+				}) */
+				
+				
+			},
+			drawEnd(event){
+				
+			}
+		}
+	}
+</script>
+
+<style scoped>
+	.bg{
+		/* width: 100%;
+		height: 100%; */
+	}
+	.name{
+		border-radius: 10rpx;
+		position: fixed;
+		right: 0rpx;
+		bottom: 0rpx;
+		line-height: 80rpx;
+		text-align: center;
+		width: 200rpx;
+		height: 80rpx;
+		background-color: #FF4A46;
+		color: #FFFFFF;
+	}
+</style>

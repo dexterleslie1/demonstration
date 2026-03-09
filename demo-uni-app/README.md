@@ -3039,3 +3039,75 @@ getDocumentPath() {
 ## 集成阿里云日志服务SLS WebTracking上报业务日志
 
 具体用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-uni-app/demo-aliyun-sls
+
+## 集成vConsole
+
+>说明：集成第三方插件vConsole：https://ext.dcloud.net.cn/plugin?id=6147
+
+具体用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-uni-app/demo-vconsole
+
+main.js
+
+```javascript
+import App from './App'
+// 集成HF调试器
+import { HFdebugging } from '@/uni_modules/HF-HF_debugging/common/next.js'
+
+// #ifndef VUE3
+import Vue from 'vue'
+import './uni.promisify.adaptor'
+Vue.config.productionTip = false
+App.mpType = 'app'
+const app = new Vue({
+  ...App
+})
+app.$mount()
+// 集成HF调试器
+new HFdebugging()
+// #endif
+
+// #ifdef VUE3
+import { createSSRApp } from 'vue'
+export function createApp() {
+  const app = createSSRApp(App)
+  // 集成HF调试器
+  new HFdebugging({ app })
+  return {
+    app
+  }
+}
+// #endif
+```
+
+pages.json
+
+```json
+{
+	"pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
+		{
+			"path": "uni_modules/HF-HF_debugging/pages/next/next",
+			"style": {
+				"navigationStyle": "custom",
+				"backgroundColor": "transparent",
+				"app-plus": {
+					"animationType": "slide-in-bottom",
+					"background": "transparent",
+					"popGesture": "none"
+				}
+			}
+		}
+	]
+}
+
+```
+
+打印日志
+
+```vue
+methods: {
+    onLogClick() {
+        console.log('按钮日志：这是通过按钮点击打印的日志', new Date().toISOString())
+    }
+}
+```
+

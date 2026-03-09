@@ -1,0 +1,429 @@
+<template>
+	<view class="bg_HFconsole">
+			<view class="mark" @click="onMark"></view>
+			<view class="bg_kuang">
+	
+				<view class="flex">
+					<text @click="onTlite(0)" :style="tliteIndex==0?'background-color: #ffaa7f;':''"
+						class="tlite-one">Log</text>
+					<text @click="onTlite(1)" :style="tliteIndex==1?'background-color: #ffaa7f;':''"
+						class="tlite-one">Network</text>
+					<text @click="onTlite(2)" :style="tliteIndex==2?'background-color: #ffaa7f;':''"
+						class="tlite-one">Storage</text>
+				</view>
+	
+	
+				<view v-if="tliteIndex==0" class="Log">
+					<scroll-view :scroll-into-view="log_scroll_bot" style="height: 1100rpx;" scroll-y="true">
+						<view :style="item[0]=='error'?'background-color: #ef918a;':''" class="item flex"
+							v-for="(item,index) in CONSOLE_DATA_LOG">
+							<text :style="item[0]=='error'?'background-color: #ef513c;':''"
+								class="item_name">{{item[0]}}</text>
+							<!-- <text class="flex item_cent">{{item[1]}}</text> -->
+							<text v-for="(it,ind) in item[1]" :key="ind" class="flex item_cent">{{JSONString(it)}}</text>
+						</view>
+						<view v-if="!CONSOLE_DATA_LOG.length" class="">
+							{{logType+'-'}}空~
+						</view>
+						<!-- style="background: #2C405A; width: 100%; justify-content: space-between;" -->
+						<view class="flex" >
+							<view class="flex" >
+								<view @click="logType = 'All',setLogScrollBot()" class="bnt-view" :class="{'bnt-hit':logType=='All'}">
+									All
+								</view>
+								<view @click="logType = 'Log',setLogScrollBot()" class="bnt-view" :class="{'bnt-hit':logType=='Log'}">
+									Log
+								</view>
+								<view @click="logType = 'Error',setLogScrollBot()" class="bnt-view" :class="{'bnt-hit':logType=='Error'}">
+									Error
+								</view>
+							</view>
+							<view @click="eliminate" class="bnt-view-1">
+								清除
+							</view>
+						</view>
+						<view class="log_scroll_bot flex" id="log_scroll_bot0">
+							
+							<textarea v-model="valLog" @confirm="confirmLog" placeholder="可输入指令进行执行(实验性的)" />
+							<view class="" @click="confirmLog">执行</view>
+						</view>
+					</scroll-view>
+				</view>
+	
+				<view v-if="tliteIndex==1" class="Network">
+					<scroll-view :scroll-into-view="log_scroll_bot" style="height: 1100rpx;" scroll-y="true">
+						<view :style="(+item.Preview.statusCode)>=400?'background:#c24346;':'background-color: #aaaa7f;'"
+							class="item flex Network_item" v-for="(item,index) in CONSOLE_DATA.request">
+							<text class="GET">{{index}}.</text>
+							<text :class="item.Headers.method">{{item.Headers.method}}</text>
+							<text class="GET">{{item.Preview.statusCode==undefined?'CORS ERR':item.Preview.statusCode}}</text>
+							<text class="URL" @click="onClickCent(item.Headers.url,index)">{{item.Headers.url}}</text>
+							<view class="requestInitData" @click="onClickCent(item.Headers,index.data)"
+								v-for="(it,ind) in requestInitData(item.Headers.data)">
+								<text class="">{{ind}}:</text>
+								<text class="">{{it}}</text>
+							</view>
+							<rich-text v-if="(+item.Preview.statusCode)>=400" class="preview_data"
+								v-html="item.Preview.data" style=""></rich-text>
+							<text v-else class="preview_data">{{item.Preview.data}}</text>
+						</view>
+						<view class="log_scroll_bot" id="log_scroll_bot1"></view>
+					</scroll-view>
+				</view>
+	
+				<view v-if="tliteIndex==2" class="Storage">
+					<scroll-view :scroll-into-view="log_scroll_bot" style="height: 1100rpx;" scroll-y="true">
+						<view class="item_storage flex" v-for="(item,index) of CONSOLE_DATA.storage">
+							
+							<text class="text_name">{{index}}</text>
+							<view @click="onClickCent(item,index)" class="text_name_cent">
+								<text>{{item}}</text>
+							</view>
+						</view>
+						<view class="log_scroll_bot" id="log_scroll_bot2"></view>
+					</scroll-view>
+				</view>
+			</view>
+		</view>
+	</template>
+
+<script>
+	import * as tool from './../../common/tool.js'
+	import HFTool from './../../common/index.js'
+	export default {
+		data() {
+			return {
+				valLog: "",
+				tliteIndex: -1,
+				CONSOLE_DATA:HFTool.CONSOLE_DATA,
+				/* CONSOLE_DATA: {
+					request: [],
+					console: [
+						["log", "欢迎使用HF调试器~~~"]
+					],
+					storage: {},
+					URL: "",
+				}, */
+				scrollTop: 0,
+				log_scroll_bot: '',
+				logType:'All'
+			}
+		},
+		computed:{
+			CONSOLE_DATA_LOG(){
+				if(this.logType == 'All'){
+					return HFTool.CONSOLE_DATA.console
+				}else if(this.logType == 'Log'){
+					return HFTool.CONSOLE_DATA.consoleData.log
+				}else{
+					return HFTool.CONSOLE_DATA.consoleData.error
+				}
+			}
+		},
+		/* watch:{
+			['CONSOLE_DATA.console'](){
+				this.log_scroll_bot = "log_scroll_bot"
+				this.$nextTick(() => {
+					this.log_scroll_bot = 'log_scroll_bot' + this.type
+				})
+			}
+		}, */
+		onShow() {
+			// ||getCurrentPages().lengt<=1
+			if (this.tliteIndex == -1) {
+				this.onTlite(0)
+			} else {
+				uni.navigateBack({
+					delta: 1
+				})
+			}
+		},
+		methods: {
+			JSONString(it){
+				try{
+					JSON.stringify(it)
+					return it
+				}catch(e){
+					return it.toString()
+				}
+			},
+			eliminate(){
+				HFTool.CONSOLE_DATA.consoleData={
+					log:[],
+					error:[]
+				}
+				HFTool.CONSOLE_DATA.console=[
+					["log", ["欢迎使用HF调试器~~~"]]
+				]
+			},
+			confirmLog() {
+				this.CONSOLE_DATA.console.push(["eval-cmd>", [this.valLog]])
+				let result = ''
+				let $content = ''
+				try {
+					result = eval.call(global, '(' + this.valLog + ')');
+				} catch (e) {
+					try {
+						result = eval.call(global, this.valLog);
+					} catch (e) {
+						;
+					}
+				}
+				if (tool.isArray(result) || tool.isObject(result)) {
+					result = getApp()!=result?result:'isObject - getApp'
+				} else {
+				  if (tool.isNull(result)) {
+					result = 'null';
+				  } else if (tool.isUndefined(result)) {
+					result = 'undefined';
+				  } else if (tool.isFunction(result)) {
+					result = 'function()'
+				  } else if (tool.isString(result)) {
+					result = '"' + result + '"';
+				  }
+				}
+				HFTool.CONSOLE_DATA.console.push(["eval<", [result || 'undefined']])
+				this.valLog = ""
+				this.log_scroll_bot = 'log_scroll_bot'
+				this.$nextTick(() => {
+					this.log_scroll_bot = 'log_scroll_bot' + this.type
+				})
+			},
+			setLogScrollBot(){
+				this.log_scroll_bot = 'log_scroll_bot'
+				this.$nextTick(() => {
+					this.log_scroll_bot = 'log_scroll_bot0'
+				})
+			},
+			onMark() {
+				uni.navigateBack({
+					delta: 1
+				})
+			},
+			onTlite(type) {
+				if (!HFTool.CONSOLE_DATA) {
+					uni.navigateBack({
+						delta: 1
+					})
+				}
+				this.tliteIndex = type
+				// this.CONSOLE_DATA = HFTool.CONSOLE_DATA || this.CONSOLE_DATA
+				this.log_scroll_bot = 'log_scroll_bot'
+				this.$nextTick(() => {
+					this.log_scroll_bot = 'log_scroll_bot' + type
+				})
+			},
+			onClickCent(item, index) {
+				uni.setClipboardData({
+					data: '' + item,
+					success: function() {
+						uni.showToast({
+							title: "复制成功"
+						})
+					}
+				});
+			},
+			requestInitData(item) {
+				if (typeof item == 'String') {
+					let OBJ = {}
+					item.split("&").forEach(item => {
+						let itema = item.split("=")
+						OBJ[itema[0]] = itema[1]
+					})
+					return OBJ
+				}
+				return item
+			}
+		}
+	}
+</script>
+
+<style lang="scss">
+	page {
+		background-color: rgba(220, 38, 38, 0.0) !important;
+	}
+
+	view,
+	scroll-view,
+	swiper,
+	button,
+	input,
+	textarea,
+	label,
+	navigator,
+	image {
+		box-sizing: border-box;
+	}
+
+	.place {
+		width: 100%;
+		color: #007AFF;
+	}
+
+	.GET,
+	.POST,
+	.put,
+	.patch,
+	.head,
+	.delete {
+		margin-right: 6rpx;
+		margin-bottom: 9rpx;
+		padding: 8rpx;
+		border: #00aa00 1px;
+		background-color: #55aa7f;
+		color: #ffffff;
+		border-radius: 8rpx;
+	}
+
+	.URL {
+		width: 100%;
+		margin-right: 6rpx;
+		margin-bottom: 9rpx;
+		padding: 8rpx;
+		border: #ff5500 1px;
+		background-color: #ffaa7f;
+		color: #ffffff;
+		border-radius: 8rpx;
+		word-break: break-all;
+	}
+
+	.Network_item {
+		width: 100%;
+		margin-right: 6rpx;
+		margin-bottom: 9rpx;
+		padding: 8rpx;
+		border: #005500 1px;
+		border-radius: 8rpx;
+	}
+
+	.requestInitData {
+		width: 100%;
+		margin-right: 6rpx;
+		margin-bottom: 9rpx;
+		padding: 8rpx;
+		border: #aaff00 1px;
+		background-color: #df8d3a;
+		color: #ffffff;
+		border-radius: 8rpx;
+	}
+
+	.preview_data {
+		width: 100%;
+		margin-right: 6rpx;
+		margin-bottom: 9rpx;
+		padding: 8rpx;
+		border: #aaff00 1px;
+		background-color: #FFFFFF;
+		border-radius: 8rpx;
+	}
+
+	.item_name {
+		margin-right: 6rpx;
+		margin-bottom: 9rpx;
+		padding: 8rpx;
+		border: #00aa00 1px;
+		background-color: #55aa7f;
+		color: #ffffff;
+		border-radius: 8rpx;
+	}
+
+	.item_cent {
+		width: 90%;
+		padding: 8rpx;
+		white-space: wrap;
+		display: flex;
+		flex-wrap: wrap;
+		overflow: auto;
+		word-break: break-all;
+	}
+
+	.text_name {
+		margin-right: 6rpx;
+		margin-bottom: 9rpx;
+		padding: 8rpx;
+		border: #ff6a06 1px;
+		background-color: #ffaa00;
+		border-radius: 8rpx;
+	}
+
+	.text_name_cent {
+		padding: 8rpx;
+		border: #55aa00 1px;
+		background-color: #aaff7f;
+		border-radius: 8rpx;
+		white-space: wrap;
+		word-break: break-all;
+	}
+
+	.item_storage {
+		padding: 8rpx;
+		margin: 2rpx;
+	}
+
+	.mark {
+		position: fixed;
+		left: 0;
+		top: 0;
+		width: 750rpx;
+		height: 1920rpx;
+		background-color: #2F364E;
+		opacity: 0.3;
+	}
+
+	.flex {
+		display: flex;
+		flex-direction: row;
+		// flex-wrap: wrap;
+
+	}
+
+	.bg_HFconsole {
+		display: flex;
+		background-color: rgba(220, 38, 38, 0.0);
+	}
+
+	.bg_kuang {
+		position: fixed;
+		bottom: 0;
+		left: 0;
+		background-color: #FFFFFF;
+		height: 1200rpx;
+		width: 750rpx;
+	}
+
+	.tlite-one {
+		padding: 20rpx;
+		background-color: #e7e7e7;
+		border: 1px #9c9c9c;
+	}
+
+	.Log {}
+
+	.item {
+		padding: 8rpx 20rpx;
+		border: 1px #424242;
+		background-color: #e3e3e3;
+		flex-wrap: wrap;
+	}
+
+	.log_scroll_bot {
+		padding: 32rpx;
+		width: 750rpx;
+		min-height: 100rpx;
+		background-color: #ffffff;
+	}
+	.bnt-view{
+		background: #F1F1F1;
+		border: #55557f 2rpx solid;
+		padding: 18rpx 30rpx;
+	}
+	.bnt-view-1{
+		background: #ff5650;
+		border: #55557f 2rpx solid;
+		padding: 18rpx 40rpx;
+		// margin-left: 200rpx;
+	}
+	.bnt-hit{
+		background: #aaaa7f;
+	}
+</style>
