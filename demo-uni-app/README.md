@@ -3040,13 +3040,15 @@ getDocumentPath() {
 
 具体用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-uni-app/demo-aliyun-sls
 
-## 集成vConsole
+## ~~集成vConsole~~
 
->说明：集成第三方插件vConsole：https://ext.dcloud.net.cn/plugin?id=6147
+>~~注意：在pms uniapp中vConsole显示空白所以放弃使用此插件。~~
+>
+>~~说明：集成第三方插件vConsole：https://ext.dcloud.net.cn/plugin?id=6147~~
 
-具体用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-uni-app/demo-vconsole
+~~具体用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-uni-app/demo-vconsole~~
 
-main.js
+~~main.js~~
 
 ```javascript
 import App from './App'
@@ -3079,7 +3081,7 @@ export function createApp() {
 // #endif
 ```
 
-pages.json
+~~pages.json~~
 
 ```json
 {
@@ -3101,12 +3103,100 @@ pages.json
 
 ```
 
-打印日志
+~~打印日志~~
 
 ```vue
 methods: {
     onLogClick() {
         console.log('按钮日志：这是通过按钮点击打印的日志', new Date().toISOString())
+    }
+}
+```
+
+## 集成UniDevTools
+
+>说明：集成第三方插件https://ext.dcloud.net.cn/plugin?id=19163
+>
+>配置和启用参考官方文档：https://dev.api0.cn/guide/install
+
+参考https://dev.api0.cn/guide/install下载源代码并解压，目录结构如下：
+
+```
+├─pages
+│  ├─ 项目页面文件
+|  └─ ...
+├─devTools   [DevTools调试工具目录]
+│  ├─core         核心源码
+│  ├─page         浮窗页面及组件
+│  ├─index.js     入口文件
+│  ├─config.js    配置文件
+│  └─tool.vue     自定义工具组件
+├─App.vue
+├─main.js
+├─manifest.json
+├─package.json
+├─uni.scss
+└─...
+```
+
+main.js配置引用插件
+
+```javascript
+import App from './App'
+// 启用UniDevTools调试工具
+import devTools from './devTools/index.js'
+// 启用UniDevTools调试工具
+import devToolsConfig from './devTools/config.js'
+
+// #ifndef VUE3
+import Vue from 'vue'
+import './uni.promisify.adaptor'
+Vue.config.productionTip = false
+App.mpType = 'app'
+// 启用UniDevTools调试工具
+devTools.install(Vue, devToolsConfig)
+const app = new Vue({
+  ...App
+})
+app.$mount()
+// #endif
+
+// #ifdef VUE3
+import { createSSRApp } from 'vue'
+export function createApp() {
+  const app = createSSRApp(App)
+  // 启用UniDevTools调试工具
+  devTools.install(app, devToolsConfig)
+  return {
+    app
+  }
+}
+// #endif
+```
+
+pages.json配置页面
+
+```
+{
+	"pages": [
+		{ // 启用UniDevTools调试工具
+			"path": "devTools/page/index",
+			"style": {
+				"navigationBarTitleText": "UniDevTools",
+				"navigationStyle": "custom"
+			}
+		}
+	]
+}
+
+```
+
+打印日志
+
+```vue
+methods: {
+    printTestLog() {
+        console.log('UniDevTools 测试日志：这是一个测试 console 日志')
     }
 }
 ```
