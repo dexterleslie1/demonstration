@@ -448,6 +448,446 @@ setUp(
 
 ------
 
+## Check是什么呢？
+
+Gatling Check 是 Gatling 性能测试框架中用于**验证响应数据是否符合预期**的核心机制，属于断言（Assertion）的一种实现方式。它的主要作用是在模拟用户请求后，检查服务器返回的响应是否满足特定条件（如状态码、响应体内容、性能指标等），从而判断系统是否正常工作。
+
+---
+
+### **核心作用**
+在性能测试中，不仅要关注吞吐量（TPS）、延迟等指标，还需验证业务逻辑的正确性。Gatling Check 就是用来确保每次请求的响应结果符合预期的“验证器”，若不满足则标记为失败，帮助开发者发现功能或数据异常。
+
+---
+
+### **支持的检查类型**
+Gatling 提供了丰富的内置检查器（Check），覆盖常见的验证场景，主要包括：
+
+#### 1. **状态码检查（Status Check）**  
+验证 HTTP 响应状态码是否为预期值（如 200、201 等）。  
+示例：  
+```scala
+check(status.is(200))  // 检查状态码是否为 200
+```
+
+#### 2. **响应体检查（Body Check）**  
+针对响应体内容进行验证，支持多种匹配方式：  
+- **精确匹配**：`bodyString.is("expected content")`  
+- **正则匹配**：`bodyString.matches(".*success.*")`（响应体包含 "success"）  
+- **JSON 路径/表达式匹配**：`jsonPath("$.code").is("0")`（检查 JSON 中 `code` 字段为 0）  
+- **XPath 匹配**（针对 XML 响应）：`xpath("//user/name").is("Alice")`  
+
+#### 3. **响应头检查（Header Check）**  
+验证响应头中的字段值（如 Content-Type、Cache-Control 等）。  
+示例：  
+```scala
+check(header("Content-Type").is("application/json"))
+```
+
+#### 4. **响应时间检查（Latency Check）**  
+验证请求的响应时间是否在阈值内（需结合断言规则）。  
+示例：  
+```scala
+check(responseTimeInMillis.lte(500))  // 响应时间 ≤ 500ms
+```
+
+#### 5. **自定义检查（Custom Check）**  
+通过编写 Scala 函数实现复杂的验证逻辑（如解析二进制数据、调用外部服务等）。  
+示例：  
+```scala
+check(custom { response =>
+  if (response.body.string.contains("error")) Failure("Found error in body")
+  else Success("OK")
+})
+```
+
+---
+
+### **配置位置与使用场景**
+Check 通常在 Gatling 的请求链（`exec`）中配置，紧跟在 HTTP 请求之后。例如：  
+```scala
+scenario("My Scenario")
+  .exec(http("Get User")
+    .get("/api/user/123")
+    .check(
+      status.is(200),
+      jsonPath("$.name").is("Bob"),
+      responseTimeInMillis.lte(300)
+    )
+  )
+```
+
+---
+
+### **重要性**
+- **功能正确性保障**：即使性能指标达标，若响应数据错误（如返回错误的用户信息），测试结果仍无意义。  
+- **快速定位问题**：通过 Check 失败的具体原因（如状态码 500、JSON 字段缺失），可快速定位服务端 Bug。  
+- **集成断言规则**：Gatling 支持将 Check 结果与全局断言（Assertions）结合，例如“所有请求的成功率必须 ≥ 99%”，最终生成测试报告时明确标记失败场景。
+
+---
+
+### **总结**  
+Gatling Check 是连接性能测试与功能验证的关键工具，通过灵活的配置确保每一次模拟请求的响应都符合业务预期，避免因“只测性能不测功能”导致的漏检问题。
+
+## Extracting是什么呢？
+
+Gatling Extracting（提取）是 Gatling 里用来**从响应中抓取数据并保存到变量**，以便后续请求或逻辑使用的机制。它本质上是 `Check` 的一种特殊用法：**把检查结果存起来，而不是直接做断言**。
+
+---
+
+### 一、Extracting 的作用
+
+- **抓取动态数据**：比如登录接口返回的 `token`、创建订单返回的 `orderId` 等，这些在测试执行时才能确定。
+- **实现参数化请求**：把上一步抓到的值，作为下一步请求的路径、参数、请求体的一部分，让场景更接近真实用户行为。
+- **解耦多步业务流程**：在长链路压测中，用提取+变量传递，把多个接口串联成完整业务流。
+
+---
+
+### 二、常见提取器（Extractor）
+
+Gatling 提供多种提取器，对应不同响应格式和使用场景：
+
+| 提取器              | 适用场景                              | 示例                                                    |
+| ------------------- | ------------------------------------- | ------------------------------------------------------- |
+| `saveAs` + 普通检查 | 任意检查点同时保存值                  | `jsonPath("$.token").saveAs("authToken")`               |
+| `regex`             | 从文本/HTML 中用正则提取值            | `regex(""""userId":(\d+)""").saveAs("uid")`             |
+| `jsonPath`          | JSON 响应中提取字段或数组元素         | `jsonPath("$.data[0].id").saveAs("firstId")`            |
+| `xpath`             | XML 响应中提取节点或属性              | `xpath("//user/@id").saveAs("xmlUserId")`               |
+| `bodyString`        | 需要整段文本时，再配合正则/字符串处理 | `bodyString.transform(_.split(":")[1]).saveAs("value")` |
+
+---
+
+### 三、典型使用流程
+
+1. **发起请求并配置提取器**  
+   在一次请求中使用 `.check(...saveAs("变量名"))`，把需要的数据保存下来。
+
+2. **在后续请求中引用变量**  
+   使用 EL 表达式 `${变量名}` 引用之前保存的值，例如放在 URL、Header、JSON Body 中。
+
+简单示例（Scala DSL）：
+
+```scala
+import io.gatling.core.Predef._
+import io.gatling.http.Predef._
+
+val scn = scenario("Extract and Use Token")
+  // 第一步：登录，提取 token
+  .exec(
+    http("Login")
+      .post("/api/login")
+      .body(StringBody("""{"username":"test","password":"123456"}"""))
+      .header("Content-Type", "application/json")
+      .check(jsonPath("$.token").saveAs("authToken"))
+  )
+  // 第二步：用 token 访问受保护接口
+  .exec(
+    http("Get Profile")
+      .get("/api/profile")
+      .header("Authorization", "Bearer ${authToken}")
+      .check(status.is(200))
+  )
+```
+
+---
+
+### 四、提取时的常用技巧
+
+- **多次提取多个值**：一次请求中可以写多个 `.check(...)`，分别保存不同变量。  
+- **带默认值**：`default` 在没匹配到时给个兜底值，避免变量未定义导致脚本报错。  
+- **处理多值情况**：`findAll` 可把多个匹配项存成 `Seq`，再配合 `transform` 取第 N 个。  
+- **与断言结合**：同一检查点既做提取又做断言，如：  
+  ```scala
+  .check(
+    jsonPath("$.code").ofType[Int].is(0).saveAs("code"),
+    jsonPath("$.msg").optional.saveAs("msg")
+  )
+  ```
+
+---
+
+### 五、和 Gatling Check 的关系
+
+- **Check**：更偏“验证”，看响应对不对，对就过，错就标红。  
+- **Extracting**：是 Check 的“副产物”，在验证的同时，把需要的数据**取出来存着**，为后续请求服务。  
+- 在 Gatling 的 DSL 中，两者写法非常接近，只是提取时加上 `.saveAs("变量名")`。
+
+## Transforming是什么呢？
+
+>提示：可以在Transforming判断响应是否有业务异常，如果有则抛出RuntimeException，具体用法可以参考本站示例https://gitee.com/dexterleslie/demonstration/tree/main/demo-benchmark/demo-gatling-java中的ResponseUtil#parseResponse。
+
+Gatling Transforming（转换）就是在**提取数据之后、保存之前，对原始数据进行加工处理**的能力。  
+它通常和 `Check` / `Extracting` 一起用，用来把“抓到的原始值”变成“真正想用的变量值”。
+
+---
+
+### 一、Transforming 解决什么问题？
+
+很多时候，从响应里直接提取到的值并不适合直接使用，比如：
+
+- 日期格式是 `"2026-03-11T08:00:00Z"`，但后面接口只接受 `"2026-03-11"`；
+- 接口返回的是 `"totalCount": "100"`（字符串），但你需要整数 `100`；
+- 提取到的是 JSON 数组，你只想取其中某个元素或长度；
+- 想给没提取到的值一个默认值，避免变量为空。
+
+这些“加工”工作，就是 `transform` 的用武之地。
+
+---
+
+### 二、基本语法结构
+
+在 Gatling 的 Check 链中，通过 `.transform(...)` 方法对提取结果做转换：
+
+```scala
+.check(
+  jsonPath("$.someField")
+    .transform(rawValue => {
+      // rawValue 是提取到的原始值，这里是 String
+      // 返回你想保存的最终值
+      rawValue.trim.toUpperCase
+    })
+    .saveAs("processedValue")
+)
+```
+
+关键点：
+
+- `.transform(...)` 接收一个函数：`原始值 => 转换后的值`
+- 转换完成后，再用 `.saveAs("变量名")` 保存。
+
+---
+
+### 三、常见使用场景举例
+
+#### 1. 类型转换
+
+响应：`{"count":"42"}`（字符串形式的数字）
+
+```scala
+.check(
+  jsonPath("$.count")
+    .ofType[String]               // 声明提取类型是 String
+    .transform(_.toInt)           // 转成 Int
+    .saveAs("cnt")
+)
+```
+
+后面就可以直接用 `${cnt}` 当作整数使用。
+
+---
+
+#### 2. 字符串处理
+
+响应：`{"createTime":"2026-03-11T08:00:00Z"}`
+
+```scala
+.check(
+  jsonPath("$.createTime")
+    .transform(s => s.split("T")(0))  // 只保留日期部分
+    .saveAs("dateOnly")
+)
+```
+
+结果：`"2026-03-11"`
+
+---
+
+#### 3. 处理集合 / 数组
+
+响应：`{"ids":["a","b","c"]}`
+
+```scala
+.check(
+  jsonPath("$.ids")
+    .ofType[Seq[String]]
+    .transform(_.headOption.getOrElse("default"))  // 取第一个，没有就用 default
+    .saveAs("firstId")
+)
+```
+
+---
+
+#### 4. 带默认值的容错处理
+
+有时提取可能失败（字段不存在或类型不匹配），可以用 `optional` + `transform` 兜底：
+
+```scala
+.check(
+  jsonPath("$.nickname").optional  // 允许为空
+    .transform(opt => opt.map(_.trim).getOrElse("guest"))
+    .saveAs("nick")
+)
+```
+
+这样即使接口没返回 `nickname`，变量 `nick` 也会是 `"guest"`，不会中断脚本。
+
+---
+
+#### 5. 链式组合：提取 + 转换 + 断言
+
+同一个检查点可以同时完成“提取、转换、断言”：
+
+```scala
+.check(
+  jsonPath("$.code")
+    .ofType[Int]
+    .transform(code => {
+      println(s"接口返回 code=$code")  // 调试日志
+      code
+    })
+    .is(0)                     // 断言必须是 0
+    .saveAs("respCode")        // 同时保存起来
+)
+```
+
+---
+
+### 四、和其他概念的关系
+
+- **Check**：负责“验证”响应是否正确（状态码、字段是否存在等）。  
+- **Extracting**：负责“提取”响应中的某些值（`.saveAs(...)`）。  
+- **Transforming**：负责“加工”提取到的原始值，让它变成后续请求可以直接用的形式。
+
+可以理解为一条流水线：
+
+> 响应 → Check 验证 → Extract 提取 → Transform 转换 → saveAs 存变量 → 后续请求使用 `${变量}`
+
+## Exec是什么呢？
+
+在 Gatling 里，`exec` 是一个**执行块**，用来包裹各种“动作”（HTTP 请求、循环、条件判断、暂停等），告诉框架：  
+“在这里执行一段逻辑，这段逻辑是一个完整的步骤。”
+
+可以把 `exec` 想象成测试脚本里的“执行语句块”，所有具体行为都要放到 `exec` 里面才会被运行。
+
+---
+
+### 一、exec 的基本作用
+
+- **承载具体行为**：HTTP 请求、WebSocket 操作、JDBC 查询、自定义代码等，都必须写在 `exec` 中。
+- **组织场景流程**：通过链式 `.exec(...).exec(...)`，把多个步骤串成一条用户行为链路。
+- **控制执行边界**：配合 `pause`、`loop`、`conditional` 等，形成更复杂的测试逻辑。
+
+---
+
+### 二、最常见的用法：执行 HTTP 请求
+
+```scala
+scenario("简单场景")
+  .exec(
+    http("首页请求")
+      .get("/")
+      .check(status.is(200))
+  )
+```
+
+这里：
+
+- `http("首页请求")` 定义了一个 HTTP 请求；
+- `.get("/")` 设置方法和路径；
+- `.check(...)` 添加校验；
+- 整个请求被包在 `exec(...)` 里，表示“执行这个请求”。
+
+---
+
+### 三、exec 里还能放什么？
+
+除了单个 HTTP 请求，`exec` 内部可以是很多类型的“动作”：
+
+1. **HTTP 请求**
+
+```scala
+.exec(
+  http("查询商品")
+    .get("/api/product/123")
+    .queryParam("detail", "true")
+    .check(jsonPath("$.price").saveAs("price"))
+)
+```
+
+2. **循环（repeat / foreach / during 等）**
+
+```scala
+.exec(
+  repeat(5, "i") {  // 循环 5 次
+    exec(
+      http("第 ${i} 次请求")
+        .get("/api/item/${i}")
+    )
+  }
+)
+```
+
+3. **条件执行（doIf / doSwitch）**
+
+```scala
+.exec(
+  http("获取状态")
+    .get("/api/status")
+    .check(jsonPath("$.state").saveAs("state"))
+)
+.exec(
+  doIf(session => session("state").as[String] == "active") {
+    exec(
+      http("激活用户")
+        .post("/api/activate")
+    )
+  }
+)
+```
+
+4. **暂停（pause）**
+
+```scala
+.exec(
+  http("提交订单")
+    .post("/api/order")
+)
+.pause(2, 5)  // 固定 2s 或在 2~5s 之间随机
+```
+
+5. **自定义代码（session 操作）**
+
+```scala
+.exec { session =>
+  val userId = session("uid").as[String]
+  println(s"当前用户：$userId")
+  session
+}
+```
+
+6. **嵌套 exec（组合复杂逻辑）**
+
+```scala
+.exec(
+  exec( /* 步骤 A */ )
+    .exec( /* 步骤 B */ )
+    .exec( /* 步骤 C */ )
+)
+```
+
+---
+
+### 四、和 scenario 的关系
+
+- `scenario("名称")` 定义一个“用户场景”，只是一个壳。
+- 真正的行为要写到 `scenario(...).exec(...).exec(...)` 里，才构成可执行的测试步骤。
+
+```scala
+val scn = scenario("用户下单")
+  .exec(loginRequest)         // 步骤1：登录
+  .exec(browseProducts)       // 步骤2：浏览商品
+  .exec(addToCart)            // 步骤3：加购
+  .exec(submitOrder)          // 步骤4：提交订单
+  .pause(1)                   // 步骤5：思考时间
+```
+
+---
+
+### 五、小结
+
+- `exec` 是 Gatling 中**组织与执行具体行为的最小单元**。
+- 所有“做什么”的语句（发请求、循环、判断、暂停、改 session 等）都要包在 `exec` 中。
+- 通过链式 `exec` 把多个行为连起来，就形成了一条完整的用户行为路径，也就是一个压测场景。
+
 ## 基于Java Maven项目
 
 1. 配置maven模板项目

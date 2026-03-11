@@ -64,11 +64,14 @@ public class DemoController {
      * @return
      */
     @GetMapping(value = "/")
-    public ObjectResponse<String> index() {
+    public ObjectResponse<MyBean> index() {
         String uuid = this.redisKeyList.get((int) RANDOM.nextLong(totalKey));
         String str = "UUID:" + uuid;
-        ObjectResponse<String> response = new ObjectResponse<>();
-        response.setData(str);
+        ObjectResponse<MyBean> response = new ObjectResponse<>();
+        MyBean myBean = new MyBean();
+        myBean.setField1(str);
+        myBean.setField2("field2 value");
+        response.setData(myBean);
         return response;
     }
 
