@@ -221,9 +221,6 @@
 					url: this.apiBaseUrl + '/' + filename,
 					success: (res) => {
 						if (res.statusCode === 200) {
-							// 下载成功
-							this.message = '下载成功'
-							
 							// #ifdef H5
 							// H5端保存文件
 							const a = document.createElement('a')
@@ -236,10 +233,8 @@
 							// #endif
 							
 							// #ifdef APP-PLUS
-							// APP端下载完成，只显示文件路径
-							this.message = `文件下载成功: ${res.tempFilePath}`
-							// 询问用户是否需要打开文件
-							// this.openWithDefaultApp(res.tempFilePath, filename)
+							// APP端将文件保存到Download目录
+							this.saveFileToDownload(res.tempFilePath, filename)
 							// #endif
 						} else {
 							this.message = '下载失败: HTTP ' + res.statusCode
@@ -270,6 +265,33 @@
 				// #endif
 
 				uni.downloadFile(downloadConfig)
+			},
+
+			// APP端将文件保存到Download目录
+			saveFileToDownload(tempFilePath, filename) {
+				this.message = `文件下载成功，保存路径：${tempFilePath}`
+				console.log(`文件下载成功，保存路径：${tempFilePath}`)
+				
+				// #ifdef APP-PLUS
+				try {
+					// 使用uni.saveFile保存文件到本地存储
+					uni.saveFile({
+						tempFilePath: tempFilePath,
+						success: (saveRes) => {
+							this.message = `文件下载成功，保存路径：${saveRes.savedFilePath}`
+							// 可以选择是否打开文件
+							this.openWithDefaultApp(saveRes.savedFilePath, filename)
+						},
+						fail: (saveErr) => {
+							console.error('保存文件失败:', saveErr)
+							this.message = '文件下载成功但保存失败: ' + (saveErr.errMsg || '未知错误')
+						}
+					})
+				} catch (error) {
+					console.error('保存文件异常:', error)
+					this.message = '文件下载成功但保存失败: ' + error.message
+				}
+				// #endif
 			},
 
 			// 使用默认应用打开文件
