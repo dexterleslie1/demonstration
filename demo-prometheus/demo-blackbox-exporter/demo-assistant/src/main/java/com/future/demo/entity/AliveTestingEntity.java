@@ -1,4 +1,4 @@
-package com.future.demo.mybatis.plus.entity;
+package com.future.demo.entity;
 
 import lombok.Data;
 

@@ -1,4 +1,4 @@
-package com.future.demo.mybatis.plus.config;
+package com.future.demo.config;
 
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;

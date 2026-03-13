@@ -1226,19 +1226,42 @@ spring.boot.admin.notify.mail.to=xxx@qq.com
 ### 定制 health 端点
 
 ```java
+package com.future.demo;
+
+import org.springframework.boot.actuate.health.AbstractHealthIndicator;
+import org.springframework.boot.actuate.health.Health;
+import org.springframework.stereotype.Component;
+
+/**
+ * @author Dexterleslie.Chan
+ */
 @Component
 public class CustomHealthIndicator extends AbstractHealthIndicator {
     @Override
-    protected void doHealthCheck(Health.Builder builder) throws Exception {
-        // 构建up状态
-        builder.up().withDetail("detail1", "Detail value 1")
-                .withDetail("detail2", "Detail value 2");
+    protected void doHealthCheck(Health.Builder builder) {
+        // 构建多个组件的健康状态
+        Health dbHealth = Health.up()
+                .withDetail("version", "5.7.0")
+                .withDetail("schema", "demo")
+                .build();
 
-        // 构建down状态
-        /*builder.down().withDetail("error", "Error value")
-                .withException(new Exception("测试异常"));*/
+        Health redisHealth = Health.down()
+                .withDetail("error", "Redis 连接失败")
+                .build();
+
+        Health mqHealth = Health.up()
+                .withDetail("lag", "0")
+                .build();
+
+        // 聚合多个组件的健康状态
+        builder.down()
+                .withDetail("database", dbHealth)
+                .withDetail("redis", redisHealth)
+                .withDetail("messageQueue", mqHealth)
+                .withException(new Exception("整体健康状态降级，某些组件异常"));
     }
 }
+
 ```
 
 启动应用后再次访问`http://localhost:8081/mydemo/health`端点查看到新增了名为 custom 的组件。

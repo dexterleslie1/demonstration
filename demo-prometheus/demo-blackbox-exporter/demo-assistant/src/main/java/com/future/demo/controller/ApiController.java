@@ -1,9 +1,9 @@
-package com.future.demo.mybatis.plus.controller;
+package com.future.demo.controller;
 
 import com.future.common.exception.BusinessException;
 import com.future.common.http.ObjectResponse;
 import com.future.common.http.ResponseUtils;
-import com.future.demo.mybatis.plus.service.AliveTestingService;
+import com.future.demo.service.AliveTestingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;

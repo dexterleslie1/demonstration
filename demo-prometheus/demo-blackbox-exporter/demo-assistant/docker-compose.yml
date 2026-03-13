@@ -14,3 +14,14 @@ services:
       - --skip-character-set-client-handshake
     ports:
       - '50000:3306'
+
+  redis:
+    image: redis:5.0.14
+    # 设置redis密码
+    command: redis-server /usr/local/etc/redis/redis.conf --requirepass 123456
+    volumes:
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - '6379:6379'

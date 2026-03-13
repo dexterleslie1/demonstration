@@ -1,7 +1,3 @@
-# `exporter`的使用
-
-
-
 ## `node_exporter`使用
 
 `docker-compose.yaml`内容如下：
@@ -230,9 +226,9 @@ modules:
 
 >注意：`blackbox exporter`只需要运行在网络连同的环境即可，因为它代理`prometheus`的`probe`请求探测目标服务器是否在线。
 
-示例的详细配置请参考 [链接](https://gitee.com/dexterleslie/demonstration/blob/master/demo-prometheus-grafana-alertmanager/demo-blackbox-exporter)
+示例的详细配置请参考 [链接](https://gitee.com/dexterleslie/demonstration/blob/master/demo-prometheus/demo-blackbox-exporter)
 
-启动基于`spring-boot`的探测目标`demo-assistant`，用于协助`blackbox exporter`通过`http`探测目标是否在线 [代码参考](https://gitee.com/dexterleslie/demonstration/tree/master/demo-prometheus-grafana-alertmanager/demo-blackbox-exporter/demo-assistant)
+启动基于`spring-boot`的探测目标`demo-assistant`，用于协助`blackbox exporter`通过`http`探测目标是否在线 [代码参考](https://gitee.com/dexterleslie/demonstration/tree/master/demo-prometheus/demo-blackbox-exporter/demo-assistant)
 
 启动`blackbox exporter`
 

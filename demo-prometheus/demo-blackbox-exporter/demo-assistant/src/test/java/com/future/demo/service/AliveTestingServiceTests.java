@@ -1,6 +1,6 @@
-package com.future.demo.mybatis.plus.service;
+package com.future.demo.service;
 
-import com.future.demo.mybatis.plus.Application;
+import com.future.demo.Application;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -47,12 +47,12 @@ scrape_configs:
       # 因为没有多个不同的target，所以临时增加两个相同的target用于测试用途
       - targets:
         # 探测目标  
-        - http://192.168.235.128:18080/api/v1/alive/check
+        - http://192.168.1.181:18080/api/v1/alive/check
         labels:
           instance: target-1
       - targets:
         # 探测目标  
-        - http://192.168.235.128:18080/api/v1/alive/check
+        - http://192.168.1.181:8081/health
         labels:
           instance: target-2
     relabel_configs:

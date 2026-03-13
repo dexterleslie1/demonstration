@@ -1,7 +1,7 @@
-package com.future.demo.mybatis.plus.mapper;
+package com.future.demo.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.future.demo.mybatis.plus.entity.AliveTestingEntity;
+import com.future.demo.entity.AliveTestingEntity;
 import org.apache.ibatis.annotations.Select;
 
 import java.util.Date;
