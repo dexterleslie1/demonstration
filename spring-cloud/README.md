@@ -841,7 +841,28 @@ docker-compose up -d
 >
 > 详细用法请参考文档 <a href="/spring-cloud/#nacos-3" target="_blank">链接</a>
 
+### Nacos启用Actuator Prometheus
 
+具体用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-prometheus/demo-docker-compose-prometheus
+
+Docker Compose配置如下：
+
+```yaml
+nacos-server:
+    image: nacos/nacos-server:v2.2.0
+    environment:
+      - TZ=Asia/Shanghai
+      - MODE=standalone
+      # 启用Actuator Prometheus
+      - management.endpoints.web.exposure.include=*
+      - management.metrics.export.prometheus.enabled=true
+      - management.endpoint.health.show-details=always
+      - management.health.ping.enabled=false
+    ports:
+      - '8848:8848'
+```
+
+查看prometheus和health数据http://localhost:8848/nacos/actuator/prometheus、http://localhost:8848/nacos/actuator/health
 
 ## 服务链路追踪
 

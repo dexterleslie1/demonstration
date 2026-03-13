@@ -112,6 +112,50 @@ services:
     depends_on:
       - prometheus
 
+  nacos-server:
+    image: nacos/nacos-server:v2.2.0
+    environment:
+      - TZ=Asia/Shanghai
+      - MODE=standalone
+      # 启用Actuator Prometheus
+      - management.endpoints.web.exposure.include=*
+      - management.metrics.export.prometheus.enabled=true
+      - management.endpoint.health.show-details=always
+      - management.health.ping.enabled=false
+    ports:
+      - '8848:8848'
+
+  seata-server:
+    image: seataio/seata-server:2.0.0
+    ports:
+      - "7091:7091"
+    environment:
+      - JVM_XMX=512m
+      - JVM_XMS=512m
+      # 设置-XX:MaxDirectMemorySize=128m
+      - JVM_MaxDirectMemorySize=128m
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./application-seata.yml:/seata-server/resources/application.yml
+    depends_on:
+      - db-seata
+      - nacos-server
+  db-seata:
+    image: mysql:8.0.18
+    user: mysql
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+    volumes:
+      - ./db-seata.sql:/docker-entrypoint-initdb.d/db.sql
+    environment:
+      - LANG=C.UTF-8
+      - TZ=Asia/Shanghai
+      - MYSQL_ROOT_PASSWORD=123456
+    ports:
+      - '3306:3306'
+
 volumes:
   data-demo-prometheus:
   data-demo-prometheus-grafana:
