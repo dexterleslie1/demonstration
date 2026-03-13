@@ -954,3 +954,73 @@ StartupNotify=true
 ## 取消自动锁定屏幕
 
 打开Settings > Privacy > Screen Lock功能，Blank Screen Delay选择Never，Automatic Screen Lock关闭，Automatic Screen Lock Delay选择Screen Turns Off，Lock Screen on Suspend关闭，Show Notifications on Lock Screen关闭。
+
+## aptitude工具是什么呢？
+
+>提示：在实践中没有使用aptitude解决问题，解决方法是使用apt remove冲突的依赖或者使用mininal安装的Ubuntu。
+
+`aptitude` 是一个**基于文本的包管理工具**，主要用于 Debian/Ubuntu 等使用 APT 系统的 Linux 发行版。它提供了比传统的 `apt-get`、`dpkg` 更友好的交互界面和更智能的依赖处理能力。
+
+---
+
+### 一、aptitude 是什么？
+
+- **本质**：APT（Advanced Package Tool）的前端工具之一  
+- **作用**：安装、升级、删除软件包，并处理它们之间的依赖关系  
+- **特点**：
+  - 支持命令行模式（适合脚本和终端操作）
+  - 自带一个 **文本界面的菜单系统**（类似 ncurses 界面），方便浏览和操作
+  - 对依赖冲突有更强的解决能力，有时会给出多种解决方案供用户选择
+
+---
+
+### 二、主要功能
+
+| 功能类别     | aptitude 能做些什么                                          |
+| ------------ | ------------------------------------------------------------ |
+| 软件安装     | `aptitude install <包名>`                                    |
+| 软件卸载     | `aptitude remove <包名>`                                     |
+| 彻底清除     | `aptitude purge <包名>`（连配置文件一起删）                  |
+| 升级软件     | `aptitude upgrade`（常规升级）<br>`aptitude full-upgrade`（跨版本大升级） |
+| 搜索软件     | `aptitude search <关键词>`                                   |
+| 查看包信息   | `aptitude show <包名>`                                       |
+| 处理依赖问题 | 自动分析并给出解决方案，用户可选择接受哪一个                 |
+
+---
+
+### 三、和普通 apt 命令的区别
+
+- **界面体验**
+  - `apt-get` / `apt`：纯命令行，输出信息比较“干”
+  - `aptitude`：除了命令行，还支持 **交互式 TUI 界面**，可以用键盘上下左右浏览包列表、标记操作，然后一次性执行
+
+- **依赖解决策略**
+  - `aptitude` 会尝试找出多种解决依赖冲突的方案，并让你选
+  - `apt-get` 在遇到复杂依赖问题时可能直接报错退出，需要手动干预
+
+- **使用习惯**
+  - Ubuntu 桌面环境里很多人习惯用 `apt`
+  - 服务器或需要精细控制依赖时，`aptitude` 更受部分管理员青睐
+
+---
+
+### 四、简单使用示例
+
+```bash
+# 1. 更新软件源索引
+sudo aptitude update
+
+# 2. 搜索包含 "vim" 的包
+aptitude search vim
+
+# 3. 安装 vim
+sudo aptitude install vim
+
+# 4. 查看某个包的详细信息
+aptitude show vim
+
+# 5. 启动图形化（文本界面）菜单
+sudo aptitude
+```
+
+进入文本界面后，可以用方向键浏览，空格键选中操作（安装/删除/保留），最后按 `g` 执行计划好的操作。

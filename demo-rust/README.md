@@ -136,6 +136,295 @@ hello_rust/
 
 日常开发一般只用 `cargo`，很少需要直接敲 `rustc`。
 
+## Cargo.toml文件是什么作用呢？
+
+`Cargo.toml` 是 Rust 项目里**最核心的配置文件**，由 Cargo 工具读取，用来描述“这个项目是谁、长什么样、依赖什么”。
+
+可以把它理解为：  
+- 像 Node.js 里的 `package.json`  
+- 像 Python 项目里的 `pyproject.toml` / `setup.py`  
+
+---
+
+### 一、Cargo.toml 主要作用
+
+1. **声明项目基本信息**
+   - 项目名称、版本、作者、描述、许可证等。
+   - 示例：
+   ```toml
+   [package]
+   name = "my_app"
+   version = "0.1.0"
+   edition = "2021"
+   authors = ["Your Name <you@example.com>"]
+   description = "一个简单的 Rust 示例项目"
+   ```
+
+2. **管理依赖（最重要的部分之一）**
+   - 说明项目用了哪些第三方库（crate），以及版本约束。
+   - 示例：
+   ```toml
+   [dependencies]
+   serde = "1.0"           # 任意兼容 1.x 的最新版
+   tokio = { version = "1", features = ["full"] }
+   ```
+
+3. **配置构建行为**
+   - 设置 crate 类型、编译器参数、特性开关等。
+   - 示例：
+   ```toml
+   [lib]
+   name = "my_lib"
+   crate-type = ["cdylib"]   # 编译成动态库
+   
+   [profile.release]
+   opt-level = 3             # release 模式开启最高优化
+   ```
+
+4. **定义 dev-dependencies**
+   - 只在开发和测试时用到的依赖，比如测试框架、mock 库。
+   ```toml
+   [dev-dependencies]
+   proptest = "1.0"
+   ```
+
+5. **版本锁定（配合 Cargo.lock）**
+   - `Cargo.toml` 写的是“版本规则”（例如 `^1.2`），  
+   - 真正锁定的精确版本写在 `Cargo.lock` 里，由 Cargo 自动维护。
+
+---
+
+### 二、整体结构大致长这样
+
+```toml
+[package]              # 项目元数据
+name = "..."
+version = "..."
+edition = "..."
+
+[dependencies]         # 运行时依赖
+some_crate = "1.2"
+
+[dev-dependencies]     # 测试/开发依赖
+tempfile = "3.0"
+
+[build-dependencies]   # 构建脚本依赖
+cc = "1.0"
+
+[profile.dev]          # dev 构建配置
+opt-level = 0
+
+[profile.release]      # release 构建配置
+opt-level = 3
+```
+
+---
+
+### 三、Cargo.toml vs Cargo.lock
+
+- **Cargo.toml**：  
+  - 给人看的配置，决定“我要用什么依赖、大概什么版本”。  
+  - 提交到 Git，方便团队协作和发布。
+
+- **Cargo.lock**：  
+  - 给工具看的锁定文件，记录“这次构建用的每个依赖的具体版本号”。  
+  - 通常也需要提交到 Git，保证所有人、CI 环境装到的依赖完全一致。
+
+## Cargo怎么处理依赖的呢？
+
+Cargo 是 Rust 的包管理器和构建工具，它有一套非常系统化的方式来处理项目依赖。下面我会从几个关键点来解释 Cargo 是如何处理依赖的：
+
+---
+
+### 一、依赖来源
+
+Cargo 支持多种依赖来源：
+
+1. **crates.io（默认）**
+   - 这是 Rust 官方的公共包仓库。
+   - 在 `Cargo.toml` 中写：
+     ```toml
+     [dependencies]
+     serde = "1.0"
+     ```
+     表示使用 crates.io 上 `serde` 的最新版（符合语义化版本规则）。
+
+2. **Git 仓库**
+   - 可以指定一个 Git 地址和分支/标签/提交：
+     ```toml
+     [dependencies]
+     mylib = { git = "https://github.com/user/repo.git", branch = "main" }
+     ```
+
+3. **本地路径**
+   - 用于开发中的本地 crate：
+     ```toml
+     [dependencies]
+     mylib = { path = "../mylib" }
+     ```
+
+4. **私有注册表（如公司内部 registry）**
+   - 通过配置 `[registries]` 和 `cargo login` 使用。
+
+---
+
+### 二、依赖解析（Dependency Resolution）
+
+当你运行 `cargo build` 或 `cargo run` 时，Cargo 会：
+
+1. 读取 `Cargo.toml` 中的依赖声明。
+2. 检查 `Cargo.lock` 文件（如果存在），其中记录了**精确版本和来源**，确保可重复构建。
+3. 如果 `Cargo.lock` 不存在（如新项目），则：
+   - 从 crates.io 或 Git 等源获取所有依赖的元数据。
+   - 解析出满足所有版本约束的**具体版本组合**（解决冲突，比如 A 需要 `log 0.4`，B 需要 `log 0.5`）。
+   - 将解析结果写入 `Cargo.lock`。
+
+> ✅ 建议将 `Cargo.lock` 提交到版本控制（尤其是应用项目），以保证团队和部署环境的一致性。
+
+---
+
+### 三、依赖下载与缓存
+
+Cargo 会将下载的依赖源码缓存在本地：
+
+- **crates.io 依赖**：  
+  存放在 `~/.cargo/registry/src/` 和 `~/.cargo/registry/index/`
+- **Git 依赖**：  
+  存放在 `~/.cargo/git/checkouts/` 和 `~/.cargo/git/db/`
+
+这些缓存避免重复下载，提高构建速度。
+
+---
+
+### 四、构建与编译
+
+1. Cargo 使用 `rustc` 编译每个 crate。
+2. 它会：
+   - 按依赖拓扑排序（谁依赖谁）进行编译。
+   - 只重新编译发生变化的 crate 及其依赖（增量编译）。
+3. 编译产物放在 `target/` 目录下，按 profile（`debug` / `release`）和 target triple 分类。
+
+---
+
+### 五、版本管理策略
+
+- 使用 **SemVer（语义化版本）**：`^1.2.3` 表示兼容 1.x.x 的最新版。
+- 通过 `cargo update` 可以更新 `Cargo.lock` 中的依赖版本（在 `Cargo.toml` 允许的范围内）。
+- 使用 `cargo tree` 查看依赖树，分析传递性依赖。
+
+---
+
+### 六、工作空间（Workspaces）
+
+在大型项目中，多个 crate 可以组织成 workspace：
+
+```toml
+# Cargo.toml (workspace root)
+[workspace]
+members = ["crate1", "crate2"]
+```
+
+- 所有成员共享一个 `Cargo.lock` 和 `target/` 目录。
+- 方便统一管理和跨 crate 开发。
+
+---
+
+### 七、安全与审计
+
+- 使用 `cargo audit` 检查已知漏洞。
+- 使用 `cargo crev` 或 `cargo vet` 进行代码审查信任链管理。
+
+---
+
+### 总结：Cargo 处理依赖的核心流程
+
+```
+1. 解析 Cargo.toml → 确定依赖及版本约束
+2. 读取或生成 Cargo.lock → 锁定精确版本
+3. 下载依赖源码到本地缓存（~/.cargo/...）
+4. 按依赖图编译所有 crate
+5. 输出到 target/ 目录
+6. 支持更新、审计、工作空间等高级功能
+```
+
+Cargo 的设计目标就是：**可重复构建、依赖隔离、易用性强、支持现代软件工程实践**。
+
+## Crate是什么呢？
+
+Rust 里的 **Crate** 可以理解为：**一个 Rust 代码的打包单元和基本编译单位**。它是 Cargo 管理的最小“积木块”，也是 Rust 生态的组织基础。
+
+---
+
+### 一、Crate 是什么？
+
+- **本质**：一组 Rust 源文件的集合，会被编译成一个或多个 `.rlib` / `.so` / `.dll` / `.exe` 等二进制产物。
+- **作用**：
+  - 封装函数、结构体、trait、宏等代码；
+  - 可被别的 crate 通过 `use` 引用；
+  - 是发布到 crates.io 或在 Git 上共享的基本单位。
+
+---
+
+### 二、两种类型的 Crate
+
+| 类型             | 说明                                                         |
+| ---------------- | ------------------------------------------------------------ |
+| **二进制 crate** | 包含一个 `main` 函数，编译后生成可执行程序（`.exe`、`bin`）。<br>通常用于 CLI 工具、服务端程序等。 |
+| **库 crate**     | 没有 `main` 函数，编译后生成库文件（`.rlib`、`.so` 等）。<br>提供 API 给其它 crate 调用，如 `serde`、`tokio`。 |
+
+一个项目里**通常只有一个二进制 crate**，但可以包含多个库 crate（通过 workspace 或子 crate 组织）。
+
+---
+
+### 三、Crate 和 Cargo 的关系
+
+- 一个 **Cargo 项目** 至少对应一个 crate：
+  - 有 `Cargo.toml` 描述这个 crate 的元信息（名称、版本、依赖等）；
+  - 有 `src/main.rs`（二进制）或 `src/lib.rs`（库）作为入口。
+- 在 `Cargo.toml` 中写：
+  ```toml
+  [dependencies]
+  serde = "1.0"
+  ```
+  表示：当前 crate 要依赖名为 `serde` 的另一个库 crate。
+
+---
+
+### 四、Crate 的来源
+
+- **crates.io**：官方公共仓库，绝大多数开源 crate 都在这里发布。
+- **Git 仓库**：可以直接依赖某个 GitHub 等项目里的 crate。
+- **本地路径**：指向你自己写的本地 crate（常用于拆分大型项目）。
+
+---
+
+### 五、Crate Root 与模块体系
+
+- **Crate Root**：编译这个 crate 的起点文件：
+  - 二进制 crate：`src/main.rs`
+  - 库 crate：`src/lib.rs`
+- 在 crate root 中用 `mod xxx;` 可以把其它文件纳入同一个 crate，形成模块的层级结构。
+
+---
+
+### 六、举个例子
+
+假设你有一个项目叫 `hello_cargo`：
+
+```
+hello_cargo/
+├── Cargo.toml          # 声明 crate 名称和依赖
+└── src/
+    └── main.rs         # crate root（二进制 crate）
+```
+
+这里的整个项目就是一个 **二进制 crate**，它可以依赖很多 **库 crate**（比如 `regex`、`reqwest` 等），组合在一起完成更复杂的功能。
+
+---
+
+一句话记住：  
+**Crate = Rust 的“模块包”，既是代码组织单位，也是编译和分发的最小单元。**  
+
 ## ~~Cargo 命令 Ubuntu 安装~~
 
 ~~在 Ubuntu 上安装 Cargo 需要先安装 Rust 工具链（Cargo 随 Rust 一起提供），推荐使用官方 **rustup** 安装：~~
@@ -247,3 +536,221 @@ Release 会开启优化，体积更小、运行更快，适合实际部署和分
 4. 执行：`cargo publish`
 
 本示例为二进制项目（`src/main.rs`），通常用于本地编译与发布构建；库项目才需要发布到 crates.io。
+
+## vcpkg是什么呢？
+
+**vcpkg** 是一个由微软开源的 **C/C++ 包管理器**，主要用于简化第三方库的下载、编译和集成流程。它的目标是让开发者可以更方便地管理项目依赖，尤其是在 Windows、Linux 和 macOS 平台上使用 Visual Studio 或其他编译器时。
+
+---
+
+### 一、主要特点
+
+1. **跨平台支持**
+   - 原生支持 Windows（Visual Studio）、Linux、macOS。
+   - 可在命令行中使用，不局限于某个 IDE。
+
+2. **自动化编译**
+   - 自动从源码编译第三方库，避免手动配置复杂的编译选项。
+   - 支持多种编译配置（Debug/Release、静态库/动态库）。
+
+3. **依赖管理**
+   - 类似 npm（Node.js）、pip（Python）的方式管理 C/C++ 库。
+   - 支持版本控制和依赖解析。
+
+4. **与 Visual Studio 深度集成**
+   - 安装后可直接在 Visual Studio 的项目中使用已安装的库。
+   - 支持 CMake 项目。
+
+---
+
+### 二、基本使用流程
+
+1. **安装 vcpkg**
+   ```bash
+   git clone https://github.com/microsoft/vcpkg.git
+   cd vcpkg
+   ./bootstrap-vcpkg.sh    # Linux/macOS
+   bootstrap-vcpkg.bat     # Windows
+   ```
+
+2. **安装库**
+   ```bash
+   ./vcpkg install fmt
+   ./vcpkg install boost:x64-windows
+   ```
+
+3. **集成到项目**
+   - 在 Visual Studio 中运行：
+     ```bash
+     ./vcpkg integrate install
+     ```
+   - 或在 CMake 项目中通过 `CMAKE_TOOLCHAIN_FILE` 指定 vcpkg 工具链文件。
+
+---
+
+### 三、优势
+
+- **省时**：避免手动下载、解压、配置库。
+- **可复现**：通过清单文件（`vcpkg.json`）记录依赖，方便团队协作。
+- **社区支持**：有大量预编译的流行库（如 OpenCV、Boost、SDL 等）。
+
+---
+
+### 四、适用场景
+
+- 需要快速引入多个第三方 C/C++ 库的项目。
+- 希望在不同平台保持一致的构建方式。
+- 使用 Visual Studio 或 CMake 进行开发。
+
+## VCPKG_ROOT是什么呢？
+
+`VCPKG_ROOT` 是一个**环境变量**，用来告诉系统（以及 Visual Studio、CMake、命令行工具等） **vcpkg 的安装根目录在哪里**。
+
+---
+
+### 一、vcpkg 是什么？
+
+- vcpkg 是微软推出的 **C/C++ 包管理器**。
+- 用来方便地安装第三方库，比如：
+  - Boost
+  - OpenCV
+  - fmt
+  - spdlog
+- 安装完的库，会自动配置好头文件、库文件路径，方便项目直接链接使用。
+
+---
+
+### 二、`VCPKG_ROOT` 的作用
+
+当你把 vcpkg 安装到某个目录，比如：
+
+```
+D:\dev\vcpkg
+```
+
+那么：
+
+- 这个目录就是 **vcpkg 的根目录**；
+- 你需要让工具知道它的位置，方式就是设置环境变量：
+
+```bash
+VCPKG_ROOT=D:\dev\vcpkg
+```
+
+常见用途：
+
+1. **在命令行里使用 vcpkg 命令时**  
+   不一定要进到 `D:\dev\vcpkg` 目录，只要 `VCPKG_ROOT` 设好，就可以在任意路径执行：
+   ```bash
+   %VCPKG_ROOT%\vcpkg install fmt:x64-windows
+   ```
+
+2. **给 CMake 用**  
+   在 `CMakePresets.json` 或 `CMakeSettings.json` 中，可以写：
+   ```json
+   "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+   ```
+   CMake 会根据 `VCPKG_ROOT` 找到 vcpkg 的工具链文件，从而自动引入已安装的库。
+
+3. **给 Visual Studio 用**  
+   装了 vcpkg 的 VS 集成后，VS 也会参考 `VCPKG_ROOT` 去定位库和头文件。
+
+---
+
+### 三、如何设置 `VCPKG_ROOT`
+
+- **Windows（CMD）**
+  ```cmd
+  setx VCPKG_ROOT "D:\dev\vcpkg"
+  ```
+- **Windows（PowerShell）**
+  ```powershell
+  [Environment]::SetEnvironmentVariable("VCPKG_ROOT", "D:\dev\vcpkg", "User")
+  ```
+- **Linux / macOS（bash）**
+  ```bash
+  export VCPKG_ROOT=$HOME/dev/vcpkg
+  # 可写入 ~/.bashrc 或 ~/.zshrc 使其永久生效
+  ```
+
+设置完成后，重新开一个终端/IDE，让新的环境变量生效。
+
+---
+
+### 四、小结
+
+- `VCPKG_ROOT` 不是系统自带的，而是 **vcpkg 的使用者自己定义的环境变量**；
+- 它的值 = vcpkg 所在目录；
+- 有了它，各种工具（命令行、CMake、VS）才能找到 vcpkg 和它管理的库。
+
+## Ubuntu安装vcpkg
+
+>提示：vcpkg 没有官方的 Ubuntu apt 软件包。vcpkg 是微软开发的 C/C++ 包管理器，需要克隆其 Git 仓库并运行引导脚本才能安装。
+
+步骤如下：
+
+1. 自动设置VCPKG_ROOT环境变量
+
+   ```sh
+   sudo vim /etc/profile.d/vcpkg.sh
+   
+   # 内容如下：
+   #!/bin/bash
+   
+   export VCPKG_ROOT=/home/dexterleslie/workspace-git/vcpkg
+   
+   ```
+
+   重启系统。
+
+2. 配置git克隆仓库使用代理
+
+   ```sh
+   sudo apt install git
+   git config --global http.proxy socks5h://192.168.1.55:1080
+   git config --global https.proxy socks5h://192.168.1.55:1080
+   ```
+
+3. 克隆仓库
+
+   ```sh
+   mkdir ~/workspace-git
+   cd ~/workspace-git
+   git clone https://github.com/microsoft/vcpkg.git
+   ```
+
+4. 更新您的系统并安装所需的依赖项：Vcpkg 及其管理的库需要构建工具、Git 和其他实用程序。
+
+   ```sh
+   sudo apt update
+   sudo apt install -y build-essential tar git zip unzip curl pkg-config nasm
+   ```
+
+5. 运行引导脚本：导航到新克隆的目录并运行相应的脚本来构建 vcpkg 可执行文件。
+
+   ```sh
+   cd ~/workspace-git/vcpkg
+   sudo ./bootstrap-vcpkg.sh
+   ```
+
+6. 创建符号链接（可选，用于系统范围访问）：要从任何目录使用 vcpkg 命令，可以在系统 PATH 中的目录中创建符号链接，例如 /usr/local/bin。
+
+   ```sh
+   sudo ln -s ~/workspace-git/vcpkg/vcpkg /usr/local/bin/vcpkg
+   ```
+
+7. 验证安装
+
+   ```sh
+   vcpkg version
+   ```
+
+8. 安装完成后，您可以使用 vcpkg 安装 C/C++ 库。例如，要安装 fmt 库。
+
+   >提示：首次运行需要等待比较长时间，因为需要下载CMake源码并编译。
+
+   ```sh
+   vcpkg install fmt
+   ```
+
+   
