@@ -1,5 +1,5 @@
 ### /order/create
-POST http://192.168.1.185/order/create?userId=1&productId=1&count=2&amount=20
+POST http://192.168.1.181:8080/order/create?userId=1&productId=1&count=2&amount=20
 
 ### /order/createPerfTest
 GET http://192.168.1.185/order/createPerfTest

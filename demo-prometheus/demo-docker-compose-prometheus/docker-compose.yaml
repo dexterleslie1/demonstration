@@ -129,6 +129,7 @@ services:
     image: seataio/seata-server:2.0.0
     ports:
       - "7091:7091"
+      - "9080:9080"
     environment:
       - JVM_XMX=512m
       - JVM_XMS=512m

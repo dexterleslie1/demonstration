@@ -69,6 +69,12 @@ seata:
       distributed-lock-table: distributed_lock
       query-limit: 1000
       max-wait: 5000
+  # 启用Prometheus监控
+#  metrics:
+#    enabled: true
+#    registry-type: compact
+#    exporter-list: prometheus
+#    exporter-prometheus-port: 9080
 
   #server:
   #  service-port: 8091 #If not configured, the default is '${server.port} + 1000'
