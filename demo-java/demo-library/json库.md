@@ -817,3 +817,34 @@ public void testCustomizeJsonSerializer() throws JsonProcessingException {
     Assert.assertEquals("{\"errorCode\":600,\"errorMessage\":\"获取访问令牌失败\"}", json);
 }
 ```
+
+### UnrecognizedPropertyException错误处理
+
+```java
+/**
+     * UnrecognizedPropertyException错误处理
+     *
+     * @throws IOException
+     */
+    @Test
+    public void testJson2BeanWithUnknownField() throws IOException {
+        String json = "{\"userId\":12345,\"loginname\":\"dexter\",\"createTime\":\"2025-02-11 16:46:04\",\"enable\":true,\"unknownField\":\"\"}";
+
+        long userId = 12345l;
+        String loginname = "dexter";
+        LocalDateTime createTime = LocalDateTime.parse("2025-02-11 16:46:04", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+
+        ObjectMapper OMInstance = new ObjectMapper();
+        // 默认情况下，Jackson 在反序列化时如果遇到目标 Java Bean 中不存在的字段（“未知字段”）会抛出 UnrecognizedPropertyException。
+        // 下面这行代码关闭 FAIL_ON_UNKNOWN_PROPERTIES 特性，表示忽略未知字段（例如 unknownField），
+        // 这样当后端 DTO 字段比前端传入的 JSON 少时，仍然可以正常反序列化而不会因为多出来的字段导致异常。
+        // 该配置只作用于当前测试方法中创建的这个 ObjectMapper 实例，不会影响其他用例或全局配置。
+        OMInstance.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        BeanClass beanClass = OMInstance.readValue(json, BeanClass.class);
+        Assert.assertEquals(userId, beanClass.getUserId());
+        Assert.assertEquals(loginname, beanClass.getLoginname());
+        Assert.assertEquals(false, beanClass.isEnable());
+        Assert.assertEquals(createTime, beanClass.getCreateTime());
+    }
+```
+
