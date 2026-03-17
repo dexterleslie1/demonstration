@@ -296,7 +296,7 @@ services:
     restart: unless-stopped
 ```
 
-### 客户端安装和配置
+### Windows11客户端安装和配置
 
 >参考资料：
 >
@@ -305,11 +305,28 @@ services:
 
 下载Windows版本MSI https://github.com/rustdesk/rustdesk/releases/tag/1.4.6 并根据提示安装
 
-安装完毕后运行RustDesk客户端，点击设置>网络>ID/中继服务器并填写信息如下：
+安装完毕后运行客户端，点击设置>网络>ID/中继服务器并填写信息如下：
 
 - ID服务器：填写hbbs服务所在的ip地址
 - 中继服务器：留空
 - API服务器：留空
 - Key：到hbbs服务的控制台中复制。
+
+这样配置后客户端就连接到自托管服务器了。
+
+### Android客户端安装和配置
+
+>提示：如果需要远程控制Android需要授权输入控制权限。
+
+下载ARM64版本的APK https://github.com/rustdesk/rustdesk/releases/tag/1.4.6 并使用mumu模拟器安装
+
+安装完毕后运行客户端，点击设置>ID/中继服务器并填写信息如下：
+
+- ID服务器：填写hbbs服务所在的ip地址
+- 中继服务器：留空
+- API服务器：留空
+- Key：到hbbs服务的控制台中复制。
+
+点击共享屏幕>启动服务以启动RustDesk服务。
 
 这样配置后客户端就连接到自托管服务器了。
