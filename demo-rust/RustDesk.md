@@ -330,3 +330,37 @@ services:
 点击共享屏幕>启动服务以启动RustDesk服务。
 
 这样配置后客户端就连接到自托管服务器了。
+
+### Ubuntu20.4客户端安装
+
+在 https://github.com/rustdesk/rustdesk/releases/tag/1.4.6 下载 Ubuntu20.4 deb安装包。
+
+登录Ubuntu UI界面使用命令安装客户端
+
+```sh
+sudo apt install -fy ./rustdesk-1.4.6-x86_64.deb
+```
+
+让系统默认用 X11 登录，否则会报告“不支持使用 Wayland 登录界面”错误
+
+1. 打开终端，编辑GDM配置文件/etc/gdm3/custom.conf
+2. 找到#WaylandEnable=false取消注释
+3. 重新启动操作系统。
+
+安装完毕后运行客户端，点击设置>网络>ID/中继服务器并填写信息如下：
+
+- ID服务器：填写hbbs服务所在的ip地址
+- 中继服务器：留空
+- API服务器：留空
+- Key：到hbbs服务的控制台中复制。
+
+这样配置后客户端就连接到自托管服务器了。
+
+## RustDesk局域网直连
+
+>提示：不需要RustDesk服务端安装。
+
+安装Windows11客户端后，勾选设置>安全>允许IP直接访问，这样就可以支持直接连接。
+
+使用另外一个客户端直接输入IP地址点击连接即可。
+
