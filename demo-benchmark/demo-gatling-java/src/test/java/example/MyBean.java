@@ -6,4 +6,5 @@ import lombok.Data;
 public class MyBean {
     private String field1;
     private String field2;
+    private String param1;
 }

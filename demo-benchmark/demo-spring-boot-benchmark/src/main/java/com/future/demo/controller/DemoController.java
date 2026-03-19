@@ -9,6 +9,7 @@ import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.*;
@@ -64,13 +65,22 @@ public class DemoController {
      * @return
      */
     @GetMapping(value = "/")
-    public ObjectResponse<MyBean> index() {
+    public ObjectResponse<MyBean> index(
+            @RequestParam(value = "param1", defaultValue = "") String param1) {
         String uuid = this.redisKeyList.get((int) RANDOM.nextLong(totalKey));
         String str = "UUID:" + uuid;
         ObjectResponse<MyBean> response = new ObjectResponse<>();
         MyBean myBean = new MyBean();
         myBean.setField1(str);
         myBean.setField2("field2 value");
+        myBean.setParam1(param1);
+        myBean.setDataList(Arrays.asList(new MyBean.MyBeanInner() {{
+            setField1("b1-f1");
+            setField2("b1-f2");
+        }}, new MyBean.MyBeanInner() {{
+            setField1("b2-f1");
+            setField2("b2-f2");
+        }}));
         response.setData(myBean);
         return response;
     }

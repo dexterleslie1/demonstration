@@ -56,6 +56,8 @@
         <artifactId>gatling-maven-plugin</artifactId>
         <version>${gatling-maven-plugin.version}</version>
         <configuration>
+          <!--<simulationClass>example.PerformanceSimulation</simulationClass>-->
+          <simulationClass>example.BasicSimulation</simulationClass>
           <!-- 下面配置支持断点调试 -->
           <!--<jvmArgs>
             <arg>-Xdebug</arg>

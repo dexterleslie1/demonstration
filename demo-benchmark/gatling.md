@@ -528,6 +528,103 @@ scenario("My Scenario")
 ### **总结**  
 Gatling Check 是连接性能测试与功能验证的关键工具，通过灵活的配置确保每一次模拟请求的响应都符合业务预期，避免因“只测性能不测功能”导致的漏检问题。
 
+## Check和Validate区别
+
+在 Gatling 中，`check` 和 `validate` 都用于**检查响应内容是否符合预期**，但它们的**使用场景、作用域和侧重点**不同。
+
+---
+
+### 1. 基本定义
+
+| 概念       | 作用                                                         |
+| ---------- | ------------------------------------------------------------ |
+| `check`    | 在 **HTTP 请求/响应** 上定义**检查点（断言）**，用来验证响应体、头、状态码等。 |
+| `validate` | 在 **检查点（check）内部** 对**提取到的值**做**自定义条件判断**，更细粒度的验证。 |
+
+简单说：  
+- `check` 是“我要检查这个东西”；  
+- `validate` 是“我检查到这个值后，还要再按我的规则判断它合不合格”。
+
+---
+
+### 2. 使用位置与语法
+
+#### 2.1 `check` 的使用
+
+`check` 直接跟在 `http("requestName").get(...)` 之后，用于声明要检查的内容类型。
+
+```scala
+http("Get user")
+  .get("/api/user/1")
+  .check(
+    status.is(200),
+    jsonPath("$.name").is("Alice"),
+    bodyString.saveAs("responseBody")
+  )
+```
+
+常见检查器：
+- `status.is(200)`
+- `jsonPath("$.id").ofType[Int]`
+- `bodyString`
+- `header("Content-Type")`
+
+#### 2.2 `validate` 的使用
+
+`validate` 不是独立使用的，而是**嵌在某个 `check` 里**，对 `check` 提取出的值做进一步判断。
+
+```scala
+http("Get user")
+  .get("/api/user/1")
+  .check(
+    jsonPath("$.age").ofType[Int].validate(
+      "age should be positive")(_ > 0)
+  )
+```
+
+这里：
+- `jsonPath("$.age")` 把值取出来；
+- `validate(...)(...)` 对取出的值做“>0”的判断，并给这个判断起个描述名。
+
+---
+
+### 3. 主要区别
+
+| 维度     | `check`                                                   | `validate`                                                   |
+| -------- | --------------------------------------------------------- | ------------------------------------------------------------ |
+| 作用层级 | 请求/响应级别，定义要检查什么                             | 检查点内部，对**已提取的值**做进一步条件判断                 |
+| 使用方式 | 直接跟在请求后面，可包含多个检查器                        | 必须作为某个 `check` 的后缀，不能单独使用                    |
+| 功能侧重 | 检查是否存在、是否等于、是否匹配、提取值、保存值等        | 在已有值的基础上，加**业务规则/逻辑**判断，如范围、组合条件等 |
+| 典型场景 | 检查 HTTP 状态码、JSON 字段值、响应头等                   | 检查数值范围、字符串格式、业务逻辑约束等                     |
+| 错误提示 | 失败信息由具体检查器提供，如 “expected 200 but found 500” | 会带上 `validate` 的描述，如 “age should be positive: failed” |
+
+---
+
+### 4. 一个综合示例
+
+```scala
+http("Create order")
+  .post("/api/order")
+  .body(StringBody("""{"itemId": 100, "qty": 2}"""))
+  .check(
+    status.is(201),
+    jsonPath("$.orderId").ofType[Int].saveAs("orderId"),
+    // 用 validate 对 qty 做范围校验
+    jsonPath("$.qty").ofType[Int].validate("qty must be between 1 and 10")(q => q >= 1 && q <= 10)
+  )
+```
+
+- `status.is(201)`：用 `check` 检查状态码；
+- `jsonPath("$.orderId")...saveAs("orderId")`：用 `check` 提取值并保存；
+- `jsonPath("$.qty")...validate(...)`：用 `check` 提取值，再用 `validate` 做业务规则判断。
+
+---
+
+### 5. 一句话总结
+
+- 用 `check` 来**“查有没有、对不对、提不提得到”**；  
+- 用 `validate` 来**“查到之后，值满不满足我自己的业务条件”**。  
+
 ## Extracting是什么呢？
 
 Gatling Extracting（提取）是 Gatling 里用来**从响应中抓取数据并保存到变量**，以便后续请求或逻辑使用的机制。它本质上是 `Check` 的一种特殊用法：**把检查结果存起来，而不是直接做断言**。
@@ -1056,3 +1153,231 @@ public class BasicSimulation extends Simulation {
 具体用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-benchmark/demo-gatling-java
 
 运行示例需要先运行https://gitee.com/dexterleslie/demonstration/tree/main/demo-benchmark/demo-spring-boot-benchmark示例作为接口服务辅助测试。
+
+## 使用application.properties配置动态参数
+
+>参考链接：https://stackoverflow.com/questions/29385918/gatling-configure-base-url-in-configuration-file
+
+具体用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-benchmark/demo-gatling-java
+
+application.properties配置参数：
+
+```properties
+baseUrl=http://localhost:8080
+```
+
+在Simulation中加载并使用参数
+
+```java
+public class PerformanceSimulation extends Simulation {
+
+    private static final Logger logger = LoggerFactory.getLogger(PerformanceSimulation.class);
+
+    // 加载配置
+    private static final Config conf = ConfigFactory.load();
+
+    // 读取自定义参数
+    private static final String baseUrl = conf.getString("baseUrl");
+
+    private static final HttpProtocolBuilder httpProtocol =
+            /*http.baseUrl("http://localhost:8080")*/
+            http.baseUrl(baseUrl)
+                    .acceptHeader("application/json")
+                    .userAgentHeader(
+                            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36");
+
+```
+
+## 多个场景顺序执行
+
+具体用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-benchmark/demo-gatling-java
+
+分别定义两个场景
+
+```java
+private static final ScenarioBuilder scenario = scenario("性能接口压测")
+    /*.exec(pause(Duration.ofSeconds(3)))
+            .exec(session -> {
+                logger.info("性能接口压测");
+                return session;
+            })*/
+    /*.exec(repeat(2).on(performance))*/
+    .exec(performance)
+    // 给请求传递param1参数
+    /*.exec(session -> session.set("param1", "p1")).exec(performance)*/
+    // 打印bodyString
+    /*.exec(session -> {
+                logger.info("bodyString: {}", session.getString("bodyString"));
+                return session;
+            })*/;
+private static final ScenarioBuilder scenario2 = scenario("另外一个测试场景")
+    /*.exec(pause(Duration.ofSeconds(3)))
+            .exec(session -> {
+                logger.info("另外一个测试场景");
+                return session;
+            })*/
+    .exec(performance);
+```
+
+定义场景顺序执行
+
+```java
+{
+        logger.info("Starting Performance simulation...");
+
+        // 先跑完一个再跑另一个，需要用 andThen() 把两次注入串起来
+        setUp(scenario.injectOpen(
+                        /*atOnceUsers(32)*/
+                        atOnceUsers(1))
+                // 多个 protocol 用来表示场景里会用到多种协议，例如同时发 HTTP 和 WebSocket
+                // .protocols(httpProtocol, wsProtocol);
+                .protocols(httpProtocol)
+                .andThen(scenario2.injectOpen(atOnceUsers(2))
+                        .protocols(httpProtocol2)))
+                .maxDuration(Duration.ofSeconds(30));
+
+        logger.info("Performance simulation setup completed");
+    }
+```
+
+## ~~为请求提供动态参数~~
+
+~~动态创建请求：~~
+
+```java
+private static HttpRequestActionBuilder createRequest(String param1) {
+        logger.info("使用参数param1={}调用createRequest函数", param1);
+        return http("性能")
+                .get("/")
+                .queryParam("param1", session -> param1 == null ? "" : param1)
+                // 参考 Gatling 文档：单次 check(...) 支持定义多个 checks
+                // https://docs.gatling.io/concepts/checks/#check-type
+                .check(
+                        status().is(200)
+                        // 用于校验给请求传递param1参数
+                        , jsonPath("$.data.param1").is(param1)
+                        , bodyString().saveAs("bodyString")
+                );
+    }
+
+    private static final ScenarioBuilder scenario6 = scenario("测试给请求动态提供参数")
+            .exec(createRequest("Hello world!"))
+            .exec(session -> {
+                logger.info("bodyString {}", session.getString("bodyString"));
+                return session;
+            });
+```
+
+~~调用测试场景：~~
+
+```java
+// 测试给请求动态提供参数
+setUp(scenario6.injectOpen(
+    atOnceUsers(2))
+      .protocols(httpProtocol));
+```
+
+POM中指定SimulationClass方便测试
+
+pom.xml配置如下：
+
+```xml
+<plugin>
+        <groupId>io.gatling</groupId>
+        <artifactId>gatling-maven-plugin</artifactId>
+        <version>${gatling-maven-plugin.version}</version>
+        <configuration>
+          <simulationClass>example.PerformanceSimulation</simulationClass>
+          <!-- 下面配置支持断点调试 -->
+          <!--<jvmArgs>
+            <arg>-Xdebug</arg>
+            <arg>-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005</arg>
+          </jvmArgs>-->
+        </configuration>
+      </plugin>
+```
+
+运行测试
+
+```sh
+./mvnw gatling:test
+```
+
+## 场景之间数据共享
+
+场景A生成数据，场景B消费数据
+
+```java
+// 场景A生成数据，场景B消费数据（同一次运行内跨场景传递）
+    private static final BlockingQueue<String> sharedParam1Queue = new LinkedBlockingQueue<>();
+    private static final ScenarioBuilder scenarioProducerA = scenario("场景A-生产数据")
+            .exec(session -> {
+                String param1 = "p" + System.nanoTime();
+                sharedParam1Queue.offer(param1);
+                logger.info("场景A produce param1={}", param1);
+                return session;
+            });
+    private static final ScenarioBuilder scenarioConsumerB = scenario("场景B-消费数据")
+            /*.asLongAs(session -> sharedParam1Queue.isEmpty()).on(
+                    pause(Duration.ofMillis(50))
+            )*/
+            .exec(session -> {
+                String param1 = sharedParam1Queue.poll();
+                if (param1 == null) {
+                    // 理论上不会走到这里：上面已等待队列非空；这里兜底避免 NPE
+                    param1 = "";
+                }
+                logger.info("场景B consume param1={}", param1);
+                return session.set("param1", param1);
+            })
+            // param1不为空才执行performance请求，否则退出
+            .doIfOrElse(session -> !session.getString("param1").isEmpty()).then(performance).orElse(exitHere());
+```
+
+场景顺序执行
+
+```java
+// 示例：场景A生产数据，场景B消费数据（andThen 串行执行）
+        setUp(scenarioProducerA.injectOpen(atOnceUsers(1))
+                .protocols(httpProtocol)
+                .andThen(scenarioConsumerB.injectOpen(atOnceUsers(2))
+                        .protocols(httpProtocol2)))
+                .maxDuration(Duration.ofSeconds(30));
+```
+
+## 总结
+
+如下：
+
+- 使用.exec(session -> { ... })编写复杂的逻辑处理数据，数据处理完毕后保存到session中提供给其他执行逻辑使用。
+
+- 灵活使用session给一个场景中的各个请求传递上下文参数。
+
+  ```java
+  private static final ScenarioBuilder scenario4 = scenario("编写复杂的逻辑过滤数据")
+              .exec(session -> {
+                  List<String> field1List = List.of("b1-f1");
+                  session = session.set("field1List", field1List);
+                  return session;
+              })
+              .exec(performance.check(jsonPath("$.data.dataList").ofList().saveAs("dataList")))
+              .exec(session -> {
+                  List<String> field1List = session.getList("field1List");
+                  List<Map> dataList = session.getList("dataList");
+                  List<Map> dataListFiltered = dataList.stream().filter(o -> {
+                      String field1 = (String) o.get("field1");
+                      return field1List.contains(field1);
+                  }).collect(Collectors.toList());
+                  session = session.set("dataList", dataListFiltered);
+                  return session;
+              })
+              .exec(session -> {
+                  logger.info("bodyString {}", session.getString("bodyString"));
+                  logger.info("dataList {}", (List<Map>) session.get("dataList"));
+                  return session;
+              });
+  ```
+
+- 不需要使用领域模型或者DTO等解析请求的返回结果，使用gatling内置的json处理api解析和过滤数据即可。
+
+- 开源版本的Gatling没有像JMeter那样实时打印QPS、错误率等指标，只有企业版本才有这个功能，所以在项目中偏向于使用JMeter能够查看实际QPS。

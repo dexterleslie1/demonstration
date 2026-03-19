@@ -1,18 +1,22 @@
 package example;
 
-import static io.gatling.javaapi.core.CoreDsl.*;
-import static io.gatling.javaapi.http.HttpDsl.*;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import example.util.ErrorCodeBodyValidator;
-import io.gatling.javaapi.core.*;
-import io.gatling.javaapi.http.*;
+import io.gatling.javaapi.core.Assertion;
+import io.gatling.javaapi.core.ScenarioBuilder;
+import io.gatling.javaapi.core.Simulation;
+import io.gatling.javaapi.http.HttpProtocolBuilder;
+import io.gatling.javaapi.http.HttpRequestActionBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+
+import static io.gatling.javaapi.core.CoreDsl.*;
+import static io.gatling.javaapi.http.HttpDsl.http;
+import static io.gatling.javaapi.http.HttpDsl.status;
 
 public class BasicSimulation extends Simulation {
 
@@ -49,15 +53,6 @@ public class BasicSimulation extends Simulation {
             .post("/api/v1/login")
             .body(StringBody(session -> "{\"username\":\"" + session.getString("username") + "\",\"password\":\"" + session.getString("password") + "\"}"))
             .check(status().is(200))
-            // 示例：对 errorCode 做自定义校验
-            /*.check(jsonPath("$.errorCode").validate(
-                    "errorCode 必须小于0",
-                    (errorCode, session) -> {
-                        if (errorCode != null && Integer.parseInt(errorCode) > 0) {
-                            throw new RuntimeException("登录失败，errorCode为" + errorCode);
-                        }
-                        return errorCode;
-                    }))*/
             // 若要对整段响应做复杂校验，可用 bodyString().validate(...)
             // 使用公共工具校验 JSON 响应中的 errorCode（0 表示成功，>0 表示失败）
             .check(bodyString().validate("是否成功登录", ErrorCodeBodyValidator::validateErrorCode))
@@ -180,7 +175,7 @@ public class BasicSimulation extends Simulation {
         // protocols(httpProtocol): 为该场景绑定上述 HTTP 协议配置（baseUrl、请求头等）
         // maxDuration(Duration.ofSeconds(10)): 整场测试最多持续 10 秒，到时强制结束（防止无限 repeat 导致测试永不结束）
         setUp(scenario.injectOpen(atOnceUsers(1))).assertions(assertion).protocols(httpProtocol)
-                .maxDuration(Duration.ofSeconds(10));
+                .maxDuration(Duration.ofSeconds(60));
 
         logger.info("Simulation setup completed");
     }

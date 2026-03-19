@@ -1,5 +1,6 @@
 package example.util;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.gatling.javaapi.core.Session;
@@ -13,10 +14,9 @@ import org.slf4j.LoggerFactory;
 public final class ErrorCodeBodyValidator {
 
     private static final Logger logger = LoggerFactory.getLogger(ErrorCodeBodyValidator.class);
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
-    private ErrorCodeBodyValidator() {
-    }
+    public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper() {{
+        configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    }};
 
     /**
      * 校验登录（或通用）响应：要求 JSON 含 errorCode，且 errorCode &lt;= 0 为成功。
