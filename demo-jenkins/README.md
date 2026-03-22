@@ -1171,6 +1171,44 @@ EOF
 }
 ```
 
+## pipeline构建参数
+
+```
+pipeline {
+    agent any
+    
+    parameters {
+        string(name: 'BRANCH', defaultValue: 'main', description: 'Git 分支')
+        booleanParam(name: 'DEPLOY', defaultValue: true, description: '是否部署')
+        choice(name: 'ENV', choices: ['dev', 'test', 'prod'], description: '部署环境')
+    }
+
+    stages {
+        stage('打印参数') {
+            steps {
+            	script {
+                    def deployFlag = params.DEPLOY ? 'y' : 'n'
+                    echo "branch=${params.BRANCH},deploy=${deployFlag},env=${params.ENV}"
+                }
+            }
+        }
+        
+        stage('when用法') {
+        	when {
+        	    // 当DEPLOY为true时才执行此stage
+                expression { params.DEPLOY }
+            }
+    
+            steps {
+            	script {
+                    echo "when用法演示"
+                }
+            }
+        }
+    }
+}
+```
+
 ## 设置Jenkins权限
 
 >说明：设置权限为管理员有所有权限，匿名用户只有Job的查看和build权限。
