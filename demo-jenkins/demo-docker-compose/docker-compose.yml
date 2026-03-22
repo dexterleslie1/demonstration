@@ -1,0 +1,18 @@
+version: "3.0"
+
+services:
+  demo-jenkins-server:
+    build:
+      context: ./
+    user: root
+    container_name: demo-jenkins-server
+    image: demo-jenkins-server-image
+    ports:
+      - 50001:8080
+      # Master和Slave通信端口
+      # - 50000:50000
+    environment:
+      - TZ=Asia/Shanghai
+      - JAVA_OPTS=-Xmx256m
+    # volumes:
+    #   - ./jenkins_data:/var/jenkins_home

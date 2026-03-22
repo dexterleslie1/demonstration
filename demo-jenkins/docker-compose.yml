@@ -1,9 +1,5 @@
 version: "3.0"
 
-networks:
-  net:
-    name: demo-jenkins-net
-
 services:
   demo-jenkins-server:
     build:
@@ -12,11 +8,10 @@ services:
     image: demo-jenkins-server-image
     ports:
       - 50001:8080
-      - 50000:50000
+      # Master和Slave通信端口
+      # - 50000:50000
     environment:
       - TZ=Asia/Shanghai
-    networks:
-      - net
 
   demo-gitlab-server:
     container_name: demo-gitlab-server
@@ -45,7 +40,4 @@ services:
         # 创建test项目
         curl --header "Authorization: Bearer token-string-here123456" --header "Content-Type: application/json" --data '{"name": "test", "description": "test","namespace": "root", "initialize_with_readme": "true", "visibility": "private"}' -X POST http://localhost/api/v4/projects
         echo "成功创建test项目"
-
-    networks:
-      - net
 

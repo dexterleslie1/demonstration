@@ -11,7 +11,9 @@ ENV JAVA_OPTS -Djenkins.install.runSetupWizard=false
 COPY plugins.txt /usr/share/jenkins/ref/plugins.txt
 RUN jenkins-plugin-cli --plugin-file /usr/share/jenkins/ref/plugins.txt
 
-# 使用configuration-as-code插件自动配置jenkins
-COPY casc.yaml /usr/share/jenkins/ref/casc.yaml
-ENV CASC_JENKINS_CONFIG /usr/share/jenkins/ref/casc.yaml
+USER root
 
+RUN apt-get update && \
+    apt-get install -y sshpass
+
+USER jenkins
