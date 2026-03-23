@@ -1160,6 +1160,8 @@ pipeline {
 					]) {
 						sh '''
 							sshpass -p "$SSH_PASS" ssh -o StrictHostKeyChecking=no $SSH_USER@192.168.1.28 << EOF
+                        		# 出现错误后马上退出并返回错误码给ssh命令
+                        		set -e
 								echo '`date` - 当前工作目录：`pwd`'
 EOF
 						'''

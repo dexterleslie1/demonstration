@@ -3749,3 +3749,50 @@ export LD_LIBRARY_PATH=/custom/path/lib:$LD_LIBRARY_PATH
 
 > `apt install` 是“把工具/库装进系统”，`pkg-config` 是“在编译时告诉编译器去哪里找这些库”。  
 > 二者配合使用，才能实现从“安装库”到“成功编译程序”的完整开发流程。
+
+## VSCode安装C/C++ Extension Pack插件
+
+>说明：安装C/C++ Extension Pack插件（微软的）后，VSCode就支持标准头文件和数据结构定义跳转。
+
+## Ubuntu20.4编译C++文件
+
+详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/blob/main/demo-c++/demo-fmtlib.cpp
+
+安装fmt库
+
+```sh
+sudo apt update
+sudo apt install libfmt-dev
+
+# 检查是否安装成功
+pkg-config --modversion fmt
+```
+
+demo-fmtlib.cpp
+
+```c++
+#include <fmt/core.h>
+
+int main() {
+    int a = 42;
+    double b = 3.14159;
+
+    fmt::print("a = {}\n", a);
+    fmt::print("b = {:.2f}\n", b);
+    fmt::print("Hello, {}!\n", "world");
+
+    return 0;
+}
+```
+
+编译
+
+```sh
+g++ demo-fmtlib.cpp -o main -lfmt
+```
+
+运行
+
+```sh
+./main
+```
