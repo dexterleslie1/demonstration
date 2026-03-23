@@ -3796,3 +3796,54 @@ g++ demo-fmtlib.cpp -o main -lfmt
 ```sh
 ./main
 ```
+
+## Ubuntu20.4编译C文件
+
+详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/blob/main/demo-c++/demo-linux-programming/demo-printf.c
+
+编译
+
+```sh
+gcc demo-printf.c -o main
+```
+
+运行
+
+```sh
+./main
+```
+
+## 以十六进制显示数据
+
+### 使用fmt库
+
+详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/blob/main/demo-c++/demo-fmtlib.cpp
+
+### 使用printf
+
+详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/blob/main/demo-c++/demo-linux-programming/demo-printf.c
+
+代码片段：
+
+```c
+// 用 printf 以十六进制打印 char buf[]
+char buf[] = {0xDE, 0xAD, 0xBE, 0xEF};
+printf("buf (hex) = ");
+for (unsigned i = 0; i < sizeof(buf); ++i) {
+    printf("%02x%s", (unsigned char)buf[i], (i + 1 == sizeof(buf)) ? "" : " ");
+}
+printf("\n");
+```
+
+编译
+
+```sh
+gcc demo-printf.c -o main
+```
+
+运行
+
+```sh
+./main
+```
+

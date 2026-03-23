@@ -3,3 +3,6 @@ build*
 /test
 a.out
 CMakeLists.txt.user
+main
+client
+server
