@@ -1173,14 +1173,21 @@ EOF
 
 ## pipeline构建参数
 
+>提示：base64File和stashedFile类型参数需要安装file-parameters插件才支持使用。
+
 ```
 pipeline {
     agent any
     
     parameters {
         string(name: 'BRANCH', defaultValue: 'main', description: 'Git 分支')
-        booleanParam(name: 'DEPLOY', defaultValue: true, description: '是否部署')
+        booleanParam(name: 'DEPLOY', defaultValue: true, description: '是否部署（为「是」时须上传下方大文件 STASH_FILE）')
         choice(name: 'ENV', choices: ['dev', 'test', 'prod'], description: '部署环境')
+        // file-parameters：https://plugins.jenkins.io/file-parameters/ — 替代核心内置文件参数，与 Pipeline 兼容
+        // 为何分 base64 与 stashed：base64File 把文件内容以 Base64 放进环境变量，便于小体量传递、与部分 API/步骤对接，但体积约 +33% 且受环境变量长度等限制，只适合小文件；stashedFile 走 Jenkins stash 存真实文件流，无 Base64 膨胀、不受 env 承载大段文本的限制，适合大文件。按大小与集成方式二选一即可，此处两条同时声明仅为演示。
+        base64File(name: 'B64_FILE', description: '小文件 (Base64)')
+        // stash：Jenkins Pipeline 的 stash（工作区快照），非 Git stash；构建内 unstash/withFileParameter 取用
+        stashedFile(name: 'STASH_FILE', description: '大文件 (Stash)；勾选「是否部署」时必选')
     }
 
     stages {
@@ -1192,6 +1199,66 @@ pipeline {
                 }
             }
         }
+
+        // 勾选「是否部署」时须上传 stashedFile(STASH_FILE)；Declarative 无法在 UI 里做跨参数校验，只能在构建中 fail
+        stage('部署参数校验') {
+            when {
+                expression { params.DEPLOY }
+            }
+            steps {
+                script {
+                    withFileParameter(name: 'STASH_FILE', allowNoFile: true) {
+                        sh '''
+                            if [ ! -f "$STASH_FILE" ] || [ ! -s "$STASH_FILE" ]; then
+                                echo "ERROR: 已勾选「是否部署」时必须上传大文件 (STASH_FILE)"
+                                exit 1
+                            fi
+                        '''
+                    }
+                }
+            }
+        }
+
+        // file-parameters：withFileParameter 提供解码后的临时文件；未上传时用 allowNoFile 避免失败；亦可 echo \$B64_FILE | base64 -d
+        // 传到 192.168.1.28：必须在 withFileParameter('STASH_FILE') 内 scp \$STASH_FILE。
+        stage('file-parameters 演示') {
+            steps {
+                script {
+                    withFileParameter(name: 'B64_FILE', allowNoFile: true) {
+                        sh 'echo "B64_FILE path=$B64_FILE"; if [ -f "$B64_FILE" ]; then head -c 200 "$B64_FILE"; else echo "(未上传)"; fi'
+                    }
+                    withFileParameter(name: 'STASH_FILE', allowNoFile: true) {
+                        sh '''
+                            if [ ! -f "$STASH_FILE" ]; then echo "(未上传 STASH_FILE)"; exit 0; fi
+                            echo "STASH_FILE path=$STASH_FILE"; head -c 200 "$STASH_FILE"
+                            dest="${STASH_FILE_FILENAME:-upload.bin}"
+                            echo "远端文件名(原始上传名): $dest"
+                            sshpass -p "Root@123" scp -o StrictHostKeyChecking=no "$STASH_FILE" "root@192.168.1.28:/tmp/${dest}"
+                        '''
+                    }
+                    // 等价用法：unstash 'STASH_FILE' 后工作区中有名为 STASH_FILE 的文件，再对该路径 scp
+                    // unstash 'STASH_FILE'
+                    // sh 'sshpass -p "Root@123" scp -o StrictHostKeyChecking=no STASH_FILE root@192.168.1.28:/tmp/$STASH_FILE_FILENAME'
+                }
+            }
+        }
+
+        // input：仅 1 个 parameter 时常直接返回 String；多个时为 Map。Map 取值用 .get('KEY')，勿用 []（沙箱拦 getAt）
+        // stage('input 演示') {
+        //     steps {
+        //         script {
+        //             def userInput = input(
+        //                 message: '是否继续执行后续 stage?',
+        //                 ok: '继续',
+        //                 parameters: [
+        //                     choice(name: 'DEMO_CHOICE', choices: ['dev', 'test'], description: '示例下拉选项')
+        //                 ]
+        //             )
+        //             def demoChoice = userInput instanceof Map ? userInput.get('DEMO_CHOICE') : userInput
+        //             echo "input 结果 DEMO_CHOICE=${demoChoice}"
+        //         }
+        //     }
+        // }
         
         stage('when用法') {
         	when {

@@ -6,6 +6,7 @@ cloudbees-folder
 configuration-as-code
 credentials-binding
 email-ext
+file-parameters
 git
 github-branch-source
 gradle
