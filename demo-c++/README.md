@@ -3847,3 +3847,178 @@ gcc demo-printf.c -o main
 ./main
 ```
 
+## perror、errorno、strerror是什么呢？
+
+`perror` 是 C 语言标准库中的一个函数，主要作用是**把发生的错误信息，按“可读字符串 + 错误原因说明”的形式打印到标准错误输出（stderr）**。
+
+下面分几个方面说明：
+
+---
+
+### 一、perror 是做什么用的？
+
+当你调用某些系统调用或库函数失败时，它们通常会设置全局变量 `errno`，用来表示具体的错误类型。`perror` 的作用就是：
+
+- 读取当前 `errno` 的值  
+- 把它翻译成一段人类可读的错误说明  
+- 加上你指定的前缀字符串一起输出  
+
+这样程序出错时，你能立刻看到“哪里错了、为什么错”。
+
+---
+
+### 二、函数原型
+
+```c
+#include <stdio.h>
+
+void perror(const char *s);
+```
+
+- 参数 `s`：  
+  - 一个字符串前缀，用来说明是哪个操作出错了  
+  - 可以为 `NULL` 或空字符串，此时只输出错误描述  
+- 返回值：`void`，不返回任何值
+
+---
+
+### 三、perror 会输出什么？
+
+一般输出格式为：
+
+```
+前缀字符串: 错误原因描述
+```
+
+例如：
+
+```c
+perror("open file");
+```
+
+可能输出：
+
+```
+open file: No such file or directory
+```
+
+其中：
+- `"open file"` 是你传进去的前缀  
+- `":"` 是 `perror` 自动加的分隔符  
+- `"No such file or directory"` 是根据当前 `errno` 查到的错误说明
+
+---
+
+### 四、一个简单的使用示例
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
+
+int main(void) {
+    FILE *fp = fopen("not_exist.txt", "r");
+    if (fp == NULL) {
+        perror("fopen");
+        return EXIT_FAILURE;
+    }
+    fclose(fp);
+    return EXIT_SUCCESS;
+}
+```
+
+运行后可能看到：
+
+```
+fopen: No such file or directory
+```
+
+这里因为文件不存在，`fopen` 失败并设置 `errno`，`perror` 就把它打印出来。
+
+---
+
+### 五、perror 与 errno、strerror 的关系
+
+- `errno`：  
+  是一个全局整数变量，由系统调用/库函数在出错时设置
+- `perror`：  
+  根据 `errno` 的值，直接打印错误描述到 stderr
+- `strerror`：  
+  与 `perror` 类似，但它返回一个字符串，而不是直接打印
+
+对比示例：
+
+```c
+#include <string.h>
+
+printf("Error: %s\n", strerror(errno));
+```
+
+等价于：
+
+```c
+perror("Error");
+```
+
+区别在于：
+- `perror`：直接输出，方便调试  
+- `strerror`：返回字符串，适合自己控制输出方式（比如写入日志文件）
+
+---
+
+### 六、使用时的注意点
+
+1. **只有在函数调用失败后才调用 perror**  
+   如果函数成功，`errno` 的值可能是不确定的，这时 `perror` 输出的信息没有意义。
+
+2. **线程安全问题**  
+   在多线程程序中，`errno` 通常是线程局部的，因此 `perror` 一般是线程安全的，但具体实现依赖编译器和标准库。
+
+3. **不适合用于正式程序的最终用户提示**  
+   它输出的信息是面向开发者的，不够友好，生产环境通常用自定义错误信息并记录日志。
+
+---
+
+### 七、示例
+
+详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/blob/main/demo-c++/demo-perror.c
+
+demo-perror.c
+
+```c
+#include <errno.h>
+#include <stdio.h>
+#include <string.h>
+
+int main(void) {
+    errno = 0;
+    FILE *fp = fopen("/__this_path_should_not_exist__", "r");
+    if (fp == NULL) {
+        // errno：失败时由库/系统调用设置的整型错误码（成功时一般不应依赖其值，需先判断返回值）
+        printf("errno = %d\n", errno);
+        // strerror(errno)：把 errno 转成可读说明字符串（不自动打印）
+        printf("strerror(errno) = %s\n", strerror(errno));
+        // perror("...")：向 stderr 输出 "前缀: strerror(errno)\n"
+        perror("fopen");
+    } else {
+        fclose(fp);
+    }
+    return 0;
+}
+
+```
+
+编译
+
+```sh
+gcc demo-perror.c -o main
+```
+
+运行
+
+```sh
+./main
+```
+
+总结一下：  
+`perror` 是一个**把 `errno` 对应的错误码，转换成可读文字并打印出来的工具函数**，常用于调试和快速定位 C 程序中的错误原因。
