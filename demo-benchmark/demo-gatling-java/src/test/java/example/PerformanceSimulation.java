@@ -185,7 +185,12 @@ public class PerformanceSimulation extends Simulation {
     }
 
     private static final ScenarioBuilder scenario6 = scenario("测试给请求动态提供参数")
-            .exec(createRequest("Hello world!"))
+            .exec(repeat(3, "index").on(
+                    exec(session -> {
+                        int index = session.getInt("index");
+                        session = session.set("param1", "param1-" + index);
+                        return session;
+                    }).exec(createRequest("Hello world!"*//* 注意：这里找不到方案从session中获取param1并作为参数 *//*))))
             .exec(session -> {
                 logger.info("bodyString {}", session.getString("bodyString"));
                 return session;

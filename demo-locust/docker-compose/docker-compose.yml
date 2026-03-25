@@ -5,7 +5,8 @@ services:
   master:
     build:
       context: ./
-    image: 192.168.235.138/library/my-locust-dev
+    # image: 192.168.235.138/library/my-locust-dev
+    image: my-locust-dev
     ports:
      - "8089:8089"
     command: -f /mnt/locust/locustfile.py --master -H http://master:8089
@@ -13,7 +14,8 @@ services:
   worker:
     build:
       context: ./
-    image: 192.168.235.138/library/my-locust-dev
+    # image: 192.168.235.138/library/my-locust-dev
+    image: my-locust-dev
     deploy:
       # 多少个worker，和cpu数量相等为宜
       replicas: 1

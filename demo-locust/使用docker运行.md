@@ -1,5 +1,3 @@
-# 使用`docker`运行
-
 ## 使用`docker compose`运行
 
 >[Running Locust with Docker](https://docs.locust.io/en/1.5.2/running-locust-docker.html)
