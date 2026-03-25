@@ -337,18 +337,37 @@ sudo snap install k6
 k6 version
 ```
 
+## k6 Windows11安装
+
+下载最新MSI安装 https://dl.k6.io/msi/k6-latest-amd64.msi
+
+验证
+
+```cmd
+k6 version
+```
+
 ## k6示例
 
 具体用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-%E6%B5%8B%E8%AF%95/demo-k6
 
 运行示例需要先运行https://gitee.com/dexterleslie/demonstration/tree/main/demo-benchmark/demo-spring-boot-benchmark示例作为接口服务辅助测试。
 
-运行测试：
+Ubuntu20.04运行测试：
 
 ```sh
 k6 run demo-controller-index.js \
-  --env BASE_URL=http://localhost:8080 \
+  --env BASE_URL=http://192.168.1.181:8080 \
   --env VUS=128 \
+  --env DURATION=10s
+```
+
+PowerShell运行测试：
+
+```powershell
+k6 run demo-controller-index.js `
+  --env BASE_URL=http://192.168.1.181:8080 `
+  --env VUS=128 `
   --env DURATION=10s
 ```
 
