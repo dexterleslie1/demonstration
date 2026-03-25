@@ -11,6 +11,7 @@ import javax.annotation.Resource;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/api/v1/user")
@@ -33,7 +34,8 @@ public class UserController {
                   @RequestParam(value = "createTimeStart", defaultValue = "") String createTimeStart,
                   @RequestParam(value = "createTimeEnd", defaultValue = "") String createTimeEnd,
                   @RequestParam(value = "pageNum", defaultValue = "0") Integer pageNum,
-                  @RequestParam(value = "pageSize", defaultValue = "0") Integer pageSize) {
+                  @RequestParam(value = "pageSize", defaultValue = "0") Integer pageSize) throws InterruptedException {
+        TimeUnit.SECONDS.sleep(5);
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         IPage<User> page = userService.list(deptId
                 , userName
@@ -55,7 +57,8 @@ public class UserController {
      * @return
      */
     @DeleteMapping("delete")
-    public R delete(@RequestParam("idList") List<Long> idList) {
+    public R delete(@RequestParam("idList") List<Long> idList) throws InterruptedException {
+        TimeUnit.SECONDS.sleep(5);
         userService.delete(idList);
         return R.success();
     }
@@ -69,7 +72,8 @@ public class UserController {
      */
     @PutMapping("resetPassword")
     public R resetPassword(@RequestParam("id") Long id,
-                           @RequestParam("password") String password) {
+                           @RequestParam("password") String password) throws InterruptedException {
+        TimeUnit.SECONDS.sleep(5);
         userService.resetPassword(id, password);
         return R.success();
     }
@@ -81,7 +85,8 @@ public class UserController {
      * @return
      */
     @PutMapping("update")
-    public R update(@RequestBody User user) {
+    public R update(@RequestBody User user) throws InterruptedException {
+        TimeUnit.SECONDS.sleep(5);
         userService.update(user);
         return R.success();
     }
@@ -93,7 +98,8 @@ public class UserController {
      * @return
      */
     @PostMapping("add")
-    public R add(@RequestBody User user) {
+    public R add(@RequestBody User user) throws InterruptedException {
+        TimeUnit.SECONDS.sleep(5);
         userService.add(user);
         return R.success();
     }

@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/api/v1/dept")
@@ -21,7 +22,8 @@ public class DeptController {
      * @return
      */
     @GetMapping("list")
-    public R list() {
+    public R list() throws InterruptedException {
+        TimeUnit.SECONDS.sleep(5);
         List<Dept> deptList = deptService.list();
         return R.success(deptList);
     }

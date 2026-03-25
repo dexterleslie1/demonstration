@@ -2,8 +2,8 @@ import axios from 'axios'
 
 // 设置基础 URL 为 /
 axios.defaults.baseURL = "/";
-// 设置全局超时为 5000 毫秒
-axios.defaults.timeout = 5000;
+// 设置全局超时为 10000 毫秒
+axios.defaults.timeout = 10000;
 
 // 请求发出前拦截器
 axios.interceptors.request.use((config) => {
