@@ -18,3 +18,28 @@ gcc client.c -o client
 ./client
 ```
 
+## Linux UDP打洞
+
+具体用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-c++/demo-c-udp-hole-punching
+
+编译
+
+```sh
+gcc server.c -o server
+
+gcc client.c -o client
+```
+
+运行
+
+```sh
+# 运行udp服务器
+./server
+
+# 运行两个udp客户端测试p2p通讯
+# 客户端1
+./client
+# 客户端2
+./client
+```
+
