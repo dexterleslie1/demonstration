@@ -20,6 +20,8 @@ gcc client.c -o client
 
 ## Linux UDP打洞
 
+>Github参考示例：https://github.com/mwarning/UDP-hole-punching-examples/tree/master
+
 具体用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-c++/demo-c-udp-hole-punching
 
 编译
