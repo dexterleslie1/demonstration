@@ -1314,3 +1314,7 @@ $ curl http://localhost:8080/api/v1/arthas/testLambdaExpression
 ```
 
 - 关于 `--skipJDKMethod` 参数详细用法请参考本站 <a href="/java/arthas使用.html#trace命令-不跳过jdk方法" target="_blank">链接</a>
+
+## tt命令
+
+>官方参考文档：https://arthas.aliyun.com/doc/tt.html#tt
