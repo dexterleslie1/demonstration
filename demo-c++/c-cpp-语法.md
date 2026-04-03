@@ -938,3 +938,8 @@ if (ptr != NULL) {
     *   错：`memset(arr, 0, 10);` (如果 `arr` 是 `int[10]`，这只清除了前 2.5 个整数)
     *   对：`memset(arr, 0, sizeof(arr));`
 3.  **替代方案**：如果需要赋非零值，老老实实写 `for` 循环，或者在 C++ 中使用 `std::fill`。
+
+## 指针类型和解引用
+
+详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/blob/main/demo-c++/demo-int-pointer.c
+
