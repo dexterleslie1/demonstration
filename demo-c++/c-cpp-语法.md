@@ -943,3 +943,87 @@ if (ptr != NULL) {
 
 详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/blob/main/demo-c++/demo-int-pointer.c
 
+## 指针类型疑问1
+
+问题：`long int strtol (const char *__restrict __nptr, char **__restrict __endptr, int __base);`中为何第二个参数要使用`char **`呢？设计为使用`char *`不可以吗？
+
+>详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/blob/main/demo-c++/demo-int-pointer.c
+
+这是一个非常经典且触及 C 语言核心机制的问题。
+
+简单直接的回答是：**不可以设计为 `char *`。如果设计为 `char *`，`strtol` 函数就无法将“解析结束的位置”告诉调用者。**
+
+之所以必须使用 `char **`（指向字符指针的指针），是因为 C 语言的**“按值传递”**机制，以及 `strtol` 需要**修改**外部变量的需求。
+
+下面我为你详细拆解其中的逻辑：
+
+### 1. 核心原因：C 语言是“按值传递”的
+
+在 C 语言中，当你把一个变量传递给函数时，函数只是**复制**了一份这个变量的值。函数内部对参数的任何修改，都只会影响那个副本，而**不会**影响函数外部的原始变量。
+
+*   **如果参数是 `char *endptr`**：
+    函数内部会拿到 `endptr` 的一个副本。如果 `strtol` 试图修改这个副本（比如让它指向 'a'），函数结束后，副本销毁，你外部原本的 `endptr` 指针**纹丝不动**，依然指向原来的地方（或者是个空指针）。
+
+*   **如果参数是 `char **endptr`**：
+    你传递的是指针的**地址**（`&endptr`）。函数内部通过这个地址，可以直接找到并修改你外部那个原始的指针变量。
+
+### 2. 场景模拟：为什么 `char *` 行不通？
+
+假设 `strtol` 的原型被设计成这样（错误的假设）：
+```c
+// 假设的错误原型
+long strtol_wrong(const char *str, char *endptr, int base);
+```
+
+你在 `main` 函数中这样调用：
+```c
+char *my_end = NULL; // 我想让它指向解析结束的位置
+const char *str = "123abc";
+
+// 尝试调用
+long val = strtol_wrong(str, my_end, 10); 
+```
+
+**发生了什么？**
+1.  `my_end` 的值（NULL）被复制给了函数内部的参数 `endptr`。
+2.  `strtol_wrong` 解析完 "123" 后，想把 `endptr` 指向 'a'。于是它执行 `endptr = str + 3;`。
+3.  **注意**：这里修改的只是函数内部那个**局部副本**。
+4.  函数返回。
+5.  回到 `main` 函数，你的 `my_end` **依然是 NULL**。你根本不知道解析在哪里停止的。
+
+### 3. 实际实现：`char **` 是如何工作的？
+
+现在的真实原型是：
+```c
+long int strtol(const char *nptr, char **endptr, int base);
+```
+
+你在 `main` 函数中这样调用：
+```c
+char *my_end;       // 1. 声明一个指针变量
+const char *str = "123abc";
+
+// 2. 传递这个指针变量的地址 (&my_end)
+long val = strtol(str, &my_end, 10);
+```
+
+**发生了什么？**
+1.  你把 `my_end` 变量的**内存地址**传给了函数。
+2.  函数内部接收到这个地址，存储在 `char **endptr` 中。
+3.  `strtol` 解析完 "123" 后，执行 `*endptr = (char*)(str + 3);`。
+    *   这里的 `*endptr` 意思是：“去 `endptr` 指向的那个地址（也就是 `my_end` 的地址），把值改写掉”。
+4.  函数返回。
+5.  回到 `main` 函数，你的 `my_end` 已经被成功修改，指向了 'a'。
+
+### 4. 形象的比喻
+
+*   **`char *` (一级指针)**：就像是你给朋友（函数）一张写着地址的**纸条**。朋友在纸条上涂改地址，你手里原本的那张纸条是不会变的。
+*   **`char **` (二级指针)**：就像是你告诉朋友你**家保险柜的位置**。朋友走到你家，打开保险柜，把里面的纸条换了。当你回家打开保险柜时，发现纸条真的变了。
+
+### 5. 总结
+
+`strtol` 的设计目标不仅是返回转换后的数字（通过 `return`），还需要返回**“在哪里停止转换的”**（通过参数）。
+
+为了修改外部定义的指针变量 `endptr` 的值（让它指向新的位置），必须传递该指针变量的地址，因此必须使用 **`char **`**。
+
+如果你不需要知道解析在哪里停止，你可以直接传 `NULL`，函数内部会判断 `if (endptr != NULL)` 来决定是否执行写入操作。

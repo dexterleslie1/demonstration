@@ -7,6 +7,8 @@
  *   - *p        ：解引用，通过地址访问/修改该地址上的 int
  *   - int *f()  ：返回 int * 的函数（参考 __errno_location），通过 *f() 读写共享的 int
  *   - #define E (*f()) ：宏展开后像整型左值，与直接写 *f() 等价（见 DEMO_ERRNO）
+ *   - 形参 int：传值，函数内改的是副本；形参 int *：传地址，*p 改调用方的 int
+ *   - char **（strtol 的 endptr）：要把「调用方 char * 变量」改成新地址，须传 &指针（见 demo_*_endptr）
  */
 
 #include <stdio.h>
@@ -44,6 +46,58 @@ demo_errno_location(void)
  * 下面 DEMO_ERRNO 用本文件的 demo_errno_location 做同样展开，便于对照理解。
  */
 #define DEMO_ERRNO (*demo_errno_location())
+
+/*
+ * int 与 int * 作函数形参的区别：
+ *   - void f(int n)   ：n 是实参的副本，f 里改 n 不影响调用处的变量。
+ *   - void g(int *p)  ：p 里存的是实参的地址，g 里 *p 赋值会改调用处那块 int。
+ */
+static void
+demo_param_int(int n)
+{
+    n = 99; /* 只改形参副本 */
+}
+
+static void
+demo_param_int_ptr(int *p)
+{
+    if (p != NULL) {
+        *p = 99; /* 改 p 所指向的对象 */
+    }
+}
+
+/*
+ * 参考：long strtol(const char *restrict nptr, char **restrict endptr, int base);
+ *
+ * strtol 除返回值 long 外，还需把「数字解析到哪里结束」告诉调用方——即调用者某个 char * 变量
+ * 应指向 nptr 中第一个未参与数值解析的字符（若全程可解析则指向尾后 '\0'）。
+ *
+ * 若第二参设计成 char *endptr（错误示范）：
+ *   - 调用处传入 endptr，实参是「指针值」的拷贝；被调函数里若写 endptr = 某地址，只改了形参副本，
+ *     调用方自己的 char * 变量仍是旧地址，无法拿到解析结束位置。
+ * 正确设计为 char **endptr：
+ *   - 调用方写 strtol(s, &rest, 10)，传入的是「指向调用方 char * 变量 rest 的指针」；
+ *   - strtol 内部执行 *endptr = 计算出的结束位置，改的是调用方 rest 里保存的地址。
+ *
+ * 下面用极简「跳过前 3 个字符」模拟写回结束指针；__restrict 仅提示别名优化，与为何用 char ** 无关。
+ */
+static void
+demo_bad_endptr_param(char *end)
+{
+    if (end == NULL) {
+        return;
+    }
+    end = end + 3; /* 只改形参里的指针副本，调用方的 char * 不变（与 demo_param_int 同理） */
+}
+
+static void
+demo_good_endptr_param(char **endptr)
+{
+    if (endptr == NULL || *endptr == NULL) {
+        return;
+    }
+    *endptr = *endptr + 3; /* 通过「指针的指针」写回调用方那份 char * */
+}
 
 int main(void)
 {
@@ -109,6 +163,25 @@ int main(void)
     DEMO_ERRNO = 5;
     printf("DEMO_ERRNO = 5 后 g_demo_errno_storage = %d，读取 DEMO_ERRNO = %d\n",
            g_demo_errno_storage, DEMO_ERRNO);
+
+    int v = 1;
+    demo_param_int(v);
+    printf("demo_param_int(v) 后 v = %d（形参为 int，函数内未改到 v）\n", v);
+    demo_param_int_ptr(&v);
+    printf("demo_param_int_ptr(&v) 后 v = %d（形参为 int *，通过 *p 改了 v）\n", v);
+
+    /*
+     * 与 strtol(..., &rest, base) 同理：要把「结束位置」写进调用方的 rest，第二参类型须为 char **。
+     */
+    char digits[] = "123xyz";
+    char *rest = digits;
+
+    demo_bad_endptr_param(rest);
+    printf("demo_bad_endptr_param(rest) 后 rest 仍指向串首: \"%s\"\n", rest);
+
+    rest = digits;
+    demo_good_endptr_param(&rest);
+    printf("demo_good_endptr_param(&rest) 后 rest 指向解析结束处: \"%s\"\n", rest);
 
     return 0;
 }
