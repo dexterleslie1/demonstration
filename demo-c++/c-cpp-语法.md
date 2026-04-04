@@ -1027,3 +1027,29 @@ long val = strtol(str, &my_end, 10);
 为了修改外部定义的指针变量 `endptr` 的值（让它指向新的位置），必须传递该指针变量的地址，因此必须使用 **`char **`**。
 
 如果你不需要知道解析在哪里停止，你可以直接传 `NULL`，函数内部会判断 `if (endptr != NULL)` 来决定是否执行写入操作。
+
+## 匿名struct
+
+详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/blob/main/demo-c++/demo-struct.c
+
+定义匿名struct
+
+```c
+/*
+ * 匿名 struct（无标签 typedef）：`struct` 与 `{` 之间无标签名，类型仅由 typedef 末尾的 range_box 给出；
+ * C 里不能写 `struct range_box`。上文 student、teacher 也是同一写法（相对带标签的 `struct foo { ... } x;`）。
+ */
+typedef struct {
+  int tag;
+  int lo;
+  int hi;
+} range_box;
+```
+
+使用匿名struct
+
+```c
+range_box r = {.tag = 1, .lo = 0, .hi = 255};
+printf("typedef 匿名 struct: tag=%d lo=%d hi=%d\n", r.tag, r.lo, r.hi);
+```
+
