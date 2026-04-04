@@ -1012,9 +1012,12 @@ services:
 
 ### Sleuth + Zipkin
 
+>说明：
+>
+>- 添加Sleuth依赖后，压力测试微服务内存使用也稳定。
+>- Zipkin服务器关闭后，压力测试微服务内存使用也不会飙升。
+>
 >Tracing in Distributed Systems with Spring Cloud Sleuth `https://reflectoring.io/tracing-with-spring-cloud-sleuth/`
->
->
 
 注意：逐渐地被 Micrometer Tracing + Zipkin 替代
 

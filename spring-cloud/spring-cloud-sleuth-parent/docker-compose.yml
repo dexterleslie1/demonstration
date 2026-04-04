@@ -1,9 +1,53 @@
-version: "3.0"
+version: "3.8"
 
 services:
+  demo-zipkin-db:
+    image: mariadb:10.11.6
+    command:
+     - --character-set-server=utf8mb4
+     - --collation-server=utf8mb4_general_ci
+     - --skip-character-set-client-handshake
+     - --innodb-buffer-pool-size=64m
+     # 支持定时删除过期的跟踪日志
+     - --event-scheduler=ON
+    environment:
+      - LANG=C.UTF-8
+      - TZ=Asia/Shanghai
+      - MYSQL_ROOT_PASSWORD=123456
+      - MYSQL_DATABASE=zipkin
+      - MYSQL_USER=zipkin
+      - MYSQL_PASSWORD=zipkin
+    ports:
+      - '3306:3306'
+    volumes:
+      - data-demo-zipkin-db:/var/lib/mysql
+      - ./zipkin-mysql-schema.sql:/docker-entrypoint-initdb.d/zipkin-mysql-schema.sql:ro
+      - ./zipkin-mysql-ttl-event.sql:/docker-entrypoint-initdb.d/zipkin-mysql-ttl-event.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p123456"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    restart: unless-stopped
+
   demo-zipkin-server:
-    image: openzipkin/zipkin
+    image: openzipkin/zipkin:3.6.0
     environment:
       - TZ=Asia/Shanghai
+      - "JAVA_OPTS=-Xms128m -Xmx128m -XX:+ExitOnOutOfMemoryError"
+      - STORAGE_TYPE=mysql
+      - MYSQL_HOST=demo-zipkin-db
+      - MYSQL_TCP_PORT=3306
+      - MYSQL_USER=zipkin
+      - MYSQL_PASS=zipkin
+      - MYSQL_DB=zipkin
     ports:
       - '9411:9411'
+    depends_on:
+      demo-zipkin-db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  data-demo-zipkin-db:

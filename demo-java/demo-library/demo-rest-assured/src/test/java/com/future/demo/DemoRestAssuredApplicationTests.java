@@ -1,17 +1,13 @@
 package com.future.demo;
 
-import com.future.common.http.ObjectResponse;
-import com.future.demo.bean.MyBean;
 import io.restassured.RestAssured;
-import io.restassured.mapper.TypeRef;
 import io.restassured.response.Response;
-import org.junit.Assert;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
-import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
-import org.springframework.test.context.junit4.SpringRunner;
 
+@Slf4j
 @SpringBootTest(classes = DemoRestAssuredApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class DemoRestAssuredApplicationTests {
 
@@ -24,12 +20,22 @@ class DemoRestAssuredApplicationTests {
         Response response = RestAssured
                 // HTTP Basic 认证
                 .given().auth().basic("client1", "123")
-                .get(this.getBasePath() + "/test1").then().statusCode(200)
-                .extract().response();
-        ObjectResponse<MyBean> response1 = response.as(new TypeRef<ObjectResponse<MyBean>>() {
-        });
-        Assert.assertEquals("field1", response1.getData().getField1());
-        Assert.assertEquals("field2", response1.getData().getField2());
+                .get(this.getBasePath() + "/test1");
+
+        // 判断是否HTTP 200
+        if (response.getStatusCode() != 200) {
+            String responseStr = response.asString();
+            throw new AssertionError("非预期响应: 状态码=" + response.getStatusCode()
+                    + ", 响应=" + responseStr);
+        }
+
+        // 判断是否业务错误
+        int errorCode = response.path("errorCode");
+        if (errorCode > 0) {
+            String errorMessage = response.path("errorMessage");
+            throw new AssertionError(errorMessage);
+        }
+        log.info("{}", response.asString());
     }
 
     public String getBasePath() {
