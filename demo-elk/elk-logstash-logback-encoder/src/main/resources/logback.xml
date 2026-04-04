@@ -66,7 +66,11 @@
             <appender name="logstash" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
                 <destination>${spring.elk.logstash.tcp.url}</destination>
                 <encoder charset="UTF-8" class="net.logstash.logback.encoder.LogstashEncoder">
-                    <!-- todo:logstash-logback-encoder不会自动生成traceId，需要解决skywalking、sleuth等集成后自动生成 -->
+                    <!-- 排除Sleuth中指定的MDC key -->
+                    <excludeMdcKeyName>X-B3-TraceId</excludeMdcKeyName>
+                    <excludeMdcKeyName>X-B3-SpanId</excludeMdcKeyName>
+                    <excludeMdcKeyName>X-Span-Export</excludeMdcKeyName>
+                    <!-- todo:logstash-logback-encoder不会自动生成traceId，需要解决skywalking集成后自动生成 -->
                     <customFields>{"module": "elk-demo","log_type": "business"}</customFields>
                 </encoder>
             </appender>
