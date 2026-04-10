@@ -282,3 +282,24 @@ int main() {
 
 ### 总结
 **json-c** 是一款**工业级**的 JSON 库。它的学习曲线比 `cJSON` 稍高（主要是引用计数的概念），但它提供的内存安全性和文件操作便利性，使其成为 Linux 系统开发和复杂 C 语言项目中的首选工具。
+
+### 示例
+
+详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/blob/main/demo-c++/demo-lib-json-jsonc.c
+
+安装json-c依赖
+
+```sh
+sudo apt install libjson-c-dev
+```
+
+编译并运行
+
+```sh
+# 编译
+gcc -std=c11 -Wall -Wextra -O2 demo-lib-json-jsonc.c $(pkg-config --cflags --libs json-c) -o main
+
+# 运行
+./main
+```
+
