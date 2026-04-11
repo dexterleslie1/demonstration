@@ -133,3 +133,126 @@ srflx   14.19.x.x:0
 srflx   14.19.x.x:53055
 ```
 
+## libnice通过websocket交换sdp信令流程？
+
+`libnice` 本身只是一个处理 ICE 协议（网络穿透）的 C 语言库，它并不直接包含 WebSocket 功能。因此，要实现通过 WebSocket 交换 SDP 信令，通常是在你的应用程序中**结合使用 `libnice` 和 WebSocket 库**（如 `libwebsocket`、`libcurl` 或 C++ 的 `websocketpp` 等）。
+
+结合你提到的 `libnice` 和 WebRTC 通用架构，以下是基于 C/C++ 环境下，利用 WebSocket 交换 SDP 信令的标准流程：
+
+### 核心架构图解
+
+在开始流程前，你需要明确数据流向：
+*   **本地应用**：运行 `libnice` 逻辑，生成/接收 SDP。
+*   **WebSocket 客户端**：嵌入在你的应用中，负责将 SDP 字符串打包成 JSON 发送给信令服务器。
+*   **信令服务器**：通常是一个 Node.js (Socket.io/ws)、Python 或 Go 服务，负责“透传”消息（把 A 的消息转发给 B）。
+
+---
+
+### 详细交互流程（以“Offer-Answer”模式为例）
+
+假设 **客户端 A（libnice）** 想要连接 **客户端 B**。
+
+#### 第一阶段：建立 WebSocket 连接
+1.  **连接信令服务器**：
+    *   客户端 A 和 B 启动后，首先分别建立与信令服务器的 **WebSocket 长连接**。
+    *   这一步通常使用 WebSocket 库完成，与 `libnice` 无关。
+
+#### 第二阶段：发起连接与生成 SDP (Offer)
+2.  **初始化 libnice (A)**：
+    *   A 创建 `NiceAgent`。
+    *   A 设置 `libnice` 的回调函数，特别是 `candidate-gathered`（收集到候选项）和 `component-state-changed`。
+    *   A 调用 `nice_agent_gather_candidates()` 开始收集本地 IP 和 STUN/TURN 候选项。
+3.  **生成 Offer SDP**：
+    *   A 的应用层代码根据 `libnice` 收集到的信息（IP、端口、ufrag、pwd）以及媒体信息（H264/OPUS等），组装成一个 **SDP Offer 字符串**。
+    *   *注意：`libnice` 只负责提供 ICE 相关的属性（`a=candidate`, `a=ice-ufrag` 等），媒体行（m=）通常需要你自己构造或配合 GStreamer/FFmpeg 生成。*
+4.  **通过 WebSocket 发送 Offer**：
+    *   A 将 SDP Offer 封装在 JSON 消息中（例如 `{"type": "offer", "sdp": "..."}`）。
+    *   A 通过 WebSocket 连接发送给信令服务器，服务器转发给 B。
+
+#### 第三阶段：接收 Offer 与回复 Answer
+5.  **接收 Offer (B)**：
+    *   B 通过 WebSocket 收到 A 的 Offer 消息。
+    *   B 解析 JSON，提取 SDP 字符串。
+6.  **初始化 libnice (B) 并设置远端参数**：
+    *   B 创建 `NiceAgent`。
+    *   B 解析 SDP 中的 `a=candidate` 行，调用 `nice_agent_add_remote_candidates()` 将 A 的候选项告诉 `libnice`。
+    *   B 解析 SDP 中的 `a=ice-ufrag` 和 `a=ice-pwd`，调用 `nice_agent_set_remote_credentials()` 设置 A 的认证信息。
+7.  **生成 Answer SDP**：
+    *   B 同样收集自己的候选项（或复用已有的）。
+    *   B 组装 **SDP Answer 字符串**，其中包含 B 的 ICE 候选项和媒体响应。
+8.  **通过 WebSocket 发送 Answer**：
+    *   B 将 Answer 封装成 JSON（`{"type": "answer", "sdp": "..."}`），通过 WebSocket 发回给 A。
+
+#### 第四阶段：连接建立与 Trickle ICE (可选但推荐)
+9.  **A 接收 Answer**：
+    *   A 收到 Answer，解析并调用 `nice_agent_set_remote_credentials()` 和 `nice_agent_add_remote_candidates()` 设置 B 的信息。
+10. **连通性检查**：
+    *   此时，`libnice` 会在后台自动开始 STUN 连通性检查。
+    *   一旦连接成功，`libnice` 会触发 `component-state-changed` 信号，状态变为 `NICE_COMPONENT_STATE_READY`。
+
+---
+
+### 关键技术点与代码逻辑
+
+在使用 `libnice` 配合 WebSocket 时，有几个特殊的细节需要注意：
+
+#### 1. 信令消息格式 (JSON)
+WebSocket 传输的是文本，通常使用 JSON 格式包裹 SDP。
+**示例消息结构：**
+```json
+{
+  "to": "user_B",
+  "type": "offer",
+  "sdp": "v=0\r\no=- 123456 ...\r\nm=video 9 RTP/SAVPF 96\r\n..."
+}
+```
+
+#### 2. 处理 Trickle ICE (动态候选项)
+虽然可以在 SDP 中一次性包含所有候选项，但 `libnice` 支持 **Trickle ICE**（即连接建立后陆续发现新路径）。
+*   **流程**：如果 `libnice` 在连接建立后又发现了新的候选项（例如连上了 TURN 服务器），它会触发 `candidate-gathered` 回调。
+*   **动作**：你的代码需要在回调中，立即通过 WebSocket 发送一个单独的 `{"type": "candidate", "candidate": "..."}` 消息给对方，而不是重新发送整个 SDP。
+*   **接收端**：收到此类消息后，调用 `nice_agent_add_remote_candidates()` 动态添加。
+
+#### 3. SDP 的构造与解析
+`libnice` **不会**自动生成完整的 SDP 字符串，它只提供 ICE 相关的参数。你需要自己处理字符串拼接：
+*   **构造**：你需要编写函数，将 `nice_agent_get_local_credentials()` 获取的 ufrag/pwd，以及 `nice_agent_get_selected_candidate_pair()` 获取的 IP/Port，填入 SDP 模板中。
+*   **解析**：你需要编写解析器（或使用正则表达式），从接收到的 SDP 字符串中提取 `a=ice-ufrag`、`a=ice-pwd` 和 `a=candidate` 行，以便传给 `libnice` API。
+
+### 总结
+`libnice` 通过 WebSocket 交换信令的本质是：
+1.  **libnice** 负责算出“我能通过哪些路（IP/端口）到达你”。
+2.  **你的代码** 把这些路的信息写成“信（SDP）”。
+3.  **WebSocket** 负责把这封“信”寄给信令服务器，再转交给对方。
+
+## libnice生成sdp
+
+>说明：这个示例强制在sdp中删除host和srflx类型的candidate，只保留relay类型的candidate。
+
+详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-computer-network-principle/demo-libnice-sdp.c
+
+运行示例前先运行Coturn服务器：https://gitee.com/dexterleslie/demonstration/tree/main/demo-computer-network-principle/demo-coturn/docker-compose.yaml
+
+```sh
+docker compose up -d
+```
+
+安装依赖
+
+```sh
+$ sudo apt install libnice-dev
+```
+
+编译并运行
+
+```sh
+$ gcc -o main demo-libnice-sdp.c $(pkg-config --cflags --libs nice)
+
+$ ./main
+----- A 端 offer（已去掉 typ host / typ srflx 的 candidate 行）-----
+m=audio 49182 ICE/SDP
+c=IN IP4 172.20.21.2
+a=ice-ufrag:NVZy
+a=ice-pwd:2UMC2yabnYTwypNfhlOmgw
+a=candidate:31 1 UDP 503316991 172.20.21.2 49182 typ relay raddr 192.168.1.181 rport 60526
+----- 结束 -----
+```

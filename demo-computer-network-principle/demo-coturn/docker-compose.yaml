@@ -1,0 +1,46 @@
+# coturn（STUN/TURN）— Docker Compose
+#
+# 启动（后台）:
+#   docker compose up -d
+# 查看日志:
+#   docker compose logs -f
+# 停止:
+#   docker compose down
+#
+# 默认长期凭据（lt-cred-mech）:
+#   用户名: demo
+#   密码:   demopass
+#   realm:  demo
+#
+# 客户端示例（TURN）:
+#   turn:127.0.0.1:3478?transport=udp
+#   turn:127.0.0.1:3478?transport=tcp
+# STUN-only 时指向同一主机端口 3478 即可。
+#
+# 说明:
+# - 映射了较小中继端口范围 49160–49190/udp，便于在 bridge 网络下跑通基本 TURN。
+# - 若中继仍不可达，可在 Linux 上改用 network_mode: host，并为本机配置
+#   --external-ip=<公网或局域网 IP>（见 coturn 文档）。
+
+services:
+  coturn:
+    image: coturn/coturn:4.6.2
+    restart: unless-stopped
+    ports:
+      - "3478:3478/tcp"
+      - "3478:3478/udp"
+      - "49160-49190:49160-49190/udp"
+    command:
+      - "-n"
+      - "--log-file=stdout"
+      - "--listening-ip=0.0.0.0"
+      - "--listening-port=3478"
+      - "--min-port=49160"
+      - "--max-port=49190"
+      - "--fingerprint"
+      - "--lt-cred-mech"
+      - "--user=demo:demopass"
+      - "--realm=demo"
+      - "--no-cli"
+      - "--no-tls"
+      - "--no-dtls"
