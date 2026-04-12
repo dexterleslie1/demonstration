@@ -1289,3 +1289,81 @@ curl http://localhost:3000/user/1
 # POST 提交 JSON
 curl -X POST http://localhost:3000/echo -H "Content-Type: application/json" -d "{\"key\":\"value\"}"
 ```
+
+## `node:test`是什么呢？
+
+`node:test` 是 Node.js 官方推出的**原生测试运行器**，它让你无需安装 Jest、Mocha 等第三方库，就能直接在 Node.js 环境中编写和运行测试。
+
+这个模块在 Node.js 18 中作为实验性功能引入，并在 **Node.js 20 中成为稳定功能**。它的目标是提供一个轻量、标准且易于使用的测试解决方案，简化项目的测试流程。
+
+### 核心功能与优势
+
+`node:test` 提供了一套完整的测试工具集，涵盖了从测试组织到执行的各个环节：
+
+*   **开箱即用**：作为 Node.js 的内置模块，它**零额外依赖**，可以显著减小项目体积，并优化 CI/CD 的构建速度。
+*   **测试组织**：支持使用 `describe` 来组织测试套件，使用 `test` 或 `it` 来定义单个测试用例。
+*   **生命周期钩子**：提供 `beforeEach`、`afterEach` 等钩子函数，方便在每个测试前后进行环境设置和清理。
+*   **原生 Mock**：内置了强大的 Mock 功能，可以轻松模拟函数、方法甚至整个模块，让单元测试更纯粹。
+*   **运行模式**：可以通过 `node --test` 命令轻松运行测试文件，并支持通配符匹配。
+*   **覆盖率报告**：通过 `--experimental-test-coverage` 标志，可以生成原生的代码覆盖率报告。
+*   **监听模式**：在开发时，可以使用 `--watch` 标志，让测试在文件变更时自动重新运行。
+
+### 快速上手
+
+使用 `node:test` 非常简单。下面是一个完整的测试示例：
+
+1.  **创建一个测试文件**，例如 `math.test.js`：
+    ```javascript
+    // 导入测试模块和断言模块
+    import { test, describe } from 'node:test';
+    import assert from 'node:assert/strict';
+    
+    // 一个简单的加法函数
+    function add(a, b) {
+      return a + b;
+    }
+    
+    // 组织测试套件
+    describe('数学运算测试', () => {
+      // 定义一个测试用例
+      test('应该正确计算两个数的和', () => {
+        const result = add(2, 3);
+        // 使用断言验证结果
+        assert.strictEqual(result, 5);
+      });
+    
+      test('异步测试示例', async () => {
+        const result = await Promise.resolve(42);
+        assert.strictEqual(result, 42);
+      });
+    });
+    ```
+
+2.  **在命令行中运行测试**：
+    ```bash
+    node --test math.test.js
+    ```
+
+### 与 Jest 等框架的对比
+
+`node:test` 的出现为开发者提供了新的选择。与成熟的 Jest 等框架相比，它各有侧重：
+
+| 特性         | `node:test` (原生)            | Jest (第三方)                         |
+| :----------- | :---------------------------- | :------------------------------------ |
+| **运行环境** | 原生 Node.js 环境，无隔离     | 独立的 VM 环境，高度隔离              |
+| **依赖体积** | **零依赖**，内置于 Node.js    | 依赖庞大，会引入数百个间接依赖        |
+| **功能生态** | 核心功能稳定，生态正在发展中  | 功能极其丰富，插件生态系统成熟        |
+| **学习成本** | 遵循 Node.js 标准，学习成本低 | 拥有自定义的 API 和断言库，需单独学习 |
+
+总而言之，`node:test` 是 Node.js 官方为了简化测试而推出的重要工具。对于新项目或希望减少对第三方测试框架依赖的团队来说，它是一个非常值得考虑的选择。
+
+### 示例
+
+详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/front-end/demo-nodejs/demo-node-test.mjs
+
+运行
+
+```sh
+node --test demo-node-test.mjs
+```
+

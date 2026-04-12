@@ -105,18 +105,6 @@ sudo apt install ./code_xxxxx.deb
 # NOTE: 使用vscode开发工具时候需要切换到 Run and debug 面板使用Launch package调试，不能使用源码测试函数上面的 run test和 debug test功能，因为此功能不能加载 launch.json
 ```
 
-## 快捷键
-
-```shell
-# 删除一行 ctrl+shift+k
-
-# 克隆当前光标一行 ctrl+c ctrl+v
-
-# 快速搜索并打开文件 ctrl+p
-
-# 快速隐藏或者打开 Terminal 所在的Panel ctrl+`
-```
-
 ## vscode makefile 报告 Makefile:2: *** missing separator.  Stop.
 
 参考
