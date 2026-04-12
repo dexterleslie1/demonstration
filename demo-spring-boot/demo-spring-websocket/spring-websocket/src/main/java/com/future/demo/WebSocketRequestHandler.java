@@ -12,9 +12,7 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  *
@@ -24,9 +22,9 @@ public class WebSocketRequestHandler extends TextWebSocketHandler {
 
     private final static String KeyAction = "action";
 
-//    private Map<String, WebSocketSession> mapSessions = new HashMap<>();
+    //    private Map<String, WebSocketSession> mapSessions = new HashMap<>();
     //    private Map<String, Runnable> mapRunnables = new HashMap<>();
-//    private List<WebSocketSession> sessionList = new ArrayList<>();
+    private List<WebSocketSession> sessionList = new ArrayList<>();
 
 //    private ScheduledExecutorService scheduledExecutorService = null;
 
@@ -56,7 +54,7 @@ public class WebSocketRequestHandler extends TextWebSocketHandler {
             return;
         }
 
-//        sessionList.add(session);
+        sessionList.add(session);
 
 //        if (!StringUtils.isEmpty(username)) {
 //            // 关闭之前socket
@@ -89,36 +87,49 @@ public class WebSocketRequestHandler extends TextWebSocketHandler {
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         String payload = message.getPayload();
         log.info("收到来自客户消息：" + payload);
-        if (!StringUtils.isEmpty(payload)) {
-            ObjectMapper objectMapper = new ObjectMapper();
-            Map<String, String> data = null;
-            try {
-                data = objectMapper.readValue(payload, Map.class);
-            } catch (JsonParseException ex) {
-                //
-            }
-            if (data != null && data.containsKey(KeyAction)) {
-                String action = data.get(KeyAction);
-                if ("MESSAGE".equals(action)) {
-                    String toUser = data.get("toUser");
-                    if (!StringUtils.isEmpty(toUser)) {
-//                        WebSocketSession toSession = mapSessions.get(toUser);
-//                        String content = data.get("content");
-//                        String fromUser = (String) session.getAttributes().get("username");
-//                        if (toSession != null) {
-//                            Map<String, String> messageMap = new HashMap<>();
-//                            messageMap.put("fromUser", fromUser);
-//                            messageMap.put("content", content);
-//                            toSession.sendMessage(new TextMessage(new ObjectMapper().writeValueAsString(messageMap)));
-//                            logger.debug("用户" + fromUser + " 给用户" + toUser + " 发送消息 " + content);
-//                        } else {
-//                            logger.debug("用户" + fromUser + " 尝试给用户" + toUser + " 发送消息，但不在线");
-//                        }
 
-                    }
-                }
+        // 广播消息
+        for (WebSocketSession toSession : sessionList) {
+            if (toSession != session) {
+                Map<String, String> messageMap = new HashMap<>();
+                messageMap.put("content", payload);
+                String messageTemp = new ObjectMapper().writeValueAsString(messageMap);
+                toSession.sendMessage(new TextMessage(messageTemp));
+                String clientId = (String) toSession.getAttributes().get("clientId");
+                log.debug("发送消息：" + messageTemp + " 给客户端 " + clientId);
             }
         }
+
+//        if (!StringUtils.isEmpty(payload)) {
+//            ObjectMapper objectMapper = new ObjectMapper();
+//            Map<String, String> data = null;
+//            try {
+//                data = objectMapper.readValue(payload, Map.class);
+//            } catch (JsonParseException ex) {
+//                //
+//            }
+//            if (data != null && data.containsKey(KeyAction)) {
+//                String action = data.get(KeyAction);
+//                if ("MESSAGE".equals(action)) {
+//                    String toUser = data.get("toUser");
+//                    if (!StringUtils.isEmpty(toUser)) {
+////                        WebSocketSession toSession = mapSessions.get(toUser);
+////                        String content = data.get("content");
+////                        String fromUser = (String) session.getAttributes().get("username");
+////                        if (toSession != null) {
+////                            Map<String, String> messageMap = new HashMap<>();
+////                            messageMap.put("fromUser", fromUser);
+////                            messageMap.put("content", content);
+////                            toSession.sendMessage(new TextMessage(new ObjectMapper().writeValueAsString(messageMap)));
+////                            logger.debug("用户" + fromUser + " 给用户" + toUser + " 发送消息 " + content);
+////                        } else {
+////                            logger.debug("用户" + fromUser + " 尝试给用户" + toUser + " 发送消息，但不在线");
+////                        }
+//
+//                    }
+//                }
+//            }
+//        }
 
         super.handleTextMessage(session, message);
     }
@@ -133,7 +144,7 @@ public class WebSocketRequestHandler extends TextWebSocketHandler {
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
         super.afterConnectionClosed(session, status);
 
-//        sessionList.remove(session);
+        sessionList.remove(session);
 
         String clientId = (String) session.getAttributes().get("clientId");
         if (!StringUtils.isEmpty(clientId)) {
