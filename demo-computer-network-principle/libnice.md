@@ -256,3 +256,46 @@ a=ice-pwd:2UMC2yabnYTwypNfhlOmgw
 a=candidate:31 1 UDP 503316991 172.20.21.2 49182 typ relay raddr 192.168.1.181 rport 60526
 ----- 结束 -----
 ```
+
+## libnice交换sdp并建立udp通信
+
+>说明：这个示例使用先收集host、srflx、stun、turn候选ip地址，然后通过Websocket服务两个客户端交换sdp，然后两个客户端使用sdp建立通信。
+
+详细用法请参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-computer-network-principle/demo-libnice/demo-libnice-exchange-sdp.c
+
+运行示例前先运行Coturn服务器：https://gitee.com/dexterleslie/demonstration/tree/main/demo-computer-network-principle/demo-coturn/docker-compose.yaml
+
+```sh
+docker compose up -d
+```
+
+运行示例前先运行Websocket服务器：https://gitee.com/dexterleslie/demonstration/tree/main/demo-computer-network-principle/demo-libnice/demo-signal-server.js
+
+```sh
+npm install
+node demo-signal-server.js
+```
+
+安装依赖
+
+```sh
+# 在开发机中安装libnice-dev
+$ sudo apt install libnice-dev
+
+# 在发布环境中安装libnice
+sudo apt install libnice10
+```
+
+编译并运行
+
+```sh
+$ gcc -o main demo-libnice-exchange-sdp.c $(pkg-config --cflags --libs nice libsoup-2.4)
+
+# 运行offer客户端
+$ ./main offer
+
+# 运行answer客户端
+$ ./main answer
+```
+
+## 
