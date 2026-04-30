@@ -1,0 +1,19 @@
+#
+# SeaTunnel Engine configuration (for Docker Compose demo)
+#
+# 关键点：
+# - Web UI 依赖 Engine 的 HTTP REST API。开启后即可访问 `http://<host>:8080/#/overview`。
+# - 该文件会被 docker-compose 挂载到 `/opt/seatunnel/config/seatunnel.yaml`。
+#
+# 注意：
+# - 如果你需要更复杂的配置（安全、资源隔离、日志等），建议基于官方默认配置再增量修改。
+#
+
+seatunnel:
+  engine:
+    # 启用 Engine 的 HTTP REST API（同时提供 Web UI 页面）。
+    # 默认端口 8080，这里显式指定，方便在 docker-compose 里做端口映射。
+    http:
+      enable-http: true
+      port: 8080
+

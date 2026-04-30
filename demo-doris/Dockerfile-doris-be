@@ -1,0 +1,13 @@
+FROM apache/doris:be-4.0.5
+# FROM apache/doris:be-4.1.0
+
+# BE 与 FE 使用相同版本的 MySQL JDBC 驱动，路径位于 BE 插件目录，供 BE 侧 JDBC 相关能力使用。
+# 基础镜像原为 fe 标签会导致运行错误，此处使用 be-4.0.5 与官方 BE 镜像一致。
+RUN curl -fsSL \
+    "https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/8.0.31/mysql-connector-j-8.0.31.jar" \
+    -o /opt/apache-doris/be/plugins/jdbc_drivers/mysql-connector-j-8.0.31.jar
+
+# 使用MySQL驱动同步数据即可
+# RUN curl -fsSL \
+#     "https://repo1.maven.org/maven2/org/mariadb/jdbc/mariadb-java-client/2.7.3/mariadb-java-client-2.7.3.jar" \
+#     -o /opt/apache-doris/be/plugins/jdbc_drivers/mariadb-java-client-2.7.3.jar

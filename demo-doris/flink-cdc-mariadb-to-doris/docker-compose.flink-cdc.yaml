@@ -1,0 +1,171 @@
+version: "3.8"
+
+# 目的：用 Flink CDC（MySQL/MariaDB CDC 连接器）实时同步 MariaDB -> Doris。
+#
+# 设计要点：
+# - 你的 Doris FE/BE 以及 MariaDB 都在 `demo-doris/docker-compose.yaml` 中启动：
+#   - Doris FE MySQL 协议：宿主机 9030（你 `.env` 已配置为 127.0.0.1:9030）
+#   - MariaDB：宿主机 3306（`doris-assistant-db` 对外映射 3306:3306）
+# - 为避免「容器内访问宿主机端口」以及 Doris Stream Load 重定向地址不可达等问题，
+#   此处 Flink 相关容器统一使用 `network_mode: host`，直接通过 127.0.0.1 访问宿主机服务。
+# - 依赖 JAR（Flink SQL 连接器）采用“下载到本地目录 + 按文件挂载到 Flink lib”的方式：
+#   - 这样不会覆盖 `/opt/flink/lib` 整个目录（覆盖会导致 Flink 缺失核心 jar 而无法启动）
+#   - compose 也更简洁，不需要在容器启动脚本里做复制
+#
+# 使用方式（你手动执行即可）：
+# 1) 先启动 Doris + MariaDB（使用你已有的 compose）：
+#    - docker compose -f demo-doris/docker-compose.yaml up -d
+# 2) 再启动 Flink CDC（本 compose）：
+#    - docker compose -f demo-doris/flink-cdc-mariadb-to-doris/docker-compose.flink-cdc.yaml up -d
+#
+# 作业逻辑：
+# - `flink-cdc.sql` 定义 MariaDB CDC Source + Doris Sink，并 `INSERT INTO` 持续写入。
+# - `flink-sql-submit` 容器会等待 JobManager REST 可用后自动执行一次 SQL 文件提交作业。
+#
+# 说明：
+# - 这是一个演示级别的 compose。生产环境请考虑：
+#   - 失败重试/高可用（HA、checkpoint、state backend、savepoint）
+#   - 安全（账号/密码、网络隔离、TLS）
+#   - 资源限制与监控（CPU/内存、日志）
+services:
+  # 一次性下载器：把需要的 connector JAR 下载到本地 `./flink-lib/`。
+  # 说明：
+  # - 这里固定使用与本 compose 匹配的版本，避免变量过多导致理解成本上升
+  # - 若你想升级版本，只需要同时改“下载 URL + 挂载文件名”两处即可
+  flink-cdc-connector-downloader:
+    image: curlimages/curl:8.7.1
+    restart: "no"
+    network_mode: host
+    volumes:
+      # 下载目录（宿主机可见，便于你复用/缓存 jar）
+      - ./flink-lib:/work/flink-lib
+    entrypoint:
+      - /bin/sh
+      - -lc
+      - |
+        set -euo pipefail
+
+        mkdir -p /work/flink-lib
+
+        # 1) MySQL/MariaDB CDC 连接器（Flink SQL）
+        #
+        # Maven Central 目录：
+        # - groupId: com.ververica
+        # - artifactId: flink-sql-connector-mysql-cdc
+        # - version: 2.4.2
+        #
+        # 该 jar 通常是一个 “fat jar”，包含 Debezium 依赖。
+        MYSQL_CDC_JAR="flink-sql-connector-mysql-cdc-2.4.2.jar"
+        if [ ! -f "/work/flink-lib/${MYSQL_CDC_JAR}" ]; then
+          echo "[downloader] downloading ${MYSQL_CDC_JAR}"
+          curl -fsSL \
+            "https://repo1.maven.org/maven2/com/ververica/flink-sql-connector-mysql-cdc/2.4.2/${MYSQL_CDC_JAR}" \
+            -o "/work/flink-lib/${MYSQL_CDC_JAR}"
+        else
+          echo "[downloader] ${MYSQL_CDC_JAR} already exists, skip"
+        fi
+
+        # 2) Doris connector（Flink）
+        #
+        # Maven Central 目录：
+        # - groupId: org.apache.doris
+        # - artifactId: flink-doris-connector-<flinkMinor>
+        # - version: 1.6.2
+        #
+        # 产物名一般为：flink-doris-connector-1.17-1.6.2.jar
+        DORIS_JAR="flink-doris-connector-1.17-1.6.2.jar"
+        if [ ! -f "/work/flink-lib/${DORIS_JAR}" ]; then
+          echo "[downloader] downloading ${DORIS_JAR}"
+          curl -fsSL \
+            "https://repo1.maven.org/maven2/org/apache/doris/flink-doris-connector-1.17/1.6.2/${DORIS_JAR}" \
+            -o "/work/flink-lib/${DORIS_JAR}"
+        else
+          echo "[downloader] ${DORIS_JAR} already exists, skip"
+        fi
+
+        echo "[downloader] done"
+
+  # Flink JobManager
+  flink-jobmanager:
+    image: apache/flink:1.17.2-scala_2.12-java11
+    restart: unless-stopped
+    depends_on:
+      - flink-cdc-connector-downloader
+    network_mode: host
+    command: jobmanager
+    environment:
+      # 说明：`apache/flink` 镜像支持通过 env 覆盖 config（其 entrypoint 会渲染到 flink-conf.yaml）
+      # 这里尽量保持最小配置，只改演示必要项。
+      - TZ=Asia/Shanghai
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: 127.0.0.1
+        jobmanager.memory.process.size: 1024m
+        parallelism.default: 1
+        rest.address: 127.0.0.1
+        rest.port: 8081
+    volumes:
+      # 关键：按“文件”挂载到 /opt/flink/lib，不会覆盖整个目录
+      - ./flink-lib/flink-sql-connector-mysql-cdc-2.4.2.jar:/opt/flink/lib/flink-sql-connector-mysql-cdc-2.4.2.jar:ro
+      - ./flink-lib/flink-doris-connector-1.17-1.6.2.jar:/opt/flink/lib/flink-doris-connector-1.17-1.6.2.jar:ro
+      # SQL 作业文件（sql-client 提交容器会用到）
+      - ./sql:/opt/flink-cdc/sql:ro
+
+  # Flink TaskManager
+  flink-taskmanager:
+    image: apache/flink:1.17.2-scala_2.12-java11
+    restart: unless-stopped
+    depends_on:
+      - flink-jobmanager
+    network_mode: host
+    command: taskmanager
+    environment:
+      - TZ=Asia/Shanghai
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: 127.0.0.1
+        taskmanager.numberOfTaskSlots: 2
+        taskmanager.memory.process.size: 2048m
+    volumes:
+      - ./flink-lib/flink-sql-connector-mysql-cdc-2.4.2.jar:/opt/flink/lib/flink-sql-connector-mysql-cdc-2.4.2.jar:ro
+      - ./flink-lib/flink-doris-connector-1.17-1.6.2.jar:/opt/flink/lib/flink-doris-connector-1.17-1.6.2.jar:ro
+
+  # 一次性容器：提交 Flink SQL 作业（执行后退出）。
+  #
+  # 说明：
+  # - 该容器不会常驻；它只负责在 Flink 集群就绪后调用 `sql-client.sh -f ...`。
+  # - 如需“重新提交”，可手动重跑本服务（或删掉作业后再执行）。
+  flink-sql-submit:
+    image: apache/flink:1.17.2-scala_2.12-java11
+    restart: "no"
+    depends_on:
+      - flink-taskmanager
+    network_mode: host
+    environment:
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./flink-lib/flink-sql-connector-mysql-cdc-2.4.2.jar:/opt/flink/lib/flink-sql-connector-mysql-cdc-2.4.2.jar:ro
+      - ./flink-lib/flink-doris-connector-1.17-1.6.2.jar:/opt/flink/lib/flink-doris-connector-1.17-1.6.2.jar:ro
+      - ./sql:/opt/flink-cdc/sql:ro
+    entrypoint:
+      - /bin/bash
+      - -lc
+      - |
+        set -euo pipefail
+
+        # 等待 Flink REST API 可用（JobManager:8081）。host 网络下直接访问 127.0.0.1。
+        for i in $(seq 1 120); do
+          if curl -fsS "http://127.0.0.1:8081/overview" >/dev/null 2>&1; then
+            echo "[flink-sql-submit] Flink REST is ready"
+            break
+          fi
+          echo "[flink-sql-submit] waiting for Flink REST..."
+          sleep 1
+        done
+
+        # 提交 SQL 作业：
+        # - `-f`：执行文件中的 SQL（DDL + DML）
+        # - 该命令会启动持续运行的 INSERT 作业（CDC 流式任务），因此 sql-client 进程本身会保持运行。
+        #   如果你希望 submit 容器提交后就退出，可以改为 REST 提交流水线或使用 standalone-job 方式。
+        exec /opt/flink/bin/sql-client.sh -f /opt/flink-cdc/sql/flink-cdc.sql
+

@@ -1,0 +1,297 @@
+services:
+  # Doris Frontend（FE）
+  #
+  # 作用：
+  # - 存储元数据（库/表/权限/作业等）
+  # - 提供查询入口、MySQL 协议端口、Web UI
+  #
+  # 端口说明（不同版本/发行可能略有差异，此处按 Doris 常用默认值映射）：
+  # - 8030：FE HTTP/Web UI（浏览器访问）
+  # - 9030：MySQL 协议端口（客户端/驱动连接）
+  # - 9010：FE RPC/内部通信端口（BE/FE 之间）
+  doris-fe:
+    build:
+      context: .      
+      dockerfile: Dockerfile-doris-fe
+    image: demo-doris-fe-dev
+    restart: unless-stopped
+    # 使用宿主机网络：FE/BE 直接监听在宿主机的 8030/9030/8040 等端口上。
+    # 这样 Stream Load 经 FE 重定向到 BE 时，返回的是局域网可达地址（如 192.168.1.181），
+    # 其他机器不会再被重定向到 Docker bridge 私网（172.28.x.x）导致超时。
+    #
+    # 注意：host 模式下不能再写 `ports:` / `networks:`（与 Docker Compose 规则冲突）。
+    network_mode: host
+    environment:
+      # 容器内时区；避免日志时间与宿主机不一致（可按需修改）
+      TZ: Asia/Shanghai
+      # 强制容器内 locale 为 UTF-8，避免 Java/脚本在极简镜像里退回 ASCII 导致中文被替换为 '?'
+      LANG: C.UTF-8
+      LC_ALL: C.UTF-8
+      # 该官方镜像的 `init_fe.sh` 会按“plan”校验必填参数。
+      # 这里使用 Election 模式（最少需要 FE_SERVERS + FE_ID）。
+      #
+      # 重要：脚本要求 FE_SERVERS 里必须是 IP:PORT（不能用服务名）。
+      # 此处填写「其他机器访问 Doris 时使用的宿主机局域网 IP」（你当前为 192.168.1.181）。
+      # 若宿主机 IP 变更，请同步修改 FE_SERVERS 与 doris-be 的 BE_ADDR。
+      FE_SERVERS: "fe1:${host_ip}:9010"
+      FE_ID: "1"
+    # ports:
+    #   # Web UI / HTTP API
+    #   - "8030:8030"
+    #   # MySQL 协议（推荐使用该端口连接 Doris）
+    #   - "9030:9030"
+    #   # FE 内部通信端口（通常不需要暴露到宿主机；此处暴露便于排查）
+    #   - "9010:9010"
+    volumes:
+    #   # FE 元数据与日志持久化；重启/重建容器后仍保留数据
+    #   - doris-fe-meta:/opt/apache-doris/fe/doris-meta
+    #   - doris-fe-log:/opt/apache-doris/fe/log
+        # 覆盖 FE 配置：将 JVM 堆内存设置为 2G
+        # 需要可写：官方 init 脚本会向 fe.conf 追加 priority_networks 等配置
+        - ./doris-config/fe.conf:/opt/apache-doris/fe/conf/fe.conf:rw
+
+  # Doris Backend（BE）
+  #
+  # 作用：
+  # - 负责数据存储、执行计算
+  #
+  # 端口说明（常用）：
+  # - 8040：BE HTTP（状态/管理）
+  # - 9060：BE Heartbeat/内部端口
+  # - 9050：BE RPC/内部端口
+  doris-be:
+    build:
+      context: .      
+      dockerfile: Dockerfile-doris-be
+    image: demo-doris-be-dev
+    restart: unless-stopped
+    # 与 FE 相同，使用宿主机网络，保证 BE 在 FE 元数据中登记为对外可达 IP。
+    network_mode: host
+    environment:
+      TZ: Asia/Shanghai
+      # 强制容器内 locale 为 UTF-8，避免 Java/脚本在极简镜像里退回 ASCII 导致中文被替换为 '?'
+      LANG: C.UTF-8
+      LC_ALL: C.UTF-8
+      # 该官方镜像的 `entry_point.sh` 会严格校验必填参数。
+      # 这里使用 Election 模式（最少需要 FE_SERVERS + BE_ADDR）。
+      #
+      # 重要：脚本要求 FE_SERVERS / BE_ADDR 里必须是 IP:PORT（不能用服务名）。
+      # BE_ADDR 必须与其他机器访问 BE 心跳/RPC 时使用的地址一致（与宿主机 IP 相同）。
+      FE_SERVERS: "fe1:${host_ip}:9010"
+      BE_ADDR: "${host_ip}:9050"
+      # 限制该容器内“所有 Java 进程”的最大堆内存，避免 `cdc-client.jar`（你看到的 9096 进程）
+      # 因为未显式指定 -Xmx 而按机器/容器内存膨胀到数 GB。
+      #
+      # 说明：
+      # - `JAVA_TOOL_OPTIONS` 会被 JVM 自动读取，无需改镜像内的启动脚本。
+      # - 这里用 `-Xms512m -Xmx512m` 将 Java 堆上限限制在 512MB。
+      # - 若你后续发现 BE 容器内存在其它 Java 组件需要更大堆（少见），再把该值上调或改成更细粒度的启动参数注入。
+      #
+      # 额外说明（本问题关键）：
+      # - `CREATE JOB ... FROM MYSQL` 会在 Doris 侧启动 CDC/同步相关的 Java 进程（你日志里看到的 `cdc-client.jar`）
+      # - 该进程不一定会读取 `be.conf`/`fe.conf` 里的 `JAVA_OPTS_FOR_JDK_17`
+      # - 因此这里用 `JAVA_TOOL_OPTIONS` 兜底强制 UTF-8，避免中文在写入前被编码器替换为 '?'
+      JAVA_TOOL_OPTIONS: "-Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -Xms512m -Xmx512m"
+      # 重要：Doris 官方 BE 容器 Entrypoint 会用 `mysql -uroot` 连接 FE 做探活：
+      # - 执行 `SHOW BACKENDS` 并要求看到该 BE 的 `alive=true` 才算启动成功
+      # - 若你在 FE 里修改过 root 密码，则此处必须提供密码，否则探活永远失败，BE 容器会循环重启
+      # 使用方式：在宿主机环境变量或 `.env` 中设置 `DORIS_ROOT_PASSWORD`
+      MYSQL_PWD: "${DORIS_ROOT_PASSWORD}"
+    # ports:
+    #   - "8040:8040"
+    #   - "9050:9050"
+    #   - "9060:9060"
+    depends_on:
+      # 使用 host 网络时，FE 的健康检查可能在 “catalog ready” 前一直不通过，
+      # 从而导致 Compose 永远不启动 BE（形成启动死锁）。
+      # 因此这里只保证 FE 容器先启动，再由 BE 的自身重试逻辑等待 FE 就绪。
+      - doris-fe
+    volumes:
+    #   # BE 数据与日志持久化；重启/重建容器后仍保留数据
+    #   - doris-be-storage:/opt/apache-doris/be/storage
+    #   - doris-be-log:/opt/apache-doris/be/log
+        # 覆盖 BE 配置：见 doris-config/be.conf 中的 mem_limit（物化视图等需足够上限）
+        # 需要可写：官方 init 脚本会向 be.conf 追加 priority_networks 等配置
+        - ./doris-config/be.conf:/opt/apache-doris/be/conf/be.conf:rw
+
+  # 一次性初始化：通过环境变量为 Doris 设置 root 初始密码
+  #
+  # 背景：
+  # - Doris 的 root 密码属于 FE 的权限/元数据范畴；官方 FE 镜像环境变量主要用于集群引导，
+  #   没有类似 MySQL 的 ROOT_PASSWORD 这种“直接用环境变量初始化 root 密码”的参数。
+  # - 因此需要在 FE 启动后，通过 MySQL 协议端口(9030)执行 SQL 来设置密码。
+  #
+  # 使用方式：
+  # - 在宿主机先导出环境变量（不要把密码写进 compose 文件，避免泄露到仓库历史）：
+  #     export DORIS_ROOT_PASSWORD='你的强密码'
+  # - 然后正常启动：
+  #     docker compose -f demo-doris/docker-compose.yaml up -d
+  #
+  # 幂等性说明：
+  # - 第一次：root 通常无密码，容器会用“空密码”连接并设置密码。
+  # - 后续重复启动：若 root 已经设置过密码，则空密码连接会失败；脚本会改用新密码做一次验证，
+  #   验证通过即退出 0，避免每次 up 都报错。
+  doris-root-password-init:
+    # 这里用官方 MySQL 客户端镜像，仅用于提供 mysql CLI（不需要额外写脚本文件）
+    image: mysql:8.0
+    restart: "no"
+    # 你的 FE/BE 使用的是 host 网络，因此该初始化容器也必须使用 host 网络才能访问到宿主机 9030
+    network_mode: host
+    depends_on:
+      - doris-fe
+    entrypoint:
+      - /bin/bash
+      - -lc
+      - |
+        set -euo pipefail
+
+        # 1) 没有提供密码则跳过，避免误操作
+        # 默认值/空值处理用 bash 的 if 判断来完成。
+        if [[ -z "$DORIS_ROOT_PASSWORD" ]]; then
+          echo "[doris-root-password-init] DORIS_ROOT_PASSWORD is empty, skip."
+          exit 0
+        fi
+
+        # set -x
+
+        # 2) 等待 Doris FE MySQL 协议端口就绪（最多等待 300s）
+        for i in $(seq 1 300); do
+          if mysql --protocol=tcp -h "$DORIS_MYSQL_HOST" -P "$DORIS_MYSQL_PORT" -uroot -e "SELECT 1" >/dev/null 2>&1; then
+            break
+          fi
+          echo "[doris-root-password-init] waiting for Doris FE MySQL 协议端口 to be ready..."
+          sleep 1
+        done
+
+        # 3) 尝试用“空密码”连接并设置 root 密码
+        #
+        # 不同 Doris 版本/兼容层对语法支持可能略有差异：
+        # - 优先尝试更通用的 ALTER USER 写法
+        # - 若失败再尝试 SET PASSWORD 写法
+        if mysql --protocol=tcp -h "$DORIS_MYSQL_HOST" -P "$DORIS_MYSQL_PORT" -uroot -e \
+          "ALTER USER 'root'@'%' IDENTIFIED BY '$DORIS_ROOT_PASSWORD';" >/dev/null 2>&1; then
+          echo "[doris-root-password-init] root password set by ALTER USER."
+          exit 0
+        fi
+
+        if mysql --protocol=tcp -h "$DORIS_MYSQL_HOST" -P "$DORIS_MYSQL_PORT" -uroot -e \
+          "SET PASSWORD FOR 'root'@'%' = PASSWORD('$DORIS_ROOT_PASSWORD');" >/dev/null 2>&1; then
+          echo "[doris-root-password-init] root password set by SET PASSWORD."
+          exit 0
+        fi
+
+        # 4) 如果设置失败，常见原因是 root 已经不是空密码了；用新密码验证一次作为幂等兜底
+        if mysql --protocol=tcp -h "$DORIS_MYSQL_HOST" -P "$DORIS_MYSQL_PORT" -uroot -p"$DORIS_ROOT_PASSWORD" -e "SELECT 1" >/dev/null 2>&1; then
+          echo "[doris-root-password-init] root password already set, verification OK."
+          exit 0
+        fi
+
+        echo "[doris-root-password-init] failed to set/verify root password." >&2
+        exit 1
+
+  doris-assistant-db:
+    image: mariadb:10.4.19
+    #image: mariadb:10.11.6
+    #image: mariadb:11.4.8
+    command:
+     - --character-set-server=utf8mb4
+     - --collation-server=utf8mb4_general_ci
+     - --skip-character-set-client-handshake
+     - --innodb-buffer-pool-size=256m
+    volumes:
+      - ./my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf:ro
+      - ./db.sql:/docker-entrypoint-initdb.d/db.sql:ro
+    environment:
+      - LANG=C.UTF-8
+      - TZ=Asia/Shanghai
+      - MYSQL_ROOT_PASSWORD=123456
+    ports:
+      - 3306:3306
+
+  # doris-assistant-db:
+  #   image: mysql:8.0.18
+  #   user: mysql
+  #   command:
+  #    - --character-set-server=utf8mb4
+  #    - --collation-server=utf8mb4_general_ci
+  #    - --skip-character-set-client-handshake
+  #   volumes:
+  #    - ./mysql-customize.cnf:/etc/mysql/conf.d/mysql-customize.cnf:ro
+  #    - ./db.sql:/docker-entrypoint-initdb.d/db.sql:ro
+  #   environment:
+  #     - LANG=C.UTF-8
+  #     - TZ=Asia/Shanghai
+  #     - MYSQL_ROOT_PASSWORD=123456
+  #   ports:
+  #     - '3306:3306'
+
+  # # SeaTunnel Engine - master（集群模式 + Web UI）
+  # #
+  # # Web UI：
+  # # - 需要在 `seatunnel.yaml` 开启 HTTP REST API（enable-http: true）
+  # # - 本项目已在 `./seatunnel-config/seatunnel.yaml` 中开启，并挂载到容器
+  # # - 访问：`http://localhost:8080/#/overview`
+  # #
+  # # 端口：
+  # # - 5801：Engine 集群通信端口（hazelcast）
+  # # - 8080：HTTP REST API / Web UI
+  # seatunnel-master:
+  #   image: apache/seatunnel:2.3.13
+  #   restart: unless-stopped
+  #   environment:
+  #     TZ: Asia/Shanghai
+  #     # Engine 集群成员列表（固定 IP）；与 networks 中的 ipv4_address 保持一致
+  #     ST_DOCKER_MEMBER_LIST: "172.28.0.10,172.28.0.11"
+  #   entrypoint: ["/bin/sh", "-c", "/opt/seatunnel/bin/seatunnel-cluster.sh -r master"]
+  #   ports:
+  #     - "5801:5801"
+  #     - "8080:8080"
+  #   volumes:
+  #     - ./seatunnel-config/seatunnel.yaml:/opt/seatunnel/config/seatunnel.yaml:ro
+  #   networks:
+  #     doris-net:
+  #       ipv4_address: 172.28.0.10
+
+  # # SeaTunnel Engine - worker（集群模式）
+  # seatunnel-worker-1:
+  #   image: apache/seatunnel:2.3.13
+  #   restart: unless-stopped
+  #   environment:
+  #     TZ: Asia/Shanghai
+  #     ST_DOCKER_MEMBER_LIST: "172.28.0.10,172.28.0.11"
+  #   entrypoint: ["/bin/sh", "-c", "/opt/seatunnel/bin/seatunnel-cluster.sh -r worker"]
+  #   depends_on:
+  #     - seatunnel-master
+  #   volumes:
+  #     - ./seatunnel-config/seatunnel.yaml:/opt/seatunnel/config/seatunnel.yaml:ro
+  #   networks:
+  #     doris-net:
+  #       ipv4_address: 172.28.0.11
+
+# volumes:
+#   # FE 元数据卷（强烈建议保留，否则 FE 重建后元数据会丢失）
+#   doris-fe-meta:
+#   # FE 日志卷
+#   doris-fe-log:
+#   # BE 数据卷（表数据文件）
+#   doris-be-storage:
+#   # BE 日志卷
+#   doris-be-log:
+
+# networks:
+#   # 自定义桥接网络：为 FE/BE 分配固定 IP，用来满足官方脚本对 IP 格式的校验。
+#   doris-net:
+#     driver: bridge
+#     ipam:
+#       config:
+#         - subnet: 172.28.0.0/16
+
+# volumes:
+#   # FE 元数据卷（强烈建议保留，否则 FE 重建后元数据会丢失）
+#   doris-fe-meta:
+#   # FE 日志卷
+#   doris-fe-log:
+#   # BE 数据卷（表数据文件）
+#   doris-be-storage:
+#   # BE 日志卷
+#   doris-be-log:

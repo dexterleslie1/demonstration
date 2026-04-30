@@ -1,0 +1,15 @@
+FROM apache/doris:fe-4.0.5
+# FROM apache/doris:fe-4.1.0
+
+# 使用 Maven Central 官方仓库下载 MySQL JDBC 驱动（8.0.31），供 FE 侧 JDBC Catalog / JDBC 外表等能力使用。
+# - curl -f：HTTP 4xx/5xx 时失败退出，避免留下空文件或损坏 jar
+# - curl -sS：静默进度但保留错误信息，便于构建失败时排查
+# - curl -L：若遇重定向则跟随（Maven Central 一般直连，此处为防御性写法）
+RUN curl -fsSL \
+    "https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/8.0.31/mysql-connector-j-8.0.31.jar" \
+    -o /opt/apache-doris/fe/plugins/jdbc_drivers/mysql-connector-j-8.0.31.jar
+
+# 使用MySQL驱动同步数据即可
+# RUN curl -fsSL \
+#     "https://repo1.maven.org/maven2/org/mariadb/jdbc/mariadb-java-client/2.7.3/mariadb-java-client-2.7.3.jar" \
+#     -o /opt/apache-doris/fe/plugins/jdbc_drivers/mariadb-java-client-2.7.3.jar
