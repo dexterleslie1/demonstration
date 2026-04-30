@@ -9,12 +9,12 @@ logging:
   config: classpath:logback-spring.xml
   file:
     path: ${log.home:${user.home}/logs/seata}
-  extend:
-    logstash-appender:
-      destination: 127.0.0.1:4560
-    kafka-appender:
-      bootstrap-servers: 127.0.0.1:9092
-      topic: logback_to_logstash
+#  extend:
+#    logstash-appender:
+#      destination: 127.0.0.1:4560
+#    kafka-appender:
+#      bootstrap-servers: 127.0.0.1:9092
+#      topic: logback_to_logstash
 
 console:
   user:
@@ -47,34 +47,70 @@ seata:
       username: nacos
       password: nacos
       context-path:
-  # Seata 服务使用 MySQL 作为持久化存储，此处配置数据库连接信息
+  # Seata 服务使用 Redis 持久化全局事务、分支事务与锁等会话数据（相较 file 模式支持多 TC 高可用）
   store:
-    # support: file 、 db 、 redis
-    mode: db
-    db:
-      datasource: druid
-      dbType: mysql
-      # 需要根据mysql的版本调整driverClassName
-      # mysql8及以上版本对应的driver：com.mysql.cj.jdbc.Driver
-      # mysql8以下版本的driver：com.mysql.jdbc.Driver
-      driverClassName: com.mysql.cj.jdbc.Driver
-      url: jdbc:mysql://127.0.0.1:3306/seata?rewriteBatchedStatements=true
-      user: root
-      password: 123456
+    # support: file 、 db 、 redis 、 raft
+    mode: redis
+    redis:
+      # single：单机；sentinel：哨兵（需配置 sentinel 段）
+      mode: single
+      # lua：脚本原子性较好；pipeline：批量管道（按官方示例与场景选择）
+      type: lua
+      # Redis 逻辑库索引，与 docker-compose 中 Redis 默认库保持一致即可
+      database: 0
+      # 连接池最小/最大连接数，按并发与 Redis 服务端 maxclients 调整
       min-conn: 10
       max-conn: 100
-      global-table: global_table
-      branch-table: branch_table
-      lock-table: lock_table
-      distributed-lock-table: distributed_lock
+      # 无密码时留空；生产环境务必设置强密码并在 compose 与此处同步
+      password:
+      # Jedis 连接池最大资源数上限，需 >= max-conn
+      max-total: 100
+      # 单次查询返回的全局会话等记录条数上限，过大可能占用内存与网络
       query-limit: 1000
-      max-wait: 5000
-  # 启用Prometheus监控
-#  metrics:
-#    enabled: true
-#    registry-type: compact
-#    exporter-list: prometheus
-#    exporter-prometheus-port: 9080
+      # 单机模式下的 Redis 地址：seata-server 使用 host 网络时，连接映射到宿主机的 Redis 端口
+      single:
+        host: 127.0.0.1
+        port: 6379
+      # 若 mode 为 sentinel，需填写 master-name、sentinel-hosts、sentinel-password 等
+      sentinel:
+        master-name:
+        sentinel-hosts:
+        sentinel-password:
+  # ---------------------------------------------------------------------------
+  # 以下为 MySQL（store.mode=db）持久化参考配置：当前未生效。若需改回数据库存储，
+  # 请将上方 store.mode 改为 db，注释掉上方 store.redis 整段，再取消注释下方块。
+  # ---------------------------------------------------------------------------
+  # store:
+  #   # support: file 、 db 、 redis
+  #   mode: db
+  #   db:
+  #     datasource: druid
+  #     dbType: mysql
+  #     # 需要根据mysql的版本调整driverClassName
+  #     # mysql8及以上版本对应的driver：com.mysql.cj.jdbc.Driver
+  #     # mysql8以下版本的driver：com.mysql.jdbc.Driver
+  #     driverClassName: com.mysql.cj.jdbc.Driver
+  #     url: jdbc:mysql://127.0.0.1:3306/seata?rewriteBatchedStatements=true
+  #     user: root
+  #     password: 123456
+  #     min-conn: 10
+  #     max-conn: 100
+  #     global-table: global_table
+  #     branch-table: branch_table
+  #     lock-table: lock_table
+  #     distributed-lock-table: distributed_lock
+  #     query-limit: 1000
+  #     max-wait: 5000
+  # Prometheus 监控：开启后可通过 HTTP 抓取 Micrometer 导出的指标（路径一般为 /metrics）
+  metrics:
+    # 是否启用指标注册与导出；关闭时不暴露 Prometheus 端口监听
+    enabled: true
+    # 指标注册表类型，compact 为 Seata 内置的紧凑实现，适合与 Prometheus 搭配
+    registry-type: compact
+    # 导出器列表；prometheus 表示注册 Prometheus 格式的文本指标端点
+    exporter-list: prometheus
+    # Prometheus 抓取端口；seata-server 使用 host 网络时即监听在宿主机该端口，勿与业务端口冲突
+    exporter-prometheus-port: 9080
 
   #server:
   #  service-port: 8091 #If not configured, the default is '${server.port} + 1000'

@@ -46,7 +46,8 @@ services:
     restart: unless-stopped
     network_mode: host
   seata-server:
-    image: seataio/seata-server:2.0.0
+    # image: seataio/seata-server:2.0.0
+    image: seataio/seata-server:1.6.1
     #    ports:
     #      - "7091:7091"
     #      - "8091:8091"
@@ -57,31 +58,41 @@ services:
       # 设置-XX:MaxDirectMemorySize=128m
       - JVM_MaxDirectMemorySize=128m
       - TZ=Asia/Shanghai
+      - SEATA_IP=192.168.1.181
     volumes:
       - ./deployer/common/application-seata.yml:/seata-server/resources/application.yml
     restart: unless-stopped
     depends_on:
-      - db-seata
-      - nacos-server
-  db-seata:
-    build:
-      context: db-seata
-      dockerfile: Dockerfile
-    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-seata-db-seata
-    command:
-      - --character-set-server=utf8mb4
-      - --collation-server=utf8mb4_general_ci
-      - --skip-character-set-client-handshake
-    volumes:
-      - ./db-seata/db-seata.sql:/docker-entrypoint-initdb.d/db.sql
-      - ./db-seata/my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf
-    environment:
-      - LANG=C.UTF-8
-      - TZ=Asia/Shanghai
-      - MYSQL_ROOT_PASSWORD=123456
-    restart: unless-stopped
+      # - db-seata
+      # 事务会话存储已切换为 Redis，启动顺序需保证 Redis 先于 Seata Server 就绪
+      - redis-seata
+#      - nacos-server
+  # Seata Server（store.mode=redis）使用的 Redis；端口映射到宿主机，配合 seata-server 的 network_mode: host
+  redis-seata:
+    image: redis:7.2-alpine
+    command: ["redis-server", "--appendonly", "yes"]
     ports:
-      - '3306:3306'
+      - "6379:6379"
+    restart: unless-stopped
+#  db-seata:
+#    build:
+#      context: db-seata
+#      dockerfile: Dockerfile
+#    image: registry.cn-hangzhou.aliyuncs.com/future-public/demo-seata-db-seata
+#    command:
+#      - --character-set-server=utf8mb4
+#      - --collation-server=utf8mb4_general_ci
+#      - --skip-character-set-client-handshake
+#    volumes:
+#      - ./db-seata/db-seata.sql:/docker-entrypoint-initdb.d/db.sql
+#      - ./db-seata/my-customize.cnf:/etc/mysql/conf.d/my-customize.cnf
+#    environment:
+#      - LANG=C.UTF-8
+#      - TZ=Asia/Shanghai
+#      - MYSQL_ROOT_PASSWORD=123456
+#    restart: unless-stopped
+#    ports:
+#      - '3306:3306'
 
   db-order:
     build:
