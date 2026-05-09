@@ -135,6 +135,51 @@ public class UserMapperTests {
     }
 
     /**
+     * 演示 where 多列 in：匹配「(name, age) 元组」属于给定若干对值之一。
+     * <p>
+     * 等价 SQL：{@code WHERE (name, age) IN (('Jone', 18), ('Bob', 18))}。
+     * MyBatis-Plus 的 {@code in} 只能单列，多列组合需用 {@link QueryWrapper#apply(String, Object...)}
+     * 拼片段；{@code {0}}、{@code {1}} 等占位符会按顺序绑定为预编译参数，避免字符串拼接注入。
+     * </p>
+     */
+    @Test
+    public void testWhereMultiColumnIn() {
+        userMapper.delete(Wrappers.query());
+        
+        // 三条样例：(Jone,18)、(Alice,20)、(Bob,18) —— 后两条与「多列 in」筛选结果区分
+        User u1 = new User();
+        u1.setId(1L);
+        u1.setName("Jone");
+        u1.setAge(18);
+        u1.setEmail("jone@example.com");
+        userMapper.insert(u1);
+
+        User u2 = new User();
+        u2.setId(2L);
+        u2.setName("Alice");
+        u2.setAge(20);
+        u2.setEmail("alice@example.com");
+        userMapper.insert(u2);
+
+        User u3 = new User();
+        u3.setId(3L);
+        u3.setName("Bob");
+        u3.setAge(18);
+        u3.setEmail("bob@example.com");
+        userMapper.insert(u3);
+
+        // (name, age) 同时等于 (Jone,18) 或 (Bob,18) 的行，应命中 u1、u3，不包含 (Alice,20)
+        QueryWrapper<User> queryWrapper = Wrappers.query();
+        queryWrapper.apply("(name, age) IN (({0},{1}), ({2},{3}))", "Jone", 18, "Bob", 18);
+        queryWrapper.orderByAsc("id");
+
+        List<User> users = userMapper.selectList(queryWrapper);
+        Assert.assertEquals(2, users.size());
+        Assert.assertEquals(Long.valueOf(1L), users.get(0).getId());
+        Assert.assertEquals(Long.valueOf(3L), users.get(1).getId());
+    }
+
+    /**
      * 测试自定义sql，只查询指定列name并且去重
      * https://blog.csdn.net/qq_44695727/article/details/123434199
      * https://blog.csdn.net/tcctcszhanghao/article/details/106576886
