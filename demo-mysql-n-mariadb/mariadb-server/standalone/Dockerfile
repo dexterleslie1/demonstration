@@ -1,4 +1,6 @@
 FROM mariadb:10.4.19
+# FROM mariadb:10.11.6
+# FROM mariadb:11.4.8
 
 RUN apt-get update
 RUN apt-get install -y curl

@@ -15,6 +15,12 @@ max_binlog_size=512m
 # 不提供log_bin表示禁用binlog功能
 log_bin
 expire_logs_days=10
+
+# 下面配置用于协助测试binlog_expire_logs_seconds、max_binlog_total_size参数
+#slave_connections_needed_for_purge=0
+#max_binlog_total_size=512m
+#max_binlog_size=128m
+
 binlog_format=mixed
 max_binlog_size=1024m
 # 指定binlog文件的前缀

@@ -3613,3 +3613,159 @@ mysql> explain select id from test_user where name like '%黄';
 >
 > 把日志类型修改为mixed
 > binlog_format=mixed
+
+
+
+## `connection_id`、`thread_id`、`event_id`关系
+
+在 MySQL 中，`connection_id`、`thread_id` 和 `event_id` 是三个不同的概念，它们分别代表了不同层次的执行单元和标识符。以下是它们的详细解释和关系：
+
+---
+
+### **1. connection_id（连接ID）**
+#### **定义**
+- **`connection_id`** 是 MySQL 服务器分配给每个客户端连接的**唯一标识符**。
+- 每当一个客户端（如 MySQL Workbench、命令行客户端、应用程序）连接到 MySQL 服务器时，都会分配一个新的 `connection_id`。
+- 该 ID 在服务器生命周期内唯一（服务器重启后会重置）。
+
+#### **如何查看**
+```sql
+SELECT CONNECTION_ID();  -- 返回当前连接的ID
+```
+或：
+```sql
+SHOW PROCESSLIST;  -- 查看所有活跃连接及其ID
+```
+
+#### **特点**
+- 一个 `connection_id` 对应一个 **客户端会话（Session）**。
+- 如果客户端断开连接，该 `connection_id` 会被释放，未来可能被新连接复用。
+
+#### 实验
+
+```sql
+# id列为connection_id
+show full processlist;
+
+# 输出信息和上面命令的输出信息类似，id列为connection_id
+select * from information_schema.processlist;
+```
+
+---
+
+### **2. thread_id（线程ID）**
+#### **定义**
+- **`thread_id`** 是 MySQL 服务器内部用于管理连接的**操作系统线程ID**。
+- 在 MySQL 中，每个客户端连接通常由一个独立的线程（或协程，取决于配置）处理。
+- 该 ID 由操作系统分配，不同于 `connection_id`。
+
+#### **如何查看**
+```sql
+SELECT THREAD_ID FROM performance_schema.threads 
+WHERE PROCESSLIST_ID = CONNECTION_ID();  -- 获取当前连接的线程ID
+```
+或：
+```sql
+SHOW PROCESSLIST;  -- 在 MySQL 8.0+ 中，`Id` 列是 `connection_id`，而 `Thread_id` 列是 `thread_id`
+```
+
+#### **特点**
+- `thread_id` 是 MySQL 内部使用的，通常比 `connection_id` 更底层。
+- 如果 MySQL 使用线程池（Thread Pool），多个 `connection_id` 可能共享同一个 `thread_id`。
+
+#### 实验
+
+```sql
+# 通过connection_id查找其对应的线程信息，thread_id为线程id
+select * from performance_schema.threads where processlist_id=connection_id();
+```
+
+---
+
+### **3. event_id（事件ID）**
+#### **定义**
+- **`event_id`** 是 MySQL **Performance Schema（性能模式）** 中记录的**事件唯一标识符**。
+- 它用于跟踪 SQL 查询、事务、锁等待等事件。
+- 每个事件（如一条 SQL 语句的执行）都会被分配一个 `event_id`。
+
+#### **如何查看**
+```sql
+SELECT EVENT_ID, EVENT_NAME, SQL_TEXT 
+FROM performance_schema.events_statements_current 
+WHERE THREAD_ID = (SELECT THREAD_ID FROM performance_schema.threads WHERE PROCESSLIST_ID = CONNECTION_ID());
+```
+
+#### **特点**
+- `event_id` 是临时的，仅用于性能分析。
+- 不同的事件（如查询、事务、锁等待）可能有不同的 `event_id`。
+
+---
+
+### **三者的关系**
+| 概念                | 作用                         | 生命周期         | 查询方式                      |
+| ------------------- | ---------------------------- | ---------------- | ----------------------------- |
+| **`connection_id`** | 标识客户端连接               | 连接期间有效     | `SELECT CONNECTION_ID()`      |
+| **`thread_id`**     | 标识 MySQL 内部线程          | 线程存活期间有效 | `performance_schema.threads`  |
+| **`event_id`**      | 标识 Performance Schema 事件 | 事件执行期间有效 | `performance_schema.events_*` |
+
+**关系示意图**
+
+```
+客户端连接 → connection_id（会话） → thread_id（处理线程） → event_id（SQL事件）
+```
+- **一个 `connection_id` 对应一个 `thread_id`**（通常）。
+- **一个 `thread_id` 可以对应多个 `event_id`**（因为一个线程可以执行多个 SQL 语句）。
+
+---
+
+### **总结**
+1. **`connection_id`** 是客户端会话的标识符，用于管理连接。
+2. **`thread_id`** 是 MySQL 内部线程的标识符，用于处理 SQL 请求。
+3. **`event_id`** 是 Performance Schema 中的事件 ID，用于监控 SQL 执行情况。
+
+在排查性能问题时，可以通过 `connection_id` 找到 `thread_id`，再通过 `thread_id` 在 Performance Schema 中查找具体的 `event_id`，从而分析 SQL 执行细节。
+
+
+
+## `Undo Log` - 概念
+
+Undo log（撤销日志）是MySQL InnoDB存储引擎中的一种重要日志机制，主要用于事务回滚和实现MVCC（多版本并发控制）。
+
+### Undo Log 的核心作用
+
+1. **事务回滚**：记录事务修改前的数据，以便在事务失败时回滚到之前的状态
+2. **MVCC支持**：为读取操作提供历史版本数据，实现非锁定读
+3. **崩溃恢复**：在数据库异常重启后帮助恢复到一致状态
+
+### Undo Log 工作原理
+
+- **记录格式**：每条Undo记录包含事务ID、回滚指针、修改前的数据等
+- **存储方式**：存放在系统表空间或独立的undo表空间中
+- **生命周期**：
+  - 事务开始时分配
+  - 事务过程中记录修改前的数据
+  - 事务提交后根据隔离级别决定保留时间
+  - 不再需要时由purge线程清理
+
+### Undo Log 类型
+
+1. **insert undo log**：记录INSERT操作，只在事务回滚时需要
+2. **update undo log**：记录UPDATE/DELETE操作，回滚和MVCC都需要
+
+### 与Redo Log的区别
+
+| 特性       | Undo Log                   | Redo Log         |
+| ---------- | -------------------------- | ---------------- |
+| 目的       | 回滚事务/MVCC              | 崩溃恢复         |
+| 记录内容   | 修改前的数据               | 修改后的数据     |
+| 持久化方式 | 随机写入                   | 顺序写入         |
+| 生命周期   | 事务结束后可能保留一段时间 | 检查点后可以覆盖 |
+
+### 实际应用中的注意事项
+
+1. 大事务会导致Undo Log膨胀，影响性能
+2. 长事务会阻止Undo Log的清理，可能导致空间不足
+3. MySQL 8.0支持独立的Undo表空间，便于管理
+
+Undo Log是MySQL实现ACID特性中原子性(A)和隔离性(I)的关键组件之一。
+

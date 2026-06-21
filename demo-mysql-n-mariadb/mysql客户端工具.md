@@ -2,7 +2,8 @@
 
 如下：
 
-- Windows11首选使用Navicat Premium作为MySQL客户端工具。
+- Windows11首选使用Navicat Premium作为MySQL客户端工具（因为担心破解版有病毒，暂时使用下面方案）。
+- Windows11目前使用DBeaver+IDEA组合使用客户端。
 
 ## `mysql workbench`
 
@@ -42,7 +43,9 @@ sudo apt install ./mysql-workbench-community_8.0.29-1ubuntu20.04_amd64.deb
 5. **修改超时值**：将“DBMS connection read time out”的值从默认的30秒修改为你希望的新值，比如60秒或更高。这个值应该根据你的查询需求和MySQL服务器的性能来设置。
 6. **保存并重启**：修改完成后，点击“Apply”（应用）或“OK”（确定）按钮保存更改。然后，你可能需要重启MySQL Workbench以使新的超时设置生效。
 
+### 连接多个`connection`
 
+>说明：在测试 `MySQL` 锁时需要不同的 `connection`，在欢迎页面通过多次点击相应的 `connection` 打开多个连接。
 
 ## `IntelliJ MySQL`客户端
 
@@ -117,15 +120,18 @@ sudo snap install heidisql-wine
 
 - 无法连接 MariaDB，因为 MariaDB jdbc 驱动在线下载失败
 
+### Ubuntu安装
 
+https://dbeaver.io/ 下载 deb 包安装，sudo apt install ./xxx.deb
 
 ## `SQLyog`
-
-使用此工具作为首选的 MySQL GUI 客户端工具，因为其支持精准的 keyword upper case 功能。
 
 提示：
 
 - 编写SQL时没有智能提示。
+- 数天不关闭后会导致登录Windows11操作系统卡住（此原因导致放弃此软件）。
+- 支持关键字自动大写功能。
+- 在使用此工具时按tab SQL缩进空间太大。
 
 
 

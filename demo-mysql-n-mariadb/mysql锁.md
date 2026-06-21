@@ -1,7 +1,3 @@
-# 锁
-
-> 注意：下面演示的测试是基于`mysql8.0`的。
-
 ## 为何需要学习`mysql`锁呢？
 
 ## 学习思路
@@ -68,7 +64,7 @@ MySQL中的锁可以根据不同的维度进行分类，以下是对MySQL锁的�
 
 ## 为测试作准备
 
-使用`docker compose`运行`mysql8.0`，详细的步骤请参考 <a href="/MySQL/使用docker-compose运行MySQL.html#单机版-mysql" target="_blank">链接</a>
+使用`docker compose`运行`mysql8.0.18`，详细的步骤请参考 <a href="/MySQL/使用docker-compose运行MySQL.html#单机版-mysql" target="_blank">链接</a>
 
 准备测试数据`SQL`脚本如下：
 
@@ -91,9 +87,17 @@ create index idx_course_age on course(age);
 set global innodb_lock_wait_timeout=3600;
 ```
 
-## 使用`show engine innodb status`显示当前锁信息
 
-启用`innodb status`打印锁等待信息
+
+## `show engine innodb status`显示当前锁信息
+
+查看打印锁等待信息是否启用
+
+```sql
+select @@innodb_status_output_locks;
+```
+
+启用`innodb status`打印锁等待信息（`MySQL 8.0.18` 默认已经开启）
 
 ```sql
 set global innodb_status_output_locks=ON;
@@ -159,6 +163,8 @@ Record lock, heap no 8 PHYSICAL RECORD: n_fields 5; compact format; info bits 0
  3: len 4; hex 6a617661; asc java;;
  4: len 4; hex 80000005; asc     ;;
 ```
+
+- 上面没有显示持有锁信息，只是显式等待锁信息。
 
 
 
@@ -279,12 +285,12 @@ mysql> select * from performance_schema.data_lock_waits\G;
 # update语句触发加行排他锁，这个锁在等待其他锁释放状态
                           ENGINE: INNODB
        REQUESTING_ENGINE_LOCK_ID: 140105457442816:2:4:2:140105390044704
-REQUESTING_ENGINE_TRANSACTION_ID: 102493
+REQUESTING_ENGINE_TRANSACTION_ID: 102493 # 请求锁的事务
             REQUESTING_THREAD_ID: 53
              REQUESTING_EVENT_ID: 38
 REQUESTING_OBJECT_INSTANCE_BEGIN: 140105390044704
          BLOCKING_ENGINE_LOCK_ID: 140105457442008:2:4:2:140105390038528
-  BLOCKING_ENGINE_TRANSACTION_ID: 102490
+  BLOCKING_ENGINE_TRANSACTION_ID: 102490 # 阻塞锁的事务
               BLOCKING_THREAD_ID: 52
                BLOCKING_EVENT_ID: 43
   BLOCKING_OBJECT_INSTANCE_BEGIN: 140105390038528
@@ -516,7 +522,38 @@ Query OK, 0 rows affected (0.00 sec)
 
 ### `flush tables with read lock`
 
-> 对整个`MySQL`实例加全局锁
+`FLUSH TABLES WITH READ LOCK` 是 MySQL 中的一个管理命令，主要作用如下：
+
+#### 主要功能
+
+1. **锁定所有表**：对数据库中的所有表施加全局读锁（共享锁）
+2. **刷新表**：关闭所有打开的表并强制所有正在运行的操作完成
+3. **阻止写入**：允许读操作继续，但阻止所有写操作（INSERT/UPDATE/DELETE等）
+
+#### 典型使用场景
+
+- **数据库备份**：在执行物理备份（如使用mysqldump或Percona XtraBackup）前使用，确保备份一致性
+- **主从复制设置**：在配置主从复制时获取主库的二进制日志位置
+- **数据迁移**：在数据迁移过程中保持数据一致性
+
+#### 注意事项
+
+- 该命令会阻塞所有写操作，直到执行`UNLOCK TABLES`命令
+- 长时间持有此锁会导致应用程序无法写入数据库
+- 对于InnoDB表，虽然可以读取，但某些操作可能仍会被阻塞
+- 执行此命令需要RELOAD权限
+
+#### 示例用法
+
+```sql
+FLUSH TABLES WITH READ LOCK;
+-- 执行备份或其他需要一致性的操作
+UNLOCK TABLES;
+```
+
+此命令是MySQL数据库管理中的重要工具，特别是在需要确保数据一致性的操作中。
+
+#### 实验
 
 ```bash
 mysql> flush tables with read lock;
@@ -552,9 +589,12 @@ OBJECT_INSTANCE_BEGIN: 140103517431056
 ERROR: 
 No query specified
 
+# 释放锁
 mysql> unlock tables;
 Query OK, 0 rows affected (0.00 sec)
 ```
+
+
 
 ### `lock tables course read`
 
@@ -3337,7 +3377,7 @@ MySQL中的全局锁（Global Lock）是一个对整个数据库实例加锁的�
 可以使用`FTWRL`锁解决在类似上面提到的场景数据备份（数据库中有`MyISAM`表）导致数据不一致情况。
 
 ```bash
-# 为`MySQL`实例加全局锁
+# 为MySQL实例加全局锁
 mysql> flush tables with read lock;
 Query OK, 0 rows affected (0.00 sec)
 
@@ -3388,6 +3428,8 @@ Query OK, 0 rows affected (0.00 sec)
 
 `FTWRL`不会发生死锁。
 
+
+
 ## 表级锁
 
 ### 什么是表级锁？
@@ -3408,7 +3450,7 @@ MySQL 中的表级锁（Table-level Locking）是最简单的锁定策略，也�
 
 >为了解决`MyISAM`表的数据不一致问题发生。
 
-#### alter table
+#### `alter table`
 
 >这个命令用于更改表的结构，如添加列、删除列、改变列的类型等。执行这个命令的时候，`MySQL`需要锁定整个表（表排他锁）以防止在更改过程中有新的数据写入。
 
@@ -3418,7 +3460,7 @@ MySQL 中的表级锁（Table-level Locking）是最简单的锁定策略，也�
 
 #### `lock tables`
 
->这个命令可以显式地为一个或多个表加上表共享锁或表排他锁。`lock tables`命令后面可以跟上一系列的表名和锁模式，用来指定需要锁定哪些表，以及使用什么样的锁模式。例如，`lock tables t1 write, t2 read`；命令会给表 t1 加上表排他锁，给表 t2 加上表共享锁。
+>这个命令可以显式地为一个或多个表加上表共享锁或表排他锁。`lock tables`命令后面可以跟上一系列的表名和锁模式，用来指定需要锁定哪些表，以及使用什么样的锁模式。例如，`lock tables t1 write, t2 read`；命令会给表 `t1` 加上表排他锁，给表 `t2` 加上表共享锁。
 
 #### 全表扫描或大范围扫描
 
@@ -3432,6 +3474,7 @@ MySQL 中的表级锁（Table-level Locking）是最简单的锁定策略，也�
 
 ```bash
 # 表共享读演示
+# session1
 mysql> lock tables course read;
 Query OK, 0 rows affected (0.00 sec)
 
@@ -3561,17 +3604,19 @@ mysql> unlock tables;
 Query OK, 0 rows affected (0.00 sec)
 ```
 
-### 元数据锁（meta data lock，MDL）
 
-#### 什么是元数据锁呢？
 
-MDL加锁过程是系统自动控制，无需显示使用，在访问一张表的时候会自动加上。MDL锁主要作用是维护表元数据的数据一致性，在表上有活动事务的时候，不可以对表元数据进行写入操作。为了避免DML和DDL冲突，保证读写的正确性。
+### 元数据锁（`MDL`）- 概念
 
-在MySQL5.5中引入了MDL，当对一张表进行增删改查的时候，自动加MDL读锁（共享）。当对表结构进行变更操作时候，自动加MDL写锁（排他）。
+`MDL（Metadata Lock）` 加锁过程是系统自动控制，无需显示使用，在访问一张表的时候会自动加上。`MDL` 锁主要作用是维护表元数据的数据一致性，在表上有活动事务的时候，不可以对表元数据进行写入操作。为了避免 `DML` 和 `DDL` 冲突，保证读写的正确性。
 
-#### 元数据锁有哪些类型呢？
+在 `MySQL5.5` 中引入了 `MDL`，当对一张表进行 `DML` 的时候，自动加 `MDL` 共享读（`SHARED_READ`）或者共享写锁（`SHARED_WRITE`）。当对表结构进行变更操作时候，自动加 `MDL` 排他锁（`EXCLUSIVE`）。
 
-MDL锁主要可以分为以下几种类型：
+
+
+### 元数据锁（`MDL`）- 类型
+
+分为以下几种类型：
 
 1. 共享读锁（SHARED_READ）：
    - 当一个会话执行查询（如SELECT）时，它首先会获取被查询对象的共享读锁。
@@ -3581,19 +3626,24 @@ MDL锁主要可以分为以下几种类型：
    - 在某些情况下，虽然会话正在执行修改数据的操作（如DML操作），但它可能并不需要修改表的元数据，此时它可能会获取共享写锁。
    - 与共享读锁类似，多个会话可以同时持有共享写锁。
    - 兼容`SHARE_READ`、`SHARED_WRITE`锁
-3. 独占锁（EXCLUSIVE）：
+3. 排他锁（EXCLUSIVE）：
    - 当一个会话执行DDL（数据定义语言）操作（如ALTER TABLE、DROP TABLE等）时，它会首先获取被操作对象的独占锁。
    - 独占锁不允许其他会话同时持有任何类型的锁（包括共享读锁和共享写锁），从而确保DDL操作的原子性和一致性。
 
-#### 哪些`sql`执行会触发加元数据锁呢？
+### 元数据锁（`MDL`）- 加锁 - 概念
 
-- `drop table`、`alter table`、`create index`会触发加元数据排他锁。
-- `select`语句会触发加元数据共享读锁，`insert`、`delete`、`update`语句会触发加元数据共享写锁。
+`drop table`、`alter table`、`create index` 会触发加元数据排他锁（`EXCLUSIVE`）。
 
-演示`select`触发加元数据共享读锁
+`select` 语句会触发加元数据共享读锁（`SHARED_READ`），`insert`、`delete`、`update` 语句会触发加元数据共享写锁（`SHARED_WRITE`）。
+
+
+
+### 元数据锁（`MDL`）- 加锁 - `SHARED_READ`
+
+> `select` 触发加元数据共享读锁（`SHARED_READ`）。
 
 ```bash
-# 演示select语句自动加入元数据共享读锁
+# 演示select语句自动加入元数据共享读锁（SHARED_READ）
 mysql> begin;
 Query OK, 0 rows affected (0.00 sec)
 
@@ -3627,10 +3677,14 @@ mysql> commit;
 Query OK, 0 rows affected (0.00 sec)
 ```
 
-演示触发加元数据共享写锁
+
+
+### 元数据锁（`MDL`）- 加锁 - `SHARED_WRITE`
+
+> `update` 触发加元数据共享写锁（`SHARED_WRITE`）。
 
 ```bash
-# 演示delete、update、insert、select ... for update语句自动加入元数据共享写锁
+# 演示delete、update、insert、select ... for update语句自动加入元数据共享写锁（SHARED_WRITE）
 mysql> begin;
 Query OK, 0 rows affected (0.00 sec)
 
@@ -3658,7 +3712,136 @@ Query OK, 0 rows affected (0.00 sec)
 
 
 
-#### 元数据锁之间的兼容性
+### 元数据锁（`MDL`）- 加锁 - `EXCLUSIVE`
+
+>`alter table` 语句尝试加元数据排他锁（`EXCLUSIVE`）和 `select` 语句加的元数据共享读锁（`SHARED_READ`）冲突。
+
+```sh
+# session1
+begin;
+select * from course where id=5;
+
+# session2
+# 下面 alter table 语句阻塞，因为元数据排他锁（exclusive）和元数据共享读锁（shared_read）冲突
+alter table course add column col1 int;
+
+# 分析锁情况
+mysql> select * from performance_schema.metadata_locks 
+    -> where owner_thread_id!=(select thread_id from performance_schema.threads where processlist_id=connection_id())\G;
+*************************** 1. row ***************************
+# select 语句自动加元数据共享读锁（shared_read）
+          OBJECT_TYPE: TABLE
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+          COLUMN_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 140556428802864
+            LOCK_TYPE: SHARED_READ
+        LOCK_DURATION: TRANSACTION
+          LOCK_STATUS: GRANTED
+               SOURCE: sql_parse.cc:6014
+      OWNER_THREAD_ID: 79
+       OWNER_EVENT_ID: 93
+*************************** 2. row ***************************
+# 暂时不理会
+          OBJECT_TYPE: GLOBAL
+        OBJECT_SCHEMA: NULL
+          OBJECT_NAME: NULL
+          COLUMN_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 140557248163536
+            LOCK_TYPE: INTENTION_EXCLUSIVE
+        LOCK_DURATION: STATEMENT
+          LOCK_STATUS: GRANTED
+               SOURCE: sql_base.cc:5393
+      OWNER_THREAD_ID: 77
+       OWNER_EVENT_ID: 68
+*************************** 3. row ***************************
+# 暂时不理会
+          OBJECT_TYPE: SCHEMA
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: NULL
+          COLUMN_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 140557248463856
+            LOCK_TYPE: INTENTION_EXCLUSIVE
+        LOCK_DURATION: TRANSACTION
+          LOCK_STATUS: GRANTED
+               SOURCE: sql_base.cc:5380
+      OWNER_THREAD_ID: 77
+       OWNER_EVENT_ID: 68
+*************************** 4. row ***************************
+# 暂时不理会
+          OBJECT_TYPE: TABLE
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+          COLUMN_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 140557248463952
+            LOCK_TYPE: SHARED_UPGRADABLE
+        LOCK_DURATION: TRANSACTION
+          LOCK_STATUS: GRANTED
+               SOURCE: sql_parse.cc:6014
+      OWNER_THREAD_ID: 77
+       OWNER_EVENT_ID: 68
+*************************** 5. row ***************************
+# 暂时不理会
+          OBJECT_TYPE: BACKUP LOCK
+        OBJECT_SCHEMA: NULL
+          OBJECT_NAME: NULL
+          COLUMN_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 140557247236128
+            LOCK_TYPE: INTENTION_EXCLUSIVE
+        LOCK_DURATION: TRANSACTION
+          LOCK_STATUS: GRANTED
+               SOURCE: sql_base.cc:5400
+      OWNER_THREAD_ID: 77
+       OWNER_EVENT_ID: 68
+*************************** 6. row ***************************
+# 暂时不理会
+          OBJECT_TYPE: TABLESPACE
+        OBJECT_SCHEMA: NULL
+          OBJECT_NAME: testdb/course
+          COLUMN_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 140557248486224
+            LOCK_TYPE: INTENTION_EXCLUSIVE
+        LOCK_DURATION: TRANSACTION
+          LOCK_STATUS: GRANTED
+               SOURCE: lock.cc:789
+      OWNER_THREAD_ID: 77
+       OWNER_EVENT_ID: 68
+*************************** 7. row ***************************
+# 暂时不理会
+          OBJECT_TYPE: TABLE
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: #sql-1_23
+          COLUMN_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 140557248170880
+            LOCK_TYPE: EXCLUSIVE
+        LOCK_DURATION: STATEMENT
+          LOCK_STATUS: GRANTED
+               SOURCE: sql_table.cc:16044
+      OWNER_THREAD_ID: 77
+       OWNER_EVENT_ID: 68
+*************************** 8. row ***************************
+# alter table 等待加元数据排他锁（exclusive）
+          OBJECT_TYPE: TABLE
+        OBJECT_SCHEMA: testdb
+          OBJECT_NAME: course
+          COLUMN_NAME: NULL
+OBJECT_INSTANCE_BEGIN: 140557248255520
+            LOCK_TYPE: EXCLUSIVE
+        LOCK_DURATION: TRANSACTION
+          LOCK_STATUS: PENDING # 锁等待...
+               SOURCE: mdl.cc:3696
+      OWNER_THREAD_ID: 77
+       OWNER_EVENT_ID: 69
+8 rows in set (0.00 sec)
+
+ERROR: 
+No query specified
+
+```
+
+
+
+### 元数据锁（`MDL`）- 兼容性 - 概念
 
 |                | 元数据共享读锁 | 元数据共享写锁 | 元数据排他锁 |
 | -------------- | -------------- | -------------- | ------------ |
@@ -3668,14 +3851,16 @@ Query OK, 0 rows affected (0.00 sec)
 
 
 
-演示元数据锁不兼容情况
+### 元数据锁（`MDL`）- 兼容性 - 不兼容
 
 ```bash
-# 演示alter table 元数据排他锁和select语句的元数据共享读锁冲突情景
-# 演示元数据共享读锁、元数据共享写锁和元数据排他锁冲突
+# 演示 alter table 元数据排他锁（exclusive）和 select 语句的元数据共享读锁（shared_read）冲突
+# 演示元数据共享读锁（shared_read）、元数据共享写锁（shared_write）和元数据排他锁（exclusive）冲突
+
+# session1
 mysql> begin;
 Query OK, 0 rows affected (0.00 sec)
-
+# session1
 mysql> select * from course;
 +----+--------+-----+
 | id | name   | age |
@@ -3687,11 +3872,12 @@ mysql> select * from course;
 +----+--------+-----+
 4 rows in set (0.00 sec)
 
-# session2 执行alter table语句一直阻塞(如下面显示的pending状态)，因为元数据排他锁和session1 select语句触发加的元数据共享读锁冲突
+# session2 执行alter table语句一直阻塞（如下面显示的pending状态），因为元数据排他锁和session1 select语句触发加的元数据共享读锁冲突
 mysql> alter table course add column test int not null;
 
 mysql> select * from performance_schema.metadata_locks\G;
 *************************** 1. row ***************************
+# select 语句加的元数据共享读锁
           OBJECT_TYPE: TABLE
         OBJECT_SCHEMA: testdb
           OBJECT_NAME: course
@@ -3705,6 +3891,7 @@ OBJECT_INSTANCE_BEGIN: 139734949992928
        OWNER_EVENT_ID: 39
 ...
 *************************** 9. row ***************************
+# alter table 语句等待加元数据排他锁
           OBJECT_TYPE: TABLE
         OBJECT_SCHEMA: testdb
           OBJECT_NAME: course
@@ -3712,7 +3899,7 @@ OBJECT_INSTANCE_BEGIN: 139734949992928
 OBJECT_INSTANCE_BEGIN: 139735431619088
             LOCK_TYPE: EXCLUSIVE
         LOCK_DURATION: TRANSACTION
-          LOCK_STATUS: PENDING
+          LOCK_STATUS: PENDING # 锁等待
                SOURCE: mdl.cc:3753
       OWNER_THREAD_ID: 71
        OWNER_EVENT_ID: 52
@@ -3721,13 +3908,21 @@ OBJECT_INSTANCE_BEGIN: 139735431619088
 ERROR: 
 No query specified
 
+# session1
 mysql> commit;
 Query OK, 0 rows affected (0.01 sec)
+```
 
-# 演示元数据共享读锁和元数据共享写锁不冲突
+
+
+### 元数据锁（`MDL`）- 兼容性 - 兼容
+
+```sh
+# 演示元数据共享读锁（shared_read）和元数据共享写锁（shared_write）不冲突
+# session1
 mysql> begin;
 Query OK, 0 rows affected (0.01 sec)
-
+# session1
 mysql> select * from course;
 +----+--------+-----+
 | id | name   | age |
@@ -3749,6 +3944,7 @@ Rows matched: 1  Changed: 1  Warnings: 0
 
 mysql> select * from performance_schema.metadata_locks\G;
 *************************** 1. row ***************************
+# select 语句加的元数据共享读锁
           OBJECT_TYPE: TABLE
         OBJECT_SCHEMA: testdb
           OBJECT_NAME: course
@@ -3761,6 +3957,7 @@ OBJECT_INSTANCE_BEGIN: 139734949936816
       OWNER_THREAD_ID: 70
        OWNER_EVENT_ID: 46
 *************************** 3. row ***************************
+# update 语句加的元数据共享写锁
           OBJECT_TYPE: TABLE
         OBJECT_SCHEMA: testdb
           OBJECT_NAME: course
@@ -3777,6 +3974,7 @@ OBJECT_INSTANCE_BEGIN: 139735431605824
 ERROR: 
 No query specified
 
+# session1
 mysql> commit;
 Query OK, 0 rows affected (0.00 sec)
 
@@ -3787,19 +3985,21 @@ Query OK, 0 rows affected (0.00 sec)
 
 
 
-### 意向锁
-
-#### 什么是意向锁呢？
+### 意向锁 - 概念
 
 意向锁是表锁，为了协调行锁和表锁的关系，支持多粒度（表锁和行锁）的锁并存。
 
 意向锁的作用是当事务A对记录加行锁时，`MySQL`会自动为该表添加意向锁，事务B如果想申请整个表的表级排他写锁，那么不需要遍历每一行判断是否存在行锁，而直接判断是否存在意向锁，增强性能。
 
-#### 意向锁有哪些类型呢？
+
+
+### 意向锁 - 类型
 
 和锁的分类一样，分为共享读锁（IS）和排他写锁（IX）。
 
-#### 什么时候触发加意向锁呢？
+
+
+### 意向锁 - 加锁
 
 - `select * from course where id=5 for update`加意向排他锁
 - `select * from course where id=5 lock in share mode`加意向共享锁
@@ -3807,7 +4007,9 @@ Query OK, 0 rows affected (0.00 sec)
 - `delete from course where id=5`加意向排他锁
 - `insert into course values(5,'java',2)`加意向排他锁
 
-#### 意向锁的兼容互斥性
+
+
+### 意向锁 - 兼容性 - 概念
 
 |                    | 意向共享锁（IS锁） | 意向排他锁（IX锁） | 表共享锁（表S锁） | 表排他锁（表X锁） |
 | ------------------ | ------------------ | ------------------ | ----------------- | ----------------- |
@@ -3818,7 +4020,7 @@ Query OK, 0 rows affected (0.00 sec)
 
 
 
-演示意向共享锁和表共享锁兼容
+### 意向锁 - 兼容性 - 意向共享锁和表共享锁兼容
 
 ```bash
 # session1开启事务
@@ -3846,7 +4048,7 @@ mysql> commit;
 Query OK, 0 rows affected (0.00 sec)
 ```
 
-演示意向共享锁和表排他锁互斥
+### 意向锁 - 兼容性 - 意向共享锁和表排他锁互斥
 
 ```bash
 # session1开启事务
@@ -3874,7 +4076,7 @@ mysql> unlock tables;
 Query OK, 0 rows affected (0.00 sec)
 ```
 
-演示意向排他锁和表共享锁、表排他锁互斥
+### 意向锁 - 兼容性 - 意向排他锁和表共享锁、表排他锁互斥
 
 ```bash
 # session1开启事务
@@ -3925,11 +4127,15 @@ Query OK, 0 rows affected (0.00 sec)
 
 ### 行级锁有哪些类型？
 
-和锁的分类一样，分为共享读锁和排他写锁。
+记录锁：共享锁（`S,REC_NOT_GAP`）、排他锁（`X,REC_NOT_GAP`）
+
+间隙锁
+
+临键锁
 
 ### 记录锁、间隙锁和临键锁用于解决什么问题？
 
-MySQL中的记录锁、间隙锁和临键锁是用于并发控制的锁机制，它们在锁定范围、锁定粒度、锁定效果以及适用场景等方面存在显著的区别。以下是关于这三种锁机制的详细比较：
+`MySQL`中的记录锁、间隙锁和临键锁是用于并发控制的锁机制，它们在锁定范围、锁定粒度、锁定效果以及适用场景等方面存在显著的区别。以下是关于这三种锁机制的详细比较：
 
 1. 记录锁（Record Locks）
 
@@ -3968,13 +4174,15 @@ MySQL中的记录锁、间隙锁和临键锁是用于并发控制的锁机制，
 - **间隙锁**：锁定索引记录之间的间隙，避免幻读。
 - **临键锁**：结合了记录锁和间隙锁的特点，既锁定行数据又锁定间隙，提供最强的并发控制。
 
-### 记录锁（Record Lock）
 
-#### 什么是记录锁呢？
 
-**即锁住一条记录。注意了，该锁是对索引记录进行加锁**！锁是在加索引上而不是行上的。注意了，innodb一定存在聚簇索引，因此行锁最终都会落到聚簇索引上！
+### 记录锁（`Record Lock`）- 概念
 
-#### 什么时候触发加记录锁呢？
+**即锁住一条记录。注意了，该锁是对索引记录进行加锁**！锁是在加索引上而不是行上的。注意了，`innodb` 一定存在聚簇索引，因此行锁最终都会落到聚簇索引上！
+
+
+
+### 记录锁（`Record Lock`）- 加锁时机
 
 - `select ... for update`
 
@@ -3992,7 +4200,9 @@ MySQL中的记录锁、间隙锁和临键锁是用于并发控制的锁机制，
 
   删除操作会对被删除并且存在的行添加一个排他锁（X锁）。
 
-#### 演示记录排他锁
+
+
+### 记录锁（`Record Lock`）- 排他锁（`X,REC_NOT_GAP`）
 
 ```bash
 # session1开启事务
@@ -4084,7 +4294,7 @@ mysql> commit;
 Query OK, 0 rows affected (0.00 sec)
 ```
 
-#### 演示记录共享锁
+### 记录锁（`Record Lock`）- 共享锁（`S,REC_NOT_GAP`）
 
 ```bash
 # session1开启事务
@@ -4177,7 +4387,7 @@ Query OK, 0 rows affected (0.00 sec)
 
 
 
-#### 演示记录共享锁和记录共享锁之间是兼容
+### 记录锁（`Record Lock`）- 共享锁（`S,REC_NOT_GAP`）和共享锁（`S,REC_NOT_GAP`）兼容
 
 ```bash
 # session1开启事务
@@ -4208,7 +4418,7 @@ mysql> commit;
 Query OK, 0 rows affected (0.00 sec)
 ```
 
-#### 演示记录共享锁和记录排他锁之间是互斥
+### 记录锁（`Record Lock`）- 共享锁（`S,REC_NOT_GAP`）和排他锁（`X,REC_NOT_GAP`）互斥
 
 ```bash
 # session1开启事务
@@ -4233,7 +4443,7 @@ mysql> commit;
 Query OK, 0 rows affected (0.00 sec)
 ```
 
-#### 演示记录排他锁和记录排他锁之间是互斥
+### 记录锁（`Record Lock`）- 排他锁（`X,REC_NOT_GAP`）和排他锁（`X,REC_NOT_GAP`）互斥
 
 ```bash
 # session1开启事务
@@ -4258,29 +4468,29 @@ mysql> commit;
 Query OK, 0 rows affected (0.00 sec)
 ```
 
-### 间隙锁（Gap Lock）
 
-#### 什么是间隙锁呢？
+
+### 间隙锁（`Gap Lock`）- 概念
 
 是对索引的间隙加锁，其目的只有一个，防止其他事物插入数据。在`Read Committed`隔离级别下，不会使用间隙锁。隔离级别比`Read Committed`低的情况下，也不会使用间隙锁，如隔离级别为`Read Uncommited`时，也不存在间隙锁。当隔离级别为`Repeatable Read`和`Serializable`时，就会存在间隙锁。**即锁定一个区间，左开右开（因为间隙锁不包含记录锁，所以是左开右开）。**
 
-#### 间隙锁有哪些类型呢？
+### 间隙锁（`Gap Lock`）- 类型
 
 和锁的分类一样，分为共享锁和排他锁。
 
-#### 间隙锁的兼容性
+### 间隙锁（`Gap Lock`）- 兼容性
 
 - 与其他间隙锁的兼容性：由于间隙锁是共享锁，多个事务可以同时持有同一个间隙锁，因此间隙锁之间是相互兼容的。
 - 与记录锁的兼容性：间隙锁与记录锁（行锁）是不兼容的。如果一个事务已经持有了某个记录的行锁，那么其他事务无法在该记录所在的间隙上获得间隙锁。
 - 与意向锁的兼容性：意向锁（Intention Locks）是InnoDB自动加的，用于表示事务准备获取某种类型的锁（共享锁或排他锁）。意向锁与间隙锁是兼容的，因为意向锁只是表示事务的加锁意向，并不实际锁定任何数据。
 
-#### 哪些`sql`执行会触发加间隙锁呢？
+### 间隙锁（`Gap Lock`）- 加锁时机
 
 - 在`RR`事务隔离级别中，`select for update`、`select lock in share mode`、`update`、`delete`语句`where`条件列没有索引时会加间隙锁（锁定表中所有间隙）。
 - 在`RR`事物隔离级别中，`select for update`、`select lock in share mode`、`update`、`delete`不存在的记录时加间隙锁。
 - 在`RR`事务隔离级别中，`select for update`、`select lock in share mode`、`update`、`delete`语句`where`条件列为非唯一索引时会加间隙所。
 
-#### 演示间隙锁
+### 间隙锁（`Gap Lock`）- 演示
 
 ```bash
 # session1开启事务
@@ -4326,21 +4536,19 @@ Query OK, 0 rows affected (0.01 sec)
 
 
 
-#### 插入意向锁
-
->[参考链接](https://www.51cto.com/article/759298.html)
-
-##### 什么是隐式锁呢？
-
-当事物需要加锁时，如果这个锁不可能发生冲突，InnoDB会跳过加锁环节，这种机制称为隐式锁。隐式锁时InnoDB实现的延时加锁机制，只有当可能会产生冲突的时候才会加锁，减少锁的数量，提高系统的性能。在Insert过程中不加锁，遇到特殊情况，将隐式锁转为显示锁。
-
-##### 什么是插入意向锁呢？
+### 间隙锁（`Gap Lock`）- 插入意向锁 - 概念
 
 插入意向锁是由 INSERT 操作在插入记录之前加的一种间隙锁。插入意向锁是一种排他（LOCK_X）间隙锁（LOCK_GAP）。
 
 由于多个间隙锁可以共存，插入记录需要加锁时，如果直接使用间隙锁，一个事务锁住了某个间隙，其它事务执行 INSERT 语句还可以插入记录到该间隙中，这样会存在幻读的问题。为了解决这个问题，InnoDB 引入了插入意向锁。
 
-##### 显示插入意向锁
+### 间隙锁（`Gap Lock`）- 插入意向锁 - 隐式锁概念
+
+>[参考链接](https://www.51cto.com/article/759298.html)
+
+当事物需要加锁时，如果这个锁不可能发生冲突，InnoDB会跳过加锁环节，这种机制称为隐式锁。隐式锁时InnoDB实现的延时加锁机制，只有当可能会产生冲突的时候才会加锁，减少锁的数量，提高系统的性能。在Insert过程中不加锁，遇到特殊情况，将隐式锁转为显式锁。
+
+### 间隙锁（`Gap Lock`）- 插入意向锁 - 显示
 
 >在插入意向锁没有和其他锁冲突时，通过`performance_schema.data_locks`是无法查询到插入意向锁信息。（这种机制称为隐式锁）
 
@@ -4511,7 +4719,7 @@ Record lock, heap no 5 PHYSICAL RECORD: n_fields 5; compact format; info bits 0
 
 
 
-##### 间隙锁会阻塞插入意向锁
+### 间隙锁（`Gap Lock`）- 间隙锁阻塞插入意向锁
 
 ```bash
 # session1开启事务
@@ -4611,7 +4819,7 @@ Record lock, heap no 5 PHYSICAL RECORD: n_fields 5; compact format; info bits 0
  4: len 4; hex 8000001f; asc     ;;
 ```
 
-##### 插入意向锁不会阻塞间隙锁
+### 间隙锁（`Gap Lock`）- 插入意向锁不阻塞间隙锁
 
 ```bash
 # session1开启事务
@@ -4736,7 +4944,7 @@ OBJECT_INSTANCE_BEGIN: 140484219593952
 
 ```
 
-##### 插入意向锁相互之间不会阻塞
+### 间隙锁（`Gap Lock`）- 插入意向锁相互之间不阻塞
 
 ```bash
 # session1开启事务
@@ -4760,9 +4968,7 @@ rollback;
 
 
 
-### 临键锁（Next-Key Lock）
-
-#### 什么是临键锁呢？
+### 临键锁（`Next-Key Lock`）- 概念
 
 理解为记录锁+索引前面的间隙锁，**记录锁+间隙锁锁定的区间，左开右闭（因为临键锁包含记录锁，所以左开右闭，右闭表示记录锁）。**记住了，锁住的是索引前面的间隙！比如一个索引包含值，10，11，13和20。那么，间隙锁的范围如下：
 
@@ -4774,13 +4980,13 @@ rollback;
 (20, positive infinity)
 ```
 
-#### 什么时候触发加临键锁呢？
+### 临键锁（`Next-Key Lock`）- 加锁时机
 
 - 在`RR`事务隔离级别中，`select lock in share mode`、`select for update`、`update`、`delete`语句`where`条件列没有索引会触发加多个临键锁以锁定整个表阻止插入新记录导致幻读。
 - 在`RR`事务隔离级别中，`select lock in share mode`、`select for update`、`update`、`delete`语句`where`条件列为非唯一索引并且记录存在时会触发加临键锁一阻止插入满足`where`条件的新记录导致幻读。
 - 在`RR`事务隔离级别中，`select * from course for update`会触发加多个临键排他锁锁定整个表以阻止插入新记录，`select * from course lock in share mode`会触发加多个临键共享锁锁定整个表以阻止插入新记录。
 
-#### 演示临键锁
+### 临键锁（`Next-Key Lock`）- 演示
 
 ```bash
 # 先创建非唯一索引
