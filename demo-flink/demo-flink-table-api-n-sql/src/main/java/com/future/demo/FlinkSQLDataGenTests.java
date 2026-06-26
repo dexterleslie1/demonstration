@@ -19,23 +19,38 @@ public class FlinkSQLDataGenTests {
         tableEnv.executeSql(
                 "CREATE TABLE messages (\n" +
                 "    id BIGINT,\n" +
-                "    content AS CONCAT('message-', CAST(id AS STRING)),\n" +
-                "    event_time TIMESTAMP(3),\n" +
-                "    WATERMARK FOR event_time AS event_time - INTERVAL '5' SECOND\n" +
+                "    dj_id BIGINT,\n" +
+                "    content AS CONCAT('message-', CAST(id AS STRING))/*,*/\n" +
+                /*"    event_time TIMESTAMP(3),\n" +
+                "    WATERMARK FOR event_time AS event_time - INTERVAL '5' SECOND\n" +*/
                 ") WITH (\n" +
                 "    'connector' = 'datagen',\n" +
-                "    'number-of-rows' = '10',\n" +
-                "    'rows-per-second' = '2',\n" +
-                "    'fields.id.kind' = 'sequence',\n" +
-                "    'fields.id.start' = '1',\n" +
-                "    'fields.id.end' = '10',\n" +
-                "    'fields.event_time.max-past' = '5'\n" +
+                /*"    'number-of-rows' = '10',\n" +*/
+                "    'rows-per-second' = '1',\n" +
+                "    'fields.id.min' = '1',\n" +
+                "    'fields.id.max' = '10',\n" +
+                "    'fields.dj_id.kind' = 'sequence',\n" +
+                "    'fields.dj_id.start' = '1',\n" +
+                "    'fields.dj_id.end' = '10'/*,*/\n" +
+                /*"    'fields.event_time.max-past' = '5'\n" +*/
+                ")"
+        );
+
+        // 定义 print sink 表，将结果打印到控制台
+        tableEnv.executeSql(
+                "CREATE TABLE print_sink (\n" +
+                "    id BIGINT,\n" +
+                "    content STRING,\n" +
+                "    dj_id BIGINT\n" +
+                ") WITH (\n" +
+                "    'connector' = 'print'\n" +
                 ")"
         );
 
         TableResult result = tableEnv.executeSql(
-                "SELECT id, content, event_time FROM messages"
+                "INSERT INTO print_sink\n" +
+                "SELECT id, content, dj_id/*, event_time*/ FROM messages"
         );
-        result.print();
+        result.await();
     }
 }

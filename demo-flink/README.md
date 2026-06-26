@@ -2964,3 +2964,488 @@ FROM orders o JOIN users u ON o.user_id = u.user_id;
 > - 源表关注：字段定义、Watermark、读取配置；输出表关注：字段定义、主键、写入策略
 > - 中间的计算逻辑通过 `INSERT INTO sink_table SELECT ... FROM source_table` 串联
 > - 支持多源表关联、多输出表同时写入
+
+## Flink CDC是什么呢？
+
+### Flink CDC 是什么
+
+Flink CDC（Change Data Capture，变更数据捕获）是 Apache Flink 生态中的一个**实时数据集成框架**，通过解析数据库的事务日志（如 MySQL Binlog、PostgreSQL WAL），实时捕获数据库中的 INSERT、UPDATE、DELETE 操作，并将其转化为 Flink 可处理的数据流。
+
+> 简单理解：Flink CDC 就是数据库的"实时监听器"——它不需要轮询、不需要触发器，而是直接读取数据库日志，毫秒级捕获每一次数据变更。
+
+---
+
+### 核心定位
+
+```
+┌──────────────────────────────────────────────────────┐
+│                    Flink CDC                          │
+│                                                      │
+│   源数据库                Flink CDC              目标系统
+│  ┌─────────┐     ┌──────────────────┐     ┌──────────┐
+│  │  MySQL   │────→│  捕获变更事件流   │────→│  Kafka   │
+│  │PostgreSQL│     │  全量+增量一体化  │     │  Doris   │
+│  │  Oracle  │     │  Schema Evolution │     │  ES      │
+│  │ SQL Server│     │  整库同步        │     │  HBase   │
+│  └─────────┘     └──────────────────┘     └──────────┘
+└──────────────────────────────────────────────────────┘
+```
+
+---
+
+### 工作原理
+
+Flink CDC 的工作流程可以分为以下阶段：
+
+#### 快照阶段（全量读取）
+
+首次启动时，对源表执行 `SELECT * FROM table` 获取全量数据快照，同时记录快照结束时的 Binlog 位置（GTID 或文件+偏移量）。
+
+#### 增量阶段（增量捕获）
+
+从快照结束位置开始，持续监听数据库事务日志，解析变更事件：
+
+- **WriteRowsEvent** → INSERT 操作
+- **UpdateRowsEvent** → UPDATE 操作
+- **DeleteRowsEvent** → DELETE 操作
+
+#### 事件序列化
+
+每个变更事件被序列化为包含以下关键字段的结构：
+
+```json
+{
+  "before": {"id": 1, "name": "Alice"},        // 变更前数据（UPDATE/DELETE）
+  "after":  {"id": 1, "name": "Alice_updated"}, // 变更后数据（INSERT/UPDATE）
+  "source": {"db": "test_db", "table": "users"}, // 来源信息
+  "op": "u"                                      // 操作类型：c=INSERT, u=UPDATE, d=DELETE
+}
+```
+
+---
+
+### 发展历程
+
+| 版本    | 时间       | 核心特性                                                |
+| ------- | ---------- | ------------------------------------------------------- |
+| **1.0** | 2020年     | 首个版本，依赖锁定机制保证一致性，无法水平扩展          |
+| **2.0** | 2021年     | 借鉴 DBLog 论文，实现无锁并发读取，全量+增量无缝衔接    |
+| **3.0** | 2023年12月 | Schema Evolution、整库同步、分库分表同步、YAML 配置 API |
+
+
+
+---
+
+### Flink CDC 3.0 核心特性
+
+#### 整库同步
+
+一个作业即可同步整个数据库的所有表，无需为每张表单独创建作业，大幅减少数据库连接数和计算资源消耗。
+
+#### Schema Evolution（表结构变更自动同步）
+
+当上游数据库发生表结构变更（如加列、删列、修改列类型）时，Flink CDC 能自动将这些变更同步到下游，无需手动修改作业定义。
+
+#### 分库分表同步
+
+支持将多个分库分表的数据合并同步到同一张目标表。
+
+#### YAML 配置 API
+
+用户通过编写 YAML 文件即可定义完整的数据管道，无需编写 Java/SQL 代码。
+
+---
+
+### YAML 配置示例
+
+以下是一个从 MySQL 同步到 Apache Doris 的完整 Pipeline 配置：
+
+```yaml
+source:
+  type: mysql
+  hostname: localhost
+  port: 3306
+  username: root
+  password: 123456
+  tables: app_db.\.*          # 正则匹配所有表
+  server-id: 5400-5404
+  server-time-zone: UTC
+
+sink:
+  type: doris
+  fenodes: 127.0.0.1:8030
+  username: root
+  password: ""
+  table.create.properties.light_schema_change: true
+  table.create.properties.replication_num: 1
+
+pipeline:
+  name: Sync MySQL Database to Doris
+  parallelism: 2
+```
+
+通过 `flink-cdc.sh` 提交该 YAML 文件，即可自动编译并部署 Flink 作业。
+
+---
+
+### Flink SQL 中使用 Flink CDC
+
+除了 YAML 方式，也可以在 Flink SQL 中直接使用 CDC Connector：
+
+```sql
+-- 创建 MySQL CDC 源表
+CREATE TABLE mysql_orders (
+    order_id INT,
+    user_id STRING,
+    amount DOUBLE,
+    order_time TIMESTAMP(3),
+    PRIMARY KEY (order_id) NOT ENFORCED
+) WITH (
+    'connector' = 'mysql-cdc',
+    'hostname' = 'localhost',
+    'port' = '3306',
+    'username' = 'flinkuser',
+    'password' = 'password',
+    'database-name' = 'test_db',
+    'table-name' = 'orders'
+);
+
+-- 创建 Kafka 输出表
+CREATE TABLE kafka_sink (
+    user_id STRING,
+    total_amount DOUBLE,
+    PRIMARY KEY (user_id) NOT ENFORCED
+) WITH (
+    'connector' = 'kafka',
+    'topic' = 'order_aggregates',
+    'properties.bootstrap.servers' = 'kafka:9092',
+    'format' = 'json'
+);
+
+-- 实时聚合计算
+INSERT INTO kafka_sink
+SELECT user_id, SUM(amount) AS total_amount
+FROM mysql_orders
+GROUP BY user_id;
+```
+
+---
+
+### 支持的数据源
+
+| 数据源         | 类型       | 日志机制               |
+| -------------- | ---------- | ---------------------- |
+| **MySQL**      | 关系数据库 | Binlog                 |
+| **PostgreSQL** | 关系数据库 | WAL（Write-Ahead Log） |
+| **Oracle**     | 关系数据库 | LogMiner / XStream     |
+| **SQL Server** | 关系数据库 | CDC / Change Tracking  |
+| **MongoDB**    | NoSQL      | Oplog                  |
+| **Kafka**      | 消息队列   | 消费 Lag               |
+
+
+
+---
+
+### 与传统数据同步方案对比
+
+| 维度            | Flink CDC          | 定时 ETL      | 触发器方案           |
+| --------------- | ------------------ | ------------- | -------------------- |
+| **延迟**        | 毫秒级             | 分钟/小时级   | 毫秒级               |
+| **对源库影响**  | 无侵入（只读日志） | 需查询源表    | 侵入性强（写触发器） |
+| **数据一致性**  | Exactly-Once       | 可能重复/丢失 | 影响事务性能         |
+| **全量+增量**   | 自动无缝衔接       | 需手动处理    | 不支持全量           |
+| **Schema 变更** | 自动同步（3.0）    | 需手动调整    | 需手动调整           |
+| **扩展性**      | 水平扩展           | 受限于单机    | 受限于数据库         |
+
+---
+
+### 典型应用场景
+
+| 场景              | 说明                                                         |
+| ----------------- | ------------------------------------------------------------ |
+| **实时数仓**      | 将业务数据库实时同步到数据仓库（如 Doris、StarRocks、ClickHouse） |
+| **数据湖入湖**    | 将数据库变更实时写入数据湖（如 Iceberg、Hudi、Paimon）       |
+| **搜索索引同步**  | 将数据库变更实时同步到 Elasticsearch                         |
+| **缓存更新**      | 数据库变更时自动更新 Redis 缓存                              |
+| **实时风控**      | 捕获交易数据变更，实时进行风险评估                           |
+| **数据备份/迁移** | 实时将数据从一个数据库同步到另一个数据库                     |
+
+---
+
+### 总结
+
+> - Flink CDC 是基于数据库日志的**实时数据集成框架**，深度集成 Apache Flink
+> - 通过解析事务日志（Binlog/WAL）实现**毫秒级**数据变更捕获，对源库**零侵入**
+> - 支持**全量+增量一体化**：首次全量快照，之后无缝切换到增量捕获
+> - 3.0 版本核心特性：Schema Evolution（表结构变更自动同步）、整库同步、分库分表同步、YAML 配置 API
+> - 支持 MySQL、PostgreSQL、Oracle、MongoDB 等多种数据源
+> - 提供两种使用方式：YAML Pipeline（推荐，适合数据集成）和 Flink SQL（适合复杂计算）
+> - 基于 Flink Checkpoint 实现 Exactly-Once 语义，保证数据不丢不重
+
+## Flink CDC yaml配置支持select join吗？
+
+**Flink CDC YAML 配置不支持 SELECT JOIN 语法。**
+
+Flink CDC YAML 中的 Transform 模块采用的是**类 SQL 的简化语法**，而非完整的 Flink SQL，其能力范围是有限的。具体来说：
+
+### Transform 模块支持的语法
+
+- **projection**：类似 SQL 的 `SELECT`，支持列裁剪、计算列、通配符（`*`）、内置函数调用等
+- **filter**：类似 SQL 的 `WHERE`，支持条件过滤（如 `id > 10 AND name IS NOT NULL`）
+- **primary-keys / partition-keys**：重定义下游主键和分区键
+- **converter-after-transform**：如软删除（SOFT_DELETE）等后处理
+
+示例：
+```yaml
+transform:
+  - source-table: mydb.web_order
+    projection: "id, order_id, UPPER(product_name) AS product_name, weight/(height*height) AS bmi"
+    filter: "id > 10 AND order_id > 100"
+```
+
+### 不支持 JOIN 的原因
+
+Flink CDC YAML API 的设计定位是**数据集成**（源端到目标端的数据同步），Transform 模块仅对**单张源表**进行行级过滤和列级投影，不涉及多表关联操作。
+
+### 如果需要 JOIN 怎么办？
+
+如果你的场景确实需要多表 JOIN，有以下替代方案：
+
+- **Flink SQL API**：支持完整的 SQL 语法，包括 `SELECT ... JOIN ...`、`GROUP BY`、`Top-N`、`INSERT INTO` 等
+- **Flink DataStream API**：基于 Java 编程，灵活性最高，可以实现任意复杂的处理逻辑（包括 JOIN），但学习曲线较陡
+
+总结：YAML API 适合**单表同步 + 简单转换**的场景；需要多表 JOIN 等复杂逻辑时，应切换到 Flink SQL 或 DataStream API。
+
+## Flink Streaming ETL是什么呢？
+
+### Flink Streaming ETL 是什么
+
+Flink Streaming ETL 是基于 Apache Flink 实现的**实时数据集成与加工方案**，它将传统 ETL（Extract-Transform-Load，抽取-转换-加载）从"定时批处理"升级为"持续流式处理"，实现数据从产生到可用的延迟从**天级降到秒级**。
+
+> 简单理解：传统 ETL 像"每天早上集中分拣快递"，而 Flink Streaming ETL 像"快递到了立刻分拣派送"——数据产生即处理，无需等待。
+
+---
+
+### 传统 ETL vs 流式 ETL
+
+| 维度           | 传统批处理 ETL               | Flink Streaming ETL           |
+| -------------- | ---------------------------- | ----------------------------- |
+| **处理方式**   | 定时批量（如每天凌晨跑一次） | 持续流式（数据产生即处理）    |
+| **延迟**       | 小时级/天级（T+1）           | 秒级/毫秒级                   |
+| **数据新鲜度** | 昨天的数据，今天才能看到     | 数据产生几秒后即可查询        |
+| **架构复杂度** | 需要暂存表、多个处理层       | 架构简洁，消除中间存储        |
+| **资源利用**   | 集中调度，空闲时资源浪费     | 持续运行，资源利用率高        |
+| **容错机制**   | 失败需重跑整个批次           | Checkpoint 断点恢复，不丢不重 |
+| **适用场景**   | 报表统计、离线分析           | 实时数仓、实时风控、实时推荐  |
+
+---
+
+### 核心架构
+
+```
+┌──────────────┐     ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+│   数据源      │     │  抽取(Extract)│     │  转换(Transform)│   │  加载(Load)   │
+│              │     │              │     │              │     │              │
+│  MySQL CDC   │ ──→ │  Flink CDC   │ ──→ │  Flink SQL   │ ──→ │  目标系统     │
+│  Kafka       │     │  实时捕获     │     │  清洗/关联    │     │  数据湖/仓库  │
+│  日志文件     │     │  变更事件     │     │  聚合/过滤    │     │  ES/Redis    │
+└──────────────┘     └──────────────┘     └──────────────┘     └──────────────┘
+      持续流入               实时捕获              流式加工              持续写入
+```
+
+---
+
+### E-T-L 三阶段详解
+
+#### Extract（抽取）
+
+从各种数据源实时捕获数据变更：
+
+| 数据源             | 抽取方式                     | 说明                      |
+| ------------------ | ---------------------------- | ------------------------- |
+| MySQL / PostgreSQL | Flink CDC（解析 Binlog/WAL） | 捕获 INSERT/UPDATE/DELETE |
+| Kafka / Pulsar     | Connector 消费消息           | 持续消费消息流            |
+| 日志文件           | File Source                  | 监听文件新增内容          |
+| API / Socket       | 自定义 Source                | 实时拉取或推送            |
+
+#### Transform（转换）
+
+在 Flink 引擎中对数据进行实时加工，常见操作包括：
+
+- **数据清洗**：过滤脏数据、去重、补全缺失字段
+- **格式转换**：JSON → 结构化字段、类型转换
+- **数据关联**：流表与维表 JOIN（如订单关联用户信息）
+- **聚合计算**：实时统计（如每分钟订单量、用户消费总额）
+- **窗口计算**：滚动窗口、滑动窗口、会话窗口
+- **数据拆分/合并**：按条件分流、多流合并
+
+#### Load（加载）
+
+将加工后的数据实时写入目标系统：
+
+| 目标系统                               | 写入方式      | 适用场景           |
+| -------------------------------------- | ------------- | ------------------ |
+| 数据湖（Iceberg/Hudi/Paimon）          | Append/Upsert | 构建实时数据湖     |
+| 数据仓库（Doris/StarRocks/ClickHouse） | Upsert        | 实时 OLAP 分析     |
+| Elasticsearch                          | Upsert        | 实时检索、日志分析 |
+| Kafka                                  | Append        | 下游消费、事件驱动 |
+| Redis / HBase                          | Upsert        | 实时缓存、特征存储 |
+
+---
+
+### 典型场景：实时数仓分层
+
+Flink Streaming ETL 最常见的应用是构建**实时数据仓库**，实现数据从 ODS 层到 DWD 层再到 ADS 层的实时流转：
+
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│   ODS 层     │     │   DWD 层     │     │   DWS 层     │     │   ADS 层     │
+│  原始数据层   │ ──→ │  明细宽表层   │ ──→ │  汇总层      │ ──→ │  应用层      │
+│             │     │             │     │             │     │             │
+│ MySQL CDC   │     │ 多表关联     │     │ 聚合统计     │     │ 报表/大屏    │
+│ Kafka       │     │ 数据清洗     │     │ 窗口计算     │     │ 实时推送     │
+└─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
+```
+
+#### Flink SQL 实现示例
+
+```sql
+-- ① ODS 层：从 MySQL CDC 抽取订单数据
+CREATE TABLE ods_orders (
+    order_id BIGINT,
+    user_id BIGINT,
+    product_id BIGINT,
+    amount DECIMAL(10, 2),
+    order_time TIMESTAMP(3),
+    PRIMARY KEY (order_id) NOT ENFORCED
+) WITH (
+    'connector' = 'mysql-cdc',
+    'hostname' = 'mysql-host',
+    'port' = '3306',
+    'username' = 'flink',
+    'password' = '***',
+    'database-name' = 'ecommerce',
+    'table-name' = 'orders'
+);
+
+-- ② 维表：用户信息
+CREATE TABLE dim_users (
+    user_id BIGINT,
+    user_name STRING,
+    user_level STRING,
+    city STRING,
+    PRIMARY KEY (user_id) NOT ENFORCED
+) WITH (
+    'connector' = 'jdbc',
+    'url' = 'jdbc:mysql://mysql-host:3306/ecommerce',
+    'table-name' = 'users'
+);
+
+-- ③ DWD 层：实时关联生成订单宽表，写入 Kafka
+CREATE TABLE dwd_order_detail (
+    order_id BIGINT,
+    user_id BIGINT,
+    user_name STRING,
+    user_level STRING,
+    city STRING,
+    product_id BIGINT,
+    amount DECIMAL(10, 2),
+    order_time TIMESTAMP(3)
+) WITH (
+    'connector' = 'kafka',
+    'topic' = 'dwd_order_detail',
+    'properties.bootstrap.servers' = 'kafka:9092',
+    'format' = 'json'
+);
+
+-- 实时关联：订单流 LEFT JOIN 用户维表
+INSERT INTO dwd_order_detail
+SELECT
+    o.order_id, o.user_id,
+    u.user_name, u.user_level, u.city,
+    o.product_id, o.amount, o.order_time
+FROM ods_orders o
+LEFT JOIN dim_users FOR SYSTEM_TIME AS OF o.order_time AS u
+ON o.user_id = u.user_id;
+
+-- ④ DWS 层：实时聚合，按城市统计订单量和金额
+CREATE TABLE dws_city_stats (
+    city STRING,
+    order_count BIGINT,
+    total_amount DECIMAL(15, 2),
+    PRIMARY KEY (city) NOT ENFORCED
+) WITH (
+    'connector' = 'jdbc',
+    'url' = 'jdbc:mysql://mysql-host:3306/warehouse',
+    'table-name' = 'city_order_stats'
+);
+
+INSERT INTO dws_city_stats
+SELECT
+    city,
+    COUNT(*) AS order_count,
+    SUM(amount) AS total_amount
+FROM dwd_order_detail
+GROUP BY city;
+```
+
+---
+
+### Flink Streaming ETL 的核心优势
+
+#### 低延迟
+
+数据在源系统产生变更的瞬间就被捕获和处理，端到端延迟可控制在**秒级甚至毫秒级**。
+
+#### Exactly-Once 语义
+
+基于 Flink Checkpoint + 两阶段提交（2PC）协议，保证数据**不丢不重**，即使发生故障也能从最近一致点恢复。
+
+#### 流批一体
+
+同一套代码既可以处理实时流数据，也可以处理历史批数据，避免维护两套系统。
+
+#### 灵活的状态管理
+
+Flink 内置强大的状态后端（如 RocksDB），支持在流处理中维护中间状态（如聚合结果、用户画像），实现有状态计算。
+
+#### 丰富的生态
+
+通过 Connector 无缝对接 Kafka、MySQL、Elasticsearch、Iceberg、Doris 等数十种数据源和目标系统。
+
+---
+
+### 典型应用场景
+
+| 场景             | 说明                              | 示例                               |
+| ---------------- | --------------------------------- | ---------------------------------- |
+| **实时数仓**     | 替代 T+1 批处理，构建秒级数据仓库 | 订单数据实时入湖，分钟级可查       |
+| **实时风控**     | 交易发生时立即检测异常            | 信用卡欺诈实时识别                 |
+| **实时推荐**     | 用户行为实时反馈到推荐模型        | 点击商品后立即更新推荐列表         |
+| **实时大屏**     | 业务指标实时展示                  | 双十一实时成交额大屏               |
+| **数据同步**     | 异构系统间数据实时同步            | MySQL → Elasticsearch 搜索索引同步 |
+| **IoT 数据处理** | 传感器数据实时清洗和聚合          | 按设备类型组织数据，去重后写入 S3  |
+
+---
+
+### 总结
+
+> - Flink Streaming ETL 是将传统批处理 ETL 升级为**持续流式处理**的方案，数据产生即处理
+> - 核心流程：**Extract**（CDC/Connector 实时捕获）→ **Transform**（Flink SQL/DataStream 流式加工）→ **Load**（实时写入目标系统）
+> - 相比传统 ETL，延迟从**天级降到秒级**，架构更简洁，资源利用率更高
+> - 基于 Flink 的 Checkpoint 和 Exactly-Once 语义，保证数据不丢不重
+> - 最典型的应用是构建**实时数仓**（ODS → DWD → DWS → ADS 实时分层）
+> - 广泛应用于实时风控、实时推荐、实时大屏、IoT 数据处理等场景
+
+## Flink SQL JOIN
+
+>参考本站示例 https://gitee.com/dexterleslie/demonstration/tree/main/demo-flink/demo-flink-table-api-n-sql 中的FlinkSQLParentAndChildTableInnerJoinParentDatumDelayTests、FlinkSQLParentAndChildTableLeftJoinChildDatumDelayTests、FlinkSQLParentAndChildTableLeftJoinParentDatumDelayTests
+
+## Flink Connector JDBC
+
+>参考本站示例 https://gitee.com/dexterleslie/demonstration/tree/main/demo-flink/demo-flink-connector 中的FlinkSQLConnectorJdbcTests
+
+## Flink Connector MySQL CDC
+
+>参考本站示例 https://gitee.com/dexterleslie/demonstration/tree/main/demo-flink/demo-flink-connector 中的FlinkSQLConnectorMySQLCDCTests
+
