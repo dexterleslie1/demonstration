@@ -3449,3 +3449,12 @@ Flink 内置强大的状态后端（如 RocksDB），支持在流处理中维护
 
 >参考本站示例 https://gitee.com/dexterleslie/demonstration/tree/main/demo-flink/demo-flink-connector 中的FlinkSQLConnectorMySQLCDCTests
 
+## 主子表JOIN成宽表
+
+>参考本站示例 https://gitee.com/dexterleslie/demonstration/tree/main/demo-flink/demo-flink-connector 中的FlinkSQLConnectorMySQLCDCParentNChildTableTests
+>
+>提醒：
+>
+>- 使用固定JobId
+>- 表状态使用RocksDB存储以减少内存使用
+>- checkpoint只保留最近一份以减少硬盘空间使用

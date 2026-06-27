@@ -50,6 +50,12 @@
       <artifactId>flink-connector-base</artifactId>
       <version>${flink.version}</version>
     </dependency>
+    <!-- RocksDB State Backend（JOIN State 落盘，减轻堆内存压力） -->
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-statebackend-rocksdb</artifactId>
+      <version>${flink.version}</version>
+    </dependency>
     <!-- JDBC 连接器 -->
     <dependency>
       <groupId>org.apache.flink</groupId>
