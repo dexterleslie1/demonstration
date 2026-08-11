@@ -1,5 +1,7 @@
 package com.future.demo;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -91,6 +93,32 @@ public class AssistantService {
         // 这里需要引用allocByteArray，否则上面allocByteArray会被jvm优化在年轻代gc就被回收
         int length = allocByteArray.length;
     }
+
+    /**
+     * 用于演示内存泄漏：对象持续放入静态集合，无法被 GC 回收，最终 OOM
+     *
+     * @throws InterruptedException
+     */
+    public void investigateMemoryLeak() throws InterruptedException {
+        System.out.println("开始调用investigateMemoryLeak...");
+        // 静态集合持有全部引用，导致分配的对象永不被回收
+        final List<byte[]> leakStore = LEAK_STORE;
+        long allocatedMb = 0;
+        while (true) {
+            // 每次泄漏约 1MB
+            byte[] chunk = new byte[1024 * 1024];
+            RANDOM.nextBytes(chunk);
+            leakStore.add(chunk);
+            allocatedMb++;
+            if (allocatedMb % 50 == 0) {
+                System.out.println("已泄漏约 " + allocatedMb + " MB，集合大小=" + leakStore.size());
+            }
+            // 稍作停顿，便于用 jmap/VisualVM 观察堆增长
+            Thread.sleep(100);
+        }
+    }
+
+    private static final List<byte[]> LEAK_STORE = new ArrayList<>();
 
     /**
      * @throws InterruptedException

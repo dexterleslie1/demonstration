@@ -24,6 +24,8 @@ public class Application {
             service.investigateMemoryAllocationPeak();
         else if (arg.equals("memalloc"))
             service.investigateMemoryAllocation();
+        else if (arg.equals("memleak"))
+            service.investigateMemoryLeak();
         else if (arg.equals("arthas-trace"))
             arthasService.traceMethodLv1();
         else {
