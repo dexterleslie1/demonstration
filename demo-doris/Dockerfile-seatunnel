@@ -1,0 +1,28 @@
+# SeaTunnel 自定义镜像：在官方镜像基础上构建时拉取 JDBC 驱动，避免 compose 再 bind mount jar。
+#
+# 基座：
+# - 与 docker-compose 中 `seatunnel` 服务原先使用的 `apache/seatunnel:2.3.13` 一致，保证作业、插件路径不变。
+#
+# MariaDB JDBC（与 `seatunnel-config/mysql_to_doris.conf` 中 jdbc:mariadb + org.mariadb.jdbc.Driver 对应）：
+# - 官方镜像 lib 中不含 mariadb-java-client；构建时下载到 `/opt/seatunnel/lib/`，供 Catalog 等路径注册驱动。
+#
+# MySQL Connector/J（CDC 快照 Debezium 仍用 com.mysql.cj.jdbc）：
+# - 镜像自带 `mysql-connector-java-8.0.27.jar`，与较新 MySQL 8 组合时快照阶段 `setAutoCommit` 可能触发
+#   ArrayIndexOutOfBoundsException；构建时用 Maven Central 的 **mysql-connector-j 8.4.0** 字节覆盖写入
+#   **同名路径** `.../mysql-connector-java-8.0.27.jar`，使 classpath 上仍只有一份 MySQL 驱动实现、避免重复类。
+#
+# 网络：
+# - 构建阶段需能访问 repo1.maven.org；内网构建请配置 buildkit HTTP 代理或预置离线层。
+#
+FROM apache/seatunnel:2.3.13
+
+# MariaDB 官方 JDBC 3.4.1（与 compose 原 seatunnel-lib 挂载版本一致，便于对照）。
+# - curl -f：HTTP 4xx/5xx 失败则构建失败；-sS：静默进度但保留错误信息；-L：跟随重定向。
+RUN curl -fsSL \
+    "https://repo1.maven.org/maven2/org/mariadb/jdbc/mariadb-java-client/3.4.1/mariadb-java-client-3.4.1.jar" \
+    -o /opt/seatunnel/lib/mariadb-java-client-3.4.1.jar
+
+# MySQL Connector/J 8.4.0：覆盖镜像内旧 jar 的文件名（保持 SeaTunnel/第三方代码里写死的文件名引用不变）。
+RUN curl -fsSL \
+    "https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/8.4.0/mysql-connector-j-8.4.0.jar" \
+    -o /opt/seatunnel/lib/mysql-connector-java-8.0.27.jar

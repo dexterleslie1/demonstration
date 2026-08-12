@@ -9,6 +9,8 @@ CREATE TABLE IF NOT EXISTS `auth`(
     create_time         DATETIME NOT NULL COMMENT '创建时间'
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+insert into `auth`(id,account,`password`,create_time) values(1,'admin','123456',now());
+
 create table if not exists student(
     id                  BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,
     `name`              VARCHAR(64) NOT NULL UNIQUE COMMENT '名称',

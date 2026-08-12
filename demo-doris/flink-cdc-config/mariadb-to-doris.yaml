@@ -1,0 +1,68 @@
+################################################################################
+# Flink CDC Pipeline（YAML）：MariaDB/MySQL → Doris 实时同步
+#
+# 与 SeaTunnel `mysql_to_doris.conf` 对齐：
+# - 源：doris-assistant-db（MariaDB 10.11，库 demo，表 auth / student / course）
+# - 宿：Doris FE（host 网络 127.0.0.1:8030 / 9030），目标库 demot
+#
+# 密码占位符由 compose 中 flink-cdc-submit 启动前 envsubst 注入（须与 .env 中 DORIS_ROOT_PASSWORD 一致；
+# 且须先由 doris-root-password-init 写入 Doris，否则 Schema Change 建表会 401）。
+#
+# 重启恢复：checkpoint 持久化在宿主机 ./flink-data/checkpoints；flink-cdc-submit 会从最新 chk 用 -s 恢复，
+# 避免 scan.startup.mode=initial 在无状态时再次全量快照导致位点回退或数据异常。
+################################################################################
+source:
+  type: mysql
+  hostname: 127.0.0.1
+  port: 3306
+  username: root
+  password: ${MYSQL_ROOT_PASSWORD}
+  # demo 库业务表；整库同步可用 demo.[\S]*（与下方 route 一致）
+  tables: demo.auth,demo.student,demo.course
+  # tables: demo.auth
+  # 须与 my-customize.cnf 中 server-id=10001 错开
+  server-id: 5700-5704
+  server-time-zone: Asia/Shanghai
+  scan.startup.mode: initial
+  # 须为 true：初始快照需发出 CreateTableEvent，SchemaRegistry 才能注册 demot.* 的 schema（否则报 schema: null）
+  schema-change.enabled: true
+
+sink:
+  type: doris
+  fenodes: 127.0.0.1:8030
+  username: root
+  password: ${DORIS_ROOT_PASSWORD}
+  table.create.properties.light_schema_change: true
+  table.create.properties.replication_num: 1
+  # 默认 interval=10s 延迟大；改为 2s。max-rows/max-bytes 勿低于连接器下限（10000 行 / 10MB），否则提交即失败
+  sink.buffer-flush.interval: 2s
+  # sink.buffer-flush.max-rows: 10000
+  # sink.buffer-flush.max-bytes: 10485760
+  # 手动建表模式：先在 Doris 执行 doris-create-database-demo.sql，再启动 Flink。
+  # - 仅允许 create.table 事件到达 Sink（Flink 内部 schema 注册必需，不可 exclude create.table，否则 schema: null）
+  # - Doris 连接器执行 CREATE TABLE IF NOT EXISTS，表已存在时不会重建/覆盖你的手动建表
+  # - 禁止加列/改类型/删表等后续 DDL 同步到 Doris
+  include.schema.changes: [create.table]
+
+# MariaDB demo.* → Doris demot.*（整库路由，表名不变；勿用 demo\..*，CDC 正则转换后无法匹配）
+route:
+  - source-table: demo.[\S]*
+    sink-table: demot.<>
+    replace-symbol: <>
+    description: sync all demo tables to demot database
+
+pipeline:
+  route-mode: FIRST_MATCH
+  name: MariaDB-demo-to-Doris-YAML-Pipeline
+  parallelism: 1
+  # schema.change.behavior：上游 MariaDB DDL 如何同步到 Doris（须 source.schema-change.enabled: true）
+  # - evolve（当前）：SchemaOperator 将上游 DDL 原样应用到 Doris（建表/加列/改类型/重命名/删列/删表/清空等）；
+  #   若 Doris 不支持某次变更则 SchemaRegistry 抛错并触发作业 failover，便于尽早发现不兼容 DDL。
+  # - lenient（默认）：尽量把 DDL 转成「不丢数」的等价变更（如改类型可能拆成重命名+加列）；truncate/drop 表默认不下发。
+  # - try_evolve：与 evolve 类似，但不支持的变更会容忍并尝试继续跑，可能对后续数据做类型转换（有丢字段风险）。
+  # - exception：禁止任何 schema 变更，捕获 DDL 即失败（下游完全不允许改表时用）。
+  # - ignore：吞掉所有 DDL，只同步未变列的数据；会阻断 CreateTableEvent 的 schema 注册，勿与 exclude create.table 同用。
+  # 细粒度控制可在 sink 下配置 include.schema.changes / exclude.schema.changes（如允许 add.column 但禁止 drop.column）。
+  schema.change.behavior: evolve
+  # 固定算子 UID 前缀，重启后 -s 恢复时才能对齐算子状态
+  operator.uid.prefix: mariadb-doris-demot

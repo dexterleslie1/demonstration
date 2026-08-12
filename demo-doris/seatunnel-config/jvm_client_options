@@ -1,0 +1,16 @@
+# ---------------------------------------------------------------------------
+# demo-doris 定制说明（覆盖镜像默认 /opt/seatunnel/config/jvm_client_options）：
+#
+# - 官方镜像默认一般为 -Xms256m -Xmx512m；此处将 **最大堆与初始堆均固定为 256m**，满足「SeaTunnel 内存限制 256m」
+# - `seatunnel.sh` 会逐行读取本文件，把非注释行追加到 `JAVA_OPTS`（以 # 开头的行忽略）；
+# - 注意：除堆以外还有 Metaspace、线程栈、Direct Buffer、本地库等占用，容器 RSS 通常会 **大于** 256MB；
+#   若 CDC/大表快照 OOM，需适当上调 -Xmx 或减小并行度/表范围。
+# ---------------------------------------------------------------------------
+
+# JVM Heap
+-Xms256m
+-Xmx256m
+
+# JVM Dump（与镜像默认一致；OOM 时写堆转储，路径由 seatunnel.sh 确保父目录存在）
+-XX:+HeapDumpOnOutOfMemoryError
+-XX:HeapDumpPath=/tmp/seatunnel/dump/zeta-client

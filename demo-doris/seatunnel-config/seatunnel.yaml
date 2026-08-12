@@ -5,15 +5,45 @@
 # - Web UI 依赖 Engine 的 HTTP REST API。开启后即可访问 `http://<host>:8080/#/overview`。
 # - 该文件会被 docker-compose 挂载到 `/opt/seatunnel/config/seatunnel.yaml`。
 #
+# Checkpoint 持久化（与「容器重启后 CDC 又全量快照」相关）：
+# - 默认镜像常把 checkpoint 写在容器内 `/tmp/seatunnel/...`，容器重建后丢失，MySQL-CDC 会按 startup.mode=initial 再跑快照。
+# - 此处将 checkpoint 存储显式指到 `/opt/seatunnel/persist/...`（本地 file 协议模拟 HDFS），由 compose 将宿主机
+#   `./seatunnel-data/persist` 挂载到该路径，使位点与作业状态在 `docker compose down/up` 后可恢复（仍须正常完成 checkpoint、避免 kill -9）。
+# - `max-retained` 控制保留的历史 checkpoint 份数；与作业内 `env.checkpoint.interval` 配合决定磁盘占用。
+#
 # 注意：
-# - 如果你需要更复杂的配置（安全、资源隔离、日志等），建议基于官方默认配置再增量修改。
+# - 若你升级 SeaTunnel 大版本，请先阅读发行说明再迁移 persist 目录。
 #
 
 seatunnel:
   engine:
-    # 启用 Engine 的 HTTP REST API（同时提供 Web UI 页面）。
-    # 默认端口 8080，这里显式指定，方便在 docker-compose 里做端口映射。
+    # 以下与官方镜像默认 seatunnel.yaml 对齐，避免仅覆盖部分键时与发行版行为偏差过大。
+    classloader-cache-mode: true
+    history-job-expire-minutes: 1440
+    backup-count: 1
+    queue-type: blockingqueue
+    print-execution-info-interval: 60
+    print-job-metrics-info-interval: 60
+    slot-service:
+      dynamic-slot: true
     http:
       enable-http: true
       port: 8080
-
+      enable-dynamic-port: false
+    checkpoint:
+      # 与作业 `mysql_to_doris.conf` 内 `env.checkpoint.interval` 对齐（本 demo 压端到端延迟用 1000ms）。
+      interval: 1000
+      timeout: 60000
+      storage:
+        type: hdfs
+        max-retained: 3
+        plugin-config:
+          # 与官方默认结构一致，仅根路径改为可挂载目录（见 docker-compose seatunnel volumes）。
+          namespace: /opt/seatunnel/persist/seatunnel/checkpoint_snapshot
+          storage.type: hdfs
+          fs.defaultFS: file:///opt/seatunnel/persist/
+    telemetry:
+      metric:
+        enabled: false
+      logs:
+        scheduled-deletion-enable: true

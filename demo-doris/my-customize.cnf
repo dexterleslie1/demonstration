@@ -1,23 +1,28 @@
+#
+# 供 docker-compose 中 doris-assistant-db 使用（当前镜像为 **MySQL 8**）。
+#
+# 背景：SeaTunnel 2.3.x 的 MySQL-CDC（connector-cdc-mysql）在解析版本号时仅识别官方 MySQL 版本串；
+# MariaDB 会报告 `10.x.x-MariaDB-...`，触发 `Unsupported MySQL version`，故 CDC 演示库改为 MySQL 8。
+#
 [mysqld]
 max_connections=250
 slow_query_log=1
 long_query_time=1
 slow_query_log_file=slow-query.log
 innodb_flush_log_at_trx_commit=0
-max_allowed_packet=10m
-key_buffer_size=512m
-innodb_log_file_size=512m
-innodb_log_buffer_size=256m
+max_allowed_packet=64M
+key_buffer_size=16M
+innodb_log_file_size=512M
+innodb_log_buffer_size=256M
 innodb_file_per_table=1
 
-# 一旦提供log_bin参数无论是何值或者不提供值时，表示启用binlog功能
-# 不提供log_bin表示禁用binlog功能
-log_bin
+# ---------- binlog（MySQL 8 语法，供 SeaTunnel MySQL-CDC / Debezium）----------
+# server_id 须与 SeaTunnel 作业里 CDC 的 server-id 区间错开（作业使用 5600-5608）。
+server-id=10001
+log_bin=mysql-bin
+binlog_format=ROW
+# binlog_row_image=FULL
+max_binlog_size=1024M
+# MySQL 8 已移除 expire_logs_days，改用秒；864000 ≈ 10 天
+# binlog_expire_logs_seconds=864000
 expire_logs_days=10
-
-# Doris数据同步要求row格式
-binlog_format=row
-max_binlog_size=1024m
-# 指定binlog文件的前缀
-log_basename=master1
-server_id=10001

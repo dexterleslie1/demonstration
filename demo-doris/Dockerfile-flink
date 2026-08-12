@@ -1,0 +1,92 @@
+# Flink + Flink CDC Pipeline 基础镜像（YAML：MariaDB/MySQL → Doris）
+#
+# 多阶段构建：
+# - downloader：curl 镜像仅负责下载（非 root，不可用 apk；不解压 tar）
+# - runtime：Flink 镜像解压 tar、COPY JAR，并安装 envsubst（gettext-base）
+#
+# Doris 类冲突说明（Flink CDC #3406 / #3814）：
+# - flink-cdc-pipeline-connector-doris 为 fat jar，已 shade org.apache.doris.*
+# - 与集群 classpath 上再加载一份 Doris 类时，序列化会报 DorisOptions ClassCastException
+# - 处理：从 pipeline-doris jar 删除 org/apache/doris，改由独立 flink-doris-connector 提供
+#
+# 网络：downloader 阶段需访问 downloads.apache.org、repo1.maven.org。
+#
+
+# ------------------------------------------------------------------------------
+# Stage 1：下载（curl 辅助，本阶段丢弃）
+# ------------------------------------------------------------------------------
+FROM curlimages/curl:8.7.1 AS downloader
+
+ARG FLINK_CDC_VERSION=3.6.0
+ARG FLINK_CDC_FLINK_MINOR=1.20
+ARG DORIS_FLINK_MINOR=1.20
+ARG DORIS_CONNECTOR_VERSION=25.1.0
+
+# curl 镜像以非 root 用户运行，仅 /home/curl_user 可写
+WORKDIR /home/curl_user
+
+RUN mkdir -p lib \
+    && curl -fsSL \
+        "https://downloads.apache.org/flink/flink-cdc-${FLINK_CDC_VERSION}/flink-cdc-${FLINK_CDC_VERSION}-${FLINK_CDC_FLINK_MINOR}-bin.tar.gz" \
+        -o flink-cdc-bin.tar.gz \
+    && curl -fsSL \
+        "https://repo1.maven.org/maven2/org/apache/flink/flink-cdc-pipeline-connector-mysql/${FLINK_CDC_VERSION}-${FLINK_CDC_FLINK_MINOR}/flink-cdc-pipeline-connector-mysql-${FLINK_CDC_VERSION}-${FLINK_CDC_FLINK_MINOR}.jar" \
+        -o "lib/flink-cdc-pipeline-connector-mysql-${FLINK_CDC_VERSION}-${FLINK_CDC_FLINK_MINOR}.jar" \
+    && curl -fsSL \
+        "https://repo1.maven.org/maven2/org/apache/flink/flink-cdc-pipeline-connector-doris/${FLINK_CDC_VERSION}-${FLINK_CDC_FLINK_MINOR}/flink-cdc-pipeline-connector-doris-${FLINK_CDC_VERSION}-${FLINK_CDC_FLINK_MINOR}.jar" \
+        -o "lib/flink-cdc-pipeline-connector-doris-${FLINK_CDC_VERSION}-${FLINK_CDC_FLINK_MINOR}.jar" \
+    && curl -fsSL \
+        "https://repo1.maven.org/maven2/org/apache/doris/flink-doris-connector-${DORIS_FLINK_MINOR}/${DORIS_CONNECTOR_VERSION}/flink-doris-connector-${DORIS_FLINK_MINOR}-${DORIS_CONNECTOR_VERSION}.jar" \
+        -o "lib/flink-doris-connector-${DORIS_FLINK_MINOR}-${DORIS_CONNECTOR_VERSION}.jar" \
+    && curl -fsSL \
+        "https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/8.0.33/mysql-connector-j-8.0.33.jar" \
+        -o lib/mysql-connector-j-8.0.33.jar
+
+# ------------------------------------------------------------------------------
+# Stage 2：运行时（Flink 集群 + flink-cdc-submit）
+# ------------------------------------------------------------------------------
+FROM apache/flink:1.20.3-scala_2.12-java11
+
+ARG FLINK_CDC_VERSION=3.6.0
+ARG FLINK_CDC_FLINK_MINOR=1.20
+ARG DORIS_FLINK_MINOR=1.20
+ARG DORIS_CONNECTOR_VERSION=25.1.0
+
+ENV FLINK_HOME=/opt/flink
+ENV FLINK_CDC_HOME=/opt/flink-cdc
+
+# flink-cdc-submit 用 envsubst；zip/unzip 用于重打包 pipeline-doris jar
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends gettext-base zip unzip \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=downloader /home/curl_user/lib/ /opt/flink/lib/
+COPY --from=downloader /home/curl_user/flink-cdc-bin.tar.gz /tmp/flink-cdc-bin.tar.gz
+
+# 发行包顶层目录名随版本可能为 flink-cdc-3.6.0 或 flink-cdc-3.6.0-1.20 等，用 find 兼容
+RUN tar -xzf /tmp/flink-cdc-bin.tar.gz -C /tmp \
+    && FLINK_CDC_DIR="$(find /tmp -maxdepth 1 -type d -name 'flink-cdc-*' | head -1)" \
+    && test -n "$FLINK_CDC_DIR" \
+    && mv "$FLINK_CDC_DIR" "${FLINK_CDC_HOME}" \
+    && rm /tmp/flink-cdc-bin.tar.gz \
+    && cp "${FLINK_CDC_HOME}/lib/"*.jar /opt/flink/lib/
+
+# 去掉 pipeline-doris fat jar 内 shaded 的 org.apache.doris，避免与独立 flink-doris-connector 重复加载
+RUN PIPELINE_DORIS_JAR="/opt/flink/lib/flink-cdc-pipeline-connector-doris-${FLINK_CDC_VERSION}-${FLINK_CDC_FLINK_MINOR}.jar" \
+    && STRIP_DIR="/tmp/pipeline-doris-strip" \
+    && rm -rf "$STRIP_DIR" \
+    && mkdir -p "$STRIP_DIR" \
+    && unzip -q "$PIPELINE_DORIS_JAR" -d "$STRIP_DIR" \
+    && rm -rf "$STRIP_DIR/org/apache/doris" \
+    && rm -f "$PIPELINE_DORIS_JAR" \
+    && cd "$STRIP_DIR" \
+    && zip -q -r "$PIPELINE_DORIS_JAR" . \
+    && rm -rf "$STRIP_DIR"
+
+# flink-cdc-submit 走自定义 entrypoint，不会合并 compose 的 FLINK_PROPERTIES；在此写入默认 checkpoint 配置
+COPY flink-docker-entrypoint.sh /usr/local/bin/flink-docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/flink-docker-entrypoint.sh
+RUN mkdir -p /opt/flink/checkpoints \
+    && chown -R flink:flink /opt/flink/checkpoints
+
+ENTRYPOINT ["/usr/local/bin/flink-docker-entrypoint.sh"]

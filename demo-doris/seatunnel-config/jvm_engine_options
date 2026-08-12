@@ -1,0 +1,7 @@
+# JVM Heap
+-Xms512m
+-Xmx512m
+
+# JVM Dump（与镜像默认一致；OOM 时写堆转储，路径由 seatunnel.sh 确保父目录存在）
+-XX:+HeapDumpOnOutOfMemoryError
+-XX:HeapDumpPath=/tmp/seatunnel/dump/zeta-engine

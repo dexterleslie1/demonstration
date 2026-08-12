@@ -168,8 +168,6 @@ https://www.cnblogs.com/seatunnel/p/19599905
 
 ## SeaTunnel是什么呢？
 
->说明：目前使用这个工具进行全量数据迁移，因为有可视化界面。
-
 Apache SeaTunnel 是一个高性能、分布式的**数据集成平台**，旨在解决海量数据的实时同步与转换问题。它的前身是 Waterdrop，于2017年开源，并在2021年更名为 SeaTunnel。
 
 简单来说，你可以把它想象成一个功能强大的“数据搬运工”和“数据加工厂”，能够高效地在各种数据源之间进行数据的抽取、转换和加载（ETL）。
@@ -600,10 +598,11 @@ Doris 也提供了一套原生的表值函数（TVF）来处理 CDC 数据。
    DROP JOB WHERE jobname = 'demo_db_sync_job';
    
    # 修改job同步频率为1秒
-   ALTER JOB demo_db_sync_job
+   # 注意：下面SQL会导致job数据同步失败，所以不可用下面SQL
+   /*ALTER JOB demo_db_sync_job
    PROPERTIES (
      "max_interval" = "1"
-   );
+   );*/
    ```
 
 ## 物化视图是什么呢？
@@ -847,3 +846,270 @@ GROUP BY user_id, dt;
    ```sql
    SELECT * FROM tasks("type"="mv");
    ```
+
+## Doris内存会自动释放吗？为何运行时间长了会触发OOM呢？
+
+Doris 的内存确实具备自动释放机制，但在实际生产环境中，运行时间长了依然可能触发 OOM（内存溢出）。下面为你详细拆解其中的原理和原因：
+
+### Doris 内存会自动释放吗？
+
+**会的。** Doris 设计了一套完整的内存自动回收机制，主要通过以下几种方式来释放内存：
+
+1. **自动内存 GC（垃圾回收）**：Doris 的 BE（后端）节点会有一个专门的 GC 线程定时监控内存状态。当内存占用达到一定阈值时，会自动触发回收：
+   * **Minor GC（轻度回收）**：当 BE 进程内存超过系统总内存的 81%（SoftMemLimit），或系统剩余可用内存不足时触发。此时会暂停查询分配内存，强制刷写导入缓存，并释放部分过期的数据缓存。
+   * **Full GC（完全回收）**：当 BE 进程内存超过系统总内存的 90%（MemLimit），或系统剩余可用内存极低时触发。此时会暂停查询和导入任务，释放绝大部分缓存，甚至主动取消一些占用内存大的查询和导入任务，直到释放出足够的内存（如20%）。
+2. **内存复用机制**：为了减少频繁申请和释放内存带来的开销，Doris 在执行层做了大量优化。例如在查询执行中会预分配一批 Free Block（空闲数据块）循环使用，Shuffle 传输时两个 Block 交替使用等。
+3. **算子落盘（Spill to Disk）**：在较新的 Doris 版本（如 4.0）中，引入了算子落盘功能。当内存达到阈值时，系统会自动将查询的中间结果（如大表的 Join、聚合数据）写入磁盘，等内存释放后再读取继续计算，从而避免内存溢出。
+
+---
+
+### 为何运行时间长了会触发 OOM？
+
+尽管有上述保护机制，但在长时间运行或高负载场景下，依然可能因为以下几种原因触发 OOM，导致 BE 进程被操作系统强制 Kill：
+
+1. **内存释放的滞后性**
+   Doris 的内存状态刷新和 GC 线程的执行都具有一定的滞后性。当集群瞬间压力过大（例如突然出现多个高并发的大查询或批量导入），内存消耗速度可能远快于 GC 的释放速度，导致在 GC 还没来得及生效时，进程内存就已经突破了操作系统的底线。
+2. **配置不合理**
+   * **`mem_limit` 设置过高**：如果 Doris BE 的内存上限（`mem_limit`）设置得太接近物理机总内存，留给操作系统和其他基础进程的缓冲空间就会太小，极易触发操作系统的 OOM Killer。
+   * **单查询/导入限制缺失**：如果没有对单个查询（`exec_mem_limit`）或单次导入（`tablet_writer_mem_limit`）做合理的内存限制，一个失控的复杂 SQL 或超大导入任务就能瞬间吃光所有内存。
+3. **复杂查询与高并发叠加**
+   长时间运行中，可能会积累一些复杂的 ETL 任务或报表查询。像大表的 Hash Join、高基数的 GROUP BY 聚合、全局排序（ORDER BY）等算子本身就需要消耗巨大的内存来构建哈希表或中间结果集。如果这类任务并发执行，内存会迅速飙升。
+4. **后台任务与缓存膨胀**
+   * **Compaction（数据合并）**：这是 Doris 后台持续进行的任务，合并数据时需要在内存中排序，如果大表的 Compaction 任务堆积，会持续占用大量内存。
+   * **缓存未有效控制**：Doris 会缓存数据页（Page Cache）和元数据以加速查询。如果缓存配置过大或清理不及时，这部分“可牺牲”的内存可能会长期处于高位，挤占了查询所需的内存空间。
+5. **内存泄漏或统计异常**
+   在极少数情况下，可能存在某些版本的 Bug 导致内存泄漏（长期运行后内存只增不减），或者 Memory Tracker（内存跟踪器）统计出现偏差，导致 GC 机制无法准确感知真实的内存压力，从而未能及时触发回收。
+
+### 如何规避长时间运行后的 OOM？
+
+* **合理设置内存水位**：建议将 `mem_limit` 设置为物理内存的 80% 左右，为系统留出安全缓冲。
+* **开启并优化资源组**：为不同的业务（如核心报表、ETL 导入）划分资源组，限制单个用户或查询的内存上限，避免单个任务拖垮整个集群。
+* **监控与告警**：利用 Prometheus + Grafana 监控 BE 节点的内存趋势，当发现内存持续高位或增长异常时，及时介入排查。
+* **升级版本**：尽量使用支持“算子落盘（Spill）”的新版本 Doris，它能极大提升大规模任务在内存不足时的稳定性。
+
+## Doris算子落盘是什么呢？
+
+Doris 的**算子落盘（Spill to Disk）**，通俗来说就是数据库的一种“内存溢出保护机制”。
+
+当 Doris 执行复杂的 SQL 查询（比如大表关联、全局排序、高基数聚合）时，这些计算需要在内存中构建巨大的中间结果集（如哈希表、排序缓冲区）。如果数据量太大，内存装不下，传统的处理方式会直接报错（OOM，内存溢出）并取消任务。
+
+而有了算子落盘功能后，当 Doris 发现内存快要用完时，会自动把一部分暂时用不上的中间数据**临时写入到本地磁盘**，从而腾出宝贵的内存空间继续处理其他数据。等后续计算需要用到这部分数据时，再从磁盘读回来。这就相当于给计算任务提供了一个“内存缓冲区”，用磁盘空间换取了任务的顺利执行。
+
+###️ 哪些算子支持落盘？
+在 Apache Doris 4.0 及后续版本中，以下消耗内存的大户算子都已经支持落盘：
+* **Hash Join 算子**：大表关联时构建哈希表。
+* **聚合算子（Aggregation）**：比如 `GROUP BY` 高基数维度的统计。
+* **排序算子（Sort）**：全局 `ORDER BY` 产生的大量中间数据。
+* **CTE 算子与窗口函数（Window Function）**：复杂的公共表表达式和窗口计算。
+
+### 如何开启和使用？
+算子落盘功能在 Doris 中通常需要手动开启。你可以通过设置 Session 变量来控制：
+
+* **`set enable_spill = true;`**：开启当前查询的落盘功能（默认是关闭的）。
+* **`set exec_mem_limit = 10g;`**：限制单个查询能使用的最大内存。
+* **`spill_storage_root_path`**：在 BE 配置文件中指定落盘数据的存储路径（建议配置在独立的高速磁盘上）。
+
+### 开启落盘后有什么影响？
+* **优点（稳定性极大提升）**：原本因为内存不足而频繁失败的 ETL 任务、复杂报表查询现在大概率能跑通了，彻底告别 OOM 报错。
+* **代价（查询延迟增加）**：因为引入了磁盘的读写操作（I/O），查询的整体耗时通常会比纯内存计算要长。但这属于“用时间换空间”，保证了任务的成功率。
+
+### 如何判断查询是否触发了落盘？
+查询执行完毕后，你可以通过以下两种方式查看是否发生了落盘：
+1. **查看 FE 审计日志（Audit Log）**：日志中会包含 `SpillWriteBytesToLocalStorage`（写入磁盘的字节数）和 `SpillReadBytesFromLocalStorage`（读取磁盘的字节数）字段。
+2. **查看 Query Profile**：在具体的执行计划 Profile 中，如果算子触发了落盘，会标记 `Spilled: true`，并展示相关的落盘 Counter 信息。
+
+总的来说，算子落盘是 Doris 迈向处理超大规模数据计算的重要能力，特别适合在内存资源有限但需要处理海量数据的离线 ETL 或复杂分析场景中开启。
+
+## 怎么配置Doris算子落盘呢？
+
+配置 Doris 的算子落盘（Spill to Disk）功能非常简单，主要分为 **BE 后端配置** 和 **SQL 会话（Session）配置** 两个部分。
+
+以下是详细的配置步骤：
+
+### 第一步：配置 BE 后端节点（需重启或动态生效）
+在 BE 节点的配置文件 `be.conf` 中，你需要指定落盘数据的存储路径以及磁盘空间的使用限制。
+
+* **`spill_storage_root_path`**：指定查询中间结果落盘文件的存储路径。可以配置多个路径，用分号 `;` 隔开，建议配置在独立的高速磁盘（如 SSD）上以提升性能。
+* **`spill_storage_limit`**：限制落盘文件能占用的最大磁盘空间。可以配置具体的数值（如 `100G`, `1T`）或百分比（如 `100%`）。默认值为 `20%`。
+
+**配置示例：**
+```properties
+# 配置多个落盘路径
+spill_storage_root_path=/mnt/disk1/doris-spill;/mnt/disk2/doris-spill
+
+# 如果落盘路径配置了单独的磁盘，可以设置为100%，否则建议保留默认或设置合理百分比以防占满磁盘
+spill_storage_limit=100%
+```
+*修改完 `be.conf` 后，需要重启 BE 节点使配置生效。*
+
+### 第二步：配置 SQL 会话变量（查询前执行）
+在发起复杂的查询或 ETL 任务之前，需要在当前的 SQL 会话中开启落盘功能，并合理设置内存限制和超时时间。
+
+* **`enable_spill`**：是否开启当前查询的落盘功能。**默认为 `false`（关闭）**，需要手动设置为 `true`。
+* **`exec_mem_limit`**：单个查询允许使用的最大内存。开启落盘后，当查询内存接近这个限制时，就会触发落盘。
+* **`query_timeout`**：查询超时时间。因为落盘涉及磁盘 I/O，查询耗时通常会显著增加，建议适当调大该值。
+
+**SQL 配置示例：**
+```sql
+-- 开启落盘功能
+SET enable_spill = true;
+
+-- 设置单查询最大内存限制（例如 10GB）
+SET exec_mem_limit = 10g;
+
+-- 适当延长查询超时时间（例如 3600秒）
+SET query_timeout = 3600;
+
+-- 随后执行你的复杂 SQL 即可
+-- SELECT ... FROM ... JOIN ... GROUP BY ...;
+```
+
+### 第三步：如何验证落盘是否生效？
+查询执行完成后，你可以通过以下两种方式确认是否触发了落盘以及落盘的数据量：
+
+1. **查看 FE 审计日志（Audit Log）**：
+   在日志中查找 `SpillWriteBytesToLocalStorage`（写入磁盘的字节数）和 `SpillReadBytesFromLocalStorage`（读取磁盘的字节数）字段。如果数值大于 0，说明触发了落盘。
+2. **查看 Query Profile**：
+   在具体的执行计划 Profile 中，如果算子触发了落盘，会明确标记 `Spilled: true`，并且能看到以 `Spill` 为前缀的详细 Counter 信息（如 `SpillWriteRows` 等）。
+
+** 温馨提示：**
+算子落盘是用“时间换空间”的策略。虽然能极大避免 OOM（内存溢出）报错，保证任务成功跑完，但会引入额外的磁盘 I/O 开销，导致查询变慢。因此，建议仅在处理大规模离线 ETL 任务或极其复杂的分析查询时开启此功能。
+
+### 实践
+
+参考本站示例：https://gitee.com/dexterleslie/demonstration/tree/main/demo-doris
+
+Dockerfile-doris-be
+
+```sh
+# be.conf 中 spill_storage_root_path=${DORIS_HOME}/spill；BE 启动时会 canonicalize 该路径，不存在则直接退出
+RUN mkdir -p /opt/apache-doris/be/spill
+```
+
+be.conf
+
+```properties
+# ---------------------------------------------------------------------------
+# 算子落盘（Spill to Disk）：查询内存紧张时将 Hash Join / Agg / Sort / CTE 等中间结果写入磁盘。
+# - 修改后须重启 BE；会话侧须 SET enable_spill=true（见 doris-create-database-demo.sql）。
+# - 演示环境 mem_limit=4g，落盘目录放在 BE 安装目录下，与数据目录分离便于排查。
+# ---------------------------------------------------------------------------
+spill_storage_root_path = ${DORIS_HOME}/spill
+# 落盘占用该路径所在磁盘的比例上限；演示机与数据同盘时保留默认 20%，避免占满磁盘
+spill_storage_limit = 90%
+```
+
+## Doris分区是什么呢？
+
+在 Apache Doris 中，**分区（Partition）**是一种将表中的数据按某一列的值范围或枚举值进行水平切分的机制。逻辑上可以理解为将一张原始大表划分成了多个子表，每个分区对应一段连续的数据区间。
+
+### 分区的核心作用
+*   **提升查询性能（分区裁剪）**：当查询条件包含分区列时，Doris 能够自动跳过不相关的分区，只扫描符合条件的数据，从而大幅减少 I/O 开销并提升查询速度。
+*   **高效的数据管理**：支持对数据进行生命周期管理和隔离。例如，可以方便地按天/月删除历史过期数据，或者按地域、业务线实现数据的物理隔离。
+
+### 常见的分区策略
+Doris 提供了多种灵活的分区方式以适应不同的业务场景：
+1.  **Range 分区（范围分区）**：按照分区列的取值范围划分，通常用于时间序列数据（如按天、按月）。
+2.  **List 分区（列表分区）**：根据特定字段的离散枚举值进行划分，适用于分类数据（如按地区、业务类型等）。
+3.  **Auto Partition（自动分区）**：针对数据分布零散或难以预测的场景，Doris 可以在数据导入过程中根据分区列的实际取值自动创建新分区，免去了手动维护的繁琐。
+
+### 分区与分桶的区别
+在实际使用中，分区常与“分桶（Bucket）”结合使用，两者的主要区别在于：
+*   **划分依据不同**：分区基于列值的**范围或枚举**；而分桶是基于某一列的 **Hash 计算**。
+*   **核心用途不同**：分区主要用于**数据的逻辑边界划分**和生命周期管理；分桶则决定了数据在集群节点间的**物理分布**，用于保证数据均匀分散、提升并行计算能力以及优化 JOIN 操作。
+*   **层级关系**：分区包含分桶，分桶属于分区。
+
+## 分区实践
+
+```sql
+-- company_id 分区表示例（Apache Doris）
+-- 使用 AUTO LIST 自动分区：导入数据时按 company_id 自动创建分区，无需手动维护
+
+DROP TABLE IF EXISTS `inventory_by_company_2`;
+DROP TABLE IF EXISTS `inventory_by_company`;
+
+CREATE TABLE IF NOT EXISTS `inventory_by_company` (
+  `id` BIGINT NOT NULL,
+  `company_id` BIGINT NOT NULL DEFAULT "0" COMMENT "公司id",
+  `ck_id` BIGINT NOT NULL COMMENT "仓库id",
+  `cp_id` BIGINT NOT NULL COMMENT "产品id",
+  `kc_sl` DECIMAL(20,2) NULL DEFAULT "0.00" COMMENT "库存数量",
+  `create_time` DATETIME NULL COMMENT "入库时间"
+) ENGINE=OLAP
+UNIQUE KEY(`id`, `company_id`)
+AUTO PARTITION BY LIST(`company_id`) ()
+DISTRIBUTED BY HASH(`id`) BUCKETS 10
+PROPERTIES (
+  "replication_num" = "1",
+  "enable_unique_key_merge_on_write" = "true"
+);
+
+CREATE TABLE IF NOT EXISTS `inventory_by_company_2` (
+  `id` BIGINT NOT NULL,
+  `company_id` BIGINT NOT NULL DEFAULT "0" COMMENT "公司id",
+  `ck_id` BIGINT NOT NULL COMMENT "仓库id",
+  `cp_id` BIGINT NOT NULL COMMENT "产品id",
+  `kc_sl` DECIMAL(20,2) NULL DEFAULT "0.00" COMMENT "库存数量",
+  `create_time` DATETIME NULL COMMENT "入库时间"
+) ENGINE=OLAP
+UNIQUE KEY(`id`, `company_id`)
+AUTO PARTITION BY LIST(`company_id`) ()
+DISTRIBUTED BY HASH(`id`) BUCKETS 10
+PROPERTIES (
+  "replication_num" = "1",
+  "enable_unique_key_merge_on_write" = "true"
+);
+
+
+-- 异步物化视图：UNION ALL 合并两张基表，分区与基表 company_id AUTO LIST 分区自动同步
+
+DROP MATERIALIZED VIEW IF EXISTS `mv_inventory_by_company`;
+
+CREATE MATERIALIZED VIEW `mv_inventory_by_company` (
+  `id`,
+  `company_id`,
+  `ck_id`,
+  `cp_id`,
+  `kc_sl`,
+  `create_time`
+)
+REFRESH AUTO ON COMMIT
+PARTITION BY (`company_id`)
+DISTRIBUTED BY HASH(`company_id`) BUCKETS 10
+PROPERTIES (
+  "replication_num" = "1"
+)
+AS
+SELECT
+  `id`,
+  `company_id`,
+  `ck_id`,
+  `cp_id`,
+  `kc_sl`,
+  `create_time`
+FROM `inventory_by_company`
+UNION ALL
+SELECT
+  `id`,
+  `company_id`,
+  `ck_id`,
+  `cp_id`,
+  `kc_sl`,
+  `create_time`
+FROM `inventory_by_company_2`;
+
+-- 测试数据：每张表各插入 3 条
+-- INSERT INTO `inventory_by_company` (`id`, `company_id`, `ck_id`, `cp_id`, `kc_sl`, `create_time`) VALUES (1, 1, 101, 1001, 10.00, '2026-06-01 10:00:00');
+-- INSERT INTO `inventory_by_company` (`id`, `company_id`, `ck_id`, `cp_id`, `kc_sl`, `create_time`) VALUES (2, 2, 102, 1002, 20.50, '2026-06-01 11:00:00');
+-- INSERT INTO `inventory_by_company` (`id`, `company_id`, `ck_id`, `cp_id`, `kc_sl`, `create_time`) VALUES (3, 3, 103, 1003, 30.00, '2026-06-01 12:00:00');
+
+-- INSERT INTO `inventory_by_company_2` (`id`, `company_id`, `ck_id`, `cp_id`, `kc_sl`, `create_time`) VALUES (1, 100, 201, 2001, 15.00, '2026-06-02 10:00:00');
+-- INSERT INTO `inventory_by_company_2` (`id`, `company_id`, `ck_id`, `cp_id`, `kc_sl`, `create_time`) VALUES (2, 101, 202, 2002, 25.50, '2026-06-02 11:00:00');
+-- INSERT INTO `inventory_by_company_2` (`id`, `company_id`, `ck_id`, `cp_id`, `kc_sl`, `create_time`) VALUES (3, 102, 203, 2003, 35.00, '2026-06-02 12:00:00');
+
+-- 手动刷新：REFRESH MATERIALIZED VIEW mv_inventory_by_company;
+
+-- 下面SQL查看mv数据刷新状态RefreshMode=PARTIAL表示分区正常
+SELECT * FROM tasks("type"="mv") order by CreateTime desc;
+```
+

@@ -1,5 +1,5 @@
 FROM apache/doris:fe-4.0.5
-# FROM apache/doris:fe-4.1.0
+# FROM apache/doris:fe-master_4.0_release 
 
 # 使用 Maven Central 官方仓库下载 MySQL JDBC 驱动（8.0.31），供 FE 侧 JDBC Catalog / JDBC 外表等能力使用。
 # - curl -f：HTTP 4xx/5xx 时失败退出，避免留下空文件或损坏 jar

@@ -1,0 +1,6 @@
+# SeaTunnel Zeta checkpoint / 本地 file 存储（由 docker-compose 挂载，含二进制与作业元数据，勿入库）
+seatunnel-data/
+# Flink checkpoint（docker-compose 挂载 ./flink-data/checkpoints，重启后用于 -s 恢复位点）
+flink-data/
+# Doris BE 算子落盘临时文件（docker-compose 挂载 doris-data/be-spill）
+doris-data/
