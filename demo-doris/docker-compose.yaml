@@ -96,16 +96,18 @@ services:
       # - 执行 `SHOW BACKENDS` 并要求看到该 BE 的 `alive=true` 才算启动成功
       # - 若你在 FE 里修改过 root 密码，则此处必须提供密码，否则探活永远失败，BE 容器会循环重启
       # 使用方式：在宿主机环境变量或 `.env` 中设置 `DORIS_ROOT_PASSWORD`
-      # MYSQL_PWD: "${DORIS_ROOT_PASSWORD}"
+      MYSQL_PWD: "${DORIS_ROOT_PASSWORD}"
     # ports:
     #   - "8040:8040"
     #   - "9050:9050"
     #   - "9060:9060"
     depends_on:
-      # 使用 host 网络时，FE 的健康检查可能在 “catalog ready” 前一直不通过，
-      # 从而导致 Compose 永远不启动 BE（形成启动死锁）。
-      # 因此这里只保证 FE 容器先启动，再由 BE 的自身重试逻辑等待 FE 就绪。
-      - doris-fe
+      # BE 镜像会读 MYSQL_PWD；须等 root 密码设好后再启 BE，否则探活永远鉴权失败。
+      # 密码初始化本身只用 SHOW FRONTENDS（不依赖 BE），不会与 BE 形成死锁。
+      doris-fe:
+        condition: service_started
+      doris-root-password-init:
+        condition: service_completed_successfully
     volumes:
     #   # BE 数据与日志持久化；重启/重建容器后仍保留数据
     #   - doris-be-storage:/opt/apache-doris/be/storage
@@ -157,10 +159,13 @@ services:
         fi
 
         MYSQL_BASE=(mysql --protocol=tcp -h "$$DORIS_MYSQL_HOST" -P "$$DORIS_MYSQL_PORT")
+        # Doris 4.x：SELECT 1 会走 BE；BE 未就绪时探活永远失败，进而与依赖 MYSQL_PWD 的 BE 启动形成死锁。
+        # SHOW FRONTENDS 仅在 FE 执行，可作为密码初始化阶段的就绪/鉴权探测。
+        FE_PROBE='SHOW FRONTENDS'
 
         for i in $$(seq 1 300); do
-          if "$${MYSQL_BASE[@]}" -uroot -e "SELECT 1" >/dev/null 2>&1 \
-            || "$${MYSQL_BASE[@]}" -uroot -p"$$DORIS_ROOT_PASSWORD" -e "SELECT 1" >/dev/null 2>&1; then
+          if "$${MYSQL_BASE[@]}" -uroot -e "$$FE_PROBE" >/dev/null 2>&1 \
+            || "$${MYSQL_BASE[@]}" -uroot -p"$$DORIS_ROOT_PASSWORD" -e "$$FE_PROBE" >/dev/null 2>&1; then
             break
           fi
           if [[ $$i -eq 300 ]]; then
@@ -201,7 +206,7 @@ services:
           grant_privileges_for_host "$$1" "$$2" || true
         }
 
-        if "$${MYSQL_BASE[@]}" -uroot -p"$$DORIS_ROOT_PASSWORD" -e "SELECT 1" >/dev/null 2>&1; then
+        if "$${MYSQL_BASE[@]}" -uroot -p"$$DORIS_ROOT_PASSWORD" -e "$$FE_PROBE" >/dev/null 2>&1; then
           echo "[doris-root-password-init] root password already set, ensuring host grants..."
           for h in '%' '127.0.0.1' 'localhost'; do
             ensure_root_for_host "$$h" 1
@@ -218,7 +223,7 @@ services:
           ensure_root_for_host "$$h" 1
         done
 
-        if "$${MYSQL_BASE[@]}" -uroot -p"$$DORIS_ROOT_PASSWORD" -e "SELECT 1" >/dev/null 2>&1; then
+        if "$${MYSQL_BASE[@]}" -uroot -p"$$DORIS_ROOT_PASSWORD" -e "$$FE_PROBE" >/dev/null 2>&1; then
           echo "[doris-root-password-init] done."
           exit 0
         fi
@@ -485,15 +490,16 @@ services:
         if [[ -n "$$DORIS_ROOT_PASSWORD" ]]; then
           MYSQL_CMD+=(-p"$$DORIS_ROOT_PASSWORD")
         fi
-        for i in $$(seq 1 120); do
+        for i in $$(seq 1 180); do
+          # 建表/查询需要可用 BE；Doris 4.x 下 SELECT 1 会走 BE，适合作为集群真正可用的探测
           if "$${MYSQL_CMD[@]}" -e "SELECT 1" >/dev/null 2>&1; then
             break
           fi
-          if [[ $$i -eq 120 ]]; then
-            echo "[doris-demo-schema-init] timeout waiting for Doris FE MySQL port" >&2
+          if [[ $$i -eq 180 ]]; then
+            echo "[doris-demo-schema-init] timeout waiting for Doris cluster (FE+BE)" >&2
             exit 1
           fi
-          echo "[doris-demo-schema-init] waiting for Doris FE MySQL port..."
+          echo "[doris-demo-schema-init] waiting for Doris cluster (FE+BE)..."
           sleep 1
         done
         echo "[doris-demo-schema-init] applying /init.sql ..."
