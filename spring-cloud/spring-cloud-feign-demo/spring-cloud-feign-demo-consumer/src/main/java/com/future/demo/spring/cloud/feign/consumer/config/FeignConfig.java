@@ -13,7 +13,7 @@ public class FeignConfig {
     // 设置 OpenFeign 日志级别
     @Bean
     Logger.Level feignLogLevel() {
-        return Logger.Level.FULL;
+        return Logger.Level.NONE;
     }
 
     // 自定义 OpenFeign 错误解码器

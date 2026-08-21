@@ -2,6 +2,7 @@ package com.future.demo.spring.cloud.feign.provider.controller;
 
 import cn.hutool.core.util.RandomUtil;
 import com.future.common.constant.ErrorCodeConstant;
+import com.future.common.http.ListResponse;
 import com.future.common.http.ObjectResponse;
 import com.future.common.http.ResponseUtils;
 import com.future.demo.spring.cloud.feign.common.entity.Product;
@@ -40,10 +41,10 @@ public class ApiController {
     @Value("${server.port}")
     private int port;
 
-    // 测试@PathVariable
-    @GetMapping("{productId}")
-    public ObjectResponse<Product> info(
-            @PathVariable("productId") Integer productId,
+    // 按 productId 列表批量查询
+    @GetMapping
+    public ListResponse<Product> info(
+            @RequestParam("productIds") List<Integer> productIds,
             @RequestHeader(value = "my-header", defaultValue = "") String myHeader,
             @RequestParam(value = "contextUserId", required = false) Long contextUserId) {
         HttpServletRequest request =
@@ -51,14 +52,19 @@ public class ApiController {
                         .getRequest();
         String contextUserIdFromRequest = request.getParameter("contextUserId");
 
-        log.info("my-headder={},contextUserId={},contextUserIdFromRequest={}", myHeader, contextUserId, contextUserIdFromRequest);
-        Product product = new Product();
-        product.setId(productId);
-        product.setName("测试产品，端口：" + port);
-        product.setPrice(12.33);
-        ObjectResponse<Product> response = new ObjectResponse<>();
-        response.setData(product);
-        return response;
+        log.info("my-headder={},contextUserId={},contextUserIdFromRequest={},productIds={}",
+                myHeader, contextUserId, contextUserIdFromRequest, productIds);
+        List<Product> products = new ArrayList<>();
+        if (productIds != null) {
+            for (Integer productId : productIds) {
+                Product product = new Product();
+                product.setId(productId);
+                product.setName("测试产品，端口：" + port);
+                product.setPrice(12.33);
+                products.add(product);
+            }
+        }
+        return ResponseUtils.successList(products);
     }
 
     // 测试@RequestParam

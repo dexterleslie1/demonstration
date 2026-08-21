@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+
+    <!-- 异步包装控制台输出，业务线程只入队，由后台线程写日志 -->
+    <appender name="ASYNC_CONSOLE" class="ch.qos.logback.classic.AsyncAppender">
+        <!-- 队列剩余容量低于该比例才丢弃；0 表示不丢弃 -->
+        <discardingThreshold>0</discardingThreshold>
+        <queueSize>1024</queueSize>
+        <!-- false：队列满时阻塞调用方，保证不丢日志 -->
+        <neverBlock>false</neverBlock>
+        <includeCallerData>false</includeCallerData>
+        <appender-ref ref="CONSOLE"/>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="ASYNC_CONSOLE"/>
+    </root>
+</configuration>

@@ -2,6 +2,7 @@ package com.future.demo.spring.cloud.feign.consumer.controller;
 
 import com.future.common.exception.BusinessException;
 import com.future.common.feign.FeignUtil;
+import com.future.common.http.ListResponse;
 import com.future.common.http.ObjectResponse;
 import com.future.common.http.ResponseUtils;
 import com.future.demo.spring.cloud.feign.common.entity.Product;
@@ -13,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 
 @Slf4j
@@ -28,14 +30,14 @@ public class ApiController {
     @Resource
     ProductFeignWithConfig productFeignWithConfig;
 
-    @GetMapping("{productId}")
-    public ObjectResponse<Product> info(@PathVariable("productId") Integer productId) throws BusinessException {
-        ObjectResponse<Product> response = this.productFeign.info(productId);
-        /*ObjectResponse<Product> response2 = this.productFeignWithSpecifyUrl.info(productId);
+    @GetMapping
+    public ListResponse<Product> info(@RequestParam("productIds") List<Integer> productIds) throws BusinessException {
+        ListResponse<Product> response = this.productFeign.info(productIds);
+        /*ListResponse<Product> response2 = this.productFeignWithSpecifyUrl.info(productIds);
         log.info("product2={}", response2);
-        ObjectResponse<Product> response3 = this.productFeignWithConfig.info(productId);
+        ListResponse<Product> response3 = this.productFeignWithConfig.info(productIds);
         log.info("product3={}", response3);
-        ObjectResponse<Product> response5 = this.productFeignTestSameName.info(productId);
+        ListResponse<Product> response5 = this.productFeignTestSameName.info(productIds);
         log.info("product5={}", response5);*/
         return response;
     }
