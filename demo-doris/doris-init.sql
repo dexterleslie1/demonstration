@@ -163,3 +163,43 @@ PROPERTIES (
    "replication_num" = "1",
    "enable_unique_key_merge_on_write" = "true"
 );
+
+-- 布匹库存明细合并状态表：记录库存匹数、数量等数据的合并状态
+CREATE TABLE IF NOT EXISTS demot.bpkc_mxb_merge_status (
+    company_id      BIGINT,
+    /*对应 bpkc_mxb.key*/
+    `key`           VARCHAR(4096),
+    /*合并类型：kc（库存）、dck（待出库）、jg_zy（加工占用）等*/
+    `type`          VARCHAR(20),
+    /*单据类型*/
+    djlx            VARCHAR(30),
+    /*单据表id*/
+    dj_id           BIGINT,
+    /*记录表id*/
+    jl_id           BIGINT,
+    /*原材料表id*/
+    mt_id           BIGINT,
+    /*明细表id*/
+    mx_id           BIGINT,
+    /*记录类型：jl（记录）、mt（原材料）、mx（明细匹）、rk（入库）、ck（出库）*/
+    jllx            VARCHAR(30),
+    /*单号*/
+    dh              VARCHAR(50),
+    /*是否审核*/
+    is_sh           INT,
+    /*是否作废*/
+    is_zf           INT,
+    /*是否结单*/
+    is_jd           INT,
+    /*是否删除*/
+    is_delete       INT,
+    /*是否取消*/
+    is_qx           INT
+)
+UNIQUE KEY(company_id, `key`, `type`, djlx, dj_id, jl_id, mt_id, mx_id)
+AUTO PARTITION BY LIST(company_id)()
+DISTRIBUTED BY HASH(company_id, `key`) BUCKETS 8
+PROPERTIES (
+   "replication_num" = "1",
+   "enable_unique_key_merge_on_write" = "true"
+);

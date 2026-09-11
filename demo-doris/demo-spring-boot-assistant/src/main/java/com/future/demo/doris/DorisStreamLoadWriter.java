@@ -65,6 +65,16 @@ public final class DorisStreamLoadWriter<T> {
             int subtaskId,
             int bufferMaxRows,
             long flushIntervalMs) {
+        this(config, labelPrefix, subtaskId, bufferMaxRows, flushIntervalMs, null);
+    }
+
+    public DorisStreamLoadWriter(
+            DorisStreamLoadConfig config,
+            String labelPrefix,
+            int subtaskId,
+            int bufferMaxRows,
+            long flushIntervalMs,
+            Properties extraStreamLoadProp) {
         this.subtaskId = subtaskId;
         this.bufferMaxRows = bufferMaxRows;
         this.flushIntervalMs = flushIntervalMs;
@@ -76,6 +86,9 @@ public final class DorisStreamLoadWriter<T> {
                 .build();
         this.readOptions = DorisReadOptions.defaults();
         this.streamLoadProp = DorisExecutionOptions.defaultsProperties();
+        if (extraStreamLoadProp != null && !extraStreamLoadProp.isEmpty()) {
+            this.streamLoadProp.putAll(extraStreamLoadProp);
+        }
         this.labelGenerator = new LabelGenerator(labelPrefix, false, subtaskId);
         this.backendUtil = new BackendUtil(
                 RestService.getBackendsV2(dorisOptions, readOptions, LOG));
@@ -197,16 +210,20 @@ public final class DorisStreamLoadWriter<T> {
         String label = labelGenerator.generateBatchLabel(table);
         String loadUrl = buildLoadUrl();
         Throwable lastError = null;
+        boolean groupCommit = isGroupCommitEnabled();
 
         for (int retry = 0; retry <= MAX_RETRIES; retry++) {
             String requestLabel = retry == 0 ? label : label + "_" + retry;
             HttpPutBuilder putBuilder = new HttpPutBuilder();
             putBuilder.setUrl(loadUrl)
                     .baseAuth(dorisOptions.getUsername(), dorisOptions.getPassword())
-                    .setLabel(requestLabel)
                     .addCommonHeader()
                     .setEntity(new StringEntity(body, StandardCharsets.UTF_8))
                     .addProperties(streamLoadProp);
+            // Group Commit 不允许自定义 label
+            if (!groupCommit) {
+                putBuilder.setLabel(requestLabel);
+            }
             if (hasDelete) {
                 putBuilder.addHiddenColumns(true);
             }
@@ -237,6 +254,11 @@ public final class DorisStreamLoadWriter<T> {
         }
 
         throw new IOException("Doris stream load failed after retries", lastError);
+    }
+
+    private boolean isGroupCommitEnabled() {
+        String mode = streamLoadProp.getProperty("group_commit");
+        return mode != null && !mode.isEmpty() && !"off_mode".equalsIgnoreCase(mode);
     }
 
     private String buildLoadUrl() {

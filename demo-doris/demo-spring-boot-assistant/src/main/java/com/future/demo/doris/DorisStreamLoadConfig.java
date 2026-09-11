@@ -19,11 +19,16 @@ public final class DorisStreamLoadConfig {
 
     /** demo-doris 默认：FE HTTP 8030，库表 demot.dd */
     public static DorisStreamLoadConfig demoDefaults() {
+        return forTable("demot.dd");
+    }
+
+    /** demo-doris：FE HTTP 8030，指定库表 */
+    public static DorisStreamLoadConfig forTable(String tableIdentifier) {
         return new DorisStreamLoadConfig(
                 "127.0.0.1:8030",
                 "root",
                 "123456",
-                "demot.dd");
+                tableIdentifier);
     }
 
     public String getFenodes() {
