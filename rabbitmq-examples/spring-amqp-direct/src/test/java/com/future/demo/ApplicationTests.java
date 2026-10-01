@@ -1,12 +1,10 @@
 package com.future.demo;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.annotation.Resource;
 import java.util.concurrent.TimeUnit;
@@ -15,7 +13,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * @author Dexterleslie.Chan
  */
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = {Application.class})
 public class ApplicationTests {
     @Autowired
@@ -32,6 +29,6 @@ public class ApplicationTests {
 
         TimeUnit.MILLISECONDS.sleep(1000);
 
-        Assert.assertEquals(totalMessageCount, counter.get());
+        Assertions.assertEquals(totalMessageCount, counter.get());
     }
 }
