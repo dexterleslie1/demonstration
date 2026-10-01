@@ -63,4 +63,7 @@ services:
       - --rabbitmq_exchange_type=fanout
       - --rabbitmq_exchange_durable=true
       - --rabbitmq_message_persistent=true
+      # 用 GTID 记位点并续读。MariaDB 下若不开启，positions.binlog_position 会一直为 0，
+      # 重启后从当前 binlog 文件头重读，无法从上次停止处续传。
+      - --gtid_mode=true
       - "--filter=exclude: *.*, include: demo.*"
