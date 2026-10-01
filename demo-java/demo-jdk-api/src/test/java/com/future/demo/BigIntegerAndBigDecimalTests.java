@@ -5,6 +5,7 @@ import org.junit.Test;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.MathContext;
 
 public class BigIntegerAndBigDecimalTests {
     @Test
@@ -38,5 +39,55 @@ public class BigIntegerAndBigDecimalTests {
         Assert.assertEquals(bigDecimal.longValue(), bigInteger.longValue());
 
         // endregion
+    }
+
+    /**
+     * 空字符串无法解析为 BigInteger，会抛出：
+     * java.lang.NumberFormatException: Zero length BigInteger
+     */
+    @Test
+    public void zeroLengthBigInteger() {
+        try {
+            new BigInteger("");
+            Assert.fail("expected NumberFormatException");
+        } catch (NumberFormatException e) {
+            Assert.assertEquals("Zero length BigInteger", e.getMessage());
+        }
+
+        try {
+            new BigInteger("", 10);
+            Assert.fail("expected NumberFormatException");
+        } catch (NumberFormatException e) {
+            Assert.assertEquals("Zero length BigInteger", e.getMessage());
+        }
+    }
+
+    /**
+     * 空字符串无法解析为 BigDecimal，同样会抛出 NumberFormatException。
+     * 与 BigInteger 不同：JDK 8 下异常 message 为 null（非 "Zero length ..."）；
+     * 较新 JDK 在解析阶段可能抛出 message 为 "No digits found." 的同类异常。
+     */
+    @Test
+    public void zeroLengthBigDecimal() {
+        try {
+            new BigDecimal("");
+            Assert.fail("expected NumberFormatException");
+        } catch (NumberFormatException e) {
+            Assert.assertNull(e.getMessage());
+        }
+
+        try {
+            new BigDecimal("", MathContext.UNLIMITED);
+            Assert.fail("expected NumberFormatException");
+        } catch (NumberFormatException e) {
+            Assert.assertNull(e.getMessage());
+        }
+
+        try {
+            new BigDecimal(new char[0], 0, 0);
+            Assert.fail("expected NumberFormatException");
+        } catch (NumberFormatException e) {
+            Assert.assertNull(e.getMessage());
+        }
     }
 }
