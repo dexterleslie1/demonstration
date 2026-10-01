@@ -3441,6 +3441,14 @@ Flink 内置强大的状态后端（如 RocksDB），支持在流处理中维护
 
 >参考本站示例 https://gitee.com/dexterleslie/demonstration/tree/main/demo-flink/demo-flink-table-api-n-sql 中的FlinkSQLParentAndChildTableInnerJoinParentDatumDelayTests、FlinkSQLParentAndChildTableLeftJoinChildDatumDelayTests、FlinkSQLParentAndChildTableLeftJoinParentDatumDelayTests
 
+## Flink SQL Lookup Join
+
+>参考本站示例 https://gitee.com/dexterleslie/demonstration/tree/main/demo-flink/demo-flink-tutorial 中的ParentAndChildTableLookupJoinTests
+>
+>结论：
+>
+>- Lookup Join不会记录源表的状态，所以不会导致状态膨胀。
+
 ## Flink Connector JDBC
 
 >参考本站示例 https://gitee.com/dexterleslie/demonstration/tree/main/demo-flink/demo-flink-connector 中的FlinkSQLConnectorJdbcTests
@@ -3458,3 +3466,222 @@ Flink 内置强大的状态后端（如 RocksDB），支持在流处理中维护
 >- 使用固定JobId
 >- 表状态使用RocksDB存储以减少内存使用
 >- checkpoint只保留最近一份以减少硬盘空间使用
+
+## Flink checkpoint和状态是什么呢？
+
+>参考本站示例 https://gitee.com/dexterleslie/demonstration/tree/main/demo-flink/demo-flink-tutorial 中的CheckpointAndStateBackendTests应用重启从上次checkpoint和state中恢复。
+>
+>参考本站示例 https://gitee.com/dexterleslie/demonstration/tree/main/demo-flink/demo-flink-tutorial 中的StatebackendParentAndChildTableJoinTests主子表join会导致state膨胀。
+>
+>参考本站示例 https://gitee.com/dexterleslie/demonstration/tree/main/demo-flink/demo-flink-tutorial 中的StatebackendSingleTableTests单表同步不会保存状态。
+
+### Flink 中的 Checkpoint 与 State（状态）
+
+在 Apache Flink 中，**State（状态）** 和 **Checkpoint（检查点）** 是实现流处理容错和一致性语义的两大核心概念，二者紧密配合，共同保障作业在发生故障时能够正确恢复。
+
+---
+
+### State（状态）
+
+Flink 中的算子（Operator）在处理数据流时，往往需要"记住"之前处理过的数据信息，这种被记住的信息就是**状态**。例如：
+
+- **窗口聚合**：在窗口触发前，需要收集或聚合到达的元素
+- **Key/Value 状态**：转换函数以键值对形式存储中间结果
+- **数据源偏移量**：记录 Kafka 等消息队列的消费位置
+
+Flink 中的状态分为两大类：
+
+- **Keyed State（键控状态）**：只能在 `KeyedStream` 上使用，每个 key 对应一个独立的状态实例，支持 `ValueState`、`ListState`、`MapState`、`ReducingState` 等类型。
+- **Operator State（算子状态）**：与算子并行实例绑定，不按键分区，常用于记录数据源的偏移量等全局信息，支持 `ListState`、`UnionListState` 等。
+
+---
+
+### Checkpoint（检查点）
+
+Checkpoint 是 Flink 对**有状态算子的全局一致性快照**，本质上是将所有算子的状态和流处理位置定期持久化，以便在发生故障时回滚恢复。
+
+#### 工作原理
+
+Flink 基于 **Chandy-Lamport 算法**的思想，通过在数据流中周期性插入特殊标记（**Barrier**）来实现分布式快照：
+
+1. JobManager 周期性地向数据源注入 Barrier
+2. 算子收到 Barrier 后，暂停处理，等待所有输入流的 Barrier **对齐**
+3. 对齐完成后，触发本地状态快照（异步写入持久化存储）
+4. Barrier 继续向下游传播，直到所有算子完成快照
+
+这种设计无需全局锁，即可保证快照时刻所有算子状态的逻辑一致性。
+
+#### 关键配置
+
+```java
+StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+
+// 每 5 秒触发一次 checkpoint
+env.enableCheckpointing(5000);
+
+// 设置精确一次语义（默认值）
+env.getCheckpointConfig().setCheckpointingMode(CheckpointingMode.EXACTLY_ONCE);
+
+// checkpoint 超时时间
+env.getCheckpointConfig().setCheckpointTimeout(60000);
+
+// 两次 checkpoint 之间的最小间隔
+env.getCheckpointConfig().setMinPauseBetweenCheckpoints(3000);
+
+// 允许连续失败的次数
+env.getCheckpointConfig().setTolerableCheckpointFailureNumber(3);
+```
+
+
+
+---
+
+### State Backend（状态后端）
+
+Checkpoint 的快照数据存储在哪里，由 **State Backend** 决定。Flink 内置了两种主要的状态后端：
+
+| 状态后端                        | 存储方式                                                | 适用场景                                             |
+| ------------------------------- | ------------------------------------------------------- | ---------------------------------------------------- |
+| **HashMapStateBackend**         | 状态以 Java 对象形式存储在 TaskManager 堆内存中         | 状态较大但内存充足、对延迟敏感的场景                 |
+| **EmbeddedRocksDBStateBackend** | 状态存储在本地 RocksDB 数据库中，异步快照到远程文件系统 | 超大状态（超过内存容量）、需要增量 Checkpoint 的场景 |
+
+两者的核心权衡是：**HashMapStateBackend 速度快但受内存限制，RocksDB 可扩展性强但读写需要序列化/反序列化，性能较低。**
+
+---
+
+### Checkpoint vs Savepoint
+
+除了自动触发的 Checkpoint，Flink 还提供了手动触发的 **Savepoint**，二者对比如下：
+
+| 特性     | Checkpoint                 | Savepoint                    |
+| -------- | -------------------------- | ---------------------------- |
+| 触发方式 | 系统自动周期性触发         | 用户手动触发                 |
+| 主要用途 | 故障自动恢复               | 作业升级、集群迁移、A/B 测试 |
+| 存储格式 | 轻量级，依赖 State Backend | 自包含格式，可跨版本恢复     |
+| 生命周期 | 作业取消后默认删除         | 需手动删除，长期保留         |
+
+---
+
+### 总结
+
+简单来说：**State 是算子在处理数据过程中需要记住的信息，Checkpoint 是对这些信息的定期快照**。当作业发生故障时，Flink 从最近一次成功的 Checkpoint 恢复状态和消费位置，从而实现 **exactly-once**（精确一次）的处理语义，确保数据不丢不重。
+
+## Flink虚拟表
+
+>使用虚拟表生成指定数据TemporaryViewTests：https://gitee.com/dexterleslie/demonstration/tree/main/demo-flink/demo-flink-tutorial
+
+### Flink 虚拟表（Virtual Table）
+
+在 Flink 中，"虚拟表"是一个广义概念，指的是**不存储实际数据、只保存查询逻辑**的表对象。Flink 中的虚拟表主要包括以下两种：
+
+---
+
+#### View（视图）
+
+```sql
+CREATE VIEW [IF NOT EXISTS] view_name AS
+SELECT ... FROM ...;
+```
+
+- 持久化到 Catalog 中，跨会话可见
+- 所有连接到该 Catalog 的 Flink 作业都能使用
+- 适用于团队共享、长期复用的查询逻辑
+
+---
+
+#### Temporary View（临时视图）
+
+```sql
+CREATE TEMPORARY VIEW [IF NOT EXISTS] view_name AS
+SELECT ... FROM ...;
+```
+
+- 仅在当前会话中有效，会话结束自动消失
+- 不持久化到 Catalog
+- 适用于临时调试、单次作业内的逻辑复用
+
+---
+
+#### 两者的共同特征
+
+- **不存储数据**：只保存一段 SQL 查询逻辑
+- **惰性执行**：每次被引用时，查询逻辑会被内嵌到引用它的 SQL 中重新执行
+- **结果不共享**：多个查询引用同一个虚拟表时，底层逻辑会各自独立执行
+- **无状态**：不会缓存任何中间结果
+
+---
+
+#### 虚拟表 vs 物理表
+
+| 维度     | 虚拟表（View）           | 物理表（Table）          |
+| -------- | ------------------------ | ------------------------ |
+| 数据存储 | ❌ 不存储                 | ✅ 存储实际数据           |
+| 写入数据 | ❌ 不支持 `INSERT INTO`   | ✅ 支持                   |
+| 生命周期 | 取决于类型（临时/持久）  | 持久存在                 |
+| 查询开销 | 每次引用重新执行底层逻辑 | 直接读取已有数据         |
+| 适用场景 | 逻辑复用、代码简化       | 数据持久化、中间结果缓存 |
+
+---
+
+#### 虚拟表的典型用途
+
+**逻辑分层，简化复杂查询：**
+
+```sql
+-- 第一层：清洗原始数据
+CREATE TEMPORARY VIEW cleaned_orders AS
+SELECT order_id, user_id, amount, order_time
+FROM raw_orders
+WHERE amount > 0 AND order_time IS NOT NULL;
+
+-- 第二层：聚合统计
+CREATE TEMPORARY VIEW daily_stats AS
+SELECT
+    DATE_FORMAT(order_time, 'yyyy-MM-dd') AS dt,
+    user_id,
+    COUNT(*) AS order_count,
+    SUM(amount) AS daily_amount
+FROM cleaned_orders
+GROUP BY DATE_FORMAT(order_time, 'yyyy-MM-dd'), user_id;
+
+-- 最终查询：直接使用虚拟表
+SELECT * FROM daily_stats WHERE daily_amount > 10000;
+```
+
+**定义时态表用于 Lookup Join：**
+
+```sql
+CREATE TEMPORARY VIEW latest_rates AS
+SELECT currency, rate, update_time
+FROM (
+    SELECT *,
+        ROW_NUMBER() OVER (PARTITION BY currency ORDER BY update_time DESC) AS rn
+    FROM rates_history
+) WHERE rn = 1;
+```
+
+---
+
+#### 管理虚拟表的常用操作
+
+```sql
+-- 查看所有视图
+SHOW VIEWS;
+
+-- 查看视图定义
+DESCRIBE view_name;
+
+-- 删除视图
+DROP VIEW [IF EXISTS] view_name;
+
+-- 删除临时视图
+DROP TEMPORARY VIEW [IF EXISTS] view_name;
+```
+
+---
+
+> **总结**：Flink 中的"虚拟表"就是 View 和 Temporary View 的统称，它们本质上都是**命名的查询逻辑**，不存储数据。选择 View 还是 Temporary View，取决于是否需要跨会话共享。如果需要复用中间结果（避免重复计算），应使用 `INSERT INTO` 写入物理表，而不是依赖虚拟表。
+
+## 自定义Sink
+
+>自定义Sink CustomizeSinkTests：https://gitee.com/dexterleslie/demonstration/tree/main/demo-flink/demo-flink-tutorial
