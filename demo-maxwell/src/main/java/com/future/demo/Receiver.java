@@ -28,6 +28,8 @@ public class Receiver {
     private final AtomicLong consumed = new AtomicLong();
     /** 批量回调次数 */
     private final AtomicLong batchCallbacks = new AtomicLong();
+    /** 单次回调 List 的最大条数 */
+    private final AtomicLong maxBatchSize = new AtomicLong();
     /** 首条消息消费时间（epoch millis） */
     private final AtomicLong firstConsumeAt = new AtomicLong();
     /** 末条消息消费时间（epoch millis） */
@@ -41,6 +43,10 @@ public class Receiver {
         return batchCallbacks;
     }
 
+    public long getMaxBatchSize() {
+        return maxBatchSize.get();
+    }
+
     public long getFirstConsumeAt() {
         return firstConsumeAt.get();
     }
@@ -52,6 +58,7 @@ public class Receiver {
     public void resetStats() {
         consumed.set(0);
         batchCallbacks.set(0);
+        maxBatchSize.set(0);
         firstConsumeAt.set(0);
         lastConsumeAt.set(0);
     }
@@ -97,11 +104,14 @@ public class Receiver {
         long now = System.currentTimeMillis();
         firstConsumeAt.compareAndSet(0, now);
         lastConsumeAt.set(now);
-        long total = consumed.addAndGet(messages.size());
+        int batchSize = messages.size();
+        long total = consumed.addAndGet(batchSize);
         long batches = batchCallbacks.incrementAndGet();
+        maxBatchSize.accumulateAndGet(batchSize, Math::max);
 
         if (logger.isDebugEnabled()) {
-            logger.debug("batch consumed size={}, total={}, batches={}", messages.size(), total, batches);
+            logger.debug("batch consumed size={}, total={}, batches={}, maxBatchSize={}",
+                    batchSize, total, batches, maxBatchSize.get());
         }
     }
 }

@@ -39,7 +39,7 @@ services:
       start_period: 20s
 
   maxwell:
-    image: zendesk/maxwell:v1.41.2
+    image: zendesk/maxwell:v1.46.0
     depends_on:
       db:
         condition: service_healthy

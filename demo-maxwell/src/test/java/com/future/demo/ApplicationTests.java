@@ -14,7 +14,6 @@ import javax.annotation.Resource;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Properties;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -45,13 +44,7 @@ public class ApplicationTests {
 
     @Test
     public void testBatchInsertThroughput() throws InterruptedException {
-        Properties before = amqpAdmin.getQueueProperties(Config.QueueName);
-        int consumersBefore = before == null ? 0
-                : Integer.parseInt(String.valueOf(before.getOrDefault(RabbitAdmin.QUEUE_CONSUMER_COUNT, "0")));
-        // SpringBoot 启动后本进程会挂 ConcurrentConsumers 个消费者；若明显更多，说明有外部实例在抢消息
-        Assertions.assertTrue(consumersBefore <= Config.ConcurrentConsumers,
-                "检测到其他进程在消费 " + Config.QueueName
-                        + "（consumers=" + consumersBefore + "），请先停止 IDEA 中的 Application / 其他消费者再测");
+        assertNoForeignConsumers();
 
         // 清空队列与统计，避免历史消息干扰
         amqpAdmin.purgeQueue(Config.QueueName, false);
@@ -88,7 +81,71 @@ public class ApplicationTests {
                         + ", queueDepth=" + queueDepth);
     }
 
+    /**
+     * 同一事务删除 10 万行：验证 Receiver 单次 batch 不会一次收到 10 万条。
+     * <p>
+     * 预期：Maxwell 仍按行产出约 10 万条 CDC；Spring AMQP 受 {@link Config#BatchSize}
+     * 与 prefetch 限制，单次 {@code receiveMessages} 的 List 大小 &lt;= BatchSize。
+     * </p>
+     */
+    @Test
+    public void testSingleTxnDeleteDoesNotProduceHugeBatch() throws InterruptedException {
+        assertNoForeignConsumers();
+
+        String prefix = "td" + Long.toString(System.currentTimeMillis(), 36) + "-";
+        amqpAdmin.purgeQueue(Config.QueueName, false);
+        TimeUnit.SECONDS.sleep(2);
+        receiver.resetStats();
+
+        // 先插入 10 万行并等 insert CDC 消费完，再单独测 delete 批次
+        batchInsertUsers(InsertCount, prefix);
+        Assertions.assertTrue(waitUntilConsumed(InsertCount, ConsumeTimeoutSeconds),
+                "insert CDC 未消费完，无法继续测 delete");
+
+        amqpAdmin.purgeQueue(Config.QueueName, false);
+        TimeUnit.SECONDS.sleep(1);
+        receiver.resetStats();
+
+        long deleteStart = System.currentTimeMillis();
+        // 单条 DELETE = 单个事务删掉全部匹配行（非逐行提交）
+        int deleted = jdbcTemplate.update("delete from t_user where username like ?", prefix + "%");
+        long deleteCostMs = System.currentTimeMillis() - deleteStart;
+        log.info("单事务删除完成 deleted={}, costMs={}", deleted, deleteCostMs);
+        Assertions.assertEquals(InsertCount, deleted, "应在同一 DELETE 中删掉全部准备数据");
+
+        boolean done = waitUntilConsumed(InsertCount, ConsumeTimeoutSeconds);
+        long consumed = receiver.getConsumed().get();
+        long batches = receiver.getBatchCallbacks().get();
+        long maxBatch = receiver.getMaxBatchSize();
+        double avgBatch = batches == 0 ? 0 : (consumed * 1.0 / batches);
+
+        log.info("单事务 delete 消费结束 consumed={}, batches={}, avgBatchSize={}, maxBatchSize={}, configBatchSize={}",
+                consumed, batches, avgBatch, maxBatch, Config.BatchSize);
+
+        Assertions.assertTrue(done,
+                "超时未消费完 delete CDC，expected=" + InsertCount + ", actual=" + consumed);
+        Assertions.assertTrue(maxBatch > 0, "应至少收到一批消息");
+        // 核心断言：不会因为「一个事务删了 10 万行」就在一个 List 里塞 10 万条
+        Assertions.assertTrue(maxBatch <= Config.BatchSize,
+                "单次 batch 过大：maxBatchSize=" + maxBatch + ", configBatchSize=" + Config.BatchSize);
+        Assertions.assertTrue(batches >= InsertCount / Config.BatchSize,
+                "批次数过少，可能出现超大 batch：batches=" + batches);
+    }
+
+    private void assertNoForeignConsumers() {
+        Properties before = amqpAdmin.getQueueProperties(Config.QueueName);
+        int consumersBefore = before == null ? 0
+                : Integer.parseInt(String.valueOf(before.getOrDefault(RabbitAdmin.QUEUE_CONSUMER_COUNT, "0")));
+        Assertions.assertTrue(consumersBefore <= Config.ConcurrentConsumers,
+                "检测到其他进程在消费 " + Config.QueueName
+                        + "（consumers=" + consumersBefore + "），请先停止 IDEA 中的 Application / 其他消费者再测");
+    }
+
     private void batchInsertUsers(int total) {
+        batchInsertUsers(total, "perf-");
+    }
+
+    private void batchInsertUsers(int total, String usernamePrefix) {
         String sql = "insert into t_user(username, createTime) values(?, now())";
         int offset = 0;
         while (offset < total) {
@@ -97,7 +154,8 @@ public class ApplicationTests {
             jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
                 @Override
                 public void setValues(PreparedStatement ps, int i) throws SQLException {
-                    ps.setString(1, "perf-" + from + "-" + i + "-" + UUID.randomUUID());
+                    // username VARCHAR(64)：前缀 + 序号即可，避免 UUID 超长
+                    ps.setString(1, usernamePrefix + (from + i));
                 }
 
                 @Override
