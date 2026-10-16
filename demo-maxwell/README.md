@@ -77,6 +77,29 @@ CDC database=demo, table=t_user, type=delete, data={...}, old=null
 
 
 
+## 复现：`ADD COLUMN IF NOT EXISTS` 导致 schema 漂移
+
+基于 `init.sql` 里的 `t_user`。生产日志特征：
+
+```
+Unable to cast 0 (java.lang.Integer) into column ...from_type (type 'varchar')
+... has a position mismatch, 126 vs 118 in new
+```
+
+**根因**：MariaDB 对「列已存在」的 `ADD COLUMN IF NOT EXISTS` 仍写入 binlog；Maxwell v1.46 会按普通 `ADD COLUMN` 在内部 schema **重复加列**，列位置错位后，读 ROW 事件时把后面的 int 当成前面的 varchar → cast 失败并退出。
+
+```bash
+# 前置：docker compose up -d（若上次已复现失败，先清 Maxwell 元数据再重启）
+docker compose exec db mariadb -uroot -p123456 -e 'DROP DATABASE IF EXISTS maxwell;'
+docker compose restart maxwell
+./reproduce-schema-drift.sh
+docker compose logs -f maxwell
+```
+
+规避：迁移脚本避免对已存在列反复执行 `ADD COLUMN IF NOT EXISTS`；或改用普通 `ADD COLUMN` 并做好幂等控制。
+
+
+
 ## 批量消费吞吐测试
 
 前置：
