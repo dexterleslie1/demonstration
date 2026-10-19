@@ -96,7 +96,20 @@ docker compose restart maxwell
 docker compose logs -f maxwell
 ```
 
-规避：迁移脚本避免对已存在列反复执行 `ADD COLUMN IF NOT EXISTS`；或改用普通 `ADD COLUMN` 并做好幂等控制。
+### 用 Flyway / Liquibase 避免漂移
+
+漂移来自**同一条幂等 DDL 被反复执行并写入 binlog**。Flyway、Liquibase 这类版本化迁移工具会在库里记已执行版本（如 `flyway_schema_history`、`DATABASECHANGELOG`），**每条变更只跑一次**，不会在每次启动时再发 `ADD COLUMN IF NOT EXISTS`。
+
+做法：
+
+- 列变更写成普通 `ADD COLUMN` / `MODIFY COLUMN`，放进有版本号的 migration，由 Flyway 或 Liquibase 执行
+- 不要在应用启动、定时任务或手工脚本里反复跑带 `IF NOT EXISTS` / `IF EXISTS` 的 DDL
+- 已漂移的 Maxwell 元数据仍需单独恢复（清 `maxwell` 库或 `--recapture_schema`）；Flyway/Liquibase 管的是**之后不再制造**这类空 ALTER
+
+```sql
+-- V20261019__add_t_user_is_jh.sql（Flyway 示例，只执行一次）
+ALTER TABLE t_user ADD COLUMN `is_jh` TINYINT(1) NULL DEFAULT 0;
+```
 
 
 
