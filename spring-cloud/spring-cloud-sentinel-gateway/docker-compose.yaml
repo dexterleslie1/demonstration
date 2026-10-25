@@ -1,0 +1,9 @@
+version: "3.0"
+
+services:
+  demo-spring-cloud-sentinel:
+    image: bladex/sentinel-dashboard:1.8.0
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - '8858:8858'
