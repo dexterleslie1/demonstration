@@ -6,6 +6,7 @@ import com.alibaba.csp.sentinel.adapter.gateway.common.api.ApiPathPredicateItem;
 import com.alibaba.csp.sentinel.adapter.gateway.common.api.ApiPredicateItem;
 import com.alibaba.csp.sentinel.adapter.gateway.common.api.GatewayApiDefinitionManager;
 import com.alibaba.csp.sentinel.adapter.gateway.common.rule.GatewayFlowRule;
+import com.alibaba.csp.sentinel.adapter.gateway.common.rule.GatewayParamFlowItem;
 import com.alibaba.csp.sentinel.adapter.gateway.common.rule.GatewayRuleManager;
 import com.alibaba.csp.sentinel.adapter.gateway.sc.callback.BlockRequestHandler;
 import com.alibaba.csp.sentinel.adapter.gateway.sc.callback.GatewayCallbackManager;
@@ -25,7 +26,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * API 分组限流：group-a 并发=2（精确+前缀并存），group-b 并发=3
+ * API 分组限流：group-a 默认并发=2（p1=v2 时为 3），group-b 并发=3
  */
 @Configuration
 @Slf4j
@@ -58,12 +59,16 @@ public class SentinelGatewayConfiguration implements CommandLineRunner {
         GatewayApiDefinitionManager.loadApiDefinitions(definitions);
 
         Set<GatewayFlowRule> rules = new HashSet<>();
-        rules.add(threadRule("group-a", 2));
+        // group-a：按 URL 参数 p1 区分并发；p1=v2 → 3，否则（含空）→ 2
+        rules.add(paramThreadRule("group-a", 3, "p1", "v2",
+                SentinelGatewayConstants.PARAM_MATCH_STRATEGY_EXACT));
+        rules.add(paramThreadRule("group-a", 2, "p1", "^(?!v2$).*$",
+                SentinelGatewayConstants.PARAM_MATCH_STRATEGY_REGEX));
         rules.add(threadRule("group-b", 3));
         GatewayRuleManager.loadRules(rules);
 
         if (log.isDebugEnabled()) {
-            log.debug("已加载 API 分组流控：group-a 并发=2（exact+pattern），group-b 并发=3");
+            log.debug("已加载 API 分组流控：group-a p1=v2→3/否则→2，group-b 并发=3");
         }
     }
 
@@ -76,5 +81,19 @@ public class SentinelGatewayConfiguration implements CommandLineRunner {
                 .setResourceMode(SentinelGatewayConstants.RESOURCE_MODE_CUSTOM_API_NAME)
                 .setGrade(RuleConstant.FLOW_GRADE_THREAD)
                 .setCount(concurrency);
+    }
+
+    private static GatewayFlowRule paramThreadRule(String apiGroupName, int concurrency,
+                                                    String paramName, String valuePattern,
+                                                    int valueMatchStrategy) {
+        return new GatewayFlowRule(apiGroupName)
+                .setResourceMode(SentinelGatewayConstants.RESOURCE_MODE_CUSTOM_API_NAME)
+                .setGrade(RuleConstant.FLOW_GRADE_THREAD)
+                .setCount(concurrency)
+                .setParamItem(new GatewayParamFlowItem()
+                        .setParseStrategy(SentinelGatewayConstants.PARAM_PARSE_STRATEGY_URL_PARAM)
+                        .setFieldName(paramName)
+                        .setPattern(valuePattern)
+                        .setMatchStrategy(valueMatchStrategy));
     }
 }

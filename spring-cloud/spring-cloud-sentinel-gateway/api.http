@@ -1,5 +1,8 @@
-### group-a 精确
-GET http://localhost:8080/api/v1/a/exact
+### group-a 默认并发=2
+GET http://localhost:8080/api/v1/a/exact?p1=v1
+
+### group-a p1=v2 并发=3
+GET http://localhost:8080/api/v1/a/exact?p1=v2
 
 ### group-a 前缀
 GET http://localhost:8080/api/v1/a/pattern/demo
