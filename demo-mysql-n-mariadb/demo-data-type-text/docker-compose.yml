@@ -1,0 +1,27 @@
+version: "3.0"
+
+services:
+  # 启动mariadb
+  db:
+    build:
+      context: ./
+    image: demo-data-type-text
+    # mysql5.7需要指定此用户，否则报告read-only file system错误
+    user: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - TZ=Asia/Shanghai
+      # 解决mysql cli中文乱码问题
+      # https://blog.csdn.net/qq_44766883/article/details/128065916
+      - LANG=C.UTF-8
+    volumes:
+      - ./my.cnf:/etc/mysql/conf.d/my.cnf
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+    deploy:
+      resources:
+        limits:
+          memory: 4g
+    network_mode: host
