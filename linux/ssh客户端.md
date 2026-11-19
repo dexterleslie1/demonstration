@@ -35,15 +35,45 @@
 
 ### 安装
 
-下载 Termius.deb `https://termius.com/download/linux`
+使用 snap 安装：
 
-安装 Termius
+```bash
+sudo snap install termius-app
+```
+
+Ubuntu 20.04 可能遇到如下报错：
+
+```text
+error: cannot perform the following tasks:
+- Ensure prerequisites for "termius-app" are available (cannot install snap base "core24": snap "core24" assumes unsupported features: snapd2.55.5 (try to refresh snapd))
+```
+
+原因是 snapd 版本过旧，需要先升级 snapd：
+
+```bash
+sudo apt update
+sudo apt install --only-upgrade snapd
+```
+
+升级后重启一下 snapd：
+
+```bash
+sudo systemctl restart snapd
+```
+
+再重新安装：
+
+```bash
+sudo snap install termius-app
+```
+
+也可下载 Termius.deb `https://termius.com/download/linux` 后用 dpkg 安装：
 
 ```bash
 sudo dpkg -i Termius.deb
 ```
 
-注意：需要配置和登录 Termius Vaults 以保存 SSH 连接信息到 Termius 远程的 Vaults，帐号：gmail，密码：ri..90...34...
+注意：需要配置和登录 Termius Vaults 以保存 SSH 连接信息到 Termius 远程的 Vaults，帐号：gmail，密码：r..9...3...
 
 
 
