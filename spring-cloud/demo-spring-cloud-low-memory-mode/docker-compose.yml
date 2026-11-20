@@ -1,0 +1,27 @@
+version: "3.0"
+
+services:
+  db:
+    image: mariadb:10.4.19
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - TZ=Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+    volumes:
+      - ./db/db.sql:/docker-entrypoint-initdb.d/db.sql:ro
+    network_mode: host
+
+  # Docker 运行 nacos2.x 需要暴露 9848 和 9849 端口
+  # https://github.com/alibaba/nacos/issues/6154
+  nacos-server:
+    image: nacos/nacos-server:v2.2.3
+    environment:
+      - TZ=Asia/Shanghai
+      - MODE=standalone
+      - JVM_XMX=256m
+      - JVM_XMS=256m
+      - JVM_XMN=128m
+    network_mode: host
