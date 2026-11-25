@@ -5,6 +5,10 @@
 > 注意：如果提示 curl command not found，ubuntu 系统运行 sudo apt install curl -y，CentOS 系统运行 yum install curl -y
 
 ```bash
+# 这是公司版本的
+sudo rm -f /usr/bin/dcli && sudo curl -s https://hk010.oss-cn-hongkong.aliyuncs.com/dcli/dcli-linux-x86_64 --output /usr/bin/dcli && sudo chmod +x /usr/bin/dcli
+
+# 这是个人版本的，推荐使用上面公司版本的
 sudo rm -f /usr/bin/dcli && sudo curl https://fut001.oss-cn-hangzhou.aliyuncs.com/dcli/dcli-linux-x86_64 --output /usr/bin/dcli && sudo chmod +x /usr/bin/dcli
 ```
 
