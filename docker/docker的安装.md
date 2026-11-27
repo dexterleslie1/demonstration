@@ -84,6 +84,92 @@ sudo dcli docker install
 
 
 
+## `Ubuntu 24.04`上安装`Docker 29.10.1`
+
+> Docker 官方支持 Ubuntu Noble 24.04（LTS），对应包版本：`5:29.10.1-1~ubuntu.24.04~noble`。参考：[Install Docker Engine on Ubuntu](https://docs.docker.com/engine/install/ubuntu/)
+
+1. 卸载可能冲突的旧包（若未安装过可跳过）
+
+   ```sh
+   sudo apt-get remove -y docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc
+   ```
+
+2. 安装依赖并添加 Docker 官方 GPG 密钥与 apt 源
+
+   ```sh
+   sudo apt-get update
+   sudo apt-get install -y ca-certificates curl
+   sudo install -m 0755 -d /etc/apt/keyrings
+   sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+   sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+   echo \
+     "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+     $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | \
+     sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+   sudo apt-get update
+   ```
+
+   > 若下载 GPG 出现 `curl: (35) Recv failure: Connection reset by peer`（`ping download.docker.com` 可能仍通，但 HTTPS 不稳定），可改为**手动下载 gpg 再配置**：
+   >
+   > 1. 在能正常访问的电脑浏览器打开 https://download.docker.com/linux/ubuntu/gpg ，另存为文件 `docker.asc`（约 3~4KB）。
+   > 2. 把 `docker.asc` 拷到目标机，例如放到 `/tmp/docker.asc`（可用 `scp`）。
+   > 3. 在目标机执行：
+   >
+   > ```sh
+   > sudo install -m 0755 -d /etc/apt/keyrings
+   > sudo install -m 0644 /tmp/docker.asc /etc/apt/keyrings/docker.asc
+   > sudo chmod a+r /etc/apt/keyrings/docker.asc
+   > ls -l /etc/apt/keyrings/docker.asc
+   > ```
+   >
+   > 确认文件存在后，继续执行上面的 `echo ... docker.list` 与 `sudo apt-get update` 即可。
+
+3. 安装指定版本 `Docker 29.10.1`（含 CLI、containerd、Buildx、Compose 插件）
+
+   ```sh
+   VERSION_STRING=5:29.10.1-1~ubuntu.24.04~noble
+   sudo apt-get install -y \
+     docker-ce=$VERSION_STRING \
+     docker-ce-cli=$VERSION_STRING \
+     containerd.io \
+     docker-buildx-plugin \
+     docker-compose-plugin
+   ```
+
+4. 通过查看 docker 版本检查是否成功安装
+
+   ```sh
+   docker --version
+   # 期望输出类似：Docker version 29.10.1, build ...
+   ```
+
+5. 编辑 docker 配置 `/etc/docker/daemon.json`（按需配置镜像加速）
+
+   ```json
+   {
+     "registry-mirrors": ["https://docker.mirrors.ustc.edu.cn"]
+   }
+   ```
+
+6. 启动并配置 docker 开机自启动
+
+   ```sh
+   sudo systemctl enable --now docker
+   sudo systemctl status docker
+   ```
+
+7. 运行 hello-world 检查 docker 服务是否正常
+
+   ```sh
+   sudo docker run --rm hello-world
+   ```
+
+> 若希望当前用户无需 `sudo` 即可使用 docker，可将用户加入 `docker` 组后重新登录：`sudo usermod -aG docker $USER`
+
+
+
 ## `windows`上安装`docker`
 
 ### `windows11`上安装`docker`
