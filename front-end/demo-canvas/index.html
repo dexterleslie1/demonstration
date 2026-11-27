@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Canvas 2D UI 框架 · 登录演示</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header>
+        <h1>Canvas 2D 自定义 UI 框架</h1>
+        <p>
+          下方整块区域是一块 <code>&lt;canvas&gt;</code>：卡片、标签、输入框、按钮都由
+          2D API 绘制，不是 DOM 控件。
+        </p>
+      </header>
+
+      <canvas id="ui-canvas" width="720" height="520" aria-label="Canvas 登录界面"></canvas>
+
+      <p class="hint">
+        试用：点击输入框输入账号密码，点「登录」或按 Enter。任意非空用户名+密码即可看到成功提示。
+      </p>
+    </div>
+
+    <script src="js/canvas-ui.js"></script>
+    <script src="js/login.js"></script>
+  </body>
+</html>
